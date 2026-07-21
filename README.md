@@ -4,7 +4,7 @@
 <br />
 <br />
 
-A super-optimized PureScript-to-Go compiler, leveraging its blazing-fast execution, lightweight goroutines and huge ecosystem.
+A super-optimized **PureScript-to-Go compiler**, leveraging its **blazing-fast execution**, **lightweight goroutines** and **huge ecosystem**.
 
 > **Note:** This project is currently a work in progress (WIP).
 
@@ -12,9 +12,9 @@ A super-optimized PureScript-to-Go compiler, leveraging its blazing-fast executi
 
 ## Why Go?
 
-While the broader JS ecosystem has heavily leaned towards TypeScript, many backend services and infrastructure tools rely heavily on Go for its raw performance, concurrency model, and deployment simplicity.
+While the broader JS ecosystem has heavily leaned towards TypeScript, many backend services and infrastructure tools rely heavily on Go for its **raw performance**, **concurrency model**, and **deployment simplicity**.
 
-`gopurs` aims to provide a bridge for developers who want the elegance and strict typing of a purely functional language like PureScript, while benefiting from Go's massive ecosystem. It opens a door for those who want to compile their pure business logic into a single, zero-dependency static binary that can run anywhere.
+`gopurs` aims to provide a bridge for developers who want the elegance and strict typing of a purely functional language like PureScript, while benefiting from Go's **massive ecosystem**. It opens a door for those who want to compile their pure business logic into a **single, zero-dependency static binary** that can run anywhere.
 
 ## Architecture and status
 
