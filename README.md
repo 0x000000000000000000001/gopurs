@@ -1,6 +1,6 @@
 # gopurs
 
-<img width="1494" height="407" alt="Screenshot 2026-07-21 at 17 22 56" src="https://github.com/user-attachments/assets/b013e7c3-fac6-4ee8-9d4c-f39ac8c2c921" />
+<img height="160" alt="Screenshot 2026-07-21 at 17 22 56" src="https://github.com/user-attachments/assets/b013e7c3-fac6-4ee8-9d4c-f39ac8c2c921" />
 <br />
 <br />
 
