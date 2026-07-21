@@ -4,7 +4,7 @@
 <br />
 <br />
 
-A super-optimized **PureScript-to-Go compiler**, leveraging its **blazing-fast execution**, **lightweight goroutines** and **huge ecosystem**.
+A super-optimized **PureScript-to-Go compiler**, entirely written in PureScript, leveraging Go's **blazing-fast execution**, **lightweight goroutines** and **huge ecosystem**.
 
 > **Note:** This project is currently a work in progress (WIP).
 
