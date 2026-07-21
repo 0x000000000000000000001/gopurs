@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var Second = gopurs_runtime.Value{}
 var Minute = gopurs_runtime.Value{}
 var Hour = gopurs_runtime.Value{}

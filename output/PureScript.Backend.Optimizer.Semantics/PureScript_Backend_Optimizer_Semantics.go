@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var eqQualified = gopurs_runtime.Apply(eqQualified, eqString)
 var eqMaybe = gopurs_runtime.Value{}
 var compare1 = gopurs_runtime.Value{}
@@ -108,9 +105,7 @@ var alter = gopurs_runtime.Apply(alter, ordEvalRef)
 var lookup3 = gopurs_runtime.Value{}
 var eqDistOp = gopurs_runtime.Value{}
 var eqBackendRewrite = gopurs_runtime.Value{}
-
 var eqBackendExpr = gopurs_runtime.Value{}
-
 var snocApp = gopurs_runtime.Value{}
 var snocSpine = gopurs_runtime.Value{}
 var simplifyCondIsTag = gopurs_runtime.Value{}
@@ -161,14 +156,10 @@ var guardFailOver3 = gopurs_runtime.Value{}
 var guardFail = gopurs_runtime.Value{}
 var foldBackendExpr = gopurs_runtime.Value{}
 var freeze = gopurs_runtime.Value{}
-
 var floatLetWith = gopurs_runtime.Value{}
 var makeLet = gopurs_runtime.Apply(floatLetWith, gopurs_runtime.Value{})
-
 var floatLet = gopurs_runtime.Apply(floatLetWith, gopurs_runtime.Value{})
-
 var makeEffectBind = gopurs_runtime.Value{}
-
 var evalUpdate = gopurs_runtime.Value{}
 var evalUncurriedBeta = gopurs_runtime.Value{}
 var evalPrimOpOrdNumber = gopurs_runtime.Value{}
@@ -186,51 +177,35 @@ var deref = gopurs_runtime.Value{}
 var evalBranches = gopurs_runtime.Value{}
 var evalPrimOpNumInt = gopurs_runtime.Value{}
 var evalPrimOpNumNumber = gopurs_runtime.Value{}
-
 var evalRefSpine = gopurs_runtime.Value{}
 var evalRef = gopurs_runtime.Value{}
 var evalPrimOp = gopurs_runtime.Value{}
 var evalAssocOp' = gopurs_runtime.Value{}
 var evalAssocOp = gopurs_runtime.Value{}
 var evalAccessor = gopurs_runtime.Value{}
-
 var caseString = gopurs_runtime.Value{}
 var caseNumber = gopurs_runtime.Value{}
 var caseInt = gopurs_runtime.Value{}
 var buildStop = gopurs_runtime.Value{}
 var buildDefault = gopurs_runtime.Value{}
-
 var build = gopurs_runtime.Value{}
-
 var simplifyCondBoolean = gopurs_runtime.Value{}
-
 var simplifyCondRedundantElse = gopurs_runtime.Value{}
 var simplifyCondLiftAnd = gopurs_runtime.Value{}
 var buildBranchCond = gopurs_runtime.Value{}
-
 var quote = gopurs_runtime.Value{}
-
 var bindLocal = gopurs_runtime.Value{}
 var evalApp = gopurs_runtime.Value{}
-
 var evalMkFn = gopurs_runtime.Value{}
-
 var evalUncurriedApp = gopurs_runtime.Value{}
-
 var evalSpine = gopurs_runtime.Value{}
 var mkUncurriedAppRewrite = gopurs_runtime.Value{}
-
 var evalUncurriedEffectApp = gopurs_runtime.Value{}
-
 var mkFnFromArgs = gopurs_runtime.Value{}
 var evalBackendSyntax = gopurs_runtime.Value{}
-
 var evalBackendExpr = gopurs_runtime.Value{}
-
 var optimize = gopurs_runtime.Value{}
-
 var evalNeutralExpr = gopurs_runtime.Value{}
-
 var eval3 = gopurs_runtime.Value{}
 var analysisFromDirective = gopurs_runtime.Value{}
 var addStop = gopurs_runtime.Value{}

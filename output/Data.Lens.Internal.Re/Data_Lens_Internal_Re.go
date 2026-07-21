@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var Re = gopurs_runtime.Value{}
 var profunctorRe = gopurs_runtime.Value{}
 var strongRe = gopurs_runtime.Value{}

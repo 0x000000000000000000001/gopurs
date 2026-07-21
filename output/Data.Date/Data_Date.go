@@ -5,9 +5,9 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
+var calcDiff = gopurs_runtime.Value{}
+var calcWeekday = gopurs_runtime.Value{}
+var canonicalDateImpl = gopurs_runtime.Value{}
 var fromJust = gopurs_runtime.Value{}
 var greaterThan = gopurs_runtime.Value{}
 var Date = gopurs_runtime.Value{}

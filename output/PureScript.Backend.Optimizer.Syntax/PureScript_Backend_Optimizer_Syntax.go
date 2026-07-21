@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var eq = gopurs_runtime.Value{}
 var compare = gopurs_runtime.Value{}
 var eqMaybe = gopurs_runtime.Value{}
@@ -85,31 +82,13 @@ var functorBackendOperator = gopurs_runtime.Value{}
 var functorBackendEffect = gopurs_runtime.Value{}
 var functorBackendSyntax = gopurs_runtime.Value{}
 var foldablePair = gopurs_runtime.Value{}
-
 var traversablePair = gopurs_runtime.Value{}
-
-
-
 var foldableBackendOperator = gopurs_runtime.Value{}
-
-
-
 var traversableBackendOperato = gopurs_runtime.Value{}
-
-
-
 var foldableBackendEffect = gopurs_runtime.Value{}
-
-
-
 var foldableBackendSyntax = gopurs_runtime.Value{}
-
 var traversableBackendEffect = gopurs_runtime.Value{}
-
-
-
 var traversableBackendSyntax = gopurs_runtime.Value{}
-
 var eqPair = gopurs_runtime.Value{}
 var eqLevel = eqInt
 var eqTuple2 = gopurs_runtime.Apply(eqTuple, eqMaybe)

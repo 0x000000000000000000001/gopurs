@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var power = gopurs_runtime.Apply(power, monoidString)
 var foldMap = gopurs_runtime.Apply(gopurs_runtime.Value{}, monoidString)
 var ShowLayout = gopurs_runtime.Value{}

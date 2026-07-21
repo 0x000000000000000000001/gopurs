@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var _JsonString = gopurs_runtime.Value{}
 var _JsonObject = gopurs_runtime.Value{}
 var _JsonNumber = gopurs_runtime.Value{}

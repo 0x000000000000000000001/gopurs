@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var local = gopurs_runtime.Value{}
 var comonadAskTuple = gopurs_runtime.Value{}
 var comonadEnvTuple = gopurs_runtime.Value{}

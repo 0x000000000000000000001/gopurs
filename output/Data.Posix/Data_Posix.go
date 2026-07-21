@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var Uid = gopurs_runtime.Value{}
 var Pid = gopurs_runtime.Value{}
 var Gid = gopurs_runtime.Value{}

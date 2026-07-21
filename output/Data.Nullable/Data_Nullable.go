@@ -5,9 +5,9 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
+var notNull = gopurs_runtime.Value{}
+var null = gopurs_runtime.Value{}
+var nullable = gopurs_runtime.Value{}
 var toNullable = gopurs_runtime.Value{}
 var toMaybe = gopurs_runtime.Value{}
 var showNullable = gopurs_runtime.Value{}

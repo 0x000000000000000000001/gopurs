@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var fromFoldable = gopurs_runtime.Apply(runFn2, fromFoldableImpl)
 var unfolded = gopurs_runtime.Value{}
 var replicated = gopurs_runtime.Value{}

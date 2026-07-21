@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var foldMap = gopurs_runtime.Apply(gopurs_runtime.Value{}, monoidString)
 var ParseSucceeded = gopurs_runtime.Value{}
 var ParseSucceededWithErrors = gopurs_runtime.Value{}

@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var lookup = gopurs_runtime.Value{}
 var append = gopurs_runtime.Apply(union, ordString)
 var delete = gopurs_runtime.Apply(unsafeCoerce, gopurs_runtime.Apply(delete, ordString))

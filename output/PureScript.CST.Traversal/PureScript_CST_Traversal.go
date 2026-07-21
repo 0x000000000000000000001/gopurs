@@ -5,18 +5,13 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var ltraverse = gopurs_runtime.Value{}
 var applicativeReaderT = gopurs_runtime.Value{}
 var applyCompose = gopurs_runtime.Value{}
 var applicativeCompose = gopurs_runtime.Apply(applicativeCompose, freeApplicative)
 var traverseWrapped = gopurs_runtime.Value{}
 var traverseSeparated = gopurs_runtime.Value{}
-
 var traverseRecordUpdate = gopurs_runtime.Value{}
-
 var traverseRecordLabeled = gopurs_runtime.Value{}
 var traverseRecordAccessor = gopurs_runtime.Value{}
 var traversePatternGuard = gopurs_runtime.Value{}
@@ -31,13 +26,11 @@ var traverseType = gopurs_runtime.Value{}
 var traverseType1 = gopurs_runtime.Apply(traverseType, applicativeReaderT)
 var traverseType2 = gopurs_runtime.Apply(traverseType, freeApplicative)
 var traverseIfThenElse = gopurs_runtime.Value{}
-
 var traverseWhere = gopurs_runtime.Value{}
 var traverseValueBindingFields = gopurs_runtime.Value{}
 var traverseLetBinding = gopurs_runtime.Value{}
 var traverseGuardedExpr = gopurs_runtime.Value{}
 var traverseGuarded = gopurs_runtime.Value{}
-
 var traverseInstanceBinding = gopurs_runtime.Value{}
 var traverseLetIn = gopurs_runtime.Value{}
 var traverseForeign = gopurs_runtime.Value{}

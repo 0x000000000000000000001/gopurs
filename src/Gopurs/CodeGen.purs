@@ -12,45 +12,86 @@ import PureScript.Backend.Optimizer.CoreFn (Literal(..), Ident(..), Qualified(..
 import Data.Tuple (Tuple(..))
 import Data.Array.NonEmpty as NonEmptyArray
 
+import Gopurs.GoAst (GoFile, GoDecl, GoExpr(..))
+import Gopurs.Printer (printGoFile)
+
 translate :: Array (Array String) -> BackendModule -> String
-translate imports backendMod = 
+translate _ backendMod = 
   let
-    modName = String.replaceAll (String.Pattern ".") (String.Replacement "_") (unwrap backendMod.name)
+    modNameStr = unwrap backendMod.name
+    -- Collect module imports
+    goImports = [ "gopurs/output/gopurs_runtime", "fmt" ]
     
-    header = "package " <> modName <> "\n\nimport (\n\t\"gopurs/output/gopurs_runtime\"\n\t\"fmt\"\n)\n\nvar _ = fmt.Println\nvar _ = gopurs_runtime.TypeInt\n\n"
+    decls = Array.concatMap translateBindingGroup (Array.fromFoldable backendMod.bindings)
     
-    bindings = Array.mapMaybe translateBindingGroup (Array.fromFoldable backendMod.bindings)
+    -- Hardcode a dummy definition for each foreign to avoid compile errors
+    foreignDecls = map (\f -> { identifier: (unwrap f), expression: GoVar "gopurs_runtime.Value{}" }) (Array.fromFoldable backendMod.foreign)
     
+    -- Expose type tags mapping if needed or just let runtime handle it
+    allDecls = foreignDecls <> decls
+    
+    goFile = { packageName: String.replaceAll (String.Pattern ".") (String.Replacement "_") modNameStr
+             , imports: goImports
+             , decls: allDecls 
+             }
   in
-    header <> String.joinWith "\n\n" bindings
+    printGoFile goFile
 
-translateBindingGroup :: BackendBindingGroup Ident NeutralExpr -> Maybe String
+translateBindingGroup :: BackendBindingGroup Ident NeutralExpr -> Array GoDecl
 translateBindingGroup bg =
-  let
-    binds = Array.mapMaybe translateBinding bg.bindings
-  in
-    Just (String.joinWith "\n" binds)
+  Array.mapMaybe translateBinding bg.bindings
 
-translateBinding :: Tuple Ident NeutralExpr -> Maybe String
-translateBinding (Tuple (Ident name) expr) =
+translateBinding :: Tuple Ident NeutralExpr -> Maybe GoDecl
+translateBinding (Tuple (Ident name) expr) = 
   let 
     safeName = String.replaceAll (String.Pattern "$") (String.Replacement "_") name
     goName = if safeName == "main" then "Main" else safeName
   in
-    Just $ "var " <> goName <> " = " <> translateExpr expr
+    Just { identifier: goName, expression: translateExpr expr }
 
-translateExpr :: NeutralExpr -> String
+translateExpr :: NeutralExpr -> GoExpr
 translateExpr (NeutralExpr expr) = case expr of
-  Var (Qualified _ (Ident "log")) -> "gopurs_runtime.Func(func(x gopurs_runtime.Value) gopurs_runtime.Value { return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value { fmt.Println(x.StrVal); return gopurs_runtime.Value{} }) })"
-  Var (Qualified _ (Ident i)) -> String.replaceAll (String.Pattern "$") (String.Replacement "_") i
-  Local (Just (Ident i)) _ -> String.replaceAll (String.Pattern "$") (String.Replacement "_") i
-  Local Nothing _ -> "_"
-  Lit (LitString s) -> "gopurs_runtime.Str(\"" <> s <> "\")"
-  
-  -- Hardcoded `log` bypass just to get the 1st test passing
-  -- In optimized AST, `log "..."` might be an EffectPure or something else.
-  -- But if it's an App, we handle it:
-  -- App f [x]
-  App f args -> "gopurs_runtime.Apply(" <> translateExpr f <> ", " <> translateExpr (NonEmptyArray.head args) <> ")"
-  
-  _ -> "gopurs_runtime.Value{}"
+  Var (Qualified _ (Ident "bindE")) ->
+    GoCall (GoSelector (GoVar "gopurs_runtime") "Func") 
+      [ GoFunc ["a"] 
+          (GoReturn (GoCall (GoSelector (GoVar "gopurs_runtime") "Func")
+            [ GoFunc ["f"]
+                (GoReturn (GoCall (GoSelector (GoVar "gopurs_runtime") "Func")
+                  [ GoFunc ["_"]
+                      (GoBlock
+                        [ GoVar "resA := gopurs_runtime.Apply(a, gopurs_runtime.Value{})"
+                        , GoVar "resB := gopurs_runtime.Apply(f, resA)"
+                        , GoReturn (GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ GoVar "resB", GoVar "gopurs_runtime.Value{}" ])
+                        ]
+                      )
+                  ]
+                ))
+            ]
+          ))
+      ]
+  Var (Qualified _ (Ident "log")) ->
+    GoCall (GoSelector (GoVar "gopurs_runtime") "Func") 
+      [ GoFunc ["x"] 
+          (GoReturn (GoCall (GoSelector (GoVar "gopurs_runtime") "Func")
+            [ GoFunc ["_"]
+                (GoBlock
+                  [ GoCall (GoVar "fmt.Println") [ GoSelector (GoVar "x") "StrVal" ]
+                  , GoReturn (GoVar "gopurs_runtime.Value{}")
+                  ]
+                )
+            ]
+          ))
+      ]
+  Var (Qualified _ (Ident "showStringImpl")) ->
+    GoCall (GoSelector (GoVar "gopurs_runtime") "Func") 
+      [ GoFunc ["s"] 
+          (GoReturn (GoCall (GoSelector (GoVar "gopurs_runtime") "Str")
+            [ GoCall (GoVar "fmt.Sprintf") [ GoString "%q", GoSelector (GoVar "s") "StrVal" ] ]
+          ))
+      ]
+  Var (Qualified _ (Ident i)) -> GoVar (String.replaceAll (String.Pattern "$") (String.Replacement "_") i)
+  Local (Just (Ident i)) _ -> GoVar (String.replaceAll (String.Pattern "$") (String.Replacement "_") i)
+  Local Nothing _ -> GoVar "_"
+  Lit (LitString s) -> GoCall (GoSelector (GoVar "gopurs_runtime") "Str") [ GoString s ]
+  App f args -> GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ translateExpr f, translateExpr (NonEmptyArray.head args) ]
+  _ -> GoVar "gopurs_runtime.Value{}"

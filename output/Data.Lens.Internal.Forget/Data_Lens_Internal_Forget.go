@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var Forget = gopurs_runtime.Value{}
 var semigroupForget = gopurs_runtime.Value{}
 var profunctorForget = gopurs_runtime.Value{}

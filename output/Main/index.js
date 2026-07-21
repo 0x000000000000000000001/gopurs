@@ -24,6 +24,7 @@ import * as Gopurs_Runtime from "../Gopurs.Runtime/index.js";
 import * as Node_Encoding from "../Node.Encoding/index.js";
 import * as Node_FS_Aff from "../Node.FS.Aff/index.js";
 import * as Node_FS_Stats from "../Node.FS.Stats/index.js";
+import * as Node_Process from "../Node.Process/index.js";
 import * as PureScript_Backend_Optimizer_Builder from "../PureScript.Backend.Optimizer.Builder/index.js";
 import * as PureScript_Backend_Optimizer_CoreFn from "../PureScript.Backend.Optimizer.CoreFn/index.js";
 import * as PureScript_Backend_Optimizer_CoreFn_Json from "../PureScript.Backend.Optimizer.CoreFn.Json/index.js";
@@ -43,13 +44,13 @@ var unwrap = /* #__PURE__ */ Data_Newtype.unwrap();
 var map = /* #__PURE__ */ Data_Functor.map(Data_Functor.functorArray);
 var readCoreFnModule = function (filePath) {
     return bind(Effect_Aff.attempt(Node_FS_Aff.stat(filePath)))(function (statRes) {
-        var $24 = Data_Either.isRight(statRes);
-        if ($24) {
+        var $29 = Data_Either.isRight(statRes);
+        if ($29) {
             return bind(Node_FS_Aff.readTextFile(Node_Encoding.UTF8.value)(filePath))(function (contents) {
                 var v = bind1(Data_Argonaut_Parser.jsonParser(contents))((function () {
-                    var $29 = lmap(Data_Argonaut_Decode_Error.printJsonDecodeError);
-                    return function ($30) {
-                        return $29(PureScript_Backend_Optimizer_CoreFn_Json.decodeModule($30));
+                    var $38 = lmap(Data_Argonaut_Decode_Error.printJsonDecodeError);
+                    return function ($39) {
+                        return $38(PureScript_Backend_Optimizer_CoreFn_Json.decodeModule($39));
                     };
                 })());
                 if (v instanceof Data_Either.Left) {
@@ -110,7 +111,30 @@ var main = /* #__PURE__ */ Effect_Aff.launchAff_(/* #__PURE__ */ bind(/* #__PURE
                                 };
                             }
                         })(finalModules))(function () {
-                            return Node_FS_Aff.writeTextFile(Node_Encoding.UTF8.value)("output/main.go")("package main\x0a\x0aimport (\x0a\x09\"gopurs/output/Test1110\"\x0a\x09\"gopurs/output/gopurs_runtime\"\x0a)\x0a\x0afunc main() {\x0a\x09gopurs_runtime.Apply(Test1110.Main, gopurs_runtime.Value{})\x0a}\x0a");
+                            return bind(liftEffect(Node_Process.argv))(function (argv) {
+                                var mainModuleName = (function () {
+                                    var v = Data_Array.findIndex(function (v1) {
+                                        return v1 === "--main";
+                                    })(argv);
+                                    if (v instanceof Data_Maybe.Just) {
+                                        var v1 = Data_Array.index(argv)(v.value0 + 1 | 0);
+                                        if (v1 instanceof Data_Maybe.Just) {
+                                            return v1.value0;
+                                        };
+                                        if (v1 instanceof Data_Maybe.Nothing) {
+                                            return "Main";
+                                        };
+                                        throw new Error("Failed pattern match at Main (line 82, column 19 - line 84, column 28): " + [ v1.constructor.name ]);
+                                    };
+                                    if (v instanceof Data_Maybe.Nothing) {
+                                        return "Main";
+                                    };
+                                    throw new Error("Failed pattern match at Main (line 81, column 24 - line 85, column 26): " + [ v.constructor.name ]);
+                                })();
+                                var pkgName = Data_String_Common.replaceAll(".")("_")(mainModuleName);
+                                var mainEntryPoint = "package main\x0a\x0aimport (\x0a\x09\"gopurs/output/" + (mainModuleName + ("\"\x0a\x09\"gopurs/output/gopurs_runtime\"\x0a)\x0a\x0afunc main() {\x0a\x09gopurs_runtime.Apply(" + (pkgName + ".Main, gopurs_runtime.Value{})\x0a}\x0a")));
+                                return Node_FS_Aff.writeTextFile(Node_Encoding.UTF8.value)("output/main.go")(mainEntryPoint);
+                            });
                         });
                     });
                 });

@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var zero = gopurs_runtime.Apply(gopurs_runtime.Value{}, gopurs_runtime.Value{})
 var ProperName = gopurs_runtime.Value{}
 var Prop = gopurs_runtime.Value{}
@@ -77,25 +74,17 @@ var importName = gopurs_runtime.Value{}
 var functorProp = gopurs_runtime.Value{}
 var functorLiteral = gopurs_runtime.Value{}
 var functorImport = gopurs_runtime.Value{}
-
 var functorBinder = gopurs_runtime.Value{}
-
-
-
 var functorGuard = gopurs_runtime.Value{}
 var functorExpr = gopurs_runtime.Value{}
 var functorCaseGuard = gopurs_runtime.Value{}
 var functorCaseAlternative = gopurs_runtime.Value{}
 var functorBinding = gopurs_runtime.Value{}
 var functorBind = gopurs_runtime.Value{}
-
 var foldableProp = gopurs_runtime.Value{}
 var traversableProp = gopurs_runtime.Value{}
-
 var foldableLiteral = gopurs_runtime.Value{}
-
 var traversableLiteral = gopurs_runtime.Value{}
-
 var findProp = gopurs_runtime.Value{}
 var exprAnn = gopurs_runtime.Value{}
 var eqProperName = eqString

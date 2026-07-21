@@ -1,0 +1,142 @@
+#!/usr/bin/env bash
+
+# Test runner for gopurs
+# Compiles and runs PureScript passing tests.
+
+ROOT_DIR=$(cd "$(dirname "$0")/.." && pwd)
+TEST_DIR="$ROOT_DIR/tests"
+PASSING_DIR="$TEST_DIR/passing"
+RUNNER_DIR="$TEST_DIR/runner"
+
+mkdir -p "$RUNNER_DIR/src"
+
+echo "Building gopurs compiler..."
+cd "$ROOT_DIR"
+npm run build --silent || { echo -e "\n\033[0;31m[FAILED]\033[0m gopurs build failed!"; exit 1; }
+
+cd "$RUNNER_DIR"
+
+if [ ! -f spago.yaml ]; then
+  cat << 'YAML' > spago.yaml
+package:
+  dependencies:
+    - prelude
+    - effect
+    - console
+    - arrays
+    - partial
+    - foldable-traversable
+    - st
+    - exceptions
+    - integers
+    - strings
+    - enums
+    - foreign-object
+    - numbers
+    - refs
+    - unsafe-coerce
+    - functions
+    - unfoldable
+    - record
+  name: runner
+workspace:
+  packageSet:
+    registry: 77.10.1
+YAML
+fi
+
+echo "Running tests from $PASSING_DIR..."
+
+passed=0
+failed=0
+
+TEST_FILES=()
+
+if [ $# -gt 0 ]; then
+  for arg in "$@"; do
+    if [ -f "$PASSING_DIR/$arg" ]; then
+      TEST_FILES+=("$PASSING_DIR/$arg")
+    elif [ -f "$PASSING_DIR/$arg.purs" ]; then
+      TEST_FILES+=("$PASSING_DIR/$arg.purs")
+    else
+      echo "Test file $arg not found."
+    fi
+  done
+fi
+
+if [ ${#TEST_FILES[@]} -eq 0 ]; then
+  TEST_FILES=("$PASSING_DIR"/*.purs)
+fi
+
+for test_file in "${TEST_FILES[@]}"; do
+  test_name=$(basename "$test_file")
+  
+  echo "=> Testing $test_name"
+  
+  rm -rf output/Main src/* output/Test* output/go.mod output/app
+  
+  cp "$test_file" "src/Main.purs"
+  
+  test_dir="${test_file%.purs}"
+  if [ -d "$test_dir" ]; then
+    cp -r "$test_dir"/* "src/"
+  fi
+  
+  # Try to build with spago (just generating corefn)
+  retry=0
+  max_retries=2
+  build_success=0
+  while [ $retry -le $max_retries ]; do
+    if spago build -q > /dev/null 2>&1; then
+      build_success=1
+      break
+    fi
+    retry=$((retry+1))
+    sleep 0.5
+  done
+
+  if [ $build_success -eq 1 ]; then
+    # Generate Go code
+    node ../../bin/gopurs.js --main Main > /dev/null 2>&1
+    
+    if [ -d "output/Main" ] && [ -f "output/Main/Main.go" ]; then
+      # Compile and Run Go code
+      cd output
+      rm -f go.mod
+      go mod init gopurs/output > /dev/null 2>&1
+      go mod tidy > /dev/null 2>&1
+      
+      if go build -o app > /dev/null 2>&1; then
+          if ./app > /dev/null 2>&1; then
+            echo -e "   \033[0;32m[OK]\033[0m"
+            passed=$((passed+1))
+          else
+            echo -e "   \033[0;31m[FAILED]\033[0m Execution error"
+            failed=$((failed+1))
+            break
+          fi
+      else
+          echo -e "   \033[0;31m[FAILED]\033[0m Go Compilation error"
+          failed=$((failed+1))
+          break
+      fi
+      cd ..
+    else
+      echo -e "   \033[0;31m[FAILED]\033[0m gopurs did not generate Main.go"
+      failed=$((failed+1))
+      break
+    fi
+  else
+    echo -e "   \033[0;31m[FAILED]\033[0m PureScript Compilation error"
+    failed=$((failed+1))
+    break
+  fi
+done
+
+echo ""
+if [ $failed -eq 0 ]; then
+  echo -e "Summary: \033[0;32m$passed passed\033[0m, 0 failed."
+else
+  echo -e "Summary: \033[0;32m$passed passed\033[0m, \033[0;31m$failed failed\033[0m."
+  exit 1
+fi

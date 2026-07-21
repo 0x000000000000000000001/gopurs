@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var fold = gopurs_runtime.Apply(gopurs_runtime.Value{}, monoidDoc)
 var lines = gopurs_runtime.Apply(foldrArray, appendBreak)
 var words = gopurs_runtime.Apply(foldrArray, appendSpace)

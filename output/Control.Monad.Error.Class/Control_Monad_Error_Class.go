@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var throwError = gopurs_runtime.Value{}
 var monadThrowMaybe = gopurs_runtime.Value{}
 var monadThrowEither = gopurs_runtime.Value{}

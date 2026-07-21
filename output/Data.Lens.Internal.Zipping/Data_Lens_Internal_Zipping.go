@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var Zipping = gopurs_runtime.Value{}
 var profunctorZipping = gopurs_runtime.Value{}
 var newtypeZipping = gopurs_runtime.Value{}

@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var runtimeGoCode = gopurs_runtime.Str("package gopurs_runtime
 
 const (

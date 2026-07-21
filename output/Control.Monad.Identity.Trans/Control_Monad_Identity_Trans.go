@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var IdentityT = gopurs_runtime.Value{}
 var monadSTIdentityT = gopurs_runtime.Value{}
 var traversableIdentityT = gopurs_runtime.Value{}

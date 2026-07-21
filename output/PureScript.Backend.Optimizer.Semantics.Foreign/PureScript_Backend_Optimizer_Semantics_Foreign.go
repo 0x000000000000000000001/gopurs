@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var comparing = gopurs_runtime.Value{}
 var fromFoldable = gopurs_runtime.Apply(foldrArray, Cons)
 var viewCopyRecord = gopurs_runtime.Value{}

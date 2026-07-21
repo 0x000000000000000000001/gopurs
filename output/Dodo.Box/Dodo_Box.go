@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var max = gopurs_runtime.Value{}
 var power = gopurs_runtime.Apply(power, monoidDoc)
 var LinePad = gopurs_runtime.Value{}
@@ -44,17 +41,13 @@ var Horizontal = gopurs_runtime.Value{}
 var Vertical = gopurs_runtime.Value{}
 var newtypeVertical_ = gopurs_runtime.Value{}
 var newtypeHorizontal_ = gopurs_runtime.Value{}
-
 var functorDocBox = gopurs_runtime.Value{}
-
 var functorHorizontal = functorDocBox
 var functorVertical = functorDocBox
 var eqAlign = gopurs_runtime.Value{}
 var vpadding = gopurs_runtime.Value{}
 var valign = gopurs_runtime.Value{}
-
 var sizeOf = gopurs_runtime.Value{}
-
 var vappend = gopurs_runtime.Value{}
 var vertical = gopurs_runtime.Value{}
 var semigroupVertical = gopurs_runtime.Value{}

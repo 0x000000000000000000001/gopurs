@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var unionSet = gopurs_runtime.Value{}
 var toUnfoldable1 = gopurs_runtime.Value{}
 var toUnfoldable11 = gopurs_runtime.Apply(toUnfoldable1, unfoldable1Array)

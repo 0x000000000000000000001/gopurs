@@ -18,6 +18,7 @@ import * as Node$dEncoding from "../Node.Encoding/index.js";
 import * as Node$dFS$dAff from "../Node.FS.Aff/index.js";
 import * as Node$dFS$dAsync from "../Node.FS.Async/index.js";
 import * as Node$dFS$dStats from "../Node.FS.Stats/index.js";
+import * as Node$dProcess from "../Node.Process/index.js";
 import * as PureScript$dBackend$dOptimizer$dBuilder from "../PureScript.Backend.Optimizer.Builder/index.js";
 import * as PureScript$dBackend$dOptimizer$dCoreFn$dJson from "../PureScript.Backend.Optimizer.CoreFn.Json/index.js";
 import * as PureScript$dBackend$dOptimizer$dCoreFn$dSort from "../PureScript.Backend.Optimizer.CoreFn.Sort/index.js";
@@ -72,7 +73,19 @@ const main = /* #__PURE__ */ (() => {
         traceIdents: Data$dMap$dInternal.Leaf,
         onPrepareModule: v => m => Effect$dAff._pure(m),
         onCodegenModule: v => v1 => backendMod => v2 => Node$dFS$dAff.toAff3(Node$dFS$dAsync.writeTextFile)(Node$dEncoding.UTF8)("output/" + backendMod.name + "/" + Data$dString$dCommon.replaceAll(".")("_")(backendMod.name) + ".go")(Gopurs$dCodeGen.translate(Data$dFunctor.arrayMap(i => Data$dString$dCommon.split(".")(i._2))(v1.imports))(backendMod))
-      })(finalModules))(() => Node$dFS$dAff.toAff3(Node$dFS$dAsync.writeTextFile)(Node$dEncoding.UTF8)("output/main.go")("package main\n\nimport (\n\t\"gopurs/output/Test1110\"\n\t\"gopurs/output/gopurs_runtime\"\n)\n\nfunc main() {\n\tgopurs_runtime.Apply(Test1110.Main, gopurs_runtime.Value{})\n}\n")))));
+      })(finalModules))(() => Effect$dAff._bind(Effect$dAff._liftEffect(Node$dProcess.argv))(argv => {
+        const v = Data$dArray.findIndexImpl(Data$dMaybe.Just, Data$dMaybe.Nothing, v1 => v1 === "--main", argv);
+        const mainModuleName = (() => {
+          if (v.tag === "Just") {
+            const $0 = v._1 + 1 | 0;
+            if ($0 >= 0 && $0 < argv.length) { return argv[$0]; }
+            return "Main";
+          }
+          if (v.tag === "Nothing") { return "Main"; }
+          $runtime.fail();
+        })();
+        return Node$dFS$dAff.toAff3(Node$dFS$dAsync.writeTextFile)(Node$dEncoding.UTF8)("output/main.go")("package main\n\nimport (\n\t\"gopurs/output/" + mainModuleName + "\"\n\t\"gopurs/output/gopurs_runtime\"\n)\n\nfunc main() {\n\tgopurs_runtime.Apply(" + Data$dString$dCommon.replaceAll(".")("_")(mainModuleName) + ".Main, gopurs_runtime.Value{})\n}\n");
+      })))));
     })))
   );
   return () => {

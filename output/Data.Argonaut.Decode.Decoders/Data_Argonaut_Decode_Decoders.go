@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var traverse = gopurs_runtime.Apply(gopurs_runtime.Value{}, applicativeEither)
 var fromFoldable = gopurs_runtime.Apply(foldrArray, Cons)
 var traverse1 = gopurs_runtime.Apply(gopurs_runtime.Value{}, applicativeEither)

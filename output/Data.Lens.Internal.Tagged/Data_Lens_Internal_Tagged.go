@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var Tagged = gopurs_runtime.Value{}
 var taggedProfunctor = gopurs_runtime.Value{}
 var taggedCostrong = gopurs_runtime.Value{}

@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var AIX = gopurs_runtime.Value{}
 var Darwin = gopurs_runtime.Value{}
 var FreeBSD = gopurs_runtime.Value{}

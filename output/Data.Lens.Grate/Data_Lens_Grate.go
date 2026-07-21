@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var zipWithOf = gopurs_runtime.Value{}
 var zipFWithOf = gopurs_runtime.Value{}
 var withGrate = gopurs_runtime.Value{}

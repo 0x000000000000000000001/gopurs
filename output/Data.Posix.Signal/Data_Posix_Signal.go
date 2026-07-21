@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var SIGABRT = gopurs_runtime.Value{}
 var SIGALRM = gopurs_runtime.Value{}
 var SIGBUS = gopurs_runtime.Value{}

@@ -1,7 +1,6 @@
 module Gopurs.Printer where
 
 import Prelude
-import Data.Array as Array
 import Data.String as String
 import Gopurs.GoAst (GoExpr(..), GoDecl, GoFile)
 

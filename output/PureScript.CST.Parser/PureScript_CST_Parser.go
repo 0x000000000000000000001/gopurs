@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var member = gopurs_runtime.Apply(member, ordString)
 var wrapped = gopurs_runtime.Value{}
 var separated = gopurs_runtime.Value{}
@@ -83,7 +80,6 @@ var parseImport = gopurs_runtime.Apply(gopurs_runtime.Value{}, gopurs_runtime.Ap
 var parseImportDecl = gopurs_runtime.Apply(gopurs_runtime.Value{}, gopurs_runtime.Apply(tokKeyword, gopurs_runtime.Str("import")))
 var parseModuleImportDecls = gopurs_runtime.Apply(many, gopurs_runtime.Apply(applyFirst, applyParser))
 var parseModuleHeader = gopurs_runtime.Apply(gopurs_runtime.Value{}, gopurs_runtime.Apply(tokKeyword, gopurs_runtime.Str("module")))
-
 var parseTypeVarKinded = gopurs_runtime.Value{}
 var parseTypeVarBindingWithVisibility = gopurs_runtime.Apply(gopurs_runtime.Value{}, gopurs_runtime.Value{})
 var parseTypeVarBinding = gopurs_runtime.Value{}
@@ -102,16 +98,13 @@ var parseRowLabel = gopurs_runtime.Apply(gopurs_runtime.Value{}, parseLabel)
 var parseRow = gopurs_runtime.Apply(gopurs_runtime.Value{}, gopurs_runtime.Value{})
 var parseKindedVar = gopurs_runtime.Value{}
 var parseForall = gopurs_runtime.Apply(gopurs_runtime.Value{}, gopurs_runtime.Value{})
-
 var parseDataCtor = gopurs_runtime.Apply(gopurs_runtime.Value{}, gopurs_runtime.Apply(gopurs_runtime.Value{}, gopurs_runtime.Value{}))
-
 var parseIdentBinder = gopurs_runtime.Apply(gopurs_runtime.Value{}, parseIdent)
 var parseBinderConstructor = gopurs_runtime.Apply(gopurs_runtime.Value{}, gopurs_runtime.Value{})
 var parseBinderAtom = gopurs_runtime.Apply(gopurs_runtime.Value{}, gopurs_runtime.Value{})
 var parseBinder2 = gopurs_runtime.Apply(gopurs_runtime.Value{}, gopurs_runtime.Value{})
 var parseBinder1 = gopurs_runtime.Apply(gopurs_runtime.Value{}, gopurs_runtime.Value{})
 var parseBinder = gopurs_runtime.Apply(gopurs_runtime.Value{}, gopurs_runtime.Value{})
-
 var parseClassConstraints = gopurs_runtime.Value{}
 var parseDeclDerive = gopurs_runtime.Apply(gopurs_runtime.Value{}, gopurs_runtime.Apply(tokKeyword, gopurs_runtime.Str("derive")))
 var parseClassMember = gopurs_runtime.Apply(gopurs_runtime.Value{}, parseIdent)
@@ -123,7 +116,6 @@ var parseForeignValue = gopurs_runtime.Apply(gopurs_runtime.Value{}, parseIdent)
 var parseDeclForeign = gopurs_runtime.Apply(gopurs_runtime.Value{}, gopurs_runtime.Apply(tokKeyword, gopurs_runtime.Str("foreign")))
 var parseInstanceBindingSignature = gopurs_runtime.Value{}
 var parseLetBindingSignature = gopurs_runtime.Value{}
-
 var parseWhere = gopurs_runtime.Apply(gopurs_runtime.Value{}, gopurs_runtime.Value{})
 var parseTickExpr1 = gopurs_runtime.Apply(gopurs_runtime.Value{}, gopurs_runtime.Value{})
 var parseTickExpr = gopurs_runtime.Apply(gopurs_runtime.Value{}, tokTick)
@@ -156,7 +148,6 @@ var parseBadSingleCaseWhere = gopurs_runtime.Value{}
 var parseBadSingleCaseGuarded = gopurs_runtime.Value{}
 var parseBadSingleCaseBranch = gopurs_runtime.Apply(gopurs_runtime.Value{}, gopurs_runtime.Apply(applySecond, applyParser))
 var parseAdo = gopurs_runtime.Apply(gopurs_runtime.Value{}, gopurs_runtime.Apply(tokQualifiedKeyword, gopurs_runtime.Str("ado")))
-
 var parseDeclValue1 = gopurs_runtime.Value{}
 var parseDeclValue = gopurs_runtime.Apply(gopurs_runtime.Value{}, parseIdent)
 var parseInstanceBindingName = gopurs_runtime.Value{}

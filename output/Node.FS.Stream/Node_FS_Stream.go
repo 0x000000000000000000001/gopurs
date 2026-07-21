@@ -5,9 +5,14 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
+var createReadStreamImpl = gopurs_runtime.Value{}
+var createReadStreamOptsImpl = gopurs_runtime.Value{}
+var createWriteStreamImpl = gopurs_runtime.Value{}
+var createWriteStreamOptsImpl = gopurs_runtime.Value{}
+var fdCreateReadStreamImpl = gopurs_runtime.Value{}
+var fdCreateReadStreamOptsImpl = gopurs_runtime.Value{}
+var fdCreateWriteStreamImpl = gopurs_runtime.Value{}
+var fdCreateWriteStreamOptsImpl = gopurs_runtime.Value{}
 var fdCreateWriteStream' = gopurs_runtime.Value{}
 var fdCreateWriteStream = gopurs_runtime.Value{}
 var fdCreateReadStream' = gopurs_runtime.Value{}

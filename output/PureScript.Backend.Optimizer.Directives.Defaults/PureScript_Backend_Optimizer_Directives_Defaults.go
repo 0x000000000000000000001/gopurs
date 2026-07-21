@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var defaultDirectives = gopurs_runtime.Str("
   -- Prelude
 

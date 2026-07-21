@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var toUnfoldable = gopurs_runtime.Apply(gopurs_runtime.Value{}, gopurs_runtime.Value{})
 var More = gopurs_runtime.Value{}
 var Done = gopurs_runtime.Value{}

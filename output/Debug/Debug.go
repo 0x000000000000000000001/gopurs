@@ -5,9 +5,10 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
+var _debugger = gopurs_runtime.Value{}
+var _spy = gopurs_runtime.Value{}
+var _trace = gopurs_runtime.Value{}
+var _traceTime = gopurs_runtime.Value{}
 var warn = gopurs_runtime.Value{}
 var traceTime = gopurs_runtime.Value{}
 var trace = gopurs_runtime.Value{}

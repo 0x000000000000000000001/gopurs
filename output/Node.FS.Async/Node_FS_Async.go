@@ -5,9 +5,32 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
+var accessImpl = gopurs_runtime.Value{}
+var appendFileImpl = gopurs_runtime.Value{}
+var chmodImpl = gopurs_runtime.Value{}
+var chownImpl = gopurs_runtime.Value{}
+var closeImpl = gopurs_runtime.Value{}
+var copyFileImpl = gopurs_runtime.Value{}
+var linkImpl = gopurs_runtime.Value{}
+var lstatImpl = gopurs_runtime.Value{}
+var mkdirImpl = gopurs_runtime.Value{}
+var mkdtempImpl = gopurs_runtime.Value{}
+var openImpl = gopurs_runtime.Value{}
+var readFileImpl = gopurs_runtime.Value{}
+var readImpl = gopurs_runtime.Value{}
+var readdirImpl = gopurs_runtime.Value{}
+var readlinkImpl = gopurs_runtime.Value{}
+var realpathImpl = gopurs_runtime.Value{}
+var renameImpl = gopurs_runtime.Value{}
+var rmImpl = gopurs_runtime.Value{}
+var rmdirImpl = gopurs_runtime.Value{}
+var statImpl = gopurs_runtime.Value{}
+var symlinkImpl = gopurs_runtime.Value{}
+var truncateImpl = gopurs_runtime.Value{}
+var unlinkImpl = gopurs_runtime.Value{}
+var utimesImpl = gopurs_runtime.Value{}
+var writeFileImpl = gopurs_runtime.Value{}
+var writeImpl = gopurs_runtime.Value{}
 var handleCallback = gopurs_runtime.Value{}
 var link = gopurs_runtime.Value{}
 var lstat = gopurs_runtime.Value{}

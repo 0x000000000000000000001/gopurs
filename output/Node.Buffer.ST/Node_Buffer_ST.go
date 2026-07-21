@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var writeString = gopurs_runtime.Apply(unsafeCoerce, writeString)
 var write = gopurs_runtime.Apply(unsafeCoerce, write)
 var unsafeThaw = gopurs_runtime.Apply(unsafeCoerce, unsafeThaw)

@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var UnexpectedEof = gopurs_runtime.Value{}
 var ExpectedEof = gopurs_runtime.Value{}
 var UnexpectedToken = gopurs_runtime.Value{}

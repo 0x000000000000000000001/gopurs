@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var eq = gopurs_runtime.Apply(eqArrayImpl, eqStringImpl)
 var eq1 = gopurs_runtime.Value{}
 var eq2 = gopurs_runtime.Value{}
@@ -73,9 +70,7 @@ var foldMapWithIndex = gopurs_runtime.Apply(gopurs_runtime.Value{}, gopurs_runti
 var topEnv = gopurs_runtime.Value{}
 var toExternImpl = gopurs_runtime.Value{}
 var toCaseRowVars = gopurs_runtime.Value{}
-
 var patternVars = gopurs_runtime.Value{}
-
 var patternSubterms = gopurs_runtime.Value{}
 var patternPatCase = gopurs_runtime.Value{}
 var normalizeCaseRows = gopurs_runtime.Value{}
@@ -102,15 +97,12 @@ var makeGuard = gopurs_runtime.Value{}
 var makeLet = gopurs_runtime.Value{}
 var makeUncurriedAbs = gopurs_runtime.Value{}
 var patternFail = gopurs_runtime.Apply(make, gopurs_runtime.Value{})
-
 var binderToPattern = gopurs_runtime.Value{}
-
 var toBackendExpr = gopurs_runtime.Value{}
 var toBackendBinding = gopurs_runtime.Value{}
 var buildCaseTreeFromRows = gopurs_runtime.Value{}
 var buildCasePattern = gopurs_runtime.Value{}
 var buildCaseLeaf = gopurs_runtime.Value{}
-
 var toTopLevelBackendBinding = gopurs_runtime.Value{}
 var toBackendTopLevelBindingGroup = gopurs_runtime.Value{}
 var toBackendTopLevelBindingGroups = gopurs_runtime.Value{}

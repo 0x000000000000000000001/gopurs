@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var applicativeStateT = gopurs_runtime.Apply(applicativeStateT, monadIdentity)
 var applicativeCompose = gopurs_runtime.Apply(applicativeCompose, applicativeStateT)
 var applyStateT = gopurs_runtime.Apply(applyStateT, monadIdentity)

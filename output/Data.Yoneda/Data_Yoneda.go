@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var Yoneda = gopurs_runtime.Value{}
 var runYoneda = gopurs_runtime.Value{}
 var lowerYoneda = gopurs_runtime.Value{}

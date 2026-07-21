@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var toAff = gopurs_runtime.Value{}
 var toAff1 = gopurs_runtime.Value{}
 var unlink = gopurs_runtime.Apply(toAff1, unlink)

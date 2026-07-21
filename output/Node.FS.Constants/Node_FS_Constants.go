@@ -5,9 +5,14 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
+var appendCopyMode = gopurs_runtime.Value{}
+var copyFile_EXCL = gopurs_runtime.Value{}
+var copyFile_FICLONE = gopurs_runtime.Value{}
+var copyFile_FICLONE_FORCE = gopurs_runtime.Value{}
+var f_OK = gopurs_runtime.Value{}
+var r_OK = gopurs_runtime.Value{}
+var w_OK = gopurs_runtime.Value{}
+var x_OK = gopurs_runtime.Value{}
 var R = gopurs_runtime.Value{}
 var R_PLUS = gopurs_runtime.Value{}
 var RS = gopurs_runtime.Value{}

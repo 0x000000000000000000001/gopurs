@@ -5,9 +5,48 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
+var allowHalfOpenImpl = gopurs_runtime.Value{}
+var closedImpl = gopurs_runtime.Value{}
+var corkImpl = gopurs_runtime.Value{}
+var destroyErrorImpl = gopurs_runtime.Value{}
+var destroyImpl = gopurs_runtime.Value{}
+var destroyedImpl = gopurs_runtime.Value{}
+var endCbImpl = gopurs_runtime.Value{}
+var endImpl = gopurs_runtime.Value{}
+var erroredImpl = gopurs_runtime.Value{}
+var isPausedImpl = gopurs_runtime.Value{}
+var newPassThrough = gopurs_runtime.Value{}
+var pauseImpl = gopurs_runtime.Value{}
+var pipeCbImpl = gopurs_runtime.Value{}
+var pipeImpl = gopurs_runtime.Value{}
+var pipelineImpl = gopurs_runtime.Value{}
+var readChunkImpl = gopurs_runtime.Value{}
+var readImpl = gopurs_runtime.Value{}
+var readSizeImpl = gopurs_runtime.Value{}
+var readableEndedImpl = gopurs_runtime.Value{}
+var readableFlowingImpl = gopurs_runtime.Value{}
+var readableFromBufImpl = gopurs_runtime.Value{}
+var readableFromStrImpl = gopurs_runtime.Value{}
+var readableHighWaterMarkImpl = gopurs_runtime.Value{}
+var readableImpl = gopurs_runtime.Value{}
+var readableLengthImpl = gopurs_runtime.Value{}
+var resumeImpl = gopurs_runtime.Value{}
+var setDefaultEncodingImpl = gopurs_runtime.Value{}
+var setEncodingImpl = gopurs_runtime.Value{}
+var uncorkImpl = gopurs_runtime.Value{}
+var unpipeAllImpl = gopurs_runtime.Value{}
+var unpipeImpl = gopurs_runtime.Value{}
+var writeCbImpl = gopurs_runtime.Value{}
+var writeImpl = gopurs_runtime.Value{}
+var writeStringCbImpl = gopurs_runtime.Value{}
+var writeStringImpl = gopurs_runtime.Value{}
+var writeableCorkedImpl = gopurs_runtime.Value{}
+var writeableEndedImpl = gopurs_runtime.Value{}
+var writeableFinishedImpl = gopurs_runtime.Value{}
+var writeableHighWaterMarkImpl = gopurs_runtime.Value{}
+var writeableImpl = gopurs_runtime.Value{}
+var writeableLengthImpl = gopurs_runtime.Value{}
+var writeableNeedDrainImpl = gopurs_runtime.Value{}
 var writeableNeedDrain = gopurs_runtime.Value{}
 var writeableLength = gopurs_runtime.Value{}
 var writeableHighWaterMark = gopurs_runtime.Value{}

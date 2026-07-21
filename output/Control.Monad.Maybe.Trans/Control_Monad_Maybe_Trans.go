@@ -5,21 +5,16 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var MaybeT = gopurs_runtime.Value{}
 var runMaybeT = gopurs_runtime.Value{}
 var newtypeMaybeT = gopurs_runtime.Value{}
 var monadTransMaybeT = gopurs_runtime.Value{}
 var mapMaybeT = gopurs_runtime.Value{}
 var functorMaybeT = gopurs_runtime.Value{}
-
 var monadMaybeT = gopurs_runtime.Value{}
 var bindMaybeT = gopurs_runtime.Value{}
 var applyMaybeT = gopurs_runtime.Value{}
 var applicativeMaybeT = gopurs_runtime.Value{}
-
 var semigroupMaybeT = gopurs_runtime.Value{}
 var monadAskMaybeT = gopurs_runtime.Value{}
 var monadReaderMaybeT = gopurs_runtime.Value{}

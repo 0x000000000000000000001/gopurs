@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var monadAskFun = gopurs_runtime.Value{}
 var monadReaderFun = gopurs_runtime.Value{}
 var local = gopurs_runtime.Value{}

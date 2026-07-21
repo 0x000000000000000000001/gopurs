@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var withGraphics = gopurs_runtime.Value{}
 var underline = gopurs_runtime.Value{}
 var strikethrough = gopurs_runtime.Value{}

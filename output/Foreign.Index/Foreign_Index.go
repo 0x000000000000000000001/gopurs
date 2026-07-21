@@ -5,9 +5,9 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
+var unsafeHasOwnProperty = gopurs_runtime.Value{}
+var unsafeHasProperty = gopurs_runtime.Value{}
+var unsafeReadPropImpl = gopurs_runtime.Value{}
 var unsafeReadProp = gopurs_runtime.Value{}
 var readProp = gopurs_runtime.Value{}
 var readIndex = gopurs_runtime.Value{}

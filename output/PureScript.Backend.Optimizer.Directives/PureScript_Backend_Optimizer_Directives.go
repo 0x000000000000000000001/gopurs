@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var expectMap = gopurs_runtime.Value{}
 var keyword = gopurs_runtime.Value{}
 var label = gopurs_runtime.Apply(expectMap, gopurs_runtime.Value{})

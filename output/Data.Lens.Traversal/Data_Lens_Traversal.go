@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var traversed = gopurs_runtime.Value{}
 var traverseOf = unsafeCoerce
 var sequenceOf = gopurs_runtime.Value{}

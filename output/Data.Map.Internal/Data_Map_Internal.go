@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var Leaf = gopurs_runtime.Value{}
 var Node = gopurs_runtime.Value{}
 var IterLeaf = gopurs_runtime.Value{}
@@ -23,19 +20,12 @@ var stepWith = gopurs_runtime.Value{}
 var size = gopurs_runtime.Value{}
 var singleton = gopurs_runtime.Value{}
 var unsafeBalancedNode = gopurs_runtime.Value{}
-
 var unsafeSplit = gopurs_runtime.Apply(mkFn3, gopurs_runtime.Value{})
-
 var unsafeSplitLast = gopurs_runtime.Apply(mkFn4, gopurs_runtime.Value{})
-
 var unsafeJoinNodes = gopurs_runtime.Apply(mkFn2, gopurs_runtime.Value{})
-
 var unsafeDifference = gopurs_runtime.Apply(mkFn3, gopurs_runtime.Value{})
-
 var unsafeIntersectionWith = gopurs_runtime.Apply(mkFn4, gopurs_runtime.Value{})
-
 var unsafeUnionWith = gopurs_runtime.Apply(mkFn4, gopurs_runtime.Value{})
-
 var unionWith = gopurs_runtime.Value{}
 var union = gopurs_runtime.Value{}
 var update = gopurs_runtime.Value{}
@@ -76,20 +66,14 @@ var functorWithIndexMap = gopurs_runtime.Value{}
 var foldableMap = gopurs_runtime.Value{}
 var foldableWithIndexMap = gopurs_runtime.Value{}
 var keys = gopurs_runtime.Apply(gopurs_runtime.Value{}, gopurs_runtime.Value{})
-
 var traversableMap = gopurs_runtime.Value{}
-
 var traversableWithIndexMap = gopurs_runtime.Value{}
 var values = gopurs_runtime.Apply(gopurs_runtime.Value{}, Cons)
 var foldSubmapBy = gopurs_runtime.Value{}
 var foldSubmap = gopurs_runtime.Value{}
-
 var findMin = gopurs_runtime.Value{}
-
 var lookupGT = gopurs_runtime.Value{}
-
 var findMax = gopurs_runtime.Value{}
-
 var lookupLT = gopurs_runtime.Value{}
 var filterWithKey = gopurs_runtime.Value{}
 var filterKeys = gopurs_runtime.Value{}

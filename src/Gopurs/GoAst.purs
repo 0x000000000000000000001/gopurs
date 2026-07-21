@@ -1,7 +1,6 @@
 module Gopurs.GoAst where
 
 import Prelude
-import Data.Maybe (Maybe)
 
 data GoExpr
   = GoVar String

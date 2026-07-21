@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var lookup = gopurs_runtime.Value{}
 var foldMap1 = gopurs_runtime.Apply(gopurs_runtime.Value{}, monoidList)
 var foldMap2 = gopurs_runtime.Apply(gopurs_runtime.Value{}, gopurs_runtime.Value{})

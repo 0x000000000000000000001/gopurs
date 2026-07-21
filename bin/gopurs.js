@@ -598,6 +598,12 @@ var findMapImpl = function(nothing, isJust2, f, xs) {
   }
   return nothing;
 };
+var findIndexImpl = function(just, nothing, f, xs) {
+  for (var i = 0, l = xs.length; i < l; i++) {
+    if (f(xs[i])) return just(i);
+  }
+  return nothing;
+};
 var reverse = function(l) {
   return l.slice().reverse();
 };
@@ -2265,48 +2271,307 @@ var error2 = function(s) {
   };
 };
 
+// output-es/Data.Set/index.js
+var foldableSet = {
+  foldMap: (dictMonoid) => {
+    const foldMap13 = foldableList.foldMap(dictMonoid);
+    return (f) => {
+      const $0 = foldMap13(f);
+      return (x) => $0((() => {
+        const go = (m$p, z$p) => {
+          if (m$p.tag === "Leaf") {
+            return z$p;
+          }
+          if (m$p.tag === "Node") {
+            return go(m$p._5, $List("Cons", m$p._3, go(m$p._6, z$p)));
+          }
+          fail();
+        };
+        return go(x, Nil);
+      })());
+    };
+  },
+  foldl: (f) => (x) => {
+    const go = (go$a0$copy) => (go$a1$copy) => {
+      let go$a0 = go$a0$copy, go$a1 = go$a1$copy, go$c = true, go$r;
+      while (go$c) {
+        const b = go$a0, v = go$a1;
+        if (v.tag === "Nil") {
+          go$c = false;
+          go$r = b;
+          continue;
+        }
+        if (v.tag === "Cons") {
+          go$a0 = f(b)(v._1);
+          go$a1 = v._2;
+          continue;
+        }
+        fail();
+      }
+      return go$r;
+    };
+    const $0 = go(x);
+    return (x$1) => $0((() => {
+      const go$1 = (m$p, z$p) => {
+        if (m$p.tag === "Leaf") {
+          return z$p;
+        }
+        if (m$p.tag === "Node") {
+          return go$1(m$p._5, $List("Cons", m$p._3, go$1(m$p._6, z$p)));
+        }
+        fail();
+      };
+      return go$1(x$1, Nil);
+    })());
+  },
+  foldr: (f) => (x) => {
+    const $0 = foldableList.foldr(f)(x);
+    return (x$1) => $0((() => {
+      const go = (m$p, z$p) => {
+        if (m$p.tag === "Leaf") {
+          return z$p;
+        }
+        if (m$p.tag === "Node") {
+          return go(m$p._5, $List("Cons", m$p._3, go(m$p._6, z$p)));
+        }
+        fail();
+      };
+      return go(x$1, Nil);
+    })());
+  }
+};
+var mapMaybe2 = (dictOrd) => (f) => foldableSet.foldr((a) => (acc) => {
+  const $0 = f(a);
+  if ($0.tag === "Nothing") {
+    return acc;
+  }
+  if ($0.tag === "Just") {
+    return insert(dictOrd)($0._1)()(acc);
+  }
+  fail();
+})(Leaf);
+var monoidSet = (dictOrd) => {
+  const semigroupSet1 = {
+    append: (() => {
+      const compare4 = dictOrd.compare;
+      return (m1) => (m2) => unsafeUnionWith(compare4, $$const, m1, m2);
+    })()
+  };
+  return { mempty: Leaf, Semigroup0: () => semigroupSet1 };
+};
+
+// output-es/Gopurs.GoAst/index.js
+var $GoExpr = (tag, _1, _2) => ({ tag, _1, _2 });
+
+// output-es/Gopurs.Printer/index.js
+var printGoExpr = (expr) => {
+  if (expr.tag === "GoVar") {
+    return expr._1;
+  }
+  if (expr.tag === "GoString") {
+    return '"' + expr._1 + '"';
+  }
+  if (expr.tag === "GoInt") {
+    return showIntImpl(expr._1);
+  }
+  if (expr.tag === "GoCall") {
+    return printGoExpr(expr._1) + "(" + joinWith(", ")(arrayMap(printGoExpr)(expr._2)) + ")";
+  }
+  if (expr.tag === "GoSelector") {
+    return printGoExpr(expr._1) + "." + expr._2;
+  }
+  if (expr.tag === "GoFunc") {
+    return "func(" + joinWith(", ")(arrayMap((a) => a + " gopurs_runtime.Value")(expr._1)) + ") gopurs_runtime.Value {\n" + printGoExpr(expr._2) + "\n}";
+  }
+  if (expr.tag === "GoBlock") {
+    return joinWith("\n")(arrayMap(printGoExpr)(expr._1));
+  }
+  if (expr.tag === "GoReturn") {
+    return "return " + printGoExpr(expr._1);
+  }
+  if (expr.tag === "GoAssign") {
+    return expr._1 + " := " + printGoExpr(expr._2);
+  }
+  if (expr.tag === "GoRaw") {
+    return expr._1;
+  }
+  fail();
+};
+var printGoDecl = (v) => "var " + v.identifier + " = " + printGoExpr(v.expression);
+var printGoFile = (v) => "package " + v.packageName + "\n\nimport (\n" + joinWith("\n")(arrayMap((i) => '	"' + i + '"')(v.imports)) + "\n)\n\n" + joinWith("\n")(arrayMap(printGoDecl)(v.decls)) + "\n";
+
 // output-es/Gopurs.CodeGen/index.js
 var translateExpr = (v) => {
   if (v.tag === "Var") {
-    if (v._1._2 === "log") {
-      return "gopurs_runtime.Func(func(x gopurs_runtime.Value) gopurs_runtime.Value { return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value { fmt.Println(x.StrVal); return gopurs_runtime.Value{} }) })";
+    if (v._1._2 === "bindE") {
+      return $GoExpr(
+        "GoCall",
+        $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Func"),
+        [
+          $GoExpr(
+            "GoFunc",
+            ["a"],
+            $GoExpr(
+              "GoReturn",
+              $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Func"),
+                [
+                  $GoExpr(
+                    "GoFunc",
+                    ["f"],
+                    $GoExpr(
+                      "GoReturn",
+                      $GoExpr(
+                        "GoCall",
+                        $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Func"),
+                        [
+                          $GoExpr(
+                            "GoFunc",
+                            ["_"],
+                            $GoExpr(
+                              "GoBlock",
+                              [
+                                $GoExpr("GoVar", "resA := gopurs_runtime.Apply(a, gopurs_runtime.Value{})"),
+                                $GoExpr("GoVar", "resB := gopurs_runtime.Apply(f, resA)"),
+                                $GoExpr(
+                                  "GoReturn",
+                                  $GoExpr(
+                                    "GoCall",
+                                    $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Apply"),
+                                    [$GoExpr("GoVar", "resB"), $GoExpr("GoVar", "gopurs_runtime.Value{}")]
+                                  )
+                                )
+                              ]
+                            )
+                          )
+                        ]
+                      )
+                    )
+                  )
+                ]
+              )
+            )
+          )
+        ]
+      );
     }
-    return replaceAll("$")("_")(v._1._2);
+    if (v._1._2 === "log") {
+      return $GoExpr(
+        "GoCall",
+        $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Func"),
+        [
+          $GoExpr(
+            "GoFunc",
+            ["x"],
+            $GoExpr(
+              "GoReturn",
+              $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Func"),
+                [
+                  $GoExpr(
+                    "GoFunc",
+                    ["_"],
+                    $GoExpr(
+                      "GoBlock",
+                      [
+                        $GoExpr(
+                          "GoCall",
+                          $GoExpr("GoVar", "fmt.Println"),
+                          [$GoExpr("GoSelector", $GoExpr("GoVar", "x"), "StrVal")]
+                        ),
+                        $GoExpr("GoReturn", $GoExpr("GoVar", "gopurs_runtime.Value{}"))
+                      ]
+                    )
+                  )
+                ]
+              )
+            )
+          )
+        ]
+      );
+    }
+    if (v._1._2 === "showStringImpl") {
+      return $GoExpr(
+        "GoCall",
+        $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Func"),
+        [
+          $GoExpr(
+            "GoFunc",
+            ["s"],
+            $GoExpr(
+              "GoReturn",
+              $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Str"),
+                [
+                  $GoExpr(
+                    "GoCall",
+                    $GoExpr("GoVar", "fmt.Sprintf"),
+                    [$GoExpr("GoString", "%q"), $GoExpr("GoSelector", $GoExpr("GoVar", "s"), "StrVal")]
+                  )
+                ]
+              )
+            )
+          )
+        ]
+      );
+    }
+    return $GoExpr("GoVar", replaceAll("$")("_")(v._1._2));
   }
   if (v.tag === "Local") {
     if (v._1.tag === "Just") {
-      return replaceAll("$")("_")(v._1._1);
+      return $GoExpr("GoVar", replaceAll("$")("_")(v._1._1));
     }
     if (v._1.tag === "Nothing") {
-      return "_";
+      return $GoExpr("GoVar", "_");
     }
-    return "gopurs_runtime.Value{}";
+    return $GoExpr("GoVar", "gopurs_runtime.Value{}");
   }
   if (v.tag === "Lit") {
     if (v._1.tag === "LitString") {
-      return 'gopurs_runtime.Str("' + v._1._1 + '")';
+      return $GoExpr(
+        "GoCall",
+        $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Str"),
+        [$GoExpr("GoString", v._1._1)]
+      );
     }
-    return "gopurs_runtime.Value{}";
+    return $GoExpr("GoVar", "gopurs_runtime.Value{}");
   }
   if (v.tag === "App") {
-    return "gopurs_runtime.Apply(" + translateExpr(v._1) + ", " + translateExpr((() => {
-      if (0 < v._2.length) {
-        return v._2[0];
-      }
-      fail();
-    })()) + ")";
+    return $GoExpr(
+      "GoCall",
+      $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Apply"),
+      [
+        translateExpr(v._1),
+        translateExpr((() => {
+          if (0 < v._2.length) {
+            return v._2[0];
+          }
+          fail();
+        })())
+      ]
+    );
   }
-  return "gopurs_runtime.Value{}";
+  return $GoExpr("GoVar", "gopurs_runtime.Value{}");
 };
 var translateBinding = (v) => {
   const safeName = replaceAll("$")("_")(v._1);
-  return $Maybe("Just", (safeName === "main" ? "var Main = " : "var " + safeName + " = ") + translateExpr(v._2));
+  return $Maybe("Just", { identifier: safeName === "main" ? "Main" : safeName, expression: translateExpr(v._2) });
 };
-var translateBindingGroup = (bg) => $Maybe("Just", joinWith("\n")(mapMaybe(translateBinding)(bg.bindings)));
-var translate = (imports) => (backendMod) => "package " + replaceAll(".")("_")(backendMod.name) + '\n\nimport (\n	"gopurs/output/gopurs_runtime"\n	"fmt"\n)\n\nvar _ = fmt.Println\nvar _ = gopurs_runtime.TypeInt\n\n' + joinWith("\n\n")(mapMaybe(translateBindingGroup)(fromFoldableImpl(
-  foldrArray,
-  backendMod.bindings
-)));
+var translateBindingGroup = (bg) => mapMaybe(translateBinding)(bg.bindings);
+var translate = (v) => (backendMod) => printGoFile({
+  packageName: replaceAll(".")("_")(backendMod.name),
+  imports: ["gopurs/output/gopurs_runtime", "fmt"],
+  decls: [
+    ...arrayMap((f) => ({ identifier: f, expression: $GoExpr("GoVar", "gopurs_runtime.Value{}") }))(fromFoldableImpl(
+      foldableSet.foldr,
+      backendMod.foreign
+    )),
+    ...arrayBind(fromFoldableImpl(foldrArray, backendMod.bindings))(translateBindingGroup)
+  ]
+});
 
 // output-es/Gopurs.Runtime/index.js
 var runtimeGoCode = 'package gopurs_runtime\n\nconst (\n	TypeInt = 1\n	TypeString = 2\n	TypeRecord = 3\n	TypeFunc = 4\n	TypeConstructor = 5\n)\n\ntype Value struct {\n	Type   uint8\n	IntVal int64\n	StrVal string\n	PtrVal any\n}\n\nfunc Str(v string) Value {\n	return Value{Type: TypeString, StrVal: v}\n}\n\nfunc Record(m map[string]Value) Value {\n	return Value{Type: TypeRecord, PtrVal: m}\n}\n\nfunc Cons(tag string, args []Value) Value {\n	return Value{Type: TypeConstructor, StrVal: tag, PtrVal: args}\n}\n\n// Function with 1 arg (curried)\nfunc Func(f func(Value) Value) Value {\n	return Value{Type: TypeFunc, PtrVal: f}\n}\n\n// Uncurried application helper\nfunc Apply(f Value, arg Value) Value {\n	if f.Type != TypeFunc {\n		panic("Attempted to apply a non-function")\n	}\n	fn := f.PtrVal.(func(Value) Value)\n	return fn(arg)\n}\n';
@@ -2823,6 +3088,25 @@ var toAff3 = (f) => (a) => (b) => (c) => {
 // output-es/Node.FS.Stats/foreign.js
 var isDirectoryImpl = (s) => s.isDirectory();
 
+// output-es/Node.Process/foreign.js
+import process from "process";
+var abortImpl = process.abort ? () => process.abort() : null;
+var argv = () => process.argv.slice();
+var channelRefImpl = process.channel && process.channel.ref ? () => process.channel.ref() : null;
+var channelUnrefImpl = process.channel && process.channel.unref ? () => process.channel.unref() : null;
+var debugPort = process.debugPort;
+var disconnectImpl = process.disconnect ? () => process.disconnect() : null;
+var pid = process.pid;
+var platformStr = process.platform;
+var ppid = process.ppid;
+var stdin = process.stdin;
+var stdout = process.stdout;
+var stderr = process.stderr;
+var stdinIsTTY = process.stdinIsTTY;
+var stdoutIsTTY = process.stdoutIsTTY;
+var stderrIsTTY = process.stderrIsTTY;
+var version = process.version;
+
 // output-es/Data.List/index.js
 var foldM = (dictMonad) => (v) => (v1) => (v2) => {
   if (v2.tag === "Nil") {
@@ -2970,95 +3254,6 @@ var power = (dictMonoid) => {
 
 // output-es/Data.Semigroup.First/index.js
 var semigroupFirst2 = { append: (x) => (v) => x };
-
-// output-es/Data.Set/index.js
-var foldableSet = {
-  foldMap: (dictMonoid) => {
-    const foldMap13 = foldableList.foldMap(dictMonoid);
-    return (f) => {
-      const $0 = foldMap13(f);
-      return (x) => $0((() => {
-        const go = (m$p, z$p) => {
-          if (m$p.tag === "Leaf") {
-            return z$p;
-          }
-          if (m$p.tag === "Node") {
-            return go(m$p._5, $List("Cons", m$p._3, go(m$p._6, z$p)));
-          }
-          fail();
-        };
-        return go(x, Nil);
-      })());
-    };
-  },
-  foldl: (f) => (x) => {
-    const go = (go$a0$copy) => (go$a1$copy) => {
-      let go$a0 = go$a0$copy, go$a1 = go$a1$copy, go$c = true, go$r;
-      while (go$c) {
-        const b = go$a0, v = go$a1;
-        if (v.tag === "Nil") {
-          go$c = false;
-          go$r = b;
-          continue;
-        }
-        if (v.tag === "Cons") {
-          go$a0 = f(b)(v._1);
-          go$a1 = v._2;
-          continue;
-        }
-        fail();
-      }
-      return go$r;
-    };
-    const $0 = go(x);
-    return (x$1) => $0((() => {
-      const go$1 = (m$p, z$p) => {
-        if (m$p.tag === "Leaf") {
-          return z$p;
-        }
-        if (m$p.tag === "Node") {
-          return go$1(m$p._5, $List("Cons", m$p._3, go$1(m$p._6, z$p)));
-        }
-        fail();
-      };
-      return go$1(x$1, Nil);
-    })());
-  },
-  foldr: (f) => (x) => {
-    const $0 = foldableList.foldr(f)(x);
-    return (x$1) => $0((() => {
-      const go = (m$p, z$p) => {
-        if (m$p.tag === "Leaf") {
-          return z$p;
-        }
-        if (m$p.tag === "Node") {
-          return go(m$p._5, $List("Cons", m$p._3, go(m$p._6, z$p)));
-        }
-        fail();
-      };
-      return go(x$1, Nil);
-    })());
-  }
-};
-var mapMaybe2 = (dictOrd) => (f) => foldableSet.foldr((a) => (acc) => {
-  const $0 = f(a);
-  if ($0.tag === "Nothing") {
-    return acc;
-  }
-  if ($0.tag === "Just") {
-    return insert(dictOrd)($0._1)()(acc);
-  }
-  fail();
-})(Leaf);
-var monoidSet = (dictOrd) => {
-  const semigroupSet1 = {
-    append: (() => {
-      const compare4 = dictOrd.compare;
-      return (m1) => (m2) => unsafeUnionWith(compare4, $$const, m1, m2);
-    })()
-  };
-  return { mempty: Leaf, Semigroup0: () => semigroupSet1 };
-};
 
 // output-es/PureScript.Backend.Optimizer.CoreFn/index.js
 var $Bind = (tag, _1) => ({ tag, _1 });
@@ -14054,7 +14249,23 @@ var main = /* @__PURE__ */ (() => {
         traceIdents: Leaf,
         onPrepareModule: (v) => (m) => _pure(m),
         onCodegenModule: (v) => (v1) => (backendMod) => (v2) => toAff3(writeTextFile)(UTF8)("output/" + backendMod.name + "/" + replaceAll(".")("_")(backendMod.name) + ".go")(translate(arrayMap((i) => split(".")(i._2))(v1.imports))(backendMod))
-      })(finalModules))(() => toAff3(writeTextFile)(UTF8)("output/main.go")('package main\n\nimport (\n	"gopurs/output/Test1110"\n	"gopurs/output/gopurs_runtime"\n)\n\nfunc main() {\n	gopurs_runtime.Apply(Test1110.Main, gopurs_runtime.Value{})\n}\n')))));
+      })(finalModules))(() => _bind(_liftEffect(argv))((argv2) => {
+        const v = findIndexImpl(Just, Nothing, (v1) => v1 === "--main", argv2);
+        const mainModuleName = (() => {
+          if (v.tag === "Just") {
+            const $02 = v._1 + 1 | 0;
+            if ($02 >= 0 && $02 < argv2.length) {
+              return argv2[$02];
+            }
+            return "Main";
+          }
+          if (v.tag === "Nothing") {
+            return "Main";
+          }
+          fail();
+        })();
+        return toAff3(writeTextFile)(UTF8)("output/main.go")('package main\n\nimport (\n	"gopurs/output/' + mainModuleName + '"\n	"gopurs/output/gopurs_runtime"\n)\n\nfunc main() {\n	gopurs_runtime.Apply(' + replaceAll(".")("_")(mainModuleName) + ".Main, gopurs_runtime.Value{})\n}\n");
+      })))));
     })))
   );
   return () => {

@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var ReaderT = gopurs_runtime.Value{}
 var withReaderT = gopurs_runtime.Value{}
 var runReaderT = gopurs_runtime.Value{}
@@ -15,9 +12,7 @@ var newtypeReaderT = gopurs_runtime.Value{}
 var monadTransReaderT = gopurs_runtime.Value{}
 var mapReaderT = gopurs_runtime.Value{}
 var functorReaderT = gopurs_runtime.Value{}
-
 var distributiveReaderT = gopurs_runtime.Value{}
-
 var applyReaderT = gopurs_runtime.Value{}
 var bindReaderT = gopurs_runtime.Value{}
 var semigroupReaderT = gopurs_runtime.Value{}

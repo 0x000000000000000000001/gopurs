@@ -5,9 +5,23 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
+var _bind = gopurs_runtime.Value{}
+var _catchError = gopurs_runtime.Value{}
+var _delay = gopurs_runtime.Value{}
+var _fork = gopurs_runtime.Value{}
+var _killAll = gopurs_runtime.Value{}
+var _liftEffect = gopurs_runtime.Value{}
+var _makeFiber = gopurs_runtime.Value{}
+var _makeSupervisedFiber = gopurs_runtime.Value{}
+var _map = gopurs_runtime.Value{}
+var _parAffAlt = gopurs_runtime.Value{}
+var _parAffApply = gopurs_runtime.Value{}
+var _parAffMap = gopurs_runtime.Value{}
+var _pure = gopurs_runtime.Value{}
+var _sequential = gopurs_runtime.Value{}
+var _throwError = gopurs_runtime.Value{}
+var generalBracket = gopurs_runtime.Value{}
+var makeAff = gopurs_runtime.Value{}
 var Canceler = gopurs_runtime.Value{}
 var suspendAff = gopurs_runtime.Apply(_fork, gopurs_runtime.Value{})
 var newtypeCanceler = gopurs_runtime.Value{}
@@ -24,12 +38,10 @@ var bracket = gopurs_runtime.Value{}
 var applyParAff = gopurs_runtime.Value{}
 var lift2 = gopurs_runtime.Value{}
 var semigroupParAff = gopurs_runtime.Value{}
-
 var monadAff = gopurs_runtime.Value{}
 var bindAff = gopurs_runtime.Value{}
 var applyAff = gopurs_runtime.Value{}
 var applicativeAff = gopurs_runtime.Value{}
-
 var lift21 = gopurs_runtime.Value{}
 var cancelWith = gopurs_runtime.Value{}
 var finally = gopurs_runtime.Value{}

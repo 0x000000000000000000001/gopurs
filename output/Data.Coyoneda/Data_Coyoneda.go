@@ -5,17 +5,12 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var CoyonedaF = gopurs_runtime.Value{}
 var Coyoneda = gopurs_runtime.Value{}
 var unCoyoneda = gopurs_runtime.Value{}
 var lowerCoyoneda = gopurs_runtime.Value{}
 var foldableCoyoneda = gopurs_runtime.Value{}
-
 var foldable1Coyoneda = gopurs_runtime.Value{}
-
 var eqCoyoneda = gopurs_runtime.Value{}
 var ordCoyoneda = gopurs_runtime.Value{}
 var eq1Coyoneda = gopurs_runtime.Value{}

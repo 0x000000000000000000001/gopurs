@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var parTraverse_ = gopurs_runtime.Value{}
 var parTraverse = gopurs_runtime.Value{}
 var parSequence_ = gopurs_runtime.Value{}

@@ -5,9 +5,8 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
+var adjustImpl = gopurs_runtime.Value{}
+var calcDiff = gopurs_runtime.Value{}
 var DateTime = gopurs_runtime.Value{}
 var toRecord = gopurs_runtime.Value{}
 var time = gopurs_runtime.Value{}

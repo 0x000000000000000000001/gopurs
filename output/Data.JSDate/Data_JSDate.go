@@ -5,9 +5,16 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
+var dateMethod = gopurs_runtime.Value{}
+var dateMethodEff = gopurs_runtime.Value{}
+var fromInstant = gopurs_runtime.Value{}
+var fromTime = gopurs_runtime.Value{}
+var isValid = gopurs_runtime.Value{}
+var jsdate = gopurs_runtime.Value{}
+var jsdateLocal = gopurs_runtime.Value{}
+var now = gopurs_runtime.Value{}
+var parse = gopurs_runtime.Value{}
+var toInstantImpl = gopurs_runtime.Value{}
 var toUTCString = gopurs_runtime.Value{}
 var toTimeString = gopurs_runtime.Value{}
 var toString = gopurs_runtime.Value{}

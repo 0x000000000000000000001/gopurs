@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var fromJust = gopurs_runtime.Value{}
 var genYear = gopurs_runtime.Value{}
 var genWeekday = gopurs_runtime.Value{}

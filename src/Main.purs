@@ -77,15 +77,13 @@ main = launchAff_ do
     }
     finalModules
 
-  let mainEntryPoint = """package main
+  argv <- liftEffect Process.argv
+  let mainModuleName = case Array.findIndex (_ == "--main") argv of
+        Just i -> case Array.index argv (i + 1) of
+          Just m -> m
+          Nothing -> "Main"
+        Nothing -> "Main"
 
-import (
-	"gopurs/output/Test1110"
-	"gopurs/output/gopurs_runtime"
-)
-
-func main() {
-	gopurs_runtime.Apply(Test1110.Main, gopurs_runtime.Value{})
-}
-"""
+  let pkgName = String.replaceAll (Pattern ".") (Replacement "_") mainModuleName
+  let mainEntryPoint = "package main\n\nimport (\n\t\"gopurs/output/" <> mainModuleName <> "\"\n\t\"gopurs/output/gopurs_runtime\"\n)\n\nfunc main() {\n\tgopurs_runtime.Apply(" <> pkgName <> ".Main, gopurs_runtime.Value{})\n}\n"
   FS.writeTextFile UTF8 "output/main.go" mainEntryPoint

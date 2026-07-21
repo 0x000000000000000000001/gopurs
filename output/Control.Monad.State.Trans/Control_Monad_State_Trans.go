@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var StateT = gopurs_runtime.Value{}
 var withStateT = gopurs_runtime.Value{}
 var runStateT = gopurs_runtime.Value{}
@@ -18,12 +15,10 @@ var lazyStateT = gopurs_runtime.Value{}
 var functorStateT = gopurs_runtime.Value{}
 var execStateT = gopurs_runtime.Value{}
 var evalStateT = gopurs_runtime.Value{}
-
 var monadStateT = gopurs_runtime.Value{}
 var bindStateT = gopurs_runtime.Value{}
 var applyStateT = gopurs_runtime.Value{}
 var applicativeStateT = gopurs_runtime.Value{}
-
 var semigroupStateT = gopurs_runtime.Value{}
 var monadAskStateT = gopurs_runtime.Value{}
 var monadReaderStateT = gopurs_runtime.Value{}

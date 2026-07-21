@@ -5,9 +5,8 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
+var fromDateTimeImpl = gopurs_runtime.Value{}
+var toDateTimeImpl = gopurs_runtime.Value{}
 var negateDuration = gopurs_runtime.Apply(negateDuration, durationMilliseconds)
 var unInstant = gopurs_runtime.Value{}
 var toDateTime = gopurs_runtime.Apply(toDateTimeImpl, gopurs_runtime.Apply(_unsafePartial, gopurs_runtime.Value{}))

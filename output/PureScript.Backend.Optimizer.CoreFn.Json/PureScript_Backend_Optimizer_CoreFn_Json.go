@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var unsafeIndex = gopurs_runtime.Apply(runFn2, unsafeIndexImpl)
 var traverse = gopurs_runtime.Apply(gopurs_runtime.Value{}, applicativeEither)
 var guard = gopurs_runtime.Apply(guard, alternativeMaybe)
@@ -36,14 +33,11 @@ var decodeSourceSpan = gopurs_runtime.Value{}
 var decodeComment = gopurs_runtime.Value{}
 var decodeStringLiteral = gopurs_runtime.Value{}
 var decodeLiteral = gopurs_runtime.Value{}
-
 var decodeBinder = gopurs_runtime.Value{}
-
 var decodeGuard = gopurs_runtime.Value{}
 var decodeExpr = gopurs_runtime.Value{}
 var decodeCaseAlternative = gopurs_runtime.Value{}
 var decodeBinding = gopurs_runtime.Value{}
 var decodeBind = gopurs_runtime.Value{}
-
 var decodeModule' = gopurs_runtime.Value{}
 var decodeModule = gopurs_runtime.Apply(decodeModule', decodeAnn)

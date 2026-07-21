@@ -5,9 +5,16 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
+var _caseJson = gopurs_runtime.Value{}
+var _compare = gopurs_runtime.Value{}
+var fromArray = gopurs_runtime.Value{}
+var fromBoolean = gopurs_runtime.Value{}
+var fromNumber = gopurs_runtime.Value{}
+var fromObject = gopurs_runtime.Value{}
+var fromString = gopurs_runtime.Value{}
+var jsonNull = gopurs_runtime.Value{}
+var stringify = gopurs_runtime.Value{}
+var stringifyWithIndent = gopurs_runtime.Value{}
 var jsonZero = gopurs_runtime.Apply(fromNumber, gopurs_runtime.Value{})
 var jsonTrue = gopurs_runtime.Apply(fromBoolean, gopurs_runtime.Value{})
 var jsonSingletonObject = gopurs_runtime.Value{}
@@ -16,10 +23,8 @@ var jsonFalse = gopurs_runtime.Apply(fromBoolean, gopurs_runtime.Value{})
 var jsonEmptyString = gopurs_runtime.Apply(fromString, gopurs_runtime.Str(""))
 var jsonEmptyObject = gopurs_runtime.Apply(fromObject, empty)
 var jsonEmptyArray = gopurs_runtime.Apply(fromArray, gopurs_runtime.Value{})
-
 var ordJson = gopurs_runtime.Value{}
 var eqJson = gopurs_runtime.Value{}
-
 var caseJsonString = gopurs_runtime.Value{}
 var isString = gopurs_runtime.Apply(caseJsonString, gopurs_runtime.Value{})
 var toString = gopurs_runtime.Apply(caseJsonString, gopurs_runtime.Value{})

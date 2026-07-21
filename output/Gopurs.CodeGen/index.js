@@ -2,55 +2,83 @@
 import * as Data_Array from "../Data.Array/index.js";
 import * as Data_Array_NonEmpty from "../Data.Array.NonEmpty/index.js";
 import * as Data_Foldable from "../Data.Foldable/index.js";
+import * as Data_Functor from "../Data.Functor/index.js";
 import * as Data_Maybe from "../Data.Maybe/index.js";
 import * as Data_Newtype from "../Data.Newtype/index.js";
+import * as Data_Semigroup from "../Data.Semigroup/index.js";
+import * as Data_Set from "../Data.Set/index.js";
 import * as Data_String_Common from "../Data.String.Common/index.js";
+import * as Gopurs_GoAst from "../Gopurs.GoAst/index.js";
+import * as Gopurs_Printer from "../Gopurs.Printer/index.js";
 import * as PureScript_Backend_Optimizer_CoreFn from "../PureScript.Backend.Optimizer.CoreFn/index.js";
 import * as PureScript_Backend_Optimizer_Syntax from "../PureScript.Backend.Optimizer.Syntax/index.js";
 var unwrap = /* #__PURE__ */ Data_Newtype.unwrap();
-var fromFoldable = /* #__PURE__ */ Data_Array.fromFoldable(Data_Foldable.foldableArray);
+var map = /* #__PURE__ */ Data_Functor.map(Data_Functor.functorArray);
+var fromFoldable = /* #__PURE__ */ Data_Array.fromFoldable(Data_Set.foldableSet);
+var fromFoldable1 = /* #__PURE__ */ Data_Array.fromFoldable(Data_Foldable.foldableArray);
+var append = /* #__PURE__ */ Data_Semigroup.append(Data_Semigroup.semigroupArray);
 var translateExpr = function (v) {
+    if (v instanceof PureScript_Backend_Optimizer_Syntax.Var && v.value0.value1 === "bindE") {
+        return new Gopurs_GoAst.GoCall(new Gopurs_GoAst.GoSelector(new Gopurs_GoAst.GoVar("gopurs_runtime"), "Func"), [ new Gopurs_GoAst.GoFunc([ "a" ], new Gopurs_GoAst.GoReturn(new Gopurs_GoAst.GoCall(new Gopurs_GoAst.GoSelector(new Gopurs_GoAst.GoVar("gopurs_runtime"), "Func"), [ new Gopurs_GoAst.GoFunc([ "f" ], new Gopurs_GoAst.GoReturn(new Gopurs_GoAst.GoCall(new Gopurs_GoAst.GoSelector(new Gopurs_GoAst.GoVar("gopurs_runtime"), "Func"), [ new Gopurs_GoAst.GoFunc([ "_" ], new Gopurs_GoAst.GoBlock([ new Gopurs_GoAst.GoVar("resA := gopurs_runtime.Apply(a, gopurs_runtime.Value{})"), new Gopurs_GoAst.GoVar("resB := gopurs_runtime.Apply(f, resA)"), new Gopurs_GoAst.GoReturn(new Gopurs_GoAst.GoCall(new Gopurs_GoAst.GoSelector(new Gopurs_GoAst.GoVar("gopurs_runtime"), "Apply"), [ new Gopurs_GoAst.GoVar("resB"), new Gopurs_GoAst.GoVar("gopurs_runtime.Value{}") ])) ])) ]))) ]))) ]);
+    };
     if (v instanceof PureScript_Backend_Optimizer_Syntax.Var && v.value0.value1 === "log") {
-        return "gopurs_runtime.Func(func(x gopurs_runtime.Value) gopurs_runtime.Value { return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value { fmt.Println(x.StrVal); return gopurs_runtime.Value{} }) })";
+        return new Gopurs_GoAst.GoCall(new Gopurs_GoAst.GoSelector(new Gopurs_GoAst.GoVar("gopurs_runtime"), "Func"), [ new Gopurs_GoAst.GoFunc([ "x" ], new Gopurs_GoAst.GoReturn(new Gopurs_GoAst.GoCall(new Gopurs_GoAst.GoSelector(new Gopurs_GoAst.GoVar("gopurs_runtime"), "Func"), [ new Gopurs_GoAst.GoFunc([ "_" ], new Gopurs_GoAst.GoBlock([ new Gopurs_GoAst.GoCall(new Gopurs_GoAst.GoVar("fmt.Println"), [ new Gopurs_GoAst.GoSelector(new Gopurs_GoAst.GoVar("x"), "StrVal") ]), new Gopurs_GoAst.GoReturn(new Gopurs_GoAst.GoVar("gopurs_runtime.Value{}")) ])) ]))) ]);
+    };
+    if (v instanceof PureScript_Backend_Optimizer_Syntax.Var && v.value0.value1 === "showStringImpl") {
+        return new Gopurs_GoAst.GoCall(new Gopurs_GoAst.GoSelector(new Gopurs_GoAst.GoVar("gopurs_runtime"), "Func"), [ new Gopurs_GoAst.GoFunc([ "s" ], new Gopurs_GoAst.GoReturn(new Gopurs_GoAst.GoCall(new Gopurs_GoAst.GoSelector(new Gopurs_GoAst.GoVar("gopurs_runtime"), "Str"), [ new Gopurs_GoAst.GoCall(new Gopurs_GoAst.GoVar("fmt.Sprintf"), [ new Gopurs_GoAst.GoString("%q"), new Gopurs_GoAst.GoSelector(new Gopurs_GoAst.GoVar("s"), "StrVal") ]) ]))) ]);
     };
     if (v instanceof PureScript_Backend_Optimizer_Syntax.Var) {
-        return Data_String_Common.replaceAll("$")("_")(v.value0.value1);
+        return new Gopurs_GoAst.GoVar(Data_String_Common.replaceAll("$")("_")(v.value0.value1));
     };
     if (v instanceof PureScript_Backend_Optimizer_Syntax.Local && v.value0 instanceof Data_Maybe.Just) {
-        return Data_String_Common.replaceAll("$")("_")(v.value0.value0);
+        return new Gopurs_GoAst.GoVar(Data_String_Common.replaceAll("$")("_")(v.value0.value0));
     };
     if (v instanceof PureScript_Backend_Optimizer_Syntax.Local && v.value0 instanceof Data_Maybe.Nothing) {
-        return "_";
+        return new Gopurs_GoAst.GoVar("_");
     };
     if (v instanceof PureScript_Backend_Optimizer_Syntax.Lit && v.value0 instanceof PureScript_Backend_Optimizer_CoreFn.LitString) {
-        return "gopurs_runtime.Str(\"" + (v.value0.value0 + "\")");
+        return new Gopurs_GoAst.GoCall(new Gopurs_GoAst.GoSelector(new Gopurs_GoAst.GoVar("gopurs_runtime"), "Str"), [ new Gopurs_GoAst.GoString(v.value0.value0) ]);
     };
     if (v instanceof PureScript_Backend_Optimizer_Syntax.App) {
-        return "gopurs_runtime.Apply(" + (translateExpr(v.value0) + (", " + (translateExpr(Data_Array_NonEmpty.head(v.value1)) + ")")));
+        return new Gopurs_GoAst.GoCall(new Gopurs_GoAst.GoSelector(new Gopurs_GoAst.GoVar("gopurs_runtime"), "Apply"), [ translateExpr(v.value0), translateExpr(Data_Array_NonEmpty.head(v.value1)) ]);
     };
-    return "gopurs_runtime.Value{}";
+    return new Gopurs_GoAst.GoVar("gopurs_runtime.Value{}");
 };
 var translateBinding = function (v) {
     var safeName = Data_String_Common.replaceAll("$")("_")(v.value0);
     var goName = (function () {
-        var $24 = safeName === "main";
-        if ($24) {
+        var $33 = safeName === "main";
+        if ($33) {
             return "Main";
         };
         return safeName;
     })();
-    return new Data_Maybe.Just("var " + (goName + (" = " + translateExpr(v.value1))));
+    return new Data_Maybe.Just({
+        identifier: goName,
+        expression: translateExpr(v.value1)
+    });
 };
 var translateBindingGroup = function (bg) {
-    var binds = Data_Array.mapMaybe(translateBinding)(bg.bindings);
-    return new Data_Maybe.Just(Data_String_Common.joinWith("\x0a")(binds));
+    return Data_Array.mapMaybe(translateBinding)(bg.bindings);
 };
-var translate = function (imports) {
+var translate = function (v) {
     return function (backendMod) {
-        var modName = Data_String_Common.replaceAll(".")("_")(unwrap(backendMod.name));
-        var header = "package " + (modName + "\x0a\x0aimport (\x0a\x09\"gopurs/output/gopurs_runtime\"\x0a\x09\"fmt\"\x0a)\x0a\x0avar _ = fmt.Println\x0avar _ = gopurs_runtime.TypeInt\x0a\x0a");
-        var bindings = Data_Array.mapMaybe(translateBindingGroup)(fromFoldable(backendMod.bindings));
-        return header + Data_String_Common.joinWith("\x0a\x0a")(bindings);
+        var modNameStr = unwrap(backendMod.name);
+        var goImports = [ "gopurs/output/gopurs_runtime", "fmt" ];
+        var foreignDecls = map(function (f) {
+            return {
+                identifier: unwrap(f),
+                expression: new Gopurs_GoAst.GoVar("gopurs_runtime.Value{}")
+            };
+        })(fromFoldable(backendMod.foreign));
+        var decls = Data_Array.concatMap(translateBindingGroup)(fromFoldable1(backendMod.bindings));
+        var allDecls = append(foreignDecls)(decls);
+        var goFile = {
+            packageName: Data_String_Common.replaceAll(".")("_")(modNameStr),
+            imports: goImports,
+            decls: allDecls
+        };
+        return Gopurs_Printer.printGoFile(goFile);
     };
 };
 export {

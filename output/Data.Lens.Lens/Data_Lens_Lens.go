@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var withLens = gopurs_runtime.Value{}
 var withIndexedLens = gopurs_runtime.Value{}
 var lensStore = gopurs_runtime.Value{}

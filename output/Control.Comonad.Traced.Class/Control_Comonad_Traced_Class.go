@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var track = gopurs_runtime.Value{}
 var tracks = gopurs_runtime.Value{}
 var lowerTrack2 = gopurs_runtime.Value{}

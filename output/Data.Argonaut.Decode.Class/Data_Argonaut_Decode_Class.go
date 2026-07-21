@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var gDecodeJsonNil = gopurs_runtime.Value{}
 var gDecodeJson = gopurs_runtime.Value{}
 var decodeVoid = gopurs_runtime.Value{}

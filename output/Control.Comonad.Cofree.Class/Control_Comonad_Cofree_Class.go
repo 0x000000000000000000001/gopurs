@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var unwrapCofree = gopurs_runtime.Value{}
 var comonadCofreeTracedT = gopurs_runtime.Value{}
 var comonadCofreeStoreT = gopurs_runtime.Value{}

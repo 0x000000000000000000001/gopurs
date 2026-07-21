@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var union = gopurs_runtime.Apply(union, ordInt)
 var ordQualified = gopurs_runtime.Apply(ordQualified, ordString)
 var union1 = gopurs_runtime.Apply(union, ordQualified)

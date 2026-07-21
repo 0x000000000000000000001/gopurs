@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var max = gopurs_runtime.Value{}
 var max1 = gopurs_runtime.Value{}
 var min = gopurs_runtime.Value{}

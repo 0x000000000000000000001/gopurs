@@ -5,9 +5,21 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
+var allocUnsafeImpl = gopurs_runtime.Value{}
+var allocUnsafeSlowImpl = gopurs_runtime.Value{}
+var copyImpl = gopurs_runtime.Value{}
+var fillImpl = gopurs_runtime.Value{}
+var freezeImpl = gopurs_runtime.Value{}
+var poolSize = gopurs_runtime.Value{}
+var setAtOffsetImpl = gopurs_runtime.Value{}
+var setPoolSizeImpl = gopurs_runtime.Value{}
+var swap16Impl = gopurs_runtime.Value{}
+var swap32Impl = gopurs_runtime.Value{}
+var swap64Impl = gopurs_runtime.Value{}
+var thawImpl = gopurs_runtime.Value{}
+var transcodeImpl = gopurs_runtime.Value{}
+var writeInternal = gopurs_runtime.Value{}
+var writeStringInternal = gopurs_runtime.Value{}
 var writeString = gopurs_runtime.Value{}
 var write = gopurs_runtime.Value{}
 var unsafeThaw = gopurs_runtime.Value{}

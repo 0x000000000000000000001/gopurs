@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var union = gopurs_runtime.Apply(union, ordInt)
 var eq = gopurs_runtime.Value{}
 var eq1 = gopurs_runtime.Value{}
@@ -61,5 +58,4 @@ var tcoRoleIsLoop = gopurs_runtime.Value{}
 var tcoRoleJoins = gopurs_runtime.Value{}
 var inTcoScope = gopurs_runtime.Value{}
 var hasTcoRole = gopurs_runtime.Value{}
-
 var analyze = gopurs_runtime.Value{}

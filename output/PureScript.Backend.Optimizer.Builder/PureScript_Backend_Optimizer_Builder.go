@@ -5,8 +5,5 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var insert = gopurs_runtime.Apply(insert, gopurs_runtime.Apply(ordQualified, ordString))
 var buildModules = gopurs_runtime.Value{}

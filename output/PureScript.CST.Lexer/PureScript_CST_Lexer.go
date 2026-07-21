@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var _ = fmt.Println
-var _ = gopurs_runtime.TypeInt
-
 var foldMap = gopurs_runtime.Apply(gopurs_runtime.Value{}, monoidArray)
 var fold1 = gopurs_runtime.Apply(gopurs_runtime.Value{}, gopurs_runtime.Value{})
 var consTokens = gopurs_runtime.Apply(consTokens, foldableArray)
