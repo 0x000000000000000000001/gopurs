@@ -1,0 +1,118 @@
+package Data_Map_Internal
+
+import (
+	"gopurs/output/gopurs_runtime"
+	"fmt"
+)
+
+var _ = fmt.Println
+var _ = gopurs_runtime.TypeInt
+
+var Leaf = gopurs_runtime.Value{}
+var Node = gopurs_runtime.Value{}
+var IterLeaf = gopurs_runtime.Value{}
+var IterEmit = gopurs_runtime.Value{}
+var IterNode = gopurs_runtime.Value{}
+var IterDone = gopurs_runtime.Value{}
+var IterNext = gopurs_runtime.Value{}
+var Split = gopurs_runtime.Value{}
+var SplitLast = gopurs_runtime.Value{}
+var unsafeNode = gopurs_runtime.Apply(mkFn4, gopurs_runtime.Value{})
+var toMapIter = gopurs_runtime.Value{}
+var stepWith = gopurs_runtime.Value{}
+var size = gopurs_runtime.Value{}
+var singleton = gopurs_runtime.Value{}
+var unsafeBalancedNode = gopurs_runtime.Value{}
+
+var unsafeSplit = gopurs_runtime.Apply(mkFn3, gopurs_runtime.Value{})
+
+var unsafeSplitLast = gopurs_runtime.Apply(mkFn4, gopurs_runtime.Value{})
+
+var unsafeJoinNodes = gopurs_runtime.Apply(mkFn2, gopurs_runtime.Value{})
+
+var unsafeDifference = gopurs_runtime.Apply(mkFn3, gopurs_runtime.Value{})
+
+var unsafeIntersectionWith = gopurs_runtime.Apply(mkFn4, gopurs_runtime.Value{})
+
+var unsafeUnionWith = gopurs_runtime.Apply(mkFn4, gopurs_runtime.Value{})
+
+var unionWith = gopurs_runtime.Value{}
+var union = gopurs_runtime.Value{}
+var update = gopurs_runtime.Value{}
+var showTree = gopurs_runtime.Value{}
+var semigroupMap = gopurs_runtime.Value{}
+var pop = gopurs_runtime.Value{}
+var member = gopurs_runtime.Value{}
+var mapMaybeWithKey = gopurs_runtime.Value{}
+var mapMaybe = gopurs_runtime.Value{}
+var lookupLE = gopurs_runtime.Value{}
+var lookupGE = gopurs_runtime.Value{}
+var lookup = gopurs_runtime.Value{}
+var iterMapU = gopurs_runtime.Value{}
+var stepUnorderedCps = gopurs_runtime.Apply(stepWith, iterMapU)
+var stepUnfoldrUnordered = gopurs_runtime.Apply(stepWith, iterMapU)
+var toUnfoldableUnordered = gopurs_runtime.Value{}
+var stepUnordered = gopurs_runtime.Apply(stepWith, iterMapU)
+var iterMapR = gopurs_runtime.Value{}
+var stepDescCps = gopurs_runtime.Apply(stepWith, iterMapR)
+var stepDesc = gopurs_runtime.Apply(stepWith, iterMapR)
+var iterMapL = gopurs_runtime.Value{}
+var stepAscCps = gopurs_runtime.Apply(stepWith, iterMapL)
+var stepAsc = gopurs_runtime.Apply(stepWith, iterMapL)
+var eqMapIter = gopurs_runtime.Value{}
+var ordMapIter = gopurs_runtime.Value{}
+var stepUnfoldr = gopurs_runtime.Apply(stepWith, iterMapL)
+var toUnfoldable = gopurs_runtime.Value{}
+var toUnfoldable1 = gopurs_runtime.Value{}
+var showMap = gopurs_runtime.Value{}
+var isSubmap = gopurs_runtime.Value{}
+var isEmpty = gopurs_runtime.Value{}
+var intersectionWith = gopurs_runtime.Value{}
+var intersection = gopurs_runtime.Value{}
+var insertWith = gopurs_runtime.Value{}
+var insert = gopurs_runtime.Value{}
+var functorMap = gopurs_runtime.Value{}
+var functorWithIndexMap = gopurs_runtime.Value{}
+var foldableMap = gopurs_runtime.Value{}
+var foldableWithIndexMap = gopurs_runtime.Value{}
+var keys = gopurs_runtime.Apply(gopurs_runtime.Value{}, gopurs_runtime.Value{})
+
+var traversableMap = gopurs_runtime.Value{}
+
+var traversableWithIndexMap = gopurs_runtime.Value{}
+var values = gopurs_runtime.Apply(gopurs_runtime.Value{}, Cons)
+var foldSubmapBy = gopurs_runtime.Value{}
+var foldSubmap = gopurs_runtime.Value{}
+
+var findMin = gopurs_runtime.Value{}
+
+var lookupGT = gopurs_runtime.Value{}
+
+var findMax = gopurs_runtime.Value{}
+
+var lookupLT = gopurs_runtime.Value{}
+var filterWithKey = gopurs_runtime.Value{}
+var filterKeys = gopurs_runtime.Value{}
+var filter = gopurs_runtime.Value{}
+var eqMap = gopurs_runtime.Value{}
+var ordMap = gopurs_runtime.Value{}
+var eq1Map = gopurs_runtime.Value{}
+var ord1Map = gopurs_runtime.Value{}
+var empty = gopurs_runtime.Value{}
+var fromFoldable = gopurs_runtime.Value{}
+var fromFoldableWith = gopurs_runtime.Value{}
+var fromFoldableWithIndex = gopurs_runtime.Value{}
+var monoidSemigroupMap = gopurs_runtime.Value{}
+var submap = gopurs_runtime.Value{}
+var unions = gopurs_runtime.Value{}
+var difference = gopurs_runtime.Value{}
+var delete = gopurs_runtime.Value{}
+var checkValid = gopurs_runtime.Value{}
+var catMaybes = gopurs_runtime.Value{}
+var applyMap = gopurs_runtime.Value{}
+var bindMap = gopurs_runtime.Value{}
+var anyWithKey = gopurs_runtime.Value{}
+var any = gopurs_runtime.Value{}
+var alter = gopurs_runtime.Value{}
+var altMap = gopurs_runtime.Value{}
+var plusMap = gopurs_runtime.Value{}

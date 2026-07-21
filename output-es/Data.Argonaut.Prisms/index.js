@@ -1,0 +1,10 @@
+import * as Data$dArgonaut$dCore from "../Data.Argonaut.Core/index.js";
+import * as Data$dLens$dPrism from "../Data.Lens.Prism/index.js";
+import * as Data$dMaybe from "../Data.Maybe/index.js";
+const _String = dictChoice => Data$dLens$dPrism.prism$p(Data$dArgonaut$dCore.fromString)(Data$dArgonaut$dCore.caseJsonString(Data$dMaybe.Nothing)(Data$dMaybe.Just))(dictChoice);
+const _Object = dictChoice => Data$dLens$dPrism.prism$p(Data$dArgonaut$dCore.fromObject)(Data$dArgonaut$dCore.caseJsonObject(Data$dMaybe.Nothing)(Data$dMaybe.Just))(dictChoice);
+const _Number = dictChoice => Data$dLens$dPrism.prism$p(Data$dArgonaut$dCore.fromNumber)(Data$dArgonaut$dCore.caseJsonNumber(Data$dMaybe.Nothing)(Data$dMaybe.Just))(dictChoice);
+const _Null = dictChoice => Data$dLens$dPrism.prism$p(v => Data$dArgonaut$dCore.jsonNull)(Data$dArgonaut$dCore.caseJsonNull(Data$dMaybe.Nothing)(Data$dMaybe.Just))(dictChoice);
+const _Boolean = dictChoice => Data$dLens$dPrism.prism$p(Data$dArgonaut$dCore.fromBoolean)(Data$dArgonaut$dCore.caseJsonBoolean(Data$dMaybe.Nothing)(Data$dMaybe.Just))(dictChoice);
+const _Array = dictChoice => Data$dLens$dPrism.prism$p(Data$dArgonaut$dCore.fromArray)(Data$dArgonaut$dCore.caseJsonArray(Data$dMaybe.Nothing)(Data$dMaybe.Just))(dictChoice);
+export {_Array, _Boolean, _Null, _Number, _Object, _String};

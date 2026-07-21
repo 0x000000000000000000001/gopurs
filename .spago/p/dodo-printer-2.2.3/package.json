@@ -1,0 +1,14 @@
+{
+  "name": "purescript-dodo-printer",
+  "type": "module",
+  "scripts": {
+    "build": "spago build",
+    "test": "spago test",
+    "format": "purs-tidy format-in-place src test"
+  },
+  "devDependencies": {
+    "purescript": "^0.15.15",
+    "purs-tidy": "^0.10.1",
+    "spago": "^0.93.42"
+  }
+}

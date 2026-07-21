@@ -1,0 +1,54 @@
+package:
+  name: gopurs
+  dependencies:
+    - aff
+    - argonaut-codecs
+    - argonaut-core
+    - arrays
+    - bifunctors
+    - console
+    - effect
+    - either
+    - exceptions
+    - node-buffer
+    - node-fs
+    - node-process
+    - parallel
+    - prelude
+    - strings
+    - backend-optimizer
+  test:
+    main: Test.Main
+    dependencies: []
+workspace:
+  packageSet:
+    registry: 77.10.1
+  extraPackages:
+    backend-optimizer:
+      git: "https://github.com/0x000000000000000000001/gopurs-backend-optimizer.git"
+      ref: "main"
+      dependencies:
+        - argonaut
+        - arrays
+        - control
+        - debug
+        - dodo-printer
+        - either
+        - enums
+        - foldable-traversable
+        - foreign-object
+        - integers
+        - language-cst-parser
+        - lazy
+        - lists
+        - maybe
+        - newtype
+        - ordered-collections
+        - partial
+        - prelude
+        - safe-coerce
+        - st
+        - strings
+        - transformers
+        - tuples
+        - unsafe-coerce

@@ -1,0 +1,115 @@
+package PureScript_Backend_Optimizer_CoreFn
+
+import (
+	"gopurs/output/gopurs_runtime"
+	"fmt"
+)
+
+var _ = fmt.Println
+var _ = gopurs_runtime.TypeInt
+
+var zero = gopurs_runtime.Apply(gopurs_runtime.Value{}, gopurs_runtime.Value{})
+var ProperName = gopurs_runtime.Value{}
+var Prop = gopurs_runtime.Value{}
+var ModuleName = gopurs_runtime.Value{}
+var Qualified = gopurs_runtime.Value{}
+var LitInt = gopurs_runtime.Value{}
+var LitNumber = gopurs_runtime.Value{}
+var LitString = gopurs_runtime.Value{}
+var LitChar = gopurs_runtime.Value{}
+var LitBoolean = gopurs_runtime.Value{}
+var LitArray = gopurs_runtime.Value{}
+var LitRecord = gopurs_runtime.Value{}
+var Import = gopurs_runtime.Value{}
+var Ident = gopurs_runtime.Value{}
+var ReExport = gopurs_runtime.Value{}
+var ProductType = gopurs_runtime.Value{}
+var SumType = gopurs_runtime.Value{}
+var IsConstructor = gopurs_runtime.Value{}
+var IsNewtype = gopurs_runtime.Value{}
+var IsTypeClassConstructor = gopurs_runtime.Value{}
+var IsForeign = gopurs_runtime.Value{}
+var IsWhere = gopurs_runtime.Value{}
+var IsSyntheticApp = gopurs_runtime.Value{}
+var LineComment = gopurs_runtime.Value{}
+var BlockComment = gopurs_runtime.Value{}
+var BinderNull = gopurs_runtime.Value{}
+var BinderVar = gopurs_runtime.Value{}
+var BinderNamed = gopurs_runtime.Value{}
+var BinderLit = gopurs_runtime.Value{}
+var BinderConstructor = gopurs_runtime.Value{}
+var NonRec = gopurs_runtime.Value{}
+var Rec = gopurs_runtime.Value{}
+var Binding = gopurs_runtime.Value{}
+var ExprVar = gopurs_runtime.Value{}
+var ExprLit = gopurs_runtime.Value{}
+var ExprConstructor = gopurs_runtime.Value{}
+var ExprAccessor = gopurs_runtime.Value{}
+var ExprUpdate = gopurs_runtime.Value{}
+var ExprAbs = gopurs_runtime.Value{}
+var ExprApp = gopurs_runtime.Value{}
+var ExprCase = gopurs_runtime.Value{}
+var ExprLet = gopurs_runtime.Value{}
+var CaseAlternative = gopurs_runtime.Value{}
+var Unconditional = gopurs_runtime.Value{}
+var Guarded = gopurs_runtime.Value{}
+var Guard = gopurs_runtime.Value{}
+var Module = gopurs_runtime.Value{}
+var Ann = gopurs_runtime.Value{}
+var newtypeModuleName_ = gopurs_runtime.Value{}
+var newtypeIdent_ = gopurs_runtime.Value{}
+var functorQualified = gopurs_runtime.Value{}
+var eqProp = gopurs_runtime.Value{}
+var eqLiteral = gopurs_runtime.Value{}
+var unQualified = gopurs_runtime.Value{}
+var qualifiedModuleName = gopurs_runtime.Value{}
+var propValue = gopurs_runtime.Value{}
+var propKey = gopurs_runtime.Value{}
+var ordProperName = ordString
+var ordModuleName = ordString
+var compare = gopurs_runtime.Value{}
+var ordIdent = ordString
+var compare3 = gopurs_runtime.Value{}
+var moduleName = gopurs_runtime.Value{}
+var litChildren = gopurs_runtime.Value{}
+var isPrimModule = gopurs_runtime.Value{}
+var importName = gopurs_runtime.Value{}
+var functorProp = gopurs_runtime.Value{}
+var functorLiteral = gopurs_runtime.Value{}
+var functorImport = gopurs_runtime.Value{}
+
+var functorBinder = gopurs_runtime.Value{}
+
+
+
+var functorGuard = gopurs_runtime.Value{}
+var functorExpr = gopurs_runtime.Value{}
+var functorCaseGuard = gopurs_runtime.Value{}
+var functorCaseAlternative = gopurs_runtime.Value{}
+var functorBinding = gopurs_runtime.Value{}
+var functorBind = gopurs_runtime.Value{}
+
+var foldableProp = gopurs_runtime.Value{}
+var traversableProp = gopurs_runtime.Value{}
+
+var foldableLiteral = gopurs_runtime.Value{}
+
+var traversableLiteral = gopurs_runtime.Value{}
+
+var findProp = gopurs_runtime.Value{}
+var exprAnn = gopurs_runtime.Value{}
+var eqProperName = eqString
+var eqModuleName = eqString
+var eq5 = gopurs_runtime.Value{}
+var eqQualified = gopurs_runtime.Value{}
+var ordQualified = gopurs_runtime.Value{}
+var eqIdent = eqString
+var eq8 = gopurs_runtime.Apply(eqArrayImpl, eqStringImpl)
+var eqReExport = gopurs_runtime.Value{}
+var ordReExport = gopurs_runtime.Value{}
+var eqConstructorType = gopurs_runtime.Value{}
+var eqMeta = gopurs_runtime.Value{}
+var ordConstructorType = gopurs_runtime.Value{}
+var ordMeta = gopurs_runtime.Value{}
+var emptySpan = gopurs_runtime.Value{}
+var emptyAnn = gopurs_runtime.Value{}

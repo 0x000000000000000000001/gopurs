@@ -1,0 +1,17 @@
+{
+  "name": "gopurs",
+  "version": "0.1.0",
+  "description": "PureScript to Go backend",
+  "type": "module",
+  "bin": {
+    "gopurs": "bin/gopurs.js"
+  },
+  "scripts": {
+    "build": "spago build && NODE_OPTIONS=\"--no-deprecation\" npx purs-backend-es bundle-app -p node -m Main --to bin/gopurs.js",
+    "prepare": "npm run build"
+  },
+  "dependencies": {
+    "esbuild": "^0.28.1",
+    "purs-backend-es": "^1.4.3"
+  }
+}

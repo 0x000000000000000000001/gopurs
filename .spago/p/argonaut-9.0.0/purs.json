@@ -1,0 +1,16 @@
+{
+  "name": "argonaut",
+  "version": "9.0.0",
+  "license": "MIT",
+  "description": "PureScript's implementation of Argonaut",
+  "location": {
+    "githubOwner": "purescript-contrib",
+    "githubRepo": "purescript-argonaut"
+  },
+  "ref": "v9.0.0",
+  "dependencies": {
+    "argonaut-codecs": ">=9.0.0 <10.0.0",
+    "argonaut-core": ">=7.0.0 <8.0.0",
+    "argonaut-traversals": ">=10.0.0 <11.0.0"
+  }
+}

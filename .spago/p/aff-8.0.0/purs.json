@@ -1,0 +1,28 @@
+{
+  "name": "aff",
+  "version": "8.0.0",
+  "license": "Apache-2.0",
+  "description": "Asynchronous effect monad",
+  "location": {
+    "githubOwner": "purescript-contrib",
+    "githubRepo": "purescript-aff"
+  },
+  "dependencies": {
+    "bifunctors": ">=6.0.0 <7.0.0",
+    "control": ">=6.0.0 <7.0.0",
+    "datetime": ">=6.0.0 <7.0.0",
+    "effect": ">=4.0.0 <5.0.0",
+    "either": ">=6.0.0 <7.0.0",
+    "exceptions": ">=6.0.0 <7.0.0",
+    "foldable-traversable": ">=6.0.0 <7.0.0",
+    "functions": ">=6.0.0 <7.0.0",
+    "maybe": ">=6.0.0 <7.0.0",
+    "newtype": ">=5.0.0 <6.0.0",
+    "parallel": ">=6.0.0 <8.0.0",
+    "prelude": ">=6.0.0 <7.0.0",
+    "refs": ">=6.0.0 <7.0.0",
+    "tailrec": ">=6.0.0 <7.0.0",
+    "transformers": ">=6.0.0 <7.0.0",
+    "unsafe-coerce": ">=6.0.0 <7.0.0"
+  }
+}

@@ -1,0 +1,11 @@
+package Type_Proxy
+
+import (
+	"gopurs/output/gopurs_runtime"
+	"fmt"
+)
+
+var _ = fmt.Println
+var _ = gopurs_runtime.TypeInt
+
+var Proxy = gopurs_runtime.Value{}

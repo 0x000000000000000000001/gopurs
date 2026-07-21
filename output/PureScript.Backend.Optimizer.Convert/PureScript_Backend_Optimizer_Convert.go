@@ -1,0 +1,117 @@
+package PureScript_Backend_Optimizer_Convert
+
+import (
+	"gopurs/output/gopurs_runtime"
+	"fmt"
+)
+
+var _ = fmt.Println
+var _ = gopurs_runtime.TypeInt
+
+var eq = gopurs_runtime.Apply(eqArrayImpl, eqStringImpl)
+var eq1 = gopurs_runtime.Value{}
+var eq2 = gopurs_runtime.Value{}
+var compare = gopurs_runtime.Value{}
+var compare1 = gopurs_runtime.Value{}
+var ordQualified = gopurs_runtime.Apply(ordQualified, ordString)
+var lookup = gopurs_runtime.Value{}
+var monoidSemigroupMap = gopurs_runtime.Apply(monoidSemigroupMap, ordString)
+var foldMap = gopurs_runtime.Apply(gopurs_runtime.Value{}, monoidSemigroupMap)
+var toUnfoldable = gopurs_runtime.Apply(toUnfoldable, unfoldableArray)
+var foldMap2 = gopurs_runtime.Apply(gopurs_runtime.Value{}, monoidArray)
+var comparing = gopurs_runtime.Value{}
+var fromFoldable1 = gopurs_runtime.Apply(foldlArray, gopurs_runtime.Value{})
+var append1 = gopurs_runtime.Apply(union, ordString)
+var lookup1 = gopurs_runtime.Value{}
+var lookup2 = gopurs_runtime.Value{}
+var lookup3 = gopurs_runtime.Value{}
+var analyzeEffectBlock = gopurs_runtime.Apply(analyzeEffectBlock, hasAnalysisBackendExpr)
+var analyze = gopurs_runtime.Apply(analyze, hasAnalysisBackendExpr)
+var foldMap3 = gopurs_runtime.Apply(gopurs_runtime.Value{}, gopurs_runtime.Value{})
+var lookup4 = gopurs_runtime.Value{}
+var forWithIndex = gopurs_runtime.Value{}
+var zipWithA = gopurs_runtime.Apply(zipWithA, applicativeFn)
+var traverse = gopurs_runtime.Apply(gopurs_runtime.Value{}, applicativeFn)
+var traverse1 = gopurs_runtime.Apply(gopurs_runtime.Value{}, applicativeFn)
+var traverse3 = gopurs_runtime.Apply(gopurs_runtime.Value{}, applicativeFn)
+var append2 = gopurs_runtime.Value{}
+var toUnfoldable1 = gopurs_runtime.Value{}
+var foldMap4 = gopurs_runtime.Apply(gopurs_runtime.Value{}, monoidSemigroupMap)
+var for = gopurs_runtime.Value{}
+var member = gopurs_runtime.Apply(member, ordQualified)
+var alter = gopurs_runtime.Apply(alter, ordEvalRef)
+var mapAccumL = gopurs_runtime.Apply(mapAccumL, traversableArray)
+var fromFoldable2 = gopurs_runtime.Apply(foldlArray, gopurs_runtime.Value{})
+var member1 = gopurs_runtime.Apply(member, ordString)
+var fromFoldable3 = gopurs_runtime.Apply(fromFoldable, ordString)
+var fromFoldable4 = gopurs_runtime.Apply(fromFoldable, ordString)
+var maximum = gopurs_runtime.Apply(maximum, ordInt)
+var comparing2 = gopurs_runtime.Value{}
+var mapAccumR = gopurs_runtime.Apply(mapAccumR, traversableArray)
+var append3 = gopurs_runtime.Apply(union, ordQualified)
+var foldMap5 = gopurs_runtime.Apply(gopurs_runtime.Value{}, gopurs_runtime.Value{})
+var guard1 = gopurs_runtime.Apply(guard, alternativeMaybe)
+var fromFoldable5 = gopurs_runtime.Apply(foldlArray, gopurs_runtime.Value{})
+var PatWild = gopurs_runtime.Value{}
+var PatRecord = gopurs_runtime.Value{}
+var PatProduct = gopurs_runtime.Value{}
+var PatArray = gopurs_runtime.Value{}
+var PatSum = gopurs_runtime.Value{}
+var PatInt = gopurs_runtime.Value{}
+var PatNumber = gopurs_runtime.Value{}
+var PatString = gopurs_runtime.Value{}
+var PatChar = gopurs_runtime.Value{}
+var PatBoolean = gopurs_runtime.Value{}
+var Pattern = gopurs_runtime.Value{}
+var UnconditionalFn = gopurs_runtime.Value{}
+var GuardedFn = gopurs_runtime.Value{}
+var newtypePattern_ = gopurs_runtime.Value{}
+var eqPatternCase = gopurs_runtime.Value{}
+var ordPatternCase = gopurs_runtime.Value{}
+var monoidSet = gopurs_runtime.Value{}
+var foldMapWithIndex = gopurs_runtime.Apply(gopurs_runtime.Value{}, gopurs_runtime.Value{})
+var topEnv = gopurs_runtime.Value{}
+var toExternImpl = gopurs_runtime.Value{}
+var toCaseRowVars = gopurs_runtime.Value{}
+
+var patternVars = gopurs_runtime.Value{}
+
+var patternSubterms = gopurs_runtime.Value{}
+var patternPatCase = gopurs_runtime.Value{}
+var normalizeCaseRows = gopurs_runtime.Value{}
+var makeExternEvalSpine = gopurs_runtime.Value{}
+var makeExternEvalRef = gopurs_runtime.Value{}
+var levelUp = gopurs_runtime.Value{}
+var intro = gopurs_runtime.Value{}
+var inferTransitiveDirective = gopurs_runtime.Value{}
+var guardTag = gopurs_runtime.Value{}
+var getCtx = gopurs_runtime.Value{}
+var fromExternImpl = gopurs_runtime.Value{}
+var decompose = gopurs_runtime.Value{}
+var currentLevel = gopurs_runtime.Value{}
+var chooseNextPattern = gopurs_runtime.Value{}
+var buildM = gopurs_runtime.Value{}
+var make = gopurs_runtime.Value{}
+var guardBoolean = gopurs_runtime.Value{}
+var guardChar = gopurs_runtime.Value{}
+var guardInt = gopurs_runtime.Value{}
+var guardArrayLength = gopurs_runtime.Value{}
+var guardNumber = gopurs_runtime.Value{}
+var guardString = gopurs_runtime.Value{}
+var makeGuard = gopurs_runtime.Value{}
+var makeLet = gopurs_runtime.Value{}
+var makeUncurriedAbs = gopurs_runtime.Value{}
+var patternFail = gopurs_runtime.Apply(make, gopurs_runtime.Value{})
+
+var binderToPattern = gopurs_runtime.Value{}
+
+var toBackendExpr = gopurs_runtime.Value{}
+var toBackendBinding = gopurs_runtime.Value{}
+var buildCaseTreeFromRows = gopurs_runtime.Value{}
+var buildCasePattern = gopurs_runtime.Value{}
+var buildCaseLeaf = gopurs_runtime.Value{}
+
+var toTopLevelBackendBinding = gopurs_runtime.Value{}
+var toBackendTopLevelBindingGroup = gopurs_runtime.Value{}
+var toBackendTopLevelBindingGroups = gopurs_runtime.Value{}
+var toBackendModule = gopurs_runtime.Value{}
