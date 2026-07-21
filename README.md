@@ -6,21 +6,28 @@
 
 A super-optimized **PureScript-to-Go compiler**, entirely written in PureScript, leveraging Go's **blazing-fast execution**, **lightweight goroutines** and **huge ecosystem**.
 
-> **Note:** This project is currently a work in progress (WIP).
+> **Note:** This project is currently a work in progress (WIP) and highly experimental, but the first official tests are already showing green and positive results! 🟢 The repo may be ready for production soon, this summer 🌻.
 
-`gopurs` leverages the intermediate `CoreFn` representation to compile your pure business logic into robust, modern Go code. It seamlessly integrates into your existing PureScript workflow as a custom backend.
+## Why a new Go backend?
 
-## Why Go?
+You might legitimately ask: *"Wait, doesn't `purescript-native` (and its `psgo` tool) already do this?"*. And yes, it does! 
 
-While the broader JS ecosystem has heavily leaned towards TypeScript, many backend services and infrastructure tools rely heavily on Go for its **raw performance**, **concurrency model**, and **deployment simplicity**.
+I want to deeply acknowledge the fantastic work done by Andy Arvanitis on `purescript-native`. It really paved the way. It is always much easier to come second and learn from the limits encountered by the pioneers. This project is a response, an extension of his work, an apology, a love letter. It simply couldn’t exist without it. All my gratitude for his initial effort. ❤️
 
-`gopurs` aims to provide a bridge for developers who want the elegance and strict typing of a purely functional language like PureScript, while benefiting from Go's **massive ecosystem**. It opens a door for those who want to compile their pure business logic into a **single, zero-dependency static binary** that can run anywhere.
+However, the ecosystem has evolved drastically over the last few years. This unlocked new architectural paradigms that make building a completely new Go backend highly relevant today, specifically to address previous limitations:
 
-## Architecture and status
+### 1. The Optimizer & Bootstrapping 🧠
+While `purescript-native` was written in Haskell and parsed raw `CoreFn`, `gopurs` is written 100% in PureScript. It plugs directly into the `purescript-backend-optimizer` (which powers `purs-backend-es`). This means we do not reinvent the wheel for classical optimizations. The `gopurs` compiler can strictly focus on translating this highly-optimized AST into idiomatic, performant Go code, adding further optimizations specifically for Go. And it remains fully accessible to anyone in the PureScript ecosystem (installable via `spago` and `npm`).
 
-This project is currently in an experimental phase.
+### 2. Heap vs. Stack: a new memory layout for Go ⚡
+Dynamic typing in statically typed languages like Go often relies heavily on `interface{}` (or `any`). However, assigning primitive values to interfaces forces them to escape to the heap (Boxing), generating massive Garbage Collector pressure. For `gopurs`, I ran extensive benchmarks and decided to completely ditch `any`. Instead, the runtime uses a universal flat `Value` struct (a tagged union). This ensures that dynamic operations stay mostly on the stack.
 
-The main challenge and current focus is to successfully map PureScript's core concepts (currying, tail call optimization, structural records) into Go's nominal type system and execution model without sacrificing performance.
+> To give you an idea, on a **1 billion operations benchmark**, native static Go took ~250ms, a dynamic `any` approach took ~9 seconds, and our `Value` struct solution completed in **~240ms**! The performance difference is staggering, completely bypassing the GC overhead in heavy iterative loops.
+
+### 3. Up-to-date with modern PureScript 📦
+`gopurs` aims to be fully aligned with the current v0.15+ ecosystem (and v0.16+ soon). We are currently mirroring the standard libraries (`gopurs-prelude`, `gopurs-effect`, etc.) to provide native Go FFIs.
+
+Go offers exceptional concurrency (goroutines fit perfectly with PureScript's `Aff`) and rock-solid native binaries. 
 
 ## License
 
