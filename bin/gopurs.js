@@ -1321,6 +1321,95 @@ var alter = (dictOrd) => {
   };
 };
 
+// output-es/Data.Set/index.js
+var foldableSet = {
+  foldMap: (dictMonoid) => {
+    const foldMap13 = foldableList.foldMap(dictMonoid);
+    return (f) => {
+      const $0 = foldMap13(f);
+      return (x) => $0((() => {
+        const go = (m$p, z$p) => {
+          if (m$p.tag === "Leaf") {
+            return z$p;
+          }
+          if (m$p.tag === "Node") {
+            return go(m$p._5, $List("Cons", m$p._3, go(m$p._6, z$p)));
+          }
+          fail();
+        };
+        return go(x, Nil);
+      })());
+    };
+  },
+  foldl: (f) => (x) => {
+    const go = (go$a0$copy) => (go$a1$copy) => {
+      let go$a0 = go$a0$copy, go$a1 = go$a1$copy, go$c = true, go$r;
+      while (go$c) {
+        const b = go$a0, v = go$a1;
+        if (v.tag === "Nil") {
+          go$c = false;
+          go$r = b;
+          continue;
+        }
+        if (v.tag === "Cons") {
+          go$a0 = f(b)(v._1);
+          go$a1 = v._2;
+          continue;
+        }
+        fail();
+      }
+      return go$r;
+    };
+    const $0 = go(x);
+    return (x$1) => $0((() => {
+      const go$1 = (m$p, z$p) => {
+        if (m$p.tag === "Leaf") {
+          return z$p;
+        }
+        if (m$p.tag === "Node") {
+          return go$1(m$p._5, $List("Cons", m$p._3, go$1(m$p._6, z$p)));
+        }
+        fail();
+      };
+      return go$1(x$1, Nil);
+    })());
+  },
+  foldr: (f) => (x) => {
+    const $0 = foldableList.foldr(f)(x);
+    return (x$1) => $0((() => {
+      const go = (m$p, z$p) => {
+        if (m$p.tag === "Leaf") {
+          return z$p;
+        }
+        if (m$p.tag === "Node") {
+          return go(m$p._5, $List("Cons", m$p._3, go(m$p._6, z$p)));
+        }
+        fail();
+      };
+      return go(x$1, Nil);
+    })());
+  }
+};
+var mapMaybe2 = (dictOrd) => (f) => foldableSet.foldr((a) => (acc) => {
+  const $0 = f(a);
+  if ($0.tag === "Nothing") {
+    return acc;
+  }
+  if ($0.tag === "Just") {
+    return insert(dictOrd)($0._1)()(acc);
+  }
+  fail();
+})(Leaf);
+var monoidSet = (dictOrd) => {
+  const semigroupSet1 = {
+    append: (() => {
+      const compare4 = dictOrd.compare;
+      return (m1) => (m2) => unsafeUnionWith(compare4, $$const, m1, m2);
+    })()
+  };
+  return { mempty: Leaf, Semigroup0: () => semigroupSet1 };
+};
+
 // output-es/Data.String.Common/foreign.js
 var replaceAll = function(s1) {
   return function(s2) {
@@ -2271,95 +2360,6 @@ var error2 = function(s) {
   };
 };
 
-// output-es/Data.Set/index.js
-var foldableSet = {
-  foldMap: (dictMonoid) => {
-    const foldMap13 = foldableList.foldMap(dictMonoid);
-    return (f) => {
-      const $0 = foldMap13(f);
-      return (x) => $0((() => {
-        const go = (m$p, z$p) => {
-          if (m$p.tag === "Leaf") {
-            return z$p;
-          }
-          if (m$p.tag === "Node") {
-            return go(m$p._5, $List("Cons", m$p._3, go(m$p._6, z$p)));
-          }
-          fail();
-        };
-        return go(x, Nil);
-      })());
-    };
-  },
-  foldl: (f) => (x) => {
-    const go = (go$a0$copy) => (go$a1$copy) => {
-      let go$a0 = go$a0$copy, go$a1 = go$a1$copy, go$c = true, go$r;
-      while (go$c) {
-        const b = go$a0, v = go$a1;
-        if (v.tag === "Nil") {
-          go$c = false;
-          go$r = b;
-          continue;
-        }
-        if (v.tag === "Cons") {
-          go$a0 = f(b)(v._1);
-          go$a1 = v._2;
-          continue;
-        }
-        fail();
-      }
-      return go$r;
-    };
-    const $0 = go(x);
-    return (x$1) => $0((() => {
-      const go$1 = (m$p, z$p) => {
-        if (m$p.tag === "Leaf") {
-          return z$p;
-        }
-        if (m$p.tag === "Node") {
-          return go$1(m$p._5, $List("Cons", m$p._3, go$1(m$p._6, z$p)));
-        }
-        fail();
-      };
-      return go$1(x$1, Nil);
-    })());
-  },
-  foldr: (f) => (x) => {
-    const $0 = foldableList.foldr(f)(x);
-    return (x$1) => $0((() => {
-      const go = (m$p, z$p) => {
-        if (m$p.tag === "Leaf") {
-          return z$p;
-        }
-        if (m$p.tag === "Node") {
-          return go(m$p._5, $List("Cons", m$p._3, go(m$p._6, z$p)));
-        }
-        fail();
-      };
-      return go(x$1, Nil);
-    })());
-  }
-};
-var mapMaybe2 = (dictOrd) => (f) => foldableSet.foldr((a) => (acc) => {
-  const $0 = f(a);
-  if ($0.tag === "Nothing") {
-    return acc;
-  }
-  if ($0.tag === "Just") {
-    return insert(dictOrd)($0._1)()(acc);
-  }
-  fail();
-})(Leaf);
-var monoidSet = (dictOrd) => {
-  const semigroupSet1 = {
-    append: (() => {
-      const compare4 = dictOrd.compare;
-      return (m1) => (m2) => unsafeUnionWith(compare4, $$const, m1, m2);
-    })()
-  };
-  return { mempty: Leaf, Semigroup0: () => semigroupSet1 };
-};
-
 // output-es/Gopurs.GoAst/index.js
 var $GoExpr = (tag, _1, _2) => ({ tag, _1, _2 });
 
@@ -2403,121 +2403,6 @@ var printGoFile = (v) => "package " + v.packageName + "\n\nimport (\n" + joinWit
 // output-es/Gopurs.CodeGen/index.js
 var translateExpr = (v) => {
   if (v.tag === "Var") {
-    if (v._1._2 === "bindE") {
-      return $GoExpr(
-        "GoCall",
-        $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Func"),
-        [
-          $GoExpr(
-            "GoFunc",
-            ["a"],
-            $GoExpr(
-              "GoReturn",
-              $GoExpr(
-                "GoCall",
-                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Func"),
-                [
-                  $GoExpr(
-                    "GoFunc",
-                    ["f"],
-                    $GoExpr(
-                      "GoReturn",
-                      $GoExpr(
-                        "GoCall",
-                        $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Func"),
-                        [
-                          $GoExpr(
-                            "GoFunc",
-                            ["_"],
-                            $GoExpr(
-                              "GoBlock",
-                              [
-                                $GoExpr("GoVar", "resA := gopurs_runtime.Apply(a, gopurs_runtime.Value{})"),
-                                $GoExpr("GoVar", "resB := gopurs_runtime.Apply(f, resA)"),
-                                $GoExpr(
-                                  "GoReturn",
-                                  $GoExpr(
-                                    "GoCall",
-                                    $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Apply"),
-                                    [$GoExpr("GoVar", "resB"), $GoExpr("GoVar", "gopurs_runtime.Value{}")]
-                                  )
-                                )
-                              ]
-                            )
-                          )
-                        ]
-                      )
-                    )
-                  )
-                ]
-              )
-            )
-          )
-        ]
-      );
-    }
-    if (v._1._2 === "log") {
-      return $GoExpr(
-        "GoCall",
-        $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Func"),
-        [
-          $GoExpr(
-            "GoFunc",
-            ["x"],
-            $GoExpr(
-              "GoReturn",
-              $GoExpr(
-                "GoCall",
-                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Func"),
-                [
-                  $GoExpr(
-                    "GoFunc",
-                    ["_"],
-                    $GoExpr(
-                      "GoBlock",
-                      [
-                        $GoExpr(
-                          "GoCall",
-                          $GoExpr("GoVar", "fmt.Println"),
-                          [$GoExpr("GoSelector", $GoExpr("GoVar", "x"), "StrVal")]
-                        ),
-                        $GoExpr("GoReturn", $GoExpr("GoVar", "gopurs_runtime.Value{}"))
-                      ]
-                    )
-                  )
-                ]
-              )
-            )
-          )
-        ]
-      );
-    }
-    if (v._1._2 === "showStringImpl") {
-      return $GoExpr(
-        "GoCall",
-        $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Func"),
-        [
-          $GoExpr(
-            "GoFunc",
-            ["s"],
-            $GoExpr(
-              "GoReturn",
-              $GoExpr(
-                "GoCall",
-                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Str"),
-                [
-                  $GoExpr(
-                    "GoCall",
-                    $GoExpr("GoVar", "fmt.Sprintf"),
-                    [$GoExpr("GoString", "%q"), $GoExpr("GoSelector", $GoExpr("GoVar", "s"), "StrVal")]
-                  )
-                ]
-              )
-            )
-          )
-        ]
-      );
-    }
     return $GoExpr("GoVar", replaceAll("$")("_")(v._1._2));
   }
   if (v.tag === "Local") {
@@ -2564,14 +2449,138 @@ var translateBindingGroup = (bg) => mapMaybe(translateBinding)(bg.bindings);
 var translate = (v) => (backendMod) => printGoFile({
   packageName: replaceAll(".")("_")(backendMod.name),
   imports: ["gopurs/output/gopurs_runtime", "fmt"],
-  decls: [
-    ...arrayMap((f) => ({ identifier: f, expression: $GoExpr("GoVar", "gopurs_runtime.Value{}") }))(fromFoldableImpl(
-      foldableSet.foldr,
-      backendMod.foreign
-    )),
-    ...arrayBind(fromFoldableImpl(foldrArray, backendMod.bindings))(translateBindingGroup)
-  ]
+  decls: arrayBind(fromFoldableImpl(foldrArray, backendMod.bindings))(translateBindingGroup)
 });
+
+// output-es/Data.Nullable/foreign.js
+var nullImpl = null;
+function nullable(a, r, f) {
+  return a == null ? r : f(a);
+}
+function notNull(x) {
+  return x;
+}
+
+// output-es/Gopurs.FfiSupport/foreign.js
+import fs from "fs";
+import path from "path";
+var cachedScanDirs = null;
+function getScanDirs(mbFfiDir) {
+  if (cachedScanDirs !== null) return cachedScanDirs;
+  const rootDir = process.cwd();
+  const scanDirs = [];
+  const spagoDirs = [
+    path.join(rootDir, ".spago"),
+    path.join(rootDir, "spago.d")
+  ];
+  for (const spagoDir of spagoDirs) {
+    if (fs.existsSync(spagoDir) && fs.statSync(spagoDir).isDirectory()) {
+      const packages = fs.readdirSync(spagoDir);
+      for (const pkg of packages) {
+        const pkgDir = path.join(spagoDir, pkg);
+        if (fs.statSync(pkgDir).isDirectory()) {
+          let hasVersion = false;
+          const subdirs = fs.readdirSync(pkgDir);
+          for (const subdir of subdirs) {
+            const versionDir = path.join(pkgDir, subdir);
+            if (subdir.startsWith("v") && fs.statSync(versionDir).isDirectory()) {
+              scanDirs.push(versionDir);
+              hasVersion = true;
+            }
+          }
+          if (!hasVersion) {
+            scanDirs.push(pkgDir);
+          }
+        }
+      }
+    }
+  }
+  if (mbFfiDir) {
+    scanDirs.push(path.join(rootDir, mbFfiDir));
+  } else {
+    scanDirs.push(rootDir);
+  }
+  cachedScanDirs = scanDirs;
+  return scanDirs;
+}
+var goFileIndex = null;
+function buildGoFileIndex(scanDirs) {
+  if (goFileIndex !== null) return;
+  goFileIndex = /* @__PURE__ */ new Set();
+  function walk(dir) {
+    let entries;
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch (e) {
+      return;
+    }
+    for (const entry of entries) {
+      const res = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        walk(res);
+      } else if (entry.name.endsWith(".go")) {
+        goFileIndex.add(res);
+      }
+    }
+  }
+  for (const d of scanDirs) {
+    walk(d);
+  }
+}
+var findFfiFileImpl = function(mbFfiDir) {
+  return function(modNameStr) {
+    return function(mbModulePath) {
+      return function() {
+        if (mbModulePath) {
+          const goPath = mbModulePath.replace(/\.purs$/, ".go");
+          if (fs.existsSync(goPath)) {
+            return goPath;
+          }
+        }
+        const scanDirs = getScanDirs(mbFfiDir);
+        buildGoFileIndex(scanDirs);
+        for (const dir of scanDirs) {
+          const searchPaths = [
+            path.join(dir, "src", ...modNameStr.split(".")) + ".go",
+            path.join(dir, "src", modNameStr + ".go"),
+            path.join(dir, modNameStr + ".go")
+          ];
+          for (const p of searchPaths) {
+            if (goFileIndex.has(p)) {
+              return p;
+            }
+          }
+        }
+        return null;
+      };
+    };
+  };
+};
+
+// output-es/Gopurs.FfiSupport/index.js
+var findFfiFile = (mbFfiDir) => (modName) => (mbModulePath) => {
+  const $0 = findFfiFileImpl((() => {
+    if (mbFfiDir.tag === "Nothing") {
+      return nullImpl;
+    }
+    if (mbFfiDir.tag === "Just") {
+      return notNull(mbFfiDir._1);
+    }
+    fail();
+  })())(modName)((() => {
+    if (mbModulePath.tag === "Nothing") {
+      return nullImpl;
+    }
+    if (mbModulePath.tag === "Just") {
+      return notNull(mbModulePath._1);
+    }
+    fail();
+  })());
+  return () => {
+    const path2 = $0();
+    return nullable(path2, Nothing, Just);
+  };
+};
 
 // output-es/Gopurs.Runtime/index.js
 var runtimeGoCode = 'package gopurs_runtime\n\nconst (\n	TypeInt = 1\n	TypeString = 2\n	TypeRecord = 3\n	TypeFunc = 4\n	TypeConstructor = 5\n)\n\ntype Value struct {\n	Type   uint8\n	IntVal int64\n	StrVal string\n	PtrVal any\n}\n\nfunc Str(v string) Value {\n	return Value{Type: TypeString, StrVal: v}\n}\n\nfunc Record(m map[string]Value) Value {\n	return Value{Type: TypeRecord, PtrVal: m}\n}\n\nfunc Cons(tag string, args []Value) Value {\n	return Value{Type: TypeConstructor, StrVal: tag, PtrVal: args}\n}\n\n// Function with 1 arg (curried)\nfunc Func(f func(Value) Value) Value {\n	return Value{Type: TypeFunc, PtrVal: f}\n}\n\n// Uncurried application helper\nfunc Apply(f Value, arg Value) Value {\n	if f.Type != TypeFunc {\n		panic("Attempted to apply a non-function")\n	}\n	fn := f.PtrVal.(func(Value) Value)\n	return fn(arg)\n}\n';
@@ -2579,11 +2588,6 @@ var runtimeGoCode = 'package gopurs_runtime\n\nconst (\n	TypeInt = 1\n	TypeStrin
 // output-es/Node.Encoding/index.js
 var $Encoding = (tag) => tag;
 var UTF8 = /* @__PURE__ */ $Encoding("UTF8");
-
-// output-es/Data.Nullable/foreign.js
-function nullable(a, r, f) {
-  return a == null ? r : f(a);
-}
 
 // output-es/Data.Semiring/foreign.js
 var intAdd = function(x) {
@@ -2979,7 +2983,7 @@ var mkdir$p = (file) => (v) => (cb) => {
   const $0 = { recursive: v.recursive, mode: permsToString(v.mode) };
   return () => mkdir(file, $0, handleCallback(cb));
 };
-var mkdir2 = (path) => mkdir$p(path)({ recursive: false, mode: { u: semiringPerm.one, g: semiringPerm.one, o: semiringPerm.one } });
+var mkdir2 = (path2) => mkdir$p(path2)({ recursive: false, mode: { u: semiringPerm.one, g: semiringPerm.one, o: semiringPerm.one } });
 var readTextFile = (encoding) => (file) => (cb) => {
   const $0 = {
     encoding: (() => {
@@ -3089,23 +3093,23 @@ var toAff3 = (f) => (a) => (b) => (c) => {
 var isDirectoryImpl = (s) => s.isDirectory();
 
 // output-es/Node.Process/foreign.js
-import process from "process";
-var abortImpl = process.abort ? () => process.abort() : null;
-var argv = () => process.argv.slice();
-var channelRefImpl = process.channel && process.channel.ref ? () => process.channel.ref() : null;
-var channelUnrefImpl = process.channel && process.channel.unref ? () => process.channel.unref() : null;
-var debugPort = process.debugPort;
-var disconnectImpl = process.disconnect ? () => process.disconnect() : null;
-var pid = process.pid;
-var platformStr = process.platform;
-var ppid = process.ppid;
-var stdin = process.stdin;
-var stdout = process.stdout;
-var stderr = process.stderr;
-var stdinIsTTY = process.stdinIsTTY;
-var stdoutIsTTY = process.stdoutIsTTY;
-var stderrIsTTY = process.stderrIsTTY;
-var version = process.version;
+import process2 from "process";
+var abortImpl = process2.abort ? () => process2.abort() : null;
+var argv = () => process2.argv.slice();
+var channelRefImpl = process2.channel && process2.channel.ref ? () => process2.channel.ref() : null;
+var channelUnrefImpl = process2.channel && process2.channel.unref ? () => process2.channel.unref() : null;
+var debugPort = process2.debugPort;
+var disconnectImpl = process2.disconnect ? () => process2.disconnect() : null;
+var pid = process2.pid;
+var platformStr = process2.platform;
+var ppid = process2.ppid;
+var stdin = process2.stdin;
+var stdout = process2.stdout;
+var stderr = process2.stderr;
+var stdinIsTTY = process2.stdinIsTTY;
+var stdoutIsTTY = process2.stdoutIsTTY;
+var stderrIsTTY = process2.stderrIsTTY;
+var version = process2.version;
 
 // output-es/Data.List/index.js
 var foldM = (dictMonad) => (v) => (v1) => (v2) => {
@@ -13469,7 +13473,7 @@ var decodeSourcePos = (json) => {
   }
   fail();
 };
-var decodeSourceSpan = (path) => (json) => {
+var decodeSourceSpan = (path2) => (json) => {
   const $0 = decodeJObject(json);
   if ($0.tag === "Left") {
     return $Either("Left", $0._1);
@@ -13485,7 +13489,7 @@ var decodeSourceSpan = (path) => (json) => {
         return $Either("Left", $2._1);
       }
       if ($2.tag === "Right") {
-        return $Either("Right", { path, start: $1._1, end: $2._1 });
+        return $Either("Right", { path: path2, start: $1._1, end: $2._1 });
       }
     }
   }
@@ -14248,7 +14252,24 @@ var main = /* @__PURE__ */ (() => {
         foreignSemantics: Leaf,
         traceIdents: Leaf,
         onPrepareModule: (v) => (m) => _pure(m),
-        onCodegenModule: (v) => (v1) => (backendMod) => (v2) => toAff3(writeTextFile)(UTF8)("output/" + backendMod.name + "/" + replaceAll(".")("_")(backendMod.name) + ".go")(translate(arrayMap((i) => split(".")(i._2))(v1.imports))(backendMod))
+        onCodegenModule: (v) => (v1) => (backendMod) => (v2) => {
+          const modNameStr = backendMod.name;
+          return _bind(toAff3(writeTextFile)(UTF8)("output/" + modNameStr + "/" + replaceAll(".")("_")(modNameStr) + ".go")(translate(arrayMap((i) => split(".")(i._2))(v1.imports))(backendMod)))(() => {
+            const $02 = _bind(_liftEffect(findFfiFile(Nothing)(modNameStr)($Maybe("Just", v1.path))))((ffiPathMb) => {
+              if (ffiPathMb.tag === "Just") {
+                return _bind(toAff2(readTextFile)(UTF8)(ffiPathMb._1))((content) => toAff3(writeTextFile)(UTF8)("output/" + modNameStr + "/" + replaceAll(".")("_")(modNameStr) + "_ffi.go")(content));
+              }
+              if (ffiPathMb.tag === "Nothing") {
+                return _pure();
+              }
+              fail();
+            });
+            if (fromFoldableImpl(foldableSet.foldr, backendMod.foreign).length > 0) {
+              return $02;
+            }
+            return _pure();
+          });
+        }
       })(finalModules))(() => _bind(_liftEffect(argv))((argv2) => {
         const v = findIndexImpl(Just, Nothing, (v1) => v1 === "--main", argv2);
         const mainModuleName = (() => {

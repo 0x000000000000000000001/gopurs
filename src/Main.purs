@@ -29,6 +29,7 @@ import PureScript.Backend.Optimizer.Builder (buildModules)
 import PureScript.Backend.Optimizer.CoreFn (Module(..), Ann, importName)
 import Gopurs.CodeGen (translate)
 import Gopurs.Runtime (runtimeGoCode)
+import Gopurs.FfiSupport (findFfiFile)
 
 readCoreFnModule :: String -> Aff (Maybe (Module Ann))
 readCoreFnModule filePath = do
@@ -74,6 +75,14 @@ main = launchAff_ do
         let importsArray = map (\i -> String.split (Pattern ".") (unwrap (importName i))) coreFnMod.imports
         let goFile = translate importsArray backendMod
         FS.writeTextFile UTF8 ("output/" <> modNameStr <> "/" <> String.replaceAll (Pattern ".") (Replacement "_") modNameStr <> ".go") goFile
+        
+        when (Array.length (Array.fromFoldable backendMod.foreign) > 0) do
+          ffiPathMb <- liftEffect $ findFfiFile Nothing modNameStr (Just coreFnMod.path)
+          case ffiPathMb of
+            Just ffiPath -> do
+              content <- FS.readTextFile UTF8 ffiPath
+              FS.writeTextFile UTF8 ("output/" <> modNameStr <> "/" <> String.replaceAll (Pattern ".") (Replacement "_") modNameStr <> "_ffi.go") content
+            Nothing -> pure unit
     }
     finalModules
 

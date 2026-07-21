@@ -15,23 +15,22 @@ import Data.Array.NonEmpty as NonEmptyArray
 import Gopurs.GoAst (GoFile, GoDecl, GoExpr(..))
 import Gopurs.Printer (printGoFile)
 
+capitalize :: String -> String
+capitalize s = String.toUpper (String.take 1 s) <> String.drop 1 s
+
 translate :: Array (Array String) -> BackendModule -> String
-translate _ backendMod = 
+translate importsArray backendMod = 
   let
     modNameStr = unwrap backendMod.name
-    -- Collect module imports
-    goImports = [ "gopurs/output/gopurs_runtime", "fmt" ]
+    
+    goImports = [ "gopurs/output/gopurs_runtime" ] <> map (\i -> "gopurs/output/" <> String.joinWith "." i) importsArray
     
     decls = Array.concatMap translateBindingGroup (Array.fromFoldable backendMod.bindings)
     
-    -- Hardcode a dummy definition for each foreign to avoid compile errors
-    foreignDecls = map (\f -> { identifier: (unwrap f), expression: GoVar "gopurs_runtime.Value{}" }) (Array.fromFoldable backendMod.foreign)
-    
-    -- Expose type tags mapping if needed or just let runtime handle it
-    allDecls = foreignDecls <> decls
+    allDecls = decls
     
     goFile = { packageName: String.replaceAll (String.Pattern ".") (String.Replacement "_") modNameStr
-             , imports: goImports
+             , imports: Array.nub goImports
              , decls: allDecls 
              }
   in
@@ -51,44 +50,6 @@ translateBinding (Tuple (Ident name) expr) =
 
 translateExpr :: NeutralExpr -> GoExpr
 translateExpr (NeutralExpr expr) = case expr of
-  Var (Qualified _ (Ident "bindE")) ->
-    GoCall (GoSelector (GoVar "gopurs_runtime") "Func") 
-      [ GoFunc ["a"] 
-          (GoReturn (GoCall (GoSelector (GoVar "gopurs_runtime") "Func")
-            [ GoFunc ["f"]
-                (GoReturn (GoCall (GoSelector (GoVar "gopurs_runtime") "Func")
-                  [ GoFunc ["_"]
-                      (GoBlock
-                        [ GoVar "resA := gopurs_runtime.Apply(a, gopurs_runtime.Value{})"
-                        , GoVar "resB := gopurs_runtime.Apply(f, resA)"
-                        , GoReturn (GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ GoVar "resB", GoVar "gopurs_runtime.Value{}" ])
-                        ]
-                      )
-                  ]
-                ))
-            ]
-          ))
-      ]
-  Var (Qualified _ (Ident "log")) ->
-    GoCall (GoSelector (GoVar "gopurs_runtime") "Func") 
-      [ GoFunc ["x"] 
-          (GoReturn (GoCall (GoSelector (GoVar "gopurs_runtime") "Func")
-            [ GoFunc ["_"]
-                (GoBlock
-                  [ GoCall (GoVar "fmt.Println") [ GoSelector (GoVar "x") "StrVal" ]
-                  , GoReturn (GoVar "gopurs_runtime.Value{}")
-                  ]
-                )
-            ]
-          ))
-      ]
-  Var (Qualified _ (Ident "showStringImpl")) ->
-    GoCall (GoSelector (GoVar "gopurs_runtime") "Func") 
-      [ GoFunc ["s"] 
-          (GoReturn (GoCall (GoSelector (GoVar "gopurs_runtime") "Str")
-            [ GoCall (GoVar "fmt.Sprintf") [ GoString "%q", GoSelector (GoVar "s") "StrVal" ] ]
-          ))
-      ]
   Var (Qualified _ (Ident i)) -> GoVar (String.replaceAll (String.Pattern "$") (String.Replacement "_") i)
   Local (Just (Ident i)) _ -> GoVar (String.replaceAll (String.Pattern "$") (String.Replacement "_") i)
   Local Nothing _ -> GoVar "_"
