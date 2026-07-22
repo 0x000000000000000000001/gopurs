@@ -51,6 +51,18 @@ func Record(m map[string]Value) Value {
 	return Value{Type: TypeRecord, PtrVal: m}
 }
 
+func RecordUpdate(orig Value, updates map[string]Value) Value {
+	origMap := orig.PtrVal.(map[string]Value)
+	newMap := make(map[string]Value, len(origMap)+len(updates))
+	for k, v := range origMap {
+		newMap[k] = v
+	}
+	for k, v := range updates {
+		newMap[k] = v
+	}
+	return Record(newMap)
+}
+
 func Cons(tag string, args []Value) Value {
 	return Value{Type: TypeConstructor, StrVal: tag, PtrVal: args}
 }

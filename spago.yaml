@@ -25,33 +25,7 @@ workspace:
     registry: 77.10.1
   extraPackages:
     backend-optimizer:
-      git: "https://github.com/0x000000000000000000001/gopurs-backend-optimizer.git"
-      ref: "main"
-      dependencies:
-        - argonaut
-        - arrays
-        - control
-        - debug
-        - dodo-printer
-        - either
-        - enums
-        - foldable-traversable
-        - foreign-object
-        - integers
-        - language-cst-parser
-        - lazy
-        - lists
-        - maybe
-        - newtype
-        - ordered-collections
-        - partial
-        - prelude
-        - safe-coerce
-        - st
-        - strings
-        - transformers
-        - tuples
-        - unsafe-coerce
+      path: "../gopurs-backend-optimizer"
     st:
       path: "../gopurs-st"
     unsafe-coerce:

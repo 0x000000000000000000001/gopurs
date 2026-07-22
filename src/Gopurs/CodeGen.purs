@@ -116,6 +116,8 @@ translateExpr modNameStr (NeutralExpr expr) = case expr of
     GetProp prop -> GoRecordAccess (translateExpr modNameStr obj) prop
     GetIndex idx -> GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayAccess") [ translateExpr modNameStr obj, GoInt idx ]
     GetCtorField _ _ _ _ fieldName _ -> GoRecordAccess (translateExpr modNameStr obj) fieldName
+  Update obj props ->
+    GoCall (GoSelector (GoVar "gopurs_runtime") "RecordUpdate") [ translateExpr modNameStr obj, GoMap (map (\(Prop k v) -> Tuple k (translateExpr modNameStr v)) props) ]
   CtorDef _ _ (Ident name) fields ->
     let recordMap = GoCall (GoSelector (GoVar "gopurs_runtime") "Record") [GoMap (Array.cons (Tuple "_tag" (GoCall (GoSelector (GoVar "gopurs_runtime") "Str") [GoString name])) (map (\f -> Tuple f (GoVar (sanitizeName f))) fields))]
     in Array.foldr (\f inner -> GoFunc (sanitizeName f) inner) recordMap fields

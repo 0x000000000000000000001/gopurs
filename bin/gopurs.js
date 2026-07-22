@@ -2496,6 +2496,7 @@ function fromStringImpl(str, isFinite2, just, nothing) {
     return nothing;
   }
 }
+var round = Math.round;
 
 // output-es/Data.Int/foreign.js
 var fromNumberImpl = function(just) {
@@ -2504,6 +2505,9 @@ var fromNumberImpl = function(just) {
       return (n | 0) === n ? just(n) : nothing;
     };
   };
+};
+var toNumber = function(n) {
+  return n;
 };
 var fromStringAsImpl = function(just) {
   return function(nothing) {
@@ -2533,6 +2537,25 @@ var fromStringAsImpl = function(just) {
 var fromStringAs = /* @__PURE__ */ fromStringAsImpl(Just)(Nothing);
 var fromString = /* @__PURE__ */ fromStringAs(10);
 var fromNumber = /* @__PURE__ */ fromNumberImpl(Just)(Nothing);
+var unsafeClamp = (x) => {
+  if (!isFiniteImpl(x)) {
+    return 0;
+  }
+  if (x >= toNumber(2147483647)) {
+    return 2147483647;
+  }
+  if (x <= toNumber(-2147483648)) {
+    return -2147483648;
+  }
+  const $0 = fromNumber(x);
+  if ($0.tag === "Nothing") {
+    return 0;
+  }
+  if ($0.tag === "Just") {
+    return $0._1;
+  }
+  fail();
+};
 
 // output-es/Data.String.Unsafe/foreign.js
 var charAt = function(i) {
@@ -3004,6 +3027,13 @@ var translateExpr = (modNameStr) => (v) => {
       return $GoExpr("GoRecordAccess", translateExpr(modNameStr)(v._1), v._2._5);
     }
     fail();
+  }
+  if (v.tag === "Update") {
+    return $GoExpr(
+      "GoCall",
+      $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "RecordUpdate"),
+      [translateExpr(modNameStr)(v._1), $GoExpr("GoMap", arrayMap((v1) => $Tuple(v1._1, translateExpr(modNameStr)(v1._2)))(v._2))]
+    );
   }
   if (v.tag === "CtorDef") {
     return foldrArray((f) => (inner) => $GoExpr("GoFunc", sanitizeName(f), inner))($GoExpr(
@@ -3519,7 +3549,7 @@ var findFfiFile = (mbFfiDir) => (modName) => (mbModulePath) => {
 };
 
 // output-es/Gopurs.Runtime/index.js
-var runtimeGoCode = 'package gopurs_runtime\n\nimport "math"\n\nconst (\n	TypeInt = 1\n	TypeString = 2\n	TypeRecord = 3\n	TypeFunc = 4\n	TypeConstructor = 5\n)\n\n// We do not add FloatVal or BoolVal fields to keep the struct size minimal.\n// Floats are packed into IntVal using math.Float64bits, and Bools are mapped to 1/0 in IntVal.\n// Adding more fields would increase the struct size and reduce pass-by-value performance.\ntype Value struct {\n	Type   uint8\n	IntVal int64\n	StrVal string\n	PtrVal any\n}\n\nfunc Str(v string) Value {\n	return Value{Type: TypeString, StrVal: v}\n}\n\nfunc Int(v int) Value {\n	return Value{Type: TypeInt, IntVal: int64(v)}\n}\n\nfunc Float(v float64) Value {\n	return Value{Type: 7, IntVal: int64(math.Float64bits(v))}\n}\n\nfunc Bool(v bool) Value {\n	var i int64 = 0\n	if v {\n		i = 1\n	}\n	return Value{Type: 6, IntVal: i}\n}\n\nfunc Array(v []Value) Value {\n	return Value{Type: 8, PtrVal: v}\n}\n\nfunc Record(m map[string]Value) Value {\n	return Value{Type: TypeRecord, PtrVal: m}\n}\n\nfunc Cons(tag string, args []Value) Value {\n	return Value{Type: TypeConstructor, StrVal: tag, PtrVal: args}\n}\n\n// Function with 1 arg (curried)\nfunc Func(f func(Value) Value) Value {\n	return Value{Type: TypeFunc, PtrVal: f}\n}\n\n// Uncurried application helper\nfunc Apply(f Value, arg Value) Value {\n	if f.Type != TypeFunc {\n		panic("Attempted to apply a non-function")\n	}\n	fn := f.PtrVal.(func(Value) Value)\n	return fn(arg)\n}\n\nfunc ArrayAccess(arr Value, index int) Value {\n	return arr.PtrVal.([]Value)[index]\n}\n';
+var runtimeGoCode = 'package gopurs_runtime\n\nimport "math"\n\nconst (\n	TypeInt = 1\n	TypeString = 2\n	TypeRecord = 3\n	TypeFunc = 4\n	TypeConstructor = 5\n)\n\n// We do not add FloatVal or BoolVal fields to keep the struct size minimal.\n// Floats are packed into IntVal using math.Float64bits, and Bools are mapped to 1/0 in IntVal.\n// Adding more fields would increase the struct size and reduce pass-by-value performance.\ntype Value struct {\n	Type   uint8\n	IntVal int64\n	StrVal string\n	PtrVal any\n}\n\nfunc Str(v string) Value {\n	return Value{Type: TypeString, StrVal: v}\n}\n\nfunc Int(v int) Value {\n	return Value{Type: TypeInt, IntVal: int64(v)}\n}\n\nfunc Float(v float64) Value {\n	return Value{Type: 7, IntVal: int64(math.Float64bits(v))}\n}\n\nfunc Bool(v bool) Value {\n	var i int64 = 0\n	if v {\n		i = 1\n	}\n	return Value{Type: 6, IntVal: i}\n}\n\nfunc Array(v []Value) Value {\n	return Value{Type: 8, PtrVal: v}\n}\n\nfunc Record(m map[string]Value) Value {\n	return Value{Type: TypeRecord, PtrVal: m}\n}\n\nfunc RecordUpdate(orig Value, updates map[string]Value) Value {\n	origMap := orig.PtrVal.(map[string]Value)\n	newMap := make(map[string]Value, len(origMap)+len(updates))\n	for k, v := range origMap {\n		newMap[k] = v\n	}\n	for k, v := range updates {\n		newMap[k] = v\n	}\n	return Record(newMap)\n}\n\nfunc Cons(tag string, args []Value) Value {\n	return Value{Type: TypeConstructor, StrVal: tag, PtrVal: args}\n}\n\n// Function with 1 arg (curried)\nfunc Func(f func(Value) Value) Value {\n	return Value{Type: TypeFunc, PtrVal: f}\n}\n\n// Uncurried application helper\nfunc Apply(f Value, arg Value) Value {\n	if f.Type != TypeFunc {\n		panic("Attempted to apply a non-function")\n	}\n	fn := f.PtrVal.(func(Value) Value)\n	return fn(arg)\n}\n\nfunc ArrayAccess(arr Value, index int) Value {\n	return arr.PtrVal.([]Value)[index]\n}\n';
 
 // output-es/Node.Encoding/index.js
 var $Encoding = (tag) => tag;
@@ -14172,12 +14202,12 @@ var decodeLiteral = (dec) => (json) => {
     }
     if ($1.tag === "Right") {
       if ($1._1 === "IntLiteral") {
-        const $2 = getField(decodeInt2)($0._1)("value");
+        const $2 = getField(decodeNumber)($0._1)("value");
         if ($2.tag === "Left") {
           return $Either("Left", $2._1);
         }
         if ($2.tag === "Right") {
-          return $Either("Right", $Literal("LitInt", $2._1));
+          return $Either("Right", $Literal("LitInt", unsafeClamp(round($2._1))));
         }
         fail();
       }

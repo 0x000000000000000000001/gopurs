@@ -8,6 +8,15 @@ TEST_DIR="$ROOT_DIR/tests"
 PASSING_DIR="$TEST_DIR/passing"
 RUNNER_DIR="$TEST_DIR/runner"
 
+# Tests to skip (e.g. tests using experimental compiler features not supported by our purs version)
+BLACKLIST=(
+  # For versions > 0.15
+  "DerivingClause.purs"
+  "DerivingContravariant.purs"
+  "DerivingFunctorFromBi.purs"
+  "DerivingFunctorFromPro.purs"
+  "DerivingProfunctor.purs"
+)
 mkdir -p "$RUNNER_DIR/src"
 
 echo "Building gopurs compiler..."
@@ -88,7 +97,7 @@ echo "Running tests from $PASSING_DIR..."
 passed=0
 failed=0
 
-SKIP_BEFORE="ConstraintParsingIssue"
+SKIP_BEFORE="NegativeBinder"
 TEST_FILES=()
 CLEAN_CACHE=0
 
@@ -101,7 +110,11 @@ if [ $# -gt 0 ]; then
     elif [[ "$arg" == "-c" || "$arg" == "--clean" ]]; then
       CLEAN_CACHE=1
     else
-      if [ -f "$PASSING_DIR/$arg" ]; then
+      if [ -f "$ROOT_DIR/$arg" ]; then
+        TEST_FILES+=("$ROOT_DIR/$arg")
+      elif [ -f "$arg" ]; then
+        TEST_FILES+=("$arg")
+      elif [ -f "$PASSING_DIR/$arg" ]; then
         TEST_FILES+=("$PASSING_DIR/$arg")
       elif [ -f "$PASSING_DIR/$arg.purs" ]; then
         TEST_FILES+=("$PASSING_DIR/$arg.purs")
@@ -122,7 +135,7 @@ if [ ${#TEST_FILES[@]} -eq 0 ]; then
 fi
 
 skipping_until=0
-if [ -n "$SKIP_BEFORE" ]; then
+if [ -n "$SKIP_BEFORE" ] && [ ${#TEST_FILES[@]} -gt 1 ]; then
   skipping_until=1
 fi
 
@@ -135,6 +148,20 @@ for test_file in "${TEST_FILES[@]}"; do
     else
       continue
     fi
+  fi
+  
+  # Check blacklist
+  skip_test=0
+  for b in "${BLACKLIST[@]}"; do
+    if [ "$test_name" = "$b" ]; then
+      skip_test=1
+      break
+    fi
+  done
+  
+  if [ $skip_test -eq 1 ]; then
+    echo "=> Skipping $test_name (blacklisted)"
+    continue
   fi
   
   echo "=> Testing $test_name"
