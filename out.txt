@@ -1,0 +1,105 @@
+	if arity == 6 {
+		return gopurs_runtime.Func(func(fn gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Func(func(a gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Func(func(b gopurs_runtime.Value) gopurs_runtime.Value {
+					return gopurs_runtime.Func(func(c gopurs_runtime.Value) gopurs_runtime.Value {
+						return gopurs_runtime.Func(func(d gopurs_runtime.Value) gopurs_runtime.Value {
+							return gopurs_runtime.Func(func(e gopurs_runtime.Value) gopurs_runtime.Value {
+								return gopurs_runtime.Func(func(f gopurs_runtime.Value) gopurs_runtime.Value {
+									return gopurs_runtime.Apply(gopurs_runtime.Apply(gopurs_runtime.Apply(gopurs_runtime.Apply(gopurs_runtime.Apply(gopurs_runtime.Apply(fn, a), b), c), d), e), f)
+								})
+							})
+						})
+					})
+				})
+			})
+		})
+	}
+	if arity == 7 {
+		return gopurs_runtime.Func(func(fn gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Func(func(a gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Func(func(b gopurs_runtime.Value) gopurs_runtime.Value {
+					return gopurs_runtime.Func(func(c gopurs_runtime.Value) gopurs_runtime.Value {
+						return gopurs_runtime.Func(func(d gopurs_runtime.Value) gopurs_runtime.Value {
+							return gopurs_runtime.Func(func(e gopurs_runtime.Value) gopurs_runtime.Value {
+								return gopurs_runtime.Func(func(f gopurs_runtime.Value) gopurs_runtime.Value {
+									return gopurs_runtime.Func(func(g gopurs_runtime.Value) gopurs_runtime.Value {
+										return gopurs_runtime.Apply(gopurs_runtime.Apply(gopurs_runtime.Apply(gopurs_runtime.Apply(gopurs_runtime.Apply(gopurs_runtime.Apply(gopurs_runtime.Apply(fn, a), b), c), d), e), f), g)
+									})
+								})
+							})
+						})
+					})
+				})
+			})
+		})
+	}
+	if arity == 8 {
+		return gopurs_runtime.Func(func(fn gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Func(func(a gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Func(func(b gopurs_runtime.Value) gopurs_runtime.Value {
+					return gopurs_runtime.Func(func(c gopurs_runtime.Value) gopurs_runtime.Value {
+						return gopurs_runtime.Func(func(d gopurs_runtime.Value) gopurs_runtime.Value {
+							return gopurs_runtime.Func(func(e gopurs_runtime.Value) gopurs_runtime.Value {
+								return gopurs_runtime.Func(func(f gopurs_runtime.Value) gopurs_runtime.Value {
+									return gopurs_runtime.Func(func(g gopurs_runtime.Value) gopurs_runtime.Value {
+										return gopurs_runtime.Func(func(h gopurs_runtime.Value) gopurs_runtime.Value {
+											return gopurs_runtime.Apply(gopurs_runtime.Apply(gopurs_runtime.Apply(gopurs_runtime.Apply(gopurs_runtime.Apply(gopurs_runtime.Apply(gopurs_runtime.Apply(gopurs_runtime.Apply(fn, a), b), c), d), e), f), g), h)
+										})
+									})
+								})
+							})
+						})
+					})
+				})
+			})
+		})
+	}
+	if arity == 9 {
+		return gopurs_runtime.Func(func(fn gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Func(func(a gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Func(func(b gopurs_runtime.Value) gopurs_runtime.Value {
+					return gopurs_runtime.Func(func(c gopurs_runtime.Value) gopurs_runtime.Value {
+						return gopurs_runtime.Func(func(d gopurs_runtime.Value) gopurs_runtime.Value {
+							return gopurs_runtime.Func(func(e gopurs_runtime.Value) gopurs_runtime.Value {
+								return gopurs_runtime.Func(func(f gopurs_runtime.Value) gopurs_runtime.Value {
+									return gopurs_runtime.Func(func(g gopurs_runtime.Value) gopurs_runtime.Value {
+										return gopurs_runtime.Func(func(h gopurs_runtime.Value) gopurs_runtime.Value {
+											return gopurs_runtime.Func(func(i gopurs_runtime.Value) gopurs_runtime.Value {
+												return gopurs_runtime.Apply(gopurs_runtime.Apply(gopurs_runtime.Apply(gopurs_runtime.Apply(gopurs_runtime.Apply(gopurs_runtime.Apply(gopurs_runtime.Apply(gopurs_runtime.Apply(gopurs_runtime.Apply(fn, a), b), c), d), e), f), g), h), i)
+											})
+										})
+									})
+								})
+							})
+						})
+					})
+				})
+			})
+		})
+	}
+	if arity == 10 {
+		return gopurs_runtime.Func(func(fn gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Func(func(a gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Func(func(b gopurs_runtime.Value) gopurs_runtime.Value {
+					return gopurs_runtime.Func(func(c gopurs_runtime.Value) gopurs_runtime.Value {
+						return gopurs_runtime.Func(func(d gopurs_runtime.Value) gopurs_runtime.Value {
+							return gopurs_runtime.Func(func(e gopurs_runtime.Value) gopurs_runtime.Value {
+								return gopurs_runtime.Func(func(f gopurs_runtime.Value) gopurs_runtime.Value {
+									return gopurs_runtime.Func(func(g gopurs_runtime.Value) gopurs_runtime.Value {
+										return gopurs_runtime.Func(func(h gopurs_runtime.Value) gopurs_runtime.Value {
+											return gopurs_runtime.Func(func(i gopurs_runtime.Value) gopurs_runtime.Value {
+												return gopurs_runtime.Func(func(j gopurs_runtime.Value) gopurs_runtime.Value {
+													return gopurs_runtime.Apply(gopurs_runtime.Apply(gopurs_runtime.Apply(gopurs_runtime.Apply(gopurs_runtime.Apply(gopurs_runtime.Apply(gopurs_runtime.Apply(gopurs_runtime.Apply(gopurs_runtime.Apply(gopurs_runtime.Apply(fn, a), b), c), d), e), f), g), h), i), j)
+												})
+											})
+										})
+									})
+								})
+							})
+						})
+					})
+				})
+			})
+		})
+	}

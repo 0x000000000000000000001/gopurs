@@ -5508,88 +5508,109 @@ var capitalize = (v) => {
 var translate = (importsArray) => (mod) => {
   const modNameStr = replaceAll(".")("_")(mod.name);
   const helpersRef = { value: [] };
-  const decls = arrayBind(foldlArray((v2) => {
-    const $0 = v2._2;
-    const $1 = v2._1;
-    return (group2) => {
-      if (group2.bindings.length > 0) {
-        const env$p = group2.recursive ? [...topLevelTcoEnvGroup(mod.name)(group2.bindings), ...$1] : $1;
+  const allDeclsAst = [
+    ...arrayBind(foldlArray((v2) => {
+      const $0 = v2._2;
+      const $1 = v2._1;
+      return (group2) => {
+        if (group2.bindings.length > 0) {
+          const env$p = group2.recursive ? [...topLevelTcoEnvGroup(mod.name)(group2.bindings), ...$1] : $1;
+          return $Tuple(
+            env$p,
+            snoc($0)({
+              recursive: group2.recursive,
+              bindings: arrayMap((v4) => $Tuple(v4._1, analyze(env$p)(v4._2)))(group2.bindings)
+            })
+          );
+        }
         return $Tuple(
-          env$p,
+          $1,
           snoc($0)({
             recursive: group2.recursive,
-            bindings: arrayMap((v4) => $Tuple(v4._1, analyze(env$p)(v4._2)))(group2.bindings)
+            bindings: arrayMap((v4) => $Tuple(v4._1, analyze($1)(v4._2)))(group2.bindings)
           })
         );
-      }
-      return $Tuple(
-        $1,
-        snoc($0)({
-          recursive: group2.recursive,
-          bindings: arrayMap((v4) => $Tuple(v4._1, analyze($1)(v4._2)))(group2.bindings)
-        })
-      );
-    };
-  })($Tuple([], []))(mod.bindings)._2)((group2) => {
-    const recVars = group2.recursive ? arrayMap((v2) => sanitizeName2(v2._1))(group2.bindings) : [];
-    if (group2.recursive && group2.bindings.length === 1) {
-      const mutRecBinds = traverse2((v2) => {
-        const $0 = extractUncurriedAbs(v2._2);
-        if ($0.tag === "Just") {
-          return $Maybe("Just", { ident: sanitizeName2(v2._1), args: $0._1.args, body: $0._1.body, fvs: $0._1.fvs });
+      };
+    })($Tuple([], []))(mod.bindings)._2)((group2) => {
+      const recVars = group2.recursive ? arrayMap((v2) => sanitizeName2(v2._1))(group2.bindings) : [];
+      if (group2.recursive && group2.bindings.length === 1) {
+        const mutRecBinds = traverse2((v2) => {
+          const $0 = extractUncurriedAbs(v2._2);
+          if ($0.tag === "Just") {
+            return $Maybe("Just", { ident: sanitizeName2(v2._1), args: $0._1.args, body: $0._1.body, fvs: $0._1.fvs });
+          }
+          return Nothing;
+        })(group2.bindings);
+        if (mutRecBinds.tag === "Just") {
+          const loopCtxs = arrayMap((fn) => ({ ident: fn.ident, params: fn.args }))(mutRecBinds._1);
+          return arrayMap((fn) => {
+            const resBodyMut = translateExprImpl(helpersRef)(0)(modNameStr)(recVars)(Leaf)(Leaf)(Nothing)(loopCtxs)(true)(0)(fn.body);
+            return {
+              identifier: fn.ident,
+              expression: foldrArray((p) => (acc) => $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Func"),
+                [$GoExpr("GoRaw", "func(" + p + " gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " + printGoExpr(acc) + "\n}")]
+              ))($GoExpr(
+                "GoRaw",
+                "func() gopurs_runtime.Value {\n" + printGoExpr($GoExpr(
+                  "GoFor",
+                  [...flattenStmts(resBodyMut.stmts), $GoExpr("GoReturn", resBodyMut.expr)]
+                )) + "\n}()"
+              ))(fn.args)
+            };
+          })(mutRecBinds._1);
         }
-        return Nothing;
-      })(group2.bindings);
-      if (mutRecBinds.tag === "Just") {
-        const loopCtxs = arrayMap((fn) => ({ ident: fn.ident, params: fn.args }))(mutRecBinds._1);
-        return arrayMap((fn) => {
-          const resBodyMut = translateExprImpl(helpersRef)(0)(modNameStr)(recVars)(Leaf)(Leaf)(Nothing)(loopCtxs)(true)(0)(fn.body);
-          return {
-            identifier: fn.ident,
-            expression: foldrArray((p) => (acc) => $GoExpr(
-              "GoCall",
-              $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Func"),
-              [$GoExpr("GoRaw", "func(" + p + " gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " + printGoExpr(acc) + "\n}")]
-            ))($GoExpr(
-              "GoRaw",
-              "func() gopurs_runtime.Value {\n" + printGoExpr($GoExpr(
-                "GoFor",
-                [...flattenStmts(resBodyMut.stmts), $GoExpr("GoReturn", resBodyMut.expr)]
-              )) + "\n}()"
-            ))(fn.args)
-          };
-        })(mutRecBinds._1);
+        if (mutRecBinds.tag === "Nothing") {
+          return arrayBind(group2.bindings)((v2) => {
+            const res = translateExprImpl(helpersRef)(0)(modNameStr)(recVars)(Leaf)(Leaf)($Maybe("Just", sanitizeName2(v2._1)))([])(false)(0)(v2._2);
+            return [{ identifier: sanitizeName2(v2._1), expression: wrapInStmts([])(res.stmts)(res.expr) }];
+          });
+        }
+        fail();
       }
-      if (mutRecBinds.tag === "Nothing") {
-        return arrayBind(group2.bindings)((v2) => {
-          const res = translateExprImpl(helpersRef)(0)(modNameStr)(recVars)(Leaf)(Leaf)($Maybe("Just", sanitizeName2(v2._1)))([])(false)(0)(v2._2);
-          return [{ identifier: sanitizeName2(v2._1), expression: wrapInStmts([])(res.stmts)(res.expr) }];
-        });
-      }
-      fail();
-    }
-    return arrayBind(group2.bindings)((v2) => {
-      const res = translateExprImpl(helpersRef)(0)(modNameStr)([])(Leaf)(Leaf)($Maybe("Just", sanitizeName2(v2._1)))([])(false)(0)(v2._2);
-      return [{ identifier: sanitizeName2(v2._1), expression: wrapInStmts([])(res.stmts)(res.expr) }];
-    });
-  });
+      return arrayBind(group2.bindings)((v2) => {
+        const res = translateExprImpl(helpersRef)(0)(modNameStr)([])(Leaf)(Leaf)($Maybe("Just", sanitizeName2(v2._1)))([])(false)(0)(v2._2);
+        return [{ identifier: sanitizeName2(v2._1), expression: wrapInStmts([])(res.stmts)(res.expr) }];
+      });
+    }),
+    ...helpersRef.value
+  ];
   return printGoFile({
     packageName: modNameStr,
     imports: nubBy(ordString.compare)([
-      ...decls.length > 0 || fromFoldableImpl(foldableSet.foldr, mod.foreign).length > 0 ? ["gopurs/output/gopurs_runtime"] : [],
-      ...decls.length > 0 ? ["sync"] : [],
-      ...mapMaybe((i) => {
-        const mStr = joinWith(".")(i);
-        if (mStr !== mod.name && (() => {
-          const $0 = indexOf2("Prim.")(mStr);
-          return mStr !== "Prim" && ($0.tag === "Nothing" || !($0.tag === "Just" && $0._1 === 0));
+      ...allDeclsAst.length > 0 || fromFoldableImpl(foldableSet.foldr, mod.foreign).length > 0 ? ["gopurs/output/gopurs_runtime"] : [],
+      ...allDeclsAst.length > 0 ? ["sync"] : [],
+      ...mapMaybe((pkg) => {
+        if (pkg !== modNameStr && (() => {
+          const $0 = indexOf2("Prim_")(pkg);
+          return pkg !== "Prim" && ($0.tag === "Nothing" || !($0.tag === "Just" && $0._1 === 0));
         })()) {
-          return $Maybe("Just", "gopurs/output/" + mStr);
+          return $Maybe("Just", "gopurs/output/" + replaceAll("_")(".")(pkg));
         }
         return Nothing;
-      })(importsArray)
+      })(nubBy(ordString.compare)(mapMaybe((part) => {
+        const $0 = split(".")(part);
+        if (0 < $0.length) {
+          return $Maybe("Just", $0[0]);
+        }
+        return Nothing;
+      })((() => {
+        const $0 = unconsImpl(
+          (v) => Nothing,
+          (v) => (xs) => $Maybe("Just", xs),
+          split("pkg_")(joinWith("\\n")(arrayMap(printGoDeclVar)(allDeclsAst)))
+        );
+        if ($0.tag === "Nothing") {
+          return [];
+        }
+        if ($0.tag === "Just") {
+          return $0._1;
+        }
+        fail();
+      })())))
     ]),
-    decls: [...decls, ...helpersRef.value],
+    decls: allDeclsAst,
     foreigns: arrayMap((v2) => ({ pursName: sanitizeName2(v2), goName: capitalize(sanitizeName2(v2)) }))(fromFoldableImpl(
       foldableSet.foldr,
       mod.foreign
@@ -15405,12 +15426,26 @@ var decodeLiteral = (dec) => (json) => {
     }
     if ($1.tag === "Right") {
       if ($1._1 === "IntLiteral") {
-        const $2 = getField(decodeInt2)($0._1)("value");
+        const $2 = getField(decodeNumber)($0._1)("value");
         if ($2.tag === "Left") {
           return $Either("Left", $2._1);
         }
         if ($2.tag === "Right") {
-          return $Either("Right", $Literal("LitInt", $2._1));
+          const v = fromNumber((() => {
+            if ($2._1 > 2147483647) {
+              return $2._1 - 4294967296;
+            }
+            if ($2._1 < -2147483648) {
+              return $2._1 + 4294967296;
+            }
+            return $2._1;
+          })());
+          if (v.tag === "Just") {
+            return $Either("Right", $Literal("LitInt", v._1));
+          }
+          if (v.tag === "Nothing") {
+            return $Either("Left", $JsonDecodeError("TypeMismatch", "Int"));
+          }
         }
         fail();
       }
