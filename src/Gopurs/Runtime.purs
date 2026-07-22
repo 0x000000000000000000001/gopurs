@@ -13,13 +13,32 @@ const (
 
 type Value struct {
 	Type   uint8
-	IntVal int64
-	StrVal string
-	PtrVal any
+	IntVal   int
+	FloatVal float64
+	BoolVal  bool
+	StrVal   string
+	ArrayVal []Value
+	PtrVal   any
 }
 
 func Str(v string) Value {
 	return Value{Type: TypeString, StrVal: v}
+}
+
+func Int(v int) Value {
+	return Value{Type: TypeInt, IntVal: v}
+}
+
+func Float(v float64) Value {
+	return Value{Type: 7, FloatVal: v}
+}
+
+func Bool(v bool) Value {
+	return Value{Type: 6, BoolVal: v}
+}
+
+func Array(v []Value) Value {
+	return Value{Type: 8, ArrayVal: v}
 }
 
 func Record(m map[string]Value) Value {
