@@ -17,6 +17,8 @@ data GoExpr
   | GoIIFE String GoExpr GoExpr
   | GoRecordAccess GoExpr String
   | GoBranch (Array (Tuple GoExpr GoExpr)) GoExpr
+  | GoBinOp String GoExpr GoExpr
+  | GoTypeAssertion GoExpr String
   | GoRaw String
 
 derive instance eqGoExpr :: Eq GoExpr

@@ -2783,6 +2783,12 @@ var printGoExpr = (expr) => {
   if (expr.tag === "GoBranch") {
     return "func() gopurs_runtime.Value {\n" + joinWith("\n")(arrayMap((v) => "if (" + printGoExpr(v._1) + ").IntVal != 0 {\nreturn " + printGoExpr(v._2) + "\n}")(expr._1)) + "\nreturn " + printGoExpr(expr._2) + "\n}()";
   }
+  if (expr.tag === "GoBinOp") {
+    return printGoExpr(expr._2) + " " + expr._1 + " " + printGoExpr(expr._3);
+  }
+  if (expr.tag === "GoTypeAssertion") {
+    return printGoExpr(expr._1) + ".(" + expr._2 + ")";
+  }
   if (expr.tag === "GoRaw") {
     return expr._1;
   }
@@ -2802,7 +2808,7 @@ var capitalize = (s) => {
 };
 var translateExpr = (modNameStr) => (v) => {
   if (v.tag === "Var") {
-    const baseName = capitalize(replaceAll("'")("_prime")(replaceAll("$")("_")(v._1._2)));
+    const baseName = capitalize(replaceAll("'")("_prime")(replaceAll("$")("_dollar")(v._1._2)));
     if (v._1._1.tag === "Just") {
       const modPkg = replaceAll(".")("_")(v._1._1._1);
       if (v._1._1._1 === modNameStr) {
@@ -2817,10 +2823,10 @@ var translateExpr = (modNameStr) => (v) => {
   }
   if (v.tag === "Local") {
     if (v._1.tag === "Just") {
-      return $GoExpr("GoVar", replaceAll("'")("_prime")(replaceAll("$")("_")(v._1._1)));
+      return $GoExpr("GoVar", replaceAll("'")("_prime")(replaceAll("$")("_dollar")(v._1._1)));
     }
     if (v._1.tag === "Nothing") {
-      return $GoExpr("GoVar", "_");
+      return $GoExpr("GoVar", "_unused_" + showIntImpl(v._2));
     }
     return $GoExpr("GoVar", "gopurs_runtime.Value{}");
   }
@@ -2837,6 +2843,18 @@ var translateExpr = (modNameStr) => (v) => {
         "GoCall",
         $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Int"),
         [$GoExpr("GoInt", v._1._1)]
+      );
+    }
+    if (v._1.tag === "LitArray") {
+      return $GoExpr(
+        "GoCall",
+        $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Array"),
+        [
+          $GoExpr(
+            "GoRaw",
+            "[]gopurs_runtime.Value{" + joinWith(", ")(arrayMap((x) => printGoExpr(translateExpr(modNameStr)(x)))(v._1._1)) + "}"
+          )
+        ]
       );
     }
     if (v._1.tag === "LitRecord") {
@@ -2857,15 +2875,16 @@ var translateExpr = (modNameStr) => (v) => {
   }
   if (v.tag === "Abs") {
     return foldrArray((v1) => {
-      const $0 = v1._1;
+      const $0 = v1._2;
+      const $1 = v1._1;
       return (inner) => $GoExpr(
         "GoFunc",
         (() => {
-          if ($0.tag === "Just") {
-            return replaceAll("'")("_prime")(replaceAll("$")("_")($0._1));
+          if ($1.tag === "Just") {
+            return replaceAll("'")("_prime")(replaceAll("$")("_dollar")($1._1));
           }
-          if ($0.tag === "Nothing") {
-            return "_";
+          if ($1.tag === "Nothing") {
+            return "_unused_" + showIntImpl($0);
           }
           fail();
         })(),
@@ -2878,10 +2897,10 @@ var translateExpr = (modNameStr) => (v) => {
       "GoIIFE",
       (() => {
         if (v._1.tag === "Just") {
-          return replaceAll("'")("_prime")(replaceAll("$")("_")(v._1._1));
+          return replaceAll("'")("_prime")(replaceAll("$")("_dollar")(v._1._1));
         }
         if (v._1.tag === "Nothing") {
-          return "_";
+          return "_unused_" + showIntImpl(v._2);
         }
         fail();
       })(),
@@ -2902,11 +2921,146 @@ var translateExpr = (modNameStr) => (v) => {
       translateExpr(modNameStr)(v._2)
     );
   }
+  if (v.tag === "PrimOp") {
+    if (v._1.tag === "Op1") {
+      if (v._1._1.tag === "OpArrayLength") {
+        return $GoExpr(
+          "GoCall",
+          $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Int"),
+          [
+            $GoExpr(
+              "GoCall",
+              $GoExpr("GoVar", "len"),
+              [$GoExpr("GoTypeAssertion", $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "PtrVal"), "[]gopurs_runtime.Value")]
+            )
+          ]
+        );
+      }
+      return $GoExpr("GoVar", "gopurs_runtime.Value{}");
+    }
+    if (v._1.tag === "Op2") {
+      if (v._1._1.tag === "OpIntOrd") {
+        if (v._1._1._1 === "OpEq") {
+          return $GoExpr(
+            "GoCall",
+            $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+            [
+              $GoExpr(
+                "GoBinOp",
+                "==",
+                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "IntVal"),
+                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._3), "IntVal")
+              )
+            ]
+          );
+        }
+        if (v._1._1._1 === "OpNotEq") {
+          return $GoExpr(
+            "GoCall",
+            $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+            [
+              $GoExpr(
+                "GoBinOp",
+                "!=",
+                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "IntVal"),
+                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._3), "IntVal")
+              )
+            ]
+          );
+        }
+        if (v._1._1._1 === "OpLt") {
+          return $GoExpr(
+            "GoCall",
+            $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+            [
+              $GoExpr(
+                "GoBinOp",
+                "<",
+                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "IntVal"),
+                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._3), "IntVal")
+              )
+            ]
+          );
+        }
+        if (v._1._1._1 === "OpLte") {
+          return $GoExpr(
+            "GoCall",
+            $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+            [
+              $GoExpr(
+                "GoBinOp",
+                "<=",
+                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "IntVal"),
+                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._3), "IntVal")
+              )
+            ]
+          );
+        }
+        if (v._1._1._1 === "OpGt") {
+          return $GoExpr(
+            "GoCall",
+            $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+            [
+              $GoExpr(
+                "GoBinOp",
+                ">",
+                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "IntVal"),
+                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._3), "IntVal")
+              )
+            ]
+          );
+        }
+        if (v._1._1._1 === "OpGte") {
+          return $GoExpr(
+            "GoCall",
+            $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+            [
+              $GoExpr(
+                "GoBinOp",
+                ">=",
+                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "IntVal"),
+                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._3), "IntVal")
+              )
+            ]
+          );
+        }
+        return $GoExpr("GoVar", "gopurs_runtime.Value{}");
+      }
+      if (v._1._1.tag === "OpBooleanAnd") {
+        return $GoExpr(
+          "GoCall",
+          $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+          [
+            $GoExpr(
+              "GoBinOp",
+              "&&",
+              $GoExpr("GoBinOp", "!=", $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "IntVal"), $GoExpr("GoInt", 0)),
+              $GoExpr("GoBinOp", "!=", $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._3), "IntVal"), $GoExpr("GoInt", 0))
+            )
+          ]
+        );
+      }
+      if (v._1._1.tag === "OpBooleanOr") {
+        return $GoExpr(
+          "GoCall",
+          $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+          [
+            $GoExpr(
+              "GoBinOp",
+              "||",
+              $GoExpr("GoBinOp", "!=", $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "IntVal"), $GoExpr("GoInt", 0)),
+              $GoExpr("GoBinOp", "!=", $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._3), "IntVal"), $GoExpr("GoInt", 0))
+            )
+          ]
+        );
+      }
+    }
+  }
   return $GoExpr("GoVar", "gopurs_runtime.Value{}");
 };
 var translateBinding = (modNameStr) => (v) => $Maybe(
   "Just",
-  { identifier: capitalize(replaceAll("'")("_prime")(replaceAll("$")("_")(v._1))), expression: translateExpr(modNameStr)(v._2) }
+  { identifier: capitalize(replaceAll("'")("_prime")(replaceAll("$")("_dollar")(v._1))), expression: translateExpr(modNameStr)(v._2) }
 );
 var translateBindingGroup = (modNameStr) => (bg) => mapMaybe(translateBinding(modNameStr))(bg.bindings);
 var translate = (importsArray) => (backendMod) => {

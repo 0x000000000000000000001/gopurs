@@ -36,6 +36,10 @@ printGoExpr expr = case expr of
     "func() gopurs_runtime.Value {\n" <>
     String.joinWith "\n" (map (\(Tuple cond t) -> "if (" <> printGoExpr cond <> ").IntVal != 0 {\nreturn " <> printGoExpr t <> "\n}") branches) <>
     "\nreturn " <> printGoExpr def <> "\n}()"
+  GoBinOp op left right ->
+    printGoExpr left <> " " <> op <> " " <> printGoExpr right
+  GoTypeAssertion expr t ->
+    printGoExpr expr <> ".(" <> t <> ")"
   GoRaw raw ->
     raw
 
