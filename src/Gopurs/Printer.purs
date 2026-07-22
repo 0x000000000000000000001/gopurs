@@ -51,10 +51,10 @@ printGoExpr expr = case expr of
     printGoExpr expr <> ".(" <> t <> ")"
   GoRaw raw ->
     raw
-  GoFor stmts ->
-    "for {\n" <> String.joinWith "\n" (map printGoExpr stmts) <> "\n}"
-  GoContinue ->
-    "continue"
+  GoFor label stmts ->
+    label <> ":\nfor {\nif false { continue " <> label <> " }\n" <> String.joinWith "\n" (map printGoExpr stmts) <> "\n}"
+  GoContinue label ->
+    "continue " <> label
   GoIfElse cond trueStmts falseStmts ->
     "if (" <> printGoExpr cond <> ").IntVal != 0 {\n" <>
       String.joinWith "\n" (map printGoExpr trueStmts) <>
