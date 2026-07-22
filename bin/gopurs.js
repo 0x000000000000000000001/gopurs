@@ -3045,7 +3045,7 @@ var printGoExpr = (expr) => {
     return "return " + printGoExpr(expr._1);
   }
   if (expr.tag === "GoAssign") {
-    return expr._1 + " := " + printGoExpr(expr._2);
+    return expr._1 + " := " + printGoExpr(expr._2) + "\n_ = " + expr._1;
   }
   if (expr.tag === "GoMap") {
     return "map[string]gopurs_runtime.Value{" + joinWith(", ")(arrayMap((v) => '"' + v._1 + '": ' + printGoExpr(v._2))(expr._1)) + "}";
@@ -4982,16 +4982,13 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
         nextId: argRes.nextId
       };
     })({ stmts: resFn.stmts, exprs: [], nextId: resFn.nextId })(v._2._2);
+    const len = v._2._2.length;
     return {
       stmts: accArgs.stmts,
       expr: $GoExpr(
         "GoCall",
-        $GoExpr(
-          "GoTypeAssertion",
-          $GoExpr("GoSelector", resFn.expr, "PtrVal"),
-          "func(" + joinWith(", ")(arrayMap((v$1) => "gopurs_runtime.Value")(v._2._2)) + ") gopurs_runtime.Value"
-        ),
-        accArgs.exprs
+        $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), len >= 2 && len <= 5 ? "UncurriedApp" + showIntImpl(len) : "UncurriedApp"),
+        [resFn.expr, ...accArgs.exprs]
       ),
       nextId: accArgs.nextId
     };
@@ -5032,16 +5029,13 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
         nextId: argRes.nextId
       };
     })({ stmts: resFn.stmts, exprs: [], nextId: resFn.nextId })(v._2._2);
+    const len = v._2._2.length;
     return {
       stmts: accArgs.stmts,
       expr: $GoExpr(
         "GoCall",
-        $GoExpr(
-          "GoTypeAssertion",
-          $GoExpr("GoSelector", resFn.expr, "PtrVal"),
-          "func(" + joinWith(", ")(arrayMap((v$1) => "gopurs_runtime.Value")(v._2._2)) + ") gopurs_runtime.Value"
-        ),
-        accArgs.exprs
+        $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), len >= 2 && len <= 5 ? "UncurriedApp" + showIntImpl(len) : "UncurriedApp"),
+        [resFn.expr, ...accArgs.exprs]
       ),
       nextId: accArgs.nextId
     };
@@ -5063,6 +5057,44 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
         nextId: resBody.nextId
       };
     });
+  }
+  if (v._2.tag === "EffectBind") {
+    const resBinding = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(nextId + 1 | 0)(v._2._3);
+    const originalName = localId(v._2._1)(v._2._2);
+    const name2 = originalName + "_" + showIntImpl(nextId);
+    const resBody = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(insert(ordString)(originalName)(name2)(bound))(Nothing)(loopCtx)(isTail)(resBinding.nextId)(v._2._4);
+    return {
+      stmts: (() => {
+        const $0 = $StmtTree("StmtLeaf", $GoExpr("GoAssign", name2, resBinding.expr));
+        const $1 = resBody.stmts.tag === "StmtEmpty" ? $0 : $StmtTree("StmtAppend", $0, resBody.stmts);
+        if (resBinding.stmts.tag === "StmtEmpty") {
+          return $1;
+        }
+        if ($1.tag === "StmtEmpty") {
+          return resBinding.stmts;
+        }
+        return $StmtTree("StmtAppend", resBinding.stmts, $1);
+      })(),
+      expr: resBody.expr,
+      nextId: resBody.nextId
+    };
+  }
+  if (v._2.tag === "EffectPure") {
+    return translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(nextId)(v._2._1);
+  }
+  if (v._2.tag === "EffectDefer") {
+    const resBinding = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(nextId)(v._2._1);
+    return {
+      stmts: StmtEmpty,
+      expr: $GoExpr(
+        "GoRaw",
+        "gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {\n" + printGoExpr($GoExpr(
+          "GoBlock",
+          [...flattenStmts(resBinding.stmts), $GoExpr("GoReturn", resBinding.expr)]
+        )) + "\n})"
+      ),
+      nextId: resBinding.nextId
+    };
   }
   if (v._2.tag === "Let") {
     const resBinding = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(nextId + 1 | 0)(v._2._3);
@@ -5210,7 +5242,7 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
       const resBody = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(combinedRecVars)(namedBound)(allocRes.newBound)(Nothing)(loopCtx)(isTail)(accBindings.nextId)(v._2._3);
       return {
         stmts: (() => {
-          const $1 = foldMap(StmtLeaf)(arrayMap((b) => $GoExpr("GoRaw", "var " + b.key + " gopurs_runtime.Value"))(accBindings.exprs));
+          const $1 = foldMap(StmtLeaf)(arrayMap((b) => $GoExpr("GoRaw", "var " + b.key + " gopurs_runtime.Value\n_ = " + b.key))(accBindings.exprs));
           const $2 = foldMap(StmtLeaf)(arrayMap((b) => $GoExpr("GoMutate", b.key, b.value))(accBindings.exprs));
           const $3 = (() => {
             if ($2.tag === "StmtEmpty") {
@@ -5490,8 +5522,14 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
               [
                 $GoExpr(
                   "GoCall",
-                  $GoExpr("GoVar", "len"),
-                  [$GoExpr("GoTypeAssertion", $GoExpr("GoSelector", resE.expr, "PtrVal"), "[]gopurs_runtime.Value")]
+                  $GoExpr("GoVar", "int64"),
+                  [
+                    $GoExpr(
+                      "GoCall",
+                      $GoExpr("GoVar", "len"),
+                      [$GoExpr("GoTypeAssertion", $GoExpr("GoSelector", resE.expr, "PtrVal"), "[]gopurs_runtime.Value")]
+                    )
+                  ]
                 )
               ]
             );
@@ -5849,6 +5887,50 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
     }
     fail();
   }
+  if (v._2.tag === "PrimEffect") {
+    if (v._2._1.tag === "EffectRefNew") {
+      const resA = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(nextId)(v._2._1._1);
+      const refIdent = "__local_ref_" + showIntImpl(resA.nextId);
+      return {
+        stmts: (() => {
+          const $0 = $StmtTree("StmtLeaf", $GoExpr("GoAssign", refIdent, resA.expr));
+          if (resA.stmts.tag === "StmtEmpty") {
+            return $0;
+          }
+          return $StmtTree("StmtAppend", resA.stmts, $0);
+        })(),
+        expr: $GoExpr("GoRaw", "gopurs_runtime.Value{PtrVal: &" + refIdent + "}"),
+        nextId: resA.nextId + 1 | 0
+      };
+    }
+    if (v._2._1.tag === "EffectRefRead") {
+      const resA = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(nextId)(v._2._1._1);
+      return { stmts: resA.stmts, expr: $GoExpr("GoRaw", "*(" + printGoExpr(resA.expr) + ".PtrVal.(*gopurs_runtime.Value))"), nextId: resA.nextId };
+    }
+    if (v._2._1.tag === "EffectRefWrite") {
+      const resRef = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(nextId)(v._2._1._1);
+      const resVal = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(resRef.nextId)(v._2._1._2);
+      return {
+        stmts: (() => {
+          const $0 = $StmtTree(
+            "StmtLeaf",
+            $GoExpr("GoRaw", "*(" + printGoExpr(resRef.expr) + ".PtrVal.(*gopurs_runtime.Value)) = " + printGoExpr(resVal.expr))
+          );
+          const $1 = resVal.stmts.tag === "StmtEmpty" ? $0 : $StmtTree("StmtAppend", resVal.stmts, $0);
+          if (resRef.stmts.tag === "StmtEmpty") {
+            return $1;
+          }
+          if ($1.tag === "StmtEmpty") {
+            return resRef.stmts;
+          }
+          return $StmtTree("StmtAppend", resRef.stmts, $1);
+        })(),
+        expr: resVal.expr,
+        nextId: resVal.nextId
+      };
+    }
+    fail();
+  }
   return { stmts: StmtEmpty, expr: $GoExpr("GoVar", "gopurs_runtime.Value{}"), nextId };
 };
 var capitalize = (v) => {
@@ -6114,7 +6196,7 @@ var findFfiFile = (mbFfiDir) => (modName) => (mbModulePath) => {
 };
 
 // output-es/Gopurs.Runtime/index.js
-var runtimeGoCode = 'package gopurs_runtime\n\nimport "math"\n\nconst (\n	TypeInt = 1\n	TypeString = 2\n	TypeRecord = 3\n	TypeFunc = 4\n	TypeConstructor = 5\n)\n\n// We do not add FloatVal or BoolVal fields to keep the struct size minimal.\n// Floats are packed into IntVal using math.Float64bits, and Bools are mapped to 1/0 in IntVal.\n// Adding more fields would increase the struct size and reduce pass-by-value performance.\ntype Value struct {\n	Type   uint8\n	IntVal int64\n	StrVal string\n	PtrVal any\n}\n\nfunc Str(v string) Value {\n	return Value{Type: TypeString, StrVal: v}\n}\n\nfunc Int(v int) Value {\n	return Value{Type: TypeInt, IntVal: int64(v)}\n}\n\nfunc Float(v float64) Value {\n	return Value{Type: 7, IntVal: int64(math.Float64bits(v))}\n}\n\nfunc Bool(v bool) Value {\n	var i int64 = 0\n	if v {\n		i = 1\n	}\n	return Value{Type: 6, IntVal: i}\n}\n\nfunc FloatAdd(a, b Value) Value { return Float(math.Float64frombits(uint64(a.IntVal)) + math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatSub(a, b Value) Value { return Float(math.Float64frombits(uint64(a.IntVal)) - math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatMul(a, b Value) Value { return Float(math.Float64frombits(uint64(a.IntVal)) * math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatDiv(a, b Value) Value { return Float(math.Float64frombits(uint64(a.IntVal)) / math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatNeg(a Value) Value { return Float(-math.Float64frombits(uint64(a.IntVal))) }\n\nfunc FloatEq(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) == math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatNeq(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) != math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatLt(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) < math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatLte(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) <= math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatGt(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) > math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatGte(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) >= math.Float64frombits(uint64(b.IntVal))) }\n\nfunc Zshr(a, b Value) Value { return Int(int(uint32(a.IntVal) >> uint32(b.IntVal))) }\n\nfunc Array(v []Value) Value {\n	return Value{Type: 8, PtrVal: v}\n}\n\nfunc Record(m map[string]Value) Value {\n	return Value{Type: TypeRecord, PtrVal: m}\n}\n\nfunc RecordUpdate(orig Value, updates map[string]Value) Value {\n	origMap := orig.PtrVal.(map[string]Value)\n	newMap := make(map[string]Value, len(origMap)+len(updates))\n	for k, v := range origMap {\n		newMap[k] = v\n	}\n	for k, v := range updates {\n		newMap[k] = v\n	}\n	return Record(newMap)\n}\n\nfunc Cons(tag string, args []Value) Value {\n	return Value{Type: TypeConstructor, StrVal: tag, PtrVal: args}\n}\n\n// Function with 1 arg (curried)\nfunc Func(f func(Value) Value) Value {\n	return Value{Type: TypeFunc, PtrVal: f}\n}\n\nfunc FuncAny(f any) Value {\n	return Value{Type: TypeFunc, PtrVal: f}\n}\n\n// Uncurried application helper\nfunc Apply(f Value, arg Value) Value {\n	if f.Type != TypeFunc {\n		panic("Attempted to apply a non-function")\n	}\n	fn := f.PtrVal.(func(Value) Value)\n	return fn(arg)\n}\n\nfunc ArrayAccess(arr Value, index int) Value {\n	return arr.PtrVal.([]Value)[index]\n}\n\nfunc Any(v any) Value {\n	return Value{Type: 9, PtrVal: v}\n}\n';
+var runtimeGoCode = 'package gopurs_runtime\n\nimport "math"\n\nconst (\n	TypeInt = 1\n	TypeString = 2\n	TypeRecord = 3\n	TypeFunc = 4\n	TypeConstructor = 5\n)\n\n// We do not add FloatVal or BoolVal fields to keep the struct size minimal.\n// Floats are packed into IntVal using math.Float64bits, and Bools are mapped to 1/0 in IntVal.\n// Adding more fields would increase the struct size and reduce pass-by-value performance.\ntype Value struct {\n	Type   uint8\n	IntVal int64\n	StrVal string\n	PtrVal any\n}\n\nfunc Str(v string) Value {\n	return Value{Type: TypeString, StrVal: v}\n}\n\nfunc Int(v int64) Value {\n	return Value{Type: TypeInt, IntVal: v}\n}\n\nfunc Float(v float64) Value {\n	return Value{Type: 7, IntVal: int64(math.Float64bits(v))}\n}\n\nfunc Bool(v bool) Value {\n	var i int64 = 0\n	if v {\n		i = 1\n	}\n	return Value{Type: 6, IntVal: i}\n}\n\nfunc FloatAdd(a, b Value) Value { return Float(math.Float64frombits(uint64(a.IntVal)) + math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatSub(a, b Value) Value { return Float(math.Float64frombits(uint64(a.IntVal)) - math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatMul(a, b Value) Value { return Float(math.Float64frombits(uint64(a.IntVal)) * math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatDiv(a, b Value) Value { return Float(math.Float64frombits(uint64(a.IntVal)) / math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatNeg(a Value) Value { return Float(-math.Float64frombits(uint64(a.IntVal))) }\n\nfunc FloatEq(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) == math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatNeq(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) != math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatLt(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) < math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatLte(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) <= math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatGt(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) > math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatGte(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) >= math.Float64frombits(uint64(b.IntVal))) }\n\nfunc Zshr(a Value, b Value) Value {\n	return Int(int64(uint32(a.IntVal) >> uint32(b.IntVal)))\n}\n\nfunc Shl(a Value, b Value) Value {\n	return Int(int64(int32(a.IntVal) << uint32(b.IntVal)))\n}\n\nfunc Shr(a Value, b Value) Value {\n	return Int(int64(int32(a.IntVal) >> uint32(b.IntVal)))\n}\n\nfunc BitAnd(a Value, b Value) Value {\n	return Int(int64(int32(a.IntVal) & int32(b.IntVal)))\n}\n\nfunc BitOr(a Value, b Value) Value {\n	return Int(int64(int32(a.IntVal) | int32(b.IntVal)))\n}\n\nfunc BitXor(a Value, b Value) Value {\n	return Int(int64(int32(a.IntVal) ^ int32(b.IntVal)))\n}\n\nfunc Array(v []Value) Value {\n	return Value{Type: 8, PtrVal: v}\n}\n\nfunc Record(m map[string]Value) Value {\n	return Value{Type: TypeRecord, PtrVal: m}\n}\n\nfunc RecordUpdate(orig Value, updates map[string]Value) Value {\n	origMap := orig.PtrVal.(map[string]Value)\n	newMap := make(map[string]Value, len(origMap)+len(updates))\n	for k, v := range origMap {\n		newMap[k] = v\n	}\n	for k, v := range updates {\n		newMap[k] = v\n	}\n	return Record(newMap)\n}\n\nfunc Cons(tag string, args []Value) Value {\n	return Value{Type: TypeConstructor, StrVal: tag, PtrVal: args}\n}\n\n// Function with 1 arg (curried)\nfunc Func(f func(Value) Value) Value {\n	return Value{Type: TypeFunc, PtrVal: f}\n}\n\nfunc FuncAny(f any) Value {\n	return Value{Type: TypeFunc, PtrVal: f}\n}\n\n// Uncurried application helper\nfunc Apply(f Value, arg Value) Value {\n	if f.Type != TypeFunc {\n		panic("Attempted to apply a non-function")\n	}\n	fn := f.PtrVal.(func(Value) Value)\n	return fn(arg)\n}\n\nfunc ArrayAccess(arr Value, index int) Value {\n	return arr.PtrVal.([]Value)[index]\n}\n\nfunc Any(v any) Value {\n	return Value{Type: 9, PtrVal: v}\n}\n\nfunc UncurriedApp2(fn Value, a, b Value) Value {\n	if f, ok := fn.PtrVal.(func(Value, Value) Value); ok {\n		return f(a, b)\n	}\n	return Apply(Apply(fn, a), b)\n}\n\nfunc UncurriedApp3(fn Value, a, b, c Value) Value {\n	if f, ok := fn.PtrVal.(func(Value, Value, Value) Value); ok {\n		return f(a, b, c)\n	}\n	return Apply(Apply(Apply(fn, a), b), c)\n}\n\nfunc UncurriedApp4(fn Value, a, b, c, d Value) Value {\n	if f, ok := fn.PtrVal.(func(Value, Value, Value, Value) Value); ok {\n		return f(a, b, c, d)\n	}\n	return Apply(Apply(Apply(Apply(fn, a), b), c), d)\n}\n\nfunc UncurriedApp5(fn Value, a, b, c, d, e Value) Value {\n	if f, ok := fn.PtrVal.(func(Value, Value, Value, Value, Value) Value); ok {\n		return f(a, b, c, d, e)\n	}\n	return Apply(Apply(Apply(Apply(Apply(fn, a), b), c), d), e)\n}\n\nfunc UncurriedApp(fn Value, args ...Value) Value {\n	res := fn\n	for _, arg := range args {\n		res = Apply(res, arg)\n	}\n	return res\n}\n';
 
 // output-es/Node.Encoding/index.js
 var $Encoding = (tag) => tag;

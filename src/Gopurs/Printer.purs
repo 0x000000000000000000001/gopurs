@@ -27,7 +27,7 @@ printGoExpr expr = case expr of
   GoReturn e ->
     "return " <> printGoExpr e
   GoAssign name e ->
-    name <> " := " <> printGoExpr e
+    name <> " := " <> printGoExpr e <> "\n_ = " <> name
   GoMap props ->
     "map[string]gopurs_runtime.Value{" <> String.joinWith ", " (map (\(Tuple k v) -> "\"" <> k <> "\": " <> printGoExpr v) props) <> "}"
   GoIIFE name binding body ->

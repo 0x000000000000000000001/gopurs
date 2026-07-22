@@ -1,7 +1,7 @@
 module Gopurs.CodeGen where
 
 import Prelude
-import PureScript.Backend.Optimizer.Syntax (BackendSyntax(..), BackendAccessor(..), Pair(..), Level(..), BackendOperator(..), BackendOperator1(..), BackendOperator2(..), BackendOperatorOrd(..), BackendOperatorNum(..))
+import PureScript.Backend.Optimizer.Syntax (BackendSyntax(..), BackendAccessor(..), Pair(..), Level(..), BackendOperator(..), BackendOperator1(..), BackendOperator2(..), BackendOperatorOrd(..), BackendOperatorNum(..), BackendEffect(..))
 import PureScript.Backend.Optimizer.Semantics (NeutralExpr(..))
 import PureScript.Backend.Optimizer.Convert (BackendModule, BackendBindingGroup)
 import Data.String as String
@@ -373,10 +373,10 @@ translateExprImpl helpersRef depth modNameStr recVars namedBound bound tcoIdent 
             args
         in
           let
-            goArgsTypes = String.joinWith ", " (map (const "gopurs_runtime.Value") args)
-            goCast = GoTypeAssertion (GoSelector resFn.expr "PtrVal") ("func(" <> goArgsTypes <> ") gopurs_runtime.Value")
+            len = Array.length args
+            goFuncName = if len >= 2 && len <= 5 then "UncurriedApp" <> show len else "UncurriedApp"
           in
-            { stmts: accArgs.stmts, expr: GoCall goCast accArgs.exprs, nextId: accArgs.nextId }
+            { stmts: accArgs.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") goFuncName) (Array.cons resFn.expr accArgs.exprs), nextId: accArgs.nextId }
 
       UncurriedAbs args body -> liftIfNeeded \_ ->
         let
@@ -401,10 +401,10 @@ translateExprImpl helpersRef depth modNameStr recVars namedBound bound tcoIdent 
             args
         in
           let
-            goArgsTypes = String.joinWith ", " (map (const "gopurs_runtime.Value") args)
-            goCast = GoTypeAssertion (GoSelector resFn.expr "PtrVal") ("func(" <> goArgsTypes <> ") gopurs_runtime.Value")
+            len = Array.length args
+            goFuncName = if len >= 2 && len <= 5 then "UncurriedApp" <> show len else "UncurriedApp"
           in
-            { stmts: accArgs.stmts, expr: GoCall goCast accArgs.exprs, nextId: accArgs.nextId }
+            { stmts: accArgs.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") goFuncName) (Array.cons resFn.expr accArgs.exprs), nextId: accArgs.nextId }
 
       UncurriedEffectAbs args body -> liftIfNeeded \_ ->
         let
@@ -414,6 +414,26 @@ translateExprImpl helpersRef depth modNameStr recVars namedBound bound tcoIdent 
           funcExpr = GoRaw ("gopurs_runtime.Value{PtrVal: func(" <> goParams <> ") gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBody.stmts <> [ GoReturn resBody.expr ])) <> "\n}}")
         in
           { stmts: StmtEmpty, expr: funcExpr, nextId: resBody.nextId }
+
+      EffectBind mbIdent lvl binding body ->
+        let
+          originalName = localId mbIdent lvl
+          name = originalName <> "_" <> show nextId
+          newBound = Map.insert originalName name bound
+          resBinding = translateExprImpl helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false (nextId + 1) binding
+          resBody = translateExprImpl helpersRef (depth + 1) modNameStr recVars namedBound newBound Nothing loopCtx isTail resBinding.nextId body
+        in
+          { stmts: resBinding.stmts <> StmtLeaf (GoAssign name resBinding.expr) <> resBody.stmts, expr: resBody.expr, nextId: resBody.nextId }
+
+      EffectPure binding ->
+        translateExprImpl helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false nextId binding
+
+      EffectDefer binding ->
+        let
+          resBinding = translateExprImpl helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false nextId binding
+          funcExpr = GoRaw ("gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBinding.stmts <> [ GoReturn resBinding.expr ])) <> "\n})")
+        in
+          { stmts: StmtEmpty, expr: funcExpr, nextId: resBinding.nextId }
 
       Let mbIdent lvl binding body ->
         let
@@ -496,7 +516,7 @@ translateExprImpl helpersRef depth modNameStr recVars namedBound bound tcoIdent 
                   { stmts: StmtEmpty, exprs: [], nextId: allocRes.nextId }
                   (Array.zip (toArray bindings) allocRes.newNames)
 
-                declStmts = map (\b -> GoRaw ("var " <> b.key <> " gopurs_runtime.Value")) accBindings.exprs
+                declStmts = map (\b -> GoRaw ("var " <> b.key <> " gopurs_runtime.Value\n_ = " <> b.key)) accBindings.exprs
                 assignStmts = map (\b -> GoMutate b.key b.value) accBindings.exprs
 
                 resBody = translateExprImpl helpersRef (depth + 1) modNameStr combinedRecVars namedBound allocRes.newBound Nothing loopCtx isTail accBindings.nextId body
@@ -582,7 +602,7 @@ translateExprImpl helpersRef depth modNameStr recVars namedBound bound tcoIdent 
               OpIntBitNot -> GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoBinOp "^" (GoRaw "^0") (GoSelector resE.expr "IntVal") ]
               OpNumberNegate -> GoCall (GoSelector (GoVar "gopurs_runtime") "FloatNeg") [ resE.expr ]
               OpIsTag (Qualified _ (Ident tag)) -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "==" (GoSelector (GoRecordAccess resE.expr "_tag") "StrVal") (GoString tag) ]
-              OpArrayLength -> GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoCall (GoVar "len") [ GoTypeAssertion (GoSelector resE.expr "PtrVal") "[]gopurs_runtime.Value" ] ]
+              OpArrayLength -> GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoCall (GoVar "int64") [ GoCall (GoVar "len") [ GoTypeAssertion (GoSelector resE.expr "PtrVal") "[]gopurs_runtime.Value" ] ] ]
           in
             { stmts: resE.stmts, expr: goOp, nextId: resE.nextId }
         Op2 op2 e1 e2 ->
@@ -640,6 +660,36 @@ translateExprImpl helpersRef depth modNameStr recVars namedBound bound tcoIdent 
               OpBooleanOr -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "||" (GoBinOp "!=" (GoSelector res1.expr "IntVal") (GoInt 0)) (GoBinOp "!=" (GoSelector res2.expr "IntVal") (GoInt 0)) ]
           in
             { stmts: res1.stmts <> res2.stmts, expr: goOp, nextId: res2.nextId }
+
+      PrimEffect eff -> case eff of
+        EffectRefNew a ->
+          let
+            resA = translateExprImpl helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false nextId a
+            refIdent = "__local_ref_" <> show resA.nextId
+            declStmt = GoAssign refIdent resA.expr
+          in
+            { stmts: resA.stmts <> StmtLeaf declStmt
+            , expr: GoRaw ("gopurs_runtime.Value{PtrVal: &" <> refIdent <> "}")
+            , nextId: resA.nextId + 1
+            }
+        EffectRefRead a ->
+          let
+            resA = translateExprImpl helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false nextId a
+          in
+            { stmts: resA.stmts
+            , expr: GoRaw ("*(" <> printGoExpr resA.expr <> ".PtrVal.(*gopurs_runtime.Value))")
+            , nextId: resA.nextId
+            }
+        EffectRefWrite ref val ->
+          let
+            resRef = translateExprImpl helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false nextId ref
+            resVal = translateExprImpl helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false resRef.nextId val
+            writeStmt = GoRaw ("*(" <> printGoExpr resRef.expr <> ".PtrVal.(*gopurs_runtime.Value)) = " <> printGoExpr resVal.expr)
+          in
+            { stmts: resRef.stmts <> resVal.stmts <> StmtLeaf writeStmt
+            , expr: resVal.expr
+            , nextId: resVal.nextId
+            }
 
       _ -> { stmts: StmtEmpty, expr: GoVar "gopurs_runtime.Value{}", nextId }
 

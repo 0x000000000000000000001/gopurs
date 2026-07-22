@@ -27,8 +27,8 @@ func Str(v string) Value {
 	return Value{Type: TypeString, StrVal: v}
 }
 
-func Int(v int) Value {
-	return Value{Type: TypeInt, IntVal: int64(v)}
+func Int(v int64) Value {
+	return Value{Type: TypeInt, IntVal: v}
 }
 
 func Float(v float64) Value {
@@ -56,7 +56,29 @@ func FloatLte(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntV
 func FloatGt(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) > math.Float64frombits(uint64(b.IntVal))) }
 func FloatGte(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) >= math.Float64frombits(uint64(b.IntVal))) }
 
-func Zshr(a, b Value) Value { return Int(int(uint32(a.IntVal) >> uint32(b.IntVal))) }
+func Zshr(a Value, b Value) Value {
+	return Int(int64(uint32(a.IntVal) >> uint32(b.IntVal)))
+}
+
+func Shl(a Value, b Value) Value {
+	return Int(int64(int32(a.IntVal) << uint32(b.IntVal)))
+}
+
+func Shr(a Value, b Value) Value {
+	return Int(int64(int32(a.IntVal) >> uint32(b.IntVal)))
+}
+
+func BitAnd(a Value, b Value) Value {
+	return Int(int64(int32(a.IntVal) & int32(b.IntVal)))
+}
+
+func BitOr(a Value, b Value) Value {
+	return Int(int64(int32(a.IntVal) | int32(b.IntVal)))
+}
+
+func BitXor(a Value, b Value) Value {
+	return Int(int64(int32(a.IntVal) ^ int32(b.IntVal)))
+}
 
 func Array(v []Value) Value {
 	return Value{Type: 8, PtrVal: v}
@@ -106,5 +128,41 @@ func ArrayAccess(arr Value, index int) Value {
 
 func Any(v any) Value {
 	return Value{Type: 9, PtrVal: v}
+}
+
+func UncurriedApp2(fn Value, a, b Value) Value {
+	if f, ok := fn.PtrVal.(func(Value, Value) Value); ok {
+		return f(a, b)
+	}
+	return Apply(Apply(fn, a), b)
+}
+
+func UncurriedApp3(fn Value, a, b, c Value) Value {
+	if f, ok := fn.PtrVal.(func(Value, Value, Value) Value); ok {
+		return f(a, b, c)
+	}
+	return Apply(Apply(Apply(fn, a), b), c)
+}
+
+func UncurriedApp4(fn Value, a, b, c, d Value) Value {
+	if f, ok := fn.PtrVal.(func(Value, Value, Value, Value) Value); ok {
+		return f(a, b, c, d)
+	}
+	return Apply(Apply(Apply(Apply(fn, a), b), c), d)
+}
+
+func UncurriedApp5(fn Value, a, b, c, d, e Value) Value {
+	if f, ok := fn.PtrVal.(func(Value, Value, Value, Value, Value) Value); ok {
+		return f(a, b, c, d, e)
+	}
+	return Apply(Apply(Apply(Apply(Apply(fn, a), b), c), d), e)
+}
+
+func UncurriedApp(fn Value, args ...Value) Value {
+	res := fn
+	for _, arg := range args {
+		res = Apply(res, arg)
+	}
+	return res
 }
 """
