@@ -1,1 +1,0 @@
-{"builtWith":"0.15.15","comments":[],"decls":[],"exports":[],"foreign":[],"imports":[{"annotation":{"meta":null,"sourceSpan":{"end":[3,10],"start":[3,1]}},"moduleName":["M1"]},{"annotation":{"meta":null,"sourceSpan":{"end":[3,10],"start":[1,1]}},"moduleName":["Prim"]}],"moduleName":["M2"],"modulePath":"src/M2.purs","reExports":{},"sourceSpan":{"end":[3,10],"start":[1,1]}}

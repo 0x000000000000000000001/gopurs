@@ -579,9 +579,10 @@ translateExprImpl helpersRef depth modNameStr recVars namedBound bound tcoIdent 
             goOp = case op1 of
               OpBooleanNot -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "==" (GoSelector resE.expr "IntVal") (GoInt 0) ]
               OpIntNegate -> GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoBinOp "-" (GoInt 0) (GoSelector resE.expr "IntVal") ]
+              OpIntBitNot -> GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoBinOp "^" (GoRaw "^0") (GoSelector resE.expr "IntVal") ]
+              OpNumberNegate -> GoCall (GoSelector (GoVar "gopurs_runtime") "FloatNeg") [ resE.expr ]
               OpIsTag (Qualified _ (Ident tag)) -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "==" (GoSelector (GoRecordAccess resE.expr "_tag") "StrVal") (GoString tag) ]
               OpArrayLength -> GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoCall (GoVar "len") [ GoTypeAssertion (GoSelector resE.expr "PtrVal") "[]gopurs_runtime.Value" ] ]
-              _ -> GoVar "TODO"
           in
             { stmts: resE.stmts, expr: goOp, nextId: resE.nextId }
         Op2 op2 e1 e2 ->
@@ -589,23 +590,54 @@ translateExprImpl helpersRef depth modNameStr recVars namedBound bound tcoIdent 
             res1 = translateExprImpl helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false nextId e1
             res2 = translateExprImpl helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false res1.nextId e2
             goOp = case op2 of
+              OpArrayIndex -> GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayAccess") [ res1.expr, GoCall (GoVar "int") [ GoSelector res2.expr "IntVal" ] ]
+              OpIntNum OpAdd -> GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoBinOp "+" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ]
+              OpIntNum OpSubtract -> GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoBinOp "-" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ]
+              OpIntNum OpMultiply -> GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoBinOp "*" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ]
+              OpIntNum OpDivide -> GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoBinOp "/" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ]
+              OpIntBitAnd -> GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoBinOp "&" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ]
+              OpIntBitOr -> GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoBinOp "|" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ]
+              OpIntBitXor -> GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoBinOp "^" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ]
+              OpIntBitShiftLeft -> GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoBinOp "<<" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ]
+              OpIntBitShiftRight -> GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoBinOp ">>" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ]
+              OpIntBitZeroFillShiftRight -> GoCall (GoSelector (GoVar "gopurs_runtime") "Zshr") [ res1.expr, res2.expr ]
               OpIntOrd OpEq -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "==" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ]
               OpIntOrd OpNotEq -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "!=" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ]
               OpIntOrd OpLt -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "<" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ]
               OpIntOrd OpLte -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "<=" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ]
               OpIntOrd OpGt -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp ">" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ]
               OpIntOrd OpGte -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp ">=" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ]
-              OpNumberOrd OpEq -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "==" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ]
-              OpNumberOrd OpNotEq -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "!=" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ]
+              OpNumberNum OpAdd -> GoCall (GoSelector (GoVar "gopurs_runtime") "FloatAdd") [ res1.expr, res2.expr ]
+              OpNumberNum OpSubtract -> GoCall (GoSelector (GoVar "gopurs_runtime") "FloatSub") [ res1.expr, res2.expr ]
+              OpNumberNum OpMultiply -> GoCall (GoSelector (GoVar "gopurs_runtime") "FloatMul") [ res1.expr, res2.expr ]
+              OpNumberNum OpDivide -> GoCall (GoSelector (GoVar "gopurs_runtime") "FloatDiv") [ res1.expr, res2.expr ]
+              OpNumberOrd OpEq -> GoCall (GoSelector (GoVar "gopurs_runtime") "FloatEq") [ res1.expr, res2.expr ]
+              OpNumberOrd OpNotEq -> GoCall (GoSelector (GoVar "gopurs_runtime") "FloatNeq") [ res1.expr, res2.expr ]
+              OpNumberOrd OpLt -> GoCall (GoSelector (GoVar "gopurs_runtime") "FloatLt") [ res1.expr, res2.expr ]
+              OpNumberOrd OpLte -> GoCall (GoSelector (GoVar "gopurs_runtime") "FloatLte") [ res1.expr, res2.expr ]
+              OpNumberOrd OpGt -> GoCall (GoSelector (GoVar "gopurs_runtime") "FloatGt") [ res1.expr, res2.expr ]
+              OpNumberOrd OpGte -> GoCall (GoSelector (GoVar "gopurs_runtime") "FloatGte") [ res1.expr, res2.expr ]
+              OpStringAppend -> GoCall (GoSelector (GoVar "gopurs_runtime") "Str") [ GoBinOp "+" (GoSelector res1.expr "StrVal") (GoSelector res2.expr "StrVal") ]
               OpStringOrd OpEq -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "==" (GoSelector res1.expr "StrVal") (GoSelector res2.expr "StrVal") ]
               OpStringOrd OpNotEq -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "!=" (GoSelector res1.expr "StrVal") (GoSelector res2.expr "StrVal") ]
+              OpStringOrd OpLt -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "<" (GoSelector res1.expr "StrVal") (GoSelector res2.expr "StrVal") ]
+              OpStringOrd OpLte -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "<=" (GoSelector res1.expr "StrVal") (GoSelector res2.expr "StrVal") ]
+              OpStringOrd OpGt -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp ">" (GoSelector res1.expr "StrVal") (GoSelector res2.expr "StrVal") ]
+              OpStringOrd OpGte -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp ">=" (GoSelector res1.expr "StrVal") (GoSelector res2.expr "StrVal") ]
               OpCharOrd OpEq -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "==" (GoSelector res1.expr "StrVal") (GoSelector res2.expr "StrVal") ]
               OpCharOrd OpNotEq -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "!=" (GoSelector res1.expr "StrVal") (GoSelector res2.expr "StrVal") ]
+              OpCharOrd OpLt -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "<" (GoSelector res1.expr "StrVal") (GoSelector res2.expr "StrVal") ]
+              OpCharOrd OpLte -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "<=" (GoSelector res1.expr "StrVal") (GoSelector res2.expr "StrVal") ]
+              OpCharOrd OpGt -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp ">" (GoSelector res1.expr "StrVal") (GoSelector res2.expr "StrVal") ]
+              OpCharOrd OpGte -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp ">=" (GoSelector res1.expr "StrVal") (GoSelector res2.expr "StrVal") ]
               OpBooleanOrd OpEq -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "==" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ]
               OpBooleanOrd OpNotEq -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "!=" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ]
+              OpBooleanOrd OpLt -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "<" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ]
+              OpBooleanOrd OpLte -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "<=" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ]
+              OpBooleanOrd OpGt -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp ">" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ]
+              OpBooleanOrd OpGte -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp ">=" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ]
               OpBooleanAnd -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "&&" (GoBinOp "!=" (GoSelector res1.expr "IntVal") (GoInt 0)) (GoBinOp "!=" (GoSelector res2.expr "IntVal") (GoInt 0)) ]
               OpBooleanOr -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "||" (GoBinOp "!=" (GoSelector res1.expr "IntVal") (GoInt 0)) (GoBinOp "!=" (GoSelector res2.expr "IntVal") (GoInt 0)) ]
-              _ -> GoVar "TODO"
           in
             { stmts: res1.stmts <> res2.stmts, expr: goOp, nextId: res2.nextId }
 

@@ -1,9 +1,0 @@
-package Bar
-
-import (
-
-)
-
-
-
-

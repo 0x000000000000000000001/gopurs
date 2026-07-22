@@ -26,6 +26,7 @@ import Data.Newtype (unwrap)
 import PureScript.Backend.Optimizer.CoreFn.Json (decodeModule)
 import PureScript.Backend.Optimizer.CoreFn.Sort (sortModules)
 import PureScript.Backend.Optimizer.Builder (buildModules)
+import PureScript.Backend.Optimizer.Semantics.Foreign (coreForeignSemantics)
 import PureScript.Backend.Optimizer.CoreFn (Module(..), Ann, importName)
 import Gopurs.CodeGen (translate)
 import Gopurs.Runtime (runtimeGoCode)
@@ -67,7 +68,7 @@ main = launchAff_ do
   buildModules
     { directives: Map.empty
     , analyzeCustom: \_ _ -> Nothing
-    , foreignSemantics: Map.empty
+    , foreignSemantics: coreForeignSemantics
     , traceIdents: Set.empty
     , onPrepareModule: \_ (Module m) -> pure (Module m)
     , onCodegenModule: \_ (Module coreFnMod) backendMod _ -> do
