@@ -53,6 +53,10 @@ var $$Proxy = /* @__PURE__ */ $$$Proxy();
 var showIntImpl = function(n) {
   return n.toString();
 };
+var showNumberImpl = function(n) {
+  var str = n.toString();
+  return isNaN(str + ".0") ? str : str + ".0";
+};
 var showStringImpl = function(s) {
   var l = s.length;
   return '"' + s.replace(
@@ -2828,9 +2832,8 @@ var printGoExpr = (expr) => {
   }
   fail();
 };
-var printGoDeclVar = (v) => "var " + v.identifier + " gopurs_runtime.Value";
-var printGoDeclInit = (v) => "	" + v.identifier + " = " + printGoExpr(v.expression);
-var printGoFile = (v) => "package " + v.packageName + "\n\nimport (\n" + joinWith("\n")(arrayMap((i) => '	"' + i + '"')(v.imports)) + "\n)\n\n" + joinWith("\n")(arrayMap(printGoDeclVar)(v.decls)) + "\n\nfunc init() {\n" + joinWith("\n")(arrayMap(printGoDeclInit)(v.decls)) + "\n}\n";
+var printGoDeclVar = (v) => "var " + v.identifier + " gopurs_runtime.Value\nvar once_" + v.identifier + " sync.Once\nfunc Get_" + v.identifier + "() gopurs_runtime.Value {\n	once_" + v.identifier + ".Do(func() {\n		" + v.identifier + " = " + printGoExpr(v.expression) + "\n	})\n	return " + v.identifier + "\n}";
+var printGoFile = (v) => "package " + v.packageName + "\n\nimport (\n" + joinWith("\n")(arrayMap((i) => '	"' + i + '"')(v.imports)) + "\n)\n\n" + joinWith("\n\n")(arrayMap(printGoDeclVar)(v.decls)) + "\n\n" + joinWith("\n\n")(arrayMap((name2) => "func Get_" + name2 + "() gopurs_runtime.Value {\n	return " + name2 + "\n}")(v.foreigns)) + "\n";
 
 // output-es/Gopurs.CodeGen/index.js
 var sanitizeName = (name2) => {
@@ -2840,15 +2843,21 @@ var sanitizeName = (name2) => {
   }
   return s1;
 };
-var capitalize = (s) => {
-  const firstChar = take2(1)(s);
+var capitalize = (v) => {
+  if (v === "") {
+    return "X";
+  }
+  const firstChar = take2(1)(v);
   if (firstChar >= "a" && firstChar <= "z") {
-    return toUpper(firstChar) + drop(length2(take2(1)(s)))(s);
+    return toUpper(firstChar) + drop(length2(take2(1)(v)))(v);
   }
   if (firstChar >= "A" && firstChar <= "Z") {
-    return s + "_";
+    return v + "_";
   }
-  return "X" + s;
+  if (firstChar === "_") {
+    return "X_" + capitalize(drop(length2(take2(1)(v)))(v));
+  }
+  return "X" + v;
 };
 var translateExpr = (modNameStr) => (v) => {
   if (v.tag === "Var") {
@@ -2856,12 +2865,12 @@ var translateExpr = (modNameStr) => (v) => {
     if (v._1._1.tag === "Just") {
       const modPkg = replaceAll(".")("_")(v._1._1._1);
       if (v._1._1._1 === modNameStr) {
-        return $GoExpr("GoVar", baseName);
+        return $GoExpr("GoCall", $GoExpr("GoVar", "Get_" + baseName), []);
       }
-      return $GoExpr("GoSelector", $GoExpr("GoVar", modPkg), baseName);
+      return $GoExpr("GoCall", $GoExpr("GoSelector", $GoExpr("GoVar", modPkg), "Get_" + baseName), []);
     }
     if (v._1._1.tag === "Nothing") {
-      return $GoExpr("GoVar", baseName);
+      return $GoExpr("GoCall", $GoExpr("GoVar", "Get_" + baseName), []);
     }
     fail();
   }
@@ -2887,6 +2896,27 @@ var translateExpr = (modNameStr) => (v) => {
         "GoCall",
         $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Int"),
         [$GoExpr("GoInt", v._1._1)]
+      );
+    }
+    if (v._1.tag === "LitNumber") {
+      return $GoExpr(
+        "GoCall",
+        $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Float"),
+        [$GoExpr("GoRaw", showNumberImpl(v._1._1))]
+      );
+    }
+    if (v._1.tag === "LitBoolean") {
+      return $GoExpr(
+        "GoCall",
+        $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+        [$GoExpr("GoRaw", v._1._1 ? "true" : "false")]
+      );
+    }
+    if (v._1.tag === "LitChar") {
+      return $GoExpr(
+        "GoCall",
+        $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Str"),
+        [$GoExpr("GoString", singleton(v._1._1))]
       );
     }
     if (v._1.tag === "LitArray") {
@@ -3162,6 +3192,130 @@ var translateExpr = (modNameStr) => (v) => {
         }
         return $GoExpr("GoVar", "gopurs_runtime.Value{}");
       }
+      if (v._1._1.tag === "OpNumberOrd") {
+        if (v._1._1._1 === "OpEq") {
+          return $GoExpr(
+            "GoCall",
+            $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+            [
+              $GoExpr(
+                "GoBinOp",
+                "==",
+                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "IntVal"),
+                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._3), "IntVal")
+              )
+            ]
+          );
+        }
+        if (v._1._1._1 === "OpNotEq") {
+          return $GoExpr(
+            "GoCall",
+            $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+            [
+              $GoExpr(
+                "GoBinOp",
+                "!=",
+                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "IntVal"),
+                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._3), "IntVal")
+              )
+            ]
+          );
+        }
+        return $GoExpr("GoVar", "gopurs_runtime.Value{}");
+      }
+      if (v._1._1.tag === "OpStringOrd") {
+        if (v._1._1._1 === "OpEq") {
+          return $GoExpr(
+            "GoCall",
+            $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+            [
+              $GoExpr(
+                "GoBinOp",
+                "==",
+                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "StrVal"),
+                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._3), "StrVal")
+              )
+            ]
+          );
+        }
+        if (v._1._1._1 === "OpNotEq") {
+          return $GoExpr(
+            "GoCall",
+            $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+            [
+              $GoExpr(
+                "GoBinOp",
+                "!=",
+                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "StrVal"),
+                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._3), "StrVal")
+              )
+            ]
+          );
+        }
+        return $GoExpr("GoVar", "gopurs_runtime.Value{}");
+      }
+      if (v._1._1.tag === "OpCharOrd") {
+        if (v._1._1._1 === "OpEq") {
+          return $GoExpr(
+            "GoCall",
+            $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+            [
+              $GoExpr(
+                "GoBinOp",
+                "==",
+                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "StrVal"),
+                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._3), "StrVal")
+              )
+            ]
+          );
+        }
+        if (v._1._1._1 === "OpNotEq") {
+          return $GoExpr(
+            "GoCall",
+            $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+            [
+              $GoExpr(
+                "GoBinOp",
+                "!=",
+                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "StrVal"),
+                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._3), "StrVal")
+              )
+            ]
+          );
+        }
+        return $GoExpr("GoVar", "gopurs_runtime.Value{}");
+      }
+      if (v._1._1.tag === "OpBooleanOrd") {
+        if (v._1._1._1 === "OpEq") {
+          return $GoExpr(
+            "GoCall",
+            $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+            [
+              $GoExpr(
+                "GoBinOp",
+                "==",
+                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "IntVal"),
+                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._3), "IntVal")
+              )
+            ]
+          );
+        }
+        if (v._1._1._1 === "OpNotEq") {
+          return $GoExpr(
+            "GoCall",
+            $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+            [
+              $GoExpr(
+                "GoBinOp",
+                "!=",
+                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "IntVal"),
+                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._3), "IntVal")
+              )
+            ]
+          );
+        }
+        return $GoExpr("GoVar", "gopurs_runtime.Value{}");
+      }
       if (v._1._1.tag === "OpBooleanAnd") {
         return $GoExpr(
           "GoCall",
@@ -3198,11 +3352,13 @@ var translateBinding = (modNameStr) => (v) => $Maybe("Just", { identifier: capit
 var translateBindingGroup = (modNameStr) => (bg) => mapMaybe(translateBinding(modNameStr))(bg.bindings);
 var translate = (importsArray) => (backendMod) => {
   const modNameStr = backendMod.name;
+  const foreigns = arrayMap((v) => capitalize(sanitizeName(v)))(fromFoldableImpl(foldableSet.foldr, backendMod.foreign));
   const decls = arrayBind(fromFoldableImpl(foldrArray, backendMod.bindings))(translateBindingGroup(modNameStr));
-  const dummyText = printGoFile({ packageName: "", imports: [], decls });
+  const dummyText = printGoFile({ packageName: "", imports: [], decls, foreigns });
   return printGoFile({
     packageName: replaceAll(".")("_")(modNameStr),
     imports: nubBy(ordString.compare)([
+      ...contains("sync.Once")(dummyText) ? ["sync"] : [],
       ...contains("gopurs_runtime")(dummyText) ? ["gopurs/output/gopurs_runtime"] : [],
       ...mapMaybe((i) => {
         const modStr = joinWith(".")(i);
@@ -3214,6 +3370,7 @@ var translate = (importsArray) => (backendMod) => {
         ...importsArray,
         ["Unsafe", "Coerce"],
         ["Partial", "Unsafe"],
+        ["Partial"],
         ["Data", "Function"],
         ["Data", "Function", "Uncurried"],
         ["Record", "Unsafe"],
@@ -3222,10 +3379,12 @@ var translate = (importsArray) => (backendMod) => {
         ["Data", "Eq"],
         ["Data", "Semiring"],
         ["Data", "Ring"],
-        ["Data", "EuclideanRing"]
+        ["Data", "EuclideanRing"],
+        ["Control", "Category"]
       ])
     ]),
-    decls
+    decls,
+    foreigns
   });
 };
 
@@ -14733,7 +14892,7 @@ var main = /* @__PURE__ */ (() => {
           }
           fail();
         })();
-        return toAff3(writeTextFile)(UTF8)("output/main.go")('package main\n\nimport (\n	"gopurs/output/' + mainModuleName + '"\n	"gopurs/output/gopurs_runtime"\n)\n\nfunc main() {\n	gopurs_runtime.Apply(' + replaceAll(".")("_")(mainModuleName) + ".Main, gopurs_runtime.Value{})\n}\n");
+        return toAff3(writeTextFile)(UTF8)("output/main.go")('package main\n\nimport (\n	"gopurs/output/' + mainModuleName + '"\n	"gopurs/output/gopurs_runtime"\n)\n\nfunc main() {\n	gopurs_runtime.Apply(' + replaceAll(".")("_")(mainModuleName) + ".Get_Main(), gopurs_runtime.Value{})\n}\n");
       })))));
     })))
   );

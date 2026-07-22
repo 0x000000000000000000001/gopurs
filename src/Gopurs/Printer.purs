@@ -50,20 +50,21 @@ printGoExpr expr = case expr of
     raw
 
 printGoDeclVar :: GoDecl -> String
-printGoDeclVar { identifier } =
-  "var " <> identifier <> " gopurs_runtime.Value"
-
-printGoDeclInit :: GoDecl -> String
-printGoDeclInit { identifier, expression } =
-  "\t" <> identifier <> " = " <> printGoExpr expression
+printGoDeclVar { identifier, expression } =
+  "var " <> identifier <> " gopurs_runtime.Value\n" <>
+  "var once_" <> identifier <> " sync.Once\n" <>
+  "func Get_" <> identifier <> "() gopurs_runtime.Value {\n" <>
+  "\tonce_" <> identifier <> ".Do(func() {\n" <>
+  "\t\t" <> identifier <> " = " <> printGoExpr expression <> "\n" <>
+  "\t})\n" <>
+  "\treturn " <> identifier <> "\n" <>
+  "}"
 
 printGoFile :: GoFile -> String
-printGoFile { packageName, imports, decls } =
+printGoFile { packageName, imports, decls, foreigns } =
   "package " <> packageName <> "\n\n" <>
   "import (\n" <>
   String.joinWith "\n" (map (\i -> "\t\"" <> i <> "\"") imports) <> "\n" <>
   ")\n\n" <>
-  String.joinWith "\n" (map printGoDeclVar decls) <> "\n\n" <>
-  "func init() {\n" <>
-  String.joinWith "\n" (map printGoDeclInit decls) <> "\n" <>
-  "}\n"
+  String.joinWith "\n\n" (map printGoDeclVar decls) <> "\n\n" <>
+  String.joinWith "\n\n" (map (\name -> "func Get_" <> name <> "() gopurs_runtime.Value {\n\treturn " <> name <> "\n}") foreigns) <> "\n"

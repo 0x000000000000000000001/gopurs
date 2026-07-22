@@ -11,18 +11,22 @@ import Data.Newtype (unwrap)
 import PureScript.Backend.Optimizer.CoreFn (Literal(..), Ident(..), Qualified(..), Prop(..))
 import Data.Tuple (Tuple(..))
 import Data.Array.NonEmpty as NonEmptyArray
+import Data.String.CodeUnits as SCU
 import Data.String.Pattern (Pattern(..))
 
 import Gopurs.GoAst (GoFile, GoDecl, GoExpr(..))
 import Gopurs.Printer (printGoFile, printGoExpr)
 
 capitalize :: String -> String
+capitalize "" = "X"
 capitalize s = 
   let firstChar = String.take 1 s
   in if firstChar >= "a" && firstChar <= "z"
      then String.toUpper firstChar <> String.drop 1 s
      else if firstChar >= "A" && firstChar <= "Z"
      then s <> "_"
+     else if firstChar == "_"
+     then "X_" <> capitalize (String.drop 1 s)
      else "X" <> s
 
 translate :: Array (Array String) -> BackendModule -> String
@@ -33,20 +37,23 @@ translate importsArray backendMod =
     decls = Array.concatMap (translateBindingGroup modNameStr) (Array.fromFoldable backendMod.bindings)
     allDecls = decls
     
-    dummyText = printGoFile { packageName: "", imports: [], decls: allDecls }
+    foreigns = map (\(Ident name) -> capitalize (sanitizeName name)) (Array.fromFoldable backendMod.foreign)
     
-    goImports = Array.nub $ (if String.contains (String.Pattern "gopurs_runtime") dummyText then [ "gopurs/output/gopurs_runtime" ] else []) <> 
+    dummyText = printGoFile { packageName: "", imports: [], decls: allDecls, foreigns: foreigns }
+    
+    goImports = Array.nub $ (if String.contains (String.Pattern "sync.Once") dummyText then [ "sync" ] else []) <> (if String.contains (String.Pattern "gopurs_runtime") dummyText then [ "gopurs/output/gopurs_runtime" ] else []) <> 
       Array.mapMaybe (\i -> 
         let modStr = String.joinWith "." i 
             modPkg = String.replaceAll (String.Pattern ".") (String.Replacement "_") modStr
         in if modStr /= modNameStr && modStr /= "Prim" && String.contains (String.Pattern (modPkg <> ".")) dummyText
            then Just ("gopurs/output/" <> modStr)
            else Nothing
-      ) (importsArray <> [ ["Unsafe", "Coerce"], ["Partial", "Unsafe"], ["Data", "Function"], ["Data", "Function", "Uncurried"], ["Record", "Unsafe"], ["Type", "Proxy"], ["Data", "Unit"], ["Data", "Eq"], ["Data", "Semiring"], ["Data", "Ring"], ["Data", "EuclideanRing"] ])
+      ) (importsArray <> [ ["Unsafe", "Coerce"], ["Partial", "Unsafe"], ["Partial"], ["Data", "Function"], ["Data", "Function", "Uncurried"], ["Record", "Unsafe"], ["Type", "Proxy"], ["Data", "Unit"], ["Data", "Eq"], ["Data", "Semiring"], ["Data", "Ring"], ["Data", "EuclideanRing"], ["Control", "Category"] ])
     
     goFile = { packageName: String.replaceAll (String.Pattern ".") (String.Replacement "_") modNameStr
              , imports: goImports
              , decls: allDecls 
+             , foreigns: foreigns
              }
   in
     printGoFile goFile
@@ -77,12 +84,15 @@ translateExpr modNameStr (NeutralExpr expr) = case expr of
       Just mn -> 
         let modStr = unwrap mn
             modPkg = String.replaceAll (String.Pattern ".") (String.Replacement "_") modStr
-        in if modStr == modNameStr then GoVar baseName else GoSelector (GoVar modPkg) baseName
-      Nothing -> GoVar baseName
+        in if modStr == modNameStr then GoCall (GoVar ("Get_" <> baseName)) [] else GoCall (GoSelector (GoVar modPkg) ("Get_" <> baseName)) []
+      Nothing -> GoCall (GoVar ("Get_" <> baseName)) []
   Local (Just (Ident name)) _ -> GoVar (sanitizeName name)
   Local Nothing (Level l) -> GoVar ("_unused_" <> show l)
   Lit (LitString s) -> GoCall (GoSelector (GoVar "gopurs_runtime") "Str") [ GoString s ]
   Lit (LitInt i) -> GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoInt i ]
+  Lit (LitNumber n) -> GoCall (GoSelector (GoVar "gopurs_runtime") "Float") [ GoRaw (show n) ]
+  Lit (LitBoolean b) -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoRaw (if b then "true" else "false") ]
+  Lit (LitChar c) -> GoCall (GoSelector (GoVar "gopurs_runtime") "Str") [ GoString (SCU.singleton c) ]
   Lit (LitArray xs) -> GoCall (GoSelector (GoVar "gopurs_runtime") "Array") [ GoRaw ("[]gopurs_runtime.Value{" <> String.joinWith ", " (map (\x -> printGoExpr (translateExpr modNameStr x)) xs) <> "}") ]
   Lit (LitRecord props) -> GoCall (GoSelector (GoVar "gopurs_runtime") "Record") [ GoMap (map (\(Prop k v) -> Tuple k (translateExpr modNameStr v)) props) ]
   App f args -> 
@@ -126,6 +136,14 @@ translateExpr modNameStr (NeutralExpr expr) = case expr of
     Op2 (OpIntOrd OpLte) e1 e2 -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "<=" (GoSelector (translateExpr modNameStr e1) "IntVal") (GoSelector (translateExpr modNameStr e2) "IntVal") ]
     Op2 (OpIntOrd OpGt) e1 e2 -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp ">" (GoSelector (translateExpr modNameStr e1) "IntVal") (GoSelector (translateExpr modNameStr e2) "IntVal") ]
     Op2 (OpIntOrd OpGte) e1 e2 -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp ">=" (GoSelector (translateExpr modNameStr e1) "IntVal") (GoSelector (translateExpr modNameStr e2) "IntVal") ]
+    Op2 (OpNumberOrd OpEq) e1 e2 -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "==" (GoSelector (translateExpr modNameStr e1) "IntVal") (GoSelector (translateExpr modNameStr e2) "IntVal") ]
+    Op2 (OpNumberOrd OpNotEq) e1 e2 -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "!=" (GoSelector (translateExpr modNameStr e1) "IntVal") (GoSelector (translateExpr modNameStr e2) "IntVal") ]
+    Op2 (OpStringOrd OpEq) e1 e2 -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "==" (GoSelector (translateExpr modNameStr e1) "StrVal") (GoSelector (translateExpr modNameStr e2) "StrVal") ]
+    Op2 (OpStringOrd OpNotEq) e1 e2 -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "!=" (GoSelector (translateExpr modNameStr e1) "StrVal") (GoSelector (translateExpr modNameStr e2) "StrVal") ]
+    Op2 (OpCharOrd OpEq) e1 e2 -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "==" (GoSelector (translateExpr modNameStr e1) "StrVal") (GoSelector (translateExpr modNameStr e2) "StrVal") ]
+    Op2 (OpCharOrd OpNotEq) e1 e2 -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "!=" (GoSelector (translateExpr modNameStr e1) "StrVal") (GoSelector (translateExpr modNameStr e2) "StrVal") ]
+    Op2 (OpBooleanOrd OpEq) e1 e2 -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "==" (GoSelector (translateExpr modNameStr e1) "IntVal") (GoSelector (translateExpr modNameStr e2) "IntVal") ]
+    Op2 (OpBooleanOrd OpNotEq) e1 e2 -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "!=" (GoSelector (translateExpr modNameStr e1) "IntVal") (GoSelector (translateExpr modNameStr e2) "IntVal") ]
     Op2 OpBooleanAnd e1 e2 -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "&&" (GoBinOp "!=" (GoSelector (translateExpr modNameStr e1) "IntVal") (GoInt 0)) (GoBinOp "!=" (GoSelector (translateExpr modNameStr e2) "IntVal") (GoInt 0)) ]
     Op2 OpBooleanOr e1 e2 -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "||" (GoBinOp "!=" (GoSelector (translateExpr modNameStr e1) "IntVal") (GoInt 0)) (GoBinOp "!=" (GoSelector (translateExpr modNameStr e2) "IntVal") (GoInt 0)) ]
     _ -> GoVar "gopurs_runtime.Value{}"

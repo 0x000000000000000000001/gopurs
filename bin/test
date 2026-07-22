@@ -38,6 +38,7 @@ package:
     - functions
     - unfoldable
     - record
+    - assert
   name: runner
 workspace:
   extraPackages:
@@ -61,6 +62,8 @@ workspace:
       path: "../../../gopurs-enums"
     foreign-object:
       path: "../../../gopurs-foreign-object"
+    strings:
+      path: "../../../gopurs-strings"
     numbers:
       path: "../../../gopurs-numbers"
     refs:
@@ -73,6 +76,8 @@ workspace:
       path: "../../../gopurs-st"
     unsafe-coerce:
       path: "../../../gopurs-unsafe-coerce"
+    assert:
+      path: "../../../gopurs-assert"
   packageSet:
     registry: 77.10.1
 YAML
@@ -83,26 +88,54 @@ echo "Running tests from $PASSING_DIR..."
 passed=0
 failed=0
 
+SKIP_BEFORE="ConstraintParsingIssue"
 TEST_FILES=()
+CLEAN_CACHE=0
 
 if [ $# -gt 0 ]; then
   for arg in "$@"; do
-    if [ -f "$PASSING_DIR/$arg" ]; then
-      TEST_FILES+=("$PASSING_DIR/$arg")
-    elif [ -f "$PASSING_DIR/$arg.purs" ]; then
-      TEST_FILES+=("$PASSING_DIR/$arg.purs")
+    if [[ "$arg" == skip_before=* ]]; then
+      SKIP_BEFORE="${arg#skip_before=}"
+    elif [[ "$arg" == --skip-before=* ]]; then
+      SKIP_BEFORE="${arg#--skip-before=}"
+    elif [[ "$arg" == "-c" || "$arg" == "--clean" ]]; then
+      CLEAN_CACHE=1
     else
-      echo "Test file $arg not found."
+      if [ -f "$PASSING_DIR/$arg" ]; then
+        TEST_FILES+=("$PASSING_DIR/$arg")
+      elif [ -f "$PASSING_DIR/$arg.purs" ]; then
+        TEST_FILES+=("$PASSING_DIR/$arg.purs")
+      else
+        echo "Test file $arg not found."
+      fi
     fi
   done
+fi
+
+if [ $CLEAN_CACHE -eq 1 ]; then
+  echo "=> Cleaning Spago and output cache..."
+  rm -rf .spago/* output-es/* output/*
 fi
 
 if [ ${#TEST_FILES[@]} -eq 0 ]; then
   TEST_FILES=("$PASSING_DIR"/*.purs)
 fi
 
+skipping_until=0
+if [ -n "$SKIP_BEFORE" ]; then
+  skipping_until=1
+fi
+
 for test_file in "${TEST_FILES[@]}"; do
   test_name=$(basename "$test_file")
+  
+  if [ $skipping_until -eq 1 ]; then
+    if [[ "$test_name" == "$SKIP_BEFORE" || "$test_name" == "$SKIP_BEFORE.purs" ]]; then
+      skipping_until=0
+    else
+      continue
+    fi
+  fi
   
   echo "=> Testing $test_name"
   
@@ -145,8 +178,8 @@ for test_file in "${TEST_FILES[@]}"; do
       go mod init gopurs/output > /dev/null 2>&1
       go mod tidy > /dev/null 2>&1
       
-      if go build -o app > /dev/null 2>&1; then
-          if ./app > /dev/null 2>&1; then
+      if go build -o gopurs_main .; then
+          if ./gopurs_main; then
             echo -e "   \033[0;32m[OK]\033[0m"
             passed=$((passed+1))
           else

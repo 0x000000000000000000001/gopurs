@@ -728,6 +728,9 @@
       "st": {
         "path": "../../../gopurs-st"
       },
+      "strings": {
+        "path": "../../../gopurs-strings"
+      },
       "unsafe-coerce": {
         "path": "../../../gopurs-unsafe-coerce"
       }
@@ -1127,9 +1130,8 @@
       ]
     },
     "strings": {
-      "type": "registry",
-      "version": "6.0.1",
-      "integrity": "sha256-FNto2hoNW5Da6W6crIk77YXMagBvOGHZE1kO7eZ1vLM=",
+      "type": "local",
+      "path": "../../../gopurs-strings",
       "dependencies": [
         "arrays",
         "control",

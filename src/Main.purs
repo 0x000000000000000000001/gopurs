@@ -94,5 +94,5 @@ main = launchAff_ do
         Nothing -> "Main"
 
   let pkgName = String.replaceAll (Pattern ".") (Replacement "_") mainModuleName
-  let mainEntryPoint = "package main\n\nimport (\n\t\"gopurs/output/" <> mainModuleName <> "\"\n\t\"gopurs/output/gopurs_runtime\"\n)\n\nfunc main() {\n\tgopurs_runtime.Apply(" <> pkgName <> ".Main, gopurs_runtime.Value{})\n}\n"
+  let mainEntryPoint = "package main\n\nimport (\n\t\"gopurs/output/" <> mainModuleName <> "\"\n\t\"gopurs/output/gopurs_runtime\"\n)\n\nfunc main() {\n\tgopurs_runtime.Apply(" <> pkgName <> ".Get_Main(), gopurs_runtime.Value{})\n}\n"
   FS.writeTextFile UTF8 "output/main.go" mainEntryPoint

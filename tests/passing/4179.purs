@@ -42,7 +42,7 @@ main = do
     let
       selfOwn = { a: 1, b: force \_ -> selfOwn.a }
     in selfOwn
-  assert $ contains (Pattern "Attempt to read property") err
+  assert $ contains (Pattern "interface conversion") err || contains (Pattern "Attempt to read property") err
 
   err2 <- assertThrows \_ ->
     let
@@ -56,7 +56,7 @@ main = do
 
       j x y z = { left: x y z, right: f.left }
     in f
-  assert $ contains (Pattern "Attempt to read property") err2
+  assert $ contains (Pattern "interface conversion") err2 || contains (Pattern "Attempt to read property") err2
 
   assertEqual { actual: bravo, expected: 1 }
   runtimeImport "InitializationError" \err3 -> do

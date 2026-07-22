@@ -1,2 +1,0 @@
-<?php
-$exports['default'] = "Done";
