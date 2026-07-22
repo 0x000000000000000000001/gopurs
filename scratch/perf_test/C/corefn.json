@@ -1,0 +1,1 @@
+{"builtWith":"0.15.15","comments":[],"decls":[],"exports":[],"foreign":[],"imports":[{"annotation":{"meta":null,"sourceSpan":{"end":[4,9],"start":[4,1]}},"moduleName":["B"]},{"annotation":{"meta":null,"sourceSpan":{"end":[4,9],"start":[1,1]}},"moduleName":["Prim"]}],"moduleName":["C"],"modulePath":"src/C.purs","reExports":{"B":["A","a"]},"sourceSpan":{"end":[4,9],"start":[1,1]}}

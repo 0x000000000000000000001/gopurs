@@ -21,6 +21,10 @@ data GoExpr
   | GoBinOp String GoExpr GoExpr
   | GoTypeAssertion GoExpr String
   | GoRaw String
+  | GoFor (Array GoExpr)
+  | GoContinue
+  | GoMutate String GoExpr
+  | GoIfElse GoExpr (Array GoExpr) (Array GoExpr)
 
 derive instance eqGoExpr :: Eq GoExpr
 
@@ -33,5 +37,5 @@ type GoFile =
   { packageName :: String
   , imports :: Array String
   , decls :: Array GoDecl
-  , foreigns :: Array String
+  , foreigns :: Array { pursName :: String, goName :: String }
   }

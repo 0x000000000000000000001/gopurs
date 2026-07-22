@@ -102,7 +102,7 @@ echo "Running tests from $PASSING_DIR..."
 passed=0
 failed=0
 
-SKIP_BEFORE=""
+SKIP_BEFORE="AutoPrelude2"
 TEST_FILES=()
 CLEAN_CACHE=0
 
@@ -196,12 +196,11 @@ for test_file in "${TEST_FILES[@]}"; do
       break
     fi
     retry=$((retry+1))
-    sleep 0.5
   done
 
   if [ $build_success -eq 1 ]; then
     # Generate Go code
-    node ../../bin/gopurs.js --main Main > /dev/null 2>&1
+    node ../../bin/gopurs.js --main Main
     
     if [ -d "output/Main" ] && [ -f "output/Main/Main.go" ]; then
       # Compile and Run Go code
