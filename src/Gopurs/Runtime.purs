@@ -72,6 +72,10 @@ func Func(f func(Value) Value) Value {
 	return Value{Type: TypeFunc, PtrVal: f}
 }
 
+func FuncAny(f any) Value {
+	return Value{Type: TypeFunc, PtrVal: f}
+}
+
 // Uncurried application helper
 func Apply(f Value, arg Value) Value {
 	if f.Type != TypeFunc {
@@ -83,5 +87,9 @@ func Apply(f Value, arg Value) Value {
 
 func ArrayAccess(arr Value, index int) Value {
 	return arr.PtrVal.([]Value)[index]
+}
+
+func Any(v any) Value {
+	return Value{Type: 9, PtrVal: v}
 }
 """

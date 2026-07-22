@@ -69,13 +69,13 @@ main = launchAff_ do
     , analyzeCustom: \_ _ -> Nothing
     , foreignSemantics: Map.empty
     , traceIdents: Set.empty
-    , onPrepareModule: \_ m -> pure m
+    , onPrepareModule: \_ (Module m) -> pure (Module m)
     , onCodegenModule: \_ (Module coreFnMod) backendMod _ -> do
         let modNameStr = unwrap backendMod.name
         let importsArray = map (\i -> String.split (Pattern ".") (unwrap (importName i))) coreFnMod.imports
         let goFile = translate importsArray backendMod
         FS.writeTextFile UTF8 ("output/" <> modNameStr <> "/" <> String.replaceAll (Pattern ".") (Replacement "_") modNameStr <> ".go") goFile
-        
+
         when (Array.length (Array.fromFoldable backendMod.foreign) > 0) do
           ffiPathMb <- liftEffect $ findFfiFile Nothing modNameStr (Just coreFnMod.path)
           case ffiPathMb of
@@ -87,12 +87,13 @@ main = launchAff_ do
     finalModules
 
   argv <- liftEffect Process.argv
-  let mainModuleName = case Array.findIndex (_ == "--main") argv of
-        Just i -> case Array.index argv (i + 1) of
-          Just m -> m
-          Nothing -> "Main"
+  let
+    mainModuleName = case Array.findIndex (_ == "--main") argv of
+      Just i -> case Array.index argv (i + 1) of
+        Just m -> m
         Nothing -> "Main"
+      Nothing -> "Main"
 
   let pkgName = String.replaceAll (Pattern ".") (Replacement "_") mainModuleName
-  let mainEntryPoint = "package main\n\nimport (\n\t\"gopurs/output/" <> mainModuleName <> "\"\n\t\"gopurs/output/gopurs_runtime\"\n)\n\nfunc main() {\n\tgopurs_runtime.Apply(" <> pkgName <> ".Get_Main(), gopurs_runtime.Value{})\n}\n"
+  let mainEntryPoint = "package main\n\nimport (\n\t\"gopurs/output/" <> mainModuleName <> "\"\n\t\"gopurs/output/gopurs_runtime\"\n)\n\nfunc main() {\n\tgopurs_runtime.Apply(" <> pkgName <> ".Get_main(), gopurs_runtime.Value{})\n}\n"
   FS.writeTextFile UTF8 "output/main.go" mainEntryPoint

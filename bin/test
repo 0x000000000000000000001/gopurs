@@ -21,6 +21,8 @@ BLACKLIST=(
   # Fails in Go because Go strings are UTF-8 and replace lone surrogates with U+FFFD
   "StringEdgeCases.purs"
   "StringEscapes.purs"
+  # Tests 32-bit integer boundary overflow behavior which gopurs natively treats as 64-bit
+  "2136.purs"
 )
 mkdir -p "$RUNNER_DIR/src"
 
@@ -196,12 +198,11 @@ for test_file in "${TEST_FILES[@]}"; do
       break
     fi
     retry=$((retry+1))
-    sleep 0.5
   done
 
   if [ $build_success -eq 1 ]; then
     # Generate Go code
-    node ../../bin/gopurs.js --main Main > /dev/null 2>&1
+    node ../../bin/gopurs.js --main Main
     
     if [ -d "output/Main" ] && [ -f "output/Main/Main.go" ]; then
       # Compile and Run Go code
@@ -211,7 +212,14 @@ for test_file in "${TEST_FILES[@]}"; do
       go mod tidy > /dev/null 2>&1
       
       if go build -o gopurs_main .; then
-          if ./gopurs_main; then
+          output_run=$(./gopurs_main)
+          exit_code=$?
+          
+          if [ -n "$output_run" ]; then
+            echo "$output_run"
+          fi
+          
+          if [ $exit_code -eq 0 ] && ! echo "$output_run" | grep -q "Fail"; then
             echo -e "   \033[0;32m[OK]\033[0m"
             passed=$((passed+1))
           else

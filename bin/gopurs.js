@@ -117,6 +117,30 @@ var isJust = (v2) => {
   }
   fail();
 };
+var functorMaybe = {
+  map: (v) => (v1) => {
+    if (v1.tag === "Just") {
+      return $Maybe("Just", v(v1._1));
+    }
+    return Nothing;
+  }
+};
+var applyMaybe = {
+  apply: (v) => (v1) => {
+    if (v.tag === "Just") {
+      if (v1.tag === "Just") {
+        return $Maybe("Just", v._1(v1._1));
+      }
+      return Nothing;
+    }
+    if (v.tag === "Nothing") {
+      return Nothing;
+    }
+    fail();
+  },
+  Functor0: () => functorMaybe
+};
+var applicativeMaybe = { pure: Just, Apply0: () => applyMaybe };
 
 // output-es/Data.Function/index.js
 var $$const = (a) => (v) => a;
@@ -811,6 +835,16 @@ var groupAllBy = (cmp) => {
   const $0 = groupBy((x) => (y) => cmp(x)(y) === "EQ");
   return (x) => $0(sortBy(cmp)(x));
 };
+var elem = (dictEq) => (a) => (arr) => {
+  const $0 = findIndexImpl(Just, Nothing, (v) => dictEq.eq(v)(a), arr);
+  if ($0.tag === "Nothing") {
+    return false;
+  }
+  if ($0.tag === "Just") {
+    return true;
+  }
+  fail();
+};
 var concatMap = (b) => (a) => arrayBind(a)(b);
 var mapMaybe = (f) => concatMap((x) => {
   const $0 = f(x);
@@ -823,10 +857,10 @@ var mapMaybe = (f) => concatMap((x) => {
   fail();
 });
 var filterA = (dictApplicative) => {
-  const traverse12 = traversableArray.traverse(dictApplicative);
+  const traverse13 = traversableArray.traverse(dictApplicative);
   const $0 = dictApplicative.Apply0().Functor0();
   return (p) => {
-    const $1 = traverse12((x) => $0.map(Tuple(x))(p(x)));
+    const $1 = traverse13((x) => $0.map(Tuple(x))(p(x)));
     const $2 = $0.map(mapMaybe((v) => {
       if (v._2) {
         return $Maybe("Just", v._1);
@@ -1198,6 +1232,19 @@ var unsafeJoinNodes = (v, v1) => {
   }
   fail();
 };
+var unsafeDifference = (comp, l, r) => {
+  if (l.tag === "Leaf") {
+    return Leaf;
+  }
+  if (r.tag === "Leaf") {
+    return l;
+  }
+  if (r.tag === "Node") {
+    const v = unsafeSplit(comp, r._3, l);
+    return unsafeJoinNodes(unsafeDifference(comp, v._2, r._5), unsafeDifference(comp, v._3, r._6));
+  }
+  fail();
+};
 var unsafeUnionWith = (comp, app, l, r) => {
   if (l.tag === "Leaf") {
     return r;
@@ -1306,6 +1353,27 @@ var stepAscCps = (next) => (done) => {
   return go;
 };
 var stepUnfoldr = /* @__PURE__ */ stepAscCps((k, v, next) => $Maybe("Just", $Tuple($Tuple(k, v), next)))((v) => Nothing);
+var insertWith = (dictOrd) => (app) => (k) => (v) => {
+  const go = (v1) => {
+    if (v1.tag === "Leaf") {
+      return $$$Map("Node", 1, 1, k, v, Leaf, Leaf);
+    }
+    if (v1.tag === "Node") {
+      const v2 = dictOrd.compare(k)(v1._3);
+      if (v2 === "LT") {
+        return unsafeBalancedNode(v1._3, v1._4, go(v1._5), v1._6);
+      }
+      if (v2 === "GT") {
+        return unsafeBalancedNode(v1._3, v1._4, v1._5, go(v1._6));
+      }
+      if (v2 === "EQ") {
+        return $$$Map("Node", v1._1, v1._2, k, app(v1._4)(v), v1._5, v1._6);
+      }
+    }
+    fail();
+  };
+  return go;
+};
 var insert = (dictOrd) => (k) => (v) => {
   const go = (v1) => {
     if (v1.tag === "Leaf") {
@@ -1382,9 +1450,9 @@ var alter = (dictOrd) => {
 // output-es/Data.Set/index.js
 var foldableSet = {
   foldMap: (dictMonoid) => {
-    const foldMap13 = foldableList.foldMap(dictMonoid);
+    const foldMap14 = foldableList.foldMap(dictMonoid);
     return (f) => {
-      const $0 = foldMap13(f);
+      const $0 = foldMap14(f);
       return (x) => $0((() => {
         const go = (m$p, z$p) => {
           if (m$p.tag === "Leaf") {
@@ -2496,7 +2564,6 @@ function fromStringImpl(str, isFinite2, just, nothing) {
     return nothing;
   }
 }
-var round = Math.round;
 
 // output-es/Data.Int/foreign.js
 var fromNumberImpl = function(just) {
@@ -2505,9 +2572,6 @@ var fromNumberImpl = function(just) {
       return (n | 0) === n ? just(n) : nothing;
     };
   };
-};
-var toNumber = function(n) {
-  return n;
 };
 var fromStringAsImpl = function(just) {
   return function(nothing) {
@@ -2537,25 +2601,6 @@ var fromStringAsImpl = function(just) {
 var fromStringAs = /* @__PURE__ */ fromStringAsImpl(Just)(Nothing);
 var fromString = /* @__PURE__ */ fromStringAs(10);
 var fromNumber = /* @__PURE__ */ fromNumberImpl(Just)(Nothing);
-var unsafeClamp = (x) => {
-  if (!isFiniteImpl(x)) {
-    return 0;
-  }
-  if (x >= toNumber(2147483647)) {
-    return 2147483647;
-  }
-  if (x <= toNumber(-2147483648)) {
-    return -2147483648;
-  }
-  const $0 = fromNumber(x);
-  if ($0.tag === "Nothing") {
-    return 0;
-  }
-  if ($0.tag === "Just") {
-    return $0._1;
-  }
-  fail();
-};
 
 // output-es/Data.String.Unsafe/foreign.js
 var charAt = function(i) {
@@ -2658,6 +2703,16 @@ var _unsafeCodePointAt0 = function(fallback) {
     return str.codePointAt(0);
   } : fallback;
 };
+var _fromCodePointArray = function(singleton3) {
+  return hasFromCodePoint ? function(cps) {
+    if (cps.length < 1e4) {
+      return String.fromCodePoint.apply(String, cps);
+    }
+    return cps.map(singleton3).join("");
+  } : function(cps) {
+    return cps.map(singleton3).join("");
+  };
+};
 var _singleton = function(fallback) {
   return hasFromCodePoint ? String.fromCodePoint : fallback;
 };
@@ -2725,6 +2780,13 @@ var unsafeCodePointAt0Fallback = (s) => {
 };
 var unsafeCodePointAt0 = /* @__PURE__ */ _unsafeCodePointAt0(unsafeCodePointAt0Fallback);
 var toCodePointArray = /* @__PURE__ */ _toCodePointArray(toCodePointArrayFallback)(unsafeCodePointAt0);
+var indexOf2 = (p) => (s) => {
+  const $0 = indexOf(p)(s);
+  if ($0.tag === "Just") {
+    return $Maybe("Just", toCodePointArray(take($0._1)(s)).length);
+  }
+  return Nothing;
+};
 var fromCharCode2 = (x) => singleton((() => {
   if (x >= 0 && x <= 65535) {
     return fromCharCode(x);
@@ -2740,6 +2802,7 @@ var singletonFallback = (v) => {
   }
   return fromCharCode2(intDiv(v - 65536 | 0, 1024) + 55296 | 0) + fromCharCode2(intMod(v - 65536 | 0)(1024) + 56320 | 0);
 };
+var fromCodePointArray = /* @__PURE__ */ _fromCodePointArray(singletonFallback);
 var singleton2 = /* @__PURE__ */ _singleton(singletonFallback);
 var takeFallback = (v) => (v1) => {
   if (v < 1) {
@@ -2786,8 +2849,161 @@ var enumCodePoint = {
   Ord0: () => ordCodePoint
 };
 
+// output-es/Gopurs.FreeVars/index.js
+var sanitizeName = (name2) => {
+  const s1 = replaceAll("'")("_prime")(replaceAll("$")("_dollar")(name2));
+  if (s1 === "break" || s1 === "default" || s1 === "func" || s1 === "interface" || s1 === "select" || s1 === "case" || s1 === "defer" || s1 === "go" || s1 === "map" || s1 === "struct" || s1 === "chan" || s1 === "else" || s1 === "goto" || s1 === "package" || s1 === "switch" || s1 === "const" || s1 === "fallthrough" || s1 === "if" || s1 === "range" || s1 === "type" || s1 === "continue" || s1 === "for" || s1 === "import" || s1 === "return" || s1 === "var") {
+    return s1 + "_";
+  }
+  return s1;
+};
+var localId = (v) => (v1) => {
+  if (v.tag === "Just") {
+    return sanitizeName(v._1) + "_" + showIntImpl(v1);
+  }
+  if (v.tag === "Nothing") {
+    return "__local_var_" + showIntImpl(v1);
+  }
+  fail();
+};
+var freeVars = (v) => {
+  if (v._2.tag === "Var") {
+    return Leaf;
+  }
+  if (v._2.tag === "Local") {
+    return $$$Map("Node", 1, 1, localId(v._2._1)(v._2._2), void 0, Leaf, Leaf);
+  }
+  if (v._2.tag === "Lit") {
+    if (v._2._1.tag === "LitArray") {
+      return foldlArray((acc) => (e) => unsafeUnionWith(ordString.compare, $$const, acc, freeVars(e)))(Leaf)(v._2._1._1);
+    }
+    if (v._2._1.tag === "LitRecord") {
+      return foldlArray((acc) => (v1) => unsafeUnionWith(ordString.compare, $$const, acc, freeVars(v1._2)))(Leaf)(v._2._1._1);
+    }
+    return Leaf;
+  }
+  if (v._2.tag === "App") {
+    return foldlArray((acc) => (e) => unsafeUnionWith(ordString.compare, $$const, acc, freeVars(e)))(freeVars(v._2._1))(v._2._2);
+  }
+  if (v._2.tag === "Abs") {
+    return unsafeDifference(
+      ordString.compare,
+      freeVars(v._2._2),
+      foldlArray((acc) => (v1) => insert(ordString)(localId(v1._1)(v1._2))()(acc))(Leaf)(v._2._1)
+    );
+  }
+  if (v._2.tag === "UncurriedApp") {
+    return foldlArray((acc) => (e) => unsafeUnionWith(ordString.compare, $$const, acc, freeVars(e)))(freeVars(v._2._1))(v._2._2);
+  }
+  if (v._2.tag === "UncurriedAbs") {
+    return unsafeDifference(
+      ordString.compare,
+      freeVars(v._2._2),
+      foldlArray((acc) => (v1) => insert(ordString)(localId(v1._1)(v1._2))()(acc))(Leaf)(v._2._1)
+    );
+  }
+  if (v._2.tag === "UncurriedEffectApp") {
+    return foldlArray((acc) => (e) => unsafeUnionWith(ordString.compare, $$const, acc, freeVars(e)))(freeVars(v._2._1))(v._2._2);
+  }
+  if (v._2.tag === "UncurriedEffectAbs") {
+    return unsafeDifference(
+      ordString.compare,
+      freeVars(v._2._2),
+      foldlArray((acc) => (v1) => insert(ordString)(localId(v1._1)(v1._2))()(acc))(Leaf)(v._2._1)
+    );
+  }
+  if (v._2.tag === "Accessor") {
+    return freeVars(v._2._1);
+  }
+  if (v._2.tag === "Update") {
+    return foldlArray((acc) => (v1) => unsafeUnionWith(ordString.compare, $$const, acc, freeVars(v1._2)))(freeVars(v._2._1))(v._2._2);
+  }
+  if (v._2.tag === "CtorSaturated") {
+    return foldlArray((acc) => (v1) => unsafeUnionWith(ordString.compare, $$const, acc, freeVars(v1._2)))(Leaf)(v._2._5);
+  }
+  if (v._2.tag === "CtorDef") {
+    return Leaf;
+  }
+  if (v._2.tag === "LetRec") {
+    const $0 = v._2._1;
+    return unsafeDifference(
+      ordString.compare,
+      unsafeUnionWith(
+        ordString.compare,
+        $$const,
+        freeVars(v._2._3),
+        foldlArray((acc) => (v1) => unsafeUnionWith(ordString.compare, $$const, acc, freeVars(v1._2)))(Leaf)(v._2._2)
+      ),
+      foldlArray((acc) => (v1) => insert(ordString)(localId($Maybe("Just", v1._1))($0))()(acc))(Leaf)(v._2._2)
+    );
+  }
+  if (v._2.tag === "Let") {
+    return unsafeUnionWith(
+      ordString.compare,
+      $$const,
+      freeVars(v._2._3),
+      unsafeDifference(
+        ordString.compare,
+        freeVars(v._2._4),
+        $$$Map("Node", 1, 1, localId(v._2._1)(v._2._2), void 0, Leaf, Leaf)
+      )
+    );
+  }
+  if (v._2.tag === "EffectBind") {
+    return unsafeUnionWith(
+      ordString.compare,
+      $$const,
+      freeVars(v._2._3),
+      unsafeDifference(
+        ordString.compare,
+        freeVars(v._2._4),
+        $$$Map("Node", 1, 1, localId(v._2._1)(v._2._2), void 0, Leaf, Leaf)
+      )
+    );
+  }
+  if (v._2.tag === "EffectPure") {
+    return freeVars(v._2._1);
+  }
+  if (v._2.tag === "EffectDefer") {
+    return freeVars(v._2._1);
+  }
+  if (v._2.tag === "Branch") {
+    return unsafeUnionWith(
+      ordString.compare,
+      $$const,
+      freeVars(v._2._2),
+      foldlArray((acc) => (v1) => unsafeUnionWith(
+        ordString.compare,
+        $$const,
+        acc,
+        unsafeUnionWith(ordString.compare, $$const, freeVars(v1._1), freeVars(v1._2))
+      ))(Leaf)(v._2._1)
+    );
+  }
+  if (v._2.tag === "PrimOp") {
+    if (v._2._1.tag === "Op1") {
+      return freeVars(v._2._1._2);
+    }
+    if (v._2._1.tag === "Op2") {
+      return unsafeUnionWith(ordString.compare, $$const, freeVars(v._2._1._2), freeVars(v._2._1._3));
+    }
+    fail();
+  }
+  if (v._2.tag === "PrimEffect") {
+    return Leaf;
+  }
+  if (v._2.tag === "PrimUndefined") {
+    return Leaf;
+  }
+  if (v._2.tag === "Fail") {
+    return Leaf;
+  }
+  fail();
+};
+
 // output-es/Gopurs.GoAst/index.js
 var $GoExpr = (tag, _1, _2, _3) => ({ tag, _1, _2, _3 });
+var GoContinue = /* @__PURE__ */ $GoExpr("GoContinue");
 
 // output-es/Gopurs.Printer/index.js
 var printGoExpr = (expr) => {
@@ -2807,6 +3023,9 @@ var printGoExpr = (expr) => {
     return printGoExpr(expr._1) + "." + expr._2;
   }
   if (expr.tag === "GoFunc") {
+    if (expr._2.tag === "GoBlock") {
+      return "gopurs_runtime.Func(func(" + expr._1 + " gopurs_runtime.Value) gopurs_runtime.Value {\n" + printGoExpr(expr._2) + "\n})";
+    }
     return "gopurs_runtime.Func(func(" + expr._1 + " gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " + printGoExpr(expr._2) + "\n})";
   }
   if (expr.tag === "GoBlock") {
@@ -2842,913 +3061,59 @@ var printGoExpr = (expr) => {
   if (expr.tag === "GoRaw") {
     return expr._1;
   }
+  if (expr.tag === "GoFor") {
+    return "for {\n" + joinWith("\n")(arrayMap(printGoExpr)(expr._1)) + "\n}";
+  }
+  if (expr.tag === "GoContinue") {
+    return "continue";
+  }
+  if (expr.tag === "GoIfElse") {
+    return "if (" + printGoExpr(expr._1) + ").IntVal != 0 {\n" + joinWith("\n")(arrayMap(printGoExpr)(expr._2)) + "\n} else {\n" + joinWith("\n")(arrayMap(printGoExpr)(expr._3)) + "\n}";
+  }
+  if (expr.tag === "GoMutate") {
+    return expr._1 + " = " + printGoExpr(expr._2);
+  }
   fail();
 };
 var printGoDeclVar = (v) => "var " + v.identifier + " gopurs_runtime.Value\nvar once_" + v.identifier + " sync.Once\nfunc Get_" + v.identifier + "() gopurs_runtime.Value {\n	once_" + v.identifier + ".Do(func() {\n		" + v.identifier + " = " + printGoExpr(v.expression) + "\n	})\n	return " + v.identifier + "\n}";
-var printGoFile = (v) => "package " + v.packageName + "\n\nimport (\n" + joinWith("\n")(arrayMap((i) => '	"' + i + '"')(v.imports)) + "\n)\n\n" + joinWith("\n\n")(arrayMap(printGoDeclVar)(v.decls)) + "\n\n" + joinWith("\n\n")(arrayMap((name2) => "func Get_" + name2 + "() gopurs_runtime.Value {\n	return " + name2 + "\n}")(v.foreigns)) + "\n";
-
-// output-es/Gopurs.CodeGen/index.js
-var sanitizeName = (name2) => {
-  const s1 = replaceAll("'")("_prime")(replaceAll("$")("_dollar")(name2));
-  if (s1 === "break" || s1 === "default" || s1 === "func" || s1 === "interface" || s1 === "select" || s1 === "case" || s1 === "defer" || s1 === "go" || s1 === "map" || s1 === "struct" || s1 === "chan" || s1 === "else" || s1 === "goto" || s1 === "package" || s1 === "switch" || s1 === "const" || s1 === "fallthrough" || s1 === "if" || s1 === "range" || s1 === "type" || s1 === "continue" || s1 === "for" || s1 === "import" || s1 === "return" || s1 === "var") {
-    return s1 + "_";
-  }
-  return s1;
-};
-var capitalize = (v) => {
-  if (v === "") {
-    return "X";
-  }
-  const firstChar = take2(1)(v);
-  if (firstChar >= "a" && firstChar <= "z") {
-    return toUpper(firstChar) + drop(length2(take2(1)(v)))(v);
-  }
-  if (firstChar >= "A" && firstChar <= "Z") {
-    return v + "_";
-  }
-  if (firstChar === "_") {
-    return "X_" + capitalize(drop(length2(take2(1)(v)))(v));
-  }
-  return "X" + v;
-};
-var translateExpr = (modNameStr) => (v) => {
-  if (v.tag === "Var") {
-    const baseName = capitalize(sanitizeName(v._1._2));
-    if (v._1._1.tag === "Just") {
-      const modPkg = replaceAll(".")("_")(v._1._1._1);
-      if (v._1._1._1 === modNameStr) {
-        return $GoExpr("GoCall", $GoExpr("GoVar", "Get_" + baseName), []);
+var printGoFile = (v) => {
+  const declsStr = joinWith("\n\n")(arrayMap(printGoDeclVar)(v.decls)) + "\n\n" + joinWith("\n\n")(arrayMap((f) => "func Get_" + f.pursName + "() gopurs_runtime.Value {\n	return " + f.goName + "\n}")(v.foreigns)) + "\n";
+  const usedImports1 = filterImpl(
+    (i) => {
+      if (i === "gopurs/output/gopurs_runtime" || i === "sync") {
+        return true;
       }
-      return $GoExpr("GoCall", $GoExpr("GoSelector", $GoExpr("GoVar", modPkg), "Get_" + baseName), []);
-    }
-    if (v._1._1.tag === "Nothing") {
-      return $GoExpr("GoCall", $GoExpr("GoVar", "Get_" + baseName), []);
-    }
-    fail();
-  }
-  if (v.tag === "Local") {
-    if (v._1.tag === "Just") {
-      return $GoExpr("GoVar", sanitizeName(v._1._1));
-    }
-    if (v._1.tag === "Nothing") {
-      return $GoExpr("GoVar", "_unused_" + showIntImpl(v._2));
-    }
-    return $GoExpr("GoVar", "gopurs_runtime.Value{}");
-  }
-  if (v.tag === "Lit") {
-    if (v._1.tag === "LitString") {
-      return $GoExpr(
-        "GoCall",
-        $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Str"),
-        [$GoExpr("GoString", v._1._1)]
-      );
-    }
-    if (v._1.tag === "LitInt") {
-      return $GoExpr(
-        "GoCall",
-        $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Int"),
-        [$GoExpr("GoInt", v._1._1)]
-      );
-    }
-    if (v._1.tag === "LitNumber") {
-      return $GoExpr(
-        "GoCall",
-        $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Float"),
-        [$GoExpr("GoRaw", showNumberImpl(v._1._1))]
-      );
-    }
-    if (v._1.tag === "LitBoolean") {
-      return $GoExpr(
-        "GoCall",
-        $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
-        [$GoExpr("GoRaw", v._1._1 ? "true" : "false")]
-      );
-    }
-    if (v._1.tag === "LitChar") {
-      return $GoExpr(
-        "GoCall",
-        $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Str"),
-        [$GoExpr("GoString", singleton(v._1._1))]
-      );
-    }
-    if (v._1.tag === "LitArray") {
-      return $GoExpr(
-        "GoCall",
-        $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Array"),
-        [
-          $GoExpr(
-            "GoRaw",
-            "[]gopurs_runtime.Value{" + joinWith(", ")(arrayMap((x) => printGoExpr(translateExpr(modNameStr)(x)))(v._1._1)) + "}"
-          )
-        ]
-      );
-    }
-    if (v._1.tag === "LitRecord") {
-      return $GoExpr(
-        "GoCall",
-        $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Record"),
-        [$GoExpr("GoMap", arrayMap((v1) => $Tuple(v1._1, translateExpr(modNameStr)(v1._2)))(v._1._1))]
-      );
-    }
-    return $GoExpr("GoVar", "gopurs_runtime.Value{}");
-  }
-  if (v.tag === "App") {
-    return foldlArray((acc) => (arg) => $GoExpr(
-      "GoCall",
-      $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Apply"),
-      [acc, translateExpr(modNameStr)(arg)]
-    ))(translateExpr(modNameStr)(v._1))(v._2);
-  }
-  if (v.tag === "Abs") {
-    return foldrArray((v1) => {
-      const $0 = v1._2;
-      const $1 = v1._1;
-      return (inner) => $GoExpr(
-        "GoFunc",
-        (() => {
-          if ($1.tag === "Just") {
-            return sanitizeName($1._1);
-          }
-          if ($1.tag === "Nothing") {
-            return "_unused_" + showIntImpl($0);
-          }
-          fail();
-        })(),
-        inner
-      );
-    })(translateExpr(modNameStr)(v._2))(v._1);
-  }
-  if (v.tag === "Let") {
-    return $GoExpr(
-      "GoIIFE",
-      (() => {
-        if (v._1.tag === "Just") {
-          return sanitizeName(v._1._1);
+      return contains("pkg_" + replaceAll(".")("_")((() => {
+        const $0 = split("/")(i);
+        const $1 = $0.length - 1 | 0;
+        if ($1 >= 0 && $1 < $0.length) {
+          return $0[$1];
         }
-        if (v._1.tag === "Nothing") {
-          return "_unused_" + showIntImpl(v._2);
-        }
-        fail();
-      })(),
-      translateExpr(modNameStr)(v._3),
-      translateExpr(modNameStr)(v._4)
-    );
-  }
-  if (v.tag === "LetRec") {
-    return $GoExpr(
-      "GoLetRec",
-      arrayMap((v1) => $Tuple(sanitizeName(v1._1), translateExpr(modNameStr)(v1._2)))(v._2),
-      translateExpr(modNameStr)(v._3)
-    );
-  }
-  if (v.tag === "Accessor") {
-    if (v._2.tag === "GetProp") {
-      return $GoExpr("GoRecordAccess", translateExpr(modNameStr)(v._1), v._2._1);
+        return "";
+      })()) + ".")(declsStr);
+    },
+    v.imports
+  );
+  return "package " + v.packageName + "\n\nimport (\n" + joinWith("\n")(arrayMap((i) => {
+    const $0 = split("/")(i);
+    const $1 = $0.length - 1 | 0;
+    if ($1 >= 0 && $1 < $0.length) {
+      if (i === "gopurs/output/gopurs_runtime" || i === "sync") {
+        return "	" + $0[$1] + ' "' + i + '"';
+      }
+      return "	pkg_" + replaceAll(".")("_")($0[$1]) + ' "' + i + '"';
     }
-    if (v._2.tag === "GetIndex") {
-      return $GoExpr(
-        "GoCall",
-        $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "ArrayAccess"),
-        [translateExpr(modNameStr)(v._1), $GoExpr("GoInt", v._2._1)]
-      );
+    if (i === "gopurs/output/gopurs_runtime" || i === "sync") {
+      return '	 "' + i + '"';
     }
-    if (v._2.tag === "GetCtorField") {
-      return $GoExpr("GoRecordAccess", translateExpr(modNameStr)(v._1), v._2._5);
-    }
-    fail();
-  }
-  if (v.tag === "Update") {
-    return $GoExpr(
-      "GoCall",
-      $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "RecordUpdate"),
-      [translateExpr(modNameStr)(v._1), $GoExpr("GoMap", arrayMap((v1) => $Tuple(v1._1, translateExpr(modNameStr)(v1._2)))(v._2))]
-    );
-  }
-  if (v.tag === "CtorDef") {
-    return foldrArray((f) => (inner) => $GoExpr("GoFunc", sanitizeName(f), inner))($GoExpr(
-      "GoCall",
-      $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Record"),
-      [
-        $GoExpr(
-          "GoMap",
-          [
-            $Tuple(
-              "_tag",
-              $GoExpr(
-                "GoCall",
-                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Str"),
-                [$GoExpr("GoString", v._3)]
-              )
-            ),
-            ...arrayMap((f) => $Tuple(f, $GoExpr("GoVar", sanitizeName(f))))(v._4)
-          ]
-        )
-      ]
-    ))(v._4);
-  }
-  if (v.tag === "CtorSaturated") {
-    return $GoExpr(
-      "GoCall",
-      $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Record"),
-      [
-        $GoExpr(
-          "GoMap",
-          [
-            $Tuple(
-              "_tag",
-              $GoExpr(
-                "GoCall",
-                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Str"),
-                [$GoExpr("GoString", v._4)]
-              )
-            ),
-            ...arrayMap((v1) => $Tuple(v1._1, translateExpr(modNameStr)(v1._2)))(v._5)
-          ]
-        )
-      ]
-    );
-  }
-  if (v.tag === "Fail") {
-    return $GoExpr("GoRaw", "func() gopurs_runtime.Value { panic(" + printGoExpr($GoExpr("GoString", v._1)) + ") }()");
-  }
-  if (v.tag === "Branch") {
-    return $GoExpr(
-      "GoBranch",
-      arrayMap((v1) => $Tuple(translateExpr(modNameStr)(v1._1), translateExpr(modNameStr)(v1._2)))(v._1),
-      translateExpr(modNameStr)(v._2)
-    );
-  }
-  if (v.tag === "PrimOp") {
-    if (v._1.tag === "Op1") {
-      if (v._1._1.tag === "OpBooleanNot") {
-        return $GoExpr(
-          "GoCall",
-          $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
-          [$GoExpr("GoBinOp", "==", $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "IntVal"), $GoExpr("GoInt", 0))]
-        );
-      }
-      if (v._1._1.tag === "OpIntNegate") {
-        return $GoExpr(
-          "GoCall",
-          $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Int"),
-          [$GoExpr("GoBinOp", "-", $GoExpr("GoInt", 0), $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "IntVal"))]
-        );
-      }
-      if (v._1._1.tag === "OpIsTag") {
-        return $GoExpr(
-          "GoCall",
-          $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
-          [
-            $GoExpr(
-              "GoBinOp",
-              "==",
-              $GoExpr("GoSelector", $GoExpr("GoRecordAccess", translateExpr(modNameStr)(v._1._2), "_tag"), "StrVal"),
-              $GoExpr("GoString", v._1._1._1._2)
-            )
-          ]
-        );
-      }
-      if (v._1._1.tag === "OpArrayLength") {
-        return $GoExpr(
-          "GoCall",
-          $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Int"),
-          [
-            $GoExpr(
-              "GoCall",
-              $GoExpr("GoVar", "len"),
-              [$GoExpr("GoTypeAssertion", $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "PtrVal"), "[]gopurs_runtime.Value")]
-            )
-          ]
-        );
-      }
-      return $GoExpr("GoVar", "gopurs_runtime.Value{}");
-    }
-    if (v._1.tag === "Op2") {
-      if (v._1._1.tag === "OpIntOrd") {
-        if (v._1._1._1 === "OpEq") {
-          return $GoExpr(
-            "GoCall",
-            $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
-            [
-              $GoExpr(
-                "GoBinOp",
-                "==",
-                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "IntVal"),
-                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._3), "IntVal")
-              )
-            ]
-          );
-        }
-        if (v._1._1._1 === "OpNotEq") {
-          return $GoExpr(
-            "GoCall",
-            $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
-            [
-              $GoExpr(
-                "GoBinOp",
-                "!=",
-                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "IntVal"),
-                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._3), "IntVal")
-              )
-            ]
-          );
-        }
-        if (v._1._1._1 === "OpLt") {
-          return $GoExpr(
-            "GoCall",
-            $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
-            [
-              $GoExpr(
-                "GoBinOp",
-                "<",
-                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "IntVal"),
-                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._3), "IntVal")
-              )
-            ]
-          );
-        }
-        if (v._1._1._1 === "OpLte") {
-          return $GoExpr(
-            "GoCall",
-            $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
-            [
-              $GoExpr(
-                "GoBinOp",
-                "<=",
-                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "IntVal"),
-                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._3), "IntVal")
-              )
-            ]
-          );
-        }
-        if (v._1._1._1 === "OpGt") {
-          return $GoExpr(
-            "GoCall",
-            $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
-            [
-              $GoExpr(
-                "GoBinOp",
-                ">",
-                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "IntVal"),
-                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._3), "IntVal")
-              )
-            ]
-          );
-        }
-        if (v._1._1._1 === "OpGte") {
-          return $GoExpr(
-            "GoCall",
-            $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
-            [
-              $GoExpr(
-                "GoBinOp",
-                ">=",
-                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "IntVal"),
-                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._3), "IntVal")
-              )
-            ]
-          );
-        }
-        return $GoExpr("GoVar", "gopurs_runtime.Value{}");
-      }
-      if (v._1._1.tag === "OpNumberOrd") {
-        if (v._1._1._1 === "OpEq") {
-          return $GoExpr(
-            "GoCall",
-            $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
-            [
-              $GoExpr(
-                "GoBinOp",
-                "==",
-                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "IntVal"),
-                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._3), "IntVal")
-              )
-            ]
-          );
-        }
-        if (v._1._1._1 === "OpNotEq") {
-          return $GoExpr(
-            "GoCall",
-            $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
-            [
-              $GoExpr(
-                "GoBinOp",
-                "!=",
-                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "IntVal"),
-                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._3), "IntVal")
-              )
-            ]
-          );
-        }
-        return $GoExpr("GoVar", "gopurs_runtime.Value{}");
-      }
-      if (v._1._1.tag === "OpStringOrd") {
-        if (v._1._1._1 === "OpEq") {
-          return $GoExpr(
-            "GoCall",
-            $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
-            [
-              $GoExpr(
-                "GoBinOp",
-                "==",
-                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "StrVal"),
-                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._3), "StrVal")
-              )
-            ]
-          );
-        }
-        if (v._1._1._1 === "OpNotEq") {
-          return $GoExpr(
-            "GoCall",
-            $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
-            [
-              $GoExpr(
-                "GoBinOp",
-                "!=",
-                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "StrVal"),
-                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._3), "StrVal")
-              )
-            ]
-          );
-        }
-        return $GoExpr("GoVar", "gopurs_runtime.Value{}");
-      }
-      if (v._1._1.tag === "OpCharOrd") {
-        if (v._1._1._1 === "OpEq") {
-          return $GoExpr(
-            "GoCall",
-            $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
-            [
-              $GoExpr(
-                "GoBinOp",
-                "==",
-                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "StrVal"),
-                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._3), "StrVal")
-              )
-            ]
-          );
-        }
-        if (v._1._1._1 === "OpNotEq") {
-          return $GoExpr(
-            "GoCall",
-            $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
-            [
-              $GoExpr(
-                "GoBinOp",
-                "!=",
-                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "StrVal"),
-                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._3), "StrVal")
-              )
-            ]
-          );
-        }
-        return $GoExpr("GoVar", "gopurs_runtime.Value{}");
-      }
-      if (v._1._1.tag === "OpBooleanOrd") {
-        if (v._1._1._1 === "OpEq") {
-          return $GoExpr(
-            "GoCall",
-            $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
-            [
-              $GoExpr(
-                "GoBinOp",
-                "==",
-                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "IntVal"),
-                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._3), "IntVal")
-              )
-            ]
-          );
-        }
-        if (v._1._1._1 === "OpNotEq") {
-          return $GoExpr(
-            "GoCall",
-            $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
-            [
-              $GoExpr(
-                "GoBinOp",
-                "!=",
-                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "IntVal"),
-                $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._3), "IntVal")
-              )
-            ]
-          );
-        }
-        return $GoExpr("GoVar", "gopurs_runtime.Value{}");
-      }
-      if (v._1._1.tag === "OpBooleanAnd") {
-        return $GoExpr(
-          "GoCall",
-          $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
-          [
-            $GoExpr(
-              "GoBinOp",
-              "&&",
-              $GoExpr("GoBinOp", "!=", $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "IntVal"), $GoExpr("GoInt", 0)),
-              $GoExpr("GoBinOp", "!=", $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._3), "IntVal"), $GoExpr("GoInt", 0))
-            )
-          ]
-        );
-      }
-      if (v._1._1.tag === "OpBooleanOr") {
-        return $GoExpr(
-          "GoCall",
-          $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
-          [
-            $GoExpr(
-              "GoBinOp",
-              "||",
-              $GoExpr("GoBinOp", "!=", $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "IntVal"), $GoExpr("GoInt", 0)),
-              $GoExpr("GoBinOp", "!=", $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._3), "IntVal"), $GoExpr("GoInt", 0))
-            )
-          ]
-        );
-      }
-    }
-  }
-  return $GoExpr("GoVar", "gopurs_runtime.Value{}");
-};
-var translateBinding = (modNameStr) => (v) => $Maybe("Just", { identifier: capitalize(sanitizeName(v._1)), expression: translateExpr(modNameStr)(v._2) });
-var translateBindingGroup = (modNameStr) => (bg) => mapMaybe(translateBinding(modNameStr))(bg.bindings);
-var translate = (importsArray) => (backendMod) => {
-  const modNameStr = backendMod.name;
-  const foreigns = arrayMap((v) => capitalize(sanitizeName(v)))(fromFoldableImpl(foldableSet.foldr, backendMod.foreign));
-  const decls = arrayBind(fromFoldableImpl(foldrArray, backendMod.bindings))(translateBindingGroup(modNameStr));
-  const dummyText = printGoFile({ packageName: "", imports: [], decls, foreigns });
-  return printGoFile({
-    packageName: replaceAll(".")("_")(modNameStr),
-    imports: nubBy(ordString.compare)([
-      ...contains("sync.Once")(dummyText) ? ["sync"] : [],
-      ...contains("gopurs_runtime")(dummyText) ? ["gopurs/output/gopurs_runtime"] : [],
-      ...mapMaybe((i) => {
-        const modStr = joinWith(".")(i);
-        const p = replaceAll(".")("_")(modStr) + ".";
-        if (modStr !== modNameStr && modStr !== "Prim" && (contains(" " + p)(dummyText) || contains("(" + p)(dummyText) || contains("\n" + p)(dummyText) || contains("	" + p)(dummyText))) {
-          return $Maybe("Just", "gopurs/output/" + modStr);
-        }
-        return Nothing;
-      })([
-        ...importsArray,
-        ["Unsafe", "Coerce"],
-        ["Partial", "Unsafe"],
-        ["Partial"],
-        ["Data", "Function"],
-        ["Data", "Function", "Uncurried"],
-        ["Record", "Unsafe"],
-        ["Type", "Proxy"],
-        ["Data", "Unit"],
-        ["Data", "Eq"],
-        ["Data", "Ord"],
-        ["Data", "Semiring"],
-        ["Data", "Ring"],
-        ["Data", "EuclideanRing"],
-        ["Control", "Category"]
-      ])
-    ]),
-    decls,
-    foreigns
-  });
-};
-
-// output-es/Data.Nullable/foreign.js
-var nullImpl = null;
-function nullable(a, r, f) {
-  return a == null ? r : f(a);
-}
-function notNull(x) {
-  return x;
-}
-
-// output-es/Gopurs.FfiSupport/foreign.js
-import fs from "fs";
-import path from "path";
-var cachedScanDirs = null;
-function getScanDirs(mbFfiDir) {
-  if (cachedScanDirs !== null) return cachedScanDirs;
-  const rootDir = process.cwd();
-  const scanDirs = [];
-  const spagoDirs = [
-    path.join(rootDir, ".spago"),
-    path.join(rootDir, "spago.d")
-  ];
-  for (const spagoDir of spagoDirs) {
-    if (fs.existsSync(spagoDir) && fs.statSync(spagoDir).isDirectory()) {
-      const packages = fs.readdirSync(spagoDir);
-      for (const pkg of packages) {
-        const pkgDir = path.join(spagoDir, pkg);
-        if (fs.statSync(pkgDir).isDirectory()) {
-          let hasVersion = false;
-          const subdirs = fs.readdirSync(pkgDir);
-          for (const subdir of subdirs) {
-            const versionDir = path.join(pkgDir, subdir);
-            if (subdir.startsWith("v") && fs.statSync(versionDir).isDirectory()) {
-              scanDirs.push(versionDir);
-              hasVersion = true;
-            }
-          }
-          if (!hasVersion) {
-            scanDirs.push(pkgDir);
-          }
-        }
-      }
-    }
-  }
-  if (mbFfiDir) {
-    scanDirs.push(path.join(rootDir, mbFfiDir));
-  } else {
-    scanDirs.push(rootDir);
-  }
-  cachedScanDirs = scanDirs;
-  return scanDirs;
-}
-var goFileIndex = null;
-function buildGoFileIndex(scanDirs) {
-  if (goFileIndex !== null) return;
-  goFileIndex = /* @__PURE__ */ new Set();
-  function walk(dir) {
-    let entries;
-    try {
-      entries = fs.readdirSync(dir, { withFileTypes: true });
-    } catch (e) {
-      return;
-    }
-    for (const entry of entries) {
-      const res = path.join(dir, entry.name);
-      if (entry.isDirectory()) {
-        walk(res);
-      } else if (entry.name.endsWith(".go")) {
-        goFileIndex.add(res);
-      }
-    }
-  }
-  for (const d of scanDirs) {
-    walk(d);
-  }
-}
-var findFfiFileImpl = function(mbFfiDir) {
-  return function(modNameStr) {
-    return function(mbModulePath) {
-      return function() {
-        if (mbModulePath) {
-          const goPath = mbModulePath.replace(/\.purs$/, ".go");
-          if (fs.existsSync(goPath)) {
-            return goPath;
-          }
-        }
-        const scanDirs = getScanDirs(mbFfiDir);
-        buildGoFileIndex(scanDirs);
-        for (const dir of scanDirs) {
-          const searchPaths = [
-            path.join(dir, "src", ...modNameStr.split(".")) + ".go",
-            path.join(dir, "src", modNameStr + ".go"),
-            path.join(dir, modNameStr + ".go")
-          ];
-          for (const p of searchPaths) {
-            if (goFileIndex.has(p)) {
-              return p;
-            }
-          }
-        }
-        return null;
-      };
-    };
-  };
-};
-
-// output-es/Gopurs.FfiSupport/index.js
-var findFfiFile = (mbFfiDir) => (modName) => (mbModulePath) => {
-  const $0 = findFfiFileImpl((() => {
-    if (mbFfiDir.tag === "Nothing") {
-      return nullImpl;
-    }
-    if (mbFfiDir.tag === "Just") {
-      return notNull(mbFfiDir._1);
-    }
-    fail();
-  })())(modName)((() => {
-    if (mbModulePath.tag === "Nothing") {
-      return nullImpl;
-    }
-    if (mbModulePath.tag === "Just") {
-      return notNull(mbModulePath._1);
-    }
-    fail();
-  })());
-  return () => {
-    const path2 = $0();
-    return nullable(path2, Nothing, Just);
-  };
-};
-
-// output-es/Gopurs.Runtime/index.js
-var runtimeGoCode = 'package gopurs_runtime\n\nimport "math"\n\nconst (\n	TypeInt = 1\n	TypeString = 2\n	TypeRecord = 3\n	TypeFunc = 4\n	TypeConstructor = 5\n)\n\n// We do not add FloatVal or BoolVal fields to keep the struct size minimal.\n// Floats are packed into IntVal using math.Float64bits, and Bools are mapped to 1/0 in IntVal.\n// Adding more fields would increase the struct size and reduce pass-by-value performance.\ntype Value struct {\n	Type   uint8\n	IntVal int64\n	StrVal string\n	PtrVal any\n}\n\nfunc Str(v string) Value {\n	return Value{Type: TypeString, StrVal: v}\n}\n\nfunc Int(v int) Value {\n	return Value{Type: TypeInt, IntVal: int64(v)}\n}\n\nfunc Float(v float64) Value {\n	return Value{Type: 7, IntVal: int64(math.Float64bits(v))}\n}\n\nfunc Bool(v bool) Value {\n	var i int64 = 0\n	if v {\n		i = 1\n	}\n	return Value{Type: 6, IntVal: i}\n}\n\nfunc Array(v []Value) Value {\n	return Value{Type: 8, PtrVal: v}\n}\n\nfunc Record(m map[string]Value) Value {\n	return Value{Type: TypeRecord, PtrVal: m}\n}\n\nfunc RecordUpdate(orig Value, updates map[string]Value) Value {\n	origMap := orig.PtrVal.(map[string]Value)\n	newMap := make(map[string]Value, len(origMap)+len(updates))\n	for k, v := range origMap {\n		newMap[k] = v\n	}\n	for k, v := range updates {\n		newMap[k] = v\n	}\n	return Record(newMap)\n}\n\nfunc Cons(tag string, args []Value) Value {\n	return Value{Type: TypeConstructor, StrVal: tag, PtrVal: args}\n}\n\n// Function with 1 arg (curried)\nfunc Func(f func(Value) Value) Value {\n	return Value{Type: TypeFunc, PtrVal: f}\n}\n\n// Uncurried application helper\nfunc Apply(f Value, arg Value) Value {\n	if f.Type != TypeFunc {\n		panic("Attempted to apply a non-function")\n	}\n	fn := f.PtrVal.(func(Value) Value)\n	return fn(arg)\n}\n\nfunc ArrayAccess(arr Value, index int) Value {\n	return arr.PtrVal.([]Value)[index]\n}\n';
-
-// output-es/Node.Encoding/index.js
-var $Encoding = (tag) => tag;
-var UTF8 = /* @__PURE__ */ $Encoding("UTF8");
-
-// output-es/Node.FS.Constants/foreign.js
-import { constants } from "node:fs";
-var f_OK = constants.F_OK;
-var r_OK = constants.R_OK;
-var w_OK = constants.W_OK;
-var x_OK = constants.X_OK;
-var copyFile_EXCL = constants.COPYFILE_EXCL;
-var copyFile_FICLONE = constants.COPYFILE_FICLONE;
-var copyFile_FICLONE_FORCE = constants.COPYFILE_FICLONE_FORCE;
-
-// output-es/Node.FS.Perms/index.js
-var semiringPerm = {
-  add: (v) => (v1) => ({ r: v.r || v1.r, w: v.w || v1.w, x: v.x || v1.x }),
-  zero: { r: false, w: false, x: false },
-  mul: (v) => (v1) => ({ r: v.r && v1.r, w: v.w && v1.w, x: v.x && v1.x }),
-  one: { r: true, w: true, x: true }
-};
-var permToString = (x) => showIntImpl(((x.r ? 4 : 0) + (x.w ? 2 : 0) | 0) + (x.x ? 1 : 0) | 0);
-var permsToString = (v) => "0" + permToString(v.u) + permToString(v.g) + permToString(v.o);
-
-// output-es/Node.FS.Async/foreign.js
-import {
-  access,
-  copyFile,
-  mkdtemp,
-  rename,
-  truncate,
-  chown,
-  chmod,
-  stat,
-  lstat,
-  link,
-  symlink,
-  readlink,
-  realpath,
-  unlink,
-  rmdir,
-  rm,
-  mkdir,
-  readdir,
-  utimes,
-  readFile,
-  writeFile,
-  appendFile,
-  open,
-  read as read2,
-  write as write2,
-  close
-} from "node:fs";
-
-// output-es/Node.FS.Async/index.js
-var handleCallback = (cb) => (err, a) => {
-  const v = nullable(err, Nothing, Just);
-  if (v.tag === "Nothing") {
-    return cb($Either("Right", a))();
-  }
-  if (v.tag === "Just") {
-    return cb($Either("Left", v._1))();
-  }
-  fail();
-};
-var mkdir$p = (file) => (v) => (cb) => {
-  const $0 = { recursive: v.recursive, mode: permsToString(v.mode) };
-  return () => mkdir(file, $0, handleCallback(cb));
-};
-var mkdir2 = (path2) => mkdir$p(path2)({ recursive: false, mode: { u: semiringPerm.one, g: semiringPerm.one, o: semiringPerm.one } });
-var readTextFile = (encoding) => (file) => (cb) => {
-  const $0 = {
-    encoding: (() => {
-      if (encoding === "ASCII") {
-        return "ASCII";
-      }
-      if (encoding === "UTF8") {
-        return "UTF8";
-      }
-      if (encoding === "UTF16LE") {
-        return "UTF16LE";
-      }
-      if (encoding === "UCS2") {
-        return "UCS2";
-      }
-      if (encoding === "Base64") {
-        return "Base64";
-      }
-      if (encoding === "Base64Url") {
-        return "Base64Url";
-      }
-      if (encoding === "Latin1") {
-        return "Latin1";
-      }
-      if (encoding === "Binary") {
-        return "Binary";
-      }
-      if (encoding === "Hex") {
-        return "Hex";
-      }
-      fail();
-    })()
-  };
-  return () => readFile(file, $0, handleCallback(cb));
-};
-var readdir2 = (file) => (cb) => () => readdir(file, handleCallback(cb));
-var stat2 = (file) => (cb) => () => stat(file, handleCallback(cb));
-var writeTextFile = (encoding) => (file) => (buff) => (cb) => {
-  const $0 = {
-    encoding: (() => {
-      if (encoding === "ASCII") {
-        return "ASCII";
-      }
-      if (encoding === "UTF8") {
-        return "UTF8";
-      }
-      if (encoding === "UTF16LE") {
-        return "UTF16LE";
-      }
-      if (encoding === "UCS2") {
-        return "UCS2";
-      }
-      if (encoding === "Base64") {
-        return "Base64";
-      }
-      if (encoding === "Base64Url") {
-        return "Base64Url";
-      }
-      if (encoding === "Latin1") {
-        return "Latin1";
-      }
-      if (encoding === "Binary") {
-        return "Binary";
-      }
-      if (encoding === "Hex") {
-        return "Hex";
-      }
-      fail();
-    })()
-  };
-  return () => writeFile(file, buff, $0, handleCallback(cb));
-};
-
-// output-es/Node.FS.Aff/index.js
-var toAff1 = (f) => (a) => {
-  const $0 = f(a);
-  return makeAff((k) => {
-    const $1 = $0(k);
-    return () => {
-      $1();
-      return nonCanceler;
-    };
-  });
-};
-var toAff2 = (f) => (a) => (b) => {
-  const $0 = f(a)(b);
-  return makeAff((k) => {
-    const $1 = $0(k);
-    return () => {
-      $1();
-      return nonCanceler;
-    };
-  });
-};
-var toAff3 = (f) => (a) => (b) => (c) => {
-  const $0 = f(a)(b)(c);
-  return makeAff((k) => {
-    const $1 = $0(k);
-    return () => {
-      $1();
-      return nonCanceler;
-    };
-  });
-};
-
-// output-es/Node.FS.Stats/foreign.js
-var isDirectoryImpl = (s) => s.isDirectory();
-
-// output-es/Node.Process/foreign.js
-import process2 from "process";
-var abortImpl = process2.abort ? () => process2.abort() : null;
-var argv = () => process2.argv.slice();
-var channelRefImpl = process2.channel && process2.channel.ref ? () => process2.channel.ref() : null;
-var channelUnrefImpl = process2.channel && process2.channel.unref ? () => process2.channel.unref() : null;
-var debugPort = process2.debugPort;
-var disconnectImpl = process2.disconnect ? () => process2.disconnect() : null;
-var pid = process2.pid;
-var platformStr = process2.platform;
-var ppid = process2.ppid;
-var stdin = process2.stdin;
-var stdout = process2.stdout;
-var stderr = process2.stderr;
-var stdinIsTTY = process2.stdinIsTTY;
-var stdoutIsTTY = process2.stdoutIsTTY;
-var stderrIsTTY = process2.stderrIsTTY;
-var version = process2.version;
-
-// output-es/Data.List/index.js
-var foldM = (dictMonad) => (v) => (v1) => (v2) => {
-  if (v2.tag === "Nil") {
-    return dictMonad.Applicative0().pure(v1);
-  }
-  if (v2.tag === "Cons") {
-    const $0 = v2._2;
-    return dictMonad.Bind1().bind(v(v1)(v2._1))((b$p) => foldM(dictMonad)(v)(b$p)($0));
-  }
-  fail();
+    return "	pkg_" + replaceAll(".")("_")("") + ' "' + i + '"';
+  })([
+    ...usedImports1,
+    ...arrayMap((dep) => "gopurs/output/" + dep)(filterImpl(
+      (dep) => contains("pkg_" + replaceAll(".")("_")(dep) + ".")(declsStr) && !elem(eqString)("gopurs/output/" + dep)(usedImports1),
+      ["Unsafe.Coerce", "Data.Unit", "Control.Monad.ST.Internal", "Data.Eq", "Data.Function.Uncurried", "Control.Category"]
+    ))
+  ])) + "\n)\n\n" + declsStr;
 };
 
 // output-es/Data.Semigroup/foreign.js
@@ -3762,103 +3127,6 @@ var concatArray = function(xs) {
 
 // output-es/Data.Semigroup/index.js
 var semigroupArray = { append: concatArray };
-
-// output-es/Data.Semigroup.Foldable/index.js
-var maximum = (dictOrd) => {
-  const semigroupMax = {
-    append: (v) => (v1) => {
-      const v$1 = dictOrd.compare(v)(v1);
-      if (v$1 === "LT") {
-        return v1;
-      }
-      if (v$1 === "EQ") {
-        return v;
-      }
-      if (v$1 === "GT") {
-        return v;
-      }
-      fail();
-    }
-  };
-  return (dictFoldable1) => dictFoldable1.foldMap1(semigroupMax)(unsafeCoerce);
-};
-
-// output-es/Data.TraversableWithIndex/index.js
-var traversableWithIndexArray = {
-  traverseWithIndex: (dictApplicative) => {
-    const sequence1 = traversableWithIndexArray.Traversable2().sequence(dictApplicative);
-    return (f) => {
-      const $0 = traversableWithIndexArray.FunctorWithIndex0().mapWithIndex(f);
-      return (x) => sequence1($0(x));
-    };
-  },
-  FunctorWithIndex0: () => functorWithIndexArray,
-  FoldableWithIndex1: () => foldableWithIndexArray,
-  Traversable2: () => traversableArray
-};
-
-// output-es/Data.Array.NonEmpty.Internal/foreign.js
-var foldr1Impl = function(f, xs) {
-  var acc = xs[xs.length - 1];
-  for (var i = xs.length - 2; i >= 0; i--) {
-    acc = f(xs[i])(acc);
-  }
-  return acc;
-};
-var foldl1Impl = function(f, xs) {
-  var acc = xs[0];
-  var len = xs.length;
-  for (var i = 1; i < len; i++) {
-    acc = f(acc)(xs[i]);
-  }
-  return acc;
-};
-
-// output-es/Data.Array.NonEmpty.Internal/index.js
-var foldable1NonEmptyArray = {
-  foldMap1: (dictSemigroup) => {
-    const append = dictSemigroup.append;
-    return (f) => {
-      const $0 = arrayMap(f);
-      const $1 = foldable1NonEmptyArray.foldl1(append);
-      return (x) => $1($0(x));
-    };
-  },
-  foldr1: ($0) => ($1) => foldr1Impl($0, $1),
-  foldl1: ($0) => ($1) => foldl1Impl($0, $1),
-  Foldable0: () => foldableArray
-};
-
-// output-es/Data.Array.NonEmpty/index.js
-var head = (x) => {
-  if (0 < x.length) {
-    return x[0];
-  }
-  fail();
-};
-var uncons2 = (x) => {
-  const $0 = unconsImpl((v) => Nothing, (x$1) => (xs) => $Maybe("Just", { head: x$1, tail: xs }), x);
-  if ($0.tag === "Just") {
-    return $0._1;
-  }
-  fail();
-};
-
-// output-es/Data.Map/index.js
-var semigroupSemigroupMap = (dictOrd) => {
-  const compare4 = dictOrd.compare;
-  return (dictSemigroup) => {
-    const append = dictSemigroup.append;
-    return { append: (v) => (v1) => unsafeUnionWith(compare4, append, v, v1) };
-  };
-};
-var monoidSemigroupMap = (dictOrd) => {
-  const semigroupSemigroupMap1 = semigroupSemigroupMap(dictOrd);
-  return (dictSemigroup) => {
-    const semigroupSemigroupMap2 = semigroupSemigroupMap1(dictSemigroup);
-    return { mempty: Leaf, Semigroup0: () => semigroupSemigroupMap2 };
-  };
-};
 
 // output-es/Data.Monoid/index.js
 var monoidArray = { mempty: [], Semigroup0: () => semigroupArray };
@@ -3884,9 +3152,6 @@ var power = (dictMonoid) => {
   };
 };
 
-// output-es/Data.Semigroup.First/index.js
-var semigroupFirst2 = { append: (x) => (v) => x };
-
 // output-es/PureScript.Backend.Optimizer.CoreFn/index.js
 var $Bind = (tag, _1) => ({ tag, _1 });
 var $Binder = (tag, _1, _2, _3, _4) => ({ tag, _1, _2, _3, _4 });
@@ -3905,6 +3170,7 @@ var $Qualified = (_1, _2) => ({ tag: "Qualified", _1, _2 });
 var $ReExport = (_1, _2) => ({ tag: "ReExport", _1, _2 });
 var zero = /* @__PURE__ */ (() => semiringRecordCons({ reflectSymbol: () => "column" })()(semiringRecordCons({ reflectSymbol: () => "line" })()(semiringRecordNil)(semiringInt))(semiringInt).zeroRecord($$Proxy)($$Proxy))();
 var Prop = (value0) => (value1) => $Prop(value0, value1);
+var Qualified = (value0) => (value1) => $Qualified(value0, value1);
 var LitArray = (value0) => $Literal("LitArray", value0);
 var LitRecord = (value0) => $Literal("LitRecord", value0);
 var ReExport = (value0) => (value1) => $ReExport(value0, value1);
@@ -4314,9 +3580,9 @@ var foldableBackendSyntax = {
   foldl: (a) => foldlDefault(foldableBackendSyntax)(a),
   foldMap: (dictMonoid) => {
     const mempty = dictMonoid.mempty;
-    const foldMap7 = foldableArray.foldMap(dictMonoid);
+    const foldMap72 = foldableArray.foldMap(dictMonoid);
     const $0 = dictMonoid.Semigroup0();
-    const foldMap9 = foldableArray.foldMap(dictMonoid);
+    const foldMap92 = foldableArray.foldMap(dictMonoid);
     return (f) => (v) => {
       if (v.tag === "Var") {
         return mempty;
@@ -4326,27 +3592,27 @@ var foldableBackendSyntax = {
       }
       if (v.tag === "Lit") {
         if (v._1.tag === "LitArray") {
-          return foldMap7(f)(v._1._1);
+          return foldMap72(f)(v._1._1);
         }
         if (v._1.tag === "LitRecord") {
-          return foldMap7((v$1) => f(v$1._2))(v._1._1);
+          return foldMap72((v$1) => f(v$1._2))(v._1._1);
         }
         return mempty;
       }
       if (v.tag === "App") {
-        return $0.append(f(v._1))(foldMap9(f)(v._2));
+        return $0.append(f(v._1))(foldMap92(f)(v._2));
       }
       if (v.tag === "Abs") {
         return f(v._2);
       }
       if (v.tag === "UncurriedApp") {
-        return $0.append(f(v._1))(foldMap7(f)(v._2));
+        return $0.append(f(v._1))(foldMap72(f)(v._2));
       }
       if (v.tag === "UncurriedAbs") {
         return f(v._2);
       }
       if (v.tag === "UncurriedEffectApp") {
-        return $0.append(f(v._1))(foldMap7(f)(v._2));
+        return $0.append(f(v._1))(foldMap72(f)(v._2));
       }
       if (v.tag === "UncurriedEffectAbs") {
         return f(v._2);
@@ -4355,10 +3621,10 @@ var foldableBackendSyntax = {
         return f(v._1);
       }
       if (v.tag === "Update") {
-        return $0.append(f(v._1))(foldMap7((v$1) => f(v$1._2))(v._2));
+        return $0.append(f(v._1))(foldMap72((v$1) => f(v$1._2))(v._2));
       }
       if (v.tag === "LetRec") {
-        return $0.append(foldMap9((v$1) => f(v$1._2))(v._2))(f(v._3));
+        return $0.append(foldMap92((v$1) => f(v$1._2))(v._2))(f(v._3));
       }
       if (v.tag === "Let") {
         return $0.append(f(v._3))(f(v._4));
@@ -4373,7 +3639,7 @@ var foldableBackendSyntax = {
         return f(v._1);
       }
       if (v.tag === "Branch") {
-        return $0.append(foldMap9((v$1) => dictMonoid.Semigroup0().append(f(v$1._1))(f(v$1._2)))(v._1))(f(v._2));
+        return $0.append(foldMap92((v$1) => dictMonoid.Semigroup0().append(f(v$1._1))(f(v$1._2)))(v._1))(f(v._2));
       }
       if (v.tag === "PrimOp") {
         if (v._1.tag === "Op1") {
@@ -4400,7 +3666,7 @@ var foldableBackendSyntax = {
         return mempty;
       }
       if (v.tag === "CtorSaturated") {
-        return foldMap7((v$1) => f(v$1._2))(v._5);
+        return foldMap72((v$1) => f(v$1._2))(v._5);
       }
       if (v.tag === "CtorDef") {
         return mempty;
@@ -4441,7 +3707,7 @@ var traversableBackendSyntax = {
     const traverse7 = traversableArray.traverse(dictApplicative);
     const traverse9 = traversableArray.traverse(dictApplicative);
     const traverse11 = traversablePair.traverse(dictApplicative);
-    const traverse12 = traversableBackendOperato.traverse(dictApplicative);
+    const traverse122 = traversableBackendOperato.traverse(dictApplicative);
     const traverse13 = traversableBackendEffect.traverse(dictApplicative);
     return (f) => (v) => {
       if (v.tag === "Var") {
@@ -4524,7 +3790,7 @@ var traversableBackendSyntax = {
         return Apply0.apply($0.map(Branch)(traverse9(traverse11(f))(v._1)))(f(v._2));
       }
       if (v.tag === "PrimOp") {
-        return $0.map(PrimOp)(traverse12(f)(v._1));
+        return $0.map(PrimOp)(traverse122(f)(v._1));
       }
       if (v.tag === "PrimEffect") {
         return $0.map(PrimEffect)(traverse13(f)(v._1));
@@ -4827,11 +4093,1978 @@ var eqBackendSyntax = (dictEq) => {
   };
 };
 
+// output-es/PureScript.Backend.Optimizer.Codegen.Tco/index.js
+var $TcoExpr = (_1, _2) => ({ tag: "TcoExpr", _1, _2 });
+var $TcoRef = (tag, _1, _2) => ({ tag, _1, _2 });
+var ordQualified2 = /* @__PURE__ */ ordQualified(ordString);
+var compare1 = (x) => (y) => {
+  if (x.tag === "Nothing") {
+    if (y.tag === "Nothing") {
+      return EQ;
+    }
+    return LT;
+  }
+  if (y.tag === "Nothing") {
+    return GT;
+  }
+  if (x.tag === "Just" && y.tag === "Just") {
+    return ordString.compare(x._1)(y._1);
+  }
+  fail();
+};
+var traverse = /* @__PURE__ */ (() => traversableArray.traverse(applicativeMaybe))();
+var traverse1 = /* @__PURE__ */ (() => traversableArray.traverse(applicativeMaybe))();
+var toUnfoldable = /* @__PURE__ */ (() => {
+  const $0 = unfoldableArray.unfoldr((xs) => {
+    if (xs.tag === "Nil") {
+      return Nothing;
+    }
+    if (xs.tag === "Cons") {
+      return $Maybe("Just", $Tuple(xs._1, xs._2));
+    }
+    fail();
+  });
+  return (x) => $0((() => {
+    const go = (m$p, z$p) => {
+      if (m$p.tag === "Leaf") {
+        return z$p;
+      }
+      if (m$p.tag === "Node") {
+        return go(m$p._5, $List("Cons", m$p._3, go(m$p._6, z$p)));
+      }
+      fail();
+    };
+    return go(x, Nil);
+  })());
+})();
+var identity5 = (x) => x;
+var foldMap1 = /* @__PURE__ */ (() => foldableArray.foldMap(monoidArray))();
+var semigroupTcoUsage = {
+  append: (v) => (v1) => ({
+    total: v.total + v1.total | 0,
+    arities: unsafeUnionWith(ordInt.compare, $$const, v.arities, v1.arities),
+    call: v.call + v1.call | 0,
+    readWrite: v.readWrite + v1.readWrite | 0
+  })
+};
+var eqTcoRef = {
+  eq: (x) => (y) => {
+    if (x.tag === "TcoTopLevel") {
+      return y.tag === "TcoTopLevel" && (x._1._1.tag === "Nothing" ? y._1._1.tag === "Nothing" : x._1._1.tag === "Just" && y._1._1.tag === "Just" && x._1._1._1 === y._1._1._1) && x._1._2 === y._1._2;
+    }
+    return x.tag === "TcoLocal" && y.tag === "TcoLocal" && (x._1.tag === "Nothing" ? y._1.tag === "Nothing" : x._1.tag === "Just" && y._1.tag === "Just" && x._1._1 === y._1._1) && x._2 === y._2;
+  }
+};
+var ordTcoRef = {
+  compare: (x) => (y) => {
+    if (x.tag === "TcoTopLevel") {
+      if (y.tag === "TcoTopLevel") {
+        return ordQualified2.compare(x._1)(y._1);
+      }
+      return LT;
+    }
+    if (y.tag === "TcoTopLevel") {
+      return GT;
+    }
+    if (x.tag === "TcoLocal" && y.tag === "TcoLocal") {
+      const v = compare1(x._1)(y._1);
+      if (v === "LT") {
+        return LT;
+      }
+      if (v === "GT") {
+        return GT;
+      }
+      return ordInt.compare(x._2)(y._2);
+    }
+    fail();
+  },
+  Eq0: () => eqTcoRef
+};
+var lookup2 = (k) => {
+  const go = (go$a0$copy) => {
+    let go$a0 = go$a0$copy, go$c = true, go$r;
+    while (go$c) {
+      const v = go$a0;
+      if (v.tag === "Leaf") {
+        go$c = false;
+        go$r = Nothing;
+        continue;
+      }
+      if (v.tag === "Node") {
+        const v1 = ordTcoRef.compare(k)(v._3);
+        if (v1 === "LT") {
+          go$a0 = v._5;
+          continue;
+        }
+        if (v1 === "GT") {
+          go$a0 = v._6;
+          continue;
+        }
+        if (v1 === "EQ") {
+          go$c = false;
+          go$r = $Maybe("Just", v._4);
+          continue;
+        }
+      }
+      fail();
+    }
+    return go$r;
+  };
+  return go;
+};
+var tcoRefEffect = (ident) => (v) => ({ ...v, usages: insertWith(ordTcoRef)(semigroupTcoUsage.append)(ident)({ total: 1, call: 0, arities: Leaf, readWrite: 1 })(v.usages) });
+var tcoRefBindings = (toTcoRef) => traverse((v) => {
+  const $0 = toTcoRef(v._1);
+  if (v._2._2.tag === "Abs") {
+    return $Maybe("Just", { ref: $0, analysis: v._2._2._2._1, arity: v._2._2._1.length });
+  }
+  if (v._2._2.tag === "UncurriedAbs") {
+    return $Maybe("Just", { ref: $0, analysis: v._2._2._2._1, arity: v._2._2._1.length });
+  }
+  return Nothing;
+});
+var tcoCall = (ident) => (arity) => (v) => ({
+  ...v,
+  usages: insertWith(ordTcoRef)(semigroupTcoUsage.append)(ident)({
+    total: 1,
+    call: 1,
+    arities: $$$Map("Node", 1, 1, arity, void 0, Leaf, Leaf),
+    readWrite: 0
+  })(v.usages),
+  tailCalls: insert(ordTcoRef)(ident)(1)(v.tailCalls)
+});
+var tcoAnalysisOf = (v) => v._1;
+var tcoEnvGroup = (toTcoRef) => {
+  const $0 = traverse1((v) => {
+    const $02 = Tuple(toTcoRef(v._1));
+    if (v._2.tag === "Abs") {
+      return $Maybe("Just", $02(v._2._1.length));
+    }
+    if (v._2.tag === "UncurriedAbs") {
+      return $Maybe("Just", $02(v._2._1.length));
+    }
+    return Nothing;
+  });
+  return (x) => {
+    const $1 = $0(x);
+    if ($1.tag === "Nothing") {
+      return [];
+    }
+    if ($1.tag === "Just") {
+      return $1._1;
+    }
+    fail();
+  };
+};
+var topLevelTcoEnvGroup = (mod) => tcoEnvGroup((() => {
+  const $0 = Qualified($Maybe("Just", mod));
+  return (x) => $TcoRef("TcoTopLevel", $0(x));
+})());
+var noTcoRole = { joins: [], isLoop: false };
+var semigroupTcoAnalysis = {
+  append: (v) => (v1) => ({
+    usages: unsafeUnionWith(ordTcoRef.compare, semigroupTcoUsage.append, v.usages, v1.usages),
+    tailCalls: unsafeUnionWith(ordTcoRef.compare, intAdd, v.tailCalls, v1.tailCalls),
+    role: noTcoRole
+  })
+};
+var monoidTcoAnalysis = { mempty: { usages: Leaf, tailCalls: Leaf, role: noTcoRole }, Semigroup0: () => semigroupTcoAnalysis };
+var foldMap4 = /* @__PURE__ */ (() => foldableArray.foldMap(monoidTcoAnalysis))();
+var foldMap5 = /* @__PURE__ */ (() => foldableArray.foldMap(monoidTcoAnalysis))();
+var foldMap6 = (f) => (v) => semigroupTcoAnalysis.append(f(v._1))(f(v._2));
+var foldMap9 = /* @__PURE__ */ (() => foldableBackendSyntax.foldMap(monoidTcoAnalysis))();
+var isUniformTailCall = (v) => (ref) => (arity) => {
+  const $0 = lookup2(ref)(v.tailCalls);
+  if ($0.tag === "Just") {
+    const $1 = lookup2(ref)(v.usages);
+    if ($1.tag === "Just") {
+      const v2 = toUnfoldable($1._1.arities);
+      if (v2.length === 1) {
+        return $Maybe("Just", v2[0] === arity && $1._1.total === $0._1);
+      }
+      return Nothing;
+    }
+    if ($1.tag === "Nothing") {
+      return Nothing;
+    }
+    fail();
+  }
+  if ($0.tag === "Nothing") {
+    return Nothing;
+  }
+  fail();
+};
+var isTailCalledIn = (analysis) => (group2) => {
+  const tailCalled = mapMaybe((b) => isUniformTailCall(analysis)(b.ref)(b.arity))(group2);
+  return tailCalled.length !== 0 && allImpl(identity5, tailCalled);
+};
+var tcoRoleJoins = (env) => (analysis) => (group2) => arrayBind(isTailCalledIn(analysis)(group2) ? [void 0] : [])(() => nubBy(ordTcoRef.compare)(foldMap1((b) => mapMaybe((v) => {
+  const $0 = isUniformTailCall(b.analysis)(v._1)(v._2);
+  if ((() => {
+    if ($0.tag === "Just") {
+      return $0._1;
+    }
+    if ($0.tag === "Nothing") {
+      return false;
+    }
+    fail();
+  })()) {
+    return $Maybe("Just", v._1);
+  }
+  return Nothing;
+})(env))(group2)));
+var analyze = (env) => (v) => {
+  const $0 = () => {
+    const expr$p = functorBackendSyntax.map(analyze(env))(v);
+    return $TcoExpr(
+      (() => {
+        const $02 = foldMap9(tcoAnalysisOf)(expr$p);
+        return { ...$02, tailCalls: Leaf, role: { ...$02.role, joins: [] } };
+      })(),
+      expr$p
+    );
+  };
+  if (v.tag === "Var") {
+    return $TcoExpr(tcoCall($TcoRef("TcoTopLevel", v._1))(0)(monoidTcoAnalysis.mempty), $BackendSyntax("Var", v._1));
+  }
+  if (v.tag === "Local") {
+    return $TcoExpr(tcoCall($TcoRef("TcoLocal", v._1, v._2))(0)(monoidTcoAnalysis.mempty), $BackendSyntax("Local", v._1, v._2));
+  }
+  if (v.tag === "App") {
+    if (v._1.tag === "Local") {
+      const tl$p = arrayMap((() => {
+        const $1 = analyze(env);
+        return (x) => {
+          const $2 = $1(x);
+          return $TcoExpr({ ...$2._1, tailCalls: Leaf, role: { ...$2._1.role, joins: [] } }, $2._2);
+        };
+      })())(v._2);
+      return $TcoExpr(
+        tcoCall($TcoRef("TcoLocal", v._1._1, v._1._2))(tl$p.length)(foldMap4(tcoAnalysisOf)(tl$p)),
+        $BackendSyntax("App", analyze(env)(v._1), tl$p)
+      );
+    }
+    if (v._1.tag === "Var") {
+      const tl$p = arrayMap((() => {
+        const $1 = analyze(env);
+        return (x) => {
+          const $2 = $1(x);
+          return $TcoExpr({ ...$2._1, tailCalls: Leaf, role: { ...$2._1.role, joins: [] } }, $2._2);
+        };
+      })())(v._2);
+      return $TcoExpr(
+        tcoCall($TcoRef("TcoTopLevel", v._1._1))(tl$p.length)(foldMap4(tcoAnalysisOf)(tl$p)),
+        $BackendSyntax("App", analyze(env)(v._1), tl$p)
+      );
+    }
+    return $0();
+  }
+  if (v.tag === "UncurriedApp") {
+    if (v._1.tag === "Local") {
+      const tl$p = arrayMap((() => {
+        const $1 = analyze(env);
+        return (x) => {
+          const $2 = $1(x);
+          return $TcoExpr({ ...$2._1, tailCalls: Leaf, role: { ...$2._1.role, joins: [] } }, $2._2);
+        };
+      })())(v._2);
+      return $TcoExpr(
+        tcoCall($TcoRef("TcoLocal", v._1._1, v._1._2))(tl$p.length)(foldMap5(tcoAnalysisOf)(tl$p)),
+        $BackendSyntax("UncurriedApp", analyze(env)(v._1), tl$p)
+      );
+    }
+    if (v._1.tag === "Var") {
+      const tl$p = arrayMap((() => {
+        const $1 = analyze(env);
+        return (x) => {
+          const $2 = $1(x);
+          return $TcoExpr({ ...$2._1, tailCalls: Leaf, role: { ...$2._1.role, joins: [] } }, $2._2);
+        };
+      })())(v._2);
+      return $TcoExpr(
+        tcoCall($TcoRef("TcoTopLevel", v._1._1))(tl$p.length)(foldMap5(tcoAnalysisOf)(tl$p)),
+        $BackendSyntax("UncurriedApp", analyze(env)(v._1), tl$p)
+      );
+    }
+    return $0();
+  }
+  if (v.tag === "PrimEffect") {
+    if (v._1.tag === "EffectRefRead") {
+      if (v._1._1.tag === "Local") {
+        return $TcoExpr(
+          tcoRefEffect($TcoRef("TcoLocal", v._1._1._1, v._1._1._2))(monoidTcoAnalysis.mempty),
+          $BackendSyntax("PrimEffect", $BackendEffect("EffectRefRead", analyze(env)(v._1._1)))
+        );
+      }
+      return $0();
+    }
+    if (v._1.tag === "EffectRefWrite" && v._1._1.tag === "Local") {
+      const val$p = analyze(env)(v._1._2);
+      return $TcoExpr(
+        tcoRefEffect($TcoRef("TcoLocal", v._1._1._1, v._1._1._2))(val$p._1),
+        $BackendSyntax("PrimEffect", $BackendEffect("EffectRefWrite", analyze(env)(v._1._1), val$p))
+      );
+    }
+    return $0();
+  }
+  if (v.tag === "Branch") {
+    const branches$p = arrayMap((v1) => $Pair(
+      (() => {
+        const $1 = analyze(env)(v1._1);
+        return $TcoExpr({ ...$1._1, tailCalls: Leaf, role: { ...$1._1.role, joins: [] } }, $1._2);
+      })(),
+      analyze(env)(v1._2)
+    ))(v._1);
+    const def$p = analyze(env)(v._2);
+    return $TcoExpr(
+      semigroupTcoAnalysis.append(foldMap4(foldMap6(tcoAnalysisOf))(branches$p))(def$p._1),
+      $BackendSyntax("Branch", branches$p, def$p)
+    );
+  }
+  if (v.tag === "Let") {
+    const binding$p = analyze(env)(v._3);
+    const body$p = analyze(env)(v._4);
+    if (binding$p._2.tag === "Abs") {
+      const role = { isLoop: false, joins: tcoRoleJoins(env)(body$p._1)([{ ref: $TcoRef("TcoLocal", v._1, v._2), analysis: binding$p._2._2._1, arity: binding$p._2._1.length }]) };
+      if (role.joins.length !== 0) {
+        return $TcoExpr(
+          { ...semigroupTcoAnalysis.append(binding$p._2._2._1)(body$p._1), role },
+          $BackendSyntax("Let", v._1, v._2, binding$p, body$p)
+        );
+      }
+      return $TcoExpr(
+        semigroupTcoAnalysis.append({ ...binding$p._1, tailCalls: Leaf, role: { ...binding$p._1.role, joins: [] } })(body$p._1),
+        $BackendSyntax("Let", v._1, v._2, binding$p, body$p)
+      );
+    }
+    if (binding$p._2.tag === "UncurriedAbs") {
+      const role = { isLoop: false, joins: tcoRoleJoins(env)(body$p._1)([{ ref: $TcoRef("TcoLocal", v._1, v._2), analysis: binding$p._2._2._1, arity: binding$p._2._1.length }]) };
+      if (role.joins.length !== 0) {
+        return $TcoExpr(
+          { ...semigroupTcoAnalysis.append(binding$p._2._2._1)(body$p._1), role },
+          $BackendSyntax("Let", v._1, v._2, binding$p, body$p)
+        );
+      }
+    }
+    return $TcoExpr(
+      semigroupTcoAnalysis.append({ ...binding$p._1, tailCalls: Leaf, role: { ...binding$p._1.role, joins: [] } })(body$p._1),
+      $BackendSyntax("Let", v._1, v._2, binding$p, body$p)
+    );
+  }
+  if (v.tag === "LetRec") {
+    const $1 = v._1;
+    const env$p = [...tcoEnvGroup((ident) => $TcoRef("TcoLocal", $Maybe("Just", ident), $1))(v._2), ...env];
+    const bindings$p = arrayMap((() => {
+      const $2 = analyze(env$p);
+      return (m) => $Tuple(m._1, $2(m._2));
+    })())(v._2);
+    const body$p = analyze(env$p)(v._3);
+    const refBindings = tcoRefBindings((ident) => $TcoRef("TcoLocal", $Maybe("Just", ident), $1))(bindings$p);
+    const role = {
+      isLoop: (() => {
+        if (refBindings.tag === "Nothing") {
+          return false;
+        }
+        if (refBindings.tag === "Just") {
+          const $2 = refBindings._1;
+          return allImpl((x) => isTailCalledIn(x.analysis)($2), $2);
+        }
+        fail();
+      })(),
+      joins: (() => {
+        if (refBindings.tag === "Nothing") {
+          return [];
+        }
+        if (refBindings.tag === "Just") {
+          return tcoRoleJoins(env)(body$p._1)(refBindings._1);
+        }
+        fail();
+      })()
+    };
+    if (role.isLoop || role.joins.length !== 0) {
+      return $TcoExpr(
+        {
+          ...semigroupTcoAnalysis.append((() => {
+            const $2 = foldMap4((v1) => v1.analysis);
+            if (refBindings.tag === "Nothing") {
+              return monoidTcoAnalysis.mempty;
+            }
+            if (refBindings.tag === "Just") {
+              return $2(refBindings._1);
+            }
+            fail();
+          })())(body$p._1),
+          role
+        },
+        $BackendSyntax("LetRec", $1, bindings$p, body$p)
+      );
+    }
+    return $TcoExpr(
+      semigroupTcoAnalysis.append((() => {
+        const $2 = foldMap4((v$1) => v$1._2._1)(bindings$p);
+        return { ...$2, tailCalls: Leaf, role: { ...$2.role, joins: [] } };
+      })())(body$p._1),
+      $BackendSyntax("LetRec", $1, bindings$p, body$p)
+    );
+  }
+  return $0();
+};
+
+// output-es/Gopurs.CodeGen/index.js
+var $StmtTree = (tag, _1, _2) => ({ tag, _1, _2 });
+var lookup3 = (k) => {
+  const go = (go$a0$copy) => {
+    let go$a0 = go$a0$copy, go$c = true, go$r;
+    while (go$c) {
+      const v = go$a0;
+      if (v.tag === "Leaf") {
+        go$c = false;
+        go$r = Nothing;
+        continue;
+      }
+      if (v.tag === "Node") {
+        const v1 = ordString.compare(k)(v._3);
+        if (v1 === "LT") {
+          go$a0 = v._5;
+          continue;
+        }
+        if (v1 === "GT") {
+          go$a0 = v._6;
+          continue;
+        }
+        if (v1 === "EQ") {
+          go$c = false;
+          go$r = $Maybe("Just", v._4);
+          continue;
+        }
+      }
+      fail();
+    }
+    return go$r;
+  };
+  return go;
+};
+var traverse2 = /* @__PURE__ */ (() => traversableArray.traverse(applicativeMaybe))();
+var StmtEmpty = /* @__PURE__ */ $StmtTree("StmtEmpty");
+var StmtLeaf = (value0) => $StmtTree("StmtLeaf", value0);
+var semigroupStmtTree = {
+  append: (v) => (v1) => {
+    if (v.tag === "StmtEmpty") {
+      return v1;
+    }
+    if (v1.tag === "StmtEmpty") {
+      return v;
+    }
+    return $StmtTree("StmtAppend", v, v1);
+  }
+};
+var monoidStmtTree = { mempty: StmtEmpty, Semigroup0: () => semigroupStmtTree };
+var foldMap = /* @__PURE__ */ (() => foldableArray.foldMap(monoidStmtTree))();
+var sanitizeName2 = (name2) => {
+  const s1 = replaceAll("'")("_prime")(replaceAll("$")("_dollar")(name2));
+  if (s1 === "break" || s1 === "default" || s1 === "func" || s1 === "interface" || s1 === "select" || s1 === "case" || s1 === "defer" || s1 === "go" || s1 === "map" || s1 === "struct" || s1 === "chan" || s1 === "else" || s1 === "goto" || s1 === "package" || s1 === "switch" || s1 === "const" || s1 === "fallthrough" || s1 === "if" || s1 === "range" || s1 === "type" || s1 === "continue" || s1 === "for" || s1 === "import" || s1 === "return" || s1 === "var" || s1 === "init" || s1 === "append" || s1 === "make" || s1 === "len" || s1 === "cap" || s1 === "new" || s1 === "close" || s1 === "delete" || s1 === "complex" || s1 === "real" || s1 === "imag" || s1 === "panic" || s1 === "recover" || s1 === "print" || s1 === "println") {
+    return s1 + "_";
+  }
+  return s1;
+};
+var flattenStmts = (tree) => {
+  const go = (v) => (v1) => {
+    if (v1.tag === "StmtEmpty") {
+      return v;
+    }
+    if (v1.tag === "StmtLeaf") {
+      return $List("Cons", v1._1, v);
+    }
+    if (v1.tag === "StmtAppend") {
+      return go(go(v)(v1._2))(v1._1);
+    }
+    fail();
+  };
+  return fromFoldableImpl(foldableList.foldr, go(Nil)(tree));
+};
+var wrapInStmts = (v) => (stmts) => (expr) => {
+  const stmtsArr = flattenStmts(stmts);
+  if (stmtsArr.length === 0) {
+    return expr;
+  }
+  return $GoExpr(
+    "GoRaw",
+    "func() gopurs_runtime.Value {\n" + printGoExpr($GoExpr("GoBlock", [...stmtsArr, $GoExpr("GoReturn", expr)])) + "\n}()"
+  );
+};
+var flattenApp = (v) => {
+  if (v._2.tag === "App") {
+    const v1 = flattenApp(v._2._1);
+    return $Tuple(v1._1, [...v1._2, ...v._2._2]);
+  }
+  return $Tuple(v, []);
+};
+var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => (namedBound) => (bound) => (tcoIdent) => (loopCtx) => (isTail) => (nextId) => (v) => {
+  const liftIfNeeded = (mkNodeThunk) => {
+    if (depth > 10) {
+      return (() => {
+        const fvs = fromFoldableImpl(foldableSet.foldr, freeVars(v));
+        const helperName = "__helper_" + showIntImpl(nextId);
+        const res = translateExprImpl(helpersRef)(0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(nextId + 1 | 0)(v);
+        const helperExpr = fvs.length === 0 ? $GoExpr("GoFunc", "_", wrapInStmts([])(res.stmts)(res.expr)) : foldrArray((fv) => (accFunc) => $GoExpr("GoFunc", fv, accFunc))(wrapInStmts([])(res.stmts)(res.expr))(fvs);
+        return () => {
+          const $0 = helpersRef.value;
+          helpersRef.value = snoc($0)({ identifier: helperName, expression: helperExpr });
+          return {
+            stmts: StmtEmpty,
+            expr: fvs.length === 0 ? $GoExpr(
+              "GoCall",
+              $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Apply"),
+              [$GoExpr("GoVar", helperName), $GoExpr("GoRaw", "gopurs_runtime.Int(0)")]
+            ) : foldlArray((accCall) => (fv) => $GoExpr(
+              "GoCall",
+              $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Apply"),
+              [accCall, $GoExpr("GoVar", fv)]
+            ))($GoExpr("GoVar", helperName))(fvs),
+            nextId: res.nextId
+          };
+        };
+      })()();
+    }
+    return mkNodeThunk();
+  };
+  if (v._2.tag === "Var") {
+    const safeName = sanitizeName2(v._2._1._2);
+    if (v._2._1._1.tag === "Just") {
+      const modPkg = replaceAll(".")("_")(v._2._1._1._1);
+      if (modPkg === modNameStr) {
+        return { stmts: StmtEmpty, expr: $GoExpr("GoCall", $GoExpr("GoVar", "Get_" + safeName), []), nextId };
+      }
+      return {
+        stmts: StmtEmpty,
+        expr: $GoExpr("GoCall", $GoExpr("GoSelector", $GoExpr("GoVar", "pkg_" + modPkg), "Get_" + safeName), []),
+        nextId
+      };
+    }
+    if (v._2._1._1.tag === "Nothing") {
+      return { stmts: StmtEmpty, expr: $GoExpr("GoCall", $GoExpr("GoVar", "Get_" + safeName), []), nextId };
+    }
+    fail();
+  }
+  if (v._2.tag === "Local") {
+    return {
+      stmts: StmtEmpty,
+      expr: $GoExpr(
+        "GoVar",
+        (() => {
+          const $0 = localId(v._2._1)(v._2._2);
+          const $1 = lookup3(localId(v._2._1)(v._2._2))(bound);
+          if ($1.tag === "Nothing") {
+            return $0;
+          }
+          if ($1.tag === "Just") {
+            return $1._1;
+          }
+          fail();
+        })()
+      ),
+      nextId
+    };
+  }
+  if (v._2.tag === "Lit") {
+    if (v._2._1.tag === "LitString") {
+      return {
+        stmts: StmtEmpty,
+        expr: $GoExpr(
+          "GoCall",
+          $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Str"),
+          [$GoExpr("GoString", v._2._1._1)]
+        ),
+        nextId
+      };
+    }
+    if (v._2._1.tag === "LitInt") {
+      return {
+        stmts: StmtEmpty,
+        expr: $GoExpr(
+          "GoCall",
+          $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Int"),
+          [$GoExpr("GoInt", v._2._1._1)]
+        ),
+        nextId
+      };
+    }
+    if (v._2._1.tag === "LitNumber") {
+      return {
+        stmts: StmtEmpty,
+        expr: $GoExpr(
+          "GoCall",
+          $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Float"),
+          [$GoExpr("GoRaw", showNumberImpl(v._2._1._1))]
+        ),
+        nextId
+      };
+    }
+    if (v._2._1.tag === "LitBoolean") {
+      return {
+        stmts: StmtEmpty,
+        expr: $GoExpr(
+          "GoCall",
+          $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+          [$GoExpr("GoRaw", v._2._1._1 ? "true" : "false")]
+        ),
+        nextId
+      };
+    }
+    if (v._2._1.tag === "LitChar") {
+      return {
+        stmts: StmtEmpty,
+        expr: $GoExpr(
+          "GoCall",
+          $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Str"),
+          [$GoExpr("GoString", singleton(v._2._1._1))]
+        ),
+        nextId
+      };
+    }
+    if (v._2._1.tag === "LitArray") {
+      const accXs = foldlArray((acc) => (val) => {
+        const resVal = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(acc.nextId)(val);
+        return {
+          stmts: (() => {
+            if (acc.stmts.tag === "StmtEmpty") {
+              return resVal.stmts;
+            }
+            if (resVal.stmts.tag === "StmtEmpty") {
+              return acc.stmts;
+            }
+            return $StmtTree("StmtAppend", acc.stmts, resVal.stmts);
+          })(),
+          exprs: snoc(acc.exprs)(resVal.expr),
+          nextId: resVal.nextId
+        };
+      })({ stmts: StmtEmpty, exprs: [], nextId })(v._2._1._1);
+      return {
+        stmts: accXs.stmts,
+        expr: $GoExpr(
+          "GoCall",
+          $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Array"),
+          [$GoExpr("GoRaw", "[]gopurs_runtime.Value{" + joinWith(", ")(arrayMap(printGoExpr)(accXs.exprs)) + "}")]
+        ),
+        nextId: accXs.nextId
+      };
+    }
+    if (v._2._1.tag === "LitRecord") {
+      const accProps = foldlArray((acc) => (v1) => {
+        const resVal = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(acc.nextId)(v1._2);
+        return {
+          stmts: (() => {
+            if (acc.stmts.tag === "StmtEmpty") {
+              return resVal.stmts;
+            }
+            if (resVal.stmts.tag === "StmtEmpty") {
+              return acc.stmts;
+            }
+            return $StmtTree("StmtAppend", acc.stmts, resVal.stmts);
+          })(),
+          exprs: snoc(acc.exprs)($Tuple(v1._1, resVal.expr)),
+          nextId: resVal.nextId
+        };
+      })({ stmts: StmtEmpty, exprs: [], nextId })(v._2._1._1);
+      return {
+        stmts: accProps.stmts,
+        expr: $GoExpr(
+          "GoCall",
+          $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Record"),
+          [$GoExpr("GoMap", accProps.exprs)]
+        ),
+        nextId: accProps.nextId
+      };
+    }
+    return { stmts: StmtEmpty, expr: $GoExpr("GoVar", "gopurs_runtime.Value{}"), nextId };
+  }
+  if (v._2.tag === "App") {
+    const v1 = flattenApp(v);
+    const isTailCallTo = (() => {
+      if (isTail) {
+        if (v1._1._2.tag === "Local") {
+          const $0 = localId(v1._1._2._1)(v1._1._2._2);
+          const $1 = lookup3(localId(v1._1._2._1)(v1._1._2._2))(bound);
+          const v3 = (() => {
+            if ($1.tag === "Nothing") {
+              return $0;
+            }
+            if ($1.tag === "Just") {
+              return $1._1;
+            }
+            fail();
+          })();
+          return findIndexImpl(Just, Nothing, (ctx) => ctx.ident === v3, loopCtx);
+        }
+        if (v1._1._2.tag === "Var") {
+          const $0 = v1._1._2._1._1;
+          const fullName = ($0.tag === "Just" ? joinWith("_")(split(".")($0._1)) + "_" : "") + sanitizeName2(v1._1._2._1._2);
+          return findIndexImpl(Just, Nothing, (ctx) => ctx.ident === fullName, loopCtx);
+        }
+      }
+      return Nothing;
+    })();
+    if (isTailCallTo.tag === "Just") {
+      const accFinal = foldlArray((acc) => (arg) => {
+        const argRes = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(acc.nextId)(arg);
+        return {
+          stmts: (() => {
+            if (acc.stmts.tag === "StmtEmpty") {
+              return argRes.stmts;
+            }
+            if (argRes.stmts.tag === "StmtEmpty") {
+              return acc.stmts;
+            }
+            return $StmtTree("StmtAppend", acc.stmts, argRes.stmts);
+          })(),
+          exprs: snoc(acc.exprs)(argRes.expr),
+          nextId: argRes.nextId
+        };
+      })({ stmts: StmtEmpty, exprs: [], nextId })(v1._2);
+      return {
+        stmts: (() => {
+          const $0 = foldMap(StmtLeaf)(mapWithIndexArray((i) => (paramName) => $GoExpr(
+            "GoMutate",
+            paramName,
+            i >= 0 && i < accFinal.exprs.length ? accFinal.exprs[i] : $GoExpr("GoRaw", "nil")
+          ))(isTailCallTo._1 >= 0 && isTailCallTo._1 < loopCtx.length ? loopCtx[isTailCallTo._1].params : []));
+          const $1 = $0.tag === "StmtEmpty" ? $StmtTree("StmtLeaf", GoContinue) : $StmtTree("StmtAppend", $0, $StmtTree("StmtLeaf", GoContinue));
+          if (accFinal.stmts.tag === "StmtEmpty") {
+            return $1;
+          }
+          if ($1.tag === "StmtEmpty") {
+            return accFinal.stmts;
+          }
+          return $StmtTree("StmtAppend", accFinal.stmts, $1);
+        })(),
+        expr: $GoExpr("GoRaw", "gopurs_runtime.Value{}"),
+        nextId: accFinal.nextId
+      };
+    }
+    if (isTailCallTo.tag === "Nothing") {
+      const resFn = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(nextId)(v._2._1);
+      const accArgs = foldlArray((acc) => (arg) => {
+        const argRes = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(acc.nextId)(arg);
+        return {
+          stmts: (() => {
+            if (acc.stmts.tag === "StmtEmpty") {
+              return argRes.stmts;
+            }
+            if (argRes.stmts.tag === "StmtEmpty") {
+              return acc.stmts;
+            }
+            return $StmtTree("StmtAppend", acc.stmts, argRes.stmts);
+          })(),
+          exprs: snoc(acc.exprs)(argRes.expr),
+          nextId: argRes.nextId
+        };
+      })({ stmts: resFn.stmts, exprs: [], nextId: resFn.nextId })(v._2._2);
+      return {
+        stmts: accArgs.stmts,
+        expr: foldlArray((acc) => (argExpr) => $GoExpr(
+          "GoCall",
+          $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Apply"),
+          [acc, argExpr]
+        ))(resFn.expr)(accArgs.exprs),
+        nextId: accArgs.nextId
+      };
+    }
+    fail();
+  }
+  if (v._2.tag === "Abs") {
+    const resBody = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)(loopCtx)(isTail)(nextId)(v._2._2);
+    return {
+      stmts: StmtEmpty,
+      expr: foldrArray((p) => (acc) => $GoExpr(
+        "GoCall",
+        $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Func"),
+        [
+          $GoExpr(
+            "GoRaw",
+            "func(" + p + " gopurs_runtime.Value) gopurs_runtime.Value {\n" + (acc.tag === "GoBlock" ? printGoExpr(acc) : "return " + printGoExpr(acc)) + "\n}"
+          )
+        ]
+      ))($GoExpr("GoBlock", [...flattenStmts(resBody.stmts), $GoExpr("GoReturn", resBody.expr)]))(arrayMap((v1) => localId(v1._1)(v1._2))(v._2._1)),
+      nextId: resBody.nextId
+    };
+  }
+  if (v._2.tag === "UncurriedApp") {
+    const resFn = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(nextId)(v._2._1);
+    const accArgs = foldlArray((acc) => (arg) => {
+      const argRes = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(acc.nextId)(arg);
+      return {
+        stmts: (() => {
+          if (acc.stmts.tag === "StmtEmpty") {
+            return argRes.stmts;
+          }
+          if (argRes.stmts.tag === "StmtEmpty") {
+            return acc.stmts;
+          }
+          return $StmtTree("StmtAppend", acc.stmts, argRes.stmts);
+        })(),
+        exprs: snoc(acc.exprs)(argRes.expr),
+        nextId: argRes.nextId
+      };
+    })({ stmts: resFn.stmts, exprs: [], nextId: resFn.nextId })(v._2._2);
+    return {
+      stmts: accArgs.stmts,
+      expr: $GoExpr(
+        "GoCall",
+        $GoExpr(
+          "GoTypeAssertion",
+          $GoExpr("GoSelector", resFn.expr, "PtrVal"),
+          "func(" + joinWith(", ")(arrayMap((v$1) => "gopurs_runtime.Value")(v._2._2)) + ") gopurs_runtime.Value"
+        ),
+        accArgs.exprs
+      ),
+      nextId: accArgs.nextId
+    };
+  }
+  if (v._2.tag === "UncurriedAbs") {
+    const $0 = v._2._1;
+    const $1 = v._2._2;
+    return liftIfNeeded((v1) => {
+      const resBody = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)(loopCtx)(isTail)(nextId)($1);
+      return {
+        stmts: StmtEmpty,
+        expr: $GoExpr(
+          "GoRaw",
+          "gopurs_runtime.Value{PtrVal: func(" + joinWith(", ")(arrayMap((p) => p + " gopurs_runtime.Value")(arrayMap((v2) => localId(v2._1)(v2._2))($0))) + ") gopurs_runtime.Value {\n" + printGoExpr($GoExpr(
+            "GoBlock",
+            [...flattenStmts(resBody.stmts), $GoExpr("GoReturn", resBody.expr)]
+          )) + "\n}}"
+        ),
+        nextId: resBody.nextId
+      };
+    });
+  }
+  if (v._2.tag === "UncurriedEffectApp") {
+    const resFn = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(nextId)(v._2._1);
+    const accArgs = foldlArray((acc) => (arg) => {
+      const argRes = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(acc.nextId)(arg);
+      return {
+        stmts: (() => {
+          if (acc.stmts.tag === "StmtEmpty") {
+            return argRes.stmts;
+          }
+          if (argRes.stmts.tag === "StmtEmpty") {
+            return acc.stmts;
+          }
+          return $StmtTree("StmtAppend", acc.stmts, argRes.stmts);
+        })(),
+        exprs: snoc(acc.exprs)(argRes.expr),
+        nextId: argRes.nextId
+      };
+    })({ stmts: resFn.stmts, exprs: [], nextId: resFn.nextId })(v._2._2);
+    return {
+      stmts: accArgs.stmts,
+      expr: $GoExpr(
+        "GoCall",
+        $GoExpr(
+          "GoTypeAssertion",
+          $GoExpr("GoSelector", resFn.expr, "PtrVal"),
+          "func(" + joinWith(", ")(arrayMap((v$1) => "gopurs_runtime.Value")(v._2._2)) + ") gopurs_runtime.Value"
+        ),
+        accArgs.exprs
+      ),
+      nextId: accArgs.nextId
+    };
+  }
+  if (v._2.tag === "UncurriedEffectAbs") {
+    const $0 = v._2._1;
+    const $1 = v._2._2;
+    return liftIfNeeded((v1) => {
+      const resBody = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)(loopCtx)(isTail)(nextId)($1);
+      return {
+        stmts: StmtEmpty,
+        expr: $GoExpr(
+          "GoRaw",
+          "gopurs_runtime.Value{PtrVal: func(" + joinWith(", ")(arrayMap((p) => p + " gopurs_runtime.Value")(arrayMap((v2) => localId(v2._1)(v2._2))($0))) + ") gopurs_runtime.Value {\n" + printGoExpr($GoExpr(
+            "GoBlock",
+            [...flattenStmts(resBody.stmts), $GoExpr("GoReturn", resBody.expr)]
+          )) + "\n}}"
+        ),
+        nextId: resBody.nextId
+      };
+    });
+  }
+  if (v._2.tag === "Let") {
+    const resBinding = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(nextId + 1 | 0)(v._2._3);
+    const originalName = localId(v._2._1)(v._2._2);
+    const name2 = originalName + "_" + showIntImpl(nextId);
+    const resBody = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(insert(ordString)(originalName)(name2)(bound))(Nothing)(loopCtx)(isTail)(resBinding.nextId)(v._2._4);
+    return {
+      stmts: (() => {
+        const $0 = $StmtTree("StmtLeaf", $GoExpr("GoAssign", name2, resBinding.expr));
+        const $1 = resBody.stmts.tag === "StmtEmpty" ? $0 : $StmtTree("StmtAppend", $0, resBody.stmts);
+        if (resBinding.stmts.tag === "StmtEmpty") {
+          return $1;
+        }
+        if ($1.tag === "StmtEmpty") {
+          return resBinding.stmts;
+        }
+        return $StmtTree("StmtAppend", resBinding.stmts, $1);
+      })(),
+      expr: resBody.expr,
+      nextId: resBody.nextId
+    };
+  }
+  if (v._2.tag === "LetRec") {
+    const $0 = v._2._1;
+    const combinedRecVars = [...recVars, ...arrayMap((v1) => sanitizeName2(v1._1))(v._2._2)];
+    const allocRes = foldlArray((acc) => (v1) => {
+      const oldName = localId($Maybe("Just", v1._1))($0);
+      const newName = oldName + "_" + showIntImpl(acc.nextId);
+      return {
+        newBound: insert(ordString)(oldName)(newName)(acc.newBound),
+        newNames: snoc(acc.newNames)({ oldName, newName }),
+        nextId: acc.nextId + 1 | 0
+      };
+    })({ newBound: bound, newNames: [], nextId })(v._2._2);
+    const accBindings = foldlArray((acc) => (v1) => {
+      const res = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(combinedRecVars)(namedBound)(allocRes.newBound)($Maybe("Just", v1._2.newName))([])(false)(acc.nextId)(v1._1._2);
+      return {
+        stmts: (() => {
+          if (acc.stmts.tag === "StmtEmpty") {
+            return res.stmts;
+          }
+          if (res.stmts.tag === "StmtEmpty") {
+            return acc.stmts;
+          }
+          return $StmtTree("StmtAppend", acc.stmts, res.stmts);
+        })(),
+        exprs: snoc(acc.exprs)({ key: v1._2.newName, value: res.expr }),
+        nextId: res.nextId
+      };
+    })({ stmts: StmtEmpty, exprs: [], nextId: allocRes.nextId })(zipWithImpl(Tuple, v._2._2, allocRes.newNames));
+    const resBody = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(combinedRecVars)(namedBound)(allocRes.newBound)(Nothing)(loopCtx)(isTail)(accBindings.nextId)(v._2._3);
+    return {
+      stmts: (() => {
+        const $1 = foldMap(StmtLeaf)(arrayMap((b) => $GoExpr("GoRaw", "var " + b.key + " gopurs_runtime.Value"))(accBindings.exprs));
+        const $2 = foldMap(StmtLeaf)(arrayMap((b) => $GoExpr("GoMutate", b.key, b.value))(accBindings.exprs));
+        const $3 = (() => {
+          if ($2.tag === "StmtEmpty") {
+            return resBody.stmts;
+          }
+          if (resBody.stmts.tag === "StmtEmpty") {
+            return $2;
+          }
+          return $StmtTree("StmtAppend", $2, resBody.stmts);
+        })();
+        const $4 = (() => {
+          if (accBindings.stmts.tag === "StmtEmpty") {
+            return $3;
+          }
+          if ($3.tag === "StmtEmpty") {
+            return accBindings.stmts;
+          }
+          return $StmtTree("StmtAppend", accBindings.stmts, $3);
+        })();
+        if ($1.tag === "StmtEmpty") {
+          return $4;
+        }
+        if ($4.tag === "StmtEmpty") {
+          return $1;
+        }
+        return $StmtTree("StmtAppend", $1, $4);
+      })(),
+      expr: resBody.expr,
+      nextId: resBody.nextId
+    };
+  }
+  if (v._2.tag === "Accessor") {
+    const resObj = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(nextId)(v._2._1);
+    if (v._2._2.tag === "GetProp") {
+      return { stmts: resObj.stmts, expr: $GoExpr("GoRecordAccess", resObj.expr, v._2._2._1), nextId: resObj.nextId };
+    }
+    if (v._2._2.tag === "GetIndex") {
+      return {
+        stmts: resObj.stmts,
+        expr: $GoExpr(
+          "GoCall",
+          $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "ArrayAccess"),
+          [resObj.expr, $GoExpr("GoInt", v._2._2._1)]
+        ),
+        nextId: resObj.nextId
+      };
+    }
+    if (v._2._2.tag === "GetCtorField") {
+      return { stmts: resObj.stmts, expr: $GoExpr("GoRecordAccess", resObj.expr, v._2._2._5), nextId: resObj.nextId };
+    }
+    fail();
+  }
+  if (v._2.tag === "Update") {
+    const resObj = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(nextId)(v._2._1);
+    const accProps = foldlArray((acc) => (v1) => {
+      const resVal = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(acc.nextId)(v1._2);
+      return {
+        stmts: (() => {
+          if (acc.stmts.tag === "StmtEmpty") {
+            return resVal.stmts;
+          }
+          if (resVal.stmts.tag === "StmtEmpty") {
+            return acc.stmts;
+          }
+          return $StmtTree("StmtAppend", acc.stmts, resVal.stmts);
+        })(),
+        exprs: snoc(acc.exprs)($Tuple(v1._1, resVal.expr)),
+        nextId: resVal.nextId
+      };
+    })({ stmts: StmtEmpty, exprs: [], nextId: resObj.nextId })(v._2._2);
+    return {
+      stmts: (() => {
+        if (resObj.stmts.tag === "StmtEmpty") {
+          return accProps.stmts;
+        }
+        if (accProps.stmts.tag === "StmtEmpty") {
+          return resObj.stmts;
+        }
+        return $StmtTree("StmtAppend", resObj.stmts, accProps.stmts);
+      })(),
+      expr: $GoExpr(
+        "GoCall",
+        $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "RecordUpdate"),
+        [resObj.expr, $GoExpr("GoMap", accProps.exprs)]
+      ),
+      nextId: accProps.nextId
+    };
+  }
+  if (v._2.tag === "CtorDef") {
+    return {
+      stmts: StmtEmpty,
+      expr: foldrArray((f) => (inner) => $GoExpr(
+        "GoCall",
+        $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Func"),
+        [$GoExpr("GoRaw", "func(" + sanitizeName2(f) + " gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " + printGoExpr(inner) + "\n}")]
+      ))($GoExpr(
+        "GoCall",
+        $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Record"),
+        [
+          $GoExpr(
+            "GoMap",
+            [
+              $Tuple(
+                "_tag",
+                $GoExpr(
+                  "GoCall",
+                  $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Str"),
+                  [$GoExpr("GoString", v._2._3)]
+                )
+              ),
+              ...arrayMap((f) => $Tuple(f, $GoExpr("GoVar", sanitizeName2(f))))(v._2._4)
+            ]
+          )
+        ]
+      ))(v._2._4),
+      nextId
+    };
+  }
+  if (v._2.tag === "CtorSaturated") {
+    const accProps = foldlArray((acc) => (v1) => {
+      const resVal = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(acc.nextId)(v1._2);
+      return {
+        stmts: (() => {
+          if (acc.stmts.tag === "StmtEmpty") {
+            return resVal.stmts;
+          }
+          if (resVal.stmts.tag === "StmtEmpty") {
+            return acc.stmts;
+          }
+          return $StmtTree("StmtAppend", acc.stmts, resVal.stmts);
+        })(),
+        exprs: snoc(acc.exprs)($Tuple(v1._1, resVal.expr)),
+        nextId: resVal.nextId
+      };
+    })({ stmts: StmtEmpty, exprs: [], nextId })(v._2._5);
+    return {
+      stmts: accProps.stmts,
+      expr: $GoExpr(
+        "GoCall",
+        $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Record"),
+        [
+          $GoExpr(
+            "GoMap",
+            [
+              $Tuple(
+                "_tag",
+                $GoExpr(
+                  "GoCall",
+                  $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Str"),
+                  [$GoExpr("GoString", v._2._4)]
+                )
+              ),
+              ...accProps.exprs
+            ]
+          )
+        ]
+      ),
+      nextId: accProps.nextId
+    };
+  }
+  if (v._2.tag === "Fail") {
+    return {
+      stmts: StmtEmpty,
+      expr: $GoExpr("GoRaw", "func() gopurs_runtime.Value { panic(" + printGoExpr($GoExpr("GoString", v._2._1)) + ") }()"),
+      nextId
+    };
+  }
+  if (v._2.tag === "Branch") {
+    const resDef = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)(loopCtx)(isTail)(nextId)(v._2._2);
+    const tmpVar = "__t" + showIntImpl(resDef.nextId);
+    const labelName = "end_branch_" + showIntImpl(resDef.nextId);
+    const buildIfs = foldlArray((acc) => (v1) => {
+      const resCond = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(acc.nextId)(v1._1);
+      const resBody = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)(loopCtx)(isTail)(resCond.nextId)(v1._2);
+      return {
+        stmts: (() => {
+          const $0 = $StmtTree(
+            "StmtLeaf",
+            $GoExpr(
+              "GoIfElse",
+              resCond.expr,
+              [...flattenStmts(resBody.stmts), $GoExpr("GoMutate", tmpVar, resBody.expr), $GoExpr("GoRaw", "goto " + labelName)],
+              []
+            )
+          );
+          const $1 = resCond.stmts.tag === "StmtEmpty" ? $StmtTree("StmtAppend", $0, $StmtTree("StmtLeaf", $GoExpr("GoRaw", "}"))) : $StmtTree("StmtAppend", resCond.stmts, $StmtTree("StmtAppend", $0, $StmtTree("StmtLeaf", $GoExpr("GoRaw", "}"))));
+          const $2 = $1.tag === "StmtEmpty" ? $StmtTree("StmtLeaf", $GoExpr("GoRaw", "{")) : $StmtTree("StmtAppend", $StmtTree("StmtLeaf", $GoExpr("GoRaw", "{")), $1);
+          if (acc.stmts.tag === "StmtEmpty") {
+            return $2;
+          }
+          if ($2.tag === "StmtEmpty") {
+            return acc.stmts;
+          }
+          return $StmtTree("StmtAppend", acc.stmts, $2);
+        })(),
+        nextId: resBody.nextId
+      };
+    })({ stmts: StmtEmpty, nextId: resDef.nextId + 1 | 0 })(v._2._1);
+    return {
+      stmts: (() => {
+        const $0 = $StmtTree("StmtLeaf", $GoExpr("GoRaw", "var " + tmpVar + " gopurs_runtime.Value"));
+        const $1 = $StmtTree(
+          "StmtAppend",
+          $StmtTree("StmtLeaf", $GoExpr("GoMutate", tmpVar, resDef.expr)),
+          $StmtTree("StmtAppend", $StmtTree("StmtLeaf", $GoExpr("GoRaw", "}")), $StmtTree("StmtLeaf", $GoExpr("GoRaw", labelName + ":")))
+        );
+        const $2 = resDef.stmts.tag === "StmtEmpty" ? $1 : $StmtTree("StmtAppend", resDef.stmts, $1);
+        const $3 = (() => {
+          const $32 = $2.tag === "StmtEmpty" ? $StmtTree("StmtLeaf", $GoExpr("GoRaw", "{")) : $StmtTree("StmtAppend", $StmtTree("StmtLeaf", $GoExpr("GoRaw", "{")), $2);
+          if (buildIfs.stmts.tag === "StmtEmpty") {
+            return $32;
+          }
+          if ($32.tag === "StmtEmpty") {
+            return buildIfs.stmts;
+          }
+          return $StmtTree("StmtAppend", buildIfs.stmts, $32);
+        })();
+        if ($3.tag === "StmtEmpty") {
+          return $0;
+        }
+        return $StmtTree("StmtAppend", $0, $3);
+      })(),
+      expr: $GoExpr("GoVar", tmpVar),
+      nextId: buildIfs.nextId
+    };
+  }
+  if (v._2.tag === "PrimOp") {
+    if (v._2._1.tag === "Op1") {
+      const resE = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(nextId)(v._2._1._2);
+      return {
+        stmts: resE.stmts,
+        expr: (() => {
+          if (v._2._1._1.tag === "OpBooleanNot") {
+            return $GoExpr(
+              "GoCall",
+              $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+              [$GoExpr("GoBinOp", "==", $GoExpr("GoSelector", resE.expr, "IntVal"), $GoExpr("GoInt", 0))]
+            );
+          }
+          if (v._2._1._1.tag === "OpIntNegate") {
+            return $GoExpr(
+              "GoCall",
+              $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Int"),
+              [$GoExpr("GoBinOp", "-", $GoExpr("GoInt", 0), $GoExpr("GoSelector", resE.expr, "IntVal"))]
+            );
+          }
+          if (v._2._1._1.tag === "OpIsTag") {
+            return $GoExpr(
+              "GoCall",
+              $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+              [
+                $GoExpr(
+                  "GoBinOp",
+                  "==",
+                  $GoExpr("GoSelector", $GoExpr("GoRecordAccess", resE.expr, "_tag"), "StrVal"),
+                  $GoExpr("GoString", v._2._1._1._1._2)
+                )
+              ]
+            );
+          }
+          if (v._2._1._1.tag === "OpArrayLength") {
+            return $GoExpr(
+              "GoCall",
+              $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Int"),
+              [
+                $GoExpr(
+                  "GoCall",
+                  $GoExpr("GoVar", "len"),
+                  [$GoExpr("GoTypeAssertion", $GoExpr("GoSelector", resE.expr, "PtrVal"), "[]gopurs_runtime.Value")]
+                )
+              ]
+            );
+          }
+          return $GoExpr("GoVar", "TODO");
+        })(),
+        nextId: resE.nextId
+      };
+    }
+    if (v._2._1.tag === "Op2") {
+      const res1 = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(nextId)(v._2._1._2);
+      const res2 = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(res1.nextId)(v._2._1._3);
+      return {
+        stmts: (() => {
+          if (res1.stmts.tag === "StmtEmpty") {
+            return res2.stmts;
+          }
+          if (res2.stmts.tag === "StmtEmpty") {
+            return res1.stmts;
+          }
+          return $StmtTree("StmtAppend", res1.stmts, res2.stmts);
+        })(),
+        expr: (() => {
+          if (v._2._1._1.tag === "OpIntOrd") {
+            if (v._2._1._1._1 === "OpEq") {
+              return $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+                [$GoExpr("GoBinOp", "==", $GoExpr("GoSelector", res1.expr, "IntVal"), $GoExpr("GoSelector", res2.expr, "IntVal"))]
+              );
+            }
+            if (v._2._1._1._1 === "OpNotEq") {
+              return $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+                [$GoExpr("GoBinOp", "!=", $GoExpr("GoSelector", res1.expr, "IntVal"), $GoExpr("GoSelector", res2.expr, "IntVal"))]
+              );
+            }
+            if (v._2._1._1._1 === "OpLt") {
+              return $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+                [$GoExpr("GoBinOp", "<", $GoExpr("GoSelector", res1.expr, "IntVal"), $GoExpr("GoSelector", res2.expr, "IntVal"))]
+              );
+            }
+            if (v._2._1._1._1 === "OpLte") {
+              return $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+                [$GoExpr("GoBinOp", "<=", $GoExpr("GoSelector", res1.expr, "IntVal"), $GoExpr("GoSelector", res2.expr, "IntVal"))]
+              );
+            }
+            if (v._2._1._1._1 === "OpGt") {
+              return $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+                [$GoExpr("GoBinOp", ">", $GoExpr("GoSelector", res1.expr, "IntVal"), $GoExpr("GoSelector", res2.expr, "IntVal"))]
+              );
+            }
+            if (v._2._1._1._1 === "OpGte") {
+              return $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+                [$GoExpr("GoBinOp", ">=", $GoExpr("GoSelector", res1.expr, "IntVal"), $GoExpr("GoSelector", res2.expr, "IntVal"))]
+              );
+            }
+            return $GoExpr("GoVar", "TODO");
+          }
+          if (v._2._1._1.tag === "OpNumberOrd") {
+            if (v._2._1._1._1 === "OpEq") {
+              return $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+                [$GoExpr("GoBinOp", "==", $GoExpr("GoSelector", res1.expr, "IntVal"), $GoExpr("GoSelector", res2.expr, "IntVal"))]
+              );
+            }
+            if (v._2._1._1._1 === "OpNotEq") {
+              return $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+                [$GoExpr("GoBinOp", "!=", $GoExpr("GoSelector", res1.expr, "IntVal"), $GoExpr("GoSelector", res2.expr, "IntVal"))]
+              );
+            }
+            return $GoExpr("GoVar", "TODO");
+          }
+          if (v._2._1._1.tag === "OpStringOrd") {
+            if (v._2._1._1._1 === "OpEq") {
+              return $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+                [$GoExpr("GoBinOp", "==", $GoExpr("GoSelector", res1.expr, "StrVal"), $GoExpr("GoSelector", res2.expr, "StrVal"))]
+              );
+            }
+            if (v._2._1._1._1 === "OpNotEq") {
+              return $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+                [$GoExpr("GoBinOp", "!=", $GoExpr("GoSelector", res1.expr, "StrVal"), $GoExpr("GoSelector", res2.expr, "StrVal"))]
+              );
+            }
+            return $GoExpr("GoVar", "TODO");
+          }
+          if (v._2._1._1.tag === "OpCharOrd") {
+            if (v._2._1._1._1 === "OpEq") {
+              return $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+                [$GoExpr("GoBinOp", "==", $GoExpr("GoSelector", res1.expr, "StrVal"), $GoExpr("GoSelector", res2.expr, "StrVal"))]
+              );
+            }
+            if (v._2._1._1._1 === "OpNotEq") {
+              return $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+                [$GoExpr("GoBinOp", "!=", $GoExpr("GoSelector", res1.expr, "StrVal"), $GoExpr("GoSelector", res2.expr, "StrVal"))]
+              );
+            }
+            return $GoExpr("GoVar", "TODO");
+          }
+          if (v._2._1._1.tag === "OpBooleanOrd") {
+            if (v._2._1._1._1 === "OpEq") {
+              return $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+                [$GoExpr("GoBinOp", "==", $GoExpr("GoSelector", res1.expr, "IntVal"), $GoExpr("GoSelector", res2.expr, "IntVal"))]
+              );
+            }
+            if (v._2._1._1._1 === "OpNotEq") {
+              return $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+                [$GoExpr("GoBinOp", "!=", $GoExpr("GoSelector", res1.expr, "IntVal"), $GoExpr("GoSelector", res2.expr, "IntVal"))]
+              );
+            }
+            return $GoExpr("GoVar", "TODO");
+          }
+          if (v._2._1._1.tag === "OpBooleanAnd") {
+            return $GoExpr(
+              "GoCall",
+              $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+              [
+                $GoExpr(
+                  "GoBinOp",
+                  "&&",
+                  $GoExpr("GoBinOp", "!=", $GoExpr("GoSelector", res1.expr, "IntVal"), $GoExpr("GoInt", 0)),
+                  $GoExpr("GoBinOp", "!=", $GoExpr("GoSelector", res2.expr, "IntVal"), $GoExpr("GoInt", 0))
+                )
+              ]
+            );
+          }
+          if (v._2._1._1.tag === "OpBooleanOr") {
+            return $GoExpr(
+              "GoCall",
+              $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+              [
+                $GoExpr(
+                  "GoBinOp",
+                  "||",
+                  $GoExpr("GoBinOp", "!=", $GoExpr("GoSelector", res1.expr, "IntVal"), $GoExpr("GoInt", 0)),
+                  $GoExpr("GoBinOp", "!=", $GoExpr("GoSelector", res2.expr, "IntVal"), $GoExpr("GoInt", 0))
+                )
+              ]
+            );
+          }
+          return $GoExpr("GoVar", "TODO");
+        })(),
+        nextId: res2.nextId
+      };
+    }
+    fail();
+  }
+  return { stmts: StmtEmpty, expr: $GoExpr("GoVar", "gopurs_runtime.Value{}"), nextId };
+};
+var extractUncurriedAbs = (v) => {
+  if (v._2.tag === "UncurriedAbs") {
+    return $Maybe("Just", { args: arrayMap((v1) => localId(v1._1)(v1._2))(v._2._1), body: v._2._2, fvs: freeVars(v) });
+  }
+  if (v._2.tag === "Abs") {
+    return $Maybe("Just", { args: arrayMap((v1) => localId(v1._1)(v1._2))(v._2._1), body: v._2._2, fvs: freeVars(v) });
+  }
+  return Nothing;
+};
+var capitalize = (v) => {
+  if (v === "") {
+    return "X";
+  }
+  const firstChar = take2(1)(v);
+  if (firstChar >= "a" && firstChar <= "z") {
+    return toUpper(firstChar) + drop(length2(take2(1)(v)))(v);
+  }
+  if (firstChar === "_") {
+    return "X_" + capitalize(drop(length2(take2(1)(v)))(v));
+  }
+  return v;
+};
+var translate = (importsArray) => (mod) => {
+  const modNameStr = replaceAll(".")("_")(mod.name);
+  const helpersRef = { value: [] };
+  const allDeclsAst = [
+    ...arrayBind(foldlArray((v2) => {
+      const $0 = v2._2;
+      const $1 = v2._1;
+      return (group2) => {
+        if (group2.bindings.length > 0) {
+          const env$p = group2.recursive ? [...topLevelTcoEnvGroup(mod.name)(group2.bindings), ...$1] : $1;
+          return $Tuple(
+            env$p,
+            snoc($0)({
+              recursive: group2.recursive,
+              bindings: arrayMap((v4) => $Tuple(v4._1, analyze(env$p)(v4._2)))(group2.bindings)
+            })
+          );
+        }
+        return $Tuple(
+          $1,
+          snoc($0)({
+            recursive: group2.recursive,
+            bindings: arrayMap((v4) => $Tuple(v4._1, analyze($1)(v4._2)))(group2.bindings)
+          })
+        );
+      };
+    })($Tuple([], []))(mod.bindings)._2)((group2) => {
+      const recVars = group2.recursive ? arrayMap((v2) => sanitizeName2(v2._1))(group2.bindings) : [];
+      if (group2.recursive && group2.bindings.length === 1) {
+        const mutRecBinds = traverse2((v2) => {
+          const $0 = extractUncurriedAbs(v2._2);
+          if ($0.tag === "Just") {
+            return $Maybe("Just", { ident: sanitizeName2(v2._1), args: $0._1.args, body: $0._1.body, fvs: $0._1.fvs });
+          }
+          return Nothing;
+        })(group2.bindings);
+        if (mutRecBinds.tag === "Just") {
+          const loopCtxs = arrayMap((fn) => ({ ident: fn.ident, params: fn.args }))(mutRecBinds._1);
+          return arrayMap((fn) => {
+            const resBodyMut = translateExprImpl(helpersRef)(0)(modNameStr)(recVars)(Leaf)(Leaf)(Nothing)(loopCtxs)(true)(0)(fn.body);
+            return {
+              identifier: fn.ident,
+              expression: foldrArray((p) => (acc) => $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Func"),
+                [$GoExpr("GoRaw", "func(" + p + " gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " + printGoExpr(acc) + "\n}")]
+              ))($GoExpr(
+                "GoRaw",
+                "func() gopurs_runtime.Value {\n" + printGoExpr($GoExpr(
+                  "GoFor",
+                  [...flattenStmts(resBodyMut.stmts), $GoExpr("GoReturn", resBodyMut.expr)]
+                )) + "\n}()"
+              ))(fn.args)
+            };
+          })(mutRecBinds._1);
+        }
+        if (mutRecBinds.tag === "Nothing") {
+          return arrayBind(group2.bindings)((v2) => {
+            const res = translateExprImpl(helpersRef)(0)(modNameStr)(recVars)(Leaf)(Leaf)($Maybe("Just", sanitizeName2(v2._1)))([])(false)(0)(v2._2);
+            return [{ identifier: sanitizeName2(v2._1), expression: wrapInStmts([])(res.stmts)(res.expr) }];
+          });
+        }
+        fail();
+      }
+      return arrayBind(group2.bindings)((v2) => {
+        const res = translateExprImpl(helpersRef)(0)(modNameStr)([])(Leaf)(Leaf)($Maybe("Just", sanitizeName2(v2._1)))([])(false)(0)(v2._2);
+        return [{ identifier: sanitizeName2(v2._1), expression: wrapInStmts([])(res.stmts)(res.expr) }];
+      });
+    }),
+    ...helpersRef.value
+  ];
+  return printGoFile({
+    packageName: modNameStr,
+    imports: nubBy(ordString.compare)([
+      ...allDeclsAst.length > 0 || fromFoldableImpl(foldableSet.foldr, mod.foreign).length > 0 ? ["gopurs/output/gopurs_runtime"] : [],
+      ...allDeclsAst.length > 0 ? ["sync"] : [],
+      ...mapMaybe((pkg) => {
+        if (pkg !== modNameStr && (() => {
+          const $0 = indexOf2("Prim_")(pkg);
+          return pkg !== "Prim" && ($0.tag === "Nothing" || !($0.tag === "Just" && $0._1 === 0));
+        })()) {
+          return $Maybe("Just", "gopurs/output/" + replaceAll("_")(".")(pkg));
+        }
+        return Nothing;
+      })(nubBy(ordString.compare)(mapMaybe((part) => {
+        const $0 = split(".")(part);
+        if (0 < $0.length) {
+          return $Maybe("Just", $0[0]);
+        }
+        return Nothing;
+      })((() => {
+        const $0 = unconsImpl(
+          (v) => Nothing,
+          (v) => (xs) => $Maybe("Just", xs),
+          split("pkg_")(joinWith("\\n")(arrayMap(printGoDeclVar)(allDeclsAst)))
+        );
+        if ($0.tag === "Nothing") {
+          return [];
+        }
+        if ($0.tag === "Just") {
+          return $0._1;
+        }
+        fail();
+      })())))
+    ]),
+    decls: allDeclsAst,
+    foreigns: arrayMap((v2) => ({ pursName: sanitizeName2(v2), goName: capitalize(sanitizeName2(v2)) }))(fromFoldableImpl(
+      foldableSet.foldr,
+      mod.foreign
+    ))
+  });
+};
+
+// output-es/Data.Nullable/foreign.js
+var nullImpl = null;
+function nullable(a, r, f) {
+  return a == null ? r : f(a);
+}
+function notNull(x) {
+  return x;
+}
+
+// output-es/Gopurs.FfiSupport/foreign.js
+import fs from "fs";
+import path from "path";
+var cachedScanDirs = null;
+function getScanDirs(mbFfiDir) {
+  if (cachedScanDirs !== null) return cachedScanDirs;
+  const rootDir = process.cwd();
+  const scanDirs = [];
+  const spagoDirs = [
+    path.join(rootDir, ".spago"),
+    path.join(rootDir, "spago.d")
+  ];
+  for (const spagoDir of spagoDirs) {
+    if (fs.existsSync(spagoDir) && fs.statSync(spagoDir).isDirectory()) {
+      const packages = fs.readdirSync(spagoDir);
+      for (const pkg of packages) {
+        const pkgDir = path.join(spagoDir, pkg);
+        if (fs.statSync(pkgDir).isDirectory()) {
+          let hasVersion = false;
+          const subdirs = fs.readdirSync(pkgDir);
+          for (const subdir of subdirs) {
+            const versionDir = path.join(pkgDir, subdir);
+            if (subdir.startsWith("v") && fs.statSync(versionDir).isDirectory()) {
+              scanDirs.push(versionDir);
+              hasVersion = true;
+            }
+          }
+          if (!hasVersion) {
+            scanDirs.push(pkgDir);
+          }
+        }
+      }
+    }
+  }
+  if (mbFfiDir) {
+    scanDirs.push(path.join(rootDir, mbFfiDir));
+  } else {
+    scanDirs.push(rootDir);
+  }
+  cachedScanDirs = scanDirs;
+  return scanDirs;
+}
+var goFileIndex = null;
+function buildGoFileIndex(scanDirs) {
+  if (goFileIndex !== null) return;
+  goFileIndex = /* @__PURE__ */ new Set();
+  function walk(dir) {
+    let entries;
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch (e) {
+      return;
+    }
+    for (const entry of entries) {
+      const res = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        walk(res);
+      } else if (entry.name.endsWith(".go")) {
+        goFileIndex.add(res);
+      }
+    }
+  }
+  for (const d of scanDirs) {
+    walk(d);
+  }
+}
+var findFfiFileImpl = function(mbFfiDir) {
+  return function(modNameStr) {
+    return function(mbModulePath) {
+      return function() {
+        if (mbModulePath) {
+          const goPath = mbModulePath.replace(/\.purs$/, ".go");
+          if (fs.existsSync(goPath)) {
+            return goPath;
+          }
+        }
+        const scanDirs = getScanDirs(mbFfiDir);
+        buildGoFileIndex(scanDirs);
+        for (const dir of scanDirs) {
+          const searchPaths = [
+            path.join(dir, "src", ...modNameStr.split(".")) + ".go",
+            path.join(dir, "src", modNameStr + ".go"),
+            path.join(dir, modNameStr + ".go")
+          ];
+          for (const p of searchPaths) {
+            if (goFileIndex.has(p)) {
+              return p;
+            }
+          }
+        }
+        return null;
+      };
+    };
+  };
+};
+
+// output-es/Gopurs.FfiSupport/index.js
+var findFfiFile = (mbFfiDir) => (modName) => (mbModulePath) => {
+  const $0 = findFfiFileImpl((() => {
+    if (mbFfiDir.tag === "Nothing") {
+      return nullImpl;
+    }
+    if (mbFfiDir.tag === "Just") {
+      return notNull(mbFfiDir._1);
+    }
+    fail();
+  })())(modName)((() => {
+    if (mbModulePath.tag === "Nothing") {
+      return nullImpl;
+    }
+    if (mbModulePath.tag === "Just") {
+      return notNull(mbModulePath._1);
+    }
+    fail();
+  })());
+  return () => {
+    const path2 = $0();
+    return nullable(path2, Nothing, Just);
+  };
+};
+
+// output-es/Gopurs.Runtime/index.js
+var runtimeGoCode = 'package gopurs_runtime\n\nimport "math"\n\nconst (\n	TypeInt = 1\n	TypeString = 2\n	TypeRecord = 3\n	TypeFunc = 4\n	TypeConstructor = 5\n)\n\n// We do not add FloatVal or BoolVal fields to keep the struct size minimal.\n// Floats are packed into IntVal using math.Float64bits, and Bools are mapped to 1/0 in IntVal.\n// Adding more fields would increase the struct size and reduce pass-by-value performance.\ntype Value struct {\n	Type   uint8\n	IntVal int64\n	StrVal string\n	PtrVal any\n}\n\nfunc Str(v string) Value {\n	return Value{Type: TypeString, StrVal: v}\n}\n\nfunc Int(v int) Value {\n	return Value{Type: TypeInt, IntVal: int64(v)}\n}\n\nfunc Float(v float64) Value {\n	return Value{Type: 7, IntVal: int64(math.Float64bits(v))}\n}\n\nfunc Bool(v bool) Value {\n	var i int64 = 0\n	if v {\n		i = 1\n	}\n	return Value{Type: 6, IntVal: i}\n}\n\nfunc Array(v []Value) Value {\n	return Value{Type: 8, PtrVal: v}\n}\n\nfunc Record(m map[string]Value) Value {\n	return Value{Type: TypeRecord, PtrVal: m}\n}\n\nfunc RecordUpdate(orig Value, updates map[string]Value) Value {\n	origMap := orig.PtrVal.(map[string]Value)\n	newMap := make(map[string]Value, len(origMap)+len(updates))\n	for k, v := range origMap {\n		newMap[k] = v\n	}\n	for k, v := range updates {\n		newMap[k] = v\n	}\n	return Record(newMap)\n}\n\nfunc Cons(tag string, args []Value) Value {\n	return Value{Type: TypeConstructor, StrVal: tag, PtrVal: args}\n}\n\n// Function with 1 arg (curried)\nfunc Func(f func(Value) Value) Value {\n	return Value{Type: TypeFunc, PtrVal: f}\n}\n\nfunc FuncAny(f any) Value {\n	return Value{Type: TypeFunc, PtrVal: f}\n}\n\n// Uncurried application helper\nfunc Apply(f Value, arg Value) Value {\n	if f.Type != TypeFunc {\n		panic("Attempted to apply a non-function")\n	}\n	fn := f.PtrVal.(func(Value) Value)\n	return fn(arg)\n}\n\nfunc ArrayAccess(arr Value, index int) Value {\n	return arr.PtrVal.([]Value)[index]\n}\n\nfunc Any(v any) Value {\n	return Value{Type: 9, PtrVal: v}\n}\n';
+
+// output-es/Node.Encoding/index.js
+var $Encoding = (tag) => tag;
+var UTF8 = /* @__PURE__ */ $Encoding("UTF8");
+
+// output-es/Node.FS.Constants/foreign.js
+import { constants } from "node:fs";
+var f_OK = constants.F_OK;
+var r_OK = constants.R_OK;
+var w_OK = constants.W_OK;
+var x_OK = constants.X_OK;
+var copyFile_EXCL = constants.COPYFILE_EXCL;
+var copyFile_FICLONE = constants.COPYFILE_FICLONE;
+var copyFile_FICLONE_FORCE = constants.COPYFILE_FICLONE_FORCE;
+
+// output-es/Node.FS.Perms/index.js
+var semiringPerm = {
+  add: (v) => (v1) => ({ r: v.r || v1.r, w: v.w || v1.w, x: v.x || v1.x }),
+  zero: { r: false, w: false, x: false },
+  mul: (v) => (v1) => ({ r: v.r && v1.r, w: v.w && v1.w, x: v.x && v1.x }),
+  one: { r: true, w: true, x: true }
+};
+var permToString = (x) => showIntImpl(((x.r ? 4 : 0) + (x.w ? 2 : 0) | 0) + (x.x ? 1 : 0) | 0);
+var permsToString = (v) => "0" + permToString(v.u) + permToString(v.g) + permToString(v.o);
+
+// output-es/Node.FS.Async/foreign.js
+import {
+  access,
+  copyFile,
+  mkdtemp,
+  rename,
+  truncate,
+  chown,
+  chmod,
+  stat,
+  lstat,
+  link,
+  symlink,
+  readlink,
+  realpath,
+  unlink,
+  rmdir,
+  rm,
+  mkdir,
+  readdir,
+  utimes,
+  readFile,
+  writeFile,
+  appendFile,
+  open,
+  read as read2,
+  write as write2,
+  close
+} from "node:fs";
+
+// output-es/Node.FS.Async/index.js
+var handleCallback = (cb) => (err, a) => {
+  const v = nullable(err, Nothing, Just);
+  if (v.tag === "Nothing") {
+    return cb($Either("Right", a))();
+  }
+  if (v.tag === "Just") {
+    return cb($Either("Left", v._1))();
+  }
+  fail();
+};
+var mkdir$p = (file) => (v) => (cb) => {
+  const $0 = { recursive: v.recursive, mode: permsToString(v.mode) };
+  return () => mkdir(file, $0, handleCallback(cb));
+};
+var mkdir2 = (path2) => mkdir$p(path2)({ recursive: false, mode: { u: semiringPerm.one, g: semiringPerm.one, o: semiringPerm.one } });
+var readTextFile = (encoding) => (file) => (cb) => {
+  const $0 = {
+    encoding: (() => {
+      if (encoding === "ASCII") {
+        return "ASCII";
+      }
+      if (encoding === "UTF8") {
+        return "UTF8";
+      }
+      if (encoding === "UTF16LE") {
+        return "UTF16LE";
+      }
+      if (encoding === "UCS2") {
+        return "UCS2";
+      }
+      if (encoding === "Base64") {
+        return "Base64";
+      }
+      if (encoding === "Base64Url") {
+        return "Base64Url";
+      }
+      if (encoding === "Latin1") {
+        return "Latin1";
+      }
+      if (encoding === "Binary") {
+        return "Binary";
+      }
+      if (encoding === "Hex") {
+        return "Hex";
+      }
+      fail();
+    })()
+  };
+  return () => readFile(file, $0, handleCallback(cb));
+};
+var readdir2 = (file) => (cb) => () => readdir(file, handleCallback(cb));
+var stat2 = (file) => (cb) => () => stat(file, handleCallback(cb));
+var writeTextFile = (encoding) => (file) => (buff) => (cb) => {
+  const $0 = {
+    encoding: (() => {
+      if (encoding === "ASCII") {
+        return "ASCII";
+      }
+      if (encoding === "UTF8") {
+        return "UTF8";
+      }
+      if (encoding === "UTF16LE") {
+        return "UTF16LE";
+      }
+      if (encoding === "UCS2") {
+        return "UCS2";
+      }
+      if (encoding === "Base64") {
+        return "Base64";
+      }
+      if (encoding === "Base64Url") {
+        return "Base64Url";
+      }
+      if (encoding === "Latin1") {
+        return "Latin1";
+      }
+      if (encoding === "Binary") {
+        return "Binary";
+      }
+      if (encoding === "Hex") {
+        return "Hex";
+      }
+      fail();
+    })()
+  };
+  return () => writeFile(file, buff, $0, handleCallback(cb));
+};
+
+// output-es/Node.FS.Aff/index.js
+var toAff1 = (f) => (a) => {
+  const $0 = f(a);
+  return makeAff((k) => {
+    const $1 = $0(k);
+    return () => {
+      $1();
+      return nonCanceler;
+    };
+  });
+};
+var toAff2 = (f) => (a) => (b) => {
+  const $0 = f(a)(b);
+  return makeAff((k) => {
+    const $1 = $0(k);
+    return () => {
+      $1();
+      return nonCanceler;
+    };
+  });
+};
+var toAff3 = (f) => (a) => (b) => (c) => {
+  const $0 = f(a)(b)(c);
+  return makeAff((k) => {
+    const $1 = $0(k);
+    return () => {
+      $1();
+      return nonCanceler;
+    };
+  });
+};
+
+// output-es/Node.FS.Stats/foreign.js
+var isDirectoryImpl = (s) => s.isDirectory();
+
+// output-es/Node.Process/foreign.js
+import process2 from "process";
+var abortImpl = process2.abort ? () => process2.abort() : null;
+var argv = () => process2.argv.slice();
+var channelRefImpl = process2.channel && process2.channel.ref ? () => process2.channel.ref() : null;
+var channelUnrefImpl = process2.channel && process2.channel.unref ? () => process2.channel.unref() : null;
+var debugPort = process2.debugPort;
+var disconnectImpl = process2.disconnect ? () => process2.disconnect() : null;
+var pid = process2.pid;
+var platformStr = process2.platform;
+var ppid = process2.ppid;
+var stdin = process2.stdin;
+var stdout = process2.stdout;
+var stderr = process2.stderr;
+var stdinIsTTY = process2.stdinIsTTY;
+var stdoutIsTTY = process2.stdoutIsTTY;
+var stderrIsTTY = process2.stderrIsTTY;
+var version = process2.version;
+
+// output-es/Data.List/index.js
+var foldM = (dictMonad) => (v) => (v1) => (v2) => {
+  if (v2.tag === "Nil") {
+    return dictMonad.Applicative0().pure(v1);
+  }
+  if (v2.tag === "Cons") {
+    const $0 = v2._2;
+    return dictMonad.Bind1().bind(v(v1)(v2._1))((b$p) => foldM(dictMonad)(v)(b$p)($0));
+  }
+  fail();
+};
+
+// output-es/Data.Semigroup.Foldable/index.js
+var maximum = (dictOrd) => {
+  const semigroupMax = {
+    append: (v) => (v1) => {
+      const v$1 = dictOrd.compare(v)(v1);
+      if (v$1 === "LT") {
+        return v1;
+      }
+      if (v$1 === "EQ") {
+        return v;
+      }
+      if (v$1 === "GT") {
+        return v;
+      }
+      fail();
+    }
+  };
+  return (dictFoldable1) => dictFoldable1.foldMap1(semigroupMax)(unsafeCoerce);
+};
+
+// output-es/Data.TraversableWithIndex/index.js
+var traversableWithIndexArray = {
+  traverseWithIndex: (dictApplicative) => {
+    const sequence1 = traversableWithIndexArray.Traversable2().sequence(dictApplicative);
+    return (f) => {
+      const $0 = traversableWithIndexArray.FunctorWithIndex0().mapWithIndex(f);
+      return (x) => sequence1($0(x));
+    };
+  },
+  FunctorWithIndex0: () => functorWithIndexArray,
+  FoldableWithIndex1: () => foldableWithIndexArray,
+  Traversable2: () => traversableArray
+};
+
+// output-es/Data.Array.NonEmpty.Internal/foreign.js
+var foldr1Impl = function(f, xs) {
+  var acc = xs[xs.length - 1];
+  for (var i = xs.length - 2; i >= 0; i--) {
+    acc = f(xs[i])(acc);
+  }
+  return acc;
+};
+var foldl1Impl = function(f, xs) {
+  var acc = xs[0];
+  var len = xs.length;
+  for (var i = 1; i < len; i++) {
+    acc = f(acc)(xs[i]);
+  }
+  return acc;
+};
+
+// output-es/Data.Array.NonEmpty.Internal/index.js
+var foldable1NonEmptyArray = {
+  foldMap1: (dictSemigroup) => {
+    const append = dictSemigroup.append;
+    return (f) => {
+      const $0 = arrayMap(f);
+      const $1 = foldable1NonEmptyArray.foldl1(append);
+      return (x) => $1($0(x));
+    };
+  },
+  foldr1: ($0) => ($1) => foldr1Impl($0, $1),
+  foldl1: ($0) => ($1) => foldl1Impl($0, $1),
+  Foldable0: () => foldableArray
+};
+
+// output-es/Data.Array.NonEmpty/index.js
+var head = (x) => {
+  if (0 < x.length) {
+    return x[0];
+  }
+  fail();
+};
+var uncons2 = (x) => {
+  const $0 = unconsImpl((v) => Nothing, (x$1) => (xs) => $Maybe("Just", { head: x$1, tail: xs }), x);
+  if ($0.tag === "Just") {
+    return $0._1;
+  }
+  fail();
+};
+
+// output-es/Data.Map/index.js
+var semigroupSemigroupMap = (dictOrd) => {
+  const compare4 = dictOrd.compare;
+  return (dictSemigroup) => {
+    const append = dictSemigroup.append;
+    return { append: (v) => (v1) => unsafeUnionWith(compare4, append, v, v1) };
+  };
+};
+var monoidSemigroupMap = (dictOrd) => {
+  const semigroupSemigroupMap1 = semigroupSemigroupMap(dictOrd);
+  return (dictSemigroup) => {
+    const semigroupSemigroupMap2 = semigroupSemigroupMap1(dictSemigroup);
+    return { mempty: Leaf, Semigroup0: () => semigroupSemigroupMap2 };
+  };
+};
+
+// output-es/Data.Semigroup.First/index.js
+var semigroupFirst2 = { append: (x) => (v) => x };
+
 // output-es/PureScript.Backend.Optimizer.Analysis/index.js
 var $Capture = (tag) => tag;
 var $Complexity = (tag) => tag;
 var $ResultTerm = (tag) => tag;
-var ordQualified2 = /* @__PURE__ */ ordQualified(ordString);
+var ordQualified3 = /* @__PURE__ */ ordQualified(ordString);
 var pop2 = /* @__PURE__ */ pop(ordInt);
 var KnownNeutral = /* @__PURE__ */ $ResultTerm("KnownNeutral");
 var Unknown = /* @__PURE__ */ $ResultTerm("Unknown");
@@ -4854,7 +6087,7 @@ var semigroupResultTerm = {
   }
 };
 var monoidResultTerm = { mempty: KnownNeutral, Semigroup0: () => semigroupResultTerm };
-var foldMap1 = /* @__PURE__ */ (() => foldableArray.foldMap(monoidResultTerm))();
+var foldMap12 = /* @__PURE__ */ (() => foldableArray.foldMap(monoidResultTerm))();
 var semigroupUsage = {
   append: (v) => (v1) => ({
     total: v.total + v1.total | 0,
@@ -4929,7 +6162,7 @@ var semigroupBackendAnalysis = {
     })(),
     args: [],
     rewrite: v.rewrite || v1.rewrite,
-    deps: unsafeUnionWith(ordQualified2.compare, $$const, v.deps, v1.deps),
+    deps: unsafeUnionWith(ordQualified3.compare, $$const, v.deps, v1.deps),
     result: (() => {
       if (v.result === "Unknown") {
         return Unknown;
@@ -4948,8 +6181,8 @@ var monoidBackendAnalysis = {
 };
 var foldMap2 = /* @__PURE__ */ (() => foldableBackendSyntax.foldMap(monoidBackendAnalysis))();
 var foldMap3 = /* @__PURE__ */ (() => foldableArray.foldMap(monoidBackendAnalysis))();
-var foldMap4 = /* @__PURE__ */ (() => foldableArray.foldMap(monoidBackendAnalysis))();
-var foldMap6 = (f) => (v) => semigroupBackendAnalysis.append(f(v._1))(f(v._2));
+var foldMap42 = /* @__PURE__ */ (() => foldableArray.foldMap(monoidBackendAnalysis))();
+var foldMap62 = (f) => (v) => semigroupBackendAnalysis.append(f(v._1))(f(v._2));
 var used = (level) => ({
   ...monoidBackendAnalysis.mempty,
   usages: $$$Map(
@@ -4989,12 +6222,12 @@ var analyzeDefault = (dictHasAnalysis) => {
   };
 };
 var accessed = (level) => (v) => ({ ...v, usages: update(ordInt)((x) => $Maybe("Just", { ...x, access: x.access + 1 | 0 }))(level)(v.usages) });
-var analyze = (dictHasAnalysis) => {
+var analyze2 = (dictHasAnalysis) => {
   const analysisOf1 = dictHasAnalysis.analysisOf;
   const analyzeDefault1 = analyzeDefault(dictHasAnalysis);
   return (dictHasSyntax) => (externAnalysis) => (expr) => {
     if (expr.tag === "Var") {
-      const analysis = { ...monoidBackendAnalysis.mempty, deps: insert(ordQualified2)(expr._1)()(monoidBackendAnalysis.mempty.deps), externs: true, size: 1 };
+      const analysis = { ...monoidBackendAnalysis.mempty, deps: insert(ordQualified3)(expr._1)()(monoidBackendAnalysis.mempty.deps), externs: true, size: 1 };
       const v = externAnalysis(expr._1)(Nothing);
       if (v.tag === "Just") {
         return { ...analysis, args: v._1.args };
@@ -5338,8 +6571,8 @@ var analyze = (dictHasAnalysis) => {
       return analysis;
     }
     if (expr.tag === "CtorSaturated") {
-      const $0 = foldMap4((v) => analysisOf1(v._2))(expr._5);
-      return { ...$0, deps: insert(ordQualified2)(expr._1)()($0.deps), result: KnownNeutral, size: $0.size + 1 | 0 };
+      const $0 = foldMap42((v) => analysisOf1(v._2))(expr._5);
+      return { ...$0, deps: insert(ordQualified3)(expr._1)()($0.deps), result: KnownNeutral, size: $0.size + 1 | 0 };
     }
     if (expr.tag === "CtorDef") {
       const $0 = analyzeDefault1(expr);
@@ -5387,7 +6620,7 @@ var analyze = (dictHasAnalysis) => {
           })()
         };
       })())(semigroupBackendAnalysis.append((() => {
-        const $02 = foldMap4(foldMap6(analysisOf1))((() => {
+        const $02 = foldMap42(foldMap62(analysisOf1))((() => {
           const $03 = unconsImpl((v) => Nothing, (v) => (xs) => $Maybe("Just", xs), expr._1);
           if ($03.tag === "Just") {
             return $03._1;
@@ -5444,7 +6677,7 @@ var analyze = (dictHasAnalysis) => {
           }
           fail();
         })(),
-        result: foldMap1((x) => dictHasAnalysis.analysisOf(x._2).result)(expr._1)
+        result: foldMap12((x) => dictHasAnalysis.analysisOf(x._2).result)(expr._1)
       };
     }
     if (expr.tag === "Fail") {
@@ -5492,14 +6725,14 @@ var analyze = (dictHasAnalysis) => {
       };
       const v2 = (v3) => {
         if ($0.tag === "Op1" && $0._1.tag === "OpIsTag") {
-          return { ...analysis, deps: insert(ordQualified2)($0._1._1)()(analysis.deps) };
+          return { ...analysis, deps: insert(ordQualified3)($0._1._1)()(analysis.deps) };
         }
         return analysis;
       };
       if ($0.tag === "Op1" && $0._1.tag === "OpIsTag") {
         const $2 = dictHasSyntax.syntaxOf($0._2);
         if ($2.tag === "Just" && $2._1.tag === "Local") {
-          return cased($2._1._2)({ ...analysis, deps: insert(ordQualified2)($0._1._1)()(analysis.deps) });
+          return cased($2._1._2)({ ...analysis, deps: insert(ordQualified3)($0._1._1)()(analysis.deps) });
         }
       }
       return v2(true);
@@ -5543,7 +6776,7 @@ var analyze = (dictHasAnalysis) => {
       const analysis = (() => {
         if (expr._2.tag === "GetCtorField") {
           const $0 = analyzeDefault1(expr);
-          return { ...$0, deps: insert(ordQualified2)(expr._2._1)()($0.deps), result: Unknown };
+          return { ...$0, deps: insert(ordQualified3)(expr._2._1)()($0.deps), result: Unknown };
         }
         return { ...analyzeDefault1(expr), result: Unknown };
       })();
@@ -5624,7 +6857,7 @@ var analyze = (dictHasAnalysis) => {
 };
 var analyzeEffectBlock = (dictHasAnalysis) => {
   const analyzeDefault1 = analyzeDefault(dictHasAnalysis);
-  const analyze1 = analyze(dictHasAnalysis);
+  const analyze1 = analyze2(dictHasAnalysis);
   return (dictHasSyntax) => {
     const analyze22 = analyze1(dictHasSyntax);
     return (externAnalysis) => (expr) => {
@@ -5812,7 +7045,7 @@ var $LocalBinding = (tag, _1) => ({ tag, _1 });
 var $MkFn = (tag, _1, _2) => ({ tag, _1, _2 });
 var $SemConditional = (_1, _2) => ({ tag: "SemConditional", _1, _2 });
 var $UnpackOp = (tag, _1, _2, _3, _4, _5) => ({ tag, _1, _2, _3, _4, _5 });
-var compare1 = /* @__PURE__ */ (() => ordQualified(ordString).compare)();
+var compare12 = /* @__PURE__ */ (() => ordQualified(ordString).compare)();
 var compare2 = (x) => (y) => {
   if (x.tag === "Nothing") {
     if (y.tag === "Nothing") {
@@ -5829,7 +7062,7 @@ var compare2 = (x) => (y) => {
   fail();
 };
 var eq102 = /* @__PURE__ */ eqArrayImpl((x) => (y) => (x._1.tag === "Nothing" ? y._1.tag === "Nothing" : x._1.tag === "Just" && y._1.tag === "Just" && x._1._1 === y._1._1) && x._2 === y._2);
-var lookup2 = (k) => {
+var lookup4 = (k) => {
   const go = (go$a0$copy) => {
     let go$a0 = go$a0$copy, go$c = true, go$r;
     while (go$c) {
@@ -5861,7 +7094,7 @@ var lookup2 = (k) => {
   };
   return go;
 };
-var toUnfoldable = /* @__PURE__ */ (() => {
+var toUnfoldable2 = /* @__PURE__ */ (() => {
   const $0 = unfoldableArray.unfoldr((xs) => {
     if (xs.tag === "Nil") {
       return Nothing;
@@ -5886,8 +7119,8 @@ var toUnfoldable = /* @__PURE__ */ (() => {
 })();
 var or2 = /* @__PURE__ */ or(foldableArray)(heytingAlgebraBoolean);
 var and2 = /* @__PURE__ */ and(foldableArray)(heytingAlgebraBoolean);
-var foldMap = /* @__PURE__ */ (() => foldableArray.foldMap(monoidBackendAnalysis))();
-var foldMap12 = /* @__PURE__ */ (() => foldableArray.foldMap(monoidBackendAnalysis))();
+var foldMap7 = /* @__PURE__ */ (() => foldableArray.foldMap(monoidBackendAnalysis))();
+var foldMap13 = /* @__PURE__ */ (() => foldableArray.foldMap(monoidBackendAnalysis))();
 var power2 = /* @__PURE__ */ power(monoidBackendAnalysis);
 var toUnfoldable1 = /* @__PURE__ */ (() => unfoldableArray.unfoldr((xs) => {
   if (xs.tag === "Nil") {
@@ -5905,7 +7138,7 @@ var eq16 = (x) => (y) => {
   }
   return x.tag === "Right" && y.tag === "Right" && eqBackendOperator2.eq(x._1)(y._1);
 };
-var identity9 = (x) => x;
+var identity10 = (x) => x;
 var lookup1 = /* @__PURE__ */ lookup(foldableArray)(eqString);
 var NeutralExpr = (x) => x;
 var InlineDefault = /* @__PURE__ */ $InlineDirective("InlineDefault");
@@ -6038,7 +7271,7 @@ var ordEvalRef = {
   compare: (x) => (y) => {
     if (x.tag === "EvalExtern") {
       if (y.tag === "EvalExtern") {
-        return compare1(x._1)(y._1);
+        return compare12(x._1)(y._1);
       }
       return LT;
     }
@@ -6060,7 +7293,7 @@ var ordEvalRef = {
   Eq0: () => eqEvalRef
 };
 var alter2 = /* @__PURE__ */ alter(ordEvalRef);
-var lookup3 = (k) => {
+var lookup32 = (k) => {
   const go = (go$a0$copy) => {
     let go$a0 = go$a0$copy, go$c = true, go$r;
     while (go$c) {
@@ -6190,7 +7423,7 @@ var shouldUnpackUpdate = (ident) => (level) => (binding2) => (body) => {
     fail();
   })();
   if (binding2.tag === "ExprSyntax" && binding2._2.tag === "Update") {
-    const $1 = lookup2(level)($0.usages);
+    const $1 = lookup4(level)($0.usages);
     if ($1.tag === "Just" && $1._1.total === ($1._1.access + $1._1.update | 0)) {
       return $Maybe(
         "Just",
@@ -6252,7 +7485,7 @@ var shouldUnpackRecord = (ident) => (level) => (binding2) => (body) => {
     fail();
   })();
   if (binding2.tag === "ExprSyntax" && binding2._2.tag === "Lit" && binding2._2._1.tag === "LitRecord") {
-    const $1 = lookup2(level)($0.usages);
+    const $1 = lookup4(level)($0.usages);
     if ($1.tag === "Just" && $1._1.total === ($1._1.access + $1._1.update | 0)) {
       return $Maybe(
         "Just",
@@ -6306,7 +7539,7 @@ var shouldUnpackCtor = (ident) => (level) => (a) => (body) => {
     fail();
   })();
   if (a.tag === "ExprSyntax" && a._2.tag === "CtorSaturated") {
-    const $1 = lookup2(level)($0.usages);
+    const $1 = lookup4(level)($0.usages);
     if ($1.tag === "Just" && $1._1.total === ($1._1.access + $1._1.case | 0)) {
       return $Maybe(
         "Just",
@@ -6360,7 +7593,7 @@ var shouldUnpackArray = (ident) => (level) => (binding2) => (body) => {
     fail();
   })();
   if (binding2.tag === "ExprSyntax" && binding2._2.tag === "Lit" && binding2._2._1.tag === "LitArray") {
-    const $1 = lookup2(level)($0.usages);
+    const $1 = lookup4(level)($0.usages);
     if ($1.tag === "Just" && $1._1.total === $1._1.access) {
       return $Maybe(
         "Just",
@@ -6414,9 +7647,9 @@ var shouldUncurryAbs = (ident) => (level) => (a) => (b) => {
     fail();
   })();
   if (a.tag === "ExprSyntax" && a._2.tag === "Abs") {
-    const $1 = lookup2(level)($0.usages);
+    const $1 = lookup4(level)($0.usages);
     if ($1.tag === "Just") {
-      const $2 = toUnfoldable($1._1.arities);
+      const $2 = toUnfoldable2($1._1.arities);
       if ($2.length === 1 && $2[0] === a._2._1.length) {
         return $Maybe(
           "Just",
@@ -6541,7 +7774,7 @@ var shouldDistributeBranches = (ident) => (level) => (a) => (body) => {
     fail();
   })();
   if (a.tag === "ExprSyntax" && a._2.tag === "Branch" && $0.size <= 128 && a._1.result === "KnownNeutral") {
-    const $1 = lookup2(level)($0.usages);
+    const $1 = lookup4(level)($0.usages);
     if ($1.tag === "Just" && $1._1.total === ($1._1.access + $1._1.case | 0)) {
       return $Maybe(
         "Just",
@@ -6597,7 +7830,7 @@ var shouldDistributeBranchUncurriedApps = (analysis1) => (branches) => (def) => 
       "Just",
       $BackendExpr(
         "ExprRewrite",
-        { ...semigroupBackendAnalysis.append(analysis1)(foldMap(hasAnalysisBackendExpr.analysisOf)(spine)), rewrite: true },
+        { ...semigroupBackendAnalysis.append(analysis1)(foldMap7(hasAnalysisBackendExpr.analysisOf)(spine)), rewrite: true },
         $BackendRewrite("RewriteDistBranchesOp", branches, def, $DistOp("DistUncurriedApp", spine))
       )
     );
@@ -6694,7 +7927,7 @@ var shouldDistributeBranchApps = (analysis1) => (branches) => (def) => (spine) =
       "Just",
       $BackendExpr(
         "ExprRewrite",
-        { ...semigroupBackendAnalysis.append(analysis1)(foldMap12(hasAnalysisBackendExpr.analysisOf)(spine)), rewrite: true },
+        { ...semigroupBackendAnalysis.append(analysis1)(foldMap13(hasAnalysisBackendExpr.analysisOf)(spine)), rewrite: true },
         $BackendRewrite("RewriteDistBranchesOp", branches, def, $DistOp("DistApp", spine))
       )
     );
@@ -6714,7 +7947,7 @@ var rewriteInline = (ident) => (level) => (binding2) => (body) => {
   return $BackendExpr(
     "ExprRewrite",
     (() => {
-      const v = lookup2(level)(s2.usages);
+      const v = lookup4(level)(s2.usages);
       const $0 = (() => {
         if (v.tag === "Just") {
           return semigroupBackendAnalysis.append(s2)(power2((() => {
@@ -6785,7 +8018,7 @@ var shouldInlineLet = (level) => (a) => (b) => {
     }
     fail();
   })();
-  const v2 = lookup2(level)((() => {
+  const v2 = lookup4(level)((() => {
     if (b.tag === "ExprSyntax") {
       return b._1.usages;
     }
@@ -8868,7 +10101,7 @@ var evalUncurriedApp = (env) => (hd) => (spine) => {
     const $0 = hd._1;
     const $1 = hd._3;
     const $2 = hd._2;
-    return guardFailOver1(identity9)(spine)((spine$p) => evalRef(env)($0)($2)($ExternSpine("ExternUncurriedApp", spine$p))($1));
+    return guardFailOver1(identity10)(spine)((spine$p) => evalRef(env)($0)($2)($ExternSpine("ExternUncurriedApp", spine$p))($1));
   }
   if (hd.tag === "SemLet") {
     return $BackendSemantics(
@@ -8884,7 +10117,7 @@ var evalUncurriedApp = (env) => (hd) => (spine) => {
   if (hd.tag === "NeutFail") {
     return $BackendSemantics("NeutFail", hd._1);
   }
-  return guardFailOver1(identity9)(spine)(NeutUncurriedApp(hd));
+  return guardFailOver1(identity10)(spine)(NeutUncurriedApp(hd));
 };
 var evalSpine = (env) => foldlArray((hd) => (v) => {
   if (v.tag === "ExternApp") {
@@ -8928,7 +10161,7 @@ var evalUncurriedEffectApp = (env) => (hd) => (spine) => {
   if (hd.tag === "NeutFail") {
     return $BackendSemantics("NeutFail", hd._1);
   }
-  return guardFailOver1(identity9)(spine)(NeutUncurriedEffectApp(hd));
+  return guardFailOver1(identity10)(spine)(NeutUncurriedEffectApp(hd));
 };
 var mkFnFromArgs = (dictEval) => (env) => (args) => (body) => $BackendSemantics(
   "SemMkFn",
@@ -9187,7 +10420,7 @@ var evalBackendSyntax = (dictEval) => ({
       })());
     }
     if (v1.tag === "PrimEffect") {
-      return guardFailOver2(identity9)((() => {
+      return guardFailOver2(identity10)((() => {
         const $0 = dictEval.eval(v);
         if (v1._1.tag === "EffectRefNew") {
           return $BackendEffect("EffectRefNew", $0(v1._1._1));
@@ -9205,7 +10438,7 @@ var evalBackendSyntax = (dictEval) => ({
       return NeutPrimUndefined;
     }
     if (v1.tag === "Lit") {
-      return guardFailOver3(identity9)(functorLiteral.map(dictEval.eval(v))(v1._1))(NeutLit);
+      return guardFailOver3(identity10)(functorLiteral.map(dictEval.eval(v))(v1._1))(NeutLit);
     }
     if (v1.tag === "Fail") {
       return $BackendSemantics("NeutFail", v1._1);
@@ -9433,7 +10666,7 @@ var evalExternFromImpl = (v) => (qual) => (v1) => (spine) => {
     if (v1._2.tag === "ExternExpr") {
       const $0 = v1._2._2;
       const $1 = v1._2._1;
-      const $2 = lookup3($EvalRef("EvalExtern", qual))(v.directives);
+      const $2 = lookup32($EvalRef("EvalExtern", qual))(v.directives);
       const $3 = lookup22(InlineRef);
       const v2 = (() => {
         if ($2.tag === "Just") {
@@ -9475,7 +10708,7 @@ var evalExternFromImpl = (v) => (qual) => (v1) => (spine) => {
     if (spine[0].tag === "ExternAccessor") {
       if (spine[0]._1.tag === "GetProp") {
         if (v1._2.tag === "ExternExpr") {
-          const $0 = lookup3($EvalRef("EvalExtern", qual))(v.directives);
+          const $0 = lookup32($EvalRef("EvalExtern", qual))(v.directives);
           const $1 = lookup22($InlineAccessor("InlineProp", spine[0]._1._1));
           const v2 = (() => {
             if ($0.tag === "Just") {
@@ -9513,7 +10746,7 @@ var evalExternFromImpl = (v) => (qual) => (v1) => (spine) => {
           );
           if ($0.tag === "Just") {
             const $1 = $0._1._2;
-            const $2 = lookup3($EvalRef("EvalExtern", qual))(v.directives);
+            const $2 = lookup32($EvalRef("EvalExtern", qual))(v.directives);
             const $3 = lookup22($InlineAccessor("InlineProp", spine[0]._1._1));
             const v3 = (() => {
               if ($2.tag === "Just") {
@@ -9554,7 +10787,7 @@ var evalExternFromImpl = (v) => (qual) => (v1) => (spine) => {
       if (v1._2.tag === "ExternExpr") {
         const $0 = v1._2._2;
         const $1 = v1._2._1;
-        const $2 = lookup3($EvalRef("EvalExtern", qual))(v.directives);
+        const $2 = lookup32($EvalRef("EvalExtern", qual))(v.directives);
         const $3 = lookup22(InlineRef);
         const v2 = (() => {
           if ($2.tag === "Just") {
@@ -9604,7 +10837,7 @@ var evalExternFromImpl = (v) => (qual) => (v1) => (spine) => {
     if (spine[0].tag === "ExternAccessor") {
       if (spine[0]._1.tag === "GetProp" && spine[1].tag === "ExternApp") {
         if (v1._2.tag === "ExternExpr") {
-          const $0 = lookup3($EvalRef("EvalExtern", qual))(v.directives);
+          const $0 = lookup32($EvalRef("EvalExtern", qual))(v.directives);
           const $1 = lookup22($InlineAccessor("InlineProp", spine[0]._1._1));
           const v2 = (() => {
             if ($0.tag === "Just") {
@@ -9648,7 +10881,7 @@ var evalExternFromImpl = (v) => (qual) => (v1) => (spine) => {
           );
           if ($0.tag === "Just") {
             const $1 = $0._1._2;
-            const $2 = lookup3($EvalRef("EvalExtern", qual))(v.directives);
+            const $2 = lookup32($EvalRef("EvalExtern", qual))(v.directives);
             const $3 = lookup22($InlineAccessor("InlineProp", spine[0]._1._1));
             const v3 = (() => {
               if ($2.tag === "Just") {
@@ -9692,7 +10925,7 @@ var evalExternFromImpl = (v) => (qual) => (v1) => (spine) => {
       return Nothing;
     }
     if (spine[0].tag === "ExternApp" && spine[1].tag === "ExternAccessor" && spine[1]._1.tag === "GetProp" && v1._2.tag === "ExternExpr") {
-      const $0 = lookup3($EvalRef("EvalExtern", qual))(v.directives);
+      const $0 = lookup32($EvalRef("EvalExtern", qual))(v.directives);
       const $1 = lookup22($InlineAccessor("InlineSpineProp", spine[1]._1._1));
       const v2 = (() => {
         if ($0.tag === "Just") {
@@ -9718,7 +10951,7 @@ var evalExternFromImpl = (v) => (qual) => (v1) => (spine) => {
     return Nothing;
   }
   if (spine.length === 3 && spine[0].tag === "ExternApp" && spine[1].tag === "ExternAccessor" && spine[1]._1.tag === "GetProp" && spine[2].tag === "ExternApp" && v1._2.tag === "ExternExpr") {
-    const $0 = lookup3($EvalRef("EvalExtern", qual))(v.directives);
+    const $0 = lookup32($EvalRef("EvalExtern", qual))(v.directives);
     const $1 = lookup22($InlineAccessor("InlineSpineProp", spine[1]._1._1));
     const v2 = (() => {
       if ($0.tag === "Just") {
@@ -11834,9 +13067,9 @@ var $CaseRowGuardedExpr = (tag, _1) => ({ tag, _1 });
 var $PatternCase = (tag, _1, _2) => ({ tag, _1, _2 });
 var eq = /* @__PURE__ */ eqArrayImpl(eqStringImpl);
 var compare3 = /* @__PURE__ */ (() => ordArray(ordString).compare)();
-var compare12 = /* @__PURE__ */ (() => ordQualified(ordString).compare)();
-var ordQualified3 = /* @__PURE__ */ ordQualified(ordString);
-var lookup4 = (k) => {
+var compare13 = /* @__PURE__ */ (() => ordQualified(ordString).compare)();
+var ordQualified4 = /* @__PURE__ */ ordQualified(ordString);
+var lookup5 = (k) => {
   const go = (go$a0$copy) => {
     let go$a0 = go$a0$copy, go$c = true, go$r;
     while (go$c) {
@@ -11869,8 +13102,8 @@ var lookup4 = (k) => {
   return go;
 };
 var monoidSemigroupMap2 = /* @__PURE__ */ monoidSemigroupMap(ordString)(semigroupFirst2);
-var foldMap5 = /* @__PURE__ */ (() => foldableSet.foldMap(monoidSemigroupMap2))();
-var toUnfoldable2 = /* @__PURE__ */ (() => {
+var foldMap8 = /* @__PURE__ */ (() => foldableSet.foldMap(monoidSemigroupMap2))();
+var toUnfoldable3 = /* @__PURE__ */ (() => {
   const $0 = unfoldableArray.unfoldr((xs) => {
     if (xs.tag === "Nil") {
       return Nothing;
@@ -11906,7 +13139,7 @@ var lookup12 = (k) => {
         continue;
       }
       if (v.tag === "Node") {
-        const v1 = ordQualified3.compare(k)(v._3);
+        const v1 = ordQualified4.compare(k)(v._3);
         if (v1 === "LT") {
           go$a0 = v._5;
           continue;
@@ -11959,7 +13192,7 @@ var lookup23 = (k) => {
   };
   return go;
 };
-var lookup32 = (k) => {
+var lookup33 = (k) => {
   const go = (go$a0$copy) => {
     let go$a0 = go$a0$copy, go$c = true, go$r;
     while (go$c) {
@@ -11992,7 +13225,7 @@ var lookup32 = (k) => {
   return go;
 };
 var analyzeEffectBlock2 = /* @__PURE__ */ analyzeEffectBlock(hasAnalysisBackendExpr)(hasSyntaxBackendExpr);
-var analyze2 = /* @__PURE__ */ analyze(hasAnalysisBackendExpr)(hasSyntaxBackendExpr);
+var analyze3 = /* @__PURE__ */ analyze2(hasAnalysisBackendExpr)(hasSyntaxBackendExpr);
 var foldMap32 = /* @__PURE__ */ (() => foldableArray.foldMap(/* @__PURE__ */ (() => {
   const semigroupRecord1 = { append: (ra) => (rb) => ({ rowsNoMatch: [...ra.rowsNoMatch, ...rb.rowsNoMatch], rowsWithMatch: [...ra.rowsWithMatch, ...rb.rowsWithMatch] }) };
   return { mempty: { rowsNoMatch: [], rowsWithMatch: [] }, Semigroup0: () => semigroupRecord1 };
@@ -12034,15 +13267,15 @@ var forWithIndex = /* @__PURE__ */ (() => {
   return (b) => (a) => $0(a)(b);
 })();
 var zipWithA2 = /* @__PURE__ */ zipWithA(applicativeFn);
-var traverse = /* @__PURE__ */ (() => traversableLiteral.traverse(applicativeFn))();
-var traverse1 = /* @__PURE__ */ (() => traversableArray.traverse(applicativeFn))();
-var traverse3 = /* @__PURE__ */ (() => traversableArray.traverse(applicativeFn))();
+var traverse3 = /* @__PURE__ */ (() => traversableLiteral.traverse(applicativeFn))();
+var traverse12 = /* @__PURE__ */ (() => traversableArray.traverse(applicativeFn))();
+var traverse32 = /* @__PURE__ */ (() => traversableArray.traverse(applicativeFn))();
 var append2 = /* @__PURE__ */ (() => semigroupSemigroupMap(ordString)(semigroupFirst2).append)();
 var toUnfoldable12 = /* @__PURE__ */ (() => {
   const $0 = unfoldableArray.unfoldr(stepUnfoldr);
   return (x) => $0($MapIter("IterNode", x, IterLeaf));
 })();
-var foldMap42 = /* @__PURE__ */ (() => foldableArray.foldMap(monoidSemigroupMap2))();
+var foldMap43 = /* @__PURE__ */ (() => foldableArray.foldMap(monoidSemigroupMap2))();
 var $$for = /* @__PURE__ */ (() => {
   const traverse22 = traversableArray.traverse(applicativeFn);
   return (x) => (f) => traverse22(f)(x);
@@ -12058,7 +13291,7 @@ var member = (k) => {
         continue;
       }
       if (v.tag === "Node") {
-        const v1 = ordQualified3.compare(k)(v._3);
+        const v1 = ordQualified4.compare(k)(v._3);
         if (v1 === "LT") {
           go$a0 = v._5;
           continue;
@@ -12118,7 +13351,7 @@ var fromFoldable3 = /* @__PURE__ */ fromFoldable(ordString)(foldableArray);
 var fromFoldable4 = /* @__PURE__ */ fromFoldable(ordString)(foldableArray);
 var maximum2 = /* @__PURE__ */ maximum(ordInt)(foldable1NonEmptyArray);
 var mapAccumR2 = /* @__PURE__ */ mapAccumR(traversableArray);
-var foldMap52 = /* @__PURE__ */ (() => foldableArray.foldMap(monoidSet(ordQualified3)))();
+var foldMap52 = /* @__PURE__ */ (() => foldableArray.foldMap(monoidSet(ordQualified4)))();
 var fromFoldable5 = /* @__PURE__ */ foldlArray((m) => (a) => insert(ordReExport)(a)()(m))(Leaf);
 var PatWild = /* @__PURE__ */ $PatternCase("PatWild");
 var eqPatternCase = {
@@ -12175,14 +13408,14 @@ var ordPatternCase = {
     }
     if (x.tag === "PatProduct") {
       if (y.tag === "PatProduct") {
-        const v = compare12(x._1)(y._1);
+        const v = compare13(x._1)(y._1);
         if (v === "LT") {
           return LT;
         }
         if (v === "GT") {
           return GT;
         }
-        return ordQualified3.compare(x._2)(y._2);
+        return ordQualified4.compare(x._2)(y._2);
       }
       return LT;
     }
@@ -12200,14 +13433,14 @@ var ordPatternCase = {
     }
     if (x.tag === "PatSum") {
       if (y.tag === "PatSum") {
-        const v = compare12(x._1)(y._1);
+        const v = compare13(x._1)(y._1);
         if (v === "LT") {
           return LT;
         }
         if (v === "GT") {
           return GT;
         }
-        return ordQualified3.compare(x._2)(y._2);
+        return ordQualified4.compare(x._2)(y._2);
       }
       return LT;
     }
@@ -12295,7 +13528,7 @@ var toExternImpl = (env) => (group2) => (expr) => {
           $ExternImpl(
             "ExternCtor",
             (() => {
-              const $1 = lookup4(expr._2._2)(env.dataTypes);
+              const $1 = lookup5(expr._2._2)(env.dataTypes);
               if ($1.tag === "Just") {
                 return $1._1;
               }
@@ -12315,9 +13548,9 @@ var toExternImpl = (env) => (group2) => (expr) => {
 };
 var toCaseRowVars = (v) => {
   const $0 = v.column;
-  return foldMap5((x) => $$$Map("Node", 1, 1, x, $0, Leaf, Leaf))(v.pattern.vars);
+  return foldMap8((x) => $$$Map("Node", 1, 1, x, $0, Leaf, Leaf))(v.pattern.vars);
 };
-var patternVars = (v) => [...toUnfoldable2(v.pattern.vars), ...foldMap22(patternVars)(v.pattern.subterms)];
+var patternVars = (v) => [...toUnfoldable3(v.pattern.vars), ...foldMap22(patternVars)(v.pattern.subterms)];
 var normalizeCaseRows = (x) => {
   const go = (go$a0$copy) => (go$a1$copy) => {
     let go$a0 = go$a0$copy, go$a1 = go$a1$copy, go$c = true, go$r;
@@ -12379,7 +13612,7 @@ var normalizeCaseRows = (x) => {
                 accessor: $BackendAccessor("GetProp", fieldName),
                 pattern: { vars: Leaf, patternCase: PatWild, subterms: [] }
               }
-            ))(toUnfoldable2(allFieldsSet))
+            ))(toUnfoldable3(allFieldsSet))
           ])));
           return { ...pat, pattern: { ...pat.pattern, patternCase: $PatternCase("PatRecord", v1._1), subterms: v1._2 } };
         }
@@ -12475,7 +13708,7 @@ var inferTransitiveDirective = (directives) => (impl) => (backendExpr) => (cfn) 
       }
       if (impl._2.tag === "Accessor" && impl._2._1.tag === "App" && impl._2._1._1.tag === "Var" && impl._2._2.tag === "GetProp") {
         const $02 = lookup23($EvalRef("EvalExtern", impl._2._1._1._1))(directives);
-        const $12 = lookup32($InlineAccessor("InlineSpineProp", impl._2._2._1));
+        const $12 = lookup33($InlineAccessor("InlineSpineProp", impl._2._2._1));
         const v = (() => {
           if ($02.tag === "Just") {
             return $12($02._1);
@@ -12506,7 +13739,7 @@ var inferTransitiveDirective = (directives) => (impl) => (backendExpr) => (cfn) 
   const $1 = (() => {
     if (backendExpr.tag === "ExprSyntax" && backendExpr._2.tag === "App" && backendExpr._2._1.tag === "ExprSyntax" && backendExpr._2._1._2.tag === "Var") {
       const $12 = lookup23($EvalRef("EvalExtern", backendExpr._2._1._2._1))(directives);
-      const $2 = lookup32(InlineRef);
+      const $2 = lookup33(InlineRef);
       const v = (() => {
         if ($12.tag === "Just") {
           return $2($12._1);
@@ -12596,7 +13829,7 @@ var getCtx = (env) => {
           if ($0) {
             return analyzeEffectBlock2(lookupExtern)(expr);
           }
-          return analyze2(lookupExtern)(expr);
+          return analyze3(lookupExtern)(expr);
         }
         fail();
       };
@@ -12992,13 +14225,13 @@ var binderToPattern = (v) => {
                 v._4,
                 (() => {
                   if (v$1.tag === "Just" && v$1._1._2.tag === "ExternCtor") {
-                    const $02 = lookup4(v._2._2)(x.dataTypes);
+                    const $02 = lookup5(v._2._2)(x.dataTypes);
                     if ($02.tag === "Just") {
                       return v$1._1._2._5;
                     }
                     return v$1._1._2._5;
                   }
-                  const $0 = lookup4(v._2._2)(x.dataTypes);
+                  const $0 = lookup5(v._2._2)(x.dataTypes);
                   if ($0.tag === "Just") {
                     const $1 = lookup42(v._3._2)($0._1.constructors);
                     if ($1.tag === "Just") {
@@ -13040,13 +14273,13 @@ var binderToPattern = (v) => {
                 v._4,
                 (() => {
                   if (v$1.tag === "Just" && v$1._1._2.tag === "ExternCtor") {
-                    const $02 = lookup4(v._2._2)(x.dataTypes);
+                    const $02 = lookup5(v._2._2)(x.dataTypes);
                     if ($02.tag === "Just") {
                       return v$1._1._2._5;
                     }
                     return v$1._1._2._5;
                   }
-                  const $0 = lookup4(v._2._2)(x.dataTypes);
+                  const $0 = lookup5(v._2._2)(x.dataTypes);
                   if ($0.tag === "Just") {
                     const $1 = lookup42(v._3._2)($0._1.constructors);
                     if ($1.tag === "Just") {
@@ -13120,7 +14353,7 @@ var toBackendExpr = (v) => {
     };
   }
   if (v.tag === "ExprLit") {
-    const $0 = traverse(toBackendExpr)(v._2);
+    const $0 = traverse3(toBackendExpr)(v._2);
     return (x) => build(getCtx(x))($BackendSyntax("Lit", $0(x)));
   }
   if (v.tag === "ExprConstructor") {
@@ -13130,7 +14363,7 @@ var toBackendExpr = (v) => {
     return (x) => build(getCtx(x))($BackendSyntax(
       "CtorDef",
       (() => {
-        const v2 = lookup4($2)(x.dataTypes);
+        const v2 = lookup5($2)(x.dataTypes);
         if (v2.tag === "Just" && (() => {
           if (v2._1.constructors.tag === "Leaf") {
             return false;
@@ -13159,7 +14392,7 @@ var toBackendExpr = (v) => {
   }
   if (v.tag === "ExprUpdate") {
     const $0 = toBackendExpr(v._2);
-    const $1 = traverse1(traversableProp.traverse(applicativeFn)(toBackendExpr))(v._3);
+    const $1 = traverse12(traversableProp.traverse(applicativeFn)(toBackendExpr))(v._3);
     return (x) => build(getCtx(x))($BackendSyntax("Update", $0(x), $1(x)));
   }
   if (v.tag === "ExprAbs") {
@@ -13189,7 +14422,7 @@ var toBackendExpr = (v) => {
           return build(getCtx(x))($BackendSyntax(
             "LetRec",
             x.currentLevel,
-            intro(foldableArray)(idents)(x.currentLevel)(traverse3(toBackendBinding)($0))(x),
+            intro(foldableArray)(idents)(x.currentLevel)(traverse32(toBackendBinding)($0))(x),
             intro(foldableArray)(idents)(x.currentLevel)(next)(x)
           ));
         };
@@ -13334,7 +14567,7 @@ var buildCasePattern = (chosenColumn) => (rows) => {
   fail();
 };
 var buildCaseLeaf = (row0) => (tailRows) => {
-  const orderedArgs = toUnfoldable12(append2(row0.vars)(foldMap42(toCaseRowVars)(row0.patterns)));
+  const orderedArgs = toUnfoldable12(append2(row0.vars)(foldMap43(toCaseRowVars)(row0.patterns)));
   if (row0.guardFn.tag === "UnconditionalFn") {
     return make($BackendSyntax(
       "UncurriedApp",
@@ -13384,8 +14617,8 @@ var toTopLevelBackendBinding = (group2) => (env) => (v) => {
   return {
     accum: {
       ...env,
-      implementations: insert(ordQualified3)(qualifiedIdent)(v2._1)(env.implementations),
-      moduleImplementations: insert(ordQualified3)(qualifiedIdent)(v2._1)(env.moduleImplementations),
+      implementations: insert(ordQualified4)(qualifiedIdent)(v2._1)(env.implementations),
+      moduleImplementations: insert(ordQualified4)(qualifiedIdent)(v2._1)(env.moduleImplementations),
       optimizationSteps: (() => {
         const $0 = Tuple(qualifiedIdent);
         if (v1._1.length > 0) {
@@ -13518,7 +14751,7 @@ var toBackendModule = (v) => (env) => {
     if (group2.recursive) {
       if (anyImpl(isBindingUsed(deps), group2.bindings)) {
         return {
-          accum: unsafeUnionWith(ordQualified3.compare, $$const, foldMap52((x) => x._2._1)(group2.bindings), deps),
+          accum: unsafeUnionWith(ordQualified4.compare, $$const, foldMap52((x) => x._2._1)(group2.bindings), deps),
           value: { ...group2, bindings: mapMaybe((x) => x)(arrayMap((x) => $Maybe("Just", $Tuple(x._1, x._2._2)))(group2.bindings)) }
         };
       }
@@ -13528,7 +14761,7 @@ var toBackendModule = (v) => (env) => {
       accum: mapAccumR2((deps$p) => (v2) => {
         if (isBindingUsed(deps$p)(v2)) {
           return {
-            accum: unsafeUnionWith(ordQualified3.compare, $$const, v2._2._1, deps$p),
+            accum: unsafeUnionWith(ordQualified4.compare, $$const, v2._2._1, deps$p),
             value: $Maybe("Just", $Tuple(v2._1, v2._2._2))
           };
         }
@@ -13539,7 +14772,7 @@ var toBackendModule = (v) => (env) => {
         bindings: mapMaybe((x) => x)(mapAccumR2((deps$p) => (v2) => {
           if (isBindingUsed(deps$p)(v2)) {
             return {
-              accum: unsafeUnionWith(ordQualified3.compare, $$const, v2._2._1, deps$p),
+              accum: unsafeUnionWith(ordQualified4.compare, $$const, v2._2._1, deps$p),
               value: $Maybe("Just", $Tuple(v2._1, v2._2._2))
             };
           }
@@ -13765,13 +14998,8 @@ var decodeTuple = (decoderA) => (decoderB) => (json) => {
   });
 };
 
-// output-es/PureScript.Backend.Optimizer.CoreFn.Json/foreign.js
-var unsafeStringFromIntArray = function(arr) {
-  return String.fromCharCode.apply(null, arr);
-};
-
 // output-es/PureScript.Backend.Optimizer.CoreFn.Json/index.js
-var traverse2 = /* @__PURE__ */ (() => traversableArray.traverse(applicativeEither))();
+var traverse4 = /* @__PURE__ */ (() => traversableArray.traverse(applicativeEither))();
 var getFieldOptional$p = (decode) => (obj) => (prop) => {
   const v = _lookup(Nothing, Just, prop, obj);
   if (v.tag === "Nothing") {
@@ -13956,6 +15184,19 @@ var decodeInt2 = (json) => {
   }
   fail();
 };
+var decodeCodePoint = (a) => {
+  const $0 = decodeInt2(a);
+  if ($0.tag === "Left") {
+    return $Either("Left", $0._1);
+  }
+  if ($0.tag === "Right") {
+    if ($0._1 >= 0 && $0._1 <= 1114111) {
+      return $Either("Right", $0._1);
+    }
+    return $Either("Left", $JsonDecodeError("TypeMismatch", "CodePoint"));
+  }
+  fail();
+};
 var decodeMeta = (json) => {
   const $0 = decodeJObject(json);
   if ($0.tag === "Left") {
@@ -14047,7 +15288,7 @@ var decodeReExports = (json) => {
     return $Either("Left", $0._1);
   }
   if ($0.tag === "Right") {
-    const $1 = traverse2(traversableTuple.traverse(applicativeEither)(decodeArray2(decodeString)))(toArrayWithKey(Tuple)($0._1));
+    const $1 = traverse4(traversableTuple.traverse(applicativeEither)(decodeArray2(decodeString)))(toArrayWithKey(Tuple)($0._1));
     if ($1.tag === "Left") {
       return $Either("Left", $1._1);
     }
@@ -14124,13 +15365,13 @@ var decodeComment = (json) => {
 var decodeStringLiteral = (json) => {
   const $0 = decodeString(json);
   if ($0.tag === "Left") {
-    const $1 = decodeArray2(decodeInt2)(json);
+    const $1 = decodeArray2(decodeCodePoint)(json);
     const $2 = (() => {
       if ($1.tag === "Left") {
         return $Either("Left", $1._1);
       }
       if ($1.tag === "Right") {
-        return $Either("Right", unsafeStringFromIntArray($1._1));
+        return $Either("Right", fromCodePointArray($1._1));
       }
       fail();
     })();
@@ -14190,7 +15431,21 @@ var decodeLiteral = (dec) => (json) => {
           return $Either("Left", $2._1);
         }
         if ($2.tag === "Right") {
-          return $Either("Right", $Literal("LitInt", unsafeClamp(round($2._1))));
+          const v = fromNumber((() => {
+            if ($2._1 > 2147483647) {
+              return $2._1 - 4294967296;
+            }
+            if ($2._1 < -2147483648) {
+              return $2._1 + 4294967296;
+            }
+            return $2._1;
+          })());
+          if (v.tag === "Just") {
+            return $Either("Right", $Literal("LitInt", v._1));
+          }
+          if (v.tag === "Nothing") {
+            return $Either("Left", $JsonDecodeError("TypeMismatch", "Int"));
+          }
         }
         fail();
       }
@@ -14714,7 +15969,7 @@ var decodeModule$p = (decodeAnn$p) => (json) => {
 };
 
 // output-es/PureScript.Backend.Optimizer.CoreFn.Sort/index.js
-var lookup5 = (k) => {
+var lookup6 = (k) => {
   const go = (go$a0$copy) => {
     let go$a0 = go$a0$copy, go$c = true, go$r;
     while (go$c) {
@@ -14790,7 +16045,7 @@ var runSort = /* @__PURE__ */ (() => {
         fail();
       };
       if (v.tag === "Cons" && v._1.tag === "Right") {
-        const $0 = lookup5(v._1._1)(modIndex);
+        const $0 = lookup6(v._1._1)(modIndex);
         if ($0.tag === "Just" && !$0._1._1) {
           go$a0 = acc;
           go$a1 = insert(ordString)(v._1._1)($Tuple(true, $0._1._2))(modIndex);
@@ -14815,7 +16070,7 @@ var sortModules = (dictFoldable) => (init) => runSort(dictFoldable.foldr((m) => 
 
 // output-es/Main/index.js
 var filterA2 = /* @__PURE__ */ filterA(applicativeAff);
-var traverse4 = /* @__PURE__ */ (() => traversableArray.traverse(applicativeAff))();
+var traverse5 = /* @__PURE__ */ (() => traversableArray.traverse(applicativeAff))();
 var fromFoldable6 = /* @__PURE__ */ foldrArray(Cons)(Nil);
 var buildModules2 = /* @__PURE__ */ buildModules(monadAff);
 var readCoreFnModule = (filePath) => _bind($$try2(toAff1(stat2)(filePath)))((statRes) => {
@@ -14864,14 +16119,14 @@ var readCoreFnModule = (filePath) => _bind($$try2(toAff1(stat2)(filePath)))((sta
 var main = /* @__PURE__ */ (() => {
   const $0 = _makeFiber(
     ffiUtil,
-    _bind(toAff1(readdir2)("output"))((files) => _bind(filterA2((f) => _bind(toAff1(stat2)("output/" + f))((stat3) => _pure(isDirectoryImpl(stat3))))(files))((validDirs) => _bind(traverse4((dir) => readCoreFnModule("output/" + dir + "/corefn.json"))(validDirs))((mbModules) => {
+    _bind(toAff1(readdir2)("output"))((files) => _bind(filterA2((f) => _bind(toAff1(stat2)("output/" + f))((stat3) => _pure(isDirectoryImpl(stat3))))(files))((validDirs) => _bind(traverse5((dir) => readCoreFnModule("output/" + dir + "/corefn.json"))(validDirs))((mbModules) => {
       const finalModules = sortModules(foldableList)(fromFoldable6(mapMaybe((x) => x)(mbModules)));
       return _bind($$try2(toAff1(mkdir2)("output/gopurs_runtime")))(() => _bind(toAff3(writeTextFile)(UTF8)("output/gopurs_runtime/runtime.go")(runtimeGoCode))(() => _bind(toAff3(writeTextFile)(UTF8)("output/go.mod")("module gopurs/output\n\ngo 1.22\n"))(() => _bind(buildModules2({
         directives: Leaf,
         analyzeCustom: (v) => (v1) => Nothing,
         foreignSemantics: Leaf,
         traceIdents: Leaf,
-        onPrepareModule: (v) => (m) => _pure(m),
+        onPrepareModule: (v) => (v1) => _pure(v1),
         onCodegenModule: (v) => (v1) => (backendMod) => (v2) => {
           const modNameStr = backendMod.name;
           return _bind(toAff3(writeTextFile)(UTF8)("output/" + modNameStr + "/" + replaceAll(".")("_")(modNameStr) + ".go")(translate(arrayMap((i) => split(".")(i._2))(v1.imports))(backendMod)))(() => {
@@ -14905,7 +16160,7 @@ var main = /* @__PURE__ */ (() => {
           }
           fail();
         })();
-        return toAff3(writeTextFile)(UTF8)("output/main.go")('package main\n\nimport (\n	"gopurs/output/' + mainModuleName + '"\n	"gopurs/output/gopurs_runtime"\n)\n\nfunc main() {\n	gopurs_runtime.Apply(' + replaceAll(".")("_")(mainModuleName) + ".Get_Main(), gopurs_runtime.Value{})\n}\n");
+        return toAff3(writeTextFile)(UTF8)("output/main.go")('package main\n\nimport (\n	"gopurs/output/' + mainModuleName + '"\n	"gopurs/output/gopurs_runtime"\n)\n\nfunc main() {\n	gopurs_runtime.Apply(' + replaceAll(".")("_")(mainModuleName) + ".Get_main(), gopurs_runtime.Value{})\n}\n");
       })))));
     })))
   );
