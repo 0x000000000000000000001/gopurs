@@ -1,3 +1,3 @@
 package Main
-import "gopurs/output/C"
-var A = C.A
+import pkgA "gopurs/output/A"
+var A = pkgA.Get_A()
