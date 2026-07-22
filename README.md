@@ -18,7 +18,7 @@ While the broader JS ecosystem has heavily leaned towards TypeScript, many backe
 
 ## Why a new Go backend?
 
-The [`purescript-native`](https://github.com/andyarvanitis/purescript-native) project (and its `psgo` tool) already provides a Go compiler backend. I want to deeply acknowledge the fantastic work done by Andy Arvanitis on that project, which paved the way for compiling PureScript to native targets. This new project is largely inspired by his initial effort, and my gratitude for his pioneering work is very real. It is always easier to come second and learn from the technical limits encountered by the pioneers.
+The [`purescript-native`](https://github.com/andyarvanitis/purescript-native) project already provides a Go compiler backend. I want to deeply acknowledge the fantastic work done by Andy Arvanitis on that project, which paved the way for compiling PureScript to native targets. This new project is largely inspired by his initial effort, and my gratitude for his pioneering work is very real. It is always easier to come second and learn from the technical limits encountered by the pioneers.
 
 Reading through the discussions and challenges raised by users over the years (initialization orders, performance overhead of `interface{}`, module qualifications), it became clear that the ecosystem has evolved drastically. This evolution unlocked new architectural paradigms that make building a completely new Go backend highly relevant today, specifically to address these past limitations:
 

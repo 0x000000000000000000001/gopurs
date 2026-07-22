@@ -109,6 +109,12 @@ for test_file in "${TEST_FILES[@]}"; do
   rm -rf output/Main src/* output/Test* output/go.mod output/app
   
   cp "$test_file" "src/Main.purs"
+  if [ -f "${test_file%.purs}.go" ]; then
+    cp "${test_file%.purs}.go" "src/Main.go"
+  fi
+  if [ -f "${test_file%.purs}.js" ]; then
+    cp "${test_file%.purs}.js" "src/Main.js"
+  fi
   
   test_dir="${test_file%.purs}"
   if [ -d "$test_dir" ]; then
