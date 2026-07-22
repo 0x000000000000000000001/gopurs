@@ -2658,16 +2658,6 @@ var _unsafeCodePointAt0 = function(fallback) {
     return str.codePointAt(0);
   } : fallback;
 };
-var _fromCodePointArray = function(singleton3) {
-  return hasFromCodePoint ? function(cps) {
-    if (cps.length < 1e4) {
-      return String.fromCodePoint.apply(String, cps);
-    }
-    return cps.map(singleton3).join("");
-  } : function(cps) {
-    return cps.map(singleton3).join("");
-  };
-};
 var _singleton = function(fallback) {
   return hasFromCodePoint ? String.fromCodePoint : fallback;
 };
@@ -2750,7 +2740,6 @@ var singletonFallback = (v) => {
   }
   return fromCharCode2(intDiv(v - 65536 | 0, 1024) + 55296 | 0) + fromCharCode2(intMod(v - 65536 | 0)(1024) + 56320 | 0);
 };
-var fromCodePointArray = /* @__PURE__ */ _fromCodePointArray(singletonFallback);
 var singleton2 = /* @__PURE__ */ _singleton(singletonFallback);
 var takeFallback = (v) => (v1) => {
   if (v < 1) {
@@ -13775,6 +13764,11 @@ var decodeTuple = (decoderA) => (decoderB) => (json) => {
   });
 };
 
+// output-es/PureScript.Backend.Optimizer.CoreFn.Json/foreign.js
+var unsafeStringFromIntArray = function(arr) {
+  return String.fromCharCode.apply(null, arr);
+};
+
 // output-es/PureScript.Backend.Optimizer.CoreFn.Json/index.js
 var traverse2 = /* @__PURE__ */ (() => traversableArray.traverse(applicativeEither))();
 var getFieldOptional$p = (decode) => (obj) => (prop) => {
@@ -13961,19 +13955,6 @@ var decodeInt2 = (json) => {
   }
   fail();
 };
-var decodeCodePoint = (a) => {
-  const $0 = decodeInt2(a);
-  if ($0.tag === "Left") {
-    return $Either("Left", $0._1);
-  }
-  if ($0.tag === "Right") {
-    if ($0._1 >= 0 && $0._1 <= 1114111) {
-      return $Either("Right", $0._1);
-    }
-    return $Either("Left", $JsonDecodeError("TypeMismatch", "CodePoint"));
-  }
-  fail();
-};
 var decodeMeta = (json) => {
   const $0 = decodeJObject(json);
   if ($0.tag === "Left") {
@@ -14075,32 +14056,6 @@ var decodeReExports = (json) => {
   }
   fail();
 };
-var decodeRecord = (x) => decodeArray2((json) => {
-  const $0 = decodeJArray2(json);
-  if ($0.tag === "Left") {
-    return $Either("Left", $0._1);
-  }
-  if ($0.tag === "Right") {
-    if ($0._1.length === 2) {
-      const $1 = decodeString($0._1[0]);
-      if ($1.tag === "Left") {
-        return $Either("Left", $1._1);
-      }
-      if ($1.tag === "Right") {
-        const $2 = x($0._1[1]);
-        if ($2.tag === "Left") {
-          return $Either("Left", $2._1);
-        }
-        if ($2.tag === "Right") {
-          return $Either("Right", $Prop($1._1, $2._1));
-        }
-      }
-      fail();
-    }
-    return $Either("Left", $JsonDecodeError("TypeMismatch", "Tuple"));
-  }
-  fail();
-});
 var decodeSourcePos = (json) => {
   const $0 = decodeTuple(decodeInt)(decodeInt)(json);
   if ($0.tag === "Left") {
@@ -14168,13 +14123,13 @@ var decodeComment = (json) => {
 var decodeStringLiteral = (json) => {
   const $0 = decodeString(json);
   if ($0.tag === "Left") {
-    const $1 = decodeArray2(decodeCodePoint)(json);
+    const $1 = decodeArray2(decodeInt2)(json);
     const $2 = (() => {
       if ($1.tag === "Left") {
         return $Either("Left", $1._1);
       }
       if ($1.tag === "Right") {
-        return $Either("Right", fromCodePointArray($1._1));
+        return $Either("Right", unsafeStringFromIntArray($1._1));
       }
       fail();
     })();
@@ -14191,6 +14146,32 @@ var decodeStringLiteral = (json) => {
   }
   fail();
 };
+var decodeRecord = (x) => decodeArray2((json) => {
+  const $0 = decodeJArray2(json);
+  if ($0.tag === "Left") {
+    return $Either("Left", $0._1);
+  }
+  if ($0.tag === "Right") {
+    if ($0._1.length === 2) {
+      const $1 = decodeStringLiteral($0._1[0]);
+      if ($1.tag === "Left") {
+        return $Either("Left", $1._1);
+      }
+      if ($1.tag === "Right") {
+        const $2 = x($0._1[1]);
+        if ($2.tag === "Left") {
+          return $Either("Left", $2._1);
+        }
+        if ($2.tag === "Right") {
+          return $Either("Right", $Prop($1._1, $2._1));
+        }
+      }
+      fail();
+    }
+    return $Either("Left", $JsonDecodeError("TypeMismatch", "Tuple"));
+  }
+  fail();
+});
 var decodeLiteral = (dec) => (json) => {
   const $0 = decodeJObject(json);
   if ($0.tag === "Left") {
@@ -14456,7 +14437,7 @@ var decodeExpr = (decAnn) => (json) => {
             return $Either("Left", $3._1);
           }
           if ($3.tag === "Right") {
-            const $4 = getField(decodeString)($0._1)("fieldName");
+            const $4 = getField(decodeStringLiteral)($0._1)("fieldName");
             if ($4.tag === "Left") {
               return $Either("Left", $4._1);
             }

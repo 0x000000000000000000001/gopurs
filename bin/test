@@ -18,6 +18,9 @@ BLACKLIST=(
   "DerivingProfunctor.purs"
   # Fails in Go/JS because of precise IEEE-754 serialization differences
   "NumberLiterals.purs"
+  # Fails in Go because Go strings are UTF-8 and replace lone surrogates with U+FFFD
+  "StringEdgeCases.purs"
+  "StringEscapes.purs"
 )
 mkdir -p "$RUNNER_DIR/src"
 
