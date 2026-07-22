@@ -4637,13 +4637,38 @@ var extractUncurriedAbs = (v) => {
   }
   return Nothing;
 };
-var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => (namedBound) => (bound) => (tcoIdent) => (loopCtx) => (isTail) => (nextId) => (v) => {
+var translateExprImpl_ = (helpersRef) => (depth) => (modNameStr) => (recVars) => (namedBound) => (bound) => (tcoIdent) => (loopCtx) => (isTail) => (inEffectBlock) => (nextId) => (v) => {
+  if ((() => {
+    if (v._2.tag === "EffectBind") {
+      return true;
+    }
+    if (v._2.tag === "EffectPure") {
+      return true;
+    }
+    if (v._2.tag === "EffectDefer") {
+      return false;
+    }
+    return v._2.tag === "PrimEffect" || v._2.tag === "UncurriedEffectApp";
+  })() && !inEffectBlock) {
+    const res = translateExprImpl_(helpersRef)(depth)(modNameStr)(recVars)(namedBound)(bound)(tcoIdent)(loopCtx)(false)(true)(nextId)(v);
+    return {
+      stmts: StmtEmpty,
+      expr: $GoExpr(
+        "GoRaw",
+        "gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {\n" + printGoExpr($GoExpr(
+          "GoBlock",
+          [...flattenStmts(res.stmts), $GoExpr("GoReturn", res.expr)]
+        )) + "\n})"
+      ),
+      nextId: res.nextId
+    };
+  }
   const liftIfNeeded = (mkNodeThunk) => {
     if (depth > 10) {
       return (() => {
         const fvs = fromFoldableImpl(foldableSet.foldr, freeVars(v));
         const helperName = "__helper_" + showIntImpl(nextId);
-        const res = translateExprImpl(helpersRef)(0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(nextId + 1 | 0)(v);
+        const res = translateExprImpl_(helpersRef)(0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(inEffectBlock)(nextId + 1 | 0)(v);
         const helperExpr = fvs.length === 0 ? $GoExpr("GoFunc", "_", wrapInStmts([])(res.stmts)(res.expr)) : foldrArray((fv) => (accFunc) => $GoExpr("GoFunc", fv, accFunc))(wrapInStmts([])(res.stmts)(res.expr))(fvs);
         return () => {
           const $0 = helpersRef.value;
@@ -4762,7 +4787,7 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
     }
     if (v._2._1.tag === "LitArray") {
       const accXs = foldlArray((acc) => (val) => {
-        const resVal = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(acc.nextId)(val);
+        const resVal = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(false)(acc.nextId)(val);
         return {
           stmts: (() => {
             if (acc.stmts.tag === "StmtEmpty") {
@@ -4789,7 +4814,7 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
     }
     if (v._2._1.tag === "LitRecord") {
       const accProps = foldlArray((acc) => (v1) => {
-        const resVal = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(acc.nextId)(v1._2);
+        const resVal = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(false)(acc.nextId)(v1._2);
         return {
           stmts: (() => {
             if (acc.stmts.tag === "StmtEmpty") {
@@ -4846,7 +4871,7 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
       if (isTailCallTo._1 >= 0 && isTailCallTo._1 < loopCtx.length) {
         const targetCtx = loopCtx[isTailCallTo._1];
         const accFinal2 = foldlArray((acc) => (arg) => {
-          const argRes = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(acc.nextId)(arg);
+          const argRes = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(false)(acc.nextId)(arg);
           return {
             stmts: (() => {
               if (acc.stmts.tag === "StmtEmpty") {
@@ -4882,7 +4907,7 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
         };
       }
       const accFinal = foldlArray((acc) => (arg) => {
-        const argRes = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(acc.nextId)(arg);
+        const argRes = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(false)(acc.nextId)(arg);
         return {
           stmts: (() => {
             if (acc.stmts.tag === "StmtEmpty") {
@@ -4918,9 +4943,9 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
       };
     }
     if (isTailCallTo.tag === "Nothing") {
-      const resFn = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(nextId)(v._2._1);
+      const resFn = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(false)(nextId)(v._2._1);
       const accArgs = foldlArray((acc) => (arg) => {
-        const argRes = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(acc.nextId)(arg);
+        const argRes = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(false)(acc.nextId)(arg);
         return {
           stmts: (() => {
             if (acc.stmts.tag === "StmtEmpty") {
@@ -4948,7 +4973,7 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
     fail();
   }
   if (v._2.tag === "Abs") {
-    const resBody = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)(loopCtx)(isTail)(nextId)(v._2._2);
+    const resBody = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)(loopCtx)(isTail)(false)(nextId)(v._2._2);
     return {
       stmts: StmtEmpty,
       expr: foldrArray((p) => (acc) => $GoExpr(
@@ -4965,9 +4990,9 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
     };
   }
   if (v._2.tag === "UncurriedApp") {
-    const resFn = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(nextId)(v._2._1);
+    const resFn = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(false)(nextId)(v._2._1);
     const accArgs = foldlArray((acc) => (arg) => {
-      const argRes = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(acc.nextId)(arg);
+      const argRes = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(false)(acc.nextId)(arg);
       return {
         stmts: (() => {
           if (acc.stmts.tag === "StmtEmpty") {
@@ -4997,7 +5022,7 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
     const $0 = v._2._1;
     const $1 = v._2._2;
     return liftIfNeeded((v1) => {
-      const resBody = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)(loopCtx)(isTail)(nextId)($1);
+      const resBody = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)(loopCtx)(isTail)(false)(nextId)($1);
       return {
         stmts: StmtEmpty,
         expr: $GoExpr(
@@ -5012,9 +5037,9 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
     });
   }
   if (v._2.tag === "UncurriedEffectApp") {
-    const resFn = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(nextId)(v._2._1);
+    const resFn = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(false)(nextId)(v._2._1);
     const accArgs = foldlArray((acc) => (arg) => {
-      const argRes = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(acc.nextId)(arg);
+      const argRes = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(false)(acc.nextId)(arg);
       return {
         stmts: (() => {
           if (acc.stmts.tag === "StmtEmpty") {
@@ -5044,7 +5069,7 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
     const $0 = v._2._1;
     const $1 = v._2._2;
     return liftIfNeeded((v1) => {
-      const resBody = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)(loopCtx)(isTail)(nextId)($1);
+      const resBody = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)(loopCtx)(isTail)(false)(nextId)($1);
       return {
         stmts: StmtEmpty,
         expr: $GoExpr(
@@ -5059,13 +5084,35 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
     });
   }
   if (v._2.tag === "EffectBind") {
-    const resBinding = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(nextId + 1 | 0)(v._2._3);
+    const resBinding = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(true)(nextId + 1 | 0)(v._2._3);
     const originalName = localId(v._2._1)(v._2._2);
     const name2 = originalName + "_" + showIntImpl(nextId);
-    const resBody = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(insert(ordString)(originalName)(name2)(bound))(Nothing)(loopCtx)(isTail)(resBinding.nextId)(v._2._4);
+    const resBody = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(insert(ordString)(originalName)(name2)(bound))(Nothing)(loopCtx)(isTail)(true)(resBinding.nextId)(v._2._4);
     return {
       stmts: (() => {
-        const $0 = $StmtTree("StmtLeaf", $GoExpr("GoAssign", name2, resBinding.expr));
+        const $0 = $StmtTree(
+          "StmtLeaf",
+          $GoExpr(
+            "GoAssign",
+            name2,
+            (() => {
+              if (v._2._3._2.tag === "EffectBind") {
+                return true;
+              }
+              if (v._2._3._2.tag === "EffectPure") {
+                return true;
+              }
+              if (v._2._3._2.tag === "EffectDefer") {
+                return false;
+              }
+              return v._2._3._2.tag === "PrimEffect" || v._2._3._2.tag === "UncurriedEffectApp";
+            })() ? resBinding.expr : $GoExpr(
+              "GoCall",
+              $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Apply"),
+              [resBinding.expr, $GoExpr("GoRaw", "gopurs_runtime.Value{}")]
+            )
+          )
+        );
         const $1 = resBody.stmts.tag === "StmtEmpty" ? $0 : $StmtTree("StmtAppend", $0, resBody.stmts);
         if (resBinding.stmts.tag === "StmtEmpty") {
           return $1;
@@ -5075,15 +5122,30 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
         }
         return $StmtTree("StmtAppend", resBinding.stmts, $1);
       })(),
-      expr: resBody.expr,
+      expr: (() => {
+        if (v._2._4._2.tag === "EffectBind") {
+          return true;
+        }
+        if (v._2._4._2.tag === "EffectPure") {
+          return true;
+        }
+        if (v._2._4._2.tag === "EffectDefer") {
+          return false;
+        }
+        return v._2._4._2.tag === "PrimEffect" || v._2._4._2.tag === "UncurriedEffectApp";
+      })() ? resBody.expr : $GoExpr(
+        "GoCall",
+        $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Apply"),
+        [resBody.expr, $GoExpr("GoRaw", "gopurs_runtime.Value{}")]
+      ),
       nextId: resBody.nextId
     };
   }
   if (v._2.tag === "EffectPure") {
-    return translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(nextId)(v._2._1);
+    return translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(false)(nextId)(v._2._1);
   }
   if (v._2.tag === "EffectDefer") {
-    const resBinding = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(nextId)(v._2._1);
+    const resBinding = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(true)(nextId)(v._2._1);
     return {
       stmts: StmtEmpty,
       expr: $GoExpr(
@@ -5097,10 +5159,10 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
     };
   }
   if (v._2.tag === "Let") {
-    const resBinding = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(nextId + 1 | 0)(v._2._3);
+    const resBinding = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(false)(nextId + 1 | 0)(v._2._3);
     const originalName = localId(v._2._1)(v._2._2);
     const name2 = originalName + "_" + showIntImpl(nextId);
-    const resBody = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(insert(ordString)(originalName)(name2)(bound))(Nothing)(loopCtx)(isTail)(resBinding.nextId)(v._2._4);
+    const resBody = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(insert(ordString)(originalName)(name2)(bound))(Nothing)(loopCtx)(isTail)(false)(resBinding.nextId)(v._2._4);
     return {
       stmts: (() => {
         const $0 = $StmtTree("StmtLeaf", $GoExpr("GoAssign", name2, resBinding.expr));
@@ -5152,9 +5214,9 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
             }
             fail();
           })();
-          const resBodyMut = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(combinedRecVars)(namedBound)(allocRes.newBound)(Nothing)([
+          const resBodyMut = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(combinedRecVars)(namedBound)(allocRes.newBound)(Nothing)([
             { ident: newName, params: fn.args, loopParams: arrayMap((p) => p + "_loop")(fn.args) }
-          ])(true)($2)(fn.body);
+          ])(true)(false)($2)(fn.body);
           return $Tuple(
             snoc($1)($GoExpr(
               "GoMutate",
@@ -5180,7 +5242,7 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
           );
         };
       })($Tuple([], allocRes.nextId))(mutRecBinds._1);
-      const resBodyOuter = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(combinedRecVars)(namedBound)(allocRes.newBound)(Nothing)(loopCtx)(isTail)(v1._2)(v._2._3);
+      const resBodyOuter = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(combinedRecVars)(namedBound)(allocRes.newBound)(Nothing)(loopCtx)(isTail)(false)(v1._2)(v._2._3);
       return {
         stmts: (() => {
           const $1 = foldMap(StmtLeaf)(arrayMap((ctx) => $GoExpr("GoRaw", "var " + ctx.ident + " gopurs_runtime.Value"))(arrayMap((fn) => {
@@ -5224,7 +5286,7 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
     }
     if (mutRecBinds.tag === "Nothing") {
       const accBindings = foldlArray((acc) => (v1) => {
-        const res = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(combinedRecVars)(namedBound)(allocRes.newBound)($Maybe("Just", v1._2.newName))([])(false)(acc.nextId)(v1._1._2);
+        const res = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(combinedRecVars)(namedBound)(allocRes.newBound)($Maybe("Just", v1._2.newName))([])(false)(false)(acc.nextId)(v1._1._2);
         return {
           stmts: (() => {
             if (acc.stmts.tag === "StmtEmpty") {
@@ -5239,7 +5301,7 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
           nextId: res.nextId
         };
       })({ stmts: StmtEmpty, exprs: [], nextId: allocRes.nextId })(zipWithImpl(Tuple, v._2._2, allocRes.newNames));
-      const resBody = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(combinedRecVars)(namedBound)(allocRes.newBound)(Nothing)(loopCtx)(isTail)(accBindings.nextId)(v._2._3);
+      const resBody = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(combinedRecVars)(namedBound)(allocRes.newBound)(Nothing)(loopCtx)(isTail)(false)(accBindings.nextId)(v._2._3);
       return {
         stmts: (() => {
           const $1 = foldMap(StmtLeaf)(arrayMap((b) => $GoExpr("GoRaw", "var " + b.key + " gopurs_runtime.Value\n_ = " + b.key))(accBindings.exprs));
@@ -5277,7 +5339,7 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
     fail();
   }
   if (v._2.tag === "Accessor") {
-    const resObj = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(nextId)(v._2._1);
+    const resObj = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(false)(nextId)(v._2._1);
     if (v._2._2.tag === "GetProp") {
       return { stmts: resObj.stmts, expr: $GoExpr("GoRecordAccess", resObj.expr, v._2._2._1), nextId: resObj.nextId };
     }
@@ -5298,9 +5360,9 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
     fail();
   }
   if (v._2.tag === "Update") {
-    const resObj = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(nextId)(v._2._1);
+    const resObj = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(false)(nextId)(v._2._1);
     const accProps = foldlArray((acc) => (v1) => {
-      const resVal = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(acc.nextId)(v1._2);
+      const resVal = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(false)(acc.nextId)(v1._2);
       return {
         stmts: (() => {
           if (acc.stmts.tag === "StmtEmpty") {
@@ -5365,7 +5427,7 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
   }
   if (v._2.tag === "CtorSaturated") {
     const accProps = foldlArray((acc) => (v1) => {
-      const resVal = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(acc.nextId)(v1._2);
+      const resVal = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(false)(acc.nextId)(v1._2);
       return {
         stmts: (() => {
           if (acc.stmts.tag === "StmtEmpty") {
@@ -5413,12 +5475,12 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
     };
   }
   if (v._2.tag === "Branch") {
-    const resDef = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)(loopCtx)(isTail)(nextId)(v._2._2);
+    const resDef = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)(loopCtx)(isTail)(false)(nextId)(v._2._2);
     const tmpVar = "__t" + showIntImpl(resDef.nextId);
     const labelName = "end_branch_" + showIntImpl(resDef.nextId);
     const buildIfs = foldlArray((acc) => (v1) => {
-      const resCond = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(acc.nextId)(v1._1);
-      const resBody = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)(loopCtx)(isTail)(resCond.nextId)(v1._2);
+      const resCond = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(false)(acc.nextId)(v1._1);
+      const resBody = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)(loopCtx)(isTail)(false)(resCond.nextId)(v1._2);
       return {
         stmts: (() => {
           const $0 = $StmtTree(
@@ -5473,7 +5535,7 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
   }
   if (v._2.tag === "PrimOp") {
     if (v._2._1.tag === "Op1") {
-      const resE = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(nextId)(v._2._1._2);
+      const resE = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(false)(nextId)(v._2._1._2);
       return {
         stmts: resE.stmts,
         expr: (() => {
@@ -5540,8 +5602,8 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
       };
     }
     if (v._2._1.tag === "Op2") {
-      const res1 = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(nextId)(v._2._1._2);
-      const res2 = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(res1.nextId)(v._2._1._3);
+      const res1 = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(false)(nextId)(v._2._1._2);
+      const res2 = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(false)(res1.nextId)(v._2._1._3);
       return {
         stmts: (() => {
           if (res1.stmts.tag === "StmtEmpty") {
@@ -5889,7 +5951,7 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
   }
   if (v._2.tag === "PrimEffect") {
     if (v._2._1.tag === "EffectRefNew") {
-      const resA = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(nextId)(v._2._1._1);
+      const resA = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(false)(nextId)(v._2._1._1);
       const refIdent = "__local_ref_" + showIntImpl(resA.nextId);
       return {
         stmts: (() => {
@@ -5904,12 +5966,12 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
       };
     }
     if (v._2._1.tag === "EffectRefRead") {
-      const resA = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(nextId)(v._2._1._1);
+      const resA = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(false)(nextId)(v._2._1._1);
       return { stmts: resA.stmts, expr: $GoExpr("GoRaw", "*(" + printGoExpr(resA.expr) + ".PtrVal.(*gopurs_runtime.Value))"), nextId: resA.nextId };
     }
     if (v._2._1.tag === "EffectRefWrite") {
-      const resRef = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(nextId)(v._2._1._1);
-      const resVal = translateExprImpl(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(resRef.nextId)(v._2._1._2);
+      const resRef = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(false)(nextId)(v._2._1._1);
+      const resVal = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(false)(resRef.nextId)(v._2._1._2);
       return {
         stmts: (() => {
           const $0 = $StmtTree(
@@ -5984,9 +6046,9 @@ var translate = (importsArray) => (mod) => {
         })(group2.bindings);
         if (mutRecBinds.tag === "Just") {
           return arrayMap((fn) => {
-            const resBodyMut = translateExprImpl(helpersRef)(0)(modNameStr)(recVars)(Leaf)(Leaf)(Nothing)([
+            const resBodyMut = translateExprImpl_(helpersRef)(0)(modNameStr)(recVars)(Leaf)(Leaf)(Nothing)([
               { ident: fn.ident, params: fn.args, loopParams: arrayMap((p) => p + "_loop")(fn.args) }
-            ])(true)(0)(fn.body);
+            ])(true)(false)(0)(fn.body);
             return {
               identifier: fn.ident,
               expression: foldrArray((p) => (acc) => $GoExpr(
@@ -6010,14 +6072,14 @@ var translate = (importsArray) => (mod) => {
         }
         if (mutRecBinds.tag === "Nothing") {
           return arrayBind(group2.bindings)((v2) => {
-            const res = translateExprImpl(helpersRef)(0)(modNameStr)(recVars)(Leaf)(Leaf)($Maybe("Just", sanitizeName2(v2._1)))([])(false)(0)(v2._2);
+            const res = translateExprImpl_(helpersRef)(0)(modNameStr)(recVars)(Leaf)(Leaf)($Maybe("Just", sanitizeName2(v2._1)))([])(false)(false)(0)(v2._2);
             return [{ identifier: sanitizeName2(v2._1), expression: wrapInStmts([])(res.stmts)(res.expr) }];
           });
         }
         fail();
       }
       return arrayBind(group2.bindings)((v2) => {
-        const res = translateExprImpl(helpersRef)(0)(modNameStr)([])(Leaf)(Leaf)($Maybe("Just", sanitizeName2(v2._1)))([])(false)(0)(v2._2);
+        const res = translateExprImpl_(helpersRef)(0)(modNameStr)([])(Leaf)(Leaf)($Maybe("Just", sanitizeName2(v2._1)))([])(false)(false)(0)(v2._2);
         return [{ identifier: sanitizeName2(v2._1), expression: wrapInStmts([])(res.stmts)(res.expr) }];
       });
     }),
