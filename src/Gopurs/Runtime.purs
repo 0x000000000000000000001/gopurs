@@ -13,6 +13,9 @@ const (
 	TypeConstructor = 5
 )
 
+// We do not add FloatVal or BoolVal fields to keep the struct size minimal.
+// Floats are packed into IntVal using math.Float64bits, and Bools are mapped to 1/0 in IntVal.
+// Adding more fields would increase the struct size and reduce pass-by-value performance.
 type Value struct {
 	Type   uint8
 	IntVal int64
