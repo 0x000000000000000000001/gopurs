@@ -2781,7 +2781,7 @@ var printGoExpr = (expr) => {
     return printGoExpr(expr._1) + '.PtrVal.(map[string]gopurs_runtime.Value)["' + expr._2 + '"]';
   }
   if (expr.tag === "GoBranch") {
-    return "func() gopurs_runtime.Value {\n" + joinWith("\n")(arrayMap((v) => "if " + printGoExpr(v._1) + ".IntVal != 0 {\nreturn " + printGoExpr(v._2) + "\n}")(expr._1)) + "\nreturn " + printGoExpr(expr._2) + "\n}()";
+    return "func() gopurs_runtime.Value {\n" + joinWith("\n")(arrayMap((v) => "if (" + printGoExpr(v._1) + ").IntVal != 0 {\nreturn " + printGoExpr(v._2) + "\n}")(expr._1)) + "\nreturn " + printGoExpr(expr._2) + "\n}()";
   }
   if (expr.tag === "GoRaw") {
     return expr._1;

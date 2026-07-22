@@ -34,7 +34,7 @@ printGoExpr expr = case expr of
     printGoExpr obj <> ".PtrVal.(map[string]gopurs_runtime.Value)[\"" <> prop <> "\"]"
   GoBranch branches def ->
     "func() gopurs_runtime.Value {\n" <>
-    String.joinWith "\n" (map (\(Tuple cond t) -> "if " <> printGoExpr cond <> ".IntVal != 0 {\nreturn " <> printGoExpr t <> "\n}") branches) <>
+    String.joinWith "\n" (map (\(Tuple cond t) -> "if (" <> printGoExpr cond <> ").IntVal != 0 {\nreturn " <> printGoExpr t <> "\n}") branches) <>
     "\nreturn " <> printGoExpr def <> "\n}()"
   GoRaw raw ->
     raw
