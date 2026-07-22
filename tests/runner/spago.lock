@@ -6,6 +6,7 @@
         "core": {
           "dependencies": [
             "arrays",
+            "assert",
             "console",
             "effect",
             "enums",
@@ -682,6 +683,9 @@
       "arrays": {
         "path": "../../../gopurs-arrays"
       },
+      "assert": {
+        "path": "../../../gopurs-assert"
+      },
       "console": {
         "path": "../../../gopurs-console"
       },
@@ -720,6 +724,12 @@
       },
       "refs": {
         "path": "../../../gopurs-refs"
+      },
+      "st": {
+        "path": "../../../gopurs-st"
+      },
+      "unsafe-coerce": {
+        "path": "../../../gopurs-unsafe-coerce"
       }
     }
   },
@@ -742,6 +752,15 @@
         "tuples",
         "unfoldable",
         "unsafe-coerce"
+      ]
+    },
+    "assert": {
+      "type": "local",
+      "path": "../../../gopurs-assert",
+      "dependencies": [
+        "console",
+        "effect",
+        "prelude"
       ]
     },
     "bifunctors": {
@@ -1098,11 +1117,9 @@
       ]
     },
     "st": {
-      "type": "registry",
-      "version": "6.2.0",
-      "integrity": "sha256-WI4MEkkwUd4pnwZQ3G8VKWgX5t1RSNJludm5e9boaRo=",
+      "type": "local",
+      "path": "../../../gopurs-st",
       "dependencies": [
-        "effect",
         "partial",
         "prelude",
         "tailrec",
@@ -1185,9 +1202,8 @@
       ]
     },
     "unsafe-coerce": {
-      "type": "registry",
-      "version": "6.0.0",
-      "integrity": "sha256-0L1QsaY20OILjfU5TV72d3U/tSjhmL9hJ32WMp857Lk=",
+      "type": "local",
+      "path": "../../../gopurs-unsafe-coerce",
       "dependencies": []
     }
   }

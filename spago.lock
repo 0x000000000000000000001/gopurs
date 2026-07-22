@@ -677,6 +677,9 @@
       }
     },
     "extra_packages": {
+      "assert": {
+        "path": "../gopurs-assert"
+      },
       "backend-optimizer": {
         "git": "https://github.com/0x000000000000000000001/gopurs-backend-optimizer.git",
         "ref": "main",
@@ -706,6 +709,12 @@
           "tuples",
           "unsafe-coerce"
         ]
+      },
+      "st": {
+        "path": "../gopurs-st"
+      },
+      "unsafe-coerce": {
+        "path": "../gopurs-unsafe-coerce"
       }
     }
   },
@@ -1581,11 +1590,9 @@
       ]
     },
     "st": {
-      "type": "registry",
-      "version": "6.2.0",
-      "integrity": "sha256-WI4MEkkwUd4pnwZQ3G8VKWgX5t1RSNJludm5e9boaRo=",
+      "type": "local",
+      "path": "../gopurs-st",
       "dependencies": [
-        "effect",
         "partial",
         "prelude",
         "tailrec",
@@ -1690,9 +1697,8 @@
       ]
     },
     "unsafe-coerce": {
-      "type": "registry",
-      "version": "6.0.0",
-      "integrity": "sha256-0L1QsaY20OILjfU5TV72d3U/tSjhmL9hJ32WMp857Lk=",
+      "type": "local",
+      "path": "../gopurs-unsafe-coerce",
       "dependencies": []
     }
   }

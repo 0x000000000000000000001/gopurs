@@ -40,7 +40,7 @@ translate importsArray backendMod =
         in if modStr /= modNameStr && modStr /= "Prim" && String.contains (String.Pattern (modPkg <> ".")) dummyText
            then Just ("gopurs/output/" <> modStr)
            else Nothing
-      ) importsArray
+      ) (importsArray <> [ ["Unsafe", "Coerce"], ["Partial", "Unsafe"], ["Data", "Function"], ["Data", "Function", "Uncurried"], ["Record", "Unsafe"], ["Type", "Proxy"], ["Data", "Unit"], ["Data", "Eq"], ["Data", "Semiring"], ["Data", "Ring"], ["Data", "EuclideanRing"] ])
     
     goFile = { packageName: String.replaceAll (String.Pattern ".") (String.Replacement "_") modNameStr
              , imports: goImports
@@ -56,10 +56,15 @@ translateBindingGroup modNameStr bg =
 translateBinding :: String -> Tuple Ident NeutralExpr -> Maybe GoDecl
 translateBinding modNameStr (Tuple (Ident name) expr) = 
   let 
-    safeName = String.replaceAll (String.Pattern "'") (String.Replacement "_prime") (String.replaceAll (String.Pattern "$") (String.Replacement "_dollar") name)
+    safeName = sanitizeName name
     goName = capitalize safeName
   in
     Just { identifier: goName, expression: translateExpr modNameStr expr }
+
+sanitizeName :: String -> String
+sanitizeName name = 
+  let s1 = String.replaceAll (String.Pattern "'") (String.Replacement "_prime") (String.replaceAll (String.Pattern "$") (String.Replacement "_dollar") name)
+  in if s1 == "break" || s1 == "default" || s1 == "func" || s1 == "interface" || s1 == "select" || s1 == "case" || s1 == "defer" || s1 == "go" || s1 == "map" || s1 == "struct" || s1 == "chan" || s1 == "else" || s1 == "goto" || s1 == "package" || s1 == "switch" || s1 == "const" || s1 == "fallthrough" || s1 == "if" || s1 == "range" || s1 == "type" || s1 == "continue" || s1 == "for" || s1 == "import" || s1 == "return" || s1 == "var" then s1 <> "_" else s1
 
 translateExpr :: String -> NeutralExpr -> GoExpr
 translateExpr modNameStr (NeutralExpr expr) = case expr of
@@ -89,13 +94,29 @@ translateExpr modNameStr (NeutralExpr expr) = case expr of
     ) (translateExpr modNameStr body) (NonEmptyArray.toArray idents)
   Let mbIdent (Level l) binding body -> 
     let name = case mbIdent of
-          Just (Ident i) -> String.replaceAll (String.Pattern "'") (String.Replacement "_prime") (String.replaceAll (String.Pattern "$") (String.Replacement "_dollar") i)
+          Just (Ident i) -> sanitizeName i
           Nothing -> "_unused_" <> show l
     in GoIIFE name (translateExpr modNameStr binding) (translateExpr modNameStr body)
-  Accessor obj (GetProp prop) -> GoRecordAccess (translateExpr modNameStr obj) prop
+  LetRec (Level l) bindings body ->
+    let mappedBindings = map (\(Tuple (Ident i) expr_) -> Tuple (sanitizeName i) (translateExpr modNameStr expr_)) (NonEmptyArray.toArray bindings)
+    in GoLetRec mappedBindings (translateExpr modNameStr body)
+  Accessor obj accessor -> case accessor of
+    GetProp prop -> GoRecordAccess (translateExpr modNameStr obj) prop
+    GetIndex idx -> GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayAccess") [ translateExpr modNameStr obj, GoInt idx ]
+    GetCtorField _ _ _ _ fieldName _ -> GoRecordAccess (translateExpr modNameStr obj) fieldName
+  CtorDef _ _ (Ident name) fields ->
+    let recordMap = GoCall (GoSelector (GoVar "gopurs_runtime") "Record") [GoMap (Array.cons (Tuple "_tag" (GoCall (GoSelector (GoVar "gopurs_runtime") "Str") [GoString name])) (map (\f -> Tuple f (GoVar (sanitizeName f))) fields))]
+    in Array.foldr (\f inner -> GoFunc (sanitizeName f) inner) recordMap fields
+  CtorSaturated _ _ _ (Ident name) props ->
+    GoCall (GoSelector (GoVar "gopurs_runtime") "Record") [GoMap (Array.cons (Tuple "_tag" (GoCall (GoSelector (GoVar "gopurs_runtime") "Str") [GoString name])) (map (\(Tuple k v) -> Tuple k (translateExpr modNameStr v)) props))]
+  Fail msg ->
+    GoRaw ("func() gopurs_runtime.Value { panic(" <> printGoExpr (GoString msg) <> ") }()")
   Branch branches def ->
     GoBranch (map (\(Pair cond t) -> Tuple (translateExpr modNameStr cond) (translateExpr modNameStr t)) (NonEmptyArray.toArray branches)) (translateExpr modNameStr def)
   PrimOp op -> case op of
+    Op1 OpBooleanNot e -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "==" (GoSelector (translateExpr modNameStr e) "IntVal") (GoInt 0) ]
+    Op1 OpIntNegate e -> GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoBinOp "-" (GoInt 0) (GoSelector (translateExpr modNameStr e) "IntVal") ]
+    Op1 (OpIsTag (Qualified _ (Ident tag))) e -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "==" (GoSelector (GoRecordAccess (translateExpr modNameStr e) "_tag") "StrVal") (GoString tag) ]
     Op1 OpArrayLength e -> GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoCall (GoVar "len") [ GoTypeAssertion (GoSelector (translateExpr modNameStr e) "PtrVal") "[]gopurs_runtime.Value" ] ]
     Op2 (OpIntOrd OpEq) e1 e2 -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "==" (GoSelector (translateExpr modNameStr e1) "IntVal") (GoSelector (translateExpr modNameStr e2) "IntVal") ]
     Op2 (OpIntOrd OpNotEq) e1 e2 -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "!=" (GoSelector (translateExpr modNameStr e1) "IntVal") (GoSelector (translateExpr modNameStr e2) "IntVal") ]

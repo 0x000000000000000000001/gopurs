@@ -52,3 +52,9 @@ workspace:
         - transformers
         - tuples
         - unsafe-coerce
+    st:
+      path: "../gopurs-st"
+    unsafe-coerce:
+      path: "../gopurs-unsafe-coerce"
+    assert:
+      path: "../gopurs-assert"

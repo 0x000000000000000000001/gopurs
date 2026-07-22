@@ -69,6 +69,10 @@ workspace:
       path: "../../../gopurs-functions"
     record:
       path: "../../../gopurs-record"
+    st:
+      path: "../../../gopurs-st"
+    unsafe-coerce:
+      path: "../../../gopurs-unsafe-coerce"
   packageSet:
     registry: 77.10.1
 YAML

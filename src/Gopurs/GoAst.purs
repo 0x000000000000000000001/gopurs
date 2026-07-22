@@ -15,6 +15,7 @@ data GoExpr
   | GoAssign String GoExpr
   | GoMap (Array (Tuple String GoExpr))
   | GoIIFE String GoExpr GoExpr
+  | GoLetRec (Array (Tuple String GoExpr)) GoExpr
   | GoRecordAccess GoExpr String
   | GoBranch (Array (Tuple GoExpr GoExpr)) GoExpr
   | GoBinOp String GoExpr GoExpr

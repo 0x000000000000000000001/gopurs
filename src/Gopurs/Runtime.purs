@@ -68,4 +68,8 @@ func Apply(f Value, arg Value) Value {
 	fn := f.PtrVal.(func(Value) Value)
 	return fn(arg)
 }
+
+func ArrayAccess(arr Value, index int) Value {
+	return arr.PtrVal.([]Value)[index]
+}
 """

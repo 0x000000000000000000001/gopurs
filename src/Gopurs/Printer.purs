@@ -10,7 +10,7 @@ printGoExpr expr = case expr of
   GoVar name ->
     name
   GoString s ->
-    "\"" <> s <> "\""
+    show s
   GoInt i ->
     show i
   GoCall f args ->
@@ -28,8 +28,14 @@ printGoExpr expr = case expr of
   GoMap props ->
     "map[string]gopurs_runtime.Value{" <> String.joinWith ", " (map (\(Tuple k v) -> "\"" <> k <> "\": " <> printGoExpr v) props) <> "}"
   GoIIFE name binding body ->
-    let assignment = if name == "_" then name <> " = " <> printGoExpr binding else name <> " := " <> printGoExpr binding
+    let assignment = if name == "_" then name <> " = " <> printGoExpr binding else name <> " := " <> printGoExpr binding <> "\n_ = " <> name
     in "func() gopurs_runtime.Value {\n" <> assignment <> "\nreturn " <> printGoExpr body <> "\n}()"
+  GoLetRec bindings body ->
+    "func() gopurs_runtime.Value {\n" <>
+    String.joinWith "\n" (map (\(Tuple name _) -> "var " <> name <> " gopurs_runtime.Value") bindings) <> "\n" <>
+    String.joinWith "\n" (map (\(Tuple name _) -> "_ = " <> name) bindings) <> "\n" <>
+    String.joinWith "\n" (map (\(Tuple name expr) -> name <> " = " <> printGoExpr expr) bindings) <> "\n" <>
+    "return " <> printGoExpr body <> "\n}()"
   GoRecordAccess obj prop ->
     printGoExpr obj <> ".PtrVal.(map[string]gopurs_runtime.Value)[\"" <> prop <> "\"]"
   GoBranch branches def ->

@@ -53,6 +53,37 @@ var $$Proxy = /* @__PURE__ */ $$$Proxy();
 var showIntImpl = function(n) {
   return n.toString();
 };
+var showStringImpl = function(s) {
+  var l = s.length;
+  return '"' + s.replace(
+    /[\0-\x1F\x7F"\\]/g,
+    // eslint-disable-line no-control-regex
+    function(c, i) {
+      switch (c) {
+        case '"':
+        case "\\":
+          return "\\" + c;
+        case "\x07":
+          return "\\a";
+        case "\b":
+          return "\\b";
+        case "\f":
+          return "\\f";
+        case "\n":
+          return "\\n";
+        case "\r":
+          return "\\r";
+        case "	":
+          return "\\t";
+        case "\v":
+          return "\\v";
+      }
+      var k = i + 1;
+      var empty2 = k < l && s[k] >= "0" && s[k] <= "9" ? "\\&" : "";
+      return "\\" + c.charCodeAt(0).toString(10) + empty2;
+    }
+  ) + '"';
+};
 
 // output-es/Data.Ordering/index.js
 var $Ordering = (tag) => tag;
@@ -2748,7 +2779,7 @@ var printGoExpr = (expr) => {
     return expr._1;
   }
   if (expr.tag === "GoString") {
-    return '"' + expr._1 + '"';
+    return showStringImpl(expr._1);
   }
   if (expr.tag === "GoInt") {
     return showIntImpl(expr._1);
@@ -2775,7 +2806,10 @@ var printGoExpr = (expr) => {
     return "map[string]gopurs_runtime.Value{" + joinWith(", ")(arrayMap((v) => '"' + v._1 + '": ' + printGoExpr(v._2))(expr._1)) + "}";
   }
   if (expr.tag === "GoIIFE") {
-    return (expr._1 === "_" ? "func() gopurs_runtime.Value {\n" + expr._1 + " = " + printGoExpr(expr._2) + "\nreturn " : "func() gopurs_runtime.Value {\n" + expr._1 + " := " + printGoExpr(expr._2) + "\nreturn ") + printGoExpr(expr._3) + "\n}()";
+    return (expr._1 === "_" ? "func() gopurs_runtime.Value {\n" + expr._1 + " = " + printGoExpr(expr._2) + "\nreturn " : "func() gopurs_runtime.Value {\n" + expr._1 + " := " + printGoExpr(expr._2) + "\n_ = " + expr._1 + "\nreturn ") + printGoExpr(expr._3) + "\n}()";
+  }
+  if (expr.tag === "GoLetRec") {
+    return "func() gopurs_runtime.Value {\n" + joinWith("\n")(arrayMap((v) => "var " + v._1 + " gopurs_runtime.Value")(expr._1)) + "\n" + joinWith("\n")(arrayMap((v) => "_ = " + v._1)(expr._1)) + "\n" + joinWith("\n")(arrayMap((v) => v._1 + " = " + printGoExpr(v._2))(expr._1)) + "\nreturn " + printGoExpr(expr._2) + "\n}()";
   }
   if (expr.tag === "GoRecordAccess") {
     return printGoExpr(expr._1) + '.PtrVal.(map[string]gopurs_runtime.Value)["' + expr._2 + '"]';
@@ -2799,6 +2833,13 @@ var printGoDeclInit = (v) => "	" + v.identifier + " = " + printGoExpr(v.expressi
 var printGoFile = (v) => "package " + v.packageName + "\n\nimport (\n" + joinWith("\n")(arrayMap((i) => '	"' + i + '"')(v.imports)) + "\n)\n\n" + joinWith("\n")(arrayMap(printGoDeclVar)(v.decls)) + "\n\nfunc init() {\n" + joinWith("\n")(arrayMap(printGoDeclInit)(v.decls)) + "\n}\n";
 
 // output-es/Gopurs.CodeGen/index.js
+var sanitizeName = (name2) => {
+  const s1 = replaceAll("'")("_prime")(replaceAll("$")("_dollar")(name2));
+  if (s1 === "break" || s1 === "default" || s1 === "func" || s1 === "interface" || s1 === "select" || s1 === "case" || s1 === "defer" || s1 === "go" || s1 === "map" || s1 === "struct" || s1 === "chan" || s1 === "else" || s1 === "goto" || s1 === "package" || s1 === "switch" || s1 === "const" || s1 === "fallthrough" || s1 === "if" || s1 === "range" || s1 === "type" || s1 === "continue" || s1 === "for" || s1 === "import" || s1 === "return" || s1 === "var") {
+    return s1 + "_";
+  }
+  return s1;
+};
 var capitalize = (s) => {
   const firstChar = take2(1)(s);
   if (toUpper(firstChar) === firstChar) {
@@ -2897,7 +2938,7 @@ var translateExpr = (modNameStr) => (v) => {
       "GoIIFE",
       (() => {
         if (v._1.tag === "Just") {
-          return replaceAll("'")("_prime")(replaceAll("$")("_dollar")(v._1._1));
+          return sanitizeName(v._1._1);
         }
         if (v._1.tag === "Nothing") {
           return "_unused_" + showIntImpl(v._2);
@@ -2908,11 +2949,75 @@ var translateExpr = (modNameStr) => (v) => {
       translateExpr(modNameStr)(v._4)
     );
   }
+  if (v.tag === "LetRec") {
+    return $GoExpr(
+      "GoLetRec",
+      arrayMap((v1) => $Tuple(sanitizeName(v1._1), translateExpr(modNameStr)(v1._2)))(v._2),
+      translateExpr(modNameStr)(v._3)
+    );
+  }
   if (v.tag === "Accessor") {
     if (v._2.tag === "GetProp") {
       return $GoExpr("GoRecordAccess", translateExpr(modNameStr)(v._1), v._2._1);
     }
-    return $GoExpr("GoVar", "gopurs_runtime.Value{}");
+    if (v._2.tag === "GetIndex") {
+      return $GoExpr(
+        "GoCall",
+        $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "ArrayAccess"),
+        [translateExpr(modNameStr)(v._1), $GoExpr("GoInt", v._2._1)]
+      );
+    }
+    if (v._2.tag === "GetCtorField") {
+      return $GoExpr("GoRecordAccess", translateExpr(modNameStr)(v._1), v._2._5);
+    }
+    fail();
+  }
+  if (v.tag === "CtorDef") {
+    return foldrArray((f) => (inner) => $GoExpr("GoFunc", sanitizeName(f), inner))($GoExpr(
+      "GoCall",
+      $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Record"),
+      [
+        $GoExpr(
+          "GoMap",
+          [
+            $Tuple(
+              "_tag",
+              $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Str"),
+                [$GoExpr("GoString", v._3)]
+              )
+            ),
+            ...arrayMap((f) => $Tuple(f, $GoExpr("GoVar", sanitizeName(f))))(v._4)
+          ]
+        )
+      ]
+    ))(v._4);
+  }
+  if (v.tag === "CtorSaturated") {
+    return $GoExpr(
+      "GoCall",
+      $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Record"),
+      [
+        $GoExpr(
+          "GoMap",
+          [
+            $Tuple(
+              "_tag",
+              $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Str"),
+                [$GoExpr("GoString", v._4)]
+              )
+            ),
+            ...arrayMap((v1) => $Tuple(v1._1, translateExpr(modNameStr)(v1._2)))(v._5)
+          ]
+        )
+      ]
+    );
+  }
+  if (v.tag === "Fail") {
+    return $GoExpr("GoRaw", "func() gopurs_runtime.Value { panic(" + printGoExpr($GoExpr("GoString", v._1)) + ") }()");
   }
   if (v.tag === "Branch") {
     return $GoExpr(
@@ -2923,6 +3028,34 @@ var translateExpr = (modNameStr) => (v) => {
   }
   if (v.tag === "PrimOp") {
     if (v._1.tag === "Op1") {
+      if (v._1._1.tag === "OpBooleanNot") {
+        return $GoExpr(
+          "GoCall",
+          $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+          [$GoExpr("GoBinOp", "==", $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "IntVal"), $GoExpr("GoInt", 0))]
+        );
+      }
+      if (v._1._1.tag === "OpIntNegate") {
+        return $GoExpr(
+          "GoCall",
+          $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Int"),
+          [$GoExpr("GoBinOp", "-", $GoExpr("GoInt", 0), $GoExpr("GoSelector", translateExpr(modNameStr)(v._1._2), "IntVal"))]
+        );
+      }
+      if (v._1._1.tag === "OpIsTag") {
+        return $GoExpr(
+          "GoCall",
+          $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+          [
+            $GoExpr(
+              "GoBinOp",
+              "==",
+              $GoExpr("GoSelector", $GoExpr("GoRecordAccess", translateExpr(modNameStr)(v._1._2), "_tag"), "StrVal"),
+              $GoExpr("GoString", v._1._1._1._2)
+            )
+          ]
+        );
+      }
       if (v._1._1.tag === "OpArrayLength") {
         return $GoExpr(
           "GoCall",
@@ -3058,10 +3191,7 @@ var translateExpr = (modNameStr) => (v) => {
   }
   return $GoExpr("GoVar", "gopurs_runtime.Value{}");
 };
-var translateBinding = (modNameStr) => (v) => $Maybe(
-  "Just",
-  { identifier: capitalize(replaceAll("'")("_prime")(replaceAll("$")("_dollar")(v._1))), expression: translateExpr(modNameStr)(v._2) }
-);
+var translateBinding = (modNameStr) => (v) => $Maybe("Just", { identifier: capitalize(sanitizeName(v._1)), expression: translateExpr(modNameStr)(v._2) });
 var translateBindingGroup = (modNameStr) => (bg) => mapMaybe(translateBinding(modNameStr))(bg.bindings);
 var translate = (importsArray) => (backendMod) => {
   const modNameStr = backendMod.name;
@@ -3077,7 +3207,20 @@ var translate = (importsArray) => (backendMod) => {
           return $Maybe("Just", "gopurs/output/" + modStr);
         }
         return Nothing;
-      })(importsArray)
+      })([
+        ...importsArray,
+        ["Unsafe", "Coerce"],
+        ["Partial", "Unsafe"],
+        ["Data", "Function"],
+        ["Data", "Function", "Uncurried"],
+        ["Record", "Unsafe"],
+        ["Type", "Proxy"],
+        ["Data", "Unit"],
+        ["Data", "Eq"],
+        ["Data", "Semiring"],
+        ["Data", "Ring"],
+        ["Data", "EuclideanRing"]
+      ])
     ]),
     decls
   });
@@ -3214,7 +3357,7 @@ var findFfiFile = (mbFfiDir) => (modName) => (mbModulePath) => {
 };
 
 // output-es/Gopurs.Runtime/index.js
-var runtimeGoCode = 'package gopurs_runtime\n\nimport "math"\n\nconst (\n	TypeInt = 1\n	TypeString = 2\n	TypeRecord = 3\n	TypeFunc = 4\n	TypeConstructor = 5\n)\n\ntype Value struct {\n	Type   uint8\n	IntVal int64\n	StrVal string\n	PtrVal any\n}\n\nfunc Str(v string) Value {\n	return Value{Type: TypeString, StrVal: v}\n}\n\nfunc Int(v int) Value {\n	return Value{Type: TypeInt, IntVal: int64(v)}\n}\n\nfunc Float(v float64) Value {\n	return Value{Type: 7, IntVal: int64(math.Float64bits(v))}\n}\n\nfunc Bool(v bool) Value {\n	var i int64 = 0\n	if v {\n		i = 1\n	}\n	return Value{Type: 6, IntVal: i}\n}\n\nfunc Array(v []Value) Value {\n	return Value{Type: 8, PtrVal: v}\n}\n\nfunc Record(m map[string]Value) Value {\n	return Value{Type: TypeRecord, PtrVal: m}\n}\n\nfunc Cons(tag string, args []Value) Value {\n	return Value{Type: TypeConstructor, StrVal: tag, PtrVal: args}\n}\n\n// Function with 1 arg (curried)\nfunc Func(f func(Value) Value) Value {\n	return Value{Type: TypeFunc, PtrVal: f}\n}\n\n// Uncurried application helper\nfunc Apply(f Value, arg Value) Value {\n	if f.Type != TypeFunc {\n		panic("Attempted to apply a non-function")\n	}\n	fn := f.PtrVal.(func(Value) Value)\n	return fn(arg)\n}\n';
+var runtimeGoCode = 'package gopurs_runtime\n\nimport "math"\n\nconst (\n	TypeInt = 1\n	TypeString = 2\n	TypeRecord = 3\n	TypeFunc = 4\n	TypeConstructor = 5\n)\n\n// We do not add FloatVal or BoolVal fields to keep the struct size minimal.\n// Floats are packed into IntVal using math.Float64bits, and Bools are mapped to 1/0 in IntVal.\n// Adding more fields would increase the struct size and reduce pass-by-value performance.\ntype Value struct {\n	Type   uint8\n	IntVal int64\n	StrVal string\n	PtrVal any\n}\n\nfunc Str(v string) Value {\n	return Value{Type: TypeString, StrVal: v}\n}\n\nfunc Int(v int) Value {\n	return Value{Type: TypeInt, IntVal: int64(v)}\n}\n\nfunc Float(v float64) Value {\n	return Value{Type: 7, IntVal: int64(math.Float64bits(v))}\n}\n\nfunc Bool(v bool) Value {\n	var i int64 = 0\n	if v {\n		i = 1\n	}\n	return Value{Type: 6, IntVal: i}\n}\n\nfunc Array(v []Value) Value {\n	return Value{Type: 8, PtrVal: v}\n}\n\nfunc Record(m map[string]Value) Value {\n	return Value{Type: TypeRecord, PtrVal: m}\n}\n\nfunc Cons(tag string, args []Value) Value {\n	return Value{Type: TypeConstructor, StrVal: tag, PtrVal: args}\n}\n\n// Function with 1 arg (curried)\nfunc Func(f func(Value) Value) Value {\n	return Value{Type: TypeFunc, PtrVal: f}\n}\n\n// Uncurried application helper\nfunc Apply(f Value, arg Value) Value {\n	if f.Type != TypeFunc {\n		panic("Attempted to apply a non-function")\n	}\n	fn := f.PtrVal.(func(Value) Value)\n	return fn(arg)\n}\n\nfunc ArrayAccess(arr Value, index int) Value {\n	return arr.PtrVal.([]Value)[index]\n}\n';
 
 // output-es/Node.Encoding/index.js
 var $Encoding = (tag) => tag;
