@@ -40,6 +40,35 @@ package:
     - record
   name: runner
 workspace:
+  extraPackages:
+    prelude:
+      path: "../../../gopurs-prelude"
+    effect:
+      path: "../../../gopurs-effect"
+    console:
+      path: "../../../gopurs-console"
+    arrays:
+      path: "../../../gopurs-arrays"
+    partial:
+      path: "../../../gopurs-partial"
+    foldable-traversable:
+      path: "../../../gopurs-foldable-traversable"
+    exceptions:
+      path: "../../../gopurs-exceptions"
+    integers:
+      path: "../../../gopurs-integers"
+    enums:
+      path: "../../../gopurs-enums"
+    foreign-object:
+      path: "../../../gopurs-foreign-object"
+    numbers:
+      path: "../../../gopurs-numbers"
+    refs:
+      path: "../../../gopurs-refs"
+    functions:
+      path: "../../../gopurs-functions"
+    record:
+      path: "../../../gopurs-record"
   packageSet:
     registry: 77.10.1
 YAML
