@@ -45,7 +45,12 @@ translate importsArray backendMod =
       Array.mapMaybe (\i -> 
         let modStr = String.joinWith "." i 
             modPkg = String.replaceAll (String.Pattern ".") (String.Replacement "_") modStr
-        in if modStr /= modNameStr && modStr /= "Prim" && String.contains (String.Pattern (modPkg <> ".")) dummyText
+            p = modPkg <> "."
+        in if modStr /= modNameStr && modStr /= "Prim" && 
+             (String.contains (String.Pattern (" " <> p)) dummyText || 
+              String.contains (String.Pattern ("(" <> p)) dummyText || 
+              String.contains (String.Pattern ("\n" <> p)) dummyText || 
+              String.contains (String.Pattern ("\t" <> p)) dummyText)
            then Just ("gopurs/output/" <> modStr)
            else Nothing
       ) (importsArray <> [ ["Unsafe", "Coerce"], ["Partial", "Unsafe"], ["Partial"], ["Data", "Function"], ["Data", "Function", "Uncurried"], ["Record", "Unsafe"], ["Type", "Proxy"], ["Data", "Unit"], ["Data", "Eq"], ["Data", "Semiring"], ["Data", "Ring"], ["Data", "EuclideanRing"], ["Control", "Category"] ])

@@ -3392,7 +3392,8 @@ var translate = (importsArray) => (backendMod) => {
       ...contains("gopurs_runtime")(dummyText) ? ["gopurs/output/gopurs_runtime"] : [],
       ...mapMaybe((i) => {
         const modStr = joinWith(".")(i);
-        if (modStr !== modNameStr && modStr !== "Prim" && contains(replaceAll(".")("_")(modStr) + ".")(dummyText)) {
+        const p = replaceAll(".")("_")(modStr) + ".";
+        if (modStr !== modNameStr && modStr !== "Prim" && (contains(" " + p)(dummyText) || contains("(" + p)(dummyText) || contains("\n" + p)(dummyText) || contains("	" + p)(dummyText))) {
           return $Maybe("Just", "gopurs/output/" + modStr);
         }
         return Nothing;
