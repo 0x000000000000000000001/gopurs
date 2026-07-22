@@ -2842,14 +2842,17 @@ var sanitizeName = (name2) => {
 };
 var capitalize = (s) => {
   const firstChar = take2(1)(s);
-  if (toUpper(firstChar) === firstChar) {
+  if (firstChar >= "a" && firstChar <= "z") {
+    return toUpper(firstChar) + drop(length2(take2(1)(s)))(s);
+  }
+  if (firstChar >= "A" && firstChar <= "Z") {
     return s + "_";
   }
-  return toUpper(firstChar) + drop(length2(take2(1)(s)))(s);
+  return "X" + s;
 };
 var translateExpr = (modNameStr) => (v) => {
   if (v.tag === "Var") {
-    const baseName = capitalize(replaceAll("'")("_prime")(replaceAll("$")("_dollar")(v._1._2)));
+    const baseName = capitalize(sanitizeName(v._1._2));
     if (v._1._1.tag === "Just") {
       const modPkg = replaceAll(".")("_")(v._1._1._1);
       if (v._1._1._1 === modNameStr) {
@@ -2864,7 +2867,7 @@ var translateExpr = (modNameStr) => (v) => {
   }
   if (v.tag === "Local") {
     if (v._1.tag === "Just") {
-      return $GoExpr("GoVar", replaceAll("'")("_prime")(replaceAll("$")("_dollar")(v._1._1)));
+      return $GoExpr("GoVar", sanitizeName(v._1._1));
     }
     if (v._1.tag === "Nothing") {
       return $GoExpr("GoVar", "_unused_" + showIntImpl(v._2));
@@ -2922,7 +2925,7 @@ var translateExpr = (modNameStr) => (v) => {
         "GoFunc",
         (() => {
           if ($1.tag === "Just") {
-            return replaceAll("'")("_prime")(replaceAll("$")("_dollar")($1._1));
+            return sanitizeName($1._1);
           }
           if ($1.tag === "Nothing") {
             return "_unused_" + showIntImpl($0);

@@ -19,9 +19,11 @@ import Gopurs.Printer (printGoFile, printGoExpr)
 capitalize :: String -> String
 capitalize s = 
   let firstChar = String.take 1 s
-  in if String.toUpper firstChar == firstChar 
-     then s <> "_" 
-     else String.toUpper firstChar <> String.drop 1 s
+  in if firstChar >= "a" && firstChar <= "z"
+     then String.toUpper firstChar <> String.drop 1 s
+     else if firstChar >= "A" && firstChar <= "Z"
+     then s <> "_"
+     else "X" <> s
 
 translate :: Array (Array String) -> BackendModule -> String
 translate importsArray backendMod = 
@@ -69,7 +71,7 @@ sanitizeName name =
 translateExpr :: String -> NeutralExpr -> GoExpr
 translateExpr modNameStr (NeutralExpr expr) = case expr of
   Var (Qualified mbMn (Ident i)) -> 
-    let safeName = String.replaceAll (String.Pattern "'") (String.Replacement "_prime") (String.replaceAll (String.Pattern "$") (String.Replacement "_dollar") i)
+    let safeName = sanitizeName i
         baseName = capitalize safeName
     in case mbMn of
       Just mn -> 
@@ -77,7 +79,7 @@ translateExpr modNameStr (NeutralExpr expr) = case expr of
             modPkg = String.replaceAll (String.Pattern ".") (String.Replacement "_") modStr
         in if modStr == modNameStr then GoVar baseName else GoSelector (GoVar modPkg) baseName
       Nothing -> GoVar baseName
-  Local (Just (Ident i)) _ -> GoVar (String.replaceAll (String.Pattern "'") (String.Replacement "_prime") (String.replaceAll (String.Pattern "$") (String.Replacement "_dollar") i))
+  Local (Just (Ident name)) _ -> GoVar (sanitizeName name)
   Local Nothing (Level l) -> GoVar ("_unused_" <> show l)
   Lit (LitString s) -> GoCall (GoSelector (GoVar "gopurs_runtime") "Str") [ GoString s ]
   Lit (LitInt i) -> GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoInt i ]
@@ -88,7 +90,7 @@ translateExpr modNameStr (NeutralExpr expr) = case expr of
   Abs idents body -> 
     Array.foldr (\(Tuple mbIdent (Level l)) inner ->
       let arg = case mbIdent of
-            Just (Ident i) -> String.replaceAll (String.Pattern "'") (String.Replacement "_prime") (String.replaceAll (String.Pattern "$") (String.Replacement "_dollar") i)
+            Just (Ident i) -> sanitizeName i
             Nothing -> "_unused_" <> show l
       in GoFunc arg inner
     ) (translateExpr modNameStr body) (NonEmptyArray.toArray idents)
