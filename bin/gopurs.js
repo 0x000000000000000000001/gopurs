@@ -2740,7 +2740,7 @@ var enumCodePoint = {
 };
 
 // output-es/Gopurs.GoAst/index.js
-var $GoExpr = (tag, _1, _2) => ({ tag, _1, _2 });
+var $GoExpr = (tag, _1, _2, _3) => ({ tag, _1, _2, _3 });
 
 // output-es/Gopurs.Printer/index.js
 var printGoExpr = (expr) => {
@@ -2760,7 +2760,7 @@ var printGoExpr = (expr) => {
     return printGoExpr(expr._1) + "." + expr._2;
   }
   if (expr.tag === "GoFunc") {
-    return "func(" + joinWith(", ")(arrayMap((a) => a + " gopurs_runtime.Value")(expr._1)) + ") gopurs_runtime.Value {\n" + printGoExpr(expr._2) + "\n}";
+    return "gopurs_runtime.Func(func(" + expr._1 + " gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " + printGoExpr(expr._2) + "\n})";
   }
   if (expr.tag === "GoBlock") {
     return joinWith("\n")(arrayMap(printGoExpr)(expr._1));
@@ -2771,13 +2771,26 @@ var printGoExpr = (expr) => {
   if (expr.tag === "GoAssign") {
     return expr._1 + " := " + printGoExpr(expr._2);
   }
+  if (expr.tag === "GoMap") {
+    return "map[string]gopurs_runtime.Value{" + joinWith(", ")(arrayMap((v) => '"' + v._1 + '": ' + printGoExpr(v._2))(expr._1)) + "}";
+  }
+  if (expr.tag === "GoIIFE") {
+    return (expr._1 === "_" ? "func() gopurs_runtime.Value {\n" + expr._1 + " = " + printGoExpr(expr._2) + "\nreturn " : "func() gopurs_runtime.Value {\n" + expr._1 + " := " + printGoExpr(expr._2) + "\nreturn ") + printGoExpr(expr._3) + "\n}()";
+  }
+  if (expr.tag === "GoRecordAccess") {
+    return printGoExpr(expr._1) + '.PtrVal.(map[string]gopurs_runtime.Value)["' + expr._2 + '"]';
+  }
+  if (expr.tag === "GoBranch") {
+    return "func() gopurs_runtime.Value {\n" + joinWith("\n")(arrayMap((v) => "if " + printGoExpr(v._1) + ".IntVal != 0 {\nreturn " + printGoExpr(v._2) + "\n}")(expr._1)) + "\nreturn " + printGoExpr(expr._2) + "\n}()";
+  }
   if (expr.tag === "GoRaw") {
     return expr._1;
   }
   fail();
 };
-var printGoDecl = (v) => "var " + v.identifier + " = " + printGoExpr(v.expression);
-var printGoFile = (v) => "package " + v.packageName + "\n\nimport (\n" + joinWith("\n")(arrayMap((i) => '	"' + i + '"')(v.imports)) + "\n)\n\n" + joinWith("\n")(arrayMap(printGoDecl)(v.decls)) + "\n";
+var printGoDeclVar = (v) => "var " + v.identifier + " gopurs_runtime.Value";
+var printGoDeclInit = (v) => "	" + v.identifier + " = " + printGoExpr(v.expression);
+var printGoFile = (v) => "package " + v.packageName + "\n\nimport (\n" + joinWith("\n")(arrayMap((i) => '	"' + i + '"')(v.imports)) + "\n)\n\n" + joinWith("\n")(arrayMap(printGoDeclVar)(v.decls)) + "\n\nfunc init() {\n" + joinWith("\n")(arrayMap(printGoDeclInit)(v.decls)) + "\n}\n";
 
 // output-es/Gopurs.CodeGen/index.js
 var capitalize = (s) => {
@@ -2787,11 +2800,15 @@ var capitalize = (s) => {
   }
   return toUpper(firstChar) + drop(length2(take2(1)(s)))(s);
 };
-var translateExpr = (v) => {
+var translateExpr = (modNameStr) => (v) => {
   if (v.tag === "Var") {
-    const baseName = capitalize(replaceAll("$")("_")(v._1._2));
+    const baseName = capitalize(replaceAll("'")("_prime")(replaceAll("$")("_")(v._1._2)));
     if (v._1._1.tag === "Just") {
-      return $GoExpr("GoSelector", $GoExpr("GoVar", replaceAll(".")("_")(v._1._1._1)), baseName);
+      const modPkg = replaceAll(".")("_")(v._1._1._1);
+      if (v._1._1._1 === modNameStr) {
+        return $GoExpr("GoVar", baseName);
+      }
+      return $GoExpr("GoSelector", $GoExpr("GoVar", modPkg), baseName);
     }
     if (v._1._1.tag === "Nothing") {
       return $GoExpr("GoVar", baseName);
@@ -2800,7 +2817,7 @@ var translateExpr = (v) => {
   }
   if (v.tag === "Local") {
     if (v._1.tag === "Just") {
-      return $GoExpr("GoVar", replaceAll("$")("_")(v._1._1));
+      return $GoExpr("GoVar", replaceAll("'")("_prime")(replaceAll("$")("_")(v._1._1)));
     }
     if (v._1.tag === "Nothing") {
       return $GoExpr("GoVar", "_");
@@ -2815,35 +2832,91 @@ var translateExpr = (v) => {
         [$GoExpr("GoString", v._1._1)]
       );
     }
+    if (v._1.tag === "LitInt") {
+      return $GoExpr(
+        "GoCall",
+        $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Int"),
+        [$GoExpr("GoInt", v._1._1)]
+      );
+    }
+    if (v._1.tag === "LitRecord") {
+      return $GoExpr(
+        "GoCall",
+        $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Record"),
+        [$GoExpr("GoMap", arrayMap((v1) => $Tuple(v1._1, translateExpr(modNameStr)(v1._2)))(v._1._1))]
+      );
+    }
     return $GoExpr("GoVar", "gopurs_runtime.Value{}");
   }
   if (v.tag === "App") {
-    return $GoExpr(
+    return foldlArray((acc) => (arg) => $GoExpr(
       "GoCall",
       $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Apply"),
-      [
-        translateExpr(v._1),
-        translateExpr((() => {
-          if (0 < v._2.length) {
-            return v._2[0];
+      [acc, translateExpr(modNameStr)(arg)]
+    ))(translateExpr(modNameStr)(v._1))(v._2);
+  }
+  if (v.tag === "Abs") {
+    return foldrArray((v1) => {
+      const $0 = v1._1;
+      return (inner) => $GoExpr(
+        "GoFunc",
+        (() => {
+          if ($0.tag === "Just") {
+            return replaceAll("'")("_prime")(replaceAll("$")("_")($0._1));
+          }
+          if ($0.tag === "Nothing") {
+            return "_";
           }
           fail();
-        })())
-      ]
+        })(),
+        inner
+      );
+    })(translateExpr(modNameStr)(v._2))(v._1);
+  }
+  if (v.tag === "Let") {
+    return $GoExpr(
+      "GoIIFE",
+      (() => {
+        if (v._1.tag === "Just") {
+          return replaceAll("'")("_prime")(replaceAll("$")("_")(v._1._1));
+        }
+        if (v._1.tag === "Nothing") {
+          return "_";
+        }
+        fail();
+      })(),
+      translateExpr(modNameStr)(v._3),
+      translateExpr(modNameStr)(v._4)
+    );
+  }
+  if (v.tag === "Accessor") {
+    if (v._2.tag === "GetProp") {
+      return $GoExpr("GoRecordAccess", translateExpr(modNameStr)(v._1), v._2._1);
+    }
+    return $GoExpr("GoVar", "gopurs_runtime.Value{}");
+  }
+  if (v.tag === "Branch") {
+    return $GoExpr(
+      "GoBranch",
+      arrayMap((v1) => $Tuple(translateExpr(modNameStr)(v1._1), translateExpr(modNameStr)(v1._2)))(v._1),
+      translateExpr(modNameStr)(v._2)
     );
   }
   return $GoExpr("GoVar", "gopurs_runtime.Value{}");
 };
-var translateBinding = (v) => $Maybe("Just", { identifier: capitalize(replaceAll("$")("_")(v._1)), expression: translateExpr(v._2) });
-var translateBindingGroup = (bg) => mapMaybe(translateBinding)(bg.bindings);
+var translateBinding = (modNameStr) => (v) => $Maybe(
+  "Just",
+  { identifier: capitalize(replaceAll("'")("_prime")(replaceAll("$")("_")(v._1))), expression: translateExpr(modNameStr)(v._2) }
+);
+var translateBindingGroup = (modNameStr) => (bg) => mapMaybe(translateBinding(modNameStr))(bg.bindings);
 var translate = (importsArray) => (backendMod) => {
   const modNameStr = backendMod.name;
-  const decls = arrayBind(fromFoldableImpl(foldrArray, backendMod.bindings))(translateBindingGroup);
+  const decls = arrayBind(fromFoldableImpl(foldrArray, backendMod.bindings))(translateBindingGroup(modNameStr));
   const dummyText = printGoFile({ packageName: "", imports: [], decls });
   return printGoFile({
     packageName: replaceAll(".")("_")(modNameStr),
     imports: nubBy(ordString.compare)([
-      "gopurs/output/gopurs_runtime",
+      ...contains("gopurs_runtime")(dummyText) ? ["gopurs/output/gopurs_runtime"] : [],
       ...mapMaybe((i) => {
         const modStr = joinWith(".")(i);
         if (modStr !== modNameStr && modStr !== "Prim" && contains(replaceAll(".")("_")(modStr) + ".")(dummyText)) {
@@ -2987,7 +3060,7 @@ var findFfiFile = (mbFfiDir) => (modName) => (mbModulePath) => {
 };
 
 // output-es/Gopurs.Runtime/index.js
-var runtimeGoCode = 'package gopurs_runtime\n\nconst (\n	TypeInt = 1\n	TypeString = 2\n	TypeRecord = 3\n	TypeFunc = 4\n	TypeConstructor = 5\n)\n\ntype Value struct {\n	Type   uint8\n	IntVal   int\n	FloatVal float64\n	BoolVal  bool\n	StrVal   string\n	ArrayVal []Value\n	PtrVal   any\n}\n\nfunc Str(v string) Value {\n	return Value{Type: TypeString, StrVal: v}\n}\n\nfunc Int(v int) Value {\n	return Value{Type: TypeInt, IntVal: v}\n}\n\nfunc Float(v float64) Value {\n	return Value{Type: 7, FloatVal: v}\n}\n\nfunc Bool(v bool) Value {\n	return Value{Type: 6, BoolVal: v}\n}\n\nfunc Array(v []Value) Value {\n	return Value{Type: 8, ArrayVal: v}\n}\n\nfunc Record(m map[string]Value) Value {\n	return Value{Type: TypeRecord, PtrVal: m}\n}\n\nfunc Cons(tag string, args []Value) Value {\n	return Value{Type: TypeConstructor, StrVal: tag, PtrVal: args}\n}\n\n// Function with 1 arg (curried)\nfunc Func(f func(Value) Value) Value {\n	return Value{Type: TypeFunc, PtrVal: f}\n}\n\n// Uncurried application helper\nfunc Apply(f Value, arg Value) Value {\n	if f.Type != TypeFunc {\n		panic("Attempted to apply a non-function")\n	}\n	fn := f.PtrVal.(func(Value) Value)\n	return fn(arg)\n}\n';
+var runtimeGoCode = 'package gopurs_runtime\n\nimport "math"\n\nconst (\n	TypeInt = 1\n	TypeString = 2\n	TypeRecord = 3\n	TypeFunc = 4\n	TypeConstructor = 5\n)\n\ntype Value struct {\n	Type   uint8\n	IntVal int64\n	StrVal string\n	PtrVal any\n}\n\nfunc Str(v string) Value {\n	return Value{Type: TypeString, StrVal: v}\n}\n\nfunc Int(v int) Value {\n	return Value{Type: TypeInt, IntVal: int64(v)}\n}\n\nfunc Float(v float64) Value {\n	return Value{Type: 7, IntVal: int64(math.Float64bits(v))}\n}\n\nfunc Bool(v bool) Value {\n	var i int64 = 0\n	if v {\n		i = 1\n	}\n	return Value{Type: 6, IntVal: i}\n}\n\nfunc Array(v []Value) Value {\n	return Value{Type: 8, PtrVal: v}\n}\n\nfunc Record(m map[string]Value) Value {\n	return Value{Type: TypeRecord, PtrVal: m}\n}\n\nfunc Cons(tag string, args []Value) Value {\n	return Value{Type: TypeConstructor, StrVal: tag, PtrVal: args}\n}\n\n// Function with 1 arg (curried)\nfunc Func(f func(Value) Value) Value {\n	return Value{Type: TypeFunc, PtrVal: f}\n}\n\n// Uncurried application helper\nfunc Apply(f Value, arg Value) Value {\n	if f.Type != TypeFunc {\n		panic("Attempted to apply a non-function")\n	}\n	fn := f.PtrVal.(func(Value) Value)\n	return fn(arg)\n}\n';
 
 // output-es/Node.Encoding/index.js
 var $Encoding = (tag) => tag;

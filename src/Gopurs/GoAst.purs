@@ -1,6 +1,7 @@
 module Gopurs.GoAst where
 
 import Prelude
+import Data.Tuple (Tuple(..))
 
 data GoExpr
   = GoVar String
@@ -8,10 +9,14 @@ data GoExpr
   | GoInt Int
   | GoCall GoExpr (Array GoExpr)
   | GoSelector GoExpr String
-  | GoFunc (Array String) GoExpr
+  | GoFunc String GoExpr
   | GoBlock (Array GoExpr)
   | GoReturn GoExpr
   | GoAssign String GoExpr
+  | GoMap (Array (Tuple String GoExpr))
+  | GoIIFE String GoExpr GoExpr
+  | GoRecordAccess GoExpr String
+  | GoBranch (Array (Tuple GoExpr GoExpr)) GoExpr
   | GoRaw String
 
 derive instance eqGoExpr :: Eq GoExpr

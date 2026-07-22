@@ -3,6 +3,8 @@ module Gopurs.Runtime where
 runtimeGoCode :: String
 runtimeGoCode = """package gopurs_runtime
 
+import "math"
+
 const (
 	TypeInt = 1
 	TypeString = 2
@@ -13,12 +15,9 @@ const (
 
 type Value struct {
 	Type   uint8
-	IntVal   int
-	FloatVal float64
-	BoolVal  bool
-	StrVal   string
-	ArrayVal []Value
-	PtrVal   any
+	IntVal int64
+	StrVal string
+	PtrVal any
 }
 
 func Str(v string) Value {
@@ -26,19 +25,23 @@ func Str(v string) Value {
 }
 
 func Int(v int) Value {
-	return Value{Type: TypeInt, IntVal: v}
+	return Value{Type: TypeInt, IntVal: int64(v)}
 }
 
 func Float(v float64) Value {
-	return Value{Type: 7, FloatVal: v}
+	return Value{Type: 7, IntVal: int64(math.Float64bits(v))}
 }
 
 func Bool(v bool) Value {
-	return Value{Type: 6, BoolVal: v}
+	var i int64 = 0
+	if v {
+		i = 1
+	}
+	return Value{Type: 6, IntVal: i}
 }
 
 func Array(v []Value) Value {
-	return Value{Type: 8, ArrayVal: v}
+	return Value{Type: 8, PtrVal: v}
 }
 
 func Record(m map[string]Value) Value {
