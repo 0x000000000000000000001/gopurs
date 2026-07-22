@@ -3397,6 +3397,7 @@ var translate = (importsArray) => (backendMod) => {
         ["Type", "Proxy"],
         ["Data", "Unit"],
         ["Data", "Eq"],
+        ["Data", "Ord"],
         ["Data", "Semiring"],
         ["Data", "Ring"],
         ["Data", "EuclideanRing"],

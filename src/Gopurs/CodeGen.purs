@@ -53,7 +53,7 @@ translate importsArray backendMod =
               String.contains (String.Pattern ("\t" <> p)) dummyText)
            then Just ("gopurs/output/" <> modStr)
            else Nothing
-      ) (importsArray <> [ ["Unsafe", "Coerce"], ["Partial", "Unsafe"], ["Partial"], ["Data", "Function"], ["Data", "Function", "Uncurried"], ["Record", "Unsafe"], ["Type", "Proxy"], ["Data", "Unit"], ["Data", "Eq"], ["Data", "Semiring"], ["Data", "Ring"], ["Data", "EuclideanRing"], ["Control", "Category"] ])
+      ) (importsArray <> [ ["Unsafe", "Coerce"], ["Partial", "Unsafe"], ["Partial"], ["Data", "Function"], ["Data", "Function", "Uncurried"], ["Record", "Unsafe"], ["Type", "Proxy"], ["Data", "Unit"], ["Data", "Eq"], ["Data", "Ord"], ["Data", "Semiring"], ["Data", "Ring"], ["Data", "EuclideanRing"], ["Control", "Category"] ])
     
     goFile = { packageName: String.replaceAll (String.Pattern ".") (String.Replacement "_") modNameStr
              , imports: goImports

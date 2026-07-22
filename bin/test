@@ -102,7 +102,7 @@ echo "Running tests from $PASSING_DIR..."
 passed=0
 failed=0
 
-SKIP_BEFORE="ReExportQualified"
+SKIP_BEFORE=""
 TEST_FILES=()
 CLEAN_CACHE=0
 
