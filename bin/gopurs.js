@@ -606,6 +606,17 @@ var mapAccumL = (dictTraversable) => {
 };
 
 // output-es/Data.Array/foreign.js
+var rangeImpl = function(start, end) {
+  var step = start > end ? -1 : 1;
+  var result = new Array(step * (end - start) + 1);
+  var i = start, n = 0;
+  while (i !== end) {
+    result[n++] = i;
+    i += step;
+  }
+  result[n] = i;
+  return result;
+};
 var replicateFill = function(count, value) {
   if (count < 1) {
     return [];
@@ -3349,6 +3360,7 @@ var $BackendEffect = (tag, _1, _2) => ({ tag, _1, _2 });
 var $BackendOperator = (tag, _1, _2, _3) => ({ tag, _1, _2, _3 });
 var $BackendOperator1 = (tag, _1) => ({ tag, _1 });
 var $BackendOperator2 = (tag, _1) => ({ tag, _1 });
+var $BackendOperatorNum = (tag) => tag;
 var $BackendOperatorOrd = (tag) => tag;
 var $BackendSyntax = (tag, _1, _2, _3, _4, _5) => ({ tag, _1, _2, _3, _4, _5 });
 var $Pair = (_1, _2) => ({ tag: "Pair", _1, _2 });
@@ -3360,9 +3372,27 @@ var OpGt = /* @__PURE__ */ $BackendOperatorOrd("OpGt");
 var OpGte = /* @__PURE__ */ $BackendOperatorOrd("OpGte");
 var OpLt = /* @__PURE__ */ $BackendOperatorOrd("OpLt");
 var OpLte = /* @__PURE__ */ $BackendOperatorOrd("OpLte");
+var OpAdd = /* @__PURE__ */ $BackendOperatorNum("OpAdd");
+var OpDivide = /* @__PURE__ */ $BackendOperatorNum("OpDivide");
+var OpMultiply = /* @__PURE__ */ $BackendOperatorNum("OpMultiply");
+var OpSubtract = /* @__PURE__ */ $BackendOperatorNum("OpSubtract");
+var OpArrayIndex = /* @__PURE__ */ $BackendOperator2("OpArrayIndex");
 var OpBooleanAnd = /* @__PURE__ */ $BackendOperator2("OpBooleanAnd");
 var OpBooleanOr = /* @__PURE__ */ $BackendOperator2("OpBooleanOr");
+var OpBooleanOrd = (value0) => $BackendOperator2("OpBooleanOrd", value0);
+var OpCharOrd = (value0) => $BackendOperator2("OpCharOrd", value0);
+var OpIntBitAnd = /* @__PURE__ */ $BackendOperator2("OpIntBitAnd");
+var OpIntBitOr = /* @__PURE__ */ $BackendOperator2("OpIntBitOr");
+var OpIntBitShiftLeft = /* @__PURE__ */ $BackendOperator2("OpIntBitShiftLeft");
+var OpIntBitShiftRight = /* @__PURE__ */ $BackendOperator2("OpIntBitShiftRight");
+var OpIntBitXor = /* @__PURE__ */ $BackendOperator2("OpIntBitXor");
+var OpIntBitZeroFillShiftRight = /* @__PURE__ */ $BackendOperator2("OpIntBitZeroFillShiftRight");
+var OpIntOrd = (value0) => $BackendOperator2("OpIntOrd", value0);
+var OpNumberOrd = (value0) => $BackendOperator2("OpNumberOrd", value0);
+var OpStringAppend = /* @__PURE__ */ $BackendOperator2("OpStringAppend");
+var OpStringOrd = (value0) => $BackendOperator2("OpStringOrd", value0);
 var OpBooleanNot = /* @__PURE__ */ $BackendOperator1("OpBooleanNot");
+var OpIntBitNot = /* @__PURE__ */ $BackendOperator1("OpIntBitNot");
 var OpIntNegate = /* @__PURE__ */ $BackendOperator1("OpIntNegate");
 var OpNumberNegate = /* @__PURE__ */ $BackendOperator1("OpNumberNegate");
 var OpArrayLength = /* @__PURE__ */ $BackendOperator1("OpArrayLength");
@@ -5429,6 +5459,16 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
               [$GoExpr("GoBinOp", "-", $GoExpr("GoInt", 0), $GoExpr("GoSelector", resE.expr, "IntVal"))]
             );
           }
+          if (v._2._1._1.tag === "OpIntBitNot") {
+            return $GoExpr(
+              "GoCall",
+              $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Int"),
+              [$GoExpr("GoBinOp", "^", $GoExpr("GoRaw", "^0"), $GoExpr("GoSelector", resE.expr, "IntVal"))]
+            );
+          }
+          if (v._2._1._1.tag === "OpNumberNegate") {
+            return $GoExpr("GoCall", $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "FloatNeg"), [resE.expr]);
+          }
           if (v._2._1._1.tag === "OpIsTag") {
             return $GoExpr(
               "GoCall",
@@ -5456,7 +5496,7 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
               ]
             );
           }
-          return $GoExpr("GoVar", "TODO");
+          fail();
         })(),
         nextId: resE.nextId
       };
@@ -5475,6 +5515,82 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
           return $StmtTree("StmtAppend", res1.stmts, res2.stmts);
         })(),
         expr: (() => {
+          if (v._2._1._1.tag === "OpArrayIndex") {
+            return $GoExpr(
+              "GoCall",
+              $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "ArrayAccess"),
+              [res1.expr, $GoExpr("GoCall", $GoExpr("GoVar", "int"), [$GoExpr("GoSelector", res2.expr, "IntVal")])]
+            );
+          }
+          if (v._2._1._1.tag === "OpIntNum") {
+            if (v._2._1._1._1 === "OpAdd") {
+              return $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Int"),
+                [$GoExpr("GoBinOp", "+", $GoExpr("GoSelector", res1.expr, "IntVal"), $GoExpr("GoSelector", res2.expr, "IntVal"))]
+              );
+            }
+            if (v._2._1._1._1 === "OpSubtract") {
+              return $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Int"),
+                [$GoExpr("GoBinOp", "-", $GoExpr("GoSelector", res1.expr, "IntVal"), $GoExpr("GoSelector", res2.expr, "IntVal"))]
+              );
+            }
+            if (v._2._1._1._1 === "OpMultiply") {
+              return $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Int"),
+                [$GoExpr("GoBinOp", "*", $GoExpr("GoSelector", res1.expr, "IntVal"), $GoExpr("GoSelector", res2.expr, "IntVal"))]
+              );
+            }
+            if (v._2._1._1._1 === "OpDivide") {
+              return $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Int"),
+                [$GoExpr("GoBinOp", "/", $GoExpr("GoSelector", res1.expr, "IntVal"), $GoExpr("GoSelector", res2.expr, "IntVal"))]
+              );
+            }
+            fail();
+          }
+          if (v._2._1._1.tag === "OpIntBitAnd") {
+            return $GoExpr(
+              "GoCall",
+              $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Int"),
+              [$GoExpr("GoBinOp", "&", $GoExpr("GoSelector", res1.expr, "IntVal"), $GoExpr("GoSelector", res2.expr, "IntVal"))]
+            );
+          }
+          if (v._2._1._1.tag === "OpIntBitOr") {
+            return $GoExpr(
+              "GoCall",
+              $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Int"),
+              [$GoExpr("GoBinOp", "|", $GoExpr("GoSelector", res1.expr, "IntVal"), $GoExpr("GoSelector", res2.expr, "IntVal"))]
+            );
+          }
+          if (v._2._1._1.tag === "OpIntBitXor") {
+            return $GoExpr(
+              "GoCall",
+              $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Int"),
+              [$GoExpr("GoBinOp", "^", $GoExpr("GoSelector", res1.expr, "IntVal"), $GoExpr("GoSelector", res2.expr, "IntVal"))]
+            );
+          }
+          if (v._2._1._1.tag === "OpIntBitShiftLeft") {
+            return $GoExpr(
+              "GoCall",
+              $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Int"),
+              [$GoExpr("GoBinOp", "<<", $GoExpr("GoSelector", res1.expr, "IntVal"), $GoExpr("GoSelector", res2.expr, "IntVal"))]
+            );
+          }
+          if (v._2._1._1.tag === "OpIntBitShiftRight") {
+            return $GoExpr(
+              "GoCall",
+              $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Int"),
+              [$GoExpr("GoBinOp", ">>", $GoExpr("GoSelector", res1.expr, "IntVal"), $GoExpr("GoSelector", res2.expr, "IntVal"))]
+            );
+          }
+          if (v._2._1._1.tag === "OpIntBitZeroFillShiftRight") {
+            return $GoExpr("GoCall", $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Zshr"), [res1.expr, res2.expr]);
+          }
           if (v._2._1._1.tag === "OpIntOrd") {
             if (v._2._1._1._1 === "OpEq") {
               return $GoExpr(
@@ -5518,24 +5634,50 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
                 [$GoExpr("GoBinOp", ">=", $GoExpr("GoSelector", res1.expr, "IntVal"), $GoExpr("GoSelector", res2.expr, "IntVal"))]
               );
             }
-            return $GoExpr("GoVar", "TODO");
+            fail();
+          }
+          if (v._2._1._1.tag === "OpNumberNum") {
+            if (v._2._1._1._1 === "OpAdd") {
+              return $GoExpr("GoCall", $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "FloatAdd"), [res1.expr, res2.expr]);
+            }
+            if (v._2._1._1._1 === "OpSubtract") {
+              return $GoExpr("GoCall", $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "FloatSub"), [res1.expr, res2.expr]);
+            }
+            if (v._2._1._1._1 === "OpMultiply") {
+              return $GoExpr("GoCall", $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "FloatMul"), [res1.expr, res2.expr]);
+            }
+            if (v._2._1._1._1 === "OpDivide") {
+              return $GoExpr("GoCall", $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "FloatDiv"), [res1.expr, res2.expr]);
+            }
+            fail();
           }
           if (v._2._1._1.tag === "OpNumberOrd") {
             if (v._2._1._1._1 === "OpEq") {
-              return $GoExpr(
-                "GoCall",
-                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
-                [$GoExpr("GoBinOp", "==", $GoExpr("GoSelector", res1.expr, "IntVal"), $GoExpr("GoSelector", res2.expr, "IntVal"))]
-              );
+              return $GoExpr("GoCall", $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "FloatEq"), [res1.expr, res2.expr]);
             }
             if (v._2._1._1._1 === "OpNotEq") {
-              return $GoExpr(
-                "GoCall",
-                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
-                [$GoExpr("GoBinOp", "!=", $GoExpr("GoSelector", res1.expr, "IntVal"), $GoExpr("GoSelector", res2.expr, "IntVal"))]
-              );
+              return $GoExpr("GoCall", $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "FloatNeq"), [res1.expr, res2.expr]);
             }
-            return $GoExpr("GoVar", "TODO");
+            if (v._2._1._1._1 === "OpLt") {
+              return $GoExpr("GoCall", $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "FloatLt"), [res1.expr, res2.expr]);
+            }
+            if (v._2._1._1._1 === "OpLte") {
+              return $GoExpr("GoCall", $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "FloatLte"), [res1.expr, res2.expr]);
+            }
+            if (v._2._1._1._1 === "OpGt") {
+              return $GoExpr("GoCall", $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "FloatGt"), [res1.expr, res2.expr]);
+            }
+            if (v._2._1._1._1 === "OpGte") {
+              return $GoExpr("GoCall", $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "FloatGte"), [res1.expr, res2.expr]);
+            }
+            fail();
+          }
+          if (v._2._1._1.tag === "OpStringAppend") {
+            return $GoExpr(
+              "GoCall",
+              $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Str"),
+              [$GoExpr("GoBinOp", "+", $GoExpr("GoSelector", res1.expr, "StrVal"), $GoExpr("GoSelector", res2.expr, "StrVal"))]
+            );
           }
           if (v._2._1._1.tag === "OpStringOrd") {
             if (v._2._1._1._1 === "OpEq") {
@@ -5552,7 +5694,35 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
                 [$GoExpr("GoBinOp", "!=", $GoExpr("GoSelector", res1.expr, "StrVal"), $GoExpr("GoSelector", res2.expr, "StrVal"))]
               );
             }
-            return $GoExpr("GoVar", "TODO");
+            if (v._2._1._1._1 === "OpLt") {
+              return $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+                [$GoExpr("GoBinOp", "<", $GoExpr("GoSelector", res1.expr, "StrVal"), $GoExpr("GoSelector", res2.expr, "StrVal"))]
+              );
+            }
+            if (v._2._1._1._1 === "OpLte") {
+              return $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+                [$GoExpr("GoBinOp", "<=", $GoExpr("GoSelector", res1.expr, "StrVal"), $GoExpr("GoSelector", res2.expr, "StrVal"))]
+              );
+            }
+            if (v._2._1._1._1 === "OpGt") {
+              return $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+                [$GoExpr("GoBinOp", ">", $GoExpr("GoSelector", res1.expr, "StrVal"), $GoExpr("GoSelector", res2.expr, "StrVal"))]
+              );
+            }
+            if (v._2._1._1._1 === "OpGte") {
+              return $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+                [$GoExpr("GoBinOp", ">=", $GoExpr("GoSelector", res1.expr, "StrVal"), $GoExpr("GoSelector", res2.expr, "StrVal"))]
+              );
+            }
+            fail();
           }
           if (v._2._1._1.tag === "OpCharOrd") {
             if (v._2._1._1._1 === "OpEq") {
@@ -5569,7 +5739,35 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
                 [$GoExpr("GoBinOp", "!=", $GoExpr("GoSelector", res1.expr, "StrVal"), $GoExpr("GoSelector", res2.expr, "StrVal"))]
               );
             }
-            return $GoExpr("GoVar", "TODO");
+            if (v._2._1._1._1 === "OpLt") {
+              return $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+                [$GoExpr("GoBinOp", "<", $GoExpr("GoSelector", res1.expr, "StrVal"), $GoExpr("GoSelector", res2.expr, "StrVal"))]
+              );
+            }
+            if (v._2._1._1._1 === "OpLte") {
+              return $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+                [$GoExpr("GoBinOp", "<=", $GoExpr("GoSelector", res1.expr, "StrVal"), $GoExpr("GoSelector", res2.expr, "StrVal"))]
+              );
+            }
+            if (v._2._1._1._1 === "OpGt") {
+              return $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+                [$GoExpr("GoBinOp", ">", $GoExpr("GoSelector", res1.expr, "StrVal"), $GoExpr("GoSelector", res2.expr, "StrVal"))]
+              );
+            }
+            if (v._2._1._1._1 === "OpGte") {
+              return $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+                [$GoExpr("GoBinOp", ">=", $GoExpr("GoSelector", res1.expr, "StrVal"), $GoExpr("GoSelector", res2.expr, "StrVal"))]
+              );
+            }
+            fail();
           }
           if (v._2._1._1.tag === "OpBooleanOrd") {
             if (v._2._1._1._1 === "OpEq") {
@@ -5586,7 +5784,35 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
                 [$GoExpr("GoBinOp", "!=", $GoExpr("GoSelector", res1.expr, "IntVal"), $GoExpr("GoSelector", res2.expr, "IntVal"))]
               );
             }
-            return $GoExpr("GoVar", "TODO");
+            if (v._2._1._1._1 === "OpLt") {
+              return $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+                [$GoExpr("GoBinOp", "<", $GoExpr("GoSelector", res1.expr, "IntVal"), $GoExpr("GoSelector", res2.expr, "IntVal"))]
+              );
+            }
+            if (v._2._1._1._1 === "OpLte") {
+              return $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+                [$GoExpr("GoBinOp", "<=", $GoExpr("GoSelector", res1.expr, "IntVal"), $GoExpr("GoSelector", res2.expr, "IntVal"))]
+              );
+            }
+            if (v._2._1._1._1 === "OpGt") {
+              return $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+                [$GoExpr("GoBinOp", ">", $GoExpr("GoSelector", res1.expr, "IntVal"), $GoExpr("GoSelector", res2.expr, "IntVal"))]
+              );
+            }
+            if (v._2._1._1._1 === "OpGte") {
+              return $GoExpr(
+                "GoCall",
+                $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Bool"),
+                [$GoExpr("GoBinOp", ">=", $GoExpr("GoSelector", res1.expr, "IntVal"), $GoExpr("GoSelector", res2.expr, "IntVal"))]
+              );
+            }
+            fail();
           }
           if (v._2._1._1.tag === "OpBooleanAnd") {
             return $GoExpr(
@@ -5616,7 +5842,7 @@ var translateExprImpl = (helpersRef) => (depth) => (modNameStr) => (recVars) => 
               ]
             );
           }
-          return $GoExpr("GoVar", "TODO");
+          fail();
         })(),
         nextId: res2.nextId
       };
@@ -5888,7 +6114,7 @@ var findFfiFile = (mbFfiDir) => (modName) => (mbModulePath) => {
 };
 
 // output-es/Gopurs.Runtime/index.js
-var runtimeGoCode = 'package gopurs_runtime\n\nimport "math"\n\nconst (\n	TypeInt = 1\n	TypeString = 2\n	TypeRecord = 3\n	TypeFunc = 4\n	TypeConstructor = 5\n)\n\n// We do not add FloatVal or BoolVal fields to keep the struct size minimal.\n// Floats are packed into IntVal using math.Float64bits, and Bools are mapped to 1/0 in IntVal.\n// Adding more fields would increase the struct size and reduce pass-by-value performance.\ntype Value struct {\n	Type   uint8\n	IntVal int64\n	StrVal string\n	PtrVal any\n}\n\nfunc Str(v string) Value {\n	return Value{Type: TypeString, StrVal: v}\n}\n\nfunc Int(v int) Value {\n	return Value{Type: TypeInt, IntVal: int64(v)}\n}\n\nfunc Float(v float64) Value {\n	return Value{Type: 7, IntVal: int64(math.Float64bits(v))}\n}\n\nfunc Bool(v bool) Value {\n	var i int64 = 0\n	if v {\n		i = 1\n	}\n	return Value{Type: 6, IntVal: i}\n}\n\nfunc Array(v []Value) Value {\n	return Value{Type: 8, PtrVal: v}\n}\n\nfunc Record(m map[string]Value) Value {\n	return Value{Type: TypeRecord, PtrVal: m}\n}\n\nfunc RecordUpdate(orig Value, updates map[string]Value) Value {\n	origMap := orig.PtrVal.(map[string]Value)\n	newMap := make(map[string]Value, len(origMap)+len(updates))\n	for k, v := range origMap {\n		newMap[k] = v\n	}\n	for k, v := range updates {\n		newMap[k] = v\n	}\n	return Record(newMap)\n}\n\nfunc Cons(tag string, args []Value) Value {\n	return Value{Type: TypeConstructor, StrVal: tag, PtrVal: args}\n}\n\n// Function with 1 arg (curried)\nfunc Func(f func(Value) Value) Value {\n	return Value{Type: TypeFunc, PtrVal: f}\n}\n\nfunc FuncAny(f any) Value {\n	return Value{Type: TypeFunc, PtrVal: f}\n}\n\n// Uncurried application helper\nfunc Apply(f Value, arg Value) Value {\n	if f.Type != TypeFunc {\n		panic("Attempted to apply a non-function")\n	}\n	fn := f.PtrVal.(func(Value) Value)\n	return fn(arg)\n}\n\nfunc ArrayAccess(arr Value, index int) Value {\n	return arr.PtrVal.([]Value)[index]\n}\n\nfunc Any(v any) Value {\n	return Value{Type: 9, PtrVal: v}\n}\n';
+var runtimeGoCode = 'package gopurs_runtime\n\nimport "math"\n\nconst (\n	TypeInt = 1\n	TypeString = 2\n	TypeRecord = 3\n	TypeFunc = 4\n	TypeConstructor = 5\n)\n\n// We do not add FloatVal or BoolVal fields to keep the struct size minimal.\n// Floats are packed into IntVal using math.Float64bits, and Bools are mapped to 1/0 in IntVal.\n// Adding more fields would increase the struct size and reduce pass-by-value performance.\ntype Value struct {\n	Type   uint8\n	IntVal int64\n	StrVal string\n	PtrVal any\n}\n\nfunc Str(v string) Value {\n	return Value{Type: TypeString, StrVal: v}\n}\n\nfunc Int(v int) Value {\n	return Value{Type: TypeInt, IntVal: int64(v)}\n}\n\nfunc Float(v float64) Value {\n	return Value{Type: 7, IntVal: int64(math.Float64bits(v))}\n}\n\nfunc Bool(v bool) Value {\n	var i int64 = 0\n	if v {\n		i = 1\n	}\n	return Value{Type: 6, IntVal: i}\n}\n\nfunc FloatAdd(a, b Value) Value { return Float(math.Float64frombits(uint64(a.IntVal)) + math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatSub(a, b Value) Value { return Float(math.Float64frombits(uint64(a.IntVal)) - math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatMul(a, b Value) Value { return Float(math.Float64frombits(uint64(a.IntVal)) * math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatDiv(a, b Value) Value { return Float(math.Float64frombits(uint64(a.IntVal)) / math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatNeg(a Value) Value { return Float(-math.Float64frombits(uint64(a.IntVal))) }\n\nfunc FloatEq(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) == math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatNeq(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) != math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatLt(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) < math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatLte(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) <= math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatGt(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) > math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatGte(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) >= math.Float64frombits(uint64(b.IntVal))) }\n\nfunc Zshr(a, b Value) Value { return Int(int(uint32(a.IntVal) >> uint32(b.IntVal))) }\n\nfunc Array(v []Value) Value {\n	return Value{Type: 8, PtrVal: v}\n}\n\nfunc Record(m map[string]Value) Value {\n	return Value{Type: TypeRecord, PtrVal: m}\n}\n\nfunc RecordUpdate(orig Value, updates map[string]Value) Value {\n	origMap := orig.PtrVal.(map[string]Value)\n	newMap := make(map[string]Value, len(origMap)+len(updates))\n	for k, v := range origMap {\n		newMap[k] = v\n	}\n	for k, v := range updates {\n		newMap[k] = v\n	}\n	return Record(newMap)\n}\n\nfunc Cons(tag string, args []Value) Value {\n	return Value{Type: TypeConstructor, StrVal: tag, PtrVal: args}\n}\n\n// Function with 1 arg (curried)\nfunc Func(f func(Value) Value) Value {\n	return Value{Type: TypeFunc, PtrVal: f}\n}\n\nfunc FuncAny(f any) Value {\n	return Value{Type: TypeFunc, PtrVal: f}\n}\n\n// Uncurried application helper\nfunc Apply(f Value, arg Value) Value {\n	if f.Type != TypeFunc {\n		panic("Attempted to apply a non-function")\n	}\n	fn := f.PtrVal.(func(Value) Value)\n	return fn(arg)\n}\n\nfunc ArrayAccess(arr Value, index int) Value {\n	return arr.PtrVal.([]Value)[index]\n}\n\nfunc Any(v any) Value {\n	return Value{Type: 9, PtrVal: v}\n}\n';
 
 // output-es/Node.Encoding/index.js
 var $Encoding = (tag) => tag;
@@ -7284,6 +7510,7 @@ var InlineDefault = /* @__PURE__ */ $InlineDirective("InlineDefault");
 var InlineNever = /* @__PURE__ */ $InlineDirective("InlineNever");
 var InlineAlways = /* @__PURE__ */ $InlineDirective("InlineAlways");
 var InlineRef = /* @__PURE__ */ $InlineAccessor("InlineRef");
+var SemEffectPure = (value0) => $BackendSemantics("SemEffectPure", value0);
 var NeutData = (value0) => (value1) => (value2) => (value3) => (value4) => $BackendSemantics("NeutData", value0, value1, value2, value3, value4);
 var NeutUpdate = (value0) => (value1) => $BackendSemantics("NeutUpdate", value0, value1);
 var NeutLit = (value0) => $BackendSemantics("NeutLit", value0);
@@ -10231,6 +10458,29 @@ var evalApp = (env) => (hd) => (spine) => {
     return $BackendSemantics("NeutApp", v, toUnfoldable1(v1));
   };
   return go(env)(hd)(fromFoldable2(spine));
+};
+var evalMkFn = (env) => (n) => (sem) => {
+  if (n === 0) {
+    return $MkFn("MkFnApplied", sem);
+  }
+  if (sem.tag === "SemLam") {
+    return $MkFn(
+      "MkFnNext",
+      sem._1,
+      (() => {
+        const $0 = evalMkFn(env)(n - 1 | 0);
+        return (x) => $0(sem._2(x));
+      })()
+    );
+  }
+  return $MkFn(
+    "MkFnNext",
+    Nothing,
+    (nextArg) => {
+      const env$p = { ...env, locals: snoc(env.locals)($LocalBinding("One", nextArg)) };
+      return evalMkFn(env$p)(n - 1 | 0)(evalApp(env$p)(sem)([nextArg]));
+    }
+  );
 };
 var evalUncurriedApp = (env) => (hd) => (spine) => {
   if (hd.tag === "SemMkFn") {
@@ -16207,10 +16457,740 @@ var sortModules = (dictFoldable) => (init) => runSort(dictFoldable.foldr((m) => 
   x.name
 )))(Nil)(init));
 
+// output-es/PureScript.Backend.Optimizer.Semantics.Foreign/index.js
+var fromFoldable6 = /* @__PURE__ */ foldrArray(Cons)(Nil);
+var record_builder_copyRecord = /* @__PURE__ */ $Tuple(
+  /* @__PURE__ */ $Qualified(/* @__PURE__ */ $Maybe("Just", "Record.Builder"), "copyRecord"),
+  (v) => (v1) => (v2) => {
+    if (v2.length === 1 && v2[0].tag === "ExternApp" && v2[0]._1.length === 1) {
+      if (v2[0]._1[0].tag === "NeutLit") {
+        if (v2[0]._1[0]._1.tag === "LitRecord") {
+          return $Maybe("Just", v2[0]._1[0]);
+        }
+        return Nothing;
+      }
+      if (v2[0]._1[0].tag === "NeutUpdate") {
+        return $Maybe("Just", v2[0]._1[0]);
+      }
+    }
+    return Nothing;
+  }
+);
+var record_builder_unsafeDelete = /* @__PURE__ */ $Tuple(
+  /* @__PURE__ */ $Qualified(/* @__PURE__ */ $Maybe("Just", "Record.Builder"), "unsafeDelete"),
+  (v) => (v1) => (v2) => {
+    if (v2.length === 1 && v2[0].tag === "ExternApp" && v2[0]._1.length === 2 && v2[0]._1[0].tag === "NeutLit" && v2[0]._1[0]._1.tag === "LitString" && v2[0]._1[1].tag === "NeutLit" && v2[0]._1[1]._1.tag === "LitRecord") {
+      const $0 = v2[0]._1[0]._1._1;
+      return $Maybe(
+        "Just",
+        $BackendSemantics(
+          "NeutLit",
+          $Literal("LitRecord", filterImpl((x) => $0 !== x._1, v2[0]._1[1]._1._1))
+        )
+      );
+    }
+    return Nothing;
+  }
+);
+var record_builder_unsafeInsert = /* @__PURE__ */ $Tuple(
+  /* @__PURE__ */ $Qualified(/* @__PURE__ */ $Maybe("Just", "Record.Builder"), "unsafeInsert"),
+  (v) => (v1) => (v2) => {
+    const $0 = () => {
+      if (v2.length === 1 && v2[0].tag === "ExternApp" && v2[0]._1.length === 3 && v2[0]._1[0].tag === "NeutLit" && v2[0]._1[0]._1.tag === "LitString") {
+        const $02 = v2[0]._1[0]._1._1;
+        if (v2[0]._1[2].tag === "SemRef" && v2[0]._1[2]._1.tag === "EvalExtern" && v2[0]._1[2]._1._1._1.tag === "Just" && v2[0]._1[2]._1._1._1._1 === "Record.Builder" && v2[0]._1[2]._1._1._2 === "copyRecord" && v2[0]._1[2]._2.length === 1 && v2[0]._1[2]._2[0].tag === "ExternApp" && v2[0]._1[2]._2[0]._1.length === 1) {
+          return $Maybe(
+            "Just",
+            evalUpdate(v2[0]._1[2]._2[0]._1[0])([$Prop($02, v2[0]._1[1])])
+          );
+        }
+      }
+      return Nothing;
+    };
+    if (v2.length === 1 && v2[0].tag === "ExternApp" && v2[0]._1.length === 3 && v2[0]._1[0].tag === "NeutLit" && v2[0]._1[0]._1.tag === "LitString") {
+      if (v2[0]._1[2].tag === "NeutLit") {
+        if (v2[0]._1[2]._1.tag === "LitRecord") {
+          return $Maybe(
+            "Just",
+            $BackendSemantics(
+              "NeutLit",
+              $Literal(
+                "LitRecord",
+                snoc(v2[0]._1[2]._1._1)($Prop(v2[0]._1[0]._1._1, v2[0]._1[1]))
+              )
+            )
+          );
+        }
+        return $0();
+      }
+      if (v2[0]._1[2].tag === "NeutUpdate") {
+        return $Maybe(
+          "Just",
+          evalUpdate(v2[0]._1[2])([$Prop(v2[0]._1[0]._1._1, v2[0]._1[1])])
+        );
+      }
+    }
+    return $0();
+  }
+);
+var record_builder_unsafeModify = /* @__PURE__ */ $Tuple(
+  /* @__PURE__ */ $Qualified(/* @__PURE__ */ $Maybe("Just", "Record.Builder"), "unsafeModify"),
+  (env) => (v) => (v1) => {
+    const $0 = () => {
+      if (v1.length === 1 && v1[0].tag === "ExternApp" && v1[0]._1.length === 3 && v1[0]._1[0].tag === "NeutLit" && v1[0]._1[0]._1.tag === "LitString") {
+        const $02 = v1[0]._1[0]._1._1;
+        if (v1[0]._1[2].tag === "SemRef" && v1[0]._1[2]._1.tag === "EvalExtern" && v1[0]._1[2]._1._1._1.tag === "Just" && v1[0]._1[2]._1._1._1._1 === "Record.Builder" && v1[0]._1[2]._1._1._2 === "copyRecord" && v1[0]._1[2]._2.length === 1 && v1[0]._1[2]._2[0].tag === "ExternApp" && v1[0]._1[2]._2[0]._1.length === 1) {
+          const $1 = v1[0]._1[2]._2[0]._1[0];
+          return $Maybe(
+            "Just",
+            makeLet(Nothing)($1)((r$p) => evalUpdate($1)([
+              $Prop(
+                $02,
+                evalApp(env)(v1[0]._1[1])([
+                  evalAccessor(env)(r$p)($BackendAccessor("GetProp", $02))
+                ])
+              )
+            ]))
+          );
+        }
+      }
+      return Nothing;
+    };
+    if (v1.length === 1 && v1[0].tag === "ExternApp" && v1[0]._1.length === 3 && v1[0]._1[0].tag === "NeutLit" && v1[0]._1[0]._1.tag === "LitString") {
+      if (v1[0]._1[2].tag === "NeutLit") {
+        if (v1[0]._1[2]._1.tag === "LitRecord") {
+          const $1 = v1[0]._1[1];
+          const $2 = v1[0]._1[0]._1._1;
+          return $Maybe(
+            "Just",
+            $BackendSemantics(
+              "NeutLit",
+              $Literal(
+                "LitRecord",
+                arrayMap((v2) => {
+                  if ($2 === v2._1) {
+                    return $Prop(v2._1, evalApp(env)($1)([v2._2]));
+                  }
+                  return $Prop(v2._1, v2._2);
+                })(v1[0]._1[2]._1._1)
+              )
+            )
+          );
+        }
+        return $0();
+      }
+      if (v1[0]._1[2].tag === "NeutUpdate" && v1[0]._1[2]._1.tag === "NeutLocal") {
+        const $1 = v1[0]._1[0]._1._1;
+        return $Maybe(
+          "Just",
+          evalUpdate(v1[0]._1[2])([
+            $Prop(
+              $1,
+              evalApp(env)(v1[0]._1[1])([
+                evalAccessor(env)(v1[0]._1[2]._1)($BackendAccessor("GetProp", $1))
+              ])
+            )
+          ])
+        );
+      }
+    }
+    return $0();
+  }
+);
+var record_builder_unsafeRename = /* @__PURE__ */ $Tuple(
+  /* @__PURE__ */ $Qualified(/* @__PURE__ */ $Maybe("Just", "Record.Builder"), "unsafeRename"),
+  (v) => (v1) => (v2) => {
+    if (v2.length === 1 && v2[0].tag === "ExternApp" && v2[0]._1.length === 3 && v2[0]._1[0].tag === "NeutLit" && v2[0]._1[0]._1.tag === "LitString" && v2[0]._1[1].tag === "NeutLit" && v2[0]._1[1]._1.tag === "LitString" && v2[0]._1[2].tag === "NeutLit" && v2[0]._1[2]._1.tag === "LitRecord") {
+      const $0 = v2[0]._1[0]._1._1;
+      const $1 = v2[0]._1[1]._1._1;
+      return $Maybe(
+        "Just",
+        $BackendSemantics(
+          "NeutLit",
+          $Literal(
+            "LitRecord",
+            arrayMap((v3) => {
+              if ($0 === v3._1) {
+                return $Prop($1, v3._2);
+              }
+              return $Prop(v3._1, v3._2);
+            })(v2[0]._1[2]._1._1)
+          )
+        )
+      );
+    }
+    return Nothing;
+  }
+);
+var record_unsafe_union_unsafeUnionFn = /* @__PURE__ */ $Tuple(
+  /* @__PURE__ */ $Qualified(/* @__PURE__ */ $Maybe("Just", "Record.Unsafe.Union"), "unsafeUnionFn"),
+  (v) => (v1) => (v2) => {
+    if (v2.length === 1 && v2[0].tag === "ExternUncurriedApp" && v2[0]._1.length === 2 && v2[0]._1[0].tag === "NeutLit" && v2[0]._1[0]._1.tag === "LitRecord" && v2[0]._1[1].tag === "NeutLit" && v2[0]._1[1]._1.tag === "LitRecord") {
+      return $Maybe(
+        "Just",
+        $BackendSemantics(
+          "NeutLit",
+          $Literal(
+            "LitRecord",
+            arrayMap(head)(groupAllBy((x) => (y) => ordString.compare(x._1)(y._1))([
+              ...v2[0]._1[0]._1._1,
+              ...v2[0]._1[1]._1._1
+            ]))
+          )
+        )
+      );
+    }
+    return Nothing;
+  }
+);
+var record_unsafe_unsafeDelete = /* @__PURE__ */ $Tuple(
+  /* @__PURE__ */ $Qualified(/* @__PURE__ */ $Maybe("Just", "Record.Unsafe"), "unsafeDelete"),
+  (v) => (v1) => (v2) => {
+    if (v2.length === 1 && v2[0].tag === "ExternApp" && v2[0]._1.length === 2 && v2[0]._1[0].tag === "NeutLit" && v2[0]._1[0]._1.tag === "LitString" && v2[0]._1[1].tag === "NeutLit" && v2[0]._1[1]._1.tag === "LitRecord") {
+      const $0 = v2[0]._1[0]._1._1;
+      return $Maybe(
+        "Just",
+        $BackendSemantics(
+          "NeutLit",
+          $Literal("LitRecord", filterImpl((x) => $0 !== x._1, v2[0]._1[1]._1._1))
+        )
+      );
+    }
+    return Nothing;
+  }
+);
+var record_unsafe_unsafeGet = /* @__PURE__ */ $Tuple(
+  /* @__PURE__ */ $Qualified(/* @__PURE__ */ $Maybe("Just", "Record.Unsafe"), "unsafeGet"),
+  (env) => (v) => (v1) => {
+    if (v1.length === 1 && v1[0].tag === "ExternApp" && v1[0]._1.length === 1 && v1[0]._1[0].tag === "NeutLit" && v1[0]._1[0]._1.tag === "LitString") {
+      const $0 = v1[0]._1[0]._1._1;
+      return $Maybe(
+        "Just",
+        $BackendSemantics(
+          "SemLam",
+          Nothing,
+          (r) => evalAccessor(env)(r)($BackendAccessor("GetProp", $0))
+        )
+      );
+    }
+    return Nothing;
+  }
+);
+var record_unsafe_unsafeHas = /* @__PURE__ */ $Tuple(
+  /* @__PURE__ */ $Qualified(/* @__PURE__ */ $Maybe("Just", "Record.Unsafe"), "unsafeHas"),
+  (v) => (v1) => (v2) => {
+    if (v2.length === 1 && v2[0].tag === "ExternApp" && v2[0]._1.length === 2 && v2[0]._1[0].tag === "NeutLit" && v2[0]._1[0]._1.tag === "LitString" && v2[0]._1[1].tag === "NeutLit" && v2[0]._1[1]._1.tag === "LitRecord") {
+      const $0 = v2[0]._1[0]._1._1;
+      return $Maybe(
+        "Just",
+        $BackendSemantics(
+          "NeutLit",
+          $Literal("LitBoolean", anyImpl((x) => $0 === x._1, v2[0]._1[1]._1._1))
+        )
+      );
+    }
+    return Nothing;
+  }
+);
+var record_unsafe_unsafeSet = /* @__PURE__ */ $Tuple(
+  /* @__PURE__ */ $Qualified(/* @__PURE__ */ $Maybe("Just", "Record.Unsafe"), "unsafeSet"),
+  (v) => (v1) => (v2) => {
+    if (v2.length === 1 && v2[0].tag === "ExternApp" && v2[0]._1.length === 3 && v2[0]._1[0].tag === "NeutLit" && v2[0]._1[0]._1.tag === "LitString") {
+      return $Maybe(
+        "Just",
+        evalUpdate(v2[0]._1[2])([$Prop(v2[0]._1[0]._1._1, v2[0]._1[1])])
+      );
+    }
+    return Nothing;
+  }
+);
+var runEffectFn = (mod) => (name2) => (n) => {
+  const goRunEffectFn = (env) => (acc) => (head2) => (v) => {
+    if (v.tag === "Nil") {
+      return evalUncurriedEffectApp(env)(head2)(acc);
+    }
+    if (v.tag === "Cons") {
+      const $0 = v._2;
+      return makeLet(Nothing)(v._1)((nextArg) => goRunEffectFn(env)(snoc(acc)(nextArg))(head2)($0));
+    }
+    fail();
+  };
+  return $Tuple(
+    $Qualified($Maybe("Just", mod), name2 + showIntImpl(n)),
+    (env) => (v) => (v1) => {
+      if (v1.length === 1 && v1[0].tag === "ExternApp") {
+        const $0 = unconsImpl((v$1) => Nothing, (x) => (xs) => $Maybe("Just", { head: x, tail: xs }), v1[0]._1);
+        if ($0.tag === "Just" && $0._1.tail.length === n) {
+          return $Maybe("Just", goRunEffectFn(env)([])($0._1.head)(fromFoldable6($0._1.tail)));
+        }
+      }
+      return Nothing;
+    }
+  );
+};
+var unsafe_coerce_unsafeCoerce = /* @__PURE__ */ $Tuple(
+  /* @__PURE__ */ $Qualified(/* @__PURE__ */ $Maybe("Just", "Unsafe.Coerce"), "unsafeCoerce"),
+  (v) => (v1) => (v2) => {
+    if (v2.length === 1 && v2[0].tag === "ExternApp" && v2[0]._1.length === 1) {
+      return $Maybe("Just", v2[0]._1[0]);
+    }
+    return Nothing;
+  }
+);
+var primUnaryOperator = (op) => (env) => (v) => (v1) => {
+  if (v1.length === 1 && v1[0].tag === "ExternApp" && v1[0]._1.length === 1) {
+    return $Maybe("Just", evalPrimOp(env)($BackendOperator("Op1", op, v1[0]._1[0])));
+  }
+  return Nothing;
+};
+var primBinaryOperator = (op) => (env) => (v) => (v1) => {
+  if (v1.length === 1 && v1[0].tag === "ExternApp" && v1[0]._1.length === 1) {
+    return $Maybe(
+      "Just",
+      makeLet(Nothing)(v1[0]._1[0])((a$p) => $BackendSemantics(
+        "SemLam",
+        Nothing,
+        (b$p) => evalPrimOp(env)($BackendOperator("Op2", op, a$p, b$p))
+      ))
+    );
+  }
+  return Nothing;
+};
+var partial_unsafe_unsafePartial = /* @__PURE__ */ $Tuple(
+  /* @__PURE__ */ $Qualified(/* @__PURE__ */ $Maybe("Just", "Partial.Unsafe"), "_unsafePartial"),
+  (v) => (v1) => (v2) => {
+    if (v2.length === 1 && v2[0].tag === "ExternApp" && v2[0]._1.length === 1 && v2[0]._1[0].tag === "SemLam") {
+      return $Maybe(
+        "Just",
+        v2[0]._1[0]._2($BackendSemantics("NeutLit", $Literal("LitRecord", [])))
+      );
+    }
+    return Nothing;
+  }
+);
+var mkEffectFn = (mod) => (name2) => (n) => $Tuple(
+  $Qualified($Maybe("Just", mod), name2 + showIntImpl(n)),
+  (env) => (v) => (v1) => {
+    if (v1.length === 1 && v1[0].tag === "ExternApp" && v1[0]._1.length === 1) {
+      return $Maybe(
+        "Just",
+        $BackendSemantics("SemMkEffectFn", evalMkFn(env)(n)(v1[0]._1[0]))
+      );
+    }
+    return Nothing;
+  }
+);
+var primOrdOperator = (op) => (env) => (v) => (v1) => {
+  if (v1.length === 3 && v1[0].tag === "ExternAccessor" && v1[0]._1.tag === "GetProp" && v1[0]._1._1 === "compare" && v1[1].tag === "ExternApp" && v1[1]._1.length === 2 && v1[2].tag === "ExternPrimOp" && v1[2]._1.tag === "OpIsTag") {
+    if (v1[2]._1._1._1.tag === "Just" && "Data.Ordering" === v1[2]._1._1._1._1 && "LT" === v1[2]._1._1._2) {
+      return $Maybe(
+        "Just",
+        evalPrimOp(env)($BackendOperator(
+          "Op2",
+          op(OpLt),
+          v1[1]._1[0],
+          v1[1]._1[1]
+        ))
+      );
+    }
+    if (v1[2]._1._1._1.tag === "Just" && "Data.Ordering" === v1[2]._1._1._1._1 && "GT" === v1[2]._1._1._2) {
+      return $Maybe(
+        "Just",
+        evalPrimOp(env)($BackendOperator(
+          "Op2",
+          op(OpGt),
+          v1[1]._1[0],
+          v1[1]._1[1]
+        ))
+      );
+    }
+    if (v1[2]._1._1._1.tag === "Just" && "Data.Ordering" === v1[2]._1._1._1._1 && "EQ" === v1[2]._1._1._2) {
+      return $Maybe(
+        "Just",
+        evalPrimOp(env)($BackendOperator(
+          "Op2",
+          op(OpEq),
+          v1[1]._1[0],
+          v1[1]._1[1]
+        ))
+      );
+    }
+  }
+  return Nothing;
+};
+var effectUnsafePerform = (v) => (v1) => (v2) => {
+  if (v2.length === 1 && v2[0].tag === "ExternApp" && v2[0]._1.length === 1 && v2[0]._1[0].tag === "SemEffectPure") {
+    return $Maybe("Just", v2[0]._1[0]._1);
+  }
+  return Nothing;
+};
+var effectRefWrite = (v) => (v1) => (v2) => {
+  if (v2.length === 1 && v2[0].tag === "ExternApp" && v2[0]._1.length === 2) {
+    const $0 = v2[0]._1[1];
+    return $Maybe(
+      "Just",
+      makeLet(Nothing)(v2[0]._1[0])((val$p) => makeLet(Nothing)($0)((ref$p) => $BackendSemantics(
+        "NeutPrimEffect",
+        $BackendEffect("EffectRefWrite", ref$p, val$p)
+      )))
+    );
+  }
+  return Nothing;
+};
+var effectRefRead = (v) => (v1) => (v2) => {
+  if (v2.length === 1 && v2[0].tag === "ExternApp" && v2[0]._1.length === 1) {
+    return $Maybe(
+      "Just",
+      makeLet(Nothing)(v2[0]._1[0])((val$p) => $BackendSemantics(
+        "NeutPrimEffect",
+        $BackendEffect("EffectRefRead", val$p)
+      ))
+    );
+  }
+  return Nothing;
+};
+var effectRefNew = (v) => (v1) => (v2) => {
+  if (v2.length === 1 && v2[0].tag === "ExternApp" && v2[0]._1.length === 1) {
+    return $Maybe(
+      "Just",
+      makeLet(Nothing)(v2[0]._1[0])((val$p) => $BackendSemantics(
+        "NeutPrimEffect",
+        $BackendEffect("EffectRefNew", val$p)
+      ))
+    );
+  }
+  return Nothing;
+};
+var effectRefModify = (env) => (v) => (v1) => {
+  if (v1.length === 1 && v1[0].tag === "ExternApp" && v1[0]._1.length === 2) {
+    const $0 = v1[0]._1[1];
+    return $Maybe(
+      "Just",
+      makeLet(Nothing)(v1[0]._1[0])((fn$p) => makeLet(Nothing)($0)((ref$p) => makeEffectBind(Nothing)($BackendSemantics(
+        "NeutPrimEffect",
+        $BackendEffect("EffectRefRead", ref$p)
+      ))((val) => $BackendSemantics(
+        "NeutPrimEffect",
+        $BackendEffect("EffectRefWrite", ref$p, evalApp(env)(fn$p)([val]))
+      ))))
+    );
+  }
+  return Nothing;
+};
+var effectPure = (v) => (v1) => (v2) => {
+  if (v2.length === 1 && v2[0].tag === "ExternApp" && v2[0]._1.length === 1) {
+    return $Maybe("Just", makeLet(Nothing)(v2[0]._1[0])(SemEffectPure));
+  }
+  return Nothing;
+};
+var effectMap = (env) => (v) => (v1) => {
+  if (v1.length === 1 && v1[0].tag === "ExternApp" && v1[0]._1.length === 1) {
+    return $Maybe(
+      "Just",
+      makeLet(Nothing)(v1[0]._1[0])((fn$p) => $BackendSemantics(
+        "SemLam",
+        Nothing,
+        (val) => makeEffectBind(Nothing)(val)((nextVal) => $BackendSemantics(
+          "SemEffectPure",
+          evalApp(env)(fn$p)([nextVal])
+        ))
+      ))
+    );
+  }
+  return Nothing;
+};
+var effectBind = (env) => (v) => (v1) => {
+  if (v1.length === 1 && v1[0].tag === "ExternApp" && v1[0]._1.length === 2) {
+    if (v1[0]._1[1].tag === "SemLam") {
+      const $02 = v1[0]._1[1]._1;
+      const $1 = v1[0]._1[1]._2;
+      return $Maybe(
+        "Just",
+        makeLet(Nothing)(v1[0]._1[0])((nextEff) => makeEffectBind($02)(nextEff)($1))
+      );
+    }
+    const $0 = v1[0]._1[1];
+    return $Maybe(
+      "Just",
+      makeLet(Nothing)(v1[0]._1[0])((nextEff) => makeLet(Nothing)($0)((nextK) => makeEffectBind(Nothing)(nextEff)((a) => evalApp(env)(nextK)([
+        a
+      ]))))
+    );
+  }
+  return Nothing;
+};
+var data_string_codePoints_toCodePointArray = /* @__PURE__ */ $Tuple(
+  /* @__PURE__ */ $Qualified(/* @__PURE__ */ $Maybe("Just", "Data.String.CodePoints"), "toCodePointArray"),
+  (v) => (v1) => (v2) => {
+    if (v2.length === 1 && v2[0].tag === "ExternApp" && v2[0]._1.length === 1 && v2[0]._1[0].tag === "NeutLit" && v2[0]._1[0]._1.tag === "LitString") {
+      return $Maybe(
+        "Just",
+        $BackendSemantics(
+          "NeutLit",
+          $Literal(
+            "LitArray",
+            arrayMap((x) => $BackendSemantics("NeutLit", $Literal("LitInt", x)))(toCodePointArray(v2[0]._1[0]._1._1))
+          )
+        )
+      );
+    }
+    return Nothing;
+  }
+);
+var data_semigroup_concatArray = /* @__PURE__ */ $Tuple(
+  /* @__PURE__ */ $Qualified(/* @__PURE__ */ $Maybe("Just", "Data.Semigroup"), "concatArray"),
+  (env) => (qual) => (v) => {
+    if (v.length === 1 && v[0].tag === "ExternApp" && v[0]._1.length === 2) {
+      if (v[0]._1[0].tag === "NeutLit" && v[0]._1[0]._1.tag === "LitArray" && v[0]._1[1].tag === "NeutLit" && v[0]._1[1]._1.tag === "LitArray") {
+        return $Maybe(
+          "Just",
+          $BackendSemantics(
+            "NeutLit",
+            $Literal("LitArray", [...v[0]._1[0]._1._1, ...v[0]._1[1]._1._1])
+          )
+        );
+      }
+      return $Maybe("Just", evalAssocOp(env)($Either("Left", qual))(v[0]._1[0])(v[0]._1[1]));
+    }
+    return Nothing;
+  }
+);
+var data_function_uncurried_runFn = (n) => {
+  const goRunFn = (env) => (n$p) => (head2) => (tail) => {
+    if (n$p <= 0) {
+      return evalUncurriedApp(env)(head2)(tail);
+    }
+    return $BackendSemantics("SemLam", Nothing, (val) => goRunFn(env)(n$p - 1 | 0)(head2)(snoc(tail)(val)));
+  };
+  return $Tuple(
+    $Qualified($Maybe("Just", "Data.Function.Uncurried"), "runFn" + showIntImpl(n)),
+    (env) => (v) => (v1) => {
+      if (v1.length === 1 && v1[0].tag === "ExternApp") {
+        const $0 = unconsImpl((v$1) => Nothing, (x) => (xs) => $Maybe("Just", { head: x, tail: xs }), v1[0]._1);
+        if ($0.tag === "Just") {
+          return $Maybe("Just", goRunFn(env)(n - $0._1.tail.length | 0)($0._1.head)($0._1.tail));
+        }
+      }
+      return Nothing;
+    }
+  );
+};
+var data_function_uncurried_mkFn = (n) => $Tuple(
+  $Qualified($Maybe("Just", "Data.Function.Uncurried"), "mkFn" + showIntImpl(n)),
+  (env) => (v) => (v1) => {
+    if (v1.length === 1 && v1[0].tag === "ExternApp" && v1[0]._1.length === 1) {
+      return $Maybe(
+        "Just",
+        $BackendSemantics("SemMkFn", evalMkFn(env)(n)(v1[0]._1[0]))
+      );
+    }
+    return Nothing;
+  }
+);
+var data_array_unsafeIndexImpl = /* @__PURE__ */ $Tuple(
+  /* @__PURE__ */ $Qualified(/* @__PURE__ */ $Maybe("Just", "Data.Array"), "unsafeIndexImpl"),
+  (env) => (v) => (v1) => {
+    if (v1.length === 1) {
+      if (v1[0].tag === "ExternUncurriedApp") {
+        if (v1[0]._1.length === 2) {
+          const $0 = v1[0]._1[1];
+          return $Maybe(
+            "Just",
+            makeLet(Nothing)(v1[0]._1[0])((a$p) => makeLet(Nothing)($0)((b$p) => evalPrimOp(env)($BackendOperator(
+              "Op2",
+              OpArrayIndex,
+              a$p,
+              b$p
+            ))))
+          );
+        }
+        return Nothing;
+      }
+      if (v1[0].tag === "ExternApp" && v1[0]._1.length === 1) {
+        return $Maybe(
+          "Just",
+          makeLet(Nothing)(v1[0]._1[0])((a$p) => $BackendSemantics(
+            "SemLam",
+            Nothing,
+            (b$p) => evalPrimOp(env)($BackendOperator(
+              "Op2",
+              OpArrayIndex,
+              a$p,
+              b$p
+            ))
+          ))
+        );
+      }
+    }
+    return Nothing;
+  }
+);
+var coreForeignSemantics = /* @__PURE__ */ (() => {
+  const oneToTen = rangeImpl(1, 10);
+  return fromFoldable(ordQualified(ordString))(foldableArray)([
+    $Tuple($Qualified($Maybe("Just", "Control.Monad.ST.Internal"), "bind_"), effectBind),
+    $Tuple($Qualified($Maybe("Just", "Control.Monad.ST.Internal"), "map_"), effectMap),
+    $Tuple($Qualified($Maybe("Just", "Control.Monad.ST.Internal"), "modify"), effectRefModify),
+    $Tuple($Qualified($Maybe("Just", "Control.Monad.ST.Internal"), "new"), effectRefNew),
+    $Tuple($Qualified($Maybe("Just", "Control.Monad.ST.Internal"), "pure_"), effectPure),
+    $Tuple($Qualified($Maybe("Just", "Control.Monad.ST.Internal"), "read"), effectRefRead),
+    $Tuple($Qualified($Maybe("Just", "Control.Monad.ST.Internal"), "run"), effectUnsafePerform),
+    $Tuple($Qualified($Maybe("Just", "Control.Monad.ST.Internal"), "write"), effectRefWrite),
+    $Tuple(
+      $Qualified($Maybe("Just", "Data.Array"), "length"),
+      primUnaryOperator(OpArrayLength)
+    ),
+    data_array_unsafeIndexImpl,
+    $Tuple(
+      $Qualified($Maybe("Just", "Data.Eq"), "eqBooleanImpl"),
+      primBinaryOperator($BackendOperator2("OpBooleanOrd", OpEq))
+    ),
+    $Tuple(
+      $Qualified($Maybe("Just", "Data.Eq"), "eqCharImpl"),
+      primBinaryOperator($BackendOperator2("OpCharOrd", OpEq))
+    ),
+    $Tuple(
+      $Qualified($Maybe("Just", "Data.Eq"), "eqIntImpl"),
+      primBinaryOperator($BackendOperator2("OpIntOrd", OpEq))
+    ),
+    $Tuple(
+      $Qualified($Maybe("Just", "Data.Eq"), "eqNumberImpl"),
+      primBinaryOperator($BackendOperator2("OpNumberOrd", OpEq))
+    ),
+    $Tuple(
+      $Qualified($Maybe("Just", "Data.Eq"), "eqStringImpl"),
+      primBinaryOperator($BackendOperator2("OpStringOrd", OpEq))
+    ),
+    $Tuple(
+      $Qualified($Maybe("Just", "Data.EuclideanRing"), "intDiv"),
+      primBinaryOperator($BackendOperator2("OpIntNum", OpDivide))
+    ),
+    $Tuple(
+      $Qualified($Maybe("Just", "Data.EuclideanRing"), "numDiv"),
+      primBinaryOperator($BackendOperator2("OpNumberNum", OpDivide))
+    ),
+    $Tuple(
+      $Qualified($Maybe("Just", "Data.HeytingAlgebra"), "boolConj"),
+      primBinaryOperator(OpBooleanAnd)
+    ),
+    $Tuple(
+      $Qualified($Maybe("Just", "Data.HeytingAlgebra"), "boolDisj"),
+      primBinaryOperator(OpBooleanOr)
+    ),
+    $Tuple(
+      $Qualified($Maybe("Just", "Data.HeytingAlgebra"), "boolNot"),
+      primUnaryOperator(OpBooleanNot)
+    ),
+    $Tuple(
+      $Qualified($Maybe("Just", "Data.Int.Bits"), "and"),
+      primBinaryOperator(OpIntBitAnd)
+    ),
+    $Tuple(
+      $Qualified($Maybe("Just", "Data.Int.Bits"), "complement"),
+      primUnaryOperator(OpIntBitNot)
+    ),
+    $Tuple(
+      $Qualified($Maybe("Just", "Data.Int.Bits"), "or"),
+      primBinaryOperator(OpIntBitOr)
+    ),
+    $Tuple(
+      $Qualified($Maybe("Just", "Data.Int.Bits"), "shl"),
+      primBinaryOperator(OpIntBitShiftLeft)
+    ),
+    $Tuple(
+      $Qualified($Maybe("Just", "Data.Int.Bits"), "shr"),
+      primBinaryOperator(OpIntBitShiftRight)
+    ),
+    $Tuple(
+      $Qualified($Maybe("Just", "Data.Int.Bits"), "xor"),
+      primBinaryOperator(OpIntBitXor)
+    ),
+    $Tuple(
+      $Qualified($Maybe("Just", "Data.Int.Bits"), "zshr"),
+      primBinaryOperator(OpIntBitZeroFillShiftRight)
+    ),
+    $Tuple(
+      $Qualified($Maybe("Just", "Data.Ord"), "ordBoolean"),
+      primOrdOperator(OpBooleanOrd)
+    ),
+    $Tuple(
+      $Qualified($Maybe("Just", "Data.Ord"), "ordChar"),
+      primOrdOperator(OpCharOrd)
+    ),
+    $Tuple(
+      $Qualified($Maybe("Just", "Data.Ord"), "ordInt"),
+      primOrdOperator(OpIntOrd)
+    ),
+    $Tuple(
+      $Qualified($Maybe("Just", "Data.Ord"), "ordNumber"),
+      primOrdOperator(OpNumberOrd)
+    ),
+    $Tuple(
+      $Qualified($Maybe("Just", "Data.Ord"), "ordString"),
+      primOrdOperator(OpStringOrd)
+    ),
+    $Tuple(
+      $Qualified($Maybe("Just", "Data.Ring"), "intSub"),
+      primBinaryOperator($BackendOperator2("OpIntNum", OpSubtract))
+    ),
+    $Tuple(
+      $Qualified($Maybe("Just", "Data.Ring"), "numSub"),
+      primBinaryOperator($BackendOperator2("OpNumberNum", OpSubtract))
+    ),
+    data_semigroup_concatArray,
+    $Tuple(
+      $Qualified($Maybe("Just", "Data.Semigroup"), "concatString"),
+      primBinaryOperator(OpStringAppend)
+    ),
+    $Tuple(
+      $Qualified($Maybe("Just", "Data.Semiring"), "intAdd"),
+      primBinaryOperator($BackendOperator2("OpIntNum", OpAdd))
+    ),
+    $Tuple(
+      $Qualified($Maybe("Just", "Data.Semiring"), "intMul"),
+      primBinaryOperator($BackendOperator2("OpIntNum", OpMultiply))
+    ),
+    $Tuple(
+      $Qualified($Maybe("Just", "Data.Semiring"), "numAdd"),
+      primBinaryOperator($BackendOperator2("OpNumberNum", OpAdd))
+    ),
+    $Tuple(
+      $Qualified($Maybe("Just", "Data.Semiring"), "numMul"),
+      primBinaryOperator($BackendOperator2("OpNumberNum", OpMultiply))
+    ),
+    data_string_codePoints_toCodePointArray,
+    $Tuple($Qualified($Maybe("Just", "Effect"), "bindE"), effectBind),
+    $Tuple($Qualified($Maybe("Just", "Effect"), "pureE"), effectPure),
+    $Tuple($Qualified($Maybe("Just", "Effect.Ref"), "modify"), effectRefModify),
+    $Tuple($Qualified($Maybe("Just", "Effect.Ref"), "_new"), effectRefNew),
+    $Tuple($Qualified($Maybe("Just", "Effect.Ref"), "read"), effectRefRead),
+    $Tuple($Qualified($Maybe("Just", "Effect.Ref"), "write"), effectRefWrite),
+    $Tuple($Qualified($Maybe("Just", "Effect.Unsafe"), "unsafePerformEffect"), effectUnsafePerform),
+    partial_unsafe_unsafePartial,
+    record_builder_copyRecord,
+    record_builder_unsafeDelete,
+    record_builder_unsafeInsert,
+    record_builder_unsafeModify,
+    record_builder_unsafeRename,
+    record_unsafe_union_unsafeUnionFn,
+    record_unsafe_unsafeDelete,
+    record_unsafe_unsafeGet,
+    record_unsafe_unsafeHas,
+    record_unsafe_unsafeSet,
+    unsafe_coerce_unsafeCoerce,
+    ...arrayMap(data_function_uncurried_mkFn)(oneToTen),
+    ...arrayMap(data_function_uncurried_runFn)(oneToTen),
+    ...arrayMap(mkEffectFn("Effect.Uncurried")("mkEffectFn"))(oneToTen),
+    ...arrayMap(runEffectFn("Effect.Uncurried")("runEffectFn"))(oneToTen),
+    ...arrayMap(mkEffectFn("Control.Monad.ST.Uncurried")("mkSTFn"))(oneToTen),
+    ...arrayMap(runEffectFn("Control.Monad.ST.Uncurried")("runSTFn"))(oneToTen)
+  ]);
+})();
+
 // output-es/Main/index.js
 var filterA2 = /* @__PURE__ */ filterA(applicativeAff);
 var traverse5 = /* @__PURE__ */ (() => traversableArray.traverse(applicativeAff))();
-var fromFoldable6 = /* @__PURE__ */ foldrArray(Cons)(Nil);
+var fromFoldable7 = /* @__PURE__ */ foldrArray(Cons)(Nil);
 var buildModules2 = /* @__PURE__ */ buildModules(monadAff);
 var readCoreFnModule = (filePath) => _bind($$try2(toAff1(stat2)(filePath)))((statRes) => {
   if ((() => {
@@ -16259,11 +17239,11 @@ var main = /* @__PURE__ */ (() => {
   const $0 = _makeFiber(
     ffiUtil,
     _bind(toAff1(readdir2)("output"))((files) => _bind(filterA2((f) => _bind(toAff1(stat2)("output/" + f))((stat3) => _pure(isDirectoryImpl(stat3))))(files))((validDirs) => _bind(traverse5((dir) => readCoreFnModule("output/" + dir + "/corefn.json"))(validDirs))((mbModules) => {
-      const finalModules = sortModules(foldableList)(fromFoldable6(mapMaybe((x) => x)(mbModules)));
+      const finalModules = sortModules(foldableList)(fromFoldable7(mapMaybe((x) => x)(mbModules)));
       return _bind($$try2(toAff1(mkdir2)("output/gopurs_runtime")))(() => _bind(toAff3(writeTextFile)(UTF8)("output/gopurs_runtime/runtime.go")(runtimeGoCode))(() => _bind(toAff3(writeTextFile)(UTF8)("output/go.mod")("module gopurs/output\n\ngo 1.22\n"))(() => _bind(buildModules2({
         directives: Leaf,
         analyzeCustom: (v) => (v1) => Nothing,
-        foreignSemantics: Leaf,
+        foreignSemantics: coreForeignSemantics,
         traceIdents: Leaf,
         onPrepareModule: (v) => (v1) => _pure(v1),
         onCodegenModule: (v) => (v1) => (backendMod) => (v2) => {
