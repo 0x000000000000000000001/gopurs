@@ -21,8 +21,8 @@ data GoExpr
   | GoBinOp String GoExpr GoExpr
   | GoTypeAssertion GoExpr String
   | GoRaw String
-  | GoFor (Array GoExpr)
-  | GoContinue
+  | GoFor String (Array GoExpr)
+  | GoContinue String
   | GoMutate String GoExpr
   | GoIfElse GoExpr (Array GoExpr) (Array GoExpr)
 

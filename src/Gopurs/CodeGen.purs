@@ -31,7 +31,7 @@ import Data.Traversable (traverse)
 import Gopurs.GoAst (GoFile, GoDecl, GoExpr(..))
 import Gopurs.Printer (printGoFile, printGoExpr, printGoDeclVar)
 import PureScript.Backend.Optimizer.Codegen.Tco as Tco
-import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
+import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..), tcoAnalysisOf)
 import Gopurs.FreeVars (freeVars, localId)
 
 capitalize :: String -> String
@@ -133,22 +133,25 @@ translate importsArray mod =
                 case mutRecBinds of
                   Just fns ->
                     let
-                      loopCtxs = map (\fn -> { ident: fn.ident, params: fn.args }) fns
+                      loopCtxs = map (\fn -> { ident: fn.ident, params: fn.args, loopParams: map (\p -> p <> "_loop") fn.args }) fns
 
                       fnWrapperStmts = map
                         ( \fn ->
                             let
-                              resBodyMut = translateExprImpl helpersRef 0 modNameStr recVars Map.empty Map.empty Nothing loopCtxs true 0 fn.body
+                              currentLoopCtx = [ { ident: fn.ident, params: fn.args, loopParams: map (\p -> p <> "_loop") fn.args } ]
+                              resBodyMut = translateExprImpl helpersRef 0 modNameStr recVars Map.empty Map.empty Nothing currentLoopCtx true 0 fn.body
                               goName = fn.ident
-                              funcBody = GoFor (flattenStmts resBodyMut.stmts <> [ GoReturn resBodyMut.expr ])
+                              loopParams = map (\p -> p <> "_loop") fn.args
+                              initVars = Array.concatMap (\p -> [ GoRaw ("var " <> p <> " = " <> p <> "_loop"), GoRaw ("_ = " <> p) ]) fn.args
+                              funcBody = GoFor goName (initVars <> flattenStmts resBodyMut.stmts <> [ GoReturn resBodyMut.expr ])
                               iife = GoRaw ("func() gopurs_runtime.Value {\n" <> printGoExpr funcBody <> "\n}()")
                               -- If fn is UncurriedAbs we might need different logic, but assuming curried for now:
-                              funcExpr = Array.foldr (\p acc -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> p <> " gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr acc <> "\n}") ]) iife fn.args
+                              funcExpr = Array.foldr (\p acc -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> p <> " gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr acc <> "\n}") ]) iife loopParams
                             in
                               { identifier: goName, expression: funcExpr }
                         )
                         fns
-                    in
+                    in 
                       fnWrapperStmts
                   Nothing ->
                     Array.concatMap
@@ -203,8 +206,8 @@ translate importsArray mod =
   in
     printGoFile goFile
 
-translateExprImpl :: Ref (Array GoDecl) -> Int -> String -> Array String -> Map String String -> Map String String -> Maybe String -> Array { ident :: String, params :: Array String } -> Boolean -> Int -> TcoExpr -> { stmts :: StmtTree, expr :: GoExpr, nextId :: Int }
-translateExprImpl helpersRef depth modNameStr recVars namedBound bound tcoIdent loopCtx isTail nextId tcoExpr@(TcoExpr _ expr) =
+translateExprImpl :: Ref (Array GoDecl) -> Int -> String -> Array String -> Map String String -> Map String String -> Maybe String -> Array { ident :: String, params :: Array String, loopParams :: Array String } -> Boolean -> Int -> TcoExpr -> { stmts :: StmtTree, expr :: GoExpr, nextId :: Int }
+translateExprImpl helpersRef depth modNameStr recVars namedBound bound tcoIdent loopCtx isTail nextId tcoExpr@(TcoExpr tcoAnalysis expr) =
   let
     liftIfNeeded mkNodeThunk =
       if depth > 10 then unsafePerformEffect do
@@ -316,10 +319,10 @@ translateExprImpl helpersRef depth modNameStr recVars namedBound bound tcoIdent 
                   )
                   { stmts: StmtEmpty, exprs: [], nextId }
                   flatArgs
-                targetCtx = fromMaybe { ident: "", params: [] } (Array.index loopCtx index)
-                assigns = Array.mapWithIndex (\i paramName -> GoMutate paramName (fromMaybe (GoRaw "nil") (Array.index accFinal.exprs i))) targetCtx.params
+                targetCtx = fromMaybe { ident: "", params: [], loopParams: [] } (Array.index loopCtx index)
+                assigns = Array.mapWithIndex (\i paramName -> GoMutate paramName (fromMaybe (GoRaw "nil") (Array.index accFinal.exprs i))) targetCtx.loopParams
               in
-                { stmts: accFinal.stmts <> foldMap StmtLeaf assigns <> StmtLeaf GoContinue, expr: GoRaw "gopurs_runtime.Value{}", nextId: accFinal.nextId }
+                { stmts: accFinal.stmts <> foldMap StmtLeaf assigns <> StmtLeaf (GoContinue targetCtx.ident), expr: GoRaw "gopurs_runtime.Value{}", nextId: accFinal.nextId }
 
             Nothing ->
               let
@@ -436,22 +439,69 @@ translateExprImpl helpersRef depth modNameStr recVars namedBound bound tcoIdent 
             (toArray bindings)
 
           combinedRecVars = recVars <> map (\(Tuple (Ident i) _) -> sanitizeName i) (toArray bindings)
-          accBindings = foldl
-            ( \acc (Tuple (Tuple (Ident ident) val) alloc) ->
-                let
-                  res = translateExprImpl helpersRef (depth + 1) modNameStr combinedRecVars namedBound allocRes.newBound (Just alloc.newName) [] false acc.nextId val
-                in
-                  { stmts: acc.stmts <> res.stmts, exprs: Array.snoc acc.exprs { key: alloc.newName, value: res.expr }, nextId: res.nextId }
-            )
-            { stmts: StmtEmpty, exprs: [], nextId: allocRes.nextId }
-            (Array.zip (toArray bindings) allocRes.newNames)
-
-          declStmts = map (\b -> GoRaw ("var " <> b.key <> " gopurs_runtime.Value")) accBindings.exprs
-          assignStmts = map (\b -> GoMutate b.key b.value) accBindings.exprs
-
-          resBody = translateExprImpl helpersRef (depth + 1) modNameStr combinedRecVars namedBound allocRes.newBound Nothing loopCtx isTail accBindings.nextId body
+          
+          isLoop = (unwrap tcoAnalysis).role.isLoop
+          mutRecBinds = if isLoop && Array.length (toArray bindings) == 1 then
+              traverse (\(Tuple (Ident name) val) -> map (\abs -> { ident: sanitizeName name, args: abs.args, body: abs.body, fvs: abs.fvs }) (extractUncurriedAbs val)) (toArray bindings)
+            else Nothing
         in
-          { stmts: foldMap StmtLeaf declStmts <> accBindings.stmts <> foldMap StmtLeaf assignStmts <> resBody.stmts, expr: resBody.expr, nextId: resBody.nextId }
+          case mutRecBinds of
+            Just fns ->
+              let
+                loopCtxs = map (\fn ->
+                    let
+                      oldName = localId (Just (Ident fn.ident)) lvl
+                      newName = fromMaybe oldName (Map.lookup oldName allocRes.newBound)
+                    in
+                      { ident: newName, params: fn.args, loopParams: map (\p -> p <> "_loop") fn.args }
+                  ) fns
+                
+                combinedLoopCtx = loopCtxs <> loopCtx
+                
+                declStmts = map (\ctx -> GoRaw ("var " <> ctx.ident <> " gopurs_runtime.Value")) loopCtxs
+                
+                Tuple fnWrapperStmts nextId' = foldl
+                  ( \(Tuple accStmts currNextId) fn ->
+                      let
+                        oldName = localId (Just (Ident fn.ident)) lvl
+                        newName = fromMaybe oldName (Map.lookup oldName allocRes.newBound)
+                        currentLoopCtx = [ { ident: newName, params: fn.args, loopParams: map (\p -> p <> "_loop") fn.args } ]
+                        resBodyMut = translateExprImpl helpersRef (depth + 1) modNameStr combinedRecVars namedBound allocRes.newBound Nothing currentLoopCtx true currNextId fn.body
+                        
+                        loopParams = map (\p -> p <> "_loop") fn.args
+                        initVars = Array.concatMap (\p -> [ GoRaw ("var " <> p <> " = " <> p <> "_loop"), GoRaw ("_ = " <> p) ]) fn.args
+                        
+                        funcBody = GoFor newName (initVars <> flattenStmts resBodyMut.stmts <> [ GoReturn resBodyMut.expr ])
+                        iife = GoRaw ("func() gopurs_runtime.Value {\n" <> printGoExpr funcBody <> "\n}()")
+                        funcExpr = Array.foldr (\p acc -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> p <> " gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr acc <> "\n}") ]) iife loopParams
+                      in
+                        Tuple (Array.snoc accStmts (GoMutate newName funcExpr)) resBodyMut.nextId
+                  )
+                  (Tuple [] allocRes.nextId)
+                  fns
+                
+                resBodyOuter = translateExprImpl helpersRef (depth + 1) modNameStr combinedRecVars namedBound allocRes.newBound Nothing loopCtx isTail nextId' body
+              in
+                { stmts: foldMap StmtLeaf declStmts <> foldMap StmtLeaf fnWrapperStmts <> resBodyOuter.stmts, expr: resBodyOuter.expr, nextId: resBodyOuter.nextId }
+            
+            Nothing ->
+              let
+                accBindings = foldl
+                  ( \acc (Tuple (Tuple (Ident ident) val) alloc) ->
+                      let
+                        res = translateExprImpl helpersRef (depth + 1) modNameStr combinedRecVars namedBound allocRes.newBound (Just alloc.newName) [] false acc.nextId val
+                      in
+                        { stmts: acc.stmts <> res.stmts, exprs: Array.snoc acc.exprs { key: alloc.newName, value: res.expr }, nextId: res.nextId }
+                  )
+                  { stmts: StmtEmpty, exprs: [], nextId: allocRes.nextId }
+                  (Array.zip (toArray bindings) allocRes.newNames)
+
+                declStmts = map (\b -> GoRaw ("var " <> b.key <> " gopurs_runtime.Value")) accBindings.exprs
+                assignStmts = map (\b -> GoMutate b.key b.value) accBindings.exprs
+
+                resBody = translateExprImpl helpersRef (depth + 1) modNameStr combinedRecVars namedBound allocRes.newBound Nothing loopCtx isTail accBindings.nextId body
+              in
+                { stmts: foldMap StmtLeaf declStmts <> accBindings.stmts <> foldMap StmtLeaf assignStmts <> resBody.stmts, expr: resBody.expr, nextId: resBody.nextId }
 
       Accessor obj accessor ->
         let
