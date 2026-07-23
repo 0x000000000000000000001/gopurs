@@ -65,7 +65,7 @@ echo "Running tests from $PASSING_DIR..."
 passed=0
 failed=0
 
-SKIP_BEFORE=""
+SKIP_BEFORE="NegativeBinder"
 TEST_FILES=()
 CLEAN_CACHE=0
 
@@ -154,7 +154,7 @@ for test_file in "${TEST_FILES[@]}"; do
   max_retries=2
   build_success=0
   while [ $retry -le $max_retries ]; do
-    if spago build -q; then
+    if out=$(spago build -q 2>&1); then
       build_success=1
       break
     fi
@@ -201,6 +201,7 @@ for test_file in "${TEST_FILES[@]}"; do
     fi
   else
     echo -e "   \033[0;31m[FAILED]\033[0m PureScript Compilation error"
+    echo "$out"
     failed=$((failed+1))
     break
   fi

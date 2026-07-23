@@ -36,13 +36,13 @@ import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..), tcoAnalysisOf)
 import Gopurs.FreeVars (freeVars, localId)
 
 capitalize :: String -> String
-capitalize "" = "X"
+capitalize "" = ""
 capitalize s =
   let
     firstChar = String.take 1 s
   in
     if firstChar >= "a" && firstChar <= "z" then String.toUpper firstChar <> String.drop 1 s
-    else if firstChar == "_" then "X_" <> capitalize (String.drop 1 s)
+    else if firstChar == "_" then "_" <> capitalize (String.drop 1 s)
     else s
 
 sanitizeName :: String -> String
@@ -202,7 +202,7 @@ translate importsArray mod =
       { packageName: modNameStr
       , imports: goImports
       , decls: allDeclsAst
-      , foreigns: map (\(Ident name) -> { pursName: sanitizeName name, goName: capitalize (sanitizeName name) }) (Array.fromFoldable mod.foreign)
+      , foreigns: map (\(Ident name) -> { pursName: sanitizeName name, goName: "_Gopurs_" <> capitalize (sanitizeName name) }) (Array.fromFoldable mod.foreign)
       }
   in
     printGoFile goFile
@@ -440,9 +440,19 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
           params = map (\(Tuple mbI lvl) -> localId mbI lvl) args
           goParams = String.joinWith ", " (map (\p -> p <> " gopurs_runtime.Value") params)
           resBody = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing loopCtx isTail false nextId body
-          funcExpr = GoRaw ("gopurs_runtime.Value{PtrVal: func(" <> goParams <> ") gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBody.stmts <> [ GoReturn resBody.expr ])) <> "\n}}")
-        in
-          { stmts: StmtEmpty, expr: funcExpr, nextId: resBody.nextId }
+          arity = Array.length args
+        in if arity >= 2 && arity <= 5 then
+          let
+            funcExpr = GoRaw ("gopurs_runtime.Func" <> show arity <> "(func(" <> goParams <> ") gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBody.stmts <> [ GoReturn resBody.expr ])) <> "\n})")
+          in { stmts: StmtEmpty, expr: funcExpr, nextId: resBody.nextId }
+        else
+          let
+            makeCurried [] = resBody.expr
+            makeCurried [p] = GoFunc p (GoBlock (flattenStmts resBody.stmts <> [ GoReturn resBody.expr ]))
+            makeCurried ps = case Array.uncons ps of
+              Just { head: p, tail: rest } -> GoFunc p (makeCurried rest)
+              Nothing -> resBody.expr
+          in { stmts: StmtEmpty, expr: makeCurried params, nextId: resBody.nextId }
 
       UncurriedEffectApp fn args ->
         let
@@ -468,9 +478,19 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
           params = map (\(Tuple mbI lvl) -> localId mbI lvl) args
           goParams = String.joinWith ", " (map (\p -> p <> " gopurs_runtime.Value") params)
           resBody = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing loopCtx isTail false nextId body
-          funcExpr = GoRaw ("gopurs_runtime.Value{PtrVal: func(" <> goParams <> ") gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBody.stmts <> [ GoReturn resBody.expr ])) <> "\n}}")
-        in
-          { stmts: StmtEmpty, expr: funcExpr, nextId: resBody.nextId }
+          arity = Array.length args
+        in if arity >= 2 && arity <= 5 then
+          let
+            funcExpr = GoRaw ("gopurs_runtime.Func" <> show arity <> "(func(" <> goParams <> ") gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBody.stmts <> [ GoReturn resBody.expr ])) <> "\n})")
+          in { stmts: StmtEmpty, expr: funcExpr, nextId: resBody.nextId }
+        else
+          let
+            makeCurried [] = resBody.expr
+            makeCurried [p] = GoFunc p (GoBlock (flattenStmts resBody.stmts <> [ GoReturn resBody.expr ]))
+            makeCurried ps = case Array.uncons ps of
+              Just { head: p, tail: rest } -> GoFunc p (makeCurried rest)
+              Nothing -> resBody.expr
+          in { stmts: StmtEmpty, expr: makeCurried params, nextId: resBody.nextId }
 
       EffectBind mbIdent lvl binding body ->
         let

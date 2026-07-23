@@ -1,5 +1,6 @@
 module Gopurs.FfiSupport
   ( findFfiFile
+  , appendFfiWrappers
   ) where
 
 import Prelude
@@ -18,3 +19,8 @@ findFfiFile :: Maybe String -> String -> Maybe String -> Effect (Maybe String)
 findFfiFile mbFfiDir modName mbModulePath = do
   path <- findFfiFileImpl (toNullable mbFfiDir) modName (toNullable mbModulePath)
   pure (toMaybe path)
+
+foreign import appendFfiWrappersImpl :: String -> String -> String
+
+appendFfiWrappers :: String -> String -> String
+appendFfiWrappers = appendFfiWrappersImpl
