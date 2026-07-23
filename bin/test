@@ -25,7 +25,9 @@ BLACKLIST=(
   "2136.purs"
 )
 
-for pkg in assert prelude effect console arrays partial foldable-traversable st exceptions integers strings enums foreign-object numbers refs unsafe-coerce functions unfoldable record; do
+source "$(dirname "$0")/pkg"
+
+for pkg in "${CORE_PACKAGES[@]}"; do
   if [ ! -d "$ROOT_DIR/../gopurs-$pkg" ]; then
     echo -e "\033[0;31m[ERROR]\033[0m Missing sibling checkout: gopurs-$pkg"
     echo "Please run ./bin/setup to clone all required repositories automatically."
@@ -42,70 +44,20 @@ npm run build --silent || { echo -e "\n\033[0;31m[FAILED]\033[0m gopurs build fa
 cd "$RUNNER_DIR"
 
 if [ ! -f spago.yaml ]; then
-  cat << 'YAML' > spago.yaml
-package:
-  dependencies:
-    - prelude
-    - effect
-    - console
-    - arrays
-    - partial
-    - foldable-traversable
-    - st
-    - exceptions
-    - integers
-    - strings
-    - enums
-    - foreign-object
-    - numbers
-    - refs
-    - unsafe-coerce
-    - functions
-    -
-    - record
-    - assert
-  name: runner
-workspace:
-  extraPackages:
-    prelude:
-      path: "../../../gopurs-prelude"
-    effect:
-      path: "../../../gopurs-effect"
-    console:
-      path: "../../../gopurs-console"
-    arrays:
-      path: "../../../gopurs-arrays"
-    partial:
-      path: "../../../gopurs-partial"
-    foldable-traversable:
-      path: "../../../gopurs-foldable-traversable"
-    exceptions:
-      path: "../../../gopurs-exceptions"
-    integers:
-      path: "../../../gopurs-integers"
-    enums:
-      path: "../../../gopurs-enums"
-    foreign-object:
-      path: "../../../gopurs-foreign-object"
-    strings:
-      path: "../../../gopurs-strings"
-    numbers:
-      path: "../../../gopurs-numbers"
-    refs:
-      path: "../../../gopurs-refs"
-    functions:
-      path: "../../../gopurs-functions"
-    record:
-      path: "../../../gopurs-record"
-    st:
-      path: "../../../gopurs-st"
-    unsafe-coerce:
-      path: "../../../gopurs-unsafe-coerce"
-    assert:
-      path: "../../../gopurs-assert"
-  packageSet:
-    registry: 77.10.1
-YAML
+  echo "package:" > spago.yaml
+  echo "  name: runner" >> spago.yaml
+  echo "  dependencies:" >> spago.yaml
+  for pkg in "${CORE_PACKAGES[@]}"; do
+    echo "    - $pkg" >> spago.yaml
+  done
+  echo "workspace:" >> spago.yaml
+  echo "  packageSet:" >> spago.yaml
+  echo "    registry: 77.10.1" >> spago.yaml
+  echo "  extraPackages:" >> spago.yaml
+  for pkg in "${CORE_PACKAGES[@]}"; do
+    echo "    $pkg:" >> spago.yaml
+    echo "      path: \"../../../gopurs-$pkg\"" >> spago.yaml
+  done
 fi
 
 echo "Running tests from $PASSING_DIR..."

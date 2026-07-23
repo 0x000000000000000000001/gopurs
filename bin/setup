@@ -6,15 +6,11 @@
 ROOT_DIR=$(cd "$(dirname "$0")/.." && pwd)
 SIBLING_DIR="$ROOT_DIR/.."
 
-PACKAGES=(
-  assert prelude effect console arrays partial foldable-traversable st
-  exceptions integers strings enums foreign-object numbers refs
-  unsafe-coerce functions unfoldable record
-)
+source "$(dirname "$0")/pkg"
 
 echo "=> Cloning gopurs-* sibling repositories into $SIBLING_DIR..."
 
-for pkg in "${PACKAGES[@]}"; do
+for pkg in "${CORE_PACKAGES[@]}"; do
   target="$SIBLING_DIR/gopurs-$pkg"
   if [ -d "$target" ]; then
     echo "[SKIP] gopurs-$pkg already exists."
