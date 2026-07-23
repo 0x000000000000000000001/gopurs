@@ -4,18 +4,30 @@ runtimeGoCode :: String
 runtimeGoCode = """
 package gopurs_runtime
 
-import "math"
+import (
+	"math"
+	"unsafe"
+)
 
 const (
-	TypeInt = 1
-	TypeString = 2
-	TypeRecord = 3
-	TypeFunc = 4
-	TypeFunc2 = 10
-	TypeFunc3 = 11
-	TypeFunc4 = 12
-	TypeFunc5 = 13
-	TypeConstructor = 5
+	TypeFunc = 1
+	TypeFunc2 = 2
+	TypeFunc3 = 3
+	TypeFunc4 = 4
+	TypeFunc5 = 5
+	TypeInt = 6
+	TypeString = 7
+	TypeRecord = 8
+	TypeConstructor = 9
+	TypeFloat = 10
+	TypeBool = 11
+	TypeArray = 12
+	TypeAny = 13
+	TypeFunc6 = 14
+	TypeFunc7 = 15
+	TypeFunc8 = 16
+	TypeFunc9 = 17
+	TypeFunc10 = 18
 )
 
 // We do not add FloatVal or BoolVal fields to keep the struct size minimal.
@@ -26,6 +38,7 @@ type Value struct {
 	IntVal int64
 	StrVal string
 	PtrVal any
+	Func   unsafe.Pointer
 }
 
 func Str(v string) Value {
@@ -37,7 +50,7 @@ func Int(v int64) Value {
 }
 
 func Float(v float64) Value {
-	return Value{Type: 7, IntVal: int64(math.Float64bits(v))}
+	return Value{Type: TypeFloat, IntVal: int64(math.Float64bits(v))}
 }
 
 func Bool(v bool) Value {
@@ -45,7 +58,7 @@ func Bool(v bool) Value {
 	if v {
 		i = 1
 	}
-	return Value{Type: 6, IntVal: i}
+	return Value{Type: TypeBool, IntVal: i}
 }
 
 func FloatAdd(a, b Value) Value { return Float(math.Float64frombits(uint64(a.IntVal)) + math.Float64frombits(uint64(b.IntVal))) }
@@ -86,7 +99,7 @@ func BitXor(a Value, b Value) Value {
 }
 
 func Array(v []Value) Value {
-	return Value{Type: 8, PtrVal: v}
+	return Value{Type: TypeArray, PtrVal: v}
 }
 
 type RecordData struct {
@@ -201,15 +214,19 @@ func Cons(tag string, args []Value) Value {
 
 // Function with 1 arg (curried)
 func Func(f func(Value) Value) Value {
-	return Value{Type: TypeFunc, PtrVal: f}
+	return Value{Type: TypeFunc, Func: *(*unsafe.Pointer)(unsafe.Pointer(&f))}
 }
 
-
 // Function constructors
-func Func2(f func(Value, Value) Value) Value { return Value{Type: TypeFunc2, PtrVal: f} }
-func Func3(f func(Value, Value, Value) Value) Value { return Value{Type: TypeFunc3, PtrVal: f} }
-func Func4(f func(Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc4, PtrVal: f} }
-func Func5(f func(Value, Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc5, PtrVal: f} }
+func Func2(f func(Value, Value) Value) Value { return Value{Type: TypeFunc2, Func: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
+func Func3(f func(Value, Value, Value) Value) Value { return Value{Type: TypeFunc3, Func: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
+func Func4(f func(Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc4, Func: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
+func Func5(f func(Value, Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc5, Func: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
+func Func6(f func(Value, Value, Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc6, Func: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
+func Func7(f func(Value, Value, Value, Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc7, Func: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
+func Func8(f func(Value, Value, Value, Value, Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc8, Func: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
+func Func9(f func(Value, Value, Value, Value, Value, Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc9, Func: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
+func Func10(f func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc10, Func: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
 
 func FuncAny(f any) Value {
 	return Value{Type: TypeFunc, PtrVal: f}
@@ -219,18 +236,18 @@ func FuncAny(f any) Value {
 func Apply(f Value, arg Value) Value {
 	switch f.Type {
 	case TypeFunc:
-		return f.PtrVal.(func(Value) Value)(arg)
+		return (*(*func(Value) Value)(unsafe.Pointer(&f.Func)))(arg)
 	case TypeFunc2:
-		fn := f.PtrVal.(func(Value, Value) Value)
+		fn := *(*func(Value, Value) Value)(unsafe.Pointer(&f.Func))
 		return Func(func(a Value) Value { return fn(arg, a) })
 	case TypeFunc3:
-		fn := f.PtrVal.(func(Value, Value, Value) Value)
+		fn := *(*func(Value, Value, Value) Value)(unsafe.Pointer(&f.Func))
 		return Func2(func(a, b Value) Value { return fn(arg, a, b) })
 	case TypeFunc4:
-		fn := f.PtrVal.(func(Value, Value, Value, Value) Value)
+		fn := *(*func(Value, Value, Value, Value) Value)(unsafe.Pointer(&f.Func))
 		return Func3(func(a, b, c Value) Value { return fn(arg, a, b, c) })
 	case TypeFunc5:
-		fn := f.PtrVal.(func(Value, Value, Value, Value, Value) Value)
+		fn := *(*func(Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.Func))
 		return Func4(func(a, b, c, d Value) Value { return fn(arg, a, b, c, d) })
 	default:
 		panic("Attempted to apply a non-function")
@@ -238,29 +255,50 @@ func Apply(f Value, arg Value) Value {
 }
 
 func Apply2(f Value, arg1, arg2 Value) Value {
-	if f.Type == TypeFunc2 {
-		return f.PtrVal.(func(Value, Value) Value)(arg1, arg2)
+	switch f.Type {
+	case TypeFunc2:
+		return (*(*func(Value, Value) Value)(unsafe.Pointer(&f.Func)))(arg1, arg2)
+	case TypeFunc3:
+		fn := *(*func(Value, Value, Value) Value)(unsafe.Pointer(&f.Func))
+		return Func(func(a Value) Value { return fn(arg1, arg2, a) })
+	case TypeFunc4:
+		fn := *(*func(Value, Value, Value, Value) Value)(unsafe.Pointer(&f.Func))
+		return Func2(func(a, b Value) Value { return fn(arg1, arg2, a, b) })
+	case TypeFunc5:
+		fn := *(*func(Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.Func))
+		return Func3(func(a, b, c Value) Value { return fn(arg1, arg2, a, b, c) })
 	}
 	return Apply(Apply(f, arg1), arg2)
 }
 
 func Apply3(f Value, arg1, arg2, arg3 Value) Value {
-	if f.Type == TypeFunc3 {
-		return f.PtrVal.(func(Value, Value, Value) Value)(arg1, arg2, arg3)
+	switch f.Type {
+	case TypeFunc3:
+		return (*(*func(Value, Value, Value) Value)(unsafe.Pointer(&f.Func)))(arg1, arg2, arg3)
+	case TypeFunc4:
+		fn := *(*func(Value, Value, Value, Value) Value)(unsafe.Pointer(&f.Func))
+		return Func(func(a Value) Value { return fn(arg1, arg2, arg3, a) })
+	case TypeFunc5:
+		fn := *(*func(Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.Func))
+		return Func2(func(a, b Value) Value { return fn(arg1, arg2, arg3, a, b) })
 	}
 	return Apply(Apply2(f, arg1, arg2), arg3)
 }
 
 func Apply4(f Value, arg1, arg2, arg3, arg4 Value) Value {
-	if f.Type == TypeFunc4 {
-		return f.PtrVal.(func(Value, Value, Value, Value) Value)(arg1, arg2, arg3, arg4)
+	switch f.Type {
+	case TypeFunc4:
+		return (*(*func(Value, Value, Value, Value) Value)(unsafe.Pointer(&f.Func)))(arg1, arg2, arg3, arg4)
+	case TypeFunc5:
+		fn := *(*func(Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.Func))
+		return Func(func(a Value) Value { return fn(arg1, arg2, arg3, arg4, a) })
 	}
 	return Apply(Apply3(f, arg1, arg2, arg3), arg4)
 }
 
 func Apply5(f Value, arg1, arg2, arg3, arg4, arg5 Value) Value {
 	if f.Type == TypeFunc5 {
-		return f.PtrVal.(func(Value, Value, Value, Value, Value) Value)(arg1, arg2, arg3, arg4, arg5)
+		return (*(*func(Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.Func)))(arg1, arg2, arg3, arg4, arg5)
 	}
 	return Apply(Apply4(f, arg1, arg2, arg3, arg4), arg5)
 }
@@ -271,33 +309,33 @@ func ArrayAccess(arr Value, index int) Value {
 }
 
 func Any(v any) Value {
-	return Value{Type: 9, PtrVal: v}
+	return Value{Type: TypeAny, PtrVal: v}
 }
 
 func UncurriedApp2(fn Value, a, b Value) Value {
-	if f, ok := fn.PtrVal.(func(Value, Value) Value); ok {
-		return f(a, b)
+	if fn.Type == TypeFunc2 {
+		return (*(*func(Value, Value) Value)(unsafe.Pointer(&fn.Func)))(a, b)
 	}
 	return Apply(Apply(fn, a), b)
 }
 
 func UncurriedApp3(fn Value, a, b, c Value) Value {
-	if f, ok := fn.PtrVal.(func(Value, Value, Value) Value); ok {
-		return f(a, b, c)
+	if fn.Type == TypeFunc3 {
+		return (*(*func(Value, Value, Value) Value)(unsafe.Pointer(&fn.Func)))(a, b, c)
 	}
 	return Apply(Apply(Apply(fn, a), b), c)
 }
 
 func UncurriedApp4(fn Value, a, b, c, d Value) Value {
-	if f, ok := fn.PtrVal.(func(Value, Value, Value, Value) Value); ok {
-		return f(a, b, c, d)
+	if fn.Type == TypeFunc4 {
+		return (*(*func(Value, Value, Value, Value) Value)(unsafe.Pointer(&fn.Func)))(a, b, c, d)
 	}
 	return Apply(Apply(Apply(Apply(fn, a), b), c), d)
 }
 
 func UncurriedApp5(fn Value, a, b, c, d, e Value) Value {
-	if f, ok := fn.PtrVal.(func(Value, Value, Value, Value, Value) Value); ok {
-		return f(a, b, c, d, e)
+	if fn.Type == TypeFunc5 {
+		return (*(*func(Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&fn.Func)))(a, b, c, d, e)
 	}
 	return Apply(Apply(Apply(Apply(Apply(fn, a), b), c), d), e)
 }
@@ -308,5 +346,84 @@ func UncurriedApp(fn Value, args ...Value) Value {
 		res = Apply(res, arg)
 	}
 	return res
+}
+
+func Unbox[T any](v Value) T {
+	var t any = *new(T)
+	switch t.(type) {
+	case int64: return any(v.IntVal).(T)
+	case int: return any(int(v.IntVal)).(T)
+	case string: return any(v.StrVal).(T)
+	case float64: return any(math.Float64frombits(uint64(v.IntVal))).(T)
+	case bool: return any(v.IntVal == 1).(T)
+	case Value: return any(v).(T)
+	default: return v.PtrVal.(T)
+	}
+}
+
+func Box[T any](val T) Value {
+	switch v := any(val).(type) {
+	case int64: return Int(v)
+	case int: return Int(int64(v))
+	case string: return Str(v)
+	case float64: return Value{Type: TypeFloat, IntVal: int64(math.Float64bits(v))}
+	case bool: 
+		if v { return Value{Type: TypeBool, IntVal: 1} }
+		return Value{Type: TypeBool, IntVal: 0}
+	case func():
+		return Func(func(_ Value) Value { v(); return Value{} })
+	case func() bool:
+		return Func(func(_ Value) Value { if v() { return Value{Type: TypeBool, IntVal: 1} }; return Value{Type: TypeBool, IntVal: 0} })
+	case func() int:
+		return Func(func(_ Value) Value { return Int(int64(v())) })
+	case func() int64:
+		return Func(func(_ Value) Value { return Int(v()) })
+	case func() string:
+		return Func(func(_ Value) Value { return Str(v()) })
+	case func() float64:
+		return Func(func(_ Value) Value { return Value{Type: TypeFloat, IntVal: int64(math.Float64bits(v()))} })
+	case func() Value:
+		return Func(func(_ Value) Value { return v() })
+	case func(Value) Value:
+		return Func(v)
+	case Value: return v
+	default: return Any(v)
+	}
+}
+
+func Wrap0[R any](f func() R) Value {
+	return Func(func(_ Value) Value {
+		return Box(f())
+	})
+}
+
+func Wrap1[A, R any](f func(A) R) Value {
+	return Func(func(a Value) Value {
+		return Box(f(Unbox[A](a)))
+	})
+}
+
+func Wrap2[A, B, R any](f func(A, B) R) Value {
+	return Func2(func(a, b Value) Value {
+		return Box(f(Unbox[A](a), Unbox[B](b)))
+	})
+}
+
+func Wrap3[A, B, C, R any](f func(A, B, C) R) Value {
+	return Func3(func(a, b, c Value) Value {
+		return Box(f(Unbox[A](a), Unbox[B](b), Unbox[C](c)))
+	})
+}
+
+func Wrap4[A, B, C, D, R any](f func(A, B, C, D) R) Value {
+	return Func4(func(a, b, c, d Value) Value {
+		return Box(f(Unbox[A](a), Unbox[B](b), Unbox[C](c), Unbox[D](d)))
+	})
+}
+
+func Wrap5[A, B, C, D, E, R any](f func(A, B, C, D, E) R) Value {
+	return Func5(func(a, b, c, d, e Value) Value {
+		return Box(f(Unbox[A](a), Unbox[B](b), Unbox[C](c), Unbox[D](d), Unbox[E](e)))
+	})
 }
 """

@@ -30,7 +30,7 @@ import PureScript.Backend.Optimizer.Semantics.Foreign (coreForeignSemantics)
 import PureScript.Backend.Optimizer.CoreFn (Module(..), Ann, importName)
 import Gopurs.CodeGen (translate)
 import Gopurs.Runtime (runtimeGoCode)
-import Gopurs.FfiSupport (findFfiFile)
+import Gopurs.FfiSupport (findFfiFile, appendFfiWrappers)
 
 readCoreFnModule :: String -> Aff (Maybe (Module Ann))
 readCoreFnModule filePath = do
@@ -82,7 +82,8 @@ main = launchAff_ do
           case ffiPathMb of
             Just ffiPath -> do
               content <- FS.readTextFile UTF8 ffiPath
-              FS.writeTextFile UTF8 ("output/" <> modNameStr <> "/" <> String.replaceAll (Pattern ".") (Replacement "_") modNameStr <> "_ffi.go") content
+              let newContent = appendFfiWrappers modNameStr content
+              FS.writeTextFile UTF8 ("output/" <> modNameStr <> "/" <> String.replaceAll (Pattern ".") (Replacement "_") modNameStr <> "_ffi.go") newContent
             Nothing -> pure unit
     }
     finalModules
