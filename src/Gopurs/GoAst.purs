@@ -13,7 +13,8 @@ data GoExpr
   | GoBlock (Array GoExpr)
   | GoReturn GoExpr
   | GoAssign String GoExpr
-  | GoMap (Array (Tuple String GoExpr))
+  | GoRecordDict (Array (Tuple String GoExpr))
+  | GoRecordUpdateDict GoExpr (Array (Tuple String GoExpr))
   | GoIIFE String GoExpr GoExpr
   | GoLetRec (Array (Tuple String GoExpr)) GoExpr
   | GoRecordAccess GoExpr String

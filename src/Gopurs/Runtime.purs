@@ -89,21 +89,111 @@ func Array(v []Value) Value {
 	return Value{Type: 8, PtrVal: v}
 }
 
+type RecordData struct {
+	Keys []string
+	Vals []Value
+}
+
+func RecordDict(keys []string, vals []Value) Value {
+	return Value{Type: TypeRecord, PtrVal: RecordData{keys, vals}}
+}
+
+type RecordData0 struct{}
+func RecordDict0() Value { return Value{Type: TypeRecord, PtrVal: &RecordData0{}} }
+
+type RecordData1 struct { K0 string; V0 Value }
+func RecordDict1(k0 string, v0 Value) Value { return Value{Type: TypeRecord, PtrVal: &RecordData1{k0, v0}} }
+
+type RecordData2 struct { K0, K1 string; V0, V1 Value }
+func RecordDict2(k0, k1 string, v0, v1 Value) Value { return Value{Type: TypeRecord, PtrVal: &RecordData2{k0, k1, v0, v1}} }
+
+type RecordData3 struct { K0, K1, K2 string; V0, V1, V2 Value }
+func RecordDict3(k0, k1, k2 string, v0, v1, v2 Value) Value { return Value{Type: TypeRecord, PtrVal: &RecordData3{k0, k1, k2, v0, v1, v2}} }
+
+type RecordData4 struct { K0, K1, K2, K3 string; V0, V1, V2, V3 Value }
+func RecordDict4(k0, k1, k2, k3 string, v0, v1, v2, v3 Value) Value { return Value{Type: TypeRecord, PtrVal: &RecordData4{k0, k1, k2, k3, v0, v1, v2, v3}} }
+
+type RecordData5 struct { K0, K1, K2, K3, K4 string; V0, V1, V2, V3, V4 Value }
+func RecordDict5(k0, k1, k2, k3, k4 string, v0, v1, v2, v3, v4 Value) Value { return Value{Type: TypeRecord, PtrVal: &RecordData5{k0, k1, k2, k3, k4, v0, v1, v2, v3, v4}} }
+
+func RecordToMap(obj Value) map[string]Value {
+	if m, ok := obj.PtrVal.(map[string]Value); ok {
+		res := make(map[string]Value, len(m))
+		for k, v := range m { res[k] = v }
+		return res
+	}
+	res := make(map[string]Value)
+	switch r := obj.PtrVal.(type) {
+	case *RecordData0:
+	case *RecordData1: res[r.K0] = r.V0
+	case *RecordData2: res[r.K0] = r.V0; res[r.K1] = r.V1
+	case *RecordData3: res[r.K0] = r.V0; res[r.K1] = r.V1; res[r.K2] = r.V2
+	case *RecordData4: res[r.K0] = r.V0; res[r.K1] = r.V1; res[r.K2] = r.V2; res[r.K3] = r.V3
+	case *RecordData5: res[r.K0] = r.V0; res[r.K1] = r.V1; res[r.K2] = r.V2; res[r.K3] = r.V3; res[r.K4] = r.V4
+	case RecordData:
+		for i, k := range r.Keys { res[k] = r.Vals[i] }
+	}
+	return res
+}
+
 func Record(m map[string]Value) Value {
-	return Value{Type: TypeRecord, PtrVal: m}
+	keys := make([]string, 0, len(m))
+	vals := make([]Value, 0, len(m))
+	for k, v := range m {
+		keys = append(keys, k)
+		vals = append(vals, v)
+	}
+	return RecordDict(keys, vals)
+}
+
+func RecordGet(obj Value, key string) Value {
+    if obj.PtrVal == nil {
+        _ = obj.PtrVal.(RecordData) // trigger interface conversion panic for backwards compatibility
+    }
+    if m, ok := obj.PtrVal.(map[string]Value); ok {
+        return m[key]
+    }
+	switch r := obj.PtrVal.(type) {
+	case *RecordData1:
+		if r.K0 == key { return r.V0 }
+	case *RecordData2:
+		if r.K0 == key { return r.V0 }
+		if r.K1 == key { return r.V1 }
+	case *RecordData3:
+		if r.K0 == key { return r.V0 }
+		if r.K1 == key { return r.V1 }
+		if r.K2 == key { return r.V2 }
+	case *RecordData4:
+		if r.K0 == key { return r.V0 }
+		if r.K1 == key { return r.V1 }
+		if r.K2 == key { return r.V2 }
+		if r.K3 == key { return r.V3 }
+	case *RecordData5:
+		if r.K0 == key { return r.V0 }
+		if r.K1 == key { return r.V1 }
+		if r.K2 == key { return r.V2 }
+		if r.K3 == key { return r.V3 }
+		if r.K4 == key { return r.V4 }
+	case RecordData:
+		for i, k := range r.Keys {
+			if k == key { return r.Vals[i] }
+		}
+	}
+	panic("Key not found in record: " + key)
+}
+
+func RecordUpdateDict(orig Value, keys []string, vals []Value) Value {
+	m := RecordToMap(orig)
+	for i, k := range keys { m[k] = vals[i] }
+	return Record(m)
 }
 
 func RecordUpdate(orig Value, updates map[string]Value) Value {
-	origMap := orig.PtrVal.(map[string]Value)
-	newMap := make(map[string]Value, len(origMap)+len(updates))
-	for k, v := range origMap {
-		newMap[k] = v
-	}
-	for k, v := range updates {
-		newMap[k] = v
-	}
-	return Record(newMap)
+	m := RecordToMap(orig)
+	for k, v := range updates { m[k] = v }
+	return Value{Type: TypeRecord, PtrVal: m}
 }
+
 
 func Cons(tag string, args []Value) Value {
 	return Value{Type: TypeConstructor, StrVal: tag, PtrVal: args}

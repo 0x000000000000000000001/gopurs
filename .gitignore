@@ -10,3 +10,4 @@ purs_files.txt
 .gopurs-cache.json
 tests/runner/src/
 tests/runner/spago.yaml
+bin/gopurs.js

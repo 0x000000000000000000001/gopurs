@@ -319,7 +319,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
             { stmts: StmtEmpty, exprs: [], nextId }
             props
         in
-          { stmts: accProps.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Record") [ GoMap accProps.exprs ], nextId: accProps.nextId }
+          { stmts: accProps.stmts, expr: GoRecordDict accProps.exprs, nextId: accProps.nextId }
 
       App fn args ->
         let
@@ -604,11 +604,11 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
             { stmts: StmtEmpty, exprs: [], nextId: resObj.nextId }
             props
         in
-          { stmts: resObj.stmts <> accProps.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "RecordUpdate") [ resObj.expr, GoMap accProps.exprs ], nextId: accProps.nextId }
+          { stmts: resObj.stmts <> accProps.stmts, expr: GoRecordUpdateDict resObj.expr accProps.exprs, nextId: accProps.nextId }
 
       CtorDef _ _ (Ident name) fields ->
         let
-          recordMap = GoCall (GoSelector (GoVar "gopurs_runtime") "Record") [ GoMap (Array.cons (Tuple "_tag" (GoCall (GoSelector (GoVar "gopurs_runtime") "Str") [ GoString name ])) (map (\f -> Tuple f (GoVar (sanitizeName f))) fields)) ]
+          recordMap = GoRecordDict (Array.cons (Tuple "_tag" (GoCall (GoSelector (GoVar "gopurs_runtime") "Str") [ GoString name ])) (map (\f -> Tuple f (GoVar (sanitizeName f))) fields))
           funcExpr = Array.foldr (\f inner -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> sanitizeName f <> " gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr inner <> "\n}") ]) recordMap fields
         in
           { stmts: StmtEmpty, expr: funcExpr, nextId }
@@ -625,7 +625,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
             { stmts: StmtEmpty, exprs: [], nextId }
             props
         in
-          { stmts: accProps.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Record") [ GoMap (Array.cons (Tuple "_tag" (GoCall (GoSelector (GoVar "gopurs_runtime") "Str") [ GoString name ])) accProps.exprs) ], nextId: accProps.nextId }
+          { stmts: accProps.stmts, expr: GoRecordDict (Array.cons (Tuple "_tag" (GoCall (GoSelector (GoVar "gopurs_runtime") "Str") [ GoString name ])) accProps.exprs), nextId: accProps.nextId }
 
       Fail msg ->
         { stmts: StmtEmpty, expr: GoRaw ("func() gopurs_runtime.Value { panic(" <> printGoExpr (GoString msg) <> ") }()"), nextId }
