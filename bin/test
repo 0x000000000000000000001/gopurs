@@ -25,7 +25,7 @@ BLACKLIST=(
   "2136.purs"
 )
 
-for pkg in assert prelude effect console arrays partial foldable-traversable st exceptions integers strings enums foreign-object numbers refs unsafe-coerce functions unfoldable record; do
+for pkg in assert prelude effect console arrays partial foldable-traversable st exceptions integers strings enums foreign-object numbers refs unsafe-coerce functions record; do
   if [ ! -d "$ROOT_DIR/../gopurs-$pkg" ]; then
     echo -e "\033[0;31m[ERROR]\033[0m Missing sibling checkout: gopurs-$pkg"
     echo "Please clone all core gopurs-* repositories as siblings of the gopurs directory before running tests."
@@ -61,7 +61,7 @@ package:
     - refs
     - unsafe-coerce
     - functions
-    - unfoldable
+    -
     - record
     - assert
   name: runner
