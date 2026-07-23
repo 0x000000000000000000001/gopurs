@@ -109,9 +109,14 @@ workspace/
 └── ... (all other core gopurs-* forks)
 ```
 
-To run the test suite:
+To easily clone all these required dependencies, you can simply run the provided setup script:
 ```bash
 cd gopurs
+./bin/setup-siblings
+```
+
+To run the test suite:
+```bash
 ./bin/test
 ```
 
