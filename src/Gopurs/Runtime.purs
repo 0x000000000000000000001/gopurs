@@ -357,6 +357,9 @@ func Unbox[T any](v Value) T {
 	case float64: return any(math.Float64frombits(uint64(v.IntVal))).(T)
 	case bool: return any(v.IntVal == 1).(T)
 	case Value: return any(v).(T)
+	case func(any) any:
+		res := func(arg any) any { return Apply(v, Box(arg)) }
+		return any(res).(T)
 	default: return v.PtrVal.(T)
 	}
 }
@@ -386,6 +389,24 @@ func Box[T any](val T) Value {
 		return Func(func(_ Value) Value { return v() })
 	case func(Value) Value:
 		return Func(v)
+	case func(any) func(any) func(any) any:
+		return Func(func(arg Value) Value { return Box(v(arg)) })
+	case func(any) func(any) any:
+		return Func(func(arg Value) Value { return Box(v(arg)) })
+	case func(any) any:
+		return Func(func(arg Value) Value { return Box(v(arg)) })
+	case []any:
+		arr := make([]Value, len(v))
+		for i, val := range v { arr[i] = Box(val) }
+		return Array(arr)
+	case []Value:
+		return Array(v)
+	case map[string]any:
+		m := make(map[string]Value)
+		for k, val := range v { m[k] = Box(val) }
+		return Record(m)
+	case map[string]Value:
+		return Record(v)
 	case Value: return v
 	default: return Any(v)
 	}

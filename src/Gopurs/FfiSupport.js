@@ -188,67 +188,174 @@ export const appendFfiWrappersImpl = function(moduleName) {
                 newLines.push(`var ${exportName} = gopurs_runtime.${funcConstructor}(func(${goFuncArgs}) gopurs_runtime.Value {`);
                 
                 let callArgs = [];
+                let parseFuncType = function(t) {
+                    let match = t.match(/^func\s*\((.*)/);
+                    if (!match) return null;
+                    let rest = match[1];
+                    let parens = 1;
+                    let i = 0;
+                    while (i < rest.length && parens > 0) {
+                        if (rest[i] === '(') parens++;
+                        else if (rest[i] === ')') parens--;
+                        i++;
+                    }
+                    let argsStr = rest.substring(0, i - 1);
+                    let retStr = rest.substring(i).trim();
+                    
+                    let args = [];
+                    let currentArg = "";
+                    parens = 0;
+                    let brackets = 0;
+                    for (let j = 0; j < argsStr.length; j++) {
+                        let c = argsStr[j];
+                        if (c === '(') parens++;
+                        else if (c === ')') parens--;
+                        else if (c === '[') brackets++;
+                        else if (c === ']') brackets--;
+                        else if (c === ',' && parens === 0 && brackets === 0) {
+                            if (currentArg.trim() !== "") args.push(currentArg.trim());
+                            currentArg = "";
+                            continue;
+                        }
+                        currentArg += c;
+                    }
+                    if (currentArg.trim() !== "") args.push(currentArg.trim());
+                    
+                    return { args: args, retStr: retStr };
+                };
+
+                let unwrapValueToFunc = function(t, valName, depth) {
+                    let parsed = parseFuncType(t);
+                    if (!parsed) return `gopurs_runtime.Unbox[${t}](${valName})`;
+                    
+                    let args = parsed.args;
+                    let retStr = parsed.retStr;
+                    
+                    let params = args.map((_, cidx) => `p${depth}_${cidx} ${args[cidx]}`).join(', ');
+                    let applyArgs = args.map((atype, cidx) => {
+                        if (atype === "gopurs_runtime.Value") return `p${depth}_${cidx}`;
+                        if (atype.startsWith("func")) return wrapReturn(atype, `p${depth}_${cidx}`).replace(/\n/g, "\n\t\t");
+                        return `gopurs_runtime.Box(p${depth}_${cidx})`;
+                    }).join(', ');
+                    
+                    let applyCall = '';
+                    if (args.length === 1) applyCall = `gopurs_runtime.Apply(${valName}, ${applyArgs})`;
+                    else if (args.length > 1) applyCall = `gopurs_runtime.Apply${args.length}(${valName}, ${applyArgs})`;
+                    else applyCall = `gopurs_runtime.Apply(${valName}, gopurs_runtime.Value{})`;
+
+                    if (retStr === "") {
+                        return `func(${params}) {\n\t\t${applyCall}\n\t}`;
+                    } else if (retStr.startsWith("[]") && retStr !== "[]gopurs_runtime.Value") {
+                        let elemType = retStr.substring(2);
+                        return `func(${params}) ${retStr} {\n\t\tinner_res${depth} := ${applyCall}\n\t\tres_arr${depth} := inner_res${depth}.PtrVal.([]gopurs_runtime.Value)\n\t\tres_go${depth} := make(${retStr}, len(res_arr${depth}))\n\t\tfor i, v := range res_arr${depth} { res_go${depth}[i] = gopurs_runtime.Unbox[${elemType}](v) }\n\t\treturn res_go${depth}\n\t}`;
+                    } else if (retStr === "any" || retStr === "interface{}") {
+                        return `func(${params}) ${retStr} {\n\t\treturn ${applyCall}\n\t}`;
+                    } else if (retStr === "gopurs_runtime.Value") {
+                        return `func(${params}) ${retStr} {\n\t\treturn ${applyCall}\n\t}`;
+                    } else if (retStr.startsWith("func")) {
+                        let innerUnwrap = unwrapValueToFunc(retStr, `inner_res${depth}`, depth+1);
+                        return `func(${params}) ${retStr} {\n\t\tinner_res${depth} := ${applyCall}\n\t\treturn ${innerUnwrap}\n\t}`;
+                    } else {
+                        return `func(${params}) ${retStr} {\n\t\tinner_res${depth} := ${applyCall}\n\t\treturn gopurs_runtime.Unbox[${retStr}](inner_res${depth})\n\t}`;
+                    }
+                };
+
+                let wrapReturn = function(t, valName) {
+                    if (t.startsWith("func")) {
+                        let parsed = parseFuncType(t);
+                        if (parsed) {
+                            let innerT = parsed.retStr;
+                            let argT = parsed.args.length > 0 ? parsed.args[0] : null;
+                            
+                            if (argT === null) {
+                                if (innerT === "") {
+                                    return `gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {\n` +
+                                           `\t\t\t${valName}()\n` +
+                                           `\t\t\treturn gopurs_runtime.Value{}\n` +
+                                           `\t\t})`;
+                                } else {
+                                    let innerWrap = wrapReturn(innerT, "inner_res");
+                                    return `gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {\n` +
+                                           `\t\t\tinner_res := ${valName}()\n` +
+                                           `\t\t\treturn ${innerWrap}\n` +
+                                           `\t\t})`;
+                                }
+                            } else {
+                                let argUnwrap = "arg.PtrVal";
+                                if (argT === "any" || argT === "interface{}") {
+                                    argUnwrap = "arg.PtrVal";
+                                } else if (argT === "gopurs_runtime.Value") {
+                                    argUnwrap = "arg";
+                                } else if (argT.startsWith("func")) {
+                                    argUnwrap = unwrapValueToFunc(argT, "arg", 99).replace(/\n/g, "\n\t\t\t");
+                                } else {
+                                    argUnwrap = `gopurs_runtime.Unbox[${argT}](arg)`;
+                                }
+                                
+                                if (innerT === "") {
+                                    return `gopurs_runtime.Func(func(arg gopurs_runtime.Value) gopurs_runtime.Value {\n` +
+                                           `\t\t\t${valName}(${argUnwrap})\n` +
+                                           `\t\t\treturn gopurs_runtime.Value{}\n` +
+                                           `\t\t})`;
+                                } else {
+                                    let innerWrap = wrapReturn(innerT, "inner_res");
+                                    return `gopurs_runtime.Func(func(arg gopurs_runtime.Value) gopurs_runtime.Value {\n` +
+                                           `\t\t\tinner_res := ${valName}(${argUnwrap})\n` +
+                                           `\t\t\treturn ${innerWrap}\n` +
+                                           `\t\t})`;
+                                }
+                            }
+                        }
+                    }
+                    if (t.startsWith("[]") && t !== "[]gopurs_runtime.Value") {
+                        return `func() gopurs_runtime.Value {\n` +
+                               `\t\t\tres_arr := make([]gopurs_runtime.Value, len(${valName}))\n` +
+                               `\t\t\tfor i, v := range ${valName} { res_arr[i] = gopurs_runtime.Box(v) }\n` +
+                               `\t\t\treturn gopurs_runtime.Array(res_arr)\n` +
+                               `\t\t}()`;
+                    } else if (t === "gopurs_runtime.Value") {
+                        return valName;
+                    } else if (t === "") {
+                        return `gopurs_runtime.Value{}`;
+                    } else if (t.startsWith("map[")) {
+                        return `func() gopurs_runtime.Value {\n` +
+                               `\t\t\tres_map := make(map[string]gopurs_runtime.Value)\n` +
+                               `\t\t\tfor k, v := range ${valName} { res_map[k] = gopurs_runtime.Box(v) }\n` +
+                               `\t\t\treturn gopurs_runtime.Record(res_map)\n` +
+                               `\t\t}()`;
+                    } else {
+                        return `gopurs_runtime.Box(${valName})`;
+                    }
+                };
+
                 for (let idx = 0; idx < parsedArgs.length; idx++) {
                     let p = parsedArgs[idx];
                     let t = p.type;
                     
                     if (t.startsWith("func")) {
-                        let cbMatch = t.match(/^func\s*\((.*?)\)(.*)$/);
-                        if (!cbMatch) continue;
-                        let cbArgsStr = cbMatch[1];
-                        let cbRetStr = cbMatch[2].trim();
-                        
-                        let cbArgs = cbArgsStr.split(',').filter(x => x.trim() !== '').map(x => x.trim());
-                        let cbParams = cbArgs.map((_, cidx) => `p${cidx} ${cbArgs[cidx]}`).join(', ');
-                        let cbParamsApply = cbArgs.map((_, cidx) => `gopurs_runtime.Box(p${cidx})`).join(', ');
-                        
-                        let applyCall = '';
-                        if (cbArgs.length === 1) applyCall = `gopurs_runtime.Apply(arg${idx}, ${cbParamsApply})`;
-                        else if (cbArgs.length > 1) applyCall = `gopurs_runtime.Apply${cbArgs.length}(arg${idx}, ${cbParamsApply})`;
-                        else applyCall = `gopurs_runtime.Apply(arg${idx}, gopurs_runtime.Value{})`;
-                        
-                        if (cbRetStr === '') {
-                            newLines.push(`\tgo_arg${idx} := func(${cbParams}) {`);
-                            newLines.push(`\t\t${applyCall}`);
-                            newLines.push(`\t}`);
-                        } else {
-                            newLines.push(`\tgo_arg${idx} := func(${cbParams}) ${cbRetStr} {`);
-                            newLines.push(`\t\tres := ${applyCall}`);
-                            if (cbRetStr.startsWith("[]")) {
-                                let elemType = cbRetStr.substring(2);
-                                newLines.push(`\t\tres_arr := res.PtrVal.([]gopurs_runtime.Value)`);
-                                newLines.push(`\t\tres_go := make(${cbRetStr}, len(res_arr))`);
-                                newLines.push(`\t\tfor i, v := range res_arr { res_go[i] = gopurs_runtime.Unbox[${elemType}](v) }`);
-                                newLines.push(`\t\treturn res_go`);
-                            } else if (cbRetStr === "gopurs_runtime.Value") {
-                                newLines.push(`\t\treturn res`);
-                            } else if (cbRetStr === "interface{}" || cbRetStr === "any") {
-                                newLines.push(`\t\treturn res.PtrVal`);
-                            } else {
-                                newLines.push(`\t\treturn gopurs_runtime.Unbox[${cbRetStr}](res)`);
-                            }
-                            newLines.push(`\t}`);
-                        }
+                        let unwrapStr = unwrapValueToFunc(t, 'arg' + idx, 0);
+                        let indentedUnwrapStr = unwrapStr.split('\n').join('\n\t');
+                        newLines.push(`\tgo_arg${idx} := ${indentedUnwrapStr}`);
                     } else if (t.startsWith("[]") && t !== "[]gopurs_runtime.Value") {
                         let elemType = t.substring(2);
                         if (elemType === "any") elemType = "interface{}";
                         newLines.push(`\targ${idx}_arr := arg${idx}.PtrVal.([]gopurs_runtime.Value)`);
                         newLines.push(`\tgo_arg${idx} := make(${t}, len(arg${idx}_arr))`);
                         if (elemType === "interface{}") {
-                            newLines.push(`\tfor i, v := range arg${idx}_arr { go_arg${idx}[i] = v.PtrVal }`);
+                            newLines.push(`\tfor i, v := range arg${idx}_arr { go_arg${idx}[i] = v }`);
                         } else {
                             newLines.push(`\tfor i, v := range arg${idx}_arr { go_arg${idx}[i] = gopurs_runtime.Unbox[${elemType}](v) }`);
                         }
                     } else if (t === "any" || t === "interface{}") {
-                        newLines.push(`\tgo_arg${idx} := arg${idx}.PtrVal`);
+                        newLines.push(`\tgo_arg${idx} := arg${idx}`);
                     } else if (t === "gopurs_runtime.Value") {
                         newLines.push(`\tgo_arg${idx} := arg${idx}`);
                     } else if (t.startsWith("map[")) {
                         let elemType = t.substring(t.indexOf(']')+1);
                         if (elemType === "any" || elemType === "interface{}") {
-                            newLines.push(`\targ${idx}_map := arg${idx}.PtrVal.(map[string]gopurs_runtime.Value)`);
+                            newLines.push(`\targ${idx}_map := gopurs_runtime.RecordToMap(arg${idx})`);
                             newLines.push(`\tgo_arg${idx} := make(${t})`);
-                            newLines.push(`\tfor k, v := range arg${idx}_map { go_arg${idx}[k] = v.PtrVal }`);
+                            newLines.push(`\tfor k, v := range arg${idx}_map { go_arg${idx}[k] = v }`);
                         } else {
                             newLines.push(`\tgo_arg${idx} := arg${idx}.PtrVal.(${t})`);
                         }
@@ -263,49 +370,6 @@ export const appendFfiWrappersImpl = function(moduleName) {
                     newLines.push(`\treturn gopurs_runtime.Value{}`);
                 } else {
                     newLines.push(`\tgo_res := ${funcName}(${callArgs.join(', ')})`);
-                    
-                    let wrapReturn = function(t, valName) {
-                        if (t.startsWith("func()")) {
-                            let innerT = t.substring(6).trim();
-                            let innerWrap = wrapReturn(innerT, "inner_res");
-                            return `gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {\n` +
-                                   `\t\t\tinner_res := ${valName}()\n` +
-                                   `\t\t\treturn ${innerWrap}\n` +
-                                   `\t\t})`;
-                        } else if (t.startsWith("func(gopurs_runtime.Value)")) {
-                            let innerT = t.substring(26).trim();
-                            let innerWrap = wrapReturn(innerT, "inner_res");
-                            return `gopurs_runtime.Func(func(arg gopurs_runtime.Value) gopurs_runtime.Value {\n` +
-                                   `\t\t\tinner_res := ${valName}(arg)\n` +
-                                   `\t\t\treturn ${innerWrap}\n` +
-                                   `\t\t})`;
-                        } else if (t.startsWith("func(any)") || t.startsWith("func(interface{})")) {
-                            let innerT = t.substring(t.indexOf(')') + 1).trim();
-                            let innerWrap = wrapReturn(innerT, "inner_res");
-                            return `gopurs_runtime.Func(func(arg gopurs_runtime.Value) gopurs_runtime.Value {\n` +
-                                   `\t\t\tinner_res := ${valName}(arg.PtrVal)\n` +
-                                   `\t\t\treturn ${innerWrap}\n` +
-                                   `\t\t})`;
-                        } else if (t.startsWith("[]") && t !== "[]gopurs_runtime.Value") {
-                            return `func() gopurs_runtime.Value {\n` +
-                                   `\t\t\tres_arr := make([]gopurs_runtime.Value, len(${valName}))\n` +
-                                   `\t\t\tfor i, v := range ${valName} { res_arr[i] = gopurs_runtime.Box(v) }\n` +
-                                   `\t\t\treturn gopurs_runtime.Array(res_arr)\n` +
-                                   `\t\t}()`;
-                        } else if (t === "gopurs_runtime.Value") {
-                            return valName;
-                        } else if (t === "") {
-                            return `gopurs_runtime.Value{}`;
-                        } else if (t.startsWith("map[")) {
-                            return `func() gopurs_runtime.Value {\n` +
-                                   `\t\t\tres_map := make(map[string]gopurs_runtime.Value)\n` +
-                                   `\t\t\tfor k, v := range ${valName} { res_map[k] = gopurs_runtime.Box(v) }\n` +
-                                   `\t\t\treturn gopurs_runtime.Record(res_map)\n` +
-                                   `\t\t}()`;
-                        } else {
-                            return `gopurs_runtime.Box(${valName})`;
-                        }
-                    };
                     
                     let wrapCode = wrapReturn(retStr, "go_res");
                     newLines.push(`\treturn ${wrapCode}`);
