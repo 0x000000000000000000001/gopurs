@@ -65,7 +65,7 @@ echo "Running tests from $PASSING_DIR..."
 passed=0
 failed=0
 
-SKIP_BEFORE="ExportedInstanceDeclarations"
+SKIP_BEFORE="NegativeBinder"
 TEST_FILES=()
 CLEAN_CACHE=0
 
