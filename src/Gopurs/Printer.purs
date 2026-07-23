@@ -28,8 +28,18 @@ printGoExpr expr = case expr of
     "return " <> printGoExpr e
   GoAssign name e ->
     name <> " := " <> printGoExpr e <> "\n_ = " <> name
-  GoMap props ->
-    "map[string]gopurs_runtime.Value{" <> String.joinWith ", " (map (\(Tuple k v) -> "\"" <> k <> "\": " <> printGoExpr v) props) <> "}"
+  GoRecordDict props ->
+    let
+      keysStr = String.joinWith ", " (map (\(Tuple k _) -> "\"" <> k <> "\"") props)
+      valsStr = String.joinWith ", " (map (\(Tuple _ v) -> printGoExpr v) props)
+    in
+      "gopurs_runtime.RecordDict([]string{" <> keysStr <> "}, []gopurs_runtime.Value{" <> valsStr <> "})"
+  GoRecordUpdateDict orig props ->
+    let
+      keysStr = String.joinWith ", " (map (\(Tuple k _) -> "\"" <> k <> "\"") props)
+      valsStr = String.joinWith ", " (map (\(Tuple _ v) -> printGoExpr v) props)
+    in
+      "gopurs_runtime.RecordUpdateDict(" <> printGoExpr orig <> ", []string{" <> keysStr <> "}, []gopurs_runtime.Value{" <> valsStr <> "})"
   GoIIFE name binding body ->
     let assignment = if name == "_" then name <> " = " <> printGoExpr binding else name <> " := " <> printGoExpr binding <> "\n_ = " <> name
     in "func() gopurs_runtime.Value {\n" <> assignment <> "\nreturn " <> printGoExpr body <> "\n}()"
@@ -40,7 +50,7 @@ printGoExpr expr = case expr of
     String.joinWith "\n" (map (\(Tuple name expr) -> name <> " = " <> printGoExpr expr) bindings) <> "\n" <>
     "return " <> printGoExpr body <> "\n}()"
   GoRecordAccess obj prop ->
-    printGoExpr obj <> ".PtrVal.(map[string]gopurs_runtime.Value)[\"" <> prop <> "\"]"
+    "gopurs_runtime.RecordGet(" <> printGoExpr obj <> ", \"" <> prop <> "\")"
   GoBranch branches def ->
     "func() gopurs_runtime.Value {\n" <>
     String.joinWith "\n" (map (\(Tuple cond t) -> "if (" <> printGoExpr cond <> ").IntVal != 0 {\nreturn " <> printGoExpr t <> "\n}") branches) <>

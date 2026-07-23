@@ -89,21 +89,73 @@ func Array(v []Value) Value {
 	return Value{Type: 8, PtrVal: v}
 }
 
+type RecordData struct {
+	Keys []string
+	Vals []Value
+}
+
+func RecordDict(keys []string, vals []Value) Value {
+	return Value{Type: TypeRecord, PtrVal: RecordData{Keys: keys, Vals: vals}}
+}
+
 func Record(m map[string]Value) Value {
-	return Value{Type: TypeRecord, PtrVal: m}
+	keys := make([]string, 0, len(m))
+	vals := make([]Value, 0, len(m))
+	for k, v := range m {
+		keys = append(keys, k)
+		vals = append(vals, v)
+	}
+	return RecordDict(keys, vals)
+}
+
+func RecordGet(obj Value, key string) Value {
+    if m, ok := obj.PtrVal.(map[string]Value); ok {
+        return m[key]
+    }
+	r := obj.PtrVal.(RecordData)
+	for i, k := range r.Keys {
+		if k == key {
+			return r.Vals[i]
+		}
+	}
+	panic("Key not found in record: " + key)
+}
+
+func RecordUpdateDict(orig Value, keys []string, vals []Value) Value {
+	r := orig.PtrVal.(RecordData)
+	newVals := make([]Value, len(r.Vals))
+	copy(newVals, r.Vals)
+	for i, k := range keys {
+		for j, oldK := range r.Keys {
+			if oldK == k {
+				newVals[j] = vals[i]
+				break
+			}
+		}
+	}
+	return RecordDict(r.Keys, newVals)
 }
 
 func RecordUpdate(orig Value, updates map[string]Value) Value {
-	origMap := orig.PtrVal.(map[string]Value)
-	newMap := make(map[string]Value, len(origMap)+len(updates))
-	for k, v := range origMap {
-		newMap[k] = v
-	}
+    if m, ok := orig.PtrVal.(map[string]Value); ok {
+        newMap := make(map[string]Value, len(m)+len(updates))
+        for k, v := range m {
+            newMap[k] = v
+        }
+        for k, v := range updates {
+            newMap[k] = v
+        }
+        return Value{Type: TypeRecord, PtrVal: newMap}
+    }
+	keys := make([]string, 0, len(updates))
+	vals := make([]Value, 0, len(updates))
 	for k, v := range updates {
-		newMap[k] = v
+		keys = append(keys, k)
+		vals = append(vals, v)
 	}
-	return Record(newMap)
+	return RecordUpdateDict(orig, keys, vals)
 }
+
 
 func Cons(tag string, args []Value) Value {
 	return Value{Type: TypeConstructor, StrVal: tag, PtrVal: args}

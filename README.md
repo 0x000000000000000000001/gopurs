@@ -95,7 +95,7 @@ spago build --backend gopurs --backend-args "--main App.Main"
 
 ## Local Development & Testing
 
-If you plan to contribute to the compiler or run the official test suite locally, you must follow a specific "sibling-checkout" directory layout. 
+If you plan to contribute to the compiler or run the official test suite locally, you will have to follow a specific "sibling-checkout" directory layout. 
 
 Because `gopurs` replaces the JS ecosystem with Go, it requires custom Go-compatible forks of the core PureScript libraries (e.g. `purescript-prelude` becomes `gopurs-prelude`). The internal test runner (`bin/test`) expects these core `gopurs-*` repositories to be cloned side-by-side in the same parent directory as the main `gopurs` repository.
 
