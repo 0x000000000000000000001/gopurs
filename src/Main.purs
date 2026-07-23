@@ -96,5 +96,5 @@ main = launchAff_ do
       Nothing -> "Main"
 
   let pkgName = String.replaceAll (Pattern ".") (Replacement "_") mainModuleName
-  let mainEntryPoint = "package main\n\nimport (\n\t\"gopurs/output/" <> mainModuleName <> "\"\n\t\"gopurs/output/gopurs_runtime\"\n)\n\nfunc main() {\n\tgopurs_runtime.Apply(" <> pkgName <> ".Get_main(), gopurs_runtime.Value{})\n}\n"
+  let mainEntryPoint = "package main\n\nimport (\n\t\"os\"\n\t\"runtime/pprof\"\n\t\"gopurs/output/" <> mainModuleName <> "\"\n\t\"gopurs/output/gopurs_runtime\"\n)\n\nfunc main() {\n\tf, err := os.Create(\"cpu.prof\")\n\tif err != nil { panic(err) }\n\tpprof.StartCPUProfile(f)\n\tdefer pprof.StopCPUProfile()\n\n\tgopurs_runtime.Apply(" <> pkgName <> ".Get_main(), gopurs_runtime.Value{})\n\n\tmf, err := os.Create(\"mem.prof\")\n\tif err != nil { panic(err) }\n\tpprof.WriteHeapProfile(mf)\n\tmf.Close()\n}\n"
   FS.writeTextFile UTF8 "output/main.go" mainEntryPoint
