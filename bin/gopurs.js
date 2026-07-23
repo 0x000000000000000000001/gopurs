@@ -4943,7 +4943,28 @@ var translateExprImpl_ = (helpersRef) => (depth) => (modNameStr) => (recVars) =>
       };
     }
     if (isTailCallTo.tag === "Nothing") {
-      const resFn = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(false)(nextId)(v._2._1);
+      const resFn = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(false)(nextId)(v1._1);
+      const buildApp = (fExpr) => (argExprs) => {
+        const len = argExprs.length;
+        if (len === 0) {
+          return fExpr;
+        }
+        if (len === 1) {
+          return $GoExpr(
+            "GoCall",
+            $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Apply"),
+            [fExpr, 0 < argExprs.length ? argExprs[0] : $GoExpr("GoRaw", "nil")]
+          );
+        }
+        if (len >= 2 && len <= 5) {
+          return $GoExpr(
+            "GoCall",
+            $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Apply" + showIntImpl(len)),
+            [fExpr, ...argExprs]
+          );
+        }
+        return buildApp(buildApp(fExpr)(sliceImpl(0, 5, argExprs)))(sliceImpl(5, argExprs.length, argExprs));
+      };
       const accArgs = foldlArray((acc) => (arg) => {
         const argRes = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)([])(false)(false)(acc.nextId)(arg);
         return {
@@ -4959,33 +4980,48 @@ var translateExprImpl_ = (helpersRef) => (depth) => (modNameStr) => (recVars) =>
           exprs: snoc(acc.exprs)(argRes.expr),
           nextId: argRes.nextId
         };
-      })({ stmts: resFn.stmts, exprs: [], nextId: resFn.nextId })(v._2._2);
-      return {
-        stmts: accArgs.stmts,
-        expr: foldlArray((acc) => (argExpr) => $GoExpr(
-          "GoCall",
-          $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Apply"),
-          [acc, argExpr]
-        ))(resFn.expr)(accArgs.exprs),
-        nextId: accArgs.nextId
-      };
+      })({ stmts: resFn.stmts, exprs: [], nextId: resFn.nextId })(v1._2);
+      return { stmts: accArgs.stmts, expr: buildApp(resFn.expr)(accArgs.exprs), nextId: accArgs.nextId };
     }
     fail();
   }
   if (v._2.tag === "Abs") {
     const resBody = translateExprImpl_(helpersRef)(depth + 1 | 0)(modNameStr)(recVars)(namedBound)(bound)(Nothing)(loopCtx)(isTail)(false)(nextId)(v._2._2);
+    const buildFunc = (ps) => (innerExpr) => {
+      const len = ps.length;
+      const bodyStr = innerExpr.tag === "GoBlock" ? printGoExpr(innerExpr) : "return " + printGoExpr(innerExpr);
+      if (len === 1) {
+        return $GoExpr(
+          "GoCall",
+          $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Func"),
+          [
+            $GoExpr(
+              "GoRaw",
+              0 < ps.length ? "func(" + ps[0] + " gopurs_runtime.Value) gopurs_runtime.Value {\n" + bodyStr + "\n}" : "func( gopurs_runtime.Value) gopurs_runtime.Value {\n" + bodyStr + "\n}"
+            )
+          ]
+        );
+      }
+      if (len >= 2 && len <= 5) {
+        return $GoExpr(
+          "GoCall",
+          $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Func" + showIntImpl(len)),
+          [
+            $GoExpr(
+              "GoRaw",
+              "func(" + joinWith(", ")(arrayMap((p) => p + " gopurs_runtime.Value")(ps)) + ") gopurs_runtime.Value {\n" + bodyStr + "\n}"
+            )
+          ]
+        );
+      }
+      return buildFunc(sliceImpl(0, 5, ps))(buildFunc(sliceImpl(5, ps.length, ps))(innerExpr));
+    };
     return {
       stmts: StmtEmpty,
-      expr: foldrArray((p) => (acc) => $GoExpr(
-        "GoCall",
-        $GoExpr("GoSelector", $GoExpr("GoVar", "gopurs_runtime"), "Func"),
-        [
-          $GoExpr(
-            "GoRaw",
-            "func(" + p + " gopurs_runtime.Value) gopurs_runtime.Value {\n" + (acc.tag === "GoBlock" ? printGoExpr(acc) : "return " + printGoExpr(acc)) + "\n}"
-          )
-        ]
-      ))($GoExpr("GoBlock", [...flattenStmts(resBody.stmts), $GoExpr("GoReturn", resBody.expr)]))(arrayMap((v1) => localId(v1._1)(v1._2))(v._2._1)),
+      expr: buildFunc(arrayMap((v1) => localId(v1._1)(v1._2))(v._2._1))($GoExpr(
+        "GoBlock",
+        [...flattenStmts(resBody.stmts), $GoExpr("GoReturn", resBody.expr)]
+      )),
       nextId: resBody.nextId
     };
   }
@@ -6258,7 +6294,7 @@ var findFfiFile = (mbFfiDir) => (modName) => (mbModulePath) => {
 };
 
 // output-es/Gopurs.Runtime/index.js
-var runtimeGoCode = 'package gopurs_runtime\n\nimport "math"\n\nconst (\n	TypeInt = 1\n	TypeString = 2\n	TypeRecord = 3\n	TypeFunc = 4\n	TypeConstructor = 5\n)\n\n// We do not add FloatVal or BoolVal fields to keep the struct size minimal.\n// Floats are packed into IntVal using math.Float64bits, and Bools are mapped to 1/0 in IntVal.\n// Adding more fields would increase the struct size and reduce pass-by-value performance.\ntype Value struct {\n	Type   uint8\n	IntVal int64\n	StrVal string\n	PtrVal any\n}\n\nfunc Str(v string) Value {\n	return Value{Type: TypeString, StrVal: v}\n}\n\nfunc Int(v int64) Value {\n	return Value{Type: TypeInt, IntVal: v}\n}\n\nfunc Float(v float64) Value {\n	return Value{Type: 7, IntVal: int64(math.Float64bits(v))}\n}\n\nfunc Bool(v bool) Value {\n	var i int64 = 0\n	if v {\n		i = 1\n	}\n	return Value{Type: 6, IntVal: i}\n}\n\nfunc FloatAdd(a, b Value) Value { return Float(math.Float64frombits(uint64(a.IntVal)) + math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatSub(a, b Value) Value { return Float(math.Float64frombits(uint64(a.IntVal)) - math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatMul(a, b Value) Value { return Float(math.Float64frombits(uint64(a.IntVal)) * math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatDiv(a, b Value) Value { return Float(math.Float64frombits(uint64(a.IntVal)) / math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatNeg(a Value) Value { return Float(-math.Float64frombits(uint64(a.IntVal))) }\n\nfunc FloatEq(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) == math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatNeq(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) != math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatLt(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) < math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatLte(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) <= math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatGt(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) > math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatGte(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) >= math.Float64frombits(uint64(b.IntVal))) }\n\nfunc Zshr(a Value, b Value) Value {\n	return Int(int64(uint32(a.IntVal) >> uint32(b.IntVal)))\n}\n\nfunc Shl(a Value, b Value) Value {\n	return Int(int64(int32(a.IntVal) << uint32(b.IntVal)))\n}\n\nfunc Shr(a Value, b Value) Value {\n	return Int(int64(int32(a.IntVal) >> uint32(b.IntVal)))\n}\n\nfunc BitAnd(a Value, b Value) Value {\n	return Int(int64(int32(a.IntVal) & int32(b.IntVal)))\n}\n\nfunc BitOr(a Value, b Value) Value {\n	return Int(int64(int32(a.IntVal) | int32(b.IntVal)))\n}\n\nfunc BitXor(a Value, b Value) Value {\n	return Int(int64(int32(a.IntVal) ^ int32(b.IntVal)))\n}\n\nfunc Array(v []Value) Value {\n	return Value{Type: 8, PtrVal: v}\n}\n\nfunc Record(m map[string]Value) Value {\n	return Value{Type: TypeRecord, PtrVal: m}\n}\n\nfunc RecordUpdate(orig Value, updates map[string]Value) Value {\n	origMap := orig.PtrVal.(map[string]Value)\n	newMap := make(map[string]Value, len(origMap)+len(updates))\n	for k, v := range origMap {\n		newMap[k] = v\n	}\n	for k, v := range updates {\n		newMap[k] = v\n	}\n	return Record(newMap)\n}\n\nfunc Cons(tag string, args []Value) Value {\n	return Value{Type: TypeConstructor, StrVal: tag, PtrVal: args}\n}\n\n// Function with 1 arg (curried)\nfunc Func(f func(Value) Value) Value {\n	return Value{Type: TypeFunc, PtrVal: f}\n}\n\nfunc FuncAny(f any) Value {\n	return Value{Type: TypeFunc, PtrVal: f}\n}\n\n// Uncurried application helper\nfunc Apply(f Value, arg Value) Value {\n	if f.Type != TypeFunc {\n		panic("Attempted to apply a non-function")\n	}\n	fn := f.PtrVal.(func(Value) Value)\n	return fn(arg)\n}\n\nfunc ArrayAccess(arr Value, index int) Value {\n	return arr.PtrVal.([]Value)[index]\n}\n\nfunc Any(v any) Value {\n	return Value{Type: 9, PtrVal: v}\n}\n\nfunc UncurriedApp2(fn Value, a, b Value) Value {\n	if f, ok := fn.PtrVal.(func(Value, Value) Value); ok {\n		return f(a, b)\n	}\n	return Apply(Apply(fn, a), b)\n}\n\nfunc UncurriedApp3(fn Value, a, b, c Value) Value {\n	if f, ok := fn.PtrVal.(func(Value, Value, Value) Value); ok {\n		return f(a, b, c)\n	}\n	return Apply(Apply(Apply(fn, a), b), c)\n}\n\nfunc UncurriedApp4(fn Value, a, b, c, d Value) Value {\n	if f, ok := fn.PtrVal.(func(Value, Value, Value, Value) Value); ok {\n		return f(a, b, c, d)\n	}\n	return Apply(Apply(Apply(Apply(fn, a), b), c), d)\n}\n\nfunc UncurriedApp5(fn Value, a, b, c, d, e Value) Value {\n	if f, ok := fn.PtrVal.(func(Value, Value, Value, Value, Value) Value); ok {\n		return f(a, b, c, d, e)\n	}\n	return Apply(Apply(Apply(Apply(Apply(fn, a), b), c), d), e)\n}\n\nfunc UncurriedApp(fn Value, args ...Value) Value {\n	res := fn\n	for _, arg := range args {\n		res = Apply(res, arg)\n	}\n	return res\n}\n';
+var runtimeGoCode = '\npackage gopurs_runtime\n\nimport "math"\n\nconst (\n	TypeInt = 1\n	TypeString = 2\n	TypeRecord = 3\n	TypeFunc = 4\n	TypeFunc2 = 10\n	TypeFunc3 = 11\n	TypeFunc4 = 12\n	TypeFunc5 = 13\n	TypeConstructor = 5\n)\n\n// We do not add FloatVal or BoolVal fields to keep the struct size minimal.\n// Floats are packed into IntVal using math.Float64bits, and Bools are mapped to 1/0 in IntVal.\n// Adding more fields would increase the struct size and reduce pass-by-value performance.\ntype Value struct {\n	Type   uint8\n	IntVal int64\n	StrVal string\n	PtrVal any\n}\n\nfunc Str(v string) Value {\n	return Value{Type: TypeString, StrVal: v}\n}\n\nfunc Int(v int64) Value {\n	return Value{Type: TypeInt, IntVal: v}\n}\n\nfunc Float(v float64) Value {\n	return Value{Type: 7, IntVal: int64(math.Float64bits(v))}\n}\n\nfunc Bool(v bool) Value {\n	var i int64 = 0\n	if v {\n		i = 1\n	}\n	return Value{Type: 6, IntVal: i}\n}\n\nfunc FloatAdd(a, b Value) Value { return Float(math.Float64frombits(uint64(a.IntVal)) + math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatSub(a, b Value) Value { return Float(math.Float64frombits(uint64(a.IntVal)) - math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatMul(a, b Value) Value { return Float(math.Float64frombits(uint64(a.IntVal)) * math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatDiv(a, b Value) Value { return Float(math.Float64frombits(uint64(a.IntVal)) / math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatNeg(a Value) Value { return Float(-math.Float64frombits(uint64(a.IntVal))) }\n\nfunc FloatEq(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) == math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatNeq(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) != math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatLt(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) < math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatLte(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) <= math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatGt(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) > math.Float64frombits(uint64(b.IntVal))) }\nfunc FloatGte(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) >= math.Float64frombits(uint64(b.IntVal))) }\n\nfunc Zshr(a Value, b Value) Value {\n	return Int(int64(uint32(a.IntVal) >> uint32(b.IntVal)))\n}\n\nfunc Shl(a Value, b Value) Value {\n	return Int(int64(int32(a.IntVal) << uint32(b.IntVal)))\n}\n\nfunc Shr(a Value, b Value) Value {\n	return Int(int64(int32(a.IntVal) >> uint32(b.IntVal)))\n}\n\nfunc BitAnd(a Value, b Value) Value {\n	return Int(int64(int32(a.IntVal) & int32(b.IntVal)))\n}\n\nfunc BitOr(a Value, b Value) Value {\n	return Int(int64(int32(a.IntVal) | int32(b.IntVal)))\n}\n\nfunc BitXor(a Value, b Value) Value {\n	return Int(int64(int32(a.IntVal) ^ int32(b.IntVal)))\n}\n\nfunc Array(v []Value) Value {\n	return Value{Type: 8, PtrVal: v}\n}\n\nfunc Record(m map[string]Value) Value {\n	return Value{Type: TypeRecord, PtrVal: m}\n}\n\nfunc RecordUpdate(orig Value, updates map[string]Value) Value {\n	origMap := orig.PtrVal.(map[string]Value)\n	newMap := make(map[string]Value, len(origMap)+len(updates))\n	for k, v := range origMap {\n		newMap[k] = v\n	}\n	for k, v := range updates {\n		newMap[k] = v\n	}\n	return Record(newMap)\n}\n\nfunc Cons(tag string, args []Value) Value {\n	return Value{Type: TypeConstructor, StrVal: tag, PtrVal: args}\n}\n\n// Function with 1 arg (curried)\nfunc Func(f func(Value) Value) Value {\n	return Value{Type: TypeFunc, PtrVal: f}\n}\n\n\n// Function constructors\nfunc Func2(f func(Value, Value) Value) Value { return Value{Type: TypeFunc2, PtrVal: f} }\nfunc Func3(f func(Value, Value, Value) Value) Value { return Value{Type: TypeFunc3, PtrVal: f} }\nfunc Func4(f func(Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc4, PtrVal: f} }\nfunc Func5(f func(Value, Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc5, PtrVal: f} }\n\nfunc FuncAny(f any) Value {\n	return Value{Type: TypeFunc, PtrVal: f}\n}\n\n\nfunc Apply(f Value, arg Value) Value {\n	switch f.Type {\n	case TypeFunc:\n		return f.PtrVal.(func(Value) Value)(arg)\n	case TypeFunc2:\n		fn := f.PtrVal.(func(Value, Value) Value)\n		return Func(func(a Value) Value { return fn(arg, a) })\n	case TypeFunc3:\n		fn := f.PtrVal.(func(Value, Value, Value) Value)\n		return Func2(func(a, b Value) Value { return fn(arg, a, b) })\n	case TypeFunc4:\n		fn := f.PtrVal.(func(Value, Value, Value, Value) Value)\n		return Func3(func(a, b, c Value) Value { return fn(arg, a, b, c) })\n	case TypeFunc5:\n		fn := f.PtrVal.(func(Value, Value, Value, Value, Value) Value)\n		return Func4(func(a, b, c, d Value) Value { return fn(arg, a, b, c, d) })\n	default:\n		panic("Attempted to apply a non-function")\n	}\n}\n\nfunc Apply2(f Value, arg1, arg2 Value) Value {\n	if f.Type == TypeFunc2 {\n		return f.PtrVal.(func(Value, Value) Value)(arg1, arg2)\n	}\n	return Apply(Apply(f, arg1), arg2)\n}\n\nfunc Apply3(f Value, arg1, arg2, arg3 Value) Value {\n	if f.Type == TypeFunc3 {\n		return f.PtrVal.(func(Value, Value, Value) Value)(arg1, arg2, arg3)\n	}\n	return Apply(Apply2(f, arg1, arg2), arg3)\n}\n\nfunc Apply4(f Value, arg1, arg2, arg3, arg4 Value) Value {\n	if f.Type == TypeFunc4 {\n		return f.PtrVal.(func(Value, Value, Value, Value) Value)(arg1, arg2, arg3, arg4)\n	}\n	return Apply(Apply3(f, arg1, arg2, arg3), arg4)\n}\n\nfunc Apply5(f Value, arg1, arg2, arg3, arg4, arg5 Value) Value {\n	if f.Type == TypeFunc5 {\n		return f.PtrVal.(func(Value, Value, Value, Value, Value) Value)(arg1, arg2, arg3, arg4, arg5)\n	}\n	return Apply(Apply4(f, arg1, arg2, arg3, arg4), arg5)\n}\n\n\nfunc ArrayAccess(arr Value, index int) Value {\n	return arr.PtrVal.([]Value)[index]\n}\n\nfunc Any(v any) Value {\n	return Value{Type: 9, PtrVal: v}\n}\n\nfunc UncurriedApp2(fn Value, a, b Value) Value {\n	if f, ok := fn.PtrVal.(func(Value, Value) Value); ok {\n		return f(a, b)\n	}\n	return Apply(Apply(fn, a), b)\n}\n\nfunc UncurriedApp3(fn Value, a, b, c Value) Value {\n	if f, ok := fn.PtrVal.(func(Value, Value, Value) Value); ok {\n		return f(a, b, c)\n	}\n	return Apply(Apply(Apply(fn, a), b), c)\n}\n\nfunc UncurriedApp4(fn Value, a, b, c, d Value) Value {\n	if f, ok := fn.PtrVal.(func(Value, Value, Value, Value) Value); ok {\n		return f(a, b, c, d)\n	}\n	return Apply(Apply(Apply(Apply(fn, a), b), c), d)\n}\n\nfunc UncurriedApp5(fn Value, a, b, c, d, e Value) Value {\n	if f, ok := fn.PtrVal.(func(Value, Value, Value, Value, Value) Value); ok {\n		return f(a, b, c, d, e)\n	}\n	return Apply(Apply(Apply(Apply(Apply(fn, a), b), c), d), e)\n}\n\nfunc UncurriedApp(fn Value, args ...Value) Value {\n	res := fn\n	for _, arg := range args {\n		res = Apply(res, arg)\n	}\n	return res\n}\n';
 
 // output-es/Node.Encoding/index.js
 var $Encoding = (tag) => tag;
