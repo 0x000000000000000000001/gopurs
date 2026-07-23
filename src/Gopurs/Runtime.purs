@@ -99,22 +99,22 @@ func RecordDict(keys []string, vals []Value) Value {
 }
 
 type RecordData0 struct{}
-func RecordDict0() Value { return Value{Type: TypeRecord, PtrVal: RecordData0{}} }
+func RecordDict0() Value { return Value{Type: TypeRecord, PtrVal: &RecordData0{}} }
 
 type RecordData1 struct { K0 string; V0 Value }
-func RecordDict1(k0 string, v0 Value) Value { return Value{Type: TypeRecord, PtrVal: RecordData1{k0, v0}} }
+func RecordDict1(k0 string, v0 Value) Value { return Value{Type: TypeRecord, PtrVal: &RecordData1{k0, v0}} }
 
 type RecordData2 struct { K0, K1 string; V0, V1 Value }
-func RecordDict2(k0, k1 string, v0, v1 Value) Value { return Value{Type: TypeRecord, PtrVal: RecordData2{k0, k1, v0, v1}} }
+func RecordDict2(k0, k1 string, v0, v1 Value) Value { return Value{Type: TypeRecord, PtrVal: &RecordData2{k0, k1, v0, v1}} }
 
 type RecordData3 struct { K0, K1, K2 string; V0, V1, V2 Value }
-func RecordDict3(k0, k1, k2 string, v0, v1, v2 Value) Value { return Value{Type: TypeRecord, PtrVal: RecordData3{k0, k1, k2, v0, v1, v2}} }
+func RecordDict3(k0, k1, k2 string, v0, v1, v2 Value) Value { return Value{Type: TypeRecord, PtrVal: &RecordData3{k0, k1, k2, v0, v1, v2}} }
 
 type RecordData4 struct { K0, K1, K2, K3 string; V0, V1, V2, V3 Value }
-func RecordDict4(k0, k1, k2, k3 string, v0, v1, v2, v3 Value) Value { return Value{Type: TypeRecord, PtrVal: RecordData4{k0, k1, k2, k3, v0, v1, v2, v3}} }
+func RecordDict4(k0, k1, k2, k3 string, v0, v1, v2, v3 Value) Value { return Value{Type: TypeRecord, PtrVal: &RecordData4{k0, k1, k2, k3, v0, v1, v2, v3}} }
 
 type RecordData5 struct { K0, K1, K2, K3, K4 string; V0, V1, V2, V3, V4 Value }
-func RecordDict5(k0, k1, k2, k3, k4 string, v0, v1, v2, v3, v4 Value) Value { return Value{Type: TypeRecord, PtrVal: RecordData5{k0, k1, k2, k3, k4, v0, v1, v2, v3, v4}} }
+func RecordDict5(k0, k1, k2, k3, k4 string, v0, v1, v2, v3, v4 Value) Value { return Value{Type: TypeRecord, PtrVal: &RecordData5{k0, k1, k2, k3, k4, v0, v1, v2, v3, v4}} }
 
 func RecordToMap(obj Value) map[string]Value {
 	if m, ok := obj.PtrVal.(map[string]Value); ok {
@@ -124,12 +124,12 @@ func RecordToMap(obj Value) map[string]Value {
 	}
 	res := make(map[string]Value)
 	switch r := obj.PtrVal.(type) {
-	case RecordData0:
-	case RecordData1: res[r.K0] = r.V0
-	case RecordData2: res[r.K0] = r.V0; res[r.K1] = r.V1
-	case RecordData3: res[r.K0] = r.V0; res[r.K1] = r.V1; res[r.K2] = r.V2
-	case RecordData4: res[r.K0] = r.V0; res[r.K1] = r.V1; res[r.K2] = r.V2; res[r.K3] = r.V3
-	case RecordData5: res[r.K0] = r.V0; res[r.K1] = r.V1; res[r.K2] = r.V2; res[r.K3] = r.V3; res[r.K4] = r.V4
+	case *RecordData0:
+	case *RecordData1: res[r.K0] = r.V0
+	case *RecordData2: res[r.K0] = r.V0; res[r.K1] = r.V1
+	case *RecordData3: res[r.K0] = r.V0; res[r.K1] = r.V1; res[r.K2] = r.V2
+	case *RecordData4: res[r.K0] = r.V0; res[r.K1] = r.V1; res[r.K2] = r.V2; res[r.K3] = r.V3
+	case *RecordData5: res[r.K0] = r.V0; res[r.K1] = r.V1; res[r.K2] = r.V2; res[r.K3] = r.V3; res[r.K4] = r.V4
 	case RecordData:
 		for i, k := range r.Keys { res[k] = r.Vals[i] }
 	}
@@ -154,21 +154,21 @@ func RecordGet(obj Value, key string) Value {
         return m[key]
     }
 	switch r := obj.PtrVal.(type) {
-	case RecordData1:
+	case *RecordData1:
 		if r.K0 == key { return r.V0 }
-	case RecordData2:
+	case *RecordData2:
 		if r.K0 == key { return r.V0 }
 		if r.K1 == key { return r.V1 }
-	case RecordData3:
+	case *RecordData3:
 		if r.K0 == key { return r.V0 }
 		if r.K1 == key { return r.V1 }
 		if r.K2 == key { return r.V2 }
-	case RecordData4:
+	case *RecordData4:
 		if r.K0 == key { return r.V0 }
 		if r.K1 == key { return r.V1 }
 		if r.K2 == key { return r.V2 }
 		if r.K3 == key { return r.V3 }
-	case RecordData5:
+	case *RecordData5:
 		if r.K0 == key { return r.V0 }
 		if r.K1 == key { return r.V1 }
 		if r.K2 == key { return r.V2 }
