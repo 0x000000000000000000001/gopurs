@@ -609,7 +609,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
           case accessor of
             GetProp prop -> { stmts: resObj.stmts, expr: GoRecordAccess resObj.expr prop, nextId: resObj.nextId }
             GetIndex idx -> { stmts: resObj.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayAccess") [ resObj.expr, GoInt idx ], nextId: resObj.nextId }
-            GetCtorField _ _ _ _ fieldName _ -> { stmts: resObj.stmts, expr: GoRecordAccess resObj.expr fieldName, nextId: resObj.nextId }
+            GetCtorField _ _ _ _ _ idx -> { stmts: resObj.stmts, expr: GoConstructorAccess resObj.expr idx, nextId: resObj.nextId }
 
       Update obj props ->
         let
@@ -628,24 +628,23 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
 
       CtorDef _ _ (Ident name) fields ->
         let
-          recordMap = GoRecordDict (Array.cons (Tuple "_tag" (GoCall (GoSelector (GoVar "gopurs_runtime") "Str") [ GoString name ])) (map (\f -> Tuple f (GoVar (sanitizeName f))) fields))
-          funcExpr = Array.foldr (\f inner -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> sanitizeName f <> " gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr inner <> "\n}") ]) recordMap fields
+          funcExpr = Array.foldr (\f inner -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> sanitizeName f <> " gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr inner <> "\n}") ]) (GoConstructor name (map (\f -> GoVar (sanitizeName f)) fields)) fields
         in
           { stmts: StmtEmpty, expr: funcExpr, nextId }
 
       CtorSaturated _ _ _ (Ident name) props ->
         let
           accProps = foldl
-            ( \acc (Tuple key val) ->
+            ( \acc (Tuple _ val) ->
                 let
                   resVal = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false false acc.nextId val
                 in
-                  { stmts: acc.stmts <> resVal.stmts, exprs: Array.snoc acc.exprs (Tuple key resVal.expr), nextId: resVal.nextId }
+                  { stmts: acc.stmts <> resVal.stmts, exprs: Array.snoc acc.exprs resVal.expr, nextId: resVal.nextId }
             )
             { stmts: StmtEmpty, exprs: [], nextId }
             props
         in
-          { stmts: accProps.stmts, expr: GoRecordDict (Array.cons (Tuple "_tag" (GoCall (GoSelector (GoVar "gopurs_runtime") "Str") [ GoString name ])) accProps.exprs), nextId: accProps.nextId }
+          { stmts: accProps.stmts, expr: GoConstructor name accProps.exprs, nextId: accProps.nextId }
 
       Fail msg ->
         { stmts: StmtEmpty, expr: GoRaw ("func() gopurs_runtime.Value { panic(" <> printGoExpr (GoString msg) <> ") }()"), nextId }
@@ -680,7 +679,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
               OpIntNegate -> GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoBinOp "-" (GoInt 0) (GoSelector resE.expr "IntVal") ]
               OpIntBitNot -> GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoBinOp "^" (GoRaw "^0") (GoSelector resE.expr "IntVal") ]
               OpNumberNegate -> GoCall (GoSelector (GoVar "gopurs_runtime") "FloatNeg") [ resE.expr ]
-              OpIsTag (Qualified _ (Ident tag)) -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "==" (GoSelector (GoRecordAccess resE.expr "_tag") "StrVal") (GoString tag) ]
+              OpIsTag (Qualified _ (Ident tag)) -> GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "==" (GoSelector resE.expr "StrVal") (GoString tag) ]
               OpArrayLength -> GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoCall (GoVar "int64") [ GoCall (GoVar "len") [ GoTypeAssertion (GoSelector resE.expr "PtrVal") "[]gopurs_runtime.Value" ] ] ]
           in
             { stmts: resE.stmts, expr: goOp, nextId: resE.nextId }

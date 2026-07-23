@@ -208,8 +208,56 @@ func RecordUpdate(orig Value, updates map[string]Value) Value {
 }
 
 
-func Cons(tag string, args []Value) Value {
-	return Value{Type: TypeConstructor, StrVal: tag, PtrVal: args}
+type ConstructorData []Value
+
+func Constructor(tag string, args []Value) Value {
+	return Value{Type: TypeConstructor, StrVal: tag, PtrVal: ConstructorData(args)}
+}
+
+type ConstructorData0 struct{}
+func Constructor0(tag string) Value { return Value{Type: TypeConstructor, StrVal: tag, PtrVal: &ConstructorData0{}} }
+
+type ConstructorData1 struct { V0 Value }
+func Constructor1(tag string, v0 Value) Value { return Value{Type: TypeConstructor, StrVal: tag, PtrVal: &ConstructorData1{v0}} }
+
+type ConstructorData2 struct { V0, V1 Value }
+func Constructor2(tag string, v0, v1 Value) Value { return Value{Type: TypeConstructor, StrVal: tag, PtrVal: &ConstructorData2{v0, v1}} }
+
+type ConstructorData3 struct { V0, V1, V2 Value }
+func Constructor3(tag string, v0, v1, v2 Value) Value { return Value{Type: TypeConstructor, StrVal: tag, PtrVal: &ConstructorData3{v0, v1, v2}} }
+
+type ConstructorData4 struct { V0, V1, V2, V3 Value }
+func Constructor4(tag string, v0, v1, v2, v3 Value) Value { return Value{Type: TypeConstructor, StrVal: tag, PtrVal: &ConstructorData4{v0, v1, v2, v3}} }
+
+type ConstructorData5 struct { V0, V1, V2, V3, V4 Value }
+func Constructor5(tag string, v0, v1, v2, v3, v4 Value) Value { return Value{Type: TypeConstructor, StrVal: tag, PtrVal: &ConstructorData5{v0, v1, v2, v3, v4}} }
+
+func ConstructorGet(obj Value, index int) Value {
+	switch r := obj.PtrVal.(type) {
+	case *ConstructorData1:
+		return r.V0
+	case *ConstructorData2:
+		if index == 0 { return r.V0 }
+		return r.V1
+	case *ConstructorData3:
+		if index == 0 { return r.V0 }
+		if index == 1 { return r.V1 }
+		return r.V2
+	case *ConstructorData4:
+		if index == 0 { return r.V0 }
+		if index == 1 { return r.V1 }
+		if index == 2 { return r.V2 }
+		return r.V3
+	case *ConstructorData5:
+		if index == 0 { return r.V0 }
+		if index == 1 { return r.V1 }
+		if index == 2 { return r.V2 }
+		if index == 3 { return r.V3 }
+		return r.V4
+	case ConstructorData:
+		return r[index]
+	}
+	panic("Index out of bounds or invalid ConstructorGet call")
 }
 
 // Function with 1 arg (curried)
