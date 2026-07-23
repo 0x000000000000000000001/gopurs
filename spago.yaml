@@ -25,7 +25,8 @@ workspace:
     registry: 77.10.1
   extraPackages:
     backend-optimizer:
-      path: "../gopurs-backend-optimizer"
+      git: "https://github.com/0x000000000000000000001/gopurs-backend-optimizer.git"
+      ref: "4810dc03048dbfed5bb194cb5b6120aa4a20be59"
     st:
       path: "../gopurs-st"
     unsafe-coerce:
