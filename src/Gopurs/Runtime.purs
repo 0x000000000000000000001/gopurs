@@ -1,7 +1,8 @@
 module Gopurs.Runtime where
 
 runtimeGoCode :: String
-runtimeGoCode = """package gopurs_runtime
+runtimeGoCode = """
+package gopurs_runtime
 
 import "math"
 
@@ -10,6 +11,10 @@ const (
 	TypeString = 2
 	TypeRecord = 3
 	TypeFunc = 4
+	TypeFunc2 = 10
+	TypeFunc3 = 11
+	TypeFunc4 = 12
+	TypeFunc5 = 13
 	TypeConstructor = 5
 )
 
@@ -109,18 +114,67 @@ func Func(f func(Value) Value) Value {
 	return Value{Type: TypeFunc, PtrVal: f}
 }
 
+
+// Function constructors
+func Func2(f func(Value, Value) Value) Value { return Value{Type: TypeFunc2, PtrVal: f} }
+func Func3(f func(Value, Value, Value) Value) Value { return Value{Type: TypeFunc3, PtrVal: f} }
+func Func4(f func(Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc4, PtrVal: f} }
+func Func5(f func(Value, Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc5, PtrVal: f} }
+
 func FuncAny(f any) Value {
 	return Value{Type: TypeFunc, PtrVal: f}
 }
 
-// Uncurried application helper
+
 func Apply(f Value, arg Value) Value {
-	if f.Type != TypeFunc {
+	switch f.Type {
+	case TypeFunc:
+		return f.PtrVal.(func(Value) Value)(arg)
+	case TypeFunc2:
+		fn := f.PtrVal.(func(Value, Value) Value)
+		return Func(func(a Value) Value { return fn(arg, a) })
+	case TypeFunc3:
+		fn := f.PtrVal.(func(Value, Value, Value) Value)
+		return Func2(func(a, b Value) Value { return fn(arg, a, b) })
+	case TypeFunc4:
+		fn := f.PtrVal.(func(Value, Value, Value, Value) Value)
+		return Func3(func(a, b, c Value) Value { return fn(arg, a, b, c) })
+	case TypeFunc5:
+		fn := f.PtrVal.(func(Value, Value, Value, Value, Value) Value)
+		return Func4(func(a, b, c, d Value) Value { return fn(arg, a, b, c, d) })
+	default:
 		panic("Attempted to apply a non-function")
 	}
-	fn := f.PtrVal.(func(Value) Value)
-	return fn(arg)
 }
+
+func Apply2(f Value, arg1, arg2 Value) Value {
+	if f.Type == TypeFunc2 {
+		return f.PtrVal.(func(Value, Value) Value)(arg1, arg2)
+	}
+	return Apply(Apply(f, arg1), arg2)
+}
+
+func Apply3(f Value, arg1, arg2, arg3 Value) Value {
+	if f.Type == TypeFunc3 {
+		return f.PtrVal.(func(Value, Value, Value) Value)(arg1, arg2, arg3)
+	}
+	return Apply(Apply2(f, arg1, arg2), arg3)
+}
+
+func Apply4(f Value, arg1, arg2, arg3, arg4 Value) Value {
+	if f.Type == TypeFunc4 {
+		return f.PtrVal.(func(Value, Value, Value, Value) Value)(arg1, arg2, arg3, arg4)
+	}
+	return Apply(Apply3(f, arg1, arg2, arg3), arg4)
+}
+
+func Apply5(f Value, arg1, arg2, arg3, arg4, arg5 Value) Value {
+	if f.Type == TypeFunc5 {
+		return f.PtrVal.(func(Value, Value, Value, Value, Value) Value)(arg1, arg2, arg3, arg4, arg5)
+	}
+	return Apply(Apply4(f, arg1, arg2, arg3, arg4), arg5)
+}
+
 
 func ArrayAccess(arr Value, index int) Value {
 	return arr.PtrVal.([]Value)[index]
