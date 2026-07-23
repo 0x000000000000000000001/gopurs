@@ -2,15 +2,7 @@ package Main
 import "gopurs/output/gopurs_runtime"
 
 func getMap(val gopurs_runtime.Value) map[string]gopurs_runtime.Value {
-	if m, ok := val.PtrVal.(map[string]gopurs_runtime.Value); ok {
-		return m
-	}
-	r := val.PtrVal.(gopurs_runtime.RecordData)
-	m := make(map[string]gopurs_runtime.Value)
-	for i, k := range r.Keys {
-		m[k] = r.Vals[i]
-	}
-	return m
+	return gopurs_runtime.RecordToMap(val)
 }
 
 var MergeImpl = gopurs_runtime.Func(func(l gopurs_runtime.Value) gopurs_runtime.Value {

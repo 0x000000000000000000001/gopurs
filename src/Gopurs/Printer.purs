@@ -29,11 +29,33 @@ printGoExpr expr = case expr of
   GoAssign name e ->
     name <> " := " <> printGoExpr e <> "\n_ = " <> name
   GoRecordDict props ->
-    let
-      keysStr = String.joinWith ", " (map (\(Tuple k _) -> "\"" <> k <> "\"") props)
-      valsStr = String.joinWith ", " (map (\(Tuple _ v) -> printGoExpr v) props)
-    in
-      "gopurs_runtime.RecordDict([]string{" <> keysStr <> "}, []gopurs_runtime.Value{" <> valsStr <> "})"
+    case Array.length props of
+      0 -> "gopurs_runtime.RecordDict0()"
+      1 -> case Array.index props 0 of
+        Just (Tuple k0 v0) -> "gopurs_runtime.RecordDict1(\"" <> k0 <> "\", " <> printGoExpr v0 <> ")"
+        Nothing -> ""
+      2 -> case Tuple (Array.index props 0) (Array.index props 1) of
+        Tuple (Just (Tuple k0 v0)) (Just (Tuple k1 v1)) ->
+          "gopurs_runtime.RecordDict2(\"" <> k0 <> "\", \"" <> k1 <> "\", " <> printGoExpr v0 <> ", " <> printGoExpr v1 <> ")"
+        _ -> ""
+      3 -> case Tuple (Tuple (Array.index props 0) (Array.index props 1)) (Array.index props 2) of
+        Tuple (Tuple (Just (Tuple k0 v0)) (Just (Tuple k1 v1))) (Just (Tuple k2 v2)) ->
+          "gopurs_runtime.RecordDict3(\"" <> k0 <> "\", \"" <> k1 <> "\", \"" <> k2 <> "\", " <> printGoExpr v0 <> ", " <> printGoExpr v1 <> ", " <> printGoExpr v2 <> ")"
+        _ -> ""
+      4 -> case Tuple (Tuple (Array.index props 0) (Array.index props 1)) (Tuple (Array.index props 2) (Array.index props 3)) of
+        Tuple (Tuple (Just (Tuple k0 v0)) (Just (Tuple k1 v1))) (Tuple (Just (Tuple k2 v2)) (Just (Tuple k3 v3))) ->
+          "gopurs_runtime.RecordDict4(\"" <> k0 <> "\", \"" <> k1 <> "\", \"" <> k2 <> "\", \"" <> k3 <> "\", " <> printGoExpr v0 <> ", " <> printGoExpr v1 <> ", " <> printGoExpr v2 <> ", " <> printGoExpr v3 <> ")"
+        _ -> ""
+      5 -> case Tuple (Tuple (Array.index props 0) (Array.index props 1)) (Tuple (Tuple (Array.index props 2) (Array.index props 3)) (Array.index props 4)) of
+        Tuple (Tuple (Just (Tuple k0 v0)) (Just (Tuple k1 v1))) (Tuple (Tuple (Just (Tuple k2 v2)) (Just (Tuple k3 v3))) (Just (Tuple k4 v4))) ->
+          "gopurs_runtime.RecordDict5(\"" <> k0 <> "\", \"" <> k1 <> "\", \"" <> k2 <> "\", \"" <> k3 <> "\", \"" <> k4 <> "\", " <> printGoExpr v0 <> ", " <> printGoExpr v1 <> ", " <> printGoExpr v2 <> ", " <> printGoExpr v3 <> ", " <> printGoExpr v4 <> ")"
+        _ -> ""
+      _ ->
+        let
+          keysStr = String.joinWith ", " (map (\(Tuple k _) -> "\"" <> k <> "\"") props)
+          valsStr = String.joinWith ", " (map (\(Tuple _ v) -> printGoExpr v) props)
+        in
+          "gopurs_runtime.RecordDict([]string{" <> keysStr <> "}, []gopurs_runtime.Value{" <> valsStr <> "})"
   GoRecordUpdateDict orig props ->
     let
       keysStr = String.joinWith ", " (map (\(Tuple k _) -> "\"" <> k <> "\"") props)
