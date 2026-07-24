@@ -181,15 +181,30 @@ export const appendFfiWrappersImpl = function(moduleName) {
                 if (arity > 5) continue; // Not supported yet
 
                 let funcConstructor = arity === 0 ? "Func" : (arity === 1 ? "Func" : `Func${arity}`);
-                let goFuncArgs = parsedArgs.map((_, idx) => `arg${idx} gopurs_runtime.Value`).join(', ');
-                if (arity === 0) goFuncArgs = `_ gopurs_runtime.Value`;
-                if (arity === 1) goFuncArgs = `arg0 gopurs_runtime.Value`;
+                let goFuncArgsNative = parsedArgs.map((_, idx) => `arg${idx} ${parsedArgs[idx].type}`).join(', ');
                 
                 let pursName = funcName;
                 if (pursName.charAt(0) >= 'A' && pursName.charAt(0) <= 'Z') {
                     pursName = pursName.charAt(0).toLowerCase() + pursName.substring(1);
                 }
-                newLines.push(`func Call_${pursName}(${goFuncArgs}) gopurs_runtime.Value {`);
+                
+                // 1. Generate Native Call_X proxy
+                let callRet = retStr.trim() !== '' ? retStr : '';
+                newLines.push(`func Call_${pursName}(${goFuncArgsNative}) ${callRet} {`);
+                let nativeCallArgs = parsedArgs.map((_, idx) => `arg${idx}`).join(', ');
+                if (callRet === '') {
+                    newLines.push(`\t${funcName}(${nativeCallArgs})`);
+                } else {
+                    newLines.push(`\treturn ${funcName}(${nativeCallArgs})`);
+                }
+                newLines.push(`}`);
+                
+                // 2. Generate boxed wrapper for dynamic dispatch
+                let goFuncArgsBoxed = parsedArgs.map((_, idx) => `arg${idx} gopurs_runtime.Value`).join(', ');
+                if (arity === 0) goFuncArgsBoxed = `_ gopurs_runtime.Value`;
+                if (arity === 1) goFuncArgsBoxed = `arg0 gopurs_runtime.Value`;
+                
+                newLines.push(`var ${exportName} = gopurs_runtime.${funcConstructor}(func(${goFuncArgsBoxed}) gopurs_runtime.Value {`);
                 let callArgs = [];
                 let parseFuncType = function(t) {
                     let match = t.match(/^func\s*\((.*)/);
@@ -377,8 +392,7 @@ export const appendFfiWrappersImpl = function(moduleName) {
                     let wrapCode = wrapReturn(retStr, "go_res");
                     newLines.push(`\treturn ${wrapCode}`);
                 }
-                newLines.push(`}`);
-                newLines.push(`var ${exportName} = gopurs_runtime.${funcConstructor}(Call_${pursName})`);
+                newLines.push(`})`);
             } else {
                 const varMatch = line.match(/^var\s+([A-Z][A-Za-z0-9_]*)\s*(.*?)=\s*(.*)/);
                 if (varMatch) {
