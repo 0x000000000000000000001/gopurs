@@ -4,6 +4,8 @@ import Prelude
 
 import Data.Maybe (Maybe(..))
 import Data.Set (Set)
+import Data.Map (Map)
+import Data.Map as Map
 import Data.Set as Set
 import Data.Tuple (Tuple(..))
 import Data.Array (foldl)
@@ -12,7 +14,7 @@ import Data.String as String
 
 import PureScript.Backend.Optimizer.Syntax (BackendSyntax(..), Level(..), Pair(..), BackendOperator(..))
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
-import PureScript.Backend.Optimizer.CoreFn (Ident(..), Prop(..), Literal(..))
+import PureScript.Backend.Optimizer.CoreFn (Ident(..), Prop(..), Literal(..), ExprType, propValue)
 import Data.Array.NonEmpty (toArray)
 
 sanitizeName :: String -> String
@@ -83,3 +85,38 @@ freeVars (TcoExpr _ syntax) = case syntax of
   PrimEffect _ -> Set.empty
   PrimUndefined -> Set.empty
   Fail _ -> Set.empty
+  Typed _ a -> freeVars a
+
+paramTypes :: TcoExpr -> Map String ExprType
+paramTypes (TcoExpr _ expr) = case expr of
+  Typed type_ (TcoExpr _ (Local (Just (Ident ident)) (Level lvl))) ->
+    Map.singleton (ident <> "_" <> show lvl) type_
+  Typed _ a -> paramTypes a
+  Var _ -> Map.empty
+  Local _ _ -> Map.empty
+  Lit lit -> case lit of
+    LitArray arr -> foldl (\acc e -> Map.union acc (paramTypes e)) Map.empty arr
+    LitRecord obj -> foldl (\acc prop -> Map.union acc (paramTypes (propValue prop))) Map.empty obj
+    _ -> Map.empty
+  App f args -> foldl (\acc e -> Map.union acc (paramTypes e)) (paramTypes f) (toArray args)
+  Abs _ a -> paramTypes a
+  UncurriedApp f args -> foldl (\acc e -> Map.union acc (paramTypes e)) (paramTypes f) args
+  UncurriedAbs _ a -> paramTypes a
+  UncurriedEffectApp f args -> foldl (\acc e -> Map.union acc (paramTypes e)) (paramTypes f) args
+  UncurriedEffectAbs _ a -> paramTypes a
+  Accessor a _ -> paramTypes a
+  Update a props -> foldl (\acc prop -> Map.union acc (paramTypes (propValue prop))) (paramTypes a) props
+  CtorSaturated _ _ _ _ args -> foldl (\acc (Tuple _ e) -> Map.union acc (paramTypes e)) Map.empty args
+  CtorDef _ _ _ _ -> Map.empty
+  LetRec _ binds body -> foldl (\acc (Tuple _ e) -> Map.union acc (paramTypes e)) (paramTypes body) (toArray binds)
+  Let _ _ val body -> Map.union (paramTypes val) (paramTypes body)
+  EffectBind _ _ val body -> Map.union (paramTypes val) (paramTypes body)
+  EffectPure e -> paramTypes e
+  EffectDefer e -> paramTypes e
+  Branch pairs def -> foldl (\acc (Pair cond body) -> Map.union acc (Map.union (paramTypes cond) (paramTypes body))) (paramTypes def) (toArray pairs)
+  PrimOp op -> case op of
+    Op1 _ e -> paramTypes e
+    Op2 _ e1 e2 -> Map.union (paramTypes e1) (paramTypes e2)
+  PrimEffect _ -> Map.empty
+  PrimUndefined -> Map.empty
+  Fail _ -> Map.empty

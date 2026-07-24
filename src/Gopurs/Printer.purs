@@ -73,16 +73,10 @@ printGoExpr expr = case expr of
     "return " <> printGoExpr body <> "\n}()"
   GoRecordAccess obj prop ->
     "gopurs_runtime.RecordGet(" <> printGoExpr obj <> ", \"" <> prop <> "\")"
-  GoConstructor tag args ->
-    let
-      len = Array.length args
-    in
-      if len <= 5 then
-        "gopurs_runtime.Constructor" <> show len <> "(\"" <> tag <> "\"" <> (if len > 0 then ", " <> String.joinWith ", " (map printGoExpr args) else "") <> ")"
-      else
-        "gopurs_runtime.Constructor(\"" <> tag <> "\", []gopurs_runtime.Value{" <> String.joinWith ", " (map printGoExpr args) <> "})"
-  GoConstructorAccess obj idx ->
-    "gopurs_runtime.ConstructorGet(" <> printGoExpr obj <> ", " <> show idx <> ")"
+  GoConstructor hashStr structName args ->
+    "gopurs_runtime.Value{Type: 9, IntVal: " <> hashStr <> ", UnsafePtr: unsafe.Pointer(&" <> structName <> "{" <> String.joinWith ", " (map printGoExpr args) <> "})}"
+  GoConstructorAccess obj structName idx ->
+    "(*" <> structName <> ")(" <> printGoExpr obj <> ".UnsafePtr).V" <> show idx
   GoBranch branches def ->
     "func() gopurs_runtime.Value {\n" <>
     String.joinWith "\n" (map (\(Tuple cond t) -> "if (" <> printGoExpr cond <> ").IntVal != 0 {\nreturn " <> printGoExpr t <> "\n}") branches) <>
@@ -98,7 +92,7 @@ printGoExpr expr = case expr of
   GoContinue label ->
     "continue " <> label
   GoIfElse cond trueStmts falseStmts ->
-    "if (" <> printGoExpr cond <> ").IntVal != 0 {\n" <>
+    "if " <> printGoExpr cond <> " {\n" <>
       String.joinWith "\n" (map printGoExpr trueStmts) <>
     "\n} else {\n" <>
       String.joinWith "\n" (map printGoExpr falseStmts) <>
@@ -120,8 +114,8 @@ printGoDeclVar { identifier, expression } =
   "}"
 
 printGoFile :: GoFile -> String
-printGoFile { packageName, imports, decls, foreigns } =
-  let declsStr = String.joinWith "\n\n" (map printGoDeclVar decls) <> "\n\n" <> String.joinWith "\n\n" (map (\f -> "func Get_" <> f.pursName <> "() gopurs_runtime.Value {\n\treturn " <> f.goName <> "\n}") foreigns) <> "\n"
+printGoFile { packageName, imports, decls, rawDecls, foreigns } =
+  let declsStr = String.joinWith "\n\n" (map printGoDeclVar decls) <> "\n\n" <> String.joinWith "\n\n" rawDecls <> "\n\n" <> String.joinWith "\n\n" (map (\f -> "func Get_" <> f.pursName <> "() gopurs_runtime.Value {\n\treturn " <> f.goName <> "\n}") foreigns) <> "\n"
       usedImports1 = Array.filter (\i -> 
         if i == "gopurs/output/gopurs_runtime" || i == "sync" then true
         else 
@@ -134,13 +128,14 @@ printGoFile { packageName, imports, decls, foreigns } =
         let pkgAlias = "pkg_" <> String.replaceAll (String.Pattern ".") (String.Replacement "_") dep
         in String.contains (String.Pattern (pkgAlias <> ".")) declsStr && not (Array.elem ("gopurs/output/" <> dep) usedImports1)
       ) missingDeps
-      usedImports = usedImports1 <> map (\dep -> "gopurs/output/" <> dep) injectedDeps
+      unsafeImport = if String.contains (String.Pattern "unsafe.") declsStr then ["unsafe"] else []
+      usedImports = usedImports1 <> map (\dep -> "gopurs/output/" <> dep) injectedDeps <> unsafeImport
   in
   "package " <> packageName <> "\n\n" <>
   "import (\n" <>
   String.joinWith "\n" (map (\i -> 
       let pkg = Array.last (String.split (String.Pattern "/") i)
-          pkgAlias = if i == "gopurs/output/gopurs_runtime" || i == "sync" then fromMaybe "" pkg else "pkg_" <> String.replaceAll (String.Pattern ".") (String.Replacement "_") (fromMaybe "" pkg)
+          pkgAlias = if i == "gopurs/output/gopurs_runtime" || i == "sync" || i == "unsafe" then fromMaybe "" pkg else "pkg_" <> String.replaceAll (String.Pattern ".") (String.Replacement "_") (fromMaybe "" pkg)
       in "\t" <> pkgAlias <> " \"" <> i <> "\""
   ) usedImports) <> "\n" <>
   ")\n\n" <> declsStr

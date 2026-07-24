@@ -28,6 +28,13 @@ const (
 	TypeFunc8 = 16
 	TypeFunc9 = 17
 	TypeFunc10 = 18
+	TypeRecord0 = 19
+	TypeRecord1 = 20
+	TypeRecord2 = 21
+	TypeRecord3 = 22
+	TypeRecord4 = 23
+	TypeRecord5 = 24
+	TypeRecordData = 25
 )
 
 // We do not add FloatVal or BoolVal fields to keep the struct size minimal.
@@ -36,13 +43,19 @@ const (
 type Value struct {
 	Type   uint8
 	IntVal int64
-	StrVal string
-	PtrVal any
-	Func   unsafe.Pointer
+	UnsafePtr unsafe.Pointer
+}
+
+func (v Value) FloatVal() float64 {
+	return math.Float64frombits(uint64(v.IntVal))
 }
 
 func Str(v string) Value {
-	return Value{Type: TypeString, StrVal: v}
+	return Value{Type: TypeString, UnsafePtr: unsafe.Pointer(&v)}
+}
+
+func (v Value) StrVal() string {
+	return *(*string)(v.UnsafePtr)
 }
 
 func Int(v int64) Value {
@@ -99,7 +112,11 @@ func BitXor(a Value, b Value) Value {
 }
 
 func Array(v []Value) Value {
-	return Value{Type: TypeArray, PtrVal: v}
+	return Value{Type: TypeArray, UnsafePtr: unsafe.Pointer(&v)}
+}
+
+func (v Value) PtrVal() any {
+	return *(*any)(v.UnsafePtr)
 }
 
 type RecordData struct {
@@ -108,86 +125,89 @@ type RecordData struct {
 }
 
 func RecordDict(keys []string, vals []Value) Value {
-	return Value{Type: TypeRecord, PtrVal: RecordData{keys, vals}}
+	r := RecordData{keys, vals}
+	return Value{Type: TypeRecordData, UnsafePtr: unsafe.Pointer(&r)}
 }
 
 type RecordData0 struct{}
-func RecordDict0() Value { return Value{Type: TypeRecord, PtrVal: &RecordData0{}} }
+func RecordDict0() Value { return Value{Type: TypeRecord0, UnsafePtr: unsafe.Pointer(&RecordData0{})} }
 
 type RecordData1 struct { K0 string; V0 Value }
-func RecordDict1(k0 string, v0 Value) Value { return Value{Type: TypeRecord, PtrVal: &RecordData1{k0, v0}} }
+func RecordDict1(k0 string, v0 Value) Value { return Value{Type: TypeRecord1, UnsafePtr: unsafe.Pointer(&RecordData1{k0, v0})} }
 
 type RecordData2 struct { K0, K1 string; V0, V1 Value }
-func RecordDict2(k0, k1 string, v0, v1 Value) Value { return Value{Type: TypeRecord, PtrVal: &RecordData2{k0, k1, v0, v1}} }
+func RecordDict2(k0, k1 string, v0, v1 Value) Value { return Value{Type: TypeRecord2, UnsafePtr: unsafe.Pointer(&RecordData2{k0, k1, v0, v1})} }
 
 type RecordData3 struct { K0, K1, K2 string; V0, V1, V2 Value }
-func RecordDict3(k0, k1, k2 string, v0, v1, v2 Value) Value { return Value{Type: TypeRecord, PtrVal: &RecordData3{k0, k1, k2, v0, v1, v2}} }
+func RecordDict3(k0, k1, k2 string, v0, v1, v2 Value) Value { return Value{Type: TypeRecord3, UnsafePtr: unsafe.Pointer(&RecordData3{k0, k1, k2, v0, v1, v2})} }
 
 type RecordData4 struct { K0, K1, K2, K3 string; V0, V1, V2, V3 Value }
-func RecordDict4(k0, k1, k2, k3 string, v0, v1, v2, v3 Value) Value { return Value{Type: TypeRecord, PtrVal: &RecordData4{k0, k1, k2, k3, v0, v1, v2, v3}} }
+func RecordDict4(k0, k1, k2, k3 string, v0, v1, v2, v3 Value) Value { return Value{Type: TypeRecord4, UnsafePtr: unsafe.Pointer(&RecordData4{k0, k1, k2, k3, v0, v1, v2, v3})} }
 
 type RecordData5 struct { K0, K1, K2, K3, K4 string; V0, V1, V2, V3, V4 Value }
-func RecordDict5(k0, k1, k2, k3, k4 string, v0, v1, v2, v3, v4 Value) Value { return Value{Type: TypeRecord, PtrVal: &RecordData5{k0, k1, k2, k3, k4, v0, v1, v2, v3, v4}} }
+func RecordDict5(k0, k1, k2, k3, k4 string, v0, v1, v2, v3, v4 Value) Value { return Value{Type: TypeRecord5, UnsafePtr: unsafe.Pointer(&RecordData5{k0, k1, k2, k3, k4, v0, v1, v2, v3, v4})} }
 
 func RecordToMap(obj Value) map[string]Value {
-	if m, ok := obj.PtrVal.(map[string]Value); ok {
+	if obj.Type == TypeRecord {
+		m := *(*map[string]Value)(obj.UnsafePtr)
 		res := make(map[string]Value, len(m))
 		for k, v := range m { res[k] = v }
 		return res
 	}
 	res := make(map[string]Value)
-	switch r := obj.PtrVal.(type) {
-	case *RecordData0:
-	case *RecordData1: res[r.K0] = r.V0
-	case *RecordData2: res[r.K0] = r.V0; res[r.K1] = r.V1
-	case *RecordData3: res[r.K0] = r.V0; res[r.K1] = r.V1; res[r.K2] = r.V2
-	case *RecordData4: res[r.K0] = r.V0; res[r.K1] = r.V1; res[r.K2] = r.V2; res[r.K3] = r.V3
-	case *RecordData5: res[r.K0] = r.V0; res[r.K1] = r.V1; res[r.K2] = r.V2; res[r.K3] = r.V3; res[r.K4] = r.V4
-	case RecordData:
+	switch obj.Type {
+	case TypeRecord0:
+	case TypeRecord1:
+		r := (*RecordData1)(obj.UnsafePtr); res[r.K0] = r.V0
+	case TypeRecord2:
+		r := (*RecordData2)(obj.UnsafePtr); res[r.K0] = r.V0; res[r.K1] = r.V1
+	case TypeRecord3:
+		r := (*RecordData3)(obj.UnsafePtr); res[r.K0] = r.V0; res[r.K1] = r.V1; res[r.K2] = r.V2
+	case TypeRecord4:
+		r := (*RecordData4)(obj.UnsafePtr); res[r.K0] = r.V0; res[r.K1] = r.V1; res[r.K2] = r.V2; res[r.K3] = r.V3
+	case TypeRecord5:
+		r := (*RecordData5)(obj.UnsafePtr); res[r.K0] = r.V0; res[r.K1] = r.V1; res[r.K2] = r.V2; res[r.K3] = r.V3; res[r.K4] = r.V4
+	case TypeRecordData:
+		r := (*RecordData)(obj.UnsafePtr)
 		for i, k := range r.Keys { res[k] = r.Vals[i] }
 	}
 	return res
 }
 
 func Record(m map[string]Value) Value {
-	keys := make([]string, 0, len(m))
-	vals := make([]Value, 0, len(m))
-	for k, v := range m {
-		keys = append(keys, k)
-		vals = append(vals, v)
-	}
-	return RecordDict(keys, vals)
+	return Value{Type: TypeRecord, UnsafePtr: unsafe.Pointer(&m)}
 }
 
 func RecordGet(obj Value, key string) Value {
-    if obj.PtrVal == nil {
-        _ = obj.PtrVal.(RecordData) // trigger interface conversion panic for backwards compatibility
-    }
-    if m, ok := obj.PtrVal.(map[string]Value); ok {
-        return m[key]
-    }
-	switch r := obj.PtrVal.(type) {
-	case *RecordData1:
+    switch obj.Type {
+    case TypeRecord: return (*(*map[string]Value)(obj.UnsafePtr))[key]
+	case TypeRecord1:
+		r := (*RecordData1)(obj.UnsafePtr)
 		if r.K0 == key { return r.V0 }
-	case *RecordData2:
+	case TypeRecord2:
+		r := (*RecordData2)(obj.UnsafePtr)
 		if r.K0 == key { return r.V0 }
 		if r.K1 == key { return r.V1 }
-	case *RecordData3:
+	case TypeRecord3:
+		r := (*RecordData3)(obj.UnsafePtr)
 		if r.K0 == key { return r.V0 }
 		if r.K1 == key { return r.V1 }
 		if r.K2 == key { return r.V2 }
-	case *RecordData4:
+	case TypeRecord4:
+		r := (*RecordData4)(obj.UnsafePtr)
 		if r.K0 == key { return r.V0 }
 		if r.K1 == key { return r.V1 }
 		if r.K2 == key { return r.V2 }
 		if r.K3 == key { return r.V3 }
-	case *RecordData5:
+	case TypeRecord5:
+		r := (*RecordData5)(obj.UnsafePtr)
 		if r.K0 == key { return r.V0 }
 		if r.K1 == key { return r.V1 }
 		if r.K2 == key { return r.V2 }
 		if r.K3 == key { return r.V3 }
 		if r.K4 == key { return r.V4 }
-	case RecordData:
+	case TypeRecordData:
+		r := (*RecordData)(obj.UnsafePtr)
 		for i, k := range r.Keys {
 			if k == key { return r.Vals[i] }
 		}
@@ -204,98 +224,72 @@ func RecordUpdateDict(orig Value, keys []string, vals []Value) Value {
 func RecordUpdate(orig Value, updates map[string]Value) Value {
 	m := RecordToMap(orig)
 	for k, v := range updates { m[k] = v }
-	return Value{Type: TypeRecord, PtrVal: m}
+	return Record(m)
 }
 
 
 type ConstructorData []Value
 
 func Constructor(tag string, args []Value) Value {
-	return Value{Type: TypeConstructor, StrVal: tag, PtrVal: ConstructorData(args)}
+	ptr := unsafe.Pointer(nil)
+	if len(args) > 0 { ptr = unsafe.Pointer(&args[0]) }
+	return Value{Type: TypeConstructor, UnsafePtr: ptr}
 }
 
 type ConstructorData0 struct{}
-func Constructor0(tag string) Value { return Value{Type: TypeConstructor, StrVal: tag, PtrVal: &ConstructorData0{}} }
+func Constructor0(tag string) Value { return Value{Type: TypeConstructor, UnsafePtr: unsafe.Pointer(&ConstructorData0{})} }
 
 type ConstructorData1 struct { V0 Value }
-func Constructor1(tag string, v0 Value) Value { return Value{Type: TypeConstructor, StrVal: tag, PtrVal: &ConstructorData1{v0}} }
+func Constructor1(tag string, v0 Value) Value { return Value{Type: TypeConstructor, UnsafePtr: unsafe.Pointer(&ConstructorData1{v0})} }
 
 type ConstructorData2 struct { V0, V1 Value }
-func Constructor2(tag string, v0, v1 Value) Value { return Value{Type: TypeConstructor, StrVal: tag, PtrVal: &ConstructorData2{v0, v1}} }
+func Constructor2(tag string, v0, v1 Value) Value { return Value{Type: TypeConstructor, UnsafePtr: unsafe.Pointer(&ConstructorData2{v0, v1})} }
 
 type ConstructorData3 struct { V0, V1, V2 Value }
-func Constructor3(tag string, v0, v1, v2 Value) Value { return Value{Type: TypeConstructor, StrVal: tag, PtrVal: &ConstructorData3{v0, v1, v2}} }
+func Constructor3(tag string, v0, v1, v2 Value) Value { return Value{Type: TypeConstructor, UnsafePtr: unsafe.Pointer(&ConstructorData3{v0, v1, v2})} }
 
 type ConstructorData4 struct { V0, V1, V2, V3 Value }
-func Constructor4(tag string, v0, v1, v2, v3 Value) Value { return Value{Type: TypeConstructor, StrVal: tag, PtrVal: &ConstructorData4{v0, v1, v2, v3}} }
+func Constructor4(tag string, v0, v1, v2, v3 Value) Value { return Value{Type: TypeConstructor, UnsafePtr: unsafe.Pointer(&ConstructorData4{v0, v1, v2, v3})} }
 
 type ConstructorData5 struct { V0, V1, V2, V3, V4 Value }
-func Constructor5(tag string, v0, v1, v2, v3, v4 Value) Value { return Value{Type: TypeConstructor, StrVal: tag, PtrVal: &ConstructorData5{v0, v1, v2, v3, v4}} }
-
-func ConstructorGet(obj Value, index int) Value {
-	switch r := obj.PtrVal.(type) {
-	case *ConstructorData1:
-		return r.V0
-	case *ConstructorData2:
-		if index == 0 { return r.V0 }
-		return r.V1
-	case *ConstructorData3:
-		if index == 0 { return r.V0 }
-		if index == 1 { return r.V1 }
-		return r.V2
-	case *ConstructorData4:
-		if index == 0 { return r.V0 }
-		if index == 1 { return r.V1 }
-		if index == 2 { return r.V2 }
-		return r.V3
-	case *ConstructorData5:
-		if index == 0 { return r.V0 }
-		if index == 1 { return r.V1 }
-		if index == 2 { return r.V2 }
-		if index == 3 { return r.V3 }
-		return r.V4
-	case ConstructorData:
-		return r[index]
-	}
-	panic("Index out of bounds or invalid ConstructorGet call")
-}
+func Constructor5(tag string, v0, v1, v2, v3, v4 Value) Value { return Value{Type: TypeConstructor, UnsafePtr: unsafe.Pointer(&ConstructorData5{v0, v1, v2, v3, v4})} }
 
 // Function with 1 arg (curried)
 func Func(f func(Value) Value) Value {
-	return Value{Type: TypeFunc, Func: *(*unsafe.Pointer)(unsafe.Pointer(&f))}
+	return Value{Type: TypeFunc, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))}
 }
 
 // Function constructors
-func Func2(f func(Value, Value) Value) Value { return Value{Type: TypeFunc2, Func: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
-func Func3(f func(Value, Value, Value) Value) Value { return Value{Type: TypeFunc3, Func: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
-func Func4(f func(Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc4, Func: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
-func Func5(f func(Value, Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc5, Func: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
-func Func6(f func(Value, Value, Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc6, Func: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
-func Func7(f func(Value, Value, Value, Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc7, Func: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
-func Func8(f func(Value, Value, Value, Value, Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc8, Func: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
-func Func9(f func(Value, Value, Value, Value, Value, Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc9, Func: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
-func Func10(f func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc10, Func: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
+func Func2(f func(Value, Value) Value) Value { return Value{Type: TypeFunc2, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
+func Func3(f func(Value, Value, Value) Value) Value { return Value{Type: TypeFunc3, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
+func Func4(f func(Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc4, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
+func Func5(f func(Value, Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc5, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
+func Func6(f func(Value, Value, Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc6, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
+func Func7(f func(Value, Value, Value, Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc7, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
+func Func8(f func(Value, Value, Value, Value, Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc8, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
+func Func9(f func(Value, Value, Value, Value, Value, Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc9, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
+func Func10(f func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc10, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
 
 func FuncAny(f any) Value {
-	return Value{Type: TypeFunc, PtrVal: f}
+	return Value{Type: TypeFunc, UnsafePtr: unsafe.Pointer(&f)}
 }
 
 
 func Apply(f Value, arg Value) Value {
 	switch f.Type {
 	case TypeFunc:
-		return (*(*func(Value) Value)(unsafe.Pointer(&f.Func)))(arg)
+		return (*(*func(Value) Value)(unsafe.Pointer(&f.UnsafePtr)))(arg)
 	case TypeFunc2:
-		fn := *(*func(Value, Value) Value)(unsafe.Pointer(&f.Func))
+		fn := *(*func(Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
 		return Func(func(a Value) Value { return fn(arg, a) })
 	case TypeFunc3:
-		fn := *(*func(Value, Value, Value) Value)(unsafe.Pointer(&f.Func))
+		fn := *(*func(Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
 		return Func2(func(a, b Value) Value { return fn(arg, a, b) })
 	case TypeFunc4:
-		fn := *(*func(Value, Value, Value, Value) Value)(unsafe.Pointer(&f.Func))
+		fn := *(*func(Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
 		return Func3(func(a, b, c Value) Value { return fn(arg, a, b, c) })
 	case TypeFunc5:
-		fn := *(*func(Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.Func))
+		fn := *(*func(Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
 		return Func4(func(a, b, c, d Value) Value { return fn(arg, a, b, c, d) })
 	default:
 		panic("Attempted to apply a non-function")
@@ -305,15 +299,15 @@ func Apply(f Value, arg Value) Value {
 func Apply2(f Value, arg1, arg2 Value) Value {
 	switch f.Type {
 	case TypeFunc2:
-		return (*(*func(Value, Value) Value)(unsafe.Pointer(&f.Func)))(arg1, arg2)
+		return (*(*func(Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr)))(arg1, arg2)
 	case TypeFunc3:
-		fn := *(*func(Value, Value, Value) Value)(unsafe.Pointer(&f.Func))
+		fn := *(*func(Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
 		return Func(func(a Value) Value { return fn(arg1, arg2, a) })
 	case TypeFunc4:
-		fn := *(*func(Value, Value, Value, Value) Value)(unsafe.Pointer(&f.Func))
+		fn := *(*func(Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
 		return Func2(func(a, b Value) Value { return fn(arg1, arg2, a, b) })
 	case TypeFunc5:
-		fn := *(*func(Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.Func))
+		fn := *(*func(Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
 		return Func3(func(a, b, c Value) Value { return fn(arg1, arg2, a, b, c) })
 	}
 	return Apply(Apply(f, arg1), arg2)
@@ -322,12 +316,12 @@ func Apply2(f Value, arg1, arg2 Value) Value {
 func Apply3(f Value, arg1, arg2, arg3 Value) Value {
 	switch f.Type {
 	case TypeFunc3:
-		return (*(*func(Value, Value, Value) Value)(unsafe.Pointer(&f.Func)))(arg1, arg2, arg3)
+		return (*(*func(Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr)))(arg1, arg2, arg3)
 	case TypeFunc4:
-		fn := *(*func(Value, Value, Value, Value) Value)(unsafe.Pointer(&f.Func))
+		fn := *(*func(Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
 		return Func(func(a Value) Value { return fn(arg1, arg2, arg3, a) })
 	case TypeFunc5:
-		fn := *(*func(Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.Func))
+		fn := *(*func(Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
 		return Func2(func(a, b Value) Value { return fn(arg1, arg2, arg3, a, b) })
 	}
 	return Apply(Apply2(f, arg1, arg2), arg3)
@@ -336,9 +330,9 @@ func Apply3(f Value, arg1, arg2, arg3 Value) Value {
 func Apply4(f Value, arg1, arg2, arg3, arg4 Value) Value {
 	switch f.Type {
 	case TypeFunc4:
-		return (*(*func(Value, Value, Value, Value) Value)(unsafe.Pointer(&f.Func)))(arg1, arg2, arg3, arg4)
+		return (*(*func(Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr)))(arg1, arg2, arg3, arg4)
 	case TypeFunc5:
-		fn := *(*func(Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.Func))
+		fn := *(*func(Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
 		return Func(func(a Value) Value { return fn(arg1, arg2, arg3, arg4, a) })
 	}
 	return Apply(Apply3(f, arg1, arg2, arg3), arg4)
@@ -346,44 +340,44 @@ func Apply4(f Value, arg1, arg2, arg3, arg4 Value) Value {
 
 func Apply5(f Value, arg1, arg2, arg3, arg4, arg5 Value) Value {
 	if f.Type == TypeFunc5 {
-		return (*(*func(Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.Func)))(arg1, arg2, arg3, arg4, arg5)
+		return (*(*func(Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr)))(arg1, arg2, arg3, arg4, arg5)
 	}
 	return Apply(Apply4(f, arg1, arg2, arg3, arg4), arg5)
 }
 
 
 func ArrayAccess(arr Value, index int) Value {
-	return arr.PtrVal.([]Value)[index]
+	return (*(*[]Value)(arr.UnsafePtr))[index]
 }
 
 func Any(v any) Value {
-	return Value{Type: TypeAny, PtrVal: v}
+	return Value{Type: TypeAny, UnsafePtr: unsafe.Pointer(&v)}
 }
 
 func UncurriedApp2(fn Value, a, b Value) Value {
 	if fn.Type == TypeFunc2 {
-		return (*(*func(Value, Value) Value)(unsafe.Pointer(&fn.Func)))(a, b)
+		return (*(*func(Value, Value) Value)(unsafe.Pointer(&fn.UnsafePtr)))(a, b)
 	}
 	return Apply(Apply(fn, a), b)
 }
 
 func UncurriedApp3(fn Value, a, b, c Value) Value {
 	if fn.Type == TypeFunc3 {
-		return (*(*func(Value, Value, Value) Value)(unsafe.Pointer(&fn.Func)))(a, b, c)
+		return (*(*func(Value, Value, Value) Value)(unsafe.Pointer(&fn.UnsafePtr)))(a, b, c)
 	}
 	return Apply(Apply(Apply(fn, a), b), c)
 }
 
 func UncurriedApp4(fn Value, a, b, c, d Value) Value {
 	if fn.Type == TypeFunc4 {
-		return (*(*func(Value, Value, Value, Value) Value)(unsafe.Pointer(&fn.Func)))(a, b, c, d)
+		return (*(*func(Value, Value, Value, Value) Value)(unsafe.Pointer(&fn.UnsafePtr)))(a, b, c, d)
 	}
 	return Apply(Apply(Apply(Apply(fn, a), b), c), d)
 }
 
 func UncurriedApp5(fn Value, a, b, c, d, e Value) Value {
 	if fn.Type == TypeFunc5 {
-		return (*(*func(Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&fn.Func)))(a, b, c, d, e)
+		return (*(*func(Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&fn.UnsafePtr)))(a, b, c, d, e)
 	}
 	return Apply(Apply(Apply(Apply(Apply(fn, a), b), c), d), e)
 }
@@ -401,14 +395,14 @@ func Unbox[T any](v Value) T {
 	switch t.(type) {
 	case int64: return any(v.IntVal).(T)
 	case int: return any(int(v.IntVal)).(T)
-	case string: return any(v.StrVal).(T)
+	case string: return any(*(*string)(v.UnsafePtr)).(T)
 	case float64: return any(math.Float64frombits(uint64(v.IntVal))).(T)
 	case bool: return any(v.IntVal == 1).(T)
 	case Value: return any(v).(T)
 	case func(any) any:
 		res := func(arg any) any { return Apply(v, Box(arg)) }
 		return any(res).(T)
-	default: return v.PtrVal.(T)
+	default: return *(*T)(v.UnsafePtr)
 	}
 }
 

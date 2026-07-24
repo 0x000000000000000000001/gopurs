@@ -1,6 +1,15 @@
 import fs from 'fs';
 import path from 'path';
 
+export const hashString = (str) => {
+    let hash = 5381;
+    let i = str.length;
+    while(i) {
+        hash = (hash * 33) ^ str.charCodeAt(--i);
+    }
+    return (hash >>> 0).toString();
+};
+
 let cachedScanDirs = null;
 
 function getScanDirs(mbFfiDir) {
@@ -181,12 +190,30 @@ export const appendFfiWrappersImpl = function(moduleName) {
                 if (arity > 5) continue; // Not supported yet
 
                 let funcConstructor = arity === 0 ? "Func" : (arity === 1 ? "Func" : `Func${arity}`);
-                let goFuncArgs = parsedArgs.map((_, idx) => `arg${idx} gopurs_runtime.Value`).join(', ');
-                if (arity === 0) goFuncArgs = `_ gopurs_runtime.Value`;
-                if (arity === 1) goFuncArgs = `arg0 gopurs_runtime.Value`;
+                let goFuncArgsNative = parsedArgs.map((_, idx) => `arg${idx} ${parsedArgs[idx].type}`).join(', ');
                 
-                newLines.push(`var ${exportName} = gopurs_runtime.${funcConstructor}(func(${goFuncArgs}) gopurs_runtime.Value {`);
+                let pursName = funcName;
+                if (pursName.charAt(0) >= 'A' && pursName.charAt(0) <= 'Z') {
+                    pursName = pursName.charAt(0).toLowerCase() + pursName.substring(1);
+                }
                 
+                // 1. Generate Native Call_X proxy
+                let callRet = retStr.trim() !== '' ? retStr : '';
+                newLines.push(`func Call_${pursName}(${goFuncArgsNative}) ${callRet} {`);
+                let nativeCallArgs = parsedArgs.map((_, idx) => `arg${idx}`).join(', ');
+                if (callRet === '') {
+                    newLines.push(`\t${funcName}(${nativeCallArgs})`);
+                } else {
+                    newLines.push(`\treturn ${funcName}(${nativeCallArgs})`);
+                }
+                newLines.push(`}`);
+                
+                // 2. Generate boxed wrapper for dynamic dispatch
+                let goFuncArgsBoxed = parsedArgs.map((_, idx) => `arg${idx} gopurs_runtime.Value`).join(', ');
+                if (arity === 0) goFuncArgsBoxed = `_ gopurs_runtime.Value`;
+                if (arity === 1) goFuncArgsBoxed = `arg0 gopurs_runtime.Value`;
+                
+                newLines.push(`var ${exportName} = gopurs_runtime.${funcConstructor}(func(${goFuncArgsBoxed}) gopurs_runtime.Value {`);
                 let callArgs = [];
                 let parseFuncType = function(t) {
                     let match = t.match(/^func\s*\((.*)/);
@@ -247,7 +274,7 @@ export const appendFfiWrappersImpl = function(moduleName) {
                         return `func(${params}) {\n\t\t${applyCall}\n\t}`;
                     } else if (retStr.startsWith("[]") && retStr !== "[]gopurs_runtime.Value") {
                         let elemType = retStr.substring(2);
-                        return `func(${params}) ${retStr} {\n\t\tinner_res${depth} := ${applyCall}\n\t\tres_arr${depth} := inner_res${depth}.PtrVal.([]gopurs_runtime.Value)\n\t\tres_go${depth} := make(${retStr}, len(res_arr${depth}))\n\t\tfor i, v := range res_arr${depth} { res_go${depth}[i] = gopurs_runtime.Unbox[${elemType}](v) }\n\t\treturn res_go${depth}\n\t}`;
+                        return `func(${params}) ${retStr} {\n\t\tinner_res${depth} := ${applyCall}\n\t\tres_arr${depth} := inner_res${depth}.PtrVal().([]gopurs_runtime.Value)\n\t\tres_go${depth} := make(${retStr}, len(res_arr${depth}))\n\t\tfor i, v := range res_arr${depth} { res_go${depth}[i] = gopurs_runtime.Unbox[${elemType}](v) }\n\t\treturn res_go${depth}\n\t}`;
                     } else if (retStr === "any" || retStr === "interface{}") {
                         return `func(${params}) ${retStr} {\n\t\treturn ${applyCall}\n\t}`;
                     } else if (retStr === "gopurs_runtime.Value") {
@@ -281,9 +308,9 @@ export const appendFfiWrappersImpl = function(moduleName) {
                                            `\t\t})`;
                                 }
                             } else {
-                                let argUnwrap = "arg.PtrVal";
+                                let argUnwrap = "arg.PtrVal()";
                                 if (argT === "any" || argT === "interface{}") {
-                                    argUnwrap = "arg.PtrVal";
+                                    argUnwrap = "arg.PtrVal()";
                                 } else if (argT === "gopurs_runtime.Value") {
                                     argUnwrap = "arg";
                                 } else if (argT.startsWith("func")) {
@@ -339,7 +366,7 @@ export const appendFfiWrappersImpl = function(moduleName) {
                     } else if (t.startsWith("[]") && t !== "[]gopurs_runtime.Value") {
                         let elemType = t.substring(2);
                         if (elemType === "any") elemType = "interface{}";
-                        newLines.push(`\targ${idx}_arr := arg${idx}.PtrVal.([]gopurs_runtime.Value)`);
+                        newLines.push(`\targ${idx}_arr := arg${idx}.PtrVal().([]gopurs_runtime.Value)`);
                         newLines.push(`\tgo_arg${idx} := make(${t}, len(arg${idx}_arr))`);
                         if (elemType === "interface{}") {
                             newLines.push(`\tfor i, v := range arg${idx}_arr { go_arg${idx}[i] = v }`);
@@ -357,7 +384,7 @@ export const appendFfiWrappersImpl = function(moduleName) {
                             newLines.push(`\tgo_arg${idx} := make(${t})`);
                             newLines.push(`\tfor k, v := range arg${idx}_map { go_arg${idx}[k] = v }`);
                         } else {
-                            newLines.push(`\tgo_arg${idx} := arg${idx}.PtrVal.(${t})`);
+                            newLines.push(`\tgo_arg${idx} := arg${idx}.PtrVal().(${t})`);
                         }
                     } else {
                         newLines.push(`\tgo_arg${idx} := gopurs_runtime.Unbox[${t}](arg${idx})`);
