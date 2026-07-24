@@ -82,7 +82,7 @@ printGoExpr expr = case expr of
       else
         "gopurs_runtime.Constructor(\"" <> tag <> "\", []gopurs_runtime.Value{" <> String.joinWith ", " (map printGoExpr args) <> "})"
   GoConstructorAccess obj idx ->
-    "gopurs_runtime.ConstructorGet(" <> printGoExpr obj <> ", " <> show idx <> ")"
+    "(*[1024]gopurs_runtime.Value)(" <> printGoExpr obj <> ".UnsafePtr)[" <> show idx <> "]"
   GoBranch branches def ->
     "func() gopurs_runtime.Value {\n" <>
     String.joinWith "\n" (map (\(Tuple cond t) -> "if (" <> printGoExpr cond <> ").IntVal != 0 {\nreturn " <> printGoExpr t <> "\n}") branches) <>
