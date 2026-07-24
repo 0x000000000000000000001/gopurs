@@ -8,7 +8,7 @@ import Data.String as String
 import Data.Array as Array
 import Data.Maybe (Maybe(..), fromMaybe, isJust)
 import Data.Newtype (unwrap)
-import PureScript.Backend.Optimizer.CoreFn (Literal(..), Ident(..), Qualified(..), Prop(..), ModuleName(..))
+import PureScript.Backend.Optimizer.CoreFn (Literal(..), Ident(..), Qualified(..), Prop(..), ModuleName(..), ExprType(..))
 import Data.Tuple (Tuple(..))
 import Data.Array.NonEmpty as NonEmptyArray
 import Data.Array.NonEmpty (NonEmptyArray, fromArray, toArray)
@@ -37,16 +37,25 @@ import PureScript.Backend.Optimizer.Codegen.Tco as Tco
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..), tcoAnalysisOf)
 import Gopurs.FreeVars (freeVars, localId)
 
-data GoType = TypeValue | TypeInt64
+data GoType = TypeValue | TypeInt64 | TypeFloat64 | TypeString | TypeBool
 derive instance eqGoType :: Eq GoType
 
 boxGoExpr :: GoExpr -> GoType -> GoExpr
 boxGoExpr expr TypeValue = expr
 boxGoExpr expr TypeInt64 = GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ expr ]
+boxGoExpr expr TypeFloat64 = GoCall (GoSelector (GoVar "gopurs_runtime") "Float") [ expr ]
+boxGoExpr expr TypeString = GoCall (GoSelector (GoVar "gopurs_runtime") "Str") [ expr ]
+boxGoExpr expr TypeBool = GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ expr ]
 
-unboxGoExpr :: GoExpr -> GoType -> GoExpr
-unboxGoExpr expr TypeInt64 = expr
-unboxGoExpr expr TypeValue = GoSelector expr "IntVal"
+unboxGoExpr :: GoExpr -> GoType -> GoType -> GoExpr
+unboxGoExpr expr currentType desiredType =
+  if currentType == desiredType then expr
+  else case desiredType of
+    TypeValue -> expr
+    TypeInt64 -> GoSelector expr "IntVal"
+    TypeFloat64 -> GoCall (GoSelector expr "FloatVal") []
+    TypeString -> GoSelector expr "StrVal"
+    TypeBool -> GoBinOp "!=" (GoSelector expr "IntVal") (GoInt 0)
 
 
 capitalize :: String -> String
@@ -174,7 +183,7 @@ translate importsArray mod =
                           let
                             res = translateExprImpl_ helpersRef 0 modNameStr recVars Map.empty Map.empty (Just (sanitizeName name)) [] false false 0 expr
                           in
-                            [ { identifier: sanitizeName name, expression: wrapInStmts [] res.stmts res.expr } ]
+                            [ { identifier: sanitizeName name, expression: wrapInStmts [] res.stmts (boxGoExpr res.expr res.exprType) } ]
                       )
                       group.bindings
             else
@@ -183,7 +192,7 @@ translate importsArray mod =
                     let
                       res = translateExprImpl_ helpersRef 0 modNameStr [] Map.empty Map.empty (Just (sanitizeName name)) [] false false 0 expr
                     in
-                      [ { identifier: sanitizeName name, expression: wrapInStmts [] res.stmts res.expr } ]
+                      [ { identifier: sanitizeName name, expression: wrapInStmts [] res.stmts (boxGoExpr res.expr res.exprType) } ]
                 )
                 group.bindings
       )
@@ -282,8 +291,20 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
       else mkNodeThunk unit
   in
     case expr of
-      Typed _ a ->
-        translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent loopCtx isTail inEffectBlock nextId a
+      Typed type_ a ->
+        let
+          res = translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent loopCtx isTail inEffectBlock nextId a
+          expectedGoType = case type_ of
+            Int -> TypeInt64
+            Number -> TypeFloat64
+            String -> TypeString
+            Char -> TypeString
+            Boolean -> TypeBool
+            _ -> TypeValue
+        in
+          if res.exprType == expectedGoType then res
+          else if expectedGoType == TypeValue then res { expr = boxGoExpr res.expr res.exprType, exprType = TypeValue }
+          else res { expr = unboxGoExpr res.expr res.exprType expectedGoType, exprType = expectedGoType }
       Var (Qualified mbMn (Ident i)) ->
         let
           safeName = sanitizeName i
@@ -303,11 +324,11 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
         in
           { stmts: StmtEmpty, expr: GoVar v.name, exprType: v.goType, nextId }
 
-      Lit (LitString s) -> { stmts: StmtEmpty, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Str") [ GoString s ], exprType: TypeValue, nextId }
-      Lit (LitInt i) -> { stmts: StmtEmpty, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoInt i ], exprType: TypeValue, nextId }
-      Lit (LitNumber n) -> { stmts: StmtEmpty, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Float") [ GoRaw (show n) ], exprType: TypeValue, nextId }
-      Lit (LitBoolean b) -> { stmts: StmtEmpty, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoRaw (if b then "true" else "false") ], exprType: TypeValue, nextId }
-      Lit (LitChar c) -> { stmts: StmtEmpty, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Str") [ GoString (SCU.singleton c) ], exprType: TypeValue, nextId }
+      Lit (LitString s) -> { stmts: StmtEmpty, expr: GoString s, exprType: TypeString, nextId }
+      Lit (LitInt i) -> { stmts: StmtEmpty, expr: GoInt i, exprType: TypeInt64, nextId }
+      Lit (LitNumber n) -> { stmts: StmtEmpty, expr: GoRaw (show n), exprType: TypeFloat64, nextId }
+      Lit (LitBoolean b) -> { stmts: StmtEmpty, expr: GoRaw (if b then "true" else "false"), exprType: TypeBool, nextId }
+      Lit (LitChar c) -> { stmts: StmtEmpty, expr: GoString (SCU.singleton c), exprType: TypeString, nextId }
 
       Lit (LitArray xs) ->
         let
@@ -518,7 +539,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
           bindingExpr = executeIfOpaque (unwrapTcoExpr binding) (boxGoExpr resBinding.expr resBinding.exprType)
           bodyExpr = executeIfOpaque (unwrapTcoExpr body) resBody.expr
         in
-          { stmts: resBinding.stmts <> StmtLeaf (GoAssign name bindingExpr) <> resBody.stmts, expr: bodyExpr, exprType: TypeValue, nextId: resBody.nextId }
+          { stmts: resBinding.stmts <> StmtLeaf (GoAssign name bindingExpr) <> resBody.stmts, expr: bodyExpr, exprType: resBody.exprType, nextId: resBody.nextId }
 
       EffectPure binding ->
         translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false false nextId binding
@@ -534,11 +555,11 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
         let
           originalName = localId mbIdent lvl
           name = originalName <> "_" <> show nextId
-          newBound = Map.insert originalName { name, goType: TypeValue } bound
           resBinding = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false false (nextId + 1) binding
+          newBound = Map.insert originalName { name, goType: resBinding.exprType } bound
           resBody = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound newBound Nothing loopCtx isTail false resBinding.nextId body
         in
-          { stmts: resBinding.stmts <> StmtLeaf (GoAssign name resBinding.expr) <> resBody.stmts, expr: resBody.expr, exprType: TypeValue, nextId: resBody.nextId }
+          { stmts: resBinding.stmts <> StmtLeaf (GoAssign name resBinding.expr) <> resBody.stmts, expr: resBody.expr, exprType: resBody.exprType, nextId: resBody.nextId }
 
       LetRec lvl bindings body ->
         let
@@ -616,7 +637,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
 
                 resBody = translateExprImpl_ helpersRef (depth + 1) modNameStr combinedRecVars namedBound allocRes.newBound Nothing loopCtx isTail false accBindings.nextId body
               in
-                { stmts: foldMap StmtLeaf declStmts <> accBindings.stmts <> foldMap StmtLeaf assignStmts <> resBody.stmts, expr: resBody.expr, exprType: TypeValue, nextId: resBody.nextId }
+                { stmts: foldMap StmtLeaf declStmts <> accBindings.stmts <> foldMap StmtLeaf assignStmts <> resBody.stmts, expr: resBody.expr, exprType: resBody.exprType, nextId: resBody.nextId }
 
       Accessor obj accessor ->
         let
@@ -677,7 +698,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
                 let
                   resCond = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false false acc.nextId condExpr
                   resBody = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing loopCtx isTail false resCond.nextId bodyExpr
-                  goIf = GoIfElse resCond.expr (flattenStmts resBody.stmts <> [ GoMutate tmpVar (boxGoExpr resBody.expr resBody.exprType), GoRaw ("goto " <> labelName) ]) []
+                  goIf = GoIfElse (unboxGoExpr resCond.expr resCond.exprType TypeBool) (flattenStmts resBody.stmts <> [ GoMutate tmpVar (boxGoExpr resBody.expr resBody.exprType), GoRaw ("goto " <> labelName) ]) []
                 in
                   { stmts: acc.stmts <> StmtLeaf (GoRaw "{") <> resCond.stmts <> StmtLeaf goIf <> StmtLeaf (GoRaw "}"), exprType: TypeValue, nextId: resBody.nextId }
             )
@@ -691,9 +712,9 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
           let
             resE = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false false nextId e
             goOp = case op1 of
-              OpBooleanNot -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "==" (GoSelector resE.expr "IntVal") (GoInt 0) ], exprType: TypeValue }
-              OpIntNegate -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoBinOp "-" (GoInt 0) (GoSelector resE.expr "IntVal") ], exprType: TypeValue }
-              OpIntBitNot -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoBinOp "^" (GoRaw "^0") (GoSelector resE.expr "IntVal") ], exprType: TypeValue }
+              OpBooleanNot -> { expr: GoBinOp "!=" (unboxGoExpr resE.expr resE.exprType TypeBool) (GoRaw "true"), exprType: TypeBool }
+              OpIntNegate -> { expr: GoBinOp "-" (GoInt 0) (unboxGoExpr resE.expr resE.exprType TypeInt64), exprType: TypeInt64 }
+              OpIntBitNot -> { expr: GoBinOp "^" (GoRaw "^0") (unboxGoExpr resE.expr resE.exprType TypeInt64), exprType: TypeInt64 }
               OpNumberNegate -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "FloatNeg") [ resE.expr ], exprType: TypeValue }
               OpIsTag (Qualified _ (Ident tag)) -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "==" (GoSelector (boxGoExpr resE.expr resE.exprType) "StrVal") (GoString tag) ], exprType: TypeValue }
               OpArrayLength -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoCall (GoVar "int64") [ GoCall (GoVar "len") [ GoTypeAssertion (GoSelector resE.expr "PtrVal") "[]gopurs_runtime.Value" ] ] ], exprType: TypeValue }
@@ -704,54 +725,54 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
             res1 = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false false nextId e1
             res2 = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false false res1.nextId e2
             goOp = case op2 of
-              OpArrayIndex -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayAccess") [ res1.expr, GoCall (GoVar "int") [ GoSelector res2.expr "IntVal" ] ], exprType: TypeValue }
-              OpIntNum OpAdd -> { expr: GoBinOp "+" (unboxGoExpr res1.expr res1.exprType) (unboxGoExpr res2.expr res2.exprType), exprType: TypeInt64 }
-              OpIntNum OpSubtract -> { expr: GoBinOp "-" (unboxGoExpr res1.expr res1.exprType) (unboxGoExpr res2.expr res2.exprType), exprType: TypeInt64 }
-              OpIntNum OpMultiply -> { expr: GoBinOp "*" (unboxGoExpr res1.expr res1.exprType) (unboxGoExpr res2.expr res2.exprType), exprType: TypeInt64 }
-              OpIntNum OpDivide -> { expr: GoBinOp "/" (unboxGoExpr res1.expr res1.exprType) (unboxGoExpr res2.expr res2.exprType), exprType: TypeInt64 }
-              OpIntBitAnd -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoBinOp "&" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ], exprType: TypeValue }
-              OpIntBitOr -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoBinOp "|" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ], exprType: TypeValue }
-              OpIntBitXor -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoBinOp "^" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ], exprType: TypeValue }
-              OpIntBitShiftLeft -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoBinOp "<<" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ], exprType: TypeValue }
-              OpIntBitShiftRight -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoBinOp ">>" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ], exprType: TypeValue }
+              OpArrayIndex -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayAccess") [ res1.expr, GoCall (GoVar "int") [ unboxGoExpr res2.expr res2.exprType TypeInt64 ] ], exprType: TypeValue }
+              OpIntNum OpAdd -> { expr: GoBinOp "+" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
+              OpIntNum OpSubtract -> { expr: GoBinOp "-" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
+              OpIntNum OpMultiply -> { expr: GoBinOp "*" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
+              OpIntNum OpDivide -> { expr: GoBinOp "/" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
+              OpIntBitAnd -> { expr: GoBinOp "&" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
+              OpIntBitOr -> { expr: GoBinOp "|" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
+              OpIntBitXor -> { expr: GoBinOp "^" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
+              OpIntBitShiftLeft -> { expr: GoBinOp "<<" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
+              OpIntBitShiftRight -> { expr: GoBinOp ">>" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
               OpIntBitZeroFillShiftRight -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Zshr") [ res1.expr, res2.expr ], exprType: TypeValue }
-              OpIntOrd OpEq -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "==" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ], exprType: TypeValue }
-              OpIntOrd OpNotEq -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "!=" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ], exprType: TypeValue }
-              OpIntOrd OpLt -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "<" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ], exprType: TypeValue }
-              OpIntOrd OpLte -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "<=" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ], exprType: TypeValue }
-              OpIntOrd OpGt -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp ">" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ], exprType: TypeValue }
-              OpIntOrd OpGte -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp ">=" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ], exprType: TypeValue }
-              OpNumberNum OpAdd -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "FloatAdd") [ res1.expr, res2.expr ], exprType: TypeValue }
-              OpNumberNum OpSubtract -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "FloatSub") [ res1.expr, res2.expr ], exprType: TypeValue }
-              OpNumberNum OpMultiply -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "FloatMul") [ res1.expr, res2.expr ], exprType: TypeValue }
-              OpNumberNum OpDivide -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "FloatDiv") [ res1.expr, res2.expr ], exprType: TypeValue }
-              OpNumberOrd OpEq -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "FloatEq") [ res1.expr, res2.expr ], exprType: TypeValue }
-              OpNumberOrd OpNotEq -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "FloatNeq") [ res1.expr, res2.expr ], exprType: TypeValue }
-              OpNumberOrd OpLt -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "FloatLt") [ res1.expr, res2.expr ], exprType: TypeValue }
-              OpNumberOrd OpLte -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "FloatLte") [ res1.expr, res2.expr ], exprType: TypeValue }
-              OpNumberOrd OpGt -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "FloatGt") [ res1.expr, res2.expr ], exprType: TypeValue }
-              OpNumberOrd OpGte -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "FloatGte") [ res1.expr, res2.expr ], exprType: TypeValue }
-              OpStringAppend -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Str") [ GoBinOp "+" (GoSelector res1.expr "StrVal") (GoSelector res2.expr "StrVal") ], exprType: TypeValue }
-              OpStringOrd OpEq -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "==" (GoSelector res1.expr "StrVal") (GoSelector res2.expr "StrVal") ], exprType: TypeValue }
-              OpStringOrd OpNotEq -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "!=" (GoSelector res1.expr "StrVal") (GoSelector res2.expr "StrVal") ], exprType: TypeValue }
-              OpStringOrd OpLt -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "<" (GoSelector res1.expr "StrVal") (GoSelector res2.expr "StrVal") ], exprType: TypeValue }
-              OpStringOrd OpLte -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "<=" (GoSelector res1.expr "StrVal") (GoSelector res2.expr "StrVal") ], exprType: TypeValue }
-              OpStringOrd OpGt -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp ">" (GoSelector res1.expr "StrVal") (GoSelector res2.expr "StrVal") ], exprType: TypeValue }
-              OpStringOrd OpGte -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp ">=" (GoSelector res1.expr "StrVal") (GoSelector res2.expr "StrVal") ], exprType: TypeValue }
-              OpCharOrd OpEq -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "==" (GoSelector res1.expr "StrVal") (GoSelector res2.expr "StrVal") ], exprType: TypeValue }
-              OpCharOrd OpNotEq -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "!=" (GoSelector res1.expr "StrVal") (GoSelector res2.expr "StrVal") ], exprType: TypeValue }
-              OpCharOrd OpLt -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "<" (GoSelector res1.expr "StrVal") (GoSelector res2.expr "StrVal") ], exprType: TypeValue }
-              OpCharOrd OpLte -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "<=" (GoSelector res1.expr "StrVal") (GoSelector res2.expr "StrVal") ], exprType: TypeValue }
-              OpCharOrd OpGt -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp ">" (GoSelector res1.expr "StrVal") (GoSelector res2.expr "StrVal") ], exprType: TypeValue }
-              OpCharOrd OpGte -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp ">=" (GoSelector res1.expr "StrVal") (GoSelector res2.expr "StrVal") ], exprType: TypeValue }
-              OpBooleanOrd OpEq -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "==" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ], exprType: TypeValue }
-              OpBooleanOrd OpNotEq -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "!=" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ], exprType: TypeValue }
-              OpBooleanOrd OpLt -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "<" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ], exprType: TypeValue }
-              OpBooleanOrd OpLte -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "<=" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ], exprType: TypeValue }
-              OpBooleanOrd OpGt -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp ">" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ], exprType: TypeValue }
-              OpBooleanOrd OpGte -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp ">=" (GoSelector res1.expr "IntVal") (GoSelector res2.expr "IntVal") ], exprType: TypeValue }
-              OpBooleanAnd -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "&&" (GoBinOp "!=" (GoSelector res1.expr "IntVal") (GoInt 0)) (GoBinOp "!=" (GoSelector res2.expr "IntVal") (GoInt 0)) ], exprType: TypeValue }
-              OpBooleanOr -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "||" (GoBinOp "!=" (GoSelector res1.expr "IntVal") (GoInt 0)) (GoBinOp "!=" (GoSelector res2.expr "IntVal") (GoInt 0)) ], exprType: TypeValue }
+              OpIntOrd OpEq -> { expr: GoBinOp "==" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeBool }
+              OpIntOrd OpNotEq -> { expr: GoBinOp "!=" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeBool }
+              OpIntOrd OpLt -> { expr: GoBinOp "<" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeBool }
+              OpIntOrd OpLte -> { expr: GoBinOp "<=" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeBool }
+              OpIntOrd OpGt -> { expr: GoBinOp ">" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeBool }
+              OpIntOrd OpGte -> { expr: GoBinOp ">=" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeBool }
+              OpNumberNum OpAdd -> { expr: GoBinOp "+" (unboxGoExpr res1.expr res1.exprType TypeFloat64) (unboxGoExpr res2.expr res2.exprType TypeFloat64), exprType: TypeFloat64 }
+              OpNumberNum OpSubtract -> { expr: GoBinOp "-" (unboxGoExpr res1.expr res1.exprType TypeFloat64) (unboxGoExpr res2.expr res2.exprType TypeFloat64), exprType: TypeFloat64 }
+              OpNumberNum OpMultiply -> { expr: GoBinOp "*" (unboxGoExpr res1.expr res1.exprType TypeFloat64) (unboxGoExpr res2.expr res2.exprType TypeFloat64), exprType: TypeFloat64 }
+              OpNumberNum OpDivide -> { expr: GoBinOp "/" (unboxGoExpr res1.expr res1.exprType TypeFloat64) (unboxGoExpr res2.expr res2.exprType TypeFloat64), exprType: TypeFloat64 }
+              OpNumberOrd OpEq -> { expr: GoBinOp "==" (unboxGoExpr res1.expr res1.exprType TypeFloat64) (unboxGoExpr res2.expr res2.exprType TypeFloat64), exprType: TypeBool }
+              OpNumberOrd OpNotEq -> { expr: GoBinOp "!=" (unboxGoExpr res1.expr res1.exprType TypeFloat64) (unboxGoExpr res2.expr res2.exprType TypeFloat64), exprType: TypeBool }
+              OpNumberOrd OpLt -> { expr: GoBinOp "<" (unboxGoExpr res1.expr res1.exprType TypeFloat64) (unboxGoExpr res2.expr res2.exprType TypeFloat64), exprType: TypeBool }
+              OpNumberOrd OpLte -> { expr: GoBinOp "<=" (unboxGoExpr res1.expr res1.exprType TypeFloat64) (unboxGoExpr res2.expr res2.exprType TypeFloat64), exprType: TypeBool }
+              OpNumberOrd OpGt -> { expr: GoBinOp ">" (unboxGoExpr res1.expr res1.exprType TypeFloat64) (unboxGoExpr res2.expr res2.exprType TypeFloat64), exprType: TypeBool }
+              OpNumberOrd OpGte -> { expr: GoBinOp ">=" (unboxGoExpr res1.expr res1.exprType TypeFloat64) (unboxGoExpr res2.expr res2.exprType TypeFloat64), exprType: TypeBool }
+              OpStringAppend -> { expr: GoBinOp "+" (unboxGoExpr res1.expr res1.exprType TypeString) (unboxGoExpr res2.expr res2.exprType TypeString), exprType: TypeString }
+              OpStringOrd OpEq -> { expr: GoBinOp "==" (unboxGoExpr res1.expr res1.exprType TypeString) (unboxGoExpr res2.expr res2.exprType TypeString), exprType: TypeBool }
+              OpStringOrd OpNotEq -> { expr: GoBinOp "!=" (unboxGoExpr res1.expr res1.exprType TypeString) (unboxGoExpr res2.expr res2.exprType TypeString), exprType: TypeBool }
+              OpStringOrd OpLt -> { expr: GoBinOp "<" (unboxGoExpr res1.expr res1.exprType TypeString) (unboxGoExpr res2.expr res2.exprType TypeString), exprType: TypeBool }
+              OpStringOrd OpLte -> { expr: GoBinOp "<=" (unboxGoExpr res1.expr res1.exprType TypeString) (unboxGoExpr res2.expr res2.exprType TypeString), exprType: TypeBool }
+              OpStringOrd OpGt -> { expr: GoBinOp ">" (unboxGoExpr res1.expr res1.exprType TypeString) (unboxGoExpr res2.expr res2.exprType TypeString), exprType: TypeBool }
+              OpStringOrd OpGte -> { expr: GoBinOp ">=" (unboxGoExpr res1.expr res1.exprType TypeString) (unboxGoExpr res2.expr res2.exprType TypeString), exprType: TypeBool }
+              OpCharOrd OpEq -> { expr: GoBinOp "==" (unboxGoExpr res1.expr res1.exprType TypeString) (unboxGoExpr res2.expr res2.exprType TypeString), exprType: TypeBool }
+              OpCharOrd OpNotEq -> { expr: GoBinOp "!=" (unboxGoExpr res1.expr res1.exprType TypeString) (unboxGoExpr res2.expr res2.exprType TypeString), exprType: TypeBool }
+              OpCharOrd OpLt -> { expr: GoBinOp "<" (unboxGoExpr res1.expr res1.exprType TypeString) (unboxGoExpr res2.expr res2.exprType TypeString), exprType: TypeBool }
+              OpCharOrd OpLte -> { expr: GoBinOp "<=" (unboxGoExpr res1.expr res1.exprType TypeString) (unboxGoExpr res2.expr res2.exprType TypeString), exprType: TypeBool }
+              OpCharOrd OpGt -> { expr: GoBinOp ">" (unboxGoExpr res1.expr res1.exprType TypeString) (unboxGoExpr res2.expr res2.exprType TypeString), exprType: TypeBool }
+              OpCharOrd OpGte -> { expr: GoBinOp ">=" (unboxGoExpr res1.expr res1.exprType TypeString) (unboxGoExpr res2.expr res2.exprType TypeString), exprType: TypeBool }
+              OpBooleanOrd OpEq -> { expr: GoBinOp "==" (unboxGoExpr res1.expr res1.exprType TypeBool) (unboxGoExpr res2.expr res2.exprType TypeBool), exprType: TypeBool }
+              OpBooleanOrd OpNotEq -> { expr: GoBinOp "!=" (unboxGoExpr res1.expr res1.exprType TypeBool) (unboxGoExpr res2.expr res2.exprType TypeBool), exprType: TypeBool }
+              OpBooleanOrd OpLt -> { expr: GoBinOp "<" (unboxGoExpr res1.expr res1.exprType TypeBool) (unboxGoExpr res2.expr res2.exprType TypeBool), exprType: TypeBool }
+              OpBooleanOrd OpLte -> { expr: GoBinOp "<=" (unboxGoExpr res1.expr res1.exprType TypeBool) (unboxGoExpr res2.expr res2.exprType TypeBool), exprType: TypeBool }
+              OpBooleanOrd OpGt -> { expr: GoBinOp ">" (unboxGoExpr res1.expr res1.exprType TypeBool) (unboxGoExpr res2.expr res2.exprType TypeBool), exprType: TypeBool }
+              OpBooleanOrd OpGte -> { expr: GoBinOp ">=" (unboxGoExpr res1.expr res1.exprType TypeBool) (unboxGoExpr res2.expr res2.exprType TypeBool), exprType: TypeBool }
+              OpBooleanAnd -> { expr: GoBinOp "&&" (unboxGoExpr res1.expr res1.exprType TypeBool) (unboxGoExpr res2.expr res2.exprType TypeBool), exprType: TypeBool }
+              OpBooleanOr -> { expr: GoBinOp "||" (unboxGoExpr res1.expr res1.exprType TypeBool) (unboxGoExpr res2.expr res2.exprType TypeBool), exprType: TypeBool }
           in
             { stmts: res1.stmts <> res2.stmts, expr: goOp.expr, exprType: goOp.exprType, nextId: res2.nextId }
 

@@ -98,7 +98,7 @@ printGoExpr expr = case expr of
   GoContinue label ->
     "continue " <> label
   GoIfElse cond trueStmts falseStmts ->
-    "if (" <> printGoExpr cond <> ").IntVal != 0 {\n" <>
+    "if " <> printGoExpr cond <> " {\n" <>
       String.joinWith "\n" (map printGoExpr trueStmts) <>
     "\n} else {\n" <>
       String.joinWith "\n" (map printGoExpr falseStmts) <>

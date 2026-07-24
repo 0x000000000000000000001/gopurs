@@ -41,6 +41,10 @@ type Value struct {
 	UnsafePtr unsafe.Pointer
 }
 
+func (v Value) FloatVal() float64 {
+	return math.Float64frombits(uint64(v.IntVal))
+}
+
 func Str(v string) Value {
 	return Value{Type: TypeString, StrVal: v}
 }
