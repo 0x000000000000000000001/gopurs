@@ -83,3 +83,4 @@ freeVars (TcoExpr _ syntax) = case syntax of
   PrimEffect _ -> Set.empty
   PrimUndefined -> Set.empty
   Fail _ -> Set.empty
+  Typed _ a -> freeVars a

@@ -13,5 +13,8 @@
   "dependencies": {
     "esbuild": "^0.28.1",
     "purs-backend-es": "^1.4.3"
+  },
+  "devDependencies": {
+    "purescript": "github:0x000000000000000000001/purescript-npm"
   }
 }
