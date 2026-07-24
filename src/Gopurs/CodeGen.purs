@@ -36,6 +36,8 @@ import Gopurs.Printer (printGoFile, printGoExpr, printGoDeclVar)
 import PureScript.Backend.Optimizer.Codegen.Tco as Tco
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..), tcoAnalysisOf)
 import Gopurs.FreeVars (freeVars, localId, paramTypes)
+import Node.FS.Sync as FS
+import Node.Encoding (Encoding(..))
 
 data GoType = TypeValue | TypeInt64 | TypeFloat64 | TypeString | TypeBool
 derive instance eqGoType :: Eq GoType
@@ -163,22 +165,37 @@ translate importsArray mod =
       (Tuple [] [])
       mod.bindings
 
+    moduleArities :: Map String Int
+    moduleArities = Map.fromFoldable $ Array.concatMap
+      ( \group ->
+          Array.concatMap
+            ( \(Tuple (Ident name) val) ->
+                case extractUncurriedAbs val of
+                  Just { args } -> [ Tuple (sanitizeName name) (Array.length args) ]
+                  Nothing -> [ Tuple (sanitizeName name) 0 ]
+            )
+            group.bindings
+      )
+      tcoBindings
+
     Tuple decls helpers = unsafePerformEffect do
       let d = Array.concatMap
             ( \group ->
                 let
                   recVars = if group.recursive then map (\(Tuple (Ident name) _) -> sanitizeName name) group.bindings else []
-                in
-                  let
-                    mutRecBinds = traverse (\(Tuple (Ident name) val) -> map (\abs -> { ident: sanitizeName name, args: abs.args, body: abs.body, fvs: abs.fvs }) (extractUncurriedAbs val)) group.bindings
-                  in
-                    case mutRecBinds of
-                      Just fns ->
-                        let
-                          loopCtxs = map (\fn -> { ident: fn.ident, params: fn.args, loopParams: map (\p -> p <> "_loop") fn.args }) fns
+                  
+                  processBindingGroup :: Array (Tuple Ident TcoExpr) -> Boolean -> Array GoDecl
+                  processBindingGroup binds isRec =
+                    let
+                      mutRecBinds = traverse (\(Tuple (Ident name) val) -> map (\abs -> { ident: sanitizeName name, args: abs.args, body: abs.body, fvs: abs.fvs }) (extractUncurriedAbs val)) binds
+                    in
+                      case mutRecBinds of
+                        Just fns ->
+                          let
+                            loopCtxs = map (\fn -> { ident: fn.ident, params: fn.args, loopParams: map (\p -> p <> "_loop") fn.args }) fns
 
-                          fnWrapperStmts = map
-                            ( \fn ->
+                            fnWrapperStmts = map
+                              ( \fn ->
                                 let
                                   pTypes = paramTypes fn.body
                                   paramsWithTypes = map (\idStr -> 
@@ -191,7 +208,7 @@ translate importsArray mod =
                                   
                                   isSelfRecursiveLoop = group.recursive && Array.length group.bindings == 1
                                   currentLoopCtx = if isSelfRecursiveLoop then [ { ident: fn.ident, params: map fst paramsWithTypes, loopParams: map (\p -> fst p <> "_loop") paramsWithTypes, goTypes: map snd paramsWithTypes } ] else []
-                                  resBodyMut = translateExprImpl_ helpersRef 0 modNameStr recVars Map.empty newBound Nothing currentLoopCtx isSelfRecursiveLoop false 0 fn.body
+                                  resBodyMut = translateExprImpl_ helpersRef 0 modNameStr recVars moduleArities newBound Nothing currentLoopCtx isSelfRecursiveLoop false 0 fn.body
                                   goName = fn.ident
                                   loopParams = map (\(Tuple idStr _) -> idStr <> "_loop") paramsWithTypes
                                   initVars = Array.concatMap (\(Tuple p goT) -> [ GoRaw ("var " <> p <> " " <> goTypeToStr goT <> " = " <> p <> "_loop"), GoRaw ("_ = " <> p) ]) paramsWithTypes
@@ -214,19 +231,24 @@ translate importsArray mod =
                                       Array.foldr (\(Tuple p goT) acc -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> p <> "_loop " <> goTypeToStr goT <> ") gopurs_runtime.Value {\nreturn " <> printGoExpr acc <> "\n}") ]) iife paramsWithTypes
                                 in
                                   { identifier: goName, expression: funcExpr }
+                              )
+                              fns
+                          in
+                            fnWrapperStmts
+                        Nothing ->
+                          Array.concatMap
+                            ( \(Tuple (Ident name) expr) ->
+                                let
+                                  res = translateExprImpl_ helpersRef 0 modNameStr recVars moduleArities Map.empty (Just (sanitizeName name)) [] false false 0 expr
+                                in
+                                  [ { identifier: sanitizeName name, expression: wrapInStmts [] res.stmts (boxGoExpr res.expr res.exprType) } ]
                             )
-                            fns
-                        in 
-                          fnWrapperStmts
-                      Nothing ->
-                        Array.concatMap
-                          ( \(Tuple (Ident name) expr) ->
-                              let
-                                res = translateExprImpl_ helpersRef 0 modNameStr recVars Map.empty Map.empty (Just (sanitizeName name)) [] false false 0 expr
-                              in
-                                [ { identifier: sanitizeName name, expression: wrapInStmts [] res.stmts (boxGoExpr res.expr res.exprType) } ]
-                          )
-                          group.bindings
+                            binds
+                in
+                  if group.recursive then
+                    processBindingGroup group.bindings true
+                  else
+                    Array.concatMap (\b -> processBindingGroup [b] false) group.bindings
             )
             tcoBindings
       h <- Ref.read helpersRef
@@ -285,18 +307,18 @@ executeIfOpaque expr goExpr =
   else GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ goExpr, GoRaw "gopurs_runtime.Value{}" ]
 
 
-translateExprImpl :: Ref { decls :: Array GoDecl, rawDecls :: Array String } -> Int -> String -> Array String -> Map String String -> Map String { name :: String, goType :: GoType } -> Maybe String -> Array { ident :: String, params :: Array String, loopParams :: Array String, goTypes :: Array GoType } -> Boolean -> Int -> TcoExpr -> { stmts :: StmtTree, expr :: GoExpr, exprType :: GoType, nextId :: Int }
-translateExprImpl helpersRef depth modNameStr recVars namedBound bound tcoIdent loopCtx isTail nextId tcoExpr =
-  translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent loopCtx isTail false nextId tcoExpr
+translateExprImpl :: Ref { decls :: Array GoDecl, rawDecls :: Array String } -> Int -> String -> Array String -> Map String Int -> Map String { name :: String, goType :: GoType } -> Maybe String -> Array { ident :: String, params :: Array String, loopParams :: Array String, goTypes :: Array GoType } -> Boolean -> Int -> TcoExpr -> { stmts :: StmtTree, expr :: GoExpr, exprType :: GoType, nextId :: Int }
+translateExprImpl helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail nextId tcoExpr =
+  translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail false nextId tcoExpr
 
-translateExprImpl_ :: Ref { decls :: Array GoDecl, rawDecls :: Array String } -> Int -> String -> Array String -> Map String String -> Map String { name :: String, goType :: GoType } -> Maybe String -> Array { ident :: String, params :: Array String, loopParams :: Array String, goTypes :: Array GoType } -> Boolean -> Boolean -> Int -> TcoExpr -> { stmts :: StmtTree, expr :: GoExpr, exprType :: GoType, nextId :: Int }
-translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent loopCtx isTail inEffectBlock nextId tcoExpr@(TcoExpr tcoAnalysis expr) =
+translateExprImpl_ :: Ref { decls :: Array GoDecl, rawDecls :: Array String } -> Int -> String -> Array String -> Map String Int -> Map String { name :: String, goType :: GoType } -> Maybe String -> Array { ident :: String, params :: Array String, loopParams :: Array String, goTypes :: Array GoType } -> Boolean -> Boolean -> Int -> TcoExpr -> { stmts :: StmtTree, expr :: GoExpr, exprType :: GoType, nextId :: Int }
+translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail inEffectBlock nextId tcoExpr@(TcoExpr tcoAnalysis expr) =
   let
     isEff = isEffectNode expr
   in
     if isEff && not inEffectBlock then
       let
-        res = translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent loopCtx false true nextId tcoExpr
+        res = translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx false true nextId tcoExpr
         funcExpr = GoRaw ("gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts res.stmts <> [ GoReturn (boxGoExpr res.expr res.exprType) ])) <> "\n})")
       in
         { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: res.nextId }
@@ -308,7 +330,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
         let fvs = Array.fromFoldable fvsSet
         let helperName = "__helper_" <> show nextId
         let newNextId = nextId + 1
-        let res = translateExprImpl_ helpersRef 0 modNameStr recVars namedBound bound Nothing [] false inEffectBlock newNextId tcoExpr
+        let res = translateExprImpl_ helpersRef 0 modNameStr recVars moduleArities bound Nothing [] false inEffectBlock newNextId tcoExpr
 
         let
           helperExpr =
@@ -328,7 +350,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
     case expr of
       Typed type_ a ->
         let
-          res = translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent loopCtx isTail inEffectBlock nextId a
+          res = translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail inEffectBlock nextId a
           expectedGoType = case type_ of
             Int -> TypeInt64
             Number -> TypeFloat64
@@ -370,7 +392,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
           accXs = foldl
             ( \acc val ->
                 let
-                  resVal = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false false acc.nextId val
+                  resVal = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false acc.nextId val
                 in
                   { stmts: acc.stmts <> resVal.stmts, exprs: Array.snoc acc.exprs (boxGoExpr resVal.expr resVal.exprType), exprType: TypeValue, nextId: resVal.nextId }
             )
@@ -384,7 +406,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
           accProps = foldl
             ( \acc (Prop key val) ->
                 let
-                  resVal = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false false acc.nextId val
+                  resVal = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false acc.nextId val
                 in
                   { stmts: acc.stmts <> resVal.stmts, exprs: Array.snoc acc.exprs (Tuple key (boxGoExpr resVal.expr resVal.exprType)), exprType: TypeValue, nextId: resVal.nextId }
             )
@@ -420,7 +442,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
                 accFinal = foldl
                   ( \acc arg ->
                       let
-                        argRes = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false false acc.nextId arg
+                        argRes = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false acc.nextId arg
                       in
                         { stmts: acc.stmts <> argRes.stmts, exprs: Array.snoc acc.exprs argRes.expr, exprTypes: Array.snoc acc.exprTypes argRes.exprType, nextId: argRes.nextId }
                   )
@@ -451,49 +473,84 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
                 getVar :: BackendSyntax TcoExpr -> Maybe { mbMod :: Maybe ModuleName, name :: String }
                 getVar (Typed _ inner) = getVar (unwrapTcoExpr inner)
                 getVar (Var (Qualified mbMod (Ident name))) = Just { mbMod, name }
-                getVar _ = Nothing
+                getVar (Local (Just (Ident name)) _) = Just { mbMod: Just (ModuleName modNameStr), name }
+                getVar (Local Nothing _) = Just { mbMod: Just (ModuleName modNameStr), name: "Local_Nothing" }
+                getVar (Lit _) = Just { mbMod: Nothing, name: "Lit" }
+                getVar (App _ _) = Just { mbMod: Nothing, name: "App" }
+                getVar (Abs _ _) = Just { mbMod: Nothing, name: "Abs" }
+                getVar (UncurriedApp _ _) = Just { mbMod: Nothing, name: "UncurriedApp" }
+                getVar (UncurriedAbs _ _) = Just { mbMod: Nothing, name: "UncurriedAbs" }
+                getVar (UncurriedEffectApp _ _) = Just { mbMod: Nothing, name: "UncurriedEffectApp" }
+                getVar (UncurriedEffectAbs _ _) = Just { mbMod: Nothing, name: "UncurriedEffectAbs" }
+                getVar (Accessor _ _) = Just { mbMod: Nothing, name: "Accessor" }
+                getVar (Update _ _) = Just { mbMod: Nothing, name: "Update" }
+                getVar (CtorSaturated _ _ _ _ _) = Just { mbMod: Nothing, name: "CtorSaturated" }
+                getVar (CtorDef _ _ _ _) = Just { mbMod: Nothing, name: "CtorDef" }
+                getVar (LetRec _ _ _) = Just { mbMod: Nothing, name: "LetRec" }
+                getVar (Let _ _ _ _) = Just { mbMod: Nothing, name: "Let" }
+                getVar (EffectBind _ _ _ _) = Just { mbMod: Nothing, name: "EffectBind" }
+                getVar (EffectPure _) = Just { mbMod: Nothing, name: "EffectPure" }
+                getVar (EffectDefer _) = Just { mbMod: Nothing, name: "EffectDefer" }
+                getVar _ = Just { mbMod: Nothing, name: "Unknown" }
 
-                mbDirectCall = case getFuncType (unwrapExpr flatFn) of
-                  Just { fArgs, fRet } | Array.length fArgs == Array.length flatArgs ->
-                    case getVar (unwrapExpr flatFn) of
-                      Just { mbMod, name } ->
+                mbDirectCall = case getVar (unwrapTcoExpr flatFn) of
+                  Just { mbMod, name } ->
+                    case Map.lookup name moduleArities of
+                      Just arity ->
                         let
-                          modulePrefix = fromMaybe "" (map (\(ModuleName m) -> "pkg_" <> String.replaceAll (Pattern ".") (Replacement "_") m <> ".") mbMod)
-                          fullName = modulePrefix <> "Call_" <> sanitizeName name
-                        in Just { fullName, fArgs, fRet }
+                          cond = (map (String.replaceAll (Pattern ".") (Replacement "_") <<< unwrap) mbMod == Just modNameStr || mbMod == Nothing) && Array.length flatArgs >= arity && arity >= 2 && arity <= 10
+                          result = if cond then Just { fullName: "Call_" <> sanitizeName name, fArgs: [], fRet: Any, arity } else Nothing
+                        in result
                       Nothing -> Nothing
-                  _ -> Nothing
+                  Nothing -> Nothing
               in
                 case mbDirectCall of
-                  Just { fullName, fArgs, fRet } ->
+                  Just { fullName, fArgs, fRet, arity } ->
                     let
                       accArgs = foldl
                         ( \acc arg ->
                             let
-                              argRes = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false false acc.nextId arg
+                              argRes = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false acc.nextId arg
                             in
                               { stmts: acc.stmts <> argRes.stmts, exprs: Array.snoc acc.exprs argRes.expr, exprTypes: Array.snoc acc.exprTypes argRes.exprType, nextId: argRes.nextId }
                         )
                         { stmts: StmtEmpty, exprs: [], exprTypes: [], nextId }
                         flatArgs
                         
+                      accArgsArity = Array.take arity accArgs.exprs
+                      accArgsRemaining = Array.drop arity accArgs.exprs
+                      
                       callArgs = Array.mapWithIndex (\i argExprValue ->
                           let
                             expectedType = exprTypeToGoType (fromMaybe Any (Array.index fArgs i))
                             actualType = fromMaybe TypeValue (Array.index accArgs.exprTypes i)
                           in unboxGoExpr argExprValue actualType expectedType
-                        ) accArgs.exprs
+                        ) accArgsArity
                         
-                      finalExpr = GoCall (GoVar fullName) callArgs
+                      callExpr = GoCall (GoVar fullName) callArgs
+                      
+                      finalExpr = if Array.length accArgsRemaining == 0 then
+                        callExpr
+                      else
+                        let
+                          len = Array.length accArgsRemaining
+                          goFuncName = if len >= 2 && len <= 10 then "Apply" <> show len else "Apply"
+                        in
+                          GoCall (GoSelector (GoVar "gopurs_runtime") goFuncName) (Array.cons callExpr accArgsRemaining)
                     in
                       { stmts: accArgs.stmts, expr: finalExpr, exprType: TypeValue, nextId: accArgs.nextId }
                   Nothing ->
                     let
-                      resFn = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false false nextId flatFn
+                      _ = unsafePerformEffect do
+                        case getVar (unwrapTcoExpr flatFn) of
+                          Just { name: "balance", mbMod } ->
+                            Console.log $ "balance fell through mbDirectCall! flatArgs len: " <> show (Array.length flatArgs) <> " mbMod==Just: " <> show (mbMod == Just (ModuleName modNameStr)) <> " moduleArities: " <> show (Map.lookup "balance" moduleArities)
+                          _ -> pure unit
+                      resFn = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false nextId flatFn
                       accArgs = foldl
                         ( \acc arg ->
                             let
-                              argRes = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false false acc.nextId arg
+                              argRes = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false acc.nextId arg
                             in
                               { stmts: acc.stmts <> argRes.stmts, exprs: Array.snoc acc.exprs (boxGoExpr argRes.expr argRes.exprType), exprType: TypeValue, nextId: argRes.nextId }
                         )
@@ -520,7 +577,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
       Abs args body ->
         let
           params = map (\(Tuple mbI lvl) -> localId mbI lvl) (toArray args)
-          resBody = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing loopCtx isTail false nextId body
+          resBody = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing loopCtx isTail false nextId body
           
           buildFunc :: Array String -> GoExpr -> GoExpr
           buildFunc ps innerExpr =
@@ -546,11 +603,11 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
 
       UncurriedApp fn args ->
         let
-          resFn = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false false nextId fn
+          resFn = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false nextId fn
           accArgs = foldl
             ( \acc arg ->
                 let
-                  argRes = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false false acc.nextId arg
+                  argRes = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false acc.nextId arg
                 in
                   { stmts: acc.stmts <> argRes.stmts, exprs: Array.snoc acc.exprs (boxGoExpr argRes.expr argRes.exprType), exprType: TypeValue, nextId: argRes.nextId }
             )
@@ -576,7 +633,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
           newBound = foldl (\acc (Tuple idStr goType) -> Map.insert idStr { name: idStr, goType } acc) bound paramsWithTypes
           
           goParams = String.joinWith ", " (map (\(Tuple p goT) -> p <> " " <> goTypeToStr goT) paramsWithTypes)
-          resBody = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound newBound Nothing loopCtx isTail false nextId body
+          resBody = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities newBound Nothing loopCtx isTail false nextId body
           arity = Array.length args
         in if arity >= 2 && arity <= 10 then
           case tcoIdent of
@@ -603,11 +660,11 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
 
       UncurriedEffectApp fn args ->
         let
-          resFn = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false false nextId fn
+          resFn = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false nextId fn
           accArgs = foldl
             ( \acc arg ->
                 let
-                  argRes = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false false acc.nextId arg
+                  argRes = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false acc.nextId arg
                 in
                   { stmts: acc.stmts <> argRes.stmts, exprs: Array.snoc acc.exprs (boxGoExpr argRes.expr argRes.exprType), exprType: TypeValue, nextId: argRes.nextId }
             )
@@ -624,7 +681,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
         let
           params = map (\(Tuple mbI lvl) -> localId mbI lvl) args
           goParams = String.joinWith ", " (map (\p -> p <> " gopurs_runtime.Value") params)
-          resBody = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing loopCtx isTail false nextId body
+          resBody = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing loopCtx isTail false nextId body
           arity = Array.length args
         in if arity >= 2 && arity <= 5 then
           let
@@ -644,19 +701,19 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
           originalName = localId mbIdent lvl
           name = originalName <> "_" <> show nextId
           newBound = Map.insert originalName { name, goType: TypeValue } bound
-          resBinding = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false true (nextId + 1) binding
-          resBody = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound newBound Nothing loopCtx isTail true resBinding.nextId body
+          resBinding = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false true (nextId + 1) binding
+          resBody = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities newBound Nothing loopCtx isTail true resBinding.nextId body
           bindingExpr = executeIfOpaque (unwrapTcoExpr binding) (boxGoExpr resBinding.expr resBinding.exprType)
           bodyExpr = executeIfOpaque (unwrapTcoExpr body) resBody.expr
         in
           { stmts: resBinding.stmts <> StmtLeaf (GoAssign name bindingExpr) <> resBody.stmts, expr: bodyExpr, exprType: resBody.exprType, nextId: resBody.nextId }
 
       EffectPure binding ->
-        translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false false nextId binding
+        translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false nextId binding
 
       EffectDefer binding ->
         let
-          resBinding = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false true nextId binding
+          resBinding = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false true nextId binding
           funcExpr = GoRaw ("gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBinding.stmts <> [ GoReturn (boxGoExpr resBinding.expr resBinding.exprType) ])) <> "\n})")
         in
           { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: resBinding.nextId }
@@ -665,9 +722,9 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
         let
           originalName = localId mbIdent lvl
           name = originalName <> "_" <> show nextId
-          resBinding = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false false (nextId + 1) binding
+          resBinding = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false (nextId + 1) binding
           newBound = Map.insert originalName { name, goType: resBinding.exprType } bound
-          resBody = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound newBound Nothing loopCtx isTail false resBinding.nextId body
+          resBody = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities newBound Nothing loopCtx isTail false resBinding.nextId body
         in
           { stmts: resBinding.stmts <> StmtLeaf (GoAssign name resBinding.expr) <> resBody.stmts, expr: resBody.expr, exprType: resBody.exprType, nextId: resBody.nextId }
 
@@ -724,7 +781,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
                             in Tuple idStr (exprTypeToGoType t)
                           ) fn.args
                         currentLoopCtx = [ { ident: newName, params: fn.args, loopParams: map (\p -> p <> "_loop") fn.args, goTypes: map snd paramsWithTypes } ]
-                        resBodyMut = translateExprImpl_ helpersRef (depth + 1) modNameStr combinedRecVars namedBound allocRes.newBound Nothing currentLoopCtx true false currNextId fn.body
+                        resBodyMut = translateExprImpl_ helpersRef (depth + 1) modNameStr combinedRecVars moduleArities allocRes.newBound Nothing currentLoopCtx true false currNextId fn.body
                         
                         loopParams = map (\(Tuple idStr _) -> idStr <> "_loop") paramsWithTypes
                         initVars = Array.concatMap (\(Tuple p goT) -> [ GoRaw ("var " <> p <> " " <> goTypeToStr goT <> " = " <> p <> "_loop"), GoRaw ("_ = " <> p) ]) paramsWithTypes
@@ -738,7 +795,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
                   (Tuple [] allocRes.nextId)
                   fns
                 
-                resBodyOuter = translateExprImpl_ helpersRef (depth + 1) modNameStr combinedRecVars namedBound allocRes.newBound Nothing loopCtx isTail false nextId' body
+                resBodyOuter = translateExprImpl_ helpersRef (depth + 1) modNameStr combinedRecVars moduleArities allocRes.newBound Nothing loopCtx isTail false nextId' body
               in
                 { stmts: foldMap StmtLeaf declStmts <> foldMap StmtLeaf fnWrapperStmts <> resBodyOuter.stmts, expr: resBodyOuter.expr, exprType: TypeValue, nextId: resBodyOuter.nextId }
             
@@ -747,7 +804,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
                 accBindings = foldl
                   ( \acc (Tuple (Tuple (Ident ident) val) alloc) ->
                       let
-                        res = translateExprImpl_ helpersRef (depth + 1) modNameStr combinedRecVars namedBound allocRes.newBound (Just alloc.newName) [] false false acc.nextId val
+                        res = translateExprImpl_ helpersRef (depth + 1) modNameStr combinedRecVars moduleArities allocRes.newBound (Just alloc.newName) [] false false acc.nextId val
                       in
                         { stmts: acc.stmts <> res.stmts, exprs: Array.snoc acc.exprs { key: alloc.newName, value: boxGoExpr res.expr res.exprType }, exprType: TypeValue, nextId: res.nextId }
                   )
@@ -757,13 +814,13 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
                 declStmts = map (\b -> GoRaw ("var " <> b.key <> " gopurs_runtime.Value\n_ = " <> b.key)) accBindings.exprs
                 assignStmts = map (\b -> GoMutate b.key b.value) accBindings.exprs
 
-                resBody = translateExprImpl_ helpersRef (depth + 1) modNameStr combinedRecVars namedBound allocRes.newBound Nothing loopCtx isTail false accBindings.nextId body
+                resBody = translateExprImpl_ helpersRef (depth + 1) modNameStr combinedRecVars moduleArities allocRes.newBound Nothing loopCtx isTail false accBindings.nextId body
               in
                 { stmts: foldMap StmtLeaf declStmts <> accBindings.stmts <> foldMap StmtLeaf assignStmts <> resBody.stmts, expr: resBody.expr, exprType: resBody.exprType, nextId: resBody.nextId }
 
       Accessor obj accessor ->
         let
-          resObj = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false false nextId obj
+          resObj = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false nextId obj
         in
           case accessor of
             GetProp prop -> { stmts: resObj.stmts, expr: GoRecordAccess (boxGoExpr resObj.expr resObj.exprType) prop, exprType: TypeValue, nextId: resObj.nextId }
@@ -772,11 +829,11 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
 
       Update obj props ->
         let
-          resObj = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false false nextId obj
+          resObj = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false nextId obj
           accProps = foldl
             ( \acc (Prop key val) ->
                 let
-                  resVal = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false false acc.nextId val
+                  resVal = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false acc.nextId val
                 in
                   { stmts: acc.stmts <> resVal.stmts, exprs: Array.snoc acc.exprs (Tuple key (boxGoExpr resVal.expr resVal.exprType)), exprType: TypeValue, nextId: resVal.nextId }
             )
@@ -796,7 +853,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
           accProps = foldl
             ( \acc (Tuple _ val) ->
                 let
-                  resVal = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false false acc.nextId val
+                  resVal = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false acc.nextId val
                 in
                   { stmts: acc.stmts <> resVal.stmts, exprs: Array.snoc acc.exprs (boxGoExpr resVal.expr resVal.exprType), exprType: TypeValue, nextId: resVal.nextId }
             )
@@ -810,7 +867,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
 
       Branch branches def ->
         let
-          resDef = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing loopCtx isTail false nextId def
+          resDef = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing loopCtx isTail false nextId def
           tmpVar = "__t" <> show resDef.nextId
           declTmp = StmtLeaf (GoRaw ("var " <> tmpVar <> " gopurs_runtime.Value"))
           labelName = "end_branch_" <> show resDef.nextId
@@ -818,8 +875,8 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
           buildIfs = foldl
             ( \acc (Pair condExpr bodyExpr) ->
                 let
-                  resCond = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false false acc.nextId condExpr
-                  resBody = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing loopCtx isTail false resCond.nextId bodyExpr
+                  resCond = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false acc.nextId condExpr
+                  resBody = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing loopCtx isTail false resCond.nextId bodyExpr
                   goIf = GoIfElse (unboxGoExpr resCond.expr resCond.exprType TypeBool) (flattenStmts resBody.stmts <> [ GoMutate tmpVar (boxGoExpr resBody.expr resBody.exprType), GoRaw ("goto " <> labelName) ]) []
                 in
                   { stmts: acc.stmts <> StmtLeaf (GoRaw "{") <> resCond.stmts <> StmtLeaf goIf <> StmtLeaf (GoRaw "}"), exprType: TypeValue, nextId: resBody.nextId }
@@ -832,7 +889,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
       PrimOp op -> case op of
         Op1 op1 e ->
           let
-            resE = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false false nextId e
+            resE = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false nextId e
             goOp = case op1 of
               OpBooleanNot -> { expr: GoBinOp "!=" (unboxGoExpr resE.expr resE.exprType TypeBool) (GoRaw "true"), exprType: TypeBool }
               OpIntNegate -> { expr: GoBinOp "-" (GoInt 0) (unboxGoExpr resE.expr resE.exprType TypeInt64), exprType: TypeInt64 }
@@ -844,8 +901,8 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
             { stmts: resE.stmts, expr: goOp.expr, exprType: goOp.exprType, nextId: resE.nextId }
         Op2 op2 e1 e2 ->
           let
-            res1 = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false false nextId e1
-            res2 = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false false res1.nextId e2
+            res1 = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false nextId e1
+            res2 = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false res1.nextId e2
             goOp = case op2 of
               OpArrayIndex -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayAccess") [ res1.expr, GoCall (GoVar "int") [ unboxGoExpr res2.expr res2.exprType TypeInt64 ] ], exprType: TypeValue }
               OpIntNum OpAdd -> { expr: GoBinOp "+" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
@@ -901,7 +958,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
       PrimEffect eff -> case eff of
         EffectRefNew a ->
           let
-            resA = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false false nextId a
+            resA = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false nextId a
             refIdent = "__local_ref_" <> show resA.nextId
             declStmt = GoAssign refIdent resA.expr
           in
@@ -911,7 +968,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
             }
         EffectRefRead a ->
           let
-            resA = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false false nextId a
+            resA = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false nextId a
           in
             { stmts: resA.stmts
             , expr: GoRaw ("*(" <> printGoExpr resA.expr <> ".PtrVal.(*gopurs_runtime.Value))")
@@ -919,8 +976,8 @@ translateExprImpl_ helpersRef depth modNameStr recVars namedBound bound tcoIdent
             }
         EffectRefWrite ref val ->
           let
-            resRef = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false false nextId ref
-            resVal = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars namedBound bound Nothing [] false false resRef.nextId val
+            resRef = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false nextId ref
+            resVal = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false resRef.nextId val
             writeStmt = GoRaw ("*(" <> printGoExpr resRef.expr <> ".PtrVal.(*gopurs_runtime.Value)) = " <> printGoExpr resVal.expr)
           in
             { stmts: resRef.stmts <> resVal.stmts <> StmtLeaf writeStmt
