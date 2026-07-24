@@ -185,8 +185,11 @@ export const appendFfiWrappersImpl = function(moduleName) {
                 if (arity === 0) goFuncArgs = `_ gopurs_runtime.Value`;
                 if (arity === 1) goFuncArgs = `arg0 gopurs_runtime.Value`;
                 
-                newLines.push(`var ${exportName} = gopurs_runtime.${funcConstructor}(func(${goFuncArgs}) gopurs_runtime.Value {`);
-                
+                let pursName = funcName;
+                if (pursName.charAt(0) >= 'A' && pursName.charAt(0) <= 'Z') {
+                    pursName = pursName.charAt(0).toLowerCase() + pursName.substring(1);
+                }
+                newLines.push(`func Call_${pursName}(${goFuncArgs}) gopurs_runtime.Value {`);
                 let callArgs = [];
                 let parseFuncType = function(t) {
                     let match = t.match(/^func\s*\((.*)/);
@@ -374,7 +377,8 @@ export const appendFfiWrappersImpl = function(moduleName) {
                     let wrapCode = wrapReturn(retStr, "go_res");
                     newLines.push(`\treturn ${wrapCode}`);
                 }
-                newLines.push(`})`);
+                newLines.push(`}`);
+                newLines.push(`var ${exportName} = gopurs_runtime.${funcConstructor}(Call_${pursName})`);
             } else {
                 const varMatch = line.match(/^var\s+([A-Z][A-Za-z0-9_]*)\s*(.*?)=\s*(.*)/);
                 if (varMatch) {

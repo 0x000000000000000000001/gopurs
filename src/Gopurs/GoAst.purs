@@ -40,5 +40,6 @@ type GoFile =
   { packageName :: String
   , imports :: Array String
   , decls :: Array GoDecl
+  , rawDecls :: Array String
   , foreigns :: Array { pursName :: String, goName :: String }
   }

@@ -120,8 +120,8 @@ printGoDeclVar { identifier, expression } =
   "}"
 
 printGoFile :: GoFile -> String
-printGoFile { packageName, imports, decls, foreigns } =
-  let declsStr = String.joinWith "\n\n" (map printGoDeclVar decls) <> "\n\n" <> String.joinWith "\n\n" (map (\f -> "func Get_" <> f.pursName <> "() gopurs_runtime.Value {\n\treturn " <> f.goName <> "\n}") foreigns) <> "\n"
+printGoFile { packageName, imports, decls, rawDecls, foreigns } =
+  let declsStr = String.joinWith "\n\n" (map printGoDeclVar decls) <> "\n\n" <> String.joinWith "\n\n" rawDecls <> "\n\n" <> String.joinWith "\n\n" (map (\f -> "func Get_" <> f.pursName <> "() gopurs_runtime.Value {\n\treturn " <> f.goName <> "\n}") foreigns) <> "\n"
       usedImports1 = Array.filter (\i -> 
         if i == "gopurs/output/gopurs_runtime" || i == "sync" then true
         else 
