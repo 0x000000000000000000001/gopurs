@@ -8,7 +8,7 @@ import Data.String as String
 import Data.Array as Array
 import Data.Maybe (Maybe(..), fromMaybe, isJust)
 import Data.Newtype (unwrap)
-import PureScript.Backend.Optimizer.CoreFn (Literal(..), Ident(..), Qualified(..), Prop(..), ModuleName(..), ExprType(..))
+import PureScript.Backend.Optimizer.CoreFn (Ann(..), Bind(..), Binder(..), Binding(..), CaseAlternative(..), CaseGuard(..), Comment, ConstructorType(..), DataConstructor, DataDecl, Expr(..), ExprType(..), Guard(..), Ident(..), Import(..), Literal(..), Meta(..), Module(..), ModuleName(..), Prop(..), ProperName(..), Qualified(..), ReExport, exprAnn, findProp, propKey, propValue, qualifiedModuleName, unQualified)
 import Data.Tuple (Tuple(..), fst, snd)
 import Data.Array.NonEmpty as NonEmptyArray
 import Data.Array.NonEmpty (NonEmptyArray, fromArray, toArray)
@@ -36,8 +36,10 @@ import Gopurs.Printer (printGoFile, printGoExpr, printGoDeclVar)
 import PureScript.Backend.Optimizer.Codegen.Tco as Tco
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..), tcoAnalysisOf)
 import Gopurs.FreeVars (freeVars, localId, paramTypes)
+import Node.Path as Path
 import Node.FS.Sync as FS
 import Node.Encoding (Encoding(..))
+import Gopurs.FfiSupport (hashString)
 
 data GoType = TypeValue | TypeInt64 | TypeFloat64 | TypeString | TypeBool
 derive instance eqGoType :: Eq GoType
@@ -70,7 +72,7 @@ unboxGoExpr expr currentType desiredType =
     TypeValue -> boxGoExpr expr currentType
     TypeInt64 -> GoSelector expr "IntVal"
     TypeFloat64 -> GoCall (GoSelector expr "FloatVal") []
-    TypeString -> GoSelector expr "StrVal"
+    TypeString -> GoCall (GoSelector expr "StrVal") []
     TypeBool -> GoBinOp "!=" (GoSelector expr "IntVal") (GoInt 0)
 
 
@@ -146,12 +148,37 @@ flattenApp e =
         Tuple f' (args' <> toArray args)
     _ -> Tuple e []
 
+getStructName :: String -> Maybe ModuleName -> String -> String
+getStructName modNameStr mbMod ctorName =
+  let
+    pkgPrefix = case mbMod of
+      Just mn | sanitizeName (String.replaceAll (Pattern ".") (Replacement "_") (unwrap mn)) /= modNameStr -> "pkg_" <> sanitizeName (String.replaceAll (Pattern ".") (Replacement "_") (unwrap mn)) <> "."
+      _ -> ""
+    modNamePart = case mbMod of
+      Just mn -> sanitizeName (String.replaceAll (Pattern ".") (Replacement "_") (unwrap mn))
+      Nothing -> modNameStr
+  in
+    pkgPrefix <> "Data_" <> modNamePart <> "_" <> sanitizeName ctorName
+
 translate :: Array (Array String) -> BackendModule -> String
 translate importsArray mod =
   let
     modNameStr = String.replaceAll (Pattern ".") (Replacement "_") (unwrap mod.name)
     _ = unsafePerformEffect (Console.log ("Translating module " <> modNameStr))
-    helpersRef = unsafePerformEffect (Ref.new { decls: [], rawDecls: [] })
+    helpersRef = unsafePerformEffect do
+      let
+        structDecls = Array.concatMap (\decl ->
+          map (\ctor ->
+            let
+              fields = Array.mapWithIndex (\i _ -> "V" <> show i <> " gopurs_runtime.Value") ctor.fieldTypes
+              structName = "Data_" <> modNameStr <> "_" <> sanitizeName ctor.constructorName
+              hashStr = hashString structName
+              isTagHelper = "func Is_" <> structName <> "(v gopurs_runtime.Value) bool {\n\treturn v.Type == 9 && v.IntVal == " <> hashStr <> "\n}"
+            in
+              "type " <> structName <> " struct {\n\t" <> String.joinWith "\n\t" fields <> "\n}\n" <> isTagHelper
+          ) decl.constructors
+        ) mod.dataDecls
+      Ref.new { decls: [], rawDecls: structDecls }
 
     Tuple _ tcoBindings = foldl
       ( \(Tuple env acc) group ->
@@ -866,7 +893,11 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
           case accessor of
             GetProp prop -> { stmts: resObj.stmts, expr: GoRecordAccess (boxGoExpr resObj.expr resObj.exprType) prop, exprType: TypeValue, nextId: resObj.nextId }
             GetIndex idx -> { stmts: resObj.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayAccess") [ (boxGoExpr resObj.expr resObj.exprType), GoInt idx ], exprType: TypeValue, nextId: resObj.nextId }
-            GetCtorField _ _ _ _ _ idx -> { stmts: resObj.stmts, expr: GoConstructorAccess (boxGoExpr resObj.expr resObj.exprType) idx, exprType: TypeValue, nextId: resObj.nextId }
+            GetCtorField (Qualified mbMod _) _ _ (Ident ctorName) _ idx ->
+              let
+                structName = getStructName modNameStr mbMod ctorName
+              in
+                { stmts: resObj.stmts, expr: GoConstructorAccess (boxGoExpr resObj.expr resObj.exprType) structName idx, exprType: TypeValue, nextId: resObj.nextId }
 
       Update obj props ->
         let
@@ -885,12 +916,14 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
 
       CtorDef _ _ (Ident name) fields ->
         let
-          funcExpr = Array.foldr (\f inner -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> sanitizeName f <> " gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr inner <> "\n}") ]) (GoConstructor name (map (\f -> GoVar (sanitizeName f)) fields)) fields
+          structName = getStructName modNameStr Nothing name
+          funcExpr = Array.foldr (\f inner -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> sanitizeName f <> " gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr inner <> "\n}") ]) (GoConstructor (hashString structName) structName (map (\f -> GoVar (sanitizeName f)) fields)) fields
         in
           { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId }
 
-      CtorSaturated _ _ _ (Ident name) props ->
+      CtorSaturated (Qualified mbMod _) _ _ (Ident name) props ->
         let
+          structName = getStructName modNameStr mbMod name
           accProps = foldl
             ( \acc (Tuple _ val) ->
                 let
@@ -901,7 +934,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
             { stmts: StmtEmpty, exprs: [], exprType: TypeValue, nextId }
             props
         in
-          { stmts: accProps.stmts, expr: GoConstructor name accProps.exprs, exprType: TypeValue, nextId: accProps.nextId }
+          { stmts: accProps.stmts, expr: GoConstructor (hashString structName) structName accProps.exprs, exprType: TypeValue, nextId: accProps.nextId }
 
       Fail msg ->
         { stmts: StmtEmpty, expr: GoRaw ("func() gopurs_runtime.Value { panic(" <> printGoExpr (GoString msg) <> ") }()"), exprType: TypeValue, nextId }
@@ -936,7 +969,13 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
               OpIntNegate -> { expr: GoBinOp "-" (GoInt 0) (unboxGoExpr resE.expr resE.exprType TypeInt64), exprType: TypeInt64 }
               OpIntBitNot -> { expr: GoBinOp "^" (GoRaw "^0") (unboxGoExpr resE.expr resE.exprType TypeInt64), exprType: TypeInt64 }
               OpNumberNegate -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "FloatNeg") [ resE.expr ], exprType: TypeValue }
-              OpIsTag (Qualified _ (Ident tag)) -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ GoBinOp "==" (GoSelector (boxGoExpr resE.expr resE.exprType) "StrVal") (GoString tag) ], exprType: TypeValue }
+              OpIsTag (Qualified mbMod (Ident tag)) ->
+                let
+                  structName = getStructName modNameStr mbMod tag
+                  hashStr = hashString structName
+                  exprStr = "(" <> printGoExpr (boxGoExpr resE.expr resE.exprType) <> ".Type == 9 && " <> printGoExpr (boxGoExpr resE.expr resE.exprType) <> ".IntVal == " <> hashStr <> ")"
+                in
+                  { expr: GoRaw exprStr, exprType: TypeBool }
               OpArrayLength -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoCall (GoVar "int64") [ GoCall (GoVar "len") [ GoTypeAssertion (GoSelector resE.expr "PtrVal") "[]gopurs_runtime.Value" ] ] ], exprType: TypeValue }
           in
             { stmts: resE.stmts, expr: goOp.expr, exprType: goOp.exprType, nextId: resE.nextId }

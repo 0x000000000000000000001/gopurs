@@ -1,5 +1,6 @@
 module Gopurs.FfiSupport
   ( findFfiFile
+  , hashString
   , appendFfiWrappers
   ) where
 
@@ -10,6 +11,7 @@ import Data.Maybe (Maybe)
 import Data.Nullable (Nullable, toNullable, toMaybe)
 
 foreign import findFfiFileImpl :: Nullable String -> String -> Nullable String -> Effect (Nullable String)
+foreign import hashString :: String -> String
 
 -- | Finds the .go FFI file corresponding to a PureScript module
 -- | mbFfiDir: optional directory to search in (if not provided, searches .spago and local dirs)

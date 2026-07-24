@@ -1,6 +1,15 @@
 import fs from 'fs';
 import path from 'path';
 
+export const hashString = (str) => {
+    let hash = 5381;
+    let i = str.length;
+    while(i) {
+        hash = (hash * 33) ^ str.charCodeAt(--i);
+    }
+    return (hash >>> 0).toString();
+};
+
 let cachedScanDirs = null;
 
 function getScanDirs(mbFfiDir) {
@@ -265,7 +274,7 @@ export const appendFfiWrappersImpl = function(moduleName) {
                         return `func(${params}) {\n\t\t${applyCall}\n\t}`;
                     } else if (retStr.startsWith("[]") && retStr !== "[]gopurs_runtime.Value") {
                         let elemType = retStr.substring(2);
-                        return `func(${params}) ${retStr} {\n\t\tinner_res${depth} := ${applyCall}\n\t\tres_arr${depth} := inner_res${depth}.PtrVal.([]gopurs_runtime.Value)\n\t\tres_go${depth} := make(${retStr}, len(res_arr${depth}))\n\t\tfor i, v := range res_arr${depth} { res_go${depth}[i] = gopurs_runtime.Unbox[${elemType}](v) }\n\t\treturn res_go${depth}\n\t}`;
+                        return `func(${params}) ${retStr} {\n\t\tinner_res${depth} := ${applyCall}\n\t\tres_arr${depth} := inner_res${depth}.PtrVal().([]gopurs_runtime.Value)\n\t\tres_go${depth} := make(${retStr}, len(res_arr${depth}))\n\t\tfor i, v := range res_arr${depth} { res_go${depth}[i] = gopurs_runtime.Unbox[${elemType}](v) }\n\t\treturn res_go${depth}\n\t}`;
                     } else if (retStr === "any" || retStr === "interface{}") {
                         return `func(${params}) ${retStr} {\n\t\treturn ${applyCall}\n\t}`;
                     } else if (retStr === "gopurs_runtime.Value") {
@@ -299,9 +308,9 @@ export const appendFfiWrappersImpl = function(moduleName) {
                                            `\t\t})`;
                                 }
                             } else {
-                                let argUnwrap = "arg.PtrVal";
+                                let argUnwrap = "arg.PtrVal()";
                                 if (argT === "any" || argT === "interface{}") {
-                                    argUnwrap = "arg.PtrVal";
+                                    argUnwrap = "arg.PtrVal()";
                                 } else if (argT === "gopurs_runtime.Value") {
                                     argUnwrap = "arg";
                                 } else if (argT.startsWith("func")) {
@@ -357,7 +366,7 @@ export const appendFfiWrappersImpl = function(moduleName) {
                     } else if (t.startsWith("[]") && t !== "[]gopurs_runtime.Value") {
                         let elemType = t.substring(2);
                         if (elemType === "any") elemType = "interface{}";
-                        newLines.push(`\targ${idx}_arr := arg${idx}.PtrVal.([]gopurs_runtime.Value)`);
+                        newLines.push(`\targ${idx}_arr := arg${idx}.PtrVal().([]gopurs_runtime.Value)`);
                         newLines.push(`\tgo_arg${idx} := make(${t}, len(arg${idx}_arr))`);
                         if (elemType === "interface{}") {
                             newLines.push(`\tfor i, v := range arg${idx}_arr { go_arg${idx}[i] = v }`);
@@ -375,7 +384,7 @@ export const appendFfiWrappersImpl = function(moduleName) {
                             newLines.push(`\tgo_arg${idx} := make(${t})`);
                             newLines.push(`\tfor k, v := range arg${idx}_map { go_arg${idx}[k] = v }`);
                         } else {
-                            newLines.push(`\tgo_arg${idx} := arg${idx}.PtrVal.(${t})`);
+                            newLines.push(`\tgo_arg${idx} := arg${idx}.PtrVal().(${t})`);
                         }
                     } else {
                         newLines.push(`\tgo_arg${idx} := gopurs_runtime.Unbox[${t}](arg${idx})`);

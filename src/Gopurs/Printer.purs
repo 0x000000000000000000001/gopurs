@@ -73,16 +73,10 @@ printGoExpr expr = case expr of
     "return " <> printGoExpr body <> "\n}()"
   GoRecordAccess obj prop ->
     "gopurs_runtime.RecordGet(" <> printGoExpr obj <> ", \"" <> prop <> "\")"
-  GoConstructor tag args ->
-    let
-      len = Array.length args
-    in
-      if len <= 5 then
-        "gopurs_runtime.Constructor" <> show len <> "(\"" <> tag <> "\"" <> (if len > 0 then ", " <> String.joinWith ", " (map printGoExpr args) else "") <> ")"
-      else
-        "gopurs_runtime.Constructor(\"" <> tag <> "\", []gopurs_runtime.Value{" <> String.joinWith ", " (map printGoExpr args) <> "})"
-  GoConstructorAccess obj idx ->
-    "(*[1024]gopurs_runtime.Value)(" <> printGoExpr obj <> ".UnsafePtr)[" <> show idx <> "]"
+  GoConstructor hashStr structName args ->
+    "gopurs_runtime.Value{Type: 9, IntVal: " <> hashStr <> ", UnsafePtr: unsafe.Pointer(&" <> structName <> "{" <> String.joinWith ", " (map printGoExpr args) <> "})}"
+  GoConstructorAccess obj structName idx ->
+    "(*" <> structName <> ")(" <> printGoExpr obj <> ".UnsafePtr).V" <> show idx
   GoBranch branches def ->
     "func() gopurs_runtime.Value {\n" <>
     String.joinWith "\n" (map (\(Tuple cond t) -> "if (" <> printGoExpr cond <> ").IntVal != 0 {\nreturn " <> printGoExpr t <> "\n}") branches) <>
@@ -134,13 +128,14 @@ printGoFile { packageName, imports, decls, rawDecls, foreigns } =
         let pkgAlias = "pkg_" <> String.replaceAll (String.Pattern ".") (String.Replacement "_") dep
         in String.contains (String.Pattern (pkgAlias <> ".")) declsStr && not (Array.elem ("gopurs/output/" <> dep) usedImports1)
       ) missingDeps
-      usedImports = usedImports1 <> map (\dep -> "gopurs/output/" <> dep) injectedDeps
+      unsafeImport = if String.contains (String.Pattern "unsafe.") declsStr then ["unsafe"] else []
+      usedImports = usedImports1 <> map (\dep -> "gopurs/output/" <> dep) injectedDeps <> unsafeImport
   in
   "package " <> packageName <> "\n\n" <>
   "import (\n" <>
   String.joinWith "\n" (map (\i -> 
       let pkg = Array.last (String.split (String.Pattern "/") i)
-          pkgAlias = if i == "gopurs/output/gopurs_runtime" || i == "sync" then fromMaybe "" pkg else "pkg_" <> String.replaceAll (String.Pattern ".") (String.Replacement "_") (fromMaybe "" pkg)
+          pkgAlias = if i == "gopurs/output/gopurs_runtime" || i == "sync" || i == "unsafe" then fromMaybe "" pkg else "pkg_" <> String.replaceAll (String.Pattern ".") (String.Replacement "_") (fromMaybe "" pkg)
       in "\t" <> pkgAlias <> " \"" <> i <> "\""
   ) usedImports) <> "\n" <>
   ")\n\n" <> declsStr
