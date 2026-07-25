@@ -18,6 +18,7 @@ import Data.Argonaut.Decode.Error (printJsonDecodeError)
 import Data.Array as Array
 import Data.List as List
 import Data.Maybe (Maybe(..))
+import Data.Tuple (Tuple(..))
 import Data.Map as Map
 import Data.Foldable (foldl)
 import Data.Set as Set
@@ -31,10 +32,44 @@ import PureScript.Backend.Optimizer.Builder (buildModules)
 import PureScript.Backend.Optimizer.Directives.Defaults (defaultDirectives)
 import PureScript.Backend.Optimizer.Directives (parseDirectiveFile)
 import PureScript.Backend.Optimizer.Semantics.Foreign (coreForeignSemantics)
-import PureScript.Backend.Optimizer.CoreFn (Module(..), Ann, importName)
+import PureScript.Backend.Optimizer.CoreFn (Module(..), Ann(..), importName, Bind(..), Binding(..), ExprType(..), Ident(..))
+import Data.String as String
+import Gopurs.Monomorphize (getExprAnn)
 import Gopurs.CodeGen (translate, getStructName)
 import Gopurs.Runtime (runtimeGoCode)
 import Gopurs.FfiSupport (findFfiFile, appendFfiWrappers)
+import Gopurs.Monomorphize (collectInstantiations)
+
+
+buildGlobalTypes :: Array (Module Ann) -> Map.Map String ExprType
+buildGlobalTypes modules = Array.foldl (\acc (Module m) ->
+  let modName = unwrap m.name
+      processBind acc' (NonRec (Binding _ (Ident name) expr)) =
+        case (getExprAnn expr) of
+          Ann ann -> case ann.type of
+            Just t -> Map.insert (modName <> "." <> name) t acc'
+            Nothing -> acc'
+      processBind acc' (Rec bindings) = Array.foldl (\a (Binding _ (Ident name) expr) ->
+        case (getExprAnn expr) of
+          Ann ann -> case ann.type of
+            Just t -> Map.insert (modName <> "." <> name) t a
+            Nothing -> a
+        ) acc' bindings
+  in Array.foldl processBind acc m.decls
+  ) Map.empty modules
+
+hasTypeVariables :: ExprType -> Boolean
+hasTypeVariables (TypeVar v) = String.take 1 v == String.toLower (String.take 1 v) && v /= "gopurs_runtime.Value"
+hasTypeVariables (Func args ret) = Array.any hasTypeVariables args || hasTypeVariables ret
+hasTypeVariables (Array t) = hasTypeVariables t
+hasTypeVariables (Record props) = Array.any (\(Tuple _ v) -> hasTypeVariables v) props
+hasTypeVariables Int = false
+hasTypeVariables String = false
+hasTypeVariables Char = false
+hasTypeVariables Number = false
+hasTypeVariables Boolean = false
+hasTypeVariables (ADT _) = false
+hasTypeVariables Any = false
 
 readCoreFnModule :: String -> Aff (Maybe (Module Ann))
 readCoreFnModule filePath = do
@@ -99,6 +134,13 @@ main = launchAff_ do
       ) acc m.dataDecls
     ) Map.empty finalModules
 
+  let globalTypes = buildGlobalTypes (Array.fromFoldable finalModules)
+  let rawInstantiations = foldl collectInstantiations Map.empty finalModules
+  let instantiations = Map.filterKeys (\k -> case Map.lookup k globalTypes of
+                                            Just t -> hasTypeVariables t
+                                            Nothing -> false) rawInstantiations
+  FS.writeTextFile UTF8 "instantiations.txt" (show (Array.fromFoldable (Map.keys instantiations)))
+
   buildModules
     { directives: parsedDirectives.directives
     , analyzeCustom: \_ _ -> Nothing
@@ -108,7 +150,7 @@ main = launchAff_ do
     , onCodegenModule: \_ (Module coreFnMod) backendMod _ -> do
         let modNameStr = unwrap backendMod.name
         let importsArray = map (\i -> String.split (Pattern ".") (unwrap (importName i))) coreFnMod.imports
-        let goFile = translate elidedCtors ctorTypes importsArray backendMod
+        let goFile = translate elidedCtors ctorTypes globalTypes instantiations importsArray backendMod
         FS.writeTextFile UTF8 ("output/" <> modNameStr <> "/" <> String.replaceAll (Pattern ".") (Replacement "_") modNameStr <> ".go") goFile
 
         when (Array.length (Array.fromFoldable backendMod.foreign) > 0) do

@@ -29,6 +29,8 @@ import Data.Foldable (foldl, foldMap)
 import Data.List as List
 import Data.Traversable (traverse)
 
+import Gopurs.Monomorphize (InstantiationMap)
+import Gopurs.Monomorphize.Substitute (unify, substituteExprType, mapTcoExprTypes, substituteAst)
 import Gopurs.GoAst (GoFile, GoDecl, GoExpr(..))
 
 
@@ -179,8 +181,8 @@ getStructName modNameStr mbMod ctorName =
   in
     pkgPrefix <> getBaseStructName modNameStr mbMod ctorName
 
-translate :: Set.Set String -> Map.Map String (Array ExprType) -> Array (Array String) -> BackendModule -> String
-translate elidedCtors ctorTypes importsArray mod =
+translate :: Set.Set String -> Map.Map String (Array ExprType) -> Map.Map String ExprType -> InstantiationMap -> Array (Array String) -> BackendModule -> String
+translate elidedCtors ctorTypes globalTypes instantiations importsArray mod =
   let
     modNameStr = String.replaceAll (Pattern ".") (Replacement "_") (unwrap mod.name)
     _ = unsafePerformEffect (Console.log ("Translating module " <> modNameStr))
@@ -213,6 +215,40 @@ translate elidedCtors ctorTypes importsArray mod =
       )
       (Tuple [] [])
       mod.bindings
+
+    mangleType :: ExprType -> String
+    mangleType t = String.replaceAll (Pattern ".") (Replacement "_") (goTypeToStr (exprTypeToGoType t))
+
+    getExprType :: TcoExpr -> ExprType
+    getExprType (TcoExpr _ (Typed ty _)) = ty
+    getExprType _ = Any -- fallback
+
+    setTcoExprType :: ExprType -> TcoExpr -> TcoExpr
+    setTcoExprType ty (TcoExpr a (Typed _ inner)) = TcoExpr a (Typed ty inner)
+    setTcoExprType _ expr = expr
+
+    tcoBindingsExpanded = map
+      (\group -> group { bindings = Array.concatMap expandBind group.bindings })
+      tcoBindings
+
+    expandBind :: Tuple Ident TcoExpr -> Array (Tuple Ident TcoExpr)
+    expandBind (Tuple id@(Ident name) val) =
+      let qual = modNameStr <> "." <> name
+          instsMap = map Set.toUnfoldable instantiations
+          baseVal = substituteAst instsMap mangleType val
+      in case Map.lookup qual instantiations of
+           Just concretes ->
+             let genericType = fromMaybe (getExprType val) (Map.lookup qual globalTypes)
+                 concreteArr = Set.toUnfoldable concretes :: Array ExprType
+             in Tuple id baseVal `Array.cons` Array.mapMaybe (\concrete ->
+                  let subst = unify genericType concrete Map.empty
+                  in if Map.isEmpty subst then Nothing else Just $
+                       let mangledName = name <> "__" <> mangleType concrete
+                           mangledVal = mapTcoExprTypes (substituteExprType subst) val
+                           mangledVal' = substituteAst instsMap mangleType mangledVal
+                       in Tuple (Ident mangledName) (setTcoExprType concrete mangledVal')
+                ) concreteArr
+           Nothing -> [ Tuple id baseVal ]
 
     extractFuncType :: TcoExpr -> Maybe { fArgs :: Array ExprType, fRet :: ExprType }
     extractFuncType (TcoExpr _ (Typed ty inner)) =
@@ -251,7 +287,7 @@ translate elidedCtors ctorTypes importsArray mod =
     moduleArities :: Map String { fullName :: String, fArgs :: Array GoType, fRet :: GoType, arity :: Int }
     moduleArities = Map.fromFoldable $ Array.concatMap
       ( \group -> unwrapFunc group.bindings )
-      tcoBindings
+      tcoBindingsExpanded
 
     Tuple decls helpers = unsafePerformEffect do
       let d = Array.concatMap
@@ -329,7 +365,7 @@ translate elidedCtors ctorTypes importsArray mod =
                   else
                     Array.concatMap (\b -> processBindingGroup [b] false) group.bindings
             )
-            tcoBindings
+            tcoBindingsExpanded
       h <- Ref.read helpersRef
       pure (Tuple d h)
 
