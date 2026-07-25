@@ -1050,8 +1050,15 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                         initVars = Array.concatMap (\(Tuple p goT) -> [ GoRaw ("var " <> p <> " " <> goTypeToStr goT <> " = " <> p <> "_loop"), GoRaw ("_ = " <> p) ]) paramsWithTypes
                         
                         funcBody = GoFor newName (initVars <> flattenStmts resBodyMut.stmts <> [ GoReturn (boxGoExpr resBodyMut.expr resBodyMut.exprType) ])
-                        iife = GoRaw ("func() gopurs_runtime.Value {\n" <> printGoExpr funcBody <> "\n}()")
-                        funcExpr = Array.foldr (\(Tuple p goT) acc -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> p <> "_loop " <> goTypeToStr goT <> ") gopurs_runtime.Value {\nreturn " <> printGoExpr acc <> "\n}") ]) iife paramsWithTypes
+                        
+                        -- Declare native loop vars from the boxed closure args
+                        iifeInitVars = map (\(Tuple p goT) -> 
+                          if goT == TypeValue then GoRaw ("var " <> p <> "_loop gopurs_runtime.Value = " <> p <> "_loop_val")
+                          else GoRaw ("var " <> p <> "_loop " <> goTypeToStr goT <> " = " <> printGoExpr (coerceGoExpr (GoRaw (p <> "_loop_val")) TypeValue goT))
+                        ) paramsWithTypes
+                        
+                        iife = GoRaw ("func() gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (iifeInitVars <> [funcBody])) <> "\n}()")
+                        funcExpr = Array.foldr (\(Tuple p goT) acc -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> p <> "_loop_val gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr acc <> "\n}") ]) iife paramsWithTypes
                       in
                         Tuple (Array.snoc accStmts (GoMutate newName funcExpr)) resBodyMut.nextId
                   )
