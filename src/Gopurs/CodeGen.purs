@@ -407,8 +407,8 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
 
         let
           callExpr =
-            if Array.length fvs == 0 then GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ GoVar helperName, GoRaw "gopurs_runtime.Int(0)" ]
-            else Array.foldl (\accCall fv -> GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ accCall, GoVar fv ]) (GoVar helperName) fvs
+            if Array.length fvs == 0 then GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ GoCall (GoVar ("Get_" <> helperName)) [], GoRaw "gopurs_runtime.Int(0)" ]
+            else Array.foldl (\accCall fv -> GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ accCall, GoVar fv ]) (GoCall (GoVar ("Get_" <> helperName)) []) fvs
 
         pure { stmts: StmtEmpty, expr: callExpr, exprType: TypeValue, nextId: res.nextId }
       else mkNodeThunk unit
