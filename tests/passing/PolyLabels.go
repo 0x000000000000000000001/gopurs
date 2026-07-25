@@ -1,14 +1,18 @@
-package Main
-import "gopurs/output/gopurs_runtime"
-var UnsafeGet = gopurs_runtime.Func(func(s gopurs_runtime.Value) gopurs_runtime.Value {
-	return gopurs_runtime.Func(func(o gopurs_runtime.Value) gopurs_runtime.Value {
-		return gopurs_runtime.RecordGet(o, s.StrVal)
-	})
-})
-var UnsafeSet = gopurs_runtime.Func(func(s gopurs_runtime.Value) gopurs_runtime.Value {
-	return gopurs_runtime.Func(func(a gopurs_runtime.Value) gopurs_runtime.Value {
-        return gopurs_runtime.Func(func(o gopurs_runtime.Value) gopurs_runtime.Value {
-		    return gopurs_runtime.RecordUpdate(o, map[string]gopurs_runtime.Value{s.StrVal: a})
-		})
-	})
-})
+func UnsafeGet(s string) func(map[string]any) any {
+	return func(o map[string]any) any {
+		return o[s]
+	}
+}
+
+func UnsafeSet(s string) func(any) func(map[string]any) map[string]any {
+	return func(a any) func(map[string]any) map[string]any {
+		return func(o map[string]any) map[string]any {
+			newMap := make(map[string]any)
+			for k, v := range o {
+				newMap[k] = v
+			}
+			newMap[s] = a
+			return newMap
+		}
+	}
+}
