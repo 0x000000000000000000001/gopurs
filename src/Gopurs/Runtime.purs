@@ -406,6 +406,16 @@ func Unbox[T any](v Value) T {
 	case float64: return any(math.Float64frombits(uint64(v.IntVal))).(T)
 	case bool: return any(v.IntVal == 1).(T)
 	case Value: return any(v).(T)
+	case map[string]any:
+		m := RecordToMap(v)
+		res := make(map[string]any, len(m))
+		for k, val := range m { res[k] = val }
+		return any(res).(T)
+	case []any:
+		arr := *(*[]Value)(v.UnsafePtr)
+		res := make([]any, len(arr))
+		for i, val := range arr { res[i] = val }
+		return any(res).(T)
 	case func(any) any:
 		res := func(arg any) any { return Apply(v, Box(arg)) }
 		return any(res).(T)
