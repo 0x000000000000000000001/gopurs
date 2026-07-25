@@ -19,6 +19,7 @@ import Data.Array as Array
 import Data.List as List
 import Data.Maybe (Maybe(..))
 import Data.Map as Map
+import Data.Foldable (foldl)
 import Data.Set as Set
 import Data.Traversable (traverse)
 import Data.String.Pattern (Pattern(..), Replacement(..))
@@ -88,6 +89,16 @@ main = launchAff_ do
 
   liftEffect $ Console.log $ "Directives count: " <> show (Map.size parsedDirectives.directives)
 
+  let
+    ctorTypes = foldl (\acc (Module m) ->
+      let modStr = String.replaceAll (Pattern ".") (Replacement "_") (unwrap m.name)
+      in foldl (\acc' decl ->
+        foldl (\acc'' ctor ->
+          Map.insert (modStr <> "." <> ctor.constructorName) ctor.fieldTypes acc''
+        ) acc' decl.constructors
+      ) acc m.dataDecls
+    ) Map.empty finalModules
+
   buildModules
     { directives: parsedDirectives.directives
     , analyzeCustom: \_ _ -> Nothing
@@ -97,7 +108,7 @@ main = launchAff_ do
     , onCodegenModule: \_ (Module coreFnMod) backendMod _ -> do
         let modNameStr = unwrap backendMod.name
         let importsArray = map (\i -> String.split (Pattern ".") (unwrap (importName i))) coreFnMod.imports
-        let goFile = translate elidedCtors importsArray backendMod
+        let goFile = translate elidedCtors ctorTypes importsArray backendMod
         FS.writeTextFile UTF8 ("output/" <> modNameStr <> "/" <> String.replaceAll (Pattern ".") (Replacement "_") modNameStr <> ".go") goFile
 
         when (Array.length (Array.fromFoldable backendMod.foreign) > 0) do
