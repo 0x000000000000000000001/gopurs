@@ -19,9 +19,23 @@ printGoExpr expr = case expr of
     printGoExpr f <> "(" <> String.joinWith ", " (map printGoExpr args) <> ")"
   GoSelector obj field ->
     printGoExpr obj <> "." <> field
-  GoFunc arg body -> case body of
-    GoBlock _ -> "gopurs_runtime.Func(func(" <> arg <> " gopurs_runtime.Value) gopurs_runtime.Value {\n" <> printGoExpr body <> "\n})"
-    _ -> "gopurs_runtime.Func(func(" <> arg <> " gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr body <> "\n})"
+  GoFunc arg body -> 
+    let
+      flattenGoFunc (GoFunc a b) acc = flattenGoFunc b (Array.snoc acc a)
+      flattenGoFunc b acc = Tuple acc b
+      Tuple allArgs finalBody = flattenGoFunc body [arg]
+      len = Array.length allArgs
+      funcName = if len == 1 then "Func" else "Func" <> show len
+      argStr = String.joinWith ", " (map (\a -> a <> " gopurs_runtime.Value") allArgs)
+    in
+      if len > 10 then
+        case body of
+          GoBlock _ -> "gopurs_runtime.Func(func(" <> arg <> " gopurs_runtime.Value) gopurs_runtime.Value {\n" <> printGoExpr body <> "\n})"
+          _ -> "gopurs_runtime.Func(func(" <> arg <> " gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr body <> "\n})"
+      else
+        case finalBody of
+          GoBlock _ -> "gopurs_runtime." <> funcName <> "(func(" <> argStr <> ") gopurs_runtime.Value {\n" <> printGoExpr finalBody <> "\n})"
+          _ -> "gopurs_runtime." <> funcName <> "(func(" <> argStr <> ") gopurs_runtime.Value {\nreturn " <> printGoExpr finalBody <> "\n})"
   GoBlock stmts ->
     String.joinWith "\n" (map printGoExpr stmts)
   GoReturn e ->
@@ -64,7 +78,9 @@ printGoExpr expr = case expr of
       "gopurs_runtime.RecordUpdateDict(" <> printGoExpr orig <> ", []string{" <> keysStr <> "}, []gopurs_runtime.Value{" <> valsStr <> "})"
   GoIIFE name binding body ->
     let assignment = if name == "_" then name <> " = " <> printGoExpr binding else name <> " := " <> printGoExpr binding <> "\n_ = " <> name
-    in "func() gopurs_runtime.Value {\n" <> assignment <> "\nreturn " <> printGoExpr body <> "\n}()"
+    in case body of
+      GoBlock _ -> "func() gopurs_runtime.Value {\n" <> assignment <> "\n" <> printGoExpr body <> "\n}()"
+      _ -> "func() gopurs_runtime.Value {\n" <> assignment <> "\nreturn " <> printGoExpr body <> "\n}()"
   GoLetRec bindings body ->
     "func() gopurs_runtime.Value {\n" <>
     String.joinWith "\n" (map (\(Tuple name _) -> "var " <> name <> " gopurs_runtime.Value") bindings) <> "\n" <>
@@ -89,6 +105,8 @@ printGoExpr expr = case expr of
     raw
   GoFor label stmts ->
     label <> ":\nfor {\nif false { continue " <> label <> " }\n" <> String.joinWith "\n" (map printGoExpr stmts) <> "\n}"
+  GoForRange rangeStmt stmts ->
+    "for " <> rangeStmt <> " {\n" <> String.joinWith "\n" (map printGoExpr stmts) <> "\n}"
   GoContinue label ->
     "continue " <> label
   GoIfElse cond trueStmts falseStmts ->

@@ -25,6 +25,7 @@ data GoExpr
   | GoTypeAssertion GoExpr String
   | GoRaw String
   | GoFor String (Array GoExpr)
+  | GoForRange String (Array GoExpr)
   | GoContinue String
   | GoMutate String GoExpr
   | GoIfElse GoExpr (Array GoExpr) (Array GoExpr)
