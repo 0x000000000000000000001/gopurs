@@ -40,7 +40,7 @@ mkdir -p "$RUNNER_DIR/src"
 passed=0
 failed=0
 
-SKIP_BEFORE="4174"
+SKIP_BEFORE="AutoPrelude2"
 TEST_FILES=()
 CLEAN_CACHE=0
 
