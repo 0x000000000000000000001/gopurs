@@ -976,7 +976,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
               OpBooleanNot -> { expr: GoBinOp "!=" (unboxGoExpr resE.expr resE.exprType TypeBool) (GoRaw "true"), exprType: TypeBool }
               OpIntNegate -> { expr: GoBinOp "-" (GoInt 0) (unboxGoExpr resE.expr resE.exprType TypeInt64), exprType: TypeInt64 }
               OpIntBitNot -> { expr: GoBinOp "^" (GoRaw "^0") (unboxGoExpr resE.expr resE.exprType TypeInt64), exprType: TypeInt64 }
-              OpNumberNegate -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "FloatNeg") [ resE.expr ], exprType: TypeValue }
+              OpNumberNegate -> { expr: GoBinOp "-" (GoRaw "0.0") (unboxGoExpr resE.expr resE.exprType TypeFloat64), exprType: TypeFloat64 }
               OpIsTag (Qualified mbMod (Ident tag)) ->
                 let
                   structName = getStructName modNameStr mbMod tag
