@@ -63,6 +63,7 @@ exprTypeToGoType :: ExprType -> GoType
 exprTypeToGoType Int = TypeInt64
 exprTypeToGoType Number = TypeFloat64
 exprTypeToGoType String = TypeString
+exprTypeToGoType Char = TypeString
 exprTypeToGoType Boolean = TypeBool
 exprTypeToGoType (Record fields) = TypeRecord (map (\(Tuple k v) -> Tuple k (exprTypeToGoType v)) (Array.sortBy (comparing \(Tuple k _) -> k) fields))
 exprTypeToGoType _ = TypeValue
@@ -437,17 +438,9 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
       Typed type_ a ->
         let
           res = translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail inEffectBlock nextId a
-          expectedGoType = case type_ of
-            Int -> TypeInt64
-            Number -> TypeFloat64
-            String -> TypeString
-            Char -> TypeString
-            Boolean -> TypeBool
-            _ -> TypeValue
+          expectedGoType = exprTypeToGoType type_
         in
-          if res.exprType == expectedGoType then res
-          else if expectedGoType == TypeValue then res { expr = boxGoExpr res.expr res.exprType, exprType = TypeValue }
-          else res { expr = unboxGoExpr res.expr res.exprType expectedGoType, exprType = expectedGoType }
+          { stmts: res.stmts, expr: coerceGoExpr res.expr res.exprType expectedGoType, exprType: expectedGoType, nextId: res.nextId }
       Var (Qualified mbMn (Ident i)) ->
         let
           safeName = sanitizeName i
