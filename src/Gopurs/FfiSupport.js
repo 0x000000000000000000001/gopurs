@@ -310,7 +310,7 @@ export const appendFfiWrappersImpl = function(moduleName) {
                             } else {
                                 let argUnwrap = "arg.PtrVal()";
                                 if (argT === "any" || argT === "interface{}") {
-                                    argUnwrap = "arg.PtrVal()";
+                                    argUnwrap = "arg";
                                 } else if (argT === "gopurs_runtime.Value") {
                                     argUnwrap = "arg";
                                 } else if (argT.startsWith("func")) {
