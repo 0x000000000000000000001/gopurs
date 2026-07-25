@@ -31,7 +31,7 @@ import PureScript.Backend.Optimizer.Directives.Defaults (defaultDirectives)
 import PureScript.Backend.Optimizer.Directives (parseDirectiveFile)
 import PureScript.Backend.Optimizer.Semantics.Foreign (coreForeignSemantics)
 import PureScript.Backend.Optimizer.CoreFn (Module(..), Ann, importName)
-import Gopurs.CodeGen (translate)
+import Gopurs.CodeGen (translate, getStructName)
 import Gopurs.Runtime (runtimeGoCode)
 import Gopurs.FfiSupport (findFfiFile, appendFfiWrappers)
 
@@ -63,6 +63,20 @@ main = launchAff_ do
   let modulesList = List.fromFoldable modulesArray
   let finalModules = sortModules modulesList
 
+  let elidedCtors = Array.foldl (\acc (Module mod) ->
+        Array.foldl (\acc' decl ->
+          if Array.length decl.constructors == 1 then
+            case Array.head decl.constructors of
+              Just ctor ->
+                if Array.length ctor.fieldTypes == 1 then
+                  let structName = getStructName (unwrap mod.name) Nothing ctor.constructorName
+                  in Set.insert structName acc'
+                else acc'
+              Nothing -> acc'
+          else acc'
+        ) acc mod.dataDecls
+      ) Set.empty (Array.fromFoldable finalModules)
+
   _ <- attempt (FS.mkdir "output/gopurs_runtime")
   FS.writeTextFile UTF8 "output/gopurs_runtime/runtime.go" runtimeGoCode
 
@@ -83,7 +97,7 @@ main = launchAff_ do
     , onCodegenModule: \_ (Module coreFnMod) backendMod _ -> do
         let modNameStr = unwrap backendMod.name
         let importsArray = map (\i -> String.split (Pattern ".") (unwrap (importName i))) coreFnMod.imports
-        let goFile = translate importsArray backendMod
+        let goFile = translate elidedCtors importsArray backendMod
         FS.writeTextFile UTF8 ("output/" <> modNameStr <> "/" <> String.replaceAll (Pattern ".") (Replacement "_") modNameStr <> ".go") goFile
 
         when (Array.length (Array.fromFoldable backendMod.foreign) > 0) do

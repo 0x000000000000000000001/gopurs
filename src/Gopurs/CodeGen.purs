@@ -170,8 +170,8 @@ getStructName modNameStr mbMod ctorName =
   in
     pkgPrefix <> getBaseStructName modNameStr mbMod ctorName
 
-translate :: Array (Array String) -> BackendModule -> String
-translate importsArray mod =
+translate :: Set.Set String -> Array (Array String) -> BackendModule -> String
+translate elidedCtors importsArray mod =
   let
     modNameStr = String.replaceAll (Pattern ".") (Replacement "_") (unwrap mod.name)
     _ = unsafePerformEffect (Console.log ("Translating module " <> modNameStr))
@@ -188,7 +188,7 @@ translate importsArray mod =
               "type " <> structName <> " struct {\n\t" <> String.joinWith "\n\t" fields <> "\n}\n" <> isTagHelper
           ) decl.constructors
         ) mod.dataDecls
-      Ref.new { decls: [], rawDecls: structDecls }
+      Ref.new { decls: [], rawDecls: structDecls, elidedCtors }
 
     Tuple _ tcoBindings = foldl
       ( \(Tuple env acc) group ->
@@ -384,13 +384,14 @@ executeIfOpaque expr goExpr =
   else GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ goExpr, GoRaw "gopurs_runtime.Value{}" ]
 
 
-translateExprImpl :: Ref { decls :: Array GoDecl, rawDecls :: Array String } -> Int -> String -> Array String -> Map String { fullName :: String, fArgs :: Array GoType, fRet :: GoType, arity :: Int } -> Map String { name :: String, goType :: GoType } -> Maybe String -> Array { ident :: String, params :: Array String, loopParams :: Array String, goTypes :: Array GoType } -> Boolean -> Int -> TcoExpr -> { stmts :: StmtTree, expr :: GoExpr, exprType :: GoType, nextId :: Int }
+translateExprImpl :: Ref { decls :: Array GoDecl, rawDecls :: Array String, elidedCtors :: Set.Set String } -> Int -> String -> Array String -> Map String { fullName :: String, fArgs :: Array GoType, fRet :: GoType, arity :: Int } -> Map String { name :: String, goType :: GoType } -> Maybe String -> Array { ident :: String, params :: Array String, loopParams :: Array String, goTypes :: Array GoType } -> Boolean -> Int -> TcoExpr -> { stmts :: StmtTree, expr :: GoExpr, exprType :: GoType, nextId :: Int }
 translateExprImpl helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail nextId tcoExpr =
   translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail false nextId tcoExpr
 
-translateExprImpl_ :: Ref { decls :: Array GoDecl, rawDecls :: Array String } -> Int -> String -> Array String -> Map String { fullName :: String, fArgs :: Array GoType, fRet :: GoType, arity :: Int } -> Map String { name :: String, goType :: GoType } -> Maybe String -> Array { ident :: String, params :: Array String, loopParams :: Array String, goTypes :: Array GoType } -> Boolean -> Boolean -> Int -> TcoExpr -> { stmts :: StmtTree, expr :: GoExpr, exprType :: GoType, nextId :: Int }
+translateExprImpl_ :: Ref { decls :: Array GoDecl, rawDecls :: Array String, elidedCtors :: Set.Set String } -> Int -> String -> Array String -> Map String { fullName :: String, fArgs :: Array GoType, fRet :: GoType, arity :: Int } -> Map String { name :: String, goType :: GoType } -> Maybe String -> Array { ident :: String, params :: Array String, loopParams :: Array String, goTypes :: Array GoType } -> Boolean -> Boolean -> Int -> TcoExpr -> { stmts :: StmtTree, expr :: GoExpr, exprType :: GoType, nextId :: Int }
 translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail inEffectBlock nextId tcoExpr@(TcoExpr tcoAnalysis expr) =
   let
+    elidedCtors = (unsafePerformEffect (Ref.read helpersRef)).elidedCtors
     isEff = isEffectNode expr
   in
     if isEff && not inEffectBlock then
@@ -1097,7 +1098,10 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
               let
                 structName = getStructName modNameStr mbMod ctorName
               in
-                { stmts: resObj.stmts, expr: GoConstructorAccess (boxGoExpr resObj.expr resObj.exprType) structName idx, exprType: TypeValue, nextId: resObj.nextId }
+                if Set.member structName elidedCtors then
+                  { stmts: resObj.stmts, expr: boxGoExpr resObj.expr resObj.exprType, exprType: TypeValue, nextId: resObj.nextId }
+                else
+                  { stmts: resObj.stmts, expr: GoConstructorAccess (boxGoExpr resObj.expr resObj.exprType) structName idx, exprType: TypeValue, nextId: resObj.nextId }
 
       Update obj props ->
         let
