@@ -350,6 +350,10 @@ func ArrayAccess(arr Value, index int) Value {
 	return (*(*[]Value)(arr.UnsafePtr))[index]
 }
 
+func ArrayLength(arr Value) int {
+	return len(*(*[]Value)(arr.UnsafePtr))
+}
+
 func Any(v any) Value {
 	return Value{Type: TypeAny, UnsafePtr: unsafe.Pointer(&v)}
 }

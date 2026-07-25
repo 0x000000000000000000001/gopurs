@@ -976,7 +976,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                   exprStr = "(" <> printGoExpr (boxGoExpr resE.expr resE.exprType) <> ".Type == 9 && " <> printGoExpr (boxGoExpr resE.expr resE.exprType) <> ".IntVal == " <> hashStr <> ")"
                 in
                   { expr: GoRaw exprStr, exprType: TypeBool }
-              OpArrayLength -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoCall (GoVar "int64") [ GoCall (GoVar "len") [ GoTypeAssertion (GoCall (GoSelector resE.expr "PtrVal") []) "[]gopurs_runtime.Value" ] ] ], exprType: TypeValue }
+              OpArrayLength -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoCall (GoVar "int64") [ GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayLength") [ resE.expr ] ] ], exprType: TypeValue }
           in
             { stmts: resE.stmts, expr: goOp.expr, exprType: goOp.exprType, nextId: resE.nextId }
         Op2 op2 e1 e2 ->
@@ -1040,7 +1040,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
           let
             resA = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false nextId a
             refIdent = "__local_ref_" <> show resA.nextId
-            declStmt = GoAssign refIdent resA.expr
+            declStmt = GoAssign refIdent (boxGoExpr resA.expr resA.exprType)
           in
             { stmts: resA.stmts <> StmtLeaf declStmt
             , expr: GoRaw ("gopurs_runtime.Any(&" <> refIdent <> ")")
@@ -1058,7 +1058,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
           let
             resRef = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false nextId ref
             resVal = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false resRef.nextId val
-            writeStmt = GoRaw ("*(" <> printGoExpr resRef.expr <> ".PtrVal().(*gopurs_runtime.Value)) = " <> printGoExpr resVal.expr)
+            writeStmt = GoRaw ("*(" <> printGoExpr resRef.expr <> ".PtrVal().(*gopurs_runtime.Value)) = " <> printGoExpr (boxGoExpr resVal.expr resVal.exprType))
           in
             { stmts: resRef.stmts <> resVal.stmts <> StmtLeaf writeStmt
             , expr: resVal.expr

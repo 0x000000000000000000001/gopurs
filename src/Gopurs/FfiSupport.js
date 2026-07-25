@@ -274,7 +274,7 @@ export const appendFfiWrappersImpl = function(moduleName) {
                         return `func(${params}) {\n\t\t${applyCall}\n\t}`;
                     } else if (retStr.startsWith("[]") && retStr !== "[]gopurs_runtime.Value") {
                         let elemType = retStr.substring(2);
-                        return `func(${params}) ${retStr} {\n\t\tinner_res${depth} := ${applyCall}\n\t\tres_arr${depth} := inner_res${depth}.PtrVal().([]gopurs_runtime.Value)\n\t\tres_go${depth} := make(${retStr}, len(res_arr${depth}))\n\t\tfor i, v := range res_arr${depth} { res_go${depth}[i] = gopurs_runtime.Unbox[${elemType}](v) }\n\t\treturn res_go${depth}\n\t}`;
+                        return `func(${params}) ${retStr} {\n\t\tinner_res${depth} := ${applyCall}\n\t\tres_arr${depth} := *(*[]gopurs_runtime.Value)(inner_res${depth}.UnsafePtr)\n\t\tres_go${depth} := make(${retStr}, len(res_arr${depth}))\n\t\tfor i, v := range res_arr${depth} { res_go${depth}[i] = gopurs_runtime.Unbox[${elemType}](v) }\n\t\treturn res_go${depth}\n\t}`;
                     } else if (retStr === "any" || retStr === "interface{}") {
                         return `func(${params}) ${retStr} {\n\t\treturn ${applyCall}\n\t}`;
                     } else if (retStr === "gopurs_runtime.Value") {
@@ -366,7 +366,7 @@ export const appendFfiWrappersImpl = function(moduleName) {
                     } else if (t.startsWith("[]") && t !== "[]gopurs_runtime.Value") {
                         let elemType = t.substring(2);
                         if (elemType === "any") elemType = "interface{}";
-                        newLines.push(`\targ${idx}_arr := arg${idx}.PtrVal().([]gopurs_runtime.Value)`);
+                        newLines.push(`\targ${idx}_arr := *(*[]gopurs_runtime.Value)(arg${idx}.UnsafePtr)`);
                         newLines.push(`\tgo_arg${idx} := make(${t}, len(arg${idx}_arr))`);
                         if (elemType === "interface{}") {
                             newLines.push(`\tfor i, v := range arg${idx}_arr { go_arg${idx}[i] = v }`);

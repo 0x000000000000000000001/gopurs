@@ -82,7 +82,7 @@ printGoExpr expr = case expr of
     String.joinWith "\n" (map (\(Tuple cond t) -> "if (" <> printGoExpr cond <> ").IntVal != 0 {\nreturn " <> printGoExpr t <> "\n}") branches) <>
     "\nreturn " <> printGoExpr def <> "\n}()"
   GoBinOp op left right ->
-    printGoExpr left <> " " <> op <> " " <> printGoExpr right
+    "(" <> printGoExpr left <> ") " <> op <> " (" <> printGoExpr right <> ")"
   GoTypeAssertion expr t ->
     printGoExpr expr <> ".(" <> t <> ")"
   GoRaw raw ->
@@ -104,13 +104,13 @@ printGoExpr expr = case expr of
 
 printGoDeclVar :: GoDecl -> String
 printGoDeclVar { identifier, expression } =
-  "var " <> identifier <> " gopurs_runtime.Value\n" <>
+  "var cache_" <> identifier <> " gopurs_runtime.Value\n" <>
   "var once_" <> identifier <> " sync.Once\n" <>
   "func Get_" <> identifier <> "() gopurs_runtime.Value {\n" <>
   "\tonce_" <> identifier <> ".Do(func() {\n" <>
-  "\t\t" <> identifier <> " = " <> printGoExpr expression <> "\n" <>
+  "\t\tcache_" <> identifier <> " = " <> printGoExpr expression <> "\n" <>
   "\t})\n" <>
-  "\treturn " <> identifier <> "\n" <>
+  "\treturn cache_" <> identifier <> "\n" <>
   "}"
 
 printGoFile :: GoFile -> String
