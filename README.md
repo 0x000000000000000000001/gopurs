@@ -28,9 +28,8 @@ While previous native compilers were often written in Haskell and parsed raw `Co
 ### 2. Heap vs. Stack: a new memory layout for Go
 Dynamic typing in statically typed languages like Go often relies heavily on `interface{}` (or `any`). However, assigning primitive values to interfaces forces them to escape to the heap (Boxing), generating massive Garbage Collector pressure. For `gopurs`, I ran extensive benchmarks and decided to completely ditch `any`. Instead, the runtime uses a universal flat `Value` struct (a tagged union). This ensures that dynamic operations stay mostly on the stack.
 
-Furthermore, `gopurs` implements advanced access elision for Tail Call Optimization (TCO). During `LetRec` bindings, the compiler infers the exact types of loop variables and unboxes them into native Go types (e.g., `int64`) inside the generated `for` loop.
+> **Benchmark context:** On a 1 billion operations benchmark, native static Go took ~250ms, a dynamic `any` approach took ~9 seconds, and my `Value` struct solution completed in **~240ms**. This memory model completely bypasses the GC overhead in heavy iterative loops.
 
-> **Benchmark context:** On a standard PureScript microbenchmark suite (featuring heavy polymorphism, deep record updates, and complex tail-call loops), the total execution time is an impressive **~89.43 ms**, massively outperforming standard boxed implementations. For instance, thanks to native unboxing, a 10 million iterations type class dictionary lookup loop completes in just ~2ms.
 ### 3. Up-to-date with modern PureScript
 `gopurs` aims to be fully aligned with the current v0.15+ ecosystem (and v0.16+ soon). I am currently mirroring the standard libraries ([`gopurs-prelude`](https://github.com/0x000000000000000000001/gopurs-prelude), [`gopurs-effect`](https://github.com/0x000000000000000000001/gopurs-effect), etc.) to provide native Go FFIs.
 
