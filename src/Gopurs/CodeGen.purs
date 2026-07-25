@@ -976,7 +976,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                   exprStr = "(" <> printGoExpr (boxGoExpr resE.expr resE.exprType) <> ".Type == 9 && " <> printGoExpr (boxGoExpr resE.expr resE.exprType) <> ".IntVal == " <> hashStr <> ")"
                 in
                   { expr: GoRaw exprStr, exprType: TypeBool }
-              OpArrayLength -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoCall (GoVar "int64") [ GoCall (GoVar "len") [ GoTypeAssertion (GoSelector resE.expr "PtrVal") "[]gopurs_runtime.Value" ] ] ], exprType: TypeValue }
+              OpArrayLength -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoCall (GoVar "int64") [ GoCall (GoVar "len") [ GoTypeAssertion (GoCall (GoSelector resE.expr "PtrVal") []) "[]gopurs_runtime.Value" ] ] ], exprType: TypeValue }
           in
             { stmts: resE.stmts, expr: goOp.expr, exprType: goOp.exprType, nextId: resE.nextId }
         Op2 op2 e1 e2 ->
@@ -1043,7 +1043,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
             declStmt = GoAssign refIdent resA.expr
           in
             { stmts: resA.stmts <> StmtLeaf declStmt
-            , expr: GoRaw ("gopurs_runtime.Value{PtrVal: &" <> refIdent <> "}")
+            , expr: GoRaw ("gopurs_runtime.Any(&" <> refIdent <> ")")
             , exprType: TypeValue, nextId: resA.nextId + 1
             }
         EffectRefRead a ->
@@ -1051,14 +1051,14 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
             resA = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false nextId a
           in
             { stmts: resA.stmts
-            , expr: GoRaw ("*(" <> printGoExpr resA.expr <> ".PtrVal.(*gopurs_runtime.Value))")
+            , expr: GoRaw ("*(" <> printGoExpr resA.expr <> ".PtrVal().(*gopurs_runtime.Value))")
             , exprType: TypeValue, nextId: resA.nextId
             }
         EffectRefWrite ref val ->
           let
             resRef = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false nextId ref
             resVal = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false resRef.nextId val
-            writeStmt = GoRaw ("*(" <> printGoExpr resRef.expr <> ".PtrVal.(*gopurs_runtime.Value)) = " <> printGoExpr resVal.expr)
+            writeStmt = GoRaw ("*(" <> printGoExpr resRef.expr <> ".PtrVal().(*gopurs_runtime.Value)) = " <> printGoExpr resVal.expr)
           in
             { stmts: resRef.stmts <> resVal.stmts <> StmtLeaf writeStmt
             , expr: resVal.expr
