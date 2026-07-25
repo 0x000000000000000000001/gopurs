@@ -5,6 +5,7 @@ import Prelude
 import Effect (Effect)
 import Effect.Class (liftEffect)
 import Effect.Aff (Aff, launchAff_, attempt)
+import Effect.Console (log, logShow)
 import Effect.Console as Console
 import Node.FS.Aff as FS
 import Node.FS.Stats as Stats
@@ -26,6 +27,8 @@ import Data.Newtype (unwrap)
 import PureScript.Backend.Optimizer.CoreFn.Json (decodeModule)
 import PureScript.Backend.Optimizer.CoreFn.Sort (sortModules)
 import PureScript.Backend.Optimizer.Builder (buildModules)
+import PureScript.Backend.Optimizer.Directives.Defaults (defaultDirectives)
+import PureScript.Backend.Optimizer.Directives (parseDirectiveFile)
 import PureScript.Backend.Optimizer.Semantics.Foreign (coreForeignSemantics)
 import PureScript.Backend.Optimizer.CoreFn (Module(..), Ann, importName)
 import Gopurs.CodeGen (translate)
@@ -65,8 +68,14 @@ main = launchAff_ do
 
   FS.writeTextFile UTF8 "output/go.mod" "module gopurs/output\n\ngo 1.22\n"
 
+  let parsedDirectives = parseDirectiveFile defaultDirectives
+  when (not (Array.null parsedDirectives.errors)) do
+    liftEffect $ Console.log "DIRECTIVE PARSE ERRORS"
+
+  liftEffect $ Console.log $ "Directives count: " <> show (Map.size parsedDirectives.directives)
+
   buildModules
-    { directives: Map.empty
+    { directives: parsedDirectives.directives
     , analyzeCustom: \_ _ -> Nothing
     , foreignSemantics: coreForeignSemantics
     , traceIdents: Set.empty

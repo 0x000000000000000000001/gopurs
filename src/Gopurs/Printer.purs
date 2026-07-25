@@ -74,8 +74,22 @@ printGoExpr expr = case expr of
     let
       keysStr = String.joinWith ", " (map (\(Tuple k _) -> "\"" <> k <> "\"") props)
       valsStr = String.joinWith ", " (map (\(Tuple _ v) -> printGoExpr v) props)
+      len = Array.length props
     in
-      "gopurs_runtime.RecordUpdateDict(" <> printGoExpr orig <> ", []string{" <> keysStr <> "}, []gopurs_runtime.Value{" <> valsStr <> "})"
+      if len == 1 then
+        case props of
+          [Tuple k v] -> "gopurs_runtime.RecordUpdate1(" <> printGoExpr orig <> ", \"" <> k <> "\", " <> printGoExpr v <> ")"
+          _ -> "gopurs_runtime.RecordUpdateDict(" <> printGoExpr orig <> ", []string{" <> keysStr <> "}, []gopurs_runtime.Value{" <> valsStr <> "})"
+      else if len == 2 then
+        case props of
+          [Tuple k1 v1, Tuple k2 v2] -> "gopurs_runtime.RecordUpdate2(" <> printGoExpr orig <> ", \"" <> k1 <> "\", " <> printGoExpr v1 <> ", \"" <> k2 <> "\", " <> printGoExpr v2 <> ")"
+          _ -> "gopurs_runtime.RecordUpdateDict(" <> printGoExpr orig <> ", []string{" <> keysStr <> "}, []gopurs_runtime.Value{" <> valsStr <> "})"
+      else if len == 3 then
+        case props of
+          [Tuple k1 v1, Tuple k2 v2, Tuple k3 v3] -> "gopurs_runtime.RecordUpdate3(" <> printGoExpr orig <> ", \"" <> k1 <> "\", " <> printGoExpr v1 <> ", \"" <> k2 <> "\", " <> printGoExpr v2 <> ", \"" <> k3 <> "\", " <> printGoExpr v3 <> ")"
+          _ -> "gopurs_runtime.RecordUpdateDict(" <> printGoExpr orig <> ", []string{" <> keysStr <> "}, []gopurs_runtime.Value{" <> valsStr <> "})"
+      else
+        "gopurs_runtime.RecordUpdateDict(" <> printGoExpr orig <> ", []string{" <> keysStr <> "}, []gopurs_runtime.Value{" <> valsStr <> "})"
   GoIIFE name binding body ->
     let assignment = if name == "_" then name <> " = " <> printGoExpr binding else name <> " := " <> printGoExpr binding <> "\n_ = " <> name
     in case body of
@@ -89,8 +103,16 @@ printGoExpr expr = case expr of
     "return " <> printGoExpr body <> "\n}()"
   GoRecordAccess obj prop ->
     "gopurs_runtime.RecordGet(" <> printGoExpr obj <> ", \"" <> prop <> "\")"
+  GoRecordAccessStatic obj size idx ->
+    if size >= 6 then
+      "((*gopurs_runtime.RecordData)(" <> printGoExpr obj <> ".UnsafePtr)).Vals[" <> show idx <> "]"
+    else
+      "((*gopurs_runtime.RecordData" <> show size <> ")(" <> printGoExpr obj <> ".UnsafePtr)).V" <> show idx
   GoConstructor hashStr structName args ->
-    "gopurs_runtime.Value{Type: 9, IntVal: " <> hashStr <> ", UnsafePtr: unsafe.Pointer(&" <> structName <> "{" <> String.joinWith ", " (map printGoExpr args) <> "})}"
+    if Array.null args then
+      "gopurs_runtime.Value{Type: 9, IntVal: " <> hashStr <> ", UnsafePtr: nil}"
+    else
+      "gopurs_runtime.Value{Type: 9, IntVal: " <> hashStr <> ", UnsafePtr: unsafe.Pointer(&" <> structName <> "{" <> String.joinWith ", " (map printGoExpr args) <> "})}"
   GoConstructorAccess obj structName idx ->
     "(*" <> structName <> ")(" <> printGoExpr obj <> ".UnsafePtr).V" <> show idx
   GoBranch branches def ->

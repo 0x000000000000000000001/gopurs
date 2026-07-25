@@ -18,6 +18,7 @@ data GoExpr
   | GoIIFE String GoExpr GoExpr
   | GoLetRec (Array (Tuple String GoExpr)) GoExpr
   | GoRecordAccess GoExpr String
+  | GoRecordAccessStatic GoExpr Int Int
   | GoConstructor String String (Array GoExpr)
   | GoConstructorAccess GoExpr String Int
   | GoBranch (Array (Tuple GoExpr GoExpr)) GoExpr

@@ -41,8 +41,8 @@ const (
 // Floats are packed into IntVal using math.Float64bits, and Bools are mapped to 1/0 in IntVal.
 // Adding more fields would increase the struct size and reduce pass-by-value performance.
 type Value struct {
-	Type   uint8
-	IntVal int64
+	Type      int
+	IntVal    int64
 	UnsafePtr unsafe.Pointer
 }
 
@@ -221,6 +221,27 @@ func RecordGet(obj Value, key string) Value {
 func RecordUpdateDict(orig Value, keys []string, vals []Value) Value {
 	m := RecordToMap(orig)
 	for i, k := range keys { m[k] = vals[i] }
+	return Record(m)
+}
+
+func RecordUpdate1(orig Value, k1 string, v1 Value) Value {
+	m := RecordToMap(orig)
+	m[k1] = v1
+	return Record(m)
+}
+
+func RecordUpdate2(orig Value, k1 string, v1 Value, k2 string, v2 Value) Value {
+	m := RecordToMap(orig)
+	m[k1] = v1
+	m[k2] = v2
+	return Record(m)
+}
+
+func RecordUpdate3(orig Value, k1 string, v1 Value, k2 string, v2 Value, k3 string, v3 Value) Value {
+	m := RecordToMap(orig)
+	m[k1] = v1
+	m[k2] = v2
+	m[k3] = v3
 	return Record(m)
 }
 
