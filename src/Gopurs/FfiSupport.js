@@ -131,9 +131,9 @@ export const appendFfiWrappersImpl = function(moduleName) {
 
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
-            const basicMatch = line.match(/^func\s+(_?[A-Z][A-Za-z0-9_]*)\s*\(/);
+            const basicMatch = line.match(/^(?:func\s+(_?[A-Z][A-Za-z0-9_]*)\s*\(|var\s+(_?[A-Z][A-Za-z0-9_]*)\s*=\s*func\s*\()/);
             if (basicMatch) {
-                const funcName = basicMatch[1];
+                const funcName = basicMatch[1] || basicMatch[2];
                 let exportName = "_Gopurs_" + funcName;
                 
                 let startIdx = basicMatch[0].length;
