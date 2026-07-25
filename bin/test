@@ -37,31 +37,6 @@ done
 
 mkdir -p "$RUNNER_DIR/src"
 
-echo "Building gopurs compiler..."
-cd "$ROOT_DIR"
-npm run build --silent || { echo -e "\n\033[0;31m[FAILED]\033[0m gopurs build failed!"; exit 1; }
-
-cd "$RUNNER_DIR"
-
-if [ ! -f spago.yaml ]; then
-  echo "package:" > spago.yaml
-  echo "  name: runner" >> spago.yaml
-  echo "  dependencies:" >> spago.yaml
-  for pkg in "${CORE_PACKAGES[@]}"; do
-    echo "    - $pkg" >> spago.yaml
-  done
-  echo "workspace:" >> spago.yaml
-  echo "  packageSet:" >> spago.yaml
-  echo "    registry: 77.10.1" >> spago.yaml
-  echo "  extraPackages:" >> spago.yaml
-  for pkg in "${CORE_PACKAGES[@]}"; do
-    echo "    $pkg:" >> spago.yaml
-    echo "      path: \"../../../gopurs-$pkg\"" >> spago.yaml
-  done
-fi
-
-echo "Running tests from $PASSING_DIR..."
-
 passed=0
 failed=0
 
@@ -92,6 +67,33 @@ if [ $# -gt 0 ]; then
     fi
   done
 fi
+
+if [ $CLEAN_CACHE -eq 1 ]; then
+  echo "Building gopurs compiler..."
+  cd "$ROOT_DIR"
+  npm run build --silent || { echo -e "\n\033[0;31m[FAILED]\033[0m gopurs build failed!"; exit 1; }
+fi
+
+cd "$RUNNER_DIR"
+
+if [ ! -f spago.yaml ]; then
+  echo "package:" > spago.yaml
+  echo "  name: runner" >> spago.yaml
+  echo "  dependencies:" >> spago.yaml
+  for pkg in "${CORE_PACKAGES[@]}"; do
+    echo "    - $pkg" >> spago.yaml
+  done
+  echo "workspace:" >> spago.yaml
+  echo "  packageSet:" >> spago.yaml
+  echo "    registry: 77.10.1" >> spago.yaml
+  echo "  extraPackages:" >> spago.yaml
+  for pkg in "${CORE_PACKAGES[@]}"; do
+    echo "    $pkg:" >> spago.yaml
+    echo "      path: \"../../../gopurs-$pkg\"" >> spago.yaml
+  done
+fi
+
+echo "Running tests from $PASSING_DIR..."
 
 if [ $CLEAN_CACHE -eq 1 ]; then
   echo "=> Cleaning Spago and output cache..."
