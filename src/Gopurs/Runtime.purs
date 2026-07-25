@@ -219,36 +219,74 @@ func RecordGet(obj Value, key string) Value {
 }
 
 func RecordUpdateDict(orig Value, keys []string, vals []Value) Value {
+	switch orig.Type {
+	case TypeRecord1:
+		clone := *(*RecordData1)(orig.UnsafePtr)
+		for i, k := range keys {
+			if clone.K0 == k { clone.V0 = vals[i] }
+		}
+		return Value{Type: TypeRecord1, UnsafePtr: unsafe.Pointer(&clone)}
+	case TypeRecord2:
+		clone := *(*RecordData2)(orig.UnsafePtr)
+		for i, k := range keys {
+			if clone.K0 == k { clone.V0 = vals[i] } else if clone.K1 == k { clone.V1 = vals[i] }
+		}
+		return Value{Type: TypeRecord2, UnsafePtr: unsafe.Pointer(&clone)}
+	case TypeRecord3:
+		clone := *(*RecordData3)(orig.UnsafePtr)
+		for i, k := range keys {
+			if clone.K0 == k { clone.V0 = vals[i] } else if clone.K1 == k { clone.V1 = vals[i] } else if clone.K2 == k { clone.V2 = vals[i] }
+		}
+		return Value{Type: TypeRecord3, UnsafePtr: unsafe.Pointer(&clone)}
+	case TypeRecord4:
+		clone := *(*RecordData4)(orig.UnsafePtr)
+		for i, k := range keys {
+			if clone.K0 == k { clone.V0 = vals[i] } else if clone.K1 == k { clone.V1 = vals[i] } else if clone.K2 == k { clone.V2 = vals[i] } else if clone.K3 == k { clone.V3 = vals[i] }
+		}
+		return Value{Type: TypeRecord4, UnsafePtr: unsafe.Pointer(&clone)}
+	case TypeRecord5:
+		clone := *(*RecordData5)(orig.UnsafePtr)
+		for i, k := range keys {
+			if clone.K0 == k { clone.V0 = vals[i] } else if clone.K1 == k { clone.V1 = vals[i] } else if clone.K2 == k { clone.V2 = vals[i] } else if clone.K3 == k { clone.V3 = vals[i] } else if clone.K4 == k { clone.V4 = vals[i] }
+		}
+		return Value{Type: TypeRecord5, UnsafePtr: unsafe.Pointer(&clone)}
+	case TypeRecordData:
+		r := (*RecordData)(orig.UnsafePtr)
+		newVals := make([]Value, len(r.Vals))
+		copy(newVals, r.Vals)
+		for i, k := range keys {
+			for j, rk := range r.Keys {
+				if rk == k { newVals[j] = vals[i]; break }
+			}
+		}
+		newR := RecordData{Keys: r.Keys, Vals: newVals}
+		return Value{Type: TypeRecordData, UnsafePtr: unsafe.Pointer(&newR)}
+	}
 	m := RecordToMap(orig)
 	for i, k := range keys { m[k] = vals[i] }
 	return Record(m)
 }
 
 func RecordUpdate1(orig Value, k1 string, v1 Value) Value {
-	m := RecordToMap(orig)
-	m[k1] = v1
-	return Record(m)
+	return RecordUpdateDict(orig, []string{k1}, []Value{v1})
 }
 
 func RecordUpdate2(orig Value, k1 string, v1 Value, k2 string, v2 Value) Value {
-	m := RecordToMap(orig)
-	m[k1] = v1
-	m[k2] = v2
-	return Record(m)
+	return RecordUpdateDict(orig, []string{k1, k2}, []Value{v1, v2})
 }
 
 func RecordUpdate3(orig Value, k1 string, v1 Value, k2 string, v2 Value, k3 string, v3 Value) Value {
-	m := RecordToMap(orig)
-	m[k1] = v1
-	m[k2] = v2
-	m[k3] = v3
-	return Record(m)
+	return RecordUpdateDict(orig, []string{k1, k2, k3}, []Value{v1, v2, v3})
 }
 
 func RecordUpdate(orig Value, updates map[string]Value) Value {
-	m := RecordToMap(orig)
-	for k, v := range updates { m[k] = v }
-	return Record(m)
+	keys := make([]string, 0, len(updates))
+	vals := make([]Value, 0, len(updates))
+	for k, v := range updates {
+		keys = append(keys, k)
+		vals = append(vals, v)
+	}
+	return RecordUpdateDict(orig, keys, vals)
 }
 
 

@@ -1169,7 +1169,21 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
             { stmts: StmtEmpty, exprs: [], exprType: TypeValue, nextId: resObj.nextId }
             props
         in
-          { stmts: resObj.stmts <> accProps.stmts, expr: GoRecordUpdateDict (boxGoExpr resObj.expr resObj.exprType) accProps.exprs, exprType: TypeValue, nextId: accProps.nextId }
+          case resObj.exprType of
+            TypeRecord fields ->
+              let
+                staticUpdates = Array.catMaybes (map (\(Tuple key val) ->
+                  case Array.findIndex (\(Tuple k _) -> k == key) fields of
+                    Just idx -> Just (Tuple idx val)
+                    Nothing -> Nothing
+                ) accProps.exprs)
+              in
+                if Array.length staticUpdates == Array.length accProps.exprs then
+                  { stmts: resObj.stmts <> accProps.stmts, expr: GoRecordUpdateStatic (boxGoExpr resObj.expr resObj.exprType) (Array.length fields) staticUpdates, exprType: TypeValue, nextId: accProps.nextId }
+                else
+                  { stmts: resObj.stmts <> accProps.stmts, expr: GoRecordUpdateDict (boxGoExpr resObj.expr resObj.exprType) accProps.exprs, exprType: TypeValue, nextId: accProps.nextId }
+            _ ->
+              { stmts: resObj.stmts <> accProps.stmts, expr: GoRecordUpdateDict (boxGoExpr resObj.expr resObj.exprType) accProps.exprs, exprType: TypeValue, nextId: accProps.nextId }
 
       CtorDef _ _ (Ident name) fields ->
         let
