@@ -1,0 +1,44 @@
+--- src/Gopurs/CodeGen.purs
++++ src/Gopurs/CodeGen.purs
+@@ -58,6 +58,13 @@
+ boxGoExpr expr (TypeRecord _) = expr
+ boxGoExpr expr (TypeInterface _) = expr
+ boxGoExpr expr (TypeNativeArray TypeValue) = GoCall (GoSelector (GoVar "gopurs_runtime") "Array") [ expr ]
++
++isSimpleGoExpr :: GoExpr -> Boolean
++isSimpleGoExpr (GoVar _) = true
++isSimpleGoExpr (GoInt _) = true
++isSimpleGoExpr (GoFloat _) = true
++isSimpleGoExpr (GoStr _) = true
++isSimpleGoExpr _ = false
+ 
+ boxGoExpr expr (TypeNativeArray inner) = GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\t\tarr := " <> printGoExpr expr <> "\n\t\t\t\t\tboxed := make([]gopurs_runtime.Value, len(arr))\n\t\t\t\t\tfor i, v := range arr { boxed[i] = " <> printGoExpr (boxGoExpr (GoVar "v") inner) <> " }\n\t\t\t\t\treturn gopurs_runtime.Array(boxed)\n\t\t\t\t}()")
+ boxGoExpr expr (TypeGenericParam _) = expr
+@@ -67,14 +74,16 @@
+     arity = Array.length args
+     hashId = hashString (printGoExpr expr)
+     wrapperArgs = String.joinWith ", " (Array.mapWithIndex (\i goT -> "wrap_box_" <> hashId <> "_" <> show i <> " gopurs_runtime.Value") args)
+     nativeFnTypeStr = "func(" <> String.joinWith ", " (map goTypeToStr args) <> ") " <> goTypeToStr ret
+     unboxedArgs = Array.mapWithIndex (\i goT -> unboxGoExpr (GoVar ("wrap_box_" <> hashId <> "_" <> show i)) TypeValue goT) args
+-    callExpr = GoCall (GoVar "nativeFn") unboxedArgs
++    callExpr = GoCall (if isSimpleGoExpr expr then expr else GoVar "nativeFn") unboxedArgs
+     boxedRet = boxGoExpr callExpr ret
+     funcStr = "func(" <> wrapperArgs <> ") gopurs_runtime.Value {\n\t\t\t\t\treturn " <> printGoExpr boxedRet <> "\n\t\t\t\t}"
+     funcCall = printGoExpr (GoCall (GoSelector (GoVar "gopurs_runtime") (if arity == 1 then "Func" else "Func" <> show arity)) [ GoRaw funcStr ])
+     iifeStr = "func(nativeFn " <> nativeFnTypeStr <> ") gopurs_runtime.Value {\n\t\t\t\t\treturn " <> funcCall <> "\n\t\t\t\t}(" <> printGoExpr expr <> ")"
+-  in GoRaw iifeStr
++  in if isSimpleGoExpr expr then GoRaw funcCall else GoRaw iifeStr
+ 
+ mangleType :: Map.Map String String -> String -> ExprType -> String
+ mangleType ptrPaths modNameStr t = 
+@@ -142,8 +151,8 @@
+         boxedArgs = Array.mapWithIndex (\i goT -> boxGoExpr (GoVar ("wrap_unbox_" <> hashId <> "_" <> show i)) goT) args
+         applyFunc = if arity == 1 then "Apply" else "Apply" <> show arity
+-        callExpr = GoCall (GoSelector (GoVar "gopurs_runtime") applyFunc) (Array.cons (GoVar "boxedFn") boxedArgs)
++        callExpr = GoCall (GoSelector (GoVar "gopurs_runtime") applyFunc) (Array.cons (if isSimpleGoExpr expr then expr else GoVar "boxedFn") boxedArgs)
+         unboxedRet = printGoExpr (unboxGoExpr callExpr TypeValue ret)
+         closureStr = "func(" <> wrapperArgs <> ") " <> goTypeToStr ret <> " {\n\t\t\t\t\treturn " <> unboxedRet <> "\n\t\t\t\t}"
+         iifeStr = "func(boxedFn gopurs_runtime.Value) " <> goTypeToStr desiredType <> " {\n\t\t\t\t\treturn " <> closureStr <> "\n\t\t\t\t}(" <> printGoExpr expr <> ")"
+-      in GoRaw iifeStr
++      in if isSimpleGoExpr expr then GoRaw closureStr else GoRaw iifeStr
+     (TypeGenericParam _) -> expr

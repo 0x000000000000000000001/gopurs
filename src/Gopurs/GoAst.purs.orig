@@ -34,7 +34,7 @@ data GoExpr
   | GoContinue String
   | GoMutate String GoExpr
   | GoIfElse GoExpr (Array GoExpr) (Array GoExpr)
-  | GoFuncLit (Array (Tuple String GoType)) (Array GoExpr) GoExpr GoType
+  | GoFuncLit (Array (Tuple String GoType)) GoType GoExpr
 
 derive instance eqGoExpr :: Eq GoExpr
 

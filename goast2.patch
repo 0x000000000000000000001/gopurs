@@ -1,0 +1,11 @@
+--- src/Gopurs/GoAst.purs
++++ src/Gopurs/GoAst.purs
+@@ -35,7 +35,7 @@
+   | GoContinue String
+   | GoMutate String GoExpr
+   | GoIfElse GoExpr (Array GoExpr) (Array GoExpr)
+-  | GoFuncLit (Array (Tuple String GoType)) GoType GoExpr
++  | GoFuncLit (Array (Tuple String GoType)) (Array GoExpr) GoExpr GoType
+ 
+ derive instance eqGoExpr :: Eq GoExpr
+ 
