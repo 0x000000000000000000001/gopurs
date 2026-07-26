@@ -30,6 +30,7 @@ import Data.List as List
 import Data.Traversable (traverse)
 
 import PureScript.Backend.Optimizer.Monomorphize (InstantiationMap)
+import PureScript.Backend.Optimizer.Monomorphize as Monomorphize
 import PureScript.Backend.Optimizer.Substitute (unify, substituteExprType, mapTcoExprTypes, substituteAst)
 import Gopurs.GoAst (GoFile, GoDecl, GoExpr(..), GoType(..), goTypeToStr)
 
@@ -69,7 +70,8 @@ mangleType modNameStr t =
     typeStrSafe = String.replaceAll (Pattern ".") (Replacement "_") typeStrNoPkg
     typeStrSafe2 = String.replaceAll (Pattern "[]") (Replacement "arr") typeStrSafe
     typeStrSafe3 = String.replaceAll (Pattern "*") (Replacement "ptr") typeStrSafe2
-  in String.replaceAll (Pattern " ") (Replacement "_") typeStrSafe3
+    cleanType = String.replaceAll (Pattern " ") (Replacement "_") typeStrSafe3
+  in cleanType <> "_" <> hashString (Monomorphize.mangleType t)
 
 exprTypeToGoType :: String -> ExprType -> GoType
 exprTypeToGoType _ Int = TypeInt64
