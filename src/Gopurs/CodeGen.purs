@@ -41,7 +41,7 @@ import PureScript.Backend.Optimizer.FreeVars (freeVars, localId, paramTypes)
 import Node.Path as Path
 import Node.FS.Sync as FS
 import Node.Encoding (Encoding(..))
-import Gopurs.FfiSupport (hashString)
+import PureScript.Backend.Optimizer.FfiSupport (hashString)
 
 coerceGoExpr :: GoExpr -> GoType -> GoType -> GoExpr
 coerceGoExpr expr from to | from == to = expr

@@ -38,9 +38,10 @@ import Data.String as String
 import PureScript.Backend.Optimizer.Monomorphize (getExprAnn)
 import Gopurs.CodeGen (translate, getStructName)
 import Gopurs.Runtime (runtimeGoCode)
-import Gopurs.FfiSupport (findFfiFile, appendFfiWrappers)
+import PureScript.Backend.Optimizer.FfiSupport (findFfiFile)
+import Gopurs.FfiSupport (appendFfiWrappers)
 import PureScript.Backend.Optimizer.Monomorphize (collectInstantiations)
-
+import PureScript.Backend.Optimizer.App (coreFnModulesFromOutput)
 
 buildGlobalTypes :: Array (Module Ann) -> Map.Map String ExprType
 buildGlobalTypes modules = Array.foldl (\acc (Module m) ->
@@ -72,33 +73,9 @@ hasTypeVariables Boolean = false
 hasTypeVariables (ADT _ args) = Array.any hasTypeVariables args
 hasTypeVariables Any = false
 
-readCoreFnModule :: String -> Aff (Maybe (Module Ann))
-readCoreFnModule filePath = do
-  statRes <- attempt (FS.stat filePath)
-  if isRight statRes then do
-    contents <- FS.readTextFile UTF8 filePath
-    case jsonParser contents >>= (lmap printJsonDecodeError <<< decodeModule) of
-      Left err -> do
-        liftEffect $ Console.error $ "Failed to decode " <> filePath <> ": " <> err
-        pure Nothing
-      Right mod -> pure (Just mod)
-  else
-    pure Nothing
-
 main :: Effect Unit
 main = launchAff_ do
-  files <- FS.readdir "output"
-  validDirs <- Array.filterA
-    ( \f -> do
-        stat <- FS.stat ("output/" <> f)
-        pure (Stats.isDirectory stat)
-    )
-    files
-
-  mbModules <- traverse (\dir -> readCoreFnModule ("output/" <> dir <> "/corefn.json")) validDirs
-  let modulesArray = Array.catMaybes mbModules
-  let modulesList = List.fromFoldable modulesArray
-  let finalModules = sortModules modulesList
+  finalModules <- coreFnModulesFromOutput "output"
 
   let elidedCtors = Array.foldl (\acc (Module mod) ->
         Array.foldl (\acc' decl ->
@@ -162,7 +139,7 @@ main = launchAff_ do
         FS.writeTextFile UTF8 ("output/" <> modNameStr <> "/" <> String.replaceAll (Pattern ".") (Replacement "_") modNameStr <> ".go") goFile
 
         when (Array.length (Array.fromFoldable backendMod.foreign) > 0) do
-          ffiPathMb <- liftEffect $ findFfiFile Nothing modNameStr (Just coreFnMod.path)
+          ffiPathMb <- liftEffect $ findFfiFile ".go" [] Nothing modNameStr (Just coreFnMod.path)
           case ffiPathMb of
             Just ffiPath -> do
               content <- FS.readTextFile UTF8 ffiPath
