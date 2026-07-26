@@ -16,7 +16,7 @@ import Effect.Console as Console
 import Effect.Unsafe (unsafePerformEffect)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
-import Gopurs.FreeVars (freeVars)
+
 import Data.Set as Set
 import Data.String.CodeUnits as SCU
 import Data.String.Pattern (Pattern(..), Replacement(..))
@@ -29,15 +29,15 @@ import Data.Foldable (foldl, foldMap)
 import Data.List as List
 import Data.Traversable (traverse)
 
-import Gopurs.Monomorphize (InstantiationMap)
-import Gopurs.Monomorphize.Substitute (unify, substituteExprType, mapTcoExprTypes, substituteAst)
+import PureScript.Backend.Optimizer.Monomorphize (InstantiationMap)
+import PureScript.Backend.Optimizer.Substitute (unify, substituteExprType, mapTcoExprTypes, substituteAst)
 import Gopurs.GoAst (GoFile, GoDecl, GoExpr(..), GoType(..), goTypeToStr)
 
 
 import Gopurs.Printer (printGoFile, printGoExpr, printGoDeclVar)
 import PureScript.Backend.Optimizer.Codegen.Tco as Tco
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..), tcoAnalysisOf)
-import Gopurs.FreeVars (freeVars, localId, paramTypes)
+import PureScript.Backend.Optimizer.FreeVars (freeVars, localId, paramTypes)
 import Node.Path as Path
 import Node.FS.Sync as FS
 import Node.Encoding (Encoding(..))

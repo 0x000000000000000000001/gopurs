@@ -31,15 +31,15 @@ import PureScript.Backend.Optimizer.CoreFn.Sort (sortModules)
 import PureScript.Backend.Optimizer.Builder (buildModules)
 import PureScript.Backend.Optimizer.Directives.Defaults (defaultDirectives)
 import PureScript.Backend.Optimizer.Directives (parseDirectiveFile)
-import Gopurs.Monomorphize (collectInstantiations, InstantiationMap, collectAllTypes, mangleType)
+import PureScript.Backend.Optimizer.Monomorphize (collectInstantiations, InstantiationMap, collectAllTypes, mangleType)
 import PureScript.Backend.Optimizer.Semantics.Foreign (coreForeignSemantics)
 import PureScript.Backend.Optimizer.CoreFn (Module(..), Ann(..), importName, Bind(..), Binding(..), ExprType(..), Ident(..))
 import Data.String as String
-import Gopurs.Monomorphize (getExprAnn)
+import PureScript.Backend.Optimizer.Monomorphize (getExprAnn)
 import Gopurs.CodeGen (translate, getStructName)
 import Gopurs.Runtime (runtimeGoCode)
 import Gopurs.FfiSupport (findFfiFile, appendFfiWrappers)
-import Gopurs.Monomorphize (collectInstantiations)
+import PureScript.Backend.Optimizer.Monomorphize (collectInstantiations)
 
 
 buildGlobalTypes :: Array (Module Ann) -> Map.Map String ExprType
@@ -154,6 +154,7 @@ main = launchAff_ do
     , foreignSemantics: coreForeignSemantics
     , traceIdents: Set.empty
     , onPrepareModule: \_ (Module m) -> pure (Module m)
+    , onSkipModule: \_ _ -> pure Nothing
     , onCodegenModule: \_ (Module coreFnMod) backendMod _ -> do
         let modNameStr = unwrap backendMod.name
         let importsArray = map (\i -> String.split (Pattern ".") (unwrap (importName i))) coreFnMod.imports
