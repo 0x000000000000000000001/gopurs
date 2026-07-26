@@ -1242,7 +1242,13 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
             _ -> case Map.lookup key helpers.ctorTypes of
               Just ctorInfo -> map (const TypeValue) ctorInfo.typeVars
               Nothing -> []
-          funcExpr = Array.foldr (\f inner -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> sanitizeName f <> " gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr inner <> "\n}") ]) (GoConstructor (hashString baseStructName) structName typeArgs coercedFields) fields
+          isElided = Set.member structName helpers.elidedCtors
+          funcExpr = if isElided then
+              case Array.head fields of
+                Just f -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> sanitizeName f <> " gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr (coerceGoExpr (GoVar (sanitizeName f)) TypeValue TypeValue) <> "\n}") ]
+                Nothing -> Array.foldr (\f inner -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> sanitizeName f <> " gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr inner <> "\n}") ]) (GoConstructor (hashString baseStructName) structName typeArgs coercedFields) fields
+            else
+              Array.foldr (\f inner -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> sanitizeName f <> " gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr inner <> "\n}") ]) (GoConstructor (hashString baseStructName) structName typeArgs coercedFields) fields
         in
           { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId }
 
@@ -1275,6 +1281,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
             { stmts: StmtEmpty, exprs: [], exprType: TypeValue, nextId, fieldIdx: 0 }
             props
             
+          isElided = Set.member structName helpers.elidedCtors
           finalExpr =
             let
               monoStructName = "Constructor_" <> sanitizeName name
@@ -1286,7 +1293,11 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                 _ -> case Map.lookup key helpers.ctorTypes of
                   Just ctorInfo -> map (const TypeValue) ctorInfo.typeVars
                   Nothing -> []
-            in GoConstructor (hashString baseStructName) (pkgPrefix <> monoStructName) typeArgs accProps.exprs
+            in if isElided then
+                 case Array.head accProps.exprs of
+                   Just expr -> expr
+                   Nothing -> GoConstructor (hashString baseStructName) (pkgPrefix <> monoStructName) typeArgs accProps.exprs
+               else GoConstructor (hashString baseStructName) (pkgPrefix <> monoStructName) typeArgs accProps.exprs
         in
           { stmts: accProps.stmts, expr: finalExpr, exprType: expectedGoType, nextId: accProps.nextId }
 
