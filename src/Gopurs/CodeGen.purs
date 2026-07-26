@@ -1157,9 +1157,9 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                 TypeRecord fields ->
                   case Array.findIndex (\(Tuple k _) -> k == prop) fields of
                     Just idx -> { stmts: resObj.stmts, expr: GoRecordAccessStatic (boxGoExpr resObj.expr resObj.exprType) (Array.length fields) idx, exprType: TypeValue, nextId: resObj.nextId }
-                    Nothing -> { stmts: resObj.stmts, expr: GoRecordAccess (boxGoExpr resObj.expr resObj.exprType) (prop <> "_NOT_FOUND"), exprType: TypeValue, nextId: resObj.nextId }
+                    Nothing -> { stmts: resObj.stmts, expr: GoRecordAccess (boxGoExpr resObj.expr resObj.exprType) prop, exprType: TypeValue, nextId: resObj.nextId }
                 TypeValue -> { stmts: resObj.stmts, expr: GoRecordAccess (boxGoExpr resObj.expr resObj.exprType) prop, exprType: TypeValue, nextId: resObj.nextId }
-                _ -> { stmts: resObj.stmts, expr: GoRecordAccess (boxGoExpr resObj.expr resObj.exprType) (prop <> "_NOT_TYPE_RECORD"), exprType: TypeValue, nextId: resObj.nextId }
+                _ -> { stmts: resObj.stmts, expr: GoRecordAccess (boxGoExpr resObj.expr resObj.exprType) prop, exprType: TypeValue, nextId: resObj.nextId }
             GetIndex idx -> { stmts: resObj.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayAccess") [ (boxGoExpr resObj.expr resObj.exprType), GoInt idx ], exprType: TypeValue, nextId: resObj.nextId }
             GetCtorField (Qualified mbMod _) _ _ (Ident ctorName) _ idx ->
               let
