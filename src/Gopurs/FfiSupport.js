@@ -149,7 +149,10 @@ export const appendFfiWrappersImpl = function(moduleName) {
                 
                 const argsStr = line.substring(startIdx, i);
                 let remainder = line.substring(i + 1).trim();
-                if (remainder.endsWith('{')) {
+                let braceIdx = remainder.indexOf(' {');
+                if (braceIdx !== -1) {
+                    remainder = remainder.substring(0, braceIdx).trim();
+                } else if (remainder.endsWith('{')) {
                     remainder = remainder.substring(0, remainder.length - 1).trim();
                 }
                 const retStr = remainder;

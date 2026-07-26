@@ -1,0 +1,9 @@
+@@ -29,7 +29,7 @@
+ import PureScript.Backend.Optimizer.Directives.Defaults (defaultDirectives)
+ import PureScript.Backend.Optimizer.Semantics.Foreign (coreForeignSemantics)
+ import PureScript.Backend.Optimizer.Syntax (BackendModule(..))
+-import Gopurs.Monomorphize (collectInstantiations, InstantiationMap)
++import Gopurs.Monomorphize (collectInstantiations, InstantiationMap, collectAllTypes)
+ 
+ localId :: Maybe Ident -> Int -> String
+ localId (Just (Ident name)) lvl = sanitizeName name <> "_" <> show lvl

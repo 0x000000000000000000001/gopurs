@@ -44,6 +44,7 @@ type Value struct {
 	Type      int
 	IntVal    int64
 	UnsafePtr unsafe.Pointer
+
 }
 
 func (v Value) FloatVal() float64 {

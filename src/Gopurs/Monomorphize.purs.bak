@@ -130,7 +130,7 @@ collectTypesFromExpr :: Expr Ann -> Set ExprType -> Set ExprType
 collectTypesFromExpr expr acc = case expr of
   ExprVar (Ann ann) _ -> maybe acc (\t -> Set.insert t acc) ann.type
   ExprLit (Ann ann) lit -> foldl (\a e -> collectTypesFromExpr e a) (maybe acc (\t -> Set.insert t acc) ann.type) lit
-  ExprApp (Ann ann) f arg -> collectTypesFromExpr arg (collectTypesFromExpr f (maybe acc (\t -> Set.insert t acc) ann.type))
+  ExprApp (Ann ann) f args -> foldl (flip collectTypesFromExpr) (collectTypesFromExpr f (maybe acc (\t -> Set.insert t acc) ann.type)) args
   ExprAbs (Ann ann) _ e -> collectTypesFromExpr e (maybe acc (\t -> Set.insert t acc) ann.type)
   ExprLet (Ann ann) binds e -> foldl (\a b -> collectTypesFromBind b a) (collectTypesFromExpr e (maybe acc (\t -> Set.insert t acc) ann.type)) binds
   ExprCase (Ann ann) exprs alts -> foldl (\a alt -> collectTypesFromAlt alt a) (foldl (flip collectTypesFromExpr) (maybe acc (\t -> Set.insert t acc) ann.type) exprs) alts

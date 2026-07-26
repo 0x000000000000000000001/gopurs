@@ -31,7 +31,6 @@ import PureScript.Backend.Optimizer.CoreFn.Sort (sortModules)
 import PureScript.Backend.Optimizer.Builder (buildModules)
 import PureScript.Backend.Optimizer.Directives.Defaults (defaultDirectives)
 import PureScript.Backend.Optimizer.Directives (parseDirectiveFile)
-import Gopurs.Monomorphize (collectInstantiations, InstantiationMap, collectAllTypes, mangleType)
 import PureScript.Backend.Optimizer.Semantics.Foreign (coreForeignSemantics)
 import PureScript.Backend.Optimizer.CoreFn (Module(..), Ann(..), importName, Bind(..), Binding(..), ExprType(..), Ident(..))
 import Data.String as String
@@ -142,12 +141,6 @@ main = launchAff_ do
                                             Nothing -> false) rawInstantiations
   FS.writeTextFile UTF8 "instantiations.txt" (show (Array.fromFoldable (Map.keys instantiations)))
 
-  let allTypes = foldl (\acc mod -> Set.union acc (collectAllTypes mod)) Set.empty finalModules
-  let adtTypes = Set.filter (\t -> case t of
-        ADT _ _ -> true
-        _ -> false) allTypes
-  FS.writeTextFile UTF8 "adt_instantiations.txt" (show (map mangleType (Array.fromFoldable adtTypes)))
-
   buildModules
     { directives: parsedDirectives.directives
     , analyzeCustom: \_ _ -> Nothing
@@ -157,7 +150,7 @@ main = launchAff_ do
     , onCodegenModule: \_ (Module coreFnMod) backendMod _ -> do
         let modNameStr = unwrap backendMod.name
         let importsArray = map (\i -> String.split (Pattern ".") (unwrap (importName i))) coreFnMod.imports
-        let goFile = translate adtTypes elidedCtors ctorTypes globalTypes instantiations importsArray backendMod
+        let goFile = translate elidedCtors ctorTypes globalTypes instantiations importsArray backendMod
         FS.writeTextFile UTF8 ("output/" <> modNameStr <> "/" <> String.replaceAll (Pattern ".") (Replacement "_") modNameStr <> ".go") goFile
 
         when (Array.length (Array.fromFoldable backendMod.foreign) > 0) do

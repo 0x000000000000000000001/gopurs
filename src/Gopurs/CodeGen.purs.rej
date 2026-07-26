@@ -1,0 +1,44 @@
+@@ -190,13 +190,32 @@
+             acc'
+ 
+-        structDecls = Array.concatMap (\decl ->
+-          map (\ctor ->
+-            let
+-              fields = Array.mapWithIndex (\i ty -> "V" <> show i <> " " <> goTypeToStr (exprTypeToGoType ty)) ctor.fieldTypes
+-              structName = "Data_" <> modNameStr <> "_" <> sanitizeName ctor.constructorName
+-              hashStr = hashString structName
+-              isTagHelper = "func Is_" <> structName <> "(v gopurs_runtime.Value) bool {\n\treturn v.Type == 9 && v.IntVal == " <> hashStr <> "\n}"
+-            in
+-              "type " <> structName <> " struct {\n\t" <> String.joinWith "\n\t" fields <> "\n}\n" <> isTagHelper
+-          ) decl.constructors
+-        ) mod.dataDecls
++        structDecls = Array.concatMap (\adtType ->
++          case adtType of
++            ADT names args ->
++              if Array.length names == 0 then [] else
++                let
++                  modStr = String.joinWith "_" (fromMaybe [] (Array.init names))
++                  declName = fromMaybe "" (Array.last names)
++                in
++                  if modStr == modNameStr then
++                    case Array.find (\d -> d.typeName == declName) mod.dataDecls of
++                      Just decl ->
++                        let
++                          interfaceName = goTypeToStr (TypeInterface ("ADT_" <> String.joinWith "_" names <> (if Array.length args == 0 then "" else "_" <> String.joinWith "_" (map mangleType args))))
++                          interfaceDecl = "type " <> interfaceName <> " interface {\n\tis" <> interfaceName <> "()\n}\n"
++                          ctorDecls = map (\ctor ->
++                            let
++                              -- substitute type vars in ctor field types using the instantiation args!
++                              subst = Array.foldl (\acc (Tuple v t) -> Map.insert v t acc) Map.empty (Array.zip decl.typeVars args)
++                              monomorphizedFields = map (\t -> substituteExprType subst t) ctor.fieldTypes
++                              fieldsStr = Array.mapWithIndex (\i ty -> "V" <> show i <> " " <> goTypeToStr (exprTypeToGoType ty)) monomorphizedFields
++                              structName = "Constructor_" <> sanitizeName ctor.constructorName <> (if Array.length args == 0 then "" else "_" <> String.joinWith "_" (map mangleType args))
++                            in
++                              "type " <> structName <> " struct {\n\t" <> String.joinWith "\n\t" fieldsStr <> "\n}\n" <>
++                              "func (v *" <> structName <> ") is" <> interfaceName <> "() {}\n"
++                          ) decl.constructors
++                        in Array.cons interfaceDecl ctorDecls
++                      Nothing -> []
++                  else []
++            _ -> []
++        ) (Array.fromFoldable adtTypes)

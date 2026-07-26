@@ -7,7 +7,7 @@ import Data.Map as Map
 import Data.Set (Set)
 import Data.Set as Set
 import Data.Foldable (foldl, class Foldable)
-import Data.Maybe (Maybe(..), fromMaybe, maybe)
+import Data.Maybe (Maybe(..), fromMaybe)
 import PureScript.Backend.Optimizer.CoreFn (Ann(..), Bind(..), Binding(..), CaseAlternative(..), CaseGuard(..), Expr(..), ExprType(..), Guard(..), Module(..), Prop(..), Ident(..), Qualified(..), unQualified, qualifiedModuleName)
 import Data.Newtype (unwrap)
 import Data.Tuple (Tuple(..))
@@ -125,26 +125,3 @@ collectAlt modName acc (CaseAlternative _ cg) = case cg of
 
 collectGuard :: String -> InstantiationMap -> Guard Ann -> InstantiationMap
 collectGuard modName acc (Guard e1 e2) = collectExpr modName (collectExpr modName acc e1) e2
-
-collectTypesFromExpr :: Expr Ann -> Set ExprType -> Set ExprType
-collectTypesFromExpr expr acc = case expr of
-  ExprVar (Ann ann) _ -> maybe acc (\t -> Set.insert t acc) ann.type
-  ExprLit (Ann ann) lit -> foldl (\a e -> collectTypesFromExpr e a) (maybe acc (\t -> Set.insert t acc) ann.type) lit
-  ExprApp (Ann ann) f arg -> collectTypesFromExpr arg (collectTypesFromExpr f (maybe acc (\t -> Set.insert t acc) ann.type))
-  ExprAbs (Ann ann) _ e -> collectTypesFromExpr e (maybe acc (\t -> Set.insert t acc) ann.type)
-  ExprLet (Ann ann) binds e -> foldl (\a b -> collectTypesFromBind b a) (collectTypesFromExpr e (maybe acc (\t -> Set.insert t acc) ann.type)) binds
-  ExprCase (Ann ann) exprs alts -> foldl (\a alt -> collectTypesFromAlt alt a) (foldl (flip collectTypesFromExpr) (maybe acc (\t -> Set.insert t acc) ann.type) exprs) alts
-  ExprConstructor (Ann ann) _ _ _ -> maybe acc (\t -> Set.insert t acc) ann.type
-  ExprAccessor (Ann ann) e _ -> collectTypesFromExpr e (maybe acc (\t -> Set.insert t acc) ann.type)
-  ExprUpdate (Ann ann) e props -> foldl (\a (Prop _ v) -> collectTypesFromExpr v a) (collectTypesFromExpr e (maybe acc (\t -> Set.insert t acc) ann.type)) props
-
-collectTypesFromBind :: Bind Ann -> Set ExprType -> Set ExprType
-collectTypesFromBind (NonRec (Binding _ _ e)) acc = collectTypesFromExpr e acc
-collectTypesFromBind (Rec binds) acc = foldl (\a (Binding _ _ e) -> collectTypesFromExpr e a) acc binds
-
-collectTypesFromAlt :: CaseAlternative Ann -> Set ExprType -> Set ExprType
-collectTypesFromAlt (CaseAlternative _ (Unconditional e)) acc = collectTypesFromExpr e acc
-collectTypesFromAlt (CaseAlternative _ (Guarded guards)) acc = foldl (\a (Guard e1 e2) -> collectTypesFromExpr e2 (collectTypesFromExpr e1 a)) acc guards
-
-collectAllTypes :: Module Ann -> Set ExprType
-collectAllTypes (Module m) = foldl (\a b -> collectTypesFromBind b a) Set.empty m.decls
