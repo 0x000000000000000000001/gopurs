@@ -11,11 +11,14 @@ import Node.FS.Aff as FS
 import Node.FS.Stats as Stats
 import Node.Encoding (Encoding(..))
 import Node.Process as Process
+import Gopurs.CodeGen as CodeGen
 import Data.Argonaut.Parser (jsonParser)
 import Data.Either (Either(..), isRight)
 import Data.Bifunctor (lmap)
 import Data.Argonaut.Decode.Error (printJsonDecodeError)
 import Data.Array as Array
+import Partial.Unsafe (unsafePartial)
+import Data.Tuple (Tuple(..))
 import Data.List as List
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
@@ -125,6 +128,32 @@ main = launchAff_ do
   let adtTypes = Set.filter (\t -> case t of
         ADT _ _ -> true
         _ -> false) allTypes
+  let
+    -- pointerAdts computation
+    pointerAdtPathsRaw = foldl (\acc (Module m) ->
+      foldl (\acc' d ->
+        let
+          ctorsWithFields = Array.filter (\c -> Array.length c.fieldTypes > 0) d.constructors
+          ctorsWithoutFields = Array.filter (\c -> Array.length c.fieldTypes == 0) d.constructors
+        in
+          if Array.length ctorsWithFields == 1 && Array.length ctorsWithoutFields == 1 then
+            let
+              adtPath = unwrap m.name <> "." <> d.typeName
+              nodeCtor = (unsafePartial (Array.unsafeIndex ctorsWithFields 0)).constructorName
+              leafCtor = (unsafePartial (Array.unsafeIndex ctorsWithoutFields 0)).constructorName
+              pkgNameStr = String.replaceAll (Pattern ".") (Replacement "_") (unwrap m.name)
+              nodeBaseStruct = "Data_" <> pkgNameStr <> "_" <> CodeGen.sanitizeName nodeCtor
+              leafBaseStruct = "Data_" <> pkgNameStr <> "_" <> CodeGen.sanitizeName leafCtor
+            in
+              Array.snoc acc' { adtPath, nodeCtor, leafCtor, nodeBaseStruct, leafBaseStruct }
+          else acc'
+      ) acc m.dataDecls
+     ) [] finalModules
+
+    pointerAdtPaths = Map.fromFoldable (map (\info -> Tuple info.adtPath info.nodeCtor) pointerAdtPathsRaw)
+    pointerAdtNodes = Set.fromFoldable (map _.nodeBaseStruct pointerAdtPathsRaw)
+    pointerAdtLeaves = Map.fromFoldable (map (\info -> Tuple info.leafBaseStruct info.nodeBaseStruct) pointerAdtPathsRaw)
+
   FS.writeTextFile UTF8 "adt_instantiations.txt" (show (map mangleType (Array.fromFoldable adtTypes)))
 
   buildModules
@@ -140,7 +169,7 @@ main = launchAff_ do
         let modNameStr = unwrap backendMod.name
         writeCache cacheVersion ("output/" <> modNameStr <> "/.gopurs-cache.json") backendMod
         let importsArray = map (\i -> String.split (Pattern ".") (unwrap (importName i))) coreFnMod.imports
-        let goFile = translate adtTypes elidedCtors ctorTypes globalTypes instantiations importsArray backendMod
+        let goFile = translate pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors ctorTypes globalTypes instantiations importsArray backendMod
         FS.writeTextFile UTF8 ("output/" <> modNameStr <> "/" <> String.replaceAll (Pattern ".") (Replacement "_") modNameStr <> ".go") goFile
 
         when (Array.length (Array.fromFoldable backendMod.foreign) > 0) do

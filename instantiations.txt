@@ -1,0 +1,1 @@
+["Gopurs.CodeGen.executeIfOpaque","Gopurs.CodeGen.isEffectNode"]

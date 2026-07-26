@@ -55,7 +55,7 @@ data GoType
   | TypeFloat64
   | TypeString
   | TypeBool
-  | TypeStructPointer String
+  | TypeStructPointer String String
   | TypeRecord (Array (Tuple String GoType))
   | TypeInterface String
   | TypeNativeArray GoType
@@ -68,7 +68,7 @@ goTypeToStr TypeInt64 = "int64"
 goTypeToStr TypeFloat64 = "float64"
 goTypeToStr TypeString = "string"
 goTypeToStr TypeBool = "bool"
-goTypeToStr (TypeStructPointer path) = "*Data_" <> String.replaceAll (Pattern ".") (Replacement "_") path
+goTypeToStr (TypeStructPointer _ fullPath) = "*" <> fullPath
 goTypeToStr (TypeInterface name) = name
 goTypeToStr (TypeGenericParam name) = "T_" <> sanitizeName name
 goTypeToStr _ = "gopurs_runtime.Value"
