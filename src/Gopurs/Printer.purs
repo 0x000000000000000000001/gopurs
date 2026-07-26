@@ -19,23 +19,23 @@ printGoExpr expr = case expr of
     printGoExpr f <> "(" <> String.joinWith ", " (map printGoExpr args) <> ")"
   GoSelector obj field ->
     printGoExpr obj <> "." <> field
-  GoFunc arg body -> 
+  GoFunc arg argType retType body -> 
     let
-      flattenGoFunc (GoFunc a b) acc = flattenGoFunc b (Array.snoc acc a)
+      flattenGoFunc (GoFunc a atype rtype b) acc = flattenGoFunc b (Array.snoc acc (Tuple a atype))
       flattenGoFunc b acc = Tuple acc b
-      Tuple allArgs finalBody = flattenGoFunc body [arg]
+      Tuple allArgs finalBody = flattenGoFunc body [Tuple arg argType]
       len = Array.length allArgs
       funcName = if len == 1 then "Func" else "Func" <> show len
-      argStr = String.joinWith ", " (map (\a -> a <> " gopurs_runtime.Value") allArgs)
+      argStr = String.joinWith ", " (map (\(Tuple a t) -> a <> " " <> goTypeToStr t) allArgs)
     in
       if len > 10 then
         case body of
-          GoBlock _ -> "gopurs_runtime.Func(func(" <> arg <> " gopurs_runtime.Value) gopurs_runtime.Value {\n" <> printGoExpr body <> "\n})"
-          _ -> "gopurs_runtime.Func(func(" <> arg <> " gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr body <> "\n})"
+          GoBlock _ -> "gopurs_runtime.Func(func(" <> arg <> " " <> goTypeToStr argType <> ") " <> goTypeToStr retType <> " {\n" <> printGoExpr body <> "\n})"
+          _ -> "gopurs_runtime.Func(func(" <> arg <> " " <> goTypeToStr argType <> ") " <> goTypeToStr retType <> " {\nreturn " <> printGoExpr body <> "\n})"
       else
         case finalBody of
-          GoBlock _ -> "gopurs_runtime." <> funcName <> "(func(" <> argStr <> ") gopurs_runtime.Value {\n" <> printGoExpr finalBody <> "\n})"
-          _ -> "gopurs_runtime." <> funcName <> "(func(" <> argStr <> ") gopurs_runtime.Value {\nreturn " <> printGoExpr finalBody <> "\n})"
+          GoBlock _ -> "gopurs_runtime." <> funcName <> "(func(" <> argStr <> ") " <> goTypeToStr retType <> " {\n" <> printGoExpr finalBody <> "\n})"
+          _ -> "gopurs_runtime." <> funcName <> "(func(" <> argStr <> ") " <> goTypeToStr retType <> " {\nreturn " <> printGoExpr finalBody <> "\n})"
   GoBlock stmts ->
     String.joinWith "\n" (map printGoExpr stmts)
   GoReturn e ->
@@ -162,10 +162,12 @@ printGoExpr expr = case expr of
 
 
 printGoDeclVar :: GoDecl -> String
-printGoDeclVar { identifier, expression } =
-  "var cache_" <> identifier <> " gopurs_runtime.Value\n" <>
+printGoDeclVar { identifier, expression, goType } =
+  let typeStr = goTypeToStr goType
+  in
+  "var cache_" <> identifier <> " " <> typeStr <> "\n" <>
   "var once_" <> identifier <> " sync.Once\n" <>
-  "func Get_" <> identifier <> "() gopurs_runtime.Value {\n" <>
+  "func Get_" <> identifier <> "() " <> typeStr <> " {\n" <>
   "\tonce_" <> identifier <> ".Do(func() {\n" <>
   "\t\tcache_" <> identifier <> " = " <> printGoExpr expression <> "\n" <>
   "\t})\n" <>

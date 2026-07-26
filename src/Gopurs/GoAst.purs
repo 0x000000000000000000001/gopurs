@@ -11,7 +11,7 @@ data GoExpr
   | GoInt Int
   | GoCall GoExpr (Array GoExpr)
   | GoSelector GoExpr String
-  | GoFunc String GoExpr
+  | GoFunc String GoType GoType GoExpr
   | GoBlock (Array GoExpr)
   | GoReturn GoExpr
   | GoAssign String GoExpr
@@ -40,6 +40,7 @@ derive instance eqGoExpr :: Eq GoExpr
 type GoDecl =
   { identifier :: String
   , expression :: GoExpr
+  , goType :: GoType
   }
 
 type GoFile =

@@ -392,7 +392,7 @@ translate pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors 
                                     in
                                       Array.foldr (\(Tuple p goT) acc -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> p <> "_box gopurs_runtime.Value) gopurs_runtime.Value {\nvar " <> p <> "_loop " <> goTypeToStr goT <> " = " <> printGoExpr (unboxGoExpr (GoVar (p <> "_box")) TypeValue goT) <> "\nreturn " <> printGoExpr acc <> "\n}") ]) iife paramsWithTypes
                                 in
-                                  { identifier: goName, expression: funcExpr }
+                                  { identifier: goName, expression: funcExpr, goType: TypeValue }
                               )
                               fns
                           in
@@ -403,7 +403,7 @@ translate pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors 
                                 let
                                   res = translateExprImpl_ helpersRef 0 modNameStr recVars moduleArities Map.empty (Just (sanitizeName name)) [] false false 0 expr
                                 in
-                                  [ { identifier: sanitizeName name, expression: wrapInStmts [] res.stmts (boxGoExpr res.expr res.exprType) } ]
+                                  [ { identifier: sanitizeName name, expression: wrapInStmts [] res.stmts (boxGoExpr res.expr res.exprType), goType: TypeValue } ]
                             )
                             binds
                 in
@@ -508,10 +508,10 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
 
         let
           helperExpr =
-            if Array.length fvs == 0 then GoFunc "_" (wrapInStmts [] res.stmts res.expr)
-            else Array.foldr (\fv accFunc -> GoFunc fv accFunc) (wrapInStmts [] res.stmts res.expr) fvs
+            if Array.length fvs == 0 then GoFunc "_" TypeValue TypeValue (wrapInStmts [] res.stmts res.expr)
+            else Array.foldr (\fv accFunc -> GoFunc fv TypeValue TypeValue accFunc) (wrapInStmts [] res.stmts res.expr) fvs
 
-        Ref.modify_ (\r -> r { decls = Array.snoc r.decls { identifier: helperName, expression: helperExpr } }) helpersRef
+        Ref.modify_ (\r -> r { decls = Array.snoc r.decls { identifier: helperName, expression: helperExpr, goType: TypeValue } }) helpersRef
 
         let
           callExpr =
@@ -1003,9 +1003,9 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
           let
             params = map fst paramsWithTypes
             makeCurried [] = resBody.expr
-            makeCurried [p] = GoFunc p (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr resBody.expr resBody.exprType) ]))
+            makeCurried [p] = GoFunc p TypeValue TypeValue (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr resBody.expr resBody.exprType) ]))
             makeCurried ps = case Array.uncons ps of
-              Just { head: p, tail: rest } -> GoFunc p (makeCurried rest)
+              Just { head: p, tail: rest } -> GoFunc p TypeValue TypeValue (makeCurried rest)
               Nothing -> resBody.expr
           in { stmts: StmtEmpty, expr: makeCurried params, exprType: TypeValue, nextId: resBody.nextId }
 
@@ -1045,9 +1045,9 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
           let
             params = map fst paramsWithTypes
             makeCurried [] = resBody.expr
-            makeCurried [p] = GoFunc p (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr resBody.expr resBody.exprType) ]))
+            makeCurried [p] = GoFunc p TypeValue TypeValue (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr resBody.expr resBody.exprType) ]))
             makeCurried ps = case Array.uncons ps of
-              Just { head: p, tail: rest } -> GoFunc p (makeCurried rest)
+              Just { head: p, tail: rest } -> GoFunc p TypeValue TypeValue (makeCurried rest)
               Nothing -> resBody.expr
           in { stmts: StmtEmpty, expr: makeCurried params, exprType: TypeValue, nextId: resBody.nextId }
 
