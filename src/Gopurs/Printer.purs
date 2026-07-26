@@ -140,6 +140,8 @@ printGoExpr expr = case expr of
     "(" <> printGoExpr left <> ") " <> op <> " (" <> printGoExpr right <> ")"
   GoTypeAssertion expr t ->
     printGoExpr expr <> ".(" <> t <> ")"
+  GoIndex expr index ->
+    "(" <> printGoExpr expr <> ")[" <> printGoExpr index <> "]"
   GoRaw raw ->
     raw
   GoFor label stmts ->

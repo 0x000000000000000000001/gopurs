@@ -27,6 +27,7 @@ data GoExpr
   | GoBranch (Array (Tuple GoExpr GoExpr)) GoExpr
   | GoBinOp String GoExpr GoExpr
   | GoTypeAssertion GoExpr String
+  | GoIndex GoExpr GoExpr
   | GoRaw String
   | GoFor String (Array GoExpr)
   | GoForRange String (Array GoExpr)
@@ -70,6 +71,7 @@ goTypeToStr TypeString = "string"
 goTypeToStr TypeBool = "bool"
 goTypeToStr (TypeStructPointer _ fullPath) = "*" <> fullPath
 goTypeToStr (TypeInterface name) = name
+goTypeToStr (TypeNativeArray inner) = "[]" <> goTypeToStr inner
 goTypeToStr (TypeGenericParam name) = "T_" <> sanitizeName name
 goTypeToStr _ = "gopurs_runtime.Value"
 

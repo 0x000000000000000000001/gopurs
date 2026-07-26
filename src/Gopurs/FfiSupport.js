@@ -11,9 +11,10 @@ export const appendFfiWrappersImpl = function(moduleName) {
 
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
-            const basicMatch = line.match(/^(?:func\s+(_?[A-Z][A-Za-z0-9_]*)\s*\(|var\s+(_?[A-Z][A-Za-z0-9_]*)\s*=\s*func\s*\()/);
+            const basicMatch = line.match(/^(?:func\s+(_?[A-Z][A-Za-z0-9_]*)(?:\s*\[([^\]]+)\])?\s*\(|var\s+(_?[A-Z][A-Za-z0-9_]*)\s*=\s*func\s*\()/);
             if (basicMatch) {
-                const funcName = basicMatch[1] || basicMatch[2];
+                const funcName = basicMatch[1] || basicMatch[3];
+                const typeParams = basicMatch[2] ? `[${basicMatch[2]}]` : ``;
                 let exportName = "_Gopurs_" + funcName;
                 
                 let startIdx = basicMatch[0].length;
@@ -81,13 +82,23 @@ export const appendFfiWrappersImpl = function(moduleName) {
                 }
                 
                 // 1. Generate Native Call_X proxy
+                let nativeCallFunc = funcName;
+                let typeParamNames = [];
+                if (basicMatch[2]) {
+                    basicMatch[2].split(',').forEach(tp => {
+                        let parts = tp.trim().split(/\s+/);
+                        if (parts.length > 0) typeParamNames.push(parts[0]);
+                    });
+                    nativeCallFunc = `${funcName}[${typeParamNames.join(', ')}]`;
+                }
+
                 let callRet = retStr.trim() !== '' ? retStr : '';
-                newLines.push(`func Call_${pursName}(${goFuncArgsNative}) ${callRet} {`);
+                newLines.push(`func Call_${pursName}${typeParams}(${goFuncArgsNative}) ${callRet} {`);
                 let nativeCallArgs = parsedArgs.map((_, idx) => `arg${idx}`).join(', ');
                 if (callRet === '') {
-                    newLines.push(`\t${funcName}(${nativeCallArgs})`);
+                    newLines.push(`\t${nativeCallFunc}(${nativeCallArgs})`);
                 } else {
-                    newLines.push(`\treturn ${funcName}(${nativeCallArgs})`);
+                    newLines.push(`\treturn ${nativeCallFunc}(${nativeCallArgs})`);
                 }
                 newLines.push(`}`);
                 
@@ -97,6 +108,19 @@ export const appendFfiWrappersImpl = function(moduleName) {
                 if (arity === 1) goFuncArgsBoxed = `arg0 gopurs_runtime.Value`;
                 
                 newLines.push(`var ${exportName} = gopurs_runtime.${funcConstructor}(func(${goFuncArgsBoxed}) gopurs_runtime.Value {`);
+                let callFunc = funcName;
+                let substituteGeneric = function(t) { return t; };
+                if (basicMatch[2]) {
+                    callFunc = `${funcName}[${typeParamNames.map(() => 'gopurs_runtime.Value').join(', ')}]`;
+                    substituteGeneric = function(t) {
+                        let res = t;
+                        typeParamNames.forEach(tp => {
+                            let re = new RegExp("\\b" + tp + "\\b", 'g');
+                            res = res.replace(re, 'gopurs_runtime.Value');
+                        });
+                        return res;
+                    };
+                }
                 let callArgs = [];
                 let parseFuncType = function(t) {
                     let match = t.match(/^func\s*\((.*)/);
@@ -243,7 +267,7 @@ export const appendFfiWrappersImpl = function(moduleName) {
 
                 for (let idx = 0; idx < parsedArgs.length; idx++) {
                     let p = parsedArgs[idx];
-                    let t = p.type;
+                    let t = substituteGeneric(p.type);
                     
                     if (t.startsWith("func")) {
                         let unwrapStr = unwrapValueToFunc(t, 'arg' + idx, 0);
@@ -279,12 +303,12 @@ export const appendFfiWrappersImpl = function(moduleName) {
                 }
                 
                 if (retStr === '') {
-                    newLines.push(`\t${funcName}(${callArgs.join(', ')})`);
+                    newLines.push(`\t${callFunc}(${callArgs.join(', ')})`);
                     newLines.push(`\treturn gopurs_runtime.Value{}`);
                 } else {
-                    newLines.push(`\tgo_res := ${funcName}(${callArgs.join(', ')})`);
+                    newLines.push(`\tgo_res := ${callFunc}(${callArgs.join(', ')})`);
                     
-                    let wrapCode = wrapReturn(retStr, "go_res");
+                    let wrapCode = wrapReturn(substituteGeneric(retStr.trim()), "go_res");
                     newLines.push(`\treturn ${wrapCode}`);
                 }
                 newLines.push(`})`);
