@@ -236,13 +236,16 @@ export const appendFfiWrappersImpl = function(moduleName) {
                     let currentArg = "";
                     parens = 0;
                     let brackets = 0;
+                    let braces = 0;
                     for (let j = 0; j < argsStr.length; j++) {
                         let c = argsStr[j];
                         if (c === '(') parens++;
                         else if (c === ')') parens--;
                         else if (c === '[') brackets++;
                         else if (c === ']') brackets--;
-                        else if (c === ',' && parens === 0 && brackets === 0) {
+                        else if (c === '{') braces++;
+                        else if (c === '}') braces--;
+                        else if (c === ',' && parens === 0 && brackets === 0 && braces === 0) {
                             if (currentArg.trim() !== "") args.push(currentArg.trim());
                             currentArg = "";
                             continue;

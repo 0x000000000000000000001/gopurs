@@ -77,6 +77,7 @@ exprTypeToGoType _ Number = TypeFloat64
 exprTypeToGoType _ String = TypeString
 exprTypeToGoType _ Char = TypeString
 exprTypeToGoType _ Boolean = TypeBool
+exprTypeToGoType modNameStr (Array ty) = TypeNativeArray (exprTypeToGoType modNameStr ty)
 exprTypeToGoType modNameStr (Record fields) = TypeRecord (map (\(Tuple k v) -> Tuple k (exprTypeToGoType modNameStr v)) (Array.sortBy (comparing \(Tuple k _) -> k) fields))
 exprTypeToGoType _ (ADT _ _) = TypeValue
 exprTypeToGoType _ (TypeVar v) = TypeValue
