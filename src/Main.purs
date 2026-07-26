@@ -41,7 +41,7 @@ import Gopurs.Runtime (runtimeGoCode)
 import PureScript.Backend.Optimizer.FfiSupport (findFfiFile)
 import Gopurs.FfiSupport (appendFfiWrappers)
 import PureScript.Backend.Optimizer.Monomorphize (collectInstantiations)
-import PureScript.Backend.Optimizer.App (coreFnModulesFromOutput)
+import PureScript.Backend.Optimizer.App (coreFnModulesFromOutput, parseCLIArgs, checkCache, writeCache, loadDirectives)
 
 buildGlobalTypes :: Array (Module Ann) -> Map.Map String ExprType
 buildGlobalTypes modules = Array.foldl (\acc (Module m) ->
@@ -73,8 +73,14 @@ hasTypeVariables Boolean = false
 hasTypeVariables (ADT _ args) = Array.any hasTypeVariables args
 hasTypeVariables Any = false
 
+cacheVersion :: String
+cacheVersion = "1.0.0"
+
 main :: Effect Unit
 main = launchAff_ do
+  argsRaw <- liftEffect Process.argv
+  let args = parseCLIArgs argsRaw
+
   finalModules <- coreFnModulesFromOutput "output"
 
   let elidedCtors = Array.foldl (\acc (Module mod) ->
@@ -96,11 +102,7 @@ main = launchAff_ do
 
   FS.writeTextFile UTF8 "output/go.mod" "module gopurs/output\n\ngo 1.22\n"
 
-  let parsedDirectives = parseDirectiveFile defaultDirectives
-  when (not (Array.null parsedDirectives.errors)) do
-    liftEffect $ Console.log "DIRECTIVE PARSE ERRORS"
-
-  liftEffect $ Console.log $ "Directives count: " <> show (Map.size parsedDirectives.directives)
+  directives <- loadDirectives
 
   let
     ctorTypes = foldl (\acc (Module m) ->
@@ -126,20 +128,23 @@ main = launchAff_ do
   FS.writeTextFile UTF8 "adt_instantiations.txt" (show (map mangleType (Array.fromFoldable adtTypes)))
 
   buildModules
-    { directives: parsedDirectives.directives
+    { directives
     , analyzeCustom: \_ _ -> Nothing
     , foreignSemantics: coreForeignSemantics
     , traceIdents: Set.empty
     , onPrepareModule: \_ (Module m) -> pure (Module m)
-    , onSkipModule: \_ _ -> pure Nothing
+    , onSkipModule: \_ (Module coreFnMod) -> do
+        let modNameStr = unwrap coreFnMod.name
+        checkCache cacheVersion coreFnMod.path ("output/" <> modNameStr <> "/.gopurs-cache.json")
     , onCodegenModule: \_ (Module coreFnMod) backendMod _ -> do
         let modNameStr = unwrap backendMod.name
+        writeCache cacheVersion ("output/" <> modNameStr <> "/.gopurs-cache.json") backendMod
         let importsArray = map (\i -> String.split (Pattern ".") (unwrap (importName i))) coreFnMod.imports
         let goFile = translate adtTypes elidedCtors ctorTypes globalTypes instantiations importsArray backendMod
         FS.writeTextFile UTF8 ("output/" <> modNameStr <> "/" <> String.replaceAll (Pattern ".") (Replacement "_") modNameStr <> ".go") goFile
 
         when (Array.length (Array.fromFoldable backendMod.foreign) > 0) do
-          ffiPathMb <- liftEffect $ findFfiFile ".go" [] Nothing modNameStr (Just coreFnMod.path)
+          ffiPathMb <- liftEffect $ findFfiFile ".go" [] args.mbFfiDir modNameStr (Just coreFnMod.path)
           case ffiPathMb of
             Just ffiPath -> do
               content <- FS.readTextFile UTF8 ffiPath
@@ -149,12 +154,9 @@ main = launchAff_ do
     }
     finalModules
 
-  argv <- liftEffect Process.argv
   let
-    mainModuleName = case Array.findIndex (_ == "--main") argv of
-      Just i -> case Array.index argv (i + 1) of
-        Just m -> m
-        Nothing -> "Main"
+    mainModuleName = case args.mbMainModule of
+      Just m -> m
       Nothing -> "Main"
 
   let pkgName = String.replaceAll (Pattern ".") (Replacement "_") mainModuleName
