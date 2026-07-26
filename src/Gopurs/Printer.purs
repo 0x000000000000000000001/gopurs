@@ -2,7 +2,7 @@ module Gopurs.Printer where
 
 import Prelude
 import Data.String as String
-import Gopurs.GoAst (GoExpr(..), GoDecl, GoFile)
+import Gopurs.GoAst (GoExpr(..), GoDecl, GoFile, GoType(..), goTypeToStr)
 import Data.Tuple (Tuple(..))
 import Data.Array as Array
 import Data.Maybe (Maybe(..), fromMaybe)
@@ -123,13 +123,15 @@ printGoExpr expr = case expr of
       "((*gopurs_runtime.RecordData)(" <> printGoExpr obj <> ".UnsafePtr)).Vals[" <> show idx <> "]"
     else
       "((*gopurs_runtime.RecordData" <> show size <> ")(" <> printGoExpr obj <> ".UnsafePtr)).V" <> show idx
-  GoConstructor hashStr structName args ->
-    if Array.null args then
+  GoConstructor hashStr structName typeArgs args ->
+    let typeArgsStr = if Array.length typeArgs > 0 then "[" <> String.joinWith ", " (map goTypeToStr typeArgs) <> "]" else ""
+    in if Array.null args then
       "gopurs_runtime.Value{Type: 9, IntVal: " <> hashStr <> ", UnsafePtr: nil}"
     else
-      "gopurs_runtime.Value{Type: 9, IntVal: " <> hashStr <> ", UnsafePtr: unsafe.Pointer(&" <> structName <> "{" <> String.joinWith ", " (map printGoExpr args) <> "})}"
-  GoConstructorAccess obj structName idx ->
-    "(*" <> structName <> ")(" <> printGoExpr obj <> ".UnsafePtr).V" <> show idx
+      "gopurs_runtime.Value{Type: 9, IntVal: " <> hashStr <> ", UnsafePtr: unsafe.Pointer(&" <> structName <> typeArgsStr <> "{" <> String.joinWith ", " (map printGoExpr args) <> "})}"
+  GoConstructorAccess obj structName typeArgs idx ->
+    let typeArgsStr = if Array.length typeArgs > 0 then "[" <> String.joinWith ", " (map goTypeToStr typeArgs) <> "]" else ""
+    in "(*" <> structName <> typeArgsStr <> ")(" <> printGoExpr obj <> ".UnsafePtr).V" <> show idx
   GoBranch branches def ->
     "func() gopurs_runtime.Value {\n" <>
     String.joinWith "\n" (map (\(Tuple cond t) -> "if (" <> printGoExpr cond <> ").IntVal != 0 {\nreturn " <> printGoExpr t <> "\n}") branches) <>

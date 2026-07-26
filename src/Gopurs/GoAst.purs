@@ -2,6 +2,8 @@ module Gopurs.GoAst where
 
 import Prelude
 import Data.Tuple (Tuple(..))
+import Data.String as String
+import Data.String (Pattern(..), Replacement(..))
 
 data GoExpr
   = GoVar String
@@ -20,8 +22,8 @@ data GoExpr
   | GoLetRec (Array (Tuple String GoExpr)) GoExpr
   | GoRecordAccess GoExpr String
   | GoRecordAccessStatic GoExpr Int Int
-  | GoConstructor String String (Array GoExpr)
-  | GoConstructorAccess GoExpr String Int
+  | GoConstructor String String (Array GoType) (Array GoExpr)
+  | GoConstructorAccess GoExpr String (Array GoType) Int
   | GoBranch (Array (Tuple GoExpr GoExpr)) GoExpr
   | GoBinOp String GoExpr GoExpr
   | GoTypeAssertion GoExpr String
@@ -46,3 +48,34 @@ type GoFile =
   , rawDecls :: Array String
   , foreigns :: Array { pursName :: String, goName :: String }
   }
+
+data GoType
+  = TypeValue
+  | TypeInt64
+  | TypeFloat64
+  | TypeString
+  | TypeBool
+  | TypeStructPointer String
+  | TypeRecord (Array (Tuple String GoType))
+  | TypeInterface String
+  | TypeNativeArray GoType
+  | TypeGenericParam String
+
+derive instance eqGoType :: Eq GoType
+
+goTypeToStr :: GoType -> String
+goTypeToStr TypeInt64 = "int64"
+goTypeToStr TypeFloat64 = "float64"
+goTypeToStr TypeString = "string"
+goTypeToStr TypeBool = "bool"
+goTypeToStr (TypeStructPointer path) = "*Data_" <> String.replaceAll (Pattern ".") (Replacement "_") path
+goTypeToStr (TypeInterface name) = name
+goTypeToStr (TypeGenericParam name) = "T_" <> sanitizeName name
+goTypeToStr _ = "gopurs_runtime.Value"
+
+sanitizeName :: String -> String
+sanitizeName name =
+  let
+    s1 = String.replaceAll (Pattern "'") (Replacement "_prime") (String.replaceAll (Pattern "$") (Replacement "_dollar") name)
+  in
+    if s1 == "break" || s1 == "default" || s1 == "func" || s1 == "interface" || s1 == "select" || s1 == "case" || s1 == "defer" || s1 == "go" || s1 == "map" || s1 == "struct" || s1 == "chan" || s1 == "else" || s1 == "goto" || s1 == "package" || s1 == "switch" || s1 == "const" || s1 == "fallthrough" || s1 == "if" || s1 == "range" || s1 == "type" || s1 == "continue" || s1 == "for" || s1 == "import" || s1 == "return" || s1 == "var" || s1 == "init" || s1 == "append" || s1 == "make" || s1 == "len" || s1 == "cap" || s1 == "new" || s1 == "close" || s1 == "delete" || s1 == "complex" || s1 == "real" || s1 == "imag" || s1 == "panic" || s1 == "recover" || s1 == "print" || s1 == "println" then s1 <> "_" else s1
