@@ -4,7 +4,7 @@
 <br />
 <br />
 
-_Experimental WIP, but the core ideas have been valided by the facts/results. That will be official soon._
+_Mature experimental WIP, but the core ideas have been valided by the facts/results. That will be official soon._
 
 A super-optimized **PureScript-to-Go compiler**, entirely written in PureScript, leveraging Go's **blazing-fast execution**, **lightweight goroutines** and **huge ecosystem**. 
 
