@@ -4,6 +4,8 @@
 <br />
 <br />
 
+_Experimental WIP, but the core ideas have been valided. That will be official soon._
+
 A super-optimized **PureScript-to-Go compiler**, entirely written in PureScript, leveraging Go's **blazing-fast execution**, **lightweight goroutines** and **huge ecosystem**. 
 
 `gopurs` leverages the intermediate `CoreFn` representation to compile your pure business logic into robust, modern Go code. It seamlessly integrates into your existing PureScript workflow as a custom backend.
