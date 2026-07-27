@@ -4,6 +4,8 @@ import Prelude
 import Data.Tuple (Tuple(..))
 import Data.String as String
 import Data.String (Pattern(..), Replacement(..))
+import PureScript.Backend.Optimizer.CoreFn (ExprType(..))
+import Data.Maybe (Maybe(..))
 
 data GoExpr
   = GoVar String
@@ -49,7 +51,7 @@ type GoFile =
   , imports :: Array String
   , decls :: Array GoDecl
   , rawDecls :: Array String
-  , foreigns :: Array { pursName :: String, goName :: String }
+  , foreigns :: Array { pursName :: String, goName :: String, exprType :: Maybe ExprType }
   }
 
 data GoType

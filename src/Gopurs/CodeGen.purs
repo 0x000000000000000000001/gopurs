@@ -467,7 +467,7 @@ translate pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors 
       , imports: goImports
       , decls: allDeclsAst
       , rawDecls: helpers.rawDecls
-      , foreigns: map (\(Ident name) -> { pursName: sanitizeName name, goName: "_Gopurs_" <> capitalize (sanitizeName name) }) (Array.fromFoldable mod.foreign)
+      , foreigns: map (\(Tuple (Ident name) type_) -> { pursName: sanitizeName name, goName: "_Gopurs_" <> capitalize (sanitizeName name), exprType: type_ }) (Map.toUnfoldable mod.foreign)
       }
   in
     printGoFile goFile
