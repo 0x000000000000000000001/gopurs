@@ -241,33 +241,15 @@ getStructName modNameStr mbMod ctorName =
 globalReusedVars :: Ref.Ref (Set.Set String)
 globalReusedVars = unsafePerformEffect (Ref.new Set.empty)
 
-translate :: Map.Map String String -> Set.Set String -> Map.Map String String -> Set.Set ExprType -> Set.Set String -> Map.Map String { typeVars :: Array String, fieldTypes :: Array ExprType } -> Map.Map String ExprType -> InstantiationMap -> Array (Array String) -> BackendModule -> String
-translate pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors ctorTypes globalTypes rawInstantiations importsArray mod =
+translate :: Map.Map String String -> Set.Set String -> Map.Map String String -> Set.Set ExprType -> Set.Set String -> Map.Map String { typeVars :: Array String, fieldTypes :: Array ExprType } -> Array (Array String) -> BackendModule -> Array { recursive :: Boolean, bindings :: Array (Tuple Ident TcoExpr) } -> String
+translate pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors ctorTypes importsArray mod tcoBindingsExpanded =
   let
     modNameStrOrig = unwrap mod.name
     modNameStr = String.replaceAll (Pattern ".") (Replacement "_") modNameStrOrig
     
     flatImportsArray = map (String.joinWith ".") importsArray
     
-    isSafeType :: ExprType -> Boolean
-    isSafeType t =
-      let
-        getAdtModules (ADT parts args) = 
-          let modPart = String.joinWith "." (fromMaybe [] (Array.init parts))
-          in [ modPart ] <> Array.concatMap getAdtModules args
-        getAdtModules (Array ty) = getAdtModules ty
-        getAdtModules (Func args ret) = Array.concatMap getAdtModules args <> getAdtModules ret
-        getAdtModules (Record fields) = Array.concatMap (\(Tuple _ ty) -> getAdtModules ty) fields
-        getAdtModules _ = []
-        
-        adtModules = Array.nub (getAdtModules t)
-      in
-        Array.all (\m -> m == "" || m == modNameStrOrig || Array.elem m flatImportsArray || m == "Prim" || String.indexOf (Pattern "Prim.") m == Just 0) adtModules
-    
-    instantiations = Map.mapMaybe (\set ->
-        let safeSet = Set.filter isSafeType set
-        in if Set.isEmpty safeSet then Nothing else Just safeSet
-      ) rawInstantiations
+
 
     _ = unsafePerformEffect (Console.log ("Translating module " <> modNameStr))
     helpersRef = unsafePerformEffect do
@@ -288,22 +270,9 @@ translate pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors 
             ) decl.constructors
           ) mod.dataDecls
 
-      Ref.new { decls: [], rawDecls: structDecls, elidedCtors, ctorTypes, pointerAdtPaths, pointerAdtNodes, pointerAdtLeaves, globalTypes }
+      Ref.new { decls: [], rawDecls: structDecls, elidedCtors, ctorTypes, pointerAdtPaths, pointerAdtNodes, pointerAdtLeaves }
 
-    Tuple _ tcoBindings = foldl
-      ( \(Tuple env acc) group ->
-          let
-            neBindings = fromArray group.bindings
-            _ = unsafePerformEffect (Console.log ("Translating binding group"))
-            env' = case neBindings of
-              Just ne | group.recursive -> Tco.topLevelTcoEnvGroup mod.name ne <> env
-              _ -> env
-            tcoBinds = map (\(Tuple k v) -> Tuple k (Tco.analyze env' v)) group.bindings
-          in
-            Tuple env' (Array.snoc acc { recursive: group.recursive, bindings: tcoBinds })
-      )
-      (Tuple [] [])
-      mod.bindings
+
 
     getExprType :: TcoExpr -> ExprType
     getExprType (TcoExpr _ (Typed ty _)) = ty
@@ -313,29 +282,7 @@ translate pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors 
     setTcoExprType ty (TcoExpr a (Typed _ inner)) = TcoExpr a (Typed ty inner)
     setTcoExprType _ expr = expr
 
-    tcoBindingsExpanded = map
-      (\group -> group { bindings = Array.concatMap expandBind group.bindings })
-      tcoBindings
 
-    expandBind :: Tuple Ident TcoExpr -> Array (Tuple Ident TcoExpr)
-    expandBind (Tuple id@(Ident name) val) =
-      let qual = modNameStrOrig <> "." <> name
-          instsMap = map Set.toUnfoldable instantiations
-          baseVal = substituteAst instsMap (mangleType pointerAdtPaths modNameStr) val
-      in case Map.lookup qual instantiations of
-           Just concretes ->
-             let genericType = fromMaybe (getExprType val) (Map.lookup qual globalTypes)
-                 concreteArr = Set.toUnfoldable concretes :: Array ExprType
-                 res = Tuple id baseVal `Array.cons` Array.mapMaybe (\concrete ->
-                  let subst = unify genericType concrete Map.empty
-                  in if Map.isEmpty subst then Nothing else Just $
-                       let mangledName = name <> "__" <> mangleType pointerAdtPaths modNameStr concrete
-                           mangledVal = mapTcoExprTypes (substituteExprType subst) val
-                           mangledVal' = substituteAst instsMap (mangleType pointerAdtPaths modNameStr) mangledVal
-                       in Tuple (Ident mangledName) (setTcoExprType concrete mangledVal')
-                ) concreteArr
-             in res
-           Nothing -> [ Tuple id baseVal ]
 
     extractFuncType :: TcoExpr -> Maybe { fArgs :: Array ExprType, fRet :: ExprType }
     extractFuncType (TcoExpr _ (Typed ty inner)) =
@@ -528,11 +475,11 @@ executeIfOpaque expr goExpr =
   else GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ goExpr, GoRaw "gopurs_runtime.Value{}" ]
 
 
-translateExprImpl :: Ref { decls :: Array GoDecl, rawDecls :: Array String, elidedCtors :: Set.Set String, ctorTypes :: Map String { typeVars :: Array String, fieldTypes :: Array ExprType }, pointerAdtPaths :: Map String String, pointerAdtNodes :: Set String, pointerAdtLeaves :: Map String String, globalTypes :: Map.Map String ExprType } -> Int -> String -> Array String -> Map String { fullName :: String, fArgs :: Array GoType, fRet :: GoType, arity :: Int } -> Map String { name :: String, goType :: GoType } -> Maybe String -> Array { ident :: String, params :: Array String, loopParams :: Array String, goTypes :: Array GoType } -> Boolean -> Int -> TcoExpr -> { stmts :: StmtTree, expr :: GoExpr, exprType :: GoType, nextId :: Int }
+translateExprImpl :: Ref { decls :: Array GoDecl, rawDecls :: Array String, elidedCtors :: Set.Set String, ctorTypes :: Map String { typeVars :: Array String, fieldTypes :: Array ExprType }, pointerAdtPaths :: Map String String, pointerAdtNodes :: Set String, pointerAdtLeaves :: Map String String } -> Int -> String -> Array String -> Map String { fullName :: String, fArgs :: Array GoType, fRet :: GoType, arity :: Int } -> Map String { name :: String, goType :: GoType } -> Maybe String -> Array { ident :: String, params :: Array String, loopParams :: Array String, goTypes :: Array GoType } -> Boolean -> Int -> TcoExpr -> { stmts :: StmtTree, expr :: GoExpr, exprType :: GoType, nextId :: Int }
 translateExprImpl helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail nextId tcoExpr =
   translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail false nextId tcoExpr
 
-translateExprImpl_ :: Ref { decls :: Array GoDecl, rawDecls :: Array String, elidedCtors :: Set.Set String, ctorTypes :: Map String { typeVars :: Array String, fieldTypes :: Array ExprType }, pointerAdtPaths :: Map String String, pointerAdtNodes :: Set String, pointerAdtLeaves :: Map String String, globalTypes :: Map.Map String ExprType } -> Int -> String -> Array String -> Map String { fullName :: String, fArgs :: Array GoType, fRet :: GoType, arity :: Int } -> Map String { name :: String, goType :: GoType } -> Maybe String -> Array { ident :: String, params :: Array String, loopParams :: Array String, goTypes :: Array GoType } -> Boolean -> Boolean -> Int -> TcoExpr -> { stmts :: StmtTree, expr :: GoExpr, exprType :: GoType, nextId :: Int }
+translateExprImpl_ :: Ref { decls :: Array GoDecl, rawDecls :: Array String, elidedCtors :: Set.Set String, ctorTypes :: Map String { typeVars :: Array String, fieldTypes :: Array ExprType }, pointerAdtPaths :: Map String String, pointerAdtNodes :: Set String, pointerAdtLeaves :: Map String String } -> Int -> String -> Array String -> Map String { fullName :: String, fArgs :: Array GoType, fRet :: GoType, arity :: Int } -> Map String { name :: String, goType :: GoType } -> Maybe String -> Array { ident :: String, params :: Array String, loopParams :: Array String, goTypes :: Array GoType } -> Boolean -> Boolean -> Int -> TcoExpr -> { stmts :: StmtTree, expr :: GoExpr, exprType :: GoType, nextId :: Int }
 translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail inEffectBlock nextId tcoExpr@(TcoExpr tcoAnalysis expr) =
   let
     _ = unsafePerformEffect (if depth == 0 then Ref.write Set.empty globalReusedVars else pure unit)

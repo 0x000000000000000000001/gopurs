@@ -44,6 +44,7 @@ import Gopurs.Runtime (runtimeGoCode)
 import PureScript.Backend.Optimizer.FfiSupport (findFfiFile)
 import Gopurs.FfiSupport (appendFfiWrappers)
 import Gopurs.Monomorphize as Mono
+import Gopurs.Monomorphize.Substitute as Substitute
 import PureScript.Backend.Optimizer.App (coreFnModulesFromOutput, parseCLIArgs, checkCache, writeCache, loadDirectives)
 
 buildGlobalTypes :: Array (Module Ann) -> Map.Map String ExprType
@@ -178,7 +179,8 @@ main = launchAff_ do
         let modNameStr = unwrap backendMod.name
         writeCache cacheVersion ("output/" <> modNameStr <> "/.gopurs-cache.json") backendMod
         let importsArray = map (\i -> String.split (Pattern ".") (unwrap (importName i))) coreFnMod.imports
-        let goFile = translate pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors ctorTypes globalTypes instantiationsStrKeys importsArray backendMod
+        let specializedBindings = Substitute.specializeBindingGroups backendMod.name pointerAdtPaths modNameStr globalTypes instantiationsStrKeys mangleType backendMod.bindings
+        let goFile = translate pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors ctorTypes importsArray backendMod specializedBindings
         FS.writeTextFile UTF8 ("output/" <> modNameStr <> "/" <> String.replaceAll (Pattern ".") (Replacement "_") modNameStr <> ".go") goFile
 
         when (Array.length (Array.fromFoldable backendMod.foreign) > 0) do
