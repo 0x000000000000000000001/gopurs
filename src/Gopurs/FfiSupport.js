@@ -71,7 +71,7 @@ export const appendFfiWrappersImpl = function(moduleName) {
                 }
                 
                 let arity = parsedArgs.length;
-                if (arity > 5) continue; // Not supported yet
+                if (arity > 11) continue; // Not supported yet
 
                 let funcConstructor = arity === 0 ? "Func" : (arity === 1 ? "Func" : `Func${arity}`);
                 let goFuncArgsNative = parsedArgs.map((_, idx) => `arg${idx} ${parsedArgs[idx].type}`).join(', ');

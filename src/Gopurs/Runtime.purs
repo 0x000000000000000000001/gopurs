@@ -35,6 +35,7 @@ const (
 	TypeRecord4 = 23
 	TypeRecord5 = 24
 	TypeRecordData = 25
+	TypeFunc11 = 26
 )
 
 // We do not add FloatVal or BoolVal fields to keep the struct size minimal.
@@ -118,6 +119,30 @@ func Array(v []Value) Value {
 
 func (v Value) PtrVal() any {
 	return *(*any)(v.UnsafePtr)
+}
+
+func (v Value) AnyVal() any {
+	switch v.Type {
+	case TypeInt: return v.IntVal
+	case TypeFloat: return math.Float64frombits(uint64(v.IntVal))
+	case TypeString: return *(*string)(v.UnsafePtr)
+	case TypeBool: return v.IntVal != 0
+	case TypeArray: return *(*[]Value)(v.UnsafePtr)
+	case TypeRecord: return *(*map[string]Value)(v.UnsafePtr)
+	case TypeAny: return v.PtrVal()
+	case TypeConstructor: return v
+	default:
+		if v.Type >= TypeRecord0 && v.Type <= TypeRecordData {
+			return RecordToMap(v)
+		}
+		if (v.Type >= TypeFunc && v.Type <= TypeFunc5) || (v.Type >= TypeFunc6 && v.Type <= TypeFunc11) {
+			return v
+		}
+		if v.UnsafePtr != nil {
+			return v
+		}
+		return nil
+	}
 }
 
 type RecordData struct {
@@ -332,6 +357,7 @@ func Func7(f func(Value, Value, Value, Value, Value, Value, Value) Value) Value 
 func Func8(f func(Value, Value, Value, Value, Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc8, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
 func Func9(f func(Value, Value, Value, Value, Value, Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc9, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
 func Func10(f func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc10, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
+func Func11(f func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc11, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
 
 func FuncAny(f any) Value {
 	return Value{Type: TypeFunc, UnsafePtr: unsafe.Pointer(&f)}
@@ -418,6 +444,9 @@ func ArrayLength(arr Value) int {
 }
 
 func Any(v any) Value {
+	if val, ok := v.(Value); ok {
+		return val
+	}
 	return Value{Type: TypeAny, UnsafePtr: unsafe.Pointer(&v)}
 }
 
@@ -457,33 +486,50 @@ func UncurriedApp(fn Value, args ...Value) Value {
 	return res
 }
 
-func Unbox[T any](v Value) T {
+func Unbox[T any](v any) T {
+	if res, ok := v.(T); ok {
+		return res
+	}
+	
+	val, isValue := v.(Value)
+	if !isValue {
+		var t any = *new(T)
+		// If T is any, we can just return v
+		switch t.(type) {
+		case any: return any(v).(T)
+		}
+		panic("Cannot unbox non-Value into T")
+	}
+	
 	var t any = *new(T)
 	switch t.(type) {
-	case int64: return any(v.IntVal).(T)
-	case int: return any(int(v.IntVal)).(T)
-	case string: return any(*(*string)(v.UnsafePtr)).(T)
-	case float64: return any(math.Float64frombits(uint64(v.IntVal))).(T)
-	case bool: return any(v.IntVal == 1).(T)
-	case Value: return any(v).(T)
+	case int64: return any(val.IntVal).(T)
+	case int: return any(int(val.IntVal)).(T)
+	case string: return any(*(*string)(val.UnsafePtr)).(T)
+	case float64: return any(math.Float64frombits(uint64(val.IntVal))).(T)
+	case bool: return any(val.IntVal == 1).(T)
+	case Value: return any(val).(T)
 	case map[string]any:
-		m := RecordToMap(v)
+		m := RecordToMap(val)
 		res := make(map[string]any, len(m))
-		for k, val := range m { res[k] = val }
+		for k, v2 := range m { res[k] = v2 }
 		return any(res).(T)
 	case []any:
-		arr := *(*[]Value)(v.UnsafePtr)
+		arr := *(*[]Value)(val.UnsafePtr)
 		res := make([]any, len(arr))
-		for i, val := range arr { res[i] = val }
+		for i, v2 := range arr { res[i] = v2 }
 		return any(res).(T)
 	case func(any) any:
-		res := func(arg any) any { return Apply(v, Box(arg)) }
+		res := func(arg any) any { return Apply(val, Box(arg)) }
 		return any(res).(T)
-	default: return *(*T)(v.UnsafePtr)
+	default: return *(*T)(val.UnsafePtr)
 	}
 }
 
 func Box[T any](val T) Value {
+	if v, ok := any(val).(Value); ok {
+		return v
+	}
 	switch v := any(val).(type) {
 	case int64: return Int(v)
 	case int: return Int(int64(v))
@@ -566,4 +612,27 @@ func Wrap5[A, B, C, D, E, R any](f func(A, B, C, D, E) R) Value {
 		return Box(f(Unbox[A](a), Unbox[B](b), Unbox[C](c), Unbox[D](d), Unbox[E](e)))
 	})
 }
+
+func Apply6(fn Value, arg1 Value, arg2 Value, arg3 Value, arg4 Value, arg5 Value, arg6 Value) Value {
+	return Apply(Apply(Apply(Apply(Apply(Apply(fn, arg1), arg2), arg3), arg4), arg5), arg6)
+}
+
+func Apply7(fn Value, arg1 Value, arg2 Value, arg3 Value, arg4 Value, arg5 Value, arg6 Value, arg7 Value) Value {
+	return Apply(Apply(Apply(Apply(Apply(Apply(Apply(fn, arg1), arg2), arg3), arg4), arg5), arg6), arg7)
+}
+
+func Apply8(fn Value, arg1 Value, arg2 Value, arg3 Value, arg4 Value, arg5 Value, arg6 Value, arg7 Value, arg8 Value) Value {
+	return Apply(Apply(Apply(Apply(Apply(Apply(Apply(Apply(fn, arg1), arg2), arg3), arg4), arg5), arg6), arg7), arg8)
+}
+
+func Apply9(fn Value, arg1 Value, arg2 Value, arg3 Value, arg4 Value, arg5 Value, arg6 Value, arg7 Value, arg8 Value, arg9 Value) Value {
+	return Apply(Apply(Apply(Apply(Apply(Apply(Apply(Apply(Apply(fn, arg1), arg2), arg3), arg4), arg5), arg6), arg7), arg8), arg9)
+}
+
+func Apply10(fn Value, arg1 Value, arg2 Value, arg3 Value, arg4 Value, arg5 Value, arg6 Value, arg7 Value, arg8 Value, arg9 Value, arg10 Value) Value {
+	return Apply(Apply(Apply(Apply(Apply(Apply(Apply(Apply(Apply(Apply(fn, arg1), arg2), arg3), arg4), arg5), arg6), arg7), arg8), arg9), arg10)
+}
+
+
+
 """
