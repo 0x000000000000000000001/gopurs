@@ -48,6 +48,18 @@ type Value struct {
 
 }
 
+// IncRef increments the Rc field if the value is a pointer ADT.
+// It assumes that all pointer ADTs have `Rc uint32` as their very first field.
+func IncRef(v Value) Value {
+	if v.Type == TypeConstructor {
+		ptr := (*struct{ Rc uint32 })(v.UnsafePtr)
+		if ptr != nil {
+			ptr.Rc++
+		}
+	}
+	return v
+}
+
 func (v Value) FloatVal() float64 {
 	return math.Float64frombits(uint64(v.IntVal))
 }
