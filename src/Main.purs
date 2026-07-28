@@ -36,14 +36,14 @@ import PureScript.Backend.Optimizer.Directives.Defaults (defaultDirectives)
 import PureScript.Backend.Optimizer.Directives (parseDirectiveFile)
 import PureScript.Backend.Optimizer.Monomorphize (collectInstantiations, InstantiationMap, collectAllTypes, mangleType)
 import PureScript.Backend.Optimizer.Semantics.Foreign (coreForeignSemantics)
-import PureScript.Backend.Optimizer.CoreFn (Module(..), Ann(..), importName, Bind(..), Binding(..), ExprType(..), Ident(..))
+import PureScript.Backend.Optimizer.CoreFn (Module(..), Ann(..), importName, Bind(..), Binding(..), ExprType(..), Ident(..), Qualified(..))
 import Data.String as String
 import PureScript.Backend.Optimizer.Monomorphize (getExprAnn)
 import Gopurs.CodeGen (translate, getStructName)
 import Gopurs.Runtime (runtimeGoCode)
 import PureScript.Backend.Optimizer.FfiSupport (findFfiFile)
 import Gopurs.FfiSupport (appendFfiWrappers)
-import PureScript.Backend.Optimizer.Monomorphize (collectInstantiations)
+import Gopurs.Monomorphize as Mono
 import PureScript.Backend.Optimizer.App (coreFnModulesFromOutput, parseCLIArgs, checkCache, writeCache, loadDirectives)
 
 buildGlobalTypes :: Array (Module Ann) -> Map.Map String ExprType
@@ -67,7 +67,7 @@ hasTypeVariables :: ExprType -> Boolean
 hasTypeVariables (TypeVar v) = String.take 1 v == String.toLower (String.take 1 v) && v /= "gopurs_runtime.Value"
 hasTypeVariables (Func args ret) = Array.any hasTypeVariables args || hasTypeVariables ret
 hasTypeVariables (Array t) = hasTypeVariables t
-hasTypeVariables (Record props) = Array.any (\(Tuple _ v) -> hasTypeVariables v) props
+hasTypeVariables (Record props) = Array.any (\(Tuple _ t) -> hasTypeVariables t) props
 hasTypeVariables Int = false
 hasTypeVariables String = false
 hasTypeVariables Char = false
@@ -117,12 +117,21 @@ main = launchAff_ do
       ) acc m.dataDecls
     ) Map.empty finalModules
 
+  let formatQualified (Qualified mbMod (Ident name)) = 
+        case mbMod of
+          Just m -> unwrap m <> "." <> name
+          Nothing -> name
+
   let globalTypes = buildGlobalTypes (Array.fromFoldable finalModules)
-  let rawInstantiations = foldl collectInstantiations Map.empty finalModules
-  let instantiations = Map.filterKeys (\k -> case Map.lookup k globalTypes of
+  let monoEnv = Mono.analyzeReachability (Array.fromFoldable finalModules)
+  let rawInstantiations = monoEnv.instantiations
+  let instantiationsStrKeysRaw = Map.fromFoldable (map (\(Tuple q v) -> Tuple (formatQualified q) v) (Map.toUnfoldable rawInstantiations :: Array (Tuple (Qualified Ident) (Set.Set ExprType))))
+  let instantiationsStrKeys = Map.filterKeys (\k -> case Map.lookup k globalTypes of
                                             Just t -> hasTypeVariables t
-                                            Nothing -> false) rawInstantiations
-  FS.writeTextFile UTF8 "instantiations.txt" (show (Array.fromFoldable (Map.keys instantiations)))
+                                            Nothing -> false) instantiationsStrKeysRaw
+  let instantiationsDump = Array.fromFoldable $ map (\(Tuple k v) -> k <> ": " <> String.joinWith ", " (Array.fromFoldable (Set.map mangleType v))) (Map.toUnfoldable instantiationsStrKeys :: Array (Tuple String (Set.Set ExprType)))
+  FS.writeTextFile UTF8 "instantiations.txt" (String.joinWith "\n" instantiationsDump)
+
 
   let allTypes = foldl (\acc mod -> Set.union acc (collectAllTypes mod)) Set.empty finalModules
   let adtTypes = Set.filter (\t -> case t of
@@ -169,7 +178,7 @@ main = launchAff_ do
         let modNameStr = unwrap backendMod.name
         writeCache cacheVersion ("output/" <> modNameStr <> "/.gopurs-cache.json") backendMod
         let importsArray = map (\i -> String.split (Pattern ".") (unwrap (importName i))) coreFnMod.imports
-        let goFile = translate pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors ctorTypes globalTypes instantiations importsArray backendMod
+        let goFile = translate pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors ctorTypes globalTypes instantiationsStrKeys importsArray backendMod
         FS.writeTextFile UTF8 ("output/" <> modNameStr <> "/" <> String.replaceAll (Pattern ".") (Replacement "_") modNameStr <> ".go") goFile
 
         when (Array.length (Array.fromFoldable backendMod.foreign) > 0) do
