@@ -1221,7 +1221,8 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                             in Tuple idStr (exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths modNameStr t)
                           ) fn.args
                         currentLoopCtx = [ { ident: newName, params: fn.args, loopParams: map (\p -> p <> "_loop") fn.args, goTypes: map snd paramsWithTypes } ]
-                        resBodyMut = translateExprImpl_ helpersRef (depth + 1) modNameStr combinedRecVars moduleArities allocRes.newBound Nothing currentLoopCtx true false currNextId fn.body
+                        newBoundBody = foldl (\acc (Tuple idStr goType) -> Map.insert idStr { name: idStr, goType } acc) allocRes.newBound paramsWithTypes
+                        resBodyMut = translateExprImpl_ helpersRef (depth + 1) modNameStr combinedRecVars moduleArities newBoundBody Nothing currentLoopCtx true false currNextId fn.body
                         
                         loopParams = map (\(Tuple idStr _) -> idStr <> "_loop") paramsWithTypes
                         initVars = Array.concatMap (\(Tuple p goT) -> [ GoRaw ("var " <> p <> " " <> goTypeToStr goT <> " = " <> p <> "_loop"), GoRaw ("_ = " <> p) ]) paramsWithTypes
@@ -1306,7 +1307,9 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                         Just ctorInfo -> map (const TypeValue) ctorInfo.typeVars
                         Nothing -> []
                       
-                    exprAccess = GoConstructorAccess (boxGoExpr resObj.expr resObj.exprType) (pkgPrefix <> monoStructName) typeArgs idx
+                    exprAccess = case resObj.exprType of
+                      TypeStructPointer _ _ -> GoSelector resObj.expr ("V" <> show idx)
+                      _ -> GoConstructorAccess (boxGoExpr resObj.expr resObj.exprType) (pkgPrefix <> monoStructName) typeArgs idx
                   in
                     { stmts: resObj.stmts, expr: coerceGoExpr exprAccess expectedType TypeValue, exprType: TypeValue, nextId: resObj.nextId }
 
@@ -1488,27 +1491,37 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                   hashStr = hashString baseStructName
                   helpers = unsafePerformEffect (Ref.read helpersRef)
                 in
-                  case resE.expr of
-                    GoVar _ ->
+                  case resE.exprType of
+                    TypeStructPointer _ _ ->
                       let
                         exprStr = case Map.lookup baseStructName helpers.pointerAdtLeaves of
-                          Just nodeBaseStruct -> "(" <> printGoExpr (boxGoExpr resE.expr resE.exprType) <> ".Type == 9 && " <> printGoExpr (boxGoExpr resE.expr resE.exprType) <> ".IntVal == " <> hashString nodeBaseStruct <> " && " <> printGoExpr (boxGoExpr resE.expr resE.exprType) <> ".UnsafePtr == nil)"
+                          Just nodeBaseStruct -> "(" <> printGoExpr resE.expr <> " == nil)"
                           Nothing -> if Set.member baseStructName helpers.pointerAdtNodes then
-                            "(" <> printGoExpr (boxGoExpr resE.expr resE.exprType) <> ".Type == 9 && " <> printGoExpr (boxGoExpr resE.expr resE.exprType) <> ".IntVal == " <> hashStr <> " && " <> printGoExpr (boxGoExpr resE.expr resE.exprType) <> ".UnsafePtr != nil)"
+                            "(" <> printGoExpr resE.expr <> " != nil)"
                           else
-                            "(" <> printGoExpr (boxGoExpr resE.expr resE.exprType) <> ".Type == 9 && " <> printGoExpr (boxGoExpr resE.expr resE.exprType) <> ".IntVal == " <> hashStr <> ")"
-                      in { stmts: resE.stmts, expr: GoRaw exprStr, exprType: TypeBool, nextId: resE.nextId }
-                    _ ->
-                      let
-                        tmpVar = "__t_tag_" <> show resE.nextId
-                        declTmp = StmtLeaf (GoRaw ("var " <> tmpVar <> " gopurs_runtime.Value = " <> printGoExpr (boxGoExpr resE.expr resE.exprType)))
-                        exprStr = case Map.lookup baseStructName helpers.pointerAdtLeaves of
-                          Just nodeBaseStruct -> "(" <> tmpVar <> ".Type == 9 && " <> tmpVar <> ".IntVal == " <> hashString nodeBaseStruct <> " && " <> tmpVar <> ".UnsafePtr == nil)"
-                          Nothing -> if Set.member baseStructName helpers.pointerAdtNodes then
-                            "(" <> tmpVar <> ".Type == 9 && " <> tmpVar <> ".IntVal == " <> hashStr <> " && " <> tmpVar <> ".UnsafePtr != nil)"
-                          else
-                            "(" <> tmpVar <> ".Type == 9 && " <> tmpVar <> ".IntVal == " <> hashStr <> ")"
-                      in { stmts: resE.stmts <> declTmp, expr: GoRaw exprStr, exprType: TypeBool, nextId: resE.nextId + 1 }
+                            "(false)"
+                      in { stmts: resE.stmts <> StmtLeaf (GoRaw ("// DEBUG: OpIsTag pointer branch for " <> printGoExpr resE.expr <> " type " <> goTypeToStr resE.exprType)), expr: GoRaw exprStr, exprType: TypeBool, nextId: resE.nextId }
+                    _ -> case resE.expr of
+                      GoVar _ ->
+                        let
+                          exprStr = case Map.lookup baseStructName helpers.pointerAdtLeaves of
+                            Just nodeBaseStruct -> "(" <> printGoExpr (boxGoExpr resE.expr resE.exprType) <> ".Type == 9 && " <> printGoExpr (boxGoExpr resE.expr resE.exprType) <> ".IntVal == " <> hashString nodeBaseStruct <> " && " <> printGoExpr (boxGoExpr resE.expr resE.exprType) <> ".UnsafePtr == nil)"
+                            Nothing -> if Set.member baseStructName helpers.pointerAdtNodes then
+                              "(" <> printGoExpr (boxGoExpr resE.expr resE.exprType) <> ".Type == 9 && " <> printGoExpr (boxGoExpr resE.expr resE.exprType) <> ".IntVal == " <> hashStr <> " && " <> printGoExpr (boxGoExpr resE.expr resE.exprType) <> ".UnsafePtr != nil)"
+                            else
+                              "(" <> printGoExpr (boxGoExpr resE.expr resE.exprType) <> ".Type == 9 && " <> printGoExpr (boxGoExpr resE.expr resE.exprType) <> ".IntVal == " <> hashStr <> ")"
+                        in { stmts: resE.stmts <> StmtLeaf (GoRaw ("// DEBUG: OpIsTag GoVar branch type " <> goTypeToStr resE.exprType)), expr: GoRaw exprStr, exprType: TypeBool, nextId: resE.nextId }
+                      _ ->
+                        let
+                          tmpVar = "__t_tag_" <> show resE.nextId
+                          declTmp = StmtLeaf (GoRaw ("var " <> tmpVar <> " gopurs_runtime.Value = " <> printGoExpr (boxGoExpr resE.expr resE.exprType)))
+                          exprStr = case Map.lookup baseStructName helpers.pointerAdtLeaves of
+                            Just nodeBaseStruct -> "(" <> tmpVar <> ".Type == 9 && " <> tmpVar <> ".IntVal == " <> hashString nodeBaseStruct <> " && " <> tmpVar <> ".UnsafePtr == nil)"
+                            Nothing -> if Set.member baseStructName helpers.pointerAdtNodes then
+                              "(" <> tmpVar <> ".Type == 9 && " <> tmpVar <> ".IntVal == " <> hashStr <> " && " <> tmpVar <> ".UnsafePtr != nil)"
+                            else
+                              "(" <> tmpVar <> ".Type == 9 && " <> tmpVar <> ".IntVal == " <> hashStr <> ")"
+                        in { stmts: resE.stmts <> declTmp <> StmtLeaf (GoRaw ("// DEBUG: OpIsTag fallback branch type " <> goTypeToStr resE.exprType)), expr: GoRaw exprStr, exprType: TypeBool, nextId: resE.nextId + 1 }
               OpArrayLength -> { stmts: resE.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoCall (GoVar "int64") [ GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayLength") [ boxGoExpr resE.expr resE.exprType ] ] ], exprType: TypeValue, nextId: resE.nextId }
           in
             goOp
