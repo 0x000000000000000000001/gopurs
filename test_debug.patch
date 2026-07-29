@@ -1,0 +1,35 @@
+--- src/Gopurs/CodeGen.purs
++++ src/Gopurs/CodeGen.purs
+@@ -675,6 +675,8 @@
+                         Just m -> unwrap m == modNameStr
+                         Nothing -> true
+                       modPrefix = case mbMod of
+                         Just m -> "pkg_" <> String.replaceAll (Pattern ".") (Replacement "_") (unwrap m) <> "."
+                         Nothing -> ""
+                       fromModuleArities = case Map.lookup name moduleArities of
+                         Just a -> Just { fullName: modPrefix <> "Call_" <> sanitizeName name, fArgs: Array.replicate a TypeValue, fRet: TypeValue, arity: a }
+                         Nothing -> Nothing
+                       mbFuncTypeFromGlobal =
+                         let
+                           mName = case mbMod of
+                             Just mn -> unwrap mn
+                             Nothing -> modNameStr
+                           key = mName <> "." <> name
+                           val = Map.lookup key (unsafePerformEffect (Ref.read helpersRef)).globalTypes
+                         in val
+                       fromTypeSig = case mbFuncTypeFromGlobal of
+                         Just (Func a r) ->
+                           let
+                             { fArgs, fRet } = flattenFuncType a r
+                           in Just { fullName: modPrefix <> "Call_" <> sanitizeName name, fArgs: map (exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths modNameStr) fArgs, fRet: exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths modNameStr fRet, arity: Array.length fArgs }
+                         _ -> Nothing
+                       entry = if isLocal then fromModuleArities else fromTypeSig
+                     in
+                       case entry of
+                         Just e ->
++                          let _ = unsafePerformEffect (FS.appendTextFile UTF8 "gopurs_debug_2.log" ("mbDirectCall match: " <> show mbMod <> "." <> name <> " argsLen: " <> show (Array.length flatArgs) <> " arity: " <> show e.arity <> "\n")) in
+                           if Array.length flatArgs >= e.arity && e.arity >= 0 then Just e else Nothing
+                         Nothing ->
++                          let _ = unsafePerformEffect (FS.appendTextFile UTF8 "gopurs_debug_2.log" ("mbDirectCall FAIL (entry Nothing): " <> show mbMod <> "." <> name <> " isLocal: " <> show isLocal <> " hasGlobalType: " <> show (isJust mbFuncTypeFromGlobal) <> "\n")) in
+                           Nothing
+                   Nothing -> Nothing

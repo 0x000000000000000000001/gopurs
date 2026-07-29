@@ -61,7 +61,13 @@ buildGlobalTypes modules = Array.foldl (\acc (Module m) ->
             Just t -> Map.insert (modName <> "." <> name) t a
             Nothing -> a
         ) acc' bindings
-  in Array.foldl processBind acc m.decls
+      accWithBinds = Array.foldl processBind acc m.decls
+      accWithForeigns = Array.foldl (\a (Tuple (Ident name) typeMb) ->
+        case typeMb of
+          Just t -> Map.insert (modName <> "." <> name) t a
+          Nothing -> a
+      ) accWithBinds (Map.toUnfoldable m.foreign :: Array (Tuple Ident (Maybe ExprType)))
+  in accWithForeigns
   ) Map.empty modules
 
 hasTypeVariables :: ExprType -> Boolean
@@ -126,6 +132,7 @@ main = launchAff_ do
   let globalTypes = buildGlobalTypes (Array.fromFoldable finalModules)
   let monoEnv = Mono.analyzeReachability (Array.fromFoldable finalModules)
   let rawInstantiations = monoEnv.instantiations
+  FS.writeTextFile UTF8 "global_types_keys.txt" (String.joinWith "\n" (Array.fromFoldable (Map.keys globalTypes)))
   let instantiationsStrKeysRaw = Map.fromFoldable (map (\(Tuple q v) -> Tuple (formatQualified q) v) (Map.toUnfoldable rawInstantiations :: Array (Tuple (Qualified Ident) (Set.Set ExprType))))
   let instantiationsStrKeys = Map.filterKeys (\k -> case Map.lookup k globalTypes of
                                             Just t -> hasTypeVariables t
@@ -180,7 +187,7 @@ main = launchAff_ do
         writeCache cacheVersion ("output/" <> modNameStr <> "/.gopurs-cache.json") backendMod
         let importsArray = map (\i -> String.split (Pattern ".") (unwrap (importName i))) coreFnMod.imports
         let specializedBindings = Substitute.specializeBindingGroups backendMod.name pointerAdtPaths modNameStr globalTypes instantiationsStrKeys mangleType backendMod.bindings
-        let goFile = translate pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors ctorTypes importsArray backendMod specializedBindings
+        let goFile = translate pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors ctorTypes importsArray globalTypes backendMod specializedBindings
         FS.writeTextFile UTF8 ("output/" <> modNameStr <> "/" <> String.replaceAll (Pattern ".") (Replacement "_") modNameStr <> ".go") goFile
 
         when (Array.length (Array.fromFoldable backendMod.foreign) > 0) do

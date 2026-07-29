@@ -1,0 +1,1 @@
+sed -i '' -e 's/let instantiationsStrKeysRaw =/FS.writeTextFile UTF8 "global_types_keys.txt" (String.joinWith "\\n" (Array.fromFoldable (Map.keys globalTypes)))\n  let instantiationsStrKeysRaw =/' src/Main.purs

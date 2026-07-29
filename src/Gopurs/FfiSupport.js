@@ -81,47 +81,6 @@ export const appendFfiWrappersImpl = function(moduleName) {
                     pursName = pursName.charAt(0).toLowerCase() + pursName.substring(1);
                 }
                 
-                // 1. Generate Native Call_X proxy
-                let nativeCallFunc = funcName;
-                let typeParamNames = [];
-                if (basicMatch[2]) {
-                    basicMatch[2].split(',').forEach(tp => {
-                        let parts = tp.trim().split(/\s+/);
-                        if (parts.length > 0) typeParamNames.push(parts[0]);
-                    });
-                    nativeCallFunc = `${funcName}[${typeParamNames.join(', ')}]`;
-                }
-
-                let callRet = retStr.trim() !== '' ? retStr : '';
-                newLines.push(`func Call_${pursName}${typeParams}(${goFuncArgsNative}) ${callRet} {`);
-                let nativeCallArgs = parsedArgs.map((_, idx) => `arg${idx}`).join(', ');
-                if (callRet === '') {
-                    newLines.push(`\t${nativeCallFunc}(${nativeCallArgs})`);
-                } else {
-                    newLines.push(`\treturn ${nativeCallFunc}(${nativeCallArgs})`);
-                }
-                newLines.push(`}`);
-                
-                // 2. Generate boxed wrapper for dynamic dispatch
-                let goFuncArgsBoxed = parsedArgs.map((_, idx) => `arg${idx} gopurs_runtime.Value`).join(', ');
-                if (arity === 0) goFuncArgsBoxed = `_ gopurs_runtime.Value`;
-                if (arity === 1) goFuncArgsBoxed = `arg0 gopurs_runtime.Value`;
-                
-                newLines.push(`var ${exportName} = gopurs_runtime.${funcConstructor}(func(${goFuncArgsBoxed}) gopurs_runtime.Value {`);
-                let callFunc = funcName;
-                let substituteGeneric = function(t) { return t; };
-                if (basicMatch[2]) {
-                    callFunc = `${funcName}[${typeParamNames.map(() => 'gopurs_runtime.Value').join(', ')}]`;
-                    substituteGeneric = function(t) {
-                        let res = t;
-                        typeParamNames.forEach(tp => {
-                            let re = new RegExp("\\b" + tp + "\\b", 'g');
-                            res = res.replace(re, 'gopurs_runtime.Value');
-                        });
-                        return res;
-                    };
-                }
-                let callArgs = [];
                 let parseFuncType = function(t) {
                     let match = t.match(/^func\s*\((.*)/);
                     if (!match) return null;
@@ -265,6 +224,61 @@ export const appendFfiWrappersImpl = function(moduleName) {
                     }
                 };
 
+                // 1. Generate Native Call_X proxy
+                let nativeCallFunc = funcName;
+                let typeParamNames = [];
+                if (basicMatch[2]) {
+                    basicMatch[2].split(',').forEach(tp => {
+                        let parts = tp.trim().split(/\s+/);
+                        if (parts.length > 0) typeParamNames.push(parts[0]);
+                    });
+                    nativeCallFunc = `${funcName}[${typeParamNames.join(', ')}]`;
+                }
+
+                let callRet = retStr.trim() !== '' ? retStr : '';
+                let callRetNative = callRet === 'interface{}' || callRet === 'any' || callRet.startsWith('func') ? 'gopurs_runtime.Value' : callRet;
+                let goFuncArgsNativeProxy = parsedArgs.map((_, idx) => {
+                    let t = parsedArgs[idx].type;
+                    if (t === 'interface{}' || t === 'any' || t.startsWith('func')) return `arg${idx} gopurs_runtime.Value`;
+                    return `arg${idx} ${t}`;
+                }).join(', ');
+                
+                newLines.push(`func Call_${pursName}${typeParams}(${goFuncArgsNativeProxy}) ${callRetNative} {`);
+                let nativeCallArgs = parsedArgs.map((_, idx) => {
+                    let t = parsedArgs[idx].type;
+                    if (t.startsWith('func')) return unwrapValueToFunc(t, `arg${idx}`, 0).replace(/\n/g, "\n\t");
+                    return `arg${idx}`;
+                }).join(', ');
+                
+                if (callRet === '') {
+                    newLines.push(`\t${nativeCallFunc}(${nativeCallArgs})`);
+                } else if (callRetNative === 'gopurs_runtime.Value') {
+                    newLines.push(`\treturn ${wrapReturn(callRet, nativeCallFunc + "(" + nativeCallArgs + ")").replace(/\n/g, "\n\t")}`);
+                } else {
+                    newLines.push(`\treturn ${nativeCallFunc}(${nativeCallArgs})`);
+                }
+                newLines.push(`}`);
+                
+                // 2. Generate boxed wrapper for dynamic dispatch
+                let goFuncArgsBoxed = parsedArgs.map((_, idx) => `arg${idx} gopurs_runtime.Value`).join(', ');
+                if (arity === 0) goFuncArgsBoxed = `_ gopurs_runtime.Value`;
+                if (arity === 1) goFuncArgsBoxed = `arg0 gopurs_runtime.Value`;
+                
+                newLines.push(`var ${exportName} = gopurs_runtime.${funcConstructor}(func(${goFuncArgsBoxed}) gopurs_runtime.Value {`);
+                let callFunc = funcName;
+                let substituteGeneric = function(t) { return t; };
+                if (basicMatch[2]) {
+                    callFunc = `${funcName}[${typeParamNames.map(() => 'gopurs_runtime.Value').join(', ')}]`;
+                    substituteGeneric = function(t) {
+                        let res = t;
+                        typeParamNames.forEach(tp => {
+                            let re = new RegExp("\\b" + tp + "\\b", 'g');
+                            res = res.replace(re, 'gopurs_runtime.Value');
+                        });
+                        return res;
+                    };
+                }
+                let callArgs = [];
                 for (let idx = 0; idx < parsedArgs.length; idx++) {
                     let p = parsedArgs[idx];
                     let t = substituteGeneric(p.type);
