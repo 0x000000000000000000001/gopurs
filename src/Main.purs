@@ -144,13 +144,14 @@ main = launchAff_ do
               pkgNameStr = String.replaceAll (Pattern ".") (Replacement "_") (unwrap m.name)
               nodeBaseStruct = "Data_" <> pkgNameStr <> "_" <> CodeGen.sanitizeName nodeCtor
               leafBaseStruct = "Data_" <> pkgNameStr <> "_" <> CodeGen.sanitizeName leafCtor
+              arity = Array.length d.typeVars
             in
-              Array.snoc acc' { adtPath, nodeCtor, leafCtor, nodeBaseStruct, leafBaseStruct }
+              Array.snoc acc' { adtPath, nodeCtor, leafCtor, nodeBaseStruct, leafBaseStruct, arity }
           else acc'
       ) acc m.dataDecls
      ) [] finalModules
 
-    pointerAdtPaths = Map.fromFoldable (map (\info -> Tuple info.adtPath info.nodeCtor) pointerAdtPathsRaw)
+    pointerAdtPaths = Map.fromFoldable (map (\info -> Tuple info.adtPath { ctorName: info.nodeCtor, arity: info.arity }) pointerAdtPathsRaw)
     pointerAdtNodes = Set.fromFoldable (map _.nodeBaseStruct pointerAdtPathsRaw)
     pointerAdtLeaves = Map.fromFoldable (map (\info -> Tuple info.leafBaseStruct info.nodeBaseStruct) pointerAdtPathsRaw)
 

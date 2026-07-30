@@ -65,7 +65,7 @@ boxGoExpr expr (TypeNativeArray inner) = GoRaw ("func() gopurs_runtime.Value {\n
 boxGoExpr expr (TypeGenericParam _) = expr
 boxGoExpr expr (TypeFunc _ _) = expr
 
-mangleType :: Map.Map String String -> String -> ExprType -> String
+mangleType :: Map.Map String { ctorName :: String, arity :: Int } -> String -> ExprType -> String
 mangleType ptrPaths modNameStr t = 
   let
     typeStr = goTypeToStr (exprTypeToGoType ptrPaths modNameStr t)
@@ -76,7 +76,7 @@ mangleType ptrPaths modNameStr t =
     cleanType = String.replaceAll (Pattern " ") (Replacement "_") typeStrSafe3
   in cleanType <> "_" <> hashString (Monomorphize.mangleType t)
 
-exprTypeToGoType :: Map.Map String String -> String -> ExprType -> GoType
+exprTypeToGoType :: Map.Map String { ctorName :: String, arity :: Int } -> String -> ExprType -> GoType
 exprTypeToGoType _ _ Int = TypeInt64
 exprTypeToGoType _ _ Number = TypeFloat64
 exprTypeToGoType _ _ String = TypeString
@@ -85,25 +85,27 @@ exprTypeToGoType _ _ Boolean = TypeBool
 exprTypeToGoType ptrPaths modNameStr (Array ty) = TypeNativeArray (exprTypeToGoType ptrPaths modNameStr ty)
 exprTypeToGoType ptrPaths modNameStr (Record fields) = TypeRecord (map (\(Tuple k v) -> Tuple k (exprTypeToGoType ptrPaths modNameStr v)) (Array.sortBy (comparing \(Tuple k _) -> k) fields))
 exprTypeToGoType ptrPaths modNameStr (ADT path args) = case Map.lookup (String.joinWith "." path) ptrPaths of
-  Just ctorName -> 
+  Just info -> 
     let 
+      ctorName = info.ctorName
       pkgNameStr = String.replaceAll (Pattern ".") (Replacement "_") (String.joinWith "." (Array.slice 0 (Array.length path - 1) path))
       pkgPrefix = if pkgNameStr /= modNameStr then "pkg_" <> pkgNameStr <> "." else ""
       baseStructName = "Data_" <> pkgNameStr <> "_" <> sanitizeName ctorName
       monoStructName = "Constructor_" <> sanitizeName ctorName
       typeArgsMapped = map (exprTypeToGoType ptrPaths modNameStr) args
-      typeArgsStr = if Array.length typeArgsMapped > 0 then "[" <> String.joinWith ", " (map goTypeToStr typeArgsMapped) <> "]" else ""
+      paddedTypeArgs = typeArgsMapped <> Array.replicate (info.arity - Array.length typeArgsMapped) TypeValue
+      typeArgsStr = if Array.length paddedTypeArgs > 0 then "[" <> String.joinWith ", " (map goTypeToStr paddedTypeArgs) <> "]" else ""
     in TypeStructPointer baseStructName (pkgPrefix <> monoStructName <> typeArgsStr)
   Nothing -> TypeValue
 exprTypeToGoType _ _ (TypeVar v) = TypeValue
 exprTypeToGoType _ _ _ = TypeValue
 
-exprTypeToGenericGoType :: Map.Map String String -> Array String -> String -> ExprType -> GoType
+exprTypeToGenericGoType :: Map.Map String { ctorName :: String, arity :: Int } -> Array String -> String -> ExprType -> GoType
 exprTypeToGenericGoType ptrPaths typeVars modNameStr (Record fields) = TypeRecord (map (\(Tuple k v) -> Tuple k (exprTypeToGenericGoType ptrPaths typeVars modNameStr v)) (Array.sortBy (comparing \(Tuple k _) -> k) fields))
 exprTypeToGenericGoType _ typeVars _ (TypeVar v) | Array.elem v typeVars = TypeGenericParam v
 exprTypeToGenericGoType ptrPaths _ modNameStr ty = exprTypeToGoType ptrPaths modNameStr ty
 
-structFieldGoType :: Map.Map String String -> Array String -> String -> ExprType -> GoType
+structFieldGoType :: Map.Map String { ctorName :: String, arity :: Int } -> Array String -> String -> ExprType -> GoType
 structFieldGoType ptrPaths typeVars modStr ty = case exprTypeToGenericGoType ptrPaths typeVars modStr ty of
   TypeInterface _ -> TypeValue
   other -> other
@@ -223,7 +225,7 @@ getStructName modNameStr mbMod ctorName =
 globalReusedVars :: Ref.Ref (Set.Set String)
 globalReusedVars = unsafePerformEffect (Ref.new Set.empty)
 
-translate :: Map.Map String String -> Set.Set String -> Map.Map String String -> Set.Set ExprType -> Set.Set String -> Map.Map String { typeVars :: Array String, fieldTypes :: Array ExprType } -> Map.Map String ExprType -> InstantiationMap -> Array (Array String) -> BackendModule -> String
+translate :: Map.Map String { ctorName :: String, arity :: Int } -> Set.Set String -> Map.Map String String -> Set.Set ExprType -> Set.Set String -> Map.Map String { typeVars :: Array String, fieldTypes :: Array ExprType } -> Map.Map String ExprType -> InstantiationMap -> Array (Array String) -> BackendModule -> String
 translate pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors ctorTypes globalTypes rawInstantiations importsArray mod =
   let
     modNameStrOrig = unwrap mod.name
@@ -510,11 +512,11 @@ executeIfOpaque expr goExpr =
   else GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ goExpr, GoRaw "gopurs_runtime.Value{}" ]
 
 
-translateExprImpl :: Ref { decls :: Array GoDecl, rawDecls :: Array String, elidedCtors :: Set.Set String, ctorTypes :: Map String { typeVars :: Array String, fieldTypes :: Array ExprType }, pointerAdtPaths :: Map String String, pointerAdtNodes :: Set String, pointerAdtLeaves :: Map String String, globalTypes :: Map.Map String ExprType } -> Int -> String -> Array String -> Map String { fullName :: String, fArgs :: Array GoType, fRet :: GoType, arity :: Int } -> Map String { name :: String, goType :: GoType } -> Maybe String -> Array { ident :: String, params :: Array String, loopParams :: Array String, goTypes :: Array GoType } -> Boolean -> Int -> TcoExpr -> { stmts :: StmtTree, expr :: GoExpr, exprType :: GoType, nextId :: Int }
+translateExprImpl :: Ref { decls :: Array GoDecl, rawDecls :: Array String, elidedCtors :: Set.Set String, ctorTypes :: Map String { typeVars :: Array String, fieldTypes :: Array ExprType }, pointerAdtPaths :: Map String { ctorName :: String, arity :: Int }, pointerAdtNodes :: Set String, pointerAdtLeaves :: Map String String, globalTypes :: Map.Map String ExprType } -> Int -> String -> Array String -> Map String { fullName :: String, fArgs :: Array GoType, fRet :: GoType, arity :: Int } -> Map String { name :: String, goType :: GoType } -> Maybe String -> Array { ident :: String, params :: Array String, loopParams :: Array String, goTypes :: Array GoType } -> Boolean -> Int -> TcoExpr -> { stmts :: StmtTree, expr :: GoExpr, exprType :: GoType, nextId :: Int }
 translateExprImpl helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail nextId tcoExpr =
   translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail false nextId tcoExpr
 
-translateExprImpl_ :: Ref { decls :: Array GoDecl, rawDecls :: Array String, elidedCtors :: Set.Set String, ctorTypes :: Map String { typeVars :: Array String, fieldTypes :: Array ExprType }, pointerAdtPaths :: Map String String, pointerAdtNodes :: Set String, pointerAdtLeaves :: Map String String, globalTypes :: Map.Map String ExprType } -> Int -> String -> Array String -> Map String { fullName :: String, fArgs :: Array GoType, fRet :: GoType, arity :: Int } -> Map String { name :: String, goType :: GoType } -> Maybe String -> Array { ident :: String, params :: Array String, loopParams :: Array String, goTypes :: Array GoType } -> Boolean -> Boolean -> Int -> TcoExpr -> { stmts :: StmtTree, expr :: GoExpr, exprType :: GoType, nextId :: Int }
+translateExprImpl_ :: Ref { decls :: Array GoDecl, rawDecls :: Array String, elidedCtors :: Set.Set String, ctorTypes :: Map String { typeVars :: Array String, fieldTypes :: Array ExprType }, pointerAdtPaths :: Map String { ctorName :: String, arity :: Int }, pointerAdtNodes :: Set String, pointerAdtLeaves :: Map String String, globalTypes :: Map.Map String ExprType } -> Int -> String -> Array String -> Map String { fullName :: String, fArgs :: Array GoType, fRet :: GoType, arity :: Int } -> Map String { name :: String, goType :: GoType } -> Maybe String -> Array { ident :: String, params :: Array String, loopParams :: Array String, goTypes :: Array GoType } -> Boolean -> Boolean -> Int -> TcoExpr -> { stmts :: StmtTree, expr :: GoExpr, exprType :: GoType, nextId :: Int }
 translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail inEffectBlock nextId tcoExpr@(TcoExpr tcoAnalysis expr) =
   let
     _ = unsafePerformEffect (if depth == 0 then Ref.write Set.empty globalReusedVars else pure unit)
