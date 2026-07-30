@@ -121,7 +121,11 @@ unboxGoExpr expr currentType desiredType =
     TypeBool -> GoBinOp "!=" (GoSelector expr "IntVal") (GoInt 0)
     (TypeStructPointer _ fullPath) -> GoCall (GoRaw ("(*" <> fullPath <> ")")) [ GoSelector expr "UnsafePtr" ]
     (TypeInterface _) -> expr
-    (TypeNativeArray inner) -> GoRaw ("func() " <> goTypeToStr desiredType <> " {\n\t\t\t\t\tarr := *(*[]gopurs_runtime.Value)(" <> printGoExpr expr <> ".UnsafePtr)\n\t\t\t\t\tunboxed := make(" <> goTypeToStr desiredType <> ", len(arr))\n\t\t\t\t\tfor i, v := range arr { unboxed[i] = " <> printGoExpr (unboxGoExpr (GoVar "v") TypeValue inner) <> " }\n\t\t\t\t\treturn unboxed\n\t\t\t\t}()")
+    (TypeNativeArray inner) -> case currentType of
+      TypeNativeArray currentInner -> 
+        GoRaw ("func() " <> goTypeToStr desiredType <> " {\n\t\t\t\t\tarr := " <> printGoExpr expr <> "\n\t\t\t\t\tunboxed := make(" <> goTypeToStr desiredType <> ", len(arr))\n\t\t\t\t\tfor i, v := range arr { unboxed[i] = " <> printGoExpr (unboxGoExpr (GoVar "v") currentInner inner) <> " }\n\t\t\t\t\treturn unboxed\n\t\t\t\t}()")
+      _ -> 
+        GoRaw ("func() " <> goTypeToStr desiredType <> " {\n\t\t\t\t\tarr := *(*[]gopurs_runtime.Value)(" <> printGoExpr expr <> ".UnsafePtr)\n\t\t\t\t\tunboxed := make(" <> goTypeToStr desiredType <> ", len(arr))\n\t\t\t\t\tfor i, v := range arr { unboxed[i] = " <> printGoExpr (unboxGoExpr (GoVar "v") TypeValue inner) <> " }\n\t\t\t\t\treturn unboxed\n\t\t\t\t}()")
     (TypeGenericParam _) -> expr
     (TypeFunc _ _) -> expr
 
@@ -1429,7 +1433,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                   Nothing -> []
             in if isElided then
                  case Array.head accProps.exprs of
-                   Just expr -> expr
+                   Just expr -> boxGoExpr expr (fromMaybe TypeValue (map (exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths modNameStr) (Array.index fieldTypes 0)))
                    Nothing -> GoConstructor (hashString baseStructName) (pkgPrefix <> monoStructName) typeArgs accProps.exprs
                else if isPointerAdtLeaf then GoRaw ("gopurs_runtime.Value{Type: 9, IntVal: " <> hashString (fromMaybe "" (Map.lookup baseStructName helpers.pointerAdtLeaves)) <> ", UnsafePtr: nil}")
                else case deadVarOpt of

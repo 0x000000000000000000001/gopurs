@@ -40,7 +40,7 @@ mkdir -p "$RUNNER_DIR/src"
 passed=0
 failed=0
 
-SKIP_BEFORE="Deriving"
+SKIP_BEFORE="AutoPrelude2"
 TEST_FILES=()
 CLEAN_CACHE=0
 
@@ -139,6 +139,7 @@ for test_file in "${TEST_FILES[@]}"; do
   rm -rf output/Main src/* output/Test* output/go.mod output/app
   
   cp "$test_file" "src/Main.purs"
+  echo "-- $(date +%s%N)" >> "src/Main.purs"
   if [ -f "${test_file%.purs}.go" ]; then
     cp "${test_file%.purs}.go" "src/Main.go"
   fi
