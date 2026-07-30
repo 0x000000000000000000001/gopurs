@@ -535,7 +535,8 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
         let fvs = Array.fromFoldable fvsSet
         let helperName = "__helper_" <> show nextId
         let newNextId = nextId + 1
-        let res = translateExprImpl_ helpersRef 0 modNameStr recVars moduleArities bound Nothing [] false inEffectBlock newNextId tcoExpr
+        let newBound = foldl (\acc fv -> Map.insert fv { name: fv, goType: TypeValue } acc) bound fvs
+        let res = translateExprImpl_ helpersRef 0 modNameStr recVars moduleArities newBound Nothing [] false inEffectBlock newNextId tcoExpr
 
         let
           helperExpr =
@@ -547,7 +548,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
         let
           callExpr =
             if Array.length fvs == 0 then GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ GoCall (GoVar ("Get_" <> helperName)) [], GoRaw "gopurs_runtime.Int(0)" ]
-            else Array.foldl (\accCall fv -> GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ accCall, GoVar fv ]) (GoCall (GoVar ("Get_" <> helperName)) []) fvs
+            else Array.foldl (\accCall fv -> GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ accCall, boxGoExpr (GoVar fv) (fromMaybe TypeValue (map _.goType (Map.lookup fv bound))) ]) (GoCall (GoVar ("Get_" <> helperName)) []) fvs
 
         pure { stmts: StmtEmpty, expr: callExpr, exprType: TypeValue, nextId: res.nextId }
       else mkNodeThunk unit
@@ -1513,7 +1514,10 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                           else
                             "(" <> tmpVar <> ".Type == 9 && " <> tmpVar <> ".IntVal == " <> hashStr <> ")"
                       in { stmts: resE.stmts <> declTmp, expr: GoRaw exprStr, exprType: TypeBool, nextId: resE.nextId + 1 }
-              OpArrayLength -> { stmts: resE.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoCall (GoVar "int64") [ GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayLength") [ boxGoExpr resE.expr resE.exprType ] ] ], exprType: TypeValue, nextId: resE.nextId }
+              OpArrayLength -> 
+                case resE.exprType of
+                  TypeNativeArray _ -> { stmts: resE.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoCall (GoVar "int64") [ GoCall (GoVar "len") [ resE.expr ] ] ], exprType: TypeValue, nextId: resE.nextId }
+                  _ -> { stmts: resE.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoCall (GoVar "int64") [ GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayLength") [ boxGoExpr resE.expr resE.exprType ] ] ], exprType: TypeValue, nextId: resE.nextId }
           in
             goOp
         Op2 OpBooleanAnd e1 e2 ->
@@ -1555,7 +1559,10 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
             res1 = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false nextId e1
             res2 = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false res1.nextId e2
             goOp = case op2 of
-              OpArrayIndex -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayAccess") [ boxGoExpr res1.expr res1.exprType, GoCall (GoVar "int") [ unboxGoExpr res2.expr res2.exprType TypeInt64 ] ], exprType: TypeValue }
+              OpArrayIndex -> 
+                case res1.exprType of
+                  TypeNativeArray innerType -> { expr: boxGoExpr (GoRaw (printGoExpr res1.expr <> "[" <> printGoExpr (unboxGoExpr res2.expr res2.exprType TypeInt64) <> "]")) innerType, exprType: TypeValue }
+                  _ -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayAccess") [ boxGoExpr res1.expr res1.exprType, GoCall (GoVar "int") [ unboxGoExpr res2.expr res2.exprType TypeInt64 ] ], exprType: TypeValue }
               OpIntNum OpAdd -> { expr: GoBinOp "+" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
               OpIntNum OpSubtract -> { expr: GoBinOp "-" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
               OpIntNum OpMultiply -> { expr: GoBinOp "*" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
