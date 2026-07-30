@@ -731,6 +731,9 @@
       "strings": {
         "path": "../../../gopurs-strings"
       },
+      "unfoldable": {
+        "path": "../../../gopurs-unfoldable"
+      },
       "unsafe-coerce": {
         "path": "../../../gopurs-unsafe-coerce"
       }
@@ -1192,9 +1195,8 @@
       ]
     },
     "unfoldable": {
-      "type": "registry",
-      "version": "6.0.0",
-      "integrity": "sha256-BK/6By1sKp/ztk+9CF3q43SV0QDTLVdsGqFerKHSmbg=",
+      "type": "local",
+      "path": "../../../gopurs-unfoldable",
       "dependencies": [
         "foldable-traversable",
         "maybe",
