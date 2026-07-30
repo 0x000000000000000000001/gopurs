@@ -5,9 +5,12 @@
         "path": "./",
         "core": {
           "dependencies": [
+            "aff",
             "arrays",
             "assert",
+            "avar",
             "console",
+            "datetime",
             "effect",
             "enums",
             "exceptions",
@@ -680,14 +683,23 @@
       }
     },
     "extra_packages": {
+      "aff": {
+        "path": "../../../gopurs-aff"
+      },
       "arrays": {
         "path": "../../../gopurs-arrays"
       },
       "assert": {
         "path": "../../../gopurs-assert"
       },
+      "avar": {
+        "path": "../../../gopurs-avar"
+      },
       "console": {
         "path": "../../../gopurs-console"
+      },
+      "datetime": {
+        "path": "../../../gopurs-datetime"
       },
       "effect": {
         "path": "../../../gopurs-effect"
@@ -740,6 +752,29 @@
     }
   },
   "packages": {
+    "aff": {
+      "type": "local",
+      "path": "../../../gopurs-aff",
+      "dependencies": [
+        "arrays",
+        "bifunctors",
+        "control",
+        "datetime",
+        "effect",
+        "either",
+        "exceptions",
+        "foldable-traversable",
+        "functions",
+        "maybe",
+        "newtype",
+        "parallel",
+        "prelude",
+        "refs",
+        "tailrec",
+        "transformers",
+        "unsafe-coerce"
+      ]
+    },
     "arrays": {
       "type": "local",
       "path": "../../../gopurs-arrays",
@@ -767,6 +802,18 @@
         "console",
         "effect",
         "prelude"
+      ]
+    },
+    "avar": {
+      "type": "local",
+      "path": "../../../gopurs-avar",
+      "dependencies": [
+        "aff",
+        "effect",
+        "either",
+        "exceptions",
+        "functions",
+        "maybe"
       ]
     },
     "bifunctors": {
@@ -818,6 +865,28 @@
       "dependencies": [
         "newtype",
         "prelude"
+      ]
+    },
+    "datetime": {
+      "type": "local",
+      "path": "../../../gopurs-datetime",
+      "dependencies": [
+        "bifunctors",
+        "control",
+        "either",
+        "enums",
+        "foldable-traversable",
+        "functions",
+        "gen",
+        "integers",
+        "lists",
+        "maybe",
+        "newtype",
+        "numbers",
+        "ordered-collections",
+        "partial",
+        "prelude",
+        "tuples"
       ]
     },
     "distributive": {
@@ -1063,6 +1132,27 @@
         "maybe"
       ]
     },
+    "ordered-collections": {
+      "type": "registry",
+      "version": "3.2.0",
+      "integrity": "sha256-NaEXc2cz/7lJfxPWEja4XlZbGxuRqJwFKQJjsJf51kQ=",
+      "dependencies": [
+        "arrays",
+        "control",
+        "foldable-traversable",
+        "functions",
+        "gen",
+        "lists",
+        "maybe",
+        "newtype",
+        "partial",
+        "prelude",
+        "safe-coerce",
+        "tailrec",
+        "tuples",
+        "unfoldable"
+      ]
+    },
     "orders": {
       "type": "registry",
       "version": "6.0.0",
@@ -1070,6 +1160,24 @@
       "dependencies": [
         "newtype",
         "prelude"
+      ]
+    },
+    "parallel": {
+      "type": "registry",
+      "version": "7.0.0",
+      "integrity": "sha256-bAGpVhrFz2IyHkA4MR7+tE/19FZ7dzYBdYPgK5svkqw=",
+      "dependencies": [
+        "control",
+        "effect",
+        "either",
+        "foldable-traversable",
+        "functors",
+        "maybe",
+        "newtype",
+        "prelude",
+        "profunctor",
+        "refs",
+        "transformers"
       ]
     },
     "partial": {
@@ -1167,6 +1275,28 @@
         "partial",
         "prelude",
         "refs"
+      ]
+    },
+    "transformers": {
+      "type": "registry",
+      "version": "6.1.0",
+      "integrity": "sha256-QJmgNT/y7ljPHSsXaW4zxF/982BFiQ90KNL1g/NtEOQ=",
+      "dependencies": [
+        "control",
+        "distributive",
+        "effect",
+        "either",
+        "exceptions",
+        "foldable-traversable",
+        "identity",
+        "lazy",
+        "maybe",
+        "newtype",
+        "prelude",
+        "st",
+        "tailrec",
+        "tuples",
+        "unfoldable"
       ]
     },
     "tuples": {
