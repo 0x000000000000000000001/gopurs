@@ -50,14 +50,18 @@ import PureScript.Backend.Optimizer.App (coreFnModulesFromOutput, parseCLIArgs, 
 buildGlobalTypes :: Array (Module Ann) -> Map.Map String ExprType
 buildGlobalTypes modules = Array.foldl (\acc (Module m) ->
   let modName = unwrap m.name
-      processBind acc' (NonRec (Binding _ (Ident name) expr)) =
-        case (getExprAnn expr) of
-          Ann ann -> case ann.type of
+      processBind acc' (NonRec (Binding (Ann ann) (Ident name) expr)) =
+        let ty = case ann.type of
+                   Just t -> Just t
+                   Nothing -> let (Ann exprAnn) = getExprAnn expr in exprAnn.type
+        in case ty of
             Just t -> Map.insert (modName <> "." <> name) t acc'
             Nothing -> acc'
-      processBind acc' (Rec bindings) = Array.foldl (\a (Binding _ (Ident name) expr) ->
-        case (getExprAnn expr) of
-          Ann ann -> case ann.type of
+      processBind acc' (Rec bindings) = Array.foldl (\a (Binding (Ann ann) (Ident name) expr) ->
+        let ty = case ann.type of
+                   Just t -> Just t
+                   Nothing -> let (Ann exprAnn) = getExprAnn expr in exprAnn.type
+        in case ty of
             Just t -> Map.insert (modName <> "." <> name) t a
             Nothing -> a
         ) acc' bindings
@@ -144,8 +148,8 @@ main = launchAff_ do
               nodeCtor = (unsafePartial (Array.unsafeIndex ctorsWithFields 0)).constructorName
               leafCtor = (unsafePartial (Array.unsafeIndex ctorsWithoutFields 0)).constructorName
               pkgNameStr = String.replaceAll (Pattern ".") (Replacement "_") (unwrap m.name)
-              nodeBaseStruct = "Data_" <> pkgNameStr <> "_" <> CodeGen.sanitizeName nodeCtor
-              leafBaseStruct = "Data_" <> pkgNameStr <> "_" <> CodeGen.sanitizeName leafCtor
+              nodeBaseStruct = "Data_" <> pkgNameStr <> "_" <> sanitizeName nodeCtor
+              leafBaseStruct = "Data_" <> pkgNameStr <> "_" <> sanitizeName leafCtor
               arity = Array.length d.typeVars
             in
               Array.snoc acc' { adtPath, nodeCtor, leafCtor, nodeBaseStruct, leafBaseStruct, arity }
@@ -170,6 +174,7 @@ main = launchAff_ do
         checkCache cacheVersion coreFnMod.path ("output/" <> modNameStr <> "/.gopurs-cache.json")
     , onCodegenModule: \_ (Module coreFnMod) backendMod _ -> do
         let modNameStr = unwrap backendMod.name
+        _ <- attempt (FS.mkdir ("output/" <> modNameStr))
         writeCache cacheVersion ("output/" <> modNameStr <> "/.gopurs-cache.json") backendMod
         let importsArray = map (\i -> String.split (Pattern ".") (unwrap (importName i))) coreFnMod.imports
         let goFile = translate pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors ctorTypes globalTypes instantiations importsArray backendMod

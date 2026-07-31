@@ -119,6 +119,8 @@ main = launchAff_ do
     ) Map.empty finalModules
 
   let globalTypes = buildGlobalTypes (Array.fromFoldable finalModules)
+  Console.log ("Data.Void.absurd genericType: " <> show (Map.lookup "Data.Void.absurd" globalTypes)))
+
   let rawInstantiations = foldl collectInstantiations Map.empty finalModules
   let instantiations = Map.filterKeys (\k -> case Map.lookup k globalTypes of
                                             Just t -> hasTypeVariables t

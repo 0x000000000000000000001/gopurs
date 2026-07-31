@@ -50,14 +50,12 @@ import PureScript.Backend.Optimizer.App (coreFnModulesFromOutput, parseCLIArgs, 
 buildGlobalTypes :: Array (Module Ann) -> Map.Map String ExprType
 buildGlobalTypes modules = Array.foldl (\acc (Module m) ->
   let modName = unwrap m.name
-      processBind acc' (NonRec (Binding _ (Ident name) expr)) =
-        case (getExprAnn expr) of
-          Ann ann -> case ann.type of
+      processBind acc' (NonRec (Binding (Ann ann) (Ident name) _)) =
+        case ann.type of
             Just t -> Map.insert (modName <> "." <> name) t acc'
             Nothing -> acc'
-      processBind acc' (Rec bindings) = Array.foldl (\a (Binding _ (Ident name) expr) ->
-        case (getExprAnn expr) of
-          Ann ann -> case ann.type of
+      processBind acc' (Rec bindings) = Array.foldl (\a (Binding (Ann ann) (Ident name) _) ->
+        case ann.type of
             Just t -> Map.insert (modName <> "." <> name) t a
             Nothing -> a
         ) acc' bindings
