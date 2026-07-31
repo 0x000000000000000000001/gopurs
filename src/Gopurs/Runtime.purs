@@ -396,6 +396,24 @@ func Apply(f Value, arg Value) Value {
 	case TypeFunc5:
 		fn := *(*func(Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
 		return Func4(func(a, b, c, d Value) Value { return fn(arg, a, b, c, d) })
+	case TypeFunc6:
+		fn := *(*func(Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func5(func(a, b, c, d, e Value) Value { return fn(arg, a, b, c, d, e) })
+	case TypeFunc7:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func6(func(a, b, c, d, e, f Value) Value { return fn(arg, a, b, c, d, e, f) })
+	case TypeFunc8:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func7(func(a, b, c, d, e, f, g Value) Value { return fn(arg, a, b, c, d, e, f, g) })
+	case TypeFunc9:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func8(func(a, b, c, d, e, f, g, h Value) Value { return fn(arg, a, b, c, d, e, f, g, h) })
+	case TypeFunc10:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func9(func(a, b, c, d, e, f, g, h, i Value) Value { return fn(arg, a, b, c, d, e, f, g, h, i) })
+	case TypeFunc11:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func10(func(a, b, c, d, e, f, g, h, i, j Value) Value { return fn(arg, a, b, c, d, e, f, g, h, i, j) })
 	default:
 		panic("Attempted to apply a non-function")
 	}
@@ -558,7 +576,11 @@ func Unbox[T any](v any) T {
 	case func(any) any:
 		res := func(arg any) any { return Apply(val, Box(arg)) }
 		return any(res).(T)
-	default: return *(*T)(val.UnsafePtr)
+	default:
+		if val.Type == TypeAny {
+			return (*(*any)(val.UnsafePtr)).(T)
+		}
+		return *(*T)(val.UnsafePtr)
 	}
 }
 
