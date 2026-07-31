@@ -133,6 +133,10 @@ func (v Value) PtrVal() any {
 	return *(*any)(v.UnsafePtr)
 }
 
+func (v Value) BoolVal() bool {
+	return v.IntVal != 0
+}
+
 func (v Value) AnyVal() any {
 	switch v.Type {
 	case TypeInt: return v.IntVal
@@ -488,6 +492,26 @@ func UncurriedApp5(fn Value, a, b, c, d, e Value) Value {
 		return (*(*func(Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&fn.UnsafePtr)))(a, b, c, d, e)
 	}
 	return Apply(Apply(Apply(Apply(Apply(fn, a), b), c), d), e)
+}
+
+func UncurriedApp6(fn Value, a, b, c, d, e, f Value) Value {
+	return Apply6(fn, a, b, c, d, e, f)
+}
+
+func UncurriedApp7(fn Value, a, b, c, d, e, f, g Value) Value {
+	return Apply7(fn, a, b, c, d, e, f, g)
+}
+
+func UncurriedApp8(fn Value, a, b, c, d, e, f, g, h Value) Value {
+	return Apply8(fn, a, b, c, d, e, f, g, h)
+}
+
+func UncurriedApp9(fn Value, a, b, c, d, e, f, g, h, i Value) Value {
+	return Apply9(fn, a, b, c, d, e, f, g, h, i)
+}
+
+func UncurriedApp10(fn Value, a, b, c, d, e, f, g, h, i, j Value) Value {
+	return Apply10(fn, a, b, c, d, e, f, g, h, i, j)
 }
 
 func UncurriedApp(fn Value, args ...Value) Value {

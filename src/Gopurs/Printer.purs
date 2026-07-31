@@ -7,12 +7,16 @@ import Data.Tuple (Tuple(..))
 import Data.Array as Array
 import Data.Maybe (Maybe(..), fromMaybe)
 
+foreign import escapeGoStringImpl :: String -> String
+escapeGoString :: String -> String
+escapeGoString = escapeGoStringImpl
+
 printGoExpr :: GoExpr -> String
 printGoExpr expr = case expr of
   GoVar name ->
     name
   GoString s ->
-    show s
+    "\"" <> escapeGoString s <> "\""
   GoInt i ->
     show i
   GoCall f args ->

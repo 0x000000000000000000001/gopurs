@@ -1,6 +1,10 @@
 
 export const appendFfiWrappersImpl = function(moduleName) {
     return function(content) {
+        let ffiMarkerIdx = content.indexOf("// --- Auto-generated FFI wrappers ---");
+        if (ffiMarkerIdx !== -1) {
+            content = content.substring(0, ffiMarkerIdx);
+        }
         let text = content.replace(/^package\s+[a-zA-Z0-9_]+[\s\n]*/m, '');
         text = text.replace(/^[ \t]*import[ \t]+"gopurs\/output\/gopurs_runtime"[\s\n]*/gm, '');
         text = text.replace(/^[ \t]*"gopurs\/output\/gopurs_runtime"[\s\n]*/gm, '');
@@ -313,7 +317,7 @@ export const appendFfiWrappersImpl = function(moduleName) {
                 }
                 newLines.push(`})`);
             } else {
-                const varMatch = line.match(/^var\s+([A-Z][A-Za-z0-9_]*)\s*(.*?)=\s*(.*)/);
+                const varMatch = line.match(/^var\s+([A-Z_][A-Za-z0-9_]*)\s*(.*?)=\s*(.*)/);
                 if (varMatch) {
                     const varName = varMatch[1];
                     let exportName = "_Gopurs_" + varName;
