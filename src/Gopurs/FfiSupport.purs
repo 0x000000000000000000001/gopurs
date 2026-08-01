@@ -1,8 +1,10 @@
 module Gopurs.FfiSupport
-  ( appendFfiWrappers
+  ( extractFfiAst
   ) where
 
-foreign import appendFfiWrappersImpl :: String -> String -> String
+import Effect (Effect)
 
-appendFfiWrappers :: String -> String -> String
-appendFfiWrappers = appendFfiWrappersImpl
+foreign import extractFfiAstImpl :: String -> String -> Effect String
+
+extractFfiAst :: String -> String -> Effect String
+extractFfiAst = extractFfiAstImpl
