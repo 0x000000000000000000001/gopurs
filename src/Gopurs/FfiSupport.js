@@ -10,6 +10,13 @@ export const appendFfiWrappersImpl = function(moduleName) {
         text = text.replace(/^[ \t]*"gopurs\/output\/gopurs_runtime"[\s\n]*/gm, '');
         text = text.replace(/import\s*\(\s*\)[\s\n]*/gm, '');
 
+        const goKeywords = ["break", "default", "func", "interface", "select", "case", "defer", "go", "map", "struct", "chan", "else", "goto", "package", "switch", "const", "fallthrough", "if", "range", "type", "continue", "for", "import", "return", "var"];
+        function getExportName(n) {
+            let base = n.endsWith('_') ? n.slice(0, -1).toLowerCase() : n.toLowerCase();
+            if (goKeywords.includes(base)) return "_Gopurs_Go__" + base;
+            return "_Gopurs_" + n;
+        }
+
         const lines = text.split('\n');
         let newLines = [];
 
@@ -19,7 +26,7 @@ export const appendFfiWrappersImpl = function(moduleName) {
             if (basicMatch) {
                 const funcName = basicMatch[1] || basicMatch[3];
                 const typeParams = basicMatch[2] ? `[${basicMatch[2]}]` : ``;
-                let exportName = "_Gopurs_" + funcName;
+                let exportName = getExportName(funcName);
                 
                 let startIdx = basicMatch[0].length;
                 let parenDepth = 1;
@@ -320,7 +327,7 @@ export const appendFfiWrappersImpl = function(moduleName) {
                 const varMatch = line.match(/^var\s+([A-Z_][A-Za-z0-9_]*)\s*(.*?)=\s*(.*)/);
                 if (varMatch) {
                     const varName = varMatch[1];
-                    let exportName = "_Gopurs_" + varName;
+                    let exportName = getExportName(varName);
                     newLines.push(`var ${exportName} = gopurs_runtime.Box(${varName})`);
                 }
             }

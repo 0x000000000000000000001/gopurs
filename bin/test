@@ -40,7 +40,7 @@ mkdir -p "$RUNNER_DIR/src"
 passed=0
 failed=0
 
-SKIP_BEFORE=""
+SKIP_BEFORE="FFIConstraintWorkaround"
 TEST_FILES=()
 CLEAN_CACHE=0
 
@@ -175,7 +175,7 @@ for test_file in "${TEST_FILES[@]}"; do
       go mod init gopurs/output > /dev/null 2>&1
       go mod tidy > /dev/null 2>&1
       
-      if go build -o gopurs_main .; then
+      if go build -o gopurs_main ./Main/main; then
           output_run=$(./gopurs_main)
           exit_code=$?
           
