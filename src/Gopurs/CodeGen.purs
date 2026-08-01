@@ -1107,12 +1107,12 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                       in unboxGoExpr arg actual expected
                     ) fArgs
                 in
-                  { stmts: accArgs.stmts, expr: boxGoExpr (GoCall resFn.expr callArgs) fRet, exprType: TypeValue, nextId: accArgs.nextId }
+                  { stmts: accArgs.stmts, expr: GoCall (GoSelector (GoRaw "gopurs_runtime") "Apply") [ boxGoExpr (GoCall resFn.expr callArgs) fRet, GoRaw "gopurs_runtime.Value{}" ], exprType: TypeValue, nextId: accArgs.nextId }
               _ ->
                 let
                   boxedArgs = Array.zipWith (\arg actual -> boxGoExpr arg actual) accArgs.exprs accArgs.exprTypes
                 in
-                  { stmts: accArgs.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") goFuncName) (Array.cons (boxGoExpr resFn.expr resFn.exprType) boxedArgs), exprType: TypeValue, nextId: accArgs.nextId }
+                  { stmts: accArgs.stmts, expr: GoCall (GoSelector (GoRaw "gopurs_runtime") "Apply") [ GoCall (GoSelector (GoVar "gopurs_runtime") goFuncName) (Array.cons (boxGoExpr resFn.expr resFn.exprType) boxedArgs), GoRaw "gopurs_runtime.Value{}" ], exprType: TypeValue, nextId: accArgs.nextId }
 
       UncurriedEffectAbs args body -> liftIfNeeded \_ ->
         let
@@ -1438,20 +1438,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                    Just expr -> boxGoExpr expr (fromMaybe TypeValue (map (exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths modNameStr) (Array.index fieldTypes 0)))
                    Nothing -> GoConstructor (hashString baseStructName) (pkgPrefix <> monoStructName) typeArgs accProps.exprs
                else if isPointerAdtLeaf then GoRaw ("gopurs_runtime.Value{Type: 9, IntVal: " <> hashString (fromMaybe "" (Map.lookup baseStructName helpers.pointerAdtLeaves)) <> ", UnsafePtr: nil}")
-               else case deadVarOpt of
-                 Just deadVar ->
-                   let
-                     allocExpr = GoConstructor (hashString baseStructName) (pkgPrefix <> monoStructName) typeArgs accProps.exprs
-                     typeArgsStr = if Array.length typeArgs > 0 then "[" <> String.joinWith ", " (map goTypeToStr typeArgs) <> "]" else ""
-                     mutateStmts = Array.mapWithIndex (\idx arg -> GoMutate ("(*" <> pkgPrefix <> monoStructName <> typeArgsStr <> ")(" <> deadVar <> ".UnsafePtr).V" <> show idx) arg) accProps.exprs
-                     mutateBlock = GoBlock (mutateStmts <> [ GoReturn (GoVar deadVar) ])
-                     allocBlock = GoBlock [ GoReturn allocExpr ]
-                     
-                     ifCond = GoBinOp "&&" (GoBinOp "!=" (GoRaw (deadVar <> ".UnsafePtr")) (GoRaw "nil")) (GoBinOp "==" (GoRaw ("(*struct{Rc uint32})(" <> deadVar <> ".UnsafePtr).Rc")) (GoInt 1))
-                     ifStmt = GoIfElse ifCond [ mutateBlock ] [ allocBlock ]
-                   in
-                     GoRaw ("func() gopurs_runtime.Value {\n" <> printGoExpr ifStmt <> "\n}()")
-                 Nothing -> GoConstructor (hashString baseStructName) (pkgPrefix <> monoStructName) typeArgs accProps.exprs
+               else GoConstructor (hashString baseStructName) (pkgPrefix <> monoStructName) typeArgs accProps.exprs
         in
           { stmts: accProps.stmts, expr: finalExpr, exprType: expectedGoType, nextId: accProps.nextId }
 
@@ -1620,9 +1607,11 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
             resA = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false nextId a
             refIdent = "__local_ref_" <> show resA.nextId
             declStmt = GoAssign refIdent (boxGoExpr resA.expr resA.exprType)
+            ifaceIdent = "__local_iface_" <> show resA.nextId
+            ifaceStmt = GoRaw ("var " <> ifaceIdent <> " interface{} = " <> refIdent)
           in
-            { stmts: resA.stmts <> StmtLeaf declStmt
-            , expr: GoRaw ("gopurs_runtime.Any(&" <> refIdent <> ")")
+            { stmts: resA.stmts <> StmtLeaf declStmt <> StmtLeaf ifaceStmt
+            , expr: GoRaw ("gopurs_runtime.Any(&" <> ifaceIdent <> ")")
             , exprType: TypeValue, nextId: resA.nextId + 1
             }
         EffectRefRead a ->
@@ -1630,14 +1619,14 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
             resA = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false nextId a
           in
             { stmts: resA.stmts
-            , expr: GoRaw ("*(" <> printGoExpr resA.expr <> ".PtrVal().(*gopurs_runtime.Value))")
+            , expr: GoRaw ("(*(" <> printGoExpr resA.expr <> ".PtrVal().(*interface{}))).(gopurs_runtime.Value)")
             , exprType: TypeValue, nextId: resA.nextId
             }
         EffectRefWrite ref val ->
           let
             resRef = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false nextId ref
             resVal = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false resRef.nextId val
-            writeStmt = GoRaw ("*(" <> printGoExpr resRef.expr <> ".PtrVal().(*gopurs_runtime.Value)) = " <> printGoExpr (boxGoExpr resVal.expr resVal.exprType))
+            writeStmt = GoRaw ("*(" <> printGoExpr resRef.expr <> ".PtrVal().(*interface{})) = " <> printGoExpr (boxGoExpr resVal.expr resVal.exprType))
           in
             { stmts: resRef.stmts <> resVal.stmts <> StmtLeaf writeStmt
             , expr: boxGoExpr resVal.expr resVal.exprType

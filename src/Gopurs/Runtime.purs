@@ -376,7 +376,9 @@ func Func10(f func(Value, Value, Value, Value, Value, Value, Value, Value, Value
 func Func11(f func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc11, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
 
 func FuncAny(f any) Value {
-	return Value{Type: TypeFunc, UnsafePtr: unsafe.Pointer(&f)}
+	ptr := new(any)
+	*ptr = f
+	return Value{Type: TypeFunc, UnsafePtr: unsafe.Pointer(ptr)}
 }
 
 
