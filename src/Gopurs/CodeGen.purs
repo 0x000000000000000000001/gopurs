@@ -1726,8 +1726,26 @@ wrapReturn (TMap _ _) valName =
   "func() gopurs_runtime.Value {\n\t\t\tres_map := make(map[string]gopurs_runtime.Value)\n\t\t\tfor k, v := range " <> valName <> " { res_map[k] = gopurs_runtime.Box(v) }\n\t\t\treturn gopurs_runtime.Record(res_map)\n\t\t}()"
 wrapReturn t valName = "gopurs_runtime.Box(" <> valName <> ")"
 
-generateWrapperFunc :: FfiDecl -> String
-generateWrapperFunc d = 
+printExprType :: ExprType -> String
+printExprType = case _ of
+  Int -> "Int"
+  Number -> "Number"
+  String -> "String"
+  Char -> "Char"
+  Boolean -> "Boolean"
+  Array e -> "(Array " <> printExprType e <> ")"
+  Func args ret -> "(Func [" <> String.joinWith ", " (map printExprType args) <> "] " <> printExprType ret <> ")"
+  Record props -> "(Record [" <> String.joinWith ", " (map (\(Tuple k v) -> k <> ": " <> printExprType v) props) <> "])"
+  ADT path args -> "(ADT " <> show path <> " [" <> String.joinWith ", " (map printExprType args) <> "])"
+  TypeVar v -> "(TypeVar " <> v <> ")"
+  Any -> "Any"
+
+generateWrapperFunc :: FfiDecl -> Maybe ExprType -> String
+generateWrapperFunc d mbTast = 
+  let tastComment = case mbTast of
+        Just tast -> "// TAST: " <> printExprType tast <> "\n"
+        Nothing -> "// TAST: Unknown\n"
+  in tastComment <>
   if d.isVar then
     "gopurs_runtime.Box(" <> d.name <> ")"
   else
@@ -1809,11 +1827,11 @@ generateWrapperFunc d =
                  "})"
     in fullCode
 
-generateFfiBridge :: forall a. Array FfiDecl -> Array (Tuple Ident a) -> String
+generateFfiBridge :: Array FfiDecl -> Array (Tuple Ident (Maybe ExprType)) -> String
 generateFfiBridge decls foreigns = 
   String.joinWith "\n" (map genBridge foreigns)
   where
-  genBridge (Tuple ident _) = 
+  genBridge (Tuple ident mbTast) = 
     let 
       pursName = unwrap ident
       sanitized = sanitizeName pursName
@@ -1833,4 +1851,4 @@ generateFfiBridge decls foreigns =
         Nothing -> 
           "var " <> exportName <> " = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value { panic(\"FFI not implemented: " <> pursName <> "\"); return gopurs_runtime.Value{} })"
         Just d ->
-          "var " <> exportName <> " = " <> generateWrapperFunc d
+          "var " <> exportName <> " = " <> generateWrapperFunc d mbTast
