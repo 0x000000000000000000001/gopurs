@@ -559,10 +559,49 @@ func Unbox[T any](v any) T {
 	
 	var t any = *new(T)
 	switch t.(type) {
-	case int64: return any(val.IntVal).(T)
-	case int: return any(int(val.IntVal)).(T)
+	case int64: 
+		if val.Type == TypeFloat {
+			return any(int64(math.Float64frombits(uint64(val.IntVal)))).(T)
+		}
+		if val.Type == TypeAny {
+			if ptr := val.UnsafePtr; ptr != nil {
+				v := *(*any)(ptr)
+				if f, ok := v.(float64); ok { return any(int64(f)).(T) }
+				if i, ok := v.(int); ok { return any(int64(i)).(T) }
+				if i, ok := v.(int64); ok { return any(i).(T) }
+			}
+			return any(int64(0)).(T)
+		}
+		return any(val.IntVal).(T)
+	case int: 
+		if val.Type == TypeFloat {
+			return any(int(math.Float64frombits(uint64(val.IntVal)))).(T)
+		}
+		if val.Type == TypeAny {
+			if ptr := val.UnsafePtr; ptr != nil {
+				v := *(*any)(ptr)
+				if f, ok := v.(float64); ok { return any(int(f)).(T) }
+				if i, ok := v.(int); ok { return any(i).(T) }
+				if i, ok := v.(int64); ok { return any(int(i)).(T) }
+			}
+			return any(0).(T)
+		}
+		return any(int(val.IntVal)).(T)
 	case string: return any(*(*string)(val.UnsafePtr)).(T)
-	case float64: return any(math.Float64frombits(uint64(val.IntVal))).(T)
+	case float64:
+		if val.Type == TypeInt {
+			return any(float64(val.IntVal)).(T)
+		}
+		if val.Type == TypeAny {
+			if ptr := val.UnsafePtr; ptr != nil {
+				v := *(*any)(ptr)
+				if f, ok := v.(float64); ok { return any(f).(T) }
+				if i, ok := v.(int); ok { return any(float64(i)).(T) }
+				if i, ok := v.(int64); ok { return any(float64(i)).(T) }
+			}
+			return any(float64(0)).(T)
+		}
+		return any(math.Float64frombits(uint64(val.IntVal))).(T)
 	case bool: return any(val.IntVal == 1).(T)
 	case Value: return any(val).(T)
 	case map[string]any:
