@@ -1107,12 +1107,12 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                       in unboxGoExpr arg actual expected
                     ) fArgs
                 in
-                  { stmts: accArgs.stmts, expr: GoCall (GoSelector (GoRaw "gopurs_runtime") "Apply") [ boxGoExpr (GoCall resFn.expr callArgs) fRet, GoRaw "gopurs_runtime.Value{}" ], exprType: TypeValue, nextId: accArgs.nextId }
+                  { stmts: accArgs.stmts, expr: boxGoExpr (GoCall resFn.expr callArgs) fRet, exprType: TypeValue, nextId: accArgs.nextId }
               _ ->
                 let
                   boxedArgs = Array.zipWith (\arg actual -> boxGoExpr arg actual) accArgs.exprs accArgs.exprTypes
                 in
-                  { stmts: accArgs.stmts, expr: GoCall (GoSelector (GoRaw "gopurs_runtime") "Apply") [ GoCall (GoSelector (GoVar "gopurs_runtime") goFuncName) (Array.cons (boxGoExpr resFn.expr resFn.exprType) boxedArgs), GoRaw "gopurs_runtime.Value{}" ], exprType: TypeValue, nextId: accArgs.nextId }
+                  { stmts: accArgs.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") goFuncName) (Array.cons (boxGoExpr resFn.expr resFn.exprType) boxedArgs), exprType: TypeValue, nextId: accArgs.nextId }
 
       UncurriedEffectAbs args body -> liftIfNeeded \_ ->
         let
@@ -1125,13 +1125,13 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
           arity = Array.length args
         in if arity >= 2 && arity <= 5 then
           let
-            funcExpr = GoRaw ("gopurs_runtime.Func" <> show arity <> "(func(" <> goParams <> ") gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr resBody.expr resBody.exprType) ])) <> "\n})")
+            funcExpr = GoRaw ("gopurs_runtime.Func" <> show arity <> "(func(" <> goParams <> ") gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (GoRaw ("gopurs_runtime.Apply(" <> printGoExpr (boxGoExpr resBody.expr resBody.exprType) <> ", gopurs_runtime.Value{})")) ])) <> "\n})")
           in { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: resBody.nextId }
         else
           let
             params = map fst paramsWithTypes
-            makeCurried [] = resBody.expr
-            makeCurried [p] = GoFunc p TypeValue TypeValue (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr resBody.expr resBody.exprType) ]))
+            makeCurried [] = GoRaw ("gopurs_runtime.Apply(" <> printGoExpr (boxGoExpr resBody.expr resBody.exprType) <> ", gopurs_runtime.Value{})")
+            makeCurried [p] = GoFunc p TypeValue TypeValue (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (GoRaw ("gopurs_runtime.Apply(" <> printGoExpr (boxGoExpr resBody.expr resBody.exprType) <> ", gopurs_runtime.Value{})")) ]))
             makeCurried ps = case Array.uncons ps of
               Just { head: p, tail: rest } -> GoFunc p TypeValue TypeValue (makeCurried rest)
               Nothing -> resBody.expr
