@@ -1652,15 +1652,51 @@ printTypeNode (TArray elem) = "[]" <> printTypeNode elem
 printTypeNode (TMap k v) = "map[" <> printTypeNode k <> "]" <> printTypeNode v
 printTypeNode (TUnknown s) = s
 
-unwrapValueToFunc :: TypeNode -> String -> Int -> Int -> String
-unwrapValueToFunc (TFunc args ret) valName depth _ = 
+exprTypeToDummyTypeNode :: ExprType -> TypeNode
+exprTypeToDummyTypeNode (Func args ret) = TFunc (map exprTypeToDummyTypeNode args) (Just (exprTypeToDummyTypeNode ret))
+exprTypeToDummyTypeNode (Array elem) = TArray (exprTypeToDummyTypeNode elem)
+exprTypeToDummyTypeNode (Record _) = TMap (TNamed "string") (TNamed "any")
+exprTypeToDummyTypeNode _ = TNamed "any"
+
+getTastReturnType :: ExprType -> Maybe ExprType
+getTastReturnType (Func _ ret) = Just ret
+getTastReturnType _ = Nothing
+
+resolveNewtype :: Array DataDecl -> ExprType -> ExprType
+resolveNewtype dataDecls (ADT path args) = 
+  let typeName = String.joinWith "." path
+      mbDecl = Array.find (\d -> d.typeName == typeName || (Array.length path > 0 && d.typeName == fromMaybe "" (Array.last path))) dataDecls
+  in case mbDecl of
+       Just decl ->
+         if Array.length decl.constructors == 1 then
+           case Array.head decl.constructors of
+             Just ctor ->
+               if Array.length ctor.fieldTypes == 1 then
+                 case Array.head ctor.fieldTypes of
+                   Just fieldT -> resolveNewtype dataDecls fieldT
+                   Nothing -> ADT path args
+               else ADT path args
+             Nothing -> ADT path args
+         else ADT path args
+       Nothing -> ADT path args
+resolveNewtype dataDecls (Func fArgs ret) = Func (map (resolveNewtype dataDecls) fArgs) (resolveNewtype dataDecls ret)
+resolveNewtype dataDecls (Array elem) = Array (resolveNewtype dataDecls elem)
+resolveNewtype dataDecls (Record fields) = Record (map (\(Tuple k v) -> Tuple k (resolveNewtype dataDecls v)) fields)
+resolveNewtype _ other = other
+
+flattenFuncArgs :: ExprType -> Array ExprType
+flattenFuncArgs (Func args ret) = args <> flattenFuncArgs ret
+flattenFuncArgs _ = []
+
+unwrapValueToFunc :: Array DataDecl -> TypeNode -> Maybe ExprType -> String -> Int -> Int -> String
+unwrapValueToFunc dataDecls (TFunc args ret) mbTast valName depth _ = 
   let
     paramsArr = Array.mapWithIndex (\cidx atype -> "p" <> show depth <> "_" <> show cidx <> " " <> printTypeNode atype) args
     applyArgsArr = Array.mapWithIndex (\cidx atype ->
       case atype of
         TNamed "gopurs_runtime.Value" -> "p" <> show depth <> "_" <> show cidx
         TFunc _ _ -> 
-          let wrapped = wrapReturn atype ("p" <> show depth <> "_" <> show cidx)
+          let wrapped = wrapReturn dataDecls atype (mbTast >>= \tast -> getTastArgType tast cidx) ("p" <> show depth <> "_" <> show cidx)
           in String.replaceAll (Pattern "\n") (Replacement "\n\t\t") wrapped
         _ -> "gopurs_runtime.Box(p" <> show depth <> "_" <> show cidx <> ")"
     ) args
@@ -1686,14 +1722,27 @@ unwrapValueToFunc (TFunc args ret) valName depth _ =
     Just (TNamed "interface{}") -> "func(" <> params <> ") interface{} {\n\t\treturn " <> applyCall <> "\n\t}"
     Just (TNamed "gopurs_runtime.Value") -> "func(" <> params <> ") gopurs_runtime.Value {\n\t\treturn " <> applyCall <> "\n\t}"
     Just f@(TFunc _ _) ->
-      let innerUnwrap = unwrapValueToFunc f ("inner_res" <> show depth) (depth + 1) 0
+      let innerUnwrap = unwrapValueToFunc dataDecls f (mbTast >>= getTastReturnType) ("inner_res" <> show depth) (depth + 1) 0
       in "func(" <> params <> ") " <> printTypeNode f <> " {\n\t\tinner_res" <> show depth <> " := " <> applyCall <> "\n\t\treturn " <> innerUnwrap <> "\n\t}"
     Just r ->
       "func(" <> params <> ") " <> printTypeNode r <> " {\n\t\tinner_res" <> show depth <> " := " <> applyCall <> "\n\t\treturn gopurs_runtime.Unbox[" <> printTypeNode r <> "](inner_res" <> show depth <> ")\n\t}"
-unwrapValueToFunc t valName _ _ = "gopurs_runtime.Unbox[" <> printTypeNode t <> "](" <> valName <> ")"
+unwrapValueToFunc dataDecls (TNamed anyT) mbTast valName depth cidx | anyT == "any" || anyT == "interface{}" || anyT == "gopurs_runtime.Value" =
+  let resolvedTast = map (resolveNewtype dataDecls) mbTast
+  in case resolvedTast of
+    Just (Record fields) ->
+      let
+        fieldStr = Array.mapWithIndex (\i (Tuple fK fT) ->
+            "\t\t\t\tres_map[\"" <> fK <> "\"] = " <> unwrapValueToFunc dataDecls (TNamed "any") (Just fT) ("_raw[\"" <> fK <> "\"]") (depth + 1) i
+          ) fields
+      in
+        "func() map[string]any {\n\t\t\t_raw := gopurs_runtime.RecordToMap(" <> valName <> ")\n\t\t\tres_map := make(map[string]any)\n" <> String.joinWith "\n" fieldStr <> "\n\t\t\treturn res_map\n\t\t}()"
+    Just f@(Func _ _) ->
+      unwrapValueToFunc dataDecls (exprTypeToDummyTypeNode f) resolvedTast valName depth cidx
+    _ -> "gopurs_runtime.Unbox[" <> anyT <> "](" <> valName <> ")"
+unwrapValueToFunc _ t _ valName _ _ = "gopurs_runtime.Unbox[" <> printTypeNode t <> "](" <> valName <> ")"
 
-wrapReturn :: TypeNode -> String -> String
-wrapReturn (TFunc args ret) valName = 
+wrapReturn :: Array DataDecl -> TypeNode -> Maybe ExprType -> String -> String
+wrapReturn dataDecls (TFunc args ret) mbTast valName = 
   let
     innerT = ret
     argT = Array.head args
@@ -1707,24 +1756,74 @@ wrapReturn (TFunc args ret) valName =
     Nothing ->
       case innerT of
         Nothing -> genInner (valName <> "()") "gopurs_runtime.Value{}"
-        Just r -> genInner ("inner_res := " <> valName <> "()") (wrapReturn r "inner_res")
+        Just r -> genInner ("inner_res := " <> valName <> "()") (wrapReturn dataDecls r (mbTast >>= getTastReturnType) "inner_res")
     Just a ->
       let 
         argUnwrap = case a of
           TNamed "any" -> "arg"
           TNamed "interface{}" -> "arg"
           TNamed "gopurs_runtime.Value" -> "arg"
-          f@(TFunc _ _) -> String.replaceAll (Pattern "\n") (Replacement "\n\t\t\t") (unwrapValueToFunc f "arg" 99 0)
+          f@(TFunc _ _) -> String.replaceAll (Pattern "\n") (Replacement "\n\t\t\t") (unwrapValueToFunc dataDecls f (mbTast >>= \tast -> getTastArgType tast 0) "arg" 99 0)
           _ -> "gopurs_runtime.Unbox[" <> printTypeNode a <> "](arg)"
       in case innerT of
         Nothing -> genInnerArg valName "gopurs_runtime.Value{}" argUnwrap
-        Just r -> genInnerArg ("inner_res := " <> valName) (wrapReturn r "inner_res") argUnwrap
-wrapReturn (TArray elem) valName | printTypeNode elem /= "gopurs_runtime.Value" = 
+        Just r -> genInnerArg ("inner_res := " <> valName) (wrapReturn dataDecls r (mbTast >>= getTastReturnType) "inner_res") argUnwrap
+wrapReturn _ (TArray elem) _ valName | printTypeNode elem /= "gopurs_runtime.Value" = 
   "func() gopurs_runtime.Value {\n\t\t\tres_arr := make([]gopurs_runtime.Value, len(" <> valName <> "))\n\t\t\tfor i, v := range " <> valName <> " { res_arr[i] = gopurs_runtime.Box(v) }\n\t\t\treturn gopurs_runtime.Array(res_arr)\n\t\t}()"
-wrapReturn (TNamed "gopurs_runtime.Value") valName = valName
-wrapReturn (TMap _ _) valName = 
+wrapReturn dataDecls (TMap _ _) (Just (Record fields)) valName = 
+  let
+    fieldStr = Array.mapWithIndex (\i (Tuple fK fT) ->
+        "\t\t\t\tres_map[\"" <> fK <> "\"] = " <> wrapReturn dataDecls (TNamed "any") (Just fT) ("_raw[\"" <> fK <> "\"]")
+      ) fields
+  in
+    "func() gopurs_runtime.Value {\n\t\t\t_raw := " <> valName <> "\n\t\t\tres_map := make(map[string]gopurs_runtime.Value)\n" <> String.joinWith "\n" fieldStr <> "\n\t\t\treturn gopurs_runtime.Record(res_map)\n\t\t}()"
+wrapReturn _ (TMap _ _) _ valName = 
   "func() gopurs_runtime.Value {\n\t\t\tres_map := make(map[string]gopurs_runtime.Value)\n\t\t\tfor k, v := range " <> valName <> " { res_map[k] = gopurs_runtime.Box(v) }\n\t\t\treturn gopurs_runtime.Record(res_map)\n\t\t}()"
-wrapReturn t valName = "gopurs_runtime.Box(" <> valName <> ")"
+wrapReturn dataDecls (TNamed anyT) mbTast valName | anyT == "any" || anyT == "interface{}" || anyT == "gopurs_runtime.Value" =
+  let resolvedTast = map (resolveNewtype dataDecls) mbTast
+  in case resolvedTast of
+    Just (Record fields) ->
+      let
+        fieldStr = Array.mapWithIndex (\i (Tuple fK fT) ->
+            "\t\t\t\tres_map[\"" <> fK <> "\"] = " <> wrapReturn dataDecls (TNamed "any") (Just fT) ("_raw[\"" <> fK <> "\"]")
+          ) fields
+      in
+        "func() gopurs_runtime.Value {\n\t\t\t_raw := gopurs_runtime.RecordToMap(gopurs_runtime.Box(" <> valName <> "))\n\t\t\tres_map := make(map[string]gopurs_runtime.Value)\n" <> String.joinWith "\n" fieldStr <> "\n\t\t\treturn gopurs_runtime.Record(res_map)\n\t\t}()"
+    Just f@(Func _ _) ->
+      let
+        fArgs = flattenFuncArgs f
+        arity = Array.length fArgs
+        
+        genWrap args remaining depth =
+           if remaining == 0 then
+             let 
+               castArgs = String.joinWith ", " (Array.replicate arity "any")
+               castType = "func(" <> castArgs <> ") any"
+               
+               invokeArgs = Array.mapWithIndex (\i argT ->
+                   let pName = "p" <> show (depth - arity + i)
+                   in case argT of
+                        Func _ _ -> 
+                           let cbArgs = flattenFuncArgs argT
+                               cbParams = Array.mapWithIndex (\ci _ -> "cb_arg" <> show ci) cbArgs
+                               cbParamsDecl = String.joinWith ", " (map (\n -> n <> " any") cbParams)
+                               applyChain = Array.foldl (\acc a -> "gopurs_runtime.Apply(" <> acc <> ", gopurs_runtime.Box(" <> a <> "))") pName cbParams
+                           in "func(" <> cbParamsDecl <> ") any { return " <> applyChain <> " }"
+                        _ -> "gopurs_runtime.Unbox[any](" <> pName <> ")"
+                 ) fArgs
+                 
+               invokeCall = "fn(" <> String.joinWith ", " invokeArgs <> ")"
+               fallbackChain = Array.foldl (\acc p -> "gopurs_runtime.Apply(" <> acc <> ", " <> p <> ")") ("(" <> valName <> ".(gopurs_runtime.Value))") (Array.mapWithIndex (\i _ -> "p" <> show (depth - arity + i)) fArgs)
+               
+             in 
+             "func() gopurs_runtime.Value {\n\t\t\t\tif fn, ok := " <> valName <> ".(" <> castType <> "); ok {\n\t\t\t\t\treturn gopurs_runtime.Box(" <> invokeCall <> ")\n\t\t\t\t}\n\t\t\t\treturn " <> fallbackChain <> "\n\t\t\t}()"
+           else
+             let currArg = "p" <> show depth
+             in "gopurs_runtime.Func(func(" <> currArg <> " gopurs_runtime.Value) gopurs_runtime.Value {\n\t\t\treturn " <> genWrap args (remaining - 1) (depth + 1) <> "\n\t\t})"
+             
+      in genWrap fArgs arity 0
+    _ -> "gopurs_runtime.Box(" <> valName <> ")"
+wrapReturn _ _ _ valName = "gopurs_runtime.Box(" <> valName <> ")"
 
 printExprType :: ExprType -> String
 printExprType = case _ of
@@ -1762,8 +1861,8 @@ isStandardPursFunc (TFunc args ret) =
        false
 isStandardPursFunc _ = false
 
-generateWrapperFunc :: FfiDecl -> Maybe ExprType -> String
-generateWrapperFunc d mbTast = 
+generateWrapperFunc :: Array DataDecl -> FfiDecl -> Maybe ExprType -> String
+generateWrapperFunc dataDecls d mbTast = 
   let tastComment = case mbTast of
         Just tast -> "// TAST: " <> printExprType tast <> "\n"
         Nothing -> "// TAST: Unknown\n"
@@ -1810,7 +1909,7 @@ generateWrapperFunc d mbTast =
             in if isOpaque && not (isStandardPursFunc t) then
                  [ "\tgo_arg" <> show i <> " := (*(*any)(arg" <> show i <> ".UnsafePtr)).(" <> typStr <> ")" ]
                else
-                 let unwrapStr = unwrapValueToFunc t ("arg" <> show i) 0 0
+                 let unwrapStr = unwrapValueToFunc dataDecls t tastArg ("arg" <> show i) 0 0
                      indented = String.replaceAll (Pattern "\n") (Replacement "\n\t") unwrapStr
                  in [ "\tgo_arg" <> show i <> " := " <> indented ]
           TArray _ | typStr /= "[]gopurs_runtime.Value" ->
@@ -1848,10 +1947,12 @@ generateWrapperFunc d mbTast =
           , "\treturn gopurs_runtime.Value{}"
           ]
         Just r ->
-          let wrapCode = wrapReturn r "go_res"
-          in [ "\tgo_res := " <> callFunc <> "(" <> callArgs <> ")"
-             , "\treturn " <> wrapCode
-             ]
+          let wrapCode = wrapReturn dataDecls r (mbTast >>= getTastReturnType) "go_res"
+              indentedWrap = String.replaceAll (Pattern "\n") (Replacement "\n\t") wrapCode
+          in
+          [ "\tgo_res := " <> callFunc <> "(" <> callArgs <> ")"
+          , "\treturn " <> indentedWrap
+          ]
              
       fullCode = "gopurs_runtime." <> funcConstructor <> "(func(" <> boxedArgs <> ") gopurs_runtime.Value {\n" <>
                  String.joinWith "\n" argsCode <> "\n" <>
@@ -1859,8 +1960,8 @@ generateWrapperFunc d mbTast =
                  "})"
     in fullCode
 
-generateFfiBridge :: Array FfiDecl -> Array (Tuple Ident (Maybe ExprType)) -> String
-generateFfiBridge decls foreigns = 
+generateFfiBridge :: Array DataDecl -> Array FfiDecl -> Array (Tuple Ident (Maybe ExprType)) -> String
+generateFfiBridge dataDecls decls foreigns = 
   String.joinWith "\n" (map genBridge foreigns)
   where
   genBridge (Tuple ident mbTast) = 
@@ -1883,4 +1984,4 @@ generateFfiBridge decls foreigns =
         Nothing -> 
           "var " <> exportName <> " = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value { panic(\"FFI not implemented: " <> pursName <> "\"); return gopurs_runtime.Value{} })"
         Just d ->
-          "var " <> exportName <> " = " <> generateWrapperFunc d mbTast
+          "var " <> exportName <> " = " <> generateWrapperFunc dataDecls d mbTast

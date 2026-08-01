@@ -208,11 +208,11 @@ main = launchAff_ do
               let finalPkgLine = "package " <> safeModName
               let hasImport = String.contains (Pattern "\"gopurs/output/gopurs_runtime\"") content
               let importLine = if hasImport then "" else "import \"gopurs/output/gopurs_runtime\"\n"
-              let newContent = finalPkgLine <> "\n\n" <> importLine <> "\n" <> String.joinWith "\n" otherLines <> "\n\n// --- Auto-generated FFI wrappers ---\n" <> CodeGen.generateFfiBridge ffiDecls (Map.toUnfoldable backendMod.foreign)
+              let newContent = finalPkgLine <> "\n\n" <> importLine <> "\n" <> String.joinWith "\n" otherLines <> "\n\n// --- Auto-generated FFI wrappers ---\n" <> CodeGen.generateFfiBridge backendMod.dataDecls ffiDecls (Map.toUnfoldable backendMod.foreign)
               FS.writeTextFile UTF8 ("output/" <> modNameStr <> "/" <> safeModName <> "_ffi.go") newContent
             Nothing -> do
               let goPackageName = String.replaceAll (Pattern ".") (Replacement "_") modNameStr
-              let dummyContent = "package " <> goPackageName <> "\n\nimport \"gopurs/output/gopurs_runtime\"\n\n" <> CodeGen.generateFfiBridge [] (Map.toUnfoldable backendMod.foreign)
+              let dummyContent = "package " <> goPackageName <> "\n\nimport \"gopurs/output/gopurs_runtime\"\n\n" <> CodeGen.generateFfiBridge backendMod.dataDecls [] (Map.toUnfoldable backendMod.foreign)
               FS.writeTextFile UTF8 ("output/" <> modNameStr <> "/" <> String.replaceAll (Pattern ".") (Replacement "_") modNameStr <> "_ffi.go") dummyContent
         writeCache cacheVersion ("output/" <> modNameStr <> "/.gopurs-cache.json") backendMod
     }
