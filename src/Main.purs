@@ -127,8 +127,6 @@ main = launchAff_ do
   let instantiations = Map.filterKeys (\k -> case Map.lookup k globalTypes of
                                             Just t -> hasTypeVariables t
                                             Nothing -> false) rawInstantiations
-  FS.writeTextFile UTF8 "instantiations.txt" (show (Array.fromFoldable (Map.keys instantiations)))
-  FS.writeTextFile UTF8 "absurd_inst.txt" (show (map (map mangleType <<< Set.toUnfoldable) (Map.lookup "Data.Void.absurd" instantiations :: Maybe (Set.Set ExprType)) :: Maybe (Array String)))
 
   let allTypes = foldl (\acc mod -> Set.union acc (collectAllTypes mod)) Set.empty finalModules
   let adtTypes = Set.filter (\t -> case t of
@@ -161,7 +159,6 @@ main = launchAff_ do
     pointerAdtNodes = Set.fromFoldable (map _.nodeBaseStruct pointerAdtPathsRaw)
     pointerAdtLeaves = Map.fromFoldable (map (\info -> Tuple info.leafBaseStruct info.nodeBaseStruct) pointerAdtPathsRaw)
 
-  FS.writeTextFile UTF8 "adt_instantiations.txt" (show (map mangleType (Array.fromFoldable adtTypes)))
 
   buildModules
     { directives
