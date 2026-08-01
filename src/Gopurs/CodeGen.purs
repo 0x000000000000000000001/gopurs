@@ -1740,6 +1740,28 @@ printExprType = case _ of
   TypeVar v -> "(TypeVar " <> v <> ")"
   Any -> "Any"
 
+getTastArgType :: ExprType -> Int -> Maybe ExprType
+getTastArgType (Func args _) i = Array.index args i
+getTastArgType _ _ = Nothing
+
+isStandardPursFunc :: TypeNode -> Boolean
+isStandardPursFunc (TFunc args ret) =
+  let 
+    argsAny = Array.all (\a -> printTypeNode a == "any" || printTypeNode a == "interface{}" || printTypeNode a == "gopurs_runtime.Value") args
+    retStr = case ret of
+      Nothing -> ""
+      Just r -> printTypeNode r
+  in if Array.length args == 0 then
+       retStr == "" || retStr == "bool" || retStr == "int" || retStr == "int64" || retStr == "string" || retStr == "float64" || retStr == "gopurs_runtime.Value" || retStr == "any" || retStr == "interface{}"
+     else if argsAny then
+       case ret of
+         Nothing -> true
+         Just r@(TFunc _ _) -> isStandardPursFunc r
+         Just r -> retStr == "any" || retStr == "interface{}" || retStr == "gopurs_runtime.Value"
+     else
+       false
+isStandardPursFunc _ = false
+
 generateWrapperFunc :: FfiDecl -> Maybe ExprType -> String
 generateWrapperFunc d mbTast = 
   let tastComment = case mbTast of
@@ -1776,11 +1798,21 @@ generateWrapperFunc d mbTast =
       processArg i t =
         let typStr = printTypeNode t 
             elemType = String.drop 2 typStr
+            tastArg = mbTast >>= \tast -> getTastArgType tast i
         in case t of
           TFunc _ _ -> 
-            let unwrapStr = unwrapValueToFunc t ("arg" <> show i) 0 0
-                indented = String.replaceAll (Pattern "\n") (Replacement "\n\t") unwrapStr
-            in [ "\tgo_arg" <> show i <> " := " <> indented ]
+            let 
+              isOpaque = case tastArg of
+                           Just (ADT _ _) -> true
+                           Just Any -> true
+                           Just (TypeVar _) -> true
+                           _ -> false
+            in if isOpaque && not (isStandardPursFunc t) then
+                 [ "\tgo_arg" <> show i <> " := (*(*any)(arg" <> show i <> ".UnsafePtr)).(" <> typStr <> ")" ]
+               else
+                 let unwrapStr = unwrapValueToFunc t ("arg" <> show i) 0 0
+                     indented = String.replaceAll (Pattern "\n") (Replacement "\n\t") unwrapStr
+                 in [ "\tgo_arg" <> show i <> " := " <> indented ]
           TArray _ | typStr /= "[]gopurs_runtime.Value" ->
             let 
               et = if elemType == "any" then "interface{}" else elemType
