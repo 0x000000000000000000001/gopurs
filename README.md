@@ -10,18 +10,6 @@ A super-optimized **PureScript-to-Go compiler**, entirely written in PureScript,
 
 `gopurs` leverages an enriched `tcorefn` (Typed CoreFn) representation to compile your pure business logic into robust, modern Go code. It seamlessly integrates into your existing PureScript workflow as a custom backend.
 
-## Current status & milestones
-
-Since its inception, `gopurs` has reached several major milestones:
-
-- [x] **100% of the official tests are green.**
-- [x] **Typed AST (TAST):** By consuming an enriched `tcorefn.json` (Typed CoreFn) instead of standard `corefn`, `gopurs` preserves deep structural typing. Combined with partial monomorphization, this unlocks massive performance gains (x10).
-- [x] **Zero boilerplate FFI:** A complete overhaul of the FFI developer experience via a WebAssembly parser (`ffi_gen.wasm`). It analyzes your Go signatures on the fly, allowing you to write idiomatic Go (uncurried functions, native types, flexible Effect semantics) without manual boxing or closures.
-- [x] **Native `Aff` via goroutines:** Full support for `Aff` mapped directly to Go's goroutines. This emulates the event loop while providing **true multi-core parallelism for free**, meaning your async PureScript code gets exponentially faster on multi-core systems.
-- [x] **Real world validation (unit):** Successful validation on 100% of the unit tests for a complex, full scale project involving Postgres, S3, RabbitMQ, and deep Aff nesting.
-- [ ] **Real world validation (integration):** Successful validation on 100% of the integration tests for a complex, full scale project involving Postgres, S3, RabbitMQ, and deep Aff nesting.
-- [ ] **Module validation:** Validate tests module by module (`gopurs-*`).
-
 ## Why Go?
 
 While the broader JS ecosystem has heavily leaned towards TypeScript, many backend services, CLIs, and infrastructure tools rely heavily on Go for its **raw performance**, **concurrency model** (goroutines), and **deployment simplicity** (single static binaries).
@@ -131,6 +119,18 @@ To run the test suite:
 ```bash
 ./bin/test
 ```
+
+## Current status & milestones
+
+Since its inception, `gopurs` has reached several major milestones:
+
+- [x] **100% of the official tests are green.**
+- [x] **Typed AST (TAST):** By consuming an enriched `tcorefn.json` (Typed CoreFn) instead of standard `corefn`, `gopurs` preserves deep structural typing. Combined with partial monomorphization, this unlocks massive performance gains (x10).
+- [x] **Zero boilerplate FFI:** A complete overhaul of the FFI developer experience via a WebAssembly parser (`ffi_gen.wasm`). It analyzes your Go signatures on the fly, allowing you to write idiomatic Go (uncurried functions, native types, flexible Effect semantics) without manual boxing or closures.
+- [x] **Native `Aff` via goroutines:** Full support for `Aff` mapped directly to Go's goroutines. This emulates the event loop while providing **true multi-core parallelism for free**, meaning your async PureScript code gets exponentially faster on multi-core systems.
+- [x] **Real world validation (unit):** Successful validation on 100% of the unit tests for a complex, full scale project involving Postgres, S3, RabbitMQ, and deep Aff nesting.
+- [ ] **Real world validation (integration):** Successful validation on 100% of the integration tests for a complex, full scale project involving Postgres, S3, RabbitMQ, and deep Aff nesting.
+- [ ] **Module validation:** Validate tests module by module (`gopurs-*`).
 
 ## Architecture
 
