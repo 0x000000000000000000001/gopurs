@@ -6,8 +6,23 @@ package gopurs_runtime
 
 import (
 	"math"
+	"sync"
 	"unsafe"
 )
+
+var EventLoop sync.WaitGroup
+
+func Retain() {
+	EventLoop.Add(1)
+}
+
+func Release() {
+	EventLoop.Done()
+}
+
+func EventLoopWait() {
+	EventLoop.Wait()
+}
 
 const (
 	TypeFunc = 1
