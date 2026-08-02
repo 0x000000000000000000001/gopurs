@@ -22,18 +22,19 @@ The [`purescript-native`](https://github.com/andyarvanitis/purescript-native) pr
 
 Reading through the discussions and challenges raised by users over the years (initialization orders, performance overhead of `interface{}`, module qualifications), it became clear that the ecosystem has evolved drastically. This evolution unlocked new architectural paradigms that make building a completely new Go backend highly relevant today, specifically to address these past limitations:
 
-### 1. The Optimizer & Bootstrapping
+### 1. The optimizer & bootstrapping
 While previous native compilers were often written in Haskell and parsed raw `CoreFn`, `gopurs` is written 100% in PureScript. It integrates directly with the [`purescript-backend-optimizer`](https://github.com/aristanetworks/purescript-backend-optimizer) (just like `purs-backend-es` or `phpurs`). This allows the compiler to instantly benefit from classical optimizations such as aggressive uncurrying, magic-do, and Tail Call Optimization (TCO) at the AST level. The `gopurs` compiler can then strictly focus on translating this highly-optimized AST into idiomatic, performant Go code. Being built in PureScript also ensures it remains fully accessible to anyone in the ecosystem (installable via `spago` and `npm`).
 
-### 2. Heap vs. Stack: a new memory layout for Go
-Dynamic typing in statically typed languages like Go often relies heavily on `interface{}` (or `any`). However, assigning primitive values to interfaces forces them to escape to the heap (Boxing), generating massive Garbage Collector pressure. For `gopurs`, I ran extensive benchmarks and decided to completely ditch `any`. Instead, the runtime uses a universal flat `Value` struct (a tagged union). This ensures that dynamic operations stay mostly on the stack.
+### 2. Heap vs stack: a new memory layout for Go
+Dynamic typing in statically typed languages like Go often relies heavily on `interface{}` (or `any`). Previous compilers represented PureScript values as `any` and PureScript records as `map[string]any`. However, assigning primitive values to interfaces forces them to escape to the heap (boxing), generating massive Garbage Collector pressure. For `gopurs`, I ran extensive benchmarks and decided to completely ditch `any`. Instead, the runtime uses a universal flat `Value` struct (a tagged union). This ensures that dynamic operations stay mostly on the stack.
 
 > **Benchmark context:** On a 1 billion operations benchmark, native static Go took ~250ms, a dynamic `any` approach took ~9 seconds, and my `Value` struct solution completed in **~240ms**. This memory model completely bypasses the GC overhead in heavy iterative loops.
 
 ### 3. Up-to-date with modern PureScript
 `gopurs` aims to be fully aligned with the current v0.15+ ecosystem (and v0.16+ soon). I am currently mirroring the standard libraries ([`gopurs-prelude`](https://github.com/0x000000000000000000001/gopurs-prelude), [`gopurs-effect`](https://github.com/0x000000000000000000001/gopurs-effect), etc.) to provide native Go FFIs.
 
-Go offers exceptional concurrency (goroutines fit perfectly with PureScript's `Aff`) and rock-solid native binaries. 
+### 4. Concurrency: Aff mapped to goroutines
+The previous compiler listed goroutine parallelism as a "future idea", which meant it lacked an implementation to run `Aff` asynchronously out of the box. `gopurs` introduces an event loop emulator and natively maps `Aff` to goroutines. This brings true, shared-memory parallelism to PureScript, allowing your asynchronous code to scale effortlessly across multiple CPU cores.
 
 ## How to use
 
