@@ -1790,8 +1790,15 @@ wrapReturn dataDecls (TMap _ _) (Just (Record fields)) valName =
       ) fields
   in
     "func() gopurs_runtime.Value {\n\t\t\t_raw := " <> valName <> "\n\t\t\tres_map := make(map[string]gopurs_runtime.Value)\n" <> String.joinWith "\n" fieldStr <> "\n\t\t\treturn gopurs_runtime.Record(res_map)\n\t\t}()"
-wrapReturn _ (TMap _ _) _ valName = 
-  "func() gopurs_runtime.Value {\n\t\t\tres_map := make(map[string]gopurs_runtime.Value)\n\t\t\tfor k, v := range " <> valName <> " { res_map[k] = gopurs_runtime.Box(v) }\n\t\t\treturn gopurs_runtime.Record(res_map)\n\t\t}()"
+wrapReturn dataDecls (TMap _ _) mbTast valName = 
+  let resolvedTast = map (resolveNewtype dataDecls) mbTast
+      isOpaque = case resolvedTast of
+                   Just (Record _) -> false
+                   _ -> true
+  in if isOpaque then
+       "gopurs_runtime.Any(" <> valName <> ")"
+     else
+       "func() gopurs_runtime.Value {\n\t\t\tres_map := make(map[string]gopurs_runtime.Value)\n\t\t\tfor k, v := range " <> valName <> " { res_map[k] = gopurs_runtime.Box(v) }\n\t\t\treturn gopurs_runtime.Record(res_map)\n\t\t}()"
 wrapReturn dataDecls (TNamed anyT) mbTast valName | anyT == "any" || anyT == "interface{}" || anyT == "gopurs_runtime.Value" =
   let resolvedTast = map (resolveNewtype dataDecls) mbTast
   in case resolvedTast of
@@ -1942,7 +1949,13 @@ generateWrapperFunc dataDecls d mbTast =
           TMap _ _ ->
             let 
               et = String.drop (String.indexOf (Pattern "]") typStr # fromMaybe 0 # add 1) typStr
-            in if et == "any" || et == "interface{}" then
+              resolvedTast = map (resolveNewtype dataDecls) tastArg
+              isOpaque = case resolvedTast of
+                           Just (Record _) -> false
+                           _ -> true
+            in if isOpaque then
+                 [ "\tgo_arg" <> show i <> " := gopurs_runtime.UnboxObject(arg" <> show i <> ")" ]
+               else if et == "any" || et == "interface{}" then
                  [ "\targ" <> show i <> "_map := gopurs_runtime.RecordToMap(arg" <> show i <> ")"
                  , "\tgo_arg" <> show i <> " := make(" <> typStr <> ")"
                  , "\tfor k, v := range arg" <> show i <> "_map { go_arg" <> show i <> "[k] = v }"

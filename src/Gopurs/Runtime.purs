@@ -208,12 +208,33 @@ func RecordDict4(k0, k1, k2, k3 string, v0, v1, v2, v3 Value) Value { return Val
 type RecordData5 struct { K0, K1, K2, K3, K4 string; V0, V1, V2, V3, V4 Value }
 func RecordDict5(k0, k1, k2, k3, k4 string, v0, v1, v2, v3, v4 Value) Value { return Value{Type: TypeRecord5, UnsafePtr: unsafe.Pointer(&RecordData5{k0, k1, k2, k3, k4, v0, v1, v2, v3, v4})} }
 
+func UnboxObject(v Value) map[string]any {
+	if v.Type == TypeRecord {
+		m := RecordToMap(v)
+		res := make(map[string]any, len(m))
+		for k, v2 := range m { res[k] = v2 }
+		return res
+	}
+	return v.PtrVal().(map[string]any)
+}
+
 func RecordToMap(obj Value) map[string]Value {
 	if obj.Type == TypeRecord {
 		m := *(*map[string]Value)(obj.UnsafePtr)
 		res := make(map[string]Value, len(m))
 		for k, v := range m { res[k] = v }
 		return res
+	}
+	if obj.Type == TypeAny {
+		v := obj.PtrVal()
+		if m, ok := v.(map[string]any); ok {
+			res := make(map[string]Value, len(m))
+			for k, v2 := range m { res[k] = Box(v2) }
+			return res
+		}
+		if m, ok := v.(map[string]Value); ok {
+			return m
+		}
 	}
 	res := make(map[string]Value)
 	switch obj.Type {
@@ -244,6 +265,15 @@ func Record(m map[string]Value) Value {
 func RecordGet(obj Value, key string) Value {
 	if obj.Type == 0 {
 		panic("Attempt to read property '" + key + "' on uninitialized value")
+	}
+	if obj.Type == TypeAny {
+		v := obj.PtrVal()
+		if m, ok := v.(map[string]any); ok {
+			return Box(m[key])
+		}
+		if m, ok := v.(map[string]Value); ok {
+			return m[key]
+		}
 	}
     switch obj.Type {
     case TypeRecord: return (*(*map[string]Value)(obj.UnsafePtr))[key]
@@ -686,14 +716,8 @@ func Box[T any](val T) Value {
 		arr := make([]Value, len(v))
 		for i, val := range v { arr[i] = Box(val) }
 		return Array(arr)
-	case []Value:
-		return Array(v)
-	case map[string]any:
-		m := make(map[string]Value)
-		for k, val := range v { m[k] = Box(val) }
-		return Record(m)
-	case map[string]Value:
-		return Record(v)
+	case []Value: return Array(v)
+
 	case Value: return v
 	default: return Any(v)
 	}
