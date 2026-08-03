@@ -125,7 +125,7 @@ To run the test suite:
 
 Since its inception, `gopurs` has reached several major milestones:
 
-- [x] **100% of the official tests are green.**
+- [x] **100% of the [official tests](https://github.com/purescript/purescript/tree/master/tests/purs/passing) are green.**
 - [x] **Typed AST (TAST):** By consuming an enriched `tcorefn.json` (Typed CoreFn) instead of standard `corefn`, `gopurs` preserves deep structural typing. Combined with partial monomorphization, this unlocks massive performance gains (x10).
 - [x] **Zero boilerplate FFI:** A complete overhaul of the FFI developer experience via a WebAssembly parser (`ffi_gen.wasm`). It analyzes your Go signatures on the fly, allowing you to write idiomatic Go (uncurried functions, native types, flexible Effect semantics) without manual boxing or closures.
 - [x] **Native `Aff` via goroutines:** Full support for `Aff` mapped directly to Go's goroutines. This emulates the event loop while providing **true multi-core parallelism for free**, meaning your async PureScript code gets exponentially faster on multi-core systems.
