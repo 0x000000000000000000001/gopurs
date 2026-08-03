@@ -358,7 +358,16 @@ translate pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors 
 
     moduleArities :: Map String { fullName :: String, fArgs :: Array GoType, fRet :: GoType, arity :: Int }
     moduleArities = Map.fromFoldable $ Array.concatMap
-      ( \group -> unwrapFunc group.bindings )
+      ( \group -> 
+          if group.recursive then
+            let
+              mutRecBinds = traverse (\(Tuple _ val) -> extractUncurriedAbs val) group.bindings
+            in case mutRecBinds of
+              Just _ -> unwrapFunc group.bindings
+              Nothing -> map (\(Tuple (Ident name) _) -> Tuple (sanitizeName name) { fullName: "Call_" <> sanitizeName name, fArgs: [], fRet: TypeValue, arity: 0 }) group.bindings
+          else
+            unwrapFunc group.bindings
+      )
       tcoBindingsExpanded
 
     Tuple decls helpers = unsafePerformEffect do
