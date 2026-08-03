@@ -133,7 +133,7 @@ Since its inception, `gopurs` has reached several major milestones:
 - [ ] **Real world validation (integration):** Successful validation on 100% of the integration tests for a complex, full scale project involving Postgres, S3, RabbitMQ, and deep Aff nesting.
 - [ ] **Module validation:** Validate tests module by module (`gopurs-*`).
 - [ ] General code **cleanup** (it’s still quite messy)
-- _(maybe more to come)_
+_(maybe more to come)_
 
 ## Architecture
 
