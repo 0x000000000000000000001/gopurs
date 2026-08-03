@@ -80,7 +80,9 @@ func (v Value) FloatVal() float64 {
 }
 
 func Str(v string) Value {
-	return Value{Type: TypeString, UnsafePtr: unsafe.Pointer(&v)}
+	ptr := new(string)
+	*ptr = v
+	return Value{Type: TypeString, UnsafePtr: unsafe.Pointer(ptr)}
 }
 
 func (v Value) StrVal() string {
@@ -141,7 +143,9 @@ func BitXor(a Value, b Value) Value {
 }
 
 func Array(v []Value) Value {
-	return Value{Type: TypeArray, UnsafePtr: unsafe.Pointer(&v)}
+	ptr := new([]Value)
+	*ptr = v
+	return Value{Type: TypeArray, UnsafePtr: unsafe.Pointer(ptr)}
 }
 
 func (v Value) PtrVal() any {
@@ -232,7 +236,9 @@ func RecordToMap(obj Value) map[string]Value {
 }
 
 func Record(m map[string]Value) Value {
-	return Value{Type: TypeRecord, UnsafePtr: unsafe.Pointer(&m)}
+	ptr := new(map[string]Value)
+	*ptr = m
+	return Value{Type: TypeRecord, UnsafePtr: unsafe.Pointer(ptr)}
 }
 
 func RecordGet(obj Value, key string) Value {
@@ -498,7 +504,9 @@ func Any(v any) Value {
 	if val, ok := v.(Value); ok {
 		return val
 	}
-	return Value{Type: TypeAny, UnsafePtr: unsafe.Pointer(&v)}
+	ptr := new(any)
+	*ptr = v
+	return Value{Type: TypeAny, UnsafePtr: unsafe.Pointer(ptr)}
 }
 
 func UncurriedApp2(fn Value, a, b Value) Value {

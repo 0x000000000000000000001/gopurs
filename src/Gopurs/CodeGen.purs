@@ -396,7 +396,7 @@ translate pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors 
                                   
                                   isSelfRecursiveLoop = group.recursive && Array.length group.bindings == 1
                                   currentLoopCtx = if isSelfRecursiveLoop then [ { ident: fn.ident, params: map fst paramsWithTypes, loopParams: map (\p -> fst p <> "_loop") paramsWithTypes, goTypes: map snd paramsWithTypes } ] else []
-                                  resBodyMut = translateExprImpl_ helpersRef 0 modNameStr recVars moduleArities newBound Nothing currentLoopCtx isSelfRecursiveLoop false 0 fn.body
+                                  resBodyMut = translateExprImpl_ helpersRef 0 modNameStr recVars moduleArities newBound (Just fn.ident) currentLoopCtx isSelfRecursiveLoop false 0 fn.body
                                   goName = fn.ident
                                   loopParams = map (\(Tuple idStr _) -> idStr <> "_loop") paramsWithTypes
                                   initVars = Array.concatMap (\(Tuple p goT) -> [ GoRaw ("var " <> p <> " " <> goTypeToStr goT <> " = " <> p <> "_loop"), GoRaw ("_ = " <> p) ]) paramsWithTypes
@@ -541,7 +541,11 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
       if depth > 10 then unsafePerformEffect do
         let fvsSet = freeVars tcoExpr
         let fvs = Array.fromFoldable fvsSet
-        let helperName = "__helper_" <> show nextId
+        let gId = unsafePerformEffect do
+              curr <- Ref.read helpersRef
+              Ref.modify_ (\r -> r { globalId = r.globalId + 1 }) helpersRef
+              pure curr.globalId
+        let helperName = "__helper_" <> show gId
         let newNextId = nextId + 1
         let newBound = foldl (\acc fv -> Map.insert fv { name: fv, goType: TypeValue } acc) bound fvs
         let res = translateExprImpl_ helpersRef 0 modNameStr recVars moduleArities newBound Nothing [] false inEffectBlock newNextId tcoExpr
@@ -556,7 +560,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
         let
           callExpr =
             if Array.length fvs == 0 then GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ GoCall (GoVar ("Get_" <> helperName)) [], GoRaw "gopurs_runtime.Int(0)" ]
-            else Array.foldl (\accCall fv -> GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ accCall, boxGoExpr (GoVar fv) (fromMaybe TypeValue (map _.goType (Map.lookup fv bound))) ]) (GoCall (GoVar ("Get_" <> helperName)) []) fvs
+            else Array.foldl (\accCall fv -> GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ accCall, boxGoExpr (GoVar (fromMaybe fv (map _.name (Map.lookup fv bound)))) (fromMaybe TypeValue (map _.goType (Map.lookup fv bound))) ]) (GoCall (GoVar ("Get_" <> helperName)) []) fvs
 
         pure { stmts: StmtEmpty, expr: callExpr, exprType: TypeValue, nextId: res.nextId }
       else mkNodeThunk unit
@@ -1238,7 +1242,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                             in Tuple idStr (exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths modNameStr t)
                           ) fn.args
                         currentLoopCtx = [ { ident: newName, params: fn.args, loopParams: map (\p -> p <> "_loop") fn.args, goTypes: map snd paramsWithTypes } ]
-                        resBodyMut = translateExprImpl_ helpersRef (depth + 1) modNameStr combinedRecVars moduleArities allocRes.newBound Nothing currentLoopCtx true false currNextId fn.body
+                        resBodyMut = translateExprImpl_ helpersRef (depth + 1) modNameStr combinedRecVars moduleArities allocRes.newBound (Just newName) currentLoopCtx true false currNextId fn.body
                         
                         loopParams = map (\(Tuple idStr _) -> idStr <> "_loop") paramsWithTypes
                         initVars = Array.concatMap (\(Tuple p goT) -> [ GoRaw ("var " <> p <> " " <> goTypeToStr goT <> " = " <> p <> "_loop"), GoRaw ("_ = " <> p) ]) paramsWithTypes
