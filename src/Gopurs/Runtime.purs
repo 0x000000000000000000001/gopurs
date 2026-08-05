@@ -5,6 +5,7 @@ runtimeGoCode = """
 package gopurs_runtime
 
 import (
+	"fmt"
 	"math"
 	"sync"
 	"unsafe"
@@ -308,6 +309,11 @@ func RecordGet(obj Value, key string) Value {
 			if k == key { return r.Vals[i] }
 		}
 	}
+	strVal := ""
+	if obj.Type == TypeString && obj.UnsafePtr != nil {
+		strVal = *(*string)(obj.UnsafePtr)
+	}
+	panic(fmt.Sprintf("Key '%s' not found in record. Object type: %d, String value: '%s', Object: %+v\n", key, obj.Type, strVal, obj))
 	panic("Key not found in record: " + key)
 }
 
@@ -779,6 +785,87 @@ func Apply10(fn Value, arg1 Value, arg2 Value, arg3 Value, arg4 Value, arg5 Valu
 	return Apply(Apply(Apply(Apply(Apply(Apply(Apply(Apply(Apply(Apply(fn, arg1), arg2), arg3), arg4), arg5), arg6), arg7), arg8), arg9), arg10)
 }
 
+
+
+
+
+func ExtractVariant(variant interface{}) (string, interface{}, bool) {
+	if val, ok := variant.(Value); ok {
+		if val.Type == TypeRecord {
+			m := *(*map[string]Value)(val.UnsafePtr)
+			if typVal, ok := m["type"]; ok {
+				if typVal.Type == TypeString {
+					str := *(*string)(typVal.UnsafePtr)
+					valVal, hasVal := m["value"]
+					if hasVal {
+						return str, valVal, true
+					}
+					return str, nil, true
+				}
+			}
+		} else if val.Type == TypeRecord2 {
+            rec := (*RecordData2)(val.UnsafePtr)
+            var str string
+            var valVal interface{}
+            hasVal := false
+            if rec.K0 == "type" && rec.V0.Type == TypeString {
+                str = *(*string)(rec.V0.UnsafePtr)
+            } else if rec.K1 == "type" && rec.V1.Type == TypeString {
+                str = *(*string)(rec.V1.UnsafePtr)
+            } else {
+                return "", nil, false
+            }
+
+            if rec.K0 == "value" {
+                valVal = rec.V0
+                hasVal = true
+            } else if rec.K1 == "value" {
+                valVal = rec.V1
+                hasVal = true
+            }
+
+            if hasVal {
+                return str, valVal, true
+            }
+            return str, nil, true
+        } else if val.Type == TypeRecord3 {
+            rec := (*RecordData3)(val.UnsafePtr)
+            var str string
+            var valVal interface{}
+            hasVal := false
+            
+            if rec.K0 == "type" && rec.V0.Type == TypeString {
+                str = *(*string)(rec.V0.UnsafePtr)
+            } else if rec.K1 == "type" && rec.V1.Type == TypeString {
+                str = *(*string)(rec.V1.UnsafePtr)
+            } else if rec.K2 == "type" && rec.V2.Type == TypeString {
+                str = *(*string)(rec.V2.UnsafePtr)
+            } else {
+                return "", nil, false
+            }
+
+            if rec.K0 == "value" {
+                valVal = rec.V0
+                hasVal = true
+            } else if rec.K1 == "value" {
+                valVal = rec.V1
+                hasVal = true
+            } else if rec.K2 == "value" {
+                valVal = rec.V2
+                hasVal = true
+            }
+
+            if hasVal {
+                return str, valVal, true
+            }
+            return str, nil, true
+        } else if val.Type == TypeString {
+			str := *(*string)(val.UnsafePtr)
+			return str, nil, true
+		}
+	}
+	return "", nil, false
+}
 
 
 """

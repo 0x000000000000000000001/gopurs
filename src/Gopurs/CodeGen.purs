@@ -75,7 +75,10 @@ mangleType ptrPaths modNameStr t =
     typeStrSafe = String.replaceAll (Pattern ".") (Replacement "_") typeStrNoPkg
     typeStrSafe2 = String.replaceAll (Pattern "[]") (Replacement "arr") typeStrSafe
     typeStrSafe3 = String.replaceAll (Pattern "*") (Replacement "ptr") typeStrSafe2
-    cleanType = String.replaceAll (Pattern " ") (Replacement "_") typeStrSafe3
+    typeStrSafe4 = String.replaceAll (Pattern "[") (Replacement "_") typeStrSafe3
+    typeStrSafe5 = String.replaceAll (Pattern "]") (Replacement "_") typeStrSafe4
+    typeStrSafe6 = String.replaceAll (Pattern ",") (Replacement "_") typeStrSafe5
+    cleanType = String.replaceAll (Pattern " ") (Replacement "_") typeStrSafe6
   in cleanType <> "_" <> hashString (Monomorphize.mangleType t)
 
 exprTypeToGoType :: Map.Map String { ctorName :: String, arity :: Int } -> String -> ExprType -> GoType
@@ -116,6 +119,8 @@ structFieldGoType ptrPaths typeVars modStr ty = case exprTypeToGenericGoType ptr
 unboxGoExpr :: GoExpr -> GoType -> GoType -> GoExpr
 unboxGoExpr expr currentType desiredType =
   if currentType == desiredType then expr
+  else if currentType /= TypeValue then
+    unboxGoExpr (boxGoExpr expr currentType) TypeValue desiredType
   else case desiredType of
     TypeValue -> boxGoExpr expr currentType
     (TypeRecord _) -> boxGoExpr expr currentType
@@ -309,12 +314,12 @@ translate pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors 
                  concreteArr = Set.toUnfoldable concretes :: Array ExprType
                  res = Tuple id baseVal `Array.cons` Array.mapMaybe (\concrete ->
                   let subst = unify genericType concrete Map.empty
-                  in if Map.isEmpty subst then Nothing else Just $
+                  in Just $
                        let mangledName = name <> "__" <> mangleType pointerAdtPaths modNameStr concrete
                            mangledVal = mapTcoExprTypes (substituteExprType subst) val
                            mangledVal' = substituteAst instsMap (mangleType pointerAdtPaths modNameStr) mangledVal
                        in Tuple (Ident mangledName) (setTcoExprType concrete mangledVal')
-                ) concreteArr
+                 ) concreteArr
              in res
            Nothing -> [ Tuple id baseVal ]
 
@@ -410,7 +415,7 @@ translate pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors 
                                   
                                   funcExpr = if arity >= 1 && arity <= 10 then
                                     let
-                                      coercedExpr = unboxGoExpr resBodyMut.expr resBodyMut.exprType expectedRetType
+                                      coercedExpr = coerceGoExpr resBodyMut.expr resBodyMut.exprType expectedRetType
                                       bodyStmts = initVars <> flattenStmts resBodyMut.stmts <> [ GoReturn coercedExpr ]
                                       funcBody = if isSelfRecursiveLoop then GoFor goName bodyStmts else GoBlock bodyStmts
                                     in unsafePerformEffect do
