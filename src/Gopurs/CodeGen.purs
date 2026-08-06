@@ -361,6 +361,7 @@ translate pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors 
         )
         binds
 
+
     moduleArities :: Map String { fullName :: String, fArgs :: Array GoType, fRet :: GoType, arity :: Int }
     moduleArities = Map.fromFoldable $ Array.concatMap
       ( \group -> 
