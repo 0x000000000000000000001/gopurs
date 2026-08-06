@@ -210,16 +210,13 @@ type RecordData5 struct { K0, K1, K2, K3, K4 string; V0, V1, V2, V3, V4 Value }
 func RecordDict5(k0, k1, k2, k3, k4 string, v0, v1, v2, v3, v4 Value) Value { return Value{Type: TypeRecord5, UnsafePtr: unsafe.Pointer(&RecordData5{k0, k1, k2, k3, k4, v0, v1, v2, v3, v4})} }
 
 func UnboxObject(v Value) map[string]any {
-	if v.Type == TypeAny {
-		val := v.PtrVal()
-		if m, ok := val.(map[string]any); ok {
-			return m
-		}
+	if v.Type == TypeRecord {
+		m := RecordToMap(v)
+		res := make(map[string]any, len(m))
+		for k, v2 := range m { res[k] = v2 }
+		return res
 	}
-	m := RecordToMap(v)
-	res := make(map[string]any, len(m))
-	for k, v2 := range m { res[k] = v2 }
-	return res
+	return v.PtrVal().(map[string]any)
 }
 
 func RecordToMap(obj Value) map[string]Value {
@@ -312,11 +309,7 @@ func RecordGet(obj Value, key string) Value {
 			if k == key { return r.Vals[i] }
 		}
 	}
-	strVal := ""
-	if obj.Type == TypeString && obj.UnsafePtr != nil {
-		strVal = *(*string)(obj.UnsafePtr)
-	}
-	panic(fmt.Sprintf("Key '%s' not found in record. Object type: %d, String value: '%s', Object: %+v\n", key, obj.Type, strVal, obj))
+	panic(fmt.Sprintf("Key '%s' not found in record. Object type: %d, Object: %+v\n", key, obj.Type, obj))
 	panic("Key not found in record: " + key)
 }
 
