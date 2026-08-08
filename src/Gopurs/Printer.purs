@@ -142,6 +142,8 @@ printGoExpr expr = case expr of
     "\nreturn " <> printGoExpr def <> "\n}()"
   GoBinOp op left right ->
     "(" <> printGoExpr left <> ") " <> op <> " (" <> printGoExpr right <> ")"
+  GoPrefixOp op expr ->
+    op <> "(" <> printGoExpr expr <> ")"
   GoTypeAssertion expr t ->
     printGoExpr expr <> ".(" <> t <> ")"
   GoIndex expr index ->

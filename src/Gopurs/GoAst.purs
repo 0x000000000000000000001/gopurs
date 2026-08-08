@@ -28,6 +28,7 @@ data GoExpr
   | GoConstructorAccess GoExpr String (Array GoType) Int
   | GoBranch (Array (Tuple GoExpr GoExpr)) GoExpr
   | GoBinOp String GoExpr GoExpr
+  | GoPrefixOp String GoExpr
   | GoTypeAssertion GoExpr String
   | GoIndex GoExpr GoExpr
   | GoRaw String
