@@ -98,6 +98,10 @@ func Float(v float64) Value {
 	return Value{Type: TypeFloat, IntVal: int64(math.Float64bits(v))}
 }
 
+func NegativeZero() float64 {
+	return math.Copysign(0, -1)
+}
+
 func Bool(v bool) Value {
 	var i int64 = 0
 	if v {

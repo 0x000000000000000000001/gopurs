@@ -599,7 +599,10 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
 
       Lit (LitString s) -> { stmts: StmtEmpty, expr: GoString s, exprType: TypeString, nextId }
       Lit (LitInt i) -> { stmts: StmtEmpty, expr: GoInt i, exprType: TypeInt64, nextId }
-      Lit (LitNumber n) -> { stmts: StmtEmpty, expr: GoRaw (show n), exprType: TypeFloat64, nextId }
+      Lit (LitNumber n) -> 
+        let 
+          expr = if n == 0.0 && 1.0 / n < 0.0 then GoCall (GoSelector (GoVar "gopurs_runtime") "NegativeZero") [] else GoRaw (show n)
+        in { stmts: StmtEmpty, expr, exprType: TypeFloat64, nextId }
       Lit (LitBoolean b) -> { stmts: StmtEmpty, expr: GoRaw (if b then "true" else "false"), exprType: TypeBool, nextId }
       Lit (LitChar c) -> { stmts: StmtEmpty, expr: GoString (SCU.singleton c), exprType: TypeString, nextId }
 
@@ -725,7 +728,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                     if Array.length flatArgs >= 2 then Just "arrayMap" else Nothing
                   Just { name: "foldlArray" } ->
                     if Array.length flatArgs >= 3 then Just "foldlArray" else Nothing
-                  Just { name: "filter" } ->
+                  Just { mbMod, name: "filter" } | mbMod == Just (ModuleName "Data.Array") || (mbMod == Nothing && modNameStr == "Data.Array") ->
                     if Array.length flatArgs >= 2 then Just "filter" else Nothing
                   _ -> Nothing
 
@@ -967,7 +970,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
               if Array.length args >= 2 then Just "arrayMap" else Nothing
             Just { name: "foldlArray" } ->
               if Array.length args >= 3 then Just "foldlArray" else Nothing
-            Just { name: "filter" } ->
+            Just { mbMod, name: "filter" } | mbMod == Just (ModuleName "Data.Array") || (mbMod == Nothing && modNameStr == "Data.Array") ->
               if Array.length args >= 2 then Just "filter" else Nothing
             _ -> Nothing
         in
@@ -1494,9 +1497,9 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
             resE = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false nextId e
             goOp = case op1 of
               OpBooleanNot -> { stmts: resE.stmts, expr: GoBinOp "!=" (unboxGoExpr resE.expr resE.exprType TypeBool) (GoRaw "true"), exprType: TypeBool, nextId: resE.nextId }
-              OpIntNegate -> { stmts: resE.stmts, expr: GoBinOp "-" (GoInt 0) (unboxGoExpr resE.expr resE.exprType TypeInt64), exprType: TypeInt64, nextId: resE.nextId }
+              OpIntNegate -> { stmts: resE.stmts, expr: GoPrefixOp "-" (unboxGoExpr resE.expr resE.exprType TypeInt64), exprType: TypeInt64, nextId: resE.nextId }
               OpIntBitNot -> { stmts: resE.stmts, expr: GoBinOp "^" (GoRaw "^0") (unboxGoExpr resE.expr resE.exprType TypeInt64), exprType: TypeInt64, nextId: resE.nextId }
-              OpNumberNegate -> { stmts: resE.stmts, expr: GoBinOp "-" (GoRaw "0.0") (unboxGoExpr resE.expr resE.exprType TypeFloat64), exprType: TypeFloat64, nextId: resE.nextId }
+              OpNumberNegate -> { stmts: resE.stmts, expr: GoPrefixOp "-" (unboxGoExpr resE.expr resE.exprType TypeFloat64), exprType: TypeFloat64, nextId: resE.nextId }
               OpIsTag (Qualified mbMod (Ident tag)) ->
                 let
                   baseStructName = getBaseStructName modNameStr mbMod tag
