@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -e
+
+# Se placer dans le dossier racine htdocs
+cd "$(dirname "$0")/../.."
+
+echo "Détection des modules gopurs-*"
+echo "================================"
+
+for dir in gopurs-*/; do
+  if [ -x "${dir}bin/test" ]; then
+    echo ""
+    echo "=============================================="
+    echo "🧪 Testing module: $dir"
+    echo "=============================================="
+    (cd "$dir" && ./bin/test)
+  fi
+done
+
+echo ""
+echo "✅ All tests passed successfully!"
