@@ -13,7 +13,12 @@ for dir in gopurs-*/; do
     echo "=============================================="
     echo "🧪 Testing module: $dir"
     echo "=============================================="
-    (cd "$dir" && ./bin/test)
+    (cd "$dir" && ./bin/test) || {
+      echo ""
+      echo "❌ ERROR: Tests failed in module $dir"
+      echo "🛑 Aborting remaining tests."
+      exit 1
+    }
   fi
 done
 
