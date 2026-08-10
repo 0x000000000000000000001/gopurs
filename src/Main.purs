@@ -75,12 +75,22 @@ hasTypeVariables :: ExprType -> Boolean
 hasTypeVariables (TypeVar v) = String.take 1 v == String.toLower (String.take 1 v) && v /= "gopurs_runtime.Value"
 hasTypeVariables (Func args ret) = Array.any hasTypeVariables args || hasTypeVariables ret
 hasTypeVariables (Array t) = hasTypeVariables t
-hasTypeVariables (Record props) = Array.any (\(Tuple _ v) -> hasTypeVariables v) props
+hasTypeVariables (Record row) = hasTypeVariables row
+hasTypeVariables (Row props tail) = 
+  let tailHas = case tail of
+        Nothing -> false
+        Just t -> hasTypeVariables t
+  in Array.any (\(Tuple _ v) -> hasTypeVariables v) props || tailHas
+hasTypeVariables (TypeApp c args) = hasTypeVariables c || Array.any hasTypeVariables args
+hasTypeVariables (ForAll _ body) = hasTypeVariables body
+hasTypeVariables (ConstrainedType constraints body) = Array.any (\(Tuple _ a) -> Array.any hasTypeVariables a) constraints || hasTypeVariables body
 hasTypeVariables Int = false
 hasTypeVariables String = false
 hasTypeVariables Char = false
 hasTypeVariables Number = false
 hasTypeVariables Boolean = false
+hasTypeVariables Unit = false
+hasTypeVariables (TypeLevelString _) = false
 hasTypeVariables (ADT _ args) = Array.any hasTypeVariables args
 hasTypeVariables Any = false
 

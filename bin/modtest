@@ -4,6 +4,19 @@ set -e
 # Se placer dans le dossier racine htdocs
 cd "$(dirname "$0")/../.."
 
+CLEAN=0
+for arg in "$@"; do
+  if [ "$arg" == "-c" ] || [ "$arg" == "--clean" ]; then
+    CLEAN=1
+  fi
+done
+
+if [ "$CLEAN" == "1" ]; then
+  echo "=== Recompiling gopurs ==="
+  (cd gopurs && npm run build) || { echo "Compiler build failed"; exit 1; }
+  echo ""
+fi
+
 echo "Détection des modules gopurs-*"
 echo "================================"
 

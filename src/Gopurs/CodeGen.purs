@@ -88,7 +88,8 @@ exprTypeToGoType _ _ String = TypeString
 exprTypeToGoType _ _ Char = TypeString
 exprTypeToGoType _ _ Boolean = TypeBool
 exprTypeToGoType ptrPaths modNameStr (Array ty) = TypeNativeArray (exprTypeToGoType ptrPaths modNameStr ty)
-exprTypeToGoType ptrPaths modNameStr (Record fields) = TypeRecord (map (\(Tuple k v) -> Tuple k (exprTypeToGoType ptrPaths modNameStr v)) (Array.sortBy (comparing \(Tuple k _) -> k) fields))
+exprTypeToGoType ptrPaths modNameStr (Record (Row fields _)) = TypeRecord (map (\(Tuple k v) -> Tuple k (exprTypeToGoType ptrPaths modNameStr v)) (Array.sortBy (comparing \(Tuple k _) -> k) fields))
+exprTypeToGoType ptrPaths modNameStr (Record _) = TypeValue
 exprTypeToGoType ptrPaths modNameStr (ADT path args) = case Map.lookup (String.joinWith "." path) ptrPaths of
   Just info -> 
     let 
@@ -106,7 +107,8 @@ exprTypeToGoType _ _ (TypeVar v) = TypeValue
 exprTypeToGoType _ _ _ = TypeValue
 
 exprTypeToGenericGoType :: Map.Map String { ctorName :: String, arity :: Int } -> Array String -> String -> ExprType -> GoType
-exprTypeToGenericGoType ptrPaths typeVars modNameStr (Record fields) = TypeRecord (map (\(Tuple k v) -> Tuple k (exprTypeToGenericGoType ptrPaths typeVars modNameStr v)) (Array.sortBy (comparing \(Tuple k _) -> k) fields))
+exprTypeToGenericGoType ptrPaths typeVars modNameStr (Record (Row fields _)) = TypeRecord (map (\(Tuple k v) -> Tuple k (exprTypeToGenericGoType ptrPaths typeVars modNameStr v)) (Array.sortBy (comparing \(Tuple k _) -> k) fields))
+exprTypeToGenericGoType _ _ _ (Record _) = TypeValue
 exprTypeToGenericGoType _ typeVars _ (TypeVar v) | Array.elem v typeVars = TypeGenericParam v
 exprTypeToGenericGoType ptrPaths _ modNameStr ty = exprTypeToGoType ptrPaths modNameStr ty
 
@@ -243,7 +245,15 @@ translate pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors 
           in (if Map.member adtFullName pointerAdtPaths then [ modPart ] else []) <> Array.concatMap getAdtModules args
         getAdtModules (Array ty) = getAdtModules ty
         getAdtModules (Func args ret) = Array.concatMap getAdtModules args <> getAdtModules ret
-        getAdtModules (Record fields) = Array.concatMap (\(Tuple _ ty) -> getAdtModules ty) fields
+        getAdtModules (Record row) = getAdtModules row
+        getAdtModules (Row fields tail) = 
+          let tailModules = case tail of
+                Nothing -> []
+                Just t -> getAdtModules t
+          in Array.concatMap (\(Tuple _ ty) -> getAdtModules ty) fields <> tailModules
+        getAdtModules (TypeApp c args) = getAdtModules c <> Array.concatMap getAdtModules args
+        getAdtModules (ForAll _ body) = getAdtModules body
+        getAdtModules (ConstrainedType constraints body) = Array.concatMap (\(Tuple _ a) -> Array.concatMap getAdtModules a) constraints <> getAdtModules body
         getAdtModules _ = []
         
         adtModules = Array.nub (getAdtModules t)
@@ -1704,7 +1714,11 @@ resolveNewtype dataDecls (ADT path args) =
        Nothing -> ADT path args
 resolveNewtype dataDecls (Func fArgs ret) = Func (map (resolveNewtype dataDecls) fArgs) (resolveNewtype dataDecls ret)
 resolveNewtype dataDecls (Array elem) = Array (resolveNewtype dataDecls elem)
-resolveNewtype dataDecls (Record fields) = Record (map (\(Tuple k v) -> Tuple k (resolveNewtype dataDecls v)) fields)
+resolveNewtype dataDecls (Record row) = Record (resolveNewtype dataDecls row)
+resolveNewtype dataDecls (Row fields tail) = Row (map (\(Tuple k v) -> Tuple k (resolveNewtype dataDecls v)) fields) (map (resolveNewtype dataDecls) tail)
+resolveNewtype dataDecls (TypeApp c args) = TypeApp (resolveNewtype dataDecls c) (map (resolveNewtype dataDecls) args)
+resolveNewtype dataDecls (ForAll vars body) = ForAll vars (resolveNewtype dataDecls body)
+resolveNewtype dataDecls (ConstrainedType constraints body) = ConstrainedType (map (\(Tuple c a) -> Tuple c (map (resolveNewtype dataDecls) a)) constraints) (resolveNewtype dataDecls body)
 resolveNewtype _ other = other
 
 flattenFuncArgs :: ExprType -> Array ExprType
@@ -1752,7 +1766,7 @@ unwrapValueToFunc dataDecls (TFunc args ret) mbTast valName depth _ =
 unwrapValueToFunc dataDecls (TNamed anyT) mbTast valName depth cidx | anyT == "any" || anyT == "interface{}" || anyT == "gopurs_runtime.Value" =
   let resolvedTast = map (resolveNewtype dataDecls) mbTast
   in case resolvedTast of
-    Just (Record fields) ->
+    Just (Record (Row fields _)) ->
       let
         fieldStr = Array.mapWithIndex (\i (Tuple fK fT) ->
             "\t\t\t\tres_map[\"" <> fK <> "\"] = " <> unwrapValueToFunc dataDecls (TNamed "any") (Just fT) ("_raw[\"" <> fK <> "\"]") (depth + 1) i
@@ -1793,7 +1807,7 @@ wrapReturn dataDecls (TFunc args ret) mbTast valName =
         Just r -> genInnerArg ("inner_res := " <> valName) (wrapReturn dataDecls r (mbTast >>= getTastReturnType) "inner_res") argUnwrap
 wrapReturn _ (TArray elem) _ valName | printTypeNode elem /= "gopurs_runtime.Value" = 
   "func() gopurs_runtime.Value {\n\t\t\tres_arr := make([]gopurs_runtime.Value, len(" <> valName <> "))\n\t\t\tfor i, v := range " <> valName <> " { res_arr[i] = gopurs_runtime.Box(v) }\n\t\t\treturn gopurs_runtime.Array(res_arr)\n\t\t}()"
-wrapReturn dataDecls (TMap _ _) (Just (Record fields)) valName = 
+wrapReturn dataDecls (TMap _ _) (Just (Record (Row fields _))) valName = 
   let
     fieldStr = Array.mapWithIndex (\i (Tuple fK fT) ->
         "\t\t\t\tres_map[\"" <> fK <> "\"] = " <> wrapReturn dataDecls (TNamed "any") (Just fT) ("_raw[\"" <> fK <> "\"]")
@@ -1812,7 +1826,7 @@ wrapReturn dataDecls (TMap _ _) mbTast valName =
 wrapReturn dataDecls (TNamed anyT) mbTast valName | anyT == "any" || anyT == "interface{}" || anyT == "gopurs_runtime.Value" =
   let resolvedTast = map (resolveNewtype dataDecls) mbTast
   in case resolvedTast of
-    Just (Record fields) ->
+    Just (Record (Row fields _)) ->
       let
         fieldStr = Array.mapWithIndex (\i (Tuple fK fT) ->
             "\t\t\t\tres_map[\"" <> fK <> "\"] = " <> wrapReturn dataDecls (TNamed "any") (Just fT) ("_raw[\"" <> fK <> "\"]")
@@ -1862,9 +1876,19 @@ printExprType = case _ of
   String -> "String"
   Char -> "Char"
   Boolean -> "Boolean"
+  Unit -> "Unit"
+  TypeLevelString s -> "(TypeLevelString " <> s <> ")"
   Array e -> "(Array " <> printExprType e <> ")"
   Func args ret -> "(Func [" <> String.joinWith ", " (map printExprType args) <> "] " <> printExprType ret <> ")"
-  Record props -> "(Record [" <> String.joinWith ", " (map (\(Tuple k v) -> k <> ": " <> printExprType v) props) <> "])"
+  Record row -> "(Record " <> printExprType row <> ")"
+  Row props tail -> 
+    let tailStr = case tail of
+          Nothing -> "Empty"
+          Just t -> printExprType t
+    in "(Row [" <> String.joinWith ", " (map (\(Tuple k v) -> k <> ": " <> printExprType v) props) <> "] " <> tailStr <> ")"
+  TypeApp c args -> "(TypeApp " <> printExprType c <> " [" <> String.joinWith ", " (map printExprType args) <> "])"
+  ForAll vars body -> "(ForAll [" <> String.joinWith ", " vars <> "] " <> printExprType body <> ")"
+  ConstrainedType constraints body -> "(ConstrainedType " <> printExprType body <> ")"
   ADT path args -> "(ADT " <> show path <> " [" <> String.joinWith ", " (map printExprType args) <> "])"
   TypeVar v -> "(TypeVar " <> v <> ")"
   Any -> "Any"
