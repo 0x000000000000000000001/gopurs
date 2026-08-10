@@ -1,0 +1,4 @@
+*.js linguist-generated
+*.js linguist-vendored
+bin/gopurs.js linguist-generated
+bin/gopurs.js linguist-vendored
