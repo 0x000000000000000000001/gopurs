@@ -230,6 +230,10 @@ globalReusedVars = unsafePerformEffect (Ref.new Set.empty)
 
 translate :: Map.Map String { ctorName :: String, arity :: Int } -> Set.Set String -> Map.Map String String -> Set.Set ExprType -> Set.Set String -> Map.Map String { vars :: Array String, fields :: Array ExprType } -> Map.Map String ExprType -> InstantiationMap -> Array (Array String) -> BackendModule -> String
 translate pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors ctorTypes globalTypes rawInstantiations importsArray mod =
+  Debug.trace ("--- DATADECLS TRACE for " <> unwrap mod.name <> " ---") \_ ->
+  Debug.trace mod.dataDecls \_ ->
+  Debug.trace ("--- CLASSDECLS TRACE for " <> unwrap mod.name <> " ---") \_ ->
+  Debug.trace mod.classDecls \_ ->
   let
     modNameStrOrig = unwrap mod.name
     modNameStr = String.replaceAll (Pattern ".") (Replacement "_") modNameStrOrig

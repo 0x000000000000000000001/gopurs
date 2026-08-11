@@ -18,12 +18,13 @@ import Data.Bifunctor (lmap)
 import Data.Argonaut.Decode.Error (printJsonDecodeError)
 import Data.Array as Array
 import Partial.Unsafe (unsafePartial)
-import Data.Tuple (Tuple(..))
+import Data.Tuple (Tuple(..), fst, snd)
 import Data.List as List
-import Data.Maybe (Maybe(..), isJust)
+import Data.Maybe (Maybe(..), isJust, fromMaybe)
 import Data.Tuple (Tuple(..))
 import Data.Map as Map
 import Data.Foldable (foldl)
+
 import Data.Set as Set
 import Data.Traversable (traverse)
 import Data.String.Pattern (Pattern(..), Replacement(..))
@@ -136,12 +137,34 @@ main = launchAff_ do
     ) Map.empty finalModules
 
   let globalTypes = buildGlobalTypes (Array.fromFoldable finalModules)
+  let
+    allClassDecls = foldl (\acc (Module m) ->
+      foldl (\acc' c -> Set.insert c.name acc') acc m.classDecls
+    ) Set.empty finalModules
+
+    finalModulesWithClassDecls = map (\(Module m) ->
+      let newDecls = map (\c ->
+            let superclassFields = Array.mapWithIndex (\i super ->
+                  let superName = fromMaybe "" (Array.last (fst super))
+                  in Tuple (superName <> show i) Any
+                ) c.superclasses
+                methodFields = c.methods
+                allFields = Array.sortBy (comparing fst) (superclassFields <> methodFields)
+                fieldTypes = map snd allFields
+            in { name: c.name, vars: c.vars, constructors: [{ name: c.name, fields: fieldTypes }] }
+          ) m.classDecls
+      in Module (m { dataDecls = m.dataDecls <> newDecls })
+    ) finalModules
+
+    getClassName (ADT fullName _ _) = Just fullName
+    getClassName _ = Nothing
+  
   let rawInstantiations = foldl collectInstantiations Map.empty finalModules
   let instantiations = Map.filterKeys (\k -> case Map.lookup k globalTypes of
                                             Just t -> hasTypeVariables t
                                             Nothing -> false) rawInstantiations
 
-  let allTypes = foldl (\acc mod -> Set.union acc (collectAllTypes mod)) Set.empty finalModules
+  let allTypes = foldl (\acc mod -> Set.union acc (collectAllTypes mod)) Set.empty finalModulesWithClassDecls
   let adtTypes = Set.filter (\t -> case t of
         ADT _ _ _ -> true
         _ -> false) allTypes
@@ -153,24 +176,24 @@ main = launchAff_ do
           ctorsWithFields = Array.filter (\c -> Array.length c.fields > 0) d.constructors
           ctorsWithoutFields = Array.filter (\c -> Array.length c.fields == 0) d.constructors
         in
-          if Array.length ctorsWithFields == 1 && Array.length ctorsWithoutFields == 1 then
+          if Array.length ctorsWithFields == 1 then
             let
               adtPath = unwrap m.name <> "." <> d.name
               nodeCtor = (unsafePartial (Array.unsafeIndex ctorsWithFields 0)).name
-              leafCtor = (unsafePartial (Array.unsafeIndex ctorsWithoutFields 0)).name
+              leafCtor = if Array.length ctorsWithoutFields == 1 then (unsafePartial (Array.unsafeIndex ctorsWithoutFields 0)).name else ""
               pkgNameStr = String.replaceAll (Pattern ".") (Replacement "_") (unwrap m.name)
               nodeBaseStruct = "Data_" <> pkgNameStr <> "_" <> sanitizeName nodeCtor
-              leafBaseStruct = "Data_" <> pkgNameStr <> "_" <> sanitizeName leafCtor
+              leafBaseStruct = if leafCtor /= "" then "Data_" <> pkgNameStr <> "_" <> sanitizeName leafCtor else ""
               arity = Array.length d.vars
             in
               Array.snoc acc' { adtPath, nodeCtor, leafCtor, nodeBaseStruct, leafBaseStruct, arity }
           else acc'
       ) acc m.dataDecls
-     ) [] finalModules
+     ) [] finalModulesWithClassDecls
 
     pointerAdtPaths = Map.fromFoldable (map (\info -> Tuple info.adtPath { ctorName: info.nodeCtor, arity: info.arity }) pointerAdtPathsRaw)
     pointerAdtNodes = Set.fromFoldable (map _.nodeBaseStruct pointerAdtPathsRaw)
-    pointerAdtLeaves = Map.fromFoldable (map (\info -> Tuple info.leafBaseStruct info.nodeBaseStruct) pointerAdtPathsRaw)
+    pointerAdtLeaves = Map.fromFoldable (Array.mapMaybe (\info -> if info.leafBaseStruct /= "" then Just (Tuple info.leafBaseStruct info.nodeBaseStruct) else Nothing) pointerAdtPathsRaw)
 
 
   buildModules
@@ -226,7 +249,7 @@ main = launchAff_ do
               FS.writeTextFile UTF8 ("output/" <> modNameStr <> "/" <> String.replaceAll (Pattern ".") (Replacement "_") modNameStr <> "_ffi.go") dummyContent
         writeCache cacheVersion ("output/" <> modNameStr <> "/.gopurs-cache.json") backendMod
     }
-    finalModules
+    finalModulesWithClassDecls
 
   let
     targetMainModules = case args.mbMainModule of
