@@ -19,7 +19,7 @@ data GoExpr
   | GoAssign String GoExpr
   | GoRecordDict (Array (Tuple String GoExpr))
   | GoRecordUpdateDict GoExpr (Array (Tuple String GoExpr))
-  | GoRecordUpdateStatic GoExpr Int (Array (Tuple Int GoExpr))
+  | GoRecordUpdateStatic GoExpr Int (Array (Tuple Int GoExpr)) (Array (Tuple String GoExpr))
   | GoIIFE String GoExpr GoExpr
   | GoLetRec (Array (Tuple String GoExpr)) GoExpr
   | GoRecordAccess GoExpr String

@@ -234,31 +234,33 @@ translate pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors 
     modNameStrOrig = unwrap mod.name
     modNameStr = String.replaceAll (Pattern ".") (Replacement "_") modNameStrOrig
     
-    flatImportsArray = map (String.joinWith ".") importsArray
+    flatImportsSet = Set.fromFoldable (map (String.joinWith ".") importsArray)
     
     isSafeType :: ExprType -> Boolean
     isSafeType t =
       let
-        getAdtModules (ADT parts args) = 
-          let adtFullName = String.joinWith "." parts
-              modPart = String.joinWith "." (fromMaybe [] (Array.init parts))
-          in (if Map.member adtFullName pointerAdtPaths then [ modPart ] else []) <> Array.concatMap getAdtModules args
-        getAdtModules (Array ty) = getAdtModules ty
-        getAdtModules (Func args ret) = Array.concatMap getAdtModules args <> getAdtModules ret
-        getAdtModules (Record row) = getAdtModules row
-        getAdtModules (Row fields tail) = 
-          let tailModules = case tail of
-                Nothing -> []
-                Just t -> getAdtModules t
-          in Array.concatMap (\(Tuple _ ty) -> getAdtModules ty) fields <> tailModules
-        getAdtModules (TypeApp c args) = getAdtModules c <> Array.concatMap getAdtModules args
-        getAdtModules (ForAll _ body) = getAdtModules body
-        getAdtModules (ConstrainedType constraints body) = Array.concatMap (\(Tuple _ a) -> Array.concatMap getAdtModules a) constraints <> getAdtModules body
-        getAdtModules _ = []
+        check m = m == "" || m == modNameStrOrig || Set.member m flatImportsSet || m == "Prim" || String.indexOf (Pattern "Prim.") m == Just 0
         
-        adtModules = Array.nub (getAdtModules t)
+        checkSafe (ADT parts args) = 
+          let adtFullName = String.joinWith "." parts
+              modPart = case SCU.lastIndexOf (Pattern ".") adtFullName of
+                          Just idx -> SCU.take idx adtFullName
+                          Nothing -> ""
+          in (if Map.member adtFullName pointerAdtPaths then check modPart else true) && Array.all checkSafe args
+        checkSafe (Array ty) = checkSafe ty
+        checkSafe (Func args ret) = Array.all checkSafe args && checkSafe ret
+        checkSafe (Record row) = checkSafe row
+        checkSafe (Row fields tail) = 
+          let tailSafe = case tail of
+                Nothing -> true
+                Just ty -> checkSafe ty
+          in Array.all (\(Tuple _ ty) -> checkSafe ty) fields && tailSafe
+        checkSafe (TypeApp c args) = checkSafe c && Array.all checkSafe args
+        checkSafe (ForAll _ body) = checkSafe body
+        checkSafe (ConstrainedType constraints body) = Array.all (\(Tuple _ a) -> Array.all checkSafe a) constraints && checkSafe body
+        checkSafe _ = true
       in
-        Array.all (\m -> m == "" || m == modNameStrOrig || Array.elem m flatImportsArray || m == "Prim" || String.indexOf (Pattern "Prim.") m == Just 0) adtModules
+        checkSafe t
     
     instantiations = Map.mapMaybe (\set ->
         let safeSet = Set.filter isSafeType set
@@ -474,16 +476,16 @@ translate pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors 
     declsStr = String.joinWith "\\n" (map printGoDeclVar allDeclsAst) <> "\\n" <> String.joinWith "\\n" helpers.rawDecls
 
     parts = String.split (Pattern "pkg_") declsStr
-    usedPkgNames = Array.nub $ Array.mapMaybe
+    usedPkgNames = Set.toUnfoldable $ Set.fromFoldable $ Array.mapMaybe
       ( \part ->
           let
             subParts = String.split (Pattern ".") part
           in
             Array.head subParts
       )
-      (fromMaybe [] (Array.tail parts))
+      (fromMaybe [] (Array.tail parts)) :: Array String
 
-    goImports = Array.nub $
+    goImports = Set.toUnfoldable $ Set.fromFoldable $
       (if Array.length allDeclsAst > 0 || Array.length (Array.fromFoldable mod.foreign) > 0 then [ "gopurs/output/gopurs_runtime" ] else [])
         <> (if Array.length allDeclsAst > 0 then [ "sync" ] else [])
         <> Array.mapMaybe
@@ -1374,7 +1376,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                 ) accProps.exprs)
               in
                 if Array.length staticUpdates == Array.length accProps.exprs then
-                  { stmts: resObj.stmts <> accProps.stmts, expr: GoRecordUpdateStatic (boxGoExpr resObj.expr resObj.exprType) (Array.length fields) staticUpdates, exprType: TypeValue, nextId: accProps.nextId }
+                  { stmts: resObj.stmts <> accProps.stmts, expr: GoRecordUpdateStatic (boxGoExpr resObj.expr resObj.exprType) (Array.length fields) staticUpdates accProps.exprs, exprType: TypeValue, nextId: accProps.nextId }
                 else
                   { stmts: resObj.stmts <> accProps.stmts, expr: GoRecordUpdateDict (boxGoExpr resObj.expr resObj.exprType) accProps.exprs, exprType: TypeValue, nextId: accProps.nextId }
             _ ->

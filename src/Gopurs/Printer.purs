@@ -94,21 +94,25 @@ printGoExpr expr = case expr of
           _ -> "gopurs_runtime.RecordUpdateDict(" <> printGoExpr orig <> ", []string{" <> keysStr <> "}, []gopurs_runtime.Value{" <> valsStr <> "})"
       else
         "gopurs_runtime.RecordUpdateDict(" <> printGoExpr orig <> ", []string{" <> keysStr <> "}, []gopurs_runtime.Value{" <> valsStr <> "})"
-  GoRecordUpdateStatic orig size updates ->
+  GoRecordUpdateStatic orig size updates fallbackUpdates ->
     let
       structName = if size >= 6 then "gopurs_runtime.RecordData" else "gopurs_runtime.RecordData" <> show size
       typeVal = if size >= 6 then "gopurs_runtime.TypeRecordData" else "gopurs_runtime.TypeRecord" <> show size
+      
+      fallbackKeys = String.joinWith ", " (map (\(Tuple k _) -> "\"" <> k <> "\"") fallbackUpdates)
+      fallbackVals = String.joinWith ", " (map (\(Tuple _ v) -> printGoExpr v) fallbackUpdates)
+      fallbackCall = "gopurs_runtime.RecordUpdateDict(origVal, []string{" <> fallbackKeys <> "}, []gopurs_runtime.Value{" <> fallbackVals <> "})"
     in
       if size >= 6 then
         let
           assignments = String.joinWith "\n" (map (\(Tuple idx val) -> "newVals[" <> show idx <> "] = " <> printGoExpr val) updates)
         in
-          "func() gopurs_runtime.Value {\nr := (*" <> structName <> ")(" <> printGoExpr orig <> ".UnsafePtr)\nnewVals := make([]gopurs_runtime.Value, len(r.Vals))\ncopy(newVals, r.Vals)\n" <> assignments <> "\nnewR := gopurs_runtime.RecordData{Keys: r.Keys, Vals: newVals}\nreturn gopurs_runtime.Value{Type: " <> typeVal <> ", UnsafePtr: unsafe.Pointer(&newR)}\n}()"
+          "func() gopurs_runtime.Value {\norigVal := " <> printGoExpr orig <> "\nif origVal.Type != " <> typeVal <> " {\nreturn " <> fallbackCall <> "\n}\nr := (*" <> structName <> ")(origVal.UnsafePtr)\nnewVals := make([]gopurs_runtime.Value, len(r.Vals))\ncopy(newVals, r.Vals)\n" <> assignments <> "\nnewR := gopurs_runtime.RecordData{Keys: r.Keys, Vals: newVals}\nreturn gopurs_runtime.Value{Type: " <> typeVal <> ", UnsafePtr: unsafe.Pointer(&newR)}\n}()"
       else
         let
           assignments = String.joinWith "\n" (map (\(Tuple idx val) -> "clone.V" <> show idx <> " = " <> printGoExpr val) updates)
         in
-          "func() gopurs_runtime.Value {\nclone := *((*" <> structName <> ")(" <> printGoExpr orig <> ".UnsafePtr))\n" <> assignments <> "\nreturn gopurs_runtime.Value{Type: " <> typeVal <> ", UnsafePtr: unsafe.Pointer(&clone)}\n}()"
+          "func() gopurs_runtime.Value {\norigVal := " <> printGoExpr orig <> "\nif origVal.Type != " <> typeVal <> " {\nreturn " <> fallbackCall <> "\n}\nclone := *((*" <> structName <> ")(origVal.UnsafePtr))\n" <> assignments <> "\nreturn gopurs_runtime.Value{Type: " <> typeVal <> ", UnsafePtr: unsafe.Pointer(&clone)}\n}()"
   GoIIFE name binding body ->
     let assignment = if name == "_" then name <> " = " <> printGoExpr binding else name <> " := " <> printGoExpr binding <> "\n_ = " <> name
     in case body of
