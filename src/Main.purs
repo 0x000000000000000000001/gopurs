@@ -109,8 +109,8 @@ main = launchAff_ do
           if Array.length decl.constructors == 1 then
             case Array.head decl.constructors of
               Just ctor ->
-                if Array.length ctor.fieldTypes == 1 then
-                  let structName = getStructName (unwrap mod.name) Nothing ctor.constructorName
+                if Array.length ctor.fields == 1 then
+                  let structName = getStructName (unwrap mod.name) Nothing ctor.name
                   in Set.insert structName acc'
                 else acc'
               Nothing -> acc'
@@ -130,7 +130,7 @@ main = launchAff_ do
       let modStr = String.replaceAll (Pattern ".") (Replacement "_") (unwrap m.name)
       in foldl (\acc' decl ->
         foldl (\acc'' ctor ->
-          Map.insert (modStr <> "." <> ctor.constructorName) { typeVars: decl.typeVars, fieldTypes: ctor.fieldTypes } acc''
+          Map.insert (modStr <> "." <> ctor.name) { vars: decl.vars, fields: ctor.fields } acc''
         ) acc' decl.constructors
       ) acc m.dataDecls
     ) Map.empty finalModules
@@ -150,18 +150,18 @@ main = launchAff_ do
     pointerAdtPathsRaw = foldl (\acc (Module m) ->
       foldl (\acc' d ->
         let
-          ctorsWithFields = Array.filter (\c -> Array.length c.fieldTypes > 0) d.constructors
-          ctorsWithoutFields = Array.filter (\c -> Array.length c.fieldTypes == 0) d.constructors
+          ctorsWithFields = Array.filter (\c -> Array.length c.fields > 0) d.constructors
+          ctorsWithoutFields = Array.filter (\c -> Array.length c.fields == 0) d.constructors
         in
           if Array.length ctorsWithFields == 1 && Array.length ctorsWithoutFields == 1 then
             let
-              adtPath = unwrap m.name <> "." <> d.typeName
-              nodeCtor = (unsafePartial (Array.unsafeIndex ctorsWithFields 0)).constructorName
-              leafCtor = (unsafePartial (Array.unsafeIndex ctorsWithoutFields 0)).constructorName
+              adtPath = unwrap m.name <> "." <> d.name
+              nodeCtor = (unsafePartial (Array.unsafeIndex ctorsWithFields 0)).name
+              leafCtor = (unsafePartial (Array.unsafeIndex ctorsWithoutFields 0)).name
               pkgNameStr = String.replaceAll (Pattern ".") (Replacement "_") (unwrap m.name)
               nodeBaseStruct = "Data_" <> pkgNameStr <> "_" <> sanitizeName nodeCtor
               leafBaseStruct = "Data_" <> pkgNameStr <> "_" <> sanitizeName leafCtor
-              arity = Array.length d.typeVars
+              arity = Array.length d.vars
             in
               Array.snoc acc' { adtPath, nodeCtor, leafCtor, nodeBaseStruct, leafBaseStruct, arity }
           else acc'
