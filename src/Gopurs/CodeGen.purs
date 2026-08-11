@@ -59,7 +59,7 @@ boxGoExpr expr TypeInt64 = GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ 
 boxGoExpr expr TypeFloat64 = GoCall (GoSelector (GoVar "gopurs_runtime") "Float") [ expr ]
 boxGoExpr expr TypeString = GoCall (GoSelector (GoVar "gopurs_runtime") "Str") [ expr ]
 boxGoExpr expr TypeBool = GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ expr ]
-boxGoExpr expr (TypeStructPointer baseStructName _) = GoRaw ("gopurs_runtime.Value{Type: 9, IntVal: " <> hashString baseStructName <> ", UnsafePtr: unsafe.Pointer(" <> printGoExpr expr <> ")}")
+boxGoExpr expr (TypeStructPointer baseStructName _ _) = GoRaw ("gopurs_runtime.Value{Type: 9, IntVal: " <> hashString baseStructName <> ", UnsafePtr: unsafe.Pointer(" <> printGoExpr expr <> ")}")
 boxGoExpr expr (TypeRecord _) = expr
 boxGoExpr expr (TypeInterface _) = expr
 boxGoExpr expr (TypeNativeArray TypeValue) = GoCall (GoSelector (GoVar "gopurs_runtime") "Array") [ expr ]
@@ -101,7 +101,7 @@ exprTypeToGoType ptrPaths modNameStr (ADT fullName path args) = case Map.lookup 
       typeArgsMapped = map (exprTypeToGoType ptrPaths modNameStr) args
       paddedTypeArgs = typeArgsMapped <> Array.replicate (info.arity - Array.length typeArgsMapped) TypeValue
       typeArgsStr = if Array.length paddedTypeArgs > 0 then "[" <> String.joinWith ", " (map goTypeToStr paddedTypeArgs) <> "]" else ""
-    in TypeStructPointer baseStructName (pkgPrefix <> monoStructName <> typeArgsStr)
+    in TypeStructPointer baseStructName "" (pkgPrefix <> monoStructName <> typeArgsStr)
   Nothing -> TypeValue
 exprTypeToGoType _ _ (TypeVar v) = TypeValue
 exprTypeToGoType _ _ _ = TypeValue
@@ -130,7 +130,7 @@ unboxGoExpr expr currentType desiredType =
     TypeFloat64 -> GoCall (GoSelector expr "FloatVal") []
     TypeString -> GoCall (GoSelector expr "StrVal") []
     TypeBool -> GoBinOp "!=" (GoSelector expr "IntVal") (GoInt 0)
-    (TypeStructPointer _ fullPath) -> GoCall (GoRaw ("(*" <> fullPath <> ")")) [ GoSelector expr "UnsafePtr" ]
+    (TypeStructPointer _ _ fullPath) -> GoCall (GoRaw ("(*" <> fullPath <> ")")) [ GoSelector expr "UnsafePtr" ]
     (TypeInterface _) -> expr
     (TypeNativeArray inner) -> case currentType of
       TypeNativeArray currentInner -> 
