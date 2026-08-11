@@ -90,7 +90,7 @@ exprTypeToGoType _ _ Boolean = TypeBool
 exprTypeToGoType ptrPaths modNameStr (Array ty) = TypeNativeArray (exprTypeToGoType ptrPaths modNameStr ty)
 exprTypeToGoType ptrPaths modNameStr (Record (Row fields _)) = TypeRecord (map (\(Tuple k v) -> Tuple k (exprTypeToGoType ptrPaths modNameStr v)) (Array.sortBy (comparing \(Tuple k _) -> k) fields))
 exprTypeToGoType ptrPaths modNameStr (Record _) = TypeValue
-exprTypeToGoType ptrPaths modNameStr (ADT path args) = case Map.lookup (String.joinWith "." path) ptrPaths of
+exprTypeToGoType ptrPaths modNameStr (ADT fullName path args) = case Map.lookup fullName ptrPaths of
   Just info -> 
     let 
       ctorName = info.ctorName
@@ -241,7 +241,7 @@ translate pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors 
       let
         check m = m == "" || m == modNameStrOrig || Set.member m flatImportsSet || m == "Prim" || String.indexOf (Pattern "Prim.") m == Just 0
         
-        checkSafe (ADT parts args) = 
+        checkSafe (ADT _ parts args) = 
           let adtFullName = String.joinWith "." parts
               modPart = case SCU.lastIndexOf (Pattern ".") adtFullName of
                           Just idx -> SCU.take idx adtFullName
@@ -1344,7 +1344,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                       Nothing -> TypeValue
                       
                     typeArgs = case getExprType obj of
-                      ADT _ tArgs -> map (exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths modNameStr) tArgs
+                      ADT _ _ tArgs -> map (exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths modNameStr) tArgs
                       _ -> case Map.lookup key helpers.ctorTypes of
                         Just ctorInfo -> map (const TypeValue) ctorInfo.typeVars
                         Nothing -> []
@@ -1396,7 +1396,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
             in coerceGoExpr (GoVar (sanitizeName f)) TypeValue expectedType
           ) fields
           typeArgs = case getExprType tcoExpr of
-            ADT _ tArgs -> map (exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths modNameStr) tArgs
+            ADT _ _ tArgs -> map (exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths modNameStr) tArgs
             _ -> case Map.lookup key helpers.ctorTypes of
               Just ctorInfo -> map (const TypeValue) ctorInfo.typeVars
               Nothing -> []
@@ -1466,7 +1466,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                 Just (ModuleName mod) | String.replaceAll (Pattern ".") (Replacement "_") mod /= modNameStr -> "pkg_" <> String.replaceAll (Pattern ".") (Replacement "_") mod <> "."
                 _ -> ""
               typeArgs = case ctorType of
-                ADT _ tArgs -> map (exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths modNameStr) tArgs
+                ADT _ _ tArgs -> map (exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths modNameStr) tArgs
                 _ -> case Map.lookup key helpers.ctorTypes of
                   Just ctorInfo -> map (const TypeValue) ctorInfo.typeVars
                   Nothing -> []
@@ -1698,8 +1698,8 @@ getTastReturnType (Func _ ret) = Just ret
 getTastReturnType _ = Nothing
 
 resolveNewtype :: Array DataDecl -> ExprType -> ExprType
-resolveNewtype dataDecls (ADT path args) = 
-  let typeName = String.joinWith "." path
+resolveNewtype dataDecls (ADT fullName path args) = 
+  let typeName = fullName
       mbDecl = Array.find (\d -> d.typeName == typeName || (Array.length path > 0 && d.typeName == fromMaybe "" (Array.last path))) dataDecls
   in case mbDecl of
        Just decl ->
@@ -1709,11 +1709,11 @@ resolveNewtype dataDecls (ADT path args) =
                if Array.length ctor.fieldTypes == 1 then
                  case Array.head ctor.fieldTypes of
                    Just fieldT -> resolveNewtype dataDecls fieldT
-                   Nothing -> ADT path args
-               else ADT path args
-             Nothing -> ADT path args
-         else ADT path args
-       Nothing -> ADT path args
+                   Nothing -> ADT fullName path args
+               else ADT fullName path args
+             Nothing -> ADT fullName path args
+         else ADT fullName path args
+       Nothing -> ADT fullName path args
 resolveNewtype dataDecls (Func fArgs ret) = Func (map (resolveNewtype dataDecls) fArgs) (resolveNewtype dataDecls ret)
 resolveNewtype dataDecls (Array elem) = Array (resolveNewtype dataDecls elem)
 resolveNewtype dataDecls (Record row) = Record (resolveNewtype dataDecls row)
@@ -1891,7 +1891,7 @@ printExprType = case _ of
   TypeApp c args -> "(TypeApp " <> printExprType c <> " [" <> String.joinWith ", " (map printExprType args) <> "])"
   ForAll vars body -> "(ForAll [" <> String.joinWith ", " vars <> "] " <> printExprType body <> ")"
   ConstrainedType constraints body -> "(ConstrainedType " <> printExprType body <> ")"
-  ADT path args -> "(ADT " <> show path <> " [" <> String.joinWith ", " (map printExprType args) <> "])"
+  ADT fullName path args -> "(ADT " <> show path <> " [" <> String.joinWith ", " (map printExprType args) <> "])"
   TypeVar v -> "(TypeVar " <> v <> ")"
   Any -> "Any"
 
@@ -1958,7 +1958,7 @@ generateWrapperFunc dataDecls d mbTast =
           TFunc _ _ -> 
             let 
               isOpaque = case tastArg of
-                           Just (ADT _ _) -> true
+                           Just (ADT _ _ _) -> true
                            Just Any -> true
                            Just (TypeVar _) -> true
                            _ -> false

@@ -91,7 +91,7 @@ hasTypeVariables Number = false
 hasTypeVariables Boolean = false
 hasTypeVariables Unit = false
 hasTypeVariables (TypeLevelString _) = false
-hasTypeVariables (ADT _ args) = Array.any hasTypeVariables args
+hasTypeVariables (ADT _ _ args) = Array.any hasTypeVariables args
 hasTypeVariables Any = false
 
 cacheVersion :: String
@@ -143,7 +143,7 @@ main = launchAff_ do
 
   let allTypes = foldl (\acc mod -> Set.union acc (collectAllTypes mod)) Set.empty finalModules
   let adtTypes = Set.filter (\t -> case t of
-        ADT _ _ -> true
+        ADT _ _ _ -> true
         _ -> false) allTypes
   let
     -- pointerAdts computation
