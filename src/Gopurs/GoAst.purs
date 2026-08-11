@@ -23,6 +23,7 @@ data GoExpr
   | GoIIFE String GoExpr GoExpr
   | GoLetRec (Array (Tuple String GoExpr)) GoExpr
   | GoRecordAccess GoExpr String
+  | GoStructAccess GoExpr String
   | GoRecordAccessStatic GoExpr Int Int
   | GoConstructor String String (Array GoType) (Array GoExpr)
   | GoConstructorAccess GoExpr String (Array GoType) Int
@@ -61,7 +62,7 @@ data GoType
   | TypeFloat64
   | TypeString
   | TypeBool
-  | TypeStructPointer String String
+  | TypeStructPointer String String String
   | TypeRecord (Array (Tuple String GoType))
   | TypeInterface String
   | TypeNativeArray GoType
@@ -75,7 +76,7 @@ goTypeToStr TypeInt64 = "int64"
 goTypeToStr TypeFloat64 = "float64"
 goTypeToStr TypeString = "string"
 goTypeToStr TypeBool = "bool"
-goTypeToStr (TypeStructPointer _ fullPath) = "*" <> fullPath
+goTypeToStr (TypeStructPointer _ _ fullPath) = "*" <> fullPath
 goTypeToStr (TypeInterface name) = name
 goTypeToStr (TypeNativeArray inner) = "[]" <> goTypeToStr inner
 goTypeToStr (TypeGenericParam name) = "T_" <> sanitizeName name

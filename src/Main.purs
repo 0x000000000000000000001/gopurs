@@ -142,6 +142,30 @@ main = launchAff_ do
       foldl (\acc' c -> Set.insert c.name acc') acc m.classDecls
     ) Set.empty finalModules
 
+    classDeclsMap = foldl (\acc (Module m) ->
+      foldl (\acc' c ->
+        let superclassFields = Array.mapWithIndex (\i super ->
+                  fromMaybe "" (Array.last (fst super)) <> show i
+                ) c.superclasses
+            methodFields = map fst c.methods
+            allFields = Array.sortBy compare (superclassFields <> methodFields)
+            key = String.joinWith "," allFields
+        in Map.insert key (unwrap m.name <> "." <> c.name) acc'
+      ) acc m.classDecls
+    ) Map.empty finalModules
+
+    classDeclsFields = foldl (\acc (Module m) ->
+      foldl (\acc' c ->
+        let superclassFields = Array.mapWithIndex (\i super ->
+                  fromMaybe "" (Array.last (fst super)) <> show i
+                ) c.superclasses
+            methodFields = map fst c.methods
+            allFields = Array.sortBy compare (superclassFields <> methodFields)
+        in case (if (unwrap m.name <> "." <> c.name) == "Data.Ord.Ord" then unsafePerformEffect (Console.log ("Data.Ord.Ord fields: " <> show allFields)) else unit) of
+             _ -> Map.insert (unwrap m.name <> "." <> c.name) allFields acc'
+      ) acc m.classDecls
+    ) Map.empty finalModules
+
     finalModulesWithClassDecls = map (\(Module m) ->
       let newDecls = map (\c ->
             let superclassFields = Array.mapWithIndex (\i super ->
@@ -158,6 +182,8 @@ main = launchAff_ do
 
     getClassName (ADT fullName _ _) = Just fullName
     getClassName _ = Nothing
+
+  liftEffect $ Console.log $ "classDeclsFields has keys: " <> show (Array.fromFoldable (Map.keys classDeclsFields))
   
   let rawInstantiations = foldl collectInstantiations Map.empty finalModules
   let instantiations = Map.filterKeys (\k -> case Map.lookup k globalTypes of
@@ -222,7 +248,7 @@ main = launchAff_ do
         let modNameStr = unwrap backendMod.name
         _ <- attempt (FS.mkdir ("output/" <> modNameStr))
         let importsArray = map (\i -> String.split (Pattern ".") (unwrap (importName i))) coreFnMod.imports
-        let goFile = translate pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors ctorTypes globalTypes instantiations importsArray backendMod
+        let goFile = translate pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors ctorTypes globalTypes instantiations classDeclsMap classDeclsFields importsArray backendMod
         FS.writeTextFile UTF8 ("output/" <> modNameStr <> "/" <> String.replaceAll (Pattern ".") (Replacement "_") modNameStr <> ".go") goFile
 
         when (Array.length (Array.fromFoldable backendMod.foreign) > 0) do

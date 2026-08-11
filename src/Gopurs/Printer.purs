@@ -126,6 +126,8 @@ printGoExpr expr = case expr of
     "return " <> printGoExpr body <> "\n}()"
   GoRecordAccess obj prop ->
     "gopurs_runtime.RecordGet(" <> printGoExpr obj <> ", \"" <> prop <> "\")"
+  GoStructAccess obj prop ->
+    printGoExpr obj <> "." <> prop
   GoRecordAccessStatic obj size idx ->
     if size >= 6 then
       "((*gopurs_runtime.RecordData)(" <> printGoExpr obj <> ".UnsafePtr)).Vals[" <> show idx <> "]"
