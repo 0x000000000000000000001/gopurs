@@ -35,9 +35,9 @@ import PureScript.Backend.Optimizer.CoreFn.Sort (sortModules)
 import PureScript.Backend.Optimizer.Builder (buildModules)
 import PureScript.Backend.Optimizer.Directives.Defaults (defaultDirectives)
 import PureScript.Backend.Optimizer.Directives (parseDirectiveFile)
-import PureScript.Backend.Optimizer.Monomorphize (collectInstantiations, InstantiationMap, collectAllTypes, mangleType)
+import PureScript.Backend.Optimizer.Monomorphize (collectInstantiations, InstantiationMap, collectAllTypes, mangleType, monomorphize)
 import PureScript.Backend.Optimizer.Semantics.Foreign (coreForeignSemantics)
-import PureScript.Backend.Optimizer.CoreFn (Module(..), Ann(..), importName, Bind(..), Binding(..), ExprType(..), Ident(..))
+import PureScript.Backend.Optimizer.CoreFn (Module(..), Ann(..), importName, Bind(..), Binding(..), ExprType(..), Expr(..), Ident(..))
 import Data.String as String
 import PureScript.Backend.Optimizer.Monomorphize (getExprAnn)
 import Gopurs.CodeGen (translate, getStructName)
@@ -57,14 +57,18 @@ buildGlobalTypes modules = Array.foldl (\acc (Module m) ->
       processBind acc' (NonRec (Binding (Ann ann) (Ident name) expr)) =
         let ty = case ann.type of
                    Just t -> Just t
-                   Nothing -> let (Ann exprAnn) = getExprAnn expr in exprAnn.type
+                   Nothing -> case let (Ann exprAnn) = getExprAnn expr in exprAnn.type of
+                                Just t -> Just t
+                                Nothing -> inferExprType expr
         in case ty of
             Just t -> Map.insert (modName <> "." <> name) t acc'
             Nothing -> acc'
       processBind acc' (Rec bindings) = Array.foldl (\a (Binding (Ann ann) (Ident name) expr) ->
         let ty = case ann.type of
                    Just t -> Just t
-                   Nothing -> let (Ann exprAnn) = getExprAnn expr in exprAnn.type
+                   Nothing -> case let (Ann exprAnn) = getExprAnn expr in exprAnn.type of
+                                Just t -> Just t
+                                Nothing -> inferExprType expr
         in case ty of
             Just t -> Map.insert (modName <> "." <> name) t a
             Nothing -> a
@@ -72,8 +76,23 @@ buildGlobalTypes modules = Array.foldl (\acc (Module m) ->
   in Array.foldl processBind acc m.decls
   ) Map.empty modules
 
+inferExprType :: Expr Ann -> Maybe ExprType
+inferExprType (ExprApp _ fn _) = case getExprAnn fn of
+  Ann { type: Just ty } -> getReturnType ty
+  _ -> case inferExprType fn of
+         Just ty -> getReturnType ty
+         Nothing -> Nothing
+inferExprType _ = Nothing
+
+getReturnType :: ExprType -> Maybe ExprType
+getReturnType (ForAll _ t) = getReturnType t
+getReturnType (ConstrainedType _ t) = getReturnType t
+getReturnType (Func _ ret) = Just ret
+getReturnType _ = Nothing
+
 hasTypeVariables :: ExprType -> Boolean
 hasTypeVariables (TypeVar v) = String.take 1 v == String.toLower (String.take 1 v) && v /= "gopurs_runtime.Value"
+
 hasTypeVariables (Func args ret) = Array.any hasTypeVariables args || hasTypeVariables ret
 hasTypeVariables (Array t) = hasTypeVariables t
 hasTypeVariables (Record row) = hasTypeVariables row
@@ -157,12 +176,14 @@ main = launchAff_ do
     classDeclsFields = foldl (\acc (Module m) ->
       foldl (\acc' c ->
         let superclassFields = Array.mapWithIndex (\i super ->
-                  fromMaybe "" (Array.last (fst super)) <> show i
+                  let superName = fromMaybe "" (Array.last (fst super))
+                  in Tuple (superName <> show i) Any
                 ) c.superclasses
-            methodFields = map fst c.methods
-            allFields = Array.sortBy compare (superclassFields <> methodFields)
-        in case (if (unwrap m.name <> "." <> c.name) == "Data.Ord.Ord" then unsafePerformEffect (Console.log ("Data.Ord.Ord fields: " <> show allFields)) else unit) of
-             _ -> Map.insert (unwrap m.name <> "." <> c.name) allFields acc'
+            methodFields = c.methods
+            allFields = Array.sortBy (comparing fst) (superclassFields <> methodFields)
+            fieldsWithTypes = map (\(Tuple name ty) -> { name, "type": ty }) allFields
+            vars = c.vars
+        in Map.insert (unwrap m.name <> "." <> c.name) { vars, fields: fieldsWithTypes } acc'
       ) acc m.classDecls
     ) Map.empty finalModules
 
@@ -183,12 +204,14 @@ main = launchAff_ do
     getClassName (ADT fullName _ _) = Just fullName
     getClassName _ = Nothing
 
-  liftEffect $ Console.log $ "classDeclsFields has keys: " <> show (Array.fromFoldable (Map.keys classDeclsFields))
+
   
   let rawInstantiations = foldl collectInstantiations Map.empty finalModules
   let instantiations = Map.filterKeys (\k -> case Map.lookup k globalTypes of
                                             Just t -> hasTypeVariables t
                                             Nothing -> false) rawInstantiations
+
+  let monomorphizedModules = map (monomorphize instantiations) finalModulesWithClassDecls
 
   let allTypes = foldl (\acc mod -> Set.union acc (collectAllTypes mod)) Set.empty finalModulesWithClassDecls
   let adtTypes = Set.filter (\t -> case t of
@@ -275,7 +298,7 @@ main = launchAff_ do
               FS.writeTextFile UTF8 ("output/" <> modNameStr <> "/" <> String.replaceAll (Pattern ".") (Replacement "_") modNameStr <> "_ffi.go") dummyContent
         writeCache cacheVersion ("output/" <> modNameStr <> "/.gopurs-cache.json") backendMod
     }
-    finalModulesWithClassDecls
+    monomorphizedModules
 
   let
     targetMainModules = case args.mbMainModule of

@@ -136,9 +136,9 @@ printGoExpr expr = case expr of
   GoConstructor hashStr structName typeArgs args ->
     let typeArgsStr = if Array.length typeArgs > 0 then "[" <> String.joinWith ", " (map goTypeToStr typeArgs) <> "]" else ""
     in if Array.null args then
-      "gopurs_runtime.Value{Type: 9, IntVal: " <> hashStr <> ", UnsafePtr: nil}"
+      "nil"
     else
-      "gopurs_runtime.Value{Type: 9, IntVal: " <> hashStr <> ", UnsafePtr: unsafe.Pointer(&" <> structName <> typeArgsStr <> "{1, " <> String.joinWith ", " (map printGoExpr args) <> "})}"
+      "&" <> structName <> typeArgsStr <> "{1, " <> String.joinWith ", " (map printGoExpr args) <> "}"
   GoConstructorAccess obj structName typeArgs idx ->
     let typeArgsStr = if Array.length typeArgs > 0 then "[" <> String.joinWith ", " (map goTypeToStr typeArgs) <> "]" else ""
     in "(*" <> structName <> typeArgsStr <> ")(" <> printGoExpr obj <> ".UnsafePtr).V" <> show idx

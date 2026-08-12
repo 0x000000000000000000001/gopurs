@@ -7,6 +7,8 @@ package gopurs_runtime
 import (
 	"fmt"
 	"math"
+	"reflect"
+	"sort"
 	"sync"
 	"unsafe"
 )
@@ -24,6 +26,8 @@ func Release() {
 func EventLoopWait() {
 	EventLoop.Wait()
 }
+
+var StructGetters = map[int64]func(unsafe.Pointer, string) Value{}
 
 const (
 	TypeFunc = 1
@@ -264,6 +268,25 @@ func RecordToMap(obj Value) map[string]Value {
 	return res
 }
 
+func CoerceToStruct[T any](val Value) *T {
+	if val.Type == TypeConstructor {
+		return (*T)(val.UnsafePtr)
+	}
+	res := new(T)
+	resVal := reflect.ValueOf(res).Elem()
+	m := RecordToMap(val)
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	
+	for i, k := range keys {
+		resVal.Field(i + 1).Set(reflect.ValueOf(m[k]))
+	}
+	return res
+}
+
 func Record(m map[string]Value) Value {
 	ptr := new(map[string]Value)
 	*ptr = m
@@ -315,13 +338,16 @@ func RecordGet(obj Value, key string) Value {
 		for i, k := range r.Keys {
 			if k == key { return r.Vals[i] }
 		}
+	case TypeConstructor:
+		if getter, ok := StructGetters[obj.IntVal]; ok {
+			return getter(obj.UnsafePtr, key)
+		}
 	}
 	strVal := ""
 	if obj.Type == TypeString && obj.UnsafePtr != nil {
 		strVal = *(*string)(obj.UnsafePtr)
 	}
 	panic(fmt.Sprintf("Key '%s' not found in record. Object type: %d, String value: '%s', Object: %+v\n", key, obj.Type, strVal, obj))
-	panic("Key not found in record: " + key)
 }
 
 func RecordUpdateDict(orig Value, keys []string, vals []Value) Value {
@@ -422,22 +448,28 @@ func Constructor4(tag string, v0, v1, v2, v3 Value) Value { return Value{Type: T
 type ConstructorData5 struct { V0, V1, V2, V3, V4 Value }
 func Constructor5(tag string, v0, v1, v2, v3, v4 Value) Value { return Value{Type: TypeConstructor, UnsafePtr: unsafe.Pointer(&ConstructorData5{v0, v1, v2, v3, v4})} }
 
+var EscapeSink any
+func forceEscape(f any) {
+	EscapeSink = f
+}
+
 // Function with 1 arg (curried)
 func Func(f func(Value) Value) Value {
+	forceEscape(f)
 	return Value{Type: TypeFunc, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))}
 }
 
 // Function constructors
-func Func2(f func(Value, Value) Value) Value { return Value{Type: TypeFunc2, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
-func Func3(f func(Value, Value, Value) Value) Value { return Value{Type: TypeFunc3, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
-func Func4(f func(Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc4, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
-func Func5(f func(Value, Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc5, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
-func Func6(f func(Value, Value, Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc6, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
-func Func7(f func(Value, Value, Value, Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc7, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
-func Func8(f func(Value, Value, Value, Value, Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc8, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
-func Func9(f func(Value, Value, Value, Value, Value, Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc9, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
-func Func10(f func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc10, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
-func Func11(f func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value) Value { return Value{Type: TypeFunc11, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
+func Func2(f func(Value, Value) Value) Value { forceEscape(f); return Value{Type: TypeFunc2, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
+func Func3(f func(Value, Value, Value) Value) Value { forceEscape(f); return Value{Type: TypeFunc3, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
+func Func4(f func(Value, Value, Value, Value) Value) Value { forceEscape(f); return Value{Type: TypeFunc4, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
+func Func5(f func(Value, Value, Value, Value, Value) Value) Value { forceEscape(f); return Value{Type: TypeFunc5, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
+func Func6(f func(Value, Value, Value, Value, Value, Value) Value) Value { forceEscape(f); return Value{Type: TypeFunc6, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
+func Func7(f func(Value, Value, Value, Value, Value, Value, Value) Value) Value { forceEscape(f); return Value{Type: TypeFunc7, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
+func Func8(f func(Value, Value, Value, Value, Value, Value, Value, Value) Value) Value { forceEscape(f); return Value{Type: TypeFunc8, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
+func Func9(f func(Value, Value, Value, Value, Value, Value, Value, Value, Value) Value) Value { forceEscape(f); return Value{Type: TypeFunc9, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
+func Func10(f func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value) Value { forceEscape(f); return Value{Type: TypeFunc10, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
+func Func11(f func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value) Value { forceEscape(f); return Value{Type: TypeFunc11, UnsafePtr: *(*unsafe.Pointer)(unsafe.Pointer(&f))} }
 
 func FuncAny(f any) Value {
 	ptr := new(any)
@@ -447,6 +479,9 @@ func FuncAny(f any) Value {
 
 
 func Apply(f Value, arg Value) Value {
+	if f.UnsafePtr == nil {
+		panic(fmt.Sprintf("PANIC in Apply: f.Type = %v, f.UnsafePtr is nil", f.Type))
+	}
 	switch f.Type {
 	case TypeFunc:
 		return (*(*func(Value) Value)(unsafe.Pointer(&f.UnsafePtr)))(arg)
