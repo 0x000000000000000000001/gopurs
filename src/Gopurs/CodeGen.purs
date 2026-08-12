@@ -848,15 +848,6 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
 
             Nothing ->
               let
-                flattenFuncType :: Array ExprType -> ExprType -> { fArgs :: Array ExprType, fRet :: ExprType }
-                flattenFuncType acc (Func args ret) = flattenFuncType (acc <> args) ret
-                flattenFuncType acc ret = { fArgs: acc, fRet: ret }
-
-                getFuncType :: BackendSyntax TcoExpr -> Maybe { fArgs :: Array ExprType, fRet :: ExprType }
-                getFuncType (Typed (Func a r) _) = Just (flattenFuncType a r)
-                getFuncType (Typed _ inner) = getFuncType (unwrapExpr inner)
-                getFuncType _ = Nothing
-
                 getVar :: BackendSyntax TcoExpr -> Maybe { mbMod :: Maybe ModuleName, name :: String }
                 getVar (Typed _ inner) = getVar (unwrapTcoExpr inner)
                 getVar (Var (Qualified mbMod (Ident name))) = Just { mbMod, name }
@@ -893,18 +884,18 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                   Just { mbMod, name } ->
                     let
                       isLocal = map (String.replaceAll (Pattern ".") (Replacement "_") <<< unwrap) mbMod == Just modNameStr || mbMod == Nothing
-                      modPrefix = case mbMod of
-                        Just (ModuleName mod) | not isLocal -> "pkg_" <> String.replaceAll (Pattern ".") (Replacement "_") mod <> "."
-                        _ -> ""
+                      modPrefix = if isLocal then "" else "pkg_" <> fromMaybe "" (map (String.replaceAll (Pattern ".") (Replacement "_") <<< unwrap) mbMod) <> "."
+                      
                       fromModuleArities = if isLocal then Map.lookup name moduleArities else Nothing
-                      fromTypeSig = case getFuncType (unwrapExpr flatFn) of
+                      fromTypeSig = case extractFuncType flatFn of
                         Just { fArgs, fRet } ->
                           Just { fullName: modPrefix <> "Call_" <> sanitizeName name, fArgs: map (exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts modNameStr) fArgs, fRet: exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts modNameStr fRet, arity: Array.length fArgs }
-                        Nothing -> Nothing
+                        Nothing ->
+                          Nothing
                       
                       entry = case fromTypeSig of
-                        Just e -> Just e
-                        Nothing -> fromModuleArities
+                        Just e | not isLocal -> Just e
+                        _ -> fromModuleArities
                     in
                       case entry of
                         Just e ->
