@@ -1,0 +1,17 @@
+--- src/Gopurs/CodeGen.purs
++++ src/Gopurs/CodeGen.purs
+@@ -1669,6 +1669,15 @@
+                   Just info -> info.arity
+                   Nothing -> Array.length vars
+               in Array.take arity mapped
++            TypeApp fn arg ->
++              let
++                unwrapTypeApp (TypeApp f a) acc = unwrapTypeApp f (a <> acc)
++                unwrapTypeApp other acc = Tuple other acc
++              in case unwrapTypeApp ctorType [] of
++                Tuple (ADT fnName _ tArgs) allArgs ->
++                  let mapped = map (exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths modNameStr) (tArgs <> allArgs)
++                  in Array.take (Array.length vars) mapped
++                _ -> map (const TypeValue) vars
+             _ -> map (const TypeValue) vars
+           instMap = Map.fromFoldable (Array.zip vars typeArgs)
