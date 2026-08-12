@@ -702,7 +702,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                 { stmts: StmtEmpty, expr: unboxGoExpr rawCall TypeValue vType, exprType: vType, nextId }
             Nothing ->
               let
-                rawCall = GoCall (GoVar ("Get_" <> safeName)) []
+                rawCall = Debug.trace ("mbMn is Nothing for safeName: " <> safeName) (\_ -> GoCall (GoVar ("Get_" <> safeName)) [])
               in
                 { stmts: StmtEmpty, expr: unboxGoExpr rawCall TypeValue vType, exprType: vType, nextId }
 

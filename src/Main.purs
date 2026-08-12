@@ -66,8 +66,7 @@ buildGlobalTypes modules = Array.foldl (\acc (Module m) ->
                                 Just t -> Just t
                                 Nothing -> inferExprType expr
         in case ty of
-            Just t -> let mapAcc = Map.insert (modName <> "." <> name) t acc'
-                      in if name == "map" && modName == "Data.Functor" then Debug.trace ("buildGlobalTypes Data.Functor.map hasTypeVariables: " <> show (hasTypeVariables t)) (\_ -> mapAcc) else mapAcc
+            Just t -> Map.insert (modName <> "." <> name) t acc'
             Nothing -> acc'
       processBind acc' (Rec bindings) = Array.foldl (\a b -> processBind a (NonRec b)) acc' bindings
   in Array.foldl processBind acc m.decls
