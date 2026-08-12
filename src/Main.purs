@@ -17,6 +17,8 @@ import Data.Either (Either(..), isRight)
 import Data.Bifunctor (lmap)
 import Data.Argonaut.Decode.Error (printJsonDecodeError)
 import Data.Array as Array
+import Data.Traversable (for, sequence)
+import Debug as Debug
 import Partial.Unsafe (unsafePartial)
 import Data.Tuple (Tuple(..), fst, snd)
 import Data.List as List
@@ -244,6 +246,24 @@ main = launchAff_ do
     pointerAdtNodes = Set.fromFoldable (map _.nodeBaseStruct pointerAdtPathsRaw)
     pointerAdtLeaves = Map.fromFoldable (Array.mapMaybe (\info -> if info.leafBaseStruct /= "" then Just (Tuple info.leafBaseStruct info.nodeBaseStruct) else Nothing) pointerAdtPathsRaw)
 
+    enumAdtsRaw = foldl (\acc (Module m) ->
+      foldl (\acc' d ->
+        let
+          ctorsWithFields = Array.filter (\c -> Array.length c.fields > 0) d.constructors
+        in
+          if Array.length ctorsWithFields == 0 && Array.length d.constructors > 0 then
+            let
+              adtPath = unwrap m.name <> "." <> d.name
+              pkgNameStr = String.replaceAll (Pattern ".") (Replacement "_") (unwrap m.name)
+              ctorBaseStructs = map (\c -> "Data_" <> pkgNameStr <> "_" <> sanitizeName c.name) d.constructors
+            in Array.snoc acc' { adtPath, ctors: ctorBaseStructs }
+          else acc'
+      ) acc m.dataDecls
+     ) [] finalModulesWithClassDecls
+
+    enumAdts = Set.fromFoldable (map _.adtPath enumAdtsRaw)
+    enumCtors = Set.fromFoldable (Array.concatMap _.ctors enumAdtsRaw)
+
 
   buildModules
     { directives
@@ -271,7 +291,7 @@ main = launchAff_ do
         let modNameStr = unwrap backendMod.name
         _ <- attempt (FS.mkdir ("output/" <> modNameStr))
         let importsArray = map (\i -> String.split (Pattern ".") (unwrap (importName i))) coreFnMod.imports
-        let goFile = translate pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors ctorTypes globalTypes instantiations classDeclsMap classDeclsFields importsArray backendMod
+        let goFile = translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors ctorTypes globalTypes instantiations classDeclsMap classDeclsFields importsArray backendMod
         FS.writeTextFile UTF8 ("output/" <> modNameStr <> "/" <> String.replaceAll (Pattern ".") (Replacement "_") modNameStr <> ".go") goFile
 
         when (Array.length (Array.fromFoldable backendMod.foreign) > 0) do

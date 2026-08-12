@@ -62,6 +62,7 @@ data GoType
   | TypeFloat64
   | TypeString
   | TypeBool
+  | TypeUint32
   | TypeStructPointer String String String (Array GoType)
   | TypeRecord (Array (Tuple String GoType))
   | TypeInterface String
@@ -76,6 +77,7 @@ goTypeToStr TypeInt64 = "int64"
 goTypeToStr TypeFloat64 = "float64"
 goTypeToStr TypeString = "string"
 goTypeToStr TypeBool = "bool"
+goTypeToStr TypeUint32 = "uint32"
 goTypeToStr (TypeStructPointer _ _ fullPath _) = "*" <> fullPath
 goTypeToStr (TypeInterface name) = name
 goTypeToStr (TypeNativeArray inner) = "[]" <> goTypeToStr inner
