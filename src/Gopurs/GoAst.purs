@@ -71,6 +71,7 @@ data GoType
   | TypeFunc (Array GoType) GoType
 
 derive instance eqGoType :: Eq GoType
+derive instance ordGoType :: Ord GoType
 
 goTypeToStr :: GoType -> String
 goTypeToStr TypeInt64 = "int64"

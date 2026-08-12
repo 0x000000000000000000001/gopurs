@@ -1,0 +1,10 @@
+--- src/Gopurs/CodeGen.purs
++++ src/Gopurs/CodeGen.purs
+@@ -1659,6 +1659,7 @@
+           
+           ctorType = getExprType tcoExpr
+           expectedGoType = exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts modNameStr ctorType
++          _ = if structName == "Constructor_T" then unsafePerformEffect (Ref.modify_ (\r -> r { logs = Array.snoc r.logs ("CtorSaturated expectedGoType: " <> goTypeToStr expectedGoType) }) helpersRef) else unit
+           
+           fullName = case ctorType of
+             ADT fn _ _ -> fn

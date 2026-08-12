@@ -37,12 +37,13 @@ import PureScript.Backend.Optimizer.CoreFn.Sort (sortModules)
 import PureScript.Backend.Optimizer.Builder (buildModules)
 import PureScript.Backend.Optimizer.Directives.Defaults (defaultDirectives)
 import PureScript.Backend.Optimizer.Directives (parseDirectiveFile)
-import PureScript.Backend.Optimizer.Monomorphize (collectInstantiations, InstantiationMap, collectAllTypes, mangleType, monomorphize)
+import PureScript.Backend.Optimizer.Monomorphize (collectInstantiations, InstantiationMap, collectAllTypes, mangleType, monomorphize, transitiveCollect)
 import PureScript.Backend.Optimizer.Semantics.Foreign (coreForeignSemantics)
 import PureScript.Backend.Optimizer.CoreFn (Module(..), Ann(..), importName, Bind(..), Binding(..), ExprType(..), Expr(..), Ident(..))
 import Data.String as String
 import PureScript.Backend.Optimizer.Monomorphize (getExprAnn)
 import Gopurs.CodeGen (translate, getStructName)
+import Debug as Debug
 import Gopurs.Runtime (runtimeGoCode)
 import PureScript.Backend.Optimizer.FfiSupport (findFfiFile)
 import Gopurs.GoAst (sanitizeName)
@@ -52,6 +53,8 @@ import PureScript.Backend.Optimizer.Monomorphize (collectInstantiations)
 import PureScript.Backend.Optimizer.App (coreFnModulesFromOutput, parseCLIArgs, checkCache, writeCache, loadDirectives)
 import Data.Argonaut.Decode (decodeJson)
 import Effect.Unsafe (unsafePerformEffect)
+import Node.FS.Sync (writeTextFile)
+import Node.Encoding (Encoding(..))
 
 buildGlobalTypes :: Array (Module Ann) -> Map.Map String ExprType
 buildGlobalTypes modules = Array.foldl (\acc (Module m) ->
@@ -63,18 +66,10 @@ buildGlobalTypes modules = Array.foldl (\acc (Module m) ->
                                 Just t -> Just t
                                 Nothing -> inferExprType expr
         in case ty of
-            Just t -> Map.insert (modName <> "." <> name) t acc'
+            Just t -> let mapAcc = Map.insert (modName <> "." <> name) t acc'
+                      in if name == "map" && modName == "Data.Functor" then Debug.trace ("buildGlobalTypes Data.Functor.map hasTypeVariables: " <> show (hasTypeVariables t)) (\_ -> mapAcc) else mapAcc
             Nothing -> acc'
-      processBind acc' (Rec bindings) = Array.foldl (\a (Binding (Ann ann) (Ident name) expr) ->
-        let ty = case ann.type of
-                   Just t -> Just t
-                   Nothing -> case let (Ann exprAnn) = getExprAnn expr in exprAnn.type of
-                                Just t -> Just t
-                                Nothing -> inferExprType expr
-        in case ty of
-            Just t -> Map.insert (modName <> "." <> name) t a
-            Nothing -> a
-        ) acc' bindings
+      processBind acc' (Rec bindings) = Array.foldl (\a b -> processBind a (NonRec b)) acc' bindings
   in Array.foldl processBind acc m.decls
   ) Map.empty modules
 
@@ -208,12 +203,24 @@ main = launchAff_ do
 
 
   
-  let rawInstantiations = foldl collectInstantiations Map.empty finalModules
+  let rawInstantiations = foldl collectInstantiations Map.empty finalModulesWithClassDecls
+      
+  let globalAstMap = foldl (\acc (Module m) ->
+        foldl (\acc' b -> case b of
+          NonRec (Binding ann id e) -> Map.insert (unwrap m.name <> "." <> unwrap id) (Binding ann id e) acc'
+          Rec binds -> foldl (\a (Binding ann id e) -> Map.insert (unwrap m.name <> "." <> unwrap id) (Binding ann id e) a) acc' binds
+        ) acc m.decls
+      ) Map.empty finalModulesWithClassDecls
+
+  let transitiveInstantiations = transitiveCollect globalAstMap rawInstantiations
+      
+  let _ = Debug.trace ("Data.Functor.map in rawInstantiations? " <> show (Map.member "Data.Functor.map" transitiveInstantiations)) (\_ -> unit)
+
   let instantiations = Map.filterKeys (\k -> case Map.lookup k globalTypes of
                                             Just t -> hasTypeVariables t
-                                            Nothing -> false) rawInstantiations
+                                            Nothing -> false) transitiveInstantiations
 
-  let monomorphizedModules = map (monomorphize instantiations) finalModulesWithClassDecls
+  let monomorphizedModules = map (monomorphize globalAstMap instantiations) finalModulesWithClassDecls
 
   let allTypes = foldl (\acc mod -> Set.union acc (collectAllTypes mod)) Set.empty finalModulesWithClassDecls
   let adtTypes = Set.filter (\t -> case t of
@@ -244,7 +251,7 @@ main = launchAff_ do
 
     pointerAdtPaths = Map.fromFoldable (map (\info -> Tuple info.adtPath { ctorName: info.nodeCtor, arity: info.arity }) pointerAdtPathsRaw)
     pointerAdtNodes = Set.fromFoldable (map _.nodeBaseStruct pointerAdtPathsRaw)
-    pointerAdtLeaves = Map.fromFoldable (Array.mapMaybe (\info -> if info.leafBaseStruct /= "" then Just (Tuple info.leafBaseStruct info.nodeBaseStruct) else Nothing) pointerAdtPathsRaw)
+    pointerAdtLeaves = Map.fromFoldable (Array.mapMaybe (\info -> if info.leafBaseStruct /= "" then Just (Tuple info.leafBaseStruct { nodeBaseStruct: info.nodeBaseStruct, nodeCtor: info.nodeCtor }) else Nothing) pointerAdtPathsRaw)
 
     enumAdtsRaw = foldl (\acc (Module m) ->
       foldl (\acc' d ->
