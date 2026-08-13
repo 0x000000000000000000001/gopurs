@@ -1975,10 +1975,11 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
           validTypes = Array.filter (\t -> case t of 
             TypeValue -> false
             _ -> true) allTypes
+          allTypesStr = map goTypeToStr validTypes
           
-          expectedGoType = case Array.nub validTypes of
-            [t] -> t
-            _ -> if Array.length (Array.nub allTypes) == 1 then resDef.exprType else TypeValue
+          expectedGoType = case Array.nub allTypesStr of
+            [_] -> fromMaybe TypeValue (Array.head validTypes)
+            _ -> if Array.length (Array.nub (map goTypeToStr allTypes)) == 1 then resDef.exprType else TypeValue
           
           tmpVar = "__t" <> show computedBranches.nextId
           declTmp = StmtLeaf (GoRaw ("var " <> tmpVar <> " " <> goTypeToStr expectedGoType))
