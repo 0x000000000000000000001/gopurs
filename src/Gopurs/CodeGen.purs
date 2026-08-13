@@ -2028,7 +2028,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                     _ ->
                       let
                         tmpVar = "__t_tag_" <> show resE.nextId
-                        declTmp = if isNativePointer then
+                        declTmp = if isNativePointer || resE.exprType /= TypeValue then
                            StmtLeaf (GoRaw ("var " <> tmpVar <> " " <> goTypeToStr resE.exprType <> " = " <> printGoExpr resE.expr))
                         else
                            StmtLeaf (GoRaw ("var " <> tmpVar <> " gopurs_runtime.Value = " <> printGoExpr (boxGoExpr resE.expr resE.exprType)))
@@ -2037,6 +2037,8 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                           case Map.lookup baseStructName helpers.pointerAdtLeaves of
                             Just _ -> "(" <> tmpVar <> " == nil)"
                             Nothing -> "(" <> tmpVar <> " != nil)"
+                        else if resE.exprType /= TypeValue then
+                          "(uint32(" <> tmpVar <> ") == " <> hashStr <> ")"
                         else case Map.lookup baseStructName helpers.pointerAdtLeaves of
                           Just nodeInfo -> "(" <> tmpVar <> ".Type == 9 && " <> tmpVar <> ".IntVal == " <> hashString nodeInfo.nodeBaseStruct <> " && " <> tmpVar <> ".UnsafePtr == nil)"
                           Nothing -> if Set.member baseStructName helpers.pointerAdtNodes then
