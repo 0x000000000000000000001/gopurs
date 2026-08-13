@@ -973,7 +973,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                             ]
                           in GoIIFE arrValName arrExpr iifeBody
                           
-                        "filter" ->
+                        "filterImpl" ->
                           let
                             fExpr = fromMaybe (GoRaw "nil") (Array.index accArgs.exprs 0)
                             arrExpr = fromMaybe (GoRaw "nil") (Array.index accArgs.exprs 1)
@@ -1146,8 +1146,8 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
               if Array.length args >= 2 then Just "arrayMap" else Nothing
             Just { name: "foldlArray" } ->
               if Array.length args >= 3 then Just "foldlArray" else Nothing
-            Just { mbMod, name: "filter" } | mbMod == Just (ModuleName "Data.Array") || (mbMod == Nothing && modNameStr == "Data.Array") ->
-              if Array.length args >= 2 then Just "filter" else Nothing
+            Just { mbMod, name: "filterImpl" } | mbMod == Just (ModuleName "Data.Array") || (mbMod == Nothing && modNameStr == "Data.Array") ->
+              if Array.length args >= 2 then Just "filterImpl" else Nothing
             _ -> Nothing
         in
           case mbIntrinsic of
@@ -1177,16 +1177,52 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                       fExprType = fromMaybe TypeValue (Array.index accArgs.exprTypes 0)
                       arrExprRaw = fromMaybe (GoRaw "nil") (Array.index accArgs.exprs 1)
                       arrExprType = fromMaybe TypeValue (Array.index accArgs.exprTypes 1)
-                      fExpr = boxGoExpr fExprRaw fExprType
-                      arrExpr = boxGoExpr arrExprRaw arrExprType
-                      loopBody = GoMutate (resGoName <> "[" <> iName <> "]") (GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ fExpr, GoVar vName ])
-                      iifeBody = GoBlock [
-                        GoAssign arrGoName (GoCall (GoRaw "(*[]gopurs_runtime.Value)") [ GoSelector (GoVar arrValName) "UnsafePtr" ]),
-                        GoAssign resGoName (GoCall (GoVar "make") [ GoRaw "[]gopurs_runtime.Value", GoCall (GoVar "len") [ GoRaw ("*" <> arrGoName) ] ]),
-                        GoForRange (iName <> ", " <> vName <> " := range *" <> arrGoName) [ loopBody ],
-                        GoReturn (GoCall (GoSelector (GoVar "gopurs_runtime") "Array") [ GoVar resGoName ])
+                      
+                      mbFnVar = case Array.index args 0 of
+                        Just fArg -> getVar (unwrapTcoExpr fArg)
+                        Nothing -> Nothing
+                      
+                      fnFullName = case mbFnVar of
+                        Just { mbMod: Just (ModuleName mn), name } -> String.replaceAll (Pattern ".") (Replacement "_") mn <> "." <> name
+                        Just { mbMod: Nothing, name } -> modNameStr <> "." <> name
+                        Nothing -> ""
+                      
+                      mbFnArityInfo = Map.lookup fnFullName moduleArities
+                      
+                      elemType = case arrExprType of
+                        TypeNativeArray inner -> inner
+                        _ -> TypeValue
+                        
+                      retType = case fExprType of
+                        TypeFunc _ ret -> ret
+                        _ -> case mbFnArityInfo of
+                          Just info -> info.fRet
+                          _ -> TypeValue
+                          
+                      finalRetType = TypeNativeArray retType
+                      
+                      arrGoAssignment = case arrExprType of
+                        TypeNativeArray _ -> GoAssign arrGoName (GoVar arrValName)
+                        _ -> GoAssign arrGoName (GoCall (GoRaw "(*[]gopurs_runtime.Value)") [ GoSelector (GoVar arrValName) "UnsafePtr" ])
+                      
+                      arrGoRangeTarget = case arrExprType of
+                        TypeNativeArray _ -> arrGoName
+                        _ -> "*" <> arrGoName
+                        
+                      loopBody = case mbFnArityInfo of
+                        Just info | info.arity == 1 ->
+                          let
+                            expectedArgType = fromMaybe TypeValue (Array.index info.fArgs 0)
+                          in GoMutate (resGoName <> "[" <> iName <> "]") (unboxGoExpr (GoCall (GoVar ("Call_" <> String.replaceAll (Pattern ".") (Replacement "_") fnFullName)) [ unboxGoExpr (GoVar vName) elemType expectedArgType ]) info.fRet retType)
+                        _ ->
+                          GoMutate (resGoName <> "[" <> iName <> "]") (unboxGoExpr (GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ boxGoExpr fExprRaw fExprType, boxGoExpr (GoVar vName) elemType ]) TypeValue retType)
+                          
+                      iifeBodyStmts = [
+                        arrGoAssignment,
+                        GoAssign resGoName (GoCall (GoVar "make") [ GoRaw ("[]" <> goTypeToStr retType), GoCall (GoVar "len") [ GoRaw arrGoRangeTarget ] ]),
+                        GoForRange (iName <> ", " <> vName <> " := range " <> arrGoRangeTarget) [ loopBody ]
                       ]
-                    in { stmts: accArgs.stmts, expr: GoIIFE arrValName arrExpr iifeBody, exprType: TypeValue, nextId: accArgs.nextId }
+                    in { stmts: accArgs.stmts, expr: GoCall (GoFuncLit [] (Array.cons (GoAssign arrValName arrExprRaw) (Array.cons (GoMutate "_" (GoVar arrValName)) iifeBodyStmts)) (GoVar resGoName) finalRetType) [], exprType: finalRetType, nextId: accArgs.nextId }
                     
                   "foldlArray" ->
                     let
@@ -1214,7 +1250,10 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                       
                       loopBody = case mbFnArityInfo of
                         Just info | info.arity == 2 ->
-                          GoMutate resGoName (GoCall (GoVar ("Call_" <> String.replaceAll (Pattern ".") (Replacement "_") fnFullName)) [ GoVar resGoName, GoVar vName ])
+                          let
+                            expectedArg0 = fromMaybe TypeValue (Array.index info.fArgs 0)
+                            expectedArg1 = fromMaybe TypeValue (Array.index info.fArgs 1)
+                          in GoMutate resGoName (unboxGoExpr (GoCall (GoVar ("Call_" <> String.replaceAll (Pattern ".") (Replacement "_") fnFullName)) [ unboxGoExpr (GoVar resGoName) initExprType expectedArg0, unboxGoExpr (GoVar vName) elemType expectedArg1 ]) info.fRet initExprType)
                         _ ->
                           GoMutate resGoName (unboxGoExpr (GoCall (GoSelector (GoVar "gopurs_runtime") "Apply2") [ boxGoExpr fExpr fExprType, boxGoExpr (GoVar resGoName) initExprType, boxGoExpr (GoVar vName) elemType ]) TypeValue initExprType)
                           
@@ -1234,24 +1273,53 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                       ]
                     in { stmts: accArgs.stmts, expr: GoIIFE arrValName arrExpr iifeBody, exprType: initExprType, nextId: accArgs.nextId }
                     
-                  "filter" ->
+                  "filterImpl" ->
                     let
                       fExprRaw = fromMaybe (GoRaw "nil") (Array.index accArgs.exprs 0)
                       fExprType = fromMaybe TypeValue (Array.index accArgs.exprTypes 0)
                       arrExprRaw = fromMaybe (GoRaw "nil") (Array.index accArgs.exprs 1)
                       arrExprType = fromMaybe TypeValue (Array.index accArgs.exprTypes 1)
-                      fExpr = boxGoExpr fExprRaw fExprType
-                      arrExpr = boxGoExpr arrExprRaw arrExprType
-                      condExpr = GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ fExpr, GoVar vName ]
-                      isTrueExpr = GoCall (GoSelector condExpr "BoolVal") []
+                      
+                      mbFnVar = case Array.index args 0 of
+                        Just fArg -> getVar (unwrapTcoExpr fArg)
+                        Nothing -> Nothing
+                      
+                      fnFullName = case mbFnVar of
+                        Just { mbMod: Just (ModuleName mn), name } -> String.replaceAll (Pattern ".") (Replacement "_") mn <> "." <> name
+                        Just { mbMod: Nothing, name } -> modNameStr <> "." <> name
+                        Nothing -> ""
+                      
+                      mbFnArityInfo = Map.lookup fnFullName moduleArities
+                      
+                      elemType = case arrExprType of
+                        TypeNativeArray inner -> inner
+                        _ -> TypeValue
+                        
+                      isTrueExpr = case mbFnArityInfo of
+                        Just info | info.arity == 1 ->
+                          let
+                            expectedArgType = fromMaybe TypeValue (Array.index info.fArgs 0)
+                          in GoCall (GoVar ("Call_" <> String.replaceAll (Pattern ".") (Replacement "_") fnFullName)) [ unboxGoExpr (GoVar vName) elemType expectedArgType ]
+                        _ ->
+                          let condExpr = GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ boxGoExpr fExprRaw fExprType, boxGoExpr (GoVar vName) elemType ]
+                          in GoCall (GoSelector condExpr "BoolVal") []
+                          
                       loopBody = GoIfElse isTrueExpr [ GoMutate resGoName (GoCall (GoVar "append") [ GoVar resGoName, GoVar vName ]) ] []
-                      iifeBody = GoBlock [
-                        GoAssign arrGoName (GoCall (GoRaw "(*[]gopurs_runtime.Value)") [ GoSelector (GoVar arrValName) "UnsafePtr" ]),
-                        GoAssign resGoName (GoCall (GoVar "make") [ GoRaw "[]gopurs_runtime.Value", GoRaw "0" ]),
-                        GoForRange ("_, " <> vName <> " := range *" <> arrGoName) [ loopBody ],
-                        GoReturn (GoCall (GoSelector (GoVar "gopurs_runtime") "Array") [ GoVar resGoName ])
+                      
+                      arrGoAssignment = case arrExprType of
+                        TypeNativeArray _ -> GoAssign arrGoName (GoVar arrValName)
+                        _ -> GoAssign arrGoName (GoCall (GoRaw "(*[]gopurs_runtime.Value)") [ GoSelector (GoVar arrValName) "UnsafePtr" ])
+                      
+                      arrGoRangeTarget = case arrExprType of
+                        TypeNativeArray _ -> arrGoName
+                        _ -> "*" <> arrGoName
+                        
+                      iifeBodyStmts = [
+                        arrGoAssignment,
+                        GoAssign resGoName (GoCall (GoVar "make") [ GoRaw ("[]" <> goTypeToStr elemType), GoRaw "0" ]),
+                        GoForRange ("_, " <> vName <> " := range " <> arrGoRangeTarget) [ loopBody ]
                       ]
-                    in { stmts: accArgs.stmts, expr: GoIIFE arrValName arrExpr iifeBody, exprType: TypeValue, nextId: accArgs.nextId }
+                    in { stmts: accArgs.stmts, expr: GoCall (GoFuncLit [] (Array.cons (GoAssign arrValName arrExprRaw) (Array.cons (GoMutate "_" (GoVar arrValName)) iifeBodyStmts)) (GoVar resGoName) (TypeNativeArray elemType)) [], exprType: TypeNativeArray elemType, nextId: accArgs.nextId }
                     
                   _ -> { stmts: accArgs.stmts, expr: GoRaw "nil", exprType: TypeValue, nextId: accArgs.nextId }
               in
