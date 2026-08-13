@@ -1972,13 +1972,9 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
             (toArray branches)
             
           allTypes = [ resDef.exprType ] <> map (\r -> r.body.exprType) computedBranches.results
-          validTypes = Array.filter (\t -> case t of 
-            TypeValue -> false
-            _ -> true) allTypes
+          allSame = Array.length (Array.nub allTypes) == 1
           
-          expectedGoType = case Array.nub validTypes of
-            [t] -> t
-            _ -> if Array.length (Array.nub allTypes) == 1 then resDef.exprType else TypeValue
+          expectedGoType = if allSame then resDef.exprType else unsafePerformEffect (Debug.trace ("Branch allSame false. allTypes: " <> String.joinWith ", " (map printGoType allTypes)) \_ -> pure TypeValue)
           
           tmpVar = "__t" <> show computedBranches.nextId
           declTmp = StmtLeaf (GoRaw ("var " <> tmpVar <> " " <> goTypeToStr expectedGoType))
