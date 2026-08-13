@@ -98,14 +98,13 @@ exprTypeToGoType ptrPaths enumAdts modNameStr (ADT fullName path args) =
     let 
       ctorName = info.ctorName
       pkgNameStr = String.replaceAll (Pattern ".") (Replacement "_") (String.joinWith "." (Array.slice 0 (Array.length path - 1) path))
-      pkgPrefix = if pkgNameStr /= modNameStr then "pkg_" <> pkgNameStr <> "." else ""
       baseStructName = "Data_" <> pkgNameStr <> "_" <> sanitizeName ctorName
-      monoStructName = "Constructor_" <> sanitizeName ctorName
+      monoStructName = "Constructor_" <> pkgNameStr <> "_" <> sanitizeName ctorName
       typeArgsMapped = map (exprTypeToGoType ptrPaths enumAdts modNameStr) args
       typeArgsMappedTruncated = Array.take info.arity typeArgsMapped
       paddedTypeArgs = typeArgsMappedTruncated <> Array.replicate (info.arity - Array.length typeArgsMappedTruncated) TypeValue
       typeArgsStr = if Array.length paddedTypeArgs > 0 then "[" <> String.joinWith ", " (map goTypeToStr paddedTypeArgs) <> "]" else ""
-    in TypeStructPointer baseStructName fullName (pkgPrefix <> monoStructName <> typeArgsStr) paddedTypeArgs
+    in TypeStructPointer baseStructName fullName (monoStructName <> typeArgsStr) paddedTypeArgs
   Nothing -> TypeValue
 exprTypeToGoType ptrPaths enumAdts modNameStr (TypeApp fn arg) =
   let
@@ -246,12 +245,7 @@ getBaseStructName modNameStr mbMod ctorName =
 
 getStructName :: String -> Maybe ModuleName -> String -> String
 getStructName modNameStr mbMod ctorName =
-  let
-    pkgPrefix = case mbMod of
-      Just mn | sanitizeName (String.replaceAll (Pattern ".") (Replacement "_") (unwrap mn)) /= modNameStr -> "pkg_" <> sanitizeName (String.replaceAll (Pattern ".") (Replacement "_") (unwrap mn)) <> "."
-      _ -> ""
-  in
-    pkgPrefix <> getBaseStructName modNameStr mbMod ctorName
+  getBaseStructName modNameStr mbMod ctorName
 
 globalReusedVars :: Ref.Ref (Set.Set String)
 globalReusedVars = unsafePerformEffect (Ref.new Set.empty)
@@ -305,7 +299,7 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves ad
               let
                 fieldTypes = ctor.fields
                 goFieldTypes = map (structFieldGoType pointerAdtPaths enumAdts decl.vars modNameStr) fieldTypes
-                structName = "Constructor_" <> sanitizeName ctor.name
+                structName = "Constructor_" <> modNameStr <> "_" <> sanitizeName ctor.name
                 
                 typeParams = if Array.length decl.vars > 0 then "[" <> String.joinWith ", " (map (\v -> "T_" <> sanitizeName v <> " any") decl.vars) <> "]" else ""
                 
@@ -317,11 +311,11 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves ad
                   Just info ->
                     let 
                       typeParamsGetter = if Array.length decl.vars > 0 then "[" <> String.joinWith ", " (map (\_ -> "gopurs_runtime.Value") decl.vars) <> "]" else ""
-                      cases = Array.mapWithIndex (\i f -> "\t\tcase \"" <> f.name <> "\": return c.V" <> show i) info.fields
+                      cases = Array.mapWithIndex (\i f -> "\t\tcase \"" <> f.name <> "\": return gopurs_runtime.Box(c.V" <> show i <> ")") info.fields
                       pkgNameStr = String.replaceAll (Pattern ".") (Replacement "_") (unwrap mod.name)
                       baseStructName = "Data_" <> pkgNameStr <> "_" <> sanitizeName ctor.name
                       hashStr = hashString baseStructName
-                    in "func init() {\n\tgopurs_runtime.StructGetters[" <> hashStr <> "] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {\n\t\tc := (*" <> structName <> typeParamsGetter <> ")(ptr)\n\t\tswitch key {\n" <> String.joinWith "\n" cases <> "\n\t\tdefault: panic(\"Key not found in dictionary " <> structName <> ": \" + key)\n\t\t}\n\t}\n}\n"
+                    in "func init() {\n\tgopurs_runtime.StructGetters[" <> hashStr <> "] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {\n\t\tc := (*" <> structName <> typeParamsGetter <> ")(ptr)\n\t\t_ = c\n\t\tswitch key {\n" <> String.joinWith "\n" cases <> "\n\t\tdefault: panic(\"Key not found in dictionary " <> structName <> ": \" + key)\n\t\t}\n\t}\n}\n"
                   Nothing -> ""
                   
               in
@@ -339,7 +333,11 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves ad
             env' = case neBindings of
               Just ne | group.recursive -> Tco.topLevelTcoEnvGroup mod.name ne <> env
               _ -> env
-            tcoBinds = map (\(Tuple k v) -> Tuple k (Tco.analyze env' v)) group.bindings
+            tcoBinds = map (\(Tuple id val) ->
+              let nameStr = unwrap id
+                  _ = if modNameStrOrig == "Data.Set" && String.indexOf (Pattern "toList") nameStr == Just 0 then unsafePerformEffect (Console.log ("CodeGen received Data.Set binding: " <> nameStr)) else unit
+              in Tuple id (Tco.analyze env' val)
+            ) group.bindings
           in
             Tuple env' (Array.snoc acc { recursive: group.recursive, bindings: tcoBinds })
       )
@@ -374,11 +372,11 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves ad
                       else
                         exprTypeToGoType pointerAdtPaths enumAdts modNameStr fRet
                     Nothing -> TypeValue
-                  fullName = "Call_" <> sanitizeName name
+                  fullName = "Call_" <> modNameStr <> "_" <> sanitizeName name
                 in
                   [ Tuple (sanitizeName name) { fullName, fArgs: fArgsGo, fRet: fRetGo, arity: Array.length args } ]
               Nothing ->
-                let fullName = "Call_" <> sanitizeName name
+                let fullName = "Call_" <> modNameStr <> "_" <> sanitizeName name
                 in [ Tuple (sanitizeName name) { fullName, fArgs: [], fRet: TypeValue, arity: 0 } ]
         )
         binds
@@ -392,7 +390,7 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves ad
               mutRecBinds = traverse (\(Tuple _ val) -> extractUncurriedAbs val) group.bindings
             in case mutRecBinds of
               Just _ -> unwrapFunc group.bindings
-              Nothing -> map (\(Tuple (Ident name) _) -> Tuple (sanitizeName name) { fullName: "Call_" <> sanitizeName name, fArgs: [], fRet: TypeValue, arity: 0 }) group.bindings
+              Nothing -> map (\(Tuple (Ident name) _) -> Tuple (sanitizeName name) { fullName: "Call_" <> modNameStr <> "_" <> sanitizeName name, fArgs: [], fRet: TypeValue, arity: 0 }) group.bindings
           else
             unwrapFunc group.bindings
       )
@@ -406,7 +404,7 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves ad
                   processBindingGroup :: Array (Tuple Ident TcoExpr) -> Boolean -> Array GoDecl
                   processBindingGroup binds isRec =
                     let
-                      mutRecBinds = traverse (\(Tuple (Ident name) val) -> map (\abs -> { ident: sanitizeName name, args: abs.args, body: abs.body, fvs: abs.fvs }) (extractUncurriedAbs val)) binds
+                      mutRecBinds = traverse (\(Tuple (Ident name) val) -> map (\abs -> { ident: sanitizeName name, args: abs.args, body: abs.body, fvs: abs.fvs, val: val }) (extractUncurriedAbs val)) binds
                     in
                       case mutRecBinds of
                         Just fns ->
@@ -416,8 +414,8 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves ad
                             fnWrapperStmts = map
                               ( \fn ->
                                 let
-                                  paramsWithTypes = case Map.lookup fn.ident moduleArities of
-                                    Just { fArgs } -> Array.zip fn.args (fArgs <> Array.replicate (Array.length fn.args - Array.length fArgs) TypeValue)
+                                  paramsWithTypes = case extractExprFuncType (getExprType fn.val) of
+                                    Just { fArgs } -> Array.zip fn.args (map (exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts modNameStr) fArgs <> Array.replicate (Array.length fn.args - Array.length fArgs) TypeValue)
                                     Nothing -> map (\p -> Tuple p TypeValue) fn.args
 
                                   newBound = foldl (\acc (Tuple idStr goType) -> Map.insert idStr { name: idStr, goType } acc) Map.empty paramsWithTypes
@@ -433,6 +431,10 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves ad
                                     Just { fRet } -> fRet
                                     Nothing -> TypeValue
                                   
+                                  _ = if String.contains (Pattern "polyLoop") goName then Debug.trace ("polyLoop type: " <> printExprType (getExprType fn.val) <> ", extractExprFuncType: " <> (case extractExprFuncType (getExprType fn.val) of
+                                                                                                    Just r -> show (Array.length r.fArgs)
+                                                                                                    Nothing -> "Nothing") <> " paramsWithTypes=" <> String.joinWith ", " (map (goTypeToStr <<< snd) paramsWithTypes)) \_ -> unit else unit
+                                  
                                   arity = Array.length fn.args
                                   goParams = String.joinWith ", " (map (\(Tuple p goT) -> p <> "_loop " <> goTypeToStr goT) paramsWithTypes)
                                   
@@ -442,10 +444,10 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves ad
                                       bodyStmts = initVars <> flattenStmts resBodyMut.stmts <> [ GoReturn coercedExpr ]
                                       funcBody = if isSelfRecursiveLoop then GoFor goName bodyStmts else GoBlock bodyStmts
                                     in unsafePerformEffect do
-                                      let callFuncDecl = "func Call_" <> goName <> "(" <> goParams <> ") " <> goTypeToStr expectedRetType <> " {\n" <> printGoExpr funcBody <> "\n}"
+                                      let callFuncDecl = "func Call_" <> modNameStr <> "_" <> goName <> "(" <> goParams <> ") " <> goTypeToStr expectedRetType <> " {\n" <> printGoExpr funcBody <> "\n}"
                                       Ref.modify_ (\r -> r { rawDecls = Array.snoc r.rawDecls callFuncDecl }) helpersRef
                                       let wrapperParams = map (\(Tuple p _) -> p <> "_box") paramsWithTypes
-                                      let callExpr = GoCall (GoVar ("Call_" <> goName)) (map (\(Tuple p goT) -> unboxGoExpr (GoVar (p <> "_box")) TypeValue goT) paramsWithTypes)
+                                      let callExpr = GoCall (GoVar ("Call_" <> modNameStr <> "_" <> goName)) (map (\(Tuple p goT) -> unboxGoExpr (GoVar (p <> "_box")) TypeValue goT) paramsWithTypes)
                                       let boxedRes = boxGoExpr callExpr expectedRetType
                                       let wrapperFunc = GoRaw ("func(" <> String.joinWith ", " (map (\p -> p <> " gopurs_runtime.Value") wrapperParams) <> ") gopurs_runtime.Value {\nreturn " <> printGoExpr boxedRes <> "\n}")
                                       let funcWrapperName = if arity == 1 then "gopurs_runtime.Func" else "gopurs_runtime.Func" <> show arity
@@ -458,7 +460,7 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves ad
                                     in
                                       Array.foldr (\(Tuple p goT) acc -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> p <> "_box gopurs_runtime.Value) gopurs_runtime.Value {\nvar " <> p <> "_loop " <> goTypeToStr goT <> " = " <> printGoExpr (unboxGoExpr (GoVar (p <> "_box")) TypeValue goT) <> "\nreturn " <> printGoExpr acc <> "\n}") ]) iife paramsWithTypes
                                 in
-                                  { identifier: goName, expression: funcExpr, goType: TypeValue }
+                                  { identifier: modNameStr <> "_" <> goName, expression: funcExpr, goType: TypeValue }
                               )
                               fns
                           in
@@ -469,7 +471,7 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves ad
                                 let
                                   res = translateExprImpl_ helpersRef 0 modNameStr recVars moduleArities Map.empty (Just (sanitizeName name)) [] false false 0 expr
                                 in
-                                  [ { identifier: sanitizeName name, expression: wrapInStmts [] res.stmts (boxGoExpr res.expr res.exprType), goType: TypeValue } ]
+                                  [ { identifier: modNameStr <> "_" <> sanitizeName name, expression: wrapInStmts [] res.stmts (boxGoExpr res.expr res.exprType), goType: TypeValue } ]
                             )
                             binds
                 in
@@ -485,7 +487,7 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves ad
     allDeclsAst = decls <> helpers.decls
     declsStr = String.joinWith "\\n" (map printGoDeclVar allDeclsAst) <> "\\n" <> String.joinWith "\\n" helpers.rawDecls
 
-    parts = String.split (Pattern "pkg_") declsStr
+    parts = [declsStr]
     usedPkgNames = Set.toUnfoldable $ Set.fromFoldable $ Array.mapMaybe
       ( \part ->
           let
@@ -506,11 +508,11 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves ad
           usedPkgNames
 
     goFile =
-      { packageName: modNameStr
+      { packageName: "purescript"
       , imports: goImports
       , decls: allDeclsAst
       , rawDecls: helpers.rawDecls
-      , foreigns: map (\(Tuple (Ident name) type_) -> { pursName: sanitizeName name, goName: "_Gopurs_" <> capitalize (sanitizeName name), exprType: type_ }) (Map.toUnfoldable mod.foreign)
+      , foreigns: map (\(Tuple (Ident name) type_) -> { pursName: modNameStr <> "_" <> sanitizeName name, goName: "_Gopurs_" <> modNameStr <> "_" <> capitalize (sanitizeName name), exprType: type_ }) (Map.toUnfoldable mod.foreign)
       }
   in
     printGoFile goFile
@@ -601,7 +603,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
               curr <- Ref.read helpersRef
               Ref.modify_ (\r -> r { globalId = r.globalId + 1 }) helpersRef
               pure curr.globalId
-        let helperName = "__helper_" <> show gId
+        let helperName = modNameStr <> "__helper_" <> show gId
         let newNextId = nextId + 1
         let newBound = foldl (\acc fv -> Map.insert fv { name: fv, goType: TypeValue } acc) bound fvs
         let res = translateExprImpl_ helpersRef 0 modNameStr recVars moduleArities newBound Nothing [] false inEffectBlock newNextId tcoExpr
@@ -697,12 +699,12 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
               let
                 modStr = unwrap mn
                 modPkg = String.replaceAll (Pattern ".") (Replacement "_") modStr
-                rawCall = if modPkg == modNameStr then GoCall (GoVar ("Get_" <> safeName)) [] else GoCall (GoSelector (GoVar ("pkg_" <> modPkg)) ("Get_" <> safeName)) []
+                rawCall = GoCall (GoVar ("Get_" <> modPkg <> "_" <> safeName)) []
               in
                 { stmts: StmtEmpty, expr: unboxGoExpr rawCall TypeValue vType, exprType: vType, nextId }
             Nothing ->
               let
-                rawCall = Debug.trace ("mbMn is Nothing for safeName: " <> safeName) (\_ -> GoCall (GoVar ("Get_" <> safeName)) [])
+                rawCall = Debug.trace ("mbMn is Nothing for safeName: " <> safeName) (\_ -> GoCall (GoVar ("Get_" <> modNameStr <> "_" <> safeName)) [])
               in
                 { stmts: StmtEmpty, expr: unboxGoExpr rawCall TypeValue vType, exprType: vType, nextId }
 
@@ -884,12 +886,13 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                   Just { mbMod, name } ->
                     let
                       isLocal = map (String.replaceAll (Pattern ".") (Replacement "_") <<< unwrap) mbMod == Just modNameStr || mbMod == Nothing
-                      modPrefix = if isLocal then "" else "pkg_" <> fromMaybe "" (map (String.replaceAll (Pattern ".") (Replacement "_") <<< unwrap) mbMod) <> "."
-                      
+                      modPrefix = case mbMod of
+                        Just mn -> String.replaceAll (Pattern ".") (Replacement "_") (unwrap mn)
+                        Nothing -> modNameStr
                       fromModuleArities = if isLocal then Map.lookup name moduleArities else Nothing
                       fromTypeSig = case extractFuncType flatFn of
                         Just { fArgs, fRet } ->
-                          Just { fullName: modPrefix <> "Call_" <> sanitizeName name, fArgs: map (exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts modNameStr) fArgs, fRet: exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts modNameStr fRet, arity: Array.length fArgs }
+                          Just { fullName: "Call_" <> modPrefix <> "_" <> sanitizeName name, fArgs: map (exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts modNameStr) fArgs, fRet: exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts modNameStr fRet, arity: Array.length fArgs }
                         Nothing ->
                           Nothing
                       
@@ -970,6 +973,8 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                         
                       arity = if intrinsicName == "foldlArray" then 3 else 2
                       accArgsRemaining = Array.drop arity accArgs.exprs
+                      accArgsRemainingTypes = Array.drop arity accArgs.exprTypes
+                      accArgsRemainingBoxed = Array.zipWith (\arg t -> boxGoExpr arg t) accArgsRemaining accArgsRemainingTypes
                       
                       buildApp :: GoExpr -> Array GoExpr -> GoExpr
                       buildApp fExpr argExprs =
@@ -984,7 +989,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                                 rest = Array.drop 10 argExprs
                             in buildApp (buildApp fExpr chunk) rest
                             
-                      finalExpr = buildApp iifeExpr accArgsRemaining
+                      finalExpr = buildApp iifeExpr accArgsRemainingBoxed
                     in
                       { stmts: accArgs.stmts, expr: finalExpr, exprType: TypeValue, nextId: accArgs.nextId }
 
@@ -1238,10 +1243,10 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
           case tcoIdent of
             Just topName ->
               let
-                callFuncDecl = "func Call_" <> topName <> "(" <> goParams <> ") gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr resBody.expr resBody.exprType) ])) <> "\n}"
+                callFuncDecl = "func Call_" <> modNameStr <> "_" <> topName <> "(" <> goParams <> ") gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr resBody.expr resBody.exprType) ])) <> "\n}"
                 funcExpr = unsafePerformEffect do
                   Ref.modify_ (\r -> r { rawDecls = Array.snoc r.rawDecls callFuncDecl }) helpersRef
-                  pure $ GoRaw ("gopurs_runtime.Func" <> show arity <> "(Call_" <> topName <> ")")
+                  pure $ GoRaw ("gopurs_runtime.Func" <> show arity <> "(Call_" <> modNameStr <> "_" <> topName <> ")")
               in { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: resBody.nextId }
             Nothing ->
               let
@@ -1340,10 +1345,16 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
           originalName = localId mbIdent lvl
           name = originalName <> "_" <> show nextId
           resBinding = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false (nextId + 1) binding
-          newBound = Map.insert originalName { name, goType: resBinding.exprType } bound
+          expectedGoType = exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts modNameStr (getExprType binding)
+          newBound = Map.insert originalName { name, goType: expectedGoType } bound
           resBody = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities newBound Nothing loopCtx isTail false resBinding.nextId body
+          
+          letStmt = if expectedGoType == resBinding.exprType then
+                      StmtLeaf (GoAssign name resBinding.expr)
+                    else
+                      StmtLeaf (GoRaw ("var " <> name <> " " <> goTypeToStr expectedGoType <> " = " <> printGoExpr (unboxGoExpr resBinding.expr resBinding.exprType expectedGoType)))
         in
-          { stmts: resBinding.stmts <> StmtLeaf (GoAssign name resBinding.expr) <> resBody.stmts, expr: resBody.expr, exprType: resBody.exprType, nextId: resBody.nextId }
+          { stmts: resBinding.stmts <> StmtLeaf (GoRaw ("// TAST (Let): " <> name <> " -> " <> goTypeToStr expectedGoType)) <> letStmt <> resBody.stmts, expr: resBody.expr, exprType: resBody.exprType, nextId: resBody.nextId }
 
       LetRec lvl bindings body ->
         let
@@ -1467,7 +1478,8 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                           let
                             unboxedObj = unboxGoExpr resObj.expr resObj.exprType resObj.exprType
                             fieldExpr = GoStructAccess unboxedObj ("V" <> show idx)
-                          in { stmts: resObj.stmts, expr: fieldExpr, exprType: TypeValue, nextId: resObj.nextId }
+                            boxedFieldExpr = GoCall (GoSelector (GoVar "gopurs_runtime") "Box") [ fieldExpr ]
+                          in { stmts: resObj.stmts, expr: boxedFieldExpr, exprType: TypeValue, nextId: resObj.nextId }
                         Nothing ->
                           let _ = unit
                           in { stmts: resObj.stmts, expr: GoRecordAccess (boxGoExpr resObj.expr resObj.exprType) prop, exprType: TypeValue, nextId: resObj.nextId }
@@ -1489,11 +1501,12 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                 else
                   let
                     fields = fromMaybe [] (map _.fields (Map.lookup key helpers.ctorTypes))
-                    monoStructName = "Constructor_" <> sanitizeName ctorName
-                    
-                    pkgPrefix = case mbMod of
-                      Just (ModuleName mod) | String.replaceAll (Pattern ".") (Replacement "_") mod /= modNameStr -> "pkg_" <> String.replaceAll (Pattern ".") (Replacement "_") mod <> "."
-                      _ -> ""
+                    defMod = case mbMod of
+                      Just (ModuleName mod) -> String.replaceAll (Pattern ".") (Replacement "_") mod
+                      Nothing -> modNameStr
+                    monoStructName = "Constructor_" <> defMod <> "_" <> sanitizeName ctorName
+                      
+
                       
                     expectedType = case Array.index fields idx of
                       Just ty -> exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts modNameStr ty
@@ -1511,7 +1524,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                         Just ctorInfo -> map (const TypeValue) ctorInfo.vars
                         Nothing -> []
                       
-                    exprAccess = GoConstructorAccess (boxGoExpr resObj.expr resObj.exprType) (pkgPrefix <> monoStructName) typeArgs idx
+                    exprAccess = GoConstructorAccess (boxGoExpr resObj.expr resObj.exprType) monoStructName typeArgs idx
                   in
                     { stmts: resObj.stmts, expr: coerceGoExpr exprAccess expectedType expectedType, exprType: expectedType, nextId: resObj.nextId }
 
@@ -1546,7 +1559,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
 
       CtorDef _ _ (Ident name) fields ->
         let
-          structName = "Constructor_" <> sanitizeName name
+          structName = "Constructor_" <> modNameStr <> "_" <> sanitizeName name
           baseStructName = getBaseStructName modNameStr Nothing name
           key = modNameStr <> "." <> name
           helpers = unsafePerformEffect (Ref.read helpersRef)
@@ -1619,7 +1632,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                 nodeCtorName = case nodeInfo of
                   Just info -> info.nodeCtor
                   Nothing -> ""
-                nodeStruct = "Constructor_" <> sanitizeName nodeCtorName
+                nodeStruct = "Constructor_" <> modNameStr <> "_" <> sanitizeName nodeCtorName
                 nodeFullPath = nodeStruct <> typeArgsStr
               in TypeStructPointer nodeBaseStruct key nodeFullPath typeArgs
             else if Array.length fields == 0 then
@@ -1635,7 +1648,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                 nodeCtorName = case Map.lookup baseStructName helpers.pointerAdtLeaves of
                   Just info -> info.nodeCtor
                   Nothing -> ""
-                nodeStruct = "Constructor_" <> sanitizeName nodeCtorName <> typeArgsStr
+                nodeStruct = "Constructor_" <> modNameStr <> "_" <> sanitizeName nodeCtorName <> typeArgsStr
               in GoRaw ("(*" <> nodeStruct <> ")(nil)")
             else if isEnum then GoRaw (hashString baseStructName)
             else if Array.length fields == 0 then
@@ -1737,10 +1750,11 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                 Just n -> Ref.modify_ (Set.insert n) globalReusedVars
                 Nothing -> pure unit)
                 
-          monoStructName = "Constructor_" <> sanitizeName name
-          pkgPrefix = case mbMod of
-            Just (ModuleName mod) | String.replaceAll (Pattern ".") (Replacement "_") mod /= modNameStr -> "pkg_" <> String.replaceAll (Pattern ".") (Replacement "_") mod <> "."
-            _ -> ""
+          modPart' = case mbMod of
+            Just (ModuleName mod) -> String.replaceAll (Pattern ".") (Replacement "_") mod
+            _ -> modNameStr
+          monoStructName = "Constructor_" <> modPart' <> "_" <> sanitizeName name
+
           typeArgs = case ctorType of
             ADT fullName _ tArgs ->
               let
@@ -1753,12 +1767,12 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
               Just ctorInfo -> map (const TypeValue) ctorInfo.vars
               Nothing -> []
           typeArgsStr = if Array.length typeArgs > 0 then "[" <> String.joinWith ", " (map goTypeToStr typeArgs) <> "]" else ""
-          fullPath = pkgPrefix <> monoStructName <> typeArgsStr
+          fullPath = monoStructName <> typeArgsStr
           isEnum = Set.member baseStructName helpers.enumCtors
           res = if isElided then
               case Array.head accProps.exprs of
                 Just expr -> { expr: boxGoExpr expr (fromMaybe TypeValue (map (exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts modNameStr) (Array.index fields 0))), exprType: TypeValue }
-                Nothing -> { expr: GoConstructor (hashString baseStructName) (pkgPrefix <> monoStructName) typeArgs accProps.exprs, exprType: TypeStructPointer baseStructName key fullPath typeArgs }
+                Nothing -> { expr: GoConstructor (hashString baseStructName) monoStructName typeArgs accProps.exprs, exprType: TypeStructPointer baseStructName key fullPath typeArgs }
             else if isPointerAdtLeaf then 
               let 
                 nodeInfo = Map.lookup baseStructName helpers.pointerAdtLeaves
@@ -1768,11 +1782,11 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                 nodeBaseStruct = case nodeInfo of
                   Just info -> info.nodeBaseStruct
                   Nothing -> ""
-                nodeStruct = "Constructor_" <> sanitizeName nodeCtorName
-                nodeFullPath = pkgPrefix <> nodeStruct <> typeArgsStr
+                nodeStruct = "Constructor_" <> modPart <> "_" <> sanitizeName nodeCtorName
+                nodeFullPath = nodeStruct <> typeArgsStr
               in { expr: GoRaw ("(*" <> nodeFullPath <> ")(nil)"), exprType: TypeStructPointer nodeBaseStruct key nodeFullPath typeArgs }
             else if isEnum then { expr: GoRaw (hashString baseStructName), exprType: TypeUint32 }
-            else { expr: GoConstructor (hashString baseStructName) (pkgPrefix <> monoStructName) typeArgs accProps.exprs, exprType: TypeStructPointer baseStructName key fullPath typeArgs }
+            else { expr: GoConstructor (hashString baseStructName) monoStructName typeArgs accProps.exprs, exprType: TypeStructPointer baseStructName key fullPath typeArgs }
         in
           { stmts: accProps.stmts, expr: res.expr, exprType: res.exprType, nextId: accProps.nextId }
 
@@ -2338,8 +2352,8 @@ generateWrapperFunc dataDecls d mbTast =
                  "})"
     in fullCode
 
-generateFfiBridge :: Array DataDecl -> Array FfiDecl -> Array (Tuple Ident (Maybe ExprType)) -> String
-generateFfiBridge dataDecls decls foreigns = 
+generateFfiBridge :: String -> Array DataDecl -> Array FfiDecl -> Array (Tuple Ident (Maybe ExprType)) -> String
+generateFfiBridge modNameStr dataDecls decls foreigns = 
   String.joinWith "\n" (map genBridge foreigns)
   where
   genBridge (Tuple ident mbTast) = 
@@ -2347,9 +2361,9 @@ generateFfiBridge dataDecls decls foreigns =
       pursName = unwrap ident
       sanitized = sanitizeName pursName
       capName = capitalize sanitized
-      exportName = "_Gopurs_" <> capName
+      exportName = "_Gopurs_" <> modNameStr <> "_" <> capName
       
-      fallback1 = capitalize pursName
+      fallback1 = modNameStr <> "_" <> capitalize pursName
       fallback2 = fallback1 <> "_"
       
       findDecl n = Array.find (\d -> d.name == n) decls

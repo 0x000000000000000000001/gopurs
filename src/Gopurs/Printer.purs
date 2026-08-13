@@ -189,26 +189,17 @@ printGoDeclVar { identifier, expression, goType } =
 printGoFile :: GoFile -> String
 printGoFile { packageName, imports, decls, rawDecls, foreigns } =
   let declsStr = String.joinWith "\n\n" (map printGoDeclVar decls) <> "\n\n" <> String.joinWith "\n\n" rawDecls <> "\n\n" <> String.joinWith "\n\n" (map (\f -> "func Get_" <> f.pursName <> "() gopurs_runtime.Value {\n\treturn " <> f.goName <> "\n}") foreigns) <> "\n"
-      usedImports1 = Array.filter (\i -> 
-        if i == "gopurs/output/gopurs_runtime" || i == "sync" then true
-        else 
-          let pkg = Array.last (String.split (String.Pattern "/") i)
-              pkgAlias = "pkg_" <> String.replaceAll (String.Pattern ".") (String.Replacement "_") (fromMaybe "" pkg)
-          in String.contains (String.Pattern (pkgAlias <> ".")) declsStr
-      ) imports
-      missingDeps = ["Unsafe.Coerce", "Data.Unit", "Control.Monad.ST.Internal", "Data.Eq", "Data.Function.Uncurried", "Control.Category"]
-      injectedDeps = Array.filter (\dep ->
-        let pkgAlias = "pkg_" <> String.replaceAll (String.Pattern ".") (String.Replacement "_") dep
-        in String.contains (String.Pattern (pkgAlias <> ".")) declsStr && not (Array.elem ("gopurs/output/" <> dep) usedImports1)
-      ) missingDeps
       unsafeImport = if String.contains (String.Pattern "unsafe.") declsStr then ["unsafe"] else []
-      usedImports = usedImports1 <> map (\dep -> "gopurs/output/" <> dep) injectedDeps <> unsafeImport
+      hasDecls = Array.length decls > 0
+      hasForeigns = Array.length foreigns > 0
+      needsRuntime = hasDecls || hasForeigns || String.contains (String.Pattern "gopurs_runtime.") declsStr
+      usedImports = (if needsRuntime then ["gopurs/output/gopurs_runtime"] else []) <> (if hasDecls then ["sync"] else []) <> unsafeImport
   in
   "package " <> packageName <> "\n\n" <>
   "import (\n" <>
   String.joinWith "\n" (map (\i -> 
       let pkg = Array.last (String.split (String.Pattern "/") i)
-          pkgAlias = if i == "gopurs/output/gopurs_runtime" || i == "sync" || i == "unsafe" then fromMaybe "" pkg else "pkg_" <> String.replaceAll (String.Pattern ".") (String.Replacement "_") (fromMaybe "" pkg)
+          pkgAlias = fromMaybe "" pkg
       in "\t" <> pkgAlias <> " \"" <> i <> "\""
   ) usedImports) <> "\n" <>
   ")\n\n" <> declsStr

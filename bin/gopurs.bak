@@ -4,5 +4,5 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 if [ "$CPU_PROF" = "1" ]; then
   node --cpu-prof "$DIR/gopurs.js" "$@"
 else
-  node --max-old-space-size=8192 "$DIR/gopurs.js" "$@"
+  node "$DIR/gopurs.js" "$@"
 fi

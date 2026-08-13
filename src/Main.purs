@@ -137,6 +137,8 @@ main = launchAff_ do
   _ <- attempt (FS.mkdir "output/gopurs_runtime")
   FS.writeTextFile UTF8 "output/gopurs_runtime/runtime.go" runtimeGoCode
 
+  _ <- attempt (FS.mkdir "output/purescript")
+
   FS.writeTextFile UTF8 "output/go.mod" "module gopurs/output\n\ngo 1.22\n"
 
   directives <- loadDirectives
@@ -279,11 +281,12 @@ main = launchAff_ do
     , onPrepareModule: \_ (Module m) -> pure (Module m)
     , onSkipModule: \_ (Module coreFnMod) -> do
         let modNameStr = unwrap coreFnMod.name
-        let cachePath = "output/" <> modNameStr <> "/.gopurs-cache.json"
+        let safeModName = String.replaceAll (Pattern ".") (Replacement "_") modNameStr
+        let cachePath = "output/purescript/" <> safeModName <> ".gopurs-cache.json"
         res <- checkCache cacheVersion coreFnMod.path cachePath
         case res of
           Just backendMod -> do
-            let ffiPath = "output/" <> modNameStr <> "/" <> String.replaceAll (Pattern ".") (Replacement "_") modNameStr <> "_ffi.go"
+            let ffiPath = "output/purescript/" <> safeModName <> "_ffi.go"
             ffiStatRes <- attempt (FS.stat ffiPath)
             cacheStatRes <- attempt (FS.stat cachePath)
             case ffiStatRes, cacheStatRes of
@@ -295,10 +298,10 @@ main = launchAff_ do
           Nothing -> pure Nothing
     , onCodegenModule: \_ (Module coreFnMod) backendMod _ -> do
         let modNameStr = unwrap backendMod.name
-        _ <- attempt (FS.mkdir ("output/" <> modNameStr))
+        let safeModName = String.replaceAll (Pattern ".") (Replacement "_") modNameStr
         let importsArray = map (\i -> String.split (Pattern ".") (unwrap (importName i))) coreFnMod.imports
         let goFile = translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors ctorTypes globalTypes instantiations classDeclsMap classDeclsFields importsArray backendMod
-        FS.writeTextFile UTF8 ("output/" <> modNameStr <> "/" <> String.replaceAll (Pattern ".") (Replacement "_") modNameStr <> ".go") goFile
+        FS.writeTextFile UTF8 ("output/purescript/" <> safeModName <> ".go") goFile
 
         when (Array.length (Array.fromFoldable backendMod.foreign) > 0) do
           ffiPathMb <- liftEffect $ findFfiFile ".go" [] args.mbFfiDir modNameStr (Just coreFnMod.path)
@@ -313,16 +316,24 @@ main = launchAff_ do
               let safeModName = String.replaceAll (Pattern ".") (Replacement "_") modNameStr
               let lines = String.split (Pattern "\n") (String.replaceAll (Pattern "\r") (Replacement "") content)
               let otherLines = Array.filter (\l -> not (String.contains (Pattern "package ") l)) lines
-              let finalPkgLine = "package " <> safeModName
+              let finalPkgLine = "package purescript"
               let hasImport = String.contains (Pattern "\"gopurs/output/gopurs_runtime\"") content
               let importLine = if hasImport then "" else "import \"gopurs/output/gopurs_runtime\"\n"
-              let newContent = finalPkgLine <> "\n\n" <> importLine <> "\n" <> String.joinWith "\n" otherLines <> "\n\n// --- Auto-generated FFI wrappers ---\n" <> CodeGen.generateFfiBridge backendMod.dataDecls ffiDecls (Map.toUnfoldable backendMod.foreign)
-              FS.writeTextFile UTF8 ("output/" <> modNameStr <> "/" <> safeModName <> "_ffi.go") newContent
+              
+              let prefixedFfiDecls = map (\d -> d { name = safeModName <> "_" <> d.name }) ffiDecls
+              let renamedContentLines = map (\l -> Array.foldl (\acc decl ->
+                                                if decl.isVar 
+                                                then String.replaceAll (Pattern ("var " <> decl.name)) (Replacement ("var " <> safeModName <> "_" <> decl.name)) acc
+                                                else String.replaceAll (Pattern ("func " <> decl.name)) (Replacement ("func " <> safeModName <> "_" <> decl.name)) acc
+                                             ) l ffiDecls) otherLines
+              
+              let newContent = finalPkgLine <> "\n\n" <> importLine <> "\n" <> String.joinWith "\n" renamedContentLines <> "\n\n// --- Auto-generated FFI wrappers ---\n" <> CodeGen.generateFfiBridge safeModName backendMod.dataDecls prefixedFfiDecls (Map.toUnfoldable backendMod.foreign)
+              FS.writeTextFile UTF8 ("output/purescript/" <> safeModName <> "_ffi.go") newContent
             Nothing -> do
-              let goPackageName = String.replaceAll (Pattern ".") (Replacement "_") modNameStr
-              let dummyContent = "package " <> goPackageName <> "\n\nimport \"gopurs/output/gopurs_runtime\"\n\n" <> CodeGen.generateFfiBridge backendMod.dataDecls [] (Map.toUnfoldable backendMod.foreign)
-              FS.writeTextFile UTF8 ("output/" <> modNameStr <> "/" <> String.replaceAll (Pattern ".") (Replacement "_") modNameStr <> "_ffi.go") dummyContent
-        writeCache cacheVersion ("output/" <> modNameStr <> "/.gopurs-cache.json") backendMod
+              let safeModName = String.replaceAll (Pattern ".") (Replacement "_") modNameStr
+              let dummyContent = "package purescript\n\nimport \"gopurs/output/gopurs_runtime\"\n\n" <> CodeGen.generateFfiBridge safeModName backendMod.dataDecls [] (Map.toUnfoldable backendMod.foreign)
+              FS.writeTextFile UTF8 ("output/purescript/" <> safeModName <> "_ffi.go") dummyContent
+        writeCache cacheVersion ("output/purescript/" <> safeModName <> ".gopurs-cache.json") backendMod
     }
     monomorphizedModules
 
@@ -334,9 +345,9 @@ main = launchAff_ do
   _ <- traverse
     ( \mainMod -> do
         let pkgName = String.replaceAll (Pattern ".") (Replacement "_") mainMod
-        let mainEntryPoint = "package main\n\nimport (\n\t\"os\"\n\t\"runtime/pprof\"\n\t\"gopurs/output/" <> mainMod <> "\"\n\t\"gopurs/output/gopurs_runtime\"\n)\n\nfunc main() {\n\tif os.Getenv(\"PPROF\") == \"1\" {\n\t\tf, err := os.Create(\"cpu.prof\")\n\t\tif err != nil { panic(err) }\n\t\tpprof.StartCPUProfile(f)\n\t\tdefer pprof.StopCPUProfile()\n\t}\n\n\tgopurs_runtime.Apply(" <> pkgName <> ".Get_main(), gopurs_runtime.Value{})\n\n\tgopurs_runtime.EventLoopWait()\n\n\tif os.Getenv(\"PPROF\") == \"1\" {\n\t\tmf, err := os.Create(\"mem.prof\")\n\t\tif err != nil { panic(err) }\n\t\tpprof.WriteHeapProfile(mf)\n\t\tmf.Close()\n\t}\n}\n"
-        _ <- attempt (FS.mkdir ("output/" <> mainMod <> "/main"))
-        FS.writeTextFile UTF8 ("output/" <> mainMod <> "/main/main.go") mainEntryPoint
+        let mainEntryPoint = "package main\n\nimport (\n\t\"os\"\n\t\"runtime/pprof\"\n\t\"gopurs/output/purescript\"\n\t\"gopurs/output/gopurs_runtime\"\n)\n\nfunc main() {\n\tif os.Getenv(\"PPROF\") == \"1\" {\n\t\tf, err := os.Create(\"cpu.prof\")\n\t\tif err != nil { panic(err) }\n\t\tpprof.StartCPUProfile(f)\n\t\tdefer pprof.StopCPUProfile()\n\t}\n\n\tgopurs_runtime.Apply(purescript.Get_" <> pkgName <> "_main(), gopurs_runtime.Value{})\n\n\tgopurs_runtime.EventLoopWait()\n\n\tif os.Getenv(\"PPROF\") == \"1\" {\n\t\tmf, err := os.Create(\"mem.prof\")\n\t\tif err != nil { panic(err) }\n\t\tpprof.WriteHeapProfile(mf)\n\t\tmf.Close()\n\t}\n}\n"
+        _ <- attempt (FS.mkdir "output/main")
+        FS.writeTextFile UTF8 ("output/main/main.go") mainEntryPoint
     )
     targetMainModules
 
