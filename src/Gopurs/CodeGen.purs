@@ -224,7 +224,11 @@ wrapInStmts _ stmts expr =
 extractUncurriedAbs :: TcoExpr -> Maybe { args :: Array String, body :: TcoExpr, fvs :: Set String }
 extractUncurriedAbs tcoExpr@(TcoExpr _ syntax) = case syntax of
   UncurriedAbs args body ->
-    Just { args: map (\(Tuple mbI lvl) -> localId mbI lvl) args, body, fvs: freeVars tcoExpr }
+    let
+      thisArgs = map (\(Tuple mbI lvl) -> localId mbI lvl) args
+    in case extractUncurriedAbs body of
+      Just inner -> Just { args: thisArgs <> inner.args, body: inner.body, fvs: Set.union (freeVars tcoExpr) inner.fvs }
+      Nothing -> Just { args: thisArgs, body, fvs: freeVars tcoExpr }
   Abs args body ->
     let
       thisArgs = map (\(Tuple mbI lvl) -> localId mbI lvl) (toArray args)
@@ -245,6 +249,11 @@ flattenApp e =
         Tuple f' args' = flattenApp f
       in
         Tuple f' (args' <> toArray args)
+    UncurriedApp f args ->
+      let
+        Tuple f' args' = flattenApp f
+      in
+        Tuple f' (args' <> args)
     _ -> Tuple e []
 
 getBaseStructName :: String -> Maybe ModuleName -> String -> String
@@ -1344,34 +1353,74 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                 iifeExpr
             Nothing ->
               let
-                resFn = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false nextId fn
-                accArgs = foldl
-                  ( \acc arg ->
+                Tuple flatFn flatArgs = flattenApp tcoExpr
+                isTailCallTo =
+                  if isTail then case unwrapTcoExpr flatFn of
+                    Local mbIdent lvl ->
                       let
-                        argRes = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false acc.nextId arg
+                        v = fromMaybe { name: localId mbIdent lvl, goType: TypeValue } (Map.lookup (localId mbIdent lvl) bound)
                       in
-                        { stmts: acc.stmts <> argRes.stmts, exprs: Array.snoc acc.exprs argRes.expr, exprTypes: Array.snoc acc.exprTypes argRes.exprType, nextId: argRes.nextId }
-                  )
-                  { stmts: resFn.stmts, exprs: [], exprTypes: [], nextId: resFn.nextId }
-                  args
-                len = Array.length args
-                goFuncName = if len >= 2 && len <= 10 then "UncurriedApp" <> show len else "UncurriedApp"
+                        Array.findIndex (\ctx -> ctx.ident == v.name) loopCtx
+                    Var (Qualified mbMod (Ident name)) ->
+                      let
+                        fullName = sanitizeName name
+                      in
+                        Array.findIndex (\ctx -> ctx.ident == fullName) loopCtx
+                    _ -> Nothing
+                  else Nothing
               in
-                case resFn.exprType of
-                  TypeFunc fArgs fRet | Array.length fArgs == len ->
+                case isTailCallTo of
+                  Just index ->
                     let
-                      callArgs = Array.mapWithIndex (\i expected ->
-                          let arg = fromMaybe (GoRaw "nil") (Array.index accArgs.exprs i)
-                              actual = fromMaybe TypeValue (Array.index accArgs.exprTypes i)
-                          in unboxGoExpr arg actual expected
-                        ) fArgs
+                      accFinal = foldl
+                        ( \acc arg ->
+                            let
+                              argRes = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false acc.nextId arg
+                            in
+                              { stmts: acc.stmts <> argRes.stmts, exprs: Array.snoc acc.exprs argRes.expr, exprTypes: Array.snoc acc.exprTypes argRes.exprType, nextId: argRes.nextId }
+                        )
+                        { stmts: StmtEmpty, exprs: [], exprTypes: [], nextId }
+                        flatArgs
+                      targetCtx = fromMaybe { ident: "", params: [], loopParams: [], goTypes: [] } (Array.index loopCtx index)
+                      assigns = Array.mapWithIndex (\i paramName ->
+                          let
+                            argExpr = fromMaybe (GoRaw "nil") (Array.index accFinal.exprs i)
+                            argType = fromMaybe TypeValue (Array.index accFinal.exprTypes i)
+                            expectedType = fromMaybe TypeValue (Array.index targetCtx.goTypes i)
+                          in GoMutate paramName (unboxGoExpr argExpr argType expectedType)
+                        ) targetCtx.loopParams
                     in
-                      { stmts: accArgs.stmts, expr: boxGoExpr (GoCall resFn.expr callArgs) fRet, exprType: TypeValue, nextId: accArgs.nextId }
-                  _ ->
+                      { stmts: accFinal.stmts <> foldMap StmtLeaf assigns <> StmtLeaf (GoContinue targetCtx.ident), expr: GoRaw "gopurs_runtime.Value{}", exprType: TypeValue, nextId: accFinal.nextId }
+                  Nothing ->
                     let
-                      boxedArgs = Array.zipWith (\arg actual -> boxGoExpr arg actual) accArgs.exprs accArgs.exprTypes
+                      resFn = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false nextId fn
+                      accArgs = foldl
+                        ( \acc arg ->
+                            let
+                              argRes = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false acc.nextId arg
+                            in
+                              { stmts: acc.stmts <> argRes.stmts, exprs: Array.snoc acc.exprs argRes.expr, exprTypes: Array.snoc acc.exprTypes argRes.exprType, nextId: argRes.nextId }
+                        )
+                        { stmts: resFn.stmts, exprs: [], exprTypes: [], nextId: resFn.nextId }
+                        args
+                      len = Array.length args
+                      goFuncName = if len >= 2 && len <= 10 then "UncurriedApp" <> show len else "UncurriedApp"
                     in
-                      { stmts: accArgs.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") goFuncName) (Array.cons (boxGoExpr resFn.expr resFn.exprType) boxedArgs), exprType: TypeValue, nextId: accArgs.nextId }
+                      case resFn.exprType of
+                        TypeFunc fArgs fRet | Array.length fArgs == len ->
+                          let
+                            callArgs = Array.mapWithIndex (\i expected ->
+                                let arg = fromMaybe (GoRaw "nil") (Array.index accArgs.exprs i)
+                                    actual = fromMaybe TypeValue (Array.index accArgs.exprTypes i)
+                                in unboxGoExpr arg actual expected
+                              ) fArgs
+                          in
+                            { stmts: accArgs.stmts, expr: boxGoExpr (GoCall resFn.expr callArgs) fRet, exprType: TypeValue, nextId: accArgs.nextId }
+                        _ ->
+                          let
+                            boxedArgs = Array.zipWith (\arg actual -> boxGoExpr arg actual) accArgs.exprs accArgs.exprTypes
+                          in
+                            { stmts: accArgs.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") goFuncName) (Array.cons (boxGoExpr resFn.expr resFn.exprType) boxedArgs), exprType: TypeValue, nextId: accArgs.nextId }
 
       UncurriedAbs args body -> liftIfNeeded \_ ->
         let
