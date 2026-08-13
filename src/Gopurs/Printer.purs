@@ -134,14 +134,17 @@ printGoExpr expr = case expr of
     else
       "((*gopurs_runtime.RecordData" <> show size <> ")(" <> printGoExpr obj <> ".UnsafePtr)).V" <> show idx
   GoConstructor hashStr structName typeArgs args ->
-    let typeArgsStr = if Array.length typeArgs > 0 then "[" <> String.joinWith ", " (map goTypeToStr typeArgs) <> "]" else ""
+    let typeArgsStr = ""
     in if Array.null args then
       "nil"
     else
       "&" <> structName <> typeArgsStr <> "{1, " <> String.joinWith ", " (map printGoExpr args) <> "}"
-  GoConstructorAccess obj structName typeArgs idx ->
-    let typeArgsStr = if Array.length typeArgs > 0 then "[" <> String.joinWith ", " (map goTypeToStr typeArgs) <> "]" else ""
-    in "(*" <> structName <> typeArgsStr <> ")(" <> printGoExpr obj <> ".UnsafePtr).V" <> show idx
+  GoConstructorAccess obj structName typeArgs idx isNative ->
+    if isNative then
+      "(" <> printGoExpr obj <> ").V" <> show idx
+    else
+      let typeArgsStr = ""
+      in "(*" <> structName <> typeArgsStr <> ")(" <> printGoExpr obj <> ".UnsafePtr).V" <> show idx
   GoBranch branches def ->
     "func() gopurs_runtime.Value {\n" <>
     String.joinWith "\n" (map (\(Tuple cond t) -> "if (" <> printGoExpr cond <> ").IntVal != 0 {\nreturn " <> printGoExpr t <> "\n}") branches) <>
