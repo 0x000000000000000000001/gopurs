@@ -139,6 +139,12 @@ printGoExpr expr = case expr of
       "nil"
     else
       "&" <> structName <> typeArgsStr <> "{1, " <> String.joinWith ", " (map printGoExpr args) <> "}"
+  GoConstructorDict tag args ->
+    let len = Array.length args
+    in if len <= 5 then
+         "gopurs_runtime.Constructor" <> show len <> "(\"" <> tag <> "\"" <> (if len > 0 then ", " else "") <> String.joinWith ", " (map printGoExpr args) <> ")"
+       else
+         "gopurs_runtime.Constructor(\"" <> tag <> "\", []gopurs_runtime.Value{" <> String.joinWith ", " (map printGoExpr args) <> "})"
   GoConstructorAccess obj structName typeArgs idx isNative ->
     if isNative then
       "(" <> printGoExpr obj <> ").V" <> show idx

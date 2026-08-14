@@ -26,6 +26,7 @@ data GoExpr
   | GoStructAccess GoExpr String
   | GoRecordAccessStatic GoExpr Int Int
   | GoConstructor String String (Array GoType) (Array GoExpr)
+  | GoConstructorDict String (Array GoExpr)
   | GoConstructorAccess GoExpr String (Array GoType) Int Boolean
   | GoBranch (Array (Tuple GoExpr GoExpr)) GoExpr
   | GoBinOp String GoExpr GoExpr

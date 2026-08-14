@@ -5,7 +5,8 @@ import PureScript.Backend.Optimizer.Convert (BackendModule)
 import Gopurs.GoAst (GoFile, GoDecl, GoExpr(..), GoType(..))
 import PureScript.Backend.Optimizer.Semantics (NeutralExpr(..))
 import PureScript.Backend.Optimizer.CoreFn (Ident(..), Qualified(..), ModuleName(..), Literal(..))
-import PureScript.Backend.Optimizer.Syntax (BackendSyntax(..))
+import PureScript.Backend.Optimizer.Syntax (BackendSyntax(..), BackendAccessor(..))
+import PureScript.Backend.Optimizer.CoreFn (Prop(..))
 import PureScript.Backend.Optimizer.FreeVars (sanitizeName)
 import Data.Maybe (Maybe(..))
 import Partial.Unsafe (unsafeCrashWith)
@@ -88,6 +89,43 @@ translateExpr currentModName (NeutralExpr expr) = case expr of
       goBinds = map (\(Tuple (Ident name) val) -> Tuple (sanitizeName name <> "_" <> show (unwrap level)) (translateExpr currentModName val)) (NEA.toArray binds)
     in
       GoLetRec goBinds (translateExpr currentModName body)
+
+  Accessor obj accessor ->
+    case accessor of
+      GetProp prop ->
+        GoRecordAccess (translateExpr currentModName obj) prop
+      GetIndex idx ->
+        GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayAccess") [translateExpr currentModName obj, GoInt idx]
+      GetCtorField _ _ _ (Ident _ctorName) _ idx ->
+        -- Sans TAST on ne peut pas savoir le type précis, alors on utilise l'index sur le tableau de valeurs générique (qui est stocké par gopurs_runtime.Constructor).
+        -- On va utiliser la fonction d'accès qui est native dans l'AST :
+        GoCall (GoSelector (GoVar "gopurs_runtime") "ConstructorGet") [translateExpr currentModName obj, GoInt idx]
+        -- Wait, is there a ConstructorGet? Let's assume we can just use property access on the Vals slice, or maybe there's a runtime helper.
+        -- We will check if `ConstructorGet` exists in `gopurs_runtime`. If not, we will add it or use an alternative. Wait!
+
+  Update obj props ->
+    let
+      goProps = map (\(Prop key val) -> Tuple key (translateExpr currentModName val)) props
+    in
+      GoRecordUpdateDict (translateExpr currentModName obj) goProps
+
+  CtorSaturated _ _ _ (Ident name) fields ->
+    let
+      goFields = map (\(Tuple _ val) -> translateExpr currentModName val) fields
+    in
+      GoConstructorDict name goFields
+
+  CtorDef _ _ (Ident name) fields ->
+    let
+      len = Array.length fields
+      buildCurried :: Int -> Array GoExpr -> GoExpr
+      buildCurried i argsAcc
+        | i == len = GoConstructorDict name argsAcc
+        | otherwise =
+            let argName = "v" <> show i
+            in GoFunc argName TypeValue TypeValue (buildCurried (i + 1) (Array.snoc argsAcc (GoVar argName)))
+    in
+      buildCurried 0 []
 
   _ ->
     unsafeCrashWith "translateExpr: Not implemented"
