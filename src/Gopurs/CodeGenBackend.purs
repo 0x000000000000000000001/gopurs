@@ -39,6 +39,17 @@ translateBackend mod =
     , foreigns: []
     }
 
+isEffectNode :: forall a. BackendSyntax a -> Boolean
+isEffectNode = case _ of
+  EffectBind _ _ _ _ -> true
+  EffectPure _ -> true
+  _ -> false
+
+executeIfOpaque :: NeutralExpr -> GoExpr -> GoExpr
+executeIfOpaque (NeutralExpr expr) goExpr =
+  if isEffectNode expr then goExpr
+  else GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [goExpr, GoRaw "gopurs_runtime.Value{}"]
+
 translateExpr :: String -> NeutralExpr -> GoExpr
 translateExpr currentModName (NeutralExpr expr) = case expr of
   Var (Qualified mbMod (Ident name)) ->
@@ -126,6 +137,22 @@ translateExpr currentModName (NeutralExpr expr) = case expr of
             in GoFunc argName TypeValue TypeValue (buildCurried (i + 1) (Array.snoc argsAcc (GoVar argName)))
     in
       buildCurried 0 []
+
+  EffectBind mbIdent lvl binding body ->
+    let
+      originalName = case mbIdent of
+        Just (Ident n) -> sanitizeName n <> "_" <> show (unwrap lvl)
+        Nothing -> "_local_" <> show (unwrap lvl)
+      bindingExpr = executeIfOpaque binding (translateExpr currentModName binding)
+      bodyExpr = executeIfOpaque body (translateExpr currentModName body)
+    in
+      GoIIFE originalName bindingExpr bodyExpr
+
+  EffectPure binding ->
+    translateExpr currentModName binding
+
+  EffectDefer binding ->
+    GoFunc "_dummy" TypeValue TypeValue (executeIfOpaque binding (translateExpr currentModName binding))
 
   _ ->
     unsafeCrashWith "translateExpr: Not implemented"
