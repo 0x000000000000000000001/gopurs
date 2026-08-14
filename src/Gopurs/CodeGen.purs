@@ -50,6 +50,8 @@ import Data.Maybe (fromMaybe)
 coerceGoExpr :: GoExpr -> GoType -> GoType -> GoExpr
 coerceGoExpr expr from to | from == to = expr
 coerceGoExpr expr (TypeStructPointer b1 f1 s1 a1) (TypeStructPointer b2 f2 s2 a2) | b1 == b2 && s1 == s2 && a1 == a2 = expr
+coerceGoExpr expr (TypeStructPointer b1 f1 s1 a1) (TypeStructPointer b2 f2 s2 a2) = 
+  unboxGoExpr (boxGoExpr expr (TypeStructPointer b1 f1 s1 a1)) TypeValue (TypeStructPointer b2 f2 s2 a2)
 coerceGoExpr expr from TypeValue = boxGoExpr expr from
 coerceGoExpr expr TypeValue to = unboxGoExpr expr TypeValue to
 coerceGoExpr expr from to = unboxGoExpr (boxGoExpr expr from) TypeValue to
@@ -150,16 +152,6 @@ instantiateGenericGoType env t = t
 unboxGoExpr :: GoExpr -> GoType -> GoType -> GoExpr
 unboxGoExpr expr currentType desiredType =
   if currentType == desiredType then expr
-  else if goTypeToStr currentType == goTypeToStr desiredType && String.contains (Pattern "Constructor_Test_RBTree_T") (goTypeToStr currentType) then
-    let
-      cArgs = case currentType of
-        TypeStructPointer b1 k1 f1 args1 -> "cBase=" <> b1 <> ", cKey=" <> k1 <> ", cFull=" <> f1 <> ", cLen=" <> show (Array.length args1)
-        _ -> "none"
-      dArgs = case desiredType of
-        TypeStructPointer b2 k2 f2 args2 -> "dBase=" <> b2 <> ", dKey=" <> k2 <> ", dFull=" <> f2 <> ", dLen=" <> show (Array.length args2)
-        _ -> "none"
-    in Debug.trace ("MISMATCH AGAIN: " <> cArgs <> " vs " <> dArgs <> ". Structurally equal arrays? " <> show (currentType == desiredType)) \_ ->
-    unboxGoExpr (boxGoExpr expr currentType) TypeValue desiredType
   else if currentType /= TypeValue then
     unboxGoExpr (boxGoExpr expr currentType) TypeValue desiredType
   else case desiredType of
