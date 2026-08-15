@@ -55,9 +55,9 @@ var once_Main_b sync.Once
 
 func Get_Main_b() gopurs_runtime.Value {
 	once_Main_b.Do(func() {
-		cache_Main_b = gopurs_runtime.Value{Type: 9, IntVal: 1454680786, UnsafePtr: unsafe.Pointer(&Constructor_Main_ClassB{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_b = gopurs_runtime.Value{Type: 9, IntVal: 1454680786, UnsafePtr: unsafe.Pointer((&Constructor_Main_ClassB{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{}
-		})})}
+		})}))}
 	})
 	return cache_Main_b
 }

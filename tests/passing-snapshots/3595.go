@@ -23,11 +23,11 @@ var once_Main_showString sync.Once
 
 func Get_Main_showString() gopurs_runtime.Value {
 	once_Main_showString.Do(func() {
-		cache_Main_showString = gopurs_runtime.Value{Type: 9, IntVal: 3143145725, UnsafePtr: unsafe.Pointer(&Constructor_Main_Show{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_showString = gopurs_runtime.Value{Type: 9, IntVal: 3143145725, UnsafePtr: unsafe.Pointer((&Constructor_Main_Show{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show](Get_Data_Show_showString()))}
 		}), gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Str(x_0.StrVal())
-		})})}
+		})}))}
 	})
 	return cache_Main_showString
 }

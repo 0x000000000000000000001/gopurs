@@ -23,7 +23,7 @@ var once_Main_eqMaybe sync.Once
 
 func Get_Main_eqMaybe() gopurs_runtime.Value {
 	once_Main_eqMaybe.Do(func() {
-		cache_Main_eqMaybe = gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(&Constructor_Data_Eq_Eq{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_eqMaybe = gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer((&Constructor_Data_Eq_Eq{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(y_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				var __t0 bool
 				{
@@ -40,7 +40,7 @@ func Get_Main_eqMaybe() gopurs_runtime.Value {
 			end_branch_0:
 				return gopurs_runtime.Bool(__t0)
 			})
-		})})}
+		})}))}
 	})
 	return cache_Main_eqMaybe
 }
@@ -138,7 +138,7 @@ var once_Main_main sync.Once
 
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
-		cache_Main_main = func() gopurs_runtime.Value {
+		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 			// TAST (Let): __local_var_0_0 -> gopurs_runtime.Value
 			__local_var_0_0 := gopurs_runtime.Apply(Get_CustomAssert_assertThrows(), gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 				var selfOwn_1_1_3 gopurs_runtime.Value
@@ -147,59 +147,60 @@ func Get_Main_main() gopurs_runtime.Value {
 				return selfOwn_1_1_3
 			}))
 			_ = __local_var_0_0
-			return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-				err_1_2 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
-				_ = err_1_2
-				_dollar___unused_2_3 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Test_Assert_assert(), gopurs_runtime.Bool(((gopurs_runtime.Apply2(Get_Data_String_CodeUnits_contains(), gopurs_runtime.Str("interface conversion"), gopurs_runtime.Str(err_1_2.StrVal())).IntVal) != (0)) || ((gopurs_runtime.Apply2(Get_Data_String_CodeUnits_contains(), gopurs_runtime.Str("Attempt to read property"), gopurs_runtime.Str(err_1_2.StrVal())).IntVal) != (0)))), gopurs_runtime.Value{})
-				_ = _dollar___unused_2_3
-				err2_3_4 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_CustomAssert_assertThrows(), gopurs_runtime.Func(func(v_3 gopurs_runtime.Value) gopurs_runtime.Value {
-					var j_4_5_4 gopurs_runtime.Value
-					_ = j_4_5_4
-					var h_4_6_5 gopurs_runtime.Value
-					_ = h_4_6_5
-					var g_4_7_6 gopurs_runtime.Value
-					_ = g_4_7_6
-					var f_4_8_7 gopurs_runtime.Value
-					_ = f_4_8_7
-					j_4_5_4 = gopurs_runtime.Func(func(x_5 gopurs_runtime.Value) gopurs_runtime.Value {
-						return gopurs_runtime.Func(func(y_6 gopurs_runtime.Value) gopurs_runtime.Value {
-							return gopurs_runtime.Func(func(z_7 gopurs_runtime.Value) gopurs_runtime.Value {
-								return gopurs_runtime.RecordDict2("left", "right", gopurs_runtime.Apply2(x_5, y_6, z_7), gopurs_runtime.RecordGet(f_4_8_7, "left"))
-							})
+			err_1_2 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
+			_ = err_1_2
+			_dollar___unused_2_3 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Test_Assert_assert(), gopurs_runtime.Bool(((gopurs_runtime.Apply2(Get_Data_String_CodeUnits_contains(), gopurs_runtime.Str("interface conversion"), gopurs_runtime.Str(err_1_2.StrVal())).IntVal) != (0)) || ((gopurs_runtime.Apply2(Get_Data_String_CodeUnits_contains(), gopurs_runtime.Str("Attempt to read property"), gopurs_runtime.Str(err_1_2.StrVal())).IntVal) != (0)))), gopurs_runtime.Value{})
+			_ = _dollar___unused_2_3
+			err2_3_4 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_CustomAssert_assertThrows(), gopurs_runtime.Func(func(v_3 gopurs_runtime.Value) gopurs_runtime.Value {
+				var j_4_5_4 gopurs_runtime.Value
+				_ = j_4_5_4
+				var h_4_6_5 gopurs_runtime.Value
+				_ = h_4_6_5
+				var g_4_7_6 gopurs_runtime.Value
+				_ = g_4_7_6
+				var f_4_8_7 gopurs_runtime.Value
+				_ = f_4_8_7
+				j_4_5_4 = gopurs_runtime.Func(func(x_5 gopurs_runtime.Value) gopurs_runtime.Value {
+					return gopurs_runtime.Func(func(y_6 gopurs_runtime.Value) gopurs_runtime.Value {
+						return gopurs_runtime.Func(func(z_7 gopurs_runtime.Value) gopurs_runtime.Value {
+							return gopurs_runtime.RecordDict2("left", "right", gopurs_runtime.Apply2(x_5, y_6, z_7), gopurs_runtime.RecordGet(f_4_8_7, "left"))
 						})
 					})
-					h_4_6_5 = gopurs_runtime.Func(func(x_5 gopurs_runtime.Value) gopurs_runtime.Value {
-						return gopurs_runtime.Apply2(j_4_5_4, x_5, x_5)
-					})
-					g_4_7_6 = gopurs_runtime.Func(func(x_5 gopurs_runtime.Value) gopurs_runtime.Value {
-						return gopurs_runtime.RecordGet(gopurs_runtime.Apply3(j_4_5_4, x_5, x_5, x_5), "right")
-					})
-					f_4_8_7 = gopurs_runtime.RecordDict2("left", "right", gopurs_runtime.Apply(g_4_7_6, gopurs_runtime.Func(func(x_5 gopurs_runtime.Value) gopurs_runtime.Value {
-						return x_5
-					})), gopurs_runtime.Apply(h_4_6_5, gopurs_runtime.Func(func(x_5 gopurs_runtime.Value) gopurs_runtime.Value {
-						return x_5
-					})))
-					return f_4_8_7
-				})), gopurs_runtime.Value{})
-				_ = err2_3_4
-				_dollar___unused_4_9 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Test_Assert_assert(), gopurs_runtime.Bool(((gopurs_runtime.Apply2(Get_Data_String_CodeUnits_contains(), gopurs_runtime.Str("interface conversion"), gopurs_runtime.Str(err2_3_4.StrVal())).IntVal) != (0)) || ((gopurs_runtime.Apply2(Get_Data_String_CodeUnits_contains(), gopurs_runtime.Str("Attempt to read property"), gopurs_runtime.Str(err2_3_4.StrVal())).IntVal) != (0)))), gopurs_runtime.Value{})
-				_ = _dollar___unused_4_9
-				// TAST (Let): __local_var_5_10 -> gopurs_runtime.Value
-				__local_var_5_10 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(gopurs_runtime.Int(1).IntVal), gopurs_runtime.Int(1))
-				_ = __local_var_5_10
-				return gopurs_runtime.Apply(gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-					_dollar___unused_6_12 := Get_Data_Unit_unit()
-					_ = _dollar___unused_6_12
-					_dollar___unused_6_11 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(((("Expected: ")+(gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_5_10, "expected")).StrVal()))+("\x0aActual:   "))+(gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_5_10, "actual")).StrVal())), gopurs_runtime.Bool(true)), gopurs_runtime.Value{})
-					_ = _dollar___unused_6_11
-					return gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Main_runtimeImport(), gopurs_runtime.Str("InitializationError"), gopurs_runtime.Func(func(err3_7 gopurs_runtime.Value) gopurs_runtime.Value {
-						var __t_tag_14 *Constructor_Data_Maybe_Just = gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just](err3_7)
-						// TAST (Let): __local_var_8_13 -> gopurs_runtime.Value
-						__local_var_8_13 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Bool((__t_tag_14 == nil) != (true)), gopurs_runtime.Bool(true))
-						_ = __local_var_8_13
-						// TAST (Let): __local_var_9_15 -> gopurs_runtime.Value
-						__local_var_9_15 := gopurs_runtime.RecordGet(__local_var_8_13, "actual")
-						_ = __local_var_9_15
+				})
+				h_4_6_5 = gopurs_runtime.Func(func(x_5 gopurs_runtime.Value) gopurs_runtime.Value {
+					return gopurs_runtime.Apply2(j_4_5_4, x_5, x_5)
+				})
+				g_4_7_6 = gopurs_runtime.Func(func(x_5 gopurs_runtime.Value) gopurs_runtime.Value {
+					return gopurs_runtime.RecordGet(gopurs_runtime.Apply3(j_4_5_4, x_5, x_5, x_5), "right")
+				})
+				f_4_8_7 = gopurs_runtime.RecordDict2("left", "right", gopurs_runtime.Apply(g_4_7_6, gopurs_runtime.Func(func(x_5 gopurs_runtime.Value) gopurs_runtime.Value {
+					return x_5
+				})), gopurs_runtime.Apply(h_4_6_5, gopurs_runtime.Func(func(x_5 gopurs_runtime.Value) gopurs_runtime.Value {
+					return x_5
+				})))
+				return f_4_8_7
+			})), gopurs_runtime.Value{})
+			_ = err2_3_4
+			_dollar___unused_4_9 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Test_Assert_assert(), gopurs_runtime.Bool(((gopurs_runtime.Apply2(Get_Data_String_CodeUnits_contains(), gopurs_runtime.Str("interface conversion"), gopurs_runtime.Str(err2_3_4.StrVal())).IntVal) != (0)) || ((gopurs_runtime.Apply2(Get_Data_String_CodeUnits_contains(), gopurs_runtime.Str("Attempt to read property"), gopurs_runtime.Str(err2_3_4.StrVal())).IntVal) != (0)))), gopurs_runtime.Value{})
+			_ = _dollar___unused_4_9
+			// TAST (Let): __local_var_5_10 -> gopurs_runtime.Value
+			__local_var_5_10 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(gopurs_runtime.Int(1).IntVal), gopurs_runtime.Int(1))
+			_ = __local_var_5_10
+			_dollar___unused_6_12 := Get_Data_Unit_unit()
+			_ = _dollar___unused_6_12
+			_dollar___unused_6_11 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(((("Expected: ")+(gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_5_10, "expected")).StrVal()))+("\x0aActual:   "))+(gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_5_10, "actual")).StrVal())), gopurs_runtime.Bool(true)), gopurs_runtime.Value{})
+			_ = _dollar___unused_6_11
+			return gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Main_runtimeImport(), gopurs_runtime.Str("InitializationError"), gopurs_runtime.Func(func(err3_7 gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+					var __t_tag_14 *Constructor_Data_Maybe_Just = gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just](err3_7)
+					// TAST (Let): __local_var_8_13 -> gopurs_runtime.Value
+					__local_var_8_13 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Bool((__t_tag_14 == nil) != (true)), gopurs_runtime.Bool(true))
+					_ = __local_var_8_13
+					// TAST (Let): __local_var_9_15 -> gopurs_runtime.Value
+					__local_var_9_15 := gopurs_runtime.RecordGet(__local_var_8_13, "actual")
+					_ = __local_var_9_15
+					// TAST (Let): __local_var_10_16 -> gopurs_runtime.Value
+					__local_var_10_16 := gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 						var __t18 string
 						{
 							if (gopurs_runtime.RecordGet(__local_var_8_13, "actual").IntVal) != (0) {
@@ -244,22 +245,17 @@ func Get_Main_main() gopurs_runtime.Value {
 						// TAST (Let): __local_var_12_20 -> gopurs_runtime.Value
 						__local_var_12_20 := __t21
 						_ = __local_var_12_20
-						// TAST (Let): __local_var_10_16 -> gopurs_runtime.Value
-						__local_var_10_16 := gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-							_dollar___unused_13_22 := gopurs_runtime.Apply(__local_var_12_20, gopurs_runtime.Value{})
-							_ = _dollar___unused_13_22
-							return gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_10_17.StrVal()), gopurs_runtime.Bool((__local_var_9_15.IntVal) != (0))), gopurs_runtime.Value{})
-						})
-						_ = __local_var_10_16
-						return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-							_dollar___unused_11_23 := gopurs_runtime.Apply(__local_var_10_16, gopurs_runtime.Value{})
-							_ = _dollar___unused_11_23
-							return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
-						})
-					})), gopurs_runtime.Value{})
-				}), gopurs_runtime.Value{})
-			})
-		}()
+						_dollar___unused_13_22 := gopurs_runtime.Apply(__local_var_12_20, gopurs_runtime.Value{})
+						_ = _dollar___unused_13_22
+						return gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_10_17.StrVal()), gopurs_runtime.Bool((__local_var_9_15.IntVal) != (0))), gopurs_runtime.Value{})
+					})
+					_ = __local_var_10_16
+					_dollar___unused_11_23 := gopurs_runtime.Apply(__local_var_10_16, gopurs_runtime.Value{})
+					_ = _dollar___unused_11_23
+					return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
+				})
+			})), gopurs_runtime.Value{})
+		})
 	})
 	return cache_Main_main
 }

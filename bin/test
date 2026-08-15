@@ -42,7 +42,7 @@ mkdir -p "$RUNNER_DIR/src"
 passed=0
 failed=0
 
-SKIP_BEFORE="WildcardType"
+SKIP_BEFORE=""
 TEST_FILES=()
 CLEAN_CACHE=0
 

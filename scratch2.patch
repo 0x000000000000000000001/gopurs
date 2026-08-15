@@ -1,0 +1,28 @@
+--- src/Gopurs/CodeGen.purs
++++ src/Gopurs/CodeGen.purs
+@@ -23,6 +23,7 @@
+ import Data.Tuple (fst, snd, Tuple(..))
+ import Debug as Debug
+ import Effect (Effect)
++import Effect.Console as Console
+ import Effect.Unsafe (unsafePerformEffect)
+ import Gopurs.GoAst (GoFile, GoDecl, GoExpr(..), GoType(..), GoStmt(..), printGoDecl, printGoExpr, unboxGoExpr, boxGoExpr, goTypeToStr, stripNativeArray)
+ import Node.Encoding (Encoding(..))
+@@ -1455,7 +1456,7 @@
+         in if arity >= 2 && arity <= 10 then
+           case tcoIdent of
+             Just topName ->
+-              let _ = unsafePerformEffect (if topName == "c100k" then Debug.trace ("UncurriedAbs c100k resBody.exprType: " <> goTypeToStr resBody.exprType) \_ -> pure unit else pure unit) in
++              let _ = unsafePerformEffect (if topName == "c100k" then Console.log ("UncurriedAbs c100k resBody.exprType: " <> goTypeToStr resBody.exprType) else pure unit) in
+               let
+                 callFuncDecl = "func Call_" <> modNameStr <> "_" <> topName <> "(" <> goParams <> ") gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr resBody.expr resBody.exprType) ])) <> "\n}"
+                 funcExpr = unsafePerformEffect do
+@@ -1466,7 +1467,7 @@
+               in { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: resBody.nextId }
+         else
+           let
+-            _ = unsafePerformEffect (if tcoIdent == Just "c100k" then Debug.trace ("UncurriedAbs else c100k resBody.exprType: " <> goTypeToStr resBody.exprType) \_ -> pure unit else pure unit)
++            _ = unsafePerformEffect (if tcoIdent == Just "c100k" then Console.log ("UncurriedAbs else c100k resBody.exprType: " <> goTypeToStr resBody.exprType) else pure unit)
+             params = map fst paramsWithTypes
+             makeCurried [] = resBody.expr
+             makeCurried [p] = GoFunc p TypeValue TypeValue (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr resBody.expr resBody.exprType) ]))

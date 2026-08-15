@@ -13,7 +13,7 @@ func Get_Main_Person() gopurs_runtime.Value {
 	once_Main_Person.Do(func() {
 		cache_Main_Person = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(value1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Value{Type: 9, IntVal: 1621815371, UnsafePtr: unsafe.Pointer(&Constructor_Main_Person{1, value0.StrVal(), (value1.IntVal) != (0)})}
+				return gopurs_runtime.Value{Type: 9, IntVal: 1621815371, UnsafePtr: unsafe.Pointer((&Constructor_Main_Person{1, value0.StrVal(), (value1.IntVal) != (0)}))}
 			})
 		})
 	})

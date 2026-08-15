@@ -1,0 +1,11 @@
+--- src/Gopurs/CodeGen.purs
++++ src/Gopurs/CodeGen.purs
+@@ -36,7 +36,7 @@
+ import Effect.Ref as Ref
+ import Node.FS.Sync as NodeFSSync
+ import Node.Encoding (Encoding(..))
+-import Gopurs.GoAst (GoFile, GoDecl, GoExpr(..), GoType(..), printGoDecl, printGoExpr, unboxGoExpr, boxGoExpr, goTypeToStr, stripNativeArray)
++import Gopurs.GoAst (GoFile, GoDecl, GoExpr(..), GoType(..), goTypeToStr)
+ 
+ 
+ import Gopurs.Printer (printGoFile, printGoExpr, printGoDeclVar)

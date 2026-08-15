@@ -12,7 +12,7 @@ var once_Main_Just sync.Once
 func Get_Main_Just() gopurs_runtime.Value {
 	once_Main_Just.Do(func() {
 		cache_Main_Just = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer(&Constructor_Main_Just{1, value0})}
+			return gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer((&Constructor_Main_Just{1, value0}))}
 		})
 	})
 	return cache_Main_Just
@@ -43,7 +43,7 @@ var once_Main_eqT sync.Once
 
 func Get_Main_eqT() gopurs_runtime.Value {
 	once_Main_eqT.Do(func() {
-		cache_Main_eqT = gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(&Constructor_Data_Eq_Eq{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_eqT = gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer((&Constructor_Data_Eq_Eq{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(y_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				var __t0 bool
 				{
@@ -60,7 +60,7 @@ func Get_Main_eqT() gopurs_runtime.Value {
 			end_branch_0:
 				return gopurs_runtime.Bool(__t0)
 			})
-		})})}
+		})}))}
 	})
 	return cache_Main_eqT
 }

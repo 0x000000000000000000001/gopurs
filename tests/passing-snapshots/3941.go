@@ -45,9 +45,9 @@ var once_Main_equals sync.Once
 
 func Get_Main_equals() gopurs_runtime.Value {
 	once_Main_equals.Do(func() {
-		cache_Main_equals = gopurs_runtime.Value{Type: 9, IntVal: 1199216238, UnsafePtr: unsafe.Pointer(&Constructor_Main_TwoParams{1, gopurs_runtime.Func(func(a_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_equals = gopurs_runtime.Value{Type: 9, IntVal: 1199216238, UnsafePtr: unsafe.Pointer((&Constructor_Main_TwoParams{1, gopurs_runtime.Func(func(a_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return a_0
-		})})}
+		})}))}
 	})
 	return cache_Main_equals
 }
@@ -69,7 +69,7 @@ var once_Main_any sync.Once
 
 func Get_Main_any() gopurs_runtime.Value {
 	once_Main_any.Do(func() {
-		cache_Main_any = gopurs_runtime.Value{Type: 9, IntVal: 1199216238, UnsafePtr: unsafe.Pointer(&Constructor_Main_TwoParams{1, Get_Unsafe_Coerce_unsafeCoerce()})}
+		cache_Main_any = gopurs_runtime.Value{Type: 9, IntVal: 1199216238, UnsafePtr: unsafe.Pointer((&Constructor_Main_TwoParams{1, Get_Unsafe_Coerce_unsafeCoerce()}))}
 	})
 	return cache_Main_any
 }

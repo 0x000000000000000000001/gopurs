@@ -65,7 +65,7 @@ var once_Main_cA sync.Once
 
 func Get_Main_cA() gopurs_runtime.Value {
 	once_Main_cA.Do(func() {
-		cache_Main_cA = gopurs_runtime.Value{Type: 9, IntVal: 2167983901, UnsafePtr: unsafe.Pointer(&Constructor_Main_C{1, gopurs_runtime.Func(func(x1_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_cA = gopurs_runtime.Value{Type: 9, IntVal: 2167983901, UnsafePtr: unsafe.Pointer((&Constructor_Main_C{1, gopurs_runtime.Func(func(x1_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Array(func() []gopurs_runtime.Value {
 					arr := *(*[]gopurs_runtime.Value)(x1_0.UnsafePtr)
@@ -76,7 +76,7 @@ func Get_Main_cA() gopurs_runtime.Value {
 					return unboxed
 				}())
 			})
-		})})}
+		})}))}
 	})
 	return cache_Main_cA
 }

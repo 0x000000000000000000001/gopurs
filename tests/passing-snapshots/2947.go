@@ -31,11 +31,11 @@ var once_Main_eqFoo sync.Once
 
 func Get_Main_eqFoo() gopurs_runtime.Value {
 	once_Main_eqFoo.Do(func() {
-		cache_Main_eqFoo = gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(&Constructor_Data_Eq_Eq{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_eqFoo = gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer((&Constructor_Data_Eq_Eq{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(v1_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Bool(true)
 			})
-		})})}
+		})}))}
 	})
 	return cache_Main_eqFoo
 }

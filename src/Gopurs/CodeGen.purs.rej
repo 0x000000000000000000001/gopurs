@@ -1,0 +1,8 @@
+@@ -27,6 +27,7 @@
+ import Effect.Ref (Ref)
+ import Effect.Ref as Ref
+ import Node.FS.Sync as NodeFSSync
++import Node.Encoding (Encoding(..))
+ import Gopurs.GoAst (GoFile, GoDecl, GoExpr(..), GoType(..), GoStmt(..), printGoDecl, printGoExpr, unboxGoExpr, boxGoExpr, goTypeToStr, stripNativeArray)
+ 
+ 

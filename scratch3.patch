@@ -1,0 +1,11 @@
+--- src/Gopurs/CodeGen.purs
++++ src/Gopurs/CodeGen.purs
+@@ -1455,7 +1455,7 @@
+         in if arity >= 2 && arity <= 10 then
+           case tcoIdent of
+             Just topName ->
+-              let _ = unsafePerformEffect (if topName == "c100k" then Debug.trace ("UncurriedAbs c100k resBody.exprType: " <> goTypeToStr resBody.exprType) \_ -> pure unit else pure unit) in
++              let _ = unsafePerformEffect (if topName == "c100k" then Effect.Console.log ("UncurriedAbs c100k resBody.exprType: " <> goTypeToStr resBody.exprType) else pure unit) in
+               let
+                 callFuncDecl = "func Call_" <> modNameStr <> "_" <> topName <> "(" <> goParams <> ") gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr resBody.expr resBody.exprType) ])) <> "\n}"
+                 funcExpr = unsafePerformEffect do

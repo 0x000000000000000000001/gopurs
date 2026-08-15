@@ -1565,7 +1565,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
           name = originalName <> "_" <> show nextId
           resBinding = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false (nextId + 1) binding
           expectedGoType = exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr (getExprType binding)
-          _ = unsafePerformEffect (Console.log $ "MakeLet CodeGen name: " <> name <> " got type: " <> printExprType (getExprType binding))
+
           newBound = Map.insert originalName { name, goType: expectedGoType } bound
           resBody = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities newBound Nothing loopCtx isTail inEffectBlock resBinding.nextId body
           

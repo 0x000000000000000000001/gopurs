@@ -35,11 +35,11 @@ var once_Main_injectRefl sync.Once
 
 func Get_Main_injectRefl() gopurs_runtime.Value {
 	once_Main_injectRefl.Do(func() {
-		cache_Main_injectRefl = gopurs_runtime.Value{Type: 9, IntVal: 930202529, UnsafePtr: unsafe.Pointer(&Constructor_Main_Inject{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_injectRefl = gopurs_runtime.Value{Type: 9, IntVal: 930202529, UnsafePtr: unsafe.Pointer((&Constructor_Main_Inject{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return x_0
 		}), gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just{1, x_0})}
-		})})}
+			return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer((&Constructor_Data_Maybe_Just{1, x_0}))}
+		})}))}
 	})
 	return cache_Main_injectRefl
 }
@@ -49,13 +49,13 @@ var once_Main_injectLeft sync.Once
 
 func Get_Main_injectLeft() gopurs_runtime.Value {
 	once_Main_injectLeft.Do(func() {
-		cache_Main_injectLeft = gopurs_runtime.Value{Type: 9, IntVal: 930202529, UnsafePtr: unsafe.Pointer(&Constructor_Main_Inject{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left{1, x_0})}
+		cache_Main_injectLeft = gopurs_runtime.Value{Type: 9, IntVal: 930202529, UnsafePtr: unsafe.Pointer((&Constructor_Main_Inject{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer((&Constructor_Data_Either_Left{1, x_0}))}
 		}), gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			var __t0 *Constructor_Data_Maybe_Just
 			{
 				if v_0.Type == 9 && v_0.IntVal == 3711209382 {
-					__t0 = &Constructor_Data_Maybe_Just{1, (*Constructor_Data_Either_Left)(v_0.UnsafePtr).V0}
+					__t0 = (&Constructor_Data_Maybe_Just{1, (*Constructor_Data_Either_Left)(v_0.UnsafePtr).V0})
 					goto end_branch_0
 				} else {
 
@@ -66,7 +66,7 @@ func Get_Main_injectLeft() gopurs_runtime.Value {
 			}
 		end_branch_0:
 			return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(__t0)}
-		})})}
+		})}))}
 	})
 	return cache_Main_injectLeft
 }
@@ -134,13 +134,13 @@ var once_Main_injectLeft__4013048200 sync.Once
 
 func Get_Main_injectLeft__4013048200() gopurs_runtime.Value {
 	once_Main_injectLeft__4013048200.Do(func() {
-		cache_Main_injectLeft__4013048200 = gopurs_runtime.Value{Type: 9, IntVal: 930202529, UnsafePtr: unsafe.Pointer(&Constructor_Main_Inject{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left{1, x_0})}
+		cache_Main_injectLeft__4013048200 = gopurs_runtime.Value{Type: 9, IntVal: 930202529, UnsafePtr: unsafe.Pointer((&Constructor_Main_Inject{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer((&Constructor_Data_Either_Left{1, x_0}))}
 		}), gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			var __t0 *Constructor_Data_Maybe_Just
 			{
 				if v_0.Type == 9 && v_0.IntVal == 3711209382 {
-					__t0 = &Constructor_Data_Maybe_Just{1, (*Constructor_Data_Either_Left)(v_0.UnsafePtr).V0}
+					__t0 = (&Constructor_Data_Maybe_Just{1, (*Constructor_Data_Either_Left)(v_0.UnsafePtr).V0})
 					goto end_branch_0
 				} else {
 
@@ -151,7 +151,7 @@ func Get_Main_injectLeft__4013048200() gopurs_runtime.Value {
 			}
 		end_branch_0:
 			return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(__t0)}
-		})})}
+		})}))}
 	})
 	return cache_Main_injectLeft__4013048200
 }
@@ -210,14 +210,14 @@ func Call_Main_inj(dict_0_loop *Constructor_Main_Inject) gopurs_runtime.Value {
 func Call_Main_injL(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var x_0 gopurs_runtime.Value = x_0_loop
 	_ = x_0
-	return gopurs_runtime.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left{1, x_0})}
+	return gopurs_runtime.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer((&Constructor_Data_Either_Left{1, x_0}))}
 }
 
 func Call_Main_injectRight(dictInject_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var dictInject_0 gopurs_runtime.Value = dictInject_0_loop
 	_ = dictInject_0
-	return gopurs_runtime.Value{Type: 9, IntVal: 930202529, UnsafePtr: unsafe.Pointer(&Constructor_Main_Inject{1, gopurs_runtime.Func(func(x_1 gopurs_runtime.Value) gopurs_runtime.Value {
-		return gopurs_runtime.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right{1, gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictInject_0, "inj"), x_1)})}
+	return gopurs_runtime.Value{Type: 9, IntVal: 930202529, UnsafePtr: unsafe.Pointer((&Constructor_Main_Inject{1, gopurs_runtime.Func(func(x_1 gopurs_runtime.Value) gopurs_runtime.Value {
+		return gopurs_runtime.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer((&Constructor_Data_Either_Right{1, gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictInject_0, "inj"), x_1)}))}
 	}), gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
 		var __t0 *Constructor_Data_Maybe_Just
 		{
@@ -233,7 +233,7 @@ func Call_Main_injectRight(dictInject_0_loop gopurs_runtime.Value) gopurs_runtim
 		}
 	end_branch_0:
 		return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(__t0)}
-	})})}
+	})}))}
 }
 
 func Call_Main_inj__2246686172(dict_0_loop *Constructor_Main_Inject) gopurs_runtime.Value {

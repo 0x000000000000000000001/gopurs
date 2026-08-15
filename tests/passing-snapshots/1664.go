@@ -3,7 +3,6 @@ package purescript
 import (
 	gopurs_runtime "gopurs/output/gopurs_runtime"
 	sync "sync"
-	unsafe "unsafe"
 )
 
 var cache_Main_pure gopurs_runtime.Value
@@ -22,7 +21,7 @@ var once_Main_Identity sync.Once
 func Get_Main_Identity() gopurs_runtime.Value {
 	once_Main_Identity.Do(func() {
 		cache_Main_Identity = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 390884680, UnsafePtr: unsafe.Pointer(&Constructor_Main_Identity{1, value0})}
+			return value0
 		})
 	})
 	return cache_Main_Identity
