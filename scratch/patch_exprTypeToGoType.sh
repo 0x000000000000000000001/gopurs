@@ -1,1 +1,0 @@
-sed -i '' -e 's/paddedTypeArgs = typeArgsMapped <> Array.replicate (info.arity - Array.length typeArgsMapped) TypeValue/let typeArgsMappedTruncated = Array.take info.arity typeArgsMapped\n      paddedTypeArgs = typeArgsMappedTruncated <> Array.replicate (info.arity - Array.length typeArgsMappedTruncated) TypeValue/g' src/Gopurs/CodeGen.purs
