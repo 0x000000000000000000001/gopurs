@@ -1,0 +1,1142 @@
+{
+  "annotation": {
+    "meta": null,
+    "sourceSpan": {
+      "end": [
+        61,
+        20
+      ],
+      "start": [
+        61,
+        1
+      ]
+    },
+    "type": null
+  },
+  "bindType": "NonRec",
+  "expression": {
+    "annotation": {
+      "meta": {
+        "metaType": "IsWhere"
+      },
+      "sourceSpan": {
+        "end": [
+          62,
+          12
+        ],
+        "start": [
+          62,
+          9
+        ]
+      },
+      "type": {
+        "args": [
+          {
+            "type": "Int"
+          }
+        ],
+        "ret": {
+          "type": "Int"
+        },
+        "type": "Func"
+      }
+    },
+    "binds": [
+      {
+        "bindType": "Rec",
+        "binds": [
+          {
+            "annotation": {
+              "meta": null,
+              "sourceSpan": {
+                "end": [
+                  66,
+                  18
+                ],
+                "start": [
+                  64,
+                  3
+                ]
+              },
+              "type": null
+            },
+            "expression": {
+              "annotation": {
+                "meta": null,
+                "sourceSpan": {
+                  "end": [
+                    66,
+                    18
+                  ],
+                  "start": [
+                    64,
+                    3
+                  ]
+                },
+                "type": {
+                  "args": [
+                    {
+                      "type": "Int"
+                    },
+                    {
+                      "type": "Int"
+                    }
+                  ],
+                  "ret": {
+                    "type": "Int"
+                  },
+                  "type": "Func"
+                }
+              },
+              "argument": "x",
+              "body": {
+                "annotation": {
+                  "meta": null,
+                  "sourceSpan": {
+                    "end": [
+                      66,
+                      18
+                    ],
+                    "start": [
+                      64,
+                      3
+                    ]
+                  },
+                  "type": {
+                    "args": [
+                      {
+                        "type": "Int"
+                      }
+                    ],
+                    "ret": {
+                      "type": "Int"
+                    },
+                    "type": "Func"
+                  }
+                },
+                "argument": "y",
+                "body": {
+                  "annotation": {
+                    "meta": {
+                      "metaType": "IsWhere"
+                    },
+                    "sourceSpan": {
+                      "end": [
+                        64,
+                        42
+                      ],
+                      "start": [
+                        64,
+                        11
+                      ]
+                    },
+                    "type": {
+                      "type": "Int"
+                    }
+                  },
+                  "binds": [
+                    {
+                      "annotation": {
+                        "meta": null,
+                        "sourceSpan": {
+                          "end": [
+                            66,
+                            18
+                          ],
+                          "start": [
+                            66,
+                            5
+                          ]
+                        },
+                        "type": null
+                      },
+                      "bindType": "NonRec",
+                      "expression": {
+                        "abstraction": {
+                          "annotation": {
+                            "meta": null,
+                            "sourceSpan": {
+                              "end": [
+                                66,
+                                10
+                              ],
+                              "start": [
+                                66,
+                                9
+                              ]
+                            },
+                            "type": {
+                              "args": [
+                                {
+                                  "type": "Int"
+                                },
+                                {
+                                  "type": "Int"
+                                }
+                              ],
+                              "ret": {
+                                "type": "Int"
+                              },
+                              "type": "Func"
+                            }
+                          },
+                          "type": "Var",
+                          "value": {
+                            "identifier": "f",
+                            "sourcePos": [
+                              64,
+                              3
+                            ]
+                          }
+                        },
+                        "annotation": {
+                          "meta": null,
+                          "sourceSpan": {
+                            "end": [
+                              66,
+                              18
+                            ],
+                            "start": [
+                              66,
+                              9
+                            ]
+                          },
+                          "type": null
+                        },
+                        "argument": {
+                          "abstraction": {
+                            "abstraction": {
+                              "abstraction": {
+                                "annotation": {
+                                  "meta": {
+                                    "metaType": "IsForeign"
+                                  },
+                                  "sourceSpan": {
+                                    "end": [
+                                      66,
+                                      15
+                                    ],
+                                    "start": [
+                                      66,
+                                      14
+                                    ]
+                                  },
+                                  "type": {
+                                    "body": {
+                                      "body": {
+                                        "args": [
+                                          {
+                                            "name": "a",
+                                            "type": "TypeVar"
+                                          },
+                                          {
+                                            "name": "a",
+                                            "type": "TypeVar"
+                                          }
+                                        ],
+                                        "ret": {
+                                          "name": "a",
+                                          "type": "TypeVar"
+                                        },
+                                        "type": "Func"
+                                      },
+                                      "constraints": [
+                                        {
+                                          "args": [
+                                            {
+                                              "name": "a",
+                                              "type": "TypeVar"
+                                            }
+                                          ],
+                                          "fqn": [
+                                            "Data",
+                                            "Semiring",
+                                            "Semiring"
+                                          ]
+                                        }
+                                      ],
+                                      "type": "ConstrainedType"
+                                    },
+                                    "type": "ForAll",
+                                    "vars": [
+                                      "a"
+                                    ]
+                                  }
+                                },
+                                "type": "Var",
+                                "value": {
+                                  "identifier": "add",
+                                  "moduleName": [
+                                    "Data",
+                                    "Semiring"
+                                  ]
+                                }
+                              },
+                              "annotation": {
+                                "meta": null,
+                                "sourceSpan": {
+                                  "end": [
+                                    66,
+                                    17
+                                  ],
+                                  "start": [
+                                    66,
+                                    12
+                                  ]
+                                },
+                                "type": {
+                                  "args": [
+                                    {
+                                      "type": "Int"
+                                    },
+                                    {
+                                      "type": "Int"
+                                    }
+                                  ],
+                                  "ret": {
+                                    "type": "Int"
+                                  },
+                                  "type": "Func"
+                                }
+                              },
+                              "argument": {
+                                "annotation": {
+                                  "meta": null,
+                                  "sourceSpan": {
+                                    "end": [
+                                      0,
+                                      0
+                                    ],
+                                    "start": [
+                                      0,
+                                      0
+                                    ]
+                                  },
+                                  "type": {
+                                    "args": [
+                                      {
+                                        "type": "Int"
+                                      }
+                                    ],
+                                    "fqn": [
+                                      "Data",
+                                      "Semiring",
+                                      "Semiring"
+                                    ],
+                                    "type": "Adt"
+                                  }
+                                },
+                                "type": "Var",
+                                "value": {
+                                  "identifier": "semiringInt",
+                                  "moduleName": [
+                                    "Data",
+                                    "Semiring"
+                                  ]
+                                }
+                              },
+                              "type": "App"
+                            },
+                            "annotation": {
+                              "meta": null,
+                              "sourceSpan": {
+                                "end": [
+                                  66,
+                                  17
+                                ],
+                                "start": [
+                                  66,
+                                  12
+                                ]
+                              },
+                              "type": {
+                                "args": [
+                                  {
+                                    "type": "Int"
+                                  }
+                                ],
+                                "ret": {
+                                  "type": "Int"
+                                },
+                                "type": "Func"
+                              }
+                            },
+                            "argument": {
+                              "annotation": {
+                                "meta": null,
+                                "sourceSpan": {
+                                  "end": [
+                                    66,
+                                    13
+                                  ],
+                                  "start": [
+                                    66,
+                                    12
+                                  ]
+                                },
+                                "type": {
+                                  "type": "Int"
+                                }
+                              },
+                              "type": "Var",
+                              "value": {
+                                "identifier": "x",
+                                "sourcePos": [
+                                  64,
+                                  3
+                                ]
+                              }
+                            },
+                            "type": "App"
+                          },
+                          "annotation": {
+                            "meta": null,
+                            "sourceSpan": {
+                              "end": [
+                                66,
+                                17
+                              ],
+                              "start": [
+                                66,
+                                12
+                              ]
+                            },
+                            "type": {
+                              "type": "Int"
+                            }
+                          },
+                          "argument": {
+                            "annotation": {
+                              "meta": null,
+                              "sourceSpan": {
+                                "end": [
+                                  66,
+                                  17
+                                ],
+                                "start": [
+                                  66,
+                                  16
+                                ]
+                              },
+                              "type": {
+                                "type": "Int"
+                              }
+                            },
+                            "type": "Literal",
+                            "value": {
+                              "literalType": "IntLiteral",
+                              "value": 2
+                            }
+                          },
+                          "type": "App"
+                        },
+                        "type": "App"
+                      },
+                      "identifier": "g"
+                    }
+                  ],
+                  "expression": {
+                    "annotation": {
+                      "meta": null,
+                      "sourceSpan": {
+                        "end": [
+                          64,
+                          42
+                        ],
+                        "start": [
+                          64,
+                          11
+                        ]
+                      },
+                      "type": {
+                        "type": "Int"
+                      }
+                    },
+                    "caseAlternatives": [
+                      {
+                        "binders": [
+                          {
+                            "annotation": {
+                              "meta": null,
+                              "sourceSpan": {
+                                "end": [
+                                  64,
+                                  42
+                                ],
+                                "start": [
+                                  64,
+                                  11
+                                ]
+                              },
+                              "type": null
+                            },
+                            "binderType": "LiteralBinder",
+                            "literal": {
+                              "literalType": "BooleanLiteral",
+                              "value": true
+                            }
+                          }
+                        ],
+                        "expression": {
+                          "annotation": {
+                            "meta": null,
+                            "sourceSpan": {
+                              "end": [
+                                64,
+                                27
+                              ],
+                              "start": [
+                                64,
+                                26
+                              ]
+                            },
+                            "type": {
+                              "type": "Int"
+                            }
+                          },
+                          "type": "Var",
+                          "value": {
+                            "identifier": "x",
+                            "sourcePos": [
+                              64,
+                              3
+                            ]
+                          }
+                        },
+                        "isGuarded": false
+                      },
+                      {
+                        "binders": [
+                          {
+                            "annotation": {
+                              "meta": null,
+                              "sourceSpan": {
+                                "end": [
+                                  64,
+                                  42
+                                ],
+                                "start": [
+                                  64,
+                                  11
+                                ]
+                              },
+                              "type": null
+                            },
+                            "binderType": "NullBinder"
+                          }
+                        ],
+                        "expression": {
+                          "abstraction": {
+                            "annotation": {
+                              "meta": null,
+                              "sourceSpan": {
+                                "end": [
+                                  64,
+                                  34
+                                ],
+                                "start": [
+                                  64,
+                                  33
+                                ]
+                              },
+                              "type": {
+                                "args": [
+                                  {
+                                    "type": "Int"
+                                  }
+                                ],
+                                "ret": {
+                                  "type": "Int"
+                                },
+                                "type": "Func"
+                              }
+                            },
+                            "type": "Var",
+                            "value": {
+                              "identifier": "g",
+                              "sourcePos": [
+                                66,
+                                5
+                              ]
+                            }
+                          },
+                          "annotation": {
+                            "meta": null,
+                            "sourceSpan": {
+                              "end": [
+                                64,
+                                42
+                              ],
+                              "start": [
+                                64,
+                                33
+                              ]
+                            },
+                            "type": {
+                              "type": "Int"
+                            }
+                          },
+                          "argument": {
+                            "abstraction": {
+                              "abstraction": {
+                                "abstraction": {
+                                  "annotation": {
+                                    "meta": {
+                                      "metaType": "IsForeign"
+                                    },
+                                    "sourceSpan": {
+                                      "end": [
+                                        64,
+                                        39
+                                      ],
+                                      "start": [
+                                        64,
+                                        38
+                                      ]
+                                    },
+                                    "type": {
+                                      "body": {
+                                        "body": {
+                                          "args": [
+                                            {
+                                              "name": "a",
+                                              "type": "TypeVar"
+                                            },
+                                            {
+                                              "name": "a",
+                                              "type": "TypeVar"
+                                            }
+                                          ],
+                                          "ret": {
+                                            "name": "a",
+                                            "type": "TypeVar"
+                                          },
+                                          "type": "Func"
+                                        },
+                                        "constraints": [
+                                          {
+                                            "args": [
+                                              {
+                                                "name": "a",
+                                                "type": "TypeVar"
+                                              }
+                                            ],
+                                            "fqn": [
+                                              "Data",
+                                              "Ring",
+                                              "Ring"
+                                            ]
+                                          }
+                                        ],
+                                        "type": "ConstrainedType"
+                                      },
+                                      "type": "ForAll",
+                                      "vars": [
+                                        "a"
+                                      ]
+                                    }
+                                  },
+                                  "type": "Var",
+                                  "value": {
+                                    "identifier": "sub",
+                                    "moduleName": [
+                                      "Data",
+                                      "Ring"
+                                    ]
+                                  }
+                                },
+                                "annotation": {
+                                  "meta": null,
+                                  "sourceSpan": {
+                                    "end": [
+                                      64,
+                                      41
+                                    ],
+                                    "start": [
+                                      64,
+                                      36
+                                    ]
+                                  },
+                                  "type": {
+                                    "args": [
+                                      {
+                                        "type": "Int"
+                                      },
+                                      {
+                                        "type": "Int"
+                                      }
+                                    ],
+                                    "ret": {
+                                      "type": "Int"
+                                    },
+                                    "type": "Func"
+                                  }
+                                },
+                                "argument": {
+                                  "annotation": {
+                                    "meta": null,
+                                    "sourceSpan": {
+                                      "end": [
+                                        0,
+                                        0
+                                      ],
+                                      "start": [
+                                        0,
+                                        0
+                                      ]
+                                    },
+                                    "type": {
+                                      "args": [
+                                        {
+                                          "type": "Int"
+                                        }
+                                      ],
+                                      "fqn": [
+                                        "Data",
+                                        "Ring",
+                                        "Ring"
+                                      ],
+                                      "type": "Adt"
+                                    }
+                                  },
+                                  "type": "Var",
+                                  "value": {
+                                    "identifier": "ringInt",
+                                    "moduleName": [
+                                      "Data",
+                                      "Ring"
+                                    ]
+                                  }
+                                },
+                                "type": "App"
+                              },
+                              "annotation": {
+                                "meta": null,
+                                "sourceSpan": {
+                                  "end": [
+                                    64,
+                                    41
+                                  ],
+                                  "start": [
+                                    64,
+                                    36
+                                  ]
+                                },
+                                "type": {
+                                  "args": [
+                                    {
+                                      "type": "Int"
+                                    }
+                                  ],
+                                  "ret": {
+                                    "type": "Int"
+                                  },
+                                  "type": "Func"
+                                }
+                              },
+                              "argument": {
+                                "annotation": {
+                                  "meta": null,
+                                  "sourceSpan": {
+                                    "end": [
+                                      64,
+                                      37
+                                    ],
+                                    "start": [
+                                      64,
+                                      36
+                                    ]
+                                  },
+                                  "type": {
+                                    "type": "Int"
+                                  }
+                                },
+                                "type": "Var",
+                                "value": {
+                                  "identifier": "y",
+                                  "sourcePos": [
+                                    64,
+                                    3
+                                  ]
+                                }
+                              },
+                              "type": "App"
+                            },
+                            "annotation": {
+                              "meta": null,
+                              "sourceSpan": {
+                                "end": [
+                                  64,
+                                  41
+                                ],
+                                "start": [
+                                  64,
+                                  36
+                                ]
+                              },
+                              "type": {
+                                "type": "Int"
+                              }
+                            },
+                            "argument": {
+                              "annotation": {
+                                "meta": null,
+                                "sourceSpan": {
+                                  "end": [
+                                    64,
+                                    41
+                                  ],
+                                  "start": [
+                                    64,
+                                    40
+                                  ]
+                                },
+                                "type": {
+                                  "type": "Int"
+                                }
+                              },
+                              "type": "Literal",
+                              "value": {
+                                "literalType": "IntLiteral",
+                                "value": 1
+                              }
+                            },
+                            "type": "App"
+                          },
+                          "type": "App"
+                        },
+                        "isGuarded": false
+                      }
+                    ],
+                    "caseExpressions": [
+                      {
+                        "abstraction": {
+                          "abstraction": {
+                            "abstraction": {
+                              "annotation": {
+                                "meta": {
+                                  "metaType": "IsForeign"
+                                },
+                                "sourceSpan": {
+                                  "end": [
+                                    64,
+                                    18
+                                  ],
+                                  "start": [
+                                    64,
+                                    16
+                                  ]
+                                },
+                                "type": {
+                                  "body": {
+                                    "body": {
+                                      "args": [
+                                        {
+                                          "name": "a",
+                                          "type": "TypeVar"
+                                        },
+                                        {
+                                          "name": "a",
+                                          "type": "TypeVar"
+                                        }
+                                      ],
+                                      "ret": {
+                                        "type": "Boolean"
+                                      },
+                                      "type": "Func"
+                                    },
+                                    "constraints": [
+                                      {
+                                        "args": [
+                                          {
+                                            "name": "a",
+                                            "type": "TypeVar"
+                                          }
+                                        ],
+                                        "fqn": [
+                                          "Data",
+                                          "Ord",
+                                          "Ord"
+                                        ]
+                                      }
+                                    ],
+                                    "type": "ConstrainedType"
+                                  },
+                                  "type": "ForAll",
+                                  "vars": [
+                                    "a"
+                                  ]
+                                }
+                              },
+                              "type": "Var",
+                              "value": {
+                                "identifier": "lessThanOrEq",
+                                "moduleName": [
+                                  "Data",
+                                  "Ord"
+                                ]
+                              }
+                            },
+                            "annotation": {
+                              "meta": null,
+                              "sourceSpan": {
+                                "end": [
+                                  64,
+                                  20
+                                ],
+                                "start": [
+                                  64,
+                                  14
+                                ]
+                              },
+                              "type": {
+                                "args": [
+                                  {
+                                    "type": "Int"
+                                  },
+                                  {
+                                    "type": "Int"
+                                  }
+                                ],
+                                "ret": {
+                                  "type": "Boolean"
+                                },
+                                "type": "Func"
+                              }
+                            },
+                            "argument": {
+                              "annotation": {
+                                "meta": null,
+                                "sourceSpan": {
+                                  "end": [
+                                    0,
+                                    0
+                                  ],
+                                  "start": [
+                                    0,
+                                    0
+                                  ]
+                                },
+                                "type": {
+                                  "args": [
+                                    {
+                                      "type": "Int"
+                                    }
+                                  ],
+                                  "fqn": [
+                                    "Data",
+                                    "Ord",
+                                    "Ord"
+                                  ],
+                                  "type": "Adt"
+                                }
+                              },
+                              "type": "Var",
+                              "value": {
+                                "identifier": "ordInt",
+                                "moduleName": [
+                                  "Data",
+                                  "Ord"
+                                ]
+                              }
+                            },
+                            "type": "App"
+                          },
+                          "annotation": {
+                            "meta": null,
+                            "sourceSpan": {
+                              "end": [
+                                64,
+                                20
+                              ],
+                              "start": [
+                                64,
+                                14
+                              ]
+                            },
+                            "type": {
+                              "args": [
+                                {
+                                  "type": "Int"
+                                }
+                              ],
+                              "ret": {
+                                "type": "Boolean"
+                              },
+                              "type": "Func"
+                            }
+                          },
+                          "argument": {
+                            "annotation": {
+                              "meta": null,
+                              "sourceSpan": {
+                                "end": [
+                                  64,
+                                  15
+                                ],
+                                "start": [
+                                  64,
+                                  14
+                                ]
+                              },
+                              "type": {
+                                "type": "Int"
+                              }
+                            },
+                            "type": "Var",
+                            "value": {
+                              "identifier": "y",
+                              "sourcePos": [
+                                64,
+                                3
+                              ]
+                            }
+                          },
+                          "type": "App"
+                        },
+                        "annotation": {
+                          "meta": null,
+                          "sourceSpan": {
+                            "end": [
+                              64,
+                              20
+                            ],
+                            "start": [
+                              64,
+                              14
+                            ]
+                          },
+                          "type": {
+                            "type": "Boolean"
+                          }
+                        },
+                        "argument": {
+                          "annotation": {
+                            "meta": null,
+                            "sourceSpan": {
+                              "end": [
+                                64,
+                                20
+                              ],
+                              "start": [
+                                64,
+                                19
+                              ]
+                            },
+                            "type": {
+                              "type": "Int"
+                            }
+                          },
+                          "type": "Literal",
+                          "value": {
+                            "literalType": "IntLiteral",
+                            "value": 0
+                          }
+                        },
+                        "type": "App"
+                      }
+                    ],
+                    "type": "Case"
+                  },
+                  "type": "Let"
+                },
+                "type": "Abs"
+              },
+              "type": "Abs"
+            },
+            "identifier": "f"
+          }
+        ]
+      }
+    ],
+    "expression": {
+      "abstraction": {
+        "annotation": {
+          "meta": null,
+          "sourceSpan": {
+            "end": [
+              62,
+              10
+            ],
+            "start": [
+              62,
+              9
+            ]
+          },
+          "type": {
+            "args": [
+              {
+                "type": "Int"
+              },
+              {
+                "type": "Int"
+              }
+            ],
+            "ret": {
+              "type": "Int"
+            },
+            "type": "Func"
+          }
+        },
+        "type": "Var",
+        "value": {
+          "identifier": "f",
+          "sourcePos": [
+            64,
+            3
+          ]
+        }
+      },
+      "annotation": {
+        "meta": null,
+        "sourceSpan": {
+          "end": [
+            62,
+            12
+          ],
+          "start": [
+            62,
+            9
+          ]
+        },
+        "type": {
+          "args": [
+            {
+              "type": "Int"
+            }
+          ],
+          "ret": {
+            "type": "Int"
+          },
+          "type": "Func"
+        }
+      },
+      "argument": {
+        "annotation": {
+          "meta": null,
+          "sourceSpan": {
+            "end": [
+              62,
+              12
+            ],
+            "start": [
+              62,
+              11
+            ]
+          },
+          "type": {
+            "type": "Int"
+          }
+        },
+        "type": "Literal",
+        "value": {
+          "literalType": "IntLiteral",
+          "value": 0
+        }
+      },
+      "type": "App"
+    },
+    "type": "Let"
+  },
+  "identifier": "ntco3"
+}

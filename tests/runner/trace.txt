@@ -1,3 +1,0 @@
-Control.Bind.bind types: Func([Record(...), Func([TypeVar(a)], ADT(["Data","List","Types","List"], [TypeVar(b)])), Func([TypeVar(a)], Func([TypeVar(a)], ADT(["Data","List","Types","List"], [TypeVar(b)])))], Func([TypeVar(a)], ADT(["Data","List","Types","List"], [TypeVar(b)]))), Func([Record(...), Func([TypeVar(a)], Any), Func([TypeVar(a)], Func([TypeVar(a)], Any))], Func([TypeVar(a)], Any)), Func([Record(...), TypeVar(m), Func([TypeVar(a)], TypeVar(m))], TypeVar(m))
-Control.Bind.bind in globalTypes: Func([Record(...), TypeVar(m), Func([TypeVar(a)], TypeVar(m))], TypeVar(m))
-Unify genericType with genericType empty? false

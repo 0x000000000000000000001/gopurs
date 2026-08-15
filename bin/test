@@ -42,7 +42,7 @@ mkdir -p "$RUNNER_DIR/src"
 passed=0
 failed=0
 
-SKIP_BEFORE=""
+SKIP_BEFORE="TypedBinders"
 TEST_FILES=()
 CLEAN_CACHE=0
 
@@ -138,7 +138,15 @@ for test_file in "${TEST_FILES[@]}"; do
   
   echo "=> Testing $test_name"
   
-  rm -rf output/Main src/* output/Test* output/go.mod output/app output/purescript output/M1 output/M2 output/M3 output/A output/B output/C
+  # Ensure complete cleanup to prevent state bleed
+  while [ -d "output/purescript" ]; do
+    rm -rf output/Main src/* output/Test* output/go.mod output/app output/purescript output/M1 output/M2 output/M3 output/A output/B output/C output/Middle
+    if [ -d "output/purescript" ]; then
+      sleep 0.1
+    fi
+  done
+  # Run once more in case the directory didn't exist but other files did
+  rm -rf output/Main src/* output/Test* output/go.mod output/app output/M1 output/M2 output/M3 output/A output/B output/C output/Middle
   
   cp "$test_file" "src/Main.purs"
   echo "-- $(date +%s%N)" >> "src/Main.purs"

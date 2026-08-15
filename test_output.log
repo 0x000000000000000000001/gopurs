@@ -1,0 +1,448 @@
+Running tests from /Users/0x1/Documents/htdocs/gopurs/gopurs/tests/passing...
+=> Testing SequenceDesugared.purs
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+["Constructor_Main_Sequence"]
+   [0;31m[FAILED][0m Snapshot mismatch:
+--- /Users/0x1/Documents/htdocs/gopurs/gopurs/tests/passing-snapshots/SequenceDesugared.go	2026-08-15 15:25:46
++++ output/purescript/Main.go	2026-08-15 16:10:23
+@@ -24,7 +24,7 @@
+ func Get_Main_Sequence() gopurs_runtime.Value {
+ 	once_Main_Sequence.Do(func() {
+ 		cache_Main_Sequence = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
+-			return gopurs_runtime.Value{Type: 9, IntVal: 3858394017, UnsafePtr: unsafe.Pointer((&Constructor_Main_Sequence{1, value0}))}
++			return value0
+ 		})
+ 	})
+ 	return cache_Main_Sequence
+@@ -71,7 +71,7 @@
+ 
+ func Get_Main_sequenceList_prime__prime_() gopurs_runtime.Value {
+ 	once_Main_sequenceList_prime__prime_.Do(func() {
+-		cache_Main_sequenceList_prime__prime_ = gopurs_runtime.Value{Type: 9, IntVal: 3858394017, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_Sequence](gopurs_runtime.Func(func(dictMonad_0 gopurs_runtime.Value) gopurs_runtime.Value {
++		cache_Main_sequenceList_prime__prime_ = gopurs_runtime.Func(func(dictMonad_0 gopurs_runtime.Value) gopurs_runtime.Value {
+ 			// TAST (Let): Applicative0_1_0 -> *Constructor_Control_Applicative_Applicative
+ 			Applicative0_1_0 := gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonad_0, "Applicative0"), gopurs_runtime.Value{}))
+ 			_ = Applicative0_1_0
+@@ -108,7 +108,7 @@
+ 			end_branch_4:
+ 				return __t4
+ 			})
+-		})))}
++		})
+ 	})
+ 	return cache_Main_sequenceList_prime__prime_
+ }
+@@ -118,7 +118,7 @@
+ 
+ func Get_Main_sequenceList() gopurs_runtime.Value {
+ 	once_Main_sequenceList.Do(func() {
+-		cache_Main_sequenceList = gopurs_runtime.Value{Type: 9, IntVal: 3858394017, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_Sequence](gopurs_runtime.Func(func(dictMonad_0 gopurs_runtime.Value) gopurs_runtime.Value {
++		cache_Main_sequenceList = gopurs_runtime.Func(func(dictMonad_0 gopurs_runtime.Value) gopurs_runtime.Value {
+ 			// TAST (Let): Applicative0_1_0 -> *Constructor_Control_Applicative_Applicative
+ 			Applicative0_1_0 := gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonad_0, "Applicative0"), gopurs_runtime.Value{}))
+ 			_ = Applicative0_1_0
+@@ -155,7 +155,7 @@
+ 			end_branch_4:
+ 				return __t4
+ 			})
+-		})))}
++		})
+ 	})
+ 	return cache_Main_sequenceList
+ }
+@@ -166,7 +166,7 @@
+ func Get_Main_sequence() gopurs_runtime.Value {
+ 	once_Main_sequence.Do(func() {
+ 		cache_Main_sequence = gopurs_runtime.Func2(func(v_0_box gopurs_runtime.Value, dictMonad_1_box gopurs_runtime.Value) gopurs_runtime.Value {
+-			return Call_Main_sequence(gopurs_runtime.CoerceToStruct[Constructor_Main_Sequence](v_0_box), dictMonad_1_box)
++			return Call_Main_sequence(v_0_box, dictMonad_1_box)
+ 		})
+ 	})
+ 	return cache_Main_sequence
+@@ -177,7 +177,7 @@
+ 
+ func Get_Main_sequenceList_prime_() gopurs_runtime.Value {
+ 	once_Main_sequenceList_prime_.Do(func() {
+-		cache_Main_sequenceList_prime_ = gopurs_runtime.Value{Type: 9, IntVal: 3858394017, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_Sequence](gopurs_runtime.Func(func(dictMonad_0 gopurs_runtime.Value) gopurs_runtime.Value {
++		cache_Main_sequenceList_prime_ = gopurs_runtime.Func(func(dictMonad_0 gopurs_runtime.Value) gopurs_runtime.Value {
+ 			// TAST (Let): Applicative0_1_0 -> *Constructor_Control_Applicative_Applicative
+ 			Applicative0_1_0 := gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonad_0, "Applicative0"), gopurs_runtime.Value{}))
+ 			_ = Applicative0_1_0
+@@ -202,7 +202,7 @@
+ 				}
+ 				{
+ 					if val_5.Type == 9 && val_5.IntVal == 322902991 && val_5.UnsafePtr != nil {
+-						__t4 = gopurs_runtime.Apply2(gopurs_runtime.Box(Apply0_3_2.V1), gopurs_runtime.Apply2(gopurs_runtime.Box(Functor0_4_3.V0), Get_Main_Cons(), (*Constructor_Main_Cons)(val_5.UnsafePtr).V0), gopurs_runtime.Apply2(gopurs_runtime.Value{Type: 9, IntVal: 3858394017, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_Sequence](Get_Main_sequenceList_prime_()))}, gopurs_runtime.Value{Type: 9, IntVal: 778916621, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad](dictMonad_0))}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons)(val_5.UnsafePtr).V1)}))
++						__t4 = gopurs_runtime.Apply2(gopurs_runtime.Box(Apply0_3_2.V1), gopurs_runtime.Apply2(gopurs_runtime.Box(Functor0_4_3.V0), Get_Main_Cons(), (*Constructor_Main_Cons)(val_5.UnsafePtr).V0), gopurs_runtime.Apply2(Get_Main_sequenceList_prime_(), gopurs_runtime.Value{Type: 9, IntVal: 778916621, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad](dictMonad_0))}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons)(val_5.UnsafePtr).V1)}))
+ 						goto end_branch_4
+ 					} else {
+ 
+@@ -214,7 +214,7 @@
+ 			end_branch_4:
+ 				return __t4
+ 			})
+-		})))}
++		})
+ 	})
+ 	return cache_Main_sequenceList_prime_
+ }
+@@ -224,7 +224,7 @@
+ 
+ func Get_Main_sequenceList_prime__prime__prime_() gopurs_runtime.Value {
+ 	once_Main_sequenceList_prime__prime__prime_.Do(func() {
+-		cache_Main_sequenceList_prime__prime__prime_ = gopurs_runtime.Value{Type: 9, IntVal: 3858394017, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_Sequence](gopurs_runtime.Func(func(dictMonad_0 gopurs_runtime.Value) gopurs_runtime.Value {
++		cache_Main_sequenceList_prime__prime__prime_ = gopurs_runtime.Func(func(dictMonad_0 gopurs_runtime.Value) gopurs_runtime.Value {
+ 			// TAST (Let): Applicative0_1_0 -> *Constructor_Control_Applicative_Applicative
+ 			Applicative0_1_0 := gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonad_0, "Applicative0"), gopurs_runtime.Value{}))
+ 			_ = Applicative0_1_0
+@@ -249,7 +249,7 @@
+ 				}
+ 				{
+ 					if val_5.Type == 9 && val_5.IntVal == 322902991 && val_5.UnsafePtr != nil {
+-						__t4 = gopurs_runtime.Apply2(gopurs_runtime.Box(Apply0_3_2.V1), gopurs_runtime.Apply2(gopurs_runtime.Box(Functor0_4_3.V0), Get_Main_Cons(), (*Constructor_Main_Cons)(val_5.UnsafePtr).V0), gopurs_runtime.Apply2(gopurs_runtime.Value{Type: 9, IntVal: 3858394017, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_Sequence](Get_Main_sequenceList_prime__prime__prime_()))}, gopurs_runtime.Value{Type: 9, IntVal: 778916621, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad](dictMonad_0))}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons)(val_5.UnsafePtr).V1)}))
++						__t4 = gopurs_runtime.Apply2(gopurs_runtime.Box(Apply0_3_2.V1), gopurs_runtime.Apply2(gopurs_runtime.Box(Functor0_4_3.V0), Get_Main_Cons(), (*Constructor_Main_Cons)(val_5.UnsafePtr).V0), gopurs_runtime.Apply2(Get_Main_sequenceList_prime__prime__prime_(), gopurs_runtime.Value{Type: 9, IntVal: 778916621, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad](dictMonad_0))}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons)(val_5.UnsafePtr).V1)}))
+ 						goto end_branch_4
+ 					} else {
+ 
+@@ -261,7 +261,7 @@
+ 			end_branch_4:
+ 				return __t4
+ 			})
+-		})))}
++		})
+ 	})
+ 	return cache_Main_sequenceList_prime__prime__prime_
+ }
+@@ -273,23 +273,23 @@
+ 	once_Main_main.Do(func() {
+ 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+ 			// TAST (Let): __local_var_0_0 -> gopurs_runtime.Value
+-			__local_var_0_0 := gopurs_runtime.Apply2(gopurs_runtime.Value{Type: 9, IntVal: 3858394017, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_Sequence](Get_Main_sequenceList()))}, gopurs_runtime.Value{Type: 9, IntVal: 778916621, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad](Get_Effect_monadEffect()))}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((&Constructor_Main_Cons{1, gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), (*Constructor_Main_Cons)(nil)}))})
++			__local_var_0_0 := gopurs_runtime.Apply2(Get_Main_sequenceList(), gopurs_runtime.Value{Type: 9, IntVal: 778916621, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad](Get_Effect_monadEffect()))}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((&Constructor_Main_Cons{1, gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), (*Constructor_Main_Cons)(nil)}))})
+ 			_ = __local_var_0_0
+ 			a_prime__1_2 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
+ 			_ = a_prime__1_2
+ 			_dollar___unused_1_1 := Get_Data_Unit_unit()
+ 			_ = _dollar___unused_1_1
+-			a_prime__2_4 := gopurs_runtime.Apply(gopurs_runtime.Apply2(gopurs_runtime.Value{Type: 9, IntVal: 3858394017, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_Sequence](Get_Main_sequenceList_prime_()))}, gopurs_runtime.Value{Type: 9, IntVal: 778916621, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad](Get_Effect_monadEffect()))}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((&Constructor_Main_Cons{1, gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), (*Constructor_Main_Cons)(nil)}))}), gopurs_runtime.Value{})
++			a_prime__2_4 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Main_sequenceList_prime_(), gopurs_runtime.Value{Type: 9, IntVal: 778916621, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad](Get_Effect_monadEffect()))}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((&Constructor_Main_Cons{1, gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), (*Constructor_Main_Cons)(nil)}))}), gopurs_runtime.Value{})
+ 			_ = a_prime__2_4
+ 			_dollar___unused_2_3 := Get_Data_Unit_unit()
+ 			_ = _dollar___unused_2_3
+-			a_prime__3_6 := gopurs_runtime.Apply(gopurs_runtime.Apply2(gopurs_runtime.Value{Type: 9, IntVal: 3858394017, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_Sequence](Get_Main_sequenceList_prime__prime_()))}, gopurs_runtime.Value{Type: 9, IntVal: 778916621, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad](Get_Effect_monadEffect()))}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((&Constructor_Main_Cons{1, gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), (*Constructor_Main_Cons)(nil)}))}), gopurs_runtime.Value{})
++			a_prime__3_6 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Main_sequenceList_prime__prime_(), gopurs_runtime.Value{Type: 9, IntVal: 778916621, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad](Get_Effect_monadEffect()))}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((&Constructor_Main_Cons{1, gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), (*Constructor_Main_Cons)(nil)}))}), gopurs_runtime.Value{})
+ 			_ = a_prime__3_6
+ 			_dollar___unused_3_5 := Get_Data_Unit_unit()
+ 			_ = _dollar___unused_3_5
+ 			return gopurs_runtime.Apply(gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+ 				return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+-					a_prime__4_7 := gopurs_runtime.Apply(gopurs_runtime.Apply2(gopurs_runtime.Value{Type: 9, IntVal: 3858394017, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_Sequence](Get_Main_sequenceList_prime__prime__prime_()))}, gopurs_runtime.Value{Type: 9, IntVal: 778916621, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad](Get_Effect_monadEffect()))}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((&Constructor_Main_Cons{1, gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), (*Constructor_Main_Cons)(nil)}))}), gopurs_runtime.Value{})
++					a_prime__4_7 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Main_sequenceList_prime__prime__prime_(), gopurs_runtime.Value{Type: 9, IntVal: 778916621, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad](Get_Effect_monadEffect()))}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((&Constructor_Main_Cons{1, gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), (*Constructor_Main_Cons)(nil)}))}), gopurs_runtime.Value{})
+ 					_ = a_prime__4_7
+ 					return Get_Data_Unit_unit()
+ 				})
+@@ -305,7 +305,7 @@
+ func Get_Main_sequence__4065837736() gopurs_runtime.Value {
+ 	once_Main_sequence__4065837736.Do(func() {
+ 		cache_Main_sequence__4065837736 = gopurs_runtime.Func2(func(v_0_box gopurs_runtime.Value, dictMonad_1_box gopurs_runtime.Value) gopurs_runtime.Value {
+-			return Call_Main_sequence__4065837736(gopurs_runtime.CoerceToStruct[Constructor_Main_Sequence](v_0_box), dictMonad_1_box)
++			return Call_Main_sequence__4065837736(v_0_box, dictMonad_1_box)
+ 		})
+ 	})
+ 	return cache_Main_sequence__4065837736
+@@ -397,20 +397,20 @@
+ 	}
+ }
+ 
+-func Call_Main_sequence(v_0_loop *Constructor_Main_Sequence, dictMonad_1_loop gopurs_runtime.Value) gopurs_runtime.Value {
+-	var v_0 *Constructor_Main_Sequence = v_0_loop
++func Call_Main_sequence(v_0_loop gopurs_runtime.Value, dictMonad_1_loop gopurs_runtime.Value) gopurs_runtime.Value {
++	var v_0 gopurs_runtime.Value = v_0_loop
+ 	_ = v_0
+ 	var dictMonad_1 gopurs_runtime.Value = dictMonad_1_loop
+ 	_ = dictMonad_1
+-	return gopurs_runtime.Apply(gopurs_runtime.Value{Type: 9, IntVal: 3858394017, UnsafePtr: unsafe.Pointer(v_0)}, dictMonad_1)
++	return gopurs_runtime.Apply(v_0, dictMonad_1)
+ }
+ 
+-func Call_Main_sequence__4065837736(v_0_loop *Constructor_Main_Sequence, dictMonad_1_loop gopurs_runtime.Value) gopurs_runtime.Value {
+-	var v_0 *Constructor_Main_Sequence = v_0_loop
++func Call_Main_sequence__4065837736(v_0_loop gopurs_runtime.Value, dictMonad_1_loop gopurs_runtime.Value) gopurs_runtime.Value {
++	var v_0 gopurs_runtime.Value = v_0_loop
+ 	_ = v_0
+ 	var dictMonad_1 gopurs_runtime.Value = dictMonad_1_loop
+ 	_ = dictMonad_1
+-	return gopurs_runtime.Apply(gopurs_runtime.Value{Type: 9, IntVal: 3858394017, UnsafePtr: unsafe.Pointer(v_0)}, dictMonad_1)
++	return gopurs_runtime.Apply(v_0, dictMonad_1)
+ }
+ 
+ func Call_Main_sequenceListSeq__2621562580(dictMonad_0_loop *Constructor_Control_Monad_Monad) gopurs_runtime.Value {
+
+Summary: [0;32m0 passed[0m, [0;31m1 failed[0m.

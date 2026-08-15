@@ -3,10 +3,10 @@ module Main where
 import Prelude
 
 import Effect (Effect)
+import Effect.Console as Console
 import Effect.Class (liftEffect)
 import Effect.Aff (Aff, launchAff_, attempt)
 import Effect.Console (log, logShow)
-import Effect.Console as Console
 import Node.FS.Aff as FS
 import Node.FS.Stats as Stats
 import Node.Encoding (Encoding(..))
@@ -127,7 +127,8 @@ main = launchAff_ do
               Just ctor ->
                 if Array.length ctor.fields == 1 then
                   let structName = getStructName (unwrap mod.name) Nothing ctor.name
-                  in Set.insert structName acc'
+                      constrName = "Constructor_" <> String.drop 5 structName
+                  in Set.insert constrName acc'
                 else acc'
               Nothing -> acc'
           else acc'
@@ -300,6 +301,7 @@ main = launchAff_ do
         let modNameStr = unwrap backendMod.name
         let safeModName = String.replaceAll (Pattern ".") (Replacement "_") modNameStr
         let importsArray = map (\i -> String.split (Pattern ".") (unwrap (importName i))) coreFnMod.imports
+
         let goFile = translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors ctorTypes globalTypes instantiations classDeclsMap classDeclsFields importsArray backendMod
         FS.writeTextFile UTF8 ("output/purescript/" <> safeModName <> ".go") goFile
 

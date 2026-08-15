@@ -1,2 +1,1 @@
-import pkgA "gopurs/output/A"
-var A = pkgA.Get_a()
+var A = Get_A_a()
