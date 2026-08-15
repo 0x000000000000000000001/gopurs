@@ -90,7 +90,28 @@ goTypeToStr _ = "gopurs_runtime.Value"
 sanitizeName :: String -> String
 sanitizeName name =
   let
-    s1 = String.replaceAll (Pattern "\"") (Replacement "_quote_") (String.replaceAll (Pattern ".") (Replacement "_dot_") (String.replaceAll (Pattern "'") (Replacement "_prime") (String.replaceAll (Pattern "$") (Replacement "_dollar") name)))
+    s1 = String.replaceAll (Pattern "/") (Replacement "_slash_")
+      $ String.replaceAll (Pattern "\\") (Replacement "_bslash_")
+      $ String.replaceAll (Pattern "<") (Replacement "_less_")
+      $ String.replaceAll (Pattern ">") (Replacement "_greater_")
+      $ String.replaceAll (Pattern "=") (Replacement "_eq_")
+      $ String.replaceAll (Pattern "+") (Replacement "_plus_")
+      $ String.replaceAll (Pattern "-") (Replacement "_minus_")
+      $ String.replaceAll (Pattern "*") (Replacement "_times_")
+      $ String.replaceAll (Pattern ":") (Replacement "_colon_")
+      $ String.replaceAll (Pattern "|") (Replacement "_bar_")
+      $ String.replaceAll (Pattern "&") (Replacement "_amp_")
+      $ String.replaceAll (Pattern "^") (Replacement "_caret_")
+      $ String.replaceAll (Pattern "~") (Replacement "_tilde_")
+      $ String.replaceAll (Pattern "?") (Replacement "_qmark_")
+      $ String.replaceAll (Pattern "!") (Replacement "_bang_")
+      $ String.replaceAll (Pattern "@") (Replacement "_at_")
+      $ String.replaceAll (Pattern "#") (Replacement "_hash_")
+      $ String.replaceAll (Pattern "%") (Replacement "_percent_")
+      $ String.replaceAll (Pattern "\"") (Replacement "_quote_")
+      $ String.replaceAll (Pattern ".") (Replacement "_dot_")
+      $ String.replaceAll (Pattern "'") (Replacement "_prime_")
+      $ String.replaceAll (Pattern "$") (Replacement "_dollar_") name
   in
     if s1 == "break" || s1 == "default" || s1 == "func" || s1 == "interface" || s1 == "select" || s1 == "case" || s1 == "defer" || s1 == "go" || s1 == "map" || s1 == "struct" || s1 == "chan" || s1 == "else" || s1 == "goto" || s1 == "package" || s1 == "switch" || s1 == "const" || s1 == "fallthrough" || s1 == "if" || s1 == "range" || s1 == "type" || s1 == "continue" || s1 == "for" || s1 == "import" || s1 == "return" || s1 == "var" || s1 == "init" || s1 == "append" || s1 == "make" || s1 == "len" || s1 == "cap" || s1 == "new" || s1 == "close" || s1 == "delete" || s1 == "complex" || s1 == "real" || s1 == "imag" || s1 == "panic" || s1 == "recover" || s1 == "print" || s1 == "println" then "go__" <> s1 else s1
 

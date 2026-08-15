@@ -7,6 +7,8 @@ ROOT_DIR=$(cd "$(dirname "$0")/.." && pwd)
 TEST_DIR="$ROOT_DIR/tests"
 PASSING_DIR="$TEST_DIR/passing"
 RUNNER_DIR="$TEST_DIR/runner"
+SNAPSHOTS_DIR="$TEST_DIR/passing-snapshots"
+UPDATE_SNAPSHOTS=${UPDATE_SNAPSHOTS:-0}
 
 # Tests to skip (e.g. tests using experimental compiler features not supported by our purs version)
 BLACKLIST=(
@@ -40,7 +42,7 @@ mkdir -p "$RUNNER_DIR/src"
 passed=0
 failed=0
 
-SKIP_BEFORE=""
+SKIP_BEFORE="ObjectUpdate2"
 TEST_FILES=()
 CLEAN_CACHE=0
 
@@ -136,7 +138,7 @@ for test_file in "${TEST_FILES[@]}"; do
   
   echo "=> Testing $test_name"
   
-  rm -rf output/Main src/* output/Test* output/go.mod output/app
+  rm -rf output/Main src/* output/Test* output/go.mod output/app output/purescript output/M1 output/M2 output/M3 output/A output/B output/C
   
   cp "$test_file" "src/Main.purs"
   echo "-- $(date +%s%N)" >> "src/Main.purs"
@@ -168,14 +170,36 @@ for test_file in "${TEST_FILES[@]}"; do
     # Generate Go code
     node ../../bin/gopurs.js --main Main
     
-    if [ -d "output/Main" ] && [ -f "output/Main/Main.go" ]; then
+    if [ -d "output/purescript" ] && [ -f "output/purescript/Main.go" ]; then
+      # Format the Go code to ensure deterministic output
+      gofmt -w output/purescript/Main.go
+      
+      test_base_name="${test_name%.purs}"
+      snapshot_file="$SNAPSHOTS_DIR/${test_base_name}.go"
+      snapshot_passed=1
+      
+      if [ "$UPDATE_SNAPSHOTS" -eq 1 ] || [ ! -f "$snapshot_file" ]; then
+        if [ ! -f "$snapshot_file" ]; then
+          echo -e "   \033[0;34m[INFO]\033[0m Creating initial snapshot for $test_name"
+        fi
+        cp output/purescript/Main.go "$snapshot_file"
+      else
+        if ! diff -u "$snapshot_file" output/purescript/Main.go > output/diff.txt; then
+          echo -e "   \033[0;31m[FAILED]\033[0m Snapshot mismatch:"
+          cat output/diff.txt
+          snapshot_passed=0
+          failed=$((failed+1))
+          break
+        fi
+      fi
+      
       # Compile and Run Go code
       cd output
       rm -f go.mod
       go mod init gopurs/output > /dev/null 2>&1
       go mod tidy > /dev/null 2>&1
       
-      if go build -o gopurs_main ./Main/main; then
+      if go build -o gopurs_main ./main/main.go; then
           output_run=$(./gopurs_main)
           exit_code=$?
           

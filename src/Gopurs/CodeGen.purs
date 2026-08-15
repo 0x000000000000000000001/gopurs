@@ -540,19 +540,33 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves ad
     printGoFile goFile
 
 
-isEffectNode :: forall a. BackendSyntax a -> Boolean
-isEffectNode = case _ of
+isEffectNode :: TcoExpr -> Boolean
+isEffectNode expr = case unwrapTcoExpr expr of
   EffectBind _ _ _ _ -> true
   EffectPure _ -> true
   EffectDefer _ -> false
   PrimEffect _ -> true
   UncurriedEffectApp _ _ -> true
+  Let _ _ _ body -> isEffectNode body
+  LetRec _ _ body -> isEffectNode body
   _ -> false
 
 unwrapTcoExpr :: TcoExpr -> BackendSyntax TcoExpr
 unwrapTcoExpr (TcoExpr _ syn) = case syn of
   Typed _ inner -> unwrapTcoExpr inner
   _ -> syn
+
+
+printTcoExprShape :: TcoExpr -> String
+printTcoExprShape e = case unwrapTcoExpr e of
+  EffectDefer inner -> "EffectDefer(" <> printTcoExprShape inner <> ")"
+  Abs _ inner -> "Abs(" <> printTcoExprShape inner <> ")"
+  Let _ _ _ body -> "Let(" <> printTcoExprShape body <> ")"
+  LetRec _ _ body -> "LetRec(" <> printTcoExprShape body <> ")"
+  EffectBind _ _ _ body -> "EffectBind(" <> printTcoExprShape body <> ")"
+  EffectPure _ -> "EffectPure"
+  App fn arg -> "App(" <> printTcoExprShape fn <> ")"
+  _ -> "Other"
 
 extractExprFuncType :: ExprType -> Maybe { fArgs :: Array ExprType, fRet :: ExprType }
 extractExprFuncType ty =
@@ -610,7 +624,7 @@ getExprTypeArity :: ExprType -> Int
 getExprTypeArity (Func args ret) = Array.length args + getExprTypeArity ret
 getExprTypeArity _ = 0
 
-executeIfOpaque :: forall a. BackendSyntax a -> GoExpr -> GoExpr
+executeIfOpaque :: TcoExpr -> GoExpr -> GoExpr
 
 executeIfOpaque expr goExpr =
   if isEffectNode expr then goExpr
@@ -626,7 +640,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
   let
     _ = unsafePerformEffect (if depth == 0 then Ref.write Set.empty globalReusedVars else pure unit)
     elidedCtors = (unsafePerformEffect (Ref.read helpersRef)).elidedCtors
-    isEff = isEffectNode expr
+    isEff = isEffectNode tcoExpr
   in
     if isEff && not inEffectBlock then
       let
@@ -1514,13 +1528,20 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
 
       EffectBind mbIdent lvl binding body ->
         let
+          stripEffectDefer (TcoExpr a syn) = case unwrapTcoExpr (TcoExpr a syn) of
+              EffectDefer inner -> stripEffectDefer inner
+              Abs _ inner -> stripEffectDefer inner
+              Let ident lvl val body -> TcoExpr a (Let ident lvl val (stripEffectDefer body))
+              LetRec lvl bindings body -> TcoExpr a (LetRec lvl bindings (stripEffectDefer body))
+              _ -> TcoExpr a syn
+          realBinding = stripEffectDefer binding
           originalName = localId mbIdent lvl
           name = originalName <> "_" <> show nextId
           newBound = Map.insert originalName { name, goType: TypeValue } bound
-          resBinding = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false true (nextId + 1) binding
+          resBinding = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false true (nextId + 1) realBinding
           resBody = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities newBound Nothing loopCtx isTail true resBinding.nextId body
-          bindingExpr = executeIfOpaque (unwrapTcoExpr binding) (boxGoExpr resBinding.expr resBinding.exprType)
-          bodyExpr = executeIfOpaque (unwrapTcoExpr body) resBody.expr
+          bindingExpr = executeIfOpaque realBinding (boxGoExpr resBinding.expr resBinding.exprType)
+          bodyExpr = executeIfOpaque body resBody.expr
         in
           { stmts: resBinding.stmts <> StmtLeaf (GoAssign name bindingExpr) <> resBody.stmts, expr: bodyExpr, exprType: resBody.exprType, nextId: resBody.nextId }
 
@@ -1541,7 +1562,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
           resBinding = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false (nextId + 1) binding
           expectedGoType = exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts modNameStr (getExprType binding)
           newBound = Map.insert originalName { name, goType: expectedGoType } bound
-          resBody = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities newBound Nothing loopCtx isTail false resBinding.nextId body
+          resBody = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities newBound Nothing loopCtx isTail inEffectBlock resBinding.nextId body
           
           letStmt = if expectedGoType == resBinding.exprType then
                       StmtLeaf (GoAssign name resBinding.expr)
@@ -1630,7 +1651,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                   (Tuple [] allocRes.nextId)
                   fns
                 
-                resBodyOuter = translateExprImpl_ helpersRef (depth + 1) modNameStr combinedRecVars moduleArities allocRes.newBound Nothing loopCtx isTail false nextId' body
+                resBodyOuter = translateExprImpl_ helpersRef (depth + 1) modNameStr combinedRecVars moduleArities allocRes.newBound Nothing loopCtx isTail inEffectBlock nextId' body
               in
                 { stmts: foldMap StmtLeaf declStmts <> foldMap StmtLeaf fnWrapperStmts <> resBodyOuter.stmts, expr: resBodyOuter.expr, exprType: resBodyOuter.exprType, nextId: resBodyOuter.nextId }
             
@@ -1649,7 +1670,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                 declStmts = map (\b -> GoRaw ("var " <> b.key <> " gopurs_runtime.Value\n_ = " <> b.key)) accBindings.exprs
                 assignStmts = map (\b -> GoMutate b.key b.value) accBindings.exprs
 
-                resBody = translateExprImpl_ helpersRef (depth + 1) modNameStr combinedRecVars moduleArities allocRes.newBound Nothing loopCtx isTail false accBindings.nextId body
+                resBody = translateExprImpl_ helpersRef (depth + 1) modNameStr combinedRecVars moduleArities allocRes.newBound Nothing loopCtx isTail inEffectBlock accBindings.nextId body
               in
                 { stmts: foldMap StmtLeaf declStmts <> accBindings.stmts <> foldMap StmtLeaf assignStmts <> resBody.stmts, expr: resBody.expr, exprType: resBody.exprType, nextId: resBody.nextId }
 

@@ -138,7 +138,7 @@ printGoExpr expr = case expr of
     in if Array.null args then
       "nil"
     else
-      "&" <> structName <> typeArgsStr <> "{1, " <> String.joinWith ", " (map printGoExpr args) <> "}"
+      "(&" <> structName <> typeArgsStr <> "{1, " <> String.joinWith ", " (map printGoExpr args) <> "})"
   GoConstructorDict tag args ->
     let len = Array.length args
     in if len <= 5 then

@@ -1,0 +1,1 @@
+			return gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq](gopurs_runtime.RecordDict1("eq", gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), gopurs_runtime.Box(&Constructor_Data_Eq_Eq{1, gopurs_runtime.Func(func(x_4 gopurs_runtime.Value) gopurs_runtime.Value {
