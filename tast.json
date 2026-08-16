@@ -1,0 +1,230 @@
+{
+  annotation: {
+    meta: null,
+    sourceSpan: { end: [ 97, 41 ], start: [ 97, 1 ] },
+    type: null
+  },
+  bindType: 'NonRec',
+  expression: {
+    annotation: {
+      meta: null,
+      sourceSpan: { end: [ 97, 41 ], start: [ 97, 1 ] },
+      type: {
+        args: [ { type: 'String' }, { type: 'String' } ],
+        ret: { type: 'Boolean' },
+        type: 'Func'
+      }
+    },
+    argument: 'pat',
+    body: {
+      abstraction: {
+        abstraction: {
+          abstraction: {
+            annotation: {
+              meta: { metaType: 'IsForeign' },
+              sourceSpan: { end: [ 98, 26 ], start: [ 98, 23 ] },
+              type: {
+                body: {
+                  body: {
+                    args: [
+                      {
+                        args: [
+                          { name: 'c', type: 'TypeVar' },
+                          { name: 'd', type: 'TypeVar' }
+                        ],
+                        constructor: { name: 'a', type: 'TypeVar' },
+                        type: 'TypeApp'
+                      },
+                      {
+                        args: [
+                          { name: 'b', type: 'TypeVar' },
+                          { name: 'c', type: 'TypeVar' }
+                        ],
+                        constructor: { name: 'a', type: 'TypeVar' },
+                        type: 'TypeApp'
+                      }
+                    ],
+                    ret: {
+                      args: [
+                        { name: 'b', type: 'TypeVar' },
+                        { name: 'd', type: 'TypeVar' }
+                      ],
+                      constructor: { name: 'a', type: 'TypeVar' },
+                      type: 'TypeApp'
+                    },
+                    type: 'Func'
+                  },
+                  constraints: [
+                    {
+                      args: [ { name: 'a', type: 'TypeVar' } ],
+                      fqn: [ 'Control', 'Semigroupoid', 'Semigroupoid' ]
+                    }
+                  ],
+                  type: 'ConstrainedType'
+                },
+                type: 'ForAll',
+                vars: [ 't33', 'a', 'b', 'c', 'd' ]
+              }
+            },
+            type: 'Var',
+            value: {
+              identifier: 'compose',
+              moduleName: [ 'Control', 'Semigroupoid' ]
+            }
+          },
+          annotation: {
+            meta: null,
+            sourceSpan: { end: [ 98, 38 ], start: [ 98, 16 ] },
+            type: {
+              args: [
+                {
+                  args: [
+                    {
+                      args: [ { type: 'Int' } ],
+                      fqn: [ 'Data', 'Maybe', 'Maybe' ],
+                      type: 'Adt'
+                    }
+                  ],
+                  ret: { type: 'Boolean' },
+                  type: 'Func'
+                },
+                {
+                  args: [ { type: 'String' } ],
+                  ret: {
+                    args: [ { type: 'Int' } ],
+                    fqn: [ 'Data', 'Maybe', 'Maybe' ],
+                    type: 'Adt'
+                  },
+                  type: 'Func'
+                },
+                { type: 'String' }
+              ],
+              ret: { type: 'Boolean' },
+              type: 'Func'
+            }
+          },
+          argument: {
+            annotation: {
+              meta: null,
+              sourceSpan: { end: [ 0, 0 ], start: [ 0, 0 ] },
+              type: {
+                args: [
+                  {
+                    args: [],
+                    fqn: [ 'Prim', 'Function' ],
+                    type: 'Adt'
+                  }
+                ],
+                fqn: [ 'Control', 'Semigroupoid', 'Semigroupoid' ],
+                type: 'Adt'
+              }
+            },
+            type: 'Var',
+            value: {
+              identifier: 'semigroupoidFn',
+              moduleName: [ 'Control', 'Semigroupoid' ]
+            }
+          },
+          type: 'App'
+        },
+        annotation: {
+          meta: null,
+          sourceSpan: { end: [ 98, 38 ], start: [ 98, 16 ] },
+          type: {
+            args: [
+              {
+                args: [ { type: 'String' } ],
+                ret: {
+                  args: [ { type: 'Int' } ],
+                  fqn: [ 'Data', 'Maybe', 'Maybe' ],
+                  type: 'Adt'
+                },
+                type: 'Func'
+              },
+              { type: 'String' }
+            ],
+            ret: { type: 'Boolean' },
+            type: 'Func'
+          }
+        },
+        argument: {
+          annotation: {
+            meta: { metaType: 'IsForeign' },
+            sourceSpan: { end: [ 98, 22 ], start: [ 98, 16 ] },
+            type: {
+              args: [
+                {
+                  args: [ { type: 'Int' } ],
+                  fqn: [ 'Data', 'Maybe', 'Maybe' ],
+                  type: 'Adt'
+                }
+              ],
+              ret: { type: 'Boolean' },
+              type: 'Func'
+            }
+          },
+          type: 'Var',
+          value: { identifier: 'isJust', moduleName: [ 'Data', 'Maybe' ] }
+        },
+        type: 'App'
+      },
+      annotation: {
+        meta: null,
+        sourceSpan: { end: [ 98, 38 ], start: [ 98, 16 ] },
+        type: {
+          args: [ { type: 'String' } ],
+          ret: { type: 'Boolean' },
+          type: 'Func'
+        }
+      },
+      argument: {
+        abstraction: {
+          annotation: {
+            meta: null,
+            sourceSpan: { end: [ 98, 34 ], start: [ 98, 27 ] },
+            type: {
+              args: [ { type: 'String' }, { type: 'String' } ],
+              ret: {
+                args: [ { type: 'Int' } ],
+                fqn: [ 'Data', 'Maybe', 'Maybe' ],
+                type: 'Adt'
+              },
+              type: 'Func'
+            }
+          },
+          type: 'Var',
+          value: {
+            identifier: 'indexOf',
+            moduleName: [ 'Data', 'String', 'CodeUnits' ]
+          }
+        },
+        annotation: {
+          meta: null,
+          sourceSpan: { end: [ 98, 38 ], start: [ 98, 27 ] },
+          type: {
+            args: [ { type: 'String' } ],
+            ret: {
+              args: [ { type: 'Int' } ],
+              fqn: [ 'Data', 'Maybe', 'Maybe' ],
+              type: 'Adt'
+            },
+            type: 'Func'
+          }
+        },
+        argument: {
+          annotation: {
+            meta: null,
+            sourceSpan: { end: [ 98, 38 ], start: [ 98, 35 ] },
+            type: { type: 'String' }
+          },
+          type: 'Var',
+          value: { identifier: 'pat', sourcePos: [ 98, 1 ] }
+        },
+        type: 'App'
+      },
+      type: 'App'
+    },
+    type: 'Abs'
+  },
+  identifier: 'contains'
+}

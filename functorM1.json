@@ -1,0 +1,110 @@
+{
+  "annotation": {
+    "meta": null,
+    "sourceSpan": {
+      "end": [
+        0,
+        0
+      ],
+      "start": [
+        0,
+        0
+      ]
+    },
+    "type": null
+  },
+  "bindType": "NonRec",
+  "expression": {
+    "abstraction": {
+      "annotation": {
+        "meta": null,
+        "sourceSpan": {
+          "end": [
+            0,
+            0
+          ],
+          "start": [
+            0,
+            0
+          ]
+        },
+        "type": null
+      },
+      "type": "Var",
+      "value": {
+        "identifier": "functorM",
+        "moduleName": [
+          "Main"
+        ]
+      }
+    },
+    "annotation": {
+      "meta": {
+        "metaType": "IsSyntheticApp"
+      },
+      "sourceSpan": {
+        "end": [
+          63,
+          32
+        ],
+        "start": [
+          63,
+          24
+        ]
+      },
+      "type": {
+        "args": [
+          {
+            "args": [
+              {
+                "args": [],
+                "fqn": [
+                  "Prim",
+                  "Array"
+                ],
+                "type": "Adt"
+              }
+            ],
+            "fqn": [
+              "Main",
+              "M"
+            ],
+            "type": "Adt"
+          }
+        ],
+        "fqn": [
+          "Data",
+          "Functor",
+          "Functor"
+        ],
+        "type": "Adt"
+      }
+    },
+    "argument": {
+      "annotation": {
+        "meta": null,
+        "sourceSpan": {
+          "end": [
+            0,
+            0
+          ],
+          "start": [
+            0,
+            0
+          ]
+        },
+        "type": null
+      },
+      "type": "Var",
+      "value": {
+        "identifier": "functorArray",
+        "moduleName": [
+          "Data",
+          "Functor"
+        ]
+      }
+    },
+    "type": "App"
+  },
+  "identifier": "functorM1"
+}

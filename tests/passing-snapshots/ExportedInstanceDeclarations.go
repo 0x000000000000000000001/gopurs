@@ -46,7 +46,7 @@ var once_Main_Const sync.Once
 func Get_Main_Const() gopurs_runtime.Value {
 	once_Main_Const.Do(func() {
 		cache_Main_Const = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 539545499, UnsafePtr: unsafe.Pointer((&Constructor_Main_Const{1, value0}))}
+			return value0
 		})
 	})
 	return cache_Main_Const
@@ -69,7 +69,7 @@ var once_Main_nonExportedNonexportedType sync.Once
 
 func Get_Main_nonExportedNonexportedType() gopurs_runtime.Value {
 	once_Main_nonExportedNonexportedType.Do(func() {
-		cache_Main_nonExportedNonexportedType = gopurs_runtime.Value{Type: 9, IntVal: 888703674, UnsafePtr: unsafe.Pointer((&Constructor_Main_NonexportedClass{1, gopurs_runtime.Value{Type: 9, IntVal: 539545499, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_Const](gopurs_runtime.Int(0)))}}))}
+		cache_Main_nonExportedNonexportedType = gopurs_runtime.Value{Type: 9, IntVal: 888703674, UnsafePtr: unsafe.Pointer((&Constructor_Main_NonexportedClass{1, gopurs_runtime.Int(0)}))}
 	})
 	return cache_Main_nonExportedNonexportedType
 }
@@ -125,7 +125,7 @@ var once_Main_constFoo sync.Once
 
 func Get_Main_constFoo() gopurs_runtime.Value {
 	once_Main_constFoo.Do(func() {
-		cache_Main_constFoo = gopurs_runtime.Value{Type: 9, IntVal: 2763139640, UnsafePtr: unsafe.Pointer((&Constructor_Main_Foo{1, gopurs_runtime.Value{Type: 9, IntVal: 539545499, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_Const](gopurs_runtime.Value{Type: 9, IntVal: int64(3828477004), UnsafePtr: nil}))}}))}
+		cache_Main_constFoo = gopurs_runtime.Value{Type: 9, IntVal: 2763139640, UnsafePtr: unsafe.Pointer((&Constructor_Main_Foo{1, gopurs_runtime.Value{Type: 9, IntVal: int64(3828477004), UnsafePtr: nil}}))}
 	})
 	return cache_Main_constFoo
 }

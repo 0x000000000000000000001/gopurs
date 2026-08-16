@@ -1,0 +1,1724 @@
+{
+  "annotation": {
+    "meta": null,
+    "sourceSpan": {
+      "end": [
+        84,
+        29
+      ],
+      "start": [
+        84,
+        1
+      ]
+    },
+    "type": null
+  },
+  "bindType": "NonRec",
+  "expression": {
+    "abstraction": {
+      "annotation": {
+        "meta": {
+          "metaType": "IsNewtype"
+        },
+        "sourceSpan": {
+          "end": [
+            0,
+            0
+          ],
+          "start": [
+            0,
+            0
+          ]
+        },
+        "type": {
+          "body": {
+            "args": [
+              {
+                "row": {
+                  "fields": [
+                    {
+                      "label": "map",
+                      "type": {
+                        "body": {
+                          "args": [
+                            {
+                              "args": [
+                                {
+                                  "name": "a",
+                                  "type": "TypeVar"
+                                }
+                              ],
+                              "ret": {
+                                "name": "b",
+                                "type": "TypeVar"
+                              },
+                              "type": "Func"
+                            },
+                            {
+                              "args": [
+                                {
+                                  "name": "a",
+                                  "type": "TypeVar"
+                                }
+                              ],
+                              "constructor": {
+                                "name": "f",
+                                "type": "TypeVar"
+                              },
+                              "type": "TypeApp"
+                            }
+                          ],
+                          "ret": {
+                            "args": [
+                              {
+                                "name": "b",
+                                "type": "TypeVar"
+                              }
+                            ],
+                            "constructor": {
+                              "name": "f",
+                              "type": "TypeVar"
+                            },
+                            "type": "TypeApp"
+                          },
+                          "type": "Func"
+                        },
+                        "type": "ForAll",
+                        "vars": [
+                          "a",
+                          "b"
+                        ]
+                      }
+                    }
+                  ],
+                  "tail": {
+                    "type": "Any"
+                  },
+                  "type": "Row"
+                },
+                "type": "Record"
+              }
+            ],
+            "ret": {
+              "args": [
+                {
+                  "name": "f",
+                  "type": "TypeVar"
+                }
+              ],
+              "fqn": [
+                "Data",
+                "Functor",
+                "Functor"
+              ],
+              "type": "Adt"
+            },
+            "type": "Func"
+          },
+          "type": "ForAll",
+          "vars": [
+            "f"
+          ]
+        }
+      },
+      "type": "Var",
+      "value": {
+        "identifier": "Functor$Dict",
+        "moduleName": [
+          "Data",
+          "Functor"
+        ]
+      }
+    },
+    "annotation": {
+      "meta": null,
+      "sourceSpan": {
+        "end": [
+          84,
+          29
+        ],
+        "start": [
+          84,
+          1
+        ]
+      },
+      "type": {
+        "args": [
+          {
+            "args": [],
+            "fqn": [
+              "Main",
+              "Fun2"
+            ],
+            "type": "Adt"
+          }
+        ],
+        "fqn": [
+          "Data",
+          "Functor",
+          "Functor"
+        ],
+        "type": "Adt"
+      }
+    },
+    "argument": {
+      "annotation": {
+        "meta": null,
+        "sourceSpan": {
+          "end": [
+            0,
+            0
+          ],
+          "start": [
+            0,
+            0
+          ]
+        },
+        "type": {
+          "row": {
+            "fields": [
+              {
+                "label": "map",
+                "type": {
+                  "body": {
+                    "args": [
+                      {
+                        "args": [
+                          {
+                            "name": "a",
+                            "type": "TypeVar"
+                          }
+                        ],
+                        "ret": {
+                          "name": "b",
+                          "type": "TypeVar"
+                        },
+                        "type": "Func"
+                      },
+                      {
+                        "args": [
+                          {
+                            "name": "a",
+                            "type": "TypeVar"
+                          }
+                        ],
+                        "fqn": [
+                          "Main",
+                          "Fun2"
+                        ],
+                        "type": "Adt"
+                      }
+                    ],
+                    "ret": {
+                      "args": [
+                        {
+                          "name": "b",
+                          "type": "TypeVar"
+                        }
+                      ],
+                      "fqn": [
+                        "Main",
+                        "Fun2"
+                      ],
+                      "type": "Adt"
+                    },
+                    "type": "Func"
+                  },
+                  "type": "ForAll",
+                  "vars": [
+                    "a",
+                    "b"
+                  ]
+                }
+              }
+            ],
+            "tail": {
+              "type": "Any"
+            },
+            "type": "Row"
+          },
+          "type": "Record"
+        }
+      },
+      "type": "Literal",
+      "value": {
+        "literalType": "ObjectLiteral",
+        "value": [
+          [
+            "map",
+            {
+              "annotation": {
+                "meta": null,
+                "sourceSpan": {
+                  "end": [
+                    0,
+                    0
+                  ],
+                  "start": [
+                    0,
+                    0
+                  ]
+                },
+                "type": {
+                  "args": [
+                    {
+                      "args": [
+                        {
+                          "name": "a",
+                          "type": "TypeVar"
+                        }
+                      ],
+                      "ret": {
+                        "name": "b",
+                        "type": "TypeVar"
+                      },
+                      "type": "Func"
+                    },
+                    {
+                      "args": [
+                        {
+                          "name": "a",
+                          "type": "TypeVar"
+                        }
+                      ],
+                      "fqn": [
+                        "Main",
+                        "Fun2"
+                      ],
+                      "type": "Adt"
+                    }
+                  ],
+                  "ret": {
+                    "args": [
+                      {
+                        "name": "b",
+                        "type": "TypeVar"
+                      }
+                    ],
+                    "fqn": [
+                      "Main",
+                      "Fun2"
+                    ],
+                    "type": "Adt"
+                  },
+                  "type": "Func"
+                }
+              },
+              "argument": "f",
+              "body": {
+                "annotation": {
+                  "meta": null,
+                  "sourceSpan": {
+                    "end": [
+                      0,
+                      0
+                    ],
+                    "start": [
+                      0,
+                      0
+                    ]
+                  },
+                  "type": {
+                    "args": [
+                      {
+                        "args": [
+                          {
+                            "name": "a",
+                            "type": "TypeVar"
+                          }
+                        ],
+                        "fqn": [
+                          "Main",
+                          "Fun2"
+                        ],
+                        "type": "Adt"
+                      }
+                    ],
+                    "ret": {
+                      "args": [
+                        {
+                          "name": "b",
+                          "type": "TypeVar"
+                        }
+                      ],
+                      "fqn": [
+                        "Main",
+                        "Fun2"
+                      ],
+                      "type": "Adt"
+                    },
+                    "type": "Func"
+                  }
+                },
+                "argument": "m",
+                "body": {
+                  "annotation": {
+                    "meta": null,
+                    "sourceSpan": {
+                      "end": [
+                        0,
+                        0
+                      ],
+                      "start": [
+                        0,
+                        0
+                      ]
+                    },
+                    "type": {
+                      "args": [
+                        {
+                          "name": "b",
+                          "type": "TypeVar"
+                        }
+                      ],
+                      "fqn": [
+                        "Main",
+                        "Fun2"
+                      ],
+                      "type": "Adt"
+                    }
+                  },
+                  "caseAlternatives": [
+                    {
+                      "binders": [
+                        {
+                          "annotation": {
+                            "meta": {
+                              "constructorType": "ProductType",
+                              "identifiers": [
+                                "value0"
+                              ],
+                              "metaType": "IsConstructor"
+                            },
+                            "sourceSpan": {
+                              "end": [
+                                0,
+                                0
+                              ],
+                              "start": [
+                                0,
+                                0
+                              ]
+                            },
+                            "type": null
+                          },
+                          "binderType": "ConstructorBinder",
+                          "binders": [
+                            {
+                              "annotation": {
+                                "meta": null,
+                                "sourceSpan": {
+                                  "end": [
+                                    0,
+                                    0
+                                  ],
+                                  "start": [
+                                    0,
+                                    0
+                                  ]
+                                },
+                                "type": null
+                              },
+                              "binderType": "VarBinder",
+                              "identifier": "v"
+                            }
+                          ],
+                          "constructorName": {
+                            "identifier": "Fun2",
+                            "moduleName": [
+                              "Main"
+                            ]
+                          },
+                          "name": {
+                            "identifier": "Fun2",
+                            "moduleName": [
+                              "Main"
+                            ]
+                          },
+                          "typeName": {
+                            "identifier": "Fun2",
+                            "moduleName": [
+                              "Main"
+                            ]
+                          }
+                        }
+                      ],
+                      "expression": {
+                        "abstraction": {
+                          "annotation": {
+                            "meta": {
+                              "constructorType": "ProductType",
+                              "identifiers": [
+                                "value0"
+                              ],
+                              "metaType": "IsConstructor"
+                            },
+                            "sourceSpan": {
+                              "end": [
+                                0,
+                                0
+                              ],
+                              "start": [
+                                0,
+                                0
+                              ]
+                            },
+                            "type": {
+                              "body": {
+                                "args": [
+                                  {
+                                    "args": [
+                                      {
+                                        "type": "Int"
+                                      },
+                                      {
+                                        "type": "Int"
+                                      }
+                                    ],
+                                    "ret": {
+                                      "element": {
+                                        "element": {
+                                          "name": "a",
+                                          "type": "TypeVar"
+                                        },
+                                        "type": "Array"
+                                      },
+                                      "type": "Array"
+                                    },
+                                    "type": "Func"
+                                  }
+                                ],
+                                "ret": {
+                                  "args": [
+                                    {
+                                      "name": "a",
+                                      "type": "TypeVar"
+                                    }
+                                  ],
+                                  "fqn": [
+                                    "Main",
+                                    "Fun2"
+                                  ],
+                                  "type": "Adt"
+                                },
+                                "type": "Func"
+                              },
+                              "type": "ForAll",
+                              "vars": [
+                                "a"
+                              ]
+                            }
+                          },
+                          "type": "Var",
+                          "value": {
+                            "identifier": "Fun2",
+                            "moduleName": [
+                              "Main"
+                            ]
+                          }
+                        },
+                        "annotation": {
+                          "meta": null,
+                          "sourceSpan": {
+                            "end": [
+                              0,
+                              0
+                            ],
+                            "start": [
+                              0,
+                              0
+                            ]
+                          },
+                          "type": {
+                            "args": [
+                              {
+                                "name": "b",
+                                "type": "TypeVar"
+                              }
+                            ],
+                            "fqn": [
+                              "Main",
+                              "Fun2"
+                            ],
+                            "type": "Adt"
+                          }
+                        },
+                        "argument": {
+                          "abstraction": {
+                            "abstraction": {
+                              "abstraction": {
+                                "annotation": {
+                                  "meta": {
+                                    "metaType": "IsForeign"
+                                  },
+                                  "sourceSpan": {
+                                    "end": [
+                                      0,
+                                      0
+                                    ],
+                                    "start": [
+                                      0,
+                                      0
+                                    ]
+                                  },
+                                  "type": {
+                                    "body": {
+                                      "body": {
+                                        "args": [
+                                          {
+                                            "args": [
+                                              {
+                                                "name": "a",
+                                                "type": "TypeVar"
+                                              }
+                                            ],
+                                            "ret": {
+                                              "name": "b",
+                                              "type": "TypeVar"
+                                            },
+                                            "type": "Func"
+                                          },
+                                          {
+                                            "args": [
+                                              {
+                                                "name": "a",
+                                                "type": "TypeVar"
+                                              }
+                                            ],
+                                            "constructor": {
+                                              "name": "f",
+                                              "type": "TypeVar"
+                                            },
+                                            "type": "TypeApp"
+                                          }
+                                        ],
+                                        "ret": {
+                                          "args": [
+                                            {
+                                              "name": "b",
+                                              "type": "TypeVar"
+                                            }
+                                          ],
+                                          "constructor": {
+                                            "name": "f",
+                                            "type": "TypeVar"
+                                          },
+                                          "type": "TypeApp"
+                                        },
+                                        "type": "Func"
+                                      },
+                                      "constraints": [
+                                        {
+                                          "args": [
+                                            {
+                                              "name": "f",
+                                              "type": "TypeVar"
+                                            }
+                                          ],
+                                          "fqn": [
+                                            "Data",
+                                            "Functor",
+                                            "Functor"
+                                          ]
+                                        }
+                                      ],
+                                      "type": "ConstrainedType"
+                                    },
+                                    "type": "ForAll",
+                                    "vars": [
+                                      "f",
+                                      "a",
+                                      "b"
+                                    ]
+                                  }
+                                },
+                                "type": "Var",
+                                "value": {
+                                  "identifier": "map",
+                                  "moduleName": [
+                                    "Data",
+                                    "Functor"
+                                  ]
+                                }
+                              },
+                              "annotation": {
+                                "meta": null,
+                                "sourceSpan": {
+                                  "end": [
+                                    0,
+                                    0
+                                  ],
+                                  "start": [
+                                    0,
+                                    0
+                                  ]
+                                },
+                                "type": {
+                                  "args": [
+                                    {
+                                      "args": [
+                                        {
+                                          "args": [
+                                            {
+                                              "type": "Int"
+                                            }
+                                          ],
+                                          "ret": {
+                                            "element": {
+                                              "element": {
+                                                "name": "a",
+                                                "type": "TypeVar"
+                                              },
+                                              "type": "Array"
+                                            },
+                                            "type": "Array"
+                                          },
+                                          "type": "Func"
+                                        },
+                                        {
+                                          "type": "Int"
+                                        }
+                                      ],
+                                      "ret": {
+                                        "element": {
+                                          "element": {
+                                            "name": "b",
+                                            "type": "TypeVar"
+                                          },
+                                          "type": "Array"
+                                        },
+                                        "type": "Array"
+                                      },
+                                      "type": "Func"
+                                    },
+                                    {
+                                      "args": [
+                                        {
+                                          "type": "Int"
+                                        },
+                                        {
+                                          "type": "Int"
+                                        }
+                                      ],
+                                      "ret": {
+                                        "element": {
+                                          "element": {
+                                            "name": "a",
+                                            "type": "TypeVar"
+                                          },
+                                          "type": "Array"
+                                        },
+                                        "type": "Array"
+                                      },
+                                      "type": "Func"
+                                    },
+                                    {
+                                      "type": "Int"
+                                    },
+                                    {
+                                      "type": "Int"
+                                    }
+                                  ],
+                                  "ret": {
+                                    "element": {
+                                      "element": {
+                                        "name": "b",
+                                        "type": "TypeVar"
+                                      },
+                                      "type": "Array"
+                                    },
+                                    "type": "Array"
+                                  },
+                                  "type": "Func"
+                                }
+                              },
+                              "argument": {
+                                "annotation": {
+                                  "meta": null,
+                                  "sourceSpan": {
+                                    "end": [
+                                      0,
+                                      0
+                                    ],
+                                    "start": [
+                                      0,
+                                      0
+                                    ]
+                                  },
+                                  "type": {
+                                    "args": [
+                                      {
+                                        "args": [
+                                          {
+                                            "type": "Int"
+                                          }
+                                        ],
+                                        "fqn": [
+                                          "Prim",
+                                          "Function"
+                                        ],
+                                        "type": "Adt"
+                                      }
+                                    ],
+                                    "fqn": [
+                                      "Data",
+                                      "Functor",
+                                      "Functor"
+                                    ],
+                                    "type": "Adt"
+                                  }
+                                },
+                                "type": "Var",
+                                "value": {
+                                  "identifier": "functorFn",
+                                  "moduleName": [
+                                    "Data",
+                                    "Functor"
+                                  ]
+                                }
+                              },
+                              "type": "App"
+                            },
+                            "annotation": {
+                              "meta": null,
+                              "sourceSpan": {
+                                "end": [
+                                  0,
+                                  0
+                                ],
+                                "start": [
+                                  0,
+                                  0
+                                ]
+                              },
+                              "type": {
+                                "args": [
+                                  {
+                                    "args": [
+                                      {
+                                        "type": "Int"
+                                      },
+                                      {
+                                        "type": "Int"
+                                      }
+                                    ],
+                                    "ret": {
+                                      "element": {
+                                        "element": {
+                                          "name": "a",
+                                          "type": "TypeVar"
+                                        },
+                                        "type": "Array"
+                                      },
+                                      "type": "Array"
+                                    },
+                                    "type": "Func"
+                                  },
+                                  {
+                                    "type": "Int"
+                                  },
+                                  {
+                                    "type": "Int"
+                                  }
+                                ],
+                                "ret": {
+                                  "element": {
+                                    "element": {
+                                      "name": "b",
+                                      "type": "TypeVar"
+                                    },
+                                    "type": "Array"
+                                  },
+                                  "type": "Array"
+                                },
+                                "type": "Func"
+                              }
+                            },
+                            "argument": {
+                              "abstraction": {
+                                "abstraction": {
+                                  "annotation": {
+                                    "meta": {
+                                      "metaType": "IsForeign"
+                                    },
+                                    "sourceSpan": {
+                                      "end": [
+                                        0,
+                                        0
+                                      ],
+                                      "start": [
+                                        0,
+                                        0
+                                      ]
+                                    },
+                                    "type": {
+                                      "body": {
+                                        "body": {
+                                          "args": [
+                                            {
+                                              "args": [
+                                                {
+                                                  "name": "a",
+                                                  "type": "TypeVar"
+                                                }
+                                              ],
+                                              "ret": {
+                                                "name": "b",
+                                                "type": "TypeVar"
+                                              },
+                                              "type": "Func"
+                                            },
+                                            {
+                                              "args": [
+                                                {
+                                                  "name": "a",
+                                                  "type": "TypeVar"
+                                                }
+                                              ],
+                                              "constructor": {
+                                                "name": "f",
+                                                "type": "TypeVar"
+                                              },
+                                              "type": "TypeApp"
+                                            }
+                                          ],
+                                          "ret": {
+                                            "args": [
+                                              {
+                                                "name": "b",
+                                                "type": "TypeVar"
+                                              }
+                                            ],
+                                            "constructor": {
+                                              "name": "f",
+                                              "type": "TypeVar"
+                                            },
+                                            "type": "TypeApp"
+                                          },
+                                          "type": "Func"
+                                        },
+                                        "constraints": [
+                                          {
+                                            "args": [
+                                              {
+                                                "name": "f",
+                                                "type": "TypeVar"
+                                              }
+                                            ],
+                                            "fqn": [
+                                              "Data",
+                                              "Functor",
+                                              "Functor"
+                                            ]
+                                          }
+                                        ],
+                                        "type": "ConstrainedType"
+                                      },
+                                      "type": "ForAll",
+                                      "vars": [
+                                        "f",
+                                        "a",
+                                        "b"
+                                      ]
+                                    }
+                                  },
+                                  "type": "Var",
+                                  "value": {
+                                    "identifier": "map",
+                                    "moduleName": [
+                                      "Data",
+                                      "Functor"
+                                    ]
+                                  }
+                                },
+                                "annotation": {
+                                  "meta": null,
+                                  "sourceSpan": {
+                                    "end": [
+                                      0,
+                                      0
+                                    ],
+                                    "start": [
+                                      0,
+                                      0
+                                    ]
+                                  },
+                                  "type": {
+                                    "args": [
+                                      {
+                                        "args": [
+                                          {
+                                            "element": {
+                                              "element": {
+                                                "name": "a",
+                                                "type": "TypeVar"
+                                              },
+                                              "type": "Array"
+                                            },
+                                            "type": "Array"
+                                          }
+                                        ],
+                                        "ret": {
+                                          "element": {
+                                            "element": {
+                                              "name": "b",
+                                              "type": "TypeVar"
+                                            },
+                                            "type": "Array"
+                                          },
+                                          "type": "Array"
+                                        },
+                                        "type": "Func"
+                                      },
+                                      {
+                                        "args": [
+                                          {
+                                            "type": "Int"
+                                          }
+                                        ],
+                                        "ret": {
+                                          "element": {
+                                            "element": {
+                                              "name": "a",
+                                              "type": "TypeVar"
+                                            },
+                                            "type": "Array"
+                                          },
+                                          "type": "Array"
+                                        },
+                                        "type": "Func"
+                                      },
+                                      {
+                                        "type": "Int"
+                                      }
+                                    ],
+                                    "ret": {
+                                      "element": {
+                                        "element": {
+                                          "name": "b",
+                                          "type": "TypeVar"
+                                        },
+                                        "type": "Array"
+                                      },
+                                      "type": "Array"
+                                    },
+                                    "type": "Func"
+                                  }
+                                },
+                                "argument": {
+                                  "annotation": {
+                                    "meta": null,
+                                    "sourceSpan": {
+                                      "end": [
+                                        0,
+                                        0
+                                      ],
+                                      "start": [
+                                        0,
+                                        0
+                                      ]
+                                    },
+                                    "type": {
+                                      "args": [
+                                        {
+                                          "args": [
+                                            {
+                                              "type": "Int"
+                                            }
+                                          ],
+                                          "fqn": [
+                                            "Prim",
+                                            "Function"
+                                          ],
+                                          "type": "Adt"
+                                        }
+                                      ],
+                                      "fqn": [
+                                        "Data",
+                                        "Functor",
+                                        "Functor"
+                                      ],
+                                      "type": "Adt"
+                                    }
+                                  },
+                                  "type": "Var",
+                                  "value": {
+                                    "identifier": "functorFn",
+                                    "moduleName": [
+                                      "Data",
+                                      "Functor"
+                                    ]
+                                  }
+                                },
+                                "type": "App"
+                              },
+                              "annotation": {
+                                "meta": null,
+                                "sourceSpan": {
+                                  "end": [
+                                    0,
+                                    0
+                                  ],
+                                  "start": [
+                                    0,
+                                    0
+                                  ]
+                                },
+                                "type": {
+                                  "args": [
+                                    {
+                                      "args": [
+                                        {
+                                          "type": "Int"
+                                        }
+                                      ],
+                                      "ret": {
+                                        "element": {
+                                          "element": {
+                                            "name": "a",
+                                            "type": "TypeVar"
+                                          },
+                                          "type": "Array"
+                                        },
+                                        "type": "Array"
+                                      },
+                                      "type": "Func"
+                                    },
+                                    {
+                                      "type": "Int"
+                                    }
+                                  ],
+                                  "ret": {
+                                    "element": {
+                                      "element": {
+                                        "name": "b",
+                                        "type": "TypeVar"
+                                      },
+                                      "type": "Array"
+                                    },
+                                    "type": "Array"
+                                  },
+                                  "type": "Func"
+                                }
+                              },
+                              "argument": {
+                                "abstraction": {
+                                  "abstraction": {
+                                    "annotation": {
+                                      "meta": {
+                                        "metaType": "IsForeign"
+                                      },
+                                      "sourceSpan": {
+                                        "end": [
+                                          0,
+                                          0
+                                        ],
+                                        "start": [
+                                          0,
+                                          0
+                                        ]
+                                      },
+                                      "type": {
+                                        "body": {
+                                          "body": {
+                                            "args": [
+                                              {
+                                                "args": [
+                                                  {
+                                                    "name": "a",
+                                                    "type": "TypeVar"
+                                                  }
+                                                ],
+                                                "ret": {
+                                                  "name": "b",
+                                                  "type": "TypeVar"
+                                                },
+                                                "type": "Func"
+                                              },
+                                              {
+                                                "args": [
+                                                  {
+                                                    "name": "a",
+                                                    "type": "TypeVar"
+                                                  }
+                                                ],
+                                                "constructor": {
+                                                  "name": "f",
+                                                  "type": "TypeVar"
+                                                },
+                                                "type": "TypeApp"
+                                              }
+                                            ],
+                                            "ret": {
+                                              "args": [
+                                                {
+                                                  "name": "b",
+                                                  "type": "TypeVar"
+                                                }
+                                              ],
+                                              "constructor": {
+                                                "name": "f",
+                                                "type": "TypeVar"
+                                              },
+                                              "type": "TypeApp"
+                                            },
+                                            "type": "Func"
+                                          },
+                                          "constraints": [
+                                            {
+                                              "args": [
+                                                {
+                                                  "name": "f",
+                                                  "type": "TypeVar"
+                                                }
+                                              ],
+                                              "fqn": [
+                                                "Data",
+                                                "Functor",
+                                                "Functor"
+                                              ]
+                                            }
+                                          ],
+                                          "type": "ConstrainedType"
+                                        },
+                                        "type": "ForAll",
+                                        "vars": [
+                                          "f",
+                                          "a",
+                                          "b"
+                                        ]
+                                      }
+                                    },
+                                    "type": "Var",
+                                    "value": {
+                                      "identifier": "map",
+                                      "moduleName": [
+                                        "Data",
+                                        "Functor"
+                                      ]
+                                    }
+                                  },
+                                  "annotation": {
+                                    "meta": null,
+                                    "sourceSpan": {
+                                      "end": [
+                                        0,
+                                        0
+                                      ],
+                                      "start": [
+                                        0,
+                                        0
+                                      ]
+                                    },
+                                    "type": {
+                                      "args": [
+                                        {
+                                          "args": [
+                                            {
+                                              "element": {
+                                                "name": "a",
+                                                "type": "TypeVar"
+                                              },
+                                              "type": "Array"
+                                            }
+                                          ],
+                                          "ret": {
+                                            "element": {
+                                              "name": "b",
+                                              "type": "TypeVar"
+                                            },
+                                            "type": "Array"
+                                          },
+                                          "type": "Func"
+                                        },
+                                        {
+                                          "element": {
+                                            "element": {
+                                              "name": "a",
+                                              "type": "TypeVar"
+                                            },
+                                            "type": "Array"
+                                          },
+                                          "type": "Array"
+                                        }
+                                      ],
+                                      "ret": {
+                                        "element": {
+                                          "element": {
+                                            "name": "b",
+                                            "type": "TypeVar"
+                                          },
+                                          "type": "Array"
+                                        },
+                                        "type": "Array"
+                                      },
+                                      "type": "Func"
+                                    }
+                                  },
+                                  "argument": {
+                                    "annotation": {
+                                      "meta": null,
+                                      "sourceSpan": {
+                                        "end": [
+                                          0,
+                                          0
+                                        ],
+                                        "start": [
+                                          0,
+                                          0
+                                        ]
+                                      },
+                                      "type": {
+                                        "args": [
+                                          {
+                                            "args": [],
+                                            "fqn": [
+                                              "Prim",
+                                              "Array"
+                                            ],
+                                            "type": "Adt"
+                                          }
+                                        ],
+                                        "fqn": [
+                                          "Data",
+                                          "Functor",
+                                          "Functor"
+                                        ],
+                                        "type": "Adt"
+                                      }
+                                    },
+                                    "type": "Var",
+                                    "value": {
+                                      "identifier": "functorArray",
+                                      "moduleName": [
+                                        "Data",
+                                        "Functor"
+                                      ]
+                                    }
+                                  },
+                                  "type": "App"
+                                },
+                                "annotation": {
+                                  "meta": null,
+                                  "sourceSpan": {
+                                    "end": [
+                                      0,
+                                      0
+                                    ],
+                                    "start": [
+                                      0,
+                                      0
+                                    ]
+                                  },
+                                  "type": {
+                                    "args": [
+                                      {
+                                        "element": {
+                                          "element": {
+                                            "name": "a",
+                                            "type": "TypeVar"
+                                          },
+                                          "type": "Array"
+                                        },
+                                        "type": "Array"
+                                      }
+                                    ],
+                                    "ret": {
+                                      "element": {
+                                        "element": {
+                                          "name": "b",
+                                          "type": "TypeVar"
+                                        },
+                                        "type": "Array"
+                                      },
+                                      "type": "Array"
+                                    },
+                                    "type": "Func"
+                                  }
+                                },
+                                "argument": {
+                                  "abstraction": {
+                                    "abstraction": {
+                                      "annotation": {
+                                        "meta": {
+                                          "metaType": "IsForeign"
+                                        },
+                                        "sourceSpan": {
+                                          "end": [
+                                            0,
+                                            0
+                                          ],
+                                          "start": [
+                                            0,
+                                            0
+                                          ]
+                                        },
+                                        "type": {
+                                          "body": {
+                                            "body": {
+                                              "args": [
+                                                {
+                                                  "args": [
+                                                    {
+                                                      "name": "a",
+                                                      "type": "TypeVar"
+                                                    }
+                                                  ],
+                                                  "ret": {
+                                                    "name": "b",
+                                                    "type": "TypeVar"
+                                                  },
+                                                  "type": "Func"
+                                                },
+                                                {
+                                                  "args": [
+                                                    {
+                                                      "name": "a",
+                                                      "type": "TypeVar"
+                                                    }
+                                                  ],
+                                                  "constructor": {
+                                                    "name": "f",
+                                                    "type": "TypeVar"
+                                                  },
+                                                  "type": "TypeApp"
+                                                }
+                                              ],
+                                              "ret": {
+                                                "args": [
+                                                  {
+                                                    "name": "b",
+                                                    "type": "TypeVar"
+                                                  }
+                                                ],
+                                                "constructor": {
+                                                  "name": "f",
+                                                  "type": "TypeVar"
+                                                },
+                                                "type": "TypeApp"
+                                              },
+                                              "type": "Func"
+                                            },
+                                            "constraints": [
+                                              {
+                                                "args": [
+                                                  {
+                                                    "name": "f",
+                                                    "type": "TypeVar"
+                                                  }
+                                                ],
+                                                "fqn": [
+                                                  "Data",
+                                                  "Functor",
+                                                  "Functor"
+                                                ]
+                                              }
+                                            ],
+                                            "type": "ConstrainedType"
+                                          },
+                                          "type": "ForAll",
+                                          "vars": [
+                                            "f",
+                                            "a",
+                                            "b"
+                                          ]
+                                        }
+                                      },
+                                      "type": "Var",
+                                      "value": {
+                                        "identifier": "map",
+                                        "moduleName": [
+                                          "Data",
+                                          "Functor"
+                                        ]
+                                      }
+                                    },
+                                    "annotation": {
+                                      "meta": null,
+                                      "sourceSpan": {
+                                        "end": [
+                                          0,
+                                          0
+                                        ],
+                                        "start": [
+                                          0,
+                                          0
+                                        ]
+                                      },
+                                      "type": {
+                                        "args": [
+                                          {
+                                            "args": [
+                                              {
+                                                "name": "a",
+                                                "type": "TypeVar"
+                                              }
+                                            ],
+                                            "ret": {
+                                              "name": "b",
+                                              "type": "TypeVar"
+                                            },
+                                            "type": "Func"
+                                          },
+                                          {
+                                            "element": {
+                                              "name": "a",
+                                              "type": "TypeVar"
+                                            },
+                                            "type": "Array"
+                                          }
+                                        ],
+                                        "ret": {
+                                          "element": {
+                                            "name": "b",
+                                            "type": "TypeVar"
+                                          },
+                                          "type": "Array"
+                                        },
+                                        "type": "Func"
+                                      }
+                                    },
+                                    "argument": {
+                                      "annotation": {
+                                        "meta": null,
+                                        "sourceSpan": {
+                                          "end": [
+                                            0,
+                                            0
+                                          ],
+                                          "start": [
+                                            0,
+                                            0
+                                          ]
+                                        },
+                                        "type": {
+                                          "args": [
+                                            {
+                                              "args": [],
+                                              "fqn": [
+                                                "Prim",
+                                                "Array"
+                                              ],
+                                              "type": "Adt"
+                                            }
+                                          ],
+                                          "fqn": [
+                                            "Data",
+                                            "Functor",
+                                            "Functor"
+                                          ],
+                                          "type": "Adt"
+                                        }
+                                      },
+                                      "type": "Var",
+                                      "value": {
+                                        "identifier": "functorArray",
+                                        "moduleName": [
+                                          "Data",
+                                          "Functor"
+                                        ]
+                                      }
+                                    },
+                                    "type": "App"
+                                  },
+                                  "annotation": {
+                                    "meta": null,
+                                    "sourceSpan": {
+                                      "end": [
+                                        0,
+                                        0
+                                      ],
+                                      "start": [
+                                        0,
+                                        0
+                                      ]
+                                    },
+                                    "type": {
+                                      "args": [
+                                        {
+                                          "element": {
+                                            "name": "a",
+                                            "type": "TypeVar"
+                                          },
+                                          "type": "Array"
+                                        }
+                                      ],
+                                      "ret": {
+                                        "element": {
+                                          "name": "b",
+                                          "type": "TypeVar"
+                                        },
+                                        "type": "Array"
+                                      },
+                                      "type": "Func"
+                                    }
+                                  },
+                                  "argument": {
+                                    "annotation": {
+                                      "meta": null,
+                                      "sourceSpan": {
+                                        "end": [
+                                          0,
+                                          0
+                                        ],
+                                        "start": [
+                                          0,
+                                          0
+                                        ]
+                                      },
+                                      "type": {
+                                        "args": [
+                                          {
+                                            "name": "a",
+                                            "type": "TypeVar"
+                                          }
+                                        ],
+                                        "ret": {
+                                          "name": "b",
+                                          "type": "TypeVar"
+                                        },
+                                        "type": "Func"
+                                      }
+                                    },
+                                    "type": "Var",
+                                    "value": {
+                                      "identifier": "f",
+                                      "sourcePos": [
+                                        0,
+                                        0
+                                      ]
+                                    }
+                                  },
+                                  "type": "App"
+                                },
+                                "type": "App"
+                              },
+                              "type": "App"
+                            },
+                            "type": "App"
+                          },
+                          "annotation": {
+                            "meta": null,
+                            "sourceSpan": {
+                              "end": [
+                                0,
+                                0
+                              ],
+                              "start": [
+                                0,
+                                0
+                              ]
+                            },
+                            "type": {
+                              "args": [
+                                {
+                                  "type": "Int"
+                                },
+                                {
+                                  "type": "Int"
+                                }
+                              ],
+                              "ret": {
+                                "element": {
+                                  "element": {
+                                    "name": "b",
+                                    "type": "TypeVar"
+                                  },
+                                  "type": "Array"
+                                },
+                                "type": "Array"
+                              },
+                              "type": "Func"
+                            }
+                          },
+                          "argument": {
+                            "annotation": {
+                              "meta": null,
+                              "sourceSpan": {
+                                "end": [
+                                  0,
+                                  0
+                                ],
+                                "start": [
+                                  0,
+                                  0
+                                ]
+                              },
+                              "type": {
+                                "args": [
+                                  {
+                                    "type": "Int"
+                                  },
+                                  {
+                                    "type": "Int"
+                                  }
+                                ],
+                                "ret": {
+                                  "element": {
+                                    "element": {
+                                      "name": "a",
+                                      "type": "TypeVar"
+                                    },
+                                    "type": "Array"
+                                  },
+                                  "type": "Array"
+                                },
+                                "type": "Func"
+                              }
+                            },
+                            "type": "Var",
+                            "value": {
+                              "identifier": "v",
+                              "sourcePos": [
+                                0,
+                                0
+                              ]
+                            }
+                          },
+                          "type": "App"
+                        },
+                        "type": "App"
+                      },
+                      "isGuarded": false
+                    }
+                  ],
+                  "caseExpressions": [
+                    {
+                      "annotation": {
+                        "meta": null,
+                        "sourceSpan": {
+                          "end": [
+                            0,
+                            0
+                          ],
+                          "start": [
+                            0,
+                            0
+                          ]
+                        },
+                        "type": null
+                      },
+                      "type": "Var",
+                      "value": {
+                        "identifier": "m",
+                        "sourcePos": [
+                          0,
+                          0
+                        ]
+                      }
+                    }
+                  ],
+                  "type": "Case"
+                },
+                "type": "Abs"
+              },
+              "type": "Abs"
+            }
+          ]
+        ]
+      }
+    },
+    "type": "App"
+  },
+  "identifier": "functorFun2"
+}

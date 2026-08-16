@@ -1,0 +1,16 @@
+func Call_Data_String_CodeUnits_contains(pat_0_loop string) gopurs_runtime.Value {
+var pat_0 string = pat_0_loop
+_ = pat_0
+// TAST (Let): __local_var_1_0 -> gopurs_runtime.Value
+__local_var_1_0 := gopurs_runtime.Apply(Get_Data_String_CodeUnits_indexOf(), gopurs_runtime.Str(pat_0))
+_ = __local_var_1_0
+return gopurs_runtime.Func(func(x_2 gopurs_runtime.Value) gopurs_runtime.Value {
+// TAST (Let): __local_var_3_1 -> gopurs_runtime.Value
+__local_var_3_1 := gopurs_runtime.Apply(__local_var_1_0, x_2)
+_ = __local_var_3_1
+var __t2 bool
+{
+if (__local_var_3_1.Type == 9 && __local_var_3_1.IntVal == 930809136 && __local_var_3_1.UnsafePtr == nil) {
+__t2 = false
+goto end_branch_2
+} else {

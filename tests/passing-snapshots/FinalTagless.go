@@ -12,7 +12,7 @@ var once_Main_Id sync.Once
 func Get_Main_Id() gopurs_runtime.Value {
 	once_Main_Id.Do(func() {
 		cache_Main_Id = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 923654739, UnsafePtr: unsafe.Pointer((&Constructor_Main_Id{1, value0}))}
+			return value0
 		})
 	})
 	return cache_Main_Id
@@ -36,7 +36,7 @@ var once_Main_runId sync.Once
 func Get_Main_runId() gopurs_runtime.Value {
 	once_Main_runId.Do(func() {
 		cache_Main_runId = gopurs_runtime.Func(func(v_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_runId(gopurs_runtime.CoerceToStruct[Constructor_Main_Id](v_0_box))
+			return Call_Main_runId(v_0_box)
 		})
 	})
 	return cache_Main_runId
@@ -61,7 +61,7 @@ func Get_Main_exprId() gopurs_runtime.Value {
 	once_Main_exprId.Do(func() {
 		cache_Main_exprId = gopurs_runtime.Value{Type: 9, IntVal: 1955825563, UnsafePtr: unsafe.Pointer((&Constructor_Main_E{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(v1_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Value{Type: 9, IntVal: 923654739, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_Id](gopurs_runtime.Float((v_0.FloatVal()) + (v1_1.FloatVal()))))}
+				return gopurs_runtime.Float((v_0.FloatVal()) + (v1_1.FloatVal()))
 			})
 		}), Get_Main_Id()}))}
 	})
@@ -97,16 +97,14 @@ var once_Main_main sync.Once
 
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
-		cache_Main_main = func() gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 -> gopurs_runtime.Value
+		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showNumberImpl(), gopurs_runtime.Float(gopurs_runtime.Float(3.0).FloatVal())).StrVal()))
 			_ = __local_var_0_0
-			return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-				_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
-				_ = _dollar___unused_1_1
-				return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
-			})
-		}()
+			_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
+			_ = _dollar___unused_1_1
+			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
+		})
 	})
 	return cache_Main_main
 }
@@ -167,10 +165,10 @@ func Call_Main_E_dollar_Dict(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value
 	return x_0
 }
 
-func Call_Main_runId(v_0_loop *Constructor_Main_Id) gopurs_runtime.Value {
-	var v_0 *Constructor_Main_Id = v_0_loop
+func Call_Main_runId(v_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var v_0 gopurs_runtime.Value = v_0_loop
 	_ = v_0
-	return gopurs_runtime.Value{Type: 9, IntVal: 923654739, UnsafePtr: unsafe.Pointer(v_0)}
+	return v_0
 }
 
 func Call_Main_num(dict_0_loop *Constructor_Main_E) gopurs_runtime.Value {

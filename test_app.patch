@@ -1,0 +1,26 @@
+--- src/Gopurs/CodeGen.purs
++++ src/Gopurs/CodeGen.purs
+@@ -1113,6 +1113,7 @@
+                             finalExpr = if Array.length accArgsRemainingBoxed == 0 then callExpr else buildApp (boxGoExpr callExpr fRet) accArgsRemainingBoxed
+                             finalExprType = if Array.length accArgsRemainingBoxed == 0 then fRet else TypeValue
+                           in
++                            let _ = Debug.trace ("App (global) " <> fullName <> " argsLen=" <> show argsLen) \_ -> unit in
+                             { stmts: accArgs.stmts, expr: finalExpr, exprType: finalExprType, nextId: accArgs.nextId }
+   
+                         Nothing ->
+@@ -1134,6 +1135,7 @@
+                                   else if fArgsLen > argsLen then TypeFunc (Array.drop argsLen fArgs) fRet
+                                   else TypeValue
+                               _ -> TypeValue
++                            let _ = Debug.trace ("App (local/closure) argsLen=" <> show (Array.length flatArgs) <> " finalExprType=" <> goTypeToStr finalExprType) \_ -> unit in
+                               
+                             finalExpr = case resFn.exprType of
+                               TypeFunc fArgs fRet ->
+@@ -1314,7 +1316,9 @@
+         in
+           case expectedGoType, a of
+             TypeStructPointer _ _ _ _, App (Var (Qualified _ (Ident ctor))) args' ->
+-              let
++              let _ = Debug.trace ("Typed TypeStructPointer ctor=" <> ctor) \_ -> unit in
++              let res = ...
++              in res -- wait, I need to patch properly

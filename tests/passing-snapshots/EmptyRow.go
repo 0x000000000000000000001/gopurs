@@ -3,7 +3,6 @@ package purescript
 import (
 	gopurs_runtime "gopurs/output/gopurs_runtime"
 	sync "sync"
-	unsafe "unsafe"
 )
 
 var cache_Main_Foo gopurs_runtime.Value
@@ -12,7 +11,7 @@ var once_Main_Foo sync.Once
 func Get_Main_Foo() gopurs_runtime.Value {
 	once_Main_Foo.Do(func() {
 		cache_Main_Foo = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 2763139640, UnsafePtr: unsafe.Pointer((&Constructor_Main_Foo{1, value0}))}
+			return value0
 		})
 	})
 	return cache_Main_Foo
@@ -23,7 +22,7 @@ var once_Main_test sync.Once
 
 func Get_Main_test() gopurs_runtime.Value {
 	once_Main_test.Do(func() {
-		cache_Main_test = gopurs_runtime.Value{Type: 9, IntVal: 2763139640, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_Foo](gopurs_runtime.RecordDict0()))}
+		cache_Main_test = gopurs_runtime.RecordDict0()
 	})
 	return cache_Main_test
 }

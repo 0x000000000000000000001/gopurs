@@ -37,16 +37,14 @@ var once_Main_main sync.Once
 
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
-		cache_Main_main = func() gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 -> gopurs_runtime.Value
+		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("true"))
 			_ = __local_var_0_0
-			return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-				_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
-				_ = _dollar___unused_1_1
-				return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
-			})
-		}()
+			_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
+			_ = _dollar___unused_1_1
+			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
+		})
 	})
 	return cache_Main_main
 }
@@ -84,14 +82,14 @@ func Call_Main_eqPair(dictEq_0_loop gopurs_runtime.Value, dictEq1_1_loop gopurs_
 func Call_Main_ordPair(dictOrd_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var dictOrd_0 gopurs_runtime.Value = dictOrd_0_loop
 	_ = dictOrd_0
-	// TAST (Let): __local_var_1_0 -> gopurs_runtime.Value
+	// TAST (Let): __local_var_1_0 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 	__local_var_1_0 := gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictOrd_0, "Eq0"), gopurs_runtime.Value{})
 	_ = __local_var_1_0
 	return gopurs_runtime.Func(func(dictOrd1_2 gopurs_runtime.Value) gopurs_runtime.Value {
-		// TAST (Let): __local_var_3_2 -> gopurs_runtime.Value
+		// TAST (Let): __local_var_3_2 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 		__local_var_3_2 := gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictOrd1_2, "Eq0"), gopurs_runtime.Value{})
 		_ = __local_var_3_2
-		// TAST (Let): eqPair2_3_1 -> *Constructor_Data_Eq_Eq
+		// TAST (Let): eqPair2_3_1 shape=Let(LitRecord) expectedFromAst=*Constructor_Data_Eq_Eq actual=*Constructor_Data_Eq_Eq bindingType=(ADT ["Data","Eq","Eq"] [(ADT ["Main","Pair"] [(TypeVar a), (TypeVar b)])])
 		eqPair2_3_1 := gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq](gopurs_runtime.RecordDict1("eq", gopurs_runtime.Func(func(v_4 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(v1_5 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Bool(((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(__local_var_1_0, "eq"), (*Constructor_Main_Pair)(v_4.UnsafePtr).V0, (*Constructor_Main_Pair)(v1_5.UnsafePtr).V0).IntVal) != (0)) && ((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(__local_var_3_2, "eq"), (*Constructor_Main_Pair)(v_4.UnsafePtr).V1, (*Constructor_Main_Pair)(v1_5.UnsafePtr).V1).IntVal) != (0)))
@@ -102,12 +100,12 @@ func Call_Main_ordPair(dictOrd_0_loop gopurs_runtime.Value) gopurs_runtime.Value
 			return gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(eqPair2_3_1)}
 		}), gopurs_runtime.Func(func(v_4 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(v1_5 gopurs_runtime.Value) gopurs_runtime.Value {
-				// TAST (Let): v2_6_3 -> gopurs_runtime.Value
-				v2_6_3 := gopurs_runtime.Apply2(gopurs_runtime.RecordGet(dictOrd_0, "compare"), (*Constructor_Main_Pair)(v_4.UnsafePtr).V0, (*Constructor_Main_Pair)(v1_5.UnsafePtr).V0)
+				// TAST (Let): v2_6_3 shape=App(Other) expectedFromAst=uint32 actual=uint32 bindingType=(ADT ["Data","Ordering","Ordering"] [])
+				v2_6_3 := uint32(gopurs_runtime.Apply2(gopurs_runtime.RecordGet(dictOrd_0, "compare"), (*Constructor_Main_Pair)(v_4.UnsafePtr).V0, (*Constructor_Main_Pair)(v1_5.UnsafePtr).V0).IntVal)
 				_ = v2_6_3
 				var __t4 uint32
 				{
-					if uint32(v2_6_3.IntVal) == 902936544 {
+					if v2_6_3 == 902936544 {
 						__t4 = uint32(gopurs_runtime.Apply2(gopurs_runtime.RecordGet(dictOrd1_2, "compare"), (*Constructor_Main_Pair)(v_4.UnsafePtr).V1, (*Constructor_Main_Pair)(v1_5.UnsafePtr).V1).IntVal)
 						goto end_branch_4
 					} else {
@@ -115,7 +113,7 @@ func Call_Main_ordPair(dictOrd_0_loop gopurs_runtime.Value) gopurs_runtime.Value
 					}
 				}
 				{
-					__t4 = uint32(v2_6_3.IntVal)
+					__t4 = v2_6_3
 				}
 			end_branch_4:
 				return gopurs_runtime.Value{Type: 9, IntVal: int64(__t4), UnsafePtr: nil}
