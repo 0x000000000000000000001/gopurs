@@ -110,7 +110,7 @@ var once_Main_main sync.Once
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Get_Main_example1().StrVal()))
 			_ = __local_var_0_0
 			_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
@@ -186,7 +186,7 @@ func Call_Main_runConst(v_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 func Call_Main_applySecond(dictApply_0_loop *Constructor_Control_Apply_Apply) gopurs_runtime.Value {
 	var dictApply_0 *Constructor_Control_Apply_Apply = dictApply_0_loop
 	_ = dictApply_0
-	// TAST (Let): Functor0_1_0 -> *Constructor_Data_Functor_Functor
+	// TAST (Let): Functor0_1_0 shape=App(Other) expectedFromAst=*Constructor_Data_Functor_Functor actual=*Constructor_Data_Functor_Functor bindingType=(ADT ["Data","Functor","Functor"] [(TypeVar f)])
 	Functor0_1_0 := gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor](gopurs_runtime.Apply(gopurs_runtime.Box(dictApply_0.V0), gopurs_runtime.Value{}))
 	_ = Functor0_1_0
 	return gopurs_runtime.Func(func(fa_2 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -215,7 +215,7 @@ func Call_Main_applyConst(dictSemigroup_0_loop gopurs_runtime.Value) gopurs_runt
 func Call_Main_applySecond__3603561348(dictApply_0_loop *Constructor_Control_Apply_Apply) gopurs_runtime.Value {
 	var dictApply_0 *Constructor_Control_Apply_Apply = dictApply_0_loop
 	_ = dictApply_0
-	// TAST (Let): Functor0_1_0 -> *Constructor_Data_Functor_Functor
+	// TAST (Let): Functor0_1_0 shape=App(Other) expectedFromAst=*Constructor_Data_Functor_Functor actual=*Constructor_Data_Functor_Functor bindingType=(ADT ["Data","Functor","Functor"] [Any])
 	Functor0_1_0 := gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor](gopurs_runtime.Apply(gopurs_runtime.Box(dictApply_0.V0), gopurs_runtime.Value{}))
 	_ = Functor0_1_0
 	return gopurs_runtime.Func(func(fa_2 gopurs_runtime.Value) gopurs_runtime.Value {

@@ -44,7 +44,7 @@ var once_Main_test2 sync.Once
 
 func Get_Main_test2() gopurs_runtime.Value {
 	once_Main_test2.Do(func() {
-		cache_Main_test2 = gopurs_runtime.Bool(true)
+		cache_Main_test2 = gopurs_runtime.Bool((gopurs_runtime.Bool(true).IntVal) != (0))
 	})
 	return cache_Main_test2
 }

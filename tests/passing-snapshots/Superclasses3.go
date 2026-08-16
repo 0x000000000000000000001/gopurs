@@ -118,7 +118,7 @@ func Get_Main_bindMTrace() gopurs_runtime.Value {
 		}), gopurs_runtime.Func(func(m_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(f_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-					// TAST (Let): __local_var_2_0 -> gopurs_runtime.Value
+					// TAST (Let): __local_var_2_0 shape=Other expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 					__local_var_2_0 := m_0
 					_ = __local_var_2_0
 					x_3_1 := gopurs_runtime.Apply(__local_var_2_0, gopurs_runtime.Value{})
@@ -141,7 +141,7 @@ func Get_Main_applyMTrace() gopurs_runtime.Value {
 		}), gopurs_runtime.Func(func(f_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(a_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-					// TAST (Let): __local_var_2_0 -> gopurs_runtime.Value
+					// TAST (Let): __local_var_2_0 shape=Other expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 					__local_var_2_0 := f_0
 					_ = __local_var_2_0
 					x_3_1 := gopurs_runtime.Apply(__local_var_2_0, gopurs_runtime.Value{})
@@ -192,7 +192,7 @@ var once_Main_main sync.Once
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Str("Done").StrVal()))
 			_ = __local_var_0_0
 			x_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
@@ -300,7 +300,7 @@ func Call_Main_MonadWriter_dollar_Dict(x_0_loop gopurs_runtime.Value) gopurs_run
 func Call_Main_testFunctor(dictMonad_0_loop *Constructor_Control_Monad_Monad) gopurs_runtime.Value {
 	var dictMonad_0 *Constructor_Control_Monad_Monad = dictMonad_0_loop
 	_ = dictMonad_0
-	// TAST (Let): Functor0_1_0 -> *Constructor_Data_Functor_Functor
+	// TAST (Let): Functor0_1_0 shape=App(Other) expectedFromAst=*Constructor_Data_Functor_Functor actual=*Constructor_Data_Functor_Functor bindingType=(ADT ["Data","Functor","Functor"] [(TypeVar m)])
 	Functor0_1_0 := gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor](gopurs_runtime.Apply(gopurs_runtime.RecordGet(gopurs_runtime.Apply(gopurs_runtime.RecordGet(gopurs_runtime.Apply(gopurs_runtime.Box(dictMonad_0.V1), gopurs_runtime.Value{}), "Apply0"), gopurs_runtime.Value{}), "Functor0"), gopurs_runtime.Value{}))
 	_ = Functor0_1_0
 	return gopurs_runtime.Func(func(n_2 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -319,7 +319,7 @@ func Call_Main_tell(dict_0_loop *Constructor_Main_MonadWriter) gopurs_runtime.Va
 func Call_Main_test(dictMonad_0_loop *Constructor_Control_Monad_Monad) gopurs_runtime.Value {
 	var dictMonad_0 *Constructor_Control_Monad_Monad = dictMonad_0_loop
 	_ = dictMonad_0
-	// TAST (Let): Bind1_1_0 -> *Constructor_Control_Bind_Bind
+	// TAST (Let): Bind1_1_0 shape=App(Other) expectedFromAst=*Constructor_Control_Bind_Bind actual=*Constructor_Control_Bind_Bind bindingType=(ADT ["Control","Bind","Bind"] [(TypeVar m)])
 	Bind1_1_0 := gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind](gopurs_runtime.Apply(gopurs_runtime.Box(dictMonad_0.V1), gopurs_runtime.Value{}))
 	_ = Bind1_1_0
 	return gopurs_runtime.Func(func(dictMonadWriter_2 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -366,7 +366,7 @@ func Call_Main_tell__2495349857(dict_0_loop *Constructor_Main_MonadWriter) gopur
 func Call_Main_test__952106832(dictMonad_0_loop *Constructor_Control_Monad_Monad) gopurs_runtime.Value {
 	var dictMonad_0 *Constructor_Control_Monad_Monad = dictMonad_0_loop
 	_ = dictMonad_0
-	// TAST (Let): Bind1_1_0 -> *Constructor_Control_Bind_Bind
+	// TAST (Let): Bind1_1_0 shape=App(Other) expectedFromAst=*Constructor_Control_Bind_Bind actual=*Constructor_Control_Bind_Bind bindingType=(ADT ["Control","Bind","Bind"] [Any])
 	Bind1_1_0 := gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind](gopurs_runtime.Apply(gopurs_runtime.Box(dictMonad_0.V1), gopurs_runtime.Value{}))
 	_ = Bind1_1_0
 	return gopurs_runtime.Func(func(dictMonadWriter_2 gopurs_runtime.Value) gopurs_runtime.Value {

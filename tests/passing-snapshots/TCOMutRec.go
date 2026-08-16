@@ -86,10 +86,10 @@ func Get_Main_tco2() gopurs_runtime.Value {
 							_ = x_1
 							var y_2 gopurs_runtime.Value = y_2_loop
 							_ = y_2
-							// TAST (Let): __local_var_3_1 -> int64
+							// TAST (Let): __local_var_3_1 shape=Other expectedFromAst=int64 actual=int64 bindingType=Int
 							__local_var_3_1 := (x_1.IntVal) + (2)
 							_ = __local_var_3_1
-							// TAST (Let): __local_var_4_2 -> int64
+							// TAST (Let): __local_var_4_2 shape=Other expectedFromAst=int64 actual=int64 bindingType=Int
 							__local_var_4_2 := (y_2.IntVal) - (1)
 							_ = __local_var_4_2
 							var __t3 int64
@@ -140,10 +140,10 @@ func Get_Main_tco1() gopurs_runtime.Value {
 							_ = x_1
 							var y_2 gopurs_runtime.Value = y_2_loop
 							_ = y_2
-							// TAST (Let): __local_var_3_1 -> int64
+							// TAST (Let): __local_var_3_1 shape=Other expectedFromAst=int64 actual=int64 bindingType=Int
 							__local_var_3_1 := (x_1.IntVal) + (2)
 							_ = __local_var_3_1
-							// TAST (Let): __local_var_4_2 -> int64
+							// TAST (Let): __local_var_4_2 shape=Other expectedFromAst=int64 actual=int64 bindingType=Int
 							__local_var_4_2 := (y_2.IntVal) - (1)
 							_ = __local_var_4_2
 							var __t3 int64
@@ -231,7 +231,7 @@ func Get_Main_ntco3() gopurs_runtime.Value {
 			_ = f_0_0_6
 			f_0_0_6 = gopurs_runtime.Func(func(x_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(y_2 gopurs_runtime.Value) gopurs_runtime.Value {
-					// TAST (Let): g_3_1 -> gopurs_runtime.Value
+					// TAST (Let): g_3_1 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Func [Int] Int)
 					g_3_1 := gopurs_runtime.Apply(f_0_0_6, gopurs_runtime.Int((x_1.IntVal)+(2)))
 					_ = g_3_1
 					var __t2 int64
@@ -337,10 +337,10 @@ func Get_Main_main() gopurs_runtime.Value {
 							_ = x_1
 							var y_2 gopurs_runtime.Value = y_2_loop
 							_ = y_2
-							// TAST (Let): __local_var_3_2 -> int64
+							// TAST (Let): __local_var_3_2 shape=Other expectedFromAst=int64 actual=int64 bindingType=Int
 							__local_var_3_2 := (x_1.IntVal) + (2)
 							_ = __local_var_3_2
-							// TAST (Let): __local_var_4_3 -> int64
+							// TAST (Let): __local_var_4_3 shape=Other expectedFromAst=int64 actual=int64 bindingType=Int
 							__local_var_4_3 := (y_2.IntVal) - (1)
 							_ = __local_var_4_3
 							var __t4 int64
@@ -364,23 +364,23 @@ func Get_Main_main() gopurs_runtime.Value {
 					}()
 				})
 			})
-			// TAST (Let): __local_var_0_0 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_0_0 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [actual: Int, expected: Int] Any))
 			__local_var_0_0 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(gopurs_runtime.Apply2(f_0_1_9, gopurs_runtime.Int(0), gopurs_runtime.Int(100000)).IntVal), gopurs_runtime.Int(200000))
 			_ = __local_var_0_0
-			// TAST (Let): __local_var_1_5 -> gopurs_runtime.Value
-			__local_var_1_5 := gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-				// TAST (Let): result_1_6 -> bool
-				result_1_6 := (gopurs_runtime.RecordGet(__local_var_0_0, "actual").IntVal) == (gopurs_runtime.RecordGet(__local_var_0_0, "expected").IntVal)
-				_ = result_1_6
-				// TAST (Let): message_2_7 -> string
-				message_2_7 := ((("Expected: ") + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_0_0, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_0_0, "actual")).StrVal())
-				_ = message_2_7
-				// TAST (Let): __local_var_3_8 -> gopurs_runtime.Value
-				__local_var_3_8 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_2_7))
+			// TAST (Let): result_1_5 shape=Other expectedFromAst=bool actual=bool bindingType=Boolean
+			result_1_5 := (gopurs_runtime.RecordGet(__local_var_0_0, "actual").IntVal) == (gopurs_runtime.RecordGet(__local_var_0_0, "expected").IntVal)
+			_ = result_1_5
+			// TAST (Let): message_2_6 shape=Other expectedFromAst=string actual=string bindingType=String
+			message_2_6 := ((("Expected: ") + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_0_0, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_0_0, "actual")).StrVal())
+			_ = message_2_6
+			// TAST (Let): __local_var_3_7 shape=Let(Let(EffectBind(App(Var)))) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
+			__local_var_3_7 := gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+				// TAST (Let): __local_var_3_8 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
+				__local_var_3_8 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_2_6))
 				_ = __local_var_3_8
 				var __t10 gopurs_runtime.Value
 				{
-					if (result_1_6) != (true) {
+					if (result_1_5) != (true) {
 						__t10 = __local_var_3_8
 						goto end_branch_10
 					} else {
@@ -388,7 +388,7 @@ func Get_Main_main() gopurs_runtime.Value {
 					}
 				}
 				{
-					if result_1_6 {
+					if result_1_5 {
 						__t10 = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 							return Get_Data_Unit_unit()
 						})
@@ -401,50 +401,50 @@ func Get_Main_main() gopurs_runtime.Value {
 					__t10 = func() gopurs_runtime.Value { panic("Failed pattern match") }()
 				}
 			end_branch_10:
-				// TAST (Let): __local_var_4_9 -> gopurs_runtime.Value
+				// TAST (Let): __local_var_4_9 shape=Branch(Other, EffectPure, def=Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(TypeApp (TypeVar m) [Unit])
 				__local_var_4_9 := __t10
 				_ = __local_var_4_9
 				_dollar___unused_5_11 := gopurs_runtime.Apply(__local_var_4_9, gopurs_runtime.Value{})
 				_ = _dollar___unused_5_11
-				return gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_2_7), gopurs_runtime.Bool(result_1_6)), gopurs_runtime.Value{})
+				return gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_2_6), gopurs_runtime.Bool(result_1_5)), gopurs_runtime.Value{})
 			})
-			_ = __local_var_1_5
-			_dollar___unused_2_12 := gopurs_runtime.Apply(__local_var_1_5, gopurs_runtime.Value{})
-			_ = _dollar___unused_2_12
-			var f_3_14_10 gopurs_runtime.Value
-			f_3_14_10 = gopurs_runtime.Func(func(x_4_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Func(func(y_5_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
+			_ = __local_var_3_7
+			_dollar___unused_4_12 := gopurs_runtime.Apply(__local_var_3_7, gopurs_runtime.Value{})
+			_ = _dollar___unused_4_12
+			var f_5_14_10 gopurs_runtime.Value
+			f_5_14_10 = gopurs_runtime.Func(func(x_6_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Func(func(y_7_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
 					return func() gopurs_runtime.Value {
-						var x_4_loop gopurs_runtime.Value = x_4_loop_val
-						var y_5_loop gopurs_runtime.Value = y_5_loop_val
-					f_3_14_10:
+						var x_6_loop gopurs_runtime.Value = x_6_loop_val
+						var y_7_loop gopurs_runtime.Value = y_7_loop_val
+					f_5_14_10:
 						for {
 							if false {
-								continue f_3_14_10
+								continue f_5_14_10
 							}
-							var x_4 gopurs_runtime.Value = x_4_loop
-							_ = x_4
-							var y_5 gopurs_runtime.Value = y_5_loop
-							_ = y_5
-							// TAST (Let): __local_var_6_15 -> int64
-							__local_var_6_15 := (x_4.IntVal) + (2)
-							_ = __local_var_6_15
-							// TAST (Let): __local_var_7_16 -> int64
-							__local_var_7_16 := (y_5.IntVal) - (1)
-							_ = __local_var_7_16
+							var x_6 gopurs_runtime.Value = x_6_loop
+							_ = x_6
+							var y_7 gopurs_runtime.Value = y_7_loop
+							_ = y_7
+							// TAST (Let): __local_var_8_15 shape=Other expectedFromAst=int64 actual=int64 bindingType=Int
+							__local_var_8_15 := (x_6.IntVal) + (2)
+							_ = __local_var_8_15
+							// TAST (Let): __local_var_9_16 shape=Other expectedFromAst=int64 actual=int64 bindingType=Int
+							__local_var_9_16 := (y_7.IntVal) - (1)
+							_ = __local_var_9_16
 							var __t17 int64
 							{
-								if (__local_var_7_16) <= (0) {
-									__t17 = __local_var_6_15
+								if (__local_var_9_16) <= (0) {
+									__t17 = __local_var_8_15
 									goto end_branch_17
 								} else {
 
 								}
 							}
 							{
-								x_4_loop = gopurs_runtime.Int(__local_var_6_15)
-								y_5_loop = gopurs_runtime.Int(__local_var_7_16)
-								continue f_3_14_10
+								x_6_loop = gopurs_runtime.Int(__local_var_8_15)
+								y_7_loop = gopurs_runtime.Int(__local_var_9_16)
+								continue f_5_14_10
 								__t17 = gopurs_runtime.Value{}.IntVal
 							}
 						end_branch_17:
@@ -453,29 +453,29 @@ func Get_Main_main() gopurs_runtime.Value {
 					}()
 				})
 			})
-			// TAST (Let): __local_var_3_13 -> gopurs_runtime.Value
-			__local_var_3_13 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(gopurs_runtime.Apply2(f_3_14_10, gopurs_runtime.Int(0), gopurs_runtime.Int(100000)).IntVal), gopurs_runtime.Int(200000))
-			_ = __local_var_3_13
-			// TAST (Let): result_4_19 -> bool
-			result_4_19 := (gopurs_runtime.RecordGet(__local_var_3_13, "actual").IntVal) == (gopurs_runtime.RecordGet(__local_var_3_13, "expected").IntVal)
-			_ = result_4_19
-			// TAST (Let): message_5_20 -> string
-			message_5_20 := ((("Expected: ") + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_3_13, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_3_13, "actual")).StrVal())
-			_ = message_5_20
-			// TAST (Let): __local_var_6_21 -> gopurs_runtime.Value
-			__local_var_6_21 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_5_20))
-			_ = __local_var_6_21
+			// TAST (Let): __local_var_5_13 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [actual: Int, expected: Int] Any))
+			__local_var_5_13 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(gopurs_runtime.Apply2(f_5_14_10, gopurs_runtime.Int(0), gopurs_runtime.Int(100000)).IntVal), gopurs_runtime.Int(200000))
+			_ = __local_var_5_13
+			// TAST (Let): result_6_18 shape=Other expectedFromAst=bool actual=bool bindingType=Boolean
+			result_6_18 := (gopurs_runtime.RecordGet(__local_var_5_13, "actual").IntVal) == (gopurs_runtime.RecordGet(__local_var_5_13, "expected").IntVal)
+			_ = result_6_18
+			// TAST (Let): message_7_19 shape=Other expectedFromAst=string actual=string bindingType=String
+			message_7_19 := ((("Expected: ") + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_5_13, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_5_13, "actual")).StrVal())
+			_ = message_7_19
+			// TAST (Let): __local_var_8_21 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
+			__local_var_8_21 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_7_19))
+			_ = __local_var_8_21
 			var __t23 gopurs_runtime.Value
 			{
-				if (result_4_19) != (true) {
-					__t23 = __local_var_6_21
+				if (result_6_18) != (true) {
+					__t23 = __local_var_8_21
 					goto end_branch_23
 				} else {
 
 				}
 			}
 			{
-				if result_4_19 {
+				if result_6_18 {
 					__t23 = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 						return Get_Data_Unit_unit()
 					})
@@ -488,44 +488,44 @@ func Get_Main_main() gopurs_runtime.Value {
 				__t23 = func() gopurs_runtime.Value { panic("Failed pattern match") }()
 			}
 		end_branch_23:
-			_dollar___unused_7_22 := gopurs_runtime.Apply(__t23, gopurs_runtime.Value{})
-			_ = _dollar___unused_7_22
-			_dollar___unused_4_18 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_5_20), gopurs_runtime.Bool(result_4_19)), gopurs_runtime.Value{})
-			_ = _dollar___unused_4_18
-			var f_5_25_11 gopurs_runtime.Value
-			f_5_25_11 = gopurs_runtime.Func(func(x_6_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Func(func(y_7_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
+			_dollar___unused_9_22 := gopurs_runtime.Apply(__t23, gopurs_runtime.Value{})
+			_ = _dollar___unused_9_22
+			_dollar___unused_8_20 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_7_19), gopurs_runtime.Bool(result_6_18)), gopurs_runtime.Value{})
+			_ = _dollar___unused_8_20
+			var f_9_25_11 gopurs_runtime.Value
+			f_9_25_11 = gopurs_runtime.Func(func(x_10_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Func(func(y_11_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
 					return func() gopurs_runtime.Value {
-						var x_6_loop int64 = x_6_loop_val.IntVal
-						var y_7_loop gopurs_runtime.Value = y_7_loop_val
-					f_5_25_11:
+						var x_10_loop int64 = x_10_loop_val.IntVal
+						var y_11_loop gopurs_runtime.Value = y_11_loop_val
+					f_9_25_11:
 						for {
 							if false {
-								continue f_5_25_11
+								continue f_9_25_11
 							}
-							var x_6 int64 = x_6_loop
-							_ = x_6
-							var y_7 gopurs_runtime.Value = y_7_loop
-							_ = y_7
-							var g_8_26_12 gopurs_runtime.Value
-							g_8_26_12 = gopurs_runtime.Func(func(x_prime__9_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
-								return gopurs_runtime.Func(func(y_prime__10_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
+							var x_10 int64 = x_10_loop
+							_ = x_10
+							var y_11 gopurs_runtime.Value = y_11_loop
+							_ = y_11
+							var g_12_26_12 gopurs_runtime.Value
+							g_12_26_12 = gopurs_runtime.Func(func(x_prime__13_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
+								return gopurs_runtime.Func(func(y_prime__14_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
 									return func() gopurs_runtime.Value {
-										var x_prime__9_loop gopurs_runtime.Value = x_prime__9_loop_val
-										var y_prime__10_loop gopurs_runtime.Value = y_prime__10_loop_val
-									g_8_26_12:
+										var x_prime__13_loop gopurs_runtime.Value = x_prime__13_loop_val
+										var y_prime__14_loop gopurs_runtime.Value = y_prime__14_loop_val
+									g_12_26_12:
 										for {
 											if false {
-												continue g_8_26_12
+												continue g_12_26_12
 											}
-											var x_prime__9 gopurs_runtime.Value = x_prime__9_loop
-											_ = x_prime__9
-											var y_prime__10 gopurs_runtime.Value = y_prime__10_loop
-											_ = y_prime__10
+											var x_prime__13 gopurs_runtime.Value = x_prime__13_loop
+											_ = x_prime__13
+											var y_prime__14 gopurs_runtime.Value = y_prime__14_loop
+											_ = y_prime__14
 											var __t28 int64
 											{
-												if (y_prime__10.IntVal) <= (0) {
-													__t28 = x_prime__9.IntVal
+												if (y_prime__14.IntVal) <= (0) {
+													__t28 = x_prime__13.IntVal
 													goto end_branch_28
 												} else {
 
@@ -534,10 +534,10 @@ func Get_Main_main() gopurs_runtime.Value {
 											{
 												var __t27 int64
 												{
-													if (y_prime__10.IntVal) > (50000) {
-														x_prime__9_loop = gopurs_runtime.Int((x_prime__9.IntVal) + (3))
-														y_prime__10_loop = gopurs_runtime.Int((y_prime__10.IntVal) - (1))
-														continue g_8_26_12
+													if (y_prime__14.IntVal) > (50000) {
+														x_prime__13_loop = gopurs_runtime.Int((x_prime__13.IntVal) + (3))
+														y_prime__14_loop = gopurs_runtime.Int((y_prime__14.IntVal) - (1))
+														continue g_12_26_12
 														__t27 = gopurs_runtime.Value{}.IntVal
 														goto end_branch_27
 													} else {
@@ -545,7 +545,7 @@ func Get_Main_main() gopurs_runtime.Value {
 													}
 												}
 												{
-													__t27 = gopurs_runtime.Apply2(f_5_25_11, gopurs_runtime.Int((x_prime__9.IntVal)+(2)), gopurs_runtime.Int(y_prime__10.IntVal)).IntVal
+													__t27 = gopurs_runtime.Apply2(f_9_25_11, gopurs_runtime.Int((x_prime__13.IntVal)+(2)), gopurs_runtime.Int(y_prime__14.IntVal)).IntVal
 												}
 											end_branch_27:
 												__t28 = __t27
@@ -556,34 +556,34 @@ func Get_Main_main() gopurs_runtime.Value {
 									}()
 								})
 							})
-							return gopurs_runtime.Int(gopurs_runtime.Apply2(g_8_26_12, gopurs_runtime.Int(x_6), gopurs_runtime.Int((y_7.IntVal)-(1))).IntVal)
+							return gopurs_runtime.Int(gopurs_runtime.Apply2(g_12_26_12, gopurs_runtime.Int(x_10), gopurs_runtime.Int((y_11.IntVal)-(1))).IntVal)
 						}
 					}()
 				})
 			})
-			// TAST (Let): __local_var_5_24 -> gopurs_runtime.Value
-			__local_var_5_24 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(gopurs_runtime.Apply2(f_5_25_11, gopurs_runtime.Int(0), gopurs_runtime.Int(100000)).IntVal), gopurs_runtime.Int(249997))
-			_ = __local_var_5_24
-			// TAST (Let): result_6_30 -> bool
-			result_6_30 := (gopurs_runtime.RecordGet(__local_var_5_24, "actual").IntVal) == (gopurs_runtime.RecordGet(__local_var_5_24, "expected").IntVal)
-			_ = result_6_30
-			// TAST (Let): message_7_31 -> string
-			message_7_31 := ((("Expected: ") + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_5_24, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_5_24, "actual")).StrVal())
-			_ = message_7_31
-			// TAST (Let): __local_var_8_32 -> gopurs_runtime.Value
-			__local_var_8_32 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_7_31))
-			_ = __local_var_8_32
+			// TAST (Let): __local_var_9_24 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [actual: Int, expected: Int] Any))
+			__local_var_9_24 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(gopurs_runtime.Apply2(f_9_25_11, gopurs_runtime.Int(0), gopurs_runtime.Int(100000)).IntVal), gopurs_runtime.Int(249997))
+			_ = __local_var_9_24
+			// TAST (Let): result_10_29 shape=Other expectedFromAst=bool actual=bool bindingType=Boolean
+			result_10_29 := (gopurs_runtime.RecordGet(__local_var_9_24, "actual").IntVal) == (gopurs_runtime.RecordGet(__local_var_9_24, "expected").IntVal)
+			_ = result_10_29
+			// TAST (Let): message_11_30 shape=Other expectedFromAst=string actual=string bindingType=String
+			message_11_30 := ((("Expected: ") + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_9_24, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_9_24, "actual")).StrVal())
+			_ = message_11_30
+			// TAST (Let): __local_var_12_32 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
+			__local_var_12_32 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_11_30))
+			_ = __local_var_12_32
 			var __t34 gopurs_runtime.Value
 			{
-				if (result_6_30) != (true) {
-					__t34 = __local_var_8_32
+				if (result_10_29) != (true) {
+					__t34 = __local_var_12_32
 					goto end_branch_34
 				} else {
 
 				}
 			}
 			{
-				if result_6_30 {
+				if result_10_29 {
 					__t34 = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 						return Get_Data_Unit_unit()
 					})
@@ -596,38 +596,38 @@ func Get_Main_main() gopurs_runtime.Value {
 				__t34 = func() gopurs_runtime.Value { panic("Failed pattern match") }()
 			}
 		end_branch_34:
-			_dollar___unused_9_33 := gopurs_runtime.Apply(__t34, gopurs_runtime.Value{})
-			_ = _dollar___unused_9_33
-			_dollar___unused_6_29 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_7_31), gopurs_runtime.Bool(result_6_30)), gopurs_runtime.Value{})
-			_ = _dollar___unused_6_29
-			var f_7_36_13 gopurs_runtime.Value
-			f_7_36_13 = gopurs_runtime.Func(func(x_8_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Func(func(y_9_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
+			_dollar___unused_13_33 := gopurs_runtime.Apply(__t34, gopurs_runtime.Value{})
+			_ = _dollar___unused_13_33
+			_dollar___unused_12_31 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_11_30), gopurs_runtime.Bool(result_10_29)), gopurs_runtime.Value{})
+			_ = _dollar___unused_12_31
+			var f_13_36_13 gopurs_runtime.Value
+			f_13_36_13 = gopurs_runtime.Func(func(x_14_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Func(func(y_15_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
 					return func() gopurs_runtime.Value {
-						var x_8_loop int64 = x_8_loop_val.IntVal
-						var y_9_loop int64 = y_9_loop_val.IntVal
-					f_7_36_13:
+						var x_14_loop int64 = x_14_loop_val.IntVal
+						var y_15_loop int64 = y_15_loop_val.IntVal
+					f_13_36_13:
 						for {
 							if false {
-								continue f_7_36_13
+								continue f_13_36_13
 							}
-							var x_8 int64 = x_8_loop
-							_ = x_8
-							var y_9 int64 = y_9_loop
-							_ = y_9
+							var x_14 int64 = x_14_loop
+							_ = x_14
+							var y_15 int64 = y_15_loop
+							_ = y_15
 							var __t37 int64
 							{
-								if (y_9) <= (0) {
-									__t37 = x_8
+								if (y_15) <= (0) {
+									__t37 = x_14
 									goto end_branch_37
 								} else {
 
 								}
 							}
 							{
-								x_8_loop = (x_8) + (2)
-								y_9_loop = (y_9) - (1)
-								continue f_7_36_13
+								x_14_loop = (x_14) + (2)
+								y_15_loop = (y_15) - (1)
+								continue f_13_36_13
 								__t37 = gopurs_runtime.Value{}.IntVal
 							}
 						end_branch_37:
@@ -636,29 +636,29 @@ func Get_Main_main() gopurs_runtime.Value {
 					}()
 				})
 			})
-			// TAST (Let): __local_var_7_35 -> gopurs_runtime.Value
-			__local_var_7_35 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(gopurs_runtime.Apply2(f_7_36_13, gopurs_runtime.Int(0), gopurs_runtime.Int(100000)).IntVal), gopurs_runtime.Int(200000))
-			_ = __local_var_7_35
-			// TAST (Let): result_8_39 -> bool
-			result_8_39 := (gopurs_runtime.RecordGet(__local_var_7_35, "actual").IntVal) == (gopurs_runtime.RecordGet(__local_var_7_35, "expected").IntVal)
-			_ = result_8_39
-			// TAST (Let): message_9_40 -> string
-			message_9_40 := ((("Expected: ") + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_7_35, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_7_35, "actual")).StrVal())
-			_ = message_9_40
-			// TAST (Let): __local_var_10_41 -> gopurs_runtime.Value
-			__local_var_10_41 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_9_40))
-			_ = __local_var_10_41
+			// TAST (Let): __local_var_13_35 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [actual: Int, expected: Int] Any))
+			__local_var_13_35 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(gopurs_runtime.Apply2(f_13_36_13, gopurs_runtime.Int(0), gopurs_runtime.Int(100000)).IntVal), gopurs_runtime.Int(200000))
+			_ = __local_var_13_35
+			// TAST (Let): result_14_38 shape=Other expectedFromAst=bool actual=bool bindingType=Boolean
+			result_14_38 := (gopurs_runtime.RecordGet(__local_var_13_35, "actual").IntVal) == (gopurs_runtime.RecordGet(__local_var_13_35, "expected").IntVal)
+			_ = result_14_38
+			// TAST (Let): message_15_39 shape=Other expectedFromAst=string actual=string bindingType=String
+			message_15_39 := ((("Expected: ") + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_13_35, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_13_35, "actual")).StrVal())
+			_ = message_15_39
+			// TAST (Let): __local_var_16_41 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
+			__local_var_16_41 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_15_39))
+			_ = __local_var_16_41
 			var __t43 gopurs_runtime.Value
 			{
-				if (result_8_39) != (true) {
-					__t43 = __local_var_10_41
+				if (result_14_38) != (true) {
+					__t43 = __local_var_16_41
 					goto end_branch_43
 				} else {
 
 				}
 			}
 			{
-				if result_8_39 {
+				if result_14_38 {
 					__t43 = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 						return Get_Data_Unit_unit()
 					})
@@ -671,18 +671,18 @@ func Get_Main_main() gopurs_runtime.Value {
 				__t43 = func() gopurs_runtime.Value { panic("Failed pattern match") }()
 			}
 		end_branch_43:
-			_dollar___unused_11_42 := gopurs_runtime.Apply(__t43, gopurs_runtime.Value{})
-			_ = _dollar___unused_11_42
-			_dollar___unused_8_38 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_9_40), gopurs_runtime.Bool(result_8_39)), gopurs_runtime.Value{})
-			_ = _dollar___unused_8_38
-			var f_9_45_14 gopurs_runtime.Value
-			_ = f_9_45_14
-			f_9_45_14 = gopurs_runtime.Func(func(x_10 gopurs_runtime.Value) gopurs_runtime.Value {
+			_dollar___unused_17_42 := gopurs_runtime.Apply(__t43, gopurs_runtime.Value{})
+			_ = _dollar___unused_17_42
+			_dollar___unused_16_40 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_15_39), gopurs_runtime.Bool(result_14_38)), gopurs_runtime.Value{})
+			_ = _dollar___unused_16_40
+			var f_17_45_14 gopurs_runtime.Value
+			_ = f_17_45_14
+			f_17_45_14 = gopurs_runtime.Func(func(x_18 gopurs_runtime.Value) gopurs_runtime.Value {
 				var __t46 gopurs_runtime.Value
 				{
-					if (x_10.IntVal) > (1000) {
-						__t46 = gopurs_runtime.Func(func(v_11 gopurs_runtime.Value) gopurs_runtime.Value {
-							return gopurs_runtime.Int((x_10.IntVal) + (v_11.IntVal))
+					if (x_18.IntVal) > (1000) {
+						__t46 = gopurs_runtime.Func(func(v_19 gopurs_runtime.Value) gopurs_runtime.Value {
+							return gopurs_runtime.Int((x_18.IntVal) + (v_19.IntVal))
 						})
 						goto end_branch_46
 					} else {
@@ -690,36 +690,36 @@ func Get_Main_main() gopurs_runtime.Value {
 					}
 				}
 				{
-					__t46 = gopurs_runtime.Func(func(y_prime__11 gopurs_runtime.Value) gopurs_runtime.Value {
-						return gopurs_runtime.Int(gopurs_runtime.Apply2(f_9_45_14, gopurs_runtime.Int((x_10.IntVal)+(10)), gopurs_runtime.Int((y_prime__11.IntVal)-(1))).IntVal)
+					__t46 = gopurs_runtime.Func(func(y_prime__19 gopurs_runtime.Value) gopurs_runtime.Value {
+						return gopurs_runtime.Int(gopurs_runtime.Apply2(f_17_45_14, gopurs_runtime.Int((x_18.IntVal)+(10)), gopurs_runtime.Int((y_prime__19.IntVal)-(1))).IntVal)
 					})
 				}
 			end_branch_46:
 				return __t46
 			})
-			// TAST (Let): __local_var_9_44 -> gopurs_runtime.Value
-			__local_var_9_44 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(gopurs_runtime.Apply2(f_9_45_14, gopurs_runtime.Int(0), gopurs_runtime.Int(100)).IntVal), gopurs_runtime.Int(1009))
-			_ = __local_var_9_44
-			// TAST (Let): result_10_48 -> bool
-			result_10_48 := (gopurs_runtime.RecordGet(__local_var_9_44, "actual").IntVal) == (gopurs_runtime.RecordGet(__local_var_9_44, "expected").IntVal)
-			_ = result_10_48
-			// TAST (Let): message_11_49 -> string
-			message_11_49 := ((("Expected: ") + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_9_44, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_9_44, "actual")).StrVal())
-			_ = message_11_49
-			// TAST (Let): __local_var_12_50 -> gopurs_runtime.Value
-			__local_var_12_50 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_11_49))
-			_ = __local_var_12_50
+			// TAST (Let): __local_var_17_44 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [actual: Int, expected: Int] Any))
+			__local_var_17_44 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(gopurs_runtime.Apply2(f_17_45_14, gopurs_runtime.Int(0), gopurs_runtime.Int(100)).IntVal), gopurs_runtime.Int(1009))
+			_ = __local_var_17_44
+			// TAST (Let): result_18_47 shape=Other expectedFromAst=bool actual=bool bindingType=Boolean
+			result_18_47 := (gopurs_runtime.RecordGet(__local_var_17_44, "actual").IntVal) == (gopurs_runtime.RecordGet(__local_var_17_44, "expected").IntVal)
+			_ = result_18_47
+			// TAST (Let): message_19_48 shape=Other expectedFromAst=string actual=string bindingType=String
+			message_19_48 := ((("Expected: ") + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_17_44, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_17_44, "actual")).StrVal())
+			_ = message_19_48
+			// TAST (Let): __local_var_20_50 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
+			__local_var_20_50 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_19_48))
+			_ = __local_var_20_50
 			var __t52 gopurs_runtime.Value
 			{
-				if (result_10_48) != (true) {
-					__t52 = __local_var_12_50
+				if (result_18_47) != (true) {
+					__t52 = __local_var_20_50
 					goto end_branch_52
 				} else {
 
 				}
 			}
 			{
-				if result_10_48 {
+				if result_18_47 {
 					__t52 = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 						return Get_Data_Unit_unit()
 					})
@@ -732,38 +732,38 @@ func Get_Main_main() gopurs_runtime.Value {
 				__t52 = func() gopurs_runtime.Value { panic("Failed pattern match") }()
 			}
 		end_branch_52:
-			_dollar___unused_13_51 := gopurs_runtime.Apply(__t52, gopurs_runtime.Value{})
-			_ = _dollar___unused_13_51
-			_dollar___unused_10_47 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_11_49), gopurs_runtime.Bool(result_10_48)), gopurs_runtime.Value{})
-			_ = _dollar___unused_10_47
-			var f_11_54_15 gopurs_runtime.Value
-			f_11_54_15 = gopurs_runtime.Func(func(x_12_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Func(func(y_13_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
+			_dollar___unused_21_51 := gopurs_runtime.Apply(__t52, gopurs_runtime.Value{})
+			_ = _dollar___unused_21_51
+			_dollar___unused_20_49 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_19_48), gopurs_runtime.Bool(result_18_47)), gopurs_runtime.Value{})
+			_ = _dollar___unused_20_49
+			var f_21_54_15 gopurs_runtime.Value
+			f_21_54_15 = gopurs_runtime.Func(func(x_22_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Func(func(y_23_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
 					return func() gopurs_runtime.Value {
-						var x_12_loop int64 = x_12_loop_val.IntVal
-						var y_13_loop int64 = y_13_loop_val.IntVal
-					f_11_54_15:
+						var x_22_loop int64 = x_22_loop_val.IntVal
+						var y_23_loop int64 = y_23_loop_val.IntVal
+					f_21_54_15:
 						for {
 							if false {
-								continue f_11_54_15
+								continue f_21_54_15
 							}
-							var x_12 int64 = x_12_loop
-							_ = x_12
-							var y_13 int64 = y_13_loop
-							_ = y_13
+							var x_22 int64 = x_22_loop
+							_ = x_22
+							var y_23 int64 = y_23_loop
+							_ = y_23
 							var __t55 int64
 							{
-								if (y_13) <= (0) {
-									__t55 = x_12
+								if (y_23) <= (0) {
+									__t55 = x_22
 									goto end_branch_55
 								} else {
 
 								}
 							}
 							{
-								x_12_loop = (x_12) + (2)
-								y_13_loop = (y_13) - (1)
-								continue f_11_54_15
+								x_22_loop = (x_22) + (2)
+								y_23_loop = (y_23) - (1)
+								continue f_21_54_15
 								__t55 = gopurs_runtime.Value{}.IntVal
 							}
 						end_branch_55:
@@ -772,29 +772,29 @@ func Get_Main_main() gopurs_runtime.Value {
 					}()
 				})
 			})
-			// TAST (Let): __local_var_11_53 -> gopurs_runtime.Value
-			__local_var_11_53 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(gopurs_runtime.Apply2(f_11_54_15, gopurs_runtime.Int(0), gopurs_runtime.Int(100)).IntVal), gopurs_runtime.Int(200))
-			_ = __local_var_11_53
-			// TAST (Let): result_12_57 -> bool
-			result_12_57 := (gopurs_runtime.RecordGet(__local_var_11_53, "actual").IntVal) == (gopurs_runtime.RecordGet(__local_var_11_53, "expected").IntVal)
-			_ = result_12_57
-			// TAST (Let): message_13_58 -> string
-			message_13_58 := ((("Expected: ") + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_11_53, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_11_53, "actual")).StrVal())
-			_ = message_13_58
-			// TAST (Let): __local_var_14_59 -> gopurs_runtime.Value
-			__local_var_14_59 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_13_58))
-			_ = __local_var_14_59
+			// TAST (Let): __local_var_21_53 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [actual: Int, expected: Int] Any))
+			__local_var_21_53 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(gopurs_runtime.Apply2(f_21_54_15, gopurs_runtime.Int(0), gopurs_runtime.Int(100)).IntVal), gopurs_runtime.Int(200))
+			_ = __local_var_21_53
+			// TAST (Let): result_22_56 shape=Other expectedFromAst=bool actual=bool bindingType=Boolean
+			result_22_56 := (gopurs_runtime.RecordGet(__local_var_21_53, "actual").IntVal) == (gopurs_runtime.RecordGet(__local_var_21_53, "expected").IntVal)
+			_ = result_22_56
+			// TAST (Let): message_23_57 shape=Other expectedFromAst=string actual=string bindingType=String
+			message_23_57 := ((("Expected: ") + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_21_53, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_21_53, "actual")).StrVal())
+			_ = message_23_57
+			// TAST (Let): __local_var_24_59 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
+			__local_var_24_59 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_23_57))
+			_ = __local_var_24_59
 			var __t61 gopurs_runtime.Value
 			{
-				if (result_12_57) != (true) {
-					__t61 = __local_var_14_59
+				if (result_22_56) != (true) {
+					__t61 = __local_var_24_59
 					goto end_branch_61
 				} else {
 
 				}
 			}
 			{
-				if result_12_57 {
+				if result_22_56 {
 					__t61 = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 						return Get_Data_Unit_unit()
 					})
@@ -807,56 +807,56 @@ func Get_Main_main() gopurs_runtime.Value {
 				__t61 = func() gopurs_runtime.Value { panic("Failed pattern match") }()
 			}
 		end_branch_61:
-			_dollar___unused_15_60 := gopurs_runtime.Apply(__t61, gopurs_runtime.Value{})
-			_ = _dollar___unused_15_60
-			_dollar___unused_12_56 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_13_58), gopurs_runtime.Bool(result_12_57)), gopurs_runtime.Value{})
-			_ = _dollar___unused_12_56
-			var f_13_63_16 gopurs_runtime.Value
-			_ = f_13_63_16
-			f_13_63_16 = gopurs_runtime.Func(func(x_14 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Func(func(y_15 gopurs_runtime.Value) gopurs_runtime.Value {
-					// TAST (Let): g_16_64 -> gopurs_runtime.Value
-					g_16_64 := gopurs_runtime.Apply(f_13_63_16, gopurs_runtime.Int((x_14.IntVal)+(2)))
-					_ = g_16_64
+			_dollar___unused_25_60 := gopurs_runtime.Apply(__t61, gopurs_runtime.Value{})
+			_ = _dollar___unused_25_60
+			_dollar___unused_24_58 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_23_57), gopurs_runtime.Bool(result_22_56)), gopurs_runtime.Value{})
+			_ = _dollar___unused_24_58
+			var f_25_63_16 gopurs_runtime.Value
+			_ = f_25_63_16
+			f_25_63_16 = gopurs_runtime.Func(func(x_26 gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Func(func(y_27 gopurs_runtime.Value) gopurs_runtime.Value {
+					// TAST (Let): g_28_64 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Func [Int] Int)
+					g_28_64 := gopurs_runtime.Apply(f_25_63_16, gopurs_runtime.Int((x_26.IntVal)+(2)))
+					_ = g_28_64
 					var __t65 int64
 					{
-						if (y_15.IntVal) <= (0) {
-							__t65 = x_14.IntVal
+						if (y_27.IntVal) <= (0) {
+							__t65 = x_26.IntVal
 							goto end_branch_65
 						} else {
 
 						}
 					}
 					{
-						__t65 = gopurs_runtime.Apply(g_16_64, gopurs_runtime.Int((y_15.IntVal)-(1))).IntVal
+						__t65 = gopurs_runtime.Apply(g_28_64, gopurs_runtime.Int((y_27.IntVal)-(1))).IntVal
 					}
 				end_branch_65:
 					return gopurs_runtime.Int(__t65)
 				})
 			})
-			// TAST (Let): __local_var_13_62 -> gopurs_runtime.Value
-			__local_var_13_62 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(gopurs_runtime.Apply2(f_13_63_16, gopurs_runtime.Int(0), gopurs_runtime.Int(100)).IntVal), gopurs_runtime.Int(200))
-			_ = __local_var_13_62
-			// TAST (Let): result_14_67 -> bool
-			result_14_67 := (gopurs_runtime.RecordGet(__local_var_13_62, "actual").IntVal) == (gopurs_runtime.RecordGet(__local_var_13_62, "expected").IntVal)
-			_ = result_14_67
-			// TAST (Let): message_15_68 -> string
-			message_15_68 := ((("Expected: ") + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_13_62, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_13_62, "actual")).StrVal())
-			_ = message_15_68
-			// TAST (Let): __local_var_16_69 -> gopurs_runtime.Value
-			__local_var_16_69 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_15_68))
-			_ = __local_var_16_69
+			// TAST (Let): __local_var_25_62 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [actual: Int, expected: Int] Any))
+			__local_var_25_62 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(gopurs_runtime.Apply2(f_25_63_16, gopurs_runtime.Int(0), gopurs_runtime.Int(100)).IntVal), gopurs_runtime.Int(200))
+			_ = __local_var_25_62
+			// TAST (Let): result_26_66 shape=Other expectedFromAst=bool actual=bool bindingType=Boolean
+			result_26_66 := (gopurs_runtime.RecordGet(__local_var_25_62, "actual").IntVal) == (gopurs_runtime.RecordGet(__local_var_25_62, "expected").IntVal)
+			_ = result_26_66
+			// TAST (Let): message_27_67 shape=Other expectedFromAst=string actual=string bindingType=String
+			message_27_67 := ((("Expected: ") + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_25_62, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_25_62, "actual")).StrVal())
+			_ = message_27_67
+			// TAST (Let): __local_var_28_69 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
+			__local_var_28_69 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_27_67))
+			_ = __local_var_28_69
 			var __t71 gopurs_runtime.Value
 			{
-				if (result_14_67) != (true) {
-					__t71 = __local_var_16_69
+				if (result_26_66) != (true) {
+					__t71 = __local_var_28_69
 					goto end_branch_71
 				} else {
 
 				}
 			}
 			{
-				if result_14_67 {
+				if result_26_66 {
 					__t71 = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 						return Get_Data_Unit_unit()
 					})
@@ -869,38 +869,38 @@ func Get_Main_main() gopurs_runtime.Value {
 				__t71 = func() gopurs_runtime.Value { panic("Failed pattern match") }()
 			}
 		end_branch_71:
-			_dollar___unused_17_70 := gopurs_runtime.Apply(__t71, gopurs_runtime.Value{})
-			_ = _dollar___unused_17_70
-			_dollar___unused_14_66 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_15_68), gopurs_runtime.Bool(result_14_67)), gopurs_runtime.Value{})
-			_ = _dollar___unused_14_66
-			var f_15_73_17 gopurs_runtime.Value
-			f_15_73_17 = gopurs_runtime.Func(func(x_16_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Func(func(y_17_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
+			_dollar___unused_29_70 := gopurs_runtime.Apply(__t71, gopurs_runtime.Value{})
+			_ = _dollar___unused_29_70
+			_dollar___unused_28_68 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_27_67), gopurs_runtime.Bool(result_26_66)), gopurs_runtime.Value{})
+			_ = _dollar___unused_28_68
+			var f_29_73_17 gopurs_runtime.Value
+			f_29_73_17 = gopurs_runtime.Func(func(x_30_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Func(func(y_31_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
 					return func() gopurs_runtime.Value {
-						var x_16_loop int64 = x_16_loop_val.IntVal
-						var y_17_loop int64 = y_17_loop_val.IntVal
-					f_15_73_17:
+						var x_30_loop int64 = x_30_loop_val.IntVal
+						var y_31_loop int64 = y_31_loop_val.IntVal
+					f_29_73_17:
 						for {
 							if false {
-								continue f_15_73_17
+								continue f_29_73_17
 							}
-							var x_16 int64 = x_16_loop
-							_ = x_16
-							var y_17 int64 = y_17_loop
-							_ = y_17
+							var x_30 int64 = x_30_loop
+							_ = x_30
+							var y_31 int64 = y_31_loop
+							_ = y_31
 							var __t74 int64
 							{
-								if (y_17) <= (0) {
-									__t74 = x_16
+								if (y_31) <= (0) {
+									__t74 = x_30
 									goto end_branch_74
 								} else {
 
 								}
 							}
 							{
-								x_16_loop = (x_16) + (2)
-								y_17_loop = (y_17) - (1)
-								continue f_15_73_17
+								x_30_loop = (x_30) + (2)
+								y_31_loop = (y_31) - (1)
+								continue f_29_73_17
 								__t74 = gopurs_runtime.Value{}.IntVal
 							}
 						end_branch_74:
@@ -909,29 +909,29 @@ func Get_Main_main() gopurs_runtime.Value {
 					}()
 				})
 			})
-			// TAST (Let): __local_var_15_72 -> gopurs_runtime.Value
-			__local_var_15_72 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(gopurs_runtime.Apply2(f_15_73_17, gopurs_runtime.Int(0), gopurs_runtime.Int(100)).IntVal), gopurs_runtime.Int(200))
-			_ = __local_var_15_72
-			// TAST (Let): result_16_76 -> bool
-			result_16_76 := (gopurs_runtime.RecordGet(__local_var_15_72, "actual").IntVal) == (gopurs_runtime.RecordGet(__local_var_15_72, "expected").IntVal)
-			_ = result_16_76
-			// TAST (Let): message_17_77 -> string
-			message_17_77 := ((("Expected: ") + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_15_72, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_15_72, "actual")).StrVal())
-			_ = message_17_77
-			// TAST (Let): __local_var_18_78 -> gopurs_runtime.Value
-			__local_var_18_78 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_17_77))
-			_ = __local_var_18_78
+			// TAST (Let): __local_var_29_72 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [actual: Int, expected: Int] Any))
+			__local_var_29_72 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(gopurs_runtime.Apply2(f_29_73_17, gopurs_runtime.Int(0), gopurs_runtime.Int(100)).IntVal), gopurs_runtime.Int(200))
+			_ = __local_var_29_72
+			// TAST (Let): result_30_75 shape=Other expectedFromAst=bool actual=bool bindingType=Boolean
+			result_30_75 := (gopurs_runtime.RecordGet(__local_var_29_72, "actual").IntVal) == (gopurs_runtime.RecordGet(__local_var_29_72, "expected").IntVal)
+			_ = result_30_75
+			// TAST (Let): message_31_76 shape=Other expectedFromAst=string actual=string bindingType=String
+			message_31_76 := ((("Expected: ") + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_29_72, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_29_72, "actual")).StrVal())
+			_ = message_31_76
+			// TAST (Let): __local_var_32_78 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
+			__local_var_32_78 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_31_76))
+			_ = __local_var_32_78
 			var __t80 gopurs_runtime.Value
 			{
-				if (result_16_76) != (true) {
-					__t80 = __local_var_18_78
+				if (result_30_75) != (true) {
+					__t80 = __local_var_32_78
 					goto end_branch_80
 				} else {
 
 				}
 			}
 			{
-				if result_16_76 {
+				if result_30_75 {
 					__t80 = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 						return Get_Data_Unit_unit()
 					})
@@ -944,10 +944,10 @@ func Get_Main_main() gopurs_runtime.Value {
 				__t80 = func() gopurs_runtime.Value { panic("Failed pattern match") }()
 			}
 		end_branch_80:
-			_dollar___unused_19_79 := gopurs_runtime.Apply(__t80, gopurs_runtime.Value{})
-			_ = _dollar___unused_19_79
-			_dollar___unused_16_75 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_17_77), gopurs_runtime.Bool(result_16_76)), gopurs_runtime.Value{})
-			_ = _dollar___unused_16_75
+			_dollar___unused_33_79 := gopurs_runtime.Apply(__t80, gopurs_runtime.Value{})
+			_ = _dollar___unused_33_79
+			_dollar___unused_32_77 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_31_76), gopurs_runtime.Bool(result_30_75)), gopurs_runtime.Value{})
+			_ = _dollar___unused_32_77
 			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
 		})
 	})

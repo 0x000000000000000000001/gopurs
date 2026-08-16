@@ -42,7 +42,7 @@ var once_Main_test19 sync.Once
 
 func Get_Main_test19() gopurs_runtime.Value {
 	once_Main_test19.Do(func() {
-		cache_Main_test19 = gopurs_runtime.Float(gopurs_runtime.Float(-1.0).FloatVal())
+		cache_Main_test19 = gopurs_runtime.Float(-1.0)
 	})
 	return cache_Main_test19
 }
@@ -52,7 +52,7 @@ var once_Main_test18 sync.Once
 
 func Get_Main_test18() gopurs_runtime.Value {
 	once_Main_test18.Do(func() {
-		cache_Main_test18 = gopurs_runtime.Float(gopurs_runtime.Float(1.0).FloatVal())
+		cache_Main_test18 = gopurs_runtime.Float(1.0)
 	})
 	return cache_Main_test18
 }

@@ -11,7 +11,7 @@ var once_Main_main sync.Once
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = func() gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 -> *Constructor_Data_Maybe_Just
+			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=*Constructor_Data_Maybe_Just actual=*Constructor_Data_Maybe_Just bindingType=(ADT ["Data","Maybe","Maybe"] [Int])
 			__local_var_0_0 := gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just](gopurs_runtime.Apply(Get_Data_Int_fromNumber(), gopurs_runtime.Float(gopurs_runtime.Float(-2147483648.0).FloatVal())))
 			_ = __local_var_0_0
 			var __t1 gopurs_runtime.Value

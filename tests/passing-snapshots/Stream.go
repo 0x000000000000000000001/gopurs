@@ -219,10 +219,10 @@ func Call_Main_test(dictIsStream_0_loop *Constructor_Main_IsStream, s_1_loop gop
 	_ = dictIsStream_0
 	var s_1 gopurs_runtime.Value = s_1_loop
 	_ = s_1
-	// TAST (Let): v_2_0 -> gopurs_runtime.Value
+	// TAST (Let): v_2_0 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 	v_2_0 := gopurs_runtime.Apply(gopurs_runtime.Box(dictIsStream_0.V1), s_1)
 	_ = v_2_0
-	// TAST (Let): __local_var_3_1 -> gopurs_runtime.Value
+	// TAST (Let): __local_var_3_1 shape=Other expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 	__local_var_3_1 := gopurs_runtime.RecordGet(v_2_0, "tail")
 	_ = __local_var_3_1
 	return gopurs_runtime.Apply2(gopurs_runtime.Box(dictIsStream_0.V0), gopurs_runtime.RecordGet(v_2_0, "head"), gopurs_runtime.Func(func(v1_4 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -241,10 +241,10 @@ func Call_Main_test__2939414718(dictIsStream_0_loop *Constructor_Main_IsStream, 
 	_ = dictIsStream_0
 	var s_1 gopurs_runtime.Value = s_1_loop
 	_ = s_1
-	// TAST (Let): v_2_0 -> gopurs_runtime.Value
+	// TAST (Let): v_2_0 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 	v_2_0 := gopurs_runtime.Apply(gopurs_runtime.Box(dictIsStream_0.V1), s_1)
 	_ = v_2_0
-	// TAST (Let): __local_var_3_1 -> gopurs_runtime.Value
+	// TAST (Let): __local_var_3_1 shape=Other expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 	__local_var_3_1 := gopurs_runtime.RecordGet(v_2_0, "tail")
 	_ = __local_var_3_1
 	return gopurs_runtime.Apply2(gopurs_runtime.Box(dictIsStream_0.V0), gopurs_runtime.RecordGet(v_2_0, "head"), gopurs_runtime.Func(func(v1_4 gopurs_runtime.Value) gopurs_runtime.Value {

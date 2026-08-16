@@ -173,16 +173,14 @@ var once_Main_main sync.Once
 
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
-		cache_Main_main = func() gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 -> gopurs_runtime.Value
+		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.Int(gopurs_runtime.Int(6).IntVal)).StrVal()))
 			_ = __local_var_0_0
-			return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-				_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
-				_ = _dollar___unused_1_1
-				return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
-			})
-		}()
+			_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
+			_ = _dollar___unused_1_1
+			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
+		})
 	})
 	return cache_Main_main
 }
@@ -192,7 +190,7 @@ var once_Main_test1 sync.Once
 
 func Get_Main_test1() gopurs_runtime.Value {
 	once_Main_test1.Do(func() {
-		cache_Main_test1 = gopurs_runtime.Int(gopurs_runtime.Int(6).IntVal)
+		cache_Main_test1 = gopurs_runtime.Int(gopurs_runtime.Int(gopurs_runtime.Int(6).IntVal).IntVal)
 	})
 	return cache_Main_test1
 }
@@ -292,7 +290,7 @@ func Call_Main_ala(dictFunctor_0_loop *Constructor_Data_Functor_Functor, _dollar
 func Call_Main_test(dictSemiring_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var dictSemiring_0 gopurs_runtime.Value = dictSemiring_0_loop
 	_ = dictSemiring_0
-	// TAST (Let): __local_var_1_0 -> gopurs_runtime.Value
+	// TAST (Let): __local_var_1_0 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [append: (Func [(TypeVar a), (TypeVar a)] (TypeVar a))] Any))
 	__local_var_1_0 := gopurs_runtime.RecordDict1("append", gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
 		return gopurs_runtime.Func(func(v1_2 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Apply2(gopurs_runtime.RecordGet(dictSemiring_0, "mul"), v_1, v1_2)

@@ -208,15 +208,16 @@ depth:
 		}
 		{
 			if v_0 != nil {
-				// TAST (Let): __local_var_1_0 -> gopurs_runtime.Value
-				var __local_var_1_0 gopurs_runtime.Value = gopurs_runtime.Int(Call_Main_depth((v_0).V1))
-				// TAST (Let): __local_var_2_1 -> int64
+				// TAST (Let): __local_var_1_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=int64 bindingType=Any
+				__local_var_1_0 := Call_Main_depth((v_0).V1)
+				_ = __local_var_1_0
+				// TAST (Let): __local_var_2_1 shape=App(Var) expectedFromAst=int64 actual=int64 bindingType=Int
 				__local_var_2_1 := Call_Main_depth((v_0).V3)
 				_ = __local_var_2_1
 				var __t2 int64
 				{
-					if (__local_var_1_0.IntVal) > (__local_var_2_1) {
-						__t2 = __local_var_1_0.IntVal
+					if (__local_var_1_0) > (__local_var_2_1) {
+						__t2 = __local_var_1_0
 						goto end_branch_2
 					} else {
 
@@ -855,7 +856,7 @@ func Call_Main_insert(x_0_loop int64, s_1_loop *Constructor_Main_T) *Constructor
 	end_branch_3:
 		return gopurs_runtime.Value{Type: 9, IntVal: 990467018, UnsafePtr: unsafe.Pointer(__t3)}
 	})
-	// TAST (Let): __local_var_3_4 -> *Constructor_Main_T
+	// TAST (Let): __local_var_3_4 shape=App(Other) expectedFromAst=*Constructor_Main_T actual=*Constructor_Main_T bindingType=(ADT ["Main","Tree"] [])
 	__local_var_3_4 := gopurs_runtime.CoerceToStruct[Constructor_Main_T](gopurs_runtime.Apply(ins_2_0_0, gopurs_runtime.Value{Type: 9, IntVal: 990467018, UnsafePtr: unsafe.Pointer(s_1)}))
 	_ = __local_var_3_4
 	var __t5 *Constructor_Main_T

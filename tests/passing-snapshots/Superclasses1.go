@@ -100,7 +100,7 @@ var once_Main_main sync.Once
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showNumberImpl(), gopurs_runtime.Float(gopurs_runtime.Float(21.0).FloatVal())).StrVal()))
 			_ = __local_var_0_0
 			_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
@@ -213,7 +213,7 @@ func Call_Main_cl(dict_0_loop *Constructor_Main_Cl) gopurs_runtime.Value {
 func Call_Main_test(dictCl_0_loop *Constructor_Main_Cl) gopurs_runtime.Value {
 	var dictCl_0 *Constructor_Main_Cl = dictCl_0_loop
 	_ = dictCl_0
-	// TAST (Let): Su0_1_0 -> *Constructor_Main_Su
+	// TAST (Let): Su0_1_0 shape=App(Other) expectedFromAst=*Constructor_Main_Su actual=*Constructor_Main_Su bindingType=(ADT ["Main","Su"] [(TypeVar a)])
 	Su0_1_0 := gopurs_runtime.CoerceToStruct[Constructor_Main_Su](gopurs_runtime.Apply(gopurs_runtime.Box(dictCl_0.V0), gopurs_runtime.Value{}))
 	_ = Su0_1_0
 	return gopurs_runtime.Func(func(a_2 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -236,7 +236,7 @@ func Call_Main_su__2782801075(dict_0_loop *Constructor_Main_Su) gopurs_runtime.V
 func Call_Main_test__2037638682(dictCl_0_loop *Constructor_Main_Cl) gopurs_runtime.Value {
 	var dictCl_0 *Constructor_Main_Cl = dictCl_0_loop
 	_ = dictCl_0
-	// TAST (Let): Su0_1_0 -> *Constructor_Main_Su
+	// TAST (Let): Su0_1_0 shape=App(Other) expectedFromAst=*Constructor_Main_Su actual=*Constructor_Main_Su bindingType=(ADT ["Main","Su"] [Any])
 	Su0_1_0 := gopurs_runtime.CoerceToStruct[Constructor_Main_Su](gopurs_runtime.Apply(gopurs_runtime.Box(dictCl_0.V0), gopurs_runtime.Value{}))
 	_ = Su0_1_0
 	return gopurs_runtime.Func(func(a_2 gopurs_runtime.Value) gopurs_runtime.Value {

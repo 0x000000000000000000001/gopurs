@@ -23,7 +23,9 @@ var once_Main_main sync.Once
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
+			message_0_0 := gopurs_runtime.Str("Done")
+			_ = message_0_0
+			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(message_0_0.StrVal())), gopurs_runtime.Value{})
 		})
 	})
 	return cache_Main_main

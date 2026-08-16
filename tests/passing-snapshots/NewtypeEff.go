@@ -38,11 +38,9 @@ func Get_Main_functorT() gopurs_runtime.Value {
 		cache_Main_functorT = gopurs_runtime.Value{Type: 9, IntVal: 929368378, UnsafePtr: unsafe.Pointer((&Constructor_Data_Functor_Functor{1, gopurs_runtime.Func(func(f_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-						a_prime__2_0 := gopurs_runtime.Apply(v_1, gopurs_runtime.Value{})
-						_ = a_prime__2_0
-						return gopurs_runtime.Apply(f_0, a_prime__2_0)
-					})
+					a_prime__2_0 := gopurs_runtime.Apply(v_1, gopurs_runtime.Value{})
+					_ = a_prime__2_0
+					return gopurs_runtime.Apply(f_0, a_prime__2_0)
 				})
 			})
 		})}))}
@@ -97,18 +95,16 @@ var once_Main_main sync.Once
 
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
-		cache_Main_main = func() gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 -> gopurs_runtime.Value
+		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
 			_ = __local_var_0_0
-			return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-				x_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
-				_ = x_1_1
-				x_2_2 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
-				_ = x_2_2
-				return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
-			})
-		}()
+			x_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
+			_ = x_1_1
+			x_2_2 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
+			_ = x_2_2
+			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
+		})
 	})
 	return cache_Main_main
 }
@@ -209,11 +205,9 @@ func Get_Main_functorT__3270181756() gopurs_runtime.Value {
 		cache_Main_functorT__3270181756 = gopurs_runtime.Value{Type: 9, IntVal: 929368378, UnsafePtr: unsafe.Pointer((&Constructor_Data_Functor_Functor{1, gopurs_runtime.Func(func(f_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-						a_prime__2_0 := gopurs_runtime.Apply(v_1, gopurs_runtime.Value{})
-						_ = a_prime__2_0
-						return gopurs_runtime.Apply(f_0, a_prime__2_0)
-					})
+					a_prime__2_0 := gopurs_runtime.Apply(v_1, gopurs_runtime.Value{})
+					_ = a_prime__2_0
+					return gopurs_runtime.Apply(f_0, a_prime__2_0)
 				})
 			})
 		})}))}

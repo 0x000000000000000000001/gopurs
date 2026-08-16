@@ -92,27 +92,25 @@ var once_Main_main sync.Once
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_0_0 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [foo: Int] Any))
 			__local_var_0_0 := gopurs_runtime.RecordDict1("foo", gopurs_runtime.Int(1))
 			_ = __local_var_0_0
-			// TAST (Let): __local_var_1_2 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_1_2 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Func [(Record (Row [] (TypeVar r1)))] (Record (Row [] (TypeVar r2))))
 			__local_var_1_2 := gopurs_runtime.Apply(Get_Main_unsafeSet(), gopurs_runtime.Str("foo"))
 			_ = __local_var_1_2
-			// TAST (Let): __local_var_1_1 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_1_1 shape=Let(Abs(App(Other))) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Func [(TypeVar b)] (Record (Row [] (TypeVar r2))))
 			__local_var_1_1 := gopurs_runtime.Func(func(a_2 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Apply2(__local_var_1_2, a_2, __local_var_0_0)
 			})
 			_ = __local_var_1_1
-			// TAST (Let): __local_var_2_4 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_2_4 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(TypeApp (TypeVar f) [(TypeVar b)])
 			__local_var_2_4 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.Apply2(Get_Main_unsafeGet(), gopurs_runtime.Str("foo"), __local_var_0_0)).StrVal()))
 			_ = __local_var_2_4
-			// TAST (Let): __local_var_2_3 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_2_3 shape=Let(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 			__local_var_2_3 := gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-					a_prime__3_5 := gopurs_runtime.Apply(__local_var_2_4, gopurs_runtime.Value{})
-					_ = a_prime__3_5
-					return gopurs_runtime.Apply(__local_var_1_1, a_prime__3_5)
-				})
+				a_prime__3_5 := gopurs_runtime.Apply(__local_var_2_4, gopurs_runtime.Value{})
+				_ = a_prime__3_5
+				return gopurs_runtime.Apply(__local_var_1_1, a_prime__3_5)
 			})
 			_ = __local_var_2_3
 			_dollar___unused_3_6 := gopurs_runtime.Apply(__local_var_2_3, gopurs_runtime.Value{})
@@ -288,7 +286,7 @@ func Call_Main_lens(dictIsSymbol_0_loop *Constructor_Data_Symbol_IsSymbol, _doll
 	_ = f_5
 	var r_6 gopurs_runtime.Value = r_6_loop
 	_ = r_6
-	// TAST (Let): __local_var_7_0 -> gopurs_runtime.Value
+	// TAST (Let): __local_var_7_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Func [(Record (Row [] (TypeVar r1)))] (Record (Row [] (TypeVar r2))))
 	__local_var_7_0 := gopurs_runtime.Apply(Get_Main_unsafeSet(), gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.Box(dictIsSymbol_0.V0), gopurs_runtime.Value{Type: 9, IntVal: int64(l_4), UnsafePtr: nil}).StrVal()))
 	_ = __local_var_7_0
 	return gopurs_runtime.Apply2(gopurs_runtime.Box(dictFunctor_3.V0), gopurs_runtime.Func(func(a_8 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -303,7 +301,7 @@ func Call_Main_fooLens(dictFunctor_0_loop *Constructor_Data_Functor_Functor, f_1
 	_ = f_1
 	var r_2 gopurs_runtime.Value = r_2_loop
 	_ = r_2
-	// TAST (Let): __local_var_3_0 -> gopurs_runtime.Value
+	// TAST (Let): __local_var_3_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Func [(Record (Row [] (TypeVar r1)))] (Record (Row [] (TypeVar r2))))
 	__local_var_3_0 := gopurs_runtime.Apply(Get_Main_unsafeSet(), gopurs_runtime.Str("foo"))
 	_ = __local_var_3_0
 	return gopurs_runtime.Apply2(gopurs_runtime.Box(dictFunctor_0.V0), gopurs_runtime.Func(func(a_4 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -318,7 +316,7 @@ func Call_Main_fooLens__3068227129(dictFunctor_0_loop *Constructor_Data_Functor_
 	_ = f_1
 	var r_2 gopurs_runtime.Value = r_2_loop
 	_ = r_2
-	// TAST (Let): __local_var_3_0 -> gopurs_runtime.Value
+	// TAST (Let): __local_var_3_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Func [(Record (Row [] (TypeVar r1)))] (Record (Row [] (TypeVar r2))))
 	__local_var_3_0 := gopurs_runtime.Apply(Get_Main_unsafeSet(), gopurs_runtime.Str("foo"))
 	_ = __local_var_3_0
 	return gopurs_runtime.Apply2(gopurs_runtime.Box(dictFunctor_0.V0), gopurs_runtime.Func(func(a_4 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -361,7 +359,7 @@ func Call_Main_lens__1789924085(dictFunctor_0_loop uint32, l_1_loop gopurs_runti
 	_ = f_2
 	var r_3 gopurs_runtime.Value = r_3_loop
 	_ = r_3
-	// TAST (Let): __local_var_4_0 -> gopurs_runtime.Value
+	// TAST (Let): __local_var_4_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Func [(Record (Row [] (TypeVar r1)))] (Record (Row [] (TypeVar r2))))
 	__local_var_4_0 := gopurs_runtime.Apply(Get_Main_unsafeSet(), gopurs_runtime.Str("foo"))
 	_ = __local_var_4_0
 	return gopurs_runtime.Apply2(gopurs_runtime.RecordGet(gopurs_runtime.Value{Type: 9, IntVal: int64(dictFunctor_0), UnsafePtr: nil}, "map"), gopurs_runtime.Func(func(a_5 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -384,7 +382,7 @@ func Call_Main_lens__409319347(dictIsSymbol_0_loop *Constructor_Data_Symbol_IsSy
 	_ = f_5
 	var r_6 gopurs_runtime.Value = r_6_loop
 	_ = r_6
-	// TAST (Let): __local_var_7_0 -> gopurs_runtime.Value
+	// TAST (Let): __local_var_7_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Func [(Record (Row [] (TypeVar r1)))] (Record (Row [] (TypeVar r2))))
 	__local_var_7_0 := gopurs_runtime.Apply(Get_Main_unsafeSet(), gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.Box(dictIsSymbol_0.V0), gopurs_runtime.Value{Type: 9, IntVal: int64(l_4), UnsafePtr: nil}).StrVal()))
 	_ = __local_var_7_0
 	return gopurs_runtime.Apply2(gopurs_runtime.Box(dictFunctor_3.V0), gopurs_runtime.Func(func(a_8 gopurs_runtime.Value) gopurs_runtime.Value {

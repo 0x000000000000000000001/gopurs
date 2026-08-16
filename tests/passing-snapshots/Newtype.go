@@ -60,7 +60,7 @@ var once_Main_logShow sync.Once
 func Get_Main_logShow() gopurs_runtime.Value {
 	once_Main_logShow.Do(func() {
 		cache_Main_logShow = func() gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_0_0 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [show: (Func [(TypeVar a)] String)] Any))
 			__local_var_0_0 := gopurs_runtime.RecordDict1("show", gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Str(("Box ") + (gopurs_runtime.Apply(Get_Data_Show_showNumberImpl(), v_0).StrVal()))
 			}))
@@ -90,20 +90,18 @@ var once_Main_main sync.Once
 
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
-		cache_Main_main = func() gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 -> gopurs_runtime.Value
+		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(("Thing ")+(gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.Str(gopurs_runtime.Str("hello").StrVal())).StrVal())))
 			_ = __local_var_0_0
-			return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-				_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
-				_ = _dollar___unused_1_1
-				_dollar___unused_2_2 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(("Box ")+(gopurs_runtime.Apply(Get_Data_Show_showNumberImpl(), gopurs_runtime.Float(42.0)).StrVal()))), gopurs_runtime.Value{})
-				_ = _dollar___unused_2_2
-				_dollar___unused_3_3 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(("Box ")+(gopurs_runtime.Apply(Get_Data_Show_showNumberImpl(), gopurs_runtime.Float(gopurs_runtime.Float(9000.0).FloatVal())).StrVal()))), gopurs_runtime.Value{})
-				_ = _dollar___unused_3_3
-				return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
-			})
-		}()
+			_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
+			_ = _dollar___unused_1_1
+			_dollar___unused_2_2 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(("Box ")+(gopurs_runtime.Apply(Get_Data_Show_showNumberImpl(), gopurs_runtime.Float(42.0)).StrVal()))), gopurs_runtime.Value{})
+			_ = _dollar___unused_2_2
+			_dollar___unused_3_3 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(("Box ")+(gopurs_runtime.Apply(Get_Data_Show_showNumberImpl(), gopurs_runtime.Float(gopurs_runtime.Float(9000.0).FloatVal())).StrVal()))), gopurs_runtime.Value{})
+			_ = _dollar___unused_3_3
+			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
+		})
 	})
 	return cache_Main_main
 }

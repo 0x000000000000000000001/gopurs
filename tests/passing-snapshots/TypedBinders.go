@@ -208,7 +208,7 @@ func Get_Main_bindState() gopurs_runtime.Value {
 		}), gopurs_runtime.Func(func(f_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(g_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(s_2 gopurs_runtime.Value) gopurs_runtime.Value {
-					// TAST (Let): v_3_0 -> *Constructor_Main_Tuple
+					// TAST (Let): v_3_0 shape=App(Other) expectedFromAst=*Constructor_Main_Tuple actual=*Constructor_Main_Tuple bindingType=(ADT ["Main","Tuple"] [(TypeVar s58), (TypeVar a59)])
 					v_3_0 := gopurs_runtime.CoerceToStruct[Constructor_Main_Tuple](gopurs_runtime.Apply(f_0, s_2))
 					_ = v_3_0
 					return gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_Tuple](gopurs_runtime.Apply(gopurs_runtime.Apply(g_1, (v_3_0).V1), (v_3_0).V0)))}
@@ -229,10 +229,10 @@ func Get_Main_applyState() gopurs_runtime.Value {
 		}), gopurs_runtime.Func(func(f_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(a_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(s_2 gopurs_runtime.Value) gopurs_runtime.Value {
-					// TAST (Let): v_3_0 -> *Constructor_Main_Tuple
+					// TAST (Let): v_3_0 shape=App(Other) expectedFromAst=*Constructor_Main_Tuple actual=*Constructor_Main_Tuple bindingType=(ADT ["Main","Tuple"] [(TypeVar s58), (TypeVar a59)])
 					v_3_0 := gopurs_runtime.CoerceToStruct[Constructor_Main_Tuple](gopurs_runtime.Apply(f_0, s_2))
 					_ = v_3_0
-					// TAST (Let): v_4_1 -> *Constructor_Main_Tuple
+					// TAST (Let): v_4_1 shape=App(Other) expectedFromAst=*Constructor_Main_Tuple actual=*Constructor_Main_Tuple bindingType=(ADT ["Main","Tuple"] [(TypeVar s58), (TypeVar a59)])
 					v_4_1 := gopurs_runtime.CoerceToStruct[Constructor_Main_Tuple](gopurs_runtime.Apply(a_1, (v_3_0).V0))
 					_ = v_4_1
 					return gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_Tuple](gopurs_runtime.Apply(gopurs_runtime.Apply(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative](Get_Main_applicativeState()).V1), gopurs_runtime.Apply((v_3_0).V1, (v_4_1).V1)), (v_4_1).V0)))}
@@ -277,7 +277,7 @@ var once_Main_test sync.Once
 func Get_Main_test() gopurs_runtime.Value {
 	once_Main_test.Do(func() {
 		cache_Main_test = func() gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_0_0 shape=Other expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 			__local_var_0_0 := gopurs_runtime.Str(("Hello, ") + ("World!"))
 			_ = __local_var_0_0
 			return gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer((&Constructor_Main_Tuple{1, __local_var_0_0, gopurs_runtime.Str(__local_var_0_0.StrVal())}))}
@@ -338,10 +338,10 @@ func Get_Main_applyState__1706849652() gopurs_runtime.Value {
 		}), gopurs_runtime.Func(func(f_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(a_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(s_2 gopurs_runtime.Value) gopurs_runtime.Value {
-					// TAST (Let): v_3_0 -> *Constructor_Main_Tuple
+					// TAST (Let): v_3_0 shape=App(Other) expectedFromAst=*Constructor_Main_Tuple actual=*Constructor_Main_Tuple bindingType=(ADT ["Main","Tuple"] [(TypeVar s58), (TypeVar a59)])
 					v_3_0 := gopurs_runtime.CoerceToStruct[Constructor_Main_Tuple](gopurs_runtime.Apply(f_0, s_2))
 					_ = v_3_0
-					// TAST (Let): v_4_1 -> *Constructor_Main_Tuple
+					// TAST (Let): v_4_1 shape=App(Other) expectedFromAst=*Constructor_Main_Tuple actual=*Constructor_Main_Tuple bindingType=(ADT ["Main","Tuple"] [(TypeVar s58), (TypeVar a59)])
 					v_4_1 := gopurs_runtime.CoerceToStruct[Constructor_Main_Tuple](gopurs_runtime.Apply(a_1, (v_3_0).V0))
 					_ = v_4_1
 					return gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer((&Constructor_Main_Tuple{1, (v_4_1).V0, gopurs_runtime.Apply((v_3_0).V1, (v_4_1).V1)}))}
@@ -362,10 +362,10 @@ func Get_Main_applyState__3856467351() gopurs_runtime.Value {
 		}), gopurs_runtime.Func(func(f_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(a_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(s_2 gopurs_runtime.Value) gopurs_runtime.Value {
-					// TAST (Let): v_3_0 -> *Constructor_Main_Tuple
+					// TAST (Let): v_3_0 shape=App(Other) expectedFromAst=*Constructor_Main_Tuple actual=*Constructor_Main_Tuple bindingType=(ADT ["Main","Tuple"] [(TypeVar s58), (TypeVar a59)])
 					v_3_0 := gopurs_runtime.CoerceToStruct[Constructor_Main_Tuple](gopurs_runtime.Apply(f_0, s_2))
 					_ = v_3_0
-					// TAST (Let): v_4_1 -> *Constructor_Main_Tuple
+					// TAST (Let): v_4_1 shape=App(Other) expectedFromAst=*Constructor_Main_Tuple actual=*Constructor_Main_Tuple bindingType=(ADT ["Main","Tuple"] [(TypeVar s58), (TypeVar a59)])
 					v_4_1 := gopurs_runtime.CoerceToStruct[Constructor_Main_Tuple](gopurs_runtime.Apply(a_1, (v_3_0).V0))
 					_ = v_4_1
 					return gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer((&Constructor_Main_Tuple{1, (v_4_1).V0, gopurs_runtime.Apply((v_3_0).V1, (v_4_1).V1)}))}
@@ -386,7 +386,7 @@ func Get_Main_bindState__1148353140() gopurs_runtime.Value {
 		}), gopurs_runtime.Func(func(f_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(g_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(s_2 gopurs_runtime.Value) gopurs_runtime.Value {
-					// TAST (Let): v_3_0 -> *Constructor_Main_Tuple
+					// TAST (Let): v_3_0 shape=App(Other) expectedFromAst=*Constructor_Main_Tuple actual=*Constructor_Main_Tuple bindingType=(ADT ["Main","Tuple"] [(TypeVar s58), (TypeVar a59)])
 					v_3_0 := gopurs_runtime.CoerceToStruct[Constructor_Main_Tuple](gopurs_runtime.Apply(f_0, s_2))
 					_ = v_3_0
 					return gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_Tuple](gopurs_runtime.Apply(gopurs_runtime.Apply(g_1, (v_3_0).V1), (v_3_0).V0)))}
@@ -407,7 +407,7 @@ func Get_Main_bindState__1233139095() gopurs_runtime.Value {
 		}), gopurs_runtime.Func(func(f_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(g_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(s_2 gopurs_runtime.Value) gopurs_runtime.Value {
-					// TAST (Let): v_3_0 -> *Constructor_Main_Tuple
+					// TAST (Let): v_3_0 shape=App(Other) expectedFromAst=*Constructor_Main_Tuple actual=*Constructor_Main_Tuple bindingType=(ADT ["Main","Tuple"] [(TypeVar s58), (TypeVar a59)])
 					v_3_0 := gopurs_runtime.CoerceToStruct[Constructor_Main_Tuple](gopurs_runtime.Apply(f_0, s_2))
 					_ = v_3_0
 					return gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_Tuple](gopurs_runtime.Apply(gopurs_runtime.Apply(g_1, (v_3_0).V1), (v_3_0).V0)))}
@@ -426,7 +426,7 @@ func Get_Main_functorState__1545512803() gopurs_runtime.Value {
 		cache_Main_functorState__1545512803 = gopurs_runtime.Value{Type: 9, IntVal: 929368378, UnsafePtr: unsafe.Pointer((&Constructor_Data_Functor_Functor{1, gopurs_runtime.Func(func(f_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(a_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(s_2 gopurs_runtime.Value) gopurs_runtime.Value {
-					// TAST (Let): v_3_0 -> *Constructor_Main_Tuple
+					// TAST (Let): v_3_0 shape=App(Other) expectedFromAst=*Constructor_Main_Tuple actual=*Constructor_Main_Tuple bindingType=(ADT ["Main","Tuple"] [(TypeVar s58), (TypeVar a59)])
 					v_3_0 := gopurs_runtime.CoerceToStruct[Constructor_Main_Tuple](gopurs_runtime.Apply(a_1, s_2))
 					_ = v_3_0
 					return gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer((&Constructor_Main_Tuple{1, (v_3_0).V0, gopurs_runtime.Apply(f_0, (v_3_0).V1)}))}
@@ -445,7 +445,7 @@ func Get_Main_functorState__2186776544() gopurs_runtime.Value {
 		cache_Main_functorState__2186776544 = gopurs_runtime.Value{Type: 9, IntVal: 929368378, UnsafePtr: unsafe.Pointer((&Constructor_Data_Functor_Functor{1, gopurs_runtime.Func(func(f_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(a_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(s_2 gopurs_runtime.Value) gopurs_runtime.Value {
-					// TAST (Let): v_3_0 -> *Constructor_Main_Tuple
+					// TAST (Let): v_3_0 shape=App(Other) expectedFromAst=*Constructor_Main_Tuple actual=*Constructor_Main_Tuple bindingType=(ADT ["Main","Tuple"] [(TypeVar s58), (TypeVar a59)])
 					v_3_0 := gopurs_runtime.CoerceToStruct[Constructor_Main_Tuple](gopurs_runtime.Apply(a_1, s_2))
 					_ = v_3_0
 					return gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer((&Constructor_Main_Tuple{1, (v_3_0).V0, gopurs_runtime.Apply(f_0, (v_3_0).V1)}))}
@@ -553,11 +553,11 @@ func Call_Main_get(dict_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 func Call_Main_modify(dictMonad_0_loop *Constructor_Control_Monad_Monad) gopurs_runtime.Value {
 	var dictMonad_0 *Constructor_Control_Monad_Monad = dictMonad_0_loop
 	_ = dictMonad_0
-	// TAST (Let): Bind1_1_0 -> *Constructor_Control_Bind_Bind
+	// TAST (Let): Bind1_1_0 shape=App(Other) expectedFromAst=*Constructor_Control_Bind_Bind actual=*Constructor_Control_Bind_Bind bindingType=(ADT ["Control","Bind","Bind"] [(TypeVar m)])
 	Bind1_1_0 := gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind](gopurs_runtime.Apply(gopurs_runtime.Box(dictMonad_0.V1), gopurs_runtime.Value{}))
 	_ = Bind1_1_0
 	return gopurs_runtime.Func(func(dictMonadState_2 gopurs_runtime.Value) gopurs_runtime.Value {
-		// TAST (Let): get2_3_1 -> gopurs_runtime.Value
+		// TAST (Let): get2_3_1 shape=Other expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(TypeApp (TypeVar m) [(TypeVar s)])
 		get2_3_1 := gopurs_runtime.RecordGet(dictMonadState_2, "get")
 		_ = get2_3_1
 		return gopurs_runtime.Func(func(f_4 gopurs_runtime.Value) gopurs_runtime.Value {

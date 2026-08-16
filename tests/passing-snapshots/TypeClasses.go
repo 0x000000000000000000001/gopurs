@@ -162,7 +162,7 @@ var once_Main_main sync.Once
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.Str("Hello")).StrVal()))
 			_ = __local_var_0_0
 			_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
@@ -521,7 +521,7 @@ func Call_Main_test7(dictShow_0_loop *Constructor_Data_Show_Show) gopurs_runtime
 func Call_Main_test4(dictMonad_0_loop *Constructor_Control_Monad_Monad) gopurs_runtime.Value {
 	var dictMonad_0 *Constructor_Control_Monad_Monad = dictMonad_0_loop
 	_ = dictMonad_0
-	// TAST (Let): Applicative0_1_0 -> *Constructor_Control_Applicative_Applicative
+	// TAST (Let): Applicative0_1_0 shape=App(Other) expectedFromAst=*Constructor_Control_Applicative_Applicative actual=*Constructor_Control_Applicative_Applicative bindingType=(ADT ["Control","Applicative","Applicative"] [(TypeVar m)])
 	Applicative0_1_0 := gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative](gopurs_runtime.Apply(gopurs_runtime.Box(dictMonad_0.V0), gopurs_runtime.Value{}))
 	_ = Applicative0_1_0
 	return gopurs_runtime.Func(func(v_2 gopurs_runtime.Value) gopurs_runtime.Value {

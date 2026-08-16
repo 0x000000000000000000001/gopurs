@@ -72,16 +72,16 @@ var once_Main_sequenceList_prime__prime_ sync.Once
 func Get_Main_sequenceList_prime__prime_() gopurs_runtime.Value {
 	once_Main_sequenceList_prime__prime_.Do(func() {
 		cache_Main_sequenceList_prime__prime_ = gopurs_runtime.Func(func(dictMonad_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): Applicative0_1_0 -> *Constructor_Control_Applicative_Applicative
+			// TAST (Let): Applicative0_1_0 shape=App(Other) expectedFromAst=*Constructor_Control_Applicative_Applicative actual=*Constructor_Control_Applicative_Applicative bindingType=(ADT ["Control","Applicative","Applicative"] [(TypeVar m)])
 			Applicative0_1_0 := gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonad_0, "Applicative0"), gopurs_runtime.Value{}))
 			_ = Applicative0_1_0
-			// TAST (Let): Bind1_2_1 -> gopurs_runtime.Value
+			// TAST (Let): Bind1_2_1 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 			Bind1_2_1 := gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonad_0, "Bind1"), gopurs_runtime.Value{})
 			_ = Bind1_2_1
-			// TAST (Let): Apply0_3_2 -> *Constructor_Control_Apply_Apply
+			// TAST (Let): Apply0_3_2 shape=App(Other) expectedFromAst=*Constructor_Control_Apply_Apply actual=*Constructor_Control_Apply_Apply bindingType=(ADT ["Control","Apply","Apply"] [(TypeVar m)])
 			Apply0_3_2 := gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply](gopurs_runtime.Apply(gopurs_runtime.RecordGet(Bind1_2_1, "Apply0"), gopurs_runtime.Value{}))
 			_ = Apply0_3_2
-			// TAST (Let): Functor0_4_3 -> *Constructor_Data_Functor_Functor
+			// TAST (Let): Functor0_4_3 shape=App(Other) expectedFromAst=*Constructor_Data_Functor_Functor actual=*Constructor_Data_Functor_Functor bindingType=(ADT ["Data","Functor","Functor"] [(TypeVar m)])
 			Functor0_4_3 := gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor](gopurs_runtime.Apply(gopurs_runtime.RecordGet(gopurs_runtime.Apply(gopurs_runtime.RecordGet(Bind1_2_1, "Apply0"), gopurs_runtime.Value{}), "Functor0"), gopurs_runtime.Value{}))
 			_ = Functor0_4_3
 			return gopurs_runtime.Func(func(v_5 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -119,16 +119,16 @@ var once_Main_sequenceList sync.Once
 func Get_Main_sequenceList() gopurs_runtime.Value {
 	once_Main_sequenceList.Do(func() {
 		cache_Main_sequenceList = gopurs_runtime.Func(func(dictMonad_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): Applicative0_1_0 -> *Constructor_Control_Applicative_Applicative
+			// TAST (Let): Applicative0_1_0 shape=App(Other) expectedFromAst=*Constructor_Control_Applicative_Applicative actual=*Constructor_Control_Applicative_Applicative bindingType=(ADT ["Control","Applicative","Applicative"] [(TypeVar m)])
 			Applicative0_1_0 := gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonad_0, "Applicative0"), gopurs_runtime.Value{}))
 			_ = Applicative0_1_0
-			// TAST (Let): Bind1_2_1 -> gopurs_runtime.Value
+			// TAST (Let): Bind1_2_1 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 			Bind1_2_1 := gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonad_0, "Bind1"), gopurs_runtime.Value{})
 			_ = Bind1_2_1
-			// TAST (Let): Apply0_3_2 -> *Constructor_Control_Apply_Apply
+			// TAST (Let): Apply0_3_2 shape=App(Other) expectedFromAst=*Constructor_Control_Apply_Apply actual=*Constructor_Control_Apply_Apply bindingType=(ADT ["Control","Apply","Apply"] [(TypeVar m)])
 			Apply0_3_2 := gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply](gopurs_runtime.Apply(gopurs_runtime.RecordGet(Bind1_2_1, "Apply0"), gopurs_runtime.Value{}))
 			_ = Apply0_3_2
-			// TAST (Let): Functor0_4_3 -> *Constructor_Data_Functor_Functor
+			// TAST (Let): Functor0_4_3 shape=App(Other) expectedFromAst=*Constructor_Data_Functor_Functor actual=*Constructor_Data_Functor_Functor bindingType=(ADT ["Data","Functor","Functor"] [(TypeVar m)])
 			Functor0_4_3 := gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor](gopurs_runtime.Apply(gopurs_runtime.RecordGet(gopurs_runtime.Apply(gopurs_runtime.RecordGet(Bind1_2_1, "Apply0"), gopurs_runtime.Value{}), "Functor0"), gopurs_runtime.Value{}))
 			_ = Functor0_4_3
 			return gopurs_runtime.Func(func(v_5 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -178,16 +178,16 @@ var once_Main_sequenceList_prime_ sync.Once
 func Get_Main_sequenceList_prime_() gopurs_runtime.Value {
 	once_Main_sequenceList_prime_.Do(func() {
 		cache_Main_sequenceList_prime_ = gopurs_runtime.Func(func(dictMonad_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): Applicative0_1_0 -> *Constructor_Control_Applicative_Applicative
+			// TAST (Let): Applicative0_1_0 shape=App(Other) expectedFromAst=*Constructor_Control_Applicative_Applicative actual=*Constructor_Control_Applicative_Applicative bindingType=(ADT ["Control","Applicative","Applicative"] [(TypeVar m)])
 			Applicative0_1_0 := gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonad_0, "Applicative0"), gopurs_runtime.Value{}))
 			_ = Applicative0_1_0
-			// TAST (Let): Bind1_2_1 -> gopurs_runtime.Value
+			// TAST (Let): Bind1_2_1 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 			Bind1_2_1 := gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonad_0, "Bind1"), gopurs_runtime.Value{})
 			_ = Bind1_2_1
-			// TAST (Let): Apply0_3_2 -> *Constructor_Control_Apply_Apply
+			// TAST (Let): Apply0_3_2 shape=App(Other) expectedFromAst=*Constructor_Control_Apply_Apply actual=*Constructor_Control_Apply_Apply bindingType=(ADT ["Control","Apply","Apply"] [(TypeVar m)])
 			Apply0_3_2 := gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply](gopurs_runtime.Apply(gopurs_runtime.RecordGet(Bind1_2_1, "Apply0"), gopurs_runtime.Value{}))
 			_ = Apply0_3_2
-			// TAST (Let): Functor0_4_3 -> *Constructor_Data_Functor_Functor
+			// TAST (Let): Functor0_4_3 shape=App(Other) expectedFromAst=*Constructor_Data_Functor_Functor actual=*Constructor_Data_Functor_Functor bindingType=(ADT ["Data","Functor","Functor"] [(TypeVar m)])
 			Functor0_4_3 := gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor](gopurs_runtime.Apply(gopurs_runtime.RecordGet(gopurs_runtime.Apply(gopurs_runtime.RecordGet(Bind1_2_1, "Apply0"), gopurs_runtime.Value{}), "Functor0"), gopurs_runtime.Value{}))
 			_ = Functor0_4_3
 			return gopurs_runtime.Func(func(val_5 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -225,16 +225,16 @@ var once_Main_sequenceList_prime__prime__prime_ sync.Once
 func Get_Main_sequenceList_prime__prime__prime_() gopurs_runtime.Value {
 	once_Main_sequenceList_prime__prime__prime_.Do(func() {
 		cache_Main_sequenceList_prime__prime__prime_ = gopurs_runtime.Func(func(dictMonad_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): Applicative0_1_0 -> *Constructor_Control_Applicative_Applicative
+			// TAST (Let): Applicative0_1_0 shape=App(Other) expectedFromAst=*Constructor_Control_Applicative_Applicative actual=*Constructor_Control_Applicative_Applicative bindingType=(ADT ["Control","Applicative","Applicative"] [(TypeVar m)])
 			Applicative0_1_0 := gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonad_0, "Applicative0"), gopurs_runtime.Value{}))
 			_ = Applicative0_1_0
-			// TAST (Let): Bind1_2_1 -> gopurs_runtime.Value
+			// TAST (Let): Bind1_2_1 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 			Bind1_2_1 := gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonad_0, "Bind1"), gopurs_runtime.Value{})
 			_ = Bind1_2_1
-			// TAST (Let): Apply0_3_2 -> *Constructor_Control_Apply_Apply
+			// TAST (Let): Apply0_3_2 shape=App(Other) expectedFromAst=*Constructor_Control_Apply_Apply actual=*Constructor_Control_Apply_Apply bindingType=(ADT ["Control","Apply","Apply"] [(TypeVar m)])
 			Apply0_3_2 := gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply](gopurs_runtime.Apply(gopurs_runtime.RecordGet(Bind1_2_1, "Apply0"), gopurs_runtime.Value{}))
 			_ = Apply0_3_2
-			// TAST (Let): Functor0_4_3 -> *Constructor_Data_Functor_Functor
+			// TAST (Let): Functor0_4_3 shape=App(Other) expectedFromAst=*Constructor_Data_Functor_Functor actual=*Constructor_Data_Functor_Functor bindingType=(ADT ["Data","Functor","Functor"] [(TypeVar m)])
 			Functor0_4_3 := gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor](gopurs_runtime.Apply(gopurs_runtime.RecordGet(gopurs_runtime.Apply(gopurs_runtime.RecordGet(Bind1_2_1, "Apply0"), gopurs_runtime.Value{}), "Functor0"), gopurs_runtime.Value{}))
 			_ = Functor0_4_3
 			return gopurs_runtime.Func(func(val_5 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -272,7 +272,7 @@ var once_Main_main sync.Once
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_0_0 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [(ADT ["Main","List"] [Unit])])
 			__local_var_0_0 := gopurs_runtime.Apply2(Get_Main_sequenceList(), gopurs_runtime.Value{Type: 9, IntVal: 778916621, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad](Get_Effect_monadEffect()))}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((&Constructor_Main_Cons{1, gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), (*Constructor_Main_Cons)(nil)}))})
 			_ = __local_var_0_0
 			a_prime__1_2 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
@@ -352,16 +352,16 @@ sequenceListSeq:
 		}
 		var dictMonad_0 *Constructor_Control_Monad_Monad = dictMonad_0_loop
 		_ = dictMonad_0
-		// TAST (Let): Applicative0_1_0 -> *Constructor_Control_Applicative_Applicative
+		// TAST (Let): Applicative0_1_0 shape=App(Other) expectedFromAst=*Constructor_Control_Applicative_Applicative actual=*Constructor_Control_Applicative_Applicative bindingType=(ADT ["Control","Applicative","Applicative"] [(TypeVar m)])
 		Applicative0_1_0 := gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative](gopurs_runtime.Apply(gopurs_runtime.Box(dictMonad_0.V0), gopurs_runtime.Value{}))
 		_ = Applicative0_1_0
-		// TAST (Let): Bind1_2_1 -> gopurs_runtime.Value
+		// TAST (Let): Bind1_2_1 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 		Bind1_2_1 := gopurs_runtime.Apply(gopurs_runtime.Box(dictMonad_0.V1), gopurs_runtime.Value{})
 		_ = Bind1_2_1
-		// TAST (Let): Apply0_3_2 -> *Constructor_Control_Apply_Apply
+		// TAST (Let): Apply0_3_2 shape=App(Other) expectedFromAst=*Constructor_Control_Apply_Apply actual=*Constructor_Control_Apply_Apply bindingType=(ADT ["Control","Apply","Apply"] [(TypeVar m)])
 		Apply0_3_2 := gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply](gopurs_runtime.Apply(gopurs_runtime.RecordGet(Bind1_2_1, "Apply0"), gopurs_runtime.Value{}))
 		_ = Apply0_3_2
-		// TAST (Let): Functor0_4_3 -> *Constructor_Data_Functor_Functor
+		// TAST (Let): Functor0_4_3 shape=App(Other) expectedFromAst=*Constructor_Data_Functor_Functor actual=*Constructor_Data_Functor_Functor bindingType=(ADT ["Data","Functor","Functor"] [(TypeVar m)])
 		Functor0_4_3 := gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor](gopurs_runtime.Apply(gopurs_runtime.RecordGet(gopurs_runtime.Apply(gopurs_runtime.RecordGet(Bind1_2_1, "Apply0"), gopurs_runtime.Value{}), "Functor0"), gopurs_runtime.Value{}))
 		_ = Functor0_4_3
 		return gopurs_runtime.Func(func(v_5 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -410,16 +410,16 @@ func Call_Main_sequence__4065837736(v_0_loop gopurs_runtime.Value, dictMonad_1_l
 func Call_Main_sequenceListSeq__2621562580(dictMonad_0_loop *Constructor_Control_Monad_Monad) gopurs_runtime.Value {
 	var dictMonad_0 *Constructor_Control_Monad_Monad = dictMonad_0_loop
 	_ = dictMonad_0
-	// TAST (Let): Applicative0_1_0 -> *Constructor_Control_Applicative_Applicative
+	// TAST (Let): Applicative0_1_0 shape=App(Other) expectedFromAst=*Constructor_Control_Applicative_Applicative actual=*Constructor_Control_Applicative_Applicative bindingType=(ADT ["Control","Applicative","Applicative"] [Any])
 	Applicative0_1_0 := gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative](gopurs_runtime.Apply(gopurs_runtime.Box(dictMonad_0.V0), gopurs_runtime.Value{}))
 	_ = Applicative0_1_0
-	// TAST (Let): Bind1_2_1 -> gopurs_runtime.Value
+	// TAST (Let): Bind1_2_1 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 	Bind1_2_1 := gopurs_runtime.Apply(gopurs_runtime.Box(dictMonad_0.V1), gopurs_runtime.Value{})
 	_ = Bind1_2_1
-	// TAST (Let): Apply0_3_2 -> *Constructor_Control_Apply_Apply
+	// TAST (Let): Apply0_3_2 shape=App(Other) expectedFromAst=*Constructor_Control_Apply_Apply actual=*Constructor_Control_Apply_Apply bindingType=(ADT ["Control","Apply","Apply"] [Any])
 	Apply0_3_2 := gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply](gopurs_runtime.Apply(gopurs_runtime.RecordGet(Bind1_2_1, "Apply0"), gopurs_runtime.Value{}))
 	_ = Apply0_3_2
-	// TAST (Let): Functor0_4_3 -> *Constructor_Data_Functor_Functor
+	// TAST (Let): Functor0_4_3 shape=App(Other) expectedFromAst=*Constructor_Data_Functor_Functor actual=*Constructor_Data_Functor_Functor bindingType=(ADT ["Data","Functor","Functor"] [Any])
 	Functor0_4_3 := gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor](gopurs_runtime.Apply(gopurs_runtime.RecordGet(gopurs_runtime.Apply(gopurs_runtime.RecordGet(Bind1_2_1, "Apply0"), gopurs_runtime.Value{}), "Functor0"), gopurs_runtime.Value{}))
 	_ = Functor0_4_3
 	return gopurs_runtime.Func(func(v_5 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -434,16 +434,16 @@ func Call_Main_sequenceListSeq__2621562580(dictMonad_0_loop *Constructor_Control
 		}
 		{
 			if v_5.Type == 9 && v_5.IntVal == 322902991 && v_5.UnsafePtr != nil {
-				// TAST (Let): Applicative0_6_4 -> *Constructor_Control_Applicative_Applicative
+				// TAST (Let): Applicative0_6_4 shape=App(Other) expectedFromAst=*Constructor_Control_Applicative_Applicative actual=*Constructor_Control_Applicative_Applicative bindingType=(ADT ["Control","Applicative","Applicative"] [(TypeVar m)])
 				Applicative0_6_4 := gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative](gopurs_runtime.Apply(gopurs_runtime.Box(dictMonad_0.V0), gopurs_runtime.Value{}))
 				_ = Applicative0_6_4
-				// TAST (Let): Bind1_7_5 -> gopurs_runtime.Value
+				// TAST (Let): Bind1_7_5 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 				Bind1_7_5 := gopurs_runtime.Apply(gopurs_runtime.Box(dictMonad_0.V1), gopurs_runtime.Value{})
 				_ = Bind1_7_5
-				// TAST (Let): Apply0_8_6 -> *Constructor_Control_Apply_Apply
+				// TAST (Let): Apply0_8_6 shape=App(Other) expectedFromAst=*Constructor_Control_Apply_Apply actual=*Constructor_Control_Apply_Apply bindingType=(ADT ["Control","Apply","Apply"] [(TypeVar m)])
 				Apply0_8_6 := gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply](gopurs_runtime.Apply(gopurs_runtime.RecordGet(Bind1_7_5, "Apply0"), gopurs_runtime.Value{}))
 				_ = Apply0_8_6
-				// TAST (Let): Functor0_9_7 -> *Constructor_Data_Functor_Functor
+				// TAST (Let): Functor0_9_7 shape=App(Other) expectedFromAst=*Constructor_Data_Functor_Functor actual=*Constructor_Data_Functor_Functor bindingType=(ADT ["Data","Functor","Functor"] [(TypeVar m)])
 				Functor0_9_7 := gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor](gopurs_runtime.Apply(gopurs_runtime.RecordGet(gopurs_runtime.Apply(gopurs_runtime.RecordGet(Bind1_7_5, "Apply0"), gopurs_runtime.Value{}), "Functor0"), gopurs_runtime.Value{}))
 				_ = Functor0_9_7
 				var __t10 gopurs_runtime.Value

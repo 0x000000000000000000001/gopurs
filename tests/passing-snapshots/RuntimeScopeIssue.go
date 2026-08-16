@@ -95,7 +95,7 @@ func Get_Main_aNumber() gopurs_runtime.Value {
 				}
 			}
 			{
-				// TAST (Let): __local_var_1_0 -> float64
+				// TAST (Let): __local_var_1_0 shape=Other expectedFromAst=float64 actual=float64 bindingType=Number
 				__local_var_1_0 := (v_0.FloatVal()) - (1.0)
 				_ = __local_var_1_0
 				var __t1 bool
@@ -139,7 +139,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				__t1 = "false"
 			}
 		end_branch_1:
-			// TAST (Let): __local_var_0_0 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(__t1))
 			_ = __local_var_0_0
 			_dollar___unused_1_2 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})

@@ -82,10 +82,10 @@ ordMu:
 		}
 		var dictOrd1_0 gopurs_runtime.Value = dictOrd1_0_loop
 		_ = dictOrd1_0
-		// TAST (Let): __local_var_1_1 -> gopurs_runtime.Value
+		// TAST (Let): __local_var_1_1 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 		__local_var_1_1 := gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictOrd1_0, "Eq10"), gopurs_runtime.Value{})
 		_ = __local_var_1_1
-		// TAST (Let): eqMu1_1_0 -> *Constructor_Data_Eq_Eq
+		// TAST (Let): eqMu1_1_0 shape=Let(LitRecord) expectedFromAst=*Constructor_Data_Eq_Eq actual=*Constructor_Data_Eq_Eq bindingType=(ADT ["Data","Eq","Eq"] [(TypeApp (TypeVar f) [(ADT ["Main","Mu"] [(TypeVar f)])])])
 		eqMu1_1_0 := gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq](gopurs_runtime.RecordDict1("eq", gopurs_runtime.Func(func(x_2 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(y_3 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Bool((gopurs_runtime.Apply3(gopurs_runtime.RecordGet(__local_var_1_1, "eq1"), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq](Call_Main_eqMu(__local_var_1_1)))}, x_2, y_3).IntVal) != (0))

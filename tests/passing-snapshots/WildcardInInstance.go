@@ -102,10 +102,10 @@ func Call_Main_ask(dict_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 func Call_Main_test(dictMonadAsk_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var dictMonadAsk_0 gopurs_runtime.Value = dictMonadAsk_0_loop
 	_ = dictMonadAsk_0
-	// TAST (Let): Monad0_1_0 -> gopurs_runtime.Value
+	// TAST (Let): Monad0_1_0 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 	Monad0_1_0 := gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonadAsk_0, "Monad0"), gopurs_runtime.Value{})
 	_ = Monad0_1_0
-	// TAST (Let): Applicative0_2_1 -> *Constructor_Control_Applicative_Applicative
+	// TAST (Let): Applicative0_2_1 shape=App(Other) expectedFromAst=*Constructor_Control_Applicative_Applicative actual=*Constructor_Control_Applicative_Applicative bindingType=(ADT ["Control","Applicative","Applicative"] [(TypeVar m)])
 	Applicative0_2_1 := gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative](gopurs_runtime.Apply(gopurs_runtime.RecordGet(Monad0_1_0, "Applicative0"), gopurs_runtime.Value{}))
 	_ = Applicative0_2_1
 	return gopurs_runtime.Apply2(gopurs_runtime.RecordGet(gopurs_runtime.Apply(gopurs_runtime.RecordGet(Monad0_1_0, "Bind1"), gopurs_runtime.Value{}), "bind"), gopurs_runtime.RecordGet(dictMonadAsk_0, "ask"), gopurs_runtime.Func(func(x_3 gopurs_runtime.Value) gopurs_runtime.Value {

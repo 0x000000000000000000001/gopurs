@@ -563,9 +563,10 @@ func Get_Main_multiCoveringSetsWorks() gopurs_runtime.Value {
 				__t1 = (&Constructor_Data_Maybe_Just{1, gopurs_runtime.Str("MultiCoveringSets failed")})
 			}
 		end_branch_1:
-			// TAST (Let): __local_var_0_0 -> gopurs_runtime.Value
-			var __local_var_0_0 gopurs_runtime.Value = gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(__t1)}
-			return __local_var_0_0
+			// TAST (Let): __local_var_0_0 shape=Branch(Other, def=Other) expectedFromAst=gopurs_runtime.Value actual=*Constructor_Data_Maybe_Just bindingType=Any
+			__local_var_0_0 := __t1
+			_ = __local_var_0_0
+			return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(__local_var_0_0)}
 		})
 	})
 	return cache_Main_multiCoveringSetsWorks
@@ -649,7 +650,7 @@ var once_Main_main sync.Once
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(TypeApp (TypeVar m) [(Array (TypeVar b))])
 			__local_var_0_0 := gopurs_runtime.Apply6(Get_Data_Traversable_traverseArrayImpl(), gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply](Get_Effect_applyEffect()).V1), gopurs_runtime.Func(func(f_0 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(a_1 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
@@ -687,7 +688,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = __local_var_0_0
 			arr_prime__1_2 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
 			_ = arr_prime__1_2
-			// TAST (Let): __local_var_2_4 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_2_4 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 			__local_var_2_4 := gopurs_runtime.Apply2(Get_Data_Array_mapMaybe(), gopurs_runtime.Func(func(x_2 gopurs_runtime.Value) gopurs_runtime.Value {
 				return x_2
 			}), arr_prime__1_2)
@@ -705,7 +706,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				__t5 = (*Constructor_Data_Maybe_Just)(nil)
 			}
 		end_branch_5:
-			// TAST (Let): v_2_3 -> *Constructor_Data_Maybe_Just
+			// TAST (Let): v_2_3 shape=Let(Branch(Other, def=Other)) expectedFromAst=*Constructor_Data_Maybe_Just actual=*Constructor_Data_Maybe_Just bindingType=(ADT ["Data","Maybe","Maybe"] [(Array String)])
 			var v_2_3 *Constructor_Data_Maybe_Just = gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just](gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(__t5)})
 			var __t7 gopurs_runtime.Value
 			{
