@@ -1,0 +1,26 @@
+--- src/Gopurs/CodeGen.purs
++++ src/Gopurs/CodeGen.purs
+@@ -550,6 +550,13 @@
+   UncurriedEffectApp _ _ -> true
+   Let _ _ _ body -> isEffectNode body
+   LetRec _ _ body -> isEffectNode body
+   _ -> false
+ 
++isClosureNode :: TcoExpr -> Boolean
++isClosureNode expr = case unwrapTcoExpr expr of
++  Abs _ _ -> true
++  Let _ _ _ body -> isClosureNode body
++  LetRec _ _ body -> isClosureNode body
++  Typed _ inner -> isClosureNode inner
++  _ -> false
++
+ stripEffectDefer :: TcoExpr -> TcoExpr
+ stripEffectDefer syn =
+@@ -758,6 +765,7 @@
+               TypeStructPointer _ _ _ _ -> res
+               _ -> 
+                 if expectedGoType == TypeValue then res
++                else if isClosureNode a then res
+                 else { stmts: res.stmts, expr: coerceGoExpr res.expr res.exprType expectedGoType, exprType: expectedGoType, nextId: res.nextId }
+ 
+       Var (Qualified mbMn (Ident i)) ->

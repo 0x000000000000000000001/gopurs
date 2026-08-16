@@ -447,15 +447,21 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves ad
                                   isSelfRecursiveLoop = group.recursive && Array.length group.bindings == 1
                                   currentLoopCtx = if isSelfRecursiveLoop then [ { ident: fn.ident, params: map fst paramsWithTypes, loopParams: map (\p -> fst p <> "_loop") paramsWithTypes, goTypes: map snd paramsWithTypes } ] else []
                                   resBodyMut = translateExprImpl_ helpersRef 0 modNameStr recVars moduleArities newBound (Just fn.ident) currentLoopCtx isSelfRecursiveLoop false 0 fn.body
+
+
+
+
                                   goName = fn.ident
                                   loopParams = map (\(Tuple idStr _) -> idStr <> "_loop") paramsWithTypes
                                   initVars = Array.concatMap (\(Tuple p goT) -> [ GoRaw ("var " <> p <> " " <> goTypeToStr goT <> " = " <> p <> "_loop"), GoRaw ("_ = " <> p) ]) paramsWithTypes
                                   
+                                  arity = Array.length fn.args
+                                  
                                   expectedRetType = case Map.lookup goName moduleArities of
+                                    Just { fRet, fArgs } | arity < Array.length fArgs -> TypeValue
                                     Just { fRet } -> fRet
                                     Nothing -> TypeValue
-                                  
-                                  arity = Array.length fn.args
+
                                   goParams = String.joinWith ", " (map (\(Tuple p goT) -> p <> "_loop " <> goTypeToStr goT) paramsWithTypes)
                                   
                                   funcExpr = if arity >= 1 && arity <= 10 then
@@ -547,6 +553,14 @@ isEffectNode expr = case unwrapTcoExpr expr of
   UncurriedEffectApp _ _ -> true
   Let _ _ _ body -> isEffectNode body
   LetRec _ _ body -> isEffectNode body
+  _ -> false
+
+isClosureNode :: TcoExpr -> Boolean
+isClosureNode expr = case unwrapTcoExpr expr of
+  Abs _ _ -> true
+  Let _ _ _ body -> isClosureNode body
+  LetRec _ _ body -> isClosureNode body
+  Typed _ inner -> isClosureNode inner
   _ -> false
 
 unwrapTcoExpr :: TcoExpr -> BackendSyntax TcoExpr
@@ -744,6 +758,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                   TypeStructPointer _ _ _ _ -> res
                   _ -> 
                     if expectedGoType == TypeValue then res
+                    else if isClosureNode a then res
                     else { stmts: res.stmts, expr: coerceGoExpr res.expr res.exprType expectedGoType, exprType: expectedGoType, nextId: res.nextId }
           _, _ ->
             let res = translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail inEffectBlock nextId a
@@ -751,6 +766,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
               TypeStructPointer _ _ _ _ -> res
               _ -> 
                 if expectedGoType == TypeValue then res
+                else if isClosureNode a then res
                 else { stmts: res.stmts, expr: coerceGoExpr res.expr res.exprType expectedGoType, exprType: expectedGoType, nextId: res.nextId }
       Var (Qualified mbMn (Ident i)) ->
         let

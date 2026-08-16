@@ -1,0 +1,10 @@
+--- src/Gopurs/CodeGen.purs
++++ src/Gopurs/CodeGen.purs
+@@ -447,7 +447,6 @@
+                                   isSelfRecursiveLoop = group.recursive && Array.length group.bindings == 1
+                                   currentLoopCtx = if isSelfRecursiveLoop then [ { ident: fn.ident, params: map fst paramsWithTypes, loopParams: map (\p -> fst p <> "_loop") paramsWithTypes, goTypes: map snd paramsWithTypes } ] else []
+                                   resBodyMut = translateExprImpl_ helpersRef 0 modNameStr recVars moduleArities newBound (Just fn.ident) currentLoopCtx isSelfRecursiveLoop false 0 fn.body
+-                                  _ = if fn.ident == "contains" then Debug.trace ("contains fn.body exprType = " <> goTypeToStr resBodyMut.exprType) \_ -> unit else unit
+ 
+ 
+ 
