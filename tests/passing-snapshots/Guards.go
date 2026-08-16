@@ -291,7 +291,7 @@ func Call_Main_clunky_case2(a_0_loop int64, b_1_loop int64) int64 {
 		__t1 = gopurs_runtime.Int(b_1)
 	}
 end_branch_1:
-	// TAST (Let): __local_var_2_0 -> int64
+	// TAST (Let): __local_var_2_0 shape=Branch(Other, def=Other) expectedFromAst=int64 actual=int64 bindingType=Int
 	__local_var_2_0 := __t1.IntVal
 	_ = __local_var_2_0
 	var __t2 int64
@@ -328,7 +328,7 @@ func Call_Main_clunky_case1(a_0_loop int64, b_1_loop int64) int64 {
 		__t1 = gopurs_runtime.Int(b_1)
 	}
 end_branch_1:
-	// TAST (Let): __local_var_2_0 -> int64
+	// TAST (Let): __local_var_2_0 shape=Branch(Other, def=Other) expectedFromAst=int64 actual=int64 bindingType=Int
 	__local_var_2_0 := __t1.IntVal
 	_ = __local_var_2_0
 	var __t2 int64
@@ -365,7 +365,7 @@ func Call_Main_clunky2(a_0_loop int64, b_1_loop int64) int64 {
 		__t1 = gopurs_runtime.Int(b_1)
 	}
 end_branch_1:
-	// TAST (Let): __local_var_2_0 -> int64
+	// TAST (Let): __local_var_2_0 shape=Branch(Other, def=Other) expectedFromAst=int64 actual=int64 bindingType=Int
 	__local_var_2_0 := __t1.IntVal
 	_ = __local_var_2_0
 	var __t2 int64
@@ -405,7 +405,7 @@ func Call_Main_clunky1_refutable(v_0_loop int64, v1_1_loop int64) int64 {
 				__t1 = gopurs_runtime.Int(v1_1)
 			}
 		end_branch_1:
-			// TAST (Let): __local_var_2_0 -> int64
+			// TAST (Let): __local_var_2_0 shape=Branch(Other, def=Other) expectedFromAst=int64 actual=int64 bindingType=Int
 			__local_var_2_0 := __t1.IntVal
 			_ = __local_var_2_0
 			var __t2 int64
@@ -452,7 +452,7 @@ func Call_Main_clunky1(v_0_loop int64, v1_1_loop int64) int64 {
 		__t1 = gopurs_runtime.Int(v1_1)
 	}
 end_branch_1:
-	// TAST (Let): __local_var_2_0 -> int64
+	// TAST (Let): __local_var_2_0 shape=Branch(Other, def=Other) expectedFromAst=int64 actual=int64 bindingType=Int
 	__local_var_2_0 := __t1.IntVal
 	_ = __local_var_2_0
 	var __t2 int64

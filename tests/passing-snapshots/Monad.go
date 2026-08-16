@@ -34,7 +34,7 @@ var once_Main_Id sync.Once
 func Get_Main_Id() gopurs_runtime.Value {
 	once_Main_Id.Do(func() {
 		cache_Main_Id = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 923654739, UnsafePtr: unsafe.Pointer((&Constructor_Main_Id{1, value0}))}
+			return value0
 		})
 	})
 	return cache_Main_Id
@@ -114,7 +114,7 @@ func Get_Main_id() gopurs_runtime.Value {
 	once_Main_id.Do(func() {
 		cache_Main_id = gopurs_runtime.RecordDict2("bind", "return", gopurs_runtime.Func(func(ma_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(f_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Value{Type: 9, IntVal: 923654739, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_Id](gopurs_runtime.Apply(f_1, ma_0)))}
+				return gopurs_runtime.Apply(f_1, ma_0)
 			})
 		}), Get_Main_Id())
 	})
@@ -126,7 +126,7 @@ var once_Main_test1 sync.Once
 
 func Get_Main_test1() gopurs_runtime.Value {
 	once_Main_test1.Do(func() {
-		cache_Main_test1 = gopurs_runtime.Value{Type: 9, IntVal: 923654739, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_Id](gopurs_runtime.Float(1.0)))}
+		cache_Main_test1 = gopurs_runtime.Float(1.0)
 	})
 	return cache_Main_test1
 }
@@ -138,7 +138,7 @@ func Get_Main_id__2356412419() gopurs_runtime.Value {
 	once_Main_id__2356412419.Do(func() {
 		cache_Main_id__2356412419 = gopurs_runtime.RecordDict2("bind", "return", gopurs_runtime.Func(func(ma_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(f_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Value{Type: 9, IntVal: 923654739, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_Id](gopurs_runtime.Apply(f_1, ma_0)))}
+				return gopurs_runtime.Apply(f_1, ma_0)
 			})
 		}), Get_Main_Id())
 	})

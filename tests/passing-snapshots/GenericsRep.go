@@ -48,7 +48,7 @@ var once_Main_X sync.Once
 func Get_Main_X() gopurs_runtime.Value {
 	once_Main_X.Do(func() {
 		cache_Main_X = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 1409933510, UnsafePtr: unsafe.Pointer((&Constructor_Main_X{1, value0}))}
+			return value0
 		})
 	})
 	return cache_Main_X
@@ -144,7 +144,7 @@ func Get_Main_genericX() gopurs_runtime.Value {
 		cache_Main_genericX = gopurs_runtime.Value{Type: 9, IntVal: 1921946594, UnsafePtr: unsafe.Pointer((&Constructor_Data_Generic_Rep_Generic{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return x_0
 		}), gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 1409933510, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_X](x_0))}
+			return x_0
 		})}))}
 	})
 	return cache_Main_genericX
@@ -196,7 +196,7 @@ var once_Main_eqY1 sync.Once
 func Get_Main_eqY1() gopurs_runtime.Value {
 	once_Main_eqY1.Do(func() {
 		cache_Main_eqY1 = func() gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_0_0 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [genericEq': (Func [(TypeVar a), (TypeVar a)] Boolean)] Any))
 			__local_var_0_0 := gopurs_runtime.RecordDict1("genericEq'", gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(v1_1 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Bool((v_0.IntVal) == (v1_1.IntVal))
@@ -205,24 +205,24 @@ func Get_Main_eqY1() gopurs_runtime.Value {
 			_ = __local_var_0_0
 			return gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer((&Constructor_Data_Eq_Eq{1, gopurs_runtime.Func(func(xs_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(ys_2 gopurs_runtime.Value) gopurs_runtime.Value {
-					// TAST (Let): __local_var_3_1 -> gopurs_runtime.Value
+					// TAST (Let): __local_var_3_1 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 					__local_var_3_1 := Call_Main_eqY(gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq](Get_Data_Eq_eqInt()))})
 					_ = __local_var_3_1
-					// TAST (Let): __local_var_4_2 -> gopurs_runtime.Value
+					// TAST (Let): __local_var_4_2 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [genericEq': (Func [(TypeVar a), (TypeVar a)] Boolean)] Any))
 					__local_var_4_2 := gopurs_runtime.RecordDict1("genericEq'", gopurs_runtime.Func(func(v_4 gopurs_runtime.Value) gopurs_runtime.Value {
 						return gopurs_runtime.Func(func(v1_5 gopurs_runtime.Value) gopurs_runtime.Value {
 							return gopurs_runtime.Bool((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(__local_var_3_1, "eq"), v_4, v1_5).IntVal) != (0))
 						})
 					}))
 					_ = __local_var_4_2
-					// TAST (Let): __local_var_5_3 -> gopurs_runtime.Value
+					// TAST (Let): __local_var_5_3 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [genericEq': (Func [(ADT ["Data","Generic","Rep","Product"] [(TypeVar a), (TypeVar b)]), (ADT ["Data","Generic","Rep","Product"] [(TypeVar a), (TypeVar b)])] Boolean)] Any))
 					__local_var_5_3 := gopurs_runtime.RecordDict1("genericEq'", gopurs_runtime.Func(func(v_5 gopurs_runtime.Value) gopurs_runtime.Value {
 						return gopurs_runtime.Func(func(v1_6 gopurs_runtime.Value) gopurs_runtime.Value {
 							return gopurs_runtime.Bool(((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(__local_var_0_0, "genericEq'"), (*Constructor_Data_Generic_Rep_Product)(v_5.UnsafePtr).V0, (*Constructor_Data_Generic_Rep_Product)(v1_6.UnsafePtr).V0).IntVal) != (0)) && ((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(__local_var_4_2, "genericEq'"), (*Constructor_Data_Generic_Rep_Product)(v_5.UnsafePtr).V1, (*Constructor_Data_Generic_Rep_Product)(v1_6.UnsafePtr).V1).IntVal) != (0)))
 						})
 					}))
 					_ = __local_var_5_3
-					// TAST (Let): __local_var_6_4 -> gopurs_runtime.Value
+					// TAST (Let): __local_var_6_4 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [genericEq': (Func [(TypeVar a), (TypeVar a)] Boolean)] Any))
 					__local_var_6_4 := gopurs_runtime.RecordDict1("genericEq'", gopurs_runtime.Func(func(v_6 gopurs_runtime.Value) gopurs_runtime.Value {
 						return gopurs_runtime.Func(func(v1_7 gopurs_runtime.Value) gopurs_runtime.Value {
 							return gopurs_runtime.Bool((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(__local_var_5_3, "genericEq'"), v_6, v1_7).IntVal) != (0))
@@ -331,24 +331,24 @@ func Get_Main_eqY2() gopurs_runtime.Value {
 	once_Main_eqY2.Do(func() {
 		cache_Main_eqY2 = gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer((&Constructor_Data_Eq_Eq{1, gopurs_runtime.Func(func(xs_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(ys_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				// TAST (Let): __local_var_2_0 -> gopurs_runtime.Value
+				// TAST (Let): __local_var_2_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 				__local_var_2_0 := Call_Main_eqY(gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq](Get_Main_eqZ()))})
 				_ = __local_var_2_0
-				// TAST (Let): __local_var_3_1 -> gopurs_runtime.Value
+				// TAST (Let): __local_var_3_1 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [genericEq': (Func [(TypeVar a), (TypeVar a)] Boolean)] Any))
 				__local_var_3_1 := gopurs_runtime.RecordDict1("genericEq'", gopurs_runtime.Func(func(v_3 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Func(func(v1_4 gopurs_runtime.Value) gopurs_runtime.Value {
 						return gopurs_runtime.Bool((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(__local_var_2_0, "eq"), v_3, v1_4).IntVal) != (0))
 					})
 				}))
 				_ = __local_var_3_1
-				// TAST (Let): __local_var_4_2 -> gopurs_runtime.Value
+				// TAST (Let): __local_var_4_2 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [genericEq': (Func [(ADT ["Data","Generic","Rep","Product"] [(TypeVar a), (TypeVar b)]), (ADT ["Data","Generic","Rep","Product"] [(TypeVar a), (TypeVar b)])] Boolean)] Any))
 				__local_var_4_2 := gopurs_runtime.RecordDict1("genericEq'", gopurs_runtime.Func(func(v_4 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Func(func(v1_5 gopurs_runtime.Value) gopurs_runtime.Value {
 						return gopurs_runtime.Bool((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(__local_var_3_1, "genericEq'"), (*Constructor_Data_Generic_Rep_Product)(v_4.UnsafePtr).V1, (*Constructor_Data_Generic_Rep_Product)(v1_5.UnsafePtr).V1).IntVal) != (0))
 					})
 				}))
 				_ = __local_var_4_2
-				// TAST (Let): __local_var_5_3 -> gopurs_runtime.Value
+				// TAST (Let): __local_var_5_3 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [genericEq': (Func [(TypeVar a), (TypeVar a)] Boolean)] Any))
 				__local_var_5_3 := gopurs_runtime.RecordDict1("genericEq'", gopurs_runtime.Func(func(v_5 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Func(func(v1_6 gopurs_runtime.Value) gopurs_runtime.Value {
 						return gopurs_runtime.Bool((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(__local_var_4_2, "genericEq'"), v_5, v1_6).IntVal) != (0))
@@ -467,14 +467,14 @@ var once_Main_eqX1 sync.Once
 func Get_Main_eqX1() gopurs_runtime.Value {
 	once_Main_eqX1.Do(func() {
 		cache_Main_eqX1 = func() gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_1 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_0_1 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [genericEq': (Func [(TypeVar a), (TypeVar a)] Boolean)] Any))
 			__local_var_0_1 := gopurs_runtime.RecordDict1("genericEq'", gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(v1_1 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Bool((v_0.IntVal) == (v1_1.IntVal))
 				})
 			}))
 			_ = __local_var_0_1
-			// TAST (Let): genericEqConstructor_0_0 -> *Constructor_Data_Eq_Generic_GenericEq
+			// TAST (Let): genericEqConstructor_0_0 shape=Let(LitRecord) expectedFromAst=*Constructor_Data_Eq_Generic_GenericEq actual=*Constructor_Data_Eq_Generic_GenericEq bindingType=(ADT ["Data","Eq","Generic","GenericEq"] [Any])
 			genericEqConstructor_0_0 := gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Generic_GenericEq](gopurs_runtime.RecordDict1("genericEq'", gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(v1_2 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Bool((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(__local_var_0_1, "genericEq'"), v_1, v1_2).IntVal) != (0))
@@ -496,37 +496,35 @@ var once_Main_main sync.Once
 
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
-		cache_Main_main = func() gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 -> gopurs_runtime.Value
+		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("false"))
 			_ = __local_var_0_0
-			return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-				_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
-				_ = _dollar___unused_1_1
-				_dollar___unused_2_2 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("true")), gopurs_runtime.Value{})
-				_ = _dollar___unused_2_2
-				_dollar___unused_3_3 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("true")), gopurs_runtime.Value{})
-				_ = _dollar___unused_3_3
-				_dollar___unused_4_4 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("false")), gopurs_runtime.Value{})
-				_ = _dollar___unused_4_4
-				var __t6 string
-				{
-					if (gopurs_runtime.Bool((gopurs_runtime.Apply2(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq](Get_Main_eqY2()).V0), gopurs_runtime.Value{Type: 9, IntVal: 1714575428, UnsafePtr: unsafe.Pointer((*Constructor_Main_Z)(nil))}, gopurs_runtime.Value{Type: 9, IntVal: 1714575428, UnsafePtr: unsafe.Pointer((*Constructor_Main_Z)(nil))}).IntVal) != (0)).IntVal) != (0) {
-						__t6 = "true"
-						goto end_branch_6
-					} else {
+			_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
+			_ = _dollar___unused_1_1
+			_dollar___unused_2_2 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("true")), gopurs_runtime.Value{})
+			_ = _dollar___unused_2_2
+			_dollar___unused_3_3 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("true")), gopurs_runtime.Value{})
+			_ = _dollar___unused_3_3
+			_dollar___unused_4_4 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("false")), gopurs_runtime.Value{})
+			_ = _dollar___unused_4_4
+			var __t6 string
+			{
+				if (gopurs_runtime.Bool((gopurs_runtime.Apply2(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq](Get_Main_eqY2()).V0), gopurs_runtime.Value{Type: 9, IntVal: 1714575428, UnsafePtr: unsafe.Pointer((*Constructor_Main_Z)(nil))}, gopurs_runtime.Value{Type: 9, IntVal: 1714575428, UnsafePtr: unsafe.Pointer((*Constructor_Main_Z)(nil))}).IntVal) != (0)).IntVal) != (0) {
+					__t6 = "true"
+					goto end_branch_6
+				} else {
 
-					}
 				}
-				{
-					__t6 = "false"
-				}
-			end_branch_6:
-				_dollar___unused_5_5 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(__t6)), gopurs_runtime.Value{})
-				_ = _dollar___unused_5_5
-				return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
-			})
-		}()
+			}
+			{
+				__t6 = "false"
+			}
+		end_branch_6:
+			_dollar___unused_5_5 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(__t6)), gopurs_runtime.Value{})
+			_ = _dollar___unused_5_5
+			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
+		})
 	})
 	return cache_Main_main
 }
@@ -539,7 +537,7 @@ func Get_Main_genericX__2110195358() gopurs_runtime.Value {
 		cache_Main_genericX__2110195358 = gopurs_runtime.Value{Type: 9, IntVal: 1921946594, UnsafePtr: unsafe.Pointer((&Constructor_Data_Generic_Rep_Generic{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return x_0
 		}), gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 1409933510, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_X](x_0))}
+			return x_0
 		})}))}
 	})
 	return cache_Main_genericX__2110195358
@@ -631,7 +629,7 @@ func Call_Main_genericEqSum(dictGenericEq1_0_loop gopurs_runtime.Value) gopurs_r
 				}
 			}
 			{
-				__t0 = (v_1.Type == 9 && v_1.IntVal == 492034566) && ((v1_2.Type == 9 && v1_2.IntVal == 492034566) && ((gopurs_runtime.Apply2(gopurs_runtime.Bool((gopurs_runtime.RecordGet(dictGenericEq1_0, "genericEq'").IntVal) != (0)), (*Constructor_Data_Generic_Rep_Inr)(v_1.UnsafePtr).V0, (*Constructor_Data_Generic_Rep_Inr)(v1_2.UnsafePtr).V0).IntVal) != (0)))
+				__t0 = (v_1.Type == 9 && v_1.IntVal == 492034566) && ((v1_2.Type == 9 && v1_2.IntVal == 492034566) && ((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(dictGenericEq1_0, "genericEq'"), (*Constructor_Data_Generic_Rep_Inr)(v_1.UnsafePtr).V0, (*Constructor_Data_Generic_Rep_Inr)(v1_2.UnsafePtr).V0).IntVal) != (0)))
 			}
 		end_branch_0:
 			return gopurs_runtime.Bool(__t0)
@@ -653,7 +651,7 @@ eqY:
 		}
 		var dictEq_0 gopurs_runtime.Value = dictEq_0_loop
 		_ = dictEq_0
-		// TAST (Let): __local_var_1_0 -> gopurs_runtime.Value
+		// TAST (Let): __local_var_1_0 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [genericEq': (Func [(TypeVar a), (TypeVar a)] Boolean)] Any))
 		__local_var_1_0 := gopurs_runtime.RecordDict1("genericEq'", gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(v1_2 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Bool((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(dictEq_0, "eq"), v_1, v1_2).IntVal) != (0))
@@ -662,24 +660,24 @@ eqY:
 		_ = __local_var_1_0
 		return gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer((&Constructor_Data_Eq_Eq{1, gopurs_runtime.Func(func(xs_2 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(ys_3 gopurs_runtime.Value) gopurs_runtime.Value {
-				// TAST (Let): __local_var_4_1 -> gopurs_runtime.Value
+				// TAST (Let): __local_var_4_1 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 				__local_var_4_1 := Call_Main_eqY(dictEq_0)
 				_ = __local_var_4_1
-				// TAST (Let): __local_var_5_2 -> gopurs_runtime.Value
+				// TAST (Let): __local_var_5_2 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [genericEq': (Func [(TypeVar a), (TypeVar a)] Boolean)] Any))
 				__local_var_5_2 := gopurs_runtime.RecordDict1("genericEq'", gopurs_runtime.Func(func(v_5 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Func(func(v1_6 gopurs_runtime.Value) gopurs_runtime.Value {
 						return gopurs_runtime.Bool((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(__local_var_4_1, "eq"), v_5, v1_6).IntVal) != (0))
 					})
 				}))
 				_ = __local_var_5_2
-				// TAST (Let): __local_var_6_3 -> gopurs_runtime.Value
+				// TAST (Let): __local_var_6_3 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [genericEq': (Func [(ADT ["Data","Generic","Rep","Product"] [(TypeVar a), (TypeVar b)]), (ADT ["Data","Generic","Rep","Product"] [(TypeVar a), (TypeVar b)])] Boolean)] Any))
 				__local_var_6_3 := gopurs_runtime.RecordDict1("genericEq'", gopurs_runtime.Func(func(v_6 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Func(func(v1_7 gopurs_runtime.Value) gopurs_runtime.Value {
 						return gopurs_runtime.Bool(((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(__local_var_1_0, "genericEq'"), (*Constructor_Data_Generic_Rep_Product)(v_6.UnsafePtr).V0, (*Constructor_Data_Generic_Rep_Product)(v1_7.UnsafePtr).V0).IntVal) != (0)) && ((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(__local_var_5_2, "genericEq'"), (*Constructor_Data_Generic_Rep_Product)(v_6.UnsafePtr).V1, (*Constructor_Data_Generic_Rep_Product)(v1_7.UnsafePtr).V1).IntVal) != (0)))
 					})
 				}))
 				_ = __local_var_6_3
-				// TAST (Let): __local_var_7_4 -> gopurs_runtime.Value
+				// TAST (Let): __local_var_7_4 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [genericEq': (Func [(TypeVar a), (TypeVar a)] Boolean)] Any))
 				__local_var_7_4 := gopurs_runtime.RecordDict1("genericEq'", gopurs_runtime.Func(func(v_7 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Func(func(v1_8 gopurs_runtime.Value) gopurs_runtime.Value {
 						return gopurs_runtime.Bool((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(__local_var_6_3, "genericEq'"), v_7, v1_8).IntVal) != (0))
@@ -782,14 +780,14 @@ eqY:
 func Call_Main_eqX(dictEq_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var dictEq_0 gopurs_runtime.Value = dictEq_0_loop
 	_ = dictEq_0
-	// TAST (Let): __local_var_1_1 -> gopurs_runtime.Value
+	// TAST (Let): __local_var_1_1 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [genericEq': (Func [(TypeVar a), (TypeVar a)] Boolean)] Any))
 	__local_var_1_1 := gopurs_runtime.RecordDict1("genericEq'", gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
 		return gopurs_runtime.Func(func(v1_2 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Bool((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(dictEq_0, "eq"), v_1, v1_2).IntVal) != (0))
 		})
 	}))
 	_ = __local_var_1_1
-	// TAST (Let): genericEqConstructor_1_0 -> *Constructor_Data_Eq_Generic_GenericEq
+	// TAST (Let): genericEqConstructor_1_0 shape=Let(LitRecord) expectedFromAst=*Constructor_Data_Eq_Generic_GenericEq actual=*Constructor_Data_Eq_Generic_GenericEq bindingType=(ADT ["Data","Eq","Generic","GenericEq"] [Any])
 	genericEqConstructor_1_0 := gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Generic_GenericEq](gopurs_runtime.RecordDict1("genericEq'", gopurs_runtime.Func(func(v_2 gopurs_runtime.Value) gopurs_runtime.Value {
 		return gopurs_runtime.Func(func(v1_3 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Bool((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(__local_var_1_1, "genericEq'"), v_2, v1_3).IntVal) != (0))

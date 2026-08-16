@@ -12,7 +12,7 @@ var once_Main_Extend sync.Once
 func Get_Main_Extend() gopurs_runtime.Value {
 	once_Main_Extend.Do(func() {
 		cache_Main_Extend = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 2609382648, UnsafePtr: unsafe.Pointer((&Constructor_Main_Extend{1, value0}))}
+			return value0
 		})
 	})
 	return cache_Main_Extend

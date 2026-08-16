@@ -57,103 +57,101 @@ var once_Main_main sync.Once
 
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
-		cache_Main_main = func() gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 -> gopurs_runtime.Value
+		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 			__local_var_0_0 := gopurs_runtime.Apply(Get_Data_Function_Uncurried_runFn0(), gopurs_runtime.Apply(Get_Data_Function_Uncurried_mkFn0(), gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showNumberImpl(), gopurs_runtime.Float(0.0)).StrVal()))
 			})))
 			_ = __local_var_0_0
-			return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-				_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
-				_ = _dollar___unused_1_1
-				_dollar___unused_2_2 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showNumberImpl(), gopurs_runtime.Float(0.0)).StrVal())), gopurs_runtime.Value{})
-				_ = _dollar___unused_2_2
-				_dollar___unused_3_3 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show](Get_Main_showArray()).V0), func() gopurs_runtime.Value {
-					arr := []float64{0.0, 0.0}
-					boxed := make([]gopurs_runtime.Value, len(arr))
-					for i, v := range arr {
-						boxed[i] = gopurs_runtime.Float(v)
-					}
-					return gopurs_runtime.Array(boxed)
-				}()).StrVal())), gopurs_runtime.Value{})
-				_ = _dollar___unused_3_3
-				_dollar___unused_4_4 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show](Get_Main_showArray()).V0), func() gopurs_runtime.Value {
-					arr := []float64{0.0, 0.0, 0.0}
-					boxed := make([]gopurs_runtime.Value, len(arr))
-					for i, v := range arr {
-						boxed[i] = gopurs_runtime.Float(v)
-					}
-					return gopurs_runtime.Array(boxed)
-				}()).StrVal())), gopurs_runtime.Value{})
-				_ = _dollar___unused_4_4
-				_dollar___unused_5_5 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show](Get_Main_showArray()).V0), func() gopurs_runtime.Value {
-					arr := []float64{0.0, 0.0, 0.0, 0.0}
-					boxed := make([]gopurs_runtime.Value, len(arr))
-					for i, v := range arr {
-						boxed[i] = gopurs_runtime.Float(v)
-					}
-					return gopurs_runtime.Array(boxed)
-				}()).StrVal())), gopurs_runtime.Value{})
-				_ = _dollar___unused_5_5
-				_dollar___unused_6_6 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show](Get_Main_showArray()).V0), func() gopurs_runtime.Value {
-					arr := []float64{0.0, 0.0, 0.0, 0.0, 0.0}
-					boxed := make([]gopurs_runtime.Value, len(arr))
-					for i, v := range arr {
-						boxed[i] = gopurs_runtime.Float(v)
-					}
-					return gopurs_runtime.Array(boxed)
-				}()).StrVal())), gopurs_runtime.Value{})
-				_ = _dollar___unused_6_6
-				_dollar___unused_7_7 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show](Get_Main_showArray()).V0), func() gopurs_runtime.Value {
-					arr := []float64{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
-					boxed := make([]gopurs_runtime.Value, len(arr))
-					for i, v := range arr {
-						boxed[i] = gopurs_runtime.Float(v)
-					}
-					return gopurs_runtime.Array(boxed)
-				}()).StrVal())), gopurs_runtime.Value{})
-				_ = _dollar___unused_7_7
-				_dollar___unused_8_8 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show](Get_Main_showArray()).V0), func() gopurs_runtime.Value {
-					arr := []float64{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
-					boxed := make([]gopurs_runtime.Value, len(arr))
-					for i, v := range arr {
-						boxed[i] = gopurs_runtime.Float(v)
-					}
-					return gopurs_runtime.Array(boxed)
-				}()).StrVal())), gopurs_runtime.Value{})
-				_ = _dollar___unused_8_8
-				_dollar___unused_9_9 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show](Get_Main_showArray()).V0), func() gopurs_runtime.Value {
-					arr := []float64{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
-					boxed := make([]gopurs_runtime.Value, len(arr))
-					for i, v := range arr {
-						boxed[i] = gopurs_runtime.Float(v)
-					}
-					return gopurs_runtime.Array(boxed)
-				}()).StrVal())), gopurs_runtime.Value{})
-				_ = _dollar___unused_9_9
-				_dollar___unused_10_10 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show](Get_Main_showArray()).V0), func() gopurs_runtime.Value {
-					arr := []float64{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
-					boxed := make([]gopurs_runtime.Value, len(arr))
-					for i, v := range arr {
-						boxed[i] = gopurs_runtime.Float(v)
-					}
-					return gopurs_runtime.Array(boxed)
-				}()).StrVal())), gopurs_runtime.Value{})
-				_ = _dollar___unused_10_10
-				_dollar___unused_11_11 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show](Get_Main_showArray()).V0), func() gopurs_runtime.Value {
-					arr := []float64{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
-					boxed := make([]gopurs_runtime.Value, len(arr))
-					for i, v := range arr {
-						boxed[i] = gopurs_runtime.Float(v)
-					}
-					return gopurs_runtime.Array(boxed)
-				}()).StrVal())), gopurs_runtime.Value{})
-				_ = _dollar___unused_11_11
-				_dollar___unused_12_12 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showNumberImpl(), gopurs_runtime.Float(gopurs_runtime.UncurriedApp2(Get_Main_g(), gopurs_runtime.Float(0.0), gopurs_runtime.Float(0.0)).FloatVal())).StrVal())), gopurs_runtime.Value{})
-				_ = _dollar___unused_12_12
-				return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
-			})
-		}()
+			_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
+			_ = _dollar___unused_1_1
+			_dollar___unused_2_2 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showNumberImpl(), gopurs_runtime.Float(0.0)).StrVal())), gopurs_runtime.Value{})
+			_ = _dollar___unused_2_2
+			_dollar___unused_3_3 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show](Get_Main_showArray()).V0), func() gopurs_runtime.Value {
+				arr := []float64{0.0, 0.0}
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Float(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}()).StrVal())), gopurs_runtime.Value{})
+			_ = _dollar___unused_3_3
+			_dollar___unused_4_4 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show](Get_Main_showArray()).V0), func() gopurs_runtime.Value {
+				arr := []float64{0.0, 0.0, 0.0}
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Float(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}()).StrVal())), gopurs_runtime.Value{})
+			_ = _dollar___unused_4_4
+			_dollar___unused_5_5 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show](Get_Main_showArray()).V0), func() gopurs_runtime.Value {
+				arr := []float64{0.0, 0.0, 0.0, 0.0}
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Float(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}()).StrVal())), gopurs_runtime.Value{})
+			_ = _dollar___unused_5_5
+			_dollar___unused_6_6 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show](Get_Main_showArray()).V0), func() gopurs_runtime.Value {
+				arr := []float64{0.0, 0.0, 0.0, 0.0, 0.0}
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Float(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}()).StrVal())), gopurs_runtime.Value{})
+			_ = _dollar___unused_6_6
+			_dollar___unused_7_7 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show](Get_Main_showArray()).V0), func() gopurs_runtime.Value {
+				arr := []float64{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Float(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}()).StrVal())), gopurs_runtime.Value{})
+			_ = _dollar___unused_7_7
+			_dollar___unused_8_8 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show](Get_Main_showArray()).V0), func() gopurs_runtime.Value {
+				arr := []float64{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Float(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}()).StrVal())), gopurs_runtime.Value{})
+			_ = _dollar___unused_8_8
+			_dollar___unused_9_9 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show](Get_Main_showArray()).V0), func() gopurs_runtime.Value {
+				arr := []float64{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Float(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}()).StrVal())), gopurs_runtime.Value{})
+			_ = _dollar___unused_9_9
+			_dollar___unused_10_10 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show](Get_Main_showArray()).V0), func() gopurs_runtime.Value {
+				arr := []float64{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Float(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}()).StrVal())), gopurs_runtime.Value{})
+			_ = _dollar___unused_10_10
+			_dollar___unused_11_11 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show](Get_Main_showArray()).V0), func() gopurs_runtime.Value {
+				arr := []float64{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Float(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}()).StrVal())), gopurs_runtime.Value{})
+			_ = _dollar___unused_11_11
+			_dollar___unused_12_12 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showNumberImpl(), gopurs_runtime.Float(gopurs_runtime.UncurriedApp2(Get_Main_g(), gopurs_runtime.Float(0.0), gopurs_runtime.Float(0.0)).FloatVal())).StrVal())), gopurs_runtime.Value{})
+			_ = _dollar___unused_12_12
+			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
+		})
 	})
 	return cache_Main_main
 }

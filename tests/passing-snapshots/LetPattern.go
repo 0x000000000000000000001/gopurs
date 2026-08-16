@@ -327,44 +327,39 @@ var once_Main_patternDoWithInfixOp sync.Once
 
 func Get_Main_patternDoWithInfixOp() gopurs_runtime.Value {
 	once_Main_patternDoWithInfixOp.Do(func() {
-		cache_Main_patternDoWithInfixOp = func() gopurs_runtime.Value {
-			var go__go_0_1_2 gopurs_runtime.Value
-			_ = go__go_0_1_2
-			go__go_0_1_2 = gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_patternDoWithInfixOp = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+			var go__go_0_0_2 gopurs_runtime.Value
+			_ = go__go_0_0_2
+			go__go_0_0_2 = gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(v1_2 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Func(func(v2_3 gopurs_runtime.Value) gopurs_runtime.Value {
-						var __t2 bool
+						var __t1 bool
 						{
 							if ((v2_3.IntVal) != (0)) != (true) {
-								__t2 = false
-								goto end_branch_2
+								__t1 = false
+								goto end_branch_1
 							} else {
 
 							}
 						}
 						{
 							if v_1.Type == 9 && v_1.IntVal == 322902991 && v_1.UnsafePtr == nil {
-								__t2 = (v1_2.Type == 9 && v1_2.IntVal == 322902991 && v1_2.UnsafePtr == nil) && ((v2_3.IntVal) != (0))
-								goto end_branch_2
+								__t1 = (v1_2.Type == 9 && v1_2.IntVal == 322902991 && v1_2.UnsafePtr == nil) && ((v2_3.IntVal) != (0))
+								goto end_branch_1
 							} else {
 
 							}
 						}
 						{
-							__t2 = (v_1.Type == 9 && v_1.IntVal == 322902991 && v_1.UnsafePtr != nil) && ((v1_2.Type == 9 && v1_2.IntVal == 322902991 && v1_2.UnsafePtr != nil) && ((gopurs_runtime.Apply3(go__go_0_1_2, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons)(v_1.UnsafePtr).V1)}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons)(v1_2.UnsafePtr).V1)}, gopurs_runtime.Bool(((v2_3.IntVal) != (0)) && (((*Constructor_Main_Cons)(v1_2.UnsafePtr).V0.IntVal) == ((*Constructor_Main_Cons)(v_1.UnsafePtr).V0.IntVal)))).IntVal) != (0)))
+							__t1 = (v_1.Type == 9 && v_1.IntVal == 322902991 && v_1.UnsafePtr != nil) && ((v1_2.Type == 9 && v1_2.IntVal == 322902991 && v1_2.UnsafePtr != nil) && ((gopurs_runtime.Apply3(go__go_0_0_2, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons)(v_1.UnsafePtr).V1)}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons)(v1_2.UnsafePtr).V1)}, gopurs_runtime.Bool(((v2_3.IntVal) != (0)) && (((*Constructor_Main_Cons)(v1_2.UnsafePtr).V0.IntVal) == ((*Constructor_Main_Cons)(v_1.UnsafePtr).V0.IntVal)))).IntVal) != (0)))
 						}
-					end_branch_2:
-						return gopurs_runtime.Bool(__t2)
+					end_branch_1:
+						return gopurs_runtime.Bool(__t1)
 					})
 				})
 			})
-			// TAST (Let): __local_var_0_0 -> bool
-			__local_var_0_0 := (gopurs_runtime.Apply3(go__go_0_1_2, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((&Constructor_Main_Cons{1, gopurs_runtime.Int(2), (&Constructor_Main_Cons{1, gopurs_runtime.Int(3), (&Constructor_Main_Cons{1, gopurs_runtime.Int(4), (*Constructor_Main_Cons)(nil)})})}))}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((&Constructor_Main_Cons{1, gopurs_runtime.Int(2), (&Constructor_Main_Cons{1, gopurs_runtime.Int(3), (&Constructor_Main_Cons{1, gopurs_runtime.Int(4), (*Constructor_Main_Cons)(nil)})})}))}, gopurs_runtime.Bool(true)).IntVal) != (0)
-			_ = __local_var_0_0
-			return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Bool(__local_var_0_0)
-			})
-		}()
+			return gopurs_runtime.Bool((gopurs_runtime.Apply3(go__go_0_0_2, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((&Constructor_Main_Cons{1, gopurs_runtime.Int(2), (&Constructor_Main_Cons{1, gopurs_runtime.Int(3), (&Constructor_Main_Cons{1, gopurs_runtime.Int(4), (*Constructor_Main_Cons)(nil)})})}))}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((&Constructor_Main_Cons{1, gopurs_runtime.Int(2), (&Constructor_Main_Cons{1, gopurs_runtime.Int(3), (&Constructor_Main_Cons{1, gopurs_runtime.Int(4), (*Constructor_Main_Cons)(nil)})})}))}, gopurs_runtime.Bool(true)).IntVal) != (0))
+		})
 	})
 	return cache_Main_patternDoWithInfixOp
 }
@@ -416,74 +411,72 @@ var once_Main_main sync.Once
 
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
-		cache_Main_main = func() gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 -> gopurs_runtime.Value
+		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 			__local_var_0_0 := gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("simple variable pattern"), gopurs_runtime.Bool(true))
 			_ = __local_var_0_0
-			return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-				_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
-				_ = _dollar___unused_1_1
-				__local_var_2_3 := gopurs_runtime.Bool(true)
-				_ = __local_var_2_3
-				_dollar___unused_2_2 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("simple variable pattern with do"), __local_var_2_3), gopurs_runtime.Value{})
-				_ = _dollar___unused_2_2
-				_dollar___unused_3_4 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("constructor pattern (newtype)"), gopurs_runtime.Bool(true)), gopurs_runtime.Value{})
-				_ = _dollar___unused_3_4
-				__local_var_4_6 := gopurs_runtime.Bool(true)
-				_ = __local_var_4_6
-				_dollar___unused_4_5 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("constructor pattern (newtype) with do"), __local_var_4_6), gopurs_runtime.Value{})
-				_ = _dollar___unused_4_5
-				_dollar___unused_5_7 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("constructor pattern (data)"), gopurs_runtime.Bool(true)), gopurs_runtime.Value{})
-				_ = _dollar___unused_5_7
-				_dollar___unused_6_8 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("constructor pattern with ignorances"), gopurs_runtime.Bool(true)), gopurs_runtime.Value{})
-				_ = _dollar___unused_6_8
-				__local_var_7_10 := gopurs_runtime.Bool(true)
-				_ = __local_var_7_10
-				_dollar___unused_7_9 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("constructor pattern (data) with do"), __local_var_7_10), gopurs_runtime.Value{})
-				_ = _dollar___unused_7_9
-				__local_var_8_12 := gopurs_runtime.Bool(true)
-				_ = __local_var_8_12
-				_dollar___unused_8_11 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("constructor pattern with ignorances and do"), __local_var_8_12), gopurs_runtime.Value{})
-				_ = _dollar___unused_8_11
-				_dollar___unused_9_13 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("array pattern"), gopurs_runtime.Bool(true)), gopurs_runtime.Value{})
-				_ = _dollar___unused_9_13
-				__local_var_10_15 := gopurs_runtime.Bool(true)
-				_ = __local_var_10_15
-				_dollar___unused_10_14 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("array pattern with do"), __local_var_10_15), gopurs_runtime.Value{})
-				_ = _dollar___unused_10_14
-				_dollar___unused_11_16 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("multiple patterns"), gopurs_runtime.Bool(true)), gopurs_runtime.Value{})
-				_ = _dollar___unused_11_16
-				__local_var_12_18 := gopurs_runtime.Bool(true)
-				_ = __local_var_12_18
-				_dollar___unused_12_17 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("multiple patterns with do"), __local_var_12_18), gopurs_runtime.Value{})
-				_ = _dollar___unused_12_17
-				_dollar___unused_13_19 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("multiple patterns with normal let's"), gopurs_runtime.Bool(true)), gopurs_runtime.Value{})
-				_ = _dollar___unused_13_19
-				__local_var_14_21 := gopurs_runtime.Bool(true)
-				_ = __local_var_14_21
-				_dollar___unused_14_20 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("multiple patterns with normal let's and do"), __local_var_14_21), gopurs_runtime.Value{})
-				_ = _dollar___unused_14_20
-				_dollar___unused_15_22 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("multiple patterns with parens"), gopurs_runtime.Bool(true)), gopurs_runtime.Value{})
-				_ = _dollar___unused_15_22
-				__local_var_16_24 := gopurs_runtime.Bool(true)
-				_ = __local_var_16_24
-				_dollar___unused_16_23 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("multiple patterns with parens and do"), __local_var_16_24), gopurs_runtime.Value{})
-				_ = _dollar___unused_16_23
-				_dollar___unused_17_25 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("multiple patterns with named binder"), gopurs_runtime.Bool(true)), gopurs_runtime.Value{})
-				_ = _dollar___unused_17_25
-				__local_var_18_27 := gopurs_runtime.Bool(true)
-				_ = __local_var_18_27
-				_dollar___unused_18_26 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("multiple patterns with named binder and do"), __local_var_18_27), gopurs_runtime.Value{})
-				_ = _dollar___unused_18_26
-				_dollar___unused_19_28 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("pattern with infix operator"), gopurs_runtime.Bool((Get_Main_patternWithInfixOp().IntVal) != (0))), gopurs_runtime.Value{})
-				_ = _dollar___unused_19_28
-				__local_var_20_30 := gopurs_runtime.Apply(Get_Main_patternDoWithInfixOp(), gopurs_runtime.Value{})
-				_ = __local_var_20_30
-				_dollar___unused_20_29 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("pattern with infix operator and do"), __local_var_20_30), gopurs_runtime.Value{})
-				_ = _dollar___unused_20_29
-				return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
-			})
-		}()
+			_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
+			_ = _dollar___unused_1_1
+			__local_var_2_3 := gopurs_runtime.Bool(true)
+			_ = __local_var_2_3
+			_dollar___unused_2_2 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("simple variable pattern with do"), __local_var_2_3), gopurs_runtime.Value{})
+			_ = _dollar___unused_2_2
+			_dollar___unused_3_4 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("constructor pattern (newtype)"), gopurs_runtime.Bool(true)), gopurs_runtime.Value{})
+			_ = _dollar___unused_3_4
+			__local_var_4_6 := gopurs_runtime.Bool(true)
+			_ = __local_var_4_6
+			_dollar___unused_4_5 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("constructor pattern (newtype) with do"), __local_var_4_6), gopurs_runtime.Value{})
+			_ = _dollar___unused_4_5
+			_dollar___unused_5_7 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("constructor pattern (data)"), gopurs_runtime.Bool(true)), gopurs_runtime.Value{})
+			_ = _dollar___unused_5_7
+			_dollar___unused_6_8 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("constructor pattern with ignorances"), gopurs_runtime.Bool(true)), gopurs_runtime.Value{})
+			_ = _dollar___unused_6_8
+			__local_var_7_10 := gopurs_runtime.Bool(true)
+			_ = __local_var_7_10
+			_dollar___unused_7_9 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("constructor pattern (data) with do"), __local_var_7_10), gopurs_runtime.Value{})
+			_ = _dollar___unused_7_9
+			__local_var_8_12 := gopurs_runtime.Bool(true)
+			_ = __local_var_8_12
+			_dollar___unused_8_11 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("constructor pattern with ignorances and do"), __local_var_8_12), gopurs_runtime.Value{})
+			_ = _dollar___unused_8_11
+			_dollar___unused_9_13 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("array pattern"), gopurs_runtime.Bool(true)), gopurs_runtime.Value{})
+			_ = _dollar___unused_9_13
+			__local_var_10_15 := gopurs_runtime.Bool(true)
+			_ = __local_var_10_15
+			_dollar___unused_10_14 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("array pattern with do"), __local_var_10_15), gopurs_runtime.Value{})
+			_ = _dollar___unused_10_14
+			_dollar___unused_11_16 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("multiple patterns"), gopurs_runtime.Bool(true)), gopurs_runtime.Value{})
+			_ = _dollar___unused_11_16
+			__local_var_12_18 := gopurs_runtime.Bool(true)
+			_ = __local_var_12_18
+			_dollar___unused_12_17 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("multiple patterns with do"), __local_var_12_18), gopurs_runtime.Value{})
+			_ = _dollar___unused_12_17
+			_dollar___unused_13_19 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("multiple patterns with normal let's"), gopurs_runtime.Bool(true)), gopurs_runtime.Value{})
+			_ = _dollar___unused_13_19
+			__local_var_14_21 := gopurs_runtime.Bool(true)
+			_ = __local_var_14_21
+			_dollar___unused_14_20 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("multiple patterns with normal let's and do"), __local_var_14_21), gopurs_runtime.Value{})
+			_ = _dollar___unused_14_20
+			_dollar___unused_15_22 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("multiple patterns with parens"), gopurs_runtime.Bool(true)), gopurs_runtime.Value{})
+			_ = _dollar___unused_15_22
+			__local_var_16_24 := gopurs_runtime.Bool(true)
+			_ = __local_var_16_24
+			_dollar___unused_16_23 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("multiple patterns with parens and do"), __local_var_16_24), gopurs_runtime.Value{})
+			_ = _dollar___unused_16_23
+			_dollar___unused_17_25 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("multiple patterns with named binder"), gopurs_runtime.Bool(true)), gopurs_runtime.Value{})
+			_ = _dollar___unused_17_25
+			__local_var_18_27 := gopurs_runtime.Bool(true)
+			_ = __local_var_18_27
+			_dollar___unused_18_26 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("multiple patterns with named binder and do"), __local_var_18_27), gopurs_runtime.Value{})
+			_ = _dollar___unused_18_26
+			_dollar___unused_19_28 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("pattern with infix operator"), gopurs_runtime.Bool((Get_Main_patternWithInfixOp().IntVal) != (0))), gopurs_runtime.Value{})
+			_ = _dollar___unused_19_28
+			__local_var_20_30 := gopurs_runtime.Apply(Get_Main_patternDoWithInfixOp(), gopurs_runtime.Value{})
+			_ = __local_var_20_30
+			_dollar___unused_20_29 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("pattern with infix operator and do"), __local_var_20_30), gopurs_runtime.Value{})
+			_ = _dollar___unused_20_29
+			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
+		})
 	})
 	return cache_Main_main
 }
