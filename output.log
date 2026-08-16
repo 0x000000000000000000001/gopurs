@@ -1,0 +1,889 @@
+Reading Spago workspace configuration...
+
+✓ Selecting package to build: gopurs
+
+Downloading dependencies...
+Building...
+[1 of 2] Compiling Gopurs.CodeGen
+[2 of 2] Compiling Main
+[WARNING 1/104 UnusedExplicitImport] src/Gopurs/CodeGen.purs:4:1
+
+  4  import PureScript.Backend.Optimizer.Syntax (BackendSyntax(..), BackendAccessor(..), Pair(..), Level(..), BackendOperator(..), BackendOperator1(..), BackendOperator2(..), BackendOperatorOrd(..), BackendOperatorNum(..), BackendEffect(..))
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  The import of module PureScript.Backend.Optimizer.Syntax contains the following unused references:
+    Level
+  It could be replaced with:
+    import PureScript.Backend.Optimizer.Syntax (BackendAccessor(..), BackendEffect(..), BackendOperator(..), BackendOperator1(..), BackendOperator2(..), BackendOperatorNum(..), BackendOperatorOrd(..), BackendSyntax(..), Pair(..))
+
+[WARNING 2/104 UnusedImport] src/Gopurs/CodeGen.purs:5:1
+
+  5  import PureScript.Backend.Optimizer.Semantics (NeutralExpr(..))
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  The import of PureScript.Backend.Optimizer.Semantics is redundant
+
+[WARNING 3/104 UnusedExplicitImport] src/Gopurs/CodeGen.purs:6:1
+
+  6  import PureScript.Backend.Optimizer.Convert (BackendModule, BackendBindingGroup)
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  The import of module PureScript.Backend.Optimizer.Convert contains the following unused references:
+    BackendBindingGroup
+  It could be replaced with:
+    import PureScript.Backend.Optimizer.Convert (BackendModule)
+
+[WARNING 4/104 UnusedExplicitImport] src/Gopurs/CodeGen.purs:9:1
+
+  9  import Data.Maybe (Maybe(..), fromMaybe, isJust)
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  The import of module Data.Maybe contains the following unused references:
+    isJust
+  It could be replaced with:
+    import Data.Maybe (Maybe(..), fromMaybe)
+
+[WARNING 5/104 UnusedExplicitImport] src/Gopurs/CodeGen.purs:11:1
+
+  11  import PureScript.Backend.Optimizer.CoreFn (Ann(..), Bind(..), Binder(..), Binding(..), CaseAlternative(..), CaseGuard(..), Comment, ConstructorType(..), DataConstructor, DataDecl, Expr(..), ExprType(..), Guard(..), Ident(..), Import(..), Literal(..), Meta(..), Module(..), ModuleName(..), Prop(..), ProperName(..), Qualified(..), ReExport, exprAnn, findProp, propKey, propValue, qualifiedModuleName, unQualified)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  The import of module PureScript.Backend.Optimizer.CoreFn contains the following unused references:
+    Ann
+    Bind
+    Binder
+    Binding
+    CaseAlternative
+    CaseGuard
+    Comment
+    ConstructorType
+    DataConstructor
+    Expr
+    Guard
+    Import
+    Meta
+    Module
+    ProperName
+    ReExport
+    exprAnn
+    findProp
+    propKey
+    propValue
+    qualifiedModuleName
+    unQualified
+  It could be replaced with:
+    import PureScript.Backend.Optimizer.CoreFn (DataDecl, ExprType(..), Ident(..), Literal(..), ModuleName(..), Prop(..), Qualified(..))
+
+[WARNING 6/104 UnusedImport] src/Gopurs/CodeGen.purs:13:1
+
+  13  import Data.Array.NonEmpty as NonEmptyArray
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  The qualified import of Data.Array.NonEmpty as NonEmptyArray is redundant
+
+[WARNING 7/104 UnusedExplicitImport] src/Gopurs/CodeGen.purs:14:1
+
+  14  import Data.Array.NonEmpty (NonEmptyArray, fromArray, toArray)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  The import of module Data.Array.NonEmpty contains the following unused references:
+    NonEmptyArray
+  It could be replaced with:
+    import Data.Array.NonEmpty (fromArray, toArray)
+
+[WARNING 8/104 UnusedImport] src/Gopurs/CodeGen.purs:19:1
+
+  19  import Partial.Unsafe (unsafePartial)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  The import of Partial.Unsafe is redundant
+
+[WARNING 9/104 DuplicateImport] src/Gopurs/CodeGen.purs:28:1
+
+  28  import Data.Set as Set
+      ^^^^^^^^^^^^^^^^^^^^^^
+
+  Duplicate import of Data.Set as Set
+
+[WARNING 10/104 UnusedExplicitImport] src/Gopurs/CodeGen.purs:35:1
+
+  35  import PureScript.Backend.Optimizer.Substitute (unify, substituteExprType, mapTcoExprTypes, substituteAst)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  The import of module PureScript.Backend.Optimizer.Substitute contains the following unused references:
+    unify
+    mapTcoExprTypes
+    substituteAst
+  It could be replaced with:
+    import PureScript.Backend.Optimizer.Substitute (substituteExprType)
+
+[WARNING 11/104 UnusedExplicitImport] src/Gopurs/CodeGen.purs:36:1
+
+  36  import Gopurs.GoAst (GoFile, GoDecl, GoExpr(..), GoType(..), goTypeToStr)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  The import of module Gopurs.GoAst contains the following unused references:
+    GoFile
+  It could be replaced with:
+    import Gopurs.GoAst (GoDecl, GoExpr(..), GoType(..), goTypeToStr)
+
+[WARNING 12/104 UnusedExplicitImport] src/Gopurs/CodeGen.purs:41:1
+
+  41  import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..), tcoAnalysisOf)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  The import of module PureScript.Backend.Optimizer.Codegen.Tco contains the following unused references:
+    tcoAnalysisOf
+  It could be replaced with:
+    import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
+
+[WARNING 13/104 UnusedImport] src/Gopurs/CodeGen.purs:43:1
+
+  43  import Node.Path as Path
+      ^^^^^^^^^^^^^^^^^^^^^^^^
+
+  The qualified import of Node.Path as Path is redundant
+
+[WARNING 14/104 UnusedImport] src/Gopurs/CodeGen.purs:44:1
+
+  44  import Node.FS.Sync as FS
+      ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  The qualified import of Node.FS.Sync as FS is redundant
+
+[WARNING 15/104 DuplicateSelectiveImport] src/Gopurs/CodeGen.purs:45:1
+
+  45  import Data.Tuple (Tuple(..), fst)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  There is an existing import of Data.Tuple, consider merging the import lists
+
+[WARNING 16/104 DuplicateSelectiveImport] src/Gopurs/CodeGen.purs:48:1
+
+  48  import Data.Maybe (fromMaybe)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  There is an existing import of Data.Maybe, consider merging the import lists
+
+[WARNING 17/104 UnusedName] src/Gopurs/CodeGen.purs:52:41
+
+  52  coerceGoExpr expr (TypeStructPointer b1 f1 s1 a1) (TypeStructPointer b2 f2 s2 a2) | b1 == b2 && s1 == s2 && a1 == a2 = expr
+                                              ^^
+
+  Name f1 was introduced but not used.
+  in value declaration coerceGoExpr
+
+[WARNING 18/104 UnusedName] src/Gopurs/CodeGen.purs:52:73
+
+  52  coerceGoExpr expr (TypeStructPointer b1 f1 s1 a1) (TypeStructPointer b2 f2 s2 a2) | b1 == b2 && s1 == s2 && a1 == a2 = expr
+                                                                              ^^
+
+  Name f2 was introduced but not used.
+  in value declaration coerceGoExpr
+
+[WARNING 19/104 UnusedName] src/Gopurs/CodeGen.purs:83:5
+
+  83      cleanType = String.replaceAll (Pattern " ") (Replacement "_") typeStrSafe6
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  Name cleanType was introduced but not used.
+  in value declaration mangleType
+
+[WARNING 20/104 UnusedName] src/Gopurs/CodeGen.purs:94:18
+
+  94  exprTypeToGoType ptrPaths enumAdts elided modNameStr (Record _) = TypeValue
+                       ^^^^^^^^
+
+  Name ptrPaths was introduced but not used.
+  in value declaration exprTypeToGoType
+
+[WARNING 21/104 UnusedName] src/Gopurs/CodeGen.purs:94:27
+
+  94  exprTypeToGoType ptrPaths enumAdts elided modNameStr (Record _) = TypeValue
+                                ^^^^^^^^
+
+  Name enumAdts was introduced but not used.
+  in value declaration exprTypeToGoType
+
+[WARNING 22/104 UnusedName] src/Gopurs/CodeGen.purs:94:36
+
+  94  exprTypeToGoType ptrPaths enumAdts elided modNameStr (Record _) = TypeValue
+                                         ^^^^^^
+
+  Name elided was introduced but not used.
+  in value declaration exprTypeToGoType
+
+[WARNING 23/104 UnusedName] src/Gopurs/CodeGen.purs:94:43
+
+  94  exprTypeToGoType ptrPaths enumAdts elided modNameStr (Record _) = TypeValue
+                                                ^^^^^^^^^^
+
+  Name modNameStr was introduced but not used.
+  in value declaration exprTypeToGoType
+
+[WARNING 24/104 UnusedName] src/Gopurs/CodeGen.purs:122:35
+
+  122  exprTypeToGoType _ _ _ _ (TypeVar v) = TypeValue
+                                         ^
+
+  Name v was introduced but not used.
+  in value declaration exprTypeToGoType
+
+[WARNING 25/104 UnusedName] src/Gopurs/CodeGen.purs:151:26
+
+  151  instantiateGenericGoType env t = t
+                                ^^^
+
+  Name env was introduced but not used.
+  in value declaration instantiateGenericGoType
+
+[WARNING 26/104 UserDefinedWarning] src/Gopurs/CodeGen.purs:154:1
+
+  154  unboxGoExpr :: GoExpr -> GoType -> GoType -> GoExpr
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  A custom warning occurred while solving type class constraints:
+    Debug function usage
+  in binding group unboxGoExpr
+
+[WARNING 27/104 UserDefinedWarning] src/Gopurs/CodeGen.purs:279:1
+
+  279  translate :: Set.Set String -> Set.Set String -> Map.Map String { ctorName :: String, arity :: Int } -> Set.Set String -> Map.Map String { nodeBaseStruct :: String, nodeCtor :: String } -> Set.Set ExprType -> Set.Set String -> Map.Map String { vars :: Array String, fields :: Array ExprType } -> Map.Map String ExprType -> InstantiationMap -> Map.Map String String -> Map.Map String { vars :: Array String, fields :: Array { name :: String, "type" :: ExprType } } -> Array (Array String) -> BackendModule -> String
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  A custom warning occurred while solving type class constraints:
+    Debug function usage
+  in value declaration translate
+
+[WARNING 28/104 UnusedName] src/Gopurs/CodeGen.purs:280:79
+
+  280  translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors ctorTypes globalTypes rawInstantiations classDeclsMap classDeclsFields importsArray mod =
+                                                                                     ^^^^^^^^
+
+  Name adtTypes was introduced but not used.
+  in value declaration translate
+
+[WARNING 29/104 UnusedName] src/Gopurs/CodeGen.purs:280:140
+
+  280  translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors ctorTypes globalTypes rawInstantiations classDeclsMap classDeclsFields importsArray mod =
+                                                                                                                                                  ^^^^^^^^^^^^^
+
+  Name classDeclsMap was introduced but not used.
+  in value declaration translate
+
+[WARNING 30/104 ShadowedName] src/Gopurs/CodeGen.purs:293:26
+
+  293          checkSafe (ADT _ parts args) = 
+                                ^^^^^
+
+  Name parts was shadowed.
+  in value declaration translate
+
+[WARNING 31/104 UnusedName] src/Gopurs/CodeGen.purs:314:5
+
+           v
+  314      instantiations = Map.mapMaybe (\typeMap ->
+  315          let set = Set.fromFoldable (Map.keys typeMap)
+  316              safeSet = Set.filter isSafeType set
+  317          in if Set.isEmpty safeSet then Nothing else Just safeSet
+  318        ) rawInstantiations
+                               ^
+
+  Name instantiations was introduced but not used.
+  in value declaration translate
+
+[WARNING 32/104 ShadowedName] src/Gopurs/CodeGen.purs:374:5
+
+  374      getExprType (TcoExpr _ (Typed ty _)) = ty
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  Name getExprType was shadowed.
+  in value declaration translate
+
+[WARNING 33/104 ShadowedName] src/Gopurs/CodeGen.purs:375:5
+
+  375      getExprType _ = Any -- fallback
+           ^^^^^^^^^^^^^^^^^^^
+
+  Name getExprType was shadowed.
+  in value declaration translate
+
+[WARNING 34/104 UnusedName] src/Gopurs/CodeGen.purs:378:5
+
+  378      setTcoExprType ty (TcoExpr a (Typed _ inner)) = TcoExpr a (Typed ty inner)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  Name setTcoExprType was introduced but not used.
+  in value declaration translate
+
+[WARNING 35/104 UnusedName] src/Gopurs/CodeGen.purs:379:5
+
+  379      setTcoExprType _ expr = expr
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  Name setTcoExprType was introduced but not used.
+  in value declaration translate
+
+[WARNING 36/104 UnusedName] src/Gopurs/CodeGen.purs:388:28
+
+  388                Just { args, body, fvs } ->
+                                  ^^^^
+
+  Name body was introduced but not used.
+  in value declaration translate
+
+[WARNING 37/104 UnusedName] src/Gopurs/CodeGen.purs:388:34
+
+  388                Just { args, body, fvs } ->
+                                        ^^^
+
+  Name fvs was introduced but not used.
+  in value declaration translate
+
+[WARNING 38/104 UnusedName] src/Gopurs/CodeGen.purs:431:45
+
+  431                    processBindingGroup binds isRec =
+                                                   ^^^^^
+
+  Name isRec was introduced but not used.
+  in value declaration translate
+
+[WARNING 39/104 UnusedName] src/Gopurs/CodeGen.purs:438:29
+
+  438                              loopCtxs = map (\fn -> { ident: fn.ident, params: fn.args, loopParams: map (\p -> p <> "_loop") fn.args }) fns
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  Name loopCtxs was introduced but not used.
+  in value declaration translate
+
+[WARNING 40/104 UnusedName] src/Gopurs/CodeGen.purs:453:35
+
+  453                                    loopParams = map (\(Tuple idStr _) -> idStr <> "_loop") paramsWithTypes
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  Name loopParams was introduced but not used.
+  in value declaration translate
+
+[WARNING 41/104 UnusedName] src/Gopurs/CodeGen.purs:574:10
+
+  574    App fn arg -> "App(" <> printTcoExprShape fn <> ")"
+                ^^^
+
+  Name arg was introduced but not used.
+  in value declaration printTcoExprShape
+
+[WARNING 42/104 UserDefinedWarning] src/Gopurs/CodeGen.purs:644:1
+
+  644  translateExprImpl_ :: Ref { decls :: Array GoDecl, rawDecls :: Array String, elidedCtors :: Set.Set String, ctorTypes :: Map String { vars :: Array String, fields :: Array ExprType }, pointerAdtPaths :: Map String { ctorName :: String, arity :: Int }, pointerAdtNodes :: Set String, pointerAdtLeaves :: Map String { nodeBaseStruct :: String, nodeCtor :: String }, enumAdts :: Set.Set String, enumCtors :: Set.Set String, globalTypes :: Map.Map String ExprType, classDeclsFields :: Map String { vars :: Array String, fields :: Array { name :: String, "type" :: ExprType } }, globalId :: Int } -> Int -> String -> Array String -> Map String { fullName :: String, fArgs :: Array GoType, fRet :: GoType, arity :: Int } -> Map String { name :: String, goType :: GoType } -> Maybe String -> Array { ident :: String, params :: Array String, loopParams :: Array String, goTypes :: Array GoType } -> Boolean -> Boolean -> Int -> TcoExpr -> { stmts :: StmtTree, expr :: GoExpr, exprType :: GoType, nextId :: Int }
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  A custom warning occurred while solving type class constraints:
+    Debug function usage
+  in binding group translateExprImpl_
+
+[WARNING 43/104 UserDefinedWarning] src/Gopurs/CodeGen.purs:644:1
+
+  644  translateExprImpl_ :: Ref { decls :: Array GoDecl, rawDecls :: Array String, elidedCtors :: Set.Set String, ctorTypes :: Map String { vars :: Array String, fields :: Array ExprType }, pointerAdtPaths :: Map String { ctorName :: String, arity :: Int }, pointerAdtNodes :: Set String, pointerAdtLeaves :: Map String { nodeBaseStruct :: String, nodeCtor :: String }, enumAdts :: Set.Set String, enumCtors :: Set.Set String, globalTypes :: Map.Map String ExprType, classDeclsFields :: Map String { vars :: Array String, fields :: Array { name :: String, "type" :: ExprType } }, globalId :: Int } -> Int -> String -> Array String -> Map String { fullName :: String, fArgs :: Array GoType, fRet :: GoType, arity :: Int } -> Map String { name :: String, goType :: GoType } -> Maybe String -> Array { ident :: String, params :: Array String, loopParams :: Array String, goTypes :: Array GoType } -> Boolean -> Boolean -> Int -> TcoExpr -> { stmts :: StmtTree, expr :: GoExpr, exprType :: GoType, nextId :: Int }
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  A custom warning occurred while solving type class constraints:
+    Debug function usage
+  in binding group translateExprImpl_
+
+[WARNING 44/104 UnusedName] src/Gopurs/CodeGen.purs:694:85
+
+  694            Lit (LitRecord props), TypeStructPointer baseStructName fullName fullPath tArgs ->
+                                                                                           ^^^^^
+
+  Name tArgs was introduced but not used.
+  in value declaration translateExprImpl_
+
+[WARNING 45/104 ShadowedName] src/Gopurs/CodeGen.purs:700:25
+
+  700                      ADT fullName _ tArgs -> 
+                               ^^^^^^^^
+
+  Name fullName was shadowed.
+  in value declaration translateExprImpl_
+
+[WARNING 46/104 ShadowedName] src/Gopurs/CodeGen.purs:700:36
+
+  700                      ADT fullName _ tArgs -> 
+                                          ^^^^^
+
+  Name tArgs was shadowed.
+  in value declaration translateExprImpl_
+
+[WARNING 47/104 ShadowedName] src/Gopurs/CodeGen.purs:782:11
+
+  782            expr = if n == 0.0 && 1.0 / n < 0.0 then GoCall (GoSelector (GoVar "gopurs_runtime") "NegativeZero") [] else GoRaw (show n)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  Name expr was shadowed.
+  in value declaration translateExprImpl_
+
+[WARNING 48/104 ShadowedName] src/Gopurs/CodeGen.purs:807:48
+
+  807                let boxedExprs = Array.zipWith (\expr ty -> boxGoExpr expr ty) accXs.exprs accXs.exprTypes
+                                                      ^^^^
+
+  Name expr was shadowed.
+  in value declaration translateExprImpl_
+
+[WARNING 49/104 UnusedName] src/Gopurs/CodeGen.purs:831:30
+
+  831                  ADT fullName path adtArgs ->
+                                    ^^^^
+
+  Name path was introduced but not used.
+  in value declaration translateExprImpl_
+
+[WARNING 50/104 UnusedName] src/Gopurs/CodeGen.purs:867:11
+
+  867        App fn args ->
+                 ^^
+
+  Name fn was introduced but not used.
+  in value declaration translateExprImpl_
+
+[WARNING 51/104 UnusedName] src/Gopurs/CodeGen.purs:869:11
+
+  869            argsArr = toArray args
+                 ^^^^^^^^^^^^^^^^^^^^^^
+
+  Name argsArr was introduced but not used.
+  in value declaration translateExprImpl_
+
+[WARNING 52/104 UnusedName] src/Gopurs/CodeGen.purs:879:30
+
+  879                Var (Qualified mbMod (Ident name)) ->
+                                    ^^^^^
+
+  Name mbMod was introduced but not used.
+  in value declaration translateExprImpl_
+
+[WARNING 53/104 UnusedName] src/Gopurs/CodeGen.purs:1121:46
+
+  1121                                TypeFunc fArgs fRet | Array.length fArgs == Array.length flatArgs ->
+                                                     ^^^^
+
+  Name fRet was introduced but not used.
+  in value declaration translateExprImpl_
+
+[WARNING 54/104 UnusedName] src/Gopurs/CodeGen.purs:1384:36
+
+  1384                      Var (Qualified mbMod (Ident name)) ->
+                                           ^^^^^
+
+  Name mbMod was introduced but not used.
+  in value declaration translateExprImpl_
+
+[WARNING 55/104 ShadowedName] src/Gopurs/CodeGen.purs:1540:25
+
+  1540                Let ident lvl val body -> TcoExpr a (Let ident lvl val (stripEffectDefer body))
+                                ^^^
+
+  Name lvl was shadowed.
+  in value declaration translateExprImpl_
+
+[WARNING 56/104 ShadowedName] src/Gopurs/CodeGen.purs:1540:33
+
+  1540                Let ident lvl val body -> TcoExpr a (Let ident lvl val (stripEffectDefer body))
+                                        ^^^^
+
+  Name body was shadowed.
+  in value declaration translateExprImpl_
+
+[WARNING 57/104 ShadowedName] src/Gopurs/CodeGen.purs:1541:22
+
+  1541                LetRec lvl bindings body -> TcoExpr a (LetRec lvl bindings (stripEffectDefer body))
+                             ^^^
+
+  Name lvl was shadowed.
+  in value declaration translateExprImpl_
+
+[WARNING 58/104 ShadowedName] src/Gopurs/CodeGen.purs:1541:35
+
+  1541                LetRec lvl bindings body -> TcoExpr a (LetRec lvl bindings (stripEffectDefer body))
+                                          ^^^^
+
+  Name body was shadowed.
+  in value declaration translateExprImpl_
+
+[WARNING 59/104 UnusedName] src/Gopurs/CodeGen.purs:1623:17
+
+  1623                  combinedLoopCtx = loopCtxs <> loopCtx
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  Name combinedLoopCtx was introduced but not used.
+  in value declaration translateExprImpl_
+
+[WARNING 60/104 UnusedName] src/Gopurs/CodeGen.purs:1642:25
+
+  1642                          loopParams = map (\(Tuple idStr _) -> idStr <> "_loop") paramsWithTypes
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  Name loopParams was introduced but not used.
+  in value declaration translateExprImpl_
+
+[WARNING 61/104 UnusedName] src/Gopurs/CodeGen.purs:1654:59
+
+  1654                          funcExpr = Array.foldr (\(Tuple p goT) acc -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> p <> "_loop_val gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr acc <> "\n}") ]) iife paramsWithTypes
+                                                                  ^^^
+
+  Name goT was introduced but not used.
+  in value declaration translateExprImpl_
+
+[WARNING 62/104 UnusedName] src/Gopurs/CodeGen.purs:1668:47
+
+  1668                    ( \acc (Tuple (Tuple (Ident ident) val) alloc) ->
+                                                      ^^^^^
+
+  Name ident was introduced but not used.
+  in value declaration translateExprImpl_
+
+[WARNING 63/104 UnusedName] src/Gopurs/CodeGen.purs:1693:28
+
+  1693                  TypeRecord fields -> { stmts: resObj.stmts, expr: GoRecordAccess (boxGoExpr resObj.expr resObj.exprType) prop, exprType: TypeValue, nextId: resObj.nextId }
+                                   ^^^^^^
+
+  Name fields was introduced but not used.
+  in value declaration translateExprImpl_
+
+[WARNING 64/104 ShadowedName] src/Gopurs/CodeGen.purs:1830:17
+
+  1830              ADT fullName _ tArgs -> 
+                        ^^^^^^^^
+
+  Name fullName was shadowed.
+  in value declaration translateExprImpl_
+
+[WARNING 65/104 UnusedName] src/Gopurs/CodeGen.purs:1837:21
+
+  1837              TypeApp fn arg ->
+                            ^^
+
+  Name fn was introduced but not used.
+  in value declaration translateExprImpl_
+
+[WARNING 66/104 UnusedName] src/Gopurs/CodeGen.purs:1837:24
+
+  1837              TypeApp fn arg ->
+                               ^^^
+
+  Name arg was introduced but not used.
+  in value declaration translateExprImpl_
+
+[WARNING 67/104 UnusedName] src/Gopurs/CodeGen.purs:1842:28
+
+  1842                  Tuple (ADT fnName _ tArgs) allArgs ->
+                                   ^^^^^^
+
+  Name fnName was introduced but not used.
+  in value declaration translateExprImpl_
+
+[WARNING 68/104 UnusedName] src/Gopurs/CodeGen.purs:1851:15
+
+                      v
+  1851                expectedExprType = case Array.index fields' i of
+  1852                  Just ty -> ty
+  1853                  Nothing -> Any
+                                     ^
+
+  Name expectedExprType was introduced but not used.
+  in value declaration translateExprImpl_
+
+[WARNING 69/104 ShadowedName] src/Gopurs/CodeGen.purs:1935:17
+
+  1935              ADT fullName _ tArgs -> 
+                        ^^^^^^^^
+
+  Name fullName was shadowed.
+  in value declaration translateExprImpl_
+
+[WARNING 70/104 ShadowedName] src/Gopurs/CodeGen.purs:1998:17
+
+  1998              ADT fullName _ tArgs ->
+                        ^^^^^^^^
+
+  Name fullName was shadowed.
+  in value declaration translateExprImpl_
+
+[WARNING 71/104 ShadowedName] src/Gopurs/CodeGen.purs:2006:20
+
+  2006                Just ctorInfo -> map (const TypeValue) ctorInfo.vars
+                           ^^^^^^^^
+
+  Name ctorInfo was shadowed.
+  in value declaration translateExprImpl_
+
+[WARNING 72/104 ShadowedName] src/Gopurs/CodeGen.purs:2013:22
+
+  2013                  Just expr -> { expr: boxGoExpr expr (fromMaybe TypeValue (map (exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr) (Array.index fields 0))), exprType: TypeValue }
+                             ^^^^
+
+  Name expr was shadowed.
+  in value declaration translateExprImpl_
+
+[WARNING 73/104 UnusedName] src/Gopurs/CodeGen.purs:2410:37
+
+  2410      fieldStr = Array.mapWithIndex (\i (Tuple fK fT) ->
+                                            ^
+
+  Name i was introduced but not used.
+  in value declaration wrapReturn
+
+[WARNING 74/104 UnusedName] src/Gopurs/CodeGen.purs:2429:41
+
+  2429          fieldStr = Array.mapWithIndex (\i (Tuple fK fT) ->
+                                                ^
+
+  Name i was introduced but not used.
+  in value declaration wrapReturn
+
+[WARNING 75/104 UnusedName] src/Gopurs/CodeGen.purs:2489:19
+
+  2489    ConstrainedType constraints body -> "(ConstrainedType " <> printExprType body <> ")"
+                          ^^^^^^^^^^^
+
+  Name constraints was introduced but not used.
+  in value declaration printExprType
+
+[WARNING 76/104 UnusedName] src/Gopurs/CodeGen.purs:2490:7
+
+  2490    ADT fullName path args -> "(ADT " <> show path <> " [" <> String.joinWith ", " (map printExprType args) <> "])"
+              ^^^^^^^^
+
+  Name fullName was introduced but not used.
+  in value declaration printExprType
+
+[WARNING 77/104 UnusedName] src/Gopurs/CodeGen.purs:2511:15
+
+  2511           Just r -> retStr == "any" || retStr == "interface{}" || retStr == "gopurs_runtime.Value"
+                      ^
+
+  Name r was introduced but not used.
+  in value declaration isStandardPursFunc
+
+[WARNING 78/104 UnusedName] src/Gopurs/CodeGen.purs:2538:7
+
+              v
+  2538        substituteGeneric t = 
+  2539          let s = printTypeNode t 
+  2540              res = Array.foldl (\acc tp -> String.replaceAll (Pattern ("\\b" <> tp <> "\\b")) (Replacement "gopurs_runtime.Value") acc) s d.typeParams
+  2541          in TUnknown res 
+                              ^
+
+  Name substituteGeneric was introduced but not used.
+  in value declaration generateWrapperFunc
+
+[WARNING 79/104 UnusedName] src/Gopurs/CodeGen.purs:2543:7
+
+  2543        newLines = []
+              ^^^^^^^^^^^^^
+
+  Name newLines was introduced but not used.
+  in value declaration generateWrapperFunc
+
+[WARNING 80/104 UnusedExplicitImport] src/Main.purs:8:1
+
+  8  import Effect.Aff (Aff, launchAff_, attempt)
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  The import of module Effect.Aff contains the following unused references:
+    Aff
+  It could be replaced with:
+    import Effect.Aff (attempt, launchAff_)
+
+[WARNING 81/104 UnusedImport] src/Main.purs:9:1
+
+  9  import Effect.Console (log, logShow)
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  The import of Effect.Console is redundant
+
+[WARNING 82/104 UnusedExplicitImport] src/Main.purs:16:1
+
+  16  import Data.Either (Either(..), isRight)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  The import of module Data.Either contains the following unused references:
+    isRight
+  It could be replaced with:
+    import Data.Either (Either(..))
+
+[WARNING 83/104 UnusedImport] src/Main.purs:20:1
+
+  20  import Data.Traversable (for, sequence)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  The import of Data.Traversable is redundant
+
+[WARNING 84/104 UnusedImport] src/Main.purs:24:1
+
+  24  import Data.List as List
+      ^^^^^^^^^^^^^^^^^^^^^^^^
+
+  The qualified import of Data.List as List is redundant
+
+[WARNING 85/104 DuplicateSelectiveImport] src/Main.purs:26:1
+
+  26  import Data.Tuple (Tuple(..))
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  There is an existing import of Data.Tuple, consider merging the import lists
+
+[WARNING 86/104 DuplicateSelectiveImport] src/Main.purs:31:1
+
+  31  import Data.Traversable (traverse)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  There is an existing import of Data.Traversable, consider merging the import lists
+
+[WARNING 87/104 UnusedImport] src/Main.purs:35:1
+
+  35  import PureScript.Backend.Optimizer.CoreFn.Json (decodeModule)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  The import of PureScript.Backend.Optimizer.CoreFn.Json is redundant
+
+[WARNING 88/104 UnusedImport] src/Main.purs:36:1
+
+  36  import PureScript.Backend.Optimizer.CoreFn.Sort (sortModules)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  The import of PureScript.Backend.Optimizer.CoreFn.Sort is redundant
+
+[WARNING 89/104 UnusedImport] src/Main.purs:38:1
+
+  38  import PureScript.Backend.Optimizer.Directives.Defaults (defaultDirectives)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  The import of PureScript.Backend.Optimizer.Directives.Defaults is redundant
+
+[WARNING 90/104 UnusedImport] src/Main.purs:39:1
+
+  39  import PureScript.Backend.Optimizer.Directives (parseDirectiveFile)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  The import of PureScript.Backend.Optimizer.Directives is redundant
+
+[WARNING 91/104 UnusedExplicitImport] src/Main.purs:40:1
+
+  40  import PureScript.Backend.Optimizer.Monomorphize (collectInstantiations, InstantiationMap, collectAllTypes, mangleType, monomorphize, transitiveCollect)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  The import of module PureScript.Backend.Optimizer.Monomorphize contains the following unused references:
+    InstantiationMap
+    mangleType
+  It could be replaced with:
+    import PureScript.Backend.Optimizer.Monomorphize (collectAllTypes, collectInstantiations, getExprAnn, monomorphize, transitiveCollect)
+
+[WARNING 92/104 DuplicateImport] src/Main.purs:43:1
+
+  43  import Data.String as String
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  Duplicate import of Data.String as String
+
+[WARNING 93/104 DuplicateSelectiveImport] src/Main.purs:44:1
+
+  44  import PureScript.Backend.Optimizer.Monomorphize (getExprAnn)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  There is an existing import of PureScript.Backend.Optimizer.Monomorphize, consider merging the import lists
+
+[WARNING 94/104 DuplicateImport] src/Main.purs:46:1
+
+  46  import Debug as Debug
+      ^^^^^^^^^^^^^^^^^^^^^
+
+  Duplicate import of Debug as Debug
+
+[WARNING 95/104 DuplicateSelectiveImport] src/Main.purs:52:1
+
+  52  import PureScript.Backend.Optimizer.Monomorphize (collectInstantiations)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  There is an existing import of PureScript.Backend.Optimizer.Monomorphize, consider merging the import lists
+
+[WARNING 96/104 UnusedImport] src/Main.purs:56:1
+
+  56  import Node.FS.Sync (writeTextFile)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  The import of Node.FS.Sync is redundant
+
+[WARNING 97/104 DuplicateImport] src/Main.purs:57:1
+
+  57  import Node.Encoding (Encoding(..))
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  Duplicate import of Node.Encoding (Encoding(..))
+
+[WARNING 98/104 UserDefinedWarning] src/Main.purs:116:1
+
+  116  main :: Effect Unit
+       ^^^^^^^^^^^^^^^^^^^
+
+  A custom warning occurred while solving type class constraints:
+    Debug function usage
+  in value declaration main
+
+[WARNING 99/104 UnusedName] src/Main.purs:159:5
+
+           v
+  159      allClassDecls = foldl (\acc (Module m) ->
+  160        foldl (\acc' c -> Set.insert c.name acc') acc m.classDecls
+  161      ) Set.empty finalModules
+                                  ^
+
+  Name allClassDecls was introduced but not used.
+  in value declaration main
+
+[WARNING 100/104 UnusedName] src/Main.purs:203:5
+
+  203      getClassName (ADT fullName _ _) = Just fullName
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  Name getClassName was introduced but not used.
+  in value declaration main
+
+[WARNING 101/104 UnusedName] src/Main.purs:204:5
+
+  204      getClassName _ = Nothing
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+
+  Name getClassName was introduced but not used.
+  in value declaration main
+
+[WARNING 102/104 UnusedName] src/Main.purs:289:16
+
+  289            Just backendMod -> do
+                      ^^^^^^^^^^
+
+  Name backendMod was introduced but not used.
+  in value declaration main
+
+[WARNING 103/104 ShadowedName] src/Main.purs:318:19
+
+  318                let safeModName = String.replaceAll (Pattern ".") (Replacement "_") modNameStr
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  Name safeModName was shadowed.
+  in value declaration main
+
+[WARNING 104/104 ShadowedName] src/Main.purs:335:19
+
+  335                let safeModName = String.replaceAll (Pattern ".") (Replacement "_") modNameStr
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  Name safeModName was shadowed.
+  in value declaration main
+
+           Src   Lib   All
+Warnings   104     0   104
+Errors       0     0     0
+
+✓ Build succeeded.
+

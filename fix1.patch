@@ -1,4 +1,6 @@
-@@ -1530,7 +1530,7 @@
+--- src/Gopurs/CodeGen.purs
++++ src/Gopurs/CodeGen.purs
+@@ -1463,7 +1463,7 @@
          let
 -          paramsWithTypes = case getExprType tcoExpr of
 -            Func fArgs _ -> Array.zipWith (\(Tuple mbI lvl) goType -> Tuple (localId mbI lvl) goType) args (map (exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr) fArgs <> Array.replicate (Array.length args - Array.length fArgs) TypeValue)
@@ -6,6 +8,5 @@
 +          paramsWithTypes = case extractExprFuncType (getExprType tcoExpr) of
 +            Just { fArgs } -> Array.zipWith (\(Tuple mbI lvl) goType -> Tuple (localId mbI lvl) goType) args (map (exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr) fArgs <> Array.replicate (Array.length args - Array.length fArgs) TypeValue)
 +            Nothing -> map (\(Tuple mbI lvl) -> Tuple (localId mbI lvl) TypeValue) args
+ 
            newBound = foldl (\acc (Tuple idStr goType) -> Map.insert idStr { name: idStr, goType } acc) bound paramsWithTypes
- 
- 

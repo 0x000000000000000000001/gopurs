@@ -1,0 +1,17 @@
+Running tests from /Users/0x1/Documents/htdocs/gopurs/gopurs/tests/passing...
+=> Testing 4179.purs
+# gopurs/output/purescript
+purescript/Control_Monad_List_Trans.go:924:67: cannot use gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad](dictMonad_0) (value of type *Constructor_Control_Monad_Monad) as gopurs_runtime.Value value in argument to Call_Control_Monad_List_Trans_unfold
+purescript/Control_Monad_List_Trans.go:978:66: cannot use gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad](dictMonad_0) (value of type *Constructor_Control_Monad_Monad) as gopurs_runtime.Value value in argument to Call_Control_Monad_List_Trans_uncons
+purescript/Control_Monad_List_Trans.go:1042:66: cannot use gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad](dictMonad_0) (value of type *Constructor_Control_Monad_Monad) as gopurs_runtime.Value value in argument to Call_Control_Monad_List_Trans_uncons
+purescript/Control_Monad_List_Trans.go:1094:81: cannot use gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative](dictApplicative_0) (value of type *Constructor_Control_Applicative_Applicative) as gopurs_runtime.Value value in argument to Call_Control_Monad_List_Trans_takeWhile
+purescript/Control_Monad_List_Trans.go:1120:81: cannot use gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative](dictApplicative_0) (value of type *Constructor_Control_Applicative_Applicative) as gopurs_runtime.Value value in argument to Call_Control_Monad_List_Trans_takeWhile
+purescript/Control_Monad_List_Trans.go:1208:67: cannot use gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad](dictMonad_0) (value of type *Constructor_Control_Monad_Monad) as gopurs_runtime.Value value in argument to Call_Control_Monad_List_Trans_unfold
+purescript/Control_Monad_List_Trans.go:1304:76: cannot use gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative](dictApplicative_0) (value of type *Constructor_Control_Applicative_Applicative) as gopurs_runtime.Value value in argument to Call_Control_Monad_List_Trans_take
+purescript/Control_Monad_List_Trans.go:1320:76: cannot use gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative](dictApplicative_0) (value of type *Constructor_Control_Applicative_Applicative) as gopurs_runtime.Value value in argument to Call_Control_Monad_List_Trans_take
+purescript/Control_Monad_List_Trans.go:1405:66: cannot use gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad](dictMonad_0) (value of type *Constructor_Control_Monad_Monad) as gopurs_runtime.Value value in argument to Call_Control_Monad_List_Trans_uncons
+purescript/Control_Monad_List_Trans.go:1443:67: cannot use gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad](dictMonad_0) (value of type *Constructor_Control_Monad_Monad) as gopurs_runtime.Value value in argument to Call_Control_Monad_List_Trans_uncons
+purescript/Control_Monad_List_Trans.go:1443:67: too many errors
+   [0;31m[FAILED][0m Go Compilation error
+
+Summary: [0;32m0 passed[0m, [0;31m1 failed[0m.

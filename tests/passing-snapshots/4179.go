@@ -116,7 +116,7 @@ var once_Main_bravo sync.Once
 
 func Get_Main_bravo() gopurs_runtime.Value {
 	once_Main_bravo.Do(func() {
-		cache_Main_bravo = gopurs_runtime.Int(gopurs_runtime.Int(gopurs_runtime.RecordGet(Get_Main_alpha(), "x").IntVal).IntVal)
+		cache_Main_bravo = gopurs_runtime.Int(gopurs_runtime.RecordGet(Get_Main_alpha(), "x").IntVal)
 	})
 	return cache_Main_bravo
 }
@@ -127,7 +127,7 @@ var once_Main_alpha sync.Once
 func Get_Main_alpha() gopurs_runtime.Value {
 	once_Main_alpha.Do(func() {
 		cache_Main_alpha = gopurs_runtime.RecordDict2("backref", "x", gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Int(gopurs_runtime.Int(gopurs_runtime.RecordGet(Get_Main_alpha(), "x").IntVal).IntVal)
+			return gopurs_runtime.Int(gopurs_runtime.RecordGet(Get_Main_alpha(), "x").IntVal)
 		}), gopurs_runtime.Int(1))
 	})
 	return cache_Main_alpha
@@ -143,7 +143,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_0_0 := gopurs_runtime.Apply(Get_CustomAssert_assertThrows(), gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 				var selfOwn_1_1_3 gopurs_runtime.Value
 				_ = selfOwn_1_1_3
-				selfOwn_1_1_3 = gopurs_runtime.RecordDict2("a", "b", gopurs_runtime.Int(1), gopurs_runtime.Int(gopurs_runtime.Int(gopurs_runtime.RecordGet(selfOwn_1_1_3, "a").IntVal).IntVal))
+				selfOwn_1_1_3 = gopurs_runtime.RecordDict2("a", "b", gopurs_runtime.Int(1), gopurs_runtime.Int(gopurs_runtime.RecordGet(selfOwn_1_1_3, "a").IntVal))
 				return selfOwn_1_1_3
 			}))
 			_ = __local_var_0_0
@@ -184,7 +184,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			_dollar___unused_4_9 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Test_Assert_assert(), gopurs_runtime.Bool(((gopurs_runtime.Apply2(Get_Data_String_CodeUnits_contains(), gopurs_runtime.Str("interface conversion"), gopurs_runtime.Str(err2_3_4.StrVal())).IntVal) != (0)) || ((gopurs_runtime.Apply2(Get_Data_String_CodeUnits_contains(), gopurs_runtime.Str("Attempt to read property"), gopurs_runtime.Str(err2_3_4.StrVal())).IntVal) != (0)))), gopurs_runtime.Value{})
 			_ = _dollar___unused_4_9
 			// TAST (Let): __local_var_5_10 -> gopurs_runtime.Value
-			__local_var_5_10 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(gopurs_runtime.Int(1).IntVal), gopurs_runtime.Int(1))
+			__local_var_5_10 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(1), gopurs_runtime.Int(1))
 			_ = __local_var_5_10
 			_dollar___unused_6_12 := Get_Data_Unit_unit()
 			_ = _dollar___unused_6_12
@@ -197,61 +197,59 @@ func Get_Main_main() gopurs_runtime.Value {
 					__local_var_8_13 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Bool((__t_tag_14 == nil) != (true)), gopurs_runtime.Bool(true))
 					_ = __local_var_8_13
 					// TAST (Let): __local_var_9_15 -> gopurs_runtime.Value
-					__local_var_9_15 := gopurs_runtime.RecordGet(__local_var_8_13, "actual")
-					_ = __local_var_9_15
-					// TAST (Let): __local_var_10_16 -> gopurs_runtime.Value
-					__local_var_10_16 := gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-						var __t18 string
+					__local_var_9_15 := gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+						var __t17 string
 						{
 							if (gopurs_runtime.RecordGet(__local_var_8_13, "actual").IntVal) != (0) {
-								__t18 = ("Expected: true\x0aActual:   ") + ("true")
-								goto end_branch_18
+								__t17 = ("Expected: true\x0aActual:   ") + ("true")
+								goto end_branch_17
 							} else {
 
 							}
 						}
 						{
-							__t18 = ("Expected: true\x0aActual:   ") + ("false")
+							__t17 = ("Expected: true\x0aActual:   ") + ("false")
 						}
-					end_branch_18:
-						// TAST (Let): message_10_17 -> gopurs_runtime.Value
-						var message_10_17 gopurs_runtime.Value = gopurs_runtime.Str(__t18)
-						// TAST (Let): __local_var_11_19 -> gopurs_runtime.Value
-						__local_var_11_19 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_10_17.StrVal()))
-						_ = __local_var_11_19
-						var __t21 gopurs_runtime.Value
+					end_branch_17:
+						// TAST (Let): message_9_16 -> string
+						message_9_16 := __t17
+						_ = message_9_16
+						// TAST (Let): __local_var_10_18 -> gopurs_runtime.Value
+						__local_var_10_18 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_9_16))
+						_ = __local_var_10_18
+						var __t20 gopurs_runtime.Value
 						{
-							if ((__local_var_9_15.IntVal) != (0)) != (true) {
-								__t21 = __local_var_11_19
-								goto end_branch_21
+							if ((gopurs_runtime.RecordGet(__local_var_8_13, "actual").IntVal) != (0)) != (true) {
+								__t20 = __local_var_10_18
+								goto end_branch_20
 							} else {
 
 							}
 						}
 						{
-							if (__local_var_9_15.IntVal) != (0) {
-								__t21 = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+							if (gopurs_runtime.RecordGet(__local_var_8_13, "actual").IntVal) != (0) {
+								__t20 = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 									return Get_Data_Unit_unit()
 								})
-								goto end_branch_21
+								goto end_branch_20
 							} else {
 
 							}
 						}
 						{
-							__t21 = func() gopurs_runtime.Value { panic("Failed pattern match") }()
+							__t20 = func() gopurs_runtime.Value { panic("Failed pattern match") }()
 						}
-					end_branch_21:
-						// TAST (Let): __local_var_12_20 -> gopurs_runtime.Value
-						__local_var_12_20 := __t21
-						_ = __local_var_12_20
-						_dollar___unused_13_22 := gopurs_runtime.Apply(__local_var_12_20, gopurs_runtime.Value{})
-						_ = _dollar___unused_13_22
-						return gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_10_17.StrVal()), gopurs_runtime.Bool((__local_var_9_15.IntVal) != (0))), gopurs_runtime.Value{})
+					end_branch_20:
+						// TAST (Let): __local_var_11_19 -> gopurs_runtime.Value
+						__local_var_11_19 := __t20
+						_ = __local_var_11_19
+						_dollar___unused_12_21 := gopurs_runtime.Apply(__local_var_11_19, gopurs_runtime.Value{})
+						_ = _dollar___unused_12_21
+						return gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_9_16), gopurs_runtime.Bool((gopurs_runtime.RecordGet(__local_var_8_13, "actual").IntVal) != (0))), gopurs_runtime.Value{})
 					})
-					_ = __local_var_10_16
-					_dollar___unused_11_23 := gopurs_runtime.Apply(__local_var_10_16, gopurs_runtime.Value{})
-					_ = _dollar___unused_11_23
+					_ = __local_var_9_15
+					_dollar___unused_10_22 := gopurs_runtime.Apply(__local_var_9_15, gopurs_runtime.Value{})
+					_ = _dollar___unused_10_22
 					return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
 				})
 			})), gopurs_runtime.Value{})

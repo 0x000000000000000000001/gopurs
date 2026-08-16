@@ -1,12 +1,6 @@
 const fs = require('fs');
-const json = JSON.parse(fs.readFileSync('ntco3.json', 'utf8'));
-const finds = [];
-function search(obj) {
-  if (!obj) return;
-  if (obj.identifier === 'g') finds.push(obj);
-  if (typeof obj === 'object') {
-    Object.values(obj).forEach(search);
-  }
-}
-search(json);
-console.log(JSON.stringify(finds[0], null, 2));
+const corefn = JSON.parse(fs.readFileSync('output/Main/corefn.json', 'utf8'));
+const decls = corefn.decls;
+const rec = decls.find(d => d.binds);
+const bravo = rec.binds.find(b => b.identifier === 'bravo');
+console.log(JSON.stringify(bravo, null, 2));

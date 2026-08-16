@@ -1,0 +1,17 @@
+file:///Users/0x1/Documents/htdocs/gopurs/gopurs/bin/gopurs.js:2647
+                  throw util2.fromLeft(step);
+                  ^
+
+RangeError: Invalid string length
+    at Array.join (<anonymous>)
+    at file:///Users/0x1/Documents/htdocs/gopurs/gopurs/bin/gopurs.js:1791:15
+    at printGoExpr (file:///Users/0x1/Documents/htdocs/gopurs/gopurs/bin/gopurs.js:3593:26)
+    at file:///Users/0x1/Documents/htdocs/gopurs/gopurs/bin/gopurs.js:11059:53
+    at file:///Users/0x1/Documents/htdocs/gopurs/gopurs/bin/gopurs.js:11088:54
+    at file:///Users/0x1/Documents/htdocs/gopurs/gopurs/bin/gopurs.js:9925:147
+    at file:///Users/0x1/Documents/htdocs/gopurs/gopurs/bin/gopurs.js:11056:74
+    at file:///Users/0x1/Documents/htdocs/gopurs/gopurs/bin/gopurs.js:9925:147
+    at file:///Users/0x1/Documents/htdocs/gopurs/gopurs/bin/gopurs.js:9857:55
+    at file:///Users/0x1/Documents/htdocs/gopurs/gopurs/bin/gopurs.js:352:21
+
+Node.js v24.8.0

@@ -1,0 +1,17 @@
+--- src/Gopurs/CodeGen.purs
++++ src/Gopurs/CodeGen.purs
+@@ -373,7 +373,5 @@
+     getExprType :: TcoExpr -> ExprType
+-    getExprType (TcoExpr _ (Typed ty inner)) = case extractUncurriedAbs inner of
+-      Just _ -> Any
+-      Nothing -> ty
++    getExprType (TcoExpr _ (Typed ty inner)) = ty
+     getExprType _ = Any -- fallback
+@@ -607,7 +605,4 @@
+ getExprType :: TcoExpr -> ExprType
+ getExprType (TcoExpr _ syn) = case syn of
+-  Typed t inner -> case extractUncurriedAbs inner of
+-    Just _ -> Any
+-    Nothing -> t
++  Typed t _ -> t
+   _ -> Any

@@ -71,7 +71,14 @@ func Get_Main_regression() gopurs_runtime.Value {
 		cache_Main_regression = func() gopurs_runtime.Value {
 			arr := func() []int64 {
 				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array(func() []gopurs_runtime.Value {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array([]gopurs_runtime.Value{gopurs_runtime.Int(2), gopurs_runtime.Int(3)}).UnsafePtr)
+					arr := *(*[]gopurs_runtime.Value)(func() gopurs_runtime.Value {
+						arr := []int64{2, 3}
+						boxed := make([]gopurs_runtime.Value, len(arr))
+						for i, v := range arr {
+							boxed[i] = gopurs_runtime.Int(v)
+						}
+						return gopurs_runtime.Array(boxed)
+					}().UnsafePtr)
 					unboxed := make([]gopurs_runtime.Value, len(arr))
 					for i, v := range arr {
 						unboxed[i] = v

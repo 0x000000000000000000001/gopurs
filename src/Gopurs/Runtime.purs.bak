@@ -534,8 +534,7 @@ func Apply2(f Value, arg1, arg2 Value) Value {
 		fn := *(*func(Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
 		return Func3(func(a, b, c Value) Value { return fn(arg1, arg2, a, b, c) })
 	}
-	res1 := Apply(f, arg1)
-	return Apply(res1, arg2)
+	return Apply(Apply(f, arg1), arg2)
 }
 
 func Apply3(f Value, arg1, arg2, arg3 Value) Value {

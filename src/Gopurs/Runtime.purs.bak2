@@ -534,8 +534,7 @@ func Apply2(f Value, arg1, arg2 Value) Value {
 		fn := *(*func(Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
 		return Func3(func(a, b, c Value) Value { return fn(arg1, arg2, a, b, c) })
 	}
-	res1 := Apply(f, arg1)
-	return Apply(res1, arg2)
+	fmt.Printf("Apply2 fallback! f.Type=%d, f.UnsafePtr=%v\n", f.Type, f.UnsafePtr)\n\tres1 := Apply(f, arg1)\n\tfmt.Printf("Apply2 fallback res1! res1.Type=%d, res1.UnsafePtr=%v\n", res1.Type, res1.UnsafePtr)\n\treturn Apply(res1, arg2)
 }
 
 func Apply3(f Value, arg1, arg2, arg3 Value) Value {

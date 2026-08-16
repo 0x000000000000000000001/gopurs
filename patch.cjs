@@ -1,18 +1,8 @@
 const fs = require('fs');
-const code = fs.readFileSync('src/Gopurs/CodeGen.purs', 'utf8');
-const synNameCode = `
-synName :: TcoExpr -> String
-synName (TcoExpr _ syn) = case syn of
-  Typed _ _ -> "Typed"
-  PrimOp _ -> "PrimOp"
-  App _ _ -> "App"
-  Var _ -> "Var"
-  Let _ _ _ _ -> "Let"
-  LetRec _ _ _ -> "LetRec"
-  Abs _ _ -> "Abs"
-  Lit _ -> "Lit"
-  CtorDef _ _ _ _ _ -> "CtorDef"
-  _ -> "Other"
-`;
-const newCode = code.replace(/getExprType :: TcoExpr -> ExprType/, synNameCode + '\ngetExprType :: TcoExpr -> ExprType');
-fs.writeFileSync('src/Gopurs/CodeGen.purs', newCode);
+const file = 'src/Gopurs/CodeGen.purs';
+let content = fs.readFileSync(file, 'utf8');
+content = content.replace(
+  /translateTopLevelDecl helpersRef modNameStr recVars moduleArities bound fn =/,
+  `translateTopLevelDecl helpersRef modNameStr recVars moduleArities bound fn =\n  Debug.trace ("TRANSLATING: " <> sanitizeName (case fn of (NonRec (Ident name) _) -> name; (Rec arr) -> case Array.head arr of Just (Tuple (Ident name) _) -> name; _ -> ""; _ -> "")) \\_ ->`
+);
+fs.writeFileSync(file, content);
