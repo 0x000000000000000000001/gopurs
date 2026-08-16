@@ -11,7 +11,7 @@ var once_Main_v1 sync.Once
 
 func Get_Main_v1() gopurs_runtime.Value {
 	once_Main_v1.Do(func() {
-		cache_Main_v1 = gopurs_runtime.RecordDict1("a", gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just{1, Get_Data_Unit_unit()})})
+		cache_Main_v1 = gopurs_runtime.RecordDict1("a", gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer((&Constructor_Data_Maybe_Just{1, Get_Data_Unit_unit()}))})
 	})
 	return cache_Main_v1
 }

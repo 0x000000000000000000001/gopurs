@@ -3,7 +3,6 @@ package purescript
 import (
 	gopurs_runtime "gopurs/output/gopurs_runtime"
 	sync "sync"
-	unsafe "unsafe"
 )
 
 var cache_Main_A gopurs_runtime.Value
@@ -12,7 +11,7 @@ var once_Main_A sync.Once
 func Get_Main_A() gopurs_runtime.Value {
 	once_Main_A.Do(func() {
 		cache_Main_A = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 4219254943, UnsafePtr: unsafe.Pointer(&Constructor_Main_A{1, value0})}
+			return value0
 		})
 	})
 	return cache_Main_A

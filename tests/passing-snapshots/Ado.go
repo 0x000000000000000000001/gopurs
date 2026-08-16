@@ -11,7 +11,7 @@ var once_Main_showArray sync.Once
 
 func Get_Main_showArray() gopurs_runtime.Value {
 	once_Main_showArray.Do(func() {
-		cache_Main_showArray = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(&Constructor_Data_Show_Show{1, gopurs_runtime.Apply(Get_Data_Show_showArrayImpl(), Get_Data_Show_showIntImpl())})}
+		cache_Main_showArray = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer((&Constructor_Data_Show_Show{1, gopurs_runtime.Apply(Get_Data_Show_showArrayImpl(), Get_Data_Show_showIntImpl())}))}
 	})
 	return cache_Main_showArray
 }
@@ -42,7 +42,7 @@ var once_Main_Just sync.Once
 func Get_Main_Just() gopurs_runtime.Value {
 	once_Main_Just.Do(func() {
 		cache_Main_Just = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer(&Constructor_Main_Just{1, value0})}
+			return gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer((&Constructor_Main_Just{1, value0}))}
 		})
 	})
 	return cache_Main_Just
@@ -137,46 +137,32 @@ var once_Main_main sync.Once
 
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
-		cache_Main_main = func() gopurs_runtime.Value {
+		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 			// TAST (Let): __local_var_0_0 -> gopurs_runtime.Value
 			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Str("X"))
 			_ = __local_var_0_0
-			return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-				r_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
-				_ = r_1_1
-				f_prime__2_5 := gopurs_runtime.Apply(gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-						a_prime__2_6 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Effect_Ref_write(), gopurs_runtime.Str("D"), r_1_1), gopurs_runtime.Value{})
-						_ = a_prime__2_6
-						return gopurs_runtime.Func(func(v1_3 gopurs_runtime.Value) gopurs_runtime.Value {
-							return gopurs_runtime.Func(func(v2_4 gopurs_runtime.Value) gopurs_runtime.Value {
-								return gopurs_runtime.Func(func(v3_5 gopurs_runtime.Value) gopurs_runtime.Value {
-									return gopurs_runtime.Str((((v1_3.StrVal()) + (v2_4.StrVal())) + ("n")) + (v3_5.StrVal()))
-								})
-							})
-						})
+			r_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
+			_ = r_1_1
+			a_prime__2_6 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Effect_Ref_write(), gopurs_runtime.Str("D"), r_1_1), gopurs_runtime.Value{})
+			_ = a_prime__2_6
+			f_prime__2_5 := gopurs_runtime.Func(func(v1_3 gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Func(func(v2_4 gopurs_runtime.Value) gopurs_runtime.Value {
+					return gopurs_runtime.Func(func(v3_5 gopurs_runtime.Value) gopurs_runtime.Value {
+						return gopurs_runtime.Str((((v1_3.StrVal()) + (v2_4.StrVal())) + ("n")) + (v3_5.StrVal()))
 					})
-				}), gopurs_runtime.Value{})
-				_ = f_prime__2_5
-				a_prime__3_7 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), r_1_1), gopurs_runtime.Value{})
-				_ = a_prime__3_7
-				f_prime__2_4 := gopurs_runtime.Apply(f_prime__2_5, a_prime__3_7)
-				_ = f_prime__2_4
-				f_prime__2_3 := gopurs_runtime.Apply(gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-						return gopurs_runtime.Apply(f_prime__2_4, gopurs_runtime.Str("o"))
-					})
-				}), gopurs_runtime.Value{})
-				_ = f_prime__2_3
-				__local_var_2_2 := gopurs_runtime.Apply(gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-						return gopurs_runtime.Apply(f_prime__2_3, gopurs_runtime.Str("e"))
-					})
-				}), gopurs_runtime.Value{})
-				_ = __local_var_2_2
-				return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), __local_var_2_2), gopurs_runtime.Value{})
+				})
 			})
-		}()
+			_ = f_prime__2_5
+			a_prime__3_7 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), r_1_1), gopurs_runtime.Value{})
+			_ = a_prime__3_7
+			f_prime__2_4 := gopurs_runtime.Apply(f_prime__2_5, a_prime__3_7)
+			_ = f_prime__2_4
+			f_prime__2_3 := gopurs_runtime.Apply(f_prime__2_4, gopurs_runtime.Str("o"))
+			_ = f_prime__2_3
+			__local_var_2_2 := gopurs_runtime.Apply(f_prime__2_3, gopurs_runtime.Str("e"))
+			_ = __local_var_2_2
+			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), __local_var_2_2), gopurs_runtime.Value{})
+		})
 	})
 	return cache_Main_main
 }
@@ -186,7 +172,7 @@ var once_Main_functorMaybe sync.Once
 
 func Get_Main_functorMaybe() gopurs_runtime.Value {
 	once_Main_functorMaybe.Do(func() {
-		cache_Main_functorMaybe = gopurs_runtime.Value{Type: 9, IntVal: 929368378, UnsafePtr: unsafe.Pointer(&Constructor_Data_Functor_Functor{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_functorMaybe = gopurs_runtime.Value{Type: 9, IntVal: 929368378, UnsafePtr: unsafe.Pointer((&Constructor_Data_Functor_Functor{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(v1_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				var __t0 *Constructor_Main_Just
 				{
@@ -199,7 +185,7 @@ func Get_Main_functorMaybe() gopurs_runtime.Value {
 				}
 				{
 					if v1_1.Type == 9 && v1_1.IntVal == 3271839782 && v1_1.UnsafePtr != nil {
-						__t0 = &Constructor_Main_Just{1, gopurs_runtime.Apply(v_0, (*Constructor_Main_Just)(v1_1.UnsafePtr).V0)}
+						__t0 = (&Constructor_Main_Just{1, gopurs_runtime.Apply(v_0, (*Constructor_Main_Just)(v1_1.UnsafePtr).V0)})
 						goto end_branch_0
 					} else {
 
@@ -211,7 +197,7 @@ func Get_Main_functorMaybe() gopurs_runtime.Value {
 			end_branch_0:
 				return gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer(__t0)}
 			})
-		})})}
+		})}))}
 	})
 	return cache_Main_functorMaybe
 }
@@ -221,14 +207,14 @@ var once_Main_applyMaybe sync.Once
 
 func Get_Main_applyMaybe() gopurs_runtime.Value {
 	once_Main_applyMaybe.Do(func() {
-		cache_Main_applyMaybe = gopurs_runtime.Value{Type: 9, IntVal: 3032403085, UnsafePtr: unsafe.Pointer(&Constructor_Control_Apply_Apply{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_applyMaybe = gopurs_runtime.Value{Type: 9, IntVal: 3032403085, UnsafePtr: unsafe.Pointer((&Constructor_Control_Apply_Apply{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 929368378, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor](Get_Main_functorMaybe()))}
 		}), gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(v1_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				var __t0 *Constructor_Main_Just
 				{
 					if (v_0.Type == 9 && v_0.IntVal == 3271839782 && v_0.UnsafePtr != nil) && (v1_1.Type == 9 && v1_1.IntVal == 3271839782 && v1_1.UnsafePtr != nil) {
-						__t0 = &Constructor_Main_Just{1, gopurs_runtime.Apply((*Constructor_Main_Just)(v_0.UnsafePtr).V0, (*Constructor_Main_Just)(v1_1.UnsafePtr).V0)}
+						__t0 = (&Constructor_Main_Just{1, gopurs_runtime.Apply((*Constructor_Main_Just)(v_0.UnsafePtr).V0, (*Constructor_Main_Just)(v1_1.UnsafePtr).V0)})
 						goto end_branch_0
 					} else {
 
@@ -240,7 +226,7 @@ func Get_Main_applyMaybe() gopurs_runtime.Value {
 			end_branch_0:
 				return gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer(__t0)}
 			})
-		})})}
+		})}))}
 	})
 	return cache_Main_applyMaybe
 }
@@ -286,9 +272,9 @@ var once_Main_applicativeMaybe sync.Once
 
 func Get_Main_applicativeMaybe() gopurs_runtime.Value {
 	once_Main_applicativeMaybe.Do(func() {
-		cache_Main_applicativeMaybe = gopurs_runtime.Value{Type: 9, IntVal: 1459134221, UnsafePtr: unsafe.Pointer(&Constructor_Control_Applicative_Applicative{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_applicativeMaybe = gopurs_runtime.Value{Type: 9, IntVal: 1459134221, UnsafePtr: unsafe.Pointer((&Constructor_Control_Applicative_Applicative{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 3032403085, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply](Get_Main_applyMaybe()))}
-		}), Get_Main_Just()})}
+		}), Get_Main_Just()}))}
 	})
 	return cache_Main_applicativeMaybe
 }
@@ -455,7 +441,7 @@ func Call_Main_test1(dictApplicative_0_loop gopurs_runtime.Value, v_1_loop gopur
 func Call_Main_test2(v_0_loop gopurs_runtime.Value) *Constructor_Main_Just {
 	var v_0 gopurs_runtime.Value = v_0_loop
 	_ = v_0
-	return gopurs_runtime.CoerceToStruct[Constructor_Main_Just](gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer(&Constructor_Main_Just{1, gopurs_runtime.Float(3.0)})})
+	return gopurs_runtime.CoerceToStruct[Constructor_Main_Just](gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer((&Constructor_Main_Just{1, gopurs_runtime.Float(3.0)}))})
 }
 
 func Call_Main_test3(v_0_loop gopurs_runtime.Value) *Constructor_Main_Just {
@@ -467,5 +453,5 @@ func Call_Main_test3(v_0_loop gopurs_runtime.Value) *Constructor_Main_Just {
 func Call_Main_test9(v_0_loop gopurs_runtime.Value) *Constructor_Main_Just {
 	var v_0 gopurs_runtime.Value = v_0_loop
 	_ = v_0
-	return gopurs_runtime.CoerceToStruct[Constructor_Main_Just](gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer(&Constructor_Main_Just{1, gopurs_runtime.Float(3.0)})})
+	return gopurs_runtime.CoerceToStruct[Constructor_Main_Just](gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer((&Constructor_Main_Just{1, gopurs_runtime.Float(3.0)}))})
 }

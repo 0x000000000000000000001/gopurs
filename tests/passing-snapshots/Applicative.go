@@ -22,7 +22,7 @@ var once_Main_Just sync.Once
 func Get_Main_Just() gopurs_runtime.Value {
 	once_Main_Just.Do(func() {
 		cache_Main_Just = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer(&Constructor_Main_Just{1, value0})}
+			return gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer((&Constructor_Main_Just{1, value0}))}
 		})
 	})
 	return cache_Main_Just
@@ -79,12 +79,12 @@ var once_Main_applicativeMaybe sync.Once
 
 func Get_Main_applicativeMaybe() gopurs_runtime.Value {
 	once_Main_applicativeMaybe.Do(func() {
-		cache_Main_applicativeMaybe = gopurs_runtime.Value{Type: 9, IntVal: 4228518006, UnsafePtr: unsafe.Pointer(&Constructor_Main_Applicative{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_applicativeMaybe = gopurs_runtime.Value{Type: 9, IntVal: 4228518006, UnsafePtr: unsafe.Pointer((&Constructor_Main_Applicative{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(v1_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				var __t0 *Constructor_Main_Just
 				{
 					if (v_0.Type == 9 && v_0.IntVal == 3271839782 && v_0.UnsafePtr != nil) && (v1_1.Type == 9 && v1_1.IntVal == 3271839782 && v1_1.UnsafePtr != nil) {
-						__t0 = &Constructor_Main_Just{1, gopurs_runtime.Apply((*Constructor_Main_Just)(v_0.UnsafePtr).V0, (*Constructor_Main_Just)(v1_1.UnsafePtr).V0)}
+						__t0 = (&Constructor_Main_Just{1, gopurs_runtime.Apply((*Constructor_Main_Just)(v_0.UnsafePtr).V0, (*Constructor_Main_Just)(v1_1.UnsafePtr).V0)})
 						goto end_branch_0
 					} else {
 
@@ -96,7 +96,7 @@ func Get_Main_applicativeMaybe() gopurs_runtime.Value {
 			end_branch_0:
 				return gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer(__t0)}
 			})
-		}), Get_Main_Just()})}
+		}), Get_Main_Just()}))}
 	})
 	return cache_Main_applicativeMaybe
 }

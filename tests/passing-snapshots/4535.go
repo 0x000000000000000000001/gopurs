@@ -36,7 +36,7 @@ func Get_Main_otherNestingWorks() gopurs_runtime.Value {
 		cache_Main_otherNestingWorks = func() gopurs_runtime.Value {
 			arr := func() []*Constructor_Data_Maybe_Just {
 				arr := *(*[]gopurs_runtime.Value)(func() gopurs_runtime.Value {
-					arr := []*Constructor_Data_Maybe_Just{&Constructor_Data_Maybe_Just{1, gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(&Constructor_Data_Tuple_Tuple{1, gopurs_runtime.Int(0), gopurs_runtime.Float(0.0)})}}, &Constructor_Data_Maybe_Just{1, gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(&Constructor_Data_Tuple_Tuple{1, gopurs_runtime.Int(1), gopurs_runtime.Float(1.0)})}}}
+					arr := []*Constructor_Data_Maybe_Just{(&Constructor_Data_Maybe_Just{1, gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer((&Constructor_Data_Tuple_Tuple{1, gopurs_runtime.Int(0), gopurs_runtime.Float(0.0)}))}}), (&Constructor_Data_Maybe_Just{1, gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer((&Constructor_Data_Tuple_Tuple{1, gopurs_runtime.Int(1), gopurs_runtime.Float(1.0)}))}})}
 					boxed := make([]gopurs_runtime.Value, len(arr))
 					for i, v := range arr {
 						boxed[i] = gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(v)}

@@ -204,7 +204,7 @@ var once_Main_RoleNotReserved sync.Once
 func Get_Main_RoleNotReserved() gopurs_runtime.Value {
 	once_Main_RoleNotReserved.Do(func() {
 		cache_Main_RoleNotReserved = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 3736855291, UnsafePtr: unsafe.Pointer(&Constructor_Main_RoleNotReserved{1, value0})}
+			return value0
 		})
 	})
 	return cache_Main_RoleNotReserved
@@ -252,7 +252,7 @@ var once_Main_Rec3 sync.Once
 func Get_Main_Rec3() gopurs_runtime.Value {
 	once_Main_Rec3.Do(func() {
 		cache_Main_Rec3 = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 2569006361, UnsafePtr: unsafe.Pointer(&Constructor_Main_Rec3{1, value0})}
+			return value0
 		})
 	})
 	return cache_Main_Rec3
@@ -264,7 +264,7 @@ var once_Main_Rec2 sync.Once
 func Get_Main_Rec2() gopurs_runtime.Value {
 	once_Main_Rec2.Do(func() {
 		cache_Main_Rec2 = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 4255831864, UnsafePtr: unsafe.Pointer(&Constructor_Main_Rec2{1, value0})}
+			return value0
 		})
 	})
 	return cache_Main_Rec2
@@ -276,7 +276,7 @@ var once_Main_Rec1 sync.Once
 func Get_Main_Rec1() gopurs_runtime.Value {
 	once_Main_Rec1.Do(func() {
 		cache_Main_Rec1 = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 3527658971, UnsafePtr: unsafe.Pointer(&Constructor_Main_Rec1{1, value0})}
+			return value0
 		})
 	})
 	return cache_Main_Rec1
@@ -288,7 +288,7 @@ var once_Main_RankN4 sync.Once
 func Get_Main_RankN4() gopurs_runtime.Value {
 	once_Main_RankN4.Do(func() {
 		cache_Main_RankN4 = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 2920889202, UnsafePtr: unsafe.Pointer(&Constructor_Main_RankN4{1, value0})}
+			return value0
 		})
 	})
 	return cache_Main_RankN4
@@ -300,7 +300,7 @@ var once_Main_RankN3 sync.Once
 func Get_Main_RankN3() gopurs_runtime.Value {
 	once_Main_RankN3.Do(func() {
 		cache_Main_RankN3 = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 2520673813, UnsafePtr: unsafe.Pointer(&Constructor_Main_RankN3{1, value0})}
+			return value0
 		})
 	})
 	return cache_Main_RankN3
@@ -312,7 +312,7 @@ var once_Main_RankN2 sync.Once
 func Get_Main_RankN2() gopurs_runtime.Value {
 	once_Main_RankN2.Do(func() {
 		cache_Main_RankN2 = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 1407128500, UnsafePtr: unsafe.Pointer(&Constructor_Main_RankN2{1, value0})}
+			return value0
 		})
 	})
 	return cache_Main_RankN2
@@ -431,7 +431,7 @@ func Get_Main_MyMap() gopurs_runtime.Value {
 	once_Main_MyMap.Do(func() {
 		cache_Main_MyMap = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(value1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Value{Type: 9, IntVal: 899776310, UnsafePtr: unsafe.Pointer(&Constructor_Main_MyMap{1, value0, value1})}
+				return gopurs_runtime.Value{Type: 9, IntVal: 899776310, UnsafePtr: unsafe.Pointer((&Constructor_Main_MyMap{1, value0, value1}))}
 			})
 		})
 	})
@@ -445,7 +445,7 @@ func Get_Main_MutuallyRecursiveRepresentational1() gopurs_runtime.Value {
 	once_Main_MutuallyRecursiveRepresentational1.Do(func() {
 		cache_Main_MutuallyRecursiveRepresentational1 = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(value1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Value{Type: 9, IntVal: 1482744760, UnsafePtr: unsafe.Pointer(&Constructor_Main_MutuallyRecursiveRepresentational1{1, value0, gopurs_runtime.CoerceToStruct[Constructor_Main_MutuallyRecursiveRepresentational2](value1)})}
+				return gopurs_runtime.Value{Type: 9, IntVal: 1482744760, UnsafePtr: unsafe.Pointer((&Constructor_Main_MutuallyRecursiveRepresentational1{1, value0, value1}))}
 			})
 		})
 	})
@@ -458,7 +458,7 @@ var once_Main_MutuallyRecursiveRepresentational2 sync.Once
 func Get_Main_MutuallyRecursiveRepresentational2() gopurs_runtime.Value {
 	once_Main_MutuallyRecursiveRepresentational2.Do(func() {
 		cache_Main_MutuallyRecursiveRepresentational2 = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 2964628507, UnsafePtr: unsafe.Pointer(&Constructor_Main_MutuallyRecursiveRepresentational2{1, gopurs_runtime.CoerceToStruct[Constructor_Main_MutuallyRecursiveRepresentational1](value0)})}
+			return value0
 		})
 	})
 	return cache_Main_MutuallyRecursiveRepresentational2
@@ -470,7 +470,7 @@ var once_Main_MutuallyRecursivePhantom1 sync.Once
 func Get_Main_MutuallyRecursivePhantom1() gopurs_runtime.Value {
 	once_Main_MutuallyRecursivePhantom1.Do(func() {
 		cache_Main_MutuallyRecursivePhantom1 = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 903904661, UnsafePtr: unsafe.Pointer(&Constructor_Main_MutuallyRecursivePhantom1{1, gopurs_runtime.CoerceToStruct[Constructor_Main_MutuallyRecursivePhantom2](value0)})}
+			return value0
 		})
 	})
 	return cache_Main_MutuallyRecursivePhantom1
@@ -482,7 +482,7 @@ var once_Main_MutuallyRecursivePhantom2 sync.Once
 func Get_Main_MutuallyRecursivePhantom2() gopurs_runtime.Value {
 	once_Main_MutuallyRecursivePhantom2.Do(func() {
 		cache_Main_MutuallyRecursivePhantom2 = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 3539668246, UnsafePtr: unsafe.Pointer(&Constructor_Main_MutuallyRecursivePhantom2{1, gopurs_runtime.CoerceToStruct[Constructor_Main_MutuallyRecursivePhantom1](value0)})}
+			return value0
 		})
 	})
 	return cache_Main_MutuallyRecursivePhantom2
@@ -518,7 +518,7 @@ var once_Main_D sync.Once
 func Get_Main_D() gopurs_runtime.Value {
 	once_Main_D.Do(func() {
 		cache_Main_D = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 1682807770, UnsafePtr: unsafe.Pointer(&Constructor_Main_D{1, value0})}
+			return value0
 		})
 	})
 	return cache_Main_D
@@ -543,7 +543,7 @@ func Get_Main_Constrained2() gopurs_runtime.Value {
 	once_Main_Constrained2.Do(func() {
 		cache_Main_Constrained2 = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(value1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Value{Type: 9, IntVal: 919721180, UnsafePtr: unsafe.Pointer(&Constructor_Main_Constrained2{1, value0, value1})}
+				return gopurs_runtime.Value{Type: 9, IntVal: 919721180, UnsafePtr: unsafe.Pointer((&Constructor_Main_Constrained2{1, value0, value1}))}
 			})
 		})
 	})
@@ -556,7 +556,7 @@ var once_Main_Constrained1 sync.Once
 func Get_Main_Constrained1() gopurs_runtime.Value {
 	once_Main_Constrained1.Do(func() {
 		cache_Main_Constrained1 = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 1799887679, UnsafePtr: unsafe.Pointer(&Constructor_Main_Constrained1{1, value0})}
+			return value0
 		})
 	})
 	return cache_Main_Constrained1
@@ -569,7 +569,7 @@ func Get_Main_Arr1() gopurs_runtime.Value {
 	once_Main_Arr1.Do(func() {
 		cache_Main_Arr1 = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(value1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Value{Type: 9, IntVal: 2324537070, UnsafePtr: unsafe.Pointer(&Constructor_Main_Arr1{1, func() []gopurs_runtime.Value {
+				return gopurs_runtime.Value{Type: 9, IntVal: 2324537070, UnsafePtr: unsafe.Pointer((&Constructor_Main_Arr1{1, func() []gopurs_runtime.Value {
 					arr := *(*[]gopurs_runtime.Value)(value0.UnsafePtr)
 					unboxed := make([]gopurs_runtime.Value, len(arr))
 					for i, v := range arr {
@@ -583,7 +583,7 @@ func Get_Main_Arr1() gopurs_runtime.Value {
 						unboxed[i] = v
 					}
 					return unboxed
-				}()})}
+				}()}))}
 			})
 		})
 	})
@@ -1296,7 +1296,7 @@ type Constructor_Main_MyMap struct {
 type Constructor_Main_MutuallyRecursiveRepresentational1 struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
-	V1 *Constructor_Main_MutuallyRecursiveRepresentational2
+	V1 gopurs_runtime.Value
 }
 
 type Constructor_Main_MutuallyRecursiveRepresentational2 struct {
@@ -1306,12 +1306,12 @@ type Constructor_Main_MutuallyRecursiveRepresentational2 struct {
 
 type Constructor_Main_MutuallyRecursivePhantom1 struct {
 	Rc uint32
-	V0 *Constructor_Main_MutuallyRecursivePhantom2
+	V0 gopurs_runtime.Value
 }
 
 type Constructor_Main_MutuallyRecursivePhantom2 struct {
 	Rc uint32
-	V0 *Constructor_Main_MutuallyRecursivePhantom1
+	V0 gopurs_runtime.Value
 }
 
 type Constructor_Main_D struct {

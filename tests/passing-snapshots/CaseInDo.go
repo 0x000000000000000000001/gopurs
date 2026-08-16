@@ -22,16 +22,14 @@ var once_Main_set sync.Once
 
 func Get_Main_set() gopurs_runtime.Value {
 	once_Main_set.Do(func() {
-		cache_Main_set = func() gopurs_runtime.Value {
+		cache_Main_set = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 			// TAST (Let): __local_var_0_0 -> gopurs_runtime.Value
 			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Testing..."))
 			_ = __local_var_0_0
-			return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-				_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
-				_ = _dollar___unused_1_1
-				return gopurs_runtime.Bool(true)
-			})
-		}()
+			_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
+			_ = _dollar___unused_1_1
+			return gopurs_runtime.Bool(true)
+		})
 	})
 	return cache_Main_set
 }

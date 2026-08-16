@@ -11,9 +11,9 @@ var once_Main_2_colon_30IsSymbol sync.Once
 
 func Get_Main_2_colon_30IsSymbol() gopurs_runtime.Value {
 	once_Main_2_colon_30IsSymbol.Do(func() {
-		cache_Main_2_colon_30IsSymbol = gopurs_runtime.Value{Type: 9, IntVal: 2134024384, UnsafePtr: unsafe.Pointer(&Constructor_Data_Symbol_IsSymbol{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_2_colon_30IsSymbol = gopurs_runtime.Value{Type: 9, IntVal: 2134024384, UnsafePtr: unsafe.Pointer((&Constructor_Data_Symbol_IsSymbol{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Str("2:30")
-		})})}
+		})}))}
 	})
 	return cache_Main_2_colon_30IsSymbol
 }
@@ -23,9 +23,9 @@ var once_Main_2IsSymbol sync.Once
 
 func Get_Main_2IsSymbol() gopurs_runtime.Value {
 	once_Main_2IsSymbol.Do(func() {
-		cache_Main_2IsSymbol = gopurs_runtime.Value{Type: 9, IntVal: 2134024384, UnsafePtr: unsafe.Pointer(&Constructor_Data_Symbol_IsSymbol{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_2IsSymbol = gopurs_runtime.Value{Type: 9, IntVal: 2134024384, UnsafePtr: unsafe.Pointer((&Constructor_Data_Symbol_IsSymbol{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Str("2")
-		})})}
+		})}))}
 	})
 	return cache_Main_2IsSymbol
 }

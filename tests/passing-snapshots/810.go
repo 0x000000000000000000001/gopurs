@@ -22,7 +22,7 @@ var once_Main_Just sync.Once
 func Get_Main_Just() gopurs_runtime.Value {
 	once_Main_Just.Do(func() {
 		cache_Main_Just = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer(&Constructor_Main_Just{1, value0})}
+			return gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer((&Constructor_Main_Just{1, value0}))}
 		})
 	})
 	return cache_Main_Just
@@ -73,7 +73,7 @@ func Call_Main_test(m_0_loop *Constructor_Main_Just) *Constructor_Main_Just {
 	}
 	{
 		if m_0 != nil {
-			__t0 = &Constructor_Main_Just{1, (m_0).V0}
+			__t0 = (&Constructor_Main_Just{1, (m_0).V0})
 			goto end_branch_0
 		} else {
 

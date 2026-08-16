@@ -84,7 +84,7 @@ var once_Main_B2 sync.Once
 func Get_Main_B2() gopurs_runtime.Value {
 	once_Main_B2.Do(func() {
 		cache_Main_B2 = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 4102534158, UnsafePtr: unsafe.Pointer(&Constructor_Main_B2{1, value0})}
+			return gopurs_runtime.Value{Type: 9, IntVal: 4102534158, UnsafePtr: unsafe.Pointer((&Constructor_Main_B2{1, value0}))}
 		})
 	})
 	return cache_Main_B2
@@ -130,7 +130,7 @@ var once_Main_B sync.Once
 func Get_Main_B() gopurs_runtime.Value {
 	once_Main_B.Do(func() {
 		cache_Main_B = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 4250879068, UnsafePtr: unsafe.Pointer(&Constructor_Main_B{1, gopurs_runtime.CoerceToStruct[Constructor_Main_B](value0)})}
+			return gopurs_runtime.Value{Type: 9, IntVal: 4250879068, UnsafePtr: unsafe.Pointer((&Constructor_Main_B{1, gopurs_runtime.CoerceToStruct[Constructor_Main_B](value0)}))}
 		})
 	})
 	return cache_Main_B
@@ -163,11 +163,11 @@ var once_Main_genericC_ sync.Once
 
 func Get_Main_genericC_() gopurs_runtime.Value {
 	once_Main_genericC_.Do(func() {
-		cache_Main_genericC_ = gopurs_runtime.Value{Type: 9, IntVal: 1921946594, UnsafePtr: unsafe.Pointer(&Constructor_Data_Generic_Rep_Generic{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_genericC_ = gopurs_runtime.Value{Type: 9, IntVal: 1921946594, UnsafePtr: unsafe.Pointer((&Constructor_Data_Generic_Rep_Generic{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 4250879068, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_B](x_0))}
 		}), gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 4250879068, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_B](x_0))}
-		})})}
+		})}))}
 	})
 	return cache_Main_genericC_
 }
@@ -177,11 +177,11 @@ var once_Main_genericC2_ sync.Once
 
 func Get_Main_genericC2_() gopurs_runtime.Value {
 	once_Main_genericC2_.Do(func() {
-		cache_Main_genericC2_ = gopurs_runtime.Value{Type: 9, IntVal: 1921946594, UnsafePtr: unsafe.Pointer(&Constructor_Data_Generic_Rep_Generic{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_genericC2_ = gopurs_runtime.Value{Type: 9, IntVal: 1921946594, UnsafePtr: unsafe.Pointer((&Constructor_Data_Generic_Rep_Generic{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return x_0
 		}), gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return x_0
-		})})}
+		})}))}
 	})
 	return cache_Main_genericC2_
 }
@@ -191,11 +191,11 @@ var once_Main_genericB_ sync.Once
 
 func Get_Main_genericB_() gopurs_runtime.Value {
 	once_Main_genericB_.Do(func() {
-		cache_Main_genericB_ = gopurs_runtime.Value{Type: 9, IntVal: 1921946594, UnsafePtr: unsafe.Pointer(&Constructor_Data_Generic_Rep_Generic{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_genericB_ = gopurs_runtime.Value{Type: 9, IntVal: 1921946594, UnsafePtr: unsafe.Pointer((&Constructor_Data_Generic_Rep_Generic{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			var __t0 gopurs_runtime.Value
 			{
 				if x_0.Type == 9 && x_0.IntVal == 4250879068 && x_0.UnsafePtr != nil {
-					__t0 = gopurs_runtime.Value{Type: 9, IntVal: 3478632216, UnsafePtr: unsafe.Pointer(&Constructor_Data_Generic_Rep_Inl{1, gopurs_runtime.Value{Type: 9, IntVal: 4250879068, UnsafePtr: unsafe.Pointer((*Constructor_Main_B)(x_0.UnsafePtr).V0)}})}
+					__t0 = gopurs_runtime.Value{Type: 9, IntVal: 3478632216, UnsafePtr: unsafe.Pointer((&Constructor_Data_Generic_Rep_Inl{1, gopurs_runtime.Value{Type: 9, IntVal: 4250879068, UnsafePtr: unsafe.Pointer((*Constructor_Main_B)(x_0.UnsafePtr).V0)}}))}
 					goto end_branch_0
 				} else {
 
@@ -203,7 +203,7 @@ func Get_Main_genericB_() gopurs_runtime.Value {
 			}
 			{
 				if x_0.Type == 9 && x_0.IntVal == 4250879068 && x_0.UnsafePtr == nil {
-					__t0 = gopurs_runtime.Value{Type: 9, IntVal: 492034566, UnsafePtr: unsafe.Pointer(&Constructor_Data_Generic_Rep_Inr{1, gopurs_runtime.Value{Type: 9, IntVal: int64(1454898258), UnsafePtr: nil}})}
+					__t0 = gopurs_runtime.Value{Type: 9, IntVal: 492034566, UnsafePtr: unsafe.Pointer((&Constructor_Data_Generic_Rep_Inr{1, gopurs_runtime.Value{Type: 9, IntVal: int64(1454898258), UnsafePtr: nil}}))}
 					goto end_branch_0
 				} else {
 
@@ -218,7 +218,7 @@ func Get_Main_genericB_() gopurs_runtime.Value {
 			var __t1 *Constructor_Main_B
 			{
 				if x_0.Type == 9 && x_0.IntVal == 3478632216 {
-					__t1 = &Constructor_Main_B{1, gopurs_runtime.CoerceToStruct[Constructor_Main_B]((*Constructor_Data_Generic_Rep_Inl)(x_0.UnsafePtr).V0)}
+					__t1 = (&Constructor_Main_B{1, gopurs_runtime.CoerceToStruct[Constructor_Main_B]((*Constructor_Data_Generic_Rep_Inl)(x_0.UnsafePtr).V0)})
 					goto end_branch_1
 				} else {
 
@@ -237,7 +237,7 @@ func Get_Main_genericB_() gopurs_runtime.Value {
 			}
 		end_branch_1:
 			return gopurs_runtime.Value{Type: 9, IntVal: 4250879068, UnsafePtr: unsafe.Pointer(__t1)}
-		})})}
+		})}))}
 	})
 	return cache_Main_genericB_
 }
@@ -247,7 +247,7 @@ var once_Main_showB sync.Once
 
 func Get_Main_showB() gopurs_runtime.Value {
 	once_Main_showB.Do(func() {
-		cache_Main_showB = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(&Constructor_Data_Show_Show{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_showB = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer((&Constructor_Data_Show_Show{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			// TAST (Let): __local_var_1_0 -> gopurs_runtime.Value
 			__local_var_1_0 := gopurs_runtime.RecordDict1("genericShowArgs", gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return func() gopurs_runtime.Value {
@@ -277,14 +277,21 @@ func Get_Main_showB() gopurs_runtime.Value {
 				{
 					__t3 = (("(") + (gopurs_runtime.Apply2(Get_Data_Show_Generic_intercalate(), gopurs_runtime.Str(" "), func() gopurs_runtime.Value {
 						arr := func() []string {
-							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), func() gopurs_runtime.Value {
-								arr := []string{"B"}
-								boxed := make([]gopurs_runtime.Value, len(arr))
+							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array(func() []gopurs_runtime.Value {
+								arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), func() gopurs_runtime.Value {
+									arr := []string{"B"}
+									boxed := make([]gopurs_runtime.Value, len(arr))
+									for i, v := range arr {
+										boxed[i] = gopurs_runtime.Str(v)
+									}
+									return gopurs_runtime.Array(boxed)
+								}(), v1_3_2).UnsafePtr)
+								unboxed := make([]gopurs_runtime.Value, len(arr))
 								for i, v := range arr {
-									boxed[i] = gopurs_runtime.Str(v)
+									unboxed[i] = v
 								}
-								return gopurs_runtime.Array(boxed)
-							}(), v1_3_2).UnsafePtr)
+								return unboxed
+							}()).UnsafePtr)
 							unboxed := make([]string, len(arr))
 							for i, v := range arr {
 								unboxed[i] = v.StrVal()
@@ -326,7 +333,7 @@ func Get_Main_showB() gopurs_runtime.Value {
 			}
 		end_branch_6:
 			return gopurs_runtime.Str(__t6)
-		})})}
+		})}))}
 	})
 	return cache_Main_showB
 }
@@ -378,14 +385,21 @@ func Get_Main_showC() gopurs_runtime.Value {
 					{
 						__t4 = (("(") + (gopurs_runtime.Apply2(Get_Data_Show_Generic_intercalate(), gopurs_runtime.Str(" "), func() gopurs_runtime.Value {
 							arr := func() []string {
-								arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), func() gopurs_runtime.Value {
-									arr := []string{"B"}
-									boxed := make([]gopurs_runtime.Value, len(arr))
+								arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array(func() []gopurs_runtime.Value {
+									arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), func() gopurs_runtime.Value {
+										arr := []string{"B"}
+										boxed := make([]gopurs_runtime.Value, len(arr))
+										for i, v := range arr {
+											boxed[i] = gopurs_runtime.Str(v)
+										}
+										return gopurs_runtime.Array(boxed)
+									}(), v1_3_3).UnsafePtr)
+									unboxed := make([]gopurs_runtime.Value, len(arr))
 									for i, v := range arr {
-										boxed[i] = gopurs_runtime.Str(v)
+										unboxed[i] = v
 									}
-									return gopurs_runtime.Array(boxed)
-								}(), v1_3_3).UnsafePtr)
+									return unboxed
+								}()).UnsafePtr)
 								unboxed := make([]string, len(arr))
 								for i, v := range arr {
 									unboxed[i] = v.StrVal()
@@ -451,14 +465,21 @@ func Get_Main_showC() gopurs_runtime.Value {
 				{
 					__t8 = (("(") + (gopurs_runtime.Apply2(Get_Data_Show_Generic_intercalate(), gopurs_runtime.Str(" "), func() gopurs_runtime.Value {
 						arr := func() []string {
-							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), func() gopurs_runtime.Value {
-								arr := []string{"C"}
-								boxed := make([]gopurs_runtime.Value, len(arr))
+							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array(func() []gopurs_runtime.Value {
+								arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), func() gopurs_runtime.Value {
+									arr := []string{"C"}
+									boxed := make([]gopurs_runtime.Value, len(arr))
+									for i, v := range arr {
+										boxed[i] = gopurs_runtime.Str(v)
+									}
+									return gopurs_runtime.Array(boxed)
+								}(), v1_2_7).UnsafePtr)
+								unboxed := make([]gopurs_runtime.Value, len(arr))
 								for i, v := range arr {
-									boxed[i] = gopurs_runtime.Str(v)
+									unboxed[i] = v
 								}
-								return gopurs_runtime.Array(boxed)
-							}(), v1_2_7).UnsafePtr)
+								return unboxed
+							}()).UnsafePtr)
 							unboxed := make([]string, len(arr))
 							for i, v := range arr {
 								unboxed[i] = v.StrVal()
@@ -476,9 +497,9 @@ func Get_Main_showC() gopurs_runtime.Value {
 				return gopurs_runtime.Str(__t8)
 			}))
 			_ = __local_var_1_6
-			return gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(&Constructor_Data_Show_Show{1, gopurs_runtime.Func(func(x_2 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer((&Constructor_Data_Show_Show{1, gopurs_runtime.Func(func(x_2 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.RecordGet(__local_var_1_6, "genericShow'"), gopurs_runtime.Value{Type: 9, IntVal: 4250879068, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_B](x_2))}).StrVal())
-			})})}
+			})}))}
 		}()
 	})
 	return cache_Main_showC
@@ -489,11 +510,11 @@ var once_Main_genericB2_ sync.Once
 
 func Get_Main_genericB2_() gopurs_runtime.Value {
 	once_Main_genericB2_.Do(func() {
-		cache_Main_genericB2_ = gopurs_runtime.Value{Type: 9, IntVal: 1921946594, UnsafePtr: unsafe.Pointer(&Constructor_Data_Generic_Rep_Generic{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_genericB2_ = gopurs_runtime.Value{Type: 9, IntVal: 1921946594, UnsafePtr: unsafe.Pointer((&Constructor_Data_Generic_Rep_Generic{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			var __t0 gopurs_runtime.Value
 			{
 				if x_0.Type == 9 && x_0.IntVal == 4102534158 && x_0.UnsafePtr != nil {
-					__t0 = gopurs_runtime.Value{Type: 9, IntVal: 3478632216, UnsafePtr: unsafe.Pointer(&Constructor_Data_Generic_Rep_Inl{1, (*Constructor_Main_B2)(x_0.UnsafePtr).V0})}
+					__t0 = gopurs_runtime.Value{Type: 9, IntVal: 3478632216, UnsafePtr: unsafe.Pointer((&Constructor_Data_Generic_Rep_Inl{1, (*Constructor_Main_B2)(x_0.UnsafePtr).V0}))}
 					goto end_branch_0
 				} else {
 
@@ -501,7 +522,7 @@ func Get_Main_genericB2_() gopurs_runtime.Value {
 			}
 			{
 				if x_0.Type == 9 && x_0.IntVal == 4102534158 && x_0.UnsafePtr == nil {
-					__t0 = gopurs_runtime.Value{Type: 9, IntVal: 492034566, UnsafePtr: unsafe.Pointer(&Constructor_Data_Generic_Rep_Inr{1, gopurs_runtime.Value{Type: 9, IntVal: int64(1454898258), UnsafePtr: nil}})}
+					__t0 = gopurs_runtime.Value{Type: 9, IntVal: 492034566, UnsafePtr: unsafe.Pointer((&Constructor_Data_Generic_Rep_Inr{1, gopurs_runtime.Value{Type: 9, IntVal: int64(1454898258), UnsafePtr: nil}}))}
 					goto end_branch_0
 				} else {
 
@@ -516,7 +537,7 @@ func Get_Main_genericB2_() gopurs_runtime.Value {
 			var __t1 *Constructor_Main_B2
 			{
 				if x_0.Type == 9 && x_0.IntVal == 3478632216 {
-					__t1 = &Constructor_Main_B2{1, (*Constructor_Data_Generic_Rep_Inl)(x_0.UnsafePtr).V0}
+					__t1 = (&Constructor_Main_B2{1, (*Constructor_Data_Generic_Rep_Inl)(x_0.UnsafePtr).V0})
 					goto end_branch_1
 				} else {
 
@@ -535,7 +556,7 @@ func Get_Main_genericB2_() gopurs_runtime.Value {
 			}
 		end_branch_1:
 			return gopurs_runtime.Value{Type: 9, IntVal: 4102534158, UnsafePtr: unsafe.Pointer(__t1)}
-		})})}
+		})}))}
 	})
 	return cache_Main_genericB2_
 }
@@ -545,7 +566,7 @@ var once_Main_showB2 sync.Once
 
 func Get_Main_showB2() gopurs_runtime.Value {
 	once_Main_showB2.Do(func() {
-		cache_Main_showB2 = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(&Constructor_Data_Show_Show{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_showB2 = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer((&Constructor_Data_Show_Show{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			// TAST (Let): __local_var_1_0 -> gopurs_runtime.Value
 			__local_var_1_0 := gopurs_runtime.RecordDict1("genericShowArgs", gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return func() gopurs_runtime.Value {
@@ -575,14 +596,21 @@ func Get_Main_showB2() gopurs_runtime.Value {
 				{
 					__t3 = (("(") + (gopurs_runtime.Apply2(Get_Data_Show_Generic_intercalate(), gopurs_runtime.Str(" "), func() gopurs_runtime.Value {
 						arr := func() []string {
-							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), func() gopurs_runtime.Value {
-								arr := []string{"B2"}
-								boxed := make([]gopurs_runtime.Value, len(arr))
+							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array(func() []gopurs_runtime.Value {
+								arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), func() gopurs_runtime.Value {
+									arr := []string{"B2"}
+									boxed := make([]gopurs_runtime.Value, len(arr))
+									for i, v := range arr {
+										boxed[i] = gopurs_runtime.Str(v)
+									}
+									return gopurs_runtime.Array(boxed)
+								}(), v1_3_2).UnsafePtr)
+								unboxed := make([]gopurs_runtime.Value, len(arr))
 								for i, v := range arr {
-									boxed[i] = gopurs_runtime.Str(v)
+									unboxed[i] = v
 								}
-								return gopurs_runtime.Array(boxed)
-							}(), v1_3_2).UnsafePtr)
+								return unboxed
+							}()).UnsafePtr)
 							unboxed := make([]string, len(arr))
 							for i, v := range arr {
 								unboxed[i] = v.StrVal()
@@ -624,7 +652,7 @@ func Get_Main_showB2() gopurs_runtime.Value {
 			}
 		end_branch_6:
 			return gopurs_runtime.Str(__t6)
-		})})}
+		})}))}
 	})
 	return cache_Main_showB2
 }
@@ -634,7 +662,7 @@ var once_Main_showA2 sync.Once
 
 func Get_Main_showA2() gopurs_runtime.Value {
 	once_Main_showA2.Do(func() {
-		cache_Main_showA2 = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(&Constructor_Data_Show_Show{1, gopurs_runtime.Func(func(record_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_showA2 = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer((&Constructor_Data_Show_Show{1, gopurs_runtime.Func(func(record_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			// TAST (Let): __local_var_1_0 -> gopurs_runtime.Value
 			__local_var_1_0 := gopurs_runtime.RecordDict1("genericShowArgs", gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return func() gopurs_runtime.Value {
@@ -664,14 +692,21 @@ func Get_Main_showA2() gopurs_runtime.Value {
 				{
 					__t3 = (("(") + (gopurs_runtime.Apply2(Get_Data_Show_Generic_intercalate(), gopurs_runtime.Str(" "), func() gopurs_runtime.Value {
 						arr := func() []string {
-							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), func() gopurs_runtime.Value {
-								arr := []string{"B2"}
-								boxed := make([]gopurs_runtime.Value, len(arr))
+							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array(func() []gopurs_runtime.Value {
+								arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), func() gopurs_runtime.Value {
+									arr := []string{"B2"}
+									boxed := make([]gopurs_runtime.Value, len(arr))
+									for i, v := range arr {
+										boxed[i] = gopurs_runtime.Str(v)
+									}
+									return gopurs_runtime.Array(boxed)
+								}(), v1_3_2).UnsafePtr)
+								unboxed := make([]gopurs_runtime.Value, len(arr))
 								for i, v := range arr {
-									boxed[i] = gopurs_runtime.Str(v)
+									unboxed[i] = v
 								}
-								return gopurs_runtime.Array(boxed)
-							}(), v1_3_2).UnsafePtr)
+								return unboxed
+							}()).UnsafePtr)
 							unboxed := make([]string, len(arr))
 							for i, v := range arr {
 								unboxed[i] = v.StrVal()
@@ -713,7 +748,7 @@ func Get_Main_showA2() gopurs_runtime.Value {
 			}
 		end_branch_6:
 			return gopurs_runtime.Str(__t6)
-		})})}
+		})}))}
 	})
 	return cache_Main_showA2
 }
@@ -753,14 +788,21 @@ func Get_Main_showC2() gopurs_runtime.Value {
 				{
 					__t3 = (("(") + (gopurs_runtime.Apply2(Get_Data_Show_Generic_intercalate(), gopurs_runtime.Str(" "), func() gopurs_runtime.Value {
 						arr := func() []string {
-							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), func() gopurs_runtime.Value {
-								arr := []string{"C2"}
-								boxed := make([]gopurs_runtime.Value, len(arr))
+							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array(func() []gopurs_runtime.Value {
+								arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), func() gopurs_runtime.Value {
+									arr := []string{"C2"}
+									boxed := make([]gopurs_runtime.Value, len(arr))
+									for i, v := range arr {
+										boxed[i] = gopurs_runtime.Str(v)
+									}
+									return gopurs_runtime.Array(boxed)
+								}(), v1_2_2).UnsafePtr)
+								unboxed := make([]gopurs_runtime.Value, len(arr))
 								for i, v := range arr {
-									boxed[i] = gopurs_runtime.Str(v)
+									unboxed[i] = v
 								}
-								return gopurs_runtime.Array(boxed)
-							}(), v1_2_2).UnsafePtr)
+								return unboxed
+							}()).UnsafePtr)
 							unboxed := make([]string, len(arr))
 							for i, v := range arr {
 								unboxed[i] = v.StrVal()
@@ -778,9 +820,9 @@ func Get_Main_showC2() gopurs_runtime.Value {
 				return gopurs_runtime.Str(__t3)
 			}))
 			_ = __local_var_1_1
-			return gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(&Constructor_Data_Show_Show{1, gopurs_runtime.Func(func(x_2 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer((&Constructor_Data_Show_Show{1, gopurs_runtime.Func(func(x_2 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.RecordGet(__local_var_1_1, "genericShow'"), x_2).StrVal())
-			})})}
+			})}))}
 		}()
 	})
 	return cache_Main_showC2
@@ -817,9 +859,9 @@ type Constructor_Main_Z struct {
 func Call_Main_genericShowConstructor(dictIsSymbol_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var dictIsSymbol_0 gopurs_runtime.Value = dictIsSymbol_0_loop
 	_ = dictIsSymbol_0
-	return gopurs_runtime.Value{Type: 9, IntVal: 2730968613, UnsafePtr: unsafe.Pointer(&Constructor_Data_Show_Generic_GenericShow{1, gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
+	return gopurs_runtime.Value{Type: 9, IntVal: 2730968613, UnsafePtr: unsafe.Pointer((&Constructor_Data_Show_Generic_GenericShow{1, gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
 		return gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictIsSymbol_0, "reflectSymbol"), gopurs_runtime.Value{Type: 9, IntVal: int64(513803634), UnsafePtr: nil}).StrVal())
-	})})}
+	})}))}
 }
 
 func Call_Main_A2(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {

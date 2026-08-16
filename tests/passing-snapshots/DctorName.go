@@ -3,7 +3,6 @@ package purescript
 import (
 	gopurs_runtime "gopurs/output/gopurs_runtime"
 	sync "sync"
-	unsafe "unsafe"
 )
 
 var cache_Main_Baz_prime__prime_ gopurs_runtime.Value
@@ -44,7 +43,7 @@ var once_Main_Foo_prime_ sync.Once
 func Get_Main_Foo_prime_() gopurs_runtime.Value {
 	once_Main_Foo_prime_.Do(func() {
 		cache_Main_Foo_prime_ = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 3230929371, UnsafePtr: unsafe.Pointer(&Constructor_Main_Foo_prime_{1, value0.IntVal})}
+			return value0
 		})
 	})
 	return cache_Main_Foo_prime_
@@ -110,7 +109,7 @@ var once_Main_f sync.Once
 func Get_Main_f() gopurs_runtime.Value {
 	once_Main_f.Do(func() {
 		cache_Main_f = gopurs_runtime.Func(func(a_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Bool(Call_Main_f(gopurs_runtime.CoerceToStruct[Constructor_Main_Foo_prime_](a_0_box)))
+			return gopurs_runtime.Bool(Call_Main_f(a_0_box))
 		})
 	})
 	return cache_Main_f
@@ -191,8 +190,8 @@ end_branch_0:
 	return __t0
 }
 
-func Call_Main_f(a_0_loop *Constructor_Main_Foo_prime_) bool {
-	var a_0 *Constructor_Main_Foo_prime_ = a_0_loop
+func Call_Main_f(a_0_loop gopurs_runtime.Value) bool {
+	var a_0 gopurs_runtime.Value = a_0_loop
 	_ = a_0
 	return true
 }

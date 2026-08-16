@@ -35,9 +35,9 @@ var once_Main_newtypeTest sync.Once
 
 func Get_Main_newtypeTest() gopurs_runtime.Value {
 	once_Main_newtypeTest.Do(func() {
-		cache_Main_newtypeTest = gopurs_runtime.Value{Type: 9, IntVal: 3322196858, UnsafePtr: unsafe.Pointer(&Constructor_Data_Newtype_Newtype{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_newtypeTest = gopurs_runtime.Value{Type: 9, IntVal: 3322196858, UnsafePtr: unsafe.Pointer((&Constructor_Data_Newtype_Newtype{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{}
-		})})}
+		})}))}
 	})
 	return cache_Main_newtypeTest
 }
@@ -57,9 +57,9 @@ var once_Main_newtypeFirst sync.Once
 
 func Get_Main_newtypeFirst() gopurs_runtime.Value {
 	once_Main_newtypeFirst.Do(func() {
-		cache_Main_newtypeFirst = gopurs_runtime.Value{Type: 9, IntVal: 3322196858, UnsafePtr: unsafe.Pointer(&Constructor_Data_Newtype_Newtype{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_newtypeFirst = gopurs_runtime.Value{Type: 9, IntVal: 3322196858, UnsafePtr: unsafe.Pointer((&Constructor_Data_Newtype_Newtype{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{}
-		})})}
+		})}))}
 	})
 	return cache_Main_newtypeFirst
 }

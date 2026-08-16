@@ -13,15 +13,15 @@ func Get_Main_monoidAdditive() gopurs_runtime.Value {
 	once_Main_monoidAdditive.Do(func() {
 		cache_Main_monoidAdditive = func() gopurs_runtime.Value {
 			// TAST (Let): semigroupAdditive1_0_0 -> *Constructor_Data_Semigroup_Semigroup
-			semigroupAdditive1_0_0 := &Constructor_Data_Semigroup_Semigroup{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			semigroupAdditive1_0_0 := (&Constructor_Data_Semigroup_Semigroup{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(v1_1 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Int((v_0.IntVal) + (v1_1.IntVal))
 				})
-			})}
+			})})
 			_ = semigroupAdditive1_0_0
-			return gopurs_runtime.Value{Type: 9, IntVal: 1722653594, UnsafePtr: unsafe.Pointer(&Constructor_Data_Monoid_Monoid{1, gopurs_runtime.Func(func(_dollar___unused_1 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Value{Type: 9, IntVal: 1722653594, UnsafePtr: unsafe.Pointer((&Constructor_Data_Monoid_Monoid{1, gopurs_runtime.Func(func(_dollar___unused_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Value{Type: 9, IntVal: 2053112122, UnsafePtr: unsafe.Pointer(semigroupAdditive1_0_0)}
-			}), gopurs_runtime.Int(0)})}
+			}), gopurs_runtime.Int(0)}))}
 		}()
 	})
 	return cache_Main_monoidAdditive
@@ -33,7 +33,7 @@ var once_Main_Foo sync.Once
 func Get_Main_Foo() gopurs_runtime.Value {
 	once_Main_Foo.Do(func() {
 		cache_Main_Foo = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 2763139640, UnsafePtr: unsafe.Pointer(&Constructor_Main_Foo{1, value0.IntVal})}
+			return gopurs_runtime.Value{Type: 9, IntVal: 2763139640, UnsafePtr: unsafe.Pointer((&Constructor_Main_Foo{1, value0.IntVal}))}
 		})
 	})
 	return cache_Main_Foo
@@ -45,7 +45,7 @@ var once_Main_Bar sync.Once
 func Get_Main_Bar() gopurs_runtime.Value {
 	once_Main_Bar.Do(func() {
 		cache_Main_Bar = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 2512729583, UnsafePtr: unsafe.Pointer(&Constructor_Main_Bar{1, value0.IntVal})}
+			return gopurs_runtime.Value{Type: 9, IntVal: 2512729583, UnsafePtr: unsafe.Pointer((&Constructor_Main_Bar{1, value0.IntVal}))}
 		})
 	})
 	return cache_Main_Bar
@@ -109,16 +109,16 @@ func Call_Main_test(v_0_loop *Constructor_Data_Maybe_Just) int64 {
 	}
 	{
 		// TAST (Let): semigroupAdditive1_1_1 -> *Constructor_Data_Semigroup_Semigroup
-		semigroupAdditive1_1_1 := &Constructor_Data_Semigroup_Semigroup{1, gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
+		semigroupAdditive1_1_1 := (&Constructor_Data_Semigroup_Semigroup{1, gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(v1_2 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Int((v_1.IntVal) + (v1_2.IntVal))
 			})
-		})}
+		})})
 		_ = semigroupAdditive1_1_1
 		// TAST (Let): __local_var_1_0 -> *Constructor_Data_Monoid_Monoid
-		var __local_var_1_0 *Constructor_Data_Monoid_Monoid = gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid](gopurs_runtime.Value{Type: 9, IntVal: 1722653594, UnsafePtr: unsafe.Pointer(&Constructor_Data_Monoid_Monoid{1, gopurs_runtime.Func(func(_dollar___unused_2 gopurs_runtime.Value) gopurs_runtime.Value {
+		var __local_var_1_0 *Constructor_Data_Monoid_Monoid = gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid](gopurs_runtime.Value{Type: 9, IntVal: 1722653594, UnsafePtr: unsafe.Pointer((&Constructor_Data_Monoid_Monoid{1, gopurs_runtime.Func(func(_dollar___unused_2 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 2053112122, UnsafePtr: unsafe.Pointer(semigroupAdditive1_1_1)}
-		}), gopurs_runtime.Int(0)})})
+		}), gopurs_runtime.Int(0)}))})
 		// TAST (Let): Semigroup0_2_2 -> *Constructor_Data_Semigroup_Semigroup
 		Semigroup0_2_2 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.Box(__local_var_1_0.V0), gopurs_runtime.Value{}))
 		_ = Semigroup0_2_2

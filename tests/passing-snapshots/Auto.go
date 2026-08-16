@@ -3,7 +3,6 @@ package purescript
 import (
 	gopurs_runtime "gopurs/output/gopurs_runtime"
 	sync "sync"
-	unsafe "unsafe"
 )
 
 var cache_Main_Auto gopurs_runtime.Value
@@ -12,7 +11,7 @@ var once_Main_Auto sync.Once
 func Get_Main_Auto() gopurs_runtime.Value {
 	once_Main_Auto.Do(func() {
 		cache_Main_Auto = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 2431339793, UnsafePtr: unsafe.Pointer(&Constructor_Main_Auto{1, value0})}
+			return value0
 		})
 	})
 	return cache_Main_Auto
@@ -74,5 +73,5 @@ func Call_Main_exists(state_0_loop gopurs_runtime.Value, step_1_loop gopurs_runt
 	_ = step_1
 	var f_2 gopurs_runtime.Value = f_2_loop
 	_ = f_2
-	return gopurs_runtime.Apply(f_2, gopurs_runtime.Value{Type: 9, IntVal: 2431339793, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_Auto](gopurs_runtime.RecordDict2("state", "step", state_0, step_1)))})
+	return gopurs_runtime.Apply(f_2, gopurs_runtime.RecordDict2("state", "step", state_0, step_1))
 }

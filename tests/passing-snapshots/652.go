@@ -158,9 +158,9 @@ func Call_Main_Baz_dollar_Dict(x_0_loop gopurs_runtime.Value) gopurs_runtime.Val
 func Call_Main_baz(dictEq_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var dictEq_0 gopurs_runtime.Value = dictEq_0_loop
 	_ = dictEq_0
-	return gopurs_runtime.Value{Type: 9, IntVal: 2012165095, UnsafePtr: unsafe.Pointer(&Constructor_Main_Baz{1, gopurs_runtime.Func(func(_dollar___unused_1 gopurs_runtime.Value) gopurs_runtime.Value {
+	return gopurs_runtime.Value{Type: 9, IntVal: 2012165095, UnsafePtr: unsafe.Pointer((&Constructor_Main_Baz{1, gopurs_runtime.Func(func(_dollar___unused_1 gopurs_runtime.Value) gopurs_runtime.Value {
 		return gopurs_runtime.Value{}
 	}), gopurs_runtime.Func(func(_dollar___unused_1 gopurs_runtime.Value) gopurs_runtime.Value {
 		return gopurs_runtime.Value{}
-	})})}
+	})}))}
 }
