@@ -435,7 +435,7 @@ func Call_Main_test5(mx_0_loop *Constructor_Main_Just, my_1_loop *Constructor_Ma
 			}
 			{
 				if my_1 != nil {
-					// TAST (Let): sum_3_0 -> float64
+					// TAST (Let): sum_3_0 shape=Other expectedFromAst=float64 actual=float64 bindingType=Number
 					sum_3_0 := ((mx_0).V0.FloatVal()) + ((my_1).V0.FloatVal())
 					_ = sum_3_0
 					var __t1 *Constructor_Main_Just

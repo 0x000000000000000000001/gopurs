@@ -555,12 +555,53 @@ isEffectNode expr = case unwrapTcoExpr expr of
   LetRec _ _ body -> isEffectNode body
   _ -> false
 
-isClosureNode :: TcoExpr -> Boolean
-isClosureNode expr = case unwrapTcoExpr expr of
+getArityFromType :: ExprType -> Int
+getArityFromType = go 0
+  where
+  go acc (ForAll _ t) = go acc t
+  go acc (ConstrainedType _ t) = go acc t
+  go acc (Func args ret) = go (acc + Array.length args) ret
+  go acc _ = acc
+
+isClosureNode :: forall r. Ref { globalTypes :: Map.Map String ExprType | r } -> TcoExpr -> Boolean
+isClosureNode helpersRef expr = case unwrapTcoExpr expr of
   Abs _ _ -> true
-  Let _ _ _ body -> isClosureNode body
-  LetRec _ _ body -> isClosureNode body
-  Typed _ inner -> isClosureNode inner
+  UncurriedAbs _ _ -> true
+  App _ _ ->
+    let Tuple flatFn flatArgs = flattenApp expr
+    in case unwrapTcoExpr flatFn of
+         Var (Qualified mbMn (Ident i)) ->
+           let
+             h = unsafePerformEffect (Ref.read helpersRef)
+             vType = case mbMn of
+               Just mn -> Map.lookup (unwrap mn <> "." <> i) h.globalTypes
+               Nothing -> Nothing
+             
+             expectedArity = case vType of
+               Just t -> getArityFromType t
+               Nothing -> 0
+             actualArity = Array.length flatArgs
+           in actualArity < expectedArity
+         _ -> false
+  UncurriedApp _ _ ->
+    let Tuple flatFn flatArgs = flattenApp expr
+    in case unwrapTcoExpr flatFn of
+         Var (Qualified mbMn (Ident i)) ->
+           let
+             h = unsafePerformEffect (Ref.read helpersRef)
+             vType = case mbMn of
+               Just mn -> Map.lookup (unwrap mn <> "." <> i) h.globalTypes
+               Nothing -> Nothing
+             
+             expectedArity = case vType of
+               Just t -> getArityFromType t
+               Nothing -> 0
+             actualArity = Array.length flatArgs
+           in actualArity < expectedArity
+         _ -> false
+  Let _ _ _ body -> isClosureNode helpersRef body
+  LetRec _ _ body -> isClosureNode helpersRef body
+  Typed _ inner -> isClosureNode helpersRef inner
   _ -> false
 
 unwrapTcoExpr :: TcoExpr -> BackendSyntax TcoExpr
@@ -757,17 +798,23 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                 in case res.exprType of
                   TypeStructPointer _ _ _ _ -> res
                   _ -> 
-                    if expectedGoType == TypeValue then res
-                    else if isClosureNode a then res
-                    else { stmts: res.stmts, expr: coerceGoExpr res.expr res.exprType expectedGoType, exprType: expectedGoType, nextId: res.nextId }
+                    if expectedGoType == res.exprType then res
+                    else if isClosureNode helpersRef a then res
+                    else
+                      let
+                        _ = Debug.trace ("Typed coercion: " <> printGoExpr res.expr <> " from " <> goTypeToStr res.exprType <> " to " <> goTypeToStr expectedGoType) \_ -> unit
+                      in { stmts: res.stmts, expr: coerceGoExpr res.expr res.exprType expectedGoType, exprType: expectedGoType, nextId: res.nextId }
           _, _ ->
             let res = translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail inEffectBlock nextId a
             in case res.exprType of
               TypeStructPointer _ _ _ _ -> res
               _ -> 
-                if expectedGoType == TypeValue then res
-                else if isClosureNode a then res
-                else { stmts: res.stmts, expr: coerceGoExpr res.expr res.exprType expectedGoType, exprType: expectedGoType, nextId: res.nextId }
+                if expectedGoType == res.exprType then res
+                else if isClosureNode helpersRef a then res
+                else
+                  let
+                    _ = Debug.trace ("Typed coercion (2): " <> printGoExpr res.expr <> " from " <> goTypeToStr res.exprType <> " to " <> goTypeToStr expectedGoType) \_ -> unit
+                  in { stmts: res.stmts, expr: coerceGoExpr res.expr res.exprType expectedGoType, exprType: expectedGoType, nextId: res.nextId }
       Var (Qualified mbMn (Ident i)) ->
         let
           safeName = sanitizeName i
@@ -1591,17 +1638,19 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
           originalName = localId mbIdent lvl
           name = originalName <> "_" <> show nextId
           resBinding = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false (nextId + 1) binding
-          expectedGoType = exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr (getExprType binding)
+          expectedGoTypeFromAst = exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr (getExprType binding)
 
-          newBound = Map.insert originalName { name, goType: expectedGoType } bound
+          actualGoType = if expectedGoTypeFromAst == TypeValue then resBinding.exprType else expectedGoTypeFromAst
+          
+          newBound = Map.insert originalName { name, goType: actualGoType } bound
           resBody = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities newBound Nothing loopCtx isTail inEffectBlock resBinding.nextId body
           
-          letStmt = if expectedGoType == resBinding.exprType then
+          letStmt = if actualGoType == resBinding.exprType then
                       StmtLeaf (GoAssign name resBinding.expr)
                     else
-                      StmtLeaf (GoRaw ("var " <> name <> " " <> goTypeToStr expectedGoType <> " = " <> printGoExpr (unboxGoExpr resBinding.expr resBinding.exprType expectedGoType)))
+                      StmtLeaf (GoRaw ("var " <> name <> " " <> goTypeToStr actualGoType <> " = " <> printGoExpr (unboxGoExpr resBinding.expr resBinding.exprType actualGoType)))
         in
-          { stmts: resBinding.stmts <> StmtLeaf (GoRaw ("// TAST (Let): " <> name <> " -> " <> goTypeToStr expectedGoType)) <> letStmt <> resBody.stmts, expr: resBody.expr, exprType: resBody.exprType, nextId: resBody.nextId }
+          { stmts: resBinding.stmts <> StmtLeaf (GoRaw ("// TAST (Let): " <> name <> " shape=" <> printTcoExprShape binding <> " expectedFromAst=" <> goTypeToStr expectedGoTypeFromAst <> " actual=" <> goTypeToStr actualGoType <> " bindingType=" <> printExprType (getExprType binding))) <> letStmt <> resBody.stmts, expr: resBody.expr, exprType: resBody.exprType, nextId: resBody.nextId }
 
       LetRec lvl bindings body ->
         let
@@ -1614,9 +1663,9 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                     Ref.modify_ (\r -> r { globalId = r.globalId + 1 }) helpersRef
                     pure curr.globalId
                   newName = oldName <> "_" <> show acc.nextId <> "_" <> show gId
-                  expectedGoType = exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr (getExprType val)
+                  expectedGoTypeFromAst = exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr (getExprType val)
                 in
-                  { newBound: Map.insert oldName { name: newName, goType: expectedGoType } acc.newBound, newNames: Array.snoc acc.newNames { oldName, newName }, exprType: TypeValue, nextId: acc.nextId + 1 }
+                  { newBound: Map.insert oldName { name: newName, goType: expectedGoTypeFromAst } acc.newBound, newNames: Array.snoc acc.newNames { oldName, newName }, exprType: TypeValue, nextId: acc.nextId + 1 }
             )
             { newBound: bound, newNames: [], exprType: TypeValue, nextId }
             (toArray bindings)

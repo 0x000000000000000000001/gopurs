@@ -287,36 +287,8 @@ func Get_Main_functorFun2() gopurs_runtime.Value {
 	once_Main_functorFun2.Do(func() {
 		cache_Main_functorFun2 = gopurs_runtime.Value{Type: 9, IntVal: 929368378, UnsafePtr: unsafe.Pointer((&Constructor_Data_Functor_Functor{1, gopurs_runtime.Func(func(f_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(m_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				// TAST (Let): __local_var_2_0 -> gopurs_runtime.Value
-				__local_var_2_0 := gopurs_runtime.Apply(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Control_Semigroupoid_Semigroupoid](Get_Control_Semigroupoid_semigroupoidFn()).V0), func() gopurs_runtime.Value {
-					arr := func() [][]gopurs_runtime.Value {
-						arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), gopurs_runtime.Array(func() []gopurs_runtime.Value {
-							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), f_0).UnsafePtr)
-							unboxed := make([]gopurs_runtime.Value, len(arr))
-							for i, v := range arr {
-								unboxed[i] = v
-							}
-							return unboxed
-						}())).UnsafePtr)
-						unboxed := make([][]gopurs_runtime.Value, len(arr))
-						for i, v := range arr {
-							unboxed[i] = func() []gopurs_runtime.Value {
-								arr := *(*[]gopurs_runtime.Value)(v.UnsafePtr)
-								unboxed := make([]gopurs_runtime.Value, len(arr))
-								for i, v := range arr {
-									unboxed[i] = v
-								}
-								return unboxed
-							}()
-						}
-						return unboxed
-					}()
-					boxed := make([]gopurs_runtime.Value, len(arr))
-					for i, v := range arr {
-						boxed[i] = gopurs_runtime.Array(v)
-					}
-					return gopurs_runtime.Array(boxed)
-				}())
+				// TAST (Let): __local_var_2_0 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
+				__local_var_2_0 := gopurs_runtime.Apply(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Control_Semigroupoid_Semigroupoid](Get_Control_Semigroupoid_semigroupoidFn()).V0), gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), f_0)))
 				_ = __local_var_2_0
 				return gopurs_runtime.Func(func(x_3 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Apply(__local_var_2_0, gopurs_runtime.Apply(m_1, x_3))
@@ -335,7 +307,7 @@ func Get_Main_functorFun1() gopurs_runtime.Value {
 		cache_Main_functorFun1 = gopurs_runtime.Value{Type: 9, IntVal: 929368378, UnsafePtr: unsafe.Pointer((&Constructor_Data_Functor_Functor{1, gopurs_runtime.Func(func(f_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(m_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(x_2 gopurs_runtime.Value) gopurs_runtime.Value {
-					// TAST (Let): __local_var_3_0 -> gopurs_runtime.Value
+					// TAST (Let): __local_var_3_0 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 					__local_var_3_0 := gopurs_runtime.Apply(m_1, x_2)
 					_ = __local_var_3_0
 					return gopurs_runtime.Func(func(x_4 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -824,7 +796,7 @@ func Get_Main_functorT() gopurs_runtime.Value {
 		cache_Main_functorT = gopurs_runtime.Value{Type: 9, IntVal: 929368378, UnsafePtr: unsafe.Pointer((&Constructor_Data_Functor_Functor{1, gopurs_runtime.Func(func(f_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(m_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(dictShow_2 gopurs_runtime.Value) gopurs_runtime.Value {
-					// TAST (Let): __local_var_3_0 -> gopurs_runtime.Value
+					// TAST (Let): __local_var_3_0 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 					__local_var_3_0 := gopurs_runtime.Apply(m_1, dictShow_2)
 					_ = __local_var_3_0
 					return gopurs_runtime.Func(func(x_4 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -929,15 +901,9 @@ func Get_Main_functorM1() gopurs_runtime.Value {
 				}
 				{
 					if m_1.Type == 9 && m_1.IntVal == 1830062304 {
-						// TAST (Let): __local_var_2_0 -> gopurs_runtime.Value
-						var __local_var_2_0 gopurs_runtime.Value = gopurs_runtime.Array(func() []gopurs_runtime.Value {
-							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), f_0).UnsafePtr)
-							unboxed := make([]gopurs_runtime.Value, len(arr))
-							for i, v := range arr {
-								unboxed[i] = v
-							}
-							return unboxed
-						}())
+						// TAST (Let): __local_var_2_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Func [(Array (TypeVar a))] (Array (TypeVar b)))
+						__local_var_2_0 := gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), f_0)
+						_ = __local_var_2_0
 						__t4 = gopurs_runtime.Value{Type: 9, IntVal: 1830062304, UnsafePtr: unsafe.Pointer((&Constructor_Main_M3{1, gopurs_runtime.RecordUpdateDict((*Constructor_Main_M3)(m_1.UnsafePtr).V0, []string{"a", "fa", "recursiveA", "zArrayA"}, []gopurs_runtime.Value{gopurs_runtime.Apply(f_0, gopurs_runtime.RecordGet((*Constructor_Main_M3)(m_1.UnsafePtr).V0, "a")), gopurs_runtime.Array(func() []gopurs_runtime.Value {
 							arr := *(*[]gopurs_runtime.Value)(func() gopurs_runtime.Value {
 								arr_val_arrayMap6 := gopurs_runtime.RecordGet((*Constructor_Main_M3)(m_1.UnsafePtr).V0, "fa")
@@ -1037,15 +1003,9 @@ func Get_Main_functorM1() gopurs_runtime.Value {
 				}
 				{
 					if m_1.Type == 9 && m_1.IntVal == 3190619783 {
-						// TAST (Let): __local_var_2_1 -> gopurs_runtime.Value
-						var __local_var_2_1 gopurs_runtime.Value = gopurs_runtime.Array(func() []gopurs_runtime.Value {
-							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), f_0).UnsafePtr)
-							unboxed := make([]gopurs_runtime.Value, len(arr))
-							for i, v := range arr {
-								unboxed[i] = v
-							}
-							return unboxed
-						}())
+						// TAST (Let): __local_var_2_1 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Func [(Array (TypeVar a))] (Array (TypeVar b)))
+						__local_var_2_1 := gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), f_0)
+						_ = __local_var_2_1
 						__t4 = gopurs_runtime.Value{Type: 9, IntVal: 3190619783, UnsafePtr: unsafe.Pointer((&Constructor_Main_M4{1, func() gopurs_runtime.Value {
 							origVal := (*Constructor_Main_M4)(m_1.UnsafePtr).V0
 							if origVal.Type != gopurs_runtime.TypeRecord1 {
@@ -1244,24 +1204,12 @@ func Get_Main_functorM1() gopurs_runtime.Value {
 				}
 				{
 					if m_1.Type == 9 && m_1.IntVal == 108241190 {
-						// TAST (Let): __local_var_2_2 -> gopurs_runtime.Value
-						var __local_var_2_2 gopurs_runtime.Value = gopurs_runtime.Array(func() []gopurs_runtime.Value {
-							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), f_0).UnsafePtr)
-							unboxed := make([]gopurs_runtime.Value, len(arr))
-							for i, v := range arr {
-								unboxed[i] = v
-							}
-							return unboxed
-						}())
-						// TAST (Let): __local_var_2_3 -> gopurs_runtime.Value
-						var __local_var_2_3 gopurs_runtime.Value = gopurs_runtime.Array(func() []gopurs_runtime.Value {
-							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), f_0).UnsafePtr)
-							unboxed := make([]gopurs_runtime.Value, len(arr))
-							for i, v := range arr {
-								unboxed[i] = v
-							}
-							return unboxed
-						}())
+						// TAST (Let): __local_var_2_2 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Func [(Array (TypeVar a))] (Array (TypeVar b)))
+						__local_var_2_2 := gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), f_0)
+						_ = __local_var_2_2
+						// TAST (Let): __local_var_2_3 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Func [(Array (TypeVar a))] (Array (TypeVar b)))
+						__local_var_2_3 := gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), f_0)
+						_ = __local_var_2_3
 						__t4 = gopurs_runtime.Value{Type: 9, IntVal: 108241190, UnsafePtr: unsafe.Pointer((&Constructor_Main_M5{1, (*Constructor_Main_M5)(m_1.UnsafePtr).V0, gopurs_runtime.Apply(f_0, (*Constructor_Main_M5)(m_1.UnsafePtr).V1), (*Constructor_Main_M5)(m_1.UnsafePtr).V2, func() []gopurs_runtime.Value {
 							arr := *(*[]gopurs_runtime.Value)(func() gopurs_runtime.Value {
 								arr_val_arrayMap5 := gopurs_runtime.Array((*Constructor_Main_M5)(m_1.UnsafePtr).V3)
@@ -1611,35 +1559,7 @@ func Get_Main_functorM1() gopurs_runtime.Value {
 									res_go_arrayMap5 := make([]gopurs_runtime.Value, len(*arr_go_arrayMap5))
 									_ = res_go_arrayMap5
 									for i_arrayMap5, v_arrayMap5 := range *arr_go_arrayMap5 {
-										res_go_arrayMap5[i_arrayMap5] = gopurs_runtime.Apply(func() gopurs_runtime.Value {
-											arr := func() [][]gopurs_runtime.Value {
-												arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), gopurs_runtime.Array(func() []gopurs_runtime.Value {
-													arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), f_0).UnsafePtr)
-													unboxed := make([]gopurs_runtime.Value, len(arr))
-													for i, v := range arr {
-														unboxed[i] = v
-													}
-													return unboxed
-												}())).UnsafePtr)
-												unboxed := make([][]gopurs_runtime.Value, len(arr))
-												for i, v := range arr {
-													unboxed[i] = func() []gopurs_runtime.Value {
-														arr := *(*[]gopurs_runtime.Value)(v.UnsafePtr)
-														unboxed := make([]gopurs_runtime.Value, len(arr))
-														for i, v := range arr {
-															unboxed[i] = v
-														}
-														return unboxed
-													}()
-												}
-												return unboxed
-											}()
-											boxed := make([]gopurs_runtime.Value, len(arr))
-											for i, v := range arr {
-												boxed[i] = gopurs_runtime.Array(v)
-											}
-											return gopurs_runtime.Array(boxed)
-										}(), v_arrayMap5)
+										res_go_arrayMap5[i_arrayMap5] = gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), f_0)), v_arrayMap5)
 									}
 									return gopurs_runtime.Array(res_go_arrayMap5)
 								}().UnsafePtr)
@@ -1691,7 +1611,7 @@ var once_Main_f3Test sync.Once
 func Get_Main_f3Test() gopurs_runtime.Value {
 	once_Main_f3Test.Do(func() {
 		cache_Main_f3Test = func() gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_0_0 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [eqRecord: (Func [(TypeApp (ADT ["Type","Proxy","Proxy"] []) [(TypeApp (ADT ["Prim","RowList","Cons"] []) [(TypeVar key), (TypeVar focus), (TypeVar rowlistTail)])]), (Record (Row [] (TypeVar row))), (Record (Row [] (TypeVar row)))] Boolean)] Any))
 			__local_var_0_0 := gopurs_runtime.RecordDict1("eqRecord", gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(ra_1 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Func(func(rb_2 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -1700,7 +1620,7 @@ func Get_Main_f3Test() gopurs_runtime.Value {
 				})
 			}))
 			_ = __local_var_0_0
-			// TAST (Let): __local_var_1_2 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_1_2 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [eqRecord: (Func [(TypeApp (ADT ["Type","Proxy","Proxy"] []) [(TypeApp (ADT ["Prim","RowList","Cons"] []) [(TypeVar key), (TypeVar focus), (TypeVar rowlistTail)])]), (Record (Row [] (TypeVar row))), (Record (Row [] (TypeVar row)))] Boolean)] Any))
 			__local_var_1_2 := gopurs_runtime.RecordDict1("eqRecord", gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(ra_2 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Func(func(rb_3 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -1713,7 +1633,7 @@ func Get_Main_f3Test() gopurs_runtime.Value {
 				})
 			}))
 			_ = __local_var_1_2
-			// TAST (Let): __local_var_2_3 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_2_3 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [eqRecord: (Func [(TypeApp (ADT ["Type","Proxy","Proxy"] []) [(TypeApp (ADT ["Prim","RowList","Cons"] []) [(TypeVar key), (TypeVar focus), (TypeVar rowlistTail)])]), (Record (Row [] (TypeVar row))), (Record (Row [] (TypeVar row)))] Boolean)] Any))
 			__local_var_2_3 := gopurs_runtime.RecordDict1("eqRecord", gopurs_runtime.Func(func(v_2 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(ra_3 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Func(func(rb_4 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -1722,7 +1642,7 @@ func Get_Main_f3Test() gopurs_runtime.Value {
 				})
 			}))
 			_ = __local_var_2_3
-			// TAST (Let): __local_var_3_4 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_3_4 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [eqRecord: (Func [(TypeApp (ADT ["Type","Proxy","Proxy"] []) [(TypeApp (ADT ["Prim","RowList","Cons"] []) [(TypeVar key), (TypeVar focus), (TypeVar rowlistTail)])]), (Record (Row [] (TypeVar row))), (Record (Row [] (TypeVar row)))] Boolean)] Any))
 			__local_var_3_4 := gopurs_runtime.RecordDict1("eqRecord", gopurs_runtime.Func(func(v_3 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(ra_4 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Func(func(rb_5 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -1731,7 +1651,7 @@ func Get_Main_f3Test() gopurs_runtime.Value {
 				})
 			}))
 			_ = __local_var_3_4
-			// TAST (Let): __local_var_4_5 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_4_5 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [eqRecord: (Func [(TypeApp (ADT ["Type","Proxy","Proxy"] []) [(TypeApp (ADT ["Prim","RowList","Cons"] []) [(TypeVar key), (TypeVar focus), (TypeVar rowlistTail)])]), (Record (Row [] (TypeVar row))), (Record (Row [] (TypeVar row)))] Boolean)] Any))
 			__local_var_4_5 := gopurs_runtime.RecordDict1("eqRecord", gopurs_runtime.Func(func(v_4 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(ra_5 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Func(func(rb_6 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -1740,7 +1660,7 @@ func Get_Main_f3Test() gopurs_runtime.Value {
 				})
 			}))
 			_ = __local_var_4_5
-			// TAST (Let): __local_var_5_6 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_5_6 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [eqRecord: (Func [(TypeApp (ADT ["Type","Proxy","Proxy"] []) [(TypeApp (ADT ["Prim","RowList","Cons"] []) [(TypeVar key), (TypeVar focus), (TypeVar rowlistTail)])]), (Record (Row [] (TypeVar row))), (Record (Row [] (TypeVar row)))] Boolean)] Any))
 			__local_var_5_6 := gopurs_runtime.RecordDict1("eqRecord", gopurs_runtime.Func(func(v_5 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(ra_6 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Func(func(rb_7 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -1749,7 +1669,7 @@ func Get_Main_f3Test() gopurs_runtime.Value {
 				})
 			}))
 			_ = __local_var_5_6
-			// TAST (Let): __local_var_6_7 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_6_7 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [eqRecord: (Func [(TypeApp (ADT ["Type","Proxy","Proxy"] []) [(TypeApp (ADT ["Prim","RowList","Cons"] []) [(TypeVar key), (TypeVar focus), (TypeVar rowlistTail)])]), (Record (Row [] (TypeVar row))), (Record (Row [] (TypeVar row)))] Boolean)] Any))
 			__local_var_6_7 := gopurs_runtime.RecordDict1("eqRecord", gopurs_runtime.Func(func(v_6 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(ra_7 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Func(func(rb_8 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -1758,7 +1678,7 @@ func Get_Main_f3Test() gopurs_runtime.Value {
 				})
 			}))
 			_ = __local_var_6_7
-			// TAST (Let): __local_var_1_1 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_1_1 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [eq: (Func [(Record (Row [] (TypeVar row))), (Record (Row [] (TypeVar row)))] Boolean)] Any))
 			__local_var_1_1 := gopurs_runtime.RecordDict1("eq", gopurs_runtime.Func(func(ra_7 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(rb_8 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Bool(((gopurs_runtime.RecordGet(ra_7, "a").StrVal()) == (gopurs_runtime.RecordGet(rb_8, "a").StrVal())) && ((gopurs_runtime.Apply3(gopurs_runtime.RecordGet(__local_var_6_7, "eqRecord"), gopurs_runtime.Value{Type: 9, IntVal: int64(513803634), UnsafePtr: nil}, ra_7, rb_8).IntVal) != (0)))
@@ -1800,123 +1720,103 @@ func Get_Main_f3Test() gopurs_runtime.Value {
 						res_go_arrayMap2 := make([]gopurs_runtime.Value, len(*arr_go_arrayMap2))
 						_ = res_go_arrayMap2
 						for i_arrayMap2, v_arrayMap2 := range *arr_go_arrayMap2 {
-							res_go_arrayMap2[i_arrayMap2] = gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), func() gopurs_runtime.Value {
-								arr := func() []gopurs_runtime.Value {
-									arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), gopurs_runtime.Func(func(v1_0 gopurs_runtime.Value) gopurs_runtime.Value {
-										// TAST (Let): __local_var_1_8 -> gopurs_runtime.Value
-										var __local_var_1_8 gopurs_runtime.Value = gopurs_runtime.Array(func() []gopurs_runtime.Value {
-											arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), Get_Data_Show_showIntImpl()).UnsafePtr)
+							res_go_arrayMap2[i_arrayMap2] = gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), gopurs_runtime.Func(func(v1_0 gopurs_runtime.Value) gopurs_runtime.Value {
+								// TAST (Let): __local_var_1_8 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Func [(Array (TypeVar a))] (Array (TypeVar b)))
+								__local_var_1_8 := gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), Get_Data_Show_showIntImpl())
+								_ = __local_var_1_8
+								return gopurs_runtime.RecordUpdate1(v1_0, "nested", gopurs_runtime.RecordUpdateDict(gopurs_runtime.RecordGet(v1_0, "nested"), []string{"a", "fa", "recursiveA", "zArrayA"}, []gopurs_runtime.Value{gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(v1_0, "nested"), "a")).StrVal()), gopurs_runtime.Array(func() []gopurs_runtime.Value {
+									arr := *(*[]gopurs_runtime.Value)(func() gopurs_runtime.Value {
+										arr_val_arrayMap8 := gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(v1_0, "nested"), "fa")
+										_ = arr_val_arrayMap8
+										arr_go_arrayMap8 := (*[]gopurs_runtime.Value)(arr_val_arrayMap8.UnsafePtr)
+										_ = arr_go_arrayMap8
+										res_go_arrayMap8 := make([]gopurs_runtime.Value, len(*arr_go_arrayMap8))
+										_ = res_go_arrayMap8
+										for i_arrayMap8, v_arrayMap8 := range *arr_go_arrayMap8 {
+											res_go_arrayMap8[i_arrayMap8] = gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), v_arrayMap8)
+										}
+										return gopurs_runtime.Array(res_go_arrayMap8)
+									}().UnsafePtr)
+									unboxed := make([]gopurs_runtime.Value, len(arr))
+									for i, v := range arr {
+										unboxed[i] = v
+									}
+									return unboxed
+								}()), func() gopurs_runtime.Value {
+									arr := func() []*Constructor_Data_Tuple_Tuple {
+										arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array(func() []gopurs_runtime.Value {
+											arr := *(*[]gopurs_runtime.Value)(func() gopurs_runtime.Value {
+												arr_val_arrayMap8 := func() gopurs_runtime.Value {
+													arr := func() []*Constructor_Data_Tuple_Tuple {
+														arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(v1_0, "nested"), "recursiveA").UnsafePtr)
+														unboxed := make([]*Constructor_Data_Tuple_Tuple, len(arr))
+														for i, v := range arr {
+															unboxed[i] = gopurs_runtime.CoerceToStruct[Constructor_Data_Tuple_Tuple](v)
+														}
+														return unboxed
+													}()
+													boxed := make([]gopurs_runtime.Value, len(arr))
+													for i, v := range arr {
+														boxed[i] = gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(v)}
+													}
+													return gopurs_runtime.Array(boxed)
+												}()
+												_ = arr_val_arrayMap8
+												arr_go_arrayMap8 := (*[]gopurs_runtime.Value)(arr_val_arrayMap8.UnsafePtr)
+												_ = arr_go_arrayMap8
+												res_go_arrayMap8 := make([]gopurs_runtime.Value, len(*arr_go_arrayMap8))
+												_ = res_go_arrayMap8
+												for i_arrayMap8, v_arrayMap8 := range *arr_go_arrayMap8 {
+													res_go_arrayMap8[i_arrayMap8] = gopurs_runtime.Apply(gopurs_runtime.Func(func(m_2 gopurs_runtime.Value) gopurs_runtime.Value {
+														return gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer((&Constructor_Data_Tuple_Tuple{1, (*Constructor_Data_Tuple_Tuple)(m_2.UnsafePtr).V0, gopurs_runtime.Apply(__local_var_1_8, (*Constructor_Data_Tuple_Tuple)(m_2.UnsafePtr).V1)}))}
+													}), v_arrayMap8)
+												}
+												return gopurs_runtime.Array(res_go_arrayMap8)
+											}().UnsafePtr)
+											unboxed := make([]gopurs_runtime.Value, len(arr))
+											for i, v := range arr {
+												unboxed[i] = v
+											}
+											return unboxed
+										}()).UnsafePtr)
+										unboxed := make([]*Constructor_Data_Tuple_Tuple, len(arr))
+										for i, v := range arr {
+											unboxed[i] = gopurs_runtime.CoerceToStruct[Constructor_Data_Tuple_Tuple](v)
+										}
+										return unboxed
+									}()
+									boxed := make([]gopurs_runtime.Value, len(arr))
+									for i, v := range arr {
+										boxed[i] = gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(v)}
+									}
+									return gopurs_runtime.Array(boxed)
+								}(), gopurs_runtime.Array(func() []gopurs_runtime.Value {
+									arr := *(*[]gopurs_runtime.Value)(func() gopurs_runtime.Value {
+										arr_val_arrayMap8 := gopurs_runtime.Array(func() []gopurs_runtime.Value {
+											arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(v1_0, "nested"), "zArrayA").UnsafePtr)
 											unboxed := make([]gopurs_runtime.Value, len(arr))
 											for i, v := range arr {
 												unboxed[i] = v
 											}
 											return unboxed
 										}())
-										return gopurs_runtime.RecordUpdate1(v1_0, "nested", gopurs_runtime.RecordUpdateDict(gopurs_runtime.RecordGet(v1_0, "nested"), []string{"a", "fa", "recursiveA", "zArrayA"}, []gopurs_runtime.Value{gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(v1_0, "nested"), "a")).StrVal()), gopurs_runtime.Array(func() []gopurs_runtime.Value {
-											arr := *(*[]gopurs_runtime.Value)(func() gopurs_runtime.Value {
-												arr_val_arrayMap8 := gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(v1_0, "nested"), "fa")
-												_ = arr_val_arrayMap8
-												arr_go_arrayMap8 := (*[]gopurs_runtime.Value)(arr_val_arrayMap8.UnsafePtr)
-												_ = arr_go_arrayMap8
-												res_go_arrayMap8 := make([]gopurs_runtime.Value, len(*arr_go_arrayMap8))
-												_ = res_go_arrayMap8
-												for i_arrayMap8, v_arrayMap8 := range *arr_go_arrayMap8 {
-													res_go_arrayMap8[i_arrayMap8] = gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), v_arrayMap8)
-												}
-												return gopurs_runtime.Array(res_go_arrayMap8)
-											}().UnsafePtr)
-											unboxed := make([]gopurs_runtime.Value, len(arr))
-											for i, v := range arr {
-												unboxed[i] = v
-											}
-											return unboxed
-										}()), func() gopurs_runtime.Value {
-											arr := func() []*Constructor_Data_Tuple_Tuple {
-												arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array(func() []gopurs_runtime.Value {
-													arr := *(*[]gopurs_runtime.Value)(func() gopurs_runtime.Value {
-														arr_val_arrayMap8 := func() gopurs_runtime.Value {
-															arr := func() []*Constructor_Data_Tuple_Tuple {
-																arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(v1_0, "nested"), "recursiveA").UnsafePtr)
-																unboxed := make([]*Constructor_Data_Tuple_Tuple, len(arr))
-																for i, v := range arr {
-																	unboxed[i] = gopurs_runtime.CoerceToStruct[Constructor_Data_Tuple_Tuple](v)
-																}
-																return unboxed
-															}()
-															boxed := make([]gopurs_runtime.Value, len(arr))
-															for i, v := range arr {
-																boxed[i] = gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(v)}
-															}
-															return gopurs_runtime.Array(boxed)
-														}()
-														_ = arr_val_arrayMap8
-														arr_go_arrayMap8 := (*[]gopurs_runtime.Value)(arr_val_arrayMap8.UnsafePtr)
-														_ = arr_go_arrayMap8
-														res_go_arrayMap8 := make([]gopurs_runtime.Value, len(*arr_go_arrayMap8))
-														_ = res_go_arrayMap8
-														for i_arrayMap8, v_arrayMap8 := range *arr_go_arrayMap8 {
-															res_go_arrayMap8[i_arrayMap8] = gopurs_runtime.Apply(gopurs_runtime.Func(func(m_2 gopurs_runtime.Value) gopurs_runtime.Value {
-																return gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer((&Constructor_Data_Tuple_Tuple{1, (*Constructor_Data_Tuple_Tuple)(m_2.UnsafePtr).V0, gopurs_runtime.Apply(__local_var_1_8, (*Constructor_Data_Tuple_Tuple)(m_2.UnsafePtr).V1)}))}
-															}), v_arrayMap8)
-														}
-														return gopurs_runtime.Array(res_go_arrayMap8)
-													}().UnsafePtr)
-													unboxed := make([]gopurs_runtime.Value, len(arr))
-													for i, v := range arr {
-														unboxed[i] = v
-													}
-													return unboxed
-												}()).UnsafePtr)
-												unboxed := make([]*Constructor_Data_Tuple_Tuple, len(arr))
-												for i, v := range arr {
-													unboxed[i] = gopurs_runtime.CoerceToStruct[Constructor_Data_Tuple_Tuple](v)
-												}
-												return unboxed
-											}()
-											boxed := make([]gopurs_runtime.Value, len(arr))
-											for i, v := range arr {
-												boxed[i] = gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(v)}
-											}
-											return gopurs_runtime.Array(boxed)
-										}(), gopurs_runtime.Array(func() []gopurs_runtime.Value {
-											arr := *(*[]gopurs_runtime.Value)(func() gopurs_runtime.Value {
-												arr_val_arrayMap8 := gopurs_runtime.Array(func() []gopurs_runtime.Value {
-													arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(v1_0, "nested"), "zArrayA").UnsafePtr)
-													unboxed := make([]gopurs_runtime.Value, len(arr))
-													for i, v := range arr {
-														unboxed[i] = v
-													}
-													return unboxed
-												}())
-												_ = arr_val_arrayMap8
-												arr_go_arrayMap8 := (*[]gopurs_runtime.Value)(arr_val_arrayMap8.UnsafePtr)
-												_ = arr_go_arrayMap8
-												res_go_arrayMap8 := make([]gopurs_runtime.Value, len(*arr_go_arrayMap8))
-												_ = res_go_arrayMap8
-												for i_arrayMap8, v_arrayMap8 := range *arr_go_arrayMap8 {
-													res_go_arrayMap8[i_arrayMap8] = gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), v_arrayMap8)
-												}
-												return gopurs_runtime.Array(res_go_arrayMap8)
-											}().UnsafePtr)
-											unboxed := make([]gopurs_runtime.Value, len(arr))
-											for i, v := range arr {
-												unboxed[i] = v
-											}
-											return unboxed
-										}())}))
-									})).UnsafePtr)
+										_ = arr_val_arrayMap8
+										arr_go_arrayMap8 := (*[]gopurs_runtime.Value)(arr_val_arrayMap8.UnsafePtr)
+										_ = arr_go_arrayMap8
+										res_go_arrayMap8 := make([]gopurs_runtime.Value, len(*arr_go_arrayMap8))
+										_ = res_go_arrayMap8
+										for i_arrayMap8, v_arrayMap8 := range *arr_go_arrayMap8 {
+											res_go_arrayMap8[i_arrayMap8] = gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), v_arrayMap8)
+										}
+										return gopurs_runtime.Array(res_go_arrayMap8)
+									}().UnsafePtr)
 									unboxed := make([]gopurs_runtime.Value, len(arr))
 									for i, v := range arr {
 										unboxed[i] = v
 									}
 									return unboxed
-								}()
-								boxed := make([]gopurs_runtime.Value, len(arr))
-								for i, v := range arr {
-									boxed[i] = v
-								}
-								return gopurs_runtime.Array(boxed)
-							}()), v_arrayMap2)
+								}())}))
+							}))), v_arrayMap2)
 						}
 						return gopurs_runtime.Array(res_go_arrayMap2)
 					}().UnsafePtr)
@@ -2015,14 +1915,7 @@ func Get_Main_f2Test() gopurs_runtime.Value {
 					res_go_arrayMap2 := make([]gopurs_runtime.Value, len(*arr_go_arrayMap2))
 					_ = res_go_arrayMap2
 					for i_arrayMap2, v_arrayMap2 := range *arr_go_arrayMap2 {
-						res_go_arrayMap2[i_arrayMap2] = gopurs_runtime.Apply(gopurs_runtime.Array(func() []gopurs_runtime.Value {
-							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), Get_Data_Show_showIntImpl()).UnsafePtr)
-							unboxed := make([]gopurs_runtime.Value, len(arr))
-							for i, v := range arr {
-								unboxed[i] = v
-							}
-							return unboxed
-						}()), v_arrayMap2)
+						res_go_arrayMap2[i_arrayMap2] = gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), Get_Data_Show_showIntImpl()), v_arrayMap2)
 					}
 					return gopurs_runtime.Array(res_go_arrayMap2)
 				}().UnsafePtr)
@@ -2076,21 +1969,7 @@ func Get_Main_f2Test() gopurs_runtime.Value {
 						res_go_arrayMap2 := make([]gopurs_runtime.Value, len(*arr_go_arrayMap2))
 						_ = res_go_arrayMap2
 						for i_arrayMap2, v_arrayMap2 := range *arr_go_arrayMap2 {
-							res_go_arrayMap2[i_arrayMap2] = gopurs_runtime.Apply(func() gopurs_runtime.Value {
-								arr := func() []string {
-									arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), Get_Data_Show_showIntImpl()).UnsafePtr)
-									unboxed := make([]string, len(arr))
-									for i, v := range arr {
-										unboxed[i] = v.StrVal()
-									}
-									return unboxed
-								}()
-								boxed := make([]gopurs_runtime.Value, len(arr))
-								for i, v := range arr {
-									boxed[i] = gopurs_runtime.Str(v)
-								}
-								return gopurs_runtime.Array(boxed)
-							}(), v_arrayMap2)
+							res_go_arrayMap2[i_arrayMap2] = gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), Get_Data_Show_showIntImpl()), v_arrayMap2)
 						}
 						return gopurs_runtime.Array(res_go_arrayMap2)
 					}().UnsafePtr)
@@ -2135,7 +2014,7 @@ var once_Main_f1Test sync.Once
 
 func Get_Main_f1Test() gopurs_runtime.Value {
 	once_Main_f1Test.Do(func() {
-		cache_Main_f1Test = gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("map - Fun1"), gopurs_runtime.Bool((gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.Int(3)).StrVal()) == (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.Int(3)).StrVal())))
+		cache_Main_f1Test = gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("map - Fun1"), gopurs_runtime.Bool((gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.Int(3)).StrVal()).StrVal()) == (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.Int(3)).StrVal())))
 	})
 	return cache_Main_f1Test
 }
@@ -2176,20 +2055,20 @@ var once_Main_eqM1 sync.Once
 func Get_Main_eqM1() gopurs_runtime.Value {
 	once_Main_eqM1.Do(func() {
 		cache_Main_eqM1 = func() gopurs_runtime.Value {
-			// TAST (Let): eqArray3_0_0 -> *Constructor_Data_Eq_Eq
+			// TAST (Let): eqArray3_0_0 shape=LitRecord expectedFromAst=*Constructor_Data_Eq_Eq actual=*Constructor_Data_Eq_Eq bindingType=(ADT ["Data","Eq","Eq"] [(Array (TypeVar a))])
 			eqArray3_0_0 := (&Constructor_Data_Eq_Eq{1, gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), Get_Data_Eq_eqStringImpl())})
 			_ = eqArray3_0_0
-			// TAST (Let): eqArray4_1_1 -> gopurs_runtime.Value
+			// TAST (Let): eqArray4_1_1 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [eq: (Func [(Array (TypeVar a)), (Array (TypeVar a))] Boolean)] Any))
 			eqArray4_1_1 := gopurs_runtime.RecordDict1("eq", gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), Get_Data_Eq_eqStringImpl()))
 			_ = eqArray4_1_1
-			// TAST (Let): eqArray5_2_2 -> *Constructor_Data_Eq_Eq
+			// TAST (Let): eqArray5_2_2 shape=LitRecord expectedFromAst=*Constructor_Data_Eq_Eq actual=*Constructor_Data_Eq_Eq bindingType=(ADT ["Data","Eq","Eq"] [(Array (ADT ["Data","Tuple","Tuple"] [Int, (Array (TypeVar a))]))])
 			eqArray5_2_2 := (&Constructor_Data_Eq_Eq{1, gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), gopurs_runtime.Func(func(x_2 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(y_3 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Bool((((*Constructor_Data_Tuple_Tuple)(x_2.UnsafePtr).V0.IntVal) == ((*Constructor_Data_Tuple_Tuple)(y_3.UnsafePtr).V0.IntVal)) && ((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(eqArray4_1_1, "eq"), (*Constructor_Data_Tuple_Tuple)(x_2.UnsafePtr).V1, (*Constructor_Data_Tuple_Tuple)(y_3.UnsafePtr).V1).IntVal) != (0)))
 				})
 			}))})
 			_ = eqArray5_2_2
-			// TAST (Let): eqArray6_3_3 -> *Constructor_Data_Eq_Eq
+			// TAST (Let): eqArray6_3_3 shape=LitRecord expectedFromAst=*Constructor_Data_Eq_Eq actual=*Constructor_Data_Eq_Eq bindingType=(ADT ["Data","Eq","Eq"] [(Array (Array (Array (TypeVar a))))])
 			eqArray6_3_3 := (&Constructor_Data_Eq_Eq{1, gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), gopurs_runtime.RecordGet(eqArray4_1_1, "eq")))})
 			_ = eqArray6_3_3
 			return gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer((&Constructor_Data_Eq_Eq{1, gopurs_runtime.Func(func(x_4 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -2583,23 +2462,23 @@ var once_Main_maTests sync.Once
 func Get_Main_maTests() gopurs_runtime.Value {
 	once_Main_maTests.Do(func() {
 		cache_Main_maTests = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): eqArray3_0_1 -> *Constructor_Data_Eq_Eq
+			// TAST (Let): eqArray3_0_1 shape=LitRecord expectedFromAst=*Constructor_Data_Eq_Eq actual=*Constructor_Data_Eq_Eq bindingType=(ADT ["Data","Eq","Eq"] [(Array (TypeVar a))])
 			eqArray3_0_1 := (&Constructor_Data_Eq_Eq{1, gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), Get_Data_Eq_eqStringImpl())})
 			_ = eqArray3_0_1
-			// TAST (Let): eqArray4_1_2 -> gopurs_runtime.Value
+			// TAST (Let): eqArray4_1_2 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [eq: (Func [(Array (TypeVar a)), (Array (TypeVar a))] Boolean)] Any))
 			eqArray4_1_2 := gopurs_runtime.RecordDict1("eq", gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), Get_Data_Eq_eqStringImpl()))
 			_ = eqArray4_1_2
-			// TAST (Let): eqArray5_2_3 -> *Constructor_Data_Eq_Eq
+			// TAST (Let): eqArray5_2_3 shape=LitRecord expectedFromAst=*Constructor_Data_Eq_Eq actual=*Constructor_Data_Eq_Eq bindingType=(ADT ["Data","Eq","Eq"] [(Array (ADT ["Data","Tuple","Tuple"] [Int, (Array (TypeVar a))]))])
 			eqArray5_2_3 := (&Constructor_Data_Eq_Eq{1, gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), gopurs_runtime.Func(func(x_2 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(y_3 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Bool((((*Constructor_Data_Tuple_Tuple)(x_2.UnsafePtr).V0.IntVal) == ((*Constructor_Data_Tuple_Tuple)(y_3.UnsafePtr).V0.IntVal)) && ((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(eqArray4_1_2, "eq"), (*Constructor_Data_Tuple_Tuple)(x_2.UnsafePtr).V1, (*Constructor_Data_Tuple_Tuple)(y_3.UnsafePtr).V1).IntVal) != (0)))
 				})
 			}))})
 			_ = eqArray5_2_3
-			// TAST (Let): eqArray6_3_4 -> *Constructor_Data_Eq_Eq
+			// TAST (Let): eqArray6_3_4 shape=LitRecord expectedFromAst=*Constructor_Data_Eq_Eq actual=*Constructor_Data_Eq_Eq bindingType=(ADT ["Data","Eq","Eq"] [(Array (Array (Array (TypeVar a))))])
 			eqArray6_3_4 := (&Constructor_Data_Eq_Eq{1, gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), gopurs_runtime.RecordGet(eqArray4_1_2, "eq")))})
 			_ = eqArray6_3_4
-			// TAST (Let): __local_var_4_5 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_4_5 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Main","M"] [(ADT ["Prim","Array"] []), String])
 			__local_var_4_5 := gopurs_runtime.Apply2(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor](Get_Main_functorM1()).V0), Get_Data_Show_showIntImpl(), Get_Main_m0L())
 			_ = __local_var_4_5
 			var __t14 bool
@@ -2989,12 +2868,12 @@ func Get_Main_maTests() gopurs_runtime.Value {
 				__t14 = __t_and_7
 			}
 		end_branch_14:
-			// TAST (Let): __local_var_0_0 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 			__local_var_0_0 := gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("map - M0"), gopurs_runtime.Bool(__t14))
 			_ = __local_var_0_0
 			_dollar___unused_1_15 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
 			_ = _dollar___unused_1_15
-			// TAST (Let): __local_var_2_17 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_2_17 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Main","M"] [(ADT ["Prim","Array"] []), String])
 			__local_var_2_17 := gopurs_runtime.Apply2(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor](Get_Main_functorM1()).V0), Get_Data_Show_showIntImpl(), gopurs_runtime.Value{Type: 9, IntVal: 769986722, UnsafePtr: unsafe.Pointer((&Constructor_Main_M1{1, 0}))})
 			_ = __local_var_2_17
 			var __t18 bool
@@ -3012,23 +2891,23 @@ func Get_Main_maTests() gopurs_runtime.Value {
 		end_branch_18:
 			_dollar___unused_2_16 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("map - M1"), gopurs_runtime.Bool(__t18)), gopurs_runtime.Value{})
 			_ = _dollar___unused_2_16
-			// TAST (Let): eqArray3_3_20 -> *Constructor_Data_Eq_Eq
+			// TAST (Let): eqArray3_3_20 shape=LitRecord expectedFromAst=*Constructor_Data_Eq_Eq actual=*Constructor_Data_Eq_Eq bindingType=(ADT ["Data","Eq","Eq"] [(Array (TypeVar a))])
 			eqArray3_3_20 := (&Constructor_Data_Eq_Eq{1, gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), Get_Data_Eq_eqStringImpl())})
 			_ = eqArray3_3_20
-			// TAST (Let): eqArray4_4_21 -> gopurs_runtime.Value
+			// TAST (Let): eqArray4_4_21 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [eq: (Func [(Array (TypeVar a)), (Array (TypeVar a))] Boolean)] Any))
 			eqArray4_4_21 := gopurs_runtime.RecordDict1("eq", gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), Get_Data_Eq_eqStringImpl()))
 			_ = eqArray4_4_21
-			// TAST (Let): eqArray5_5_22 -> *Constructor_Data_Eq_Eq
+			// TAST (Let): eqArray5_5_22 shape=LitRecord expectedFromAst=*Constructor_Data_Eq_Eq actual=*Constructor_Data_Eq_Eq bindingType=(ADT ["Data","Eq","Eq"] [(Array (ADT ["Data","Tuple","Tuple"] [Int, (Array (TypeVar a))]))])
 			eqArray5_5_22 := (&Constructor_Data_Eq_Eq{1, gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), gopurs_runtime.Func(func(x_5 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(y_6 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Bool((((*Constructor_Data_Tuple_Tuple)(x_5.UnsafePtr).V0.IntVal) == ((*Constructor_Data_Tuple_Tuple)(y_6.UnsafePtr).V0.IntVal)) && ((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(eqArray4_4_21, "eq"), (*Constructor_Data_Tuple_Tuple)(x_5.UnsafePtr).V1, (*Constructor_Data_Tuple_Tuple)(y_6.UnsafePtr).V1).IntVal) != (0)))
 				})
 			}))})
 			_ = eqArray5_5_22
-			// TAST (Let): eqArray6_6_23 -> *Constructor_Data_Eq_Eq
+			// TAST (Let): eqArray6_6_23 shape=LitRecord expectedFromAst=*Constructor_Data_Eq_Eq actual=*Constructor_Data_Eq_Eq bindingType=(ADT ["Data","Eq","Eq"] [(Array (Array (Array (TypeVar a))))])
 			eqArray6_6_23 := (&Constructor_Data_Eq_Eq{1, gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), gopurs_runtime.RecordGet(eqArray4_4_21, "eq")))})
 			_ = eqArray6_6_23
-			// TAST (Let): __local_var_7_24 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_7_24 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Main","M"] [(ADT ["Prim","Array"] []), String])
 			__local_var_7_24 := gopurs_runtime.Apply2(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor](Get_Main_functorM1()).V0), Get_Data_Show_showIntImpl(), Get_Main_m2L())
 			_ = __local_var_7_24
 			var __t33 bool
@@ -3420,20 +3299,20 @@ func Get_Main_maTests() gopurs_runtime.Value {
 		end_branch_33:
 			_dollar___unused_3_19 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("map - M2"), gopurs_runtime.Bool(__t33)), gopurs_runtime.Value{})
 			_ = _dollar___unused_3_19
-			// TAST (Let): eqArray3_4_35 -> *Constructor_Data_Eq_Eq
+			// TAST (Let): eqArray3_4_35 shape=LitRecord expectedFromAst=*Constructor_Data_Eq_Eq actual=*Constructor_Data_Eq_Eq bindingType=(ADT ["Data","Eq","Eq"] [(Array (TypeVar a))])
 			eqArray3_4_35 := (&Constructor_Data_Eq_Eq{1, gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), Get_Data_Eq_eqStringImpl())})
 			_ = eqArray3_4_35
-			// TAST (Let): eqArray4_5_36 -> gopurs_runtime.Value
+			// TAST (Let): eqArray4_5_36 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [eq: (Func [(Array (TypeVar a)), (Array (TypeVar a))] Boolean)] Any))
 			eqArray4_5_36 := gopurs_runtime.RecordDict1("eq", gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), Get_Data_Eq_eqStringImpl()))
 			_ = eqArray4_5_36
-			// TAST (Let): eqArray5_6_37 -> *Constructor_Data_Eq_Eq
+			// TAST (Let): eqArray5_6_37 shape=LitRecord expectedFromAst=*Constructor_Data_Eq_Eq actual=*Constructor_Data_Eq_Eq bindingType=(ADT ["Data","Eq","Eq"] [(Array (ADT ["Data","Tuple","Tuple"] [Int, (Array (TypeVar a))]))])
 			eqArray5_6_37 := (&Constructor_Data_Eq_Eq{1, gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), gopurs_runtime.Func(func(x_6 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(y_7 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Bool((((*Constructor_Data_Tuple_Tuple)(x_6.UnsafePtr).V0.IntVal) == ((*Constructor_Data_Tuple_Tuple)(y_7.UnsafePtr).V0.IntVal)) && ((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(eqArray4_5_36, "eq"), (*Constructor_Data_Tuple_Tuple)(x_6.UnsafePtr).V1, (*Constructor_Data_Tuple_Tuple)(y_7.UnsafePtr).V1).IntVal) != (0)))
 				})
 			}))})
 			_ = eqArray5_6_37
-			// TAST (Let): __local_var_7_38 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_7_38 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Main","M"] [(ADT ["Prim","Array"] []), String])
 			__local_var_7_38 := gopurs_runtime.Apply2(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor](Get_Main_functorM1()).V0), Get_Data_Show_showIntImpl(), gopurs_runtime.Value{Type: 9, IntVal: 1830062304, UnsafePtr: unsafe.Pointer((&Constructor_Main_M3{1, Get_Main_recordValueL()}))})
 			_ = __local_var_7_38
 			var __t39 bool
@@ -3462,7 +3341,7 @@ func Get_Main_maTests() gopurs_runtime.Value {
 				}
 			}
 			{
-				__t39 = (__local_var_7_38.Type == 9 && __local_var_7_38.IntVal == 1830062304) && ((((((((gopurs_runtime.RecordGet((*Constructor_Main_M3)(__local_var_7_38.UnsafePtr).V0, "a").StrVal()) == ("71")) && ((gopurs_runtime.Apply2(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq](Get_Main_eqArray2()).V0), func() gopurs_runtime.Value {
+				__t39 = (__local_var_7_38.Type == 9 && __local_var_7_38.IntVal == 1830062304) && ((((((((gopurs_runtime.RecordGet((*Constructor_Main_M3)(__local_var_7_38.UnsafePtr).V0, "a").StrVal()) == (gopurs_runtime.Str("71").StrVal())) && ((gopurs_runtime.Apply2(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq](Get_Main_eqArray2()).V0), func() gopurs_runtime.Value {
 					arr := func() []int64 {
 						arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet((*Constructor_Main_M3)(__local_var_7_38.UnsafePtr).V0, "arrayIgnore").UnsafePtr)
 						unboxed := make([]int64, len(arr))
@@ -3537,23 +3416,23 @@ func Get_Main_maTests() gopurs_runtime.Value {
 		end_branch_39:
 			_dollar___unused_4_34 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("map - M3"), gopurs_runtime.Bool(__t39)), gopurs_runtime.Value{})
 			_ = _dollar___unused_4_34
-			// TAST (Let): eqArray3_5_41 -> *Constructor_Data_Eq_Eq
+			// TAST (Let): eqArray3_5_41 shape=LitRecord expectedFromAst=*Constructor_Data_Eq_Eq actual=*Constructor_Data_Eq_Eq bindingType=(ADT ["Data","Eq","Eq"] [(Array (TypeVar a))])
 			eqArray3_5_41 := (&Constructor_Data_Eq_Eq{1, gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), Get_Data_Eq_eqStringImpl())})
 			_ = eqArray3_5_41
-			// TAST (Let): eqArray4_6_42 -> gopurs_runtime.Value
+			// TAST (Let): eqArray4_6_42 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [eq: (Func [(Array (TypeVar a)), (Array (TypeVar a))] Boolean)] Any))
 			eqArray4_6_42 := gopurs_runtime.RecordDict1("eq", gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), Get_Data_Eq_eqStringImpl()))
 			_ = eqArray4_6_42
-			// TAST (Let): eqArray5_7_43 -> *Constructor_Data_Eq_Eq
+			// TAST (Let): eqArray5_7_43 shape=LitRecord expectedFromAst=*Constructor_Data_Eq_Eq actual=*Constructor_Data_Eq_Eq bindingType=(ADT ["Data","Eq","Eq"] [(Array (ADT ["Data","Tuple","Tuple"] [Int, (Array (TypeVar a))]))])
 			eqArray5_7_43 := (&Constructor_Data_Eq_Eq{1, gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), gopurs_runtime.Func(func(x_7 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(y_8 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Bool((((*Constructor_Data_Tuple_Tuple)(x_7.UnsafePtr).V0.IntVal) == ((*Constructor_Data_Tuple_Tuple)(y_8.UnsafePtr).V0.IntVal)) && ((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(eqArray4_6_42, "eq"), (*Constructor_Data_Tuple_Tuple)(x_7.UnsafePtr).V1, (*Constructor_Data_Tuple_Tuple)(y_8.UnsafePtr).V1).IntVal) != (0)))
 				})
 			}))})
 			_ = eqArray5_7_43
-			// TAST (Let): eqArray6_8_44 -> *Constructor_Data_Eq_Eq
+			// TAST (Let): eqArray6_8_44 shape=LitRecord expectedFromAst=*Constructor_Data_Eq_Eq actual=*Constructor_Data_Eq_Eq bindingType=(ADT ["Data","Eq","Eq"] [(Array (Array (Array (TypeVar a))))])
 			eqArray6_8_44 := (&Constructor_Data_Eq_Eq{1, gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), gopurs_runtime.RecordGet(eqArray4_6_42, "eq")))})
 			_ = eqArray6_8_44
-			// TAST (Let): __local_var_9_45 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_9_45 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Main","M"] [(ADT ["Prim","Array"] []), String])
 			__local_var_9_45 := gopurs_runtime.Apply2(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor](Get_Main_functorM1()).V0), Get_Data_Show_showIntImpl(), Get_Main_m4L())
 			_ = __local_var_9_45
 			var __t54 bool
@@ -3945,23 +3824,23 @@ func Get_Main_maTests() gopurs_runtime.Value {
 		end_branch_54:
 			_dollar___unused_5_40 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("map - M4"), gopurs_runtime.Bool(__t54)), gopurs_runtime.Value{})
 			_ = _dollar___unused_5_40
-			// TAST (Let): eqArray3_6_56 -> *Constructor_Data_Eq_Eq
+			// TAST (Let): eqArray3_6_56 shape=LitRecord expectedFromAst=*Constructor_Data_Eq_Eq actual=*Constructor_Data_Eq_Eq bindingType=(ADT ["Data","Eq","Eq"] [(Array (TypeVar a))])
 			eqArray3_6_56 := (&Constructor_Data_Eq_Eq{1, gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), Get_Data_Eq_eqStringImpl())})
 			_ = eqArray3_6_56
-			// TAST (Let): eqArray4_7_57 -> gopurs_runtime.Value
+			// TAST (Let): eqArray4_7_57 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [eq: (Func [(Array (TypeVar a)), (Array (TypeVar a))] Boolean)] Any))
 			eqArray4_7_57 := gopurs_runtime.RecordDict1("eq", gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), Get_Data_Eq_eqStringImpl()))
 			_ = eqArray4_7_57
-			// TAST (Let): eqArray5_8_58 -> *Constructor_Data_Eq_Eq
+			// TAST (Let): eqArray5_8_58 shape=LitRecord expectedFromAst=*Constructor_Data_Eq_Eq actual=*Constructor_Data_Eq_Eq bindingType=(ADT ["Data","Eq","Eq"] [(Array (ADT ["Data","Tuple","Tuple"] [Int, (Array (TypeVar a))]))])
 			eqArray5_8_58 := (&Constructor_Data_Eq_Eq{1, gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), gopurs_runtime.Func(func(x_8 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(y_9 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Bool((((*Constructor_Data_Tuple_Tuple)(x_8.UnsafePtr).V0.IntVal) == ((*Constructor_Data_Tuple_Tuple)(y_9.UnsafePtr).V0.IntVal)) && ((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(eqArray4_7_57, "eq"), (*Constructor_Data_Tuple_Tuple)(x_8.UnsafePtr).V1, (*Constructor_Data_Tuple_Tuple)(y_9.UnsafePtr).V1).IntVal) != (0)))
 				})
 			}))})
 			_ = eqArray5_8_58
-			// TAST (Let): eqArray6_9_59 -> *Constructor_Data_Eq_Eq
+			// TAST (Let): eqArray6_9_59 shape=LitRecord expectedFromAst=*Constructor_Data_Eq_Eq actual=*Constructor_Data_Eq_Eq bindingType=(ADT ["Data","Eq","Eq"] [(Array (Array (Array (TypeVar a))))])
 			eqArray6_9_59 := (&Constructor_Data_Eq_Eq{1, gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), gopurs_runtime.RecordGet(eqArray4_7_57, "eq")))})
 			_ = eqArray6_9_59
-			// TAST (Let): __local_var_10_60 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_10_60 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Main","M"] [(ADT ["Prim","Array"] []), String])
 			__local_var_10_60 := gopurs_runtime.Apply2(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor](Get_Main_functorM1()).V0), Get_Data_Show_showIntImpl(), Get_Main_m5L())
 			_ = __local_var_10_60
 			var __t69 bool
@@ -4353,23 +4232,23 @@ func Get_Main_maTests() gopurs_runtime.Value {
 		end_branch_69:
 			_dollar___unused_6_55 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("map - M5"), gopurs_runtime.Bool(__t69)), gopurs_runtime.Value{})
 			_ = _dollar___unused_6_55
-			// TAST (Let): eqArray3_7_70 -> *Constructor_Data_Eq_Eq
+			// TAST (Let): eqArray3_7_70 shape=LitRecord expectedFromAst=*Constructor_Data_Eq_Eq actual=*Constructor_Data_Eq_Eq bindingType=(ADT ["Data","Eq","Eq"] [(Array (TypeVar a))])
 			eqArray3_7_70 := (&Constructor_Data_Eq_Eq{1, gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), Get_Data_Eq_eqStringImpl())})
 			_ = eqArray3_7_70
-			// TAST (Let): eqArray4_8_71 -> gopurs_runtime.Value
+			// TAST (Let): eqArray4_8_71 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [eq: (Func [(Array (TypeVar a)), (Array (TypeVar a))] Boolean)] Any))
 			eqArray4_8_71 := gopurs_runtime.RecordDict1("eq", gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), Get_Data_Eq_eqStringImpl()))
 			_ = eqArray4_8_71
-			// TAST (Let): eqArray5_9_72 -> *Constructor_Data_Eq_Eq
+			// TAST (Let): eqArray5_9_72 shape=LitRecord expectedFromAst=*Constructor_Data_Eq_Eq actual=*Constructor_Data_Eq_Eq bindingType=(ADT ["Data","Eq","Eq"] [(Array (ADT ["Data","Tuple","Tuple"] [Int, (Array (TypeVar a))]))])
 			eqArray5_9_72 := (&Constructor_Data_Eq_Eq{1, gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), gopurs_runtime.Func(func(x_9 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(y_10 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Bool((((*Constructor_Data_Tuple_Tuple)(x_9.UnsafePtr).V0.IntVal) == ((*Constructor_Data_Tuple_Tuple)(y_10.UnsafePtr).V0.IntVal)) && ((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(eqArray4_8_71, "eq"), (*Constructor_Data_Tuple_Tuple)(x_9.UnsafePtr).V1, (*Constructor_Data_Tuple_Tuple)(y_10.UnsafePtr).V1).IntVal) != (0)))
 				})
 			}))})
 			_ = eqArray5_9_72
-			// TAST (Let): eqArray6_10_73 -> *Constructor_Data_Eq_Eq
+			// TAST (Let): eqArray6_10_73 shape=LitRecord expectedFromAst=*Constructor_Data_Eq_Eq actual=*Constructor_Data_Eq_Eq bindingType=(ADT ["Data","Eq","Eq"] [(Array (Array (Array (TypeVar a))))])
 			eqArray6_10_73 := (&Constructor_Data_Eq_Eq{1, gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), gopurs_runtime.RecordGet(eqArray4_8_71, "eq")))})
 			_ = eqArray6_10_73
-			// TAST (Let): __local_var_11_74 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_11_74 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Main","M"] [(ADT ["Prim","Array"] []), String])
 			__local_var_11_74 := gopurs_runtime.Apply2(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor](Get_Main_functorM1()).V0), Get_Data_Show_showIntImpl(), Get_Main_m6L())
 			_ = __local_var_11_74
 			var __t83 bool
@@ -4859,84 +4738,39 @@ func Call_Main_functorFun3(dictFunctor_0_loop gopurs_runtime.Value) gopurs_runti
 	_ = dictFunctor_0
 	return gopurs_runtime.Value{Type: 9, IntVal: 929368378, UnsafePtr: unsafe.Pointer((&Constructor_Data_Functor_Functor{1, gopurs_runtime.Func(func(f_1 gopurs_runtime.Value) gopurs_runtime.Value {
 		return gopurs_runtime.Func(func(m_2 gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): __local_var_3_0 -> gopurs_runtime.Value
-			__local_var_3_0 := gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictFunctor_0, "map"), func() gopurs_runtime.Value {
-				arr := func() []gopurs_runtime.Value {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), gopurs_runtime.Func(func(v1_3 gopurs_runtime.Value) gopurs_runtime.Value {
-						// TAST (Let): __local_var_4_1 -> gopurs_runtime.Value
-						var __local_var_4_1 gopurs_runtime.Value = gopurs_runtime.Array(func() []gopurs_runtime.Value {
-							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), f_1).UnsafePtr)
-							unboxed := make([]gopurs_runtime.Value, len(arr))
-							for i, v := range arr {
-								unboxed[i] = v
-							}
-							return unboxed
-						}())
-						return gopurs_runtime.RecordUpdate1(v1_3, "nested", gopurs_runtime.RecordUpdateDict(gopurs_runtime.RecordGet(v1_3, "nested"), []string{"a", "fa", "recursiveA", "zArrayA"}, []gopurs_runtime.Value{gopurs_runtime.Apply(f_1, gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(v1_3, "nested"), "a")), gopurs_runtime.Apply2(gopurs_runtime.RecordGet(dictFunctor_0, "map"), f_1, gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(v1_3, "nested"), "fa")), func() gopurs_runtime.Value {
-							arr := func() []*Constructor_Data_Tuple_Tuple {
-								arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array(func() []gopurs_runtime.Value {
-									arr := *(*[]gopurs_runtime.Value)(func() gopurs_runtime.Value {
-										arr_val_arrayMap11 := func() gopurs_runtime.Value {
-											arr := func() []*Constructor_Data_Tuple_Tuple {
-												arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(v1_3, "nested"), "recursiveA").UnsafePtr)
-												unboxed := make([]*Constructor_Data_Tuple_Tuple, len(arr))
-												for i, v := range arr {
-													unboxed[i] = gopurs_runtime.CoerceToStruct[Constructor_Data_Tuple_Tuple](v)
-												}
-												return unboxed
-											}()
-											boxed := make([]gopurs_runtime.Value, len(arr))
-											for i, v := range arr {
-												boxed[i] = gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(v)}
-											}
-											return gopurs_runtime.Array(boxed)
-										}()
-										_ = arr_val_arrayMap11
-										arr_go_arrayMap11 := (*[]gopurs_runtime.Value)(arr_val_arrayMap11.UnsafePtr)
-										_ = arr_go_arrayMap11
-										res_go_arrayMap11 := make([]gopurs_runtime.Value, len(*arr_go_arrayMap11))
-										_ = res_go_arrayMap11
-										for i_arrayMap11, v_arrayMap11 := range *arr_go_arrayMap11 {
-											res_go_arrayMap11[i_arrayMap11] = gopurs_runtime.Apply(gopurs_runtime.Func(func(m_5 gopurs_runtime.Value) gopurs_runtime.Value {
-												return gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer((&Constructor_Data_Tuple_Tuple{1, (*Constructor_Data_Tuple_Tuple)(m_5.UnsafePtr).V0, gopurs_runtime.Apply(__local_var_4_1, (*Constructor_Data_Tuple_Tuple)(m_5.UnsafePtr).V1)}))}
-											}), v_arrayMap11)
-										}
-										return gopurs_runtime.Array(res_go_arrayMap11)
-									}().UnsafePtr)
-									unboxed := make([]gopurs_runtime.Value, len(arr))
-									for i, v := range arr {
-										unboxed[i] = v
-									}
-									return unboxed
-								}()).UnsafePtr)
-								unboxed := make([]*Constructor_Data_Tuple_Tuple, len(arr))
-								for i, v := range arr {
-									unboxed[i] = gopurs_runtime.CoerceToStruct[Constructor_Data_Tuple_Tuple](v)
-								}
-								return unboxed
-							}()
-							boxed := make([]gopurs_runtime.Value, len(arr))
-							for i, v := range arr {
-								boxed[i] = gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(v)}
-							}
-							return gopurs_runtime.Array(boxed)
-						}(), gopurs_runtime.Array(func() []gopurs_runtime.Value {
+			// TAST (Let): __local_var_3_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
+			__local_var_3_0 := gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictFunctor_0, "map"), gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), gopurs_runtime.Func(func(v1_3 gopurs_runtime.Value) gopurs_runtime.Value {
+				// TAST (Let): __local_var_4_1 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Func [(Array (TypeVar a))] (Array (TypeVar b)))
+				__local_var_4_1 := gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), f_1)
+				_ = __local_var_4_1
+				return gopurs_runtime.RecordUpdate1(v1_3, "nested", gopurs_runtime.RecordUpdateDict(gopurs_runtime.RecordGet(v1_3, "nested"), []string{"a", "fa", "recursiveA", "zArrayA"}, []gopurs_runtime.Value{gopurs_runtime.Apply(f_1, gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(v1_3, "nested"), "a")), gopurs_runtime.Apply2(gopurs_runtime.RecordGet(dictFunctor_0, "map"), f_1, gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(v1_3, "nested"), "fa")), func() gopurs_runtime.Value {
+					arr := func() []*Constructor_Data_Tuple_Tuple {
+						arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array(func() []gopurs_runtime.Value {
 							arr := *(*[]gopurs_runtime.Value)(func() gopurs_runtime.Value {
-								arr_val_arrayMap11 := gopurs_runtime.Array(func() []gopurs_runtime.Value {
-									arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(v1_3, "nested"), "zArrayA").UnsafePtr)
-									unboxed := make([]gopurs_runtime.Value, len(arr))
+								arr_val_arrayMap11 := func() gopurs_runtime.Value {
+									arr := func() []*Constructor_Data_Tuple_Tuple {
+										arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(v1_3, "nested"), "recursiveA").UnsafePtr)
+										unboxed := make([]*Constructor_Data_Tuple_Tuple, len(arr))
+										for i, v := range arr {
+											unboxed[i] = gopurs_runtime.CoerceToStruct[Constructor_Data_Tuple_Tuple](v)
+										}
+										return unboxed
+									}()
+									boxed := make([]gopurs_runtime.Value, len(arr))
 									for i, v := range arr {
-										unboxed[i] = v
+										boxed[i] = gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(v)}
 									}
-									return unboxed
-								}())
+									return gopurs_runtime.Array(boxed)
+								}()
 								_ = arr_val_arrayMap11
 								arr_go_arrayMap11 := (*[]gopurs_runtime.Value)(arr_val_arrayMap11.UnsafePtr)
 								_ = arr_go_arrayMap11
 								res_go_arrayMap11 := make([]gopurs_runtime.Value, len(*arr_go_arrayMap11))
 								_ = res_go_arrayMap11
 								for i_arrayMap11, v_arrayMap11 := range *arr_go_arrayMap11 {
-									res_go_arrayMap11[i_arrayMap11] = gopurs_runtime.Apply(f_1, v_arrayMap11)
+									res_go_arrayMap11[i_arrayMap11] = gopurs_runtime.Apply(gopurs_runtime.Func(func(m_5 gopurs_runtime.Value) gopurs_runtime.Value {
+										return gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer((&Constructor_Data_Tuple_Tuple{1, (*Constructor_Data_Tuple_Tuple)(m_5.UnsafePtr).V0, gopurs_runtime.Apply(__local_var_4_1, (*Constructor_Data_Tuple_Tuple)(m_5.UnsafePtr).V1)}))}
+									}), v_arrayMap11)
 								}
 								return gopurs_runtime.Array(res_go_arrayMap11)
 							}().UnsafePtr)
@@ -4945,20 +4779,45 @@ func Call_Main_functorFun3(dictFunctor_0_loop gopurs_runtime.Value) gopurs_runti
 								unboxed[i] = v
 							}
 							return unboxed
-						}())}))
-					})).UnsafePtr)
+						}()).UnsafePtr)
+						unboxed := make([]*Constructor_Data_Tuple_Tuple, len(arr))
+						for i, v := range arr {
+							unboxed[i] = gopurs_runtime.CoerceToStruct[Constructor_Data_Tuple_Tuple](v)
+						}
+						return unboxed
+					}()
+					boxed := make([]gopurs_runtime.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(v)}
+					}
+					return gopurs_runtime.Array(boxed)
+				}(), gopurs_runtime.Array(func() []gopurs_runtime.Value {
+					arr := *(*[]gopurs_runtime.Value)(func() gopurs_runtime.Value {
+						arr_val_arrayMap11 := gopurs_runtime.Array(func() []gopurs_runtime.Value {
+							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(v1_3, "nested"), "zArrayA").UnsafePtr)
+							unboxed := make([]gopurs_runtime.Value, len(arr))
+							for i, v := range arr {
+								unboxed[i] = v
+							}
+							return unboxed
+						}())
+						_ = arr_val_arrayMap11
+						arr_go_arrayMap11 := (*[]gopurs_runtime.Value)(arr_val_arrayMap11.UnsafePtr)
+						_ = arr_go_arrayMap11
+						res_go_arrayMap11 := make([]gopurs_runtime.Value, len(*arr_go_arrayMap11))
+						_ = res_go_arrayMap11
+						for i_arrayMap11, v_arrayMap11 := range *arr_go_arrayMap11 {
+							res_go_arrayMap11[i_arrayMap11] = gopurs_runtime.Apply(f_1, v_arrayMap11)
+						}
+						return gopurs_runtime.Array(res_go_arrayMap11)
+					}().UnsafePtr)
 					unboxed := make([]gopurs_runtime.Value, len(arr))
 					for i, v := range arr {
 						unboxed[i] = v
 					}
 					return unboxed
-				}()
-				boxed := make([]gopurs_runtime.Value, len(arr))
-				for i, v := range arr {
-					boxed[i] = v
-				}
-				return gopurs_runtime.Array(boxed)
-			}()))
+				}())}))
+			}))))
 			_ = __local_var_3_0
 			return gopurs_runtime.Func(func(x_4 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Apply(__local_var_3_0, gopurs_runtime.Apply(m_2, x_4))
@@ -5017,15 +4876,9 @@ func Call_Main_functorM(dictFunctor_0_loop gopurs_runtime.Value) gopurs_runtime.
 			}
 			{
 				if m_2.Type == 9 && m_2.IntVal == 1830062304 {
-					// TAST (Let): __local_var_3_0 -> gopurs_runtime.Value
-					var __local_var_3_0 gopurs_runtime.Value = gopurs_runtime.Array(func() []gopurs_runtime.Value {
-						arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), f_1).UnsafePtr)
-						unboxed := make([]gopurs_runtime.Value, len(arr))
-						for i, v := range arr {
-							unboxed[i] = v
-						}
-						return unboxed
-					}())
+					// TAST (Let): __local_var_3_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Func [(Array (TypeVar a))] (Array (TypeVar b)))
+					__local_var_3_0 := gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), f_1)
+					_ = __local_var_3_0
 					__t4 = gopurs_runtime.Value{Type: 9, IntVal: 1830062304, UnsafePtr: unsafe.Pointer((&Constructor_Main_M3{1, gopurs_runtime.RecordUpdateDict((*Constructor_Main_M3)(m_2.UnsafePtr).V0, []string{"a", "fa", "recursiveA", "zArrayA"}, []gopurs_runtime.Value{gopurs_runtime.Apply(f_1, gopurs_runtime.RecordGet((*Constructor_Main_M3)(m_2.UnsafePtr).V0, "a")), gopurs_runtime.Apply2(gopurs_runtime.RecordGet(dictFunctor_0, "map"), f_1, gopurs_runtime.RecordGet((*Constructor_Main_M3)(m_2.UnsafePtr).V0, "fa")), func() gopurs_runtime.Value {
 						arr := func() []*Constructor_Data_Tuple_Tuple {
 							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array(func() []gopurs_runtime.Value {
@@ -5107,15 +4960,9 @@ func Call_Main_functorM(dictFunctor_0_loop gopurs_runtime.Value) gopurs_runtime.
 			}
 			{
 				if m_2.Type == 9 && m_2.IntVal == 3190619783 {
-					// TAST (Let): __local_var_3_1 -> gopurs_runtime.Value
-					var __local_var_3_1 gopurs_runtime.Value = gopurs_runtime.Array(func() []gopurs_runtime.Value {
-						arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), f_1).UnsafePtr)
-						unboxed := make([]gopurs_runtime.Value, len(arr))
-						for i, v := range arr {
-							unboxed[i] = v
-						}
-						return unboxed
-					}())
+					// TAST (Let): __local_var_3_1 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Func [(Array (TypeVar a))] (Array (TypeVar b)))
+					__local_var_3_1 := gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), f_1)
+					_ = __local_var_3_1
 					__t4 = gopurs_runtime.Value{Type: 9, IntVal: 3190619783, UnsafePtr: unsafe.Pointer((&Constructor_Main_M4{1, func() gopurs_runtime.Value {
 						origVal := (*Constructor_Main_M4)(m_2.UnsafePtr).V0
 						if origVal.Type != gopurs_runtime.TypeRecord1 {
@@ -5278,24 +5125,12 @@ func Call_Main_functorM(dictFunctor_0_loop gopurs_runtime.Value) gopurs_runtime.
 			}
 			{
 				if m_2.Type == 9 && m_2.IntVal == 108241190 {
-					// TAST (Let): __local_var_3_2 -> gopurs_runtime.Value
-					var __local_var_3_2 gopurs_runtime.Value = gopurs_runtime.Array(func() []gopurs_runtime.Value {
-						arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), f_1).UnsafePtr)
-						unboxed := make([]gopurs_runtime.Value, len(arr))
-						for i, v := range arr {
-							unboxed[i] = v
-						}
-						return unboxed
-					}())
-					// TAST (Let): __local_var_3_3 -> gopurs_runtime.Value
-					var __local_var_3_3 gopurs_runtime.Value = gopurs_runtime.Array(func() []gopurs_runtime.Value {
-						arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), f_1).UnsafePtr)
-						unboxed := make([]gopurs_runtime.Value, len(arr))
-						for i, v := range arr {
-							unboxed[i] = v
-						}
-						return unboxed
-					}())
+					// TAST (Let): __local_var_3_2 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Func [(Array (TypeVar a))] (Array (TypeVar b)))
+					__local_var_3_2 := gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), f_1)
+					_ = __local_var_3_2
+					// TAST (Let): __local_var_3_3 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Func [(Array (TypeVar a))] (Array (TypeVar b)))
+					__local_var_3_3 := gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), f_1)
+					_ = __local_var_3_3
 					__t4 = gopurs_runtime.Value{Type: 9, IntVal: 108241190, UnsafePtr: unsafe.Pointer((&Constructor_Main_M5{1, (*Constructor_Main_M5)(m_2.UnsafePtr).V0, gopurs_runtime.Apply(f_1, (*Constructor_Main_M5)(m_2.UnsafePtr).V1), (*Constructor_Main_M5)(m_2.UnsafePtr).V2, func() []gopurs_runtime.Value {
 						arr := *(*[]gopurs_runtime.Value)(func() gopurs_runtime.Value {
 							arr_val_arrayMap5 := gopurs_runtime.Array((*Constructor_Main_M5)(m_2.UnsafePtr).V3)
@@ -5573,35 +5408,7 @@ func Call_Main_functorM(dictFunctor_0_loop gopurs_runtime.Value) gopurs_runtime.
 								res_go_arrayMap5 := make([]gopurs_runtime.Value, len(*arr_go_arrayMap5))
 								_ = res_go_arrayMap5
 								for i_arrayMap5, v_arrayMap5 := range *arr_go_arrayMap5 {
-									res_go_arrayMap5[i_arrayMap5] = gopurs_runtime.Apply(func() gopurs_runtime.Value {
-										arr := func() [][]gopurs_runtime.Value {
-											arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), gopurs_runtime.Array(func() []gopurs_runtime.Value {
-												arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), f_1).UnsafePtr)
-												unboxed := make([]gopurs_runtime.Value, len(arr))
-												for i, v := range arr {
-													unboxed[i] = v
-												}
-												return unboxed
-											}())).UnsafePtr)
-											unboxed := make([][]gopurs_runtime.Value, len(arr))
-											for i, v := range arr {
-												unboxed[i] = func() []gopurs_runtime.Value {
-													arr := *(*[]gopurs_runtime.Value)(v.UnsafePtr)
-													unboxed := make([]gopurs_runtime.Value, len(arr))
-													for i, v := range arr {
-														unboxed[i] = v
-													}
-													return unboxed
-												}()
-											}
-											return unboxed
-										}()
-										boxed := make([]gopurs_runtime.Value, len(arr))
-										for i, v := range arr {
-											boxed[i] = gopurs_runtime.Array(v)
-										}
-										return gopurs_runtime.Array(boxed)
-									}(), v_arrayMap5)
+									res_go_arrayMap5[i_arrayMap5] = gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), gopurs_runtime.Apply(Get_Data_Functor_arrayMap(), f_1)), v_arrayMap5)
 								}
 								return gopurs_runtime.Array(res_go_arrayMap5)
 							}().UnsafePtr)
@@ -5650,20 +5457,20 @@ func Call_Main_eqM(dictEq1_0_loop gopurs_runtime.Value, dictEq_1_loop gopurs_run
 	_ = dictEq1_0
 	var dictEq_1 gopurs_runtime.Value = dictEq_1_loop
 	_ = dictEq_1
-	// TAST (Let): eqArray3_2_0 -> *Constructor_Data_Eq_Eq
+	// TAST (Let): eqArray3_2_0 shape=LitRecord expectedFromAst=*Constructor_Data_Eq_Eq actual=*Constructor_Data_Eq_Eq bindingType=(ADT ["Data","Eq","Eq"] [(Array (TypeVar a))])
 	eqArray3_2_0 := (&Constructor_Data_Eq_Eq{1, gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), gopurs_runtime.RecordGet(dictEq_1, "eq"))})
 	_ = eqArray3_2_0
-	// TAST (Let): eqArray4_3_1 -> gopurs_runtime.Value
+	// TAST (Let): eqArray4_3_1 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [eq: (Func [(Array (TypeVar a)), (Array (TypeVar a))] Boolean)] Any))
 	eqArray4_3_1 := gopurs_runtime.RecordDict1("eq", gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), gopurs_runtime.RecordGet(dictEq_1, "eq")))
 	_ = eqArray4_3_1
-	// TAST (Let): eqArray5_4_2 -> *Constructor_Data_Eq_Eq
+	// TAST (Let): eqArray5_4_2 shape=LitRecord expectedFromAst=*Constructor_Data_Eq_Eq actual=*Constructor_Data_Eq_Eq bindingType=(ADT ["Data","Eq","Eq"] [(Array (ADT ["Data","Tuple","Tuple"] [Int, (Array (TypeVar a))]))])
 	eqArray5_4_2 := (&Constructor_Data_Eq_Eq{1, gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), gopurs_runtime.Func(func(x_4 gopurs_runtime.Value) gopurs_runtime.Value {
 		return gopurs_runtime.Func(func(y_5 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Bool((((*Constructor_Data_Tuple_Tuple)(x_4.UnsafePtr).V0.IntVal) == ((*Constructor_Data_Tuple_Tuple)(y_5.UnsafePtr).V0.IntVal)) && ((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(eqArray4_3_1, "eq"), (*Constructor_Data_Tuple_Tuple)(x_4.UnsafePtr).V1, (*Constructor_Data_Tuple_Tuple)(y_5.UnsafePtr).V1).IntVal) != (0)))
 		})
 	}))})
 	_ = eqArray5_4_2
-	// TAST (Let): eqArray6_5_3 -> *Constructor_Data_Eq_Eq
+	// TAST (Let): eqArray6_5_3 shape=LitRecord expectedFromAst=*Constructor_Data_Eq_Eq actual=*Constructor_Data_Eq_Eq bindingType=(ADT ["Data","Eq","Eq"] [(Array (Array (Array (TypeVar a))))])
 	eqArray6_5_3 := (&Constructor_Data_Eq_Eq{1, gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), gopurs_runtime.Apply(Get_Data_Eq_eqArrayImpl(), gopurs_runtime.RecordGet(eqArray4_3_1, "eq")))})
 	_ = eqArray6_5_3
 	return gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer((&Constructor_Data_Eq_Eq{1, gopurs_runtime.Func(func(x_6 gopurs_runtime.Value) gopurs_runtime.Value {

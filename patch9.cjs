@@ -1,22 +1,6 @@
 const fs = require('fs');
 let code = fs.readFileSync('src/Gopurs/CodeGen.purs', 'utf8');
 
-code = code.replace(/synName = \(\\\(TcoExpr _ syn\) -> case syn of \{ Typed _ _ -> "Typed"; PrimOp _ -> "PrimOp"; App _ _ -> "App"; Var _ -> "Var"; Let _ _ _ _ -> "Let"; LetRec _ _ _ -> "LetRec"; Abs _ _ -> "Abs"; Lit _ -> "Lit"; CtorDef _ _ _ _ -> "CtorDef"; _ -> "Other" \}\) binding/,
-`synName = getSynName binding`);
-
-code += `\n
-getSynName :: TcoExpr -> String
-getSynName (TcoExpr _ syn) = case syn of
-  Typed _ _ -> "Typed"
-  PrimOp _ -> "PrimOp"
-  App _ _ -> "App"
-  Var _ -> "Var"
-  Let _ _ _ _ -> "Let"
-  LetRec _ _ _ -> "LetRec"
-  Abs _ _ -> "Abs"
-  Lit _ -> "Lit"
-  CtorDef _ _ _ _ -> "CtorDef"
-  _ -> "Other"
-`;
+code = code.replace(`        Let ident lvl val body ->\\n          let\\n            idStr = localId ident lvl`, `        Let ident lvl val body ->\\n          let\\n            idStr = localId ident lvl\\n            _trace = if idStr == "__local_var_2_0" then Debug.trace ("=== LOCAL VAR 2_0 ===\\n" <> printTcoExprShape val) (\\_ -> unit) else unit`);
 
 fs.writeFileSync('src/Gopurs/CodeGen.purs', code);

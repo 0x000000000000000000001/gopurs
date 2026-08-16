@@ -1,18 +1,4 @@
 const fs = require('fs');
 let code = fs.readFileSync('src/Gopurs/CodeGen.purs', 'utf8');
-code = code.replace(/synName :: TcoExpr -> String[\s\S]*?_ -> "Other"/, '');
-code = code.replace(/(import Gopurs\.OptimizeTAST[^\n]*\n)/, `$1\n
-synName :: TcoExpr -> String
-synName (TcoExpr _ syn) = case syn of
-  Typed _ _ -> "Typed"
-  PrimOp _ -> "PrimOp"
-  App _ _ -> "App"
-  Var _ -> "Var"
-  Let _ _ _ _ -> "Let"
-  LetRec _ _ _ -> "LetRec"
-  Abs _ _ -> "Abs"
-  Lit _ -> "Lit"
-  CtorDef _ _ _ _ _ -> "CtorDef"
-  _ -> "Other"
-`);
+code = code.replace(`_trace_msg = unsafePerformEffect (Console.log ("=== APP TRACE ===\\nflatFn: " <> show (unwrapTcoExpr flatFn) <> "\\nresFn.exprType: " <> show resFn.exprType <> "\\nflatArgs len: " <> show (Array.length flatArgs)))`, `_trace_msg = unsafePerformEffect (Console.log ("=== APP TRACE ===\\nresFn.exprType: " <> show resFn.exprType <> "\\nflatArgs len: " <> show (Array.length flatArgs)))`);
 fs.writeFileSync('src/Gopurs/CodeGen.purs', code);

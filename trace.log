@@ -1,243 +1,706 @@
+Building gopurs compiler...
+Reading Spago workspace configuration...
 
-<--- Last few GCs --->
+✓ Selecting package to build: gopurs
 
-[45179:0x81b80c000]    38359 ms: Mark-Compact 4036.7 (4116.4) -> 4021.3 (4116.9) MB, pooled: 0 MB, 548.12 / 0.00 ms  (average mu = 0.162, current mu = 0.010) allocation failure; scavenge might not succeed
-[45179:0x81b80c000]    38911 ms: Mark-Compact 4037.7 (4117.1) -> 4022.2 (4117.9) MB, pooled: 0 MB, 548.58 / 0.00 ms  (average mu = 0.093, current mu = 0.007) allocation failure; scavenge might not succeed
+Downloading dependencies...
+Building...
+           Src   Lib   All
+Warnings     0     0     0
+Errors       0     0     0
 
-FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory
------ Native stack trace -----
+✓ Build succeeded.
 
- 1: 0x102614e68 node::OOMErrorHandler(char const*, v8::OOMDetails const&) [/opt/homebrew/Cellar/node/24.8.0/bin/node]
- 2: 0x102744e60 v8::Utils::ReportOOMFailure(v8::internal::Isolate*, char const*, v8::OOMDetails const&) [/opt/homebrew/Cellar/node/24.8.0/bin/node]
- 3: 0x102744e18 v8::internal::V8::FatalProcessOutOfMemory(v8::internal::Isolate*, char const*, v8::OOMDetails const&) [/opt/homebrew/Cellar/node/24.8.0/bin/node]
- 4: 0x102902c78 v8::internal::Heap::ShouldOptimizeForLoadTime() const [/opt/homebrew/Cellar/node/24.8.0/bin/node]
- 5: 0x102905398 v8::internal::Heap::OldGenerationConsumedBytes() const [/opt/homebrew/Cellar/node/24.8.0/bin/node]
- 6: 0x102905238 v8::internal::Heap::RecomputeLimits(v8::internal::GarbageCollector, v8::base::TimeTicks) [/opt/homebrew/Cellar/node/24.8.0/bin/node]
- 7: 0x102912530 v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags)::$_1::operator()() const [/opt/homebrew/Cellar/node/24.8.0/bin/node]
- 8: 0x1029121d4 void heap::base::Stack::SetMarkerAndCallbackImpl<v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags)::$_1>(heap::base::Stack*, void*, void const*) [/opt/homebrew/Cellar/node/24.8.0/bin/node]
- 9: 0x102f67cf8 PushAllRegistersAndIterateStack [/opt/homebrew/Cellar/node/24.8.0/bin/node]
-10: 0x102901240 v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags) [/opt/homebrew/Cellar/node/24.8.0/bin/node]
-11: 0x1028f95ac v8::internal::HeapAllocator::AllocateRawWithRetryOrFailSlowPath(int, v8::internal::AllocationType, v8::internal::AllocationOrigin, v8::internal::AllocationAlignment) [/opt/homebrew/Cellar/node/24.8.0/bin/node]
-12: 0x1028e18c4 v8::internal::Factory::NewFillerObject(int, v8::internal::AllocationAlignment, v8::internal::AllocationType, v8::internal::AllocationOrigin) [/opt/homebrew/Cellar/node/24.8.0/bin/node]
-13: 0x102c0cc9c v8::internal::Runtime_AllocateInYoungGeneration(int, unsigned long*, v8::internal::Isolate*) [/opt/homebrew/Cellar/node/24.8.0/bin/node]
-14: 0x103025f74 Builtins_CEntry_Return1_ArgvOnStack_NoBuiltinExit [/opt/homebrew/Cellar/node/24.8.0/bin/node]
-15: 0x12d90fcb4 
-16: 0x12d8c23e4 
-17: 0x12d92865c 
-18: 0x12d93c20c 
-19: 0x12d759430 
-20: 0x12d8c3748 
-21: 0x12d92865c 
-22: 0x12d8c3b74 
-23: 0x12d92865c 
-24: 0x12d737144 
-25: 0x12d934a08 
-26: 0x12d759430 
-27: 0x12d90dc1c 
-28: 0x12d90e640 
-29: 0x12d90e640 
-30: 0x12d91a46c 
-31: 0x12d759430 
-32: 0x12d90c2a0 
-33: 0x12d90e640 
-34: 0x12d90e640 
-35: 0x12d90d0ec 
-36: 0x12d90e640 
-37: 0x12d90e640 
-38: 0x12d90e640 
-39: 0x12d75933c 
-40: 0x12d90bc1c 
-41: 0x12d90d728 
-42: 0x12d91a46c 
-43: 0x12d759430 
-44: 0x12d90c2a0 
-45: 0x12d90e640 
-46: 0x12d934a54 
-47: 0x12d759430 
-48: 0x12d90dc1c 
-49: 0x12d90e640 
-50: 0x12d91a46c 
-51: 0x12d75933c 
-52: 0x12d90c2a0 
-53: 0x12d90e640 
-54: 0x12d90e640 
-55: 0x12d90d0ec 
-56: 0x12d90e640 
-57: 0x12d90e640 
-58: 0x12d90e640 
-59: 0x12d75933c 
-60: 0x12d90bc1c 
-61: 0x12d90d728 
-62: 0x12d91a46c 
-63: 0x12d75933c 
-64: 0x12d90c2a0 
-65: 0x12d90e640 
-66: 0x12d934a54 
-67: 0x12d759430 
-68: 0x12d90dc1c 
-69: 0x12d90e640 
-70: 0x12d91a46c 
-71: 0x12d759430 
-72: 0x12d90c2a0 
-73: 0x12d90e640 
-74: 0x12d90e640 
-75: 0x12d90d0ec 
-76: 0x12d90e640 
-77: 0x12d90e424 
-78: 0x12d90e640 
-79: 0x12d90e640 
-80: 0x12d75933c 
-81: 0x12d90bc1c 
-82: 0x12d90d728 
-83: 0x12d91a46c 
-84: 0x12d759430 
-85: 0x12d90c2a0 
-86: 0x12d90e640 
-87: 0x12d934a54 
-88: 0x12d759430 
-89: 0x12d90dc1c 
-90: 0x12d90e640 
-91: 0x12d90d0ec 
-92: 0x12d90e640 
-93: 0x12d90e424 
-94: 0x12d90e640 
-95: 0x12d90e640 
-96: 0x12d75933c 
-97: 0x12d90bc1c 
-98: 0x12d90d728 
-99: 0x12d91a46c 
-100: 0x12d759430 
-101: 0x12d90c2a0 
-102: 0x12d90e640 
-103: 0x12d934a54 
-104: 0x12d759430 
-105: 0x12d90dc1c 
-106: 0x12d90e640 
-107: 0x12d91a46c 
-108: 0x12d759430 
-109: 0x12d90c2a0 
-110: 0x12d90e640 
-111: 0x12d934a54 
-112: 0x12d759430 
-113: 0x12d90dc1c 
-114: 0x12d90e640 
-115: 0x12d91a46c 
-116: 0x12d75933c 
-117: 0x12d90c2a0 
-118: 0x12d90e640 
-119: 0x12d90e640 
-120: 0x12d90d0ec 
-121: 0x12d90e640 
-122: 0x12d90e640 
-123: 0x12d90e640 
-124: 0x12d75933c 
-125: 0x12d90bc1c 
-126: 0x12d90d728 
-127: 0x12d91a46c 
-128: 0x12d75933c 
-129: 0x12d90c2a0 
-130: 0x12d90e640 
-131: 0x12d934a54 
-132: 0x12d759430 
-133: 0x12d90dc1c 
-134: 0x12d90e640 
-135: 0x12d91a46c 
-136: 0x12d759430 
-137: 0x12d90c2a0 
-138: 0x12d90e640 
-139: 0x12d90e640 
-140: 0x12d90d0ec 
-141: 0x12d90e640 
-142: 0x12d90e640 
-143: 0x12d90e640 
-144: 0x12d75933c 
-145: 0x12d90bc1c 
-146: 0x12d90d728 
-147: 0x12d91a46c 
-148: 0x12d759430 
-149: 0x12d90c2a0 
-150: 0x12d90e640 
-151: 0x12d934a54 
-152: 0x12d759430 
-153: 0x12d90dc1c 
-154: 0x12d90e640 
-155: 0x12d91a46c 
-156: 0x12d759430 
-157: 0x12d90c2a0 
-158: 0x12d90e640 
-159: 0x12d90e640 
-160: 0x12d90d0ec 
-161: 0x12d90e640 
-162: 0x12d90e424 
-163: 0x12d90e640 
-164: 0x12d90e640 
-165: 0x12d75933c 
-166: 0x12d90bc1c 
-167: 0x12d90d728 
-168: 0x12d91a46c 
-169: 0x12d75933c 
-170: 0x12d90c2a0 
-171: 0x12d90e640 
-172: 0x12d934a54 
-173: 0x12d759430 
-174: 0x12d90dc1c 
-175: 0x12d90e640 
-176: 0x12d90d0ec 
-177: 0x12d90e640 
-178: 0x12d90d0ec 
-179: 0x12d90e640 
-180: 0x12d734544 
-181: 0x12d75933c 
-182: 0x12d723890 
-183: 0x12d90b154 
-184: 0x12d90e640 
-185: 0x12d90e640 
-186: 0x12d905efc 
-187: 0x12d8f6d8c 
-188: 0x12d956340 
-189: 0x12d958d98 
-190: 0x102f88bec Builtins_InterpreterEntryTrampoline [/opt/homebrew/Cellar/node/24.8.0/bin/node]
-191: 0x12d95bcb4 
-192: 0x12d95bcb4 
-193: 0x12d95bcb4 
-194: 0x12d959954 
-195: 0x12d959d7c 
-196: 0x12d95bcb4 
-197: 0x12d95bcb4 
-198: 0x12d94c528 
-199: 0x12d95bc70 
-200: 0x12d95bcb4 
-201: 0x12d95bcb4 
-202: 0x12d94c528 
-203: 0x12d95bc70 
-204: 0x102f88bec Builtins_InterpreterEntryTrampoline [/opt/homebrew/Cellar/node/24.8.0/bin/node]
-205: 0x102f88bec Builtins_InterpreterEntryTrampoline [/opt/homebrew/Cellar/node/24.8.0/bin/node]
-206: 0x102f88bec Builtins_InterpreterEntryTrampoline [/opt/homebrew/Cellar/node/24.8.0/bin/node]
-207: 0x102f88bec Builtins_InterpreterEntryTrampoline [/opt/homebrew/Cellar/node/24.8.0/bin/node]
-208: 0x12d72d9dc 
-209: 0x12d6d09d8 
-210: 0x12d6e17c8 
-211: 0x12d6cc55c 
-212: 0x12d72ef10 
-213: 0x12d72e9c4 
-214: 0x102f868cc Builtins_JSEntryTrampoline [/opt/homebrew/Cellar/node/24.8.0/bin/node]
-215: 0x102f86570 Builtins_JSEntry [/opt/homebrew/Cellar/node/24.8.0/bin/node]
-216: 0x10286a6b8 v8::internal::(anonymous namespace)::Invoke(v8::internal::Isolate*, v8::internal::(anonymous namespace)::InvokeParams const&) [/opt/homebrew/Cellar/node/24.8.0/bin/node]
-217: 0x10286a0a8 v8::internal::Execution::Call(v8::internal::Isolate*, v8::internal::DirectHandle<v8::internal::Object>, v8::internal::DirectHandle<v8::internal::Object>, v8::base::Vector<v8::internal::DirectHandle<v8::internal::Object> const>) [/opt/homebrew/Cellar/node/24.8.0/bin/node]
-218: 0x1027561ac v8::Function::Call(v8::Isolate*, v8::Local<v8::Context>, v8::Local<v8::Value>, int, v8::Local<v8::Value>*) [/opt/homebrew/Cellar/node/24.8.0/bin/node]
-219: 0x102568be8 node::InternalMakeCallback(node::Environment*, v8::Local<v8::Object>, v8::Local<v8::Object>, v8::Local<v8::Function>, int, v8::Local<v8::Value>*, node::async_context, v8::Local<v8::Value>) [/opt/homebrew/Cellar/node/24.8.0/bin/node]
-220: 0x1025773e0 node::AsyncWrap::MakeCallback(v8::Local<v8::Function>, int, v8::Local<v8::Value>*) [/opt/homebrew/Cellar/node/24.8.0/bin/node]
-221: 0x102618a84 node::fs::FSReqCallback::Reject(v8::Local<v8::Value>) [/opt/homebrew/Cellar/node/24.8.0/bin/node]
-222: 0x102618ff4 node::fs::FSReqAfterScope::Reject(uv_fs_s*) [/opt/homebrew/Cellar/node/24.8.0/bin/node]
-223: 0x102619058 node::fs::FSReqAfterScope::Proceed() [/opt/homebrew/Cellar/node/24.8.0/bin/node]
-224: 0x1026192fc node::fs::AfterStat(uv_fs_s*) [/opt/homebrew/Cellar/node/24.8.0/bin/node]
-225: 0x10260f768 node::MakeLibuvRequestCallback<uv_fs_s, void (*)(uv_fs_s*)>::Wrapper(uv_fs_s*) [/opt/homebrew/Cellar/node/24.8.0/bin/node]
-226: 0x10634ed70 uv__work_done [/opt/homebrew/Cellar/libuv/1.51.0/lib/libuv.1.0.0.dylib]
-227: 0x10635258c uv__async_io [/opt/homebrew/Cellar/libuv/1.51.0/lib/libuv.1.0.0.dylib]
-228: 0x106360e28 uv__io_poll [/opt/homebrew/Cellar/libuv/1.51.0/lib/libuv.1.0.0.dylib]
-229: 0x106352a00 uv_run [/opt/homebrew/Cellar/libuv/1.51.0/lib/libuv.1.0.0.dylib]
-230: 0x10256940c node::SpinEventLoopInternal(node::Environment*) [/opt/homebrew/Cellar/node/24.8.0/bin/node]
-231: 0x102640db0 node::NodeMainInstance::Run(node::ExitCode*, node::Environment*) [/opt/homebrew/Cellar/node/24.8.0/bin/node]
-232: 0x102640b44 node::NodeMainInstance::Run() [/opt/homebrew/Cellar/node/24.8.0/bin/node]
-233: 0x1025ec5ac node::Start(int, char**) [/opt/homebrew/Cellar/node/24.8.0/bin/node]
-234: 0x18ba01d54 start [/usr/lib/dyld]
+[  1 of 420] Building Control.Semigroupoid
+[  2 of 420] Building Type.Proxy
+[  3 of 420] Building Data.Symbol
+[  4 of 420] Building Data.Unit
+[  5 of 420] Building Record.Unsafe
+[  6 of 420] Building Data.HeytingAlgebra
+[  7 of 420] Building Data.Void
+[  8 of 420] Building Data.Eq
+[  9 of 420] Building Control.Category
+[ 10 of 420] Building Data.Boolean
+[ 11 of 420] Building Data.Semigroup
+[ 12 of 420] Building Data.Show
+[ 13 of 420] Building Data.Ordering
+[ 14 of 420] Building Data.Semiring
+[ 15 of 420] Building Data.Ring
+[ 16 of 420] Building Data.Ord
+[ 17 of 420] Building Data.Function
+[ 18 of 420] Building Data.Functor
+[ 19 of 420] Building Control.Alt
+[ 20 of 420] Building Control.Apply
+[ 21 of 420] Building Control.Applicative
+[ 22 of 420] Building Control.Bind
+[ 23 of 420] Building Control.Plus
+[ 24 of 420] Building Data.BooleanAlgebra
+[ 25 of 420] Building Data.Bounded
+[ 26 of 420] Building Data.CommutativeRing
+[ 27 of 420] Building Data.EuclideanRing
+[ 28 of 420] Building Control.Monad
+[ 29 of 420] Building Data.Monoid
+[ 30 of 420] Building Data.DivisionRing
+[ 31 of 420] Building Data.Field
+[ 32 of 420] Building Data.NaturalTransformation
+[ 33 of 420] Building Prelude
+[ 34 of 420] Building Data.Monoid.Additive
+[ 35 of 420] Building Control.Alternative
+[ 36 of 420] Building Control.Extend
+[ 37 of 420] Building Control.Comonad
+[ 38 of 420] Building Data.Monoid.Conj
+[ 39 of 420] Building Data.Monoid.Disj
+[ 40 of 420] Building Data.Monoid.Dual
+[ 41 of 420] Building Data.Monoid.Endo
+[ 42 of 420] Building Data.Monoid.Multiplicative
+[ 43 of 420] Building Data.Semigroup.First
+[ 44 of 420] Building Data.Semigroup.Last
+[ 45 of 420] Building Unsafe.Coerce
+[ 46 of 420] Building Safe.Coerce
+[ 47 of 420] Building Data.Newtype
+[ 48 of 420] Building Data.Monoid.Alternate
+[ 49 of 420] Building Data.Functor.Invariant
+[ 50 of 420] Building Data.Const
+[ 51 of 420] Building Data.Generic.Rep
+[ 52 of 420] Building Data.Maybe
+[ 53 of 420] Building Data.Either
+[ 54 of 420] Building Control.Lazy
+[ 55 of 420] Building Control.MonadPlus
+[ 56 of 420] Building Data.Functor.App
+[ 57 of 420] Building Data.Functor.Compose
+[ 58 of 420] Building Data.Tuple
+[ 59 of 420] Building Data.Bifunctor
+[ 60 of 420] Building Data.Functor.Coproduct
+[ 61 of 420] Building Data.Functor.Product
+[ 62 of 420] Building Data.Identity
+[ 63 of 420] Building Data.Maybe.First
+[ 64 of 420] Building Data.Maybe.Last
+[ 65 of 420] Building Data.Foldable
+[ 66 of 420] Building Effect
+[ 67 of 420] Building Effect.Ref
+[ 68 of 420] Building Partial
+[ 69 of 420] Building Partial.Unsafe
+[ 70 of 420] Building Control.Monad.Rec.Class
+[ 71 of 420] Building Data.FunctorWithIndex
+[ 72 of 420] Building Data.FoldableWithIndex
+[ 73 of 420] Building Data.Ord.Max
+[ 74 of 420] Building Data.Ord.Min
+[ 75 of 420] Building Data.Semigroup.Foldable
+[ 76 of 420] Building Data.Traversable.Accum
+[ 77 of 420] Building Data.Traversable.Accum.Internal
+[ 78 of 420] Building Data.Traversable
+[ 79 of 420] Building Data.TraversableWithIndex
+[ 80 of 420] Building Data.Semigroup.Traversable
+[ 81 of 420] Building Data.Unfoldable1
+[ 82 of 420] Building Data.Unfoldable
+[ 83 of 420] Building Data.NonEmpty
+[ 84 of 420] Building Data.List.Types
+[ 85 of 420] Building Data.List.Internal
+[ 86 of 420] Building Data.List
+[ 87 of 420] Building Data.List.NonEmpty
+[ 88 of 420] Building Data.Show.Generic
+[ 89 of 420] Building Ansi.Codes
+[ 90 of 420] Building Ansi.Output
+[ 91 of 420] Building Control.Biapply
+[ 92 of 420] Building Control.Biapplicative
+[ 93 of 420] Building Control.Monad.Trans.Class
+[ 94 of 420] Building Data.CatQueue
+[ 95 of 420] Building Data.CatList
+[ 96 of 420] Building Control.Monad.Free
+[ 97 of 420] Building Control.Monad.State.Class
+[ 98 of 420] Building Control.Monad.Cont.Class
+[ 99 of 420] Building Effect.Exception
+[100 of 420] Building Control.Monad.Error.Class
+[101 of 420] Building Control.Monad.Reader.Class
+[102 of 420] Building Control.Monad.ST.Internal
+[103 of 420] Building Control.Monad.ST
+[104 of 420] Building Control.Monad.ST.Global
+[105 of 420] Building Control.Monad.ST.Class
+[106 of 420] Building Control.Monad.Writer.Class
+[107 of 420] Building Effect.Class
+[108 of 420] Building Control.Monad.State.Trans
+[109 of 420] Building Control.Monad.State
+[110 of 420] Building Data.Lazy
+[111 of 420] Building Control.Comonad.Cofree
+[112 of 420] Building Control.Monad.Identity.Trans
+[113 of 420] Building Control.Comonad.Trans.Class
+[114 of 420] Building Control.Comonad.Env.Trans
+[115 of 420] Building Control.Comonad.Store.Trans
+[116 of 420] Building Control.Comonad.Traced.Trans
+[117 of 420] Building Control.Comonad.Cofree.Class
+[118 of 420] Building Control.Comonad.Store.Class
+[119 of 420] Building Control.Comonad.Store
+[120 of 420] Building Control.Comonad.Env.Class
+[121 of 420] Building Control.Comonad.Env
+[122 of 420] Building Control.Comonad.Traced.Class
+[123 of 420] Building Control.Comonad.Traced
+[124 of 420] Building Control.Monad.Cont.Trans
+[125 of 420] Building Control.Monad.Cont
+[126 of 420] Building Control.Monad.Except.Trans
+[127 of 420] Building Control.Monad.Except
+[128 of 420] Building Control.Monad.Maybe.Trans
+[129 of 420] Building Type.Equality
+[130 of 420] Building Data.Distributive
+[131 of 420] Building Control.Monad.Reader.Trans
+[132 of 420] Building Control.Monad.Writer.Trans
+[133 of 420] Building Control.Monad.Free.Class
+[134 of 420] Building Control.Monad.Gen.Class
+[135 of 420] Building Control.Monad.Gen
+[136 of 420] Building Control.Monad.Gen.Common
+[137 of 420] Building Control.Monad.List.Trans
+[138 of 420] Building Control.Monad.RWS.Trans
+[139 of 420] Building Control.Monad.RWS
+[140 of 420] Building Control.Monad.Reader
+[141 of 420] Building Control.Monad.ST.Ref
+[142 of 420] Building Control.Monad.ST.Uncurried
+[143 of 420] Building Control.Monad.Trampoline
+[144 of 420] Building Control.Monad.Writer
+[145 of 420] Building Data.Functor.Contravariant
+[146 of 420] Building Data.Profunctor
+[147 of 420] Building Data.Profunctor.Closed
+[148 of 420] Building Data.Profunctor.Strong
+[149 of 420] Building Data.Functor.Costar
+[150 of 420] Building Data.Profunctor.Choice
+[151 of 420] Building Data.Profunctor.Star
+[152 of 420] Building Control.Parallel.Class
+[153 of 420] Building Control.Parallel
+[154 of 420] Building Data.Function.Uncurried
+[155 of 420] Building Data.Array.NonEmpty.Internal
+[156 of 420] Building Data.Array.ST
+[157 of 420] Building Data.Array.ST.Iterator
+[158 of 420] Building Data.Array
+[159 of 420] Building Foreign.Object.ST
+[160 of 420] Building Type.Data.Boolean
+[161 of 420] Building Type.Data.Ordering
+[162 of 420] Building Type.Data.Symbol
+[163 of 420] Building Type.RowList
+[164 of 420] Building Type.Row.Homogeneous
+[165 of 420] Building Foreign.Object
+[166 of 420] Building Data.Argonaut.Core
+[167 of 420] Building Data.Argonaut.Decode.Error
+[168 of 420] Building Data.Array.NonEmpty
+[169 of 420] Building Data.Int.Bits
+[170 of 420] Building Data.Number
+[171 of 420] Building Data.Int
+[172 of 420] Building Data.Map.Internal
+[173 of 420] Building Data.Set
+[174 of 420] Building Data.Map
+[175 of 420] Building Data.Enum
+[176 of 420] Building Data.String.Pattern
+[177 of 420] Building Data.String.Unsafe
+[178 of 420] Building Data.String.CodeUnits
+[179 of 420] Building Data.String.Common
+[180 of 420] Building Data.String.CodePoints
+[181 of 420] Building Data.String
+[182 of 420] Building Data.String.NonEmpty.Internal
+[183 of 420] Building Data.String.NonEmpty.CodePoints
+[184 of 420] Building Data.String.NonEmpty
+[185 of 420] Building Data.Argonaut.Decode.Decoders
+[186 of 420] Building Record.Unsafe.Union
+[187 of 420] Building Record
+[188 of 420] Building Data.Argonaut.Decode.Class
+[189 of 420] Building Data.Argonaut.Decode.Combinators
+[190 of 420] Building Data.Argonaut.Parser
+[191 of 420] Building Data.Argonaut.Decode.Parser
+[192 of 420] Building Data.Argonaut.Decode
+[193 of 420] Building Data.Argonaut.Encode.Encoders
+[194 of 420] Building Data.Argonaut.Encode.Class
+[195 of 420] Building Data.Argonaut.Encode.Combinators
+[196 of 420] Building Data.Argonaut.Encode
+[197 of 420] Building Data.Char.Gen
+[198 of 420] Building Data.String.Gen
+[199 of 420] Building Data.Argonaut.Gen
+[200 of 420] Building Data.Argonaut.JCursor
+[201 of 420] Building Data.Argonaut.JCursor.Gen
+[202 of 420] Building Data.Lens.Internal.Wander
+[203 of 420] Building Data.Lens.Internal.Indexed
+[204 of 420] Building Data.Lens.Internal.Shop
+[205 of 420] Building Data.Functor.Clown
+[206 of 420] Building Data.Functor.Flip
+[207 of 420] Building Data.Functor.Joker
+[208 of 420] Building Data.Functor.Product2
+[209 of 420] Building Data.Bifoldable
+[210 of 420] Building Data.Bitraversable
+[211 of 420] Building Data.Lens.Internal.Bazaar
+[212 of 420] Building Data.Lens.Internal.Exchange
+[213 of 420] Building Data.Profunctor.Cochoice
+[214 of 420] Building Data.Lens.Internal.Forget
+[215 of 420] Building Data.Lens.Internal.Grating
+[216 of 420] Building Data.Lens.Internal.Market
+[217 of 420] Building Data.Profunctor.Costrong
+[218 of 420] Building Data.Lens.Internal.Re
+[219 of 420] Building Data.Lens.Internal.Stall
+[220 of 420] Building Data.Lens.Internal.Tagged
+[221 of 420] Building Data.Lens.Types
+[222 of 420] Building Data.Lens.Lens
+[223 of 420] Building Data.Lens.Lens.Tuple
+[224 of 420] Building Data.Lens.Lens.Unit
+[225 of 420] Building Data.Lens.Prism
+[226 of 420] Building Data.Lens.Prism.Either
+[227 of 420] Building Data.Lens.Prism.Maybe
+[228 of 420] Building Data.Lens.Common
+[229 of 420] Building Data.Lens.Fold
+[230 of 420] Building Data.Lens.Getter
+[231 of 420] Building Data.Lens.Internal.Zipping
+[232 of 420] Building Data.Lens.Grate
+[233 of 420] Building Data.Lens.Iso
+[234 of 420] Building Data.Lens.Setter
+[235 of 420] Building Data.Lens.Iso.Newtype
+[236 of 420] Building Data.Lens.Indexed
+[237 of 420] Building Data.Lens.Traversal
+[238 of 420] Building Data.Lens
+[239 of 420] Building Data.Argonaut.Prisms
+[240 of 420] Building Data.Argonaut.Traversals
+[241 of 420] Building Data.Argonaut
+[242 of 420] Building Data.Array.Partial
+[243 of 420] Building Data.Array.ST.Partial
+[244 of 420] Building Data.ArrayBuffer.Types
+[245 of 420] Building Data.Bifunctor.Join
+[246 of 420] Building Data.Bounded.Generic
+[247 of 420] Building Data.Char
+[248 of 420] Building Data.Comparison
+[249 of 420] Building Data.Exists
+[250 of 420] Building Data.Coyoneda
+[251 of 420] Building Data.Date.Component
+[252 of 420] Building Data.Enum.Gen
+[253 of 420] Building Data.Date.Component.Gen
+[254 of 420] Building Data.Time.Duration
+[255 of 420] Building Data.Date
+[256 of 420] Building Data.Date.Gen
+[257 of 420] Building Data.Time.Component
+[258 of 420] Building Data.Time
+[259 of 420] Building Data.DateTime
+[260 of 420] Building Data.Time.Component.Gen
+[261 of 420] Building Data.Time.Gen
+[262 of 420] Building Data.DateTime.Gen
+[263 of 420] Building Data.DateTime.Instant
+[264 of 420] Building Data.Equivalence
+[265 of 420] Building Data.Op
+[266 of 420] Building Data.Predicate
+[267 of 420] Building Data.Divide
+[268 of 420] Building Data.Decide
+[269 of 420] Building Data.Divisible
+[270 of 420] Building Data.Decidable
+[271 of 420] Building Data.Either.Inject
+[272 of 420] Building Data.Either.Nested
+[273 of 420] Building Data.Enum.Generic
+[274 of 420] Building Data.Eq.Generic
+[275 of 420] Building Data.Functor.Coproduct.Inject
+[276 of 420] Building Data.Functor.Coproduct.Nested
+[277 of 420] Building Data.Functor.Product.Nested
+[278 of 420] Building Data.HeytingAlgebra.Generic
+[279 of 420] Building Data.Interval.Duration
+[280 of 420] Building Data.Interval.Duration.Iso
+[281 of 420] Building Data.Interval
+[282 of 420] Building Foreign
+[283 of 420] Building Data.JSDate
+[284 of 420] Building Data.Lens.AffineTraversal
+[285 of 420] Building Data.Lens.Index
+[286 of 420] Building Data.Lens.At
+[287 of 420] Building Data.Lens.Fold.Partial
+[288 of 420] Building Data.Lens.Internal.Focusing
+[289 of 420] Building Data.Lens.Lens.Product
+[290 of 420] Building Data.Lens.Lens.Void
+[291 of 420] Building Data.Lens.Prism.Coproduct
+[292 of 420] Building Data.Lens.Record
+[293 of 420] Building Data.Lens.Zoom
+[294 of 420] Building Data.List.Lazy.Types
+[295 of 420] Building Data.List.Lazy
+[296 of 420] Building Data.List.Lazy.NonEmpty
+[297 of 420] Building Data.List.Partial
+[298 of 420] Building Data.List.ZipList
+[299 of 420] Building Data.Map.Gen
+[300 of 420] Building Data.Monoid.Generic
+[301 of 420] Building Data.Nullable
+[302 of 420] Building Data.Number.Approximate
+[303 of 420] Building Data.Number.Format
+[304 of 420] Building Data.Ord.Down
+[305 of 420] Building Data.Ord.Generic
+[306 of 420] Building Data.Posix.Signal
+[307 of 420] Building Data.Posix
+[308 of 420] Building Data.Profunctor.Join
+[309 of 420] Building Data.Profunctor.Split
+[310 of 420] Building Data.Reflectable
+[311 of 420] Building Data.Ring.Generic
+[312 of 420] Building Data.Semigroup.Generic
+[313 of 420] Building Data.Semiring.Generic
+[314 of 420] Building Data.Set.NonEmpty
+[315 of 420] Building Data.String.CaseInsensitive
+[316 of 420] Building Data.String.NonEmpty.CaseInsensitive
+[317 of 420] Building Data.String.NonEmpty.CodeUnits
+[318 of 420] Building Data.String.Regex.Flags
+[319 of 420] Building Data.String.Regex
+[320 of 420] Building Data.String.Regex.Unsafe
+[321 of 420] Building Data.Time.Duration.Gen
+[322 of 420] Building Data.Tuple.Nested
+[323 of 420] Building Data.Yoneda
+[324 of 420] Building Debug
+[325 of 420] Building Dodo.Internal
+[326 of 420] Building Dodo.Internal.Buffer
+[327 of 420] Building Dodo
+[328 of 420] Building Dodo.Ansi
+[329 of 420] Building Dodo.Box
+[330 of 420] Building Dodo.Common
+[331 of 420] Building Effect.Unsafe
+[332 of 420] Building Effect.Aff
+[333 of 420] Building Effect.Aff.Class
+[334 of 420] Building Effect.Uncurried
+[335 of 420] Building Effect.Aff.Compat
+[336 of 420] Building Effect.Console
+[337 of 420] Building Effect.Class.Console
+[338 of 420] Building Effect.Exception.Unsafe
+[339 of 420] Building Foreign.Index
+[340 of 420] Building Foreign.Keys
+[341 of 420] Building Foreign.Object.Gen
+[342 of 420] Building Foreign.Object.ST.Unsafe
+[343 of 420] Building Foreign.Object.Unsafe
+[344 of 420] Building Gopurs.FfiTypes
+[345 of 420] Building PureScript.Backend.Optimizer.CoreFn
+[346 of 420] Building Gopurs.GoAst
+[347 of 420] Building Gopurs.Printer
+[348 of 420] Building Node.Buffer.Types
+[349 of 420] Building Node.Encoding
+[350 of 420] Building Node.Buffer.Immutable
+[351 of 420] Building Node.Buffer.Class
+[352 of 420] Building Node.Buffer
+[353 of 420] Building Node.FS.Constants
+[354 of 420] Building Node.FS
+[355 of 420] Building Node.FS.Perms
+[356 of 420] Building Node.FS.Stats
+[357 of 420] Building Node.Path
+[358 of 420] Building Node.FS.Sync
+[359 of 420] Building PureScript.Backend.Optimizer.Syntax
+[360 of 420] Building PureScript.Backend.Optimizer.Analysis
+[361 of 420] Building PureScript.Backend.Optimizer.Utils
+[362 of 420] Building PureScript.Backend.Optimizer.Semantics
+[363 of 420] Building PureScript.Backend.Optimizer.Codegen.Tco
+[364 of 420] Building PureScript.CST.Types
+[365 of 420] Building PureScript.CST.Print
+[366 of 420] Building PureScript.CST.Errors
+[367 of 420] Building PureScript.CST.Layout
+[368 of 420] Building PureScript.CST.TokenStream
+[369 of 420] Building PureScript.CST.Lexer
+[370 of 420] Building PureScript.CST.Parser.Monad
+[371 of 420] Building PureScript.Backend.Optimizer.Directives
+[372 of 420] Building PureScript.Backend.Optimizer.Semantics.Foreign
+[373 of 420] Building PureScript.Backend.Optimizer.Convert
+[374 of 420] Building PureScript.Backend.Optimizer.FfiSupport
+[375 of 420] Building PureScript.Backend.Optimizer.FreeVars
+[376 of 420] Building PureScript.Backend.Optimizer.Substitute
+[377 of 420] Building PureScript.Backend.Optimizer.Monomorphize
+[378 of 420] Building Gopurs.CodeGen
+[379 of 420] Building Gopurs.CodeGenBackend
+[380 of 420] Building Gopurs.FBIP
+[381 of 420] Building Gopurs.FfiSupport
+[382 of 420] Building Gopurs.QuoteTAST
+[383 of 420] Building Gopurs.OptimizeTAST
+[384 of 420] Building Gopurs.Runtime
+[385 of 420] Building Gopurs.ShowTco
+[386 of 420] Building Gopurs.TestTrace
+[387 of 420] Building Gopurs.UsageAnalysis
+[388 of 420] Building Node.FS.Async
+[389 of 420] Building Node.FS.Aff
+[390 of 420] Building Node.Symbol
+[391 of 420] Building Node.EventEmitter
+[392 of 420] Building Node.EventEmitter.UtilTypes
+[393 of 420] Building Node.Platform
+[394 of 420] Building Node.Stream
+[395 of 420] Building Node.Process
+[396 of 420] Building PureScript.Backend.Optimizer.CoreFn.Json
+[397 of 420] Building PureScript.Backend.Optimizer.CoreFn.Sort
+[398 of 420] Building PureScript.Backend.Optimizer.Directives.Defaults
+[399 of 420] Building PureScript.Backend.Optimizer.App
+[400 of 420] Building PureScript.Backend.Optimizer.Builder
+[401 of 420] Building Main
+[402 of 420] Building Node.Buffer.Constants
+[403 of 420] Building Node.Buffer.ST
+[404 of 420] Building Node.FS.Stream
+[405 of 420] Building Node.Stream.Aff
+[406 of 420] Building PureScript.Backend.Optimizer.Debug
+[407 of 420] Building PureScript.Backend.Optimizer.Reachability
+[408 of 420] Building PureScript.Backend.Optimizer.Tracer.Printer
+[409 of 420] Building PureScript.CST.ModuleGraph
+[410 of 420] Building PureScript.CST.Parser
+[411 of 420] Building PureScript.CST.Range.TokenList
+[412 of 420] Building PureScript.CST.Range
+[413 of 420] Building Type.Row
+[414 of 420] Building PureScript.CST.Traversal
+[415 of 420] Building PureScript.CST
+[416 of 420] Building Record.Builder
+[417 of 420] Building Spago.Generated.BuildInfo
+[418 of 420] Building TestMangle
+[419 of 420] Building Type.Function
+[420 of 420] Building Type.Prelude
+
+  bin/gopurs.js  1.0mb ⚠️
+
+⚡ Done in 21ms
+Running tests from /Users/0x1/Documents/htdocs/gopurs/gopurs/tests/passing...
+=> Cleaning Spago and output cache...
+=> Testing DerivingFunctor.purs
+unexpected fault address 0x102a1c000
+fatal error: fault
+[signal SIGBUS: bus error code=0x1 addr=0x102a1c000 pc=0x102781df0]
+
+goroutine 1 gp=0x2527c7f741e0 m=9 mp=0x254006080008 [running]:
+runtime.throw({0x1027a592b?, 0x7d?})
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/panic.go:1229 +0x38 fp=0x2527c7fa3600 sp=0x2527c7fa35d0 pc=0x1026b34f8
+runtime.sigpanic()
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/signal_unix.go:928 +0x164 fp=0x2527c7fa3660 sp=0x2527c7fa3600 pc=0x1026b4b04
+gopurs/output/purescript.Get_Main_functorM1.func1.1.1.3(...)
+	/Users/0x1/Documents/htdocs/gopurs/gopurs/tests/runner/output/purescript/Main.go:936
+gopurs/output/purescript.Get_Main_functorM1.func1.1.1({0x2527c7fa3bd8?, 0x102655cc8?, 0x2527c8094300?})
+	/Users/0x1/Documents/htdocs/gopurs/gopurs/tests/runner/output/purescript/Main.go:940 +0x600 fp=0x2527c7fa3bb0 sp=0x2527c7fa3670 pc=0x102781df0
+gopurs/output/gopurs_runtime.Apply({0x1, 0x0, 0x2527c8094320}, {0x10265676c?, 0x20?, 0x2527c8094300?})
+	/Users/0x1/Documents/htdocs/gopurs/gopurs/tests/runner/output/gopurs_runtime/runtime.go:484 +0x6c fp=0x2527c7fa3c20 sp=0x2527c7fa3bb0 pc=0x10270f60c
+gopurs/output/gopurs_runtime.Apply2({0x3, 0x1, 0x0}, {0x1029436f0?, 0x2?, 0x102943e20?}, {0x0?, 0x0?, 0x2527c8094300?})
+	/Users/0x1/Documents/htdocs/gopurs/gopurs/tests/runner/output/gopurs_runtime/runtime.go:535 +0x164 fp=0x2527c7fa3ca0 sp=0x2527c7fa3c20 pc=0x102710704
+gopurs/output/purescript.Get_Main_maTests.func1.1({0x6a?, 0x10000f9b4d5a7?, 0x1026be7a0?})
+	/Users/0x1/Documents/htdocs/gopurs/gopurs/tests/runner/output/purescript/Main.go:3437 +0x19ec fp=0x2527c7fa5d90 sp=0x2527c7fa3ca0 pc=0x10276a01c
+gopurs/output/gopurs_runtime.Apply({0x1, 0x0, 0x102943750}, {0x2527c80a4ee0?, 0x2527c8086e48?, 0x0?})
+	/Users/0x1/Documents/htdocs/gopurs/gopurs/tests/runner/output/gopurs_runtime/runtime.go:484 +0x6c fp=0x2527c7fa5e00 sp=0x2527c7fa5d90 pc=0x10270f60c
+gopurs/output/purescript.Get_Main_main.func1.1({0x1027a5836?, 0x1000000000005?, 0x1026be7a0?})
+	/Users/0x1/Documents/htdocs/gopurs/gopurs/tests/runner/output/purescript/Main.go:4774 +0x2c fp=0x2527c7fa5e60 sp=0x2527c7fa5e00 pc=0x10276850c
+gopurs/output/gopurs_runtime.Apply({0x1, 0x0, 0x102943760}, {0x0?, 0x0?, 0x0?})
+	/Users/0x1/Documents/htdocs/gopurs/gopurs/tests/runner/output/gopurs_runtime/runtime.go:484 +0x6c fp=0x2527c7fa5ed0 sp=0x2527c7fa5e60 pc=0x10270f60c
+main.main()
+	/Users/0x1/Documents/htdocs/gopurs/gopurs/tests/runner/output/main/main.go:18 +0xb0 fp=0x2527c7fa5f30 sp=0x2527c7fa5ed0 pc=0x1027a5150
+runtime.main()
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/proc.go:290 +0x2b4 fp=0x2527c7fa5fd0 sp=0x2527c7fa5f30 pc=0x102681904
+runtime.goexit({})
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/asm_arm64.s:1447 +0x4 fp=0x2527c7fa5fd0 sp=0x2527c7fa5fd0 pc=0x1026b9f94
+
+goroutine 17 gp=0x2527c800c3c0 m=nil [force gc (idle)]:
+runtime.gopark(0x0?, 0x0?, 0x0?, 0x0?, 0x0?)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/proc.go:462 +0xbc fp=0x2527c7fe4790 sp=0x2527c7fe4770 pc=0x1026b35cc
+runtime.goparkunlock(...)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/proc.go:468
+runtime.forcegchelper()
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/proc.go:375 +0xb4 fp=0x2527c7fe47d0 sp=0x2527c7fe4790 pc=0x102681c24
+runtime.goexit({})
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/asm_arm64.s:1447 +0x4 fp=0x2527c7fe47d0 sp=0x2527c7fe47d0 pc=0x1026b9f94
+created by runtime.init.7 in goroutine 1
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/proc.go:363 +0x24
+
+goroutine 18 gp=0x2527c800c5a0 m=nil [GC sweep wait]:
+runtime.gopark(0x0?, 0x0?, 0x0?, 0x0?, 0x0?)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/proc.go:462 +0xbc fp=0x2527c7fe4f70 sp=0x2527c7fe4f50 pc=0x1026b35cc
+runtime.goparkunlock(...)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/proc.go:468
+runtime.bgsweep(0x2527c801a000)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgcsweep.go:279 +0x9c fp=0x2527c7fe4fb0 sp=0x2527c7fe4f70 pc=0x10266cf9c
+runtime.gcenable.gowrap1()
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:214 +0x20 fp=0x2527c7fe4fd0 sp=0x2527c7fe4fb0 pc=0x10265e730
+runtime.goexit({})
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/asm_arm64.s:1447 +0x4 fp=0x2527c7fe4fd0 sp=0x2527c7fe4fd0 pc=0x1026b9f94
+created by runtime.gcenable in goroutine 1
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:214 +0x6c
+
+goroutine 19 gp=0x2527c800c780 m=nil [GC scavenge wait]:
+runtime.gopark(0x10000?, 0x1027b3430?, 0x0?, 0x0?, 0x0?)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/proc.go:462 +0xbc fp=0x2527c7fe5760 sp=0x2527c7fe5740 pc=0x1026b35cc
+runtime.goparkunlock(...)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/proc.go:468
+runtime.(*scavengerState).park(0x102971a40)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgcscavenge.go:425 +0x5c fp=0x2527c7fe5790 sp=0x2527c7fe5760 pc=0x10266ab8c
+runtime.bgscavenge(0x2527c801a000)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgcscavenge.go:658 +0xac fp=0x2527c7fe57b0 sp=0x2527c7fe5790 pc=0x10266b12c
+runtime.gcenable.gowrap2()
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:215 +0x20 fp=0x2527c7fe57d0 sp=0x2527c7fe57b0 pc=0x10265e6f0
+runtime.goexit({})
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/asm_arm64.s:1447 +0x4 fp=0x2527c7fe57d0 sp=0x2527c7fe57d0 pc=0x1026b9f94
+created by runtime.gcenable in goroutine 1
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:215 +0xac
+
+goroutine 2 gp=0x2527c7f74f00 m=nil [GOMAXPROCS updater (idle)]:
+runtime.gopark(0x0?, 0x0?, 0x0?, 0x0?, 0x0?)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/proc.go:462 +0xbc fp=0x2527c7fe8f70 sp=0x2527c7fe8f50 pc=0x1026b35cc
+runtime.goparkunlock(...)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/proc.go:468
+runtime.updateMaxProcsGoroutine()
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/proc.go:7095 +0xf4 fp=0x2527c7fe8fd0 sp=0x2527c7fe8f70 pc=0x1026903f4
+runtime.goexit({})
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/asm_arm64.s:1447 +0x4 fp=0x2527c7fe8fd0 sp=0x2527c7fe8fd0 pc=0x1026b9f94
+created by runtime.defaultGOMAXPROCSUpdateEnable in goroutine 1
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/proc.go:7083 +0x48
+
+goroutine 3 gp=0x2527c7f750e0 m=nil [finalizer wait]:
+runtime.gopark(0x0?, 0x0?, 0xb8?, 0x85?, 0x1026b4114?)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/proc.go:462 +0xbc fp=0x2527c7fe8580 sp=0x2527c7fe8560 pc=0x1026b35cc
+runtime.runFinalizers()
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mfinal.go:210 +0x100 fp=0x2527c7fe87d0 sp=0x2527c7fe8580 pc=0x10265d800
+runtime.goexit({})
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/asm_arm64.s:1447 +0x4 fp=0x2527c7fe87d0 sp=0x2527c7fe87d0 pc=0x1026b9f94
+created by runtime.createfing in goroutine 1
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mfinal.go:172 +0x78
+
+goroutine 4 gp=0x2527c7f752c0 m=nil [GC worker (idle)]:
+runtime.gopark(0x0?, 0x0?, 0x0?, 0x0?, 0x0?)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/proc.go:462 +0xbc fp=0x2527c7fe9720 sp=0x2527c7fe9700 pc=0x1026b35cc
+runtime.gcBgMarkWorker(0x2527c7f962a0)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1791 +0xe0 fp=0x2527c7fe97b0 sp=0x2527c7fe9720 pc=0x102660f10
+runtime.gcBgMarkStartWorkers.gowrap1()
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1695 +0x20 fp=0x2527c7fe97d0 sp=0x2527c7fe97b0 pc=0x102660e10
+runtime.goexit({})
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/asm_arm64.s:1447 +0x4 fp=0x2527c7fe97d0 sp=0x2527c7fe97d0 pc=0x1026b9f94
+created by runtime.gcBgMarkStartWorkers in goroutine 1
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1695 +0x134
+
+goroutine 5 gp=0x2527c7f754a0 m=nil [GC worker (idle)]:
+runtime.gopark(0x102998c00?, 0x3?, 0xa?, 0x95?, 0x0?)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/proc.go:462 +0xbc fp=0x2527c7fe9f20 sp=0x2527c7fe9f00 pc=0x1026b35cc
+runtime.gcBgMarkWorker(0x2527c7f962a0)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1791 +0xe0 fp=0x2527c7fe9fb0 sp=0x2527c7fe9f20 pc=0x102660f10
+runtime.gcBgMarkStartWorkers.gowrap1()
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1695 +0x20 fp=0x2527c7fe9fd0 sp=0x2527c7fe9fb0 pc=0x102660e10
+runtime.goexit({})
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/asm_arm64.s:1447 +0x4 fp=0x2527c7fe9fd0 sp=0x2527c7fe9fd0 pc=0x1026b9f94
+created by runtime.gcBgMarkStartWorkers in goroutine 1
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1695 +0x134
+
+goroutine 6 gp=0x2527c7f75680 m=nil [GC worker (idle)]:
+runtime.gopark(0x102998c00?, 0x3?, 0xd?, 0xe8?, 0x0?)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/proc.go:462 +0xbc fp=0x2527c7fea720 sp=0x2527c7fea700 pc=0x1026b35cc
+runtime.gcBgMarkWorker(0x2527c7f962a0)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1791 +0xe0 fp=0x2527c7fea7b0 sp=0x2527c7fea720 pc=0x102660f10
+runtime.gcBgMarkStartWorkers.gowrap1()
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1695 +0x20 fp=0x2527c7fea7d0 sp=0x2527c7fea7b0 pc=0x102660e10
+runtime.goexit({})
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/asm_arm64.s:1447 +0x4 fp=0x2527c7fea7d0 sp=0x2527c7fea7d0 pc=0x1026b9f94
+created by runtime.gcBgMarkStartWorkers in goroutine 1
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1695 +0x134
+
+goroutine 7 gp=0x2527c7f75860 m=nil [GC worker (idle)]:
+runtime.gopark(0x102998c00?, 0x3?, 0x95?, 0x83?, 0x0?)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/proc.go:462 +0xbc fp=0x2527c7feaf20 sp=0x2527c7feaf00 pc=0x1026b35cc
+runtime.gcBgMarkWorker(0x2527c7f962a0)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1791 +0xe0 fp=0x2527c7feafb0 sp=0x2527c7feaf20 pc=0x102660f10
+runtime.gcBgMarkStartWorkers.gowrap1()
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1695 +0x20 fp=0x2527c7feafd0 sp=0x2527c7feafb0 pc=0x102660e10
+runtime.goexit({})
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/asm_arm64.s:1447 +0x4 fp=0x2527c7feafd0 sp=0x2527c7feafd0 pc=0x1026b9f94
+created by runtime.gcBgMarkStartWorkers in goroutine 1
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1695 +0x134
+
+goroutine 8 gp=0x2527c7f75a40 m=nil [GC worker (idle)]:
+runtime.gopark(0x102998c00?, 0x1?, 0x60?, 0xe8?, 0x0?)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/proc.go:462 +0xbc fp=0x2527c7feb720 sp=0x2527c7feb700 pc=0x1026b35cc
+runtime.gcBgMarkWorker(0x2527c7f962a0)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1791 +0xe0 fp=0x2527c7feb7b0 sp=0x2527c7feb720 pc=0x102660f10
+runtime.gcBgMarkStartWorkers.gowrap1()
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1695 +0x20 fp=0x2527c7feb7d0 sp=0x2527c7feb7b0 pc=0x102660e10
+runtime.goexit({})
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/asm_arm64.s:1447 +0x4 fp=0x2527c7feb7d0 sp=0x2527c7feb7d0 pc=0x1026b9f94
+created by runtime.gcBgMarkStartWorkers in goroutine 1
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1695 +0x134
+
+goroutine 9 gp=0x2527c7f75c20 m=nil [GC worker (idle)]:
+runtime.gopark(0x102998c00?, 0x3?, 0x89?, 0x78?, 0x0?)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/proc.go:462 +0xbc fp=0x2527c7febf20 sp=0x2527c7febf00 pc=0x1026b35cc
+runtime.gcBgMarkWorker(0x2527c7f962a0)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1791 +0xe0 fp=0x2527c7febfb0 sp=0x2527c7febf20 pc=0x102660f10
+runtime.gcBgMarkStartWorkers.gowrap1()
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1695 +0x20 fp=0x2527c7febfd0 sp=0x2527c7febfb0 pc=0x102660e10
+runtime.goexit({})
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/asm_arm64.s:1447 +0x4 fp=0x2527c7febfd0 sp=0x2527c7febfd0 pc=0x1026b9f94
+created by runtime.gcBgMarkStartWorkers in goroutine 1
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1695 +0x134
+
+goroutine 10 gp=0x2527c80ca000 m=nil [GC worker (idle)]:
+runtime.gopark(0x102998c00?, 0x1?, 0x36?, 0xee?, 0x0?)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/proc.go:462 +0xbc fp=0x2527c80d0720 sp=0x2527c80d0700 pc=0x1026b35cc
+runtime.gcBgMarkWorker(0x2527c7f962a0)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1791 +0xe0 fp=0x2527c80d07b0 sp=0x2527c80d0720 pc=0x102660f10
+runtime.gcBgMarkStartWorkers.gowrap1()
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1695 +0x20 fp=0x2527c80d07d0 sp=0x2527c80d07b0 pc=0x102660e10
+runtime.goexit({})
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/asm_arm64.s:1447 +0x4 fp=0x2527c80d07d0 sp=0x2527c80d07d0 pc=0x1026b9f94
+created by runtime.gcBgMarkStartWorkers in goroutine 1
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1695 +0x134
+
+goroutine 11 gp=0x2527c80ca1e0 m=nil [GC worker (idle)]:
+runtime.gopark(0x102998c00?, 0x3?, 0xf2?, 0xb3?, 0x0?)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/proc.go:462 +0xbc fp=0x2527c80d0f20 sp=0x2527c80d0f00 pc=0x1026b35cc
+runtime.gcBgMarkWorker(0x2527c7f962a0)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1791 +0xe0 fp=0x2527c80d0fb0 sp=0x2527c80d0f20 pc=0x102660f10
+runtime.gcBgMarkStartWorkers.gowrap1()
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1695 +0x20 fp=0x2527c80d0fd0 sp=0x2527c80d0fb0 pc=0x102660e10
+runtime.goexit({})
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/asm_arm64.s:1447 +0x4 fp=0x2527c80d0fd0 sp=0x2527c80d0fd0 pc=0x1026b9f94
+created by runtime.gcBgMarkStartWorkers in goroutine 1
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1695 +0x134
+
+goroutine 12 gp=0x2527c80ca3c0 m=nil [GC worker (idle)]:
+runtime.gopark(0x102998c00?, 0x1?, 0x95?, 0xee?, 0x0?)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/proc.go:462 +0xbc fp=0x2527c80d1720 sp=0x2527c80d1700 pc=0x1026b35cc
+runtime.gcBgMarkWorker(0x2527c7f962a0)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1791 +0xe0 fp=0x2527c80d17b0 sp=0x2527c80d1720 pc=0x102660f10
+runtime.gcBgMarkStartWorkers.gowrap1()
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1695 +0x20 fp=0x2527c80d17d0 sp=0x2527c80d17b0 pc=0x102660e10
+runtime.goexit({})
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/asm_arm64.s:1447 +0x4 fp=0x2527c80d17d0 sp=0x2527c80d17d0 pc=0x1026b9f94
+created by runtime.gcBgMarkStartWorkers in goroutine 1
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1695 +0x134
+
+goroutine 13 gp=0x2527c80ca5a0 m=nil [GC worker (idle)]:
+runtime.gopark(0x102998c00?, 0x3?, 0x61?, 0x63?, 0x0?)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/proc.go:462 +0xbc fp=0x2527c80d1f20 sp=0x2527c80d1f00 pc=0x1026b35cc
+runtime.gcBgMarkWorker(0x2527c7f962a0)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1791 +0xe0 fp=0x2527c80d1fb0 sp=0x2527c80d1f20 pc=0x102660f10
+runtime.gcBgMarkStartWorkers.gowrap1()
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1695 +0x20 fp=0x2527c80d1fd0 sp=0x2527c80d1fb0 pc=0x102660e10
+runtime.goexit({})
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/asm_arm64.s:1447 +0x4 fp=0x2527c80d1fd0 sp=0x2527c80d1fd0 pc=0x1026b9f94
+created by runtime.gcBgMarkStartWorkers in goroutine 1
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1695 +0x134
+
+goroutine 14 gp=0x2527c80ca780 m=nil [GC worker (idle)]:
+runtime.gopark(0x102998c00?, 0x3?, 0x43?, 0x6d?, 0x0?)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/proc.go:462 +0xbc fp=0x2527c80d2720 sp=0x2527c80d2700 pc=0x1026b35cc
+runtime.gcBgMarkWorker(0x2527c7f962a0)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1791 +0xe0 fp=0x2527c80d27b0 sp=0x2527c80d2720 pc=0x102660f10
+runtime.gcBgMarkStartWorkers.gowrap1()
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1695 +0x20 fp=0x2527c80d27d0 sp=0x2527c80d27b0 pc=0x102660e10
+runtime.goexit({})
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/asm_arm64.s:1447 +0x4 fp=0x2527c80d27d0 sp=0x2527c80d27d0 pc=0x1026b9f94
+created by runtime.gcBgMarkStartWorkers in goroutine 1
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1695 +0x134
+
+goroutine 15 gp=0x2527c80ca960 m=nil [GC worker (idle)]:
+runtime.gopark(0x102998c00?, 0x3?, 0xb2?, 0x86?, 0x0?)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/proc.go:462 +0xbc fp=0x2527c80d2f20 sp=0x2527c80d2f00 pc=0x1026b35cc
+runtime.gcBgMarkWorker(0x2527c7f962a0)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1791 +0xe0 fp=0x2527c80d2fb0 sp=0x2527c80d2f20 pc=0x102660f10
+runtime.gcBgMarkStartWorkers.gowrap1()
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1695 +0x20 fp=0x2527c80d2fd0 sp=0x2527c80d2fb0 pc=0x102660e10
+runtime.goexit({})
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/asm_arm64.s:1447 +0x4 fp=0x2527c80d2fd0 sp=0x2527c80d2fd0 pc=0x1026b9f94
+created by runtime.gcBgMarkStartWorkers in goroutine 1
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1695 +0x134
+
+goroutine 16 gp=0x2527c80cab40 m=nil [GC worker (idle)]:
+runtime.gopark(0x102998c00?, 0x1?, 0xb1?, 0x11?, 0x0?)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/proc.go:462 +0xbc fp=0x2527c80d3720 sp=0x2527c80d3700 pc=0x1026b35cc
+runtime.gcBgMarkWorker(0x2527c7f962a0)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1791 +0xe0 fp=0x2527c80d37b0 sp=0x2527c80d3720 pc=0x102660f10
+runtime.gcBgMarkStartWorkers.gowrap1()
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1695 +0x20 fp=0x2527c80d37d0 sp=0x2527c80d37b0 pc=0x102660e10
+runtime.goexit({})
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/asm_arm64.s:1447 +0x4 fp=0x2527c80d37d0 sp=0x2527c80d37d0 pc=0x1026b9f94
+created by runtime.gcBgMarkStartWorkers in goroutine 1
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1695 +0x134
+
+goroutine 33 gp=0x2527c80cad20 m=nil [GC worker (idle)]:
+runtime.gopark(0x102998c00?, 0x3?, 0x53?, 0x6?, 0x0?)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/proc.go:462 +0xbc fp=0x2527c80d3f20 sp=0x2527c80d3f00 pc=0x1026b35cc
+runtime.gcBgMarkWorker(0x2527c7f962a0)
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1791 +0xe0 fp=0x2527c80d3fb0 sp=0x2527c80d3f20 pc=0x102660f10
+runtime.gcBgMarkStartWorkers.gowrap1()
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1695 +0x20 fp=0x2527c80d3fd0 sp=0x2527c80d3fb0 pc=0x102660e10
+runtime.goexit({})
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/asm_arm64.s:1447 +0x4 fp=0x2527c80d3fd0 sp=0x2527c80d3fd0 pc=0x1026b9f94
+created by runtime.gcBgMarkStartWorkers in goroutine 1
+	/opt/homebrew/Cellar/go/1.26.5/libexec/src/runtime/mgc.go:1695 +0x134
+   [0;31m[FAILED][0m Execution error
+
+Summary: [0;32m0 passed[0m, [0;31m1 failed[0m.

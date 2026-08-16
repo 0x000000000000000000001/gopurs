@@ -69,7 +69,12 @@ buildGlobalTypes modules = Array.foldl (\acc (Module m) ->
             Just t -> Map.insert (modName <> "." <> name) t acc'
             Nothing -> acc'
       processBind acc' (Rec bindings) = Array.foldl (\a b -> processBind a (NonRec b)) acc' bindings
-  in Array.foldl processBind acc m.decls
+      withDecls = Array.foldl processBind acc m.decls
+  in foldl (\acc' (Tuple (Ident name) mbTy) -> 
+        case mbTy of
+          Just ty -> Map.insert (modName <> "." <> name) ty acc'
+          Nothing -> acc'
+      ) withDecls (Map.toUnfoldable m.foreign :: Array (Tuple Ident (Maybe ExprType)))
   ) Map.empty modules
 
 inferExprType :: Expr Ann -> Maybe ExprType

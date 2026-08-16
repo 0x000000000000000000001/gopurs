@@ -376,10 +376,10 @@ var once_Main_foldableM1 sync.Once
 func Get_Main_foldableM1() gopurs_runtime.Value {
 	once_Main_foldableM1.Do(func() {
 		cache_Main_foldableM1 = gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer((&Constructor_Data_Foldable_Foldable{1, gopurs_runtime.Func(func(dictMonoid_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): mempty_1_0 -> gopurs_runtime.Value
+			// TAST (Let): mempty_1_0 shape=Other expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(TypeVar m)
 			mempty_1_0 := gopurs_runtime.RecordGet(dictMonoid_0, "mempty")
 			_ = mempty_1_0
-			// TAST (Let): Semigroup0_2_1 -> *Constructor_Data_Semigroup_Semigroup
+			// TAST (Let): Semigroup0_2_1 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 			Semigroup0_2_1 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_0, "Semigroup0"), gopurs_runtime.Value{}))
 			_ = Semigroup0_2_1
 			return gopurs_runtime.Func(func(f_3 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -395,7 +395,7 @@ func Get_Main_foldableM1() gopurs_runtime.Value {
 					}
 					{
 						if m_4.Type == 9 && m_4.IntVal == 769986722 {
-							// TAST (Let): Semigroup0_5_2 -> *Constructor_Data_Semigroup_Semigroup
+							// TAST (Let): Semigroup0_5_2 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 							Semigroup0_5_2 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_0, "Semigroup0"), gopurs_runtime.Value{}))
 							_ = Semigroup0_5_2
 							__t19 = gopurs_runtime.Apply2(gopurs_runtime.Box(Semigroup0_2_1.V0), gopurs_runtime.Apply(f_3, (*Constructor_Main_M1)(m_4.UnsafePtr).V0), gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), gopurs_runtime.Func(func(x_6 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -418,7 +418,7 @@ func Get_Main_foldableM1() gopurs_runtime.Value {
 					}
 					{
 						if m_4.Type == 9 && m_4.IntVal == 1830062304 {
-							// TAST (Let): Semigroup0_5_3 -> *Constructor_Data_Semigroup_Semigroup
+							// TAST (Let): Semigroup0_5_3 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 							Semigroup0_5_3 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_0, "Semigroup0"), gopurs_runtime.Value{}))
 							_ = Semigroup0_5_3
 							__t19 = gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), gopurs_runtime.Func(func(x_6 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -433,10 +433,10 @@ func Get_Main_foldableM1() gopurs_runtime.Value {
 					}
 					{
 						if m_4.Type == 9 && m_4.IntVal == 3190619783 {
-							// TAST (Let): Semigroup0_5_4 -> *Constructor_Data_Semigroup_Semigroup
+							// TAST (Let): Semigroup0_5_4 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 							Semigroup0_5_4 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_0, "Semigroup0"), gopurs_runtime.Value{}))
 							_ = Semigroup0_5_4
-							// TAST (Let): Semigroup0_5_5 -> *Constructor_Data_Semigroup_Semigroup
+							// TAST (Let): Semigroup0_5_5 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 							Semigroup0_5_5 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_0, "Semigroup0"), gopurs_runtime.Value{}))
 							_ = Semigroup0_5_5
 							__t19 = gopurs_runtime.Apply2(gopurs_runtime.Box(Semigroup0_2_1.V0), gopurs_runtime.Apply(f_3, gopurs_runtime.RecordGet((*Constructor_Main_M4)(m_4.UnsafePtr).V0, "a")), gopurs_runtime.Apply2(gopurs_runtime.Box(Semigroup0_2_1.V0), gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), gopurs_runtime.Func(func(x_6 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -462,10 +462,10 @@ func Get_Main_foldableM1() gopurs_runtime.Value {
 					}
 					{
 						if m_4.Type == 9 && m_4.IntVal == 108241190 {
-							// TAST (Let): Semigroup0_5_6 -> *Constructor_Data_Semigroup_Semigroup
+							// TAST (Let): Semigroup0_5_6 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 							Semigroup0_5_6 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_0, "Semigroup0"), gopurs_runtime.Value{}))
 							_ = Semigroup0_5_6
-							// TAST (Let): Semigroup0_5_7 -> *Constructor_Data_Semigroup_Semigroup
+							// TAST (Let): Semigroup0_5_7 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 							Semigroup0_5_7 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_0, "Semigroup0"), gopurs_runtime.Value{}))
 							_ = Semigroup0_5_7
 							__t19 = gopurs_runtime.Apply2(gopurs_runtime.Box(Semigroup0_2_1.V0), gopurs_runtime.Apply(f_3, gopurs_runtime.RecordGet(gopurs_runtime.RecordGet((*Constructor_Main_M5)(m_4.UnsafePtr).V0, "nested"), "a")), gopurs_runtime.Apply2(gopurs_runtime.Box(Semigroup0_2_1.V0), gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), gopurs_runtime.Func(func(x_6 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -491,22 +491,22 @@ func Get_Main_foldableM1() gopurs_runtime.Value {
 					}
 					{
 						if m_4.Type == 9 && m_4.IntVal == 2066233029 {
-							// TAST (Let): Semigroup0_5_8 -> *Constructor_Data_Semigroup_Semigroup
+							// TAST (Let): Semigroup0_5_8 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 							Semigroup0_5_8 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_0, "Semigroup0"), gopurs_runtime.Value{}))
 							_ = Semigroup0_5_8
-							// TAST (Let): Semigroup0_5_9 -> *Constructor_Data_Semigroup_Semigroup
+							// TAST (Let): Semigroup0_5_9 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 							Semigroup0_5_9 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_0, "Semigroup0"), gopurs_runtime.Value{}))
 							_ = Semigroup0_5_9
-							// TAST (Let): Semigroup0_5_10 -> *Constructor_Data_Semigroup_Semigroup
+							// TAST (Let): Semigroup0_5_10 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 							Semigroup0_5_10 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_0, "Semigroup0"), gopurs_runtime.Value{}))
 							_ = Semigroup0_5_10
-							// TAST (Let): Semigroup0_5_11 -> *Constructor_Data_Semigroup_Semigroup
+							// TAST (Let): Semigroup0_5_11 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 							Semigroup0_5_11 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_0, "Semigroup0"), gopurs_runtime.Value{}))
 							_ = Semigroup0_5_11
-							// TAST (Let): Semigroup0_5_12 -> *Constructor_Data_Semigroup_Semigroup
+							// TAST (Let): Semigroup0_5_12 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 							Semigroup0_5_12 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_0, "Semigroup0"), gopurs_runtime.Value{}))
 							_ = Semigroup0_5_12
-							// TAST (Let): Semigroup0_5_13 -> *Constructor_Data_Semigroup_Semigroup
+							// TAST (Let): Semigroup0_5_13 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 							Semigroup0_5_13 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_0, "Semigroup0"), gopurs_runtime.Value{}))
 							_ = Semigroup0_5_13
 							__t19 = gopurs_runtime.Apply2(gopurs_runtime.Box(Semigroup0_2_1.V0), gopurs_runtime.Apply(f_3, (*Constructor_Main_M6)(m_4.UnsafePtr).V1), gopurs_runtime.Apply2(gopurs_runtime.Box(Semigroup0_2_1.V0), gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), gopurs_runtime.Func(func(x_6 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -555,19 +555,19 @@ func Get_Main_foldableM1() gopurs_runtime.Value {
 					}
 					{
 						if m_4.Type == 9 && m_4.IntVal == 1168316772 {
-							// TAST (Let): Semigroup0_5_14 -> *Constructor_Data_Semigroup_Semigroup
+							// TAST (Let): Semigroup0_5_14 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 							Semigroup0_5_14 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_0, "Semigroup0"), gopurs_runtime.Value{}))
 							_ = Semigroup0_5_14
-							// TAST (Let): Semigroup0_6_16 -> *Constructor_Data_Semigroup_Semigroup
+							// TAST (Let): Semigroup0_6_16 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 							Semigroup0_6_16 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_0, "Semigroup0"), gopurs_runtime.Value{}))
 							_ = Semigroup0_6_16
-							// TAST (Let): __local_var_6_15 -> gopurs_runtime.Value
+							// TAST (Let): __local_var_6_15 shape=Let(App(Var)) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Func [(TypeApp (TypeVar f) [(Record (Row [nested: (Record (Row [a: (TypeVar a), fa: (TypeApp (TypeVar f) [(TypeVar a)]), zArrayA: (Array (TypeVar a)), arrayIgnore: (Array Int), fIgnore: (TypeApp (TypeVar f) [Int]), ignore: Int] Any))] Any))])] (TypeVar m))
 							__local_var_6_15 := gopurs_runtime.Apply2(Get_Data_Foldable_foldrArray(), gopurs_runtime.Func(func(x_7 gopurs_runtime.Value) gopurs_runtime.Value {
 								return gopurs_runtime.Func(func(acc_8 gopurs_runtime.Value) gopurs_runtime.Value {
-									// TAST (Let): Semigroup0_9_17 -> *Constructor_Data_Semigroup_Semigroup
+									// TAST (Let): Semigroup0_9_17 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 									Semigroup0_9_17 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_0, "Semigroup0"), gopurs_runtime.Value{}))
 									_ = Semigroup0_9_17
-									// TAST (Let): Semigroup0_9_18 -> *Constructor_Data_Semigroup_Semigroup
+									// TAST (Let): Semigroup0_9_18 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 									Semigroup0_9_18 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_0, "Semigroup0"), gopurs_runtime.Value{}))
 									_ = Semigroup0_9_18
 									return gopurs_runtime.Apply2(gopurs_runtime.Box(Semigroup0_6_16.V0), gopurs_runtime.Apply2(gopurs_runtime.Box(Semigroup0_2_1.V0), gopurs_runtime.Apply(f_3, gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(x_7, "nested"), "a")), gopurs_runtime.Apply2(gopurs_runtime.Box(Semigroup0_2_1.V0), gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), gopurs_runtime.Func(func(x_10 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -975,7 +975,7 @@ func Get_Main_foldableM1() gopurs_runtime.Value {
 					}
 					{
 						if m_2.Type == 9 && m_2.IntVal == 1168316772 {
-							// TAST (Let): __local_var_3_21 -> gopurs_runtime.Value
+							// TAST (Let): __local_var_3_21 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Func [(TypeApp (TypeVar f) [(Record (Row [nested: (Record (Row [a: (TypeVar a), zArrayA: (Array (TypeVar a)), fa: (TypeApp (TypeVar f) [(TypeVar a)]), arrayIgnore: (Array Int), fIgnore: (TypeApp (TypeVar f) [Int]), ignore: Int] Any))] Any))])] (TypeVar b))
 							__local_var_3_21 := gopurs_runtime.Apply(Get_Data_Foldable_foldrArray(), gopurs_runtime.Func(func(v1_3 gopurs_runtime.Value) gopurs_runtime.Value {
 								return gopurs_runtime.Func(func(v2_4 gopurs_runtime.Value) gopurs_runtime.Value {
 									return gopurs_runtime.Apply2(f_0, gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(v1_3, "nested"), "a"), gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), f_0, gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), f_0, v2_4, gopurs_runtime.Array(func() []gopurs_runtime.Value {
@@ -1029,22 +1029,22 @@ var once_Main_main sync.Once
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_0_0 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [actual: String, expected: String] Any))
 			__local_var_0_0 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Str(gopurs_runtime.Apply3(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable](Get_Main_foldableM1()).V1), gopurs_runtime.Func(func(acc_0 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(next_1 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Str(((acc_0.StrVal()) + ("<")) + (next_1.StrVal()))
 				})
 			}), gopurs_runtime.Str("Start"), gopurs_runtime.Value{Type: 9, IntVal: 3852365315, UnsafePtr: unsafe.Pointer(nil)}).StrVal()), gopurs_runtime.Str("Start"))
 			_ = __local_var_0_0
-			// TAST (Let): result_1_1 -> bool
+			// TAST (Let): result_1_1 shape=Other expectedFromAst=bool actual=bool bindingType=Boolean
 			result_1_1 := (gopurs_runtime.RecordGet(__local_var_0_0, "actual").StrVal()) == (gopurs_runtime.RecordGet(__local_var_0_0, "expected").StrVal())
 			_ = result_1_1
-			// TAST (Let): message_2_2 -> string
+			// TAST (Let): message_2_2 shape=Other expectedFromAst=string actual=string bindingType=String
 			message_2_2 := ((("foldl - M0\x0aExpected: ") + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_0_0, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_0_0, "actual")).StrVal())
 			_ = message_2_2
-			// TAST (Let): __local_var_3_3 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_3_3 shape=Let(Let(EffectBind(App(Var)))) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_3_3 := gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-				// TAST (Let): __local_var_3_4 -> gopurs_runtime.Value
+				// TAST (Let): __local_var_3_4 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
 				__local_var_3_4 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_2_2))
 				_ = __local_var_3_4
 				var __t6 gopurs_runtime.Value
@@ -1070,7 +1070,7 @@ func Get_Main_main() gopurs_runtime.Value {
 					__t6 = func() gopurs_runtime.Value { panic("Failed pattern match") }()
 				}
 			end_branch_6:
-				// TAST (Let): __local_var_4_5 -> gopurs_runtime.Value
+				// TAST (Let): __local_var_4_5 shape=Branch(Other, EffectPure, def=Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(TypeApp (TypeVar m) [Unit])
 				__local_var_4_5 := __t6
 				_ = __local_var_4_5
 				_dollar___unused_5_7 := gopurs_runtime.Apply(__local_var_4_5, gopurs_runtime.Value{})
@@ -1080,20 +1080,20 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = __local_var_3_3
 			_dollar___unused_4_8 := gopurs_runtime.Apply(__local_var_3_3, gopurs_runtime.Value{})
 			_ = _dollar___unused_4_8
-			// TAST (Let): __local_var_5_9 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_5_9 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [actual: String, expected: String] Any))
 			__local_var_5_9 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Str(gopurs_runtime.Apply3(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable](Get_Main_foldableM1()).V1), gopurs_runtime.Func(func(acc_5 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(next_6 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Str(((acc_5.StrVal()) + ("<")) + (next_6.StrVal()))
 				})
 			}), gopurs_runtime.Str("Start"), Get_Main_m1()).StrVal()), gopurs_runtime.Str("Start<a<b<c"))
 			_ = __local_var_5_9
-			// TAST (Let): result_6_10 -> bool
+			// TAST (Let): result_6_10 shape=Other expectedFromAst=bool actual=bool bindingType=Boolean
 			result_6_10 := (gopurs_runtime.RecordGet(__local_var_5_9, "actual").StrVal()) == (gopurs_runtime.RecordGet(__local_var_5_9, "expected").StrVal())
 			_ = result_6_10
-			// TAST (Let): message_7_11 -> string
+			// TAST (Let): message_7_11 shape=Other expectedFromAst=string actual=string bindingType=String
 			message_7_11 := ((("foldl - M1\x0aExpected: ") + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_5_9, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_5_9, "actual")).StrVal())
 			_ = message_7_11
-			// TAST (Let): __local_var_8_13 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_8_13 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_8_13 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_7_11))
 			_ = __local_var_8_13
 			var __t15 gopurs_runtime.Value
@@ -1123,20 +1123,20 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = _dollar___unused_9_14
 			_dollar___unused_8_12 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_7_11), gopurs_runtime.Bool(result_6_10)), gopurs_runtime.Value{})
 			_ = _dollar___unused_8_12
-			// TAST (Let): __local_var_9_16 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_9_16 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [actual: String, expected: String] Any))
 			__local_var_9_16 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Str(gopurs_runtime.Apply3(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable](Get_Main_foldableM1()).V1), gopurs_runtime.Func(func(acc_9 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(next_10 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Str(((acc_9.StrVal()) + ("<")) + (next_10.StrVal()))
 				})
 			}), gopurs_runtime.Str("Start"), Get_Main_m2()).StrVal()), gopurs_runtime.Str("Start"))
 			_ = __local_var_9_16
-			// TAST (Let): result_10_17 -> bool
+			// TAST (Let): result_10_17 shape=Other expectedFromAst=bool actual=bool bindingType=Boolean
 			result_10_17 := (gopurs_runtime.RecordGet(__local_var_9_16, "actual").StrVal()) == (gopurs_runtime.RecordGet(__local_var_9_16, "expected").StrVal())
 			_ = result_10_17
-			// TAST (Let): message_11_18 -> string
+			// TAST (Let): message_11_18 shape=Other expectedFromAst=string actual=string bindingType=String
 			message_11_18 := ((("foldl - M2\x0aExpected: ") + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_9_16, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_9_16, "actual")).StrVal())
 			_ = message_11_18
-			// TAST (Let): __local_var_12_20 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_12_20 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_12_20 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_11_18))
 			_ = __local_var_12_20
 			var __t22 gopurs_runtime.Value
@@ -1166,20 +1166,20 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = _dollar___unused_13_21
 			_dollar___unused_12_19 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_11_18), gopurs_runtime.Bool(result_10_17)), gopurs_runtime.Value{})
 			_ = _dollar___unused_12_19
-			// TAST (Let): __local_var_13_23 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_13_23 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [actual: String, expected: String] Any))
 			__local_var_13_23 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Str(gopurs_runtime.Apply3(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable](Get_Main_foldableM1()).V1), gopurs_runtime.Func(func(acc_13 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(next_14 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Str(((acc_13.StrVal()) + ("<")) + (next_14.StrVal()))
 				})
 			}), gopurs_runtime.Str("Start"), Get_Main_m3()).StrVal()), gopurs_runtime.Str("Start<a<b<c"))
 			_ = __local_var_13_23
-			// TAST (Let): result_14_24 -> bool
+			// TAST (Let): result_14_24 shape=Other expectedFromAst=bool actual=bool bindingType=Boolean
 			result_14_24 := (gopurs_runtime.RecordGet(__local_var_13_23, "actual").StrVal()) == (gopurs_runtime.RecordGet(__local_var_13_23, "expected").StrVal())
 			_ = result_14_24
-			// TAST (Let): message_15_25 -> string
+			// TAST (Let): message_15_25 shape=Other expectedFromAst=string actual=string bindingType=String
 			message_15_25 := ((("foldl - M3\x0aExpected: ") + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_13_23, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_13_23, "actual")).StrVal())
 			_ = message_15_25
-			// TAST (Let): __local_var_16_27 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_16_27 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_16_27 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_15_25))
 			_ = __local_var_16_27
 			var __t29 gopurs_runtime.Value
@@ -1209,20 +1209,20 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = _dollar___unused_17_28
 			_dollar___unused_16_26 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_15_25), gopurs_runtime.Bool(result_14_24)), gopurs_runtime.Value{})
 			_ = _dollar___unused_16_26
-			// TAST (Let): __local_var_17_30 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_17_30 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [actual: String, expected: String] Any))
 			__local_var_17_30 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Str(gopurs_runtime.Apply3(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable](Get_Main_foldableM1()).V1), gopurs_runtime.Func(func(acc_17 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(next_18 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Str(((acc_17.StrVal()) + ("<")) + (next_18.StrVal()))
 				})
 			}), gopurs_runtime.Str("Start"), gopurs_runtime.Value{Type: 9, IntVal: 3190619783, UnsafePtr: unsafe.Pointer((&Constructor_Main_M4{1, Get_Main_recordValue()}))}).StrVal()), gopurs_runtime.Str("Start<a<b<c"))
 			_ = __local_var_17_30
-			// TAST (Let): result_18_31 -> bool
+			// TAST (Let): result_18_31 shape=Other expectedFromAst=bool actual=bool bindingType=Boolean
 			result_18_31 := (gopurs_runtime.RecordGet(__local_var_17_30, "actual").StrVal()) == (gopurs_runtime.RecordGet(__local_var_17_30, "expected").StrVal())
 			_ = result_18_31
-			// TAST (Let): message_19_32 -> string
+			// TAST (Let): message_19_32 shape=Other expectedFromAst=string actual=string bindingType=String
 			message_19_32 := ((("foldl - M4\x0aExpected: ") + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_17_30, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_17_30, "actual")).StrVal())
 			_ = message_19_32
-			// TAST (Let): __local_var_20_34 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_20_34 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_20_34 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_19_32))
 			_ = __local_var_20_34
 			var __t36 gopurs_runtime.Value
@@ -1252,20 +1252,20 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = _dollar___unused_21_35
 			_dollar___unused_20_33 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_19_32), gopurs_runtime.Bool(result_18_31)), gopurs_runtime.Value{})
 			_ = _dollar___unused_20_33
-			// TAST (Let): __local_var_21_37 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_21_37 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [actual: String, expected: String] Any))
 			__local_var_21_37 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Str(gopurs_runtime.Apply3(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable](Get_Main_foldableM1()).V1), gopurs_runtime.Func(func(acc_21 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(next_22 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Str(((acc_21.StrVal()) + ("<")) + (next_22.StrVal()))
 				})
 			}), gopurs_runtime.Str("Start"), Get_Main_m5()).StrVal()), gopurs_runtime.Str("Start<a<b<c"))
 			_ = __local_var_21_37
-			// TAST (Let): result_22_38 -> bool
+			// TAST (Let): result_22_38 shape=Other expectedFromAst=bool actual=bool bindingType=Boolean
 			result_22_38 := (gopurs_runtime.RecordGet(__local_var_21_37, "actual").StrVal()) == (gopurs_runtime.RecordGet(__local_var_21_37, "expected").StrVal())
 			_ = result_22_38
-			// TAST (Let): message_23_39 -> string
+			// TAST (Let): message_23_39 shape=Other expectedFromAst=string actual=string bindingType=String
 			message_23_39 := ((("foldl - M5\x0aExpected: ") + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_21_37, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_21_37, "actual")).StrVal())
 			_ = message_23_39
-			// TAST (Let): __local_var_24_41 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_24_41 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_24_41 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_23_39))
 			_ = __local_var_24_41
 			var __t43 gopurs_runtime.Value
@@ -1295,20 +1295,20 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = _dollar___unused_25_42
 			_dollar___unused_24_40 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_23_39), gopurs_runtime.Bool(result_22_38)), gopurs_runtime.Value{})
 			_ = _dollar___unused_24_40
-			// TAST (Let): __local_var_25_44 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_25_44 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [actual: String, expected: String] Any))
 			__local_var_25_44 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Str(gopurs_runtime.Apply3(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable](Get_Main_foldableM1()).V1), gopurs_runtime.Func(func(acc_25 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(next_26 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Str(((acc_25.StrVal()) + ("<")) + (next_26.StrVal()))
 				})
 			}), gopurs_runtime.Str("Start"), Get_Main_m6()).StrVal()), gopurs_runtime.Str("Start<a<b<c<a<b<c<a<b<c"))
 			_ = __local_var_25_44
-			// TAST (Let): result_26_45 -> bool
+			// TAST (Let): result_26_45 shape=Other expectedFromAst=bool actual=bool bindingType=Boolean
 			result_26_45 := (gopurs_runtime.RecordGet(__local_var_25_44, "actual").StrVal()) == (gopurs_runtime.RecordGet(__local_var_25_44, "expected").StrVal())
 			_ = result_26_45
-			// TAST (Let): message_27_46 -> string
+			// TAST (Let): message_27_46 shape=Other expectedFromAst=string actual=string bindingType=String
 			message_27_46 := ((("foldl - M6\x0aExpected: ") + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_25_44, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_25_44, "actual")).StrVal())
 			_ = message_27_46
-			// TAST (Let): __local_var_28_48 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_28_48 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_28_48 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_27_46))
 			_ = __local_var_28_48
 			var __t50 gopurs_runtime.Value
@@ -1338,20 +1338,20 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = _dollar___unused_29_49
 			_dollar___unused_28_47 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_27_46), gopurs_runtime.Bool(result_26_45)), gopurs_runtime.Value{})
 			_ = _dollar___unused_28_47
-			// TAST (Let): __local_var_29_51 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_29_51 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [actual: String, expected: String] Any))
 			__local_var_29_51 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Str(gopurs_runtime.Apply3(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable](Get_Main_foldableM1()).V1), gopurs_runtime.Func(func(acc_29 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(next_30 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Str(((acc_29.StrVal()) + ("<")) + (next_30.StrVal()))
 				})
 			}), gopurs_runtime.Str("Start"), Get_Main_m7()).StrVal()), gopurs_runtime.Str("Start<a<b<c"))
 			_ = __local_var_29_51
-			// TAST (Let): result_30_52 -> bool
+			// TAST (Let): result_30_52 shape=Other expectedFromAst=bool actual=bool bindingType=Boolean
 			result_30_52 := (gopurs_runtime.RecordGet(__local_var_29_51, "actual").StrVal()) == (gopurs_runtime.RecordGet(__local_var_29_51, "expected").StrVal())
 			_ = result_30_52
-			// TAST (Let): message_31_53 -> string
+			// TAST (Let): message_31_53 shape=Other expectedFromAst=string actual=string bindingType=String
 			message_31_53 := ((("foldl - M7\x0aExpected: ") + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_29_51, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_29_51, "actual")).StrVal())
 			_ = message_31_53
-			// TAST (Let): __local_var_32_55 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_32_55 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_32_55 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_31_53))
 			_ = __local_var_32_55
 			var __t57 gopurs_runtime.Value
@@ -1381,20 +1381,20 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = _dollar___unused_33_56
 			_dollar___unused_32_54 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_31_53), gopurs_runtime.Bool(result_30_52)), gopurs_runtime.Value{})
 			_ = _dollar___unused_32_54
-			// TAST (Let): __local_var_33_58 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_33_58 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [actual: String, expected: String] Any))
 			__local_var_33_58 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Str(gopurs_runtime.Apply3(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable](Get_Main_foldableM1()).V2), gopurs_runtime.Func(func(next_33 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(acc_34 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Str(((next_33.StrVal()) + (">")) + (acc_34.StrVal()))
 				})
 			}), gopurs_runtime.Str("Start"), gopurs_runtime.Value{Type: 9, IntVal: 3852365315, UnsafePtr: unsafe.Pointer(nil)}).StrVal()), gopurs_runtime.Str("Start"))
 			_ = __local_var_33_58
-			// TAST (Let): result_34_59 -> bool
+			// TAST (Let): result_34_59 shape=Other expectedFromAst=bool actual=bool bindingType=Boolean
 			result_34_59 := (gopurs_runtime.RecordGet(__local_var_33_58, "actual").StrVal()) == (gopurs_runtime.RecordGet(__local_var_33_58, "expected").StrVal())
 			_ = result_34_59
-			// TAST (Let): message_35_60 -> string
+			// TAST (Let): message_35_60 shape=Other expectedFromAst=string actual=string bindingType=String
 			message_35_60 := ((("foldr - M0\x0aExpected: ") + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_33_58, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_33_58, "actual")).StrVal())
 			_ = message_35_60
-			// TAST (Let): __local_var_36_62 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_36_62 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_36_62 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_35_60))
 			_ = __local_var_36_62
 			var __t64 gopurs_runtime.Value
@@ -1424,20 +1424,20 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = _dollar___unused_37_63
 			_dollar___unused_36_61 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_35_60), gopurs_runtime.Bool(result_34_59)), gopurs_runtime.Value{})
 			_ = _dollar___unused_36_61
-			// TAST (Let): __local_var_37_65 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_37_65 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [actual: String, expected: String] Any))
 			__local_var_37_65 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Str(gopurs_runtime.Apply3(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable](Get_Main_foldableM1()).V2), gopurs_runtime.Func(func(next_37 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(acc_38 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Str(((next_37.StrVal()) + (">")) + (acc_38.StrVal()))
 				})
 			}), gopurs_runtime.Str("Start"), Get_Main_m1()).StrVal()), gopurs_runtime.Str("a>b>c>Start"))
 			_ = __local_var_37_65
-			// TAST (Let): result_38_66 -> bool
+			// TAST (Let): result_38_66 shape=Other expectedFromAst=bool actual=bool bindingType=Boolean
 			result_38_66 := (gopurs_runtime.RecordGet(__local_var_37_65, "actual").StrVal()) == (gopurs_runtime.RecordGet(__local_var_37_65, "expected").StrVal())
 			_ = result_38_66
-			// TAST (Let): message_39_67 -> string
+			// TAST (Let): message_39_67 shape=Other expectedFromAst=string actual=string bindingType=String
 			message_39_67 := ((("foldr - M1\x0aExpected: ") + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_37_65, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_37_65, "actual")).StrVal())
 			_ = message_39_67
-			// TAST (Let): __local_var_40_69 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_40_69 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_40_69 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_39_67))
 			_ = __local_var_40_69
 			var __t71 gopurs_runtime.Value
@@ -1467,20 +1467,20 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = _dollar___unused_41_70
 			_dollar___unused_40_68 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_39_67), gopurs_runtime.Bool(result_38_66)), gopurs_runtime.Value{})
 			_ = _dollar___unused_40_68
-			// TAST (Let): __local_var_41_72 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_41_72 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [actual: String, expected: String] Any))
 			__local_var_41_72 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Str(gopurs_runtime.Apply3(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable](Get_Main_foldableM1()).V2), gopurs_runtime.Func(func(next_41 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(acc_42 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Str(((next_41.StrVal()) + (">")) + (acc_42.StrVal()))
 				})
 			}), gopurs_runtime.Str("Start"), Get_Main_m2()).StrVal()), gopurs_runtime.Str("Start"))
 			_ = __local_var_41_72
-			// TAST (Let): result_42_73 -> bool
+			// TAST (Let): result_42_73 shape=Other expectedFromAst=bool actual=bool bindingType=Boolean
 			result_42_73 := (gopurs_runtime.RecordGet(__local_var_41_72, "actual").StrVal()) == (gopurs_runtime.RecordGet(__local_var_41_72, "expected").StrVal())
 			_ = result_42_73
-			// TAST (Let): message_43_74 -> string
+			// TAST (Let): message_43_74 shape=Other expectedFromAst=string actual=string bindingType=String
 			message_43_74 := ((("foldr - M2\x0aExpected: ") + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_41_72, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_41_72, "actual")).StrVal())
 			_ = message_43_74
-			// TAST (Let): __local_var_44_76 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_44_76 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_44_76 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_43_74))
 			_ = __local_var_44_76
 			var __t78 gopurs_runtime.Value
@@ -1510,20 +1510,20 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = _dollar___unused_45_77
 			_dollar___unused_44_75 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_43_74), gopurs_runtime.Bool(result_42_73)), gopurs_runtime.Value{})
 			_ = _dollar___unused_44_75
-			// TAST (Let): __local_var_45_79 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_45_79 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [actual: String, expected: String] Any))
 			__local_var_45_79 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Str(gopurs_runtime.Apply3(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable](Get_Main_foldableM1()).V2), gopurs_runtime.Func(func(next_45 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(acc_46 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Str(((next_45.StrVal()) + (">")) + (acc_46.StrVal()))
 				})
 			}), gopurs_runtime.Str("Start"), Get_Main_m3()).StrVal()), gopurs_runtime.Str("a>b>c>Start"))
 			_ = __local_var_45_79
-			// TAST (Let): result_46_80 -> bool
+			// TAST (Let): result_46_80 shape=Other expectedFromAst=bool actual=bool bindingType=Boolean
 			result_46_80 := (gopurs_runtime.RecordGet(__local_var_45_79, "actual").StrVal()) == (gopurs_runtime.RecordGet(__local_var_45_79, "expected").StrVal())
 			_ = result_46_80
-			// TAST (Let): message_47_81 -> string
+			// TAST (Let): message_47_81 shape=Other expectedFromAst=string actual=string bindingType=String
 			message_47_81 := ((("foldr - M3\x0aExpected: ") + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_45_79, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_45_79, "actual")).StrVal())
 			_ = message_47_81
-			// TAST (Let): __local_var_48_83 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_48_83 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_48_83 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_47_81))
 			_ = __local_var_48_83
 			var __t85 gopurs_runtime.Value
@@ -1553,20 +1553,20 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = _dollar___unused_49_84
 			_dollar___unused_48_82 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_47_81), gopurs_runtime.Bool(result_46_80)), gopurs_runtime.Value{})
 			_ = _dollar___unused_48_82
-			// TAST (Let): __local_var_49_86 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_49_86 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [actual: String, expected: String] Any))
 			__local_var_49_86 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Str(gopurs_runtime.Apply3(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable](Get_Main_foldableM1()).V2), gopurs_runtime.Func(func(next_49 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(acc_50 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Str(((next_49.StrVal()) + (">")) + (acc_50.StrVal()))
 				})
 			}), gopurs_runtime.Str("Start"), gopurs_runtime.Value{Type: 9, IntVal: 3190619783, UnsafePtr: unsafe.Pointer((&Constructor_Main_M4{1, Get_Main_recordValue()}))}).StrVal()), gopurs_runtime.Str("a>b>c>Start"))
 			_ = __local_var_49_86
-			// TAST (Let): result_50_87 -> bool
+			// TAST (Let): result_50_87 shape=Other expectedFromAst=bool actual=bool bindingType=Boolean
 			result_50_87 := (gopurs_runtime.RecordGet(__local_var_49_86, "actual").StrVal()) == (gopurs_runtime.RecordGet(__local_var_49_86, "expected").StrVal())
 			_ = result_50_87
-			// TAST (Let): message_51_88 -> string
+			// TAST (Let): message_51_88 shape=Other expectedFromAst=string actual=string bindingType=String
 			message_51_88 := ((("foldr - M4\x0aExpected: ") + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_49_86, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_49_86, "actual")).StrVal())
 			_ = message_51_88
-			// TAST (Let): __local_var_52_90 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_52_90 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_52_90 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_51_88))
 			_ = __local_var_52_90
 			var __t92 gopurs_runtime.Value
@@ -1596,20 +1596,20 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = _dollar___unused_53_91
 			_dollar___unused_52_89 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_51_88), gopurs_runtime.Bool(result_50_87)), gopurs_runtime.Value{})
 			_ = _dollar___unused_52_89
-			// TAST (Let): __local_var_53_93 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_53_93 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [actual: String, expected: String] Any))
 			__local_var_53_93 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Str(gopurs_runtime.Apply3(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable](Get_Main_foldableM1()).V2), gopurs_runtime.Func(func(next_53 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(acc_54 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Str(((next_53.StrVal()) + (">")) + (acc_54.StrVal()))
 				})
 			}), gopurs_runtime.Str("Start"), Get_Main_m5()).StrVal()), gopurs_runtime.Str("a>b>c>Start"))
 			_ = __local_var_53_93
-			// TAST (Let): result_54_94 -> bool
+			// TAST (Let): result_54_94 shape=Other expectedFromAst=bool actual=bool bindingType=Boolean
 			result_54_94 := (gopurs_runtime.RecordGet(__local_var_53_93, "actual").StrVal()) == (gopurs_runtime.RecordGet(__local_var_53_93, "expected").StrVal())
 			_ = result_54_94
-			// TAST (Let): message_55_95 -> string
+			// TAST (Let): message_55_95 shape=Other expectedFromAst=string actual=string bindingType=String
 			message_55_95 := ((("foldr - M5\x0aExpected: ") + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_53_93, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_53_93, "actual")).StrVal())
 			_ = message_55_95
-			// TAST (Let): __local_var_56_97 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_56_97 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_56_97 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_55_95))
 			_ = __local_var_56_97
 			var __t99 gopurs_runtime.Value
@@ -1639,20 +1639,20 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = _dollar___unused_57_98
 			_dollar___unused_56_96 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_55_95), gopurs_runtime.Bool(result_54_94)), gopurs_runtime.Value{})
 			_ = _dollar___unused_56_96
-			// TAST (Let): __local_var_57_100 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_57_100 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [actual: String, expected: String] Any))
 			__local_var_57_100 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Str(gopurs_runtime.Apply3(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable](Get_Main_foldableM1()).V2), gopurs_runtime.Func(func(next_57 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(acc_58 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Str(((next_57.StrVal()) + (">")) + (acc_58.StrVal()))
 				})
 			}), gopurs_runtime.Str("Start"), Get_Main_m6()).StrVal()), gopurs_runtime.Str("a>b>c>a>b>c>a>b>c>Start"))
 			_ = __local_var_57_100
-			// TAST (Let): result_58_101 -> bool
+			// TAST (Let): result_58_101 shape=Other expectedFromAst=bool actual=bool bindingType=Boolean
 			result_58_101 := (gopurs_runtime.RecordGet(__local_var_57_100, "actual").StrVal()) == (gopurs_runtime.RecordGet(__local_var_57_100, "expected").StrVal())
 			_ = result_58_101
-			// TAST (Let): message_59_102 -> string
+			// TAST (Let): message_59_102 shape=Other expectedFromAst=string actual=string bindingType=String
 			message_59_102 := ((("foldr - M6\x0aExpected: ") + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_57_100, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_57_100, "actual")).StrVal())
 			_ = message_59_102
-			// TAST (Let): __local_var_60_104 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_60_104 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_60_104 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_59_102))
 			_ = __local_var_60_104
 			var __t106 gopurs_runtime.Value
@@ -1682,20 +1682,20 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = _dollar___unused_61_105
 			_dollar___unused_60_103 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_59_102), gopurs_runtime.Bool(result_58_101)), gopurs_runtime.Value{})
 			_ = _dollar___unused_60_103
-			// TAST (Let): __local_var_61_107 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_61_107 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [actual: String, expected: String] Any))
 			__local_var_61_107 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Str(gopurs_runtime.Apply3(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable](Get_Main_foldableM1()).V2), gopurs_runtime.Func(func(next_61 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(acc_62 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Str(((next_61.StrVal()) + (">")) + (acc_62.StrVal()))
 				})
 			}), gopurs_runtime.Str("Start"), Get_Main_m7()).StrVal()), gopurs_runtime.Str("a>b>c>Start"))
 			_ = __local_var_61_107
-			// TAST (Let): result_62_108 -> bool
+			// TAST (Let): result_62_108 shape=Other expectedFromAst=bool actual=bool bindingType=Boolean
 			result_62_108 := (gopurs_runtime.RecordGet(__local_var_61_107, "actual").StrVal()) == (gopurs_runtime.RecordGet(__local_var_61_107, "expected").StrVal())
 			_ = result_62_108
-			// TAST (Let): message_63_109 -> string
+			// TAST (Let): message_63_109 shape=Other expectedFromAst=string actual=string bindingType=String
 			message_63_109 := ((("foldr - M7\x0aExpected: ") + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_61_107, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_61_107, "actual")).StrVal())
 			_ = message_63_109
-			// TAST (Let): __local_var_64_111 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_64_111 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_64_111 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_63_109))
 			_ = __local_var_64_111
 			var __t113 gopurs_runtime.Value
@@ -1725,18 +1725,18 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = _dollar___unused_65_112
 			_dollar___unused_64_110 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_63_109), gopurs_runtime.Bool(result_62_108)), gopurs_runtime.Value{})
 			_ = _dollar___unused_64_110
-			// TAST (Let): __local_var_65_114 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_65_114 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [actual: String, expected: String] Any))
 			__local_var_65_114 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Str(gopurs_runtime.Apply3(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable](Get_Main_foldableM1()).V0), gopurs_runtime.Value{Type: 9, IntVal: 1722653594, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid](Get_Data_Monoid_monoidString()))}, gopurs_runtime.Func(func(x_65 gopurs_runtime.Value) gopurs_runtime.Value {
 				return x_65
 			}), gopurs_runtime.Value{Type: 9, IntVal: 3852365315, UnsafePtr: unsafe.Pointer(nil)}).StrVal()), gopurs_runtime.Str(""))
 			_ = __local_var_65_114
-			// TAST (Let): result_66_115 -> bool
+			// TAST (Let): result_66_115 shape=Other expectedFromAst=bool actual=bool bindingType=Boolean
 			result_66_115 := (gopurs_runtime.RecordGet(__local_var_65_114, "actual").StrVal()) == (gopurs_runtime.RecordGet(__local_var_65_114, "expected").StrVal())
 			_ = result_66_115
-			// TAST (Let): message_67_116 -> string
+			// TAST (Let): message_67_116 shape=Other expectedFromAst=string actual=string bindingType=String
 			message_67_116 := ((("foldMap - M0\x0aExpected: ") + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_65_114, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_65_114, "actual")).StrVal())
 			_ = message_67_116
-			// TAST (Let): __local_var_68_118 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_68_118 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_68_118 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_67_116))
 			_ = __local_var_68_118
 			var __t120 gopurs_runtime.Value
@@ -1766,18 +1766,18 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = _dollar___unused_69_119
 			_dollar___unused_68_117 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_67_116), gopurs_runtime.Bool(result_66_115)), gopurs_runtime.Value{})
 			_ = _dollar___unused_68_117
-			// TAST (Let): __local_var_69_121 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_69_121 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [actual: String, expected: String] Any))
 			__local_var_69_121 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Str(gopurs_runtime.Apply3(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable](Get_Main_foldableM1()).V0), gopurs_runtime.Value{Type: 9, IntVal: 1722653594, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid](Get_Data_Monoid_monoidString()))}, gopurs_runtime.Func(func(x_69 gopurs_runtime.Value) gopurs_runtime.Value {
 				return x_69
 			}), Get_Main_m1()).StrVal()), gopurs_runtime.Str("abc"))
 			_ = __local_var_69_121
-			// TAST (Let): result_70_122 -> bool
+			// TAST (Let): result_70_122 shape=Other expectedFromAst=bool actual=bool bindingType=Boolean
 			result_70_122 := (gopurs_runtime.RecordGet(__local_var_69_121, "actual").StrVal()) == (gopurs_runtime.RecordGet(__local_var_69_121, "expected").StrVal())
 			_ = result_70_122
-			// TAST (Let): message_71_123 -> string
+			// TAST (Let): message_71_123 shape=Other expectedFromAst=string actual=string bindingType=String
 			message_71_123 := ((("foldMap - M1\x0aExpected: ") + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_69_121, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_69_121, "actual")).StrVal())
 			_ = message_71_123
-			// TAST (Let): __local_var_72_125 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_72_125 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_72_125 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_71_123))
 			_ = __local_var_72_125
 			var __t127 gopurs_runtime.Value
@@ -1807,18 +1807,18 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = _dollar___unused_73_126
 			_dollar___unused_72_124 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_71_123), gopurs_runtime.Bool(result_70_122)), gopurs_runtime.Value{})
 			_ = _dollar___unused_72_124
-			// TAST (Let): __local_var_73_128 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_73_128 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [actual: String, expected: String] Any))
 			__local_var_73_128 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Str(gopurs_runtime.Apply3(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable](Get_Main_foldableM1()).V0), gopurs_runtime.Value{Type: 9, IntVal: 1722653594, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid](Get_Data_Monoid_monoidString()))}, gopurs_runtime.Func(func(x_73 gopurs_runtime.Value) gopurs_runtime.Value {
 				return x_73
 			}), Get_Main_m2()).StrVal()), gopurs_runtime.Str(""))
 			_ = __local_var_73_128
-			// TAST (Let): result_74_129 -> bool
+			// TAST (Let): result_74_129 shape=Other expectedFromAst=bool actual=bool bindingType=Boolean
 			result_74_129 := (gopurs_runtime.RecordGet(__local_var_73_128, "actual").StrVal()) == (gopurs_runtime.RecordGet(__local_var_73_128, "expected").StrVal())
 			_ = result_74_129
-			// TAST (Let): message_75_130 -> string
+			// TAST (Let): message_75_130 shape=Other expectedFromAst=string actual=string bindingType=String
 			message_75_130 := ((("foldMap - M2\x0aExpected: ") + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_73_128, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_73_128, "actual")).StrVal())
 			_ = message_75_130
-			// TAST (Let): __local_var_76_132 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_76_132 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_76_132 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_75_130))
 			_ = __local_var_76_132
 			var __t134 gopurs_runtime.Value
@@ -1848,18 +1848,18 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = _dollar___unused_77_133
 			_dollar___unused_76_131 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_75_130), gopurs_runtime.Bool(result_74_129)), gopurs_runtime.Value{})
 			_ = _dollar___unused_76_131
-			// TAST (Let): __local_var_77_135 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_77_135 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [actual: String, expected: String] Any))
 			__local_var_77_135 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Str(gopurs_runtime.Apply3(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable](Get_Main_foldableM1()).V0), gopurs_runtime.Value{Type: 9, IntVal: 1722653594, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid](Get_Data_Monoid_monoidString()))}, gopurs_runtime.Func(func(x_77 gopurs_runtime.Value) gopurs_runtime.Value {
 				return x_77
 			}), Get_Main_m3()).StrVal()), gopurs_runtime.Str("abc"))
 			_ = __local_var_77_135
-			// TAST (Let): result_78_136 -> bool
+			// TAST (Let): result_78_136 shape=Other expectedFromAst=bool actual=bool bindingType=Boolean
 			result_78_136 := (gopurs_runtime.RecordGet(__local_var_77_135, "actual").StrVal()) == (gopurs_runtime.RecordGet(__local_var_77_135, "expected").StrVal())
 			_ = result_78_136
-			// TAST (Let): message_79_137 -> string
+			// TAST (Let): message_79_137 shape=Other expectedFromAst=string actual=string bindingType=String
 			message_79_137 := ((("foldMap - M3\x0aExpected: ") + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_77_135, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_77_135, "actual")).StrVal())
 			_ = message_79_137
-			// TAST (Let): __local_var_80_139 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_80_139 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_80_139 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_79_137))
 			_ = __local_var_80_139
 			var __t141 gopurs_runtime.Value
@@ -1889,18 +1889,18 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = _dollar___unused_81_140
 			_dollar___unused_80_138 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_79_137), gopurs_runtime.Bool(result_78_136)), gopurs_runtime.Value{})
 			_ = _dollar___unused_80_138
-			// TAST (Let): __local_var_81_142 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_81_142 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [actual: String, expected: String] Any))
 			__local_var_81_142 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Str(gopurs_runtime.Apply3(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable](Get_Main_foldableM1()).V0), gopurs_runtime.Value{Type: 9, IntVal: 1722653594, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid](Get_Data_Monoid_monoidString()))}, gopurs_runtime.Func(func(x_81 gopurs_runtime.Value) gopurs_runtime.Value {
 				return x_81
 			}), gopurs_runtime.Value{Type: 9, IntVal: 3190619783, UnsafePtr: unsafe.Pointer((&Constructor_Main_M4{1, Get_Main_recordValue()}))}).StrVal()), gopurs_runtime.Str("abc"))
 			_ = __local_var_81_142
-			// TAST (Let): result_82_143 -> bool
+			// TAST (Let): result_82_143 shape=Other expectedFromAst=bool actual=bool bindingType=Boolean
 			result_82_143 := (gopurs_runtime.RecordGet(__local_var_81_142, "actual").StrVal()) == (gopurs_runtime.RecordGet(__local_var_81_142, "expected").StrVal())
 			_ = result_82_143
-			// TAST (Let): message_83_144 -> string
+			// TAST (Let): message_83_144 shape=Other expectedFromAst=string actual=string bindingType=String
 			message_83_144 := ((("foldMap - M4\x0aExpected: ") + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_81_142, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_81_142, "actual")).StrVal())
 			_ = message_83_144
-			// TAST (Let): __local_var_84_146 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_84_146 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_84_146 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_83_144))
 			_ = __local_var_84_146
 			var __t148 gopurs_runtime.Value
@@ -1930,18 +1930,18 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = _dollar___unused_85_147
 			_dollar___unused_84_145 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_83_144), gopurs_runtime.Bool(result_82_143)), gopurs_runtime.Value{})
 			_ = _dollar___unused_84_145
-			// TAST (Let): __local_var_85_149 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_85_149 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [actual: String, expected: String] Any))
 			__local_var_85_149 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Str(gopurs_runtime.Apply3(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable](Get_Main_foldableM1()).V0), gopurs_runtime.Value{Type: 9, IntVal: 1722653594, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid](Get_Data_Monoid_monoidString()))}, gopurs_runtime.Func(func(x_85 gopurs_runtime.Value) gopurs_runtime.Value {
 				return x_85
 			}), Get_Main_m5()).StrVal()), gopurs_runtime.Str("abc"))
 			_ = __local_var_85_149
-			// TAST (Let): result_86_150 -> bool
+			// TAST (Let): result_86_150 shape=Other expectedFromAst=bool actual=bool bindingType=Boolean
 			result_86_150 := (gopurs_runtime.RecordGet(__local_var_85_149, "actual").StrVal()) == (gopurs_runtime.RecordGet(__local_var_85_149, "expected").StrVal())
 			_ = result_86_150
-			// TAST (Let): message_87_151 -> string
+			// TAST (Let): message_87_151 shape=Other expectedFromAst=string actual=string bindingType=String
 			message_87_151 := ((("foldMap - M5\x0aExpected: ") + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_85_149, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_85_149, "actual")).StrVal())
 			_ = message_87_151
-			// TAST (Let): __local_var_88_153 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_88_153 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_88_153 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_87_151))
 			_ = __local_var_88_153
 			var __t155 gopurs_runtime.Value
@@ -1971,18 +1971,18 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = _dollar___unused_89_154
 			_dollar___unused_88_152 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_87_151), gopurs_runtime.Bool(result_86_150)), gopurs_runtime.Value{})
 			_ = _dollar___unused_88_152
-			// TAST (Let): __local_var_89_156 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_89_156 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [actual: String, expected: String] Any))
 			__local_var_89_156 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Str(gopurs_runtime.Apply3(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable](Get_Main_foldableM1()).V0), gopurs_runtime.Value{Type: 9, IntVal: 1722653594, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid](Get_Data_Monoid_monoidString()))}, gopurs_runtime.Func(func(x_89 gopurs_runtime.Value) gopurs_runtime.Value {
 				return x_89
 			}), Get_Main_m6()).StrVal()), gopurs_runtime.Str("abcabcabc"))
 			_ = __local_var_89_156
-			// TAST (Let): result_90_157 -> bool
+			// TAST (Let): result_90_157 shape=Other expectedFromAst=bool actual=bool bindingType=Boolean
 			result_90_157 := (gopurs_runtime.RecordGet(__local_var_89_156, "actual").StrVal()) == (gopurs_runtime.RecordGet(__local_var_89_156, "expected").StrVal())
 			_ = result_90_157
-			// TAST (Let): message_91_158 -> string
+			// TAST (Let): message_91_158 shape=Other expectedFromAst=string actual=string bindingType=String
 			message_91_158 := ((("foldMap - M6\x0aExpected: ") + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_89_156, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_89_156, "actual")).StrVal())
 			_ = message_91_158
-			// TAST (Let): __local_var_92_160 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_92_160 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_92_160 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_91_158))
 			_ = __local_var_92_160
 			var __t162 gopurs_runtime.Value
@@ -2012,18 +2012,18 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = _dollar___unused_93_161
 			_dollar___unused_92_159 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_91_158), gopurs_runtime.Bool(result_90_157)), gopurs_runtime.Value{})
 			_ = _dollar___unused_92_159
-			// TAST (Let): __local_var_93_163 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_93_163 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [actual: String, expected: String] Any))
 			__local_var_93_163 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Str(gopurs_runtime.Apply3(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable](Get_Main_foldableM1()).V0), gopurs_runtime.Value{Type: 9, IntVal: 1722653594, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid](Get_Data_Monoid_monoidString()))}, gopurs_runtime.Func(func(x_93 gopurs_runtime.Value) gopurs_runtime.Value {
 				return x_93
 			}), Get_Main_m7()).StrVal()), gopurs_runtime.Str("abc"))
 			_ = __local_var_93_163
-			// TAST (Let): result_94_164 -> bool
+			// TAST (Let): result_94_164 shape=Other expectedFromAst=bool actual=bool bindingType=Boolean
 			result_94_164 := (gopurs_runtime.RecordGet(__local_var_93_163, "actual").StrVal()) == (gopurs_runtime.RecordGet(__local_var_93_163, "expected").StrVal())
 			_ = result_94_164
-			// TAST (Let): message_95_165 -> string
+			// TAST (Let): message_95_165 shape=Other expectedFromAst=string actual=string bindingType=String
 			message_95_165 := ((("foldMap - M7\x0aExpected: ") + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_93_163, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.RecordGet(__local_var_93_163, "actual")).StrVal())
 			_ = message_95_165
-			// TAST (Let): __local_var_96_167 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_96_167 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_96_167 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_95_165))
 			_ = __local_var_96_167
 			var __t169 gopurs_runtime.Value
@@ -2146,7 +2146,7 @@ type Constructor_Main_M7 struct {
 func Call_Main_identity(x_0_loop string) string {
 	var x_0 string = x_0_loop
 	_ = x_0
-	return x_0
+	return gopurs_runtime.Str(x_0).StrVal()
 }
 
 func Call_Main_foldrStr(dictFoldable_0_loop *Constructor_Data_Foldable_Foldable) gopurs_runtime.Value {
@@ -2173,10 +2173,10 @@ func Call_Main_foldableM(dictFoldable_0_loop gopurs_runtime.Value) gopurs_runtim
 	var dictFoldable_0 gopurs_runtime.Value = dictFoldable_0_loop
 	_ = dictFoldable_0
 	return gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer((&Constructor_Data_Foldable_Foldable{1, gopurs_runtime.Func(func(dictMonoid_1 gopurs_runtime.Value) gopurs_runtime.Value {
-		// TAST (Let): mempty_2_0 -> gopurs_runtime.Value
+		// TAST (Let): mempty_2_0 shape=Other expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(TypeVar m)
 		mempty_2_0 := gopurs_runtime.RecordGet(dictMonoid_1, "mempty")
 		_ = mempty_2_0
-		// TAST (Let): Semigroup0_3_1 -> *Constructor_Data_Semigroup_Semigroup
+		// TAST (Let): Semigroup0_3_1 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 		Semigroup0_3_1 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_1, "Semigroup0"), gopurs_runtime.Value{}))
 		_ = Semigroup0_3_1
 		return gopurs_runtime.Func(func(f_4 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -2192,7 +2192,7 @@ func Call_Main_foldableM(dictFoldable_0_loop gopurs_runtime.Value) gopurs_runtim
 				}
 				{
 					if m_5.Type == 9 && m_5.IntVal == 769986722 {
-						// TAST (Let): Semigroup0_6_2 -> *Constructor_Data_Semigroup_Semigroup
+						// TAST (Let): Semigroup0_6_2 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 						Semigroup0_6_2 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_1, "Semigroup0"), gopurs_runtime.Value{}))
 						_ = Semigroup0_6_2
 						__t9 = gopurs_runtime.Apply2(gopurs_runtime.Box(Semigroup0_3_1.V0), gopurs_runtime.Apply(f_4, (*Constructor_Main_M1)(m_5.UnsafePtr).V0), gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), gopurs_runtime.Func(func(x_7 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -2223,7 +2223,7 @@ func Call_Main_foldableM(dictFoldable_0_loop gopurs_runtime.Value) gopurs_runtim
 				}
 				{
 					if m_5.Type == 9 && m_5.IntVal == 3190619783 {
-						// TAST (Let): Semigroup0_6_3 -> *Constructor_Data_Semigroup_Semigroup
+						// TAST (Let): Semigroup0_6_3 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 						Semigroup0_6_3 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_1, "Semigroup0"), gopurs_runtime.Value{}))
 						_ = Semigroup0_6_3
 						__t9 = gopurs_runtime.Apply2(gopurs_runtime.Box(Semigroup0_3_1.V0), gopurs_runtime.Apply(f_4, gopurs_runtime.RecordGet((*Constructor_Main_M4)(m_5.UnsafePtr).V0, "a")), gopurs_runtime.Apply2(gopurs_runtime.Box(Semigroup0_3_1.V0), gopurs_runtime.Apply3(gopurs_runtime.RecordGet(dictFoldable_0, "foldMap"), gopurs_runtime.Value{Type: 9, IntVal: 1722653594, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid](dictMonoid_1))}, f_4, gopurs_runtime.RecordGet((*Constructor_Main_M4)(m_5.UnsafePtr).V0, "fa")), gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), gopurs_runtime.Func(func(x_7 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -2245,7 +2245,7 @@ func Call_Main_foldableM(dictFoldable_0_loop gopurs_runtime.Value) gopurs_runtim
 				}
 				{
 					if m_5.Type == 9 && m_5.IntVal == 108241190 {
-						// TAST (Let): Semigroup0_6_4 -> *Constructor_Data_Semigroup_Semigroup
+						// TAST (Let): Semigroup0_6_4 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 						Semigroup0_6_4 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_1, "Semigroup0"), gopurs_runtime.Value{}))
 						_ = Semigroup0_6_4
 						__t9 = gopurs_runtime.Apply2(gopurs_runtime.Box(Semigroup0_3_1.V0), gopurs_runtime.Apply(f_4, gopurs_runtime.RecordGet(gopurs_runtime.RecordGet((*Constructor_Main_M5)(m_5.UnsafePtr).V0, "nested"), "a")), gopurs_runtime.Apply2(gopurs_runtime.Box(Semigroup0_3_1.V0), gopurs_runtime.Apply3(gopurs_runtime.RecordGet(dictFoldable_0, "foldMap"), gopurs_runtime.Value{Type: 9, IntVal: 1722653594, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid](dictMonoid_1))}, f_4, gopurs_runtime.RecordGet(gopurs_runtime.RecordGet((*Constructor_Main_M5)(m_5.UnsafePtr).V0, "nested"), "fa")), gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), gopurs_runtime.Func(func(x_7 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -2267,13 +2267,13 @@ func Call_Main_foldableM(dictFoldable_0_loop gopurs_runtime.Value) gopurs_runtim
 				}
 				{
 					if m_5.Type == 9 && m_5.IntVal == 2066233029 {
-						// TAST (Let): Semigroup0_6_5 -> *Constructor_Data_Semigroup_Semigroup
+						// TAST (Let): Semigroup0_6_5 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 						Semigroup0_6_5 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_1, "Semigroup0"), gopurs_runtime.Value{}))
 						_ = Semigroup0_6_5
-						// TAST (Let): Semigroup0_6_6 -> *Constructor_Data_Semigroup_Semigroup
+						// TAST (Let): Semigroup0_6_6 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 						Semigroup0_6_6 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_1, "Semigroup0"), gopurs_runtime.Value{}))
 						_ = Semigroup0_6_6
-						// TAST (Let): Semigroup0_6_7 -> *Constructor_Data_Semigroup_Semigroup
+						// TAST (Let): Semigroup0_6_7 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 						Semigroup0_6_7 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_1, "Semigroup0"), gopurs_runtime.Value{}))
 						_ = Semigroup0_6_7
 						__t9 = gopurs_runtime.Apply2(gopurs_runtime.Box(Semigroup0_3_1.V0), gopurs_runtime.Apply(f_4, (*Constructor_Main_M6)(m_5.UnsafePtr).V1), gopurs_runtime.Apply2(gopurs_runtime.Box(Semigroup0_3_1.V0), gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), gopurs_runtime.Func(func(x_7 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -2311,7 +2311,7 @@ func Call_Main_foldableM(dictFoldable_0_loop gopurs_runtime.Value) gopurs_runtim
 				{
 					if m_5.Type == 9 && m_5.IntVal == 1168316772 {
 						__t9 = gopurs_runtime.Apply3(gopurs_runtime.RecordGet(dictFoldable_0, "foldMap"), gopurs_runtime.Value{Type: 9, IntVal: 1722653594, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid](dictMonoid_1))}, gopurs_runtime.Apply2(gopurs_runtime.RecordGet(dictFoldable_0, "foldMap"), gopurs_runtime.Value{Type: 9, IntVal: 1722653594, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid](dictMonoid_1))}, gopurs_runtime.Func(func(v1_6 gopurs_runtime.Value) gopurs_runtime.Value {
-							// TAST (Let): Semigroup0_7_8 -> *Constructor_Data_Semigroup_Semigroup
+							// TAST (Let): Semigroup0_7_8 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 							Semigroup0_7_8 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_1, "Semigroup0"), gopurs_runtime.Value{}))
 							_ = Semigroup0_7_8
 							return gopurs_runtime.Apply2(gopurs_runtime.Box(Semigroup0_3_1.V0), gopurs_runtime.Apply(f_4, gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(v1_6, "nested"), "a")), gopurs_runtime.Apply2(gopurs_runtime.Box(Semigroup0_3_1.V0), gopurs_runtime.Apply3(gopurs_runtime.RecordGet(dictFoldable_0, "foldMap"), gopurs_runtime.Value{Type: 9, IntVal: 1722653594, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid](dictMonoid_1))}, f_4, gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(v1_6, "nested"), "fa")), gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), gopurs_runtime.Func(func(x_8 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -2620,7 +2620,7 @@ func Call_Main_foldableM(dictFoldable_0_loop gopurs_runtime.Value) gopurs_runtim
 				}
 				{
 					if m_3.Type == 9 && m_3.IntVal == 1168316772 {
-						// TAST (Let): __local_var_4_11 -> gopurs_runtime.Value
+						// TAST (Let): __local_var_4_11 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Func [(TypeApp (TypeVar f) [(Record (Row [nested: (Record (Row [a: (TypeVar a), zArrayA: (Array (TypeVar a)), fa: (TypeApp (TypeVar f) [(TypeVar a)]), arrayIgnore: (Array Int), fIgnore: (TypeApp (TypeVar f) [Int]), ignore: Int] Any))] Any))])] (TypeVar b))
 						__local_var_4_11 := gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictFoldable_0, "foldr"), gopurs_runtime.Func(func(v1_4 gopurs_runtime.Value) gopurs_runtime.Value {
 							return gopurs_runtime.Func(func(v2_5 gopurs_runtime.Value) gopurs_runtime.Value {
 								return gopurs_runtime.Apply2(f_1, gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(v1_4, "nested"), "a"), gopurs_runtime.Apply3(gopurs_runtime.RecordGet(dictFoldable_0, "foldr"), f_1, gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), f_1, v2_5, gopurs_runtime.Array(func() []gopurs_runtime.Value {
