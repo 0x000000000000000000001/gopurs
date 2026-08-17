@@ -362,7 +362,7 @@ func Call_Main_bifoldr1(f_0_loop gopurs_runtime.Value, g_1_loop gopurs_runtime.V
 func Call_Main_bifoldMap(dictMonoid_0_loop *Constructor_Data_Monoid_Monoid) gopurs_runtime.Value {
 	var dictMonoid_0 *Constructor_Data_Monoid_Monoid = dictMonoid_0_loop
 	_ = dictMonoid_0
-	// TAST (Let): Semigroup0_1_0 -> *Constructor_Data_Semigroup_Semigroup
+	// TAST (Let): Semigroup0_1_0 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 	Semigroup0_1_0 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.Box(dictMonoid_0.V0), gopurs_runtime.Value{}))
 	_ = Semigroup0_1_0
 	return gopurs_runtime.Func(func(f_2 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -623,19 +623,19 @@ func Call_Main_bifoldableTest(dictBifoldable_0_loop gopurs_runtime.Value) gopurs
 	var dictBifoldable_0 gopurs_runtime.Value = dictBifoldable_0_loop
 	_ = dictBifoldable_0
 	return gopurs_runtime.Value{Type: 9, IntVal: 4001671834, UnsafePtr: unsafe.Pointer((&Constructor_Data_Bifoldable_Bifoldable{1, gopurs_runtime.Func(func(dictMonoid_1 gopurs_runtime.Value) gopurs_runtime.Value {
-		// TAST (Let): mempty_2_0 -> gopurs_runtime.Value
+		// TAST (Let): mempty_2_0 shape=Other expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(TypeVar m)
 		mempty_2_0 := gopurs_runtime.RecordGet(dictMonoid_1, "mempty")
 		_ = mempty_2_0
-		// TAST (Let): Semigroup0_3_1 -> *Constructor_Data_Semigroup_Semigroup
+		// TAST (Let): Semigroup0_3_1 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 		Semigroup0_3_1 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_1, "Semigroup0"), gopurs_runtime.Value{}))
 		_ = Semigroup0_3_1
-		// TAST (Let): bifoldMap2_4_2 -> gopurs_runtime.Value
+		// TAST (Let): bifoldMap2_4_2 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Func [(Func [(TypeVar a)] (TypeVar m)), (Func [Int] (TypeVar m)), (TypeApp (TypeVar f) [(TypeVar a), Int])] (TypeVar m))
 		bifoldMap2_4_2 := gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictBifoldable_0, "bifoldMap"), dictMonoid_1)
 		_ = bifoldMap2_4_2
-		// TAST (Let): Semigroup0_5_4 -> *Constructor_Data_Semigroup_Semigroup
+		// TAST (Let): Semigroup0_5_4 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 		Semigroup0_5_4 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_1, "Semigroup0"), gopurs_runtime.Value{}))
 		_ = Semigroup0_5_4
-		// TAST (Let): bifoldMap3_5_3 -> gopurs_runtime.Value
+		// TAST (Let): bifoldMap3_5_3 shape=Let(Abs(Abs(Abs(App(Other))))) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Func [(Func [(TypeVar a)] (TypeVar m)), (Func [Int] (TypeVar m)), (ADT ["Data","Tuple","Tuple"] [(TypeVar a), Int])] (TypeVar m))
 		bifoldMap3_5_3 := gopurs_runtime.Func(func(f_6 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(g_7 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(v_8 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -644,10 +644,10 @@ func Call_Main_bifoldableTest(dictBifoldable_0_loop gopurs_runtime.Value) gopurs
 			})
 		})
 		_ = bifoldMap3_5_3
-		// TAST (Let): Semigroup0_6_6 -> *Constructor_Data_Semigroup_Semigroup
+		// TAST (Let): Semigroup0_6_6 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 		Semigroup0_6_6 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_1, "Semigroup0"), gopurs_runtime.Value{}))
 		_ = Semigroup0_6_6
-		// TAST (Let): bifoldMap4_6_5 -> gopurs_runtime.Value
+		// TAST (Let): bifoldMap4_6_5 shape=Let(Abs(Abs(Abs(App(Other))))) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Func [(Func [(TypeVar b)] (TypeVar m)), (Func [Int] (TypeVar m)), (ADT ["Data","Tuple","Tuple"] [(TypeVar b), Int])] (TypeVar m))
 		bifoldMap4_6_5 := gopurs_runtime.Func(func(f_7 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(g_8 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(v_9 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -670,7 +670,7 @@ func Call_Main_bifoldableTest(dictBifoldable_0_loop gopurs_runtime.Value) gopurs
 					}
 					{
 						if m_9.Type == 9 && m_9.IntVal == 3720114489 {
-							// TAST (Let): Semigroup0_10_7 -> *Constructor_Data_Semigroup_Semigroup
+							// TAST (Let): Semigroup0_10_7 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 							Semigroup0_10_7 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_1, "Semigroup0"), gopurs_runtime.Value{}))
 							_ = Semigroup0_10_7
 							__t11 = gopurs_runtime.Apply2(gopurs_runtime.Box(Semigroup0_3_1.V0), gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), gopurs_runtime.Func(func(x_11 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -705,10 +705,10 @@ func Call_Main_bifoldableTest(dictBifoldable_0_loop gopurs_runtime.Value) gopurs
 					}
 					{
 						if m_9.Type == 9 && m_9.IntVal == 3712677948 {
-							// TAST (Let): Semigroup0_10_8 -> *Constructor_Data_Semigroup_Semigroup
+							// TAST (Let): Semigroup0_10_8 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 							Semigroup0_10_8 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_1, "Semigroup0"), gopurs_runtime.Value{}))
 							_ = Semigroup0_10_8
-							// TAST (Let): __local_var_11_9 -> gopurs_runtime.Value
+							// TAST (Let): __local_var_11_9 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Func [(ADT ["Data","Tuple","Tuple"] [(TypeVar a), Int])] (TypeVar m))
 							__local_var_11_9 := gopurs_runtime.Apply2(bifoldMap3_5_3, f_7, gopurs_runtime.Func(func(v_11 gopurs_runtime.Value) gopurs_runtime.Value {
 								return gopurs_runtime.RecordGet(dictMonoid_1, "mempty")
 							}))
@@ -734,7 +734,7 @@ func Call_Main_bifoldableTest(dictBifoldable_0_loop gopurs_runtime.Value) gopurs
 					}
 					{
 						if m_9.Type == 9 && m_9.IntVal == 1063363133 {
-							// TAST (Let): Semigroup0_10_10 -> *Constructor_Data_Semigroup_Semigroup
+							// TAST (Let): Semigroup0_10_10 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 							Semigroup0_10_10 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_1, "Semigroup0"), gopurs_runtime.Value{}))
 							_ = Semigroup0_10_10
 							__t11 = gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), gopurs_runtime.Func(func(x_11 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -1021,10 +1021,10 @@ bitraversableTest:
 		}
 		var dictBitraversable_0 gopurs_runtime.Value = dictBitraversable_0_loop
 		_ = dictBitraversable_0
-		// TAST (Let): __local_var_1_1 -> gopurs_runtime.Value
+		// TAST (Let): __local_var_1_1 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 		__local_var_1_1 := gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictBitraversable_0, "Bifunctor0"), gopurs_runtime.Value{})
 		_ = __local_var_1_1
-		// TAST (Let): bifunctorTest1_1_0 -> *Constructor_Data_Bifunctor_Bifunctor
+		// TAST (Let): bifunctorTest1_1_0 shape=Let(LitRecord) expectedFromAst=*Constructor_Data_Bifunctor_Bifunctor actual=*Constructor_Data_Bifunctor_Bifunctor bindingType=(ADT ["Data","Bifunctor","Bifunctor"] [(ADT ["Main","Test"] [(TypeVar f)])])
 		bifunctorTest1_1_0 := gopurs_runtime.CoerceToStruct[Constructor_Data_Bifunctor_Bifunctor](gopurs_runtime.RecordDict1("bimap", gopurs_runtime.Func(func(f_2 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(g_3 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(m_4 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -1254,24 +1254,24 @@ bitraversableTest:
 			})
 		})))
 		_ = bifunctorTest1_1_0
-		// TAST (Let): __local_var_2_4 -> gopurs_runtime.Value
+		// TAST (Let): __local_var_2_4 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 		__local_var_2_4 := gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictBitraversable_0, "Bifoldable1"), gopurs_runtime.Value{})
 		_ = __local_var_2_4
-		// TAST (Let): bifoldableTest1_2_3 -> *Constructor_Data_Bifoldable_Bifoldable
+		// TAST (Let): bifoldableTest1_2_3 shape=Let(LitRecord) expectedFromAst=*Constructor_Data_Bifoldable_Bifoldable actual=*Constructor_Data_Bifoldable_Bifoldable bindingType=(ADT ["Data","Bifoldable","Bifoldable"] [(ADT ["Main","Test"] [(TypeVar f)])])
 		bifoldableTest1_2_3 := gopurs_runtime.CoerceToStruct[Constructor_Data_Bifoldable_Bifoldable](gopurs_runtime.RecordDict3("bifoldMap", "bifoldl", "bifoldr", gopurs_runtime.Func(func(dictMonoid_3 gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): mempty_4_5 -> gopurs_runtime.Value
+			// TAST (Let): mempty_4_5 shape=Other expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(TypeVar m)
 			mempty_4_5 := gopurs_runtime.RecordGet(dictMonoid_3, "mempty")
 			_ = mempty_4_5
-			// TAST (Let): Semigroup0_5_6 -> *Constructor_Data_Semigroup_Semigroup
+			// TAST (Let): Semigroup0_5_6 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 			Semigroup0_5_6 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_3, "Semigroup0"), gopurs_runtime.Value{}))
 			_ = Semigroup0_5_6
-			// TAST (Let): bifoldMap2_6_7 -> gopurs_runtime.Value
+			// TAST (Let): bifoldMap2_6_7 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Func [(Func [(TypeVar a)] (TypeVar m)), (Func [Int] (TypeVar m)), (TypeApp (TypeVar f) [(TypeVar a), Int])] (TypeVar m))
 			bifoldMap2_6_7 := gopurs_runtime.Apply(gopurs_runtime.RecordGet(__local_var_2_4, "bifoldMap"), dictMonoid_3)
 			_ = bifoldMap2_6_7
-			// TAST (Let): Semigroup0_7_9 -> *Constructor_Data_Semigroup_Semigroup
+			// TAST (Let): Semigroup0_7_9 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 			Semigroup0_7_9 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_3, "Semigroup0"), gopurs_runtime.Value{}))
 			_ = Semigroup0_7_9
-			// TAST (Let): bifoldMap3_7_8 -> gopurs_runtime.Value
+			// TAST (Let): bifoldMap3_7_8 shape=Let(Abs(Abs(Abs(App(Other))))) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Func [(Func [(TypeVar a)] (TypeVar m)), (Func [Int] (TypeVar m)), (ADT ["Data","Tuple","Tuple"] [(TypeVar a), Int])] (TypeVar m))
 			bifoldMap3_7_8 := gopurs_runtime.Func(func(f_8 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(g_9 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Func(func(v_10 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -1280,10 +1280,10 @@ bitraversableTest:
 				})
 			})
 			_ = bifoldMap3_7_8
-			// TAST (Let): Semigroup0_8_11 -> *Constructor_Data_Semigroup_Semigroup
+			// TAST (Let): Semigroup0_8_11 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 			Semigroup0_8_11 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_3, "Semigroup0"), gopurs_runtime.Value{}))
 			_ = Semigroup0_8_11
-			// TAST (Let): bifoldMap4_8_10 -> gopurs_runtime.Value
+			// TAST (Let): bifoldMap4_8_10 shape=Let(Abs(Abs(Abs(App(Other))))) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Func [(Func [(TypeVar b)] (TypeVar m)), (Func [Int] (TypeVar m)), (ADT ["Data","Tuple","Tuple"] [(TypeVar b), Int])] (TypeVar m))
 			bifoldMap4_8_10 := gopurs_runtime.Func(func(f_9 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(g_10 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Func(func(v_11 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -1306,7 +1306,7 @@ bitraversableTest:
 						}
 						{
 							if m_11.Type == 9 && m_11.IntVal == 3720114489 {
-								// TAST (Let): Semigroup0_12_12 -> *Constructor_Data_Semigroup_Semigroup
+								// TAST (Let): Semigroup0_12_12 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 								Semigroup0_12_12 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_3, "Semigroup0"), gopurs_runtime.Value{}))
 								_ = Semigroup0_12_12
 								__t16 = gopurs_runtime.Apply2(gopurs_runtime.Box(Semigroup0_5_6.V0), gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), gopurs_runtime.Func(func(x_13 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -1341,10 +1341,10 @@ bitraversableTest:
 						}
 						{
 							if m_11.Type == 9 && m_11.IntVal == 3712677948 {
-								// TAST (Let): Semigroup0_12_13 -> *Constructor_Data_Semigroup_Semigroup
+								// TAST (Let): Semigroup0_12_13 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 								Semigroup0_12_13 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_3, "Semigroup0"), gopurs_runtime.Value{}))
 								_ = Semigroup0_12_13
-								// TAST (Let): __local_var_13_14 -> gopurs_runtime.Value
+								// TAST (Let): __local_var_13_14 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Func [(ADT ["Data","Tuple","Tuple"] [(TypeVar a), Int])] (TypeVar m))
 								__local_var_13_14 := gopurs_runtime.Apply2(bifoldMap3_7_8, f_9, gopurs_runtime.Func(func(v_13 gopurs_runtime.Value) gopurs_runtime.Value {
 									return gopurs_runtime.RecordGet(dictMonoid_3, "mempty")
 								}))
@@ -1370,7 +1370,7 @@ bitraversableTest:
 						}
 						{
 							if m_11.Type == 9 && m_11.IntVal == 1063363133 {
-								// TAST (Let): Semigroup0_12_15 -> *Constructor_Data_Semigroup_Semigroup
+								// TAST (Let): Semigroup0_12_15 shape=App(Other) expectedFromAst=*Constructor_Data_Semigroup_Semigroup actual=*Constructor_Data_Semigroup_Semigroup bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
 								Semigroup0_12_15 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonoid_3, "Semigroup0"), gopurs_runtime.Value{}))
 								_ = Semigroup0_12_15
 								__t16 = gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), gopurs_runtime.Func(func(x_13 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -1661,10 +1661,10 @@ bitraversableTest:
 				}), v_4)
 			})
 		}), gopurs_runtime.Func(func(dictApplicative_3 gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): Apply0_4_19 -> *Constructor_Control_Apply_Apply
+			// TAST (Let): Apply0_4_19 shape=App(Other) expectedFromAst=*Constructor_Control_Apply_Apply actual=*Constructor_Control_Apply_Apply bindingType=(ADT ["Control","Apply","Apply"] [(TypeVar f)])
 			Apply0_4_19 := gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictApplicative_3, "Apply0"), gopurs_runtime.Value{}))
 			_ = Apply0_4_19
-			// TAST (Let): Functor0_5_20 -> *Constructor_Data_Functor_Functor
+			// TAST (Let): Functor0_5_20 shape=App(Other) expectedFromAst=*Constructor_Data_Functor_Functor actual=*Constructor_Data_Functor_Functor bindingType=(ADT ["Data","Functor","Functor"] [(TypeVar f)])
 			Functor0_5_20 := gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor](gopurs_runtime.Apply(gopurs_runtime.RecordGet(gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictApplicative_3, "Apply0"), gopurs_runtime.Value{}), "Functor0"), gopurs_runtime.Value{}))
 			_ = Functor0_5_20
 			return gopurs_runtime.Func(func(f_6 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -1681,7 +1681,7 @@ bitraversableTest:
 						}
 						{
 							if m_8.Type == 9 && m_8.IntVal == 3720114489 {
-								// TAST (Let): Apply0_9_21 -> gopurs_runtime.Value
+								// TAST (Let): Apply0_9_21 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 								Apply0_9_21 := gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictApplicative_3, "Apply0"), gopurs_runtime.Value{})
 								_ = Apply0_9_21
 								__t28 = gopurs_runtime.Apply2(gopurs_runtime.Box(Apply0_4_19.V1), gopurs_runtime.Apply2(gopurs_runtime.Box(Functor0_5_20.V0), gopurs_runtime.Func(func(v2_9 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -1711,12 +1711,13 @@ bitraversableTest:
 						}
 						{
 							if m_8.Type == 9 && m_8.IntVal == 227416251 {
-								// TAST (Let): __local_var_9_22 -> gopurs_runtime.Value
-								var __local_var_9_22 gopurs_runtime.Value = gopurs_runtime.Int((*Constructor_Main_Test3)(m_8.UnsafePtr).V0)
+								// TAST (Let): __local_var_9_22 shape=Other expectedFromAst=gopurs_runtime.Value actual=int64 bindingType=Any
+								__local_var_9_22 := (*Constructor_Main_Test3)(m_8.UnsafePtr).V0
+								_ = __local_var_9_22
 								__t28 = gopurs_runtime.Apply2(gopurs_runtime.Box(Apply0_4_19.V1), gopurs_runtime.Apply2(gopurs_runtime.Box(Apply0_4_19.V1), gopurs_runtime.Apply2(gopurs_runtime.Box(Functor0_5_20.V0), gopurs_runtime.Func(func(v4_10 gopurs_runtime.Value) gopurs_runtime.Value {
 									return gopurs_runtime.Func(func(v5_11 gopurs_runtime.Value) gopurs_runtime.Value {
 										return gopurs_runtime.Func(func(v6_12 gopurs_runtime.Value) gopurs_runtime.Value {
-											return gopurs_runtime.Value{Type: 9, IntVal: 227416251, UnsafePtr: unsafe.Pointer((&Constructor_Main_Test3{1, __local_var_9_22.IntVal, v4_10, v5_11, v6_12}))}
+											return gopurs_runtime.Value{Type: 9, IntVal: 227416251, UnsafePtr: unsafe.Pointer((&Constructor_Main_Test3{1, __local_var_9_22, v4_10, v5_11, v6_12}))}
 										})
 									})
 								}), gopurs_runtime.Apply4(gopurs_runtime.RecordGet(dictBitraversable_0, "bitraverse"), gopurs_runtime.Value{Type: 9, IntVal: 1459134221, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative](dictApplicative_3))}, f_6, g_7, (*Constructor_Main_Test3)(m_8.UnsafePtr).V1)), gopurs_runtime.Apply4(gopurs_runtime.RecordGet(dictBitraversable_0, "bitraverse"), gopurs_runtime.Value{Type: 9, IntVal: 1459134221, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative](dictApplicative_3))}, f_6, gopurs_runtime.RecordGet(dictApplicative_3, "pure"), (*Constructor_Main_Test3)(m_8.UnsafePtr).V2)), gopurs_runtime.Apply4(gopurs_runtime.RecordGet(dictBitraversable_0, "bitraverse"), gopurs_runtime.Value{Type: 9, IntVal: 1459134221, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative](dictApplicative_3))}, gopurs_runtime.RecordGet(dictApplicative_3, "pure"), g_7, (*Constructor_Main_Test3)(m_8.UnsafePtr).V3))
@@ -1727,13 +1728,13 @@ bitraversableTest:
 						}
 						{
 							if m_8.Type == 9 && m_8.IntVal == 3712677948 {
-								// TAST (Let): Apply0_9_23 -> gopurs_runtime.Value
+								// TAST (Let): Apply0_9_23 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 								Apply0_9_23 := gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictApplicative_3, "Apply0"), gopurs_runtime.Value{})
 								_ = Apply0_9_23
-								// TAST (Let): Apply0_10_24 -> *Constructor_Control_Apply_Apply
+								// TAST (Let): Apply0_10_24 shape=App(Other) expectedFromAst=*Constructor_Control_Apply_Apply actual=*Constructor_Control_Apply_Apply bindingType=(ADT ["Control","Apply","Apply"] [(TypeVar f)])
 								Apply0_10_24 := gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictApplicative_3, "Apply0"), gopurs_runtime.Value{}))
 								_ = Apply0_10_24
-								// TAST (Let): Functor0_11_25 -> *Constructor_Data_Functor_Functor
+								// TAST (Let): Functor0_11_25 shape=App(Other) expectedFromAst=*Constructor_Data_Functor_Functor actual=*Constructor_Data_Functor_Functor bindingType=(ADT ["Data","Functor","Functor"] [(TypeVar f)])
 								Functor0_11_25 := gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor](gopurs_runtime.Apply(gopurs_runtime.RecordGet(gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictApplicative_3, "Apply0"), gopurs_runtime.Value{}), "Functor0"), gopurs_runtime.Value{}))
 								_ = Functor0_11_25
 								__t28 = gopurs_runtime.Apply2(gopurs_runtime.Box(Apply0_4_19.V1), gopurs_runtime.Apply2(gopurs_runtime.Box(Functor0_5_20.V0), gopurs_runtime.Func(func(v2_9 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -1764,27 +1765,50 @@ bitraversableTest:
 						}
 						{
 							if m_8.Type == 9 && m_8.IntVal == 1063363133 {
-								// TAST (Let): __local_var_9_26 -> gopurs_runtime.Value
-								var __local_var_9_26 gopurs_runtime.Value = (*Constructor_Main_Test5)(m_8.UnsafePtr).V0
-								// TAST (Let): Apply0_10_27 -> gopurs_runtime.Value
+								// TAST (Let): __local_var_9_26 shape=Other expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
+								__local_var_9_26 := (*Constructor_Main_Test5)(m_8.UnsafePtr).V0
+								_ = __local_var_9_26
+								// TAST (Let): Apply0_10_27 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 								Apply0_10_27 := gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictApplicative_3, "Apply0"), gopurs_runtime.Value{})
 								_ = Apply0_10_27
 								__t28 = gopurs_runtime.Apply2(gopurs_runtime.Box(Functor0_5_20.V0), gopurs_runtime.Func(func(v1_10 gopurs_runtime.Value) gopurs_runtime.Value {
-									return gopurs_runtime.Value{Type: 9, IntVal: 1063363133, UnsafePtr: unsafe.Pointer((&Constructor_Main_Test5{1, gopurs_runtime.RecordUpdate1(__local_var_9_26, "nested", func() gopurs_runtime.Value {
-										arr := func() []gopurs_runtime.Value {
-											arr := *(*[]gopurs_runtime.Value)(v1_10.UnsafePtr)
-											unboxed := make([]gopurs_runtime.Value, len(arr))
-											for i, v := range arr {
-												unboxed[i] = v
-											}
-											return unboxed
-										}()
-										boxed := make([]gopurs_runtime.Value, len(arr))
-										for i, v := range arr {
-											boxed[i] = v
+									return gopurs_runtime.Value{Type: 9, IntVal: 1063363133, UnsafePtr: unsafe.Pointer((&Constructor_Main_Test5{1, func() gopurs_runtime.Value {
+										origVal := __local_var_9_26
+										if origVal.Type != gopurs_runtime.TypeRecord1 {
+											return gopurs_runtime.RecordUpdateDict(origVal, []string{"nested"}, []gopurs_runtime.Value{func() gopurs_runtime.Value {
+												arr := func() []gopurs_runtime.Value {
+													arr := *(*[]gopurs_runtime.Value)(v1_10.UnsafePtr)
+													unboxed := make([]gopurs_runtime.Value, len(arr))
+													for i, v := range arr {
+														unboxed[i] = v
+													}
+													return unboxed
+												}()
+												boxed := make([]gopurs_runtime.Value, len(arr))
+												for i, v := range arr {
+													boxed[i] = v
+												}
+												return gopurs_runtime.Array(boxed)
+											}()})
 										}
-										return gopurs_runtime.Array(boxed)
-									}())}))}
+										clone := *((*gopurs_runtime.RecordData1)(origVal.UnsafePtr))
+										clone.V0 = func() gopurs_runtime.Value {
+											arr := func() []gopurs_runtime.Value {
+												arr := *(*[]gopurs_runtime.Value)(v1_10.UnsafePtr)
+												unboxed := make([]gopurs_runtime.Value, len(arr))
+												for i, v := range arr {
+													unboxed[i] = v
+												}
+												return unboxed
+											}()
+											boxed := make([]gopurs_runtime.Value, len(arr))
+											for i, v := range arr {
+												boxed[i] = v
+											}
+											return gopurs_runtime.Array(boxed)
+										}()
+										return gopurs_runtime.Value{Type: gopurs_runtime.TypeRecord1, UnsafePtr: unsafe.Pointer(&clone)}
+									}()}))}
 								}), gopurs_runtime.Apply6(Get_Data_Traversable_traverseArrayImpl(), gopurs_runtime.RecordGet(Apply0_10_27, "apply"), gopurs_runtime.RecordGet(gopurs_runtime.Apply(gopurs_runtime.RecordGet(Apply0_10_27, "Functor0"), gopurs_runtime.Value{}), "map"), gopurs_runtime.RecordGet(dictApplicative_3, "pure"), Get_Data_Semigroup_concatArray(), gopurs_runtime.Func(func(v1_11 gopurs_runtime.Value) gopurs_runtime.Value {
 									return gopurs_runtime.Apply2(gopurs_runtime.Box(Functor0_5_20.V0), gopurs_runtime.Func(func(v2_12 gopurs_runtime.Value) gopurs_runtime.Value {
 										return gopurs_runtime.RecordUpdate1(v1_11, "x", v2_12)

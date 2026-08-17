@@ -40,7 +40,7 @@ func Get_Main_main() gopurs_runtime.Value {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 			var __t2 string
 			{
-				// TAST (Let): __local_var_0_1 -> *Constructor_Main_B
+				// TAST (Let): __local_var_0_1 shape=Other expectedFromAst=*Constructor_Main_B actual=*Constructor_Main_B bindingType=(ADT ["Main","B"] [(Func [Int] (Array Unit))])
 				__local_var_0_1 := (&Constructor_Main_B{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Array(func() []gopurs_runtime.Value {
 						arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array([]gopurs_runtime.Value{}).UnsafePtr)
@@ -90,7 +90,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				__t2 = "false"
 			}
 		end_branch_2:
-			// TAST (Let): __local_var_0_0 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(__t2))
 			_ = __local_var_0_0
 			_dollar___unused_1_3 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})

@@ -48,7 +48,7 @@ var once_Main_main sync.Once
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 			__local_var_0_0 := gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("Incorrect result!"), gopurs_runtime.Bool((Call_Main_match2(gopurs_runtime.CoerceToStruct[Constructor_Main_Cons](gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((&Constructor_Main_Cons{1, gopurs_runtime.Float(1.0), (&Constructor_Main_Cons{1, gopurs_runtime.Float(2.0), (&Constructor_Main_Cons{1, gopurs_runtime.Float(3.0), (&Constructor_Main_Cons{1, gopurs_runtime.Float(4.0), (&Constructor_Main_Cons{1, gopurs_runtime.Float(5.0), (&Constructor_Main_Cons{1, gopurs_runtime.Float(6.0), (&Constructor_Main_Cons{1, gopurs_runtime.Float(7.0), (&Constructor_Main_Cons{1, gopurs_runtime.Float(8.0), (&Constructor_Main_Cons{1, gopurs_runtime.Float(9.0), (*Constructor_Main_Cons)(nil)})})})})})})})})}))}))) == (100.0)))
 			_ = __local_var_0_0
 			_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})

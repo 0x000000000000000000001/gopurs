@@ -139,7 +139,7 @@ var once_Main_main sync.Once
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): z_0_0 -> int64
+			// TAST (Let): z_0_0 shape=App(Var) expectedFromAst=int64 actual=int64 bindingType=Int
 			z_0_0 := gopurs_runtime.Apply(Call_Main_count(gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Bool((v_0.IntVal) > (0))
 			})), func() gopurs_runtime.Value {
@@ -189,7 +189,7 @@ func Get_Main_main() gopurs_runtime.Value {
 					}()
 				})
 			})
-			// TAST (Let): __local_var_1_1 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_1_1 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_1_1 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.Int(gopurs_runtime.Apply3(go__go_1_2_3, gopurs_runtime.Func(func(x_2 gopurs_runtime.Value) gopurs_runtime.Value {
 				return x_2
 			}), gopurs_runtime.Int(7), gopurs_runtime.Int(3)).IntVal)).StrVal()))

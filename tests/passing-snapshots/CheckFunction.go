@@ -10,7 +10,7 @@ var once_Main_test sync.Once
 
 func Get_Main_test() gopurs_runtime.Value {
 	once_Main_test.Do(func() {
-		cache_Main_test = gopurs_runtime.Float(10.0)
+		cache_Main_test = gopurs_runtime.Float(gopurs_runtime.Float(10.0).FloatVal())
 	})
 	return cache_Main_test
 }

@@ -248,7 +248,7 @@ var once_Main_showB sync.Once
 func Get_Main_showB() gopurs_runtime.Value {
 	once_Main_showB.Do(func() {
 		cache_Main_showB = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer((&Constructor_Data_Show_Show{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): __local_var_1_0 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_1_0 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [genericShowArgs: (Func [(TypeVar a)] (Array String))] Any))
 			__local_var_1_0 := gopurs_runtime.RecordDict1("genericShowArgs", gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return func() gopurs_runtime.Value {
 					arr := []string{gopurs_runtime.Apply(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show](Get_Main_showC()).V0), v_1).StrVal()}
@@ -260,9 +260,9 @@ func Get_Main_showB() gopurs_runtime.Value {
 				}()
 			}))
 			_ = __local_var_1_0
-			// TAST (Let): __local_var_2_1 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_2_1 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [genericShow': (Func [(TypeVar a)] String)] Any))
 			__local_var_2_1 := gopurs_runtime.RecordDict1("genericShow'", gopurs_runtime.Func(func(v_2 gopurs_runtime.Value) gopurs_runtime.Value {
-				// TAST (Let): v1_3_2 -> gopurs_runtime.Value
+				// TAST (Let): v1_3_2 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 				v1_3_2 := gopurs_runtime.Apply(gopurs_runtime.RecordGet(__local_var_1_0, "genericShowArgs"), v_2)
 				_ = v1_3_2
 				var __t3 string
@@ -354,9 +354,9 @@ var once_Main_showC sync.Once
 func Get_Main_showC() gopurs_runtime.Value {
 	once_Main_showC.Do(func() {
 		cache_Main_showC = func() gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_0_0 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [genericShowArgs: (Func [(TypeVar a)] (Array String))] Any))
 			__local_var_0_0 := gopurs_runtime.RecordDict1("genericShowArgs", gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
-				// TAST (Let): __local_var_1_1 -> gopurs_runtime.Value
+				// TAST (Let): __local_var_1_1 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [genericShowArgs: (Func [(TypeVar a)] (Array String))] Any))
 				__local_var_1_1 := gopurs_runtime.RecordDict1("genericShowArgs", gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
 					return func() gopurs_runtime.Value {
 						arr := []string{gopurs_runtime.Apply(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show](Get_Main_showC()).V0), v_1).StrVal()}
@@ -368,9 +368,9 @@ func Get_Main_showC() gopurs_runtime.Value {
 					}()
 				}))
 				_ = __local_var_1_1
-				// TAST (Let): __local_var_2_2 -> gopurs_runtime.Value
+				// TAST (Let): __local_var_2_2 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [genericShow': (Func [(TypeVar a)] String)] Any))
 				__local_var_2_2 := gopurs_runtime.RecordDict1("genericShow'", gopurs_runtime.Func(func(v_2 gopurs_runtime.Value) gopurs_runtime.Value {
-					// TAST (Let): v1_3_3 -> gopurs_runtime.Value
+					// TAST (Let): v1_3_3 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 					v1_3_3 := gopurs_runtime.Apply(gopurs_runtime.RecordGet(__local_var_1_1, "genericShowArgs"), v_2)
 					_ = v1_3_3
 					var __t4 string
@@ -448,9 +448,9 @@ func Get_Main_showC() gopurs_runtime.Value {
 				}()
 			}))
 			_ = __local_var_0_0
-			// TAST (Let): __local_var_1_6 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_1_6 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [genericShow': (Func [(TypeVar a)] String)] Any))
 			__local_var_1_6 := gopurs_runtime.RecordDict1("genericShow'", gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				// TAST (Let): v1_2_7 -> gopurs_runtime.Value
+				// TAST (Let): v1_2_7 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 				v1_2_7 := gopurs_runtime.Apply(gopurs_runtime.RecordGet(__local_var_0_0, "genericShowArgs"), v_1)
 				_ = v1_2_7
 				var __t8 string
@@ -567,7 +567,7 @@ var once_Main_showB2 sync.Once
 func Get_Main_showB2() gopurs_runtime.Value {
 	once_Main_showB2.Do(func() {
 		cache_Main_showB2 = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer((&Constructor_Data_Show_Show{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): __local_var_1_0 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_1_0 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [genericShowArgs: (Func [(TypeVar a)] (Array String))] Any))
 			__local_var_1_0 := gopurs_runtime.RecordDict1("genericShowArgs", gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return func() gopurs_runtime.Value {
 					arr := []string{gopurs_runtime.Apply(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show](Get_Main_showC2()).V0), v_1).StrVal()}
@@ -579,9 +579,9 @@ func Get_Main_showB2() gopurs_runtime.Value {
 				}()
 			}))
 			_ = __local_var_1_0
-			// TAST (Let): __local_var_2_1 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_2_1 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [genericShow': (Func [(TypeVar a)] String)] Any))
 			__local_var_2_1 := gopurs_runtime.RecordDict1("genericShow'", gopurs_runtime.Func(func(v_2 gopurs_runtime.Value) gopurs_runtime.Value {
-				// TAST (Let): v1_3_2 -> gopurs_runtime.Value
+				// TAST (Let): v1_3_2 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 				v1_3_2 := gopurs_runtime.Apply(gopurs_runtime.RecordGet(__local_var_1_0, "genericShowArgs"), v_2)
 				_ = v1_3_2
 				var __t3 string
@@ -663,7 +663,7 @@ var once_Main_showA2 sync.Once
 func Get_Main_showA2() gopurs_runtime.Value {
 	once_Main_showA2.Do(func() {
 		cache_Main_showA2 = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer((&Constructor_Data_Show_Show{1, gopurs_runtime.Func(func(record_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): __local_var_1_0 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_1_0 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [genericShowArgs: (Func [(TypeVar a)] (Array String))] Any))
 			__local_var_1_0 := gopurs_runtime.RecordDict1("genericShowArgs", gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return func() gopurs_runtime.Value {
 					arr := []string{gopurs_runtime.Apply(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show](Get_Main_showC2()).V0), v_1).StrVal()}
@@ -675,9 +675,9 @@ func Get_Main_showA2() gopurs_runtime.Value {
 				}()
 			}))
 			_ = __local_var_1_0
-			// TAST (Let): __local_var_2_1 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_2_1 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [genericShow': (Func [(TypeVar a)] String)] Any))
 			__local_var_2_1 := gopurs_runtime.RecordDict1("genericShow'", gopurs_runtime.Func(func(v_2 gopurs_runtime.Value) gopurs_runtime.Value {
-				// TAST (Let): v1_3_2 -> gopurs_runtime.Value
+				// TAST (Let): v1_3_2 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 				v1_3_2 := gopurs_runtime.Apply(gopurs_runtime.RecordGet(__local_var_1_0, "genericShowArgs"), v_2)
 				_ = v1_3_2
 				var __t3 string
@@ -759,7 +759,7 @@ var once_Main_showC2 sync.Once
 func Get_Main_showC2() gopurs_runtime.Value {
 	once_Main_showC2.Do(func() {
 		cache_Main_showC2 = func() gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_0_0 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [genericShowArgs: (Func [(TypeVar a)] (Array String))] Any))
 			__local_var_0_0 := gopurs_runtime.RecordDict1("genericShowArgs", gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 				return func() gopurs_runtime.Value {
 					arr := []string{gopurs_runtime.Apply(gopurs_runtime.Box(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show](Get_Main_showA2()).V0), v_0).StrVal()}
@@ -771,9 +771,9 @@ func Get_Main_showC2() gopurs_runtime.Value {
 				}()
 			}))
 			_ = __local_var_0_0
-			// TAST (Let): __local_var_1_1 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_1_1 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [genericShow': (Func [(TypeVar a)] String)] Any))
 			__local_var_1_1 := gopurs_runtime.RecordDict1("genericShow'", gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				// TAST (Let): v1_2_2 -> gopurs_runtime.Value
+				// TAST (Let): v1_2_2 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 				v1_2_2 := gopurs_runtime.Apply(gopurs_runtime.RecordGet(__local_var_0_0, "genericShowArgs"), v_1)
 				_ = v1_2_2
 				var __t3 string

@@ -138,7 +138,7 @@ var once_Main_main sync.Once
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 -> gopurs_runtime.Value
+			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Str("X"))
 			_ = __local_var_0_0
 			r_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
@@ -327,7 +327,7 @@ end_branch_1:
 func Call_Main_test5(dictApply_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var dictApply_0 gopurs_runtime.Value = dictApply_0_loop
 	_ = dictApply_0
-	// TAST (Let): Functor0_1_0 -> *Constructor_Data_Functor_Functor
+	// TAST (Let): Functor0_1_0 shape=App(Other) expectedFromAst=*Constructor_Data_Functor_Functor actual=*Constructor_Data_Functor_Functor bindingType=(ADT ["Data","Functor","Functor"] [Any])
 	Functor0_1_0 := gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictApply_0, "Functor0"), gopurs_runtime.Value{}))
 	_ = Functor0_1_0
 	return gopurs_runtime.Func(func(mx_2 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -335,7 +335,7 @@ func Call_Main_test5(dictApply_0_loop gopurs_runtime.Value) gopurs_runtime.Value
 			return gopurs_runtime.Func(func(mz_4 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Apply2(gopurs_runtime.RecordGet(dictApply_0, "apply"), gopurs_runtime.Apply2(gopurs_runtime.RecordGet(dictApply_0, "apply"), gopurs_runtime.Apply2(gopurs_runtime.Box(Functor0_1_0.V0), gopurs_runtime.Func(func(v_5 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Func(func(v1_6 gopurs_runtime.Value) gopurs_runtime.Value {
-						// TAST (Let): sum_7_1 -> float64
+						// TAST (Let): sum_7_1 shape=Other expectedFromAst=float64 actual=float64 bindingType=Number
 						sum_7_1 := (v_5.FloatVal()) + (v1_6.FloatVal())
 						_ = sum_7_1
 						return gopurs_runtime.Func(func(v2_8 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -351,7 +351,7 @@ func Call_Main_test5(dictApply_0_loop gopurs_runtime.Value) gopurs_runtime.Value
 func Call_Main_test4(dictApply_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var dictApply_0 gopurs_runtime.Value = dictApply_0_loop
 	_ = dictApply_0
-	// TAST (Let): Functor0_1_0 -> *Constructor_Data_Functor_Functor
+	// TAST (Let): Functor0_1_0 shape=App(Other) expectedFromAst=*Constructor_Data_Functor_Functor actual=*Constructor_Data_Functor_Functor bindingType=(ADT ["Data","Functor","Functor"] [Any])
 	Functor0_1_0 := gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictApply_0, "Functor0"), gopurs_runtime.Value{}))
 	_ = Functor0_1_0
 	return gopurs_runtime.Func(func(mx_2 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -368,7 +368,7 @@ func Call_Main_test4(dictApply_0_loop gopurs_runtime.Value) gopurs_runtime.Value
 func Call_Main_test11(dictApply_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var dictApply_0 gopurs_runtime.Value = dictApply_0_loop
 	_ = dictApply_0
-	// TAST (Let): Functor0_1_0 -> *Constructor_Data_Functor_Functor
+	// TAST (Let): Functor0_1_0 shape=App(Other) expectedFromAst=*Constructor_Data_Functor_Functor actual=*Constructor_Data_Functor_Functor bindingType=(ADT ["Data","Functor","Functor"] [Any])
 	Functor0_1_0 := gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictApply_0, "Functor0"), gopurs_runtime.Value{}))
 	_ = Functor0_1_0
 	return gopurs_runtime.Func(func(dictApplicative_2 gopurs_runtime.Value) gopurs_runtime.Value {

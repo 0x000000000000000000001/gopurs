@@ -135,7 +135,7 @@ func Call_Main_unLBox(g_0_loop gopurs_runtime.Value, v_1_loop gopurs_runtime.Val
 	_ = g_0
 	var v_1 gopurs_runtime.Value = v_1_loop
 	_ = v_1
-	// TAST (Let): g2_2_0 -> gopurs_runtime.Value
+	// TAST (Let): g2_2_0 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 	g2_2_0 := gopurs_runtime.Apply(g_0, gopurs_runtime.Value{})
 	_ = g2_2_0
 	return gopurs_runtime.Apply(v_1, gopurs_runtime.Func(func(_dollar___unused_3 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -212,7 +212,7 @@ func Call_Main_unLBox__2682485592(g_0_loop gopurs_runtime.Value, v_1_loop gopurs
 	_ = g_0
 	var v_1 gopurs_runtime.Value = v_1_loop
 	_ = v_1
-	// TAST (Let): g2_2_0 -> gopurs_runtime.Value
+	// TAST (Let): g2_2_0 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 	g2_2_0 := gopurs_runtime.Apply(g_0, gopurs_runtime.Value{})
 	_ = g2_2_0
 	return gopurs_runtime.Apply(v_1, gopurs_runtime.Func(func(_dollar___unused_3 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -227,7 +227,7 @@ func Call_Main_unLBox__3788829592(g_0_loop gopurs_runtime.Value, v_1_loop gopurs
 	_ = g_0
 	var v_1 gopurs_runtime.Value = v_1_loop
 	_ = v_1
-	// TAST (Let): g2_2_0 -> gopurs_runtime.Value
+	// TAST (Let): g2_2_0 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
 	g2_2_0 := gopurs_runtime.Apply(g_0, gopurs_runtime.Value{})
 	_ = g2_2_0
 	return gopurs_runtime.Apply(v_1, gopurs_runtime.Func(func(_dollar___unused_3 gopurs_runtime.Value) gopurs_runtime.Value {

@@ -71,7 +71,7 @@ func Call_Main_f(_dollar___unused_0_loop gopurs_runtime.Value, v_1_loop int64) i
 		__t0 = func() gopurs_runtime.Value { panic("Failed pattern match") }().IntVal
 	}
 end_branch_0:
-	return __t0
+	return gopurs_runtime.Int(__t0).IntVal
 }
 
 func Call_Main_f_prime_(v_0_loop int64) int64 {
@@ -90,5 +90,5 @@ func Call_Main_f_prime_(v_0_loop int64) int64 {
 		__t0 = func() gopurs_runtime.Value { panic("Failed pattern match") }().IntVal
 	}
 end_branch_0:
-	return __t0
+	return gopurs_runtime.Int(__t0).IntVal
 }
