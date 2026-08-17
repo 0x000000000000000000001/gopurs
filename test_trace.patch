@@ -1,9 +1,0 @@
---- src/Gopurs/CodeGen.purs
-+++ src/Gopurs/CodeGen.purs
-@@ -213,6 +213,7 @@
-                   [ Tuple (sanitizeName name) { fullName, fArgs: fArgsGo, fRet: fRetGo, arity: Array.length args } ]
-               Nothing ->
-                 let fullName = "Call_" <> modNameStr <> "_" <> sanitizeName name
-                 in [ Tuple (sanitizeName name) { fullName, fArgs: [], fRet: TypeValue, arity: 0 } ]
-         )
-         binds

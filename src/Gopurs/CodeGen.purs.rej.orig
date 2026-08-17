@@ -1,9 +1,0 @@
-@@ -62,7 +62,7 @@
-     Array.foldr (\idx acc -> GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ acc, fromMaybe (GoRaw "nil") (Array.index args idx) ]) fn args
- 
- boxGoExpr :: GoExpr -> GoType -> GoExpr
--boxGoExpr expr TypeBool = GoCall (GoSelector (GoVar "gopurs_runtime") ("Bool/*" <> goTypeToStr (TypeBool) <> "*/")) [ expr ]
-+boxGoExpr expr TypeBool = GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ expr ]
- boxGoExpr expr TypeInt64 = GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ expr ]
- boxGoExpr expr TypeFloat64 = GoCall (GoSelector (GoVar "gopurs_runtime") "Float") [ expr ]
- boxGoExpr expr TypeString = GoCall (GoSelector (GoVar "gopurs_runtime") "Str") [ expr ]
