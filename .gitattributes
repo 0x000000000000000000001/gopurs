@@ -1,8 +1,11 @@
-# Ignore all files for language stats
-* linguist-vendored
+# Suppress PureScript entirely from stats
+*.purs linguist-detectable=false
+*.purs linguist-vendored
+
 # Keep JS generated diffs hidden
 *.js linguist-generated
 bin/gopurs.js linguist-generated
 
 # Only include target language
+*.go linguist-detectable=true
 *.go linguist-vendored=false
