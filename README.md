@@ -141,7 +141,7 @@ Since its inception, `gopurs` has reached several major milestones:
 - [x] **Native `Aff` via goroutines:** Full support for `Aff` mapped directly to Go's goroutines. This emulates the event loop while providing **true multi-core parallelism for free**, meaning your async PureScript code gets exponentially faster on multi-core systems.
 - [x] **Real world validation (unit):** Successful validation on 100% of the unit tests for a complex, full scale project involving Postgres, S3, RabbitMQ, and deep Aff nesting.
 - [x] **Real world validation (integration):** Successful validation on 100% of the integration tests for a complex, full scale project involving Postgres, S3, RabbitMQ, and deep Aff nesting.
-- [ ] **Module validation:** Validate tests module by module (`gopurs-*`).
+- [x] **Module validation:** Validate tests module by module (`gopurs-*`).
 - [ ] General code **cleanup** (it’s still quite messy)
 
 _(maybe more to come)_
