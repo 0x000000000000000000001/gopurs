@@ -13,3 +13,9 @@ bin/gopurs.js linguist-generated
 # Suppress Dhall entirely from stats
 *.dhall linguist-detectable=false
 *.dhall linguist-vendored
+
+# Suppress AI artifact languages from stats
+*.py linguist-detectable=false
+*.py linguist-vendored
+*.js linguist-detectable=false
+*.js linguist-vendored
