@@ -226,7 +226,7 @@ wrapInStmts _ stmts expr =
     else GoRaw ("func() gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (stmtsArr <> [ GoReturn expr ])) <> "\n}()")
 
 extractUncurriedAbs :: TcoExpr -> Maybe { args :: Array String, body :: TcoExpr, fvs :: Set String }
-extractUncurriedAbs tcoExpr@(TcoExpr a syntax) = case syntax of
+extractUncurriedAbs tcoExpr@(TcoExpr _ syntax) = case syntax of
   UncurriedAbs args body ->
     let
       thisArgs = map (\(Tuple mbI lvl) -> localId mbI lvl) args
@@ -240,10 +240,6 @@ extractUncurriedAbs tcoExpr@(TcoExpr a syntax) = case syntax of
       Just inner -> Just { args: thisArgs <> inner.args, body: inner.body, fvs: Set.union (freeVars tcoExpr) inner.fvs }
       Nothing -> Just { args: thisArgs, body, fvs: freeVars tcoExpr }
   Typed _ inner -> extractUncurriedAbs inner
-  Let mbIdent lvl binding body ->
-    case extractUncurriedAbs body of
-      Just inner -> Just { args: inner.args, body: TcoExpr a (Let mbIdent lvl binding inner.body), fvs: Set.union (freeVars tcoExpr) inner.fvs }
-      Nothing -> Nothing
   _ -> Nothing
 
 unwrapExpr :: TcoExpr -> BackendSyntax TcoExpr
@@ -810,9 +806,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                       in { stmts: res.stmts, expr: coerceGoExpr res.expr res.exprType expectedGoType, exprType: expectedGoType, nextId: res.nextId }
           _, _ ->
             let res = translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail inEffectBlock nextId a
-            in case res.exprType of
-              TypeStructPointer _ _ _ _ -> res
-              _ -> 
+            in
                 if expectedGoType == res.exprType then res
                 else if isClosureNode helpersRef a then res
                 else
@@ -1654,7 +1648,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                     else
                       StmtLeaf (GoRaw ("var " <> name <> " " <> goTypeToStr actualGoType <> " = " <> printGoExpr (unboxGoExpr resBinding.expr resBinding.exprType actualGoType)))
         in
-          { stmts: resBinding.stmts <> StmtLeaf (GoRaw ("// TAST (Let): " <> name <> " shape=" <> printTcoExprShape binding <> " expectedFromAst=" <> goTypeToStr expectedGoTypeFromAst <> " actual=" <> goTypeToStr actualGoType <> " resBindingType=" <> goTypeToStr resBinding.exprType <> " bindingType=" <> printExprType (getExprType binding))) <> letStmt <> resBody.stmts, expr: resBody.expr, exprType: resBody.exprType, nextId: resBody.nextId }
+          { stmts: resBinding.stmts <> letStmt <> resBody.stmts, expr: resBody.expr, exprType: resBody.exprType, nextId: resBody.nextId }
 
       LetRec lvl bindings body ->
         let

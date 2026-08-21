@@ -1189,6 +1189,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                               { stmts: resFn.stmts, exprs: [], exprTypes: [], nextId: resFn.nextId }
                               flatArgs
                               
+                            let _ = Debug.trace ("App resFn.exprType for " <> printTcoExprShape flatFn <> ": " <> goTypeToStr resFn.exprType) \_ -> unit
                             finalExprType = case resFn.exprType of
                               TypeFunc fArgs fRet | Array.length fArgs == Array.length flatArgs -> fRet
                               _ -> TypeValue

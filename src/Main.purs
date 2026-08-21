@@ -210,8 +210,6 @@ main = launchAff_ do
 
 
   
-  let rawInstantiations = foldl collectInstantiations Map.empty finalModulesWithClassDecls
-      
   let globalAstMap = foldl (\acc (Module m) ->
         foldl (\acc' b -> case b of
           NonRec (Binding ann id e) -> Map.insert (unwrap m.name <> "." <> unwrap id) (Binding ann id e) acc'
@@ -219,6 +217,8 @@ main = launchAff_ do
         ) acc m.decls
       ) Map.empty finalModulesWithClassDecls
 
+  let rawInstantiations = foldl collectInstantiations Map.empty finalModulesWithClassDecls
+      
   let transitiveInstantiations = transitiveCollect globalAstMap rawInstantiations
       
   let _ = Debug.trace ("Data.Functor.map in rawInstantiations? " <> show (Map.member "Data.Functor.map" transitiveInstantiations)) (\_ -> unit)

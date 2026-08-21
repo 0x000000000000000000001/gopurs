@@ -1,0 +1,1 @@
+module Gopurs.CheckType where

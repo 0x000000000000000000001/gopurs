@@ -1,0 +1,6 @@
+@@ -1645,2 +1645,5 @@
+           expectedGoTypeFromAst = exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr (getExprType binding)
++          _ = if name == "__local_var_3_0" then
++                Debug.trace ("__local_var_3_0 AST Type: " <> printExprType (getExprType binding) <> " expectedGoTypeFromAst: " <> goTypeToStr expectedGoTypeFromAst) \_ -> unit
++              else unit
+           actualGoType = if expectedGoTypeFromAst == TypeValue then resBinding.exprType else expectedGoTypeFromAst
