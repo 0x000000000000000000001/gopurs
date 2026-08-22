@@ -8,6 +8,7 @@ import Effect.Class (liftEffect)
 import Effect.Aff (Aff, launchAff_, attempt)
 import Effect.Console (log, logShow)
 import Node.FS.Aff as FS
+import Effect.Unsafe (unsafePerformEffect)
 import Node.FS.Stats as Stats
 import Node.Encoding (Encoding(..))
 import Node.Process as Process
@@ -191,33 +192,14 @@ main = launchAff_ do
       ) acc m.classDecls
     ) Map.empty finalModules
 
-    finalModulesWithClassDecls = map (\(Module m) ->
-      let newDecls = map (\c ->
-            let superclassFields = Array.mapWithIndex (\i super ->
-                  let superName = fromMaybe "" (Array.last (fst super))
-                  in Tuple (superName <> show i) Any
-                ) c.superclasses
-                methodFields = c.methods
-                allFields = Array.sortBy (comparing fst) (superclassFields <> methodFields)
-                fieldTypes = map snd allFields
-            in { name: c.name, vars: c.vars, constructors: [{ name: c.name, fields: fieldTypes }] }
-          ) m.classDecls
-      in Module (m { dataDecls = m.dataDecls <> newDecls })
-    ) finalModules
-
-    getClassName (ADT fullName _ _) = Just fullName
-    getClassName _ = Nothing
-
-
-  
   let globalAstMap = foldl (\acc (Module m) ->
         foldl (\acc' b -> case b of
           NonRec (Binding ann id e) -> Map.insert (unwrap m.name <> "." <> unwrap id) (Binding ann id e) acc'
           Rec binds -> foldl (\a (Binding ann id e) -> Map.insert (unwrap m.name <> "." <> unwrap id) (Binding ann id e) a) acc' binds
         ) acc m.decls
-      ) Map.empty finalModulesWithClassDecls
+      ) Map.empty finalModules
 
-  let rawInstantiations = foldl collectInstantiations Map.empty finalModulesWithClassDecls
+  let rawInstantiations = foldl collectInstantiations Map.empty finalModules
       
   let transitiveInstantiations = transitiveCollect globalAstMap rawInstantiations
       
@@ -227,9 +209,9 @@ main = launchAff_ do
                                             Just t -> hasTypeVariables t
                                             Nothing -> false) transitiveInstantiations
 
-  let monomorphizedModules = map (monomorphize globalAstMap instantiations) finalModulesWithClassDecls
+  let monomorphizedModules = map (monomorphize globalAstMap instantiations) finalModules
 
-  let allTypes = foldl (\acc mod -> Set.union acc (collectAllTypes mod)) Set.empty finalModulesWithClassDecls
+  let allTypes = foldl (\acc mod -> Set.union acc (collectAllTypes mod)) Set.empty finalModules
   let adtTypes = Set.filter (\t -> case t of
         ADT _ _ _ -> true
         _ -> false) allTypes
@@ -239,13 +221,16 @@ main = launchAff_ do
       foldl (\acc' d ->
         let
           ctorsWithFields = Array.filter (\c -> Array.length c.fields > 0) d.constructors
-          ctorsWithoutFields = Array.filter (\c -> Array.length c.fields == 0) d.constructors
         in
-          if Array.length ctorsWithFields == 1 then
+          if Array.length ctorsWithFields == 1 && Array.length d.constructors > 1 then
             let
               adtPath = unwrap m.name <> "." <> d.name
-              nodeCtor = (unsafePartial (Array.unsafeIndex ctorsWithFields 0)).name
-              leafCtor = if Array.length ctorsWithoutFields == 1 then (unsafePartial (Array.unsafeIndex ctorsWithoutFields 0)).name else ""
+              nodeCtor = case Array.head ctorsWithFields of
+                Just c -> c.name
+                Nothing -> ""
+              leafCtor = case Array.head (Array.filter (\c -> Array.length c.fields == 0) d.constructors) of
+                Just c -> c.name
+                Nothing -> ""
               pkgNameStr = String.replaceAll (Pattern ".") (Replacement "_") (unwrap m.name)
               nodeBaseStruct = "Data_" <> pkgNameStr <> "_" <> sanitizeName nodeCtor
               leafBaseStruct = if leafCtor /= "" then "Data_" <> pkgNameStr <> "_" <> sanitizeName leafCtor else ""
@@ -254,7 +239,7 @@ main = launchAff_ do
               Array.snoc acc' { adtPath, nodeCtor, leafCtor, nodeBaseStruct, leafBaseStruct, arity }
           else acc'
       ) acc m.dataDecls
-     ) [] finalModulesWithClassDecls
+     ) [] finalModules
 
     pointerAdtPaths = Map.fromFoldable (map (\info -> Tuple info.adtPath { ctorName: info.nodeCtor, arity: info.arity }) pointerAdtPathsRaw)
     pointerAdtNodes = Set.fromFoldable (map _.nodeBaseStruct pointerAdtPathsRaw)
@@ -273,7 +258,7 @@ main = launchAff_ do
             in Array.snoc acc' { adtPath, ctors: ctorBaseStructs }
           else acc'
       ) acc m.dataDecls
-     ) [] finalModulesWithClassDecls
+     ) [] finalModules
 
     enumAdts = Set.fromFoldable (map _.adtPath enumAdtsRaw)
     enumCtors = Set.fromFoldable (Array.concatMap _.ctors enumAdtsRaw)

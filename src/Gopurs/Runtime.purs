@@ -588,6 +588,14 @@ func Any(v any) Value {
 	return Value{Type: TypeAny, UnsafePtr: unsafe.Pointer(ptr)}
 }
 
+func UnboxAny[T any](v Value) T {
+	var zero T
+	if _, ok := any(zero).(Value); ok {
+		return any(v).(T)
+	}
+	return v.AnyVal().(T)
+}
+
 func UncurriedApp2(fn Value, a, b Value) Value {
 	if fn.Type == TypeFunc2 {
 		return (*(*func(Value, Value) Value)(unsafe.Pointer(&fn.UnsafePtr)))(a, b)

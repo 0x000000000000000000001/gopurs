@@ -6,7 +6,9 @@ import Data.String as String
 import Data.String (Pattern(..), Replacement(..))
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..))
 import Data.Maybe (Maybe(..))
-
+import Data.Set as Set
+import Data.Foldable (fold)
+import Data.Array as Array
 data GoExpr
   = GoVar String
   | GoString String
@@ -80,12 +82,33 @@ goTypeToStr TypeFloat64 = "float64"
 goTypeToStr TypeString = "string"
 goTypeToStr TypeBool = "bool"
 goTypeToStr TypeUint32 = "uint32"
-goTypeToStr (TypeStructPointer _ _ fullPath _) = "*" <> fullPath
+goTypeToStr (TypeStructPointer _ _ monoStructName args) = "*" <> monoStructName
 goTypeToStr (TypeInterface name) = name
 goTypeToStr (TypeNativeArray inner) = "[]" <> goTypeToStr inner
-goTypeToStr (TypeGenericParam name) = "T_" <> sanitizeName name
+goTypeToStr (TypeGenericParam name) = "gopurs_runtime.Value"
 goTypeToStr (TypeFunc args ret) = "func(" <> String.joinWith ", " (map goTypeToStr args) <> ") " <> goTypeToStr ret
 goTypeToStr _ = "gopurs_runtime.Value"
+
+erasedGoTypeToStr :: GoType -> String
+erasedGoTypeToStr TypeInt64 = "int64"
+erasedGoTypeToStr TypeFloat64 = "float64"
+erasedGoTypeToStr TypeString = "string"
+erasedGoTypeToStr TypeBool = "bool"
+erasedGoTypeToStr TypeUint32 = "uint32"
+erasedGoTypeToStr (TypeStructPointer _ _ monoStructName args) = "*" <> monoStructName
+erasedGoTypeToStr (TypeInterface name) = name
+erasedGoTypeToStr (TypeNativeArray inner) = "[]" <> erasedGoTypeToStr inner
+erasedGoTypeToStr (TypeGenericParam _) = "gopurs_runtime.Value"
+erasedGoTypeToStr (TypeFunc args ret) = "func(" <> String.joinWith ", " (map erasedGoTypeToStr args) <> ") " <> erasedGoTypeToStr ret
+erasedGoTypeToStr _ = "gopurs_runtime.Value"
+
+extractTypeVars :: GoType -> Set.Set String
+extractTypeVars (TypeStructPointer _ _ _ args) = fold (map extractTypeVars args)
+extractTypeVars (TypeRecord fields) = fold (map (\(Tuple _ v) -> extractTypeVars v) fields)
+extractTypeVars (TypeNativeArray inner) = extractTypeVars inner
+extractTypeVars (TypeGenericParam name) = Set.singleton name
+extractTypeVars (TypeFunc args ret) = fold (map extractTypeVars args) <> extractTypeVars ret
+extractTypeVars _ = Set.empty
 
 sanitizeName :: String -> String
 sanitizeName name =

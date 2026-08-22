@@ -2,7 +2,7 @@ module Gopurs.Printer where
 
 import Prelude
 import Data.String as String
-import Gopurs.GoAst (GoExpr(..), GoDecl, GoFile, GoType(..), goTypeToStr)
+import Gopurs.GoAst (GoExpr(..), GoDecl, GoFile, GoType(..), goTypeToStr, erasedGoTypeToStr)
 import Data.Tuple (Tuple(..))
 import Data.Array as Array
 import Data.Maybe (Maybe(..), fromMaybe)
