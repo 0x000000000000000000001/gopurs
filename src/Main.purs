@@ -171,7 +171,7 @@ main = launchAff_ do
                   fromMaybe "" (Array.last (fst super)) <> show i
                 ) c.superclasses
             methodFields = map fst c.methods
-            allFields = Array.sortBy compare (superclassFields <> methodFields)
+            allFields = superclassFields <> methodFields
             key = String.joinWith "," allFields
         in Map.insert key (unwrap m.name <> "." <> c.name) acc'
       ) acc m.classDecls
@@ -198,7 +198,7 @@ main = launchAff_ do
                   in Tuple (superName <> show i) Any
                 ) c.superclasses
                 methodFields = c.methods
-                allFields = Array.sortBy (comparing fst) (superclassFields <> methodFields)
+                allFields = superclassFields <> methodFields
                 fieldTypes = map snd allFields
             in { name: c.name, vars: c.vars, constructors: [{ name: c.name, fields: fieldTypes }] }
           ) m.classDecls
