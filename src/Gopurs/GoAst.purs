@@ -17,9 +17,10 @@ data GoExpr
   | GoBlock (Array GoExpr)
   | GoReturn GoExpr
   | GoAssign String GoExpr
-  | GoRecordDict (Array (Tuple String GoExpr))
+  | GoRecordDict GoType (Array (Tuple String GoExpr))
   | GoRecordUpdateDict GoExpr (Array (Tuple String GoExpr))
   | GoRecordUpdateStatic GoExpr Int (Array (Tuple Int GoExpr)) (Array (Tuple String GoExpr))
+  | GoRecordUpdateNative GoType GoExpr (Array (Tuple String GoExpr))
   | GoIIFE String GoExpr GoExpr
   | GoLetRec (Array (Tuple String GoExpr)) GoExpr
   | GoRecordAccess GoExpr String
@@ -85,7 +86,14 @@ goTypeToStr (TypeInterface name) = name
 goTypeToStr (TypeNativeArray inner) = "[]" <> goTypeToStr inner
 goTypeToStr (TypeGenericParam name) = "T_" <> sanitizeName name
 goTypeToStr (TypeFunc args ret) = "func(" <> String.joinWith ", " (map goTypeToStr args) <> ") " <> goTypeToStr ret
+goTypeToStr (TypeRecord fields) = goRecordStructName fields
 goTypeToStr _ = "gopurs_runtime.Value"
+
+goRecordStructName :: Array (Tuple String GoType) -> String
+goRecordStructName fields =
+  "*struct{\n" <> String.joinWith "\n" (map (\(Tuple k v) -> "\t" <> sanitizeName k <> " " <> goTypeToStr v) fields) <> "\n}"
+
+
 
 sanitizeName :: String -> String
 sanitizeName name =

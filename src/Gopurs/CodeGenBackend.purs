@@ -71,8 +71,8 @@ translateExpr currentModName (NeutralExpr expr) = case expr of
     LitBoolean b -> GoVar (if b then "true" else "false")
     LitNumber n -> GoRaw (show n)
     LitChar c -> GoRaw (show c)
-    LitArray _ -> GoRecordDict [] -- TODO (array literals logic needs more than just GoRecordDict but leaving as dummy for now to compile)
-    LitRecord _ -> GoRecordDict [] -- TODO
+    LitArray _ -> GoRecordDict TypeValue [] -- TODO (array literals logic needs more than just GoRecordDict but leaving as dummy for now to compile)
+    LitRecord _ -> GoRecordDict TypeValue [] -- TODO
   
   App f xs ->
     foldl (\acc x -> GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [acc, translateExpr currentModName x]) (translateExpr currentModName f) xs
