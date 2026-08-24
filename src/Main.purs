@@ -83,6 +83,7 @@ inferExprType (ExprApp _ fn _) = case getExprAnn fn of
   _ -> case inferExprType fn of
          Just ty -> getReturnType ty
          Nothing -> Nothing
+inferExprType (ExprTypeApp _ fn _) = inferExprType fn
 inferExprType _ = Nothing
 
 getReturnType :: ExprType -> Maybe ExprType
