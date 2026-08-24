@@ -114,7 +114,7 @@ exprTypeToGoType ptrPaths enumAdts elided modNameStr (ADT fullName path args) =
       typeArgsMapped = map (exprTypeToGoType ptrPaths enumAdts elided modNameStr) args
       typeArgsMappedTruncated = Array.take info.arity typeArgsMapped
       paddedTypeArgs = typeArgsMappedTruncated <> Array.replicate (info.arity - Array.length typeArgsMappedTruncated) TypeValue
-      typeArgsStr = ""
+      typeArgsStr = if Array.length paddedTypeArgs > 0 then "[" <> String.joinWith ", " (map goTypeToStr paddedTypeArgs) <> "]" else ""
     in TypeStructPointer baseStructName fullName (monoStructName' <> typeArgsStr) paddedTypeArgs
   Nothing -> TypeValue
 exprTypeToGoType ptrPaths enumAdts elided modNameStr (TypeApp fn arg) =
@@ -342,7 +342,10 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves ad
                 goFieldTypes = map (structFieldGoType pointerAdtPaths enumAdts elidedCtors decl.vars modNameStr) fieldTypes
                 structName = "Constructor_" <> modNameStr <> "_" <> sanitizeName ctor.name
                 
-                typeParams = ""
+                typeParams = 
+                  if Array.length decl.vars > 0 then
+                    "[" <> String.joinWith ", " (map (\v -> "T_" <> sanitizeName v <> " any") decl.vars) <> "]"
+                  else ""
                 
                 fieldsStr = Array.cons "Rc uint32" (Array.mapWithIndex (\i ty -> "V" <> show i <> " " <> goTypeToStr ty) goFieldTypes)
                 structDecl = "type " <> structName <> typeParams <> " struct {\n\t" <> String.joinWith "\n\t" fieldsStr <> "\n}\n"
@@ -351,7 +354,10 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves ad
                 getterDecl = case Map.lookup fullName classDeclsFields of
                   Just info ->
                     let 
-                      typeParamsGetter = ""
+                      typeParamsGetter = 
+                        if Array.length decl.vars > 0 then
+                          "[" <> String.joinWith ", " (map (const "any") decl.vars) <> "]"
+                        else ""
                       cases = Array.mapWithIndex (\i f -> "\t\tcase \"" <> f.name <> "\": return gopurs_runtime.Box(c.V" <> show i <> ")") info.fields
                       pkgNameStr = String.replaceAll (Pattern ".") (Replacement "_") (unwrap mod.name)
                       baseStructName = "Data_" <> pkgNameStr <> "_" <> sanitizeName ctor.name
@@ -807,7 +813,13 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                     { stmts: StmtEmpty, exprs: [], exprType: TypeValue, nextId }
                     sortedVals
                 in
-                  { stmts: accProps.stmts, expr: GoConstructor (hashString baseStructName) fullPath [] accProps.exprs, exprType: expectedGoType, nextId: accProps.nextId }
+                  let typeArgsForDict = case expectedGoType of
+                                          TypeStructPointer _ _ _ args -> args
+                                          _ -> []
+                      monoStructName = case String.indexOf (Pattern "[") fullPath of
+                                         Just idx -> String.take idx fullPath
+                                         Nothing -> fullPath
+                  in { stmts: accProps.stmts, expr: GoConstructor (hashString baseStructName) monoStructName typeArgsForDict accProps.exprs, exprType: expectedGoType, nextId: accProps.nextId }
               Nothing ->
                 let res = translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail inEffectBlock nextId a
                 in case res.exprType of
@@ -1949,7 +1961,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                   in Array.take (Array.length vars') mapped
                 _ -> map (const TypeValue) vars'
             _ -> map (const TypeValue) vars'
-          typeArgsStr = ""
+          typeArgsStr = if Array.length typeArgs > 0 then "[" <> String.joinWith ", " (map goTypeToStr typeArgs) <> "]" else ""
           instMap = Map.fromFoldable (Array.zip vars' typeArgs)
           coercedFields = Array.mapWithIndex (\i f -> 
             let
@@ -2110,7 +2122,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
             _ -> case Map.lookup key helpers.ctorTypes of
               Just ctorInfo -> map (const TypeValue) ctorInfo.vars
               Nothing -> []
-          typeArgsStr = ""
+          typeArgsStr = if Array.length typeArgs > 0 then "[" <> String.joinWith ", " (map goTypeToStr typeArgs) <> "]" else ""
           fullPath = monoStructName <> typeArgsStr
           isEnum = Set.member baseStructName helpers.enumCtors
           res = if isElided then

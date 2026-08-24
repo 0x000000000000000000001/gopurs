@@ -20,7 +20,7 @@ L'objectif est d'atteindre les performances maximales du compilateur Go natif, e
 
 ## Prochaines étapes
 
-- [ ] **Step 1 (Monomorphisation stricte des ADTs)** :
+- [x] **Step 1 (Monomorphisation stricte des ADTs)** :
   - **Action** : Utiliser `TypeApp` pour instancier des structures génériques natives Go (`type Cons[T any] struct { V0 T; V1 *Cons[T] }`) ou des structures spécialisées (`type Cons_Int64 struct { ... }`).
   - **Résultat attendu** : Éradication totale de `gopurs_runtime.Value` pour les payloads des ADTs, éliminant les allocations sur le tas pour les primitives comme `int64`.
 
@@ -30,3 +30,5 @@ L'objectif est d'atteindre les performances maximales du compilateur Go natif, e
 
 - [ ] **Step 3 (Dictionnaires statiques)** :
   - **Action** : Les instances de type class étant maintenant explicitement résolues par `TypeApp` et `Monomorphize.purs`, le code Go peut appeler directement les fonctions spécifiques (ex: `+`) ou passer des structs dont les champs sont des pointeurs de fonctions natifs, sans passer par `gopurs_runtime.Apply2`.
+
+Tu peux tester si tout roule dans altbak.pub-gopurs avec bin/go/run -c

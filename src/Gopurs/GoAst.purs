@@ -6,6 +6,7 @@ import Data.String as String
 import Data.String (Pattern(..), Replacement(..))
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..))
 import Data.Maybe (Maybe(..))
+import Data.Array as Array
 
 data GoExpr
   = GoVar String
