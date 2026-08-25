@@ -19,14 +19,16 @@ L'objectif est d'atteindre les performances maximales du compilateur Go natif ("
 
 ## Prochaines étapes
 
-- [ ] **Step 1 (Monomorphisation stricte des ADTs)** :
+- [x] **Step 1 (Monomorphisation stricte des ADTs)** :
   - **Action** : Le TAST v3 fournissant les `TypeApp`, `gopurs` doit générer des structures génériques natives Go 1.18 (`type Cons[T any] struct { V0 T; V1 *Cons[T] }`) ou spécialisées (`type Cons_Int64`).
-  - **Résultat attendu** : Éradication totale de `gopurs_runtime.Value` pour les payloads des ADTs. Fini les pointeurs dynamiques pour des primitives.
+  - **Résultat attendu** : Éradication totale de `gopurs_runtime.Value` pour les payloads des ADTs. Fini les pointeurs dynamiques pour des primitives. *(Accompli, mais a révélé le besoin vital de l'étape 2)*
 
-- [ ] **Step 2 (Pattern Worker/Wrapper pour les fonctions)** :
-  - **Action** : Les fonctions d'ordre supérieur (comme `foldl`) ou les boucles récursives doivent être scindées en deux :
-    - *Worker* : Le moteur interne avec une signature 100% native (ex: `func foldl_worker(acc int64, lst *Cons[int64]) int64`), exécutant la boucle de manière itérative sur la stack sans allouer de `Value`.
-    - *Wrapper* : Une surcouche maintenant la signature d'origine acceptant/retournant des `gopurs_runtime.Value` pour garantir la compatibilité si la fonction est exportée ou passée comme closure dynamique.
-  - **Bénéfice** : Zéro-cost abstraction sur le chemin critique, tout en gardant une API compatible avec le système de types dynamiques du runtime. 
+- [ ] **Step 2 (Pattern Worker/Wrapper pour les fonctions & Instanciation Locale)** :
+  - **Problème Actuel** : Les boucles locales (`LetRec`) inlinées par l'optimiseur conservent leur type polymorphe d'origine (`TypeVar "a"`), ce qui provoque un crash mémoire (panic) lorsqu'elles tentent de lire un payload ADT généré nativement (ex: lire un `Value` à la place d'un `int64`).
+  - [x] **Phase 1 (Instanciation locale des LetRec)** : Scrutateur de type dans `translateExprImpl_ LetRec`. Inférer le type concret (`int64`) depuis l'appel de la boucle (`GoCall`) pour instancier ses arguments au lieu d'utiliser aveuglément `TypeVar` (qui devient `Value`). *(Accompli : Le routage correct des types attendus via le TAST résout les panics d'exécution liés au mismatch `Value` vs type natif)*
+  - **Phase 2 (Workers Génériques Top-Level)** : Les fonctions d'ordre supérieur (comme `foldl`) doivent être scindées en deux :
+    - *Worker* : Le moteur interne avec une signature 100% native (ex: `func foldl_worker[T_a any, T_b any](acc T_b, lst *Cons[T_a]) T_b`), compilé génériquement par Go 1.18.
+    - *Wrapper* : Une surcouche maintenant la signature d'origine acceptant/retournant des `gopurs_runtime.Value` pour garantir la compatibilité dynamique.
+  - **Bénéfice** : Zéro-cost abstraction sur le chemin critique et résolution définitive du mismatch de layout mémoire.
 
 Tu peux tester si tout roule dans altbak.pub avec `bin/go/run -c`

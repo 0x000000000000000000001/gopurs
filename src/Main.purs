@@ -199,7 +199,7 @@ main = launchAff_ do
                   in Tuple (superName <> show i) Any
                 ) c.superclasses
                 methodFields = c.methods
-                allFields = superclassFields <> methodFields
+                allFields = Array.sortBy (comparing fst) (superclassFields <> methodFields)
                 fieldTypes = map snd allFields
             in { name: c.name, vars: c.vars, constructors: [{ name: c.name, fields: fieldTypes }] }
           ) m.classDecls
