@@ -7,7 +7,7 @@
     "gopurs": "bin/gopurs.js"
   },
   "scripts": {
-    "build": "spago build && NODE_OPTIONS=\"--no-deprecation\" purs-backend-es bundle-app -p node -m Main --to bin/gopurs.js",
+    "build": "spago build && node_modules/.bin/esbuild output/Main/index.js --bundle --platform=node --format=esm --outfile=bin/gopurs.js",
     "prepare": "npm run build"
   },
   "dependencies": {
