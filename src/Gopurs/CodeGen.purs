@@ -831,6 +831,22 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                       let
                         _ = Debug.trace ("Typed coercion: " <> printGoExpr res.expr <> " from " <> goTypeToStr res.exprType <> " to " <> goTypeToStr expectedGoType) \_ -> unit
                       in { stmts: res.stmts, expr: coerceGoExpr res.expr res.exprType expectedGoType, exprType: expectedGoType, nextId: res.nextId }
+          Let ident lvl val body, _ ->
+            let
+              newBody = case body of
+                TcoExpr bAnn _ -> TcoExpr bAnn (Typed type_ body)
+              newLetShape = Let ident lvl val newBody
+              newA = case a of
+                TcoExpr ann _ -> TcoExpr ann newLetShape
+            in translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail inEffectBlock nextId newA
+          LetRec lvl bindings body, _ ->
+            let
+              newBody = case body of
+                TcoExpr bAnn _ -> TcoExpr bAnn (Typed type_ body)
+              newLetShape = LetRec lvl bindings newBody
+              newA = case a of
+                TcoExpr ann _ -> TcoExpr ann newLetShape
+            in translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail inEffectBlock nextId newA
           _, _ ->
             let res = translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail inEffectBlock nextId a
             in case res.exprType of
