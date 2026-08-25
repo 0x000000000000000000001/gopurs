@@ -1,5 +1,6 @@
 node_modules/
 output/
+output.bak/
 output-es/
 .spago/
 .psc-ide-port
