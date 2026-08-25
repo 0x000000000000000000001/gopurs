@@ -282,6 +282,7 @@ main = launchAff_ do
     , analyzeCustom: \_ _ -> Nothing
     , foreignSemantics: coreForeignSemantics
     , traceIdents: Set.empty
+    , rewriteLimit: fromMaybe 10_000 args.mbRewriteLimit
     , onPrepareModule: \_ (Module m) -> pure (Module m)
     , onSkipModule: \_ (Module coreFnMod) -> do
         let modNameStr = unwrap coreFnMod.name
