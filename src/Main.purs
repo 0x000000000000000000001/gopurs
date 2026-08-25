@@ -290,7 +290,7 @@ main = launchAff_ do
         let modNameStr = unwrap coreFnMod.name
         let safeModName = String.replaceAll (Pattern ".") (Replacement "_") modNameStr
         let cachePath = "output/purescript/" <> safeModName <> ".gopurs-cache.json"
-        res <- checkCache cacheVersion coreFnMod.path cachePath
+        res <- pure Nothing
         case res of
           Just backendMod -> do
             let ffiPath = "output/purescript/" <> safeModName <> "_ffi.go"
