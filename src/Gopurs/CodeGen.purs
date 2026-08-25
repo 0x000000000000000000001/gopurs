@@ -382,7 +382,6 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves ad
               _ -> env
             tcoBinds = map (\(Tuple id val) ->
               let nameStr = unwrap id
-                  _ = if modNameStrOrig == "Data.Set" && String.indexOf (Pattern "toList") nameStr == Just 0 then unsafePerformEffect (Console.log ("CodeGen received Data.Set binding: " <> nameStr)) else unit
               in Tuple id (Tco.analyze env' val)
             ) group.bindings
           in
@@ -828,9 +827,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                     if expectedGoType == res.exprType then res
                     else if isClosureNode helpersRef a then res
                     else
-                      let
-                        _ = Debug.trace ("Typed coercion: " <> printGoExpr res.expr <> " from " <> goTypeToStr res.exprType <> " to " <> goTypeToStr expectedGoType) \_ -> unit
-                      in { stmts: res.stmts, expr: coerceGoExpr res.expr res.exprType expectedGoType, exprType: expectedGoType, nextId: res.nextId }
+                      { stmts: res.stmts, expr: coerceGoExpr res.expr res.exprType expectedGoType, exprType: expectedGoType, nextId: res.nextId }
           Let ident lvl val body, _ ->
             let
               newBody = case body of
@@ -855,9 +852,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                 if expectedGoType == res.exprType then res
                 else if isClosureNode helpersRef a then res
                 else
-                  let
-                    _ = Debug.trace ("Typed coercion (2): " <> printGoExpr res.expr <> " from " <> goTypeToStr res.exprType <> " to " <> goTypeToStr expectedGoType) \_ -> unit
-                  in { stmts: res.stmts, expr: coerceGoExpr res.expr res.exprType expectedGoType, exprType: expectedGoType, nextId: res.nextId }
+                  { stmts: res.stmts, expr: coerceGoExpr res.expr res.exprType expectedGoType, exprType: expectedGoType, nextId: res.nextId }
       Var (Qualified mbMn (Ident i)) ->
         let
           safeName = sanitizeName i
@@ -977,7 +972,6 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
               Var (Qualified mbMod (Ident name)) ->
                 let
                   fullName = sanitizeName name
-                  _ = unsafePerformEffect (if name == "deepTailRec" then Debug.trace ("isTailCallTo deepTailRec: fullName=" <> fullName <> " loopCtx.idents=" <> String.joinWith "," (map _.ident loopCtx)) \_ -> pure unit else pure unit)
                 in
                   Array.findIndex (\ctx -> ctx.ident == fullName) loopCtx
               _ -> Nothing

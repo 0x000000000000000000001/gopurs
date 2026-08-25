@@ -221,9 +221,6 @@ main = launchAff_ do
       ) Map.empty finalModulesWithClassDecls
 
   let transitiveInstantiations = transitiveCollect globalAstMap rawInstantiations
-      
-  let _ = Debug.trace ("Data.Functor.map in rawInstantiations? " <> show (Map.member "Data.Functor.map" transitiveInstantiations)) (\_ -> unit)
-
   let instantiations = Map.filterKeys (\k -> case Map.lookup k globalTypes of
                                             Just t -> hasTypeVariables t
                                             Nothing -> false) transitiveInstantiations
