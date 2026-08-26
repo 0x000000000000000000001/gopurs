@@ -62,16 +62,6 @@ func Get_Main_main() gopurs_runtime.Value {
 	return cache_Main_main
 }
 
-var cache_Main_t__891769217 gopurs_runtime.Value
-var once_Main_t__891769217 sync.Once
-
-func Get_Main_t__891769217() gopurs_runtime.Value {
-	once_Main_t__891769217.Do(func() {
-		cache_Main_t__891769217 = gopurs_runtime.Value{Type: 9, IntVal: int64(990467018), UnsafePtr: nil}
-	})
-	return cache_Main_t__891769217
-}
-
-type Constructor_Main_T struct {
+type Constructor_Main_T[T_a any] struct {
 	Rc uint32
 }

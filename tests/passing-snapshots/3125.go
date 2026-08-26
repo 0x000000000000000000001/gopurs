@@ -13,7 +13,7 @@ func Get_Main_B() gopurs_runtime.Value {
 	once_Main_B.Do(func() {
 		cache_Main_B = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(value1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Value{Type: 9, IntVal: 4250879068, UnsafePtr: unsafe.Pointer((&Constructor_Main_B{1, value0, value1}))}
+				return gopurs_runtime.Value{Type: 9, IntVal: 4250879068, UnsafePtr: unsafe.Pointer((&Constructor_Main_B[gopurs_runtime.Value]{1, value0, value1}))}
 			})
 		})
 	})
@@ -40,8 +40,8 @@ func Get_Main_main() gopurs_runtime.Value {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 			var __t2 string
 			{
-				// TAST (Let): __local_var_0_1 shape=Other expectedFromAst=*Constructor_Main_B actual=*Constructor_Main_B bindingType=(ADT ["Main","B"] [(Func [Int] (Array Unit))])
-				__local_var_0_1 := (&Constructor_Main_B{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
+				// TAST (Let): __local_var_0_1 shape=Other bindingType=(ADT ["Main","B"] [(Func [Int] (Array Unit))])
+				__local_var_0_1 := (&Constructor_Main_B[gopurs_runtime.Value]{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Array(func() []gopurs_runtime.Value {
 						arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array([]gopurs_runtime.Value{}).UnsafePtr)
 						unboxed := make([]gopurs_runtime.Value, len(arr))
@@ -90,7 +90,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				__t2 = "false"
 			}
 		end_branch_2:
-			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
 			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(__t2))
 			_ = __local_var_0_0
 			_dollar___unused_1_3 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
@@ -101,7 +101,7 @@ func Get_Main_main() gopurs_runtime.Value {
 	return cache_Main_main
 }
 
-type Constructor_Main_B struct {
+type Constructor_Main_B[T_a any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 	V1 gopurs_runtime.Value
@@ -110,7 +110,7 @@ type Constructor_Main_B struct {
 func Call_Main_memptyB(dictMonoid_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var dictMonoid_0 gopurs_runtime.Value = dictMonoid_0_loop
 	_ = dictMonoid_0
-	return gopurs_runtime.Value{Type: 9, IntVal: 4250879068, UnsafePtr: unsafe.Pointer((&Constructor_Main_B{1, gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
+	return gopurs_runtime.Value{Type: 9, IntVal: 4250879068, UnsafePtr: unsafe.Pointer((&Constructor_Main_B[gopurs_runtime.Value]{1, gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
 		return gopurs_runtime.RecordGet(dictMonoid_0, "mempty")
 	}), gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
 		return gopurs_runtime.RecordGet(dictMonoid_0, "mempty")

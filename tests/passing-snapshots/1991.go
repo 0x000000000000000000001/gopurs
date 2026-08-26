@@ -17,6 +17,18 @@ func Get_Main_singleton() gopurs_runtime.Value {
 	return cache_Main_singleton
 }
 
+var cache_Main_singleton__2286220742 gopurs_runtime.Value
+var once_Main_singleton__2286220742 sync.Once
+
+func Get_Main_singleton__2286220742() gopurs_runtime.Value {
+	once_Main_singleton__2286220742.Do(func() {
+		cache_Main_singleton__2286220742 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Array(Call_Main_singleton__2286220742(x_0_box))
+		})
+	})
+	return cache_Main_singleton__2286220742
+}
+
 var cache_Main_main gopurs_runtime.Value
 var once_Main_main sync.Once
 
@@ -33,7 +45,7 @@ var once_Main_foldMap sync.Once
 func Get_Main_foldMap() gopurs_runtime.Value {
 	once_Main_foldMap.Do(func() {
 		cache_Main_foldMap = gopurs_runtime.Func3(func(dictSemigroup_0_box gopurs_runtime.Value, v_1_box gopurs_runtime.Value, v1_2_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_foldMap(gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](dictSemigroup_0_box), v_1_box, func() []gopurs_runtime.Value {
+			return Call_Main_foldMap(gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup[gopurs_runtime.Value]](dictSemigroup_0_box), v_1_box, func() []gopurs_runtime.Value {
 				arr := *(*[]gopurs_runtime.Value)(v1_2_box.UnsafePtr)
 				unboxed := make([]gopurs_runtime.Value, len(arr))
 				for i, v := range arr {
@@ -44,6 +56,25 @@ func Get_Main_foldMap() gopurs_runtime.Value {
 		})
 	})
 	return cache_Main_foldMap
+}
+
+var cache_Main_foldMap__1307344740 gopurs_runtime.Value
+var once_Main_foldMap__1307344740 sync.Once
+
+func Get_Main_foldMap__1307344740() gopurs_runtime.Value {
+	once_Main_foldMap__1307344740.Do(func() {
+		cache_Main_foldMap__1307344740 = gopurs_runtime.Func3(func(dictSemigroup_0_box gopurs_runtime.Value, v_1_box gopurs_runtime.Value, v1_2_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_foldMap__1307344740(gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup[gopurs_runtime.Value]](dictSemigroup_0_box), v_1_box, func() []gopurs_runtime.Value {
+				arr := *(*[]gopurs_runtime.Value)(v1_2_box.UnsafePtr)
+				unboxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					unboxed[i] = v
+				}
+				return unboxed
+			}())
+		})
+	})
+	return cache_Main_foldMap__1307344740
 }
 
 var cache_Main_empty gopurs_runtime.Value
@@ -61,6 +92,23 @@ func Get_Main_empty() gopurs_runtime.Value {
 		}())
 	})
 	return cache_Main_empty
+}
+
+var cache_Main_empty__4047862030 gopurs_runtime.Value
+var once_Main_empty__4047862030 sync.Once
+
+func Get_Main_empty__4047862030() gopurs_runtime.Value {
+	once_Main_empty__4047862030.Do(func() {
+		cache_Main_empty__4047862030 = gopurs_runtime.Array(func() []gopurs_runtime.Value {
+			arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array([]gopurs_runtime.Value{}).UnsafePtr)
+			unboxed := make([]gopurs_runtime.Value, len(arr))
+			for i, v := range arr {
+				unboxed[i] = v
+			}
+			return unboxed
+		}())
+	})
+	return cache_Main_empty__4047862030
 }
 
 var cache_Main_regression gopurs_runtime.Value
@@ -94,54 +142,6 @@ func Get_Main_regression() gopurs_runtime.Value {
 	return cache_Main_regression
 }
 
-var cache_Main_empty__4047862030 gopurs_runtime.Value
-var once_Main_empty__4047862030 sync.Once
-
-func Get_Main_empty__4047862030() gopurs_runtime.Value {
-	once_Main_empty__4047862030.Do(func() {
-		cache_Main_empty__4047862030 = gopurs_runtime.Array(func() []gopurs_runtime.Value {
-			arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array([]gopurs_runtime.Value{}).UnsafePtr)
-			unboxed := make([]gopurs_runtime.Value, len(arr))
-			for i, v := range arr {
-				unboxed[i] = v
-			}
-			return unboxed
-		}())
-	})
-	return cache_Main_empty__4047862030
-}
-
-var cache_Main_foldMap__1307344740 gopurs_runtime.Value
-var once_Main_foldMap__1307344740 sync.Once
-
-func Get_Main_foldMap__1307344740() gopurs_runtime.Value {
-	once_Main_foldMap__1307344740.Do(func() {
-		cache_Main_foldMap__1307344740 = gopurs_runtime.Func3(func(dictSemigroup_0_box gopurs_runtime.Value, v_1_box gopurs_runtime.Value, v1_2_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_foldMap__1307344740(gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup](dictSemigroup_0_box), v_1_box, func() []gopurs_runtime.Value {
-				arr := *(*[]gopurs_runtime.Value)(v1_2_box.UnsafePtr)
-				unboxed := make([]gopurs_runtime.Value, len(arr))
-				for i, v := range arr {
-					unboxed[i] = v
-				}
-				return unboxed
-			}())
-		})
-	})
-	return cache_Main_foldMap__1307344740
-}
-
-var cache_Main_singleton__2286220742 gopurs_runtime.Value
-var once_Main_singleton__2286220742 sync.Once
-
-func Get_Main_singleton__2286220742() gopurs_runtime.Value {
-	once_Main_singleton__2286220742.Do(func() {
-		cache_Main_singleton__2286220742 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Array(Call_Main_singleton__2286220742(x_0_box))
-		})
-	})
-	return cache_Main_singleton__2286220742
-}
-
 func Call_Main_singleton(x_0_loop gopurs_runtime.Value) []gopurs_runtime.Value {
 	var x_0 gopurs_runtime.Value = x_0_loop
 	_ = x_0
@@ -155,13 +155,26 @@ func Call_Main_singleton(x_0_loop gopurs_runtime.Value) []gopurs_runtime.Value {
 	}()
 }
 
-func Call_Main_foldMap(dictSemigroup_0_loop *Constructor_Data_Semigroup_Semigroup, v_1_loop gopurs_runtime.Value, v1_2_loop []gopurs_runtime.Value) gopurs_runtime.Value {
+func Call_Main_singleton__2286220742(x_0_loop gopurs_runtime.Value) []gopurs_runtime.Value {
+	var x_0 gopurs_runtime.Value = x_0_loop
+	_ = x_0
+	return func() []gopurs_runtime.Value {
+		arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array([]gopurs_runtime.Value{x_0}).UnsafePtr)
+		unboxed := make([]gopurs_runtime.Value, len(arr))
+		for i, v := range arr {
+			unboxed[i] = v
+		}
+		return unboxed
+	}()
+}
+
+func Call_Main_foldMap(dictSemigroup_0_loop *Constructor_Data_Semigroup_Semigroup[gopurs_runtime.Value], v_1_loop gopurs_runtime.Value, v1_2_loop []gopurs_runtime.Value) gopurs_runtime.Value {
 foldMap:
 	for {
 		if false {
 			continue foldMap
 		}
-		var dictSemigroup_0 *Constructor_Data_Semigroup_Semigroup = dictSemigroup_0_loop
+		var dictSemigroup_0 *Constructor_Data_Semigroup_Semigroup[gopurs_runtime.Value] = dictSemigroup_0_loop
 		_ = dictSemigroup_0
 		var v_1 gopurs_runtime.Value = v_1_loop
 		_ = v_1
@@ -188,8 +201,8 @@ foldMap:
 	}
 }
 
-func Call_Main_foldMap__1307344740(dictSemigroup_0_loop *Constructor_Data_Semigroup_Semigroup, v_1_loop gopurs_runtime.Value, v1_2_loop []gopurs_runtime.Value) gopurs_runtime.Value {
-	var dictSemigroup_0 *Constructor_Data_Semigroup_Semigroup = dictSemigroup_0_loop
+func Call_Main_foldMap__1307344740(dictSemigroup_0_loop *Constructor_Data_Semigroup_Semigroup[gopurs_runtime.Value], v_1_loop gopurs_runtime.Value, v1_2_loop []gopurs_runtime.Value) gopurs_runtime.Value {
+	var dictSemigroup_0 *Constructor_Data_Semigroup_Semigroup[gopurs_runtime.Value] = dictSemigroup_0_loop
 	_ = dictSemigroup_0
 	var v_1 gopurs_runtime.Value = v_1_loop
 	_ = v_1
@@ -222,17 +235,4 @@ func Call_Main_foldMap__1307344740(dictSemigroup_0_loop *Constructor_Data_Semigr
 	}
 end_branch_1:
 	return __t1
-}
-
-func Call_Main_singleton__2286220742(x_0_loop gopurs_runtime.Value) []gopurs_runtime.Value {
-	var x_0 gopurs_runtime.Value = x_0_loop
-	_ = x_0
-	return func() []gopurs_runtime.Value {
-		arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array([]gopurs_runtime.Value{x_0}).UnsafePtr)
-		unboxed := make([]gopurs_runtime.Value, len(arr))
-		for i, v := range arr {
-			unboxed[i] = v
-		}
-		return unboxed
-	}()
 }
