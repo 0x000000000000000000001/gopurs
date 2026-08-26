@@ -11,7 +11,7 @@ var once_Main_map_prime_ sync.Once
 func Get_Main_map_prime_() gopurs_runtime.Value {
 	once_Main_map_prime_.Do(func() {
 		cache_Main_map_prime_ = gopurs_runtime.Func(func(dictFunctor_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_map_prime_(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor](dictFunctor_0_box))
+			return Call_Main_map_prime_(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor[gopurs_runtime.Value]](dictFunctor_0_box))
 		})
 	})
 	return cache_Main_map_prime_
@@ -39,8 +39,8 @@ func Get_Main_identity() gopurs_runtime.Value {
 	return cache_Main_identity
 }
 
-func Call_Main_map_prime_(dictFunctor_0_loop *Constructor_Data_Functor_Functor) gopurs_runtime.Value {
-	var dictFunctor_0 *Constructor_Data_Functor_Functor = dictFunctor_0_loop
+func Call_Main_map_prime_(dictFunctor_0_loop *Constructor_Data_Functor_Functor[gopurs_runtime.Value]) gopurs_runtime.Value {
+	var dictFunctor_0 *Constructor_Data_Functor_Functor[gopurs_runtime.Value] = dictFunctor_0_loop
 	_ = dictFunctor_0
 	return gopurs_runtime.Box(dictFunctor_0.V0)
 }

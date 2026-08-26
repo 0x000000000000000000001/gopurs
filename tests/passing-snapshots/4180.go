@@ -23,7 +23,19 @@ var once_Main_c sync.Once
 
 func Get_Main_c() gopurs_runtime.Value {
 	once_Main_c.Do(func() {
-		cache_Main_c = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(gopurs_runtime.RecordDict0().IntVal)), UnsafePtr: nil}
+		cache_Main_c = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+			orig := func() *struct {
+			} {
+				orig := gopurs_runtime.RecordDict0()
+				_ = orig
+				clone := struct {
+				}{}
+
+				return &clone
+			}()
+			_ = orig
+			return gopurs_runtime.RecordDict([]string{}, []gopurs_runtime.Value{})
+		}().IntVal)), UnsafePtr: nil}
 	})
 	return cache_Main_c
 }
@@ -60,13 +72,13 @@ func Get_Main_v() gopurs_runtime.Value {
 	return cache_Main_v
 }
 
-type Constructor_Main_C struct {
+type Constructor_Main_C[T_t any] struct {
 	Rc uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[2167983901] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_C)(ptr)
+		c := (*Constructor_Main_C[any])(ptr)
 		_ = c
 		switch key {
 

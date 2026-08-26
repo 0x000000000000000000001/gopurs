@@ -33,7 +33,7 @@ var once_Main_eqUpdateDto sync.Once
 
 func Get_Main_eqUpdateDto() gopurs_runtime.Value {
 	once_Main_eqUpdateDto.Do(func() {
-		cache_Main_eqUpdateDto = gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer((&Constructor_Data_Eq_Eq{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_eqUpdateDto = gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer((&Constructor_Data_Eq_Eq[gopurs_runtime.Value]{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(y_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Bool((gopurs_runtime.RecordGet(x_0, "bio").StrVal()) == (gopurs_runtime.RecordGet(y_1, "bio").StrVal()))
 			})
