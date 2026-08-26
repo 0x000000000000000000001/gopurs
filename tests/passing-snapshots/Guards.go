@@ -23,10 +23,22 @@ var once_Main_min sync.Once
 func Get_Main_min() gopurs_runtime.Value {
 	once_Main_min.Do(func() {
 		cache_Main_min = gopurs_runtime.Func3(func(dictOrd_0_box gopurs_runtime.Value, n_1_box gopurs_runtime.Value, m_2_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_min(gopurs_runtime.CoerceToStruct[Constructor_Data_Ord_Ord](dictOrd_0_box), n_1_box, m_2_box)
+			return Call_Main_min(gopurs_runtime.CoerceToStruct[Constructor_Data_Ord_Ord[gopurs_runtime.Value]](dictOrd_0_box), n_1_box, m_2_box)
 		})
 	})
 	return cache_Main_min
+}
+
+var cache_Main_min__2767602680 gopurs_runtime.Value
+var once_Main_min__2767602680 sync.Once
+
+func Get_Main_min__2767602680() gopurs_runtime.Value {
+	once_Main_min__2767602680.Do(func() {
+		cache_Main_min__2767602680 = gopurs_runtime.Func3(func(dictOrd_0_box gopurs_runtime.Value, n_1_box gopurs_runtime.Value, m_2_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_min__2767602680(gopurs_runtime.CoerceToStruct[Constructor_Data_Ord_Ord[gopurs_runtime.Value]](dictOrd_0_box), n_1_box, m_2_box)
+		})
+	})
+	return cache_Main_min__2767602680
 }
 
 var cache_Main_max gopurs_runtime.Value
@@ -35,10 +47,22 @@ var once_Main_max sync.Once
 func Get_Main_max() gopurs_runtime.Value {
 	once_Main_max.Do(func() {
 		cache_Main_max = gopurs_runtime.Func3(func(dictOrd_0_box gopurs_runtime.Value, n_1_box gopurs_runtime.Value, m_2_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_max(gopurs_runtime.CoerceToStruct[Constructor_Data_Ord_Ord](dictOrd_0_box), n_1_box, m_2_box)
+			return Call_Main_max(gopurs_runtime.CoerceToStruct[Constructor_Data_Ord_Ord[gopurs_runtime.Value]](dictOrd_0_box), n_1_box, m_2_box)
 		})
 	})
 	return cache_Main_max
+}
+
+var cache_Main_max__2767602680 gopurs_runtime.Value
+var once_Main_max__2767602680 sync.Once
+
+func Get_Main_max__2767602680() gopurs_runtime.Value {
+	once_Main_max__2767602680.Do(func() {
+		cache_Main_max__2767602680 = gopurs_runtime.Func3(func(dictOrd_0_box gopurs_runtime.Value, n_1_box gopurs_runtime.Value, m_2_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_max__2767602680(gopurs_runtime.CoerceToStruct[Constructor_Data_Ord_Ord[gopurs_runtime.Value]](dictOrd_0_box), n_1_box, m_2_box)
+		})
+	})
+	return cache_Main_max__2767602680
 }
 
 var cache_Main_main gopurs_runtime.Value
@@ -151,30 +175,6 @@ func Get_Main_clunky1() gopurs_runtime.Value {
 	return cache_Main_clunky1
 }
 
-var cache_Main_max__2767602680 gopurs_runtime.Value
-var once_Main_max__2767602680 sync.Once
-
-func Get_Main_max__2767602680() gopurs_runtime.Value {
-	once_Main_max__2767602680.Do(func() {
-		cache_Main_max__2767602680 = gopurs_runtime.Func3(func(dictOrd_0_box gopurs_runtime.Value, n_1_box gopurs_runtime.Value, m_2_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_max__2767602680(gopurs_runtime.CoerceToStruct[Constructor_Data_Ord_Ord](dictOrd_0_box), n_1_box, m_2_box)
-		})
-	})
-	return cache_Main_max__2767602680
-}
-
-var cache_Main_min__2767602680 gopurs_runtime.Value
-var once_Main_min__2767602680 sync.Once
-
-func Get_Main_min__2767602680() gopurs_runtime.Value {
-	once_Main_min__2767602680.Do(func() {
-		cache_Main_min__2767602680 = gopurs_runtime.Func3(func(dictOrd_0_box gopurs_runtime.Value, n_1_box gopurs_runtime.Value, m_2_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_min__2767602680(gopurs_runtime.CoerceToStruct[Constructor_Data_Ord_Ord](dictOrd_0_box), n_1_box, m_2_box)
-		})
-	})
-	return cache_Main_min__2767602680
-}
-
 func Call_Main_testIndentation(x_0_loop float64, y_1_loop float64) float64 {
 	var x_0 float64 = x_0_loop
 	_ = x_0
@@ -197,8 +197,8 @@ end_branch_1:
 	return __t1
 }
 
-func Call_Main_min(dictOrd_0_loop *Constructor_Data_Ord_Ord, n_1_loop gopurs_runtime.Value, m_2_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var dictOrd_0 *Constructor_Data_Ord_Ord = dictOrd_0_loop
+func Call_Main_min(dictOrd_0_loop *Constructor_Data_Ord_Ord[gopurs_runtime.Value], n_1_loop gopurs_runtime.Value, m_2_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var dictOrd_0 *Constructor_Data_Ord_Ord[gopurs_runtime.Value] = dictOrd_0_loop
 	_ = dictOrd_0
 	var n_1 gopurs_runtime.Value = n_1_loop
 	_ = n_1
@@ -221,8 +221,56 @@ end_branch_1:
 	return __t1
 }
 
-func Call_Main_max(dictOrd_0_loop *Constructor_Data_Ord_Ord, n_1_loop gopurs_runtime.Value, m_2_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var dictOrd_0 *Constructor_Data_Ord_Ord = dictOrd_0_loop
+func Call_Main_min__2767602680(dictOrd_0_loop *Constructor_Data_Ord_Ord[gopurs_runtime.Value], n_1_loop gopurs_runtime.Value, m_2_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var dictOrd_0 *Constructor_Data_Ord_Ord[gopurs_runtime.Value] = dictOrd_0_loop
+	_ = dictOrd_0
+	var n_1 gopurs_runtime.Value = n_1_loop
+	_ = n_1
+	var m_2 gopurs_runtime.Value = m_2_loop
+	_ = m_2
+	var __t1 gopurs_runtime.Value
+	{
+		var __t_tag_0 gopurs_runtime.Value = gopurs_runtime.Apply2(gopurs_runtime.Box(dictOrd_0.V1), n_1, m_2)
+		if uint32(__t_tag_0.IntVal) == 1527465420 {
+			__t1 = n_1
+			goto end_branch_1
+		} else {
+
+		}
+	}
+	{
+		__t1 = m_2
+	}
+end_branch_1:
+	return __t1
+}
+
+func Call_Main_max(dictOrd_0_loop *Constructor_Data_Ord_Ord[gopurs_runtime.Value], n_1_loop gopurs_runtime.Value, m_2_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var dictOrd_0 *Constructor_Data_Ord_Ord[gopurs_runtime.Value] = dictOrd_0_loop
+	_ = dictOrd_0
+	var n_1 gopurs_runtime.Value = n_1_loop
+	_ = n_1
+	var m_2 gopurs_runtime.Value = m_2_loop
+	_ = m_2
+	var __t1 gopurs_runtime.Value
+	{
+		var __t_tag_0 gopurs_runtime.Value = gopurs_runtime.Apply2(gopurs_runtime.Box(dictOrd_0.V1), m_2, n_1)
+		if uint32(__t_tag_0.IntVal) == 1527465420 {
+			__t1 = n_1
+			goto end_branch_1
+		} else {
+
+		}
+	}
+	{
+		__t1 = m_2
+	}
+end_branch_1:
+	return __t1
+}
+
+func Call_Main_max__2767602680(dictOrd_0_loop *Constructor_Data_Ord_Ord[gopurs_runtime.Value], n_1_loop gopurs_runtime.Value, m_2_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var dictOrd_0 *Constructor_Data_Ord_Ord[gopurs_runtime.Value] = dictOrd_0_loop
 	_ = dictOrd_0
 	var n_1 gopurs_runtime.Value = n_1_loop
 	_ = n_1
@@ -291,7 +339,7 @@ func Call_Main_clunky_case2(a_0_loop int64, b_1_loop int64) int64 {
 		__t1 = gopurs_runtime.Int(b_1)
 	}
 end_branch_1:
-	// TAST (Let): __local_var_2_0 shape=Branch(Other, def=Other) expectedFromAst=int64 actual=int64 bindingType=Int
+	// TAST (Let): __local_var_2_0 shape=Branch(Other, def=Other) bindingType=Int
 	__local_var_2_0 := __t1.IntVal
 	_ = __local_var_2_0
 	var __t2 int64
@@ -328,7 +376,7 @@ func Call_Main_clunky_case1(a_0_loop int64, b_1_loop int64) int64 {
 		__t1 = gopurs_runtime.Int(b_1)
 	}
 end_branch_1:
-	// TAST (Let): __local_var_2_0 shape=Branch(Other, def=Other) expectedFromAst=int64 actual=int64 bindingType=Int
+	// TAST (Let): __local_var_2_0 shape=Branch(Other, def=Other) bindingType=Int
 	__local_var_2_0 := __t1.IntVal
 	_ = __local_var_2_0
 	var __t2 int64
@@ -365,7 +413,7 @@ func Call_Main_clunky2(a_0_loop int64, b_1_loop int64) int64 {
 		__t1 = gopurs_runtime.Int(b_1)
 	}
 end_branch_1:
-	// TAST (Let): __local_var_2_0 shape=Branch(Other, def=Other) expectedFromAst=int64 actual=int64 bindingType=Int
+	// TAST (Let): __local_var_2_0 shape=Branch(Other, def=Other) bindingType=Int
 	__local_var_2_0 := __t1.IntVal
 	_ = __local_var_2_0
 	var __t2 int64
@@ -405,7 +453,7 @@ func Call_Main_clunky1_refutable(v_0_loop int64, v1_1_loop int64) int64 {
 				__t1 = gopurs_runtime.Int(v1_1)
 			}
 		end_branch_1:
-			// TAST (Let): __local_var_2_0 shape=Branch(Other, def=Other) expectedFromAst=int64 actual=int64 bindingType=Int
+			// TAST (Let): __local_var_2_0 shape=Branch(Other, def=Other) bindingType=Int
 			__local_var_2_0 := __t1.IntVal
 			_ = __local_var_2_0
 			var __t2 int64
@@ -452,7 +500,7 @@ func Call_Main_clunky1(v_0_loop int64, v1_1_loop int64) int64 {
 		__t1 = gopurs_runtime.Int(v1_1)
 	}
 end_branch_1:
-	// TAST (Let): __local_var_2_0 shape=Branch(Other, def=Other) expectedFromAst=int64 actual=int64 bindingType=Int
+	// TAST (Let): __local_var_2_0 shape=Branch(Other, def=Other) bindingType=Int
 	__local_var_2_0 := __t1.IntVal
 	_ = __local_var_2_0
 	var __t2 int64
@@ -469,52 +517,4 @@ end_branch_1:
 	}
 end_branch_2:
 	return __t2
-}
-
-func Call_Main_max__2767602680(dictOrd_0_loop *Constructor_Data_Ord_Ord, n_1_loop gopurs_runtime.Value, m_2_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var dictOrd_0 *Constructor_Data_Ord_Ord = dictOrd_0_loop
-	_ = dictOrd_0
-	var n_1 gopurs_runtime.Value = n_1_loop
-	_ = n_1
-	var m_2 gopurs_runtime.Value = m_2_loop
-	_ = m_2
-	var __t1 gopurs_runtime.Value
-	{
-		var __t_tag_0 gopurs_runtime.Value = gopurs_runtime.Apply2(gopurs_runtime.Box(dictOrd_0.V1), m_2, n_1)
-		if uint32(__t_tag_0.IntVal) == 1527465420 {
-			__t1 = n_1
-			goto end_branch_1
-		} else {
-
-		}
-	}
-	{
-		__t1 = m_2
-	}
-end_branch_1:
-	return __t1
-}
-
-func Call_Main_min__2767602680(dictOrd_0_loop *Constructor_Data_Ord_Ord, n_1_loop gopurs_runtime.Value, m_2_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var dictOrd_0 *Constructor_Data_Ord_Ord = dictOrd_0_loop
-	_ = dictOrd_0
-	var n_1 gopurs_runtime.Value = n_1_loop
-	_ = n_1
-	var m_2 gopurs_runtime.Value = m_2_loop
-	_ = m_2
-	var __t1 gopurs_runtime.Value
-	{
-		var __t_tag_0 gopurs_runtime.Value = gopurs_runtime.Apply2(gopurs_runtime.Box(dictOrd_0.V1), n_1, m_2)
-		if uint32(__t_tag_0.IntVal) == 1527465420 {
-			__t1 = n_1
-			goto end_branch_1
-		} else {
-
-		}
-	}
-	{
-		__t1 = m_2
-	}
-end_branch_1:
-	return __t1
 }

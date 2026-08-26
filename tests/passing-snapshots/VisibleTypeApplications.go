@@ -12,7 +12,7 @@ var once_Main_Leaf sync.Once
 func Get_Main_Leaf() gopurs_runtime.Value {
 	once_Main_Leaf.Do(func() {
 		cache_Main_Leaf = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 3604601968, UnsafePtr: unsafe.Pointer((&Constructor_Main_Leaf{1, value0}))}
+			return gopurs_runtime.Value{Type: 9, IntVal: 3604601968, UnsafePtr: unsafe.Pointer((&Constructor_Main_Leaf[gopurs_runtime.Value]{1, value0}))}
 		})
 	})
 	return cache_Main_Leaf
@@ -25,7 +25,7 @@ func Get_Main_Branch() gopurs_runtime.Value {
 	once_Main_Branch.Do(func() {
 		cache_Main_Branch = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(value1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Value{Type: 9, IntVal: 2447690122, UnsafePtr: unsafe.Pointer((&Constructor_Main_Branch{1, value0, value1}))}
+				return gopurs_runtime.Value{Type: 9, IntVal: 2447690122, UnsafePtr: unsafe.Pointer((&Constructor_Main_Branch[gopurs_runtime.Value]{1, value0, value1}))}
 			})
 		})
 	})
@@ -49,13 +49,27 @@ var once_Main_constClass1 sync.Once
 
 func Get_Main_constClass1() gopurs_runtime.Value {
 	once_Main_constClass1.Do(func() {
-		cache_Main_constClass1 = gopurs_runtime.Value{Type: 9, IntVal: 4125467925, UnsafePtr: unsafe.Pointer((&Constructor_Main_ConstClass{1, gopurs_runtime.Func(func(a_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_constClass1 = gopurs_runtime.Value{Type: 9, IntVal: 4125467925, UnsafePtr: unsafe.Pointer((&Constructor_Main_ConstClass[gopurs_runtime.Value]{1, gopurs_runtime.Func(func(a_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return a_0
 			})
 		})}))}
 	})
 	return cache_Main_constClass1
+}
+
+var cache_Main_constClass1__3802304696 gopurs_runtime.Value
+var once_Main_constClass1__3802304696 sync.Once
+
+func Get_Main_constClass1__3802304696() gopurs_runtime.Value {
+	once_Main_constClass1__3802304696.Do(func() {
+		cache_Main_constClass1__3802304696 = gopurs_runtime.Value{Type: 9, IntVal: 4125467925, UnsafePtr: unsafe.Pointer((&Constructor_Main_ConstClass[gopurs_runtime.Value]{1, gopurs_runtime.Func(func(a_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
+				return a_0
+			})
+		})}))}
+	})
+	return cache_Main_constClass1__3802304696
 }
 
 var cache_Main_treeInt_prime_ gopurs_runtime.Value
@@ -114,7 +128,7 @@ var once_Main_constClass sync.Once
 func Get_Main_constClass() gopurs_runtime.Value {
 	once_Main_constClass.Do(func() {
 		cache_Main_constClass = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_constClass(gopurs_runtime.CoerceToStruct[Constructor_Main_ConstClass](dict_0_box))
+			return Call_Main_constClass(gopurs_runtime.CoerceToStruct[Constructor_Main_ConstClass[gopurs_runtime.Value]](dict_0_box))
 		})
 	})
 	return cache_Main_constClass
@@ -152,39 +166,25 @@ func Get_Main_constPass() gopurs_runtime.Value {
 	return cache_Main_constPass
 }
 
-var cache_Main_constClass1__3802304696 gopurs_runtime.Value
-var once_Main_constClass1__3802304696 sync.Once
-
-func Get_Main_constClass1__3802304696() gopurs_runtime.Value {
-	once_Main_constClass1__3802304696.Do(func() {
-		cache_Main_constClass1__3802304696 = gopurs_runtime.Value{Type: 9, IntVal: 4125467925, UnsafePtr: unsafe.Pointer((&Constructor_Main_ConstClass{1, gopurs_runtime.Func(func(a_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Int(a_0.IntVal)
-			})
-		})}))}
-	})
-	return cache_Main_constClass1__3802304696
-}
-
-type Constructor_Main_Leaf struct {
+type Constructor_Main_Leaf[T_a any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 }
 
-type Constructor_Main_Branch struct {
+type Constructor_Main_Branch[T_a any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 	V1 gopurs_runtime.Value
 }
 
-type Constructor_Main_ConstClass struct {
+type Constructor_Main_ConstClass[T_a any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 }
 
 func init() {
 	gopurs_runtime.StructGetters[4125467925] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_ConstClass)(ptr)
+		c := (*Constructor_Main_ConstClass[any])(ptr)
 		_ = c
 		switch key {
 		case "constClass":
@@ -201,8 +201,8 @@ func Call_Main_ConstClass_dollar_Dict(x_0_loop gopurs_runtime.Value) gopurs_runt
 	return x_0
 }
 
-func Call_Main_constClass(dict_0_loop *Constructor_Main_ConstClass) gopurs_runtime.Value {
-	var dict_0 *Constructor_Main_ConstClass = dict_0_loop
+func Call_Main_constClass(dict_0_loop *Constructor_Main_ConstClass[gopurs_runtime.Value]) gopurs_runtime.Value {
+	var dict_0 *Constructor_Main_ConstClass[gopurs_runtime.Value] = dict_0_loop
 	_ = dict_0
 	return gopurs_runtime.Box(dict_0.V0)
 }

@@ -24,21 +24,7 @@ var once_Main_unF sync.Once
 func Get_Main_unF() gopurs_runtime.Value {
 	once_Main_unF.Do(func() {
 		cache_Main_unF = gopurs_runtime.Func(func(v_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return func() gopurs_runtime.Value {
-				orig := Call_Main_unF(func() *struct {
-					x gopurs_runtime.Value
-				} {
-					orig := v_0_box
-					_ = orig
-					clone := struct {
-						x gopurs_runtime.Value
-					}{}
-					clone.x = gopurs_runtime.RecordGet(orig, "x")
-					return &clone
-				}())
-				_ = orig
-				return gopurs_runtime.RecordDict([]string{"x"}, []gopurs_runtime.Value{orig.x})
-			}()
+			return Call_Main_unF(v_0_box)
 		})
 	})
 	return cache_Main_unF
@@ -50,21 +36,7 @@ var once_Main_unF__3107818477 sync.Once
 func Get_Main_unF__3107818477() gopurs_runtime.Value {
 	once_Main_unF__3107818477.Do(func() {
 		cache_Main_unF__3107818477 = gopurs_runtime.Func(func(v_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return func() gopurs_runtime.Value {
-				orig := Call_Main_unF__3107818477(func() *struct {
-					x gopurs_runtime.Value
-				} {
-					orig := v_0_box
-					_ = orig
-					clone := struct {
-						x gopurs_runtime.Value
-					}{}
-					clone.x = gopurs_runtime.RecordGet(orig, "x")
-					return &clone
-				}())
-				_ = orig
-				return gopurs_runtime.RecordDict([]string{"x"}, []gopurs_runtime.Value{orig.x})
-			}()
+			return Call_Main_unF__3107818477(v_0_box)
 		})
 	})
 	return cache_Main_unF__3107818477
@@ -75,25 +47,9 @@ var once_Main_functorF sync.Once
 
 func Get_Main_functorF() gopurs_runtime.Value {
 	once_Main_functorF.Do(func() {
-		cache_Main_functorF = gopurs_runtime.Value{Type: 9, IntVal: 929368378, UnsafePtr: unsafe.Pointer((&Constructor_Data_Functor_Functor[*struct {
-			x gopurs_runtime.Value
-		}]{1, gopurs_runtime.Func(func(f_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_functorF = gopurs_runtime.Value{Type: 9, IntVal: 929368378, UnsafePtr: unsafe.Pointer((&Constructor_Data_Functor_Functor[gopurs_runtime.Value]{1, gopurs_runtime.Func(func(f_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(m_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return func() gopurs_runtime.Value {
-					orig := func() *struct {
-						x gopurs_runtime.Value
-					} {
-						orig := gopurs_runtime.RecordUpdate1(m_1, "x", gopurs_runtime.Apply(f_0, gopurs_runtime.RecordGet(m_1, "x")))
-						_ = orig
-						clone := struct {
-							x gopurs_runtime.Value
-						}{}
-						clone.x = gopurs_runtime.RecordGet(orig, "x")
-						return &clone
-					}()
-					_ = orig
-					return gopurs_runtime.RecordDict([]string{"x"}, []gopurs_runtime.Value{orig.x})
-				}()
+				return gopurs_runtime.RecordUpdate1(m_1, "x", gopurs_runtime.Apply(f_0, gopurs_runtime.RecordGet(m_1, "x")))
 			})
 		})}))}
 	})
@@ -105,25 +61,9 @@ var once_Main_functorF__1417878353 sync.Once
 
 func Get_Main_functorF__1417878353() gopurs_runtime.Value {
 	once_Main_functorF__1417878353.Do(func() {
-		cache_Main_functorF__1417878353 = gopurs_runtime.Value{Type: 9, IntVal: 929368378, UnsafePtr: unsafe.Pointer((&Constructor_Data_Functor_Functor[*struct {
-			x gopurs_runtime.Value
-		}]{1, gopurs_runtime.Func(func(f_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_functorF__1417878353 = gopurs_runtime.Value{Type: 9, IntVal: 929368378, UnsafePtr: unsafe.Pointer((&Constructor_Data_Functor_Functor[gopurs_runtime.Value]{1, gopurs_runtime.Func(func(f_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(m_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return func() gopurs_runtime.Value {
-					orig := func() *struct {
-						x gopurs_runtime.Value
-					} {
-						orig := gopurs_runtime.RecordUpdate1(m_1, "x", gopurs_runtime.Apply(f_0, gopurs_runtime.RecordGet(m_1, "x")))
-						_ = orig
-						clone := struct {
-							x gopurs_runtime.Value
-						}{}
-						clone.x = gopurs_runtime.RecordGet(orig, "x")
-						return &clone
-					}()
-					_ = orig
-					return gopurs_runtime.RecordDict([]string{"x"}, []gopurs_runtime.Value{orig.x})
-				}()
+				return gopurs_runtime.RecordUpdate1(m_1, "x", gopurs_runtime.Apply(f_0, gopurs_runtime.RecordGet(m_1, "x")))
 			})
 		})}))}
 	})
@@ -146,26 +86,14 @@ func Call_Main_F(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	return x_0
 }
 
-func Call_Main_unF(v_0_loop *struct {
-	x gopurs_runtime.Value
-}) *struct {
-	x gopurs_runtime.Value
-} {
-	var v_0 *struct {
-		x gopurs_runtime.Value
-	} = v_0_loop
+func Call_Main_unF(v_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var v_0 gopurs_runtime.Value = v_0_loop
 	_ = v_0
 	return v_0
 }
 
-func Call_Main_unF__3107818477(v_0_loop *struct {
-	x gopurs_runtime.Value
-}) *struct {
-	x gopurs_runtime.Value
-} {
-	var v_0 *struct {
-		x gopurs_runtime.Value
-	} = v_0_loop
+func Call_Main_unF__3107818477(v_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var v_0 gopurs_runtime.Value = v_0_loop
 	_ = v_0
 	return v_0
 }

@@ -55,20 +55,20 @@ var once_Main_lte256 sync.Once
 
 func Get_Main_lte256() gopurs_runtime.Value {
 	once_Main_lte256.Do(func() {
-		cache_Main_lte256 = gopurs_runtime.Value{Type: 9, IntVal: 907985874, UnsafePtr: unsafe.Pointer((&Constructor_Main_Lte256{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_lte256 = gopurs_runtime.Value{Type: 9, IntVal: 907985874, UnsafePtr: unsafe.Pointer((&Constructor_Main_Lte256[gopurs_runtime.Value]{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{}
 		})}))}
 	})
 	return cache_Main_lte256
 }
 
-type Constructor_Main_LtEq struct {
+type Constructor_Main_LtEq[T_a any, T_b any] struct {
 	Rc uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[3632241042] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_LtEq)(ptr)
+		c := (*Constructor_Main_LtEq[any, any])(ptr)
 		_ = c
 		switch key {
 
@@ -78,14 +78,14 @@ func init() {
 	}
 }
 
-type Constructor_Main_Lte256 struct {
+type Constructor_Main_Lte256[T_a any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 }
 
 func init() {
 	gopurs_runtime.StructGetters[907985874] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_Lte256)(ptr)
+		c := (*Constructor_Main_Lte256[any])(ptr)
 		_ = c
 		switch key {
 		case "LtEq0":

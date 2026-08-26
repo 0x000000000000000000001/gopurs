@@ -21,7 +21,7 @@ var once_Main_fib sync.Once
 func Get_Main_fib() gopurs_runtime.Value {
 	once_Main_fib.Do(func() {
 		cache_Main_fib = gopurs_runtime.Float(gopurs_runtime.Apply(Get_Control_Monad_ST_Internal_run(), gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
 			__local_var_0_0 := gopurs_runtime.Apply(Get_Control_Monad_ST_Internal_newImpl(), gopurs_runtime.Float(1.0))
 			_ = __local_var_0_0
 			n1_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})

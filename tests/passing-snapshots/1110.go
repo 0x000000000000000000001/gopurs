@@ -155,21 +155,7 @@ func Call_Main_C_dollar_Dict(x1_0_loop gopurs_runtime.Value) gopurs_runtime.Valu
 func Call_Main_test(dictMonad_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var dictMonad_0 gopurs_runtime.Value = dictMonad_0_loop
 	_ = dictMonad_0
-	return gopurs_runtime.Apply(gopurs_runtime.RecordGet(gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonad_0, "Applicative0"), gopurs_runtime.Value{}), "pure"), func() gopurs_runtime.Value {
-		orig := func() *struct {
-			x uint32
-		} {
-			orig := gopurs_runtime.RecordDict1("x", gopurs_runtime.Value{Type: 9, IntVal: int64(1409933510), UnsafePtr: nil})
-			_ = orig
-			clone := struct {
-				x uint32
-			}{}
-			clone.x = uint32(gopurs_runtime.RecordGet(orig, "x").IntVal)
-			return &clone
-		}()
-		_ = orig
-		return gopurs_runtime.RecordDict([]string{"x"}, []gopurs_runtime.Value{gopurs_runtime.Value{Type: 9, IntVal: int64(orig.x), UnsafePtr: nil}})
-	}())
+	return gopurs_runtime.Apply(gopurs_runtime.RecordGet(gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonad_0, "Applicative0"), gopurs_runtime.Value{}), "pure"), gopurs_runtime.RecordDict1("x", gopurs_runtime.Value{Type: 9, IntVal: int64(1409933510), UnsafePtr: nil}))
 }
 
 func Call_Main_c(dict_0_loop *Constructor_Main_C[gopurs_runtime.Value]) gopurs_runtime.Value {
@@ -189,30 +175,16 @@ func Call_Main_c1(x1_0_loop []gopurs_runtime.Value, v_1_loop gopurs_runtime.Valu
 func Call_Main_test2(dictMonad_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var dictMonad_0 gopurs_runtime.Value = dictMonad_0_loop
 	_ = dictMonad_0
-	return gopurs_runtime.Apply(gopurs_runtime.RecordGet(gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonad_0, "Applicative0"), gopurs_runtime.Value{}), "pure"), func() gopurs_runtime.Value {
-		orig := func() *struct {
-			ccc gopurs_runtime.Value
-		} {
-			orig := gopurs_runtime.RecordDict1("ccc", gopurs_runtime.Func(func(x1_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Func(func(v_2 gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Array(func() []gopurs_runtime.Value {
-						arr := *(*[]gopurs_runtime.Value)(x1_1.UnsafePtr)
-						unboxed := make([]gopurs_runtime.Value, len(arr))
-						for i, v := range arr {
-							unboxed[i] = v
-						}
-						return unboxed
-					}())
-				})
-			}))
-			_ = orig
-			clone := struct {
-				ccc gopurs_runtime.Value
-			}{}
-			clone.ccc = gopurs_runtime.RecordGet(orig, "ccc")
-			return &clone
-		}()
-		_ = orig
-		return gopurs_runtime.RecordDict([]string{"ccc"}, []gopurs_runtime.Value{orig.ccc})
-	}())
+	return gopurs_runtime.Apply(gopurs_runtime.RecordGet(gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonad_0, "Applicative0"), gopurs_runtime.Value{}), "pure"), gopurs_runtime.RecordDict1("ccc", gopurs_runtime.Func(func(x1_1 gopurs_runtime.Value) gopurs_runtime.Value {
+		return gopurs_runtime.Func(func(v_2 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Array(func() []gopurs_runtime.Value {
+				arr := *(*[]gopurs_runtime.Value)(x1_1.UnsafePtr)
+				unboxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					unboxed[i] = v
+				}
+				return unboxed
+			}())
+		})
+	})))
 }

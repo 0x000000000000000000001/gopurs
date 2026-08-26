@@ -30,10 +30,22 @@ var once_Main_comparing sync.Once
 func Get_Main_comparing() gopurs_runtime.Value {
 	once_Main_comparing.Do(func() {
 		cache_Main_comparing = gopurs_runtime.Func4(func(dictOrd_0_box gopurs_runtime.Value, f_1_box gopurs_runtime.Value, x_2_box gopurs_runtime.Value, y_3_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_comparing(gopurs_runtime.CoerceToStruct[Constructor_Data_Ord_Ord](dictOrd_0_box), f_1_box, x_2_box, y_3_box)), UnsafePtr: nil}
+			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_comparing(gopurs_runtime.CoerceToStruct[Constructor_Data_Ord_Ord[gopurs_runtime.Value]](dictOrd_0_box), f_1_box, x_2_box, y_3_box)), UnsafePtr: nil}
 		})
 	})
 	return cache_Main_comparing
+}
+
+var cache_Main_comparing__3506074860 gopurs_runtime.Value
+var once_Main_comparing__3506074860 sync.Once
+
+func Get_Main_comparing__3506074860() gopurs_runtime.Value {
+	once_Main_comparing__3506074860.Do(func() {
+		cache_Main_comparing__3506074860 = gopurs_runtime.Func4(func(dictOrd_0_box gopurs_runtime.Value, f_1_box gopurs_runtime.Value, x_2_box gopurs_runtime.Value, y_3_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_comparing__3506074860(gopurs_runtime.CoerceToStruct[Constructor_Data_Ord_Ord[gopurs_runtime.Value]](dictOrd_0_box), f_1_box, x_2_box, y_3_box)), UnsafePtr: nil}
+		})
+	})
+	return cache_Main_comparing__3506074860
 }
 
 var cache_Main_test gopurs_runtime.Value
@@ -84,7 +96,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				__t4 = func() gopurs_runtime.Value { panic("Failed pattern match") }().StrVal()
 			}
 		end_branch_4:
-			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(__t4))
 			_ = __local_var_0_0
 			_dollar___unused_1_5 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
@@ -95,26 +107,14 @@ func Get_Main_main() gopurs_runtime.Value {
 	return cache_Main_main
 }
 
-var cache_Main_comparing__3506074860 gopurs_runtime.Value
-var once_Main_comparing__3506074860 sync.Once
-
-func Get_Main_comparing__3506074860() gopurs_runtime.Value {
-	once_Main_comparing__3506074860.Do(func() {
-		cache_Main_comparing__3506074860 = gopurs_runtime.Func4(func(dictOrd_0_box gopurs_runtime.Value, f_1_box gopurs_runtime.Value, x_2_box gopurs_runtime.Value, y_3_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_comparing__3506074860(gopurs_runtime.CoerceToStruct[Constructor_Data_Ord_Ord](dictOrd_0_box), f_1_box, x_2_box, y_3_box)), UnsafePtr: nil}
-		})
-	})
-	return cache_Main_comparing__3506074860
-}
-
 func Call_Main_null(v_0_loop []gopurs_runtime.Value) bool {
 	var v_0 []gopurs_runtime.Value = v_0_loop
 	_ = v_0
 	return (gopurs_runtime.Int(int64(len(v_0))).IntVal) == (0)
 }
 
-func Call_Main_comparing(dictOrd_0_loop *Constructor_Data_Ord_Ord, f_1_loop gopurs_runtime.Value, x_2_loop gopurs_runtime.Value, y_3_loop gopurs_runtime.Value) uint32 {
-	var dictOrd_0 *Constructor_Data_Ord_Ord = dictOrd_0_loop
+func Call_Main_comparing(dictOrd_0_loop *Constructor_Data_Ord_Ord[gopurs_runtime.Value], f_1_loop gopurs_runtime.Value, x_2_loop gopurs_runtime.Value, y_3_loop gopurs_runtime.Value) uint32 {
+	var dictOrd_0 *Constructor_Data_Ord_Ord[gopurs_runtime.Value] = dictOrd_0_loop
 	_ = dictOrd_0
 	var f_1 gopurs_runtime.Value = f_1_loop
 	_ = f_1
@@ -122,11 +122,11 @@ func Call_Main_comparing(dictOrd_0_loop *Constructor_Data_Ord_Ord, f_1_loop gopu
 	_ = x_2
 	var y_3 gopurs_runtime.Value = y_3_loop
 	_ = y_3
-	return uint32(gopurs_runtime.Apply2(gopurs_runtime.Box(dictOrd_0.V1), gopurs_runtime.Apply(f_1, x_2), gopurs_runtime.Apply(f_1, y_3)).IntVal)
+	return uint32(gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(gopurs_runtime.Apply2(gopurs_runtime.Box(dictOrd_0.V1), gopurs_runtime.Apply(f_1, x_2), gopurs_runtime.Apply(f_1, y_3)).IntVal)), UnsafePtr: nil}.IntVal)
 }
 
-func Call_Main_comparing__3506074860(dictOrd_0_loop *Constructor_Data_Ord_Ord, f_1_loop gopurs_runtime.Value, x_2_loop gopurs_runtime.Value, y_3_loop gopurs_runtime.Value) uint32 {
-	var dictOrd_0 *Constructor_Data_Ord_Ord = dictOrd_0_loop
+func Call_Main_comparing__3506074860(dictOrd_0_loop *Constructor_Data_Ord_Ord[gopurs_runtime.Value], f_1_loop gopurs_runtime.Value, x_2_loop gopurs_runtime.Value, y_3_loop gopurs_runtime.Value) uint32 {
+	var dictOrd_0 *Constructor_Data_Ord_Ord[gopurs_runtime.Value] = dictOrd_0_loop
 	_ = dictOrd_0
 	var f_1 gopurs_runtime.Value = f_1_loop
 	_ = f_1
@@ -134,5 +134,5 @@ func Call_Main_comparing__3506074860(dictOrd_0_loop *Constructor_Data_Ord_Ord, f
 	_ = x_2
 	var y_3 gopurs_runtime.Value = y_3_loop
 	_ = y_3
-	return uint32(gopurs_runtime.Apply2(gopurs_runtime.Box(dictOrd_0.V1), gopurs_runtime.Apply(f_1, x_2), gopurs_runtime.Apply(f_1, y_3)).IntVal)
+	return uint32(gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(gopurs_runtime.Apply2(gopurs_runtime.Box(dictOrd_0.V1), gopurs_runtime.Apply(f_1, x_2), gopurs_runtime.Apply(f_1, y_3)).IntVal)), UnsafePtr: nil}.IntVal)
 }

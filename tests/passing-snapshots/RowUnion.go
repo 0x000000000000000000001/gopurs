@@ -52,6 +52,18 @@ func Get_Main_solve() gopurs_runtime.Value {
 	return cache_Main_solve
 }
 
+var cache_Main_solve__3022339743 gopurs_runtime.Value
+var once_Main_solve__3022339743 sync.Once
+
+func Get_Main_solve__3022339743() gopurs_runtime.Value {
+	once_Main_solve__3022339743.Do(func() {
+		cache_Main_solve__3022339743 = gopurs_runtime.Func3(func(_dollar___unused_0_box gopurs_runtime.Value, v_1_box gopurs_runtime.Value, v1_2_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_solve__3022339743(_dollar___unused_0_box, uint32(v_1_box.IntVal), uint32(v1_2_box.IntVal))), UnsafePtr: nil}
+		})
+	})
+	return cache_Main_solve__3022339743
+}
+
 var cache_Main_solveUnionBackwardsCons gopurs_runtime.Value
 var once_Main_solveUnionBackwardsCons sync.Once
 
@@ -94,6 +106,18 @@ func Get_Main_merge() gopurs_runtime.Value {
 	return cache_Main_merge
 }
 
+var cache_Main_merge__455623340 gopurs_runtime.Value
+var once_Main_merge__455623340 sync.Once
+
+func Get_Main_merge__455623340() gopurs_runtime.Value {
+	once_Main_merge__455623340.Do(func() {
+		cache_Main_merge__455623340 = gopurs_runtime.Func(func(_dollar___unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_merge__455623340(_dollar___unused_0_box)
+		})
+	})
+	return cache_Main_merge__455623340
+}
+
 var cache_Main_merge1 gopurs_runtime.Value
 var once_Main_merge1 sync.Once
 
@@ -114,6 +138,18 @@ func Get_Main_mergeWithExtras() gopurs_runtime.Value {
 		})
 	})
 	return cache_Main_mergeWithExtras
+}
+
+var cache_Main_mergeWithExtras__3915448531 gopurs_runtime.Value
+var once_Main_mergeWithExtras__3915448531 sync.Once
+
+func Get_Main_mergeWithExtras__3915448531() gopurs_runtime.Value {
+	once_Main_mergeWithExtras__3915448531.Do(func() {
+		cache_Main_mergeWithExtras__3915448531 = gopurs_runtime.Func(func(_dollar___unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_mergeWithExtras__3915448531(_dollar___unused_0_box)
+		})
+	})
+	return cache_Main_mergeWithExtras__3915448531
 }
 
 var cache_Main_test1 gopurs_runtime.Value
@@ -172,6 +208,18 @@ func Get_Main_withDefaults() gopurs_runtime.Value {
 	return cache_Main_withDefaults
 }
 
+var cache_Main_withDefaults__3254862882 gopurs_runtime.Value
+var once_Main_withDefaults__3254862882 sync.Once
+
+func Get_Main_withDefaults__3254862882() gopurs_runtime.Value {
+	once_Main_withDefaults__3254862882.Do(func() {
+		cache_Main_withDefaults__3254862882 = gopurs_runtime.Func2(func(_dollar___unused_0_box gopurs_runtime.Value, p_1_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_withDefaults__3254862882(_dollar___unused_0_box, p_1_box)
+		})
+	})
+	return cache_Main_withDefaults__3254862882
+}
+
 var cache_Main_test4 gopurs_runtime.Value
 var once_Main_test4 sync.Once
 
@@ -194,13 +242,25 @@ func Get_Main_withDefaultsClosed() gopurs_runtime.Value {
 	return cache_Main_withDefaultsClosed
 }
 
+var cache_Main_withDefaultsClosed__919397809 gopurs_runtime.Value
+var once_Main_withDefaultsClosed__919397809 sync.Once
+
+func Get_Main_withDefaultsClosed__919397809() gopurs_runtime.Value {
+	once_Main_withDefaultsClosed__919397809.Do(func() {
+		cache_Main_withDefaultsClosed__919397809 = gopurs_runtime.Func3(func(_dollar___unused_0_box gopurs_runtime.Value, _dollar___unused_1_box gopurs_runtime.Value, p_2_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_withDefaultsClosed__919397809(_dollar___unused_0_box, uint32(_dollar___unused_1_box.IntVal), p_2_box)
+		})
+	})
+	return cache_Main_withDefaultsClosed__919397809
+}
+
 var cache_Main_main gopurs_runtime.Value
 var once_Main_main sync.Once
 
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.Int(gopurs_runtime.RecordGet(Get_Main_test1(), "x").IntVal)).StrVal()))
 			_ = __local_var_0_0
 			_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
@@ -261,89 +321,17 @@ func Get_Main_main() gopurs_runtime.Value {
 	return cache_Main_main
 }
 
-var cache_Main_merge__455623340 gopurs_runtime.Value
-var once_Main_merge__455623340 sync.Once
-
-func Get_Main_merge__455623340() gopurs_runtime.Value {
-	once_Main_merge__455623340.Do(func() {
-		cache_Main_merge__455623340 = gopurs_runtime.Func(func(_dollar___unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_merge__455623340(_dollar___unused_0_box)
-		})
-	})
-	return cache_Main_merge__455623340
-}
-
-var cache_Main_mergeWithExtras__3915448531 gopurs_runtime.Value
-var once_Main_mergeWithExtras__3915448531 sync.Once
-
-func Get_Main_mergeWithExtras__3915448531() gopurs_runtime.Value {
-	once_Main_mergeWithExtras__3915448531.Do(func() {
-		cache_Main_mergeWithExtras__3915448531 = gopurs_runtime.Func(func(_dollar___unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_mergeWithExtras__3915448531(_dollar___unused_0_box)
-		})
-	})
-	return cache_Main_mergeWithExtras__3915448531
-}
-
-var cache_Main_solve__1633636313 gopurs_runtime.Value
-var once_Main_solve__1633636313 sync.Once
-
-func Get_Main_solve__1633636313() gopurs_runtime.Value {
-	once_Main_solve__1633636313.Do(func() {
-		cache_Main_solve__1633636313 = gopurs_runtime.Func2(func(v_0_box gopurs_runtime.Value, v1_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_solve__1633636313(uint32(v_0_box.IntVal), uint32(v1_1_box.IntVal))), UnsafePtr: nil}
-		})
-	})
-	return cache_Main_solve__1633636313
-}
-
-var cache_Main_solve__3022339743 gopurs_runtime.Value
-var once_Main_solve__3022339743 sync.Once
-
-func Get_Main_solve__3022339743() gopurs_runtime.Value {
-	once_Main_solve__3022339743.Do(func() {
-		cache_Main_solve__3022339743 = gopurs_runtime.Func3(func(_dollar___unused_0_box gopurs_runtime.Value, v_1_box gopurs_runtime.Value, v1_2_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_solve__3022339743(_dollar___unused_0_box, uint32(v_1_box.IntVal), uint32(v1_2_box.IntVal))), UnsafePtr: nil}
-		})
-	})
-	return cache_Main_solve__3022339743
-}
-
-var cache_Main_withDefaults__3254862882 gopurs_runtime.Value
-var once_Main_withDefaults__3254862882 sync.Once
-
-func Get_Main_withDefaults__3254862882() gopurs_runtime.Value {
-	once_Main_withDefaults__3254862882.Do(func() {
-		cache_Main_withDefaults__3254862882 = gopurs_runtime.Func2(func(_dollar___unused_0_box gopurs_runtime.Value, p_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_withDefaults__3254862882(_dollar___unused_0_box, p_1_box)
-		})
-	})
-	return cache_Main_withDefaults__3254862882
-}
-
-var cache_Main_withDefaultsClosed__919397809 gopurs_runtime.Value
-var once_Main_withDefaultsClosed__919397809 sync.Once
-
-func Get_Main_withDefaultsClosed__919397809() gopurs_runtime.Value {
-	once_Main_withDefaultsClosed__919397809.Do(func() {
-		cache_Main_withDefaultsClosed__919397809 = gopurs_runtime.Func3(func(_dollar___unused_0_box gopurs_runtime.Value, _dollar___unused_1_box gopurs_runtime.Value, p_2_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_withDefaultsClosed__919397809(_dollar___unused_0_box, uint32(_dollar___unused_1_box.IntVal), p_2_box)
-		})
-	})
-	return cache_Main_withDefaultsClosed__919397809
-}
-
-type Constructor_Main_Proxy struct {
+type Constructor_Main_Proxy[T_a any] struct {
 	Rc uint32
 }
 
-type Constructor_Main_Subrow struct {
+type Constructor_Main_Subrow[T_r any, T_s any] struct {
 	Rc uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[3309093968] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_Subrow)(ptr)
+		c := (*Constructor_Main_Subrow[any, any])(ptr)
 		_ = c
 		switch key {
 
@@ -375,13 +363,35 @@ func Call_Main_solve(_dollar___unused_0_loop gopurs_runtime.Value, v_1_loop uint
 	return 227768594
 }
 
+func Call_Main_solve__3022339743(_dollar___unused_0_loop gopurs_runtime.Value, v_1_loop uint32, v1_2_loop uint32) uint32 {
+	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
+	_ = _dollar___unused_0
+	var v_1 uint32 = v_1_loop
+	_ = v_1
+	var v1_2 uint32 = v1_2_loop
+	_ = v1_2
+	return 227768594
+}
+
 func Call_Main_merge(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
 	return Get_Main_mergeImpl()
 }
 
+func Call_Main_merge__455623340(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
+	_ = _dollar___unused_0
+	return Get_Main_mergeImpl()
+}
+
 func Call_Main_mergeWithExtras(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
+	_ = _dollar___unused_0
+	return Get_Main_mergeImpl()
+}
+
+func Call_Main_mergeWithExtras__3915448531(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
 	return Get_Main_mergeImpl()
@@ -409,6 +419,14 @@ func Call_Main_withDefaults(_dollar___unused_0_loop gopurs_runtime.Value, p_1_lo
 	return gopurs_runtime.Apply2(Get_Main_mergeImpl(), p_1, gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(1), gopurs_runtime.Int(1)))
 }
 
+func Call_Main_withDefaults__3254862882(_dollar___unused_0_loop gopurs_runtime.Value, p_1_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
+	_ = _dollar___unused_0
+	var p_1 gopurs_runtime.Value = p_1_loop
+	_ = p_1
+	return gopurs_runtime.Apply2(Get_Main_mergeImpl(), p_1, gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(1), gopurs_runtime.Int(1)))
+}
+
 func Call_Main_withDefaultsClosed(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___unused_1_loop uint32, p_2_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
@@ -417,44 +435,6 @@ func Call_Main_withDefaultsClosed(_dollar___unused_0_loop gopurs_runtime.Value, 
 	var p_2 gopurs_runtime.Value = p_2_loop
 	_ = p_2
 	return gopurs_runtime.Apply2(Get_Main_mergeImpl(), p_2, gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(1), gopurs_runtime.Int(1)))
-}
-
-func Call_Main_merge__455623340(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
-	_ = _dollar___unused_0
-	return Get_Main_mergeImpl()
-}
-
-func Call_Main_mergeWithExtras__3915448531(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
-	_ = _dollar___unused_0
-	return Get_Main_mergeImpl()
-}
-
-func Call_Main_solve__1633636313(v_0_loop uint32, v1_1_loop uint32) uint32 {
-	var v_0 uint32 = v_0_loop
-	_ = v_0
-	var v1_1 uint32 = v1_1_loop
-	_ = v1_1
-	return 227768594
-}
-
-func Call_Main_solve__3022339743(_dollar___unused_0_loop gopurs_runtime.Value, v_1_loop uint32, v1_2_loop uint32) uint32 {
-	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
-	_ = _dollar___unused_0
-	var v_1 uint32 = v_1_loop
-	_ = v_1
-	var v1_2 uint32 = v1_2_loop
-	_ = v1_2
-	return 227768594
-}
-
-func Call_Main_withDefaults__3254862882(_dollar___unused_0_loop gopurs_runtime.Value, p_1_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
-	_ = _dollar___unused_0
-	var p_1 gopurs_runtime.Value = p_1_loop
-	_ = p_1
-	return gopurs_runtime.Apply2(Get_Main_mergeImpl(), p_1, gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(1), gopurs_runtime.Int(1)))
 }
 
 func Call_Main_withDefaultsClosed__919397809(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___unused_1_loop uint32, p_2_loop gopurs_runtime.Value) gopurs_runtime.Value {

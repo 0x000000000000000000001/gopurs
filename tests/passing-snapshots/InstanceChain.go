@@ -116,6 +116,18 @@ func Get_Main_learnIsString() gopurs_runtime.Value {
 	return cache_Main_learnIsString
 }
 
+var cache_Main_learnIsString__2323137891 gopurs_runtime.Value
+var once_Main_learnIsString__2323137891 sync.Once
+
+func Get_Main_learnIsString__2323137891() gopurs_runtime.Value {
+	once_Main_learnIsString__2323137891.Do(func() {
+		cache_Main_learnIsString__2323137891 = gopurs_runtime.Func3(func(_dollar___unused_0_box gopurs_runtime.Value, _dollar___unused_1_box gopurs_runtime.Value, v_2_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_learnIsString__2323137891(uint32(_dollar___unused_0_box.IntVal), uint32(_dollar___unused_1_box.IntVal), uint32(v_2_box.IntVal))), UnsafePtr: nil}
+		})
+	})
+	return cache_Main_learnIsString__2323137891
+}
+
 var cache_Main_learnInst gopurs_runtime.Value
 var once_Main_learnInst sync.Once
 
@@ -178,6 +190,18 @@ func Get_Main_isEq() gopurs_runtime.Value {
 	return cache_Main_isEq
 }
 
+var cache_Main_isEq__4020624470 gopurs_runtime.Value
+var once_Main_isEq__4020624470 sync.Once
+
+func Get_Main_isEq__4020624470() gopurs_runtime.Value {
+	once_Main_isEq__4020624470.Do(func() {
+		cache_Main_isEq__4020624470 = gopurs_runtime.Func3(func(_dollar___unused_0_box gopurs_runtime.Value, v_1_box gopurs_runtime.Value, v1_2_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_isEq__4020624470(uint32(_dollar___unused_0_box.IntVal), uint32(v_1_box.IntVal), uint32(v1_2_box.IntVal))), UnsafePtr: nil}
+		})
+	})
+	return cache_Main_isEq__4020624470
+}
+
 var cache_Main_isEqEg0 gopurs_runtime.Value
 var once_Main_isEqEg0 sync.Once
 
@@ -218,6 +242,18 @@ func Get_Main_arg() gopurs_runtime.Value {
 		})
 	})
 	return cache_Main_arg
+}
+
+var cache_Main_arg__3788959831 gopurs_runtime.Value
+var once_Main_arg__3788959831 sync.Once
+
+func Get_Main_arg__3788959831() gopurs_runtime.Value {
+	once_Main_arg__3788959831.Do(func() {
+		cache_Main_arg__3788959831 = gopurs_runtime.Func2(func(_dollar___unused_0_box gopurs_runtime.Value, v_1_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_arg__3788959831(uint32(_dollar___unused_0_box.IntVal), uint32(v_1_box.IntVal))), UnsafePtr: nil}
+		})
+	})
+	return cache_Main_arg__3788959831
 }
 
 var cache_Main_argEg0 gopurs_runtime.Value
@@ -262,89 +298,17 @@ func Get_Main_argEg2() gopurs_runtime.Value {
 	return cache_Main_argEg2
 }
 
-var cache_Main_arg__347165271 gopurs_runtime.Value
-var once_Main_arg__347165271 sync.Once
-
-func Get_Main_arg__347165271() gopurs_runtime.Value {
-	once_Main_arg__347165271.Do(func() {
-		cache_Main_arg__347165271 = gopurs_runtime.Func(func(v_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_arg__347165271(uint32(v_0_box.IntVal))), UnsafePtr: nil}
-		})
-	})
-	return cache_Main_arg__347165271
-}
-
-var cache_Main_arg__3788959831 gopurs_runtime.Value
-var once_Main_arg__3788959831 sync.Once
-
-func Get_Main_arg__3788959831() gopurs_runtime.Value {
-	once_Main_arg__3788959831.Do(func() {
-		cache_Main_arg__3788959831 = gopurs_runtime.Func2(func(_dollar___unused_0_box gopurs_runtime.Value, v_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_arg__3788959831(uint32(_dollar___unused_0_box.IntVal), uint32(v_1_box.IntVal))), UnsafePtr: nil}
-		})
-	})
-	return cache_Main_arg__3788959831
-}
-
-var cache_Main_isEq__2475591184 gopurs_runtime.Value
-var once_Main_isEq__2475591184 sync.Once
-
-func Get_Main_isEq__2475591184() gopurs_runtime.Value {
-	once_Main_isEq__2475591184.Do(func() {
-		cache_Main_isEq__2475591184 = gopurs_runtime.Func2(func(v_0_box gopurs_runtime.Value, v1_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_isEq__2475591184(uint32(v_0_box.IntVal), uint32(v1_1_box.IntVal))), UnsafePtr: nil}
-		})
-	})
-	return cache_Main_isEq__2475591184
-}
-
-var cache_Main_isEq__4020624470 gopurs_runtime.Value
-var once_Main_isEq__4020624470 sync.Once
-
-func Get_Main_isEq__4020624470() gopurs_runtime.Value {
-	once_Main_isEq__4020624470.Do(func() {
-		cache_Main_isEq__4020624470 = gopurs_runtime.Func3(func(_dollar___unused_0_box gopurs_runtime.Value, v_1_box gopurs_runtime.Value, v1_2_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_isEq__4020624470(uint32(_dollar___unused_0_box.IntVal), uint32(v_1_box.IntVal), uint32(v1_2_box.IntVal))), UnsafePtr: nil}
-		})
-	})
-	return cache_Main_isEq__4020624470
-}
-
-var cache_Main_learnIsString__4204160867 gopurs_runtime.Value
-var once_Main_learnIsString__4204160867 sync.Once
-
-func Get_Main_learnIsString__4204160867() gopurs_runtime.Value {
-	once_Main_learnIsString__4204160867.Do(func() {
-		cache_Main_learnIsString__4204160867 = gopurs_runtime.Func(func(v_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_learnIsString__4204160867(uint32(v_0_box.IntVal))), UnsafePtr: nil}
-		})
-	})
-	return cache_Main_learnIsString__4204160867
-}
-
-var cache_Main_learnIsString__2323137891 gopurs_runtime.Value
-var once_Main_learnIsString__2323137891 sync.Once
-
-func Get_Main_learnIsString__2323137891() gopurs_runtime.Value {
-	once_Main_learnIsString__2323137891.Do(func() {
-		cache_Main_learnIsString__2323137891 = gopurs_runtime.Func3(func(_dollar___unused_0_box gopurs_runtime.Value, _dollar___unused_1_box gopurs_runtime.Value, v_2_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_learnIsString__2323137891(uint32(_dollar___unused_0_box.IntVal), uint32(_dollar___unused_1_box.IntVal), uint32(v_2_box.IntVal))), UnsafePtr: nil}
-		})
-	})
-	return cache_Main_learnIsString__2323137891
-}
-
-type Constructor_Main_Proxy struct {
+type Constructor_Main_Proxy[T_p any] struct {
 	Rc uint32
 }
 
-type Constructor_Main_Learn struct {
+type Constructor_Main_Learn[T_a any, T_b any] struct {
 	Rc uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[2338118058] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_Learn)(ptr)
+		c := (*Constructor_Main_Learn[any, any])(ptr)
 		_ = c
 		switch key {
 
@@ -354,13 +318,13 @@ func init() {
 	}
 }
 
-type Constructor_Main_IsString struct {
+type Constructor_Main_IsString[T_t any, T_o any] struct {
 	Rc uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[2058630097] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_IsString)(ptr)
+		c := (*Constructor_Main_IsString[any, any])(ptr)
 		_ = c
 		switch key {
 
@@ -370,13 +334,13 @@ func init() {
 	}
 }
 
-type Constructor_Main_IsEq struct {
+type Constructor_Main_IsEq[T_l any, T_r any, T_o any] struct {
 	Rc uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[3793749168] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_IsEq)(ptr)
+		c := (*Constructor_Main_IsEq[any, any, any])(ptr)
 		_ = c
 		switch key {
 
@@ -386,13 +350,13 @@ func init() {
 	}
 }
 
-type Constructor_Main_Arg struct {
+type Constructor_Main_Arg[T_i any, T_o any] struct {
 	Rc uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[3676657418] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_Arg)(ptr)
+		c := (*Constructor_Main_Arg[any, any])(ptr)
 		_ = c
 		switch key {
 
@@ -436,7 +400,27 @@ func Call_Main_learnIsString(_dollar___unused_0_loop uint32, _dollar___unused_1_
 	return 227768594
 }
 
+func Call_Main_learnIsString__2323137891(_dollar___unused_0_loop uint32, _dollar___unused_1_loop uint32, v_2_loop uint32) uint32 {
+	var _dollar___unused_0 uint32 = _dollar___unused_0_loop
+	_ = _dollar___unused_0
+	var _dollar___unused_1 uint32 = _dollar___unused_1_loop
+	_ = _dollar___unused_1
+	var v_2 uint32 = v_2_loop
+	_ = v_2
+	return 227768594
+}
+
 func Call_Main_isEq(_dollar___unused_0_loop uint32, v_1_loop uint32, v1_2_loop uint32) uint32 {
+	var _dollar___unused_0 uint32 = _dollar___unused_0_loop
+	_ = _dollar___unused_0
+	var v_1 uint32 = v_1_loop
+	_ = v_1
+	var v1_2 uint32 = v1_2_loop
+	_ = v1_2
+	return 227768594
+}
+
+func Call_Main_isEq__4020624470(_dollar___unused_0_loop uint32, v_1_loop uint32, v1_2_loop uint32) uint32 {
 	var _dollar___unused_0 uint32 = _dollar___unused_0_loop
 	_ = _dollar___unused_0
 	var v_1 uint32 = v_1_loop
@@ -454,18 +438,6 @@ func Call_Main_arg(_dollar___unused_0_loop uint32, v_1_loop uint32) uint32 {
 	return 227768594
 }
 
-func Call_Main_appArg(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
-	_ = _dollar___unused_0
-	return gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(gopurs_runtime.RecordDict0().IntVal)), UnsafePtr: nil}
-}
-
-func Call_Main_arg__347165271(v_0_loop uint32) uint32 {
-	var v_0 uint32 = v_0_loop
-	_ = v_0
-	return 227768594
-}
-
 func Call_Main_arg__3788959831(_dollar___unused_0_loop uint32, v_1_loop uint32) uint32 {
 	var _dollar___unused_0 uint32 = _dollar___unused_0_loop
 	_ = _dollar___unused_0
@@ -474,36 +446,8 @@ func Call_Main_arg__3788959831(_dollar___unused_0_loop uint32, v_1_loop uint32) 
 	return 227768594
 }
 
-func Call_Main_isEq__2475591184(v_0_loop uint32, v1_1_loop uint32) uint32 {
-	var v_0 uint32 = v_0_loop
-	_ = v_0
-	var v1_1 uint32 = v1_1_loop
-	_ = v1_1
-	return 227768594
-}
-
-func Call_Main_isEq__4020624470(_dollar___unused_0_loop uint32, v_1_loop uint32, v1_2_loop uint32) uint32 {
-	var _dollar___unused_0 uint32 = _dollar___unused_0_loop
+func Call_Main_appArg(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
-	var v_1 uint32 = v_1_loop
-	_ = v_1
-	var v1_2 uint32 = v1_2_loop
-	_ = v1_2
-	return 227768594
-}
-
-func Call_Main_learnIsString__4204160867(v_0_loop uint32) uint32 {
-	var v_0 uint32 = v_0_loop
-	_ = v_0
-	return 227768594
-}
-
-func Call_Main_learnIsString__2323137891(_dollar___unused_0_loop uint32, _dollar___unused_1_loop uint32, v_2_loop uint32) uint32 {
-	var _dollar___unused_0 uint32 = _dollar___unused_0_loop
-	_ = _dollar___unused_0
-	var _dollar___unused_1 uint32 = _dollar___unused_1_loop
-	_ = _dollar___unused_1
-	var v_2 uint32 = v_2_loop
-	_ = v_2
-	return 227768594
+	return gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(gopurs_runtime.RecordDict0().IntVal)), UnsafePtr: nil}
 }

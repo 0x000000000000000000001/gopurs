@@ -13,7 +13,7 @@ func Get_Main_C() gopurs_runtime.Value {
 	once_Main_C.Do(func() {
 		cache_Main_C = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(value1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Value{Type: 9, IntVal: 2167983901, UnsafePtr: unsafe.Pointer((&Constructor_Main_C{1, value0, gopurs_runtime.CoerceToStruct[Constructor_Main_C](value1)}))}
+				return gopurs_runtime.Value{Type: 9, IntVal: 2167983901, UnsafePtr: unsafe.Pointer((&Constructor_Main_C[gopurs_runtime.Value]{1, value0, gopurs_runtime.CoerceToStruct[Constructor_Main_C[gopurs_runtime.Value]](value1)}))}
 			})
 		})
 	})
@@ -25,7 +25,7 @@ var once_Main_N sync.Once
 
 func Get_Main_N() gopurs_runtime.Value {
 	once_Main_N.Do(func() {
-		cache_Main_N = gopurs_runtime.Value{Type: 9, IntVal: 2167983901, UnsafePtr: unsafe.Pointer((*Constructor_Main_C)(nil))}
+		cache_Main_N = gopurs_runtime.Value{Type: 9, IntVal: 2167983901, UnsafePtr: unsafe.Pointer((*Constructor_Main_C[gopurs_runtime.Value])(nil))}
 	})
 	return cache_Main_N
 }
@@ -36,7 +36,7 @@ var once_Main_test sync.Once
 func Get_Main_test() gopurs_runtime.Value {
 	once_Main_test.Do(func() {
 		cache_Main_test = gopurs_runtime.Func2(func(v_0_box gopurs_runtime.Value, v1_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Float(Call_Main_test(v_0_box.FloatVal(), gopurs_runtime.CoerceToStruct[Constructor_Main_C](v1_1_box)))
+			return gopurs_runtime.Float(Call_Main_test(v_0_box.FloatVal(), gopurs_runtime.CoerceToStruct[Constructor_Main_C[float64]](v1_1_box)))
 		})
 	})
 	return cache_Main_test
@@ -60,8 +60,8 @@ var once_Main_main sync.Once
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
-			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showNumberImpl(), gopurs_runtime.Float(Call_Main_test(0.0, gopurs_runtime.CoerceToStruct[Constructor_Main_C](gopurs_runtime.Value{Type: 9, IntVal: 2167983901, UnsafePtr: unsafe.Pointer((&Constructor_Main_C{1, gopurs_runtime.Float(1.0), (&Constructor_Main_C{1, gopurs_runtime.Float(2.0), (&Constructor_Main_C{1, gopurs_runtime.Float(3.0), (*Constructor_Main_C)(nil)})})}))})))).StrVal()))
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=(ADT ["Effect","Effect"] [Unit])
+			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showNumberImpl(), gopurs_runtime.Float(Call_Main_test(0.0, (&Constructor_Main_C[float64]{1, gopurs_runtime.Float(1.0), (&Constructor_Main_C[gopurs_runtime.Value]{1, gopurs_runtime.Float(2.0), (&Constructor_Main_C[gopurs_runtime.Value]{1, gopurs_runtime.Float(3.0), (*Constructor_Main_C[gopurs_runtime.Value])(nil)})})})))).StrVal()))
 			_ = __local_var_0_0
 			_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
 			_ = _dollar___unused_1_1
@@ -95,17 +95,17 @@ func Get_Main_loop__3510510677() gopurs_runtime.Value {
 	return cache_Main_loop__3510510677
 }
 
-type Constructor_Main_C struct {
+type Constructor_Main_C[T_a any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
-	V1 *Constructor_Main_C
+	V1 *Constructor_Main_C[gopurs_runtime.Value]
 }
 
-type Constructor_Main_N struct {
+type Constructor_Main_N[T_a any] struct {
 	Rc uint32
 }
 
-func Call_Main_test(v_0_loop float64, v1_1_loop *Constructor_Main_C) float64 {
+func Call_Main_test(v_0_loop float64, v1_1_loop *Constructor_Main_C[float64]) float64 {
 test:
 	for {
 		if false {
@@ -113,7 +113,7 @@ test:
 		}
 		var v_0 float64 = v_0_loop
 		_ = v_0
-		var v1_1 *Constructor_Main_C = v1_1_loop
+		var v1_1 *Constructor_Main_C[float64] = v1_1_loop
 		_ = v1_1
 		var __t0 float64
 		{
@@ -127,7 +127,7 @@ test:
 		{
 			if v1_1 != nil {
 				v_0_loop = (v_0) + ((v1_1).V0.FloatVal())
-				v1_1_loop = gopurs_runtime.CoerceToStruct[Constructor_Main_C](gopurs_runtime.Value{Type: 9, IntVal: 2167983901, UnsafePtr: unsafe.Pointer((v1_1).V1)})
+				v1_1_loop = gopurs_runtime.CoerceToStruct[Constructor_Main_C[float64]](gopurs_runtime.Value{Type: 9, IntVal: 2167983901, UnsafePtr: unsafe.Pointer((v1_1).V1)})
 				continue test
 				__t0 = gopurs_runtime.Value{}.FloatVal()
 				goto end_branch_0

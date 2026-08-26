@@ -79,7 +79,7 @@ var once_Main_coerceRefl sync.Once
 
 func Get_Main_coerceRefl() gopurs_runtime.Value {
 	once_Main_coerceRefl.Do(func() {
-		cache_Main_coerceRefl = gopurs_runtime.Value{Type: 9, IntVal: 2049652419, UnsafePtr: unsafe.Pointer((&Constructor_Main_Coerce{1, gopurs_runtime.Func(func(a_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_coerceRefl = gopurs_runtime.Value{Type: 9, IntVal: 2049652419, UnsafePtr: unsafe.Pointer((&Constructor_Main_Coerce[gopurs_runtime.Value, gopurs_runtime.Value]{1, gopurs_runtime.Func(func(a_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return a_0
 		})}))}
 	})
@@ -92,7 +92,7 @@ var once_Main_coerce sync.Once
 func Get_Main_coerce() gopurs_runtime.Value {
 	once_Main_coerce.Do(func() {
 		cache_Main_coerce = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_coerce(gopurs_runtime.CoerceToStruct[Constructor_Main_Coerce](dict_0_box))
+			return Call_Main_coerce(gopurs_runtime.CoerceToStruct[Constructor_Main_Coerce[gopurs_runtime.Value, gopurs_runtime.Value]](dict_0_box))
 		})
 	})
 	return cache_Main_coerce
@@ -116,14 +116,14 @@ func init() {
 	}
 }
 
-type Constructor_Main_Coerce struct {
+type Constructor_Main_Coerce[T_a any, T_b any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 }
 
 func init() {
 	gopurs_runtime.StructGetters[2049652419] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_Coerce)(ptr)
+		c := (*Constructor_Main_Coerce[any, any])(ptr)
 		_ = c
 		switch key {
 		case "coerce":
@@ -155,11 +155,11 @@ func Call_Main_greeting(dict_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 func Call_Main_coerceShow(dictShow_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var dictShow_0 gopurs_runtime.Value = dictShow_0_loop
 	_ = dictShow_0
-	return gopurs_runtime.Value{Type: 9, IntVal: 2049652419, UnsafePtr: unsafe.Pointer((&Constructor_Main_Coerce{1, gopurs_runtime.RecordGet(dictShow_0, "show")}))}
+	return gopurs_runtime.Value{Type: 9, IntVal: 2049652419, UnsafePtr: unsafe.Pointer((&Constructor_Main_Coerce[gopurs_runtime.Value, string]{1, gopurs_runtime.RecordGet(dictShow_0, "show")}))}
 }
 
-func Call_Main_coerce(dict_0_loop *Constructor_Main_Coerce) gopurs_runtime.Value {
-	var dict_0 *Constructor_Main_Coerce = dict_0_loop
+func Call_Main_coerce(dict_0_loop *Constructor_Main_Coerce[gopurs_runtime.Value, gopurs_runtime.Value]) gopurs_runtime.Value {
+	var dict_0 *Constructor_Main_Coerce[gopurs_runtime.Value, gopurs_runtime.Value] = dict_0_loop
 	_ = dict_0
 	return gopurs_runtime.Box(dict_0.V0)
 }

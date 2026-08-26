@@ -11,7 +11,7 @@ var once_Main_Nil sync.Once
 
 func Get_Main_Nil() gopurs_runtime.Value {
 	once_Main_Nil.Do(func() {
-		cache_Main_Nil = gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons)(nil))}
+		cache_Main_Nil = gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons[gopurs_runtime.Value])(nil))}
 	})
 	return cache_Main_Nil
 }
@@ -23,7 +23,7 @@ func Get_Main_Cons() gopurs_runtime.Value {
 	once_Main_Cons.Do(func() {
 		cache_Main_Cons = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(value1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((&Constructor_Main_Cons{1, value0, gopurs_runtime.CoerceToStruct[Constructor_Main_Cons](value1)}))}
+				return gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((&Constructor_Main_Cons[gopurs_runtime.Value]{1, value0, gopurs_runtime.CoerceToStruct[Constructor_Main_Cons[gopurs_runtime.Value]](value1)}))}
 			})
 		})
 	})
@@ -46,26 +46,26 @@ var once_Main_head sync.Once
 func Get_Main_head() gopurs_runtime.Value {
 	once_Main_head.Do(func() {
 		cache_Main_head = gopurs_runtime.Func2(func(_dollar___unused_0_box gopurs_runtime.Value, v_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Int(Call_Main_head(_dollar___unused_0_box, gopurs_runtime.CoerceToStruct[Constructor_Main_Cons](v_1_box)))
+			return gopurs_runtime.Int(Call_Main_head(_dollar___unused_0_box, gopurs_runtime.CoerceToStruct[Constructor_Main_Cons[int64]](v_1_box)))
 		})
 	})
 	return cache_Main_head
 }
 
-type Constructor_Main_Nil struct {
+type Constructor_Main_Nil[T_a any] struct {
 	Rc uint32
 }
 
-type Constructor_Main_Cons struct {
+type Constructor_Main_Cons[T_a any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
-	V1 *Constructor_Main_Cons
+	V1 *Constructor_Main_Cons[gopurs_runtime.Value]
 }
 
-func Call_Main_head(_dollar___unused_0_loop gopurs_runtime.Value, v_1_loop *Constructor_Main_Cons) int64 {
+func Call_Main_head(_dollar___unused_0_loop gopurs_runtime.Value, v_1_loop *Constructor_Main_Cons[int64]) int64 {
 	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
-	var v_1 *Constructor_Main_Cons = v_1_loop
+	var v_1 *Constructor_Main_Cons[int64] = v_1_loop
 	_ = v_1
 	var __t0 int64
 	{

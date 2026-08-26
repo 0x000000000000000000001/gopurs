@@ -137,7 +137,7 @@ var once_Main_main sync.Once
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showNumberImpl(), gopurs_runtime.Float(2.0)).StrVal()))
 			_ = __local_var_0_0
 			_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
@@ -163,44 +163,47 @@ func Get_Main_main() gopurs_runtime.Value {
 func Call_Main_test8(x_0_loop float64) float64 {
 	var x_0 float64 = x_0_loop
 	_ = x_0
+	var Call_local_Main_go__go_1_0_0 func(float64) gopurs_runtime.Value
+	_ = Call_local_Main_go__go_1_0_0
 	var go__go_1_0_0 gopurs_runtime.Value
-	go__go_1_0_0 = gopurs_runtime.Func(func(v_2_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
-		return func() gopurs_runtime.Value {
-			var v_2_loop float64 = v_2_loop_val.FloatVal()
-		go__go_1_0_0:
-			for {
-				if false {
-					continue go__go_1_0_0
-				}
-				var v_2 float64 = v_2_loop
-				_ = v_2
-				var __t4 float64
-				{
-					var __t_tag_1 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordNumberImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, gopurs_runtime.Float((x_0)-(0.1)), gopurs_runtime.Float((v_2)*(v_2)))
-					var __t_and_3 bool = false
-					if uint32(__t_tag_1.IntVal) == 1527465420 {
-
-						var __t_tag_2 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordNumberImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, gopurs_runtime.Float((v_2)*(v_2)), gopurs_runtime.Float((x_0)+(0.1)))
-						__t_and_3 = (uint32(__t_tag_2.IntVal) == 1527465420)
-					}
-					if __t_and_3 {
-						__t4 = v_2
-						goto end_branch_4
-					} else {
-
-					}
-				}
-				{
-					v_2_loop = ((v_2) + ((x_0) / (v_2))) / (2.0)
-					continue go__go_1_0_0
-					__t4 = gopurs_runtime.Value{}.FloatVal()
-				}
-			end_branch_4:
-				return gopurs_runtime.Float(__t4)
+	_ = go__go_1_0_0
+	Call_local_Main_go__go_1_0_0 = func(v_2_loop float64) gopurs_runtime.Value {
+	go__go_1_0_0:
+		for {
+			if false {
+				continue go__go_1_0_0
 			}
-		}()
+			var v_2 float64 = v_2_loop
+			_ = v_2
+			var __t4 float64
+			{
+				var __t_tag_1 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordNumberImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, gopurs_runtime.Float((x_0)-(0.1)), gopurs_runtime.Float((v_2)*(v_2)))
+				var __t_and_3 bool = false
+				if uint32(__t_tag_1.IntVal) == 1527465420 {
+
+					var __t_tag_2 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordNumberImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, gopurs_runtime.Float((v_2)*(v_2)), gopurs_runtime.Float((x_0)+(0.1)))
+					__t_and_3 = (uint32(__t_tag_2.IntVal) == 1527465420)
+				}
+				if __t_and_3 {
+					__t4 = v_2
+					goto end_branch_4
+				} else {
+
+				}
+			}
+			{
+				v_2_loop = ((v_2) + ((x_0) / (v_2))) / (2.0)
+				continue go__go_1_0_0
+				__t4 = gopurs_runtime.Value{}.FloatVal()
+			}
+		end_branch_4:
+			return gopurs_runtime.Float(__t4)
+		}
+	}
+	go__go_1_0_0 = gopurs_runtime.Func(func(v_2_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
+		return Call_local_Main_go__go_1_0_0(v_2_loop_val.FloatVal())
 	})
-	return gopurs_runtime.Apply(go__go_1_0_0, gopurs_runtime.Float(x_0)).FloatVal()
+	return Call_local_Main_go__go_1_0_0(x_0).FloatVal()
 }
 
 func Call_Main_test4(dictPartial_0_loop gopurs_runtime.Value) gopurs_runtime.Value {

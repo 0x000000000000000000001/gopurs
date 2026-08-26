@@ -82,7 +82,7 @@ var once_Main_swap sync.Once
 func Get_Main_swap() gopurs_runtime.Value {
 	once_Main_swap.Do(func() {
 		cache_Main_swap = gopurs_runtime.Func(func(v_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 3190713900, UnsafePtr: unsafe.Pointer(Call_Main_swap(gopurs_runtime.CoerceToStruct[Constructor_A_Tuple](v_0_box)))}
+			return gopurs_runtime.Value{Type: 9, IntVal: 3190713900, UnsafePtr: unsafe.Pointer(Call_Main_swap(gopurs_runtime.CoerceToStruct[Constructor_A_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]](v_0_box)))}
 		})
 	})
 	return cache_Main_swap
@@ -110,22 +110,22 @@ func Get_Main_main() gopurs_runtime.Value {
 	return cache_Main_main
 }
 
-type Constructor_Main_UseOperatorInDataParamKind struct {
+type Constructor_Main_UseOperatorInDataParamKind[T_a any] struct {
 	Rc uint32
 }
 
-type Constructor_Main_Compose struct {
+type Constructor_Main_Compose[T_f any, T_g any, T_a any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 }
 
-type Constructor_Main_UseOperatorInClassParamKind struct {
+type Constructor_Main_UseOperatorInClassParamKind[T_a any] struct {
 	Rc uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[40269555] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_UseOperatorInClassParamKind)(ptr)
+		c := (*Constructor_Main_UseOperatorInClassParamKind[any])(ptr)
 		_ = c
 		switch key {
 
@@ -161,10 +161,10 @@ func Call_Main_testParens(nat_0_loop gopurs_runtime.Value) gopurs_runtime.Value 
 	return nat_0
 }
 
-func Call_Main_swap(v_0_loop *Constructor_A_Tuple) *Constructor_A_Tuple {
-	var v_0 *Constructor_A_Tuple = v_0_loop
+func Call_Main_swap(v_0_loop *Constructor_A_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]) *Constructor_A_Tuple[gopurs_runtime.Value, gopurs_runtime.Value] {
+	var v_0 *Constructor_A_Tuple[gopurs_runtime.Value, gopurs_runtime.Value] = v_0_loop
 	_ = v_0
-	return (&Constructor_A_Tuple{1, (v_0).V1, (v_0).V0})
+	return (&Constructor_A_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{1, (v_0).V1, (v_0).V0})
 }
 
 func Call_Main_natty(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {

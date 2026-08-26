@@ -37,7 +37,7 @@ func Get_Main_foo() gopurs_runtime.Value {
 	return cache_Main_foo
 }
 
-type Constructor_Main_Foo struct {
+type Constructor_Main_Foo[T_a any] struct {
 	Rc uint32
 }
 

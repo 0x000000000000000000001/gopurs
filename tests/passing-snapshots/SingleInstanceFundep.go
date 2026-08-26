@@ -23,7 +23,7 @@ var once_Main_singleInstanceFundepRow sync.Once
 
 func Get_Main_singleInstanceFundepRow() gopurs_runtime.Value {
 	once_Main_singleInstanceFundepRow.Do(func() {
-		cache_Main_singleInstanceFundepRow = gopurs_runtime.Value{Type: 9, IntVal: 4179949665, UnsafePtr: unsafe.Pointer((&Constructor_Main_SingleInstanceFundep{1, 513803634}))}
+		cache_Main_singleInstanceFundepRow = gopurs_runtime.Value{Type: 9, IntVal: 4179949665, UnsafePtr: unsafe.Pointer((&Constructor_Main_SingleInstanceFundep[gopurs_runtime.Value]{1, 513803634}))}
 	})
 	return cache_Main_singleInstanceFundepRow
 }
@@ -60,14 +60,14 @@ func Get_Main_main() gopurs_runtime.Value {
 	return cache_Main_main
 }
 
-type Constructor_Main_SingleInstanceFundep struct {
+type Constructor_Main_SingleInstanceFundep[T_r any] struct {
 	Rc uint32
 	V0 uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[4179949665] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_SingleInstanceFundep)(ptr)
+		c := (*Constructor_Main_SingleInstanceFundep[any])(ptr)
 		_ = c
 		switch key {
 		case "unified":

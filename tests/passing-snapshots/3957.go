@@ -83,26 +83,13 @@ func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 			// TAST (Let): __local_var_0_0 shape=LitRecord bindingType=(Record (Row [actual: Int, expected: Int] Any))
-			__local_var_0_0 := func() *struct {
-				actual   int64
-				expected int64
-			} {
-				orig := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(Call_Main_f(99999)), gopurs_runtime.Int(0))
-				_ = orig
-				clone := struct {
-					actual   int64
-					expected int64
-				}{}
-				clone.actual = gopurs_runtime.RecordGet(orig, "actual").IntVal
-				clone.expected = gopurs_runtime.RecordGet(orig, "expected").IntVal
-				return &clone
-			}()
+			__local_var_0_0 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(Call_Main_f(99999)), gopurs_runtime.Int(0))
 			_ = __local_var_0_0
 			// TAST (Let): result_1_1 shape=Other bindingType=Boolean
-			result_1_1 := (__local_var_0_0.actual) == (gopurs_runtime.Int(__local_var_0_0.expected).IntVal)
+			result_1_1 := (gopurs_runtime.RecordGet(__local_var_0_0, "actual").IntVal) == (gopurs_runtime.RecordGet(__local_var_0_0, "expected").IntVal)
 			_ = result_1_1
 			// TAST (Let): message_2_2 shape=Other bindingType=String
-			message_2_2 := ((("Expected: ") + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.Int(__local_var_0_0.expected)).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.Int(__local_var_0_0.actual)).StrVal())
+			message_2_2 := ((("Expected: ") + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_0_0, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_0_0, "actual")).StrVal())
 			_ = message_2_2
 			// TAST (Let): __local_var_3_3 shape=Let(Let(EffectBind(App(Var)))) bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_3_3 := gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
@@ -143,26 +130,13 @@ func Get_Main_main() gopurs_runtime.Value {
 			_dollar___unused_4_8 := gopurs_runtime.Apply(__local_var_3_3, gopurs_runtime.Value{})
 			_ = _dollar___unused_4_8
 			// TAST (Let): __local_var_5_9 shape=LitRecord bindingType=(Record (Row [actual: Int, expected: Int] Any))
-			__local_var_5_9 := func() *struct {
-				actual   int64
-				expected int64
-			} {
-				orig := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(Call_Main_g(100000)), gopurs_runtime.Int(0))
-				_ = orig
-				clone := struct {
-					actual   int64
-					expected int64
-				}{}
-				clone.actual = gopurs_runtime.RecordGet(orig, "actual").IntVal
-				clone.expected = gopurs_runtime.RecordGet(orig, "expected").IntVal
-				return &clone
-			}()
+			__local_var_5_9 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(Call_Main_g(100000)), gopurs_runtime.Int(0))
 			_ = __local_var_5_9
 			// TAST (Let): result_6_10 shape=Other bindingType=Boolean
-			result_6_10 := (__local_var_5_9.actual) == (gopurs_runtime.Int(__local_var_5_9.expected).IntVal)
+			result_6_10 := (gopurs_runtime.RecordGet(__local_var_5_9, "actual").IntVal) == (gopurs_runtime.RecordGet(__local_var_5_9, "expected").IntVal)
 			_ = result_6_10
 			// TAST (Let): message_7_11 shape=Other bindingType=String
-			message_7_11 := ((("Expected: ") + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.Int(__local_var_5_9.expected)).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.Int(__local_var_5_9.actual)).StrVal())
+			message_7_11 := ((("Expected: ") + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_5_9, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_5_9, "actual")).StrVal())
 			_ = message_7_11
 			// TAST (Let): __local_var_8_13 shape=App(Var) bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_8_13 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_7_11))
@@ -195,41 +169,28 @@ func Get_Main_main() gopurs_runtime.Value {
 			_dollar___unused_8_12 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_7_11), gopurs_runtime.Bool(result_6_10)), gopurs_runtime.Value{})
 			_ = _dollar___unused_8_12
 			// TAST (Let): __local_var_9_16 shape=LitRecord bindingType=(Record (Row [actual: Int, expected: Int] Any))
-			__local_var_9_16 := func() *struct {
-				actual   int64
-				expected int64
-			} {
-				orig := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(Call_Main_weirdsum(0, gopurs_runtime.Func(func(x_9 gopurs_runtime.Value) gopurs_runtime.Value {
-					var __t17 *Constructor_Main_Just[int64]
-					{
-						if (x_9.IntVal) < (5) {
-							__t17 = (&Constructor_Main_Just[int64]{1, gopurs_runtime.Int((2) * (x_9.IntVal))})
-							goto end_branch_17
-						} else {
+			__local_var_9_16 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(Call_Main_weirdsum(0, gopurs_runtime.Func(func(x_9 gopurs_runtime.Value) gopurs_runtime.Value {
+				var __t17 *Constructor_Main_Just[int64]
+				{
+					if (x_9.IntVal) < (5) {
+						__t17 = (&Constructor_Main_Just[int64]{1, gopurs_runtime.Int((2) * (x_9.IntVal))})
+						goto end_branch_17
+					} else {
 
-						}
 					}
-					{
-						__t17 = (*Constructor_Main_Just[int64])(nil)
-					}
-				end_branch_17:
-					return gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer(__t17)}
-				}), 100000)), gopurs_runtime.Int(20))
-				_ = orig
-				clone := struct {
-					actual   int64
-					expected int64
-				}{}
-				clone.actual = gopurs_runtime.RecordGet(orig, "actual").IntVal
-				clone.expected = gopurs_runtime.RecordGet(orig, "expected").IntVal
-				return &clone
-			}()
+				}
+				{
+					__t17 = (*Constructor_Main_Just[int64])(nil)
+				}
+			end_branch_17:
+				return gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer(__t17)}
+			}), 100000)), gopurs_runtime.Int(20))
 			_ = __local_var_9_16
 			// TAST (Let): result_10_18 shape=Other bindingType=Boolean
-			result_10_18 := (__local_var_9_16.actual) == (gopurs_runtime.Int(__local_var_9_16.expected).IntVal)
+			result_10_18 := (gopurs_runtime.RecordGet(__local_var_9_16, "actual").IntVal) == (gopurs_runtime.RecordGet(__local_var_9_16, "expected").IntVal)
 			_ = result_10_18
 			// TAST (Let): message_11_19 shape=Other bindingType=String
-			message_11_19 := ((("Expected: ") + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.Int(__local_var_9_16.expected)).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.Int(__local_var_9_16.actual)).StrVal())
+			message_11_19 := ((("Expected: ") + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_9_16, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_9_16, "actual")).StrVal())
 			_ = message_11_19
 			// TAST (Let): __local_var_12_21 shape=App(Var) bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_12_21 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_11_19))
@@ -262,26 +223,13 @@ func Get_Main_main() gopurs_runtime.Value {
 			_dollar___unused_12_20 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str(message_11_19), gopurs_runtime.Bool(result_10_18)), gopurs_runtime.Value{})
 			_ = _dollar___unused_12_20
 			// TAST (Let): __local_var_13_24 shape=LitRecord bindingType=(Record (Row [actual: Int, expected: Int] Any))
-			__local_var_13_24 := func() *struct {
-				actual   int64
-				expected int64
-			} {
-				orig := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(Call_Main_tricksyinners(0, 100000)), gopurs_runtime.Int(200009))
-				_ = orig
-				clone := struct {
-					actual   int64
-					expected int64
-				}{}
-				clone.actual = gopurs_runtime.RecordGet(orig, "actual").IntVal
-				clone.expected = gopurs_runtime.RecordGet(orig, "expected").IntVal
-				return &clone
-			}()
+			__local_var_13_24 := gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(Call_Main_tricksyinners(0, 100000)), gopurs_runtime.Int(200009))
 			_ = __local_var_13_24
 			// TAST (Let): result_14_25 shape=Other bindingType=Boolean
-			result_14_25 := (__local_var_13_24.actual) == (gopurs_runtime.Int(__local_var_13_24.expected).IntVal)
+			result_14_25 := (gopurs_runtime.RecordGet(__local_var_13_24, "actual").IntVal) == (gopurs_runtime.RecordGet(__local_var_13_24, "expected").IntVal)
 			_ = result_14_25
 			// TAST (Let): message_15_26 shape=Other bindingType=String
-			message_15_26 := ((("Expected: ") + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.Int(__local_var_13_24.expected)).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.Int(__local_var_13_24.actual)).StrVal())
+			message_15_26 := ((("Expected: ") + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_13_24, "expected")).StrVal())) + ("\x0aActual:   ")) + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(__local_var_13_24, "actual")).StrVal())
 			_ = message_15_26
 			// TAST (Let): __local_var_16_28 shape=App(Var) bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_16_28 := gopurs_runtime.Apply(Get_Effect_Console_error(), gopurs_runtime.Str(message_15_26))

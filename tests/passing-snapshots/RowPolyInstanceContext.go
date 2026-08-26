@@ -36,7 +36,7 @@ var once_Main_state sync.Once
 func Get_Main_state() gopurs_runtime.Value {
 	once_Main_state.Do(func() {
 		cache_Main_state = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_state(gopurs_runtime.CoerceToStruct[Constructor_Main_T](dict_0_box))
+			return Call_Main_state(gopurs_runtime.CoerceToStruct[Constructor_Main_T[gopurs_runtime.Value, gopurs_runtime.Value]](dict_0_box))
 		})
 	})
 	return cache_Main_state
@@ -59,7 +59,7 @@ var once_Main_st sync.Once
 
 func Get_Main_st() gopurs_runtime.Value {
 	once_Main_st.Do(func() {
-		cache_Main_st = gopurs_runtime.Value{Type: 9, IntVal: 990467018, UnsafePtr: unsafe.Pointer((&Constructor_Main_T{1, gopurs_runtime.Func(func(f_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_st = gopurs_runtime.Value{Type: 9, IntVal: 990467018, UnsafePtr: unsafe.Pointer((&Constructor_Main_T[gopurs_runtime.Value, gopurs_runtime.Value]{1, gopurs_runtime.Func(func(f_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(s_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.RecordDict2("new", "ret", gopurs_runtime.Apply(f_0, s_1), Get_Data_Unit_unit())
 			})
@@ -90,19 +90,19 @@ func Get_Main_main() gopurs_runtime.Value {
 	return cache_Main_main
 }
 
-type Constructor_Main_S struct {
+type Constructor_Main_S[T_s any, T_a any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 }
 
-type Constructor_Main_T struct {
+type Constructor_Main_T[T_s any, T_m any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 }
 
 func init() {
 	gopurs_runtime.StructGetters[990467018] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_T)(ptr)
+		c := (*Constructor_Main_T[any, any])(ptr)
 		_ = c
 		switch key {
 		case "state":
@@ -119,8 +119,8 @@ func Call_Main_T_dollar_Dict(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value
 	return x_0
 }
 
-func Call_Main_state(dict_0_loop *Constructor_Main_T) gopurs_runtime.Value {
-	var dict_0 *Constructor_Main_T = dict_0_loop
+func Call_Main_state(dict_0_loop *Constructor_Main_T[gopurs_runtime.Value, gopurs_runtime.Value]) gopurs_runtime.Value {
+	var dict_0 *Constructor_Main_T[gopurs_runtime.Value, gopurs_runtime.Value] = dict_0_loop
 	_ = dict_0
 	return gopurs_runtime.Box(dict_0.V0)
 }

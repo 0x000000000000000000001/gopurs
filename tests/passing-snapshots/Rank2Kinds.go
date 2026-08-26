@@ -77,19 +77,19 @@ func Get_Main_test() gopurs_runtime.Value {
 	return cache_Main_test
 }
 
-type Constructor_Main_Proxy struct {
+type Constructor_Main_Proxy[T_a any] struct {
 	Rc uint32
 }
 
-type Constructor_Main_Pair struct {
+type Constructor_Main_Pair[T_a any, T_b any] struct {
 	Rc uint32
 }
 
-type Constructor_Main_B struct {
+type Constructor_Main_B[T_a any] struct {
 	Rc uint32
 }
 
-type Constructor_Main_A struct {
+type Constructor_Main_A[T_a any] struct {
 	Rc uint32
 }
 

@@ -27,6 +27,18 @@ func Get_Main_testToString() gopurs_runtime.Value {
 	return cache_Main_testToString
 }
 
+var cache_Main_testToString__762614295 gopurs_runtime.Value
+var once_Main_testToString__762614295 sync.Once
+
+func Get_Main_testToString__762614295() gopurs_runtime.Value {
+	once_Main_testToString__762614295.Do(func() {
+		cache_Main_testToString__762614295 = gopurs_runtime.Func2(func(_dollar___unused_0_box gopurs_runtime.Value, v_1_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_testToString__762614295(_dollar___unused_0_box, uint32(v_1_box.IntVal))), UnsafePtr: nil}
+		})
+	})
+	return cache_Main_testToString__762614295
+}
+
 var cache_Main_zeroToString gopurs_runtime.Value
 var once_Main_zeroToString sync.Once
 
@@ -109,6 +121,18 @@ func Get_Main_intMul() gopurs_runtime.Value {
 	return cache_Main_intMul
 }
 
+var cache_Main_intMul__3629321662 gopurs_runtime.Value
+var once_Main_intMul__3629321662 sync.Once
+
+func Get_Main_intMul__3629321662() gopurs_runtime.Value {
+	once_Main_intMul__3629321662.Do(func() {
+		cache_Main_intMul__3629321662 = gopurs_runtime.Func3(func(_dollar___unused_0_box gopurs_runtime.Value, v_1_box gopurs_runtime.Value, v1_2_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_intMul__3629321662(_dollar___unused_0_box, uint32(v_1_box.IntVal), uint32(v1_2_box.IntVal))), UnsafePtr: nil}
+		})
+	})
+	return cache_Main_intMul__3629321662
+}
+
 var cache_Main_testMul gopurs_runtime.Value
 var once_Main_testMul sync.Once
 
@@ -129,6 +153,18 @@ func Get_Main_intAdd() gopurs_runtime.Value {
 		})
 	})
 	return cache_Main_intAdd
+}
+
+var cache_Main_intAdd__2918969323 gopurs_runtime.Value
+var once_Main_intAdd__2918969323 sync.Once
+
+func Get_Main_intAdd__2918969323() gopurs_runtime.Value {
+	once_Main_intAdd__2918969323.Do(func() {
+		cache_Main_intAdd__2918969323 = gopurs_runtime.Func3(func(_dollar___unused_0_box gopurs_runtime.Value, v_1_box gopurs_runtime.Value, v1_2_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_intAdd__2918969323(_dollar___unused_0_box, uint32(v_1_box.IntVal), uint32(v1_2_box.IntVal))), UnsafePtr: nil}
+		})
+	})
+	return cache_Main_intAdd__2918969323
 }
 
 var cache_Main_testAdd gopurs_runtime.Value
@@ -191,79 +227,7 @@ func Get_Main_testMax() gopurs_runtime.Value {
 	return cache_Main_testMax
 }
 
-var cache_Main_intAdd__3787502957 gopurs_runtime.Value
-var once_Main_intAdd__3787502957 sync.Once
-
-func Get_Main_intAdd__3787502957() gopurs_runtime.Value {
-	once_Main_intAdd__3787502957.Do(func() {
-		cache_Main_intAdd__3787502957 = gopurs_runtime.Func2(func(v_0_box gopurs_runtime.Value, v1_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_intAdd__3787502957(uint32(v_0_box.IntVal), uint32(v1_1_box.IntVal))), UnsafePtr: nil}
-		})
-	})
-	return cache_Main_intAdd__3787502957
-}
-
-var cache_Main_intAdd__2918969323 gopurs_runtime.Value
-var once_Main_intAdd__2918969323 sync.Once
-
-func Get_Main_intAdd__2918969323() gopurs_runtime.Value {
-	once_Main_intAdd__2918969323.Do(func() {
-		cache_Main_intAdd__2918969323 = gopurs_runtime.Func3(func(_dollar___unused_0_box gopurs_runtime.Value, v_1_box gopurs_runtime.Value, v1_2_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_intAdd__2918969323(_dollar___unused_0_box, uint32(v_1_box.IntVal), uint32(v1_2_box.IntVal))), UnsafePtr: nil}
-		})
-	})
-	return cache_Main_intAdd__2918969323
-}
-
-var cache_Main_intMul__3173359160 gopurs_runtime.Value
-var once_Main_intMul__3173359160 sync.Once
-
-func Get_Main_intMul__3173359160() gopurs_runtime.Value {
-	once_Main_intMul__3173359160.Do(func() {
-		cache_Main_intMul__3173359160 = gopurs_runtime.Func2(func(v_0_box gopurs_runtime.Value, v1_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_intMul__3173359160(uint32(v_0_box.IntVal), uint32(v1_1_box.IntVal))), UnsafePtr: nil}
-		})
-	})
-	return cache_Main_intMul__3173359160
-}
-
-var cache_Main_intMul__3629321662 gopurs_runtime.Value
-var once_Main_intMul__3629321662 sync.Once
-
-func Get_Main_intMul__3629321662() gopurs_runtime.Value {
-	once_Main_intMul__3629321662.Do(func() {
-		cache_Main_intMul__3629321662 = gopurs_runtime.Func3(func(_dollar___unused_0_box gopurs_runtime.Value, v_1_box gopurs_runtime.Value, v1_2_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_intMul__3629321662(_dollar___unused_0_box, uint32(v_1_box.IntVal), uint32(v1_2_box.IntVal))), UnsafePtr: nil}
-		})
-	})
-	return cache_Main_intMul__3629321662
-}
-
-var cache_Main_testToString__1569371159 gopurs_runtime.Value
-var once_Main_testToString__1569371159 sync.Once
-
-func Get_Main_testToString__1569371159() gopurs_runtime.Value {
-	once_Main_testToString__1569371159.Do(func() {
-		cache_Main_testToString__1569371159 = gopurs_runtime.Func(func(v_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_testToString__1569371159(uint32(v_0_box.IntVal))), UnsafePtr: nil}
-		})
-	})
-	return cache_Main_testToString__1569371159
-}
-
-var cache_Main_testToString__762614295 gopurs_runtime.Value
-var once_Main_testToString__762614295 sync.Once
-
-func Get_Main_testToString__762614295() gopurs_runtime.Value {
-	once_Main_testToString__762614295.Do(func() {
-		cache_Main_testToString__762614295 = gopurs_runtime.Func2(func(_dollar___unused_0_box gopurs_runtime.Value, v_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_testToString__762614295(_dollar___unused_0_box, uint32(v_1_box.IntVal))), UnsafePtr: nil}
-		})
-	})
-	return cache_Main_testToString__762614295
-}
-
-type Constructor_Main_Proxy struct {
+type Constructor_Main_Proxy[T_a any] struct {
 	Rc uint32
 }
 
@@ -275,7 +239,25 @@ func Call_Main_testToString(_dollar___unused_0_loop gopurs_runtime.Value, v_1_lo
 	return 227768594
 }
 
+func Call_Main_testToString__762614295(_dollar___unused_0_loop gopurs_runtime.Value, v_1_loop uint32) uint32 {
+	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
+	_ = _dollar___unused_0
+	var v_1 uint32 = v_1_loop
+	_ = v_1
+	return 227768594
+}
+
 func Call_Main_intMul(_dollar___unused_0_loop gopurs_runtime.Value, v_1_loop uint32, v1_2_loop uint32) uint32 {
+	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
+	_ = _dollar___unused_0
+	var v_1 uint32 = v_1_loop
+	_ = v_1
+	var v1_2 uint32 = v1_2_loop
+	_ = v1_2
+	return 227768594
+}
+
+func Call_Main_intMul__3629321662(_dollar___unused_0_loop gopurs_runtime.Value, v_1_loop uint32, v1_2_loop uint32) uint32 {
 	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
 	var v_1 uint32 = v_1_loop
@@ -295,14 +277,6 @@ func Call_Main_intAdd(_dollar___unused_0_loop gopurs_runtime.Value, v_1_loop uin
 	return 227768594
 }
 
-func Call_Main_intAdd__3787502957(v_0_loop uint32, v1_1_loop uint32) uint32 {
-	var v_0 uint32 = v_0_loop
-	_ = v_0
-	var v1_1 uint32 = v1_1_loop
-	_ = v1_1
-	return 227768594
-}
-
 func Call_Main_intAdd__2918969323(_dollar___unused_0_loop gopurs_runtime.Value, v_1_loop uint32, v1_2_loop uint32) uint32 {
 	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
@@ -310,37 +284,5 @@ func Call_Main_intAdd__2918969323(_dollar___unused_0_loop gopurs_runtime.Value, 
 	_ = v_1
 	var v1_2 uint32 = v1_2_loop
 	_ = v1_2
-	return 227768594
-}
-
-func Call_Main_intMul__3173359160(v_0_loop uint32, v1_1_loop uint32) uint32 {
-	var v_0 uint32 = v_0_loop
-	_ = v_0
-	var v1_1 uint32 = v1_1_loop
-	_ = v1_1
-	return 227768594
-}
-
-func Call_Main_intMul__3629321662(_dollar___unused_0_loop gopurs_runtime.Value, v_1_loop uint32, v1_2_loop uint32) uint32 {
-	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
-	_ = _dollar___unused_0
-	var v_1 uint32 = v_1_loop
-	_ = v_1
-	var v1_2 uint32 = v1_2_loop
-	_ = v1_2
-	return 227768594
-}
-
-func Call_Main_testToString__1569371159(v_0_loop uint32) uint32 {
-	var v_0 uint32 = v_0_loop
-	_ = v_0
-	return 227768594
-}
-
-func Call_Main_testToString__762614295(_dollar___unused_0_loop gopurs_runtime.Value, v_1_loop uint32) uint32 {
-	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
-	_ = _dollar___unused_0
-	var v_1 uint32 = v_1_loop
-	_ = v_1
 	return 227768594
 }

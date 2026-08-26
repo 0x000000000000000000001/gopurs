@@ -64,7 +64,7 @@ func Get_Main_test() gopurs_runtime.Value {
 	return cache_Main_test
 }
 
-type Constructor_Main_MonadAsk struct {
+type Constructor_Main_MonadAsk[T_r any, T_m any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 	V1 gopurs_runtime.Value
@@ -72,7 +72,7 @@ type Constructor_Main_MonadAsk struct {
 
 func init() {
 	gopurs_runtime.StructGetters[1125470254] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_MonadAsk)(ptr)
+		c := (*Constructor_Main_MonadAsk[any, any])(ptr)
 		_ = c
 		switch key {
 		case "Monad0":
@@ -85,7 +85,7 @@ func init() {
 	}
 }
 
-type Constructor_Main_MonadAskEnv struct {
+type Constructor_Main_MonadAskEnv[T_m any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 	V1 gopurs_runtime.Value
@@ -93,7 +93,7 @@ type Constructor_Main_MonadAskEnv struct {
 
 func init() {
 	gopurs_runtime.StructGetters[239845587] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_MonadAskEnv)(ptr)
+		c := (*Constructor_Main_MonadAskEnv[any])(ptr)
 		_ = c
 		switch key {
 		case "Monad0":
@@ -127,14 +127,14 @@ func Call_Main_ask(dict_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 func Call_Main_test(dictMonadAskEnv_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var dictMonadAskEnv_0 gopurs_runtime.Value = dictMonadAskEnv_0_loop
 	_ = dictMonadAskEnv_0
-	// TAST (Let): MonadAsk1_1_0 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
+	// TAST (Let): MonadAsk1_1_0 shape=App(Other) bindingType=Any
 	MonadAsk1_1_0 := gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonadAskEnv_0, "MonadAsk1"), gopurs_runtime.Value{})
 	_ = MonadAsk1_1_0
-	// TAST (Let): Monad0_2_1 shape=App(Other) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
+	// TAST (Let): Monad0_2_1 shape=App(Other) bindingType=Any
 	Monad0_2_1 := gopurs_runtime.Apply(gopurs_runtime.RecordGet(MonadAsk1_1_0, "Monad0"), gopurs_runtime.Value{})
 	_ = Monad0_2_1
-	// TAST (Let): Applicative0_3_2 shape=App(Other) expectedFromAst=*Constructor_Control_Applicative_Applicative actual=*Constructor_Control_Applicative_Applicative bindingType=(ADT ["Control","Applicative","Applicative"] [(TypeVar m)])
-	Applicative0_3_2 := gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative](gopurs_runtime.Apply(gopurs_runtime.RecordGet(Monad0_2_1, "Applicative0"), gopurs_runtime.Value{}))
+	// TAST (Let): Applicative0_3_2 shape=App(Other) bindingType=(ADT ["Control","Applicative","Applicative"] [(TypeVar m)])
+	Applicative0_3_2 := gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](gopurs_runtime.Apply(gopurs_runtime.RecordGet(Monad0_2_1, "Applicative0"), gopurs_runtime.Value{}))
 	_ = Applicative0_3_2
 	return gopurs_runtime.Apply2(gopurs_runtime.RecordGet(gopurs_runtime.Apply(gopurs_runtime.RecordGet(Monad0_2_1, "Bind1"), gopurs_runtime.Value{}), "bind"), gopurs_runtime.RecordGet(MonadAsk1_1_0, "ask"), gopurs_runtime.Func(func(v_4 gopurs_runtime.Value) gopurs_runtime.Value {
 		return gopurs_runtime.Apply(gopurs_runtime.Box(Applicative0_3_2.V1), gopurs_runtime.Bool((gopurs_runtime.RecordGet(v_4, "foo").StrVal()) == ("test")))

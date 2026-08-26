@@ -154,7 +154,7 @@ var once_Main_Left sync.Once
 func Get_Main_Left() gopurs_runtime.Value {
 	once_Main_Left.Do(func() {
 		cache_Main_Left = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 913637797, UnsafePtr: unsafe.Pointer((&Constructor_Main_Left{1, value0}))}
+			return gopurs_runtime.Value{Type: 9, IntVal: 913637797, UnsafePtr: unsafe.Pointer((&Constructor_Main_Left[gopurs_runtime.Value, gopurs_runtime.Value]{1, value0}))}
 		})
 	})
 	return cache_Main_Left
@@ -166,7 +166,7 @@ var once_Main_Right sync.Once
 func Get_Main_Right() gopurs_runtime.Value {
 	once_Main_Right.Do(func() {
 		cache_Main_Right = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 2535318782, UnsafePtr: unsafe.Pointer((&Constructor_Main_Right{1, value0}))}
+			return gopurs_runtime.Value{Type: 9, IntVal: 2535318782, UnsafePtr: unsafe.Pointer((&Constructor_Main_Right[gopurs_runtime.Value, gopurs_runtime.Value]{1, value0}))}
 		})
 	})
 	return cache_Main_Right
@@ -179,7 +179,7 @@ func Get_Main_Foo() gopurs_runtime.Value {
 	once_Main_Foo.Do(func() {
 		cache_Main_Foo = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(value1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Value{Type: 9, IntVal: 2763139640, UnsafePtr: unsafe.Pointer((&Constructor_Main_Foo{1, value0, value1}))}
+				return gopurs_runtime.Value{Type: 9, IntVal: 2763139640, UnsafePtr: unsafe.Pointer((&Constructor_Main_Foo[gopurs_runtime.Value, gopurs_runtime.Value]{1, value0, value1}))}
 			})
 		})
 	})
@@ -371,7 +371,7 @@ var once_Main_higherKindedTypeParamsCha sync.Once
 
 func Get_Main_higherKindedTypeParamsCha() gopurs_runtime.Value {
 	once_Main_higherKindedTypeParamsCha.Do(func() {
-		cache_Main_higherKindedTypeParamsCha = gopurs_runtime.Value{Type: 9, IntVal: 1868017351, UnsafePtr: unsafe.Pointer((&Constructor_Main_HigherKindedTypeParamsChain{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_higherKindedTypeParamsCha = gopurs_runtime.Value{Type: 9, IntVal: 1868017351, UnsafePtr: unsafe.Pointer((&Constructor_Main_HigherKindedTypeParamsChain[gopurs_runtime.Value, gopurs_runtime.Value]{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(v1_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Int(0)
 			})
@@ -385,7 +385,7 @@ var once_Main_higherKindedTypeParamsCha1 sync.Once
 
 func Get_Main_higherKindedTypeParamsCha1() gopurs_runtime.Value {
 	once_Main_higherKindedTypeParamsCha1.Do(func() {
-		cache_Main_higherKindedTypeParamsCha1 = gopurs_runtime.Value{Type: 9, IntVal: 1868017351, UnsafePtr: unsafe.Pointer((&Constructor_Main_HigherKindedTypeParamsChain{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_higherKindedTypeParamsCha1 = gopurs_runtime.Value{Type: 9, IntVal: 1868017351, UnsafePtr: unsafe.Pointer((&Constructor_Main_HigherKindedTypeParamsChain[gopurs_runtime.Value, gopurs_runtime.Value]{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(v1_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Int(0)
 			})
@@ -399,7 +399,7 @@ var once_Main_higherKindedTypeParamsArr sync.Once
 
 func Get_Main_higherKindedTypeParamsArr() gopurs_runtime.Value {
 	once_Main_higherKindedTypeParamsArr.Do(func() {
-		cache_Main_higherKindedTypeParamsArr = gopurs_runtime.Value{Type: 9, IntVal: 3032179466, UnsafePtr: unsafe.Pointer((&Constructor_Main_HigherKindedTypeParams{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_higherKindedTypeParamsArr = gopurs_runtime.Value{Type: 9, IntVal: 3032179466, UnsafePtr: unsafe.Pointer((&Constructor_Main_HigherKindedTypeParams[gopurs_runtime.Value, gopurs_runtime.Value]{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(v1_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Int(0)
 			})
@@ -413,7 +413,7 @@ var once_Main_genericGenericFoo_ sync.Once
 
 func Get_Main_genericGenericFoo_() gopurs_runtime.Value {
 	once_Main_genericGenericFoo_.Do(func() {
-		cache_Main_genericGenericFoo_ = gopurs_runtime.Value{Type: 9, IntVal: 1921946594, UnsafePtr: unsafe.Pointer((&Constructor_Data_Generic_Rep_Generic{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_genericGenericFoo_ = gopurs_runtime.Value{Type: 9, IntVal: 1921946594, UnsafePtr: unsafe.Pointer((&Constructor_Data_Generic_Rep_Generic[uint32, uint32]{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: int64(1454898258), UnsafePtr: nil}
 		}), gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: int64(682342953), UnsafePtr: nil}
@@ -440,7 +440,7 @@ var once_Main_hktpChain sync.Once
 func Get_Main_hktpChain() gopurs_runtime.Value {
 	once_Main_hktpChain.Do(func() {
 		cache_Main_hktpChain = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_hktpChain(gopurs_runtime.CoerceToStruct[Constructor_Main_HigherKindedTypeParamsChain](dict_0_box))
+			return Call_Main_hktpChain(gopurs_runtime.CoerceToStruct[Constructor_Main_HigherKindedTypeParamsChain[gopurs_runtime.Value, gopurs_runtime.Value]](dict_0_box))
 		})
 	})
 	return cache_Main_hktpChain
@@ -452,7 +452,7 @@ var once_Main_hktp sync.Once
 func Get_Main_hktp() gopurs_runtime.Value {
 	once_Main_hktp.Do(func() {
 		cache_Main_hktp = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_hktp(gopurs_runtime.CoerceToStruct[Constructor_Main_HigherKindedTypeParams](dict_0_box))
+			return Call_Main_hktp(gopurs_runtime.CoerceToStruct[Constructor_Main_HigherKindedTypeParams[gopurs_runtime.Value, gopurs_runtime.Value]](dict_0_box))
 		})
 	})
 	return cache_Main_hktp
@@ -462,29 +462,29 @@ type Constructor_Main_GenericFoo struct {
 	Rc uint32
 }
 
-type Constructor_Main_Left struct {
+type Constructor_Main_Left[T_l any, T_r any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 }
 
-type Constructor_Main_Right struct {
+type Constructor_Main_Right[T_l any, T_r any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 }
 
-type Constructor_Main_Foo struct {
+type Constructor_Main_Foo[T_a any, T_b any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 	V1 gopurs_runtime.Value
 }
 
-type Constructor_Main_ReservedWord struct {
+type Constructor_Main_ReservedWord[T_a any] struct {
 	Rc uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[3965187028] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_ReservedWord)(ptr)
+		c := (*Constructor_Main_ReservedWord[any])(ptr)
 		_ = c
 		switch key {
 
@@ -494,13 +494,13 @@ func init() {
 	}
 }
 
-type Constructor_Main_OverlappingStillCompiles struct {
+type Constructor_Main_OverlappingStillCompiles[T_a any] struct {
 	Rc uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[1985592625] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_OverlappingStillCompiles)(ptr)
+		c := (*Constructor_Main_OverlappingStillCompiles[any])(ptr)
 		_ = c
 		switch key {
 
@@ -510,13 +510,13 @@ func init() {
 	}
 }
 
-type Constructor_Main_OneTypeParamChain struct {
+type Constructor_Main_OneTypeParamChain[T_a any] struct {
 	Rc uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[4048695264] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_OneTypeParamChain)(ptr)
+		c := (*Constructor_Main_OneTypeParamChain[any])(ptr)
 		_ = c
 		switch key {
 
@@ -526,13 +526,13 @@ func init() {
 	}
 }
 
-type Constructor_Main_OneTypeParam struct {
+type Constructor_Main_OneTypeParam[T_a any] struct {
 	Rc uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[1734428973] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_OneTypeParam)(ptr)
+		c := (*Constructor_Main_OneTypeParam[any])(ptr)
 		_ = c
 		switch key {
 
@@ -558,13 +558,13 @@ func init() {
 	}
 }
 
-type Constructor_Main_MultipleTypeParamsChain struct {
+type Constructor_Main_MultipleTypeParamsChain[T_a any, T_b any, T_c any, T_d any, T_e any] struct {
 	Rc uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[3346744871] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_MultipleTypeParamsChain)(ptr)
+		c := (*Constructor_Main_MultipleTypeParamsChain[any, any, any, any, any])(ptr)
 		_ = c
 		switch key {
 
@@ -574,13 +574,13 @@ func init() {
 	}
 }
 
-type Constructor_Main_MultipleTypeParams struct {
+type Constructor_Main_MultipleTypeParams[T_a any, T_b any, T_c any, T_d any, T_e any] struct {
 	Rc uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[1755820650] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_MultipleTypeParams)(ptr)
+		c := (*Constructor_Main_MultipleTypeParams[any, any, any, any, any])(ptr)
 		_ = c
 		switch key {
 
@@ -590,14 +590,14 @@ func init() {
 	}
 }
 
-type Constructor_Main_HigherKindedTypeParamsChain struct {
+type Constructor_Main_HigherKindedTypeParamsChain[T_f any, T_g any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 }
 
 func init() {
 	gopurs_runtime.StructGetters[1868017351] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_HigherKindedTypeParamsChain)(ptr)
+		c := (*Constructor_Main_HigherKindedTypeParamsChain[any, any])(ptr)
 		_ = c
 		switch key {
 		case "hktpChain":
@@ -608,14 +608,14 @@ func init() {
 	}
 }
 
-type Constructor_Main_HigherKindedTypeParams struct {
+type Constructor_Main_HigherKindedTypeParams[T_f any, T_g any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 }
 
 func init() {
 	gopurs_runtime.StructGetters[3032179466] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_HigherKindedTypeParams)(ptr)
+		c := (*Constructor_Main_HigherKindedTypeParams[any, any])(ptr)
 		_ = c
 		switch key {
 		case "hktp":
@@ -626,13 +626,13 @@ func init() {
 	}
 }
 
-type Constructor_Main_MultipleKindParams struct {
+type Constructor_Main_MultipleKindParams[T_customKind any] struct {
 	Rc uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[3989967386] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_MultipleKindParams)(ptr)
+		c := (*Constructor_Main_MultipleKindParams[any])(ptr)
 		_ = c
 		switch key {
 
@@ -642,13 +642,13 @@ func init() {
 	}
 }
 
-type Constructor_Main_MultipleKindParamsChain struct {
+type Constructor_Main_MultipleKindParamsChain[T_customKind any] struct {
 	Rc uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[467154327] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_MultipleKindParamsChain)(ptr)
+		c := (*Constructor_Main_MultipleKindParamsChain[any])(ptr)
 		_ = c
 		switch key {
 
@@ -724,14 +724,14 @@ func Call_Main_HigherKindedTypeParams_dollar_Dict(x_0_loop gopurs_runtime.Value)
 	return x_0
 }
 
-func Call_Main_hktpChain(dict_0_loop *Constructor_Main_HigherKindedTypeParamsChain) gopurs_runtime.Value {
-	var dict_0 *Constructor_Main_HigherKindedTypeParamsChain = dict_0_loop
+func Call_Main_hktpChain(dict_0_loop *Constructor_Main_HigherKindedTypeParamsChain[gopurs_runtime.Value, gopurs_runtime.Value]) gopurs_runtime.Value {
+	var dict_0 *Constructor_Main_HigherKindedTypeParamsChain[gopurs_runtime.Value, gopurs_runtime.Value] = dict_0_loop
 	_ = dict_0
 	return gopurs_runtime.Box(dict_0.V0)
 }
 
-func Call_Main_hktp(dict_0_loop *Constructor_Main_HigherKindedTypeParams) gopurs_runtime.Value {
-	var dict_0 *Constructor_Main_HigherKindedTypeParams = dict_0_loop
+func Call_Main_hktp(dict_0_loop *Constructor_Main_HigherKindedTypeParams[gopurs_runtime.Value, gopurs_runtime.Value]) gopurs_runtime.Value {
+	var dict_0 *Constructor_Main_HigherKindedTypeParams[gopurs_runtime.Value, gopurs_runtime.Value] = dict_0_loop
 	_ = dict_0
 	return gopurs_runtime.Box(dict_0.V0)
 }

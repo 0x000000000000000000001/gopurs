@@ -54,7 +54,7 @@ var once_Main_noshow sync.Once
 func Get_Main_noshow() gopurs_runtime.Value {
 	once_Main_noshow.Do(func() {
 		cache_Main_noshow = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_noshow(gopurs_runtime.CoerceToStruct[Constructor_Main_Show](dict_0_box))
+			return Call_Main_noshow(gopurs_runtime.CoerceToStruct[Constructor_Main_Show[gopurs_runtime.Value]](dict_0_box))
 		})
 	})
 	return cache_Main_noshow
@@ -66,7 +66,7 @@ var once_Main_main sync.Once
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showNumberImpl(), gopurs_runtime.Float(1.0)).StrVal()))
 			_ = __local_var_0_0
 			_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
@@ -85,14 +85,14 @@ type Constructor_Main_Y struct {
 	Rc uint32
 }
 
-type Constructor_Main_Show struct {
+type Constructor_Main_Show[T_a any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 }
 
 func init() {
 	gopurs_runtime.StructGetters[3143145725] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_Show)(ptr)
+		c := (*Constructor_Main_Show[any])(ptr)
 		_ = c
 		switch key {
 		case "noshow":
@@ -109,8 +109,8 @@ func Call_Main_Show_dollar_Dict(x_0_loop gopurs_runtime.Value) gopurs_runtime.Va
 	return x_0
 }
 
-func Call_Main_noshow(dict_0_loop *Constructor_Main_Show) gopurs_runtime.Value {
-	var dict_0 *Constructor_Main_Show = dict_0_loop
+func Call_Main_noshow(dict_0_loop *Constructor_Main_Show[gopurs_runtime.Value]) gopurs_runtime.Value {
+	var dict_0 *Constructor_Main_Show[gopurs_runtime.Value] = dict_0_loop
 	_ = dict_0
 	return gopurs_runtime.Box(dict_0.V0)
 }

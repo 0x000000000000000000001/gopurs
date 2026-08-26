@@ -33,7 +33,7 @@ var once_Main_fooNumber sync.Once
 
 func Get_Main_fooNumber() gopurs_runtime.Value {
 	once_Main_fooNumber.Do(func() {
-		cache_Main_fooNumber = gopurs_runtime.Value{Type: 9, IntVal: 2763139640, UnsafePtr: unsafe.Pointer((&Constructor_Main_Foo{1, gopurs_runtime.Float(0.0)}))}
+		cache_Main_fooNumber = gopurs_runtime.Value{Type: 9, IntVal: 2763139640, UnsafePtr: unsafe.Pointer((&Constructor_Main_Foo[float64]{1, gopurs_runtime.Float(0.0)}))}
 	})
 	return cache_Main_fooNumber
 }
@@ -50,14 +50,14 @@ func Get_Main_foo() gopurs_runtime.Value {
 	return cache_Main_foo
 }
 
-type Constructor_Main_Foo struct {
+type Constructor_Main_Foo[T_a any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 }
 
 func init() {
 	gopurs_runtime.StructGetters[2763139640] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_Foo)(ptr)
+		c := (*Constructor_Main_Foo[any])(ptr)
 		_ = c
 		switch key {
 		case "foo":

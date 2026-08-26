@@ -86,22 +86,22 @@ func Get_Main_main() gopurs_runtime.Value {
 	return cache_Main_main
 }
 
-type Constructor_Main_Proxy struct {
+type Constructor_Main_Proxy[T_a any] struct {
 	Rc uint32
 }
 
-type Constructor_Main_X struct {
+type Constructor_Main_X[T_a any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 }
 
-type Constructor_Main_Z struct {
+type Constructor_Main_Z[T_a any] struct {
 	Rc uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[1714575428] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_Z)(ptr)
+		c := (*Constructor_Main_Z[any])(ptr)
 		_ = c
 		switch key {
 

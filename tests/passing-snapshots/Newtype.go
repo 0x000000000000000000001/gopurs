@@ -35,7 +35,7 @@ var once_Main_showThing sync.Once
 
 func Get_Main_showThing() gopurs_runtime.Value {
 	once_Main_showThing.Do(func() {
-		cache_Main_showThing = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer((&Constructor_Data_Show_Show{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_showThing = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer((&Constructor_Data_Show_Show[string]{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Str(("Thing ") + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.Str(v_0.StrVal())).StrVal()))
 		})}))}
 	})
@@ -60,7 +60,7 @@ var once_Main_logShow sync.Once
 func Get_Main_logShow() gopurs_runtime.Value {
 	once_Main_logShow.Do(func() {
 		cache_Main_logShow = func() gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 shape=LitRecord expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(Record (Row [show: (Func [(TypeVar a)] String)] Any))
+			// TAST (Let): __local_var_0_0 shape=LitRecord bindingType=(Record (Row [show: (Func [(TypeVar a)] String)] Any))
 			__local_var_0_0 := gopurs_runtime.RecordDict1("show", gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Str(("Box ") + (gopurs_runtime.Apply(Get_Data_Show_showNumberImpl(), v_0).StrVal()))
 			}))
@@ -91,7 +91,7 @@ var once_Main_main sync.Once
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
 			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(("Thing ")+(gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.Str(gopurs_runtime.Str("hello").StrVal())).StrVal())))
 			_ = __local_var_0_0
 			_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
@@ -121,7 +121,7 @@ func Call_Main_Box(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 func Call_Main_showBox(dictShow_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var dictShow_0 gopurs_runtime.Value = dictShow_0_loop
 	_ = dictShow_0
-	return gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer((&Constructor_Data_Show_Show{1, gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
+	return gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer((&Constructor_Data_Show_Show[gopurs_runtime.Value]{1, gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
 		return gopurs_runtime.Str(("Box ") + (gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictShow_0, "show"), v_1).StrVal()))
 	})}))}
 }

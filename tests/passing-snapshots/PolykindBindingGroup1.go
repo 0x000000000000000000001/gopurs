@@ -12,7 +12,7 @@ var once_Main_X sync.Once
 func Get_Main_X() gopurs_runtime.Value {
 	once_Main_X.Do(func() {
 		cache_Main_X = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 1409933510, UnsafePtr: unsafe.Pointer((&Constructor_Main_X{1, value0}))}
+			return gopurs_runtime.Value{Type: 9, IntVal: 1409933510, UnsafePtr: unsafe.Pointer((&Constructor_Main_X[gopurs_runtime.Value]{1, value0}))}
 		})
 	})
 	return cache_Main_X
@@ -23,7 +23,7 @@ var once_Main_Z sync.Once
 
 func Get_Main_Z() gopurs_runtime.Value {
 	once_Main_Z.Do(func() {
-		cache_Main_Z = gopurs_runtime.Value{Type: 9, IntVal: 1409933510, UnsafePtr: unsafe.Pointer((*Constructor_Main_X)(nil))}
+		cache_Main_Z = gopurs_runtime.Value{Type: 9, IntVal: 1409933510, UnsafePtr: unsafe.Pointer((*Constructor_Main_X[gopurs_runtime.Value])(nil))}
 	})
 	return cache_Main_Z
 }
@@ -45,7 +45,7 @@ var once_Main_test4 sync.Once
 
 func Get_Main_test4() gopurs_runtime.Value {
 	once_Main_test4.Do(func() {
-		cache_Main_test4 = gopurs_runtime.Value{Type: 9, IntVal: 1409933510, UnsafePtr: unsafe.Pointer((&Constructor_Main_X{1, gopurs_runtime.Value{Type: 9, IntVal: 1409933510, UnsafePtr: unsafe.Pointer((*Constructor_Main_X)(nil))}}))}
+		cache_Main_test4 = gopurs_runtime.Value{Type: 9, IntVal: 1409933510, UnsafePtr: unsafe.Pointer((&Constructor_Main_X[gopurs_runtime.Value]{1, gopurs_runtime.Value{Type: 9, IntVal: 1409933510, UnsafePtr: unsafe.Pointer((*Constructor_Main_X[gopurs_runtime.Value])(nil))}}))}
 	})
 	return cache_Main_test4
 }
@@ -55,7 +55,7 @@ var once_Main_test3 sync.Once
 
 func Get_Main_test3() gopurs_runtime.Value {
 	once_Main_test3.Do(func() {
-		cache_Main_test3 = gopurs_runtime.Value{Type: 9, IntVal: 1409933510, UnsafePtr: unsafe.Pointer((&Constructor_Main_X{1, gopurs_runtime.Value{Type: 9, IntVal: 1409933510, UnsafePtr: unsafe.Pointer((*Constructor_Main_X)(nil))}}))}
+		cache_Main_test3 = gopurs_runtime.Value{Type: 9, IntVal: 1409933510, UnsafePtr: unsafe.Pointer((&Constructor_Main_X[gopurs_runtime.Value]{1, gopurs_runtime.Value{Type: 9, IntVal: 1409933510, UnsafePtr: unsafe.Pointer((*Constructor_Main_X[gopurs_runtime.Value])(nil))}}))}
 	})
 	return cache_Main_test3
 }
@@ -65,7 +65,7 @@ var once_Main_test2 sync.Once
 
 func Get_Main_test2() gopurs_runtime.Value {
 	once_Main_test2.Do(func() {
-		cache_Main_test2 = gopurs_runtime.Value{Type: 9, IntVal: 1409933510, UnsafePtr: unsafe.Pointer((&Constructor_Main_X{1, gopurs_runtime.Value{Type: 9, IntVal: 1409933510, UnsafePtr: unsafe.Pointer((*Constructor_Main_X)(nil))}}))}
+		cache_Main_test2 = gopurs_runtime.Value{Type: 9, IntVal: 1409933510, UnsafePtr: unsafe.Pointer((&Constructor_Main_X[gopurs_runtime.Value]{1, gopurs_runtime.Value{Type: 9, IntVal: 1409933510, UnsafePtr: unsafe.Pointer((*Constructor_Main_X[gopurs_runtime.Value])(nil))}}))}
 	})
 	return cache_Main_test2
 }
@@ -75,7 +75,7 @@ var once_Main_test1 sync.Once
 
 func Get_Main_test1() gopurs_runtime.Value {
 	once_Main_test1.Do(func() {
-		cache_Main_test1 = gopurs_runtime.Value{Type: 9, IntVal: 1409933510, UnsafePtr: unsafe.Pointer((&Constructor_Main_X{1, gopurs_runtime.Value{Type: 9, IntVal: 1409933510, UnsafePtr: unsafe.Pointer((*Constructor_Main_X)(nil))}}))}
+		cache_Main_test1 = gopurs_runtime.Value{Type: 9, IntVal: 1409933510, UnsafePtr: unsafe.Pointer((&Constructor_Main_X[gopurs_runtime.Value]{1, gopurs_runtime.Value{Type: 9, IntVal: 1409933510, UnsafePtr: unsafe.Pointer((*Constructor_Main_X[gopurs_runtime.Value])(nil))}}))}
 	})
 	return cache_Main_test1
 }
@@ -90,16 +90,16 @@ func Get_Main_main() gopurs_runtime.Value {
 	return cache_Main_main
 }
 
-type Constructor_Main_X struct {
+type Constructor_Main_X[T_a any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 }
 
-type Constructor_Main_Z struct {
+type Constructor_Main_Z[T_a any] struct {
 	Rc uint32
 }
 
-type Constructor_Main_Y struct {
+type Constructor_Main_Y[T_a any] struct {
 	Rc uint32
-	V0 *Constructor_Main_X
+	V0 *Constructor_Main_X[gopurs_runtime.Value]
 }

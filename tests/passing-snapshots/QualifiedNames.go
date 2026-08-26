@@ -29,16 +29,6 @@ func Get_Main_either() gopurs_runtime.Value {
 	return cache_Main_either
 }
 
-var cache_Main_main gopurs_runtime.Value
-var once_Main_main sync.Once
-
-func Get_Main_main() gopurs_runtime.Value {
-	once_Main_main.Do(func() {
-		cache_Main_main = gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Str("Done").StrVal()))
-	})
-	return cache_Main_main
-}
-
 var cache_Main_either__1292901638 gopurs_runtime.Value
 var once_Main_either__1292901638 sync.Once
 
@@ -49,6 +39,16 @@ func Get_Main_either__1292901638() gopurs_runtime.Value {
 		})
 	})
 	return cache_Main_either__1292901638
+}
+
+var cache_Main_main gopurs_runtime.Value
+var once_Main_main sync.Once
+
+func Get_Main_main() gopurs_runtime.Value {
+	once_Main_main.Do(func() {
+		cache_Main_main = gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Str("Done").StrVal()))
+	})
+	return cache_Main_main
 }
 
 func Call_Main_identity(x_0_loop string) string {
@@ -67,7 +67,7 @@ func Call_Main_either(v_0_loop gopurs_runtime.Value, v1_1_loop gopurs_runtime.Va
 	var __t0 gopurs_runtime.Value
 	{
 		if v2_2.Type == 9 && v2_2.IntVal == 1485529257 {
-			__t0 = gopurs_runtime.Apply(v_0, (*Constructor_Either_Left)(v2_2.UnsafePtr).V0)
+			__t0 = gopurs_runtime.Apply(v_0, (*Constructor_Either_Left[gopurs_runtime.Value, gopurs_runtime.Value])(v2_2.UnsafePtr).V0)
 			goto end_branch_0
 		} else {
 
@@ -75,7 +75,7 @@ func Call_Main_either(v_0_loop gopurs_runtime.Value, v1_1_loop gopurs_runtime.Va
 	}
 	{
 		if v2_2.Type == 9 && v2_2.IntVal == 3726768370 {
-			__t0 = gopurs_runtime.Apply(v1_1, (*Constructor_Either_Right)(v2_2.UnsafePtr).V0)
+			__t0 = gopurs_runtime.Apply(v1_1, (*Constructor_Either_Right[gopurs_runtime.Value, gopurs_runtime.Value])(v2_2.UnsafePtr).V0)
 			goto end_branch_0
 		} else {
 
@@ -98,7 +98,7 @@ func Call_Main_either__1292901638(v_0_loop gopurs_runtime.Value, v1_1_loop gopur
 	var __t0 gopurs_runtime.Value
 	{
 		if v2_2.Type == 9 && v2_2.IntVal == 1485529257 {
-			__t0 = gopurs_runtime.Apply(v_0, (*Constructor_Either_Left)(v2_2.UnsafePtr).V0)
+			__t0 = gopurs_runtime.Apply(v_0, (*Constructor_Either_Left[gopurs_runtime.Value, gopurs_runtime.Value])(v2_2.UnsafePtr).V0)
 			goto end_branch_0
 		} else {
 
@@ -106,7 +106,7 @@ func Call_Main_either__1292901638(v_0_loop gopurs_runtime.Value, v1_1_loop gopur
 	}
 	{
 		if v2_2.Type == 9 && v2_2.IntVal == 3726768370 {
-			__t0 = gopurs_runtime.Apply(v1_1, (*Constructor_Either_Right)(v2_2.UnsafePtr).V0)
+			__t0 = gopurs_runtime.Apply(v1_1, (*Constructor_Either_Right[gopurs_runtime.Value, gopurs_runtime.Value])(v2_2.UnsafePtr).V0)
 			goto end_branch_0
 		} else {
 

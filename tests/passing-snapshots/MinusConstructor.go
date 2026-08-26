@@ -13,7 +13,7 @@ func Get_Main_Tuple() gopurs_runtime.Value {
 	once_Main_Tuple.Do(func() {
 		cache_Main_Tuple = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(value1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer((&Constructor_Main_Tuple{1, value0, value1}))}
+				return gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer((&Constructor_Main_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{1, value0, value1}))}
 			})
 		})
 	})
@@ -46,7 +46,7 @@ var once_Main_test3 sync.Once
 func Get_Main_test3() gopurs_runtime.Value {
 	once_Main_test3.Do(func() {
 		cache_Main_test3 = gopurs_runtime.Func(func(v_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Int(Call_Main_test3(gopurs_runtime.CoerceToStruct[Constructor_Main_Tuple](v_0_box)))
+			return gopurs_runtime.Int(Call_Main_test3(gopurs_runtime.CoerceToStruct[Constructor_Main_Tuple[*Constructor_Main_Tuple[int64, gopurs_runtime.Value], gopurs_runtime.Value]](v_0_box)))
 		})
 	})
 	return cache_Main_test3
@@ -78,7 +78,7 @@ var once_Main_main sync.Once
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
 			__local_var_0_0 := gopurs_runtime.Apply(Get_Test_Assert_assert(), gopurs_runtime.Bool(true))
 			_ = __local_var_0_0
 			_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
@@ -97,14 +97,14 @@ func Get_Main_main() gopurs_runtime.Value {
 	return cache_Main_main
 }
 
-type Constructor_Main_Tuple struct {
+type Constructor_Main_Tuple[T_a any, T_b any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 	V1 gopurs_runtime.Value
 }
 
-func Call_Main_test3(v_0_loop *Constructor_Main_Tuple) int64 {
-	var v_0 *Constructor_Main_Tuple = v_0_loop
+func Call_Main_test3(v_0_loop *Constructor_Main_Tuple[*Constructor_Main_Tuple[int64, gopurs_runtime.Value], gopurs_runtime.Value]) int64 {
+	var v_0 *Constructor_Main_Tuple[*Constructor_Main_Tuple[int64, gopurs_runtime.Value], gopurs_runtime.Value] = v_0_loop
 	_ = v_0
-	return (*Constructor_Main_Tuple)((v_0).V0.UnsafePtr).V0.IntVal
+	return (*Constructor_Main_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])((v_0).V0.UnsafePtr).V0.IntVal
 }

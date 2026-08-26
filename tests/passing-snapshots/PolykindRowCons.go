@@ -61,6 +61,30 @@ func Get_Main_lookup() gopurs_runtime.Value {
 	return cache_Main_lookup
 }
 
+var cache_Main_lookup__2933592557 gopurs_runtime.Value
+var once_Main_lookup__2933592557 sync.Once
+
+func Get_Main_lookup__2933592557() gopurs_runtime.Value {
+	once_Main_lookup__2933592557.Do(func() {
+		cache_Main_lookup__2933592557 = gopurs_runtime.Func3(func(_dollar___unused_0_box gopurs_runtime.Value, v_1_box gopurs_runtime.Value, v1_2_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_lookup__2933592557(_dollar___unused_0_box, uint32(v_1_box.IntVal), uint32(v1_2_box.IntVal))), UnsafePtr: nil}
+		})
+	})
+	return cache_Main_lookup__2933592557
+}
+
+var cache_Main_lookup__1504059307 gopurs_runtime.Value
+var once_Main_lookup__1504059307 sync.Once
+
+func Get_Main_lookup__1504059307() gopurs_runtime.Value {
+	once_Main_lookup__1504059307.Do(func() {
+		cache_Main_lookup__1504059307 = gopurs_runtime.Func3(func(_dollar___unused_0_box gopurs_runtime.Value, v_1_box gopurs_runtime.Value, v1_2_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_lookup__1504059307(_dollar___unused_0_box, uint32(v_1_box.IntVal), uint32(v1_2_box.IntVal))), UnsafePtr: nil}
+		})
+	})
+	return cache_Main_lookup__1504059307
+}
+
 var cache_Main_lookup1 gopurs_runtime.Value
 var once_Main_lookup1 sync.Once
 
@@ -241,40 +265,16 @@ func Get_Main_test9() gopurs_runtime.Value {
 	return cache_Main_test9
 }
 
-var cache_Main_lookup__2933592557 gopurs_runtime.Value
-var once_Main_lookup__2933592557 sync.Once
-
-func Get_Main_lookup__2933592557() gopurs_runtime.Value {
-	once_Main_lookup__2933592557.Do(func() {
-		cache_Main_lookup__2933592557 = gopurs_runtime.Func2(func(v_0_box gopurs_runtime.Value, v1_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_lookup__2933592557(uint32(v_0_box.IntVal), uint32(v1_1_box.IntVal))), UnsafePtr: nil}
-		})
-	})
-	return cache_Main_lookup__2933592557
-}
-
-var cache_Main_lookup__1504059307 gopurs_runtime.Value
-var once_Main_lookup__1504059307 sync.Once
-
-func Get_Main_lookup__1504059307() gopurs_runtime.Value {
-	once_Main_lookup__1504059307.Do(func() {
-		cache_Main_lookup__1504059307 = gopurs_runtime.Func3(func(_dollar___unused_0_box gopurs_runtime.Value, v_1_box gopurs_runtime.Value, v1_2_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_lookup__1504059307(_dollar___unused_0_box, uint32(v_1_box.IntVal), uint32(v1_2_box.IntVal))), UnsafePtr: nil}
-		})
-	})
-	return cache_Main_lookup__1504059307
-}
-
-type Constructor_Main_Proxy struct {
+type Constructor_Main_Proxy[T_a any] struct {
 	Rc uint32
 }
 
-type Constructor_Main_Identity struct {
+type Constructor_Main_Identity[T_a any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 }
 
-type Constructor_Main_App struct {
+type Constructor_Main_App[T_f any, T_a any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 }
@@ -289,11 +289,13 @@ func Call_Main_lookup(_dollar___unused_0_loop gopurs_runtime.Value, v_1_loop uin
 	return 227768594
 }
 
-func Call_Main_lookup__2933592557(v_0_loop uint32, v1_1_loop uint32) uint32 {
-	var v_0 uint32 = v_0_loop
-	_ = v_0
-	var v1_1 uint32 = v1_1_loop
-	_ = v1_1
+func Call_Main_lookup__2933592557(_dollar___unused_0_loop gopurs_runtime.Value, v_1_loop uint32, v1_2_loop uint32) uint32 {
+	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
+	_ = _dollar___unused_0
+	var v_1 uint32 = v_1_loop
+	_ = v_1
+	var v1_2 uint32 = v1_2_loop
+	_ = v1_2
 	return 227768594
 }
 

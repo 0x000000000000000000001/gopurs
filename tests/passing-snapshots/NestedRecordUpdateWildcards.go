@@ -3,7 +3,6 @@ package purescript
 import (
 	gopurs_runtime "gopurs/output/gopurs_runtime"
 	sync "sync"
-	unsafe "unsafe"
 )
 
 var cache_Main_update gopurs_runtime.Value
@@ -18,14 +17,14 @@ func Get_Main_update() gopurs_runtime.Value {
 	return cache_Main_update
 }
 
-var cache_Main_init gopurs_runtime.Value
-var once_Main_init sync.Once
+var cache_Main_go__init gopurs_runtime.Value
+var once_Main_go__init sync.Once
 
-func Get_Main_init() gopurs_runtime.Value {
-	once_Main_init.Do(func() {
-		cache_Main_init = gopurs_runtime.RecordDict2("bar", "foo", gopurs_runtime.RecordDict2("baz", "qux", gopurs_runtime.Int(2), gopurs_runtime.Int(3)), gopurs_runtime.Int(1))
+func Get_Main_go__init() gopurs_runtime.Value {
+	once_Main_go__init.Do(func() {
+		cache_Main_go__init = gopurs_runtime.RecordDict2("bar", "foo", gopurs_runtime.RecordDict2("baz", "qux", gopurs_runtime.Int(2), gopurs_runtime.Int(3)), gopurs_runtime.Int(1))
 	})
-	return cache_Main_init
+	return cache_Main_go__init
 }
 
 var cache_Main_expected gopurs_runtime.Value
@@ -55,16 +54,7 @@ var once_Main_after sync.Once
 
 func Get_Main_after() gopurs_runtime.Value {
 	once_Main_after.Do(func() {
-		cache_Main_after = func() gopurs_runtime.Value {
-			origVal := Get_Main_init()
-			if origVal.Type != gopurs_runtime.TypeRecord2 {
-				return gopurs_runtime.RecordUpdateDict(origVal, []string{"foo", "bar"}, []gopurs_runtime.Value{gopurs_runtime.Int(10), gopurs_runtime.RecordUpdate2(gopurs_runtime.RecordGet(Get_Main_init(), "bar"), "baz", gopurs_runtime.Int(20), "qux", gopurs_runtime.Int(30))})
-			}
-			clone := *((*gopurs_runtime.RecordData2)(origVal.UnsafePtr))
-			clone.V1 = gopurs_runtime.Int(10)
-			clone.V0 = gopurs_runtime.RecordUpdate2(gopurs_runtime.RecordGet(Get_Main_init(), "bar"), "baz", gopurs_runtime.Int(20), "qux", gopurs_runtime.Int(30))
-			return gopurs_runtime.Value{Type: gopurs_runtime.TypeRecord2, UnsafePtr: unsafe.Pointer(&clone)}
-		}()
+		cache_Main_after = gopurs_runtime.RecordUpdate2(Get_Main_go__init(), "foo", gopurs_runtime.Int(10), "bar", gopurs_runtime.RecordUpdate2(gopurs_runtime.RecordGet(Get_Main_go__init(), "bar"), "baz", gopurs_runtime.Int(20), "qux", gopurs_runtime.Int(30)))
 	})
 	return cache_Main_after
 }
@@ -75,7 +65,7 @@ var once_Main_main sync.Once
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = func() gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=(ADT ["Effect","Effect"] [Unit])
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=(ADT ["Effect","Effect"] [Unit])
 			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
 			_ = __local_var_0_0
 			var __t1 gopurs_runtime.Value
@@ -108,16 +98,7 @@ func Call_Main_update(v_0_loop gopurs_runtime.Value, v1_1_loop gopurs_runtime.Va
 	_ = v2_2
 	var v3_3 gopurs_runtime.Value = v3_3_loop
 	_ = v3_3
-	return func() gopurs_runtime.Value {
-		origVal := v_0
-		if origVal.Type != gopurs_runtime.TypeRecord2 {
-			return gopurs_runtime.RecordUpdateDict(origVal, []string{"foo", "bar"}, []gopurs_runtime.Value{v1_1, gopurs_runtime.RecordUpdate2(gopurs_runtime.RecordGet(v_0, "bar"), "baz", v2_2, "qux", v3_3)})
-		}
-		clone := *((*gopurs_runtime.RecordData2)(origVal.UnsafePtr))
-		clone.V1 = v1_1
-		clone.V0 = gopurs_runtime.RecordUpdate2(gopurs_runtime.RecordGet(v_0, "bar"), "baz", v2_2, "qux", v3_3)
-		return gopurs_runtime.Value{Type: gopurs_runtime.TypeRecord2, UnsafePtr: unsafe.Pointer(&clone)}
-	}()
+	return gopurs_runtime.RecordUpdate2(v_0, "foo", v1_1, "bar", gopurs_runtime.RecordUpdate2(gopurs_runtime.RecordGet(v_0, "bar"), "baz", v2_2, "qux", v3_3))
 }
 
 func Call_Main_check(dictEq_0_loop gopurs_runtime.Value, dictEq1_1_loop gopurs_runtime.Value, dictEq2_2_loop gopurs_runtime.Value, l_3_loop gopurs_runtime.Value, r_4_loop gopurs_runtime.Value) gopurs_runtime.Value {

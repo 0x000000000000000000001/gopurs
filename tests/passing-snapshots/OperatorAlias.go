@@ -17,16 +17,6 @@ func Get_Main_what() gopurs_runtime.Value {
 	return cache_Main_what
 }
 
-var cache_Main_main gopurs_runtime.Value
-var once_Main_main sync.Once
-
-func Get_Main_main() gopurs_runtime.Value {
-	once_Main_main.Do(func() {
-		cache_Main_main = gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Str("Done").StrVal()))
-	})
-	return cache_Main_main
-}
-
 var cache_Main_what__641934996 gopurs_runtime.Value
 var once_Main_what__641934996 sync.Once
 
@@ -37,6 +27,16 @@ func Get_Main_what__641934996() gopurs_runtime.Value {
 		})
 	})
 	return cache_Main_what__641934996
+}
+
+var cache_Main_main gopurs_runtime.Value
+var once_Main_main sync.Once
+
+func Get_Main_main() gopurs_runtime.Value {
+	once_Main_main.Do(func() {
+		cache_Main_main = gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Str("Done").StrVal()))
+	})
+	return cache_Main_main
 }
 
 func Call_Main_what(a_0_loop gopurs_runtime.Value, v_1_loop gopurs_runtime.Value) gopurs_runtime.Value {

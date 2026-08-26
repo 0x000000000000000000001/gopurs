@@ -91,7 +91,7 @@ var once_Main_transitive sync.Once
 
 func Get_Main_transitive() gopurs_runtime.Value {
 	once_Main_transitive.Do(func() {
-		cache_Main_transitive = gopurs_runtime.Value{Type: 9, IntVal: 4241826851, UnsafePtr: unsafe.Pointer((&Constructor_Main_Transitive{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_transitive = gopurs_runtime.Value{Type: 9, IntVal: 4241826851, UnsafePtr: unsafe.Pointer((&Constructor_Main_Transitive[uint32, gopurs_runtime.Value, gopurs_runtime.Value]{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.RecordDict0()
 		})}))}
 	})
@@ -103,7 +103,7 @@ var once_Main_simple1 sync.Once
 
 func Get_Main_simple1() gopurs_runtime.Value {
 	once_Main_simple1.Do(func() {
-		cache_Main_simple1 = gopurs_runtime.Value{Type: 9, IntVal: 2086942032, UnsafePtr: unsafe.Pointer((&Constructor_Main_Simple{1, gopurs_runtime.Func(func(cons_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_simple1 = gopurs_runtime.Value{Type: 9, IntVal: 2086942032, UnsafePtr: unsafe.Pointer((&Constructor_Main_Simple[uint32, gopurs_runtime.Value]{1, gopurs_runtime.Func(func(cons_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.RecordDict1("foo", gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(cons_0.IntVal)), UnsafePtr: nil})
 		})}))}
 	})
@@ -115,7 +115,7 @@ var once_Main_simple0 sync.Once
 
 func Get_Main_simple0() gopurs_runtime.Value {
 	once_Main_simple0.Do(func() {
-		cache_Main_simple0 = gopurs_runtime.Value{Type: 9, IntVal: 2086942032, UnsafePtr: unsafe.Pointer((&Constructor_Main_Simple{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_simple0 = gopurs_runtime.Value{Type: 9, IntVal: 2086942032, UnsafePtr: unsafe.Pointer((&Constructor_Main_Simple[uint32, gopurs_runtime.Value]{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.RecordDict0()
 		})}))}
 	})
@@ -158,7 +158,7 @@ var once_Main_d sync.Once
 func Get_Main_d() gopurs_runtime.Value {
 	once_Main_d.Do(func() {
 		cache_Main_d = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_d(gopurs_runtime.CoerceToStruct[Constructor_Main_Transitive](dict_0_box))
+			return Call_Main_d(gopurs_runtime.CoerceToStruct[Constructor_Main_Transitive[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value]](dict_0_box))
 		})
 	})
 	return cache_Main_d
@@ -180,7 +180,7 @@ var once_Main_c sync.Once
 func Get_Main_c() gopurs_runtime.Value {
 	once_Main_c.Do(func() {
 		cache_Main_c = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_c(gopurs_runtime.CoerceToStruct[Constructor_Main_Simple](dict_0_box))
+			return Call_Main_c(gopurs_runtime.CoerceToStruct[Constructor_Main_Simple[gopurs_runtime.Value, gopurs_runtime.Value]](dict_0_box))
 		})
 	})
 	return cache_Main_c
@@ -194,14 +194,14 @@ type Constructor_Main_Cons struct {
 	Rc uint32
 }
 
-type Constructor_Main_Transitive struct {
+type Constructor_Main_Transitive[T_a any, T_b any, T_c any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 }
 
 func init() {
 	gopurs_runtime.StructGetters[4241826851] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_Transitive)(ptr)
+		c := (*Constructor_Main_Transitive[any, any, any])(ptr)
 		_ = c
 		switch key {
 		case "d":
@@ -212,14 +212,14 @@ func init() {
 	}
 }
 
-type Constructor_Main_Simple struct {
+type Constructor_Main_Simple[T_a any, T_b any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 }
 
 func init() {
 	gopurs_runtime.StructGetters[2086942032] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_Simple)(ptr)
+		c := (*Constructor_Main_Simple[any, any])(ptr)
 		_ = c
 		switch key {
 		case "c":
@@ -230,13 +230,13 @@ func init() {
 	}
 }
 
-type Constructor_Main_MultipleDeterminers struct {
+type Constructor_Main_MultipleDeterminers[T_a any, T_b any, T_c any, T_d any] struct {
 	Rc uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[1290835010] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_MultipleDeterminers)(ptr)
+		c := (*Constructor_Main_MultipleDeterminers[any, any, any, any])(ptr)
 		_ = c
 		switch key {
 
@@ -246,13 +246,13 @@ func init() {
 	}
 }
 
-type Constructor_Main_DeterminedCycle struct {
+type Constructor_Main_DeterminedCycle[T_a any, T_b any, T_c any] struct {
 	Rc uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[1744313767] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_DeterminedCycle)(ptr)
+		c := (*Constructor_Main_DeterminedCycle[any, any, any])(ptr)
 		_ = c
 		switch key {
 
@@ -262,13 +262,13 @@ func init() {
 	}
 }
 
-type Constructor_Main_Cyclic struct {
+type Constructor_Main_Cyclic[T_a any, T_b any, T_c any, T_d any] struct {
 	Rc uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[1751764097] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_Cyclic)(ptr)
+		c := (*Constructor_Main_Cyclic[any, any, any, any])(ptr)
 		_ = c
 		switch key {
 
@@ -308,14 +308,14 @@ func Call_Main_Cyclic_dollar_Dict(x_0_loop gopurs_runtime.Value) gopurs_runtime.
 	return x_0
 }
 
-func Call_Main_d(dict_0_loop *Constructor_Main_Transitive) gopurs_runtime.Value {
-	var dict_0 *Constructor_Main_Transitive = dict_0_loop
+func Call_Main_d(dict_0_loop *Constructor_Main_Transitive[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value]) gopurs_runtime.Value {
+	var dict_0 *Constructor_Main_Transitive[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value] = dict_0_loop
 	_ = dict_0
 	return gopurs_runtime.Box(dict_0.V0)
 }
 
-func Call_Main_c(dict_0_loop *Constructor_Main_Simple) gopurs_runtime.Value {
-	var dict_0 *Constructor_Main_Simple = dict_0_loop
+func Call_Main_c(dict_0_loop *Constructor_Main_Simple[gopurs_runtime.Value, gopurs_runtime.Value]) gopurs_runtime.Value {
+	var dict_0 *Constructor_Main_Simple[gopurs_runtime.Value, gopurs_runtime.Value] = dict_0_loop
 	_ = dict_0
 	return gopurs_runtime.Box(dict_0.V0)
 }

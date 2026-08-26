@@ -107,10 +107,22 @@ var once_Main_test1 sync.Once
 func Get_Main_test1() gopurs_runtime.Value {
 	once_Main_test1.Do(func() {
 		cache_Main_test1 = gopurs_runtime.Func4(func(dictSemiring_0_box gopurs_runtime.Value, x_1_box gopurs_runtime.Value, y_2_box gopurs_runtime.Value, z_3_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_test1(gopurs_runtime.CoerceToStruct[Constructor_Data_Semiring_Semiring](dictSemiring_0_box), x_1_box, y_2_box, z_3_box)
+			return Call_Main_test1(gopurs_runtime.CoerceToStruct[Constructor_Data_Semiring_Semiring[gopurs_runtime.Value]](dictSemiring_0_box), x_1_box, y_2_box, z_3_box)
 		})
 	})
 	return cache_Main_test1
+}
+
+var cache_Main_test1__638868095 gopurs_runtime.Value
+var once_Main_test1__638868095 sync.Once
+
+func Get_Main_test1__638868095() gopurs_runtime.Value {
+	once_Main_test1__638868095.Do(func() {
+		cache_Main_test1__638868095 = gopurs_runtime.Func4(func(dictSemiring_0_box gopurs_runtime.Value, x_1_box gopurs_runtime.Value, y_2_box gopurs_runtime.Value, z_3_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_test1__638868095(gopurs_runtime.CoerceToStruct[Constructor_Data_Semiring_Semiring[gopurs_runtime.Value]](dictSemiring_0_box), x_1_box, y_2_box, z_3_box)
+		})
+	})
+	return cache_Main_test1__638868095
 }
 
 var cache_Main_op5 gopurs_runtime.Value
@@ -137,6 +149,32 @@ func Get_Main_op5() gopurs_runtime.Value {
 		})
 	})
 	return cache_Main_op5
+}
+
+var cache_Main_op5__39834991 gopurs_runtime.Value
+var once_Main_op5__39834991 sync.Once
+
+func Get_Main_op5__39834991() gopurs_runtime.Value {
+	once_Main_op5__39834991.Do(func() {
+		cache_Main_op5__39834991 = gopurs_runtime.Func2(func(as_0_box gopurs_runtime.Value, bs_1_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Array(Call_Main_op5__39834991(func() []gopurs_runtime.Value {
+				arr := *(*[]gopurs_runtime.Value)(as_0_box.UnsafePtr)
+				unboxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					unboxed[i] = v
+				}
+				return unboxed
+			}(), func() []gopurs_runtime.Value {
+				arr := *(*[]gopurs_runtime.Value)(bs_1_box.UnsafePtr)
+				unboxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					unboxed[i] = v
+				}
+				return unboxed
+			}()))
+		})
+	})
+	return cache_Main_op5__39834991
 }
 
 var cache_Main_test11 gopurs_runtime.Value
@@ -187,6 +225,18 @@ func Get_Main_op4() gopurs_runtime.Value {
 		})
 	})
 	return cache_Main_op4
+}
+
+var cache_Main_op4__369910300 gopurs_runtime.Value
+var once_Main_op4__369910300 sync.Once
+
+func Get_Main_op4__369910300() gopurs_runtime.Value {
+	once_Main_op4__369910300.Do(func() {
+		cache_Main_op4__369910300 = gopurs_runtime.Func2(func(f_0_box gopurs_runtime.Value, x_1_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_op4__369910300(f_0_box, x_1_box)
+		})
+	})
+	return cache_Main_op4__369910300
 }
 
 var cache_Main_test8 gopurs_runtime.Value
@@ -307,56 +357,6 @@ func Get_Main_main() gopurs_runtime.Value {
 	return cache_Main_main
 }
 
-var cache_Main_op4__369910300 gopurs_runtime.Value
-var once_Main_op4__369910300 sync.Once
-
-func Get_Main_op4__369910300() gopurs_runtime.Value {
-	once_Main_op4__369910300.Do(func() {
-		cache_Main_op4__369910300 = gopurs_runtime.Func2(func(f_0_box gopurs_runtime.Value, x_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_op4__369910300(f_0_box, x_1_box)
-		})
-	})
-	return cache_Main_op4__369910300
-}
-
-var cache_Main_op5__39834991 gopurs_runtime.Value
-var once_Main_op5__39834991 sync.Once
-
-func Get_Main_op5__39834991() gopurs_runtime.Value {
-	once_Main_op5__39834991.Do(func() {
-		cache_Main_op5__39834991 = gopurs_runtime.Func2(func(as_0_box gopurs_runtime.Value, bs_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Array(Call_Main_op5__39834991(func() []gopurs_runtime.Value {
-				arr := *(*[]gopurs_runtime.Value)(as_0_box.UnsafePtr)
-				unboxed := make([]gopurs_runtime.Value, len(arr))
-				for i, v := range arr {
-					unboxed[i] = v
-				}
-				return unboxed
-			}(), func() []gopurs_runtime.Value {
-				arr := *(*[]gopurs_runtime.Value)(bs_1_box.UnsafePtr)
-				unboxed := make([]gopurs_runtime.Value, len(arr))
-				for i, v := range arr {
-					unboxed[i] = v
-				}
-				return unboxed
-			}()))
-		})
-	})
-	return cache_Main_op5__39834991
-}
-
-var cache_Main_test1__638868095 gopurs_runtime.Value
-var once_Main_test1__638868095 sync.Once
-
-func Get_Main_test1__638868095() gopurs_runtime.Value {
-	once_Main_test1__638868095.Do(func() {
-		cache_Main_test1__638868095 = gopurs_runtime.Func4(func(dictSemiring_0_box gopurs_runtime.Value, x_1_box gopurs_runtime.Value, y_2_box gopurs_runtime.Value, z_3_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_test1__638868095(gopurs_runtime.CoerceToStruct[Constructor_Data_Semiring_Semiring](dictSemiring_0_box), x_1_box, y_2_box, z_3_box)
-		})
-	})
-	return cache_Main_test1__638868095
-}
-
 func Call_Main_negate(a_0_loop float64) float64 {
 	var a_0 float64 = a_0_loop
 	_ = a_0
@@ -380,8 +380,20 @@ func Call_Main_test15(a_0_loop float64, b_1_loop float64) bool {
 	return (gopurs_runtime.Bool(false).IntVal) != (0)
 }
 
-func Call_Main_test1(dictSemiring_0_loop *Constructor_Data_Semiring_Semiring, x_1_loop gopurs_runtime.Value, y_2_loop gopurs_runtime.Value, z_3_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var dictSemiring_0 *Constructor_Data_Semiring_Semiring = dictSemiring_0_loop
+func Call_Main_test1(dictSemiring_0_loop *Constructor_Data_Semiring_Semiring[gopurs_runtime.Value], x_1_loop gopurs_runtime.Value, y_2_loop gopurs_runtime.Value, z_3_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var dictSemiring_0 *Constructor_Data_Semiring_Semiring[gopurs_runtime.Value] = dictSemiring_0_loop
+	_ = dictSemiring_0
+	var x_1 gopurs_runtime.Value = x_1_loop
+	_ = x_1
+	var y_2 gopurs_runtime.Value = y_2_loop
+	_ = y_2
+	var z_3 gopurs_runtime.Value = z_3_loop
+	_ = z_3
+	return gopurs_runtime.Apply2(gopurs_runtime.Box(dictSemiring_0.V0), gopurs_runtime.Apply2(gopurs_runtime.Box(dictSemiring_0.V1), x_1, y_2), gopurs_runtime.Apply2(z_3, x_1, y_2))
+}
+
+func Call_Main_test1__638868095(dictSemiring_0_loop *Constructor_Data_Semiring_Semiring[gopurs_runtime.Value], x_1_loop gopurs_runtime.Value, y_2_loop gopurs_runtime.Value, z_3_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var dictSemiring_0 *Constructor_Data_Semiring_Semiring[gopurs_runtime.Value] = dictSemiring_0_loop
 	_ = dictSemiring_0
 	var x_1 gopurs_runtime.Value = x_1_loop
 	_ = x_1
@@ -400,7 +412,23 @@ func Call_Main_op5(as_0_loop []gopurs_runtime.Value, bs_1_loop []gopurs_runtime.
 	return as_0
 }
 
+func Call_Main_op5__39834991(as_0_loop []gopurs_runtime.Value, bs_1_loop []gopurs_runtime.Value) []gopurs_runtime.Value {
+	var as_0 []gopurs_runtime.Value = as_0_loop
+	_ = as_0
+	var bs_1 []gopurs_runtime.Value = bs_1_loop
+	_ = bs_1
+	return as_0
+}
+
 func Call_Main_op4(f_0_loop gopurs_runtime.Value, x_1_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var f_0 gopurs_runtime.Value = f_0_loop
+	_ = f_0
+	var x_1 gopurs_runtime.Value = x_1_loop
+	_ = x_1
+	return gopurs_runtime.Apply(f_0, x_1)
+}
+
+func Call_Main_op4__369910300(f_0_loop gopurs_runtime.Value, x_1_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var f_0 gopurs_runtime.Value = f_0_loop
 	_ = f_0
 	var x_1 gopurs_runtime.Value = x_1_loop
@@ -438,32 +466,4 @@ func Call_Main_k(x_0_loop gopurs_runtime.Value, y_1_loop gopurs_runtime.Value) g
 	var y_1 gopurs_runtime.Value = y_1_loop
 	_ = y_1
 	return x_0
-}
-
-func Call_Main_op4__369910300(f_0_loop gopurs_runtime.Value, x_1_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var f_0 gopurs_runtime.Value = f_0_loop
-	_ = f_0
-	var x_1 gopurs_runtime.Value = x_1_loop
-	_ = x_1
-	return gopurs_runtime.Apply(f_0, x_1)
-}
-
-func Call_Main_op5__39834991(as_0_loop []gopurs_runtime.Value, bs_1_loop []gopurs_runtime.Value) []gopurs_runtime.Value {
-	var as_0 []gopurs_runtime.Value = as_0_loop
-	_ = as_0
-	var bs_1 []gopurs_runtime.Value = bs_1_loop
-	_ = bs_1
-	return as_0
-}
-
-func Call_Main_test1__638868095(dictSemiring_0_loop *Constructor_Data_Semiring_Semiring, x_1_loop gopurs_runtime.Value, y_2_loop gopurs_runtime.Value, z_3_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var dictSemiring_0 *Constructor_Data_Semiring_Semiring = dictSemiring_0_loop
-	_ = dictSemiring_0
-	var x_1 gopurs_runtime.Value = x_1_loop
-	_ = x_1
-	var y_2 gopurs_runtime.Value = y_2_loop
-	_ = y_2
-	var z_3 gopurs_runtime.Value = z_3_loop
-	_ = z_3
-	return gopurs_runtime.Apply2(gopurs_runtime.Box(dictSemiring_0.V0), gopurs_runtime.Apply2(gopurs_runtime.Box(dictSemiring_0.V1), x_1, y_2), gopurs_runtime.Apply2(z_3, x_1, y_2))
 }

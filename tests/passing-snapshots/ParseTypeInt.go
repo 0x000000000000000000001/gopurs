@@ -85,6 +85,6 @@ func Get_Main_a() gopurs_runtime.Value {
 	return cache_Main_a
 }
 
-type Constructor_Main_Proxy struct {
+type Constructor_Main_Proxy[T_n any] struct {
 	Rc uint32
 }

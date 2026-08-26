@@ -35,7 +35,7 @@ var once_Main_testBoolean sync.Once
 
 func Get_Main_testBoolean() gopurs_runtime.Value {
 	once_Main_testBoolean.Do(func() {
-		cache_Main_testBoolean = gopurs_runtime.Value{Type: 9, IntVal: 3423238824, UnsafePtr: unsafe.Pointer((&Constructor_Main_Test{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_testBoolean = gopurs_runtime.Value{Type: 9, IntVal: 3423238824, UnsafePtr: unsafe.Pointer((&Constructor_Main_Test[bool]{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(y_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Bool((y_1.IntVal) != (0))
 			})
@@ -50,10 +50,22 @@ var once_Main_fn sync.Once
 func Get_Main_fn() gopurs_runtime.Value {
 	once_Main_fn.Do(func() {
 		cache_Main_fn = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_fn(gopurs_runtime.CoerceToStruct[Constructor_Main_Test](dict_0_box))
+			return Call_Main_fn(gopurs_runtime.CoerceToStruct[Constructor_Main_Test[gopurs_runtime.Value]](dict_0_box))
 		})
 	})
 	return cache_Main_fn
+}
+
+var cache_Main_fn__88475274 gopurs_runtime.Value
+var once_Main_fn__88475274 sync.Once
+
+func Get_Main_fn__88475274() gopurs_runtime.Value {
+	once_Main_fn__88475274.Do(func() {
+		cache_Main_fn__88475274 = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_fn__88475274(gopurs_runtime.CoerceToStruct[Constructor_Main_Test[gopurs_runtime.Value]](dict_0_box))
+		})
+	})
+	return cache_Main_fn__88475274
 }
 
 var cache_Main_main gopurs_runtime.Value
@@ -62,7 +74,7 @@ var once_Main_main sync.Once
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
 			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("true"))
 			_ = __local_var_0_0
 			_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
@@ -73,19 +85,7 @@ func Get_Main_main() gopurs_runtime.Value {
 	return cache_Main_main
 }
 
-var cache_Main_fn__88475274 gopurs_runtime.Value
-var once_Main_fn__88475274 sync.Once
-
-func Get_Main_fn__88475274() gopurs_runtime.Value {
-	once_Main_fn__88475274.Do(func() {
-		cache_Main_fn__88475274 = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_fn__88475274(gopurs_runtime.CoerceToStruct[Constructor_Main_Test](dict_0_box))
-		})
-	})
-	return cache_Main_fn__88475274
-}
-
-type Constructor_Main_Test struct {
+type Constructor_Main_Test[T_a any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 	V1 gopurs_runtime.Value
@@ -93,7 +93,7 @@ type Constructor_Main_Test struct {
 
 func init() {
 	gopurs_runtime.StructGetters[3423238824] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_Test)(ptr)
+		c := (*Constructor_Main_Test[any])(ptr)
 		_ = c
 		switch key {
 		case "fn":
@@ -118,14 +118,14 @@ func Call_Main_val(dict_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	return gopurs_runtime.RecordGet(dict_0, "val")
 }
 
-func Call_Main_fn(dict_0_loop *Constructor_Main_Test) gopurs_runtime.Value {
-	var dict_0 *Constructor_Main_Test = dict_0_loop
+func Call_Main_fn(dict_0_loop *Constructor_Main_Test[gopurs_runtime.Value]) gopurs_runtime.Value {
+	var dict_0 *Constructor_Main_Test[gopurs_runtime.Value] = dict_0_loop
 	_ = dict_0
 	return gopurs_runtime.Box(dict_0.V0)
 }
 
-func Call_Main_fn__88475274(dict_0_loop *Constructor_Main_Test) gopurs_runtime.Value {
-	var dict_0 *Constructor_Main_Test = dict_0_loop
+func Call_Main_fn__88475274(dict_0_loop *Constructor_Main_Test[gopurs_runtime.Value]) gopurs_runtime.Value {
+	var dict_0 *Constructor_Main_Test[gopurs_runtime.Value] = dict_0_loop
 	_ = dict_0
 	return gopurs_runtime.Box(dict_0.V0)
 }

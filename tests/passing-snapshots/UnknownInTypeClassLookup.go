@@ -30,6 +30,18 @@ func Get_Main_test() gopurs_runtime.Value {
 	return cache_Main_test
 }
 
+var cache_Main_test__1605317791 gopurs_runtime.Value
+var once_Main_test__1605317791 sync.Once
+
+func Get_Main_test__1605317791() gopurs_runtime.Value {
+	once_Main_test__1605317791.Do(func() {
+		cache_Main_test__1605317791 = gopurs_runtime.Func3(func(_dollar___unused_0_box gopurs_runtime.Value, v_1_box gopurs_runtime.Value, v1_2_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_test__1605317791(uint32(_dollar___unused_0_box.IntVal), v_1_box, v1_2_box))
+		})
+	})
+	return cache_Main_test__1605317791
+}
+
 var cache_Main_eqAA gopurs_runtime.Value
 var once_Main_eqAA sync.Once
 
@@ -62,25 +74,13 @@ func Get_Main_main() gopurs_runtime.Value {
 	return cache_Main_main
 }
 
-var cache_Main_test__1605317791 gopurs_runtime.Value
-var once_Main_test__1605317791 sync.Once
-
-func Get_Main_test__1605317791() gopurs_runtime.Value {
-	once_Main_test__1605317791.Do(func() {
-		cache_Main_test__1605317791 = gopurs_runtime.Func3(func(_dollar___unused_0_box gopurs_runtime.Value, v_1_box gopurs_runtime.Value, v1_2_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_test__1605317791(uint32(_dollar___unused_0_box.IntVal), v_1_box, v1_2_box))
-		})
-	})
-	return cache_Main_test__1605317791
-}
-
-type Constructor_Main_EQ struct {
+type Constructor_Main_EQ[T_a any, T_b any] struct {
 	Rc uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[3323825930] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_EQ)(ptr)
+		c := (*Constructor_Main_EQ[any, any])(ptr)
 		_ = c
 		switch key {
 
@@ -106,12 +106,6 @@ func Call_Main_test(_dollar___unused_0_loop uint32, v_1_loop gopurs_runtime.Valu
 	return "Done"
 }
 
-func Call_Main_runTest(a_0_loop gopurs_runtime.Value) string {
-	var a_0 gopurs_runtime.Value = a_0_loop
-	_ = a_0
-	return "Done"
-}
-
 func Call_Main_test__1605317791(_dollar___unused_0_loop uint32, v_1_loop gopurs_runtime.Value, v1_2_loop gopurs_runtime.Value) string {
 	var _dollar___unused_0 uint32 = _dollar___unused_0_loop
 	_ = _dollar___unused_0
@@ -119,5 +113,11 @@ func Call_Main_test__1605317791(_dollar___unused_0_loop uint32, v_1_loop gopurs_
 	_ = v_1
 	var v1_2 gopurs_runtime.Value = v1_2_loop
 	_ = v1_2
+	return "Done"
+}
+
+func Call_Main_runTest(a_0_loop gopurs_runtime.Value) string {
+	var a_0 gopurs_runtime.Value = a_0_loop
+	_ = a_0
 	return "Done"
 }

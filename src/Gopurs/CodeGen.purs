@@ -96,7 +96,7 @@ exprTypeToGoType _ _ _ _ String = TypeString
 exprTypeToGoType _ _ _ _ Char = TypeString
 exprTypeToGoType _ _ _ _ Boolean = TypeBool
 exprTypeToGoType ptrPaths enumAdts elided modNameStr (Array ty) = TypeNativeArray (exprTypeToGoType ptrPaths enumAdts elided modNameStr ty)
-exprTypeToGoType ptrPaths enumAdts elided modNameStr (Record (Row fields _)) = TypeRecord (map (\(Tuple k v) -> Tuple k (exprTypeToGoType ptrPaths enumAdts elided modNameStr v)) (Array.sortBy (comparing \(Tuple k _) -> k) fields))
+exprTypeToGoType ptrPaths enumAdts elided modNameStr (Record (Row fields Nothing)) = TypeRecord (map (\(Tuple k v) -> Tuple k (exprTypeToGoType ptrPaths enumAdts elided modNameStr v)) (Array.sortBy (comparing \(Tuple k _) -> k) fields))
 exprTypeToGoType ptrPaths enumAdts elided modNameStr (Record _) = TypeValue
 exprTypeToGoType ptrPaths enumAdts elided modNameStr (ADT fullName path args) =
   let
@@ -129,7 +129,7 @@ exprTypeToGoType _ _ _ _ (TypeVar v) = TypeValue
 exprTypeToGoType _ _ _ _ _ = TypeValue
 
 exprTypeToGenericGoType :: Map.Map String { ctorName :: String, arity :: Int } -> Set.Set String -> Set.Set String -> Array String -> String -> ExprType -> GoType
-exprTypeToGenericGoType ptrPaths enumAdts elidedCtors typeVars modNameStr (Record (Row fields _)) = TypeRecord (map (\(Tuple k v) -> Tuple k (exprTypeToGenericGoType ptrPaths enumAdts elidedCtors typeVars modNameStr v)) (Array.sortBy (comparing \(Tuple k _) -> k) fields))
+exprTypeToGenericGoType ptrPaths enumAdts elidedCtors typeVars modNameStr (Record (Row fields Nothing)) = TypeRecord (map (\(Tuple k v) -> Tuple k (exprTypeToGenericGoType ptrPaths enumAdts elidedCtors typeVars modNameStr v)) (Array.sortBy (comparing \(Tuple k _) -> k) fields))
 exprTypeToGenericGoType _ _ _ _ _ (Record _) = TypeValue
 exprTypeToGenericGoType ptrPaths enumAdts elidedCtors typeVars modNameStr (TypeApp fn arg) =
   let
@@ -2497,7 +2497,7 @@ unwrapValueToFunc dataDecls (TFunc args ret) mbTast valName depth _ =
 unwrapValueToFunc dataDecls (TNamed anyT) mbTast valName depth cidx | anyT == "any" || anyT == "interface{}" || anyT == "gopurs_runtime.Value" =
   let resolvedTast = map (resolveNewtype dataDecls) mbTast
   in case resolvedTast of
-    Just (Record (Row fields _)) ->
+    Just (Record (Row fields Nothing)) ->
       let
         fieldStr = Array.mapWithIndex (\i (Tuple fK fT) ->
             "\t\t\t\tres_map[\"" <> fK <> "\"] = " <> unwrapValueToFunc dataDecls (TNamed "any") (Just fT) ("_raw[\"" <> fK <> "\"]") (depth + 1) i
@@ -2538,7 +2538,7 @@ wrapReturn dataDecls (TFunc args ret) mbTast valName =
         Just r -> genInnerArg ("inner_res := " <> valName) (wrapReturn dataDecls r (mbTast >>= getTastReturnType) "inner_res") argUnwrap
 wrapReturn _ (TArray elem) _ valName | printTypeNode elem /= "gopurs_runtime.Value" = 
   "func() gopurs_runtime.Value {\n\t\t\tres_arr := make([]gopurs_runtime.Value, len(" <> valName <> "))\n\t\t\tfor i, v := range " <> valName <> " { res_arr[i] = gopurs_runtime.Box(v) }\n\t\t\treturn gopurs_runtime.Array(res_arr)\n\t\t}()"
-wrapReturn dataDecls (TMap _ _) (Just (Record (Row fields _))) valName = 
+wrapReturn dataDecls (TMap _ _) (Just (Record (Row fields Nothing))) valName = 
   let
     fieldStr = Array.mapWithIndex (\i (Tuple fK fT) ->
         "\t\t\t\tres_map[\"" <> fK <> "\"] = " <> wrapReturn dataDecls (TNamed "any") (Just fT) ("_raw[\"" <> fK <> "\"]")
@@ -2557,7 +2557,7 @@ wrapReturn dataDecls (TMap _ _) mbTast valName =
 wrapReturn dataDecls (TNamed anyT) mbTast valName | anyT == "any" || anyT == "interface{}" || anyT == "gopurs_runtime.Value" =
   let resolvedTast = map (resolveNewtype dataDecls) mbTast
   in case resolvedTast of
-    Just (Record (Row fields _)) ->
+    Just (Record (Row fields Nothing)) ->
       let
         fieldStr = Array.mapWithIndex (\i (Tuple fK fT) ->
             "\t\t\t\tres_map[\"" <> fK <> "\"] = " <> wrapReturn dataDecls (TNamed "any") (Just fT) ("_raw[\"" <> fK <> "\"]")

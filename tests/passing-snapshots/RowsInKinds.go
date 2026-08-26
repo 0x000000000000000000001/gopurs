@@ -25,6 +25,6 @@ func Get_Main_main() gopurs_runtime.Value {
 	return cache_Main_main
 }
 
-type Constructor_Main_P struct {
+type Constructor_Main_P[T_a any] struct {
 	Rc uint32
 }

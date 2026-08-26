@@ -35,23 +35,9 @@ var once_Main_test1 sync.Once
 
 func Get_Main_test1() gopurs_runtime.Value {
 	once_Main_test1.Do(func() {
-		cache_Main_test1 = func() gopurs_runtime.Value {
-			orig := func() *struct {
-				attr gopurs_runtime.Value
-			} {
-				orig := gopurs_runtime.RecordDict1("attr", gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Int(0)
-				}))
-				_ = orig
-				clone := struct {
-					attr gopurs_runtime.Value
-				}{}
-				clone.attr = gopurs_runtime.RecordGet(orig, "attr")
-				return &clone
-			}()
-			_ = orig
-			return gopurs_runtime.RecordDict([]string{"attr"}, []gopurs_runtime.Value{orig.attr})
-		}()
+		cache_Main_test1 = gopurs_runtime.RecordDict1("attr", gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Int(0)
+		}))
 	})
 	return cache_Main_test1
 }

@@ -131,23 +131,23 @@ var once_Main_clazzString sync.Once
 
 func Get_Main_clazzString() gopurs_runtime.Value {
 	once_Main_clazzString.Do(func() {
-		cache_Main_clazzString = gopurs_runtime.Value{Type: 9, IntVal: 3678469904, UnsafePtr: unsafe.Pointer((&Constructor_Main_Clazz{1, gopurs_runtime.Str("test")}))}
+		cache_Main_clazzString = gopurs_runtime.Value{Type: 9, IntVal: 3678469904, UnsafePtr: unsafe.Pointer((&Constructor_Main_Clazz[string]{1, gopurs_runtime.Str("test")}))}
 	})
 	return cache_Main_clazzString
 }
 
-type Constructor_Main_Proxy struct {
+type Constructor_Main_Proxy[T_f any] struct {
 	Rc uint32
 }
 
-type Constructor_Main_Clazz struct {
+type Constructor_Main_Clazz[T_a any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 }
 
 func init() {
 	gopurs_runtime.StructGetters[3678469904] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_Clazz)(ptr)
+		c := (*Constructor_Main_Clazz[any])(ptr)
 		_ = c
 		switch key {
 		case "def":

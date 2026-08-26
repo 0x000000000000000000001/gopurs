@@ -3,7 +3,6 @@ package purescript
 import (
 	gopurs_runtime "gopurs/output/gopurs_runtime"
 	sync "sync"
-	unsafe "unsafe"
 )
 
 var cache_Main_x gopurs_runtime.Value
@@ -38,24 +37,6 @@ func Get_Main_blah() gopurs_runtime.Value {
 	return cache_Main_blah
 }
 
-var cache_Main_test gopurs_runtime.Value
-var once_Main_test sync.Once
-
-func Get_Main_test() gopurs_runtime.Value {
-	once_Main_test.Do(func() {
-		cache_Main_test = func() gopurs_runtime.Value {
-			origVal := Get_Main_x()
-			if origVal.Type != gopurs_runtime.TypeRecord1 {
-				return gopurs_runtime.RecordUpdateDict(origVal, []string{"baz"}, []gopurs_runtime.Value{gopurs_runtime.Str("blah")})
-			}
-			clone := *((*gopurs_runtime.RecordData1)(origVal.UnsafePtr))
-			clone.V0 = gopurs_runtime.Str("blah")
-			return gopurs_runtime.Value{Type: gopurs_runtime.TypeRecord1, UnsafePtr: unsafe.Pointer(&clone)}
-		}()
-	})
-	return cache_Main_test
-}
-
 var cache_Main_blah__335853299 gopurs_runtime.Value
 var once_Main_blah__335853299 sync.Once
 
@@ -66,6 +47,16 @@ func Get_Main_blah__335853299() gopurs_runtime.Value {
 		})
 	})
 	return cache_Main_blah__335853299
+}
+
+var cache_Main_test gopurs_runtime.Value
+var once_Main_test sync.Once
+
+func Get_Main_test() gopurs_runtime.Value {
+	once_Main_test.Do(func() {
+		cache_Main_test = gopurs_runtime.RecordUpdate1(Get_Main_x(), "baz", gopurs_runtime.Str("blah"))
+	})
+	return cache_Main_test
 }
 
 func Call_Main_blah(x1_0_loop gopurs_runtime.Value) gopurs_runtime.Value {

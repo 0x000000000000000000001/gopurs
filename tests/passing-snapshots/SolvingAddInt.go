@@ -91,7 +91,7 @@ func Get_Main_a_prime_() gopurs_runtime.Value {
 	return cache_Main_a_prime_
 }
 
-type Constructor_Main_Proxy struct {
+type Constructor_Main_Proxy[T_k any] struct {
 	Rc uint32
 }
 

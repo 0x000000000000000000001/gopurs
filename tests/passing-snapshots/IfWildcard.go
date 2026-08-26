@@ -49,16 +49,6 @@ func Get_Main_cond() gopurs_runtime.Value {
 	return cache_Main_cond
 }
 
-var cache_Main_main gopurs_runtime.Value
-var once_Main_main sync.Once
-
-func Get_Main_main() gopurs_runtime.Value {
-	once_Main_main.Do(func() {
-		cache_Main_main = gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
-	})
-	return cache_Main_main
-}
-
 var cache_Main_cond__1906969362 gopurs_runtime.Value
 var once_Main_cond__1906969362 sync.Once
 
@@ -69,6 +59,16 @@ func Get_Main_cond__1906969362() gopurs_runtime.Value {
 		})
 	})
 	return cache_Main_cond__1906969362
+}
+
+var cache_Main_main gopurs_runtime.Value
+var once_Main_main sync.Once
+
+func Get_Main_main() gopurs_runtime.Value {
+	once_Main_main.Do(func() {
+		cache_Main_main = gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
+	})
+	return cache_Main_main
 }
 
 type Constructor_Main_X struct {

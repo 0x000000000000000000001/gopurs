@@ -195,8 +195,8 @@ type RecordData struct {
 }
 
 func RecordDict(keys []string, vals []Value) Value {
-	r := RecordData{keys, vals}
-	return Value{Type: TypeRecordData, UnsafePtr: unsafe.Pointer(&r)}
+	r := &RecordData{keys, vals}
+	return Value{Type: TypeRecordData, UnsafePtr: unsafe.Pointer(r)}
 }
 
 type RecordData0 struct{}

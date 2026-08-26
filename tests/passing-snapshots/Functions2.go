@@ -17,23 +17,6 @@ func Get_Main_test() gopurs_runtime.Value {
 	return cache_Main_test
 }
 
-var cache_Main_main gopurs_runtime.Value
-var once_Main_main sync.Once
-
-func Get_Main_main() gopurs_runtime.Value {
-	once_Main_main.Do(func() {
-		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
-			__local_var_0_0 := gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("Not done"), gopurs_runtime.Bool(true))
-			_ = __local_var_0_0
-			_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
-			_ = _dollar___unused_1_1
-			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
-		})
-	})
-	return cache_Main_main
-}
-
 var cache_Main_test__641934996 gopurs_runtime.Value
 var once_Main_test__641934996 sync.Once
 
@@ -44,6 +27,23 @@ func Get_Main_test__641934996() gopurs_runtime.Value {
 		})
 	})
 	return cache_Main_test__641934996
+}
+
+var cache_Main_main gopurs_runtime.Value
+var once_Main_main sync.Once
+
+func Get_Main_main() gopurs_runtime.Value {
+	once_Main_main.Do(func() {
+		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
+			__local_var_0_0 := gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("Not done"), gopurs_runtime.Bool(true))
+			_ = __local_var_0_0
+			_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
+			_ = _dollar___unused_1_1
+			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
+		})
+	})
+	return cache_Main_main
 }
 
 func Call_Main_test(go__const_0_loop gopurs_runtime.Value, v_1_loop gopurs_runtime.Value) gopurs_runtime.Value {

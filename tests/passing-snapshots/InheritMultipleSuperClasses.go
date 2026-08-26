@@ -58,7 +58,7 @@ var once_Main_g2 sync.Once
 func Get_Main_g2() gopurs_runtime.Value {
 	once_Main_g2.Do(func() {
 		cache_Main_g2 = gopurs_runtime.Func(func(dictEg2_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_g2(gopurs_runtime.CoerceToStruct[Constructor_Main_Eg2](dictEg2_0_box))
+			return Call_Main_g2(gopurs_runtime.CoerceToStruct[Constructor_Main_Eg2[gopurs_runtime.Value, gopurs_runtime.Value]](dictEg2_0_box))
 		})
 	})
 	return cache_Main_g2
@@ -70,7 +70,7 @@ var once_Main_g1 sync.Once
 func Get_Main_g1() gopurs_runtime.Value {
 	once_Main_g1.Do(func() {
 		cache_Main_g1 = gopurs_runtime.Func(func(dictEg1_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_g1(gopurs_runtime.CoerceToStruct[Constructor_Main_Eg1](dictEg1_0_box))
+			return Call_Main_g1(gopurs_runtime.CoerceToStruct[Constructor_Main_Eg1[gopurs_runtime.Value, gopurs_runtime.Value]](dictEg1_0_box))
 		})
 	})
 	return cache_Main_g1
@@ -82,7 +82,7 @@ var once_Main_f2 sync.Once
 func Get_Main_f2() gopurs_runtime.Value {
 	once_Main_f2.Do(func() {
 		cache_Main_f2 = gopurs_runtime.Func(func(dictEg2_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_f2(gopurs_runtime.CoerceToStruct[Constructor_Main_Eg2](dictEg2_0_box))
+			return Call_Main_f2(gopurs_runtime.CoerceToStruct[Constructor_Main_Eg2[gopurs_runtime.Value, gopurs_runtime.Value]](dictEg2_0_box))
 		})
 	})
 	return cache_Main_f2
@@ -94,13 +94,13 @@ var once_Main_f1 sync.Once
 func Get_Main_f1() gopurs_runtime.Value {
 	once_Main_f1.Do(func() {
 		cache_Main_f1 = gopurs_runtime.Func(func(dictEg1_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_f1(gopurs_runtime.CoerceToStruct[Constructor_Main_Eg1](dictEg1_0_box))
+			return Call_Main_f1(gopurs_runtime.CoerceToStruct[Constructor_Main_Eg1[gopurs_runtime.Value, gopurs_runtime.Value]](dictEg1_0_box))
 		})
 	})
 	return cache_Main_f1
 }
 
-type Constructor_Main_Eg2 struct {
+type Constructor_Main_Eg2[T_f any, T_g any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 	V1 gopurs_runtime.Value
@@ -108,7 +108,7 @@ type Constructor_Main_Eg2 struct {
 
 func init() {
 	gopurs_runtime.StructGetters[2207147950] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_Eg2)(ptr)
+		c := (*Constructor_Main_Eg2[any, any])(ptr)
 		_ = c
 		switch key {
 		case "Functor0":
@@ -121,7 +121,7 @@ func init() {
 	}
 }
 
-type Constructor_Main_Eg1 struct {
+type Constructor_Main_Eg1[T_f any, T_g any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 	V1 gopurs_runtime.Value
@@ -129,7 +129,7 @@ type Constructor_Main_Eg1 struct {
 
 func init() {
 	gopurs_runtime.StructGetters[1828296749] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_Eg1)(ptr)
+		c := (*Constructor_Main_Eg1[any, any])(ptr)
 		_ = c
 		switch key {
 		case "Functor0":
@@ -160,32 +160,32 @@ func Call_Main_Eg1_dollar_Dict(x_0_loop gopurs_runtime.Value) gopurs_runtime.Val
 	return x_0
 }
 
-func Call_Main_g2(dictEg2_0_loop *Constructor_Main_Eg2) gopurs_runtime.Value {
-	var dictEg2_0 *Constructor_Main_Eg2 = dictEg2_0_loop
+func Call_Main_g2(dictEg2_0_loop *Constructor_Main_Eg2[gopurs_runtime.Value, gopurs_runtime.Value]) gopurs_runtime.Value {
+	var dictEg2_0 *Constructor_Main_Eg2[gopurs_runtime.Value, gopurs_runtime.Value] = dictEg2_0_loop
 	_ = dictEg2_0
 	return gopurs_runtime.Apply(gopurs_runtime.RecordGet(gopurs_runtime.Apply(gopurs_runtime.Box(dictEg2_0.V0), gopurs_runtime.Value{}), "map"), gopurs_runtime.Func(func(x_1 gopurs_runtime.Value) gopurs_runtime.Value {
 		return x_1
 	}))
 }
 
-func Call_Main_g1(dictEg1_0_loop *Constructor_Main_Eg1) gopurs_runtime.Value {
-	var dictEg1_0 *Constructor_Main_Eg1 = dictEg1_0_loop
+func Call_Main_g1(dictEg1_0_loop *Constructor_Main_Eg1[gopurs_runtime.Value, gopurs_runtime.Value]) gopurs_runtime.Value {
+	var dictEg1_0 *Constructor_Main_Eg1[gopurs_runtime.Value, gopurs_runtime.Value] = dictEg1_0_loop
 	_ = dictEg1_0
 	return gopurs_runtime.Apply(gopurs_runtime.RecordGet(gopurs_runtime.Apply(gopurs_runtime.Box(dictEg1_0.V1), gopurs_runtime.Value{}), "map"), gopurs_runtime.Func(func(x_1 gopurs_runtime.Value) gopurs_runtime.Value {
 		return x_1
 	}))
 }
 
-func Call_Main_f2(dictEg2_0_loop *Constructor_Main_Eg2) gopurs_runtime.Value {
-	var dictEg2_0 *Constructor_Main_Eg2 = dictEg2_0_loop
+func Call_Main_f2(dictEg2_0_loop *Constructor_Main_Eg2[gopurs_runtime.Value, gopurs_runtime.Value]) gopurs_runtime.Value {
+	var dictEg2_0 *Constructor_Main_Eg2[gopurs_runtime.Value, gopurs_runtime.Value] = dictEg2_0_loop
 	_ = dictEg2_0
 	return gopurs_runtime.Apply(gopurs_runtime.RecordGet(gopurs_runtime.Apply(gopurs_runtime.Box(dictEg2_0.V1), gopurs_runtime.Value{}), "map"), gopurs_runtime.Func(func(x_1 gopurs_runtime.Value) gopurs_runtime.Value {
 		return x_1
 	}))
 }
 
-func Call_Main_f1(dictEg1_0_loop *Constructor_Main_Eg1) gopurs_runtime.Value {
-	var dictEg1_0 *Constructor_Main_Eg1 = dictEg1_0_loop
+func Call_Main_f1(dictEg1_0_loop *Constructor_Main_Eg1[gopurs_runtime.Value, gopurs_runtime.Value]) gopurs_runtime.Value {
+	var dictEg1_0 *Constructor_Main_Eg1[gopurs_runtime.Value, gopurs_runtime.Value] = dictEg1_0_loop
 	_ = dictEg1_0
 	return gopurs_runtime.Apply(gopurs_runtime.RecordGet(gopurs_runtime.Apply(gopurs_runtime.Box(dictEg1_0.V0), gopurs_runtime.Value{}), "map"), gopurs_runtime.Func(func(x_1 gopurs_runtime.Value) gopurs_runtime.Value {
 		return x_1

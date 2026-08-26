@@ -121,16 +121,16 @@ func Get_Main_f() gopurs_runtime.Value {
 	return cache_Main_f
 }
 
-var cache_Main_append gopurs_runtime.Value
-var once_Main_append sync.Once
+var cache_Main_go__append gopurs_runtime.Value
+var once_Main_go__append sync.Once
 
-func Get_Main_append() gopurs_runtime.Value {
-	once_Main_append.Do(func() {
-		cache_Main_append = gopurs_runtime.Func(func(o_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_append(o_0_box)
+func Get_Main_go__append() gopurs_runtime.Value {
+	once_Main_go__append.Do(func() {
+		cache_Main_go__append = gopurs_runtime.Func(func(o_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_go__append(o_0_box)
 		})
 	})
-	return cache_Main_append
+	return cache_Main_go__append
 }
 
 var cache_Main_apTest gopurs_runtime.Value
@@ -161,7 +161,7 @@ func Call_Main_test(x_0_loop gopurs_runtime.Value) float64 {
 	return ((gopurs_runtime.RecordGet(x_0, "foo").FloatVal()) + (gopurs_runtime.RecordGet(x_0, "bar").FloatVal())) + (1.0)
 }
 
-func Call_Main_append(o_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
+func Call_Main_go__append(o_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var o_0 gopurs_runtime.Value = o_0_loop
 	_ = o_0
 	return gopurs_runtime.RecordDict2("bar", "foo", gopurs_runtime.Float(1.0), gopurs_runtime.RecordGet(o_0, "foo"))

@@ -55,20 +55,20 @@ var once_Main_c1 sync.Once
 
 func Get_Main_c1() gopurs_runtime.Value {
 	once_Main_c1.Do(func() {
-		cache_Main_c1 = gopurs_runtime.Value{Type: 9, IntVal: 4264042284, UnsafePtr: unsafe.Pointer((&Constructor_Main_C1{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_c1 = gopurs_runtime.Value{Type: 9, IntVal: 4264042284, UnsafePtr: unsafe.Pointer((&Constructor_Main_C1[gopurs_runtime.Value]{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{}
 		})}))}
 	})
 	return cache_Main_c1
 }
 
-type Constructor_Main_C0 struct {
+type Constructor_Main_C0[T_a any] struct {
 	Rc uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[1613519245] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_C0)(ptr)
+		c := (*Constructor_Main_C0[any])(ptr)
 		_ = c
 		switch key {
 
@@ -78,14 +78,14 @@ func init() {
 	}
 }
 
-type Constructor_Main_C1 struct {
+type Constructor_Main_C1[T_a any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 }
 
 func init() {
 	gopurs_runtime.StructGetters[4264042284] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_C1)(ptr)
+		c := (*Constructor_Main_C1[any])(ptr)
 		_ = c
 		switch key {
 		case "C00":

@@ -33,7 +33,7 @@ var once_Main_eqNumber sync.Once
 
 func Get_Main_eqNumber() gopurs_runtime.Value {
 	once_Main_eqNumber.Do(func() {
-		cache_Main_eqNumber = gopurs_runtime.Value{Type: 9, IntVal: 61300330, UnsafePtr: unsafe.Pointer((&Constructor_Main_Eq{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_eqNumber = gopurs_runtime.Value{Type: 9, IntVal: 61300330, UnsafePtr: unsafe.Pointer((&Constructor_Main_Eq[float64]{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(v1_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Bool(true)
 			})
@@ -48,20 +48,20 @@ var once_Main_eq sync.Once
 func Get_Main_eq() gopurs_runtime.Value {
 	once_Main_eq.Do(func() {
 		cache_Main_eq = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_eq(gopurs_runtime.CoerceToStruct[Constructor_Main_Eq](dict_0_box))
+			return Call_Main_eq(gopurs_runtime.CoerceToStruct[Constructor_Main_Eq[gopurs_runtime.Value]](dict_0_box))
 		})
 	})
 	return cache_Main_eq
 }
 
-type Constructor_Main_Eq struct {
+type Constructor_Main_Eq[T_a any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 }
 
 func init() {
 	gopurs_runtime.StructGetters[61300330] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_Eq)(ptr)
+		c := (*Constructor_Main_Eq[any])(ptr)
 		_ = c
 		switch key {
 		case "eq":
@@ -78,8 +78,8 @@ func Call_Main_Eq_dollar_Dict(x_0_loop gopurs_runtime.Value) gopurs_runtime.Valu
 	return x_0
 }
 
-func Call_Main_eq(dict_0_loop *Constructor_Main_Eq) gopurs_runtime.Value {
-	var dict_0 *Constructor_Main_Eq = dict_0_loop
+func Call_Main_eq(dict_0_loop *Constructor_Main_Eq[gopurs_runtime.Value]) gopurs_runtime.Value {
+	var dict_0 *Constructor_Main_Eq[gopurs_runtime.Value] = dict_0_loop
 	_ = dict_0
 	return gopurs_runtime.Box(dict_0.V0)
 }

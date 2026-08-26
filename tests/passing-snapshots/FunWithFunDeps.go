@@ -108,6 +108,18 @@ func Get_Main_fflatten() gopurs_runtime.Value {
 	return cache_Main_fflatten
 }
 
+var cache_Main_fflatten__2162348848 gopurs_runtime.Value
+var once_Main_fflatten__2162348848 sync.Once
+
+func Get_Main_fflatten__2162348848() gopurs_runtime.Value {
+	once_Main_fflatten__2162348848.Do(func() {
+		cache_Main_fflatten__2162348848 = gopurs_runtime.Func(func(_dollar___unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_fflatten__2162348848(uint32(_dollar___unused_0_box.IntVal))
+		})
+	})
+	return cache_Main_fflatten__2162348848
+}
+
 var cache_Main_fappend gopurs_runtime.Value
 var once_Main_fappend sync.Once
 
@@ -118,6 +130,18 @@ func Get_Main_fappend() gopurs_runtime.Value {
 		})
 	})
 	return cache_Main_fappend
+}
+
+var cache_Main_fappend__4108296857 gopurs_runtime.Value
+var once_Main_fappend__4108296857 sync.Once
+
+func Get_Main_fappend__4108296857() gopurs_runtime.Value {
+	once_Main_fappend__4108296857.Do(func() {
+		cache_Main_fappend__4108296857 = gopurs_runtime.Func(func(_dollar___unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_fappend__4108296857(uint32(_dollar___unused_0_box.IntVal))
+		})
+	})
+	return cache_Main_fappend__4108296857
 }
 
 var cache_Main_fexample gopurs_runtime.Value
@@ -160,37 +184,13 @@ func Get_Main_fexample4() gopurs_runtime.Value {
 	return cache_Main_fexample4
 }
 
-var cache_Main_fappend__4108296857 gopurs_runtime.Value
-var once_Main_fappend__4108296857 sync.Once
-
-func Get_Main_fappend__4108296857() gopurs_runtime.Value {
-	once_Main_fappend__4108296857.Do(func() {
-		cache_Main_fappend__4108296857 = gopurs_runtime.Func(func(_dollar___unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_fappend__4108296857(uint32(_dollar___unused_0_box.IntVal))
-		})
-	})
-	return cache_Main_fappend__4108296857
-}
-
-var cache_Main_fflatten__2162348848 gopurs_runtime.Value
-var once_Main_fflatten__2162348848 sync.Once
-
-func Get_Main_fflatten__2162348848() gopurs_runtime.Value {
-	once_Main_fflatten__2162348848.Do(func() {
-		cache_Main_fflatten__2162348848 = gopurs_runtime.Func(func(_dollar___unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_fflatten__2162348848(uint32(_dollar___unused_0_box.IntVal))
-		})
-	})
-	return cache_Main_fflatten__2162348848
-}
-
-type Constructor_Main_NatPlus struct {
+type Constructor_Main_NatPlus[T_l any, T_r any, T_o any] struct {
 	Rc uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[3417617535] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_NatPlus)(ptr)
+		c := (*Constructor_Main_NatPlus[any, any, any])(ptr)
 		_ = c
 		switch key {
 
@@ -200,13 +200,13 @@ func init() {
 	}
 }
 
-type Constructor_Main_NatMult struct {
+type Constructor_Main_NatMult[T_l any, T_r any, T_o any] struct {
 	Rc uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[2508830309] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_NatMult)(ptr)
+		c := (*Constructor_Main_NatMult[any, any, any])(ptr)
 		_ = c
 		switch key {
 
@@ -254,6 +254,12 @@ func Call_Main_fflatten(_dollar___unused_0_loop uint32) gopurs_runtime.Value {
 	return Get_Main_fflattenImpl()
 }
 
+func Call_Main_fflatten__2162348848(_dollar___unused_0_loop uint32) gopurs_runtime.Value {
+	var _dollar___unused_0 uint32 = _dollar___unused_0_loop
+	_ = _dollar___unused_0
+	return Get_Main_fflattenImpl()
+}
+
 func Call_Main_fappend(_dollar___unused_0_loop uint32) gopurs_runtime.Value {
 	var _dollar___unused_0 uint32 = _dollar___unused_0_loop
 	_ = _dollar___unused_0
@@ -264,12 +270,6 @@ func Call_Main_fappend__4108296857(_dollar___unused_0_loop uint32) gopurs_runtim
 	var _dollar___unused_0 uint32 = _dollar___unused_0_loop
 	_ = _dollar___unused_0
 	return Get_Main_fappendImpl()
-}
-
-func Call_Main_fflatten__2162348848(_dollar___unused_0_loop uint32) gopurs_runtime.Value {
-	var _dollar___unused_0 uint32 = _dollar___unused_0_loop
-	_ = _dollar___unused_0
-	return Get_Main_fflattenImpl()
 }
 
 func Get_Main_fappendImpl() gopurs_runtime.Value {

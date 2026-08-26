@@ -48,10 +48,22 @@ var once_Main_num sync.Once
 func Get_Main_num() gopurs_runtime.Value {
 	once_Main_num.Do(func() {
 		cache_Main_num = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_num(gopurs_runtime.CoerceToStruct[Constructor_Main_E](dict_0_box))
+			return Call_Main_num(gopurs_runtime.CoerceToStruct[Constructor_Main_E[gopurs_runtime.Value]](dict_0_box))
 		})
 	})
 	return cache_Main_num
+}
+
+var cache_Main_num__3369776827 gopurs_runtime.Value
+var once_Main_num__3369776827 sync.Once
+
+func Get_Main_num__3369776827() gopurs_runtime.Value {
+	once_Main_num__3369776827.Do(func() {
+		cache_Main_num__3369776827 = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_num__3369776827(gopurs_runtime.CoerceToStruct[Constructor_Main_E[gopurs_runtime.Value]](dict_0_box))
+		})
+	})
+	return cache_Main_num__3369776827
 }
 
 var cache_Main_exprId gopurs_runtime.Value
@@ -59,7 +71,7 @@ var once_Main_exprId sync.Once
 
 func Get_Main_exprId() gopurs_runtime.Value {
 	once_Main_exprId.Do(func() {
-		cache_Main_exprId = gopurs_runtime.Value{Type: 9, IntVal: 1955825563, UnsafePtr: unsafe.Pointer((&Constructor_Main_E{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_exprId = gopurs_runtime.Value{Type: 9, IntVal: 1955825563, UnsafePtr: unsafe.Pointer((&Constructor_Main_E[gopurs_runtime.Value]{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(v1_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Float((v_0.FloatVal()) + (v1_1.FloatVal()))
 			})
@@ -74,10 +86,22 @@ var once_Main_add sync.Once
 func Get_Main_add() gopurs_runtime.Value {
 	once_Main_add.Do(func() {
 		cache_Main_add = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_add(gopurs_runtime.CoerceToStruct[Constructor_Main_E](dict_0_box))
+			return Call_Main_add(gopurs_runtime.CoerceToStruct[Constructor_Main_E[gopurs_runtime.Value]](dict_0_box))
 		})
 	})
 	return cache_Main_add
+}
+
+var cache_Main_add__1253445479 gopurs_runtime.Value
+var once_Main_add__1253445479 sync.Once
+
+func Get_Main_add__1253445479() gopurs_runtime.Value {
+	once_Main_add__1253445479.Do(func() {
+		cache_Main_add__1253445479 = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_add__1253445479(gopurs_runtime.CoerceToStruct[Constructor_Main_E[gopurs_runtime.Value]](dict_0_box))
+		})
+	})
+	return cache_Main_add__1253445479
 }
 
 var cache_Main_three gopurs_runtime.Value
@@ -98,7 +122,7 @@ var once_Main_main sync.Once
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
 			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showNumberImpl(), gopurs_runtime.Float(gopurs_runtime.Float(3.0).FloatVal())).StrVal()))
 			_ = __local_var_0_0
 			_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
@@ -109,36 +133,12 @@ func Get_Main_main() gopurs_runtime.Value {
 	return cache_Main_main
 }
 
-var cache_Main_add__1253445479 gopurs_runtime.Value
-var once_Main_add__1253445479 sync.Once
-
-func Get_Main_add__1253445479() gopurs_runtime.Value {
-	once_Main_add__1253445479.Do(func() {
-		cache_Main_add__1253445479 = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_add__1253445479(gopurs_runtime.CoerceToStruct[Constructor_Main_E](dict_0_box))
-		})
-	})
-	return cache_Main_add__1253445479
-}
-
-var cache_Main_num__3369776827 gopurs_runtime.Value
-var once_Main_num__3369776827 sync.Once
-
-func Get_Main_num__3369776827() gopurs_runtime.Value {
-	once_Main_num__3369776827.Do(func() {
-		cache_Main_num__3369776827 = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_num__3369776827(gopurs_runtime.CoerceToStruct[Constructor_Main_E](dict_0_box))
-		})
-	})
-	return cache_Main_num__3369776827
-}
-
-type Constructor_Main_Id struct {
+type Constructor_Main_Id[T_a any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 }
 
-type Constructor_Main_E struct {
+type Constructor_Main_E[T_e any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 	V1 gopurs_runtime.Value
@@ -146,7 +146,7 @@ type Constructor_Main_E struct {
 
 func init() {
 	gopurs_runtime.StructGetters[1955825563] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_E)(ptr)
+		c := (*Constructor_Main_E[any])(ptr)
 		_ = c
 		switch key {
 		case "add":
@@ -171,14 +171,26 @@ func Call_Main_runId(v_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	return v_0
 }
 
-func Call_Main_num(dict_0_loop *Constructor_Main_E) gopurs_runtime.Value {
-	var dict_0 *Constructor_Main_E = dict_0_loop
+func Call_Main_num(dict_0_loop *Constructor_Main_E[gopurs_runtime.Value]) gopurs_runtime.Value {
+	var dict_0 *Constructor_Main_E[gopurs_runtime.Value] = dict_0_loop
 	_ = dict_0
 	return gopurs_runtime.Box(dict_0.V1)
 }
 
-func Call_Main_add(dict_0_loop *Constructor_Main_E) gopurs_runtime.Value {
-	var dict_0 *Constructor_Main_E = dict_0_loop
+func Call_Main_num__3369776827(dict_0_loop *Constructor_Main_E[gopurs_runtime.Value]) gopurs_runtime.Value {
+	var dict_0 *Constructor_Main_E[gopurs_runtime.Value] = dict_0_loop
+	_ = dict_0
+	return gopurs_runtime.Box(dict_0.V1)
+}
+
+func Call_Main_add(dict_0_loop *Constructor_Main_E[gopurs_runtime.Value]) gopurs_runtime.Value {
+	var dict_0 *Constructor_Main_E[gopurs_runtime.Value] = dict_0_loop
+	_ = dict_0
+	return gopurs_runtime.Box(dict_0.V0)
+}
+
+func Call_Main_add__1253445479(dict_0_loop *Constructor_Main_E[gopurs_runtime.Value]) gopurs_runtime.Value {
+	var dict_0 *Constructor_Main_E[gopurs_runtime.Value] = dict_0_loop
 	_ = dict_0
 	return gopurs_runtime.Box(dict_0.V0)
 }
@@ -187,16 +199,4 @@ func Call_Main_three(dictE_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var dictE_0 gopurs_runtime.Value = dictE_0_loop
 	_ = dictE_0
 	return gopurs_runtime.Apply2(gopurs_runtime.RecordGet(dictE_0, "add"), gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictE_0, "num"), gopurs_runtime.Float(1.0)), gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictE_0, "num"), gopurs_runtime.Float(2.0)))
-}
-
-func Call_Main_add__1253445479(dict_0_loop *Constructor_Main_E) gopurs_runtime.Value {
-	var dict_0 *Constructor_Main_E = dict_0_loop
-	_ = dict_0
-	return gopurs_runtime.Box(dict_0.V0)
-}
-
-func Call_Main_num__3369776827(dict_0_loop *Constructor_Main_E) gopurs_runtime.Value {
-	var dict_0 *Constructor_Main_E = dict_0_loop
-	_ = dict_0
-	return gopurs_runtime.Box(dict_0.V1)
 }

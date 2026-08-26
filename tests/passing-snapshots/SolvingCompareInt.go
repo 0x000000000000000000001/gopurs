@@ -33,7 +33,7 @@ var once_Main_assertIsGTGT sync.Once
 
 func Get_Main_assertIsGTGT() gopurs_runtime.Value {
 	once_Main_assertIsGTGT.Do(func() {
-		cache_Main_assertIsGTGT = gopurs_runtime.Value{Type: 9, IntVal: 3071150869, UnsafePtr: unsafe.Pointer((&Constructor_Main_AssertIsGT{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_assertIsGTGT = gopurs_runtime.Value{Type: 9, IntVal: 3071150869, UnsafePtr: unsafe.Pointer((&Constructor_Main_AssertIsGT[gopurs_runtime.Value]{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Bool(true)
 		})}))}
 	})
@@ -238,10 +238,34 @@ var once_Main_assertIsGT sync.Once
 func Get_Main_assertIsGT() gopurs_runtime.Value {
 	once_Main_assertIsGT.Do(func() {
 		cache_Main_assertIsGT = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_assertIsGT(gopurs_runtime.CoerceToStruct[Constructor_Main_AssertIsGT](dict_0_box))
+			return Call_Main_assertIsGT(gopurs_runtime.CoerceToStruct[Constructor_Main_AssertIsGT[gopurs_runtime.Value]](dict_0_box))
 		})
 	})
 	return cache_Main_assertIsGT
+}
+
+var cache_Main_assertIsGT__865065017 gopurs_runtime.Value
+var once_Main_assertIsGT__865065017 sync.Once
+
+func Get_Main_assertIsGT__865065017() gopurs_runtime.Value {
+	once_Main_assertIsGT__865065017.Do(func() {
+		cache_Main_assertIsGT__865065017 = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_assertIsGT__865065017(gopurs_runtime.CoerceToStruct[Constructor_Main_AssertIsGT[gopurs_runtime.Value]](dict_0_box))
+		})
+	})
+	return cache_Main_assertIsGT__865065017
+}
+
+var cache_Main_assertIsGT__1442557951 gopurs_runtime.Value
+var once_Main_assertIsGT__1442557951 sync.Once
+
+func Get_Main_assertIsGT__1442557951() gopurs_runtime.Value {
+	once_Main_assertIsGT__1442557951.Do(func() {
+		cache_Main_assertIsGT__1442557951 = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_assertIsGT__1442557951(gopurs_runtime.CoerceToStruct[Constructor_Main_AssertIsGT[gopurs_runtime.Value]](dict_0_box))
+		})
+	})
+	return cache_Main_assertIsGT__1442557951
 }
 
 var cache_Main_infer gopurs_runtime.Value
@@ -250,10 +274,22 @@ var once_Main_infer sync.Once
 func Get_Main_infer() gopurs_runtime.Value {
 	once_Main_infer.Do(func() {
 		cache_Main_infer = gopurs_runtime.Func4(func(_dollar___unused_0_box gopurs_runtime.Value, dictAssertIsGT_1_box gopurs_runtime.Value, v_2_box gopurs_runtime.Value, v1_3_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Bool(Call_Main_infer(_dollar___unused_0_box, gopurs_runtime.CoerceToStruct[Constructor_Main_AssertIsGT](dictAssertIsGT_1_box), uint32(v_2_box.IntVal), uint32(v1_3_box.IntVal)))
+			return gopurs_runtime.Bool(Call_Main_infer(_dollar___unused_0_box, gopurs_runtime.CoerceToStruct[Constructor_Main_AssertIsGT[gopurs_runtime.Value]](dictAssertIsGT_1_box), uint32(v_2_box.IntVal), uint32(v1_3_box.IntVal)))
 		})
 	})
 	return cache_Main_infer
+}
+
+var cache_Main_infer__668843825 gopurs_runtime.Value
+var once_Main_infer__668843825 sync.Once
+
+func Get_Main_infer__668843825() gopurs_runtime.Value {
+	once_Main_infer__668843825.Do(func() {
+		cache_Main_infer__668843825 = gopurs_runtime.Func4(func(_dollar___unused_0_box gopurs_runtime.Value, dictAssertIsGT_1_box gopurs_runtime.Value, v_2_box gopurs_runtime.Value, v1_3_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Bool(Call_Main_infer__668843825(_dollar___unused_0_box, gopurs_runtime.CoerceToStruct[Constructor_Main_AssertIsGT[gopurs_runtime.Value]](dictAssertIsGT_1_box), uint32(v_2_box.IntVal), uint32(v1_3_box.IntVal)))
+		})
+	})
+	return cache_Main_infer__668843825
 }
 
 var cache_Main_inferSolved gopurs_runtime.Value
@@ -504,78 +540,18 @@ func Get_Main_transSymmEq() gopurs_runtime.Value {
 	return cache_Main_transSymmEq
 }
 
-var cache_Main_assertIsGT__3854141607 gopurs_runtime.Value
-var once_Main_assertIsGT__3854141607 sync.Once
-
-func Get_Main_assertIsGT__3854141607() gopurs_runtime.Value {
-	once_Main_assertIsGT__3854141607.Do(func() {
-		cache_Main_assertIsGT__3854141607 = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_assertIsGT__3854141607(gopurs_runtime.CoerceToStruct[Constructor_Main_AssertIsGT](dict_0_box))
-		})
-	})
-	return cache_Main_assertIsGT__3854141607
-}
-
-var cache_Main_assertIsGT__865065017 gopurs_runtime.Value
-var once_Main_assertIsGT__865065017 sync.Once
-
-func Get_Main_assertIsGT__865065017() gopurs_runtime.Value {
-	once_Main_assertIsGT__865065017.Do(func() {
-		cache_Main_assertIsGT__865065017 = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_assertIsGT__865065017(gopurs_runtime.CoerceToStruct[Constructor_Main_AssertIsGT](dict_0_box))
-		})
-	})
-	return cache_Main_assertIsGT__865065017
-}
-
-var cache_Main_assertIsGT__1442557951 gopurs_runtime.Value
-var once_Main_assertIsGT__1442557951 sync.Once
-
-func Get_Main_assertIsGT__1442557951() gopurs_runtime.Value {
-	once_Main_assertIsGT__1442557951.Do(func() {
-		cache_Main_assertIsGT__1442557951 = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_assertIsGT__1442557951(gopurs_runtime.CoerceToStruct[Constructor_Main_AssertIsGT](dict_0_box))
-		})
-	})
-	return cache_Main_assertIsGT__1442557951
-}
-
-var cache_Main_infer__3410330225 gopurs_runtime.Value
-var once_Main_infer__3410330225 sync.Once
-
-func Get_Main_infer__3410330225() gopurs_runtime.Value {
-	once_Main_infer__3410330225.Do(func() {
-		cache_Main_infer__3410330225 = gopurs_runtime.Func2(func(v_0_box gopurs_runtime.Value, v1_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Bool(Call_Main_infer__3410330225(uint32(v_0_box.IntVal), uint32(v1_1_box.IntVal)))
-		})
-	})
-	return cache_Main_infer__3410330225
-}
-
-var cache_Main_infer__668843825 gopurs_runtime.Value
-var once_Main_infer__668843825 sync.Once
-
-func Get_Main_infer__668843825() gopurs_runtime.Value {
-	once_Main_infer__668843825.Do(func() {
-		cache_Main_infer__668843825 = gopurs_runtime.Func4(func(_dollar___unused_0_box gopurs_runtime.Value, dictAssertIsGT_1_box gopurs_runtime.Value, v_2_box gopurs_runtime.Value, v1_3_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Bool(Call_Main_infer__668843825(_dollar___unused_0_box, gopurs_runtime.CoerceToStruct[Constructor_Main_AssertIsGT](dictAssertIsGT_1_box), uint32(v_2_box.IntVal), uint32(v1_3_box.IntVal)))
-		})
-	})
-	return cache_Main_infer__668843825
-}
-
-type Constructor_Main_Proxy struct {
+type Constructor_Main_Proxy[T_n any] struct {
 	Rc uint32
 }
 
-type Constructor_Main_AssertIsGT struct {
+type Constructor_Main_AssertIsGT[T_o any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 }
 
 func init() {
 	gopurs_runtime.StructGetters[3071150869] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_AssertIsGT)(ptr)
+		c := (*Constructor_Main_AssertIsGT[any])(ptr)
 		_ = c
 		switch key {
 		case "assertIsGT":
@@ -686,16 +662,40 @@ func Call_Main_withFacts(_dollar___unused_0_loop gopurs_runtime.Value, _dollar__
 	return gopurs_runtime.Value{Type: 9, IntVal: int64(227768594), UnsafePtr: nil}
 }
 
-func Call_Main_assertIsGT(dict_0_loop *Constructor_Main_AssertIsGT) gopurs_runtime.Value {
-	var dict_0 *Constructor_Main_AssertIsGT = dict_0_loop
+func Call_Main_assertIsGT(dict_0_loop *Constructor_Main_AssertIsGT[gopurs_runtime.Value]) gopurs_runtime.Value {
+	var dict_0 *Constructor_Main_AssertIsGT[gopurs_runtime.Value] = dict_0_loop
 	_ = dict_0
 	return gopurs_runtime.Box(dict_0.V0)
 }
 
-func Call_Main_infer(_dollar___unused_0_loop gopurs_runtime.Value, dictAssertIsGT_1_loop *Constructor_Main_AssertIsGT, v_2_loop uint32, v1_3_loop uint32) bool {
+func Call_Main_assertIsGT__865065017(dict_0_loop *Constructor_Main_AssertIsGT[gopurs_runtime.Value]) gopurs_runtime.Value {
+	var dict_0 *Constructor_Main_AssertIsGT[gopurs_runtime.Value] = dict_0_loop
+	_ = dict_0
+	return gopurs_runtime.Box(dict_0.V0)
+}
+
+func Call_Main_assertIsGT__1442557951(dict_0_loop *Constructor_Main_AssertIsGT[gopurs_runtime.Value]) gopurs_runtime.Value {
+	var dict_0 *Constructor_Main_AssertIsGT[gopurs_runtime.Value] = dict_0_loop
+	_ = dict_0
+	return gopurs_runtime.Box(dict_0.V0)
+}
+
+func Call_Main_infer(_dollar___unused_0_loop gopurs_runtime.Value, dictAssertIsGT_1_loop *Constructor_Main_AssertIsGT[gopurs_runtime.Value], v_2_loop uint32, v1_3_loop uint32) bool {
 	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
-	var dictAssertIsGT_1 *Constructor_Main_AssertIsGT = dictAssertIsGT_1_loop
+	var dictAssertIsGT_1 *Constructor_Main_AssertIsGT[gopurs_runtime.Value] = dictAssertIsGT_1_loop
+	_ = dictAssertIsGT_1
+	var v_2 uint32 = v_2_loop
+	_ = v_2
+	var v1_3 uint32 = v1_3_loop
+	_ = v1_3
+	return (gopurs_runtime.Apply(gopurs_runtime.Box(dictAssertIsGT_1.V0), gopurs_runtime.Value{Type: 9, IntVal: int64(227768594), UnsafePtr: nil}).IntVal) != (0)
+}
+
+func Call_Main_infer__668843825(_dollar___unused_0_loop gopurs_runtime.Value, dictAssertIsGT_1_loop *Constructor_Main_AssertIsGT[gopurs_runtime.Value], v_2_loop uint32, v1_3_loop uint32) bool {
+	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
+	_ = _dollar___unused_0
+	var dictAssertIsGT_1 *Constructor_Main_AssertIsGT[gopurs_runtime.Value] = dictAssertIsGT_1_loop
 	_ = dictAssertIsGT_1
 	var v_2 uint32 = v_2_loop
 	_ = v_2
@@ -826,42 +826,4 @@ func Call_Main_transSymmEq(_dollar___unused_0_loop gopurs_runtime.Value, _dollar
 	var v_2 uint32 = v_2_loop
 	_ = v_2
 	return 227768594
-}
-
-func Call_Main_assertIsGT__3854141607(dict_0_loop *Constructor_Main_AssertIsGT) gopurs_runtime.Value {
-	var dict_0 *Constructor_Main_AssertIsGT = dict_0_loop
-	_ = dict_0
-	return gopurs_runtime.Box(dict_0.V0)
-}
-
-func Call_Main_assertIsGT__865065017(dict_0_loop *Constructor_Main_AssertIsGT) gopurs_runtime.Value {
-	var dict_0 *Constructor_Main_AssertIsGT = dict_0_loop
-	_ = dict_0
-	return gopurs_runtime.Box(dict_0.V0)
-}
-
-func Call_Main_assertIsGT__1442557951(dict_0_loop *Constructor_Main_AssertIsGT) gopurs_runtime.Value {
-	var dict_0 *Constructor_Main_AssertIsGT = dict_0_loop
-	_ = dict_0
-	return gopurs_runtime.Box(dict_0.V0)
-}
-
-func Call_Main_infer__3410330225(v_0_loop uint32, v1_1_loop uint32) bool {
-	var v_0 uint32 = v_0_loop
-	_ = v_0
-	var v1_1 uint32 = v1_1_loop
-	_ = v1_1
-	return true
-}
-
-func Call_Main_infer__668843825(_dollar___unused_0_loop gopurs_runtime.Value, dictAssertIsGT_1_loop *Constructor_Main_AssertIsGT, v_2_loop uint32, v1_3_loop uint32) bool {
-	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
-	_ = _dollar___unused_0
-	var dictAssertIsGT_1 *Constructor_Main_AssertIsGT = dictAssertIsGT_1_loop
-	_ = dictAssertIsGT_1
-	var v_2 uint32 = v_2_loop
-	_ = v_2
-	var v1_3 uint32 = v1_3_loop
-	_ = v1_3
-	return (gopurs_runtime.Apply(gopurs_runtime.Box(dictAssertIsGT_1.V0), gopurs_runtime.Value{Type: 9, IntVal: int64(227768594), UnsafePtr: nil}).IntVal) != (0)
 }

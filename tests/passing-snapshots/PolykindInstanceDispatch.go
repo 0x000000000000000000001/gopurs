@@ -33,11 +33,23 @@ var once_Main_test2 sync.Once
 
 func Get_Main_test2() gopurs_runtime.Value {
 	once_Main_test2.Do(func() {
-		cache_Main_test2 = gopurs_runtime.Value{Type: 9, IntVal: 1349270669, UnsafePtr: unsafe.Pointer((&Constructor_Main_ShowP{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_test2 = gopurs_runtime.Value{Type: 9, IntVal: 1349270669, UnsafePtr: unsafe.Pointer((&Constructor_Main_ShowP[uint32]{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Str("Symbol")
 		})}))}
 	})
 	return cache_Main_test2
+}
+
+var cache_Main_test2__61460478 gopurs_runtime.Value
+var once_Main_test2__61460478 sync.Once
+
+func Get_Main_test2__61460478() gopurs_runtime.Value {
+	once_Main_test2__61460478.Do(func() {
+		cache_Main_test2__61460478 = gopurs_runtime.Value{Type: 9, IntVal: 1349270669, UnsafePtr: unsafe.Pointer((&Constructor_Main_ShowP[uint32]{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str("Symbol")
+		})}))}
+	})
+	return cache_Main_test2__61460478
 }
 
 var cache_Main_test1 gopurs_runtime.Value
@@ -45,11 +57,23 @@ var once_Main_test1 sync.Once
 
 func Get_Main_test1() gopurs_runtime.Value {
 	once_Main_test1.Do(func() {
-		cache_Main_test1 = gopurs_runtime.Value{Type: 9, IntVal: 1349270669, UnsafePtr: unsafe.Pointer((&Constructor_Main_ShowP{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_test1 = gopurs_runtime.Value{Type: 9, IntVal: 1349270669, UnsafePtr: unsafe.Pointer((&Constructor_Main_ShowP[uint32]{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Str("Type")
 		})}))}
 	})
 	return cache_Main_test1
+}
+
+var cache_Main_test1__1863477487 gopurs_runtime.Value
+var once_Main_test1__1863477487 sync.Once
+
+func Get_Main_test1__1863477487() gopurs_runtime.Value {
+	once_Main_test1__1863477487.Do(func() {
+		cache_Main_test1__1863477487 = gopurs_runtime.Value{Type: 9, IntVal: 1349270669, UnsafePtr: unsafe.Pointer((&Constructor_Main_ShowP[uint32]{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str("Type")
+		})}))}
+	})
+	return cache_Main_test1__1863477487
 }
 
 var cache_Main_showP gopurs_runtime.Value
@@ -58,10 +82,22 @@ var once_Main_showP sync.Once
 func Get_Main_showP() gopurs_runtime.Value {
 	once_Main_showP.Do(func() {
 		cache_Main_showP = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_showP(gopurs_runtime.CoerceToStruct[Constructor_Main_ShowP](dict_0_box))
+			return Call_Main_showP(gopurs_runtime.CoerceToStruct[Constructor_Main_ShowP[gopurs_runtime.Value]](dict_0_box))
 		})
 	})
 	return cache_Main_showP
+}
+
+var cache_Main_showP__1027712357 gopurs_runtime.Value
+var once_Main_showP__1027712357 sync.Once
+
+func Get_Main_showP__1027712357() gopurs_runtime.Value {
+	once_Main_showP__1027712357.Do(func() {
+		cache_Main_showP__1027712357 = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_showP__1027712357(gopurs_runtime.CoerceToStruct[Constructor_Main_ShowP[gopurs_runtime.Value]](dict_0_box))
+		})
+	})
+	return cache_Main_showP__1027712357
 }
 
 var cache_Main_main gopurs_runtime.Value
@@ -70,7 +106,7 @@ var once_Main_main sync.Once
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
 			__local_var_0_0 := gopurs_runtime.Apply(Get_Test_Assert_assert(), gopurs_runtime.Bool(true))
 			_ = __local_var_0_0
 			_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
@@ -83,54 +119,18 @@ func Get_Main_main() gopurs_runtime.Value {
 	return cache_Main_main
 }
 
-var cache_Main_showP__1027712357 gopurs_runtime.Value
-var once_Main_showP__1027712357 sync.Once
-
-func Get_Main_showP__1027712357() gopurs_runtime.Value {
-	once_Main_showP__1027712357.Do(func() {
-		cache_Main_showP__1027712357 = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_showP__1027712357(gopurs_runtime.CoerceToStruct[Constructor_Main_ShowP](dict_0_box))
-		})
-	})
-	return cache_Main_showP__1027712357
-}
-
-var cache_Main_test1__1863477487 gopurs_runtime.Value
-var once_Main_test1__1863477487 sync.Once
-
-func Get_Main_test1__1863477487() gopurs_runtime.Value {
-	once_Main_test1__1863477487.Do(func() {
-		cache_Main_test1__1863477487 = gopurs_runtime.Value{Type: 9, IntVal: 1349270669, UnsafePtr: unsafe.Pointer((&Constructor_Main_ShowP{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str("Type")
-		})}))}
-	})
-	return cache_Main_test1__1863477487
-}
-
-var cache_Main_test2__61460478 gopurs_runtime.Value
-var once_Main_test2__61460478 sync.Once
-
-func Get_Main_test2__61460478() gopurs_runtime.Value {
-	once_Main_test2__61460478.Do(func() {
-		cache_Main_test2__61460478 = gopurs_runtime.Value{Type: 9, IntVal: 1349270669, UnsafePtr: unsafe.Pointer((&Constructor_Main_ShowP{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str("Symbol")
-		})}))}
-	})
-	return cache_Main_test2__61460478
-}
-
-type Constructor_Main_Proxy struct {
+type Constructor_Main_Proxy[T_a any] struct {
 	Rc uint32
 }
 
-type Constructor_Main_ShowP struct {
+type Constructor_Main_ShowP[T_a any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 }
 
 func init() {
 	gopurs_runtime.StructGetters[1349270669] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_ShowP)(ptr)
+		c := (*Constructor_Main_ShowP[any])(ptr)
 		_ = c
 		switch key {
 		case "showP":
@@ -147,14 +147,14 @@ func Call_Main_ShowP_dollar_Dict(x_0_loop gopurs_runtime.Value) gopurs_runtime.V
 	return x_0
 }
 
-func Call_Main_showP(dict_0_loop *Constructor_Main_ShowP) gopurs_runtime.Value {
-	var dict_0 *Constructor_Main_ShowP = dict_0_loop
+func Call_Main_showP(dict_0_loop *Constructor_Main_ShowP[gopurs_runtime.Value]) gopurs_runtime.Value {
+	var dict_0 *Constructor_Main_ShowP[gopurs_runtime.Value] = dict_0_loop
 	_ = dict_0
 	return gopurs_runtime.Box(dict_0.V0)
 }
 
-func Call_Main_showP__1027712357(dict_0_loop *Constructor_Main_ShowP) gopurs_runtime.Value {
-	var dict_0 *Constructor_Main_ShowP = dict_0_loop
+func Call_Main_showP__1027712357(dict_0_loop *Constructor_Main_ShowP[gopurs_runtime.Value]) gopurs_runtime.Value {
+	var dict_0 *Constructor_Main_ShowP[gopurs_runtime.Value] = dict_0_loop
 	_ = dict_0
 	return gopurs_runtime.Box(dict_0.V0)
 }

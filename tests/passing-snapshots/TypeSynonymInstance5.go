@@ -52,13 +52,13 @@ func Get_Main_c() gopurs_runtime.Value {
 	return cache_Main_c
 }
 
-type Constructor_Main_C struct {
+type Constructor_Main_C[T_a any, T_b any] struct {
 	Rc uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[2167983901] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_C)(ptr)
+		c := (*Constructor_Main_C[any, any])(ptr)
 		_ = c
 		switch key {
 

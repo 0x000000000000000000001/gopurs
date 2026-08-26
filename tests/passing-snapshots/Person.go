@@ -41,7 +41,10 @@ func Get_Main_main() gopurs_runtime.Value {
 
 type Constructor_Main_Person struct {
 	Rc uint32
-	V0 gopurs_runtime.Value
+	V0 *struct {
+		age  float64
+		name string
+	}
 }
 
 func Call_Main_showPerson(p_0_loop gopurs_runtime.Value) string {

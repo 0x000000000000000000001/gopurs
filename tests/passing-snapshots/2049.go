@@ -46,10 +46,7 @@ var once_Main_f sync.Once
 func Get_Main_f() gopurs_runtime.Value {
 	once_Main_f.Do(func() {
 		cache_Main_f = gopurs_runtime.Func(func(v_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Int(Call_Main_f(gopurs_runtime.CoerceToStruct[Constructor_Main_Cons[*struct {
-				x int64
-				y int64
-			}]](v_0_box)))
+			return gopurs_runtime.Int(Call_Main_f(gopurs_runtime.CoerceToStruct[Constructor_Main_Cons[gopurs_runtime.Value]](v_0_box)))
 		})
 	})
 	return cache_Main_f
@@ -65,14 +62,8 @@ type Constructor_Main_Nil[T_a any] struct {
 	Rc uint32
 }
 
-func Call_Main_f(v_0_loop *Constructor_Main_Cons[*struct {
-	x int64
-	y int64
-}]) int64 {
-	var v_0 *Constructor_Main_Cons[*struct {
-		x int64
-		y int64
-	}] = v_0_loop
+func Call_Main_f(v_0_loop *Constructor_Main_Cons[gopurs_runtime.Value]) int64 {
+	var v_0 *Constructor_Main_Cons[gopurs_runtime.Value] = v_0_loop
 	_ = v_0
 	var __t0 int64
 	{

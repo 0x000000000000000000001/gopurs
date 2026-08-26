@@ -72,6 +72,18 @@ func Get_Main_ctorKind() gopurs_runtime.Value {
 	return cache_Main_ctorKind
 }
 
+var cache_Main_ctorKind__1288446513 gopurs_runtime.Value
+var once_Main_ctorKind__1288446513 sync.Once
+
+func Get_Main_ctorKind__1288446513() gopurs_runtime.Value {
+	once_Main_ctorKind__1288446513.Do(func() {
+		cache_Main_ctorKind__1288446513 = gopurs_runtime.Func2(func(_dollar___unused_0_box gopurs_runtime.Value, v_1_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_ctorKind__1288446513(uint32(_dollar___unused_0_box.IntVal), uint32(v_1_box.IntVal))), UnsafePtr: nil}
+		})
+	})
+	return cache_Main_ctorKind__1288446513
+}
+
 var cache_Main_testCtor1 gopurs_runtime.Value
 var once_Main_testCtor1 sync.Once
 
@@ -102,41 +114,17 @@ func Get_Main_testCtor3() gopurs_runtime.Value {
 	return cache_Main_testCtor3
 }
 
-var cache_Main_ctorKind__2095203377 gopurs_runtime.Value
-var once_Main_ctorKind__2095203377 sync.Once
-
-func Get_Main_ctorKind__2095203377() gopurs_runtime.Value {
-	once_Main_ctorKind__2095203377.Do(func() {
-		cache_Main_ctorKind__2095203377 = gopurs_runtime.Func(func(v_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_ctorKind__2095203377(uint32(v_0_box.IntVal))), UnsafePtr: nil}
-		})
-	})
-	return cache_Main_ctorKind__2095203377
-}
-
-var cache_Main_ctorKind__1288446513 gopurs_runtime.Value
-var once_Main_ctorKind__1288446513 sync.Once
-
-func Get_Main_ctorKind__1288446513() gopurs_runtime.Value {
-	once_Main_ctorKind__1288446513.Do(func() {
-		cache_Main_ctorKind__1288446513 = gopurs_runtime.Func2(func(_dollar___unused_0_box gopurs_runtime.Value, v_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_ctorKind__1288446513(uint32(_dollar___unused_0_box.IntVal), uint32(v_1_box.IntVal))), UnsafePtr: nil}
-		})
-	})
-	return cache_Main_ctorKind__1288446513
-}
-
-type Constructor_Main_Proxy struct {
+type Constructor_Main_Proxy[T_a any] struct {
 	Rc uint32
 }
 
-type Constructor_Main_CtorKind struct {
+type Constructor_Main_CtorKind[T_ctor any, T_kind any] struct {
 	Rc uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[133020252] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_CtorKind)(ptr)
+		c := (*Constructor_Main_CtorKind[any, any])(ptr)
 		_ = c
 		switch key {
 
@@ -163,12 +151,6 @@ func Call_Main_ctorKind(_dollar___unused_0_loop uint32, v_1_loop uint32) uint32 
 	_ = _dollar___unused_0
 	var v_1 uint32 = v_1_loop
 	_ = v_1
-	return 227768594
-}
-
-func Call_Main_ctorKind__2095203377(v_0_loop uint32) uint32 {
-	var v_0 uint32 = v_0_loop
-	_ = v_0
 	return 227768594
 }
 

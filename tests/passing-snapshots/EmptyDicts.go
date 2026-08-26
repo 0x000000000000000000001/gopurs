@@ -115,7 +115,7 @@ var once_Main_withArgHasEmptySuperCheck sync.Once
 
 func Get_Main_withArgHasEmptySuperCheck() gopurs_runtime.Value {
 	once_Main_withArgHasEmptySuperCheck.Do(func() {
-		cache_Main_withArgHasEmptySuperCheck = gopurs_runtime.Value{Type: 9, IntVal: 785089286, UnsafePtr: unsafe.Pointer((&Constructor_Main_WithArgHasEmptySuper{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_withArgHasEmptySuperCheck = gopurs_runtime.Value{Type: 9, IntVal: 785089286, UnsafePtr: unsafe.Pointer((&Constructor_Main_WithArgHasEmptySuper[uint32]{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{}
 		}), gopurs_runtime.Value{Type: 9, IntVal: int64(60647608), UnsafePtr: nil}}))}
 	})
@@ -161,7 +161,7 @@ var once_Main_eqCheck sync.Once
 
 func Get_Main_eqCheck() gopurs_runtime.Value {
 	once_Main_eqCheck.Do(func() {
-		cache_Main_eqCheck = gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer((&Constructor_Data_Eq_Eq{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_eqCheck = gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer((&Constructor_Data_Eq_Eq[uint32]{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(y_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Bool(true)
 			})
@@ -258,13 +258,13 @@ type Constructor_Main_Check struct {
 	Rc uint32
 }
 
-type Constructor_Main_WithArgEmpty struct {
+type Constructor_Main_WithArgEmpty[T_t any] struct {
 	Rc uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[207373949] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_WithArgEmpty)(ptr)
+		c := (*Constructor_Main_WithArgEmpty[any])(ptr)
 		_ = c
 		switch key {
 
@@ -274,7 +274,7 @@ func init() {
 	}
 }
 
-type Constructor_Main_WithArgHasEmptySuper struct {
+type Constructor_Main_WithArgHasEmptySuper[T_t any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 	V1 gopurs_runtime.Value
@@ -282,7 +282,7 @@ type Constructor_Main_WithArgHasEmptySuper struct {
 
 func init() {
 	gopurs_runtime.StructGetters[785089286] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_WithArgHasEmptySuper)(ptr)
+		c := (*Constructor_Main_WithArgHasEmptySuper[any])(ptr)
 		_ = c
 		switch key {
 		case "WithArgEmpty0":

@@ -49,7 +49,7 @@ var once_Main_Nil sync.Once
 
 func Get_Main_Nil() gopurs_runtime.Value {
 	once_Main_Nil.Do(func() {
-		cache_Main_Nil = gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons)(nil))}
+		cache_Main_Nil = gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons[gopurs_runtime.Value])(nil))}
 	})
 	return cache_Main_Nil
 }
@@ -61,7 +61,7 @@ func Get_Main_Cons() gopurs_runtime.Value {
 	once_Main_Cons.Do(func() {
 		cache_Main_Cons = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(value1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((&Constructor_Main_Cons{1, value0, gopurs_runtime.CoerceToStruct[Constructor_Main_Cons](value1)}))}
+				return gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((&Constructor_Main_Cons[gopurs_runtime.Value]{1, value0, gopurs_runtime.CoerceToStruct[Constructor_Main_Cons[gopurs_runtime.Value]](value1)}))}
 			})
 		})
 	})
@@ -283,7 +283,7 @@ var once_Main_eqList1 sync.Once
 
 func Get_Main_eqList1() gopurs_runtime.Value {
 	once_Main_eqList1.Do(func() {
-		cache_Main_eqList1 = gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer((&Constructor_Data_Eq_Eq{1, gopurs_runtime.Func(func(xs_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_eqList1 = gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer((&Constructor_Data_Eq_Eq[*Constructor_Main_Cons[int64]]{1, gopurs_runtime.Func(func(xs_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(ys_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				var go__go_2_0_1 gopurs_runtime.Value
 				_ = go__go_2_0_1
@@ -308,14 +308,14 @@ func Get_Main_eqList1() gopurs_runtime.Value {
 								}
 							}
 							{
-								__t1 = (v_3.Type == 9 && v_3.IntVal == 322902991 && v_3.UnsafePtr != nil) && ((v1_4.Type == 9 && v1_4.IntVal == 322902991 && v1_4.UnsafePtr != nil) && ((gopurs_runtime.Apply3(go__go_2_0_1, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons)(v_3.UnsafePtr).V1)}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons)(v1_4.UnsafePtr).V1)}, gopurs_runtime.Bool(((v2_5.IntVal) != (0)) && (((*Constructor_Main_Cons)(v1_4.UnsafePtr).V0.IntVal) == ((*Constructor_Main_Cons)(v_3.UnsafePtr).V0.IntVal)))).IntVal) != (0)))
+								__t1 = (v_3.Type == 9 && v_3.IntVal == 322902991 && v_3.UnsafePtr != nil) && ((v1_4.Type == 9 && v1_4.IntVal == 322902991 && v1_4.UnsafePtr != nil) && ((gopurs_runtime.Apply3(go__go_2_0_1, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons[gopurs_runtime.Value])(v_3.UnsafePtr).V1)}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons[gopurs_runtime.Value])(v1_4.UnsafePtr).V1)}, gopurs_runtime.Bool(((v2_5.IntVal) != (0)) && (((*Constructor_Main_Cons[gopurs_runtime.Value])(v1_4.UnsafePtr).V0.IntVal) == ((*Constructor_Main_Cons[gopurs_runtime.Value])(v_3.UnsafePtr).V0.IntVal)))).IntVal) != (0)))
 							}
 						end_branch_1:
 							return gopurs_runtime.Bool(__t1)
 						})
 					})
 				})
-				return gopurs_runtime.Bool((gopurs_runtime.Apply3(go__go_2_0_1, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_Cons](xs_0))}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_Cons](ys_1))}, gopurs_runtime.Bool(true)).IntVal) != (0))
+				return gopurs_runtime.Bool((gopurs_runtime.Apply3(go__go_2_0_1, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_Cons[gopurs_runtime.Value]](xs_0))}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_Cons[gopurs_runtime.Value]](ys_1))}, gopurs_runtime.Bool(true)).IntVal) != (0))
 			})
 		})}))}
 	})
@@ -351,14 +351,14 @@ func Get_Main_patternDoWithInfixOp() gopurs_runtime.Value {
 							}
 						}
 						{
-							__t1 = (v_1.Type == 9 && v_1.IntVal == 322902991 && v_1.UnsafePtr != nil) && ((v1_2.Type == 9 && v1_2.IntVal == 322902991 && v1_2.UnsafePtr != nil) && ((gopurs_runtime.Apply3(go__go_0_0_2, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons)(v_1.UnsafePtr).V1)}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons)(v1_2.UnsafePtr).V1)}, gopurs_runtime.Bool(((v2_3.IntVal) != (0)) && (((*Constructor_Main_Cons)(v1_2.UnsafePtr).V0.IntVal) == ((*Constructor_Main_Cons)(v_1.UnsafePtr).V0.IntVal)))).IntVal) != (0)))
+							__t1 = (v_1.Type == 9 && v_1.IntVal == 322902991 && v_1.UnsafePtr != nil) && ((v1_2.Type == 9 && v1_2.IntVal == 322902991 && v1_2.UnsafePtr != nil) && ((gopurs_runtime.Apply3(go__go_0_0_2, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons[gopurs_runtime.Value])(v_1.UnsafePtr).V1)}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons[gopurs_runtime.Value])(v1_2.UnsafePtr).V1)}, gopurs_runtime.Bool(((v2_3.IntVal) != (0)) && (((*Constructor_Main_Cons[gopurs_runtime.Value])(v1_2.UnsafePtr).V0.IntVal) == ((*Constructor_Main_Cons[gopurs_runtime.Value])(v_1.UnsafePtr).V0.IntVal)))).IntVal) != (0)))
 						}
 					end_branch_1:
 						return gopurs_runtime.Bool(__t1)
 					})
 				})
 			})
-			return gopurs_runtime.Bool((gopurs_runtime.Apply3(go__go_0_0_2, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((&Constructor_Main_Cons{1, gopurs_runtime.Int(2), (&Constructor_Main_Cons{1, gopurs_runtime.Int(3), (&Constructor_Main_Cons{1, gopurs_runtime.Int(4), (*Constructor_Main_Cons)(nil)})})}))}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((&Constructor_Main_Cons{1, gopurs_runtime.Int(2), (&Constructor_Main_Cons{1, gopurs_runtime.Int(3), (&Constructor_Main_Cons{1, gopurs_runtime.Int(4), (*Constructor_Main_Cons)(nil)})})}))}, gopurs_runtime.Bool(true)).IntVal) != (0))
+			return gopurs_runtime.Bool((gopurs_runtime.Apply3(go__go_0_0_2, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((&Constructor_Main_Cons[gopurs_runtime.Value]{1, gopurs_runtime.Int(2), (&Constructor_Main_Cons[gopurs_runtime.Value]{1, gopurs_runtime.Int(3), (&Constructor_Main_Cons[gopurs_runtime.Value]{1, gopurs_runtime.Int(4), (*Constructor_Main_Cons[gopurs_runtime.Value])(nil)})})}))}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((&Constructor_Main_Cons[int64]{1, gopurs_runtime.Int(2), (&Constructor_Main_Cons[gopurs_runtime.Value]{1, gopurs_runtime.Int(3), (&Constructor_Main_Cons[gopurs_runtime.Value]{1, gopurs_runtime.Int(4), (*Constructor_Main_Cons[gopurs_runtime.Value])(nil)})})}))}, gopurs_runtime.Bool(true)).IntVal) != (0))
 		})
 	})
 	return cache_Main_patternDoWithInfixOp
@@ -393,14 +393,14 @@ func Get_Main_patternWithInfixOp() gopurs_runtime.Value {
 							}
 						}
 						{
-							__t1 = (v_1.Type == 9 && v_1.IntVal == 322902991 && v_1.UnsafePtr != nil) && ((v1_2.Type == 9 && v1_2.IntVal == 322902991 && v1_2.UnsafePtr != nil) && ((gopurs_runtime.Apply3(go__go_0_0_3, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons)(v_1.UnsafePtr).V1)}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons)(v1_2.UnsafePtr).V1)}, gopurs_runtime.Bool(((v2_3.IntVal) != (0)) && (((*Constructor_Main_Cons)(v1_2.UnsafePtr).V0.IntVal) == ((*Constructor_Main_Cons)(v_1.UnsafePtr).V0.IntVal)))).IntVal) != (0)))
+							__t1 = (v_1.Type == 9 && v_1.IntVal == 322902991 && v_1.UnsafePtr != nil) && ((v1_2.Type == 9 && v1_2.IntVal == 322902991 && v1_2.UnsafePtr != nil) && ((gopurs_runtime.Apply3(go__go_0_0_3, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons[gopurs_runtime.Value])(v_1.UnsafePtr).V1)}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons[gopurs_runtime.Value])(v1_2.UnsafePtr).V1)}, gopurs_runtime.Bool(((v2_3.IntVal) != (0)) && (((*Constructor_Main_Cons[gopurs_runtime.Value])(v1_2.UnsafePtr).V0.IntVal) == ((*Constructor_Main_Cons[gopurs_runtime.Value])(v_1.UnsafePtr).V0.IntVal)))).IntVal) != (0)))
 						}
 					end_branch_1:
 						return gopurs_runtime.Bool(__t1)
 					})
 				})
 			})
-			return gopurs_runtime.Bool((gopurs_runtime.Apply3(go__go_0_0_3, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((&Constructor_Main_Cons{1, gopurs_runtime.Int(2), (&Constructor_Main_Cons{1, gopurs_runtime.Int(3), (&Constructor_Main_Cons{1, gopurs_runtime.Int(4), (*Constructor_Main_Cons)(nil)})})}))}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((&Constructor_Main_Cons{1, gopurs_runtime.Int(2), (&Constructor_Main_Cons{1, gopurs_runtime.Int(3), (&Constructor_Main_Cons{1, gopurs_runtime.Int(4), (*Constructor_Main_Cons)(nil)})})}))}, gopurs_runtime.Bool(true)).IntVal) != (0))
+			return gopurs_runtime.Bool((gopurs_runtime.Apply3(go__go_0_0_3, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((&Constructor_Main_Cons[gopurs_runtime.Value]{1, gopurs_runtime.Int(2), (&Constructor_Main_Cons[gopurs_runtime.Value]{1, gopurs_runtime.Int(3), (&Constructor_Main_Cons[gopurs_runtime.Value]{1, gopurs_runtime.Int(4), (*Constructor_Main_Cons[gopurs_runtime.Value])(nil)})})}))}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((&Constructor_Main_Cons[int64]{1, gopurs_runtime.Int(2), (&Constructor_Main_Cons[gopurs_runtime.Value]{1, gopurs_runtime.Int(3), (&Constructor_Main_Cons[gopurs_runtime.Value]{1, gopurs_runtime.Int(4), (*Constructor_Main_Cons[gopurs_runtime.Value])(nil)})})}))}, gopurs_runtime.Bool(true)).IntVal) != (0))
 		}()
 	})
 	return cache_Main_patternWithInfixOp
@@ -412,7 +412,7 @@ var once_Main_main sync.Once
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
 			__local_var_0_0 := gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("simple variable pattern"), gopurs_runtime.Bool(true))
 			_ = __local_var_0_0
 			_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
@@ -488,14 +488,14 @@ type Constructor_Main_Y struct {
 	V2 bool
 }
 
-type Constructor_Main_Nil struct {
+type Constructor_Main_Nil[T_a any] struct {
 	Rc uint32
 }
 
-type Constructor_Main_Cons struct {
+type Constructor_Main_Cons[T_a any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
-	V1 *Constructor_Main_Cons
+	V1 *Constructor_Main_Cons[gopurs_runtime.Value]
 }
 
 func Call_Main_X(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
@@ -507,7 +507,7 @@ func Call_Main_X(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 func Call_Main_eqList(dictEq_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var dictEq_0 gopurs_runtime.Value = dictEq_0_loop
 	_ = dictEq_0
-	return gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer((&Constructor_Data_Eq_Eq{1, gopurs_runtime.Func(func(xs_1 gopurs_runtime.Value) gopurs_runtime.Value {
+	return gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer((&Constructor_Data_Eq_Eq[*Constructor_Main_Cons[gopurs_runtime.Value]]{1, gopurs_runtime.Func(func(xs_1 gopurs_runtime.Value) gopurs_runtime.Value {
 		return gopurs_runtime.Func(func(ys_2 gopurs_runtime.Value) gopurs_runtime.Value {
 			var go__go_3_0_0 gopurs_runtime.Value
 			_ = go__go_3_0_0
@@ -532,14 +532,14 @@ func Call_Main_eqList(dictEq_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 							}
 						}
 						{
-							__t1 = (v_4.Type == 9 && v_4.IntVal == 322902991 && v_4.UnsafePtr != nil) && ((v1_5.Type == 9 && v1_5.IntVal == 322902991 && v1_5.UnsafePtr != nil) && ((gopurs_runtime.Apply3(go__go_3_0_0, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons)(v_4.UnsafePtr).V1)}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons)(v1_5.UnsafePtr).V1)}, gopurs_runtime.Bool(((v2_6.IntVal) != (0)) && ((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(dictEq_0, "eq"), (*Constructor_Main_Cons)(v1_5.UnsafePtr).V0, (*Constructor_Main_Cons)(v_4.UnsafePtr).V0).IntVal) != (0)))).IntVal) != (0)))
+							__t1 = (v_4.Type == 9 && v_4.IntVal == 322902991 && v_4.UnsafePtr != nil) && ((v1_5.Type == 9 && v1_5.IntVal == 322902991 && v1_5.UnsafePtr != nil) && ((gopurs_runtime.Apply3(go__go_3_0_0, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons[gopurs_runtime.Value])(v_4.UnsafePtr).V1)}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons[gopurs_runtime.Value])(v1_5.UnsafePtr).V1)}, gopurs_runtime.Bool(((v2_6.IntVal) != (0)) && ((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(dictEq_0, "eq"), (*Constructor_Main_Cons[gopurs_runtime.Value])(v1_5.UnsafePtr).V0, (*Constructor_Main_Cons[gopurs_runtime.Value])(v_4.UnsafePtr).V0).IntVal) != (0)))).IntVal) != (0)))
 						}
 					end_branch_1:
 						return gopurs_runtime.Bool(__t1)
 					})
 				})
 			})
-			return gopurs_runtime.Bool((gopurs_runtime.Apply3(go__go_3_0_0, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_Cons](xs_1))}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_Cons](ys_2))}, gopurs_runtime.Bool(true)).IntVal) != (0))
+			return gopurs_runtime.Bool((gopurs_runtime.Apply3(go__go_3_0_0, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_Cons[gopurs_runtime.Value]](xs_1))}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_Cons[gopurs_runtime.Value]](ys_2))}, gopurs_runtime.Bool(true)).IntVal) != (0))
 		})
 	})}))}
 }

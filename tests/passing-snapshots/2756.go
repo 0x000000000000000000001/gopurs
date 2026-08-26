@@ -46,21 +46,7 @@ var once_Main_sampleC sync.Once
 
 func Get_Main_sampleC() gopurs_runtime.Value {
 	once_Main_sampleC.Do(func() {
-		cache_Main_sampleC = func() gopurs_runtime.Value {
-			orig := func() *struct {
-				pu gopurs_runtime.Value
-			} {
-				orig := gopurs_runtime.RecordDict1("pu", Get_Main_pu())
-				_ = orig
-				clone := struct {
-					pu gopurs_runtime.Value
-				}{}
-				clone.pu = gopurs_runtime.RecordGet(orig, "pu")
-				return &clone
-			}()
-			_ = orig
-			return gopurs_runtime.RecordDict([]string{"pu"}, []gopurs_runtime.Value{orig.pu})
-		}()
+		cache_Main_sampleC = gopurs_runtime.RecordDict1("pu", Get_Main_pu())
 	})
 	return cache_Main_sampleC
 }
@@ -70,21 +56,7 @@ var once_Main_sampleIdC sync.Once
 
 func Get_Main_sampleIdC() gopurs_runtime.Value {
 	once_Main_sampleIdC.Do(func() {
-		cache_Main_sampleIdC = func() gopurs_runtime.Value {
-			orig := func() *struct {
-				pu gopurs_runtime.Value
-			} {
-				orig := gopurs_runtime.RecordDict1("pu", Get_Main_pu())
-				_ = orig
-				clone := struct {
-					pu gopurs_runtime.Value
-				}{}
-				clone.pu = gopurs_runtime.RecordGet(orig, "pu")
-				return &clone
-			}()
-			_ = orig
-			return gopurs_runtime.RecordDict([]string{"pu"}, []gopurs_runtime.Value{orig.pu})
-		}()
+		cache_Main_sampleIdC = gopurs_runtime.RecordDict1("pu", Get_Main_pu())
 	})
 	return cache_Main_sampleIdC
 }
