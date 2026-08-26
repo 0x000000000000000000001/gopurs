@@ -11,7 +11,7 @@ var once_Main_N sync.Once
 
 func Get_Main_N() gopurs_runtime.Value {
 	once_Main_N.Do(func() {
-		cache_Main_N = gopurs_runtime.Value{Type: 9, IntVal: 2406916180, UnsafePtr: unsafe.Pointer((*Constructor_Main_J)(nil))}
+		cache_Main_N = gopurs_runtime.Value{Type: 9, IntVal: 2406916180, UnsafePtr: unsafe.Pointer((*Constructor_Main_J[gopurs_runtime.Value])(nil))}
 	})
 	return cache_Main_N
 }
@@ -22,7 +22,7 @@ var once_Main_J sync.Once
 func Get_Main_J() gopurs_runtime.Value {
 	once_Main_J.Do(func() {
 		cache_Main_J = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 2406916180, UnsafePtr: unsafe.Pointer((&Constructor_Main_J{1, value0}))}
+			return gopurs_runtime.Value{Type: 9, IntVal: 2406916180, UnsafePtr: unsafe.Pointer((&Constructor_Main_J[gopurs_runtime.Value]{1, value0}))}
 		})
 	})
 	return cache_Main_J
@@ -64,7 +64,7 @@ var once_Main_h sync.Once
 func Get_Main_h() gopurs_runtime.Value {
 	once_Main_h.Do(func() {
 		cache_Main_h = gopurs_runtime.Func3(func(v_0_box gopurs_runtime.Value, v1_1_box gopurs_runtime.Value, v2_2_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 2406916180, UnsafePtr: unsafe.Pointer(Call_Main_h(v_0_box, gopurs_runtime.CoerceToStruct[Constructor_Main_J](v1_1_box), gopurs_runtime.CoerceToStruct[Constructor_Main_J](v2_2_box)))}
+			return gopurs_runtime.Value{Type: 9, IntVal: 2406916180, UnsafePtr: unsafe.Pointer(Call_Main_h(v_0_box, gopurs_runtime.CoerceToStruct[Constructor_Main_J[gopurs_runtime.Value]](v1_1_box), gopurs_runtime.CoerceToStruct[Constructor_Main_J[gopurs_runtime.Value]](v2_2_box)))}
 		})
 	})
 	return cache_Main_h
@@ -104,11 +104,11 @@ func Get_Main_main() gopurs_runtime.Value {
 	return cache_Main_main
 }
 
-type Constructor_Main_N struct {
+type Constructor_Main_N[T_a any] struct {
 	Rc uint32
 }
 
-type Constructor_Main_J struct {
+type Constructor_Main_J[T_a any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 }
@@ -125,14 +125,14 @@ type Constructor_Main_C struct {
 	Rc uint32
 }
 
-func Call_Main_h(v_0_loop gopurs_runtime.Value, v1_1_loop *Constructor_Main_J, v2_2_loop *Constructor_Main_J) *Constructor_Main_J {
+func Call_Main_h(v_0_loop gopurs_runtime.Value, v1_1_loop *Constructor_Main_J[gopurs_runtime.Value], v2_2_loop *Constructor_Main_J[gopurs_runtime.Value]) *Constructor_Main_J[gopurs_runtime.Value] {
 	var v_0 gopurs_runtime.Value = v_0_loop
 	_ = v_0
-	var v1_1 *Constructor_Main_J = v1_1_loop
+	var v1_1 *Constructor_Main_J[gopurs_runtime.Value] = v1_1_loop
 	_ = v1_1
-	var v2_2 *Constructor_Main_J = v2_2_loop
+	var v2_2 *Constructor_Main_J[gopurs_runtime.Value] = v2_2_loop
 	_ = v2_2
-	var __t0 *Constructor_Main_J
+	var __t0 *Constructor_Main_J[gopurs_runtime.Value]
 	{
 		if v1_1 == nil {
 			__t0 = v2_2
@@ -151,14 +151,14 @@ func Call_Main_h(v_0_loop gopurs_runtime.Value, v1_1_loop *Constructor_Main_J, v
 	}
 	{
 		if (v1_1 != nil) && (v2_2 != nil) {
-			__t0 = (&Constructor_Main_J{1, gopurs_runtime.Apply2(v_0, (v1_1).V0, (v2_2).V0)})
+			__t0 = (&Constructor_Main_J[gopurs_runtime.Value]{1, gopurs_runtime.Apply2(v_0, (v1_1).V0, (v2_2).V0)})
 			goto end_branch_0
 		} else {
 
 		}
 	}
 	{
-		__t0 = gopurs_runtime.CoerceToStruct[Constructor_Main_J](func() gopurs_runtime.Value { panic("Failed pattern match") }())
+		__t0 = gopurs_runtime.CoerceToStruct[Constructor_Main_J[gopurs_runtime.Value]](func() gopurs_runtime.Value { panic("Failed pattern match") }())
 	}
 end_branch_0:
 	return __t0

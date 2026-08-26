@@ -48,8 +48,60 @@ func Get_Main_main() gopurs_runtime.Value {
 			return gopurs_runtime.Apply2(Get_Effect_Aff__bind(), gopurs_runtime.Apply(Get_Effect_Aff__liftEffect(), Get_Effect_AVar_empty()), gopurs_runtime.Func(func(avar_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Apply2(Get_Effect_Aff__bind(), gopurs_runtime.Apply(Get_Effect_Aff_forkAff(), Call_Main_consumer(avar_1)), gopurs_runtime.Func(func(f1_2 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Apply2(Get_Effect_Aff__bind(), gopurs_runtime.Apply(Get_Effect_Aff_forkAff(), Call_Main_producer(avar_1)), gopurs_runtime.Func(func(f2_3 gopurs_runtime.Value) gopurs_runtime.Value {
-						return gopurs_runtime.Apply2(Get_Effect_Aff__bind(), gopurs_runtime.Apply(Get_Effect_Aff_joinFiber(), f1_2), gopurs_runtime.Func(func(_dollar___unused_4 gopurs_runtime.Value) gopurs_runtime.Value {
-							return gopurs_runtime.Apply2(Get_Effect_Aff__bind(), gopurs_runtime.Apply(Get_Effect_Aff_joinFiber(), f2_3), gopurs_runtime.Func(func(_dollar___unused_5 gopurs_runtime.Value) gopurs_runtime.Value {
+						return gopurs_runtime.Apply2(Get_Effect_Aff__bind(), gopurs_runtime.Apply(Get_Effect_Aff_joinFiber(), func() gopurs_runtime.Value {
+							orig := func() *struct {
+								isSuspended gopurs_runtime.Value
+								join        gopurs_runtime.Value
+								kill        gopurs_runtime.Value
+								onComplete  gopurs_runtime.Value
+								run         gopurs_runtime.Value
+							} {
+								orig := f1_2
+								_ = orig
+								clone := struct {
+									isSuspended gopurs_runtime.Value
+									join        gopurs_runtime.Value
+									kill        gopurs_runtime.Value
+									onComplete  gopurs_runtime.Value
+									run         gopurs_runtime.Value
+								}{}
+								clone.isSuspended = gopurs_runtime.RecordGet(orig, "isSuspended")
+								clone.join = gopurs_runtime.RecordGet(orig, "join")
+								clone.kill = gopurs_runtime.RecordGet(orig, "kill")
+								clone.onComplete = gopurs_runtime.RecordGet(orig, "onComplete")
+								clone.run = gopurs_runtime.RecordGet(orig, "run")
+								return &clone
+							}()
+							_ = orig
+							return gopurs_runtime.RecordDict([]string{"isSuspended", "join", "kill", "onComplete", "run"}, []gopurs_runtime.Value{orig.isSuspended, orig.join, orig.kill, orig.onComplete, orig.run})
+						}()), gopurs_runtime.Func(func(_dollar___unused_4 gopurs_runtime.Value) gopurs_runtime.Value {
+							return gopurs_runtime.Apply2(Get_Effect_Aff__bind(), gopurs_runtime.Apply(Get_Effect_Aff_joinFiber(), func() gopurs_runtime.Value {
+								orig := func() *struct {
+									isSuspended gopurs_runtime.Value
+									join        gopurs_runtime.Value
+									kill        gopurs_runtime.Value
+									onComplete  gopurs_runtime.Value
+									run         gopurs_runtime.Value
+								} {
+									orig := f2_3
+									_ = orig
+									clone := struct {
+										isSuspended gopurs_runtime.Value
+										join        gopurs_runtime.Value
+										kill        gopurs_runtime.Value
+										onComplete  gopurs_runtime.Value
+										run         gopurs_runtime.Value
+									}{}
+									clone.isSuspended = gopurs_runtime.RecordGet(orig, "isSuspended")
+									clone.join = gopurs_runtime.RecordGet(orig, "join")
+									clone.kill = gopurs_runtime.RecordGet(orig, "kill")
+									clone.onComplete = gopurs_runtime.RecordGet(orig, "onComplete")
+									clone.run = gopurs_runtime.RecordGet(orig, "run")
+									return &clone
+								}()
+								_ = orig
+								return gopurs_runtime.RecordDict([]string{"isSuspended", "join", "kill", "onComplete", "run"}, []gopurs_runtime.Value{orig.isSuspended, orig.join, orig.kill, orig.onComplete, orig.run})
+							}()), gopurs_runtime.Func(func(_dollar___unused_5 gopurs_runtime.Value) gopurs_runtime.Value {
 								return gopurs_runtime.Apply(Get_Effect_Aff__liftEffect(), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Test completed.")))
 							}))
 						}))

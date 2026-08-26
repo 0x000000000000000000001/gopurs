@@ -23,7 +23,19 @@ var once_Main_testUnit sync.Once
 
 func Get_Main_testUnit() gopurs_runtime.Value {
 	once_Main_testUnit.Do(func() {
-		cache_Main_testUnit = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(gopurs_runtime.RecordDict0().IntVal)), UnsafePtr: nil}
+		cache_Main_testUnit = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+			orig := func() *struct {
+			} {
+				orig := gopurs_runtime.RecordDict0()
+				_ = orig
+				clone := struct {
+				}{}
+
+				return &clone
+			}()
+			_ = orig
+			return gopurs_runtime.RecordDict([]string{}, []gopurs_runtime.Value{})
+		}().IntVal)), UnsafePtr: nil}
 	})
 	return cache_Main_testUnit
 }
@@ -40,16 +52,6 @@ func Get_Main_test() gopurs_runtime.Value {
 	return cache_Main_test
 }
 
-var cache_Main_main gopurs_runtime.Value
-var once_Main_main sync.Once
-
-func Get_Main_main() gopurs_runtime.Value {
-	once_Main_main.Do(func() {
-		cache_Main_main = gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Str("Done").StrVal()))
-	})
-	return cache_Main_main
-}
-
 var cache_Main_test__3373544390 gopurs_runtime.Value
 var once_Main_test__3373544390 sync.Once
 
@@ -62,13 +64,23 @@ func Get_Main_test__3373544390() gopurs_runtime.Value {
 	return cache_Main_test__3373544390
 }
 
-type Constructor_Main_Test struct {
+var cache_Main_main gopurs_runtime.Value
+var once_Main_main sync.Once
+
+func Get_Main_main() gopurs_runtime.Value {
+	once_Main_main.Do(func() {
+		cache_Main_main = gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Str("Done").StrVal()))
+	})
+	return cache_Main_main
+}
+
+type Constructor_Main_Test[T_a any] struct {
 	Rc uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[3423238824] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_Test)(ptr)
+		c := (*Constructor_Main_Test[any])(ptr)
 		_ = c
 		switch key {
 

@@ -23,7 +23,7 @@ var once_Main_pointedArray sync.Once
 
 func Get_Main_pointedArray() gopurs_runtime.Value {
 	once_Main_pointedArray.Do(func() {
-		cache_Main_pointedArray = gopurs_runtime.Value{Type: 9, IntVal: 4236620371, UnsafePtr: unsafe.Pointer((&Constructor_Main_Pointed{1, gopurs_runtime.Func(func(a_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_pointedArray = gopurs_runtime.Value{Type: 9, IntVal: 4236620371, UnsafePtr: unsafe.Pointer((&Constructor_Main_Pointed[gopurs_runtime.Value]{1, gopurs_runtime.Func(func(a_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Array(func() []gopurs_runtime.Value {
 				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array([]gopurs_runtime.Value{a_0}).UnsafePtr)
 				unboxed := make([]gopurs_runtime.Value, len(arr))
@@ -43,7 +43,7 @@ var once_Main_point sync.Once
 func Get_Main_point() gopurs_runtime.Value {
 	once_Main_point.Do(func() {
 		cache_Main_point = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_point(gopurs_runtime.CoerceToStruct[Constructor_Main_Pointed](dict_0_box))
+			return Call_Main_point(gopurs_runtime.CoerceToStruct[Constructor_Main_Pointed[gopurs_runtime.Value]](dict_0_box))
 		})
 	})
 	return cache_Main_point
@@ -59,14 +59,14 @@ func Get_Main_main() gopurs_runtime.Value {
 	return cache_Main_main
 }
 
-type Constructor_Main_Pointed struct {
+type Constructor_Main_Pointed[T_p any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 }
 
 func init() {
 	gopurs_runtime.StructGetters[4236620371] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_Pointed)(ptr)
+		c := (*Constructor_Main_Pointed[any])(ptr)
 		_ = c
 		switch key {
 		case "point":
@@ -83,8 +83,8 @@ func Call_Main_Pointed_dollar_Dict(x_0_loop gopurs_runtime.Value) gopurs_runtime
 	return x_0
 }
 
-func Call_Main_point(dict_0_loop *Constructor_Main_Pointed) gopurs_runtime.Value {
-	var dict_0 *Constructor_Main_Pointed = dict_0_loop
+func Call_Main_point(dict_0_loop *Constructor_Main_Pointed[gopurs_runtime.Value]) gopurs_runtime.Value {
+	var dict_0 *Constructor_Main_Pointed[gopurs_runtime.Value] = dict_0_loop
 	_ = dict_0
 	return gopurs_runtime.Box(dict_0.V0)
 }

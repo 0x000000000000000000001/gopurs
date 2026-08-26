@@ -23,7 +23,19 @@ var once_Main_errorSemigroupMaybeMaybe sync.Once
 
 func Get_Main_errorSemigroupMaybeMaybe() gopurs_runtime.Value {
 	once_Main_errorSemigroupMaybeMaybe.Do(func() {
-		cache_Main_errorSemigroupMaybeMaybe = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(gopurs_runtime.RecordDict0().IntVal)), UnsafePtr: nil}
+		cache_Main_errorSemigroupMaybeMaybe = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+			orig := func() *struct {
+			} {
+				orig := gopurs_runtime.RecordDict0()
+				_ = orig
+				clone := struct {
+				}{}
+
+				return &clone
+			}()
+			_ = orig
+			return gopurs_runtime.RecordDict([]string{}, []gopurs_runtime.Value{})
+		}().IntVal)), UnsafePtr: nil}
 	})
 	return cache_Main_errorSemigroupMaybeMaybe
 }
@@ -33,7 +45,19 @@ var once_Main_errorSemigroupIdentityIde sync.Once
 
 func Get_Main_errorSemigroupIdentityIde() gopurs_runtime.Value {
 	once_Main_errorSemigroupIdentityIde.Do(func() {
-		cache_Main_errorSemigroupIdentityIde = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(gopurs_runtime.RecordDict0().IntVal)), UnsafePtr: nil}
+		cache_Main_errorSemigroupIdentityIde = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+			orig := func() *struct {
+			} {
+				orig := gopurs_runtime.RecordDict0()
+				_ = orig
+				clone := struct {
+				}{}
+
+				return &clone
+			}()
+			_ = orig
+			return gopurs_runtime.RecordDict([]string{}, []gopurs_runtime.Value{})
+		}().IntVal)), UnsafePtr: nil}
 	})
 	return cache_Main_errorSemigroupIdentityIde
 }
@@ -48,13 +72,13 @@ func Get_Main_main() gopurs_runtime.Value {
 	return cache_Main_main
 }
 
-type Constructor_Main_ErrorSemigroup struct {
+type Constructor_Main_ErrorSemigroup[T_o any, T_m any, T_w any] struct {
 	Rc uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[246409291] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_ErrorSemigroup)(ptr)
+		c := (*Constructor_Main_ErrorSemigroup[any, any, any])(ptr)
 		_ = c
 		switch key {
 

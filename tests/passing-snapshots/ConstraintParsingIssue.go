@@ -40,13 +40,13 @@ func Get_Main_main() gopurs_runtime.Value {
 	return cache_Main_main
 }
 
-type Constructor_Main_X struct {
+type Constructor_Main_X[T_a any] struct {
 	Rc uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[1409933510] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_X)(ptr)
+		c := (*Constructor_Main_X[any])(ptr)
 		_ = c
 		switch key {
 
@@ -65,5 +65,17 @@ func Call_Main_X_dollar_Dict(x1_0_loop gopurs_runtime.Value) gopurs_runtime.Valu
 func Call_Main_x(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
-	return gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(gopurs_runtime.RecordDict0().IntVal)), UnsafePtr: nil}
+	return gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		orig := func() *struct {
+		} {
+			orig := gopurs_runtime.RecordDict0()
+			_ = orig
+			clone := struct {
+			}{}
+
+			return &clone
+		}()
+		_ = orig
+		return gopurs_runtime.RecordDict([]string{}, []gopurs_runtime.Value{})
+	}().IntVal)), UnsafePtr: nil}
 }

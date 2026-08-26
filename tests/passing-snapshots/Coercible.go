@@ -431,7 +431,7 @@ func Get_Main_MyMap() gopurs_runtime.Value {
 	once_Main_MyMap.Do(func() {
 		cache_Main_MyMap = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(value1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Value{Type: 9, IntVal: 899776310, UnsafePtr: unsafe.Pointer((&Constructor_Main_MyMap{1, value0, value1}))}
+				return gopurs_runtime.Value{Type: 9, IntVal: 899776310, UnsafePtr: unsafe.Pointer((&Constructor_Main_MyMap[gopurs_runtime.Value, gopurs_runtime.Value]{1, value0, value1}))}
 			})
 		})
 	})
@@ -445,7 +445,7 @@ func Get_Main_MutuallyRecursiveRepresentational1() gopurs_runtime.Value {
 	once_Main_MutuallyRecursiveRepresentational1.Do(func() {
 		cache_Main_MutuallyRecursiveRepresentational1 = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(value1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Value{Type: 9, IntVal: 1482744760, UnsafePtr: unsafe.Pointer((&Constructor_Main_MutuallyRecursiveRepresentational1{1, value0, value1}))}
+				return gopurs_runtime.Value{Type: 9, IntVal: 1482744760, UnsafePtr: unsafe.Pointer((&Constructor_Main_MutuallyRecursiveRepresentational1[gopurs_runtime.Value]{1, value0, value1}))}
 			})
 		})
 	})
@@ -543,7 +543,7 @@ func Get_Main_Constrained2() gopurs_runtime.Value {
 	once_Main_Constrained2.Do(func() {
 		cache_Main_Constrained2 = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(value1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Value{Type: 9, IntVal: 919721180, UnsafePtr: unsafe.Pointer((&Constructor_Main_Constrained2{1, value0, value1}))}
+				return gopurs_runtime.Value{Type: 9, IntVal: 919721180, UnsafePtr: unsafe.Pointer((&Constructor_Main_Constrained2[gopurs_runtime.Value]{1, value0, value1}))}
 			})
 		})
 	})
@@ -569,7 +569,7 @@ func Get_Main_Arr1() gopurs_runtime.Value {
 	once_Main_Arr1.Do(func() {
 		cache_Main_Arr1 = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(value1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Value{Type: 9, IntVal: 2324537070, UnsafePtr: unsafe.Pointer((&Constructor_Main_Arr1{1, func() []gopurs_runtime.Value {
+				return gopurs_runtime.Value{Type: 9, IntVal: 2324537070, UnsafePtr: unsafe.Pointer((&Constructor_Main_Arr1[gopurs_runtime.Value, gopurs_runtime.Value]{1, func() []gopurs_runtime.Value {
 					arr := *(*[]gopurs_runtime.Value)(value0.UnsafePtr)
 					unboxed := make([]gopurs_runtime.Value, len(arr))
 					for i, v := range arr {
@@ -1248,101 +1248,108 @@ func Get_Main_apId1ToApId1() gopurs_runtime.Value {
 	return cache_Main_apId1ToApId1
 }
 
-type Constructor_Main_RoleNotReserved struct {
+type Constructor_Main_RoleNotReserved[T_role any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 }
 
-type Constructor_Main_Rec3 struct {
+type Constructor_Main_Rec3[T_a any] struct {
+	Rc uint32
+	V0 *struct {
+	}
+}
+
+type Constructor_Main_Rec2[T_a any, T_b any] struct {
+	Rc uint32
+	V0 *struct {
+		f gopurs_runtime.Value
+		g int64
+		h gopurs_runtime.Value
+	}
+}
+
+type Constructor_Main_Rec1[T_a any] struct {
+	Rc uint32
+	V0 *struct {
+		f gopurs_runtime.Value
+	}
+}
+
+type Constructor_Main_RankN4[T_z any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 }
 
-type Constructor_Main_Rec2 struct {
+type Constructor_Main_RankN3[T_c any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 }
 
-type Constructor_Main_Rec1 struct {
+type Constructor_Main_RankN2[T_a any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 }
 
-type Constructor_Main_RankN4 struct {
-	Rc uint32
-	V0 gopurs_runtime.Value
-}
-
-type Constructor_Main_RankN3 struct {
-	Rc uint32
-	V0 gopurs_runtime.Value
-}
-
-type Constructor_Main_RankN2 struct {
-	Rc uint32
-	V0 gopurs_runtime.Value
-}
-
-type Constructor_Main_Phantom struct {
+type Constructor_Main_Phantom[T_a any] struct {
 	Rc uint32
 }
 
-type Constructor_Main_MyMap struct {
-	Rc uint32
-	V0 gopurs_runtime.Value
-	V1 gopurs_runtime.Value
-}
-
-type Constructor_Main_MutuallyRecursiveRepresentational1 struct {
-	Rc uint32
-	V0 gopurs_runtime.Value
-	V1 gopurs_runtime.Value
-}
-
-type Constructor_Main_MutuallyRecursiveRepresentational2 struct {
-	Rc uint32
-	V0 *Constructor_Main_MutuallyRecursiveRepresentational1
-}
-
-type Constructor_Main_MutuallyRecursivePhantom1 struct {
-	Rc uint32
-	V0 gopurs_runtime.Value
-}
-
-type Constructor_Main_MutuallyRecursivePhantom2 struct {
-	Rc uint32
-	V0 gopurs_runtime.Value
-}
-
-type Constructor_Main_D struct {
-	Rc uint32
-	V0 gopurs_runtime.Value
-}
-
-type Constructor_Main_Constrained2 struct {
+type Constructor_Main_MyMap[T_k any, T_v any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 	V1 gopurs_runtime.Value
 }
 
-type Constructor_Main_Constrained1 struct {
+type Constructor_Main_MutuallyRecursiveRepresentational1[T_a any] struct {
+	Rc uint32
+	V0 gopurs_runtime.Value
+	V1 gopurs_runtime.Value
+}
+
+type Constructor_Main_MutuallyRecursiveRepresentational2[T_a any] struct {
+	Rc uint32
+	V0 *Constructor_Main_MutuallyRecursiveRepresentational1[gopurs_runtime.Value]
+}
+
+type Constructor_Main_MutuallyRecursivePhantom1[T_a any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 }
 
-type Constructor_Main_Arr1 struct {
+type Constructor_Main_MutuallyRecursivePhantom2[T_a any] struct {
+	Rc uint32
+	V0 gopurs_runtime.Value
+}
+
+type Constructor_Main_D[T_a any, T_b any] struct {
+	Rc uint32
+	V0 gopurs_runtime.Value
+}
+
+type Constructor_Main_Constrained2[T_a any] struct {
+	Rc uint32
+	V0 gopurs_runtime.Value
+	V1 gopurs_runtime.Value
+}
+
+type Constructor_Main_Constrained1[T_a any, T_b any] struct {
+	Rc uint32
+	V0 gopurs_runtime.Value
+}
+
+type Constructor_Main_Arr1[T_a any, T_b any] struct {
 	Rc uint32
 	V0 []gopurs_runtime.Value
 	V1 []gopurs_runtime.Value
 }
 
-type Constructor_Main_Unary struct {
+type Constructor_Main_Unary[T_a any] struct {
 	Rc uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[2271101711] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_Unary)(ptr)
+		c := (*Constructor_Main_Unary[any])(ptr)
 		_ = c
 		switch key {
 

@@ -13,7 +13,7 @@ func Get_Main_Tuple() gopurs_runtime.Value {
 	once_Main_Tuple.Do(func() {
 		cache_Main_Tuple = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(value1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer((&Constructor_Main_Tuple{1, value0, value1}))}
+				return gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer((&Constructor_Main_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{1, value0, value1}))}
 			})
 		})
 	})
@@ -37,9 +37,9 @@ var once_Main_tupleEq1 sync.Once
 
 func Get_Main_tupleEq1() gopurs_runtime.Value {
 	once_Main_tupleEq1.Do(func() {
-		cache_Main_tupleEq1 = gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer((&Constructor_Data_Eq_Eq{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_tupleEq1 = gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer((&Constructor_Data_Eq_Eq[*Constructor_Main_Tuple[string, string]]{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(y_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Bool((((*Constructor_Main_Tuple)(x_0.UnsafePtr).V0.StrVal()) == ((*Constructor_Main_Tuple)(y_1.UnsafePtr).V0.StrVal())) && (((*Constructor_Main_Tuple)(x_0.UnsafePtr).V1.StrVal()) == ((*Constructor_Main_Tuple)(y_1.UnsafePtr).V1.StrVal())))
+				return gopurs_runtime.Bool((((*Constructor_Main_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(x_0.UnsafePtr).V0.StrVal()) == ((*Constructor_Main_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(y_1.UnsafePtr).V0.StrVal())) && (((*Constructor_Main_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(x_0.UnsafePtr).V1.StrVal()) == ((*Constructor_Main_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(y_1.UnsafePtr).V1.StrVal())))
 			})
 		})}))}
 	})
@@ -52,7 +52,7 @@ var once_Main_main sync.Once
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
 			__local_var_0_0 := gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("empty string"), gopurs_runtime.Bool(true))
 			_ = __local_var_0_0
 			_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
@@ -89,7 +89,7 @@ func Get_Main_main() gopurs_runtime.Value {
 	return cache_Main_main
 }
 
-type Constructor_Main_Tuple struct {
+type Constructor_Main_Tuple[T_a any, T_b any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 	V1 gopurs_runtime.Value
@@ -100,9 +100,9 @@ func Call_Main_tupleEq(dictEq_0_loop gopurs_runtime.Value, dictEq1_1_loop gopurs
 	_ = dictEq_0
 	var dictEq1_1 gopurs_runtime.Value = dictEq1_1_loop
 	_ = dictEq1_1
-	return gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer((&Constructor_Data_Eq_Eq{1, gopurs_runtime.Func(func(x_2 gopurs_runtime.Value) gopurs_runtime.Value {
+	return gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer((&Constructor_Data_Eq_Eq[*Constructor_Main_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]]{1, gopurs_runtime.Func(func(x_2 gopurs_runtime.Value) gopurs_runtime.Value {
 		return gopurs_runtime.Func(func(y_3 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Bool(((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(dictEq_0, "eq"), (*Constructor_Main_Tuple)(x_2.UnsafePtr).V0, (*Constructor_Main_Tuple)(y_3.UnsafePtr).V0).IntVal) != (0)) && ((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(dictEq1_1, "eq"), (*Constructor_Main_Tuple)(x_2.UnsafePtr).V1, (*Constructor_Main_Tuple)(y_3.UnsafePtr).V1).IntVal) != (0)))
+			return gopurs_runtime.Bool(((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(dictEq_0, "eq"), (*Constructor_Main_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(x_2.UnsafePtr).V0, (*Constructor_Main_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(y_3.UnsafePtr).V0).IntVal) != (0)) && ((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(dictEq1_1, "eq"), (*Constructor_Main_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(x_2.UnsafePtr).V1, (*Constructor_Main_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(y_3.UnsafePtr).V1).IntVal) != (0)))
 		})
 	})}))}
 }

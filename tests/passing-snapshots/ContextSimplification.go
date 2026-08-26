@@ -36,8 +36,8 @@ var once_Main_main sync.Once
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 shape=App(Var) expectedFromAst=gopurs_runtime.Value actual=gopurs_runtime.Value bindingType=Any
-			__local_var_0_0 := gopurs_runtime.Apply(Call_Main_usesShowTwice(gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show](Get_Data_Show_showString()))}, gopurs_runtime.Bool(true)), gopurs_runtime.Str("Test"))
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
+			__local_var_0_0 := gopurs_runtime.Apply(Call_Main_usesShowTwice(gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[string]](Get_Data_Show_showString()))}, gopurs_runtime.Bool(true)), gopurs_runtime.Str("Test"))
 			_ = __local_var_0_0
 			_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
 			_ = _dollar___unused_1_1
@@ -63,7 +63,7 @@ func Call_Main_usesShowTwice(dictShow_0_loop gopurs_runtime.Value, v_1_loop gopu
 	var __t0 gopurs_runtime.Value
 	{
 		if (v_1.IntVal) != (0) {
-			__t0 = gopurs_runtime.Apply(Get_Main_shout(), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show](dictShow_0))})
+			__t0 = gopurs_runtime.Apply(Get_Main_shout(), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](dictShow_0))})
 			goto end_branch_0
 		} else {
 

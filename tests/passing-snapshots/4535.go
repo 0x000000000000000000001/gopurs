@@ -34,21 +34,7 @@ var once_Main_otherNestingWorks sync.Once
 func Get_Main_otherNestingWorks() gopurs_runtime.Value {
 	once_Main_otherNestingWorks.Do(func() {
 		cache_Main_otherNestingWorks = func() gopurs_runtime.Value {
-			arr := func() []*Constructor_Data_Maybe_Just {
-				arr := *(*[]gopurs_runtime.Value)(func() gopurs_runtime.Value {
-					arr := []*Constructor_Data_Maybe_Just{(&Constructor_Data_Maybe_Just{1, gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer((&Constructor_Data_Tuple_Tuple{1, gopurs_runtime.Int(0), gopurs_runtime.Float(0.0)}))}}), (&Constructor_Data_Maybe_Just{1, gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer((&Constructor_Data_Tuple_Tuple{1, gopurs_runtime.Int(1), gopurs_runtime.Float(1.0)}))}})}
-					boxed := make([]gopurs_runtime.Value, len(arr))
-					for i, v := range arr {
-						boxed[i] = gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(v)}
-					}
-					return gopurs_runtime.Array(boxed)
-				}().UnsafePtr)
-				unboxed := make([]*Constructor_Data_Maybe_Just, len(arr))
-				for i, v := range arr {
-					unboxed[i] = gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just](v)
-				}
-				return unboxed
-			}()
+			arr := []*Constructor_Data_Maybe_Just[*Constructor_Data_Tuple_Tuple[int64, float64]]{(&Constructor_Data_Maybe_Just[*Constructor_Data_Tuple_Tuple[int64, float64]]{1, gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer((&Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{1, gopurs_runtime.Int(0), gopurs_runtime.Float(0.0)}))}}), (&Constructor_Data_Maybe_Just[*Constructor_Data_Tuple_Tuple[int64, float64]]{1, gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer((&Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{1, gopurs_runtime.Int(1), gopurs_runtime.Float(1.0)}))}})}
 			boxed := make([]gopurs_runtime.Value, len(arr))
 			for i, v := range arr {
 				boxed[i] = gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(v)}
@@ -111,30 +97,6 @@ func Get_Main_appNestingWorks() gopurs_runtime.Value {
 	return cache_Main_appNestingWorks
 }
 
-var cache_Main_multiArgument__3939888738 gopurs_runtime.Value
-var once_Main_multiArgument__3939888738 sync.Once
-
-func Get_Main_multiArgument__3939888738() gopurs_runtime.Value {
-	once_Main_multiArgument__3939888738.Do(func() {
-		cache_Main_multiArgument__3939888738 = gopurs_runtime.Func2(func(v_0_box gopurs_runtime.Value, v1_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_multiArgument__3939888738(gopurs_runtime.CoerceToStruct[Constructor_Data_Tuple_Tuple](v_0_box), gopurs_runtime.CoerceToStruct[Constructor_Data_Tuple_Tuple](v1_1_box))
-		})
-	})
-	return cache_Main_multiArgument__3939888738
-}
-
-var cache_Main_singleArgument__968457715 gopurs_runtime.Value
-var once_Main_singleArgument__968457715 sync.Once
-
-func Get_Main_singleArgument__968457715() gopurs_runtime.Value {
-	once_Main_singleArgument__968457715.Do(func() {
-		cache_Main_singleArgument__968457715 = gopurs_runtime.Func(func(v_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_singleArgument__968457715(gopurs_runtime.CoerceToStruct[Constructor_Data_Tuple_Tuple](v_0_box))
-		})
-	})
-	return cache_Main_singleArgument__968457715
-}
-
 func Call_Main_singleArgument(v_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var v_0 gopurs_runtime.Value = v_0_loop
 	_ = v_0
@@ -146,19 +108,5 @@ func Call_Main_multiArgument(v_0_loop gopurs_runtime.Value, v1_1_loop gopurs_run
 	_ = v_0
 	var v1_1 gopurs_runtime.Value = v1_1_loop
 	_ = v1_1
-	return Get_Data_Unit_unit()
-}
-
-func Call_Main_multiArgument__3939888738(v_0_loop *Constructor_Data_Tuple_Tuple, v1_1_loop *Constructor_Data_Tuple_Tuple) gopurs_runtime.Value {
-	var v_0 *Constructor_Data_Tuple_Tuple = v_0_loop
-	_ = v_0
-	var v1_1 *Constructor_Data_Tuple_Tuple = v1_1_loop
-	_ = v1_1
-	return Get_Data_Unit_unit()
-}
-
-func Call_Main_singleArgument__968457715(v_0_loop *Constructor_Data_Tuple_Tuple) gopurs_runtime.Value {
-	var v_0 *Constructor_Data_Tuple_Tuple = v_0_loop
-	_ = v_0
 	return Get_Data_Unit_unit()
 }

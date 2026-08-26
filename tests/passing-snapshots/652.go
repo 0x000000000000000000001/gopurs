@@ -57,7 +57,19 @@ var once_Main_foo sync.Once
 
 func Get_Main_foo() gopurs_runtime.Value {
 	once_Main_foo.Do(func() {
-		cache_Main_foo = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(gopurs_runtime.RecordDict0().IntVal)), UnsafePtr: nil}
+		cache_Main_foo = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+			orig := func() *struct {
+			} {
+				orig := gopurs_runtime.RecordDict0()
+				_ = orig
+				clone := struct {
+				}{}
+
+				return &clone
+			}()
+			_ = orig
+			return gopurs_runtime.RecordDict([]string{}, []gopurs_runtime.Value{})
+		}().IntVal)), UnsafePtr: nil}
 	})
 	return cache_Main_foo
 }
@@ -67,7 +79,19 @@ var once_Main_bar sync.Once
 
 func Get_Main_bar() gopurs_runtime.Value {
 	once_Main_bar.Do(func() {
-		cache_Main_bar = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(gopurs_runtime.RecordDict0().IntVal)), UnsafePtr: nil}
+		cache_Main_bar = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+			orig := func() *struct {
+			} {
+				orig := gopurs_runtime.RecordDict0()
+				_ = orig
+				clone := struct {
+				}{}
+
+				return &clone
+			}()
+			_ = orig
+			return gopurs_runtime.RecordDict([]string{}, []gopurs_runtime.Value{})
+		}().IntVal)), UnsafePtr: nil}
 	})
 	return cache_Main_bar
 }
@@ -84,13 +108,13 @@ func Get_Main_baz() gopurs_runtime.Value {
 	return cache_Main_baz
 }
 
-type Constructor_Main_Foo struct {
+type Constructor_Main_Foo[T_a any, T_b any] struct {
 	Rc uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[2763139640] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_Foo)(ptr)
+		c := (*Constructor_Main_Foo[any, any])(ptr)
 		_ = c
 		switch key {
 
@@ -100,13 +124,13 @@ func init() {
 	}
 }
 
-type Constructor_Main_Bar struct {
+type Constructor_Main_Bar[T_a any, T_c any] struct {
 	Rc uint32
 }
 
 func init() {
 	gopurs_runtime.StructGetters[2512729583] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_Bar)(ptr)
+		c := (*Constructor_Main_Bar[any, any])(ptr)
 		_ = c
 		switch key {
 
@@ -116,7 +140,7 @@ func init() {
 	}
 }
 
-type Constructor_Main_Baz struct {
+type Constructor_Main_Baz[T_a any, T_b any, T_c any] struct {
 	Rc uint32
 	V0 gopurs_runtime.Value
 	V1 gopurs_runtime.Value
@@ -124,7 +148,7 @@ type Constructor_Main_Baz struct {
 
 func init() {
 	gopurs_runtime.StructGetters[2012165095] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_Baz)(ptr)
+		c := (*Constructor_Main_Baz[any, any, any])(ptr)
 		_ = c
 		switch key {
 		case "Bar1":
@@ -158,7 +182,7 @@ func Call_Main_Baz_dollar_Dict(x_0_loop gopurs_runtime.Value) gopurs_runtime.Val
 func Call_Main_baz(dictEq_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var dictEq_0 gopurs_runtime.Value = dictEq_0_loop
 	_ = dictEq_0
-	return gopurs_runtime.Value{Type: 9, IntVal: 2012165095, UnsafePtr: unsafe.Pointer((&Constructor_Main_Baz{1, gopurs_runtime.Func(func(_dollar___unused_1 gopurs_runtime.Value) gopurs_runtime.Value {
+	return gopurs_runtime.Value{Type: 9, IntVal: 2012165095, UnsafePtr: unsafe.Pointer((&Constructor_Main_Baz[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value]{1, gopurs_runtime.Func(func(_dollar___unused_1 gopurs_runtime.Value) gopurs_runtime.Value {
 		return gopurs_runtime.Value{}
 	}), gopurs_runtime.Func(func(_dollar___unused_1 gopurs_runtime.Value) gopurs_runtime.Value {
 		return gopurs_runtime.Value{}

@@ -51,9 +51,12 @@ func Get_Main_exists() gopurs_runtime.Value {
 	return cache_Main_exists
 }
 
-type Constructor_Main_Auto struct {
+type Constructor_Main_Auto[T_s any, T_i any, T_o any] struct {
 	Rc uint32
-	V0 gopurs_runtime.Value
+	V0 *struct {
+		state gopurs_runtime.Value
+		step  gopurs_runtime.Value
+	}
 }
 
 func Call_Main_run(s_0_loop gopurs_runtime.Value, i_1_loop gopurs_runtime.Value) gopurs_runtime.Value {
@@ -73,5 +76,22 @@ func Call_Main_exists(state_0_loop gopurs_runtime.Value, step_1_loop gopurs_runt
 	_ = step_1
 	var f_2 gopurs_runtime.Value = f_2_loop
 	_ = f_2
-	return gopurs_runtime.Apply(f_2, gopurs_runtime.RecordDict2("state", "step", state_0, step_1))
+	return gopurs_runtime.Apply(f_2, func() gopurs_runtime.Value {
+		orig := func() *struct {
+			state gopurs_runtime.Value
+			step  gopurs_runtime.Value
+		} {
+			orig := gopurs_runtime.RecordDict2("state", "step", state_0, step_1)
+			_ = orig
+			clone := struct {
+				state gopurs_runtime.Value
+				step  gopurs_runtime.Value
+			}{}
+			clone.state = gopurs_runtime.RecordGet(orig, "state")
+			clone.step = gopurs_runtime.RecordGet(orig, "step")
+			return &clone
+		}()
+		_ = orig
+		return gopurs_runtime.RecordDict([]string{"state", "step"}, []gopurs_runtime.Value{orig.state, orig.step})
+	}())
 }

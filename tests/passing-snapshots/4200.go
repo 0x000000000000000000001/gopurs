@@ -23,7 +23,7 @@ var once_Main_newtypeNewA_ sync.Once
 
 func Get_Main_newtypeNewA_() gopurs_runtime.Value {
 	once_Main_newtypeNewA_.Do(func() {
-		cache_Main_newtypeNewA_ = gopurs_runtime.Value{Type: 9, IntVal: 3322196858, UnsafePtr: unsafe.Pointer((&Constructor_Data_Newtype_Newtype{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_newtypeNewA_ = gopurs_runtime.Value{Type: 9, IntVal: 3322196858, UnsafePtr: unsafe.Pointer((&Constructor_Data_Newtype_Newtype[gopurs_runtime.Value, uint32]{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{}
 		})}))}
 	})
