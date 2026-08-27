@@ -1,0 +1,9 @@
+@@ -279,6 +279,8 @@
+ coerceGoExpr expr currentType expectedType =
+   if currentType == expectedType then expr
+   else
++    let _ = unsafePerformEffect (Console.log ("coerceGoExpr from " <> goTypeToStr currentType <> " to " <> goTypeToStr expectedType <> " on " <> printGoExpr expr))
++    in
+     boxGoExpr (unboxGoExpr expr expectedType currentType) expectedType
+ 
+ executeIfOpaque :: TcoExpr -> GoExpr -> GoExpr

@@ -50,6 +50,9 @@ printGoExpr expr = case expr of
     case goType of
       TypeRecord fields ->
         "(&" <> String.drop 1 (goTypeToStr goType) <> "{" <> String.joinWith ", " (map (\(Tuple _ v) -> printGoExpr v) props) <> "})"
+      TypeStructPointer _ _ _ _ ->
+        let capitalize s = String.toUpper (String.take 1 s) <> String.drop 1 s
+        in "(&" <> String.drop 1 (goTypeToStr goType) <> "{" <> String.joinWith ", " (map (\(Tuple k v) -> capitalize k <> ": " <> printGoExpr v) props) <> "})"
       _ ->
         case Array.length props of
           0 -> "gopurs_runtime.RecordDict0()"

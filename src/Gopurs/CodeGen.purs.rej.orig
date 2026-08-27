@@ -1,0 +1,8 @@
+@@ -1318,6 +1318,7 @@
+                           Just a -> getExprType (unwrapTcoExpr a)
+                           Nothing -> Any
+                         fExprType = exprTypeToGoType helpers.pointerAdtPaths helpers.enumAdts helpers.elidedCtors modNameStr fType
++                        _ = unsafePerformEffect (Console.log ("_map first arg fType=" <> printExprType fType <> ", fExprType=" <> goTypeToStr fExprType))
+                       in Just { fArgs: [ fExprType, TypeValue ], fRet: TypeValue }
+                     "Effect.Aff._bind" ->
+                       let

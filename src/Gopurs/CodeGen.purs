@@ -106,7 +106,9 @@ exprTypeToGoType ptrPaths enumAdts elided modNameStr (ADT fullName path args) =
   in
   if Set.member monoStructName elided then TypeValue else
   if Set.member fullName enumAdts then TypeUint32
-  else case Map.lookup fullName ptrPaths of
+  else case (case Map.lookup fullName ptrPaths of 
+               Just i -> Just i 
+               Nothing -> Map.lookup (fullName <> "$Dict") ptrPaths) of
   Just info -> 
     let 
       baseStructName = "Data_" <> pkgNameStr <> "_" <> sanitizeName info.ctorName

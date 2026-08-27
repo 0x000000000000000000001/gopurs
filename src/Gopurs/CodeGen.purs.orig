@@ -33,13 +33,13 @@ import Data.Traversable (traverse)
 import PureScript.Backend.Optimizer.Monomorphize (InstantiationMap)
 import PureScript.Backend.Optimizer.Monomorphize as Monomorphize
 import PureScript.Backend.Optimizer.Substitute (unify, substituteExprType, mapTcoExprTypes, substituteAst)
-import Gopurs.GoAst (GoFile, GoDecl, GoExpr(..), GoType(..), goTypeToStr)
+import Gopurs.GoAst (GoFile, GoDecl, GoExpr(..), GoType(..), goTypeToStr, sanitizeName, goRecordStructName)
 
 
 import Gopurs.Printer (printGoFile, printGoExpr, printGoDeclVar)
 import PureScript.Backend.Optimizer.Codegen.Tco as Tco
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..), tcoAnalysisOf)
-import PureScript.Backend.Optimizer.FreeVars (freeVars, localId, paramTypes, sanitizeName)
+import PureScript.Backend.Optimizer.FreeVars (freeVars, localId, paramTypes)
 import Node.Path as Path
 import Node.FS.Sync as FS
 import Data.Tuple (Tuple(..), fst)
@@ -59,9 +59,17 @@ boxGoExpr expr TypeValue = expr
 boxGoExpr expr TypeInt64 = GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ expr ]
 boxGoExpr expr TypeFloat64 = GoCall (GoSelector (GoVar "gopurs_runtime") "Float") [ expr ]
 boxGoExpr expr TypeString = GoCall (GoSelector (GoVar "gopurs_runtime") "Str") [ expr ]
-boxGoExpr expr TypeBool = GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ expr ]
+boxGoExpr expr TypeBool = 
+  let _ = unsafePerformEffect (Console.log ("boxGoExpr TypeBool called with: " <> printGoExpr expr))
+  in GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ expr ]
 boxGoExpr expr (TypeStructPointer baseStructName _ _ _) = GoRaw ("gopurs_runtime.Value{Type: 9, IntVal: " <> hashString baseStructName <> ", UnsafePtr: unsafe.Pointer(" <> printGoExpr expr <> ")}")
-boxGoExpr expr (TypeRecord _) = expr
+boxGoExpr expr (TypeRecord fields) =
+  let
+    keys = map (\(Tuple k _) -> k) fields
+    keysStr = String.joinWith ", " (map (\k -> "\"" <> k <> "\"") keys)
+    valsStr = String.joinWith ", " (map (\(Tuple k v) -> printGoExpr (boxGoExpr (GoStructAccess (GoVar "orig") (sanitizeName k)) v)) fields)
+  in
+    GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\torig := " <> printGoExpr expr <> "\n\t\t\t\t_ = orig\n\t\t\t\treturn gopurs_runtime.RecordDict([]string{" <> keysStr <> "}, []gopurs_runtime.Value{" <> valsStr <> "})\n\t\t\t\t}()")
 boxGoExpr expr (TypeInterface _) = expr
 boxGoExpr expr (TypeNativeArray TypeValue) = GoCall (GoSelector (GoVar "gopurs_runtime") "Array") [ expr ]
 boxGoExpr expr (TypeNativeArray inner) = GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\t\tarr := " <> printGoExpr expr <> "\n\t\t\t\t\tboxed := make([]gopurs_runtime.Value, len(arr))\n\t\t\t\t\tfor i, v := range arr { boxed[i] = " <> printGoExpr (boxGoExpr (GoVar "v") inner) <> " }\n\t\t\t\t\treturn gopurs_runtime.Array(boxed)\n\t\t\t\t}()")
@@ -90,7 +98,7 @@ exprTypeToGoType _ _ _ _ String = TypeString
 exprTypeToGoType _ _ _ _ Char = TypeString
 exprTypeToGoType _ _ _ _ Boolean = TypeBool
 exprTypeToGoType ptrPaths enumAdts elided modNameStr (Array ty) = TypeNativeArray (exprTypeToGoType ptrPaths enumAdts elided modNameStr ty)
-exprTypeToGoType ptrPaths enumAdts elided modNameStr (Record (Row fields _)) = TypeRecord (map (\(Tuple k v) -> Tuple k (exprTypeToGoType ptrPaths enumAdts elided modNameStr v)) (Array.sortBy (comparing \(Tuple k _) -> k) fields))
+exprTypeToGoType ptrPaths enumAdts elided modNameStr (Record (Row fields Nothing)) = TypeRecord (map (\(Tuple k v) -> Tuple k (exprTypeToGoType ptrPaths enumAdts elided modNameStr v)) (Array.sortBy (comparing \(Tuple k _) -> k) fields))
 exprTypeToGoType ptrPaths enumAdts elided modNameStr (Record _) = TypeValue
 exprTypeToGoType ptrPaths enumAdts elided modNameStr (ADT fullName path args) =
   let
@@ -108,7 +116,7 @@ exprTypeToGoType ptrPaths enumAdts elided modNameStr (ADT fullName path args) =
       typeArgsMapped = map (exprTypeToGoType ptrPaths enumAdts elided modNameStr) args
       typeArgsMappedTruncated = Array.take info.arity typeArgsMapped
       paddedTypeArgs = typeArgsMappedTruncated <> Array.replicate (info.arity - Array.length typeArgsMappedTruncated) TypeValue
-      typeArgsStr = ""
+      typeArgsStr = if Array.length paddedTypeArgs > 0 then "[" <> String.joinWith ", " (map goTypeToStr paddedTypeArgs) <> "]" else ""
     in TypeStructPointer baseStructName fullName (monoStructName' <> typeArgsStr) paddedTypeArgs
   Nothing -> TypeValue
 exprTypeToGoType ptrPaths enumAdts elided modNameStr (TypeApp fn arg) =
@@ -123,7 +131,7 @@ exprTypeToGoType _ _ _ _ (TypeVar v) = TypeValue
 exprTypeToGoType _ _ _ _ _ = TypeValue
 
 exprTypeToGenericGoType :: Map.Map String { ctorName :: String, arity :: Int } -> Set.Set String -> Set.Set String -> Array String -> String -> ExprType -> GoType
-exprTypeToGenericGoType ptrPaths enumAdts elidedCtors typeVars modNameStr (Record (Row fields _)) = TypeRecord (map (\(Tuple k v) -> Tuple k (exprTypeToGenericGoType ptrPaths enumAdts elidedCtors typeVars modNameStr v)) (Array.sortBy (comparing \(Tuple k _) -> k) fields))
+exprTypeToGenericGoType ptrPaths enumAdts elidedCtors typeVars modNameStr (Record (Row fields Nothing)) = TypeRecord (map (\(Tuple k v) -> Tuple k (exprTypeToGenericGoType ptrPaths enumAdts elidedCtors typeVars modNameStr v)) (Array.sortBy (comparing \(Tuple k _) -> k) fields))
 exprTypeToGenericGoType _ _ _ _ _ (Record _) = TypeValue
 exprTypeToGenericGoType ptrPaths enumAdts elidedCtors typeVars modNameStr (TypeApp fn arg) =
   let
@@ -168,11 +176,14 @@ unboxGoExpr expr currentType desiredType =
     unboxGoExpr (boxGoExpr expr currentType) TypeValue desiredType
   else case desiredType of
     TypeValue -> boxGoExpr expr currentType
-    (TypeRecord _) -> boxGoExpr expr currentType
+    (TypeRecord fields) ->
+      let
+        assignments = String.joinWith "\n" (map (\(Tuple k v) -> "\t\t\t\t\tclone." <> sanitizeName k <> " = " <> printGoExpr (unboxGoExpr (GoCall (GoSelector (GoVar "gopurs_runtime") "RecordGet") [GoVar "orig", GoString k]) TypeValue v)) fields)
+      in GoRaw ("func() " <> goTypeToStr desiredType <> " {\n\t\t\t\t\torig := " <> printGoExpr expr <> "\n\t\t\t\t\t_ = orig\n\t\t\t\t\tclone := " <> String.drop 1 (goTypeToStr desiredType) <> "{}\n" <> assignments <> "\n\t\t\t\t\treturn &clone\n\t\t\t\t}()")
     TypeInt64 -> GoSelector expr "IntVal"
     TypeFloat64 -> GoCall (GoSelector expr "FloatVal") []
     TypeString -> GoCall (GoSelector expr "StrVal") []
-    TypeBool -> GoBinOp "!=" (GoSelector expr "IntVal") (GoInt 0)
+    TypeBool -> Debug.trace ("unboxGoExpr to TypeBool, currentType=" <> goTypeToStr currentType <> " on " <> printGoExpr expr) \_ -> GoBinOp "!=" (GoSelector expr "IntVal") (GoInt 0)
     TypeUint32 -> GoRaw ("uint32(" <> printGoExpr (GoSelector expr "IntVal") <> ")")
     (TypeStructPointer _ _ fullPath _) -> GoCall (GoRaw ("gopurs_runtime.CoerceToStruct[" <> fullPath <> "]")) [ expr ]
     (TypeInterface _) -> expr
@@ -276,6 +287,12 @@ getStructName modNameStr mbMod ctorName =
 globalReusedVars :: Ref.Ref (Set.Set String)
 globalReusedVars = unsafePerformEffect (Ref.new Set.empty)
 
+globalRecordStructs :: Ref.Ref (Set.Set String)
+globalRecordStructs = unsafePerformEffect (Ref.new Set.empty)
+
+globalRecordDecls :: Ref.Ref (Array String)
+globalRecordDecls = unsafePerformEffect (Ref.new [])
+
 translate :: Set.Set String -> Set.Set String -> Map.Map String { ctorName :: String, arity :: Int } -> Set.Set String -> Map.Map String { nodeBaseStruct :: String, nodeCtor :: String } -> Set.Set ExprType -> Set.Set String -> Map.Map String { vars :: Array String, fields :: Array ExprType } -> Map.Map String ExprType -> InstantiationMap -> Map.Map String String -> Map.Map String { vars :: Array String, fields :: Array { name :: String, "type" :: ExprType } } -> Array (Array String) -> BackendModule -> String
 translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors ctorTypes globalTypes rawInstantiations classDeclsMap classDeclsFields importsArray mod =
 
@@ -327,7 +344,10 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves ad
                 goFieldTypes = map (structFieldGoType pointerAdtPaths enumAdts elidedCtors decl.vars modNameStr) fieldTypes
                 structName = "Constructor_" <> modNameStr <> "_" <> sanitizeName ctor.name
                 
-                typeParams = ""
+                typeParams = 
+                  if Array.length decl.vars > 0 then
+                    "[" <> String.joinWith ", " (map (\v -> "T_" <> sanitizeName v <> " any") decl.vars) <> "]"
+                  else ""
                 
                 fieldsStr = Array.cons "Rc uint32" (Array.mapWithIndex (\i ty -> "V" <> show i <> " " <> goTypeToStr ty) goFieldTypes)
                 structDecl = "type " <> structName <> typeParams <> " struct {\n\t" <> String.joinWith "\n\t" fieldsStr <> "\n}\n"
@@ -336,7 +356,10 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves ad
                 getterDecl = case Map.lookup fullName classDeclsFields of
                   Just info ->
                     let 
-                      typeParamsGetter = ""
+                      typeParamsGetter = 
+                        if Array.length decl.vars > 0 then
+                          "[" <> String.joinWith ", " (map (const "any") decl.vars) <> "]"
+                        else ""
                       cases = Array.mapWithIndex (\i f -> "\t\tcase \"" <> f.name <> "\": return gopurs_runtime.Box(c.V" <> show i <> ")") info.fields
                       pkgNameStr = String.replaceAll (Pattern ".") (Replacement "_") (unwrap mod.name)
                       baseStructName = "Data_" <> pkgNameStr <> "_" <> sanitizeName ctor.name
@@ -361,7 +384,6 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves ad
               _ -> env
             tcoBinds = map (\(Tuple id val) ->
               let nameStr = unwrap id
-                  _ = if modNameStrOrig == "Data.Set" && String.indexOf (Pattern "toList") nameStr == Just 0 then unsafePerformEffect (Console.log ("CodeGen received Data.Set binding: " <> nameStr)) else unit
               in Tuple id (Tco.analyze env' val)
             ) group.bindings
           in
@@ -702,7 +724,11 @@ translateExprImpl helpersRef depth modNameStr recVars moduleArities bound tcoIde
   translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail false nextId tcoExpr
 
 translateExprImpl_ :: Ref { decls :: Array GoDecl, rawDecls :: Array String, elidedCtors :: Set.Set String, ctorTypes :: Map String { vars :: Array String, fields :: Array ExprType }, pointerAdtPaths :: Map String { ctorName :: String, arity :: Int }, pointerAdtNodes :: Set String, pointerAdtLeaves :: Map String { nodeBaseStruct :: String, nodeCtor :: String }, enumAdts :: Set.Set String, enumCtors :: Set.Set String, globalTypes :: Map.Map String ExprType, classDeclsFields :: Map String { vars :: Array String, fields :: Array { name :: String, "type" :: ExprType } }, globalId :: Int } -> Int -> String -> Array String -> Map String { fullName :: String, fArgs :: Array GoType, fRet :: GoType, arity :: Int } -> Map String { name :: String, goType :: GoType } -> Maybe String -> Array { ident :: String, params :: Array String, loopParams :: Array String, goTypes :: Array GoType } -> Boolean -> Boolean -> Int -> TcoExpr -> { stmts :: StmtTree, expr :: GoExpr, exprType :: GoType, nextId :: Int }
-translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail inEffectBlock nextId tcoExpr@(TcoExpr tcoAnalysis expr) =
+translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail inEffectBlock nextId tcoExpr =
+  translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail inEffectBlock Nothing nextId tcoExpr
+
+translateExprImpl__ :: Ref { decls :: Array GoDecl, rawDecls :: Array String, elidedCtors :: Set.Set String, ctorTypes :: Map String { vars :: Array String, fields :: Array ExprType }, pointerAdtPaths :: Map String { ctorName :: String, arity :: Int }, pointerAdtNodes :: Set String, pointerAdtLeaves :: Map String { nodeBaseStruct :: String, nodeCtor :: String }, enumAdts :: Set.Set String, enumCtors :: Set.Set String, globalTypes :: Map.Map String ExprType, classDeclsFields :: Map String { vars :: Array String, fields :: Array { name :: String, "type" :: ExprType } }, globalId :: Int } -> Int -> String -> Array String -> Map String { fullName :: String, fArgs :: Array GoType, fRet :: GoType, arity :: Int } -> Map String { name :: String, goType :: GoType } -> Maybe String -> Array { ident :: String, params :: Array String, loopParams :: Array String, goTypes :: Array GoType } -> Boolean -> Boolean -> Maybe ExprType -> Int -> TcoExpr -> { stmts :: StmtTree, expr :: GoExpr, exprType :: GoType, nextId :: Int }
+translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail inEffectBlock mbExpectedExprType nextId tcoExpr@(TcoExpr tcoAnalysis expr) =
   let
     _ = unsafePerformEffect (if depth == 0 then Ref.write Set.empty globalReusedVars else pure unit)
     elidedCtors = (unsafePerformEffect (Ref.read helpersRef)).elidedCtors
@@ -792,7 +818,13 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                     { stmts: StmtEmpty, exprs: [], exprType: TypeValue, nextId }
                     sortedVals
                 in
-                  { stmts: accProps.stmts, expr: GoConstructor (hashString baseStructName) fullPath [] accProps.exprs, exprType: expectedGoType, nextId: accProps.nextId }
+                  let typeArgsForDict = case expectedGoType of
+                                          TypeStructPointer _ _ _ args -> args
+                                          _ -> []
+                      monoStructName = case String.indexOf (Pattern "[") fullPath of
+                                         Just idx -> String.take idx fullPath
+                                         Nothing -> fullPath
+                  in { stmts: accProps.stmts, expr: GoConstructor (hashString baseStructName) monoStructName typeArgsForDict accProps.exprs, exprType: expectedGoType, nextId: accProps.nextId }
               Nothing ->
                 let res = translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail inEffectBlock nextId a
                 in case res.exprType of
@@ -801,20 +833,32 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                     if expectedGoType == res.exprType then res
                     else if isClosureNode helpersRef a then res
                     else
-                      let
-                        _ = Debug.trace ("Typed coercion: " <> printGoExpr res.expr <> " from " <> goTypeToStr res.exprType <> " to " <> goTypeToStr expectedGoType) \_ -> unit
-                      in { stmts: res.stmts, expr: coerceGoExpr res.expr res.exprType expectedGoType, exprType: expectedGoType, nextId: res.nextId }
+                      { stmts: res.stmts, expr: coerceGoExpr res.expr res.exprType expectedGoType, exprType: expectedGoType, nextId: res.nextId }
+          Let ident lvl val body, _ ->
+            let
+              newBody = case body of
+                TcoExpr bAnn _ -> TcoExpr bAnn (Typed type_ body)
+              newLetShape = Let ident lvl val newBody
+              newA = case a of
+                TcoExpr ann _ -> TcoExpr ann newLetShape
+            in translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail inEffectBlock nextId newA
+          LetRec lvl bindings body, _ ->
+            let
+              newBody = case body of
+                TcoExpr bAnn _ -> TcoExpr bAnn (Typed type_ body)
+              newLetShape = LetRec lvl bindings newBody
+              newA = case a of
+                TcoExpr ann _ -> TcoExpr ann newLetShape
+            in translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail inEffectBlock nextId newA
           _, _ ->
-            let res = translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail inEffectBlock nextId a
+            let res = translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail inEffectBlock (Just type_) nextId a
             in case res.exprType of
               TypeStructPointer _ _ _ _ -> res
               _ -> 
                 if expectedGoType == res.exprType then res
                 else if isClosureNode helpersRef a then res
                 else
-                  let
-                    _ = Debug.trace ("Typed coercion (2): " <> printGoExpr res.expr <> " from " <> goTypeToStr res.exprType <> " to " <> goTypeToStr expectedGoType) \_ -> unit
-                  in { stmts: res.stmts, expr: coerceGoExpr res.expr res.exprType expectedGoType, exprType: expectedGoType, nextId: res.nextId }
+                  { stmts: res.stmts, expr: coerceGoExpr res.expr res.exprType expectedGoType, exprType: expectedGoType, nextId: res.nextId }
       Var (Qualified mbMn (Ident i)) ->
         let
           safeName = sanitizeName i
@@ -882,37 +926,17 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
       Lit (LitRecord props) ->
         let
           sortedProps = Array.sortBy (comparing \(Prop k _) -> k) props
+          exprType = getExprType tcoExpr
           
-          expectedGlobalType = case tcoIdent of
-            Just ident ->
-              let h = unsafePerformEffect (Ref.read helpersRef)
-                  ty = Map.lookup (modNameStr <> "." <> ident) h.globalTypes
-
-              in ty
-            Nothing -> Nothing
+          mbRecordType = case exprType of
+            Record (Row fields _) -> Just fields
+            _ -> Nothing
             
-          recordFields = case expectedGlobalType of
-            Just (Record (Row fields _)) -> Map.fromFoldable fields
-            Just ty ->
-              let
-                unwrapTypeApp :: ExprType -> Array ExprType -> Tuple ExprType (Array ExprType)
-                unwrapTypeApp (TypeApp f a) acc = unwrapTypeApp f (a <> acc)
-                unwrapTypeApp other acc = Tuple other acc
-                Tuple mbAdt allArgs = unwrapTypeApp ty []
-              in case mbAdt of
-                ADT fullName path adtArgs ->
-                  let h = unsafePerformEffect (Ref.read helpersRef)
-
-                  in case Map.lookup fullName h.classDeclsFields of
-                    Just info -> 
-                      let
-                        finalArgs = adtArgs <> allArgs
-                        instMap = Map.fromFoldable (Array.zip info.vars finalArgs)
-                        instantiatedFields = map (\f -> Tuple f.name (substituteExprType instMap f."type")) info.fields
-                      in Map.fromFoldable instantiatedFields
-                    Nothing -> Map.empty
-                _ -> Map.empty
-            _ -> Map.empty
+          goRecordType = exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr exprType
+            
+          recordFields = case mbRecordType of
+            Just fields -> Map.fromFoldable fields
+            Nothing -> Map.empty
             
           accProps = foldl
             ( \acc (Prop key val) ->
@@ -928,13 +952,16 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                     _, _ -> bound
                     
                   resVal = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities newBound Nothing [] false false acc.nextId val
+                  
+                  expectedGoType = exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr expectedExprType
+                  coercedVal = coerceGoExpr resVal.expr resVal.exprType expectedGoType
                 in
-                  { stmts: acc.stmts <> resVal.stmts, exprs: Array.snoc acc.exprs (Tuple key (boxGoExpr resVal.expr resVal.exprType)), exprType: TypeValue, nextId: resVal.nextId }
+                  { stmts: acc.stmts <> resVal.stmts, exprs: Array.snoc acc.exprs (Tuple key coercedVal), exprType: TypeValue, nextId: resVal.nextId }
             )
             { stmts: StmtEmpty, exprs: [], exprType: TypeValue, nextId }
             sortedProps
         in
-          { stmts: accProps.stmts, expr: GoRecordDict accProps.exprs, exprType: TypeValue, nextId: accProps.nextId }
+          { stmts: accProps.stmts, expr: GoRecordDict goRecordType accProps.exprs, exprType: goRecordType, nextId: accProps.nextId }
 
       App fn args ->
         let
@@ -951,7 +978,6 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
               Var (Qualified mbMod (Ident name)) ->
                 let
                   fullName = sanitizeName name
-                  _ = unsafePerformEffect (if name == "deepTailRec" then Debug.trace ("isTailCallTo deepTailRec: fullName=" <> fullName <> " loopCtx.idents=" <> String.joinWith "," (map _.ident loopCtx)) \_ -> pure unit else pure unit)
                 in
                   Array.findIndex (\ctx -> ctx.ident == fullName) loopCtx
               _ -> Nothing
@@ -1180,6 +1206,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                             accArgs = foldl
                               ( \acc arg ->
                                   let
+                                    _unused = unsafePerformEffect (Console.log ("accArgs arg type: " <> printExprType (getExprType arg) <> " -> " <> goTypeToStr (exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr (getExprType arg))))
                                     argRes = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false acc.nextId arg
                                   in
                                     { stmts: acc.stmts <> argRes.stmts, exprs: Array.snoc acc.exprs argRes.expr, exprTypes: Array.snoc acc.exprTypes argRes.exprType, nextId: argRes.nextId }
@@ -1187,9 +1214,21 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                               { stmts: resFn.stmts, exprs: [], exprTypes: [], nextId: resFn.nextId }
                               flatArgs
                               
+                            finalExprTypeStr = case resFn.exprType of
+                              TypeFunc fA fR -> "TypeFunc len:" <> show (Array.length fA) <> " ret:" <> goTypeToStr fR
+                              _ -> "Other " <> goTypeToStr resFn.exprType
+                            _ = unsafePerformEffect (Console.log ("App on " <> printGoExpr resFn.expr <> " with args len " <> show (Array.length flatArgs) <> " fnType: " <> finalExprTypeStr))
                             finalExprType = case resFn.exprType of
                               TypeFunc fArgs fRet | Array.length fArgs == Array.length flatArgs -> fRet
+                              TypeFunc fArgs fRet | Array.length flatArgs > Array.length fArgs -> TypeValue
                               _ -> TypeValue
+                              
+                            finalExprTypeStr = case finalExprType of
+                              TypeBool -> "TypeBool"
+                              TypeValue -> "TypeValue"
+                              _ -> "Other"
+                            _ = unsafePerformEffect (Console.log ("App finalExprType: " <> finalExprTypeStr))
+
                               
                             finalExpr = case resFn.exprType of
                               TypeFunc fArgs fRet | Array.length fArgs == Array.length flatArgs ->
@@ -1639,20 +1678,51 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
         let
           originalName = localId mbIdent lvl
           name = originalName <> "_" <> show nextId
-          resBinding = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false (nextId + 1) binding
           expectedGoTypeFromAst = exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr (getExprType binding)
-
-          actualGoType = if expectedGoTypeFromAst == TypeValue then resBinding.exprType else expectedGoTypeFromAst
           
-          newBound = Map.insert originalName { name, goType: actualGoType } bound
-          resBody = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities newBound Nothing loopCtx isTail inEffectBlock resBinding.nextId body
-          
-          letStmt = if actualGoType == resBinding.exprType then
-                      StmtLeaf (GoAssign name resBinding.expr)
-                    else
-                      StmtLeaf (GoRaw ("var " <> name <> " " <> goTypeToStr actualGoType <> " = " <> printGoExpr (unboxGoExpr resBinding.expr resBinding.exprType actualGoType)))
-        in
-          { stmts: resBinding.stmts <> StmtLeaf (GoRaw ("// TAST (Let): " <> name <> " shape=" <> printTcoExprShape binding <> " expectedFromAst=" <> goTypeToStr expectedGoTypeFromAst <> " actual=" <> goTypeToStr actualGoType <> " bindingType=" <> printExprType (getExprType binding))) <> letStmt <> resBody.stmts, expr: resBody.expr, exprType: resBody.exprType, nextId: resBody.nextId }
+          mbFunc = extractUncurriedAbs binding
+        in case mbFunc of
+          Just abs | Array.length abs.args > 0 ->
+            let
+              pTypes = paramTypes abs.body
+              paramsWithTypes = map (\idStr -> 
+                  let 
+                    t = fromMaybe Any (Map.lookup idStr pTypes)
+                  in Tuple idStr (exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr t)
+                ) abs.args
+              goTypes = map snd paramsWithTypes
+              
+              localModuleArities = Map.insert name { fullName: "Call_local_" <> modNameStr <> "_" <> name, fArgs: goTypes, fRet: TypeValue, arity: Array.length abs.args } moduleArities
+              declStmts = [ GoRaw ("var Call_local_" <> modNameStr <> "_" <> name <> " func(" <> String.joinWith ", " (map goTypeToStr goTypes) <> ") gopurs_runtime.Value"), GoRaw ("_ = Call_local_" <> modNameStr <> "_" <> name), GoRaw ("var " <> name <> " gopurs_runtime.Value"), GoRaw ("_ = " <> name) ]
+              
+              loopBound = foldl (\acc (Tuple idStr goT) -> Map.insert idStr { name: idStr, goType: goT } acc) bound paramsWithTypes
+              resBodyMut = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars localModuleArities loopBound (Just name) [] true false (nextId + 1) abs.body
+              
+              goParamsNative = String.joinWith ", " (map (\(Tuple p goT) -> p <> "_loop " <> goTypeToStr goT) paramsWithTypes)
+              initVars = Array.concatMap (\(Tuple p goT) -> [ GoRaw ("var " <> p <> " " <> goTypeToStr goT <> " = " <> p <> "_loop"), GoRaw ("_ = " <> p) ]) paramsWithTypes
+              funcBody = GoBlock (initVars <> flattenStmts resBodyMut.stmts <> [ GoReturn (boxGoExpr resBodyMut.expr resBodyMut.exprType) ])
+              nativeAssignment = GoMutate ("Call_local_" <> modNameStr <> "_" <> name) (GoRaw ("func(" <> goParamsNative <> ") gopurs_runtime.Value {\n" <> printGoExpr funcBody <> "\n}"))
+              
+              nativeCallExpr = GoCall (GoVar ("Call_local_" <> modNameStr <> "_" <> name)) (map (\(Tuple p goT) -> unboxGoExpr (GoVar (p <> "_loop_val")) TypeValue goT) paramsWithTypes)
+              funcExpr = Array.foldr (\(Tuple p goT) acc -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> p <> "_loop_val gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr acc <> "\n}") ]) nativeCallExpr paramsWithTypes
+              
+              newBound = Map.insert originalName { name, goType: TypeValue } bound
+              resBodyOuter = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars localModuleArities newBound Nothing loopCtx isTail inEffectBlock resBodyMut.nextId body
+            in
+              { stmts: foldMap StmtLeaf declStmts <> StmtLeaf nativeAssignment <> StmtLeaf (GoMutate name funcExpr) <> resBodyOuter.stmts, expr: resBodyOuter.expr, exprType: resBodyOuter.exprType, nextId: resBodyOuter.nextId }
+              
+          _ ->
+            let
+              resBinding = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false (nextId + 1) binding
+              actualGoType = if expectedGoTypeFromAst == TypeValue then resBinding.exprType else expectedGoTypeFromAst
+              newBound = Map.insert originalName { name, goType: actualGoType } bound
+              resBody = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities newBound Nothing loopCtx isTail inEffectBlock resBinding.nextId body
+              letStmt = if actualGoType == resBinding.exprType then
+                          StmtLeaf (GoAssign name resBinding.expr)
+                        else
+                          StmtLeaf (GoRaw ("var " <> name <> " " <> goTypeToStr actualGoType <> " = " <> printGoExpr (unboxGoExpr resBinding.expr resBinding.exprType actualGoType)))
+            in
+              { stmts: resBinding.stmts <> StmtLeaf (GoRaw ("// TAST (Let): " <> name <> " shape=" <> printTcoExprShape binding <> " bindingType=" <> printExprType (getExprType binding))) <> letStmt <> resBody.stmts, expr: resBody.expr, exprType: resBody.exprType, nextId: resBody.nextId }
 
       LetRec lvl bindings body ->
         let
@@ -1699,7 +1769,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                 combinedLoopCtx = loopCtxs <> loopCtx
                 
                 localModuleArities = foldl (\acc ctx -> Map.insert ctx.ident { fullName: "Call_local_" <> modNameStr <> "_" <> ctx.ident, fArgs: ctx.goTypes, fRet: TypeValue, arity: Array.length ctx.params } acc) moduleArities loopCtxs
-                declStmts = Array.concatMap (\ctx -> [ GoRaw ("var Call_local_" <> modNameStr <> "_" <> ctx.ident <> " func(" <> String.joinWith ", " (map goTypeToStr ctx.goTypes) <> ") gopurs_runtime.Value"), GoRaw ("var " <> ctx.ident <> " gopurs_runtime.Value") ]) loopCtxs
+                declStmts = Array.concatMap (\ctx -> [ GoRaw ("var Call_local_" <> modNameStr <> "_" <> ctx.ident <> " func(" <> String.joinWith ", " (map goTypeToStr ctx.goTypes) <> ") gopurs_runtime.Value"), GoRaw ("_ = Call_local_" <> modNameStr <> "_" <> ctx.ident), GoRaw ("var " <> ctx.ident <> " gopurs_runtime.Value"), GoRaw ("_ = " <> ctx.ident) ]) loopCtxs
                 
                 Tuple fnWrapperStmts nextId' = foldl
                   ( \(Tuple accStmts currNextId) fn ->
@@ -1764,7 +1834,10 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
           case accessor of
             GetProp prop ->
               case resObj.exprType of
-                TypeRecord fields -> { stmts: resObj.stmts, expr: GoRecordAccess (boxGoExpr resObj.expr resObj.exprType) prop, exprType: TypeValue, nextId: resObj.nextId }
+                TypeRecord fields ->
+                  let
+                    fieldGoType = fromMaybe TypeValue (Map.lookup prop (Map.fromFoldable fields))
+                  in { stmts: resObj.stmts, expr: GoStructAccess resObj.expr (sanitizeName prop), exprType: fieldGoType, nextId: resObj.nextId }
                 TypeStructPointer _ fullName _ _ ->
                   let
                     h = unsafePerformEffect (Ref.read helpersRef)
@@ -1852,7 +1925,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                 let
                   resVal = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false acc.nextId val
                 in
-                  { stmts: acc.stmts <> resVal.stmts, exprs: Array.snoc acc.exprs (Tuple key (boxGoExpr resVal.expr resVal.exprType)), exprType: TypeValue, nextId: resVal.nextId }
+                  { stmts: acc.stmts <> resVal.stmts, exprs: Array.snoc acc.exprs { key, expr: resVal.expr, goType: resVal.exprType }, exprType: TypeValue, nextId: resVal.nextId }
             )
             { stmts: StmtEmpty, exprs: [], exprType: TypeValue, nextId: resObj.nextId }
             props
@@ -1860,18 +1933,17 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
           case resObj.exprType of
             TypeRecord fields ->
               let
-                staticUpdates = Array.catMaybes (map (\(Tuple key val) ->
-                  case Array.findIndex (\(Tuple k _) -> k == key) fields of
-                    Just idx -> Just (Tuple idx val)
-                    Nothing -> Nothing
-                ) accProps.exprs)
+                coercedUpdates = map (\p ->
+                    let
+                      expectedGoType = fromMaybe TypeValue (Map.lookup p.key (Map.fromFoldable fields))
+                      coercedVal = coerceGoExpr p.expr p.goType expectedGoType
+                    in Tuple p.key coercedVal
+                  ) accProps.exprs
               in
-                if Array.length staticUpdates == Array.length accProps.exprs then
-                  { stmts: resObj.stmts <> accProps.stmts, expr: GoRecordUpdateStatic (boxGoExpr resObj.expr resObj.exprType) (Array.length fields) staticUpdates accProps.exprs, exprType: TypeValue, nextId: accProps.nextId }
-                else
-                  { stmts: resObj.stmts <> accProps.stmts, expr: GoRecordUpdateDict (boxGoExpr resObj.expr resObj.exprType) accProps.exprs, exprType: TypeValue, nextId: accProps.nextId }
+                { stmts: resObj.stmts <> accProps.stmts, expr: GoRecordUpdateNative resObj.exprType resObj.expr coercedUpdates, exprType: resObj.exprType, nextId: accProps.nextId }
             _ ->
-              { stmts: resObj.stmts <> accProps.stmts, expr: GoRecordUpdateDict (boxGoExpr resObj.expr resObj.exprType) accProps.exprs, exprType: TypeValue, nextId: accProps.nextId }
+              let boxedExprs = map (\p -> Tuple p.key (boxGoExpr p.expr p.goType)) accProps.exprs
+              in { stmts: resObj.stmts <> accProps.stmts, expr: GoRecordUpdateDict (boxGoExpr resObj.expr resObj.exprType) boxedExprs, exprType: TypeValue, nextId: accProps.nextId }
 
       CtorDef _ _ (Ident name) fields ->
         let
@@ -1918,7 +1990,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
                   in Array.take (Array.length vars') mapped
                 _ -> map (const TypeValue) vars'
             _ -> map (const TypeValue) vars'
-          typeArgsStr = ""
+          typeArgsStr = if Array.length typeArgs > 0 then "[" <> String.joinWith ", " (map goTypeToStr typeArgs) <> "]" else ""
           instMap = Map.fromFoldable (Array.zip vars' typeArgs)
           coercedFields = Array.mapWithIndex (\i f -> 
             let
@@ -1983,7 +2055,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
           key = modPart <> "." <> name
           helpers = unsafePerformEffect (Ref.read helpersRef)
           
-          ctorType = getExprType tcoExpr
+          ctorType = fromMaybe (getExprType tcoExpr) mbExpectedExprType
           expectedGoType = exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr ctorType
           
           fullName = case expectedGoType of
@@ -2079,7 +2151,7 @@ translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoId
             _ -> case Map.lookup key helpers.ctorTypes of
               Just ctorInfo -> map (const TypeValue) ctorInfo.vars
               Nothing -> []
-          typeArgsStr = ""
+          typeArgsStr = if Array.length typeArgs > 0 then "[" <> String.joinWith ", " (map goTypeToStr typeArgs) <> "]" else ""
           fullPath = monoStructName <> typeArgsStr
           isEnum = Set.member baseStructName helpers.enumCtors
           res = if isElided then
@@ -2440,7 +2512,7 @@ unwrapValueToFunc dataDecls (TFunc args ret) mbTast valName depth _ =
 unwrapValueToFunc dataDecls (TNamed anyT) mbTast valName depth cidx | anyT == "any" || anyT == "interface{}" || anyT == "gopurs_runtime.Value" =
   let resolvedTast = map (resolveNewtype dataDecls) mbTast
   in case resolvedTast of
-    Just (Record (Row fields _)) ->
+    Just (Record (Row fields Nothing)) ->
       let
         fieldStr = Array.mapWithIndex (\i (Tuple fK fT) ->
             "\t\t\t\tres_map[\"" <> fK <> "\"] = " <> unwrapValueToFunc dataDecls (TNamed "any") (Just fT) ("_raw[\"" <> fK <> "\"]") (depth + 1) i
@@ -2481,7 +2553,7 @@ wrapReturn dataDecls (TFunc args ret) mbTast valName =
         Just r -> genInnerArg ("inner_res := " <> valName) (wrapReturn dataDecls r (mbTast >>= getTastReturnType) "inner_res") argUnwrap
 wrapReturn _ (TArray elem) _ valName | printTypeNode elem /= "gopurs_runtime.Value" = 
   "func() gopurs_runtime.Value {\n\t\t\tres_arr := make([]gopurs_runtime.Value, len(" <> valName <> "))\n\t\t\tfor i, v := range " <> valName <> " { res_arr[i] = gopurs_runtime.Box(v) }\n\t\t\treturn gopurs_runtime.Array(res_arr)\n\t\t}()"
-wrapReturn dataDecls (TMap _ _) (Just (Record (Row fields _))) valName = 
+wrapReturn dataDecls (TMap _ _) (Just (Record (Row fields Nothing))) valName = 
   let
     fieldStr = Array.mapWithIndex (\i (Tuple fK fT) ->
         "\t\t\t\tres_map[\"" <> fK <> "\"] = " <> wrapReturn dataDecls (TNamed "any") (Just fT) ("_raw[\"" <> fK <> "\"]")
@@ -2500,7 +2572,7 @@ wrapReturn dataDecls (TMap _ _) mbTast valName =
 wrapReturn dataDecls (TNamed anyT) mbTast valName | anyT == "any" || anyT == "interface{}" || anyT == "gopurs_runtime.Value" =
   let resolvedTast = map (resolveNewtype dataDecls) mbTast
   in case resolvedTast of
-    Just (Record (Row fields _)) ->
+    Just (Record (Row fields Nothing)) ->
       let
         fieldStr = Array.mapWithIndex (\i (Tuple fK fT) ->
             "\t\t\t\tres_map[\"" <> fK <> "\"] = " <> wrapReturn dataDecls (TNamed "any") (Just fT) ("_raw[\"" <> fK <> "\"]")
