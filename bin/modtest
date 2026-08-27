@@ -5,7 +5,7 @@ set -e
 cd "$(dirname "$0")/../.."
 
 CLEAN=0
-SKIP_BEFORE="node-fs"
+SKIP_BEFORE="node-streams"
 for arg in "$@"; do
   if [[ "$arg" == skip_before=* ]]; then
     SKIP_BEFORE="${arg#skip_before=}"
