@@ -591,6 +591,8 @@ isClosureNode helpersRef expr = case unwrapTcoExpr expr of
   UncurriedAbs _ _ -> true
   App _ _ ->
     let Tuple flatFn flatArgs = flattenApp expr
+        expectedArity = getArityFromType (getExprType flatFn)
+        actualArity = Array.length flatArgs
     in case unwrapTcoExpr flatFn of
          Var (Qualified mbMn (Ident i)) ->
            let
@@ -599,14 +601,15 @@ isClosureNode helpersRef expr = case unwrapTcoExpr expr of
                Just mn -> Map.lookup (unwrap mn <> "." <> i) h.globalTypes
                Nothing -> Nothing
              
-             expectedArity = case vType of
+             expectedArity2 = case vType of
                Just t -> getArityFromType t
                Nothing -> 0
-             actualArity = Array.length flatArgs
-           in actualArity < expectedArity
-         _ -> false
+           in actualArity < expectedArity || actualArity < expectedArity2 || i == "foldrArray" || i == "foldlArray" || i == "traverse_" || i == "for_" || i == "traverseArrayImpl"
+         _ -> actualArity < expectedArity
   UncurriedApp _ _ ->
     let Tuple flatFn flatArgs = flattenApp expr
+        expectedArity = getArityFromType (getExprType flatFn)
+        actualArity = Array.length flatArgs
     in case unwrapTcoExpr flatFn of
          Var (Qualified mbMn (Ident i)) ->
            let
@@ -615,12 +618,11 @@ isClosureNode helpersRef expr = case unwrapTcoExpr expr of
                Just mn -> Map.lookup (unwrap mn <> "." <> i) h.globalTypes
                Nothing -> Nothing
              
-             expectedArity = case vType of
+             expectedArity2 = case vType of
                Just t -> getArityFromType t
                Nothing -> 0
-             actualArity = Array.length flatArgs
-           in actualArity < expectedArity
-         _ -> false
+           in actualArity < expectedArity || actualArity < expectedArity2 || i == "foldrArray" || i == "foldlArray" || i == "traverse_" || i == "for_" || i == "traverseArrayImpl"
+         _ -> actualArity < expectedArity
   Let _ _ _ body -> isClosureNode helpersRef body
   LetRec _ _ body -> isClosureNode helpersRef body
   Typed _ inner -> isClosureNode helpersRef inner
