@@ -1635,18 +1635,18 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
       EffectBind mbIdent lvl binding body ->
         let
           stripEffectDefer (TcoExpr a syn) = case unwrapTcoExpr (TcoExpr a syn) of
-              EffectDefer inner -> stripEffectDefer inner
-              Abs _ inner -> stripEffectDefer inner
-              Let ident lvl val body -> TcoExpr a (Let ident lvl val (stripEffectDefer body))
-              LetRec lvl bindings body -> TcoExpr a (LetRec lvl bindings (stripEffectDefer body))
-              _ -> TcoExpr a syn
-          realBinding = stripEffectDefer binding
+              EffectDefer inner -> let Tuple _ i = stripEffectDefer inner in Tuple true i
+              Abs _ inner -> let Tuple _ i = stripEffectDefer inner in Tuple true i
+              Let ident lvl_ val body_ -> let Tuple stripped i = stripEffectDefer body_ in Tuple stripped (TcoExpr a (Let ident lvl_ val i))
+              LetRec lvl_ bindings_ body_ -> let Tuple stripped i = stripEffectDefer body_ in Tuple stripped (TcoExpr a (LetRec lvl_ bindings_ i))
+              _ -> Tuple false (TcoExpr a syn)
+          Tuple wasStripped realBinding = stripEffectDefer binding
           originalName = localId mbIdent lvl
           name = originalName <> "_" <> show nextId
           newBound = Map.insert originalName { name, goType: TypeValue } bound
           resBinding = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false true (nextId + 1) realBinding
           resBody = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities newBound Nothing loopCtx isTail true resBinding.nextId body
-          bindingExpr = executeIfOpaque realBinding (boxGoExpr resBinding.expr resBinding.exprType)
+          bindingExpr = if wasStripped then boxGoExpr resBinding.expr resBinding.exprType else executeIfOpaque realBinding (boxGoExpr resBinding.expr resBinding.exprType)
           bodyExpr = executeIfOpaque body resBody.expr
         in
           { stmts: resBinding.stmts <> StmtLeaf (GoAssign name bindingExpr) <> resBody.stmts, expr: bodyExpr, exprType: resBody.exprType, nextId: resBody.nextId }

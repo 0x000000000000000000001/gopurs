@@ -5,8 +5,13 @@ set -e
 cd "$(dirname "$0")/../.."
 
 CLEAN=0
+SKIP_BEFORE="foreign-object"
 for arg in "$@"; do
-  if [ "$arg" == "-c" ] || [ "$arg" == "--clean" ]; then
+  if [[ "$arg" == skip_before=* ]]; then
+    SKIP_BEFORE="${arg#skip_before=}"
+  elif [[ "$arg" == --skip-before=* ]]; then
+    SKIP_BEFORE="${arg#--skip-before=}"
+  elif [ "$arg" == "-c" ] || [ "$arg" == "--clean" ]; then
     CLEAN=1
   fi
 done
@@ -17,10 +22,29 @@ if [ "$CLEAN" == "1" ]; then
   echo ""
 fi
 
+if [[ -n "$SKIP_BEFORE" && "$SKIP_BEFORE" != gopurs-* ]]; then
+  SKIP_BEFORE="gopurs-$SKIP_BEFORE"
+fi
+
+SKIP=0
+if [ -n "$SKIP_BEFORE" ]; then
+  SKIP=1
+fi
+
 echo "Détection des modules gopurs-*"
 echo "================================"
 
 for dir in gopurs-*/; do
+  dirname_no_slash="${dir%/}"
+  
+  if [ "$SKIP" == "1" ]; then
+    if [ "$dirname_no_slash" == "$SKIP_BEFORE" ]; then
+      SKIP=0
+    else
+      continue
+    fi
+  fi
+
   if [ -x "${dir}bin/test" ]; then
     echo ""
     echo "=============================================="
