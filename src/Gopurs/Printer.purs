@@ -212,10 +212,11 @@ printGoFile :: GoFile -> String
 printGoFile { packageName, imports, decls, rawDecls, foreigns } =
   let declsStr = String.joinWith "\n\n" (map printGoDeclVar decls) <> "\n\n" <> String.joinWith "\n\n" rawDecls <> "\n\n" <> String.joinWith "\n\n" (map (\f -> "func Get_" <> f.pursName <> "() gopurs_runtime.Value {\n\treturn " <> f.goName <> "\n}") foreigns) <> "\n"
       unsafeImport = if String.contains (String.Pattern "unsafe.") declsStr then ["unsafe"] else []
+      mathImport = if String.contains (String.Pattern "math.") declsStr then ["math"] else []
       hasDecls = Array.length decls > 0
       hasForeigns = Array.length foreigns > 0
       needsRuntime = hasDecls || hasForeigns || String.contains (String.Pattern "gopurs_runtime.") declsStr
-      usedImports = (if needsRuntime then ["gopurs/output/gopurs_runtime"] else []) <> (if hasDecls then ["sync"] else []) <> unsafeImport
+      usedImports = Array.nub (imports <> (if needsRuntime then ["gopurs/output/gopurs_runtime"] else []) <> (if hasDecls then ["sync"] else []) <> unsafeImport <> mathImport)
   in
   "package " <> packageName <> "\n\n" <>
   "import (\n" <>

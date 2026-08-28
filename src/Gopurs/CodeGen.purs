@@ -548,6 +548,7 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves ad
     goImports = Set.toUnfoldable $ Set.fromFoldable $
       (if Array.length allDeclsAst > 0 || Array.length (Array.fromFoldable mod.foreign) > 0 then [ "gopurs/output/gopurs_runtime" ] else [])
         <> (if Array.length allDeclsAst > 0 then [ "sync" ] else [])
+        <> (if String.contains (Pattern "math.") declsStr then [ "math" ] else [])
         <> Array.mapMaybe
           ( \pkg ->
               if pkg /= modNameStr && pkg /= "Prim" && not (String.indexOf (Pattern "Prim_") pkg == Just 0) then Just ("gopurs/output/" <> String.replaceAll (Pattern "_") (Replacement ".") pkg)
@@ -897,7 +898,12 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
       Lit (LitInt i) -> { stmts: StmtEmpty, expr: GoInt i, exprType: TypeInt64, nextId }
       Lit (LitNumber n) -> 
         let 
-          expr = if n == 0.0 && 1.0 / n < 0.0 then GoCall (GoSelector (GoVar "gopurs_runtime") "NegativeZero") [] else GoRaw (show n)
+          nStr = show n
+          expr = if n == 0.0 && 1.0 / n < 0.0 then GoCall (GoSelector (GoVar "gopurs_runtime") "NegativeZero") []
+                 else if nStr == "Infinity" then GoCall (GoSelector (GoVar "math") "Inf") [GoInt 1]
+                 else if nStr == "-Infinity" then GoCall (GoSelector (GoVar "math") "Inf") [GoInt (-1)]
+                 else if nStr == "NaN" then GoCall (GoSelector (GoVar "math") "NaN") []
+                 else GoRaw nStr
         in { stmts: StmtEmpty, expr, exprType: TypeFloat64, nextId }
       Lit (LitBoolean b) -> { stmts: StmtEmpty, expr: GoRaw (if b then "true" else "false"), exprType: TypeBool, nextId }
       Lit (LitChar c) -> { stmts: StmtEmpty, expr: GoString (SCU.singleton c), exprType: TypeString, nextId }
