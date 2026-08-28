@@ -5,7 +5,7 @@ set -e
 cd "$(dirname "$0")/../.."
 
 CLEAN=0
-SKIP_BEFORE="ordered-collections"
+SKIP_BEFORE="spec"
 for arg in "$@"; do
   if [[ "$arg" == skip_before=* ]]; then
     SKIP_BEFORE="${arg#skip_before=}"
