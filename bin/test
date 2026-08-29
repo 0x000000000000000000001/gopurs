@@ -176,7 +176,7 @@ for test_file in "${TEST_FILES[@]}"; do
 
   if [ $build_success -eq 1 ]; then
     # Generate Go code
-    node ../../bin/gopurs.js --main Main
+    ../../bin/gopurs --main Main
     
     if [ -d "output/purescript" ] && [ -f "output/purescript/Main.go" ]; then
       # Format the Go code to ensure deterministic output
