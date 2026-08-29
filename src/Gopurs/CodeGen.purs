@@ -1123,7 +1123,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                             ]
                           in GoIIFE arrValName arrExpr iifeBody
                           
-                        "filterImpl" ->
+                        "filter" ->
                           let
                             fExpr = fromMaybe (GoRaw "nil") (Array.index accArgs.exprs 0)
                             arrExpr = fromMaybe (GoRaw "nil") (Array.index accArgs.exprs 1)

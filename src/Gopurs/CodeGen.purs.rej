@@ -1,9 +1,10 @@
-@@ -279,6 +279,8 @@
- coerceGoExpr expr currentType expectedType =
-   if currentType == expectedType then expr
-   else
-+    let _ = unsafePerformEffect (Console.log ("coerceGoExpr from " <> goTypeToStr currentType <> " to " <> goTypeToStr expectedType <> " on " <> printGoExpr expr))
-+    in
-     boxGoExpr (unboxGoExpr expr expectedType currentType) expectedType
- 
- executeIfOpaque :: TcoExpr -> GoExpr -> GoExpr
+@@ -1563,8 +1563,7 @@
+           let
+             topName = sanitizeName ident
+             goParams = String.joinWith ", " (map (\(Tuple p goT) -> p <> "_loop " <> goTypeToStr goT) paramsWithTypes)
+-            _ = if ident == "filterEvens" then Debug.trace ("filterEvens AST: " <> show (unwrapTcoExpr body)) (\_ -> unit) else unit
+-            _ = if ident == "filterEvens" then Debug.trace ("filterEvens Type: " <> show (getExprType flatFn)) (\_ -> unit) else unit
+             resBody = translateExpr env ctx loopCtx false false 0 body
++            _ = if resBody.expr == GoRaw "nil" then Debug.trace ("NIL FOUND IN " <> topName <> ": " <> show (unwrapTcoExpr body)) (\_ -> unit) else unit
+             
+             goBodyStr = case unwrapTcoExpr body of

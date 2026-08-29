@@ -1,8 +1,9 @@
-@@ -1318,6 +1318,7 @@
-                           Just a -> getExprType (unwrapTcoExpr a)
-                           Nothing -> Any
-                         fExprType = exprTypeToGoType helpers.pointerAdtPaths helpers.enumAdts helpers.elidedCtors modNameStr fType
-+                        _ = unsafePerformEffect (Console.log ("_map first arg fType=" <> printExprType fType <> ", fExprType=" <> goTypeToStr fExprType))
-                       in Just { fArgs: [ fExprType, TypeValue ], fRet: TypeValue }
-                     "Effect.Aff._bind" ->
-                       let
+@@ -1563,6 +1563,8 @@
+           let
+             topName = sanitizeName ident
+             goParams = String.joinWith ", " (map (\(Tuple p goT) -> p <> "_loop " <> goTypeToStr goT) paramsWithTypes)
++            _ = if ident == "filterEvens" then Debug.trace ("filterEvens AST: " <> show (unwrapTcoExpr body)) (\_ -> unit) else unit
++            _ = if ident == "filterEvens" then Debug.trace ("filterEvens Type: " <> show (getExprType flatFn)) (\_ -> unit) else unit
+             resBody = translateExpr env ctx loopCtx false false 0 body
+             
+             goBodyStr = case unwrapTcoExpr body of

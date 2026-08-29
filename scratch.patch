@@ -1,0 +1,7 @@
+--- src/Gopurs/Printer.purs
++++ src/Gopurs/Printer.purs
+@@ -21,6 +21,7 @@
+     "\"" <> s <> "\""
+   GoCall f args ->
+     printGoExpr f <> "(" <> String.joinWith ", " (map printGoExpr args) <> ")"
++  GoRaw "nil" -> "nil"
