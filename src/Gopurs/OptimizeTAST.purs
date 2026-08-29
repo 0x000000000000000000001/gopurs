@@ -8,8 +8,8 @@ import Data.Tuple (Tuple(..))
 import Data.Array as Array
 import Partial.Unsafe (unsafePartial)
 
-import PureScript.Backend.Optimizer.CoreFn (Module(..), Ann(..), Bind(..), Binding(..), Ident)
-import PureScript.Backend.Optimizer.Semantics (BackendExpr(..), Ctx(..), build, NeutralExpr(..))
+import PureScript.Backend.Optimizer.CoreFn (Ann(..), Bind(..), Binding(..), Module(..))
+import PureScript.Backend.Optimizer.Semantics (BackendExpr, Ctx(..), NeutralExpr(..), build)
 import PureScript.Backend.Optimizer.Convert (toBackendModule)
 import Gopurs.QuoteTAST (quoteTAST)
 

@@ -6,56 +6,42 @@ import Effect (Effect)
 import Effect.Console as Console
 import Effect.Class (liftEffect)
 import Effect.Aff (Aff, launchAff_, attempt)
-import Effect.Console (log, logShow)
 import Node.FS.Aff as FS
 import Node.FS.Stats as Stats
 import Node.Encoding (Encoding(..))
 import Node.Process as Process
 import Gopurs.CodeGen as CodeGen
 import Data.Argonaut.Parser (jsonParser)
-import Data.Either (Either(..), isRight)
+import Data.Either (Either(..))
 import Data.Bifunctor (lmap)
 import Data.Argonaut.Decode.Error (printJsonDecodeError)
 import Data.Array as Array
-import Data.Traversable (for, sequence)
-import Debug as Debug
 import Partial.Unsafe (unsafePartial)
 import Data.Tuple (Tuple(..), fst, snd)
 import Data.List as List
 import Data.List (List)
+import Data.Traversable (traverse)
 import Data.Maybe (Maybe(..), isJust, fromMaybe)
-import Data.Tuple (Tuple(..))
 import Data.Map as Map
 import Data.Foldable (foldl)
 
 import Data.Set as Set
-import Data.Traversable (traverse)
 import Data.String.Pattern (Pattern(..), Replacement(..))
 import Data.String as String
 import Data.Newtype (unwrap)
-import PureScript.Backend.Optimizer.CoreFn.Json (decodeModule)
-import PureScript.Backend.Optimizer.CoreFn.Sort (sortModules)
 import PureScript.Backend.Optimizer.Builder (buildModules)
-import PureScript.Backend.Optimizer.Directives.Defaults (defaultDirectives)
-import PureScript.Backend.Optimizer.Directives (parseDirectiveFile)
-import PureScript.Backend.Optimizer.Monomorphize (collectInstantiations, InstantiationMap, collectAllTypes, mangleType, monomorphize, transitiveCollect)
+import PureScript.Backend.Optimizer.Monomorphize (collectInstantiations, InstantiationMap, collectAllTypes, monomorphize, transitiveCollect, getExprAnn)
 import PureScript.Backend.Optimizer.Semantics.Foreign (coreForeignSemantics)
 import PureScript.Backend.Optimizer.CoreFn (Module(..), Ann(..), importName, Bind(..), Binding(..), ExprType(..), Expr(..), Ident(..))
-import Data.String as String
-import PureScript.Backend.Optimizer.Monomorphize (getExprAnn)
 import Gopurs.CodeGen (translate, getStructName)
-import Debug as Debug
 import Gopurs.Runtime (runtimeGoCode)
 import PureScript.Backend.Optimizer.FfiSupport (findFfiFile)
 import Gopurs.GoAst (sanitizeName)
 import Gopurs.FfiSupport (extractFfiAst)
 import Gopurs.FfiTypes (FfiDecl)
-import PureScript.Backend.Optimizer.Monomorphize (collectInstantiations)
-import PureScript.Backend.Optimizer.App (coreFnModulesFromOutput, parseCLIArgs, checkCache, writeCache, loadDirectives)
+import PureScript.Backend.Optimizer.App (coreFnModulesFromOutput, parseCLIArgs, writeCache, loadDirectives)
 import Data.Argonaut.Decode (decodeJson)
 import Effect.Unsafe (unsafePerformEffect)
-import Node.FS.Sync (writeTextFile)
-import Node.Encoding (Encoding(..))
 import PureScript.Backend.Optimizer.Semantics (InlineDirectiveMap)
 
 type PreparedData =
@@ -109,9 +95,6 @@ loadAndPrepareModules args = do
 
   let globalTypes = buildGlobalTypes (Array.fromFoldable finalModules)
   let
-    allClassDecls = foldl (\acc (Module m) ->
-      foldl (\acc' c -> Set.insert c.name acc') acc m.classDecls
-    ) Set.empty finalModules
 
     classDeclsMap = foldl (\acc (Module m) ->
       foldl (\acc' c ->
@@ -152,9 +135,6 @@ loadAndPrepareModules args = do
           ) m.classDecls
       in Module (m { dataDecls = m.dataDecls <> newDecls })
     ) finalModules
-
-    getClassName (ADT fullName _ _) = Just fullName
-    getClassName _ = Nothing
   
   let rawInstantiations = foldl collectInstantiations Map.empty finalModulesWithClassDecls
       
@@ -349,7 +329,7 @@ main = launchAff_ do
         let cachePath = "output/purescript/" <> safeModName <> ".gopurs-cache.json"
         res <- pure Nothing
         case res of
-          Just backendMod -> do
+          Just _ -> do
             let ffiPath = "output/purescript/" <> safeModName <> "_ffi.go"
             ffiStatRes <- attempt (FS.stat ffiPath)
             cacheStatRes <- attempt (FS.stat cachePath)
@@ -378,7 +358,7 @@ main = launchAff_ do
               let ffiDecls = case parsed of
                                Right d -> d
                                Left err -> unsafePerformEffect (Console.log ("JSON Parse error for " <> modNameStr <> ": " <> err) *> pure [])
-              let safeModName = String.replaceAll (Pattern ".") (Replacement "_") modNameStr
+
               let lines = String.split (Pattern "\n") (String.replaceAll (Pattern "\r") (Replacement "") content)
               let otherLines = Array.filter (\l -> not (String.contains (Pattern "package ") l)) lines
               let finalPkgLine = "package purescript"
@@ -395,7 +375,7 @@ main = launchAff_ do
               let newContent = finalPkgLine <> "\n\n" <> importLine <> "\n" <> String.joinWith "\n" renamedContentLines <> "\n\n// --- Auto-generated FFI wrappers ---\n" <> CodeGen.generateFfiBridge safeModName backendMod.dataDecls prefixedFfiDecls (Map.toUnfoldable backendMod.foreign)
               FS.writeTextFile UTF8 ("output/purescript/" <> safeModName <> "_ffi.go") newContent
             Nothing -> do
-              let safeModName = String.replaceAll (Pattern ".") (Replacement "_") modNameStr
+
               let dummyContent = "package purescript\n\nimport \"gopurs/output/gopurs_runtime\"\n\n" <> CodeGen.generateFfiBridge safeModName backendMod.dataDecls [] (Map.toUnfoldable backendMod.foreign)
               FS.writeTextFile UTF8 ("output/purescript/" <> safeModName <> "_ffi.go") dummyContent
         writeCache cacheVersion ("output/purescript/" <> safeModName <> ".gopurs-cache.json") backendMod
