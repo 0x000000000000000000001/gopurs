@@ -46,6 +46,11 @@ import PureScript.Backend.Optimizer.FfiSupport (hashString)
 import Gopurs.FfiTypes (TypeNode(..), FfiDecl)
 import Data.Maybe (fromMaybe)
 
+foreign import memoizedFreeVarsImpl :: (TcoExpr -> Set String) -> TcoExpr -> Set String
+
+memoizedFreeVars :: TcoExpr -> Set String
+memoizedFreeVars = memoizedFreeVarsImpl freeVars
+
 coerceGoExpr :: GoExpr -> GoType -> GoType -> GoExpr
 coerceGoExpr expr from to | from == to = expr
 coerceGoExpr expr (TypeStructPointer b1 f1 s1 a1) (TypeStructPointer b2 f2 s2 a2) | b1 == b2 && s1 == s2 && a1 == a2 = expr
@@ -242,22 +247,22 @@ wrapInStmts _ stmts expr =
     if Array.length stmtsArr == 0 then expr
     else GoRaw ("func() gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (stmtsArr <> [ GoReturn expr ])) <> "\n}()")
 
-extractUncurriedAbs :: TcoExpr -> Maybe { args :: Array String, body :: TcoExpr, fvs :: Set String }
+extractUncurriedAbs :: TcoExpr -> Maybe { args :: Array String, body :: TcoExpr }
 extractUncurriedAbs tcoExpr@(TcoExpr _ syntax) = case syntax of
   UncurriedAbs args body ->
     let
       thisArgs = map (\(Tuple mbI lvl) -> localId mbI lvl) args
     in
       case extractUncurriedAbs body of
-        Just inner -> Just { args: thisArgs <> inner.args, body: inner.body, fvs: Set.union (freeVars tcoExpr) inner.fvs }
-        Nothing -> Just { args: thisArgs, body, fvs: freeVars tcoExpr }
+        Just inner -> Just { args: thisArgs <> inner.args, body: inner.body }
+        Nothing -> Just { args: thisArgs, body }
   Abs args body ->
     let
       thisArgs = map (\(Tuple mbI lvl) -> localId mbI lvl) (toArray args)
     in
       case extractUncurriedAbs body of
-        Just inner -> Just { args: thisArgs <> inner.args, body: inner.body, fvs: Set.union (freeVars tcoExpr) inner.fvs }
-        Nothing -> Just { args: thisArgs, body, fvs: freeVars tcoExpr }
+        Just inner -> Just { args: thisArgs <> inner.args, body: inner.body }
+        Nothing -> Just { args: thisArgs, body }
   Typed _ inner -> extractUncurriedAbs inner
   _ -> Nothing
 
@@ -428,7 +433,7 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves ad
       Array.concatMap
         ( \(Tuple (Ident name) val) ->
             case extractUncurriedAbs val of
-              Just { args, body, fvs } ->
+              Just { args, body } ->
                 let
                   typeSig = extractFuncType val
                   fArgsGo = case typeSig of
@@ -477,7 +482,7 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves ad
                 processBindingGroup :: Array (Tuple Ident TcoExpr) -> Boolean -> Array GoDecl
                 processBindingGroup binds isRec =
                   let
-                    mutRecBinds = traverse (\(Tuple (Ident name) val) -> map (\abs -> { ident: sanitizeName name, args: abs.args, body: abs.body, fvs: abs.fvs, val: val }) (extractUncurriedAbs val)) binds
+                    mutRecBinds = traverse (\(Tuple (Ident name) val) -> map (\abs -> { ident: sanitizeName name, args: abs.args, body: abs.body, fvs: memoizedFreeVars val, val: val }) (extractUncurriedAbs val)) binds
                   in
                     case mutRecBinds of
                       Just fns ->
@@ -780,34 +785,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
         { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: res.nextId }
     else
       let
-        liftIfNeeded mkNodeThunk =
-          if depth > 10 then unsafePerformEffect do
-            let fvsSet = freeVars tcoExpr
-            let fvs = Array.fromFoldable fvsSet
-            let
-              gId = unsafePerformEffect do
-                curr <- Ref.read helpersRef
-                Ref.modify_ (\r -> r { globalId = r.globalId + 1 }) helpersRef
-                pure curr.globalId
-            let helperName = modNameStr <> "__helper_" <> show gId
-            let newNextId = nextId + 1
-            let newBound = foldl (\acc fv -> Map.insert fv { name: fv, goType: TypeValue } acc) bound fvs
-            let res = translateExprImpl_ helpersRef 0 modNameStr recVars moduleArities newBound Nothing [] false inEffectBlock newNextId tcoExpr
-
-            let
-              helperExpr =
-                if Array.length fvs == 0 then GoFunc "_" TypeValue TypeValue (wrapInStmts [] res.stmts res.expr)
-                else Array.foldr (\fv accFunc -> GoFunc fv TypeValue TypeValue accFunc) (wrapInStmts [] res.stmts res.expr) fvs
-
-            Ref.modify_ (\r -> r { decls = Array.snoc r.decls { identifier: helperName, expression: helperExpr, goType: TypeValue } }) helpersRef
-
-            let
-              callExpr =
-                if Array.length fvs == 0 then GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ GoCall (GoVar ("Get_" <> helperName)) [], GoRaw "gopurs_runtime.Int(0)" ]
-                else Array.foldl (\accCall fv -> GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ accCall, boxGoExpr (GoVar (fromMaybe fv (map _.name (Map.lookup fv bound)))) (fromMaybe TypeValue (map _.goType (Map.lookup fv bound))) ]) (GoCall (GoVar ("Get_" <> helperName)) []) fvs
-
-            pure { stmts: StmtEmpty, expr: callExpr, exprType: TypeValue, nextId: res.nextId }
-          else mkNodeThunk unit
+        liftIfNeeded mkNodeThunk = mkNodeThunk unit
       in
         case expr of
           Typed type_ a ->
@@ -1866,7 +1844,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
               isLoop = (unwrap tcoAnalysis).role.isLoop
               mutRecBinds =
                 if isLoop && Array.length (toArray bindings) == 1 then
-                  traverse (\(Tuple (Ident name) val) -> map (\abs -> { ident: sanitizeName name, args: abs.args, body: abs.body, fvs: abs.fvs }) (extractUncurriedAbs val)) (toArray bindings)
+                  traverse (\(Tuple (Ident name) val) -> map (\abs -> { ident: sanitizeName name, args: abs.args, body: abs.body, fvs: memoizedFreeVars val }) (extractUncurriedAbs val)) (toArray bindings)
                 else Nothing
             in
               case mutRecBinds of

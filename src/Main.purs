@@ -146,6 +146,7 @@ loadAndPrepareModules args = do
       ) Map.empty finalModulesWithClassDecls
 
   let transitiveInstantiations = transitiveCollect globalAstMap rawInstantiations
+
   let instantiations = Map.filterKeys (\k -> case Map.lookup k globalTypes of
                                             Just t -> hasTypeVariables t
                                             Nothing -> false) transitiveInstantiations
