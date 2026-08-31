@@ -501,7 +501,7 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves ad
 
                                   arity = Array.length fn.args
 
-                                  expectedRetType = let _ = unsafePerformEffect (if String.contains (Pattern "lookup") goName then Console.log ("lookup fn.args: " <> show fn.args <> " expectedExprType: " <> printExprType (getExprType fn.val)) else pure unit) in case Map.lookup goName moduleArities of
+                                  expectedRetType = case Map.lookup goName moduleArities of
                                     Just { fRet, fArgs } | arity < Array.length fArgs -> TypeValue
                                     Just { fRet } -> fRet
                                     Nothing -> TypeValue
