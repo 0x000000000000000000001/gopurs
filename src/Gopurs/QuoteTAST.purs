@@ -9,7 +9,8 @@ import Partial.Unsafe (unsafeCrashWith)
 
 import PureScript.Backend.Optimizer.CoreFn (Ann(..), Bind(..), Binding(..), CaseAlternative(..), CaseGuard(..), Expr(..), ExprType(..), Guard(..), Ident(..), Prop(..), Qualified(..), Binder(..), Literal(..))
 import PureScript.Backend.Optimizer.Semantics (BackendExpr(..))
-import PureScript.Backend.Optimizer.Syntax (BackendSyntax(..), Level(..), BackendAccessor(..), fstPair, sndPair)
+import PureScript.Backend.Optimizer.Syntax (BackendSyntax(Var, Local, Lit, App, Abs, UncurriedApp, UncurriedAbs, UncurriedEffectApp, UncurriedEffectAbs, Accessor, Update, CtorSaturated, CtorDef, LetRec, Let, EffectBind, EffectPure, EffectDefer, Branch, PrimOp, PrimEffect, PrimUndefined, Fail, Typed), Level(..), BackendAccessor(..), fstPair, sndPair)
+import PureScript.Backend.Optimizer.Syntax as Syn
 
 quoteTAST :: BackendExpr -> Expr Ann
 quoteTAST = case _ of
@@ -23,6 +24,7 @@ quoteTAST = case _ of
           Local ident _ -> ExprVar ann (Qualified Nothing (fromMaybe (Ident "_") ident))
           Lit lit -> ExprLit ann (map quoteTAST lit)
           App f args -> Array.foldl (ExprApp ann) (quoteTAST f) (map quoteTAST (NonEmptyArray.toArray args))
+          Syn.TypeApp f _ -> quoteTAST f
           UncurriedApp f args -> Array.foldl (ExprApp ann) (quoteTAST f) (map quoteTAST args)
           Abs args body -> Array.foldr (\(Tuple ident _) b -> ExprAbs ann (fromMaybe (Ident "_") ident) b) (quoteTAST body) (NonEmptyArray.toArray args)
           UncurriedAbs args body -> Array.foldr (\(Tuple ident _) b -> ExprAbs ann (fromMaybe (Ident "_") ident) b) (quoteTAST body) args
@@ -64,6 +66,7 @@ quoteTAST = case _ of
         Local ident _ -> ExprVar dummyAnn (Qualified Nothing (fromMaybe (Ident "_") ident))
         Lit lit -> ExprLit dummyAnn (map quoteTAST lit)
         App f args -> Array.foldl (ExprApp dummyAnn) (quoteTAST f) (map quoteTAST (NonEmptyArray.toArray args))
+        Syn.TypeApp f _ -> quoteTAST f
         UncurriedApp f args -> Array.foldl (ExprApp dummyAnn) (quoteTAST f) (map quoteTAST args)
         Abs args body -> Array.foldr (\(Tuple ident _) b -> ExprAbs dummyAnn (fromMaybe (Ident "_") ident) b) (quoteTAST body) (NonEmptyArray.toArray args)
         UncurriedAbs args body -> Array.foldr (\(Tuple ident _) b -> ExprAbs dummyAnn (fromMaybe (Ident "_") ident) b) (quoteTAST body) args

@@ -11,7 +11,8 @@ import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.CoreFn (Ident(..), Prop(..), Literal(..))
-import PureScript.Backend.Optimizer.Syntax (BackendSyntax(..), Level(..), Pair(..), BackendOperator(..))
+import PureScript.Backend.Optimizer.Syntax (BackendSyntax(Var, Local, Lit, App, Abs, UncurriedApp, UncurriedAbs, UncurriedEffectApp, UncurriedEffectAbs, Accessor, Update, CtorSaturated, CtorDef, LetRec, Let, EffectBind, EffectPure, EffectDefer, Branch, PrimOp, PrimEffect, PrimUndefined, Fail, Typed), Level(..), Pair(..), BackendOperator(..))
+import PureScript.Backend.Optimizer.Syntax as Syn
 import Data.Array.NonEmpty (toArray)
 import Data.String (Pattern(..), Replacement(..))
 import Data.String as String
@@ -64,6 +65,8 @@ usageCount (TcoExpr _ syntax) = case syntax of
     _ -> Map.empty
   App fn args -> 
     Array.foldl (\acc e -> addUsages acc (usageCount e)) (usageCount fn) (toArray args)
+  Syn.TypeApp fn _ ->
+    usageCount fn
   Abs args body ->
     let 
       argsList = map (\(Tuple mbIdent lvl) -> localId mbIdent lvl) (toArray args)
@@ -132,8 +135,10 @@ freeVars (TcoExpr _ syntax) = case syntax of
     LitArray arr -> Array.foldl (\acc e -> Set.union acc (freeVars e)) Set.empty arr
     LitRecord rec -> Array.foldl (\acc (Prop _ e) -> Set.union acc (freeVars e)) Set.empty rec
     _ -> Set.empty
-  App fn args -> 
+  App fn args ->
     Array.foldl (\acc e -> Set.union acc (freeVars e)) (freeVars fn) (toArray args)
+  Syn.TypeApp fn _ ->
+    freeVars fn
   Abs args body ->
     let 
       argsList = map (\(Tuple mbIdent lvl) -> localId mbIdent lvl) (toArray args)

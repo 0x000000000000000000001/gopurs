@@ -147,7 +147,12 @@ loadAndPrepareModules args = do
 
   let transitiveInstantiations = transitiveCollect globalAstMap rawInstantiations
 
-  let instantiations = Map.filterKeys (\k -> case Map.lookup k globalTypes of
+  let ffiGlobals = foldl (\acc (Module m) ->
+         let modName = unwrap m.name
+         in foldl (\acc' (Tuple (Ident name) _) -> Set.insert (modName <> "." <> name) acc') acc (Map.toUnfoldable m.foreign :: Array (Tuple Ident (Maybe ExprType)))
+      ) Set.empty finalModulesWithClassDecls
+
+  let instantiations = Map.filterKeys (\k -> not (Set.member k ffiGlobals) && case Map.lookup k globalTypes of
                                             Just t -> hasTypeVariables t
                                             Nothing -> false) transitiveInstantiations
 
