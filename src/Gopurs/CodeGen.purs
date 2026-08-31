@@ -270,19 +270,32 @@ extractUncurriedAbs tcoExpr@(TcoExpr _ syntax) = case syntax of
 unwrapExpr :: TcoExpr -> BackendSyntax TcoExpr
 unwrapExpr (TcoExpr _ e) = e
 
-flattenApp :: TcoExpr -> Tuple TcoExpr (Array TcoExpr)
-flattenApp e =
+data GoSpineArg = GoSpineApp (Array TcoExpr) | GoSpineTypeApp ExprType
+
+getGoSpineArgs :: Array GoSpineArg -> Array TcoExpr
+getGoSpineArgs = Array.concatMap extractApp
+  where
+  extractApp (GoSpineApp a) = a
+  extractApp _ = []
+
+collectGoSpine :: TcoExpr -> Tuple TcoExpr (Array GoSpineArg)
+collectGoSpine e =
   case unwrapTcoExpr e of
     App f args ->
       let
-        Tuple f' args' = flattenApp f
+        Tuple f' args' = collectGoSpine f
       in
-        Tuple f' (args' <> toArray args)
+        Tuple f' (args' <> [GoSpineApp (toArray args)])
     UncurriedApp f args ->
       let
-        Tuple f' args' = flattenApp f
+        Tuple f' args' = collectGoSpine f
       in
-        Tuple f' (args' <> args)
+        Tuple f' (args' <> [GoSpineApp args])
+    Syn.TypeApp f ty ->
+      let
+        Tuple f' args' = collectGoSpine f
+      in
+        Tuple f' (args' <> [GoSpineTypeApp ty])
     _ -> Tuple e []
 
 getBaseStructName :: String -> Maybe ModuleName -> String -> String
@@ -616,7 +629,8 @@ isClosureNode helpersRef expr = case unwrapTcoExpr expr of
   UncurriedAbs _ _ -> true
   App _ _ ->
     let
-      Tuple flatFn flatArgs = flattenApp expr
+      Tuple flatFn flatArgsSpine = collectGoSpine expr
+      flatArgs = getGoSpineArgs flatArgsSpine
       expectedArity = getArityFromType (getExprType flatFn)
       actualArity = Array.length flatArgs
     in
@@ -636,7 +650,8 @@ isClosureNode helpersRef expr = case unwrapTcoExpr expr of
         _ -> actualArity < expectedArity
   UncurriedApp _ _ ->
     let
-      Tuple flatFn flatArgs = flattenApp expr
+      Tuple flatFn flatArgsSpine = collectGoSpine expr
+      flatArgs = getGoSpineArgs flatArgsSpine
       expectedArity = getArityFromType (getExprType flatFn)
       actualArity = Array.length flatArgs
     in
@@ -1025,7 +1040,8 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
           App fn args ->
             let
               argsArr = toArray args
-              Tuple flatFn flatArgs = flattenApp tcoExpr
+              Tuple flatFn flatArgsSpine = collectGoSpine tcoExpr
+              flatArgs = getGoSpineArgs flatArgsSpine
 
               isTailCallTo =
                 if isTail then case unwrapTcoExpr flatFn of
@@ -1571,7 +1587,8 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                     iifeExpr
                 Nothing ->
                   let
-                    Tuple flatFn flatArgs = flattenApp tcoExpr
+                    Tuple flatFn flatArgsSpine = collectGoSpine tcoExpr
+                    flatArgs = getGoSpineArgs flatArgsSpine
                     isTailCallTo =
                       if isTail then case unwrapTcoExpr flatFn of
                         Local mbIdent lvl ->

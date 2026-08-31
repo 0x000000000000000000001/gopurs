@@ -28,8 +28,8 @@ Lors de l'investigation sur `void`, on a découvert que le code Go final génèr
 - **Action 2 (Générateur Go)** :
   - [ ] **Baby Step 3.1 : Capter et transmettre les TypeApp dans CodeGen.purs**
     - [ ] 3.1.1 : Créer un type de donnée `GoSpineArg = GoSpineApp (Array TcoExpr) | GoSpineTypeApp ExprType`.
-    - [ ] 3.1.2 : Remplacer `flattenApp` par `collectGoSpine` pour dépiler les `App`, `UncurriedApp` et `TypeApp`.
-    - [ ] 3.1.3 : Remplacer l'appel à `flattenApp` dans `translateExprImpl__` par `collectGoSpine`.
+    - [x] 3.1.2 : Remplacer `flattenApp` par `collectGoSpine` pour dépiler les `App`, `UncurriedApp` et `TypeApp`.
+    - [x] 3.1.3 : Remplacer l'appel à `flattenApp` dans `translateExprImpl__` par `collectGoSpine`.
     - [ ] 3.1.4 : Mettre à jour la logique d'application des `App`/`TypeApp` pour filtrer les types (à sauvegarder) et les valeurs (à évaluer), et supprimer l'ancien traitement isolé de `TypeApp`.
   - Amélioration de `exprTypeToGoType` pour préserver le type générique (ex: `T_a`) au lieu de le rabaisser en `Value`.
   - Adaptation du *Wrapper* avec `gopurs_runtime.AnyToValue` et `ValueToAny` pour déballer/remballer aux frontières d'appel du Worker.
