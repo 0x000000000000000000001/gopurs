@@ -23,8 +23,24 @@ Lors de l'investigation sur `void`, on a découvert que le code Go final génèr
 - [ ] *Action* : Corriger le filtrage des arguments (`filteredArgs`) dans `Monomorphize.purs` lors d'un fallback `rebuildSpine`, afin que le dictionnaire statique ne soit pas supprimé de l'AST recréé si la fonction cible n'est finalement pas substituée par sa version spécialisée.
 
 ### 3. Exploitation des TypeApp et Monomorphisation au Générateur 
-  - [ ] S'assurer que `Convert.purs` n'ignore aucun nœud `ExprTypeApp` issu du JSON (TAST).
-  - Remplacer les fonctions rigides actuelles (`collectAppSpine` et `collectTypeAppSpine` dans `Monomorphize.purs`) par un `collectSpine` unifié et robuste (tolérant à l'ordre d'imbrication) pour dépiler conjointement les arguments classiques (`ExprApp`) et les arguments de type (`ExprTypeApp`).
+  - [x] S'assurer que `Convert.purs` n'ignore aucun nœud `ExprTypeApp` issu du JSON (TAST). *(Déjà implémenté dans l'optimiseur)*
+  - [x] Remplacer les fonctions rigides actuelles (`collectAppSpine` et `collectTypeAppSpine` dans `Monomorphize.purs`) par un `collectSpine` unifié et robuste (tolérant à l'ordre d'imbrication) pour dépiler conjointement les arguments classiques (`ExprApp`) et les arguments de type (`ExprTypeApp`). *(Déjà implémenté dans l'optimiseur)*
 - **Action 2 (Générateur Go)** :
+  - [ ] **Baby Step 3.1 : Capter et transmettre les TypeApp dans CodeGen.purs**
+    - 3.1.1 : Écrire une fonction `collectGoSpine` dans `CodeGen.purs` pour dépiler `Syn.App` et `Syn.TypeApp` d'un seul coup.
+    - 3.1.2 : Utiliser `collectGoSpine` dans `translateExprImpl__` pour collecter les types au lieu d'ignorer `Syn.TypeApp`.
   - Amélioration de `exprTypeToGoType` pour préserver le type générique (ex: `T_a`) au lieu de le rabaisser en `Value`.
   - Adaptation du *Wrapper* avec `gopurs_runtime.AnyToValue` et `ValueToAny` pour déballer/remballer aux frontières d'appel du Worker.
+
+### 4. Unboxing total des ADT (Génération de structs natives)
+L'objectif est d'éliminer les allocations de `gopurs_runtime.Value` pour les constructeurs de données (comme `Tree a` dans `Red-Black Tree`), afin de diviser par deux ou trois les temps d'exécution.
+*(Prérequis : Avoir accompli le point 3 pour que `exprTypeToGoType` puisse lire les `TypeApp` et générer des pointeurs typés comme `*Node[int64]` au lieu de génériques polymorphes).*
+
+- [ ] **Baby Step 4.1 : Changer la signature des structs générées**
+  - Modifier `CodeGen.purs` (lors de `generateStructs`) pour utiliser les informations de `dataDecls` (du TAST) afin de générer les champs avec leur vrai type (`V0 T_a`, `V1 int64`) au lieu de `gopurs_runtime.Value`.
+- [ ] **Baby Step 4.2 : Adapter les appels de constructeurs**
+  - Faire en sorte que `GoConstructorApp` n'encapsule plus les arguments dans des boîtes (`Box`) mais passe les valeurs natives déballées.
+- [ ] **Baby Step 4.3 : Adapter le Pattern Matching (`GoCase`)**
+  - Mettre à jour la génération des clauses `switch/case` pour lire directement les valeurs natives sans devoir faire d'appels `Unbox` ou `.IntVal`.
+- [ ] **Baby Step 4.4 : Le Wrapper Frontière**
+  - Mettre à jour la FFI `AnyToValue` / `ValueToAny` pour ré-emballer ces structs natives pures en `Value` lorsqu'elles sortent vers du code Go dynamique (ou non polymorphe résolu).
