@@ -343,15 +343,7 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves ad
       in
         checkSafe t
 
-    instantiations = Map.mapMaybe
-      ( \typeMap ->
-          let
-            set = Set.fromFoldable (Map.keys typeMap)
-            safeSet = Set.filter isSafeType set
-          in
-            if Set.isEmpty safeSet then Nothing else Just safeSet
-      )
-      rawInstantiations
+
 
     helpersRef = unsafePerformEffect do
       let
