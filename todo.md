@@ -32,19 +32,19 @@ Lors de l'investigation sur `void`, on a découvert que le code Go final génèr
     - [x] 3.1.3 : Remplacer l'appel à `flattenApp` dans `translateExprImpl__` par `collectGoSpine`.
     - [x] 3.1.4 : Mettre à jour la logique d'application des `App`/`TypeApp` pour filtrer les types (à sauvegarder) et les valeurs (à évaluer), et supprimer l'ancien traitement isolé de `TypeApp`.
   - [ ] **Baby Step 3.2 : Amélioration de `exprTypeToGoType`**
-    - [ ] 3.2.1 : Modifier `exprTypeToGoType` pour préserver le type générique (ex: `T_a`) au lieu de le rabaisser systématiquement en `gopurs_runtime.Value` (TypeAny/TypeValue).
+    - [x] 3.2.1 : Modifier `exprTypeToGoType` pour préserver le type générique (ex: `T_a`) au lieu de le rabaisser systématiquement en `gopurs_runtime.Value` (TypeAny/TypeValue).
+    - [x] 3.2.2 : Propager les déclarations génériques en Go (structs et func) avec `[T_a any]` pour satisfaire le compilateur Go.
   - [ ] **Baby Step 3.3 : Adaptation du Wrapper d'appels natifs**
-    - [ ] 3.3.1 : Utiliser `gopurs_runtime.AnyToValue` et `ValueToAny` pour déballer/remballer aux frontières d'appel du Worker (adaptation de `generateWrapperFunc` si nécessaire).
+    - [x] 3.3.1 : Utiliser `gopurs_runtime.AnyToValue` et `ValueToAny` pour déballer/remballer aux frontières d'appel du Worker (adaptation de `generateWrapperFunc` si nécessaire).
 
 ### 4. Unboxing total des ADT (Génération de structs natives)
 L'objectif est d'éliminer les allocations de `gopurs_runtime.Value` pour les constructeurs de données (comme `Tree a` dans `Red-Black Tree`), afin de diviser par deux ou trois les temps d'exécution.
 *(Prérequis : Avoir accompli le point 3 pour que `exprTypeToGoType` puisse lire les `TypeApp` et générer des pointeurs typés comme `*Node[int64]` au lieu de génériques polymorphes).*
 
-- [ ] **Baby Step 4.1 : Changer la signature des structs générées**
+- [x] **Baby Step 4.1 : Changer la signature des structs générées** (Déjà fait par l'étape 3.2.1)
   - Modifier `CodeGen.purs` (lors de `generateStructs`) pour utiliser les informations de `dataDecls` (du TAST) afin de générer les champs avec leur vrai type (`V0 T_a`, `V1 int64`) au lieu de `gopurs_runtime.Value`.
-- [ ] **Baby Step 4.2 : Adapter les appels de constructeurs**
-  - Faire en sorte que `GoConstructorApp` n'encapsule plus les arguments dans des boîtes (`Box`) mais passe les valeurs natives déballées.
-- [ ] **Baby Step 4.3 : Adapter le Pattern Matching (`GoCase`)**
-  - Mettre à jour la génération des clauses `switch/case` pour lire directement les valeurs natives sans devoir faire d'appels `Unbox` ou `.IntVal`.
-- [ ] **Baby Step 4.4 : Le Wrapper Frontière**
-  - Mettre à jour la FFI `AnyToValue` / `ValueToAny` pour ré-emballer ces structs natives pures en `Value` lorsqu'elles sortent vers du code Go dynamique (ou non polymorphe résolu).
+- [ ] **Baby Step 4.2 : Gérer le polymorphisme aux frontières**
+  - [ ] 4.2.1 : Ajouter `gopurs_runtime.ReboxToStruct[T any](val Value) *T` via la réflexion Go (`reflect`) dans `Runtime.purs` pour faire une copie profonde d'un ADT polymorphe vers sa forme concrète.
+  - [ ] 4.2.2 : Modifier `coerceGoExpr` dans `CodeGen.purs` pour appeler `ReboxToStruct[T]` au lieu de `CoerceToStruct[T]` en cas de frontière polymorphe (quand le type d'origine et d'arrivée ne correspondent pas).
+- [ ] **Baby Step 4.3 : Optimisation AOT (Générer des fonctions natives de Re-boxing)**
+  - Plus tard, remplacer l'utilisation de `reflect` par la génération en dur de fonctions Go (`Rebox_Test_Primes_Cons`) pour éliminer l'overhead de la réflexion.

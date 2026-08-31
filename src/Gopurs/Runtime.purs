@@ -816,6 +816,27 @@ func Apply7(fn Value, arg1 Value, arg2 Value, arg3 Value, arg4 Value, arg5 Value
 	return Apply(Apply(Apply(Apply(Apply(Apply(Apply(fn, arg1), arg2), arg3), arg4), arg5), arg6), arg7)
 }
 
+func AnyToValue(val any) Value {
+	if val == nil {
+		return Value{}
+	}
+	return Box(val)
+}
+
+func ValueToAny(val Value) any {
+	switch val.Type {
+	case TypeInt:
+		return val.IntVal
+	case TypeFloat:
+		return *(*float64)(val.UnsafePtr)
+	case TypeString:
+		return *(*string)(val.UnsafePtr)
+	case TypeBool:
+		return val.IntVal != 0
+	}
+	return val
+}
+
 func Apply8(fn Value, arg1 Value, arg2 Value, arg3 Value, arg4 Value, arg5 Value, arg6 Value, arg7 Value, arg8 Value) Value {
 	return Apply(Apply(Apply(Apply(Apply(Apply(Apply(Apply(fn, arg1), arg2), arg3), arg4), arg5), arg6), arg7), arg8)
 }
