@@ -2,62 +2,36 @@
 
 L'objectif est d'atteindre les performances maximales du compilateur Go natif ("cheatcode"), en éliminant les reliquats d'allocations dynamiques (`gopurs_runtime.Value`) qui ralentissent l'exécution.
 
-> **Preuve empirique (basée sur `altbak.pub`)** :
-> En analysant l'output généré par `gopurs` (comme `Test_ListOps.go`), on constate que la spécialisation des types est incomplète malgré la puissance du TAST v3, car le générateur de code Go n'exploite pas encore les informations de type exactes :
-> 
-> 1. **Polymorphisme des ADTs (ex: ListOps - 44 µs vs 1 µs cheatcode)** : 
->    Dans `Test_ListOps.go`, le constructeur `Cons` est défini avec :
->    `type Constructor_Test_ListOps_Cons struct { Rc uint32; V0 gopurs_runtime.Value; V1 *Constructor_Test_ListOps_Cons }`
->    Le payload `V0` est contraint d'être un `gopurs_runtime.Value` (alloué sur le tas, `interface{}`) au lieu d'un `int64` natif, sollicitant massivement le Garbage Collector.
-> 
-> 2. **Surcharge de boxing (ex: Opérations mathématiques)** : 
->    Une simple soustraction est traduite par `v_3_loop = gopurs_runtime.Int((v_3.IntVal) - (1))`. Bien que l'opération se fasse de manière native, le résultat est immédiatement ré-alloué sur la heap sous la forme d'un `gopurs_runtime.Int`.
+> [!IMPORTANT]
+> Le juge de paix absolu pour évaluer les performances est le projet `altbak.pub` en utilisant la commande `bin/run/go -c`.
 
 ## État des lieux (Accompli) :
 - [x] **Dictionnaires de Type Class (Monomorphisation)** : L'utilisation de `Apply2(Box(dict.V0), ...)` a été complètement éradiquée. Grâce à l'optimiseur centralisé branché sur le TAST v3, toutes les instances de Type Classes sont résolues statiquement avant la génération de code Go.
 - [x] **Unification du pipeline de Build** : Migration vers `spago bundle` et interfaçage avec `purescript-backend-optimizer`.
+- [x] **Step 1 (Monomorphisation stricte des ADTs)** : Éradication totale de `gopurs_runtime.Value` pour les payloads des ADTs. Fini les pointeurs dynamiques pour des primitives.
+- [x] **Step 2 (Pattern Worker/Wrapper pour les fonctions & Instanciation Locale)** : 
+  - Phase 1 (Instanciation locale des LetRec) : Routage correct des types attendus via le TAST résout les panics d'exécution.
+  - Phase 2 (Workers Génériques Top-Level) : Les fonctions génériques sont de retour dans le code Go sans faire planter le compilateur.
 
-## Prochaines étapes
+## Prochaines étapes (Baby steps)
 
-- [x] **Step 1 (Monomorphisation stricte des ADTs)** :
-  - **Action** : Le TAST v3 fournissant les `TypeApp`, `gopurs` doit générer des structures génériques natives Go 1.18 (`type Cons[T any] struct { V0 T; V1 *Cons[T] }`) ou spécialisées (`type Cons_Int64`).
-  - **Résultat attendu** : Éradication totale de `gopurs_runtime.Value` pour les payloads des ADTs. Fini les pointeurs dynamiques pour des primitives. *(Accompli, mais a révélé le besoin vital de l'étape 2)*
+### 1. Optimisation de ListOps (Monomorphisation et TCO)
+Le code de `ListOps` s'est amélioré grâce à la restauration du typage et de l'inlining, mais il reste des lacunes d'optimisation (notamment sur la monomorphisation et la TCO) :
 
-- [x] **Step 2 (Pattern Worker/Wrapper pour les fonctions & Instanciation Locale)** :
-  - **Problème Actuel** : Les boucles locales (`LetRec`) inlinées par l'optimiseur conservent leur type polymorphe d'origine (`TypeVar "a"`), ce qui provoque un crash mémoire (panic) lorsqu'elles tentent de lire un payload ADT généré nativement (ex: lire un `Value` à la place d'un `int64`).
-  - [x] **Phase 1 (Instanciation locale des LetRec)** : Scrutateur de type dans `translateExprImpl_ LetRec`. Inférer le type concret (`int64`) depuis l'appel de la boucle (`GoCall`) pour instancier ses arguments au lieu d'utiliser aveuglément `TypeVar` (qui devient `Value`). *(Accompli : Le routage correct des types attendus via le TAST résout les panics d'exécution liés au mismatch `Value` vs type natif)*
-  - [x] **Phase 2 (Workers Génériques Top-Level)** : Restauration des paramètres génériques natifs Go (Go 1.18+).
-    - *Action* : Collecte des variables implicites (`TypeVar`) dans l'AST des types pour forcer la signature générique du Worker (`func Call_foldl[T_b any, T_a any]`). Mise à jour des appels directs (`mbDirectCall`) pour injecter explicitement la version opaque (`[gopurs_runtime.Value, ...]`) afin de satisfaire l'inférence du compilateur Go.
-    - *Résultat* : Les fonctions génériques sont de retour dans le code Go sans faire planter le compilateur. L'échafaudage pour la Phase 3 est en place.
+- [ ] **Le cas de la récursion (TCO cassée)** : La boucle TCO est détruite pour la version spécialisée de `foldl`, car l'appel récursif retombe sur la version générique polymorphe.
+  - [ ] *Action* : Inspecter pourquoi, lors de la monomorphisation d'une fonction récursive, `Monomorphize.purs` "oublie" de remplacer l'identifiant polymorphe par l'identifiant spécialisé dans le corps de la fonction (le `LetRec`).
+- [ ] **Le cas du DPE (Dictionary Passing Elimination)** : L'inlining des primitives "Higher-Order" échoue (ex: `v_0` qui est en réalité `intAdd`). 
+  - [ ] *Action* : Vérifier si le DPE est bien exécuté pour `mod` ou `intAdd`, et pourquoi il s'arrête à un appel de closure (`Apply2`) au lieu de se réduire à l'opérateur primitif `ExternPrimOp`.
 
-- [ ] **Step 3 (Exploitation des TypeApp et Monomorphisation au Générateur)** :
-  - [ ] **Action 1 (Convert.purs / Monomorphize.purs)** : 
-    - S'assurer que `Convert.purs` n'ignore aucun nœud `ExprTypeApp` issu du JSON (TAST).
-    - **Le Refactoring vital** : Remplacer les fonctions rigides actuelles (`collectAppSpine` et `collectTypeAppSpine` dans `Monomorphize.purs`) qui plantent silencieusement sur les AST entrelacés.
-    - Écrire un `collectSpine` unifié et robuste (tolérant à l'ordre d'imbrication) pour dépiler conjointement les arguments classiques (`ExprApp`) et les arguments de type (`ExprTypeApp`) dans deux listes distinctes, afin d'extraire la vraie fonction de base (`ExprVar`).
-    - Propager ces arguments de type exacts jusqu'au générateur de code.
-  - [ ] **Action 2 (Générateur Go)** :
-    - Amélioration de `exprTypeToGoType` pour préserver le type générique (ex: `T_a`) au lieu de le rabaisser en `Value`.
-    - **Instanciation des ADTs** : Les définitions d'ADTs (comme `Cons[T_a]`) doivent exploiter ces types pour leurs payloads (`V0 int64` au lieu de `V0 gopurs_runtime.Value`).
-    - **Instanciation des Workers** : Les fonctions polymorphes (comme `foldl`) doivent recevoir leurs paramètres de type (`foldl[int64, int64]`) pour forcer Go à les cloner en version native.
-    - Adaptation du *Wrapper* avec `gopurs_runtime.AnyToValue` et `ValueToAny` pour "déballer" et "remballer" aux frontières d'appel du Worker, si l'appel vient d'un contexte encore polymorphe.
-  - **Bénéfice ultime (La Zéro-Cost Abstraction)** : 
-    - **ADTs unboxés** : Les structures de données (listes, arbres) ne feront plus aucune allocation sur le tas pour les primitives.
-      *Avant (La tragédie des ADTs)* : `V0` est forcé à être une interface allouée sur le tas (`gopurs_runtime.Value`) malgré le paramètre générique.
-      ```go
-      type Constructor_Test_ListOps_Cons[T_a any] struct {
-      	Rc uint32
-      	V0 gopurs_runtime.Value
-      	V1 *Constructor_Test_ListOps_Cons[gopurs_runtime.Value]
-      }
-      ```
-      *Après (Grâce au TypeApp)* : `Cons` est appliqué au type `Int`. Le générateur crachera `V0 int64`. Zéro allocation sur la heap, la liste chaînée devient un pur bloc de mémoire compact !
+### 2. Le bug de `void` (RecordGet sur Func)
+Lors de l'investigation sur `void`, on a découvert que le code Go final génère `RecordGet(Func(\_ -> unit), "map")` au lieu d'un appel natif. Ceci est causé par un décalage d'arguments dans l'AST lors du "fallback" de `monomorphizeExpr` (quand `instType` contient encore des variables de type).
 
-    - **Fonctions 100% natives** : Le Worker n'effectue plus aucune conversion dynamique et reçoit des structures 100% natives. Les appels directs depuis PureScript tireront parti de la "monomorphisation par stenciling" de Go (ex: appel direct de la version `..._int` hyper rapide). Zéro surcoût sur le chemin critique !
-      *Avant (Le drame du Worker)* : Les arguments de type sont effacés, `foldl` prend et retourne des `Value`, et utilise un dispatch dynamique lent (`Apply2`) dans la boucle.
-      ```go
-      func Call_Test_ListOps_foldl(v_0_loop gopurs_runtime.Value, v1_1_loop gopurs_runtime.Value, v2_2_loop *Constructor_Test_ListOps_Cons[gopurs_runtime.Value]) gopurs_runtime.Value
-      ```
-      *Après (Grâce au TypeApp)* : Le Worker devient générique (`func Call_Test_ListOps_foldl[a any, b any]...`) et est appelé avec ses types exacts (`Call_Test_ListOps_foldl[int64, int64](...)`). Le compilateur Go le clonera silencieusement en pur code machine natif.
+- [ ] *Action* : Corriger le filtrage des arguments (`filteredArgs`) dans `Monomorphize.purs` lors d'un fallback `rebuildSpine`, afin que le dictionnaire statique ne soit pas supprimé de l'AST recréé si la fonction cible n'est finalement pas substituée par sa version spécialisée.
 
-Tu peux tester si tout roule dans altbak.pub avec `bin/go/run -c`
+### 3. Exploitation des TypeApp et Monomorphisation au Générateur
+- [ ] **Action 1 (Convert.purs / Monomorphize.purs)** : 
+  - [ ] S'assurer que `Convert.purs` n'ignore aucun nœud `ExprTypeApp` issu du JSON (TAST).
+  - Remplacer les fonctions rigides actuelles (`collectAppSpine` et `collectTypeAppSpine` dans `Monomorphize.purs`) par un `collectSpine` unifié et robuste (tolérant à l'ordre d'imbrication) pour dépiler conjointement les arguments classiques (`ExprApp`) et les arguments de type (`ExprTypeApp`).
+- **Action 2 (Générateur Go)** :
+  - Amélioration de `exprTypeToGoType` pour préserver le type générique (ex: `T_a`) au lieu de le rabaisser en `Value`.
+  - Adaptation du *Wrapper* avec `gopurs_runtime.AnyToValue` et `ValueToAny` pour déballer/remballer aux frontières d'appel du Worker.
