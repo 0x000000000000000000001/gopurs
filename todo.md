@@ -30,9 +30,11 @@ Lors de l'investigation sur `void`, on a découvert que le code Go final génèr
     - [ ] 3.1.1 : Créer un type de donnée `GoSpineArg = GoSpineApp (Array TcoExpr) | GoSpineTypeApp ExprType`.
     - [x] 3.1.2 : Remplacer `flattenApp` par `collectGoSpine` pour dépiler les `App`, `UncurriedApp` et `TypeApp`.
     - [x] 3.1.3 : Remplacer l'appel à `flattenApp` dans `translateExprImpl__` par `collectGoSpine`.
-    - [ ] 3.1.4 : Mettre à jour la logique d'application des `App`/`TypeApp` pour filtrer les types (à sauvegarder) et les valeurs (à évaluer), et supprimer l'ancien traitement isolé de `TypeApp`.
-  - Amélioration de `exprTypeToGoType` pour préserver le type générique (ex: `T_a`) au lieu de le rabaisser en `Value`.
-  - Adaptation du *Wrapper* avec `gopurs_runtime.AnyToValue` et `ValueToAny` pour déballer/remballer aux frontières d'appel du Worker.
+    - [x] 3.1.4 : Mettre à jour la logique d'application des `App`/`TypeApp` pour filtrer les types (à sauvegarder) et les valeurs (à évaluer), et supprimer l'ancien traitement isolé de `TypeApp`.
+  - [ ] **Baby Step 3.2 : Amélioration de `exprTypeToGoType`**
+    - [ ] 3.2.1 : Modifier `exprTypeToGoType` pour préserver le type générique (ex: `T_a`) au lieu de le rabaisser systématiquement en `gopurs_runtime.Value` (TypeAny/TypeValue).
+  - [ ] **Baby Step 3.3 : Adaptation du Wrapper d'appels natifs**
+    - [ ] 3.3.1 : Utiliser `gopurs_runtime.AnyToValue` et `ValueToAny` pour déballer/remballer aux frontières d'appel du Worker (adaptation de `generateWrapperFunc` si nécessaire).
 
 ### 4. Unboxing total des ADT (Génération de structs natives)
 L'objectif est d'éliminer les allocations de `gopurs_runtime.Value` pour les constructeurs de données (comme `Tree a` dans `Red-Black Tree`), afin de diviser par deux ou trois les temps d'exécution.

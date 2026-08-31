@@ -278,9 +278,14 @@ getGoSpineArgs = Array.concatMap extractApp
   extractApp (GoSpineApp a) = a
   extractApp _ = []
 
+unwrapForSpine :: TcoExpr -> BackendSyntax TcoExpr
+unwrapForSpine (TcoExpr _ syn) = case syn of
+  Typed _ inner -> unwrapForSpine inner
+  _ -> syn
+
 collectGoSpine :: TcoExpr -> Tuple TcoExpr (Array GoSpineArg)
 collectGoSpine e =
-  case unwrapTcoExpr e of
+  case unwrapForSpine e of
     App f args ->
       let
         Tuple f' args' = collectGoSpine f
@@ -797,9 +802,6 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
         liftIfNeeded mkNodeThunk = mkNodeThunk unit
       in
         case expr of
-          Syn.TypeApp a ty ->
-            translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail inEffectBlock mbExpectedExprType nextId a
-
           Typed type_ a ->
             let
               expectedGoType = exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr type_
@@ -1037,11 +1039,16 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
             in
               { stmts: accProps.stmts, expr: GoRecordDict goRecordType accProps.exprs, exprType: goRecordType, nextId: accProps.nextId }
 
-          App fn args ->
+          expr_ | (case expr_ of
+                     App _ _ -> true
+                     Syn.TypeApp _ _ -> true
+                     _ -> false) ->
             let
-              argsArr = toArray args
               Tuple flatFn flatArgsSpine = collectGoSpine tcoExpr
               flatArgs = getGoSpineArgs flatArgsSpine
+              extractTypeApp (GoSpineTypeApp ty) = [ty]
+              extractTypeApp _ = []
+              typeArgs = Array.concatMap extractTypeApp flatArgsSpine
 
               isTailCallTo =
                 if isTail then case unwrapTcoExpr flatFn of
