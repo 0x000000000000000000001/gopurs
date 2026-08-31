@@ -789,6 +789,9 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
         liftIfNeeded mkNodeThunk = mkNodeThunk unit
       in
         case expr of
+          Syn.TypeApp a ty ->
+            translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail inEffectBlock nextId a
+
           Typed type_ a ->
             let
               expectedGoType = exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr type_
