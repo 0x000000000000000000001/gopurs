@@ -509,7 +509,7 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves ad
 
                                   arity = Array.length fn.args
 
-                                  expectedRetType = case Map.lookup goName moduleArities of
+                                  expectedRetType = let _ = unsafePerformEffect (if String.contains (Pattern "lookup") goName then Console.log ("lookup fn.args: " <> show fn.args <> " expectedExprType: " <> printExprType (getExprType fn.val)) else pure unit) in case Map.lookup goName moduleArities of
                                     Just { fRet, fArgs } | arity < Array.length fArgs -> TypeValue
                                     Just { fRet } -> fRet
                                     Nothing -> TypeValue
@@ -1796,15 +1796,15 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
               case mbFunc of
                 Just abs | Array.length abs.args > 0 ->
                   let
-                    pTypes = paramTypes abs.body
-                    paramsWithTypes = map
-                      ( \idStr ->
-                          let
-                            t = fromMaybe Any (Map.lookup idStr pTypes)
-                          in
-                            Tuple idStr (exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr t)
+                    fArgsAst = case extractExprFuncType (getExprType binding) of
+                      Just { fArgs } -> fArgs
+                      Nothing -> []
+                    paramsWithTypes = Array.zipWith
+                      ( \idStr ty ->
+                          Tuple idStr (exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr ty)
                       )
                       abs.args
+                      (fArgsAst <> Array.replicate (max 0 (Array.length abs.args - Array.length fArgsAst)) Any)
                     goTypes = map snd paramsWithTypes
 
                     localModuleArities = Map.insert name { fullName: "Call_local_" <> modNameStr <> "_" <> name, fArgs: goTypes, fRet: TypeValue, arity: Array.length abs.args } moduleArities
@@ -2008,18 +2008,20 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                           Just ty -> exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr ty
                           Nothing -> TypeValue
 
-                        typeArgs = case getExprType obj of
-                          ADT fullName _ tArgs ->
-                            let
-                              mapped = map (exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr) tArgs
-                              arity = case Map.lookup fullName (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths of
-                                Just info -> info.arity
-                                Nothing -> Array.length mapped
-                            in
-                              Array.take arity mapped
-                          _ -> case Map.lookup key helpers.ctorTypes of
-                            Just ctorInfo -> map (const TypeValue) ctorInfo.vars
-                            Nothing -> []
+                        typeArgs = case resObj.exprType of
+                          TypeStructPointer _ _ _ tArgs -> tArgs
+                          _ -> case getExprType obj of
+                            ADT fullName _ tArgs ->
+                              let
+                                mapped = map (exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr) tArgs
+                                arity = case Map.lookup fullName (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths of
+                                  Just info -> info.arity
+                                  Nothing -> Array.length mapped
+                              in
+                                Array.take arity mapped
+                            _ -> case Map.lookup key helpers.ctorTypes of
+                              Just ctorInfo -> map (const TypeValue) ctorInfo.vars
+                              Nothing -> []
 
                         isNative = case resObj.exprType of
                           TypeStructPointer _ _ _ _ -> true
@@ -2204,7 +2206,9 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
               key = modPart <> "." <> name
               helpers = unsafePerformEffect (Ref.read helpersRef)
 
-              ctorType = fromMaybe (getExprType tcoExpr) mbExpectedExprType
+              ctorType = case getExprType tcoExpr of
+                Any -> fromMaybe Any mbExpectedExprType
+                ty -> ty
               expectedGoType = exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr ctorType
 
               fullName = case expectedGoType of
@@ -2337,7 +2341,12 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                 { nextId: resDef.nextId, results: [] }
                 (toArray branches)
 
-              allTypes = [ resDef.exprType ] <> map (\r -> r.body.exprType) computedBranches.results
+              isFailNode = case unwrapTcoExpr def of
+                Fail _ -> true
+                _ -> false
+
+              allTypes = (if isFailNode then [] else [ resDef.exprType ]) <> map (\r -> r.body.exprType) computedBranches.results
+              
               hasTypeValue = Array.any
                 ( \t -> case t of
                     TypeValue -> true
@@ -2351,7 +2360,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                   let
                     nubbed = Array.nub (map goTypeToStr allTypes)
                   in
-                    if Array.length nubbed == 1 then resDef.exprType
+                    if Array.length nubbed == 1 then fromMaybe TypeValue (Array.head allTypes)
                     else TypeValue
 
               tmpVar = "__t" <> show computedBranches.nextId
@@ -2493,6 +2502,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                   OpIntNum OpSubtract -> { expr: GoBinOp "-" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
                   OpIntNum OpMultiply -> { expr: GoBinOp "*" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
                   OpIntNum OpDivide -> { expr: GoBinOp "/" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
+                  OpIntNum OpMod -> { expr: GoBinOp "%" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
                   OpIntBitAnd -> { expr: GoBinOp "&" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
                   OpIntBitOr -> { expr: GoBinOp "|" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
                   OpIntBitXor -> { expr: GoBinOp "^" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
@@ -2509,6 +2519,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                   OpNumberNum OpSubtract -> { expr: GoBinOp "-" (unboxGoExpr res1.expr res1.exprType TypeFloat64) (unboxGoExpr res2.expr res2.exprType TypeFloat64), exprType: TypeFloat64 }
                   OpNumberNum OpMultiply -> { expr: GoBinOp "*" (unboxGoExpr res1.expr res1.exprType TypeFloat64) (unboxGoExpr res2.expr res2.exprType TypeFloat64), exprType: TypeFloat64 }
                   OpNumberNum OpDivide -> { expr: GoBinOp "/" (unboxGoExpr res1.expr res1.exprType TypeFloat64) (unboxGoExpr res2.expr res2.exprType TypeFloat64), exprType: TypeFloat64 }
+                  OpNumberNum OpMod -> { expr: GoCall (GoVar "math.Mod") [unboxGoExpr res1.expr res1.exprType TypeFloat64, unboxGoExpr res2.expr res2.exprType TypeFloat64], exprType: TypeFloat64 }
                   OpNumberOrd OpEq -> { expr: GoBinOp "==" (unboxGoExpr res1.expr res1.exprType TypeFloat64) (unboxGoExpr res2.expr res2.exprType TypeFloat64), exprType: TypeBool }
                   OpNumberOrd OpNotEq -> { expr: GoBinOp "!=" (unboxGoExpr res1.expr res1.exprType TypeFloat64) (unboxGoExpr res2.expr res2.exprType TypeFloat64), exprType: TypeBool }
                   OpNumberOrd OpLt -> { expr: GoBinOp "<" (unboxGoExpr res1.expr res1.exprType TypeFloat64) (unboxGoExpr res2.expr res2.exprType TypeFloat64), exprType: TypeBool }

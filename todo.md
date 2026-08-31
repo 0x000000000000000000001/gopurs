@@ -1,17 +1,4 @@
-# Roadmap Optimisation `gopurs` (TAST v3 / TypeApp)
-
-L'objectif est d'atteindre les performances maximales du compilateur Go natif ("cheatcode"), en éliminant les reliquats d'allocations dynamiques (`gopurs_runtime.Value`) qui ralentissent l'exécution.
-
-> [!IMPORTANT]
-> Le juge de paix absolu pour évaluer les performances est le projet `altbak.pub` en utilisant la commande `bin/run/go -c`.
-
-## État des lieux (Accompli) :
-- [x] **Dictionnaires de Type Class (Monomorphisation)** : L'utilisation de `Apply2(Box(dict.V0), ...)` a été complètement éradiquée. Grâce à l'optimiseur centralisé branché sur le TAST v3, toutes les instances de Type Classes sont résolues statiquement avant la génération de code Go.
-- [x] **Unification du pipeline de Build** : Migration vers `spago bundle` et interfaçage avec `purescript-backend-optimizer`.
-- [x] **Step 1 (Monomorphisation stricte des ADTs)** : Éradication totale de `gopurs_runtime.Value` pour les payloads des ADTs. Fini les pointeurs dynamiques pour des primitives.
-- [x] **Step 2 (Pattern Worker/Wrapper pour les fonctions & Instanciation Locale)** : 
-  - Phase 1 (Instanciation locale des LetRec) : Routage correct des types attendus via le TAST résout les panics d'exécution.
-  - Phase 2 (Workers Génériques Top-Level) : Les fonctions génériques sont de retour dans le code Go sans faire planter le compilateur.
+# Résolution des Bugs AOT (Gopurs)
 
 ## Prochaines étapes (Baby steps)
 
@@ -20,6 +7,10 @@ Le code de `ListOps` s'est amélioré grâce à la restauration du typage et de 
 
 - [ ] **Le cas de la récursion (TCO cassée)** : La boucle TCO est détruite pour la version spécialisée de `foldl`, car l'appel récursif retombe sur la version générique polymorphe.
   - [ ] *Action* : Inspecter pourquoi, lors de la monomorphisation d'une fonction récursive, `Monomorphize.purs` "oublie" de remplacer l'identifiant polymorphe par l'identifiant spécialisé dans le corps de la fonction (le `LetRec`).
+    - [ ] **Baby Step 1.2** : Corriger le renommage récursif lors de la spécialisation. *(Décoché car incomplet : une substitution a été codée par le passé, mais elle ne gère visiblement que certains cas locaux et rate les déclarations Top-Level comme `foldl`. L'identifiant n'est pas substitué, ce qui brise la TCO).*
+      - 1.2.1 : Localiser dans `Monomorphize.purs` (probablement dans `monomorphizeExpr` lors de la création d'une nouvelle spécialisation) l'endroit où le corps de la fonction générique est cloné/réécrit.
+      - 1.2.2 : Injecter une substitution (`Map Ident Ident` ou via `localDicts`) pour que l'ancien nom de la fonction (ex: `foldl`) soit remplacé par le nouveau nom manglé (ex: `foldl__12345`) dans le corps de la fonction clonée, afin que l'appel récursif pointe bien sur la version spécialisée.
+    - [ ] **Baby Step 1.3** : Vérifier que l'output Go généré contient bien la boucle native (le label de TCO). *(Décoché car l'output Go de la version spécialisée de `foldl` montre encore un appel de fonction classique récursif, sans boucle `for` TCO).*
 - [ ] **Le cas du DPE (Dictionary Passing Elimination)** : L'inlining des primitives "Higher-Order" échoue (ex: `v_0` qui est en réalité `intAdd`). 
   - [ ] *Action* : Vérifier si le DPE est bien exécuté pour `mod` ou `intAdd`, et pourquoi il s'arrête à un appel de closure (`Apply2`) au lieu de se réduire à l'opérateur primitif `ExternPrimOp`.
 
@@ -28,8 +19,7 @@ Lors de l'investigation sur `void`, on a découvert que le code Go final génèr
 
 - [ ] *Action* : Corriger le filtrage des arguments (`filteredArgs`) dans `Monomorphize.purs` lors d'un fallback `rebuildSpine`, afin que le dictionnaire statique ne soit pas supprimé de l'AST recréé si la fonction cible n'est finalement pas substituée par sa version spécialisée.
 
-### 3. Exploitation des TypeApp et Monomorphisation au Générateur
-- [ ] **Action 1 (Convert.purs / Monomorphize.purs)** : 
+### 3. Exploitation des TypeApp et Monomorphisation au Générateur 
   - [ ] S'assurer que `Convert.purs` n'ignore aucun nœud `ExprTypeApp` issu du JSON (TAST).
   - Remplacer les fonctions rigides actuelles (`collectAppSpine` et `collectTypeAppSpine` dans `Monomorphize.purs`) par un `collectSpine` unifié et robuste (tolérant à l'ordre d'imbrication) pour dépiler conjointement les arguments classiques (`ExprApp`) et les arguments de type (`ExprTypeApp`).
 - **Action 2 (Générateur Go)** :
