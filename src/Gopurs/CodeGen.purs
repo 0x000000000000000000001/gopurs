@@ -670,6 +670,7 @@ isClosureNode helpersRef expr = case unwrapTcoExpr expr of
 unwrapTcoExpr :: TcoExpr -> BackendSyntax TcoExpr
 unwrapTcoExpr (TcoExpr _ syn) = case syn of
   Typed _ inner -> unwrapTcoExpr inner
+  Syn.TypeApp inner _ -> unwrapTcoExpr inner
   _ -> syn
 
 printTcoExprShape :: TcoExpr -> String
@@ -790,7 +791,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
       in
         case expr of
           Syn.TypeApp a ty ->
-            translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail inEffectBlock nextId a
+            translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail inEffectBlock mbExpectedExprType nextId a
 
           Typed type_ a ->
             let
@@ -958,9 +959,23 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
 
               mbElemType = Array.head accXs.exprTypes
               isAllSame = Array.all (\t -> Just t == mbElemType) accXs.exprTypes
+              
+              expectedElemType = case mbExpectedExprType of
+                Just exTy ->
+                  let
+                    h = unsafePerformEffect (Ref.read helpersRef)
+                  in
+                    case exprTypeToGenericGoType h.pointerAdtPaths h.enumAdts h.elidedCtors [] modNameStr exTy of
+                      TypeNativeArray et -> Just et
+                      _ -> Nothing
+                Nothing -> Nothing
+                
+              finalElemType = case expectedElemType of
+                Just t -> Just t
+                Nothing -> if isAllSame then mbElemType else Nothing
             in
-              case mbElemType of
-                Just elemType | isAllSame && elemType /= TypeValue ->
+              case finalElemType of
+                Just elemType | (isAllSame || Array.length xs == 0) && elemType /= TypeValue ->
                   let
                     goTypeArr = TypeNativeArray elemType
                   in
