@@ -31,10 +31,11 @@ L'objectif est d'atteindre les performances maximales du compilateur Go natif ("
     - *Résultat* : Les fonctions génériques sont de retour dans le code Go sans faire planter le compilateur. L'échafaudage pour la Phase 3 est en place.
 
 - [ ] **Step 3 (Exploitation des TypeApp et Monomorphisation au Générateur)** :
-  - [ ] **Action 1 (Convert.purs)** : 
-    - Arrêter d'ignorer silencieusement les nœuds `ExprTypeApp`.
-    - Écrire une fonction `collectSpine` robuste (tolérante à l'ordre d'imbrication) pour dépiler conjointement les arguments classiques (`ExprApp`) et les arguments de type (`ExprTypeApp`).
-    - Propager ces arguments de type exacts instanciés par le compilateur Haskell (le TAST) jusqu'au générateur de code.
+  - [ ] **Action 1 (Convert.purs / Monomorphize.purs)** : 
+    - S'assurer que `Convert.purs` n'ignore aucun nœud `ExprTypeApp` issu du JSON (TAST).
+    - **Le Refactoring vital** : Remplacer les fonctions rigides actuelles (`collectAppSpine` et `collectTypeAppSpine` dans `Monomorphize.purs`) qui plantent silencieusement sur les AST entrelacés.
+    - Écrire un `collectSpine` unifié et robuste (tolérant à l'ordre d'imbrication) pour dépiler conjointement les arguments classiques (`ExprApp`) et les arguments de type (`ExprTypeApp`) dans deux listes distinctes, afin d'extraire la vraie fonction de base (`ExprVar`).
+    - Propager ces arguments de type exacts jusqu'au générateur de code.
   - [ ] **Action 2 (Générateur Go)** :
     - Amélioration de `exprTypeToGoType` pour préserver le type générique (ex: `T_a`) au lieu de le rabaisser en `Value`.
     - **Instanciation des ADTs** : Les définitions d'ADTs (comme `Cons[T_a]`) doivent exploiter ces types pour leurs payloads (`V0 int64` au lieu de `V0 gopurs_runtime.Value`).
@@ -42,6 +43,21 @@ L'objectif est d'atteindre les performances maximales du compilateur Go natif ("
     - Adaptation du *Wrapper* avec `gopurs_runtime.AnyToValue` et `ValueToAny` pour "déballer" et "remballer" aux frontières d'appel du Worker, si l'appel vient d'un contexte encore polymorphe.
   - **Bénéfice ultime (La Zéro-Cost Abstraction)** : 
     - **ADTs unboxés** : Les structures de données (listes, arbres) ne feront plus aucune allocation sur le tas pour les primitives.
-    - **Fonctions 100% natives** : Le Worker n'effectue plus aucune conversion dynamique et reçoit des structures 100% natives. Les appels directs depuis PureScript tireront parti de la "monomorphisation par stenciling" de Go (ex: appel direct de la version `..._int` hyper rapide). Zéro-cost abstraction sur le chemin critique !
+      *Avant (La tragédie des ADTs)* : `V0` est forcé à être une interface allouée sur le tas (`gopurs_runtime.Value`) malgré le paramètre générique.
+      ```go
+      type Constructor_Test_ListOps_Cons[T_a any] struct {
+      	Rc uint32
+      	V0 gopurs_runtime.Value
+      	V1 *Constructor_Test_ListOps_Cons[gopurs_runtime.Value]
+      }
+      ```
+      *Après (Grâce au TypeApp)* : `Cons` est appliqué au type `Int`. Le générateur crachera `V0 int64`. Zéro allocation sur la heap, la liste chaînée devient un pur bloc de mémoire compact !
+
+    - **Fonctions 100% natives** : Le Worker n'effectue plus aucune conversion dynamique et reçoit des structures 100% natives. Les appels directs depuis PureScript tireront parti de la "monomorphisation par stenciling" de Go (ex: appel direct de la version `..._int` hyper rapide). Zéro surcoût sur le chemin critique !
+      *Avant (Le drame du Worker)* : Les arguments de type sont effacés, `foldl` prend et retourne des `Value`, et utilise un dispatch dynamique lent (`Apply2`) dans la boucle.
+      ```go
+      func Call_Test_ListOps_foldl(v_0_loop gopurs_runtime.Value, v1_1_loop gopurs_runtime.Value, v2_2_loop *Constructor_Test_ListOps_Cons[gopurs_runtime.Value]) gopurs_runtime.Value
+      ```
+      *Après (Grâce au TypeApp)* : Le Worker devient générique (`func Call_Test_ListOps_foldl[a any, b any]...`) et est appelé avec ses types exacts (`Call_Test_ListOps_foldl[int64, int64](...)`). Le compilateur Go le clonera silencieusement en pur code machine natif.
 
 Tu peux tester si tout roule dans altbak.pub avec `bin/go/run -c`
