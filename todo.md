@@ -30,10 +30,18 @@ L'objectif est d'atteindre les performances maximales du compilateur Go natif ("
     - *Action* : Collecte des variables implicites (`TypeVar`) dans l'AST des types pour forcer la signature générique du Worker (`func Call_foldl[T_b any, T_a any]`). Mise à jour des appels directs (`mbDirectCall`) pour injecter explicitement la version opaque (`[gopurs_runtime.Value, ...]`) afin de satisfaire l'inférence du compilateur Go.
     - *Résultat* : Les fonctions génériques sont de retour dans le code Go sans faire planter le compilateur. L'échafaudage pour la Phase 3 est en place.
 
-- [ ] **Step 3 (Monomorphisation Intelligente des Types d'Arguments)** :
-  - [] **Action 2 (Générateur Go)** :
+- [ ] **Step 3 (Exploitation des TypeApp et Monomorphisation au Générateur)** :
+  - [ ] **Action 1 (Convert.purs)** : 
+    - Arrêter d'ignorer silencieusement les nœuds `ExprTypeApp`.
+    - Écrire une fonction `collectSpine` robuste (tolérante à l'ordre d'imbrication) pour dépiler conjointement les arguments classiques (`ExprApp`) et les arguments de type (`ExprTypeApp`).
+    - Propager ces arguments de type exacts instanciés par le compilateur Haskell (le TAST) jusqu'au générateur de code.
+  - [ ] **Action 2 (Générateur Go)** :
     - Amélioration de `exprTypeToGoType` pour préserver le type générique (ex: `T_a`) au lieu de le rabaisser en `Value`.
-    - Adaptation du *Wrapper* avec `gopurs_runtime.AnyToValue` et `ValueToAny` pour "déballer" et "remballer" aux frontières d'appel du Worker.
-  - **Bénéfice ultime** : Le Worker n'effectue plus aucune conversion dynamique et reçoit des structures 100% natives. Les appels directs depuis PureScript tireront parti de la "monomorphisation par stenciling" de Go (ex: appel direct de la version `..._int` hyper rapide). Zéro-cost abstraction sur le chemin critique !
+    - **Instanciation des ADTs** : Les définitions d'ADTs (comme `Cons[T_a]`) doivent exploiter ces types pour leurs payloads (`V0 int64` au lieu de `V0 gopurs_runtime.Value`).
+    - **Instanciation des Workers** : Les fonctions polymorphes (comme `foldl`) doivent recevoir leurs paramètres de type (`foldl[int64, int64]`) pour forcer Go à les cloner en version native.
+    - Adaptation du *Wrapper* avec `gopurs_runtime.AnyToValue` et `ValueToAny` pour "déballer" et "remballer" aux frontières d'appel du Worker, si l'appel vient d'un contexte encore polymorphe.
+  - **Bénéfice ultime (La Zéro-Cost Abstraction)** : 
+    - **ADTs unboxés** : Les structures de données (listes, arbres) ne feront plus aucune allocation sur le tas pour les primitives.
+    - **Fonctions 100% natives** : Le Worker n'effectue plus aucune conversion dynamique et reçoit des structures 100% natives. Les appels directs depuis PureScript tireront parti de la "monomorphisation par stenciling" de Go (ex: appel direct de la version `..._int` hyper rapide). Zéro-cost abstraction sur le chemin critique !
 
 Tu peux tester si tout roule dans altbak.pub avec `bin/go/run -c`
