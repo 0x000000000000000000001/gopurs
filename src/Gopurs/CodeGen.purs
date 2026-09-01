@@ -1453,7 +1453,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                                         expectedType = fromMaybe TypeValue (Array.index fArgs i)
                                         actualType = fromMaybe TypeValue (Array.index accArgs.exprTypes i)
                                       in
-                                        unboxGoExpr argExprValue actualType expectedType
+                                        coerceGoExpr modNameStr argExprValue actualType expectedType
                                   )
                                   accArgsArity
 
@@ -1489,7 +1489,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                                               arg = fromMaybe (GoRaw "nil") (Array.index accArgs.exprs i)
                                               actual = fromMaybe TypeValue (Array.index accArgs.exprTypes i)
                                             in
-                                              unboxGoExpr arg actual expected
+                                              coerceGoExpr modNameStr arg actual expected
                                         )
                                         fArgs
                                     in
@@ -1508,7 +1508,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                                               expectedType = fromMaybe TypeValue (Array.index fArgs i)
                                               actualType = fromMaybe TypeValue (Array.index accArgs.exprTypes i)
                                             in
-                                              unboxGoExpr argExprValue actualType expectedType
+                                              coerceGoExpr modNameStr argExprValue actualType expectedType
                                         )
                                         accArgsArity
 
@@ -1825,7 +1825,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                                         arg = fromMaybe (GoRaw "nil") (Array.index accArgs.exprs i)
                                         actual = fromMaybe TypeValue (Array.index accArgs.exprTypes i)
                                       in
-                                        unboxGoExpr arg actual expected
+                                        coerceGoExpr modNameStr arg actual expected
                                   )
                                   fArgs
                               in
@@ -1900,7 +1900,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                               arg = fromMaybe (GoRaw "nil") (Array.index accArgs.exprs i)
                               actual = fromMaybe TypeValue (Array.index accArgs.exprTypes i)
                             in
-                              unboxGoExpr arg actual expected
+                              coerceGoExpr modNameStr arg actual expected
                         )
                         fArgs
                     in
