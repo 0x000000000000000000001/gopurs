@@ -2044,7 +2044,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
               isLoop = (unwrap tcoAnalysis).role.isLoop
               mutRecBinds =
                 if isLoop && Array.length (toArray bindings) == 1 then
-                  traverse (\(Tuple (Ident name) val) -> map (\abs -> { ident: sanitizeName name, args: abs.args, body: abs.body, fvs: memoizedFreeVars val }) (extractUncurriedAbs val)) (toArray bindings)
+                  traverse (\(Tuple (Ident name) val) -> map (\abs -> { ident: sanitizeName name, args: abs.args, body: abs.body, fvs: memoizedFreeVars val, val }) (extractUncurriedAbs val)) (toArray bindings)
                 else Nothing
             in
               case mutRecBinds of
@@ -2060,15 +2060,10 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                             fRet = case goType of
                               TypeFunc _ r -> r
                               _ -> TypeValue
-                            pTypes = paramTypes fn.body
-                            paramsWithTypes = map
-                              ( \idStr ->
-                                  let
-                                    t = fromMaybe Any (Map.lookup idStr pTypes)
-                                  in
-                                    Tuple idStr (exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr t)
-                              )
-                              fn.args
+                            fArgs = case extractExprFuncType (getExprType fn.val) of
+                              Just { fArgs: a } -> map (exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr) a
+                              Nothing -> []
+                            paramsWithTypes = Array.zipWith (\idStr goT -> Tuple idStr goT) fn.args (fArgs <> Array.replicate (max 0 (Array.length fn.args - Array.length fArgs)) TypeValue)
                           in
                             { ident: newName, params: fn.args, loopParams: map (\p -> p <> "_loop") fn.args, goTypes: map snd paramsWithTypes, fRet }
                       )
@@ -2083,15 +2078,10 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                             boundInfo = fromMaybe { name: oldName, goType: TypeValue } (Map.lookup oldName allocRes.newBound)
                             newName = boundInfo.name
                             goType = boundInfo.goType
-                            pTypes = paramTypes fn.body
-                            paramsWithTypes = map
-                              ( \idStr ->
-                                  let
-                                    t = fromMaybe Any (Map.lookup idStr pTypes)
-                                  in
-                                    Tuple idStr (exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr t)
-                              )
-                              fn.args
+                            fArgs = case extractExprFuncType (getExprType fn.val) of
+                              Just { fArgs: a } -> map (exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr) a
+                              Nothing -> []
+                            paramsWithTypes = Array.zipWith (\idStr goT -> Tuple idStr goT) fn.args (fArgs <> Array.replicate (max 0 (Array.length fn.args - Array.length fArgs)) TypeValue)
                             currentLoopCtx = [ { ident: newName, params: fn.args, loopParams: map (\p -> p <> "_loop") fn.args, goTypes: map snd paramsWithTypes, fRet: TypeValue } ]
                             loopBound = foldl (\acc2 (Tuple idStr goT) -> Map.insert idStr { name: idStr, goType: goT } acc2) allocRes.newBound paramsWithTypes
                             resBodyMut = translateExprImpl_ helpersRef (depth + 1) modNameStr combinedRecVars acc.modArities loopBound (Just newName) currentLoopCtx true false acc.nextId fn.body
@@ -2235,10 +2225,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                           else
                             GoConstructorAccess (boxGoExpr resObj.expr resObj.exprType) monoStructName typeArgs idx false
                       in
-                        if isNative then
-                          { stmts: resObj.stmts, expr: coerceGoExpr modNameStr exprAccess actualFieldType expectedType, exprType: expectedType, nextId: resObj.nextId }
-                        else
-                          { stmts: resObj.stmts, expr: coerceGoExpr modNameStr exprAccess expectedType expectedType, exprType: expectedType, nextId: resObj.nextId }
+                        { stmts: resObj.stmts, expr: exprAccess, exprType: actualFieldType, nextId: resObj.nextId }
 
           Update obj props ->
             let
