@@ -1104,7 +1104,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
               { stmts: StmtEmpty, expr: GoVar v.name, exprType: v.goType, nextId }
 
           Lit (LitString s) -> { stmts: StmtEmpty, expr: GoString s, exprType: TypeString, nextId }
-          Lit (LitInt i) -> { stmts: StmtEmpty, expr: GoInt i, exprType: TypeInt64, nextId }
+          Lit (LitInt i) -> { stmts: StmtEmpty, expr: GoCall (GoVar "int64") [GoInt i], exprType: TypeInt64, nextId }
           Lit (LitNumber n) ->
             let
               nStr = show n

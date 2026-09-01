@@ -66,7 +66,7 @@ translateExpr currentModName (NeutralExpr expr) = case expr of
       Nothing -> GoVar ("_local_" <> show (unwrap level))
 
   Lit lit -> case lit of
-    LitInt i -> GoInt i
+    LitInt i -> GoCall (GoVar "int64") [GoInt i]
     LitString s -> GoString s
     LitBoolean b -> GoVar (if b then "true" else "false")
     LitNumber n -> GoRaw (show n)
