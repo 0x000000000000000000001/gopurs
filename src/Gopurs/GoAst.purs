@@ -7,6 +7,8 @@ import Data.String (Pattern(..), Replacement(..))
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..))
 import Data.Maybe (Maybe(..))
 import Data.Array as Array
+import Data.Generic.Rep (class Generic)
+import Data.Show.Generic (genericShow)
 
 data GoExpr
   = GoVar String
@@ -75,6 +77,9 @@ data GoType
 
 derive instance eqGoType :: Eq GoType
 derive instance ordGoType :: Ord GoType
+debugGoType :: GoType -> String
+debugGoType (TypeStructPointer b f p a) = "Struct(" <> b <> ", " <> f <> ", " <> p <> ", " <> show (Array.length a) <> ")"
+debugGoType t = goTypeToStr t
 
 goTypeToStr :: GoType -> String
 goTypeToStr TypeInt64 = "int64"

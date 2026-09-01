@@ -931,5 +931,78 @@ func ExtractVariant(variant interface{}) (string, interface{}, bool) {
 	return "", nil, false
 }
 
+func ReboxStruct[Src any, Dest any](srcVal *Src) *Dest {
+	if srcVal == nil {
+		return nil
+	}
+	
+	src := reflect.ValueOf(srcVal).Elem()
+	destPtr := reflect.New(reflect.TypeOf(*new(Dest)))
+	dest := destPtr.Elem()
+	
+	for i := 0; i < src.NumField(); i++ {
+		srcField := src.Field(i)
+		destField := dest.Field(i)
+		destField.Set(copyReflectField(srcField, destField.Type()))
+	}
+	
+	return destPtr.Interface().(*Dest)
+}
 
+func copyReflectField(src reflect.Value, destType reflect.Type) reflect.Value {
+	if src.Type() == destType {
+		return src
+	}
+	
+	valueType := reflect.TypeOf(Value{})
+	
+	if src.Type() == valueType {
+		val := src.Interface().(Value)
+		
+		switch destType.Kind() {
+		case reflect.Int64:
+			if val.Type == TypeFloat {
+				return reflect.ValueOf(int64(math.Float64frombits(uint64(val.IntVal))))
+			}
+			return reflect.ValueOf(val.IntVal)
+		case reflect.Int:
+			if val.Type == TypeFloat {
+				return reflect.ValueOf(int(math.Float64frombits(uint64(val.IntVal))))
+			}
+			return reflect.ValueOf(int(val.IntVal))
+		case reflect.String:
+			if val.UnsafePtr != nil {
+				return reflect.ValueOf(*(*string)(val.UnsafePtr))
+			}
+			return reflect.ValueOf("")
+		case reflect.Bool:
+			return reflect.ValueOf(val.IntVal != 0)
+		case reflect.Float64:
+			return reflect.ValueOf(math.Float64frombits(uint64(val.IntVal)))
+		}
+	}
+	
+	if destType == valueType {
+		return reflect.ValueOf(AnyToValue(src.Interface()))
+	}
+	
+	if src.Kind() == reflect.Ptr && destType.Kind() == reflect.Ptr {
+		if src.IsNil() {
+			return reflect.Zero(destType)
+		}
+		srcElem := src.Elem()
+		destElemPtr := reflect.New(destType.Elem())
+		destElem := destElemPtr.Elem()
+		
+		for i := 0; i < srcElem.NumField(); i++ {
+			destElem.Field(i).Set(copyReflectField(srcElem.Field(i), destElem.Field(i).Type()))
+		}
+		return destElemPtr
+	}
+	
+	if src.Type().ConvertibleTo(destType) {
+		return src.Convert(destType)
+	}
+	return reflect.Zero(destType)
+}
 """

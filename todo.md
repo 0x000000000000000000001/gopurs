@@ -43,8 +43,17 @@ L'objectif est d'éliminer les allocations de `gopurs_runtime.Value` pour les co
 
 - [x] **Baby Step 4.1 : Changer la signature des structs générées** (Déjà fait par l'étape 3.2.1)
   - Modifier `CodeGen.purs` (lors de `generateStructs`) pour utiliser les informations de `dataDecls` (du TAST) afin de générer les champs avec leur vrai type (`V0 T_a`, `V1 int64`) au lieu de `gopurs_runtime.Value`.
-- [ ] **Baby Step 4.2 : Gérer le polymorphisme aux frontières**
-  - [ ] 4.2.1 : Ajouter `gopurs_runtime.ReboxToStruct[T any](val Value) *T` via la réflexion Go (`reflect`) dans `Runtime.purs` pour faire une copie profonde d'un ADT polymorphe vers sa forme concrète.
-  - [ ] 4.2.2 : Modifier `coerceGoExpr` dans `CodeGen.purs` pour appeler `ReboxToStruct[T]` au lieu de `CoerceToStruct[T]` en cas de frontière polymorphe (quand le type d'origine et d'arrivée ne correspondent pas).
-- [ ] **Baby Step 4.3 : Optimisation AOT (Générer des fonctions natives de Re-boxing)**
-  - Plus tard, remplacer l'utilisation de `reflect` par la génération en dur de fonctions Go (`Rebox_Test_Primes_Cons`) pour éliminer l'overhead de la réflexion.
+- [x] **Baby Step 4.2 : Gérer le polymorphisme aux frontières**
+  - [x] 4.2.1 : Ajouter `gopurs_runtime.ReboxToStruct[T any](val Value) *T` via la réflexion Go (`reflect`) dans `Runtime.purs` pour faire une copie profonde d'un ADT polymorphe vers sa forme concrète.
+  - [x] 4.2.2 : Modifier `coerceGoExpr` dans `CodeGen.purs` pour appeler `ReboxToStruct[T]` au lieu de `CoerceToStruct[T]` en cas de frontière polymorphe (quand le type d'origine et d'arrivée ne correspondent pas).
+- [x] **Baby Step 4.3 : Optimisation AOT (Générer des fonctions natives de Re-boxing)**
+  - [x] 4.3.1 : Dans `CodeGen.purs`, utiliser l'état global (ex: `Ref`) pour collecter toutes les paires `(SrcType, DestType)` de structs nécessitant un reboxing.
+  - [x] 4.3.2 : Modifier `coerceGoExpr`, `boxGoExpr` et `unboxGoExpr` pour émettre un appel à la fonction native (ex: `Rebox_HashSrc_HashDest(expr)`).
+  - [x] 4.3.3 : Lors de la génération finale du module, émettre le code Go des fonctions `Rebox_HashSrc_HashDest` avec des affectations statiques champ par champ.
+- [x] **Baby Step 4.4 : Validation empirique du Re-boxing et résolution du Segfault (Panic)**
+  - [x] 4.4.1 : Découverte de la cause racine du panic : PBO perdait le type des variables synthétiques de `ExprCase` (`v`, `v1`) car le TAST (JSON) omet l'annotation de type dessus.
+  - [x] 4.4.2 : Patch de `Convert.purs` (dans PBO) pour forcer l'héritage du type depuis les `Binders` environnants. Les types sont désormais restaurés dans le backend Go.
+  - [x] 4.4.3 : **Régression bloquante (Effet de bord du cache)** : La purge du cache `.purmeta` (pour valider 4.4.2) a fait réapparaître un bug masqué de `gopurs` : `Get_Control_Semigroupoid_composeImpl` est généré mais jamais défini. *(Terminé : En relançant la compilation complète de gopurs via `npm run build`, l'erreur a disparu, confirmant que le binaire `gopurs.js` utilisé par `bin/go/run` n'était pas à jour avec mes patchs précédents)*.
+  - [ ] 4.4.4 : **Investigation du panic (Nil pointer dereference)** : Lors de l'exécution de `./bin/go/run`, le code Go généré panique sur un "invalid memory address or nil pointer dereference" dans `Call_Test_ListOps_sumEvens.func3`. Il faut identifier si cela provient d'un problème de casting (unbox/box), ou d'un pointeur non initialisé lié au reboxing générique.
+
+plus tard : ajouter des asserts aux tests pour vérifier que les calculs sont justes (e.g. prime sieve, additoon de valeurs pas de leurs adresses mémoire)
