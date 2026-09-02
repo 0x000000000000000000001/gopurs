@@ -156,8 +156,10 @@ loadAndPrepareModules args = do
   let instantiations = Map.filterKeys (\k -> not (Set.member k ffiGlobals) && case Map.lookup k globalTypes of
                                             Just t -> 
                                               let hasTV = hasTypeVariables t
+                                                  _ = if k == "Control.Semigroupoid.compose" then unsafePerformEffect (Console.log ("Global type hasTypeVariables for " <> k <> ": " <> show hasTV) *> pure unit) else unit
                                               in hasTV
-                                            Nothing -> false) transitiveInstantiations
+                                            Nothing -> 
+                                              let _ = if k == "Control.Semigroupoid.compose" then unsafePerformEffect (Console.log ("Control.Semigroupoid.compose NOT IN globalTypes!") *> pure unit) else unit in false) transitiveInstantiations
 
   let monomorphizedModules = map (monomorphize globalAstMap instantiations) finalModulesWithClassDecls
 

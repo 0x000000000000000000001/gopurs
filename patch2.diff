@@ -1,0 +1,14 @@
+--- src/Main.purs
++++ src/Main.purs
+@@ -151,7 +151,10 @@
+       ) Set.empty finalModulesWithClassDecls
+ 
+   let instantiations = Map.filterKeys (\k -> not (Set.member k ffiGlobals) && case Map.lookup k globalTypes of
+-                                            Just t -> hasTypeVariables t
++                                            Just t -> 
++                                              let hasTV = hasTypeVariables t
++                                                  _ = if k == "Control.Semigroupoid.compose" then unsafePerformEffect (Console.log ("Global type hasTypeVariables for " <> k <> ": " <> show hasTV) *> pure unit) else unit
++                                              in hasTV
+                                             Nothing -> false) transitiveInstantiations
+ 
+   let monomorphizedModules = map (monomorphize globalAstMap instantiations) finalModulesWithClassDecls

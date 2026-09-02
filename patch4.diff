@@ -1,0 +1,12 @@
+--- src/Main.purs
++++ src/Main.purs
+@@ -160,7 +160,8 @@
+                                             Nothing -> 
+                                               let _ = if k == "Control.Semigroupoid.compose" then unsafePerformEffect (Console.log ("Control.Semigroupoid.compose NOT IN globalTypes!") *> pure unit) else unit in false) transitiveInstantiations
+ 
+-  let monomorphizedModules = map (monomorphize globalAstMap instantiations) finalModulesWithClassDecls
++  let _ = if Map.member "Control.Semigroupoid.compose" globalAstMap then unsafePerformEffect (Console.log ("Control.Semigroupoid.compose IS IN globalAstMap!") *> pure unit) else unsafePerformEffect (Console.log ("Control.Semigroupoid.compose IS NOT IN globalAstMap!") *> pure unit)
++  let monomorphizedModules = map (monomorphize globalAstMap instantiations) finalModulesWithClassDecls
+ 
+   let allTypes = foldl (\acc mod -> Set.union acc (collectAllTypes mod)) Set.empty finalModulesWithClassDecls
+   let adtTypes = Set.filter (\t -> case t of
