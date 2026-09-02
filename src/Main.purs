@@ -145,7 +145,7 @@ loadAndPrepareModules args = do
         ) acc m.decls
       ) Map.empty finalModulesWithClassDecls
       
-  let rawInstantiations = foldl collectInstantiations Map.empty finalModulesWithClassDecls
+  let rawInstantiations = foldl (collectInstantiations globalAstMap) Map.empty finalModulesWithClassDecls
   let transitiveInstantiations = transitiveCollect globalAstMap rawInstantiations
 
   let ffiGlobals = foldl (\acc (Module m) ->
