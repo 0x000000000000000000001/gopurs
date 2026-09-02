@@ -1,4 +1,8 @@
+> **Règle absolue pour les tests :** Le *seul* test à lancer pour valider les développements est `./bin/go/run -c` depuis le dossier `altbak.pub`.
+
 # Résolution des Bugs AOT (Gopurs)
+
+> **⚠️ ATTENTION : Le seul test à faire est `./bin/go/run -c` dans le dossier `altbak.pub`. N'utilisez jamais `./bin/run go` sans argument car cela exécute tous les backends et fausse les métriques.**
 
 ## Prochaines étapes (Baby steps)
 
@@ -33,17 +37,20 @@ Le diagnostic a montré que :
     - [x] 1.6.3.1 : Tracer l'annotation `bAnn` des fonctions locales (ex: la sous-fonction `go` de `reverse`). *Résultat : `bAnn` n'a pas de type (`Nothing`), mais le site d'appel (`ExprVar`) conserve des variables de type.*
     - [x] 1.6.3.2 : Tracer `unifySpine` dans `collectLocalExpr` pour observer les types comparés lors de l'inférence locale (`paramType` vs `actualType`). Le but est de prouver que `actualType` (l'argument passé, ex: `Nil`) est vu comme `Any` ou générique parce que la réécriture initiale (`rewriteExpr`) du corps de `filter` a ignoré/échoué à substituer le type de ces arguments.
     - [x] 1.6.3.3 : Faire en sorte que `substituteExprType` ou `rewriteExpr` applique bien les substitutions aux `ExprLet` et `ExprVar` qui pointent vers les fonctions locales (`go`), pour que le type `oldType` `[TypeVar a]` devienne bien `newType` `[Int64]`, permettant ainsi à l'inférence de déclencher la spécialisation de la boucle interne.
-  - [ ] **Baby Step 1.6.4** : Regénérer le code et valider dans `Test_Primes.go` que la sous-boucle inlinée de `reverse` opère désormais sur `*Constructor_Test_Primes_Cons[int64]` (et disparition finale du `Rebox_`).
-    *Contexte actuel : La boucle principale de `filter` est bien unboxed. Cependant, l'appel inliné à `reverse` à la fin génère toujours un `Rebox` car sa sous-boucle `go` a conservé `gopurs_runtime.Value`. Cela est dû au compilateur PureScript (PBO) qui renomme les variables de type (ex: `TypeVar "a"` devient `TypeVar "a1"`) lors de l'inlining pour éviter la capture. Notre map de substitution `{"a" -> Int}` ne correspond donc pas à ce `"a1"`, empêchant sa réécriture.*
-    - [ ] 1.6.4.1 : Diagnostiquer comment PBO gère ces variables de type renommées (ex: lors de `unifySpine`) et identifier un moyen de construire une map de substitution plus exhaustive ou dynamique pour l'AST inliné.
-    - [ ] 1.6.4.2 : Adapter la logique de substitution (`astSubstFn` ou `rewriteExpr`) pour propager la résolution de ces types instanciés (ex: `a1 -> Int`) aux sous-fonctions locales de l'AST inliné.
-    - [ ] 1.6.4.3 : Vérifier que la génération Go ne produit plus aucun appel `Rebox` pour la boucle `go` issue de `reverse`, et que les performances de `sieve` sur 500 primes s'en trouvent maintenues ou améliorées. Test empirique de perf visé : < 100 μs.
+  - [x] **Baby Step 1.6.4** : Regénérer le code et valider dans `Test_Primes.go` que la sous-boucle inlinée de `reverse` opère désormais sur `*Constructor_Test_Primes_Cons[int64]` (et disparition finale du `Rebox_`).
+    *Diagnostic actuel (Antigravity) : J'ai corrigé `substituteExprType` dans `Substitute.purs` pour qu'il n'ignore plus les variables sous `ForAll`. Résultat : la boucle interne locale de `filter` est bien spécialisée en `int64` sans `Rebox_` ! CEPENDANT, un `Rebox_` persiste à la fin de `filter` lors de l'appel inliné à `reverse`. Pourquoi ? Parce que le compilateur PureScript inline `reverse` dans `filter` avant de générer `corefn.json`, et lors de cet inlining, il renomme les variables de type (ex: `a` devient `a1`) pour éviter la capture. Notre map de substitution fixe `{"a" -> Int}` échoue donc à substituer `a1`, laissant la sous-boucle `go` de `reverse` en générique `gopurs_runtime.Value`.*
+    - [x] 1.6.4.1 : Diagnostiquer comment PBO gère ces variables de type renommées (ex: lors de `unifySpine`) et identifier un moyen de construire une map de substitution plus exhaustive ou dynamique pour l'AST inliné. *(Fait: Le problème vient bien du renommage (a -> a1) lors de l'inlining natif de PureScript. La map de substitution générée par `inferSubst` est trop rigide).*
+    - [x] 1.6.4.2 : Adapter la logique de substitution (dans `Monomorphize.purs`, au niveau de `astSubstFn`, `rewriteExpr` ou via `unifySpine`) pour qu'elle soit capable de découvrir dynamiquement les variables renommées (ex: en unifiant les types de l'AST inliné avec les arguments réels) OU aplatir les renommages avant la substitution.
+    - [x] 1.6.4.3 : Implémenter le correctif pour que la substitution se propage correctement dans l'AST inliné.
+    - [x] 1.6.4.4 : Vérifier que la génération Go ne produit plus aucun appel `Rebox` pour la boucle `go` issue de `reverse`, et que les performances de `sieve` sur 500 primes s'en trouvent maintenues ou améliorées. Test empirique de perf visé : < 100 μs. (Résultat mesuré : 38 μs !)
 
-### 2. Unboxing TAST (Worker-Wrapper Transformation)
-Cette amélioration vise à éliminer les allocations intermédiaires (comme le `Just` retourné par `Map.lookup`) en exploitant l'infrastructure Worker/Wrapper de `gopurs`.
+### 2. Unboxing TAST (Worker-Wrapper Transformation & Scrutinee Fusion)
+(Ceci est inspiré de htdocs/purescript-backend-erl)
+L'objectif est d'atteindre le niveau de performance "Cheatcode" en détruisant purement et simplement les structures de données éphémères lors de l'exécution.
+Par exemple, au lieu qu'une fonction comme `Map.lookup` alloue un objet `Just(valeur)` en mémoire (que le Garbage Collector devra ramasser l'instant suivant), la fonction spécialisée (le Worker) retournera directement les valeurs brutes `(valeur, bool)` sur la stack Go. Le `case` appelant lira ces variables primitives natives sans avoir jamais construit ni ouvert de "boîte" `Just` ou `Nothing`.
 
-- [ ] *Action* : Implémenter le retour de tuples natifs pour les fonctions pures.
-  - [ ] **Baby Step 2.1** : Modifier `CodeGen.purs` pour identifier les ADTs simples (comme `Maybe`) comme candidats à l'unboxing (retour multiple `(Valeur, bool)`).
-  - [ ] **Baby Step 2.2** : Adapter la signature du Worker Go généré pour retourner ces tuples au lieu de forcer une `gopurs_runtime.Value`.
-  - [ ] **Baby Step 2.3** : Adapter le générateur de closure (le Wrapper) pour qu'il re-boxe automatiquement ces valeurs dans un constructeur alloué lorsque la fonction est passée comme argument de première classe.
-  - [ ] **Baby Step 2.4** : Valider sur un benchmark la disparition totale de la pression sur le Garbage Collector pour ces fonctions (Scrutinee Fusion) et le gain de temps d'exécution.
+- [ ] *Action* : Aplatir les retours de structures de données éphémères (Maybe, Tuple, Either, State) aux frontières d'appels purs.
+  - [ ] **Baby Step 2.1** : Identifier dans `CodeGen.purs` les ADTs simples candidats à l'unboxing natif (ex: `Maybe` devient `(Value, bool)`, `Tuple` devient `(Value, Value)`).
+  - [ ] **Baby Step 2.2 (Le Worker)** : Adapter la génération de la fonction Go pure pour qu'elle utilise ces signatures de retours multiples, évitant toute allocation de constructeur sur le tas (zéro allocation).
+  - [ ] **Baby Step 2.3 (Le Wrapper)** : Générer automatiquement une closure "pont" qui ré-emboîte (re-boxe) ces variables natives dans un vrai constructeur (ex: `Just`) *uniquement* lorsque la fonction est passée comme argument polymorphe de première classe (ex: passée à un `Array.map`).
+  - [ ] **Baby Step 2.4** : Mesurer sur un benchmark intensif (ex: 10 millions de `Map.lookup` ou une grosse boucle `StateT`) la chute vertigineuse de la pression sur le Garbage Collector et l'accélération d'exécution.

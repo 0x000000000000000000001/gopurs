@@ -67,7 +67,7 @@ coerceGoExpr modNameStr expr srcT@(TypeStructPointer b1 f1 s1 a1) destT@(TypeStr
     GoCall (GoVar ("Rebox_" <> modNameStr <> "_" <> hashString s1 <> "_" <> hashString s2)) [ expr ]
 
 coerceGoExpr modNameStr expr srcT@(TypeStructPointer b1 f1 s1 a1) destT@(TypeStructPointer b2 f2 s2 a2) = Debug.trace ("MISMATCH B1 B2: " <> b1 <> " vs " <> b2 <> " from " <> goTypeToStr srcT <> " to " <> goTypeToStr destT) \_ ->
-  unboxGoExpr (boxGoExpr expr srcT) TypeValue destT
+  unboxGoExpr modNameStr (boxGoExpr modNameStr expr srcT) TypeValue destT
 
 coerceGoExpr modNameStr expr srcT@(TypeStructPointer b1 f1 s1 a1) destT@(TypeStructPointer b2 f2 s2 a2) | b1 == b2 =
   let
@@ -86,7 +86,7 @@ coerceGoExpr modNameStr expr srcT@(TypeStructPointer b f s a) TypeValue | Array.
       Nothing -> s
     destT = TypeStructPointer b f (basePath <> if Array.length a > 0 then "[" <> String.joinWith ", " (map (const "gopurs_runtime.Value") a) <> "]" else "") (map (const TypeValue) a)
   in
-    boxGoExpr (coerceGoExpr modNameStr expr srcT destT) destT
+    boxGoExpr modNameStr (coerceGoExpr modNameStr expr srcT destT) destT
 
 coerceGoExpr modNameStr expr TypeValue destT@(TypeStructPointer b f s a) | Array.any (_ /= TypeValue) a =
   let
@@ -95,32 +95,40 @@ coerceGoExpr modNameStr expr TypeValue destT@(TypeStructPointer b f s a) | Array
       Nothing -> s
     srcT = TypeStructPointer b f (basePath <> if Array.length a > 0 then "[" <> String.joinWith ", " (map (const "gopurs_runtime.Value") a) <> "]" else "") (map (const TypeValue) a)
   in
-    coerceGoExpr modNameStr (unboxGoExpr expr TypeValue srcT) srcT destT
+    coerceGoExpr modNameStr (unboxGoExpr modNameStr expr TypeValue srcT) srcT destT
 
-coerceGoExpr modNameStr expr from TypeValue = boxGoExpr expr from
-coerceGoExpr modNameStr expr TypeValue to = unboxGoExpr expr TypeValue to
-coerceGoExpr modNameStr expr from to = unboxGoExpr (boxGoExpr expr from) TypeValue to
+coerceGoExpr modNameStr expr from TypeValue = boxGoExpr modNameStr expr from
+coerceGoExpr modNameStr expr TypeValue to = unboxGoExpr modNameStr expr TypeValue to
+coerceGoExpr modNameStr expr from to = unboxGoExpr modNameStr (boxGoExpr modNameStr expr from) TypeValue to
 
-boxGoExpr :: GoExpr -> GoType -> GoExpr
-boxGoExpr expr TypeValue = expr
-boxGoExpr expr TypeInt64 = GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ expr ]
-boxGoExpr expr TypeFloat64 = GoCall (GoSelector (GoVar "gopurs_runtime") "Float") [ expr ]
-boxGoExpr expr TypeString = GoCall (GoSelector (GoVar "gopurs_runtime") "Str") [ expr ]
-boxGoExpr expr TypeBool = GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ expr ]
-boxGoExpr expr (TypeStructPointer baseStructName _ _ _) = GoRaw ("gopurs_runtime.Value{Type: 9, IntVal: " <> hashString baseStructName <> ", UnsafePtr: unsafe.Pointer(" <> printGoExpr expr <> ")}")
-boxGoExpr expr (TypeRecord fields) =
+boxGoExpr :: String -> GoExpr -> GoType -> GoExpr
+boxGoExpr modNameStr expr srcT@(TypeStructPointer baseStructName fullName fullPath typeArgs) =
+  if Array.any (\t -> t /= TypeValue) typeArgs then
+    coerceGoExpr modNameStr expr srcT TypeValue
+  else
+    boxGoExprImpl modNameStr expr srcT
+boxGoExpr modNameStr expr t = boxGoExprImpl modNameStr expr t
+
+boxGoExprImpl :: String -> GoExpr -> GoType -> GoExpr
+boxGoExprImpl modNameStr expr TypeValue = expr
+boxGoExprImpl modNameStr expr TypeInt64 = GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ expr ]
+boxGoExprImpl modNameStr expr TypeFloat64 = GoCall (GoSelector (GoVar "gopurs_runtime") "Float") [ expr ]
+boxGoExprImpl modNameStr expr TypeString = GoCall (GoSelector (GoVar "gopurs_runtime") "Str") [ expr ]
+boxGoExprImpl modNameStr expr TypeBool = GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ expr ]
+boxGoExprImpl modNameStr expr (TypeStructPointer baseStructName _ _ _) = GoRaw ("gopurs_runtime.Value{Type: 9, IntVal: " <> hashString baseStructName <> ", UnsafePtr: unsafe.Pointer(" <> printGoExpr expr <> ")}")
+boxGoExprImpl modNameStr expr (TypeRecord fields) =
   let
     keys = map (\(Tuple k _) -> k) fields
     keysStr = String.joinWith ", " (map (\k -> "\"" <> k <> "\"") keys)
-    valsStr = String.joinWith ", " (map (\(Tuple k v) -> printGoExpr (boxGoExpr (GoStructAccess (GoVar "orig") (sanitizeName k)) v)) fields)
+    valsStr = String.joinWith ", " (map (\(Tuple k v) -> printGoExpr (boxGoExpr modNameStr (GoStructAccess (GoVar "orig") (sanitizeName k)) v)) fields)
   in
     GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\torig := " <> printGoExpr expr <> "\n\t\t\t\t_ = orig\n\t\t\t\treturn gopurs_runtime.RecordDict([]string{" <> keysStr <> "}, []gopurs_runtime.Value{" <> valsStr <> "})\n\t\t\t\t}()")
-boxGoExpr expr (TypeInterface _) = expr
-boxGoExpr expr (TypeNativeArray TypeValue) = GoCall (GoSelector (GoVar "gopurs_runtime") "Array") [ expr ]
-boxGoExpr expr (TypeNativeArray inner) = GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\t\tarr := " <> printGoExpr expr <> "\n\t\t\t\t\tboxed := make([]gopurs_runtime.Value, len(arr))\n\t\t\t\t\tfor i, v := range arr { boxed[i] = " <> printGoExpr (boxGoExpr (GoVar "v") inner) <> " }\n\t\t\t\t\treturn gopurs_runtime.Array(boxed)\n\t\t\t\t}()")
-boxGoExpr expr TypeUint32 = GoRaw ("gopurs_runtime.Value{Type: 9, IntVal: int64(" <> printGoExpr expr <> "), UnsafePtr: nil}")
-boxGoExpr expr (TypeGenericParam _) = expr
-boxGoExpr expr (TypeFunc _ _) = expr
+boxGoExprImpl modNameStr expr (TypeInterface _) = expr
+boxGoExprImpl modNameStr expr (TypeNativeArray TypeValue) = GoCall (GoSelector (GoVar "gopurs_runtime") "Array") [ expr ]
+boxGoExprImpl modNameStr expr (TypeNativeArray inner) = GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\t\tarr := " <> printGoExpr expr <> "\n\t\t\t\t\tboxed := make([]gopurs_runtime.Value, len(arr))\n\t\t\t\t\tfor i, v := range arr { boxed[i] = " <> printGoExpr (boxGoExpr modNameStr (GoVar "v") inner) <> " }\n\t\t\t\t\treturn gopurs_runtime.Array(boxed)\n\t\t\t\t}()")
+boxGoExprImpl modNameStr expr TypeUint32 = GoRaw ("gopurs_runtime.Value{Type: 9, IntVal: int64(" <> printGoExpr expr <> "), UnsafePtr: nil}")
+boxGoExprImpl modNameStr expr (TypeGenericParam _) = expr
+boxGoExprImpl modNameStr expr (TypeFunc _ _) = expr
 
 mangleType :: Map.Map String { ctorName :: String, arity :: Int } -> Set.Set String -> Set.Set String -> String -> ExprType -> String
 mangleType ptrPaths enumAdts elidedCtors modNameStr t =
@@ -251,8 +259,8 @@ instantiateGenericGoType env (TypeStructPointer base key full typeArgs) =
 instantiateGenericGoType env (TypeFunc args ret) = TypeFunc (map (instantiateGenericGoType env) args) (instantiateGenericGoType env ret)
 instantiateGenericGoType env t = t
 
-unboxGoExpr :: GoExpr -> GoType -> GoType -> GoExpr
-unboxGoExpr expr currentType desiredType =
+unboxGoExpr :: String -> GoExpr -> GoType -> GoType -> GoExpr
+unboxGoExpr modNameStr expr currentType desiredType =
   if currentType == desiredType then expr
   else if goTypeToStr currentType == goTypeToStr desiredType && String.contains (Pattern "Constructor_Test_RBTree_T") (goTypeToStr currentType) then
     let
@@ -264,14 +272,14 @@ unboxGoExpr expr currentType desiredType =
         _ -> "none"
     in
       Debug.trace ("MISMATCH AGAIN: " <> cArgs <> " vs " <> dArgs <> ". Structurally equal arrays? " <> show (currentType == desiredType)) \_ ->
-        unboxGoExpr (boxGoExpr expr currentType) TypeValue desiredType
+        unboxGoExpr modNameStr (boxGoExpr modNameStr expr currentType) TypeValue desiredType
   else if currentType /= TypeValue then
-    unboxGoExpr (boxGoExpr expr currentType) TypeValue desiredType
+    unboxGoExpr modNameStr (boxGoExpr modNameStr expr currentType) TypeValue desiredType
   else case desiredType of
-    TypeValue -> boxGoExpr expr currentType
+    TypeValue -> boxGoExpr modNameStr expr currentType
     (TypeRecord fields) ->
       let
-        assignments = String.joinWith "\n" (map (\(Tuple k v) -> "\t\t\t\t\tclone." <> sanitizeName k <> " = " <> printGoExpr (unboxGoExpr (GoCall (GoSelector (GoVar "gopurs_runtime") "RecordGet") [ GoVar "orig", GoString k ]) TypeValue v)) fields)
+        assignments = String.joinWith "\n" (map (\(Tuple k v) -> "\t\t\t\t\tclone." <> sanitizeName k <> " = " <> printGoExpr (unboxGoExpr modNameStr (GoCall (GoSelector (GoVar "gopurs_runtime") "RecordGet") [ GoVar "orig", GoString k ]) TypeValue v)) fields)
       in
         GoRaw ("func() " <> goTypeToStr desiredType <> " {\n\t\t\t\t\torig := " <> printGoExpr expr <> "\n\t\t\t\t\t_ = orig\n\t\t\t\t\tclone := " <> String.drop 1 (goTypeToStr desiredType) <> "{}\n" <> assignments <> "\n\t\t\t\t\treturn &clone\n\t\t\t\t}()")
     TypeInt64 -> GoSelector expr "IntVal"
@@ -283,9 +291,9 @@ unboxGoExpr expr currentType desiredType =
     (TypeInterface _) -> expr
     (TypeNativeArray inner) -> case currentType of
       TypeNativeArray currentInner ->
-        GoRaw ("func() " <> goTypeToStr desiredType <> " {\n\t\t\t\t\tarr := " <> printGoExpr expr <> "\n\t\t\t\t\tunboxed := make(" <> goTypeToStr desiredType <> ", len(arr))\n\t\t\t\t\tfor i, v := range arr { unboxed[i] = " <> printGoExpr (unboxGoExpr (GoVar "v") currentInner inner) <> " }\n\t\t\t\t\treturn unboxed\n\t\t\t\t}()")
+        GoRaw ("func() " <> goTypeToStr desiredType <> " {\n\t\t\t\t\tarr := " <> printGoExpr expr <> "\n\t\t\t\t\tunboxed := make(" <> goTypeToStr desiredType <> ", len(arr))\n\t\t\t\t\tfor i, v := range arr { unboxed[i] = " <> printGoExpr (unboxGoExpr modNameStr (GoVar "v") currentInner inner) <> " }\n\t\t\t\t\treturn unboxed\n\t\t\t\t}()")
       _ ->
-        GoRaw ("func() " <> goTypeToStr desiredType <> " {\n\t\t\t\t\tarr := *(*[]gopurs_runtime.Value)(" <> printGoExpr expr <> ".UnsafePtr)\n\t\t\t\t\tunboxed := make(" <> goTypeToStr desiredType <> ", len(arr))\n\t\t\t\t\tfor i, v := range arr { unboxed[i] = " <> printGoExpr (unboxGoExpr (GoVar "v") TypeValue inner) <> " }\n\t\t\t\t\treturn unboxed\n\t\t\t\t}()")
+        GoRaw ("func() " <> goTypeToStr desiredType <> " {\n\t\t\t\t\tarr := *(*[]gopurs_runtime.Value)(" <> printGoExpr expr <> ".UnsafePtr)\n\t\t\t\t\tunboxed := make(" <> goTypeToStr desiredType <> ", len(arr))\n\t\t\t\t\tfor i, v := range arr { unboxed[i] = " <> printGoExpr (unboxGoExpr modNameStr (GoVar "v") TypeValue inner) <> " }\n\t\t\t\t\treturn unboxed\n\t\t\t\t}()")
     (TypeGenericParam _) -> expr
     (TypeFunc _ _) -> expr
 
@@ -623,18 +631,18 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves ad
                                           let callFuncDecl = "func Call_" <> modNameStr <> "_" <> goName <> "(" <> goParams <> ") " <> goTypeToStr expectedRetType <> " {\n" <> printGoExpr funcBody <> "\n}"
                                           Ref.modify_ (\r -> r { rawDecls = Array.snoc r.rawDecls callFuncDecl }) helpersRef
                                           let wrapperParams = map (\(Tuple p _) -> p <> "_box") paramsWithTypes
-                                          let callExpr = GoCall (GoVar ("Call_" <> modNameStr <> "_" <> goName)) (map (\(Tuple p goT) -> unboxGoExpr (GoVar (p <> "_box")) TypeValue goT) paramsWithTypes)
-                                          let boxedRes = boxGoExpr callExpr expectedRetType
+                                          let callExpr = GoCall (GoVar ("Call_" <> modNameStr <> "_" <> goName)) (map (\(Tuple p goT) -> unboxGoExpr modNameStr (GoVar (p <> "_box")) TypeValue goT) paramsWithTypes)
+                                          let boxedRes = boxGoExpr modNameStr callExpr expectedRetType
                                           let wrapperFunc = GoRaw ("func(" <> String.joinWith ", " (map (\p -> p <> " gopurs_runtime.Value") wrapperParams) <> ") gopurs_runtime.Value {\nreturn " <> printGoExpr boxedRes <> "\n}")
                                           let funcWrapperName = if arity == 1 then "gopurs_runtime.Func" else "gopurs_runtime.Func" <> show arity
                                           pure $ GoRaw (funcWrapperName <> "(" <> printGoExpr wrapperFunc <> ")")
                                     else
                                       let
-                                        bodyStmts = initVars <> flattenStmts resBodyMut.stmts <> [ GoReturn (boxGoExpr resBodyMut.expr resBodyMut.exprType) ]
+                                        bodyStmts = initVars <> flattenStmts resBodyMut.stmts <> [ GoReturn (boxGoExpr modNameStr resBodyMut.expr resBodyMut.exprType) ]
                                         funcBody = if isSelfRecursiveLoop then GoFor goName bodyStmts else GoBlock bodyStmts
                                         iife = GoRaw ("func() gopurs_runtime.Value {\n" <> printGoExpr funcBody <> "\n}()")
                                       in
-                                        Array.foldr (\(Tuple p goT) acc -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> p <> "_box gopurs_runtime.Value) gopurs_runtime.Value {\nvar " <> p <> "_loop " <> goTypeToStr goT <> " = " <> printGoExpr (unboxGoExpr (GoVar (p <> "_box")) TypeValue goT) <> "\nreturn " <> printGoExpr acc <> "\n}") ]) iife paramsWithTypes
+                                        Array.foldr (\(Tuple p goT) acc -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> p <> "_box gopurs_runtime.Value) gopurs_runtime.Value {\nvar " <> p <> "_loop " <> goTypeToStr goT <> " = " <> printGoExpr (unboxGoExpr modNameStr (GoVar (p <> "_box")) TypeValue goT) <> "\nreturn " <> printGoExpr acc <> "\n}") ]) iife paramsWithTypes
                                 in
                                   { identifier: modNameStr <> "_" <> goName, expression: funcExpr, goType: TypeValue }
                             )
@@ -647,7 +655,7 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves ad
                               let
                                 res = translateExprImpl_ helpersRef 0 modNameStr recVars moduleArities Map.empty (Just (sanitizeName name)) [] false false 0 expr
                               in
-                                [ { identifier: modNameStr <> "_" <> sanitizeName name, expression: wrapInStmts [] res.stmts (boxGoExpr res.expr res.exprType), goType: TypeValue } ]
+                                [ { identifier: modNameStr <> "_" <> sanitizeName name, expression: wrapInStmts [] res.stmts (boxGoExpr modNameStr res.expr res.exprType), goType: TypeValue } ]
                           )
                           binds
               in
@@ -959,7 +967,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
     if isEff && not inEffectBlock then
       let
         res = translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx false true nextId tcoExpr
-        funcExpr = GoRaw ("gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts res.stmts <> [ GoReturn (boxGoExpr res.expr res.exprType) ])) <> "\n})")
+        funcExpr = GoRaw ("gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts res.stmts <> [ GoReturn (boxGoExpr modNameStr res.expr res.exprType) ])) <> "\n})")
       in
         { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: res.nextId }
     else
@@ -1090,12 +1098,12 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                     modPkg = String.replaceAll (Pattern ".") (Replacement "_") modStr
                     rawCall = GoCall (GoVar ("Get_" <> modPkg <> "_" <> safeName)) []
                   in
-                    { stmts: StmtEmpty, expr: unboxGoExpr rawCall TypeValue vType, exprType: vType, nextId }
+                    { stmts: StmtEmpty, expr: unboxGoExpr modNameStr rawCall TypeValue vType, exprType: vType, nextId }
                 Nothing ->
                   let
                     rawCall = Debug.trace ("mbMn is Nothing for safeName: " <> safeName) (\_ -> GoCall (GoVar ("Get_" <> modNameStr <> "_" <> safeName)) [])
                   in
-                    { stmts: StmtEmpty, expr: unboxGoExpr rawCall TypeValue vType, exprType: vType, nextId }
+                    { stmts: StmtEmpty, expr: unboxGoExpr modNameStr rawCall TypeValue vType, exprType: vType, nextId }
 
           Local mbIdent lvl ->
             let
@@ -1156,7 +1164,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                     { stmts: accXs.stmts, expr: GoRaw (goTypeToStr goTypeArr <> "{" <> String.joinWith ", " (map printGoExpr accXs.exprs) <> "}"), exprType: goTypeArr, nextId: accXs.nextId }
                 _ ->
                   let
-                    boxedExprs = Array.zipWith (\expr ty -> boxGoExpr expr ty) accXs.exprs accXs.exprTypes
+                    boxedExprs = Array.zipWith (\expr ty -> boxGoExpr modNameStr expr ty) accXs.exprs accXs.exprTypes
                   in
                     { stmts: accXs.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Array") [ GoRaw ("[]gopurs_runtime.Value{" <> String.joinWith ", " (map printGoExpr boxedExprs) <> "}") ], exprType: TypeValue, nextId: accXs.nextId }
 
@@ -1326,7 +1334,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                                 let
                                   argRes = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false acc.nextId arg
                                 in
-                                  { stmts: acc.stmts <> argRes.stmts, exprs: Array.snoc acc.exprs (boxGoExpr argRes.expr argRes.exprType), exprTypes: Array.snoc acc.exprTypes argRes.exprType, nextId: argRes.nextId }
+                                  { stmts: acc.stmts <> argRes.stmts, exprs: Array.snoc acc.exprs (boxGoExpr modNameStr argRes.expr argRes.exprType), exprTypes: Array.snoc acc.exprTypes argRes.exprType, nextId: argRes.nextId }
                             )
                             { stmts: StmtEmpty, exprs: [], exprTypes: [], nextId }
                             flatArgs
@@ -1389,7 +1397,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                           arity = if intrinsicName == "foldlArray" then 3 else 2
                           accArgsRemaining = Array.drop arity accArgs.exprs
                           accArgsRemainingTypes = Array.drop arity accArgs.exprTypes
-                          accArgsRemainingBoxed = Array.zipWith (\arg t -> boxGoExpr arg t) accArgsRemaining accArgsRemainingTypes
+                          accArgsRemainingBoxed = Array.zipWith (\arg t -> boxGoExpr modNameStr arg t) accArgsRemaining accArgsRemainingTypes
 
                           buildApp :: GoExpr -> Array GoExpr -> GoExpr
                           buildApp fExpr argExprs =
@@ -1445,7 +1453,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                                 accArgsArity = Array.take arity accArgs.exprs
                                 accArgsRemaining = Array.drop arity accArgs.exprs
                                 accArgsRemainingTypes = Array.drop arity accArgs.exprTypes
-                                accArgsRemainingBoxed = Array.zipWith (\arg t -> boxGoExpr arg t) accArgsRemaining accArgsRemainingTypes
+                                accArgsRemainingBoxed = Array.zipWith (\arg t -> boxGoExpr modNameStr arg t) accArgsRemaining accArgsRemainingTypes
 
                                 callArgs = Array.mapWithIndex
                                   ( \i argExprValue ->
@@ -1458,7 +1466,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                                   accArgsArity
 
                                 callExpr = GoCall (GoVar fullName) callArgs
-                                finalExpr = if Array.length accArgsRemainingBoxed == 0 then callExpr else buildApp (boxGoExpr callExpr fRet) accArgsRemainingBoxed
+                                finalExpr = if Array.length accArgsRemainingBoxed == 0 then callExpr else buildApp (boxGoExpr modNameStr callExpr fRet) accArgsRemainingBoxed
                                 finalExprType = if Array.length accArgsRemainingBoxed == 0 then fRet else TypeValue
                               in
                                 { stmts: accArgs.stmts, expr: finalExpr, exprType: finalExprType, nextId: accArgs.nextId }
@@ -1500,7 +1508,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                                       accArgsArity = Array.take arity accArgs.exprs
                                       accArgsRemaining = Array.drop arity accArgs.exprs
                                       accArgsRemainingTypes = Array.drop arity accArgs.exprTypes
-                                      accArgsRemainingBoxed = Array.zipWith (\arg t -> boxGoExpr arg t) accArgsRemaining accArgsRemainingTypes
+                                      accArgsRemainingBoxed = Array.zipWith (\arg t -> boxGoExpr modNameStr arg t) accArgsRemaining accArgsRemainingTypes
 
                                       callArgs = Array.mapWithIndex
                                         ( \i argExprValue ->
@@ -1514,12 +1522,12 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
 
                                       callExpr = GoCall resFn.expr callArgs
                                     in
-                                      buildApp (boxGoExpr callExpr fRet) accArgsRemainingBoxed
+                                      buildApp (boxGoExpr modNameStr callExpr fRet) accArgsRemainingBoxed
                                   _ ->
                                     let
-                                      boxedArgs = Array.zipWith (\arg actual -> boxGoExpr arg actual) accArgs.exprs accArgs.exprTypes
+                                      boxedArgs = Array.zipWith (\arg actual -> boxGoExpr modNameStr arg actual) accArgs.exprs accArgs.exprTypes
                                     in
-                                      buildApp (boxGoExpr resFn.expr resFn.exprType) boxedArgs
+                                      buildApp (boxGoExpr modNameStr resFn.expr resFn.exprType) boxedArgs
                               in
                                 { stmts: accArgs.stmts, expr: finalExpr, exprType: finalExprType, nextId: accArgs.nextId }
 
@@ -1555,7 +1563,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                     in
                       buildFunc chunk (buildFunc rest innerExpr)
 
-              funcExpr = buildFunc params (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr resBody.expr resBody.exprType) ]))
+              funcExpr = buildFunc params (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr modNameStr resBody.expr resBody.exprType) ]))
             in
               { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: resBody.nextId }
 
@@ -1639,9 +1647,9 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                               let
                                 expectedArgType = fromMaybe TypeValue (Array.index info.fArgs 0)
                               in
-                                GoMutate (resGoName <> "[" <> iName <> "]") (unboxGoExpr (GoCall (GoVar ("Call_" <> String.replaceAll (Pattern ".") (Replacement "_") fnFullName)) [ unboxGoExpr (GoVar vName) elemType expectedArgType ]) info.fRet retType)
+                                GoMutate (resGoName <> "[" <> iName <> "]") (unboxGoExpr modNameStr (GoCall (GoVar ("Call_" <> String.replaceAll (Pattern ".") (Replacement "_") fnFullName)) [ unboxGoExpr modNameStr (GoVar vName) elemType expectedArgType ]) info.fRet retType)
                             _ ->
-                              GoMutate (resGoName <> "[" <> iName <> "]") (unboxGoExpr (GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ boxGoExpr fExprRaw fExprType, boxGoExpr (GoVar vName) elemType ]) TypeValue retType)
+                              GoMutate (resGoName <> "[" <> iName <> "]") (unboxGoExpr modNameStr (GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ boxGoExpr modNameStr fExprRaw fExprType, boxGoExpr modNameStr (GoVar vName) elemType ]) TypeValue retType)
 
                           iifeBodyStmts =
                             [ arrGoAssignment
@@ -1681,9 +1689,9 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                                 expectedArg0 = fromMaybe TypeValue (Array.index info.fArgs 0)
                                 expectedArg1 = fromMaybe TypeValue (Array.index info.fArgs 1)
                               in
-                                GoMutate resGoName (unboxGoExpr (GoCall (GoVar ("Call_" <> String.replaceAll (Pattern ".") (Replacement "_") fnFullName)) [ unboxGoExpr (GoVar resGoName) initExprType expectedArg0, unboxGoExpr (GoVar vName) elemType expectedArg1 ]) info.fRet initExprType)
+                                GoMutate resGoName (unboxGoExpr modNameStr (GoCall (GoVar ("Call_" <> String.replaceAll (Pattern ".") (Replacement "_") fnFullName)) [ unboxGoExpr modNameStr (GoVar resGoName) initExprType expectedArg0, unboxGoExpr modNameStr (GoVar vName) elemType expectedArg1 ]) info.fRet initExprType)
                             _ ->
-                              GoMutate resGoName (unboxGoExpr (GoCall (GoSelector (GoVar "gopurs_runtime") "Apply2") [ boxGoExpr fExpr fExprType, boxGoExpr (GoVar resGoName) initExprType, boxGoExpr (GoVar vName) elemType ]) TypeValue initExprType)
+                              GoMutate resGoName (unboxGoExpr modNameStr (GoCall (GoSelector (GoVar "gopurs_runtime") "Apply2") [ boxGoExpr modNameStr fExpr fExprType, boxGoExpr modNameStr (GoVar resGoName) initExprType, boxGoExpr modNameStr (GoVar vName) elemType ]) TypeValue initExprType)
 
                           arrGoAssignment = case arrExprType of
                             TypeNativeArray _ -> GoAssign arrGoName (GoVar arrValName)
@@ -1729,10 +1737,10 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                               let
                                 expectedArgType = fromMaybe TypeValue (Array.index info.fArgs 0)
                               in
-                                GoCall (GoVar ("Call_" <> String.replaceAll (Pattern ".") (Replacement "_") fnFullName)) [ unboxGoExpr (GoVar vName) elemType expectedArgType ]
+                                GoCall (GoVar ("Call_" <> String.replaceAll (Pattern ".") (Replacement "_") fnFullName)) [ unboxGoExpr modNameStr (GoVar vName) elemType expectedArgType ]
                             _ ->
                               let
-                                condExpr = GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ boxGoExpr fExprRaw fExprType, boxGoExpr (GoVar vName) elemType ]
+                                condExpr = GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ boxGoExpr modNameStr fExprRaw fExprType, boxGoExpr modNameStr (GoVar vName) elemType ]
                               in
                                 GoCall (GoSelector condExpr "BoolVal") []
 
@@ -1829,12 +1837,12 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                                   )
                                   fArgs
                               in
-                                { stmts: accArgs.stmts, expr: boxGoExpr (GoCall resFn.expr callArgs) fRet, exprType: TypeValue, nextId: accArgs.nextId }
+                                { stmts: accArgs.stmts, expr: boxGoExpr modNameStr (GoCall resFn.expr callArgs) fRet, exprType: TypeValue, nextId: accArgs.nextId }
                             _ ->
                               let
-                                boxedArgs = Array.zipWith (\arg actual -> boxGoExpr arg actual) accArgs.exprs accArgs.exprTypes
+                                boxedArgs = Array.zipWith (\arg actual -> boxGoExpr modNameStr arg actual) accArgs.exprs accArgs.exprTypes
                               in
-                                { stmts: accArgs.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") goFuncName) (Array.cons (boxGoExpr resFn.expr resFn.exprType) boxedArgs), exprType: TypeValue, nextId: accArgs.nextId }
+                                { stmts: accArgs.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") goFuncName) (Array.cons (boxGoExpr modNameStr resFn.expr resFn.exprType) boxedArgs), exprType: TypeValue, nextId: accArgs.nextId }
 
           UncurriedAbs args body -> liftIfNeeded \_ ->
             let
@@ -1852,7 +1860,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                 case tcoIdent of
                   Just topName ->
                     let
-                      callFuncDecl = "func Call_" <> modNameStr <> "_" <> topName <> "(" <> goParams <> ") gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr resBody.expr resBody.exprType) ])) <> "\n}"
+                      callFuncDecl = "func Call_" <> modNameStr <> "_" <> topName <> "(" <> goParams <> ") gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr modNameStr resBody.expr resBody.exprType) ])) <> "\n}"
                       funcExpr = unsafePerformEffect do
                         Ref.modify_ (\r -> r { rawDecls = Array.snoc r.rawDecls callFuncDecl }) helpersRef
                         pure $ GoRaw ("gopurs_runtime.Func" <> show arity <> "(Call_" <> modNameStr <> "_" <> topName <> ")")
@@ -1860,14 +1868,14 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                       { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: resBody.nextId }
                   Nothing ->
                     let
-                      funcExpr = GoRaw ("gopurs_runtime.Func" <> show arity <> "(func(" <> goParams <> ") gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr resBody.expr resBody.exprType) ])) <> "\n})")
+                      funcExpr = GoRaw ("gopurs_runtime.Func" <> show arity <> "(func(" <> goParams <> ") gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr modNameStr resBody.expr resBody.exprType) ])) <> "\n})")
                     in
                       { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: resBody.nextId }
               else
                 let
                   params = map fst paramsWithTypes
                   makeCurried [] = resBody.expr
-                  makeCurried [ p ] = GoFunc p TypeValue TypeValue (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr resBody.expr resBody.exprType) ]))
+                  makeCurried [ p ] = GoFunc p TypeValue TypeValue (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr modNameStr resBody.expr resBody.exprType) ]))
                   makeCurried ps = case Array.uncons ps of
                     Just { head: p, tail: rest } -> GoFunc p TypeValue TypeValue (makeCurried rest)
                     Nothing -> resBody.expr
@@ -1904,12 +1912,12 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                         )
                         fArgs
                     in
-                      { stmts: accArgs.stmts, expr: boxGoExpr (GoCall resFn.expr callArgs) fRet, exprType: TypeValue, nextId: accArgs.nextId }
+                      { stmts: accArgs.stmts, expr: boxGoExpr modNameStr (GoCall resFn.expr callArgs) fRet, exprType: TypeValue, nextId: accArgs.nextId }
                   _ ->
                     let
-                      boxedArgs = Array.zipWith (\arg actual -> boxGoExpr arg actual) accArgs.exprs accArgs.exprTypes
+                      boxedArgs = Array.zipWith (\arg actual -> boxGoExpr modNameStr arg actual) accArgs.exprs accArgs.exprTypes
                     in
-                      { stmts: accArgs.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") goFuncName) (Array.cons (boxGoExpr resFn.expr resFn.exprType) boxedArgs), exprType: TypeValue, nextId: accArgs.nextId }
+                      { stmts: accArgs.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") goFuncName) (Array.cons (boxGoExpr modNameStr resFn.expr resFn.exprType) boxedArgs), exprType: TypeValue, nextId: accArgs.nextId }
 
           UncurriedEffectAbs args body -> liftIfNeeded \_ ->
             let
@@ -1923,14 +1931,14 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
             in
               if arity >= 2 && arity <= 5 then
                 let
-                  funcExpr = GoRaw ("gopurs_runtime.Func" <> show arity <> "(func(" <> goParams <> ") gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (GoRaw ("gopurs_runtime.Apply(" <> printGoExpr (boxGoExpr resBody.expr resBody.exprType) <> ", gopurs_runtime.Value{})")) ])) <> "\n})")
+                  funcExpr = GoRaw ("gopurs_runtime.Func" <> show arity <> "(func(" <> goParams <> ") gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (GoRaw ("gopurs_runtime.Apply(" <> printGoExpr (boxGoExpr modNameStr resBody.expr resBody.exprType) <> ", gopurs_runtime.Value{})")) ])) <> "\n})")
                 in
                   { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: resBody.nextId }
               else
                 let
                   params = map fst paramsWithTypes
-                  makeCurried [] = GoRaw ("gopurs_runtime.Apply(" <> printGoExpr (boxGoExpr resBody.expr resBody.exprType) <> ", gopurs_runtime.Value{})")
-                  makeCurried [ p ] = GoFunc p TypeValue TypeValue (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (GoRaw ("gopurs_runtime.Apply(" <> printGoExpr (boxGoExpr resBody.expr resBody.exprType) <> ", gopurs_runtime.Value{})")) ]))
+                  makeCurried [] = GoRaw ("gopurs_runtime.Apply(" <> printGoExpr (boxGoExpr modNameStr resBody.expr resBody.exprType) <> ", gopurs_runtime.Value{})")
+                  makeCurried [ p ] = GoFunc p TypeValue TypeValue (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (GoRaw ("gopurs_runtime.Apply(" <> printGoExpr (boxGoExpr modNameStr resBody.expr resBody.exprType) <> ", gopurs_runtime.Value{})")) ]))
                   makeCurried ps = case Array.uncons ps of
                     Just { head: p, tail: rest } -> GoFunc p TypeValue TypeValue (makeCurried rest)
                     Nothing -> resBody.expr
@@ -1951,7 +1959,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
               newBound = Map.insert originalName { name, goType: TypeValue } bound
               resBinding = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false true (nextId + 1) realBinding
               resBody = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities newBound Nothing loopCtx isTail true resBinding.nextId body
-              bindingExpr = if wasStripped then boxGoExpr resBinding.expr resBinding.exprType else executeIfOpaque realBinding (boxGoExpr resBinding.expr resBinding.exprType)
+              bindingExpr = if wasStripped then boxGoExpr modNameStr resBinding.expr resBinding.exprType else executeIfOpaque realBinding (boxGoExpr modNameStr resBinding.expr resBinding.exprType)
               bodyExpr = executeIfOpaque body resBody.expr
             in
               { stmts: resBinding.stmts <> StmtLeaf (GoAssign name bindingExpr) <> resBody.stmts, expr: bodyExpr, exprType: resBody.exprType, nextId: resBody.nextId }
@@ -1962,7 +1970,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
           EffectDefer binding ->
             let
               resBinding = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false true nextId binding
-              funcExpr = GoRaw ("gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBinding.stmts <> [ GoReturn (boxGoExpr resBinding.expr resBinding.exprType) ])) <> "\n})")
+              funcExpr = GoRaw ("gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBinding.stmts <> [ GoReturn (boxGoExpr modNameStr resBinding.expr resBinding.exprType) ])) <> "\n})")
             in
               { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: resBinding.nextId }
 
@@ -1996,10 +2004,10 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
 
                     goParamsNative = String.joinWith ", " (map (\(Tuple p goT) -> p <> "_loop " <> goTypeToStr goT) paramsWithTypes)
                     initVars = Array.concatMap (\(Tuple p goT) -> [ GoRaw ("var " <> p <> " " <> goTypeToStr goT <> " = " <> p <> "_loop"), GoRaw ("_ = " <> p) ]) paramsWithTypes
-                    funcBody = GoBlock (initVars <> flattenStmts resBodyMut.stmts <> [ GoReturn (boxGoExpr resBodyMut.expr resBodyMut.exprType) ])
+                    funcBody = GoBlock (initVars <> flattenStmts resBodyMut.stmts <> [ GoReturn (boxGoExpr modNameStr resBodyMut.expr resBodyMut.exprType) ])
                     nativeAssignment = GoMutate ("Call_local_" <> modNameStr <> "_" <> name) (GoRaw ("func(" <> goParamsNative <> ") gopurs_runtime.Value {\n" <> printGoExpr funcBody <> "\n}"))
 
-                    nativeCallExpr = GoCall (GoVar ("Call_local_" <> modNameStr <> "_" <> name)) (map (\(Tuple p goT) -> unboxGoExpr (GoVar (p <> "_loop_val")) TypeValue goT) paramsWithTypes)
+                    nativeCallExpr = GoCall (GoVar ("Call_local_" <> modNameStr <> "_" <> name)) (map (\(Tuple p goT) -> unboxGoExpr modNameStr (GoVar (p <> "_loop_val")) TypeValue goT) paramsWithTypes)
                     funcExpr = Array.foldr (\(Tuple p goT) acc -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> p <> "_loop_val gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr acc <> "\n}") ]) nativeCallExpr paramsWithTypes
 
                     newBound = Map.insert originalName { name, goType: TypeValue } bound
@@ -2017,7 +2025,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                       if actualGoType == resBinding.exprType then
                         StmtLeaf (GoAssign name resBinding.expr)
                       else
-                        StmtLeaf (GoRaw ("var " <> name <> " " <> goTypeToStr actualGoType <> " = " <> printGoExpr (unboxGoExpr resBinding.expr resBinding.exprType actualGoType)))
+                        StmtLeaf (GoRaw ("var " <> name <> " " <> goTypeToStr actualGoType <> " = " <> printGoExpr (unboxGoExpr modNameStr resBinding.expr resBinding.exprType actualGoType)))
                   in
                     { stmts: resBinding.stmts <> StmtLeaf (GoRaw ("// TAST (Let): " <> name <> " shape=" <> printTcoExprShape binding <> " bindingType=" <> printExprType (getExprType binding))) <> letStmt <> resBody.stmts, expr: resBody.expr, exprType: resBody.exprType, nextId: resBody.nextId }
 
@@ -2043,7 +2051,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
 
               isLoop = (unwrap tcoAnalysis).role.isLoop
               mutRecBinds =
-                if isLoop && Array.length (toArray bindings) == 1 then
+                if isLoop then
                   traverse (\(Tuple (Ident name) val) -> map (\abs -> { ident: sanitizeName name, args: abs.args, body: abs.body, fvs: memoizedFreeVars val, val }) (extractUncurriedAbs val)) (toArray bindings)
                 else Nothing
             in
@@ -2127,8 +2135,8 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                             goParamsNative = String.joinWith ", " (map (\(Tuple p goT) -> p <> "_loop " <> goTypeToStr goT) paramsWithTypes)
                             nativeAssignment = GoMutate ("Call_local_" <> modNameStr <> "_" <> newName) (GoRaw ("func(" <> goParamsNative <> ") " <> goTypeToStr trueFRet <> " {\n" <> printGoExpr funcBody <> "\n}"))
 
-                            nativeCallExpr = GoCall (GoVar ("Call_local_" <> modNameStr <> "_" <> newName)) (map (\(Tuple p goT) -> unboxGoExpr (GoVar (p <> "_loop_val")) TypeValue goT) paramsWithTypes)
-                            funcExpr = Array.foldr (\(Tuple p goT) accExpr -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> p <> "_loop_val gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr accExpr <> "\n}") ]) (boxGoExpr nativeCallExpr trueFRet) paramsWithTypes
+                            nativeCallExpr = GoCall (GoVar ("Call_local_" <> modNameStr <> "_" <> newName)) (map (\(Tuple p goT) -> unboxGoExpr modNameStr (GoVar (p <> "_loop_val")) TypeValue goT) paramsWithTypes)
+                            funcExpr = Array.foldr (\(Tuple p goT) accExpr -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> p <> "_loop_val gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr accExpr <> "\n}") ]) (boxGoExpr modNameStr nativeCallExpr trueFRet) paramsWithTypes
                             
                             newArities = Map.insert newName { fullName: "Call_local_" <> modNameStr <> "_" <> newName, fArgs: map snd paramsWithTypes, fRet: trueFRet, arity: Array.length fn.args } acc.modArities
                             newBound2 = Map.insert oldName { name: newName, goType: TypeFunc (map snd paramsWithTypes) trueFRet } acc.newBound
@@ -2150,7 +2158,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                           let
                             res = translateExprImpl_ helpersRef (depth + 1) modNameStr combinedRecVars moduleArities allocRes.newBound Nothing [] false false acc.nextId val
                             expectedGoType = (fromMaybe { name: alloc.newName, goType: TypeValue } (Map.lookup alloc.oldName allocRes.newBound)).goType
-                            assignedVal = if expectedGoType == res.exprType then res.expr else unboxGoExpr res.expr res.exprType expectedGoType
+                            assignedVal = if expectedGoType == res.exprType then res.expr else unboxGoExpr modNameStr res.expr res.exprType expectedGoType
                           in
                             { stmts: acc.stmts <> res.stmts, exprs: Array.snoc acc.exprs { key: alloc.newName, value: assignedVal, goType: expectedGoType }, exprType: TypeValue, nextId: res.nextId }
                       )
@@ -2186,7 +2194,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                             case Array.findIndex (\f -> f.name == prop) info.fields of
                               Just idx ->
                                 let
-                                  unboxedObj = unboxGoExpr resObj.expr resObj.exprType resObj.exprType
+                                  unboxedObj = unboxGoExpr modNameStr resObj.expr resObj.exprType resObj.exprType
                                   fieldExpr = GoStructAccess unboxedObj ("V" <> show idx)
                                   boxedFieldExpr = GoCall (GoSelector (GoVar "gopurs_runtime") "Box") [ fieldExpr ]
                                 in
@@ -2195,11 +2203,11 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                                 let
                                   _ = unit
                                 in
-                                  { stmts: resObj.stmts, expr: GoRecordAccess (boxGoExpr resObj.expr resObj.exprType) prop, exprType: TypeValue, nextId: resObj.nextId }
-                          Nothing -> { stmts: resObj.stmts, expr: GoRecordAccess (boxGoExpr resObj.expr resObj.exprType) prop, exprType: TypeValue, nextId: resObj.nextId }
-                    TypeValue -> { stmts: resObj.stmts, expr: GoRecordAccess (boxGoExpr resObj.expr resObj.exprType) prop, exprType: TypeValue, nextId: resObj.nextId }
-                    _ -> { stmts: resObj.stmts, expr: GoRecordAccess (boxGoExpr resObj.expr resObj.exprType) prop, exprType: TypeValue, nextId: resObj.nextId }
-                GetIndex idx -> { stmts: resObj.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayAccess") [ (boxGoExpr resObj.expr resObj.exprType), GoInt idx ], exprType: TypeValue, nextId: resObj.nextId }
+                                  { stmts: resObj.stmts, expr: GoRecordAccess (boxGoExpr modNameStr resObj.expr resObj.exprType) prop, exprType: TypeValue, nextId: resObj.nextId }
+                          Nothing -> { stmts: resObj.stmts, expr: GoRecordAccess (boxGoExpr modNameStr resObj.expr resObj.exprType) prop, exprType: TypeValue, nextId: resObj.nextId }
+                    TypeValue -> { stmts: resObj.stmts, expr: GoRecordAccess (boxGoExpr modNameStr resObj.expr resObj.exprType) prop, exprType: TypeValue, nextId: resObj.nextId }
+                    _ -> { stmts: resObj.stmts, expr: GoRecordAccess (boxGoExpr modNameStr resObj.expr resObj.exprType) prop, exprType: TypeValue, nextId: resObj.nextId }
+                GetIndex idx -> { stmts: resObj.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayAccess") [ (boxGoExpr modNameStr resObj.expr resObj.exprType), GoInt idx ], exprType: TypeValue, nextId: resObj.nextId }
                 GetCtorField (Qualified mbMod _) _ _ (Ident ctorName) _ idx ->
                   let
                     defMod = case mbMod of
@@ -2255,7 +2263,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                           if isNative then
                             GoConstructorAccess resObj.expr monoStructName typeArgs idx true
                           else
-                            GoConstructorAccess (boxGoExpr resObj.expr resObj.exprType) monoStructName typeArgs idx false
+                            GoConstructorAccess (boxGoExpr modNameStr resObj.expr resObj.exprType) monoStructName typeArgs idx false
                       in
                         { stmts: resObj.stmts, expr: exprAccess, exprType: actualFieldType, nextId: resObj.nextId }
 
@@ -2288,9 +2296,9 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                     { stmts: resObj.stmts <> accProps.stmts, expr: GoRecordUpdateNative resObj.exprType resObj.expr coercedUpdates, exprType: resObj.exprType, nextId: accProps.nextId }
                 _ ->
                   let
-                    boxedExprs = map (\p -> Tuple p.key (boxGoExpr p.expr p.goType)) accProps.exprs
+                    boxedExprs = map (\p -> Tuple p.key (boxGoExpr modNameStr p.expr p.goType)) accProps.exprs
                   in
-                    { stmts: resObj.stmts <> accProps.stmts, expr: GoRecordUpdateDict (boxGoExpr resObj.expr resObj.exprType) boxedExprs, exprType: TypeValue, nextId: accProps.nextId }
+                    { stmts: resObj.stmts <> accProps.stmts, expr: GoRecordUpdateDict (boxGoExpr modNameStr resObj.expr resObj.exprType) boxedExprs, exprType: TypeValue, nextId: accProps.nextId }
 
           CtorDef _ _ (Ident name) fields ->
             let
@@ -2363,7 +2371,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
               isElided = Set.member structName helpers.elidedCtors
               isPointerAdtLeaf = Map.member baseStructName helpers.pointerAdtLeaves
               isEnum = Set.member baseStructName helpers.enumCtors
-              boxedCtor = boxGoExpr (GoConstructor (hashString baseStructName) structName typeArgs coercedFields) (TypeStructPointer baseStructName fullName (structName <> typeArgsStr) typeArgs)
+              boxedCtor = boxGoExpr modNameStr (GoConstructor (hashString baseStructName) structName typeArgs coercedFields) (TypeStructPointer baseStructName fullName (structName <> typeArgsStr) typeArgs)
 
               finalExprType =
                 if isEnum then TypeUint32
@@ -2512,7 +2520,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
               res =
                 if isElided then
                   case Array.head accProps.exprs of
-                    Just expr -> { expr: boxGoExpr expr (fromMaybe TypeValue (map (exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr) (Array.index fields 0))), exprType: TypeValue }
+                    Just expr -> { expr: boxGoExpr modNameStr expr (fromMaybe TypeValue (map (exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr) (Array.index fields 0))), exprType: TypeValue }
                     Nothing -> { expr: GoConstructor (hashString baseStructName) monoStructName typeArgsCtor accProps.exprs, exprType: TypeStructPointer baseStructName fullName fullPath typeArgsCtor }
                 else if isPointerAdtLeaf then
                   let
@@ -2579,7 +2587,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
               buildIfs = foldl
                 ( \acc r ->
                     let
-                      goIf = GoIfElse (unboxGoExpr r.cond.expr r.cond.exprType TypeBool) (flattenStmts r.body.stmts <> [ GoMutate tmpVar (coerceGoExpr modNameStr r.body.expr r.body.exprType expectedGoType), GoRaw ("goto " <> labelName) ]) []
+                      goIf = GoIfElse (unboxGoExpr modNameStr r.cond.expr r.cond.exprType TypeBool) (flattenStmts r.body.stmts <> [ GoMutate tmpVar (coerceGoExpr modNameStr r.body.expr r.body.exprType expectedGoType), GoRaw ("goto " <> labelName) ]) []
                     in
                       acc <> StmtLeaf (GoRaw "{") <> r.cond.stmts <> StmtLeaf goIf <> StmtLeaf (GoRaw "}")
                 )
@@ -2593,10 +2601,10 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
               let
                 resE = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false nextId e
                 goOp = case op1 of
-                  OpBooleanNot -> { stmts: resE.stmts, expr: GoBinOp "!=" (unboxGoExpr resE.expr resE.exprType TypeBool) (GoRaw "true"), exprType: TypeBool, nextId: resE.nextId }
-                  OpIntNegate -> { stmts: resE.stmts, expr: GoPrefixOp "-" (unboxGoExpr resE.expr resE.exprType TypeInt64), exprType: TypeInt64, nextId: resE.nextId }
-                  OpIntBitNot -> { stmts: resE.stmts, expr: GoBinOp "^" (GoRaw "^0") (unboxGoExpr resE.expr resE.exprType TypeInt64), exprType: TypeInt64, nextId: resE.nextId }
-                  OpNumberNegate -> { stmts: resE.stmts, expr: GoPrefixOp "-" (unboxGoExpr resE.expr resE.exprType TypeFloat64), exprType: TypeFloat64, nextId: resE.nextId }
+                  OpBooleanNot -> { stmts: resE.stmts, expr: GoBinOp "!=" (unboxGoExpr modNameStr resE.expr resE.exprType TypeBool) (GoRaw "true"), exprType: TypeBool, nextId: resE.nextId }
+                  OpIntNegate -> { stmts: resE.stmts, expr: GoPrefixOp "-" (unboxGoExpr modNameStr resE.expr resE.exprType TypeInt64), exprType: TypeInt64, nextId: resE.nextId }
+                  OpIntBitNot -> { stmts: resE.stmts, expr: GoBinOp "^" (GoRaw "^0") (unboxGoExpr modNameStr resE.expr resE.exprType TypeInt64), exprType: TypeInt64, nextId: resE.nextId }
+                  OpNumberNegate -> { stmts: resE.stmts, expr: GoPrefixOp "-" (unboxGoExpr modNameStr resE.expr resE.exprType TypeFloat64), exprType: TypeFloat64, nextId: resE.nextId }
                   OpIsTag (Qualified mbMod (Ident tag)) ->
                     let
                       baseStructName = getBaseStructName modNameStr mbMod tag
@@ -2621,14 +2629,14 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                                   Just _ -> "(" <> printGoExpr resE.expr <> " == nil)"
                                   Nothing -> "(" <> printGoExpr resE.expr <> " != nil)"
                               else case Map.lookup baseStructName helpers.pointerAdtLeaves of
-                                Just nodeInfo -> "(" <> printGoExpr (boxGoExpr resE.expr resE.exprType) <> ".Type == 9 && " <> printGoExpr (boxGoExpr resE.expr resE.exprType) <> ".IntVal == " <> hashString nodeInfo.nodeBaseStruct <> " && " <> printGoExpr (boxGoExpr resE.expr resE.exprType) <> ".UnsafePtr == nil)"
+                                Just nodeInfo -> "(" <> printGoExpr (boxGoExpr modNameStr resE.expr resE.exprType) <> ".Type == 9 && " <> printGoExpr (boxGoExpr modNameStr resE.expr resE.exprType) <> ".IntVal == " <> hashString nodeInfo.nodeBaseStruct <> " && " <> printGoExpr (boxGoExpr modNameStr resE.expr resE.exprType) <> ".UnsafePtr == nil)"
                                 Nothing ->
                                   if Set.member baseStructName helpers.pointerAdtNodes then
-                                    "(" <> printGoExpr (boxGoExpr resE.expr resE.exprType) <> ".Type == 9 && " <> printGoExpr (boxGoExpr resE.expr resE.exprType) <> ".IntVal == " <> hashStr <> " && " <> printGoExpr (boxGoExpr resE.expr resE.exprType) <> ".UnsafePtr != nil)"
+                                    "(" <> printGoExpr (boxGoExpr modNameStr resE.expr resE.exprType) <> ".Type == 9 && " <> printGoExpr (boxGoExpr modNameStr resE.expr resE.exprType) <> ".IntVal == " <> hashStr <> " && " <> printGoExpr (boxGoExpr modNameStr resE.expr resE.exprType) <> ".UnsafePtr != nil)"
                                   else if Set.member baseStructName helpers.enumCtors then
-                                    "(" <> printGoExpr (unboxGoExpr resE.expr resE.exprType TypeUint32) <> " == " <> hashStr <> ")"
+                                    "(" <> printGoExpr (unboxGoExpr modNameStr resE.expr resE.exprType TypeUint32) <> " == " <> hashStr <> ")"
                                   else
-                                    "(" <> printGoExpr (boxGoExpr resE.expr resE.exprType) <> ".Type == 9 && " <> printGoExpr (boxGoExpr resE.expr resE.exprType) <> ".IntVal == " <> hashStr <> ")"
+                                    "(" <> printGoExpr (boxGoExpr modNameStr resE.expr resE.exprType) <> ".Type == 9 && " <> printGoExpr (boxGoExpr modNameStr resE.expr resE.exprType) <> ".IntVal == " <> hashStr <> ")"
                           in
                             { stmts: resE.stmts, expr: GoRaw exprStr, exprType: TypeBool, nextId: resE.nextId }
                         _ ->
@@ -2638,7 +2646,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                               if isNativePointer || resE.exprType /= TypeValue then
                                 StmtLeaf (GoRaw ("var " <> tmpVar <> " " <> goTypeToStr resE.exprType <> " = " <> printGoExpr resE.expr))
                               else
-                                StmtLeaf (GoRaw ("var " <> tmpVar <> " gopurs_runtime.Value = " <> printGoExpr (boxGoExpr resE.expr resE.exprType)))
+                                StmtLeaf (GoRaw ("var " <> tmpVar <> " gopurs_runtime.Value = " <> printGoExpr (boxGoExpr modNameStr resE.expr resE.exprType)))
 
                             exprStr =
                               if isNativePointer then
@@ -2653,7 +2661,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                                   if Set.member baseStructName helpers.pointerAdtNodes then
                                     "(" <> tmpVar <> ".Type == 9 && " <> tmpVar <> ".IntVal == " <> hashStr <> " && " <> tmpVar <> ".UnsafePtr != nil)"
                                   else if Set.member baseStructName helpers.enumCtors then
-                                    "(" <> printGoExpr (unboxGoExpr (GoVar tmpVar) TypeValue TypeUint32) <> " == " <> hashStr <> ")"
+                                    "(" <> printGoExpr (unboxGoExpr modNameStr (GoVar tmpVar) TypeValue TypeUint32) <> " == " <> hashStr <> ")"
                                   else
                                     "(" <> tmpVar <> ".Type == 9 && " <> tmpVar <> ".IntVal == " <> hashStr <> ")"
                           in
@@ -2661,7 +2669,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                   OpArrayLength ->
                     case resE.exprType of
                       TypeNativeArray _ -> { stmts: resE.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoCall (GoVar "int64") [ GoCall (GoVar "len") [ resE.expr ] ] ], exprType: TypeValue, nextId: resE.nextId }
-                      _ -> { stmts: resE.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoCall (GoVar "int64") [ GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayLength") [ boxGoExpr resE.expr resE.exprType ] ] ], exprType: TypeValue, nextId: resE.nextId }
+                      _ -> { stmts: resE.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoCall (GoVar "int64") [ GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayLength") [ boxGoExpr modNameStr resE.expr resE.exprType ] ] ], exprType: TypeValue, nextId: resE.nextId }
               in
                 goOp
             Op2 OpBooleanAnd e1 e2 ->
@@ -2673,12 +2681,12 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                 isEmptyStmts _ = false
               in
                 if isEmptyStmts res2.stmts then
-                  { expr: GoBinOp "&&" (unboxGoExpr res1.expr res1.exprType TypeBool) (unboxGoExpr res2.expr res2.exprType TypeBool), exprType: TypeBool, stmts: res1.stmts <> res2.stmts, nextId: res2.nextId }
+                  { expr: GoBinOp "&&" (unboxGoExpr modNameStr res1.expr res1.exprType TypeBool) (unboxGoExpr modNameStr res2.expr res2.exprType TypeBool), exprType: TypeBool, stmts: res1.stmts <> res2.stmts, nextId: res2.nextId }
                 else
                   let
                     tmpVar = "__t_and_" <> show res2.nextId
-                    declTmp = StmtLeaf (GoRaw ("var " <> tmpVar <> " bool = false\nif " <> printGoExpr (unboxGoExpr res1.expr res1.exprType TypeBool) <> " {\n"))
-                    assignTmp = StmtLeaf (GoRaw (tmpVar <> " = " <> printGoExpr (unboxGoExpr res2.expr res2.exprType TypeBool) <> "\n}"))
+                    declTmp = StmtLeaf (GoRaw ("var " <> tmpVar <> " bool = false\nif " <> printGoExpr (unboxGoExpr modNameStr res1.expr res1.exprType TypeBool) <> " {\n"))
+                    assignTmp = StmtLeaf (GoRaw (tmpVar <> " = " <> printGoExpr (unboxGoExpr modNameStr res2.expr res2.exprType TypeBool) <> "\n}"))
                   in
                     { expr: GoRaw tmpVar, exprType: TypeBool, stmts: res1.stmts <> declTmp <> res2.stmts <> assignTmp, nextId: res2.nextId + 1 }
             Op2 OpBooleanOr e1 e2 ->
@@ -2690,12 +2698,12 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                 isEmptyStmts _ = false
               in
                 if isEmptyStmts res2.stmts then
-                  { expr: GoBinOp "||" (unboxGoExpr res1.expr res1.exprType TypeBool) (unboxGoExpr res2.expr res2.exprType TypeBool), exprType: TypeBool, stmts: res1.stmts <> res2.stmts, nextId: res2.nextId }
+                  { expr: GoBinOp "||" (unboxGoExpr modNameStr res1.expr res1.exprType TypeBool) (unboxGoExpr modNameStr res2.expr res2.exprType TypeBool), exprType: TypeBool, stmts: res1.stmts <> res2.stmts, nextId: res2.nextId }
                 else
                   let
                     tmpVar = "__t_or_" <> show res2.nextId
-                    declTmp = StmtLeaf (GoRaw ("var " <> tmpVar <> " bool = true\nif !(" <> printGoExpr (unboxGoExpr res1.expr res1.exprType TypeBool) <> ") {\n"))
-                    assignTmp = StmtLeaf (GoRaw (tmpVar <> " = " <> printGoExpr (unboxGoExpr res2.expr res2.exprType TypeBool) <> "\n}"))
+                    declTmp = StmtLeaf (GoRaw ("var " <> tmpVar <> " bool = true\nif !(" <> printGoExpr (unboxGoExpr modNameStr res1.expr res1.exprType TypeBool) <> ") {\n"))
+                    assignTmp = StmtLeaf (GoRaw (tmpVar <> " = " <> printGoExpr (unboxGoExpr modNameStr res2.expr res2.exprType TypeBool) <> "\n}"))
                   in
                     { expr: GoRaw tmpVar, exprType: TypeBool, stmts: res1.stmts <> declTmp <> res2.stmts <> assignTmp, nextId: res2.nextId + 1 }
             Op2 op2 e1 e2 ->
@@ -2705,55 +2713,55 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                 goOp = case op2 of
                   OpArrayIndex ->
                     case res1.exprType of
-                      TypeNativeArray innerType -> { expr: boxGoExpr (GoRaw (printGoExpr res1.expr <> "[" <> printGoExpr (unboxGoExpr res2.expr res2.exprType TypeInt64) <> "]")) innerType, exprType: TypeValue }
-                      _ -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayAccess") [ boxGoExpr res1.expr res1.exprType, GoCall (GoVar "int") [ unboxGoExpr res2.expr res2.exprType TypeInt64 ] ], exprType: TypeValue }
-                  OpIntNum OpAdd -> { expr: GoBinOp "+" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
-                  OpIntNum OpSubtract -> { expr: GoBinOp "-" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
-                  OpIntNum OpMultiply -> { expr: GoBinOp "*" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
-                  OpIntNum OpDivide -> { expr: GoBinOp "/" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
-                  OpIntNum OpMod -> { expr: GoBinOp "%" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
-                  OpIntBitAnd -> { expr: GoBinOp "&" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
-                  OpIntBitOr -> { expr: GoBinOp "|" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
-                  OpIntBitXor -> { expr: GoBinOp "^" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
-                  OpIntBitShiftLeft -> { expr: GoBinOp "<<" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
-                  OpIntBitShiftRight -> { expr: GoBinOp ">>" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
-                  OpIntBitZeroFillShiftRight -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Zshr") [ boxGoExpr res1.expr res1.exprType, boxGoExpr res2.expr res2.exprType ], exprType: TypeValue }
-                  OpIntOrd OpEq -> { expr: GoBinOp "==" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeBool }
-                  OpIntOrd OpNotEq -> { expr: GoBinOp "!=" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeBool }
-                  OpIntOrd OpLt -> { expr: GoBinOp "<" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeBool }
-                  OpIntOrd OpLte -> { expr: GoBinOp "<=" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeBool }
-                  OpIntOrd OpGt -> { expr: GoBinOp ">" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeBool }
-                  OpIntOrd OpGte -> { expr: GoBinOp ">=" (unboxGoExpr res1.expr res1.exprType TypeInt64) (unboxGoExpr res2.expr res2.exprType TypeInt64), exprType: TypeBool }
-                  OpNumberNum OpAdd -> { expr: GoBinOp "+" (unboxGoExpr res1.expr res1.exprType TypeFloat64) (unboxGoExpr res2.expr res2.exprType TypeFloat64), exprType: TypeFloat64 }
-                  OpNumberNum OpSubtract -> { expr: GoBinOp "-" (unboxGoExpr res1.expr res1.exprType TypeFloat64) (unboxGoExpr res2.expr res2.exprType TypeFloat64), exprType: TypeFloat64 }
-                  OpNumberNum OpMultiply -> { expr: GoBinOp "*" (unboxGoExpr res1.expr res1.exprType TypeFloat64) (unboxGoExpr res2.expr res2.exprType TypeFloat64), exprType: TypeFloat64 }
-                  OpNumberNum OpDivide -> { expr: GoBinOp "/" (unboxGoExpr res1.expr res1.exprType TypeFloat64) (unboxGoExpr res2.expr res2.exprType TypeFloat64), exprType: TypeFloat64 }
-                  OpNumberNum OpMod -> { expr: GoCall (GoVar "math.Mod") [unboxGoExpr res1.expr res1.exprType TypeFloat64, unboxGoExpr res2.expr res2.exprType TypeFloat64], exprType: TypeFloat64 }
-                  OpNumberOrd OpEq -> { expr: GoBinOp "==" (unboxGoExpr res1.expr res1.exprType TypeFloat64) (unboxGoExpr res2.expr res2.exprType TypeFloat64), exprType: TypeBool }
-                  OpNumberOrd OpNotEq -> { expr: GoBinOp "!=" (unboxGoExpr res1.expr res1.exprType TypeFloat64) (unboxGoExpr res2.expr res2.exprType TypeFloat64), exprType: TypeBool }
-                  OpNumberOrd OpLt -> { expr: GoBinOp "<" (unboxGoExpr res1.expr res1.exprType TypeFloat64) (unboxGoExpr res2.expr res2.exprType TypeFloat64), exprType: TypeBool }
-                  OpNumberOrd OpLte -> { expr: GoBinOp "<=" (unboxGoExpr res1.expr res1.exprType TypeFloat64) (unboxGoExpr res2.expr res2.exprType TypeFloat64), exprType: TypeBool }
-                  OpNumberOrd OpGt -> { expr: GoBinOp ">" (unboxGoExpr res1.expr res1.exprType TypeFloat64) (unboxGoExpr res2.expr res2.exprType TypeFloat64), exprType: TypeBool }
-                  OpNumberOrd OpGte -> { expr: GoBinOp ">=" (unboxGoExpr res1.expr res1.exprType TypeFloat64) (unboxGoExpr res2.expr res2.exprType TypeFloat64), exprType: TypeBool }
-                  OpStringAppend -> { expr: GoBinOp "+" (unboxGoExpr res1.expr res1.exprType TypeString) (unboxGoExpr res2.expr res2.exprType TypeString), exprType: TypeString }
-                  OpStringOrd OpEq -> { expr: GoBinOp "==" (unboxGoExpr res1.expr res1.exprType TypeString) (unboxGoExpr res2.expr res2.exprType TypeString), exprType: TypeBool }
-                  OpStringOrd OpNotEq -> { expr: GoBinOp "!=" (unboxGoExpr res1.expr res1.exprType TypeString) (unboxGoExpr res2.expr res2.exprType TypeString), exprType: TypeBool }
-                  OpStringOrd OpLt -> { expr: GoBinOp "<" (unboxGoExpr res1.expr res1.exprType TypeString) (unboxGoExpr res2.expr res2.exprType TypeString), exprType: TypeBool }
-                  OpStringOrd OpLte -> { expr: GoBinOp "<=" (unboxGoExpr res1.expr res1.exprType TypeString) (unboxGoExpr res2.expr res2.exprType TypeString), exprType: TypeBool }
-                  OpStringOrd OpGt -> { expr: GoBinOp ">" (unboxGoExpr res1.expr res1.exprType TypeString) (unboxGoExpr res2.expr res2.exprType TypeString), exprType: TypeBool }
-                  OpStringOrd OpGte -> { expr: GoBinOp ">=" (unboxGoExpr res1.expr res1.exprType TypeString) (unboxGoExpr res2.expr res2.exprType TypeString), exprType: TypeBool }
-                  OpCharOrd OpEq -> { expr: GoBinOp "==" (unboxGoExpr res1.expr res1.exprType TypeString) (unboxGoExpr res2.expr res2.exprType TypeString), exprType: TypeBool }
-                  OpCharOrd OpNotEq -> { expr: GoBinOp "!=" (unboxGoExpr res1.expr res1.exprType TypeString) (unboxGoExpr res2.expr res2.exprType TypeString), exprType: TypeBool }
-                  OpCharOrd OpLt -> { expr: GoBinOp "<" (unboxGoExpr res1.expr res1.exprType TypeString) (unboxGoExpr res2.expr res2.exprType TypeString), exprType: TypeBool }
-                  OpCharOrd OpLte -> { expr: GoBinOp "<=" (unboxGoExpr res1.expr res1.exprType TypeString) (unboxGoExpr res2.expr res2.exprType TypeString), exprType: TypeBool }
-                  OpCharOrd OpGt -> { expr: GoBinOp ">" (unboxGoExpr res1.expr res1.exprType TypeString) (unboxGoExpr res2.expr res2.exprType TypeString), exprType: TypeBool }
-                  OpCharOrd OpGte -> { expr: GoBinOp ">=" (unboxGoExpr res1.expr res1.exprType TypeString) (unboxGoExpr res2.expr res2.exprType TypeString), exprType: TypeBool }
-                  OpBooleanOrd OpEq -> { expr: GoBinOp "==" (unboxGoExpr res1.expr res1.exprType TypeBool) (unboxGoExpr res2.expr res2.exprType TypeBool), exprType: TypeBool }
-                  OpBooleanOrd OpNotEq -> { expr: GoBinOp "!=" (unboxGoExpr res1.expr res1.exprType TypeBool) (unboxGoExpr res2.expr res2.exprType TypeBool), exprType: TypeBool }
-                  OpBooleanOrd OpLt -> { expr: GoBinOp "<" (unboxGoExpr res1.expr res1.exprType TypeBool) (unboxGoExpr res2.expr res2.exprType TypeBool), exprType: TypeBool }
-                  OpBooleanOrd OpLte -> { expr: GoBinOp "<=" (unboxGoExpr res1.expr res1.exprType TypeBool) (unboxGoExpr res2.expr res2.exprType TypeBool), exprType: TypeBool }
-                  OpBooleanOrd OpGt -> { expr: GoBinOp ">" (unboxGoExpr res1.expr res1.exprType TypeBool) (unboxGoExpr res2.expr res2.exprType TypeBool), exprType: TypeBool }
-                  OpBooleanOrd OpGte -> { expr: GoBinOp ">=" (unboxGoExpr res1.expr res1.exprType TypeBool) (unboxGoExpr res2.expr res2.exprType TypeBool), exprType: TypeBool }
+                      TypeNativeArray innerType -> { expr: boxGoExpr modNameStr (GoRaw (printGoExpr res1.expr <> "[" <> printGoExpr (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64) <> "]")) innerType, exprType: TypeValue }
+                      _ -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayAccess") [ boxGoExpr modNameStr res1.expr res1.exprType, GoCall (GoVar "int") [ unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64 ] ], exprType: TypeValue }
+                  OpIntNum OpAdd -> { expr: GoBinOp "+" (unboxGoExpr modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
+                  OpIntNum OpSubtract -> { expr: GoBinOp "-" (unboxGoExpr modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
+                  OpIntNum OpMultiply -> { expr: GoBinOp "*" (unboxGoExpr modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
+                  OpIntNum OpDivide -> { expr: GoBinOp "/" (unboxGoExpr modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
+                  OpIntNum OpMod -> { expr: GoBinOp "%" (unboxGoExpr modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
+                  OpIntBitAnd -> { expr: GoBinOp "&" (unboxGoExpr modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
+                  OpIntBitOr -> { expr: GoBinOp "|" (unboxGoExpr modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
+                  OpIntBitXor -> { expr: GoBinOp "^" (unboxGoExpr modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
+                  OpIntBitShiftLeft -> { expr: GoBinOp "<<" (unboxGoExpr modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
+                  OpIntBitShiftRight -> { expr: GoBinOp ">>" (unboxGoExpr modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
+                  OpIntBitZeroFillShiftRight -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Zshr") [ boxGoExpr modNameStr res1.expr res1.exprType, boxGoExpr modNameStr res2.expr res2.exprType ], exprType: TypeValue }
+                  OpIntOrd OpEq -> { expr: GoBinOp "==" (unboxGoExpr modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeBool }
+                  OpIntOrd OpNotEq -> { expr: GoBinOp "!=" (unboxGoExpr modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeBool }
+                  OpIntOrd OpLt -> { expr: GoBinOp "<" (unboxGoExpr modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeBool }
+                  OpIntOrd OpLte -> { expr: GoBinOp "<=" (unboxGoExpr modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeBool }
+                  OpIntOrd OpGt -> { expr: GoBinOp ">" (unboxGoExpr modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeBool }
+                  OpIntOrd OpGte -> { expr: GoBinOp ">=" (unboxGoExpr modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeBool }
+                  OpNumberNum OpAdd -> { expr: GoBinOp "+" (unboxGoExpr modNameStr res1.expr res1.exprType TypeFloat64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeFloat64), exprType: TypeFloat64 }
+                  OpNumberNum OpSubtract -> { expr: GoBinOp "-" (unboxGoExpr modNameStr res1.expr res1.exprType TypeFloat64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeFloat64), exprType: TypeFloat64 }
+                  OpNumberNum OpMultiply -> { expr: GoBinOp "*" (unboxGoExpr modNameStr res1.expr res1.exprType TypeFloat64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeFloat64), exprType: TypeFloat64 }
+                  OpNumberNum OpDivide -> { expr: GoBinOp "/" (unboxGoExpr modNameStr res1.expr res1.exprType TypeFloat64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeFloat64), exprType: TypeFloat64 }
+                  OpNumberNum OpMod -> { expr: GoCall (GoVar "math.Mod") [unboxGoExpr modNameStr res1.expr res1.exprType TypeFloat64, unboxGoExpr modNameStr res2.expr res2.exprType TypeFloat64], exprType: TypeFloat64 }
+                  OpNumberOrd OpEq -> { expr: GoBinOp "==" (unboxGoExpr modNameStr res1.expr res1.exprType TypeFloat64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeFloat64), exprType: TypeBool }
+                  OpNumberOrd OpNotEq -> { expr: GoBinOp "!=" (unboxGoExpr modNameStr res1.expr res1.exprType TypeFloat64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeFloat64), exprType: TypeBool }
+                  OpNumberOrd OpLt -> { expr: GoBinOp "<" (unboxGoExpr modNameStr res1.expr res1.exprType TypeFloat64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeFloat64), exprType: TypeBool }
+                  OpNumberOrd OpLte -> { expr: GoBinOp "<=" (unboxGoExpr modNameStr res1.expr res1.exprType TypeFloat64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeFloat64), exprType: TypeBool }
+                  OpNumberOrd OpGt -> { expr: GoBinOp ">" (unboxGoExpr modNameStr res1.expr res1.exprType TypeFloat64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeFloat64), exprType: TypeBool }
+                  OpNumberOrd OpGte -> { expr: GoBinOp ">=" (unboxGoExpr modNameStr res1.expr res1.exprType TypeFloat64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeFloat64), exprType: TypeBool }
+                  OpStringAppend -> { expr: GoBinOp "+" (unboxGoExpr modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr modNameStr res2.expr res2.exprType TypeString), exprType: TypeString }
+                  OpStringOrd OpEq -> { expr: GoBinOp "==" (unboxGoExpr modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
+                  OpStringOrd OpNotEq -> { expr: GoBinOp "!=" (unboxGoExpr modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
+                  OpStringOrd OpLt -> { expr: GoBinOp "<" (unboxGoExpr modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
+                  OpStringOrd OpLte -> { expr: GoBinOp "<=" (unboxGoExpr modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
+                  OpStringOrd OpGt -> { expr: GoBinOp ">" (unboxGoExpr modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
+                  OpStringOrd OpGte -> { expr: GoBinOp ">=" (unboxGoExpr modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
+                  OpCharOrd OpEq -> { expr: GoBinOp "==" (unboxGoExpr modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
+                  OpCharOrd OpNotEq -> { expr: GoBinOp "!=" (unboxGoExpr modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
+                  OpCharOrd OpLt -> { expr: GoBinOp "<" (unboxGoExpr modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
+                  OpCharOrd OpLte -> { expr: GoBinOp "<=" (unboxGoExpr modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
+                  OpCharOrd OpGt -> { expr: GoBinOp ">" (unboxGoExpr modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
+                  OpCharOrd OpGte -> { expr: GoBinOp ">=" (unboxGoExpr modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
+                  OpBooleanOrd OpEq -> { expr: GoBinOp "==" (unboxGoExpr modNameStr res1.expr res1.exprType TypeBool) (unboxGoExpr modNameStr res2.expr res2.exprType TypeBool), exprType: TypeBool }
+                  OpBooleanOrd OpNotEq -> { expr: GoBinOp "!=" (unboxGoExpr modNameStr res1.expr res1.exprType TypeBool) (unboxGoExpr modNameStr res2.expr res2.exprType TypeBool), exprType: TypeBool }
+                  OpBooleanOrd OpLt -> { expr: GoBinOp "<" (unboxGoExpr modNameStr res1.expr res1.exprType TypeBool) (unboxGoExpr modNameStr res2.expr res2.exprType TypeBool), exprType: TypeBool }
+                  OpBooleanOrd OpLte -> { expr: GoBinOp "<=" (unboxGoExpr modNameStr res1.expr res1.exprType TypeBool) (unboxGoExpr modNameStr res2.expr res2.exprType TypeBool), exprType: TypeBool }
+                  OpBooleanOrd OpGt -> { expr: GoBinOp ">" (unboxGoExpr modNameStr res1.expr res1.exprType TypeBool) (unboxGoExpr modNameStr res2.expr res2.exprType TypeBool), exprType: TypeBool }
+                  OpBooleanOrd OpGte -> { expr: GoBinOp ">=" (unboxGoExpr modNameStr res1.expr res1.exprType TypeBool) (unboxGoExpr modNameStr res2.expr res2.exprType TypeBool), exprType: TypeBool }
                   OpBooleanAnd -> { expr: GoRaw "panic(\"unreachable\")", exprType: TypeValue }
                   OpBooleanOr -> { expr: GoRaw "panic(\"unreachable\")", exprType: TypeValue }
               in
@@ -2764,7 +2772,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
               let
                 resA = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false nextId a
                 refIdent = "__local_ref_" <> show resA.nextId
-                declStmt = GoAssign refIdent (boxGoExpr resA.expr resA.exprType)
+                declStmt = GoAssign refIdent (boxGoExpr modNameStr resA.expr resA.exprType)
                 ifaceIdent = "__local_iface_" <> show resA.nextId
                 ifaceStmt = GoRaw ("var " <> ifaceIdent <> " interface{} = " <> refIdent)
               in
@@ -2786,10 +2794,10 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
               let
                 resRef = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false nextId ref
                 resVal = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities bound Nothing [] false false resRef.nextId val
-                writeStmt = GoRaw ("*(" <> printGoExpr resRef.expr <> ".PtrVal().(*interface{})) = " <> printGoExpr (boxGoExpr resVal.expr resVal.exprType))
+                writeStmt = GoRaw ("*(" <> printGoExpr resRef.expr <> ".PtrVal().(*interface{})) = " <> printGoExpr (boxGoExpr modNameStr resVal.expr resVal.exprType))
               in
                 { stmts: resRef.stmts <> resVal.stmts <> StmtLeaf writeStmt
-                , expr: boxGoExpr resVal.expr resVal.exprType
+                , expr: boxGoExpr modNameStr resVal.expr resVal.exprType
                 , exprType: TypeValue
                 , nextId: resVal.nextId
                 }
