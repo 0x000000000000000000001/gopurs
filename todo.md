@@ -54,3 +54,13 @@ Par exemple, au lieu qu'une fonction comme `Map.lookup` alloue un objet `Just(va
   - [ ] **Baby Step 2.2** : Adapter la génération de la fonction Go pure pour qu'elle utilise ces signatures de retours multiples, évitant toute allocation de constructeur sur le tas (zéro allocation).
   - [ ] **Baby Step 2.3** : Générer automatiquement une closure "pont" qui ré-emboîte (re-boxe) ces variables natives dans un vrai constructeur (ex: `Just`) *uniquement* lorsque la fonction est passée comme argument polymorphe de première classe (ex: passée à un `Array.map`).
   - [ ] **Baby Step 2.4** : Mesurer sur un benchmark intensif (ex: 10 millions de `Map.lookup` ou une grosse boucle `StateT`) la chute vertigineuse de la pression sur le Garbage Collector et l'accélération d'exécution.
+
+### 3. Optimisation des Records
+L'implémentation actuelle s'appuie sur `gopurs_runtime.RecordGet` / `RecordUpdate2` et des hashmaps dynamiques (générant un overhead d'allocation O(N) lors des copies). L'objectif est d'éliminer ces allocations en exploitant la connaissance statique des records.
+
+- [ ] *Action* : Remplacer l'usage des dictionnaires dynamiques par des structures Go natives (ou un ShapeArray) lorsque le polymorphisme de rangée n'est pas requis (records fermés) ou suite à la monomorphisation.
+  - [ ] **Baby Step 3.1** : Identifier dans le TAST (via `ann.type` ou la passe de spécialisation) les sites d'instanciation et de manipulation où un record possède un type fermé et exact (sans variable de rangée `| r`).
+  - [ ] **Baby Step 3.2** : Modifier le CodeGen pour déclarer dynamiquement une `struct` Go native (ex: `type Record_a_Int_b_String struct { a int64; b string }`) associée à ce type exact.
+  - [ ] **Baby Step 3.3** : Traduire les accès et les mises à jour (ex: `RecordUpdate`) en mutations/copies de structs natives par valeur (ex: `newRec := rec; newRec.a = ...`), garantissant **zéro allocation mémoire sur le tas (heap)**.
+  - [ ] **Baby Step 3.4** : Implémenter une couche de coercion (boxing "à la demande") pour convertir ces structs natives en dictionnaires dynamiques `gopurs_runtime.Value` *uniquement* lors d'un passage à une fonction exigeant un record polymorphe.
+  - [ ] **Baby Step 3.5** : Vérifier sur le benchmark `Test_Records.go` (Deep Record Updates) la disparition des allocations et la chute drastique du temps d'exécution (objectif : division du temps par ~800, en dessous de 50 ns).
