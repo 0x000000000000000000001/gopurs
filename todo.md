@@ -44,13 +44,13 @@ Le diagnostic a montré que :
     - [x] 1.6.4.3 : Implémenter le correctif pour que la substitution se propage correctement dans l'AST inliné.
     - [x] 1.6.4.4 : Vérifier que la génération Go ne produit plus aucun appel `Rebox` pour la boucle `go` issue de `reverse`, et que les performances de `sieve` sur 500 primes s'en trouvent maintenues ou améliorées. Test empirique de perf visé : < 100 μs. (Résultat mesuré : 38 μs !)
 
-### 2. Unboxing TAST (Worker-Wrapper Transformation & Scrutinee Fusion)
+### 2. Unboxing TAST (Scrutinee Fusion)
 (Ceci est inspiré de htdocs/purescript-backend-erl)
-L'objectif est d'atteindre le niveau de performance "Cheatcode" en détruisant purement et simplement les structures de données éphémères lors de l'exécution.
-Par exemple, au lieu qu'une fonction comme `Map.lookup` alloue un objet `Just(valeur)` en mémoire (que le Garbage Collector devra ramasser l'instant suivant), la fonction spécialisée (le Worker) retournera directement les valeurs brutes `(valeur, bool)` sur la stack Go. Le `case` appelant lira ces variables primitives natives sans avoir jamais construit ni ouvert de "boîte" `Just` ou `Nothing`.
+L'objectif est d'atteindre le niveau de performance "Cheatcode" en détruisant purement et simplement les structures de données éphémères lors de l'exécution via la fusion de la vue (Scrutinee Fusion).
+Par exemple, au lieu qu'une fonction comme `Map.lookup` alloue un objet `Just(valeur)` en mémoire (que le Garbage Collector devra ramasser l'instant suivant), la fonction spécialisée retournera directement les valeurs brutes `(valeur, bool)` sur la stack Go. Le `case` appelant (le scrutinee) lira ces variables primitives natives sans avoir jamais construit ni ouvert de "boîte" `Just` ou `Nothing`.
 
 - [ ] *Action* : Aplatir les retours de structures de données éphémères (Maybe, Tuple, Either, State) aux frontières d'appels purs.
   - [ ] **Baby Step 2.1** : Identifier dans `CodeGen.purs` les ADTs simples candidats à l'unboxing natif (ex: `Maybe` devient `(Value, bool)`, `Tuple` devient `(Value, Value)`).
-  - [ ] **Baby Step 2.2 (Le Worker)** : Adapter la génération de la fonction Go pure pour qu'elle utilise ces signatures de retours multiples, évitant toute allocation de constructeur sur le tas (zéro allocation).
-  - [ ] **Baby Step 2.3 (Le Wrapper)** : Générer automatiquement une closure "pont" qui ré-emboîte (re-boxe) ces variables natives dans un vrai constructeur (ex: `Just`) *uniquement* lorsque la fonction est passée comme argument polymorphe de première classe (ex: passée à un `Array.map`).
+  - [ ] **Baby Step 2.2** : Adapter la génération de la fonction Go pure pour qu'elle utilise ces signatures de retours multiples, évitant toute allocation de constructeur sur le tas (zéro allocation).
+  - [ ] **Baby Step 2.3** : Générer automatiquement une closure "pont" qui ré-emboîte (re-boxe) ces variables natives dans un vrai constructeur (ex: `Just`) *uniquement* lorsque la fonction est passée comme argument polymorphe de première classe (ex: passée à un `Array.map`).
   - [ ] **Baby Step 2.4** : Mesurer sur un benchmark intensif (ex: 10 millions de `Map.lookup` ou une grosse boucle `StateT`) la chute vertigineuse de la pression sur le Garbage Collector et l'accélération d'exécution.
