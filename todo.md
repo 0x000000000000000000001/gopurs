@@ -45,14 +45,17 @@ Le diagnostic a montré que :
     - [x] 1.6.4.4 : Vérifier que la génération Go ne produit plus aucun appel `Rebox` pour la boucle `go` issue de `reverse`, et que les performances de `sieve` sur 500 primes s'en trouvent maintenues ou améliorées. Test empirique de perf visé : < 100 μs. (Résultat mesuré : 38 μs !)
 
 ### 1.7 Persistance du bug de Monomorphisation sur les LetRec inlinés (Rebox)
-Malgré les validations apparentes de l'étape 1.6, une inspection du code Go généré (`Test_Primes.go`) montre que le bug n'est pas complètement résolu. La boucle `go` principale de `filter` est bien spécialisée en `int64`, mais la sous-boucle `go` issue de l'inlining natif de `reverse` (`Call_local_Test_Primes_go__go_...`) continue d'opérer sur du typage générique (`*Constructor_Test_Primes_Cons[gopurs_runtime.Value]`). En conséquence, `filter` subit toujours de lourdes pénalités de conversion via `Rebox_...` à la fin de son exécution pour passer de `Cons[int64]` à `Cons[Value]`.
-Le problème vient très probablement du fait que les fonctions imbriquées (LetRec) issues de l'inlining natif du compilateur possèdent des variables de type renommées (ex: `a1`) qui échappent toujours à la propagation de substitution descendante dans `Monomorphize.purs`.
+Malgré les validations apparentes de l'étape 1.6, une inspection du code Go généré (`Test_Primes.go`) montre que le bug n'est pas complètement résolu. La boucle `go` principale de `filter` est bien spécialisée en `int64`, mais la sous-boucle `go` issue de l'inlining de `reverse` continue d'opérer sur du typage générique (`*Constructor_Test_Primes_Cons[gopurs_runtime.Value]`). En conséquence, `filter` subit toujours des pénalités de conversion via `Rebox_...` à la fin de son exécution pour passer de `Cons[int64]` à `Cons[Value]`.
 
-- [ ] *Action* : Garantir la spécialisation récursive totale des LetRec imbriqués et la disparition stricte des `Rebox_` restants.
-  - [x] **Baby Step 1.7.1** : Ajouter un log/trace dans `Monomorphize.purs` (`monomorphizeBindLocal` ou `rewriteExpr`) pour inspecter les types des bindings LetRec (spécifiquement la sous-boucle `go` de `reverse` dans `filter`). Vérifier si ses variables `a1` sont bien identifiées et mappées lors de l'inférence. *(Fait : le log montre que `ann.type` est `Nothing` pour les LetRec inlinés).*
-  - [ ] **Baby Step 1.7.2** : S'assurer que `unifySpine` ou la fonction de création de la map de substitution explore récursivement le corps de l'expression inlinée pour forcer l'unification des variables de type renommées des sous-fonctions locales (ex: `a1 -> Int64`).
-  - [ ] **Baby Step 1.7.3** : Modifier la passe de monomorphisation pour appliquer agressivement cette map de substitution descendante à *toutes* les annotations `bAnn` des `LetRec` imbriqués, y compris ceux qui ne sont pas appelés directement au niveau racine.
-  - [ ] **Baby Step 1.7.4** : Regénérer le code et valider *strictement* dans `Test_Primes.go` (via un grep) qu'il n'y a **plus aucun** appel à `Rebox_Test_Primes...` généré au sein de la fonction `filter` inlinée ni dans `sieve`.
+**Diagnostic mis à jour :**
+Le patch du compilateur Haskell (`Desugar.hs`) est **un succès total**. Les types des `LetRec` (comme le `go` de `reverse`) sont désormais bien présents et corrects dans le `corefn.json` généré (`type: 14`). Les `type: null` restants sur les masques (`Binder`) ne sont pas un problème car PBO sait unifier par le haut.
+Le problème vient de la passe d'**Inlining/Monomorphisation de PBO**. Lorsque PBO inline l'AST de `reverse` au sein de `filter`, soit il perd l'annotation de type du `LetRec` copié, soit la propagation de substitution (`Monomorphize.purs`) échoue à s'appliquer aux variables de type renommées (`a1`) à l'intérieur de ce sous-arbre.
+
+- [ ] *Action* : Garantir la spécialisation récursive des sous-arbres inlinés et la disparition stricte des `Rebox_` restants dans PBO.
+  - [x] **Baby Step 1.7.1** : (Fait) Validation empirique que `Test_Primes.go` génère encore des `Rebox_` à cause des patterns non-unifiés et confirmation que `corefn.json` contient bien les types.
+  - [ ] **Baby Step 1.7.2** : Inspecter la logique d'Inlining et de Monomorphisation dans `purescript-backend-optimizer` (`Monomorphize.purs`). Identifier pourquoi l'annotation du `LetRec` inliné est vue comme `Nothing` ou pourquoi la substitution de type `a1 -> Int64` s'arrête aux portes du sous-arbre inliné.
+  - [ ] **Baby Step 1.7.3** : Patcher la passe d'optimisation dans PBO pour propager la Map de substitution de manière récursive ou préserver scrupuleusement les annotations de type lors de la copie de l'AST.
+  - [ ] **Baby Step 1.7.4** : Regénérer le code (via `./bin/go/run -c`) et valider strictement via un `grep` que le fichier `Test_Primes.go` ne contient **plus aucun** appel à `Rebox_Test_Primes...` généré au sein de la fonction `filter` et `sieve`.
 
 ### 2. Unboxing TAST (Scrutinee Fusion)
 (Ceci est inspiré de htdocs/purescript-backend-erl)
