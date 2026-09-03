@@ -64,7 +64,7 @@ Par exemple, au lieu qu'une fonction comme `Map.lookup` alloue un objet `Just(va
 
 - [ ] *Action* : Aplatir les retours de structures de données éphémères (Maybe, Tuple, Either, State) aux frontières d'appels purs.
   - [x] **Baby Step 2.1** : Identifier dans `CodeGen.purs` les ADTs simples candidats à l'unboxing natif (ex: `Maybe` devient `(Value, bool)`, `Tuple` devient `(Value, Value)`).
-  - [ ] **Baby Step 2.2** : Adapter la génération de la fonction Go pure pour qu'elle utilise ces signatures de retours multiples, évitant toute allocation de constructeur sur le tas (zéro allocation).
+  - [ ] **Baby Step 2.2** : Adapter la génération de la fonction Go pure pour qu'elle retourne directement une structure par valeur allouée sur la stack (Option B), évitant toute allocation de constructeur sur le tas (zéro allocation).
   - [ ] **Baby Step 2.3** : Générer automatiquement une closure "pont" qui ré-emboîte (re-boxe) ces variables natives dans un vrai constructeur (ex: `Just`) *uniquement* lorsque la fonction est passée comme argument polymorphe de première classe (ex: passée à un `Array.map`).
   - [ ] **Baby Step 2.4** : Mesurer sur un benchmark intensif (ex: 10 millions de `Map.lookup` ou une grosse boucle `StateT`) la chute vertigineuse de la pression sur le Garbage Collector et l'accélération d'exécution.
 
