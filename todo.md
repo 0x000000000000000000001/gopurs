@@ -53,9 +53,9 @@ Le problème vient de la passe d'**Inlining/Monomorphisation de PBO**. Lorsque P
 
 - [ ] *Action* : Garantir la spécialisation récursive des sous-arbres inlinés et la disparition stricte des `Rebox_` restants dans PBO.
   - [x] **Baby Step 1.7.1** : (Fait) Validation empirique que `Test_Primes.go` génère encore des `Rebox_` à cause des patterns non-unifiés et confirmation que `corefn.json` contient bien les types.
-  - [ ] **Baby Step 1.7.2** : Inspecter la logique d'Inlining et de Monomorphisation dans `purescript-backend-optimizer` (`Monomorphize.purs`). Identifier pourquoi l'annotation du `LetRec` inliné est vue comme `Nothing` ou pourquoi la substitution de type `a1 -> Int64` s'arrête aux portes du sous-arbre inliné.
-  - [ ] **Baby Step 1.7.3** : Patcher la passe d'optimisation dans PBO pour propager la Map de substitution de manière récursive ou préserver scrupuleusement les annotations de type lors de la copie de l'AST.
-  - [ ] **Baby Step 1.7.4** : Regénérer le code (via `./bin/go/run -c`) et valider strictement via un `grep` que le fichier `Test_Primes.go` ne contient **plus aucun** appel à `Rebox_Test_Primes...` généré au sein de la fonction `filter` et `sieve`.
+  - [x] **Baby Step 1.7.2** : Inspecter la logique d'Inlining et de Monomorphisation dans `purescript-backend-optimizer` (`Monomorphize.purs`). Identifier pourquoi l'annotation du `LetRec` inliné est vue comme `Nothing` ou pourquoi la substitution de type `a1 -> Int64` s'arrête aux portes du sous-arbre inliné.
+  - [x] **Baby Step 1.7.3** : Patcher la passe d'optimisation dans PBO pour propager la Map de substitution de manière récursive ou préserver scrupuleusement les annotations de type lors de la copie de l'AST.
+  - [x] **Baby Step 1.7.4** : Regénérer le code (via `./bin/go/run -c`) et valider strictement via un `grep` que le fichier `Test_Primes.go` ne contient **plus aucun** appel à `Rebox_Test_Primes...` généré au sein de la fonction `filter` et `sieve`.
 
 ### 2. Unboxing TAST (Scrutinee Fusion)
 (Ceci est inspiré de htdocs/purescript-backend-erl)
@@ -77,3 +77,4 @@ L'implémentation actuelle s'appuie sur `gopurs_runtime.RecordGet` / `RecordUpda
   - [ ] **Baby Step 3.3** : Traduire les accès et les mises à jour (ex: `RecordUpdate`) en mutations/copies de structs natives par valeur (ex: `newRec := rec; newRec.a = ...`), garantissant **zéro allocation mémoire sur le tas (heap)**.
   - [ ] **Baby Step 3.4** : Implémenter une couche de coercion (boxing "à la demande") pour convertir ces structs natives en dictionnaires dynamiques `gopurs_runtime.Value` *uniquement* lors d'un passage à une fonction exigeant un record polymorphe.
   - [ ] **Baby Step 3.5** : Vérifier sur le benchmark `Test_Records.go` (Deep Record Updates) la disparition des allocations et la chute drastique du temps d'exécution (objectif : division du temps par ~800, en dessous de 50 ns).
+  - [x] **Baby Step 1.7.3** : Patcher `Monomorphize.purs` (dans `purescript-backend-optimizer`). Dans `monomorphizeExpr`, lors du traitement d'un `ExprApp` qui cible une fonction spécialisée, utiliser la map de substitution locale (`substType`) pour appliquer un `rewriteExpr` sur les arguments de l'appel. Cela garantira que les variables libres (comme `a1` sur le `Nil` inliné) soient correctement substituées par le type spécialisé (ex: `Int64`) au point d'appel.
