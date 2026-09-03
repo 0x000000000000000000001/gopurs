@@ -1267,7 +1267,6 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                       targetCtx.loopParams
                   in
                     let
-                      _ = unsafePerformEffect (Console.log ("\n[TRACE] TcoApp type in " <> modNameStr <> " is " <> printExprType (getExprType tcoExpr) <> "\n"))
                       expectedGoType = exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr (case getExprType tcoExpr of
                                 Any -> fromMaybe Any mbExpectedExprType
                                 ty -> ty)
@@ -1553,7 +1552,6 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
 
               newBound = foldl (\acc (Tuple idStr goType) -> Map.insert idStr { name: idStr, goType } acc) bound paramsWithTypes
               params = map fst paramsWithTypes
-              _ = unsafePerformEffect (Console.log ("\n[TRACE] UncurriedAbs type in " <> modNameStr <> " is " <> printExprType (getExprType tcoExpr) <> "\n"))
               resBody = translateExprImpl__ helpersRef (depth + 1) modNameStr recVars moduleArities newBound Nothing [] isTail false (case mbFuncTy of
                 Just { fRet } -> Just fRet
                 Nothing -> Nothing) nextId body
@@ -1880,7 +1878,6 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
               newBound = foldl (\acc (Tuple idStr goType) -> Map.insert idStr { name: idStr, goType } acc) bound paramsWithTypes
 
               goParams = String.joinWith ", " (map (\(Tuple p goT) -> p <> " " <> goTypeToStr goT) paramsWithTypes)
-              _ = unsafePerformEffect (Console.log ("\n[TRACE] UncurriedAbs type in " <> modNameStr <> " is " <> printExprType (getExprType tcoExpr) <> "\n"))
               resBody = translateExprImpl__ helpersRef (depth + 1) modNameStr recVars moduleArities newBound Nothing [] isTail false (case mbFuncTy of
                 Just { fRet } -> Just fRet
                 Nothing -> Nothing) nextId body
@@ -1960,7 +1957,6 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
               paramsWithTypes = map (\(Tuple mbI lvl) -> Tuple (localId mbI lvl) TypeValue) args
               newBound = foldl (\acc (Tuple idStr goType) -> Map.insert idStr { name: idStr, goType } acc) bound paramsWithTypes
               goParams = String.joinWith ", " (map (\(Tuple p goT) -> p <> " " <> goTypeToStr goT) paramsWithTypes)
-              _ = unsafePerformEffect (Console.log ("\n[TRACE] UncurriedEffectAbs type in " <> modNameStr <> " is " <> printExprType (getExprType tcoExpr) <> "\n"))
               resBody = translateExprImpl__ helpersRef (depth + 1) modNameStr recVars moduleArities newBound Nothing [] isTail false (case mbFuncTy of
                 Just { fRet } -> Just fRet
                 Nothing -> Nothing) nextId body
