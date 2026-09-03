@@ -44,6 +44,16 @@ Le diagnostic a montré que :
     - [x] 1.6.4.3 : Implémenter le correctif pour que la substitution se propage correctement dans l'AST inliné.
     - [x] 1.6.4.4 : Vérifier que la génération Go ne produit plus aucun appel `Rebox` pour la boucle `go` issue de `reverse`, et que les performances de `sieve` sur 500 primes s'en trouvent maintenues ou améliorées. Test empirique de perf visé : < 100 μs. (Résultat mesuré : 38 μs !)
 
+### 1.7 Persistance du bug de Monomorphisation sur les LetRec inlinés (Rebox)
+Malgré les validations apparentes de l'étape 1.6, une inspection du code Go généré (`Test_Primes.go`) montre que le bug n'est pas complètement résolu. La boucle `go` principale de `filter` est bien spécialisée en `int64`, mais la sous-boucle `go` issue de l'inlining natif de `reverse` (`Call_local_Test_Primes_go__go_...`) continue d'opérer sur du typage générique (`*Constructor_Test_Primes_Cons[gopurs_runtime.Value]`). En conséquence, `filter` subit toujours de lourdes pénalités de conversion via `Rebox_...` à la fin de son exécution pour passer de `Cons[int64]` à `Cons[Value]`.
+Le problème vient très probablement du fait que les fonctions imbriquées (LetRec) issues de l'inlining natif du compilateur possèdent des variables de type renommées (ex: `a1`) qui échappent toujours à la propagation de substitution descendante dans `Monomorphize.purs`.
+
+- [ ] *Action* : Garantir la spécialisation récursive totale des LetRec imbriqués et la disparition stricte des `Rebox_` restants.
+  - [ ] **Baby Step 1.7.1** : Ajouter un log/trace dans `Monomorphize.purs` (`monomorphizeBindLocal` ou `rewriteExpr`) pour inspecter les types des bindings LetRec (spécifiquement la sous-boucle `go` de `reverse` dans `filter`). Vérifier si ses variables `a1` sont bien identifiées et mappées lors de l'inférence.
+  - [ ] **Baby Step 1.7.2** : S'assurer que `unifySpine` ou la fonction de création de la map de substitution explore récursivement le corps de l'expression inlinée pour forcer l'unification des variables de type renommées des sous-fonctions locales (ex: `a1 -> Int64`).
+  - [ ] **Baby Step 1.7.3** : Modifier la passe de monomorphisation pour appliquer agressivement cette map de substitution descendante à *toutes* les annotations `bAnn` des `LetRec` imbriqués, y compris ceux qui ne sont pas appelés directement au niveau racine.
+  - [ ] **Baby Step 1.7.4** : Regénérer le code et valider *strictement* dans `Test_Primes.go` (via un grep) qu'il n'y a **plus aucun** appel à `Rebox_Test_Primes...` généré au sein de la fonction `filter` inlinée ni dans `sieve`.
+
 ### 2. Unboxing TAST (Scrutinee Fusion)
 (Ceci est inspiré de htdocs/purescript-backend-erl)
 L'objectif est d'atteindre le niveau de performance "Cheatcode" en détruisant purement et simplement les structures de données éphémères lors de l'exécution via la fusion de la vue (Scrutinee Fusion).
