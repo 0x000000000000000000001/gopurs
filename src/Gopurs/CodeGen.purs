@@ -2405,12 +2405,24 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
 
           CtorDef _ _ (Ident name) fields ->
             let
-              structName = "Constructor_" <> modNameStr <> "_" <> sanitizeName name
-              baseStructName = getBaseStructName modNameStr Nothing name
-              key = modNameStr <> "." <> name
               helpers = unsafePerformEffect (Ref.read helpersRef)
               ctorType = getExprType tcoExpr
               expectedGoType = exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr ctorType
+
+              trueModPart = case expectedGoType of
+                TypeStructPointer _ fn _ _ ->
+                  let
+                    parts = String.split (Pattern ".") fn
+                  in
+                    String.joinWith "." (Array.slice 0 (Array.length parts - 1) parts)
+                _ -> modNameStr
+
+              trueModPartUnderscores = String.replaceAll (Pattern ".") (Replacement "_") trueModPart
+
+              structName = "Constructor_" <> trueModPartUnderscores <> "_" <> sanitizeName name
+              baseStructName = "Data_" <> trueModPartUnderscores <> "_" <> sanitizeName name
+              key = trueModPartUnderscores <> "." <> name
+
               fullName = case expectedGoType of
                 TypeStructPointer _ fn _ _ -> fn
                 _ -> if key == "Test_RBTree.E" then "Test.RBTree.Tree" else key
@@ -2524,17 +2536,29 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                 Any -> fromMaybe Any mbExpectedExprType
                 ty -> ty
                 
-              baseStructName = getBaseStructName modNameStr mbMod name
+              expectedGoType = exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr ctorType
+
+              modPart = case mbMod of
+                Just (ModuleName mn) -> mn
+                Nothing -> modNameStr
+
+              trueModPart = case expectedGoType of
+                TypeStructPointer _ fn _ _ ->
+                  let
+                    parts = String.split (Pattern ".") fn
+                  in
+                    String.joinWith "." (Array.slice 0 (Array.length parts - 1) parts)
+                _ -> modPart
+
+              trueModPartUnderscores = String.replaceAll (Pattern ".") (Replacement "_") trueModPart
+
+              baseStructName = "Data_" <> trueModPartUnderscores <> "_" <> sanitizeName name
               adtFullName = case ctorType of
                 ADT fn _ _ -> Just fn
                 _ -> Nothing
                 
-              modPart = case mbMod of
-                Just (ModuleName mn) -> String.replaceAll (Pattern ".") (Replacement "_") mn
-                Nothing -> modNameStr
-              structName = "Constructor_" <> modPart <> "_" <> sanitizeName name
-              key = modPart <> "." <> name
-              expectedGoType = exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr ctorType
+              structName = "Constructor_" <> trueModPartUnderscores <> "_" <> sanitizeName name
+              key = trueModPartUnderscores <> "." <> name
 
               fullName = case expectedGoType of
                 TypeStructPointer _ fn _ _ -> fn
