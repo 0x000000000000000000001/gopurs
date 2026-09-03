@@ -55,22 +55,31 @@ memoizedFreeVars = memoizedFreeVarsImpl freeVars
 type UnboxedADT =
   { signature :: Array GoType
   , mapConstructor :: String -> Array GoExpr -> Array GoExpr
+  , boxExpr :: GoExpr -> GoExpr
+  , unboxExpr :: GoExpr -> GoExpr
   }
 
-unboxableADTs :: Map.Map String UnboxedADT
+unboxableADTs :: Map String UnboxedADT
 unboxableADTs = Map.fromFoldable
   [ Tuple "Data.Maybe.Maybe"
       { signature: [ TypeValue, TypeBool ]
-      , mapConstructor: \ctor args -> case ctor of
-          "Just" -> [ fromMaybe (GoRaw "gopurs_runtime.Value{}") (Array.head args), GoRaw "true" ]
-          _ -> [ GoRaw "gopurs_runtime.Value{}", GoRaw "false" ]
+      , mapConstructor: \ctorName args ->
+          case ctorName of
+            "Just" -> [ fromMaybe (GoRaw "gopurs_runtime.Value{}") (Array.index args 0), GoRaw "true" ]
+            "Nothing" -> [ GoRaw "gopurs_runtime.Value{}", GoRaw "false" ]
+            _ -> args
+      , boxExpr: \expr ->
+          GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\tif _v.V1 {\n\t\t\t\t\treturn gopurs_runtime.Box(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{V0: _v.V0})\n\t\t\t\t}\n\t\t\t\treturn gopurs_runtime.Box(&Constructor_Data_Maybe_Nothing[gopurs_runtime.Value]{})\n\t\t\t}()")
+      , unboxExpr: \expr ->
+          GoRaw ("func() struct{V0 gopurs_runtime.Value; V1 bool} {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\tif _v.Type == 9 && _v.IntVal == " <> hashString "Constructor_Data_Maybe_Just" <> " && _v.UnsafePtr != nil {\n\t\t\t\t\treturn struct{V0 gopurs_runtime.Value; V1 bool}{V0: (*Constructor_Data_Maybe_Just[gopurs_runtime.Value])(_v.UnsafePtr).V0, V1: true}\n\t\t\t\t}\n\t\t\t\treturn struct{V0 gopurs_runtime.Value; V1 bool}{V0: gopurs_runtime.Value{}, V1: false}\n\t\t\t}()")
       }
   , Tuple "Data.Tuple.Tuple"
       { signature: [ TypeValue, TypeValue ]
-      , mapConstructor: \_ args -> 
-          [ fromMaybe (GoRaw "gopurs_runtime.Value{}") (Array.index args 0)
-          , fromMaybe (GoRaw "gopurs_runtime.Value{}") (Array.index args 1)
-          ]
+      , mapConstructor: \ctorName args -> args
+      , boxExpr: \expr ->
+          GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\treturn gopurs_runtime.Box(&Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V0, V1: _v.V1})\n\t\t\t}()")
+      , unboxExpr: \expr ->
+          GoRaw ("func() struct{V0 gopurs_runtime.Value; V1 gopurs_runtime.Value} {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\t_p := (*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(_v.UnsafePtr)\n\t\t\t\treturn struct{V0 gopurs_runtime.Value; V1 gopurs_runtime.Value}{V0: _p.V0, V1: _p.V1}\n\t\t\t}()")
       }
   , Tuple "Data.Either.Either"
       { signature: [ TypeValue, TypeValue, TypeBool ]
@@ -78,6 +87,10 @@ unboxableADTs = Map.fromFoldable
           "Left" -> [ fromMaybe (GoRaw "gopurs_runtime.Value{}") (Array.head args), GoRaw "gopurs_runtime.Value{}", GoRaw "false" ]
           "Right" -> [ GoRaw "gopurs_runtime.Value{}", fromMaybe (GoRaw "gopurs_runtime.Value{}") (Array.head args), GoRaw "true" ]
           _ -> [ GoRaw "gopurs_runtime.Value{}", GoRaw "gopurs_runtime.Value{}", GoRaw "false" ]
+      , boxExpr: \expr ->
+          GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\tif _v.V2 {\n\t\t\t\t\treturn gopurs_runtime.Box(&Constructor_Data_Either_Right[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V1})\n\t\t\t\t}\n\t\t\t\treturn gopurs_runtime.Box(&Constructor_Data_Either_Left[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V0})\n\t\t\t}()")
+      , unboxExpr: \expr ->
+          GoRaw ("func() struct{V0 gopurs_runtime.Value; V1 gopurs_runtime.Value; V2 bool} {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\tif _v.Type == 9 && _v.IntVal == " <> hashString "Constructor_Data_Either_Right" <> " && _v.UnsafePtr != nil {\n\t\t\t\t\treturn struct{V0 gopurs_runtime.Value; V1 gopurs_runtime.Value; V2 bool}{V0: gopurs_runtime.Value{}, V1: (*Constructor_Data_Either_Right[gopurs_runtime.Value, gopurs_runtime.Value])(_v.UnsafePtr).V0, V2: true}\n\t\t\t\t}\n\t\t\t\treturn struct{V0 gopurs_runtime.Value; V1 gopurs_runtime.Value; V2 bool}{V0: (*Constructor_Data_Either_Left[gopurs_runtime.Value, gopurs_runtime.Value])(_v.UnsafePtr).V0, V1: gopurs_runtime.Value{}, V2: false}\n\t\t\t}()")
       }
   ]
 
@@ -173,7 +186,10 @@ boxGoExprImpl modNameStr expr (TypeNativeArray inner) = GoRaw ("func() gopurs_ru
 boxGoExprImpl modNameStr expr TypeUint32 = GoRaw ("gopurs_runtime.Value{Type: 9, IntVal: int64(" <> printGoExpr expr <> "), UnsafePtr: nil}")
 boxGoExprImpl modNameStr expr (TypeGenericParam _) = expr
 boxGoExprImpl modNameStr expr (TypeFunc _ _) = expr
-boxGoExprImpl modNameStr expr (TypeStructValue adtName fields) = GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\t_ = " <> printGoExpr expr <> "\n\t\t\t\tpanic(\"boxTypeStructValue not implemented yet for " <> adtName <> "\")\n\t\t\t}()")
+boxGoExprImpl modNameStr expr (TypeStructValue adtName fields) =
+  case Map.lookup adtName unboxableADTs of
+    Just adt -> adt.boxExpr expr
+    Nothing -> GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\t_ = " <> printGoExpr expr <> "\n\t\t\t\tpanic(\"boxTypeStructValue not implemented yet for " <> adtName <> "\")\n\t\t\t}()")
 
 mangleType :: Map.Map String { ctorName :: String, arity :: Int } -> Set.Set String -> Set.Set String -> String -> ExprType -> String
 mangleType ptrPaths enumAdts elidedCtors modNameStr t =
@@ -341,7 +357,10 @@ unboxGoExpr modNameStr expr currentType desiredType =
         GoRaw ("func() " <> goTypeToStr desiredType <> " {\n\t\t\t\t\tarr := *(*[]gopurs_runtime.Value)(" <> printGoExpr expr <> ".UnsafePtr)\n\t\t\t\t\tunboxed := make(" <> goTypeToStr desiredType <> ", len(arr))\n\t\t\t\t\tfor i, v := range arr { unboxed[i] = " <> printGoExpr (unboxGoExpr modNameStr (GoVar "v") TypeValue inner) <> " }\n\t\t\t\t\treturn unboxed\n\t\t\t\t}()")
     (TypeGenericParam _) -> expr
     (TypeFunc _ _) -> expr
-    (TypeStructValue adtName fields) -> GoRaw ("func() " <> goTypeToStr (TypeStructValue adtName fields) <> " {\n\t\t\t\t_ = " <> printGoExpr expr <> "\n\t\t\t\tpanic(\"unboxTypeStructValue not implemented yet for " <> adtName <> "\")\n\t\t\t}()")
+    (TypeStructValue adtName fields) ->
+      case Map.lookup adtName unboxableADTs of
+        Just adt -> adt.unboxExpr expr
+        Nothing -> GoRaw ("func() " <> goTypeToStr (TypeStructValue adtName fields) <> " {\n\t\t\t\t_ = " <> printGoExpr expr <> "\n\t\t\t\tpanic(\"unboxTypeStructValue not implemented yet for " <> adtName <> "\")\n\t\t\t}()")
 
 capitalize :: String -> String
 capitalize "" = ""
@@ -2499,17 +2518,22 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
 
           CtorSaturated (Qualified mbMod _) _ _ (Ident name) props ->
             let
-              baseStructName = getBaseStructName modNameStr mbMod name
-              modPart = case mbMod of
-                Just (ModuleName mn) -> String.replaceAll (Pattern ".") (Replacement "_") mn
-                Nothing -> modNameStr
-              structName = "Constructor_" <> modPart <> "_" <> sanitizeName name
-              key = modPart <> "." <> name
               helpers = unsafePerformEffect (Ref.read helpersRef)
 
               ctorType = case getExprType tcoExpr of
                 Any -> fromMaybe Any mbExpectedExprType
                 ty -> ty
+                
+              baseStructName = getBaseStructName modNameStr mbMod name
+              adtFullName = case ctorType of
+                ADT fn _ _ -> Just fn
+                _ -> Nothing
+                
+              modPart = case mbMod of
+                Just (ModuleName mn) -> String.replaceAll (Pattern ".") (Replacement "_") mn
+                Nothing -> modNameStr
+              structName = "Constructor_" <> modPart <> "_" <> sanitizeName name
+              key = modPart <> "." <> name
               expectedGoType = exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr ctorType
 
               fullName = case expectedGoType of
@@ -2549,13 +2573,15 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                       expectedExprType = case Array.index fields acc.fieldIdx of
                         Just ty -> ty
                         Nothing -> Any
-                      expectedType = case Array.index fields acc.fieldIdx of
-                        Just ty ->
-                          let
-                            genericGoType = exprTypeToGenericGoType helpers.pointerAdtPaths helpers.enumAdts helpers.elidedCtors vars modNameStr ty
-                          in
-                            instantiateGenericGoType instMap genericGoType
-                        Nothing -> TypeValue
+                      expectedType = case adtFullName >>= \fn -> Map.lookup fn unboxableADTs of
+                        Just adt -> fromMaybe TypeValue (Array.index adt.signature acc.fieldIdx)
+                        Nothing -> case Array.index fields acc.fieldIdx of
+                          Just ty ->
+                            let
+                              genericGoType = exprTypeToGenericGoType helpers.pointerAdtPaths helpers.enumAdts helpers.elidedCtors vars modNameStr ty
+                            in
+                              instantiateGenericGoType instMap genericGoType
+                          Nothing -> TypeValue
 
                       newBound = case unwrapTcoExpr val, extractExprFuncType expectedExprType of
                         Abs args _, Just { fArgs } ->
@@ -2606,21 +2632,27 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                   case Array.head accProps.exprs of
                     Just expr -> { expr: boxGoExpr modNameStr expr (fromMaybe TypeValue (map (exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr) (Array.index fields 0))), exprType: TypeValue }
                     Nothing -> { expr: GoConstructor (hashString baseStructName) monoStructName typeArgsCtor accProps.exprs, exprType: TypeStructPointer baseStructName fullName fullPath typeArgsCtor }
-                else if isPointerAdtLeaf then
-                  let
-                    nodeInfo = Map.lookup baseStructName helpers.pointerAdtLeaves
-                    nodeCtorName = case nodeInfo of
-                      Just info -> info.nodeCtor
-                      Nothing -> ""
-                    nodeBaseStruct = case nodeInfo of
-                      Just info -> info.nodeBaseStruct
-                      Nothing -> ""
-                    nodeStruct = "Constructor_" <> modPart' <> "_" <> sanitizeName nodeCtorName
-                    nodeFullPath = nodeStruct <> typeArgsStr
-                  in
-                    { expr: GoRaw ("(*" <> nodeFullPath <> ")(nil)"), exprType: TypeStructPointer nodeBaseStruct fullName nodeFullPath typeArgsCtor }
-                else if isEnum then { expr: GoRaw (hashString baseStructName), exprType: TypeUint32 }
-                else { expr: GoConstructor (hashString baseStructName) monoStructName typeArgsCtor accProps.exprs, exprType: TypeStructPointer baseStructName fullName fullPath typeArgsCtor }
+                else case adtFullName >>= \fn -> Map.lookup fn unboxableADTs >>= \adt -> Just (Tuple fn adt) of
+                  Just (Tuple fn adt) ->
+                    { expr: GoStructValue fn adt.signature (adt.mapConstructor name accProps.exprs)
+                    , exprType: TypeStructValue fn adt.signature
+                    }
+                  Nothing ->
+                    if isPointerAdtLeaf then
+                      let
+                        nodeInfo = Map.lookup baseStructName helpers.pointerAdtLeaves
+                        nodeCtorName = case nodeInfo of
+                          Just info -> info.nodeCtor
+                          Nothing -> ""
+                        nodeBaseStruct = case nodeInfo of
+                          Just info -> info.nodeBaseStruct
+                          Nothing -> ""
+                        nodeStruct = "Constructor_" <> modPart' <> "_" <> sanitizeName nodeCtorName
+                        nodeFullPath = nodeStruct <> typeArgsStr
+                      in
+                        { expr: GoRaw ("(*" <> nodeFullPath <> ")(nil)"), exprType: TypeStructPointer nodeBaseStruct fullName nodeFullPath typeArgsCtor }
+                    else if isEnum then { expr: GoRaw (hashString baseStructName), exprType: TypeUint32 }
+                    else { expr: GoConstructor (hashString baseStructName) monoStructName typeArgsCtor accProps.exprs, exprType: TypeStructPointer baseStructName fullName fullPath typeArgsCtor }
             in
               { stmts: accProps.stmts, expr: res.expr, exprType: res.exprType, nextId: accProps.nextId }
 
