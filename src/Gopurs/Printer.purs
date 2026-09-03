@@ -194,6 +194,8 @@ printGoExpr expr = case expr of
     name <> " = " <> printGoExpr expr
   GoFuncLit params stmts retExpr retType ->
     "func(" <> String.joinWith ", " (map (\(Tuple p goT) -> p <> " " <> goTypeToStr goT) params) <> ") " <> goTypeToStr retType <> " {\n" <> printGoExpr (GoBlock (stmts <> [ GoReturn retExpr ])) <> "\n}"
+  GoStructValue adtName fields exprs ->
+    goTypeToStr (TypeStructValue adtName fields) <> "{" <> String.joinWith ", " (map printGoExpr exprs) <> "}"
 
 printGoDeclVar :: GoDecl -> String
 printGoDeclVar { identifier, expression, goType } =

@@ -44,6 +44,7 @@ data GoExpr
   | GoMutate String GoExpr
   | GoIfElse GoExpr (Array GoExpr) (Array GoExpr)
   | GoFuncLit (Array (Tuple String GoType)) (Array GoExpr) GoExpr GoType
+  | GoStructValue String (Array GoType) (Array GoExpr)
 
 derive instance eqGoExpr :: Eq GoExpr
 
@@ -74,6 +75,7 @@ data GoType
   | TypeNativeArray GoType
   | TypeGenericParam String
   | TypeFunc (Array GoType) GoType
+  | TypeStructValue String (Array GoType)
 
 derive instance eqGoType :: Eq GoType
 derive instance ordGoType :: Ord GoType
@@ -92,6 +94,7 @@ goTypeToStr (TypeInterface name) = name
 goTypeToStr (TypeNativeArray inner) = "[]" <> goTypeToStr inner
 goTypeToStr (TypeGenericParam name) = "T_" <> sanitizeName name
 goTypeToStr (TypeFunc args ret) = "func(" <> String.joinWith ", " (map goTypeToStr args) <> ") " <> goTypeToStr ret
+goTypeToStr (TypeStructValue _ fields) = "struct{" <> String.joinWith "; " (Array.mapWithIndex (\i t -> "V" <> show i <> " " <> goTypeToStr t) fields) <> "}"
 goTypeToStr (TypeRecord fields) = goRecordStructName fields
 goTypeToStr _ = "gopurs_runtime.Value"
 

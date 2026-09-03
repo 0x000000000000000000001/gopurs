@@ -52,17 +52,52 @@ foreign import memoizedFreeVarsImpl :: (TcoExpr -> Set String) -> TcoExpr -> Set
 memoizedFreeVars :: TcoExpr -> Set String
 memoizedFreeVars = memoizedFreeVarsImpl freeVars
 
-type UnboxedSignature = Array GoType
+type UnboxedADT =
+  { signature :: Array GoType
+  , mapConstructor :: String -> Array GoExpr -> Array GoExpr
+  }
 
-unboxableADTs :: Map.Map String UnboxedSignature
+unboxableADTs :: Map.Map String UnboxedADT
 unboxableADTs = Map.fromFoldable
-  [ Tuple "Data.Maybe.Maybe" [ TypeValue, TypeBool ]
-  , Tuple "Data.Tuple.Tuple" [ TypeValue, TypeValue ]
-  , Tuple "Data.Either.Either" [ TypeValue, TypeValue, TypeBool ]
+  [ Tuple "Data.Maybe.Maybe"
+      { signature: [ TypeValue, TypeBool ]
+      , mapConstructor: \ctor args -> case ctor of
+          "Just" -> [ fromMaybe (GoRaw "gopurs_runtime.Value{}") (Array.head args), GoRaw "true" ]
+          _ -> [ GoRaw "gopurs_runtime.Value{}", GoRaw "false" ]
+      }
+  , Tuple "Data.Tuple.Tuple"
+      { signature: [ TypeValue, TypeValue ]
+      , mapConstructor: \_ args -> 
+          [ fromMaybe (GoRaw "gopurs_runtime.Value{}") (Array.index args 0)
+          , fromMaybe (GoRaw "gopurs_runtime.Value{}") (Array.index args 1)
+          ]
+      }
+  , Tuple "Data.Either.Either"
+      { signature: [ TypeValue, TypeValue, TypeBool ]
+      , mapConstructor: \ctor args -> case ctor of
+          "Left" -> [ fromMaybe (GoRaw "gopurs_runtime.Value{}") (Array.head args), GoRaw "gopurs_runtime.Value{}", GoRaw "false" ]
+          "Right" -> [ GoRaw "gopurs_runtime.Value{}", fromMaybe (GoRaw "gopurs_runtime.Value{}") (Array.head args), GoRaw "true" ]
+          _ -> [ GoRaw "gopurs_runtime.Value{}", GoRaw "gopurs_runtime.Value{}", GoRaw "false" ]
+      }
   ]
+
+getUnboxedADT :: ExprType -> Maybe (Tuple String UnboxedADT)
+getUnboxedADT (ADT fullName _ _) = do
+  adt <- Map.lookup fullName unboxableADTs
+  pure (Tuple fullName adt)
+getUnboxedADT (TypeApp f a) = getUnboxedADT f
+getUnboxedADT _ = Nothing
 
 coerceGoExpr :: String -> GoExpr -> GoType -> GoType -> GoExpr
 coerceGoExpr modNameStr expr from to | from == to = expr
+coerceGoExpr modNameStr ctor@(GoConstructor _ structName _ args) _ (TypeStructValue adtName fields) =
+  let
+    parts = String.split (Pattern "_") structName
+    ctorName = fromMaybe "" (Array.last parts)
+  in
+    case Map.lookup adtName unboxableADTs of
+      Just adt -> GoStructValue adtName fields (adt.mapConstructor ctorName args)
+      Nothing -> ctor -- fallback
 coerceGoExpr modNameStr expr srcT@(TypeStructPointer b1 f1 s1 a1) destT@(TypeStructPointer b2 f2 s2 a2) | b1 == b2 && s1 == s2 && a1 == a2 = expr
 
 coerceGoExpr modNameStr expr srcT@(TypeStructPointer b1 f1 s1 a1) destT@(TypeStructPointer b2 f2 s2 a2) | b1 == b2 =
@@ -138,6 +173,7 @@ boxGoExprImpl modNameStr expr (TypeNativeArray inner) = GoRaw ("func() gopurs_ru
 boxGoExprImpl modNameStr expr TypeUint32 = GoRaw ("gopurs_runtime.Value{Type: 9, IntVal: int64(" <> printGoExpr expr <> "), UnsafePtr: nil}")
 boxGoExprImpl modNameStr expr (TypeGenericParam _) = expr
 boxGoExprImpl modNameStr expr (TypeFunc _ _) = expr
+boxGoExprImpl modNameStr expr (TypeStructValue adtName fields) = GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\t_ = " <> printGoExpr expr <> "\n\t\t\t\tpanic(\"boxTypeStructValue not implemented yet for " <> adtName <> "\")\n\t\t\t}()")
 
 mangleType :: Map.Map String { ctorName :: String, arity :: Int } -> Set.Set String -> Set.Set String -> String -> ExprType -> String
 mangleType ptrPaths enumAdts elidedCtors modNameStr t =
@@ -305,6 +341,7 @@ unboxGoExpr modNameStr expr currentType desiredType =
         GoRaw ("func() " <> goTypeToStr desiredType <> " {\n\t\t\t\t\tarr := *(*[]gopurs_runtime.Value)(" <> printGoExpr expr <> ".UnsafePtr)\n\t\t\t\t\tunboxed := make(" <> goTypeToStr desiredType <> ", len(arr))\n\t\t\t\t\tfor i, v := range arr { unboxed[i] = " <> printGoExpr (unboxGoExpr modNameStr (GoVar "v") TypeValue inner) <> " }\n\t\t\t\t\treturn unboxed\n\t\t\t\t}()")
     (TypeGenericParam _) -> expr
     (TypeFunc _ _) -> expr
+    (TypeStructValue adtName fields) -> GoRaw ("func() " <> goTypeToStr (TypeStructValue adtName fields) <> " {\n\t\t\t\t_ = " <> printGoExpr expr <> "\n\t\t\t\tpanic(\"unboxTypeStructValue not implemented yet for " <> adtName <> "\")\n\t\t\t}()")
 
 capitalize :: String -> String
 capitalize "" = ""
@@ -337,13 +374,13 @@ flattenStmts tree = Array.fromFoldable (go List.Nil tree)
     in
       go acc' a
 
-wrapInStmts :: Array String -> StmtTree -> GoExpr -> GoExpr
-wrapInStmts _ stmts expr =
+wrapInStmts :: Array String -> StmtTree -> GoType -> GoExpr -> GoExpr
+wrapInStmts _ stmts retType expr =
   let
     stmtsArr = flattenStmts stmts
   in
     if Array.length stmtsArr == 0 then expr
-    else GoRaw ("func() gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (stmtsArr <> [ GoReturn expr ])) <> "\n}()")
+    else GoCall (GoFuncLit [] stmtsArr expr retType) []
 
 extractUncurriedAbs :: TcoExpr -> Maybe { args :: Array String, body :: TcoExpr }
 extractUncurriedAbs tcoExpr@(TcoExpr _ syntax) = case syntax of
@@ -555,7 +592,9 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves ad
                       let
                         ret = if Array.length args < Array.length fArgs then TypeValue else exprTypeToGoType pointerAdtPaths enumAdts elidedCtors modNameStr fRet
                       in
-                        ret
+                        case getUnboxedADT fRet of
+                          Just (Tuple adtName adt) -> TypeStructValue adtName adt.signature
+                          Nothing -> ret
                     Nothing -> TypeValue
                   fullName = "Call_" <> modNameStr <> "_" <> sanitizeName name
                 in
@@ -667,7 +706,7 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves ad
                               let
                                 res = translateExprImpl__ helpersRef 0 modNameStr recVars moduleArities Map.empty (Just (sanitizeName name)) [] false false (Just (getExprType expr)) 0 expr
                               in
-                                [ { identifier: modNameStr <> "_" <> sanitizeName name, expression: wrapInStmts [] res.stmts (boxGoExpr modNameStr res.expr res.exprType), goType: TypeValue } ]
+                                [ { identifier: modNameStr <> "_" <> sanitizeName name, expression: wrapInStmts [] res.stmts TypeValue (boxGoExpr modNameStr res.expr res.exprType), goType: TypeValue } ]
                           )
                           binds
               in
