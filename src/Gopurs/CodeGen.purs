@@ -52,6 +52,15 @@ foreign import memoizedFreeVarsImpl :: (TcoExpr -> Set String) -> TcoExpr -> Set
 memoizedFreeVars :: TcoExpr -> Set String
 memoizedFreeVars = memoizedFreeVarsImpl freeVars
 
+type UnboxedSignature = Array GoType
+
+unboxableADTs :: Map.Map String UnboxedSignature
+unboxableADTs = Map.fromFoldable
+  [ Tuple "Data.Maybe.Maybe" [ TypeValue, TypeBool ]
+  , Tuple "Data.Tuple.Tuple" [ TypeValue, TypeValue ]
+  , Tuple "Data.Either.Either" [ TypeValue, TypeValue, TypeBool ]
+  ]
+
 coerceGoExpr :: String -> GoExpr -> GoType -> GoType -> GoExpr
 coerceGoExpr modNameStr expr from to | from == to = expr
 coerceGoExpr modNameStr expr srcT@(TypeStructPointer b1 f1 s1 a1) destT@(TypeStructPointer b2 f2 s2 a2) | b1 == b2 && s1 == s2 && a1 == a2 = expr
