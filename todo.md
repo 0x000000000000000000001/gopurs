@@ -62,11 +62,11 @@ Le problème vient de la passe d'**Inlining/Monomorphisation de PBO**. Lorsque P
 L'objectif est d'atteindre le niveau de performance "Cheatcode" en détruisant purement et simplement les structures de données éphémères lors de l'exécution via la fusion de la vue (Scrutinee Fusion).
 Par exemple, au lieu qu'une fonction comme `Map.lookup` alloue un objet `Just(valeur)` en mémoire (que le Garbage Collector devra ramasser l'instant suivant), la fonction spécialisée retournera directement les valeurs brutes `(valeur, bool)` sur la stack Go. Le `case` appelant (le scrutinee) lira ces variables primitives natives sans avoir jamais construit ni ouvert de "boîte" `Just` ou `Nothing`.
 
-- [ ] *Action* : Aplatir les retours de structures de données éphémères (Maybe, Tuple, Either, State) aux frontières d'appels purs.
+- [x] *Action* : Aplatir les retours de structures de données éphémères (Maybe, Tuple, Either, State) aux frontières d'appels purs.
   - [x] **Baby Step 2.1** : Identifier dans `CodeGen.purs` les ADTs simples candidats à l'unboxing natif (ex: `Maybe` devient `(Value, bool)`, `Tuple` devient `(Value, Value)`).
   - [x] **Baby Step 2.2** : Adapter la génération de la fonction Go pure pour qu'elle retourne directement une structure par valeur allouée sur la stack (Option B), évitant toute allocation de constructeur sur le tas (zéro allocation).
-  - [ ] **Baby Step 2.3** : Générer automatiquement une closure "pont" qui ré-emboîte (re-boxe) ces variables natives dans un vrai constructeur (ex: `Just`) *uniquement* lorsque la fonction est passée comme argument polymorphe de première classe (ex: passée à un `Array.map`).
-  - [ ] **Baby Step 2.4** : Mesurer sur un benchmark intensif (ex: 10 millions de `Map.lookup` ou une grosse boucle `StateT`) la chute vertigineuse de la pression sur le Garbage Collector et l'accélération d'exécution.AddNewsTopic
+  - [x] **Baby Step 2.3** : Générer automatiquement une closure "pont" qui ré-emboîte (re-boxe) ces variables natives dans un vrai constructeur (ex: `Just`) *uniquement* lorsque la fonction est passée comme argument polymorphe de première classe (ex: passée à un `Array.map`).
+  - [x] **Baby Step 2.4** : Mesurer sur un benchmark intensif (ex: 10 millions de `Map.lookup` ou une grosse boucle `StateT`) la chute vertigineuse de la pression sur le Garbage Collector et l'accélération d'exécution.AddNewsTopic
 
 ### 3. Optimisation des Records
 L'implémentation actuelle s'appuie sur `gopurs_runtime.RecordGet` / `RecordUpdate2` et des hashmaps dynamiques (générant un overhead d'allocation O(N) lors des copies). L'objectif est d'éliminer ces allocations en exploitant la connaissance statique des records.
