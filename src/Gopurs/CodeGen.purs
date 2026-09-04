@@ -2631,9 +2631,7 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
               isElided = Set.member structName helpers.elidedCtors
               isPointerAdtLeaf = Map.member baseStructName helpers.pointerAdtLeaves
 
-              modPart' = case mbMod of
-                Just (ModuleName mod) -> String.replaceAll (Pattern ".") (Replacement "_") mod
-                _ -> modNameStr
+              modPart' = trueModPartUnderscores
               monoStructName = "Constructor_" <> modPart' <> "_" <> sanitizeName name
 
               typeArgsCtor = case ctorType of
