@@ -13,3 +13,4 @@ tests/runner/spago.yaml
 bin/gopurs.js
 .psci*
 psci*
+.purmeta/
