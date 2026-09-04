@@ -206,6 +206,11 @@ mangleType ptrPaths enumAdts elidedCtors modNameStr t =
   in
     hashString (Monomorphize.mangleType t)
 
+isClosedRowTail :: Maybe ExprType -> Boolean
+isClosedRowTail Nothing = true
+isClosedRowTail (Just Any) = true
+isClosedRowTail _ = false
+
 exprTypeToGoType :: Map.Map String { ctorName :: String, arity :: Int } -> Set.Set String -> Set.Set String -> String -> ExprType -> GoType
 exprTypeToGoType _ _ _ _ Int = TypeInt64
 exprTypeToGoType _ _ _ _ Number = TypeFloat64
@@ -213,7 +218,7 @@ exprTypeToGoType _ _ _ _ String = TypeString
 exprTypeToGoType _ _ _ _ Char = TypeString
 exprTypeToGoType _ _ _ _ Boolean = TypeBool
 exprTypeToGoType ptrPaths enumAdts elided modNameStr (Array ty) = TypeNativeArray (exprTypeToGoType ptrPaths enumAdts elided modNameStr ty)
-exprTypeToGoType ptrPaths enumAdts elided modNameStr (Record (Row fields Nothing)) = TypeRecord (map (\(Tuple k v) -> Tuple k (exprTypeToGoType ptrPaths enumAdts elided modNameStr v)) (Array.sortBy (comparing \(Tuple k _) -> k) fields))
+exprTypeToGoType ptrPaths enumAdts elided modNameStr (Record (Row fields tail)) | isClosedRowTail tail = TypeRecord (map (\(Tuple k v) -> Tuple k (exprTypeToGoType ptrPaths enumAdts elided modNameStr v)) (Array.sortBy (comparing \(Tuple k _) -> k) fields))
 exprTypeToGoType ptrPaths enumAdts elided modNameStr (Record _) = TypeValue
 exprTypeToGoType ptrPaths enumAdts elided modNameStr (ADT fullName path args) =
   let
@@ -254,7 +259,7 @@ exprTypeToGoType _ _ _ _ (TypeVar v) = TypeValue
 exprTypeToGoType _ _ _ _ _ = TypeValue
 
 exprTypeToGenericGoType :: Map.Map String { ctorName :: String, arity :: Int } -> Set.Set String -> Set.Set String -> Array String -> String -> ExprType -> GoType
-exprTypeToGenericGoType ptrPaths enumAdts elidedCtors typeVars modNameStr (Record (Row fields Nothing)) = TypeRecord (map (\(Tuple k v) -> Tuple k (exprTypeToGenericGoType ptrPaths enumAdts elidedCtors typeVars modNameStr v)) (Array.sortBy (comparing \(Tuple k _) -> k) fields))
+exprTypeToGenericGoType ptrPaths enumAdts elidedCtors typeVars modNameStr (Record (Row fields tail)) | isClosedRowTail tail = TypeRecord (map (\(Tuple k v) -> Tuple k (exprTypeToGenericGoType ptrPaths enumAdts elidedCtors typeVars modNameStr v)) (Array.sortBy (comparing \(Tuple k _) -> k) fields))
 exprTypeToGenericGoType _ _ _ _ _ (Record _) = TypeValue
 exprTypeToGenericGoType ptrPaths enumAdts elidedCtors typeVars modNameStr (TypeApp fn arg) =
   let
@@ -3056,7 +3061,7 @@ unwrapValueToFunc dataDecls (TNamed anyT) mbTast valName depth cidx | anyT == "a
     resolvedTast = map (resolveNewtype dataDecls) mbTast
   in
     case resolvedTast of
-      Just (Record (Row fields Nothing)) ->
+      Just (Record (Row fields tail)) | isClosedRowTail tail ->
         let
           fieldStr = Array.mapWithIndex
             ( \i (Tuple fK fT) ->
@@ -3101,7 +3106,7 @@ wrapReturn dataDecls (TFunc args ret) mbTast valName =
             Just r -> genInnerArg ("inner_res := " <> valName) (wrapReturn dataDecls r (mbTast >>= getTastReturnType) "inner_res") argUnwrap
 wrapReturn _ (TArray elem) _ valName | printTypeNode elem /= "gopurs_runtime.Value" =
   "func() gopurs_runtime.Value {\n\t\t\tres_arr := make([]gopurs_runtime.Value, len(" <> valName <> "))\n\t\t\tfor i, v := range " <> valName <> " { res_arr[i] = gopurs_runtime.Box(v) }\n\t\t\treturn gopurs_runtime.Array(res_arr)\n\t\t}()"
-wrapReturn dataDecls (TMap _ _) (Just (Record (Row fields Nothing))) valName =
+wrapReturn dataDecls (TMap _ _) (Just (Record (Row fields tail))) valName | isClosedRowTail tail =
   let
     fieldStr = Array.mapWithIndex
       ( \i (Tuple fK fT) ->
@@ -3126,7 +3131,7 @@ wrapReturn dataDecls (TNamed anyT) mbTast valName | anyT == "any" || anyT == "in
     resolvedTast = map (resolveNewtype dataDecls) mbTast
   in
     case resolvedTast of
-      Just (Record (Row fields Nothing)) ->
+      Just (Record (Row fields tail)) | isClosedRowTail tail ->
         let
           fieldStr = Array.mapWithIndex
             ( \i (Tuple fK fT) ->
