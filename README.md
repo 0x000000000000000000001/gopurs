@@ -16,6 +16,10 @@ While the broader JS ecosystem has heavily leaned towards TypeScript, many backe
 
 `gopurs` aims to provide a bridge for developers who want the elegance and strict typing of a purely functional language like PureScript, while benefiting from Go's massive ecosystem. It opens a door for those who want to compile their pure business logic into a single, zero-dependency static binary that can run anywhere.
 
+## Benchmarks
+
+The performance results of code compiled with `gopurs` are available in the [altbak benchmark repository](https://github.com/0x000000000000000000001/altbak.pub#go). These benchmarks are evaluated on various algorithms specifically designed to stress the CPU and RAM.
+
 ## Why a new Go backend?
 
 The [`purescript-native`](https://github.com/andyarvanitis/purescript-native) project already provides a Go compiler backend. I want to deeply acknowledge the fantastic work done by Andy Arvanitis on that project, which paved the way for compiling PureScript to native targets. This new project is largely inspired by his initial effort, and my gratitude for his pioneering work is very real. It is always easier to come second and learn from the technical limits encountered by the pioneers.
