@@ -77,7 +77,7 @@ L'implémentation actuelle s'appuie sur `gopurs_runtime.RecordGet` / `RecordUpda
   - [x] **Baby Step 3.3** : Traduire les accès et les mises à jour (ex: `RecordUpdate`) en mutations/copies de structs natives par valeur (ex: `newRec := rec; newRec.a = ...`), garantissant **zéro allocation mémoire sur le tas (heap)**.
   - [x] **Baby Step 3.4** : Implémenter une couche de coercion (boxing "à la demande") pour convertir ces structs natives en dictionnaires dynamiques `gopurs_runtime.Value` *uniquement* lors d'un passage à une fonction exigeant un record polymorphe.
   - [x] **Baby Step 3.5** : Vérifier sur le benchmark `Test_Records.go` (Deep Record Updates) la disparition des allocations et la chute drastique du temps d'exécution (objectif : division du temps par ~800, en dessous de 50 ns).
-  - [ ] **Baby Step 3.6** : Optimiser la génération des littéraux de records (`ExprRecordLiteral`) dans `CodeGen.purs` pour qu'ils produisent directement une instanciation de `struct` native Go plutôt qu'un appel à `gopurs_runtime.RecordDict` (qui subit ensuite une coercion via unboxing).
+  - [x] **Baby Step 3.6** : Optimiser la génération des littéraux de records (`ExprRecordLiteral`) dans `CodeGen.purs` pour qu'ils produisent directement une instanciation de `struct` native Go plutôt qu'un appel à `gopurs_runtime.RecordDict` (qui subit ensuite une coercion via unboxing).
   
 ### 4. Dictionary Specialization (Destruction des Type Classes)
 L'implémentation de l'unboxing des ADT (Point 2) est actuellement bridée par les frontières polymorphiques des Type Classes (ex: le `bind` dynamique de `StateT`), qui forcent le compilateur à générer des ponts `Rebox_` inutiles (allocation sur le tas).

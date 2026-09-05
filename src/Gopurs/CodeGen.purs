@@ -1246,14 +1246,17 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
           Lit (LitRecord props) ->
             let
               sortedProps = Array.sortBy (comparing \(Prop k _) -> k) props
-              exprType = getExprType tcoExpr
+              baseExprType = getExprType tcoExpr
+              exprType = case baseExprType of
+                Record _ -> baseExprType
+                _ -> fromMaybe baseExprType mbExpectedExprType
 
               mbRecordType = case exprType of
                 Record (Row fields _) -> Just fields
                 _ -> Nothing
 
               goRecordType = exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr exprType
-
+              
               recordFields = case mbRecordType of
                 Just fields -> Map.fromFoldable fields
                 Nothing -> Map.empty
