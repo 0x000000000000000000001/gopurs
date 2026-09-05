@@ -81,7 +81,7 @@ L'implémentation actuelle s'appuie sur `gopurs_runtime.RecordGet` / `RecordUpda
 ### 4. Dictionary Specialization (Destruction des Type Classes)
 L'implémentation de l'unboxing des ADT (Point 2) est actuellement bridée par les frontières polymorphiques des Type Classes (ex: le `bind` dynamique de `StateT`), qui forcent le compilateur à générer des ponts `Rebox_` inutiles (allocation sur le tas).
 - [ ] *Action* : Exploiter le TAST pour inliner statiquement les méthodes de Type Classes lorsque le dictionnaire concret est connu, éliminant ainsi l'interface `gopurs_runtime.Value` du chemin critique.
-  - [ ] **Baby Step 4.1** : Identifier dans `purescript-backend-optimizer` (PBO) ou dans `CodeGen.purs` les appels `App` ciblant un dictionnaire de type class connu statiquement.
+  - [x] **Baby Step 4.1** : Identifier dans `purescript-backend-optimizer` (PBO) ou dans `CodeGen.purs` les appels `App` ciblant un dictionnaire de type class connu statiquement.
   - [ ] **Baby Step 4.2** : Implémenter la passe de spécialisation (Dictionary Specialization) qui remplace l'appel dynamique par le code inliné de la méthode concrète.
   - [ ] **Baby Step 4.3** : Garantir que cette destruction de l'interface polymorphe permet au pattern Worker/Wrapper (Point 2) d'opérer de bout en bout sur des structs natives.
-  - [ ] **Baby Step 4.4** : Valider sur le benchmark `State Monad` une chute totale des allocations et un temps d'exécution passant de ~42 ms à < 2 ms (niveau FFI Natif).
+  - [ ] **Baby Step 4.4** : Valider sur le benchmark `State Monad` une chute totale des allocations et un temps d'exécution passant à < 2 ms (niveau FFI Natif).
