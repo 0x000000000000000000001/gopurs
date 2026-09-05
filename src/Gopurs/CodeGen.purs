@@ -27,7 +27,7 @@ import Debug as Debug
 import Data.Map as Map
 import Data.Set (Set)
 import Data.Set as Set
-import Data.Foldable (foldl, foldMap)
+import Data.Foldable (foldl, foldMap, any)
 import Data.List as List
 import Data.Traversable (traverse)
 
@@ -2539,8 +2539,13 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
 
               ctorType = case getExprType tcoExpr of
                 Any -> fromMaybe Any mbExpectedExprType
-                ty -> ty
-                
+                ty -> 
+                  if hasTypeVars ty then 
+                    case mbExpectedExprType of
+                      Just expectedTy | not (hasTypeVars expectedTy) -> expectedTy
+                      _ -> ty
+                  else ty
+                  
               expectedGoType = exprTypeToGoType (unsafePerformEffect (Ref.read helpersRef)).pointerAdtPaths (unsafePerformEffect (Ref.read helpersRef)).enumAdts (unsafePerformEffect (Ref.read helpersRef)).elidedCtors modNameStr ctorType
 
               modPart = case mbMod of
@@ -3380,3 +3385,20 @@ generateFfiBridge modNameStr dataDecls decls foreigns =
           "var " <> exportName <> " = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value { panic(\"FFI not implemented: " <> pursName <> "\"); return gopurs_runtime.Value{} })"
         Just d ->
           "var " <> exportName <> " = " <> generateWrapperFunc dataDecls d mbTast
+
+hasTypeVars :: ExprType -> Boolean
+hasTypeVars = case _ of
+  TypeVar _ -> true
+  Array t -> hasTypeVars t
+  ADT _ _ ts -> any hasTypeVars ts
+  TypeApp t ts -> hasTypeVars t || any hasTypeVars ts
+  Func ts t -> any hasTypeVars ts || hasTypeVars t
+  Record t -> hasTypeVars t
+  Row ts tail ->
+    any (\(Tuple _ t) -> hasTypeVars t) ts ||
+      case tail of
+        Just t -> hasTypeVars t
+        Nothing -> false
+  ForAll _ t -> hasTypeVars t
+  ConstrainedType cs t -> any (\(Tuple _ ts) -> any hasTypeVars ts) cs || hasTypeVars t
+  _ -> false
