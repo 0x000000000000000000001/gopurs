@@ -347,7 +347,7 @@ unboxGoExpr modNameStr expr currentType desiredType =
       let
         assignments = String.joinWith "\n" (map (\(Tuple k v) -> "\t\t\t\t\tclone." <> sanitizeName k <> " = " <> printGoExpr (unboxGoExpr modNameStr (GoCall (GoSelector (GoVar "gopurs_runtime") "RecordGet") [ GoVar "orig", GoString k ]) TypeValue v)) fields)
       in
-        GoRaw ("func() " <> goTypeToStr desiredType <> " {\n\t\t\t\t\torig := " <> printGoExpr expr <> "\n\t\t\t\t\t_ = orig\n\t\t\t\t\tclone := " <> String.drop 1 (goTypeToStr desiredType) <> "{}\n" <> assignments <> "\n\t\t\t\t\treturn &clone\n\t\t\t\t}()")
+        GoRaw ("func() " <> goTypeToStr desiredType <> " {\n\t\t\t\t\torig := " <> printGoExpr expr <> "\n\t\t\t\t\t_ = orig\n\t\t\t\t\tclone := " <> goTypeToStr desiredType <> "{}\n" <> assignments <> "\n\t\t\t\t\treturn clone\n\t\t\t\t}()")
     TypeInt64 -> GoSelector expr "IntVal"
     TypeFloat64 -> GoCall (GoSelector expr "FloatVal") []
     TypeString -> GoCall (GoSelector expr "StrVal") []

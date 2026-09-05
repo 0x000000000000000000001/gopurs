@@ -100,7 +100,7 @@ goTypeToStr _ = "gopurs_runtime.Value"
 
 goRecordStructName :: Array (Tuple String GoType) -> String
 goRecordStructName fields =
-  "*struct{\n" <> String.joinWith "\n" (map (\(Tuple k v) -> "\t" <> sanitizeName k <> " " <> goTypeToStr v) fields) <> "\n}"
+  "struct{\n" <> String.joinWith "\n" (map (\(Tuple k v) -> "\t" <> sanitizeName k <> " " <> goTypeToStr v) fields) <> "\n}"
 
 
 

@@ -122,10 +122,9 @@ printGoExpr expr = case expr of
           "func() gopurs_runtime.Value {\norigVal := " <> printGoExpr orig <> "\nif origVal.Type != " <> typeVal <> " {\nreturn " <> fallbackCall <> "\n}\nclone := *((*" <> structName <> ")(origVal.UnsafePtr))\n" <> assignments <> "\nreturn gopurs_runtime.Value{Type: " <> typeVal <> ", UnsafePtr: unsafe.Pointer(&clone)}\n}()"
   GoRecordUpdateNative goType orig updates ->
     let
-      structName = String.drop 1 (goTypeToStr goType)
       assignments = String.joinWith "\n" (map (\(Tuple prop val) -> "clone." <> sanitizeName prop <> " = " <> printGoExpr val) updates)
     in
-      "func() " <> goTypeToStr goType <> " {\nclone := *(" <> printGoExpr orig <> ")\n" <> assignments <> "\nreturn &clone\n}()"
+      "func() " <> goTypeToStr goType <> " {\nclone := " <> printGoExpr orig <> "\n" <> assignments <> "\nreturn clone\n}()"
   GoIIFE name binding body ->
     let assignment = if name == "_" then name <> " = " <> printGoExpr binding else name <> " := " <> printGoExpr binding <> "\n_ = " <> name
     in case body of
