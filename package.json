@@ -15,6 +15,6 @@
     "purs-backend-es": "^1.4.3"
   },
   "devDependencies": {
-    "purescript": "github:0x000000000000000000001/purescript-npm"
+    "purescript-npm": "github:0x000000000000000000001/purescript-npm#main"
   }
 }
