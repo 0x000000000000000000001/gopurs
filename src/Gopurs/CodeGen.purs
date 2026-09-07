@@ -407,6 +407,26 @@ wrapInStmts _ stmts retType expr =
     if Array.length stmtsArr == 0 then expr
     else GoCall (GoFuncLit [] stmtsArr expr retType) []
 
+type CurriedAbs =
+  { args :: NonEmptyArray (Tuple (Maybe Ident) Level)
+  , body :: TcoExpr
+  }
+
+-- Collect adjacent curried lambdas without crossing a computation.
+-- Typed is transparent only when looking for another Abs; the terminal body
+-- keeps its original annotations for translation.
+collectCurriedAbs :: NonEmptyArray (Tuple (Maybe Ident) Level) -> TcoExpr -> CurriedAbs
+collectCurriedAbs args body =
+  case lookAheadAbs body of
+    Just next -> collectCurriedAbs (args <> next.args) next.body
+    Nothing -> { args, body }
+  where
+  lookAheadAbs :: TcoExpr -> Maybe CurriedAbs
+  lookAheadAbs (TcoExpr _ syntax) = case syntax of
+    Typed _ inner -> lookAheadAbs inner
+    Abs nextArgs nextBody -> Just { args: nextArgs, body: nextBody }
+    _ -> Nothing
+
 extractUncurriedAbs :: TcoExpr -> Maybe { args :: Array String, body :: TcoExpr }
 extractUncurriedAbs tcoExpr@(TcoExpr _ syntax) = case syntax of
   UncurriedAbs args body ->
@@ -1619,19 +1639,29 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
 
           Abs args body ->
             let
+              grouped = collectCurriedAbs args body
+              consumed = NonEmptyArray.length grouped.args
               mbFuncTy = case extractFuncType tcoExpr of
                 Just r -> Just r
                 Nothing -> case mbExpectedExprType of
                   Just ty -> extractExprFuncType ty
                   Nothing -> Nothing
 
-              paramsWithTypes = map (\(Tuple mbI lvl) -> Tuple (localId mbI lvl) TypeValue) (toArray args)
+              -- A computation may still separate us from further lambdas.
+              -- Consume only the parameters actually collected, not the full
+              -- flattened function type's argument list.
+              mbBodyType = case mbFuncTy of
+                Just { fArgs, fRet } | consumed <= Array.length fArgs ->
+                  Just case Array.drop consumed fArgs of
+                    [] -> fRet
+                    remaining -> Func remaining fRet
+                _ -> Nothing
+
+              paramsWithTypes = map (\(Tuple mbI lvl) -> Tuple (localId mbI lvl) TypeValue) (toArray grouped.args)
 
               newBound = foldl (\acc (Tuple idStr goType) -> Map.insert idStr { name: idStr, goType } acc) bound paramsWithTypes
               params = map fst paramsWithTypes
-              resBody = translateExprImpl__ helpersRef (depth + 1) modNameStr recVars moduleArities newBound Nothing [] isTail false (case mbFuncTy of
-                Just { fRet } -> Just fRet
-                Nothing -> Nothing) nextId body
+              resBody = translateExprImpl__ helpersRef (depth + 1) modNameStr recVars moduleArities newBound Nothing [] isTail false mbBodyType nextId grouped.body
 
               buildFunc :: Array String -> GoExpr -> GoExpr
               buildFunc ps innerExpr =

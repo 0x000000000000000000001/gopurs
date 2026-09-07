@@ -102,10 +102,8 @@ repeatApply:
 		var __t1 gopurs_runtime.Value
 		{
 			if (v_0) == (int64(0)) {
-				__t1 = gopurs_runtime.Func(func(v1_1 gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Func(func(seed_2 gopurs_runtime.Value) gopurs_runtime.Value {
-						return gopurs_runtime.Int(seed_2.IntVal)
-					})
+				__t1 = gopurs_runtime.Func2(func(v1_1 gopurs_runtime.Value, seed_2 gopurs_runtime.Value) gopurs_runtime.Value {
+					return gopurs_runtime.Int(seed_2.IntVal)
 				})
 				goto end_branch_1
 			} else {
@@ -116,10 +114,8 @@ repeatApply:
 			// TAST (Let): previous__4066693242_1_0 shape=App(Var) bindingType=(Func [(Func [Int] Int), Int] Int)
 			previous__4066693242_1_0 := Call_Main_repeatApply((v_0) - (int64(1)))
 			_ = previous__4066693242_1_0
-			__t1 = gopurs_runtime.Func(func(step_2 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Func(func(seed_3 gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Int(gopurs_runtime.Apply(step_2, gopurs_runtime.Int(gopurs_runtime.Apply2(previous__4066693242_1_0, step_2, gopurs_runtime.Int(seed_3.IntVal)).IntVal)).IntVal)
-				})
+			__t1 = gopurs_runtime.Func2(func(step_2 gopurs_runtime.Value, seed_3 gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Int(gopurs_runtime.Apply(step_2, gopurs_runtime.Int(gopurs_runtime.Apply2(previous__4066693242_1_0, step_2, gopurs_runtime.Int(seed_3.IntVal)).IntVal)).IntVal)
 			})
 		}
 	end_branch_1:
@@ -138,10 +134,8 @@ func Call_Main_composeRepeats(leftCount_0_loop int64, rightCount_1_loop int64) g
 	// TAST (Let): left__4066693242_3_1 shape=App(Var) bindingType=(Func [(Func [Int] Int), Int] Int)
 	left__4066693242_3_1 := Call_Main_repeatApply(leftCount_0)
 	_ = left__4066693242_3_1
-	return gopurs_runtime.Func(func(step_4 gopurs_runtime.Value) gopurs_runtime.Value {
-		return gopurs_runtime.Func(func(seed_5 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Int(gopurs_runtime.Apply2(left__4066693242_3_1, step_4, gopurs_runtime.Int(gopurs_runtime.Apply2(right__4066693242_2_0, step_4, gopurs_runtime.Int(seed_5.IntVal)).IntVal)).IntVal)
-		})
+	return gopurs_runtime.Func2(func(step_4 gopurs_runtime.Value, seed_5 gopurs_runtime.Value) gopurs_runtime.Value {
+		return gopurs_runtime.Int(gopurs_runtime.Apply2(left__4066693242_3_1, step_4, gopurs_runtime.Int(gopurs_runtime.Apply2(right__4066693242_2_0, step_4, gopurs_runtime.Int(seed_5.IntVal)).IntVal)).IntVal)
 	})
 }
 
