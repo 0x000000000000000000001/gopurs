@@ -10,6 +10,8 @@ export PATH="$GOPURS_TEST_TOOL_DIR:$PATH"
 
 cd "$GOPURS_TEST_ROOT"
 npm run build --silent
+node "$THUNK_TEST_DIR/check-recursive-seed.mjs"
+node "$THUNK_TEST_DIR/check-semantics.mjs"
 cd "$THUNK_TEST_DIR"
 # Distinct custom frontends can report the same version but emit different
 # CoreFn metadata, so do not reuse this isolated fixture's old output.

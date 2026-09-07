@@ -68,6 +68,8 @@ Deux étapes distinctes : préserver les signatures des fonctions de première c
 
 Le programme PureScript du benchmark et le runtime sont inchangés : la passe enlève les closures intermédiaires, tout en conservant le million d'additions. Les tests ciblés sont décrits dans [`tests/thunk-fusion/README.md`](tests/thunk-fusion/README.md) : profondeurs et seeds variables, captures, ordre non commutatif, paramètres simultanés, collisions de noms Go, closures échappées, demandes conditionnelles et effets. Le typage général des closures (5.1–5.3), la mémoïsation de `Data.Lazy` et la simplification algébrique (5.5) restent des chantiers distincts.
 
+**Périmètre sémantique :** les blocs locaux `LetRec` sont entièrement exclus de la fusion. Une annotation `Int` ne suffit pas à prouver qu'une valeur récursive est déjà initialisée ; cette barrière empêche d'avancer sa lecture et de dépendre du contrôle d'initialisation actuel du backend. Un test direct sur l'IR vérifie cette exclusion, ainsi que le maintien de l'optimisation pour les paramètres ordinaires déjà évalués.
+
 ### 6. Tableaux natifs et suppression des copies de conversion
 
 Le chemin exécuté de `Test_ArrayOps.sumEvens` convertit le tableau filtré de `[]Value` vers `[]int64`, puis de nouveau vers `[]Value`, avant un `foldl` utilisant `Apply2(intAdd, ...)`. Les intrinsics de tableaux dans `CodeGen.purs` continuent à boxer leurs arguments et à appeler leurs fonctions via le runtime.
