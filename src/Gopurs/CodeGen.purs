@@ -45,6 +45,7 @@ import Node.FS.Sync as FS
 import Data.Tuple (Tuple(..), fst)
 import PureScript.Backend.Optimizer.FfiSupport (hashString)
 import Gopurs.FfiTypes (TypeNode(..), FfiDecl)
+import Gopurs.ThunkFusion (optimizeThunkProducers)
 import Data.Maybe (fromMaybe)
 
 foreign import memoizedFreeVarsImpl :: (TcoExpr -> Set String) -> TcoExpr -> Set String
@@ -484,9 +485,10 @@ globalRecordDecls :: Ref.Ref (Array String)
 globalRecordDecls = unsafePerformEffect (Ref.new [])
 
 translate :: Set.Set String -> Set.Set String -> Map.Map String { ctorName :: String, arity :: Int } -> Set.Set String -> Map.Map String { nodeBaseStruct :: String, nodeCtor :: String } -> Set.Set ExprType -> Set.Set String -> Map.Map String { vars :: Array String, fields :: Array ExprType } -> Map.Map String ExprType -> InstantiationMap -> Map.Map String String -> Map.Map String { vars :: Array String, fields :: Array { name :: String, "type" :: ExprType } } -> Array (Array String) -> BackendModule -> String
-translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors ctorTypes globalTypes rawInstantiations classDeclsMap classDeclsFields importsArray mod =
+translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors ctorTypes globalTypes rawInstantiations classDeclsMap classDeclsFields importsArray inputMod =
 
   let
+    mod = optimizeThunkProducers inputMod
     modNameStrOrig = unwrap mod.name
     modNameStr = String.replaceAll (Pattern ".") (Replacement "_") modNameStrOrig
 

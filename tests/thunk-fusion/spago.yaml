@@ -1,0 +1,25 @@
+package:
+  name: thunk-fusion-regression
+  dependencies:
+    - assert
+    - prelude
+    - effect
+    - console
+    - refs
+    - partial
+workspace:
+  packageSet:
+    registry: 77.7.0
+  extraPackages:
+    prelude:
+      path: ../../../gopurs-prelude
+    effect:
+      path: ../../../gopurs-effect
+    console:
+      path: ../../../gopurs-console
+    refs:
+      path: ../../../gopurs-refs
+    partial:
+      path: ../../../gopurs-partial
+    assert:
+      path: ../../../gopurs-assert
