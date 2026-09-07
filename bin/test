@@ -222,26 +222,49 @@ for test_file in "${TEST_FILES[@]}"; do
     ../../bin/gopurs --main Main
     
     if [ -d "output/purescript" ] && [ -f "output/purescript/Main.go" ]; then
-      # Format the Go code to ensure deterministic output
-      gofmt -w output/purescript/Main.go
-      
       test_base_name="${test_name%.purs}"
-      snapshot_file="$SNAPSHOTS_DIR/${test_base_name}.go"
+      snapshot_suffixes=("")
+      # Opt in per fixture: FFI wrappers are emitted separately from Main.go.
+      if grep -Fxq -- '-- @snapshot-ffi' "$test_file"; then
+        snapshot_suffixes+=("_ffi")
+      fi
       snapshot_passed=1
-      
-      if [ "$UPDATE_SNAPSHOTS" -eq 1 ] || [ ! -f "$snapshot_file" ]; then
-        if [ ! -f "$snapshot_file" ]; then
-          echo -e "   \033[0;34m[INFO]\033[0m Creating initial snapshot for $test_name"
-        fi
-        cp output/purescript/Main.go "$snapshot_file"
-      else
-        if ! diff -u "$snapshot_file" output/purescript/Main.go > output/diff.txt; then
-          echo -e "   \033[0;31m[FAILED]\033[0m Snapshot mismatch:"
-          cat output/diff.txt
+
+      for snapshot_suffix in "${snapshot_suffixes[@]}"; do
+        generated_file="output/purescript/Main${snapshot_suffix}.go"
+        snapshot_file="$SNAPSHOTS_DIR/${test_base_name}${snapshot_suffix}.go"
+        if [ ! -f "$generated_file" ]; then
+          echo -e "   \033[0;31m[FAILED]\033[0m Missing snapshot source: $generated_file"
           snapshot_passed=0
           failed=$((failed+1))
           break
         fi
+
+        # Normalize each selected Go file before comparing or updating it.
+        if ! gofmt -w "$generated_file"; then
+          echo -e "   \033[0;31m[FAILED]\033[0m Cannot format snapshot source: $generated_file"
+          snapshot_passed=0
+          failed=$((failed+1))
+          break
+        fi
+
+        if [ "$UPDATE_SNAPSHOTS" -eq 1 ] || [ ! -f "$snapshot_file" ]; then
+          if [ ! -f "$snapshot_file" ]; then
+            echo -e "   \033[0;34m[INFO]\033[0m Creating initial snapshot: $snapshot_file"
+          fi
+          cp "$generated_file" "$snapshot_file"
+        else
+          if ! diff -u "$snapshot_file" "$generated_file" > output/diff.txt; then
+            echo -e "   \033[0;31m[FAILED]\033[0m Snapshot mismatch: $snapshot_file"
+            cat output/diff.txt
+            snapshot_passed=0
+            failed=$((failed+1))
+            break
+          fi
+        fi
+      done
+      if [ "$snapshot_passed" -eq 0 ]; then
+        break
       fi
       
       # Compile and Run Go code

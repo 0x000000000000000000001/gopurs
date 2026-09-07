@@ -26,6 +26,18 @@ func Get_Main_showArray() gopurs_runtime.Value {
 	return cache_Main_showArray
 }
 
+var cache_Main_checkConsumer gopurs_runtime.Value
+var once_Main_checkConsumer sync.Once
+
+func Get_Main_checkConsumer() gopurs_runtime.Value {
+	once_Main_checkConsumer.Do(func() {
+		cache_Main_checkConsumer = gopurs_runtime.Func(func(consume_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_checkConsumer(consume_0_box)
+		})
+	})
+	return cache_Main_checkConsumer
+}
+
 var cache_Main_main gopurs_runtime.Value
 var once_Main_main sync.Once
 
@@ -193,10 +205,35 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = __local_var_22_22
 			__local_var_23_23 := gopurs_runtime.Apply(gopurs_runtime.Apply4(Get_Test_Assert_assertEqual_prime_(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_2737952170_3790796878(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[bool]](Get_Data_Eq_eqBoolean())))}, gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_2735895690_1386611502(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[bool]](Get_Data_Show_showBoolean())))}, gopurs_runtime.Str(""), gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Bool((gopurs_runtime.Apply(Get_Main_dynamicBoolean(), gopurs_runtime.Bool(true)).IntVal) != (0)), gopurs_runtime.Bool(true))), gopurs_runtime.Value{})
 			_ = __local_var_23_23
+			__local_var_24_24 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Func(func(value_24 gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Int(((value_24.IntVal) * (value_24.IntVal)) + (int64(1)))
+			})), gopurs_runtime.Value{})
+			_ = __local_var_24_24
+			__local_var_25_25 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_24_24), gopurs_runtime.Value{})
+			_ = __local_var_25_25
+			__local_var_26_26 := gopurs_runtime.Apply(Call_Main_checkConsumer(__local_var_25_25), gopurs_runtime.Value{})
+			_ = __local_var_26_26
 			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
 		})
 	})
 	return cache_Main_main
+}
+
+func Call_Main_checkConsumer(consume_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var consume_0 gopurs_runtime.Value = consume_0_loop
+	_ = consume_0
+	return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+		// TAST (Let): __local_var_1_0 shape=App(Var) bindingType=Any
+		__local_var_1_0 := gopurs_runtime.Apply4(Get_Test_Assert_assertEqual_prime_(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[int64]](Get_Data_Eq_eqInt())))}, gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[int64]](Get_Data_Show_showInt())))}, gopurs_runtime.Str(""), gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(gopurs_runtime.Apply(consume_0, gopurs_runtime.Int(gopurs_runtime.Apply(Get_Main_returnInt64(), gopurs_runtime.Int(int64(-7))).IntVal)).IntVal), gopurs_runtime.Int(int64(50))))
+		_ = __local_var_1_0
+		__local_var_2_1 := gopurs_runtime.Apply(__local_var_1_0, gopurs_runtime.Value{})
+		_ = __local_var_2_1
+		__local_var_3_2 := gopurs_runtime.Apply(gopurs_runtime.Apply4(Get_Test_Assert_assertEqual_prime_(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[int64]](Get_Data_Eq_eqInt())))}, gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[int64]](Get_Data_Show_showInt())))}, gopurs_runtime.Str(""), gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(gopurs_runtime.Apply(consume_0, gopurs_runtime.Int(gopurs_runtime.Apply(Get_Main_returnInt(), gopurs_runtime.Int(int64(5))).IntVal)).IntVal), gopurs_runtime.Int(int64(26)))), gopurs_runtime.Value{})
+		_ = __local_var_3_2
+		__local_var_4_3 := gopurs_runtime.Apply(gopurs_runtime.Apply4(Get_Test_Assert_assertEqual_prime_(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[int64]](Get_Data_Eq_eqInt())))}, gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[int64]](Get_Data_Show_showInt())))}, gopurs_runtime.Str(""), gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(gopurs_runtime.Apply(consume_0, gopurs_runtime.Int(gopurs_runtime.Apply(Get_Main_dynamicInt64(), gopurs_runtime.Int(int64(-3))).IntVal)).IntVal), gopurs_runtime.Int(int64(10)))), gopurs_runtime.Value{})
+		_ = __local_var_4_3
+		return gopurs_runtime.Apply(gopurs_runtime.Apply4(Get_Test_Assert_assertEqual_prime_(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[int64]](Get_Data_Eq_eqInt())))}, gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[int64]](Get_Data_Show_showInt())))}, gopurs_runtime.Str(""), gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(gopurs_runtime.Apply(consume_0, gopurs_runtime.Int(gopurs_runtime.Apply(Get_Main_dynamicInt(), gopurs_runtime.Int(int64(0))).IntVal)).IntVal), gopurs_runtime.Int(int64(1)))), gopurs_runtime.Value{})
+	})
 }
 
 func Rebox_Main_1053099733_3790796878(in *Constructor_Data_Eq_Eq[int64]) *Constructor_Data_Eq_Eq[gopurs_runtime.Value] {

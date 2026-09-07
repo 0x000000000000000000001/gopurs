@@ -3115,6 +3115,11 @@ unwrapValueToFunc dataDecls (TNamed anyT) mbTast valName depth cidx | anyT == "a
       _ -> "gopurs_runtime.Unbox[" <> anyT <> "](" <> valName <> ")"
 unwrapValueToFunc _ t _ valName _ _ = "gopurs_runtime.Unbox[" <> printTypeNode t <> "](" <> valName <> ")"
 
+boxFfiValue :: TypeNode -> String -> String
+boxFfiValue (TNamed "int64") valName = "gopurs_runtime.Int(" <> valName <> ")"
+boxFfiValue (TNamed "int") valName = "gopurs_runtime.Int(int64(" <> valName <> "))"
+boxFfiValue _ valName = "gopurs_runtime.Box(" <> valName <> ")"
+
 wrapReturn :: Array DataDecl -> TypeNode -> Maybe ExprType -> String -> String
 wrapReturn dataDecls (TFunc args ret) mbTast valName =
   let
@@ -3145,7 +3150,7 @@ wrapReturn dataDecls (TFunc args ret) mbTast valName =
             Nothing -> genInnerArg valName "gopurs_runtime.Value{}" argUnwrap
             Just r -> genInnerArg ("inner_res := " <> valName) (wrapReturn dataDecls r (mbTast >>= getTastReturnType) "inner_res") argUnwrap
 wrapReturn _ (TArray elem) _ valName | printTypeNode elem /= "gopurs_runtime.Value" =
-  "func() gopurs_runtime.Value {\n\t\t\tres_arr := make([]gopurs_runtime.Value, len(" <> valName <> "))\n\t\t\tfor i, v := range " <> valName <> " { res_arr[i] = gopurs_runtime.Box(v) }\n\t\t\treturn gopurs_runtime.Array(res_arr)\n\t\t}()"
+  "func() gopurs_runtime.Value {\n\t\t\tres_arr := make([]gopurs_runtime.Value, len(" <> valName <> "))\n\t\t\tfor i, v := range " <> valName <> " { res_arr[i] = " <> boxFfiValue elem "v" <> " }\n\t\t\treturn gopurs_runtime.Array(res_arr)\n\t\t}()"
 wrapReturn dataDecls (TMap _ _) (Just (Record (Row fields tail))) valName | isClosedRowTail tail =
   let
     fieldStr = Array.mapWithIndex
@@ -3223,9 +3228,7 @@ wrapReturn dataDecls (TNamed anyT) mbTast valName | anyT == "any" || anyT == "in
         in
           genWrap fArgs arity 0
       _ -> "gopurs_runtime.Box(" <> valName <> ")"
-wrapReturn _ (TNamed "int64") _ valName = "gopurs_runtime.Int(" <> valName <> ")"
-wrapReturn _ (TNamed "int") _ valName = "gopurs_runtime.Int(int64(" <> valName <> "))"
-wrapReturn _ _ _ valName = "gopurs_runtime.Box(" <> valName <> ")"
+wrapReturn _ typ _ valName = boxFfiValue typ valName
 
 printExprType :: ExprType -> String
 printExprType = case _ of
