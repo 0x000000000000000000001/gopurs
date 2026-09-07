@@ -32,3 +32,11 @@ Le but ultime pour avoir un compilateur extrêmement rapide : compiler le code s
   - [ ] **Baby Step 4.1** : Lancer la compilation du projet `gopurs` en utilisant le backend `gopurs` (la version JS actuelle).
   - [ ] **Baby Step 4.2** : Identifier et résoudre les éventuelles APIs FFI manquantes dans le portage de l'écosystème PureScript -> Go (ex: FileSystem, ChildProcess) nécessaires au compilateur.
   - [ ] **Baby Step 4.3** : Exécuter une compilation (ex: `altbak.pub`) avec le nouveau binaire `gopurs.go` et valider que l'output est identique (et mesurer le gain foudroyant de temps de compilation !).
+
+### 5. Optimisation massive de Lazy Evaluation (Thunk Elimination & Typed Closures)
+Le benchmark sur l'évaluation paresseuse (1 million de thunks forcés) montre que `gopurs` (~17.3 ms) est pénalisé par le boxing des closures (`gopurs_runtime.Func`) et l'application via `gopurs_runtime.Apply`. En monomorphisant les types flèches (Typed Closures), le temps tombe à ~11.0 ms. En poussant jusqu'à l'élimination totale du thunk via l'analyse de sévérité (Strictness Analysis), il tombe à 0.25 ms avec 0 allocation.
+- [ ] *Action* : Étendre la monomorphisation profonde aux closures (arrow types) et implémenter l'analyse de sévérité pour éliminer les thunks déterministes.
+  - [ ] **Baby Step 5.1** : Identifier dans le `purescript-backend-optimizer` (probablement dans `Monomorphize.purs` et `Convert.purs`) où la monomorphisation s'arrête actuellement face aux fonctions de première classe (comme dans le type `Lazy`).
+  - [ ] **Baby Step 5.2** : Permettre au CodeGen d'émettre des closures purement typées (ex: `func() int64`) au lieu d'envelopper systématiquement les retours et les passages de fonctions dans le type boîte `gopurs_runtime.Value` ou `gopurs_runtime.Func`.
+  - [ ] **Baby Step 5.3** : Évaluer la faisabilité d'une passe de *Strictness Analysis* pour détecter si un thunk est forcé de manière inconditionnelle (Thunk Elimination) et émettre le cas échéant une évaluation stricte immédiate.
+  - [ ] **Baby Step 5.4** : Valider via le script de benchmark que `gopurs` rejoint les performances du cheatcode (vers 0.25 ms pour ce test extrême).

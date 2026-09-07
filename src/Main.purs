@@ -66,7 +66,9 @@ type PreparedData =
 
 loadAndPrepareModules :: { mbMainModule :: Maybe String } -> Aff PreparedData
 loadAndPrepareModules args = do
+  liftEffect $ Console.log "Loading modules..."
   finalModules <- coreFnModulesFromOutput "output"
+  liftEffect $ Console.log ("Loaded " <> show (Array.length (Array.fromFoldable finalModules)) <> " modules.")
 
   let elidedCtors = Array.foldl (\acc (Module mod) ->
         Array.foldl (\acc' decl ->
@@ -138,6 +140,7 @@ loadAndPrepareModules args = do
       in Module (m { dataDecls = m.dataDecls <> newDecls })
     ) finalModules
   
+  liftEffect $ Console.log "Building global AST map..."
   let globalAstMap = foldl (\acc (Module m) ->
         foldl (\acc' b -> case b of
           NonRec (Binding ann id e) -> Map.insert (unwrap m.name <> "." <> unwrap id) (Binding ann id e) acc'
@@ -145,7 +148,9 @@ loadAndPrepareModules args = do
         ) acc m.decls
       ) Map.empty finalModulesWithClassDecls
       
+  liftEffect $ Console.log "Collecting raw instantiations..."
   let rawInstantiations = foldl (collectInstantiations globalAstMap) Map.empty finalModulesWithClassDecls
+  liftEffect $ Console.log "Computing transitive instantiations..."
   let transitiveInstantiations = transitiveCollect globalAstMap rawInstantiations
 
   let ffiGlobals = foldl (\acc (Module m) ->
@@ -159,8 +164,14 @@ loadAndPrepareModules args = do
                                               in hasTV
                                             Nothing -> false) transitiveInstantiations
 
-  let monomorphizedModules = map (monomorphize globalAstMap instantiations) finalModulesWithClassDecls
+  liftEffect $ Console.log ("Monomorphizing modules for " <> show (Map.size instantiations) <> " poly functions...")
+  let monomorphizedModules =
+        if Map.isEmpty instantiations then
+          finalModulesWithClassDecls
+        else
+          map (monomorphize globalAstMap instantiations) finalModulesWithClassDecls
 
+  liftEffect $ Console.log "Collecting all types..."
   let allTypes = foldl (\acc mod -> Set.union acc (collectAllTypes mod)) Set.empty finalModulesWithClassDecls
   let adtTypes = Set.filter (\t -> case t of
         ADT _ _ _ -> true
