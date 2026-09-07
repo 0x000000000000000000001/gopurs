@@ -137,6 +137,14 @@ for test_file in "${TEST_FILES[@]}"; do
   fi
   
   echo "=> Testing $test_name"
+
+  if [ "$test_name" = "ThunkFusion.purs" ]; then
+    if ! node "$RUNNER_DIR/check-thunk-recursive-seed.mjs"; then
+      echo -e "   \033[0;31m[FAILED]\033[0m Recursive seed IR regression"
+      failed=$((failed+1))
+      break
+    fi
+  fi
   
   # Ensure complete cleanup to prevent state bleed
   while [ -d "output/purescript" ]; do

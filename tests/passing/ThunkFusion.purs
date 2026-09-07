@@ -9,7 +9,7 @@ import Partial.Unsafe (unsafeCrashWith)
 import Test.Assert (assertEqual)
 
 -- These producers deliberately use names and inputs unrelated to the benchmark.
--- Run through tests/thunk-fusion/run with the typed PureScript compiler.
+-- Run with ./bin/test ThunkFusion -c using the typed PureScript compiler.
 suspendAdds :: Int -> Int -> (Unit -> Int) -> Unit -> Int
 suspendAdds 0 _ acc = acc
 suspendAdds n step acc = suspendAdds (n - 1) step (\_ -> acc unit + step)

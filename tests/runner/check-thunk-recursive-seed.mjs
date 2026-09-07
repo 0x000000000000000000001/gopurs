@@ -6,7 +6,7 @@ import { Tuple } from "../../output/Data.Tuple/index.js";
 import { empty } from "../../output/Data.Map/index.js";
 import { optimizeThunkProducers } from "../../output/Gopurs.ThunkFusion/index.js";
 
-// Exercise the actual pass before frontend simplification can erase LetRec.
+// Run by bin/test for ThunkFusion, before frontend simplification can erase LetRec.
 const int = C.Int.value;
 const thunk = new C.Func([C.Unit.value], int);
 const producerType = new C.Func([int, thunk, C.Unit.value], int);
