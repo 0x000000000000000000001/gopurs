@@ -1,6 +1,7 @@
 module Gopurs.CodeGen where
 
 import Prelude
+import Control.Alternative (guard)
 import PureScript.Backend.Optimizer.Syntax (BackendSyntax(Var, Local, Lit, App, Abs, UncurriedApp, UncurriedAbs, UncurriedEffectApp, UncurriedEffectAbs, Accessor, Update, CtorSaturated, CtorDef, LetRec, Let, EffectBind, EffectPure, EffectDefer, Branch, PrimOp, PrimEffect, PrimUndefined, Fail, Typed), BackendAccessor(..), Pair(..), Level(..), BackendOperator(..), BackendOperator1(..), BackendOperator2(..), BackendOperatorOrd(..), BackendOperatorNum(..), BackendEffect(..))
 import PureScript.Backend.Optimizer.Syntax as Syn
 import PureScript.Backend.Optimizer.Semantics (NeutralExpr(..))
@@ -406,6 +407,39 @@ wrapInStmts _ stmts retType expr =
   in
     if Array.length stmtsArr == 0 then expr
     else GoCall (GoFuncLit [] stmtsArr expr retType) []
+
+-- Reuse an unchanged constructor without mutating it. Restrict this to direct
+-- projections of one typed local, with exactly one constant field replaced.
+-- Comparing Number fields would be unsound for observable signed zero.
+constructorReuse :: Map String { name :: String, goType :: GoType } -> GoType -> Array Boolean -> GoExpr -> Maybe { source :: GoExpr, condition :: GoExpr }
+constructorReuse bound resultType constants constructor = case resultType, constructor of
+  TypeStructPointer _ _ _ _, GoConstructor _ ctor typeArgs fields ->
+    case Array.catMaybes (Array.mapWithIndex (\index constant -> if constant then Just index else Nothing) constants) of
+      [ changedIndex ] -> do
+        guard (Array.length constants == Array.length fields)
+        sourceName <- Array.head (Array.mapMaybe
+          (\(Tuple index field) -> case field of
+            GoConstructorAccess (GoVar name) sourceCtor sourceTypeArgs sourceIndex true
+              | index /= changedIndex && sourceCtor == ctor
+                  && sourceTypeArgs == typeArgs && sourceIndex == index -> Just name
+            _ -> Nothing)
+          (Array.mapWithIndex Tuple fields))
+        sourceBinding <- Array.find (\binding -> binding.name == sourceName)
+          (Array.fromFoldable (Map.values bound))
+        guard (sourceBinding.goType == resultType)
+        let
+          source = GoVar sourceName
+          projection index = GoConstructorAccess source ctor typeArgs index true
+        guard (Array.all identity (Array.mapWithIndex
+          (\index field -> index == changedIndex || field == projection index) fields))
+        replacement <- Array.index fields changedIndex
+        pure
+          { source
+          , condition: GoBinOp "&&" (GoBinOp "!=" source (GoRaw "nil"))
+              (GoBinOp "==" (projection changedIndex) replacement)
+          }
+      _ -> Nothing
+  _, _ -> Nothing
 
 type CurriedAbs =
   { args :: NonEmptyArray (Tuple (Maybe Ident) Level)
@@ -2667,10 +2701,16 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
 
                       resVal = translateExprImpl_ helpersRef (depth + 1) modNameStr recVars moduleArities newBound Nothing [] false false acc.nextId val
                       coercedExpr = coerceGoExpr modNameStr resVal.expr resVal.exprType expectedType
+                      isConstant = expectedType == resVal.exprType && case expectedType, unwrapTcoExpr val of
+                        TypeInt64, Lit (LitInt _) -> true
+                        TypeBool, Lit (LitBoolean _) -> true
+                        TypeUint32, CtorSaturated _ _ _ _ ctorFields -> Array.null ctorFields
+                        TypeUint32, CtorDef _ _ _ ctorFields -> Array.null ctorFields
+                        _, _ -> false
                     in
-                      { stmts: acc.stmts <> resVal.stmts, exprs: Array.snoc acc.exprs coercedExpr, exprType: TypeValue, nextId: resVal.nextId, fieldIdx: acc.fieldIdx + 1 }
+                      { stmts: acc.stmts <> resVal.stmts, exprs: Array.snoc acc.exprs coercedExpr, exprType: TypeValue, nextId: resVal.nextId, fieldIdx: acc.fieldIdx + 1, constants: Array.snoc acc.constants isConstant }
                 )
-                { stmts: StmtEmpty, exprs: [], exprType: TypeValue, nextId, fieldIdx: 0 }
+                { stmts: StmtEmpty, exprs: [], exprType: TypeValue, nextId, fieldIdx: 0, constants: [] }
                 props
 
               isElided = Set.member structName helpers.elidedCtors
@@ -2720,8 +2760,20 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                         { expr: GoRaw ("(*" <> nodeFullPath <> ")(nil)"), exprType: TypeStructPointer nodeBaseStruct fullName nodeFullPath typeArgsCtor }
                     else if isEnum then { expr: GoRaw (hashString baseStructName), exprType: TypeUint32 }
                     else { expr: GoConstructor (hashString baseStructName) monoStructName typeArgsCtor accProps.exprs, exprType: TypeStructPointer baseStructName fullName fullPath typeArgsCtor }
+              reuse = case accProps.stmts of
+                StmtEmpty -> constructorReuse bound res.exprType accProps.constants res.expr
+                _ -> Nothing
             in
-              { stmts: accProps.stmts, expr: res.expr, exprType: res.exprType, nextId: accProps.nextId }
+              case reuse of
+                Just { source, condition } ->
+                  let
+                    resultName = "__reuse_" <> show accProps.nextId
+                    declare = GoRaw ("var " <> resultName <> " " <> goTypeToStr res.exprType)
+                    choose = GoIfElse condition [ GoMutate resultName source ] [ GoMutate resultName res.expr ]
+                  in
+                    { stmts: StmtLeaf declare <> StmtLeaf choose, expr: GoVar resultName, exprType: res.exprType, nextId: accProps.nextId + 1 }
+                Nothing ->
+                  { stmts: accProps.stmts, expr: res.expr, exprType: res.exprType, nextId: accProps.nextId }
 
           Fail msg ->
             let
