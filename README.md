@@ -135,6 +135,14 @@ To run the test suite:
 ./bin/test
 ```
 
+Use a TAST-capable `purs` on `PATH`. To rebuild the backend and run one test with
+its Go snapshot, use `./bin/test ThunkFusion -c`. Its PureScript cases also cover
+the exclusion of recursive scopes from thunk fusion.
+
+A fixture can declare `-- @dependencies: assert prelude effect console refs partial`
+to compile only its required packages. The runner temporarily adjusts its dependency
+list and restores its configuration and lockfile after the build.
+
 ## Current status & milestones
 
 Since its inception, `gopurs` has reached several major milestones:

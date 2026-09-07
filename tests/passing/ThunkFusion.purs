@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: assert prelude effect console refs partial
+
 import Prelude
 
 import Effect (Effect)
@@ -91,6 +93,23 @@ suspendTwice n acc = suspendTwice (n - 1) (\_ -> acc unit + acc unit)
 runTwice :: Int -> Int -> Int
 runTwice depth seed = suspendTwice depth (\_ -> seed) unit
 
+-- Keep a real recursive scope after optimization. The otherwise eligible
+-- consumer inside a recursive binding must retain its thunk producer.
+runRecursiveBinding :: Int -> Int -> Int
+runRecursiveBinding depth seed =
+  let
+    visit n =
+      if n == 0 then suspendAdds depth 2 (\_ -> seed) unit
+      else visit (n - 1) + 1
+  in visit depth
+
+-- The same barrier also covers the body of the recursive scope.
+runRecursiveBody :: Int -> Int -> Int
+runRecursiveBody depth seed =
+  let
+    visit n = if n == 0 then seed else visit (n - 1) + 1
+  in visit depth + suspendAdds depth 2 (\_ -> seed) unit
+
 -- Producing or forcing a thunk returning Effect must preserve effect timing.
 scheduleEffects :: Int -> (Unit -> Effect Int) -> Unit -> Effect Int
 scheduleEffects 0 acc = acc
@@ -129,6 +148,12 @@ main = do
   assertEqual { expected: 1, actual: runOverwriteTotal 3 seed }
   assertEqual { expected: seed, actual: runTwice 0 seed }
   assertEqual { expected: 56, actual: runTwice 3 seed }
+  assertEqual { expected: seed, actual: runRecursiveBinding 0 seed }
+  assertEqual { expected: 16, actual: runRecursiveBinding 3 seed }
+  assertEqual { expected: seed + 3000, actual: runRecursiveBinding depth seed }
+  assertEqual { expected: 2 * seed, actual: runRecursiveBody 0 seed }
+  assertEqual { expected: 23, actual: runRecursiveBody 3 seed }
+  assertEqual { expected: 2 * seed + 3000, actual: runRecursiveBody depth seed }
 
   calls <- Ref.new 0
   let pending = scheduleEffects 3 \_ -> do

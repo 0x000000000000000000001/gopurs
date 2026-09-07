@@ -95,6 +95,49 @@ if [ ! -f spago.yaml ]; then
   done
 fi
 
+build_test() {
+  local dependencies
+  dependencies=$(sed -n 's/^-- @dependencies: //p' "$1")
+  if [ -z "$dependencies" ]; then
+    spago build -q
+    return $?
+  fi
+
+  # Scope dependency selection to this build; preserve the shared runner config.
+  (
+    dependency_backup=$(mktemp -d "${TMPDIR:-/tmp}/gopurs-test-deps.XXXXXX") || exit 1
+    cp spago.yaml "$dependency_backup/spago.yaml" || exit 1
+    if [ -f spago.lock ]; then cp spago.lock "$dependency_backup/spago.lock" || exit 1; fi
+    restore_dependencies() {
+      local build_status=$?
+      cp "$dependency_backup/spago.yaml" spago.yaml || exit 1
+      if [ -f "$dependency_backup/spago.lock" ]; then
+        cp "$dependency_backup/spago.lock" spago.lock || exit 1
+      else
+        rm -f spago.lock || exit 1
+      fi
+      rm -rf "$dependency_backup" || exit 1
+      exit "$build_status"
+    }
+    trap restore_dependencies EXIT
+    trap 'exit 130' INT
+    trap 'exit 143' TERM
+    node --input-type=module - "$dependencies" <<'NODE' || exit 1
+import { readFileSync, writeFileSync } from "node:fs";
+const packages = process.argv[2].trim().split(/\s+/);
+if (!packages.every(name => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name))) {
+  throw new Error("Invalid @dependencies package name");
+}
+const config = readFileSync("spago.yaml", "utf8");
+const dependencyList = /^  dependencies:\n(?:    - [^\n]*\n)*/m;
+if (!dependencyList.test(config)) throw new Error("Expected generated runner dependencies");
+writeFileSync("spago.yaml", config.replace(dependencyList,
+  "  dependencies:\n" + packages.map(name => `    - ${name}\n`).join("")));
+NODE
+    spago build -q
+  )
+}
+
 echo "Running tests from $PASSING_DIR..."
 
 if [ $CLEAN_CACHE -eq 1 ]; then
@@ -138,14 +181,6 @@ for test_file in "${TEST_FILES[@]}"; do
   
   echo "=> Testing $test_name"
 
-  if [ "$test_name" = "ThunkFusion.purs" ]; then
-    if ! node "$RUNNER_DIR/check-thunk-recursive-seed.mjs"; then
-      echo -e "   \033[0;31m[FAILED]\033[0m Recursive seed IR regression"
-      failed=$((failed+1))
-      break
-    fi
-  fi
-  
   # Ensure complete cleanup to prevent state bleed
   while [ -d "output/purescript" ]; do
     rm -rf output/Main src/* output/Test* output/go.mod output/app output/purescript output/M1 output/M2 output/M3 output/A output/B output/C output/Middle
@@ -175,7 +210,7 @@ for test_file in "${TEST_FILES[@]}"; do
   max_retries=2
   build_success=0
   while [ $retry -le $max_retries ]; do
-    if out=$(spago build -q 2>&1); then
+    if out=$(build_test "$test_file" 2>&1); then
       build_success=1
       break
     fi
