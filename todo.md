@@ -29,7 +29,7 @@ L'objectif est d'éradiquer les derniers `gopurs_runtime.Value` dans le code for
 ### 4. Self-Hosting (Auto-hébergement) : Compiler `gopurs` avec `gopurs`
 Le but ultime pour avoir un compilateur extrêmement rapide : compiler le code source PureScript de `gopurs` avec le backend `gopurs` pour obtenir un binaire natif Go (`gopurs.go`), plutôt que de tourner via Node/JS.
 - [ ] *Action* : Amorcer la chaîne de cross-compilation et valider la parité des fonctionnalités.
-  - [ ] **Baby Step 4.1** : Lancer la compilation du projet `gopurs` en utilisant le backend `gopurs` (la version JS actuelle).
+  - [x] **Baby Step 4.1** : Lancer la compilation du projet `gopurs` en utilisant le backend `gopurs` (la version JS actuelle).
   - [ ] **Baby Step 4.2** : Identifier et résoudre les éventuelles APIs FFI manquantes dans le portage de l'écosystème PureScript -> Go (ex: FileSystem, ChildProcess) nécessaires au compilateur.
   - [ ] **Baby Step 4.3** : Exécuter une compilation (ex: `altbak.pub`) avec le nouveau binaire `gopurs.go` et valider que l'output est identique (et mesurer le gain foudroyant de temps de compilation !).
 
