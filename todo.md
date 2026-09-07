@@ -8,7 +8,7 @@ Les gains ci-dessous viennent de prototypes Go, pas encore du compilateur. Inté
 
 Prototype Church : **1,83 → 0,47 ms**, **100 260 → 157 allocations**. Le calcul et les applications partielles sont conservés.
 
-- [ ] **1.1** Ajouter une petite fixture dans `passing` avec des fonctions retournant des lambdas à deux arguments, annotées, et plusieurs entrées. Vérifier dans son snapshot que le cas à optimiser reste présent après le PBO.
+- [x] **1.1** Fixture `tests/passing/CurriedLambdas.purs` ajoutée : deux producteurs annotés, entrées variées et neuf assertions. Le snapshot Go conserve les deux `Func` imbriqués dans leurs corps après le PBO. `./bin/test CurriedLambdas -c` passe et le snapshot se reproduit à l'identique.
 - [ ] **1.2** Dans `CodeGen.purs`, écrire un collecteur qui regroupe uniquement les `Abs` adjacents, éventuellement séparés par `Typed`. Conserver l'ordre et les niveaux des paramètres, ainsi que les annotations du corps terminal.
 - [ ] **1.3** Utiliser ce collecteur dans la branche `Abs` et réutiliser `buildFunc` pour émettre `Func2` et les autres arités déjà supportées. Vérifier le type de retour attendu après regroupement ; conserver le boxing final et le runtime d'application existants.
 - [ ] **1.4** Compléter la fixture : appel saturé, application partielle réutilisée avec plusieurs valeurs initiales, callback non linéaire et ordre d'évaluation observable. Couvrir aussi trois arguments et plus de cinq pour vérifier le découpage existant.
