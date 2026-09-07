@@ -3223,6 +3223,8 @@ wrapReturn dataDecls (TNamed anyT) mbTast valName | anyT == "any" || anyT == "in
         in
           genWrap fArgs arity 0
       _ -> "gopurs_runtime.Box(" <> valName <> ")"
+wrapReturn _ (TNamed "int64") _ valName = "gopurs_runtime.Int(" <> valName <> ")"
+wrapReturn _ (TNamed "int") _ valName = "gopurs_runtime.Int(int64(" <> valName <> "))"
 wrapReturn _ _ _ valName = "gopurs_runtime.Box(" <> valName <> ")"
 
 printExprType :: ExprType -> String
