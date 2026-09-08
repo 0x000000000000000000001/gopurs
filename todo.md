@@ -18,7 +18,7 @@ Constats au 8 septembre 2026 : `CodeGen.purs` compte 3 546 lignes, `Main.purs` 5
 
 - [x] **1.1 — Identifier les outils réellement utilisés.** Chemins résolus, versions exécutées et révisions Git relevés le 8 septembre 2026 ; voir le relevé ci-dessous. Le shell, le build npm et altbak sélectionnent des outils différents. Aucun build ni test exécuté.
 - [x] **1.2 — Vérifier un cycle court.** Le 8 septembre 2026, `./bin/test NativeRecordSizes -c`, puis la même fixture sans `-c`, réussissent avec le `purs` TAST sur le `PATH` et `UPDATE_SNAPSHOTS=0`. Les 30 assertions passent à chaque run ; les deux snapshots restent identiques aux références. Voir le relevé ci-dessous.
-- [ ] **1.3 — Définir les contrôles par famille.** Associer types/records à `NativeRecordBoxing` et `NativeRecordSizes`, FFI à `FFIIntegerReturns`, appels à `CurriedLambdas`, tableaux à `ArrayRoundtrip`, récursion à `TCO`/`TCOMutRec`, fusion à `ThunkFusion`. Vérifier leur état initial par petits groupes. **Types/records, FFI, appels et ArrayRoundtrip vérifiés ; récursion non validée (sortie incorrecte de span dans TCO et écarts des deux snapshots) ; fusion encore à exécuter.**
+- [ ] **1.3 — Définir les contrôles par famille.** Associer types/records à `NativeRecordBoxing` et `NativeRecordSizes`, FFI à `FFIIntegerReturns`, appels à `CurriedLambdas`, tableaux à `ArrayRoundtrip`, récursion à `TCO`/`TCOMutRec`, fusion à `ThunkFusion`. Vérifier leur état initial par petits groupes. **Types/records, FFI, appels et ArrayRoundtrip vérifiés ; sortie de TCO corrigée, snapshots TCO/TCOMutRec encore non validés ; fusion encore à exécuter.**
 - [ ] **1.4 — Consigner les limites initiales.** Distinguer échecs existants, exclusions et contrôles non exécutés. Conserver les sorties nécessaires aux comparaisons suivantes hors des sources de production.
 
 ### Relevé 1.1 — Outils et révisions
@@ -108,10 +108,30 @@ Les deux commandes sont relancées séparément sans `-c`, avec le même `PATH` 
 
 Le Go de chaque fixture est ensuite compilé et exécuté séparément, sans actualiser les snapshots, pour vérifier le comportement :
 
-- **`TCO` : sortie incorrecte.** Sortie obtenue `0, 1, 2, 3, 4, 0, 42, Done`, contre `0, 1, 2, 3, 4, 10000, 42, Done` attendu. `length (span (\_ -> true) (1..10000)).init` donne `0` au lieu de `10000`. Le processus termine avec le code 0, cette fixture affichant ses résultats sans assertions ; la comparaison explicite détecte l'échec. Cause non établie.
+- **`TCO` : sortie incorrecte.** Sortie obtenue `0, 1, 2, 3, 4, 0, 42, Done`, contre `0, 1, 2, 3, 4, 10000, 42, Done` attendu. `length (span (\_ -> true) (1..10000)).init` donne `0` au lieu de `10000`. Le processus termine avec le code 0, cette fixture affichant ses résultats sans assertions ; la comparaison explicite détecte l'échec. Cause localisée dans la conversion de `Nothing` à la frontière FFI, voir l'isolation ci-dessous.
 - **`TCOMutRec` : comportement vérifié, snapshot non conforme.** Les 8 assertions passent, sortie `Done`, code de sortie 0. Les tests de débordement de pile restent commentés ; ce succès ne prouve pas une pile constante pour tous les cas.
 
 Les empreintes des deux snapshots, du bundle (identique à celui de 1.2), de la configuration et du lockfile du runner sont inchangées. Les seuls changements de sources sont les deux directives de dépendances ; le présent compte rendu est également mis à jour. Aucune correction du générateur ni exécution JavaScript. Preuves conservées dans `/private/tmp/gopurs-step-1-3-recursion-deps-w6w0mjua/` : logs du runner, sous-dossiers `TCO/` et `TCOMutRec/` avec Go généré, diffs, binaires et sorties, puis `verification.json`. La référence récursion reste non validée.
+
+### Relevé 1.3 — Isolation de findIndex / span
+
+Le 8 septembre 2026, une reproduction indépendante compare JavaScript et Go sur des tableaux de 0, 1, 3 et 10000 éléments. Le défaut apparaît déjà avec `findIndex (\_ -> false) []` : JavaScript retourne `Nothing`, Go retourne `Just 0`. Les tailles des entrées sont correctes. `span (\_ -> true) [1]` donne ainsi les longueurs `0,1` en Go contre `1,0` en JavaScript.
+
+Deux traces, ajoutées uniquement au Go généré de cette copie, montrent que la valeur fournie comme `nothing` arrive au helper FFI avec le tag 9, l'identifiant ADT 930809136 et un pointeur non nul. Le helper ne trouve aucun élément et renvoie cette valeur ; `span` la traite comme `Just 0`. La génération convertit `Box(&Constructor_Data_Maybe_Nothing[Value]{})` via `CoerceToStruct[Constructor_Data_Maybe_Just[Value]]`, alors que le consommateur attend un pointeur nul pour `Nothing`. L'échec est localisé dans la conversion entre représentations de Maybe avant l'entrée FFI.
+
+Le bundle, les sources, les snapshots et la configuration du runner sont inchangés. Aucun correctif du générateur ni benchmark appliqué. Les sorties Go restent identiques avec et sans traces. Reproduction, comparaison, traces et points de génération à examiner conservés dans `/private/tmp/gopurs-span-isolation-2f_emf1y/RESULTS.md`. La prochaine correction doit préserver la distinction `Nothing` / `Just 0` ; la référence récursion reste non validée.
+
+### Relevé 1.3 — Correction des conversions de Maybe
+
+Le 8 septembre 2026, correction limitée à `CodeGen.purs` : la conversion de la forme valeur de Maybe émet la représentation canonique (identifiant `hashString "Data_Data_Maybe_Just"`, pointeur nul pour Nothing, pointeur vers Just avec son contenu sinon). La conversion inverse utilise le même identifiant. Le passage à un pointeur typé réutilise le reboxing existant pour convertir le contenu de Just depuis `Value` vers son type natif.
+
+La nouvelle fixture `MaybeFfiRoundtrip` vérifie 24 assertions : Nothing, Just 0, Just 7, allers-retours via Ref, recherche sans résultat ou avec résultat, et span vide, complet, partiel et sur 10000 éléments. Un producteur non inliné et des entrées lues via Ref exercent aussi les conversions de retour de fonction. La première version de la fixture échoue avec le bundle antérieur (`Nothing` devient `Just 0`). Les cas supplémentaires ont exposé l'identifiant erroné et une réinterprétation du contenu (`Just 0` devenait `Just 6` après correction du seul identifiant). La version finale donne les mêmes sorties en Go et JavaScript, sans instrumentation.
+
+Validation finale : `npm run build` réussit sans avertissement ; `bin/test MaybeFfiRoundtrip -c` passe avec son nouveau snapshot, puis `NativeRecordBoxing` (10 assertions), `ArrayRoundtrip` (28) et `FFIIntegerReturns` (27) passent avec leurs références inchangées. `UPDATE_SNAPSHOTS=0` est conservé. Le nettoyage `-c` est nécessaire ici : un premier essai sur le runner chaud référençait un alias Show d'un module résiduel (`Data.Interval`) dans le nouveau snapshot, absent de la reproduction isolée.
+
+`bin/test TCO` reste en échec sur son snapshot antérieur. Son Go est compilé et exécuté séparément : sortie exacte `0, 1, 2, 3, 4, 10000, 42, Done`, désormais correcte. Aucun snapshot existant n'est modifié ; seul celui de `MaybeFfiRoundtrip` est ajouté. Configuration et lockfile du runner préservés. Les snapshots de récursion restent à examiner ; TCOMutRec et ThunkFusion ne sont pas exécutés durant cette correction. Aucun benchmark exécuté.
+
+Preuves, expériences intermédiaires, sorties JavaScript/Go, logs finaux et empreintes conservés dans `/private/tmp/gopurs-maybe-fix-8wgjs445/`. L'étape 1.3 reste ouverte.
 
 ## 2. Retrouver un arbre de sources lisible
 

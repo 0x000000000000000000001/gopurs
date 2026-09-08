@@ -71,9 +71,10 @@ unboxableADTs = Map.fromFoldable
             "Nothing" -> [ GoRaw "gopurs_runtime.Value{}", GoRaw "false" ]
             _ -> args
       , boxExpr: \expr ->
-          GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\tif _v.V1 {\n\t\t\t\t\treturn gopurs_runtime.Box(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{V0: _v.V0})\n\t\t\t\t}\n\t\t\t\treturn gopurs_runtime.Box(&Constructor_Data_Maybe_Nothing[gopurs_runtime.Value]{})\n\t\t\t}()")
+          -- Maybe uses the Just constructor id for both cases, with a nil pointer for Nothing.
+          GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\tif _v.V1 {\n\t\t\t\t\treturn gopurs_runtime.Value{Type: 9, IntVal: " <> hashString "Data_Data_Maybe_Just" <> ", UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: _v.V0})}\n\t\t\t\t}\n\t\t\t\treturn gopurs_runtime.Value{Type: 9, IntVal: " <> hashString "Data_Data_Maybe_Just" <> "}\n\t\t\t}()")
       , unboxExpr: \expr ->
-          GoRaw ("func() struct{V0 gopurs_runtime.Value; V1 bool} {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\tif _v.Type == 9 && _v.IntVal == " <> hashString "Constructor_Data_Maybe_Just" <> " && _v.UnsafePtr != nil {\n\t\t\t\t\treturn struct{V0 gopurs_runtime.Value; V1 bool}{V0: (*Constructor_Data_Maybe_Just[gopurs_runtime.Value])(_v.UnsafePtr).V0, V1: true}\n\t\t\t\t}\n\t\t\t\treturn struct{V0 gopurs_runtime.Value; V1 bool}{V0: gopurs_runtime.Value{}, V1: false}\n\t\t\t}()")
+          GoRaw ("func() struct{V0 gopurs_runtime.Value; V1 bool} {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\tif _v.Type == 9 && _v.IntVal == " <> hashString "Data_Data_Maybe_Just" <> " && _v.UnsafePtr != nil {\n\t\t\t\t\treturn struct{V0 gopurs_runtime.Value; V1 bool}{V0: (*Constructor_Data_Maybe_Just[gopurs_runtime.Value])(_v.UnsafePtr).V0, V1: true}\n\t\t\t\t}\n\t\t\t\treturn struct{V0 gopurs_runtime.Value; V1 bool}{V0: gopurs_runtime.Value{}, V1: false}\n\t\t\t}()")
       }
   , Tuple "Data.Tuple.Tuple"
       { signature: [ TypeValue, TypeValue ]
@@ -155,6 +156,10 @@ coerceGoExpr modNameStr expr TypeValue destT@(TypeStructPointer b f s a) | Array
     srcT = TypeStructPointer b f (basePath <> if Array.length a > 0 then "[" <> String.joinWith ", " (map (const "gopurs_runtime.Value") a) <> "]" else "") (map (const TypeValue) a)
   in
     coerceGoExpr modNameStr (unboxGoExpr modNameStr expr TypeValue srcT) srcT destT
+
+coerceGoExpr modNameStr expr srcT@(TypeStructValue "Data.Maybe.Maybe" _) destT@(TypeStructPointer _ "Data.Maybe.Maybe" _ _) =
+  -- The boxed payload is Value; reuse the typed-pointer conversion to rebox it.
+  coerceGoExpr modNameStr (boxGoExpr modNameStr expr srcT) TypeValue destT
 
 coerceGoExpr modNameStr expr from TypeValue = boxGoExpr modNameStr expr from
 coerceGoExpr modNameStr expr TypeValue to = unboxGoExpr modNameStr expr TypeValue to
