@@ -16,10 +16,35 @@ Constats au 8 septembre 2026 : `CodeGen.purs` compte 3 546 lignes, `Main.purs` 5
 
 ## 1. Établir une référence de travail reproductible
 
-- [ ] **1.1 — Identifier les outils réellement utilisés.** Relever chemins et versions de `purs` typé, Spago, Node et Go, ainsi que les révisions de gopurs et du PBO local déclaré dans `spago.yaml`.
+- [x] **1.1 — Identifier les outils réellement utilisés.** Chemins résolus, versions exécutées et révisions Git relevés le 8 septembre 2026 ; voir le relevé ci-dessous. Le shell, le build npm et altbak sélectionnent des outils différents. Aucun build ni test exécuté.
 - [ ] **1.2 — Vérifier un cycle court.** Exécuter `./bin/test NativeRecordSizes -c` avec le `purs` TAST sur le `PATH`, puis la même fixture sans `-c` ; relever les fichiers produits et comparer les snapshots sans les actualiser.
 - [ ] **1.3 — Définir les contrôles par famille.** Associer types/records à `NativeRecordBoxing` et `NativeRecordSizes`, FFI à `FFIIntegerReturns`, appels à `CurriedLambdas`, tableaux à `ArrayRoundtrip`, récursion à `TCO`/`TCOMutRec`, fusion à `ThunkFusion`. Vérifier leur état initial par petits groupes.
 - [ ] **1.4 — Consigner les limites initiales.** Distinguer échecs existants, exclusions et contrôles non exécutés. Conserver les sorties nécessaires aux comparaisons suivantes hors des sources de production.
+
+### Relevé 1.1 — Outils et révisions
+
+Les chemins ci-dessous sont résolus après suivi des liens symboliques. Versions obtenues avec `--version`, ou `go version`.
+
+| Outil et contexte | Version observée | Exécutable résolu |
+| --- | --- | --- |
+| `purs` du shell | `0.15.15` | `/opt/homebrew/lib/node_modules/purescript/purs.bin` |
+| `purs` local de gopurs, prioritaire pendant `npm run build` | `0.15.16` ; paquet `purescript-npm` : `0.15.16-0x1` | `/Users/0x1/Documents/htdocs/gopurs/gopurs/node_modules/purescript-npm/purs` |
+| `purs` du fork TAST sélectionné par altbak | `0.15.16 [development build; commit: 59b80f2a183647c6d4e99f06b5658ff550f1cb68 DIRTY]` | `/Users/0x1/Documents/htdocs/purescript/.stack-work/dist/aarch64-osx/ghc-9.8.4/build/purs/purs` |
+| Spago du shell | `1.0.3` | `/opt/homebrew/lib/node_modules/spago/bin/bundle.js` |
+| Spago sélectionné par altbak | `1.0.4` | `/Users/0x1/Documents/htdocs/altbak.pub/run/bak/js/node_modules/spago/bin/bundle.js` |
+| Node, commun aux contextes relevés | `v24.8.0` | `/opt/homebrew/Cellar/node/24.8.0/bin/node` |
+| Go, commun aux contextes relevés | `go1.27.0 darwin/arm64` | `/opt/homebrew/Cellar/go/1.27.0/libexec/bin/go` |
+
+Le shell résout ces commandes via `/opt/homebrew/bin`. `bin/test` hérite du `PATH` ; son option `-c` appelle `npm run build`, où le `node_modules/.bin/purs` de gopurs devient prioritaire. Il n'existe pas de Spago local dans gopurs : celui du `PATH` reste sélectionné. `altbak.pub/bin/go/run` préfixe le `PATH` avec `/Users/0x1/Documents/htdocs/altbak.pub/run/bak/js/node_modules/.bin`, qui fournit le fork TAST et Spago 1.0.4. Le build npm de gopurs conserve toutefois son propre `purs` local en priorité. Ces résolutions ont été contrôlées avec les chemins correspondants et des appels de version uniquement.
+
+Pour l'étape 1.2, le `purs` TAST à sélectionner est celui exposé par le répertoire `.bin` d'altbak ci-dessus ; le `purs` 0.15.15 du shell n'est pas ce binaire. Aucun `PATH` persistant n'a été modifié. Le suffixe `DIRTY` est celui rapporté par le binaire du fork, pas une mesure de l'état actuel de ses sources. Son SHA-256 est `a9162efcb4256de3e1564c6ab766b0a2638795c711e21865fd477135c8f4020b` ; celui du `purs` local de gopurs est `ae313bebeb0c150dd71d94a95e6654966806e4911602dfc1e5b6329162aaa9b9`.
+
+| Dépôt | Racine réelle | Révision HEAD | Branche | État au relevé |
+| --- | --- | --- | --- | --- |
+| gopurs | `/Users/0x1/Documents/htdocs/gopurs/gopurs` | `324b9326e47ef271a9d9b93c1c385415a55f1167` | `edge` | Seul `todo.md` modifié |
+| PBO déclaré dans `spago.yaml` | `/Users/0x1/Documents/htdocs/purescript-backend-optimizer-gopurs` | `67ba2151e3717b27a13e95c25d3b25c8bdc645cc` | `edge-gopurs` | Propre |
+
+Le chemin PBO déclaré est bien `../../purescript-backend-optimizer-gopurs`. Vérification par résolution du chemin, `git rev-parse --show-toplevel HEAD`, `git symbolic-ref -q --short HEAD` et `git status --short` dans chaque dépôt.
 
 ## 2. Retrouver un arbre de sources lisible
 
