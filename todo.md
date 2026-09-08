@@ -18,7 +18,7 @@ Constats au 8 septembre 2026 : `CodeGen.purs` compte 3 546 lignes, `Main.purs` 5
 
 - [x] **1.1 — Identifier les outils réellement utilisés.** Chemins résolus, versions exécutées et révisions Git relevés le 8 septembre 2026 ; voir le relevé ci-dessous. Le shell, le build npm et altbak sélectionnent des outils différents. Aucun build ni test exécuté.
 - [x] **1.2 — Vérifier un cycle court.** Le 8 septembre 2026, `./bin/test NativeRecordSizes -c`, puis la même fixture sans `-c`, réussissent avec le `purs` TAST sur le `PATH` et `UPDATE_SNAPSHOTS=0`. Les 30 assertions passent à chaque run ; les deux snapshots restent identiques aux références. Voir le relevé ci-dessous.
-- [ ] **1.3 — Définir les contrôles par famille.** Associer types/records à `NativeRecordBoxing` et `NativeRecordSizes`, FFI à `FFIIntegerReturns`, appels à `CurriedLambdas`, tableaux à `ArrayRoundtrip`, récursion à `TCO`/`TCOMutRec`, fusion à `ThunkFusion`. Vérifier leur état initial par petits groupes. **Types/records et FFI vérifiés ; appels, tableaux, récursion et fusion encore à exécuter.**
+- [ ] **1.3 — Définir les contrôles par famille.** Associer types/records à `NativeRecordBoxing` et `NativeRecordSizes`, FFI à `FFIIntegerReturns`, appels à `CurriedLambdas`, tableaux à `ArrayRoundtrip`, récursion à `TCO`/`TCOMutRec`, fusion à `ThunkFusion`. Vérifier leur état initial par petits groupes. **Types/records, FFI, appels et ArrayRoundtrip vérifiés ; récursion non validée (sortie incorrecte de span dans TCO et écarts des deux snapshots) ; fusion encore à exécuter.**
 - [ ] **1.4 — Consigner les limites initiales.** Distinguer échecs existants, exclusions et contrôles non exécutés. Conserver les sorties nécessaires aux comparaisons suivantes hors des sources de production.
 
 ### Relevé 1.1 — Outils et révisions
@@ -78,6 +78,40 @@ Le 8 septembre 2026, `./bin/test FFIIntegerReturns` réussit sans `-c`, avec le 
 La fixture couvre les retours `int64`/`int`, leurs tableaux vides et non vides, les bornes Int PureScript, les fallbacks `any` numériques/String/Boolean et un consommateur opaque lu depuis une `Ref`. Les wrappers vérifiés utilisent `Int` pour les entiers natifs et chaque élément des tableaux, et conservent `Box` pour les retours `any`.
 
 Snapshots, configuration et lockfile du runner, bundle et fichiers suivis inchangés après exécution. Seul le présent compte rendu est modifié. Aucune autre fixture ni exécution JavaScript lancée. Preuves dans `/private/tmp/gopurs-step-1-3-ffi-gn1z8kpv/` : `run.log`, `stdout.txt`, `Main.go`, `Main_ffi.go` et `verification.json`.
+
+### Relevé 1.3 — Appels
+
+Le 8 septembre 2026, `./bin/test CurriedLambdas` réussit sans `-c`, avec le même `PATH` qu'en 1.2 et `UPDATE_SNAPSHOTS=0`. Le bundle conserve l'empreinte vérifiée en 1.2. Le Go généré correspond octet pour octet à `tests/passing-snapshots/CurriedLambdas.go`, puis les 52 assertions passent : sortie `Done`, bilan `1 passed, 0 failed`.
+
+La fixture couvre les applications partielles réutilisées, l'ordre des arguments jusqu'à six, l'ordre et l'exécution différée des effets, les frontières `let`/branche/récursion/appel/`Fn2`/`TypeApp` et la capture d'état lors de l'exécution de l'effet.
+
+Snapshot, configuration et lockfile du runner, bundle et fichiers suivis inchangés après exécution. Seul le présent compte rendu est modifié. Aucune autre fixture ni exécution JavaScript lancée. Preuves dans `/private/tmp/gopurs-step-1-3-calls-g9w2b5n5/` : `run.log`, `stdout.txt`, `Main.go` et `verification.json`.
+
+### Relevé 1.3 — Tableaux
+
+Le 8 septembre 2026, `./bin/test ArrayRoundtrip` réussit sans `-c`, avec le même `PATH` qu'en 1.2 et `UPDATE_SNAPSHOTS=0`. Le bundle conserve l'empreinte vérifiée en 1.2. Le Go généré correspond octet pour octet à `tests/passing-snapshots/ArrayRoundtrip.go`, puis les 28 assertions passent : 29 lignes utiles terminées par `Done`, bilan `1 passed, 0 failed`.
+
+La fixture couvre 14 cas de tableaux (vide, singletons, parité, signes, doublons, bornes Int32), 9 plages inclusives ascendantes ou descendantes et 5 cas du pipeline `range → filter → fold`, dont `n=900 → 202950`. Les sommes intermédiaires restent dans Int32. Ce contrôle établit la référence de cette fixture ; il ne mesure pas les performances et ne constitue pas une validation étendue de toutes les optimisations de tableaux.
+
+Snapshot, configuration et lockfile du runner, bundle et fichiers suivis conservent leurs empreintes d'avant ce run. Seul le présent compte rendu est modifié. Aucune autre fixture ni exécution JavaScript lancée. Preuves dans `/private/tmp/gopurs-step-1-3-arrays-oa2sxhuy/` : `run.log`, `stdout.txt`, `Main.go` et `verification.json`.
+
+### Relevé 1.3 — Récursion : dépendances isolées, référence non validée
+
+Le 8 septembre 2026, les premiers essais de `./bin/test TCO` et `./bin/test TCOMutRec` échouent avant l'appel à gopurs sur `EscapedSkolem` dans `gopurs-foreign-object/src/Foreign/Object.purs:203:14`. Sans directive `@dependencies`, ces fixtures utilisaient la liste générale du runner. Logs initiaux conservés dans `/private/tmp/gopurs-step-1-3-recursion-207hcm10/`.
+
+Après accord pour isoler leurs dépendances, ajout des seules directives suivantes, sans changement des algorithmes ni du runner :
+
+- `TCO` : `-- @dependencies: prelude effect console arrays tailrec`.
+- `TCOMutRec` : `-- @dependencies: assert prelude effect console`.
+
+Les deux commandes sont relancées séparément sans `-c`, avec le même `PATH` qu'en 1.2 et `UPDATE_SNAPSHOTS=0`. La compilation PureScript et la génération Go réussissent désormais, mais chaque commande s'arrête sur un écart de snapshot (`0 passed, 1 failed`). Les snapshots sont conservés. Pour `TCO`, le diff comprend notamment des fonctions spécialisées et des changements de représentation ; il ne se limite pas à des renommages.
+
+Le Go de chaque fixture est ensuite compilé et exécuté séparément, sans actualiser les snapshots, pour vérifier le comportement :
+
+- **`TCO` : sortie incorrecte.** Sortie obtenue `0, 1, 2, 3, 4, 0, 42, Done`, contre `0, 1, 2, 3, 4, 10000, 42, Done` attendu. `length (span (\_ -> true) (1..10000)).init` donne `0` au lieu de `10000`. Le processus termine avec le code 0, cette fixture affichant ses résultats sans assertions ; la comparaison explicite détecte l'échec. Cause non établie.
+- **`TCOMutRec` : comportement vérifié, snapshot non conforme.** Les 8 assertions passent, sortie `Done`, code de sortie 0. Les tests de débordement de pile restent commentés ; ce succès ne prouve pas une pile constante pour tous les cas.
+
+Les empreintes des deux snapshots, du bundle (identique à celui de 1.2), de la configuration et du lockfile du runner sont inchangées. Les seuls changements de sources sont les deux directives de dépendances ; le présent compte rendu est également mis à jour. Aucune correction du générateur ni exécution JavaScript. Preuves conservées dans `/private/tmp/gopurs-step-1-3-recursion-deps-w6w0mjua/` : logs du runner, sous-dossiers `TCO/` et `TCOMutRec/` avec Go généré, diffs, binaires et sorties, puis `verification.json`. La référence récursion reste non validée.
 
 ## 2. Retrouver un arbre de sources lisible
 

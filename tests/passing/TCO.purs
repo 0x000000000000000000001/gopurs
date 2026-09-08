@@ -1,5 +1,7 @@
 module Main where
 
+-- @dependencies: prelude effect console arrays tailrec
+
 import Prelude
 import Effect.Console (log, logShow)
 import Control.Monad.Rec.Class
