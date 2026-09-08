@@ -17,7 +17,7 @@ Constats au 8 septembre 2026 : `CodeGen.purs` compte 3 546 lignes, `Main.purs` 5
 ## 1. Établir une référence de travail reproductible
 
 - [x] **1.1 — Identifier les outils réellement utilisés.** Chemins résolus, versions exécutées et révisions Git relevés le 8 septembre 2026 ; voir le relevé ci-dessous. Le shell, le build npm et altbak sélectionnent des outils différents. Aucun build ni test exécuté.
-- [ ] **1.2 — Vérifier un cycle court.** Exécuter `./bin/test NativeRecordSizes -c` avec le `purs` TAST sur le `PATH`, puis la même fixture sans `-c` ; relever les fichiers produits et comparer les snapshots sans les actualiser.
+- [x] **1.2 — Vérifier un cycle court.** Le 8 septembre 2026, `./bin/test NativeRecordSizes -c`, puis la même fixture sans `-c`, réussissent avec le `purs` TAST sur le `PATH` et `UPDATE_SNAPSHOTS=0`. Les 30 assertions passent à chaque run ; les deux snapshots restent identiques aux références. Voir le relevé ci-dessous.
 - [ ] **1.3 — Définir les contrôles par famille.** Associer types/records à `NativeRecordBoxing` et `NativeRecordSizes`, FFI à `FFIIntegerReturns`, appels à `CurriedLambdas`, tableaux à `ArrayRoundtrip`, récursion à `TCO`/`TCOMutRec`, fusion à `ThunkFusion`. Vérifier leur état initial par petits groupes.
 - [ ] **1.4 — Consigner les limites initiales.** Distinguer échecs existants, exclusions et contrôles non exécutés. Conserver les sorties nécessaires aux comparaisons suivantes hors des sources de production.
 
@@ -45,6 +45,23 @@ Pour l'étape 1.2, le `purs` TAST à sélectionner est celui exposé par le rép
 | PBO déclaré dans `spago.yaml` | `/Users/0x1/Documents/htdocs/purescript-backend-optimizer-gopurs` | `67ba2151e3717b27a13e95c25d3b25c8bdc645cc` | `edge-gopurs` | Propre |
 
 Le chemin PBO déclaré est bien `../../purescript-backend-optimizer-gopurs`. Vérification par résolution du chemin, `git rev-parse --show-toplevel HEAD`, `git symbolic-ref -q --short HEAD` et `git status --short` dans chaque dépôt.
+
+### Relevé 1.2 — Cycle ciblé NativeRecordSizes
+
+Commandes exécutées depuis la racine de gopurs, avec le `PATH` limité à ces processus :
+
+```bash
+export PATH="/Users/0x1/Documents/htdocs/altbak.pub/run/bak/js/node_modules/.bin:$PATH"
+export UPDATE_SNAPSHOTS=0
+./bin/test NativeRecordSizes -c
+./bin/test NativeRecordSizes
+```
+
+Le premier run reconstruit `bin/gopurs.js` puis nettoie les caches du runner. Le build rapporte zéro erreur et zéro avertissement. Chaque run compare `Main.go` et `Main_ffi.go` aux snapshots existants, compile le Go et exécute les 30 assertions : 31 lignes utiles, terminées par `Done`, puis `1 passed, 0 failed`. Les sorties sont identiques octet pour octet.
+
+Produits relevés : bundle `bin/gopurs.js`, 196 fichiers Go sous `tests/runner/output/` (dont `purescript/Main.go`, `purescript/Main_ffi.go`, `gopurs_runtime/runtime.go`, `main/main.go` et `Main/main/main.go`), `go.mod` et exécutable `gopurs_main`. Les empreintes SHA-256 des 196 fichiers Go et du bundle sont identiques entre les deux runs. Les deux snapshots, `tests/runner/spago.yaml`, son lockfile et tous les fichiers suivis hors `todo.md` conservent leurs empreintes initiales.
+
+La première tentative s'est arrêtée avant compilation sur l'accès au cache SQLite de Spago hors sandbox ; les deux runs réussis ont utilisé l'accès autorisé aux caches Spago et Go. Aucun changement du compilateur, du runner ou des fixtures. Validation limitée à cette fixture en Go ; aucune exécution JavaScript ni suite complète. Logs, sorties et inventaires conservés dans `/private/tmp/gopurs-step-1-2-c6z31szu/` (`clean-retry.log`, `repeat.log`, `first-output-files.txt`, empreintes avant/après).
 
 ## 2. Retrouver un arbre de sources lisible
 
