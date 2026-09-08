@@ -18,7 +18,7 @@ Constats au 8 septembre 2026 : `CodeGen.purs` compte 3 546 lignes, `Main.purs` 5
 
 - [x] **1.1 — Identifier les outils réellement utilisés.** Chemins résolus, versions exécutées et révisions Git relevés le 8 septembre 2026 ; voir le relevé ci-dessous. Le shell, le build npm et altbak sélectionnent des outils différents. Aucun build ni test exécuté.
 - [x] **1.2 — Vérifier un cycle court.** Le 8 septembre 2026, `./bin/test NativeRecordSizes -c`, puis la même fixture sans `-c`, réussissent avec le `purs` TAST sur le `PATH` et `UPDATE_SNAPSHOTS=0`. Les 30 assertions passent à chaque run ; les deux snapshots restent identiques aux références. Voir le relevé ci-dessous.
-- [ ] **1.3 — Définir les contrôles par famille.** Associer types/records à `NativeRecordBoxing` et `NativeRecordSizes`, FFI à `FFIIntegerReturns`, appels à `CurriedLambdas`, tableaux à `ArrayRoundtrip`, récursion à `TCO`/`TCOMutRec`, fusion à `ThunkFusion`. Vérifier leur état initial par petits groupes.
+- [ ] **1.3 — Définir les contrôles par famille.** Associer types/records à `NativeRecordBoxing` et `NativeRecordSizes`, FFI à `FFIIntegerReturns`, appels à `CurriedLambdas`, tableaux à `ArrayRoundtrip`, récursion à `TCO`/`TCOMutRec`, fusion à `ThunkFusion`. Vérifier leur état initial par petits groupes. **Types/records vérifiés ; autres familles encore à exécuter.**
 - [ ] **1.4 — Consigner les limites initiales.** Distinguer échecs existants, exclusions et contrôles non exécutés. Conserver les sorties nécessaires aux comparaisons suivantes hors des sources de production.
 
 ### Relevé 1.1 — Outils et révisions
@@ -62,6 +62,14 @@ Le premier run reconstruit `bin/gopurs.js` puis nettoie les caches du runner. Le
 Produits relevés : bundle `bin/gopurs.js`, 196 fichiers Go sous `tests/runner/output/` (dont `purescript/Main.go`, `purescript/Main_ffi.go`, `gopurs_runtime/runtime.go`, `main/main.go` et `Main/main/main.go`), `go.mod` et exécutable `gopurs_main`. Les empreintes SHA-256 des 196 fichiers Go et du bundle sont identiques entre les deux runs. Les deux snapshots, `tests/runner/spago.yaml`, son lockfile et tous les fichiers suivis hors `todo.md` conservent leurs empreintes initiales.
 
 La première tentative s'est arrêtée avant compilation sur l'accès au cache SQLite de Spago hors sandbox ; les deux runs réussis ont utilisé l'accès autorisé aux caches Spago et Go. Aucun changement du compilateur, du runner ou des fixtures. Validation limitée à cette fixture en Go ; aucune exécution JavaScript ni suite complète. Logs, sorties et inventaires conservés dans `/private/tmp/gopurs-step-1-2-c6z31szu/` (`clean-retry.log`, `repeat.log`, `first-output-files.txt`, empreintes avant/après).
+
+### Relevé 1.3 — Types et records
+
+Le 8 septembre 2026, `./bin/test NativeRecordBoxing` réussit sans `-c`, avec le même `PATH` qu'en 1.2 et `UPDATE_SNAPSHOTS=0`. Le bundle est identique à celui vérifié en 1.2. Le Go généré correspond octet pour octet à `tests/passing-snapshots/NativeRecordBoxing.go`, puis les 10 assertions passent : 11 lignes utiles terminées par `Done`, bilan `1 passed, 0 failed`.
+
+Le snapshot vérifié conserve le chemin ciblé : `Call_Main_consumeEntry` reçoit un record Go natif, le boxe avec `RecordDict2`, puis le transmet au consommateur opaque via `Apply`. La fixture couvre les mises à jour des champs et la conservation des versions précédentes. Avec les 30 assertions de `NativeRecordSizes` validées en 1.2, la référence types/records est établie.
+
+Snapshot, configuration et lockfile du runner, bundle et fichiers suivis inchangés après exécution. Seul le présent compte rendu est modifié. Aucune autre fixture ni exécution JavaScript lancée. Preuves conservées dans `/private/tmp/gopurs-step-1-3-boxing-3g6_jrno/` : `run.log`, `stdout.txt`, `Main.go` et `verification.json`. L'étape 1.3 reste ouverte pour les autres familles.
 
 ## 2. Retrouver un arbre de sources lisible
 
