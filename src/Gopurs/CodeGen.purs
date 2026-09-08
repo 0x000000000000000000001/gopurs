@@ -181,10 +181,12 @@ boxGoExprImpl modNameStr expr (TypeRecord fields) =
     keysStr = String.joinWith ", " (map (\k -> "\"" <> k <> "\"") keys)
     valsStr = String.joinWith ", " (map (\(Tuple k v) -> printGoExpr (boxGoExpr modNameStr (GoStructAccess (GoVar "orig") (sanitizeName k)) v)) fields)
     boxedRecord =
-      if Array.length fields == 2 then
-        "gopurs_runtime.RecordDict2(" <> keysStr <> ", " <> valsStr <> ")"
-      else
-        "gopurs_runtime.RecordDict([]string{" <> keysStr <> "}, []gopurs_runtime.Value{" <> valsStr <> "})"
+      case Array.length fields of
+        0 -> "gopurs_runtime.RecordDict0()"
+        size | size <= 5 ->
+          "gopurs_runtime.RecordDict" <> show size <> "(" <> keysStr <> ", " <> valsStr <> ")"
+        _ ->
+          "gopurs_runtime.RecordDict([]string{" <> keysStr <> "}, []gopurs_runtime.Value{" <> valsStr <> "})"
   in
     GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\torig := " <> printGoExpr expr <> "\n\t\t\t\t_ = orig\n\t\t\t\treturn " <> boxedRecord <> "\n\t\t\t\t}()")
 boxGoExprImpl modNameStr expr (TypeInterface _) = expr
