@@ -14,3 +14,8 @@ bin/gopurs.js
 .psci*
 psci*
 .purmeta/
+/src/**/*.bak
+/src/**/*.bak[0-9]*
+/src/**/*.orig
+/src/**/*.rej
+/tests/runner/*.log

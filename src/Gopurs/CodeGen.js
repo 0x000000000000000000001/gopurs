@@ -1,7 +1,3 @@
-export const gopursTrace = function() {
-  return new Error().stack;
-};
-
 const fvsCache = new WeakMap();
 
 export const memoizedFreeVarsImpl = function(calcFreeVars) {

@@ -25,7 +25,7 @@ printGoExpr expr = case expr of
     printGoExpr obj <> "." <> field
   GoFunc arg argType retType body -> 
     let
-      flattenGoFunc (GoFunc a atype rtype b) acc = flattenGoFunc b (Array.snoc acc (Tuple a atype))
+      flattenGoFunc (GoFunc a atype _ b) acc = flattenGoFunc b (Array.snoc acc (Tuple a atype))
       flattenGoFunc b acc = Tuple acc b
       Tuple allArgs finalBody = flattenGoFunc body [Tuple arg argType]
       len = Array.length allArgs
@@ -48,7 +48,7 @@ printGoExpr expr = case expr of
     name <> " := " <> printGoExpr e <> "\n_ = " <> name
   GoRecordDict goType props ->
     case goType of
-      TypeRecord fields ->
+      TypeRecord _ ->
         goTypeToStr goType <> "{" <> String.joinWith ", " (map (\(Tuple _ v) -> printGoExpr v) props) <> "}"
       TypeStructPointer _ _ _ _ ->
         let capitalize s = String.toUpper (String.take 1 s) <> String.drop 1 s
@@ -145,7 +145,7 @@ printGoExpr expr = case expr of
       "((*gopurs_runtime.RecordData)(" <> printGoExpr obj <> ".UnsafePtr)).Vals[" <> show idx <> "]"
     else
       "((*gopurs_runtime.RecordData" <> show size <> ")(" <> printGoExpr obj <> ".UnsafePtr)).V" <> show idx
-  GoConstructor hashStr structName typeArgs args ->
+  GoConstructor _ structName typeArgs args ->
     let typeArgsStr = if Array.length typeArgs > 0 then "[" <> String.joinWith ", " (map goTypeToStr typeArgs) <> "]" else ""
     in if Array.null args then
       "nil"

@@ -1,9 +1,0 @@
-@@ -1563,6 +1563,8 @@
-           let
-             topName = sanitizeName ident
-             goParams = String.joinWith ", " (map (\(Tuple p goT) -> p <> "_loop " <> goTypeToStr goT) paramsWithTypes)
-+            _ = if ident == "filterEvens" then Debug.trace ("filterEvens AST: " <> show (unwrapTcoExpr body)) (\_ -> unit) else unit
-+            _ = if ident == "filterEvens" then Debug.trace ("filterEvens Type: " <> show (getExprType flatFn)) (\_ -> unit) else unit
-             resBody = translateExpr env ctx loopCtx false false 0 body
-             
-             goBodyStr = case unwrapTcoExpr body of

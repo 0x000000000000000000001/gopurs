@@ -14,11 +14,9 @@
             "console",
             "effect",
             "either",
-            "exceptions",
             "node-buffer",
             "node-fs",
             "node-process",
-            "parallel",
             "prelude",
             "strings"
           ]
@@ -844,6 +842,9 @@
         "lists",
         "maybe",
         "newtype",
+        "node-buffer",
+        "node-fs",
+        "nullable",
         "ordered-collections",
         "partial",
         "prelude",

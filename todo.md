@@ -135,23 +135,37 @@ Preuves, expériences intermédiaires, sorties JavaScript/Go, logs finaux et emp
 
 ## 2. Retrouver un arbre de sources lisible
 
-Constat : Git suit des `.bak`, `.orig`, `.rej`, des modules de scratch et des dumps dans `src/` et `tests/runner/`.
+Nettoyage effectué le 8 septembre 2026 dans gopurs et le worktree PBO utilisé par son build ; voir le relevé ci-dessous.
 
-- [ ] **2.1 — Classer les fichiers suspects.** Rechercher leurs imports, appels et usages dans les scripts ; examiner notamment `Scratch`, `TestJson`, `TestTrace`, `ShowTco`, `DumpHeap` et les fichiers expérimentaux du runner.
-- [ ] **2.2 — Sauver les expériences utiles.** Transformer une expérience encore pertinente en fixture ou outil nommé avec sa commande d'exécution, une expérience à la fois.
-- [ ] **2.3 — Retirer les reliquats prouvés inutiles.** Supprimer les sauvegardes, rejets et sorties sans usage ni contenu unique utile, par petits lots ; vérifier le diff et les références restantes.
-- [ ] **2.4 — Clarifier les chemins alternatifs.** Vérifier les usages de `CodeGenBackend`, `OptimizeTAST`, `QuoteTAST`, `UsageAnalysis` et `FBIP` ; documenter leur rôle ou retirer ceux dont l'inutilité est établie.
-- [ ] **2.5 — Prévenir le retour des artefacts.** Ajouter des exclusions précises pour les sorties identifiées et nettoyer les imports des seuls modules touchés.
+- [x] **2.1 — Classer les fichiers suspects.** Imports, appels, scripts, FFI et points d’entrée examinés dans gopurs, PBO-Go et leurs consommateurs locaux. Les candidats sans usage établi ont été retirés.
+- [x] **2.2 — Sauver les expériences utiles.** Les fixtures actives et les outils FFI restent en place ; aucun essai orphelin examiné ne nécessite de promotion en nouvel outil. Les anciens essais retirés restent disponibles dans l’historique Git.
+- [x] **2.3 — Retirer les reliquats prouvés inutiles.** Sauvegardes, rejets, patchs de diagnostic, essais isolés et anciennes sorties `output-test` retirés après recherche de leurs consommateurs. Les tests et snapshots actifs sont préservés.
+- [x] **2.4 — Clarifier les chemins alternatifs.** `CodeGenBackend`, `OptimizeTAST`, `QuoteTAST`, `UsageAnalysis` et `FBIP` supprimés : aucun import ni point d’entrée actif ne les utilisait. `QuoteTAST` était consommé uniquement par `OptimizeTAST`.
+- [x] **2.5 — Prévenir le retour des artefacts.** Exclusions ciblées ajoutées aux deux `.gitignore` pour les sauvegardes, rejets et sorties identifiées. Imports et calculs locaux purs inutilisés retirés des modules concernés.
+
+### Relevé — Nettoyage gopurs et PBO-Go
+
+Périmètre : `gopurs/gopurs` et `purescript-backend-optimizer-gopurs`, worktree désigné par son `spago.yaml`. Les autres worktrees PBO ne sont pas modifiés.
+
+- **gopurs :** 892 lignes nettes de sources et d’essais retirées, 24 fichiers supprimés. Cela inclut les chemins et modules sans appelant, les helpers et calculs purs inutilisés, les références globales jamais lues, les expériences isolées et les sauvegardes. Les dépendances directes `exceptions` et `parallel` étaient redondantes avec celles d’`aff` ; les 69 packages résolus gardent les mêmes versions et sources. Le lockfile actualise aussi les dépendances déjà déclarées par le PBO local.
+- **PBO :** 229 lignes nettes de sources et d’essais retirées, dont le module Debug orphelin, trois décodeurs privés inutilisés de `CoreFn.Json`, des helpers de diagnostic et deux branches TypeApp dupliquées. Les 993 fichiers générés d’`output-test` (environ 20 Mo), ainsi que les anciens patchs et sauvegardes, n’avaient aucun consommateur dans les sources, configurations ou scripts.
+- **Usages particuliers vérifiés :** les outils FFI Go/Wasm, les entrées ES et Rust, les tests configurés, les imports dynamiques de `test/typeapp.mjs` et les constructeurs enregistrés par réflexion dans `Cache.js` sont conservés. Les calculs de contexte `LetRec` qui lisent des `Ref` via `unsafePerformEffect` ne sont pas supprimés sur le seul critère d’un résultat ignoré.
+
+Validation : gopurs compile, ainsi que les deux packages PBO (`backend-optimizer`, `backend-es`) avec le compilateur npm utilisé par gopurs. Des avertissements de paramètres ignorés et de noms masqués restent présents. `NativeRecordBoxing`, `FFIIntegerReturns` et `ArrayRoundtrip` passent avec leurs snapshots inchangés ; les 173 fichiers Go des deux premières fixtures sont identiques aux références avant nettoyage. Les 18 tests TypeApp passent sur le PBO compilé par gopurs.
+
+`CurriedLambdas` et `MaybeFfiRoundtrip` s’arrêtent sur des écarts de snapshots, y compris avec `-c`. Leur Go est compilé et exécuté séparément : les assertions passent. Un bundle reconstruit à partir des HEAD avant nettoyage produit exactement les mêmes 195 fichiers Go sur les mêmes entrées pour chacune des deux fixtures. Ces écarts ne sont donc pas introduits par le nettoyage ; aucun snapshot n’est actualisé. Ils restent à prendre en compte pour terminer la référence 1.3.
+
+Preuves, manifestes des suppressions, builds, comparaisons et sorties : `/private/tmp/gopurs-pbo-cleanup-ucl3t3ja/`.
 
 ## 3. Ramener Main à l'orchestration du build
 
-Constat : `runBuild` et `main` dupliquent la préparation des sorties, les callbacks de `buildModules` et le traitement FFI. Ils diffèrent notamment sur la consommation des modules et le fichier de debug.
+Le build dispose maintenant d’un seul chemin actif : `main` appelle `emitModule`. La préparation des métadonnées et le rôle du cache restent à clarifier.
 
-- [ ] **3.1 — Déterminer le chemin de référence.** Rechercher les appelants de `runBuild` et caractériser les différences avec `main`, y compris `takeMonomorphizedModules` dans `Main.js`, qui modifie le record reçu.
+- [x] **3.1 — Déterminer le chemin de référence.** La CLI construit et exécute `Main.main`. Aucun appelant de `runBuild` trouvé ; son helper `takeMonomorphizedModules`, qui mutait le record préparé, était utilisé uniquement par ce chemin abandonné.
 - [x] **3.2 — Extraire l'émission d'un module.** Le 8 septembre 2026, extraction du callback de `main` dans `emitModule`, avec les métadonnées préparées, le dossier FFI et les deux modules en paramètres. Les alias devenus inutiles dans `main` sont retirés. Compilation sans avertissement ; `NativeRecordBoxing` (10 assertions) et `FFIIntegerReturns` (27) passent avant et après. Tous les fichiers Go générés sont identiques octet par octet (86 et 87 fichiers respectivement), ainsi que les trois snapshots existants. `runBuild` reste inchangé. Preuves : `/private/tmp/gopurs-emit-module-d_1b62n0/`.
-- [ ] **3.3 — Unifier le build.** Faire utiliser le même pipeline aux points d'entrée nécessaires, ou retirer `runBuild` si aucun usage n'est établi. Conserver les comportements du chemin actif, notamment les points d'entrée Go émis.
+- [x] **3.3 — Unifier le build.** `runBuild`, son import FFI et `Main.js` supprimés. Le chemin actif passe par `main` et `emitModule`. Les sorties Go, y compris les points d’entrée, restent identiques sur les comparaisons avant/après.
 - [ ] **3.4 — Extraire la préparation des métadonnées.** Commencer par `buildGlobalTypes`, puis déplacer séparément les tables de constructeurs, les tables de classes et la préparation de la monomorphisation ; comparer les données et sorties à chaque déplacement.
-- [ ] **3.5 — Rendre le cache compréhensible.** Caractériser `onSkipModule` et son `res <- pure Nothing`, ainsi que les écritures de cache ; retirer les branches inaccessibles prouvées ou documenter le fonctionnement réellement conservé. Vérifier deux builds successifs et une modification FFI.
+- [ ] **3.5 — Rendre le cache compréhensible.** La branche inaccessible de `onSkipModule` a été retirée ; le callback retourne explicitement `Nothing`, comme auparavant. Il reste à documenter le rôle des écritures de cache et à vérifier le scénario de modification FFI.
 
 ## 4. Donner des noms aux contextes et borner l'état du codegen
 
@@ -160,7 +174,7 @@ Constat : `translate` prend une longue liste d'arguments et `translateExprImpl`,
 - [ ] **4.1 — Nommer les structures existantes.** Introduire des alias pour les métadonnées, l'environnement local, l'état de génération et le résultat d'expression, sans changer leur contenu.
 - [ ] **4.2 — Regrouper les métadonnées de translate.** Remplacer sa liste d'arguments par un contexte nommé ; comparer le Go généré sur une fixture avec ADT et une avec classes.
 - [ ] **4.3 — Expliciter les options du traducteur.** Remplacer les booléens positionnels par des champs nommés, puis renommer les trois variantes selon leur responsabilité ; procéder séparément du déplacement des branches.
-- [ ] **4.4 — Caractériser la durée de vie des Ref.** Tracer création, remise à zéro et usages de `globalReboxPairs`, `globalRecordStructs`, `globalRecordDecls`. Comparer A → B → A dans un même processus avec A exécuté seul avant de conclure à une fuite d'état.
+- [ ] **4.4 — Caractériser la durée de vie des Ref.** Tracer création, remise à zéro et usages de `globalReboxPairs`. `globalRecordStructs` et `globalRecordDecls` ont été supprimées, aucune lecture ni écriture ne les utilisant. Comparer A → B → A dans un même processus avec A exécuté seul avant de conclure à une fuite d’état.
 - [ ] **4.5 — Localiser l'état nécessaire.** Déplacer une référence effectivement utilisée dans l'état de compilation, puis vérifier la même séquence ; retirer séparément les références sans usage démontré.
 
 ## 5. Séparer les types Go et les conversions de valeurs
