@@ -37,6 +37,11 @@ data GoExpr
   | GoPrefixOp String GoExpr
   | GoTypeAssertion GoExpr String
   | GoIndex GoExpr GoExpr
+  -- Keep these conversions structured until the array consumer is known.
+  | GoBoxIntArray GoExpr
+  | GoUnboxIntArray GoExpr
+  -- Only the intrinsic filter's private []Value buffer may carry this marker.
+  | GoFreshFilterArray GoExpr
   | GoRaw String
   | GoFor String (Array GoExpr)
   | GoForRange String (Array GoExpr)

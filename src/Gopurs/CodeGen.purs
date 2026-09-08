@@ -184,6 +184,7 @@ boxGoExprImpl modNameStr expr (TypeRecord fields) =
     GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\torig := " <> printGoExpr expr <> "\n\t\t\t\t_ = orig\n\t\t\t\treturn gopurs_runtime.RecordDict([]string{" <> keysStr <> "}, []gopurs_runtime.Value{" <> valsStr <> "})\n\t\t\t\t}()")
 boxGoExprImpl modNameStr expr (TypeInterface _) = expr
 boxGoExprImpl modNameStr expr (TypeNativeArray TypeValue) = GoCall (GoSelector (GoVar "gopurs_runtime") "Array") [ expr ]
+boxGoExprImpl _ expr (TypeNativeArray TypeInt64) = GoBoxIntArray expr
 boxGoExprImpl modNameStr expr (TypeNativeArray inner) = GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\t\tarr := " <> printGoExpr expr <> "\n\t\t\t\t\tboxed := make([]gopurs_runtime.Value, len(arr))\n\t\t\t\t\tfor i, v := range arr { boxed[i] = " <> printGoExpr (boxGoExpr modNameStr (GoVar "v") inner) <> " }\n\t\t\t\t\treturn gopurs_runtime.Array(boxed)\n\t\t\t\t}()")
 boxGoExprImpl modNameStr expr TypeUint32 = GoRaw ("gopurs_runtime.Value{Type: 9, IntVal: int64(" <> printGoExpr expr <> "), UnsafePtr: nil}")
 boxGoExprImpl modNameStr expr (TypeGenericParam _) = expr
@@ -357,6 +358,7 @@ unboxGoExpr modNameStr expr currentType desiredType =
     TypeUint32 -> GoRaw ("uint32(" <> printGoExpr (GoSelector expr "IntVal") <> ")")
     (TypeStructPointer _ _ fullPath _) -> GoCall (GoRaw ("gopurs_runtime.CoerceToStruct[" <> fullPath <> "]")) [ expr ]
     (TypeInterface _) -> expr
+    (TypeNativeArray TypeInt64) -> GoUnboxIntArray expr
     (TypeNativeArray inner) -> case currentType of
       TypeNativeArray currentInner ->
         GoRaw ("func() " <> goTypeToStr desiredType <> " {\n\t\t\t\t\tarr := " <> printGoExpr expr <> "\n\t\t\t\t\tunboxed := make(" <> goTypeToStr desiredType <> ", len(arr))\n\t\t\t\t\tfor i, v := range arr { unboxed[i] = " <> printGoExpr (unboxGoExpr modNameStr (GoVar "v") currentInner inner) <> " }\n\t\t\t\t\treturn unboxed\n\t\t\t\t}()")
@@ -1047,6 +1049,42 @@ extractFuncType (TcoExpr _ (Typed ty inner)) =
     Nothing -> extractFuncType inner
 extractFuncType _ = Nothing
 
+-- Require the resolved intrinsic and concrete scalar callback. Outer Typed
+-- annotations on the seed can describe the enclosing application, so only a
+-- literal establishes its Int type here; opaque/dynamic seeds keep the copies.
+isIntArrayFold :: TcoExpr -> Array TcoExpr -> Boolean
+isIntArrayFold fn args = case unwrapTcoExpr fn, args of
+  Var (Qualified (Just (ModuleName "Data.Foldable")) (Ident "foldlArray")), [ callback, seed, _ ] ->
+    case extractFuncType callback, unwrapTcoExpr seed of
+      Just { fArgs: [ Int, Int ], fRet: Int }, Lit (LitInt _) -> true
+      _, _ -> false
+  _, _ -> false
+
+normalizeFreshIntArrayRoundtrip :: String -> GoExpr -> GoExpr
+normalizeFreshIntArrayRoundtrip suffix expr = case expr of
+  GoBoxIntArray (GoUnboxIntArray (GoCall (GoSelector (GoVar "gopurs_runtime") "Array") [ GoFreshFilterArray filtered ])) ->
+    let
+      sourceName = "source_int_array_" <> suffix
+      itemsName = "items_int_array_" <> suffix
+      indexName = "i_int_array_" <> suffix
+      valueName = "v_int_array_" <> suffix
+      source = GoCall (GoSelector (GoVar "gopurs_runtime") "Array") [ filtered ]
+      -- The source runs once, before these IIFE-local names enter scope. The
+      -- filter's make/append owns this buffer; do not search through variables,
+      -- calls or storage for a marker. Normalize every Value before the fold
+      -- to preserve IntVal/tag/pointer semantics of the two original copies.
+      body = GoBlock
+        [ GoAssign itemsName (GoCall (GoRaw "(*[]gopurs_runtime.Value)") [ GoSelector (GoVar sourceName) "UnsafePtr" ])
+        , GoForRange (indexName <> ", " <> valueName <> " := range *" <> itemsName)
+            [ GoMutate ("(*" <> itemsName <> ")[" <> indexName <> "]")
+                (GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoSelector (GoVar valueName) "IntVal" ])
+            ]
+        , GoReturn (GoVar sourceName)
+        ]
+    in
+      GoIIFE sourceName source body
+  _ -> expr
+
 getExprType :: TcoExpr -> ExprType
 getExprType (TcoExpr _ syn) = case syn of
   Typed t _ -> t
@@ -1505,7 +1543,10 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                               let
                                 fExpr = fromMaybe (GoRaw "nil") (Array.index accArgs.exprs 0)
                                 initExpr = fromMaybe (GoRaw "nil") (Array.index accArgs.exprs 1)
-                                arrExpr = fromMaybe (GoRaw "nil") (Array.index accArgs.exprs 2)
+                                boxedArrExpr = fromMaybe (GoRaw "nil") (Array.index accArgs.exprs 2)
+                                arrExpr = if isIntArrayFold flatFn flatArgs then
+                                  normalizeFreshIntArrayRoundtrip (iifeName <> "_" <> show accArgs.nextId) boxedArrExpr
+                                else boxedArrExpr
                                 loopBody = GoMutate resGoName (GoCall (GoSelector (GoVar "gopurs_runtime") "Apply2") [ fExpr, GoVar resGoName, GoVar vName ])
                                 iifeBody = GoBlock
                                   [ GoAssign resGoName initExpr
@@ -1915,8 +1956,10 @@ translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoI
                             , GoAssign resGoName (GoCall (GoVar "make") [ GoRaw ("[]" <> goTypeToStr elemType), GoRaw "0" ])
                             , GoForRange ("_, " <> vName <> " := range " <> arrGoRangeTarget) [ loopBody ]
                             ]
+                          filterExpr = GoCall (GoFuncLit [] (Array.cons (GoAssign arrValName arrExprRaw) (Array.cons (GoMutate "_" (GoVar arrValName)) iifeBodyStmts)) (GoVar resGoName) (TypeNativeArray elemType)) []
+                          freshFilterExpr = if elemType == TypeValue && Array.length args == 2 then GoFreshFilterArray filterExpr else filterExpr
                         in
-                          { stmts: accArgs.stmts, expr: GoCall (GoFuncLit [] (Array.cons (GoAssign arrValName arrExprRaw) (Array.cons (GoMutate "_" (GoVar arrValName)) iifeBodyStmts)) (GoVar resGoName) (TypeNativeArray elemType)) [], exprType: TypeNativeArray elemType, nextId: accArgs.nextId }
+                          { stmts: accArgs.stmts, expr: freshFilterExpr, exprType: TypeNativeArray elemType, nextId: accArgs.nextId }
 
                       _ -> { stmts: accArgs.stmts, expr: GoRaw "nil", exprType: TypeValue, nextId: accArgs.nextId }
                   in

@@ -175,6 +175,12 @@ printGoExpr expr = case expr of
     printGoExpr expr <> ".(" <> t <> ")"
   GoIndex expr index ->
     "(" <> printGoExpr expr <> ")[" <> printGoExpr index <> "]"
+  GoBoxIntArray expr ->
+    "func() gopurs_runtime.Value {\n\t\t\t\t\tarr := " <> printGoExpr expr <> "\n\t\t\t\t\tboxed := make([]gopurs_runtime.Value, len(arr))\n\t\t\t\t\tfor i, v := range arr { boxed[i] = gopurs_runtime.Int(v) }\n\t\t\t\t\treturn gopurs_runtime.Array(boxed)\n\t\t\t\t}()"
+  GoUnboxIntArray expr ->
+    "func() []int64 {\n\t\t\t\t\tarr := *(*[]gopurs_runtime.Value)(" <> printGoExpr expr <> ".UnsafePtr)\n\t\t\t\t\tunboxed := make([]int64, len(arr))\n\t\t\t\t\tfor i, v := range arr { unboxed[i] = v.IntVal }\n\t\t\t\t\treturn unboxed\n\t\t\t\t}()"
+  GoFreshFilterArray expr ->
+    printGoExpr expr
   GoRaw raw ->
     raw
   GoFor label stmts ->
