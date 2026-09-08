@@ -501,7 +501,7 @@ func Call_Main_checkRange(label_0_loop string, expected_1_loop int64, start_2_lo
 				start int64
 			}{end_3, start_2}
 			_ = orig
-			return gopurs_runtime.RecordDict([]string{"end", "start"}, []gopurs_runtime.Value{gopurs_runtime.Int(orig.end), gopurs_runtime.Int(orig.start)})
+			return gopurs_runtime.RecordDict2("end", "start", gopurs_runtime.Int(orig.end), gopurs_runtime.Int(orig.start))
 		}())
 		_ = __local_var_4_0
 		inputRef_5_1 := gopurs_runtime.Apply(__local_var_4_0, gopurs_runtime.Value{})

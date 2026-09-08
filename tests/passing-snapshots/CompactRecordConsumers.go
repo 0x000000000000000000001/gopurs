@@ -45,7 +45,7 @@ func Get_Main_makeEntry() gopurs_runtime.Value {
 			return func() gopurs_runtime.Value {
 				orig := Call_Main_makeEntry(count_0_box.IntVal, label_1_box.StrVal())
 				_ = orig
-				return gopurs_runtime.RecordDict([]string{"count", "label"}, []gopurs_runtime.Value{gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label)})
+				return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
 			}()
 		})
 	})
@@ -109,7 +109,7 @@ func Get_Main_checkEffects() gopurs_runtime.Value {
 											return clone
 										}()
 										_ = orig
-										return gopurs_runtime.RecordDict([]string{"count", "label"}, []gopurs_runtime.Value{gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label)})
+										return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
 									}()).StrVal())}
 									boxed := make([]gopurs_runtime.Value, len(arr))
 									for i, v := range arr {
@@ -190,7 +190,7 @@ func Get_Main_checkEffects() gopurs_runtime.Value {
 					return clone
 				}()
 				_ = orig
-				return gopurs_runtime.RecordDict([]string{"count", "label"}, []gopurs_runtime.Value{gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label)})
+				return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
 			}()), gopurs_runtime.Value{})
 			_ = __local_var_6_6
 			__local_var_7_7 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Effect_Ref_modify_(), gopurs_runtime.Func(func(v_7 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -330,10 +330,10 @@ func Get_Main_checkPayload() gopurs_runtime.Value {
 					return clone
 				}()
 				_ = orig
-				return gopurs_runtime.RecordDict([]string{"child", "values"}, []gopurs_runtime.Value{func() gopurs_runtime.Value {
+				return gopurs_runtime.RecordDict2("child", "values", func() gopurs_runtime.Value {
 					orig := orig.child
 					_ = orig
-					return gopurs_runtime.RecordDict([]string{"count", "label"}, []gopurs_runtime.Value{gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label)})
+					return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
 				}(), func() gopurs_runtime.Value {
 					arr := orig.values
 					boxed := make([]gopurs_runtime.Value, len(arr))
@@ -341,7 +341,7 @@ func Get_Main_checkPayload() gopurs_runtime.Value {
 						boxed[i] = gopurs_runtime.Int(v)
 					}
 					return gopurs_runtime.Array(boxed)
-				}()})
+				}())
 			}()), gopurs_runtime.Value{})
 			_ = retained_1_1
 			__local_var_2_2 := gopurs_runtime.Apply(Call_Main_inspectProduced(Get_Main_compactKeys(), Get_Main_compactPayload()), gopurs_runtime.Value{})
@@ -396,10 +396,10 @@ func Get_Main_checkPayload() gopurs_runtime.Value {
 					return clone
 				}()
 				_ = orig
-				return gopurs_runtime.RecordDict([]string{"child", "values"}, []gopurs_runtime.Value{func() gopurs_runtime.Value {
+				return gopurs_runtime.RecordDict2("child", "values", func() gopurs_runtime.Value {
 					orig := orig.child
 					_ = orig
-					return gopurs_runtime.RecordDict([]string{"count", "label"}, []gopurs_runtime.Value{gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label)})
+					return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
 				}(), func() gopurs_runtime.Value {
 					arr := orig.values
 					boxed := make([]gopurs_runtime.Value, len(arr))
@@ -407,7 +407,7 @@ func Get_Main_checkPayload() gopurs_runtime.Value {
 						boxed[i] = gopurs_runtime.Int(v)
 					}
 					return gopurs_runtime.Array(boxed)
-				}()})
+				}())
 			}()).StrVal()), gopurs_runtime.Value{})
 			_ = __local_var_7_7
 			__local_var_8_8 := gopurs_runtime.Apply(Call_Main_inspectProduced(Get_Main_describePayloadMap(), Get_Main_compactPayload()), gopurs_runtime.Value{})
@@ -463,10 +463,10 @@ func Get_Main_checkPayload() gopurs_runtime.Value {
 					return clone
 				}()
 				_ = orig
-				return gopurs_runtime.RecordDict([]string{"child", "values"}, []gopurs_runtime.Value{func() gopurs_runtime.Value {
+				return gopurs_runtime.RecordDict2("child", "values", func() gopurs_runtime.Value {
 					orig := orig.child
 					_ = orig
-					return gopurs_runtime.RecordDict([]string{"count", "label"}, []gopurs_runtime.Value{gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label)})
+					return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
 				}(), func() gopurs_runtime.Value {
 					arr := orig.values
 					boxed := make([]gopurs_runtime.Value, len(arr))
@@ -474,7 +474,7 @@ func Get_Main_checkPayload() gopurs_runtime.Value {
 						boxed[i] = gopurs_runtime.Int(v)
 					}
 					return gopurs_runtime.Array(boxed)
-				}()})
+				}())
 			}()).StrVal()), gopurs_runtime.Value{})
 			_ = __local_var_10_10
 			__local_var_11_11 := gopurs_runtime.Apply(Call_Main_check("child update", "9:replacement:[-3 0 7]", gopurs_runtime.Apply(Get_Main_describePayloadMap(), func() gopurs_runtime.Value {
@@ -491,7 +491,7 @@ func Get_Main_checkPayload() gopurs_runtime.Value {
 							label string
 						}{int64(9), "replacement"}
 						_ = orig
-						return gopurs_runtime.RecordDict([]string{"count", "label"}, []gopurs_runtime.Value{gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label)})
+						return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
 					}())
 					_ = orig
 					clone := struct {
@@ -526,10 +526,10 @@ func Get_Main_checkPayload() gopurs_runtime.Value {
 					return clone
 				}()
 				_ = orig
-				return gopurs_runtime.RecordDict([]string{"child", "values"}, []gopurs_runtime.Value{func() gopurs_runtime.Value {
+				return gopurs_runtime.RecordDict2("child", "values", func() gopurs_runtime.Value {
 					orig := orig.child
 					_ = orig
-					return gopurs_runtime.RecordDict([]string{"count", "label"}, []gopurs_runtime.Value{gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label)})
+					return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
 				}(), func() gopurs_runtime.Value {
 					arr := orig.values
 					boxed := make([]gopurs_runtime.Value, len(arr))
@@ -537,7 +537,7 @@ func Get_Main_checkPayload() gopurs_runtime.Value {
 						boxed[i] = gopurs_runtime.Int(v)
 					}
 					return gopurs_runtime.Array(boxed)
-				}()})
+				}())
 			}()).StrVal()), gopurs_runtime.Value{})
 			_ = __local_var_11_11
 			__local_var_12_12 := gopurs_runtime.Apply(Call_Main_check("nested field update", "2:updated:[-3 0 7]", gopurs_runtime.Apply(Get_Main_describePayloadMap(), func() gopurs_runtime.Value {
@@ -564,7 +564,7 @@ func Get_Main_checkPayload() gopurs_runtime.Value {
 							return clone
 						}()
 						_ = orig
-						return gopurs_runtime.RecordDict([]string{"count", "label"}, []gopurs_runtime.Value{gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label)})
+						return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
 					}())
 					_ = orig
 					clone := struct {
@@ -599,10 +599,10 @@ func Get_Main_checkPayload() gopurs_runtime.Value {
 					return clone
 				}()
 				_ = orig
-				return gopurs_runtime.RecordDict([]string{"child", "values"}, []gopurs_runtime.Value{func() gopurs_runtime.Value {
+				return gopurs_runtime.RecordDict2("child", "values", func() gopurs_runtime.Value {
 					orig := orig.child
 					_ = orig
-					return gopurs_runtime.RecordDict([]string{"count", "label"}, []gopurs_runtime.Value{gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label)})
+					return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
 				}(), func() gopurs_runtime.Value {
 					arr := orig.values
 					boxed := make([]gopurs_runtime.Value, len(arr))
@@ -610,7 +610,7 @@ func Get_Main_checkPayload() gopurs_runtime.Value {
 						boxed[i] = gopurs_runtime.Int(v)
 					}
 					return gopurs_runtime.Array(boxed)
-				}()})
+				}())
 			}()).StrVal()), gopurs_runtime.Value{})
 			_ = __local_var_12_12
 			__local_var_13_13 := gopurs_runtime.Apply(Call_Main_check("payload after updates", "2:nested:[-3 0 7]", gopurs_runtime.Apply(Get_Main_describePayloadMap(), func() gopurs_runtime.Value {
@@ -655,10 +655,10 @@ func Get_Main_checkPayload() gopurs_runtime.Value {
 					return clone
 				}()
 				_ = orig
-				return gopurs_runtime.RecordDict([]string{"child", "values"}, []gopurs_runtime.Value{func() gopurs_runtime.Value {
+				return gopurs_runtime.RecordDict2("child", "values", func() gopurs_runtime.Value {
 					orig := orig.child
 					_ = orig
-					return gopurs_runtime.RecordDict([]string{"count", "label"}, []gopurs_runtime.Value{gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label)})
+					return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
 				}(), func() gopurs_runtime.Value {
 					arr := orig.values
 					boxed := make([]gopurs_runtime.Value, len(arr))
@@ -666,7 +666,7 @@ func Get_Main_checkPayload() gopurs_runtime.Value {
 						boxed[i] = gopurs_runtime.Int(v)
 					}
 					return gopurs_runtime.Array(boxed)
-				}()})
+				}())
 			}()).StrVal()), gopurs_runtime.Value{})
 			_ = __local_var_13_13
 			originalAgain_14_14 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), retained_1_1), gopurs_runtime.Value{})
@@ -713,10 +713,10 @@ func Get_Main_checkPayload() gopurs_runtime.Value {
 					return clone
 				}()
 				_ = orig
-				return gopurs_runtime.RecordDict([]string{"child", "values"}, []gopurs_runtime.Value{func() gopurs_runtime.Value {
+				return gopurs_runtime.RecordDict2("child", "values", func() gopurs_runtime.Value {
 					orig := orig.child
 					_ = orig
-					return gopurs_runtime.RecordDict([]string{"count", "label"}, []gopurs_runtime.Value{gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label)})
+					return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
 				}(), func() gopurs_runtime.Value {
 					arr := orig.values
 					boxed := make([]gopurs_runtime.Value, len(arr))
@@ -724,7 +724,7 @@ func Get_Main_checkPayload() gopurs_runtime.Value {
 						boxed[i] = gopurs_runtime.Int(v)
 					}
 					return gopurs_runtime.Array(boxed)
-				}()})
+				}())
 			}()).StrVal()), gopurs_runtime.Value{})
 		})
 	})
@@ -776,7 +776,7 @@ func Get_Main_checkScalars() gopurs_runtime.Value {
 					return clone
 				}()
 				_ = orig
-				return gopurs_runtime.RecordDict([]string{"flag", "number"}, []gopurs_runtime.Value{gopurs_runtime.Bool(orig.flag), gopurs_runtime.Float(orig.number)})
+				return gopurs_runtime.RecordDict2("flag", "number", gopurs_runtime.Bool(orig.flag), gopurs_runtime.Float(orig.number))
 			}()).StrVal()), gopurs_runtime.Value{})
 			_ = __local_var_5_6
 			__local_var_6_7 := gopurs_runtime.Apply(Call_Main_inspectProduced(Get_Main_describeScalarsMap(), Get_Main_compactScalars()), gopurs_runtime.Value{})
@@ -799,7 +799,7 @@ func Get_Main_checkScalars() gopurs_runtime.Value {
 					return clone
 				}()
 				_ = orig
-				return gopurs_runtime.RecordDict([]string{"flag", "number"}, []gopurs_runtime.Value{gopurs_runtime.Bool(orig.flag), gopurs_runtime.Float(orig.number)})
+				return gopurs_runtime.RecordDict2("flag", "number", gopurs_runtime.Bool(orig.flag), gopurs_runtime.Float(orig.number))
 			}()).StrVal()), gopurs_runtime.Value{})
 			_ = __local_var_8_9
 			return gopurs_runtime.Apply(Call_Main_check("retained scalars", "true:-1.25", gopurs_runtime.Apply(Get_Main_describeScalarsMap(), func() gopurs_runtime.Value {
@@ -818,7 +818,7 @@ func Get_Main_checkScalars() gopurs_runtime.Value {
 					return clone
 				}()
 				_ = orig
-				return gopurs_runtime.RecordDict([]string{"flag", "number"}, []gopurs_runtime.Value{gopurs_runtime.Bool(orig.flag), gopurs_runtime.Float(orig.number)})
+				return gopurs_runtime.RecordDict2("flag", "number", gopurs_runtime.Bool(orig.flag), gopurs_runtime.Float(orig.number))
 			}()).StrVal()), gopurs_runtime.Value{})
 		})
 	})
@@ -906,7 +906,7 @@ func Call_Main_produceEntry(trace_0_loop gopurs_runtime.Value) gopurs_runtime.Va
 		return func() gopurs_runtime.Value {
 			orig := Call_Main_makeEntry(int64(9), "created")
 			_ = orig
-			return gopurs_runtime.RecordDict([]string{"count", "label"}, []gopurs_runtime.Value{gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label)})
+			return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
 		}()
 	})
 }
@@ -965,7 +965,7 @@ func Call_Main_checkEntry(reverse_0_loop bool) gopurs_runtime.Value {
 				return clone
 			}()
 			_ = orig
-			return gopurs_runtime.RecordDict([]string{"count", "label"}, []gopurs_runtime.Value{gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label)})
+			return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
 		}()), gopurs_runtime.Value{})
 		_ = retained_3_2
 		var __t4 string
@@ -1021,7 +1021,7 @@ func Call_Main_checkEntry(reverse_0_loop bool) gopurs_runtime.Value {
 				return clone
 			}()
 			_ = orig
-			return gopurs_runtime.RecordDict([]string{"count", "label"}, []gopurs_runtime.Value{gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label)})
+			return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
 		}()).StrVal()), gopurs_runtime.Value{})
 		_ = __local_var_9_10
 		__local_var_10_11 := gopurs_runtime.Apply(Call_Main_inspectProduced(Get_Main_describeEntryMap(), gopurs_runtime.Apply(Get_Main_compactEntry(), gopurs_runtime.Bool(reverse_0))), gopurs_runtime.Value{})
@@ -1047,13 +1047,13 @@ func Call_Main_checkEntry(reverse_0_loop bool) gopurs_runtime.Value {
 		savedCount_13_14 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), func() gopurs_runtime.Value {
 			orig := changedCount_12_13
 			_ = orig
-			return gopurs_runtime.RecordDict([]string{"count", "label"}, []gopurs_runtime.Value{gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label)})
+			return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
 		}()), gopurs_runtime.Value{})
 		_ = savedCount_13_14
 		__local_var_14_15 := gopurs_runtime.Apply(Call_Main_check((prefix_4_3)+("count update"), "-7:alpha", gopurs_runtime.Apply(Get_Main_describeEntryMap(), func() gopurs_runtime.Value {
 			orig := changedCount_12_13
 			_ = orig
-			return gopurs_runtime.RecordDict([]string{"count", "label"}, []gopurs_runtime.Value{gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label)})
+			return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
 		}()).StrVal()), gopurs_runtime.Value{})
 		_ = __local_var_14_15
 		__local_var_15_16 := gopurs_runtime.Apply(Call_Main_check((prefix_4_3)+("label update"), "5:beta", gopurs_runtime.Apply(Get_Main_describeEntryMap(), func() gopurs_runtime.Value {
@@ -1072,7 +1072,7 @@ func Call_Main_checkEntry(reverse_0_loop bool) gopurs_runtime.Value {
 				return clone
 			}()
 			_ = orig
-			return gopurs_runtime.RecordDict([]string{"count", "label"}, []gopurs_runtime.Value{gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label)})
+			return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
 		}()).StrVal()), gopurs_runtime.Value{})
 		_ = __local_var_15_16
 		__local_var_16_17 := gopurs_runtime.Apply(Call_Main_check((prefix_4_3)+("both updates"), "0:", gopurs_runtime.Apply(Get_Main_describeEntryMap(), func() gopurs_runtime.Value {
@@ -1091,7 +1091,7 @@ func Call_Main_checkEntry(reverse_0_loop bool) gopurs_runtime.Value {
 				return clone
 			}()
 			_ = orig
-			return gopurs_runtime.RecordDict([]string{"count", "label"}, []gopurs_runtime.Value{gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label)})
+			return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
 		}()).StrVal()), gopurs_runtime.Value{})
 		_ = __local_var_16_17
 		__local_var_17_18 := gopurs_runtime.Apply(Call_Main_check((prefix_4_3)+("original after updates"), "5:alpha", gopurs_runtime.Apply(Get_Main_describeEntryMap(), func() gopurs_runtime.Value {
@@ -1110,7 +1110,7 @@ func Call_Main_checkEntry(reverse_0_loop bool) gopurs_runtime.Value {
 				return clone
 			}()
 			_ = orig
-			return gopurs_runtime.RecordDict([]string{"count", "label"}, []gopurs_runtime.Value{gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label)})
+			return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
 		}()).StrVal()), gopurs_runtime.Value{})
 		_ = __local_var_17_18
 		originalAgain_18_19 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), retained_3_2), gopurs_runtime.Value{})
@@ -1133,7 +1133,7 @@ func Call_Main_checkEntry(reverse_0_loop bool) gopurs_runtime.Value {
 				return clone
 			}()
 			_ = orig
-			return gopurs_runtime.RecordDict([]string{"count", "label"}, []gopurs_runtime.Value{gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label)})
+			return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
 		}()).StrVal()), gopurs_runtime.Value{})
 		_ = __local_var_20_21
 		return gopurs_runtime.Apply(Call_Main_check((prefix_4_3)+("retained count update"), "-7:alpha", gopurs_runtime.Apply(Get_Main_describeEntryMap(), func() gopurs_runtime.Value {
@@ -1152,7 +1152,7 @@ func Call_Main_checkEntry(reverse_0_loop bool) gopurs_runtime.Value {
 				return clone
 			}()
 			_ = orig
-			return gopurs_runtime.RecordDict([]string{"count", "label"}, []gopurs_runtime.Value{gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label)})
+			return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
 		}()).StrVal()), gopurs_runtime.Value{})
 	})
 }

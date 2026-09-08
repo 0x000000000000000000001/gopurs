@@ -464,7 +464,7 @@ func Call_Main_makeTypeAppBoundary(count_0_loop int64) gopurs_runtime.Value {
 					return gopurs_runtime.Int((value_4.IntVal) + (int64(1)))
 				}), gopurs_runtime.Int(a_2.IntVal)).IntVal, b_3}
 				_ = orig
-				return gopurs_runtime.RecordDict([]string{"left", "right"}, []gopurs_runtime.Value{gopurs_runtime.Int(orig.left), orig.right})
+				return gopurs_runtime.RecordDict2("left", "right", gopurs_runtime.Int(orig.left), orig.right)
 			}()
 		})
 	})
@@ -945,14 +945,14 @@ func Call_Main_checkBoundaries(count_0_loop int64) gopurs_runtime.Value {
 				return clone
 			}()
 			_ = orig
-			return gopurs_runtime.RecordDict([]string{"left", "right"}, []gopurs_runtime.Value{gopurs_runtime.Int(orig.left), gopurs_runtime.Int(orig.right)})
+			return gopurs_runtime.RecordDict2("left", "right", gopurs_runtime.Int(orig.left), gopurs_runtime.Int(orig.right))
 		}(), func() gopurs_runtime.Value {
 			orig := struct {
 				left  int64
 				right int64
 			}{int64(10), int64(2)}
 			_ = orig
-			return gopurs_runtime.RecordDict([]string{"left", "right"}, []gopurs_runtime.Value{gopurs_runtime.Int(orig.left), gopurs_runtime.Int(orig.right)})
+			return gopurs_runtime.RecordDict2("left", "right", gopurs_runtime.Int(orig.left), gopurs_runtime.Int(orig.right))
 		}())), gopurs_runtime.Value{})
 		_ = __local_var_41_40
 		// TAST (Let): __local_var_42_41 shape=App(Var) bindingType=Any
@@ -979,14 +979,14 @@ func Call_Main_checkBoundaries(count_0_loop int64) gopurs_runtime.Value {
 				return clone
 			}()
 			_ = orig
-			return gopurs_runtime.RecordDict([]string{"left", "right"}, []gopurs_runtime.Value{gopurs_runtime.Int(orig.left), gopurs_runtime.Int(orig.right)})
+			return gopurs_runtime.RecordDict2("left", "right", gopurs_runtime.Int(orig.left), gopurs_runtime.Int(orig.right))
 		}(), func() gopurs_runtime.Value {
 			orig := struct {
 				left  int64
 				right int64
 			}{int64(10), int64(-5)}
 			_ = orig
-			return gopurs_runtime.RecordDict([]string{"left", "right"}, []gopurs_runtime.Value{gopurs_runtime.Int(orig.left), gopurs_runtime.Int(orig.right)})
+			return gopurs_runtime.RecordDict2("left", "right", gopurs_runtime.Int(orig.left), gopurs_runtime.Int(orig.right))
 		}())), gopurs_runtime.Value{})
 	})
 }

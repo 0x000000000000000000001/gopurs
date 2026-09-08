@@ -18,8 +18,8 @@ makeEntry :: Int -> String -> Entry
 makeEntry count label = { count, label }
 
 -- The closed record parameter must stay native, while the callback is opaque.
--- Its call currently boxes via RecordDict([]string{...}, []Value{...}), using
--- CodeGen.boxGoExprImpl (TypeRecord fields), rather than Printer's RecordDict2.
+-- Its call boxes via CodeGen.boxGoExprImpl (TypeRecord fields), which now
+-- selects RecordDict2 for two fields, rather than Printer's literal path.
 consumeEntry :: (Entry -> String) -> Entry -> String
 consumeEntry consume entry = consume entry
 

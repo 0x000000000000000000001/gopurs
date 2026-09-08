@@ -180,8 +180,13 @@ boxGoExprImpl modNameStr expr (TypeRecord fields) =
     keys = map (\(Tuple k _) -> k) fields
     keysStr = String.joinWith ", " (map (\k -> "\"" <> k <> "\"") keys)
     valsStr = String.joinWith ", " (map (\(Tuple k v) -> printGoExpr (boxGoExpr modNameStr (GoStructAccess (GoVar "orig") (sanitizeName k)) v)) fields)
+    boxedRecord =
+      if Array.length fields == 2 then
+        "gopurs_runtime.RecordDict2(" <> keysStr <> ", " <> valsStr <> ")"
+      else
+        "gopurs_runtime.RecordDict([]string{" <> keysStr <> "}, []gopurs_runtime.Value{" <> valsStr <> "})"
   in
-    GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\torig := " <> printGoExpr expr <> "\n\t\t\t\t_ = orig\n\t\t\t\treturn gopurs_runtime.RecordDict([]string{" <> keysStr <> "}, []gopurs_runtime.Value{" <> valsStr <> "})\n\t\t\t\t}()")
+    GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\torig := " <> printGoExpr expr <> "\n\t\t\t\t_ = orig\n\t\t\t\treturn " <> boxedRecord <> "\n\t\t\t\t}()")
 boxGoExprImpl modNameStr expr (TypeInterface _) = expr
 boxGoExprImpl modNameStr expr (TypeNativeArray TypeValue) = GoCall (GoSelector (GoVar "gopurs_runtime") "Array") [ expr ]
 boxGoExprImpl _ expr (TypeNativeArray TypeInt64) = GoBoxIntArray expr
