@@ -12,7 +12,6 @@ import Node.Encoding (Encoding(..))
 import Node.Process as Process
 import Gopurs.CodeGen as CodeGen
 import Effect.Unsafe (unsafePerformEffect)
-import Effect.Console as Console
 import Data.Argonaut.Parser (jsonParser)
 import Data.Either (Either(..))
 import Data.Bifunctor (lmap)
@@ -32,6 +31,7 @@ import Data.String.Pattern (Pattern(..), Replacement(..))
 import Data.String as String
 import Data.Newtype (unwrap)
 import PureScript.Backend.Optimizer.Builder (buildModules)
+import PureScript.Backend.Optimizer.Convert (BackendModule)
 import PureScript.Backend.Optimizer.Monomorphize (collectInstantiations, InstantiationMap, collectAllTypes, monomorphize, transitiveCollect, getExprAnn)
 import PureScript.Backend.Optimizer.Semantics.Foreign (coreForeignSemantics)
 import PureScript.Backend.Optimizer.CoreFn (Module(..), Ann(..), importName, Bind(..), Binding(..), ExprType(..), Expr(..), Ident(..))
@@ -43,7 +43,6 @@ import Gopurs.FfiSupport (extractFfiAst)
 import Gopurs.FfiTypes (FfiDecl)
 import PureScript.Backend.Optimizer.App (coreFnModulesFromOutput, parseCLIArgs, writeCache, loadDirectives)
 import Data.Argonaut.Decode (decodeJson)
-import Effect.Unsafe (unsafePerformEffect)
 import PureScript.Backend.Optimizer.Semantics (InlineDirectiveMap)
 
 type PreparedData =
@@ -406,6 +405,47 @@ runBuild args = do
     
   pure targetMainModules
 
+emitModule :: PreparedData -> Maybe String -> Module Ann -> BackendModule -> Aff Unit
+emitModule prepared mbFfiDir (Module coreFnMod) backendMod = do
+  let modNameStr = unwrap backendMod.name
+  let safeModName = String.replaceAll (Pattern ".") (Replacement "_") modNameStr
+  let importsArray = map (\i -> String.split (Pattern ".") (unwrap (importName i))) coreFnMod.imports
+
+  let goFile = translate prepared.enumAdts prepared.enumCtors prepared.pointerAdtPaths prepared.pointerAdtNodes prepared.pointerAdtLeaves prepared.adtTypes prepared.elidedCtors prepared.ctorTypes prepared.globalTypes prepared.instantiations prepared.classDeclsMap prepared.classDeclsFields importsArray backendMod
+  FS.writeTextFile UTF8 ("output/purescript/" <> safeModName <> ".go") goFile
+
+  when (Array.length (Array.fromFoldable backendMod.foreign) > 0) do
+    ffiPathMb <- liftEffect $ findFfiFile ".go" [] mbFfiDir modNameStr (Just coreFnMod.path)
+    case ffiPathMb of
+      Just ffiPath -> do
+        content <- FS.readTextFile UTF8 ffiPath
+        jsonStr <- liftEffect $ extractFfiAst modNameStr content
+        let parsed = (jsonParser jsonStr >>= (decodeJson >>> lmap printJsonDecodeError)) :: Either String (Array FfiDecl)
+        let ffiDecls = case parsed of
+                         Right d -> d
+                         Left err -> unsafePerformEffect (Console.log ("JSON Parse error for " <> modNameStr <> ": " <> err) *> pure [])
+
+        let lines = String.split (Pattern "\n") (String.replaceAll (Pattern "\r") (Replacement "") content)
+        let otherLines = Array.filter (\l -> not (String.contains (Pattern "package ") l)) lines
+        let finalPkgLine = "package purescript"
+        let hasImport = String.contains (Pattern "\"gopurs/output/gopurs_runtime\"") content
+        let importLine = if hasImport then "" else "import \"gopurs/output/gopurs_runtime\"\n"
+
+        let prefixedFfiDecls = map (\d -> d { name = safeModName <> "_" <> d.name }) ffiDecls
+        let renamedContentLines = map (\l -> Array.foldl (\acc decl ->
+                                          if decl.isVar
+                                          then String.replaceAll (Pattern ("var " <> decl.name)) (Replacement ("var " <> safeModName <> "_" <> decl.name)) acc
+                                          else String.replaceAll (Pattern ("func " <> decl.name)) (Replacement ("func " <> safeModName <> "_" <> decl.name)) acc
+                                       ) l ffiDecls) otherLines
+
+        let newContent = finalPkgLine <> "\n\n" <> importLine <> "\n" <> String.joinWith "\n" renamedContentLines <> "\n\n// --- Auto-generated FFI wrappers ---\n" <> CodeGen.generateFfiBridge safeModName backendMod.dataDecls prefixedFfiDecls (Map.toUnfoldable backendMod.foreign)
+        FS.writeTextFile UTF8 ("output/purescript/" <> safeModName <> "_ffi.go") newContent
+      Nothing -> do
+
+        let dummyContent = "package purescript\n\nimport \"gopurs/output/gopurs_runtime\"\n\n" <> CodeGen.generateFfiBridge safeModName backendMod.dataDecls [] (Map.toUnfoldable backendMod.foreign)
+        FS.writeTextFile UTF8 ("output/purescript/" <> safeModName <> "_ffi.go") dummyContent
+  writeCache cacheVersion ("output/purescript/" <> safeModName <> ".gopurs-cache.json") backendMod
+
 main :: Effect Unit
 main = launchAff_ do
   argsRaw <- liftEffect Process.argv
@@ -422,23 +462,8 @@ main = launchAff_ do
 
   let
     directives = prepared.directives
-    enumAdts = prepared.enumAdts
-    enumCtors = prepared.enumCtors
-    pointerAdtPaths = prepared.pointerAdtPaths
-    pointerAdtNodes = prepared.pointerAdtNodes
-    pointerAdtLeaves = prepared.pointerAdtLeaves
-    adtTypes = prepared.adtTypes
-    elidedCtors = prepared.elidedCtors
-    ctorTypes = prepared.ctorTypes
-    globalTypes = prepared.globalTypes
-    instantiations = prepared.instantiations
-    classDeclsMap = prepared.classDeclsMap
-    classDeclsFields = prepared.classDeclsFields
     monomorphizedModules = prepared.monomorphizedModules
     targetMainModules = prepared.targetMainModules
-
-
-
 
   buildModules
     { directives: directives
@@ -464,45 +489,8 @@ main = launchAff_ do
                 else pure res
               _, _ -> pure res
           Nothing -> pure Nothing
-    , onCodegenModule: \_ (Module coreFnMod) backendMod _ -> do
-        let modNameStr = unwrap backendMod.name
-        let safeModName = String.replaceAll (Pattern ".") (Replacement "_") modNameStr
-        let importsArray = map (\i -> String.split (Pattern ".") (unwrap (importName i))) coreFnMod.imports
-
-        let goFile = translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves adtTypes elidedCtors ctorTypes globalTypes instantiations classDeclsMap classDeclsFields importsArray backendMod
-        FS.writeTextFile UTF8 ("output/purescript/" <> safeModName <> ".go") goFile
-
-        when (Array.length (Array.fromFoldable backendMod.foreign) > 0) do
-          ffiPathMb <- liftEffect $ findFfiFile ".go" [] args.mbFfiDir modNameStr (Just coreFnMod.path)
-          case ffiPathMb of
-            Just ffiPath -> do
-              content <- FS.readTextFile UTF8 ffiPath
-              jsonStr <- liftEffect $ extractFfiAst modNameStr content
-              let parsed = (jsonParser jsonStr >>= (decodeJson >>> lmap printJsonDecodeError)) :: Either String (Array FfiDecl)
-              let ffiDecls = case parsed of
-                               Right d -> d
-                               Left err -> unsafePerformEffect (Console.log ("JSON Parse error for " <> modNameStr <> ": " <> err) *> pure [])
-
-              let lines = String.split (Pattern "\n") (String.replaceAll (Pattern "\r") (Replacement "") content)
-              let otherLines = Array.filter (\l -> not (String.contains (Pattern "package ") l)) lines
-              let finalPkgLine = "package purescript"
-              let hasImport = String.contains (Pattern "\"gopurs/output/gopurs_runtime\"") content
-              let importLine = if hasImport then "" else "import \"gopurs/output/gopurs_runtime\"\n"
-              
-              let prefixedFfiDecls = map (\d -> d { name = safeModName <> "_" <> d.name }) ffiDecls
-              let renamedContentLines = map (\l -> Array.foldl (\acc decl ->
-                                                if decl.isVar 
-                                                then String.replaceAll (Pattern ("var " <> decl.name)) (Replacement ("var " <> safeModName <> "_" <> decl.name)) acc
-                                                else String.replaceAll (Pattern ("func " <> decl.name)) (Replacement ("func " <> safeModName <> "_" <> decl.name)) acc
-                                             ) l ffiDecls) otherLines
-              
-              let newContent = finalPkgLine <> "\n\n" <> importLine <> "\n" <> String.joinWith "\n" renamedContentLines <> "\n\n// --- Auto-generated FFI wrappers ---\n" <> CodeGen.generateFfiBridge safeModName backendMod.dataDecls prefixedFfiDecls (Map.toUnfoldable backendMod.foreign)
-              FS.writeTextFile UTF8 ("output/purescript/" <> safeModName <> "_ffi.go") newContent
-            Nothing -> do
-
-              let dummyContent = "package purescript\n\nimport \"gopurs/output/gopurs_runtime\"\n\n" <> CodeGen.generateFfiBridge safeModName backendMod.dataDecls [] (Map.toUnfoldable backendMod.foreign)
-              FS.writeTextFile UTF8 ("output/purescript/" <> safeModName <> "_ffi.go") dummyContent
-        writeCache cacheVersion ("output/purescript/" <> safeModName <> ".gopurs-cache.json") backendMod
+    , onCodegenModule: \_ coreFnModule backendMod _ ->
+        emitModule prepared args.mbFfiDir coreFnModule backendMod
     }
     (List.fromFoldable monomorphizedModules)
 
@@ -521,4 +509,3 @@ main = launchAff_ do
     targetMainModules
 
   pure unit
-
