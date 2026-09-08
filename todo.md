@@ -18,7 +18,7 @@ Constats au 8 septembre 2026 : `CodeGen.purs` compte 3 546 lignes, `Main.purs` 5
 
 - [x] **1.1 — Identifier les outils réellement utilisés.** Chemins résolus, versions exécutées et révisions Git relevés le 8 septembre 2026 ; voir le relevé ci-dessous. Le shell, le build npm et altbak sélectionnent des outils différents. Aucun build ni test exécuté.
 - [x] **1.2 — Vérifier un cycle court.** Le 8 septembre 2026, `./bin/test NativeRecordSizes -c`, puis la même fixture sans `-c`, réussissent avec le `purs` TAST sur le `PATH` et `UPDATE_SNAPSHOTS=0`. Les 30 assertions passent à chaque run ; les deux snapshots restent identiques aux références. Voir le relevé ci-dessous.
-- [ ] **1.3 — Définir les contrôles par famille.** Associer types/records à `NativeRecordBoxing` et `NativeRecordSizes`, FFI à `FFIIntegerReturns`, appels à `CurriedLambdas`, tableaux à `ArrayRoundtrip`, récursion à `TCO`/`TCOMutRec`, fusion à `ThunkFusion`. Vérifier leur état initial par petits groupes. **Types/records vérifiés ; autres familles encore à exécuter.**
+- [ ] **1.3 — Définir les contrôles par famille.** Associer types/records à `NativeRecordBoxing` et `NativeRecordSizes`, FFI à `FFIIntegerReturns`, appels à `CurriedLambdas`, tableaux à `ArrayRoundtrip`, récursion à `TCO`/`TCOMutRec`, fusion à `ThunkFusion`. Vérifier leur état initial par petits groupes. **Types/records et FFI vérifiés ; appels, tableaux, récursion et fusion encore à exécuter.**
 - [ ] **1.4 — Consigner les limites initiales.** Distinguer échecs existants, exclusions et contrôles non exécutés. Conserver les sorties nécessaires aux comparaisons suivantes hors des sources de production.
 
 ### Relevé 1.1 — Outils et révisions
@@ -70,6 +70,14 @@ Le 8 septembre 2026, `./bin/test NativeRecordBoxing` réussit sans `-c`, avec le
 Le snapshot vérifié conserve le chemin ciblé : `Call_Main_consumeEntry` reçoit un record Go natif, le boxe avec `RecordDict2`, puis le transmet au consommateur opaque via `Apply`. La fixture couvre les mises à jour des champs et la conservation des versions précédentes. Avec les 30 assertions de `NativeRecordSizes` validées en 1.2, la référence types/records est établie.
 
 Snapshot, configuration et lockfile du runner, bundle et fichiers suivis inchangés après exécution. Seul le présent compte rendu est modifié. Aucune autre fixture ni exécution JavaScript lancée. Preuves conservées dans `/private/tmp/gopurs-step-1-3-boxing-3g6_jrno/` : `run.log`, `stdout.txt`, `Main.go` et `verification.json`. L'étape 1.3 reste ouverte pour les autres familles.
+
+### Relevé 1.3 — FFI
+
+Le 8 septembre 2026, `./bin/test FFIIntegerReturns` réussit sans `-c`, avec le même `PATH` qu'en 1.2 et `UPDATE_SNAPSHOTS=0`. Le bundle conserve l'empreinte vérifiée en 1.2. Les deux fichiers Go générés correspondent octet pour octet à `FFIIntegerReturns.go` et `FFIIntegerReturns_ffi.go`, puis les 27 assertions passent : sortie `Done`, bilan `1 passed, 0 failed`.
+
+La fixture couvre les retours `int64`/`int`, leurs tableaux vides et non vides, les bornes Int PureScript, les fallbacks `any` numériques/String/Boolean et un consommateur opaque lu depuis une `Ref`. Les wrappers vérifiés utilisent `Int` pour les entiers natifs et chaque élément des tableaux, et conservent `Box` pour les retours `any`.
+
+Snapshots, configuration et lockfile du runner, bundle et fichiers suivis inchangés après exécution. Seul le présent compte rendu est modifié. Aucune autre fixture ni exécution JavaScript lancée. Preuves dans `/private/tmp/gopurs-step-1-3-ffi-gn1z8kpv/` : `run.log`, `stdout.txt`, `Main.go`, `Main_ffi.go` et `verification.json`.
 
 ## 2. Retrouver un arbre de sources lisible
 
