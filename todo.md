@@ -1,6 +1,8 @@
 # Gopurs — Priorités utiles
 
-> **Benchmark : `./bin/go/run -c` dans `altbak.pub`. Ne pas utiliser `./bin/run go` sans argument : il exécute tous les backends.**
+> **Benchmark : `./bin/go/run -c` dans `altbak.pub-gopurs`. Ne pas utiliser `./bin/run go` sans argument : il exécute tous les backends.**
+
+Travailler avec les worktrees `altbak.pub-gopurs` et `purescript-backend-optimizer-gopurs`, sur leurs branches `edge-gopurs`. Gopurs reste dans ce checkout ; les checkouts habituels d'altbak.pub et PBO sont conservés. Les liens vers les mesures antérieures restent ceux de leurs dossiers d'origine.
 
 Les chiffres marqués « Prototype » viennent de prototypes Go ; les mesures du boxing après intégration dans le compilateur figurent en 2.6. Intégrer et mesurer chaque point séparément. Les régressions doivent rester dans `tests/passing`, avec leurs snapshots Go ; pas de projet de test séparé ni de script de test `.mjs`.
 
