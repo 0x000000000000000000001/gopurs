@@ -34,7 +34,8 @@ import PureScript.Backend.Optimizer.Convert (BackendModule)
 import PureScript.Backend.Optimizer.Monomorphize (collectInstantiations, InstantiationMap, collectAllTypes, monomorphize, transitiveCollect)
 import PureScript.Backend.Optimizer.Semantics.Foreign (coreForeignSemantics)
 import PureScript.Backend.Optimizer.CoreFn (Module(..), Ann, importName, Bind(..), Binding(..), ExprType(..), Ident(..))
-import Gopurs.CodeGen (translate, getStructName)
+import Gopurs.CodeGen (translate)
+import Gopurs.ConstructorMetadata (ConstructorTypes, buildConstructorTypes, collectElidedConstructors)
 import Gopurs.Runtime (runtimeGoCode)
 import PureScript.Backend.Optimizer.FfiSupport (findFfiFile)
 import Gopurs.GoAst (sanitizeName)
@@ -48,7 +49,7 @@ import PureScript.Backend.Optimizer.Semantics (InlineDirectiveMap)
 type PreparedData =
   { directives :: InlineDirectiveMap
   , elidedCtors :: Set.Set String
-  , ctorTypes :: Map.Map String { vars :: Array String, fields :: Array ExprType }
+  , ctorTypes :: ConstructorTypes
   , globalTypes :: Map.Map String ExprType
   , classDeclsMap :: Map.Map String String
   , classDeclsFields :: Map.Map String { vars :: Array String, fields :: Array { name :: String, "type" :: ExprType } }
@@ -69,32 +70,11 @@ loadAndPrepareModules args = do
   finalModules <- coreFnModulesFromOutput "output"
 
 
-  let elidedCtors = Array.foldl (\acc (Module mod) ->
-        Array.foldl (\acc' decl ->
-          if Array.length decl.constructors == 1 then
-            case Array.head decl.constructors of
-              Just ctor ->
-                if Array.length ctor.fields == 1 then
-                  let structName = getStructName (unwrap mod.name) Nothing ctor.name
-                      constrName = "Constructor_" <> String.drop 5 structName
-                  in Set.insert constrName acc'
-                else acc'
-              Nothing -> acc'
-          else acc'
-        ) acc mod.dataDecls
-      ) Set.empty (Array.fromFoldable finalModules)
+  let elidedCtors = collectElidedConstructors (Array.fromFoldable finalModules)
 
   directives <- loadDirectives
 
-  let
-    ctorTypes = foldl (\acc (Module m) ->
-      let modStr = String.replaceAll (Pattern ".") (Replacement "_") (unwrap m.name)
-      in foldl (\acc' decl ->
-        foldl (\acc'' ctor ->
-          Map.insert (modStr <> "." <> ctor.name) { vars: decl.vars, fields: ctor.fields } acc''
-        ) acc' decl.constructors
-      ) acc m.dataDecls
-    ) Map.empty finalModules
+  let ctorTypes = buildConstructorTypes (Array.fromFoldable finalModules)
 
   let globalTypes = buildGlobalTypes (Array.fromFoldable finalModules)
   let
