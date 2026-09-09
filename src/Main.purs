@@ -31,15 +31,16 @@ import Data.String as String
 import Data.Newtype (unwrap)
 import PureScript.Backend.Optimizer.Builder (buildModules)
 import PureScript.Backend.Optimizer.Convert (BackendModule)
-import PureScript.Backend.Optimizer.Monomorphize (collectInstantiations, InstantiationMap, collectAllTypes, monomorphize, transitiveCollect, getExprAnn)
+import PureScript.Backend.Optimizer.Monomorphize (collectInstantiations, InstantiationMap, collectAllTypes, monomorphize, transitiveCollect)
 import PureScript.Backend.Optimizer.Semantics.Foreign (coreForeignSemantics)
-import PureScript.Backend.Optimizer.CoreFn (Module(..), Ann(..), importName, Bind(..), Binding(..), ExprType(..), Expr(..), Ident(..))
+import PureScript.Backend.Optimizer.CoreFn (Module(..), Ann, importName, Bind(..), Binding(..), ExprType(..), Ident(..))
 import Gopurs.CodeGen (translate, getStructName)
 import Gopurs.Runtime (runtimeGoCode)
 import PureScript.Backend.Optimizer.FfiSupport (findFfiFile)
 import Gopurs.GoAst (sanitizeName)
 import Gopurs.FfiSupport (extractFfiAst)
 import Gopurs.FfiTypes (FfiDecl)
+import Gopurs.GlobalTypes (buildGlobalTypes)
 import PureScript.Backend.Optimizer.App (coreFnModulesFromOutput, parseCLIArgs, writeCache, loadDirectives)
 import Data.Argonaut.Decode (decodeJson)
 import PureScript.Backend.Optimizer.Semantics (InlineDirectiveMap)
@@ -239,42 +240,6 @@ loadAndPrepareModules args = do
        , enumCtors
        , targetMainModules
        }
-
-buildGlobalTypes :: Array (Module Ann) -> Map.Map String ExprType
-buildGlobalTypes modules = Array.foldl (\acc (Module m) ->
-  let modName = unwrap m.name
-      processBind acc' (NonRec (Binding (Ann ann) (Ident name) expr)) =
-        let ty = case ann.type of
-                   Just t -> Just t
-                   Nothing -> case let (Ann exprAnn) = getExprAnn expr in exprAnn.type of
-                                Just t -> Just t
-                                Nothing -> inferExprType expr
-        in case ty of
-            Just t -> Map.insert (modName <> "." <> name) t acc'
-            Nothing -> acc'
-      processBind acc' (Rec bindings) = Array.foldl (\a b -> processBind a (NonRec b)) acc' bindings
-      withDecls = Array.foldl processBind acc m.decls
-  in foldl (\acc' (Tuple (Ident name) mbTy) -> 
-        case mbTy of
-          Just ty -> Map.insert (modName <> "." <> name) ty acc'
-          Nothing -> acc'
-      ) withDecls (Map.toUnfoldable m.foreign :: Array (Tuple Ident (Maybe ExprType)))
-  ) Map.empty modules
-
-inferExprType :: Expr Ann -> Maybe ExprType
-inferExprType (ExprApp _ fn _) = case getExprAnn fn of
-  Ann { type: Just ty } -> getReturnType ty
-  _ -> case inferExprType fn of
-         Just ty -> getReturnType ty
-         Nothing -> Nothing
-inferExprType (ExprTypeApp _ fn _) = inferExprType fn
-inferExprType _ = Nothing
-
-getReturnType :: ExprType -> Maybe ExprType
-getReturnType (ForAll _ t) = getReturnType t
-getReturnType (ConstrainedType _ t) = getReturnType t
-getReturnType (Func _ ret) = Just ret
-getReturnType _ = Nothing
 
 hasTypeVariables :: ExprType -> Boolean
 hasTypeVariables (TypeVar v) = String.take 1 v == String.toLower (String.take 1 v) && v /= "gopurs_runtime.Value"
