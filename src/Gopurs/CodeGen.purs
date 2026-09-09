@@ -39,6 +39,7 @@ import PureScript.Backend.Optimizer.FreeVars (freeVars, localId)
 import PureScript.Backend.Optimizer.FfiSupport (hashString)
 import Gopurs.FfiTypes (TypeNode(..), FfiDecl)
 import Gopurs.ThunkFusion (optimizeThunkProducers)
+import Gopurs.GoTypes as GoTypes
 
 type CodegenMetadataRow :: Row Type
 type CodegenMetadataRow =
@@ -59,6 +60,7 @@ type CodegenState =
   { decls :: Array GoDecl
   , rawDecls :: Array String
   , globalId :: Int
+  , reboxPairs :: Set.Set (Tuple GoType GoType)
   | CodegenMetadataRow
   }
 
@@ -157,9 +159,9 @@ getUnboxedADT (ADT fullName _ _) = do
 getUnboxedADT (TypeApp f a) = getUnboxedADT f
 getUnboxedADT _ = Nothing
 
-coerceGoExpr :: String -> GoExpr -> GoType -> GoType -> GoExpr
-coerceGoExpr modNameStr expr from to | from == to = expr
-coerceGoExpr modNameStr ctor@(GoConstructor _ structName _ args) _ (TypeStructValue adtName fields) =
+coerceGoExpr :: Ref CodegenState -> String -> GoExpr -> GoType -> GoType -> GoExpr
+coerceGoExpr _ modNameStr expr from to | from == to = expr
+coerceGoExpr _ modNameStr ctor@(GoConstructor _ structName _ args) _ (TypeStructValue adtName fields) =
   let
     parts = String.split (Pattern "_") structName
     ctorName = fromMaybe "" (Array.last parts)
@@ -167,69 +169,69 @@ coerceGoExpr modNameStr ctor@(GoConstructor _ structName _ args) _ (TypeStructVa
     case Map.lookup adtName unboxableADTs of
       Just adt -> GoStructValue adtName fields (adt.mapConstructor ctorName args)
       Nothing -> ctor -- fallback
-coerceGoExpr modNameStr expr srcT@(TypeStructPointer b1 f1 s1 a1) destT@(TypeStructPointer b2 f2 s2 a2) | b1 == b2 && s1 == s2 && a1 == a2 = expr
+coerceGoExpr _ modNameStr expr srcT@(TypeStructPointer b1 f1 s1 a1) destT@(TypeStructPointer b2 f2 s2 a2) | b1 == b2 && s1 == s2 && a1 == a2 = expr
 
-coerceGoExpr modNameStr expr srcT@(TypeStructPointer b1 f1 s1 a1) destT@(TypeStructPointer b2 f2 s2 a2) | b1 == b2 =
+coerceGoExpr codegenStateRef modNameStr expr srcT@(TypeStructPointer b1 f1 s1 a1) destT@(TypeStructPointer b2 f2 s2 a2) | b1 == b2 =
   let
-    _register = unsafePerformEffect (registerReboxPair modNameStr srcT destT)
+    _register = unsafePerformEffect (registerReboxPair codegenStateRef srcT destT)
   in
     GoCall (GoVar ("Rebox_" <> modNameStr <> "_" <> hashString s1 <> "_" <> hashString s2)) [ expr ]
 
-coerceGoExpr modNameStr expr srcT@(TypeStructPointer b1 f1 s1 a1) destT@(TypeStructPointer b2 f2 s2 a2) = Debug.trace ("MISMATCH B1 B2: " <> b1 <> " vs " <> b2 <> " from " <> goTypeToStr srcT <> " to " <> goTypeToStr destT) \_ ->
-  unboxGoExpr modNameStr (boxGoExpr modNameStr expr srcT) TypeValue destT
+coerceGoExpr codegenStateRef modNameStr expr srcT@(TypeStructPointer b1 f1 s1 a1) destT@(TypeStructPointer b2 f2 s2 a2) = Debug.trace ("MISMATCH B1 B2: " <> b1 <> " vs " <> b2 <> " from " <> goTypeToStr srcT <> " to " <> goTypeToStr destT) \_ ->
+  unboxGoExpr codegenStateRef modNameStr (boxGoExpr codegenStateRef modNameStr expr srcT) TypeValue destT
 
-coerceGoExpr modNameStr expr srcT@(TypeStructPointer b1 f1 s1 a1) destT@(TypeStructPointer b2 f2 s2 a2) | b1 == b2 =
+coerceGoExpr codegenStateRef modNameStr expr srcT@(TypeStructPointer b1 f1 s1 a1) destT@(TypeStructPointer b2 f2 s2 a2) | b1 == b2 =
   let
-    _register = unsafePerformEffect (registerReboxPair modNameStr srcT destT)
+    _register = unsafePerformEffect (registerReboxPair codegenStateRef srcT destT)
   in
     GoCall (GoVar ("Rebox_" <> modNameStr <> "_" <> hashString s1 <> "_" <> hashString s2)) [ expr ]
 
-coerceGoExpr modNameStr expr srcT@(TypeStructPointer b f s a) TypeValue | Array.any (_ /= TypeValue) a =
+coerceGoExpr codegenStateRef modNameStr expr srcT@(TypeStructPointer b f s a) TypeValue | Array.any (_ /= TypeValue) a =
   let
     basePath = case String.indexOf (Pattern "[") s of
       Just i -> String.take i s
       Nothing -> s
     destT = TypeStructPointer b f (basePath <> if Array.length a > 0 then "[" <> String.joinWith ", " (map (const "gopurs_runtime.Value") a) <> "]" else "") (map (const TypeValue) a)
   in
-    boxGoExpr modNameStr (coerceGoExpr modNameStr expr srcT destT) destT
+    boxGoExpr codegenStateRef modNameStr (coerceGoExpr codegenStateRef modNameStr expr srcT destT) destT
 
-coerceGoExpr modNameStr expr TypeValue destT@(TypeStructPointer b f s a) | Array.any (_ /= TypeValue) a =
+coerceGoExpr codegenStateRef modNameStr expr TypeValue destT@(TypeStructPointer b f s a) | Array.any (_ /= TypeValue) a =
   let
     basePath = case String.indexOf (Pattern "[") s of
       Just i -> String.take i s
       Nothing -> s
     srcT = TypeStructPointer b f (basePath <> if Array.length a > 0 then "[" <> String.joinWith ", " (map (const "gopurs_runtime.Value") a) <> "]" else "") (map (const TypeValue) a)
   in
-    coerceGoExpr modNameStr (unboxGoExpr modNameStr expr TypeValue srcT) srcT destT
+    coerceGoExpr codegenStateRef modNameStr (unboxGoExpr codegenStateRef modNameStr expr TypeValue srcT) srcT destT
 
-coerceGoExpr modNameStr expr srcT@(TypeStructValue "Data.Maybe.Maybe" _) destT@(TypeStructPointer _ "Data.Maybe.Maybe" _ _) =
+coerceGoExpr codegenStateRef modNameStr expr srcT@(TypeStructValue "Data.Maybe.Maybe" _) destT@(TypeStructPointer _ "Data.Maybe.Maybe" _ _) =
   -- The boxed payload is Value; reuse the typed-pointer conversion to rebox it.
-  coerceGoExpr modNameStr (boxGoExpr modNameStr expr srcT) TypeValue destT
+  coerceGoExpr codegenStateRef modNameStr (boxGoExpr codegenStateRef modNameStr expr srcT) TypeValue destT
 
-coerceGoExpr modNameStr expr from TypeValue = boxGoExpr modNameStr expr from
-coerceGoExpr modNameStr expr TypeValue to = unboxGoExpr modNameStr expr TypeValue to
-coerceGoExpr modNameStr expr from to = unboxGoExpr modNameStr (boxGoExpr modNameStr expr from) TypeValue to
+coerceGoExpr codegenStateRef modNameStr expr from TypeValue = boxGoExpr codegenStateRef modNameStr expr from
+coerceGoExpr codegenStateRef modNameStr expr TypeValue to = unboxGoExpr codegenStateRef modNameStr expr TypeValue to
+coerceGoExpr codegenStateRef modNameStr expr from to = unboxGoExpr codegenStateRef modNameStr (boxGoExpr codegenStateRef modNameStr expr from) TypeValue to
 
-boxGoExpr :: String -> GoExpr -> GoType -> GoExpr
-boxGoExpr modNameStr expr srcT@(TypeStructPointer baseStructName fullName fullPath typeArgs) =
+boxGoExpr :: Ref CodegenState -> String -> GoExpr -> GoType -> GoExpr
+boxGoExpr codegenStateRef modNameStr expr srcT@(TypeStructPointer baseStructName fullName fullPath typeArgs) =
   if Array.any (\t -> t /= TypeValue) typeArgs then
-    coerceGoExpr modNameStr expr srcT TypeValue
+    coerceGoExpr codegenStateRef modNameStr expr srcT TypeValue
   else
-    boxGoExprImpl modNameStr expr srcT
-boxGoExpr modNameStr expr t = boxGoExprImpl modNameStr expr t
+    boxGoExprImpl codegenStateRef modNameStr expr srcT
+boxGoExpr codegenStateRef modNameStr expr t = boxGoExprImpl codegenStateRef modNameStr expr t
 
-boxGoExprImpl :: String -> GoExpr -> GoType -> GoExpr
-boxGoExprImpl modNameStr expr TypeValue = expr
-boxGoExprImpl modNameStr expr TypeInt64 = GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ expr ]
-boxGoExprImpl modNameStr expr TypeFloat64 = GoCall (GoSelector (GoVar "gopurs_runtime") "Float") [ expr ]
-boxGoExprImpl modNameStr expr TypeString = GoCall (GoSelector (GoVar "gopurs_runtime") "Str") [ expr ]
-boxGoExprImpl modNameStr expr TypeBool = GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ expr ]
-boxGoExprImpl modNameStr expr (TypeStructPointer baseStructName _ _ _) = GoRaw ("gopurs_runtime.Value{Type: 9, IntVal: " <> hashString baseStructName <> ", UnsafePtr: unsafe.Pointer(" <> printGoExpr expr <> ")}")
-boxGoExprImpl modNameStr expr (TypeRecord fields) =
+boxGoExprImpl :: Ref CodegenState -> String -> GoExpr -> GoType -> GoExpr
+boxGoExprImpl _ modNameStr expr TypeValue = expr
+boxGoExprImpl _ modNameStr expr TypeInt64 = GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ expr ]
+boxGoExprImpl _ modNameStr expr TypeFloat64 = GoCall (GoSelector (GoVar "gopurs_runtime") "Float") [ expr ]
+boxGoExprImpl _ modNameStr expr TypeString = GoCall (GoSelector (GoVar "gopurs_runtime") "Str") [ expr ]
+boxGoExprImpl _ modNameStr expr TypeBool = GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ expr ]
+boxGoExprImpl _ modNameStr expr (TypeStructPointer baseStructName _ _ _) = GoRaw ("gopurs_runtime.Value{Type: 9, IntVal: " <> hashString baseStructName <> ", UnsafePtr: unsafe.Pointer(" <> printGoExpr expr <> ")}")
+boxGoExprImpl codegenStateRef modNameStr expr (TypeRecord fields) =
   let
     keys = map (\(Tuple k _) -> k) fields
     keysStr = String.joinWith ", " (map (\k -> "\"" <> k <> "\"") keys)
-    valsStr = String.joinWith ", " (map (\(Tuple k v) -> printGoExpr (boxGoExpr modNameStr (GoStructAccess (GoVar "orig") (sanitizeName k)) v)) fields)
+    valsStr = String.joinWith ", " (map (\(Tuple k v) -> printGoExpr (boxGoExpr codegenStateRef modNameStr (GoStructAccess (GoVar "orig") (sanitizeName k)) v)) fields)
     boxedRecord =
       case Array.length fields of
         0 -> "gopurs_runtime.RecordDict0()"
@@ -239,139 +241,35 @@ boxGoExprImpl modNameStr expr (TypeRecord fields) =
           "gopurs_runtime.RecordDict([]string{" <> keysStr <> "}, []gopurs_runtime.Value{" <> valsStr <> "})"
   in
     GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\torig := " <> printGoExpr expr <> "\n\t\t\t\t_ = orig\n\t\t\t\treturn " <> boxedRecord <> "\n\t\t\t\t}()")
-boxGoExprImpl modNameStr expr (TypeInterface _) = expr
-boxGoExprImpl modNameStr expr (TypeNativeArray TypeValue) = GoCall (GoSelector (GoVar "gopurs_runtime") "Array") [ expr ]
-boxGoExprImpl _ expr (TypeNativeArray TypeInt64) = GoBoxIntArray expr
-boxGoExprImpl modNameStr expr (TypeNativeArray inner) = GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\t\tarr := " <> printGoExpr expr <> "\n\t\t\t\t\tboxed := make([]gopurs_runtime.Value, len(arr))\n\t\t\t\t\tfor i, v := range arr { boxed[i] = " <> printGoExpr (boxGoExpr modNameStr (GoVar "v") inner) <> " }\n\t\t\t\t\treturn gopurs_runtime.Array(boxed)\n\t\t\t\t}()")
-boxGoExprImpl modNameStr expr TypeUint32 = GoRaw ("gopurs_runtime.Value{Type: 9, IntVal: int64(" <> printGoExpr expr <> "), UnsafePtr: nil}")
-boxGoExprImpl modNameStr expr (TypeGenericParam _) = expr
-boxGoExprImpl modNameStr expr (TypeFunc _ _) = expr
-boxGoExprImpl modNameStr expr (TypeStructValue adtName fields) =
+boxGoExprImpl _ modNameStr expr (TypeInterface _) = expr
+boxGoExprImpl _ modNameStr expr (TypeNativeArray TypeValue) = GoCall (GoSelector (GoVar "gopurs_runtime") "Array") [ expr ]
+boxGoExprImpl _ _ expr (TypeNativeArray TypeInt64) = GoBoxIntArray expr
+boxGoExprImpl codegenStateRef modNameStr expr (TypeNativeArray inner) = GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\t\tarr := " <> printGoExpr expr <> "\n\t\t\t\t\tboxed := make([]gopurs_runtime.Value, len(arr))\n\t\t\t\t\tfor i, v := range arr { boxed[i] = " <> printGoExpr (boxGoExpr codegenStateRef modNameStr (GoVar "v") inner) <> " }\n\t\t\t\t\treturn gopurs_runtime.Array(boxed)\n\t\t\t\t}()")
+boxGoExprImpl _ modNameStr expr TypeUint32 = GoRaw ("gopurs_runtime.Value{Type: 9, IntVal: int64(" <> printGoExpr expr <> "), UnsafePtr: nil}")
+boxGoExprImpl _ modNameStr expr (TypeGenericParam _) = expr
+boxGoExprImpl _ modNameStr expr (TypeFunc _ _) = expr
+boxGoExprImpl _ modNameStr expr (TypeStructValue adtName fields) =
   case Map.lookup adtName unboxableADTs of
     Just adt -> adt.boxExpr expr
     Nothing -> GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\t_ = " <> printGoExpr expr <> "\n\t\t\t\tpanic(\"boxTypeStructValue not implemented yet for " <> adtName <> "\")\n\t\t\t}()")
 
 isClosedRowTail :: Maybe ExprType -> Boolean
-isClosedRowTail Nothing = true
-isClosedRowTail (Just Any) = true
-isClosedRowTail _ = false
+isClosedRowTail = GoTypes.isClosedRowTail
 
 exprTypeToGoType :: Map.Map String { ctorName :: String, arity :: Int } -> Set.Set String -> Set.Set String -> String -> ExprType -> GoType
-exprTypeToGoType _ _ _ _ Int = TypeInt64
-exprTypeToGoType _ _ _ _ Number = TypeFloat64
-exprTypeToGoType _ _ _ _ String = TypeString
-exprTypeToGoType _ _ _ _ Char = TypeString
-exprTypeToGoType _ _ _ _ Boolean = TypeBool
-exprTypeToGoType ptrPaths enumAdts elided modNameStr (Array ty) = TypeNativeArray (exprTypeToGoType ptrPaths enumAdts elided modNameStr ty)
-exprTypeToGoType ptrPaths enumAdts elided modNameStr (Record (Row fields tail)) | isClosedRowTail tail = TypeRecord (map (\(Tuple k v) -> Tuple k (exprTypeToGoType ptrPaths enumAdts elided modNameStr v)) (Array.sortBy (comparing \(Tuple k _) -> k) fields))
-exprTypeToGoType ptrPaths enumAdts elided modNameStr (Record _) = TypeValue
-exprTypeToGoType ptrPaths enumAdts elided modNameStr (ADT fullName path args) =
-  let
-    ctorName = fromMaybe "" (Array.last path)
-    pkgNameStr = String.replaceAll (Pattern ".") (Replacement "_") (String.joinWith "." (Array.slice 0 (Array.length path - 1) path))
-    monoStructName = "Constructor_" <> pkgNameStr <> "_" <> sanitizeName ctorName
-  in
-    if Set.member monoStructName elided then TypeValue
-    else if Set.member fullName enumAdts then TypeUint32
-    else
-      case
-        ( case Map.lookup fullName ptrPaths of
-            Just i -> Just i
-            Nothing -> Map.lookup (fullName <> "$Dict") ptrPaths
-        )
-        of
-        Just info ->
-          let
-            baseStructName = "Data_" <> pkgNameStr <> "_" <> sanitizeName info.ctorName
-            monoStructName' = "Constructor_" <> pkgNameStr <> "_" <> sanitizeName info.ctorName
-            typeArgsMapped = map (exprTypeToGoType ptrPaths enumAdts elided modNameStr) args
-            typeArgsMappedTruncated = Array.take info.arity typeArgsMapped
-            paddedTypeArgs = typeArgsMappedTruncated <> Array.replicate (info.arity - Array.length typeArgsMappedTruncated) TypeValue
-            typeArgsStr = if Array.length paddedTypeArgs > 0 then "[" <> String.joinWith ", " (map goTypeToStr paddedTypeArgs) <> "]" else ""
-          in
-            TypeStructPointer baseStructName fullName (monoStructName' <> typeArgsStr) paddedTypeArgs
-        Nothing -> TypeValue
-exprTypeToGoType ptrPaths enumAdts elided modNameStr (TypeApp fn arg) =
-  let
-    unwrapTypeApp :: ExprType -> Array ExprType -> Tuple ExprType (Array ExprType)
-    unwrapTypeApp (TypeApp f a) acc = unwrapTypeApp f (a <> acc)
-    unwrapTypeApp other acc = Tuple other acc
-  in
-    case unwrapTypeApp (TypeApp fn arg) [] of
-      Tuple (ADT fullName path args) allArgs -> exprTypeToGoType ptrPaths enumAdts elided modNameStr (ADT fullName path (args <> allArgs))
-      _ -> TypeValue
-exprTypeToGoType _ _ _ _ (TypeVar v) = TypeValue
-exprTypeToGoType _ _ _ _ _ = TypeValue
+exprTypeToGoType = GoTypes.exprTypeToGoType
 
 exprTypeToGenericGoType :: Map.Map String { ctorName :: String, arity :: Int } -> Set.Set String -> Set.Set String -> Array String -> String -> ExprType -> GoType
-exprTypeToGenericGoType ptrPaths enumAdts elidedCtors typeVars modNameStr (Record (Row fields tail)) | isClosedRowTail tail = TypeRecord (map (\(Tuple k v) -> Tuple k (exprTypeToGenericGoType ptrPaths enumAdts elidedCtors typeVars modNameStr v)) (Array.sortBy (comparing \(Tuple k _) -> k) fields))
-exprTypeToGenericGoType _ _ _ _ _ (Record _) = TypeValue
-exprTypeToGenericGoType ptrPaths enumAdts elidedCtors typeVars modNameStr (TypeApp fn arg) =
-  let
-    unwrapTypeApp :: ExprType -> Array ExprType -> Tuple ExprType (Array ExprType)
-    unwrapTypeApp (TypeApp f a) acc = unwrapTypeApp f (a <> acc)
-    unwrapTypeApp other acc = Tuple other acc
-  in
-    case unwrapTypeApp (TypeApp fn arg) [] of
-      Tuple (ADT fullName path args) allArgs -> exprTypeToGenericGoType ptrPaths enumAdts elidedCtors typeVars modNameStr (ADT fullName path (args <> allArgs))
-      _ -> TypeValue
-exprTypeToGenericGoType _ _ _ typeVars _ (TypeVar v) | Array.elem v typeVars = TypeGenericParam v
-exprTypeToGenericGoType ptrPaths enumAdts elided typeVars modNameStr (ADT fullName path args) =
-  if Set.member fullName enumAdts then TypeUint32
-  else
-    case
-      ( case Map.lookup fullName ptrPaths of
-          Just i -> Just i
-          Nothing -> Map.lookup (fullName <> "$Dict") ptrPaths
-      )
-      of
-        Just info ->
-          let
-            pkgNameStr = String.replaceAll (Pattern ".") (Replacement "_") (String.joinWith "." (Array.slice 0 (Array.length path - 1) path))
-            monoStructName = "Constructor_" <> pkgNameStr <> "_" <> sanitizeName info.ctorName
-            baseStructName = "Data_" <> pkgNameStr <> "_" <> sanitizeName info.ctorName
-          in
-          if Set.member monoStructName elided then TypeValue
-          else if info.arity == 0 then TypeStructPointer baseStructName fullName monoStructName []
-          else
-            let
-              finalArgs =
-                if Array.length args == info.arity then
-                  map (exprTypeToGenericGoType ptrPaths enumAdts elided typeVars modNameStr) args
-                else if Array.length typeVars == info.arity then
-                  map TypeGenericParam typeVars
-                else
-                  Array.replicate info.arity TypeValue
-              typeArgsStr = if Array.length finalArgs > 0 then "[" <> String.joinWith ", " (map goTypeToStr finalArgs) <> "]" else ""
-            in
-              TypeStructPointer baseStructName fullName (monoStructName <> typeArgsStr) finalArgs
-        Nothing -> TypeValue
-exprTypeToGenericGoType ptrPaths enumAdts elidedCtors _ modNameStr ty = exprTypeToGoType ptrPaths enumAdts elidedCtors modNameStr ty
+exprTypeToGenericGoType = GoTypes.exprTypeToGenericGoType
 
 structFieldGoType :: Map.Map String { ctorName :: String, arity :: Int } -> Set.Set String -> Set.Set String -> Array String -> String -> ExprType -> GoType
-structFieldGoType ptrPaths enumAdts elidedCtors typeVars modStr ty =
-  case exprTypeToGenericGoType ptrPaths enumAdts elidedCtors typeVars modStr ty of
-    TypeInterface _ -> TypeValue
-    other -> other
+structFieldGoType = GoTypes.structFieldGoType
 
 instantiateGenericGoType :: Map.Map String GoType -> GoType -> GoType
-instantiateGenericGoType env (TypeGenericParam v) = fromMaybe TypeValue (Map.lookup v env)
-instantiateGenericGoType env (TypeRecord fields) = TypeRecord (map (\(Tuple k v) -> Tuple k (instantiateGenericGoType env v)) fields)
-instantiateGenericGoType env (TypeNativeArray ty) = TypeNativeArray (instantiateGenericGoType env ty)
-instantiateGenericGoType env (TypeStructPointer base key full typeArgs) =
-  let
-    newTypeArgs = map (instantiateGenericGoType env) typeArgs
-    typeArgsStr = if Array.length newTypeArgs > 0 then "[" <> String.joinWith ", " (map goTypeToStr newTypeArgs) <> "]" else ""
-    monoStructName = case String.indexOf (Pattern "[") full of
-      Just i -> String.take i full
-      Nothing -> full
-  in
-    TypeStructPointer base key (monoStructName <> typeArgsStr) newTypeArgs
-instantiateGenericGoType env (TypeFunc args ret) = TypeFunc (map (instantiateGenericGoType env) args) (instantiateGenericGoType env ret)
-instantiateGenericGoType env t = t
+instantiateGenericGoType = GoTypes.instantiateGenericGoType
 
-unboxGoExpr :: String -> GoExpr -> GoType -> GoType -> GoExpr
-unboxGoExpr modNameStr expr currentType desiredType =
+unboxGoExpr :: Ref CodegenState -> String -> GoExpr -> GoType -> GoType -> GoExpr
+unboxGoExpr codegenStateRef modNameStr expr currentType desiredType =
   if currentType == desiredType then expr
   else if goTypeToStr currentType == goTypeToStr desiredType && String.contains (Pattern "Constructor_Test_RBTree_T") (goTypeToStr currentType) then
     let
@@ -383,14 +281,14 @@ unboxGoExpr modNameStr expr currentType desiredType =
         _ -> "none"
     in
       Debug.trace ("MISMATCH AGAIN: " <> cArgs <> " vs " <> dArgs <> ". Structurally equal arrays? " <> show (currentType == desiredType)) \_ ->
-        unboxGoExpr modNameStr (boxGoExpr modNameStr expr currentType) TypeValue desiredType
+        unboxGoExpr codegenStateRef modNameStr (boxGoExpr codegenStateRef modNameStr expr currentType) TypeValue desiredType
   else if currentType /= TypeValue then
-    unboxGoExpr modNameStr (boxGoExpr modNameStr expr currentType) TypeValue desiredType
+    unboxGoExpr codegenStateRef modNameStr (boxGoExpr codegenStateRef modNameStr expr currentType) TypeValue desiredType
   else case desiredType of
-    TypeValue -> boxGoExpr modNameStr expr currentType
+    TypeValue -> boxGoExpr codegenStateRef modNameStr expr currentType
     (TypeRecord fields) ->
       let
-        assignments = String.joinWith "\n" (map (\(Tuple k v) -> "\t\t\t\t\tclone." <> sanitizeName k <> " = " <> printGoExpr (unboxGoExpr modNameStr (GoCall (GoSelector (GoVar "gopurs_runtime") "RecordGet") [ GoVar "orig", GoString k ]) TypeValue v)) fields)
+        assignments = String.joinWith "\n" (map (\(Tuple k v) -> "\t\t\t\t\tclone." <> sanitizeName k <> " = " <> printGoExpr (unboxGoExpr codegenStateRef modNameStr (GoCall (GoSelector (GoVar "gopurs_runtime") "RecordGet") [ GoVar "orig", GoString k ]) TypeValue v)) fields)
       in
         GoRaw ("func() " <> goTypeToStr desiredType <> " {\n\t\t\t\t\torig := " <> printGoExpr expr <> "\n\t\t\t\t\t_ = orig\n\t\t\t\t\tclone := " <> goTypeToStr desiredType <> "{}\n" <> assignments <> "\n\t\t\t\t\treturn clone\n\t\t\t\t}()")
     TypeInt64 -> GoSelector expr "IntVal"
@@ -403,9 +301,9 @@ unboxGoExpr modNameStr expr currentType desiredType =
     (TypeNativeArray TypeInt64) -> GoUnboxIntArray expr
     (TypeNativeArray inner) -> case currentType of
       TypeNativeArray currentInner ->
-        GoRaw ("func() " <> goTypeToStr desiredType <> " {\n\t\t\t\t\tarr := " <> printGoExpr expr <> "\n\t\t\t\t\tunboxed := make(" <> goTypeToStr desiredType <> ", len(arr))\n\t\t\t\t\tfor i, v := range arr { unboxed[i] = " <> printGoExpr (unboxGoExpr modNameStr (GoVar "v") currentInner inner) <> " }\n\t\t\t\t\treturn unboxed\n\t\t\t\t}()")
+        GoRaw ("func() " <> goTypeToStr desiredType <> " {\n\t\t\t\t\tarr := " <> printGoExpr expr <> "\n\t\t\t\t\tunboxed := make(" <> goTypeToStr desiredType <> ", len(arr))\n\t\t\t\t\tfor i, v := range arr { unboxed[i] = " <> printGoExpr (unboxGoExpr codegenStateRef modNameStr (GoVar "v") currentInner inner) <> " }\n\t\t\t\t\treturn unboxed\n\t\t\t\t}()")
       _ ->
-        GoRaw ("func() " <> goTypeToStr desiredType <> " {\n\t\t\t\t\tarr := *(*[]gopurs_runtime.Value)(" <> printGoExpr expr <> ".UnsafePtr)\n\t\t\t\t\tunboxed := make(" <> goTypeToStr desiredType <> ", len(arr))\n\t\t\t\t\tfor i, v := range arr { unboxed[i] = " <> printGoExpr (unboxGoExpr modNameStr (GoVar "v") TypeValue inner) <> " }\n\t\t\t\t\treturn unboxed\n\t\t\t\t}()")
+        GoRaw ("func() " <> goTypeToStr desiredType <> " {\n\t\t\t\t\tarr := *(*[]gopurs_runtime.Value)(" <> printGoExpr expr <> ".UnsafePtr)\n\t\t\t\t\tunboxed := make(" <> goTypeToStr desiredType <> ", len(arr))\n\t\t\t\t\tfor i, v := range arr { unboxed[i] = " <> printGoExpr (unboxGoExpr codegenStateRef modNameStr (GoVar "v") TypeValue inner) <> " }\n\t\t\t\t\treturn unboxed\n\t\t\t\t}()")
     (TypeGenericParam _) -> expr
     (TypeFunc _ _) -> expr
     (TypeStructValue adtName fields) ->
@@ -570,20 +468,17 @@ getStructName :: String -> Maybe ModuleName -> String -> String
 getStructName modNameStr mbMod ctorName =
   getBaseStructName modNameStr mbMod ctorName
 
-globalReboxPairs :: Ref.Ref (Map.Map String (Set.Set (Tuple GoType GoType)))
-globalReboxPairs = unsafePerformEffect (Ref.new Map.empty)
-
 type ReboxFields =
   { vars :: Array String
   , fields :: Array ExprType
   }
 
-registerReboxPair :: String -> GoType -> GoType -> Effect Unit
-registerReboxPair modNameStr srcT destT = do
-  pairsMap <- Ref.read globalReboxPairs
-  let pairs = fromMaybe Set.empty (Map.lookup modNameStr pairsMap)
+registerReboxPair :: Ref CodegenState -> GoType -> GoType -> Effect Unit
+registerReboxPair codegenStateRef srcT destT = do
+  state <- Ref.read codegenStateRef
+  let pairs = state.reboxPairs
   if Set.member (Tuple srcT destT) pairs then pure unit
-  else Ref.modify_ (\m -> Map.insert modNameStr (Set.insert (Tuple srcT destT) pairs) m) globalReboxPairs
+  else Ref.modify_ (\s -> s { reboxPairs = Set.insert (Tuple srcT destT) pairs }) codegenStateRef
 
 findReboxFields :: CodegenState -> String -> Maybe ReboxFields
 findReboxFields helpers baseStructName =
@@ -618,8 +513,8 @@ findReboxFields helpers baseStructName =
           in
             Nothing
 
-renderReboxFunction :: CodegenState -> String -> Map String String -> Tuple GoType GoType -> Maybe (Tuple String String)
-renderReboxFunction helpers modNameStr generatedFuncs (Tuple srcT destT) =
+renderReboxFunction :: Ref CodegenState -> CodegenState -> String -> Map String String -> Tuple GoType GoType -> Maybe (Tuple String String)
+renderReboxFunction codegenStateRef helpers modNameStr generatedFuncs (Tuple srcT destT) =
   case srcT, destT of
     TypeStructPointer b1 _ s1 a1, TypeStructPointer b2 _ s2 a2 | b1 == b2 ->
       let
@@ -638,7 +533,7 @@ renderReboxFunction helpers modNameStr generatedFuncs (Tuple srcT destT) =
                     t1 = instantiateGenericGoType env1 genericTy
                     t2 = instantiateGenericGoType env2 genericTy
                   in
-                    "\t\tout.V" <> show i <> " = " <> printGoExpr (coerceGoExpr modNameStr (GoStructAccess (GoVar "in") ("V" <> show i)) t1 t2)
+                    "\t\tout.V" <> show i <> " = " <> printGoExpr (coerceGoExpr codegenStateRef modNameStr (GoStructAccess (GoVar "in") ("V" <> show i)) t1 t2)
                 )
                 info.fields)
               funcBody = "func " <> funcName <> "(in *" <> s1 <> ") *" <> s2 <> " {\n\tif in == nil { return nil }\n\tout := &" <> s2 <> "{}\n" <> assignments <> "\n\treturn out\n}"
@@ -647,16 +542,16 @@ renderReboxFunction helpers modNameStr generatedFuncs (Tuple srcT destT) =
           Nothing -> Nothing
     _, _ -> Nothing
 
-generateReboxFunctions :: CodegenState -> String -> Effect (Array String)
-generateReboxFunctions helpers modNameStr = loop Map.empty
+generateReboxFunctions :: Ref CodegenState -> String -> Effect (Array String)
+generateReboxFunctions codegenStateRef modNameStr = loop Map.empty
   where
   -- Rendering fields can register more conversions; collect until none remain.
   loop generatedFuncs = do
-    pairsMap <- Ref.read globalReboxPairs
+    helpers <- Ref.read codegenStateRef
     let
-      reboxPairs = fromMaybe Set.empty (Map.lookup modNameStr pairsMap)
+      reboxPairs = helpers.reboxPairs
       newFuncs = Map.fromFoldable $
-        Array.mapMaybe (renderReboxFunction helpers modNameStr generatedFuncs) (Array.fromFoldable reboxPairs)
+        Array.mapMaybe (renderReboxFunction codegenStateRef helpers modNameStr generatedFuncs) (Array.fromFoldable reboxPairs)
       nextGeneratedFuncs = Map.union generatedFuncs newFuncs
     if Map.isEmpty newFuncs then
       pure $ Array.fromFoldable (Map.values nextGeneratedFuncs)
@@ -714,7 +609,8 @@ translate { enumAdts, enumCtors, pointerAdtPaths, pointerAdtNodes, pointerAdtLea
           )
           mod.dataDecls
 
-      Ref.new { decls: [], rawDecls: structDecls, elidedCtors, ctorTypes, pointerAdtPaths, pointerAdtNodes, pointerAdtLeaves, enumAdts, enumCtors, globalTypes, classDeclsFields, globalId: 0 }
+      -- Rebox requests belong to this invocation of translate.
+      Ref.new { decls: [], rawDecls: structDecls, elidedCtors, ctorTypes, pointerAdtPaths, pointerAdtNodes, pointerAdtLeaves, enumAdts, enumCtors, globalTypes, classDeclsFields, globalId: 0, reboxPairs: Set.empty }
 
     Tuple _ tcoBindings = foldl
       ( \(Tuple env acc) group ->
@@ -835,7 +731,7 @@ translate { enumAdts, enumCtors, pointerAdtPaths, pointerAdtNodes, pointerAdtLea
                                   funcExpr =
                                     if arity >= 1 && arity <= 10 then
                                       let
-                                        coercedExpr = coerceGoExpr modNameStr resBodyMut.expr resBodyMut.exprType expectedRetType
+                                        coercedExpr = coerceGoExpr codegenStateRef modNameStr resBodyMut.expr resBodyMut.exprType expectedRetType
                                         bodyStmts = initVars <> flattenStmts resBodyMut.stmts <> [ GoReturn coercedExpr ]
                                         funcBody = if isSelfRecursiveLoop then GoFor goName bodyStmts else GoBlock bodyStmts
                                       in
@@ -843,18 +739,18 @@ translate { enumAdts, enumCtors, pointerAdtPaths, pointerAdtNodes, pointerAdtLea
                                           let callFuncDecl = "func Call_" <> modNameStr <> "_" <> goName <> "(" <> goParams <> ") " <> goTypeToStr expectedRetType <> " {\n" <> printGoExpr funcBody <> "\n}"
                                           Ref.modify_ (\r -> r { rawDecls = Array.snoc r.rawDecls callFuncDecl }) codegenStateRef
                                           let wrapperParams = map (\(Tuple p _) -> p <> "_box") paramsWithTypes
-                                          let callExpr = GoCall (GoVar ("Call_" <> modNameStr <> "_" <> goName)) (map (\(Tuple p goT) -> unboxGoExpr modNameStr (GoVar (p <> "_box")) TypeValue goT) paramsWithTypes)
-                                          let boxedRes = boxGoExpr modNameStr callExpr expectedRetType
+                                          let callExpr = GoCall (GoVar ("Call_" <> modNameStr <> "_" <> goName)) (map (\(Tuple p goT) -> unboxGoExpr codegenStateRef modNameStr (GoVar (p <> "_box")) TypeValue goT) paramsWithTypes)
+                                          let boxedRes = boxGoExpr codegenStateRef modNameStr callExpr expectedRetType
                                           let wrapperFunc = GoRaw ("func(" <> String.joinWith ", " (map (\p -> p <> " gopurs_runtime.Value") wrapperParams) <> ") gopurs_runtime.Value {\nreturn " <> printGoExpr boxedRes <> "\n}")
                                           let funcWrapperName = if arity == 1 then "gopurs_runtime.Func" else "gopurs_runtime.Func" <> show arity
                                           pure $ GoRaw (funcWrapperName <> "(" <> printGoExpr wrapperFunc <> ")")
                                     else
                                       let
-                                        bodyStmts = initVars <> flattenStmts resBodyMut.stmts <> [ GoReturn (boxGoExpr modNameStr resBodyMut.expr resBodyMut.exprType) ]
+                                        bodyStmts = initVars <> flattenStmts resBodyMut.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr resBodyMut.expr resBodyMut.exprType) ]
                                         funcBody = if isSelfRecursiveLoop then GoFor goName bodyStmts else GoBlock bodyStmts
                                         iife = GoRaw ("func() gopurs_runtime.Value {\n" <> printGoExpr funcBody <> "\n}()")
                                       in
-                                        Array.foldr (\(Tuple p goT) acc -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> p <> "_box gopurs_runtime.Value) gopurs_runtime.Value {\nvar " <> p <> "_loop " <> goTypeToStr goT <> " = " <> printGoExpr (unboxGoExpr modNameStr (GoVar (p <> "_box")) TypeValue goT) <> "\nreturn " <> printGoExpr acc <> "\n}") ]) iife paramsWithTypes
+                                        Array.foldr (\(Tuple p goT) acc -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> p <> "_box gopurs_runtime.Value) gopurs_runtime.Value {\nvar " <> p <> "_loop " <> goTypeToStr goT <> " = " <> printGoExpr (unboxGoExpr codegenStateRef modNameStr (GoVar (p <> "_box")) TypeValue goT) <> "\nreturn " <> printGoExpr acc <> "\n}") ]) iife paramsWithTypes
                                 in
                                   { identifier: modNameStr <> "_" <> goName, expression: funcExpr, goType: TypeValue }
                             )
@@ -867,7 +763,7 @@ translate { enumAdts, enumCtors, pointerAdtPaths, pointerAdtNodes, pointerAdtLea
                               let
                                 res = translateExprWithExpectedType codegenStateRef 0 modNameStr recVars moduleFunctions Map.empty (Just (sanitizeName name)) [] { isTail: false, inEffectBlock: false } (Just (getExprType expr)) 0 expr
                               in
-                                [ { identifier: modNameStr <> "_" <> sanitizeName name, expression: wrapInStmts [] res.stmts TypeValue (boxGoExpr modNameStr res.expr res.exprType), goType: TypeValue } ]
+                                [ { identifier: modNameStr <> "_" <> sanitizeName name, expression: wrapInStmts [] res.stmts TypeValue (boxGoExpr codegenStateRef modNameStr res.expr res.exprType), goType: TypeValue } ]
                           )
                           binds
               in
@@ -909,7 +805,7 @@ translate { enumAdts, enumCtors, pointerAdtPaths, pointerAdtNodes, pointerAdtLea
       { packageName: "purescript"
       , imports: goImports
       , decls: allDeclsAst
-      , rawDecls: helpers.rawDecls <> unsafePerformEffect (generateReboxFunctions helpers modNameStr)
+      , rawDecls: helpers.rawDecls <> unsafePerformEffect (generateReboxFunctions codegenStateRef modNameStr)
       , foreigns: map (\(Tuple (Ident name) type_) -> { pursName: modNameStr <> "_" <> sanitizeName name, goName: "_Gopurs_" <> modNameStr <> "_" <> capitalize (sanitizeName name), exprType: type_ }) (Map.toUnfoldable mod.foreign)
       }
   in
@@ -1128,7 +1024,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
     if isEff && not inEffectBlock then
       let
         res = translateExpr codegenStateRef depth modNameStr recVars moduleFunctions bound tcoIdent loopCtx { isTail: false, inEffectBlock: true } nextId tcoExpr
-        funcExpr = GoRaw ("gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts res.stmts <> [ GoReturn (boxGoExpr modNameStr res.expr res.exprType) ])) <> "\n})")
+        funcExpr = GoRaw ("gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts res.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr res.expr res.exprType) ])) <> "\n})")
       in
         { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: res.nextId }
     else
@@ -1182,7 +1078,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                                   _, _ -> bound
 
                                 resVal = translateExpr codegenStateRef (depth + 1) modNameStr recVars moduleFunctions newBound Nothing [] { isTail: false, inEffectBlock: false } acc.nextId item.val
-                                coercedExpr = coerceGoExpr modNameStr resVal.expr resVal.exprType expectedType
+                                coercedExpr = coerceGoExpr codegenStateRef modNameStr resVal.expr resVal.exprType expectedType
                               in
                                 { stmts: acc.stmts <> resVal.stmts, exprs: Array.snoc acc.exprs coercedExpr, exprType: TypeValue, nextId: resVal.nextId }
                           )
@@ -1208,7 +1104,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                             if expectedGoType == res.exprType then res
                             else if isClosureNode codegenStateRef a then res
                             else
-                              { stmts: res.stmts, expr: coerceGoExpr modNameStr res.expr res.exprType expectedGoType, exprType: expectedGoType, nextId: res.nextId }
+                              { stmts: res.stmts, expr: coerceGoExpr codegenStateRef modNameStr res.expr res.exprType expectedGoType, exprType: expectedGoType, nextId: res.nextId }
                 Let ident lvl val body, _ ->
                   let
                     newBody = case body of
@@ -1237,7 +1133,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                         if expectedGoType == res.exprType then res
                         else if isClosureNode codegenStateRef a then res
                         else
-                          { stmts: res.stmts, expr: coerceGoExpr modNameStr res.expr res.exprType expectedGoType, exprType: expectedGoType, nextId: res.nextId }
+                          { stmts: res.stmts, expr: coerceGoExpr codegenStateRef modNameStr res.expr res.exprType expectedGoType, exprType: expectedGoType, nextId: res.nextId }
           Var (Qualified mbMn (Ident i)) ->
             let
               safeName = sanitizeName i
@@ -1259,12 +1155,12 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                     modPkg = String.replaceAll (Pattern ".") (Replacement "_") modStr
                     rawCall = GoCall (GoVar ("Get_" <> modPkg <> "_" <> safeName)) []
                   in
-                    { stmts: StmtEmpty, expr: unboxGoExpr modNameStr rawCall TypeValue vType, exprType: vType, nextId }
+                    { stmts: StmtEmpty, expr: unboxGoExpr codegenStateRef modNameStr rawCall TypeValue vType, exprType: vType, nextId }
                 Nothing ->
                   let
                     rawCall = Debug.trace ("mbMn is Nothing for safeName: " <> safeName) (\_ -> GoCall (GoVar ("Get_" <> modNameStr <> "_" <> safeName)) [])
                   in
-                    { stmts: StmtEmpty, expr: unboxGoExpr modNameStr rawCall TypeValue vType, exprType: vType, nextId }
+                    { stmts: StmtEmpty, expr: unboxGoExpr codegenStateRef modNameStr rawCall TypeValue vType, exprType: vType, nextId }
 
           Local mbIdent lvl ->
             let
@@ -1325,7 +1221,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                     { stmts: accXs.stmts, expr: GoRaw (goTypeToStr goTypeArr <> "{" <> String.joinWith ", " (map printGoExpr accXs.exprs) <> "}"), exprType: goTypeArr, nextId: accXs.nextId }
                 _ ->
                   let
-                    boxedExprs = Array.zipWith (\expr ty -> boxGoExpr modNameStr expr ty) accXs.exprs accXs.exprTypes
+                    boxedExprs = Array.zipWith (\expr ty -> boxGoExpr codegenStateRef modNameStr expr ty) accXs.exprs accXs.exprTypes
                   in
                     { stmts: accXs.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Array") [ GoRaw ("[]gopurs_runtime.Value{" <> String.joinWith ", " (map printGoExpr boxedExprs) <> "}") ], exprType: TypeValue, nextId: accXs.nextId }
 
@@ -1367,7 +1263,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                       resVal = translateExpr codegenStateRef (depth + 1) modNameStr recVars moduleFunctions newBound Nothing [] { isTail: false, inEffectBlock: false } acc.nextId val
 
                       expectedGoType = exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr expectedExprType
-                      coercedVal = coerceGoExpr modNameStr resVal.expr resVal.exprType expectedGoType
+                      coercedVal = coerceGoExpr codegenStateRef modNameStr resVal.expr resVal.exprType expectedGoType
                     in
                       { stmts: acc.stmts <> resVal.stmts, exprs: Array.snoc acc.exprs (Tuple key coercedVal), exprType: TypeValue, nextId: resVal.nextId }
                 )
@@ -1420,7 +1316,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                             argType = fromMaybe TypeValue (Array.index accFinal.exprTypes i)
                             expectedType = fromMaybe TypeValue (Array.index targetCtx.goTypes i)
                           in
-                            GoMutate paramName (coerceGoExpr modNameStr argExpr argType expectedType)
+                            GoMutate paramName (coerceGoExpr codegenStateRef modNameStr argExpr argType expectedType)
                       )
                       targetCtx.loopParams
                   in
@@ -1501,7 +1397,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                                 let
                                   argRes = translateExpr codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } acc.nextId arg
                                 in
-                                  { stmts: acc.stmts <> argRes.stmts, exprs: Array.snoc acc.exprs (boxGoExpr modNameStr argRes.expr argRes.exprType), exprTypes: Array.snoc acc.exprTypes argRes.exprType, nextId: argRes.nextId }
+                                  { stmts: acc.stmts <> argRes.stmts, exprs: Array.snoc acc.exprs (boxGoExpr codegenStateRef modNameStr argRes.expr argRes.exprType), exprTypes: Array.snoc acc.exprTypes argRes.exprType, nextId: argRes.nextId }
                             )
                             { stmts: StmtEmpty, exprs: [], exprTypes: [], nextId }
                             flatArgs
@@ -1567,7 +1463,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                           arity = if intrinsicName == "foldlArray" then 3 else 2
                           accArgsRemaining = Array.drop arity accArgs.exprs
                           accArgsRemainingTypes = Array.drop arity accArgs.exprTypes
-                          accArgsRemainingBoxed = Array.zipWith (\arg t -> boxGoExpr modNameStr arg t) accArgsRemaining accArgsRemainingTypes
+                          accArgsRemainingBoxed = Array.zipWith (\arg t -> boxGoExpr codegenStateRef modNameStr arg t) accArgsRemaining accArgsRemainingTypes
 
                           buildApp :: GoExpr -> Array GoExpr -> GoExpr
                           buildApp fExpr argExprs =
@@ -1623,7 +1519,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                                 accArgsArity = Array.take arity accArgs.exprs
                                 accArgsRemaining = Array.drop arity accArgs.exprs
                                 accArgsRemainingTypes = Array.drop arity accArgs.exprTypes
-                                accArgsRemainingBoxed = Array.zipWith (\arg t -> boxGoExpr modNameStr arg t) accArgsRemaining accArgsRemainingTypes
+                                accArgsRemainingBoxed = Array.zipWith (\arg t -> boxGoExpr codegenStateRef modNameStr arg t) accArgsRemaining accArgsRemainingTypes
 
                                 callArgs = Array.mapWithIndex
                                   ( \i argExprValue ->
@@ -1631,12 +1527,12 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                                         expectedType = fromMaybe TypeValue (Array.index fArgs i)
                                         actualType = fromMaybe TypeValue (Array.index accArgs.exprTypes i)
                                       in
-                                        coerceGoExpr modNameStr argExprValue actualType expectedType
+                                        coerceGoExpr codegenStateRef modNameStr argExprValue actualType expectedType
                                   )
                                   accArgsArity
 
                                 callExpr = GoCall (GoVar fullName) callArgs
-                                finalExpr = if Array.length accArgsRemainingBoxed == 0 then callExpr else buildApp (boxGoExpr modNameStr callExpr fRet) accArgsRemainingBoxed
+                                finalExpr = if Array.length accArgsRemainingBoxed == 0 then callExpr else buildApp (boxGoExpr codegenStateRef modNameStr callExpr fRet) accArgsRemainingBoxed
                                 finalExprType = if Array.length accArgsRemainingBoxed == 0 then fRet else TypeValue
                               in
                                 { stmts: accArgs.stmts, expr: finalExpr, exprType: finalExprType, nextId: accArgs.nextId }
@@ -1667,7 +1563,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                                               arg = fromMaybe (GoRaw "nil") (Array.index accArgs.exprs i)
                                               actual = fromMaybe TypeValue (Array.index accArgs.exprTypes i)
                                             in
-                                              coerceGoExpr modNameStr arg actual expected
+                                              coerceGoExpr codegenStateRef modNameStr arg actual expected
                                         )
                                         fArgs
                                     in
@@ -1678,7 +1574,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                                       accArgsArity = Array.take arity accArgs.exprs
                                       accArgsRemaining = Array.drop arity accArgs.exprs
                                       accArgsRemainingTypes = Array.drop arity accArgs.exprTypes
-                                      accArgsRemainingBoxed = Array.zipWith (\arg t -> boxGoExpr modNameStr arg t) accArgsRemaining accArgsRemainingTypes
+                                      accArgsRemainingBoxed = Array.zipWith (\arg t -> boxGoExpr codegenStateRef modNameStr arg t) accArgsRemaining accArgsRemainingTypes
 
                                       callArgs = Array.mapWithIndex
                                         ( \i argExprValue ->
@@ -1686,18 +1582,18 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                                               expectedType = fromMaybe TypeValue (Array.index fArgs i)
                                               actualType = fromMaybe TypeValue (Array.index accArgs.exprTypes i)
                                             in
-                                              coerceGoExpr modNameStr argExprValue actualType expectedType
+                                              coerceGoExpr codegenStateRef modNameStr argExprValue actualType expectedType
                                         )
                                         accArgsArity
 
                                       callExpr = GoCall resFn.expr callArgs
                                     in
-                                      buildApp (boxGoExpr modNameStr callExpr fRet) accArgsRemainingBoxed
+                                      buildApp (boxGoExpr codegenStateRef modNameStr callExpr fRet) accArgsRemainingBoxed
                                   _ ->
                                     let
-                                      boxedArgs = Array.zipWith (\arg actual -> boxGoExpr modNameStr arg actual) accArgs.exprs accArgs.exprTypes
+                                      boxedArgs = Array.zipWith (\arg actual -> boxGoExpr codegenStateRef modNameStr arg actual) accArgs.exprs accArgs.exprTypes
                                     in
-                                      buildApp (boxGoExpr modNameStr resFn.expr resFn.exprType) boxedArgs
+                                      buildApp (boxGoExpr codegenStateRef modNameStr resFn.expr resFn.exprType) boxedArgs
                               in
                                 { stmts: accArgs.stmts, expr: finalExpr, exprType: finalExprType, nextId: accArgs.nextId }
 
@@ -1749,7 +1645,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                     in
                       buildFunc chunk (buildFunc rest innerExpr)
 
-              funcExpr = buildFunc params (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr modNameStr resBody.expr resBody.exprType) ]))
+              funcExpr = buildFunc params (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType) ]))
             in
               { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: resBody.nextId }
 
@@ -1833,9 +1729,9 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                               let
                                 expectedArgType = fromMaybe TypeValue (Array.index info.fArgs 0)
                               in
-                                GoMutate (resGoName <> "[" <> iName <> "]") (unboxGoExpr modNameStr (GoCall (GoVar ("Call_" <> String.replaceAll (Pattern ".") (Replacement "_") fnFullName)) [ unboxGoExpr modNameStr (GoVar vName) elemType expectedArgType ]) info.fRet retType)
+                                GoMutate (resGoName <> "[" <> iName <> "]") (unboxGoExpr codegenStateRef modNameStr (GoCall (GoVar ("Call_" <> String.replaceAll (Pattern ".") (Replacement "_") fnFullName)) [ unboxGoExpr codegenStateRef modNameStr (GoVar vName) elemType expectedArgType ]) info.fRet retType)
                             _ ->
-                              GoMutate (resGoName <> "[" <> iName <> "]") (unboxGoExpr modNameStr (GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ boxGoExpr modNameStr fExprRaw fExprType, boxGoExpr modNameStr (GoVar vName) elemType ]) TypeValue retType)
+                              GoMutate (resGoName <> "[" <> iName <> "]") (unboxGoExpr codegenStateRef modNameStr (GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ boxGoExpr codegenStateRef modNameStr fExprRaw fExprType, boxGoExpr codegenStateRef modNameStr (GoVar vName) elemType ]) TypeValue retType)
 
                           iifeBodyStmts =
                             [ arrGoAssignment
@@ -1875,9 +1771,9 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                                 expectedArg0 = fromMaybe TypeValue (Array.index info.fArgs 0)
                                 expectedArg1 = fromMaybe TypeValue (Array.index info.fArgs 1)
                               in
-                                GoMutate resGoName (unboxGoExpr modNameStr (GoCall (GoVar ("Call_" <> String.replaceAll (Pattern ".") (Replacement "_") fnFullName)) [ unboxGoExpr modNameStr (GoVar resGoName) initExprType expectedArg0, unboxGoExpr modNameStr (GoVar vName) elemType expectedArg1 ]) info.fRet initExprType)
+                                GoMutate resGoName (unboxGoExpr codegenStateRef modNameStr (GoCall (GoVar ("Call_" <> String.replaceAll (Pattern ".") (Replacement "_") fnFullName)) [ unboxGoExpr codegenStateRef modNameStr (GoVar resGoName) initExprType expectedArg0, unboxGoExpr codegenStateRef modNameStr (GoVar vName) elemType expectedArg1 ]) info.fRet initExprType)
                             _ ->
-                              GoMutate resGoName (unboxGoExpr modNameStr (GoCall (GoSelector (GoVar "gopurs_runtime") "Apply2") [ boxGoExpr modNameStr fExpr fExprType, boxGoExpr modNameStr (GoVar resGoName) initExprType, boxGoExpr modNameStr (GoVar vName) elemType ]) TypeValue initExprType)
+                              GoMutate resGoName (unboxGoExpr codegenStateRef modNameStr (GoCall (GoSelector (GoVar "gopurs_runtime") "Apply2") [ boxGoExpr codegenStateRef modNameStr fExpr fExprType, boxGoExpr codegenStateRef modNameStr (GoVar resGoName) initExprType, boxGoExpr codegenStateRef modNameStr (GoVar vName) elemType ]) TypeValue initExprType)
 
                           arrGoAssignment = case arrExprType of
                             TypeNativeArray _ -> GoAssign arrGoName (GoVar arrValName)
@@ -1923,10 +1819,10 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                               let
                                 expectedArgType = fromMaybe TypeValue (Array.index info.fArgs 0)
                               in
-                                GoCall (GoVar ("Call_" <> String.replaceAll (Pattern ".") (Replacement "_") fnFullName)) [ unboxGoExpr modNameStr (GoVar vName) elemType expectedArgType ]
+                                GoCall (GoVar ("Call_" <> String.replaceAll (Pattern ".") (Replacement "_") fnFullName)) [ unboxGoExpr codegenStateRef modNameStr (GoVar vName) elemType expectedArgType ]
                             _ ->
                               let
-                                condExpr = GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ boxGoExpr modNameStr fExprRaw fExprType, boxGoExpr modNameStr (GoVar vName) elemType ]
+                                condExpr = GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ boxGoExpr codegenStateRef modNameStr fExprRaw fExprType, boxGoExpr codegenStateRef modNameStr (GoVar vName) elemType ]
                               in
                                 GoCall (GoSelector condExpr "BoolVal") []
 
@@ -1992,7 +1888,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                                   argType = fromMaybe TypeValue (Array.index accFinal.exprTypes i)
                                   expectedType = fromMaybe TypeValue (Array.index targetCtx.goTypes i)
                                 in
-                                  GoMutate paramName (coerceGoExpr modNameStr argExpr argType expectedType)
+                                  GoMutate paramName (coerceGoExpr codegenStateRef modNameStr argExpr argType expectedType)
                             )
                             targetCtx.loopParams
                         in
@@ -2027,16 +1923,16 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                                         arg = fromMaybe (GoRaw "nil") (Array.index accArgs.exprs i)
                                         actual = fromMaybe TypeValue (Array.index accArgs.exprTypes i)
                                       in
-                                        coerceGoExpr modNameStr arg actual expected
+                                        coerceGoExpr codegenStateRef modNameStr arg actual expected
                                   )
                                   fArgs
                               in
-                                { stmts: accArgs.stmts, expr: boxGoExpr modNameStr (GoCall resFn.expr callArgs) fRet, exprType: TypeValue, nextId: accArgs.nextId }
+                                { stmts: accArgs.stmts, expr: boxGoExpr codegenStateRef modNameStr (GoCall resFn.expr callArgs) fRet, exprType: TypeValue, nextId: accArgs.nextId }
                             _ ->
                               let
-                                boxedArgs = Array.zipWith (\arg actual -> boxGoExpr modNameStr arg actual) accArgs.exprs accArgs.exprTypes
+                                boxedArgs = Array.zipWith (\arg actual -> boxGoExpr codegenStateRef modNameStr arg actual) accArgs.exprs accArgs.exprTypes
                               in
-                                { stmts: accArgs.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") goFuncName) (Array.cons (boxGoExpr modNameStr resFn.expr resFn.exprType) boxedArgs), exprType: TypeValue, nextId: accArgs.nextId }
+                                { stmts: accArgs.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") goFuncName) (Array.cons (boxGoExpr codegenStateRef modNameStr resFn.expr resFn.exprType) boxedArgs), exprType: TypeValue, nextId: accArgs.nextId }
 
           UncurriedAbs args body -> liftIfNeeded \_ ->
             let
@@ -2060,7 +1956,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                 case tcoIdent of
                   Just topName ->
                     let
-                      callFuncDecl = "func Call_" <> modNameStr <> "_" <> topName <> "(" <> goParams <> ") gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr modNameStr resBody.expr resBody.exprType) ])) <> "\n}"
+                      callFuncDecl = "func Call_" <> modNameStr <> "_" <> topName <> "(" <> goParams <> ") gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType) ])) <> "\n}"
                       funcExpr = unsafePerformEffect do
                         Ref.modify_ (\r -> r { rawDecls = Array.snoc r.rawDecls callFuncDecl }) codegenStateRef
                         pure $ GoRaw ("gopurs_runtime.Func" <> show arity <> "(Call_" <> modNameStr <> "_" <> topName <> ")")
@@ -2068,14 +1964,14 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                       { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: resBody.nextId }
                   Nothing ->
                     let
-                      funcExpr = GoRaw ("gopurs_runtime.Func" <> show arity <> "(func(" <> goParams <> ") gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr modNameStr resBody.expr resBody.exprType) ])) <> "\n})")
+                      funcExpr = GoRaw ("gopurs_runtime.Func" <> show arity <> "(func(" <> goParams <> ") gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType) ])) <> "\n})")
                     in
                       { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: resBody.nextId }
               else
                 let
                   params = map fst paramsWithTypes
                   makeCurried [] = resBody.expr
-                  makeCurried [ p ] = GoFunc p TypeValue TypeValue (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr modNameStr resBody.expr resBody.exprType) ]))
+                  makeCurried [ p ] = GoFunc p TypeValue TypeValue (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType) ]))
                   makeCurried ps = case Array.uncons ps of
                     Just { head: p, tail: rest } -> GoFunc p TypeValue TypeValue (makeCurried rest)
                     Nothing -> resBody.expr
@@ -2108,16 +2004,16 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                               arg = fromMaybe (GoRaw "nil") (Array.index accArgs.exprs i)
                               actual = fromMaybe TypeValue (Array.index accArgs.exprTypes i)
                             in
-                              coerceGoExpr modNameStr arg actual expected
+                              coerceGoExpr codegenStateRef modNameStr arg actual expected
                         )
                         fArgs
                     in
-                      { stmts: accArgs.stmts, expr: boxGoExpr modNameStr (GoCall resFn.expr callArgs) fRet, exprType: TypeValue, nextId: accArgs.nextId }
+                      { stmts: accArgs.stmts, expr: boxGoExpr codegenStateRef modNameStr (GoCall resFn.expr callArgs) fRet, exprType: TypeValue, nextId: accArgs.nextId }
                   _ ->
                     let
-                      boxedArgs = Array.zipWith (\arg actual -> boxGoExpr modNameStr arg actual) accArgs.exprs accArgs.exprTypes
+                      boxedArgs = Array.zipWith (\arg actual -> boxGoExpr codegenStateRef modNameStr arg actual) accArgs.exprs accArgs.exprTypes
                     in
-                      { stmts: accArgs.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") goFuncName) (Array.cons (boxGoExpr modNameStr resFn.expr resFn.exprType) boxedArgs), exprType: TypeValue, nextId: accArgs.nextId }
+                      { stmts: accArgs.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") goFuncName) (Array.cons (boxGoExpr codegenStateRef modNameStr resFn.expr resFn.exprType) boxedArgs), exprType: TypeValue, nextId: accArgs.nextId }
 
           UncurriedEffectAbs args body -> liftIfNeeded \_ ->
             let
@@ -2137,14 +2033,14 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
             in
               if arity >= 2 && arity <= 5 then
                 let
-                  funcExpr = GoRaw ("gopurs_runtime.Func" <> show arity <> "(func(" <> goParams <> ") gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (GoRaw ("gopurs_runtime.Apply(" <> printGoExpr (boxGoExpr modNameStr resBody.expr resBody.exprType) <> ", gopurs_runtime.Value{})")) ])) <> "\n})")
+                  funcExpr = GoRaw ("gopurs_runtime.Func" <> show arity <> "(func(" <> goParams <> ") gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (GoRaw ("gopurs_runtime.Apply(" <> printGoExpr (boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType) <> ", gopurs_runtime.Value{})")) ])) <> "\n})")
                 in
                   { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: resBody.nextId }
               else
                 let
                   params = map fst paramsWithTypes
-                  makeCurried [] = GoRaw ("gopurs_runtime.Apply(" <> printGoExpr (boxGoExpr modNameStr resBody.expr resBody.exprType) <> ", gopurs_runtime.Value{})")
-                  makeCurried [ p ] = GoFunc p TypeValue TypeValue (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (GoRaw ("gopurs_runtime.Apply(" <> printGoExpr (boxGoExpr modNameStr resBody.expr resBody.exprType) <> ", gopurs_runtime.Value{})")) ]))
+                  makeCurried [] = GoRaw ("gopurs_runtime.Apply(" <> printGoExpr (boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType) <> ", gopurs_runtime.Value{})")
+                  makeCurried [ p ] = GoFunc p TypeValue TypeValue (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (GoRaw ("gopurs_runtime.Apply(" <> printGoExpr (boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType) <> ", gopurs_runtime.Value{})")) ]))
                   makeCurried ps = case Array.uncons ps of
                     Just { head: p, tail: rest } -> GoFunc p TypeValue TypeValue (makeCurried rest)
                     Nothing -> resBody.expr
@@ -2165,7 +2061,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
               newBound = Map.insert originalName { name, goType: TypeValue } bound
               resBinding = translateExpr codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: true } (nextId + 1) realBinding
               resBody = translateExprWithExpectedType codegenStateRef (depth + 1) modNameStr recVars moduleFunctions newBound Nothing loopCtx { isTail, inEffectBlock: true } mbExpectedExprType resBinding.nextId body
-              bindingExpr = if wasStripped then boxGoExpr modNameStr resBinding.expr resBinding.exprType else executeIfOpaque realBinding (boxGoExpr modNameStr resBinding.expr resBinding.exprType)
+              bindingExpr = if wasStripped then boxGoExpr codegenStateRef modNameStr resBinding.expr resBinding.exprType else executeIfOpaque realBinding (boxGoExpr codegenStateRef modNameStr resBinding.expr resBinding.exprType)
               bodyExpr = executeIfOpaque body resBody.expr
             in
               { stmts: resBinding.stmts <> StmtLeaf (GoAssign name bindingExpr) <> resBody.stmts, expr: bodyExpr, exprType: resBody.exprType, nextId: resBody.nextId }
@@ -2176,7 +2072,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
           EffectDefer binding ->
             let
               resBinding = translateExpr codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: true } nextId binding
-              funcExpr = GoRaw ("gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBinding.stmts <> [ GoReturn (boxGoExpr modNameStr resBinding.expr resBinding.exprType) ])) <> "\n})")
+              funcExpr = GoRaw ("gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBinding.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr resBinding.expr resBinding.exprType) ])) <> "\n})")
             in
               { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: resBinding.nextId }
 
@@ -2210,10 +2106,10 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
 
                     goParamsNative = String.joinWith ", " (map (\(Tuple p goT) -> p <> "_loop " <> goTypeToStr goT) paramsWithTypes)
                     initVars = Array.concatMap (\(Tuple p goT) -> [ GoRaw ("var " <> p <> " " <> goTypeToStr goT <> " = " <> p <> "_loop"), GoRaw ("_ = " <> p) ]) paramsWithTypes
-                    funcBody = GoBlock (initVars <> flattenStmts resBodyMut.stmts <> [ GoReturn (boxGoExpr modNameStr resBodyMut.expr resBodyMut.exprType) ])
+                    funcBody = GoBlock (initVars <> flattenStmts resBodyMut.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr resBodyMut.expr resBodyMut.exprType) ])
                     nativeAssignment = GoMutate ("Call_local_" <> modNameStr <> "_" <> name) (GoRaw ("func(" <> goParamsNative <> ") gopurs_runtime.Value {\n" <> printGoExpr funcBody <> "\n}"))
 
-                    nativeCallExpr = GoCall (GoVar ("Call_local_" <> modNameStr <> "_" <> name)) (map (\(Tuple p goT) -> unboxGoExpr modNameStr (GoVar (p <> "_loop_val")) TypeValue goT) paramsWithTypes)
+                    nativeCallExpr = GoCall (GoVar ("Call_local_" <> modNameStr <> "_" <> name)) (map (\(Tuple p goT) -> unboxGoExpr codegenStateRef modNameStr (GoVar (p <> "_loop_val")) TypeValue goT) paramsWithTypes)
                     funcExpr = Array.foldr (\(Tuple p goT) acc -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> p <> "_loop_val gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr acc <> "\n}") ]) nativeCallExpr paramsWithTypes
 
                     newBound = Map.insert originalName { name, goType: TypeValue } bound
@@ -2231,7 +2127,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                       if actualGoType == resBinding.exprType then
                         StmtLeaf (GoAssign name resBinding.expr)
                       else
-                        StmtLeaf (GoRaw ("var " <> name <> " " <> goTypeToStr actualGoType <> " = " <> printGoExpr (unboxGoExpr modNameStr resBinding.expr resBinding.exprType actualGoType)))
+                        StmtLeaf (GoRaw ("var " <> name <> " " <> goTypeToStr actualGoType <> " = " <> printGoExpr (unboxGoExpr codegenStateRef modNameStr resBinding.expr resBinding.exprType actualGoType)))
                   in
                     { stmts: resBinding.stmts <> StmtLeaf (GoRaw ("// TAST (Let): " <> name <> " shape=" <> printTcoExprShape binding <> " bindingType=" <> printExprType (getExprType binding))) <> letStmt <> resBody.stmts, expr: resBody.expr, exprType: resBody.exprType, nextId: resBody.nextId }
 
@@ -2342,8 +2238,8 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                             goParamsNative = String.joinWith ", " (map (\(Tuple p goT) -> p <> "_loop " <> goTypeToStr goT) paramsWithTypes)
                             nativeAssignment = GoMutate ("Call_local_" <> modNameStr <> "_" <> newName) (GoRaw ("func(" <> goParamsNative <> ") " <> goTypeToStr trueFRet <> " {\n" <> printGoExpr funcBody <> "\n}"))
 
-                            nativeCallExpr = GoCall (GoVar ("Call_local_" <> modNameStr <> "_" <> newName)) (map (\(Tuple p goT) -> unboxGoExpr modNameStr (GoVar (p <> "_loop_val")) TypeValue goT) paramsWithTypes)
-                            funcExpr = Array.foldr (\(Tuple p goT) accExpr -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> p <> "_loop_val gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr accExpr <> "\n}") ]) (boxGoExpr modNameStr nativeCallExpr trueFRet) paramsWithTypes
+                            nativeCallExpr = GoCall (GoVar ("Call_local_" <> modNameStr <> "_" <> newName)) (map (\(Tuple p goT) -> unboxGoExpr codegenStateRef modNameStr (GoVar (p <> "_loop_val")) TypeValue goT) paramsWithTypes)
+                            funcExpr = Array.foldr (\(Tuple p goT) accExpr -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> p <> "_loop_val gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr accExpr <> "\n}") ]) (boxGoExpr codegenStateRef modNameStr nativeCallExpr trueFRet) paramsWithTypes
                             
                             newFunctions = Map.insert newName { fullName: "Call_local_" <> modNameStr <> "_" <> newName, fArgs: map snd paramsWithTypes, fRet: trueFRet, arity: Array.length fn.args } acc.moduleFunctions
                             newBound2 = Map.insert oldName { name: newName, goType: TypeFunc (map snd paramsWithTypes) trueFRet } acc.newBound
@@ -2365,7 +2261,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                           let
                             res = translateExpr codegenStateRef (depth + 1) modNameStr combinedRecVars moduleFunctions allocRes.newBound Nothing [] { isTail: false, inEffectBlock: false } acc.nextId val
                             expectedGoType = (fromMaybe { name: alloc.newName, goType: TypeValue } (Map.lookup alloc.oldName allocRes.newBound)).goType
-                            assignedVal = if expectedGoType == res.exprType then res.expr else unboxGoExpr modNameStr res.expr res.exprType expectedGoType
+                            assignedVal = if expectedGoType == res.exprType then res.expr else unboxGoExpr codegenStateRef modNameStr res.expr res.exprType expectedGoType
                           in
                             { stmts: acc.stmts <> res.stmts, exprs: Array.snoc acc.exprs { key: alloc.newName, value: assignedVal, goType: expectedGoType }, exprType: TypeValue, nextId: res.nextId }
                       )
@@ -2401,7 +2297,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                             case Array.findIndex (\f -> f.name == prop) info.fields of
                               Just idx ->
                                 let
-                                  unboxedObj = unboxGoExpr modNameStr resObj.expr resObj.exprType resObj.exprType
+                                  unboxedObj = unboxGoExpr codegenStateRef modNameStr resObj.expr resObj.exprType resObj.exprType
                                   fieldExpr = GoStructAccess unboxedObj ("V" <> show idx)
                                   boxedFieldExpr = GoCall (GoSelector (GoVar "gopurs_runtime") "Box") [ fieldExpr ]
                                 in
@@ -2410,11 +2306,11 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                                 let
                                   _ = unit
                                 in
-                                  { stmts: resObj.stmts, expr: GoRecordAccess (boxGoExpr modNameStr resObj.expr resObj.exprType) prop, exprType: TypeValue, nextId: resObj.nextId }
-                          Nothing -> { stmts: resObj.stmts, expr: GoRecordAccess (boxGoExpr modNameStr resObj.expr resObj.exprType) prop, exprType: TypeValue, nextId: resObj.nextId }
-                    TypeValue -> { stmts: resObj.stmts, expr: GoRecordAccess (boxGoExpr modNameStr resObj.expr resObj.exprType) prop, exprType: TypeValue, nextId: resObj.nextId }
-                    _ -> { stmts: resObj.stmts, expr: GoRecordAccess (boxGoExpr modNameStr resObj.expr resObj.exprType) prop, exprType: TypeValue, nextId: resObj.nextId }
-                GetIndex idx -> { stmts: resObj.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayAccess") [ (boxGoExpr modNameStr resObj.expr resObj.exprType), GoInt idx ], exprType: TypeValue, nextId: resObj.nextId }
+                                  { stmts: resObj.stmts, expr: GoRecordAccess (boxGoExpr codegenStateRef modNameStr resObj.expr resObj.exprType) prop, exprType: TypeValue, nextId: resObj.nextId }
+                          Nothing -> { stmts: resObj.stmts, expr: GoRecordAccess (boxGoExpr codegenStateRef modNameStr resObj.expr resObj.exprType) prop, exprType: TypeValue, nextId: resObj.nextId }
+                    TypeValue -> { stmts: resObj.stmts, expr: GoRecordAccess (boxGoExpr codegenStateRef modNameStr resObj.expr resObj.exprType) prop, exprType: TypeValue, nextId: resObj.nextId }
+                    _ -> { stmts: resObj.stmts, expr: GoRecordAccess (boxGoExpr codegenStateRef modNameStr resObj.expr resObj.exprType) prop, exprType: TypeValue, nextId: resObj.nextId }
+                GetIndex idx -> { stmts: resObj.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayAccess") [ (boxGoExpr codegenStateRef modNameStr resObj.expr resObj.exprType), GoInt idx ], exprType: TypeValue, nextId: resObj.nextId }
                 GetCtorField (Qualified mbMod _) _ _ (Ident ctorName) _ idx ->
                   let
                     defMod = case mbMod of
@@ -2425,7 +2321,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                     helpers = unsafePerformEffect (Ref.read codegenStateRef)
                   in
                     if Set.member structName elidedCtors then
-                      { stmts: resObj.stmts, expr: coerceGoExpr modNameStr resObj.expr resObj.exprType TypeValue, exprType: TypeValue, nextId: resObj.nextId }
+                      { stmts: resObj.stmts, expr: coerceGoExpr codegenStateRef modNameStr resObj.expr resObj.exprType TypeValue, exprType: TypeValue, nextId: resObj.nextId }
                     else
                       let
                         fields = fromMaybe [] (map _.fields (Map.lookup key helpers.ctorTypes))
@@ -2470,7 +2366,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                           if isNative then
                             GoConstructorAccess resObj.expr monoStructName typeArgs idx true
                           else
-                            GoConstructorAccess (boxGoExpr modNameStr resObj.expr resObj.exprType) monoStructName typeArgs idx false
+                            GoConstructorAccess (boxGoExpr codegenStateRef modNameStr resObj.expr resObj.exprType) monoStructName typeArgs idx false
                       in
                         { stmts: resObj.stmts, expr: exprAccess, exprType: actualFieldType, nextId: resObj.nextId }
 
@@ -2494,7 +2390,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                       ( \p ->
                           let
                             expectedGoType = fromMaybe TypeValue (Map.lookup p.key (Map.fromFoldable fields))
-                            coercedVal = coerceGoExpr modNameStr p.expr p.goType expectedGoType
+                            coercedVal = coerceGoExpr codegenStateRef modNameStr p.expr p.goType expectedGoType
                           in
                             Tuple p.key coercedVal
                       )
@@ -2503,9 +2399,9 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                     { stmts: resObj.stmts <> accProps.stmts, expr: GoRecordUpdateNative resObj.exprType resObj.expr coercedUpdates, exprType: resObj.exprType, nextId: accProps.nextId }
                 _ ->
                   let
-                    boxedExprs = map (\p -> Tuple p.key (boxGoExpr modNameStr p.expr p.goType)) accProps.exprs
+                    boxedExprs = map (\p -> Tuple p.key (boxGoExpr codegenStateRef modNameStr p.expr p.goType)) accProps.exprs
                   in
-                    { stmts: resObj.stmts <> accProps.stmts, expr: GoRecordUpdateDict (boxGoExpr modNameStr resObj.expr resObj.exprType) boxedExprs, exprType: TypeValue, nextId: accProps.nextId }
+                    { stmts: resObj.stmts <> accProps.stmts, expr: GoRecordUpdateDict (boxGoExpr codegenStateRef modNameStr resObj.expr resObj.exprType) boxedExprs, exprType: TypeValue, nextId: accProps.nextId }
 
           CtorDef _ _ (Ident name) fields ->
             let
@@ -2581,13 +2477,13 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                             instantiateGenericGoType instMap genericGoType
                         Nothing -> TypeValue
                     in
-                      coerceGoExpr modNameStr (GoVar (sanitizeName f)) TypeValue expectedType
+                      coerceGoExpr codegenStateRef modNameStr (GoVar (sanitizeName f)) TypeValue expectedType
                 )
                 fields
               isElided = Set.member structName helpers.elidedCtors
               isPointerAdtLeaf = Map.member baseStructName helpers.pointerAdtLeaves
               isEnum = Set.member baseStructName helpers.enumCtors
-              boxedCtor = boxGoExpr modNameStr (GoConstructor (hashString baseStructName) structName typeArgs coercedFields) (TypeStructPointer baseStructName fullName (structName <> typeArgsStr) typeArgs)
+              boxedCtor = boxGoExpr codegenStateRef modNameStr (GoConstructor (hashString baseStructName) structName typeArgs coercedFields) (TypeStructPointer baseStructName fullName (structName <> typeArgsStr) typeArgs)
 
               finalExprType =
                 if isEnum then TypeUint32
@@ -2611,7 +2507,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
               funcExpr =
                 if isElided then
                   case Array.head fields of
-                    Just f -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> sanitizeName f <> " gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr (coerceGoExpr modNameStr (GoVar (sanitizeName f)) TypeValue TypeValue) <> "\n}") ]
+                    Just f -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> sanitizeName f <> " gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr (coerceGoExpr codegenStateRef modNameStr (GoVar (sanitizeName f)) TypeValue TypeValue) <> "\n}") ]
                     Nothing -> Array.foldr (\f inner -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> sanitizeName f <> " gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr inner <> "\n}") ]) boxedCtor fields
                 else if isPointerAdtLeaf then
                   let
@@ -2727,7 +2623,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                         _, _ -> bound
 
                       resVal = translateExpr codegenStateRef (depth + 1) modNameStr recVars moduleFunctions newBound Nothing [] { isTail: false, inEffectBlock: false } acc.nextId val
-                      coercedExpr = coerceGoExpr modNameStr resVal.expr resVal.exprType expectedType
+                      coercedExpr = coerceGoExpr codegenStateRef modNameStr resVal.expr resVal.exprType expectedType
                       isConstant = expectedType == resVal.exprType && case expectedType, unwrapTcoExpr val of
                         TypeInt64, Lit (LitInt _) -> true
                         TypeBool, Lit (LitBoolean _) -> true
@@ -2764,7 +2660,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
               res =
                 if isElided then
                   case Array.head accProps.exprs of
-                    Just expr -> { expr: boxGoExpr modNameStr expr (fromMaybe TypeValue (map (exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr) (Array.index fields 0))), exprType: TypeValue }
+                    Just expr -> { expr: boxGoExpr codegenStateRef modNameStr expr (fromMaybe TypeValue (map (exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr) (Array.index fields 0))), exprType: TypeValue }
                     Nothing -> { expr: GoConstructor (hashString baseStructName) monoStructName typeArgsCtor accProps.exprs, exprType: TypeStructPointer baseStructName fullName fullPath typeArgsCtor }
                 else case adtFullName >>= \fn -> Map.lookup fn unboxableADTs >>= \adt -> Just (Tuple fn adt) of
                   Just (Tuple fn adt) ->
@@ -2855,24 +2751,24 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
               buildIfs = foldl
                 ( \acc r ->
                     let
-                      goIf = GoIfElse (unboxGoExpr modNameStr r.cond.expr r.cond.exprType TypeBool) (flattenStmts r.body.stmts <> [ GoMutate tmpVar (coerceGoExpr modNameStr r.body.expr r.body.exprType expectedGoType), GoRaw ("goto " <> labelName) ]) []
+                      goIf = GoIfElse (unboxGoExpr codegenStateRef modNameStr r.cond.expr r.cond.exprType TypeBool) (flattenStmts r.body.stmts <> [ GoMutate tmpVar (coerceGoExpr codegenStateRef modNameStr r.body.expr r.body.exprType expectedGoType), GoRaw ("goto " <> labelName) ]) []
                     in
                       acc <> StmtLeaf (GoRaw "{") <> r.cond.stmts <> StmtLeaf goIf <> StmtLeaf (GoRaw "}")
                 )
                 StmtEmpty
                 computedBranches.results
             in
-              { stmts: declTmp <> buildIfs <> StmtLeaf (GoRaw "{") <> resDef.stmts <> StmtLeaf (GoMutate tmpVar (coerceGoExpr modNameStr resDef.expr resDef.exprType expectedGoType)) <> StmtLeaf (GoRaw "}") <> StmtLeaf (GoRaw (labelName <> ":")), expr: GoVar tmpVar, exprType: expectedGoType, nextId: computedBranches.nextId + 1 }
+              { stmts: declTmp <> buildIfs <> StmtLeaf (GoRaw "{") <> resDef.stmts <> StmtLeaf (GoMutate tmpVar (coerceGoExpr codegenStateRef modNameStr resDef.expr resDef.exprType expectedGoType)) <> StmtLeaf (GoRaw "}") <> StmtLeaf (GoRaw (labelName <> ":")), expr: GoVar tmpVar, exprType: expectedGoType, nextId: computedBranches.nextId + 1 }
 
           PrimOp op -> case op of
             Op1 op1 e ->
               let
                 resE = translateExpr codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } nextId e
                 goOp = case op1 of
-                  OpBooleanNot -> { stmts: resE.stmts, expr: GoBinOp "!=" (unboxGoExpr modNameStr resE.expr resE.exprType TypeBool) (GoRaw "true"), exprType: TypeBool, nextId: resE.nextId }
-                  OpIntNegate -> { stmts: resE.stmts, expr: GoPrefixOp "-" (unboxGoExpr modNameStr resE.expr resE.exprType TypeInt64), exprType: TypeInt64, nextId: resE.nextId }
-                  OpIntBitNot -> { stmts: resE.stmts, expr: GoBinOp "^" (GoRaw "^0") (unboxGoExpr modNameStr resE.expr resE.exprType TypeInt64), exprType: TypeInt64, nextId: resE.nextId }
-                  OpNumberNegate -> { stmts: resE.stmts, expr: GoPrefixOp "-" (unboxGoExpr modNameStr resE.expr resE.exprType TypeFloat64), exprType: TypeFloat64, nextId: resE.nextId }
+                  OpBooleanNot -> { stmts: resE.stmts, expr: GoBinOp "!=" (unboxGoExpr codegenStateRef modNameStr resE.expr resE.exprType TypeBool) (GoRaw "true"), exprType: TypeBool, nextId: resE.nextId }
+                  OpIntNegate -> { stmts: resE.stmts, expr: GoPrefixOp "-" (unboxGoExpr codegenStateRef modNameStr resE.expr resE.exprType TypeInt64), exprType: TypeInt64, nextId: resE.nextId }
+                  OpIntBitNot -> { stmts: resE.stmts, expr: GoBinOp "^" (GoRaw "^0") (unboxGoExpr codegenStateRef modNameStr resE.expr resE.exprType TypeInt64), exprType: TypeInt64, nextId: resE.nextId }
+                  OpNumberNegate -> { stmts: resE.stmts, expr: GoPrefixOp "-" (unboxGoExpr codegenStateRef modNameStr resE.expr resE.exprType TypeFloat64), exprType: TypeFloat64, nextId: resE.nextId }
                   OpIsTag (Qualified mbMod (Ident tag)) ->
                     let
                       baseStructName = getBaseStructName modNameStr mbMod tag
@@ -2897,14 +2793,14 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                                   Just _ -> "(" <> printGoExpr resE.expr <> " == nil)"
                                   Nothing -> "(" <> printGoExpr resE.expr <> " != nil)"
                               else case Map.lookup baseStructName helpers.pointerAdtLeaves of
-                                Just nodeInfo -> "(" <> printGoExpr (boxGoExpr modNameStr resE.expr resE.exprType) <> ".Type == 9 && " <> printGoExpr (boxGoExpr modNameStr resE.expr resE.exprType) <> ".IntVal == " <> hashString nodeInfo.nodeBaseStruct <> " && " <> printGoExpr (boxGoExpr modNameStr resE.expr resE.exprType) <> ".UnsafePtr == nil)"
+                                Just nodeInfo -> "(" <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".Type == 9 && " <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".IntVal == " <> hashString nodeInfo.nodeBaseStruct <> " && " <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".UnsafePtr == nil)"
                                 Nothing ->
                                   if Set.member baseStructName helpers.pointerAdtNodes then
-                                    "(" <> printGoExpr (boxGoExpr modNameStr resE.expr resE.exprType) <> ".Type == 9 && " <> printGoExpr (boxGoExpr modNameStr resE.expr resE.exprType) <> ".IntVal == " <> hashStr <> " && " <> printGoExpr (boxGoExpr modNameStr resE.expr resE.exprType) <> ".UnsafePtr != nil)"
+                                    "(" <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".Type == 9 && " <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".IntVal == " <> hashStr <> " && " <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".UnsafePtr != nil)"
                                   else if Set.member baseStructName helpers.enumCtors then
-                                    "(" <> printGoExpr (unboxGoExpr modNameStr resE.expr resE.exprType TypeUint32) <> " == " <> hashStr <> ")"
+                                    "(" <> printGoExpr (unboxGoExpr codegenStateRef modNameStr resE.expr resE.exprType TypeUint32) <> " == " <> hashStr <> ")"
                                   else
-                                    "(" <> printGoExpr (boxGoExpr modNameStr resE.expr resE.exprType) <> ".Type == 9 && " <> printGoExpr (boxGoExpr modNameStr resE.expr resE.exprType) <> ".IntVal == " <> hashStr <> ")"
+                                    "(" <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".Type == 9 && " <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".IntVal == " <> hashStr <> ")"
                           in
                             { stmts: resE.stmts, expr: GoRaw exprStr, exprType: TypeBool, nextId: resE.nextId }
                         _ ->
@@ -2914,7 +2810,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                               if isNativePointer || resE.exprType /= TypeValue then
                                 StmtLeaf (GoRaw ("var " <> tmpVar <> " " <> goTypeToStr resE.exprType <> " = " <> printGoExpr resE.expr))
                               else
-                                StmtLeaf (GoRaw ("var " <> tmpVar <> " gopurs_runtime.Value = " <> printGoExpr (boxGoExpr modNameStr resE.expr resE.exprType)))
+                                StmtLeaf (GoRaw ("var " <> tmpVar <> " gopurs_runtime.Value = " <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType)))
 
                             exprStr =
                               if isNativePointer then
@@ -2929,7 +2825,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                                   if Set.member baseStructName helpers.pointerAdtNodes then
                                     "(" <> tmpVar <> ".Type == 9 && " <> tmpVar <> ".IntVal == " <> hashStr <> " && " <> tmpVar <> ".UnsafePtr != nil)"
                                   else if Set.member baseStructName helpers.enumCtors then
-                                    "(" <> printGoExpr (unboxGoExpr modNameStr (GoVar tmpVar) TypeValue TypeUint32) <> " == " <> hashStr <> ")"
+                                    "(" <> printGoExpr (unboxGoExpr codegenStateRef modNameStr (GoVar tmpVar) TypeValue TypeUint32) <> " == " <> hashStr <> ")"
                                   else
                                     "(" <> tmpVar <> ".Type == 9 && " <> tmpVar <> ".IntVal == " <> hashStr <> ")"
                           in
@@ -2937,7 +2833,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                   OpArrayLength ->
                     case resE.exprType of
                       TypeNativeArray _ -> { stmts: resE.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoCall (GoVar "int64") [ GoCall (GoVar "len") [ resE.expr ] ] ], exprType: TypeValue, nextId: resE.nextId }
-                      _ -> { stmts: resE.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoCall (GoVar "int64") [ GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayLength") [ boxGoExpr modNameStr resE.expr resE.exprType ] ] ], exprType: TypeValue, nextId: resE.nextId }
+                      _ -> { stmts: resE.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoCall (GoVar "int64") [ GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayLength") [ boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType ] ] ], exprType: TypeValue, nextId: resE.nextId }
               in
                 goOp
             Op2 OpBooleanAnd e1 e2 ->
@@ -2949,12 +2845,12 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                 isEmptyStmts _ = false
               in
                 if isEmptyStmts res2.stmts then
-                  { expr: GoBinOp "&&" (unboxGoExpr modNameStr res1.expr res1.exprType TypeBool) (unboxGoExpr modNameStr res2.expr res2.exprType TypeBool), exprType: TypeBool, stmts: res1.stmts <> res2.stmts, nextId: res2.nextId }
+                  { expr: GoBinOp "&&" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeBool) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeBool), exprType: TypeBool, stmts: res1.stmts <> res2.stmts, nextId: res2.nextId }
                 else
                   let
                     tmpVar = "__t_and_" <> show res2.nextId
-                    declTmp = StmtLeaf (GoRaw ("var " <> tmpVar <> " bool = false\nif " <> printGoExpr (unboxGoExpr modNameStr res1.expr res1.exprType TypeBool) <> " {\n"))
-                    assignTmp = StmtLeaf (GoRaw (tmpVar <> " = " <> printGoExpr (unboxGoExpr modNameStr res2.expr res2.exprType TypeBool) <> "\n}"))
+                    declTmp = StmtLeaf (GoRaw ("var " <> tmpVar <> " bool = false\nif " <> printGoExpr (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeBool) <> " {\n"))
+                    assignTmp = StmtLeaf (GoRaw (tmpVar <> " = " <> printGoExpr (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeBool) <> "\n}"))
                   in
                     { expr: GoRaw tmpVar, exprType: TypeBool, stmts: res1.stmts <> declTmp <> res2.stmts <> assignTmp, nextId: res2.nextId + 1 }
             Op2 OpBooleanOr e1 e2 ->
@@ -2966,12 +2862,12 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                 isEmptyStmts _ = false
               in
                 if isEmptyStmts res2.stmts then
-                  { expr: GoBinOp "||" (unboxGoExpr modNameStr res1.expr res1.exprType TypeBool) (unboxGoExpr modNameStr res2.expr res2.exprType TypeBool), exprType: TypeBool, stmts: res1.stmts <> res2.stmts, nextId: res2.nextId }
+                  { expr: GoBinOp "||" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeBool) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeBool), exprType: TypeBool, stmts: res1.stmts <> res2.stmts, nextId: res2.nextId }
                 else
                   let
                     tmpVar = "__t_or_" <> show res2.nextId
-                    declTmp = StmtLeaf (GoRaw ("var " <> tmpVar <> " bool = true\nif !(" <> printGoExpr (unboxGoExpr modNameStr res1.expr res1.exprType TypeBool) <> ") {\n"))
-                    assignTmp = StmtLeaf (GoRaw (tmpVar <> " = " <> printGoExpr (unboxGoExpr modNameStr res2.expr res2.exprType TypeBool) <> "\n}"))
+                    declTmp = StmtLeaf (GoRaw ("var " <> tmpVar <> " bool = true\nif !(" <> printGoExpr (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeBool) <> ") {\n"))
+                    assignTmp = StmtLeaf (GoRaw (tmpVar <> " = " <> printGoExpr (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeBool) <> "\n}"))
                   in
                     { expr: GoRaw tmpVar, exprType: TypeBool, stmts: res1.stmts <> declTmp <> res2.stmts <> assignTmp, nextId: res2.nextId + 1 }
             Op2 op2 e1 e2 ->
@@ -2981,55 +2877,55 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                 goOp = case op2 of
                   OpArrayIndex ->
                     case res1.exprType of
-                      TypeNativeArray innerType -> { expr: boxGoExpr modNameStr (GoRaw (printGoExpr res1.expr <> "[" <> printGoExpr (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64) <> "]")) innerType, exprType: TypeValue }
-                      _ -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayAccess") [ boxGoExpr modNameStr res1.expr res1.exprType, GoCall (GoVar "int") [ unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64 ] ], exprType: TypeValue }
-                  OpIntNum OpAdd -> { expr: GoBinOp "+" (unboxGoExpr modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
-                  OpIntNum OpSubtract -> { expr: GoBinOp "-" (unboxGoExpr modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
-                  OpIntNum OpMultiply -> { expr: GoBinOp "*" (unboxGoExpr modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
-                  OpIntNum OpDivide -> { expr: GoBinOp "/" (unboxGoExpr modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
-                  OpIntNum OpMod -> { expr: GoBinOp "%" (unboxGoExpr modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
-                  OpIntBitAnd -> { expr: GoBinOp "&" (unboxGoExpr modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
-                  OpIntBitOr -> { expr: GoBinOp "|" (unboxGoExpr modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
-                  OpIntBitXor -> { expr: GoBinOp "^" (unboxGoExpr modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
-                  OpIntBitShiftLeft -> { expr: GoBinOp "<<" (unboxGoExpr modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
-                  OpIntBitShiftRight -> { expr: GoBinOp ">>" (unboxGoExpr modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
-                  OpIntBitZeroFillShiftRight -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Zshr") [ boxGoExpr modNameStr res1.expr res1.exprType, boxGoExpr modNameStr res2.expr res2.exprType ], exprType: TypeValue }
-                  OpIntOrd OpEq -> { expr: GoBinOp "==" (unboxGoExpr modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeBool }
-                  OpIntOrd OpNotEq -> { expr: GoBinOp "!=" (unboxGoExpr modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeBool }
-                  OpIntOrd OpLt -> { expr: GoBinOp "<" (unboxGoExpr modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeBool }
-                  OpIntOrd OpLte -> { expr: GoBinOp "<=" (unboxGoExpr modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeBool }
-                  OpIntOrd OpGt -> { expr: GoBinOp ">" (unboxGoExpr modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeBool }
-                  OpIntOrd OpGte -> { expr: GoBinOp ">=" (unboxGoExpr modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeBool }
-                  OpNumberNum OpAdd -> { expr: GoBinOp "+" (unboxGoExpr modNameStr res1.expr res1.exprType TypeFloat64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeFloat64), exprType: TypeFloat64 }
-                  OpNumberNum OpSubtract -> { expr: GoBinOp "-" (unboxGoExpr modNameStr res1.expr res1.exprType TypeFloat64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeFloat64), exprType: TypeFloat64 }
-                  OpNumberNum OpMultiply -> { expr: GoBinOp "*" (unboxGoExpr modNameStr res1.expr res1.exprType TypeFloat64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeFloat64), exprType: TypeFloat64 }
-                  OpNumberNum OpDivide -> { expr: GoBinOp "/" (unboxGoExpr modNameStr res1.expr res1.exprType TypeFloat64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeFloat64), exprType: TypeFloat64 }
-                  OpNumberNum OpMod -> { expr: GoCall (GoVar "math.Mod") [unboxGoExpr modNameStr res1.expr res1.exprType TypeFloat64, unboxGoExpr modNameStr res2.expr res2.exprType TypeFloat64], exprType: TypeFloat64 }
-                  OpNumberOrd OpEq -> { expr: GoBinOp "==" (unboxGoExpr modNameStr res1.expr res1.exprType TypeFloat64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeFloat64), exprType: TypeBool }
-                  OpNumberOrd OpNotEq -> { expr: GoBinOp "!=" (unboxGoExpr modNameStr res1.expr res1.exprType TypeFloat64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeFloat64), exprType: TypeBool }
-                  OpNumberOrd OpLt -> { expr: GoBinOp "<" (unboxGoExpr modNameStr res1.expr res1.exprType TypeFloat64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeFloat64), exprType: TypeBool }
-                  OpNumberOrd OpLte -> { expr: GoBinOp "<=" (unboxGoExpr modNameStr res1.expr res1.exprType TypeFloat64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeFloat64), exprType: TypeBool }
-                  OpNumberOrd OpGt -> { expr: GoBinOp ">" (unboxGoExpr modNameStr res1.expr res1.exprType TypeFloat64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeFloat64), exprType: TypeBool }
-                  OpNumberOrd OpGte -> { expr: GoBinOp ">=" (unboxGoExpr modNameStr res1.expr res1.exprType TypeFloat64) (unboxGoExpr modNameStr res2.expr res2.exprType TypeFloat64), exprType: TypeBool }
-                  OpStringAppend -> { expr: GoBinOp "+" (unboxGoExpr modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr modNameStr res2.expr res2.exprType TypeString), exprType: TypeString }
-                  OpStringOrd OpEq -> { expr: GoBinOp "==" (unboxGoExpr modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
-                  OpStringOrd OpNotEq -> { expr: GoBinOp "!=" (unboxGoExpr modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
-                  OpStringOrd OpLt -> { expr: GoBinOp "<" (unboxGoExpr modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
-                  OpStringOrd OpLte -> { expr: GoBinOp "<=" (unboxGoExpr modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
-                  OpStringOrd OpGt -> { expr: GoBinOp ">" (unboxGoExpr modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
-                  OpStringOrd OpGte -> { expr: GoBinOp ">=" (unboxGoExpr modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
-                  OpCharOrd OpEq -> { expr: GoBinOp "==" (unboxGoExpr modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
-                  OpCharOrd OpNotEq -> { expr: GoBinOp "!=" (unboxGoExpr modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
-                  OpCharOrd OpLt -> { expr: GoBinOp "<" (unboxGoExpr modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
-                  OpCharOrd OpLte -> { expr: GoBinOp "<=" (unboxGoExpr modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
-                  OpCharOrd OpGt -> { expr: GoBinOp ">" (unboxGoExpr modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
-                  OpCharOrd OpGte -> { expr: GoBinOp ">=" (unboxGoExpr modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
-                  OpBooleanOrd OpEq -> { expr: GoBinOp "==" (unboxGoExpr modNameStr res1.expr res1.exprType TypeBool) (unboxGoExpr modNameStr res2.expr res2.exprType TypeBool), exprType: TypeBool }
-                  OpBooleanOrd OpNotEq -> { expr: GoBinOp "!=" (unboxGoExpr modNameStr res1.expr res1.exprType TypeBool) (unboxGoExpr modNameStr res2.expr res2.exprType TypeBool), exprType: TypeBool }
-                  OpBooleanOrd OpLt -> { expr: GoBinOp "<" (unboxGoExpr modNameStr res1.expr res1.exprType TypeBool) (unboxGoExpr modNameStr res2.expr res2.exprType TypeBool), exprType: TypeBool }
-                  OpBooleanOrd OpLte -> { expr: GoBinOp "<=" (unboxGoExpr modNameStr res1.expr res1.exprType TypeBool) (unboxGoExpr modNameStr res2.expr res2.exprType TypeBool), exprType: TypeBool }
-                  OpBooleanOrd OpGt -> { expr: GoBinOp ">" (unboxGoExpr modNameStr res1.expr res1.exprType TypeBool) (unboxGoExpr modNameStr res2.expr res2.exprType TypeBool), exprType: TypeBool }
-                  OpBooleanOrd OpGte -> { expr: GoBinOp ">=" (unboxGoExpr modNameStr res1.expr res1.exprType TypeBool) (unboxGoExpr modNameStr res2.expr res2.exprType TypeBool), exprType: TypeBool }
+                      TypeNativeArray innerType -> { expr: boxGoExpr codegenStateRef modNameStr (GoRaw (printGoExpr res1.expr <> "[" <> printGoExpr (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeInt64) <> "]")) innerType, exprType: TypeValue }
+                      _ -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayAccess") [ boxGoExpr codegenStateRef modNameStr res1.expr res1.exprType, GoCall (GoVar "int") [ unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeInt64 ] ], exprType: TypeValue }
+                  OpIntNum OpAdd -> { expr: GoBinOp "+" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
+                  OpIntNum OpSubtract -> { expr: GoBinOp "-" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
+                  OpIntNum OpMultiply -> { expr: GoBinOp "*" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
+                  OpIntNum OpDivide -> { expr: GoBinOp "/" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
+                  OpIntNum OpMod -> { expr: GoBinOp "%" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
+                  OpIntBitAnd -> { expr: GoBinOp "&" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
+                  OpIntBitOr -> { expr: GoBinOp "|" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
+                  OpIntBitXor -> { expr: GoBinOp "^" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
+                  OpIntBitShiftLeft -> { expr: GoBinOp "<<" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
+                  OpIntBitShiftRight -> { expr: GoBinOp ">>" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeInt64 }
+                  OpIntBitZeroFillShiftRight -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Zshr") [ boxGoExpr codegenStateRef modNameStr res1.expr res1.exprType, boxGoExpr codegenStateRef modNameStr res2.expr res2.exprType ], exprType: TypeValue }
+                  OpIntOrd OpEq -> { expr: GoBinOp "==" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeBool }
+                  OpIntOrd OpNotEq -> { expr: GoBinOp "!=" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeBool }
+                  OpIntOrd OpLt -> { expr: GoBinOp "<" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeBool }
+                  OpIntOrd OpLte -> { expr: GoBinOp "<=" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeBool }
+                  OpIntOrd OpGt -> { expr: GoBinOp ">" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeBool }
+                  OpIntOrd OpGte -> { expr: GoBinOp ">=" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeInt64) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeInt64), exprType: TypeBool }
+                  OpNumberNum OpAdd -> { expr: GoBinOp "+" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeFloat64) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeFloat64), exprType: TypeFloat64 }
+                  OpNumberNum OpSubtract -> { expr: GoBinOp "-" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeFloat64) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeFloat64), exprType: TypeFloat64 }
+                  OpNumberNum OpMultiply -> { expr: GoBinOp "*" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeFloat64) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeFloat64), exprType: TypeFloat64 }
+                  OpNumberNum OpDivide -> { expr: GoBinOp "/" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeFloat64) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeFloat64), exprType: TypeFloat64 }
+                  OpNumberNum OpMod -> { expr: GoCall (GoVar "math.Mod") [unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeFloat64, unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeFloat64], exprType: TypeFloat64 }
+                  OpNumberOrd OpEq -> { expr: GoBinOp "==" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeFloat64) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeFloat64), exprType: TypeBool }
+                  OpNumberOrd OpNotEq -> { expr: GoBinOp "!=" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeFloat64) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeFloat64), exprType: TypeBool }
+                  OpNumberOrd OpLt -> { expr: GoBinOp "<" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeFloat64) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeFloat64), exprType: TypeBool }
+                  OpNumberOrd OpLte -> { expr: GoBinOp "<=" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeFloat64) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeFloat64), exprType: TypeBool }
+                  OpNumberOrd OpGt -> { expr: GoBinOp ">" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeFloat64) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeFloat64), exprType: TypeBool }
+                  OpNumberOrd OpGte -> { expr: GoBinOp ">=" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeFloat64) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeFloat64), exprType: TypeBool }
+                  OpStringAppend -> { expr: GoBinOp "+" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeString), exprType: TypeString }
+                  OpStringOrd OpEq -> { expr: GoBinOp "==" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
+                  OpStringOrd OpNotEq -> { expr: GoBinOp "!=" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
+                  OpStringOrd OpLt -> { expr: GoBinOp "<" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
+                  OpStringOrd OpLte -> { expr: GoBinOp "<=" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
+                  OpStringOrd OpGt -> { expr: GoBinOp ">" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
+                  OpStringOrd OpGte -> { expr: GoBinOp ">=" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
+                  OpCharOrd OpEq -> { expr: GoBinOp "==" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
+                  OpCharOrd OpNotEq -> { expr: GoBinOp "!=" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
+                  OpCharOrd OpLt -> { expr: GoBinOp "<" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
+                  OpCharOrd OpLte -> { expr: GoBinOp "<=" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
+                  OpCharOrd OpGt -> { expr: GoBinOp ">" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
+                  OpCharOrd OpGte -> { expr: GoBinOp ">=" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
+                  OpBooleanOrd OpEq -> { expr: GoBinOp "==" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeBool) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeBool), exprType: TypeBool }
+                  OpBooleanOrd OpNotEq -> { expr: GoBinOp "!=" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeBool) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeBool), exprType: TypeBool }
+                  OpBooleanOrd OpLt -> { expr: GoBinOp "<" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeBool) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeBool), exprType: TypeBool }
+                  OpBooleanOrd OpLte -> { expr: GoBinOp "<=" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeBool) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeBool), exprType: TypeBool }
+                  OpBooleanOrd OpGt -> { expr: GoBinOp ">" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeBool) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeBool), exprType: TypeBool }
+                  OpBooleanOrd OpGte -> { expr: GoBinOp ">=" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeBool) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeBool), exprType: TypeBool }
                   OpBooleanAnd -> { expr: GoRaw "panic(\"unreachable\")", exprType: TypeValue }
                   OpBooleanOr -> { expr: GoRaw "panic(\"unreachable\")", exprType: TypeValue }
               in
@@ -3040,7 +2936,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
               let
                 resA = translateExpr codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } nextId a
                 refIdent = "__local_ref_" <> show resA.nextId
-                declStmt = GoAssign refIdent (boxGoExpr modNameStr resA.expr resA.exprType)
+                declStmt = GoAssign refIdent (boxGoExpr codegenStateRef modNameStr resA.expr resA.exprType)
                 ifaceIdent = "__local_iface_" <> show resA.nextId
                 ifaceStmt = GoRaw ("var " <> ifaceIdent <> " interface{} = " <> refIdent)
               in
@@ -3062,10 +2958,10 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
               let
                 resRef = translateExpr codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } nextId ref
                 resVal = translateExpr codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } resRef.nextId val
-                writeStmt = GoRaw ("*(" <> printGoExpr resRef.expr <> ".PtrVal().(*interface{})) = " <> printGoExpr (boxGoExpr modNameStr resVal.expr resVal.exprType))
+                writeStmt = GoRaw ("*(" <> printGoExpr resRef.expr <> ".PtrVal().(*interface{})) = " <> printGoExpr (boxGoExpr codegenStateRef modNameStr resVal.expr resVal.exprType))
               in
                 { stmts: resRef.stmts <> resVal.stmts <> StmtLeaf writeStmt
-                , expr: boxGoExpr modNameStr resVal.expr resVal.exprType
+                , expr: boxGoExpr codegenStateRef modNameStr resVal.expr resVal.exprType
                 , exprType: TypeValue
                 , nextId: resVal.nextId
                 }

@@ -174,7 +174,7 @@ Le build dispose maintenant d’un seul chemin actif : `main` appelle `emitModul
 
 ## 4. Donner des noms aux contextes et borner l'état du codegen
 
-Les structures partagées ont des alias, `translate` reçoit les métadonnées et le module, et les options du traducteur sont nommées. Les usages de `globalReboxPairs` sont regroupés et sa rétention entre modules est mesurée ; sa localisation reste à faire.
+Les structures partagées ont des alias, `translate` reçoit les métadonnées et le module, et les options du traducteur sont nommées. Chaque invocation de `translate` possède maintenant son propre ensemble de conversions Rebox dans `CodegenState`.
 
 - [x] **4.1 — Nommer les structures existantes.** Les métadonnées, l'environnement local, l'état de génération, les informations des fonctions, les contextes de boucle et le résultat d'expression ont des alias ; leur contenu reste identique (4.1.1–4.1.6).
 - [x] **4.1.1 — Nommer l'état de génération.** Le 9 septembre 2026, l'alias `CodegenState` centralise les 12 champs répétés dans `translateExprImpl_` et `translateExprImpl__` ; leurs signatures et la création de `helpersRef` utilisent `Ref CodegenState`. Build réussi avec les 89 avertissements déjà observés dans `CodeGen`. Sur `RBTree`, les 58 entrées CoreFn et les 82 fichiers Go sont identiques avant/après ; le Go compile et renvoie une profondeur de `22` pour 100 000 insertions. L'écart de snapshot préexistant reste identique. Comparaison via une copie temporaire de la fixture avec les dépendances `prelude effect console`. Preuves : `/private/tmp/gopurs-codegen-state-9au_tywe/`.
@@ -205,13 +205,25 @@ Validation commune du lot 4.3, le 9 septembre 2026 : build réussi avec les mêm
 
 Validation commune du lot 4.4, le 9 septembre 2026 : compilation réussie avec 86 avertissements connus, contre 89 auparavant (deux noms inutilisés et un masquage disparaissent avec l'extraction, aucun nouvel avertissement). `GenericsRep` et `TypeClassMemberOrderChange` produisent chacun les mêmes 82 fichiers Go sur 58 entrées CoreFn identiques avant/après ; le Go compile et les deux exécutions réussissent. Les écarts de snapshots préexistants restent identiques. Copies temporaires avec les dépendances `prelude effect console` ; snapshots et configuration du runner inchangés. La caractérisation A → B → A est rejouée sur les deux bundles, dans un espace temporaire isolé du runner. Preuves : `/private/tmp/gopurs-rebox-extraction-lpnkrwyc/`.
 
-- [ ] **4.5 — Localiser l'état nécessaire.** Déplacer une référence effectivement utilisée dans l'état de compilation, puis vérifier la même séquence ; retirer séparément les références sans usage démontré.
+- [x] **4.5 — Localiser l'état nécessaire.** Les conversions Rebox utilisent la référence locale de génération ; `globalReboxPairs` est supprimée. La séquence A → B → A confirme des états distincts, initialement vides, avec un Go inchangé.
+- [x] **4.5.1 — Créer un ensemble local de conversions.** `reboxPairs` appartient à `CodegenState` et est initialisé à `Set.empty` à chaque invocation de `translate` ; les métadonnées partagées ne contiennent pas cet état.
+- [x] **4.5.2 — Enregistrer dans l'état reçu.** `registerReboxPair` reçoit la référence locale, dédoublonne les paires et modifie uniquement son champ `reboxPairs`.
+- [x] **4.5.3 — Expliciter l'état des coercions.** `coerceGoExpr` reçoit et transmet la référence locale, y compris lors des conversions récursives.
+- [x] **4.5.4 — Expliciter l'état du boxing.** `boxGoExpr` et `boxGoExprImpl` transmettent la même référence ; les branches qui émettent directement ignorent ce paramètre.
+- [x] **4.5.5 — Expliciter l'état de l'unboxing.** `unboxGoExpr` conserve la référence dans ses appels récursifs et ses conversions de champs et d'éléments.
+- [x] **4.5.6 — Générer depuis l'état local.** `renderReboxFunction` transmet la référence aux coercions des champs. `generateReboxFunctions` la relit à chaque tour pour découvrir les nouvelles paires ; la référence globale et sa table par nom de module sont retirées.
 
 ## 5. Séparer les types Go et les conversions de valeurs
 
-- [ ] **5.1 — Extraire la traduction des types.** Déplacer `exprTypeToGoType` et ses dépendances minimales vers un module dédié, en gardant d'abord l'API publique existante comme relais.
-- [ ] **5.2 — Déplacer les variantes génériques.** Y regrouper `exprTypeToGenericGoType`, `structFieldGoType` et `instantiateGenericGoType` ; contrôler applications de types, ADT et classes avec les fixtures existantes.
-- [ ] **5.3 — Rendre les effets des coercions visibles.** Identifier les écritures effectuées par `coerceGoExpr`, boxing et unboxing ; leur transmettre explicitement l'état défini au point 4 avant toute extraction.
+- [x] **5.1 — Extraire la traduction des types.** `Gopurs.GoTypes` expose `exprTypeToGoType` et `isClosedRowTail`. Leurs corps restent identiques ; les relais dans `CodeGen` conservent l'API existante, y compris pour les usages FFI du helper de rangées.
+- [x] **5.2 — Déplacer les variantes génériques.** Les variantes partagent le même module pur, sans dépendance à `CodeGen`, avec des relais conservés.
+- [x] **5.2.1 — Déplacer la traduction générique.** `exprTypeToGenericGoType` rejoint `GoTypes` sans changement des règles pour les paramètres, applications de types, ADT et rangées.
+- [x] **5.2.2 — Déplacer les types des champs.** `structFieldGoType` rejoint `GoTypes` avec le même traitement des interfaces.
+- [x] **5.2.3 — Déplacer l'instanciation des types Go.** `instantiateGenericGoType` rejoint `GoTypes` avec les mêmes substitutions et reconstructions.
+- [x] **5.3 — Rendre les effets des coercions visibles.** Le passage explicite de la référence aux quatre fonctions de conversion et à l'enregistrement est réalisé aux points 4.5.2–4.5.6 ; les conversions restent dans `CodeGen` avant leur extraction.
+
+Validation commune du lot de dix étapes, le 9 septembre 2026 : compilation réussie avec les mêmes 86 avertissements connus, dont ceux des fonctions déplacées. Les corps des cinq fonctions de types sont conservés littéralement. `GenericsRep`, `TypeClassMemberOrderChange`, `NativeRecordBoxing` et `VisibleTypeApplications` produisent les mêmes 82, 82, 86 et 84 fichiers Go sur 58, 58, 60 et 59 entrées CoreFn identiques avant/après ; le Go compile et les quatre exécutions réussissent, dont les dix assertions de boxing. Les écarts de snapshots préexistants restent identiques. Le harness rejoue A seul puis A → B → A sans reset après modification : quatre références distinctes, toutes initialement vides, avec 13 puis 13 → 11 → 13 paires. Les quatre sorties rejouées, les 82 fichiers Go de la génération capturée et les conversions émises sont identiques avant/après. Registre global absent. Copies temporaires des fixtures ; snapshots et configuration du runner inchangés. Preuves : `/private/tmp/gopurs-local-rebox-types-tx4bqq91/`.
+
 - [ ] **5.4 — Extraire les conversions.** Déplacer boxing, puis unboxing/coercions dans des étapes séparées ; vérifier records natifs, tableaux et callbacks avec snapshots identiques.
 - [ ] **5.5 — Documenter les choix de représentation.** Décrire près du code les conditions du passage en natif et du fallback `Value`, notamment rangées ouvertes, polymorphisme et frontières FFI.
 
