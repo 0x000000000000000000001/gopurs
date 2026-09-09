@@ -29,7 +29,6 @@ import Data.Foldable (foldl, foldMap, any)
 import Data.List as List
 import Data.Traversable (traverse)
 
-import PureScript.Backend.Optimizer.Monomorphize (InstantiationMap)
 import Gopurs.GoAst (GoDecl, GoExpr(..), GoType(..), goTypeToStr, sanitizeName)
 
 import Gopurs.Printer (printGoFile, printGoExpr, printGoDeclVar)
@@ -519,8 +518,8 @@ getStructName modNameStr mbMod ctorName =
 globalReboxPairs :: Ref.Ref (Map.Map String (Set.Set (Tuple GoType GoType)))
 globalReboxPairs = unsafePerformEffect (Ref.new Map.empty)
 
-translate :: Set.Set String -> Set.Set String -> Map.Map String { ctorName :: String, arity :: Int } -> Set.Set String -> Map.Map String { nodeBaseStruct :: String, nodeCtor :: String } -> Set.Set ExprType -> Set.Set String -> Map.Map String { vars :: Array String, fields :: Array ExprType } -> Map.Map String ExprType -> InstantiationMap -> Map.Map String { vars :: Array String, fields :: Array { name :: String, "type" :: ExprType } } -> Array (Array String) -> BackendModule -> String
-translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves _ elidedCtors ctorTypes globalTypes _ classDeclsFields _ inputMod =
+translate :: Set.Set String -> Set.Set String -> Map.Map String { ctorName :: String, arity :: Int } -> Set.Set String -> Map.Map String { nodeBaseStruct :: String, nodeCtor :: String } -> Set.Set String -> Map.Map String { vars :: Array String, fields :: Array ExprType } -> Map.Map String ExprType -> Map.Map String { vars :: Array String, fields :: Array { name :: String, "type" :: ExprType } } -> Array (Array String) -> BackendModule -> String
+translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves elidedCtors ctorTypes globalTypes classDeclsFields _ inputMod =
 
   let
     mod = optimizeThunkProducers inputMod

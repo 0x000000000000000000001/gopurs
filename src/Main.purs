@@ -16,13 +16,11 @@ import Data.Either (Either(..))
 import Data.Bifunctor (lmap)
 import Data.Argonaut.Decode.Error (printJsonDecodeError)
 import Data.Array as Array
-import Data.Tuple (Tuple(..))
 import Data.List as List
 import Data.List (List)
 import Data.Traversable (traverse)
 import Data.Maybe (Maybe(..), isJust, fromMaybe)
 import Data.Map as Map
-import Data.Foldable (foldl)
 
 import Data.Set as Set
 import Data.String.Pattern (Pattern(..), Replacement(..))
@@ -30,9 +28,8 @@ import Data.String as String
 import Data.Newtype (unwrap)
 import PureScript.Backend.Optimizer.Builder (buildModules)
 import PureScript.Backend.Optimizer.Convert (BackendModule)
-import PureScript.Backend.Optimizer.Monomorphize (collectInstantiations, InstantiationMap, collectAllTypes, monomorphize, transitiveCollect)
 import PureScript.Backend.Optimizer.Semantics.Foreign (coreForeignSemantics)
-import PureScript.Backend.Optimizer.CoreFn (Module(..), Ann, importName, Bind(..), Binding(..), ExprType(..), Ident(..))
+import PureScript.Backend.Optimizer.CoreFn (Module(..), Ann, importName, ExprType, Ident(..))
 import Gopurs.CodeGen (translate)
 import Gopurs.AdtMetadata (buildPointerAdtMetadata, buildEnumAdtMetadata)
 import Gopurs.ClassMetadata (ClassFields, buildClassFields, addClassDataDeclarations)
@@ -42,7 +39,8 @@ import PureScript.Backend.Optimizer.FfiSupport (findFfiFile)
 import Gopurs.FfiSupport (extractFfiAst)
 import Gopurs.FfiTypes (FfiDecl)
 import Gopurs.GlobalTypes (buildGlobalTypes)
-import PureScript.Backend.Optimizer.App (coreFnModulesFromOutput, parseCLIArgs, writeCache, loadDirectives)
+import Gopurs.Monomorphization (monomorphizeModules)
+import PureScript.Backend.Optimizer.App (coreFnModulesFromOutput, parseCLIArgs, loadDirectives)
 import Data.Argonaut.Decode (decodeJson)
 import PureScript.Backend.Optimizer.Semantics (InlineDirectiveMap)
 
@@ -52,9 +50,7 @@ type PreparedData =
   , ctorTypes :: ConstructorTypes
   , globalTypes :: Map.Map String ExprType
   , classDeclsFields :: ClassFields
-  , instantiations :: InstantiationMap
   , monomorphizedModules :: List (Module Ann)
-  , adtTypes :: Set.Set ExprType
   , pointerAdtPaths :: Map.Map String { ctorName :: String, arity :: Int }
   , pointerAdtNodes :: Set.Set String
   , pointerAdtLeaves :: Map.Map String { nodeBaseStruct :: String, nodeCtor :: String }
@@ -65,9 +61,7 @@ type PreparedData =
 
 loadAndPrepareModules :: { mbMainModule :: Maybe String } -> Aff PreparedData
 loadAndPrepareModules args = do
-
   finalModules <- coreFnModulesFromOutput "output"
-
 
   let elidedCtors = collectElidedConstructors (Array.fromFoldable finalModules)
 
@@ -79,43 +73,8 @@ loadAndPrepareModules args = do
   let
     classDeclsFields = buildClassFields (Array.fromFoldable finalModules)
     finalModulesWithClassDecls = map addClassDataDeclarations finalModules
-  
 
-  let globalAstMap = foldl (\acc (Module m) ->
-        foldl (\acc' b -> case b of
-          NonRec (Binding ann id e) -> Map.insert (unwrap m.name <> "." <> unwrap id) (Binding ann id e) acc'
-          Rec binds -> foldl (\a (Binding ann id e) -> Map.insert (unwrap m.name <> "." <> unwrap id) (Binding ann id e) a) acc' binds
-        ) acc m.decls
-      ) Map.empty finalModulesWithClassDecls
-      
-
-  let rawInstantiations = foldl (collectInstantiations globalAstMap) Map.empty finalModulesWithClassDecls
-
-  let transitiveInstantiations = transitiveCollect globalAstMap rawInstantiations
-
-  let ffiGlobals = foldl (\acc (Module m) ->
-         let modName = unwrap m.name
-         in foldl (\acc' (Tuple (Ident name) _) -> Set.insert (modName <> "." <> name) acc') acc (Map.toUnfoldable m.foreign :: Array (Tuple Ident (Maybe ExprType)))
-      ) Set.empty finalModulesWithClassDecls
-
-  let instantiations = Map.filterKeys (\k -> not (Set.member k ffiGlobals) && case Map.lookup k globalTypes of
-                                            Just t -> 
-                                              let hasTV = hasTypeVariables t
-                                              in hasTV
-                                            Nothing -> false) transitiveInstantiations
-
-
-  let monomorphizedModules =
-        if Map.isEmpty instantiations then
-          finalModulesWithClassDecls
-        else
-          map (monomorphize globalAstMap instantiations) finalModulesWithClassDecls
-
-
-  let allTypes = foldl (\acc mod -> Set.union acc (collectAllTypes mod)) Set.empty finalModulesWithClassDecls
-  let adtTypes = Set.filter (\t -> case t of
-        ADT _ _ _ -> true
-        _ -> false) allTypes
+  let monomorphizedModules = monomorphizeModules globalTypes finalModulesWithClassDecls
   let
     { pointerAdtPaths, pointerAdtNodes, pointerAdtLeaves } = buildPointerAdtMetadata (Array.fromFoldable finalModulesWithClassDecls)
     { enumAdts, enumCtors } = buildEnumAdtMetadata (Array.fromFoldable finalModulesWithClassDecls)
@@ -129,9 +88,7 @@ loadAndPrepareModules args = do
        , ctorTypes
        , globalTypes
        , classDeclsFields
-       , instantiations
        , monomorphizedModules
-       , adtTypes
        , pointerAdtPaths
        , pointerAdtNodes
        , pointerAdtLeaves
@@ -140,41 +97,13 @@ loadAndPrepareModules args = do
        , targetMainModules
        }
 
-hasTypeVariables :: ExprType -> Boolean
-hasTypeVariables (TypeVar v) = String.take 1 v == String.toLower (String.take 1 v) && v /= "gopurs_runtime.Value"
-
-hasTypeVariables (Func args ret) = Array.any hasTypeVariables args || hasTypeVariables ret
-hasTypeVariables (Array t) = hasTypeVariables t
-hasTypeVariables (Record row) = hasTypeVariables row
-hasTypeVariables (Row props tail) = 
-  let tailHas = case tail of
-        Nothing -> false
-        Just t -> hasTypeVariables t
-  in Array.any (\(Tuple _ v) -> hasTypeVariables v) props || tailHas
-hasTypeVariables (TypeApp c args) = hasTypeVariables c || Array.any hasTypeVariables args
-hasTypeVariables (ForAll _ body) = hasTypeVariables body
-hasTypeVariables (ConstrainedType constraints body) = Array.any (\(Tuple _ a) -> Array.any hasTypeVariables a) constraints || hasTypeVariables body
-hasTypeVariables Int = false
-hasTypeVariables String = false
-hasTypeVariables Char = false
-hasTypeVariables Number = false
-hasTypeVariables Boolean = false
-hasTypeVariables Unit = false
-hasTypeVariables (TypeLevelString _) = false
-hasTypeVariables (ADT _ _ args) = Array.any hasTypeVariables args
-hasTypeVariables Any = false
-
-cacheVersion :: String
-cacheVersion = "1.0.0"
-
-
 emitModule :: PreparedData -> Maybe String -> Module Ann -> BackendModule -> Aff Unit
 emitModule prepared mbFfiDir (Module coreFnMod) backendMod = do
   let modNameStr = unwrap backendMod.name
   let safeModName = String.replaceAll (Pattern ".") (Replacement "_") modNameStr
   let importsArray = map (\i -> String.split (Pattern ".") (unwrap (importName i))) coreFnMod.imports
 
-  let goFile = translate prepared.enumAdts prepared.enumCtors prepared.pointerAdtPaths prepared.pointerAdtNodes prepared.pointerAdtLeaves prepared.adtTypes prepared.elidedCtors prepared.ctorTypes prepared.globalTypes prepared.instantiations prepared.classDeclsFields importsArray backendMod
+  let goFile = translate prepared.enumAdts prepared.enumCtors prepared.pointerAdtPaths prepared.pointerAdtNodes prepared.pointerAdtLeaves prepared.elidedCtors prepared.ctorTypes prepared.globalTypes prepared.classDeclsFields importsArray backendMod
   FS.writeTextFile UTF8 ("output/purescript/" <> safeModName <> ".go") goFile
 
   when (Array.length (Array.fromFoldable backendMod.foreign) > 0) do
@@ -207,7 +136,6 @@ emitModule prepared mbFfiDir (Module coreFnMod) backendMod = do
 
         let dummyContent = "package purescript\n\nimport \"gopurs/output/gopurs_runtime\"\n\n" <> CodeGen.generateFfiBridge safeModName backendMod.dataDecls [] (Map.toUnfoldable backendMod.foreign)
         FS.writeTextFile UTF8 ("output/purescript/" <> safeModName <> "_ffi.go") dummyContent
-  writeCache cacheVersion ("output/purescript/" <> safeModName <> ".gopurs-cache.json") backendMod
 
 main :: Effect Unit
 main = launchAff_ do
@@ -235,6 +163,7 @@ main = launchAff_ do
     , traceIdents: Set.empty
     , rewriteLimit: fromMaybe 10_000 args.mbRewriteLimit
     , onPrepareModule: \_ (Module m) -> pure (Module m)
+    -- Regenerate every module and its FFI output on each invocation.
     , onSkipModule: \_ _ -> pure Nothing
     , onCodegenModule: \_ coreFnModule backendMod _ ->
         emitModule prepared args.mbFfiDir coreFnModule backendMod
