@@ -143,6 +143,44 @@ A fixture can declare `-- @dependencies: assert prelude effect console refs part
 to compile only its required packages. The runner temporarily adjusts its dependency
 list and restores its configuration and lockfile after the build.
 
+## Rebuilding the FFI parser
+
+The Go parser lives in `tools/ffi-gen`. `parser.go` analyzes declarations and
+returns the JSON contract; `types.go` defines that contract, and
+`main_js_wasm.go` exposes it to JavaScript. `tools/ffi-runner.mjs` reads Go source
+from stdin and writes the parser response to stdout.
+
+The generator's `go.mod` pins **Go 1.27.0**. With that version on `PATH`, run:
+
+```bash
+npm run build:ffi
+```
+
+This explicitly rebuilds `tools/ffi_gen.wasm` for `js/wasm` and copies
+`tools/wasm_exec.js` from the same Go installation. The command checks the exact
+Go version, disables automatic toolchain switching, and uses `-trimpath`,
+`-buildvcs=false` and an empty build ID. Both artifacts are prepared before
+replacement, so a compilation failure preserves the existing pair. Commit the
+WASM and its matching JavaScript runtime together when regenerating them.
+
+The parser's contract tests run natively, without WASM:
+
+```bash
+cd tools/ffi-gen
+go test ./...
+```
+
+The checked-in WASM and runtime are shipped with `tools/ffi-runner.mjs` in the
+npm package. `npm run build` and the installation `prepare` hook build the
+PureScript backend using those artifacts; rebuilding the parser is a separate
+maintainer command. After editing `FfiSupport.js`, run `npm run build` to update
+the backend bundle. Runner paths are resolved relative to the source, Spago
+output or installed bundle, independently of the current directory.
+
+This workflow is validated with Node.js 24.8.0 and Go 1.27.0. The existing error
+contract is preserved: invalid Go returns `[]`, and asynchronous WASM failures
+are logged by the runner's rejection handler.
+
 ## Current status & milestones
 
 Since its inception, `gopurs` has reached several major milestones:

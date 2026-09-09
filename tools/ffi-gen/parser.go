@@ -8,28 +8,9 @@ import (
 	"go/printer"
 	"go/token"
 	"strings"
-	"syscall/js"
 )
 
 var fset = token.NewFileSet()
-
-type TypeNode struct {
-	Type string      `json:"type"` // "Named", "Func", "Array", "Map", "Unknown"
-	Name string      `json:"name,omitempty"`
-	Args []*TypeNode `json:"args,omitempty"`
-	Ret  *TypeNode   `json:"ret,omitempty"`
-	Elem *TypeNode   `json:"elem,omitempty"`
-	Key  *TypeNode   `json:"key,omitempty"`
-	Val  *TypeNode   `json:"val,omitempty"`
-}
-
-type FFIDecl struct {
-	Name       string      `json:"name"`
-	IsVar      bool        `json:"isVar"`
-	TypeParams []string    `json:"typeParams"`
-	Args       []*TypeNode `json:"args"`
-	Ret        *TypeNode   `json:"ret"`
-}
 
 func parseExprToTypeNode(expr ast.Expr) *TypeNode {
 	if expr == nil {
@@ -77,14 +58,13 @@ func parseExprToTypeNode(expr ast.Expr) *TypeNode {
 	}
 }
 
-func parseFFI(this js.Value, args []js.Value) any {
-	content := args[0].String()
-	
+func parseFFI(content string) string {
+
 	ffiMarkerIdx := strings.Index(content, "// --- Auto-generated FFI wrappers ---")
 	if ffiMarkerIdx != -1 {
 		content = content[:ffiMarkerIdx]
 	}
-	
+
 	src := content
 	if !strings.Contains(content, "package ") {
 		src = "package main\n" + content
@@ -106,7 +86,7 @@ func parseFFI(this js.Value, args []js.Value) any {
 			if c != '_' && (c < 'A' || c > 'Z') {
 				continue
 			}
-			
+
 			var typeParamNames []string
 			if funcDecl.Type.TypeParams != nil {
 				for _, field := range funcDecl.Type.TypeParams.List {
@@ -115,7 +95,7 @@ func parseFFI(this js.Value, args []js.Value) any {
 					}
 				}
 			}
-			
+
 			var parsedArgs []*TypeNode
 			if funcDecl.Type.Params != nil {
 				for _, field := range funcDecl.Type.Params.List {
@@ -129,14 +109,18 @@ func parseFFI(this js.Value, args []js.Value) any {
 					}
 				}
 			}
-			
+
 			var retNode *TypeNode
 			if funcDecl.Type.Results != nil && len(funcDecl.Type.Results.List) > 0 {
 				retNode = parseExprToTypeNode(funcDecl.Type.Results.List[0].Type)
 			}
-			
-			if typeParamNames == nil { typeParamNames = []string{} }
-			if parsedArgs == nil { parsedArgs = []*TypeNode{} }
+
+			if typeParamNames == nil {
+				typeParamNames = []string{}
+			}
+			if parsedArgs == nil {
+				parsedArgs = []*TypeNode{}
+			}
 
 			decls = append(decls, FFIDecl{
 				Name:       funcName,
@@ -145,7 +129,7 @@ func parseFFI(this js.Value, args []js.Value) any {
 				Args:       parsedArgs,
 				Ret:        retNode,
 			})
-			
+
 		} else if genDecl, ok := decl.(*ast.GenDecl); ok && genDecl.Tok == token.VAR {
 			for _, spec := range genDecl.Specs {
 				if valueSpec, ok := spec.(*ast.ValueSpec); ok {
@@ -159,10 +143,10 @@ func parseFFI(this js.Value, args []js.Value) any {
 							continue
 						}
 						decls = append(decls, FFIDecl{
-							Name:  varName,
-							IsVar: true,
+							Name:       varName,
+							IsVar:      true,
 							TypeParams: []string{},
-							Args: []*TypeNode{},
+							Args:       []*TypeNode{},
 						})
 					}
 				}
@@ -176,9 +160,4 @@ func parseFFI(this js.Value, args []js.Value) any {
 
 	jsonBytes, _ := json.Marshal(decls)
 	return string(jsonBytes)
-}
-
-func main() {
-	js.Global().Set("parseFFI", js.FuncOf(parseFFI))
-	select {}
 }
