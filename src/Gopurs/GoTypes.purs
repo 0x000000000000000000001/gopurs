@@ -18,11 +18,15 @@ import Data.Tuple (Tuple(..))
 import Gopurs.GoAst (GoType(..), goTypeToStr, sanitizeName)
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..))
 
+-- Nothing and Just Any count as closed row tails in this mapping. Closed
+-- records become native structs with fields sorted by label; other tails use Value.
 isClosedRowTail :: Maybe ExprType -> Boolean
 isClosedRowTail Nothing = true
 isClosedRowTail (Just Any) = true
 isClosedRowTail _ = false
 
+-- TAST annotations and ADT metadata select the internal Go representation.
+-- FFI wrappers separately reconcile it with the declared foreign Go signature.
 exprTypeToGoType :: Map.Map String { ctorName :: String, arity :: Int } -> Set.Set String -> Set.Set String -> String -> ExprType -> GoType
 exprTypeToGoType _ _ _ _ Int = TypeInt64
 exprTypeToGoType _ _ _ _ Number = TypeFloat64
@@ -70,6 +74,8 @@ exprTypeToGoType ptrPaths enumAdts elided modNameStr (TypeApp fn arg) =
 exprTypeToGoType _ _ _ _ (TypeVar v) = TypeValue
 exprTypeToGoType _ _ _ _ _ = TypeValue
 
+-- Ordinary type variables fall back to Value. In a generic declaration,
+-- variables listed in typeVars can instead become Go type parameters.
 exprTypeToGenericGoType :: Map.Map String { ctorName :: String, arity :: Int } -> Set.Set String -> Set.Set String -> Array String -> String -> ExprType -> GoType
 exprTypeToGenericGoType ptrPaths enumAdts elidedCtors typeVars modNameStr (Record (Row fields tail)) | isClosedRowTail tail = TypeRecord (map (\(Tuple k v) -> Tuple k (exprTypeToGenericGoType ptrPaths enumAdts elidedCtors typeVars modNameStr v)) (Array.sortBy (comparing \(Tuple k _) -> k) fields))
 exprTypeToGenericGoType _ _ _ _ _ (Record _) = TypeValue
