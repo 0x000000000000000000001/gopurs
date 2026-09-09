@@ -3,9 +3,11 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/printer"
+	"go/scanner"
 	"go/token"
 	"strings"
 )
@@ -58,20 +60,27 @@ func parseExprToTypeNode(expr ast.Expr) *TypeNode {
 	}
 }
 
-func parseFFI(content string) string {
-
+func parseFFI(content string) (string, error) {
 	ffiMarkerIdx := strings.Index(content, "// --- Auto-generated FFI wrappers ---")
 	if ffiMarkerIdx != -1 {
 		content = content[:ffiMarkerIdx]
 	}
 
 	src := content
-	if !strings.Contains(content, "package ") {
-		src = "package main\n" + content
+	// Preserve source lines and columns while allowing later //line directives.
+	const packagePrefix = "package main\n//line :1:1\n"
+	addedPackage := !strings.Contains(content, "package ")
+	if addedPackage {
+		src = packagePrefix + content
 	}
 	f, err := parser.ParseFile(fset, "", src, parser.ParseComments)
 	if err != nil {
-		return "[]"
+		if parseErrors, ok := err.(scanner.ErrorList); ok && addedPackage {
+			for _, parseError := range parseErrors {
+				parseError.Pos.Offset -= len(packagePrefix)
+			}
+		}
+		return "", err
 	}
 
 	var decls []FFIDecl
@@ -158,6 +167,9 @@ func parseFFI(content string) string {
 		decls = []FFIDecl{}
 	}
 
-	jsonBytes, _ := json.Marshal(decls)
-	return string(jsonBytes)
+	jsonBytes, err := json.Marshal(decls)
+	if err != nil {
+		return "", fmt.Errorf("encode FFI declarations: %w", err)
+	}
+	return string(jsonBytes), nil
 }

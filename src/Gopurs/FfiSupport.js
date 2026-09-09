@@ -17,21 +17,18 @@ function resolveFfiRunner() {
     return runner;
 }
 
-export const extractFfiAstImpl = function(moduleName) {
-    return function(content) {
-        return function() {
-            try {
-                return execFileSync(process.execPath, [resolveFfiRunner()], {
-                    input: content,
-                    encoding: 'utf-8',
-                    maxBuffer: 10 * 1024 * 1024,
-                });
-            } catch (e) {
-                console.error("FFI AST Extraction Error in module", moduleName);
-                if (e.stdout) console.error(e.stdout.toString());
-                if (e.stderr) console.error(e.stderr.toString());
-                throw e;
-            }
-        };
+export const extractFfiAstImpl = function(content) {
+    return function() {
+        try {
+            return execFileSync(process.execPath, [resolveFfiRunner()], {
+                input: content,
+                encoding: 'utf-8',
+                maxBuffer: 10 * 1024 * 1024,
+                stdio: ['pipe', 'pipe', 'pipe'],
+            });
+        } catch (error) {
+            const detail = error.stderr?.trim() || error.message;
+            throw new Error(`FFI runner failed: ${detail}`);
+        }
     };
 };

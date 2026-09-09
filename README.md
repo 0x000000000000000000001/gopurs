@@ -148,7 +148,10 @@ list and restores its configuration and lockfile after the build.
 The Go parser lives in `tools/ffi-gen`. `parser.go` analyzes declarations and
 returns the JSON contract; `types.go` defines that contract, and
 `main_js_wasm.go` exposes it to JavaScript. `tools/ffi-runner.mjs` reads Go source
-from stdin and writes the parser response to stdout.
+from stdin and writes the declarations as JSON to stdout. Valid input with no
+retained declarations returns `[]`. Invalid Go or a runner failure writes a
+diagnostic to stderr and exits unsuccessfully. The backend also rejects invalid
+JSON responses, reporting the PureScript module and the FFI file path.
 
 The generator's `go.mod` pins **Go 1.27.0**. With that version on `PATH`, run:
 
@@ -169,6 +172,18 @@ The parser's contract tests run natively, without WASM:
 cd tools/ffi-gen
 go test ./...
 ```
+
+After rebuilding the WASM and the backend with `npm run build:ffi` and
+`npm run build`, run the Node integration tests from the repository root:
+
+```bash
+npm run test:ffi
+```
+
+These exercise the typed `FfiSupport` API, syntax and JSON errors, and missing
+or corrupt runner/WASM files in temporary directories. `Main` receives decoded
+declarations; extraction and decoding failures propagate as exceptions. A build
+can have written some output files before failing.
 
 The checked-in WASM and runtime are shipped with `tools/ffi-runner.mjs` in the
 npm package. `npm run build` and the installation `prepare` hook build the

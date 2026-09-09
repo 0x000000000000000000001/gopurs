@@ -3,18 +3,12 @@ module Main where
 import Prelude
 
 import Effect (Effect)
-import Effect.Console as Console
 import Effect.Class (liftEffect)
 import Effect.Aff (Aff, launchAff_, attempt)
 import Node.FS.Aff as FS
 import Node.Encoding (Encoding(..))
 import Node.Process as Process
 import Gopurs.FfiBridge as FfiBridge
-import Effect.Unsafe (unsafePerformEffect)
-import Data.Argonaut.Parser (jsonParser)
-import Data.Either (Either(..))
-import Data.Bifunctor (lmap)
-import Data.Argonaut.Decode.Error (printJsonDecodeError)
 import Data.Array as Array
 import Data.List as List
 import Data.List (List)
@@ -36,12 +30,10 @@ import Gopurs.ClassMetadata (buildClassFields, addClassDataDeclarations)
 import Gopurs.ConstructorMetadata (buildConstructorTypes, collectElidedConstructors)
 import Gopurs.Runtime (runtimeGoCode)
 import PureScript.Backend.Optimizer.FfiSupport (findFfiFile)
-import Gopurs.FfiSupport (extractFfiAst)
-import Gopurs.FfiTypes (FfiDecl)
+import Gopurs.FfiSupport (extractFfiDecls)
 import Gopurs.GlobalTypes (buildGlobalTypes)
 import Gopurs.Monomorphization (monomorphizeModules)
 import PureScript.Backend.Optimizer.App (coreFnModulesFromOutput, parseCLIArgs, loadDirectives)
-import Data.Argonaut.Decode (decodeJson)
 import PureScript.Backend.Optimizer.Semantics (InlineDirectiveMap)
 
 type PreparedData =
@@ -115,11 +107,7 @@ emitModule prepared mbFfiDir (Module coreFnMod) backendMod = do
     case ffiPathMb of
       Just ffiPath -> do
         content <- FS.readTextFile UTF8 ffiPath
-        jsonStr <- liftEffect $ extractFfiAst modNameStr content
-        let parsed = (jsonParser jsonStr >>= (decodeJson >>> lmap printJsonDecodeError)) :: Either String (Array FfiDecl)
-        let ffiDecls = case parsed of
-                         Right d -> d
-                         Left err -> unsafePerformEffect (Console.log ("JSON Parse error for " <> modNameStr <> ": " <> err) *> pure [])
+        ffiDecls <- liftEffect $ extractFfiDecls { moduleName: modNameStr, path: ffiPath } content
 
         let lines = String.split (Pattern "\n") (String.replaceAll (Pattern "\r") (Replacement "") content)
         let otherLines = Array.filter (\l -> not (String.contains (Pattern "package ") l)) lines

@@ -9,6 +9,7 @@
   "scripts": {
     "build": "spago build && spago bundle --module Main --platform node --outfile bin/gopurs.js --bundle-type app",
     "build:ffi": "node tools/build-ffi.mjs",
+    "test:ffi": "node --test tools/ffi-errors.test.mjs",
     "prepare": "npm run build"
   },
   "dependencies": {
