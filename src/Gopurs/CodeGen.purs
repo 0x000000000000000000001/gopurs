@@ -13,6 +13,7 @@ import PureScript.Backend.Optimizer.CoreFn (DataDecl, ExprType(..), Ident(..), L
 import Data.Tuple (Tuple(..), fst, snd)
 import Data.Array.NonEmpty as NonEmptyArray
 import Data.Array.NonEmpty (NonEmptyArray, fromArray, toArray)
+import Effect (Effect)
 import Effect.Console as Console
 import Effect.Unsafe (unsafePerformEffect)
 import Effect.Ref (Ref)
@@ -170,11 +171,7 @@ coerceGoExpr modNameStr expr srcT@(TypeStructPointer b1 f1 s1 a1) destT@(TypeStr
 
 coerceGoExpr modNameStr expr srcT@(TypeStructPointer b1 f1 s1 a1) destT@(TypeStructPointer b2 f2 s2 a2) | b1 == b2 =
   let
-    _register = unsafePerformEffect do
-      pairsMap <- Ref.read globalReboxPairs
-      let pairs = fromMaybe Set.empty (Map.lookup modNameStr pairsMap)
-      if Set.member (Tuple srcT destT) pairs then pure unit
-      else Ref.modify_ (\m -> Map.insert modNameStr (Set.insert (Tuple srcT destT) pairs) m) globalReboxPairs
+    _register = unsafePerformEffect (registerReboxPair modNameStr srcT destT)
   in
     GoCall (GoVar ("Rebox_" <> modNameStr <> "_" <> hashString s1 <> "_" <> hashString s2)) [ expr ]
 
@@ -183,11 +180,7 @@ coerceGoExpr modNameStr expr srcT@(TypeStructPointer b1 f1 s1 a1) destT@(TypeStr
 
 coerceGoExpr modNameStr expr srcT@(TypeStructPointer b1 f1 s1 a1) destT@(TypeStructPointer b2 f2 s2 a2) | b1 == b2 =
   let
-    _register = unsafePerformEffect do
-      pairsMap <- Ref.read globalReboxPairs
-      let pairs = fromMaybe Set.empty (Map.lookup modNameStr pairsMap)
-      if Set.member (Tuple srcT destT) pairs then pure unit
-      else Ref.modify_ (\m -> Map.insert modNameStr (Set.insert (Tuple srcT destT) pairs) m) globalReboxPairs
+    _register = unsafePerformEffect (registerReboxPair modNameStr srcT destT)
   in
     GoCall (GoVar ("Rebox_" <> modNameStr <> "_" <> hashString s1 <> "_" <> hashString s2)) [ expr ]
 
@@ -580,6 +573,96 @@ getStructName modNameStr mbMod ctorName =
 globalReboxPairs :: Ref.Ref (Map.Map String (Set.Set (Tuple GoType GoType)))
 globalReboxPairs = unsafePerformEffect (Ref.new Map.empty)
 
+type ReboxFields =
+  { vars :: Array String
+  , fields :: Array ExprType
+  }
+
+registerReboxPair :: String -> GoType -> GoType -> Effect Unit
+registerReboxPair modNameStr srcT destT = do
+  pairsMap <- Ref.read globalReboxPairs
+  let pairs = fromMaybe Set.empty (Map.lookup modNameStr pairsMap)
+  if Set.member (Tuple srcT destT) pairs then pure unit
+  else Ref.modify_ (\m -> Map.insert modNameStr (Set.insert (Tuple srcT destT) pairs) m) globalReboxPairs
+
+findReboxFields :: CodegenState -> String -> Maybe ReboxFields
+findReboxFields helpers baseStructName =
+  let
+    matchesConstructor key =
+      let
+        parts = String.split (Pattern ".") key
+      in
+        if Array.length parts >= 2 then
+          let
+            ctorName = fromMaybe "" (Array.last parts)
+            pkgName = String.joinWith "_" (Array.slice 0 (Array.length parts - 1) parts)
+            constructorName = "Constructor_" <> pkgName <> "_" <> sanitizeName ctorName
+            dataName = "Data_" <> pkgName <> "_" <> sanitizeName ctorName
+          in
+            constructorName == baseStructName || dataName == baseStructName
+        else false
+
+    mbCtor = Array.find (\(Tuple key _) -> matchesConstructor key)
+      (Map.toUnfoldable helpers.ctorTypes :: Array (Tuple String ReboxFields))
+    mbClass = Array.find (\(Tuple key _) -> matchesConstructor key)
+      (Map.toUnfoldable helpers.classDeclsFields :: Array (Tuple String { vars :: Array String, fields :: Array { name :: String, "type" :: ExprType } }))
+  in
+    case mbCtor of
+      Just (Tuple _ info) -> Just info
+      Nothing -> case mbClass of
+        Just (Tuple _ classInfo) ->
+          Just { vars: classInfo.vars, fields: map (\field -> field."type") classInfo.fields }
+        Nothing ->
+          let
+            _trace = unsafePerformEffect (Console.log ("ERROR: Rebox missing! b1=" <> baseStructName <> " keysCtor: " <> String.joinWith ", " (map fst (Map.toUnfoldable helpers.ctorTypes :: Array (Tuple String _)))))
+          in
+            Nothing
+
+renderReboxFunction :: CodegenState -> String -> Map String String -> Tuple GoType GoType -> Maybe (Tuple String String)
+renderReboxFunction helpers modNameStr generatedFuncs (Tuple srcT destT) =
+  case srcT, destT of
+    TypeStructPointer b1 _ s1 a1, TypeStructPointer b2 _ s2 a2 | b1 == b2 ->
+      let
+        funcName = "Rebox_" <> modNameStr <> "_" <> hashString s1 <> "_" <> hashString s2
+      in
+        if Map.member funcName generatedFuncs then Nothing
+        else case findReboxFields helpers b1 of
+          Just info ->
+            let
+              env1 = Map.fromFoldable (Array.zip info.vars a1)
+              env2 = Map.fromFoldable (Array.zip info.vars a2)
+              assignments = String.joinWith "\n" (Array.mapWithIndex
+                (\i fieldExprType ->
+                  let
+                    genericTy = structFieldGoType helpers.pointerAdtPaths helpers.enumAdts helpers.elidedCtors info.vars modNameStr fieldExprType
+                    t1 = instantiateGenericGoType env1 genericTy
+                    t2 = instantiateGenericGoType env2 genericTy
+                  in
+                    "\t\tout.V" <> show i <> " = " <> printGoExpr (coerceGoExpr modNameStr (GoStructAccess (GoVar "in") ("V" <> show i)) t1 t2)
+                )
+                info.fields)
+              funcBody = "func " <> funcName <> "(in *" <> s1 <> ") *" <> s2 <> " {\n\tif in == nil { return nil }\n\tout := &" <> s2 <> "{}\n" <> assignments <> "\n\treturn out\n}"
+            in
+              Just (Tuple funcName funcBody)
+          Nothing -> Nothing
+    _, _ -> Nothing
+
+generateReboxFunctions :: CodegenState -> String -> Effect (Array String)
+generateReboxFunctions helpers modNameStr = loop Map.empty
+  where
+  -- Rendering fields can register more conversions; collect until none remain.
+  loop generatedFuncs = do
+    pairsMap <- Ref.read globalReboxPairs
+    let
+      reboxPairs = fromMaybe Set.empty (Map.lookup modNameStr pairsMap)
+      newFuncs = Map.fromFoldable $
+        Array.mapMaybe (renderReboxFunction helpers modNameStr generatedFuncs) (Array.fromFoldable reboxPairs)
+      nextGeneratedFuncs = Map.union generatedFuncs newFuncs
+    if Map.isEmpty newFuncs then
+      pure $ Array.fromFoldable (Map.values nextGeneratedFuncs)
+    else
+      loop nextGeneratedFuncs
+
 translate :: CodegenMetadata -> BackendModule -> String
 translate { enumAdts, enumCtors, pointerAdtPaths, pointerAdtNodes, pointerAdtLeaves, elidedCtors, ctorTypes, globalTypes, classDeclsFields } inputMod =
 
@@ -826,85 +909,7 @@ translate { enumAdts, enumCtors, pointerAdtPaths, pointerAdtNodes, pointerAdtLea
       { packageName: "purescript"
       , imports: goImports
       , decls: allDeclsAst
-      , rawDecls: helpers.rawDecls <> (unsafePerformEffect do
-          let
-            loop generatedFuncs = do
-              pairsMap <- Ref.read globalReboxPairs
-              let reboxPairs = fromMaybe Set.empty (Map.lookup modNameStr pairsMap)
-              
-              let 
-                newFuncs = Map.fromFoldable $ Array.mapMaybe (\(Tuple srcT destT) -> 
-                  case srcT, destT of
-                    TypeStructPointer b1 f1 s1 a1, TypeStructPointer b2 f2 s2 a2 | b1 == b2 ->
-                      let
-                        funcName = "Rebox_" <> modNameStr <> "_" <> hashString s1 <> "_" <> hashString s2
-                      in if Map.member funcName generatedFuncs then Nothing else
-                      let
-                        matchB1 k =
-                          let
-                            parts = String.split (Pattern ".") k
-                          in if Array.length parts >= 2 then
-                              let
-                                ctorName = fromMaybe "" (Array.last parts)
-                                pkgName = String.joinWith "_" (Array.slice 0 (Array.length parts - 1) parts)
-                                expectedB1 = "Constructor_" <> pkgName <> "_" <> sanitizeName ctorName
-                                expectedB2 = "Data_" <> pkgName <> "_" <> sanitizeName ctorName
-                              in expectedB1 == b1 || expectedB2 == b1
-                            else false
-                            
-                        mbCtor = Array.find (\(Tuple k _) -> matchB1 k) (Map.toUnfoldable helpers.ctorTypes :: Array (Tuple String { vars :: Array String, fields :: Array ExprType }))
-                        mbClass = Array.find (\(Tuple k _) -> matchB1 k) (Map.toUnfoldable helpers.classDeclsFields :: Array (Tuple String { vars :: Array String, fields :: Array { name :: String, "type" :: ExprType } }))
-                      in case mbCtor of
-                        Just (Tuple _ info) ->
-                          let
-                            env1 = Map.fromFoldable (Array.zip info.vars a1)
-                            env2 = Map.fromFoldable (Array.zip info.vars a2)
-                            assignments = String.joinWith "\n" (Array.mapWithIndex (\i fieldExprType -> 
-                                let
-                                  genericTy = structFieldGoType helpers.pointerAdtPaths helpers.enumAdts helpers.elidedCtors info.vars modNameStr fieldExprType
-                                  t1 = instantiateGenericGoType env1 genericTy
-                                  t2 = instantiateGenericGoType env2 genericTy
-                                in
-                                  "\t\tout.V" <> show i <> " = " <> printGoExpr (coerceGoExpr modNameStr (GoStructAccess (GoVar "in") ("V" <> show i)) t1 t2)
-                              ) info.fields)
-                            funcBody = "func " <> funcName <> "(in *" <> s1 <> ") *" <> s2 <> " {\n\tif in == nil { return nil }\n\tout := &" <> s2 <> "{}\n" <> assignments <> "\n\treturn out\n}"
-                          in Just (Tuple funcName funcBody)
-                        Nothing ->
-                          let
-                            ctorVarsAndFields = case mbClass of
-                              Just (Tuple _ classInfo) ->
-                                Just { vars: classInfo.vars, fields: map (\f -> f."type") classInfo.fields }
-                              Nothing ->
-                                let
-                                  _trace = unsafePerformEffect (Console.log ("ERROR: Rebox missing! b1=" <> b1 <> " keysCtor: " <> String.joinWith ", " (map fst (Map.toUnfoldable helpers.ctorTypes :: Array (Tuple String _)))))
-                                in Nothing
-                          in case ctorVarsAndFields of
-                            Just info ->
-                              let
-                                env1 = Map.fromFoldable (Array.zip info.vars a1)
-                                env2 = Map.fromFoldable (Array.zip info.vars a2)
-                                assignments = String.joinWith "\n" (Array.mapWithIndex (\i fieldExprType -> 
-                                    let
-                                      genericTy = structFieldGoType helpers.pointerAdtPaths helpers.enumAdts helpers.elidedCtors info.vars modNameStr fieldExprType
-                                      t1 = instantiateGenericGoType env1 genericTy
-                                      t2 = instantiateGenericGoType env2 genericTy
-                                    in
-                                      "\t\tout.V" <> show i <> " = " <> printGoExpr (coerceGoExpr modNameStr (GoStructAccess (GoVar "in") ("V" <> show i)) t1 t2)
-                                  ) info.fields)
-                                funcBody = "func " <> funcName <> "(in *" <> s1 <> ") *" <> s2 <> " {\n\tif in == nil { return nil }\n\tout := &" <> s2 <> "{}\n" <> assignments <> "\n\treturn out\n}"
-                              in Just (Tuple funcName funcBody)
-                            Nothing -> Nothing
-                    _, _ -> Nothing
-                ) (Array.fromFoldable reboxPairs)
-              
-              let nextGeneratedFuncs = Map.union generatedFuncs newFuncs
-              if Map.isEmpty newFuncs then
-                pure $ Array.fromFoldable (Map.values nextGeneratedFuncs)
-              else
-                loop nextGeneratedFuncs
-
-          loop Map.empty
-        )
+      , rawDecls: helpers.rawDecls <> unsafePerformEffect (generateReboxFunctions helpers modNameStr)
       , foreigns: map (\(Tuple (Ident name) type_) -> { pursName: modNameStr <> "_" <> sanitizeName name, goName: "_Gopurs_" <> modNameStr <> "_" <> capitalize (sanitizeName name), exprType: type_ }) (Map.toUnfoldable mod.foreign)
       }
   in
