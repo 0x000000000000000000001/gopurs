@@ -9,7 +9,7 @@ import Effect.Aff (Aff, launchAff_, attempt)
 import Node.FS.Aff as FS
 import Node.Encoding (Encoding(..))
 import Node.Process as Process
-import Gopurs.CodeGen as CodeGen
+import Gopurs.FfiBridge as FfiBridge
 import Effect.Unsafe (unsafePerformEffect)
 import Data.Argonaut.Parser (jsonParser)
 import Data.Either (Either(..))
@@ -134,11 +134,11 @@ emitModule prepared mbFfiDir (Module coreFnMod) backendMod = do
                                           else String.replaceAll (Pattern ("func " <> decl.name)) (Replacement ("func " <> safeModName <> "_" <> decl.name)) acc
                                        ) l ffiDecls) otherLines
 
-        let newContent = finalPkgLine <> "\n\n" <> importLine <> "\n" <> String.joinWith "\n" renamedContentLines <> "\n\n// --- Auto-generated FFI wrappers ---\n" <> CodeGen.generateFfiBridge safeModName backendMod.dataDecls prefixedFfiDecls (Map.toUnfoldable backendMod.foreign)
+        let newContent = finalPkgLine <> "\n\n" <> importLine <> "\n" <> String.joinWith "\n" renamedContentLines <> "\n\n// --- Auto-generated FFI wrappers ---\n" <> FfiBridge.generateFfiBridge safeModName backendMod.dataDecls prefixedFfiDecls (Map.toUnfoldable backendMod.foreign)
         FS.writeTextFile UTF8 ("output/purescript/" <> safeModName <> "_ffi.go") newContent
       Nothing -> do
 
-        let dummyContent = "package purescript\n\nimport \"gopurs/output/gopurs_runtime\"\n\n" <> CodeGen.generateFfiBridge safeModName backendMod.dataDecls [] (Map.toUnfoldable backendMod.foreign)
+        let dummyContent = "package purescript\n\nimport \"gopurs/output/gopurs_runtime\"\n\n" <> FfiBridge.generateFfiBridge safeModName backendMod.dataDecls [] (Map.toUnfoldable backendMod.foreign)
         FS.writeTextFile UTF8 ("output/purescript/" <> safeModName <> "_ffi.go") dummyContent
 
 main :: Effect Unit

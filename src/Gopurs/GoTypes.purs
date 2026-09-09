@@ -1,5 +1,6 @@
 module Gopurs.GoTypes
   ( isClosedRowTail
+  , printExprType
   , exprTypeToGoType
   , exprTypeToGenericGoType
   , structFieldGoType
@@ -17,6 +18,33 @@ import Data.String.Pattern (Pattern(..), Replacement(..))
 import Data.Tuple (Tuple(..))
 import Gopurs.GoAst (GoType(..), goTypeToStr, sanitizeName)
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..))
+
+-- Diagnostic rendering of TAST annotations, shared by codegen and FFI comments.
+printExprType :: ExprType -> String
+printExprType = case _ of
+  Int -> "Int"
+  Number -> "Number"
+  String -> "String"
+  Char -> "Char"
+  Boolean -> "Boolean"
+  Unit -> "Unit"
+  TypeLevelString s -> "(TypeLevelString " <> s <> ")"
+  Array e -> "(Array " <> printExprType e <> ")"
+  Func args ret -> "(Func [" <> String.joinWith ", " (map printExprType args) <> "] " <> printExprType ret <> ")"
+  Record row -> "(Record " <> printExprType row <> ")"
+  Row props tail ->
+    let
+      tailStr = case tail of
+        Nothing -> "Empty"
+        Just t -> printExprType t
+    in
+      "(Row [" <> String.joinWith ", " (map (\(Tuple k v) -> k <> ": " <> printExprType v) props) <> "] " <> tailStr <> ")"
+  TypeApp c args -> "(TypeApp " <> printExprType c <> " [" <> String.joinWith ", " (map printExprType args) <> "])"
+  ForAll vars body -> "(ForAll [" <> String.joinWith ", " vars <> "] " <> printExprType body <> ")"
+  ConstrainedType constraints body -> "(ConstrainedType " <> printExprType body <> ")"
+  ADT fullName path args -> "(ADT " <> show path <> " [" <> String.joinWith ", " (map printExprType args) <> "])"
+  TypeVar v -> "(TypeVar " <> v <> ")"
+  Any -> "Any"
 
 -- Nothing and Just Any count as closed row tails in this mapping. Closed
 -- records become native structs with fields sorted by label; other tails use Value.

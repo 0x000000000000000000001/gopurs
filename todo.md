@@ -240,10 +240,25 @@ Validation commune du lot de dix étapes, le 9 septembre 2026 : compilation réu
 
 ## 6. Donner au pont FFI sa propre frontière
 
-Constat : les helpers et générateurs FFI occupent la fin de `CodeGen.purs` ; `FfiSupport.js` construit un programme Node et une commande shell imbriqués.
+La génération des wrappers est isolée dans `Gopurs.FfiBridge`. Le transport de `FfiSupport.js`, qui construit un programme Node et une commande shell imbriqués, relève des étapes suivantes.
 
-- [ ] **6.1 — Extraire les helpers FFI purs.** Commencer par `printTypeNode`, la résolution des newtypes et la lecture des signatures TAST, en conservant exactement les résultats.
-- [ ] **6.2 — Extraire les wrappers.** Déplacer les conversions de retour, puis `generateWrapperFunc` et `generateFfiBridge` vers un module FFI dédié ; vérifier `FFIIntegerReturns`, `ESFFIFunctionFunction` et leurs snapshots.
+- [x] **6.1 — Extraire les helpers FFI purs.** Le nouveau module rassemble la lecture des signatures Go et TAST et la résolution des newtypes. Les helpers partagés rejoignent `GoAst` et `GoTypes` ; les signatures et relais dans `CodeGen` sont conservés.
+- [x] **6.1.1 — Partager le nommage Go.** `capitalize` rejoint `GoAst` près de `sanitizeName`, avec le même traitement des underscores. La fonction locale distincte de `Printer` reste inchangée.
+- [x] **6.1.2 — Partager le rendu diagnostique TAST.** `printExprType` rejoint `GoTypes`, avec un export explicite et le même texte pour les diagnostics du traducteur et les commentaires FFI.
+- [x] **6.1.3 — Déplacer la lecture des signatures Go.** `printTypeNode` et `isStandardPursFunc` rejoignent `FfiBridge`, avec les mêmes règles pour fonctions, tableaux, maps et types opaques.
+- [x] **6.1.4 — Déplacer les helpers TAST du pont.** `getTastArgType`, `getTastReturnType`, `exprTypeToDummyTypeNode` et `flattenFuncArgs` conservent leurs résultats et leurs appels récursifs.
+- [x] **6.1.5 — Déplacer la résolution des newtypes.** `resolveNewtype` conserve sa recherche dans `dataDecls`, ses critères et son parcours des annotations enrichies.
+- [x] **6.2 — Extraire les wrappers.** `FfiBridge` contient les conversions FFI et leurs générateurs ; il dépend directement des helpers de `GoAst` et `GoTypes`, sans dépendance vers `CodeGen`.
+- [x] **6.2.1 — Déplacer le boxing FFI simple.** `boxFfiValue` conserve le traitement de `int64`, `int` et des autres types.
+- [x] **6.2.2 — Déplacer ensemble callbacks et retours.** `unwrapValueToFunc` et `wrapReturn`, mutuellement récursifs, restent dans le même module avec les mêmes branches, conversions et chaînes Go.
+- [x] **6.2.3 — Déplacer le générateur de wrapper.** `generateWrapperFunc` conserve l'adaptation des arguments, des retours, des fonctions génériques et des variables étrangères.
+- [x] **6.2.4 — Déplacer l'assemblage du pont.** `generateFfiBridge` conserve les noms exportés, l'ordre des correspondances et le diagnostic des déclarations absentes.
+- [x] **6.2.5 — Brancher Main directement.** Les deux sites d'émission utilisent `FfiBridge.generateFfiBridge` ; les points d'entrée publics de `CodeGen` restent des relais. Les exports du nouveau module sont explicites. `hasTypeVars` reste auprès du traducteur, qui en est le seul consommateur.
+
+Validation commune du lot de dix étapes, le 9 septembre 2026 : compilation réussie. Les 14 blocs déplacés, signatures et corps compris, sont identiques octet pour octet ; une transformation inverse restitue exactement les quatre fichiers sources initiaux. `CodeGen` passe de 3 151 à 2 762 lignes. Les 94 avertissements émis comprennent les mêmes 86 diagnostics déjà connus et huit masquages du nom `expr` dans `Printer`, recompilé avec un contenu inchangé. `FFIIntegerReturns`, `FFIConstraintWorkaround`, `NativeRecordSizes` et `ESFFIFunctionFunction` produisent les mêmes 87, 87, 196 et 194 fichiers Go sur 60, 60, 153 et 152 entrées CoreFn identiques avant/après, wrappers compris. Les trois premières fixtures conservent leur écart préexistant de snapshot principal ; le snapshot principal d'`ESFFIFunctionFunction` et les deux snapshots FFI déclarés correspondent aux références. Les exécutions d'`FFIIntegerReturns`, `FFIConstraintWorkaround` (avec appel réel du callback) et `ESFFIFunctionFunction` réussissent avec les mêmes sorties ; ce dernier exécute seulement son `main` affichant `Done`.
+
+Limite préexistante observée avant toute modification : `NativeRecordSizes` réussit 29 assertions puis plante pendant la vérification de la trace d'effets (`tests/passing/NativeRecordSizes.purs:147`), avec `fatal error: fault`, un code de sortie 2 et une pile passant par `Test_Assert.go:425` puis `Value.StrVal` à `runtime.go:91`. Deux répétitions indépendantes du binaire initial confirment le comportement. Après extraction, les 29 lignes de sortie, le signal et les onze frames de la pile principale sont identiques, adresses et offsets normalisés. Ce cas n'est pas compté comme réussi. Fixtures copiées temporairement avec leurs compagnons FFI ; snapshots et configuration du runner inchangés. Preuves : `/private/tmp/gopurs-ffi-bridge-r0wbn890/`.
+
 - [ ] **6.3 — Séparer le transport Node.** Sortir le runner WASM dans un fichier et transmettre les arguments sans assembler une commande shell ; comparer le JSON pour fonction, variable, générique et fichier vide.
 - [ ] **6.4 — Reproduire la fabrication du WASM.** Ajouter une commande explicite de génération de `ffi_gen.wasm` et de récupération du `wasm_exec.js` correspondant ; documenter la version Go et vérifier le parsing avec les artefacts reconstruits.
 - [ ] **6.5 — Tester le parseur Go isolément.** Extraire le parsing de `tools/ffi-gen/main.go` hors de l'adaptateur `syscall/js`, avec quelques cas de contrat ciblés.

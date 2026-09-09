@@ -104,6 +104,16 @@ goRecordStructName fields =
 
 
 
+capitalize :: String -> String
+capitalize "" = ""
+capitalize s =
+  let
+    firstChar = String.take 1 s
+  in
+    if firstChar >= "a" && firstChar <= "z" then String.toUpper firstChar <> String.drop 1 s
+    else if firstChar == "_" then "_" <> capitalize (String.drop 1 s)
+    else s
+
 sanitizeName :: String -> String
 sanitizeName name =
   let
