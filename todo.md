@@ -295,10 +295,39 @@ Le comportement change pour les erreurs d'une FFI trouvée. Une FFI absente cons
 
 ## 7. Découper le traducteur d'expressions par responsabilité
 
-Constat : `translateExprImpl__` couvre environ 1 960 lignes. Le contexte du point 4 doit permettre des extractions sans créer de dépendances circulaires.
+Constat actualisé le 9 septembre 2026 : `translateExprWithExpectedType` rassemble encore environ 1 900 lignes. Les expressions primitives sont désormais construites par `PrimitiveExprs`, sans dépendance vers `CodeGen` ; la traversée et l'assemblage des statements restent centraux.
 
-- [ ] **7.1 — Cartographier les branches.** Associer chaque famille à ses entrées, effets sur l'état et fixtures ; repérer les helpers réellement partagés.
-- [ ] **7.2 — Extraire une première branche simple.** Choisir un littéral ou une primitive, comparer son résultat et conserver le dispatch central lisible.
+- [x] **7.1 — Cartographier les branches.** Les familles ci-dessous identifient leurs entrées, leurs responsabilités et les fixtures utiles. Leur présence dans ce tableau ne signifie pas que toutes ces fixtures passent ; les résultats du lot sont précisés après 7.2.
+
+| Famille | Entrées et responsabilités | Fixtures et contrôles ciblés |
+| --- | --- | --- |
+| Annotations et noms : `Typed`, `Var`, `Local` | Type TAST attendu, types globaux, fonctions connues et environnement local ; sélection de représentation et conversions. | `NativeRecordBoxing`, `IntAndChar` |
+| Littéraux et opérations scalaires | Valeurs scalaires ou opérandes Go déjà traduits ; construction de l'expression et de son type. `PrimitiveExprs` ne gère ni statements ni identifiants. | Corpus direct du traducteur ; cas dynamique décrit ci-dessous |
+| Tableaux | Littéraux, longueur, indexation et intrinsics `map`/`filter`/`foldl` dans les appels ; ordre d'évaluation, type attendu, conversions et buffer frais. | `ArrayRoundtrip` |
+| Records | Construction, accès et mises à jour, y compris les chemins dans `Typed` ; labels, ordre des champs, type attendu et copies. | `NativeRecordBoxing`, `NativeRecordSizes`, `CompactRecordConsumers` |
+| ADT | `CtorDef`, `CtorSaturated`, accès aux champs et `OpIsTag` ; métadonnées des constructeurs, pointeurs, enums, wrappers effacés et réemploi sans mutation. | `ConstructorReuse`, `OneConstructor` |
+| Appels et fonctions | `App`, `Abs` et variantes uncurried/effect ; arités, spines, fonctions connues, captures et workers. Certains chemins ajoutent des déclarations à `rawDecls`. | `CurriedLambdas`, `ESFFIFunction`, fixtures FFI |
+| Bindings, branches et récursion | `Let`, `LetRec`, `Branch`, `Fail`, `&&` et `||` ; environnement local, statements, identifiants temporaires et contexte de boucle. `LetRec` utilise aussi `globalId`. | `CaseStatement`, `TCO`, `TCOMutRec`, `ThunkFusion` |
+| Effets | `EffectBind`, `EffectPure`, `EffectDefer`, `PrimEffect` ; enveloppes Effect, ordre des statements et cellules de référence. | `ArrayRoundtrip`, `ESFFIFunction` |
+
+Helpers partagés : `GoTypes` choisit les représentations ; `GoConversions` adapte les expressions et peut enregistrer des helpers Rebox dans `CodegenState`. `getExprType`, `unwrapTcoExpr`, les environnements, `StmtTree` et son aplatissement restent dans `CodeGen` tant qu'une extraction ne justifie pas leur déplacement. Le TAST et les métadonnées ADT/classes restent disponibles aux branches qui les consomment.
+
+- [x] **7.2 — Extraire les expressions primitives.** `Gopurs.PrimitiveExprs` contient les cinq familles de littéraux scalaires, quatre opérations unaires et 47 opérations binaires strictes.
+- [x] **7.2.1 — Définir l'interface.** `PrimitiveExpr` contient seulement `expr` et `exprType`. Les fonctions `unary` et `binary` sélectionnent un émetteur avant la traduction des opérandes ; il reçoit uniquement des expressions déjà traduites. Les cas non scalaires renvoient `Nothing` sans effectuer de conversion.
+- [x] **7.2.2 — Extraire les littéraux simples.** Entiers, booléens, chaînes et caractères conservent leurs expressions Go et leurs types.
+- [x] **7.2.3 — Extraire les nombres.** Le traitement de `-0`, `NaN`, des infinis et des nombres finis conserve ses conditions et son ordre.
+- [x] **7.2.4 — Extraire les unaires scalaires.** Négation booléenne, négations Int/Number et complément bit à bit utilisent les mêmes conversions et constructions Go.
+- [x] **7.2.5 — Extraire l'arithmétique entière.** Addition, soustraction, multiplication, division et modulo sont déplacés sans changement de représentation.
+- [x] **7.2.6 — Extraire les opérations bit à bit.** Les opérations et décalages conservent leurs expressions ; `Zshr` garde son appel runtime et son résultat `Value`.
+- [x] **7.2.7 — Extraire les autres binaires scalaires.** Arithmétique flottante, `math.Mod`, comparaisons et concaténation de chaînes conservent leurs opérateurs et leurs types de résultat.
+- [x] **7.2.8 — Raccorder le dispatch central.** `CodeGen` conserve la traduction gauche puis droite, les statements, `nextId`, les courts-circuits, les tests ADT, la longueur/indexation des tableaux et les effets. Les imports devenus inutiles sont retirés. Les deux anciens cas de secours `panic("unreachable")` pour `&&`/`||` disparaissent ; leurs branches dédiées restent en place.
+- [x] **7.2.9 — Vérifier l'équivalence.** Comparaison mécanique des 51 corps d'opérateurs et du traitement des nombres ; 513 cas passent par les deux entrées réelles du traducteur, soit 1 026 résultats identiques avant/après : AST Go complet, type, statements, `nextId`, expression imprimée et état final. Les cas couvrent opérandes natifs/`Value`, annotations `Typed`, bindings `Let`, courts-circuits voisins et nombres spéciaux.
+
+Validation du lot de dix étapes, le 9 septembre 2026 : compilation et bundle réussis. Les 32 avertissements de `CodeGen` correspondent aux diagnostics déjà relevés ; un ancien masquage du nom `expr` disparaît. Aucun avertissement dans `PrimitiveExprs`. `CodeGen` passe de 2 762 à 2 715 lignes ; le module extrait compte 104 lignes. Revue indépendante sans constat actionnable.
+
+`IntAndChar` et un cas temporaire `PrimitiveExprsDynamic` réussissent avec les mêmes sorties et le même Go avant/après. Ce dernier vérifie cinq assertions avec une valeur flottante lue depuis une référence et des workers conservés pour l'arithmétique et les opérations bit à bit. Trois limites sont préexistantes : `Where` émet un appel à `Get_Main_go__go` absent (échec de compilation Go identique) ; `ArrayRoundtrip` échoue sur le cas singleton pair (attendu 8, obtenu 4620693217682128896) ; `OperatorInlining` plante dans `Value.StrVal` après les comparaisons de chaînes. Ces deux derniers conservent leur sortie et leur statut d'échec ; ils ne sont pas comptés comme réussis.
+
+Les Go de `Where`, `OperatorInlining`, `IntAndChar` et du cas dynamique sont identiques dans les captures initiales. Pour `ArrayRoundtrip`, un premier passage diffère uniquement dans `Data_Function.go` (inlining de `isJust`/`isNothing`). Un rejeu ancien/nouveau/ancien/nouveau sur des CoreFn figés, avec `modulePath` absolutisé pour la résolution FFI, produit quatre ensembles de 195 fichiers Go identiques, y compris avec l'ancien bundle. L'origine de l'écart initial n'est pas isolée ; il n'est pas attribué à l'extraction. Les 526 fichiers JavaScript existants comparés restent identiques sauf `Gopurs.CodeGen/index.js`, et le PBO est inchangé. Les snapshots existants sont conservés ; le cas temporaire et son snapshot restent dans les preuves hors du dépôt. Preuves : `/private/tmp/gopurs-primitive-exprs-0iw0n6gu/`.
 - [ ] **7.3 — Extraire les records.** Déplacer successivement construction, accès et mise à jour ; vérifier ordre des champs, évaluation unique et conservation des anciennes valeurs.
 - [ ] **7.4 — Extraire les constructeurs ADT.** Déplacer une opération à la fois, en préservant les décisions fondées sur `dataDecls` et les représentations natives.
 - [ ] **7.5 — Extraire les appels.** Commencer par les helpers de spine et d'arité, puis les appels directs ; traiter ensuite closures et appels indirects avec `CurriedLambdas` et les fixtures FFI.
