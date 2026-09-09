@@ -43,6 +43,7 @@ import Gopurs.GoTypes as GoTypes
 import Gopurs.CodegenState as State
 import Gopurs.GoConversions as GoConversions
 import Gopurs.PrimitiveExprs as PrimitiveExprs
+import Gopurs.RecordExprs as RecordExprs
 
 type CodegenMetadataRow :: Row Type
 type CodegenMetadataRow = State.CodegenMetadataRow
@@ -748,6 +749,22 @@ executeIfOpaque expr goExpr =
   if isEffectNode expr then goExpr
   else GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ goExpr, GoRaw "gopurs_runtime.Value{}" ]
 
+bindFieldFunctionParameters :: (ExprType -> GoType) -> LocalEnv -> ExprType -> TcoExpr -> LocalEnv
+bindFieldFunctionParameters toGoType bound expectedExprType value =
+  let
+    mbArgs = case unwrapTcoExpr value of
+      Abs args _ -> Just (toArray args)
+      UncurriedAbs args _ -> Just args
+      _ -> Nothing
+  in
+    case mbArgs, extractExprFuncType expectedExprType of
+      Just args, Just { fArgs } ->
+        let
+          paramsWithTypes = Array.zipWith (\(Tuple mbI lvl) fArgTy -> Tuple (localId mbI lvl) (toGoType fArgTy)) args (fArgs <> Array.replicate (Array.length args - Array.length fArgs) Any)
+        in
+          foldl (\b (Tuple idStr goType) -> Map.insert idStr { name: idStr, goType } b) bound paramsWithTypes
+      _, _ -> bound
+
 translateExpr :: Ref CodegenState -> Int -> String -> Array String -> ModuleFunctions -> LocalEnv -> Maybe String -> LoopContext -> ExprOptions -> Int -> TcoExpr -> ExprResult
 translateExpr codegenStateRef depth modNameStr recVars moduleFunctions bound tcoIdent loopCtx options nextId tcoExpr =
   translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFunctions bound tcoIdent loopCtx options Nothing nextId tcoExpr
@@ -801,18 +818,9 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                                 expectedType = instantiateGenericGoType instMap genericGoType
                                 expectedExprType = item.field."type"
 
-                                newBound = case unwrapTcoExpr item.val, extractExprFuncType expectedExprType of
-                                  Abs args _, Just { fArgs } ->
-                                    let
-                                      paramsWithTypes = Array.zipWith (\(Tuple mbI lvl) fArgTy -> Tuple (localId mbI lvl) (exprTypeToGoType h.pointerAdtPaths h.enumAdts h.elidedCtors modNameStr fArgTy)) (toArray args) (fArgs <> Array.replicate (Array.length (toArray args) - Array.length fArgs) Any)
-                                    in
-                                      foldl (\b (Tuple idStr goType) -> Map.insert idStr { name: idStr, goType } b) bound paramsWithTypes
-                                  UncurriedAbs args _, Just { fArgs } ->
-                                    let
-                                      paramsWithTypes = Array.zipWith (\(Tuple mbI lvl) fArgTy -> Tuple (localId mbI lvl) (exprTypeToGoType h.pointerAdtPaths h.enumAdts h.elidedCtors modNameStr fArgTy)) args (fArgs <> Array.replicate (Array.length args - Array.length fArgs) Any)
-                                    in
-                                      foldl (\b (Tuple idStr goType) -> Map.insert idStr { name: idStr, goType } b) bound paramsWithTypes
-                                  _, _ -> bound
+                                newBound = bindFieldFunctionParameters
+                                  (exprTypeToGoType h.pointerAdtPaths h.enumAdts h.elidedCtors modNameStr)
+                                  bound expectedExprType item.val
 
                                 resVal = translateExpr codegenStateRef (depth + 1) modNameStr recVars moduleFunctions newBound Nothing [] { isTail: false, inEffectBlock: false } acc.nextId item.val
                                 coercedExpr = coerceGoExpr codegenStateRef modNameStr resVal.expr resVal.exprType expectedType
@@ -953,49 +961,26 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
           Lit (LitRecord props) ->
             let
               sortedProps = Array.sortBy (comparing \(Prop k _) -> k) props
-              baseExprType = getExprType tcoExpr
-              exprType = case baseExprType of
-                Record _ -> baseExprType
-                _ -> fromMaybe baseExprType mbExpectedExprType
-
-              mbRecordType = case exprType of
-                Record (Row fields _) -> Just fields
-                _ -> Nothing
-
-              goRecordType = exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr exprType
-              
-              recordFields = case mbRecordType of
-                Just fields -> Map.fromFoldable fields
-                Nothing -> Map.empty
+              recordInfo = RecordExprs.prepareLiteral codegenStateRef modNameStr (getExprType tcoExpr) mbExpectedExprType
 
               accProps = foldl
                 ( \acc (Prop key val) ->
                     let
-                      expectedExprType = fromMaybe Any (Map.lookup key recordFields)
-                      newBound = case unwrapTcoExpr val, extractExprFuncType expectedExprType of
-                        Abs args _, Just { fArgs } ->
-                          let
-                            paramsWithTypes = Array.zipWith (\(Tuple mbI lvl) fArgTy -> Tuple (localId mbI lvl) (exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr fArgTy)) (toArray args) (fArgs <> Array.replicate (Array.length (toArray args) - Array.length fArgs) Any)
-                          in
-                            foldl (\b (Tuple idStr goType) -> Map.insert idStr { name: idStr, goType } b) bound paramsWithTypes
-                        UncurriedAbs args _, Just { fArgs } ->
-                          let
-                            paramsWithTypes = Array.zipWith (\(Tuple mbI lvl) fArgTy -> Tuple (localId mbI lvl) (exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr fArgTy)) args (fArgs <> Array.replicate (Array.length args - Array.length fArgs) Any)
-                          in
-                            foldl (\b (Tuple idStr goType) -> Map.insert idStr { name: idStr, goType } b) bound paramsWithTypes
-                        _, _ -> bound
+                      expectedExprType = fromMaybe Any (Map.lookup key recordInfo.fields)
+                      newBound = bindFieldFunctionParameters
+                        (\fArgTy -> exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr fArgTy)
+                        bound expectedExprType val
 
                       resVal = translateExpr codegenStateRef (depth + 1) modNameStr recVars moduleFunctions newBound Nothing [] { isTail: false, inEffectBlock: false } acc.nextId val
-
-                      expectedGoType = exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr expectedExprType
-                      coercedVal = coerceGoExpr codegenStateRef modNameStr resVal.expr resVal.exprType expectedGoType
+                      field = RecordExprs.coerceLiteralField codegenStateRef modNameStr key expectedExprType { expr: resVal.expr, exprType: resVal.exprType }
                     in
-                      { stmts: acc.stmts <> resVal.stmts, exprs: Array.snoc acc.exprs (Tuple key coercedVal), exprType: TypeValue, nextId: resVal.nextId }
+                      { stmts: acc.stmts <> resVal.stmts, exprs: Array.snoc acc.exprs field, exprType: TypeValue, nextId: resVal.nextId }
                 )
                 { stmts: StmtEmpty, exprs: [], exprType: TypeValue, nextId }
                 sortedProps
+              result = RecordExprs.literal recordInfo.recordType accProps.exprs
             in
-              { stmts: accProps.stmts, expr: GoRecordDict goRecordType accProps.exprs, exprType: goRecordType, nextId: accProps.nextId }
+              { stmts: accProps.stmts, expr: result.expr, exprType: result.exprType, nextId: accProps.nextId }
 
           expr_ | (case expr_ of
                      App _ _ -> true
@@ -2006,35 +1991,10 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
             in
               case accessor of
                 GetProp prop ->
-                  case resObj.exprType of
-                    TypeRecord fields ->
-                      let
-                        fieldGoType = fromMaybe TypeValue (Map.lookup prop (Map.fromFoldable fields))
-                      in
-                        { stmts: resObj.stmts, expr: GoStructAccess resObj.expr (sanitizeName prop), exprType: fieldGoType, nextId: resObj.nextId }
-                    TypeStructPointer _ fullName _ _ ->
-                      let
-                        h = unsafePerformEffect (Ref.read codegenStateRef)
-
-                      in
-                        case Map.lookup fullName h.classDeclsFields of
-                          Just info ->
-                            case Array.findIndex (\f -> f.name == prop) info.fields of
-                              Just idx ->
-                                let
-                                  unboxedObj = unboxGoExpr codegenStateRef modNameStr resObj.expr resObj.exprType resObj.exprType
-                                  fieldExpr = GoStructAccess unboxedObj ("V" <> show idx)
-                                  boxedFieldExpr = GoCall (GoSelector (GoVar "gopurs_runtime") "Box") [ fieldExpr ]
-                                in
-                                  { stmts: resObj.stmts, expr: boxedFieldExpr, exprType: TypeValue, nextId: resObj.nextId }
-                              Nothing ->
-                                let
-                                  _ = unit
-                                in
-                                  { stmts: resObj.stmts, expr: GoRecordAccess (boxGoExpr codegenStateRef modNameStr resObj.expr resObj.exprType) prop, exprType: TypeValue, nextId: resObj.nextId }
-                          Nothing -> { stmts: resObj.stmts, expr: GoRecordAccess (boxGoExpr codegenStateRef modNameStr resObj.expr resObj.exprType) prop, exprType: TypeValue, nextId: resObj.nextId }
-                    TypeValue -> { stmts: resObj.stmts, expr: GoRecordAccess (boxGoExpr codegenStateRef modNameStr resObj.expr resObj.exprType) prop, exprType: TypeValue, nextId: resObj.nextId }
-                    _ -> { stmts: resObj.stmts, expr: GoRecordAccess (boxGoExpr codegenStateRef modNameStr resObj.expr resObj.exprType) prop, exprType: TypeValue, nextId: resObj.nextId }
+                  let
+                    result = RecordExprs.getProp codegenStateRef modNameStr prop { expr: resObj.expr, exprType: resObj.exprType }
+                  in
+                    { stmts: resObj.stmts, expr: result.expr, exprType: result.exprType, nextId: resObj.nextId }
                 GetIndex idx -> { stmts: resObj.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayAccess") [ (boxGoExpr codegenStateRef modNameStr resObj.expr resObj.exprType), GoInt idx ], exprType: TypeValue, nextId: resObj.nextId }
                 GetCtorField (Qualified mbMod _) _ _ (Ident ctorName) _ idx ->
                   let
@@ -2107,26 +2067,9 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                 )
                 { stmts: StmtEmpty, exprs: [], exprType: TypeValue, nextId: resObj.nextId }
                 props
+              result = RecordExprs.update codegenStateRef modNameStr { expr: resObj.expr, exprType: resObj.exprType } accProps.exprs
             in
-              case resObj.exprType of
-                TypeRecord fields ->
-                  let
-                    coercedUpdates = map
-                      ( \p ->
-                          let
-                            expectedGoType = fromMaybe TypeValue (Map.lookup p.key (Map.fromFoldable fields))
-                            coercedVal = coerceGoExpr codegenStateRef modNameStr p.expr p.goType expectedGoType
-                          in
-                            Tuple p.key coercedVal
-                      )
-                      accProps.exprs
-                  in
-                    { stmts: resObj.stmts <> accProps.stmts, expr: GoRecordUpdateNative resObj.exprType resObj.expr coercedUpdates, exprType: resObj.exprType, nextId: accProps.nextId }
-                _ ->
-                  let
-                    boxedExprs = map (\p -> Tuple p.key (boxGoExpr codegenStateRef modNameStr p.expr p.goType)) accProps.exprs
-                  in
-                    { stmts: resObj.stmts <> accProps.stmts, expr: GoRecordUpdateDict (boxGoExpr codegenStateRef modNameStr resObj.expr resObj.exprType) boxedExprs, exprType: TypeValue, nextId: accProps.nextId }
+              { stmts: resObj.stmts <> accProps.stmts, expr: result.expr, exprType: result.exprType, nextId: accProps.nextId }
 
           CtorDef _ _ (Ident name) fields ->
             let
