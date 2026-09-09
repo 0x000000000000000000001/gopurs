@@ -16,7 +16,6 @@ import Data.Either (Either(..))
 import Data.Bifunctor (lmap)
 import Data.Argonaut.Decode.Error (printJsonDecodeError)
 import Data.Array as Array
-import Partial.Unsafe (unsafePartial)
 import Data.Tuple (Tuple(..))
 import Data.List as List
 import Data.List (List)
@@ -35,11 +34,11 @@ import PureScript.Backend.Optimizer.Monomorphize (collectInstantiations, Instant
 import PureScript.Backend.Optimizer.Semantics.Foreign (coreForeignSemantics)
 import PureScript.Backend.Optimizer.CoreFn (Module(..), Ann, importName, Bind(..), Binding(..), ExprType(..), Ident(..))
 import Gopurs.CodeGen (translate)
+import Gopurs.AdtMetadata (buildPointerAdtMetadata, buildEnumAdtMetadata)
 import Gopurs.ClassMetadata (ClassFields, buildClassFields, addClassDataDeclarations)
 import Gopurs.ConstructorMetadata (ConstructorTypes, buildConstructorTypes, collectElidedConstructors)
 import Gopurs.Runtime (runtimeGoCode)
 import PureScript.Backend.Optimizer.FfiSupport (findFfiFile)
-import Gopurs.GoAst (sanitizeName)
 import Gopurs.FfiSupport (extractFfiAst)
 import Gopurs.FfiTypes (FfiDecl)
 import Gopurs.GlobalTypes (buildGlobalTypes)
@@ -118,49 +117,8 @@ loadAndPrepareModules args = do
         ADT _ _ _ -> true
         _ -> false) allTypes
   let
-    -- pointerAdts computation
-    pointerAdtPathsRaw = foldl (\acc (Module m) ->
-      foldl (\acc' d ->
-        let
-          ctorsWithFields = Array.filter (\c -> Array.length c.fields > 0) d.constructors
-          ctorsWithoutFields = Array.filter (\c -> Array.length c.fields == 0) d.constructors
-        in
-          if Array.length ctorsWithFields == 1 then
-            let
-              adtPath = unwrap m.name <> "." <> d.name
-              nodeCtor = (unsafePartial (Array.unsafeIndex ctorsWithFields 0)).name
-              leafCtor = if Array.length ctorsWithoutFields == 1 then (unsafePartial (Array.unsafeIndex ctorsWithoutFields 0)).name else ""
-              pkgNameStr = String.replaceAll (Pattern ".") (Replacement "_") (unwrap m.name)
-              nodeBaseStruct = "Data_" <> pkgNameStr <> "_" <> sanitizeName nodeCtor
-              leafBaseStruct = if leafCtor /= "" then "Data_" <> pkgNameStr <> "_" <> sanitizeName leafCtor else ""
-              arity = Array.length d.vars
-            in
-              Array.snoc acc' { adtPath, nodeCtor, leafCtor, nodeBaseStruct, leafBaseStruct, arity }
-          else acc'
-      ) acc m.dataDecls
-     ) [] finalModulesWithClassDecls
-
-    pointerAdtPaths = Map.fromFoldable (map (\info -> Tuple info.adtPath { ctorName: info.nodeCtor, arity: info.arity }) pointerAdtPathsRaw)
-    pointerAdtNodes = Set.fromFoldable (map _.nodeBaseStruct pointerAdtPathsRaw)
-    pointerAdtLeaves = Map.fromFoldable (Array.mapMaybe (\info -> if info.leafBaseStruct /= "" then Just (Tuple info.leafBaseStruct { nodeBaseStruct: info.nodeBaseStruct, nodeCtor: info.nodeCtor }) else Nothing) pointerAdtPathsRaw)
-
-    enumAdtsRaw = foldl (\acc (Module m) ->
-      foldl (\acc' d ->
-        let
-          ctorsWithFields = Array.filter (\c -> Array.length c.fields > 0) d.constructors
-        in
-          if Array.length ctorsWithFields == 0 && Array.length d.constructors > 0 then
-            let
-              adtPath = unwrap m.name <> "." <> d.name
-              pkgNameStr = String.replaceAll (Pattern ".") (Replacement "_") (unwrap m.name)
-              ctorBaseStructs = map (\c -> "Data_" <> pkgNameStr <> "_" <> sanitizeName c.name) d.constructors
-            in Array.snoc acc' { adtPath, ctors: ctorBaseStructs }
-          else acc'
-      ) acc m.dataDecls
-     ) [] finalModulesWithClassDecls
-
-    enumAdts = Set.fromFoldable (map _.adtPath enumAdtsRaw)
-    enumCtors = Set.fromFoldable (Array.concatMap _.ctors enumAdtsRaw)
+    { pointerAdtPaths, pointerAdtNodes, pointerAdtLeaves } = buildPointerAdtMetadata (Array.fromFoldable finalModulesWithClassDecls)
+    { enumAdts, enumCtors } = buildEnumAdtMetadata (Array.fromFoldable finalModulesWithClassDecls)
 
     targetMainModules = case args.mbMainModule of
       Just mainMod -> [ mainMod ]
