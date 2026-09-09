@@ -17,7 +17,7 @@ import Data.Bifunctor (lmap)
 import Data.Argonaut.Decode.Error (printJsonDecodeError)
 import Data.Array as Array
 import Partial.Unsafe (unsafePartial)
-import Data.Tuple (Tuple(..), fst, snd)
+import Data.Tuple (Tuple(..))
 import Data.List as List
 import Data.List (List)
 import Data.Traversable (traverse)
@@ -35,6 +35,7 @@ import PureScript.Backend.Optimizer.Monomorphize (collectInstantiations, Instant
 import PureScript.Backend.Optimizer.Semantics.Foreign (coreForeignSemantics)
 import PureScript.Backend.Optimizer.CoreFn (Module(..), Ann, importName, Bind(..), Binding(..), ExprType(..), Ident(..))
 import Gopurs.CodeGen (translate)
+import Gopurs.ClassMetadata (ClassFields, buildClassFields, addClassDataDeclarations)
 import Gopurs.ConstructorMetadata (ConstructorTypes, buildConstructorTypes, collectElidedConstructors)
 import Gopurs.Runtime (runtimeGoCode)
 import PureScript.Backend.Optimizer.FfiSupport (findFfiFile)
@@ -51,8 +52,7 @@ type PreparedData =
   , elidedCtors :: Set.Set String
   , ctorTypes :: ConstructorTypes
   , globalTypes :: Map.Map String ExprType
-  , classDeclsMap :: Map.Map String String
-  , classDeclsFields :: Map.Map String { vars :: Array String, fields :: Array { name :: String, "type" :: ExprType } }
+  , classDeclsFields :: ClassFields
   , instantiations :: InstantiationMap
   , monomorphizedModules :: List (Module Ann)
   , adtTypes :: Set.Set ExprType
@@ -78,46 +78,8 @@ loadAndPrepareModules args = do
 
   let globalTypes = buildGlobalTypes (Array.fromFoldable finalModules)
   let
-
-    classDeclsMap = foldl (\acc (Module m) ->
-      foldl (\acc' c ->
-        let superclassFields = Array.mapWithIndex (\i super ->
-                  fromMaybe "" (Array.last (fst super)) <> show i
-                ) c.superclasses
-            methodFields = map fst c.methods
-            allFields = superclassFields <> methodFields
-            key = String.joinWith "," allFields
-        in Map.insert key (unwrap m.name <> "." <> c.name) acc'
-      ) acc m.classDecls
-    ) Map.empty finalModules
-
-    classDeclsFields = foldl (\acc (Module m) ->
-      foldl (\acc' c ->
-        let superclassFields = Array.mapWithIndex (\i super ->
-                  let superName = fromMaybe "" (Array.last (fst super))
-                  in Tuple (superName <> show i) Any
-                ) c.superclasses
-            methodFields = c.methods
-            allFields = Array.sortBy (comparing fst) (superclassFields <> methodFields)
-            fieldsWithTypes = map (\(Tuple name ty) -> { name, "type": ty }) allFields
-            vars = c.vars
-        in Map.insert (unwrap m.name <> "." <> c.name) { vars, fields: fieldsWithTypes } acc'
-      ) acc m.classDecls
-    ) Map.empty finalModules
-
-    finalModulesWithClassDecls = map (\(Module m) ->
-      let newDecls = map (\c ->
-            let superclassFields = Array.mapWithIndex (\i super ->
-                  let superName = fromMaybe "" (Array.last (fst super))
-                  in Tuple (superName <> show i) Any
-                ) c.superclasses
-                methodFields = c.methods
-                allFields = Array.sortBy (comparing fst) (superclassFields <> methodFields)
-                fieldTypes = map snd allFields
-            in { name: c.name, vars: c.vars, constructors: [{ name: c.name, fields: fieldTypes }] }
-          ) m.classDecls
-      in Module (m { dataDecls = m.dataDecls <> newDecls })
-    ) finalModules
+    classDeclsFields = buildClassFields (Array.fromFoldable finalModules)
+    finalModulesWithClassDecls = map addClassDataDeclarations finalModules
   
 
   let globalAstMap = foldl (\acc (Module m) ->
@@ -208,7 +170,6 @@ loadAndPrepareModules args = do
        , elidedCtors
        , ctorTypes
        , globalTypes
-       , classDeclsMap
        , classDeclsFields
        , instantiations
        , monomorphizedModules
@@ -255,7 +216,7 @@ emitModule prepared mbFfiDir (Module coreFnMod) backendMod = do
   let safeModName = String.replaceAll (Pattern ".") (Replacement "_") modNameStr
   let importsArray = map (\i -> String.split (Pattern ".") (unwrap (importName i))) coreFnMod.imports
 
-  let goFile = translate prepared.enumAdts prepared.enumCtors prepared.pointerAdtPaths prepared.pointerAdtNodes prepared.pointerAdtLeaves prepared.adtTypes prepared.elidedCtors prepared.ctorTypes prepared.globalTypes prepared.instantiations prepared.classDeclsMap prepared.classDeclsFields importsArray backendMod
+  let goFile = translate prepared.enumAdts prepared.enumCtors prepared.pointerAdtPaths prepared.pointerAdtNodes prepared.pointerAdtLeaves prepared.adtTypes prepared.elidedCtors prepared.ctorTypes prepared.globalTypes prepared.instantiations prepared.classDeclsFields importsArray backendMod
   FS.writeTextFile UTF8 ("output/purescript/" <> safeModName <> ".go") goFile
 
   when (Array.length (Array.fromFoldable backendMod.foreign) > 0) do
