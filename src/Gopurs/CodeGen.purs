@@ -39,10 +39,9 @@ import PureScript.Backend.Optimizer.FfiSupport (hashString)
 import Gopurs.FfiTypes (TypeNode(..), FfiDecl)
 import Gopurs.ThunkFusion (optimizeThunkProducers)
 
-type CodegenState =
-  { decls :: Array GoDecl
-  , rawDecls :: Array String
-  , elidedCtors :: Set.Set String
+type CodegenMetadataRow :: Row Type
+type CodegenMetadataRow =
+  ( elidedCtors :: Set.Set String
   , ctorTypes :: Map String { vars :: Array String, fields :: Array ExprType }
   , pointerAdtPaths :: Map String { ctorName :: String, arity :: Int }
   , pointerAdtNodes :: Set String
@@ -51,7 +50,15 @@ type CodegenState =
   , enumCtors :: Set.Set String
   , globalTypes :: Map.Map String ExprType
   , classDeclsFields :: Map String { vars :: Array String, fields :: Array { name :: String, "type" :: ExprType } }
+  )
+
+type CodegenMetadata = { | CodegenMetadataRow }
+
+type CodegenState =
+  { decls :: Array GoDecl
+  , rawDecls :: Array String
   , globalId :: Int
+  | CodegenMetadataRow
   }
 
 type LocalBinding =
@@ -62,6 +69,32 @@ type LocalBinding =
 -- Keys are original localId values; each binding's name is the emitted Go name,
 -- which may have been renamed.
 type LocalEnv = Map String LocalBinding
+
+type FunctionInfo =
+  { fullName :: String
+  , fArgs :: Array GoType
+  , fRet :: GoType
+  , arity :: Int
+  }
+
+type ModuleFunctions = Map String FunctionInfo
+
+type LoopTarget =
+  { ident :: String
+  , params :: Array String
+  , loopParams :: Array String
+  , goTypes :: Array GoType
+  , fRet :: GoType
+  }
+
+type LoopContext = Array LoopTarget
+
+type ExprResult =
+  { stmts :: StmtTree
+  , expr :: GoExpr
+  , exprType :: GoType
+  , nextId :: Int
+  }
 
 foreign import memoizedFreeVarsImpl :: (TcoExpr -> Set String) -> TcoExpr -> Set String
 
@@ -542,8 +575,8 @@ getStructName modNameStr mbMod ctorName =
 globalReboxPairs :: Ref.Ref (Map.Map String (Set.Set (Tuple GoType GoType)))
 globalReboxPairs = unsafePerformEffect (Ref.new Map.empty)
 
-translate :: Set.Set String -> Set.Set String -> Map.Map String { ctorName :: String, arity :: Int } -> Set.Set String -> Map.Map String { nodeBaseStruct :: String, nodeCtor :: String } -> Set.Set String -> Map.Map String { vars :: Array String, fields :: Array ExprType } -> Map.Map String ExprType -> Map.Map String { vars :: Array String, fields :: Array { name :: String, "type" :: ExprType } } -> Array (Array String) -> BackendModule -> String
-translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves elidedCtors ctorTypes globalTypes classDeclsFields _ inputMod =
+translate :: CodegenMetadata -> BackendModule -> String
+translate { enumAdts, enumCtors, pointerAdtPaths, pointerAdtNodes, pointerAdtLeaves, elidedCtors, ctorTypes, globalTypes, classDeclsFields } inputMod =
 
   let
     mod = optimizeThunkProducers inputMod
@@ -618,7 +651,7 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves el
 
     tcoBindingsExpanded = tcoBindings
 
-    unwrapFunc :: Array (Tuple Ident TcoExpr) -> Array (Tuple String { fullName :: String, fArgs :: Array GoType, fRet :: GoType, arity :: Int })
+    unwrapFunc :: Array (Tuple Ident TcoExpr) -> Array (Tuple String FunctionInfo)
     unwrapFunc binds =
       Array.concatMap
         ( \(Tuple (Ident name) val) ->
@@ -649,7 +682,7 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves el
         )
         binds
 
-    moduleArities :: Map String { fullName :: String, fArgs :: Array GoType, fRet :: GoType, arity :: Int }
+    moduleArities :: ModuleFunctions
     moduleArities = Map.fromFoldable $ Array.concatMap
       ( \group ->
           if group.recursive then
@@ -695,6 +728,7 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves el
                                   mbExpectedRet = case extractExprFuncType (getExprType fn.val) of
                                     Just { fRet: rt } -> Just rt
                                     Nothing -> Nothing
+                                  currentLoopCtx :: LoopContext
                                   currentLoopCtx = if isSelfRecursiveLoop then [ { ident: fn.ident, params: map fst paramsWithTypes, loopParams: map (\p -> fst p <> "_loop") paramsWithTypes, goTypes: map snd paramsWithTypes, fRet } ] else []
                                   resBodyMut = translateExprImpl__ helpersRef 0 modNameStr recVars moduleArities newBound (Just fn.ident) currentLoopCtx isSelfRecursiveLoop false mbExpectedRet 0 fn.body
 
@@ -1071,11 +1105,11 @@ executeIfOpaque expr goExpr =
   if isEffectNode expr then goExpr
   else GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ goExpr, GoRaw "gopurs_runtime.Value{}" ]
 
-translateExprImpl_ :: Ref CodegenState -> Int -> String -> Array String -> Map String { fullName :: String, fArgs :: Array GoType, fRet :: GoType, arity :: Int } -> LocalEnv -> Maybe String -> Array { ident :: String, params :: Array String, loopParams :: Array String, goTypes :: Array GoType, fRet :: GoType } -> Boolean -> Boolean -> Int -> TcoExpr -> { stmts :: StmtTree, expr :: GoExpr, exprType :: GoType, nextId :: Int }
+translateExprImpl_ :: Ref CodegenState -> Int -> String -> Array String -> ModuleFunctions -> LocalEnv -> Maybe String -> LoopContext -> Boolean -> Boolean -> Int -> TcoExpr -> ExprResult
 translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail inEffectBlock nextId tcoExpr =
   translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail inEffectBlock Nothing nextId tcoExpr
 
-translateExprImpl__ :: Ref CodegenState -> Int -> String -> Array String -> Map String { fullName :: String, fArgs :: Array GoType, fRet :: GoType, arity :: Int } -> LocalEnv -> Maybe String -> Array { ident :: String, params :: Array String, loopParams :: Array String, goTypes :: Array GoType, fRet :: GoType } -> Boolean -> Boolean -> Maybe ExprType -> Int -> TcoExpr -> { stmts :: StmtTree, expr :: GoExpr, exprType :: GoType, nextId :: Int }
+translateExprImpl__ :: Ref CodegenState -> Int -> String -> Array String -> ModuleFunctions -> LocalEnv -> Maybe String -> LoopContext -> Boolean -> Boolean -> Maybe ExprType -> Int -> TcoExpr -> ExprResult
 translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail inEffectBlock mbExpectedExprType nextId tcoExpr@(TcoExpr tcoAnalysis expr) =
   let
     elidedCtors = (unsafePerformEffect (Ref.read helpersRef)).elidedCtors

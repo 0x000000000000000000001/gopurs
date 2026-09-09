@@ -29,11 +29,11 @@ import Data.Newtype (unwrap)
 import PureScript.Backend.Optimizer.Builder (buildModules)
 import PureScript.Backend.Optimizer.Convert (BackendModule)
 import PureScript.Backend.Optimizer.Semantics.Foreign (coreForeignSemantics)
-import PureScript.Backend.Optimizer.CoreFn (Module(..), Ann, importName, ExprType, Ident(..))
-import Gopurs.CodeGen (translate)
+import PureScript.Backend.Optimizer.CoreFn (Module(..), Ann, Ident(..))
+import Gopurs.CodeGen (CodegenMetadata, CodegenMetadataRow, translate)
 import Gopurs.AdtMetadata (buildPointerAdtMetadata, buildEnumAdtMetadata)
-import Gopurs.ClassMetadata (ClassFields, buildClassFields, addClassDataDeclarations)
-import Gopurs.ConstructorMetadata (ConstructorTypes, buildConstructorTypes, collectElidedConstructors)
+import Gopurs.ClassMetadata (buildClassFields, addClassDataDeclarations)
+import Gopurs.ConstructorMetadata (buildConstructorTypes, collectElidedConstructors)
 import Gopurs.Runtime (runtimeGoCode)
 import PureScript.Backend.Optimizer.FfiSupport (findFfiFile)
 import Gopurs.FfiSupport (extractFfiAst)
@@ -46,17 +46,9 @@ import PureScript.Backend.Optimizer.Semantics (InlineDirectiveMap)
 
 type PreparedData =
   { directives :: InlineDirectiveMap
-  , elidedCtors :: Set.Set String
-  , ctorTypes :: ConstructorTypes
-  , globalTypes :: Map.Map String ExprType
-  , classDeclsFields :: ClassFields
   , monomorphizedModules :: List (Module Ann)
-  , pointerAdtPaths :: Map.Map String { ctorName :: String, arity :: Int }
-  , pointerAdtNodes :: Set.Set String
-  , pointerAdtLeaves :: Map.Map String { nodeBaseStruct :: String, nodeCtor :: String }
-  , enumAdts :: Set.Set String
-  , enumCtors :: Set.Set String
   , targetMainModules :: Array String
+  | CodegenMetadataRow
   }
 
 loadAndPrepareModules :: { mbMainModule :: Maybe String } -> Aff PreparedData
@@ -101,9 +93,21 @@ emitModule :: PreparedData -> Maybe String -> Module Ann -> BackendModule -> Aff
 emitModule prepared mbFfiDir (Module coreFnMod) backendMod = do
   let modNameStr = unwrap backendMod.name
   let safeModName = String.replaceAll (Pattern ".") (Replacement "_") modNameStr
-  let importsArray = map (\i -> String.split (Pattern ".") (unwrap (importName i))) coreFnMod.imports
+  let
+    metadata :: CodegenMetadata
+    metadata =
+      { enumAdts: prepared.enumAdts
+      , enumCtors: prepared.enumCtors
+      , pointerAdtPaths: prepared.pointerAdtPaths
+      , pointerAdtNodes: prepared.pointerAdtNodes
+      , pointerAdtLeaves: prepared.pointerAdtLeaves
+      , elidedCtors: prepared.elidedCtors
+      , ctorTypes: prepared.ctorTypes
+      , globalTypes: prepared.globalTypes
+      , classDeclsFields: prepared.classDeclsFields
+      }
 
-  let goFile = translate prepared.enumAdts prepared.enumCtors prepared.pointerAdtPaths prepared.pointerAdtNodes prepared.pointerAdtLeaves prepared.elidedCtors prepared.ctorTypes prepared.globalTypes prepared.classDeclsFields importsArray backendMod
+  let goFile = translate metadata backendMod
   FS.writeTextFile UTF8 ("output/purescript/" <> safeModName <> ".go") goFile
 
   when (Array.length (Array.fromFoldable backendMod.foreign) > 0) do
