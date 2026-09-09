@@ -39,6 +39,30 @@ import PureScript.Backend.Optimizer.FfiSupport (hashString)
 import Gopurs.FfiTypes (TypeNode(..), FfiDecl)
 import Gopurs.ThunkFusion (optimizeThunkProducers)
 
+type CodegenState =
+  { decls :: Array GoDecl
+  , rawDecls :: Array String
+  , elidedCtors :: Set.Set String
+  , ctorTypes :: Map String { vars :: Array String, fields :: Array ExprType }
+  , pointerAdtPaths :: Map String { ctorName :: String, arity :: Int }
+  , pointerAdtNodes :: Set String
+  , pointerAdtLeaves :: Map String { nodeBaseStruct :: String, nodeCtor :: String }
+  , enumAdts :: Set.Set String
+  , enumCtors :: Set.Set String
+  , globalTypes :: Map.Map String ExprType
+  , classDeclsFields :: Map String { vars :: Array String, fields :: Array { name :: String, "type" :: ExprType } }
+  , globalId :: Int
+  }
+
+type LocalBinding =
+  { name :: String
+  , goType :: GoType
+  }
+
+-- Keys are original localId values; each binding's name is the emitted Go name,
+-- which may have been renamed.
+type LocalEnv = Map String LocalBinding
+
 foreign import memoizedFreeVarsImpl :: (TcoExpr -> Set String) -> TcoExpr -> Set String
 
 memoizedFreeVars :: TcoExpr -> Set String
@@ -400,7 +424,7 @@ wrapInStmts _ stmts retType expr =
 -- Reuse an unchanged constructor without mutating it. Restrict this to direct
 -- projections of one typed local, with exactly one constant field replaced.
 -- Comparing Number fields would be unsound for observable signed zero.
-constructorReuse :: Map String { name :: String, goType :: GoType } -> GoType -> Array Boolean -> GoExpr -> Maybe { source :: GoExpr, condition :: GoExpr }
+constructorReuse :: LocalEnv -> GoType -> Array Boolean -> GoExpr -> Maybe { source :: GoExpr, condition :: GoExpr }
 constructorReuse bound resultType constants constructor = case resultType, constructor of
   TypeStructPointer _ _ _ _, GoConstructor _ ctor typeArgs fields ->
     case Array.catMaybes (Array.mapWithIndex (\index constant -> if constant then Just index else Nothing) constants) of
@@ -526,6 +550,7 @@ translate enumAdts enumCtors pointerAdtPaths pointerAdtNodes pointerAdtLeaves el
     modNameStrOrig = unwrap mod.name
     modNameStr = String.replaceAll (Pattern ".") (Replacement "_") modNameStrOrig
 
+    helpersRef :: Ref CodegenState
     helpersRef = unsafePerformEffect do
       let
         structDecls = Array.concatMap
@@ -1046,11 +1071,11 @@ executeIfOpaque expr goExpr =
   if isEffectNode expr then goExpr
   else GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ goExpr, GoRaw "gopurs_runtime.Value{}" ]
 
-translateExprImpl_ :: Ref { decls :: Array GoDecl, rawDecls :: Array String, elidedCtors :: Set.Set String, ctorTypes :: Map String { vars :: Array String, fields :: Array ExprType }, pointerAdtPaths :: Map String { ctorName :: String, arity :: Int }, pointerAdtNodes :: Set String, pointerAdtLeaves :: Map String { nodeBaseStruct :: String, nodeCtor :: String }, enumAdts :: Set.Set String, enumCtors :: Set.Set String, globalTypes :: Map.Map String ExprType, classDeclsFields :: Map String { vars :: Array String, fields :: Array { name :: String, "type" :: ExprType } }, globalId :: Int } -> Int -> String -> Array String -> Map String { fullName :: String, fArgs :: Array GoType, fRet :: GoType, arity :: Int } -> Map String { name :: String, goType :: GoType } -> Maybe String -> Array { ident :: String, params :: Array String, loopParams :: Array String, goTypes :: Array GoType, fRet :: GoType } -> Boolean -> Boolean -> Int -> TcoExpr -> { stmts :: StmtTree, expr :: GoExpr, exprType :: GoType, nextId :: Int }
+translateExprImpl_ :: Ref CodegenState -> Int -> String -> Array String -> Map String { fullName :: String, fArgs :: Array GoType, fRet :: GoType, arity :: Int } -> LocalEnv -> Maybe String -> Array { ident :: String, params :: Array String, loopParams :: Array String, goTypes :: Array GoType, fRet :: GoType } -> Boolean -> Boolean -> Int -> TcoExpr -> { stmts :: StmtTree, expr :: GoExpr, exprType :: GoType, nextId :: Int }
 translateExprImpl_ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail inEffectBlock nextId tcoExpr =
   translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail inEffectBlock Nothing nextId tcoExpr
 
-translateExprImpl__ :: Ref { decls :: Array GoDecl, rawDecls :: Array String, elidedCtors :: Set.Set String, ctorTypes :: Map String { vars :: Array String, fields :: Array ExprType }, pointerAdtPaths :: Map String { ctorName :: String, arity :: Int }, pointerAdtNodes :: Set String, pointerAdtLeaves :: Map String { nodeBaseStruct :: String, nodeCtor :: String }, enumAdts :: Set.Set String, enumCtors :: Set.Set String, globalTypes :: Map.Map String ExprType, classDeclsFields :: Map String { vars :: Array String, fields :: Array { name :: String, "type" :: ExprType } }, globalId :: Int } -> Int -> String -> Array String -> Map String { fullName :: String, fArgs :: Array GoType, fRet :: GoType, arity :: Int } -> Map String { name :: String, goType :: GoType } -> Maybe String -> Array { ident :: String, params :: Array String, loopParams :: Array String, goTypes :: Array GoType, fRet :: GoType } -> Boolean -> Boolean -> Maybe ExprType -> Int -> TcoExpr -> { stmts :: StmtTree, expr :: GoExpr, exprType :: GoType, nextId :: Int }
+translateExprImpl__ :: Ref CodegenState -> Int -> String -> Array String -> Map String { fullName :: String, fArgs :: Array GoType, fRet :: GoType, arity :: Int } -> LocalEnv -> Maybe String -> Array { ident :: String, params :: Array String, loopParams :: Array String, goTypes :: Array GoType, fRet :: GoType } -> Boolean -> Boolean -> Maybe ExprType -> Int -> TcoExpr -> { stmts :: StmtTree, expr :: GoExpr, exprType :: GoType, nextId :: Int }
 translateExprImpl__ helpersRef depth modNameStr recVars moduleArities bound tcoIdent loopCtx isTail inEffectBlock mbExpectedExprType nextId tcoExpr@(TcoExpr tcoAnalysis expr) =
   let
     elidedCtors = (unsafePerformEffect (Ref.read helpersRef)).elidedCtors
