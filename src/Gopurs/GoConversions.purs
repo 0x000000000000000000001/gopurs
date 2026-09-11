@@ -64,7 +64,7 @@ unboxableADTs = Map.fromFoldable
       { signature: [ TypeValue, TypeValue ]
       , mapConstructor: \ctorName args -> args
       , boxExpr: \expr ->
-          GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\treturn gopurs_runtime.Box(&Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V0, V1: _v.V1})\n\t\t\t}()")
+          GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\treturn gopurs_runtime.Value{Type: 9, IntVal: " <> hashString "Data_Data_Tuple_Tuple" <> ", UnsafePtr: unsafe.Pointer(&Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V0, V1: _v.V1})}\n\t\t\t}()")
       , unboxExpr: \expr ->
           GoRaw ("func() struct{V0 gopurs_runtime.Value; V1 gopurs_runtime.Value} {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\t_p := (*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(_v.UnsafePtr)\n\t\t\t\treturn struct{V0 gopurs_runtime.Value; V1 gopurs_runtime.Value}{V0: _p.V0, V1: _p.V1}\n\t\t\t}()")
       }
@@ -75,9 +75,9 @@ unboxableADTs = Map.fromFoldable
           "Right" -> [ GoRaw "gopurs_runtime.Value{}", fromMaybe (GoRaw "gopurs_runtime.Value{}") (Array.head args), GoRaw "true" ]
           _ -> [ GoRaw "gopurs_runtime.Value{}", GoRaw "gopurs_runtime.Value{}", GoRaw "false" ]
       , boxExpr: \expr ->
-          GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\tif _v.V2 {\n\t\t\t\t\treturn gopurs_runtime.Box(&Constructor_Data_Either_Right[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V1})\n\t\t\t\t}\n\t\t\t\treturn gopurs_runtime.Box(&Constructor_Data_Either_Left[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V0})\n\t\t\t}()")
+          GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\tif _v.V2 {\n\t\t\t\t\treturn gopurs_runtime.Value{Type: 9, IntVal: " <> hashString "Data_Data_Either_Right" <> ", UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V1})}\n\t\t\t\t}\n\t\t\t\treturn gopurs_runtime.Value{Type: 9, IntVal: " <> hashString "Data_Data_Either_Left" <> ", UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V0})}\n\t\t\t}()")
       , unboxExpr: \expr ->
-          GoRaw ("func() struct{V0 gopurs_runtime.Value; V1 gopurs_runtime.Value; V2 bool} {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\tif _v.Type == 9 && _v.IntVal == " <> hashString "Constructor_Data_Either_Right" <> " && _v.UnsafePtr != nil {\n\t\t\t\t\treturn struct{V0 gopurs_runtime.Value; V1 gopurs_runtime.Value; V2 bool}{V0: gopurs_runtime.Value{}, V1: (*Constructor_Data_Either_Right[gopurs_runtime.Value, gopurs_runtime.Value])(_v.UnsafePtr).V0, V2: true}\n\t\t\t\t}\n\t\t\t\treturn struct{V0 gopurs_runtime.Value; V1 gopurs_runtime.Value; V2 bool}{V0: (*Constructor_Data_Either_Left[gopurs_runtime.Value, gopurs_runtime.Value])(_v.UnsafePtr).V0, V1: gopurs_runtime.Value{}, V2: false}\n\t\t\t}()")
+          GoRaw ("func() struct{V0 gopurs_runtime.Value; V1 gopurs_runtime.Value; V2 bool} {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\tif _v.Type == 9 && _v.IntVal == " <> hashString "Data_Data_Either_Right" <> " && _v.UnsafePtr != nil {\n\t\t\t\t\treturn struct{V0 gopurs_runtime.Value; V1 gopurs_runtime.Value; V2 bool}{V0: gopurs_runtime.Value{}, V1: (*Constructor_Data_Either_Right[gopurs_runtime.Value, gopurs_runtime.Value])(_v.UnsafePtr).V0, V2: true}\n\t\t\t\t}\n\t\t\t\treturn struct{V0 gopurs_runtime.Value; V1 gopurs_runtime.Value; V2 bool}{V0: (*Constructor_Data_Either_Left[gopurs_runtime.Value, gopurs_runtime.Value])(_v.UnsafePtr).V0, V1: gopurs_runtime.Value{}, V2: false}\n\t\t\t}()")
       }
   ]
 

@@ -330,7 +330,7 @@ translate { enumAdts, enumCtors, pointerAdtPaths, pointerAdtNodes, pointerAdtLea
                           let
                             typeParamsGetter =
                               if Array.length decl.vars > 0 then
-                                "[" <> String.joinWith ", " (map (const "any") decl.vars) <> "]"
+                                "[" <> String.joinWith ", " (map (const "gopurs_runtime.Value") decl.vars) <> "]"
                               else ""
                             cases = Array.mapWithIndex (\i f -> "\t\tcase \"" <> f.name <> "\": return gopurs_runtime.Box(c.V" <> show i <> ")") info.fields
                             pkgNameStr = String.replaceAll (Pattern ".") (Replacement "_") (unwrap mod.name)
