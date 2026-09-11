@@ -135,8 +135,9 @@ coerceGoExpr codegenStateRef modNameStr expr TypeValue destT@(TypeStructPointer 
   in
     coerceGoExpr codegenStateRef modNameStr (unboxGoExpr codegenStateRef modNameStr expr TypeValue srcT) srcT destT
 
-coerceGoExpr codegenStateRef modNameStr expr srcT@(TypeStructValue "Data.Maybe.Maybe" _) destT@(TypeStructPointer _ "Data.Maybe.Maybe" _ _) =
-  -- The boxed payload is Value; reuse the typed-pointer conversion to rebox it.
+coerceGoExpr codegenStateRef modNameStr expr srcT@(TypeStructValue srcAdt _) destT@(TypeStructPointer _ destAdt _ _) | srcAdt == destAdt =
+  -- Boxed native ADTs have Value payloads; convert each field before using
+  -- a typed pointer instead of reinterpreting the generic payload layout.
   coerceGoExpr codegenStateRef modNameStr (boxGoExpr codegenStateRef modNameStr expr srcT) TypeValue destT
 
 coerceGoExpr codegenStateRef modNameStr expr from TypeValue = boxGoExpr codegenStateRef modNameStr expr from

@@ -46,10 +46,12 @@ prepareLiteral codegenStateRef modNameStr baseExprType mbExpectedExprType =
 
 -- CodeGen calls this immediately after translating each field. Delaying these
 -- conversions until all fields are translated would change reboxing state.
-coerceLiteralField :: Ref CodegenState -> String -> String -> ExprType -> RecordExpr -> Tuple String GoExpr
-coerceLiteralField codegenStateRef modNameStr key expectedExprType value =
+coerceLiteralField :: Ref CodegenState -> String -> String -> GoType -> RecordExpr -> Tuple String GoExpr
+coerceLiteralField codegenStateRef modNameStr key recordType value =
   let
-    expectedGoType = exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr expectedExprType
+    expectedGoType = case recordType of
+      TypeRecord fields -> fromMaybe TypeValue (Map.lookup key (Map.fromFoldable fields))
+      _ -> TypeValue
     coercedVal = coerceGoExpr codegenStateRef modNameStr value.expr value.exprType expectedGoType
   in
     Tuple key coercedVal

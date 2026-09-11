@@ -987,7 +987,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                         val
 
                       resVal = translateExpr codegenStateRef (depth + 1) modNameStr recVars moduleFunctions newBound Nothing [] { isTail: false, inEffectBlock: false } acc.nextId val
-                      field = RecordExprs.coerceLiteralField codegenStateRef modNameStr key expectedExprType { expr: resVal.expr, exprType: resVal.exprType }
+                      field = RecordExprs.coerceLiteralField codegenStateRef modNameStr key recordInfo.recordType { expr: resVal.expr, exprType: resVal.exprType }
                     in
                       { stmts: acc.stmts <> resVal.stmts, exprs: Array.snoc acc.exprs field, exprType: TypeValue, nextId: resVal.nextId }
                 )
@@ -1991,14 +1991,16 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                             newBound2 = Map.insert oldName { name: newName, goType: TypeFunc (map snd paramsWithTypes) trueFRet } acc.newBound
                             declStmtsLocal = [ GoRaw ("var Call_local_" <> modNameStr <> "_" <> newName <> " func(" <> String.joinWith ", " (map goTypeToStr (map snd paramsWithTypes)) <> ") " <> goTypeToStr trueFRet), GoRaw ("_ = Call_local_" <> modNameStr <> "_" <> newName), GoRaw ("var " <> newName <> " gopurs_runtime.Value"), GoRaw ("_ = " <> newName) ]
                           in
-                            { stmts: acc.stmts <> declStmtsLocal <> [ nativeAssignment, GoMutate newName funcExpr ], nextId: resBodyMut.nextId, moduleFunctions: newFunctions, newBound: newBound2 }
+                            { declarations: acc.declarations <> declStmtsLocal, stmts: acc.stmts <> [ nativeAssignment, GoMutate newName funcExpr ], nextId: resBodyMut.nextId, moduleFunctions: newFunctions, newBound: newBound2 }
                       )
-                      { stmts: [], nextId: allocRes.nextId, moduleFunctions: prepopulatedFunctions, newBound: prepopulatedBound }
+                      { declarations: [], stmts: [], nextId: allocRes.nextId, moduleFunctions: prepopulatedFunctions, newBound: prepopulatedBound }
                       fns
 
                     resBodyOuter = translateExpr codegenStateRef (depth + 1) modNameStr combinedRecVars resData.moduleFunctions resData.newBound Nothing loopCtx options resData.nextId body
                   in
-                    { stmts: foldMap StmtLeaf resData.stmts <> resBodyOuter.stmts, expr: resBodyOuter.expr, exprType: resBodyOuter.exprType, nextId: resBodyOuter.nextId }
+                    -- Every function in the recursive group must be in scope
+                    -- before emitting bodies that can refer to its peers.
+                    { stmts: foldMap StmtLeaf (resData.declarations <> resData.stmts) <> resBodyOuter.stmts, expr: resBodyOuter.expr, exprType: resBodyOuter.exprType, nextId: resBodyOuter.nextId }
 
                 Nothing ->
                   let

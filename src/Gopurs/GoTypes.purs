@@ -46,11 +46,10 @@ printExprType = case _ of
   TypeVar v -> "(TypeVar " <> v <> ")"
   Any -> "Any"
 
--- Nothing and Just Any count as closed row tails in this mapping. Closed
--- records become native structs with fields sorted by label; other tails use Value.
+-- Only an absent tail proves that a row is closed. An unknown tail (Any)
+-- may contain additional fields, which a native struct would discard.
 isClosedRowTail :: Maybe ExprType -> Boolean
 isClosedRowTail Nothing = true
-isClosedRowTail (Just Any) = true
 isClosedRowTail _ = false
 
 -- TAST annotations and ADT metadata select the internal Go representation.
