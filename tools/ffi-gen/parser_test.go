@@ -1,7 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"go/scanner"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -74,6 +79,120 @@ func After() {}`,
 			}
 			if got != test.want {
 				t.Errorf("parseFFI() = %s\nwant %s", got, test.want)
+			}
+		})
+	}
+}
+
+func TestParseFFIRenamesPackageReferences(t *testing.T) {
+	const source = `package main
+import "strings"
+// Words, Callback and Count stay unchanged in comments.
+var label = "Words Callback Count"
+var Count = 0
+var Callback = Words
+var Key = "key"
+var entries = map[string]int{Key: 1}
+var object = struct{ Words func(string) []string }{Words: strings.Fields}
+type reader struct{}
+func (reader) Words(s string) []string { return strings.Fields(s) }
+func Words(s string) []string {
+	Count++
+	if s == "again" { return Words("next") }
+	return strings.Fields(s)
+}
+func CamelCase(s string) string { return strings.Join(Words(s), "") }
+func Invoke(s string) []string { return Callback(s) }
+func Shadow(Words func(string) []string) []string { return Words("parameter") }
+func Local() []string {
+	Words := object.Words
+	return Words("local")
+}
+func Selectors() []string { return reader{}.Words("receiver") }
+func FunctionValue() func(string) []string { return Words }
+func hidden() string { return label }
+func Lookup() int { return entries[Key] }
+// --- Auto-generated FFI wrappers ---
+invalid old generated wrapper
+`
+	const assertions = `package main
+import (
+	"strings"
+	"testing"
+)
+func TestRenamedFFI(t *testing.T) {
+	if Data_String_Extra_CamelCase("two words") != "twowords" { t.Fatal("internal call") }
+	if Data_String_Extra_Invoke("again")[0] != "next" { t.Fatal("recursive callback") }
+	if Data_String_Extra_FunctionValue()("value")[0] != "value" { t.Fatal("function value") }
+	if Data_String_Extra_Count != 4 { t.Fatalf("count: %d", Data_String_Extra_Count) }
+	if Data_String_Extra_Shadow(strings.Fields)[0] != "parameter" { t.Fatal("parameter shadowing") }
+	if Data_String_Extra_Local()[0] != "local" { t.Fatal("local shadowing") }
+	if Data_String_Extra_Selectors()[0] != "receiver" { t.Fatal("selector") }
+	if Data_String_Extra_Lookup() != 1 { t.Fatal("map key reference") }
+	if hidden() != "Words Callback Count" { t.Fatal("string literal or private declaration") }
+}
+`
+	for _, withPackage := range []bool{true, false} {
+		name := "with package"
+		content := source
+		if !withPackage {
+			name = "without package"
+			content = strings.TrimPrefix(content, "package main\n")
+		}
+		t.Run(name, func(t *testing.T) {
+			got, err := parseFFI(content, "Data_String_Extra_")
+			if err != nil {
+				t.Fatal(err)
+			}
+			var result struct {
+				Decls   []FFIDecl `json:"decls"`
+				Content string    `json:"content"`
+			}
+			if err := json.Unmarshal([]byte(got), &result); err != nil {
+				t.Fatal(err)
+			}
+			for _, decl := range result.Decls {
+				// Methods are not package declarations and keep their selector names.
+				if decl.Name != "Words" && !strings.HasPrefix(decl.Name, "Data_String_Extra_") {
+					t.Errorf("declaration not renamed: %s", decl.Name)
+				}
+			}
+			for _, preserved := range []string{
+				"// Words, Callback and Count stay unchanged in comments.",
+				`var label = "Words Callback Count"`,
+				"Words := object.Words",
+				"return Words(\"local\")",
+				"func (reader) Words(s string)",
+				"{Words: strings.Fields}",
+			} {
+				if !strings.Contains(result.Content, preserved) {
+					t.Errorf("source fragment changed: %s", preserved)
+				}
+			}
+			before, _, _ := strings.Cut(content, "// --- Auto-generated FFI wrappers ---")
+			if strings.Count(before, "\n") != strings.Count(result.Content, "\n") {
+				t.Error("source line count changed")
+			}
+			if strings.Contains(result.Content, "invalid old generated wrapper") {
+				t.Error("generated wrappers were retained")
+			}
+			if !withPackage {
+				if strings.HasPrefix(result.Content, "package ") {
+					t.Fatal("synthetic package retained in source")
+				}
+				result.Content = "package main\n" + result.Content
+			}
+			dir := t.TempDir()
+			ffiPath := filepath.Join(dir, "ffi.go")
+			testPath := filepath.Join(dir, "ffi_test.go")
+			for path, contents := range map[string]string{ffiPath: result.Content, testPath: assertions} {
+				if err := os.WriteFile(path, []byte(contents), 0600); err != nil {
+					t.Fatal(err)
+				}
+			}
+			cmd := exec.Command("go", "test", ffiPath, testPath)
+			if output, err := cmd.CombinedOutput(); err != nil {
+				t.Fatalf("renamed Go failed: %v\n%s\n%s", err, output, result.Content)
 			}
 		})
 	}

@@ -9,7 +9,10 @@ async function run() {
     // Observe startup failures without waiting for the runtime to finish.
     go.run(result.instance).catch(fail);
     const content = readFileSync(0, 'utf8');
-    const response = globalThis.parseFFI(content);
+    const prefix = process.argv[2];
+    const response = prefix === undefined
+        ? globalThis.parseFFI(content)
+        : globalThis.parseFFI(content, prefix);
     if (!response || typeof response.json !== 'string' || typeof response.error !== 'string') {
         throw new Error('Invalid Go FFI parser response; rebuild with npm run build:ffi');
     }

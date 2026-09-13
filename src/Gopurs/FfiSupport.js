@@ -17,18 +17,22 @@ function resolveFfiRunner() {
     return runner;
 }
 
-export const extractFfiAstImpl = function(content) {
-    return function() {
-        try {
-            return execFileSync(process.execPath, [resolveFfiRunner()], {
-                input: content,
-                encoding: 'utf-8',
-                maxBuffer: 10 * 1024 * 1024,
-                stdio: ['pipe', 'pipe', 'pipe'],
-            });
-        } catch (error) {
-            const detail = error.stderr?.trim() || error.message;
-            throw new Error(`FFI runner failed: ${detail}`);
-        }
-    };
-};
+function runFfiParser(content, prefix) {
+    try {
+        const args = [resolveFfiRunner()];
+        if (prefix !== undefined) args.push(prefix);
+        return execFileSync(process.execPath, args, {
+            input: content,
+            encoding: 'utf-8',
+            maxBuffer: 10 * 1024 * 1024,
+            stdio: ['pipe', 'pipe', 'pipe'],
+        });
+    } catch (error) {
+        const detail = error.stderr?.trim() || error.message;
+        throw new Error(`FFI runner failed: ${detail}`);
+    }
+}
+
+export const extractFfiAstImpl = content => () => runFfiParser(content);
+
+export const prepareFfiAstImpl = prefix => content => () => runFfiParser(content, prefix);

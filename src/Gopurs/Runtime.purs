@@ -669,6 +669,10 @@ func UncurriedApp10(fn Value, a, b, c, d, e, f, g, h, i, j Value) Value {
 }
 
 func UncurriedApp(fn Value, args ...Value) Value {
+	// Zero-argument closures use the same ignored-Unit wrapper as Box and Wrap0.
+	if len(args) == 0 {
+		return Apply(fn, Value{})
+	}
 	res := fn
 	for _, arg := range args {
 		res = Apply(res, arg)

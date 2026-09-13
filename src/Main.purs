@@ -31,7 +31,7 @@ import Gopurs.ClassMetadata (buildClassFields, addClassDataDeclarations)
 import Gopurs.ConstructorMetadata (buildConstructorTypes, collectElidedConstructors)
 import Gopurs.Runtime (runtimeGoCode)
 import PureScript.Backend.Optimizer.FfiSupport (findFfiFile)
-import Gopurs.FfiSupport (extractFfiDecls)
+import Gopurs.FfiSupport (prepareFfi)
 import Gopurs.GlobalTypes (buildGlobalTypes)
 import Gopurs.Monomorphization (monomorphizeModules)
 import PureScript.Backend.Optimizer.App (coreFnModulesFromOutput, parseCLIArgs, loadDirectives)
@@ -110,22 +110,15 @@ emitModule prepared mbFfiDir (Module coreFnMod) backendMod = do
     case ffiPathMb of
       Just ffiPath -> do
         content <- FS.readTextFile UTF8 ffiPath
-        ffiDecls <- liftEffect $ extractFfiDecls { moduleName: modNameStr, path: ffiPath } content
+        ffi <- liftEffect $ prepareFfi { moduleName: modNameStr, path: ffiPath } (safeModName <> "_") content
 
-        let lines = String.split (Pattern "\n") (String.replaceAll (Pattern "\r") (Replacement "") content)
+        let lines = String.split (Pattern "\n") (String.replaceAll (Pattern "\r") (Replacement "") ffi.content)
         let otherLines = Array.filter (\l -> not (String.contains (Pattern "package ") l)) lines
         let finalPkgLine = "package purescript"
         let hasImport = String.contains (Pattern "\"gopurs/output/gopurs_runtime\"") content
         let importLine = if hasImport then "" else "import \"gopurs/output/gopurs_runtime\"\n"
 
-        let prefixedFfiDecls = map (\d -> d { name = safeModName <> "_" <> d.name }) ffiDecls
-        let renamedContentLines = map (\l -> Array.foldl (\acc decl ->
-                                          if decl.isVar
-                                          then String.replaceAll (Pattern ("var " <> decl.name)) (Replacement ("var " <> safeModName <> "_" <> decl.name)) acc
-                                          else String.replaceAll (Pattern ("func " <> decl.name)) (Replacement ("func " <> safeModName <> "_" <> decl.name)) acc
-                                       ) l ffiDecls) otherLines
-
-        let newContent = finalPkgLine <> "\n\n" <> importLine <> "\n" <> String.joinWith "\n" renamedContentLines <> "\n\n// --- Auto-generated FFI wrappers ---\n" <> FfiBridge.generateFfiBridge safeModName backendMod.dataDecls prefixedFfiDecls (Map.toUnfoldable backendMod.foreign)
+        let newContent = finalPkgLine <> "\n\n" <> importLine <> "\n" <> String.joinWith "\n" otherLines <> "\n\n// --- Auto-generated FFI wrappers ---\n" <> FfiBridge.generateFfiBridge safeModName backendMod.dataDecls ffi.decls (Map.toUnfoldable backendMod.foreign)
         FS.writeTextFile UTF8 ("output/purescript/" <> safeModName <> "_ffi.go") newContent
       Nothing -> do
 

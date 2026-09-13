@@ -6,7 +6,7 @@ import { dirname, join } from 'node:path';
 import test from 'node:test';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Left, Right } from '../output/Data.Either/index.js';
-import { decodeFfiDecls, extractFfiDecls } from '../output/Gopurs.FfiSupport/index.js';
+import { decodeFfiDecls, extractFfiDecls, prepareFfi } from '../output/Gopurs.FfiSupport/index.js';
 import { TFunc } from '../output/Gopurs.FfiTypes/index.js';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -83,6 +83,20 @@ test('valid declarations retain structured callback types through the compiled A
     assert.equal(declarations[0].isVar, false);
     assert.equal(declarations[0].args.length, 1);
     assert.ok(declarations[0].args[0] instanceof TFunc);
+});
+
+test('the compiled API prepares names and internal references together', () => {
+    const content = 'func Words(s string) string { return s }\n'
+        + 'func CamelCase(s string) string { return Words(s) }\n';
+    const prepared = prepareFfi(source)('Test_Invalid_')(content)();
+    assert.deepEqual(prepared.decls.map(decl => decl.name), ['Test_Invalid_Words', 'Test_Invalid_CamelCase']);
+    assert.match(prepared.content, /func Test_Invalid_Words\(/);
+    assert.match(prepared.content, /return Test_Invalid_Words\(s\)/);
+});
+
+test('preparing invalid Go preserves the source context', () => {
+    assert.throws(() => prepareFfi(source)('Test_Invalid_')('func Broken(')(), error =>
+        error.message.includes(source.moduleName) && error.message.includes(source.path));
 });
 
 test('invalid Go fails without partial JSON and keeps original source positions', () => {

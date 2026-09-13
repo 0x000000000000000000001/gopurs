@@ -9,6 +9,7 @@ import (
 	"go/printer"
 	"go/scanner"
 	"go/token"
+	"sort"
 	"strings"
 )
 
@@ -60,7 +61,7 @@ func parseExprToTypeNode(expr ast.Expr) *TypeNode {
 	}
 }
 
-func parseFFI(content string) (string, error) {
+func parseFFI(content string, prefixes ...string) (string, error) {
 	ffiMarkerIdx := strings.Index(content, "// --- Auto-generated FFI wrappers ---")
 	if ffiMarkerIdx != -1 {
 		content = content[:ffiMarkerIdx]
@@ -83,18 +84,31 @@ func parseFFI(content string) (string, error) {
 		return "", err
 	}
 
+	renamedObjects := make(map[*ast.Object]bool)
+	prefix := ""
+	if len(prefixes) > 0 {
+		prefix = prefixes[0]
+		for name, object := range f.Scope.Objects {
+			if (object.Kind == ast.Fun || object.Kind == ast.Var) && isFFIName(name) {
+				renamedObjects[object] = true
+			}
+		}
+	}
+	declarationName := func(name *ast.Ident) string {
+		if renamedObjects[name.Obj] {
+			return prefix + name.Name
+		}
+		return name.Name
+	}
+
 	var decls []FFIDecl
 
 	for _, decl := range f.Decls {
 		if funcDecl, ok := decl.(*ast.FuncDecl); ok {
-			funcName := funcDecl.Name.Name
-			if len(funcName) == 0 {
+			if !isFFIName(funcDecl.Name.Name) {
 				continue
 			}
-			c := funcName[0]
-			if c != '_' && (c < 'A' || c > 'Z') {
-				continue
-			}
+			funcName := declarationName(funcDecl.Name)
 
 			var typeParamNames []string
 			if funcDecl.Type.TypeParams != nil {
@@ -143,14 +157,10 @@ func parseFFI(content string) (string, error) {
 			for _, spec := range genDecl.Specs {
 				if valueSpec, ok := spec.(*ast.ValueSpec); ok {
 					for _, name := range valueSpec.Names {
-						varName := name.Name
-						if len(varName) == 0 {
+						if !isFFIName(name.Name) {
 							continue
 						}
-						c := varName[0]
-						if c != '_' && (c < 'A' || c > 'Z') {
-							continue
-						}
+						varName := declarationName(name)
 						decls = append(decls, FFIDecl{
 							Name:       varName,
 							IsVar:      true,
@@ -167,9 +177,46 @@ func parseFFI(content string) (string, error) {
 		decls = []FFIDecl{}
 	}
 
-	jsonBytes, err := json.Marshal(decls)
+	var result any = decls
+	if len(prefixes) > 0 {
+		var offsets []int
+		selectorNames := make(map[*ast.Ident]bool)
+		ast.Inspect(f, func(node ast.Node) bool {
+			switch node := node.(type) {
+			case *ast.SelectorExpr:
+				selectorNames[node.Sel] = true
+			case *ast.Ident:
+				if renamedObjects[node.Obj] && !selectorNames[node] {
+					offset := fset.PositionFor(node.Pos(), false).Offset
+					if addedPackage {
+						offset -= len(packagePrefix)
+					}
+					offsets = append(offsets, offset)
+				}
+			}
+			return true
+		})
+		sort.Ints(offsets)
+		var renamed strings.Builder
+		start := 0
+		for _, offset := range offsets {
+			renamed.WriteString(content[start:offset])
+			renamed.WriteString(prefix)
+			start = offset
+		}
+		renamed.WriteString(content[start:])
+		result = struct {
+			Decls   []FFIDecl `json:"decls"`
+			Content string    `json:"content"`
+		}{decls, renamed.String()}
+	}
+	jsonBytes, err := json.Marshal(result)
 	if err != nil {
 		return "", fmt.Errorf("encode FFI declarations: %w", err)
 	}
 	return string(jsonBytes), nil
+}
+
+func isFFIName(name string) bool {
+	return len(name) > 0 && (name[0] == '_' || name[0] >= 'A' && name[0] <= 'Z')
 }

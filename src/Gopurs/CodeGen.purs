@@ -224,20 +224,22 @@ collectCurriedAbs args body =
 
 extractUncurriedAbs :: TcoExpr -> Maybe { args :: Array String, body :: TcoExpr }
 extractUncurriedAbs tcoExpr@(TcoExpr _ syntax) = case syntax of
+  -- A zero-argument call is a separate evaluation step, even around another lambda.
+  UncurriedAbs [] body -> Just { args: [], body }
   UncurriedAbs args body ->
     let
       thisArgs = map (\(Tuple mbI lvl) -> localId mbI lvl) args
     in
       case extractUncurriedAbs body of
-        Just inner -> Just { args: thisArgs <> inner.args, body: inner.body }
-        Nothing -> Just { args: thisArgs, body }
+        Just inner | not (Array.null inner.args) -> Just { args: thisArgs <> inner.args, body: inner.body }
+        _ -> Just { args: thisArgs, body }
   Abs args body ->
     let
       thisArgs = map (\(Tuple mbI lvl) -> localId mbI lvl) (toArray args)
     in
       case extractUncurriedAbs body of
-        Just inner -> Just { args: thisArgs <> inner.args, body: inner.body }
-        Nothing -> Just { args: thisArgs, body }
+        Just inner | not (Array.null inner.args) -> Just { args: thisArgs <> inner.args, body: inner.body }
+        _ -> Just { args: thisArgs, body }
   Typed _ inner -> extractUncurriedAbs inner
   _ -> Nothing
 
@@ -498,7 +500,10 @@ translateWithFunctions { enumAdts, enumCtors, pointerAdtPaths, pointerAdtNodes, 
                                         funcBody = if isSelfRecursiveLoop then GoFor goName bodyStmts else GoBlock bodyStmts
                                         iife = GoRaw ("func() gopurs_runtime.Value {\n" <> printGoExpr funcBody <> "\n}()")
                                       in
-                                        Array.foldr (\(Tuple p goT) acc -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> p <> "_box gopurs_runtime.Value) gopurs_runtime.Value {\nvar " <> p <> "_loop " <> goTypeToStr goT <> " = " <> printGoExpr (coerceGoExpr codegenStateRef modNameStr (GoVar (p <> "_box")) TypeValue goT) <> "\nreturn " <> printGoExpr acc <> "\n}") ]) iife paramsWithTypes
+                                        if arity == 0 then
+                                          GoFunc "_" TypeValue TypeValue funcBody
+                                        else
+                                          Array.foldr (\(Tuple p goT) acc -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> p <> "_box gopurs_runtime.Value) gopurs_runtime.Value {\nvar " <> p <> "_loop " <> goTypeToStr goT <> " = " <> printGoExpr (coerceGoExpr codegenStateRef modNameStr (GoVar (p <> "_box")) TypeValue goT) <> "\nreturn " <> printGoExpr acc <> "\n}") ]) iife paramsWithTypes
                                 in
                                   { identifier: modNameStr <> "_" <> goName, expression: funcExpr, goType: TypeValue }
                             )
@@ -1705,7 +1710,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
               else
                 let
                   params = map fst paramsWithTypes
-                  makeCurried [] = resBody.expr
+                  makeCurried [] = GoFunc "_" TypeValue TypeValue (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType) ]))
                   makeCurried [ p ] = GoFunc p TypeValue TypeValue (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType) ]))
                   makeCurried ps = case Array.uncons ps of
                     Just { head: p, tail: rest } -> GoFunc p TypeValue TypeValue (makeCurried rest)
@@ -1778,7 +1783,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
               else
                 let
                   params = map fst paramsWithTypes
-                  makeCurried [] = GoRaw ("gopurs_runtime.Apply(" <> printGoExpr (boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType) <> ", gopurs_runtime.Value{})")
+                  makeCurried [] = GoFunc "_" TypeValue TypeValue (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (GoRaw ("gopurs_runtime.Apply(" <> printGoExpr (boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType) <> ", gopurs_runtime.Value{})")) ]))
                   makeCurried [ p ] = GoFunc p TypeValue TypeValue (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (GoRaw ("gopurs_runtime.Apply(" <> printGoExpr (boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType) <> ", gopurs_runtime.Value{})")) ]))
                   makeCurried ps = case Array.uncons ps of
                     Just { head: p, tail: rest } -> GoFunc p TypeValue TypeValue (makeCurried rest)
@@ -1984,7 +1989,11 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                             nativeAssignment = GoMutate ("Call_local_" <> modNameStr <> "_" <> newName) (GoRaw ("func(" <> goParamsNative <> ") " <> goTypeToStr trueFRet <> " {\n" <> printGoExpr funcBody <> "\n}"))
 
                             nativeCallExpr = GoCall (GoVar ("Call_local_" <> modNameStr <> "_" <> newName)) (map (\(Tuple p goT) -> coerceGoExpr codegenStateRef modNameStr (GoVar (p <> "_loop_val")) TypeValue goT) paramsWithTypes)
-                            funcExpr = Array.foldr (\(Tuple p goT) accExpr -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> p <> "_loop_val gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr accExpr <> "\n}") ]) (boxGoExpr codegenStateRef modNameStr nativeCallExpr trueFRet) paramsWithTypes
+                            funcExpr =
+                              if Array.null paramsWithTypes then
+                                GoFunc "_" TypeValue TypeValue (GoBlock [ GoReturn (boxGoExpr codegenStateRef modNameStr nativeCallExpr trueFRet) ])
+                              else
+                                Array.foldr (\(Tuple p goT) accExpr -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> p <> "_loop_val gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr accExpr <> "\n}") ]) (boxGoExpr codegenStateRef modNameStr nativeCallExpr trueFRet) paramsWithTypes
 
                             newFunctions = Map.insert newName { fullName: "Call_local_" <> modNameStr <> "_" <> newName, fArgs: map snd paramsWithTypes, fRet: trueFRet, arity: Array.length fn.args } acc.moduleFunctions
                             newBound2 = Map.insert oldName { name: newName, goType: TypeFunc (map snd paramsWithTypes) trueFRet } acc.newBound
