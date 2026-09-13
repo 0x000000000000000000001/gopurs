@@ -59,11 +59,12 @@ modulePointerAdts :: Module Ann -> Array PointerAdtInfo
 modulePointerAdts (Module mod) =
   Array.mapMaybe (pointerAdtInfo (unwrap mod.name)) mod.dataDecls
 
--- Exactly one constructor carries fields; any number of nullary constructors is allowed.
+-- A pointer stores the payload constructor and nil can represent one nullary
+-- alternative. Multiple nullary constructors need their distinct runtime tags.
 pointerAdtInfo :: String -> DataDecl -> Maybe PointerAdtInfo
 pointerAdtInfo moduleName declaration =
   case Array.filter (\constructor -> not (Array.null constructor.fields)) declaration.constructors of
-    [ node ] -> Just
+    [ node ] | Array.length declaration.constructors <= 2 -> Just
       { adtPath: moduleName <> "." <> declaration.name
       , nodeCtor: node.name
       , nodeBaseStruct: constructorStructName moduleName node.name
