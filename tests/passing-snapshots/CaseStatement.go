@@ -110,7 +110,7 @@ type Constructor_Main_N[T_a any] struct {
 
 type Constructor_Main_J[T_a any] struct {
 	Rc uint32
-	V0 gopurs_runtime.Value
+	V0 T_a
 }
 
 type Constructor_Main_A struct {
@@ -158,7 +158,7 @@ func Call_Main_h(v_0_loop gopurs_runtime.Value, v1_1_loop *Constructor_Main_J[go
 		}
 	}
 	{
-		__t0 = gopurs_runtime.CoerceToStruct[Constructor_Main_J[gopurs_runtime.Value]](func() gopurs_runtime.Value { panic("Failed pattern match") }())
+		__t0 = func() *Constructor_Main_J[gopurs_runtime.Value] { panic("Failed pattern match") }()
 	}
 end_branch_0:
 	return __t0
@@ -197,7 +197,7 @@ func Call_Main_g(v_0_loop uint32, v1_1_loop uint32, v2_2_loop uint32) uint32 {
 		}
 	}
 	{
-		__t0 = uint32(func() gopurs_runtime.Value { panic("Failed pattern match") }().IntVal)
+		__t0 = func() uint32 { panic("Failed pattern match") }()
 	}
 end_branch_0:
 	return __t0
@@ -236,7 +236,7 @@ func Call_Main_f(v_0_loop string, v1_1_loop string, v2_2_loop uint32) string {
 		}
 	}
 	{
-		__t0 = func() gopurs_runtime.Value { panic("Failed pattern match") }().StrVal()
+		__t0 = func() string { panic("Failed pattern match") }()
 	}
 end_branch_0:
 	return __t0

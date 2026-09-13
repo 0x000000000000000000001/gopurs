@@ -41,7 +41,7 @@ func Get_Main_main() gopurs_runtime.Value {
 
 type Constructor_Main_Person struct {
 	Rc uint32
-	V0 *struct {
+	V0 struct {
 		age  float64
 		name string
 	}
@@ -50,5 +50,5 @@ type Constructor_Main_Person struct {
 func Call_Main_showPerson(p_0_loop gopurs_runtime.Value) string {
 	var p_0 gopurs_runtime.Value = p_0_loop
 	_ = p_0
-	return ((gopurs_runtime.RecordGet(p_0, "name").StrVal()) + (", aged ")) + (gopurs_runtime.Apply(Get_Data_Show_showNumberImpl(), gopurs_runtime.Float(gopurs_runtime.RecordGet(p_0, "age").FloatVal())).StrVal())
+	return ((gopurs_runtime.RecordGet(p_0, "name").StrVal()) + (", aged ")) + (gopurs_runtime.Apply(Get_Data_Show_showNumberImpl(), gopurs_runtime.RecordGet(p_0, "age")).StrVal())
 }

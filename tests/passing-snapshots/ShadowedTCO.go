@@ -46,9 +46,7 @@ var once_Main_one_prime_ sync.Once
 
 func Get_Main_one_prime_() gopurs_runtime.Value {
 	once_Main_one_prime_.Do(func() {
-		cache_Main_one_prime_ = gopurs_runtime.Func2(func(zero_prime_1_0_box gopurs_runtime.Value, succ1_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_one_prime_(zero_prime_1_0_box, succ1_1_box)
-		})
+		cache_Main_one_prime_ = gopurs_runtime.Apply(Get_Main_succ(), Get_Main_zero_prime_())
 	})
 	return cache_Main_one_prime_
 }
@@ -58,9 +56,7 @@ var once_Main_two sync.Once
 
 func Get_Main_two() gopurs_runtime.Value {
 	once_Main_two.Do(func() {
-		cache_Main_two = gopurs_runtime.Func2(func(zero_prime_1_0_box gopurs_runtime.Value, succ1_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_two(zero_prime_1_0_box, succ1_1_box)
-		})
+		cache_Main_two = gopurs_runtime.Apply(Get_Main_succ(), gopurs_runtime.Apply(Get_Main_succ(), Get_Main_zero_prime_()))
 	})
 	return cache_Main_two
 }
@@ -82,9 +78,7 @@ var once_Main_four sync.Once
 
 func Get_Main_four() gopurs_runtime.Value {
 	once_Main_four.Do(func() {
-		cache_Main_four = gopurs_runtime.Func2(func(zero_prime_1_0_box gopurs_runtime.Value, succ1_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_four(zero_prime_1_0_box, succ1_1_box)
-		})
+		cache_Main_four = gopurs_runtime.Apply2(Get_Main_add(), gopurs_runtime.Apply(Get_Main_succ(), gopurs_runtime.Apply(Get_Main_succ(), Get_Main_zero_prime_())), gopurs_runtime.Apply(Get_Main_succ(), gopurs_runtime.Apply(Get_Main_succ(), Get_Main_zero_prime_())))
 	})
 	return cache_Main_four
 }
@@ -94,7 +88,7 @@ var once_Main_fourNumber sync.Once
 
 func Get_Main_fourNumber() gopurs_runtime.Value {
 	once_Main_fourNumber.Do(func() {
-		cache_Main_fourNumber = gopurs_runtime.Float(gopurs_runtime.Float(4.0).FloatVal())
+		cache_Main_fourNumber = gopurs_runtime.Float(Call_Main_runNat(Get_Main_four()).FloatVal())
 	})
 	return cache_Main_fourNumber
 }
@@ -104,14 +98,9 @@ var once_Main_main sync.Once
 
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
-		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
-			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showNumberImpl(), gopurs_runtime.Float(gopurs_runtime.Float(4.0).FloatVal())).StrVal()))
-			_ = __local_var_0_0
-			_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
-			_ = _dollar___unused_1_1
-			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
-		})
+		cache_Main_main = gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showNumberImpl(), gopurs_runtime.Float(Get_Main_fourNumber().FloatVal())).StrVal())), gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
+		}))
 	})
 	return cache_Main_main
 }
@@ -142,22 +131,6 @@ func Call_Main_runNat(f_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	}))
 }
 
-func Call_Main_one_prime_(zero_prime_1_0_loop gopurs_runtime.Value, succ1_1_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var zero_prime_1_0 gopurs_runtime.Value = zero_prime_1_0_loop
-	_ = zero_prime_1_0
-	var succ1_1 gopurs_runtime.Value = succ1_1_loop
-	_ = succ1_1
-	return gopurs_runtime.Apply(succ1_1, zero_prime_1_0)
-}
-
-func Call_Main_two(zero_prime_1_0_loop gopurs_runtime.Value, succ1_1_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var zero_prime_1_0 gopurs_runtime.Value = zero_prime_1_0_loop
-	_ = zero_prime_1_0
-	var succ1_1 gopurs_runtime.Value = succ1_1_loop
-	_ = succ1_1
-	return gopurs_runtime.Apply(succ1_1, gopurs_runtime.Apply(succ1_1, zero_prime_1_0))
-}
-
 func Call_Main_add(f_0_loop gopurs_runtime.Value, g_1_loop gopurs_runtime.Value, zero_prime_1_2_loop gopurs_runtime.Value, succ1_3_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var f_0 gopurs_runtime.Value = f_0_loop
 	_ = f_0
@@ -168,12 +141,4 @@ func Call_Main_add(f_0_loop gopurs_runtime.Value, g_1_loop gopurs_runtime.Value,
 	var succ1_3 gopurs_runtime.Value = succ1_3_loop
 	_ = succ1_3
 	return gopurs_runtime.Apply2(g_1, gopurs_runtime.Apply2(f_0, zero_prime_1_2, succ1_3), succ1_3)
-}
-
-func Call_Main_four(zero_prime_1_0_loop gopurs_runtime.Value, succ1_1_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var zero_prime_1_0 gopurs_runtime.Value = zero_prime_1_0_loop
-	_ = zero_prime_1_0
-	var succ1_1 gopurs_runtime.Value = succ1_1_loop
-	_ = succ1_1
-	return gopurs_runtime.Apply(succ1_1, gopurs_runtime.Apply(succ1_1, gopurs_runtime.Apply(succ1_1, gopurs_runtime.Apply(succ1_1, zero_prime_1_0))))
 }

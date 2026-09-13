@@ -10,7 +10,7 @@ var once_Main_y sync.Once
 
 func Get_Main_y() gopurs_runtime.Value {
 	once_Main_y.Do(func() {
-		cache_Main_y = gopurs_runtime.Float(gopurs_runtime.Int(1).FloatVal())
+		cache_Main_y = gopurs_runtime.Float(gopurs_runtime.Int(int64(1)).FloatVal())
 	})
 	return cache_Main_y
 }
@@ -20,7 +20,7 @@ var once_Main_x sync.Once
 
 func Get_Main_x() gopurs_runtime.Value {
 	once_Main_x.Do(func() {
-		cache_Main_x = gopurs_runtime.Float(gopurs_runtime.Int(1).FloatVal())
+		cache_Main_x = gopurs_runtime.Float(gopurs_runtime.Int(int64(1)).FloatVal())
 	})
 	return cache_Main_x
 }

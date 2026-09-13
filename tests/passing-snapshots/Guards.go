@@ -29,16 +29,16 @@ func Get_Main_min() gopurs_runtime.Value {
 	return cache_Main_min
 }
 
-var cache_Main_min__2767602680 gopurs_runtime.Value
-var once_Main_min__2767602680 sync.Once
+var cache_Main_min__4200641300 gopurs_runtime.Value
+var once_Main_min__4200641300 sync.Once
 
-func Get_Main_min__2767602680() gopurs_runtime.Value {
-	once_Main_min__2767602680.Do(func() {
-		cache_Main_min__2767602680 = gopurs_runtime.Func3(func(dictOrd_0_box gopurs_runtime.Value, n_1_box gopurs_runtime.Value, m_2_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_min__2767602680(gopurs_runtime.CoerceToStruct[Constructor_Data_Ord_Ord[gopurs_runtime.Value]](dictOrd_0_box), n_1_box, m_2_box)
+func Get_Main_min__4200641300() gopurs_runtime.Value {
+	once_Main_min__4200641300.Do(func() {
+		cache_Main_min__4200641300 = gopurs_runtime.Func2(func(n_0_box gopurs_runtime.Value, m_1_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_min__4200641300(n_0_box.StrVal(), m_1_box.StrVal()))
 		})
 	})
-	return cache_Main_min__2767602680
+	return cache_Main_min__4200641300
 }
 
 var cache_Main_max gopurs_runtime.Value
@@ -53,16 +53,16 @@ func Get_Main_max() gopurs_runtime.Value {
 	return cache_Main_max
 }
 
-var cache_Main_max__2767602680 gopurs_runtime.Value
-var once_Main_max__2767602680 sync.Once
+var cache_Main_max__4195722324 gopurs_runtime.Value
+var once_Main_max__4195722324 sync.Once
 
-func Get_Main_max__2767602680() gopurs_runtime.Value {
-	once_Main_max__2767602680.Do(func() {
-		cache_Main_max__2767602680 = gopurs_runtime.Func3(func(dictOrd_0_box gopurs_runtime.Value, n_1_box gopurs_runtime.Value, m_2_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_max__2767602680(gopurs_runtime.CoerceToStruct[Constructor_Data_Ord_Ord[gopurs_runtime.Value]](dictOrd_0_box), n_1_box, m_2_box)
+func Get_Main_max__4195722324() gopurs_runtime.Value {
+	once_Main_max__4195722324.Do(func() {
+		cache_Main_max__4195722324 = gopurs_runtime.Func2(func(n_0_box gopurs_runtime.Value, m_1_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Int(Call_Main_max__4195722324(n_0_box.IntVal, m_1_box.IntVal))
 		})
 	})
-	return cache_Main_max__2767602680
+	return cache_Main_max__4195722324
 }
 
 var cache_Main_main gopurs_runtime.Value
@@ -71,21 +71,22 @@ var once_Main_main sync.Once
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = func() gopurs_runtime.Value {
-			var __t1 gopurs_runtime.Value
+			var __t1 string
 			{
 				var __t_tag_0 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordStringImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, gopurs_runtime.Str("Done"), gopurs_runtime.Str("ZZZZ"))
+				_ = __t_tag_0
 				if uint32(__t_tag_0.IntVal) == 1527465420 {
-					__t1 = gopurs_runtime.Str("Done")
+					__t1 = "Done"
 					goto end_branch_1
 				} else {
 
 				}
 			}
 			{
-				__t1 = gopurs_runtime.Str("ZZZZ")
+				__t1 = "ZZZZ"
 			}
 		end_branch_1:
-			return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(__t1.StrVal()))
+			return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(__t1))
 		}()
 	})
 	return cache_Main_main
@@ -183,6 +184,7 @@ func Call_Main_testIndentation(x_0_loop float64, y_1_loop float64) float64 {
 	var __t1 float64
 	{
 		var __t_tag_0 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordNumberImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, gopurs_runtime.Float(x_0), gopurs_runtime.Float(0.0))
+		_ = __t_tag_0
 		if uint32(__t_tag_0.IntVal) == 380165415 {
 			__t1 = (x_0) + (y_1)
 			goto end_branch_1
@@ -206,8 +208,9 @@ func Call_Main_min(dictOrd_0_loop *Constructor_Data_Ord_Ord[gopurs_runtime.Value
 	_ = m_2
 	var __t1 gopurs_runtime.Value
 	{
-		var __t_tag_0 gopurs_runtime.Value = gopurs_runtime.Apply2(gopurs_runtime.Box(dictOrd_0.V1), n_1, m_2)
-		if uint32(__t_tag_0.IntVal) == 1527465420 {
+		var __t_tag_0 uint32 = uint32(gopurs_runtime.Apply2(dictOrd_0.V1, n_1, m_2).IntVal)
+		_ = __t_tag_0
+		if uint32(__t_tag_0) == 1527465420 {
 			__t1 = n_1
 			goto end_branch_1
 		} else {
@@ -221,28 +224,33 @@ end_branch_1:
 	return __t1
 }
 
-func Call_Main_min__2767602680(dictOrd_0_loop *Constructor_Data_Ord_Ord[gopurs_runtime.Value], n_1_loop gopurs_runtime.Value, m_2_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var dictOrd_0 *Constructor_Data_Ord_Ord[gopurs_runtime.Value] = dictOrd_0_loop
-	_ = dictOrd_0
-	var n_1 gopurs_runtime.Value = n_1_loop
-	_ = n_1
-	var m_2 gopurs_runtime.Value = m_2_loop
-	_ = m_2
-	var __t1 gopurs_runtime.Value
-	{
-		var __t_tag_0 gopurs_runtime.Value = gopurs_runtime.Apply2(gopurs_runtime.Box(dictOrd_0.V1), n_1, m_2)
-		if uint32(__t_tag_0.IntVal) == 1527465420 {
-			__t1 = n_1
-			goto end_branch_1
-		} else {
-
+func Call_Main_min__4200641300(n_0_loop string, m_1_loop string) string {
+min__4200641300:
+	for {
+		if false {
+			continue min__4200641300
 		}
+		var n_0 string = n_0_loop
+		_ = n_0
+		var m_1 string = m_1_loop
+		_ = m_1
+		var __t1 string
+		{
+			var __t_tag_0 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordStringImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, gopurs_runtime.Str(n_0), gopurs_runtime.Str(m_1))
+			_ = __t_tag_0
+			if uint32(__t_tag_0.IntVal) == 1527465420 {
+				__t1 = n_0
+				goto end_branch_1
+			} else {
+
+			}
+		}
+		{
+			__t1 = m_1
+		}
+	end_branch_1:
+		return __t1
 	}
-	{
-		__t1 = m_2
-	}
-end_branch_1:
-	return __t1
 }
 
 func Call_Main_max(dictOrd_0_loop *Constructor_Data_Ord_Ord[gopurs_runtime.Value], n_1_loop gopurs_runtime.Value, m_2_loop gopurs_runtime.Value) gopurs_runtime.Value {
@@ -254,8 +262,9 @@ func Call_Main_max(dictOrd_0_loop *Constructor_Data_Ord_Ord[gopurs_runtime.Value
 	_ = m_2
 	var __t1 gopurs_runtime.Value
 	{
-		var __t_tag_0 gopurs_runtime.Value = gopurs_runtime.Apply2(gopurs_runtime.Box(dictOrd_0.V1), m_2, n_1)
-		if uint32(__t_tag_0.IntVal) == 1527465420 {
+		var __t_tag_0 uint32 = uint32(gopurs_runtime.Apply2(dictOrd_0.V1, m_2, n_1).IntVal)
+		_ = __t_tag_0
+		if uint32(__t_tag_0) == 1527465420 {
 			__t1 = n_1
 			goto end_branch_1
 		} else {
@@ -269,28 +278,31 @@ end_branch_1:
 	return __t1
 }
 
-func Call_Main_max__2767602680(dictOrd_0_loop *Constructor_Data_Ord_Ord[gopurs_runtime.Value], n_1_loop gopurs_runtime.Value, m_2_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var dictOrd_0 *Constructor_Data_Ord_Ord[gopurs_runtime.Value] = dictOrd_0_loop
-	_ = dictOrd_0
-	var n_1 gopurs_runtime.Value = n_1_loop
-	_ = n_1
-	var m_2 gopurs_runtime.Value = m_2_loop
-	_ = m_2
-	var __t1 gopurs_runtime.Value
-	{
-		var __t_tag_0 gopurs_runtime.Value = gopurs_runtime.Apply2(gopurs_runtime.Box(dictOrd_0.V1), m_2, n_1)
-		if uint32(__t_tag_0.IntVal) == 1527465420 {
-			__t1 = n_1
-			goto end_branch_1
-		} else {
-
+func Call_Main_max__4195722324(n_0_loop int64, m_1_loop int64) int64 {
+max__4195722324:
+	for {
+		if false {
+			continue max__4195722324
 		}
+		var n_0 int64 = n_0_loop
+		_ = n_0
+		var m_1 int64 = m_1_loop
+		_ = m_1
+		var __t0 int64
+		{
+			if (m_1) < (n_0) {
+				__t0 = n_0
+				goto end_branch_0
+			} else {
+
+			}
+		}
+		{
+			__t0 = m_1
+		}
+	end_branch_0:
+		return __t0
 	}
-	{
-		__t1 = m_2
-	}
-end_branch_1:
-	return __t1
 }
 
 func Call_Main_collatz2(x_0_loop float64, y_1_loop float64) float64 {
@@ -301,6 +313,7 @@ func Call_Main_collatz2(x_0_loop float64, y_1_loop float64) float64 {
 	var __t1 float64
 	{
 		var __t_tag_0 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordNumberImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, gopurs_runtime.Float(y_1), gopurs_runtime.Float(0.0))
+		_ = __t_tag_0
 		if uint32(__t_tag_0.IntVal) == 380165415 {
 			__t1 = (x_0) / (2.0)
 			goto end_branch_1
@@ -326,25 +339,25 @@ func Call_Main_clunky_case2(a_0_loop int64, b_1_loop int64) int64 {
 	_ = a_0
 	var b_1 int64 = b_1_loop
 	_ = b_1
-	var __t1 gopurs_runtime.Value
+	var __t1 int64
 	{
 		if (b_1) < (a_0) {
-			__t1 = gopurs_runtime.Int(a_0)
+			__t1 = a_0
 			goto end_branch_1
 		} else {
 
 		}
 	}
 	{
-		__t1 = gopurs_runtime.Int(b_1)
+		__t1 = b_1
 	}
 end_branch_1:
 	// TAST (Let): __local_var_2_0 shape=Branch(Other, def=Other) bindingType=Int
-	__local_var_2_0 := __t1.IntVal
+	__local_var_2_0 := __t1
 	_ = __local_var_2_0
 	var __t2 int64
 	{
-		if (__local_var_2_0) > (5) {
+		if (__local_var_2_0) > (int64(5)) {
 			__t2 = __local_var_2_0
 			goto end_branch_2
 		} else {
@@ -363,25 +376,25 @@ func Call_Main_clunky_case1(a_0_loop int64, b_1_loop int64) int64 {
 	_ = a_0
 	var b_1 int64 = b_1_loop
 	_ = b_1
-	var __t1 gopurs_runtime.Value
+	var __t1 int64
 	{
 		if (b_1) < (a_0) {
-			__t1 = gopurs_runtime.Int(a_0)
+			__t1 = a_0
 			goto end_branch_1
 		} else {
 
 		}
 	}
 	{
-		__t1 = gopurs_runtime.Int(b_1)
+		__t1 = b_1
 	}
 end_branch_1:
 	// TAST (Let): __local_var_2_0 shape=Branch(Other, def=Other) bindingType=Int
-	__local_var_2_0 := __t1.IntVal
+	__local_var_2_0 := __t1
 	_ = __local_var_2_0
 	var __t2 int64
 	{
-		if (__local_var_2_0) > (5) {
+		if (__local_var_2_0) > (int64(5)) {
 			__t2 = __local_var_2_0
 			goto end_branch_2
 		} else {
@@ -400,25 +413,25 @@ func Call_Main_clunky2(a_0_loop int64, b_1_loop int64) int64 {
 	_ = a_0
 	var b_1 int64 = b_1_loop
 	_ = b_1
-	var __t1 gopurs_runtime.Value
+	var __t1 int64
 	{
 		if (b_1) < (a_0) {
-			__t1 = gopurs_runtime.Int(a_0)
+			__t1 = a_0
 			goto end_branch_1
 		} else {
 
 		}
 	}
 	{
-		__t1 = gopurs_runtime.Int(b_1)
+		__t1 = b_1
 	}
 end_branch_1:
 	// TAST (Let): __local_var_2_0 shape=Branch(Other, def=Other) bindingType=Int
-	__local_var_2_0 := __t1.IntVal
+	__local_var_2_0 := __t1
 	_ = __local_var_2_0
 	var __t2 int64
 	{
-		if (__local_var_2_0) > (5) {
+		if (__local_var_2_0) > (int64(5)) {
 			__t2 = __local_var_2_0
 			goto end_branch_2
 		} else {
@@ -439,26 +452,26 @@ func Call_Main_clunky1_refutable(v_0_loop int64, v1_1_loop int64) int64 {
 	_ = v1_1
 	var __t3 int64
 	{
-		if (v_0) == (0) {
-			var __t1 gopurs_runtime.Value
+		if (v_0) == (int64(0)) {
+			var __t1 int64
 			{
 				if (v1_1) < (v1_1) {
-					__t1 = gopurs_runtime.Int(v1_1)
+					__t1 = v1_1
 					goto end_branch_1
 				} else {
 
 				}
 			}
 			{
-				__t1 = gopurs_runtime.Int(v1_1)
+				__t1 = v1_1
 			}
 		end_branch_1:
 			// TAST (Let): __local_var_2_0 shape=Branch(Other, def=Other) bindingType=Int
-			__local_var_2_0 := __t1.IntVal
+			__local_var_2_0 := __t1
 			_ = __local_var_2_0
 			var __t2 int64
 			{
-				if (__local_var_2_0) > (5) {
+				if (__local_var_2_0) > (int64(5)) {
 					__t2 = __local_var_2_0
 					goto end_branch_2
 				} else {
@@ -487,25 +500,25 @@ func Call_Main_clunky1(v_0_loop int64, v1_1_loop int64) int64 {
 	_ = v_0
 	var v1_1 int64 = v1_1_loop
 	_ = v1_1
-	var __t1 gopurs_runtime.Value
+	var __t1 int64
 	{
 		if (v1_1) < (v_0) {
-			__t1 = gopurs_runtime.Int(v_0)
+			__t1 = v_0
 			goto end_branch_1
 		} else {
 
 		}
 	}
 	{
-		__t1 = gopurs_runtime.Int(v1_1)
+		__t1 = v1_1
 	}
 end_branch_1:
 	// TAST (Let): __local_var_2_0 shape=Branch(Other, def=Other) bindingType=Int
-	__local_var_2_0 := __t1.IntVal
+	__local_var_2_0 := __t1
 	_ = __local_var_2_0
 	var __t2 int64
 	{
-		if (__local_var_2_0) > (5) {
+		if (__local_var_2_0) > (int64(5)) {
 			__t2 = __local_var_2_0
 			goto end_branch_2
 		} else {

@@ -50,8 +50,8 @@ func Call_Main_fn(_dollar___unused_0_loop gopurs_runtime.Value, v_1_loop float64
 		}
 	}
 	{
-		__t0 = func() gopurs_runtime.Value { panic("Failed pattern match") }().FloatVal()
+		__t0 = func() float64 { panic("Failed pattern match") }()
 	}
 end_branch_0:
-	return gopurs_runtime.Float(__t0).FloatVal()
+	return __t0
 }

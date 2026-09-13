@@ -12,7 +12,20 @@ var once_Main_Monad2_dollar_Dict sync.Once
 func Get_Main_Monad2_dollar_Dict() gopurs_runtime.Value {
 	once_Main_Monad2_dollar_Dict.Do(func() {
 		cache_Main_Monad2_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_Monad2_dollar_Dict(x_0_box)
+			return gopurs_runtime.Value{Type: 9, IntVal: 518617989, UnsafePtr: unsafe.Pointer(Call_Main_Monad2_dollar_Dict(func() struct {
+				Monad0 gopurs_runtime.Value
+				f2     gopurs_runtime.Value
+			} {
+				orig := x_0_box
+				_ = orig
+				clone := struct {
+					Monad0 gopurs_runtime.Value
+					f2     gopurs_runtime.Value
+				}{}
+				clone.Monad0 = gopurs_runtime.RecordGet(orig, "Monad0")
+				clone.f2 = gopurs_runtime.RecordGet(orig, "f2")
+				return clone
+			}()))}
 		})
 	})
 	return cache_Main_Monad2_dollar_Dict
@@ -24,7 +37,20 @@ var once_Main_Monad1_dollar_Dict sync.Once
 func Get_Main_Monad1_dollar_Dict() gopurs_runtime.Value {
 	once_Main_Monad1_dollar_Dict.Do(func() {
 		cache_Main_Monad1_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_Monad1_dollar_Dict(x_0_box)
+			return gopurs_runtime.Value{Type: 9, IntVal: 4280338790, UnsafePtr: unsafe.Pointer(Call_Main_Monad1_dollar_Dict(func() struct {
+				Monad0 gopurs_runtime.Value
+				f1     gopurs_runtime.Value
+			} {
+				orig := x_0_box
+				_ = orig
+				clone := struct {
+					Monad0 gopurs_runtime.Value
+					f1     gopurs_runtime.Value
+				}{}
+				clone.Monad0 = gopurs_runtime.RecordGet(orig, "Monad0")
+				clone.f1 = gopurs_runtime.RecordGet(orig, "f1")
+				return clone
+			}()))}
 		})
 	})
 	return cache_Main_Monad1_dollar_Dict
@@ -96,7 +122,7 @@ type Constructor_Main_Monad2[T_m any] struct {
 
 func init() {
 	gopurs_runtime.StructGetters[518617989] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_Monad2[any])(ptr)
+		c := (*Constructor_Main_Monad2[gopurs_runtime.Value])(ptr)
 		_ = c
 		switch key {
 		case "Monad0":
@@ -117,7 +143,7 @@ type Constructor_Main_Monad1[T_m any] struct {
 
 func init() {
 	gopurs_runtime.StructGetters[4280338790] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_Monad1[any])(ptr)
+		c := (*Constructor_Main_Monad1[gopurs_runtime.Value])(ptr)
 		_ = c
 		switch key {
 		case "Monad0":
@@ -130,16 +156,36 @@ func init() {
 	}
 }
 
-func Call_Main_Monad2_dollar_Dict(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var x_0 gopurs_runtime.Value = x_0_loop
+func Call_Main_Monad2_dollar_Dict(x_0_loop struct {
+	Monad0 gopurs_runtime.Value
+	f2     gopurs_runtime.Value
+}) *Constructor_Main_Monad2[gopurs_runtime.Value] {
+	var x_0 struct {
+		Monad0 gopurs_runtime.Value
+		f2     gopurs_runtime.Value
+	} = x_0_loop
 	_ = x_0
-	return x_0
+	return gopurs_runtime.CoerceToStruct[Constructor_Main_Monad2[gopurs_runtime.Value]](func() gopurs_runtime.Value {
+		orig := x_0
+		_ = orig
+		return gopurs_runtime.RecordDict2("Monad0", "f2", orig.Monad0, orig.f2)
+	}())
 }
 
-func Call_Main_Monad1_dollar_Dict(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var x_0 gopurs_runtime.Value = x_0_loop
+func Call_Main_Monad1_dollar_Dict(x_0_loop struct {
+	Monad0 gopurs_runtime.Value
+	f1     gopurs_runtime.Value
+}) *Constructor_Main_Monad1[gopurs_runtime.Value] {
+	var x_0 struct {
+		Monad0 gopurs_runtime.Value
+		f1     gopurs_runtime.Value
+	} = x_0_loop
 	_ = x_0
-	return x_0
+	return gopurs_runtime.CoerceToStruct[Constructor_Main_Monad1[gopurs_runtime.Value]](func() gopurs_runtime.Value {
+		orig := x_0
+		_ = orig
+		return gopurs_runtime.RecordDict2("Monad0", "f1", orig.Monad0, orig.f1)
+	}())
 }
 
 func Call_Main_f2(dict_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
@@ -157,15 +203,15 @@ func Call_Main_f1(dict_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 func Call_Main_f_prime_(dictMonad_0_loop *Constructor_Control_Monad_Monad[gopurs_runtime.Value]) gopurs_runtime.Value {
 	var dictMonad_0 *Constructor_Control_Monad_Monad[gopurs_runtime.Value] = dictMonad_0_loop
 	_ = dictMonad_0
-	// TAST (Let): Bind1_1_0 shape=App(Other) bindingType=(ADT ["Control","Bind","Bind"] [(TypeVar m)])
-	Bind1_1_0 := gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](gopurs_runtime.Apply(gopurs_runtime.Box(dictMonad_0.V1), gopurs_runtime.Value{}))
+	// TAST (Let): Bind1_1_0 shape=App(Other) bindingType=(ADT ["Control","Bind","Bind"] [(TypeVar m$scope3)])
+	Bind1_1_0 := gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](gopurs_runtime.Apply(dictMonad_0.V1, gopurs_runtime.Value{}))
 	_ = Bind1_1_0
-	// TAST (Let): Applicative0_2_1 shape=App(Other) bindingType=(ADT ["Control","Applicative","Applicative"] [(TypeVar m)])
-	Applicative0_2_1 := gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](gopurs_runtime.Apply(gopurs_runtime.Box(dictMonad_0.V0), gopurs_runtime.Value{}))
+	// TAST (Let): Applicative0_2_1 shape=App(Other) bindingType=(ADT ["Control","Applicative","Applicative"] [(TypeVar m$scope3)])
+	Applicative0_2_1 := gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](gopurs_runtime.Apply(dictMonad_0.V0, gopurs_runtime.Value{}))
 	_ = Applicative0_2_1
 	return gopurs_runtime.Func(func(n_3 gopurs_runtime.Value) gopurs_runtime.Value {
-		return gopurs_runtime.Apply2(gopurs_runtime.Box(Bind1_1_0.V1), gopurs_runtime.Apply(gopurs_runtime.Box(Applicative0_2_1.V1), gopurs_runtime.Int(n_3.IntVal)), gopurs_runtime.Func(func(n_prime__4 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Apply(gopurs_runtime.Box(Applicative0_2_1.V1), gopurs_runtime.Int(n_prime__4.IntVal))
+		return gopurs_runtime.Apply2(Bind1_1_0.V1, gopurs_runtime.Apply(Applicative0_2_1.V1, gopurs_runtime.Int(n_3.IntVal)), gopurs_runtime.Func(func(n_prime__4 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Apply(Applicative0_2_1.V1, gopurs_runtime.Int(n_prime__4.IntVal))
 		}))
 	})
 }
@@ -173,15 +219,15 @@ func Call_Main_f_prime_(dictMonad_0_loop *Constructor_Control_Monad_Monad[gopurs
 func Call_Main_f(dictMonad_0_loop *Constructor_Control_Monad_Monad[gopurs_runtime.Value]) gopurs_runtime.Value {
 	var dictMonad_0 *Constructor_Control_Monad_Monad[gopurs_runtime.Value] = dictMonad_0_loop
 	_ = dictMonad_0
-	// TAST (Let): Bind1_1_0 shape=App(Other) bindingType=(ADT ["Control","Bind","Bind"] [(TypeVar m)])
-	Bind1_1_0 := gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](gopurs_runtime.Apply(gopurs_runtime.Box(dictMonad_0.V1), gopurs_runtime.Value{}))
+	// TAST (Let): Bind1_1_0 shape=App(Other) bindingType=(ADT ["Control","Bind","Bind"] [(TypeVar m$scope5)])
+	Bind1_1_0 := gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](gopurs_runtime.Apply(dictMonad_0.V1, gopurs_runtime.Value{}))
 	_ = Bind1_1_0
-	// TAST (Let): Applicative0_2_1 shape=App(Other) bindingType=(ADT ["Control","Applicative","Applicative"] [(TypeVar m)])
-	Applicative0_2_1 := gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](gopurs_runtime.Apply(gopurs_runtime.Box(dictMonad_0.V0), gopurs_runtime.Value{}))
+	// TAST (Let): Applicative0_2_1 shape=App(Other) bindingType=(ADT ["Control","Applicative","Applicative"] [(TypeVar m$scope5)])
+	Applicative0_2_1 := gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](gopurs_runtime.Apply(dictMonad_0.V0, gopurs_runtime.Value{}))
 	_ = Applicative0_2_1
 	return gopurs_runtime.Func(func(n_3 gopurs_runtime.Value) gopurs_runtime.Value {
-		return gopurs_runtime.Apply2(gopurs_runtime.Box(Bind1_1_0.V1), gopurs_runtime.Apply(gopurs_runtime.Box(Applicative0_2_1.V1), gopurs_runtime.Int(n_3.IntVal)), gopurs_runtime.Func(func(n_prime__4 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Apply(gopurs_runtime.Box(Applicative0_2_1.V1), gopurs_runtime.Int(n_prime__4.IntVal))
+		return gopurs_runtime.Apply2(Bind1_1_0.V1, gopurs_runtime.Apply(Applicative0_2_1.V1, gopurs_runtime.Int(n_3.IntVal)), gopurs_runtime.Func(func(n_prime__4 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Apply(Applicative0_2_1.V1, gopurs_runtime.Int(n_prime__4.IntVal))
 		}))
 	})
 }

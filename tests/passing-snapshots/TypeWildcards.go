@@ -68,7 +68,7 @@ func Call_Main_test(dictEq_0_loop *Constructor_Data_Eq_Eq[gopurs_runtime.Value],
 			_ = v1_5
 			var __t1 gopurs_runtime.Value
 			{
-				if (gopurs_runtime.Apply2(gopurs_runtime.Box(dictEq_0.V0), v_4, v1_5).IntVal) != (0) {
+				if (gopurs_runtime.Apply2(dictEq_0.V0, v_4, v1_5).IntVal) != (0) {
 					__t1 = v_4
 					goto end_branch_1
 				} else {
@@ -79,7 +79,7 @@ func Call_Main_test(dictEq_0_loop *Constructor_Data_Eq_Eq[gopurs_runtime.Value],
 				v_4_loop = gopurs_runtime.Apply(f_1, v_4)
 				v1_5_loop = v_4
 				continue go__go_3_0_0
-				__t1 = gopurs_runtime.Value{}
+				__t1 = func() gopurs_runtime.Value { panic("unreachable") }()
 			}
 		end_branch_1:
 			return __t1

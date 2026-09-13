@@ -24,7 +24,7 @@ func Get_Main_foo() gopurs_runtime.Value {
 			arr := func() []int64 {
 				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array(func() []gopurs_runtime.Value {
 					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply2(Get_Control_Bind_arrayBind(), func() gopurs_runtime.Value {
-						arr := [][][]int64{[][]int64{[]int64{1, 2, 3}, []int64{4, 5}}, [][]int64{[]int64{6}}}
+						arr := [][][]int64{[][]int64{[]int64{int64(1), int64(2), int64(3)}, []int64{int64(4), int64(5)}}, [][]int64{[]int64{int64(6)}}}
 						boxed := make([]gopurs_runtime.Value, len(arr))
 						for i, v := range arr {
 							boxed[i] = func() gopurs_runtime.Value {

@@ -31,7 +31,7 @@ var once_Main_Bar_prime_ sync.Once
 func Get_Main_Bar_prime_() gopurs_runtime.Value {
 	once_Main_Bar_prime_.Do(func() {
 		cache_Main_Bar_prime_ = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_Bar_prime_(x_0_box)
+			return gopurs_runtime.Int(Call_Main_Bar_prime_(x_0_box.IntVal))
 		})
 	})
 	return cache_Main_Bar_prime_
@@ -76,7 +76,7 @@ var once_Main_h_prime_ sync.Once
 
 func Get_Main_h_prime_() gopurs_runtime.Value {
 	once_Main_h_prime_.Do(func() {
-		cache_Main_h_prime_ = gopurs_runtime.Int(8)
+		cache_Main_h_prime_ = gopurs_runtime.Int(int64(8))
 	})
 	return cache_Main_h_prime_
 }
@@ -98,7 +98,7 @@ var once_Main_g_prime_ sync.Once
 
 func Get_Main_g_prime_() gopurs_runtime.Value {
 	once_Main_g_prime_.Do(func() {
-		cache_Main_g_prime_ = gopurs_runtime.Int(0)
+		cache_Main_g_prime_ = gopurs_runtime.Int(int64(0))
 	})
 	return cache_Main_g_prime_
 }
@@ -138,8 +138,8 @@ type Constructor_Main_Foo_prime_ struct {
 	V0 int64
 }
 
-func Call_Main_Bar_prime_(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var x_0 gopurs_runtime.Value = x_0_loop
+func Call_Main_Bar_prime_(x_0_loop int64) int64 {
+	var x_0 int64 = x_0_loop
 	_ = x_0
 	return x_0
 }
@@ -149,15 +149,15 @@ func Call_Main_h(v_0_loop int64) int64 {
 	_ = v_0
 	var __t0 int64
 	{
-		if (v_0) <= (10) {
-			__t0 = (v_0) * (2)
+		if (v_0) <= (int64(10)) {
+			__t0 = (v_0) * (int64(2))
 			goto end_branch_0
 		} else {
 
 		}
 	}
 	{
-		__t0 = 10
+		__t0 = int64(10)
 	}
 end_branch_0:
 	return __t0
@@ -169,7 +169,7 @@ func Call_Main_g(v_0_loop uint32) int64 {
 	var __t0 int64
 	{
 		if v_0 == 905033287 {
-			__t0 = 0
+			__t0 = int64(0)
 			goto end_branch_0
 		} else {
 
@@ -177,14 +177,14 @@ func Call_Main_g(v_0_loop uint32) int64 {
 	}
 	{
 		if v_0 == 2412272388 {
-			__t0 = 1
+			__t0 = int64(1)
 			goto end_branch_0
 		} else {
 
 		}
 	}
 	{
-		__t0 = func() gopurs_runtime.Value { panic("Failed pattern match") }().IntVal
+		__t0 = func() int64 { panic("Failed pattern match") }()
 	}
 end_branch_0:
 	return __t0

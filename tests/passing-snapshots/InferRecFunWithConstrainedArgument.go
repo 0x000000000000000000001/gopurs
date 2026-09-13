@@ -22,14 +22,9 @@ var once_Main_main sync.Once
 
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
-		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=(ADT ["Effect","Effect"] [Unit])
-			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.Int(Call_Main_test(1))).StrVal()))
-			_ = __local_var_0_0
-			_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
-			_ = _dollar___unused_1_1
-			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
-		})
+		cache_Main_main = gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.Int(Call_Main_test(int64(1)))).StrVal())), gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
+		}))
 	})
 	return cache_Main_main
 }
@@ -44,17 +39,17 @@ test:
 		_ = v_0
 		var __t0 int64
 		{
-			if (v_0) == (100) {
-				__t0 = 100
+			if (v_0) == (int64(100)) {
+				__t0 = int64(100)
 				goto end_branch_0
 			} else {
 
 			}
 		}
 		{
-			v_0_loop = (1) + (v_0)
+			v_0_loop = (int64(1)) + (v_0)
 			continue test
-			__t0 = gopurs_runtime.Value{}.IntVal
+			__t0 = func() int64 { panic("unreachable") }()
 		}
 	end_branch_0:
 		return __t0

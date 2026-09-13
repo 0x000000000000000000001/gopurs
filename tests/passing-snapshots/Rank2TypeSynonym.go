@@ -3,6 +3,7 @@ package purescript
 import (
 	gopurs_runtime "gopurs/output/gopurs_runtime"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 var cache_Main_foo gopurs_runtime.Value
@@ -15,18 +16,6 @@ func Get_Main_foo() gopurs_runtime.Value {
 		})
 	})
 	return cache_Main_foo
-}
-
-var cache_Main_foo__2367305173 gopurs_runtime.Value
-var once_Main_foo__2367305173 sync.Once
-
-func Get_Main_foo__2367305173() gopurs_runtime.Value {
-	once_Main_foo__2367305173.Do(func() {
-		cache_Main_foo__2367305173 = gopurs_runtime.Func2(func(x_0_box gopurs_runtime.Value, dictMonad_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_foo__2367305173(x_0_box, dictMonad_1_box)
-		})
-	})
-	return cache_Main_foo__2367305173
 }
 
 var cache_Main_bar gopurs_runtime.Value
@@ -47,23 +36,20 @@ var once_Main_main sync.Once
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-			_dollar___unused_0_0 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showNumberImpl(), gopurs_runtime.Float(3.0)).StrVal())), gopurs_runtime.Value{})
-			_ = _dollar___unused_0_0
-			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
+			__local_var_0_0 := Call_Main_bar(gopurs_runtime.Value{Type: 9, IntVal: 778916621, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad[gopurs_runtime.Value]](Get_Effect_monadEffect()))})
+			_ = __local_var_0_0
+			__local_var_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
+			_ = __local_var_1_1
+			return gopurs_runtime.Apply(gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showNumberImpl(), __local_var_1_1).StrVal())), gopurs_runtime.Func(func(_dollar___unused_2 gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
+			})), gopurs_runtime.Value{})
 		})
 	})
 	return cache_Main_main
 }
 
 func Call_Main_foo(x_0_loop gopurs_runtime.Value, dictMonad_1_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var x_0 gopurs_runtime.Value = x_0_loop
-	_ = x_0
-	var dictMonad_1 gopurs_runtime.Value = dictMonad_1_loop
-	_ = dictMonad_1
-	return gopurs_runtime.Apply(gopurs_runtime.RecordGet(gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonad_1, "Applicative0"), gopurs_runtime.Value{}), "pure"), x_0)
-}
-
-func Call_Main_foo__2367305173(x_0_loop gopurs_runtime.Value, dictMonad_1_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var x_0 gopurs_runtime.Value = x_0_loop
 	_ = x_0
 	var dictMonad_1 gopurs_runtime.Value = dictMonad_1_loop

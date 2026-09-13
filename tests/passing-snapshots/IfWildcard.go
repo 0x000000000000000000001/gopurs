@@ -49,16 +49,16 @@ func Get_Main_cond() gopurs_runtime.Value {
 	return cache_Main_cond
 }
 
-var cache_Main_cond__1906969362 gopurs_runtime.Value
-var once_Main_cond__1906969362 sync.Once
+var cache_Main_cond__2804882735 gopurs_runtime.Value
+var once_Main_cond__2804882735 sync.Once
 
-func Get_Main_cond__1906969362() gopurs_runtime.Value {
-	once_Main_cond__1906969362.Do(func() {
-		cache_Main_cond__1906969362 = gopurs_runtime.Func3(func(v_0_box gopurs_runtime.Value, v1_1_box gopurs_runtime.Value, v2_2_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_cond__1906969362((v_0_box.IntVal) != (0), v1_1_box, v2_2_box)
+func Get_Main_cond__2804882735() gopurs_runtime.Value {
+	once_Main_cond__2804882735.Do(func() {
+		cache_Main_cond__2804882735 = gopurs_runtime.Func3(func(v_0_box gopurs_runtime.Value, v1_1_box gopurs_runtime.Value, v2_2_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Int(Call_Main_cond__2804882735((v_0_box.IntVal) != (0), v1_1_box.IntVal, v2_2_box.IntVal))
 		})
 	})
-	return cache_Main_cond__1906969362
+	return cache_Main_cond__2804882735
 }
 
 var cache_Main_main gopurs_runtime.Value
@@ -121,25 +121,31 @@ end_branch_0:
 	return __t0
 }
 
-func Call_Main_cond__1906969362(v_0_loop bool, v1_1_loop gopurs_runtime.Value, v2_2_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var v_0 bool = v_0_loop
-	_ = v_0
-	var v1_1 gopurs_runtime.Value = v1_1_loop
-	_ = v1_1
-	var v2_2 gopurs_runtime.Value = v2_2_loop
-	_ = v2_2
-	var __t0 gopurs_runtime.Value
-	{
-		if v_0 {
-			__t0 = v1_1
-			goto end_branch_0
-		} else {
-
+func Call_Main_cond__2804882735(v_0_loop bool, v1_1_loop int64, v2_2_loop int64) int64 {
+cond__2804882735:
+	for {
+		if false {
+			continue cond__2804882735
 		}
+		var v_0 bool = v_0_loop
+		_ = v_0
+		var v1_1 int64 = v1_1_loop
+		_ = v1_1
+		var v2_2 int64 = v2_2_loop
+		_ = v2_2
+		var __t0 int64
+		{
+			if v_0 {
+				__t0 = v1_1
+				goto end_branch_0
+			} else {
+
+			}
+		}
+		{
+			__t0 = v2_2
+		}
+	end_branch_0:
+		return __t0
 	}
-	{
-		__t0 = v2_2
-	}
-end_branch_0:
-	return __t0
 }

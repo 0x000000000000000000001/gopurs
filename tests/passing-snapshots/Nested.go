@@ -54,8 +54,8 @@ func Get_Main_main() gopurs_runtime.Value {
 
 type Constructor_Main_Extend[T_r any, T_a any] struct {
 	Rc uint32
-	V0 *struct {
-		next gopurs_runtime.Value
+	V0 struct {
+		next T_a
 		prev gopurs_runtime.Value
 	}
 }

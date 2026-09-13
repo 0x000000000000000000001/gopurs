@@ -41,11 +41,9 @@ var once_Main_eqT sync.Once
 
 func Get_Main_eqT() gopurs_runtime.Value {
 	once_Main_eqT.Do(func() {
-		cache_Main_eqT = gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer((&Constructor_Data_Eq_Eq[uint32]{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Func(func(v1_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Bool(true)
-			})
-		})}))}
+		cache_Main_eqT = gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_3768443459_3790796878((&Constructor_Data_Eq_Eq[uint32]{1, gopurs_runtime.Func2(func(v_0 gopurs_runtime.Value, v1_1 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Bool(true)
+		})})))}
 	})
 	return cache_Main_eqT
 }
@@ -56,4 +54,13 @@ type Constructor_Main_TP struct {
 
 type Constructor_Main_T[T_a any] struct {
 	Rc uint32
+}
+
+func Rebox_Main_3768443459_3790796878(in *Constructor_Data_Eq_Eq[uint32]) *Constructor_Data_Eq_Eq[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Data_Eq_Eq[gopurs_runtime.Value]{}
+	out.V0 = in.V0
+	return out
 }

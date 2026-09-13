@@ -12,10 +12,42 @@ var once_Main_Foo_dollar_Dict sync.Once
 func Get_Main_Foo_dollar_Dict() gopurs_runtime.Value {
 	once_Main_Foo_dollar_Dict.Do(func() {
 		cache_Main_Foo_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_Foo_dollar_Dict(x_0_box)
+			return gopurs_runtime.Value{Type: 9, IntVal: 2763139640, UnsafePtr: unsafe.Pointer(Call_Main_Foo_dollar_Dict(func() struct {
+				foo gopurs_runtime.Value
+			} {
+				orig := x_0_box
+				_ = orig
+				clone := struct {
+					foo gopurs_runtime.Value
+				}{}
+				clone.foo = gopurs_runtime.RecordGet(orig, "foo")
+				return clone
+			}()))}
 		})
 	})
 	return cache_Main_Foo_dollar_Dict
+}
+
+var cache_Main_Foo_dollar_Dict__1164380134 gopurs_runtime.Value
+var once_Main_Foo_dollar_Dict__1164380134 sync.Once
+
+func Get_Main_Foo_dollar_Dict__1164380134() gopurs_runtime.Value {
+	once_Main_Foo_dollar_Dict__1164380134.Do(func() {
+		cache_Main_Foo_dollar_Dict__1164380134 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Value{Type: 9, IntVal: 2763139640, UnsafePtr: unsafe.Pointer(Rebox_Main_752630355_3584142444(Call_Main_Foo_dollar_Dict__1164380134(func() struct {
+				foo gopurs_runtime.Value
+			} {
+				orig := x_0_box
+				_ = orig
+				clone := struct {
+					foo gopurs_runtime.Value
+				}{}
+				clone.foo = gopurs_runtime.RecordGet(orig, "foo")
+				return clone
+			}())))}
+		})
+	})
+	return cache_Main_Foo_dollar_Dict__1164380134
 }
 
 var cache_Main_fooString gopurs_runtime.Value
@@ -23,9 +55,9 @@ var once_Main_fooString sync.Once
 
 func Get_Main_fooString() gopurs_runtime.Value {
 	once_Main_fooString.Do(func() {
-		cache_Main_fooString = gopurs_runtime.Value{Type: 9, IntVal: 2763139640, UnsafePtr: unsafe.Pointer((&Constructor_Main_Foo[string]{1, gopurs_runtime.Func(func(s_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_fooString = gopurs_runtime.Value{Type: 9, IntVal: 2763139640, UnsafePtr: unsafe.Pointer(Rebox_Main_752630355_3584142444((&Constructor_Main_Foo[string]{1, gopurs_runtime.Func(func(s_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Str(s_0.StrVal())
-		})}))}
+		})})))}
 	})
 	return cache_Main_fooString
 }
@@ -42,16 +74,16 @@ func Get_Main_foo() gopurs_runtime.Value {
 	return cache_Main_foo
 }
 
-var cache_Main_foo__1092450768 gopurs_runtime.Value
-var once_Main_foo__1092450768 sync.Once
+var cache_Main_foo__3108595935 gopurs_runtime.Value
+var once_Main_foo__3108595935 sync.Once
 
-func Get_Main_foo__1092450768() gopurs_runtime.Value {
-	once_Main_foo__1092450768.Do(func() {
-		cache_Main_foo__1092450768 = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_foo__1092450768(gopurs_runtime.CoerceToStruct[Constructor_Main_Foo[gopurs_runtime.Value]](dict_0_box))
+func Get_Main_foo__3108595935() gopurs_runtime.Value {
+	once_Main_foo__3108595935.Do(func() {
+		cache_Main_foo__3108595935 = gopurs_runtime.Func(func(__eta_norm_0_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_foo__3108595935(__eta_norm_0_0_box.StrVal()))
 		})
 	})
-	return cache_Main_foo__1092450768
+	return cache_Main_foo__3108595935
 }
 
 var cache_Main_main gopurs_runtime.Value
@@ -71,7 +103,7 @@ type Constructor_Main_Foo[T_a any] struct {
 
 func init() {
 	gopurs_runtime.StructGetters[2763139640] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_Foo[any])(ptr)
+		c := (*Constructor_Main_Foo[gopurs_runtime.Value])(ptr)
 		_ = c
 		switch key {
 		case "foo":
@@ -82,20 +114,63 @@ func init() {
 	}
 }
 
-func Call_Main_Foo_dollar_Dict(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var x_0 gopurs_runtime.Value = x_0_loop
+func Call_Main_Foo_dollar_Dict(x_0_loop struct {
+	foo gopurs_runtime.Value
+}) *Constructor_Main_Foo[gopurs_runtime.Value] {
+	var x_0 struct {
+		foo gopurs_runtime.Value
+	} = x_0_loop
 	_ = x_0
-	return x_0
+	return gopurs_runtime.CoerceToStruct[Constructor_Main_Foo[gopurs_runtime.Value]](func() gopurs_runtime.Value {
+		orig := x_0
+		_ = orig
+		return gopurs_runtime.RecordDict1("foo", orig.foo)
+	}())
+}
+
+func Call_Main_Foo_dollar_Dict__1164380134(x_0_loop struct {
+	foo gopurs_runtime.Value
+}) *Constructor_Main_Foo[string] {
+Foo_dollar_Dict__1164380134:
+	for {
+		if false {
+			continue Foo_dollar_Dict__1164380134
+		}
+		var x_0 struct {
+			foo gopurs_runtime.Value
+		} = x_0_loop
+		_ = x_0
+		return gopurs_runtime.CoerceToStruct[Constructor_Main_Foo[string]](func() gopurs_runtime.Value {
+			orig := x_0
+			_ = orig
+			return gopurs_runtime.RecordDict1("foo", orig.foo)
+		}())
+	}
 }
 
 func Call_Main_foo(dict_0_loop *Constructor_Main_Foo[gopurs_runtime.Value]) gopurs_runtime.Value {
 	var dict_0 *Constructor_Main_Foo[gopurs_runtime.Value] = dict_0_loop
 	_ = dict_0
-	return gopurs_runtime.Box(dict_0.V0)
+	return dict_0.V0
 }
 
-func Call_Main_foo__1092450768(dict_0_loop *Constructor_Main_Foo[gopurs_runtime.Value]) gopurs_runtime.Value {
-	var dict_0 *Constructor_Main_Foo[gopurs_runtime.Value] = dict_0_loop
-	_ = dict_0
-	return gopurs_runtime.Box(dict_0.V0)
+func Call_Main_foo__3108595935(__eta_norm_0_0_loop string) string {
+foo__3108595935:
+	for {
+		if false {
+			continue foo__3108595935
+		}
+		var __eta_norm_0_0 string = __eta_norm_0_0_loop
+		_ = __eta_norm_0_0
+		return __eta_norm_0_0
+	}
+}
+
+func Rebox_Main_752630355_3584142444(in *Constructor_Main_Foo[string]) *Constructor_Main_Foo[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Main_Foo[gopurs_runtime.Value]{}
+	out.V0 = in.V0
+	return out
 }

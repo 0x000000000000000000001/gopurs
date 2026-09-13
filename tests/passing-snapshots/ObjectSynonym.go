@@ -30,7 +30,13 @@ var once_Main_outer sync.Once
 
 func Get_Main_outer() gopurs_runtime.Value {
 	once_Main_outer.Do(func() {
-		cache_Main_outer = gopurs_runtime.RecordDict1("inner", gopurs_runtime.Float(0.0))
+		cache_Main_outer = func() gopurs_runtime.Value {
+			orig := struct {
+				inner float64
+			}{0.0}
+			_ = orig
+			return gopurs_runtime.RecordDict1("inner", gopurs_runtime.Float(orig.inner))
+		}()
 	})
 	return cache_Main_outer
 }

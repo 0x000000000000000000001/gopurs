@@ -22,7 +22,17 @@ var once_Main_F_dollar_Dict sync.Once
 func Get_Main_F_dollar_Dict() gopurs_runtime.Value {
 	once_Main_F_dollar_Dict.Do(func() {
 		cache_Main_F_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_F_dollar_Dict(x_0_box)
+			return gopurs_runtime.Value{Type: 9, IntVal: 1987449688, UnsafePtr: unsafe.Pointer(Call_Main_F_dollar_Dict(func() struct {
+				f gopurs_runtime.Value
+			} {
+				orig := x_0_box
+				_ = orig
+				clone := struct {
+					f gopurs_runtime.Value
+				}{}
+				clone.f = gopurs_runtime.RecordGet(orig, "f")
+				return clone
+			}()))}
 		})
 	})
 	return cache_Main_F_dollar_Dict
@@ -43,11 +53,9 @@ var once_Main_fProxy sync.Once
 
 func Get_Main_fProxy() gopurs_runtime.Value {
 	once_Main_fProxy.Do(func() {
-		cache_Main_fProxy = gopurs_runtime.Value{Type: 9, IntVal: 1987449688, UnsafePtr: unsafe.Pointer((&Constructor_Main_F[uint32]{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Func(func(v1_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Value{Type: 9, IntVal: int64(227768594), UnsafePtr: nil}
-			})
-		})}))}
+		cache_Main_fProxy = gopurs_runtime.Value{Type: 9, IntVal: 1987449688, UnsafePtr: unsafe.Pointer(Rebox_Main_3484061825_1752060876((&Constructor_Main_F[uint32]{1, gopurs_runtime.Func2(func(v_0 gopurs_runtime.Value, v1_1 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Value{Type: 9, IntVal: int64(227768594), UnsafePtr: nil}
+		})})))}
 	})
 	return cache_Main_fProxy
 }
@@ -64,16 +72,16 @@ func Get_Main_f() gopurs_runtime.Value {
 	return cache_Main_f
 }
 
-var cache_Main_f__3489368022 gopurs_runtime.Value
-var once_Main_f__3489368022 sync.Once
+var cache_Main_f__2289165299 gopurs_runtime.Value
+var once_Main_f__2289165299 sync.Once
 
-func Get_Main_f__3489368022() gopurs_runtime.Value {
-	once_Main_f__3489368022.Do(func() {
-		cache_Main_f__3489368022 = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_f__3489368022(gopurs_runtime.CoerceToStruct[Constructor_Main_F[gopurs_runtime.Value]](dict_0_box))
+func Get_Main_f__2289165299() gopurs_runtime.Value {
+	once_Main_f__2289165299.Do(func() {
+		cache_Main_f__2289165299 = gopurs_runtime.Func2(func(__eta_norm_1_0_box gopurs_runtime.Value, __eta_norm_0_unused_1_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_f__2289165299(__eta_norm_1_0_box, uint32(__eta_norm_0_unused_1_box.IntVal))), UnsafePtr: nil}
 		})
 	})
-	return cache_Main_f__3489368022
+	return cache_Main_f__2289165299
 }
 
 var cache_Main_test1 gopurs_runtime.Value
@@ -117,7 +125,7 @@ type Constructor_Main_F[T_f any] struct {
 
 func init() {
 	gopurs_runtime.StructGetters[1987449688] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_F[any])(ptr)
+		c := (*Constructor_Main_F[gopurs_runtime.Value])(ptr)
 		_ = c
 		switch key {
 		case "f":
@@ -128,20 +136,45 @@ func init() {
 	}
 }
 
-func Call_Main_F_dollar_Dict(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var x_0 gopurs_runtime.Value = x_0_loop
+func Call_Main_F_dollar_Dict(x_0_loop struct {
+	f gopurs_runtime.Value
+}) *Constructor_Main_F[gopurs_runtime.Value] {
+	var x_0 struct {
+		f gopurs_runtime.Value
+	} = x_0_loop
 	_ = x_0
-	return x_0
+	return gopurs_runtime.CoerceToStruct[Constructor_Main_F[gopurs_runtime.Value]](func() gopurs_runtime.Value {
+		orig := x_0
+		_ = orig
+		return gopurs_runtime.RecordDict1("f", orig.f)
+	}())
 }
 
 func Call_Main_f(dict_0_loop *Constructor_Main_F[gopurs_runtime.Value]) gopurs_runtime.Value {
 	var dict_0 *Constructor_Main_F[gopurs_runtime.Value] = dict_0_loop
 	_ = dict_0
-	return gopurs_runtime.Box(dict_0.V0)
+	return dict_0.V0
 }
 
-func Call_Main_f__3489368022(dict_0_loop *Constructor_Main_F[gopurs_runtime.Value]) gopurs_runtime.Value {
-	var dict_0 *Constructor_Main_F[gopurs_runtime.Value] = dict_0_loop
-	_ = dict_0
-	return gopurs_runtime.Box(dict_0.V0)
+func Call_Main_f__2289165299(__eta_norm_1_0_loop gopurs_runtime.Value, __eta_norm_0_unused_1_loop uint32) uint32 {
+f__2289165299:
+	for {
+		if false {
+			continue f__2289165299
+		}
+		var __eta_norm_1_0 gopurs_runtime.Value = __eta_norm_1_0_loop
+		_ = __eta_norm_1_0
+		var __eta_norm_0_unused_1 uint32 = __eta_norm_0_unused_1_loop
+		_ = __eta_norm_0_unused_1
+		return 227768594
+	}
+}
+
+func Rebox_Main_3484061825_1752060876(in *Constructor_Main_F[uint32]) *Constructor_Main_F[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Main_F[gopurs_runtime.Value]{}
+	out.V0 = in.V0
+	return out
 }

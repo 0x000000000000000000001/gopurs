@@ -22,10 +22,42 @@ var once_Main_AssertIsGT_dollar_Dict sync.Once
 func Get_Main_AssertIsGT_dollar_Dict() gopurs_runtime.Value {
 	once_Main_AssertIsGT_dollar_Dict.Do(func() {
 		cache_Main_AssertIsGT_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_AssertIsGT_dollar_Dict(x_0_box)
+			return gopurs_runtime.Value{Type: 9, IntVal: 3071150869, UnsafePtr: unsafe.Pointer(Call_Main_AssertIsGT_dollar_Dict(func() struct {
+				assertIsGT gopurs_runtime.Value
+			} {
+				orig := x_0_box
+				_ = orig
+				clone := struct {
+					assertIsGT gopurs_runtime.Value
+				}{}
+				clone.assertIsGT = gopurs_runtime.RecordGet(orig, "assertIsGT")
+				return clone
+			}()))}
 		})
 	})
 	return cache_Main_AssertIsGT_dollar_Dict
+}
+
+var cache_Main_AssertIsGT_dollar_Dict__187125118 gopurs_runtime.Value
+var once_Main_AssertIsGT_dollar_Dict__187125118 sync.Once
+
+func Get_Main_AssertIsGT_dollar_Dict__187125118() gopurs_runtime.Value {
+	once_Main_AssertIsGT_dollar_Dict__187125118.Do(func() {
+		cache_Main_AssertIsGT_dollar_Dict__187125118 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Value{Type: 9, IntVal: 3071150869, UnsafePtr: unsafe.Pointer(Call_Main_AssertIsGT_dollar_Dict__187125118(func() struct {
+				assertIsGT gopurs_runtime.Value
+			} {
+				orig := x_0_box
+				_ = orig
+				clone := struct {
+					assertIsGT gopurs_runtime.Value
+				}{}
+				clone.assertIsGT = gopurs_runtime.RecordGet(orig, "assertIsGT")
+				return clone
+			}()))}
+		})
+	})
+	return cache_Main_AssertIsGT_dollar_Dict__187125118
 }
 
 var cache_Main_assertIsGTGT gopurs_runtime.Value
@@ -67,7 +99,7 @@ var once_Main_assertLesser1 sync.Once
 
 func Get_Main_assertLesser1() gopurs_runtime.Value {
 	once_Main_assertLesser1.Do(func() {
-		cache_Main_assertLesser1 = gopurs_runtime.Value{Type: 9, IntVal: int64(227768594), UnsafePtr: nil}
+		cache_Main_assertLesser1 = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_assertLesser(gopurs_runtime.Value{}).IntVal)), UnsafePtr: nil}
 	})
 	return cache_Main_assertLesser1
 }
@@ -77,7 +109,7 @@ var once_Main_assertLesser2 sync.Once
 
 func Get_Main_assertLesser2() gopurs_runtime.Value {
 	once_Main_assertLesser2.Do(func() {
-		cache_Main_assertLesser2 = gopurs_runtime.Value{Type: 9, IntVal: int64(227768594), UnsafePtr: nil}
+		cache_Main_assertLesser2 = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_assertLesser(gopurs_runtime.Value{}).IntVal)), UnsafePtr: nil}
 	})
 	return cache_Main_assertLesser2
 }
@@ -87,7 +119,7 @@ var once_Main_assertLesser3 sync.Once
 
 func Get_Main_assertLesser3() gopurs_runtime.Value {
 	once_Main_assertLesser3.Do(func() {
-		cache_Main_assertLesser3 = gopurs_runtime.Value{Type: 9, IntVal: int64(227768594), UnsafePtr: nil}
+		cache_Main_assertLesser3 = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_assertLesser(gopurs_runtime.Value{}).IntVal)), UnsafePtr: nil}
 	})
 	return cache_Main_assertLesser3
 }
@@ -97,9 +129,69 @@ var once_Main_assertLesser4 sync.Once
 
 func Get_Main_assertLesser4() gopurs_runtime.Value {
 	once_Main_assertLesser4.Do(func() {
-		cache_Main_assertLesser4 = gopurs_runtime.Value{Type: 9, IntVal: int64(227768594), UnsafePtr: nil}
+		cache_Main_assertLesser4 = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_assertLesser(gopurs_runtime.Value{}).IntVal)), UnsafePtr: nil}
 	})
 	return cache_Main_assertLesser4
+}
+
+var cache_Main_assertLesser5 gopurs_runtime.Value
+var once_Main_assertLesser5 sync.Once
+
+func Get_Main_assertLesser5() gopurs_runtime.Value {
+	once_Main_assertLesser5.Do(func() {
+		cache_Main_assertLesser5 = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_assertLesser(gopurs_runtime.Value{}).IntVal)), UnsafePtr: nil}
+	})
+	return cache_Main_assertLesser5
+}
+
+var cache_Main_assertLesser6 gopurs_runtime.Value
+var once_Main_assertLesser6 sync.Once
+
+func Get_Main_assertLesser6() gopurs_runtime.Value {
+	once_Main_assertLesser6.Do(func() {
+		cache_Main_assertLesser6 = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_assertLesser(gopurs_runtime.Value{}).IntVal)), UnsafePtr: nil}
+	})
+	return cache_Main_assertLesser6
+}
+
+var cache_Main_assertLesser7 gopurs_runtime.Value
+var once_Main_assertLesser7 sync.Once
+
+func Get_Main_assertLesser7() gopurs_runtime.Value {
+	once_Main_assertLesser7.Do(func() {
+		cache_Main_assertLesser7 = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_assertLesser(gopurs_runtime.Value{}).IntVal)), UnsafePtr: nil}
+	})
+	return cache_Main_assertLesser7
+}
+
+var cache_Main_assertLesser8 gopurs_runtime.Value
+var once_Main_assertLesser8 sync.Once
+
+func Get_Main_assertLesser8() gopurs_runtime.Value {
+	once_Main_assertLesser8.Do(func() {
+		cache_Main_assertLesser8 = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_assertLesser(gopurs_runtime.Value{}).IntVal)), UnsafePtr: nil}
+	})
+	return cache_Main_assertLesser8
+}
+
+var cache_Main_assertLesser9 gopurs_runtime.Value
+var once_Main_assertLesser9 sync.Once
+
+func Get_Main_assertLesser9() gopurs_runtime.Value {
+	once_Main_assertLesser9.Do(func() {
+		cache_Main_assertLesser9 = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_assertLesser(gopurs_runtime.Value{}).IntVal)), UnsafePtr: nil}
+	})
+	return cache_Main_assertLesser9
+}
+
+var cache_Main_assertLesser10 gopurs_runtime.Value
+var once_Main_assertLesser10 sync.Once
+
+func Get_Main_assertLesser10() gopurs_runtime.Value {
+	once_Main_assertLesser10.Do(func() {
+		cache_Main_assertLesser10 = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_assertLesser(gopurs_runtime.Value{}).IntVal)), UnsafePtr: nil}
+	})
+	return cache_Main_assertLesser10
 }
 
 var cache_Main_litLt gopurs_runtime.Value
@@ -107,7 +199,7 @@ var once_Main_litLt sync.Once
 
 func Get_Main_litLt() gopurs_runtime.Value {
 	once_Main_litLt.Do(func() {
-		cache_Main_litLt = gopurs_runtime.Value{Type: 9, IntVal: int64(227768594), UnsafePtr: nil}
+		cache_Main_litLt = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_assertLesser(gopurs_runtime.Value{}).IntVal)), UnsafePtr: nil}
 	})
 	return cache_Main_litLt
 }
@@ -244,30 +336,6 @@ func Get_Main_assertIsGT() gopurs_runtime.Value {
 	return cache_Main_assertIsGT
 }
 
-var cache_Main_assertIsGT__865065017 gopurs_runtime.Value
-var once_Main_assertIsGT__865065017 sync.Once
-
-func Get_Main_assertIsGT__865065017() gopurs_runtime.Value {
-	once_Main_assertIsGT__865065017.Do(func() {
-		cache_Main_assertIsGT__865065017 = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_assertIsGT__865065017(gopurs_runtime.CoerceToStruct[Constructor_Main_AssertIsGT[gopurs_runtime.Value]](dict_0_box))
-		})
-	})
-	return cache_Main_assertIsGT__865065017
-}
-
-var cache_Main_assertIsGT__1442557951 gopurs_runtime.Value
-var once_Main_assertIsGT__1442557951 sync.Once
-
-func Get_Main_assertIsGT__1442557951() gopurs_runtime.Value {
-	once_Main_assertIsGT__1442557951.Do(func() {
-		cache_Main_assertIsGT__1442557951 = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_assertIsGT__1442557951(gopurs_runtime.CoerceToStruct[Constructor_Main_AssertIsGT[gopurs_runtime.Value]](dict_0_box))
-		})
-	})
-	return cache_Main_assertIsGT__1442557951
-}
-
 var cache_Main_infer gopurs_runtime.Value
 var once_Main_infer sync.Once
 
@@ -278,18 +346,6 @@ func Get_Main_infer() gopurs_runtime.Value {
 		})
 	})
 	return cache_Main_infer
-}
-
-var cache_Main_infer__668843825 gopurs_runtime.Value
-var once_Main_infer__668843825 sync.Once
-
-func Get_Main_infer__668843825() gopurs_runtime.Value {
-	once_Main_infer__668843825.Do(func() {
-		cache_Main_infer__668843825 = gopurs_runtime.Func4(func(_dollar___unused_0_box gopurs_runtime.Value, dictAssertIsGT_1_box gopurs_runtime.Value, v_2_box gopurs_runtime.Value, v1_3_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Bool(Call_Main_infer__668843825(_dollar___unused_0_box, gopurs_runtime.CoerceToStruct[Constructor_Main_AssertIsGT[gopurs_runtime.Value]](dictAssertIsGT_1_box), uint32(v_2_box.IntVal), uint32(v1_3_box.IntVal)))
-		})
-	})
-	return cache_Main_infer__668843825
 }
 
 var cache_Main_inferSolved gopurs_runtime.Value
@@ -321,7 +377,7 @@ var once_Main_assertGreater1 sync.Once
 
 func Get_Main_assertGreater1() gopurs_runtime.Value {
 	once_Main_assertGreater1.Do(func() {
-		cache_Main_assertGreater1 = gopurs_runtime.Value{Type: 9, IntVal: int64(227768594), UnsafePtr: nil}
+		cache_Main_assertGreater1 = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_assertGreater(gopurs_runtime.Value{}).IntVal)), UnsafePtr: nil}
 	})
 	return cache_Main_assertGreater1
 }
@@ -331,7 +387,7 @@ var once_Main_assertGreater2 sync.Once
 
 func Get_Main_assertGreater2() gopurs_runtime.Value {
 	once_Main_assertGreater2.Do(func() {
-		cache_Main_assertGreater2 = gopurs_runtime.Value{Type: 9, IntVal: int64(227768594), UnsafePtr: nil}
+		cache_Main_assertGreater2 = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_assertGreater(gopurs_runtime.Value{}).IntVal)), UnsafePtr: nil}
 	})
 	return cache_Main_assertGreater2
 }
@@ -341,9 +397,59 @@ var once_Main_assertGreater3 sync.Once
 
 func Get_Main_assertGreater3() gopurs_runtime.Value {
 	once_Main_assertGreater3.Do(func() {
-		cache_Main_assertGreater3 = gopurs_runtime.Value{Type: 9, IntVal: int64(227768594), UnsafePtr: nil}
+		cache_Main_assertGreater3 = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_assertGreater(gopurs_runtime.Value{}).IntVal)), UnsafePtr: nil}
 	})
 	return cache_Main_assertGreater3
+}
+
+var cache_Main_assertGreater4 gopurs_runtime.Value
+var once_Main_assertGreater4 sync.Once
+
+func Get_Main_assertGreater4() gopurs_runtime.Value {
+	once_Main_assertGreater4.Do(func() {
+		cache_Main_assertGreater4 = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_assertGreater(gopurs_runtime.Value{}).IntVal)), UnsafePtr: nil}
+	})
+	return cache_Main_assertGreater4
+}
+
+var cache_Main_assertGreater5 gopurs_runtime.Value
+var once_Main_assertGreater5 sync.Once
+
+func Get_Main_assertGreater5() gopurs_runtime.Value {
+	once_Main_assertGreater5.Do(func() {
+		cache_Main_assertGreater5 = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_assertGreater(gopurs_runtime.Value{}).IntVal)), UnsafePtr: nil}
+	})
+	return cache_Main_assertGreater5
+}
+
+var cache_Main_assertGreater6 gopurs_runtime.Value
+var once_Main_assertGreater6 sync.Once
+
+func Get_Main_assertGreater6() gopurs_runtime.Value {
+	once_Main_assertGreater6.Do(func() {
+		cache_Main_assertGreater6 = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_assertGreater(gopurs_runtime.Value{}).IntVal)), UnsafePtr: nil}
+	})
+	return cache_Main_assertGreater6
+}
+
+var cache_Main_assertGreater7 gopurs_runtime.Value
+var once_Main_assertGreater7 sync.Once
+
+func Get_Main_assertGreater7() gopurs_runtime.Value {
+	once_Main_assertGreater7.Do(func() {
+		cache_Main_assertGreater7 = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_assertGreater(gopurs_runtime.Value{}).IntVal)), UnsafePtr: nil}
+	})
+	return cache_Main_assertGreater7
+}
+
+var cache_Main_assertGreater8 gopurs_runtime.Value
+var once_Main_assertGreater8 sync.Once
+
+func Get_Main_assertGreater8() gopurs_runtime.Value {
+	once_Main_assertGreater8.Do(func() {
+		cache_Main_assertGreater8 = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_assertGreater(gopurs_runtime.Value{}).IntVal)), UnsafePtr: nil}
+	})
+	return cache_Main_assertGreater8
 }
 
 var cache_Main_litGt gopurs_runtime.Value
@@ -351,7 +457,7 @@ var once_Main_litGt sync.Once
 
 func Get_Main_litGt() gopurs_runtime.Value {
 	once_Main_litGt.Do(func() {
-		cache_Main_litGt = gopurs_runtime.Value{Type: 9, IntVal: int64(227768594), UnsafePtr: nil}
+		cache_Main_litGt = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_assertGreater(gopurs_runtime.Value{}).IntVal)), UnsafePtr: nil}
 	})
 	return cache_Main_litGt
 }
@@ -469,7 +575,7 @@ var once_Main_assertEqual1 sync.Once
 
 func Get_Main_assertEqual1() gopurs_runtime.Value {
 	once_Main_assertEqual1.Do(func() {
-		cache_Main_assertEqual1 = gopurs_runtime.Value{Type: 9, IntVal: int64(227768594), UnsafePtr: nil}
+		cache_Main_assertEqual1 = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_assertEqual(gopurs_runtime.Value{}).IntVal)), UnsafePtr: nil}
 	})
 	return cache_Main_assertEqual1
 }
@@ -479,9 +585,19 @@ var once_Main_assertEqual2 sync.Once
 
 func Get_Main_assertEqual2() gopurs_runtime.Value {
 	once_Main_assertEqual2.Do(func() {
-		cache_Main_assertEqual2 = gopurs_runtime.Value{Type: 9, IntVal: int64(227768594), UnsafePtr: nil}
+		cache_Main_assertEqual2 = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_assertEqual(gopurs_runtime.Value{}).IntVal)), UnsafePtr: nil}
 	})
 	return cache_Main_assertEqual2
+}
+
+var cache_Main_assertEqual3 gopurs_runtime.Value
+var once_Main_assertEqual3 sync.Once
+
+func Get_Main_assertEqual3() gopurs_runtime.Value {
+	once_Main_assertEqual3.Do(func() {
+		cache_Main_assertEqual3 = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_assertEqual(gopurs_runtime.Value{}).IntVal)), UnsafePtr: nil}
+	})
+	return cache_Main_assertEqual3
 }
 
 var cache_Main_litEq gopurs_runtime.Value
@@ -489,7 +605,7 @@ var once_Main_litEq sync.Once
 
 func Get_Main_litEq() gopurs_runtime.Value {
 	once_Main_litEq.Do(func() {
-		cache_Main_litEq = gopurs_runtime.Value{Type: 9, IntVal: int64(227768594), UnsafePtr: nil}
+		cache_Main_litEq = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_assertEqual(gopurs_runtime.Value{}).IntVal)), UnsafePtr: nil}
 	})
 	return cache_Main_litEq
 }
@@ -499,7 +615,7 @@ var once_Main_reflEq sync.Once
 
 func Get_Main_reflEq() gopurs_runtime.Value {
 	once_Main_reflEq.Do(func() {
-		cache_Main_reflEq = gopurs_runtime.Value{Type: 9, IntVal: int64(227768594), UnsafePtr: nil}
+		cache_Main_reflEq = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_assertEqual(gopurs_runtime.Value{}).IntVal)), UnsafePtr: nil}
 	})
 	return cache_Main_reflEq
 }
@@ -551,7 +667,7 @@ type Constructor_Main_AssertIsGT[T_o any] struct {
 
 func init() {
 	gopurs_runtime.StructGetters[3071150869] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_AssertIsGT[any])(ptr)
+		c := (*Constructor_Main_AssertIsGT[gopurs_runtime.Value])(ptr)
 		_ = c
 		switch key {
 		case "assertIsGT":
@@ -562,10 +678,38 @@ func init() {
 	}
 }
 
-func Call_Main_AssertIsGT_dollar_Dict(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var x_0 gopurs_runtime.Value = x_0_loop
+func Call_Main_AssertIsGT_dollar_Dict(x_0_loop struct {
+	assertIsGT gopurs_runtime.Value
+}) *Constructor_Main_AssertIsGT[gopurs_runtime.Value] {
+	var x_0 struct {
+		assertIsGT gopurs_runtime.Value
+	} = x_0_loop
 	_ = x_0
-	return x_0
+	return gopurs_runtime.CoerceToStruct[Constructor_Main_AssertIsGT[gopurs_runtime.Value]](func() gopurs_runtime.Value {
+		orig := x_0
+		_ = orig
+		return gopurs_runtime.RecordDict1("assertIsGT", orig.assertIsGT)
+	}())
+}
+
+func Call_Main_AssertIsGT_dollar_Dict__187125118(x_0_loop struct {
+	assertIsGT gopurs_runtime.Value
+}) *Constructor_Main_AssertIsGT[gopurs_runtime.Value] {
+AssertIsGT_dollar_Dict__187125118:
+	for {
+		if false {
+			continue AssertIsGT_dollar_Dict__187125118
+		}
+		var x_0 struct {
+			assertIsGT gopurs_runtime.Value
+		} = x_0_loop
+		_ = x_0
+		return gopurs_runtime.CoerceToStruct[Constructor_Main_AssertIsGT[gopurs_runtime.Value]](func() gopurs_runtime.Value {
+			orig := x_0
+			_ = orig
+			return gopurs_runtime.RecordDict1("assertIsGT", orig.assertIsGT)
+		}())
+	}
 }
 
 func Call_Main_assertLesser(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
@@ -577,7 +721,7 @@ func Call_Main_assertLesser(_dollar___unused_0_loop gopurs_runtime.Value) gopurs
 func Call_Main_litTransLT(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
-	return gopurs_runtime.Value{Type: 9, IntVal: int64(227768594), UnsafePtr: nil}
+	return gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_assertLesser(gopurs_runtime.Value{}).IntVal)), UnsafePtr: nil}
 }
 
 func Call_Main_litTransRange(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___unused_1_loop gopurs_runtime.Value) gopurs_runtime.Value {
@@ -585,13 +729,13 @@ func Call_Main_litTransRange(_dollar___unused_0_loop gopurs_runtime.Value, _doll
 	_ = _dollar___unused_0
 	var _dollar___unused_1 gopurs_runtime.Value = _dollar___unused_1_loop
 	_ = _dollar___unused_1
-	return gopurs_runtime.Value{Type: 9, IntVal: int64(227768594), UnsafePtr: nil}
+	return gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_assertLesser(gopurs_runtime.Value{}).IntVal)), UnsafePtr: nil}
 }
 
 func Call_Main_symmLt(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
-	return gopurs_runtime.Value{Type: 9, IntVal: int64(227768594), UnsafePtr: nil}
+	return gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_assertLesser(gopurs_runtime.Value{}).IntVal)), UnsafePtr: nil}
 }
 
 func Call_Main_transEqLt(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___unused_1_loop gopurs_runtime.Value, v_2_loop uint32) uint32 {
@@ -601,7 +745,7 @@ func Call_Main_transEqLt(_dollar___unused_0_loop gopurs_runtime.Value, _dollar__
 	_ = _dollar___unused_1
 	var v_2 uint32 = v_2_loop
 	_ = v_2
-	return 227768594
+	return uint32(Call_Main_assertLesser(gopurs_runtime.Value{}).IntVal)
 }
 
 func Call_Main_transLt(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___unused_1_loop gopurs_runtime.Value, v_2_loop uint32) uint32 {
@@ -611,7 +755,7 @@ func Call_Main_transLt(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___u
 	_ = _dollar___unused_1
 	var v_2 uint32 = v_2_loop
 	_ = v_2
-	return 227768594
+	return uint32(Call_Main_assertLesser(gopurs_runtime.Value{}).IntVal)
 }
 
 func Call_Main_transLtEq(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___unused_1_loop gopurs_runtime.Value, v_2_loop uint32) uint32 {
@@ -621,7 +765,7 @@ func Call_Main_transLtEq(_dollar___unused_0_loop gopurs_runtime.Value, _dollar__
 	_ = _dollar___unused_1
 	var v_2 uint32 = v_2_loop
 	_ = v_2
-	return 227768594
+	return uint32(Call_Main_assertLesser(gopurs_runtime.Value{}).IntVal)
 }
 
 func Call_Main_transSymmEqLt(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___unused_1_loop gopurs_runtime.Value, v_2_loop uint32) uint32 {
@@ -631,7 +775,7 @@ func Call_Main_transSymmEqLt(_dollar___unused_0_loop gopurs_runtime.Value, _doll
 	_ = _dollar___unused_1
 	var v_2 uint32 = v_2_loop
 	_ = v_2
-	return 227768594
+	return uint32(Call_Main_assertLesser(gopurs_runtime.Value{}).IntVal)
 }
 
 func Call_Main_transSymmLt(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___unused_1_loop gopurs_runtime.Value, v_2_loop uint32) uint32 {
@@ -641,7 +785,7 @@ func Call_Main_transSymmLt(_dollar___unused_0_loop gopurs_runtime.Value, _dollar
 	_ = _dollar___unused_1
 	var v_2 uint32 = v_2_loop
 	_ = v_2
-	return 227768594
+	return uint32(Call_Main_assertLesser(gopurs_runtime.Value{}).IntVal)
 }
 
 func Call_Main_transSymmLtEq(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___unused_1_loop gopurs_runtime.Value, v_2_loop uint32) uint32 {
@@ -651,7 +795,7 @@ func Call_Main_transSymmLtEq(_dollar___unused_0_loop gopurs_runtime.Value, _doll
 	_ = _dollar___unused_1
 	var v_2 uint32 = v_2_loop
 	_ = v_2
-	return 227768594
+	return uint32(Call_Main_assertLesser(gopurs_runtime.Value{}).IntVal)
 }
 
 func Call_Main_withFacts(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___unused_1_loop gopurs_runtime.Value) gopurs_runtime.Value {
@@ -659,25 +803,13 @@ func Call_Main_withFacts(_dollar___unused_0_loop gopurs_runtime.Value, _dollar__
 	_ = _dollar___unused_0
 	var _dollar___unused_1 gopurs_runtime.Value = _dollar___unused_1_loop
 	_ = _dollar___unused_1
-	return gopurs_runtime.Value{Type: 9, IntVal: int64(227768594), UnsafePtr: nil}
+	return gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_assertLesser(gopurs_runtime.Value{}).IntVal)), UnsafePtr: nil}
 }
 
 func Call_Main_assertIsGT(dict_0_loop *Constructor_Main_AssertIsGT[gopurs_runtime.Value]) gopurs_runtime.Value {
 	var dict_0 *Constructor_Main_AssertIsGT[gopurs_runtime.Value] = dict_0_loop
 	_ = dict_0
-	return gopurs_runtime.Box(dict_0.V0)
-}
-
-func Call_Main_assertIsGT__865065017(dict_0_loop *Constructor_Main_AssertIsGT[gopurs_runtime.Value]) gopurs_runtime.Value {
-	var dict_0 *Constructor_Main_AssertIsGT[gopurs_runtime.Value] = dict_0_loop
-	_ = dict_0
-	return gopurs_runtime.Box(dict_0.V0)
-}
-
-func Call_Main_assertIsGT__1442557951(dict_0_loop *Constructor_Main_AssertIsGT[gopurs_runtime.Value]) gopurs_runtime.Value {
-	var dict_0 *Constructor_Main_AssertIsGT[gopurs_runtime.Value] = dict_0_loop
-	_ = dict_0
-	return gopurs_runtime.Box(dict_0.V0)
+	return dict_0.V0
 }
 
 func Call_Main_infer(_dollar___unused_0_loop gopurs_runtime.Value, dictAssertIsGT_1_loop *Constructor_Main_AssertIsGT[gopurs_runtime.Value], v_2_loop uint32, v1_3_loop uint32) bool {
@@ -689,19 +821,7 @@ func Call_Main_infer(_dollar___unused_0_loop gopurs_runtime.Value, dictAssertIsG
 	_ = v_2
 	var v1_3 uint32 = v1_3_loop
 	_ = v1_3
-	return (gopurs_runtime.Apply(gopurs_runtime.Box(dictAssertIsGT_1.V0), gopurs_runtime.Value{Type: 9, IntVal: int64(227768594), UnsafePtr: nil}).IntVal) != (0)
-}
-
-func Call_Main_infer__668843825(_dollar___unused_0_loop gopurs_runtime.Value, dictAssertIsGT_1_loop *Constructor_Main_AssertIsGT[gopurs_runtime.Value], v_2_loop uint32, v1_3_loop uint32) bool {
-	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
-	_ = _dollar___unused_0
-	var dictAssertIsGT_1 *Constructor_Main_AssertIsGT[gopurs_runtime.Value] = dictAssertIsGT_1_loop
-	_ = dictAssertIsGT_1
-	var v_2 uint32 = v_2_loop
-	_ = v_2
-	var v1_3 uint32 = v1_3_loop
-	_ = v1_3
-	return (gopurs_runtime.Apply(gopurs_runtime.Box(dictAssertIsGT_1.V0), gopurs_runtime.Value{Type: 9, IntVal: int64(227768594), UnsafePtr: nil}).IntVal) != (0)
+	return (gopurs_runtime.Apply(Call_Main_assertIsGT(dictAssertIsGT_1), gopurs_runtime.Value{Type: 9, IntVal: int64(227768594), UnsafePtr: nil}).IntVal) != (0)
 }
 
 func Call_Main_inferSolved(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___unused_1_loop gopurs_runtime.Value, m_2_loop uint32, v_3_loop uint32, p_4_loop uint32) bool {
@@ -715,7 +835,7 @@ func Call_Main_inferSolved(_dollar___unused_0_loop gopurs_runtime.Value, _dollar
 	_ = v_3
 	var p_4 uint32 = p_4_loop
 	_ = p_4
-	return true
+	return (gopurs_runtime.Apply(Call_Main_assertIsGT(gopurs_runtime.CoerceToStruct[Constructor_Main_AssertIsGT[gopurs_runtime.Value]](Get_Main_assertIsGTGT())), gopurs_runtime.Value{Type: 9, IntVal: int64(227768594), UnsafePtr: nil}).IntVal) != (0)
 }
 
 func Call_Main_assertGreater(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
@@ -727,13 +847,13 @@ func Call_Main_assertGreater(_dollar___unused_0_loop gopurs_runtime.Value) gopur
 func Call_Main_litTransGT(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
-	return gopurs_runtime.Value{Type: 9, IntVal: int64(227768594), UnsafePtr: nil}
+	return gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_assertGreater(gopurs_runtime.Value{}).IntVal)), UnsafePtr: nil}
 }
 
 func Call_Main_symmGt(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
-	return gopurs_runtime.Value{Type: 9, IntVal: int64(227768594), UnsafePtr: nil}
+	return gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_assertGreater(gopurs_runtime.Value{}).IntVal)), UnsafePtr: nil}
 }
 
 func Call_Main_transEqGt(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___unused_1_loop gopurs_runtime.Value, v_2_loop uint32) uint32 {
@@ -743,7 +863,7 @@ func Call_Main_transEqGt(_dollar___unused_0_loop gopurs_runtime.Value, _dollar__
 	_ = _dollar___unused_1
 	var v_2 uint32 = v_2_loop
 	_ = v_2
-	return 227768594
+	return uint32(Call_Main_assertGreater(gopurs_runtime.Value{}).IntVal)
 }
 
 func Call_Main_transGt(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___unused_1_loop gopurs_runtime.Value, v_2_loop uint32) uint32 {
@@ -753,7 +873,7 @@ func Call_Main_transGt(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___u
 	_ = _dollar___unused_1
 	var v_2 uint32 = v_2_loop
 	_ = v_2
-	return 227768594
+	return uint32(Call_Main_assertGreater(gopurs_runtime.Value{}).IntVal)
 }
 
 func Call_Main_transGtEq(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___unused_1_loop gopurs_runtime.Value, v_2_loop uint32) uint32 {
@@ -763,7 +883,7 @@ func Call_Main_transGtEq(_dollar___unused_0_loop gopurs_runtime.Value, _dollar__
 	_ = _dollar___unused_1
 	var v_2 uint32 = v_2_loop
 	_ = v_2
-	return 227768594
+	return uint32(Call_Main_assertGreater(gopurs_runtime.Value{}).IntVal)
 }
 
 func Call_Main_transSymmEqGt(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___unused_1_loop gopurs_runtime.Value, v_2_loop uint32) uint32 {
@@ -773,7 +893,7 @@ func Call_Main_transSymmEqGt(_dollar___unused_0_loop gopurs_runtime.Value, _doll
 	_ = _dollar___unused_1
 	var v_2 uint32 = v_2_loop
 	_ = v_2
-	return 227768594
+	return uint32(Call_Main_assertGreater(gopurs_runtime.Value{}).IntVal)
 }
 
 func Call_Main_transSymmGt(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___unused_1_loop gopurs_runtime.Value, v_2_loop uint32) uint32 {
@@ -783,7 +903,7 @@ func Call_Main_transSymmGt(_dollar___unused_0_loop gopurs_runtime.Value, _dollar
 	_ = _dollar___unused_1
 	var v_2 uint32 = v_2_loop
 	_ = v_2
-	return 227768594
+	return uint32(Call_Main_assertGreater(gopurs_runtime.Value{}).IntVal)
 }
 
 func Call_Main_transSymmGtEq(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___unused_1_loop gopurs_runtime.Value, v_2_loop uint32) uint32 {
@@ -793,7 +913,7 @@ func Call_Main_transSymmGtEq(_dollar___unused_0_loop gopurs_runtime.Value, _doll
 	_ = _dollar___unused_1
 	var v_2 uint32 = v_2_loop
 	_ = v_2
-	return 227768594
+	return uint32(Call_Main_assertGreater(gopurs_runtime.Value{}).IntVal)
 }
 
 func Call_Main_assertEqual(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
@@ -805,7 +925,7 @@ func Call_Main_assertEqual(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_
 func Call_Main_symmEq(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
-	return gopurs_runtime.Value{Type: 9, IntVal: int64(227768594), UnsafePtr: nil}
+	return gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_assertEqual(gopurs_runtime.Value{}).IntVal)), UnsafePtr: nil}
 }
 
 func Call_Main_transEq(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___unused_1_loop gopurs_runtime.Value, v_2_loop uint32) uint32 {
@@ -815,7 +935,7 @@ func Call_Main_transEq(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___u
 	_ = _dollar___unused_1
 	var v_2 uint32 = v_2_loop
 	_ = v_2
-	return 227768594
+	return uint32(Call_Main_assertEqual(gopurs_runtime.Value{}).IntVal)
 }
 
 func Call_Main_transSymmEq(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___unused_1_loop gopurs_runtime.Value, v_2_loop uint32) uint32 {
@@ -825,5 +945,5 @@ func Call_Main_transSymmEq(_dollar___unused_0_loop gopurs_runtime.Value, _dollar
 	_ = _dollar___unused_1
 	var v_2 uint32 = v_2_loop
 	_ = v_2
-	return 227768594
+	return uint32(Call_Main_assertEqual(gopurs_runtime.Value{}).IntVal)
 }

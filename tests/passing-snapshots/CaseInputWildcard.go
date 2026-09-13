@@ -64,7 +64,7 @@ func Call_Main_what(x_0_loop uint32, v_1_loop int64, v1_2_loop bool) uint32 {
 	_ = v1_2
 	var __t1 uint32
 	{
-		if ((v_1) == (0)) && (v1_2) {
+		if ((v_1) == (int64(0))) && (v1_2) {
 			var __t0 uint32
 			{
 				if x_0 == 1409933510 {

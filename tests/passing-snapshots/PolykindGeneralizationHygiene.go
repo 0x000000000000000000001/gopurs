@@ -30,5 +30,5 @@ func Get_Main_main() gopurs_runtime.Value {
 func Call_Main_test(v_0_loop gopurs_runtime.Value) int64 {
 	var v_0 gopurs_runtime.Value = v_0_loop
 	_ = v_0
-	return 42
+	return int64(42)
 }

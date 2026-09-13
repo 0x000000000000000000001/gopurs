@@ -45,31 +45,29 @@ var once_Main_functorEither sync.Once
 
 func Get_Main_functorEither() gopurs_runtime.Value {
 	once_Main_functorEither.Do(func() {
-		cache_Main_functorEither = gopurs_runtime.Value{Type: 9, IntVal: 929368378, UnsafePtr: unsafe.Pointer((&Constructor_Data_Functor_Functor[gopurs_runtime.Value]{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Func(func(v1_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				var __t0 gopurs_runtime.Value
-				{
-					if v1_1.Type == 9 && v1_1.IntVal == 913637797 {
-						__t0 = gopurs_runtime.Value{Type: 9, IntVal: 913637797, UnsafePtr: unsafe.Pointer((&Constructor_Main_Left[gopurs_runtime.Value, gopurs_runtime.Value]{1, (*Constructor_Main_Left[gopurs_runtime.Value, gopurs_runtime.Value])(v1_1.UnsafePtr).V0}))}
-						goto end_branch_0
-					} else {
+		cache_Main_functorEither = gopurs_runtime.Value{Type: 9, IntVal: 929368378, UnsafePtr: unsafe.Pointer((&Constructor_Data_Functor_Functor[gopurs_runtime.Value]{1, gopurs_runtime.Func2(func(v_0 gopurs_runtime.Value, v1_1 gopurs_runtime.Value) gopurs_runtime.Value {
+			var __t0 gopurs_runtime.Value
+			{
+				if v1_1.Type == 9 && v1_1.IntVal == 913637797 {
+					__t0 = gopurs_runtime.Value{Type: 9, IntVal: 913637797, UnsafePtr: unsafe.Pointer((&Constructor_Main_Left[gopurs_runtime.Value, gopurs_runtime.Value]{1, (*Constructor_Main_Left[gopurs_runtime.Value, gopurs_runtime.Value])(v1_1.UnsafePtr).V0}))}
+					goto end_branch_0
+				} else {
 
-					}
 				}
-				{
-					if v1_1.Type == 9 && v1_1.IntVal == 2535318782 {
-						__t0 = gopurs_runtime.Value{Type: 9, IntVal: 2535318782, UnsafePtr: unsafe.Pointer((&Constructor_Main_Right[gopurs_runtime.Value, gopurs_runtime.Value]{1, gopurs_runtime.Apply(v_0, (*Constructor_Main_Right[gopurs_runtime.Value, gopurs_runtime.Value])(v1_1.UnsafePtr).V0)}))}
-						goto end_branch_0
-					} else {
+			}
+			{
+				if v1_1.Type == 9 && v1_1.IntVal == 2535318782 {
+					__t0 = gopurs_runtime.Value{Type: 9, IntVal: 2535318782, UnsafePtr: unsafe.Pointer((&Constructor_Main_Right[gopurs_runtime.Value, gopurs_runtime.Value]{1, gopurs_runtime.Apply(v_0, (*Constructor_Main_Right[gopurs_runtime.Value, gopurs_runtime.Value])(v1_1.UnsafePtr).V0)}))}
+					goto end_branch_0
+				} else {
 
-					}
 				}
-				{
-					__t0 = func() gopurs_runtime.Value { panic("Failed pattern match") }()
-				}
-			end_branch_0:
-				return __t0
-			})
+			}
+			{
+				__t0 = func() gopurs_runtime.Value { panic("Failed pattern match") }()
+			}
+		end_branch_0:
+			return __t0
 		})}))}
 	})
 	return cache_Main_functorEither
@@ -77,10 +75,10 @@ func Get_Main_functorEither() gopurs_runtime.Value {
 
 type Constructor_Main_Left[T_a any, T_b any] struct {
 	Rc uint32
-	V0 gopurs_runtime.Value
+	V0 T_a
 }
 
 type Constructor_Main_Right[T_a any, T_b any] struct {
 	Rc uint32
-	V0 gopurs_runtime.Value
+	V0 T_b
 }

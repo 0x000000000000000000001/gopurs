@@ -10,7 +10,7 @@ var once_Main_yield sync.Once
 
 func Get_Main_yield() gopurs_runtime.Value {
 	once_Main_yield.Do(func() {
-		cache_Main_yield = gopurs_runtime.Int(0)
+		cache_Main_yield = gopurs_runtime.Int(int64(0))
 	})
 	return cache_Main_yield
 }
@@ -44,7 +44,7 @@ var once_Main_member sync.Once
 
 func Get_Main_member() gopurs_runtime.Value {
 	once_Main_member.Do(func() {
-		cache_Main_member = gopurs_runtime.Int(1)
+		cache_Main_member = gopurs_runtime.Int(int64(1))
 	})
 	return cache_Main_member
 }

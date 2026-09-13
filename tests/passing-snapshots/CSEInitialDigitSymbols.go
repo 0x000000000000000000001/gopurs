@@ -62,16 +62,28 @@ func Get_Main_reflectSymbol_prime_() gopurs_runtime.Value {
 	return cache_Main_reflectSymbol_prime_
 }
 
-var cache_Main_reflectSymbol_prime___3961507637 gopurs_runtime.Value
-var once_Main_reflectSymbol_prime___3961507637 sync.Once
+var cache_Main_reflectSymbol_prime___1436918783 gopurs_runtime.Value
+var once_Main_reflectSymbol_prime___1436918783 sync.Once
 
-func Get_Main_reflectSymbol_prime___3961507637() gopurs_runtime.Value {
-	once_Main_reflectSymbol_prime___3961507637.Do(func() {
-		cache_Main_reflectSymbol_prime___3961507637 = gopurs_runtime.Func(func(dictIsSymbol_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_reflectSymbol_prime___3961507637(gopurs_runtime.CoerceToStruct[Constructor_Data_Symbol_IsSymbol[gopurs_runtime.Value]](dictIsSymbol_0_box))
+func Get_Main_reflectSymbol_prime___1436918783() gopurs_runtime.Value {
+	once_Main_reflectSymbol_prime___1436918783.Do(func() {
+		cache_Main_reflectSymbol_prime___1436918783 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_reflectSymbol_prime___1436918783(uint32(__eta_norm_0_unused_0_box.IntVal)))
 		})
 	})
-	return cache_Main_reflectSymbol_prime___3961507637
+	return cache_Main_reflectSymbol_prime___1436918783
+}
+
+var cache_Main_reflectSymbol_prime___781938175 gopurs_runtime.Value
+var once_Main_reflectSymbol_prime___781938175 sync.Once
+
+func Get_Main_reflectSymbol_prime___781938175() gopurs_runtime.Value {
+	once_Main_reflectSymbol_prime___781938175.Do(func() {
+		cache_Main_reflectSymbol_prime___781938175 = gopurs_runtime.Func(func(__eta_norm_0_unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_reflectSymbol_prime___781938175(uint32(__eta_norm_0_unused_0_box.IntVal)))
+		})
+	})
+	return cache_Main_reflectSymbol_prime___781938175
 }
 
 var cache_Main_two2 gopurs_runtime.Value
@@ -79,7 +91,7 @@ var once_Main_two2 sync.Once
 
 func Get_Main_two2() gopurs_runtime.Value {
 	once_Main_two2.Do(func() {
-		cache_Main_two2 = gopurs_runtime.Str("2")
+		cache_Main_two2 = gopurs_runtime.Str(gopurs_runtime.Apply(Call_Data_Symbol_reflectSymbol(gopurs_runtime.CoerceToStruct[Constructor_Data_Symbol_IsSymbol[gopurs_runtime.Value]](Get_Main_X_2IsSymbol())), gopurs_runtime.Value{Type: 9, IntVal: int64(513803634), UnsafePtr: nil}).StrVal())
 	})
 	return cache_Main_two2
 }
@@ -89,7 +101,7 @@ var once_Main_twoThirty2 sync.Once
 
 func Get_Main_twoThirty2() gopurs_runtime.Value {
 	once_Main_twoThirty2.Do(func() {
-		cache_Main_twoThirty2 = gopurs_runtime.Str("2:30")
+		cache_Main_twoThirty2 = gopurs_runtime.Str(gopurs_runtime.Apply(Call_Data_Symbol_reflectSymbol(gopurs_runtime.CoerceToStruct[Constructor_Data_Symbol_IsSymbol[gopurs_runtime.Value]](Get_Main_X_2_colon_30IsSymbol())), gopurs_runtime.Value{Type: 9, IntVal: int64(513803634), UnsafePtr: nil}).StrVal())
 	})
 	return cache_Main_twoThirty2
 }
@@ -107,11 +119,29 @@ func Get_Main_main() gopurs_runtime.Value {
 func Call_Main_reflectSymbol_prime_(dictIsSymbol_0_loop *Constructor_Data_Symbol_IsSymbol[gopurs_runtime.Value]) gopurs_runtime.Value {
 	var dictIsSymbol_0 *Constructor_Data_Symbol_IsSymbol[gopurs_runtime.Value] = dictIsSymbol_0_loop
 	_ = dictIsSymbol_0
-	return gopurs_runtime.Box(dictIsSymbol_0.V0)
+	return Call_Data_Symbol_reflectSymbol(dictIsSymbol_0)
 }
 
-func Call_Main_reflectSymbol_prime___3961507637(dictIsSymbol_0_loop *Constructor_Data_Symbol_IsSymbol[gopurs_runtime.Value]) gopurs_runtime.Value {
-	var dictIsSymbol_0 *Constructor_Data_Symbol_IsSymbol[gopurs_runtime.Value] = dictIsSymbol_0_loop
-	_ = dictIsSymbol_0
-	return gopurs_runtime.Box(dictIsSymbol_0.V0)
+func Call_Main_reflectSymbol_prime___1436918783(__eta_norm_0_unused_0_loop uint32) string {
+reflectSymbol_prime___1436918783:
+	for {
+		if false {
+			continue reflectSymbol_prime___1436918783
+		}
+		var __eta_norm_0_unused_0 uint32 = __eta_norm_0_unused_0_loop
+		_ = __eta_norm_0_unused_0
+		return gopurs_runtime.Apply(Call_Data_Symbol_reflectSymbol(gopurs_runtime.CoerceToStruct[Constructor_Data_Symbol_IsSymbol[gopurs_runtime.Value]](Get_Main_X_2_colon_30IsSymbol())), gopurs_runtime.Value{Type: 9, IntVal: int64(513803634), UnsafePtr: nil}).StrVal()
+	}
+}
+
+func Call_Main_reflectSymbol_prime___781938175(__eta_norm_0_unused_0_loop uint32) string {
+reflectSymbol_prime___781938175:
+	for {
+		if false {
+			continue reflectSymbol_prime___781938175
+		}
+		var __eta_norm_0_unused_0 uint32 = __eta_norm_0_unused_0_loop
+		_ = __eta_norm_0_unused_0
+		return gopurs_runtime.Apply(Call_Data_Symbol_reflectSymbol(gopurs_runtime.CoerceToStruct[Constructor_Data_Symbol_IsSymbol[gopurs_runtime.Value]](Get_Main_X_2IsSymbol())), gopurs_runtime.Value{Type: 9, IntVal: int64(513803634), UnsafePtr: nil}).StrVal()
+	}
 }

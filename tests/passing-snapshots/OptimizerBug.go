@@ -48,5 +48,5 @@ func Call_Main_y(a_0_loop gopurs_runtime.Value) float64 {
 func Call_Main_x(a_0_loop gopurs_runtime.Value) float64 {
 	var a_0 gopurs_runtime.Value = a_0_loop
 	_ = a_0
-	return (1.0) + (Call_Main_x(a_0))
+	return (1.0) + (Call_Main_y(a_0))
 }

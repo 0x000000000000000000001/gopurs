@@ -72,7 +72,7 @@ var once_Main_test sync.Once
 
 func Get_Main_test() gopurs_runtime.Value {
 	once_Main_test.Do(func() {
-		cache_Main_test = gopurs_runtime.Int(42)
+		cache_Main_test = gopurs_runtime.Int(Call_Main_k(227768594))
 	})
 	return cache_Main_test
 }
@@ -96,5 +96,5 @@ type Constructor_Main_A[T_a any] struct {
 func Call_Main_k(v_0_loop uint32) int64 {
 	var v_0 uint32 = v_0_loop
 	_ = v_0
-	return 42
+	return int64(42)
 }

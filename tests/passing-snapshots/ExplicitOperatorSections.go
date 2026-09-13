@@ -54,17 +54,17 @@ func Get_Main_addOne() gopurs_runtime.Value {
 func Call_Main_subtractOne(v_0_loop int64) int64 {
 	var v_0 int64 = v_0_loop
 	_ = v_0
-	return (v_0) - (1)
+	return (v_0) - (int64(1))
 }
 
 func Call_Main_named(v_0_loop int64) int64 {
 	var v_0 int64 = v_0_loop
 	_ = v_0
-	return (v_0) - (1)
+	return (v_0) - (int64(1))
 }
 
 func Call_Main_addOne(v_0_loop int64) int64 {
 	var v_0 int64 = v_0_loop
 	_ = v_0
-	return (1) + (v_0)
+	return (int64(1)) + (v_0)
 }

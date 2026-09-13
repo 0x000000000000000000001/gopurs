@@ -34,10 +34,8 @@ var once_Main_zero_prime_ sync.Once
 
 func Get_Main_zero_prime_() gopurs_runtime.Value {
 	once_Main_zero_prime_.Do(func() {
-		cache_Main_zero_prime_ = gopurs_runtime.Func(func(zero_prime_1_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return zero_prime_1_0
-			})
+		cache_Main_zero_prime_ = gopurs_runtime.Func2(func(zero_prime_1_0 gopurs_runtime.Value, v_1 gopurs_runtime.Value) gopurs_runtime.Value {
+			return zero_prime_1_0
 		})
 	})
 	return cache_Main_zero_prime_
@@ -60,10 +58,8 @@ var once_Main_two sync.Once
 
 func Get_Main_two() gopurs_runtime.Value {
 	once_Main_two.Do(func() {
-		cache_Main_two = gopurs_runtime.Func(func(zero_prime_1_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Func(func(succ1_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Apply(succ1_1, gopurs_runtime.Apply2(Get_Main_zero_prime_(), zero_prime_1_0, succ1_1))
-			})
+		cache_Main_two = gopurs_runtime.Func2(func(zero_prime_1_0 gopurs_runtime.Value, succ1_1 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Apply(succ1_1, gopurs_runtime.Apply2(Get_Main_zero_prime_(), zero_prime_1_0, succ1_1))
 		})
 	})
 	return cache_Main_two
@@ -98,10 +94,8 @@ var once_Main_one_prime_ sync.Once
 
 func Get_Main_one_prime_() gopurs_runtime.Value {
 	once_Main_one_prime_.Do(func() {
-		cache_Main_one_prime_ = gopurs_runtime.Func(func(zero_prime_1_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Func(func(succ1_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Apply(succ1_1, gopurs_runtime.Apply2(Get_Main_zero_prime_(), zero_prime_1_0, succ1_1))
-			})
+		cache_Main_one_prime_ = gopurs_runtime.Func2(func(zero_prime_1_0 gopurs_runtime.Value, succ1_1 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Apply(succ1_1, gopurs_runtime.Apply2(Get_Main_zero_prime_(), zero_prime_1_0, succ1_1))
 		})
 	})
 	return cache_Main_one_prime_
@@ -134,10 +128,8 @@ var once_Main_four sync.Once
 
 func Get_Main_four() gopurs_runtime.Value {
 	once_Main_four.Do(func() {
-		cache_Main_four = gopurs_runtime.Func(func(zero_prime_1_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Func(func(succ1_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Apply2(Get_Main_two(), gopurs_runtime.Apply2(Get_Main_two(), zero_prime_1_0, succ1_1), succ1_1)
-			})
+		cache_Main_four = gopurs_runtime.Func2(func(zero_prime_1_0 gopurs_runtime.Value, succ1_1 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Apply2(Get_Main_two(), gopurs_runtime.Apply2(Get_Main_two(), zero_prime_1_0, succ1_1), succ1_1)
 		})
 	})
 	return cache_Main_four
@@ -168,10 +160,11 @@ type Constructor_Main_Id struct {
 func Call_Main_succ(n_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var n_0 gopurs_runtime.Value = n_0_loop
 	_ = n_0
-	return gopurs_runtime.Func(func(zero_prime_1_1 gopurs_runtime.Value) gopurs_runtime.Value {
-		return gopurs_runtime.Func(func(succ1_2 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Apply(succ1_2, gopurs_runtime.Apply2(n_0, zero_prime_1_1, succ1_2))
-		})
+	// TAST (Let): __local_var_1_0 shape=Other bindingType=Any
+	__local_var_1_0 := n_0
+	_ = __local_var_1_0
+	return gopurs_runtime.Func2(func(zero_prime_1_2 gopurs_runtime.Value, succ1_3 gopurs_runtime.Value) gopurs_runtime.Value {
+		return gopurs_runtime.Apply(succ1_3, gopurs_runtime.Apply2(__local_var_1_0, zero_prime_1_2, succ1_3))
 	})
 }
 
@@ -196,9 +189,13 @@ func Call_Main_add(n_0_loop gopurs_runtime.Value, m_1_loop gopurs_runtime.Value)
 	_ = n_0
 	var m_1 gopurs_runtime.Value = m_1_loop
 	_ = m_1
-	return gopurs_runtime.Func(func(zero_prime_1_2 gopurs_runtime.Value) gopurs_runtime.Value {
-		return gopurs_runtime.Func(func(succ1_3 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Apply2(m_1, gopurs_runtime.Apply2(n_0, zero_prime_1_2, succ1_3), succ1_3)
-		})
+	// TAST (Let): __local_var_2_0 shape=Other bindingType=Any
+	__local_var_2_0 := n_0
+	_ = __local_var_2_0
+	// TAST (Let): __local_var_3_1 shape=Other bindingType=Any
+	__local_var_3_1 := m_1
+	_ = __local_var_3_1
+	return gopurs_runtime.Func2(func(zero_prime_1_4 gopurs_runtime.Value, succ1_5 gopurs_runtime.Value) gopurs_runtime.Value {
+		return gopurs_runtime.Apply2(__local_var_3_1, gopurs_runtime.Apply2(__local_var_2_0, zero_prime_1_4, succ1_5), succ1_5)
 	})
 }

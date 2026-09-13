@@ -94,7 +94,7 @@ func Call_Main_g(b_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 func Call_Main_f(a_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var a_0 gopurs_runtime.Value = a_0_loop
 	_ = a_0
-	return Call_Main_f(a_0)
+	return Call_Main_g(a_0)
 }
 
 func Call_Main_showN(a_0_loop gopurs_runtime.Value) gopurs_runtime.Value {

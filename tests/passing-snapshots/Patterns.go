@@ -100,23 +100,24 @@ func Call_Main_isDesc(v_0_loop []float64) bool {
 	var v_0 []float64 = v_0_loop
 	_ = v_0
 	var __t_and_1 bool = false
-	if (gopurs_runtime.Int(int64(len(v_0))).IntVal) == (2) {
+	if (gopurs_runtime.Int(int64(len(v_0))).IntVal) == (int64(2)) {
 
-		var __t_tag_0 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordNumberImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, gopurs_runtime.Float(gopurs_runtime.ArrayAccess(func() gopurs_runtime.Value {
+		var __t_tag_0 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordNumberImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, gopurs_runtime.ArrayAccess(func() gopurs_runtime.Value {
 			arr := v_0
 			boxed := make([]gopurs_runtime.Value, len(arr))
 			for i, v := range arr {
 				boxed[i] = gopurs_runtime.Float(v)
 			}
 			return gopurs_runtime.Array(boxed)
-		}(), 0).FloatVal()), gopurs_runtime.Float(gopurs_runtime.ArrayAccess(func() gopurs_runtime.Value {
+		}(), 0), gopurs_runtime.ArrayAccess(func() gopurs_runtime.Value {
 			arr := v_0
 			boxed := make([]gopurs_runtime.Value, len(arr))
 			for i, v := range arr {
 				boxed[i] = gopurs_runtime.Float(v)
 			}
 			return gopurs_runtime.Array(boxed)
-		}(), 1).FloatVal()))
+		}(), 1))
+		_ = __t_tag_0
 		__t_and_1 = (uint32(__t_tag_0.IntVal) == 380165415)
 	}
 	return __t_and_1
@@ -127,7 +128,7 @@ func Call_Main_h(o_0_loop []gopurs_runtime.Value) []gopurs_runtime.Value {
 	_ = o_0
 	var __t0 []gopurs_runtime.Value
 	{
-		if (gopurs_runtime.Int(int64(len(o_0))).IntVal) == (3) {
+		if (gopurs_runtime.Int(int64(len(o_0))).IntVal) == (int64(3)) {
 			__t0 = o_0
 			goto end_branch_0
 		} else {
@@ -161,7 +162,7 @@ func Call_Main_f(o_0_loop gopurs_runtime.Value) int64 {
 		}
 	}
 	{
-		__t0 = 0
+		__t0 = int64(0)
 	}
 end_branch_0:
 	return __t0

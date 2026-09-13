@@ -20,7 +20,7 @@ var once_Main_baz sync.Once
 
 func Get_Main_baz() gopurs_runtime.Value {
 	once_Main_baz.Do(func() {
-		cache_Main_baz = gopurs_runtime.Int(3)
+		cache_Main_baz = gopurs_runtime.Int(int64(3))
 	})
 	return cache_Main_baz
 }

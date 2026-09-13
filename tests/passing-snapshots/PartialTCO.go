@@ -44,8 +44,8 @@ partialTCO:
 			if v_1 {
 				var __t0 int64
 				{
-					if (v1_2) == (0) {
-						__t0 = 0
+					if (v1_2) == (int64(0)) {
+						__t0 = int64(0)
 						goto end_branch_0
 					} else {
 
@@ -54,9 +54,9 @@ partialTCO:
 				{
 					_dollar___unused_0_loop = gopurs_runtime.Value{}
 					v_1_loop = true
-					v1_2_loop = (v1_2) - (1)
+					v1_2_loop = (v1_2) - (int64(1))
 					continue partialTCO
-					__t0 = gopurs_runtime.Value{}.IntVal
+					__t0 = func() int64 { panic("unreachable") }()
 				}
 			end_branch_0:
 				__t1 = __t0
@@ -66,9 +66,9 @@ partialTCO:
 			}
 		}
 		{
-			__t1 = func() gopurs_runtime.Value { panic("Failed pattern match") }().IntVal
+			__t1 = func() int64 { panic("Failed pattern match") }()
 		}
 	end_branch_1:
-		return gopurs_runtime.Int(__t1).IntVal
+		return __t1
 	}
 }

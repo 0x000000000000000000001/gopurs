@@ -4,8 +4,9 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
-import { empty as emptyMap } from '../output/Data.Map/index.js';
+import { empty as emptyMap, insert } from '../output/Data.Map/index.js';
 import { Just, Nothing } from '../output/Data.Maybe/index.js';
+import { ordString } from '../output/Data.Ord/index.js';
 import { empty as emptySet } from '../output/Data.Set/index.js';
 import { Tuple } from '../output/Data.Tuple/index.js';
 import * as CodeGen from '../output/Gopurs.CodeGen/index.js';
@@ -32,6 +33,10 @@ const record = fields => typed(
     expr(new S.Lit(new C.LitRecord(fields.map(([key, , value]) => new Tuple(key, value))))));
 const rec = (bindings, body) => expr(new S.LetRec(1,
     bindings.map(([name, value]) => new Tuple(name, value)), body));
+const streamType = type => new C.ADT('Recursive.Stream', ['Recursive', 'Stream'], [type]);
+const streamCtor = new C.Qualified(new Just('Recursive'), 'Stream');
+const streamField = index => expr(new S.Accessor(local('self'), new S.GetCtorField(
+    streamCtor, C.ProductType.value, 'Stream', 'Stream', `value${index}`, index)));
 
 test('recursive native values reject early reads and publish complete initializers in order', t => {
     const self = local('self');
@@ -57,13 +62,24 @@ test('recursive native values reject early reads and publish complete initialize
             ['bravo', typed(C.Int.value, expr(new S.Let(new Just('value'), 2,
                 prop(local('alpha'), 'a'), local('value', 2))))],
         ], app(prop(local('alpha'), 'backref')))],
+        ['recursiveAdt', rec([['self', typed(streamType(C.Int.value),
+            typed(streamType(C.Any.value), expr(new S.CtorSaturated(
+                streamCtor, C.ProductType.value, 'Stream', 'Stream', [
+                    new Tuple('value0', literal(17)),
+                    new Tuple('value1', lambda('ignored', 2, streamField(0))),
+                ]))))]], app(streamField(1)))],
     ];
-    const code = CodeGen.translate(metadata)({
+    const streamFields = [new C.TypeVar('a'), C.Any.value];
+    const code = CodeGen.translate({ ...metadata,
+        ctorTypes: insert(ordString)('Recursive.Stream')({ vars: ['a'], fields: streamFields })(emptyMap),
+        pointerAdtPaths: insert(ordString)('Recursive.Stream')({ ctorName: 'Stream', arity: 1 })(emptyMap),
+    })({
         name: 'Recursive', bindings: fixtures.map(([name, body]) => ({
             recursive: false, bindings: [new Tuple(name, lambda('ignored', 0, body))],
         })),
         comments: [], imports: emptySet, exports: emptySet, reExports: emptySet,
-        dataTypes: emptyMap, dataDecls: [], classDecls: [], foreign: emptyMap,
+        dataTypes: emptyMap, dataDecls: [{ vars: ['a'], constructors: [{ name: 'Stream', fields: streamFields }] }],
+        classDecls: [], foreign: emptyMap,
         implementations: emptyMap, directives: emptyMap,
     });
     const directory = mkdtempSync(join(tmpdir(), 'gopurs-recursive-initialization-'));
@@ -105,6 +121,7 @@ func main() {
         'eagerInt uninitialized',
         'delayedRecord 1',
         'orderedInitializers 7',
+        'recursiveAdt 17',
         '',
     ].join('\n'));
 });

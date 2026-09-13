@@ -897,11 +897,14 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                 _, _ ->
                   let
                     res = translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFunctions bound tcoIdent loopCtx options (Just type_) nextId a
+                    preserveBoxedRecord = case expectedGoType, mbExpectedExprType of
+                      TypeRecord _, Just Any -> res.exprType == TypeValue
+                      _, _ -> false
                   in
                     case res.exprType of
                       TypeStructPointer _ _ _ _ -> res
                       _ ->
-                        if expectedGoType == res.exprType then res
+                        if expectedGoType == res.exprType || preserveBoxedRecord then res
                         else if isClosureNode codegenStateRef a then res
                         else
                           { stmts: res.stmts, expr: coerceGoExpr codegenStateRef modNameStr res.expr res.exprType expectedGoType, exprType: expectedGoType, nextId: res.nextId }
@@ -1274,10 +1277,16 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                                 Nothing ->
                                   let
                                     resFn = translateExpr codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } nextId flatFn
+                                    -- A dynamic call consumes boxed arguments. Keep
+                                    -- an existing record value instead of unboxing
+                                    -- and immediately rebuilding its representation.
+                                    argExpectedType = case resFn.exprType of
+                                      TypeFunc _ _ -> Nothing
+                                      _ -> Just Any
                                     accArgs = foldl
                                       ( \acc arg ->
                                           let
-                                            argRes = translateExpr codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } acc.nextId arg
+                                            argRes = translateExprWithExpectedType codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } argExpectedType acc.nextId arg
                                           in
                                             { stmts: acc.stmts <> argRes.stmts, exprs: Array.snoc acc.exprs argRes.expr, exprTypes: Array.snoc acc.exprTypes argRes.exprType, nextId: argRes.nextId }
                                       )
@@ -2030,7 +2039,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                           let
                             res = translateExpr codegenStateRef (depth + 1) modNameStr combinedRecVars moduleFunctions initializingBound Nothing [] { isTail: false, inEffectBlock: false } acc.nextId val
                             expectedGoType = (fromMaybe { name: alloc.newName, goType: TypeValue } (Map.lookup alloc.oldName allocRes.newBound)).goType
-                            assignedVal = if expectedGoType == res.exprType then res.expr else unboxGoExpr codegenStateRef modNameStr res.expr res.exprType expectedGoType
+                            assignedVal = coerceGoExpr codegenStateRef modNameStr res.expr res.exprType expectedGoType
                           in
                             { stmts: acc.stmts <> res.stmts
                                 <> StmtLeaf (GoMutate alloc.newName assignedVal)
@@ -2368,9 +2377,9 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                         TypeUint32, CtorDef _ _ _ ctorFields -> Array.null ctorFields
                         _, _ -> false
                     in
-                      { stmts: acc.stmts <> resVal.stmts, exprs: Array.snoc acc.exprs coercedExpr, exprType: TypeValue, nextId: resVal.nextId, fieldIdx: acc.fieldIdx + 1, constants: Array.snoc acc.constants isConstant }
+                      { stmts: acc.stmts <> resVal.stmts, exprs: Array.snoc acc.exprs coercedExpr, exprTypes: Array.snoc acc.exprTypes expectedType, exprType: TypeValue, nextId: resVal.nextId, fieldIdx: acc.fieldIdx + 1, constants: Array.snoc acc.constants isConstant }
                 )
-                { stmts: StmtEmpty, exprs: [], exprType: TypeValue, nextId, fieldIdx: 0, constants: [] }
+                { stmts: StmtEmpty, exprs: [], exprTypes: [], exprType: TypeValue, nextId, fieldIdx: 0, constants: [] }
                 props
 
               isElided = Set.member structName helpers.elidedCtors
@@ -2397,7 +2406,9 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
               res =
                 if isElided then
                   case Array.head accProps.exprs of
-                    Just expr -> { expr: boxGoExpr codegenStateRef modNameStr expr (fromMaybe TypeValue (map (exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr) (Array.index fields 0))), exprType: TypeValue }
+                    -- The field has already been coerced to its instantiated
+                    -- representation; its declaration may still contain a type variable.
+                    Just expr -> { expr: boxGoExpr codegenStateRef modNameStr expr (fromMaybe TypeValue (Array.head accProps.exprTypes)), exprType: TypeValue }
                     Nothing -> { expr: GoConstructor (hashString baseStructName) monoStructName typeArgsCtor accProps.exprs, exprType: TypeStructPointer baseStructName fullName fullPath typeArgsCtor }
                 else case adtFullName >>= \fn -> Map.lookup fn unboxableADTs >>= \adt -> Just (Tuple fn adt) of
                   Just (Tuple fn adt) ->

@@ -22,7 +22,17 @@ var once_Main_NonexportedClass_dollar_Dict sync.Once
 func Get_Main_NonexportedClass_dollar_Dict() gopurs_runtime.Value {
 	once_Main_NonexportedClass_dollar_Dict.Do(func() {
 		cache_Main_NonexportedClass_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_NonexportedClass_dollar_Dict(x_0_box)
+			return gopurs_runtime.Value{Type: 9, IntVal: 888703674, UnsafePtr: unsafe.Pointer(Call_Main_NonexportedClass_dollar_Dict(func() struct {
+				notExported gopurs_runtime.Value
+			} {
+				orig := x_0_box
+				_ = orig
+				clone := struct {
+					notExported gopurs_runtime.Value
+				}{}
+				clone.notExported = gopurs_runtime.RecordGet(orig, "notExported")
+				return clone
+			}()))}
 		})
 	})
 	return cache_Main_NonexportedClass_dollar_Dict
@@ -34,7 +44,17 @@ var once_Main_Foo_dollar_Dict sync.Once
 func Get_Main_Foo_dollar_Dict() gopurs_runtime.Value {
 	once_Main_Foo_dollar_Dict.Do(func() {
 		cache_Main_Foo_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_Foo_dollar_Dict(x_0_box)
+			return gopurs_runtime.Value{Type: 9, IntVal: 2763139640, UnsafePtr: unsafe.Pointer(Call_Main_Foo_dollar_Dict(func() struct {
+				foo gopurs_runtime.Value
+			} {
+				orig := x_0_box
+				_ = orig
+				clone := struct {
+					foo gopurs_runtime.Value
+				}{}
+				clone.foo = gopurs_runtime.RecordGet(orig, "foo")
+				return clone
+			}()))}
 		})
 	})
 	return cache_Main_Foo_dollar_Dict
@@ -64,36 +84,12 @@ func Get_Main_notExported() gopurs_runtime.Value {
 	return cache_Main_notExported
 }
 
-var cache_Main_notExported__193435443 gopurs_runtime.Value
-var once_Main_notExported__193435443 sync.Once
-
-func Get_Main_notExported__193435443() gopurs_runtime.Value {
-	once_Main_notExported__193435443.Do(func() {
-		cache_Main_notExported__193435443 = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_notExported__193435443(dict_0_box)
-		})
-	})
-	return cache_Main_notExported__193435443
-}
-
-var cache_Main_notExported__1435057913 gopurs_runtime.Value
-var once_Main_notExported__1435057913 sync.Once
-
-func Get_Main_notExported__1435057913() gopurs_runtime.Value {
-	once_Main_notExported__1435057913.Do(func() {
-		cache_Main_notExported__1435057913 = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_notExported__1435057913(dict_0_box)
-		})
-	})
-	return cache_Main_notExported__1435057913
-}
-
 var cache_Main_nonExportedNonexportedType gopurs_runtime.Value
 var once_Main_nonExportedNonexportedType sync.Once
 
 func Get_Main_nonExportedNonexportedType() gopurs_runtime.Value {
 	once_Main_nonExportedNonexportedType.Do(func() {
-		cache_Main_nonExportedNonexportedType = gopurs_runtime.Value{Type: 9, IntVal: 888703674, UnsafePtr: unsafe.Pointer((&Constructor_Main_NonexportedClass[gopurs_runtime.Value]{1, gopurs_runtime.Int(0)}))}
+		cache_Main_nonExportedNonexportedType = gopurs_runtime.Value{Type: 9, IntVal: 888703674, UnsafePtr: unsafe.Pointer((&Constructor_Main_NonexportedClass[gopurs_runtime.Value]{1, gopurs_runtime.Int(int64(0))}))}
 	})
 	return cache_Main_nonExportedNonexportedType
 }
@@ -160,17 +156,17 @@ type Constructor_Main_NonexportedType struct {
 
 type Constructor_Main_Const[T_a any, T_b any] struct {
 	Rc uint32
-	V0 gopurs_runtime.Value
+	V0 T_a
 }
 
 type Constructor_Main_NonexportedClass[T_a any] struct {
 	Rc uint32
-	V0 gopurs_runtime.Value
+	V0 T_a
 }
 
 func init() {
 	gopurs_runtime.StructGetters[888703674] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_NonexportedClass[any])(ptr)
+		c := (*Constructor_Main_NonexportedClass[gopurs_runtime.Value])(ptr)
 		_ = c
 		switch key {
 		case "notExported":
@@ -183,12 +179,12 @@ func init() {
 
 type Constructor_Main_Foo[T_a any] struct {
 	Rc uint32
-	V0 gopurs_runtime.Value
+	V0 T_a
 }
 
 func init() {
 	gopurs_runtime.StructGetters[2763139640] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_Foo[any])(ptr)
+		c := (*Constructor_Main_Foo[gopurs_runtime.Value])(ptr)
 		_ = c
 		switch key {
 		case "foo":
@@ -199,31 +195,35 @@ func init() {
 	}
 }
 
-func Call_Main_NonexportedClass_dollar_Dict(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var x_0 gopurs_runtime.Value = x_0_loop
+func Call_Main_NonexportedClass_dollar_Dict(x_0_loop struct {
+	notExported gopurs_runtime.Value
+}) *Constructor_Main_NonexportedClass[gopurs_runtime.Value] {
+	var x_0 struct {
+		notExported gopurs_runtime.Value
+	} = x_0_loop
 	_ = x_0
-	return x_0
+	return gopurs_runtime.CoerceToStruct[Constructor_Main_NonexportedClass[gopurs_runtime.Value]](func() gopurs_runtime.Value {
+		orig := x_0
+		_ = orig
+		return gopurs_runtime.RecordDict1("notExported", orig.notExported)
+	}())
 }
 
-func Call_Main_Foo_dollar_Dict(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var x_0 gopurs_runtime.Value = x_0_loop
+func Call_Main_Foo_dollar_Dict(x_0_loop struct {
+	foo gopurs_runtime.Value
+}) *Constructor_Main_Foo[gopurs_runtime.Value] {
+	var x_0 struct {
+		foo gopurs_runtime.Value
+	} = x_0_loop
 	_ = x_0
-	return x_0
+	return gopurs_runtime.CoerceToStruct[Constructor_Main_Foo[gopurs_runtime.Value]](func() gopurs_runtime.Value {
+		orig := x_0
+		_ = orig
+		return gopurs_runtime.RecordDict1("foo", orig.foo)
+	}())
 }
 
 func Call_Main_notExported(dict_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var dict_0 gopurs_runtime.Value = dict_0_loop
-	_ = dict_0
-	return gopurs_runtime.RecordGet(dict_0, "notExported")
-}
-
-func Call_Main_notExported__193435443(dict_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var dict_0 gopurs_runtime.Value = dict_0_loop
-	_ = dict_0
-	return gopurs_runtime.RecordGet(dict_0, "notExported")
-}
-
-func Call_Main_notExported__1435057913(dict_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var dict_0 gopurs_runtime.Value = dict_0_loop
 	_ = dict_0
 	return gopurs_runtime.RecordGet(dict_0, "notExported")
@@ -238,7 +238,7 @@ func Call_Main_nonExportedFoo2(dictNonexportedClass_0_loop gopurs_runtime.Value)
 func Call_Main_nonExportedFoo(dictFoo_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var dictFoo_0 gopurs_runtime.Value = dictFoo_0_loop
 	_ = dictFoo_0
-	return gopurs_runtime.Value{Type: 9, IntVal: 2763139640, UnsafePtr: unsafe.Pointer((&Constructor_Main_Foo[gopurs_runtime.Value]{1, Get_Control_Category_identity__193435443()}))}
+	return gopurs_runtime.Value{Type: 9, IntVal: 2763139640, UnsafePtr: unsafe.Pointer((&Constructor_Main_Foo[gopurs_runtime.Value]{1, Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))})}))}
 }
 
 func Call_Main_foo(dict_0_loop gopurs_runtime.Value) gopurs_runtime.Value {

@@ -12,10 +12,42 @@ var once_Main_Convert_dollar_Dict sync.Once
 func Get_Main_Convert_dollar_Dict() gopurs_runtime.Value {
 	once_Main_Convert_dollar_Dict.Do(func() {
 		cache_Main_Convert_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_Convert_dollar_Dict(x_0_box)
+			return gopurs_runtime.Value{Type: 9, IntVal: 3639075177, UnsafePtr: unsafe.Pointer(Call_Main_Convert_dollar_Dict(func() struct {
+				convert gopurs_runtime.Value
+			} {
+				orig := x_0_box
+				_ = orig
+				clone := struct {
+					convert gopurs_runtime.Value
+				}{}
+				clone.convert = gopurs_runtime.RecordGet(orig, "convert")
+				return clone
+			}()))}
 		})
 	})
 	return cache_Main_Convert_dollar_Dict
+}
+
+var cache_Main_Convert_dollar_Dict__1108481452 gopurs_runtime.Value
+var once_Main_Convert_dollar_Dict__1108481452 sync.Once
+
+func Get_Main_Convert_dollar_Dict__1108481452() gopurs_runtime.Value {
+	once_Main_Convert_dollar_Dict__1108481452.Do(func() {
+		cache_Main_Convert_dollar_Dict__1108481452 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Value{Type: 9, IntVal: 3639075177, UnsafePtr: unsafe.Pointer(Rebox_Main_1758696223_1198875995(Call_Main_Convert_dollar_Dict__1108481452(func() struct {
+				convert gopurs_runtime.Value
+			} {
+				orig := x_0_box
+				_ = orig
+				clone := struct {
+					convert gopurs_runtime.Value
+				}{}
+				clone.convert = gopurs_runtime.RecordGet(orig, "convert")
+				return clone
+			}())))}
+		})
+	})
+	return cache_Main_Convert_dollar_Dict__1108481452
 }
 
 var cache_Main_convertSB gopurs_runtime.Value
@@ -23,10 +55,10 @@ var once_Main_convertSB sync.Once
 
 func Get_Main_convertSB() gopurs_runtime.Value {
 	once_Main_convertSB.Do(func() {
-		cache_Main_convertSB = gopurs_runtime.Value{Type: 9, IntVal: 3639075177, UnsafePtr: unsafe.Pointer((&Constructor_Main_Convert[int64, string]{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_convertSB = gopurs_runtime.Value{Type: 9, IntVal: 3639075177, UnsafePtr: unsafe.Pointer(Rebox_Main_1758696223_1198875995((&Constructor_Main_Convert[int64, string]{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			var __t0 string
 			{
-				if (v_0.IntVal) == (0) {
+				if (v_0.IntVal) == (int64(0)) {
 					__t0 = "Nope"
 					goto end_branch_0
 				} else {
@@ -38,7 +70,7 @@ func Get_Main_convertSB() gopurs_runtime.Value {
 			}
 		end_branch_0:
 			return gopurs_runtime.Str(__t0)
-		})}))}
+		})})))}
 	})
 	return cache_Main_convertSB
 }
@@ -55,16 +87,16 @@ func Get_Main_convert() gopurs_runtime.Value {
 	return cache_Main_convert
 }
 
-var cache_Main_convert__769515702 gopurs_runtime.Value
-var once_Main_convert__769515702 sync.Once
+var cache_Main_convert__2990510892 gopurs_runtime.Value
+var once_Main_convert__2990510892 sync.Once
 
-func Get_Main_convert__769515702() gopurs_runtime.Value {
-	once_Main_convert__769515702.Do(func() {
-		cache_Main_convert__769515702 = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_convert__769515702(gopurs_runtime.CoerceToStruct[Constructor_Main_Convert[gopurs_runtime.Value, gopurs_runtime.Value]](dict_0_box))
+func Get_Main_convert__2990510892() gopurs_runtime.Value {
+	once_Main_convert__2990510892.Do(func() {
+		cache_Main_convert__2990510892 = gopurs_runtime.Func(func(__eta_norm_0_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_convert__2990510892(__eta_norm_0_0_box.IntVal))
 		})
 	})
-	return cache_Main_convert__769515702
+	return cache_Main_convert__2990510892
 }
 
 var cache_Main_main gopurs_runtime.Value
@@ -84,7 +116,7 @@ type Constructor_Main_Convert[T_a any, T_b any] struct {
 
 func init() {
 	gopurs_runtime.StructGetters[3639075177] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_Convert[any, any])(ptr)
+		c := (*Constructor_Main_Convert[gopurs_runtime.Value, gopurs_runtime.Value])(ptr)
 		_ = c
 		switch key {
 		case "convert":
@@ -95,20 +127,76 @@ func init() {
 	}
 }
 
-func Call_Main_Convert_dollar_Dict(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var x_0 gopurs_runtime.Value = x_0_loop
+func Call_Main_Convert_dollar_Dict(x_0_loop struct {
+	convert gopurs_runtime.Value
+}) *Constructor_Main_Convert[gopurs_runtime.Value, gopurs_runtime.Value] {
+	var x_0 struct {
+		convert gopurs_runtime.Value
+	} = x_0_loop
 	_ = x_0
-	return x_0
+	return gopurs_runtime.CoerceToStruct[Constructor_Main_Convert[gopurs_runtime.Value, gopurs_runtime.Value]](func() gopurs_runtime.Value {
+		orig := x_0
+		_ = orig
+		return gopurs_runtime.RecordDict1("convert", orig.convert)
+	}())
+}
+
+func Call_Main_Convert_dollar_Dict__1108481452(x_0_loop struct {
+	convert gopurs_runtime.Value
+}) *Constructor_Main_Convert[int64, string] {
+Convert_dollar_Dict__1108481452:
+	for {
+		if false {
+			continue Convert_dollar_Dict__1108481452
+		}
+		var x_0 struct {
+			convert gopurs_runtime.Value
+		} = x_0_loop
+		_ = x_0
+		return gopurs_runtime.CoerceToStruct[Constructor_Main_Convert[int64, string]](func() gopurs_runtime.Value {
+			orig := x_0
+			_ = orig
+			return gopurs_runtime.RecordDict1("convert", orig.convert)
+		}())
+	}
 }
 
 func Call_Main_convert(dict_0_loop *Constructor_Main_Convert[gopurs_runtime.Value, gopurs_runtime.Value]) gopurs_runtime.Value {
 	var dict_0 *Constructor_Main_Convert[gopurs_runtime.Value, gopurs_runtime.Value] = dict_0_loop
 	_ = dict_0
-	return gopurs_runtime.Box(dict_0.V0)
+	return dict_0.V0
 }
 
-func Call_Main_convert__769515702(dict_0_loop *Constructor_Main_Convert[gopurs_runtime.Value, gopurs_runtime.Value]) gopurs_runtime.Value {
-	var dict_0 *Constructor_Main_Convert[gopurs_runtime.Value, gopurs_runtime.Value] = dict_0_loop
-	_ = dict_0
-	return gopurs_runtime.Box(dict_0.V0)
+func Call_Main_convert__2990510892(__eta_norm_0_0_loop int64) string {
+convert__2990510892:
+	for {
+		if false {
+			continue convert__2990510892
+		}
+		var __eta_norm_0_0 int64 = __eta_norm_0_0_loop
+		_ = __eta_norm_0_0
+		var __t0 string
+		{
+			if (__eta_norm_0_0) == (int64(0)) {
+				__t0 = "Nope"
+				goto end_branch_0
+			} else {
+
+			}
+		}
+		{
+			__t0 = "Done"
+		}
+	end_branch_0:
+		return __t0
+	}
+}
+
+func Rebox_Main_1758696223_1198875995(in *Constructor_Main_Convert[int64, string]) *Constructor_Main_Convert[gopurs_runtime.Value, gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Main_Convert[gopurs_runtime.Value, gopurs_runtime.Value]{}
+	out.V0 = in.V0
+	return out
 }

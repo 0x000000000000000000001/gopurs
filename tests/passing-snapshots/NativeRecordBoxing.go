@@ -3,7 +3,6 @@ package purescript
 import (
 	gopurs_runtime "gopurs/output/gopurs_runtime"
 	sync "sync"
-	unsafe "unsafe"
 )
 
 var cache_Main_makeEntry gopurs_runtime.Value
@@ -95,21 +94,21 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = __local_var_0_0
 			consumerRef_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
 			_ = consumerRef_1_1
-			consume_2_2 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), consumerRef_1_1), gopurs_runtime.Value{})
-			_ = consume_2_2
-			originalRef_3_3 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), func() gopurs_runtime.Value {
+			__local_var_2_2 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), consumerRef_1_1), gopurs_runtime.Value{})
+			_ = __local_var_2_2
+			__local_var_3_3 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), func() gopurs_runtime.Value {
 				orig := Call_Main_makeEntry(int64(5), "alpha")
 				_ = orig
 				return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
 			}()), gopurs_runtime.Value{})
-			_ = originalRef_3_3
-			original_4_4 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), originalRef_3_3), gopurs_runtime.Value{})
-			_ = original_4_4
-			__local_var_5_5 := gopurs_runtime.Apply(Call_Main_check("original", "5:alpha", Call_Main_consumeEntry(consume_2_2, func() struct {
+			_ = __local_var_3_3
+			__local_var_4_4 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_3_3), gopurs_runtime.Value{})
+			_ = __local_var_4_4
+			return gopurs_runtime.Apply(gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Main_check("original", "5:alpha", Call_Main_consumeEntry(__local_var_2_2, func() struct {
 				count int64
 				label string
 			} {
-				orig := original_4_4
+				orig := __local_var_4_4
 				_ = orig
 				clone := struct {
 					count int64
@@ -118,131 +117,146 @@ func Get_Main_main() gopurs_runtime.Value {
 				clone.count = gopurs_runtime.RecordGet(orig, "count").IntVal
 				clone.label = gopurs_runtime.RecordGet(orig, "label").StrVal()
 				return clone
-			}())), gopurs_runtime.Value{})
-			_ = __local_var_5_5
-			// TAST (Let): changedCount_6_6 shape=Other bindingType=(Record (Row [count: Int, label: String] Any))
-			changedCount_6_6 := func() struct {
-				count int64
-				label string
-			} {
-				orig := gopurs_runtime.RecordUpdate1(original_4_4, "count", gopurs_runtime.Int(int64(-7)))
-				_ = orig
-				clone := struct {
-					count int64
-					label string
-				}{}
-				clone.count = gopurs_runtime.RecordGet(orig, "count").IntVal
-				clone.label = gopurs_runtime.RecordGet(orig, "label").StrVal()
-				return clone
-			}()
-			_ = changedCount_6_6
-			countRef_7_7 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), func() gopurs_runtime.Value {
-				orig := changedCount_6_6
-				_ = orig
-				return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
-			}()), gopurs_runtime.Value{})
-			_ = countRef_7_7
-			__local_var_8_8 := gopurs_runtime.Apply(Call_Main_check("count updated", "-7:alpha", Call_Main_consumeEntry(consume_2_2, changedCount_6_6)), gopurs_runtime.Value{})
-			_ = __local_var_8_8
-			__local_var_9_9 := gopurs_runtime.Apply(Call_Main_check("original after count update", "5:alpha", Call_Main_consumeEntry(consume_2_2, func() struct {
-				count int64
-				label string
-			} {
-				orig := original_4_4
-				_ = orig
-				clone := struct {
-					count int64
-					label string
-				}{}
-				clone.count = gopurs_runtime.RecordGet(orig, "count").IntVal
-				clone.label = gopurs_runtime.RecordGet(orig, "label").StrVal()
-				return clone
-			}())), gopurs_runtime.Value{})
-			_ = __local_var_9_9
-			// TAST (Let): changedLabel_10_10 shape=Other bindingType=(Record (Row [label: String, count: Int] Any))
-			changedLabel_10_10 := func() struct {
-				count int64
-				label string
-			} {
-				clone := changedCount_6_6
-				clone.label = "beta"
-				return clone
-			}()
-			_ = changedLabel_10_10
-			labelRef_11_11 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), func() gopurs_runtime.Value {
-				orig := changedLabel_10_10
-				_ = orig
-				return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
-			}()), gopurs_runtime.Value{})
-			_ = labelRef_11_11
-			__local_var_12_12 := gopurs_runtime.Apply(Call_Main_check("label updated", "-7:beta", Call_Main_consumeEntry(consume_2_2, changedLabel_10_10)), gopurs_runtime.Value{})
-			_ = __local_var_12_12
-			__local_var_13_13 := gopurs_runtime.Apply(Call_Main_check("count version after label update", "-7:alpha", Call_Main_consumeEntry(consume_2_2, changedCount_6_6)), gopurs_runtime.Value{})
-			_ = __local_var_13_13
-			__local_var_14_14 := gopurs_runtime.Apply(Call_Main_check("both fields updated", "0:", Call_Main_consumeEntry(consume_2_2, func() struct {
-				count int64
-				label string
-			} {
-				clone := changedLabel_10_10
-				clone.count = int64(0)
-				clone.label = ""
-				return clone
-			}())), gopurs_runtime.Value{})
-			_ = __local_var_14_14
-			__local_var_15_15 := gopurs_runtime.Apply(Call_Main_check("label version after both updates", "-7:beta", Call_Main_consumeEntry(consume_2_2, changedLabel_10_10)), gopurs_runtime.Value{})
-			_ = __local_var_15_15
-			savedOriginal_16_16 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), originalRef_3_3), gopurs_runtime.Value{})
-			_ = savedOriginal_16_16
-			savedCount_17_17 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), countRef_7_7), gopurs_runtime.Value{})
-			_ = savedCount_17_17
-			savedLabel_18_18 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), labelRef_11_11), gopurs_runtime.Value{})
-			_ = savedLabel_18_18
-			__local_var_19_19 := gopurs_runtime.Apply(Call_Main_check("retained original", "5:alpha", Call_Main_consumeEntry(consume_2_2, func() struct {
-				count int64
-				label string
-			} {
-				orig := savedOriginal_16_16
-				_ = orig
-				clone := struct {
-					count int64
-					label string
-				}{}
-				clone.count = gopurs_runtime.RecordGet(orig, "count").IntVal
-				clone.label = gopurs_runtime.RecordGet(orig, "label").StrVal()
-				return clone
-			}())), gopurs_runtime.Value{})
-			_ = __local_var_19_19
-			__local_var_20_20 := gopurs_runtime.Apply(Call_Main_check("retained count version", "-7:alpha", Call_Main_consumeEntry(consume_2_2, func() struct {
-				count int64
-				label string
-			} {
-				orig := savedCount_17_17
-				_ = orig
-				clone := struct {
-					count int64
-					label string
-				}{}
-				clone.count = gopurs_runtime.RecordGet(orig, "count").IntVal
-				clone.label = gopurs_runtime.RecordGet(orig, "label").StrVal()
-				return clone
-			}())), gopurs_runtime.Value{})
-			_ = __local_var_20_20
-			__local_var_21_21 := gopurs_runtime.Apply(Call_Main_check("retained label version", "-7:beta", Call_Main_consumeEntry(consume_2_2, func() struct {
-				count int64
-				label string
-			} {
-				orig := savedLabel_18_18
-				_ = orig
-				clone := struct {
-					count int64
-					label string
-				}{}
-				clone.count = gopurs_runtime.RecordGet(orig, "count").IntVal
-				clone.label = gopurs_runtime.RecordGet(orig, "label").StrVal()
-				return clone
-			}())), gopurs_runtime.Value{})
-			_ = __local_var_21_21
-			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
+			}())), gopurs_runtime.Func(func(_dollar___unused_5 gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+					// TAST (Let): changedCount_6_5 shape=Other bindingType=(Record (Row [count: Int, label: String] Empty))
+					changedCount_6_5 := func() struct {
+						count int64
+						label string
+					} {
+						orig := gopurs_runtime.RecordUpdate1(__local_var_4_4, "count", gopurs_runtime.Int(int64(-7)))
+						_ = orig
+						clone := struct {
+							count int64
+							label string
+						}{}
+						clone.count = gopurs_runtime.RecordGet(orig, "count").IntVal
+						clone.label = gopurs_runtime.RecordGet(orig, "label").StrVal()
+						return clone
+					}()
+					_ = changedCount_6_5
+					// TAST (Let): __local_var_7_6 shape=App(Var) bindingType=Any
+					__local_var_7_6 := gopurs_runtime.Apply(Get_Effect_Ref__new(), func() gopurs_runtime.Value {
+						orig := changedCount_6_5
+						_ = orig
+						return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
+					}())
+					_ = __local_var_7_6
+					__local_var_8_7 := gopurs_runtime.Apply(__local_var_7_6, gopurs_runtime.Value{})
+					_ = __local_var_8_7
+					return gopurs_runtime.Apply(gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Main_check("count updated", "-7:alpha", Call_Main_consumeEntry(__local_var_2_2, changedCount_6_5)), gopurs_runtime.Func(func(_dollar___unused_9 gopurs_runtime.Value) gopurs_runtime.Value {
+						return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Main_check("original after count update", "5:alpha", Call_Main_consumeEntry(__local_var_2_2, func() struct {
+							count int64
+							label string
+						} {
+							orig := __local_var_4_4
+							_ = orig
+							clone := struct {
+								count int64
+								label string
+							}{}
+							clone.count = gopurs_runtime.RecordGet(orig, "count").IntVal
+							clone.label = gopurs_runtime.RecordGet(orig, "label").StrVal()
+							return clone
+						}())), gopurs_runtime.Func(func(_dollar___unused_10 gopurs_runtime.Value) gopurs_runtime.Value {
+							return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+								// TAST (Let): changedLabel_11_8 shape=Other bindingType=(Record (Row [label: String, count: Int] Empty))
+								changedLabel_11_8 := func() struct {
+									count int64
+									label string
+								} {
+									clone := changedCount_6_5
+									clone.label = "beta"
+									return clone
+								}()
+								_ = changedLabel_11_8
+								// TAST (Let): __local_var_12_9 shape=App(Var) bindingType=Any
+								__local_var_12_9 := gopurs_runtime.Apply(Get_Effect_Ref__new(), func() gopurs_runtime.Value {
+									orig := changedLabel_11_8
+									_ = orig
+									return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
+								}())
+								_ = __local_var_12_9
+								__local_var_13_10 := gopurs_runtime.Apply(__local_var_12_9, gopurs_runtime.Value{})
+								_ = __local_var_13_10
+								return gopurs_runtime.Apply(gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Main_check("label updated", "-7:beta", Call_Main_consumeEntry(__local_var_2_2, changedLabel_11_8)), gopurs_runtime.Func(func(_dollar___unused_14 gopurs_runtime.Value) gopurs_runtime.Value {
+									return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Main_check("count version after label update", "-7:alpha", Call_Main_consumeEntry(__local_var_2_2, changedCount_6_5)), gopurs_runtime.Func(func(_dollar___unused_15 gopurs_runtime.Value) gopurs_runtime.Value {
+										return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Main_check("both fields updated", "0:", Call_Main_consumeEntry(__local_var_2_2, func() struct {
+											count int64
+											label string
+										} {
+											clone := changedLabel_11_8
+											clone.count = int64(0)
+											clone.label = ""
+											return clone
+										}())), gopurs_runtime.Func(func(_dollar___unused_16 gopurs_runtime.Value) gopurs_runtime.Value {
+											return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Main_check("label version after both updates", "-7:beta", Call_Main_consumeEntry(__local_var_2_2, changedLabel_11_8)), gopurs_runtime.Func(func(_dollar___unused_17 gopurs_runtime.Value) gopurs_runtime.Value {
+												return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+													// TAST (Let): __local_var_18_11 shape=App(Var) bindingType=Any
+													__local_var_18_11 := gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_3_3)
+													_ = __local_var_18_11
+													__local_var_19_12 := gopurs_runtime.Apply(__local_var_18_11, gopurs_runtime.Value{})
+													_ = __local_var_19_12
+													__local_var_20_13 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_8_7), gopurs_runtime.Value{})
+													_ = __local_var_20_13
+													__local_var_21_14 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_13_10), gopurs_runtime.Value{})
+													_ = __local_var_21_14
+													return gopurs_runtime.Apply(gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Main_check("retained original", "5:alpha", Call_Main_consumeEntry(__local_var_2_2, func() struct {
+														count int64
+														label string
+													} {
+														orig := __local_var_19_12
+														_ = orig
+														clone := struct {
+															count int64
+															label string
+														}{}
+														clone.count = gopurs_runtime.RecordGet(orig, "count").IntVal
+														clone.label = gopurs_runtime.RecordGet(orig, "label").StrVal()
+														return clone
+													}())), gopurs_runtime.Func(func(_dollar___unused_22 gopurs_runtime.Value) gopurs_runtime.Value {
+														return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Main_check("retained count version", "-7:alpha", Call_Main_consumeEntry(__local_var_2_2, func() struct {
+															count int64
+															label string
+														} {
+															orig := __local_var_20_13
+															_ = orig
+															clone := struct {
+																count int64
+																label string
+															}{}
+															clone.count = gopurs_runtime.RecordGet(orig, "count").IntVal
+															clone.label = gopurs_runtime.RecordGet(orig, "label").StrVal()
+															return clone
+														}())), gopurs_runtime.Func(func(_dollar___unused_23 gopurs_runtime.Value) gopurs_runtime.Value {
+															return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Main_check("retained label version", "-7:beta", Call_Main_consumeEntry(__local_var_2_2, func() struct {
+																count int64
+																label string
+															} {
+																orig := __local_var_21_14
+																_ = orig
+																clone := struct {
+																	count int64
+																	label string
+																}{}
+																clone.count = gopurs_runtime.RecordGet(orig, "count").IntVal
+																clone.label = gopurs_runtime.RecordGet(orig, "label").StrVal()
+																return clone
+															}())), gopurs_runtime.Func(func(_dollar___unused_24 gopurs_runtime.Value) gopurs_runtime.Value {
+																return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
+															}))
+														}))
+													})), gopurs_runtime.Value{})
+												})
+											}))
+										}))
+									}))
+								})), gopurs_runtime.Value{})
+							})
+						}))
+					})), gopurs_runtime.Value{})
+				})
+			})), gopurs_runtime.Value{})
 		})
 	})
 	return cache_Main_main
@@ -299,30 +313,10 @@ func Call_Main_check(label_0_loop string, expected_1_loop string, actual_2_loop 
 	_ = expected_1
 	var actual_2 string = actual_2_loop
 	_ = actual_2
-	return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-		// TAST (Let): __local_var_3_0 shape=App(Var) bindingType=Any
-		__local_var_3_0 := gopurs_runtime.Apply4(Get_Test_Assert_assertEqual_prime_(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1140313009_3790796878(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[string]](Get_Data_Eq_eqString())))}, gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1514099793_1386611502(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[string]](Get_Data_Show_showString())))}, gopurs_runtime.Str(""), gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Str(actual_2), gopurs_runtime.Str(expected_1)))
-		_ = __local_var_3_0
-		__local_var_4_1 := gopurs_runtime.Apply(__local_var_3_0, gopurs_runtime.Value{})
-		_ = __local_var_4_1
-		return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(((label_0)+(": "))+(actual_2))), gopurs_runtime.Value{})
-	})
-}
-
-func Rebox_Main_1140313009_3790796878(in *Constructor_Data_Eq_Eq[string]) *Constructor_Data_Eq_Eq[gopurs_runtime.Value] {
-	if in == nil {
-		return nil
-	}
-	out := &Constructor_Data_Eq_Eq[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
-}
-
-func Rebox_Main_1514099793_1386611502(in *Constructor_Data_Show_Show[string]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
-	if in == nil {
-		return nil
-	}
-	out := &Constructor_Data_Show_Show[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___4176622598("", struct {
+		actual   string
+		expected string
+	}{actual_2, expected_1}), gopurs_runtime.Func(func(_dollar___unused_3 gopurs_runtime.Value) gopurs_runtime.Value {
+		return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(((label_0)+(": "))+(actual_2)))
+	}))
 }

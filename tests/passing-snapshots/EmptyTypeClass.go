@@ -41,7 +41,7 @@ func Call_Main_head(_dollar___unused_0_loop gopurs_runtime.Value, v_1_loop []gop
 	_ = v_1
 	var __t0 gopurs_runtime.Value
 	{
-		if (gopurs_runtime.Int(int64(len(v_1))).IntVal) == (1) {
+		if (gopurs_runtime.Int(int64(len(v_1))).IntVal) == (int64(1)) {
 			__t0 = gopurs_runtime.ArrayAccess(gopurs_runtime.Array(v_1), 0)
 			goto end_branch_0
 		} else {

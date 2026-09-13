@@ -33,14 +33,14 @@ func Call_Main_what(v_0_loop bool) int64 {
 	var __t0 int64
 	{
 		if v_0 {
-			__t0 = 1
+			__t0 = int64(1)
 			goto end_branch_0
 		} else {
 
 		}
 	}
 	{
-		__t0 = 3
+		__t0 = int64(3)
 	}
 end_branch_0:
 	return __t0

@@ -41,7 +41,7 @@ func Get_Main_main() gopurs_runtime.Value {
 
 type Constructor_Main_One[T_a any] struct {
 	Rc uint32
-	V0 gopurs_runtime.Value
+	V0 T_a
 }
 
 func Call_Main_one_prime_(v_0_loop gopurs_runtime.Value) gopurs_runtime.Value {

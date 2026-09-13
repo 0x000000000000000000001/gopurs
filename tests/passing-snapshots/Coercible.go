@@ -11,7 +11,7 @@ var once_Main_coerce sync.Once
 
 func Get_Main_coerce() gopurs_runtime.Value {
 	once_Main_coerce.Do(func() {
-		cache_Main_coerce = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_coerce = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_coerce
 }
@@ -21,7 +21,7 @@ var once_Main_coerce1 sync.Once
 
 func Get_Main_coerce1() gopurs_runtime.Value {
 	once_Main_coerce1.Do(func() {
-		cache_Main_coerce1 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_coerce1 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_coerce1
 }
@@ -31,7 +31,7 @@ var once_Main_coerce2 sync.Once
 
 func Get_Main_coerce2() gopurs_runtime.Value {
 	once_Main_coerce2.Do(func() {
-		cache_Main_coerce2 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_coerce2 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_coerce2
 }
@@ -41,7 +41,7 @@ var once_Main_coerce3 sync.Once
 
 func Get_Main_coerce3() gopurs_runtime.Value {
 	once_Main_coerce3.Do(func() {
-		cache_Main_coerce3 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_coerce3 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_coerce3
 }
@@ -51,7 +51,7 @@ var once_Main_coerce4 sync.Once
 
 func Get_Main_coerce4() gopurs_runtime.Value {
 	once_Main_coerce4.Do(func() {
-		cache_Main_coerce4 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_coerce4 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_coerce4
 }
@@ -61,7 +61,7 @@ var once_Main_coerce5 sync.Once
 
 func Get_Main_coerce5() gopurs_runtime.Value {
 	once_Main_coerce5.Do(func() {
-		cache_Main_coerce5 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_coerce5 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_coerce5
 }
@@ -71,7 +71,7 @@ var once_Main_coerce6 sync.Once
 
 func Get_Main_coerce6() gopurs_runtime.Value {
 	once_Main_coerce6.Do(func() {
-		cache_Main_coerce6 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_coerce6 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_coerce6
 }
@@ -81,7 +81,7 @@ var once_Main_coerce7 sync.Once
 
 func Get_Main_coerce7() gopurs_runtime.Value {
 	once_Main_coerce7.Do(func() {
-		cache_Main_coerce7 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_coerce7 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_coerce7
 }
@@ -91,7 +91,7 @@ var once_Main_coerce8 sync.Once
 
 func Get_Main_coerce8() gopurs_runtime.Value {
 	once_Main_coerce8.Do(func() {
-		cache_Main_coerce8 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_coerce8 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_coerce8
 }
@@ -101,7 +101,7 @@ var once_Main_coerce9 sync.Once
 
 func Get_Main_coerce9() gopurs_runtime.Value {
 	once_Main_coerce9.Do(func() {
-		cache_Main_coerce9 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_coerce9 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_coerce9
 }
@@ -111,7 +111,7 @@ var once_Main_coerce10 sync.Once
 
 func Get_Main_coerce10() gopurs_runtime.Value {
 	once_Main_coerce10.Do(func() {
-		cache_Main_coerce10 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_coerce10 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_coerce10
 }
@@ -121,7 +121,7 @@ var once_Main_coerce11 sync.Once
 
 func Get_Main_coerce11() gopurs_runtime.Value {
 	once_Main_coerce11.Do(func() {
-		cache_Main_coerce11 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_coerce11 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_coerce11
 }
@@ -131,7 +131,7 @@ var once_Main_coerce12 sync.Once
 
 func Get_Main_coerce12() gopurs_runtime.Value {
 	once_Main_coerce12.Do(func() {
-		cache_Main_coerce12 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_coerce12 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_coerce12
 }
@@ -141,7 +141,7 @@ var once_Main_coerce13 sync.Once
 
 func Get_Main_coerce13() gopurs_runtime.Value {
 	once_Main_coerce13.Do(func() {
-		cache_Main_coerce13 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_coerce13 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_coerce13
 }
@@ -151,7 +151,7 @@ var once_Main_coerce14 sync.Once
 
 func Get_Main_coerce14() gopurs_runtime.Value {
 	once_Main_coerce14.Do(func() {
-		cache_Main_coerce14 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_coerce14 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_coerce14
 }
@@ -161,7 +161,7 @@ var once_Main_coerce15 sync.Once
 
 func Get_Main_coerce15() gopurs_runtime.Value {
 	once_Main_coerce15.Do(func() {
-		cache_Main_coerce15 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_coerce15 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_coerce15
 }
@@ -171,19 +171,9 @@ var once_Main_coerce16 sync.Once
 
 func Get_Main_coerce16() gopurs_runtime.Value {
 	once_Main_coerce16.Do(func() {
-		cache_Main_coerce16 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_coerce16 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_coerce16
-}
-
-var cache_Main_coerce17 gopurs_runtime.Value
-var once_Main_coerce17 sync.Once
-
-func Get_Main_coerce17() gopurs_runtime.Value {
-	once_Main_coerce17.Do(func() {
-		cache_Main_coerce17 = Get_Unsafe_Coerce_unsafeCoerce()
-	})
-	return cache_Main_coerce17
 }
 
 var cache_Main_Unary_dollar_Dict gopurs_runtime.Value
@@ -192,7 +182,15 @@ var once_Main_Unary_dollar_Dict sync.Once
 func Get_Main_Unary_dollar_Dict() gopurs_runtime.Value {
 	once_Main_Unary_dollar_Dict.Do(func() {
 		cache_Main_Unary_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_Unary_dollar_Dict(x_0_box)
+			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_Unary_dollar_Dict(func() struct {
+			} {
+				orig := x_0_box
+				_ = orig
+				clone := struct {
+				}{}
+
+				return clone
+			}())), UnsafePtr: nil}
 		})
 	})
 	return cache_Main_Unary_dollar_Dict
@@ -370,7 +368,7 @@ var once_Main_NTString2 sync.Once
 func Get_Main_NTString2() gopurs_runtime.Value {
 	once_Main_NTString2.Do(func() {
 		cache_Main_NTString2 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_NTString2(x_0_box)
+			return gopurs_runtime.Str(Call_Main_NTString2(x_0_box.StrVal()))
 		})
 	})
 	return cache_Main_NTString2
@@ -394,7 +392,7 @@ var once_Main_NTInt1 sync.Once
 func Get_Main_NTInt1() gopurs_runtime.Value {
 	once_Main_NTInt1.Do(func() {
 		cache_Main_NTInt1 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_NTInt1(x_0_box)
+			return gopurs_runtime.Int(Call_Main_NTInt1(x_0_box.IntVal))
 		})
 	})
 	return cache_Main_NTInt1
@@ -619,7 +617,7 @@ var once_Main_unwrapRec4 sync.Once
 
 func Get_Main_unwrapRec4() gopurs_runtime.Value {
 	once_Main_unwrapRec4.Do(func() {
-		cache_Main_unwrapRec4 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_unwrapRec4 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_unwrapRec4
 }
@@ -629,7 +627,7 @@ var once_Main_underD sync.Once
 
 func Get_Main_underD() gopurs_runtime.Value {
 	once_Main_underD.Do(func() {
-		cache_Main_underD = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_underD = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_underD
 }
@@ -747,7 +745,7 @@ var once_Main_stringToNt1 sync.Once
 
 func Get_Main_stringToNt1() gopurs_runtime.Value {
 	once_Main_stringToNt1.Do(func() {
-		cache_Main_stringToNt1 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_stringToNt1 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_stringToNt1
 }
@@ -757,7 +755,7 @@ var once_Main_roles1ToSecond sync.Once
 
 func Get_Main_roles1ToSecond() gopurs_runtime.Value {
 	once_Main_roles1ToSecond.Do(func() {
-		cache_Main_roles1ToSecond = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_roles1ToSecond = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_roles1ToSecond
 }
@@ -767,7 +765,7 @@ var once_Main_refl sync.Once
 
 func Get_Main_refl() gopurs_runtime.Value {
 	once_Main_refl.Do(func() {
-		cache_Main_refl = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_refl = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_refl
 }
@@ -801,7 +799,7 @@ var once_Main_rec8ToRec8 sync.Once
 
 func Get_Main_rec8ToRec8() gopurs_runtime.Value {
 	once_Main_rec8ToRec8.Do(func() {
-		cache_Main_rec8ToRec8 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_rec8ToRec8 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_rec8ToRec8
 }
@@ -811,7 +809,7 @@ var once_Main_rec7ToRec7 sync.Once
 
 func Get_Main_rec7ToRec7() gopurs_runtime.Value {
 	once_Main_rec7ToRec7.Do(func() {
-		cache_Main_rec7ToRec7 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_rec7ToRec7 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_rec7ToRec7
 }
@@ -821,7 +819,7 @@ var once_Main_rec6ToRec6 sync.Once
 
 func Get_Main_rec6ToRec6() gopurs_runtime.Value {
 	once_Main_rec6ToRec6.Do(func() {
-		cache_Main_rec6ToRec6 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_rec6ToRec6 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_rec6ToRec6
 }
@@ -831,7 +829,7 @@ var once_Main_rec3ToRec3 sync.Once
 
 func Get_Main_rec3ToRec3() gopurs_runtime.Value {
 	once_Main_rec3ToRec3.Do(func() {
-		cache_Main_rec3ToRec3 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_rec3ToRec3 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_rec3ToRec3
 }
@@ -841,7 +839,7 @@ var once_Main_rec2ToRec2 sync.Once
 
 func Get_Main_rec2ToRec2() gopurs_runtime.Value {
 	once_Main_rec2ToRec2.Do(func() {
-		cache_Main_rec2ToRec2 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_rec2ToRec2 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_rec2ToRec2
 }
@@ -851,7 +849,7 @@ var once_Main_rec1ToRec1 sync.Once
 
 func Get_Main_rec1ToRec1() gopurs_runtime.Value {
 	once_Main_rec1ToRec1.Do(func() {
-		cache_Main_rec1ToRec1 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_rec1ToRec1 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_rec1ToRec1
 }
@@ -861,7 +859,7 @@ var once_Main_rankN4ToRankN4 sync.Once
 
 func Get_Main_rankN4ToRankN4() gopurs_runtime.Value {
 	once_Main_rankN4ToRankN4.Do(func() {
-		cache_Main_rankN4ToRankN4 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_rankN4ToRankN4 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_rankN4ToRankN4
 }
@@ -871,7 +869,7 @@ var once_Main_rankN3ToRankN3 sync.Once
 
 func Get_Main_rankN3ToRankN3() gopurs_runtime.Value {
 	once_Main_rankN3ToRankN3.Do(func() {
-		cache_Main_rankN3ToRankN3 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_rankN3ToRankN3 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_rankN3ToRankN3
 }
@@ -881,7 +879,7 @@ var once_Main_rankN2ToRankN2 sync.Once
 
 func Get_Main_rankN2ToRankN2() gopurs_runtime.Value {
 	once_Main_rankN2ToRankN2.Do(func() {
-		cache_Main_rankN2ToRankN2 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_rankN2ToRankN2 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_rankN2ToRankN2
 }
@@ -891,7 +889,7 @@ var once_Main_rankN1ToRankN1 sync.Once
 
 func Get_Main_rankN1ToRankN1() gopurs_runtime.Value {
 	once_Main_rankN1ToRankN1.Do(func() {
-		cache_Main_rankN1ToRankN1 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_rankN1ToRankN1 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_rankN1ToRankN1
 }
@@ -901,7 +899,7 @@ var once_Main_phantom1TypeToPhantom1Symbol sync.Once
 
 func Get_Main_phantom1TypeToPhantom1Symbol() gopurs_runtime.Value {
 	once_Main_phantom1TypeToPhantom1Symbol.Do(func() {
-		cache_Main_phantom1TypeToPhantom1Symbol = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_phantom1TypeToPhantom1Symbol = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_phantom1TypeToPhantom1Symbol
 }
@@ -911,7 +909,7 @@ var once_Main_phantom1ToId12 sync.Once
 
 func Get_Main_phantom1ToId12() gopurs_runtime.Value {
 	once_Main_phantom1ToId12.Do(func() {
-		cache_Main_phantom1ToId12 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_phantom1ToId12 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_phantom1ToId12
 }
@@ -921,7 +919,7 @@ var once_Main_ntdToNTD sync.Once
 
 func Get_Main_ntdToNTD() gopurs_runtime.Value {
 	once_Main_ntdToNTD.Do(func() {
-		cache_Main_ntdToNTD = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_ntdToNTD = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_ntdToNTD
 }
@@ -931,7 +929,7 @@ var once_Main_ntFn1ToNTFn2 sync.Once
 
 func Get_Main_ntFn1ToNTFn2() gopurs_runtime.Value {
 	once_Main_ntFn1ToNTFn2.Do(func() {
-		cache_Main_ntFn1ToNTFn2 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_ntFn1ToNTFn2 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_ntFn1ToNTFn2
 }
@@ -941,7 +939,7 @@ var once_Main_nt2ToNT1 sync.Once
 
 func Get_Main_nt2ToNT1() gopurs_runtime.Value {
 	once_Main_nt2ToNT1.Do(func() {
-		cache_Main_nt2ToNT1 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_nt2ToNT1 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_nt2ToNT1
 }
@@ -951,7 +949,7 @@ var once_Main_nt1ToString sync.Once
 
 func Get_Main_nt1ToString() gopurs_runtime.Value {
 	once_Main_nt1ToString.Do(func() {
-		cache_Main_nt1ToString = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_nt1ToString = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_nt1ToString
 }
@@ -961,7 +959,7 @@ var once_Main_nested sync.Once
 
 func Get_Main_nested() gopurs_runtime.Value {
 	once_Main_nested.Do(func() {
-		cache_Main_nested = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_nested = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_nested
 }
@@ -971,7 +969,7 @@ var once_Main_mutuallyRecursiveRepresentational sync.Once
 
 func Get_Main_mutuallyRecursiveRepresentational() gopurs_runtime.Value {
 	once_Main_mutuallyRecursiveRepresentational.Do(func() {
-		cache_Main_mutuallyRecursiveRepresentational = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_mutuallyRecursiveRepresentational = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_mutuallyRecursiveRepresentational
 }
@@ -981,7 +979,7 @@ var once_Main_mutuallyRecursivePhantom sync.Once
 
 func Get_Main_mutuallyRecursivePhantom() gopurs_runtime.Value {
 	once_Main_mutuallyRecursivePhantom.Do(func() {
-		cache_Main_mutuallyRecursivePhantom = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_mutuallyRecursivePhantom = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_mutuallyRecursivePhantom
 }
@@ -1003,7 +1001,7 @@ var once_Main_mapStringToMapString sync.Once
 
 func Get_Main_mapStringToMapString() gopurs_runtime.Value {
 	once_Main_mapStringToMapString.Do(func() {
-		cache_Main_mapStringToMapString = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_mapStringToMapString = Call_Main_mapToMap(gopurs_runtime.Value{})
 	})
 	return cache_Main_mapStringToMapString
 }
@@ -1023,7 +1021,7 @@ var once_Main_libReExportedCtorToId2 sync.Once
 
 func Get_Main_libReExportedCtorToId2() gopurs_runtime.Value {
 	once_Main_libReExportedCtorToId2.Do(func() {
-		cache_Main_libReExportedCtorToId2 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_libReExportedCtorToId2 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_libReExportedCtorToId2
 }
@@ -1045,7 +1043,7 @@ var once_Main_libExposedCtorToId2 sync.Once
 
 func Get_Main_libExposedCtorToId2() gopurs_runtime.Value {
 	once_Main_libExposedCtorToId2.Do(func() {
-		cache_Main_libExposedCtorToId2 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_libExposedCtorToId2 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_libExposedCtorToId2
 }
@@ -1055,7 +1053,7 @@ var once_Main_id2NTToId1Nt sync.Once
 
 func Get_Main_id2NTToId1Nt() gopurs_runtime.Value {
 	once_Main_id2NTToId1Nt.Do(func() {
-		cache_Main_id2NTToId1Nt = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_id2NTToId1Nt = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_id2NTToId1Nt
 }
@@ -1065,7 +1063,7 @@ var once_Main_id2NTToId1Int sync.Once
 
 func Get_Main_id2NTToId1Int() gopurs_runtime.Value {
 	once_Main_id2NTToId1Int.Do(func() {
-		cache_Main_id2NTToId1Int = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_id2NTToId1Int = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_id2NTToId1Int
 }
@@ -1075,7 +1073,7 @@ var once_Main_id2IntToId1Int sync.Once
 
 func Get_Main_id2IntToId1Int() gopurs_runtime.Value {
 	once_Main_id2IntToId1Int.Do(func() {
-		cache_Main_id2IntToId1Int = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_id2IntToId1Int = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_id2IntToId1Int
 }
@@ -1085,7 +1083,7 @@ var once_Main_id1ToId2 sync.Once
 
 func Get_Main_id1ToId2() gopurs_runtime.Value {
 	once_Main_id1ToId2.Do(func() {
-		cache_Main_id1ToId2 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_id1ToId2 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_id1ToId2
 }
@@ -1095,7 +1093,7 @@ var once_Main_id1IntToInt sync.Once
 
 func Get_Main_id1IntToInt() gopurs_runtime.Value {
 	once_Main_id1IntToInt.Do(func() {
-		cache_Main_id1IntToInt = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_id1IntToInt = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_id1IntToInt
 }
@@ -1105,7 +1103,7 @@ var once_Main_id12ToId21 sync.Once
 
 func Get_Main_id12ToId21() gopurs_runtime.Value {
 	once_Main_id12ToId21.Do(func() {
-		cache_Main_id12ToId21 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_id12ToId21 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_id12ToId21
 }
@@ -1151,7 +1149,7 @@ var once_Main_foreign2ToForeign2 sync.Once
 
 func Get_Main_foreign2ToForeign2() gopurs_runtime.Value {
 	once_Main_foreign2ToForeign2.Do(func() {
-		cache_Main_foreign2ToForeign2 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_foreign2ToForeign2 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_foreign2ToForeign2
 }
@@ -1161,7 +1159,7 @@ var once_Main_foreign1ToForeign1 sync.Once
 
 func Get_Main_foreign1ToForeign1() gopurs_runtime.Value {
 	once_Main_foreign1ToForeign1.Do(func() {
-		cache_Main_foreign1ToForeign1 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_foreign1ToForeign1 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_foreign1ToForeign1
 }
@@ -1171,7 +1169,7 @@ var once_Main_dToNTD sync.Once
 
 func Get_Main_dToNTD() gopurs_runtime.Value {
 	once_Main_dToNTD.Do(func() {
-		cache_Main_dToNTD = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_dToNTD = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_dToNTD
 }
@@ -1181,7 +1179,7 @@ var once_Main_constrained1ToConstrained1 sync.Once
 
 func Get_Main_constrained1ToConstrained1() gopurs_runtime.Value {
 	once_Main_constrained1ToConstrained1.Do(func() {
-		cache_Main_constrained1ToConstrained1 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_constrained1ToConstrained1 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_constrained1ToConstrained1
 }
@@ -1191,7 +1189,7 @@ var once_Main_arr1ToArr1Phantom sync.Once
 
 func Get_Main_arr1ToArr1Phantom() gopurs_runtime.Value {
 	once_Main_arr1ToArr1Phantom.Do(func() {
-		cache_Main_arr1ToArr1Phantom = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_arr1ToArr1Phantom = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_arr1ToArr1Phantom
 }
@@ -1201,7 +1199,7 @@ var once_Main_arr1ToArr1 sync.Once
 
 func Get_Main_arr1ToArr1() gopurs_runtime.Value {
 	once_Main_arr1ToArr1.Do(func() {
-		cache_Main_arr1ToArr1 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_arr1ToArr1 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_arr1ToArr1
 }
@@ -1211,7 +1209,7 @@ var once_Main_apRec4ToApRec5 sync.Once
 
 func Get_Main_apRec4ToApRec5() gopurs_runtime.Value {
 	once_Main_apRec4ToApRec5.Do(func() {
-		cache_Main_apRec4ToApRec5 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_apRec4ToApRec5 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_apRec4ToApRec5
 }
@@ -1221,7 +1219,7 @@ var once_Main_apPolykind sync.Once
 
 func Get_Main_apPolykind() gopurs_runtime.Value {
 	once_Main_apPolykind.Do(func() {
-		cache_Main_apPolykind = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_apPolykind = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_apPolykind
 }
@@ -1231,7 +1229,7 @@ var once_Main_apId1ToApId2 sync.Once
 
 func Get_Main_apId1ToApId2() gopurs_runtime.Value {
 	once_Main_apId1ToApId2.Do(func() {
-		cache_Main_apId1ToApId2 = Get_Unsafe_Coerce_unsafeCoerce()
+		cache_Main_apId1ToApId2 = Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 	})
 	return cache_Main_apId1ToApId2
 }
@@ -1250,28 +1248,28 @@ func Get_Main_apId1ToApId1() gopurs_runtime.Value {
 
 type Constructor_Main_RoleNotReserved[T_role any] struct {
 	Rc uint32
-	V0 gopurs_runtime.Value
+	V0 T_role
 }
 
 type Constructor_Main_Rec3[T_a any] struct {
 	Rc uint32
-	V0 *struct {
+	V0 struct {
 	}
 }
 
 type Constructor_Main_Rec2[T_a any, T_b any] struct {
 	Rc uint32
-	V0 *struct {
-		f gopurs_runtime.Value
+	V0 struct {
+		f T_a
 		g int64
-		h gopurs_runtime.Value
+		h T_b
 	}
 }
 
 type Constructor_Main_Rec1[T_a any] struct {
 	Rc uint32
-	V0 *struct {
-		f gopurs_runtime.Value
+	V0 struct {
+		f T_a
 	}
 }
 
@@ -1296,19 +1294,19 @@ type Constructor_Main_Phantom[T_a any] struct {
 
 type Constructor_Main_MyMap[T_k any, T_v any] struct {
 	Rc uint32
-	V0 gopurs_runtime.Value
-	V1 gopurs_runtime.Value
+	V0 T_k
+	V1 T_v
 }
 
 type Constructor_Main_MutuallyRecursiveRepresentational1[T_a any] struct {
 	Rc uint32
-	V0 gopurs_runtime.Value
+	V0 T_a
 	V1 gopurs_runtime.Value
 }
 
 type Constructor_Main_MutuallyRecursiveRepresentational2[T_a any] struct {
 	Rc uint32
-	V0 *Constructor_Main_MutuallyRecursiveRepresentational1[gopurs_runtime.Value]
+	V0 *Constructor_Main_MutuallyRecursiveRepresentational1[T_a]
 }
 
 type Constructor_Main_MutuallyRecursivePhantom1[T_a any] struct {
@@ -1323,12 +1321,12 @@ type Constructor_Main_MutuallyRecursivePhantom2[T_a any] struct {
 
 type Constructor_Main_D[T_a any, T_b any] struct {
 	Rc uint32
-	V0 gopurs_runtime.Value
+	V0 T_a
 }
 
 type Constructor_Main_Constrained2[T_a any] struct {
 	Rc uint32
-	V0 gopurs_runtime.Value
+	V0 T_a
 	V1 gopurs_runtime.Value
 }
 
@@ -1349,7 +1347,7 @@ type Constructor_Main_Unary[T_a any] struct {
 
 func init() {
 	gopurs_runtime.StructGetters[2271101711] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_Unary[any])(ptr)
+		c := (*Constructor_Main_Unary[gopurs_runtime.Value])(ptr)
 		_ = c
 		switch key {
 
@@ -1359,10 +1357,16 @@ func init() {
 	}
 }
 
-func Call_Main_Unary_dollar_Dict(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var x_0 gopurs_runtime.Value = x_0_loop
+func Call_Main_Unary_dollar_Dict(x_0_loop struct {
+}) uint32 {
+	var x_0 struct {
+	} = x_0_loop
 	_ = x_0
-	return x_0
+	return uint32(func() gopurs_runtime.Value {
+		orig := x_0
+		_ = orig
+		return gopurs_runtime.RecordDict0()
+	}().IntVal)
 }
 
 func Call_Main_RecursiveRepresentational(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
@@ -1401,8 +1405,8 @@ func Call_Main_Roles1(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	return x_0
 }
 
-func Call_Main_NTString2(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var x_0 gopurs_runtime.Value = x_0_loop
+func Call_Main_NTString2(x_0_loop string) string {
+	var x_0 string = x_0_loop
 	_ = x_0
 	return x_0
 }
@@ -1413,8 +1417,8 @@ func Call_Main_NTString1(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	return x_0
 }
 
-func Call_Main_NTInt1(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var x_0 gopurs_runtime.Value = x_0_loop
+func Call_Main_NTInt1(x_0_loop int64) int64 {
+	var x_0 int64 = x_0_loop
 	_ = x_0
 	return x_0
 }
@@ -1468,7 +1472,7 @@ func Call_Main_transSymm(_dollar___unused_0_loop gopurs_runtime.Value, _dollar__
 	_ = _dollar___unused_1
 	var v_2 uint32 = v_2_loop
 	_ = v_2
-	return Get_Unsafe_Coerce_unsafeCoerce()
+	return Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 }
 
 func Call_Main_trans_prime__prime_(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___unused_1_loop gopurs_runtime.Value, _dollar___unused_2_loop gopurs_runtime.Value, v_3_loop uint32, v1_4_loop uint32) gopurs_runtime.Value {
@@ -1482,7 +1486,7 @@ func Call_Main_trans_prime__prime_(_dollar___unused_0_loop gopurs_runtime.Value,
 	_ = v_3
 	var v1_4 uint32 = v1_4_loop
 	_ = v1_4
-	return Get_Unsafe_Coerce_unsafeCoerce()
+	return Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 }
 
 func Call_Main_trans_prime_(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___unused_1_loop gopurs_runtime.Value, v_2_loop uint32) gopurs_runtime.Value {
@@ -1492,7 +1496,7 @@ func Call_Main_trans_prime_(_dollar___unused_0_loop gopurs_runtime.Value, _dolla
 	_ = _dollar___unused_1
 	var v_2 uint32 = v_2_loop
 	_ = v_2
-	return Get_Unsafe_Coerce_unsafeCoerce()
+	return Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 }
 
 func Call_Main_trans(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___unused_1_loop gopurs_runtime.Value, v_2_loop uint32) gopurs_runtime.Value {
@@ -1502,19 +1506,19 @@ func Call_Main_trans(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___unu
 	_ = _dollar___unused_1
 	var v_2 uint32 = v_2_loop
 	_ = v_2
-	return Get_Unsafe_Coerce_unsafeCoerce()
+	return Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 }
 
 func Call_Main_toNT1Array(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
-	return Get_Unsafe_Coerce_unsafeCoerce()
+	return Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 }
 
 func Call_Main_toNT1(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
-	return Get_Unsafe_Coerce_unsafeCoerce()
+	return Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 }
 
 func Call_Main_testRolesNotReserved(nominal_0_loop string, representational_1_loop string, phantom_2_loop string) string {
@@ -1536,31 +1540,31 @@ func Call_Main_testRoleNotReserved(role_0_loop string) string {
 func Call_Main_symm(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
-	return Get_Unsafe_Coerce_unsafeCoerce()
+	return Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 }
 
 func Call_Main_recursiveRepresentational(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
-	return Get_Unsafe_Coerce_unsafeCoerce()
+	return Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 }
 
 func Call_Main_rec8ToRec8_prime_(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
-	return Get_Unsafe_Coerce_unsafeCoerce()
+	return Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 }
 
 func Call_Main_mapToMap(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
-	return Get_Unsafe_Coerce_unsafeCoerce()
+	return Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 }
 
 func Call_Main_libHiddenCtorRepresentational(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
-	return Get_Unsafe_Coerce_unsafeCoerce()
+	return Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 }
 
 func Call_Main_givenCanonicalSameTyVarEq(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___unused_1_loop gopurs_runtime.Value, v_2_loop uint32) gopurs_runtime.Value {
@@ -1570,7 +1574,7 @@ func Call_Main_givenCanonicalSameTyVarEq(_dollar___unused_0_loop gopurs_runtime.
 	_ = _dollar___unused_1
 	var v_2 uint32 = v_2_loop
 	_ = v_2
-	return Get_Unsafe_Coerce_unsafeCoerce()
+	return Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 }
 
 func Call_Main_givenCanonicalDiffTyVarEq2(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___unused_1_loop gopurs_runtime.Value, v_2_loop uint32) gopurs_runtime.Value {
@@ -1580,7 +1584,7 @@ func Call_Main_givenCanonicalDiffTyVarEq2(_dollar___unused_0_loop gopurs_runtime
 	_ = _dollar___unused_1
 	var v_2 uint32 = v_2_loop
 	_ = v_2
-	return Get_Unsafe_Coerce_unsafeCoerce()
+	return Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 }
 
 func Call_Main_givenCanonicalDiffTyVarEq1(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___unused_1_loop gopurs_runtime.Value) gopurs_runtime.Value {
@@ -1588,11 +1592,11 @@ func Call_Main_givenCanonicalDiffTyVarEq1(_dollar___unused_0_loop gopurs_runtime
 	_ = _dollar___unused_0
 	var _dollar___unused_1 gopurs_runtime.Value = _dollar___unused_1_loop
 	_ = _dollar___unused_1
-	return Get_Unsafe_Coerce_unsafeCoerce()
+	return Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 }
 
 func Call_Main_apId1ToApId1(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
-	return Get_Unsafe_Coerce_unsafeCoerce()
+	return Call_Safe_Coerce_coerce(gopurs_runtime.Value{})
 }

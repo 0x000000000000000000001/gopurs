@@ -30,5 +30,5 @@ func Get_Main_go_prime_() gopurs_runtime.Value {
 func Call_Main_go_prime_(dictX_0_loop *Constructor_Lib_X[gopurs_runtime.Value]) gopurs_runtime.Value {
 	var dictX_0 *Constructor_Lib_X[gopurs_runtime.Value] = dictX_0_loop
 	_ = dictX_0
-	return gopurs_runtime.Box(dictX_0.V0)
+	return Call_Lib_go__go(dictX_0)
 }

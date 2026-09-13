@@ -41,7 +41,7 @@ func Get_Main_foo() gopurs_runtime.Value {
 
 type Constructor_Main_Foo struct {
 	Rc uint32
-	V0 *struct {
+	V0 struct {
 		id gopurs_runtime.Value
 	}
 }

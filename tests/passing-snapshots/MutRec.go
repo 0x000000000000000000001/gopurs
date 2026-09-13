@@ -131,7 +131,7 @@ func Call_Main_f(v_0_loop float64) float64 {
 		}
 	}
 	{
-		__t0 = (Call_Main_f((v_0) / (0.0))) + (0.0)
+		__t0 = (Call_Main_g(v_0)) + (0.0)
 	}
 end_branch_0:
 	return __t0
@@ -157,14 +157,14 @@ func Call_Main_evenToNumber(v_0_loop *Constructor_Main_Even) float64 {
 	}
 	{
 		if v_0 != nil {
-			__t0 = (Call_Main_evenToNumber(gopurs_runtime.CoerceToStruct[Constructor_Main_Even]((v_0).V0))) + (0.0)
+			__t0 = (Call_Main_oddToNumber((v_0).V0)) + (0.0)
 			goto end_branch_0
 		} else {
 
 		}
 	}
 	{
-		__t0 = func() gopurs_runtime.Value { panic("Failed pattern match") }().FloatVal()
+		__t0 = func() float64 { panic("Failed pattern match") }()
 	}
 end_branch_0:
 	return __t0

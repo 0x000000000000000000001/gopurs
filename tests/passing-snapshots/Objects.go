@@ -10,7 +10,13 @@ var once_Main_typed sync.Once
 
 func Get_Main_typed() gopurs_runtime.Value {
 	once_Main_typed.Do(func() {
-		cache_Main_typed = gopurs_runtime.RecordDict1("foo", gopurs_runtime.Float(0.0))
+		cache_Main_typed = func() gopurs_runtime.Value {
+			orig := struct {
+				foo float64
+			}{0.0}
+			_ = orig
+			return gopurs_runtime.RecordDict1("foo", gopurs_runtime.Float(orig.foo))
+		}()
 	})
 	return cache_Main_typed
 }
@@ -74,7 +80,13 @@ var once_Main_test4 sync.Once
 
 func Get_Main_test4() gopurs_runtime.Value {
 	once_Main_test4.Do(func() {
-		cache_Main_test4 = gopurs_runtime.Float(1.0)
+		cache_Main_test4 = gopurs_runtime.Float(Call_Main_test2(func() gopurs_runtime.Value {
+			orig := struct {
+				_bang__at__hash_ float64
+			}{1.0}
+			_ = orig
+			return gopurs_runtime.RecordDict1("!@#", gopurs_runtime.Float(orig._bang__at__hash_))
+		}()).FloatVal())
 	})
 	return cache_Main_test4
 }
@@ -127,7 +139,11 @@ var once_Main_go__append sync.Once
 func Get_Main_go__append() gopurs_runtime.Value {
 	once_Main_go__append.Do(func() {
 		cache_Main_go__append = gopurs_runtime.Func(func(o_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_go__append(o_0_box)
+			return func() gopurs_runtime.Value {
+				orig := Call_Main_go__append(o_0_box)
+				_ = orig
+				return gopurs_runtime.RecordDict2("bar", "foo", gopurs_runtime.Float(orig.bar), orig.foo)
+			}()
 		})
 	})
 	return cache_Main_go__append
@@ -138,7 +154,31 @@ var once_Main_apTest sync.Once
 
 func Get_Main_apTest() gopurs_runtime.Value {
 	once_Main_apTest.Do(func() {
-		cache_Main_apTest = gopurs_runtime.RecordDict2("bar", "foo", gopurs_runtime.Float(1.0), gopurs_runtime.Str("Foo"))
+		cache_Main_apTest = func() gopurs_runtime.Value {
+			orig := func() struct {
+				bar float64
+				foo string
+			} {
+				orig := gopurs_runtime.Apply(Get_Main_go__append(), func() gopurs_runtime.Value {
+					orig := struct {
+						baz string
+						foo string
+					}{"Baz", "Foo"}
+					_ = orig
+					return gopurs_runtime.RecordDict2("baz", "foo", gopurs_runtime.Str(orig.baz), gopurs_runtime.Str(orig.foo))
+				}())
+				_ = orig
+				clone := struct {
+					bar float64
+					foo string
+				}{}
+				clone.bar = gopurs_runtime.RecordGet(orig, "bar").FloatVal()
+				clone.foo = gopurs_runtime.RecordGet(orig, "foo").StrVal()
+				return clone
+			}()
+			_ = orig
+			return gopurs_runtime.RecordDict2("bar", "foo", gopurs_runtime.Float(orig.bar), gopurs_runtime.Str(orig.foo))
+		}()
 	})
 	return cache_Main_apTest
 }
@@ -161,8 +201,14 @@ func Call_Main_test(x_0_loop gopurs_runtime.Value) float64 {
 	return ((gopurs_runtime.RecordGet(x_0, "foo").FloatVal()) + (gopurs_runtime.RecordGet(x_0, "bar").FloatVal())) + (1.0)
 }
 
-func Call_Main_go__append(o_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
+func Call_Main_go__append(o_0_loop gopurs_runtime.Value) struct {
+	bar float64
+	foo gopurs_runtime.Value
+} {
 	var o_0 gopurs_runtime.Value = o_0_loop
 	_ = o_0
-	return gopurs_runtime.RecordDict2("bar", "foo", gopurs_runtime.Float(1.0), gopurs_runtime.RecordGet(o_0, "foo"))
+	return struct {
+		bar float64
+		foo gopurs_runtime.Value
+	}{1.0, gopurs_runtime.RecordGet(o_0, "foo")}
 }

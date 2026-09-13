@@ -20,7 +20,12 @@ var once_Main_clr sync.Once
 
 func Get_Main_clr() gopurs_runtime.Value {
 	once_Main_clr.Do(func() {
-		cache_Main_clr = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(gopurs_runtime.RecordDict0().IntVal)), UnsafePtr: nil}
+		cache_Main_clr = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+			orig := struct {
+			}{}
+			_ = orig
+			return gopurs_runtime.RecordDict0()
+		}().IntVal)), UnsafePtr: nil}
 	})
 	return cache_Main_clr
 }

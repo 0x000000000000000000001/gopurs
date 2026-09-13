@@ -87,11 +87,11 @@ func Call_Main_unLBox(g_0_loop gopurs_runtime.Value, v_1_loop gopurs_runtime.Val
 	_ = g_0
 	var v_1 gopurs_runtime.Value = v_1_loop
 	_ = v_1
-	// TAST (Let): g2__193435443_2_0 shape=App(Other) bindingType=Any
-	g2__193435443_2_0 := gopurs_runtime.Apply(g_0, gopurs_runtime.Value{})
-	_ = g2__193435443_2_0
+	// TAST (Let): g2_2_0 shape=App(Other) bindingType=(ConstrainedType (Func [(TypeApp (ADT ["Type","Proxy","Proxy"] []) [(TypeVar lbl$scope1)])] (TypeVar r$scope7)))
+	g2_2_0 := gopurs_runtime.Apply(g_0, gopurs_runtime.Value{})
+	_ = g2_2_0
 	return gopurs_runtime.Apply(v_1, gopurs_runtime.Func2(func(_dollar___unused_3 gopurs_runtime.Value, dictIsSymbol_4 gopurs_runtime.Value) gopurs_runtime.Value {
-		return gopurs_runtime.Apply(g2__193435443_2_0, dictIsSymbol_4)
+		return gopurs_runtime.Apply(g2_2_0, dictIsSymbol_4)
 	}))
 }
 

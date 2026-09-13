@@ -46,22 +46,23 @@ var once_Main_test sync.Once
 func Get_Main_test() gopurs_runtime.Value {
 	once_Main_test.Do(func() {
 		cache_Main_test = gopurs_runtime.Func(func(m_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_test(m_0_box)
+			return Call_Main_test(func() struct {
+				bind       gopurs_runtime.Value
+				go__return gopurs_runtime.Value
+			} {
+				orig := m_0_box
+				_ = orig
+				clone := struct {
+					bind       gopurs_runtime.Value
+					go__return gopurs_runtime.Value
+				}{}
+				clone.bind = gopurs_runtime.RecordGet(orig, "bind")
+				clone.go__return = gopurs_runtime.RecordGet(orig, "return")
+				return clone
+			}())
 		})
 	})
 	return cache_Main_test
-}
-
-var cache_Main_test__1633551430 gopurs_runtime.Value
-var once_Main_test__1633551430 sync.Once
-
-func Get_Main_test__1633551430() gopurs_runtime.Value {
-	once_Main_test__1633551430.Do(func() {
-		cache_Main_test__1633551430 = gopurs_runtime.Func(func(m_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_test__1633551430(m_0_box)
-		})
-	})
-	return cache_Main_test__1633551430
 }
 
 var cache_Main_maybe gopurs_runtime.Value
@@ -69,69 +70,43 @@ var once_Main_maybe sync.Once
 
 func Get_Main_maybe() gopurs_runtime.Value {
 	once_Main_maybe.Do(func() {
-		cache_Main_maybe = gopurs_runtime.RecordDict2("bind", "return", gopurs_runtime.Func(func(ma_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Func(func(f_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				var __t0 *Constructor_Main_Just[gopurs_runtime.Value]
+		cache_Main_maybe = func() gopurs_runtime.Value {
+			orig := struct {
+				bind       gopurs_runtime.Value
+				go__return gopurs_runtime.Value
+			}{gopurs_runtime.Func2(func(ma_0 gopurs_runtime.Value, f_1 gopurs_runtime.Value) gopurs_runtime.Value {
+				var __t2 *Constructor_Main_Just[gopurs_runtime.Value]
 				{
-					if ma_0.Type == 9 && ma_0.IntVal == 3271839782 && ma_0.UnsafePtr == nil {
-						__t0 = (*Constructor_Main_Just[gopurs_runtime.Value])(nil)
-						goto end_branch_0
+					var __t_tag_0 *Constructor_Main_Just[gopurs_runtime.Value] = gopurs_runtime.CoerceToStruct[Constructor_Main_Just[gopurs_runtime.Value]](ma_0)
+					_ = __t_tag_0
+					if __t_tag_0 == nil {
+						__t2 = (*Constructor_Main_Just[gopurs_runtime.Value])(nil)
+						goto end_branch_2
 					} else {
 
 					}
 				}
 				{
-					if ma_0.Type == 9 && ma_0.IntVal == 3271839782 && ma_0.UnsafePtr != nil {
-						__t0 = gopurs_runtime.CoerceToStruct[Constructor_Main_Just[gopurs_runtime.Value]](gopurs_runtime.Apply(f_1, (*Constructor_Main_Just[gopurs_runtime.Value])(ma_0.UnsafePtr).V0))
-						goto end_branch_0
+					var __t_tag_1 *Constructor_Main_Just[gopurs_runtime.Value] = gopurs_runtime.CoerceToStruct[Constructor_Main_Just[gopurs_runtime.Value]](ma_0)
+					_ = __t_tag_1
+					if __t_tag_1 != nil {
+						__t2 = gopurs_runtime.CoerceToStruct[Constructor_Main_Just[gopurs_runtime.Value]](gopurs_runtime.Apply(f_1, (*Constructor_Main_Just[gopurs_runtime.Value])(ma_0.UnsafePtr).V0))
+						goto end_branch_2
 					} else {
 
 					}
 				}
 				{
-					__t0 = gopurs_runtime.CoerceToStruct[Constructor_Main_Just[gopurs_runtime.Value]](func() gopurs_runtime.Value { panic("Failed pattern match") }())
+					__t2 = func() *Constructor_Main_Just[gopurs_runtime.Value] { panic("Failed pattern match") }()
 				}
-			end_branch_0:
-				return gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer(__t0)}
-			})
-		}), Get_Main_Just())
+			end_branch_2:
+				return gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer(__t2)}
+			}), Get_Main_Just()}
+			_ = orig
+			return gopurs_runtime.RecordDict2("bind", "return", orig.bind, orig.go__return)
+		}()
 	})
 	return cache_Main_maybe
-}
-
-var cache_Main_maybe__2826186755 gopurs_runtime.Value
-var once_Main_maybe__2826186755 sync.Once
-
-func Get_Main_maybe__2826186755() gopurs_runtime.Value {
-	once_Main_maybe__2826186755.Do(func() {
-		cache_Main_maybe__2826186755 = gopurs_runtime.RecordDict2("bind", "return", gopurs_runtime.Func(func(ma_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Func(func(f_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				var __t0 *Constructor_Main_Just[gopurs_runtime.Value]
-				{
-					if ma_0.Type == 9 && ma_0.IntVal == 3271839782 && ma_0.UnsafePtr == nil {
-						__t0 = (*Constructor_Main_Just[gopurs_runtime.Value])(nil)
-						goto end_branch_0
-					} else {
-
-					}
-				}
-				{
-					if ma_0.Type == 9 && ma_0.IntVal == 3271839782 && ma_0.UnsafePtr != nil {
-						__t0 = gopurs_runtime.CoerceToStruct[Constructor_Main_Just[gopurs_runtime.Value]](gopurs_runtime.Apply(f_1, (*Constructor_Main_Just[gopurs_runtime.Value])(ma_0.UnsafePtr).V0))
-						goto end_branch_0
-					} else {
-
-					}
-				}
-				{
-					__t0 = gopurs_runtime.CoerceToStruct[Constructor_Main_Just[gopurs_runtime.Value]](func() gopurs_runtime.Value { panic("Failed pattern match") }())
-				}
-			end_branch_0:
-				return gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer(__t0)}
-			})
-		}), Get_Main_Just())
-	})
-	return cache_Main_maybe__2826186755
 }
 
 var cache_Main_test2 gopurs_runtime.Value
@@ -159,27 +134,18 @@ var once_Main_id sync.Once
 
 func Get_Main_id() gopurs_runtime.Value {
 	once_Main_id.Do(func() {
-		cache_Main_id = gopurs_runtime.RecordDict2("bind", "return", gopurs_runtime.Func(func(ma_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Func(func(f_1 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_id = func() gopurs_runtime.Value {
+			orig := struct {
+				bind       gopurs_runtime.Value
+				go__return gopurs_runtime.Value
+			}{gopurs_runtime.Func2(func(ma_0 gopurs_runtime.Value, f_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Apply(f_1, ma_0)
-			})
-		}), Get_Main_Id())
+			}), Get_Main_Id()}
+			_ = orig
+			return gopurs_runtime.RecordDict2("bind", "return", orig.bind, orig.go__return)
+		}()
 	})
 	return cache_Main_id
-}
-
-var cache_Main_id__2356412419 gopurs_runtime.Value
-var once_Main_id__2356412419 sync.Once
-
-func Get_Main_id__2356412419() gopurs_runtime.Value {
-	once_Main_id__2356412419.Do(func() {
-		cache_Main_id__2356412419 = gopurs_runtime.RecordDict2("bind", "return", gopurs_runtime.Func(func(ma_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Func(func(f_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Apply(f_1, ma_0)
-			})
-		}), Get_Main_Id())
-	})
-	return cache_Main_id__2356412419
 }
 
 var cache_Main_test1 gopurs_runtime.Value
@@ -198,30 +164,26 @@ type Constructor_Main_Nothing[T_a any] struct {
 
 type Constructor_Main_Just[T_a any] struct {
 	Rc uint32
-	V0 gopurs_runtime.Value
+	V0 T_a
 }
 
 type Constructor_Main_Id[T_a any] struct {
 	Rc uint32
-	V0 gopurs_runtime.Value
+	V0 T_a
 }
 
-func Call_Main_test(m_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var m_0 gopurs_runtime.Value = m_0_loop
+func Call_Main_test(m_0_loop struct {
+	bind       gopurs_runtime.Value
+	go__return gopurs_runtime.Value
+}) gopurs_runtime.Value {
+	var m_0 struct {
+		bind       gopurs_runtime.Value
+		go__return gopurs_runtime.Value
+	} = m_0_loop
 	_ = m_0
-	return gopurs_runtime.Apply2(gopurs_runtime.RecordGet(m_0, "bind"), gopurs_runtime.Apply(gopurs_runtime.RecordGet(m_0, "return"), gopurs_runtime.Float(1.0)), gopurs_runtime.Func(func(n1_1 gopurs_runtime.Value) gopurs_runtime.Value {
-		return gopurs_runtime.Apply2(gopurs_runtime.RecordGet(m_0, "bind"), gopurs_runtime.Apply(gopurs_runtime.RecordGet(m_0, "return"), gopurs_runtime.Str("Test")), gopurs_runtime.Func(func(n2_2 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Apply(gopurs_runtime.RecordGet(m_0, "return"), gopurs_runtime.Float(n1_1.FloatVal()))
-		}))
-	}))
-}
-
-func Call_Main_test__1633551430(m_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var m_0 gopurs_runtime.Value = m_0_loop
-	_ = m_0
-	return gopurs_runtime.Apply2(gopurs_runtime.RecordGet(m_0, "bind"), gopurs_runtime.Apply(gopurs_runtime.RecordGet(m_0, "return"), gopurs_runtime.Float(1.0)), gopurs_runtime.Func(func(n1_1 gopurs_runtime.Value) gopurs_runtime.Value {
-		return gopurs_runtime.Apply2(gopurs_runtime.RecordGet(m_0, "bind"), gopurs_runtime.Apply(gopurs_runtime.RecordGet(m_0, "return"), gopurs_runtime.Str("Test")), gopurs_runtime.Func(func(n2_2 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Apply(gopurs_runtime.RecordGet(m_0, "return"), gopurs_runtime.Float(n1_1.FloatVal()))
+	return gopurs_runtime.Apply2(m_0.bind, gopurs_runtime.Apply(m_0.go__return, gopurs_runtime.Float(1.0)), gopurs_runtime.Func(func(n1_1 gopurs_runtime.Value) gopurs_runtime.Value {
+		return gopurs_runtime.Apply2(m_0.bind, gopurs_runtime.Apply(m_0.go__return, gopurs_runtime.Str("Test")), gopurs_runtime.Func(func(n2_2 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Apply(m_0.go__return, gopurs_runtime.Float(n1_1.FloatVal()))
 		}))
 	}))
 }

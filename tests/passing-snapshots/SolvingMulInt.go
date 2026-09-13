@@ -42,7 +42,7 @@ var once_Main_a_prime_ sync.Once
 
 func Get_Main_a_prime_() gopurs_runtime.Value {
 	once_Main_a_prime_.Do(func() {
-		cache_Main_a_prime_ = gopurs_runtime.Value{Type: 9, IntVal: int64(227768594), UnsafePtr: nil}
+		cache_Main_a_prime_ = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_a(gopurs_runtime.Value{}).IntVal)), UnsafePtr: nil}
 	})
 	return cache_Main_a_prime_
 }

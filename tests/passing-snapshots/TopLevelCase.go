@@ -21,7 +21,7 @@ var once_Main_parseTest sync.Once
 func Get_Main_parseTest() gopurs_runtime.Value {
 	once_Main_parseTest.Do(func() {
 		cache_Main_parseTest = gopurs_runtime.Func3(func(dictPartial_0_box gopurs_runtime.Value, v_1_box gopurs_runtime.Value, v1_2_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_parseTest(dictPartial_0_box, v_1_box, v1_2_box)
+			return gopurs_runtime.Float(Call_Main_parseTest(dictPartial_0_box, uint32(v_1_box.IntVal), v1_2_box.FloatVal()))
 		})
 	})
 	return cache_Main_parseTest
@@ -79,16 +79,16 @@ type Constructor_Main_A struct {
 	Rc uint32
 }
 
-func Call_Main_parseTest(dictPartial_0_loop gopurs_runtime.Value, v_1_loop gopurs_runtime.Value, v1_2_loop gopurs_runtime.Value) gopurs_runtime.Value {
+func Call_Main_parseTest(dictPartial_0_loop gopurs_runtime.Value, v_1_loop uint32, v1_2_loop float64) float64 {
 	var dictPartial_0 gopurs_runtime.Value = dictPartial_0_loop
 	_ = dictPartial_0
-	var v_1 gopurs_runtime.Value = v_1_loop
+	var v_1 uint32 = v_1_loop
 	_ = v_1
-	var v1_2 gopurs_runtime.Value = v1_2_loop
+	var v1_2 float64 = v1_2_loop
 	_ = v1_2
 	var __t0 float64
 	{
-		if (v1_2.FloatVal()) == (0.0) {
+		if (v1_2) == (0.0) {
 			__t0 = 0.0
 			goto end_branch_0
 		} else {
@@ -96,10 +96,10 @@ func Call_Main_parseTest(dictPartial_0_loop gopurs_runtime.Value, v_1_loop gopur
 		}
 	}
 	{
-		__t0 = func() gopurs_runtime.Value { panic("Failed pattern match") }().FloatVal()
+		__t0 = func() float64 { panic("Failed pattern match") }()
 	}
 end_branch_0:
-	return gopurs_runtime.Float(__t0)
+	return __t0
 }
 
 func Call_Main_guardsTest(v_0_loop []float64) []float64 {
@@ -108,27 +108,21 @@ func Call_Main_guardsTest(v_0_loop []float64) []float64 {
 	var __t2 []float64
 	{
 		var __t_and_1 bool = false
-		if (gopurs_runtime.Int(int64(len(v_0))).IntVal) == (1) {
+		if (gopurs_runtime.Int(int64(len(v_0))).IntVal) == (int64(1)) {
 
-			var __t_tag_0 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordNumberImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, gopurs_runtime.Float(gopurs_runtime.ArrayAccess(func() gopurs_runtime.Value {
+			var __t_tag_0 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordNumberImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, gopurs_runtime.ArrayAccess(func() gopurs_runtime.Value {
 				arr := v_0
 				boxed := make([]gopurs_runtime.Value, len(arr))
 				for i, v := range arr {
 					boxed[i] = gopurs_runtime.Float(v)
 				}
 				return gopurs_runtime.Array(boxed)
-			}(), 0).FloatVal()), gopurs_runtime.Float(0.0))
+			}(), 0), gopurs_runtime.Float(0.0))
+			_ = __t_tag_0
 			__t_and_1 = (uint32(__t_tag_0.IntVal) == 380165415)
 		}
 		if __t_and_1 {
-			__t2 = func() []float64 {
-				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array([]gopurs_runtime.Value{}).UnsafePtr)
-				unboxed := make([]float64, len(arr))
-				for i, v := range arr {
-					unboxed[i] = v.FloatVal()
-				}
-				return unboxed
-			}()
+			__t2 = []float64{}
 			goto end_branch_2
 		} else {
 
@@ -170,11 +164,12 @@ gcd:
 		}
 		{
 			var __t_tag_0 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordNumberImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, gopurs_runtime.Float(v_0), gopurs_runtime.Float(v1_1))
+			_ = __t_tag_0
 			if uint32(__t_tag_0.IntVal) == 380165415 {
 				v_0_loop = 0.0
 				v1_1_loop = v1_1
 				continue gcd
-				__t1 = gopurs_runtime.Value{}.FloatVal()
+				__t1 = func() float64 { panic("unreachable") }()
 				goto end_branch_1
 			} else {
 
@@ -184,7 +179,7 @@ gcd:
 			v_0_loop = 0.0
 			v1_1_loop = v_0
 			continue gcd
-			__t1 = gopurs_runtime.Value{}.FloatVal()
+			__t1 = func() float64 { panic("unreachable") }()
 		}
 	end_branch_1:
 		return __t1

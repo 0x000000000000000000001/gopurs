@@ -66,5 +66,11 @@ func Call_Main_foo(s_0_loop string) string {
 func Call_Main_f(g_0_loop gopurs_runtime.Value) string {
 	var g_0 gopurs_runtime.Value = g_0_loop
 	_ = g_0
-	return gopurs_runtime.RecordGet(gopurs_runtime.Apply(g_0, gopurs_runtime.RecordDict1("x", gopurs_runtime.Str("Hello"))), "x").StrVal()
+	return gopurs_runtime.RecordGet(gopurs_runtime.Apply(g_0, func() gopurs_runtime.Value {
+		orig := struct {
+			x string
+		}{"Hello"}
+		_ = orig
+		return gopurs_runtime.RecordDict1("x", gopurs_runtime.Str(orig.x))
+	}()), "x").StrVal()
 }
