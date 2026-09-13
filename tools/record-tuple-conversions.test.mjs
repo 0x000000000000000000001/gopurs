@@ -4,7 +4,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
-import { empty as emptyMap, insert } from '../output/Data.Map/index.js';
+import { empty as emptyMap, insert, lookup } from '../output/Data.Map/index.js';
 import { Just, Nothing } from '../output/Data.Maybe/index.js';
 import { ordString } from '../output/Data.Ord/index.js';
 import { empty as emptySet, toUnfoldable } from '../output/Data.Set/index.js';
@@ -12,10 +12,10 @@ import { Tuple } from '../output/Data.Tuple/index.js';
 import { unfoldableArray } from '../output/Data.Unfoldable/index.js';
 import * as Ref from '../output/Effect.Ref/index.js';
 import * as Go from '../output/Gopurs.GoAst/index.js';
-import { coerceGoExpr, generateReboxFunctions, unboxGoExpr } from '../output/Gopurs.GoConversions/index.js';
+import { boxGoExpr, coerceGoExpr, generateReboxFunctions, unboxGoExpr } from '../output/Gopurs.GoConversions/index.js';
 import { exprTypeToGoType, exprTypeToGenericGoType } from '../output/Gopurs.GoTypes/index.js';
 import { printGoExpr } from '../output/Gopurs.Printer/index.js';
-import { coerceLiteralField, getProp } from '../output/Gopurs.RecordExprs/index.js';
+import { coerceLiteralField, getProp, prepareLiteral } from '../output/Gopurs.RecordExprs/index.js';
 import { runtimeGoCode } from '../output/Gopurs.Runtime/index.js';
 import * as Core from '../output/PureScript.Backend.Optimizer.CoreFn/index.js';
 import { hashString } from '../output/PureScript.Backend.Optimizer.FfiSupport/index.js';
@@ -39,6 +39,66 @@ for (const [name, convert] of [['ordinary', goType], ['generic', genericGoType]]
         ]));
     });
 }
+
+test('duplicate row labels preserve the first field through native access and boxing', t => {
+    const ref = Ref.new({ pointerAdtPaths: emptyMap, enumAdts: emptySet, elidedCtors: emptySet })();
+    const cases = [
+        { name: 'string', first: Core.String.value, second: Core.Int.value, input: 'gopurs_runtime.Str("left")', read: 'StrVal()', format: '%s', expected: 'left' },
+        { name: 'int', first: Core.Int.value, second: Core.String.value, input: 'gopurs_runtime.Int(2)', read: 'IntVal', format: '%d', expected: '2' },
+    ];
+    const blocks = [];
+    const expected = [];
+    for (const [mode, convert] of [['ordinary', goType], ['generic', genericGoType]]) {
+        for (const fixture of cases) {
+            const row = new Core.Record(new Core.Row([
+                new Tuple('z', Core.Boolean.value), new Tuple('y', fixture.first),
+                new Tuple('x', Core.Int.value), new Tuple('y', fixture.second),
+            ], Nothing.value));
+            const type = convert(row);
+            const native = unboxGoExpr(ref)('Test')(new Go.GoVar('input'))(Go.TypeValue.value)(type);
+            const boxed = boxGoExpr(ref)('Test')(new Go.GoVar('native'))(type);
+            const field = getProp(ref)('Test')('y')({ expr: new Go.GoVar('native'), exprType: type });
+            const fieldValue = boxGoExpr(ref)('Test')(field.expr)(field.exprType);
+            blocks.push(`{
+    input := gopurs_runtime.RecordDict3("x", "y", "z", gopurs_runtime.Int(1), ${fixture.input}, gopurs_runtime.Bool(true))
+    native := ${printGoExpr(native)}
+    boxed := ${printGoExpr(boxed)}
+    field := ${printGoExpr(fieldValue)}
+    fmt.Printf("${mode}/${fixture.name} %d ${fixture.format} %t ${fixture.format}\\n",
+        gopurs_runtime.RecordGet(boxed, "x").IntVal, gopurs_runtime.RecordGet(boxed, "y").${fixture.read},
+        gopurs_runtime.RecordGet(boxed, "z").IntVal != 0, field.${fixture.read})
+}`);
+            expected.push(`${mode}/${fixture.name} 1 ${fixture.expected} true ${fixture.expected}`);
+        }
+    }
+    const directory = mkdtempSync(join(tmpdir(), 'gopurs-duplicate-row-'));
+    t.after(() => rmSync(directory, { recursive: true, force: true }));
+    mkdirSync(join(directory, 'gopurs_runtime'));
+    writeFileSync(join(directory, 'go.mod'), 'module gopurs/output\n\ngo 1.22\n');
+    writeFileSync(join(directory, 'gopurs_runtime/runtime.go'), runtimeGoCode);
+    writeFileSync(join(directory, 'main.go'), `package main
+import ("fmt"; "gopurs/output/gopurs_runtime")
+func main() { ${blocks.join('\n')} }
+`);
+    const result = spawnSync('go', ['run', '.'], {
+        cwd: directory, encoding: 'utf8', timeout: 30_000,
+        env: { ...process.env, GOWORK: 'off' },
+    });
+    assert.ifError(result.error);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout, expected.join('\n') + '\n');
+});
+
+test('record literals use the first duplicate label for field typing, including open rows', () => {
+    const ref = Ref.new({ pointerAdtPaths: emptyMap, enumAdts: emptySet, elidedCtors: emptySet })();
+    for (const tail of [Nothing.value, new Just(new Core.TypeVar('r'))]) {
+        const row = new Core.Record(new Core.Row([
+            new Tuple('y', Core.String.value), new Tuple('y', Core.Int.value),
+        ], tail));
+        const literal = prepareLiteral(ref)('Test')(row)(Nothing.value);
+        assert.deepEqual(lookup(ordString)('y')(literal.fields), new Just(Core.String.value));
+    }
+});
 
 test('boxed record literals box their native scalar and array fields', () => {
     const ref = Ref.new({ reboxPairs: emptySet })();

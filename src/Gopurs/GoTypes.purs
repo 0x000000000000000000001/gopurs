@@ -1,5 +1,6 @@
 module Gopurs.GoTypes
   ( isClosedRowTail
+  , visibleRecordFields
   , printExprType
   , exprTypeToGoType
   , exprTypeToGenericGoType
@@ -52,6 +53,11 @@ isClosedRowTail :: Maybe ExprType -> Boolean
 isClosedRowTail Nothing = true
 isClosedRowTail _ = false
 
+-- Row.Union can retain duplicate labels in the TAST. Only the first
+-- occurrence is visible in the runtime record, including its field type.
+visibleRecordFields :: forall a. Array (Tuple String a) -> Array (Tuple String a)
+visibleRecordFields = Array.nubBy (comparing \(Tuple label _) -> label)
+
 -- TAST annotations and ADT metadata select the internal Go representation.
 -- FFI wrappers separately reconcile it with the declared foreign Go signature.
 exprTypeToGoType :: Map.Map String { ctorName :: String, arity :: Int } -> Set.Set String -> Set.Set String -> String -> ExprType -> GoType
@@ -61,7 +67,7 @@ exprTypeToGoType _ _ _ _ String = TypeString
 exprTypeToGoType _ _ _ _ Char = TypeString
 exprTypeToGoType _ _ _ _ Boolean = TypeBool
 exprTypeToGoType ptrPaths enumAdts elided modNameStr (Array ty) = TypeNativeArray (exprTypeToGoType ptrPaths enumAdts elided modNameStr ty)
-exprTypeToGoType ptrPaths enumAdts elided modNameStr (Record (Row fields tail)) | isClosedRowTail tail = TypeRecord (map (\(Tuple k v) -> Tuple k (exprTypeToGoType ptrPaths enumAdts elided modNameStr v)) (Array.sortBy (comparing \(Tuple k _) -> k) fields))
+exprTypeToGoType ptrPaths enumAdts elided modNameStr (Record (Row fields tail)) | isClosedRowTail tail = TypeRecord (map (\(Tuple k v) -> Tuple k (exprTypeToGoType ptrPaths enumAdts elided modNameStr v)) (Array.sortBy (comparing \(Tuple k _) -> k) (visibleRecordFields fields)))
 exprTypeToGoType ptrPaths enumAdts elided modNameStr (Record _) = TypeValue
 exprTypeToGoType ptrPaths enumAdts elided modNameStr (ADT fullName path args) =
   let
@@ -104,7 +110,7 @@ exprTypeToGoType _ _ _ _ _ = TypeValue
 -- Ordinary type variables fall back to Value. In a generic declaration,
 -- variables listed in typeVars can instead become Go type parameters.
 exprTypeToGenericGoType :: Map.Map String { ctorName :: String, arity :: Int } -> Set.Set String -> Set.Set String -> Array String -> String -> ExprType -> GoType
-exprTypeToGenericGoType ptrPaths enumAdts elidedCtors typeVars modNameStr (Record (Row fields tail)) | isClosedRowTail tail = TypeRecord (map (\(Tuple k v) -> Tuple k (exprTypeToGenericGoType ptrPaths enumAdts elidedCtors typeVars modNameStr v)) (Array.sortBy (comparing \(Tuple k _) -> k) fields))
+exprTypeToGenericGoType ptrPaths enumAdts elidedCtors typeVars modNameStr (Record (Row fields tail)) | isClosedRowTail tail = TypeRecord (map (\(Tuple k v) -> Tuple k (exprTypeToGenericGoType ptrPaths enumAdts elidedCtors typeVars modNameStr v)) (Array.sortBy (comparing \(Tuple k _) -> k) (visibleRecordFields fields)))
 exprTypeToGenericGoType _ _ _ _ _ (Record _) = TypeValue
 exprTypeToGenericGoType ptrPaths enumAdts elidedCtors typeVars modNameStr (TypeApp fn arg) =
   let

@@ -20,7 +20,7 @@ import Effect.Unsafe (unsafePerformEffect)
 import Gopurs.CodegenState (CodegenState)
 import Gopurs.GoAst (GoExpr(..), GoType(..), sanitizeName)
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr, unboxGoExpr)
-import Gopurs.GoTypes (exprTypeToGoType, instantiateGenericGoType, structFieldGoType)
+import Gopurs.GoTypes (exprTypeToGoType, instantiateGenericGoType, structFieldGoType, visibleRecordFields)
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..))
 
 type RecordExpr =
@@ -39,7 +39,7 @@ prepareLiteral codegenStateRef modNameStr baseExprType mbExpectedExprType =
       _ -> Nothing
     recordType = exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr exprType
     recordFields = case mbRecordType of
-      Just fields -> Map.fromFoldable fields
+      Just fields -> Map.fromFoldable (visibleRecordFields fields)
       Nothing -> Map.empty
   in
     { recordType, fields: recordFields }
