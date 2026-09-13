@@ -15,9 +15,10 @@ import * as Go from '../output/Gopurs.GoAst/index.js';
 import { coerceGoExpr, generateReboxFunctions, unboxGoExpr } from '../output/Gopurs.GoConversions/index.js';
 import { exprTypeToGoType, exprTypeToGenericGoType } from '../output/Gopurs.GoTypes/index.js';
 import { printGoExpr } from '../output/Gopurs.Printer/index.js';
-import { coerceLiteralField } from '../output/Gopurs.RecordExprs/index.js';
+import { coerceLiteralField, getProp } from '../output/Gopurs.RecordExprs/index.js';
 import { runtimeGoCode } from '../output/Gopurs.Runtime/index.js';
 import * as Core from '../output/PureScript.Backend.Optimizer.CoreFn/index.js';
+import { hashString } from '../output/PureScript.Backend.Optimizer.FfiSupport/index.js';
 
 const goType = exprTypeToGoType(emptyMap)(emptySet)(emptySet)('Test');
 const genericGoType = exprTypeToGenericGoType(emptyMap)(emptySet)(emptySet)([])('Test');
@@ -128,4 +129,99 @@ func main() {
     assert.ifError(result.error);
     assert.equal(result.status, 0, result.stderr);
     assert.equal(result.stdout, '4 9 true / 4 9 true');
+});
+
+test('generic class properties retain the tag and fields of native ADT values', t => {
+    const dateType = new Go.TypeStructPointer('Data_Fixture_Date', 'Fixture.Date', 'Constructor_Fixture_Date', []);
+    const boundedType = new Go.TypeStructPointer(
+        'Data_Fixture_Bounded', 'Fixture.Bounded', 'Constructor_Fixture_Bounded[*Constructor_Fixture_Date]', [dateType],
+    );
+    const ref = Ref.new({
+        reboxPairs: emptySet, pointerAdtPaths: emptyMap, enumAdts: emptySet, elidedCtors: emptySet,
+        classDeclsFields: insert(ordString)('Fixture.Bounded')({
+            vars: ['a'], fields: [{ name: 'bottom', type: new Core.TypeVar('a') }],
+        })(emptyMap),
+    })();
+    const property = getProp(ref)('Test')('bottom')({ expr: new Go.GoVar('dictionary'), exprType: boundedType });
+    const directory = mkdtempSync(join(tmpdir(), 'gopurs-class-adt-field-'));
+    t.after(() => rmSync(directory, { recursive: true, force: true }));
+    mkdirSync(join(directory, 'gopurs_runtime'));
+    writeFileSync(join(directory, 'go.mod'), 'module gopurs/output\n\ngo 1.22\n');
+    writeFileSync(join(directory, 'gopurs_runtime/runtime.go'), runtimeGoCode);
+    writeFileSync(join(directory, 'main.go'), `package main
+import (
+    "fmt"
+    "unsafe"
+    "gopurs/output/gopurs_runtime"
+)
+type Constructor_Fixture_Date struct { Rc uint32; Year int64; Month int64; Day int64 }
+type Constructor_Fixture_Bounded[A any] struct { Rc uint32; V0 A }
+func main() {
+    dictionary := &Constructor_Fixture_Bounded[*Constructor_Fixture_Date]{
+        Rc: 1, V0: &Constructor_Fixture_Date{Rc: 1, Year: 2026, Month: 9, Day: 13},
+    }
+    value := ${printGoExpr(property.expr)}
+    if value.Type != gopurs_runtime.TypeConstructor {
+        fmt.Printf("unexpected type %d", value.Type)
+        return
+    }
+    date := (*Constructor_Fixture_Date)(unsafe.Pointer(value.UnsafePtr))
+    fmt.Printf("%t %d %d %d", value.IntVal == ${hashString('Data_Fixture_Date')}, date.Year, date.Month, date.Day)
+}
+`);
+    const result = spawnSync('go', ['run', '.'], {
+        cwd: directory, encoding: 'utf8', timeout: 30_000,
+        env: { ...process.env, GOWORK: 'off' },
+    });
+    assert.ifError(result.error);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout, 'true 2026 9 13');
+});
+
+test('boxed record fields convert generic ADT payloads to their native layout', t => {
+    const ref = Ref.new({
+        reboxPairs: emptySet, pointerAdtPaths: emptyMap, enumAdts: emptySet,
+        elidedCtors: emptySet, classDeclsFields: emptyMap,
+        ctorTypes: insert(ordString)('Data_Tuple.Tuple')({
+            vars: ['a', 'b'], fields: [new Core.TypeVar('a'), new Core.TypeVar('b')],
+        })(emptyMap),
+    })();
+    const tuple = new Go.TypeStructPointer(
+        'Data_Data_Tuple_Tuple', 'Data.Tuple.Tuple', 'Constructor_Data_Tuple_Tuple[int64, int64]',
+        [Go.TypeInt64.value, Go.TypeInt64.value],
+    );
+    const recordType = new Go.TypeRecord([new Tuple('payload', tuple)]);
+    const expression = unboxGoExpr(ref)('Test')(new Go.GoVar('input'))(Go.TypeValue.value)(recordType);
+    const helpers = generateReboxFunctions(ref)('Test')();
+    const directory = mkdtempSync(join(tmpdir(), 'gopurs-record-adt-field-'));
+    t.after(() => rmSync(directory, { recursive: true, force: true }));
+    mkdirSync(join(directory, 'gopurs_runtime'));
+    writeFileSync(join(directory, 'go.mod'), 'module gopurs/output\n\ngo 1.22\n');
+    writeFileSync(join(directory, 'gopurs_runtime/runtime.go'), runtimeGoCode);
+    writeFileSync(join(directory, 'main.go'), `package main
+import (
+    "fmt"
+    "unsafe"
+    "gopurs/output/gopurs_runtime"
+)
+type Constructor_Data_Tuple_Tuple[A, B any] struct { Rc uint32; V0 A; V1 B }
+${helpers.join('\n')}
+func main() {
+    boxed := &Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{
+        Rc: 1, V0: gopurs_runtime.Int(4), V1: gopurs_runtime.Int(9),
+    }
+    input := gopurs_runtime.RecordDict1("payload", gopurs_runtime.Value{
+        Type: gopurs_runtime.TypeConstructor, UnsafePtr: unsafe.Pointer(boxed),
+    })
+    result := ${printGoExpr(expression)}
+    fmt.Printf("%d %d", result.payload.V0, result.payload.V1)
+}
+`);
+    const result = spawnSync('go', ['run', '.'], {
+        cwd: directory, encoding: 'utf8', timeout: 30_000,
+        env: { ...process.env, GOWORK: 'off' },
+    });
+    assert.ifError(result.error);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout, '4 9');
 });

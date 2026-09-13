@@ -20,7 +20,7 @@ import Effect.Unsafe (unsafePerformEffect)
 import Gopurs.CodegenState (CodegenState)
 import Gopurs.GoAst (GoExpr(..), GoType(..), sanitizeName)
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr, unboxGoExpr)
-import Gopurs.GoTypes (exprTypeToGoType)
+import Gopurs.GoTypes (exprTypeToGoType, instantiateGenericGoType, structFieldGoType)
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..))
 
 type RecordExpr =
@@ -66,18 +66,21 @@ getProp codegenStateRef modNameStr prop obj = case obj.exprType of
       fieldGoType = fromMaybe TypeValue (Map.lookup prop (Map.fromFoldable fields))
     in
       { expr: GoStructAccess obj.expr (sanitizeName prop), exprType: fieldGoType }
-  TypeStructPointer _ fullName _ _ ->
+  TypeStructPointer _ fullName _ typeArgs ->
     let
       h = unsafePerformEffect (Ref.read codegenStateRef)
     in
       case Map.lookup fullName h.classDeclsFields of
         Just info ->
-          case Array.findIndex (\f -> f.name == prop) info.fields of
-            Just idx ->
+          case Array.find (\(Tuple _ field) -> field.name == prop) (Array.mapWithIndex Tuple info.fields) of
+            Just (Tuple idx field) ->
               let
+                typeEnv = Map.fromFoldable (Array.zip info.vars typeArgs)
+                genericFieldType = structFieldGoType h.pointerAdtPaths h.enumAdts h.elidedCtors info.vars modNameStr field."type"
+                fieldGoType = instantiateGenericGoType typeEnv genericFieldType
                 unboxedObj = unboxGoExpr codegenStateRef modNameStr obj.expr obj.exprType obj.exprType
                 fieldExpr = GoStructAccess unboxedObj ("V" <> show idx)
-                boxedFieldExpr = GoCall (GoSelector (GoVar "gopurs_runtime") "Box") [ fieldExpr ]
+                boxedFieldExpr = boxGoExpr codegenStateRef modNameStr fieldExpr fieldGoType
               in
                 { expr: boxedFieldExpr, exprType: TypeValue }
             Nothing -> genericGetProp codegenStateRef modNameStr prop obj
