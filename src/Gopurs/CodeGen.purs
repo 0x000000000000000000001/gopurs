@@ -396,12 +396,11 @@ translate { enumAdts, enumCtors, pointerAdtPaths, pointerAdtNodes, pointerAdtLea
                     Nothing -> Array.replicate (Array.length args) TypeValue
                   fRetGo = case typeSig of
                     Just { fArgs, fRet } ->
-                      let
-                        ret = if Array.length args < Array.length fArgs then TypeValue else exprTypeToGoType pointerAdtPaths enumAdts elidedCtors modNameStr fRet
-                      in
+                      if Array.length args < Array.length fArgs then TypeValue
+                      else
                         case getUnboxedADT fRet of
                           Just (Tuple adtName adt) -> TypeStructValue adtName adt.signature
-                          Nothing -> ret
+                          Nothing -> exprTypeToGoType pointerAdtPaths enumAdts elidedCtors modNameStr fRet
                     Nothing -> TypeValue
                   fullName = "Call_" <> modNameStr <> "_" <> sanitizeName name
                 in
@@ -454,12 +453,14 @@ translate { enumAdts, enumCtors, pointerAdtPaths, pointerAdtNodes, pointerAdtLea
                                   newBound = foldl (\acc (Tuple idStr goType) -> Map.insert idStr { name: idStr, goType } acc) Map.empty paramsWithTypes
 
                                   isSelfRecursiveLoop = group.recursive && Array.length group.bindings == 1
-                                  fRet = case extractExprFuncType (getExprType fn.val) of
-                                    Just { fRet: rt } -> exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr rt
-                                    Nothing -> TypeValue
                                   mbExpectedRet = case extractExprFuncType (getExprType fn.val) of
-                                    Just { fRet: rt } -> Just rt
+                                    Just { fArgs, fRet: rt } -> Just case Array.drop (Array.length fn.args) fArgs of
+                                      [] -> rt
+                                      remaining -> Func remaining rt
                                     Nothing -> Nothing
+                                  fRet = case mbExpectedRet of
+                                    Just rt -> exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr rt
+                                    Nothing -> TypeValue
 
                                   currentLoopCtx :: LoopContext
                                   currentLoopCtx = if isSelfRecursiveLoop then [ { ident: fn.ident, params: map fst paramsWithTypes, loopParams: map (\p -> fst p <> "_loop") paramsWithTypes, goTypes: map snd paramsWithTypes, fRet } ] else []
@@ -488,7 +489,7 @@ translate { enumAdts, enumCtors, pointerAdtPaths, pointerAdtNodes, pointerAdtLea
                                           let callFuncDecl = "func Call_" <> modNameStr <> "_" <> goName <> "(" <> goParams <> ") " <> goTypeToStr expectedRetType <> " {\n" <> printGoExpr funcBody <> "\n}"
                                           Ref.modify_ (\r -> r { rawDecls = Array.snoc r.rawDecls callFuncDecl }) codegenStateRef
                                           let wrapperParams = map (\(Tuple p _) -> p <> "_box") paramsWithTypes
-                                          let callExpr = GoCall (GoVar ("Call_" <> modNameStr <> "_" <> goName)) (map (\(Tuple p goT) -> unboxGoExpr codegenStateRef modNameStr (GoVar (p <> "_box")) TypeValue goT) paramsWithTypes)
+                                          let callExpr = GoCall (GoVar ("Call_" <> modNameStr <> "_" <> goName)) (map (\(Tuple p goT) -> coerceGoExpr codegenStateRef modNameStr (GoVar (p <> "_box")) TypeValue goT) paramsWithTypes)
                                           let boxedRes = boxGoExpr codegenStateRef modNameStr callExpr expectedRetType
                                           let wrapperFunc = GoRaw ("func(" <> String.joinWith ", " (map (\p -> p <> " gopurs_runtime.Value") wrapperParams) <> ") gopurs_runtime.Value {\nreturn " <> printGoExpr boxedRes <> "\n}")
                                           let funcWrapperName = if arity == 1 then "gopurs_runtime.Func" else "gopurs_runtime.Func" <> show arity
@@ -499,7 +500,7 @@ translate { enumAdts, enumCtors, pointerAdtPaths, pointerAdtNodes, pointerAdtLea
                                         funcBody = if isSelfRecursiveLoop then GoFor goName bodyStmts else GoBlock bodyStmts
                                         iife = GoRaw ("func() gopurs_runtime.Value {\n" <> printGoExpr funcBody <> "\n}()")
                                       in
-                                        Array.foldr (\(Tuple p goT) acc -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> p <> "_box gopurs_runtime.Value) gopurs_runtime.Value {\nvar " <> p <> "_loop " <> goTypeToStr goT <> " = " <> printGoExpr (unboxGoExpr codegenStateRef modNameStr (GoVar (p <> "_box")) TypeValue goT) <> "\nreturn " <> printGoExpr acc <> "\n}") ]) iife paramsWithTypes
+                                        Array.foldr (\(Tuple p goT) acc -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> p <> "_box gopurs_runtime.Value) gopurs_runtime.Value {\nvar " <> p <> "_loop " <> goTypeToStr goT <> " = " <> printGoExpr (coerceGoExpr codegenStateRef modNameStr (GoVar (p <> "_box")) TypeValue goT) <> "\nreturn " <> printGoExpr acc <> "\n}") ]) iife paramsWithTypes
                                 in
                                   { identifier: modNameStr <> "_" <> goName, expression: funcExpr, goType: TypeValue }
                             )
@@ -913,12 +914,12 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                     modPkg = String.replaceAll (Pattern ".") (Replacement "_") modStr
                     rawCall = GoCall (GoVar ("Get_" <> modPkg <> "_" <> safeName)) []
                   in
-                    { stmts: StmtEmpty, expr: unboxGoExpr codegenStateRef modNameStr rawCall TypeValue vType, exprType: vType, nextId }
+                    { stmts: StmtEmpty, expr: coerceGoExpr codegenStateRef modNameStr rawCall TypeValue vType, exprType: vType, nextId }
                 Nothing ->
                   let
                     rawCall = Debug.trace ("mbMn is Nothing for safeName: " <> safeName) (\_ -> GoCall (GoVar ("Get_" <> modNameStr <> "_" <> safeName)) [])
                   in
-                    { stmts: StmtEmpty, expr: unboxGoExpr codegenStateRef modNameStr rawCall TypeValue vType, exprType: vType, nextId }
+                    { stmts: StmtEmpty, expr: coerceGoExpr codegenStateRef modNameStr rawCall TypeValue vType, exprType: vType, nextId }
 
           Local mbIdent lvl ->
             let
@@ -1849,7 +1850,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                     funcBody = GoBlock (initVars <> flattenStmts resBodyMut.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr resBodyMut.expr resBodyMut.exprType) ])
                     nativeAssignment = GoMutate ("Call_local_" <> modNameStr <> "_" <> name) (GoRaw ("func(" <> goParamsNative <> ") gopurs_runtime.Value {\n" <> printGoExpr funcBody <> "\n}"))
 
-                    nativeCallExpr = GoCall (GoVar ("Call_local_" <> modNameStr <> "_" <> name)) (map (\(Tuple p goT) -> unboxGoExpr codegenStateRef modNameStr (GoVar (p <> "_loop_val")) TypeValue goT) paramsWithTypes)
+                    nativeCallExpr = GoCall (GoVar ("Call_local_" <> modNameStr <> "_" <> name)) (map (\(Tuple p goT) -> coerceGoExpr codegenStateRef modNameStr (GoVar (p <> "_loop_val")) TypeValue goT) paramsWithTypes)
                     funcExpr = Array.foldr (\(Tuple p goT) acc -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> p <> "_loop_val gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr acc <> "\n}") ]) nativeCallExpr paramsWithTypes
 
                     newBound = Map.insert originalName { name, goType: TypeValue } bound
@@ -1867,7 +1868,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                       if actualGoType == resBinding.exprType then
                         StmtLeaf (GoAssign name resBinding.expr)
                       else
-                        StmtLeaf (GoRaw ("var " <> name <> " " <> goTypeToStr actualGoType <> " = " <> printGoExpr (unboxGoExpr codegenStateRef modNameStr resBinding.expr resBinding.exprType actualGoType)))
+                        StmtLeaf (GoRaw ("var " <> name <> " " <> goTypeToStr actualGoType <> " = " <> printGoExpr (coerceGoExpr codegenStateRef modNameStr resBinding.expr resBinding.exprType actualGoType)))
                   in
                     { stmts: resBinding.stmts <> StmtLeaf (GoRaw ("// TAST (Let): " <> name <> " shape=" <> printTcoExprShape binding <> " bindingType=" <> printExprType (getExprType binding))) <> letStmt <> resBody.stmts, expr: resBody.expr, exprType: resBody.exprType, nextId: resBody.nextId }
 
@@ -1984,7 +1985,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                             goParamsNative = String.joinWith ", " (map (\(Tuple p goT) -> p <> "_loop " <> goTypeToStr goT) paramsWithTypes)
                             nativeAssignment = GoMutate ("Call_local_" <> modNameStr <> "_" <> newName) (GoRaw ("func(" <> goParamsNative <> ") " <> goTypeToStr trueFRet <> " {\n" <> printGoExpr funcBody <> "\n}"))
 
-                            nativeCallExpr = GoCall (GoVar ("Call_local_" <> modNameStr <> "_" <> newName)) (map (\(Tuple p goT) -> unboxGoExpr codegenStateRef modNameStr (GoVar (p <> "_loop_val")) TypeValue goT) paramsWithTypes)
+                            nativeCallExpr = GoCall (GoVar ("Call_local_" <> modNameStr <> "_" <> newName)) (map (\(Tuple p goT) -> coerceGoExpr codegenStateRef modNameStr (GoVar (p <> "_loop_val")) TypeValue goT) paramsWithTypes)
                             funcExpr = Array.foldr (\(Tuple p goT) accExpr -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> p <> "_loop_val gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr accExpr <> "\n}") ]) (boxGoExpr codegenStateRef modNameStr nativeCallExpr trueFRet) paramsWithTypes
 
                             newFunctions = Map.insert newName { fullName: "Call_local_" <> modNameStr <> "_" <> newName, fArgs: map snd paramsWithTypes, fRet: trueFRet, arity: Array.length fn.args } acc.moduleFunctions
@@ -2112,7 +2113,10 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
           CtorDef _ _ (Ident name) fields ->
             let
               helpers = unsafePerformEffect (Ref.read codegenStateRef)
-              ctorType = getExprType tcoExpr
+              annotatedType = fromMaybe (getExprType tcoExpr) mbExpectedExprType
+              ctorType = case extractExprFuncType annotatedType of
+                Just { fRet } -> fRet
+                Nothing -> annotatedType
               expectedGoType = exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr ctorType
 
               trueModPart = case expectedGoType of
@@ -2148,7 +2152,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                   Just info -> info.vars
                   Nothing -> []
 
-              typeArgs = case getExprType tcoExpr of
+              typeArgs = case ctorType of
                 ADT fullName _ tArgs ->
                   let
                     mapped = map (exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr) tArgs
@@ -2162,7 +2166,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                     unwrapTypeApp (TypeApp f a) acc = unwrapTypeApp f (a <> acc)
                     unwrapTypeApp other acc = Tuple other acc
                   in
-                    case unwrapTypeApp (getExprType tcoExpr) [] of
+                    case unwrapTypeApp ctorType [] of
                       Tuple (ADT fnName _ tArgs) allArgs ->
                         let
                           mapped = map (exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr) (tArgs <> allArgs)
