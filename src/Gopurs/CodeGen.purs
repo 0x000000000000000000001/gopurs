@@ -62,12 +62,7 @@ type LocalBinding =
 -- which may have been renamed.
 type LocalEnv = Map String LocalBinding
 
-type FunctionInfo =
-  { fullName :: String
-  , fArgs :: Array GoType
-  , fRet :: GoType
-  , arity :: Int
-  }
+type FunctionInfo = State.FunctionInfo
 
 type ModuleFunctions = Map String FunctionInfo
 
@@ -307,7 +302,10 @@ generateReboxFunctions :: Ref CodegenState -> String -> Effect (Array String)
 generateReboxFunctions = GoConversions.generateReboxFunctions
 
 translate :: CodegenMetadata -> BackendModule -> String
-translate { enumAdts, enumCtors, pointerAdtPaths, pointerAdtNodes, pointerAdtLeaves, elidedCtors, ctorTypes, globalTypes, classDeclsFields } inputMod =
+translate metadata inputMod = (translateWithFunctions metadata inputMod).code
+
+translateWithFunctions :: CodegenMetadata -> BackendModule -> { code :: String, functions :: ModuleFunctions }
+translateWithFunctions { enumAdts, enumCtors, pointerAdtPaths, pointerAdtNodes, pointerAdtLeaves, elidedCtors, ctorTypes, globalTypes, globalFunctions, classDeclsFields } inputMod =
 
   let
     mod = optimizeThunkProducers inputMod
@@ -358,7 +356,7 @@ translate { enumAdts, enumCtors, pointerAdtPaths, pointerAdtNodes, pointerAdtLea
           mod.dataDecls
 
       -- Rebox requests belong to this invocation of translate.
-      Ref.new { decls: [], rawDecls: structDecls, elidedCtors, ctorTypes, pointerAdtPaths, pointerAdtNodes, pointerAdtLeaves, enumAdts, enumCtors, globalTypes, classDeclsFields, globalId: 0, reboxPairs: Set.empty }
+      Ref.new { decls: [], rawDecls: structDecls, elidedCtors, ctorTypes, pointerAdtPaths, pointerAdtNodes, pointerAdtLeaves, enumAdts, enumCtors, globalTypes, globalFunctions, classDeclsFields, globalId: 0, reboxPairs: Set.empty }
 
     Tuple _ tcoBindings = foldl
       ( \(Tuple env acc) group ->
@@ -392,7 +390,7 @@ translate { enumAdts, enumCtors, pointerAdtPaths, pointerAdtNodes, pointerAdtLea
                 let
                   typeSig = extractFuncType val
                   fArgsGo = case typeSig of
-                    Just { fArgs } -> map (exprTypeToGoType pointerAdtPaths enumAdts elidedCtors modNameStr) (Array.take (Array.length args) fArgs)
+                    Just { fArgs } -> map (exprTypeToGoType pointerAdtPaths enumAdts elidedCtors modNameStr) (Array.take (Array.length args) fArgs) <> Array.replicate (Array.length args - Array.length fArgs) TypeValue
                     Nothing -> Array.replicate (Array.length args) TypeValue
                   fRetGo = case typeSig of
                     Just { fArgs, fRet } ->
@@ -559,7 +557,16 @@ translate { enumAdts, enumCtors, pointerAdtPaths, pointerAdtNodes, pointerAdtLea
       , foreigns: map (\(Tuple (Ident name) type_) -> { pursName: modNameStr <> "_" <> sanitizeName name, goName: "_Gopurs_" <> modNameStr <> "_" <> capitalize (sanitizeName name), exprType: type_ }) (Map.toUnfoldable mod.foreign)
       }
   in
-    printGoFile goFile
+    { code: printGoFile goFile
+    , functions: Map.fromFoldable $ Array.concatMap
+        (\group -> Array.mapMaybe
+          (\(Tuple (Ident name) _) -> do
+            info <- Map.lookup (sanitizeName name) moduleFunctions
+            guard (info.arity >= 1 && info.arity <= 10)
+            pure (Tuple (unwrap mod.name <> "." <> name) info))
+          group.bindings)
+        tcoBindingsExpanded
+    }
 
 isEffectNode :: TcoExpr -> Boolean
 isEffectNode expr = case unwrapTcoExpr expr of
@@ -1099,19 +1106,10 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                           Just { mbMod, name } ->
                             let
                               isLocal = map (String.replaceAll (Pattern ".") (Replacement "_") <<< unwrap) mbMod == Just modNameStr || mbMod == Nothing
-                              modPrefix = case mbMod of
-                                Just mn -> String.replaceAll (Pattern ".") (Replacement "_") (unwrap mn)
-                                Nothing -> modNameStr
-                              fromModuleFunctions = if isLocal then Map.lookup name moduleFunctions else Nothing
-                              fromTypeSig = case extractFuncType flatFn of
-                                Just { fArgs, fRet } ->
-                                  Just { fullName: "Call_" <> modPrefix <> "_" <> sanitizeName name, fArgs: map (exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr) fArgs, fRet: exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr fRet, arity: Array.length fArgs }
-                                Nothing ->
-                                  Nothing
-
-                              entry = case fromTypeSig of
-                                Just e | not isLocal -> Just e
-                                _ -> fromModuleFunctions
+                              entry = if isLocal then Map.lookup name moduleFunctions
+                                else do
+                                  mn <- mbMod
+                                  Map.lookup (unwrap mn <> "." <> name) (unsafePerformEffect (Ref.read codegenStateRef)).globalFunctions
                             in
                               case entry of
                                 Just e ->

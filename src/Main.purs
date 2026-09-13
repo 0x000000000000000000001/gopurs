@@ -3,6 +3,7 @@ module Main where
 import Prelude
 
 import Effect (Effect)
+import Effect.Ref as Ref
 import Effect.Class (liftEffect)
 import Effect.Aff (Aff, launchAff_, attempt)
 import Node.FS.Aff as FS
@@ -24,7 +25,7 @@ import PureScript.Backend.Optimizer.Builder (buildModules)
 import PureScript.Backend.Optimizer.Convert (BackendModule)
 import PureScript.Backend.Optimizer.Semantics.Foreign (coreForeignSemantics)
 import PureScript.Backend.Optimizer.CoreFn (Module(..), Ann, Ident(..))
-import Gopurs.CodeGen (CodegenMetadata, CodegenMetadataRow, translate)
+import Gopurs.CodeGen (CodegenMetadata, CodegenMetadataRow, ModuleFunctions, translateWithFunctions)
 import Gopurs.AdtMetadata (buildPointerAdtMetadata, buildEnumAdtMetadata)
 import Gopurs.ClassMetadata (buildClassFields, addClassDataDeclarations)
 import Gopurs.ConstructorMetadata (buildConstructorTypes, collectElidedConstructors)
@@ -71,6 +72,7 @@ loadAndPrepareModules args = do
        , elidedCtors
        , ctorTypes
        , globalTypes
+       , globalFunctions: Map.empty
        , classDeclsFields
        , monomorphizedModules
        , pointerAdtPaths
@@ -81,7 +83,7 @@ loadAndPrepareModules args = do
        , targetMainModules
        }
 
-emitModule :: PreparedData -> Maybe String -> Module Ann -> BackendModule -> Aff Unit
+emitModule :: PreparedData -> Maybe String -> Module Ann -> BackendModule -> Aff ModuleFunctions
 emitModule prepared mbFfiDir (Module coreFnMod) backendMod = do
   let modNameStr = unwrap backendMod.name
   let safeModName = String.replaceAll (Pattern ".") (Replacement "_") modNameStr
@@ -96,11 +98,12 @@ emitModule prepared mbFfiDir (Module coreFnMod) backendMod = do
       , elidedCtors: prepared.elidedCtors
       , ctorTypes: prepared.ctorTypes
       , globalTypes: prepared.globalTypes
+      , globalFunctions: prepared.globalFunctions
       , classDeclsFields: prepared.classDeclsFields
       }
 
-  let goFile = translate metadata backendMod
-  FS.writeTextFile UTF8 ("output/purescript/" <> safeModName <> ".go") goFile
+  let translated = translateWithFunctions metadata backendMod
+  FS.writeTextFile UTF8 ("output/purescript/" <> safeModName <> ".go") translated.code
 
   when (Array.length (Array.fromFoldable backendMod.foreign) > 0) do
     ffiPathMb <- liftEffect $ findFfiFile ".go" [] mbFfiDir modNameStr (Just coreFnMod.path)
@@ -129,12 +132,15 @@ emitModule prepared mbFfiDir (Module coreFnMod) backendMod = do
         let dummyContent = "package purescript\n\nimport \"gopurs/output/gopurs_runtime\"\n\n" <> FfiBridge.generateFfiBridge safeModName backendMod.dataDecls [] (Map.toUnfoldable backendMod.foreign)
         FS.writeTextFile UTF8 ("output/purescript/" <> safeModName <> "_ffi.go") dummyContent
 
+  pure translated.functions
+
 main :: Effect Unit
 main = launchAff_ do
   argsRaw <- liftEffect Process.argv
   let args = parseCLIArgs argsRaw
 
   prepared <- loadAndPrepareModules { mbMainModule: args.mbMainModule }
+  globalFunctionsRef <- liftEffect (Ref.new Map.empty)
 
   _ <- attempt (FS.mkdir "output/gopurs_runtime")
   FS.writeTextFile UTF8 "output/gopurs_runtime/runtime.go" runtimeGoCode
@@ -157,8 +163,10 @@ main = launchAff_ do
     , onPrepareModule: \_ (Module m) -> pure (Module m)
     -- Regenerate every module and its FFI output on each invocation.
     , onSkipModule: \_ _ -> pure Nothing
-    , onCodegenModule: \_ coreFnModule backendMod _ ->
-        emitModule prepared args.mbFfiDir coreFnModule backendMod
+    , onCodegenModule: \_ coreFnModule backendMod _ -> do
+        globalFunctions <- liftEffect (Ref.read globalFunctionsRef)
+        functions <- emitModule (prepared { globalFunctions = globalFunctions }) args.mbFfiDir coreFnModule backendMod
+        liftEffect (Ref.modify_ (Map.union functions) globalFunctionsRef)
     }
     (List.fromFoldable monomorphizedModules)
 
