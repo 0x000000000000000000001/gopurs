@@ -2486,6 +2486,9 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                 baseStructName = getBaseStructName modNameStr mbMod tag
                 hashStr = hashString baseStructName
                 helpers = unsafePerformEffect (Ref.read codegenStateRef)
+                nativeTagTest = case resE.exprType of
+                  TypeStructValue adtName _ -> map (\adt -> adt.isConstructor baseStructName) (Map.lookup adtName unboxableADTs)
+                  _ -> Nothing
 
                 isNativePointer = case resE.exprType of
                   TypeStructPointer typedBaseStructName _ _ _ ->
@@ -2499,20 +2502,22 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                 case resE.expr of
                   GoVar _ ->
                     let
-                      exprStr =
-                        if isNativePointer then
-                          case Map.lookup baseStructName helpers.pointerAdtLeaves of
-                            Just _ -> "(" <> printGoExpr resE.expr <> " == nil)"
-                            Nothing -> "(" <> printGoExpr resE.expr <> " != nil)"
-                        else case Map.lookup baseStructName helpers.pointerAdtLeaves of
-                          Just nodeInfo -> "(" <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".Type == 9 && " <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".IntVal == " <> hashString nodeInfo.nodeBaseStruct <> " && " <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".UnsafePtr == nil)"
-                          Nothing ->
-                            if Set.member baseStructName helpers.pointerAdtNodes then
-                              "(" <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".Type == 9 && " <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".IntVal == " <> hashStr <> " && " <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".UnsafePtr != nil)"
-                            else if Set.member baseStructName helpers.enumCtors then
-                              "(" <> printGoExpr (unboxGoExpr codegenStateRef modNameStr resE.expr resE.exprType TypeUint32) <> " == " <> hashStr <> ")"
-                            else
-                              "(" <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".Type == 9 && " <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".IntVal == " <> hashStr <> ")"
+                      exprStr = case nativeTagTest of
+                        Just test -> printGoExpr (test resE.expr)
+                        Nothing ->
+                          if isNativePointer then
+                            case Map.lookup baseStructName helpers.pointerAdtLeaves of
+                              Just _ -> "(" <> printGoExpr resE.expr <> " == nil)"
+                              Nothing -> "(" <> printGoExpr resE.expr <> " != nil)"
+                          else case Map.lookup baseStructName helpers.pointerAdtLeaves of
+                            Just nodeInfo -> "(" <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".Type == 9 && " <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".IntVal == " <> hashString nodeInfo.nodeBaseStruct <> " && " <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".UnsafePtr == nil)"
+                            Nothing ->
+                              if Set.member baseStructName helpers.pointerAdtNodes then
+                                "(" <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".Type == 9 && " <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".IntVal == " <> hashStr <> " && " <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".UnsafePtr != nil)"
+                              else if Set.member baseStructName helpers.enumCtors then
+                                "(" <> printGoExpr (unboxGoExpr codegenStateRef modNameStr resE.expr resE.exprType TypeUint32) <> " == " <> hashStr <> ")"
+                              else
+                                "(" <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".Type == 9 && " <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".IntVal == " <> hashStr <> ")"
                     in
                       { stmts: resE.stmts, expr: GoRaw exprStr, exprType: TypeBool, nextId: resE.nextId }
                   _ ->
@@ -2524,24 +2529,28 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                         else
                           StmtLeaf (GoRaw ("var " <> tmpVar <> " gopurs_runtime.Value = " <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType)))
 
-                      exprStr =
-                        if isNativePointer then
-                          case Map.lookup baseStructName helpers.pointerAdtLeaves of
-                            Just _ -> "(" <> tmpVar <> " == nil)"
-                            Nothing -> "(" <> tmpVar <> " != nil)"
-                        else if resE.exprType /= TypeValue then
-                          "(uint32(" <> tmpVar <> ") == " <> hashStr <> ")"
-                        else case Map.lookup baseStructName helpers.pointerAdtLeaves of
-                          Just nodeInfo -> "(" <> tmpVar <> ".Type == 9 && " <> tmpVar <> ".IntVal == " <> hashString nodeInfo.nodeBaseStruct <> " && " <> tmpVar <> ".UnsafePtr == nil)"
-                          Nothing ->
-                            if Set.member baseStructName helpers.pointerAdtNodes then
-                              "(" <> tmpVar <> ".Type == 9 && " <> tmpVar <> ".IntVal == " <> hashStr <> " && " <> tmpVar <> ".UnsafePtr != nil)"
-                            else if Set.member baseStructName helpers.enumCtors then
-                              "(" <> printGoExpr (unboxGoExpr codegenStateRef modNameStr (GoVar tmpVar) TypeValue TypeUint32) <> " == " <> hashStr <> ")"
-                            else
-                              "(" <> tmpVar <> ".Type == 9 && " <> tmpVar <> ".IntVal == " <> hashStr <> ")"
+                      exprStr = case nativeTagTest of
+                        Just test -> printGoExpr (test (GoVar tmpVar))
+                        Nothing ->
+                          if isNativePointer then
+                            case Map.lookup baseStructName helpers.pointerAdtLeaves of
+                              Just _ -> "(" <> tmpVar <> " == nil)"
+                              Nothing -> "(" <> tmpVar <> " != nil)"
+                          else if resE.exprType /= TypeValue then
+                            "(uint32(" <> tmpVar <> ") == " <> hashStr <> ")"
+                          else case Map.lookup baseStructName helpers.pointerAdtLeaves of
+                            Just nodeInfo -> "(" <> tmpVar <> ".Type == 9 && " <> tmpVar <> ".IntVal == " <> hashString nodeInfo.nodeBaseStruct <> " && " <> tmpVar <> ".UnsafePtr == nil)"
+                            Nothing ->
+                              if Set.member baseStructName helpers.pointerAdtNodes then
+                                "(" <> tmpVar <> ".Type == 9 && " <> tmpVar <> ".IntVal == " <> hashStr <> " && " <> tmpVar <> ".UnsafePtr != nil)"
+                              else if Set.member baseStructName helpers.enumCtors then
+                                "(" <> printGoExpr (unboxGoExpr codegenStateRef modNameStr (GoVar tmpVar) TypeValue TypeUint32) <> " == " <> hashStr <> ")"
+                              else
+                                "(" <> tmpVar <> ".Type == 9 && " <> tmpVar <> ".IntVal == " <> hashStr <> ")"
                     in
-                      { stmts: resE.stmts <> declTmp, expr: GoRaw exprStr, exprType: TypeBool, nextId: resE.nextId + 1 }
+                      -- A single-constructor native value has a constant test,
+                      -- but its operand must still be evaluated exactly once.
+                      { stmts: resE.stmts <> declTmp <> StmtLeaf (GoRaw ("_ = " <> tmpVar)), expr: GoRaw exprStr, exprType: TypeBool, nextId: resE.nextId + 1 }
 
           PrimOp (Op1 OpArrayLength e) ->
             let

@@ -41,6 +41,7 @@ import PureScript.Backend.Optimizer.FfiSupport (hashString)
 type UnboxedADT =
   { signature :: Array GoType
   , mapConstructor :: String -> Array GoExpr -> Array GoExpr
+  , isConstructor :: String -> GoExpr -> GoExpr
   , boxExpr :: GoExpr -> GoExpr
   , unboxExpr :: GoExpr -> GoExpr
   }
@@ -54,6 +55,10 @@ unboxableADTs = Map.fromFoldable
             "Just" -> [ fromMaybe (GoRaw "gopurs_runtime.Value{}") (Array.index args 0), GoRaw "true" ]
             "Nothing" -> [ GoRaw "gopurs_runtime.Value{}", GoRaw "false" ]
             _ -> args
+      , isConstructor: \ctor expr -> case ctor of
+          "Data_Data_Maybe_Just" -> GoSelector expr "V1"
+          "Data_Data_Maybe_Nothing" -> GoRaw ("(!" <> printGoExpr (GoSelector expr "V1") <> ")")
+          _ -> GoRaw "false"
       , boxExpr: \expr ->
           -- Maybe uses the Just constructor id for both cases, with a nil pointer for Nothing.
           GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\tif _v.V1 {\n\t\t\t\t\treturn gopurs_runtime.Value{Type: 9, IntVal: " <> hashString "Data_Data_Maybe_Just" <> ", UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: _v.V0})}\n\t\t\t\t}\n\t\t\t\treturn gopurs_runtime.Value{Type: 9, IntVal: " <> hashString "Data_Data_Maybe_Just" <> "}\n\t\t\t}()")
@@ -63,6 +68,7 @@ unboxableADTs = Map.fromFoldable
   , Tuple "Data.Tuple.Tuple"
       { signature: [ TypeValue, TypeValue ]
       , mapConstructor: \ctorName args -> args
+      , isConstructor: \ctor _ -> GoRaw (if ctor == "Data_Data_Tuple_Tuple" then "true" else "false")
       , boxExpr: \expr ->
           GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\treturn gopurs_runtime.Value{Type: 9, IntVal: " <> hashString "Data_Data_Tuple_Tuple" <> ", UnsafePtr: unsafe.Pointer(&Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V0, V1: _v.V1})}\n\t\t\t}()")
       , unboxExpr: \expr ->
@@ -74,6 +80,10 @@ unboxableADTs = Map.fromFoldable
           "Left" -> [ fromMaybe (GoRaw "gopurs_runtime.Value{}") (Array.head args), GoRaw "gopurs_runtime.Value{}", GoRaw "false" ]
           "Right" -> [ GoRaw "gopurs_runtime.Value{}", fromMaybe (GoRaw "gopurs_runtime.Value{}") (Array.head args), GoRaw "true" ]
           _ -> [ GoRaw "gopurs_runtime.Value{}", GoRaw "gopurs_runtime.Value{}", GoRaw "false" ]
+      , isConstructor: \ctor expr -> case ctor of
+          "Data_Data_Either_Right" -> GoSelector expr "V2"
+          "Data_Data_Either_Left" -> GoRaw ("(!" <> printGoExpr (GoSelector expr "V2") <> ")")
+          _ -> GoRaw "false"
       , boxExpr: \expr ->
           GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\tif _v.V2 {\n\t\t\t\t\treturn gopurs_runtime.Value{Type: 9, IntVal: " <> hashString "Data_Data_Either_Right" <> ", UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V1})}\n\t\t\t\t}\n\t\t\t\treturn gopurs_runtime.Value{Type: 9, IntVal: " <> hashString "Data_Data_Either_Left" <> ", UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V0})}\n\t\t\t}()")
       , unboxExpr: \expr ->
