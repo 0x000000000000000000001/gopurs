@@ -15,8 +15,9 @@ import Data.Set (Set)
 import Data.Set as Set
 import Data.String as String
 import Data.Tuple (Tuple(..))
-import PureScript.Backend.Optimizer.CoreFn (Ann, Bind(..), Binding(..), ExprType(..), Ident(..), Module(..))
+import PureScript.Backend.Optimizer.CoreFn (Ann, Bind(..), Binding(..), ExprType(..), Ident(..), Module(..), Qualified(..))
 import PureScript.Backend.Optimizer.Monomorphize (collectInstantiations, monomorphize, transitiveCollect)
+import PureScript.Backend.Optimizer.Semantics.Foreign (coreForeignSemantics)
 
 type GlobalAstMap = Map String (Binding Ann)
 
@@ -24,10 +25,17 @@ type GlobalAstMap = Map String (Binding Ann)
 monomorphizeModules :: Map String ExprType -> List (Module Ann) -> List (Module Ann)
 monomorphizeModules globalTypes modules =
   let
-    globalAstMap = buildGlobalAstMap modules
+    -- Intrinsics must retain their names and dictionary arguments so the
+    -- evaluator can recognize them before their PureScript bodies expand.
+    intrinsicGlobals = Set.fromFoldable $ Array.mapMaybe
+      (case _ of
+        Tuple (Qualified (Just moduleName) ident) _ -> Just (unwrap moduleName <> "." <> unwrap ident)
+        _ -> Nothing)
+      (Map.toUnfoldable coreForeignSemantics)
+    globalAstMap = Map.filterKeys (not <<< flip Set.member intrinsicGlobals) (buildGlobalAstMap modules)
     rawInstantiations = foldl (collectInstantiations globalAstMap) Map.empty modules
     transitiveInstantiations = transitiveCollect globalAstMap rawInstantiations
-    foreignGlobals = collectForeignGlobals modules
+    foreignGlobals = Set.union intrinsicGlobals (collectForeignGlobals modules)
     instantiations = Map.filterKeys (shouldMonomorphize globalTypes foreignGlobals) transitiveInstantiations
   in
     if Map.isEmpty instantiations then
