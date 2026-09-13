@@ -2012,24 +2012,44 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
 
                 Nothing ->
                   let
+                    -- An initializer must not observe Go's zero value for an
+                    -- uninitialized recursive binding. Publish a pointer only
+                    -- after its complete initializer has run; closures capture
+                    -- that cell and can safely read it once initialization ends.
+                    initializingBound = foldl
+                      ( \acc alloc -> Map.update
+                          (\binding -> Just (binding { name = "(*" <> alloc.newName <> "_cell)" }))
+                          alloc.oldName
+                          acc
+                      )
+                      allocRes.newBound
+                      allocRes.newNames
+
                     accBindings = foldl
                       ( \acc (Tuple (Tuple (Ident ident) val) alloc) ->
                           let
-                            res = translateExpr codegenStateRef (depth + 1) modNameStr combinedRecVars moduleFunctions allocRes.newBound Nothing [] { isTail: false, inEffectBlock: false } acc.nextId val
+                            res = translateExpr codegenStateRef (depth + 1) modNameStr combinedRecVars moduleFunctions initializingBound Nothing [] { isTail: false, inEffectBlock: false } acc.nextId val
                             expectedGoType = (fromMaybe { name: alloc.newName, goType: TypeValue } (Map.lookup alloc.oldName allocRes.newBound)).goType
                             assignedVal = if expectedGoType == res.exprType then res.expr else unboxGoExpr codegenStateRef modNameStr res.expr res.exprType expectedGoType
                           in
-                            { stmts: acc.stmts <> res.stmts, exprs: Array.snoc acc.exprs { key: alloc.newName, value: assignedVal, goType: expectedGoType }, exprType: TypeValue, nextId: res.nextId }
+                            { stmts: acc.stmts <> res.stmts
+                                <> StmtLeaf (GoMutate alloc.newName assignedVal)
+                                <> StmtLeaf (GoMutate (alloc.newName <> "_cell") (GoRaw ("&" <> alloc.newName)))
+                            , exprs: Array.snoc acc.exprs { key: alloc.newName, goType: expectedGoType }
+                            , exprType: TypeValue
+                            , nextId: res.nextId
+                            }
                       )
                       { stmts: StmtEmpty, exprs: [], exprType: TypeValue, nextId: allocRes.nextId }
                       (Array.zip (toArray bindings) allocRes.newNames)
 
-                    declStmts = map (\b -> GoRaw ("var " <> b.key <> " " <> goTypeToStr b.goType <> "\n_ = " <> b.key <> "\n// FALLBACK TCO: isLoop=" <> show isLoop <> " len=" <> show (Array.length (toArray bindings)))) accBindings.exprs
-                    assignStmts = map (\b -> GoMutate b.key b.value) accBindings.exprs
+                    declStmts = map (\b -> GoRaw ("var " <> b.key <> " " <> goTypeToStr b.goType <> "\n_ = " <> b.key
+                      <> "\nvar " <> b.key <> "_cell *" <> goTypeToStr b.goType <> "\n_ = " <> b.key <> "_cell"
+                      <> "\n// FALLBACK TCO: isLoop=" <> show isLoop <> " len=" <> show (Array.length (toArray bindings)))) accBindings.exprs
 
                     resBody = translateExprWithExpectedType codegenStateRef (depth + 1) modNameStr combinedRecVars moduleFunctions allocRes.newBound Nothing loopCtx options mbExpectedExprType accBindings.nextId body
                   in
-                    { stmts: foldMap StmtLeaf declStmts <> accBindings.stmts <> foldMap StmtLeaf assignStmts <> resBody.stmts, expr: resBody.expr, exprType: resBody.exprType, nextId: resBody.nextId }
+                    { stmts: foldMap StmtLeaf declStmts <> accBindings.stmts <> resBody.stmts, expr: resBody.expr, exprType: resBody.exprType, nextId: resBody.nextId }
 
           Accessor obj accessor ->
             let

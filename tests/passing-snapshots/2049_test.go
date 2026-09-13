@@ -46,7 +46,7 @@ var once_Main_f sync.Once
 func Get_Main_f() gopurs_runtime.Value {
 	once_Main_f.Do(func() {
 		cache_Main_f = gopurs_runtime.Func(func(v_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Int(Call_Main_f(gopurs_runtime.CoerceToStruct[Constructor_Main_Cons[gopurs_runtime.Value]](v_0_box)))
+			return gopurs_runtime.Int(Call_Main_f(Rebox_Main_176455803_457532107(gopurs_runtime.CoerceToStruct[Constructor_Main_Cons[gopurs_runtime.Value]](v_0_box))))
 		})
 	})
 	return cache_Main_f
@@ -54,29 +54,64 @@ func Get_Main_f() gopurs_runtime.Value {
 
 type Constructor_Main_Cons[T_a any] struct {
 	Rc uint32
-	V0 gopurs_runtime.Value
-	V1 *Constructor_Main_Cons[gopurs_runtime.Value]
+	V0 T_a
+	V1 *Constructor_Main_Cons[T_a]
 }
 
 type Constructor_Main_Nil[T_a any] struct {
 	Rc uint32
 }
 
-func Call_Main_f(v_0_loop *Constructor_Main_Cons[gopurs_runtime.Value]) int64 {
-	var v_0 *Constructor_Main_Cons[gopurs_runtime.Value] = v_0_loop
+func Call_Main_f(v_0_loop *Constructor_Main_Cons[struct {
+	x int64
+	y int64
+}]) int64 {
+	var v_0 *Constructor_Main_Cons[struct {
+		x int64
+		y int64
+	}] = v_0_loop
 	_ = v_0
 	var __t0 int64
 	{
 		if v_0 != nil {
-			__t0 = (gopurs_runtime.RecordGet((v_0).V0, "x").IntVal) + (gopurs_runtime.RecordGet((v_0).V0, "y").IntVal)
+			__t0 = ((v_0).V0.x) + ((v_0).V0.y)
 			goto end_branch_0
 		} else {
 
 		}
 	}
 	{
-		__t0 = 0
+		__t0 = int64(0)
 	}
 end_branch_0:
 	return __t0
+}
+
+func Rebox_Main_176455803_457532107(in *Constructor_Main_Cons[gopurs_runtime.Value]) *Constructor_Main_Cons[struct {
+	x int64
+	y int64
+}] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Main_Cons[struct {
+		x int64
+		y int64
+	}]{}
+	out.V0 = func() struct {
+		x int64
+		y int64
+	} {
+		orig := in.V0
+		_ = orig
+		clone := struct {
+			x int64
+			y int64
+		}{}
+		clone.x = gopurs_runtime.RecordGet(orig, "x").IntVal
+		clone.y = gopurs_runtime.RecordGet(orig, "y").IntVal
+		return clone
+	}()
+	out.V1 = Rebox_Main_176455803_457532107(in.V1)
+	return out
 }

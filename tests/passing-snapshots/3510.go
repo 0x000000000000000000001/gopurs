@@ -43,33 +43,62 @@ var once_Main_eqT sync.Once
 
 func Get_Main_eqT() gopurs_runtime.Value {
 	once_Main_eqT.Do(func() {
-		cache_Main_eqT = gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer((&Constructor_Data_Eq_Eq[*Constructor_Main_Just[int64]]{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Func(func(y_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				var __t0 bool
-				{
-					if x_0.Type == 9 && x_0.IntVal == 3271839782 && x_0.UnsafePtr != nil {
-						__t0 = (y_1.Type == 9 && y_1.IntVal == 3271839782 && y_1.UnsafePtr != nil) && (((*Constructor_Main_Just[gopurs_runtime.Value])(x_0.UnsafePtr).V0.IntVal) == ((*Constructor_Main_Just[gopurs_runtime.Value])(y_1.UnsafePtr).V0.IntVal))
-						goto end_branch_0
-					} else {
+		cache_Main_eqT = gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_603498402_3790796878((&Constructor_Data_Eq_Eq[*Constructor_Main_Just[int64]]{1, gopurs_runtime.Func2(func(x_0 gopurs_runtime.Value, y_1 gopurs_runtime.Value) gopurs_runtime.Value {
+			var __t5 bool
+			{
+				var __t_tag_3 *Constructor_Main_Just[int64] = Rebox_Main_4188394610_2656528265(gopurs_runtime.CoerceToStruct[Constructor_Main_Just[gopurs_runtime.Value]](x_0))
+				_ = __t_tag_3
+				if __t_tag_3 != nil {
+					var __t_tag_4 *Constructor_Main_Just[int64] = Rebox_Main_4188394610_2656528265(gopurs_runtime.CoerceToStruct[Constructor_Main_Just[gopurs_runtime.Value]](y_1))
+					_ = __t_tag_4
+					__t5 = (__t_tag_4 != nil) && (((*Constructor_Main_Just[gopurs_runtime.Value])(x_0.UnsafePtr).V0.IntVal) == ((*Constructor_Main_Just[gopurs_runtime.Value])(y_1.UnsafePtr).V0.IntVal))
+					goto end_branch_5
+				} else {
 
-					}
 				}
-				{
-					__t0 = (x_0.Type == 9 && x_0.IntVal == 3271839782 && x_0.UnsafePtr == nil) && (y_1.Type == 9 && y_1.IntVal == 3271839782 && y_1.UnsafePtr == nil)
+			}
+			{
+				var __t_tag_0 *Constructor_Main_Just[int64] = Rebox_Main_4188394610_2656528265(gopurs_runtime.CoerceToStruct[Constructor_Main_Just[gopurs_runtime.Value]](x_0))
+				_ = __t_tag_0
+				var __t_and_2 bool = false
+				if __t_tag_0 == nil {
+
+					var __t_tag_1 *Constructor_Main_Just[int64] = Rebox_Main_4188394610_2656528265(gopurs_runtime.CoerceToStruct[Constructor_Main_Just[gopurs_runtime.Value]](y_1))
+					_ = __t_tag_1
+					__t_and_2 = (__t_tag_1 == nil)
 				}
-			end_branch_0:
-				return gopurs_runtime.Bool(__t0)
-			})
-		})}))}
+				__t5 = __t_and_2
+			}
+		end_branch_5:
+			return gopurs_runtime.Bool(__t5)
+		})})))}
 	})
 	return cache_Main_eqT
 }
 
 type Constructor_Main_Just[T_a any] struct {
 	Rc uint32
-	V0 gopurs_runtime.Value
+	V0 T_a
 }
 
 type Constructor_Main_Nothing[T_a any] struct {
 	Rc uint32
+}
+
+func Rebox_Main_4188394610_2656528265(in *Constructor_Main_Just[gopurs_runtime.Value]) *Constructor_Main_Just[int64] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Main_Just[int64]{}
+	out.V0 = in.V0.IntVal
+	return out
+}
+
+func Rebox_Main_603498402_3790796878(in *Constructor_Data_Eq_Eq[*Constructor_Main_Just[int64]]) *Constructor_Data_Eq_Eq[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Data_Eq_Eq[gopurs_runtime.Value]{}
+	out.V0 = in.V0
+	return out
 }

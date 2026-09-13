@@ -12,7 +12,17 @@ var once_Main_Test2_dollar_Dict sync.Once
 func Get_Main_Test2_dollar_Dict() gopurs_runtime.Value {
 	once_Main_Test2_dollar_Dict.Do(func() {
 		cache_Main_Test2_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_Test2_dollar_Dict(x_0_box)
+			return gopurs_runtime.Value{Type: 9, IntVal: 2375191994, UnsafePtr: unsafe.Pointer(Call_Main_Test2_dollar_Dict(func() struct {
+				f gopurs_runtime.Value
+			} {
+				orig := x_0_box
+				_ = orig
+				clone := struct {
+					f gopurs_runtime.Value
+				}{}
+				clone.f = gopurs_runtime.RecordGet(orig, "f")
+				return clone
+			}()))}
 		})
 	})
 	return cache_Main_Test2_dollar_Dict
@@ -35,9 +45,15 @@ var once_Main_test1 sync.Once
 
 func Get_Main_test1() gopurs_runtime.Value {
 	once_Main_test1.Do(func() {
-		cache_Main_test1 = gopurs_runtime.RecordDict1("attr", gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Int(0)
-		}))
+		cache_Main_test1 = func() gopurs_runtime.Value {
+			orig := struct {
+				attr gopurs_runtime.Value
+			}{gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Int(int64(0))
+			})}
+			_ = orig
+			return gopurs_runtime.RecordDict1("attr", orig.attr)
+		}()
 	})
 	return cache_Main_test1
 }
@@ -94,20 +110,28 @@ func init() {
 	}
 }
 
-func Call_Main_Test2_dollar_Dict(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var x_0 gopurs_runtime.Value = x_0_loop
+func Call_Main_Test2_dollar_Dict(x_0_loop struct {
+	f gopurs_runtime.Value
+}) *Constructor_Main_Test2 {
+	var x_0 struct {
+		f gopurs_runtime.Value
+	} = x_0_loop
 	_ = x_0
-	return x_0
+	return gopurs_runtime.CoerceToStruct[Constructor_Main_Test2](func() gopurs_runtime.Value {
+		orig := x_0
+		_ = orig
+		return gopurs_runtime.RecordDict1("f", orig.f)
+	}())
 }
 
 func Call_Main_test0(v_0_loop gopurs_runtime.Value) int64 {
 	var v_0 gopurs_runtime.Value = v_0_loop
 	_ = v_0
-	return 0
+	return int64(0)
 }
 
 func Call_Main_f(dict_0_loop *Constructor_Main_Test2) gopurs_runtime.Value {
 	var dict_0 *Constructor_Main_Test2 = dict_0_loop
 	_ = dict_0
-	return gopurs_runtime.Box(dict_0.V0)
+	return dict_0.V0
 }

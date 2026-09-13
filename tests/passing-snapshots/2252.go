@@ -41,7 +41,7 @@ var once_Main_xs sync.Once
 func Get_Main_xs() gopurs_runtime.Value {
 	once_Main_xs.Do(func() {
 		cache_Main_xs = func() gopurs_runtime.Value {
-			arr := []uint32{990467018, 990467018, 990467018}
+			arr := []uint32{990467018, uint32(gopurs_runtime.Value{Type: 9, IntVal: int64(990467018), UnsafePtr: nil}.IntVal), uint32(gopurs_runtime.Value{Type: 9, IntVal: int64(990467018), UnsafePtr: nil}.IntVal)}
 			boxed := make([]gopurs_runtime.Value, len(arr))
 			for i, v := range arr {
 				boxed[i] = gopurs_runtime.Value{Type: 9, IntVal: int64(v), UnsafePtr: nil}

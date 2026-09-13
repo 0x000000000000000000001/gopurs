@@ -42,7 +42,7 @@ func Get_Main_identity() gopurs_runtime.Value {
 func Call_Main_map_prime_(dictFunctor_0_loop *Constructor_Data_Functor_Functor[gopurs_runtime.Value]) gopurs_runtime.Value {
 	var dictFunctor_0 *Constructor_Data_Functor_Functor[gopurs_runtime.Value] = dictFunctor_0_loop
 	_ = dictFunctor_0
-	return gopurs_runtime.Box(dictFunctor_0.V0)
+	return Call_Data_Functor_go__map(dictFunctor_0)
 }
 
 func Call_Main_identity(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {

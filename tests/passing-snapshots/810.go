@@ -56,7 +56,7 @@ type Constructor_Main_Nothing[T_a any] struct {
 
 type Constructor_Main_Just[T_a any] struct {
 	Rc uint32
-	V0 gopurs_runtime.Value
+	V0 T_a
 }
 
 func Call_Main_test(m_0_loop *Constructor_Main_Just[gopurs_runtime.Value]) *Constructor_Main_Just[gopurs_runtime.Value] {
@@ -65,7 +65,7 @@ func Call_Main_test(m_0_loop *Constructor_Main_Just[gopurs_runtime.Value]) *Cons
 	var __t0 *Constructor_Main_Just[gopurs_runtime.Value]
 	{
 		if m_0 == nil {
-			__t0 = (*Constructor_Main_Just[gopurs_runtime.Value])(nil)
+			__t0 = gopurs_runtime.CoerceToStruct[Constructor_Main_Just[gopurs_runtime.Value]](gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer((*Constructor_Main_Just[gopurs_runtime.Value])(nil))})
 			goto end_branch_0
 		} else {
 
@@ -80,7 +80,7 @@ func Call_Main_test(m_0_loop *Constructor_Main_Just[gopurs_runtime.Value]) *Cons
 		}
 	}
 	{
-		__t0 = gopurs_runtime.CoerceToStruct[Constructor_Main_Just[gopurs_runtime.Value]](func() gopurs_runtime.Value { panic("Failed pattern match") }())
+		__t0 = func() *Constructor_Main_Just[gopurs_runtime.Value] { panic("Failed pattern match") }()
 	}
 end_branch_0:
 	return __t0

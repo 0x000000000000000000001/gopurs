@@ -65,7 +65,7 @@ func Call_Main_x(v_0_loop *Constructor_Main_X) int64 {
 	var __t1 int64
 	{
 		if v_0 == nil {
-			__t1 = 0
+			__t1 = int64(0)
 			goto end_branch_1
 		} else {
 
@@ -75,8 +75,8 @@ func Call_Main_x(v_0_loop *Constructor_Main_X) int64 {
 		if v_0 != nil {
 			var __t0 int64
 			{
-				if ((v_0).V0) == (1) {
-					__t0 = 1
+				if ((v_0).V0) == (int64(1)) {
+					__t0 = int64(1)
 					goto end_branch_0
 				} else {
 
@@ -84,14 +84,14 @@ func Call_Main_x(v_0_loop *Constructor_Main_X) int64 {
 			}
 			{
 				if v_0 != nil {
-					__t0 = 2
+					__t0 = int64(2)
 					goto end_branch_0
 				} else {
 
 				}
 			}
 			{
-				__t0 = func() gopurs_runtime.Value { panic("Failed pattern match") }().IntVal
+				__t0 = func() int64 { panic("Failed pattern match") }()
 			}
 		end_branch_0:
 			__t1 = __t0
@@ -102,14 +102,14 @@ func Call_Main_x(v_0_loop *Constructor_Main_X) int64 {
 	}
 	{
 		if v_0 != nil {
-			__t1 = 2
+			__t1 = int64(2)
 			goto end_branch_1
 		} else {
 
 		}
 	}
 	{
-		__t1 = func() gopurs_runtime.Value { panic("Failed pattern match") }().IntVal
+		__t1 = func() int64 { panic("Failed pattern match") }()
 	}
 end_branch_1:
 	return __t1

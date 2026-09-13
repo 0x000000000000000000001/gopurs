@@ -34,10 +34,40 @@ var once_Main_otherNestingWorks sync.Once
 func Get_Main_otherNestingWorks() gopurs_runtime.Value {
 	once_Main_otherNestingWorks.Do(func() {
 		cache_Main_otherNestingWorks = func() gopurs_runtime.Value {
-			arr := []*Constructor_Data_Maybe_Just[*Constructor_Data_Tuple_Tuple[int64, float64]]{(&Constructor_Data_Maybe_Just[*Constructor_Data_Tuple_Tuple[int64, float64]]{1, gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer((&Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{1, gopurs_runtime.Int(0), gopurs_runtime.Float(0.0)}))}}), (&Constructor_Data_Maybe_Just[*Constructor_Data_Tuple_Tuple[int64, float64]]{1, gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer((&Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{1, gopurs_runtime.Int(1), gopurs_runtime.Float(1.0)}))}})}
+			arr := []*Constructor_Data_Maybe_Just[*Constructor_Data_Tuple_Tuple[int64, float64]]{Rebox_Main_3094389156_1952550506(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](func() gopurs_runtime.Value {
+				_v := struct {
+					V0 gopurs_runtime.Value
+					V1 bool
+				}{gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(Rebox_Main_2886983403_138441832(Rebox_Main_138441832_2886983403(gopurs_runtime.CoerceToStruct[Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]](func() gopurs_runtime.Value {
+					_v := struct {
+						V0 gopurs_runtime.Value
+						V1 gopurs_runtime.Value
+					}{gopurs_runtime.Int(int64(0)), gopurs_runtime.Float(0.0)}
+					return gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(&Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V0, V1: _v.V1})}
+				}()))))}, true}
+				if _v.V1 {
+					return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: _v.V0})}
+				}
+				return gopurs_runtime.Value{Type: 9, IntVal: 930809136}
+			}())), Rebox_Main_3094389156_1952550506(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](func() gopurs_runtime.Value {
+				_v := struct {
+					V0 gopurs_runtime.Value
+					V1 bool
+				}{gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(Rebox_Main_2886983403_138441832(Rebox_Main_138441832_2886983403(gopurs_runtime.CoerceToStruct[Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]](func() gopurs_runtime.Value {
+					_v := struct {
+						V0 gopurs_runtime.Value
+						V1 gopurs_runtime.Value
+					}{gopurs_runtime.Int(int64(1)), gopurs_runtime.Float(1.0)}
+					return gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(&Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V0, V1: _v.V1})}
+				}()))))}, true}
+				if _v.V1 {
+					return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: _v.V0})}
+				}
+				return gopurs_runtime.Value{Type: 9, IntVal: 930809136}
+			}()))}
 			boxed := make([]gopurs_runtime.Value, len(arr))
 			for i, v := range arr {
-				boxed[i] = gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(v)}
+				boxed[i] = gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(Rebox_Main_1952550506_3094389156(v))}
 			}
 			return gopurs_runtime.Array(boxed)
 		}()
@@ -109,4 +139,42 @@ func Call_Main_multiArgument(v_0_loop gopurs_runtime.Value, v1_1_loop gopurs_run
 	var v1_1 gopurs_runtime.Value = v1_1_loop
 	_ = v1_1
 	return Get_Data_Unit_unit()
+}
+
+func Rebox_Main_138441832_2886983403(in *Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]) *Constructor_Data_Tuple_Tuple[int64, float64] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Data_Tuple_Tuple[int64, float64]{}
+	out.V0 = in.V0.IntVal
+	out.V1 = in.V1.FloatVal()
+	return out
+}
+
+func Rebox_Main_1952550506_3094389156(in *Constructor_Data_Maybe_Just[*Constructor_Data_Tuple_Tuple[int64, float64]]) *Constructor_Data_Maybe_Just[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Data_Maybe_Just[gopurs_runtime.Value]{}
+	out.V0 = gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(Rebox_Main_2886983403_138441832(in.V0))}
+	return out
+}
+
+func Rebox_Main_2886983403_138441832(in *Constructor_Data_Tuple_Tuple[int64, float64]) *Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{}
+	out.V0 = gopurs_runtime.Int(in.V0)
+	out.V1 = gopurs_runtime.Float(in.V1)
+	return out
+}
+
+func Rebox_Main_3094389156_1952550506(in *Constructor_Data_Maybe_Just[gopurs_runtime.Value]) *Constructor_Data_Maybe_Just[*Constructor_Data_Tuple_Tuple[int64, float64]] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Data_Maybe_Just[*Constructor_Data_Tuple_Tuple[int64, float64]]{}
+	out.V0 = Rebox_Main_138441832_2886983403(gopurs_runtime.CoerceToStruct[Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]](in.V0))
+	return out
 }

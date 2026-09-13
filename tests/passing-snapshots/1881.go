@@ -10,7 +10,7 @@ var once_Main_qux sync.Once
 
 func Get_Main_qux() gopurs_runtime.Value {
 	once_Main_qux.Do(func() {
-		cache_Main_qux = gopurs_runtime.Int(3)
+		cache_Main_qux = gopurs_runtime.Int(int64(3))
 	})
 	return cache_Main_qux
 }
@@ -30,7 +30,7 @@ var once_Main_foo sync.Once
 
 func Get_Main_foo() gopurs_runtime.Value {
 	once_Main_foo.Do(func() {
-		cache_Main_foo = gopurs_runtime.Int(1)
+		cache_Main_foo = gopurs_runtime.Int(int64(1))
 	})
 	return cache_Main_foo
 }
@@ -40,7 +40,7 @@ var once_Main_baz sync.Once
 
 func Get_Main_baz() gopurs_runtime.Value {
 	once_Main_baz.Do(func() {
-		cache_Main_baz = gopurs_runtime.Int(3)
+		cache_Main_baz = gopurs_runtime.Int(int64(3))
 	})
 	return cache_Main_baz
 }
@@ -50,7 +50,7 @@ var once_Main_bar sync.Once
 
 func Get_Main_bar() gopurs_runtime.Value {
 	once_Main_bar.Do(func() {
-		cache_Main_bar = gopurs_runtime.Int(2)
+		cache_Main_bar = gopurs_runtime.Int(int64(2))
 	})
 	return cache_Main_bar
 }

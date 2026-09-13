@@ -23,9 +23,9 @@ var once_Main_newtypeNewA_ sync.Once
 
 func Get_Main_newtypeNewA_() gopurs_runtime.Value {
 	once_Main_newtypeNewA_.Do(func() {
-		cache_Main_newtypeNewA_ = gopurs_runtime.Value{Type: 9, IntVal: 3322196858, UnsafePtr: unsafe.Pointer((&Constructor_Data_Newtype_Newtype[gopurs_runtime.Value, uint32]{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_newtypeNewA_ = gopurs_runtime.Value{Type: 9, IntVal: 3322196858, UnsafePtr: unsafe.Pointer(Rebox_Main_3272106341_385277032((&Constructor_Data_Newtype_Newtype[gopurs_runtime.Value, uint32]{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{}
-		})}))}
+		})})))}
 	})
 	return cache_Main_newtypeNewA_
 }
@@ -44,4 +44,13 @@ func Call_Main_NewA(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var x_0 gopurs_runtime.Value = x_0_loop
 	_ = x_0
 	return x_0
+}
+
+func Rebox_Main_3272106341_385277032(in *Constructor_Data_Newtype_Newtype[gopurs_runtime.Value, uint32]) *Constructor_Data_Newtype_Newtype[gopurs_runtime.Value, gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Data_Newtype_Newtype[gopurs_runtime.Value, gopurs_runtime.Value]{}
+	out.V0 = in.V0
+	return out
 }

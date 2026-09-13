@@ -12,7 +12,15 @@ var once_Main_C_dollar_Dict sync.Once
 func Get_Main_C_dollar_Dict() gopurs_runtime.Value {
 	once_Main_C_dollar_Dict.Do(func() {
 		cache_Main_C_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_C_dollar_Dict(x_0_box)
+			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_C_dollar_Dict(func() struct {
+			} {
+				orig := x_0_box
+				_ = orig
+				clone := struct {
+				}{}
+
+				return clone
+			}())), UnsafePtr: nil}
 		})
 	})
 	return cache_Main_C_dollar_Dict
@@ -23,7 +31,12 @@ var once_Main_c sync.Once
 
 func Get_Main_c() gopurs_runtime.Value {
 	once_Main_c.Do(func() {
-		cache_Main_c = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(gopurs_runtime.RecordDict0().IntVal)), UnsafePtr: nil}
+		cache_Main_c = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+			orig := struct {
+			}{}
+			_ = orig
+			return gopurs_runtime.RecordDict0()
+		}().IntVal)), UnsafePtr: nil}
 	})
 	return cache_Main_c
 }
@@ -55,7 +68,7 @@ var once_Main_v sync.Once
 
 func Get_Main_v() gopurs_runtime.Value {
 	once_Main_v.Do(func() {
-		cache_Main_v = gopurs_runtime.Int(0)
+		cache_Main_v = gopurs_runtime.Int(int64(0))
 	})
 	return cache_Main_v
 }
@@ -66,7 +79,7 @@ type Constructor_Main_C[T_t any] struct {
 
 func init() {
 	gopurs_runtime.StructGetters[2167983901] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_C[any])(ptr)
+		c := (*Constructor_Main_C[gopurs_runtime.Value])(ptr)
 		_ = c
 		switch key {
 
@@ -76,14 +89,20 @@ func init() {
 	}
 }
 
-func Call_Main_C_dollar_Dict(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var x_0 gopurs_runtime.Value = x_0_loop
+func Call_Main_C_dollar_Dict(x_0_loop struct {
+}) uint32 {
+	var x_0 struct {
+	} = x_0_loop
 	_ = x_0
-	return x_0
+	return uint32(func() gopurs_runtime.Value {
+		orig := x_0
+		_ = orig
+		return gopurs_runtime.RecordDict0()
+	}().IntVal)
 }
 
 func Call_Main_f(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
-	return gopurs_runtime.Int(0)
+	return gopurs_runtime.Int(int64(0))
 }

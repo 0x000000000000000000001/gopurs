@@ -11,18 +11,7 @@ var once_Main_monoidAdditive sync.Once
 
 func Get_Main_monoidAdditive() gopurs_runtime.Value {
 	once_Main_monoidAdditive.Do(func() {
-		cache_Main_monoidAdditive = func() gopurs_runtime.Value {
-			// TAST (Let): semigroupAdditive1_0_0 shape=LitRecord bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar a)])
-			semigroupAdditive1_0_0 := (&Constructor_Data_Semigroup_Semigroup[gopurs_runtime.Value]{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Func(func(v1_1 gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Int((v_0.IntVal) + (v1_1.IntVal))
-				})
-			})})
-			_ = semigroupAdditive1_0_0
-			return gopurs_runtime.Value{Type: 9, IntVal: 1722653594, UnsafePtr: unsafe.Pointer((&Constructor_Data_Monoid_Monoid[int64]{1, gopurs_runtime.Func(func(_dollar___unused_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Value{Type: 9, IntVal: 2053112122, UnsafePtr: unsafe.Pointer(semigroupAdditive1_0_0)}
-			}), gopurs_runtime.Int(0)}))}
-		}()
+		cache_Main_monoidAdditive = gopurs_runtime.Value{Type: 9, IntVal: 1722653594, UnsafePtr: unsafe.Pointer(Rebox_Main_2095395797_1201789390(Rebox_Main_1201789390_2095395797(gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid[gopurs_runtime.Value]](Call_Data_Monoid_Additive_monoidAdditive(gopurs_runtime.Value{Type: 9, IntVal: 134961754, UnsafePtr: unsafe.Pointer(Rebox_Main_348932501_2826095630(Rebox_Main_2826095630_348932501(gopurs_runtime.CoerceToStruct[Constructor_Data_Semiring_Semiring[gopurs_runtime.Value]](Get_Data_Semiring_semiringInt()))))})))))}
 	})
 	return cache_Main_monoidAdditive
 }
@@ -57,7 +46,7 @@ var once_Main_test sync.Once
 func Get_Main_test() gopurs_runtime.Value {
 	once_Main_test.Do(func() {
 		cache_Main_test = gopurs_runtime.Func(func(v_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Int(Call_Main_test(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[int64]](v_0_box)))
+			return gopurs_runtime.Int(Call_Main_test(Rebox_Main_3094389156_1170268447(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](v_0_box))))
 		})
 	})
 	return cache_Main_test
@@ -98,53 +87,20 @@ type Constructor_Main_Bar struct {
 func Call_Main_test(v_0_loop *Constructor_Data_Maybe_Just[int64]) int64 {
 	var v_0 *Constructor_Data_Maybe_Just[int64] = v_0_loop
 	_ = v_0
-	var __t3 int64
+	var __t0 int64
 	{
 		if v_0 != nil {
-			__t3 = (v_0).V0.IntVal
-			goto end_branch_3
+			__t0 = (v_0).V0
+			goto end_branch_0
 		} else {
 
 		}
 	}
 	{
-		// TAST (Let): semigroupAdditive1_1_1 shape=LitRecord bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar a)])
-		semigroupAdditive1_1_1 := (&Constructor_Data_Semigroup_Semigroup[gopurs_runtime.Value]{1, gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Func(func(v1_2 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Int((v_1.IntVal) + (v1_2.IntVal))
-			})
-		})})
-		_ = semigroupAdditive1_1_1
-		// TAST (Let): __local_var_1_0 shape=Let(LitRecord) bindingType=(ADT ["Data","Monoid","Monoid"] [Int])
-		__local_var_1_0 := (&Constructor_Data_Monoid_Monoid[int64]{1, gopurs_runtime.Func(func(_dollar___unused_2 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 2053112122, UnsafePtr: unsafe.Pointer(semigroupAdditive1_1_1)}
-		}), gopurs_runtime.Int(0)})
-		_ = __local_var_1_0
-		// TAST (Let): Semigroup0_2_2 shape=App(Other) bindingType=(ADT ["Data","Semigroup","Semigroup"] [(TypeVar m)])
-		Semigroup0_2_2 := gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup[gopurs_runtime.Value]](gopurs_runtime.Apply(gopurs_runtime.Box(__local_var_1_0.V0), gopurs_runtime.Value{}))
-		_ = Semigroup0_2_2
-		__t3 = gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), gopurs_runtime.Func(func(x_3 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Func(func(acc_4 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Apply2(gopurs_runtime.Box(Semigroup0_2_2.V0), x_3, acc_4)
-			})
-		}), gopurs_runtime.Box(__local_var_1_0.V1), func() gopurs_runtime.Value {
-			arr := func() []int64 {
-				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array([]gopurs_runtime.Value{}).UnsafePtr)
-				unboxed := make([]int64, len(arr))
-				for i, v := range arr {
-					unboxed[i] = v.IntVal
-				}
-				return unboxed
-			}()
-			boxed := make([]gopurs_runtime.Value, len(arr))
-			for i, v := range arr {
-				boxed[i] = gopurs_runtime.Int(v)
-			}
-			return gopurs_runtime.Array(boxed)
-		}()).IntVal
+		__t0 = gopurs_runtime.Apply2(Call_Data_Foldable_foldMapDefaultR(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()), Rebox_Main_2095395797_1201789390(Rebox_Main_1201789390_2095395797(gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid[gopurs_runtime.Value]](Call_Data_Monoid_Additive_monoidAdditive(gopurs_runtime.Value{Type: 9, IntVal: 134961754, UnsafePtr: unsafe.Pointer(Rebox_Main_348932501_2826095630(Rebox_Main_2826095630_348932501(gopurs_runtime.CoerceToStruct[Constructor_Data_Semiring_Semiring[gopurs_runtime.Value]](Get_Data_Semiring_semiringInt()))))}))))), Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))}), gopurs_runtime.Array([]gopurs_runtime.Value{})).IntVal
 	}
-end_branch_3:
-	return __t3
+end_branch_0:
+	return __t0
 }
 
 func Call_Main_g(v_0_loop gopurs_runtime.Value) int64 {
@@ -168,8 +124,61 @@ func Call_Main_g(v_0_loop gopurs_runtime.Value) int64 {
 		}
 	}
 	{
-		__t0 = 42
+		__t0 = int64(42)
 	}
 end_branch_0:
 	return __t0
+}
+
+func Rebox_Main_1201789390_2095395797(in *Constructor_Data_Monoid_Monoid[gopurs_runtime.Value]) *Constructor_Data_Monoid_Monoid[int64] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Data_Monoid_Monoid[int64]{}
+	out.V0 = in.V0
+	out.V1 = in.V1.IntVal
+	return out
+}
+
+func Rebox_Main_2095395797_1201789390(in *Constructor_Data_Monoid_Monoid[int64]) *Constructor_Data_Monoid_Monoid[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Data_Monoid_Monoid[gopurs_runtime.Value]{}
+	out.V0 = in.V0
+	out.V1 = gopurs_runtime.Int(in.V1)
+	return out
+}
+
+func Rebox_Main_2826095630_348932501(in *Constructor_Data_Semiring_Semiring[gopurs_runtime.Value]) *Constructor_Data_Semiring_Semiring[int64] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Data_Semiring_Semiring[int64]{}
+	out.V0 = in.V0
+	out.V1 = in.V1
+	out.V2 = in.V2.IntVal
+	out.V3 = in.V3.IntVal
+	return out
+}
+
+func Rebox_Main_3094389156_1170268447(in *Constructor_Data_Maybe_Just[gopurs_runtime.Value]) *Constructor_Data_Maybe_Just[int64] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Data_Maybe_Just[int64]{}
+	out.V0 = in.V0.IntVal
+	return out
+}
+
+func Rebox_Main_348932501_2826095630(in *Constructor_Data_Semiring_Semiring[int64]) *Constructor_Data_Semiring_Semiring[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Data_Semiring_Semiring[gopurs_runtime.Value]{}
+	out.V0 = in.V0
+	out.V1 = in.V1
+	out.V2 = gopurs_runtime.Int(in.V2)
+	out.V3 = gopurs_runtime.Int(in.V3)
+	return out
 }

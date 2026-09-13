@@ -34,7 +34,20 @@ var once_Main_Applicative_dollar_Dict sync.Once
 func Get_Main_Applicative_dollar_Dict() gopurs_runtime.Value {
 	once_Main_Applicative_dollar_Dict.Do(func() {
 		cache_Main_Applicative_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_Applicative_dollar_Dict(x_0_box)
+			return gopurs_runtime.Value{Type: 9, IntVal: 4228518006, UnsafePtr: unsafe.Pointer(Call_Main_Applicative_dollar_Dict(func() struct {
+				apply gopurs_runtime.Value
+				pure  gopurs_runtime.Value
+			} {
+				orig := x_0_box
+				_ = orig
+				clone := struct {
+					apply gopurs_runtime.Value
+					pure  gopurs_runtime.Value
+				}{}
+				clone.apply = gopurs_runtime.RecordGet(orig, "apply")
+				clone.pure = gopurs_runtime.RecordGet(orig, "pure")
+				return clone
+			}()))}
 		})
 	})
 	return cache_Main_Applicative_dollar_Dict
@@ -79,24 +92,31 @@ var once_Main_applicativeMaybe sync.Once
 
 func Get_Main_applicativeMaybe() gopurs_runtime.Value {
 	once_Main_applicativeMaybe.Do(func() {
-		cache_Main_applicativeMaybe = gopurs_runtime.Value{Type: 9, IntVal: 4228518006, UnsafePtr: unsafe.Pointer((&Constructor_Main_Applicative[*Constructor_Main_Just[gopurs_runtime.Value]]{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Func(func(v1_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				var __t0 *Constructor_Main_Just[gopurs_runtime.Value]
-				{
-					if (v_0.Type == 9 && v_0.IntVal == 3271839782 && v_0.UnsafePtr != nil) && (v1_1.Type == 9 && v1_1.IntVal == 3271839782 && v1_1.UnsafePtr != nil) {
-						__t0 = (&Constructor_Main_Just[gopurs_runtime.Value]{1, gopurs_runtime.Apply((*Constructor_Main_Just[gopurs_runtime.Value])(v_0.UnsafePtr).V0, (*Constructor_Main_Just[gopurs_runtime.Value])(v1_1.UnsafePtr).V0)})
-						goto end_branch_0
-					} else {
+		cache_Main_applicativeMaybe = gopurs_runtime.Value{Type: 9, IntVal: 4228518006, UnsafePtr: unsafe.Pointer(Rebox_Main_2015372117_1467411426((&Constructor_Main_Applicative[*Constructor_Main_Just[gopurs_runtime.Value]]{1, gopurs_runtime.Func2(func(v_0 gopurs_runtime.Value, v1_1 gopurs_runtime.Value) gopurs_runtime.Value {
+			var __t3 *Constructor_Main_Just[gopurs_runtime.Value]
+			{
+				var __t_tag_0 *Constructor_Main_Just[gopurs_runtime.Value] = gopurs_runtime.CoerceToStruct[Constructor_Main_Just[gopurs_runtime.Value]](v_0)
+				_ = __t_tag_0
+				var __t_and_2 bool = false
+				if __t_tag_0 != nil {
 
-					}
+					var __t_tag_1 *Constructor_Main_Just[gopurs_runtime.Value] = gopurs_runtime.CoerceToStruct[Constructor_Main_Just[gopurs_runtime.Value]](v1_1)
+					_ = __t_tag_1
+					__t_and_2 = (__t_tag_1 != nil)
 				}
-				{
-					__t0 = (*Constructor_Main_Just[gopurs_runtime.Value])(nil)
+				if __t_and_2 {
+					__t3 = (&Constructor_Main_Just[gopurs_runtime.Value]{1, gopurs_runtime.Apply((*Constructor_Main_Just[gopurs_runtime.Value])(v_0.UnsafePtr).V0, (*Constructor_Main_Just[gopurs_runtime.Value])(v1_1.UnsafePtr).V0)})
+					goto end_branch_3
+				} else {
+
 				}
-			end_branch_0:
-				return gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer(__t0)}
-			})
-		}), Get_Main_Just()}))}
+			}
+			{
+				__t3 = (*Constructor_Main_Just[gopurs_runtime.Value])(nil)
+			}
+		end_branch_3:
+			return gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer(__t3)}
+		}), Get_Main_Just()})))}
 	})
 	return cache_Main_applicativeMaybe
 }
@@ -107,7 +127,7 @@ type Constructor_Main_Nothing[T_a any] struct {
 
 type Constructor_Main_Just[T_a any] struct {
 	Rc uint32
-	V0 gopurs_runtime.Value
+	V0 T_a
 }
 
 type Constructor_Main_Applicative[T_f any] struct {
@@ -118,7 +138,7 @@ type Constructor_Main_Applicative[T_f any] struct {
 
 func init() {
 	gopurs_runtime.StructGetters[4228518006] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_Applicative[any])(ptr)
+		c := (*Constructor_Main_Applicative[gopurs_runtime.Value])(ptr)
 		_ = c
 		switch key {
 		case "apply":
@@ -131,20 +151,40 @@ func init() {
 	}
 }
 
-func Call_Main_Applicative_dollar_Dict(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var x_0 gopurs_runtime.Value = x_0_loop
+func Call_Main_Applicative_dollar_Dict(x_0_loop struct {
+	apply gopurs_runtime.Value
+	pure  gopurs_runtime.Value
+}) *Constructor_Main_Applicative[gopurs_runtime.Value] {
+	var x_0 struct {
+		apply gopurs_runtime.Value
+		pure  gopurs_runtime.Value
+	} = x_0_loop
 	_ = x_0
-	return x_0
+	return gopurs_runtime.CoerceToStruct[Constructor_Main_Applicative[gopurs_runtime.Value]](func() gopurs_runtime.Value {
+		orig := x_0
+		_ = orig
+		return gopurs_runtime.RecordDict2("apply", "pure", orig.apply, orig.pure)
+	}())
 }
 
 func Call_Main_pure(dict_0_loop *Constructor_Main_Applicative[gopurs_runtime.Value]) gopurs_runtime.Value {
 	var dict_0 *Constructor_Main_Applicative[gopurs_runtime.Value] = dict_0_loop
 	_ = dict_0
-	return gopurs_runtime.Box(dict_0.V1)
+	return dict_0.V1
 }
 
 func Call_Main_apply(dict_0_loop *Constructor_Main_Applicative[gopurs_runtime.Value]) gopurs_runtime.Value {
 	var dict_0 *Constructor_Main_Applicative[gopurs_runtime.Value] = dict_0_loop
 	_ = dict_0
-	return gopurs_runtime.Box(dict_0.V0)
+	return dict_0.V0
+}
+
+func Rebox_Main_2015372117_1467411426(in *Constructor_Main_Applicative[*Constructor_Main_Just[gopurs_runtime.Value]]) *Constructor_Main_Applicative[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Main_Applicative[gopurs_runtime.Value]{}
+	out.V0 = in.V0
+	out.V1 = in.V1
+	return out
 }

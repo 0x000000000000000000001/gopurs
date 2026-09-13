@@ -12,7 +12,15 @@ var once_Main_ClassA_dollar_Dict sync.Once
 func Get_Main_ClassA_dollar_Dict() gopurs_runtime.Value {
 	once_Main_ClassA_dollar_Dict.Do(func() {
 		cache_Main_ClassA_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_ClassA_dollar_Dict(x_0_box)
+			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_ClassA_dollar_Dict(func() struct {
+			} {
+				orig := x_0_box
+				_ = orig
+				clone := struct {
+				}{}
+
+				return clone
+			}())), UnsafePtr: nil}
 		})
 	})
 	return cache_Main_ClassA_dollar_Dict
@@ -24,7 +32,17 @@ var once_Main_ClassB_dollar_Dict sync.Once
 func Get_Main_ClassB_dollar_Dict() gopurs_runtime.Value {
 	once_Main_ClassB_dollar_Dict.Do(func() {
 		cache_Main_ClassB_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_ClassB_dollar_Dict(x_0_box)
+			return gopurs_runtime.Value{Type: 9, IntVal: 1454680786, UnsafePtr: unsafe.Pointer(Call_Main_ClassB_dollar_Dict(func() struct {
+				ClassA0 gopurs_runtime.Value
+			} {
+				orig := x_0_box
+				_ = orig
+				clone := struct {
+					ClassA0 gopurs_runtime.Value
+				}{}
+				clone.ClassA0 = gopurs_runtime.RecordGet(orig, "ClassA0")
+				return clone
+			}()))}
 		})
 	})
 	return cache_Main_ClassB_dollar_Dict
@@ -46,17 +64,10 @@ var once_Main_a sync.Once
 func Get_Main_a() gopurs_runtime.Value {
 	once_Main_a.Do(func() {
 		cache_Main_a = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
-			orig := func() *struct {
-			} {
-				orig := gopurs_runtime.RecordDict0()
-				_ = orig
-				clone := struct {
-				}{}
-
-				return &clone
-			}()
+			orig := struct {
+			}{}
 			_ = orig
-			return gopurs_runtime.RecordDict([]string{}, []gopurs_runtime.Value{})
+			return gopurs_runtime.RecordDict0()
 		}().IntVal)), UnsafePtr: nil}
 	})
 	return cache_Main_a
@@ -80,7 +91,7 @@ type Constructor_Main_ClassA[T_t any, T_a any] struct {
 
 func init() {
 	gopurs_runtime.StructGetters[3328906353] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_ClassA[any, any])(ptr)
+		c := (*Constructor_Main_ClassA[gopurs_runtime.Value, gopurs_runtime.Value])(ptr)
 		_ = c
 		switch key {
 
@@ -97,7 +108,7 @@ type Constructor_Main_ClassB[T_t any, T_a any] struct {
 
 func init() {
 	gopurs_runtime.StructGetters[1454680786] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
-		c := (*Constructor_Main_ClassB[any, any])(ptr)
+		c := (*Constructor_Main_ClassB[gopurs_runtime.Value, gopurs_runtime.Value])(ptr)
 		_ = c
 		switch key {
 		case "ClassA0":
@@ -108,14 +119,28 @@ func init() {
 	}
 }
 
-func Call_Main_ClassA_dollar_Dict(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var x_0 gopurs_runtime.Value = x_0_loop
+func Call_Main_ClassA_dollar_Dict(x_0_loop struct {
+}) uint32 {
+	var x_0 struct {
+	} = x_0_loop
 	_ = x_0
-	return x_0
+	return uint32(func() gopurs_runtime.Value {
+		orig := x_0
+		_ = orig
+		return gopurs_runtime.RecordDict0()
+	}().IntVal)
 }
 
-func Call_Main_ClassB_dollar_Dict(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var x_0 gopurs_runtime.Value = x_0_loop
+func Call_Main_ClassB_dollar_Dict(x_0_loop struct {
+	ClassA0 gopurs_runtime.Value
+}) *Constructor_Main_ClassB[gopurs_runtime.Value, gopurs_runtime.Value] {
+	var x_0 struct {
+		ClassA0 gopurs_runtime.Value
+	} = x_0_loop
 	_ = x_0
-	return x_0
+	return gopurs_runtime.CoerceToStruct[Constructor_Main_ClassB[gopurs_runtime.Value, gopurs_runtime.Value]](func() gopurs_runtime.Value {
+		orig := x_0
+		_ = orig
+		return gopurs_runtime.RecordDict1("ClassA0", orig.ClassA0)
+	}())
 }

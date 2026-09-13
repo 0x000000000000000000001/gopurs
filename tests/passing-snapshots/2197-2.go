@@ -10,7 +10,7 @@ var once_Main_z sync.Once
 
 func Get_Main_z() gopurs_runtime.Value {
 	once_Main_z.Do(func() {
-		cache_Main_z = gopurs_runtime.Int(0)
+		cache_Main_z = gopurs_runtime.Int(int64(0))
 	})
 	return cache_Main_z
 }

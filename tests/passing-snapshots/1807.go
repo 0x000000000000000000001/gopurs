@@ -22,7 +22,31 @@ var once_Main_a sync.Once
 
 func Get_Main_a() gopurs_runtime.Value {
 	once_Main_a.Do(func() {
-		cache_Main_a = gopurs_runtime.RecordDict1("b", gopurs_runtime.RecordDict1("c", gopurs_runtime.RecordDict1("d", gopurs_runtime.Int(2))))
+		cache_Main_a = func() gopurs_runtime.Value {
+			orig := struct {
+				b struct {
+					c struct {
+						d int64
+					}
+				}
+			}{struct {
+				c struct {
+					d int64
+				}
+			}{struct {
+				d int64
+			}{int64(2)}}}
+			_ = orig
+			return gopurs_runtime.RecordDict1("b", func() gopurs_runtime.Value {
+				orig := orig.b
+				_ = orig
+				return gopurs_runtime.RecordDict1("c", func() gopurs_runtime.Value {
+					orig := orig.c
+					_ = orig
+					return gopurs_runtime.RecordDict1("d", gopurs_runtime.Int(orig.d))
+				}())
+			}())
+		}()
 	})
 	return cache_Main_a
 }
@@ -32,7 +56,61 @@ var once_Main_d sync.Once
 
 func Get_Main_d() gopurs_runtime.Value {
 	once_Main_d.Do(func() {
-		cache_Main_d = gopurs_runtime.Int(4)
+		cache_Main_d = gopurs_runtime.Int((Call_Main_fn(func() gopurs_runtime.Value {
+			orig := func() struct {
+				b struct {
+					c struct {
+						d int64
+					}
+				}
+			} {
+				orig := Get_Main_a()
+				_ = orig
+				clone := struct {
+					b struct {
+						c struct {
+							d int64
+						}
+					}
+				}{}
+				clone.b = func() struct {
+					c struct {
+						d int64
+					}
+				} {
+					orig := gopurs_runtime.RecordGet(orig, "b")
+					_ = orig
+					clone := struct {
+						c struct {
+							d int64
+						}
+					}{}
+					clone.c = func() struct {
+						d int64
+					} {
+						orig := gopurs_runtime.RecordGet(orig, "c")
+						_ = orig
+						clone := struct {
+							d int64
+						}{}
+						clone.d = gopurs_runtime.RecordGet(orig, "d").IntVal
+						return clone
+					}()
+					return clone
+				}()
+				return clone
+			}()
+			_ = orig
+			return gopurs_runtime.RecordDict1("b", func() gopurs_runtime.Value {
+				orig := orig.b
+				_ = orig
+				return gopurs_runtime.RecordDict1("c", func() gopurs_runtime.Value {
+					orig := orig.c
+					_ = orig
+					return gopurs_runtime.RecordDict1("d", gopurs_runtime.Int(orig.d))
+				}())
+			}())
+		}()).IntVal) + (int64(2)))
 	})
 	return cache_Main_d
 }
@@ -42,7 +120,76 @@ var once_Main_main sync.Once
 
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
-		cache_Main_main = gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
+		cache_Main_main = func() gopurs_runtime.Value {
+			var __t0 gopurs_runtime.Value
+			{
+				if ((Call_Main_fn(func() gopurs_runtime.Value {
+					orig := func() struct {
+						b struct {
+							c struct {
+								d int64
+							}
+						}
+					} {
+						orig := Get_Main_a()
+						_ = orig
+						clone := struct {
+							b struct {
+								c struct {
+									d int64
+								}
+							}
+						}{}
+						clone.b = func() struct {
+							c struct {
+								d int64
+							}
+						} {
+							orig := gopurs_runtime.RecordGet(orig, "b")
+							_ = orig
+							clone := struct {
+								c struct {
+									d int64
+								}
+							}{}
+							clone.c = func() struct {
+								d int64
+							} {
+								orig := gopurs_runtime.RecordGet(orig, "c")
+								_ = orig
+								clone := struct {
+									d int64
+								}{}
+								clone.d = gopurs_runtime.RecordGet(orig, "d").IntVal
+								return clone
+							}()
+							return clone
+						}()
+						return clone
+					}()
+					_ = orig
+					return gopurs_runtime.RecordDict1("b", func() gopurs_runtime.Value {
+						orig := orig.b
+						_ = orig
+						return gopurs_runtime.RecordDict1("c", func() gopurs_runtime.Value {
+							orig := orig.c
+							_ = orig
+							return gopurs_runtime.RecordDict1("d", gopurs_runtime.Int(orig.d))
+						}())
+					}())
+				}()).IntVal) + (int64(2))) == (int64(4)) {
+					__t0 = gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
+					goto end_branch_0
+				} else {
+
+				}
+			}
+			{
+				__t0 = gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Fail"))
+			}
+		end_branch_0:
+			return __t0
+		}()
 	})
 	return cache_Main_main
 }

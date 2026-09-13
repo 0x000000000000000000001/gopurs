@@ -6,42 +6,6 @@ import (
 	unsafe "unsafe"
 )
 
-var cache_Main_barIsSymbol gopurs_runtime.Value
-var once_Main_barIsSymbol sync.Once
-
-func Get_Main_barIsSymbol() gopurs_runtime.Value {
-	once_Main_barIsSymbol.Do(func() {
-		cache_Main_barIsSymbol = gopurs_runtime.Value{Type: 9, IntVal: 2134024384, UnsafePtr: unsafe.Pointer((&Constructor_Data_Symbol_IsSymbol[gopurs_runtime.Value]{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str("bar")
-		})}))}
-	})
-	return cache_Main_barIsSymbol
-}
-
-var cache_Main_showTuple gopurs_runtime.Value
-var once_Main_showTuple sync.Once
-
-func Get_Main_showTuple() gopurs_runtime.Value {
-	once_Main_showTuple.Do(func() {
-		cache_Main_showTuple = gopurs_runtime.Func(func(dictShow1_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_showTuple(dictShow1_0_box)
-		})
-	})
-	return cache_Main_showTuple
-}
-
-var cache_Main_showTuple1 gopurs_runtime.Value
-var once_Main_showTuple1 sync.Once
-
-func Get_Main_showTuple1() gopurs_runtime.Value {
-	once_Main_showTuple1.Do(func() {
-		cache_Main_showTuple1 = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer((&Constructor_Data_Show_Show[gopurs_runtime.Value]{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str((((("(Tuple ") + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), (*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(v_0.UnsafePtr).V0).StrVal())) + (" ")) + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), (*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(v_0.UnsafePtr).V1).StrVal())) + (")"))
-		})}))}
-	})
-	return cache_Main_showTuple1
-}
-
 var cache_Main_fooIsSymbol gopurs_runtime.Value
 var once_Main_fooIsSymbol sync.Once
 
@@ -59,44 +23,41 @@ var once_Main_showMaybe sync.Once
 
 func Get_Main_showMaybe() gopurs_runtime.Value {
 	once_Main_showMaybe.Do(func() {
-		cache_Main_showMaybe = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer((&Constructor_Data_Show_Show[gopurs_runtime.Value]{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			var __t0 string
-			{
-				if v_0.Type == 9 && v_0.IntVal == 930809136 && v_0.UnsafePtr != nil {
-					__t0 = (("(Just ") + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), (*Constructor_Data_Maybe_Just[gopurs_runtime.Value])(v_0.UnsafePtr).V0).StrVal())) + (")")
-					goto end_branch_0
-				} else {
-
-				}
-			}
-			{
-				if v_0.Type == 9 && v_0.IntVal == 930809136 && v_0.UnsafePtr == nil {
-					__t0 = "Nothing"
-					goto end_branch_0
-				} else {
-
-				}
-			}
-			{
-				__t0 = func() gopurs_runtime.Value { panic("Failed pattern match") }().StrVal()
-			}
-		end_branch_0:
-			return gopurs_runtime.Str(__t0)
-		})}))}
+		cache_Main_showMaybe = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Call_Data_Maybe_showMaybe(gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showInt()))))})))}
 	})
 	return cache_Main_showMaybe
 }
 
-var cache_Main_showTuple2 gopurs_runtime.Value
-var once_Main_showTuple2 sync.Once
+var cache_Main_barIsSymbol gopurs_runtime.Value
+var once_Main_barIsSymbol sync.Once
 
-func Get_Main_showTuple2() gopurs_runtime.Value {
-	once_Main_showTuple2.Do(func() {
-		cache_Main_showTuple2 = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer((&Constructor_Data_Show_Show[*Constructor_Data_Tuple_Tuple[string, int64]]{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str((((("(Tuple ") + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), (*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(v_0.UnsafePtr).V0).StrVal())) + (" ")) + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), (*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(v_0.UnsafePtr).V1).StrVal())) + (")"))
+func Get_Main_barIsSymbol() gopurs_runtime.Value {
+	once_Main_barIsSymbol.Do(func() {
+		cache_Main_barIsSymbol = gopurs_runtime.Value{Type: 9, IntVal: 2134024384, UnsafePtr: unsafe.Pointer((&Constructor_Data_Symbol_IsSymbol[gopurs_runtime.Value]{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str("bar")
 		})}))}
 	})
-	return cache_Main_showTuple2
+	return cache_Main_barIsSymbol
+}
+
+var cache_Main_showTuple gopurs_runtime.Value
+var once_Main_showTuple sync.Once
+
+func Get_Main_showTuple() gopurs_runtime.Value {
+	once_Main_showTuple.Do(func() {
+		cache_Main_showTuple = gopurs_runtime.Apply(Get_Data_Tuple_showTuple(), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showString()))))})
+	})
+	return cache_Main_showTuple
+}
+
+var cache_Main_showTuple1 gopurs_runtime.Value
+var once_Main_showTuple1 sync.Once
+
+func Get_Main_showTuple1() gopurs_runtime.Value {
+	once_Main_showTuple1.Do(func() {
+		cache_Main_showTuple1 = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Call_Data_Tuple_showTuple(gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showString()))))}, gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showInt()))))})))}
+	})
+	return cache_Main_showTuple1
 }
 
 var cache_Main_showMaybe1 gopurs_runtime.Value
@@ -104,32 +65,19 @@ var once_Main_showMaybe1 sync.Once
 
 func Get_Main_showMaybe1() gopurs_runtime.Value {
 	once_Main_showMaybe1.Do(func() {
-		cache_Main_showMaybe1 = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer((&Constructor_Data_Show_Show[*Constructor_Data_Maybe_Just[int64]]{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			var __t0 string
-			{
-				if v_0.Type == 9 && v_0.IntVal == 930809136 && v_0.UnsafePtr != nil {
-					__t0 = (("(Just ") + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), (*Constructor_Data_Maybe_Just[gopurs_runtime.Value])(v_0.UnsafePtr).V0).StrVal())) + (")")
-					goto end_branch_0
-				} else {
-
-				}
-			}
-			{
-				if v_0.Type == 9 && v_0.IntVal == 930809136 && v_0.UnsafePtr == nil {
-					__t0 = "Nothing"
-					goto end_branch_0
-				} else {
-
-				}
-			}
-			{
-				__t0 = func() gopurs_runtime.Value { panic("Failed pattern match") }().StrVal()
-			}
-		end_branch_0:
-			return gopurs_runtime.Str(__t0)
-		})}))}
+		cache_Main_showMaybe1 = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_2818770644_1386611502(Rebox_Main_1386611502_2818770644(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Call_Data_Maybe_showMaybe(gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showInt()))))})))))}
 	})
 	return cache_Main_showMaybe1
+}
+
+var cache_Main_showTuple2 gopurs_runtime.Value
+var once_Main_showTuple2 sync.Once
+
+func Get_Main_showTuple2() gopurs_runtime.Value {
+	once_Main_showTuple2.Do(func() {
+		cache_Main_showTuple2 = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_949660775_1386611502(Rebox_Main_1386611502_949660775(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Call_Data_Tuple_showTuple(gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showString()))))}, gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showInt()))))})))))}
+	})
+	return cache_Main_showTuple2
 }
 
 var cache_Main__foo gopurs_runtime.Value
@@ -162,10 +110,74 @@ func Get_Main_main() gopurs_runtime.Value {
 	return cache_Main_main
 }
 
-func Call_Main_showTuple(dictShow1_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var dictShow1_0 gopurs_runtime.Value = dictShow1_0_loop
-	_ = dictShow1_0
-	return gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer((&Constructor_Data_Show_Show[*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]]{1, gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
-		return gopurs_runtime.Str((((("(Tuple ") + (gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), (*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(v_1.UnsafePtr).V0).StrVal())) + (" ")) + (gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictShow1_0, "show"), (*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(v_1.UnsafePtr).V1).StrVal())) + (")"))
-	})}))}
+func Rebox_Main_1386611502_1514099793(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[string] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Data_Show_Show[string]{}
+	out.V0 = in.V0
+	return out
+}
+
+func Rebox_Main_1386611502_1636311157(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[int64] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Data_Show_Show[int64]{}
+	out.V0 = in.V0
+	return out
+}
+
+func Rebox_Main_1386611502_2818770644(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[*Constructor_Data_Maybe_Just[int64]] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Data_Show_Show[*Constructor_Data_Maybe_Just[int64]]{}
+	out.V0 = in.V0
+	return out
+}
+
+func Rebox_Main_1386611502_949660775(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[*Constructor_Data_Tuple_Tuple[string, int64]] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Data_Show_Show[*Constructor_Data_Tuple_Tuple[string, int64]]{}
+	out.V0 = in.V0
+	return out
+}
+
+func Rebox_Main_1514099793_1386611502(in *Constructor_Data_Show_Show[string]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Data_Show_Show[gopurs_runtime.Value]{}
+	out.V0 = in.V0
+	return out
+}
+
+func Rebox_Main_1636311157_1386611502(in *Constructor_Data_Show_Show[int64]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Data_Show_Show[gopurs_runtime.Value]{}
+	out.V0 = in.V0
+	return out
+}
+
+func Rebox_Main_2818770644_1386611502(in *Constructor_Data_Show_Show[*Constructor_Data_Maybe_Just[int64]]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Data_Show_Show[gopurs_runtime.Value]{}
+	out.V0 = in.V0
+	return out
+}
+
+func Rebox_Main_949660775_1386611502(in *Constructor_Data_Show_Show[*Constructor_Data_Tuple_Tuple[string, int64]]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Data_Show_Show[gopurs_runtime.Value]{}
+	out.V0 = in.V0
+	return out
 }
