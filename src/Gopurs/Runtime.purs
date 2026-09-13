@@ -98,6 +98,38 @@ func Int(v int64) Value {
 	return Value{Type: TypeInt, IntVal: v}
 }
 
+// PureScript uses Euclidean division: a non-negative remainder, and zero
+// for both division and modulo by zero. Go instead truncates toward zero.
+func IntDiv(a, b int64) int64 {
+	if b == 0 {
+		return 0
+	}
+	q := a / b
+	if a % b < 0 {
+		if b > 0 {
+			q--
+		} else {
+			q++
+		}
+	}
+	return q
+}
+
+func IntMod(a, b int64) int64 {
+	if b == 0 {
+		return 0
+	}
+	r := a % b
+	if r < 0 {
+		if b > 0 {
+			r += b
+		} else {
+			r -= b
+		}
+	}
+	return r
+}
+
 func Float(v float64) Value {
 	return Value{Type: TypeFloat, IntVal: int64(math.Float64bits(v))}
 }
