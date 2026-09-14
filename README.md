@@ -183,7 +183,7 @@ For the recent cleanup batches, the agreed integration checkpoint is
 compiles Go and executes the 14 cases of the default `pure` campaign. The
 recorded comparisons preserved all 387 generated Go files and their functional
 outputs. This does not establish a green full `passing` or sibling-module suite.
-The [cleanup log](todo.md) records completed changes and outstanding checks.
+The [cleanup plan](todo.md) tracks the current wave; [testing and validation](docs/testing.md) records the completed checks.
 
 ## Rebuilding the FFI parser
 

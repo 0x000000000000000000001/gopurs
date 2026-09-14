@@ -111,3 +111,15 @@ La suite complète `passing` et les nouveaux témoins de refus, d'effets et de p
 **8. Mesures de l'étape 3.5**
 
 Le [bilan sur le Go régénéré](/Users/0x1/Documents/htdocs/altbak.pub/scratch/gopurs-array-roundtrip-3-5-20260908/RESULTS.md) conserve le protocole, les dix paires de chaque série et la dispersion. Les économies d'allocation sont confirmées : −19,44 % d'octets/op à 900, −15,57 % à 90 000, deux allocations supprimées dans les deux cas. Les temps médians du noyau baissent de 2,47 % et 0,86 %, sans gain global d'altbak démontré. Le RSS de la sonde répétée reste stable à 900 et baisse à 90 000 ; ce n'est pas une garantie de RAM pour tout programme. Un petit ralentissement de Fib est reproduit par un contrôle isolé (+3 % environ), malgré son Go inchangé, avec cause non établie. La validation étendue de 3.4 reste ouverte.
+
+**9. Réexamen de la fixture — 14 septembre 2026**
+
+`./bin/test ArrayRoundtrip -c --keep-workspace`, avec le compilateur TAST et
+Spago d'altbak, réussit dans un workspace neuf : les 28 assertions passent et
+le Go de Main correspond au snapshot existant. Le singleton pair retourne
+bien `8` ; l'échec fonctionnel consigné le 9 septembre dans le lot 7.2 de
+l'ancien journal (`git show baa1e071:todo.md`) n'est plus reproductible avec les
+sources et outils actuels.
+Aucun correctif ni changement de snapshot n'a été nécessaire pour ce contrôle.
+Les témoins supplémentaires prévus en 3.4 ne sont pas ajoutés par cette
+réexécution. Preuves : `/private/tmp/gopurs-array-check-hm1393_z/`.

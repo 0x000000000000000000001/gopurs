@@ -126,7 +126,7 @@ puis deux fixtures minimales avec les vrais outils dans des workspaces
 séparés. Ces checks ne constituent pas une campagne complète du compilateur.
 
 Restent ouverts : la référence des snapshots TCO/TCOMutRec et le contrôle
-ciblé de fusion consignés en 1.3 du [todo](../todo.md), la validation étendue de
+ciblé de fusion du bilan de la première vague, la validation étendue de
 la [règle ArrayRoundtrip](array-roundtrip.md) prévue en 3.4 de ce chantier, et
 une campagne complète `passing` / modules frères. Les contrôles ciblés plus
 anciens et leurs écarts préexistants sont datés dans le todo. L'ancienne
@@ -141,4 +141,11 @@ préexistants (73 sources, 12 dépendances)**. Le lot 12 les a supprimés : deux
 compilations de référence sans sorties préexistantes ont recompilé chacune les
 438 modules, passant de 85 à **zéro avertissement et zéro erreur**. Un build
 incrémental silencieux ne suffit pas à établir ce résultat. Les preuves
-détaillées sont consignées à la fin du [todo](../todo.md).
+détaillées jusqu’au lot 12 restent consultables avec `git show baa1e071:todo.md`.
+Le [todo actuel](../todo.md) décrit la deuxième vague de nettoyage.
+
+Le contrôle `ArrayRoundtrip -c --keep-workspace` du 14 septembre confirme les
+28 assertions existantes et le snapshot inchangé. Le résultat incorrect du
+singleton pair consigné le 9 septembre ne se reproduit plus : le résultat est
+`8`. Cette vérification n'a nécessité aucune modification du compilateur ;
+elle ne désigne pas la cause ni la correction de l'ancien échec.
