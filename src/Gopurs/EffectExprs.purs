@@ -12,7 +12,7 @@ import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
 import Gopurs.ExprAnalysis (executeIfOpaque, unwrapTcoExpr)
 import Gopurs.ExprContext (ExprContext, ExprResult, TranslateExpr, StmtTree(..), flattenStmts)
-import Gopurs.GoAst (GoExpr(..), GoType(..))
+import Gopurs.GoAst (rawGo, GoExpr(..), GoType(..))
 import Gopurs.GoConversions (boxGoExpr)
 import Gopurs.Printer (printGoExpr)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
@@ -65,10 +65,10 @@ primitive translate context@{ codegenStateRef, depth, modNameStr } nextId eff =
       refIdent = "__local_ref_" <> show resA.nextId
       declStmt = GoAssign refIdent (boxGoExpr codegenStateRef modNameStr resA.expr resA.exprType)
       ifaceIdent = "__local_iface_" <> show resA.nextId
-      ifaceStmt = GoRaw ("var " <> ifaceIdent <> " interface{} = " <> refIdent)
+      ifaceStmt = rawGo ("var " <> ifaceIdent <> " interface{} = " <> refIdent)
     in
       { stmts: resA.stmts <> StmtLeaf declStmt <> StmtLeaf ifaceStmt
-      , expr: GoRaw ("gopurs_runtime.Any(&" <> ifaceIdent <> ")")
+      , expr: rawGo ("gopurs_runtime.Any(&" <> ifaceIdent <> ")")
       , exprType: TypeValue
       , nextId: resA.nextId + 1
       }
@@ -77,7 +77,7 @@ primitive translate context@{ codegenStateRef, depth, modNameStr } nextId eff =
       resA = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing }) nextId a
     in
       { stmts: resA.stmts
-      , expr: GoRaw ("(*(" <> printGoExpr resA.expr <> ".PtrVal().(*interface{}))).(gopurs_runtime.Value)")
+      , expr: rawGo ("(*(" <> printGoExpr resA.expr <> ".PtrVal().(*interface{}))).(gopurs_runtime.Value)")
       , exprType: TypeValue
       , nextId: resA.nextId
       }
@@ -85,7 +85,7 @@ primitive translate context@{ codegenStateRef, depth, modNameStr } nextId eff =
     let
       resRef = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing }) nextId ref
       resVal = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing }) resRef.nextId val
-      writeStmt = GoRaw ("*(" <> printGoExpr resRef.expr <> ".PtrVal().(*interface{})) = " <> printGoExpr (boxGoExpr codegenStateRef modNameStr resVal.expr resVal.exprType))
+      writeStmt = rawGo ("*(" <> printGoExpr resRef.expr <> ".PtrVal().(*interface{})) = " <> printGoExpr (boxGoExpr codegenStateRef modNameStr resVal.expr resVal.exprType))
     in
       { stmts: resRef.stmts <> resVal.stmts <> StmtLeaf writeStmt
       , expr: boxGoExpr codegenStateRef modNameStr resVal.expr resVal.exprType

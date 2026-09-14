@@ -10,7 +10,6 @@ import Data.Array.NonEmpty (fromArray)
 import Data.Foldable (foldl)
 import Data.Map as Map
 import Data.Maybe (Maybe(..))
-import Data.String as String
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..), fst, snd)
 import Effect.Ref (Ref)
@@ -20,10 +19,11 @@ import Gopurs.CallAnalysis (extractUncurriedAbs)
 import Gopurs.CodegenState (CodegenMetadata, CodegenState, FunctionInfo)
 import Gopurs.ExprAnalysis (extractExprFuncType, extractFuncType)
 import Gopurs.ExprContext (LoopContext, ModuleFunctions, TranslateExpr, flattenStmts, wrapInStmts)
-import Gopurs.GoAst (GoDecl, GoExpr(..), GoType(..), goTypeToStr, sanitizeName)
+import Gopurs.GoAst (rawGo, GoDecl(..), GoExpr(..), GoType(..), goTypeToStr, sanitizeName)
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr, getUnboxedADT)
 import Gopurs.GoTypes (exprTypeToGoType)
 import Gopurs.Printer (printGoExpr)
+import Gopurs.GoFunctions (curriedFunction)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.Codegen.Tco as Tco
 import PureScript.Backend.Optimizer.Convert (BackendModule)
@@ -148,7 +148,7 @@ declarations translate metadata codegenStateRef modNameStr moduleFunctions group
                             resBodyMut = translate (context { depth = 0, bound = newBound, tcoIdent = (Just fn.ident), loopCtx = currentLoopCtx, options = { isTail: isSelfRecursiveLoop, inEffectBlock: false }, mbExpectedExprType = mbExpectedRet }) 0 fn.body
 
                             goName = fn.ident
-                            initVars = Array.concatMap (\(Tuple p goT) -> [ GoRaw ("var " <> p <> " " <> goTypeToStr goT <> " = " <> p <> "_loop"), GoRaw ("_ = " <> p) ]) paramsWithTypes
+                            initVars = Array.concatMap (\(Tuple p goT) -> [ rawGo ("var " <> p <> " " <> goTypeToStr goT <> " = " <> p <> "_loop"), rawGo ("_ = " <> p) ]) paramsWithTypes
 
                             arity = Array.length fn.args
 
@@ -157,7 +157,7 @@ declarations translate metadata codegenStateRef modNameStr moduleFunctions group
                               Just { fRet: resultType } -> resultType
                               Nothing -> TypeValue
 
-                            goParams = String.joinWith ", " (map (\(Tuple p goT) -> p <> "_loop " <> goTypeToStr goT) paramsWithTypes)
+                            goParams = map (\(Tuple p goT) -> Tuple (p <> "_loop") goT) paramsWithTypes
 
                             funcExpr =
                               if arity >= 1 && arity <= 10 then
@@ -167,8 +167,8 @@ declarations translate metadata codegenStateRef modNameStr moduleFunctions group
                                   funcBody = if isSelfRecursiveLoop then GoFor goName bodyStmts else GoBlock bodyStmts
                                 in
                                   unsafePerformEffect do
-                                    let callFuncDecl = "func Call_" <> modNameStr <> "_" <> goName <> "(" <> goParams <> ") " <> goTypeToStr expectedRetType <> " {\n" <> printGoExpr funcBody <> "\n}"
-                                    Ref.modify_ (\r -> r { rawDecls = Array.snoc r.rawDecls callFuncDecl }) codegenStateRef
+                                    let callFuncDecl = GoFunctionDecl { name: "Call_" <> modNameStr <> "_" <> goName, params: goParams, result: expectedRetType, body: funcBody }
+                                    Ref.modify_ (\r -> r { declarations = Array.snoc r.declarations callFuncDecl }) codegenStateRef
                                     let wrapperParams = map (\(Tuple p _) -> p <> "_box") paramsWithTypes
                                     let callExpr = GoCall (GoVar ("Call_" <> modNameStr <> "_" <> goName)) (map (\(Tuple p goT) -> coerceGoExpr codegenStateRef modNameStr (GoVar (p <> "_box")) TypeValue goT) paramsWithTypes)
                                     let boxedRes = boxGoExpr codegenStateRef modNameStr callExpr expectedRetType
@@ -182,19 +182,19 @@ declarations translate metadata codegenStateRef modNameStr moduleFunctions group
                                   iife = GoCall (GoFuncBlock [] [ funcBody ] TypeValue) []
                                 in
                                   if arity == 0 then
-                                    GoFunc "_" TypeValue TypeValue funcBody
+                                    curriedFunction [ Tuple "_" TypeValue ] TypeValue funcBody
                                   else
                                     Array.foldr
                                       (\(Tuple p goT) acc -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func")
                                         [ GoFuncLit [ Tuple (p <> "_box") TypeValue ]
-                                            [ GoRaw ("var " <> p <> "_loop " <> goTypeToStr goT <> " = " <> printGoExpr (coerceGoExpr codegenStateRef modNameStr (GoVar (p <> "_box")) TypeValue goT)) ]
+                                            [ rawGo ("var " <> p <> "_loop " <> goTypeToStr goT <> " = " <> printGoExpr (coerceGoExpr codegenStateRef modNameStr (GoVar (p <> "_box")) TypeValue goT)) ]
                                             acc
                                             TypeValue
                                         ])
                                       iife
                                       paramsWithTypes
                           in
-                            { identifier: modNameStr <> "_" <> goName, expression: funcExpr, goType: TypeValue }
+                            GoCachedValue { identifier: modNameStr <> "_" <> goName, expression: funcExpr, goType: TypeValue }
                       )
                       fns
                   in
@@ -205,7 +205,7 @@ declarations translate metadata codegenStateRef modNameStr moduleFunctions group
                         let
                           res = translate (context { depth = 0, bound = Map.empty, tcoIdent = (Just (sanitizeName name)), loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = (Just (getExprType expr)) }) 0 expr
                         in
-                          [ { identifier: modNameStr <> "_" <> sanitizeName name, expression: wrapInStmts [] res.stmts TypeValue (boxGoExpr codegenStateRef modNameStr res.expr res.exprType), goType: TypeValue } ]
+                          [ GoCachedValue { identifier: modNameStr <> "_" <> sanitizeName name, expression: wrapInStmts [] res.stmts TypeValue (boxGoExpr codegenStateRef modNameStr res.expr res.exprType), goType: TypeValue } ]
                     )
                     binds
         in

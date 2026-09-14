@@ -2,7 +2,7 @@ module Gopurs.Printer where
 
 import Prelude
 import Data.String as String
-import Gopurs.GoAst (GoExpr(..), GoDecl, GoFile, GoType(..), goTypeToStr, sanitizeName)
+import Gopurs.GoAst (GoExpr(..), GoDecl(..), GoBinding, GoFile, GoType(..), goTypeToStr, sanitizeName)
 import Data.Tuple (Tuple(..))
 import Data.Array as Array
 import Data.Maybe (Maybe(..), fromMaybe)
@@ -23,23 +23,6 @@ printGoExpr goExpr = case goExpr of
     printGoExpr f <> "(" <> String.joinWith ", " (map printGoExpr args) <> ")"
   GoSelector obj field ->
     printGoExpr obj <> "." <> field
-  GoFunc arg argType retType body -> 
-    let
-      flattenGoFunc (GoFunc a atype _ b) acc = flattenGoFunc b (Array.snoc acc (Tuple a atype))
-      flattenGoFunc b acc = Tuple acc b
-      Tuple allArgs finalBody = flattenGoFunc body [Tuple arg argType]
-      len = Array.length allArgs
-      funcName = if len == 1 then "Func" else "Func" <> show len
-      argStr = String.joinWith ", " (map (\(Tuple a t) -> a <> " " <> goTypeToStr t) allArgs)
-    in
-      if len > 10 then
-        case body of
-          GoBlock _ -> "gopurs_runtime.Func(func(" <> arg <> " " <> goTypeToStr argType <> ") " <> goTypeToStr retType <> " {\n" <> printGoExpr body <> "\n})"
-          _ -> "gopurs_runtime.Func(func(" <> arg <> " " <> goTypeToStr argType <> ") " <> goTypeToStr retType <> " {\nreturn " <> printGoExpr body <> "\n})"
-      else
-        case finalBody of
-          GoBlock _ -> "gopurs_runtime." <> funcName <> "(func(" <> argStr <> ") " <> goTypeToStr retType <> " {\n" <> printGoExpr finalBody <> "\n})"
-          _ -> "gopurs_runtime." <> funcName <> "(func(" <> argStr <> ") " <> goTypeToStr retType <> " {\nreturn " <> printGoExpr finalBody <> "\n})"
   GoBlock stmts ->
     String.joinWith "\n" (map printGoExpr stmts)
   GoReturn e ->
@@ -181,8 +164,8 @@ printGoExpr goExpr = case goExpr of
     "func() []int64 {\n\t\t\t\t\tarr := *(*[]gopurs_runtime.Value)(" <> printGoExpr expr <> ".UnsafePtr)\n\t\t\t\t\tunboxed := make([]int64, len(arr))\n\t\t\t\t\tfor i, v := range arr { unboxed[i] = v.IntVal }\n\t\t\t\t\treturn unboxed\n\t\t\t\t}()"
   GoFreshFilterArray expr ->
     printGoExpr expr
-  GoRaw raw ->
-    raw
+  GoRaw code ->
+    code.text
   GoFor label stmts ->
     label <> ":\nfor {\nif false { continue " <> label <> " }\n" <> String.joinWith "\n" (map printGoExpr stmts) <> "\n}"
   GoForRange rangeStmt stmts ->
@@ -204,7 +187,7 @@ printGoExpr goExpr = case goExpr of
   GoStructValue adtName fields exprs ->
     goTypeToStr (TypeStructValue adtName fields) <> "{" <> String.joinWith ", " (map printGoExpr exprs) <> "}"
 
-printGoDeclVar :: GoDecl -> String
+printGoDeclVar :: GoBinding -> String
 printGoDeclVar { identifier, expression, goType } =
   let typeStr = goTypeToStr goType
   in
@@ -217,21 +200,33 @@ printGoDeclVar { identifier, expression, goType } =
   "\treturn cache_" <> identifier <> "\n" <>
   "}"
 
+printGoDecl :: GoDecl -> String
+printGoDecl = case _ of
+  GoCachedValue binding -> printGoDeclVar binding
+  GoStructDecl { name, typeParams, fields } ->
+    let
+      params = if Array.null typeParams then "" else "[" <> printParams typeParams <> "]"
+      fieldLines = map (\(Tuple field ty) -> field <> " " <> goTypeToStr ty) fields
+    in
+      "type " <> name <> params <> " struct {\n\t" <> String.joinWith "\n\t" fieldLines <> "\n}\n"
+  GoFunctionDecl { name, params, result, body } ->
+    "func " <> name <> "(" <> printParams params <> ") " <> goTypeToStr result <> " {\n" <> printGoExpr body <> "\n}"
+  GoInitDecl body -> "func init() {\n" <> printGoExpr body <> "\n}\n"
+  GoForeignGetter { name, value } ->
+    "func " <> name <> "() gopurs_runtime.Value {\n\treturn " <> value <> "\n}"
+
+printParams :: Array (Tuple String GoType) -> String
+printParams = String.joinWith ", " <<< map (\(Tuple name ty) -> name <> " " <> goTypeToStr ty)
+
 printGoFile :: GoFile -> String
-printGoFile { packageName, imports, decls, rawDecls, foreigns } =
-  let declsStr = String.joinWith "\n\n" (map printGoDeclVar decls) <> "\n\n" <> String.joinWith "\n\n" rawDecls <> "\n\n" <> String.joinWith "\n\n" (map (\f -> "func Get_" <> f.pursName <> "() gopurs_runtime.Value {\n\treturn " <> f.goName <> "\n}") foreigns) <> "\n"
-      unsafeImport = if String.contains (String.Pattern "unsafe.") declsStr then ["unsafe"] else []
-      mathImport = if String.contains (String.Pattern "math.") declsStr then ["math"] else []
-      hasDecls = Array.length decls > 0
-      hasForeigns = Array.length foreigns > 0
-      needsRuntime = hasDecls || hasForeigns || String.contains (String.Pattern "gopurs_runtime.") declsStr
-      usedImports = Array.nub (imports <> (if needsRuntime then ["gopurs/output/gopurs_runtime"] else []) <> (if hasDecls then ["sync"] else []) <> unsafeImport <> mathImport)
+printGoFile { packageName, imports, declarationGroups } =
+  let
+    declarations = String.joinWith "\n\n"
+      (map (String.joinWith "\n\n" <<< map printGoDecl) declarationGroups) <> "\n"
+    importLines = map
+      (\path ->
+        let alias = fromMaybe "" (Array.last (String.split (String.Pattern "/") path))
+        in "\t" <> alias <> " \"" <> path <> "\"")
+      imports
   in
-  "package " <> packageName <> "\n\n" <>
-  "import (\n" <>
-  String.joinWith "\n" (map (\i -> 
-      let pkg = Array.last (String.split (String.Pattern "/") i)
-          pkgAlias = fromMaybe "" pkg
-      in "\t" <> pkgAlias <> " \"" <> i <> "\""
-  ) usedImports) <> "\n" <>
-  ")\n\n" <> declsStr
+    "package " <> packageName <> "\n\nimport (\n" <> String.joinWith "\n" importLines <> "\n)\n\n" <> declarations

@@ -24,7 +24,7 @@ import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import Effect.Unsafe (unsafePerformEffect)
 import Gopurs.CodegenState (CodegenMetadata, CodegenState)
-import Gopurs.GoAst (GoExpr(..), GoType(..), goTypeToStr, structPointer, sanitizeName)
+import Gopurs.GoAst (rawGo, GoExpr(..), GoDecl(..), GoType(..), goTypeToStr, structPointer, sanitizeName)
 import Gopurs.GoTypes as GoTypes
 import Gopurs.Printer (printGoExpr)
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..))
@@ -46,42 +46,42 @@ unboxableADTs = Map.fromFoldable
       { signature: [ TypeValue, TypeBool ]
       , mapConstructor: \ctorName args ->
           case ctorName of
-            "Just" -> [ fromMaybe (GoRaw "gopurs_runtime.Value{}") (Array.index args 0), GoRaw "true" ]
-            "Nothing" -> [ GoRaw "gopurs_runtime.Value{}", GoRaw "false" ]
+            "Just" -> [ fromMaybe (rawGo "gopurs_runtime.Value{}") (Array.index args 0), rawGo "true" ]
+            "Nothing" -> [ rawGo "gopurs_runtime.Value{}", rawGo "false" ]
             _ -> args
       , isConstructor: \ctor expr -> case ctor of
           "Data_Data_Maybe_Just" -> GoSelector expr "V1"
-          "Data_Data_Maybe_Nothing" -> GoRaw ("(!" <> printGoExpr (GoSelector expr "V1") <> ")")
-          _ -> GoRaw "false"
+          "Data_Data_Maybe_Nothing" -> rawGo ("(!" <> printGoExpr (GoSelector expr "V1") <> ")")
+          _ -> rawGo "false"
       , boxExpr: \expr ->
           -- Maybe uses the Just constructor id for both cases, with a nil pointer for Nothing.
-          GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\tif _v.V1 {\n\t\t\t\t\treturn gopurs_runtime.Value{Type: 9, IntVal: " <> hashString "Data_Data_Maybe_Just" <> ", UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: _v.V0})}\n\t\t\t\t}\n\t\t\t\treturn gopurs_runtime.Value{Type: 9, IntVal: " <> hashString "Data_Data_Maybe_Just" <> "}\n\t\t\t}()")
+          rawGo ("func() gopurs_runtime.Value {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\tif _v.V1 {\n\t\t\t\t\treturn gopurs_runtime.Value{Type: 9, IntVal: " <> hashString "Data_Data_Maybe_Just" <> ", UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: _v.V0})}\n\t\t\t\t}\n\t\t\t\treturn gopurs_runtime.Value{Type: 9, IntVal: " <> hashString "Data_Data_Maybe_Just" <> "}\n\t\t\t}()")
       , unboxExpr: \expr ->
-          GoRaw ("func() struct{V0 gopurs_runtime.Value; V1 bool} {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\tif _v.Type == 9 && _v.IntVal == " <> hashString "Data_Data_Maybe_Just" <> " && _v.UnsafePtr != nil {\n\t\t\t\t\treturn struct{V0 gopurs_runtime.Value; V1 bool}{V0: (*Constructor_Data_Maybe_Just[gopurs_runtime.Value])(_v.UnsafePtr).V0, V1: true}\n\t\t\t\t}\n\t\t\t\treturn struct{V0 gopurs_runtime.Value; V1 bool}{V0: gopurs_runtime.Value{}, V1: false}\n\t\t\t}()")
+          rawGo ("func() struct{V0 gopurs_runtime.Value; V1 bool} {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\tif _v.Type == 9 && _v.IntVal == " <> hashString "Data_Data_Maybe_Just" <> " && _v.UnsafePtr != nil {\n\t\t\t\t\treturn struct{V0 gopurs_runtime.Value; V1 bool}{V0: (*Constructor_Data_Maybe_Just[gopurs_runtime.Value])(_v.UnsafePtr).V0, V1: true}\n\t\t\t\t}\n\t\t\t\treturn struct{V0 gopurs_runtime.Value; V1 bool}{V0: gopurs_runtime.Value{}, V1: false}\n\t\t\t}()")
       }
   , Tuple "Data.Tuple.Tuple"
       { signature: [ TypeValue, TypeValue ]
       , mapConstructor: \_ args -> args
-      , isConstructor: \ctor _ -> GoRaw (if ctor == "Data_Data_Tuple_Tuple" then "true" else "false")
+      , isConstructor: \ctor _ -> rawGo (if ctor == "Data_Data_Tuple_Tuple" then "true" else "false")
       , boxExpr: \expr ->
-          GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\treturn gopurs_runtime.Value{Type: 9, IntVal: " <> hashString "Data_Data_Tuple_Tuple" <> ", UnsafePtr: unsafe.Pointer(&Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V0, V1: _v.V1})}\n\t\t\t}()")
+          rawGo ("func() gopurs_runtime.Value {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\treturn gopurs_runtime.Value{Type: 9, IntVal: " <> hashString "Data_Data_Tuple_Tuple" <> ", UnsafePtr: unsafe.Pointer(&Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V0, V1: _v.V1})}\n\t\t\t}()")
       , unboxExpr: \expr ->
-          GoRaw ("func() struct{V0 gopurs_runtime.Value; V1 gopurs_runtime.Value} {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\t_p := (*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(_v.UnsafePtr)\n\t\t\t\treturn struct{V0 gopurs_runtime.Value; V1 gopurs_runtime.Value}{V0: _p.V0, V1: _p.V1}\n\t\t\t}()")
+          rawGo ("func() struct{V0 gopurs_runtime.Value; V1 gopurs_runtime.Value} {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\t_p := (*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(_v.UnsafePtr)\n\t\t\t\treturn struct{V0 gopurs_runtime.Value; V1 gopurs_runtime.Value}{V0: _p.V0, V1: _p.V1}\n\t\t\t}()")
       }
   , Tuple "Data.Either.Either"
       { signature: [ TypeValue, TypeValue, TypeBool ]
       , mapConstructor: \ctor args -> case ctor of
-          "Left" -> [ fromMaybe (GoRaw "gopurs_runtime.Value{}") (Array.head args), GoRaw "gopurs_runtime.Value{}", GoRaw "false" ]
-          "Right" -> [ GoRaw "gopurs_runtime.Value{}", fromMaybe (GoRaw "gopurs_runtime.Value{}") (Array.head args), GoRaw "true" ]
-          _ -> [ GoRaw "gopurs_runtime.Value{}", GoRaw "gopurs_runtime.Value{}", GoRaw "false" ]
+          "Left" -> [ fromMaybe (rawGo "gopurs_runtime.Value{}") (Array.head args), rawGo "gopurs_runtime.Value{}", rawGo "false" ]
+          "Right" -> [ rawGo "gopurs_runtime.Value{}", fromMaybe (rawGo "gopurs_runtime.Value{}") (Array.head args), rawGo "true" ]
+          _ -> [ rawGo "gopurs_runtime.Value{}", rawGo "gopurs_runtime.Value{}", rawGo "false" ]
       , isConstructor: \ctor expr -> case ctor of
           "Data_Data_Either_Right" -> GoSelector expr "V2"
-          "Data_Data_Either_Left" -> GoRaw ("(!" <> printGoExpr (GoSelector expr "V2") <> ")")
-          _ -> GoRaw "false"
+          "Data_Data_Either_Left" -> rawGo ("(!" <> printGoExpr (GoSelector expr "V2") <> ")")
+          _ -> rawGo "false"
       , boxExpr: \expr ->
-          GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\tif _v.V2 {\n\t\t\t\t\treturn gopurs_runtime.Value{Type: 9, IntVal: " <> hashString "Data_Data_Either_Right" <> ", UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V1})}\n\t\t\t\t}\n\t\t\t\treturn gopurs_runtime.Value{Type: 9, IntVal: " <> hashString "Data_Data_Either_Left" <> ", UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V0})}\n\t\t\t}()")
+          rawGo ("func() gopurs_runtime.Value {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\tif _v.V2 {\n\t\t\t\t\treturn gopurs_runtime.Value{Type: 9, IntVal: " <> hashString "Data_Data_Either_Right" <> ", UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V1})}\n\t\t\t\t}\n\t\t\t\treturn gopurs_runtime.Value{Type: 9, IntVal: " <> hashString "Data_Data_Either_Left" <> ", UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V0})}\n\t\t\t}()")
       , unboxExpr: \expr ->
-          GoRaw ("func() struct{V0 gopurs_runtime.Value; V1 gopurs_runtime.Value; V2 bool} {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\tif _v.Type == 9 && _v.IntVal == " <> hashString "Data_Data_Either_Right" <> " && _v.UnsafePtr != nil {\n\t\t\t\t\treturn struct{V0 gopurs_runtime.Value; V1 gopurs_runtime.Value; V2 bool}{V0: gopurs_runtime.Value{}, V1: (*Constructor_Data_Either_Right[gopurs_runtime.Value, gopurs_runtime.Value])(_v.UnsafePtr).V0, V2: true}\n\t\t\t\t}\n\t\t\t\treturn struct{V0 gopurs_runtime.Value; V1 gopurs_runtime.Value; V2 bool}{V0: (*Constructor_Data_Either_Left[gopurs_runtime.Value, gopurs_runtime.Value])(_v.UnsafePtr).V0, V1: gopurs_runtime.Value{}, V2: false}\n\t\t\t}()")
+          rawGo ("func() struct{V0 gopurs_runtime.Value; V1 gopurs_runtime.Value; V2 bool} {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\tif _v.Type == 9 && _v.IntVal == " <> hashString "Data_Data_Either_Right" <> " && _v.UnsafePtr != nil {\n\t\t\t\t\treturn struct{V0 gopurs_runtime.Value; V1 gopurs_runtime.Value; V2 bool}{V0: gopurs_runtime.Value{}, V1: (*Constructor_Data_Either_Right[gopurs_runtime.Value, gopurs_runtime.Value])(_v.UnsafePtr).V0, V2: true}\n\t\t\t\t}\n\t\t\t\treturn struct{V0 gopurs_runtime.Value; V1 gopurs_runtime.Value; V2 bool}{V0: (*Constructor_Data_Either_Left[gopurs_runtime.Value, gopurs_runtime.Value])(_v.UnsafePtr).V0, V1: gopurs_runtime.Value{}, V2: false}\n\t\t\t}()")
       }
   ]
 
@@ -154,7 +154,7 @@ boxGoExprImpl _ _ expr TypeInt64 = GoCall (GoSelector (GoVar "gopurs_runtime") "
 boxGoExprImpl _ _ expr TypeFloat64 = GoCall (GoSelector (GoVar "gopurs_runtime") "Float") [ expr ]
 boxGoExprImpl _ _ expr TypeString = GoCall (GoSelector (GoVar "gopurs_runtime") "Str") [ expr ]
 boxGoExprImpl _ _ expr TypeBool = GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ expr ]
-boxGoExprImpl _ _ expr (TypeStructPointer { baseStructName }) = GoRaw ("gopurs_runtime.Value{Type: 9, IntVal: " <> hashString baseStructName <> ", UnsafePtr: unsafe.Pointer(" <> printGoExpr expr <> ")}")
+boxGoExprImpl _ _ expr (TypeStructPointer { baseStructName }) = rawGo ("gopurs_runtime.Value{Type: 9, IntVal: " <> hashString baseStructName <> ", UnsafePtr: unsafe.Pointer(" <> printGoExpr expr <> ")}")
 boxGoExprImpl codegenStateRef modNameStr expr (TypeRecord fields) =
   let
     keys = map (\(Tuple k _) -> k) fields
@@ -168,18 +168,18 @@ boxGoExprImpl codegenStateRef modNameStr expr (TypeRecord fields) =
         _ ->
           "gopurs_runtime.RecordDict([]string{" <> keysStr <> "}, []gopurs_runtime.Value{" <> valsStr <> "})"
   in
-    GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\torig := " <> printGoExpr expr <> "\n\t\t\t\t_ = orig\n\t\t\t\treturn " <> boxedRecord <> "\n\t\t\t\t}()")
+    rawGo ("func() gopurs_runtime.Value {\n\t\t\t\torig := " <> printGoExpr expr <> "\n\t\t\t\t_ = orig\n\t\t\t\treturn " <> boxedRecord <> "\n\t\t\t\t}()")
 boxGoExprImpl _ _ expr (TypeInterface _) = expr
 boxGoExprImpl _ _ expr (TypeNativeArray TypeValue) = GoCall (GoSelector (GoVar "gopurs_runtime") "Array") [ expr ]
 boxGoExprImpl _ _ expr (TypeNativeArray TypeInt64) = GoBoxIntArray expr
-boxGoExprImpl codegenStateRef modNameStr expr (TypeNativeArray inner) = GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\t\tarr := " <> printGoExpr expr <> "\n\t\t\t\t\tboxed := make([]gopurs_runtime.Value, len(arr))\n\t\t\t\t\tfor i, v := range arr { boxed[i] = " <> printGoExpr (boxGoExpr codegenStateRef modNameStr (GoVar "v") inner) <> " }\n\t\t\t\t\treturn gopurs_runtime.Array(boxed)\n\t\t\t\t}()")
-boxGoExprImpl _ _ expr TypeUint32 = GoRaw ("gopurs_runtime.Value{Type: 9, IntVal: int64(" <> printGoExpr expr <> "), UnsafePtr: nil}")
+boxGoExprImpl codegenStateRef modNameStr expr (TypeNativeArray inner) = rawGo ("func() gopurs_runtime.Value {\n\t\t\t\t\tarr := " <> printGoExpr expr <> "\n\t\t\t\t\tboxed := make([]gopurs_runtime.Value, len(arr))\n\t\t\t\t\tfor i, v := range arr { boxed[i] = " <> printGoExpr (boxGoExpr codegenStateRef modNameStr (GoVar "v") inner) <> " }\n\t\t\t\t\treturn gopurs_runtime.Array(boxed)\n\t\t\t\t}()")
+boxGoExprImpl _ _ expr TypeUint32 = rawGo ("gopurs_runtime.Value{Type: 9, IntVal: int64(" <> printGoExpr expr <> "), UnsafePtr: nil}")
 boxGoExprImpl _ _ expr (TypeGenericParam _) = expr
 boxGoExprImpl _ _ expr (TypeFunc _ _) = expr
 boxGoExprImpl _ _ expr (TypeStructValue adtName _) =
   case Map.lookup adtName unboxableADTs of
     Just adt -> adt.boxExpr expr
-    Nothing -> GoRaw ("func() gopurs_runtime.Value {\n\t\t\t\t_ = " <> printGoExpr expr <> "\n\t\t\t\tpanic(\"boxTypeStructValue not implemented yet for " <> adtName <> "\")\n\t\t\t}()")
+    Nothing -> rawGo ("func() gopurs_runtime.Value {\n\t\t\t\t_ = " <> printGoExpr expr <> "\n\t\t\t\tpanic(\"boxTypeStructValue not implemented yet for " <> adtName <> "\")\n\t\t\t}()")
 
 -- The destination GoType determines how to read Value: native record fields,
 -- array elements, primitive payloads, or an ADT pointer.
@@ -194,26 +194,26 @@ unboxGoExpr codegenStateRef modNameStr expr currentType desiredType =
       let
         assignments = String.joinWith "\n" (map (\(Tuple k v) -> "\t\t\t\t\tclone." <> sanitizeName k <> " = " <> printGoExpr (coerceGoExpr codegenStateRef modNameStr (GoCall (GoSelector (GoVar "gopurs_runtime") "RecordGet") [ GoVar "orig", GoString k ]) TypeValue v)) fields)
       in
-        GoRaw ("func() " <> goTypeToStr desiredType <> " {\n\t\t\t\t\torig := " <> printGoExpr expr <> "\n\t\t\t\t\t_ = orig\n\t\t\t\t\tclone := " <> goTypeToStr desiredType <> "{}\n" <> assignments <> "\n\t\t\t\t\treturn clone\n\t\t\t\t}()")
+        rawGo ("func() " <> goTypeToStr desiredType <> " {\n\t\t\t\t\torig := " <> printGoExpr expr <> "\n\t\t\t\t\t_ = orig\n\t\t\t\t\tclone := " <> goTypeToStr desiredType <> "{}\n" <> assignments <> "\n\t\t\t\t\treturn clone\n\t\t\t\t}()")
     TypeInt64 -> GoSelector expr "IntVal"
     TypeFloat64 -> GoCall (GoSelector expr "FloatVal") []
     TypeString -> GoCall (GoSelector expr "StrVal") []
     TypeBool -> GoBinOp "!=" (GoSelector expr "IntVal") (GoInt 0)
-    TypeUint32 -> GoRaw ("uint32(" <> printGoExpr (GoSelector expr "IntVal") <> ")")
-    (TypeStructPointer { fullPath }) -> GoCall (GoRaw ("gopurs_runtime.CoerceToStruct[" <> fullPath <> "]")) [ expr ]
+    TypeUint32 -> rawGo ("uint32(" <> printGoExpr (GoSelector expr "IntVal") <> ")")
+    (TypeStructPointer { fullPath }) -> GoCall (rawGo ("gopurs_runtime.CoerceToStruct[" <> fullPath <> "]")) [ expr ]
     (TypeInterface _) -> expr
     (TypeNativeArray TypeInt64) -> GoUnboxIntArray expr
     (TypeNativeArray inner) -> case currentType of
       TypeNativeArray currentInner ->
-        GoRaw ("func() " <> goTypeToStr desiredType <> " {\n\t\t\t\t\tarr := " <> printGoExpr expr <> "\n\t\t\t\t\tunboxed := make(" <> goTypeToStr desiredType <> ", len(arr))\n\t\t\t\t\tfor i, v := range arr { unboxed[i] = " <> printGoExpr (coerceGoExpr codegenStateRef modNameStr (GoVar "v") currentInner inner) <> " }\n\t\t\t\t\treturn unboxed\n\t\t\t\t}()")
+        rawGo ("func() " <> goTypeToStr desiredType <> " {\n\t\t\t\t\tarr := " <> printGoExpr expr <> "\n\t\t\t\t\tunboxed := make(" <> goTypeToStr desiredType <> ", len(arr))\n\t\t\t\t\tfor i, v := range arr { unboxed[i] = " <> printGoExpr (coerceGoExpr codegenStateRef modNameStr (GoVar "v") currentInner inner) <> " }\n\t\t\t\t\treturn unboxed\n\t\t\t\t}()")
       _ ->
-        GoRaw ("func() " <> goTypeToStr desiredType <> " {\n\t\t\t\t\tarr := *(*[]gopurs_runtime.Value)(" <> printGoExpr expr <> ".UnsafePtr)\n\t\t\t\t\tunboxed := make(" <> goTypeToStr desiredType <> ", len(arr))\n\t\t\t\t\tfor i, v := range arr { unboxed[i] = " <> printGoExpr (coerceGoExpr codegenStateRef modNameStr (GoVar "v") TypeValue inner) <> " }\n\t\t\t\t\treturn unboxed\n\t\t\t\t}()")
+        rawGo ("func() " <> goTypeToStr desiredType <> " {\n\t\t\t\t\tarr := *(*[]gopurs_runtime.Value)(" <> printGoExpr expr <> ".UnsafePtr)\n\t\t\t\t\tunboxed := make(" <> goTypeToStr desiredType <> ", len(arr))\n\t\t\t\t\tfor i, v := range arr { unboxed[i] = " <> printGoExpr (coerceGoExpr codegenStateRef modNameStr (GoVar "v") TypeValue inner) <> " }\n\t\t\t\t\treturn unboxed\n\t\t\t\t}()")
     (TypeGenericParam _) -> expr
     (TypeFunc _ _) -> expr
     (TypeStructValue adtName fields) ->
       case Map.lookup adtName unboxableADTs of
         Just adt -> adt.unboxExpr expr
-        Nothing -> GoRaw ("func() " <> goTypeToStr (TypeStructValue adtName fields) <> " {\n\t\t\t\t_ = " <> printGoExpr expr <> "\n\t\t\t\tpanic(\"unboxTypeStructValue not implemented yet for " <> adtName <> "\")\n\t\t\t}()")
+        Nothing -> rawGo ("func() " <> goTypeToStr (TypeStructValue adtName fields) <> " {\n\t\t\t\t_ = " <> printGoExpr expr <> "\n\t\t\t\tpanic(\"unboxTypeStructValue not implemented yet for " <> adtName <> "\")\n\t\t\t}()")
 
 type ReboxFields =
   { vars :: Array String
@@ -260,7 +260,7 @@ findReboxFields metadata baseStructName =
           in
             Nothing
 
-renderReboxFunction :: Ref CodegenState -> CodegenMetadata -> String -> Map String String -> Tuple GoType GoType -> Maybe (Tuple String String)
+renderReboxFunction :: Ref CodegenState -> CodegenMetadata -> String -> Map String GoDecl -> Tuple GoType GoType -> Maybe (Tuple String GoDecl)
 renderReboxFunction codegenStateRef metadata modNameStr generatedFuncs (Tuple srcT destT) =
   case srcT, destT of
     TypeStructPointer { baseStructName: b1, fullPath: s1, typeArgs: a1 }, TypeStructPointer { baseStructName: b2, fullPath: s2, typeArgs: a2 } | b1 == b2 ->
@@ -283,13 +283,16 @@ renderReboxFunction codegenStateRef metadata modNameStr generatedFuncs (Tuple sr
                     "\t\tout.V" <> show i <> " = " <> printGoExpr (coerceGoExpr codegenStateRef modNameStr (GoStructAccess (GoVar "in") ("V" <> show i)) t1 t2)
                 )
                 info.fields)
-              funcBody = "func " <> funcName <> "(in *" <> s1 <> ") *" <> s2 <> " {\n\tif in == nil { return nil }\n\tout := &" <> s2 <> "{}\n" <> assignments <> "\n\treturn out\n}"
+              funcBody = GoFunctionDecl
+                { name: funcName, params: [ Tuple "in" srcT ], result: destT
+                , body: rawGo ("\tif in == nil { return nil }\n\tout := &" <> s2 <> "{}\n" <> assignments <> "\n\treturn out")
+                }
             in
               Just (Tuple funcName funcBody)
           Nothing -> Nothing
     _, _ -> Nothing
 
-generateReboxFunctions :: CodegenMetadata -> Ref CodegenState -> String -> Effect (Array String)
+generateReboxFunctions :: CodegenMetadata -> Ref CodegenState -> String -> Effect (Array GoDecl)
 generateReboxFunctions metadata codegenStateRef modNameStr = loop Map.empty
   where
   -- Rendering fields can register more conversions; collect until none remain.

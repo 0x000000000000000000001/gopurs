@@ -4,7 +4,8 @@ import Prelude
 import Data.Tuple (Tuple(..))
 import Data.String as String
 import Data.String (Pattern(..), Replacement(..))
-import PureScript.Backend.Optimizer.CoreFn (ExprType, ModuleName)
+import PureScript.Backend.Optimizer.CoreFn (ModuleName)
+import Gopurs.GoCode (GoCode, opaqueCode)
 import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap)
 import Data.Array as Array
@@ -15,7 +16,6 @@ data GoExpr
   | GoInt Int
   | GoCall GoExpr (Array GoExpr)
   | GoSelector GoExpr String
-  | GoFunc String GoType GoType GoExpr
   | GoBlock (Array GoExpr)
   | GoReturn GoExpr
   | GoAssign String GoExpr
@@ -41,7 +41,7 @@ data GoExpr
   | GoUnboxIntArray GoExpr
   -- Only the intrinsic filter's private []Value buffer may carry this marker.
   | GoFreshFilterArray GoExpr
-  | GoRaw String
+  | GoRaw GoCode
   | GoFor String (Array GoExpr)
   | GoForRange String (Array GoExpr)
   | GoContinue String
@@ -55,19 +55,38 @@ data GoExpr
 
 derive instance eqGoExpr :: Eq GoExpr
 
-type GoDecl =
+type GoBinding =
   { identifier :: String
   , expression :: GoExpr
   , goType :: GoType
   }
 
+data GoDecl
+  = GoCachedValue GoBinding
+  | GoStructDecl
+      { name :: String
+      , typeParams :: Array (Tuple String GoType)
+      , fields :: Array (Tuple String GoType)
+      }
+  | GoFunctionDecl
+      { name :: String
+      , params :: Array (Tuple String GoType)
+      , result :: GoType
+      , body :: GoExpr
+      }
+  | GoInitDecl GoExpr
+  | GoForeignGetter { name :: String, value :: String }
+
 type GoFile =
   { packageName :: String
   , imports :: Array String
-  , decls :: Array GoDecl
-  , rawDecls :: Array String
-  , foreigns :: Array { pursName :: String, goName :: String, exprType :: Maybe ExprType }
+  , declarationGroups :: Array (Array GoDecl)
   }
+
+-- Opaque syntax carries its dependencies alongside its text. Structured
+-- expressions and declarations expose their dependencies to GoImports.
+rawGo :: String -> GoExpr
+rawGo = GoRaw <<< opaqueCode
 
 -- Keep the runtime tag, PureScript identity and Go names distinct.
 -- structPointer is the single constructor of the instantiated name.

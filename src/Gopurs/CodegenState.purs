@@ -10,7 +10,7 @@ import Data.Map as Map
 import Data.Set (Set)
 import Data.Set as Set
 import Data.Tuple (Tuple)
-import Gopurs.GoAst (GoType)
+import Gopurs.GoAst (GoDecl, GoType)
 import PureScript.Backend.Optimizer.CoreFn (ExprType)
 
 type FunctionInfo =
@@ -40,7 +40,7 @@ type CodegenMetadata = { | CodegenMetadataRow }
 
 -- Only output accumulated during one translation belongs in the mutable state.
 type CodegenState =
-  { rawDecls :: Array String
+  { declarations :: Array GoDecl
   , globalId :: Int
   , reboxPairs :: Set.Set (Tuple GoType GoType)
   }

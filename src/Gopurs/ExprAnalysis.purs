@@ -19,7 +19,7 @@ import Data.Maybe (Maybe(..))
 import Data.String as String
 import Data.Tuple (Tuple(..))
 import Gopurs.ExprContext (LocalEnv)
-import Gopurs.GoAst (GoExpr(..), GoType)
+import Gopurs.GoAst (rawGo, GoExpr(..), GoType)
 import Gopurs.GoTypes (printExprType)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..), Literal(..))
@@ -130,7 +130,7 @@ executeIfOpaque :: TcoExpr -> GoExpr -> GoExpr
 
 executeIfOpaque expr goExpr =
   if isEffectNode expr then goExpr
-  else GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ goExpr, GoRaw "gopurs_runtime.Value{}" ]
+  else GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ goExpr, rawGo "gopurs_runtime.Value{}" ]
 
 bindFieldFunctionParameters :: (ExprType -> GoType) -> LocalEnv -> ExprType -> TcoExpr -> LocalEnv
 bindFieldFunctionParameters toGoType bound expectedExprType value =

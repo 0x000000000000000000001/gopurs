@@ -22,7 +22,7 @@ import Data.Tuple (Tuple(..))
 import Effect.Ref (Ref)
 import Gopurs.CodegenState (CodegenMetadata, CodegenState)
 import Gopurs.ExprContext (ExprResult, LocalEnv, StmtTree(..))
-import Gopurs.GoAst (GoExpr(..), GoType(..), goTypeToStr, sanitizeName, getStructName)
+import Gopurs.GoAst (rawGo, GoExpr(..), GoType(..), goTypeToStr, sanitizeName, getStructName)
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr, unboxGoExpr, unboxableADTs)
 import Gopurs.GoTypes (exprTypeToGoType, instantiateGenericGoType, structFieldGoType)
 import Gopurs.ConstructorLayout (PreparedConstructor)
@@ -65,9 +65,9 @@ definition metadata codegenStateRef modNameStr name fields ctorType =
           Just f -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoFuncLit [ Tuple (sanitizeName f) TypeValue ] [] (coerceGoExpr codegenStateRef modNameStr (GoVar (sanitizeName f)) TypeValue TypeValue) TypeValue ]
           Nothing -> Array.foldr (\f inner -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoFuncLit [ Tuple (sanitizeName f) TypeValue ] [] inner TypeValue ]) boxedCtor fields
       else case prepared.leafPointerType of
-        Just pointer -> GoRaw ("(" <> goTypeToStr pointer <> ")(nil)")
+        Just pointer -> rawGo ("(" <> goTypeToStr pointer <> ")(nil)")
         Nothing ->
-          if isEnum then GoRaw (hashString baseStructName)
+          if isEnum then rawGo (hashString baseStructName)
           else if Array.null fields then GoConstructor (hashString baseStructName) structName typeArgs coercedFields
           else Array.foldr (\f inner -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoFuncLit [ Tuple (sanitizeName f) TypeValue ] [] inner TypeValue ]) boxedCtor fields
 
@@ -125,9 +125,9 @@ saturated codegenStateRef (SaturatedConstructor { metadata, modNameStr, name, pr
         , exprType: TypeStructValue fn adt.signature
         }
       Nothing -> case prepared.leafPointerType of
-        Just pointer -> { expr: GoRaw ("(" <> goTypeToStr pointer <> ")(nil)"), exprType: pointer }
+        Just pointer -> { expr: rawGo ("(" <> goTypeToStr pointer <> ")(nil)"), exprType: pointer }
         Nothing ->
-          if Set.member baseStructName metadata.enumCtors then { expr: GoRaw (hashString baseStructName), exprType: TypeUint32 }
+          if Set.member baseStructName metadata.enumCtors then { expr: rawGo (hashString baseStructName), exprType: TypeUint32 }
           else native
 
 -- The object's statements and identifiers remain with the caller.
@@ -222,7 +222,7 @@ constructorReuse bound resultType constants constructor = case resultType, const
         replacement <- Array.index fields changedIndex
         pure
           { source
-          , condition: GoBinOp "&&" (GoBinOp "!=" source (GoRaw "nil"))
+          , condition: GoBinOp "&&" (GoBinOp "!=" source (rawGo "nil"))
               (GoBinOp "==" (projection changedIndex) replacement)
           }
       _ -> Nothing
@@ -268,15 +268,15 @@ isTag metadata codegenStateRef modNameStr mbMod tag resE =
                   else
                     "(" <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".Type == 9 && " <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".IntVal == " <> hashStr <> ")"
         in
-          { stmts: resE.stmts, expr: GoRaw exprStr, exprType: TypeBool, nextId: resE.nextId }
+          { stmts: resE.stmts, expr: rawGo exprStr, exprType: TypeBool, nextId: resE.nextId }
       _ ->
         let
           tmpVar = "__t_tag_" <> show resE.nextId
           declTmp =
             if isNativePointer || resE.exprType /= TypeValue then
-              StmtLeaf (GoRaw ("var " <> tmpVar <> " " <> goTypeToStr resE.exprType <> " = " <> printGoExpr resE.expr))
+              StmtLeaf (rawGo ("var " <> tmpVar <> " " <> goTypeToStr resE.exprType <> " = " <> printGoExpr resE.expr))
             else
-              StmtLeaf (GoRaw ("var " <> tmpVar <> " gopurs_runtime.Value = " <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType)))
+              StmtLeaf (rawGo ("var " <> tmpVar <> " gopurs_runtime.Value = " <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType)))
 
           exprStr = case nativeTagTest of
             Just test -> printGoExpr (test (GoVar tmpVar))
@@ -299,4 +299,4 @@ isTag metadata codegenStateRef modNameStr mbMod tag resE =
         in
           -- A single-constructor native value has a constant test,
           -- but its operand must still be evaluated exactly once.
-          { stmts: resE.stmts <> declTmp <> StmtLeaf (GoRaw ("_ = " <> tmpVar)), expr: GoRaw exprStr, exprType: TypeBool, nextId: resE.nextId + 1 }
+          { stmts: resE.stmts <> declTmp <> StmtLeaf (rawGo ("_ = " <> tmpVar)), expr: rawGo exprStr, exprType: TypeBool, nextId: resE.nextId + 1 }

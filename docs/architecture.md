@@ -26,10 +26,11 @@ actuels du code ; les étapes suivent le chemin actif de [Main](../src/Main.purs
    Celui-ci applique `ThunkFusion.optimizeThunkProducers`, crée un état local
    de traduction, prépare l'analyse TCO et les signatures des fonctions via
    `ModuleBindings`, puis traduit les déclarations et leurs expressions.
-6. Les émetteurs construisent le `GoAst`, les déclarations brutes encore
-   nécessaires et les helpers de conversion. `Printer.printGoFile` les rend en
-   texte Go. Les signatures produites sont rendues à `Main`, qui les transporte
-   vers les modules suivants pour les appels directs entre modules.
+6. Les émetteurs construisent les expressions et les déclarations `GoDecl`,
+   dont les helpers de conversion. `GoImports.collectImports` collecte leurs
+   dépendances avant que `Printer.printGoFile` les rende en texte Go. Les
+   signatures produites sont rendues à `Main`, qui les transporte vers les
+   modules suivants pour les appels directs entre modules.
 7. Après le code du module, `emitModule` traite sa FFI Go : localisation,
    préparation et décodage des déclarations, puis génération du bridge typé.
    Les entrées exécutables sont écrites après le parcours des modules.
@@ -51,6 +52,7 @@ Tous les modules gopurs de ce tableau se trouvent dans [src/Gopurs](../src/Gopur
 | Dispatcher récursif, assemblage du fichier | `CodeGen` |
 | Contexte, résultat et callbacks de traduction | `ExprContext` |
 | Fonctions de module, signatures, groupes TCO | `ModuleBindings` |
+| Structs ADT et enregistrement des getters de classes | `ModuleDeclarations` |
 | Bindings locaux, récursion locale et initialisation | `BindingExprs` |
 | Sélection des appels, surapplications et sauts TCO | `CallExprs`, `CallAnalysis` |
 | Traduction ordonnée et adaptation des arguments | `CallArguments` |
@@ -60,6 +62,8 @@ Tous les modules gopurs de ce tableau se trouvent dans [src/Gopurs](../src/Gopur
 | Identité, champs et arguments génériques des constructeurs | `ConstructorLayout` |
 | Analyses d'expressions | `ExprAnalysis` |
 | Types Go, boxing et conversions | `GoTypes`, `GoConversions` |
+| Préparation des enveloppes curryfiées | `GoFunctions` |
+| Dépendances des fragments opaques et imports du module | `GoCode`, `GoImports` |
 | Représentation et rendu Go | `GoAst`, `Printer` |
 | Frontière FFI et adaptation des signatures | `FfiSupport`, `FfiBridge` |
 
@@ -69,8 +73,8 @@ importer `CodeGen`. Il transporte directement les tables immuables de
 des constructeurs et des records. Ces décisions ne lisent aucune référence
 mutable.
 
-La référence `CodegenState` contient uniquement les déclarations brutes
-produites (`rawDecls`), le compteur des bindings récursifs (`globalId`) et les
+La référence `CodegenState` contient uniquement les déclarations structurées
+produites (`declarations`), le compteur des bindings récursifs (`globalId`) et les
 couples de conversion à émettre (`reboxPairs`). Le compteur local `nextId` et
 les statements restent transportés dans les résultats ; les déclarations
 principales sont renvoyées directement par `ModuleBindings.declarations`.
@@ -78,6 +82,14 @@ La génération Rebox consulte les métadonnées directement et relit les couple
 accumulés jusqu'à avoir émis les conversions transitives. Le printer ne consulte
 ni ne modifie cet état. Le [contrat AST/printer](go-ast-printer.md) décrit les
 nœuds structurés et les familles qui restent assemblées en chaînes.
+
+`CodeGen` assemble trois groupes ordonnés de `GoDecl` : valeurs avec cache,
+déclarations natives et helpers Rebox, puis getters FFI. Tous empruntent le
+même parcours d'imports et de rendu. Les corps opaques encore nécessaires,
+notamment les affectations Rebox et l'enregistrement des getters de classes,
+portent leur texte et leurs dépendances dans `GoCode`. Le constructeur `rawGo`
+reconnaît les imports historiques à la création du fragment ; aucun module
+Go imprimé n'est reparcouru pour calculer ses imports.
 
 `ConstructorLayout` partage la préparation entre définitions, constructions
 saturées et accès aux champs. Il garde explicites les variantes d'instanciation

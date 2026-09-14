@@ -12,7 +12,7 @@ import Data.Foldable (foldl)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Gopurs.ExprAnalysis (getExprType, unwrapTcoExpr)
 import Gopurs.ExprContext (ExprContext, ExprResult, TranslateExpr, StmtTree(..), flattenStmts)
-import Gopurs.GoAst (GoExpr(..), GoType(..), goTypeToStr)
+import Gopurs.GoAst (rawGo, GoExpr(..), GoType(..), goTypeToStr)
 import Gopurs.GoConversions (coerceGoExpr, unboxGoExpr)
 import Gopurs.GoTypes (exprTypeToGoType)
 import Gopurs.Printer (printGoExpr)
@@ -30,7 +30,7 @@ failure { metadata, modNameStr, mbExpectedExprType } nextId tcoExpr msg =
       )
     expectedGoTypeStr = goTypeToStr expectedGoType
   in
-    { stmts: StmtEmpty, expr: GoRaw ("func() " <> expectedGoTypeStr <> " { panic(" <> printGoExpr (GoString msg) <> ") }()"), exprType: expectedGoType, nextId }
+    { stmts: StmtEmpty, expr: rawGo ("func() " <> expectedGoTypeStr <> " { panic(" <> printGoExpr (GoString msg) <> ") }()"), exprType: expectedGoType, nextId }
 
 branch :: TranslateExpr -> ExprContext -> Int -> NonEmptyArray (Pair TcoExpr) -> TcoExpr -> ExprResult
 branch translate context@{ codegenStateRef, depth, modNameStr, options: { isTail } } nextId branches def =
@@ -71,20 +71,20 @@ branch translate context@{ codegenStateRef, depth, modNameStr, options: { isTail
           else TypeValue
 
     tmpVar = "__t" <> show computedBranches.nextId
-    declTmp = StmtLeaf (GoRaw ("var " <> tmpVar <> " " <> goTypeToStr expectedGoType))
+    declTmp = StmtLeaf (rawGo ("var " <> tmpVar <> " " <> goTypeToStr expectedGoType))
     labelName = "end_branch_" <> show computedBranches.nextId
 
     buildIfs = foldl
       ( \acc r ->
           let
-            goIf = GoIfElse (unboxGoExpr codegenStateRef modNameStr r.cond.expr r.cond.exprType TypeBool) (flattenStmts r.body.stmts <> [ GoMutate tmpVar (coerceGoExpr codegenStateRef modNameStr r.body.expr r.body.exprType expectedGoType), GoRaw ("goto " <> labelName) ]) []
+            goIf = GoIfElse (unboxGoExpr codegenStateRef modNameStr r.cond.expr r.cond.exprType TypeBool) (flattenStmts r.body.stmts <> [ GoMutate tmpVar (coerceGoExpr codegenStateRef modNameStr r.body.expr r.body.exprType expectedGoType), rawGo ("goto " <> labelName) ]) []
           in
-            acc <> StmtLeaf (GoRaw "{") <> r.cond.stmts <> StmtLeaf goIf <> StmtLeaf (GoRaw "}")
+            acc <> StmtLeaf (rawGo "{") <> r.cond.stmts <> StmtLeaf goIf <> StmtLeaf (rawGo "}")
       )
       StmtEmpty
       computedBranches.results
   in
-    { stmts: declTmp <> buildIfs <> StmtLeaf (GoRaw "{") <> resDef.stmts <> StmtLeaf (GoMutate tmpVar (coerceGoExpr codegenStateRef modNameStr resDef.expr resDef.exprType expectedGoType)) <> StmtLeaf (GoRaw "}") <> StmtLeaf (GoRaw (labelName <> ":")), expr: GoVar tmpVar, exprType: expectedGoType, nextId: computedBranches.nextId + 1 }
+    { stmts: declTmp <> buildIfs <> StmtLeaf (rawGo "{") <> resDef.stmts <> StmtLeaf (GoMutate tmpVar (coerceGoExpr codegenStateRef modNameStr resDef.expr resDef.exprType expectedGoType)) <> StmtLeaf (rawGo "}") <> StmtLeaf (rawGo (labelName <> ":")), expr: GoVar tmpVar, exprType: expectedGoType, nextId: computedBranches.nextId + 1 }
 
 booleanAnd :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> TcoExpr -> ExprResult
 booleanAnd translate context@{ codegenStateRef, depth, modNameStr } nextId e1 e2 =
@@ -97,10 +97,10 @@ booleanAnd translate context@{ codegenStateRef, depth, modNameStr } nextId e1 e2
     else
       let
         tmpVar = "__t_and_" <> show res2.nextId
-        declTmp = StmtLeaf (GoRaw ("var " <> tmpVar <> " bool = false\nif " <> printGoExpr (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeBool) <> " {\n"))
-        assignTmp = StmtLeaf (GoRaw (tmpVar <> " = " <> printGoExpr (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeBool) <> "\n}"))
+        declTmp = StmtLeaf (rawGo ("var " <> tmpVar <> " bool = false\nif " <> printGoExpr (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeBool) <> " {\n"))
+        assignTmp = StmtLeaf (rawGo (tmpVar <> " = " <> printGoExpr (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeBool) <> "\n}"))
       in
-        { expr: GoRaw tmpVar, exprType: TypeBool, stmts: res1.stmts <> declTmp <> res2.stmts <> assignTmp, nextId: res2.nextId + 1 }
+        { expr: rawGo tmpVar, exprType: TypeBool, stmts: res1.stmts <> declTmp <> res2.stmts <> assignTmp, nextId: res2.nextId + 1 }
 
 booleanOr :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> TcoExpr -> ExprResult
 booleanOr translate context@{ codegenStateRef, depth, modNameStr } nextId e1 e2 =
@@ -113,10 +113,10 @@ booleanOr translate context@{ codegenStateRef, depth, modNameStr } nextId e1 e2 
     else
       let
         tmpVar = "__t_or_" <> show res2.nextId
-        declTmp = StmtLeaf (GoRaw ("var " <> tmpVar <> " bool = true\nif !(" <> printGoExpr (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeBool) <> ") {\n"))
-        assignTmp = StmtLeaf (GoRaw (tmpVar <> " = " <> printGoExpr (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeBool) <> "\n}"))
+        declTmp = StmtLeaf (rawGo ("var " <> tmpVar <> " bool = true\nif !(" <> printGoExpr (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeBool) <> ") {\n"))
+        assignTmp = StmtLeaf (rawGo (tmpVar <> " = " <> printGoExpr (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeBool) <> "\n}"))
       in
-        { expr: GoRaw tmpVar, exprType: TypeBool, stmts: res1.stmts <> declTmp <> res2.stmts <> assignTmp, nextId: res2.nextId + 1 }
+        { expr: rawGo tmpVar, exprType: TypeBool, stmts: res1.stmts <> declTmp <> res2.stmts <> assignTmp, nextId: res2.nextId + 1 }
 
 isEmptyStmts :: StmtTree -> Boolean
 isEmptyStmts StmtEmpty = true

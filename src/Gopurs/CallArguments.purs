@@ -13,7 +13,7 @@ import Data.Array as Array
 import Data.Foldable (foldl)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Gopurs.ExprContext (ExprContext, ExprResult, TranslateExpr, StmtTree)
-import Gopurs.GoAst (GoExpr(..), GoType(..))
+import Gopurs.GoAst (rawGo, GoExpr(..), GoType(..))
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr)
 import PureScript.Backend.Optimizer.CoreFn (ExprType)
@@ -75,6 +75,6 @@ applyBoxed fExpr argExprs =
   let len = Array.length argExprs
   in
     if len == 0 then fExpr
-    else if len == 1 then GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ fExpr, fromMaybe (GoRaw "nil") (Array.index argExprs 0) ]
+    else if len == 1 then GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ fExpr, fromMaybe (rawGo "nil") (Array.index argExprs 0) ]
     else if len <= 10 then GoCall (GoSelector (GoVar "gopurs_runtime") ("Apply" <> show len)) (Array.cons fExpr argExprs)
     else applyBoxed (applyBoxed fExpr (Array.take 10 argExprs)) (Array.drop 10 argExprs)

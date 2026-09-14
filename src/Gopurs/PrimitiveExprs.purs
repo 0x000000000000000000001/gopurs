@@ -11,7 +11,7 @@ import Data.Maybe (Maybe(..))
 import Data.String.CodeUnits as SCU
 import Effect.Ref (Ref)
 import Gopurs.CodegenState (CodegenState)
-import Gopurs.GoAst (GoExpr(..), GoType(..))
+import Gopurs.GoAst (rawGo, GoExpr(..), GoType(..))
 import Gopurs.GoConversions (boxGoExpr, unboxGoExpr)
 import PureScript.Backend.Optimizer.CoreFn (Literal(..))
 import PureScript.Backend.Optimizer.Syntax (BackendOperator1(..), BackendOperator2(..), BackendOperatorNum(..), BackendOperatorOrd(..))
@@ -34,10 +34,10 @@ literal = case _ of
         else if nStr == "Infinity" then GoCall (GoSelector (GoVar "math") "Inf") [ GoInt 1 ]
         else if nStr == "-Infinity" then GoCall (GoSelector (GoVar "math") "Inf") [ GoInt (-1) ]
         else if nStr == "NaN" then GoCall (GoSelector (GoVar "math") "NaN") []
-        else GoRaw nStr
+        else rawGo nStr
     in
       Just { expr, exprType: TypeFloat64 }
-  LitBoolean b -> Just { expr: GoRaw (if b then "true" else "false"), exprType: TypeBool }
+  LitBoolean b -> Just { expr: rawGo (if b then "true" else "false"), exprType: TypeBool }
   LitChar c -> Just { expr: GoString (SCU.singleton c), exprType: TypeString }
   _ -> Nothing
 
@@ -46,9 +46,9 @@ literal = case _ of
 -- already translated operands.
 unary :: Ref CodegenState -> String -> BackendOperator1 -> Maybe (PrimitiveExpr -> PrimitiveExpr)
 unary codegenStateRef modNameStr = case _ of
-  OpBooleanNot -> Just \resE -> { expr: GoBinOp "!=" (unboxGoExpr codegenStateRef modNameStr resE.expr resE.exprType TypeBool) (GoRaw "true"), exprType: TypeBool }
+  OpBooleanNot -> Just \resE -> { expr: GoBinOp "!=" (unboxGoExpr codegenStateRef modNameStr resE.expr resE.exprType TypeBool) (rawGo "true"), exprType: TypeBool }
   OpIntNegate -> Just \resE -> { expr: GoPrefixOp "-" (unboxGoExpr codegenStateRef modNameStr resE.expr resE.exprType TypeInt64), exprType: TypeInt64 }
-  OpIntBitNot -> Just \resE -> { expr: GoBinOp "^" (GoRaw "^0") (unboxGoExpr codegenStateRef modNameStr resE.expr resE.exprType TypeInt64), exprType: TypeInt64 }
+  OpIntBitNot -> Just \resE -> { expr: GoBinOp "^" (rawGo "^0") (unboxGoExpr codegenStateRef modNameStr resE.expr resE.exprType TypeInt64), exprType: TypeInt64 }
   OpNumberNegate -> Just \resE -> { expr: GoPrefixOp "-" (unboxGoExpr codegenStateRef modNameStr resE.expr resE.exprType TypeFloat64), exprType: TypeFloat64 }
   _ -> Nothing
 

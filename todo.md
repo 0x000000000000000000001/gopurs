@@ -45,13 +45,15 @@ Point de départ vérifié le 14 septembre 2026 : première vague terminée ; co
 
   **Résultat (14 septembre 2026) :** `ArrayIntrinsics` reconnaît explicitement map/filter/foldl et émet leurs boucles ; `CallArguments` centralise la traduction ordonnée, les conversions et l'application des arguments supplémentaires. `CallExprs` mutualise les appels natifs, non curryfiés et les sauts TCO, en conservant les priorités et gardes des deux chemins. Compilation sans avertissement, 7 tests d'appels réussis, 28 assertions et snapshot ArrayRoundtrip réussis. `bin/go/run -c` confirme à nouveau les 387 Go identiques et les 14 résultats inchangés. Documentation actualisée ; PBO et altbak inchangés. Preuves : `/private/tmp/gopurs-wave2-constructors-calls-6dzbp4q_/verification.json`.
 
-- [ ] **4 — Unifier les déclarations Go et le calcul des imports.**
+- [x] **4 — Unifier les déclarations Go et le calcul des imports.**
 
   **Constat :** structs, workers nommés et helpers Rebox sont encore des `rawDecls`. `CodeGen` et `Printer` calculent tous deux des imports à partir du texte rendu. Dans `CodeGen`, `usedPkgNames` parcourt la queue de `parts = [declsStr]`, donc une liste vide.
 
   **Travail :** représenter les déclarations natives répétées — structs, fonctions nommées et initialisations — avec des nœuds adaptés de `GoAst`, puis migrer ensemble leurs producteurs. Donner au calcul des imports un propriétaire unique, retirer le chemin vide et les rendus intermédiaires devenus inutiles. Déclarer les imports nécessaires aux fragments opaques conservés. Déplacer la préparation du currying encore faite par `Printer` pour `GoFunc` vers les émetteurs, en réutilisant les formes natives existantes.
 
   **Terminé lorsque :** le printer rend des décisions déjà prises, les déclarations et leurs imports ont un parcours unique, et les déclarations brutes restantes sont identifiées avec leurs dépendances. La frontière visée reste celle de [docs/go-ast-printer.md](docs/go-ast-printer.md), avec le même Go produit.
+
+  **Résultat (14 septembre 2026) :** `GoDecl` unifie les valeurs avec cache, structs, fonctions nommées, initialisations et getters FFI ; `CodegenState.declarations` conserve l'ordre des déclarations produites. `GoImports` collecte seul les dépendances, dont celles des fragments opaques portées par `GoCode` ; le chemin vide et les doubles rendus sont retirés. `GoFunctions` prépare le currying avant impression et remplace `GoFunc`. Compilation sans avertissement, 18 tests existants et 18 comparaisons de currying réussis. `bin/go/run -c` réussi : 387 fichiers Go identiques sur les mêmes 300 TAST, 14 résultats fonctionnels inchangés. Documentation actualisée ; sources PBO et altbak inchangées. Preuves : `/private/tmp/gopurs-wave2-declarations-q81ed26w/verification.json`.
 
 - [ ] **5 — Clarifier les conversions et l'émission des bridges FFI.**
 

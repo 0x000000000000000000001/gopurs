@@ -18,7 +18,7 @@ import Gopurs.CallArguments as CallArguments
 import Gopurs.CodegenState (FunctionInfo)
 import Gopurs.ExprAnalysis (extractFuncType, unwrapTcoExpr)
 import Gopurs.ExprContext (ExprContext, ExprResult)
-import Gopurs.GoAst (GoExpr(..), GoType(..), goTypeToStr)
+import Gopurs.GoAst (rawGo, GoExpr(..), GoType(..), goTypeToStr)
 import Gopurs.GoConversions (boxGoExpr, unboxGoExpr)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr)
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..), Ident(..), Literal(..), ModuleName(..), Qualified(..))
@@ -63,12 +63,12 @@ emitCurried context@{ depth } fn args intrinsic accArgs =
     iifeExpr = case intrinsic of
       MapArray ->
         let
-          fExpr = fromMaybe (GoRaw "nil") (Array.index accArgs.exprs 0)
-          arrExpr = fromMaybe (GoRaw "nil") (Array.index accArgs.exprs 1)
+          fExpr = fromMaybe (rawGo "nil") (Array.index accArgs.exprs 0)
+          arrExpr = fromMaybe (rawGo "nil") (Array.index accArgs.exprs 1)
           loopBody = GoMutate (resGoName <> "[" <> iName <> "]") (GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ fExpr, GoVar vName ])
           iifeBody = GoBlock
-            [ GoAssign arrGoName (GoCall (GoRaw "(*[]gopurs_runtime.Value)") [ GoSelector (GoVar arrValName) "UnsafePtr" ])
-            , GoAssign resGoName (GoCall (GoVar "make") [ GoRaw "[]gopurs_runtime.Value", GoCall (GoVar "len") [ GoRaw ("*" <> arrGoName) ] ])
+            [ GoAssign arrGoName (GoCall (rawGo "(*[]gopurs_runtime.Value)") [ GoSelector (GoVar arrValName) "UnsafePtr" ])
+            , GoAssign resGoName (GoCall (GoVar "make") [ rawGo "[]gopurs_runtime.Value", GoCall (GoVar "len") [ rawGo ("*" <> arrGoName) ] ])
             , GoForRange (iName <> ", " <> vName <> " := range *" <> arrGoName) [ loopBody ]
             , GoReturn (GoCall (GoSelector (GoVar "gopurs_runtime") "Array") [ GoVar resGoName ])
             ]
@@ -77,9 +77,9 @@ emitCurried context@{ depth } fn args intrinsic accArgs =
 
       FoldlArray ->
         let
-          fExpr = fromMaybe (GoRaw "nil") (Array.index accArgs.exprs 0)
-          initExpr = fromMaybe (GoRaw "nil") (Array.index accArgs.exprs 1)
-          boxedArrExpr = fromMaybe (GoRaw "nil") (Array.index accArgs.exprs 2)
+          fExpr = fromMaybe (rawGo "nil") (Array.index accArgs.exprs 0)
+          initExpr = fromMaybe (rawGo "nil") (Array.index accArgs.exprs 1)
+          boxedArrExpr = fromMaybe (rawGo "nil") (Array.index accArgs.exprs 2)
           arrExpr =
             if isIntArrayFold fn args then
               normalizeFreshIntArrayRoundtrip (iifeName <> "_" <> show accArgs.nextId) boxedArrExpr
@@ -87,7 +87,7 @@ emitCurried context@{ depth } fn args intrinsic accArgs =
           loopBody = GoMutate resGoName (GoCall (GoSelector (GoVar "gopurs_runtime") "Apply2") [ fExpr, GoVar resGoName, GoVar vName ])
           iifeBody = GoBlock
             [ GoAssign resGoName initExpr
-            , GoAssign arrGoName (GoCall (GoRaw "(*[]gopurs_runtime.Value)") [ GoSelector (GoVar arrValName) "UnsafePtr" ])
+            , GoAssign arrGoName (GoCall (rawGo "(*[]gopurs_runtime.Value)") [ GoSelector (GoVar arrValName) "UnsafePtr" ])
             , GoForRange ("_, " <> vName <> " := range *" <> arrGoName) [ loopBody ]
             , GoReturn (GoVar resGoName)
             ]
@@ -96,14 +96,14 @@ emitCurried context@{ depth } fn args intrinsic accArgs =
 
       FilterArray ->
         let
-          fExpr = fromMaybe (GoRaw "nil") (Array.index accArgs.exprs 0)
-          arrExpr = fromMaybe (GoRaw "nil") (Array.index accArgs.exprs 1)
+          fExpr = fromMaybe (rawGo "nil") (Array.index accArgs.exprs 0)
+          arrExpr = fromMaybe (rawGo "nil") (Array.index accArgs.exprs 1)
           condExpr = GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ fExpr, GoVar vName ]
           isTrueExpr = GoCall (GoSelector condExpr "BoolVal") []
           loopBody = GoIfElse isTrueExpr [ GoMutate resGoName (GoCall (GoVar "append") [ GoVar resGoName, GoVar vName ]) ] []
           iifeBody = GoBlock
-            [ GoAssign arrGoName (GoCall (GoRaw "(*[]gopurs_runtime.Value)") [ GoSelector (GoVar arrValName) "UnsafePtr" ])
-            , GoAssign resGoName (GoCall (GoVar "make") [ GoRaw "[]gopurs_runtime.Value", GoRaw "0" ])
+            [ GoAssign arrGoName (GoCall (rawGo "(*[]gopurs_runtime.Value)") [ GoSelector (GoVar arrValName) "UnsafePtr" ])
+            , GoAssign resGoName (GoCall (GoVar "make") [ rawGo "[]gopurs_runtime.Value", rawGo "0" ])
             , GoForRange ("_, " <> vName <> " := range *" <> arrGoName) [ loopBody ]
             , GoReturn (GoCall (GoSelector (GoVar "gopurs_runtime") "Array") [ GoVar resGoName ])
             ]
@@ -129,9 +129,9 @@ emitUncurried context@{ codegenStateRef, modNameStr, depth } args intrinsic accA
     iifeExpr = case intrinsic of
       MapArray ->
         let
-          fExprRaw = fromMaybe (GoRaw "nil") (Array.index accArgs.exprs 0)
+          fExprRaw = fromMaybe (rawGo "nil") (Array.index accArgs.exprs 0)
           fExprType = fromMaybe TypeValue (Array.index accArgs.exprTypes 0)
-          arrExprRaw = fromMaybe (GoRaw "nil") (Array.index accArgs.exprs 1)
+          arrExprRaw = fromMaybe (rawGo "nil") (Array.index accArgs.exprs 1)
           arrExprType = fromMaybe TypeValue (Array.index accArgs.exprTypes 1)
 
           source = arraySource arrValName arrGoName arrExprType
@@ -159,7 +159,7 @@ emitUncurried context@{ codegenStateRef, modNameStr, depth } args intrinsic accA
 
           iifeBodyStmts =
             [ arrGoAssignment
-            , GoAssign resGoName (GoCall (GoVar "make") [ GoRaw ("[]" <> goTypeToStr retType), GoCall (GoVar "len") [ GoRaw arrGoRangeTarget ] ])
+            , GoAssign resGoName (GoCall (GoVar "make") [ rawGo ("[]" <> goTypeToStr retType), GoCall (GoVar "len") [ rawGo arrGoRangeTarget ] ])
             , GoForRange (iName <> ", " <> vName <> " := range " <> arrGoRangeTarget) [ loopBody ]
             ]
         in
@@ -167,11 +167,11 @@ emitUncurried context@{ codegenStateRef, modNameStr, depth } args intrinsic accA
 
       FoldlArray ->
         let
-          fExpr = fromMaybe (GoRaw "nil") (Array.index accArgs.exprs 0)
+          fExpr = fromMaybe (rawGo "nil") (Array.index accArgs.exprs 0)
           fExprType = fromMaybe TypeValue (Array.index accArgs.exprTypes 0)
-          initExpr = fromMaybe (GoRaw "nil") (Array.index accArgs.exprs 1)
+          initExpr = fromMaybe (rawGo "nil") (Array.index accArgs.exprs 1)
           initExprType = fromMaybe TypeValue (Array.index accArgs.exprTypes 1)
-          arrExpr = fromMaybe (GoRaw "nil") (Array.index accArgs.exprs 2)
+          arrExpr = fromMaybe (rawGo "nil") (Array.index accArgs.exprs 2)
           arrExprType = fromMaybe TypeValue (Array.index accArgs.exprTypes 2)
 
           source = arraySource arrValName arrGoName arrExprType
@@ -201,9 +201,9 @@ emitUncurried context@{ codegenStateRef, modNameStr, depth } args intrinsic accA
 
       FilterArray ->
         let
-          fExprRaw = fromMaybe (GoRaw "nil") (Array.index accArgs.exprs 0)
+          fExprRaw = fromMaybe (rawGo "nil") (Array.index accArgs.exprs 0)
           fExprType = fromMaybe TypeValue (Array.index accArgs.exprTypes 0)
-          arrExprRaw = fromMaybe (GoRaw "nil") (Array.index accArgs.exprs 1)
+          arrExprRaw = fromMaybe (rawGo "nil") (Array.index accArgs.exprs 1)
           arrExprType = fromMaybe TypeValue (Array.index accArgs.exprTypes 1)
 
           source = arraySource arrValName arrGoName arrExprType
@@ -228,7 +228,7 @@ emitUncurried context@{ codegenStateRef, modNameStr, depth } args intrinsic accA
 
           iifeBodyStmts =
             [ arrGoAssignment
-            , GoAssign resGoName (GoCall (GoVar "make") [ GoRaw ("[]" <> goTypeToStr elemType), GoRaw "0" ])
+            , GoAssign resGoName (GoCall (GoVar "make") [ rawGo ("[]" <> goTypeToStr elemType), rawGo "0" ])
             , GoForRange ("_, " <> vName <> " := range " <> arrGoRangeTarget) [ loopBody ]
             ]
           filterExpr = GoCall (GoFuncLit [] (Array.cons (GoAssign arrValName arrExprRaw) (Array.cons (GoMutate "_" (GoVar arrValName)) iifeBodyStmts)) (GoVar resGoName) (TypeNativeArray elemType)) []
@@ -255,7 +255,7 @@ arraySource valueName arrayName = case _ of
   TypeNativeArray inner ->
     { assignment: GoAssign arrayName (GoVar valueName), target: arrayName, elementType: inner }
   _ ->
-    { assignment: GoAssign arrayName (GoCall (GoRaw "(*[]gopurs_runtime.Value)") [ GoSelector (GoVar valueName) "UnsafePtr" ])
+    { assignment: GoAssign arrayName (GoCall (rawGo "(*[]gopurs_runtime.Value)") [ GoSelector (GoVar valueName) "UnsafePtr" ])
     , target: "*" <> arrayName, elementType: TypeValue
     }
 
@@ -284,7 +284,7 @@ normalizeFreshIntArrayRoundtrip suffix expr = case expr of
       -- calls or storage for a marker. Normalize every Value before the fold
       -- to preserve IntVal/tag/pointer semantics of the two original copies.
       body = GoBlock
-        [ GoAssign itemsName (GoCall (GoRaw "(*[]gopurs_runtime.Value)") [ GoSelector (GoVar sourceName) "UnsafePtr" ])
+        [ GoAssign itemsName (GoCall (rawGo "(*[]gopurs_runtime.Value)") [ GoSelector (GoVar sourceName) "UnsafePtr" ])
         , GoForRange (indexName <> ", " <> valueName <> " := range *" <> itemsName)
             [ GoMutate ("(*" <> itemsName <> ")[" <> indexName <> "]")
                 (GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoSelector (GoVar valueName) "IntVal" ])

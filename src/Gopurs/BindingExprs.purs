@@ -18,9 +18,10 @@ import Effect.Unsafe (unsafePerformEffect)
 import Gopurs.CallAnalysis (extractUncurriedAbs)
 import Gopurs.ExprAnalysis (extractExprFuncType, getExprType, printTcoExprShape)
 import Gopurs.ExprContext (ExprContext, ExprResult, TranslateExpr, StmtTree(..), flattenStmts)
-import Gopurs.GoAst (GoExpr(..), GoType(..), goTypeToStr, sanitizeName)
+import Gopurs.GoAst (rawGo, GoExpr(..), GoType(..), goTypeToStr, sanitizeName)
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr)
 import Gopurs.GoTypes (exprTypeToGoType, printExprType)
+import Gopurs.GoFunctions (curriedFunction)
 import Gopurs.Printer (printGoExpr)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..), Ident(..))
@@ -51,13 +52,13 @@ nonRecursive translate context@{ metadata, codegenStateRef, depth, modNameStr, m
           goTypes = map snd paramsWithTypes
 
           localModuleFunctions = Map.insert name { fullName: "Call_local_" <> modNameStr <> "_" <> name, fArgs: goTypes, fRet: TypeValue, arity: Array.length abs.args } moduleFunctions
-          declStmts = [ GoRaw ("var Call_local_" <> modNameStr <> "_" <> name <> " func(" <> String.joinWith ", " (map goTypeToStr goTypes) <> ") gopurs_runtime.Value"), GoRaw ("_ = Call_local_" <> modNameStr <> "_" <> name), GoRaw ("var " <> name <> " gopurs_runtime.Value"), GoRaw ("_ = " <> name) ]
+          declStmts = [ rawGo ("var Call_local_" <> modNameStr <> "_" <> name <> " func(" <> String.joinWith ", " (map goTypeToStr goTypes) <> ") gopurs_runtime.Value"), rawGo ("_ = Call_local_" <> modNameStr <> "_" <> name), rawGo ("var " <> name <> " gopurs_runtime.Value"), rawGo ("_ = " <> name) ]
 
           loopBound = foldl (\acc (Tuple idStr goT) -> Map.insert idStr { name: idStr, goType: goT } acc) bound paramsWithTypes
           resBodyMut = translate (context { depth = (depth + 1), moduleFunctions = localModuleFunctions, bound = loopBound, tcoIdent = (Just name), loopCtx = [], options = { isTail: true, inEffectBlock: false }, mbExpectedExprType = Nothing }) (nextId + 1) abs.body
 
           goParamsNative = map (\(Tuple p goT) -> Tuple (p <> "_loop") goT) paramsWithTypes
-          initVars = Array.concatMap (\(Tuple p goT) -> [ GoRaw ("var " <> p <> " " <> goTypeToStr goT <> " = " <> p <> "_loop"), GoRaw ("_ = " <> p) ]) paramsWithTypes
+          initVars = Array.concatMap (\(Tuple p goT) -> [ rawGo ("var " <> p <> " " <> goTypeToStr goT <> " = " <> p <> "_loop"), rawGo ("_ = " <> p) ]) paramsWithTypes
           funcBody = GoBlock (initVars <> flattenStmts resBodyMut.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr resBodyMut.expr resBodyMut.exprType) ])
           nativeAssignment = GoMutate ("Call_local_" <> modNameStr <> "_" <> name) (GoFuncBlock goParamsNative [ funcBody ] TypeValue)
 
@@ -79,9 +80,9 @@ nonRecursive translate context@{ metadata, codegenStateRef, depth, modNameStr, m
             if actualGoType == resBinding.exprType then
               StmtLeaf (GoAssign name resBinding.expr)
             else
-              StmtLeaf (GoRaw ("var " <> name <> " " <> goTypeToStr actualGoType <> " = " <> printGoExpr (coerceGoExpr codegenStateRef modNameStr resBinding.expr resBinding.exprType actualGoType)))
+              StmtLeaf (rawGo ("var " <> name <> " " <> goTypeToStr actualGoType <> " = " <> printGoExpr (coerceGoExpr codegenStateRef modNameStr resBinding.expr resBinding.exprType actualGoType)))
         in
-          { stmts: resBinding.stmts <> StmtLeaf (GoRaw ("// TAST (Let): " <> name <> " shape=" <> printTcoExprShape binding <> " bindingType=" <> printExprType (getExprType binding))) <> letStmt <> resBody.stmts, expr: resBody.expr, exprType: resBody.exprType, nextId: resBody.nextId }
+          { stmts: resBinding.stmts <> StmtLeaf (rawGo ("// TAST (Let): " <> name <> " shape=" <> printTcoExprShape binding <> " bindingType=" <> printExprType (getExprType binding))) <> letStmt <> resBody.stmts, expr: resBody.expr, exprType: resBody.exprType, nextId: resBody.nextId }
 
 recursive :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> Level -> NonEmptyArray (Tuple Ident TcoExpr) -> TcoExpr -> ExprResult
 recursive translate context@{ metadata, codegenStateRef, depth, modNameStr, recVars, moduleFunctions, bound } nextId (TcoExpr tcoAnalysis _) lvl bindings body =
@@ -169,7 +170,7 @@ recursive translate context@{ metadata, codegenStateRef, depth, modNameStr, recV
                   resBodyMut = translate (context { depth = (depth + 1), recVars = combinedRecVars, moduleFunctions = acc.moduleFunctions, bound = loopBound, tcoIdent = (Just newName), loopCtx = currentLoopCtx, options = { isTail: true, inEffectBlock: false }, mbExpectedExprType = mbExpectedRet }) acc.nextId fn.body
                   trueFRet = resBodyMut.exprType
 
-                  initVars = Array.concatMap (\(Tuple p goT) -> [ GoRaw ("var " <> p <> " " <> goTypeToStr goT <> " = " <> p <> "_loop"), GoRaw ("_ = " <> p) ]) paramsWithTypes
+                  initVars = Array.concatMap (\(Tuple p goT) -> [ rawGo ("var " <> p <> " " <> goTypeToStr goT <> " = " <> p <> "_loop"), rawGo ("_ = " <> p) ]) paramsWithTypes
 
                   funcBody = GoFor newName (initVars <> flattenStmts resBodyMut.stmts <> [ GoReturn resBodyMut.expr ])
 
@@ -179,13 +180,13 @@ recursive translate context@{ metadata, codegenStateRef, depth, modNameStr, recV
                   nativeCallExpr = GoCall (GoVar ("Call_local_" <> modNameStr <> "_" <> newName)) (map (\(Tuple p goT) -> coerceGoExpr codegenStateRef modNameStr (GoVar (p <> "_loop_val")) TypeValue goT) paramsWithTypes)
                   funcExpr =
                     if Array.null paramsWithTypes then
-                      GoFunc "_" TypeValue TypeValue (GoBlock [ GoReturn (boxGoExpr codegenStateRef modNameStr nativeCallExpr trueFRet) ])
+                      curriedFunction [ Tuple "_" TypeValue ] TypeValue (GoBlock [ GoReturn (boxGoExpr codegenStateRef modNameStr nativeCallExpr trueFRet) ])
                     else
                       Array.foldr (\(Tuple p _) accExpr -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoFuncLit [ Tuple (p <> "_loop_val") TypeValue ] [] accExpr TypeValue ]) (boxGoExpr codegenStateRef modNameStr nativeCallExpr trueFRet) paramsWithTypes
 
                   newFunctions = Map.insert newName { fullName: "Call_local_" <> modNameStr <> "_" <> newName, fArgs: map snd paramsWithTypes, fRet: trueFRet, arity: Array.length fn.args } acc.moduleFunctions
                   newBound2 = Map.insert oldName { name: newName, goType: TypeFunc (map snd paramsWithTypes) trueFRet } acc.newBound
-                  declStmtsLocal = [ GoRaw ("var Call_local_" <> modNameStr <> "_" <> newName <> " func(" <> String.joinWith ", " (map goTypeToStr (map snd paramsWithTypes)) <> ") " <> goTypeToStr trueFRet), GoRaw ("_ = Call_local_" <> modNameStr <> "_" <> newName), GoRaw ("var " <> newName <> " gopurs_runtime.Value"), GoRaw ("_ = " <> newName) ]
+                  declStmtsLocal = [ rawGo ("var Call_local_" <> modNameStr <> "_" <> newName <> " func(" <> String.joinWith ", " (map goTypeToStr (map snd paramsWithTypes)) <> ") " <> goTypeToStr trueFRet), rawGo ("_ = Call_local_" <> modNameStr <> "_" <> newName), rawGo ("var " <> newName <> " gopurs_runtime.Value"), rawGo ("_ = " <> newName) ]
                 in
                   { declarations: acc.declarations <> declStmtsLocal, stmts: acc.stmts <> [ nativeAssignment, GoMutate newName funcExpr ], nextId: resBodyMut.nextId, moduleFunctions: newFunctions, newBound: newBound2 }
             )
@@ -222,7 +223,7 @@ recursive translate context@{ metadata, codegenStateRef, depth, modNameStr, recV
                 in
                   { stmts: acc.stmts <> res.stmts
                       <> StmtLeaf (GoMutate alloc.newName assignedVal)
-                      <> StmtLeaf (GoMutate (alloc.newName <> "_cell") (GoRaw ("&" <> alloc.newName)))
+                      <> StmtLeaf (GoMutate (alloc.newName <> "_cell") (rawGo ("&" <> alloc.newName)))
                   , exprs: Array.snoc acc.exprs { key: alloc.newName, goType: expectedGoType }
                   , exprType: TypeValue
                   , nextId: res.nextId
@@ -231,7 +232,7 @@ recursive translate context@{ metadata, codegenStateRef, depth, modNameStr, recV
             { stmts: StmtEmpty, exprs: [], exprType: TypeValue, nextId: allocRes.nextId }
             (Array.zip (toArray bindings) allocRes.newNames)
 
-          declStmts = map (\b -> GoRaw ("var " <> b.key <> " " <> goTypeToStr b.goType <> "\n_ = " <> b.key
+          declStmts = map (\b -> rawGo ("var " <> b.key <> " " <> goTypeToStr b.goType <> "\n_ = " <> b.key
             <> "\nvar " <> b.key <> "_cell *" <> goTypeToStr b.goType <> "\n_ = " <> b.key <> "_cell"
             <> "\n// FALLBACK TCO: isLoop=" <> show isLoop <> " len=" <> show (Array.length (toArray bindings)))) accBindings.exprs
 

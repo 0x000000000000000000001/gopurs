@@ -11,16 +11,15 @@ import Data.Array.NonEmpty as NonEmptyArray
 import Data.Foldable (foldl)
 import Data.Map as Map
 import Data.Maybe (Maybe(..), fromMaybe)
-import Data.String as String
 import Data.Tuple (Tuple(..), fst)
 import Effect.Ref as Ref
 import Effect.Unsafe (unsafePerformEffect)
 import Gopurs.CallAnalysis (collectCurriedAbs)
 import Gopurs.ExprAnalysis (extractExprFuncType, extractFuncType, getExprType)
 import Gopurs.ExprContext (ExprContext, ExprResult, TranslateExpr, StmtTree(..), flattenStmts)
-import Gopurs.GoAst (GoExpr(..), GoType(..), goTypeToStr)
+import Gopurs.GoAst (rawGo, GoExpr(..), GoDecl(..), GoType(..))
 import Gopurs.GoConversions (boxGoExpr)
-import Gopurs.Printer (printGoExpr)
+import Gopurs.GoFunctions (curriedFunction)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr)
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..), Ident)
 import PureScript.Backend.Optimizer.FreeVars (localId)
@@ -92,7 +91,6 @@ uncurriedAbstraction translate context@{ codegenStateRef, depth, modNameStr, bou
 
     newBound = foldl (\acc (Tuple idStr goType) -> Map.insert idStr { name: idStr, goType } acc) bound paramsWithTypes
 
-    goParams = String.joinWith ", " (map (\(Tuple p goT) -> p <> " " <> goTypeToStr goT) paramsWithTypes)
     resBody = translate (context { depth = (depth + 1), bound = newBound, tcoIdent = Nothing, loopCtx = [], options = { isTail, inEffectBlock: false }, mbExpectedExprType = ( case mbFuncTy of
           Just { fRet } -> Just fRet
           Nothing -> Nothing
@@ -103,9 +101,9 @@ uncurriedAbstraction translate context@{ codegenStateRef, depth, modNameStr, bou
       case tcoIdent of
         Just topName ->
           let
-            callFuncDecl = "func Call_" <> modNameStr <> "_" <> topName <> "(" <> goParams <> ") gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType) ])) <> "\n}"
+            callFuncDecl = GoFunctionDecl { name: "Call_" <> modNameStr <> "_" <> topName, params: paramsWithTypes, result: TypeValue, body: GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType) ]) }
             funcExpr = unsafePerformEffect do
-              Ref.modify_ (\r -> r { rawDecls = Array.snoc r.rawDecls callFuncDecl }) codegenStateRef
+              Ref.modify_ (\r -> r { declarations = Array.snoc r.declarations callFuncDecl }) codegenStateRef
               pure $ GoCall (GoSelector (GoVar "gopurs_runtime") ("Func" <> show arity)) [ GoVar ("Call_" <> modNameStr <> "_" <> topName) ]
           in
             { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: resBody.nextId }
@@ -120,14 +118,10 @@ uncurriedAbstraction translate context@{ codegenStateRef, depth, modNameStr, bou
             { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: resBody.nextId }
     else
       let
-        params = map fst paramsWithTypes
-        makeCurried [] = GoFunc "_" TypeValue TypeValue (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType) ]))
-        makeCurried [ p ] = GoFunc p TypeValue TypeValue (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType) ]))
-        makeCurried ps = case Array.uncons ps of
-          Just { head: p, tail: rest } -> GoFunc p TypeValue TypeValue (makeCurried rest)
-          Nothing -> resBody.expr
+        funcExpr = curriedFunction paramsWithTypes TypeValue
+          (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType) ]))
       in
-        { stmts: StmtEmpty, expr: makeCurried params, exprType: TypeValue, nextId: resBody.nextId }
+        { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: resBody.nextId }
 
 effectAbstraction :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> Array (Tuple (Maybe Ident) Level) -> TcoExpr -> ExprResult
 effectAbstraction translate context@{ codegenStateRef, depth, modNameStr, bound, mbExpectedExprType, options: { isTail } } nextId tcoExpr args body =
@@ -150,18 +144,14 @@ effectAbstraction translate context@{ codegenStateRef, depth, modNameStr, bound,
       let
         funcExpr = GoCall (GoSelector (GoVar "gopurs_runtime") ("Func" <> show arity))
           [ GoFuncLit paramsWithTypes (flattenStmts resBody.stmts)
-              (GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType, GoRaw "gopurs_runtime.Value{}" ])
+              (GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType, rawGo "gopurs_runtime.Value{}" ])
               TypeValue
           ]
       in
         { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: resBody.nextId }
     else
       let
-        params = map fst paramsWithTypes
-        makeCurried [] = GoFunc "_" TypeValue TypeValue (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType, GoRaw "gopurs_runtime.Value{}" ]) ]))
-        makeCurried [ p ] = GoFunc p TypeValue TypeValue (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType, GoRaw "gopurs_runtime.Value{}" ]) ]))
-        makeCurried ps = case Array.uncons ps of
-          Just { head: p, tail: rest } -> GoFunc p TypeValue TypeValue (makeCurried rest)
-          Nothing -> resBody.expr
+        funcExpr = curriedFunction paramsWithTypes TypeValue
+          (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType, rawGo "gopurs_runtime.Value{}" ]) ]))
       in
-        { stmts: StmtEmpty, expr: makeCurried params, exprType: TypeValue, nextId: resBody.nextId }
+        { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: resBody.nextId }

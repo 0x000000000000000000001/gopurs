@@ -20,7 +20,7 @@ import Gopurs.CallArguments as CallArguments
 import Gopurs.CodegenState (FunctionInfo)
 import Gopurs.ExprAnalysis (getExprType, unwrapTcoExpr)
 import Gopurs.ExprContext (ExprContext, ExprResult, LoopTarget, TranslateExpr, StmtTree(..))
-import Gopurs.GoAst (GoExpr(..), GoType(..), goTypeToStr, sanitizeName)
+import Gopurs.GoAst (rawGo, GoExpr(..), GoType(..), goTypeToStr, sanitizeName)
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr)
 import Gopurs.GoTypes (exprTypeToGoType)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr)
@@ -149,7 +149,7 @@ tailCall translate context@{ metadata, codegenStateRef, modNameStr, mbExpectedEx
     translated = CallArguments.translate translate context Nothing { stmts: StmtEmpty, nextId } args
     assigns = Array.mapWithIndex
       (\index param -> GoMutate param (coerceGoExpr codegenStateRef modNameStr
-        (fromMaybe (GoRaw "nil") (Array.index translated.exprs index))
+        (fromMaybe (rawGo "nil") (Array.index translated.exprs index))
         (fromMaybe TypeValue (Array.index translated.exprTypes index))
         (fromMaybe TypeValue (Array.index target.goTypes index))))
       target.loopParams
@@ -159,7 +159,7 @@ tailCall translate context@{ metadata, codegenStateRef, modNameStr, mbExpectedEx
         ty -> ty)
   in
     { stmts: translated.stmts <> foldMap StmtLeaf assigns <> StmtLeaf (GoContinue target.ident)
-    , expr: GoRaw ("func() " <> goTypeToStr expectedGoType <> " { panic(\"unreachable\") }()")
+    , expr: rawGo ("func() " <> goTypeToStr expectedGoType <> " { panic(\"unreachable\") }()")
     , exprType: expectedGoType
     , nextId: translated.nextId
     }

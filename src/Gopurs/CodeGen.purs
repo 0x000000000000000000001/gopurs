@@ -22,13 +22,13 @@ import Data.String.Pattern (Pattern(..), Replacement(..))
 import Data.Map as Map
 import Data.Set as Set
 import Data.Foldable (foldl)
-import Gopurs.GoAst (GoExpr(..), GoType(..), capitalize, goTypeToStr, sanitizeName)
-import Gopurs.Printer (printGoFile, printGoExpr, printGoDeclVar)
+import Gopurs.GoAst (rawGo, GoExpr(..), GoDecl(..), GoType(..), capitalize, goTypeToStr, sanitizeName)
+import Gopurs.Printer (printGoFile, printGoExpr)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.FreeVars (localId)
 import PureScript.Backend.Optimizer.FfiSupport (hashString)
 import Gopurs.ThunkFusion (optimizeThunkProducers)
-import Gopurs.GoTypes (exprTypeToGenericGoType, exprTypeToGoType, instantiateGenericGoType, structFieldGoType)
+import Gopurs.GoTypes (exprTypeToGenericGoType, exprTypeToGoType, instantiateGenericGoType)
 import Gopurs.CodegenState (CodegenMetadata, CodegenState)
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr, generateReboxFunctions, unboxGoExpr)
 import Gopurs.PrimitiveExprs as PrimitiveExprs
@@ -41,6 +41,8 @@ import Gopurs.BindingExprs as BindingExprs
 import Gopurs.ControlExprs as ControlExprs
 import Gopurs.EffectExprs as EffectExprs
 import Gopurs.ModuleBindings as ModuleBindings
+import Gopurs.ModuleDeclarations as ModuleDeclarations
+import Gopurs.GoImports (collectImports)
 import Gopurs.ExprAnalysis (bindFieldFunctionParameters, extractExprFuncType, getExprType, hasTypeVars, isEffectNode, unwrapTcoExpr)
 import Gopurs.ExprContext (ExprOptions, ExprResult, LocalEnv, LoopContext, ModuleFunctions, StmtTree(..), TranslateExpr)
 
@@ -48,7 +50,7 @@ translate :: CodegenMetadata -> BackendModule -> String
 translate metadata inputMod = (translateWithFunctions metadata inputMod).code
 
 translateWithFunctions :: CodegenMetadata -> BackendModule -> { code :: String, functions :: ModuleFunctions }
-translateWithFunctions metadata@{ enumAdts, pointerAdtPaths, elidedCtors, classDeclsFields } inputMod =
+translateWithFunctions metadata inputMod =
 
   let
     mod = optimizeThunkProducers inputMod
@@ -56,50 +58,8 @@ translateWithFunctions metadata@{ enumAdts, pointerAdtPaths, elidedCtors, classD
     modNameStr = String.replaceAll (Pattern ".") (Replacement "_") modNameStrOrig
 
     codegenStateRef :: Ref CodegenState
-    codegenStateRef = unsafePerformEffect do
-      let
-        structDecls = Array.concatMap
-          ( \decl ->
-              Array.concatMap
-                ( \ctor ->
-                    let
-                      fieldTypes = ctor.fields
-                      goFieldTypes = map (structFieldGoType pointerAdtPaths enumAdts elidedCtors decl.vars modNameStr) fieldTypes
-                      structName = "Constructor_" <> modNameStr <> "_" <> sanitizeName ctor.name
-
-                      typeParams =
-                        if Array.length decl.vars > 0 then
-                          "[" <> String.joinWith ", " (map (\v -> "T_" <> sanitizeName v <> " any") decl.vars) <> "]"
-                        else ""
-
-                      fieldsStr = Array.cons "Rc uint32" (Array.mapWithIndex (\i ty -> "V" <> show i <> " " <> goTypeToStr ty) goFieldTypes)
-                      structDecl = "type " <> structName <> typeParams <> " struct {\n\t" <> String.joinWith "\n\t" fieldsStr <> "\n}\n"
-
-                      fullName = unwrap mod.name <> "." <> ctor.name
-                      getterDecl = case Map.lookup fullName classDeclsFields of
-                        Just info ->
-                          let
-                            typeParamsGetter =
-                              if Array.length decl.vars > 0 then
-                                "[" <> String.joinWith ", " (map (const "gopurs_runtime.Value") decl.vars) <> "]"
-                              else ""
-                            cases = Array.mapWithIndex (\i f -> "\t\tcase \"" <> f.name <> "\": return gopurs_runtime.Box(c.V" <> show i <> ")") info.fields
-                            pkgNameStr = String.replaceAll (Pattern ".") (Replacement "_") (unwrap mod.name)
-                            baseStructName = "Data_" <> pkgNameStr <> "_" <> sanitizeName ctor.name
-                            hashStr = hashString baseStructName
-                          in
-                            "func init() {\n\tgopurs_runtime.StructGetters[" <> hashStr <> "] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {\n\t\tc := (*" <> structName <> typeParamsGetter <> ")(ptr)\n\t\t_ = c\n\t\tswitch key {\n" <> String.joinWith "\n" cases <> "\n\t\tdefault: panic(\"Key not found in dictionary " <> structName <> ": \" + key)\n\t\t}\n\t}\n}\n"
-                        Nothing -> ""
-
-                    in
-                      if getterDecl == "" then [ structDecl ] else [ structDecl, getterDecl ]
-                )
-                decl.constructors
-          )
-          mod.dataDecls
-
-      -- Rebox requests belong to this invocation of translate.
-      Ref.new { rawDecls: structDecls, globalId: 0, reboxPairs: Set.empty }
+    codegenStateRef = unsafePerformEffect $
+      Ref.new { declarations: ModuleDeclarations.constructors metadata modNameStr mod, globalId: 0, reboxPairs: Set.empty }
 
     preparedBindings = ModuleBindings.prepare metadata modNameStr mod
     moduleFunctions = preparedBindings.functions
@@ -110,37 +70,19 @@ translateWithFunctions metadata@{ enumAdts, pointerAdtPaths, elidedCtors, classD
       h <- Ref.read codegenStateRef
       pure (Tuple d h)
 
-    declsStr = String.joinWith "\\n" (map printGoDeclVar allDeclsAst) <> "\\n" <> String.joinWith "\\n" helpers.rawDecls
+    foreignGetters = map
+      (\(Tuple (Ident name) _) -> GoForeignGetter
+        { name: "Get_" <> modNameStr <> "_" <> sanitizeName name
+        , value: "_Gopurs_" <> modNameStr <> "_" <> capitalize (sanitizeName name)
+        })
+      (Map.toUnfoldable mod.foreign)
+    declarationGroups =
+      [ allDeclsAst
+      , helpers.declarations <> unsafePerformEffect (generateReboxFunctions metadata codegenStateRef modNameStr)
+      , foreignGetters
+      ]
+    goFile = { packageName: "purescript", imports: collectImports declarationGroups, declarationGroups }
 
-    parts = [ declsStr ]
-    usedPkgNames =
-      Set.toUnfoldable $ Set.fromFoldable $ Array.mapMaybe
-        ( \part ->
-            let
-              subParts = String.split (Pattern ".") part
-            in
-              Array.head subParts
-        )
-        (fromMaybe [] (Array.tail parts)) :: Array String
-
-    goImports = Set.toUnfoldable $ Set.fromFoldable $
-      (if Array.length allDeclsAst > 0 || Array.length (Array.fromFoldable mod.foreign) > 0 then [ "gopurs/output/gopurs_runtime" ] else [])
-        <> (if Array.length allDeclsAst > 0 then [ "sync" ] else [])
-        <> (if String.contains (Pattern "math.") declsStr then [ "math" ] else [])
-        <> Array.mapMaybe
-          ( \pkg ->
-              if pkg /= modNameStr && pkg /= "Prim" && not (String.indexOf (Pattern "Prim_") pkg == Just 0) then Just ("gopurs/output/" <> String.replaceAll (Pattern "_") (Replacement ".") pkg)
-              else Nothing
-          )
-          usedPkgNames
-
-    goFile =
-      { packageName: "purescript"
-      , imports: goImports
-      , decls: allDeclsAst
-      , rawDecls: helpers.rawDecls <> unsafePerformEffect (generateReboxFunctions metadata codegenStateRef modNameStr)
-      , foreigns: map (\(Tuple (Ident name) type_) -> { pursName: modNameStr <> "_" <> sanitizeName name, goName: "_Gopurs_" <> modNameStr <> "_" <> capitalize (sanitizeName name), exprType: type_ }) (Map.toUnfoldable mod.foreign)
-      }
   in
     { code: printGoFile goFile
     , functions: Map.fromFoldable $ Array.concatMap
@@ -328,12 +270,12 @@ translateExprWithExpectedType metadata codegenStateRef depth modNameStr recVars 
                 let
                   goTypeArr = TypeNativeArray elemType
                 in
-                  { stmts: accXs.stmts, expr: GoRaw (goTypeToStr goTypeArr <> "{" <> String.joinWith ", " (map printGoExpr accXs.exprs) <> "}"), exprType: goTypeArr, nextId: accXs.nextId }
+                  { stmts: accXs.stmts, expr: rawGo (goTypeToStr goTypeArr <> "{" <> String.joinWith ", " (map printGoExpr accXs.exprs) <> "}"), exprType: goTypeArr, nextId: accXs.nextId }
               _ ->
                 let
                   boxedExprs = Array.zipWith (\itemExpr ty -> boxGoExpr codegenStateRef modNameStr itemExpr ty) accXs.exprs accXs.exprTypes
                 in
-                  { stmts: accXs.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Array") [ GoRaw ("[]gopurs_runtime.Value{" <> String.joinWith ", " (map printGoExpr boxedExprs) <> "}") ], exprType: TypeValue, nextId: accXs.nextId }
+                  { stmts: accXs.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Array") [ rawGo ("[]gopurs_runtime.Value{" <> String.joinWith ", " (map printGoExpr boxedExprs) <> "}") ], exprType: TypeValue, nextId: accXs.nextId }
 
         Lit (LitRecord props) ->
           let
@@ -498,7 +440,7 @@ translateExprWithExpectedType metadata codegenStateRef depth modNameStr recVars 
               Just { source, condition } ->
                 let
                   resultName = "__reuse_" <> show accProps.nextId
-                  declare = GoRaw ("var " <> resultName <> " " <> goTypeToStr res.exprType)
+                  declare = rawGo ("var " <> resultName <> " " <> goTypeToStr res.exprType)
                   choose = GoIfElse condition [ GoMutate resultName source ] [ GoMutate resultName res.expr ]
                 in
                   { stmts: StmtLeaf declare <> StmtLeaf choose, expr: GoVar resultName, exprType: res.exprType, nextId: accProps.nextId + 1 }
@@ -544,7 +486,7 @@ translateExprWithExpectedType metadata codegenStateRef depth modNameStr recVars 
             res1 = translateExpr metadata codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } nextId e1
             res2 = translateExpr metadata codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } res1.nextId e2
             result = case res1.exprType of
-              TypeNativeArray innerType -> { expr: boxGoExpr codegenStateRef modNameStr (GoRaw (printGoExpr res1.expr <> "[" <> printGoExpr (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeInt64) <> "]")) innerType, exprType: TypeValue }
+              TypeNativeArray innerType -> { expr: boxGoExpr codegenStateRef modNameStr (rawGo (printGoExpr res1.expr <> "[" <> printGoExpr (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeInt64) <> "]")) innerType, exprType: TypeValue }
               _ -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayAccess") [ boxGoExpr codegenStateRef modNameStr res1.expr res1.exprType, GoCall (GoVar "int") [ unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeInt64 ] ], exprType: TypeValue }
           in
             { stmts: res1.stmts <> res2.stmts, expr: result.expr, exprType: result.exprType, nextId: res2.nextId }

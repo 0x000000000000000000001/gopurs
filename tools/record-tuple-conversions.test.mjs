@@ -14,7 +14,7 @@ import * as Ref from '../output/Effect.Ref/index.js';
 import * as Go from '../output/Gopurs.GoAst/index.js';
 import { boxGoExpr, coerceGoExpr, generateReboxFunctions, unboxGoExpr } from '../output/Gopurs.GoConversions/index.js';
 import { exprTypeToGoType, exprTypeToGenericGoType } from '../output/Gopurs.GoTypes/index.js';
-import { printGoExpr } from '../output/Gopurs.Printer/index.js';
+import { printGoDecl, printGoExpr } from '../output/Gopurs.Printer/index.js';
 import { coerceLiteralField, getProp, prepareLiteral } from '../output/Gopurs.RecordExprs/index.js';
 import { runtimeGoCode } from '../output/Gopurs.Runtime/index.js';
 import * as Core from '../output/PureScript.Backend.Optimizer.CoreFn/index.js';
@@ -25,7 +25,7 @@ const emptyMetadata = {
     enumAdts: emptySet, enumCtors: emptySet, elidedCtors: emptySet,
     ctorTypes: emptyMap, classDeclsFields: emptyMap, globalTypes: emptyMap, globalFunctions: emptyMap,
 };
-const newState = () => Ref.new({ rawDecls: [], globalId: 0, reboxPairs: emptySet })();
+const newState = () => Ref.new({ declarations: [], globalId: 0, reboxPairs: emptySet })();
 
 const goType = exprTypeToGoType(emptyMap)(emptySet)(emptySet)('Test');
 const genericGoType = exprTypeToGenericGoType(emptyMap)(emptySet)(emptySet)([])('Test');
@@ -151,7 +151,7 @@ test('arrays of boxed Tuple values preserve fields when converted to native tupl
         (Go.TypeValue.value)(new Go.TypeNativeArray(tuple));
     const nativeExpression = unboxGoExpr(ref)('Test')(new Go.GoVar('native'))
         (new Go.TypeNativeArray(Go.TypeValue.value))(new Go.TypeNativeArray(tuple));
-    const helpers = generateReboxFunctions(metadata)(ref)('Test')();
+    const helpers = generateReboxFunctions(metadata)(ref)('Test')().map(printGoDecl);
     const directory = mkdtempSync(join(tmpdir(), 'gopurs-tuple-array-'));
     t.after(() => rmSync(directory, { recursive: true, force: true }));
     mkdirSync(join(directory, 'gopurs_runtime'));
@@ -246,7 +246,7 @@ test('boxed record fields convert generic ADT payloads to their native layout', 
     const tuple = Go.structPointer({ baseStructName: 'Data_Data_Tuple_Tuple', fullName: 'Data.Tuple.Tuple', structName: 'Constructor_Data_Tuple_Tuple' })([Go.TypeInt64.value, Go.TypeInt64.value]);
     const recordType = new Go.TypeRecord([new Tuple('payload', tuple)]);
     const expression = unboxGoExpr(ref)('Test')(new Go.GoVar('input'))(Go.TypeValue.value)(recordType);
-    const helpers = generateReboxFunctions(metadata)(ref)('Test')();
+    const helpers = generateReboxFunctions(metadata)(ref)('Test')().map(printGoDecl);
     const directory = mkdtempSync(join(tmpdir(), 'gopurs-record-adt-field-'));
     t.after(() => rmSync(directory, { recursive: true, force: true }));
     mkdirSync(join(directory, 'gopurs_runtime'));
