@@ -52,9 +52,12 @@ Tous les modules gopurs de ce tableau se trouvent dans [src/Gopurs](../src/Gopur
 | Contexte, résultat et callbacks de traduction | `ExprContext` |
 | Fonctions de module, signatures, groupes TCO | `ModuleBindings` |
 | Bindings locaux, récursion locale et initialisation | `BindingExprs` |
-| Applications, appels directs et intrinsics | `CallExprs`, `CallAnalysis` |
+| Sélection des appels, surapplications et sauts TCO | `CallExprs`, `CallAnalysis` |
+| Traduction ordonnée et adaptation des arguments | `CallArguments` |
+| Reconnaissance et émission de map, filter et foldl | `ArrayIntrinsics` |
 | Abstractions, branches et effets | `FunctionExprs`, `ControlExprs`, `EffectExprs` |
 | ADT, records et primitives | `AdtExprs`, `RecordExprs`, `PrimitiveExprs` |
+| Identité, champs et arguments génériques des constructeurs | `ConstructorLayout` |
 | Analyses d'expressions | `ExprAnalysis` |
 | Types Go, boxing et conversions | `GoTypes`, `GoConversions` |
 | Représentation et rendu Go | `GoAst`, `Printer` |
@@ -75,6 +78,21 @@ La génération Rebox consulte les métadonnées directement et relit les couple
 accumulés jusqu'à avoir émis les conversions transitives. Le printer ne consulte
 ni ne modifie cet état. Le [contrat AST/printer](go-ast-printer.md) décrit les
 nœuds structurés et les familles qui restent assemblées en chaînes.
+
+`ConstructorLayout` partage la préparation entre définitions, constructions
+saturées et accès aux champs. Il garde explicites les variantes d'instanciation
+des champs et du pointeur. `TypeStructPointer` porte un record nommé : identité
+du tag runtime, type PureScript, constructeur Go, nom Go instancié et arguments
+de type. `GoAst.structPointer` construit le nom instancié ; les conversions et
+l'instanciation générique réutilisent le nom du constructeur sans découper le
+texte imprimé.
+
+`CallArguments` traduit chaque argument dans l'ordre, en conservant ses
+statements et le compteur de noms. Les intrinsics curryfiés boxent chaque
+argument immédiatement ; les autres chemins conservent sa représentation
+native jusqu'à l'adaptation de l'appel. `ArrayIntrinsics` reçoit ces arguments
+déjà traduits et émet les boucles. `CallExprs` conserve les priorités existantes :
+TCO avant les intrinsics pour `App`, intrinsics avant TCO pour `UncurriedApp`.
 
 ## Runtime et FFI
 

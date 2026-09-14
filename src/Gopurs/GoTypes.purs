@@ -17,7 +17,7 @@ import Data.Set as Set
 import Data.String as String
 import Data.String.Pattern (Pattern(..), Replacement(..))
 import Data.Tuple (Tuple(..))
-import Gopurs.GoAst (GoType(..), goTypeToStr, sanitizeName)
+import Gopurs.GoAst (GoType(..), structPointer, sanitizeName)
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..))
 
 -- Diagnostic rendering of TAST annotations, shared by codegen and FFI comments.
@@ -91,9 +91,8 @@ exprTypeToGoType ptrPaths enumAdts elided modNameStr (ADT fullName path args) =
             typeArgsMapped = map (exprTypeToGoType ptrPaths enumAdts elided modNameStr) args
             typeArgsMappedTruncated = Array.take info.arity typeArgsMapped
             paddedTypeArgs = typeArgsMappedTruncated <> Array.replicate (info.arity - Array.length typeArgsMappedTruncated) TypeValue
-            typeArgsStr = if Array.length paddedTypeArgs > 0 then "[" <> String.joinWith ", " (map goTypeToStr paddedTypeArgs) <> "]" else ""
           in
-            TypeStructPointer baseStructName fullName (monoStructName' <> typeArgsStr) paddedTypeArgs
+            structPointer { baseStructName, fullName, structName: monoStructName' } paddedTypeArgs
         Nothing -> TypeValue
 exprTypeToGoType ptrPaths enumAdts elided modNameStr (TypeApp fn arg) =
   let
@@ -138,7 +137,7 @@ exprTypeToGenericGoType ptrPaths enumAdts elided typeVars modNameStr (ADT fullNa
             baseStructName = "Data_" <> pkgNameStr <> "_" <> sanitizeName info.ctorName
           in
           if Set.member monoStructName elided then TypeValue
-          else if info.arity == 0 then TypeStructPointer baseStructName fullName monoStructName []
+          else if info.arity == 0 then structPointer { baseStructName, fullName, structName: monoStructName } []
           else
             let
               finalArgs =
@@ -148,9 +147,8 @@ exprTypeToGenericGoType ptrPaths enumAdts elided typeVars modNameStr (ADT fullNa
                   map TypeGenericParam typeVars
                 else
                   Array.replicate info.arity TypeValue
-              typeArgsStr = if Array.length finalArgs > 0 then "[" <> String.joinWith ", " (map goTypeToStr finalArgs) <> "]" else ""
             in
-              TypeStructPointer baseStructName fullName (monoStructName <> typeArgsStr) finalArgs
+              structPointer { baseStructName, fullName, structName: monoStructName } finalArgs
         Nothing -> TypeValue
 exprTypeToGenericGoType ptrPaths enumAdts elidedCtors _ modNameStr ty = exprTypeToGoType ptrPaths enumAdts elidedCtors modNameStr ty
 
@@ -164,14 +162,7 @@ instantiateGenericGoType :: Map.Map String GoType -> GoType -> GoType
 instantiateGenericGoType env (TypeGenericParam v) = fromMaybe TypeValue (Map.lookup v env)
 instantiateGenericGoType env (TypeRecord fields) = TypeRecord (map (\(Tuple k v) -> Tuple k (instantiateGenericGoType env v)) fields)
 instantiateGenericGoType env (TypeNativeArray ty) = TypeNativeArray (instantiateGenericGoType env ty)
-instantiateGenericGoType env (TypeStructPointer base key full typeArgs) =
-  let
-    newTypeArgs = map (instantiateGenericGoType env) typeArgs
-    typeArgsStr = if Array.length newTypeArgs > 0 then "[" <> String.joinWith ", " (map goTypeToStr newTypeArgs) <> "]" else ""
-    monoStructName = case String.indexOf (Pattern "[") full of
-      Just i -> String.take i full
-      Nothing -> full
-  in
-    TypeStructPointer base key (monoStructName <> typeArgsStr) newTypeArgs
+instantiateGenericGoType env (TypeStructPointer pointer) =
+  structPointer pointer (map (instantiateGenericGoType env) pointer.typeArgs)
 instantiateGenericGoType env (TypeFunc args ret) = TypeFunc (map (instantiateGenericGoType env) args) (instantiateGenericGoType env ret)
 instantiateGenericGoType _ t = t

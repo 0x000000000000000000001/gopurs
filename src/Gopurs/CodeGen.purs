@@ -165,7 +165,6 @@ translateExprWithExpectedType :: CodegenMetadata -> Ref CodegenState -> Int -> S
 translateExprWithExpectedType metadata codegenStateRef depth modNameStr recVars moduleFunctions bound tcoIdent loopCtx options@{ inEffectBlock } mbExpectedExprType nextId tcoExpr@(TcoExpr _ expr) =
   let
     context = { metadata, codegenStateRef, depth, modNameStr, recVars, moduleFunctions, bound, tcoIdent, loopCtx, options, mbExpectedExprType }
-    elidedCtors = metadata.elidedCtors
     isEff = isEffectNode tcoExpr
   in
     if isEff && not inEffectBlock then
@@ -178,7 +177,7 @@ translateExprWithExpectedType metadata codegenStateRef depth modNameStr recVars 
 
           in
             case unwrapTcoExpr a, expectedGoType of
-              Lit (LitRecord props), TypeStructPointer baseStructName fullName fullPath _ ->
+              Lit (LitRecord props), TypeStructPointer { baseStructName, fullName, structName: monoStructName, typeArgs: typeArgsForDict } ->
                 case Map.lookup fullName metadata.classDeclsFields of
                   Just classInfo ->
                     let
@@ -217,21 +216,13 @@ translateExprWithExpectedType metadata codegenStateRef depth modNameStr recVars 
                         { stmts: StmtEmpty, exprs: [], exprType: TypeValue, nextId }
                         sortedVals
                     in
-                      let
-                        typeArgsForDict = case expectedGoType of
-                          TypeStructPointer _ _ _ args -> args
-                          _ -> []
-                        monoStructName = case String.indexOf (Pattern "[") fullPath of
-                          Just idx -> String.take idx fullPath
-                          Nothing -> fullPath
-                      in
-                        { stmts: accProps.stmts, expr: GoConstructor (hashString baseStructName) monoStructName typeArgsForDict accProps.exprs, exprType: expectedGoType, nextId: accProps.nextId }
+                      { stmts: accProps.stmts, expr: GoConstructor (hashString baseStructName) monoStructName typeArgsForDict accProps.exprs, exprType: expectedGoType, nextId: accProps.nextId }
                   Nothing ->
                     let
                       res = translateExprWithExpectedType metadata codegenStateRef depth modNameStr recVars moduleFunctions bound tcoIdent loopCtx options (Just type_) nextId a
                     in
                       case res.exprType of
-                        TypeStructPointer _ _ _ _ -> res
+                        TypeStructPointer _ -> res
                         _ ->
                           if expectedGoType == res.exprType then res
                           else if isClosureNode metadata a then res
@@ -263,7 +254,7 @@ translateExprWithExpectedType metadata codegenStateRef depth modNameStr recVars 
                     _, _ -> false
                 in
                   case res.exprType of
-                    TypeStructPointer _ _ _ _ -> res
+                    TypeStructPointer _ -> res
                     _ ->
                       if expectedGoType == res.exprType || preserveBoxedRecord then res
                       else if isClosureNode metadata a then res
@@ -421,7 +412,7 @@ translateExprWithExpectedType metadata codegenStateRef depth modNameStr recVars 
               GetIndex idx -> { stmts: resObj.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayAccess") [ (boxGoExpr codegenStateRef modNameStr resObj.expr resObj.exprType), GoInt idx ], exprType: TypeValue, nextId: resObj.nextId }
               GetCtorField (Qualified mbMod _) _ _ (Ident ctorName) _ idx ->
                 let
-                  result = AdtExprs.getField metadata codegenStateRef modNameStr elidedCtors
+                  result = AdtExprs.getField metadata codegenStateRef modNameStr
                     { moduleName: mbMod, ctorName, index: idx }
                     { expr: resObj.expr, exprType: resObj.exprType, sourceType: getExprType obj }
                 in

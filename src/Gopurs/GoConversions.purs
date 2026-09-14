@@ -24,7 +24,7 @@ import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import Effect.Unsafe (unsafePerformEffect)
 import Gopurs.CodegenState (CodegenMetadata, CodegenState)
-import Gopurs.GoAst (GoExpr(..), GoType(..), goTypeToStr, sanitizeName)
+import Gopurs.GoAst (GoExpr(..), GoType(..), goTypeToStr, structPointer, sanitizeName)
 import Gopurs.GoTypes as GoTypes
 import Gopurs.Printer (printGoExpr)
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..))
@@ -104,36 +104,30 @@ coerceGoExpr _ _ ctor@(GoConstructor _ structName _ args) _ (TypeStructValue adt
     case Map.lookup adtName unboxableADTs of
       Just adt -> GoStructValue adtName fields (adt.mapConstructor ctorName args)
       Nothing -> ctor -- fallback
-coerceGoExpr _ _ expr (TypeStructPointer b1 _ s1 a1) (TypeStructPointer b2 _ s2 a2) | b1 == b2 && s1 == s2 && a1 == a2 = expr
+coerceGoExpr _ _ expr (TypeStructPointer { baseStructName: b1, fullPath: s1, typeArgs: a1 }) (TypeStructPointer { baseStructName: b2, fullPath: s2, typeArgs: a2 }) | b1 == b2 && s1 == s2 && a1 == a2 = expr
 
-coerceGoExpr codegenStateRef modNameStr expr srcT@(TypeStructPointer b1 _ s1 _) destT@(TypeStructPointer b2 _ s2 _) | b1 == b2 =
+coerceGoExpr codegenStateRef modNameStr expr srcT@(TypeStructPointer { baseStructName: b1, fullPath: s1 }) destT@(TypeStructPointer { baseStructName: b2, fullPath: s2 }) | b1 == b2 =
   let
     _register = unsafePerformEffect (registerReboxPair codegenStateRef srcT destT)
   in
     GoCall (GoVar ("Rebox_" <> modNameStr <> "_" <> hashString s1 <> "_" <> hashString s2)) [ expr ]
 
-coerceGoExpr codegenStateRef modNameStr expr srcT@(TypeStructPointer _ _ _ _) destT@(TypeStructPointer _ _ _ _) =
+coerceGoExpr codegenStateRef modNameStr expr srcT@(TypeStructPointer _) destT@(TypeStructPointer _) =
   unboxGoExpr codegenStateRef modNameStr (boxGoExpr codegenStateRef modNameStr expr srcT) TypeValue destT
 
-coerceGoExpr codegenStateRef modNameStr expr srcT@(TypeStructPointer b f s a) TypeValue | Array.any (_ /= TypeValue) a =
+coerceGoExpr codegenStateRef modNameStr expr srcT@(TypeStructPointer pointer@{ typeArgs: a }) TypeValue | Array.any (_ /= TypeValue) a =
   let
-    basePath = case String.indexOf (Pattern "[") s of
-      Just i -> String.take i s
-      Nothing -> s
-    destT = TypeStructPointer b f (basePath <> if Array.length a > 0 then "[" <> String.joinWith ", " (map (const "gopurs_runtime.Value") a) <> "]" else "") (map (const TypeValue) a)
+    destT = structPointer pointer (map (const TypeValue) a)
   in
     boxGoExpr codegenStateRef modNameStr (coerceGoExpr codegenStateRef modNameStr expr srcT destT) destT
 
-coerceGoExpr codegenStateRef modNameStr expr TypeValue destT@(TypeStructPointer b f s a) | Array.any (_ /= TypeValue) a =
+coerceGoExpr codegenStateRef modNameStr expr TypeValue destT@(TypeStructPointer pointer@{ typeArgs: a }) | Array.any (_ /= TypeValue) a =
   let
-    basePath = case String.indexOf (Pattern "[") s of
-      Just i -> String.take i s
-      Nothing -> s
-    srcT = TypeStructPointer b f (basePath <> if Array.length a > 0 then "[" <> String.joinWith ", " (map (const "gopurs_runtime.Value") a) <> "]" else "") (map (const TypeValue) a)
+    srcT = structPointer pointer (map (const TypeValue) a)
   in
     coerceGoExpr codegenStateRef modNameStr (unboxGoExpr codegenStateRef modNameStr expr TypeValue srcT) srcT destT
 
-coerceGoExpr codegenStateRef modNameStr expr srcT@(TypeStructValue srcAdt _) destT@(TypeStructPointer _ destAdt _ _) | srcAdt == destAdt =
+coerceGoExpr codegenStateRef modNameStr expr srcT@(TypeStructValue srcAdt _) destT@(TypeStructPointer { fullName: destAdt }) | srcAdt == destAdt =
   -- Boxed native ADTs have Value payloads; convert each field before using
   -- a typed pointer instead of reinterpreting the generic payload layout.
   coerceGoExpr codegenStateRef modNameStr (boxGoExpr codegenStateRef modNameStr expr srcT) TypeValue destT
@@ -145,7 +139,7 @@ coerceGoExpr codegenStateRef modNameStr expr from to = unboxGoExpr codegenStateR
 -- Before boxing a generic pointer, Rebox converts its type arguments to
 -- Value. boxGoExprImpl then emits the box without repeating that conversion.
 boxGoExpr :: Ref CodegenState -> String -> GoExpr -> GoType -> GoExpr
-boxGoExpr codegenStateRef modNameStr expr srcT@(TypeStructPointer _ _ _ typeArgs) =
+boxGoExpr codegenStateRef modNameStr expr srcT@(TypeStructPointer { typeArgs }) =
   if Array.any (\t -> t /= TypeValue) typeArgs then
     coerceGoExpr codegenStateRef modNameStr expr srcT TypeValue
   else
@@ -160,7 +154,7 @@ boxGoExprImpl _ _ expr TypeInt64 = GoCall (GoSelector (GoVar "gopurs_runtime") "
 boxGoExprImpl _ _ expr TypeFloat64 = GoCall (GoSelector (GoVar "gopurs_runtime") "Float") [ expr ]
 boxGoExprImpl _ _ expr TypeString = GoCall (GoSelector (GoVar "gopurs_runtime") "Str") [ expr ]
 boxGoExprImpl _ _ expr TypeBool = GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ expr ]
-boxGoExprImpl _ _ expr (TypeStructPointer baseStructName _ _ _) = GoRaw ("gopurs_runtime.Value{Type: 9, IntVal: " <> hashString baseStructName <> ", UnsafePtr: unsafe.Pointer(" <> printGoExpr expr <> ")}")
+boxGoExprImpl _ _ expr (TypeStructPointer { baseStructName }) = GoRaw ("gopurs_runtime.Value{Type: 9, IntVal: " <> hashString baseStructName <> ", UnsafePtr: unsafe.Pointer(" <> printGoExpr expr <> ")}")
 boxGoExprImpl codegenStateRef modNameStr expr (TypeRecord fields) =
   let
     keys = map (\(Tuple k _) -> k) fields
@@ -206,7 +200,7 @@ unboxGoExpr codegenStateRef modNameStr expr currentType desiredType =
     TypeString -> GoCall (GoSelector expr "StrVal") []
     TypeBool -> GoBinOp "!=" (GoSelector expr "IntVal") (GoInt 0)
     TypeUint32 -> GoRaw ("uint32(" <> printGoExpr (GoSelector expr "IntVal") <> ")")
-    (TypeStructPointer _ _ fullPath _) -> GoCall (GoRaw ("gopurs_runtime.CoerceToStruct[" <> fullPath <> "]")) [ expr ]
+    (TypeStructPointer { fullPath }) -> GoCall (GoRaw ("gopurs_runtime.CoerceToStruct[" <> fullPath <> "]")) [ expr ]
     (TypeInterface _) -> expr
     (TypeNativeArray TypeInt64) -> GoUnboxIntArray expr
     (TypeNativeArray inner) -> case currentType of
@@ -269,7 +263,7 @@ findReboxFields metadata baseStructName =
 renderReboxFunction :: Ref CodegenState -> CodegenMetadata -> String -> Map String String -> Tuple GoType GoType -> Maybe (Tuple String String)
 renderReboxFunction codegenStateRef metadata modNameStr generatedFuncs (Tuple srcT destT) =
   case srcT, destT of
-    TypeStructPointer b1 _ s1 a1, TypeStructPointer b2 _ s2 a2 | b1 == b2 ->
+    TypeStructPointer { baseStructName: b1, fullPath: s1, typeArgs: a1 }, TypeStructPointer { baseStructName: b2, fullPath: s2, typeArgs: a2 } | b1 == b2 ->
       let
         funcName = "Rebox_" <> modNameStr <> "_" <> hashString s1 <> "_" <> hashString s2
       in

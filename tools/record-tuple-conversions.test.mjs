@@ -124,16 +124,12 @@ test('boxed record literals box their native scalar and array fields', () => {
 test('native Tuple payloads are converted before accessing a typed pointer', () => {
     const ref = newState();
     const native = new Go.TypeStructValue('Data.Tuple.Tuple', [Go.TypeValue.value, Go.TypeValue.value]);
-    const typed = new Go.TypeStructPointer(
-        'Data_Data_Tuple_Tuple', 'Data.Tuple.Tuple',
-        'Constructor_Data_Tuple_Tuple[int64, gopurs_runtime.Value]',
-        [Go.TypeInt64.value, Go.TypeValue.value],
-    );
+    const typed = Go.structPointer({ baseStructName: 'Data_Data_Tuple_Tuple', fullName: 'Data.Tuple.Tuple', structName: 'Constructor_Data_Tuple_Tuple' })([Go.TypeInt64.value, Go.TypeValue.value]);
     const result = coerceGoExpr(ref)('Test')(new Go.GoVar('tuple'))(native)(typed);
     const pairs = toUnfoldable(unfoldableArray)(Ref.read(ref)().reboxPairs);
 
     assert.equal(pairs.length, 1, 'conversion must register a field-wise rebox');
-    assert.deepEqual(pairs[0].value0.value3, [Go.TypeValue.value, Go.TypeValue.value]);
+    assert.deepEqual(pairs[0].value0.value0.typeArgs, [Go.TypeValue.value, Go.TypeValue.value]);
     assert.deepEqual(pairs[0].value1, typed);
     assert.ok(result instanceof Go.GoCall);
     assert.match(result.value0.value0, /^Rebox_Test_/);
@@ -150,11 +146,7 @@ test('arrays of boxed Tuple values preserve fields when converted to native tupl
             vars: ['a', 'b'], fields: [new Core.TypeVar('a'), new Core.TypeVar('b')],
         })(emptyMap),
     };
-    const tuple = new Go.TypeStructPointer(
-        'Data_Data_Tuple_Tuple', 'Data.Tuple.Tuple',
-        'Constructor_Data_Tuple_Tuple[int64, int64]',
-        [Go.TypeInt64.value, Go.TypeInt64.value],
-    );
+    const tuple = Go.structPointer({ baseStructName: 'Data_Data_Tuple_Tuple', fullName: 'Data.Tuple.Tuple', structName: 'Constructor_Data_Tuple_Tuple' })([Go.TypeInt64.value, Go.TypeInt64.value]);
     const expression = coerceGoExpr(ref)('Test')(new Go.GoVar('input'))
         (Go.TypeValue.value)(new Go.TypeNativeArray(tuple));
     const nativeExpression = unboxGoExpr(ref)('Test')(new Go.GoVar('native'))
@@ -198,10 +190,8 @@ func main() {
 });
 
 test('generic class properties retain the tag and fields of native ADT values', t => {
-    const dateType = new Go.TypeStructPointer('Data_Fixture_Date', 'Fixture.Date', 'Constructor_Fixture_Date', []);
-    const boundedType = new Go.TypeStructPointer(
-        'Data_Fixture_Bounded', 'Fixture.Bounded', 'Constructor_Fixture_Bounded[*Constructor_Fixture_Date]', [dateType],
-    );
+    const dateType = Go.structPointer({ baseStructName: 'Data_Fixture_Date', fullName: 'Fixture.Date', structName: 'Constructor_Fixture_Date' })([]);
+    const boundedType = Go.structPointer({ baseStructName: 'Data_Fixture_Bounded', fullName: 'Fixture.Bounded', structName: 'Constructor_Fixture_Bounded' })([dateType]);
     const ref = newState();
     const metadata = {
         ...emptyMetadata,
@@ -253,10 +243,7 @@ test('boxed record fields convert generic ADT payloads to their native layout', 
             vars: ['a', 'b'], fields: [new Core.TypeVar('a'), new Core.TypeVar('b')],
         })(emptyMap),
     };
-    const tuple = new Go.TypeStructPointer(
-        'Data_Data_Tuple_Tuple', 'Data.Tuple.Tuple', 'Constructor_Data_Tuple_Tuple[int64, int64]',
-        [Go.TypeInt64.value, Go.TypeInt64.value],
-    );
+    const tuple = Go.structPointer({ baseStructName: 'Data_Data_Tuple_Tuple', fullName: 'Data.Tuple.Tuple', structName: 'Constructor_Data_Tuple_Tuple' })([Go.TypeInt64.value, Go.TypeInt64.value]);
     const recordType = new Go.TypeRecord([new Tuple('payload', tuple)]);
     const expression = unboxGoExpr(ref)('Test')(new Go.GoVar('input'))(Go.TypeValue.value)(recordType);
     const helpers = generateReboxFunctions(metadata)(ref)('Test')();

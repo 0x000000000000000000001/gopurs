@@ -25,7 +25,7 @@ Point de départ vérifié le 14 septembre 2026 : première vague terminée ; co
 
   **Résultat (14 septembre 2026) :** `ExprContext` et les helpers reçoivent directement `CodegenMetadata`. L'état mutable ne contient plus que `rawDecls`, `globalId` et `reboxPairs` ; le champ `decls`, toujours vide, est retiré. Les lectures `Ref.read` passent de 97 à 4, réservées à ces sorties. Compilation sans avertissement, 11 tests de conversion adaptés réussis, `bin/go/run -c` réussi : mêmes 300 entrées TAST, 387 fichiers Go identiques octet pour octet et 14 résultats fonctionnels inchangés. Architecture mise à jour ; PBO et altbak inchangés. Preuves locales : `/private/tmp/gopurs-wave2-state-t8wc3xll/verification.json`.
 
-- [ ] **2 — Donner un chemin commun à la préparation des constructeurs.**
+- [x] **2 — Donner un chemin commun à la préparation des constructeurs.**
 
   **Constat :** `AdtExprs` répète entre définition, construction saturée et accès aux champs la résolution du type ADT, le calcul des arguments génériques et le choix des noms. `TypeStructPointer` transporte quatre informations positionnelles, dont trois chaînes.
 
@@ -33,13 +33,17 @@ Point de départ vérifié le 14 septembre 2026 : première vague terminée ; co
 
   **Terminé lorsque :** une même décision de représentation n'est plus reconstruite dans plusieurs branches et que noms, tags, champs, arités et conversions générés restent identiques.
 
-- [ ] **3 — Simplifier les appels et sortir les intrinsics de tableaux.**
+  **Résultat (14 septembre 2026) :** `ConstructorLayout` partage l'identité, les champs et l'instanciation entre définitions, constructions saturées et accès. `TypeStructPointer` utilise des champs nommés ; `GoAst.structPointer` construit le nom instancié, sans découpage de chaînes dans les conversions. Les variantes d'instanciation existantes sont préservées. Compilation sans avertissement, 15 tests réussis, `bin/go/run -c` réussi : 387 fichiers Go identiques sur les mêmes 300 TAST et 14 résultats inchangés. Preuves : `/private/tmp/gopurs-wave2-constructors-calls-6dzbp4q_/lot2-verification.json`.
+
+- [x] **3 — Simplifier les appels et sortir les intrinsics de tableaux.**
 
   **Constat :** les 697 lignes de `CallExprs` mêlent reconnaissance des intrinsics, traduction des arguments, choix des appels directs et émission des boucles. Les chemins curryfiés et non curryfiés répètent une partie de ces traitements.
 
   **Travail :** donner aux intrinsics reconnus une représentation explicite et leur propre émetteur pour `map`, `filter` et `foldl`. Factoriser la traduction ordonnée des arguments et les adaptations communes. Garder dans `CallExprs` la sélection entre appels directs, indirects, partiels, surapplications et sauts TCO. Conserver les gardes propres à chaque chemin et le marqueur de filtre frais utilisé par ArrayRoundtrip.
 
   **Terminé lorsque :** le parcours d'un appel se lit par étapes nommées, les mêmes règles ne sont plus copiées entre les variantes et aucun argument n'est traduit ou évalué deux fois.
+
+  **Résultat (14 septembre 2026) :** `ArrayIntrinsics` reconnaît explicitement map/filter/foldl et émet leurs boucles ; `CallArguments` centralise la traduction ordonnée, les conversions et l'application des arguments supplémentaires. `CallExprs` mutualise les appels natifs, non curryfiés et les sauts TCO, en conservant les priorités et gardes des deux chemins. Compilation sans avertissement, 7 tests d'appels réussis, 28 assertions et snapshot ArrayRoundtrip réussis. `bin/go/run -c` confirme à nouveau les 387 Go identiques et les 14 résultats inchangés. Documentation actualisée ; PBO et altbak inchangés. Preuves : `/private/tmp/gopurs-wave2-constructors-calls-6dzbp4q_/verification.json`.
 
 - [ ] **4 — Unifier les déclarations Go et le calcul des imports.**
 

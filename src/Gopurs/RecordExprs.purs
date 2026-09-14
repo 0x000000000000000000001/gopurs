@@ -64,7 +64,7 @@ getProp metadata codegenStateRef modNameStr prop obj = case obj.exprType of
       fieldGoType = fromMaybe TypeValue (Map.lookup prop (Map.fromFoldable fields))
     in
       { expr: GoStructAccess obj.expr (sanitizeName prop), exprType: fieldGoType }
-  TypeStructPointer _ fullName _ typeArgs ->
+  TypeStructPointer { fullName, typeArgs } ->
     case Map.lookup fullName metadata.classDeclsFields of
       Just info ->
         case Array.find (\(Tuple _ field) -> field.name == prop) (Array.mapWithIndex Tuple info.fields) of

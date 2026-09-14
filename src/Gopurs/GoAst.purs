@@ -69,6 +69,23 @@ type GoFile =
   , foreigns :: Array { pursName :: String, goName :: String, exprType :: Maybe ExprType }
   }
 
+-- Keep the runtime tag, PureScript identity and Go names distinct.
+-- structPointer is the single constructor of the instantiated name.
+type StructPointer =
+  { baseStructName :: String -- Runtime tag identity.
+  , fullName :: String -- Fully qualified PureScript type.
+  , fullPath :: String -- Instantiated Go constructor name.
+  , structName :: String -- Go constructor name without type arguments.
+  , typeArgs :: Array GoType
+  }
+
+structPointer :: forall r. { baseStructName :: String, fullName :: String, structName :: String | r } -> Array GoType -> GoType
+structPointer { baseStructName, fullName, structName } typeArgs =
+  TypeStructPointer { baseStructName, fullName, structName, fullPath: structTypeName structName typeArgs, typeArgs }
+
+structTypeName :: String -> Array GoType -> String
+structTypeName name args = name <> if Array.null args then "" else "[" <> String.joinWith ", " (map goTypeToStr args) <> "]"
+
 data GoType
   = TypeValue
   | TypeInt64
@@ -76,7 +93,7 @@ data GoType
   | TypeString
   | TypeBool
   | TypeUint32
-  | TypeStructPointer String String String (Array GoType)
+  | TypeStructPointer StructPointer
   | TypeRecord (Array (Tuple String GoType))
   | TypeInterface String
   | TypeNativeArray GoType
@@ -93,7 +110,7 @@ goTypeToStr TypeFloat64 = "float64"
 goTypeToStr TypeString = "string"
 goTypeToStr TypeBool = "bool"
 goTypeToStr TypeUint32 = "uint32"
-goTypeToStr (TypeStructPointer _ _ fullPath _) = "*" <> fullPath
+goTypeToStr (TypeStructPointer { fullPath }) = "*" <> fullPath
 goTypeToStr (TypeInterface name) = name
 goTypeToStr (TypeNativeArray inner) = "[]" <> goTypeToStr inner
 goTypeToStr (TypeGenericParam name) = "T_" <> sanitizeName name

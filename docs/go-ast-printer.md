@@ -12,7 +12,7 @@ L'inventaire porte sur les sites du générateur, pas sur le nombre d'occurrence
 | --- | --- | --- |
 | Déclarations de module | `CodeGen`, `ModuleBindings`, `FunctionExprs`, `GoConversions` | Structs ADT, getters de classes, workers nommés et helpers Rebox sont encore assemblés en chaînes. `rawDecls` conserve leur ordre ; `GoDecl` représente les globals avec cache et `sync.Once`. |
 | Fonctions anonymes du parcours d'expressions | `BindingExprs`, `ModuleBindings`, `FunctionExprs`, `EffectExprs`, `AdtExprs` | Les 16 sites qui assemblaient une fonction native, une enveloppe curryfiée ou une IIFE utilisent désormais `GoFuncBlock` ou `GoFuncLit`, composés avec `GoCall`. |
-| Autres expressions et statements | `BindingExprs`, `ControlExprs`, `CallExprs`, `AdtExprs`, `EffectExprs`, `PrimitiveExprs`, `CodeGen` | Déclarations locales typées, labels et fragments de contrôle, pointeurs, littéraux et commentaires comportent encore des `GoRaw`. Ils constituent d'autres familles. |
+| Autres expressions et statements | `BindingExprs`, `ControlExprs`, `CallExprs`, `ArrayIntrinsics`, `CallArguments`, `AdtExprs`, `EffectExprs`, `PrimitiveExprs`, `CodeGen` | Déclarations locales typées, labels et fragments de contrôle, pointeurs, littéraux et commentaires comportent encore des `GoRaw`. Ils constituent d'autres familles. |
 | Conversions | `GoConversions`, avec certains rendus spécialisés dans `Printer` | Les conversions de records, tableaux génériques et ADT unboxés contiennent encore des fonctions Go assemblées en chaînes. Les conversions de tableaux d'entiers restent des nœuds structurés jusqu'au consommateur. |
 | Adaptations FFI | `FfiBridge` | Les bridges sont rendus depuis les signatures Go et les métadonnées TAST, avec leurs adaptations propres. Ils ne passent pas par les nœuds de fonctions anonymes du parcours d'expressions. |
 | Runtime | `runtime/runtime.go`, `Gopurs.Runtime` | La source Go canonique est incluse au build par `tools/embed-runtime.mjs`. La façade PureScript expose la constante embarquée, sans lecture du fichier Go à l'exécution ; extraction réalisée au lot 9. |
@@ -39,7 +39,7 @@ Le nœud historique `GoFunc` conserve son rendu spécialisé, dont le regroupeme
 
 ## Conversions de tableaux
 
-`GoBoxIntArray`, `GoUnboxIntArray` et `GoFreshFilterArray` conservent l'information nécessaire à `CallExprs.normalizeFreshIntArrayRoundtrip`. La décision de normaliser le buffer privé du filtre se prend au site du fold, avant l'impression. `Printer` rend les conversions conservées et imprime le marqueur de fraîcheur de façon transparente ; il ne reconnaît pas ce motif dans du texte Go. Voir [la règle des tableaux d'entiers](array-roundtrip.md).
+`GoBoxIntArray`, `GoUnboxIntArray` et `GoFreshFilterArray` conservent l'information nécessaire à `ArrayIntrinsics.normalizeFreshIntArrayRoundtrip`. La décision de normaliser le buffer privé du filtre se prend au site du fold, avant l'impression. `Printer` rend les conversions conservées et imprime le marqueur de fraîcheur de façon transparente ; il ne reconnaît pas ce motif dans du texte Go. Voir [la règle des tableaux d'entiers](array-roundtrip.md).
 
 ## Validation du lot 8
 
