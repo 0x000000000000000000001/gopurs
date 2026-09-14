@@ -68,8 +68,8 @@ workspace/
 The optimizer checkout comes from the
 [Go branch of our optimizer fork](https://github.com/0x000000000000000000001/purescript-backend-optimizer/tree/edge-gopurs).
 Its path is `../../purescript-backend-optimizer-gopurs` relative to this
-repository. `st`, `unsafe-coerce` and `assert` are also local build dependencies.
-From this repository, `./bin/setup` clones the core library siblings listed in
+repository. `st` and `unsafe-coerce` are also local build dependencies.
+From this repository, `./bin/setup` installs the library siblings listed in
 [bin/pkg](bin/pkg); it does not install the optimizer or the typed compiler.
 
 ```bash
@@ -90,12 +90,36 @@ npm ci
 npm run build
 ```
 
+### Choose the library checkouts
+
+```bash
+./bin/setup --core --list  # 22 core libraries + lazy, ordered-collections, random
+./bin/setup --core         # default; install missing checkouts, preserve existing ones
+./bin/setup --all --list   # complete inventory of 50 libraries
+./bin/setup --all          # requires the local Go-adapted QuickCheck checkout
+```
+
+The **22 `CORE_PACKAGES`** are the default dependencies of compiler fixtures.
+The **three `CORE_CHECKOUT_DEPENDENCIES`** are additional local overrides used
+when developing those core libraries themselves. `ADDITIONAL_PACKAGES` completes
+the list of 50. All three lists live in `bin/pkg`; setup never changes the
+fixture dependency list. An unknown option, an invalid existing destination or
+a failed clone stops setup with a nonzero status.
+
+QuickCheck is a specific local prerequisite for the complete library suite.
+The available checkout is upstream **v8.0.1**, with the Go adaptation supplied
+by `spago.yaml` and `src/Test/QuickCheck/Gen.go`. An upstream clone alone does
+not supply these two files. Keep the adapted checkout, including those files,
+at `../gopurs-quickcheck`; `--all` checks it before cloning anything. No remotely
+installable Go fork was established in this review, so setup does not invent
+one. Publishing that adaptation is separate from local setup.
+
 The build embeds the Go runtime, compiles PureScript, and bundles `Main` into
 `bin/gopurs.js`. The checked-in FFI WASM and its matching JavaScript runtime are
 used as-is. Node.js 24.8.0, local Spago 0.93.45 and the npm-provided `purs` 0.15.16
 were used for the backend build recorded below.
 
-For **application and fixture compilation**, put a TAST-capable `purs` on
+For **application, library and fixture compilation**, put a TAST-capable `purs` on
 `PATH`. A version number alone does not establish that it is the typed fork.
 The example below was rechecked on 14 September 2026 with the locally built
 fork and Spago 1.0.3; earlier integration checks used Spago 1.0.4; `bin/test` inherits the caller's `PATH`. npm build commands prioritize
@@ -191,6 +215,77 @@ by the current gopurs entrypoint are:
 
 The shared optimizer argument parser also recognizes options such as `--output`
 and `--bundle`, but `Main` does not use them to change gopurs output behavior.
+
+## Develop one library locally
+
+Each library keeps its own Spago configuration and repository. The
+[51-directory map](todo.md#dossiers-api-et-commandes-actuelles) identifies its
+API, test entrypoint and review owner. The Go development section in each
+library README links back to this procedure.
+
+1. Build gopurs as above and prepare the required sibling checkouts. `--core`
+   covers the 22 core libraries and their supporting dependencies; use `--all`
+   for the complete family, including the adapted QuickCheck prerequisite.
+2. Put the TAST compiler and **Spago 1.0.4** on `PATH`. Check both with
+   `command -v purs spago` and `purs --version; spago --version`. The interactive
+   shell, npm and altbak can select different tools. A stock compiler's version
+   number alone does not prove that it emits TAST.
+3. From the library root, inspect the resolved packages and build:
+
+   ```bash
+   spago ls deps --transitive --json
+   spago build
+   ../gopurs/bin/gopurs --main Test.Main
+   (cd output && go mod tidy && go run ./main)
+   ```
+
+   Add `--offline` to the Spago commands when all dependencies are cached.
+   Start with an empty local `output` when validating a removed or renamed
+   module: gopurs does not purge obsolete Go files. These direct commands do
+   not run the sibling cleanup performed by many existing `bin/test` scripts.
+   They describe the test path; they do not establish that every library's
+   tests are already passing. See the [coverage limits](docs/testing.md).
+
+`assert` has no executable test suite: use `spago build`, then
+`../gopurs/bin/gopurs`, then `(cd output && go mod tidy && go build ./...)`.
+QuickCheck has a local package configuration but no Go runner or `package.test`
+declaration yet; use `spago build` for its package, and the consuming package's
+Go tests to exercise it. `node-net` also lacks a `package.test` declaration;
+its test entrypoint must be reconciled with the suite in the later test review.
+
+### Configuration and lockfiles
+
+The Go configuration is `spago.yaml`. In 42 libraries it is a **tracked** link
+to `spago.go.yaml`, which is the file to edit; the other configurations are
+ordinary files. Setup preserves these links. Library `workspace.extraPackages`
+lists only overrides used by that workspace's resolved graph, including its
+test dependencies. A dependency's own `workspace` does not supply overrides to
+the consuming application: add the necessary Go overrides to that application's
+configuration as well. Keep required transitive overrides; retaining only the
+direct imports can silently select registry JavaScript implementations.
+
+Most libraries use registry set **77.7.0**; `assert` retains **73.3.0**, while
+the backend uses **77.10.1**. Package names in four historical configurations
+(`js-promise`, `js-promise-aff`, `node-path`, `node-process`) include `gopurs-`;
+their existing resolution aliases are preserved. No package versions or public
+module names were changed by the configuration cleanup.
+
+Spago lockfiles record registry versions and local **paths**, not commits of
+sibling repositories. Keep related checkouts at the intended revisions when
+reproducing a build. Update a tracked lockfile with the same Spago version as
+the workspace after changing its configuration. Seven libraries currently
+ignore their local Spago lockfile: `aff`, `argonaut-core`, `avar`, `js-date`,
+`now`, `nullable` and `strings-extra`. This existing policy is preserved;
+dependency resolution was also checked without these local files.
+
+The backend's `package-lock.json` is the source for `npm ci`; its npm `prepare`
+hook builds the bundle. Library npm manifests, Bower files and the eleven
+Dhall configuration pairs still serve their JavaScript or upstream workflows.
+In particular, Spago 0.20/0.21 reads Dhall while Spago 0.93/1.x reads YAML.
+Follow a library's existing npm/CI commands for those workflows; `npm test`
+does not universally run Go. Preserve npm lockfiles used by those commands.
+The Go parser has the only maintained `go.mod`, in `tools/ffi-gen`; the backend
+creates each application's Go module under `output`.
 Argument values containing spaces are not supported by that parser, including
 quoted `--ffi` paths. There is no dedicated `--help` handler.
 

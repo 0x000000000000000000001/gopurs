@@ -165,14 +165,27 @@ indépendamment du préfixe `gopurs-` des répertoires.
 | Tests, exemples et benchmarks des bibliothèques | `test/`, `example(s)/`, `bench/`, `benchmark/`, `integration-tests/`, compagnons et données | `bin/test`, commandes npm/Pulp/Spago et CI propres au paquet ; lots 4 et 9–14 |
 | Documentation de chaque dépôt | README, guides, licences, images et docs | Utilisateurs et mainteneurs ; lot 15, avec contexte actualisé dans chaque lot |
 
-`bin/pkg` déclare **22 paquets core**, consommés par `bin/setup` et le runner
-de fixtures. La liste complète de `bin/modtest` est découverte au lancement :
+`bin/pkg` déclare **22 paquets core** pour le runner de fixtures, **trois
+checkouts de support** pour leur développement et **25 autres bibliothèques**.
+`bin/setup --core` installe les 25 premiers checkouts et `--all` couvre les 50,
+avec l'adaptation QuickCheck locale fournie au préalable. `--list` décrit la
+sélection sans modifier de fichiers. La liste de `bin/modtest` est, elle,
+découverte au lancement :
 **49 frères ont un `bin/test` exécutable**, sur 50 bibliothèques. QuickCheck
 n'en a pas. Une entrée dans `extraPackages` est un choix de résolution, pas la
 preuve qu'un paquet appartient aux dépendances effectivement utilisées.
 La compilation du backend emploie son propre graphe Spago : PBO local, plus
-les overrides `st`, `unsafe-coerce` et `assert`. Le graphe de l'application
+les overrides `st` et `unsafe-coerce`. L'override `assert`, inutilisé par ce
+graphe, a été retiré au lot 2. Le graphe de l'application
 détermine les bibliothèques et FFI Go qu'elle utilise.
+
+Les configurations restent propres à chaque dépôt. Le lot 2 a retiré les
+overrides inutilisés après comparaison des graphes résolus, en conservant les
+overrides transitifs nécessaires et les 42 liens Spago suivis. Le
+[guide de développement local](../README.md#develop-one-library-locally)
+décrit les profils d'installation, les outils et la politique des lockfiles.
+Les dépendances npm de gopurs servent uniquement au build : le bundle distribué
+ne dépend ni d'esbuild ni du backend ES au lancement.
 
 ## Usages qui échappent à une recherche d'imports
 

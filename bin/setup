@@ -1,23 +1,83 @@
 #!/usr/bin/env bash
-
-# Clones all core gopurs-* repositories as siblings of the gopurs directory.
-# Useful for setting up the local development and testing environment.
+set -euo pipefail
 
 ROOT_DIR=$(cd "$(dirname "$0")/.." && pwd)
 SIBLING_DIR="$ROOT_DIR/.."
+source "$ROOT_DIR/bin/pkg"
 
-source "$(dirname "$0")/pkg"
+usage() {
+  cat <<'USAGE'
+Usage: ./bin/setup [--core | --all] [--list]
 
-echo "=> Cloning gopurs-* sibling repositories into $SIBLING_DIR..."
+  --core  Install the 22 core libraries and their 3 supporting checkouts (default).
+  --all   Install all 50 libraries. Requires the local Go QuickCheck checkout.
+  --list  Print the selected directories without cloning or changing files.
 
-for pkg in "${CORE_PACKAGES[@]}"; do
+Existing checkouts are preserved. The TAST compiler and the Go optimizer fork
+must be installed separately, as described in README.md.
+USAGE
+}
+
+profile=core
+selected_profile=
+list_only=0
+for arg in "$@"; do
+  case "$arg" in
+    --core|--all)
+      if [[ -n "$selected_profile" && "$selected_profile" != "$arg" ]]; then
+        echo "Use either --core or --all." >&2
+        exit 2
+      fi
+      selected_profile=$arg
+      profile=${arg#--}
+      ;;
+    --list) list_only=1 ;;
+    --help|-h) usage; exit 0 ;;
+    *) echo "Unknown option: $arg" >&2; usage >&2; exit 2 ;;
+  esac
+done
+
+packages=("${CORE_PACKAGES[@]}" "${CORE_CHECKOUT_DEPENDENCIES[@]}")
+if [[ "$profile" == all ]]; then
+  packages+=("${ADDITIONAL_PACKAGES[@]}")
+fi
+
+if [[ "$list_only" == 1 ]]; then
+  printf 'gopurs-%s\n' "${packages[@]}"
+  exit 0
+fi
+
+# Upstream QuickCheck v8.0.1 does not contain the local configuration or Go FFI.
+# Do not silently replace this adaptation with an upstream clone or invent a URL.
+if [[ "$profile" == all ]]; then
+  for file in spago.yaml src/Test/QuickCheck/Gen.purs src/Test/QuickCheck/Gen.go; do
+    if [[ ! -f "$SIBLING_DIR/gopurs-quickcheck/$file" ]]; then
+      echo "Missing local QuickCheck adaptation: gopurs-quickcheck/$file" >&2
+      echo "Provide the Go-adapted checkout before --all; see README.md." >&2
+      exit 1
+    fi
+  done
+fi
+
+# Validate existing destinations before cloning any missing repositories.
+for pkg in "${packages[@]}"; do
   target="$SIBLING_DIR/gopurs-$pkg"
-  if [ -d "$target" ]; then
-    echo "[SKIP] gopurs-$pkg already exists."
+  if [[ -e "$target" || -L "$target" ]]; then
+    if [[ ! -d "$target" || ! -f "$target/spago.yaml" ]]; then
+      echo "Existing destination is not a configured library: $target" >&2
+      exit 1
+    fi
+  fi
+done
+
+for pkg in "${packages[@]}"; do
+  target="$SIBLING_DIR/gopurs-$pkg"
+  if [[ -d "$target" ]]; then
+    echo "[SKIP] gopurs-$pkg"
   else
-    echo "[CLONE] gopurs-$pkg..."
+    echo "[CLONE] gopurs-$pkg"
     git clone "https://github.com/0x000000000000000000001/gopurs-$pkg.git" "$target"
   fi
 done
 
-echo "=> Done! You can now run ./bin/test"
+echo "Installed ${#packages[@]} library checkouts. See README.md for toolchain and build commands."

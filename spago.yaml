@@ -28,5 +28,3 @@ workspace:
       path: "../gopurs-st"
     unsafe-coerce:
       path: "../gopurs-unsafe-coerce"
-    assert:
-      path: "../gopurs-assert"

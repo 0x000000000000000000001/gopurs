@@ -14,12 +14,9 @@
     "test:runner": "node --test tools/test-runner.test.mjs",
     "prepare": "npm run build"
   },
-  "dependencies": {
-    "esbuild": "^0.28.1",
-    "purs-backend-es": "^1.4.3"
-  },
   "devDependencies": {
     "purescript-npm": "github:0x000000000000000000001/purescript-npm#main",
-    "spago": "^0.93.45"
+    "spago": "^0.93.45",
+    "esbuild": "^0.28.1"
   }
 }

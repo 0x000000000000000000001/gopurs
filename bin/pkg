@@ -1,5 +1,19 @@
+# Default dependencies of compiler fixtures. test-workspace.mjs reads this list.
 CORE_PACKAGES=(
   assert prelude effect console arrays partial foldable-traversable st
   exceptions integers strings enums foreign-object numbers refs
   unsafe-coerce functions record unfoldable aff datetime avar
+)
+
+# Local overrides needed when developing the core packages themselves.
+# These are checkouts, not additional default dependencies of compiler fixtures.
+CORE_CHECKOUT_DEPENDENCIES=(lazy ordered-collections random)
+
+# Together, the three lists describe the 50 library directories.
+# QuickCheck requires the local Go adaptation; see bin/setup and the README.
+ADDITIONAL_PACKAGES=(
+  argonaut-core catenable-lists foreign free js-bigints js-date js-promise
+  js-promise-aff node-buffer node-event-emitter node-fs node-http node-net
+  node-path node-process node-streams now nullable quickcheck run spec
+  strings-extra uuid variant yoga-json
 )

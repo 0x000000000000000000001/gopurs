@@ -236,3 +236,62 @@ README d'altbak, sans conclusion tirée de ce seul run.
 Les écarts de snapshots et les campagnes non exécutées décrits plus haut
 restent ouverts. Le lot 1 n'établit ni un build intégral de chaque bibliothèque,
 ni une validation réseau/FS/Aff, ni un build sans caches de dépendances.
+
+## Lot 2 — installation et configurations
+
+Le [guide local](../README.md#develop-one-library-locally) décrit désormais le
+parcours de chaque bibliothèque. Le lot 2 a examiné les **404 fichiers de
+configuration** inventoriés : **91 modifiés, 313 conservés**, ainsi que
+`bin/setup` et les imports/dépendances Go. Les fichiers Bower, Dhall, CI,
+formatage, lint et règles d'exclusion gardent leurs rôles existants. Les
+configurations des exemples et le template d'intégration de `spec` sont aussi
+identifiés ; `SPEC_REPO_PATH` y est remplacé par le runner, et leur revue de
+tests reste au lot 14.
+
+**1 106 overrides inutilisés ont été retirés de 46 configurations Spago
+principales**, y compris les références aux six noms de dossiers absents.
+Les graphes complets avant/après ont été résolus avec Spago 1.0.4 dans deux
+copies des 51 dépôts : mêmes paquets, versions, chemins locaux et dépendances
+de tests. Les lockfiles Spago suivis ont été synchronisés ; les sept lockfiles
+locaux ignorés n'ont pas servi à construire ces copies. La politique de
+lockfiles et les 42 liens suivis sont préservés.
+
+Quatre lockfiles avaient aussi des métadonnées locales périmées : `random`
+dans `foreign-object` et `ordered-collections`, `js-promise` dans
+`js-promise-aff`, et `free` dans `run`. Leur liste de dépendances reflète
+maintenant les manifestes locaux, sans changer de chemin ni de version.
+Le backend garde son Spago 0.93.45 et son graphe de paquets verrouillé ; ne pas
+confondre ce graphe avec celui recalculé par Spago 1.0.4 pour la comparaison.
+
+| Contrôle du lot 2 | Résultat |
+| --- | --- |
+| `spago ls deps --offline --transitive --json`, avant/après | **51/51 graphes identiques** ; aucune résolution en échec. |
+| `bin/setup`, avec Git simulé dans `/tmp` | Sélections **25/50**, options invalides, prévalidation, arrêt au premier échec de clone, réexécution sans recloner, chemins avec espaces et préservation des fichiers existants vérifiés. |
+| `./bin/setup --all` dans l'arborescence existante | **50 checkouts conservés**, aucun clone ni changement de leurs fichiers. |
+| Build du backend dans une copie sans `output`, `.spago` ou `Runtime.js` généré | **445 modules compilés**, zéro avertissement, zéro erreur, bundle produit ; dépendances installées et caches de paquets réutilisés. |
+| `gopurs-refs` dans une copie contenant uniquement les 25 checkouts core | **161 modules compilés**, zéro avertissement/erreur ; génération Go et tests réussis (`All tests passed!`). Les runners frères et leurs nettoyages n'ont pas été appelés. |
+| Archive du backend → projet npm vide, cache npm vide, installation hors ligne avec `--ignore-scripts` | **Un seul paquet installé**, aucune dépendance npm d'exécution ; exemple TAST/Go réussi, **82 fichiers Go**, sortie `Hello from gopurs`, runtime identique à sa source canonique. |
+| Archive reconstruite depuis les sources, appliquée aux mêmes TAST d'altbak | **387 fichiers Go identiques** à la référence, dans un répertoire de sortie neuf. |
+| `node --test tools/*.test.mjs` | **43/43 tests réussis** après les changements. |
+| `bin/go/run -c` depuis altbak | **300 TAST et 387 fichiers Go identiques octet par octet**, mêmes **14 résultats fonctionnels** que le lot 1. |
+| Lockfiles npm suivis | Les cinq correspondent aux dépendances directes déclarées ; `npm ci --dry-run --ignore-scripts --offline` réussit pour le lockfile Promise/Aff corrigé. |
+
+Le backend ES inutilisé a été retiré du manifeste npm de gopurs ; esbuild est
+une dépendance de développement, et l'archive n'a plus de dépendance npm
+d'exécution. Dans Promise/Aff, le lockfile enregistre maintenant le compilateur
+forké déjà déclaré et retire 99 entrées devenues inutiles, notamment celles
+d'ESLint. Les versions des entrées conservées n'ont pas changé. Le lockfile
+Yoga JSON est aligné sur son manifeste. Sa commande d'éditeur utilise désormais
+`spago build --json-errors`, à la place d'un `test.dhall` absent.
+
+Le profil core installe 22 bibliothèques et trois supports ; il n'ajoute pas
+ces supports aux dépendances par défaut des fixtures. Le profil complet exige
+le checkout QuickCheck avec ses deux fichiers d'adaptation Go. Leur publication
+dans un fork installable n'a pas été réalisée : l'installateur vérifie ce
+prérequis avant tout clone. Les anciennes limites des tests, des noms de paquets
+et des FFI restent attribuées aux lots suivants ; cette validation ne vaut pas
+campagne intégrale des bibliothèques ou exécution de leurs CI JavaScript.
+
+Les détails, copies avant/après, revue par fichier et journaux sont temporaires
+dans `/tmp/gopurs-lot2-20260914/`. Aucune mesure de performance n'est déduite de
+ce lot ; les baselines restent celles du README d'altbak.

@@ -748,9 +748,6 @@
       }
     },
     "extra_packages": {
-      "assert": {
-        "path": "../gopurs-assert"
-      },
       "backend-optimizer": {
         "path": "../../purescript-backend-optimizer-gopurs"
       },
