@@ -136,7 +136,9 @@ Le lot documentaire a reconstruit le backend sans artefacts compilés, installé
 son archive dans un projet npm vide et exécuté l'exemple du README via les deux
 backends : mêmes 82 fichiers Go et même sortie. Les dépendances installées,
 checkouts frères et caches ont été réutilisés ; le téléchargement de tous les
-prérequis n'a pas été rejoué. Le build propre révèle aussi **85 avertissements
-préexistants (73 sources, 12 dépendances)**, à traiter séparément. Un build
-incrémental silencieux ne prouve pas leur absence. Les preuves détaillées sont
-consignées à la fin du [todo](../todo.md).
+prérequis n'a pas été rejoué. Ce build avait révélé **85 avertissements
+préexistants (73 sources, 12 dépendances)**. Le lot 12 les a supprimés : deux
+compilations de référence sans sorties préexistantes ont recompilé chacune les
+438 modules, passant de 85 à **zéro avertissement et zéro erreur**. Un build
+incrémental silencieux ne suffit pas à établir ce résultat. Les preuves
+détaillées sont consignées à la fin du [todo](../todo.md).

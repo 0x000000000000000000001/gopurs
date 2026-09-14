@@ -5,14 +5,11 @@ module Gopurs.FfiTypes
 
 import Prelude
 
-import Control.Alt ((<|>))
-import Data.Argonaut.Core (Json, toObject, toString, toArray)
-import Data.Argonaut.Decode (class DecodeJson, decodeJson, (.:), (.:?))
+import Data.Argonaut.Core (toObject)
+import Data.Argonaut.Decode (class DecodeJson, (.:), (.:?))
 import Data.Argonaut.Decode.Error (JsonDecodeError(TypeMismatch))
-import Data.Either (Either(..), note)
-import Data.Maybe (Maybe(..), fromMaybe)
-import Data.Traversable (traverse)
-import Foreign.Object as FO
+import Data.Either (note)
+import Data.Maybe (Maybe, fromMaybe)
 
 data TypeNode
   = TNamed String

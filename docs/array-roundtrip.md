@@ -12,9 +12,9 @@ Le témoin `sumEvens` de 3.1 suivait ce chemin avant optimisation. Son [snapshot
 |---|---|
 | Range | L'appel existant à `rangeImpl` fournit ici un `Value` contenant un tableau. Son bridge FFI reste exécuté. |
 | Filtre | Le chemin `UncurriedApp Data.Array.filterImpl` génère un buffer neuf par `make([]Value, 0)` puis `append`. Son résultat Go est `TypeNativeArray TypeValue`. [CallExprs](../src/Gopurs/CallExprs.purs#L465). |
-| Contrainte `Array Int` | Le traitement de `Typed` impose `TypeNativeArray TypeInt64`, via `coerceGoExpr`. [CodeGen](../src/Gopurs/CodeGen.purs#L177). |
-| Première conversion | Emballage du header par `Array`, puis copie des `.IntVal` vers `[]int64`. Auparavant imprimée immédiatement en `GoRaw`, elle reste désormais structurée en `GoUnboxIntArray`. [GoConversions](../src/Gopurs/GoConversions.purs#L229). |
-| Deuxième conversion | `boxGoExprImpl` recrée un `[]Value` avec `Int(v)`, désormais représenté par `GoBoxIntArray`. [GoConversions](../src/Gopurs/GoConversions.purs#L187). |
+| Contrainte `Array Int` | Le traitement de `Typed` impose `TypeNativeArray TypeInt64`, via `coerceGoExpr`. [CodeGen](../src/Gopurs/CodeGen.purs#L176). |
+| Première conversion | Emballage du header par `Array`, puis copie des `.IntVal` vers `[]int64`. Auparavant imprimée immédiatement en `GoRaw`, elle reste désormais structurée en `GoUnboxIntArray`. [GoConversions](../src/Gopurs/GoConversions.purs#L211). |
+| Deuxième conversion | `boxGoExprImpl` recrée un `[]Value` avec `Int(v)`, désormais représenté par `GoBoxIntArray`. [GoConversions](../src/Gopurs/GoConversions.purs#L180). |
 | Fold | Dans ce témoin, le fold emprunte le chemin **App**, qui boxe ses arguments puis lit un `[]Value` avec `Apply2`. Ce n'est pas le chemin `UncurriedApp foldlArray`. [Arguments](../src/Gopurs/CallExprs.purs#L145), [boucle](../src/Gopurs/CallExprs.purs#L187). |
 
 Le boxing final peut être provoqué par un `Typed` extérieur ou par le boxing des arguments de `App`. Le point de reconnaissance doit donc examiner l'argument **après son boxing normal**, tout en conservant les conversions structurées jusque-là.

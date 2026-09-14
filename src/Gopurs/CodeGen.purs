@@ -19,7 +19,6 @@ import Effect.Unsafe (unsafePerformEffect)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import Data.String.Pattern (Pattern(..), Replacement(..))
-import Debug as Debug
 import Data.Map as Map
 import Data.Set as Set
 import Data.Foldable (foldl)
@@ -181,16 +180,16 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
 
           in
             case unwrapTcoExpr a, expectedGoType of
-              Lit (LitRecord props), TypeStructPointer baseStructName fullName fullPath tArgs ->
+              Lit (LitRecord props), TypeStructPointer baseStructName fullName fullPath _ ->
                 case Map.lookup fullName h.classDeclsFields of
                   Just classInfo ->
                     let
                       classFields = classInfo.fields
                       typeArgs = case type_ of
-                        ADT fullName _ tArgs ->
+                        ADT className _ tArgs ->
                           let
                             mapped = map (exprTypeToGoType h.pointerAdtPaths h.enumAdts h.elidedCtors modNameStr) tArgs
-                            arity = case Map.lookup fullName h.pointerAdtPaths of
+                            arity = case Map.lookup className h.pointerAdtPaths of
                               Just info -> info.arity
                               Nothing -> Array.length classInfo.vars
                           in
@@ -296,7 +295,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                   { stmts: StmtEmpty, expr: coerceGoExpr codegenStateRef modNameStr rawCall TypeValue vType, exprType: vType, nextId }
               Nothing ->
                 let
-                  rawCall = Debug.trace ("mbMn is Nothing for safeName: " <> safeName) (\_ -> GoCall (GoVar ("Get_" <> modNameStr <> "_" <> safeName)) [])
+                  rawCall = GoCall (GoVar ("Get_" <> modNameStr <> "_" <> safeName)) []
                 in
                   { stmts: StmtEmpty, expr: coerceGoExpr codegenStateRef modNameStr rawCall TypeValue vType, exprType: vType, nextId }
 
@@ -347,7 +346,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                   { stmts: accXs.stmts, expr: GoRaw (goTypeToStr goTypeArr <> "{" <> String.joinWith ", " (map printGoExpr accXs.exprs) <> "}"), exprType: goTypeArr, nextId: accXs.nextId }
               _ ->
                 let
-                  boxedExprs = Array.zipWith (\expr ty -> boxGoExpr codegenStateRef modNameStr expr ty) accXs.exprs accXs.exprTypes
+                  boxedExprs = Array.zipWith (\itemExpr ty -> boxGoExpr codegenStateRef modNameStr itemExpr ty) accXs.exprs accXs.exprTypes
                 in
                   { stmts: accXs.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Array") [ GoRaw ("[]gopurs_runtime.Value{" <> String.joinWith ", " (map printGoExpr boxedExprs) <> "}") ], exprType: TypeValue, nextId: accXs.nextId }
 

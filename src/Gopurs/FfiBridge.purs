@@ -176,7 +176,7 @@ wrapReturn _ (TArray elem) _ valName | printTypeNode elem /= "gopurs_runtime.Val
 wrapReturn dataDecls (TMap _ _) (Just (Record (Row fields tail))) valName | isClosedRowTail tail =
   let
     fieldStr = Array.mapWithIndex
-      ( \i (Tuple fK fT) ->
+      ( \_ (Tuple fK fT) ->
           "\t\t\t\tres_map[\"" <> fK <> "\"] = " <> wrapReturn dataDecls (TNamed "any") (Just fT) ("_raw[\"" <> fK <> "\"]")
       )
       fields
@@ -201,7 +201,7 @@ wrapReturn dataDecls (TNamed anyT) mbTast valName | anyT == "any" || anyT == "in
       Just (Record (Row fields tail)) | isClosedRowTail tail ->
         let
           fieldStr = Array.mapWithIndex
-            ( \i (Tuple fK fT) ->
+            ( \_ (Tuple fK fT) ->
                 "\t\t\t\tres_map[\"" <> fK <> "\"] = " <> wrapReturn dataDecls (TNamed "any") (Just fT) ("_raw[\"" <> fK <> "\"]")
             )
             fields
@@ -270,7 +270,7 @@ isStandardPursFunc (TFunc args ret) =
       case ret of
         Nothing -> true
         Just r@(TFunc _ _) -> isStandardPursFunc r
-        Just r -> retStr == "any" || retStr == "interface{}" || retStr == "gopurs_runtime.Value"
+        Just _ -> retStr == "any" || retStr == "interface{}" || retStr == "gopurs_runtime.Value"
     else
       false
 isStandardPursFunc _ = false

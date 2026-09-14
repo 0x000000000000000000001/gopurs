@@ -12,7 +12,7 @@ escapeGoString :: String -> String
 escapeGoString = escapeGoStringImpl
 
 printGoExpr :: GoExpr -> String
-printGoExpr expr = case expr of
+printGoExpr goExpr = case goExpr of
   GoVar name ->
     name
   GoString s ->

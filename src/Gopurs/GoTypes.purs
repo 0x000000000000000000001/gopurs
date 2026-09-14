@@ -42,8 +42,8 @@ printExprType = case _ of
       "(Row [" <> String.joinWith ", " (map (\(Tuple k v) -> k <> ": " <> printExprType v) props) <> "] " <> tailStr <> ")"
   TypeApp c args -> "(TypeApp " <> printExprType c <> " [" <> String.joinWith ", " (map printExprType args) <> "])"
   ForAll vars body -> "(ForAll [" <> String.joinWith ", " vars <> "] " <> printExprType body <> ")"
-  ConstrainedType constraints body -> "(ConstrainedType " <> printExprType body <> ")"
-  ADT fullName path args -> "(ADT " <> show path <> " [" <> String.joinWith ", " (map printExprType args) <> "])"
+  ConstrainedType _ body -> "(ConstrainedType " <> printExprType body <> ")"
+  ADT _ path args -> "(ADT " <> show path <> " [" <> String.joinWith ", " (map printExprType args) <> "])"
   TypeVar v -> "(TypeVar " <> v <> ")"
   Any -> "Any"
 
@@ -68,7 +68,7 @@ exprTypeToGoType _ _ _ _ Char = TypeString
 exprTypeToGoType _ _ _ _ Boolean = TypeBool
 exprTypeToGoType ptrPaths enumAdts elided modNameStr (Array ty) = TypeNativeArray (exprTypeToGoType ptrPaths enumAdts elided modNameStr ty)
 exprTypeToGoType ptrPaths enumAdts elided modNameStr (Record (Row fields tail)) | isClosedRowTail tail = TypeRecord (map (\(Tuple k v) -> Tuple k (exprTypeToGoType ptrPaths enumAdts elided modNameStr v)) (Array.sortBy (comparing \(Tuple k _) -> k) (visibleRecordFields fields)))
-exprTypeToGoType ptrPaths enumAdts elided modNameStr (Record _) = TypeValue
+exprTypeToGoType _ _ _ _ (Record _) = TypeValue
 exprTypeToGoType ptrPaths enumAdts elided modNameStr (ADT fullName path args) =
   let
     ctorName = fromMaybe "" (Array.last path)
@@ -104,7 +104,7 @@ exprTypeToGoType ptrPaths enumAdts elided modNameStr (TypeApp fn arg) =
     case unwrapTypeApp (TypeApp fn arg) [] of
       Tuple (ADT fullName path args) allArgs -> exprTypeToGoType ptrPaths enumAdts elided modNameStr (ADT fullName path (args <> allArgs))
       _ -> TypeValue
-exprTypeToGoType _ _ _ _ (TypeVar v) = TypeValue
+exprTypeToGoType _ _ _ _ (TypeVar _) = TypeValue
 exprTypeToGoType _ _ _ _ _ = TypeValue
 
 -- Ordinary type variables fall back to Value. In a generic declaration,
@@ -174,4 +174,4 @@ instantiateGenericGoType env (TypeStructPointer base key full typeArgs) =
   in
     TypeStructPointer base key (monoStructName <> typeArgsStr) newTypeArgs
 instantiateGenericGoType env (TypeFunc args ret) = TypeFunc (map (instantiateGenericGoType env) args) (instantiateGenericGoType env ret)
-instantiateGenericGoType env t = t
+instantiateGenericGoType _ t = t
