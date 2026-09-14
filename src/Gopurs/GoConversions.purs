@@ -4,12 +4,7 @@ module Gopurs.GoConversions
   , getUnboxedADT
   , coerceGoExpr
   , boxGoExpr
-  , boxGoExprImpl
   , unboxGoExpr
-  , ReboxFields
-  , registerReboxPair
-  , findReboxFields
-  , renderReboxFunction
   , generateReboxFunctions
   ) where
 

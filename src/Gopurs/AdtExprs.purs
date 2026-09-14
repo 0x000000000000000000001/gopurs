@@ -6,9 +6,13 @@ module Gopurs.AdtExprs
   , saturatedFieldType
   , saturated
   , getField
+  , isTag
+  , constructorReuse
   ) where
 
 import Prelude
+
+import Control.Alternative (guard)
 
 import Data.Array as Array
 import Data.Map (Map)
@@ -23,8 +27,9 @@ import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import Effect.Unsafe (unsafePerformEffect)
 import Gopurs.CodegenState (CodegenState)
-import Gopurs.GoAst (GoExpr(..), GoType(..), goTypeToStr, sanitizeName)
-import Gopurs.GoConversions (boxGoExpr, coerceGoExpr, unboxableADTs)
+import Gopurs.ExprContext (ExprResult, LocalEnv, StmtTree(..))
+import Gopurs.GoAst (GoExpr(..), GoType(..), goTypeToStr, sanitizeName, getStructName)
+import Gopurs.GoConversions (boxGoExpr, coerceGoExpr, unboxGoExpr, unboxableADTs)
 import Gopurs.GoTypes (exprTypeToGoType, exprTypeToGenericGoType, instantiateGenericGoType, structFieldGoType)
 import Gopurs.Printer (printGoExpr)
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..), ModuleName(..))
@@ -394,3 +399,119 @@ getField codegenStateRef modNameStr elidedCtors { moduleName: mbMod, ctorName, i
             GoConstructorAccess (boxGoExpr codegenStateRef modNameStr object.expr object.exprType) monoStructName typeArgs idx false
       in
         { expr: exprAccess, exprType: actualFieldType }
+
+-- Reuse an unchanged constructor without mutating it. Restrict this to direct
+-- projections of one typed local, with exactly one constant field replaced.
+-- Comparing Number fields would be unsound for observable signed zero.
+constructorReuse :: LocalEnv -> GoType -> Array Boolean -> GoExpr -> Maybe { source :: GoExpr, condition :: GoExpr }
+constructorReuse bound resultType constants constructor = case resultType, constructor of
+  TypeStructPointer _ _ _ _, GoConstructor _ ctor typeArgs fields ->
+    case Array.catMaybes (Array.mapWithIndex (\index constant -> if constant then Just index else Nothing) constants) of
+      [ changedIndex ] -> do
+        guard (Array.length constants == Array.length fields)
+        sourceName <- Array.head
+          ( Array.mapMaybe
+              ( \(Tuple index field) -> case field of
+                  GoConstructorAccess (GoVar name) sourceCtor sourceTypeArgs sourceIndex true
+                    | index /= changedIndex && sourceCtor == ctor
+                        && sourceTypeArgs == typeArgs
+                        && sourceIndex == index -> Just name
+                  _ -> Nothing
+              )
+              (Array.mapWithIndex Tuple fields)
+          )
+        sourceBinding <- Array.find (\binding -> binding.name == sourceName)
+          (Array.fromFoldable (Map.values bound))
+        guard (sourceBinding.goType == resultType)
+        let
+          source = GoVar sourceName
+          projection index = GoConstructorAccess source ctor typeArgs index true
+        guard
+          ( Array.all identity
+              ( Array.mapWithIndex
+                  (\index field -> index == changedIndex || field == projection index)
+                  fields
+              )
+          )
+        replacement <- Array.index fields changedIndex
+        pure
+          { source
+          , condition: GoBinOp "&&" (GoBinOp "!=" source (GoRaw "nil"))
+              (GoBinOp "==" (projection changedIndex) replacement)
+          }
+      _ -> Nothing
+  _, _ -> Nothing
+
+-- The operand has already been translated. A temporary keeps non-variable
+-- operands evaluated exactly once, including constant native tag tests.
+isTag :: Ref CodegenState -> String -> Maybe ModuleName -> String -> ExprResult -> ExprResult
+isTag codegenStateRef modNameStr mbMod tag resE =
+  let
+    baseStructName = getStructName modNameStr mbMod tag
+    hashStr = hashString baseStructName
+    helpers = unsafePerformEffect (Ref.read codegenStateRef)
+    nativeTagTest = case resE.exprType of
+      TypeStructValue adtName _ -> map (\adt -> adt.isConstructor baseStructName) (Map.lookup adtName unboxableADTs)
+      _ -> Nothing
+
+    isNativePointer = case resE.exprType of
+      TypeStructPointer typedBaseStructName _ _ _ ->
+        typedBaseStructName == baseStructName ||
+          ( case Map.lookup baseStructName helpers.pointerAdtLeaves of
+              Just nodeInfo -> typedBaseStructName == nodeInfo.nodeBaseStruct
+              Nothing -> false
+          )
+      _ -> false
+  in
+    case resE.expr of
+      GoVar _ ->
+        let
+          exprStr = case nativeTagTest of
+            Just test -> printGoExpr (test resE.expr)
+            Nothing ->
+              if isNativePointer then
+                case Map.lookup baseStructName helpers.pointerAdtLeaves of
+                  Just _ -> "(" <> printGoExpr resE.expr <> " == nil)"
+                  Nothing -> "(" <> printGoExpr resE.expr <> " != nil)"
+              else case Map.lookup baseStructName helpers.pointerAdtLeaves of
+                Just nodeInfo -> "(" <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".Type == 9 && " <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".IntVal == " <> hashString nodeInfo.nodeBaseStruct <> " && " <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".UnsafePtr == nil)"
+                Nothing ->
+                  if Set.member baseStructName helpers.pointerAdtNodes then
+                    "(" <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".Type == 9 && " <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".IntVal == " <> hashStr <> " && " <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".UnsafePtr != nil)"
+                  else if Set.member baseStructName helpers.enumCtors then
+                    "(" <> printGoExpr (unboxGoExpr codegenStateRef modNameStr resE.expr resE.exprType TypeUint32) <> " == " <> hashStr <> ")"
+                  else
+                    "(" <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".Type == 9 && " <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType) <> ".IntVal == " <> hashStr <> ")"
+        in
+          { stmts: resE.stmts, expr: GoRaw exprStr, exprType: TypeBool, nextId: resE.nextId }
+      _ ->
+        let
+          tmpVar = "__t_tag_" <> show resE.nextId
+          declTmp =
+            if isNativePointer || resE.exprType /= TypeValue then
+              StmtLeaf (GoRaw ("var " <> tmpVar <> " " <> goTypeToStr resE.exprType <> " = " <> printGoExpr resE.expr))
+            else
+              StmtLeaf (GoRaw ("var " <> tmpVar <> " gopurs_runtime.Value = " <> printGoExpr (boxGoExpr codegenStateRef modNameStr resE.expr resE.exprType)))
+
+          exprStr = case nativeTagTest of
+            Just test -> printGoExpr (test (GoVar tmpVar))
+            Nothing ->
+              if isNativePointer then
+                case Map.lookup baseStructName helpers.pointerAdtLeaves of
+                  Just _ -> "(" <> tmpVar <> " == nil)"
+                  Nothing -> "(" <> tmpVar <> " != nil)"
+              else if resE.exprType /= TypeValue then
+                "(uint32(" <> tmpVar <> ") == " <> hashStr <> ")"
+              else case Map.lookup baseStructName helpers.pointerAdtLeaves of
+                Just nodeInfo -> "(" <> tmpVar <> ".Type == 9 && " <> tmpVar <> ".IntVal == " <> hashString nodeInfo.nodeBaseStruct <> " && " <> tmpVar <> ".UnsafePtr == nil)"
+                Nothing ->
+                  if Set.member baseStructName helpers.pointerAdtNodes then
+                    "(" <> tmpVar <> ".Type == 9 && " <> tmpVar <> ".IntVal == " <> hashStr <> " && " <> tmpVar <> ".UnsafePtr != nil)"
+                  else if Set.member baseStructName helpers.enumCtors then
+                    "(" <> printGoExpr (unboxGoExpr codegenStateRef modNameStr (GoVar tmpVar) TypeValue TypeUint32) <> " == " <> hashStr <> ")"
+                  else
+                    "(" <> tmpVar <> ".Type == 9 && " <> tmpVar <> ".IntVal == " <> hashStr <> ")"
+        in
+          -- A single-constructor native value has a constant test,
+          -- but its operand must still be evaluated exactly once.
+          { stmts: resE.stmts <> declTmp <> StmtLeaf (GoRaw ("_ = " <> tmpVar)), expr: GoRaw exprStr, exprType: TypeBool, nextId: resE.nextId + 1 }

@@ -4,8 +4,9 @@ import Prelude
 import Data.Tuple (Tuple(..))
 import Data.String as String
 import Data.String (Pattern(..), Replacement(..))
-import PureScript.Backend.Optimizer.CoreFn (ExprType)
-import Data.Maybe (Maybe)
+import PureScript.Backend.Optimizer.CoreFn (ExprType, ModuleName)
+import Data.Maybe (Maybe(..))
+import Data.Newtype (unwrap)
 import Data.Array as Array
 
 data GoExpr
@@ -148,3 +149,11 @@ sanitizeName name =
     else if s2 == "" then "X_empty"
     else s2
 
+getStructName :: String -> Maybe ModuleName -> String -> String
+getStructName modNameStr mbMod ctorName =
+  let
+    modNamePart = case mbMod of
+      Just mn -> sanitizeName (String.replaceAll (Pattern ".") (Replacement "_") (unwrap mn))
+      Nothing -> modNameStr
+  in
+    "Data_" <> modNamePart <> "_" <> sanitizeName ctorName

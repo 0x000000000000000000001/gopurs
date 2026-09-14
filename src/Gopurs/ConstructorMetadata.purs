@@ -15,7 +15,7 @@ import Data.Set (Set)
 import Data.Set as Set
 import Data.String as String
 import Data.String.Pattern (Pattern(..), Replacement(..))
-import Gopurs.CodeGen (getStructName)
+import Gopurs.GoAst (getStructName)
 import PureScript.Backend.Optimizer.CoreFn (Ann, DataConstructor, DataDecl, ExprType, Module(..))
 
 type ConstructorTypes = Map String { vars :: Array String, fields :: Array ExprType }
