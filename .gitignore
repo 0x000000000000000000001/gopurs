@@ -8,8 +8,7 @@ output-es/
 purs_files.txt
 .DS_Store
 .gopurs-cache.json
-tests/runner/src/
-tests/runner/spago.yaml
+/tests/runner/
 bin/gopurs.js
 /src/Gopurs/Runtime.js
 .psci*
@@ -19,4 +18,3 @@ psci*
 /src/**/*.bak[0-9]*
 /src/**/*.orig
 /src/**/*.rej
-/tests/runner/*.log
