@@ -20,6 +20,13 @@ import { runtimeGoCode } from '../output/Gopurs.Runtime/index.js';
 import * as Core from '../output/PureScript.Backend.Optimizer.CoreFn/index.js';
 import { hashString } from '../output/PureScript.Backend.Optimizer.FfiSupport/index.js';
 
+const emptyMetadata = {
+    pointerAdtPaths: emptyMap, pointerAdtNodes: emptySet, pointerAdtLeaves: emptyMap,
+    enumAdts: emptySet, enumCtors: emptySet, elidedCtors: emptySet,
+    ctorTypes: emptyMap, classDeclsFields: emptyMap, globalTypes: emptyMap, globalFunctions: emptyMap,
+};
+const newState = () => Ref.new({ rawDecls: [], globalId: 0, reboxPairs: emptySet })();
+
 const goType = exprTypeToGoType(emptyMap)(emptySet)(emptySet)('Test');
 const genericGoType = exprTypeToGenericGoType(emptyMap)(emptySet)(emptySet)([])('Test');
 const record = tail => new Core.Record(new Core.Row([
@@ -41,7 +48,7 @@ for (const [name, convert] of [['ordinary', goType], ['generic', genericGoType]]
 }
 
 test('duplicate row labels preserve the first field through native access and boxing', t => {
-    const ref = Ref.new({ pointerAdtPaths: emptyMap, enumAdts: emptySet, elidedCtors: emptySet })();
+    const ref = newState();
     const cases = [
         { name: 'string', first: Core.String.value, second: Core.Int.value, input: 'gopurs_runtime.Str("left")', read: 'StrVal()', format: '%s', expected: 'left' },
         { name: 'int', first: Core.Int.value, second: Core.String.value, input: 'gopurs_runtime.Int(2)', read: 'IntVal', format: '%d', expected: '2' },
@@ -57,7 +64,7 @@ test('duplicate row labels preserve the first field through native access and bo
             const type = convert(row);
             const native = unboxGoExpr(ref)('Test')(new Go.GoVar('input'))(Go.TypeValue.value)(type);
             const boxed = boxGoExpr(ref)('Test')(new Go.GoVar('native'))(type);
-            const field = getProp(ref)('Test')('y')({ expr: new Go.GoVar('native'), exprType: type });
+            const field = getProp(emptyMetadata)(ref)('Test')('y')({ expr: new Go.GoVar('native'), exprType: type });
             const fieldValue = boxGoExpr(ref)('Test')(field.expr)(field.exprType);
             blocks.push(`{
     input := gopurs_runtime.RecordDict3("x", "y", "z", gopurs_runtime.Int(1), ${fixture.input}, gopurs_runtime.Bool(true))
@@ -90,18 +97,17 @@ func main() { ${blocks.join('\n')} }
 });
 
 test('record literals use the first duplicate label for field typing, including open rows', () => {
-    const ref = Ref.new({ pointerAdtPaths: emptyMap, enumAdts: emptySet, elidedCtors: emptySet })();
     for (const tail of [Nothing.value, new Just(new Core.TypeVar('r'))]) {
         const row = new Core.Record(new Core.Row([
             new Tuple('y', Core.String.value), new Tuple('y', Core.Int.value),
         ], tail));
-        const literal = prepareLiteral(ref)('Test')(row)(Nothing.value);
+        const literal = prepareLiteral(emptyMetadata)('Test')(row)(Nothing.value);
         assert.deepEqual(lookup(ordString)('y')(literal.fields), new Just(Core.String.value));
     }
 });
 
 test('boxed record literals box their native scalar and array fields', () => {
-    const ref = Ref.new({ reboxPairs: emptySet })();
+    const ref = newState();
     for (const [type, expected] of [
         [Go.TypeInt64.value, 'gopurs_runtime.Int(field)'],
         [new Go.TypeNativeArray(Go.TypeValue.value), 'gopurs_runtime.Array(field)'],
@@ -116,7 +122,7 @@ test('boxed record literals box their native scalar and array fields', () => {
 });
 
 test('native Tuple payloads are converted before accessing a typed pointer', () => {
-    const ref = Ref.new({ reboxPairs: emptySet })();
+    const ref = newState();
     const native = new Go.TypeStructValue('Data.Tuple.Tuple', [Go.TypeValue.value, Go.TypeValue.value]);
     const typed = new Go.TypeStructPointer(
         'Data_Data_Tuple_Tuple', 'Data.Tuple.Tuple',
@@ -137,13 +143,13 @@ test('native Tuple payloads are converted before accessing a typed pointer', () 
 });
 
 test('arrays of boxed Tuple values preserve fields when converted to native tuples', t => {
-    const ref = Ref.new({
-        reboxPairs: emptySet, pointerAdtPaths: emptyMap, enumAdts: emptySet,
-        elidedCtors: emptySet, classDeclsFields: emptyMap,
+    const ref = newState();
+    const metadata = {
+        ...emptyMetadata,
         ctorTypes: insert(ordString)('Data_Tuple.Tuple')({
             vars: ['a', 'b'], fields: [new Core.TypeVar('a'), new Core.TypeVar('b')],
         })(emptyMap),
-    })();
+    };
     const tuple = new Go.TypeStructPointer(
         'Data_Data_Tuple_Tuple', 'Data.Tuple.Tuple',
         'Constructor_Data_Tuple_Tuple[int64, int64]',
@@ -153,7 +159,7 @@ test('arrays of boxed Tuple values preserve fields when converted to native tupl
         (Go.TypeValue.value)(new Go.TypeNativeArray(tuple));
     const nativeExpression = unboxGoExpr(ref)('Test')(new Go.GoVar('native'))
         (new Go.TypeNativeArray(Go.TypeValue.value))(new Go.TypeNativeArray(tuple));
-    const helpers = generateReboxFunctions(ref)('Test')();
+    const helpers = generateReboxFunctions(metadata)(ref)('Test')();
     const directory = mkdtempSync(join(tmpdir(), 'gopurs-tuple-array-'));
     t.after(() => rmSync(directory, { recursive: true, force: true }));
     mkdirSync(join(directory, 'gopurs_runtime'));
@@ -196,13 +202,14 @@ test('generic class properties retain the tag and fields of native ADT values', 
     const boundedType = new Go.TypeStructPointer(
         'Data_Fixture_Bounded', 'Fixture.Bounded', 'Constructor_Fixture_Bounded[*Constructor_Fixture_Date]', [dateType],
     );
-    const ref = Ref.new({
-        reboxPairs: emptySet, pointerAdtPaths: emptyMap, enumAdts: emptySet, elidedCtors: emptySet,
+    const ref = newState();
+    const metadata = {
+        ...emptyMetadata,
         classDeclsFields: insert(ordString)('Fixture.Bounded')({
             vars: ['a'], fields: [{ name: 'bottom', type: new Core.TypeVar('a') }],
         })(emptyMap),
-    })();
-    const property = getProp(ref)('Test')('bottom')({ expr: new Go.GoVar('dictionary'), exprType: boundedType });
+    };
+    const property = getProp(metadata)(ref)('Test')('bottom')({ expr: new Go.GoVar('dictionary'), exprType: boundedType });
     const directory = mkdtempSync(join(tmpdir(), 'gopurs-class-adt-field-'));
     t.after(() => rmSync(directory, { recursive: true, force: true }));
     mkdirSync(join(directory, 'gopurs_runtime'));
@@ -239,20 +246,20 @@ func main() {
 });
 
 test('boxed record fields convert generic ADT payloads to their native layout', t => {
-    const ref = Ref.new({
-        reboxPairs: emptySet, pointerAdtPaths: emptyMap, enumAdts: emptySet,
-        elidedCtors: emptySet, classDeclsFields: emptyMap,
+    const ref = newState();
+    const metadata = {
+        ...emptyMetadata,
         ctorTypes: insert(ordString)('Data_Tuple.Tuple')({
             vars: ['a', 'b'], fields: [new Core.TypeVar('a'), new Core.TypeVar('b')],
         })(emptyMap),
-    })();
+    };
     const tuple = new Go.TypeStructPointer(
         'Data_Data_Tuple_Tuple', 'Data.Tuple.Tuple', 'Constructor_Data_Tuple_Tuple[int64, int64]',
         [Go.TypeInt64.value, Go.TypeInt64.value],
     );
     const recordType = new Go.TypeRecord([new Tuple('payload', tuple)]);
     const expression = unboxGoExpr(ref)('Test')(new Go.GoVar('input'))(Go.TypeValue.value)(recordType);
-    const helpers = generateReboxFunctions(ref)('Test')();
+    const helpers = generateReboxFunctions(metadata)(ref)('Test')();
     const directory = mkdtempSync(join(tmpdir(), 'gopurs-record-adt-field-'));
     t.after(() => rmSync(directory, { recursive: true, force: true }));
     mkdirSync(join(directory, 'gopurs_runtime'));

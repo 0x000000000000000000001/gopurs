@@ -15,9 +15,6 @@ import Data.Map as Map
 import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap)
 import Data.Tuple (Tuple(..))
-import Effect.Ref (Ref)
-import Effect.Ref as Ref
-import Effect.Unsafe (unsafePerformEffect)
 import Gopurs.ExprAnalysis (getExprType, unwrapTcoExpr)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..), Ident(..), Qualified(..))
@@ -107,8 +104,8 @@ getArityFromType = go 0
   go acc (Func args ret) = go (acc + Array.length args) ret
   go acc _ = acc
 
-isClosureNode :: forall r. Ref { globalTypes :: Map.Map String ExprType | r } -> TcoExpr -> Boolean
-isClosureNode codegenStateRef expr = case unwrapTcoExpr expr of
+isClosureNode :: forall r. { globalTypes :: Map.Map String ExprType | r } -> TcoExpr -> Boolean
+isClosureNode metadata expr = case unwrapTcoExpr expr of
   Abs _ _ -> true
   UncurriedAbs _ _ -> true
   App _ _ ->
@@ -121,9 +118,8 @@ isClosureNode codegenStateRef expr = case unwrapTcoExpr expr of
       case unwrapTcoExpr flatFn of
         Var (Qualified mbMn (Ident i)) ->
           let
-            h = unsafePerformEffect (Ref.read codegenStateRef)
             vType = case mbMn of
-              Just mn -> Map.lookup (unwrap mn <> "." <> i) h.globalTypes
+              Just mn -> Map.lookup (unwrap mn <> "." <> i) metadata.globalTypes
               Nothing -> Nothing
 
             expectedArity2 = case vType of
@@ -142,9 +138,8 @@ isClosureNode codegenStateRef expr = case unwrapTcoExpr expr of
       case unwrapTcoExpr flatFn of
         Var (Qualified mbMn (Ident i)) ->
           let
-            h = unsafePerformEffect (Ref.read codegenStateRef)
             vType = case mbMn of
-              Just mn -> Map.lookup (unwrap mn <> "." <> i) h.globalTypes
+              Just mn -> Map.lookup (unwrap mn <> "." <> i) metadata.globalTypes
               Nothing -> Nothing
 
             expectedArity2 = case vType of
@@ -153,7 +148,7 @@ isClosureNode codegenStateRef expr = case unwrapTcoExpr expr of
           in
             actualArity < expectedArity || actualArity < expectedArity2 || i == "foldrArray" || i == "foldlArray" || i == "traverse_" || i == "for_" || i == "traverseArrayImpl"
         _ -> actualArity < expectedArity
-  Let _ _ _ body -> isClosureNode codegenStateRef body
-  LetRec _ _ body -> isClosureNode codegenStateRef body
-  Typed _ inner -> isClosureNode codegenStateRef inner
+  Let _ _ _ body -> isClosureNode metadata body
+  LetRec _ _ body -> isClosureNode metadata body
+  Typed _ inner -> isClosureNode metadata inner
   _ -> false

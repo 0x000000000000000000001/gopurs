@@ -10,8 +10,6 @@ import Data.Array as Array
 import Data.Array.NonEmpty (NonEmptyArray, toArray)
 import Data.Foldable (foldl)
 import Data.Maybe (Maybe(..), fromMaybe)
-import Effect.Ref as Ref
-import Effect.Unsafe (unsafePerformEffect)
 import Gopurs.ExprAnalysis (getExprType, unwrapTcoExpr)
 import Gopurs.ExprContext (ExprContext, ExprResult, TranslateExpr, StmtTree(..), flattenStmts)
 import Gopurs.GoAst (GoExpr(..), GoType(..), goTypeToStr)
@@ -23,9 +21,9 @@ import PureScript.Backend.Optimizer.CoreFn (ExprType(..))
 import PureScript.Backend.Optimizer.Syntax (BackendSyntax(Fail), Pair(..))
 
 failure :: ExprContext -> Int -> TcoExpr -> String -> ExprResult
-failure { codegenStateRef, modNameStr, mbExpectedExprType } nextId tcoExpr msg =
+failure { metadata, modNameStr, mbExpectedExprType } nextId tcoExpr msg =
   let
-    expectedGoType = exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr
+    expectedGoType = exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr
       ( case getExprType tcoExpr of
           Any -> fromMaybe Any mbExpectedExprType
           ty -> ty

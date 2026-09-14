@@ -28,11 +28,11 @@ import PureScript.Backend.Optimizer.FreeVars (localId)
 import PureScript.Backend.Optimizer.Syntax (Level)
 
 nonRecursive :: TranslateExpr -> ExprContext -> Int -> Maybe Ident -> Level -> TcoExpr -> TcoExpr -> ExprResult
-nonRecursive translate context@{ codegenStateRef, depth, modNameStr, moduleFunctions, bound } nextId mbIdent lvl binding body =
+nonRecursive translate context@{ metadata, codegenStateRef, depth, modNameStr, moduleFunctions, bound } nextId mbIdent lvl binding body =
   let
     originalName = localId mbIdent lvl
     name = originalName <> "_" <> show nextId
-    expectedGoTypeFromAst = exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr (getExprType binding)
+    expectedGoTypeFromAst = exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr (getExprType binding)
 
     mbFunc = extractUncurriedAbs binding
   in
@@ -44,7 +44,7 @@ nonRecursive translate context@{ codegenStateRef, depth, modNameStr, moduleFunct
             Nothing -> []
           paramsWithTypes = Array.zipWith
             ( \idStr ty ->
-                Tuple idStr (exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr ty)
+                Tuple idStr (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr ty)
             )
             abs.args
             (fArgsAst <> Array.replicate (max 0 (Array.length abs.args - Array.length fArgsAst)) Any)
@@ -84,7 +84,7 @@ nonRecursive translate context@{ codegenStateRef, depth, modNameStr, moduleFunct
           { stmts: resBinding.stmts <> StmtLeaf (GoRaw ("// TAST (Let): " <> name <> " shape=" <> printTcoExprShape binding <> " bindingType=" <> printExprType (getExprType binding))) <> letStmt <> resBody.stmts, expr: resBody.expr, exprType: resBody.exprType, nextId: resBody.nextId }
 
 recursive :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> Level -> NonEmptyArray (Tuple Ident TcoExpr) -> TcoExpr -> ExprResult
-recursive translate context@{ codegenStateRef, depth, modNameStr, recVars, moduleFunctions, bound } nextId (TcoExpr tcoAnalysis _) lvl bindings body =
+recursive translate context@{ metadata, codegenStateRef, depth, modNameStr, recVars, moduleFunctions, bound } nextId (TcoExpr tcoAnalysis _) lvl bindings body =
   let
     allocRes = foldl
       ( \acc (Tuple (Ident ident) val) ->
@@ -95,7 +95,7 @@ recursive translate context@{ codegenStateRef, depth, modNameStr, recVars, modul
               Ref.modify_ (\r -> r { globalId = r.globalId + 1 }) codegenStateRef
               pure curr.globalId
             newName = oldName <> "_" <> show acc.nextId <> "_" <> show gId
-            expectedGoTypeFromAst = exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr (getExprType val)
+            expectedGoTypeFromAst = exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr (getExprType val)
           in
             { newBound: Map.insert oldName { name: newName, goType: expectedGoTypeFromAst } acc.newBound, newNames: Array.snoc acc.newNames { oldName, newName }, exprType: TypeValue, nextId: acc.nextId + 1 }
       )
@@ -120,10 +120,10 @@ recursive translate context@{ codegenStateRef, depth, modNameStr, recVars, modul
                   boundInfo = fromMaybe { name: oldName, goType: TypeValue } (Map.lookup oldName allocRes.newBound)
                   newName = boundInfo.name
                   fArgs = case extractExprFuncType (getExprType fn.val) of
-                    Just { fArgs: a } -> map (exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr) a
+                    Just { fArgs: a } -> map (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr) a
                     Nothing -> []
                   fRet = case extractExprFuncType (getExprType fn.val) of
-                    Just { fRet: r } -> exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr r
+                    Just { fRet: r } -> exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr r
                     Nothing -> TypeValue
                   paramsWithTypes = Array.zipWith (\idStr goT -> Tuple idStr goT) fn.args (fArgs <> Array.replicate (max 0 (Array.length fn.args - Array.length fArgs)) TypeValue)
                 in
@@ -139,10 +139,10 @@ recursive translate context@{ codegenStateRef, depth, modNameStr, recVars, modul
                   boundInfo = fromMaybe { name: oldName, goType: TypeValue } (Map.lookup oldName allocRes.newBound)
                   newName = boundInfo.name
                   fArgs = case extractExprFuncType (getExprType fn.val) of
-                    Just { fArgs: a } -> map (exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr) a
+                    Just { fArgs: a } -> map (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr) a
                     Nothing -> []
                   fRet = case extractExprFuncType (getExprType fn.val) of
-                    Just { fRet: r } -> exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr r
+                    Just { fRet: r } -> exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr r
                     Nothing -> TypeValue
                   paramsWithTypes = Array.zipWith (\idStr goT -> Tuple idStr goT) fn.args (fArgs <> Array.replicate (max 0 (Array.length fn.args - Array.length fArgs)) TypeValue)
                 in
@@ -158,7 +158,7 @@ recursive translate context@{ codegenStateRef, depth, modNameStr, recVars, modul
                   boundInfo = fromMaybe { name: oldName, goType: TypeValue } (Map.lookup oldName prepopulatedBound)
                   newName = boundInfo.name
                   fArgs = case extractExprFuncType (getExprType fn.val) of
-                    Just { fArgs: a } -> map (exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr) a
+                    Just { fArgs: a } -> map (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr) a
                     Nothing -> []
                   paramsWithTypes = Array.zipWith (\idStr goT -> Tuple idStr goT) fn.args (fArgs <> Array.replicate (max 0 (Array.length fn.args - Array.length fArgs)) TypeValue)
                   currentLoopCtx = [ { ident: newName, params: fn.args, loopParams: map (\p -> p <> "_loop") fn.args, goTypes: map snd paramsWithTypes, fRet: TypeValue } ]

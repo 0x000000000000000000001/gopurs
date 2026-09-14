@@ -15,9 +15,7 @@ import Data.Map as Map
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Tuple (Tuple(..))
 import Effect.Ref (Ref)
-import Effect.Ref as Ref
-import Effect.Unsafe (unsafePerformEffect)
-import Gopurs.CodegenState (CodegenState)
+import Gopurs.CodegenState (CodegenMetadata, CodegenState)
 import Gopurs.GoAst (GoExpr(..), GoType(..), sanitizeName)
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr, unboxGoExpr)
 import Gopurs.GoTypes (exprTypeToGoType, instantiateGenericGoType, structFieldGoType, visibleRecordFields)
@@ -28,8 +26,8 @@ type RecordExpr =
   , exprType :: GoType
   }
 
-prepareLiteral :: Ref CodegenState -> String -> ExprType -> Maybe ExprType -> { recordType :: GoType, fields :: Map String ExprType }
-prepareLiteral codegenStateRef modNameStr baseExprType mbExpectedExprType =
+prepareLiteral :: CodegenMetadata -> String -> ExprType -> Maybe ExprType -> { recordType :: GoType, fields :: Map String ExprType }
+prepareLiteral metadata modNameStr baseExprType mbExpectedExprType =
   let
     exprType = case baseExprType of
       Record _ -> baseExprType
@@ -37,7 +35,7 @@ prepareLiteral codegenStateRef modNameStr baseExprType mbExpectedExprType =
     mbRecordType = case exprType of
       Record (Row fields _) -> Just fields
       _ -> Nothing
-    recordType = exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr exprType
+    recordType = exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr exprType
     recordFields = case mbRecordType of
       Just fields -> Map.fromFoldable (visibleRecordFields fields)
       Nothing -> Map.empty
@@ -59,32 +57,29 @@ coerceLiteralField codegenStateRef modNameStr key recordType value =
 literal :: GoType -> Array (Tuple String GoExpr) -> RecordExpr
 literal recordType fields = { expr: GoRecordDict recordType fields, exprType: recordType }
 
-getProp :: Ref CodegenState -> String -> String -> RecordExpr -> RecordExpr
-getProp codegenStateRef modNameStr prop obj = case obj.exprType of
+getProp :: CodegenMetadata -> Ref CodegenState -> String -> String -> RecordExpr -> RecordExpr
+getProp metadata codegenStateRef modNameStr prop obj = case obj.exprType of
   TypeRecord fields ->
     let
       fieldGoType = fromMaybe TypeValue (Map.lookup prop (Map.fromFoldable fields))
     in
       { expr: GoStructAccess obj.expr (sanitizeName prop), exprType: fieldGoType }
   TypeStructPointer _ fullName _ typeArgs ->
-    let
-      h = unsafePerformEffect (Ref.read codegenStateRef)
-    in
-      case Map.lookup fullName h.classDeclsFields of
-        Just info ->
-          case Array.find (\(Tuple _ field) -> field.name == prop) (Array.mapWithIndex Tuple info.fields) of
-            Just (Tuple idx field) ->
-              let
-                typeEnv = Map.fromFoldable (Array.zip info.vars typeArgs)
-                genericFieldType = structFieldGoType h.pointerAdtPaths h.enumAdts h.elidedCtors info.vars modNameStr field."type"
-                fieldGoType = instantiateGenericGoType typeEnv genericFieldType
-                unboxedObj = unboxGoExpr codegenStateRef modNameStr obj.expr obj.exprType obj.exprType
-                fieldExpr = GoStructAccess unboxedObj ("V" <> show idx)
-                boxedFieldExpr = boxGoExpr codegenStateRef modNameStr fieldExpr fieldGoType
-              in
-                { expr: boxedFieldExpr, exprType: TypeValue }
-            Nothing -> genericGetProp codegenStateRef modNameStr prop obj
-        Nothing -> genericGetProp codegenStateRef modNameStr prop obj
+    case Map.lookup fullName metadata.classDeclsFields of
+      Just info ->
+        case Array.find (\(Tuple _ field) -> field.name == prop) (Array.mapWithIndex Tuple info.fields) of
+          Just (Tuple idx field) ->
+            let
+              typeEnv = Map.fromFoldable (Array.zip info.vars typeArgs)
+              genericFieldType = structFieldGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors info.vars modNameStr field."type"
+              fieldGoType = instantiateGenericGoType typeEnv genericFieldType
+              unboxedObj = unboxGoExpr codegenStateRef modNameStr obj.expr obj.exprType obj.exprType
+              fieldExpr = GoStructAccess unboxedObj ("V" <> show idx)
+              boxedFieldExpr = boxGoExpr codegenStateRef modNameStr fieldExpr fieldGoType
+            in
+              { expr: boxedFieldExpr, exprType: TypeValue }
+          Nothing -> genericGetProp codegenStateRef modNameStr prop obj
+      Nothing -> genericGetProp codegenStateRef modNameStr prop obj
   _ -> genericGetProp codegenStateRef modNameStr prop obj
 
 genericGetProp :: Ref CodegenState -> String -> String -> RecordExpr -> RecordExpr

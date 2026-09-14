@@ -48,7 +48,7 @@ translate :: CodegenMetadata -> BackendModule -> String
 translate metadata inputMod = (translateWithFunctions metadata inputMod).code
 
 translateWithFunctions :: CodegenMetadata -> BackendModule -> { code :: String, functions :: ModuleFunctions }
-translateWithFunctions { enumAdts, enumCtors, pointerAdtPaths, pointerAdtNodes, pointerAdtLeaves, elidedCtors, ctorTypes, globalTypes, globalFunctions, classDeclsFields } inputMod =
+translateWithFunctions metadata@{ enumAdts, pointerAdtPaths, elidedCtors, classDeclsFields } inputMod =
 
   let
     mod = optimizeThunkProducers inputMod
@@ -99,18 +99,17 @@ translateWithFunctions { enumAdts, enumCtors, pointerAdtPaths, pointerAdtNodes, 
           mod.dataDecls
 
       -- Rebox requests belong to this invocation of translate.
-      Ref.new { decls: [], rawDecls: structDecls, elidedCtors, ctorTypes, pointerAdtPaths, pointerAdtNodes, pointerAdtLeaves, enumAdts, enumCtors, globalTypes, globalFunctions, classDeclsFields, globalId: 0, reboxPairs: Set.empty }
+      Ref.new { rawDecls: structDecls, globalId: 0, reboxPairs: Set.empty }
 
-    preparedBindings = ModuleBindings.prepare codegenStateRef modNameStr mod
+    preparedBindings = ModuleBindings.prepare metadata modNameStr mod
     moduleFunctions = preparedBindings.functions
 
-    Tuple decls helpers = unsafePerformEffect do
+    Tuple allDeclsAst helpers = unsafePerformEffect do
       let
-        d = ModuleBindings.declarations translateInContext codegenStateRef modNameStr moduleFunctions preparedBindings.bindings
+        d = ModuleBindings.declarations translateInContext metadata codegenStateRef modNameStr moduleFunctions preparedBindings.bindings
       h <- Ref.read codegenStateRef
       pure (Tuple d h)
 
-    allDeclsAst = decls <> helpers.decls
     declsStr = String.joinWith "\\n" (map printGoDeclVar allDeclsAst) <> "\\n" <> String.joinWith "\\n" helpers.rawDecls
 
     parts = [ declsStr ]
@@ -139,7 +138,7 @@ translateWithFunctions { enumAdts, enumCtors, pointerAdtPaths, pointerAdtNodes, 
       { packageName: "purescript"
       , imports: goImports
       , decls: allDeclsAst
-      , rawDecls: helpers.rawDecls <> unsafePerformEffect (generateReboxFunctions codegenStateRef modNameStr)
+      , rawDecls: helpers.rawDecls <> unsafePerformEffect (generateReboxFunctions metadata codegenStateRef modNameStr)
       , foreigns: map (\(Tuple (Ident name) type_) -> { pursName: modNameStr <> "_" <> sanitizeName name, goName: "_Gopurs_" <> modNameStr <> "_" <> capitalize (sanitizeName name), exprType: type_ }) (Map.toUnfoldable mod.foreign)
       }
   in
@@ -155,18 +154,18 @@ translateWithFunctions { enumAdts, enumCtors, pointerAdtPaths, pointerAdtNodes, 
     }
 
 translateInContext :: TranslateExpr
-translateInContext { codegenStateRef, depth, modNameStr, recVars, moduleFunctions, bound, tcoIdent, loopCtx, options, mbExpectedExprType } nextId expression =
-  translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFunctions bound tcoIdent loopCtx options mbExpectedExprType nextId expression
+translateInContext { metadata, codegenStateRef, depth, modNameStr, recVars, moduleFunctions, bound, tcoIdent, loopCtx, options, mbExpectedExprType } nextId expression =
+  translateExprWithExpectedType metadata codegenStateRef depth modNameStr recVars moduleFunctions bound tcoIdent loopCtx options mbExpectedExprType nextId expression
 
-translateExpr :: Ref CodegenState -> Int -> String -> Array String -> ModuleFunctions -> LocalEnv -> Maybe String -> LoopContext -> ExprOptions -> Int -> TcoExpr -> ExprResult
-translateExpr codegenStateRef depth modNameStr recVars moduleFunctions bound tcoIdent loopCtx options nextId tcoExpr =
-  translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFunctions bound tcoIdent loopCtx options Nothing nextId tcoExpr
+translateExpr :: CodegenMetadata -> Ref CodegenState -> Int -> String -> Array String -> ModuleFunctions -> LocalEnv -> Maybe String -> LoopContext -> ExprOptions -> Int -> TcoExpr -> ExprResult
+translateExpr metadata codegenStateRef depth modNameStr recVars moduleFunctions bound tcoIdent loopCtx options nextId tcoExpr =
+  translateExprWithExpectedType metadata codegenStateRef depth modNameStr recVars moduleFunctions bound tcoIdent loopCtx options Nothing nextId tcoExpr
 
-translateExprWithExpectedType :: Ref CodegenState -> Int -> String -> Array String -> ModuleFunctions -> LocalEnv -> Maybe String -> LoopContext -> ExprOptions -> Maybe ExprType -> Int -> TcoExpr -> ExprResult
-translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFunctions bound tcoIdent loopCtx options@{ inEffectBlock } mbExpectedExprType nextId tcoExpr@(TcoExpr _ expr) =
+translateExprWithExpectedType :: CodegenMetadata -> Ref CodegenState -> Int -> String -> Array String -> ModuleFunctions -> LocalEnv -> Maybe String -> LoopContext -> ExprOptions -> Maybe ExprType -> Int -> TcoExpr -> ExprResult
+translateExprWithExpectedType metadata codegenStateRef depth modNameStr recVars moduleFunctions bound tcoIdent loopCtx options@{ inEffectBlock } mbExpectedExprType nextId tcoExpr@(TcoExpr _ expr) =
   let
-    context = { codegenStateRef, depth, modNameStr, recVars, moduleFunctions, bound, tcoIdent, loopCtx, options, mbExpectedExprType }
-    elidedCtors = (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors
+    context = { metadata, codegenStateRef, depth, modNameStr, recVars, moduleFunctions, bound, tcoIdent, loopCtx, options, mbExpectedExprType }
+    elidedCtors = metadata.elidedCtors
     isEff = isEffectNode tcoExpr
   in
     if isEff && not inEffectBlock then
@@ -175,21 +174,20 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
       case expr of
         Typed type_ a ->
           let
-            expectedGoType = exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr type_
-            h = unsafePerformEffect (Ref.read codegenStateRef)
+            expectedGoType = exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr type_
 
           in
             case unwrapTcoExpr a, expectedGoType of
               Lit (LitRecord props), TypeStructPointer baseStructName fullName fullPath _ ->
-                case Map.lookup fullName h.classDeclsFields of
+                case Map.lookup fullName metadata.classDeclsFields of
                   Just classInfo ->
                     let
                       classFields = classInfo.fields
                       typeArgs = case type_ of
                         ADT className _ tArgs ->
                           let
-                            mapped = map (exprTypeToGoType h.pointerAdtPaths h.enumAdts h.elidedCtors modNameStr) tArgs
-                            arity = case Map.lookup className h.pointerAdtPaths of
+                            mapped = map (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr) tArgs
+                            arity = case Map.lookup className metadata.pointerAdtPaths of
                               Just info -> info.arity
                               Nothing -> Array.length classInfo.vars
                           in
@@ -201,17 +199,17 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                       accProps = foldl
                         ( \acc item ->
                             let
-                              genericGoType = exprTypeToGenericGoType h.pointerAdtPaths h.enumAdts h.elidedCtors classInfo.vars modNameStr item.field."type"
+                              genericGoType = exprTypeToGenericGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors classInfo.vars modNameStr item.field."type"
                               expectedType = instantiateGenericGoType instMap genericGoType
                               expectedExprType = item.field."type"
 
                               newBound = bindFieldFunctionParameters
-                                (exprTypeToGoType h.pointerAdtPaths h.enumAdts h.elidedCtors modNameStr)
+                                (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr)
                                 bound
                                 expectedExprType
                                 item.val
 
-                              resVal = translateExpr codegenStateRef (depth + 1) modNameStr recVars moduleFunctions newBound Nothing [] { isTail: false, inEffectBlock: false } acc.nextId item.val
+                              resVal = translateExpr metadata codegenStateRef (depth + 1) modNameStr recVars moduleFunctions newBound Nothing [] { isTail: false, inEffectBlock: false } acc.nextId item.val
                               coercedExpr = coerceGoExpr codegenStateRef modNameStr resVal.expr resVal.exprType expectedType
                             in
                               { stmts: acc.stmts <> resVal.stmts, exprs: Array.snoc acc.exprs coercedExpr, exprType: TypeValue, nextId: resVal.nextId }
@@ -230,13 +228,13 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                         { stmts: accProps.stmts, expr: GoConstructor (hashString baseStructName) monoStructName typeArgsForDict accProps.exprs, exprType: expectedGoType, nextId: accProps.nextId }
                   Nothing ->
                     let
-                      res = translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFunctions bound tcoIdent loopCtx options (Just type_) nextId a
+                      res = translateExprWithExpectedType metadata codegenStateRef depth modNameStr recVars moduleFunctions bound tcoIdent loopCtx options (Just type_) nextId a
                     in
                       case res.exprType of
                         TypeStructPointer _ _ _ _ -> res
                         _ ->
                           if expectedGoType == res.exprType then res
-                          else if isClosureNode codegenStateRef a then res
+                          else if isClosureNode metadata a then res
                           else
                             { stmts: res.stmts, expr: coerceGoExpr codegenStateRef modNameStr res.expr res.exprType expectedGoType, exprType: expectedGoType, nextId: res.nextId }
               Let ident lvl val body, _ ->
@@ -247,7 +245,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                   newA = case a of
                     TcoExpr ann _ -> TcoExpr ann newLetShape
                 in
-                  translateExpr codegenStateRef depth modNameStr recVars moduleFunctions bound tcoIdent loopCtx options nextId newA
+                  translateExpr metadata codegenStateRef depth modNameStr recVars moduleFunctions bound tcoIdent loopCtx options nextId newA
               LetRec lvl bindings body, _ ->
                 let
                   newBody = case body of
@@ -256,10 +254,10 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                   newA = case a of
                     TcoExpr ann _ -> TcoExpr ann newLetShape
                 in
-                  translateExpr codegenStateRef depth modNameStr recVars moduleFunctions bound tcoIdent loopCtx options nextId newA
+                  translateExpr metadata codegenStateRef depth modNameStr recVars moduleFunctions bound tcoIdent loopCtx options nextId newA
               _, _ ->
                 let
-                  res = translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFunctions bound tcoIdent loopCtx options (Just type_) nextId a
+                  res = translateExprWithExpectedType metadata codegenStateRef depth modNameStr recVars moduleFunctions bound tcoIdent loopCtx options (Just type_) nextId a
                   preserveBoxedRecord = case expectedGoType, mbExpectedExprType of
                     TypeRecord _, Just Any -> res.exprType == TypeValue
                     _, _ -> false
@@ -268,20 +266,19 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                     TypeStructPointer _ _ _ _ -> res
                     _ ->
                       if expectedGoType == res.exprType || preserveBoxedRecord then res
-                      else if isClosureNode codegenStateRef a then res
+                      else if isClosureNode metadata a then res
                       else
                         { stmts: res.stmts, expr: coerceGoExpr codegenStateRef modNameStr res.expr res.exprType expectedGoType, exprType: expectedGoType, nextId: res.nextId }
         Var (Qualified mbMn (Ident i)) ->
           let
             safeName = sanitizeName i
-            h = unsafePerformEffect (Ref.read codegenStateRef)
             vType = case mbMn of
               Just mn ->
                 let
                   modStr = unwrap mn
                 in
-                  case Map.lookup (modStr <> "." <> i) h.globalTypes of
-                    Just ty -> exprTypeToGoType h.pointerAdtPaths h.enumAdts h.elidedCtors modNameStr ty
+                  case Map.lookup (modStr <> "." <> i) metadata.globalTypes of
+                    Just ty -> exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr ty
                     Nothing -> TypeValue
               Nothing -> TypeValue
           in
@@ -314,7 +311,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
             accXs = foldl
               ( \acc val ->
                   let
-                    resVal = translateExpr codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } acc.nextId val
+                    resVal = translateExpr metadata codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } acc.nextId val
                   in
                     { stmts: acc.stmts <> resVal.stmts, exprs: Array.snoc acc.exprs resVal.expr, exprTypes: Array.snoc acc.exprTypes resVal.exprType, nextId: resVal.nextId }
               )
@@ -326,12 +323,9 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
 
             expectedElemType = case mbExpectedExprType of
               Just exTy ->
-                let
-                  h = unsafePerformEffect (Ref.read codegenStateRef)
-                in
-                  case exprTypeToGenericGoType h.pointerAdtPaths h.enumAdts h.elidedCtors [] modNameStr exTy of
-                    TypeNativeArray et -> Just et
-                    _ -> Nothing
+                case exprTypeToGenericGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors [] modNameStr exTy of
+                  TypeNativeArray et -> Just et
+                  _ -> Nothing
               Nothing -> Nothing
 
             finalElemType = case expectedElemType of
@@ -353,19 +347,19 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
         Lit (LitRecord props) ->
           let
             sortedProps = Array.sortBy (comparing \(Prop k _) -> k) props
-            recordInfo = RecordExprs.prepareLiteral codegenStateRef modNameStr (getExprType tcoExpr) mbExpectedExprType
+            recordInfo = RecordExprs.prepareLiteral metadata modNameStr (getExprType tcoExpr) mbExpectedExprType
 
             accProps = foldl
               ( \acc (Prop key val) ->
                   let
                     expectedExprType = fromMaybe Any (Map.lookup key recordInfo.fields)
                     newBound = bindFieldFunctionParameters
-                      (\fArgTy -> exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr fArgTy)
+                      (\fArgTy -> exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr fArgTy)
                       bound
                       expectedExprType
                       val
 
-                    resVal = translateExpr codegenStateRef (depth + 1) modNameStr recVars moduleFunctions newBound Nothing [] { isTail: false, inEffectBlock: false } acc.nextId val
+                    resVal = translateExpr metadata codegenStateRef (depth + 1) modNameStr recVars moduleFunctions newBound Nothing [] { isTail: false, inEffectBlock: false } acc.nextId val
                     field = RecordExprs.coerceLiteralField codegenStateRef modNameStr key recordInfo.recordType { expr: resVal.expr, exprType: resVal.exprType }
                   in
                     { stmts: acc.stmts <> resVal.stmts, exprs: Array.snoc acc.exprs field, exprType: TypeValue, nextId: resVal.nextId }
@@ -416,18 +410,18 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
 
         Accessor obj accessor ->
           let
-            resObj = translateExpr codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } nextId obj
+            resObj = translateExpr metadata codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } nextId obj
           in
             case accessor of
               GetProp prop ->
                 let
-                  result = RecordExprs.getProp codegenStateRef modNameStr prop { expr: resObj.expr, exprType: resObj.exprType }
+                  result = RecordExprs.getProp metadata codegenStateRef modNameStr prop { expr: resObj.expr, exprType: resObj.exprType }
                 in
                   { stmts: resObj.stmts, expr: result.expr, exprType: result.exprType, nextId: resObj.nextId }
               GetIndex idx -> { stmts: resObj.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayAccess") [ (boxGoExpr codegenStateRef modNameStr resObj.expr resObj.exprType), GoInt idx ], exprType: TypeValue, nextId: resObj.nextId }
               GetCtorField (Qualified mbMod _) _ _ (Ident ctorName) _ idx ->
                 let
-                  result = AdtExprs.getField codegenStateRef modNameStr elidedCtors
+                  result = AdtExprs.getField metadata codegenStateRef modNameStr elidedCtors
                     { moduleName: mbMod, ctorName, index: idx }
                     { expr: resObj.expr, exprType: resObj.exprType, sourceType: getExprType obj }
                 in
@@ -435,11 +429,11 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
 
         Update obj props ->
           let
-            resObj = translateExpr codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } nextId obj
+            resObj = translateExpr metadata codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } nextId obj
             accProps = foldl
               ( \acc (Prop key val) ->
                   let
-                    resVal = translateExpr codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } acc.nextId val
+                    resVal = translateExpr metadata codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } acc.nextId val
                   in
                     { stmts: acc.stmts <> resVal.stmts, exprs: Array.snoc acc.exprs { key, expr: resVal.expr, goType: resVal.exprType }, exprType: TypeValue, nextId: resVal.nextId }
               )
@@ -455,14 +449,12 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
             ctorType = case extractExprFuncType annotatedType of
               Just { fRet } -> fRet
               Nothing -> annotatedType
-            result = AdtExprs.definition codegenStateRef modNameStr name fields ctorType
+            result = AdtExprs.definition metadata codegenStateRef modNameStr name fields ctorType
           in
             { stmts: StmtEmpty, expr: result.expr, exprType: result.exprType, nextId }
 
         CtorSaturated (Qualified mbMod _) _ _ (Ident name) props ->
           let
-            helpers = unsafePerformEffect (Ref.read codegenStateRef)
-
             ctorType = case getExprType tcoExpr of
               Any -> fromMaybe Any mbExpectedExprType
               ty ->
@@ -472,7 +464,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                     _ -> ty
                 else ty
 
-            prepared = AdtExprs.prepareSaturated codegenStateRef modNameStr mbMod name ctorType
+            prepared = AdtExprs.prepareSaturated metadata modNameStr mbMod name ctorType
 
             accProps = foldl
               ( \acc (Tuple _ val) ->
@@ -482,17 +474,17 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                     newBound = case unwrapTcoExpr val, extractExprFuncType expectedExprType of
                       Abs args _, Just { fArgs } ->
                         let
-                          paramsWithTypes = Array.zipWith (\(Tuple mbI lvl) fArgTy -> Tuple (localId mbI lvl) (exprTypeToGoType helpers.pointerAdtPaths helpers.enumAdts helpers.elidedCtors modNameStr fArgTy)) (toArray args) (fArgs <> Array.replicate (Array.length (toArray args) - Array.length fArgs) Any)
+                          paramsWithTypes = Array.zipWith (\(Tuple mbI lvl) fArgTy -> Tuple (localId mbI lvl) (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr fArgTy)) (toArray args) (fArgs <> Array.replicate (Array.length (toArray args) - Array.length fArgs) Any)
                         in
                           foldl (\b (Tuple idStr goType) -> Map.insert idStr { name: idStr, goType } b) bound paramsWithTypes
                       UncurriedAbs args _, Just { fArgs } ->
                         let
-                          paramsWithTypes = Array.zipWith (\(Tuple mbI lvl) fArgTy -> Tuple (localId mbI lvl) (exprTypeToGoType helpers.pointerAdtPaths helpers.enumAdts helpers.elidedCtors modNameStr fArgTy)) args (fArgs <> Array.replicate (Array.length args - Array.length fArgs) Any)
+                          paramsWithTypes = Array.zipWith (\(Tuple mbI lvl) fArgTy -> Tuple (localId mbI lvl) (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr fArgTy)) args (fArgs <> Array.replicate (Array.length args - Array.length fArgs) Any)
                         in
                           foldl (\b (Tuple idStr goType) -> Map.insert idStr { name: idStr, goType } b) bound paramsWithTypes
                       _, _ -> bound
 
-                    resVal = translateExpr codegenStateRef (depth + 1) modNameStr recVars moduleFunctions newBound Nothing [] { isTail: false, inEffectBlock: false } acc.nextId val
+                    resVal = translateExpr metadata codegenStateRef (depth + 1) modNameStr recVars moduleFunctions newBound Nothing [] { isTail: false, inEffectBlock: false } acc.nextId val
                     coercedExpr = coerceGoExpr codegenStateRef modNameStr resVal.expr resVal.exprType expectedType
                     isConstant = expectedType == resVal.exprType && case expectedType, unwrapTcoExpr val of
                       TypeInt64, Lit (LitInt _) -> true
@@ -531,20 +523,20 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
         PrimOp (Op1 op1 e)
           | Just emit <- PrimitiveExprs.unary codegenStateRef modNameStr op1 ->
               let
-                resE = translateExpr codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } nextId e
+                resE = translateExpr metadata codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } nextId e
                 result = emit { expr: resE.expr, exprType: resE.exprType }
               in
                 { stmts: resE.stmts, expr: result.expr, exprType: result.exprType, nextId: resE.nextId }
 
         PrimOp (Op1 (OpIsTag (Qualified mbMod (Ident tag))) e) ->
           let
-            resE = translateExpr codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } nextId e
+            resE = translateExpr metadata codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } nextId e
           in
-            AdtExprs.isTag codegenStateRef modNameStr mbMod tag resE
+            AdtExprs.isTag metadata codegenStateRef modNameStr mbMod tag resE
 
         PrimOp (Op1 OpArrayLength e) ->
           let
-            resE = translateExpr codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } nextId e
+            resE = translateExpr metadata codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } nextId e
           in
             case resE.exprType of
               TypeNativeArray _ -> { stmts: resE.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Int") [ GoCall (GoVar "int64") [ GoCall (GoVar "len") [ resE.expr ] ] ], exprType: TypeValue, nextId: resE.nextId }
@@ -558,8 +550,8 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
 
         PrimOp (Op2 OpArrayIndex e1 e2) ->
           let
-            res1 = translateExpr codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } nextId e1
-            res2 = translateExpr codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } res1.nextId e2
+            res1 = translateExpr metadata codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } nextId e1
+            res2 = translateExpr metadata codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } res1.nextId e2
             result = case res1.exprType of
               TypeNativeArray innerType -> { expr: boxGoExpr codegenStateRef modNameStr (GoRaw (printGoExpr res1.expr <> "[" <> printGoExpr (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeInt64) <> "]")) innerType, exprType: TypeValue }
               _ -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayAccess") [ boxGoExpr codegenStateRef modNameStr res1.expr res1.exprType, GoCall (GoVar "int") [ unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeInt64 ] ], exprType: TypeValue }
@@ -569,8 +561,8 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
         PrimOp (Op2 op2 e1 e2)
           | Just emit <- PrimitiveExprs.binary codegenStateRef modNameStr op2 ->
               let
-                res1 = translateExpr codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } nextId e1
-                res2 = translateExpr codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } res1.nextId e2
+                res1 = translateExpr metadata codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } nextId e1
+                res2 = translateExpr metadata codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } res1.nextId e2
                 result = emit { expr: res1.expr, exprType: res1.exprType } { expr: res2.expr, exprType: res2.exprType }
               in
                 { stmts: res1.stmts <> res2.stmts, expr: result.expr, exprType: result.exprType, nextId: res2.nextId }

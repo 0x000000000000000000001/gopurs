@@ -47,7 +47,7 @@ Tous les modules gopurs de ce tableau se trouvent dans [src/Gopurs](../src/Gopur
 | --- | --- |
 | Types globaux, constructeurs et classes | `GlobalTypes`, `ConstructorMetadata`, `ClassMetadata` |
 | Représentations des ADT et spécialisation | `AdtMetadata`, `Monomorphization` |
-| Métadonnées et état mutable par traduction | `CodegenState` |
+| Contrats distincts des métadonnées immuables et de l'état mutable | `CodegenState` |
 | Dispatcher récursif, assemblage du fichier | `CodeGen` |
 | Contexte, résultat et callbacks de traduction | `ExprContext` |
 | Fonctions de module, signatures, groupes TCO | `ModuleBindings` |
@@ -61,9 +61,18 @@ Tous les modules gopurs de ce tableau se trouvent dans [src/Gopurs](../src/Gopur
 | Frontière FFI et adaptation des signatures | `FfiSupport`, `FfiBridge` |
 
 `ExprContext` permet aux familles d'expressions de rappeler le dispatcher sans
-importer `CodeGen`. Le compteur de noms et les statements produits sont
-transportés dans les résultats ; `CodegenState` conserve notamment les
-déclarations et les couples de conversion à émettre. Le printer ne consulte
+importer `CodeGen`. Il transporte directement les tables immuables de
+`CodegenMetadata`, utilisées pour le typage, les signatures et la préparation
+des constructeurs et des records. Ces décisions ne lisent aucune référence
+mutable.
+
+La référence `CodegenState` contient uniquement les déclarations brutes
+produites (`rawDecls`), le compteur des bindings récursifs (`globalId`) et les
+couples de conversion à émettre (`reboxPairs`). Le compteur local `nextId` et
+les statements restent transportés dans les résultats ; les déclarations
+principales sont renvoyées directement par `ModuleBindings.declarations`.
+La génération Rebox consulte les métadonnées directement et relit les couples
+accumulés jusqu'à avoir émis les conversions transitives. Le printer ne consulte
 ni ne modifie cet état. Le [contrat AST/printer](go-ast-printer.md) décrit les
 nœuds structurés et les familles qui restent assemblées en chaînes.
 

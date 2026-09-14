@@ -23,7 +23,7 @@ import Effect.Console as Console
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import Effect.Unsafe (unsafePerformEffect)
-import Gopurs.CodegenState (CodegenState)
+import Gopurs.CodegenState (CodegenMetadata, CodegenState)
 import Gopurs.GoAst (GoExpr(..), GoType(..), goTypeToStr, sanitizeName)
 import Gopurs.GoTypes as GoTypes
 import Gopurs.Printer (printGoExpr)
@@ -233,8 +233,8 @@ registerReboxPair codegenStateRef srcT destT = do
   if Set.member (Tuple srcT destT) pairs then pure unit
   else Ref.modify_ (\s -> s { reboxPairs = Set.insert (Tuple srcT destT) pairs }) codegenStateRef
 
-findReboxFields :: CodegenState -> String -> Maybe ReboxFields
-findReboxFields helpers baseStructName =
+findReboxFields :: CodegenMetadata -> String -> Maybe ReboxFields
+findReboxFields metadata baseStructName =
   let
     matchesConstructor key =
       let
@@ -251,9 +251,9 @@ findReboxFields helpers baseStructName =
         else false
 
     mbCtor = Array.find (\(Tuple key _) -> matchesConstructor key)
-      (Map.toUnfoldable helpers.ctorTypes :: Array (Tuple String ReboxFields))
+      (Map.toUnfoldable metadata.ctorTypes :: Array (Tuple String ReboxFields))
     mbClass = Array.find (\(Tuple key _) -> matchesConstructor key)
-      (Map.toUnfoldable helpers.classDeclsFields :: Array (Tuple String { vars :: Array String, fields :: Array { name :: String, "type" :: ExprType } }))
+      (Map.toUnfoldable metadata.classDeclsFields :: Array (Tuple String { vars :: Array String, fields :: Array { name :: String, "type" :: ExprType } }))
   in
     case mbCtor of
       Just (Tuple _ info) -> Just info
@@ -262,19 +262,19 @@ findReboxFields helpers baseStructName =
           Just { vars: classInfo.vars, fields: map (\field -> field."type") classInfo.fields }
         Nothing ->
           let
-            _trace = unsafePerformEffect (Console.log ("ERROR: Rebox missing! b1=" <> baseStructName <> " keysCtor: " <> String.joinWith ", " (map fst (Map.toUnfoldable helpers.ctorTypes :: Array (Tuple String _)))))
+            _trace = unsafePerformEffect (Console.log ("ERROR: Rebox missing! b1=" <> baseStructName <> " keysCtor: " <> String.joinWith ", " (map fst (Map.toUnfoldable metadata.ctorTypes :: Array (Tuple String _)))))
           in
             Nothing
 
-renderReboxFunction :: Ref CodegenState -> CodegenState -> String -> Map String String -> Tuple GoType GoType -> Maybe (Tuple String String)
-renderReboxFunction codegenStateRef helpers modNameStr generatedFuncs (Tuple srcT destT) =
+renderReboxFunction :: Ref CodegenState -> CodegenMetadata -> String -> Map String String -> Tuple GoType GoType -> Maybe (Tuple String String)
+renderReboxFunction codegenStateRef metadata modNameStr generatedFuncs (Tuple srcT destT) =
   case srcT, destT of
     TypeStructPointer b1 _ s1 a1, TypeStructPointer b2 _ s2 a2 | b1 == b2 ->
       let
         funcName = "Rebox_" <> modNameStr <> "_" <> hashString s1 <> "_" <> hashString s2
       in
         if Map.member funcName generatedFuncs then Nothing
-        else case findReboxFields helpers b1 of
+        else case findReboxFields metadata b1 of
           Just info ->
             let
               env1 = Map.fromFoldable (Array.zip info.vars a1)
@@ -282,7 +282,7 @@ renderReboxFunction codegenStateRef helpers modNameStr generatedFuncs (Tuple src
               assignments = String.joinWith "\n" (Array.mapWithIndex
                 (\i fieldExprType ->
                   let
-                    genericTy = GoTypes.structFieldGoType helpers.pointerAdtPaths helpers.enumAdts helpers.elidedCtors info.vars modNameStr fieldExprType
+                    genericTy = GoTypes.structFieldGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors info.vars modNameStr fieldExprType
                     t1 = GoTypes.instantiateGenericGoType env1 genericTy
                     t2 = GoTypes.instantiateGenericGoType env2 genericTy
                   in
@@ -295,16 +295,16 @@ renderReboxFunction codegenStateRef helpers modNameStr generatedFuncs (Tuple src
           Nothing -> Nothing
     _, _ -> Nothing
 
-generateReboxFunctions :: Ref CodegenState -> String -> Effect (Array String)
-generateReboxFunctions codegenStateRef modNameStr = loop Map.empty
+generateReboxFunctions :: CodegenMetadata -> Ref CodegenState -> String -> Effect (Array String)
+generateReboxFunctions metadata codegenStateRef modNameStr = loop Map.empty
   where
   -- Rendering fields can register more conversions; collect until none remain.
   loop generatedFuncs = do
-    helpers <- Ref.read codegenStateRef
+    state <- Ref.read codegenStateRef
     let
-      reboxPairs = helpers.reboxPairs
+      reboxPairs = state.reboxPairs
       newFuncs = Map.fromFoldable $
-        Array.mapMaybe (renderReboxFunction codegenStateRef helpers modNameStr generatedFuncs) (Array.fromFoldable reboxPairs)
+        Array.mapMaybe (renderReboxFunction codegenStateRef metadata modNameStr generatedFuncs) (Array.fromFoldable reboxPairs)
       nextGeneratedFuncs = Map.union generatedFuncs newFuncs
     if Map.isEmpty newFuncs then
       pure $ Array.fromFoldable (Map.values nextGeneratedFuncs)

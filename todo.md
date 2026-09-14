@@ -15,13 +15,15 @@ Point de départ vérifié le 14 septembre 2026 : première vague terminée ; co
 
 ## Lots
 
-- [ ] **1 — Séparer les métadonnées immuables de l'état de génération.**
+- [x] **1 — Séparer les métadonnées immuables de l'état de génération.**
 
   **Constat :** `CodegenState` contient encore les métadonnées en plus des déclarations, du compteur et des demandes Rebox. `AdtExprs` compte 35 lectures de référence, souvent pour relire les mêmes tables de types ; `CodeGen` en compte 12.
 
   **Travail :** passer les métadonnées directement dans le contexte de traduction et les helpers de types/conversions. Garder dans l'état mutable les données effectivement produites pendant la traduction. Raccorder en un lot les émetteurs et leurs appelants ; conserver l'ordre des allocations de noms et de l'enregistrement des helpers.
 
   **Terminé lorsque :** les décisions de typage ne nécessitent plus de lire une référence mutable, les responsabilités restantes de l'état sont explicites et le Go est inchangé.
+
+  **Résultat (14 septembre 2026) :** `ExprContext` et les helpers reçoivent directement `CodegenMetadata`. L'état mutable ne contient plus que `rawDecls`, `globalId` et `reboxPairs` ; le champ `decls`, toujours vide, est retiré. Les lectures `Ref.read` passent de 97 à 4, réservées à ces sorties. Compilation sans avertissement, 11 tests de conversion adaptés réussis, `bin/go/run -c` réussi : mêmes 300 entrées TAST, 387 fichiers Go identiques octet pour octet et 14 résultats fonctionnels inchangés. Architecture mise à jour ; PBO et altbak inchangés. Preuves locales : `/private/tmp/gopurs-wave2-state-t8wc3xll/verification.json`.
 
 - [ ] **2 — Donner un chemin commun à la préparation des constructeurs.**
 

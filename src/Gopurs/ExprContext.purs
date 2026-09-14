@@ -19,7 +19,7 @@ import Data.List as List
 import Data.Map (Map)
 import Data.Maybe (Maybe)
 import Effect.Ref (Ref)
-import Gopurs.CodegenState (CodegenState, FunctionInfo)
+import Gopurs.CodegenState (CodegenMetadata, CodegenState, FunctionInfo)
 import Gopurs.GoAst (GoExpr(..), GoType)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr)
 import PureScript.Backend.Optimizer.CoreFn (ExprType)
@@ -89,7 +89,8 @@ wrapInStmts _ stmts retType expr =
 -- Child translation receives an explicit context and returns the next free
 -- identifier with its statements. Family emitters never import CodeGen.
 type ExprContext =
-  { codegenStateRef :: Ref CodegenState
+  { metadata :: CodegenMetadata
+  , codegenStateRef :: Ref CodegenState
   , depth :: Int
   , modNameStr :: String
   , recVars :: Array String

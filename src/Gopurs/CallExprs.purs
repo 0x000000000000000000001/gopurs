@@ -14,8 +14,6 @@ import Data.Newtype (unwrap)
 import Data.String as String
 import Data.String.Pattern (Pattern(..), Replacement(..))
 import Data.Tuple (Tuple(..))
-import Effect.Ref as Ref
-import Effect.Unsafe (unsafePerformEffect)
 import Gopurs.CallAnalysis (collectGoSpine, getGoSpineArgs)
 import Gopurs.ExprAnalysis (extractFuncType, getExprType, unwrapTcoExpr)
 import Gopurs.ExprContext (ExprContext, ExprResult, TranslateExpr, StmtTree(..))
@@ -29,7 +27,7 @@ import PureScript.Backend.Optimizer.FreeVars (localId)
 import PureScript.Backend.Optimizer.Syntax (BackendSyntax(..))
 
 application :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> ExprResult
-application translate context@{ codegenStateRef, depth, modNameStr, moduleFunctions, bound, loopCtx, mbExpectedExprType, options: { isTail } } nextId tcoExpr =
+application translate context@{ metadata, codegenStateRef, depth, modNameStr, moduleFunctions, bound, loopCtx, mbExpectedExprType, options: { isTail } } nextId tcoExpr =
   let
     Tuple flatFn flatArgsSpine = collectGoSpine tcoExpr
     flatArgs = getGoSpineArgs flatArgsSpine
@@ -75,7 +73,7 @@ application translate context@{ codegenStateRef, depth, modNameStr, moduleFuncti
             targetCtx.loopParams
         in
           let
-            expectedGoType = exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr
+            expectedGoType = exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr
               ( case getExprType tcoExpr of
                   Any -> fromMaybe Any mbExpectedExprType
                   ty -> ty
@@ -128,7 +126,7 @@ application translate context@{ codegenStateRef, depth, modNameStr, moduleFuncti
                 entry = if isLocal then Map.lookup name moduleFunctions
                   else do
                     mn <- mbMod
-                    Map.lookup (unwrap mn <> "." <> name) (unsafePerformEffect (Ref.read codegenStateRef)).globalFunctions
+                    Map.lookup (unwrap mn <> "." <> name) metadata.globalFunctions
               in
                 case entry of
                   Just e ->
@@ -319,7 +317,7 @@ application translate context@{ codegenStateRef, depth, modNameStr, moduleFuncti
                     { stmts: accArgs.stmts, expr: finalExpr, exprType: finalExprType, nextId: accArgs.nextId }
 
 uncurriedApplication :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> TcoExpr -> Array TcoExpr -> ExprResult
-uncurriedApplication translate context@{ codegenStateRef, depth, modNameStr, moduleFunctions, bound, loopCtx, mbExpectedExprType, options: { isTail } } nextId tcoExpr fn args =
+uncurriedApplication translate context@{ metadata, codegenStateRef, depth, modNameStr, moduleFunctions, bound, loopCtx, mbExpectedExprType, options: { isTail } } nextId tcoExpr fn args =
   let
     getVar :: BackendSyntax TcoExpr -> Maybe { mbMod :: Maybe ModuleName, name :: String }
     getVar (Typed _ inner) = getVar (unwrapTcoExpr inner)
@@ -563,7 +561,7 @@ uncurriedApplication translate context@{ codegenStateRef, depth, modNameStr, mod
                   targetCtx.loopParams
               in
                 let
-                  expectedGoType = exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr
+                  expectedGoType = exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr
                     ( case getExprType tcoExpr of
                         Any -> fromMaybe Any mbExpectedExprType
                         ty -> ty

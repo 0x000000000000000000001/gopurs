@@ -10,7 +10,7 @@ import Data.Map as Map
 import Data.Set (Set)
 import Data.Set as Set
 import Data.Tuple (Tuple)
-import Gopurs.GoAst (GoDecl, GoType)
+import Gopurs.GoAst (GoType)
 import PureScript.Backend.Optimizer.CoreFn (ExprType)
 
 type FunctionInfo =
@@ -21,7 +21,7 @@ type FunctionInfo =
   }
 
 -- Prepared metadata is shared by the generator and value conversions.
--- Only CodegenState adds mutable data for one invocation of translate.
+-- It is passed directly to each translation, never stored in a mutable Ref.
 type CodegenMetadataRow :: Row Type
 type CodegenMetadataRow =
   ( elidedCtors :: Set.Set String
@@ -38,10 +38,9 @@ type CodegenMetadataRow =
 
 type CodegenMetadata = { | CodegenMetadataRow }
 
+-- Only output accumulated during one translation belongs in the mutable state.
 type CodegenState =
-  { decls :: Array GoDecl
-  , rawDecls :: Array String
+  { rawDecls :: Array String
   , globalId :: Int
   , reboxPairs :: Set.Set (Tuple GoType GoType)
-  | CodegenMetadataRow
   }

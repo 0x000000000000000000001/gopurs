@@ -17,7 +17,7 @@ import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import Effect.Unsafe (unsafePerformEffect)
 import Gopurs.CallAnalysis (extractUncurriedAbs)
-import Gopurs.CodegenState (CodegenState, FunctionInfo)
+import Gopurs.CodegenState (CodegenMetadata, CodegenState, FunctionInfo)
 import Gopurs.ExprAnalysis (extractExprFuncType, extractFuncType)
 import Gopurs.ExprContext (LoopContext, ModuleFunctions, TranslateExpr, flattenStmts, wrapInStmts)
 import Gopurs.GoAst (GoDecl, GoExpr(..), GoType(..), goTypeToStr, sanitizeName)
@@ -36,10 +36,10 @@ type TcoBindingGroup =
   }
 
 -- Analyze recursion before publishing the native signatures used by calls.
-prepare :: Ref CodegenState -> String -> BackendModule -> { bindings :: Array TcoBindingGroup, functions :: ModuleFunctions }
-prepare codegenStateRef modNameStr mod =
+prepare :: CodegenMetadata -> String -> BackendModule -> { bindings :: Array TcoBindingGroup, functions :: ModuleFunctions }
+prepare metadata modNameStr mod =
   let
-    { pointerAdtPaths, enumAdts, elidedCtors } = unsafePerformEffect (Ref.read codegenStateRef)
+    { pointerAdtPaths, enumAdts, elidedCtors } = metadata
     Tuple _ tcoBindings = foldl
       ( \(Tuple env acc) group ->
           let
@@ -107,14 +107,14 @@ prepare codegenStateRef modNameStr mod =
 
 -- Declarations and loop bodies share the same child translator as local
 -- bindings. Each recursive group publishes its function declarations together.
-declarations :: TranslateExpr -> Ref CodegenState -> String -> ModuleFunctions -> Array TcoBindingGroup -> Array GoDecl
-declarations translate codegenStateRef modNameStr moduleFunctions groups =
+declarations :: TranslateExpr -> CodegenMetadata -> Ref CodegenState -> String -> ModuleFunctions -> Array TcoBindingGroup -> Array GoDecl
+declarations translate metadata codegenStateRef modNameStr moduleFunctions groups =
   Array.concatMap
     ( \group ->
         let
           recVars = if group.recursive then map (\(Tuple (Ident name) _) -> sanitizeName name) group.bindings else []
 
-          context = { codegenStateRef, depth: 0, modNameStr, recVars, moduleFunctions, bound: Map.empty, tcoIdent: Nothing, loopCtx: [], options: { isTail: false, inEffectBlock: false }, mbExpectedExprType: Nothing }
+          context = { metadata, codegenStateRef, depth: 0, modNameStr, recVars, moduleFunctions, bound: Map.empty, tcoIdent: Nothing, loopCtx: [], options: { isTail: false, inEffectBlock: false }, mbExpectedExprType: Nothing }
 
           processBindingGroup :: Array (Tuple Ident TcoExpr) -> Array GoDecl
           processBindingGroup binds =
@@ -128,7 +128,7 @@ declarations translate codegenStateRef modNameStr moduleFunctions groups =
                       ( \fn ->
                           let
                             paramsWithTypes = case extractExprFuncType (getExprType fn.val) of
-                              Just { fArgs } -> Array.zipWith (\p goType -> Tuple p goType) fn.args (map (exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr) fArgs <> Array.replicate (Array.length fn.args - Array.length fArgs) TypeValue)
+                              Just { fArgs } -> Array.zipWith (\p goType -> Tuple p goType) fn.args (map (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr) fArgs <> Array.replicate (Array.length fn.args - Array.length fArgs) TypeValue)
                               Nothing -> map (\p -> Tuple p TypeValue) fn.args
 
                             newBound = foldl (\acc (Tuple idStr goType) -> Map.insert idStr { name: idStr, goType } acc) Map.empty paramsWithTypes
@@ -140,7 +140,7 @@ declarations translate codegenStateRef modNameStr moduleFunctions groups =
                                 remaining -> Func remaining rt
                               Nothing -> Nothing
                             fRet = case mbExpectedRet of
-                              Just rt -> exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr rt
+                              Just rt -> exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr rt
                               Nothing -> TypeValue
 
                             currentLoopCtx :: LoopContext
