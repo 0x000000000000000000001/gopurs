@@ -372,7 +372,8 @@ translateExprWithExpectedType metadata codegenStateRef depth modNameStr recVars 
               )
               { stmts: StmtEmpty, exprs: [], exprType: TypeValue, nextId: resObj.nextId }
               props
-            result = RecordExprs.update codegenStateRef modNameStr { expr: resObj.expr, exprType: resObj.exprType } accProps.exprs
+            resultType = map (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr) mbExpectedExprType
+            result = RecordExprs.update codegenStateRef modNameStr resultType { expr: resObj.expr, exprType: resObj.exprType } accProps.exprs
           in
             { stmts: resObj.stmts <> accProps.stmts, expr: result.expr, exprType: result.exprType, nextId: accProps.nextId }
 

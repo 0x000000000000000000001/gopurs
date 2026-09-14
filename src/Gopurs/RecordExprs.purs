@@ -16,7 +16,7 @@ import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Tuple (Tuple(..))
 import Effect.Ref (Ref)
 import Gopurs.CodegenState (CodegenMetadata, CodegenState)
-import Gopurs.GoAst (GoExpr(..), GoType(..), sanitizeName)
+import Gopurs.GoAst (GoExpr(..), GoType(..), goTypeToStr, rawGo, sanitizeName)
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr, unboxGoExpr)
 import Gopurs.GoTypes (exprTypeToGoType, instantiateGenericGoType, structFieldGoType, visibleRecordFields)
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..))
@@ -88,21 +88,42 @@ genericGetProp codegenStateRef modNameStr prop obj =
 
 -- Updates reach this emitter only after CodeGen translates the object and every
 -- new value. Keep the supplied order, including duplicate labels.
-update :: Ref CodegenState -> String -> RecordExpr -> Array { key :: String, expr :: GoExpr, goType :: GoType } -> RecordExpr
-update codegenStateRef modNameStr obj props = case obj.exprType of
+update :: Ref CodegenState -> String -> Maybe GoType -> RecordExpr -> Array { key :: String, expr :: GoExpr, goType :: GoType } -> RecordExpr
+update codegenStateRef modNameStr expectedType obj props = case obj.exprType of
   TypeRecord fields ->
     let
+      resultFields = case expectedType of
+        Just (TypeRecord targetFields) -> targetFields
+        _ -> map (\(Tuple key ty) -> Tuple key
+          (fromMaybe ty (map _.goType (Array.last (Array.filter (\p -> p.key == key) props))))) fields
+      resultType = TypeRecord resultFields
       coercedUpdates = map
         ( \p ->
             let
-              expectedGoType = fromMaybe TypeValue (Map.lookup p.key (Map.fromFoldable fields))
+              expectedGoType = fromMaybe TypeValue (Map.lookup p.key (Map.fromFoldable resultFields))
               coercedVal = coerceGoExpr codegenStateRef modNameStr p.expr p.goType expectedGoType
             in
               Tuple p.key coercedVal
         )
         props
+      unchangedFields = Array.filter (\(Tuple key _) -> not (Array.any (\p -> p.key == key) props)) resultFields
+      copyField (Tuple key targetType) =
+        let sourceType = fromMaybe TypeValue (Map.lookup key (Map.fromFoldable fields))
+        in GoMutate ("clone." <> sanitizeName key)
+          (coerceGoExpr codegenStateRef modNameStr (GoStructAccess (GoVar "originalRecord") key) sourceType targetType)
+      -- A type-changing update needs a new native layout. Do not convert the
+      -- overwritten fields through their old types while copying the record.
+      changedLayout = GoCall (GoFuncLit []
+        ([ GoAssign "originalRecord" obj.expr
+         , rawGo "_ = originalRecord"
+         , rawGo ("var clone " <> goTypeToStr resultType)
+         ] <> map copyField unchangedFields
+           <> map (\(Tuple key value) -> GoMutate ("clone." <> sanitizeName key) value) coercedUpdates)
+        (GoVar "clone") resultType) []
     in
-      { expr: GoRecordUpdateNative obj.exprType obj.expr coercedUpdates, exprType: obj.exprType }
+      { expr: if resultType == obj.exprType then GoRecordUpdateNative resultType obj.expr coercedUpdates else changedLayout
+      , exprType: resultType
+      }
   _ ->
     let
       boxedExprs = map (\p -> Tuple p.key (boxGoExpr codegenStateRef modNameStr p.expr p.goType)) props

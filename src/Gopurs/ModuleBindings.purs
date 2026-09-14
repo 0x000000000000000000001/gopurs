@@ -22,7 +22,6 @@ import Gopurs.ExprContext (LoopContext, ModuleFunctions, TranslateExpr, flattenS
 import Gopurs.GoAst (rawGo, GoDecl(..), GoExpr(..), GoType(..), goTypeToStr, sanitizeName)
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr, getUnboxedADT)
 import Gopurs.GoTypes (exprTypeToGoType)
-import Gopurs.Printer (printGoExpr)
 import Gopurs.GoFunctions (curriedFunction)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.Codegen.Tco as Tco
@@ -160,7 +159,7 @@ declarations translate metadata codegenStateRef modNameStr moduleFunctions group
                             goParams = map (\(Tuple p goT) -> Tuple (p <> "_loop") goT) paramsWithTypes
 
                             funcExpr =
-                              if arity >= 1 && arity <= 10 then
+                              if arity >= 1 then
                                 let
                                   coercedExpr = coerceGoExpr codegenStateRef modNameStr resBodyMut.expr resBodyMut.exprType expectedRetType
                                   bodyStmts = initVars <> flattenStmts resBodyMut.stmts <> [ GoReturn coercedExpr ]
@@ -174,25 +173,20 @@ declarations translate metadata codegenStateRef modNameStr moduleFunctions group
                                     let boxedRes = boxGoExpr codegenStateRef modNameStr callExpr expectedRetType
                                     let wrapperFunc = GoFuncLit (map (\p -> Tuple p TypeValue) wrapperParams) [] boxedRes TypeValue
                                     let funcWrapperName = if arity == 1 then "gopurs_runtime.Func" else "gopurs_runtime.Func" <> show arity
-                                    pure $ GoCall (GoVar funcWrapperName) [ wrapperFunc ]
+                                    pure $ if arity <= 10 then
+                                      GoCall (GoVar funcWrapperName) [ wrapperFunc ]
+                                    else
+                                      Array.foldr
+                                        (\p acc -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func")
+                                          [ GoFuncLit [ Tuple p TypeValue ] [] acc TypeValue ])
+                                        boxedRes
+                                        wrapperParams
                               else
                                 let
                                   bodyStmts = initVars <> flattenStmts resBodyMut.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr resBodyMut.expr resBodyMut.exprType) ]
                                   funcBody = if isSelfRecursiveLoop then GoFor goName bodyStmts else GoBlock bodyStmts
-                                  iife = GoCall (GoFuncBlock [] [ funcBody ] TypeValue) []
                                 in
-                                  if arity == 0 then
-                                    curriedFunction [ Tuple "_" TypeValue ] TypeValue funcBody
-                                  else
-                                    Array.foldr
-                                      (\(Tuple p goT) acc -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func")
-                                        [ GoFuncLit [ Tuple (p <> "_box") TypeValue ]
-                                            [ rawGo ("var " <> p <> "_loop " <> goTypeToStr goT <> " = " <> printGoExpr (coerceGoExpr codegenStateRef modNameStr (GoVar (p <> "_box")) TypeValue goT)) ]
-                                            acc
-                                            TypeValue
-                                        ])
-                                      iife
-                                      paramsWithTypes
+                                  curriedFunction [ Tuple "_" TypeValue ] TypeValue funcBody
                           in
                             GoCachedValue { identifier: modNameStr <> "_" <> goName, expression: funcExpr, goType: TypeValue }
                       )

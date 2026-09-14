@@ -64,7 +64,7 @@ loadAndPrepareModules args = do
   let monomorphizedModules = monomorphizeModules globalTypes finalModulesWithClassDecls
   let
     { pointerAdtPaths, pointerAdtNodes, pointerAdtLeaves } = buildPointerAdtMetadata (Array.fromFoldable finalModulesWithClassDecls)
-    { enumAdts, enumCtors } = buildEnumAdtMetadata (Array.fromFoldable finalModulesWithClassDecls)
+    { enumAdts, enumCtors } = buildEnumAdtMetadata (Array.fromFoldable finalModules)
 
     targetMainModules = case args.mbMainModule of
       Just mainMod -> [ mainMod ]

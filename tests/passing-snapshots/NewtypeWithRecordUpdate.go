@@ -58,24 +58,44 @@ func Get_Main_rec2() gopurs_runtime.Value {
 				b float64
 				c float64
 			} {
-				clone := func() struct {
-					a float64
-					b float64
-					c float64
-				} {
-					orig := Get_Main_rec1()
-					_ = orig
-					clone := struct {
+				orig := func() gopurs_runtime.Value {
+					orig := func() struct {
 						a float64
 						b float64
 						c float64
-					}{}
-					clone.a = gopurs_runtime.RecordGet(orig, "a").FloatVal()
-					clone.b = gopurs_runtime.RecordGet(orig, "b").FloatVal()
-					clone.c = gopurs_runtime.RecordGet(orig, "c").FloatVal()
-					return clone
+					} {
+						clone := func() struct {
+							a float64
+							b float64
+							c float64
+						} {
+							orig := Get_Main_rec1()
+							_ = orig
+							clone := struct {
+								a float64
+								b float64
+								c float64
+							}{}
+							clone.a = gopurs_runtime.RecordGet(orig, "a").FloatVal()
+							clone.b = gopurs_runtime.RecordGet(orig, "b").FloatVal()
+							clone.c = gopurs_runtime.RecordGet(orig, "c").FloatVal()
+							return clone
+						}()
+						clone.a = 1.0
+						return clone
+					}()
+					_ = orig
+					return gopurs_runtime.RecordDict3("a", "b", "c", gopurs_runtime.Float(orig.a), gopurs_runtime.Float(orig.b), gopurs_runtime.Float(orig.c))
 				}()
-				clone.a = 1.0
+				_ = orig
+				clone := struct {
+					a float64
+					b float64
+					c float64
+				}{}
+				clone.a = gopurs_runtime.RecordGet(orig, "a").FloatVal()
+				clone.b = gopurs_runtime.RecordGet(orig, "b").FloatVal()
+				clone.c = gopurs_runtime.RecordGet(orig, "c").FloatVal()
 				return clone
 			}()
 			_ = orig

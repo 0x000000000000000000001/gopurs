@@ -73,11 +73,16 @@ typeArguments metadata modNameStr fallbackArity vars = case _ of
   ADT name _ args ->
     let
       mapped = map (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr) args
-      arity = case Map.lookup name metadata.pointerAdtPaths of
-        Just info -> info.arity
-        Nothing -> fromMaybe (Array.length mapped) fallbackArity
+      arity = fromMaybe
+        (case Map.lookup name metadata.pointerAdtPaths of
+          Just info -> info.arity
+          Nothing -> Array.length mapped)
+        fallbackArity
     in
-      Array.take arity mapped
+      -- An opaque type introduced by unsafeCoerce can hide constructor
+      -- parameters. Its shorter argument list cannot instantiate this layout.
+      if Array.length mapped < arity then Array.replicate arity TypeValue
+      else Array.take arity mapped
   _ -> map (const TypeValue) vars
 
 data ConstructionForm = Definition | Saturated
@@ -111,7 +116,7 @@ prepare form metadata modNameStr fallbackModule name ctorType =
       _, _ -> typeArguments metadata modNameStr (Just (Array.length fields.vars)) fields.vars ctorType
     typeArgs = case form of
       Definition -> fieldTypeArgs
-      Saturated -> typeArguments metadata modNameStr Nothing (fromMaybe [] (map _.vars ctorLayout.constructorFields)) ctorType
+      Saturated -> typeArguments metadata modNameStr (Just (Array.length fields.vars)) fields.vars ctorType
     pointerType = structPointer identity typeArgs
     leafPointerType = map
       (\leaf ->

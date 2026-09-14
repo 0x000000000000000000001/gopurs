@@ -155,7 +155,12 @@ capitalize s =
     else s
 
 sanitizeName :: String -> String
-sanitizeName name =
+sanitizeName = memoizeName sanitizeNameUncached
+
+foreign import memoizeName :: (String -> String) -> String -> String
+
+sanitizeNameUncached :: String -> String
+sanitizeNameUncached name =
   let
     s1 = String.replaceAll (Pattern "/") (Replacement "_slash_")
       $ String.replaceAll (Pattern "\\") (Replacement "_bslash_")

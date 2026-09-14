@@ -35,7 +35,17 @@ constructors { pointerAdtPaths, enumAdts, elidedCtors, classDeclsFields } modNam
             Just info ->
               let
                 typeParamsGetter = if Array.null decl.vars then "" else "[" <> String.joinWith ", " (map (const "gopurs_runtime.Value") decl.vars) <> "]"
-                cases = Array.mapWithIndex (\i f -> "\t\tcase \"" <> f.name <> "\": return gopurs_runtime.Box(c.V" <> show i <> ")") info.fields
+                cases = Array.mapWithIndex
+                  (\i f ->
+                    let
+                      field = "c.V" <> show i
+                      -- Enum fields store constructor tags, not boxed foreign integers.
+                      boxed = case Array.index goFieldTypes i of
+                        Just TypeUint32 -> "gopurs_runtime.Value{Type: 9, IntVal: int64(" <> field <> ")}"
+                        _ -> "gopurs_runtime.Box(" <> field <> ")"
+                    in
+                      "\t\tcase \"" <> f.name <> "\": return " <> boxed)
+                  info.fields
                 pkgNameStr = String.replaceAll (Pattern ".") (Replacement "_") (unwrap mod.name)
                 baseStructName = "Data_" <> pkgNameStr <> "_" <> sanitizeName ctor.name
                 hashStr = hashString baseStructName
