@@ -8,7 +8,7 @@ Ce plan couvre **gopurs et les 50 bibliothèques locales `gopurs-*`** : sources 
 
 La priorité est la compréhension et la maintenance. **Le nombre de `.mjs` n’est plus un critère de réussite autonome.** Les scripts temporaires disparaissent ; la logique et les tests qui appartiennent à PureScript y sont intégrés ; une petite interface technique peut rester en JavaScript si sa nécessité et son fonctionnement sont clairs. Un changement d’extension ou de dossier ne suffit pas à améliorer le code.
 
-Le présent travail prépare uniquement le plan. Sa mise en œuvre se fera ensemble, lot par lot.
+La mise en œuvre se fait ensemble, lot par lot. Le bilan en fin de document suit les lots réalisés.
 
 ## Manière de travailler
 
@@ -58,7 +58,7 @@ La taille d’un fichier sert à choisir où regarder, pas à décider de le dé
 
 ## Lots
 
-- [ ] **1 — Établir la carte et les références des 51 dossiers.**
+- [x] **1 — Établir la carte et les références des 51 dossiers.**
 
   Inventorier les fichiers suivis et non suivis pertinents, les points d’entrée, les exports, les compagnons FFI, les configurations, les dépendances et les sorties générées. Identifier le propriétaire et les consommateurs de chaque famille. Repérer les usages dynamiques et les différences upstream/local avant toute suppression.
 
@@ -220,4 +220,172 @@ La taille d’un fichier sert à choisir où regarder, pas à décider de le dé
 
 ## Bilan des lots
 
-À remplir au fil du travail, en quelques lignes par lot : périmètre revu, décisions expliquées ensemble, changements utiles, éléments conservés volontairement et résultat des contrôles. Aucun lot d’implémentation de ce nouveau plan n’est encore réalisé.
+Le lot 1 est réalisé ci-dessous. Les bilans suivants préciseront le périmètre réellement revu, les décisions, les changements conservés et le résultat des contrôles.
+
+### Lot 1 — carte et référence du 14 septembre 2026
+
+**Terminé pour l'inventaire et l'attribution.** Aucun fichier source n'est
+déclaré revu en profondeur à ce stade. Les choix de langage, de découpage et de
+commandes des lots suivants restent à examiner ensemble. Ce lot ajoute la
+carte ci-dessous et le contexte durable dans [l'architecture](docs/architecture.md#carte-des-dépôts-et-des-consommateurs)
+et [les validations](docs/testing.md#référence-du-lot-1-de-maintenance--14-septembre-2026).
+
+#### Périmètre et suivi des fichiers
+
+Les **51 dépôts** contiennent **2 255 fichiers suivis et 2 fichiers non suivis**
+pertinents, soit **2 257 entrées attribuées individuellement**. Les deux ajouts
+locaux sont `gopurs-quickcheck/spago.yaml` et
+`gopurs-quickcheck/src/Test/QuickCheck/Gen.go` ; ils sont conservés. Les 14
+fichiers ignorés présents hors répertoires de dépendances/sorties comprennent
+les deux artefacts de build gopurs, dix lockfiles locaux et deux fichiers REPL.
+Les dépendances installées et les sorties générées ont été distinguées des
+sources maintenues ; elles ne constituent pas des fichiers source revus.
+
+Dans la table, **S/T/O/C/D** compte les fichiers restant à revoir : sources
+(compagnons inclus), tests/exemples/benchmarks/données, outils, configurations,
+documentation/licences. Les liens symboliques suivis comptent comme une entrée.
+Les dossiers d'intégration de `spec` appartiennent à T, y compris leurs
+configurations et sorties attendues. Toutes les colonnes restent ouvertes
+pour la revue interne prévue par la grille ; cartographier n'en retire aucun.
+
+- **S et T** : lot indiqué pour la bibliothèque. Pour gopurs, S se répartit
+  entre lots **5 : 10**, **6 : 14**, **7 : 13**, **8 : 6** fichiers ; T contient
+  **490** fixtures/compagnons, **376** snapshots et **11** tests Node, au lot 3.
+  Les tests Go du parser sont comptés dans S/lot 8 avec leur source canonique.
+- **O : lot 4**, **C : lot 2**, **D : lot 15** dans chaque dépôt, avec mise à
+  jour du contexte dans le lot concerné. `bin/pkg` appartient à C. La revue des
+  interfaces des outils et du parser associe les lots 4, 7 et 8.
+- **G : 2 fichiers distribués suivis**, hors S/T/O/C/D : `ffi_gen.wasm` et
+  `wasm_exec.js` de gopurs, à vérifier par leur reconstruction au lot 8.
+
+Le solde global est **S 516 / T 1 098 / O 63 / C 404 / D 174 / G 2**.
+Une clôture partielle devra indiquer les chemins réellement examinés et
+actualiser ce solde ; elle ne peut pas valider une famille par échantillonnage.
+Le manifeste temporaire fournit chaque chemin, son état Git, son lot, son
+type de fichier et son empreinte. Si `/tmp` a été purgé, repartir de
+`git ls-files --cached --others --exclude-standard` dans chacun des 51 dépôts,
+inventorier séparément les fichiers ignorés utiles, puis appliquer les familles
+ci-dessus et les listes de modules des lots 5–8. Les fichiers nouvellement
+ajoutés restent eux aussi à attribuer avant le bilan final du lot 15.
+
+#### Dossiers, API et commandes actuelles
+
+Chaque dépôt est propriétaire des API et compagnons mentionnés sur sa ligne.
+Leur consommation passe par les imports PureScript et la résolution Spago,
+puis par les bridges Go ou la FFI JavaScript selon le parcours. Les quatre
+bibliothèques sans compagnon dans `src/` sont `catenable-lists`,
+`js-promise-aff`, `run` et `variant` ; elles consomment les représentations de
+leurs dépendances. Les relations d'imports, de réexports et d'overrides sont
+inventoriées dans le détail temporaire ; les consommateurs par phase et les
+usages dynamiques sont expliqués dans l'architecture.
+
+Les commandes sont à lancer depuis le dépôt de la ligne :
+
+- **B** : `npm run build` ; `./bin/test [fixture]`, `./bin/modtest [paquet]`,
+  `npm run test:runner`, `npm run test:ffi` ; parser : `go test ./...` dans
+  `tools/ffi-gen`. `build:runtime` et `build:ffi` reconstruisent leurs artefacts.
+- **G** : `./bin/test` ; `-c` reconstruit aussi gopurs. Le script compile avec
+  Spago, appelle `../gopurs/bin/gopurs --main Test.Main`, compile Go et lance
+  `output/go_test_app`. **†** indique un nettoyage qui touche aussi les frères.
+- **A†** : `./bin/test` d'assert ; build PureScript, génération Go sans `--main`,
+  puis `go build ./...`, sans exécution d'une suite.
+- **Q** : `npm run build` et `npm test` déclarent Pulp/JavaScript ; aucun
+  `bin/test` Go. La configuration Spago locale déclare le paquet et ses
+  dépendances, sans déclarer de suite `package.test`.
+
+Ces commandes décrivent les entrées existantes, pas 51 parcours tous validés.
+Les autres scripts npm/Pulp/Spago, benchmarks et workflows CI sont recensés
+avec leurs configurations. Leur revue appartient aux lots 2 et 4 ; ils ne sont
+pas remplacés par une nouvelle commande commune dans ce lot.
+
+| Dépôt | Rôle et API principales | Commandes | S/T/O/C/D à revoir | Lot S/T |
+| --- | --- | --- | --- | --- |
+| `gopurs` | Compilateur TAST → Go ; `Main`, `Gopurs.*` | B | 43/877/13/8/7 | 3, 5–8 |
+| `gopurs-aff` | Fibres, annulation, finaliseurs ; `Effect.Aff.*` | G† | 5/3/1/10/5 | 11 |
+| `gopurs-argonaut-core` | Valeurs et parser JSON ; `Data.Argonaut.*` | G† | 7/3/1/10/5 | 10 |
+| `gopurs-arrays` | Tableaux purs, non vides et ST ; `Data.Array.*` | G† | 15/11/1/7/3 | 9 |
+| `gopurs-assert` | Assertions ; `Test.Assert` | A† | 3/0/1/6/3 | 9 |
+| `gopurs-avar` | Variables asynchrones ; `Effect.AVar`, `Effect.Aff.AVar` | G† | 4/1/1/11/4 | 11 |
+| `gopurs-catenable-lists` | Listes et files concaténables ; `Data.CatList`, `Data.CatQueue` | G† | 2/21/1/8/3 | 10 |
+| `gopurs-console` | Sortie console ; `Effect.Console`, `Effect.Class.Console` | G† | 4/2/2/7/3 | 9 |
+| `gopurs-datetime` | Dates, instants, heures, intervalles et générateurs ; `Data.Date*`, `Data.Time*`, `Data.Interval*` | G† | 22/1/1/7/3 | 12 |
+| `gopurs-effect` | Effets synchrones et non curryfiés ; `Effect.*` | G† | 10/1/1/6/2 | 9 |
+| `gopurs-enums` | Énumération, bornes et génération ; `Data.Enum.*` | G† | 5/3/1/6/3 | 9 |
+| `gopurs-exceptions` | Exceptions et variantes partielles ; `Effect.Exception.*` | G† | 4/1/1/6/3 | 9 |
+| `gopurs-foldable-traversable` | Plis et traversées indexées ou bifonctorielles ; `Data.Foldable*`, `Data.Traversable*` | G† | 17/3/1/7/3 | 9 |
+| `gopurs-foreign` | Valeurs étrangères, index et clés ; `Foreign.*` | G† | 8/12/1/6/3 | 10 |
+| `gopurs-foreign-object` | Objets et variantes ST ; `Foreign.Object.*` | G† | 12/4/1/7/3 | 10 |
+| `gopurs-free` | Free/Cofree, trampoline, Yoneda ; `Control.Monad.Free`, `Control.Comonad.Cofree` | G† | 9/17/1/8/4 | 11 |
+| `gopurs-functions` | Appels non curryfiés ; `Data.Function.Uncurried` | G | 3/1/1/6/3 | 9 |
+| `gopurs-integers` | Entiers et opérations binaires ; `Data.Int.*` | G† | 6/2/1/7/3 | 9 |
+| `gopurs-js-bigints` | Grands entiers ; `JS.BigInt` | G | 3/1/1/4/0 | 12 |
+| `gopurs-js-date` | Interface date historique JavaScript ; `Data.JSDate` | G† | 3/3/1/15/4 | 12 |
+| `gopurs-js-promise` | Promesses, rejet et variante différée ; `Promise.*` | G† | 8/3/1/7/3 | 11 |
+| `gopurs-js-promise-aff` | Conversion Promise/Aff ; `Promise.Aff` | G† | 1/3/1/11/2 | 11 |
+| `gopurs-lazy` | Évaluation différée ; `Data.Lazy` | G | 3/1/1/6/3 | 9 |
+| `gopurs-node-buffer` | Buffers mutables, immuables, ST et encodages ; `Node.Buffer.*`, `Node.Encoding` | G† | 14/7/1/9/3 | 13 |
+| `gopurs-node-event-emitter` | Événements et symboles ; `Node.EventEmitter.*`, `Node.Symbol` | G† | 6/2/1/8/2 | 13 |
+| `gopurs-node-fs` | Fichiers sync/async/Aff et métadonnées ; `Node.FS.*` | G† | 18/6/1/7/3 | 13 |
+| `gopurs-node-http` | HTTP/HTTPS, requêtes, réponses et serveurs ; `Node.HTTP.*`, `Node.HTTPS` | G† | 22/2/1/7/3 | 13 |
+| `gopurs-node-net` | Sockets, adresses et serveurs ; `Node.Net.*` | G† | 16/1/1/7/3 | 13 |
+| `gopurs-node-path` | Chemins ; `Node.Path` | G† | 3/1/1/7/3 | 13 |
+| `gopurs-node-process` | Processus et plateforme ; `Node.Process`, `Node.Platform` | G† | 4/1/1/7/3 | 13 |
+| `gopurs-node-streams` | Flux et adaptation Aff ; `Node.Stream.*` | G† | 4/16/1/8/3 | 13 |
+| `gopurs-now` | Horloge ; `Effect.Now` | G† | 3/1/1/10/5 | 12 |
+| `gopurs-nullable` | Valeur nullable ; `Data.Nullable` | G† | 3/4/1/11/5 | 10 |
+| `gopurs-numbers` | Nombres, approximation et formatage ; `Data.Number.*` | G† | 7/1/1/6/3 | 9 |
+| `gopurs-ordered-collections` | Maps et ensembles ordonnés ; `Data.Map.*`, `Data.Set.*` | G† | 7/7/1/6/3 | 10 |
+| `gopurs-partial` | Calculs partiels ; `Partial.*` | G† | 6/1/1/7/3 | 9 |
+| `gopurs-prelude` | Classes, primitives, instances et réexports ; `Prelude`, `Control.*`, `Data.*` | G† | 85/7/1/7/3 | 9 |
+| `gopurs-quickcheck` | Tests de propriétés, générateurs et instances ; `Test.QuickCheck.*` | Q | 5/1/0/7/4 | 14 |
+| `gopurs-random` | Aléa avec effets ; `Effect.Random` | G† | 3/1/1/7/3 | 12 |
+| `gopurs-record` | Construction, copie et union de records ; `Record.*` | G† | 7/2/1/7/3 | 10 |
+| `gopurs-refs` | Références mutables ; `Effect.Ref` | G† | 3/1/1/7/3 | 9 |
+| `gopurs-run` | Effets extensibles et interpréteurs ; `Run.*` | G† | 7/7/1/7/2 | 11 |
+| `gopurs-spec` | Arbre de tests, reporters et runner ; `Test.Spec.*` | G† | 29/30/1/11/12 | 14 |
+| `gopurs-st` | Mutation locale, références et appels non curryfiés ; `Control.Monad.ST.*` | G† | 10/1/1/8/3 | 9 |
+| `gopurs-strings` | Chaînes, points/unités de code et regex ; `Data.String.*`, `Data.Char.*` | G† | 28/10/1/8/3 | 9 |
+| `gopurs-strings-extra` | Opérations de chaînes supplémentaires ; `Data.String.Extra` | G | 3/1/1/15/5 | 9 |
+| `gopurs-unfoldable` | Dépliages ; `Data.Unfoldable`, `Data.Unfoldable1` | G† | 6/1/1/6/3 | 9 |
+| `gopurs-unsafe-coerce` | Coercition non vérifiée ; `Unsafe.Coerce` | G† | 3/1/1/8/3 | 9 |
+| `gopurs-uuid` | Identifiants UUID ; `Data.UUID` | G† | 3/1/1/11/3 | 12 |
+| `gopurs-variant` | Sommes extensibles ; `Data.Variant.*`, `Data.Functor.Variant` | G† | 3/4/1/9/2 | 10 |
+| `gopurs-yoga-json` | Encodage/décodage JSON générique ; `Yoga.JSON.*` | G† | 11/6/1/10/5 | 10 |
+
+#### Référence, constats et limites
+
+Les 51 dossiers sont attribués ; le parcours build → TAST → métadonnées →
+monomorphisation → PBO → génération/bridges → Go → exécution est relié à ses
+propriétaires. Le TAST du fork et ses types enrichis restent le contrat
+d'entrée. Les **22 paquets core**, les **49 runners frères** et la liste des
+**50 bibliothèques locales** sont trois ensembles distincts.
+
+Référence fraîche : **43 tests Node réussis**, tests Go du parser réussis,
+**373 fixtures listées** et **49 runners listés**. Le jalon
+`altbak.pub/bin/go/run -c` réussit : **300 TAST**, **387 fichiers Go identiques
+octet par octet à l'état d'entrée**, **14 résultats fonctionnels**. Le manifeste
+npm inclut les artefacts distribués attendus. Les versions d'outils, commits,
+sorties fonctionnelles et limites d'accès aux caches sont consignés dans
+[docs/testing.md](docs/testing.md#référence-du-lot-1-de-maintenance--14-septembre-2026).
+Aucun résultat de performance n'est déduit de cette campagne.
+
+Les exceptions durables sont documentées : deux ajouts QuickCheck non suivis,
+45 runners nettoyant les frères, six noms de dossiers absents référencés dans
+les configurations, différences de noms Spago, entrées de tests à clarifier,
+cinq modules étrangers sans compagnon Go adjacent et absence de README/licence
+suivie dans `js-bigints`. La résolution Aff hors ligne réussit malgré ses trois
+entrées absentes ; ces constats n'imposent donc pas tous une correction.
+
+Les usages dynamiques sont repérés et les sources de 33 bibliothèques ont été
+comparées aux versions du registre déjà en cache : **224 fichiers identiques,
+36 différents et 79 ajouts**, avec versions et chemins conservés temporairement.
+QuickCheck correspond au tag upstream v8.0.1 pour ses fichiers suivis. Aucune
+comparaison aux derniers HEAD upstream ni revue interne complète n'est revendiquée.
+
+Preuves et listes détaillées : `/tmp/gopurs-lot1-20260914/` contient
+`inventory.json`, `files.tsv`, `dynamic-uses.tsv`, `registry-comparison.json`,
+les listes de fixtures/runners, les manifestes et les logs des validations.
+Ce sont des données temporaires ; la carte, les responsabilités, les résultats
+et les exceptions utiles sont conservés dans ce todo et les documents existants.
+Les lots **2 à 15 restent ouverts** ; aucun refactoring, changement de
+configuration, suppression de fichier ni commit n'a été réalisé par ce lot.

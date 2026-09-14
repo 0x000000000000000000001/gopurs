@@ -149,3 +149,90 @@ Le contrôle `ArrayRoundtrip -c --keep-workspace` du 14 septembre confirme les
 singleton pair consigné le 9 septembre ne se reproduit plus : le résultat est
 `8`. Cette vérification n'a nécessité aucune modification du compilateur ;
 elle ne désigne pas la cause ni la correction de l'ancien échec.
+
+## Référence du lot 1 de maintenance — 14 septembre 2026
+
+Cette référence accompagne la [carte des 51 dépôts](../todo.md#lot-1--carte-et-référence-du-14-septembre-2026).
+Elle vérifie les points d'entrée et les comportements ci-dessous ; la revue
+interne de tous les fichiers et la campagne des bibliothèques restent à faire.
+
+| Contrôle exécuté | Résultat et portée |
+| --- | --- |
+| `node --test tools/*.test.mjs` | Les 11 fichiers passent : **43 tests**, aucun échec ni cas ignoré ; utilise les modules PureScript compilés de gopurs. |
+| `go test -count=1 ./...` dans `tools/ffi-gen` | Réussite des tests natifs du parser, sans réutiliser un résultat de test en cache. |
+| `./bin/test --list` | **373 fixtures** sélectionnées ; les neuf exclusions restent appliquées. Ce contrôle ne compile ni n'exécute ces fixtures. |
+| `./bin/modtest --all --list` | **49 bibliothèques** sélectionnées ; QuickCheck est absent faute de `bin/test`. Les scripts frères n'ont pas été exécutés. |
+| `bin/go/run -c` depuis altbak.pub | Build du backend et du bundle, compilation de l'application, génération et compilation Go, puis **14 cas pure réussis**. |
+| Comparaison altbak avant/après | **300 TAST et 387 fichiers Go identiques octet par octet**, chemins inclus. Empreintes prises avant le nettoyage de `-c`. |
+| `npm pack --dry-run --ignore-scripts --json` | Le manifeste npm contient le bundle, le lanceur, le runner FFI, le WASM et `wasm_exec.js`. L'installation autonome n'a pas été rejouée dans ce lot. |
+| `spago ls deps --offline --json` sur une copie temporaire de la configuration Aff | Résolution réussie avec Spago 1.0.4, sans lockfile initial ; les chemins locaux ont été rendus absolus pour préserver leur destination. Pas de compilation d'Aff. |
+
+Les 14 sorties fonctionnelles d'altbak, dans l'ordre de `src/App.purs`, sont :
+
+```text
+AST=7, Fibonacci=55, List=202950, TCO=100000, Records=20000,
+Ackermann=125, Church=100000, Primes=21536, RBTree=22,
+Polymorphism=10000000, State=1200, Lazy=1000000, Array=202950, RowToList=5
+```
+
+Les sources de référence sont gopurs `f1fa7ef6`, PBO Go `574c72e6`, fork
+PureScript `40840b3e` et altbak `1d141427`. Le binaire TAST effectivement appelé
+par altbak annonce `0.15.16 [development build; commit: a6a9864… DIRTY]` : ce
+contrôle ne prouve pas qu'il a été reconstruit depuis le HEAD du fork.
+Node est en **24.8.0** et Go en **1.27.0**. Le build npm de gopurs sélectionne
+Spago **0.93.45** et `purs` **0.15.16** dans `node_modules/.bin`. Le script altbak
+sélectionne Spago **1.0.4** et le binaire TAST via `run/bak/js/node_modules/.bin`.
+Le `PATH` interactif seul désignait Spago **1.0.3** et `purs` **0.15.15** : ne
+pas assimiler les commandes d'un shell, de npm et d'altbak.
+
+L'environnement restreint empêchait initialement l'écriture dans les caches
+Go et SQLite de Spago. Les contrôles Go ont utilisé un `GOCACHE` dans `/tmp` ;
+Spago a ensuite été exécuté avec accès à son cache habituel. Ces premiers
+arrêts sont des limites d'accès de l'environnement, pas des régressions du
+compilateur. Les preuves et journaux sont temporaires dans
+`/tmp/gopurs-lot1-20260914/`. Les résultats fonctionnels ci-dessus sont la
+référence durable ; les performances restent à comparer aux baselines du
+README d'altbak, sans conclusion tirée de ce seul run.
+
+## Limites de configuration et de couverture relevées au lot 1
+
+- **45 des 49 `bin/test` frères** nettoient aussi les `output`, `.spago` et
+  `.cache` des autres `gopurs-*`. Les quatre nettoyages limités au paquet sont
+  ceux de `functions`, `lazy`, `js-bigints` et `strings-extra`. Ce dernier
+  lance aussi `go get github.com/iancoleman/strcase`. Revue au lot 4.
+- `gopurs-assert/bin/test` vérifie la compilation avec `go build ./...`, sans
+  suite exécutable. Les 48 autres runners frères ciblent `Test.Main`.
+  `gopurs/spago.yaml` déclare ce module sans source de suite correspondante ;
+  les fixtures de `tests/passing` ne sont pas une suite Spago `Test.Main`.
+  `node-net` possède `test/Main.purs`, mais sa configuration ne déclare pas
+  `package.test`. La configuration locale de QuickCheck n'en déclare pas non
+  plus. Attribution aux lots 2, 3, 13 et 14, selon le propriétaire.
+- **42 bibliothèques** ont un `spago.yaml` suivi qui pointe vers
+  `spago.go.yaml`. Les fichiers Bower, Dhall, npm, CI et les compagnons JS
+  décrivent encore d'autres parcours. Une commande `npm test` peut lancer
+  Pulp/JavaScript, et n'est pas interchangeable avec `bin/test`.
+- Les configurations actives citent six dossiers absents : `js-uri` et
+  `simple-json` dans 41 paquets chacun, `test` dans 40, `safe-coerce` dans
+  `effect` et `functions`, `math` et `starter` dans `unfoldable`. **Le contrôle
+  Aff ci-dessus réussit avec ses trois entrées absentes** : une entrée inutilisée
+  d'`extraPackages` n'est pas un blocage démontré. Le lot 2 doit vérifier la
+  résolution utile à chaque paquet avant de modifier ces configurations.
+- Les noms Spago de `js-promise`, `js-promise-aff`, `node-path` et
+  `node-process` contiennent le préfixe `gopurs-`, alors que les overrides
+  utilisent aussi les noms sans préfixe. Leurs interfaces et chemins sont
+  recensés ; leur harmonisation éventuelle appartient au lot 2.
+- Cinq modules de bibliothèque ont des imports étrangers avec un compagnon
+  JS et aucun compagnon Go adjacent : `Foreign.Keys`,
+  `Foreign.Object.ST.Unsafe`, `Foreign.Object.Unsafe`, `Node.Encoding` et
+  `Node.Symbol`. La recherche FFI et les traitements intrinsèques doivent être
+  suivis avant de conclure à un défaut ; leur couverture Go n'est pas établie
+  par ce lot. Revue aux lots 7, 10 et 13.
+- Sept lockfiles Spago ignorés sont présents dans `aff`, `argonaut-core`,
+  `avar`, `js-date`, `now`, `nullable` et `strings-extra`. Trois lockfiles npm
+  ignorés sont présents dans `node-fs`, `node-http` et `node-process`. Ils
+  appartiennent à l'état local observé, sans garantie qu'un clone neuf les
+  reconstruise à l'identique ; revue au lot 2.
+
+Les écarts de snapshots et les campagnes non exécutées décrits plus haut
+restent ouverts. Le lot 1 n'établit ni un build intégral de chaque bibliothèque,
+ni une validation réseau/FS/Aff, ni un build sans caches de dépendances.

@@ -142,3 +142,103 @@ Le backend ne purge pas les anciens fichiers de `output` lorsqu'un module ou
 une FFI disparaît. Pour comparer deux générateurs, conserver les mêmes entrées
 TAST et inventorier les sorties ; pour une fixture, le runner fournit un
 workspace neuf. Voir [les vérifications](testing.md).
+
+## Carte des dépôts et des consommateurs
+
+Le [suivi du lot 1](../todo.md#lot-1--carte-et-référence-du-14-septembre-2026)
+attribue les **51 dépôts indépendants** et toutes leurs familles de fichiers.
+Le répertoire parent `gopurs/` est leur conteneur ; son `output/` et son fichier
+IDE `.psc-ide-port` ne constituent pas une bibliothèque supplémentaire.
+Les noms publics sont ceux des déclarations `module` et de leurs exports,
+indépendamment du préfixe `gopurs-` des répertoires.
+
+| Famille et propriétaire | Entrées → traitement → sorties | Consommateurs et revue |
+| --- | --- | --- |
+| Configuration de chaque dépôt | `package.json`, Bower/Dhall, Spago et lockfiles → choix des outils, dépendances et sources | npm, Spago, Pulp, CI et éditeurs ; lot 2 |
+| Build de gopurs | `runtime/runtime.go` → `embed-runtime.mjs` → `Runtime.js` ; `src/**/*.purs` et FFI JS → Spago/esbuild → `bin/gopurs.js` | npm `prepare`, `bin/gopurs`, runners et applications ; lot 4 |
+| Entrée et pipeline gopurs | TAST de l'application → métadonnées → monomorphisation → PBO → émetteurs → AST/printer | Fichiers Go et signatures utilisées par les modules suivants ; lots 5–7 |
+| Bibliothèque `gopurs-*` | `src/**/*.purs` → modules publics, réexports, instances et signatures étrangères ; compagnons `.go`/`.js` | Imports des autres paquets, des applications et des tests ; lots 9–14 |
+| Bridge gopurs et FFI de bibliothèque | Chemin source du TAST + `.go` → recherche PBO → parser → déclarations JSON → rapprochement avec les types → `<Module>_ffi.go` | Programme Go généré ; lot 7 et lot de la bibliothèque |
+| Runtime gopurs | Source Go canonique → chaîne d'embarquement ci-dessus → `output/gopurs_runtime/runtime.go` | Go généré, bridges et FFI des bibliothèques ; lot 8 |
+| Parser gopurs | `tools/ffi-gen/{parser,types,main_js_wasm}.go` → build Go `js/wasm` → `ffi_gen.wasm`, avec `wasm_exec.js` du même Go | `ffi-runner.mjs`, puis `FfiSupport` ; lots 4 et 8 |
+| Tests de gopurs | Fixtures et compagnons, snapshots, AST construits par les tests Node, cas Go du parser | Runners Node, modules PureScript compilés et Go ; lots 3, 4 et 8 |
+| Tests, exemples et benchmarks des bibliothèques | `test/`, `example(s)/`, `bench/`, `benchmark/`, `integration-tests/`, compagnons et données | `bin/test`, commandes npm/Pulp/Spago et CI propres au paquet ; lots 4 et 9–14 |
+| Documentation de chaque dépôt | README, guides, licences, images et docs | Utilisateurs et mainteneurs ; lot 15, avec contexte actualisé dans chaque lot |
+
+`bin/pkg` déclare **22 paquets core**, consommés par `bin/setup` et le runner
+de fixtures. La liste complète de `bin/modtest` est découverte au lancement :
+**49 frères ont un `bin/test` exécutable**, sur 50 bibliothèques. QuickCheck
+n'en a pas. Une entrée dans `extraPackages` est un choix de résolution, pas la
+preuve qu'un paquet appartient aux dépendances effectivement utilisées.
+La compilation du backend emploie son propre graphe Spago : PBO local, plus
+les overrides `st`, `unsafe-coerce` et `assert`. Le graphe de l'application
+détermine les bibliothèques et FFI Go qu'elle utilise.
+
+## Usages qui échappent à une recherche d'imports
+
+Avant de supprimer un fichier ou un export, suivre aussi ces entrées :
+
+- `Main` découvre les exports `main` quand `--main` est absent. Le parseur PBO
+  lit les TAST depuis `output`, sans import de fichier explicite dans gopurs.
+- `findFfiFile` du PBO essaie d'abord le compagnon du `modulePath` TAST, puis
+  les répertoires FFI et Spago. Une FFI Go peut donc être consommée sans aucun
+  import textuel vers son chemin. La FFI JS est sélectionnée par le compilateur
+  PureScript pour les outils et parcours JavaScript conservés.
+- `FfiSupport.js` résout le runner relativement à la source, au module compilé
+  ou au bundle. Le runner instancie le WASM et appelle le global `parseFFI`
+  enregistré par `main_js_wasm.go` ; cette fonction n'a pas d'import JS ordinaire.
+- Les tests Node importent `output/Gopurs.*/index.js` et construisent les AST
+  avec leurs exports. Les supprimer du bundle ou renommer un constructeur
+  demande de vérifier ces consommateurs au lot 3.
+- Le runner découvre les fixtures par répertoire et lit `@dependencies` et
+  `@snapshot-ffi`. Il copie aussi les fichiers et répertoires compagnons.
+  Les snapshots et données d'entrée ne sont pas des sorties jetables.
+- Le runtime consulte notamment `StructGetters` par tag et emploie `reflect`
+  pour des conversions de champs. Les noms et enregistrements générés font
+  partie de ce contrat, même sans appel statique visible dans une bibliothèque.
+- `gopurs-spec/test/Integration.purs` découvre les sous-répertoires de
+  `integration-tests/cases`, leurs sorties attendues et `env-template`.
+  `gopurs-console/scripts/test` est appelé par npm et compare la sortie à
+  `test/expected_output.txt`. Des commandes npm de benchmarks et de chaînes
+  importent également les modules compilés directement.
+
+## Provenance et sources à conserver
+
+L'inventaire du lot 1 sépare fichiers suivis, fichiers locaux non suivis,
+artefacts ignorés et dépendances installées. Les attributs Linguist des dépôts
+masquent largement le PureScript et le JavaScript : `linguist-generated` ou
+`linguist-vendored` n'établit pas à lui seul qu'un fichier est reconstructible.
+
+46 bibliothèques ont un remote `upstream`, mais aucune référence locale
+`upstream/*` n'était disponible lors de l'inventaire. Le backend,
+`argonaut-core`, `js-bigints` et `js-date` n'ont pas ce remote ; QuickCheck a
+directement l'origin PureScript upstream et est détaché sur **v8.0.1**.
+Ses fichiers suivis correspondent à ce tag. Ses deux ajouts locaux non suivis,
+`spago.yaml` et `src/Test/QuickCheck/Gen.go`, participent à l'adaptation Go et
+restent à examiner aux lots 2 et 14.
+
+Une comparaison octet par octet de `src/` avec **33 versions du registre déjà
+présentes dans `.spago/p` de gopurs** donne 224 fichiers identiques, 36 fichiers
+différents, 79 ajouts locaux et aucun fichier manquant. Ces versions sont des
+références locales datées, pas les dernières versions upstream. Parmi les
+ajouts, 77 sont des `.go` ; les deux autres sont
+`Control/Monad/Free.js` et `Data/Map/Internal.js`. Les différences touchent
+aussi le PureScript et le JavaScript de `aff`, `argonaut-core`, `arrays`,
+`foldable-traversable`, `foreign`, `foreign-object`, `free`, `lazy`,
+`node-event-emitter`, `nullable`, `ordered-collections`, `record`, `refs` et
+`strings`. Les versions et chemins exacts sont dans l'inventaire temporaire
+mentionné au lot 1 ; les 17 autres bibliothèques n'ont pas été comparées à une
+distribution du registre dans ce contrôle. QuickCheck dispose du tag ci-dessus.
+
+Les licences sont maintenues par dépôt. `gopurs-yoga-json` conserve aussi
+`LICENCE/simple-json.LICENSE`. `gopurs-js-bigints` n'a actuellement ni README
+ni fichier de licence suivi : le lot 12 doit établir ce contexte, sans déduire
+sa provenance du seul nom du paquet.
+
+Les artefacts distribués suivis de gopurs sont `tools/ffi_gen.wasm` et
+`tools/wasm_exec.js` ; leur reconstruction est `npm run build:ffi`, avec
+Go **1.27.0** imposé par `tools/ffi-gen/go.mod`. `bin/gopurs.js` et
+`src/Gopurs/Runtime.js` sont générés et ignorés. Les `output/`, `.spago/`,
+`.purmeta/`, caches npm et `node_modules/`, y compris ceux des exemples et
+environnements d'intégration, se contrôlent par leurs entrées et leur commande
+de reconstruction. Ne pas y reporter des modifications de sources.

@@ -16,17 +16,35 @@ implementations of effects and `Aff` using goroutines.
 The project builds on [Arista's purescript-backend-optimizer](https://github.com/aristanetworks/purescript-backend-optimizer)
 and draws inspiration from Andy Arvanitis's
 [purescript-native](https://github.com/andyarvanitis/purescript-native).
-The [development log](https://discourse.purescript.org/t/leveraging-a-blazing-fast-runtime-a-new-go-backend-for-purescript)
+The [development log](https://discourse.purescript.org/t/leveraging-a-blazing-fast-runtime-a-new-go-backend-for-purescript/5841)
 records the earlier design work.
+
+## Features
+
+- **Type-guided Go generation.** TAST expression types, ADT layouts, and type-class declarations guide native records, constructors, dictionaries, and specialized functions. Partial monomorphization reduces generic representations where supported.
+- **Optimization before code generation.** The backend combines the shared optimizer with Go-specific handling of function calls, tail recursion, records, arrays, and effect thunks.
+- **Native FFI bridges.** A Go parser compiled to WebAssembly reads foreign declarations; generated wrappers adapt supported Go signatures to PureScript calls.
+- **Go runtime and library ports.** Generated programs include the runtime. The Go `Aff` port uses goroutines, and generated entrypoints wait for work registered with the runtime event loop.
 
 ## Benchmarks
 
 The [altbak README](https://github.com/0x000000000000000000001/altbak.pub#go)
-contains the reference results and benchmark context. Use those baselines when
-comparing performance; successful cleanup checks alone do not demonstrate a
-speed or memory improvement.
+contains the reference results, workloads, and benchmark context. Compare
+changes against those baselines; results depend on the workload and toolchain.
+The sequential core campaign does not establish multicore scaling.
 
-## Build the backend locally
+## Getting started
+
+### Prerequisites
+
+- Node.js and npm to build and run the backend. Node.js `24.8.0` is the documented development reference; a minimum Node version is not declared in `package.json`.
+- A TAST-capable `purs` from the compiler fork for applications, plus Spago with YAML configuration support.
+- Go to compile generated applications. Their `go.mod` declares Go 1.22; the walkthrough was checked with Go `1.27.0`, without establishing the minimum working version across library ports.
+- Git and Bash for the checkout and helper scripts.
+
+Go `1.27.0` is specifically required to rebuild the FFI parser. Ordinary backend builds use its checked-in WASM and JavaScript runtime.
+
+### Build the backend
 
 The source build currently depends on local checkouts. Keep this layout, or
 adjust the paths in [spago.yaml](spago.yaml) explicitly:
@@ -55,7 +73,12 @@ From this repository, `./bin/setup` clones the core library siblings listed in
 [bin/pkg](bin/pkg); it does not install the optimizer or the typed compiler.
 
 ```bash
-# From workspace/gopurs/gopurs, after installing the optimizer checkout:
+# From an empty workspace directory:
+git clone --branch edge-gopurs https://github.com/0x000000000000000000001/purescript-backend-optimizer.git purescript-backend-optimizer-gopurs
+mkdir gopurs
+cd gopurs
+git clone https://github.com/0x000000000000000000001/gopurs.git
+cd gopurs
 ./bin/setup
 npm ci
 ```
@@ -74,12 +97,14 @@ were used for the backend build recorded below.
 
 For **application and fixture compilation**, put a TAST-capable `purs` on
 `PATH`. A version number alone does not establish that it is the typed fork.
-The validated application toolchain uses the locally built fork and Spago
-1.0.4; `bin/test` inherits the caller's `PATH`. npm build commands prioritize
+The example below was rechecked on 14 September 2026 with the locally built
+fork and Spago 1.0.3; earlier integration checks used Spago 1.0.4; `bin/test` inherits the caller's `PATH`. npm build commands prioritize
 this repository's `node_modules/.bin`, so inspect both toolchains when diagnosing
 compiler differences. The fork currently writes the enriched format to
 `output/<Module>/corefn.json`; the name `tcorefn` describes the format, not a
-separate filename consumed by gopurs.
+separate filename consumed by gopurs. Check a generated file for `dataDecls`,
+`classDecls`, and, with the current fork, `typeTable`. If they are absent, select
+the fork explicitly on `PATH` and rebuild in a fresh output directory.
 
 A GitHub source install is not a standalone installation recipe with these
 relative build dependencies. To install an already built backend in another
@@ -98,7 +123,7 @@ install the application compiler or the Go library overrides. The local
 archive installation was checked offline in an empty npm project; rebuilding
 the backend there is unnecessary.
 
-## Compile and run an application
+### Compile and run an application
 
 For `workspace/hello`, create `src/Main.purs`:
 
@@ -153,6 +178,8 @@ The entry file is `output/main/main.go`. To build an executable from `output`,
 use `go build -o hello ./main`. Generated modules declare Go 1.22; the integration
 checks used Go 1.27.0, without establishing the oldest working Go toolchain.
 
+### Compiler options
+
 The backend reads and writes `output` in its current directory. Options used
 by the current gopurs entrypoint are:
 
@@ -164,8 +191,32 @@ by the current gopurs entrypoint are:
 
 The shared optimizer argument parser also recognizes options such as `--output`
 and `--bundle`, but `Main` does not use them to change gopurs output behavior.
+Argument values containing spaces are not supported by that parser, including
+quoted `--ffi` paths. There is no dedicated `--help` handler.
 
-## Development and validation
+## Foreign function interface
+
+Place a `.go` file beside the corresponding `.purs` file, or provide a lookup
+directory with `--ffi`. For a foreign import named `returnInt64`, export a Go
+function named `ReturnInt64`. The backend prefixes package-level declarations
+and their references, merges generated modules into the `purescript` Go package,
+and creates bridge functions using the parsed signatures and TAST types.
+
+Supported bridges handle primitive values, slices, selected records and ADTs,
+and callbacks. Their conversion rules are implemented in
+[FfiBridge](src/Gopurs/FfiBridge.purs); see the executable
+[integer FFI fixture](tests/passing/FFIIntegerReturns.purs) and its
+[Go implementation](tests/passing/FFIIntegerReturns.go) for native `int`, `int64`,
+slice, and dynamic return examples. Effect bindings must follow the thunk
+convention used by the Go library ports.
+
+The Go parser is not a general binding generator for every Go API. Confirm that
+an imported signature is supported before using it. A missing binding can
+produce a panic stub, so successful Go compilation alone does not establish FFI
+coverage. Parser and decoding failures report the PureScript module and FFI
+path and stop generation.
+
+## Development and testing
 
 Start with [the architecture map](docs/architecture.md) to locate the owner of
 a change. [Testing and validation](docs/testing.md) describes targeted fixture
@@ -178,14 +229,13 @@ coverage gaps.
 npm run test:runner
 ```
 
-For the recent cleanup batches, the agreed integration checkpoint is
-`bin/go/run -c` from `altbak.pub`. It rebuilds the backend and application,
-compiles Go and executes the 14 cases of the default `pure` campaign. The
-recorded comparisons preserved all 387 generated Go files and their functional
-outputs. This does not establish a green full `passing` or sibling-module suite.
-The [cleanup plan](todo.md) tracks the current wave; [testing and validation](docs/testing.md) records the completed checks.
+For a broader integration check, run `bin/go/run -c` from an `altbak.pub`
+checkout. It rebuilds the backend and application, compiles Go, and executes
+the 14 cases of the default `pure` campaign. See [testing and validation](docs/testing.md)
+for dated results and the exact scope of completed checks. Performance
+comparisons use the altbak baselines separately from functional validation.
 
-## Rebuilding the FFI parser
+### Rebuilding the FFI parser
 
 The Go parser lives in `tools/ffi-gen`. `parser.go` analyzes declarations and
 returns the JSON contract; `types.go` defines that contract, and
@@ -237,7 +287,7 @@ output or installed bundle, independently of the current directory.
 The parser workflow was validated with Node.js 24.8.0 and Go 1.27.0.
 See [validation and remaining limits](docs/testing.md) for the scope of the checks.
 
-## Editing the Go runtime
+### Editing the Go runtime
 
 The canonical runtime source is [`runtime/runtime.go`](runtime/runtime.go).
 Edit that file, then rebuild the backend:
@@ -258,6 +308,32 @@ When the source is unchanged, regeneration preserves the FFI file's timestamp
 so Spago can reuse its compiled output. The npm `prepare` hook runs the full
 build and includes this step automatically. Generated FFI and bundle files are
 build artifacts; commit the Go source and build tooling.
+
+## Architecture
+
+1. **Load and prepare:** [Main](src/Main.purs) loads enriched CoreFn, builds type and constructor metadata, and applies partial monomorphization.
+2. **Optimize and lower:** the optimizer produces backend modules; [CodeGen](src/Gopurs/CodeGen.purs) and the specialized `Gopurs` modules lower them to Go representations and expressions.
+3. **Print and bridge:** [Printer](src/Gopurs/Printer.purs) emits Go source; [FfiSupport](src/Gopurs/FfiSupport.purs) prepares foreign declarations for [FfiBridge](src/Gopurs/FfiBridge.purs).
+4. **Assemble and execute:** the backend writes modules, the embedded runtime, `go.mod`, and entrypoints. Go's tools resolve dependencies and compile the application.
+
+The [architecture map](docs/architecture.md) gives a detailed guide to module responsibilities.
+
+## Current status and limitations
+
+The backend remains experimental. Native representations coexist with a tagged
+`Value` runtime; general unboxing and complete library compatibility are not
+promised. Go implementations are needed for every reachable foreign binding.
+
+The fixture runner records known exclusions for integer overflow at 32-bit
+boundaries, floating-point serialization, isolated UTF-16 surrogates, and some
+compiler-feature fixtures. Go's native integer and string representations need
+care when porting code that depends on those JavaScript edge cases. See
+[the exclusions and validation gaps](docs/testing.md#exclusions-et-modules-frères).
+
+Targeted fixtures and the core benchmark campaign have recorded successful
+checks; a complete green run of all `passing` fixtures and sibling-library
+suites is not established by those results. The [development plan](todo.md)
+tracks remaining work.
 
 ## License
 
