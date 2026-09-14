@@ -45,6 +45,7 @@ import Gopurs.CodegenState as State
 import Gopurs.GoConversions as GoConversions
 import Gopurs.PrimitiveExprs as PrimitiveExprs
 import Gopurs.RecordExprs as RecordExprs
+import Gopurs.AdtExprs as AdtExprs
 
 type CodegenMetadataRow :: Row Type
 type CodegenMetadataRow = State.CodegenMetadataRow
@@ -2073,62 +2074,11 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                 GetIndex idx -> { stmts: resObj.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayAccess") [ (boxGoExpr codegenStateRef modNameStr resObj.expr resObj.exprType), GoInt idx ], exprType: TypeValue, nextId: resObj.nextId }
                 GetCtorField (Qualified mbMod _) _ _ (Ident ctorName) _ idx ->
                   let
-                    defMod = case mbMod of
-                      Just (ModuleName mod) -> String.replaceAll (Pattern ".") (Replacement "_") mod
-                      Nothing -> modNameStr
-                    structName = "Constructor_" <> defMod <> "_" <> sanitizeName ctorName
-                    key = defMod <> "." <> ctorName
-                    helpers = unsafePerformEffect (Ref.read codegenStateRef)
+                    result = AdtExprs.getField codegenStateRef modNameStr elidedCtors
+                      { moduleName: mbMod, ctorName, index: idx }
+                      { expr: resObj.expr, exprType: resObj.exprType, sourceType: getExprType obj }
                   in
-                    if Set.member structName elidedCtors then
-                      { stmts: resObj.stmts, expr: coerceGoExpr codegenStateRef modNameStr resObj.expr resObj.exprType TypeValue, exprType: TypeValue, nextId: resObj.nextId }
-                    else
-                      let
-                        fields = fromMaybe [] (map _.fields (Map.lookup key helpers.ctorTypes))
-                        monoStructName = structName
-
-                        expectedType = case Array.index fields idx of
-                          Just ty -> exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr ty
-                          Nothing -> TypeValue
-
-                        typeArgs = case resObj.exprType of
-                          TypeStructPointer _ _ _ tArgs -> tArgs
-                          _ -> case getExprType obj of
-                            ADT fullName _ tArgs ->
-                              let
-                                mapped = map (exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr) tArgs
-                                arity = case Map.lookup fullName (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths of
-                                  Just info -> info.arity
-                                  Nothing -> Array.length mapped
-                              in
-                                Array.take arity mapped
-                            _ -> case Map.lookup key helpers.ctorTypes of
-                              Just ctorInfo -> map (const TypeValue) ctorInfo.vars
-                              Nothing -> []
-
-                        isNative = case resObj.exprType of
-                          TypeStructPointer _ _ _ _ -> true
-                          _ -> false
-
-                        actualFieldType = case resObj.exprType of
-                          TypeStructPointer _ _ _ tArgs ->
-                            case Map.lookup key helpers.ctorTypes of
-                              Just ctorInfo ->
-                                let
-                                  env = Map.fromFoldable (Array.zip ctorInfo.vars tArgs)
-                                  genericTy = structFieldGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors ctorInfo.vars modNameStr (fromMaybe (TypeVar "") (Array.index fields idx))
-                                in
-                                  instantiateGenericGoType env genericTy
-                              Nothing -> expectedType
-                          _ -> expectedType
-
-                        exprAccess =
-                          if isNative then
-                            GoConstructorAccess resObj.expr monoStructName typeArgs idx true
-                          else
-                            GoConstructorAccess (boxGoExpr codegenStateRef modNameStr resObj.expr resObj.exprType) monoStructName typeArgs idx false
-                      in
-                        { stmts: resObj.stmts, expr: exprAccess, exprType: actualFieldType, nextId: resObj.nextId }
+                    { stmts: resObj.stmts, expr: result.expr, exprType: result.exprType, nextId: resObj.nextId }
 
           Update obj props ->
             let
@@ -2148,128 +2098,13 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
 
           CtorDef _ _ (Ident name) fields ->
             let
-              helpers = unsafePerformEffect (Ref.read codegenStateRef)
               annotatedType = fromMaybe (getExprType tcoExpr) mbExpectedExprType
               ctorType = case extractExprFuncType annotatedType of
                 Just { fRet } -> fRet
                 Nothing -> annotatedType
-              expectedGoType = exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr ctorType
-
-              trueModPart = case expectedGoType of
-                TypeStructPointer _ fn _ _ ->
-                  let
-                    parts = String.split (Pattern ".") fn
-                  in
-                    String.joinWith "." (Array.slice 0 (Array.length parts - 1) parts)
-                _ -> modNameStr
-
-              trueModPartUnderscores = String.replaceAll (Pattern ".") (Replacement "_") trueModPart
-
-              structName = "Constructor_" <> trueModPartUnderscores <> "_" <> sanitizeName name
-              baseStructName = "Data_" <> trueModPartUnderscores <> "_" <> sanitizeName name
-              key = trueModPartUnderscores <> "." <> name
-
-              fullName = case expectedGoType of
-                TypeStructPointer _ fn _ _ -> fn
-                _ -> if key == "Test_RBTree.E" then "Test.RBTree.Tree" else key
-
-              ctorInfo = Map.lookup key helpers.ctorTypes
-              classInfo = Map.lookup fullName helpers.classDeclsFields
-
-              fields' = case ctorInfo of
-                Just info -> info.fields
-                Nothing -> case classInfo of
-                  Just info -> map _."type" info.fields
-                  Nothing -> []
-
-              vars' = case ctorInfo of
-                Just info -> info.vars
-                Nothing -> case classInfo of
-                  Just info -> info.vars
-                  Nothing -> []
-
-              typeArgs = case ctorType of
-                ADT fullName _ tArgs ->
-                  let
-                    mapped = map (exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr) tArgs
-                    arity = case Map.lookup fullName (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths of
-                      Just info -> info.arity
-                      Nothing -> Array.length vars'
-                  in
-                    Array.take arity mapped
-                TypeApp fn arg ->
-                  let
-                    unwrapTypeApp (TypeApp f a) acc = unwrapTypeApp f (a <> acc)
-                    unwrapTypeApp other acc = Tuple other acc
-                  in
-                    case unwrapTypeApp ctorType [] of
-                      Tuple (ADT fnName _ tArgs) allArgs ->
-                        let
-                          mapped = map (exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr) (tArgs <> allArgs)
-                        in
-                          Array.take (Array.length vars') mapped
-                      _ -> map (const TypeValue) vars'
-                _ -> map (const TypeValue) vars'
-              typeArgsStr = if Array.length typeArgs > 0 then "[" <> String.joinWith ", " (map goTypeToStr typeArgs) <> "]" else ""
-              instMap = Map.fromFoldable (Array.zip vars' typeArgs)
-              coercedFields = Array.mapWithIndex
-                ( \i f ->
-                    let
-                      expectedType = case Array.index fields' i of
-                        Just ty ->
-                          let
-                            genericGoType = exprTypeToGenericGoType helpers.pointerAdtPaths helpers.enumAdts helpers.elidedCtors vars' modNameStr ty
-                          in
-                            instantiateGenericGoType instMap genericGoType
-                        Nothing -> TypeValue
-                    in
-                      coerceGoExpr codegenStateRef modNameStr (GoVar (sanitizeName f)) TypeValue expectedType
-                )
-                fields
-              isElided = Set.member structName helpers.elidedCtors
-              isPointerAdtLeaf = Map.member baseStructName helpers.pointerAdtLeaves
-              isEnum = Set.member baseStructName helpers.enumCtors
-              boxedCtor = boxGoExpr codegenStateRef modNameStr (GoConstructor (hashString baseStructName) structName typeArgs coercedFields) (TypeStructPointer baseStructName fullName (structName <> typeArgsStr) typeArgs)
-
-              finalExprType =
-                if isEnum then TypeUint32
-                else if isPointerAdtLeaf then
-                  let
-                    nodeInfo = Map.lookup baseStructName helpers.pointerAdtLeaves
-                    nodeBaseStruct = case nodeInfo of
-                      Just info -> info.nodeBaseStruct
-                      Nothing -> ""
-                    nodeCtorName = case nodeInfo of
-                      Just info -> info.nodeCtor
-                      Nothing -> ""
-                    nodeStruct = "Constructor_" <> modNameStr <> "_" <> sanitizeName nodeCtorName
-                    nodeFullPath = nodeStruct <> typeArgsStr
-                  in
-                    TypeStructPointer nodeBaseStruct fullName nodeFullPath typeArgs
-                else if Array.length fields == 0 then
-                  TypeStructPointer baseStructName fullName (structName <> typeArgsStr) typeArgs
-                else TypeValue
-
-              funcExpr =
-                if isElided then
-                  case Array.head fields of
-                    Just f -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> sanitizeName f <> " gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr (coerceGoExpr codegenStateRef modNameStr (GoVar (sanitizeName f)) TypeValue TypeValue) <> "\n}") ]
-                    Nothing -> Array.foldr (\f inner -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> sanitizeName f <> " gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr inner <> "\n}") ]) boxedCtor fields
-                else if isPointerAdtLeaf then
-                  let
-                    nodeCtorName = case Map.lookup baseStructName helpers.pointerAdtLeaves of
-                      Just info -> info.nodeCtor
-                      Nothing -> ""
-                    nodeStruct = "Constructor_" <> modNameStr <> "_" <> sanitizeName nodeCtorName <> typeArgsStr
-                  in
-                    GoRaw ("(*" <> nodeStruct <> ")(nil)")
-                else if isEnum then GoRaw (hashString baseStructName)
-                else if Array.length fields == 0 then
-                  GoConstructor (hashString baseStructName) structName typeArgs coercedFields
-                else
-                  Array.foldr (\f inner -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> sanitizeName f <> " gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr inner <> "\n}") ]) boxedCtor fields
+              result = AdtExprs.definition codegenStateRef modNameStr name fields ctorType
             in
-              { stmts: StmtEmpty, expr: funcExpr, exprType: finalExprType, nextId }
+              { stmts: StmtEmpty, expr: result.expr, exprType: result.exprType, nextId }
 
           CtorSaturated (Qualified mbMod _) _ _ (Ident name) props ->
             let
@@ -2284,76 +2119,12 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                       _ -> ty
                   else ty
 
-              expectedGoType = exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr ctorType
-
-              modPart = case mbMod of
-                Just (ModuleName mn) -> mn
-                Nothing -> modNameStr
-
-              trueModPart = case expectedGoType of
-                TypeStructPointer _ fn _ _ ->
-                  let
-                    parts = String.split (Pattern ".") fn
-                  in
-                    String.joinWith "." (Array.slice 0 (Array.length parts - 1) parts)
-                _ -> modPart
-
-              trueModPartUnderscores = String.replaceAll (Pattern ".") (Replacement "_") trueModPart
-
-              baseStructName = "Data_" <> trueModPartUnderscores <> "_" <> sanitizeName name
-              adtFullName = case ctorType of
-                ADT fn _ _ -> Just fn
-                _ -> Nothing
-
-              structName = "Constructor_" <> trueModPartUnderscores <> "_" <> sanitizeName name
-              key = trueModPartUnderscores <> "." <> name
-
-              fullName = case expectedGoType of
-                TypeStructPointer _ fn _ _ -> fn
-                _ -> if key == "Test_RBTree.E" then "Test.RBTree.Tree" else key
-
-              ctorInfo = Map.lookup key helpers.ctorTypes
-              classInfo = Map.lookup fullName helpers.classDeclsFields
-
-              fields = case ctorInfo of
-                Just info -> info.fields
-                Nothing -> case classInfo of
-                  Just info -> map _."type" info.fields
-                  Nothing -> []
-
-              vars = case ctorInfo of
-                Just info -> info.vars
-                Nothing -> case classInfo of
-                  Just info -> info.vars
-                  Nothing -> []
-
-              typeArgs = case ctorType of
-                ADT fullName _ tArgs ->
-                  let
-                    mapped = map (exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr) tArgs
-                    arity = case Map.lookup fullName (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths of
-                      Just info -> info.arity
-                      Nothing -> Array.length vars
-                  in
-                    Array.take arity mapped
-                _ -> map (const TypeValue) vars
-              instMap = Map.fromFoldable (Array.zip vars typeArgs)
+              prepared = AdtExprs.prepareSaturated codegenStateRef modNameStr mbMod name ctorType
 
               accProps = foldl
                 ( \acc (Tuple _ val) ->
                     let
-                      expectedExprType = case Array.index fields acc.fieldIdx of
-                        Just ty -> ty
-                        Nothing -> Any
-                      expectedType = case adtFullName >>= \fn -> Map.lookup fn unboxableADTs of
-                        Just adt -> fromMaybe TypeValue (Array.index adt.signature acc.fieldIdx)
-                        Nothing -> case Array.index fields acc.fieldIdx of
-                          Just ty ->
-                            let
-                              genericGoType = exprTypeToGenericGoType helpers.pointerAdtPaths helpers.enumAdts helpers.elidedCtors vars modNameStr ty
-                            in
-                              instantiateGenericGoType instMap genericGoType
-                          Nothing -> TypeValue
+                      { exprType: expectedExprType, goType: expectedType } = AdtExprs.saturatedFieldType prepared acc.fieldIdx
 
                       newBound = case unwrapTcoExpr val, extractExprFuncType expectedExprType of
                         Abs args _, Just { fArgs } ->
@@ -2382,55 +2153,7 @@ translateExprWithExpectedType codegenStateRef depth modNameStr recVars moduleFun
                 { stmts: StmtEmpty, exprs: [], exprTypes: [], exprType: TypeValue, nextId, fieldIdx: 0, constants: [] }
                 props
 
-              isElided = Set.member structName helpers.elidedCtors
-              isPointerAdtLeaf = Map.member baseStructName helpers.pointerAdtLeaves
-
-              modPart' = trueModPartUnderscores
-              monoStructName = "Constructor_" <> modPart' <> "_" <> sanitizeName name
-
-              typeArgsCtor = case ctorType of
-                ADT fullName _ tArgs ->
-                  let
-                    mapped = map (exprTypeToGoType (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths (unsafePerformEffect (Ref.read codegenStateRef)).enumAdts (unsafePerformEffect (Ref.read codegenStateRef)).elidedCtors modNameStr) tArgs
-                    arity = case Map.lookup fullName (unsafePerformEffect (Ref.read codegenStateRef)).pointerAdtPaths of
-                      Just info -> info.arity
-                      Nothing -> Array.length mapped
-                  in
-                    Array.take arity mapped
-                _ -> case Map.lookup key helpers.ctorTypes of
-                  Just ctorInfo -> map (const TypeValue) ctorInfo.vars
-                  Nothing -> []
-              typeArgsStr = if Array.length typeArgsCtor > 0 then "[" <> String.joinWith ", " (map goTypeToStr typeArgsCtor) <> "]" else ""
-              fullPath = monoStructName <> typeArgsStr
-              isEnum = Set.member baseStructName helpers.enumCtors
-              res =
-                if isElided then
-                  case Array.head accProps.exprs of
-                    -- The field has already been coerced to its instantiated
-                    -- representation; its declaration may still contain a type variable.
-                    Just expr -> { expr: boxGoExpr codegenStateRef modNameStr expr (fromMaybe TypeValue (Array.head accProps.exprTypes)), exprType: TypeValue }
-                    Nothing -> { expr: GoConstructor (hashString baseStructName) monoStructName typeArgsCtor accProps.exprs, exprType: TypeStructPointer baseStructName fullName fullPath typeArgsCtor }
-                else case adtFullName >>= \fn -> Map.lookup fn unboxableADTs >>= \adt -> Just (Tuple fn adt) of
-                  Just (Tuple fn adt) ->
-                    { expr: GoStructValue fn adt.signature (adt.mapConstructor name accProps.exprs)
-                    , exprType: TypeStructValue fn adt.signature
-                    }
-                  Nothing ->
-                    if isPointerAdtLeaf then
-                      let
-                        nodeInfo = Map.lookup baseStructName helpers.pointerAdtLeaves
-                        nodeCtorName = case nodeInfo of
-                          Just info -> info.nodeCtor
-                          Nothing -> ""
-                        nodeBaseStruct = case nodeInfo of
-                          Just info -> info.nodeBaseStruct
-                          Nothing -> ""
-                        nodeStruct = "Constructor_" <> modPart' <> "_" <> sanitizeName nodeCtorName
-                        nodeFullPath = nodeStruct <> typeArgsStr
-                      in
-                        { expr: GoRaw ("(*" <> nodeFullPath <> ")(nil)"), exprType: TypeStructPointer nodeBaseStruct fullName nodeFullPath typeArgsCtor }
-                    else if isEnum then { expr: GoRaw (hashString baseStructName), exprType: TypeUint32 }
-                    else { expr: GoConstructor (hashString baseStructName) monoStructName typeArgsCtor accProps.exprs, exprType: TypeStructPointer baseStructName fullName fullPath typeArgsCtor }
+              res = AdtExprs.saturated codegenStateRef prepared { exprs: accProps.exprs, exprTypes: accProps.exprTypes }
               reuse = case accProps.stmts of
                 StmtEmpty -> constructorReuse bound res.exprType accProps.constants res.expr
                 _ -> Nothing
