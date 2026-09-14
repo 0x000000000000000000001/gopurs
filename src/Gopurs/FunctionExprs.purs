@@ -57,17 +57,17 @@ abstraction translate context@{ codegenStateRef, depth, modNameStr, bound, mbExp
     buildFunc ps innerExpr =
       let
         len = Array.length ps
-        bodyStr = case innerExpr of
-          GoBlock _ -> printGoExpr innerExpr
-          _ -> "return " <> printGoExpr innerExpr
+        bodyStmts = case innerExpr of
+          GoBlock stmts -> stmts
+          _ -> [ GoReturn innerExpr ]
       in
         if len == 1 then
-          GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> fromMaybe "" (Array.index ps 0) <> " gopurs_runtime.Value) gopurs_runtime.Value {\n" <> bodyStr <> "\n}") ]
+          GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoFuncBlock [ Tuple (fromMaybe "" (Array.index ps 0)) TypeValue ] bodyStmts TypeValue ]
         else if len >= 2 && len <= 5 then
           let
-            goParams = String.joinWith ", " (map (\p -> p <> " gopurs_runtime.Value") ps)
+            goParams = map (\p -> Tuple p TypeValue) ps
           in
-            GoCall (GoSelector (GoVar "gopurs_runtime") ("Func" <> show len)) [ GoRaw ("func(" <> goParams <> ") gopurs_runtime.Value {\n" <> bodyStr <> "\n}") ]
+            GoCall (GoSelector (GoVar "gopurs_runtime") ("Func" <> show len)) [ GoFuncBlock goParams bodyStmts TypeValue ]
         else
           let
             chunk = Array.take 5 ps
@@ -106,12 +106,16 @@ uncurriedAbstraction translate context@{ codegenStateRef, depth, modNameStr, bou
             callFuncDecl = "func Call_" <> modNameStr <> "_" <> topName <> "(" <> goParams <> ") gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType) ])) <> "\n}"
             funcExpr = unsafePerformEffect do
               Ref.modify_ (\r -> r { rawDecls = Array.snoc r.rawDecls callFuncDecl }) codegenStateRef
-              pure $ GoRaw ("gopurs_runtime.Func" <> show arity <> "(Call_" <> modNameStr <> "_" <> topName <> ")")
+              pure $ GoCall (GoSelector (GoVar "gopurs_runtime") ("Func" <> show arity)) [ GoVar ("Call_" <> modNameStr <> "_" <> topName) ]
           in
             { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: resBody.nextId }
         Nothing ->
           let
-            funcExpr = GoRaw ("gopurs_runtime.Func" <> show arity <> "(func(" <> goParams <> ") gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType) ])) <> "\n})")
+            funcExpr = GoCall (GoSelector (GoVar "gopurs_runtime") ("Func" <> show arity))
+              [ GoFuncLit paramsWithTypes (flattenStmts resBody.stmts)
+                  (boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType)
+                  TypeValue
+              ]
           in
             { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: resBody.nextId }
     else
@@ -136,7 +140,6 @@ effectAbstraction translate context@{ codegenStateRef, depth, modNameStr, bound,
 
     paramsWithTypes = map (\(Tuple mbI lvl) -> Tuple (localId mbI lvl) TypeValue) args
     newBound = foldl (\acc (Tuple idStr goType) -> Map.insert idStr { name: idStr, goType } acc) bound paramsWithTypes
-    goParams = String.joinWith ", " (map (\(Tuple p goT) -> p <> " " <> goTypeToStr goT) paramsWithTypes)
     resBody = translate (context { depth = (depth + 1), bound = newBound, tcoIdent = Nothing, loopCtx = [], options = { isTail, inEffectBlock: false }, mbExpectedExprType = ( case mbFuncTy of
           Just { fRet } -> Just fRet
           Nothing -> Nothing
@@ -145,14 +148,18 @@ effectAbstraction translate context@{ codegenStateRef, depth, modNameStr, bound,
   in
     if arity >= 2 && arity <= 5 then
       let
-        funcExpr = GoRaw ("gopurs_runtime.Func" <> show arity <> "(func(" <> goParams <> ") gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (GoRaw ("gopurs_runtime.Apply(" <> printGoExpr (boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType) <> ", gopurs_runtime.Value{})")) ])) <> "\n})")
+        funcExpr = GoCall (GoSelector (GoVar "gopurs_runtime") ("Func" <> show arity))
+          [ GoFuncLit paramsWithTypes (flattenStmts resBody.stmts)
+              (GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType, GoRaw "gopurs_runtime.Value{}" ])
+              TypeValue
+          ]
       in
         { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: resBody.nextId }
     else
       let
         params = map fst paramsWithTypes
-        makeCurried [] = GoFunc "_" TypeValue TypeValue (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (GoRaw ("gopurs_runtime.Apply(" <> printGoExpr (boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType) <> ", gopurs_runtime.Value{})")) ]))
-        makeCurried [ p ] = GoFunc p TypeValue TypeValue (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (GoRaw ("gopurs_runtime.Apply(" <> printGoExpr (boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType) <> ", gopurs_runtime.Value{})")) ]))
+        makeCurried [] = GoFunc "_" TypeValue TypeValue (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType, GoRaw "gopurs_runtime.Value{}" ]) ]))
+        makeCurried [ p ] = GoFunc p TypeValue TypeValue (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType, GoRaw "gopurs_runtime.Value{}" ]) ]))
         makeCurried ps = case Array.uncons ps of
           Just { head: p, tail: rest } -> GoFunc p TypeValue TypeValue (makeCurried rest)
           Nothing -> resBody.expr

@@ -48,7 +48,11 @@ defer :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> ExprResult
 defer translate context@{ codegenStateRef, depth, modNameStr } nextId binding =
   let
     resBinding = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: true }, mbExpectedExprType = Nothing }) nextId binding
-    funcExpr = GoRaw ("gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts resBinding.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr resBinding.expr resBinding.exprType) ])) <> "\n})")
+    funcExpr = GoCall (GoSelector (GoVar "gopurs_runtime") "Func")
+      [ GoFuncBlock [ Tuple "_" TypeValue ]
+          (flattenStmts resBinding.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr resBinding.expr resBinding.exprType) ])
+          TypeValue
+      ]
   in
     { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: resBinding.nextId }
 
@@ -93,6 +97,10 @@ wrap :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> ExprResult
 wrap translate context@{ codegenStateRef, modNameStr } nextId tcoExpr =
   let
     res = translate (context { options = { isTail: false, inEffectBlock: true }, mbExpectedExprType = Nothing }) nextId tcoExpr
-    funcExpr = GoRaw ("gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {\n" <> printGoExpr (GoBlock (flattenStmts res.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr res.expr res.exprType) ])) <> "\n})")
+    funcExpr = GoCall (GoSelector (GoVar "gopurs_runtime") "Func")
+      [ GoFuncBlock [ Tuple "_" TypeValue ]
+          (flattenStmts res.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr res.expr res.exprType) ])
+          TypeValue
+      ]
   in
     { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: res.nextId }

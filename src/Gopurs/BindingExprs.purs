@@ -56,13 +56,13 @@ nonRecursive translate context@{ codegenStateRef, depth, modNameStr, moduleFunct
           loopBound = foldl (\acc (Tuple idStr goT) -> Map.insert idStr { name: idStr, goType: goT } acc) bound paramsWithTypes
           resBodyMut = translate (context { depth = (depth + 1), moduleFunctions = localModuleFunctions, bound = loopBound, tcoIdent = (Just name), loopCtx = [], options = { isTail: true, inEffectBlock: false }, mbExpectedExprType = Nothing }) (nextId + 1) abs.body
 
-          goParamsNative = String.joinWith ", " (map (\(Tuple p goT) -> p <> "_loop " <> goTypeToStr goT) paramsWithTypes)
+          goParamsNative = map (\(Tuple p goT) -> Tuple (p <> "_loop") goT) paramsWithTypes
           initVars = Array.concatMap (\(Tuple p goT) -> [ GoRaw ("var " <> p <> " " <> goTypeToStr goT <> " = " <> p <> "_loop"), GoRaw ("_ = " <> p) ]) paramsWithTypes
           funcBody = GoBlock (initVars <> flattenStmts resBodyMut.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr resBodyMut.expr resBodyMut.exprType) ])
-          nativeAssignment = GoMutate ("Call_local_" <> modNameStr <> "_" <> name) (GoRaw ("func(" <> goParamsNative <> ") gopurs_runtime.Value {\n" <> printGoExpr funcBody <> "\n}"))
+          nativeAssignment = GoMutate ("Call_local_" <> modNameStr <> "_" <> name) (GoFuncBlock goParamsNative [ funcBody ] TypeValue)
 
           nativeCallExpr = GoCall (GoVar ("Call_local_" <> modNameStr <> "_" <> name)) (map (\(Tuple p goT) -> coerceGoExpr codegenStateRef modNameStr (GoVar (p <> "_loop_val")) TypeValue goT) paramsWithTypes)
-          funcExpr = Array.foldr (\(Tuple p _) acc -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> p <> "_loop_val gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr acc <> "\n}") ]) nativeCallExpr paramsWithTypes
+          funcExpr = Array.foldr (\(Tuple p _) acc -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoFuncLit [ Tuple (p <> "_loop_val") TypeValue ] [] acc TypeValue ]) nativeCallExpr paramsWithTypes
 
           newBound = Map.insert originalName { name, goType: TypeValue } bound
           resBodyOuter = translate (context { depth = (depth + 1), moduleFunctions = localModuleFunctions, bound = newBound, tcoIdent = Nothing, mbExpectedExprType = Nothing }) resBodyMut.nextId body
@@ -173,15 +173,15 @@ recursive translate context@{ codegenStateRef, depth, modNameStr, recVars, modul
 
                   funcBody = GoFor newName (initVars <> flattenStmts resBodyMut.stmts <> [ GoReturn resBodyMut.expr ])
 
-                  goParamsNative = String.joinWith ", " (map (\(Tuple p goT) -> p <> "_loop " <> goTypeToStr goT) paramsWithTypes)
-                  nativeAssignment = GoMutate ("Call_local_" <> modNameStr <> "_" <> newName) (GoRaw ("func(" <> goParamsNative <> ") " <> goTypeToStr trueFRet <> " {\n" <> printGoExpr funcBody <> "\n}"))
+                  goParamsNative = map (\(Tuple p goT) -> Tuple (p <> "_loop") goT) paramsWithTypes
+                  nativeAssignment = GoMutate ("Call_local_" <> modNameStr <> "_" <> newName) (GoFuncBlock goParamsNative [ funcBody ] trueFRet)
 
                   nativeCallExpr = GoCall (GoVar ("Call_local_" <> modNameStr <> "_" <> newName)) (map (\(Tuple p goT) -> coerceGoExpr codegenStateRef modNameStr (GoVar (p <> "_loop_val")) TypeValue goT) paramsWithTypes)
                   funcExpr =
                     if Array.null paramsWithTypes then
                       GoFunc "_" TypeValue TypeValue (GoBlock [ GoReturn (boxGoExpr codegenStateRef modNameStr nativeCallExpr trueFRet) ])
                     else
-                      Array.foldr (\(Tuple p _) accExpr -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> p <> "_loop_val gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr accExpr <> "\n}") ]) (boxGoExpr codegenStateRef modNameStr nativeCallExpr trueFRet) paramsWithTypes
+                      Array.foldr (\(Tuple p _) accExpr -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoFuncLit [ Tuple (p <> "_loop_val") TypeValue ] [] accExpr TypeValue ]) (boxGoExpr codegenStateRef modNameStr nativeCallExpr trueFRet) paramsWithTypes
 
                   newFunctions = Map.insert newName { fullName: "Call_local_" <> modNameStr <> "_" <> newName, fArgs: map snd paramsWithTypes, fRet: trueFRet, arity: Array.length fn.args } acc.moduleFunctions
                   newBound2 = Map.insert oldName { name: newName, goType: TypeFunc (map snd paramsWithTypes) trueFRet } acc.newBound

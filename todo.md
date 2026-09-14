@@ -381,16 +381,20 @@ Preuves : `/private/tmp/gopurs-adt-calls-_2yo6rza/` contient les sources initial
 
 `CodeGen` passe de 1 115 à 582 lignes. Les quatre nouveaux modules comptent 240 lignes pour `BindingExprs`, 126 pour `ControlExprs`, 98 pour `EffectExprs` et 213 pour `ModuleBindings`. Ils ont des exports explicites, compilent sans avertissement et n'introduisent aucun cycle d'import. Les cinq avertissements restant dans `CodeGen` concernent le code conservé. Le booléen inutilisé de `processBindingGroup`, le contexte de boucles intermédiaire sans lecteur et les calculs de variables libres sans consommateur sont retirés. Le cache FFI associé disparaît avec `CodeGen.js`. Le test identique de statements vides des deux opérateurs booléens devient un helper privé de `ControlExprs`.
 
-Preuves : `/private/tmp/gopurs-control-64cttepu/` contient les sources et le Go de référence, les 26 adaptations d'appels dans `child-call-adaptations.json`, `integration-verification.json` et `altbak-after.log`. Les bindings et le contrôle sont extraits ; le prochain lot concerne la frontière entre AST Go et impression (8).
+Preuves : `/private/tmp/gopurs-control-64cttepu/` contient les sources et le Go de référence, les 26 adaptations d'appels dans `child-call-adaptations.json`, `integration-verification.json` et `altbak-after.log`. Les bindings et le contrôle sont extraits ; la frontière entre AST Go et impression est traitée au lot 8 ci-dessous.
 
 ## 8. Clarifier la frontière entre AST Go et impression
 
-Constat : `Printer.purs` reste court (235 lignes), mais du Go est aussi assemblé via `GoRaw`, `rawDecls` et `printGoExpr` dans le codegen.
+Constat actualisé le 14 septembre 2026 : les fonctions anonymes des cinq modules du parcours d'expressions sont structurées dans GoAst. Les autres familles de fragments bruts et les responsabilités de rendu sont inventoriées dans [docs/go-ast-printer.md](docs/go-ast-printer.md).
 
-- [ ] **8.1 — Inventorier les fragments bruts.** Séparer déclarations, expressions, conversions et adaptations FFI ; choisir une famille répétée dont la structuration simplifie réellement le code.
-- [ ] **8.2 — Structurer un seul motif.** Ajouter le nœud GoAst nécessaire et son rendu, puis migrer un site ; comparer le Go après `gofmt` et exécuter sa fixture.
-- [ ] **8.3 — Migrer les occurrences équivalentes.** Réutiliser ce nœud pour les autres sites de la même famille, sans étendre la règle de génération.
-- [ ] **8.4 — Fixer le contrat du printer.** Documenter ce qui relève du rendu et ce qui doit être décidé avant celui-ci, notamment les conversions de tableaux déjà structurées dans GoAst.
+- [x] **8.1 — Inventorier les fragments bruts.** Déclarations, expressions et statements, conversions, FFI et runtime sont distingués. La famille retenue est celle des fonctions anonymes natives et de leurs enveloppes : 16 sites répartis entre `BindingExprs`, `ModuleBindings`, `FunctionExprs`, `EffectExprs` et `AdtExprs`.
+- [x] **8.2 — Structurer un seul motif.** `GoFuncBlock` représente les paramètres typés, le corps avec retours explicites et le type résultat. `GoFuncLit` réutilise ce rendu avec son retour final. Le premier site migré dans `EffectExprs` compile avec le nouveau nœud ; l'intégration de l'ensemble est vérifiée ci-dessous avec `altbak.pub/bin/go/run -c`, conformément au choix de l'utilisateur.
+- [x] **8.3 — Migrer les occurrences équivalentes.** Les 16 sites utilisent `GoFuncBlock` ou `GoFuncLit`, composés avec `GoCall`. Paramètres, types natifs, currying, conversions, retours, boucles TCO et ordre des statements sont conservés. Les appels runtime adjacents sont également construits avec `GoCall`. Les fonctions nommées et les conversions spécialisées restent dans leurs familles existantes.
+- [x] **8.4 — Fixer le contrat du printer.** `docs/go-ast-printer.md` décrit les décisions prises dans les émetteurs, le rendu des fonctions natives, les conventions historiques de `GoFunc`, les fragments bruts restants et la détection actuelle des imports. Les conversions de tableaux d'entiers restent structurées jusqu'à la décision du consommateur, avant impression.
+
+Validation du lot 8, le 14 septembre 2026 : `altbak.pub/bin/go/run -c` reconstruit le backend et le bundle, compile les 300 modules PureScript puis le Go, et termine les 14 benchmarks du mode `pure` avec statut 0. Les 387 fichiers Go sont identiques octet pour octet à ceux de 7.6, sur les mêmes 300 entrées CoreFn ; les quatorze résultats fonctionnels sont identiques. Aucun nouveau diagnostic dans les modules modifiés ; les cinq avertissements signalés par ce build concernent le code conservé de `CodeGen`. Snapshots de gopurs et fichiers suivis d'altbak inchangés. Aucune comparaison de performances.
+
+Preuves : `/private/tmp/gopurs-go-functions-sfj38g4e/` contient les sources initiales, l'inventaire des fragments bruts, le Go de référence, `integration-verification.json`, `prototype-build.log` et `altbak-after.log`. Le prochain lot concerne la source canonique Go du runtime (9).
 
 ## 9. Éditer le runtime comme du Go
 

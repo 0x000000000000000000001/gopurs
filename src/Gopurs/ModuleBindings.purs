@@ -172,19 +172,27 @@ declarations translate codegenStateRef modNameStr moduleFunctions groups =
                                     let wrapperParams = map (\(Tuple p _) -> p <> "_box") paramsWithTypes
                                     let callExpr = GoCall (GoVar ("Call_" <> modNameStr <> "_" <> goName)) (map (\(Tuple p goT) -> coerceGoExpr codegenStateRef modNameStr (GoVar (p <> "_box")) TypeValue goT) paramsWithTypes)
                                     let boxedRes = boxGoExpr codegenStateRef modNameStr callExpr expectedRetType
-                                    let wrapperFunc = GoRaw ("func(" <> String.joinWith ", " (map (\p -> p <> " gopurs_runtime.Value") wrapperParams) <> ") gopurs_runtime.Value {\nreturn " <> printGoExpr boxedRes <> "\n}")
+                                    let wrapperFunc = GoFuncLit (map (\p -> Tuple p TypeValue) wrapperParams) [] boxedRes TypeValue
                                     let funcWrapperName = if arity == 1 then "gopurs_runtime.Func" else "gopurs_runtime.Func" <> show arity
-                                    pure $ GoRaw (funcWrapperName <> "(" <> printGoExpr wrapperFunc <> ")")
+                                    pure $ GoCall (GoVar funcWrapperName) [ wrapperFunc ]
                               else
                                 let
                                   bodyStmts = initVars <> flattenStmts resBodyMut.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr resBodyMut.expr resBodyMut.exprType) ]
                                   funcBody = if isSelfRecursiveLoop then GoFor goName bodyStmts else GoBlock bodyStmts
-                                  iife = GoRaw ("func() gopurs_runtime.Value {\n" <> printGoExpr funcBody <> "\n}()")
+                                  iife = GoCall (GoFuncBlock [] [ funcBody ] TypeValue) []
                                 in
                                   if arity == 0 then
                                     GoFunc "_" TypeValue TypeValue funcBody
                                   else
-                                    Array.foldr (\(Tuple p goT) acc -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> p <> "_box gopurs_runtime.Value) gopurs_runtime.Value {\nvar " <> p <> "_loop " <> goTypeToStr goT <> " = " <> printGoExpr (coerceGoExpr codegenStateRef modNameStr (GoVar (p <> "_box")) TypeValue goT) <> "\nreturn " <> printGoExpr acc <> "\n}") ]) iife paramsWithTypes
+                                    Array.foldr
+                                      (\(Tuple p goT) acc -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func")
+                                        [ GoFuncLit [ Tuple (p <> "_box") TypeValue ]
+                                            [ GoRaw ("var " <> p <> "_loop " <> goTypeToStr goT <> " = " <> printGoExpr (coerceGoExpr codegenStateRef modNameStr (GoVar (p <> "_box")) TypeValue goT)) ]
+                                            acc
+                                            TypeValue
+                                        ])
+                                      iife
+                                      paramsWithTypes
                           in
                             { identifier: modNameStr <> "_" <> goName, expression: funcExpr, goType: TypeValue }
                       )

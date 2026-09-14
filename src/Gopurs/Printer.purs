@@ -197,8 +197,10 @@ printGoExpr expr = case expr of
     "\n}"
   GoMutate name expr ->
     name <> " = " <> printGoExpr expr
+  GoFuncBlock params stmts retType ->
+    "func(" <> String.joinWith ", " (map (\(Tuple p goT) -> p <> " " <> goTypeToStr goT) params) <> ") " <> goTypeToStr retType <> " {\n" <> printGoExpr (GoBlock stmts) <> "\n}"
   GoFuncLit params stmts retExpr retType ->
-    "func(" <> String.joinWith ", " (map (\(Tuple p goT) -> p <> " " <> goTypeToStr goT) params) <> ") " <> goTypeToStr retType <> " {\n" <> printGoExpr (GoBlock (stmts <> [ GoReturn retExpr ])) <> "\n}"
+    printGoExpr (GoFuncBlock params (stmts <> [ GoReturn retExpr ]) retType)
   GoStructValue adtName fields exprs ->
     goTypeToStr (TypeStructValue adtName fields) <> "{" <> String.joinWith ", " (map printGoExpr exprs) <> "}"
 

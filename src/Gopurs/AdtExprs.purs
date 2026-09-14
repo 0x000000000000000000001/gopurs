@@ -146,8 +146,8 @@ definition codegenStateRef modNameStr name fields ctorType =
     funcExpr =
       if isElided then
         case Array.head fields of
-          Just f -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> sanitizeName f <> " gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr (coerceGoExpr codegenStateRef modNameStr (GoVar (sanitizeName f)) TypeValue TypeValue) <> "\n}") ]
-          Nothing -> Array.foldr (\f inner -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> sanitizeName f <> " gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr inner <> "\n}") ]) boxedCtor fields
+          Just f -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoFuncLit [ Tuple (sanitizeName f) TypeValue ] [] (coerceGoExpr codegenStateRef modNameStr (GoVar (sanitizeName f)) TypeValue TypeValue) TypeValue ]
+          Nothing -> Array.foldr (\f inner -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoFuncLit [ Tuple (sanitizeName f) TypeValue ] [] inner TypeValue ]) boxedCtor fields
       else if isPointerAdtLeaf then
         let
           nodeCtorName = case Map.lookup baseStructName helpers.pointerAdtLeaves of
@@ -160,7 +160,7 @@ definition codegenStateRef modNameStr name fields ctorType =
       else if Array.length fields == 0 then
         GoConstructor (hashString baseStructName) structName typeArgs coercedFields
       else
-        Array.foldr (\f inner -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoRaw ("func(" <> sanitizeName f <> " gopurs_runtime.Value) gopurs_runtime.Value {\nreturn " <> printGoExpr inner <> "\n}") ]) boxedCtor fields
+        Array.foldr (\f inner -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoFuncLit [ Tuple (sanitizeName f) TypeValue ] [] inner TypeValue ]) boxedCtor fields
   in
     { expr: funcExpr, exprType: finalExprType }
 

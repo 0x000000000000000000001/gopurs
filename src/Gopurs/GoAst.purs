@@ -47,6 +47,9 @@ data GoExpr
   | GoContinue String
   | GoMutate String GoExpr
   | GoIfElse GoExpr (Array GoExpr) (Array GoExpr)
+  -- A native function body with explicit returns, including loop bodies.
+  -- Parameter grouping and runtime wrappers are chosen before printing.
+  | GoFuncBlock (Array (Tuple String GoType)) (Array GoExpr) GoType
   | GoFuncLit (Array (Tuple String GoType)) (Array GoExpr) GoExpr GoType
   | GoStructValue String (Array GoType) (Array GoExpr)
 
