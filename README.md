@@ -140,8 +140,59 @@ its Go snapshot, use `./bin/test ThunkFusion -c`. Its PureScript cases also cove
 the exclusion of recursive scopes from thunk fusion.
 
 A fixture can declare `-- @dependencies: assert prelude effect console refs partial`
-to compile only its required packages. The runner temporarily adjusts its dependency
-list and restores its configuration and lockfile after the build.
+to compile only its required packages. Each fixture gets a fresh temporary Spago
+workspace with its own sources, configuration, lockfile and generated output.
+`tests/runner` is left untouched; dependencies still use the sibling checkouts
+and Spago's global package cache.
+
+Preview a selection without compiling or creating files:
+
+```bash
+./bin/test --list
+./bin/test TCOMutRec ThunkFusion --list
+./bin/test --skip-before ThunkFusion --list
+```
+
+Explicit names retain their order, and resume includes the named fixture.
+Unknown names, unknown options and missing resume targets fail before any build.
+The existing fixture exclusions remain in effect.
+
+Snapshot verification is the default: a missing snapshot is a failure. To create
+or replace snapshots, use `--update-snapshots` (or `UPDATE_SNAPSHOTS=1`). Updates
+are written only after that fixture's Go build and execution succeed.
+`-- @snapshot-ffi` includes the separately generated FFI snapshot.
+
+Successful temporary workspaces are removed unless `--keep-workspace` is set.
+Failures and interruptions retain their workspace and phase logs, with its path
+printed in the result. Interruptions stop the active command and its subprocesses.
+`-c` rebuilds gopurs once; fixture outputs are fresh on every run. The runner stops
+at the first failed phase and does not retry failed PureScript builds automatically.
+It preserves the existing execution check: exit status zero and no `Fail` in the
+captured output.
+
+`bin/modtest` selects sibling `gopurs-*` repositories that have an executable
+`bin/test`. Its default is the full selection; resume and explicit module lists
+are optional:
+
+```bash
+./bin/modtest --all --list
+./bin/modtest --skip-before strings --list
+./bin/modtest prelude strings
+```
+
+Selection is printed before execution, and `-c` rebuilds the compiler once from
+this checkout. Each sibling script still controls its own workspace and cleanup;
+the fixture isolation above applies to this repository's `bin/test`.
+
+Run the runner's contract checks without compiling PureScript or Go:
+
+```bash
+npm run test:runner
+```
+
+These invoke the real CLI against temporary fixtures with stand-in compiler
+commands to check selection, snapshots, failures, concurrent runs, signals and
+module campaigns. Integration with the real toolchain is checked separately.
 
 ## Rebuilding the FFI parser
 
