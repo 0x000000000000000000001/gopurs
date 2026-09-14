@@ -11,11 +11,11 @@ Le témoin `sumEvens` de 3.1 suivait ce chemin avant optimisation. Son [snapshot
 | Étape | Représentation et site du générateur |
 |---|---|
 | Range | L'appel existant à `rangeImpl` fournit ici un `Value` contenant un tableau. Son bridge FFI reste exécuté. |
-| Filtre | Le chemin `UncurriedApp Data.Array.filterImpl` génère un buffer neuf par `make([]Value, 0)` puis `append`. Son résultat Go est `TypeNativeArray TypeValue`. [CodeGen](/Users/0x1/Documents/htdocs/gopurs/gopurs/src/Gopurs/CodeGen.purs:1910). |
-| Contrainte `Array Int` | Le traitement de `Typed` impose `TypeNativeArray TypeInt64`, via `coerceGoExpr`. [CodeGen](/Users/0x1/Documents/htdocs/gopurs/gopurs/src/Gopurs/CodeGen.purs:1240). |
-| Première conversion | Emballage du header par `Array`, puis copie des `.IntVal` vers `[]int64`. Auparavant imprimée immédiatement en `GoRaw`, elle reste désormais structurée en `GoUnboxIntArray`. [CodeGen](/Users/0x1/Documents/htdocs/gopurs/gopurs/src/Gopurs/CodeGen.purs:361). |
-| Deuxième conversion | `boxGoExprImpl` recrée un `[]Value` avec `Int(v)`, désormais représenté par `GoBoxIntArray`. [CodeGen](/Users/0x1/Documents/htdocs/gopurs/gopurs/src/Gopurs/CodeGen.purs:187). |
-| Fold | Dans ce témoin, le fold emprunte le chemin **App**, qui boxe ses arguments puis lit un `[]Value` avec `Apply2`. Ce n'est pas le chemin `UncurriedApp foldlArray`. [Arguments](/Users/0x1/Documents/htdocs/gopurs/gopurs/src/Gopurs/CodeGen.purs:1513), [boucle](/Users/0x1/Documents/htdocs/gopurs/gopurs/src/Gopurs/CodeGen.purs:1542). |
+| Filtre | Le chemin `UncurriedApp Data.Array.filterImpl` génère un buffer neuf par `make([]Value, 0)` puis `append`. Son résultat Go est `TypeNativeArray TypeValue`. [CallExprs](../src/Gopurs/CallExprs.purs#L465). |
+| Contrainte `Array Int` | Le traitement de `Typed` impose `TypeNativeArray TypeInt64`, via `coerceGoExpr`. [CodeGen](../src/Gopurs/CodeGen.purs#L177). |
+| Première conversion | Emballage du header par `Array`, puis copie des `.IntVal` vers `[]int64`. Auparavant imprimée immédiatement en `GoRaw`, elle reste désormais structurée en `GoUnboxIntArray`. [GoConversions](../src/Gopurs/GoConversions.purs#L229). |
+| Deuxième conversion | `boxGoExprImpl` recrée un `[]Value` avec `Int(v)`, désormais représenté par `GoBoxIntArray`. [GoConversions](../src/Gopurs/GoConversions.purs#L187). |
+| Fold | Dans ce témoin, le fold emprunte le chemin **App**, qui boxe ses arguments puis lit un `[]Value` avec `Apply2`. Ce n'est pas le chemin `UncurriedApp foldlArray`. [Arguments](../src/Gopurs/CallExprs.purs#L145), [boucle](../src/Gopurs/CallExprs.purs#L187). |
 
 Le boxing final peut être provoqué par un `Typed` extérieur ou par le boxing des arguments de `App`. Le point de reconnaissance doit donc examiner l'argument **après son boxing normal**, tout en conservant les conversions structurées jusque-là.
 
@@ -100,7 +100,7 @@ En 3.4, conserver les 28 assertions Go/JS de 3.1 et ajouter les témoins nécess
 
 **7. État de l'intégration 3.3**
 
-La règle est implémentée dans [CodeGen](/Users/0x1/Documents/htdocs/gopurs/gopurs/src/Gopurs/CodeGen.purs:1052), avec les trois nœuds de GoAst et leur impression dans Printer. Le remplacement intervient uniquement sur l'argument tableau déjà traduit et boxé ; les instructions associées et le compteur `nextId` sont conservés. Les noms de la normalisation sont locaux à une IIFE, suffixés par la profondeur du fold et le compteur courant ; aucune expression du programme n'est évaluée sous leur portée.
+La règle est implémentée dans [CallExprs](../src/Gopurs/CallExprs.purs#L659), avec les trois nœuds de GoAst et leur impression dans Printer. Le remplacement intervient uniquement sur l'argument tableau déjà traduit et boxé ; les instructions associées et le compteur `nextId` sont conservés. Les noms de la normalisation sont locaux à une IIFE, suffixés par la profondeur du fold et le compteur courant ; aucune expression du programme n'est évaluée sous leur portée.
 
 `./bin/test ArrayRoundtrip -c` réussit avec le `purs` typé utilisé par altbak. Les 28 assertions passent aussi en JavaScript, avec sortie identique octet pour octet à celle du Go. Une seconde exécution sans mise à jour reproduit le snapshot. La comparaison avant/après ne change que `Call_Main_sumEvens` et `Call_Main_sumRangeEvens` : deux buffers et leurs boucles de copie sont remplacés par une normalisation sur place dans chaque fonction. Chaque noyau conserve son unique range, son filtre avec `append` et son `Apply2`. Toutes les autres fonctions du snapshot, dont `sumArrayEvens` et ses conversions d'entrée, sont identiques.
 

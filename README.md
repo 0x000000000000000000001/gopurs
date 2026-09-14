@@ -1,198 +1,189 @@
 # gopurs
 
-<img height="160" alt="Screenshot 2026-07-21 at 17 22 56" src="https://github.com/user-attachments/assets/b013e7c3-fac6-4ee8-9d4c-f39ac8c2c921" />
-<br />
-<br />
+<img height="160" alt="gopurs" src="https://github.com/user-attachments/assets/b013e7c3-fac6-4ee8-9d4c-f39ac8c2c921" />
 
-_Mature experimental WIP. The core ideas have been valided by the facts/results. That will be official soon. You can [find a complete devlog here](https://discourse.purescript.org/t/leveraging-a-blazing-fast-runtime-a-new-go-backend-for-purescript)._
+An experimental **PureScript-to-Go backend**. The compiler is written in
+PureScript, with a Go runtime, a Go parser compiled to WebAssembly for FFI
+signatures, and JavaScript build tooling.
 
-A super-optimized **PureScript-to-Go compiler**, entirely written in PureScript, leveraging Go's **blazing-fast execution**, **lightweight goroutines** and **huge ecosystem**. 
+`gopurs` consumes the enriched TAST (`tcorefn`) produced by our
+[PureScript fork](https://github.com/0x000000000000000000001/purescript).
+It uses preserved types and partial monomorphization to choose native Go
+representations, with a tagged `Value` representation where needed. Go FFI
+bridges adapt native function signatures, and the Go library forks provide
+implementations of effects and `Aff` using goroutines.
 
-`gopurs` leverages an enriched `tcorefn` (Typed CoreFn) representation to compile your pure business logic into robust, modern Go code. It seamlessly integrates into your existing PureScript workflow as a custom backend.
-
-## Why Go?
-
-While the broader JS ecosystem has heavily leaned towards TypeScript, many backend services, CLIs, and infrastructure tools rely heavily on Go for its **raw performance**, **concurrency model** (goroutines), and **deployment simplicity** (single static binaries).
-
-`gopurs` aims to provide a bridge for developers who want the elegance and strict typing of a purely functional language like PureScript, while benefiting from Go's massive ecosystem. It opens a door for those who want to compile their pure business logic into a single, zero-dependency static binary that can run anywhere.
+The project builds on [Arista's purescript-backend-optimizer](https://github.com/aristanetworks/purescript-backend-optimizer)
+and draws inspiration from Andy Arvanitis's
+[purescript-native](https://github.com/andyarvanitis/purescript-native).
+The [development log](https://discourse.purescript.org/t/leveraging-a-blazing-fast-runtime-a-new-go-backend-for-purescript)
+records the earlier design work.
 
 ## Benchmarks
 
-The performance results of code compiled with `gopurs` are available in the [altbak benchmark repository](https://github.com/0x000000000000000000001/altbak.pub#go). These benchmarks are evaluated on various algorithms specifically designed to stress the CPU and RAM.
+The [altbak README](https://github.com/0x000000000000000000001/altbak.pub#go)
+contains the reference results and benchmark context. Use those baselines when
+comparing performance; successful cleanup checks alone do not demonstrate a
+speed or memory improvement.
 
-## Why a new Go backend?
+## Build the backend locally
 
-The [`purescript-native`](https://github.com/andyarvanitis/purescript-native) project already provides a Go compiler backend. I want to deeply acknowledge the fantastic work done by Andy Arvanitis on that project, which paved the way for compiling PureScript to native targets. This new project is largely inspired by his initial effort, and my gratitude for his pioneering work is very real. It is always easier to come second and learn from the technical limits encountered by the pioneers.
+The source build currently depends on local checkouts. Keep this layout, or
+adjust the paths in [spago.yaml](spago.yaml) explicitly:
 
-Reading through the discussions and challenges raised by users over the years (initialization orders, performance overhead of `interface{}`, module qualifications), it became clear that the ecosystem has evolved drastically. This evolution unlocked new architectural paradigms that make building a completely new Go backend highly relevant today, specifically to address these past limitations:
-
-### 1. The optimizer & bootstrapping
-While previous native compilers were often written in Haskell and parsed raw `CoreFn`, `gopurs` is written 100% in PureScript. It integrates directly with the [`purescript-backend-optimizer`](https://github.com/aristanetworks/purescript-backend-optimizer) (just like `purs-backend-es` or `phpurs`). This allows the compiler to instantly benefit from classical optimizations such as aggressive uncurrying, magic-do, and Tail Call Optimization (TCO) at the AST level. The `gopurs` compiler can then strictly focus on translating this highly-optimized AST into idiomatic, performant Go code. Being built in PureScript also ensures it remains fully accessible to anyone in the ecosystem (installable via `spago` and `npm`).
-
-### 2. Heap vs stack: a new memory layout for Go
-Dynamic typing in statically typed languages like Go often relies heavily on `interface{}` (or `any`). Previous compilers represented PureScript values as `any` and PureScript records as `map[string]any`. However, assigning primitive values to interfaces forces them to escape to the heap (boxing), generating massive Garbage Collector pressure. For `gopurs`, I ran extensive benchmarks and decided to completely ditch `any`. Instead, the runtime uses a universal flat `Value` struct (a tagged union), inspired by V8 or LuaJIT. This ensures that dynamic operations stay mostly on the stack, bypassing GC overhead in heavy iterative loops.
-
-> **Benchmark context:** On a 1 billion operations micro-benchmark, native static Go took ~250ms, a dynamic `any` approach took ~9 seconds, and my `Value` struct solution completed in **~240ms**. 
-
-### 3. TAST: Breaking the performance ceiling
-While the flat `Value` struct does wonders for simple algorithms, complex real-world code (with deep ADTs, nested Records, or higher-order functions) still accumulates tag checks. To reach raw Go speeds, `gopurs` consumes an enriched `tcorefn.json` (Typed CoreFn). This custom format preserves the deep structural typing information and the exact memory layout of ADTs that standard `corefn` strips away. Combined with partial monomorphization, this allows the compiler to generate idiomatic, statically typed Go code end-to-end, unlocking massive performance gains (a 10x factor over naive compilation).
-
-> **Single-thread performance:** The code generated by `gopurs` now performs as well as the official JS compiler running on highly-optimized V8 (approaching Arista's blazing-fast ES backend speeds). You can find the [single-thread core benchmark results here](https://github.com/0x000000000000000000001/altbak.pub#core-benchmark-results-pure-computational).
-
-### 4. Zero boilerplate FFI
-One of the pain points with FFI in alternative backends is the boilerplate (manual boxing/unboxing, currying). `gopurs` features a WebAssembly AST parser (`ffi_gen.wasm`) that analyzes your `.go` FFI files on the fly. You can write perfectly flat and strongly typed Go functions (e.g. `func DoMath(a int64, b int64) interface{}`). The generated bridge takes care of all the uncurrying, type conversions, and Effect flattening under the hood, making FFI development feel 100% native.
-
-### 5. Up-to-date with modern PureScript & Go
-`gopurs` aims to be fully aligned with the current v0.15+ ecosystem (and v0.16+ soon). It takes full advantage of modern Go (1.18+), from the much-improved Garbage Collector and Goroutine scheduler to the introduction of Generics.
-
-### 6. Native Parallelism behind Aff
-Historical hurdles involved mapping PureScript’s asynchronous monad (`Aff`) without introducing massive overhead. Today, the game has changed: asynchronous code and multi-core parallelism are practically free and feel completely native in Go. `gopurs` maps `Aff` to goroutines, bringing true, shared-memory parallelism to PureScript. A heavy CPU-bound parallel workload naturally distributes across your CPU cores, scaling linearly and crushing single-threaded JIT runtimes.
-
-> **Multi-thread performance:** Running 10 concurrent heavy tasks takes ~15 seconds on Node.js (V8) due to event loop blocking, while Go devours the same workload in ~1.2 seconds by utilizing 10 cores. You can find the [multi-thread benchmark results here](https://github.com/0x000000000000000000001/altbak.pub#extended-benchmark-results-io-mutability-async).
-
-## How to use
-
-If you wish to configure an existing project, `gopurs` acts as a drop-in backend for the Spago build system.
-
-1. **Install the `gopurs` backend compiler:**
-   You can install the compiler directly from GitHub. NPM will automatically compile it in the background during installation.
-   ```bash
-   npm install --save-dev github:0x000000000000000000001/gopurs
-   ```
-
-2. **Manage Core Library Overrides (`spago.yaml`):**
-   Because standard PureScript libraries use JavaScript FFI, you must override them with their `gopurs-*` counterparts. Keep using the official PureScript registry as your base, and manually define all Go overrides using the `extraPackages` directive.
-
-   ```yaml
-   workspace:
-     packageSet:
-       registry: 77.10.1
-     extraPackages:
-       prelude:
-         git: "https://github.com/0x000000000000000000001/gopurs-prelude.git"
-         ref: "master"
-         dependencies: []
-       # ... all other gopurs-* packages
-     backend:
-       cmd: gopurs
-   ```
-   *Alternatively, you can pass the backend directly via CLI:*
-   ```bash
-   spago build --backend gopurs
-   ```
-
-3. **Build and execute:**
-   The compiler will parse all `tcorefn.json` files generated by `purs` (via a TAST-enabled fork) and output native Go files in the `output/` directory.
-   
-   An executable `main.go` entrypoint will be automatically generated. You can run it directly by initializing a Go module in the output folder:
-   
-   ```bash
-   spago build
-   cd output
-   go mod init gopurs
-   go mod tidy
-   go run main.go
-   ```
-
-### Compiler configuration options
-
-The `gopurs` compiler is entirely **zero-config by default**. It will automatically scan your `tcorefn` ASTs and generate a ready-to-execute `main.go` entrypoint.
-
-If you need advanced behavior, you can pass arguments to the `gopurs` compiler by appending them to the `spago build --backend-args` command:
-
-```bash
-spago build --backend gopurs --backend-args "--main App.Main"
-```
-
-| Option | Description |
-|---|---|
-| `--main <Module>` | *Optional*. Explicitly sets the entrypoint module. Without this flag, `gopurs` automatically targets the `Main` module. |
-
-## Local development & testing
-
-If you plan to contribute to the compiler or run the official test suite locally, you will have to follow a specific "sibling-checkout" directory layout. 
-
-Because `gopurs` replaces the JS ecosystem with Go, it requires custom Go-compatible forks of the core PureScript libraries (e.g. `purescript-prelude` becomes `gopurs-prelude`). The internal test runner (`bin/test`) expects these core `gopurs-*` repositories to be cloned side-by-side in the same parent directory as the main `gopurs` repository.
-
-```
+```text
 workspace/
+├── purescript/                         # TAST compiler fork, if built locally
+├── purescript-backend-optimizer-gopurs/ # optimizer fork, edge-gopurs branch
 ├── gopurs/
-├── gopurs-prelude/
-├── gopurs-effect/
-├── gopurs-console/
-├── gopurs-assert/
-└── ... (all other core gopurs-* forks)
+│   ├── gopurs/                         # this repository
+│   ├── gopurs-prelude/
+│   ├── gopurs-effect/
+│   ├── gopurs-console/
+│   ├── gopurs-st/
+│   ├── gopurs-unsafe-coerce/
+│   ├── gopurs-assert/
+│   └── ...                            # other core Go library forks
+└── hello/                             # example application below
 ```
 
-To easily clone all these required dependencies, you can simply run the provided setup script:
+The optimizer checkout comes from the
+[Go branch of our optimizer fork](https://github.com/0x000000000000000000001/purescript-backend-optimizer/tree/edge-gopurs).
+Its path is `../../purescript-backend-optimizer-gopurs` relative to this
+repository. `st`, `unsafe-coerce` and `assert` are also local build dependencies.
+From this repository, `./bin/setup` clones the core library siblings listed in
+[bin/pkg](bin/pkg); it does not install the optimizer or the typed compiler.
+
 ```bash
-cd gopurs
+# From workspace/gopurs/gopurs, after installing the optimizer checkout:
 ./bin/setup
+npm ci
 ```
 
-To run the test suite:
+`npm ci` installs the locked npm dependencies and its `prepare` hook runs
+`npm run build`. Later edits need only:
+
 ```bash
-./bin/test
+npm run build
 ```
 
-Use a TAST-capable `purs` on `PATH`. To rebuild the backend and run one test with
-its Go snapshot, use `./bin/test ThunkFusion -c`. Its PureScript cases also cover
-the exclusion of recursive scopes from thunk fusion.
+The build embeds the Go runtime, compiles PureScript, and bundles `Main` into
+`bin/gopurs.js`. The checked-in FFI WASM and its matching JavaScript runtime are
+used as-is. Node.js 24.8.0, local Spago 0.93.45 and the npm-provided `purs` 0.15.16
+were used for the backend build recorded below.
 
-A fixture can declare `-- @dependencies: assert prelude effect console refs partial`
-to compile only its required packages. Each fixture gets a fresh temporary Spago
-workspace with its own sources, configuration, lockfile and generated output.
-`tests/runner` is left untouched; dependencies still use the sibling checkouts
-and Spago's global package cache.
+For **application and fixture compilation**, put a TAST-capable `purs` on
+`PATH`. A version number alone does not establish that it is the typed fork.
+The validated application toolchain uses the locally built fork and Spago
+1.0.4; `bin/test` inherits the caller's `PATH`. npm build commands prioritize
+this repository's `node_modules/.bin`, so inspect both toolchains when diagnosing
+compiler differences. The fork currently writes the enriched format to
+`output/<Module>/corefn.json`; the name `tcorefn` describes the format, not a
+separate filename consumed by gopurs.
 
-Preview a selection without compiling or creating files:
+A GitHub source install is not a standalone installation recipe with these
+relative build dependencies. To install an already built backend in another
+project, create a local archive after `npm run build`:
+
+```bash
+# From the backend repository:
+npm pack --ignore-scripts
+
+# From the application directory, using the archive just produced:
+npm install --save-dev --ignore-scripts /absolute/path/to/gopurs-0.1.0.tgz
+```
+
+The archive includes the backend bundle and FFI parser artifacts. It does not
+install the application compiler or the Go library overrides. The local
+archive installation was checked offline in an empty npm project; rebuilding
+the backend there is unnecessary.
+
+## Compile and run an application
+
+For `workspace/hello`, create `src/Main.purs`:
+
+```purescript
+module Main where
+
+import Prelude (Unit)
+import Effect (Effect)
+import Effect.Console (log)
+
+main :: Effect Unit
+main = log "Hello from gopurs"
+```
+
+Use this `spago.yaml` for the example:
+
+```yaml
+package:
+  name: hello
+  dependencies:
+    - prelude
+    - effect
+    - console
+workspace:
+  packageSet:
+    registry: 77.10.1
+  extraPackages:
+    prelude:
+      path: "../gopurs/gopurs-prelude"
+    effect:
+      path: "../gopurs/gopurs-effect"
+    console:
+      path: "../gopurs/gopurs-console"
+```
+
+Add the corresponding Go overrides for any other packages with FFI used by your
+application. Ordinary registry packages may supply JavaScript FFI only.
+With the typed compiler and Spago on `PATH`, run from `workspace/hello`:
+
+```bash
+spago build
+../gopurs/gopurs/bin/gopurs --main Main
+cd output
+go mod tidy
+go run ./main
+```
+
+This prints `Hello from gopurs`. If the archive is installed in the application,
+replace the backend invocation with `./node_modules/.bin/gopurs --main Main`.
+`output/go.mod` is generated by gopurs; there is no `go mod init` step.
+The entry file is `output/main/main.go`. To build an executable from `output`,
+use `go build -o hello ./main`. Generated modules declare Go 1.22; the integration
+checks used Go 1.27.0, without establishing the oldest working Go toolchain.
+
+The backend reads and writes `output` in its current directory. Options used
+by the current gopurs entrypoint are:
+
+| Option | Behavior |
+| --- | --- |
+| `--main Module` | Select the entry module explicitly. Without it, discover all loaded modules exporting `main`; each gets `output/<Module>/main/main.go`, and the shared `output/main/main.go` belongs to the last discovered target. |
+| `--ffi directory` | Supply an additional FFI lookup directory. |
+| `--rewrite-limit number` | Set the optimizer rewrite limit; default 10000. |
+
+The shared optimizer argument parser also recognizes options such as `--output`
+and `--bundle`, but `Main` does not use them to change gopurs output behavior.
+
+## Development and validation
+
+Start with [the architecture map](docs/architecture.md) to locate the owner of
+a change. [Testing and validation](docs/testing.md) describes targeted fixture
+commands, snapshot review, cache behavior, the runner, exclusions and remaining
+coverage gaps.
 
 ```bash
 ./bin/test --list
-./bin/test TCOMutRec ThunkFusion --list
-./bin/test --skip-before ThunkFusion --list
-```
-
-Explicit names retain their order, and resume includes the named fixture.
-Unknown names, unknown options and missing resume targets fail before any build.
-The existing fixture exclusions remain in effect.
-
-Snapshot verification is the default: a missing snapshot is a failure. To create
-or replace snapshots, use `--update-snapshots` (or `UPDATE_SNAPSHOTS=1`). Updates
-are written only after that fixture's Go build and execution succeed.
-`-- @snapshot-ffi` includes the separately generated FFI snapshot.
-
-Successful temporary workspaces are removed unless `--keep-workspace` is set.
-Failures and interruptions retain their workspace and phase logs, with its path
-printed in the result. Interruptions stop the active command and its subprocesses.
-`-c` rebuilds gopurs once; fixture outputs are fresh on every run. The runner stops
-at the first failed phase and does not retry failed PureScript builds automatically.
-It preserves the existing execution check: exit status zero and no `Fail` in the
-captured output.
-
-`bin/modtest` selects sibling `gopurs-*` repositories that have an executable
-`bin/test`. Its default is the full selection; resume and explicit module lists
-are optional:
-
-```bash
-./bin/modtest --all --list
-./bin/modtest --skip-before strings --list
-./bin/modtest prelude strings
-```
-
-Selection is printed before execution, and `-c` rebuilds the compiler once from
-this checkout. Each sibling script still controls its own workspace and cleanup;
-the fixture isolation above applies to this repository's `bin/test`.
-
-Run the runner's contract checks without compiling PureScript or Go:
-
-```bash
+./bin/test FFIIntegerReturns -c
 npm run test:runner
 ```
 
-These invoke the real CLI against temporary fixtures with stand-in compiler
-commands to check selection, snapshots, failures, concurrent runs, signals and
-module campaigns. Integration with the real toolchain is checked separately.
+For the recent cleanup batches, the agreed integration checkpoint is
+`bin/go/run -c` from `altbak.pub`. It rebuilds the backend and application,
+compiles Go and executes the 14 cases of the default `pure` campaign. The
+recorded comparisons preserved all 387 generated Go files and their functional
+outputs. This does not establish a green full `passing` or sibling-module suite.
+The [cleanup log](todo.md) records completed changes and outstanding checks.
 
 ## Rebuilding the FFI parser
 
@@ -243,9 +234,8 @@ maintainer command. After editing `FfiSupport.js`, run `npm run build` to update
 the backend bundle. Runner paths are resolved relative to the source, Spago
 output or installed bundle, independently of the current directory.
 
-This workflow is validated with Node.js 24.8.0 and Go 1.27.0. The existing error
-contract is preserved: invalid Go returns `[]`, and asynchronous WASM failures
-are logged by the runner's rejection handler.
+The parser workflow was validated with Node.js 24.8.0 and Go 1.27.0.
+See [validation and remaining limits](docs/testing.md) for the scope of the checks.
 
 ## Editing the Go runtime
 
@@ -268,30 +258,6 @@ When the source is unchanged, regeneration preserves the FFI file's timestamp
 so Spago can reuse its compiled output. The npm `prepare` hook runs the full
 build and includes this step automatically. Generated FFI and bundle files are
 build artifacts; commit the Go source and build tooling.
-
-## Current status & milestones
-
-Since its inception, `gopurs` has reached several major milestones:
-
-- [x] **100% of the [official tests](https://github.com/purescript/purescript/tree/master/tests/purs/passing) are green.**
-- [x] **Typed AST (TAST):** By consuming an enriched `tcorefn.json` (Typed CoreFn) instead of standard `corefn`, `gopurs` preserves deep structural typing. Combined with partial monomorphization, this unlocks massive performance gains (x10).
-- [x] **Zero boilerplate FFI:** A complete overhaul of the FFI developer experience via a WebAssembly parser (`ffi_gen.wasm`). It analyzes your Go signatures on the fly, allowing you to write idiomatic Go (uncurried functions, native types, flexible Effect semantics) without manual boxing or closures.
-- [x] **Native `Aff` via goroutines:** Full support for `Aff` mapped directly to Go's goroutines. This emulates the event loop while providing **true multi-core parallelism for free**, meaning your async PureScript code gets exponentially faster on multi-core systems.
-- [x] **Real world validation (unit):** Successful validation on 100% of the unit tests for a complex, full scale project involving Postgres, S3, RabbitMQ, and deep Aff nesting.
-- [x] **Real world validation (integration):** Successful validation on 100% of the integration tests for a complex, full scale project involving Postgres, S3, RabbitMQ, and deep Aff nesting.
-- [x] **Module validation:** Validate tests module by module (`gopurs-*`).
-- [ ] General code **cleanup** (it’s still quite messy)
-
-_(maybe more to come)_
-
-## Architecture
-
-`gopurs` is built on top of [Arista's purescript-backend-optimizer](https://github.com/aristanetworks/purescript-backend-optimizer) to avoid reinventing the optimization wheel. The compilation pipeline is functionally decoupled:
-
-1. **Optimization**: The optimizer reads the `tcorefn.json` generated by `purs`, performs aggressive Dead Code Elimination (DCE), typeclass dictionary resolution, inlining, and constant folding at the AST level, and outputs an optimized `BackendModule`.
-2. **Code Generation**: `Gopurs.CodeGen` maps this heavily optimized PureScript AST to our native `GoAst`.
-3. **Printing**: `Gopurs.Printer` formats the Go AST into valid, modern Go syntax.
-4. **Caching & CLI**: `Main` orchestrates the CLI, writing the generated `.go` files to their respective module directories. 
 
 ## License
 
