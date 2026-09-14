@@ -15,7 +15,7 @@ L'inventaire porte sur les sites du générateur, pas sur le nombre d'occurrence
 | Autres expressions et statements | `BindingExprs`, `ControlExprs`, `CallExprs`, `AdtExprs`, `EffectExprs`, `PrimitiveExprs`, `CodeGen` | Déclarations locales typées, labels et fragments de contrôle, pointeurs, littéraux et commentaires comportent encore des `GoRaw`. Ils constituent d'autres familles. |
 | Conversions | `GoConversions`, avec certains rendus spécialisés dans `Printer` | Les conversions de records, tableaux génériques et ADT unboxés contiennent encore des fonctions Go assemblées en chaînes. Les conversions de tableaux d'entiers restent des nœuds structurés jusqu'au consommateur. |
 | Adaptations FFI | `FfiBridge` | Les bridges sont rendus depuis les signatures Go et les métadonnées TAST, avec leurs adaptations propres. Ils ne passent pas par les nœuds de fonctions anonymes du parcours d'expressions. |
-| Runtime | `Runtime` | Le runtime reste une source Go incluse dans une chaîne PureScript ; son extraction appartient au lot 9. |
+| Runtime | `runtime/runtime.go`, `Gopurs.Runtime` | La source Go canonique est incluse au build par `tools/embed-runtime.mjs`. La façade PureScript expose la constante embarquée, sans lecture du fichier Go à l'exécution ; extraction réalisée au lot 9. |
 
 ## Fonctions natives structurées
 

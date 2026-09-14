@@ -196,6 +196,28 @@ This workflow is validated with Node.js 24.8.0 and Go 1.27.0. The existing error
 contract is preserved: invalid Go returns `[]`, and asynchronous WASM failures
 are logged by the runner's rejection handler.
 
+## Editing the Go runtime
+
+The canonical runtime source is [`runtime/runtime.go`](runtime/runtime.go).
+Edit that file, then rebuild the backend:
+
+```bash
+npm run build
+```
+
+The build first runs `tools/embed-runtime.mjs`, which writes the ignored
+`src/Gopurs/Runtime.js` FFI module. `Gopurs.Runtime.runtimeGoCode` remains a
+PureScript `String`; Spago and esbuild embed it in `bin/gopurs.js`. The installed
+backend does not read the Go source at execution time, and the generated
+`output/gopurs_runtime/runtime.go` contains its exact text.
+
+`npm run build:runtime` regenerates only the FFI module. Run it before a direct
+`spago build` after changing the Go source or starting from a fresh checkout.
+When the source is unchanged, regeneration preserves the FFI file's timestamp
+so Spago can reuse its compiled output. The npm `prepare` hook runs the full
+build and includes this step automatically. Generated FFI and bundle files are
+build artifacts; commit the Go source and build tooling.
+
 ## Current status & milestones
 
 Since its inception, `gopurs` has reached several major milestones:

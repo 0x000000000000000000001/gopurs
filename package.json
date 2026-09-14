@@ -7,7 +7,8 @@
     "gopurs": "bin/gopurs.js"
   },
   "scripts": {
-    "build": "spago build && spago bundle --module Main --platform node --outfile bin/gopurs.js --bundle-type app",
+    "build": "npm run build:runtime && spago build && spago bundle --module Main --platform node --outfile bin/gopurs.js --bundle-type app",
+    "build:runtime": "node tools/embed-runtime.mjs",
     "build:ffi": "node tools/build-ffi.mjs",
     "test:ffi": "node --test tools/ffi-errors.test.mjs",
     "prepare": "npm run build"

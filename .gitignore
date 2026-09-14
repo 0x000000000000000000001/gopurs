@@ -11,6 +11,7 @@ purs_files.txt
 tests/runner/src/
 tests/runner/spago.yaml
 bin/gopurs.js
+/src/Gopurs/Runtime.js
 .psci*
 psci*
 .purmeta/

@@ -394,16 +394,20 @@ Constat actualisé le 14 septembre 2026 : les fonctions anonymes des cinq module
 
 Validation du lot 8, le 14 septembre 2026 : `altbak.pub/bin/go/run -c` reconstruit le backend et le bundle, compile les 300 modules PureScript puis le Go, et termine les 14 benchmarks du mode `pure` avec statut 0. Les 387 fichiers Go sont identiques octet pour octet à ceux de 7.6, sur les mêmes 300 entrées CoreFn ; les quatorze résultats fonctionnels sont identiques. Aucun nouveau diagnostic dans les modules modifiés ; les cinq avertissements signalés par ce build concernent le code conservé de `CodeGen`. Snapshots de gopurs et fichiers suivis d'altbak inchangés. Aucune comparaison de performances.
 
-Preuves : `/private/tmp/gopurs-go-functions-sfj38g4e/` contient les sources initiales, l'inventaire des fragments bruts, le Go de référence, `integration-verification.json`, `prototype-build.log` et `altbak-after.log`. Le prochain lot concerne la source canonique Go du runtime (9).
+Preuves : `/private/tmp/gopurs-go-functions-sfj38g4e/` contient les sources initiales, l'inventaire des fragments bruts, le Go de référence, `integration-verification.json`, `prototype-build.log` et `altbak-after.log`. La source canonique Go du runtime est traitée au lot 9 ci-dessous.
 
 ## 9. Éditer le runtime comme du Go
 
-Constat : `Runtime.purs` contient essentiellement une grande chaîne de code Go.
+Constat actualisé le 14 septembre 2026 : `runtime/runtime.go` est la source canonique du runtime, avec ses 1 040 lignes conservées. `Runtime.purs` est une façade de cinq lignes qui expose toujours `runtimeGoCode :: String`.
 
-- [ ] **9.1 — Définir la source canonique.** Prévoir un fichier Go éditable et une inclusion compatible avec le build npm, le bundle et les chemins d'installation ; vérifier ce mécanisme sur un exemple isolé.
-- [ ] **9.2 — Déplacer le texte sans réécriture.** Extraire le runtime et vérifier l'identité du `runtime.go` émis avant toute modification de présentation ou de structure.
-- [ ] **9.3 — Valider l'assemblage.** Reconstruire le bundle, générer une fixture, compiler son Go et vérifier qu'une modification du fichier canonique est bien prise en compte.
-- [ ] **9.4 — Séparer une famille si utile.** Commencer par les helpers de records ; vérifier `NativeRecordSizes` et `CompactRecordConsumers`. Traiter appels/closures et event loop dans des étapes ultérieures distinctes avec leurs propres fixtures.
+- [x] **9.1 — Définir la source canonique.** `tools/embed-runtime.mjs` transforme le fichier Go en constante FFI JavaScript. `npm run build` exécute cette inclusion avant Spago et le bundle ; le hook `prepare` la reprend. Les chemins sont relatifs au script, sans dépendance au dossier courant. La FFI générée est ignorée par Git et n'est réécrite que si son contenu change. Un essai isolé vérifie le texte exact, les caractères spéciaux, la propagation des modifications et un bundle déplacé sans ses sources.
+- [x] **9.2 — Déplacer le texte sans réécriture.** Les 33 756 octets extraits de la chaîne PureScript sont identiques au `runtime.go` produit par le lot 8. Présentation, noms, déclarations et corps de fonctions sont conservés. `Main` et les outils qui importent `Gopurs.Runtime.runtimeGoCode` gardent la même API.
+- [x] **9.3 — Valider l'assemblage.** Un commentaire temporaire ajouté à la source Go est retrouvé dans la sortie Spago et le bundle après `npm run build`. Après restauration du texte original, `altbak.pub/bin/go/run -c` reconstruit le backend, compile le PureScript puis le Go et exécute les 14 benchmarks. Une archive npm locale est également extraite ailleurs ; son backend reproduit les 387 fichiers Go depuis le dossier altbak, sans source Go ni FFI générée à côté du bundle. Cette validation remplace la campagne supplémentaire de fixtures conformément au choix de l'utilisateur.
+- [x] **9.4 — Évaluer la séparation d'une famille.** Une seule source Go est retenue pour ce lot : les helpers de records forment déjà un bloc contigu, et leur édition directe ne nécessite pas d'assemblage de fragments ni de changement de l'API d'émission. Aucune séparation supplémentaire des records, appels/closures ou de l'event loop n'est effectuée.
+
+Validation du lot 9, le 14 septembre 2026 : `altbak.pub/bin/go/run -c` termine avec statut 0. Les 387 fichiers Go sont identiques octet pour octet à ceux du lot 8, sur les mêmes 300 entrées CoreFn ; les quatorze résultats fonctionnels sont identiques. L'exécution du backend extrait de l'archive npm termine également avec statut 0 et reproduit ces fichiers. Le runtime est embarqué dans le bundle ; il n'est pas lu depuis le système de fichiers à l'exécution. Snapshots de gopurs et fichiers suivis d'altbak inchangés. Aucune comparaison de performances.
+
+Le README documente la source canonique, les artefacts générés et `npm run build:runtime` avant un build Spago direct. Preuves : `/private/tmp/gopurs-runtime-8o88d6eg/` contient le runtime et le Go de référence, les vérifications isolée, de propagation et du paquet, `integration-verification.json`, `marker-build.log` et `altbak-after.log`. Le prochain lot concerne le runner de tests (10).
 
 ## 10. Rendre le runner de tests prévisible
 
