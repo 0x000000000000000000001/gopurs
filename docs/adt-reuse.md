@@ -66,15 +66,17 @@ leurs fonctions auxiliaires, en tenant compte des fonctions et des FFI du module
 
 ## Contrat source et transformations
 
-Le lecteur PBO reconnaît `usageAnalysis` version 1, phase `corefn`, et conserve
-la provenance module + identifiant. Un champ absent reste inconnu. Les bornes
+Le lecteur PBO lit directement `bindingUsage` et `variableUse` sur les
+annotations, sans marqueur de version ou de phase, et conserve la provenance
+module + identifiant. Un champ absent reste inconnu. Les bornes
 supérieures à l’intervalle `Int` du lecteur deviennent inconnues, sans troncature.
 
 Avant la monomorphisation et la conversion PBO, ces identités et faits source sont
 invalidés. Les copies et spécialisations ne peuvent donc pas transporter de
 certificat périmé. La passe Go recalcule ses preuves sur les références lexicales
-et les chemins de l’IR final ; elle ne transforme pas un ancien `usageCount`, un
-`lastLocalUse` ou un marqueur d’échappement en preuve d’exclusivité.
+et les chemins de l’IR final ; elle ne transforme pas un `lastLocalUse` ou un
+marqueur de contexte échappant en preuve d’exclusivité. Les anciens champs
+`usageCount` et `escapes`, ainsi que leur transport `UsageMeta`, ont été retirés.
 
 ## Vérification
 
@@ -89,6 +91,13 @@ Le build et le bundle passent sans avertissement. Les 64 tests des outils
 Gopurs passent, dont 21 tests de possession. La fixture `OwnedTrees` compile et
 s’exécute ; le contrôle final du snapshot passe sans le réécrire. Les 10 tests
 du contrat source et les 41 tests PBO existants passent également.
+
+Après la suppression des anciens champs et du marqueur racine le 17 septembre,
+le build et le bundle passent sans avertissement, ainsi que les 12 tests du
+contrat direct, les 41 tests PBO existants et les 64 tests des outils Gopurs.
+`OwnedTrees` conserve son snapshot et s’exécute correctement avec le compilateur
+TAST installé. Le retrait des anciens champs côté Haskell reste à compiler et
+tester par l’utilisateur ; les anciens fichiers JSON ne sont pas réécrits.
 
 Les mesures avant/après utilisent le [protocole et les artefacts archivés](/Users/0x1/Documents/htdocs/altbak.pub/scratch/gopurs-adt-reuse-validation-20260916/PROTOCOL.md).
 Pour 100 000 clés, les médianes passent de 2 483 949 à 100 000 allocations et

@@ -2,11 +2,13 @@
 
 Plan terminé le 16 septembre 2026. Le lot 1 a été validé par l’utilisateur. Les lots 2 à 5 sont implémentés et vérifiés pour le périmètre conservateur décrit ci-dessous : arbres monomorphes, fonctions de premier ordre et entrées dont toute la forêt est exclusive.
 
+Le 17 septembre, le contrat est simplifié à la demande de l’utilisateur : seuls `bindingUsage` et `variableUse` sont conservés, sans marqueur de version ou de phase. Les champs historiques `usageCount` et `escapes` sont retirés du producteur et des lecteurs PBO de Gopurs/Purust. Cette migration est distincte des mesures du 16 septembre ; la nouvelle compilation Haskell reste à faire par l’utilisateur. Côté Gopurs, build/bundle sans avertissement, 12 tests du contrat direct, 41 tests PBO et 64 tests outils passent. Le snapshot et l’exécution de `OwnedTrees` passent avec le compilateur TAST installé. Les JSON déjà présents ne sont pas réécrits.
+
 ## Objectif et ordre de réalisation
 
 Réduire les allocations du Go généré en réutilisant les cellules dont la modification ne peut affecter aucune autre référence observable. Le premier cas concret est le Red-Black Tree d’altbak.pub. Les optimisations doivent découler des propriétés du programme, sans reconnaître le nom du benchmark.
 
-1. **Haskell :** produire un contrat d’usage versionné, additif et vérifié.
+1. **Haskell :** produire un contrat explicite distinguant usages des bindings et des occurrences.
 2. **PBO de Gopurs :** lire ce contrat et maintenir sa validité après transformation.
 3. **Analyse sur l’IR transformé :** établir les alias, le partage des champs et les conditions d’exclusivité.
 4. **Gopurs :** réutiliser les cellules dans les chemins où ces conditions sont prouvées.
@@ -32,18 +34,7 @@ Un dernier usage peut aider à transférer une référence ou éviter un clone t
 
 ### 1.2. Schéma JSON implémenté
 
-La version ci-dessous concerne le contrat d’usage, indépendamment de la version générale du TAST. Les exemples sont des fragments ; les champs existants de chaque nœud sont conservés.
-
-À la racine du module :
-
-```json
-{
-  "usageAnalysis": {
-    "version": 1,
-    "phase": "corefn"
-  }
-}
-```
+Les exemples sont des fragments ; les autres champs TAST de chaque nœud sont conservés. Aucun bloc `usageAnalysis`, numéro de contrat ou champ de phase n’est émis. Les lecteurs interprètent directement les blocs présents sur les annotations.
 
 Sur l’annotation d’un binding local ou du paramètre lié par une abstraction :
 
@@ -90,9 +81,8 @@ Cas où l’analyse ne fournit pas de borne, par exemple certaines captures réu
 | `maxUses` | Entier positif ou nul : borne supérieure des usages directs de cette instance du binding dans la portée analysée. `null` : borne non établie. Zéro n’est émis que lorsque l’absence d’usage est établie. |
 | `hasEscapingUseContext` | `true` : un usage dans un contexte classé potentiellement échappant a été rencontré ; `false` : aucun tel contexte n’a été détecté dans l’analyse de ce binding ; `null` : information inconnue. Aucune valeur ne prouve l’exclusivité de l’objet ou de ses champs. |
 | `lastLocalUse` | `true` : après cette occurrence, aucun usage direct ultérieur de cette instance du binding n’est possible sur les chemins concernés. `null` : propriété non établie. Ce champ ne décrit pas les autres alias vers la valeur. |
-| `phase` | Provenance des faits. `corefn` n’atteste pas leur validité après les transformations du PBO. |
 
-L’absence d’un bloc ou d’un champ équivaut à une information inconnue. Une version de contrat non prise en charge ne fournit aucun fait exploitable. Les références globales/importées conservent leur qualification existante ; aucun compte global n’est déduit d’un comptage local incomplet, notamment pour les exports.
+L’absence d’un bloc ou d’un champ optionnel équivaut à une information inconnue. Un bloc présent exige un identifiant valide ; un champ invalide n’est pas silencieusement accepté. Les références globales/importées conservent leur qualification existante ; aucun compte global n’est déduit d’un comptage local incomplet, notamment pour les exports. Ces faits décrivent le CoreFn source et doivent être invalidés ou recalculés après transformation.
 
 - [x] Formaliser ce schéma et les nœuds auxquels chaque bloc s’applique, notamment paramètres d’abstractions, bindings de `let`, binders de patterns et occurrences `Var`.
 - [x] Implémenter la vérification de l’unicité et de la résolution des identifiants, y compris en présence de noms identiques dans des portées distinctes et de groupes récursifs.
@@ -107,20 +97,20 @@ L’absence d’un bloc ou d’un champ équivaut à une information inconnue. U
 - [x] Adapter `CoreFn/ToJSON.hs`, `CoreFn/FromJSON.hs` et documenter le point d’appel dans `Make/Actions.hs`.
 - [x] Ne produire aucun certificat `unique`, `canMutate`, de fraîcheur de résultat ou d’exclusivité transitive à partir de ces seuls faits d’usage.
 
-### 1.4. Migration additive et compatibilité
+### 1.4. Migration du format d’usage
 
-- [x] Conserver temporairement `usageCount` et `escapes`, avec leur sens historique, pour les lecteurs existants.
-- [x] Émettre les nouveaux blocs en complément et conserver les autres champs du TAST à l’identique. Le lecteur Haskell résout désormais les références à `typeTable` et lit les expressions `TypeApp`, nécessaires aux tests d’aller-retour typés.
+- [x] Retirer `usageCount` et `escapes`, initialement conservés pendant la migration additive. Les lecteurs Gopurs/Purust ne les interprètent plus.
+- [x] Émettre les nouveaux blocs directement, sans marqueur racine, et conserver les autres champs du TAST à l’identique. Le lecteur Haskell résout les références à `typeTable` et lit les expressions `TypeApp`, nécessaires aux tests d’aller-retour typés.
 - [x] Lire les anciens JSON sans inventer de nouveaux certificats à partir des champs historiques. En particulier, un ancien marqueur d’occurrence ne devient pas automatiquement une preuve conforme au nouveau contrat.
 - [x] Vérifier que les lecteurs des forks PBO existants acceptent les champs supplémentaires : les artefacts déjà compilés Gopurs/Purust donnent le même module décodé pour un JSON `Test.Fib` enrichi en mémoire. Cela vérifie les champs ignorés, pas le futur consommateur du contrat.
 - [x] Couvrir l’aller-retour du nouveau format par le lecteur Haskell et la compatibilité avec le format historique dans les tests confiés à l’utilisateur et validés par lui.
-- [x] Ne jamais reprendre pour `maxUses` le comportement du lecteur Purust qui convertit actuellement un `usageCount` absent en `0`.
+- [x] Ne jamais reprendre pour `maxUses` l’ancien comportement qui convertissait un `usageCount` absent en `0`.
 
 L’implémentation des nouvelles optimisations des backends n’est pas une condition de compatibilité du lot 1. Leur absence doit seulement laisser les informations supplémentaires inutilisées.
 
 ### 1.5. Tests du contrat
 
-- [x] Écrire les cas ci-dessous dans `tests/TestCoreFn.hs`, avec tests supplémentaires des annotations périmées, identifiants invalides, bornes négatives/fractionnaires et versions inconnues.
+- [x] Écrire les cas ci-dessous dans `tests/TestCoreFn.hs`, avec tests supplémentaires des annotations périmées, identifiants invalides et bornes négatives/fractionnaires. La suppression des anciens champs et du marqueur racine est également couverte.
 - [x] Compilation et tests Haskell validés par l’utilisateur ; JSON réel du compilateur reconstruit inspecté et accepté par le nouveau lecteur PBO.
 
 | Cas témoin | Propriété à vérifier |
@@ -135,7 +125,7 @@ L’implémentation des nouvelles optimisations des backends n’est pas une con
 | Récursion et groupes de bindings récursifs | Traitement conservateur des répétitions et résolution correcte des identifiants. |
 | Valeur globale exportée ou référence importée | Aucune borne globale nulle déduite de l’absence d’usage local. |
 | Alias local, arbre conservé par l’appelant, sous-arbre retourné | Les faits locaux ne sont jamais présentés comme une preuve d’exclusivité mémoire. |
-| JSON historique, nouveau, incomplet ou de version inconnue | Compatibilité, aller-retour et absence de conversion d’inconnu en fait positif. |
+| JSON historique, nouveau ou incomplet | Les anciens champs sont ignorés ; les nouveaux blocs sont validés sans marqueur racine ; l’inconnu ne devient jamais un fait positif. |
 
 Exemple de limite à conserver dans la documentation et les tests :
 
@@ -152,9 +142,9 @@ Le scrutinee `t` peut être utilisé une seule fois sans contexte directement cl
 
 **État : terminé.** Le [PBO utilisé par Gopurs](/Users/0x1/Documents/htdocs/purescript-backend-optimizer-gopurs/CORE_FN_USAGE.md) lit explicitement le contrat et l’invalide aux frontières de transformation.
 
-- [x] Ajouter `sourceUsage :: Maybe SourceUsage` aux annotations ; reconnaître seulement la version 1, phase `corefn`.
+- [x] Ajouter `sourceUsage :: Maybe SourceUsage` aux annotations ; lire directement les blocs `bindingUsage` et `variableUse`, sans condition de version ou de phase.
 - [x] Garder la provenance module + identifiant lors de la lecture, vérifier les placements, la résolution lexicale et l’unicité, y compris les masquages sans métadonnées.
-- [x] Conserver l’inconnu : absence, `null`, version ou phase non reconnue ne donnent aucun certificat. Une borne entière dépassant l’intervalle `Int` devient inconnue ; les bornes négatives ou fractionnaires sont rejetées.
+- [x] Conserver l’inconnu : absence ou `null` ne donnent aucun certificat. Une borne entière dépassant l’intervalle `Int` devient inconnue ; les bornes négatives ou fractionnaires sont rejetées.
 - [x] Invalider complètement identités et faits source avant la collecte des corps de monomorphisation de Gopurs, à la sortie du monomorphiseur PBO et à l’entrée de `Convert.toBackendModule`.
 - [x] Utiliser les identités lexicales de l’IR final pour les nouvelles preuves. Les niveaux sont interprétés dans leur fonction et leur portée, pas comme des identifiants globaux.
 - [x] Vérifier la lecture, l’invalidation immuable et l’absence de ces faits dans le résultat converti ; les tests existants de spécialisation restent passants.
@@ -233,7 +223,7 @@ Depuis `gopurs/gopurs`, les vérifications ciblées peuvent être reproduites av
 ```sh
 npm run build --silent
 GOCACHE=/private/tmp/gopurs-adt-reuse-gocache node --test --test-concurrency=1 tools/*.test.mjs
-./bin/test OwnedTrees --keep-workspace
+PATH="$HOME/.local/bin:$PATH" ./bin/test OwnedTrees --keep-workspace
 ```
 
 Les commandes de compilation et de mesure d’altbak ainsi que l’adaptation des sondes sont décrites dans le protocole archivé. Les extensions à d’autres formes d’ADT, aux closures ou à une analyse générale des observateurs demanderaient des preuves supplémentaires ; elles ne sont pas activées implicitement.
