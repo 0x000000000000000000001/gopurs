@@ -47,6 +47,20 @@ cellules disponibles sont retirées du stock lorsqu’elles servent. Lors d’un
 `let` consommant, l’environnement perd aussi les anciennes références vers les
 cellules données au calcul, avant d’introduire la nouvelle racine du résultat.
 
+Les préfixes stricts des chemins conservés ont nécessairement été déréférencés
+pendant la capture des champs. Parmi les cellules mortes, ces préfixes forment
+un stock connu non nul, distinct du stock nullable qui contient notamment le
+donneur. Le générateur consomme d’abord les cellules connues, sans test de
+nullité ni repli d’allocation. Les autres cellules gardent leur sélection et
+leur effacement à l’exécution. Une lecture scalaire conditionnelle ne suffit
+pas à établir cette non-nullité.
+
+Le stock connu restant est transmis entre les constructions et les arguments
+frères. Un appel externe, y compris récursif terminal, reçoit son donneur après
+la consommation des cellules par ses arguments. Chaque plan possède son stock ;
+les branches et les continuations ne le partagent pas. Toutes les adresses sont
+capturées avant mutation, même lorsque le parent est réutilisé avant son enfant.
+
 Une ancienne racine ou un sous-arbre encore observable dans la continuation
 empêche la consommation correspondante. Les appels terminaux récursifs des
 fonctions spécialisées deviennent des boucles. Le champ `Rc` existant ne sert
@@ -99,6 +113,14 @@ contrat direct, les 41 tests PBO existants et les 64 tests des outils Gopurs.
 TAST installé. Le retrait des anciens champs côté Haskell reste à compiler et
 tester par l’utilisateur ; les anciens fichiers JSON ne sont pas réécrits.
 
+La sélection statique ajoutée le 17 septembre passe le build et le bundle sans
+avertissement, les 64 tests outils existants et quatre tests supplémentaires.
+Ces derniers vérifient les captures avant réemploi du parent, les arguments
+frères, le stock nullable et le donneur d’un appel récursif terminal. Le nouveau
+snapshot `OwnedTrees` ne change que trois corps de fonctions consommantes ; son
+code public et persistant reste identique. La fixture s’exécute et un nouveau
+passage contrôle le snapshot sans le réécrire.
+
 Les mesures avant/après utilisent le [protocole et les artefacts archivés](/Users/0x1/Documents/htdocs/altbak.pub/scratch/gopurs-adt-reuse-validation-20260916/PROTOCOL.md).
 Pour 100 000 clés, les médianes passent de 2 483 949 à 100 000 allocations et
 de 79 486 352 à 3 200 000 octets cumulés. Dans la campagne à trois processus
@@ -106,3 +128,12 @@ par variante, RBTree passe de 24,20 à 9,95 ms, contre 8,92 ms pour le manuscrit
 Les baselines historiques du README d’altbak restent distinctes des mesures
 contrôlées de cette campagne. Le [bilan complet](/Users/0x1/Documents/htdocs/gopurs/gopurs/todo.md)
 précise les limites et les commandes de reproduction.
+
+La [campagne de sélection statique du 17 septembre](/Users/0x1/Documents/htdocs/altbak.pub/scratch/gopurs-static-cells-20260917/integration/REPORT.md)
+compare le vrai générateur avant/après à CoreFn identique. Seuls les corps
+consommants de `balance` et `makeBlack` changent dans le Go d’altbak. Sur trois
+processus par variante, le total passe de 12,58267 à 12,26888 ms (−2,49 %),
+contre 10,59596 ms pour le Go manuscrit ; RBTree passe de 9,40708 à 9,09525 ms
+(−3,31 %), contre 8,28300 ms. La sonde séparée conserve une médiane de
+100 000 allocations et 3 200 000 octets. Cette campagne reste distincte de
+la baseline officielle du README, 13,01 ms compilées et 11,09 ms manuscrites.

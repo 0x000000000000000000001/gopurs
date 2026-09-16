@@ -325,3 +325,187 @@ func main() {
     assert.equal(result.status, 0, result.stderr);
     assert.equal(result.stdout, 'acyclic owned result\n');
 });
+
+
+const cellPoolIsCell = value => typed(C.Boolean.value, expr(new S.PrimOp(
+    new S.Op1(new S.OpIsTag(qualified('Cell')), value))));
+const cellPoolNative = prepared => {
+    const worker = referencedLocals(binding(prepared, 'fresh')).find(name =>
+        name.startsWith('__gopurs_owned_'));
+    assert.ok(worker, 'the fresh caller must select a consuming worker');
+    const native = `Call_${moduleName}_${Go.sanitizeName(worker)}`;
+    assert.ok(declarationNames(prepared).includes(native));
+    return native;
+};
+const runCellPoolFixture = (t, bindings, goBody, recursiveNames = []) => {
+    const source = moduleOf(bindings);
+    source.bindings = source.bindings.map(group => ({
+        ...group, recursive: group.bindings.some(pair => recursiveNames.includes(pair.value0)),
+    }));
+    const prepared = Ownership.prepare(metadata)(source);
+    assert.notDeepEqual(binding(prepared, 'fresh'), bindings.find(([name]) => name === 'fresh')[1],
+        'this test must exercise the owned implementation');
+    const native = cellPoolNative(prepared);
+    const directory = mkdtempSync(join(tmpdir(), 'gopurs-owned-static-pool-'));
+    t.after(() => rmSync(directory, { recursive: true, force: true }));
+    mkdirSync(join(directory, 'purescript'));
+    mkdirSync(join(directory, 'gopurs_runtime'));
+    writeFileSync(join(directory, 'go.mod'), 'module gopurs/output\n\ngo 1.22\n');
+    writeFileSync(join(directory, 'gopurs_runtime/runtime.go'), runtimeGoCode);
+    writeFileSync(join(directory, 'purescript/OwnershipFixture.go'), CodeGen.translate(metadata)(source));
+    writeFileSync(join(directory, 'main.go'), `package main
+import (
+    "fmt"
+    "gopurs/output/purescript"
+)
+type tree = purescript.Constructor_OwnershipFixture_Cell
+func renderCellTree(node *tree, seen, original map[*tree]bool) string {
+    if node == nil { return "E" }
+    if seen[node] { panic("a cell was consumed twice: alias or cycle") }
+    if original != nil && !original[node] { panic("a reusable input cell was replaced by an allocation") }
+    seen[node] = true
+    return fmt.Sprintf("%d(%s)(%s)", node.V0,
+        renderCellTree(node.V1, seen, original), renderCellTree(node.V2, seen, original))
+}
+func inputCellSet(node *tree) map[*tree]bool {
+    original := map[*tree]bool{}
+    renderCellTree(node, original, nil)
+    return original
+}
+func checkCellTree(node *tree, want string, original map[*tree]bool) {
+    seen := map[*tree]bool{}
+    got := renderCellTree(node, seen, original)
+    if got != want { panic(fmt.Sprintf("got %s; want %s", got, want)) }
+    if original != nil && len(seen) != len(original) { panic("input cell lost") }
+}
+func main() {
+${goBody(native, `${native}_consume`)}
+    fmt.Println("owned cell pool verified")
+}
+`);
+    const result = spawnSync('go', ['run', '.'], {
+        cwd: directory, encoding: 'utf8', timeout: 30_000,
+        env: { ...process.env, GOWORK: 'off', GOCACHE: join(tmpdir(), 'gopurs-owned-tests-go-cache') },
+    });
+    assert.ifError(result.error);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout, 'owned cell pool verified\n');
+};
+
+// The input parent is available before its child in the pool. Reusing it for
+// the nested result changes the paths used later for the sibling and child
+// cell; every original path/value must already have been snapshotted.
+test('known cells preserve deep values when a parent is recycled before its child', t => {
+    const input = local();
+    const left = field(input, 1);
+    const rebuild = cell(field(input, 0),
+        cell(field(left, 0), field(left, 2), field(left, 1)), field(input, 2));
+    const changeBody = branch(chooseTree(cellPoolIsCell(left), rebuild, empty()));
+    const sourceTree = () => cell(literal(10),
+        cell(literal(20), cell(literal(30), empty(), empty()), empty()),
+        cell(literal(40), empty(), empty()));
+    runCellPoolFixture(t, [
+        ['change', lambda(changeBody)],
+        ['fresh', freshCaller(call('change', sourceTree()))],
+    ], native => `
+    input := &tree{Rc: 1, V0: 10,
+        V1: &tree{Rc: 1, V0: 20, V1: &tree{Rc: 1, V0: 30}},
+        V2: &tree{Rc: 1, V0: 40}}
+    original := inputCellSet(input)
+    result := purescript.${native}(input)
+    checkCellTree(result, "10(20(E)(30(E)(E)))(40(E)(E))", original)
+`);
+});
+
+// Both nested constructor arguments consume from the same static pool. The
+// enclosing call may only donate the cell left over after those arguments.
+test('known cells are consumed once across sibling arguments and the outer call donor', t => {
+    const joinType = new C.Func([tree, tree], tree);
+    const joinBody = typed(joinType, expr(new S.Abs([
+        new Tuple(new Just('input'), 0), new Tuple(new Just('input'), 1),
+    ], cell(literal(99), local(0), local(1)))));
+    const left = field(local(), 1);
+    const right = field(local(), 2);
+    const result = typed(tree, expr(new S.App(
+        typed(joinType, expr(new S.Var(qualified('joinChildren')))), [
+            cell(field(left, 0), field(left, 1), field(left, 2)),
+            cell(field(right, 0), field(right, 2), field(right, 1)),
+        ])));
+    const body = branch(chooseTree(cellPoolIsCell(left),
+        chooseTree(cellPoolIsCell(right), result, empty()), empty()));
+    const leaf = n => cell(literal(n), empty(), empty());
+    runCellPoolFixture(t, [
+        ['joinChildren', joinBody], ['change', lambda(body)],
+        ['fresh', freshCaller(call('change', cell(literal(5),
+            cell(literal(7), leaf(11), leaf(13)), cell(literal(17), leaf(19), leaf(23)))))],
+    ], native => `
+    input := &tree{Rc: 1, V0: 5,
+        V1: &tree{Rc: 1, V0: 7, V1: &tree{Rc: 1, V0: 11}, V2: &tree{Rc: 1, V0: 13}},
+        V2: &tree{Rc: 1, V0: 17, V1: &tree{Rc: 1, V0: 19}, V2: &tree{Rc: 1, V0: 23}}}
+    original := inputCellSet(input)
+    result := purescript.${native}(input)
+    checkCellTree(result, "99(7(11(E)(E))(13(E)(E)))(17(23(E)(E))(19(E)(E)))", original)
+`);
+});
+
+// No Keep path here proves a nonnil prefix: the dynamic fallback must still
+// allocate on nil, recycle a nonnil root, and accept an optional external donor.
+test('nullable pools retain nil allocation and nonnil root or donor reuse', t => {
+    runCellPoolFixture(t, [
+        ['create', lambda(cell(literal(100), empty(), empty()))],
+        ['fresh', freshCaller(call('create', empty()))],
+    ], (native, consume) => `
+    checkCellTree(purescript.${native}(nil), "100(E)(E)", nil)
+    checkCellTree(purescript.${consume}(nil, nil), "100(E)(E)", nil)
+    root := &tree{Rc: 1, V0: -1}
+    rootResult := purescript.${native}(root)
+    if rootResult != root { panic("nonnil root was not recycled") }
+    checkCellTree(rootResult, "100(E)(E)", map[*tree]bool{root: true})
+    donor := &tree{Rc: 1, V0: -2}
+    donorResult := purescript.${consume}(nil, donor)
+    if donorResult != donor { panic("nonnil donor was not recycled") }
+    checkCellTree(donorResult, "100(E)(E)", map[*tree]bool{donor: true})
+`);
+});
+
+// The nested/outer constructors exhaust the known cells before the tail-call
+// donor is selected. The base case adds a fresh outer node: a stale tail donor
+// aliased with the argument would create a cycle instead of allocating it.
+test('tail calls do not donate known cells already used by their constructed argument', t => {
+    const loopType = new C.Func([C.Int.value, tree], tree);
+    const remaining = typed(C.Int.value, expr(new S.Local(new Just('remaining'), 0)));
+    const input = local(1);
+    const left = field(input, 1);
+    const loopCall = (count, argument) => typed(tree, expr(new S.App(
+        typed(loopType, expr(new S.Var(qualified('repeatSwap')))), [count, argument])));
+    const next = typed(C.Int.value, expr(new S.PrimOp(new S.Op2(
+        new S.OpIntNum(S.OpSubtract.value), remaining, literal(1)))));
+    const rebuilt = cell(field(input, 0),
+        cell(field(left, 0), field(left, 2), field(left, 1)), field(input, 2));
+    const body = chooseTree(equalInt(remaining, literal(0)), cell(literal(777), input, empty()),
+        chooseTree(cellPoolIsCell(input),
+            chooseTree(cellPoolIsCell(left), loopCall(next, rebuilt), input), input));
+    const loop = typed(loopType, expr(new S.Abs([
+        new Tuple(new Just('remaining'), 0), new Tuple(new Just('input'), 1),
+    ], body)));
+    const sourceTree = cell(literal(10),
+        cell(literal(20), cell(literal(30), empty(), empty()), empty()),
+        cell(literal(40), empty(), empty()));
+    runCellPoolFixture(t, [
+        ['repeatSwap', loop], ['fresh', freshCaller(loopCall(literal(3), sourceTree))],
+    ], native => `
+    for count := int64(2); count <= 3; count++ {
+        input := &tree{Rc: 1, V0: 10,
+            V1: &tree{Rc: 1, V0: 20, V1: &tree{Rc: 1, V0: 30}},
+            V2: &tree{Rc: 1, V0: 40}}
+        original := inputCellSet(input)
+        result := purescript.${native}(count, input)
+        want := "10(20(30(E)(E))(E))(40(E)(E))"
+        if count == 3 { want = "10(20(E)(30(E)(E)))(40(E)(E))" }
+        if result == nil || result.V0 != 777 || result.V2 != nil { panic("missing base-case wrapper") }
+        if original[result] { panic("a tail donor still belongs to the returned argument") }
+        checkCellTree(result.V1, want, original)
+        renderCellTree(result, map[*tree]bool{}, nil)
+    }
+`, ['repeatSwap']);
+});

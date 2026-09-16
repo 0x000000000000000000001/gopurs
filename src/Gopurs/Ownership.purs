@@ -9,7 +9,7 @@ import Control.Monad.State (StateT, evalStateT, get, put)
 import Control.Monad.Trans.Class (lift)
 import Data.Array as Array
 import Data.Array.NonEmpty as NEA
-import Data.Foldable (all, any, foldMap, foldl)
+import Data.Foldable (all, any, foldMap, foldl, foldM)
 import Data.Map as Map
 import Data.Maybe (Maybe(..), fromMaybe, isJust)
 import Data.Newtype (unwrap)
@@ -71,7 +71,9 @@ data TreeTerm
   | Existing GoExpr
 data Argument = TreeArg TreeTerm | ScalarArg Scalar
 
-type Generated = { stmts :: Array GoExpr, expr :: GoExpr }
+type CellPool = { known :: Array String, nullable :: Array String }
+type Generated = { stmts :: Array GoExpr, expr :: GoExpr, pool :: CellPool }
+type TakenCell = { stmts :: Array GoExpr, expr :: GoExpr, pool :: CellPool, nonNull :: Boolean }
 type Gen = StateT Int Maybe
 
 strip :: NeutralExpr -> BackendSyntax NeutralExpr
@@ -369,15 +371,19 @@ snapshotArgument = case _ of
     pure { stmts: [ GoAssign name (GoCall (GoVar (goTypeToStr value.goType)) [ value.expr ]) ]
          , arg: ScalarArg (value { expr = GoVar name, reads = [] }) }
 
--- A finite, invocation-local collection of dead cells. The slots are consumed
--- by clearing them. Nil donors need no allocation until a constructor needs it.
-takeCell :: Array String -> Gen Generated
-takeCell slots = do
-  name <- freshName "__cell_"
-  let takeOne slot rest = [ GoIfElse (GoBinOp "!=" (GoVar slot) (rawGo "nil"))
-        [ GoMutate name (GoVar slot), GoMutate slot (rawGo "nil") ] rest ]
-  pure { stmts: [ rawGo ("var " <> name <> " " <> "__TREE_TYPE__") ] <> Array.foldr takeOne [] slots
-       , expr: GoVar name }
+-- Known cells were dereferenced by a completed snapshot and are consumed once
+-- during emission. Nullable slots still require selection and clearing at runtime.
+-- Neither stock contains a cell present in the other one.
+takeCell :: CellPool -> Gen TakenCell
+takeCell pool = case Array.uncons pool.known of
+  Just { head, tail } -> pure
+    { stmts: [], expr: GoVar head, pool: pool { known = tail }, nonNull: true }
+  Nothing -> do
+    name <- freshName "__cell_"
+    let takeOne slot rest = [ GoIfElse (GoBinOp "!=" (GoVar slot) (rawGo "nil"))
+          [ GoMutate name (GoVar slot), GoMutate slot (rawGo "nil") ] rest ]
+    pure { stmts: [ rawGo ("var " <> name <> " " <> "__TREE_TYPE__") ] <> Array.foldr takeOne [] pool.nullable
+         , expr: GoVar name, pool, nonNull: false }
 
 -- Substitute only this internal declaration placeholder, never user syntax.
 cellStatements :: TreeSpec -> Array GoExpr -> Array GoExpr
@@ -386,42 +392,54 @@ cellStatements spec = map replace
   replace (GoRaw code) = rawGo $ String.replaceAll (Pattern "__TREE_TYPE__") (Replacement $ goTypeToStr spec.goType) code.text
   replace expr = expr
 
-emitTree :: Context -> Array String -> Boolean -> TreeTerm -> Gen Generated
+emitTree :: Context -> CellPool -> Boolean -> TreeTerm -> Gen Generated
 emitTree context pool outer = case _ of
-  Existing expr -> pure { stmts: [], expr }
-  Empty -> pure { stmts: [], expr: rawGo "nil" }
+  Existing expr -> pure { stmts: [], expr, pool }
+  Empty -> pure { stmts: [], expr: rawGo "nil", pool }
   Keep _ -> lift Nothing
   Construct args -> do
-    values <- traverse (emitArgument context pool) args
-    cell <- takeCell pool
+    values <- emitArguments context pool args
+    cell <- takeCell values.pool
     name <- case cell.expr of
       GoVar name -> pure name
       _ -> lift Nothing
     pointer <- case context.candidate.spec.goType of
       TypeStructPointer pointer -> pure pointer
       _ -> lift Nothing
-    let initialize = GoIfElse (GoBinOp "==" cell.expr (rawGo "nil"))
-          [ GoMutate name (GoCall (GoVar "new") [ GoVar pointer.fullPath ]) ] []
-        assign = Array.mapWithIndex (\index value -> GoMutate (name <> ".V" <> show index) value.expr) values
-    pure { stmts: foldMap _.stmts values <> cellStatements context.candidate.spec cell.stmts
-             <> [ initialize, GoMutate (name <> ".Rc") (GoInt 1) ] <> assign
-         , expr: cell.expr }
+    let initialize = if cell.nonNull then [] else
+          [ GoIfElse (GoBinOp "==" cell.expr (rawGo "nil"))
+              [ GoMutate name (GoCall (GoVar "new") [ GoVar pointer.fullPath ]) ] [] ]
+        assign = Array.mapWithIndex (\index value -> GoMutate (name <> ".V" <> show index) value) values.exprs
+    pure { stmts: values.stmts <> cellStatements context.candidate.spec cell.stmts
+             <> initialize <> [ GoMutate (name <> ".Rc") (GoInt 1) ] <> assign
+         , expr: cell.expr, pool: cell.pool }
   Call name args -> do
     fn <- lift $ Map.lookup name context.candidates
-    values <- traverse (emitArgument context pool) args
-    donor <- if outer then takeCell pool else pure { stmts: [], expr: rawGo "nil" }
+    values <- emitArguments context pool args
+    donor <- if outer then takeCell values.pool
+      else pure { stmts: [], expr: rawGo "nil", pool: values.pool, nonNull: false }
     result <- freshName "__result_"
-    pure { stmts: foldMap _.stmts values <> cellStatements context.candidate.spec donor.stmts
-             <> [ GoAssign result (GoCall (GoVar fn.consume) (map _.expr values <> [ donor.expr ])) ]
-         , expr: GoVar result }
+    pure { stmts: values.stmts <> cellStatements context.candidate.spec donor.stmts
+             <> [ GoAssign result (GoCall (GoVar fn.consume) (values.exprs <> [ donor.expr ])) ]
+         , expr: GoVar result, pool: donor.pool }
 
-emitArgument :: Context -> Array String -> Argument -> Gen Generated
+-- Thread the remaining stock across siblings, including constructions inside
+-- call arguments. Starting each argument with the original stock would alias cells.
+emitArguments :: Context -> CellPool -> Array Argument -> Gen
+  { stmts :: Array GoExpr, exprs :: Array GoExpr, pool :: CellPool }
+emitArguments context pool = foldM step { stmts: [], exprs: [], pool }
+  where
+  step result arg = do
+    value <- emitArgument context result.pool arg
+    pure { stmts: result.stmts <> value.stmts, exprs: Array.snoc result.exprs value.expr, pool: value.pool }
+
+emitArgument :: Context -> CellPool -> Argument -> Gen Generated
 emitArgument context pool = case _ of
   TreeArg tree -> emitTree context pool false tree
-  ScalarArg value -> pure { stmts: [], expr: value.expr }
+  ScalarArg value -> pure { stmts: [], expr: value.expr, pool }
 
 plan :: Context -> Env -> Array Path -> TreeTerm -> Gen
-  { stmts :: Array GoExpr, term :: TreeTerm, pool :: Array String, retired :: Array Path }
+  { stmts :: Array GoExpr, term :: TreeTerm, pool :: CellPool, retired :: Array Path }
 plan _ env future term = do
   lift $ guard (disjoint $ leaves term)
   captured <- snapshot term
@@ -431,15 +449,19 @@ plan _ env future term = do
         _ -> Nothing) (Array.fromFoldable $ Map.values env)
       -- Only these paths were necessarily evaluated by the Keep snapshots.
       -- Scalar short-circuit expressions may leave deeper paths unevaluated.
-      candidates = Array.nub $ roots <> foldMap prefixes retained
+      nonNull = Array.nub $ foldMap prefixes retained
+      candidates = Array.nub $ roots <> nonNull
       dead = Array.filter (\path -> not (any (\kept -> prefix kept path) retained)
         && not (any (overlap path) future)) candidates
   slots <- traverse (\path -> do
     name <- freshName "__dead_"
-    pure { name, stmt: GoAssign name (pathExpr path) }) dead
+    pure { name, nonNull: Array.elem path nonNull, stmt: GoAssign name (pathExpr path) }) dead
   donor <- freshName "__donor_slot_"
   pure { stmts: captured.stmts <> [ GoAssign donor (GoVar "__donor") ] <> map _.stmt slots
-       , term: captured.term, pool: [ donor ] <> map _.name slots, retired: retained <> dead }
+       , term: captured.term
+       , pool: { known: map _.name (Array.filter _.nonNull slots)
+               , nullable: [ donor ] <> map _.name (Array.filter (not <<< _.nonNull) slots) }
+       , retired: retained <> dead }
 
 emitBody :: Context -> Env -> NeutralExpr -> Gen (Array GoExpr)
 emitBody context env expr = case strip expr of
@@ -482,10 +504,10 @@ emitBody context env expr = case strip expr of
     prepared <- plan context env [] term
     case prepared.term of
       Call name args | name == context.candidate.original -> do
-        values <- traverse (emitArgument context prepared.pool) args
-        donor <- takeCell prepared.pool
-        let assign = Array.mapWithIndex (\index value -> GoMutate ("__arg" <> show index) value.expr) values
-        pure (prepared.stmts <> foldMap _.stmts values <> cellStatements context.candidate.spec donor.stmts
+        values <- emitArguments context prepared.pool args
+        donor <- takeCell values.pool
+        let assign = Array.mapWithIndex (\index value -> GoMutate ("__arg" <> show index) value) values.exprs
+        pure (prepared.stmts <> values.stmts <> cellStatements context.candidate.spec donor.stmts
           <> assign <> [ GoMutate "__donor" donor.expr, GoContinue "__owned_loop" ])
       _ -> do
         result <- emitTree context prepared.pool true prepared.term

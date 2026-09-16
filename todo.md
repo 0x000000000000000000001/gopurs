@@ -227,3 +227,28 @@ PATH="$HOME/.local/bin:$PATH" ./bin/test OwnedTrees --keep-workspace
 ```
 
 Les commandes de compilation et de mesure d’altbak ainsi que l’adaptation des sondes sont décrites dans le protocole archivé. Les extensions à d’autres formes d’ADT, aux closures ou à une analyse générale des observateurs demanderaient des preuves supplémentaires ; elles ne sont pas activées implicitement.
+
+## Essai du 17 septembre — recoloration avec copies conditionnelles
+
+Un prototype limité au Go généré de `insert` et `makeBlack` omet les copies des enfants et de la clé lorsque la cellule réutilisée est précisément le nœud d’origine. Un donneur distinct reçoit toujours tous les champs ; la sélection des cellules, la couleur et `Rc` restent inchangés. Aucun changement correspondant n’est intégré au générateur.
+
+Les huit tests Go passent avant/après, dont deux cas supplémentaires avec donneur distinct. Sur cinq paires de processus alternées, cinq appels mesurés par processus, 100 000 clés et `GOGC=800`, la variation appariée médiane est de **+0,055 %**, avec des paires allant de −1,468 % à +2,179 %. Les médianes des 25 échantillons sont **9,992250 → 10,050541 ms**. Les allocations restent à **100 000 / 3 200 000 octets** : aucun gain temporel reproductible ne justifie cette garde supplémentaire.
+
+Le [prototype et ses mesures](/Users/0x1/Documents/htdocs/altbak.pub/scratch/gopurs-field-updates-20260917-prototype/REPORT.md) sont conservés pour éviter de reprendre cette variante sans nouvelle hypothèse. Ces durées de sonde ne remplacent ni le total du README ni les mesures du harnais complet. La simplification de la sélection des cellules et des branches de rééquilibrage reste une piste distincte à mesurer.
+
+## Livraison du 17 septembre — sélection statique des cellules
+
+**État : intégré et validé.** Le générateur distingue les cellules mortes dont la non-nullité est prouvée par les captures de champs des cellules nullable. Il consomme les premières directement, sans balayage ni garde d’allocation, puis garde le repli existant pour les autres. Le stock restant est transmis entre les arguments frères, les constructions et le choix du donneur des appels, y compris récursifs terminaux. Les lectures scalaires conditionnelles ne donnent aucune preuve supplémentaire.
+
+À CoreFn identique (301 fichiers), seul le Go de RBTree change parmi les 388 fichiers produits : les corps consommants de `balance` et `makeBlack`. Le fichier passe de 5 141 à 3 932 lignes. Les types, le runtime, les FFI et les autres modules sont identiques.
+
+| Nouvelle campagne contrôlée | Compilé avant | Compilé après | Manuscrit |
+| --- | ---: | ---: | ---: |
+| Suite complète, somme des médianes par test | 12,58267 ms | 12,26888 ms | 10,59596 ms |
+| RBTree, médiane du harnais | 9,40708 ms | 9,09525 ms | 8,28300 ms |
+
+Trois processus par variante, ordre tournant, 126 résultats numériques validés : le gain total est de **2,49 %**, dont presque toute la baisse vient de RBTree (**3,31 %**). Dans la sonde séparée à cinq paires, quatre sont favorables ; la variation appariée médiane est de **−3,53 %**, et les médianes des 25 appels passent de **9,370458 à 9,080833 ms** (−3,09 %). Les allocations restent à une médiane de **100 000 / 3 200 000 octets**. Les chiffres de sonde et de harnais ne sont pas mélangés.
+
+**Vérifications :** build et bundle sans erreur ni avertissement ; 64 tests outils existants et quatre nouvelles régressions exécutant le Go généré ; fixture `OwnedTrees` compilée et exécutée, snapshot mis à jour après inspection puis contrôlé sans réécriture ; huit tests Go avant et huit après. Les nouvelles régressions couvrent les captures avant réemploi du parent, les arguments frères, le repli nullable et la consommation du donneur d’un appel récursif terminal. Les autres fixtures de compilation n’ont pas été relancées.
+
+Le [rapport, les sources et les mesures brutes](/Users/0x1/Documents/htdocs/altbak.pub/scratch/gopurs-static-cells-20260917/integration/REPORT.md) conservent le protocole et les empreintes. Cette campagne ne remplace pas la baseline officielle actuelle du [README d’altbak](/Users/0x1/Documents/htdocs/altbak.pub/README.md:55), **13,01 ms compilées / 11,09 ms manuscrites** ; le README reste inchangé.
