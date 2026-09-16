@@ -28,6 +28,7 @@ import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.FreeVars (localId)
 import PureScript.Backend.Optimizer.FfiSupport (hashString)
 import Gopurs.ThunkFusion (optimizeThunkProducers)
+import Gopurs.Ownership as Ownership
 import Gopurs.GoTypes (exprTypeToGenericGoType, exprTypeToGoType, instantiateGenericGoType)
 import Gopurs.CodegenState (CodegenMetadata, CodegenState)
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr, generateReboxFunctions, unboxGoExpr)
@@ -53,7 +54,8 @@ translateWithFunctions :: CodegenMetadata -> BackendModule -> { code :: String, 
 translateWithFunctions metadata inputMod =
 
   let
-    mod = optimizeThunkProducers inputMod
+    owned = Ownership.prepare metadata (optimizeThunkProducers inputMod)
+    mod = owned.module
     modNameStrOrig = unwrap mod.name
     modNameStr = String.replaceAll (Pattern ".") (Replacement "_") modNameStrOrig
 
@@ -62,7 +64,7 @@ translateWithFunctions metadata inputMod =
       Ref.new { declarations: ModuleDeclarations.constructors metadata modNameStr mod, globalId: 0, reboxPairs: Set.empty }
 
     preparedBindings = ModuleBindings.prepare metadata modNameStr mod
-    moduleFunctions = preparedBindings.functions
+    moduleFunctions = Map.union owned.functions preparedBindings.functions
 
     Tuple allDeclsAst helpers = unsafePerformEffect do
       let
@@ -77,7 +79,7 @@ translateWithFunctions metadata inputMod =
         })
       (Map.toUnfoldable mod.foreign)
     declarationGroups =
-      [ allDeclsAst
+      [ allDeclsAst <> owned.declarations
       , helpers.declarations <> unsafePerformEffect (generateReboxFunctions metadata codegenStateRef modNameStr)
       , foreignGetters
       ]

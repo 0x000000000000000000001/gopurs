@@ -16,14 +16,18 @@ import Data.Set as Set
 import Data.String as String
 import Data.Tuple (Tuple(..))
 import PureScript.Backend.Optimizer.CoreFn (Ann, Bind(..), Binding(..), ExprType(..), Ident(..), Module(..))
+import PureScript.Backend.Optimizer.CoreFn.Usage (invalidateSourceUsageModule)
 import PureScript.Backend.Optimizer.Monomorphize (collectInstantiations, monomorphize, transitiveCollect)
 
 type GlobalAstMap = Map String (Binding Ann)
 
 -- Receive the original global types and modules enriched with class declarations.
 monomorphizeModules :: Map String ExprType -> List (Module Ann) -> List (Module Ann)
-monomorphizeModules globalTypes modules =
+monomorphizeModules globalTypes inputModules =
   let
+    -- Source identities and usage proofs belong to the exported CoreFn.
+    -- Specialization copies bindings; analyze the final IR afresh instead.
+    modules = map invalidateSourceUsageModule inputModules
     -- Keep negate's dictionary until its signed-zero intrinsic is recognized.
     -- Other known definitions must remain available for static evaluation.
     intrinsicGlobals = Set.singleton "Data.Ring.negate"
