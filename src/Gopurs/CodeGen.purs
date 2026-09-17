@@ -28,6 +28,7 @@ import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.FreeVars (localId)
 import PureScript.Backend.Optimizer.FfiSupport (hashString)
 import Gopurs.ThunkFusion (optimizeThunkProducers)
+import Gopurs.FunctionFusion (optimizeFunctionProducers)
 import Gopurs.Ownership as Ownership
 import Gopurs.GoTypes (exprTypeToGenericGoType, exprTypeToGoType, instantiateGenericGoType)
 import Gopurs.CodegenState (CodegenMetadata, CodegenState)
@@ -54,7 +55,7 @@ translateWithFunctions :: CodegenMetadata -> BackendModule -> { code :: String, 
 translateWithFunctions metadata inputMod =
 
   let
-    owned = Ownership.prepare metadata (optimizeThunkProducers inputMod)
+    owned = Ownership.prepare metadata (optimizeFunctionProducers (optimizeThunkProducers inputMod))
     mod = owned.module
     modNameStrOrig = unwrap mod.name
     modNameStr = String.replaceAll (Pattern ".") (Replacement "_") modNameStrOrig
