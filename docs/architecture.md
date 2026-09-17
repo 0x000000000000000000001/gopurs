@@ -138,6 +138,14 @@ chemin. Le PBO emploie encore `.purmeta` pour les implémentations nécessaires 
 l'optimisation ; cela ne remplace pas la génération Go. Les caches de paquets
 et de compilation Spago restent une couche distincte.
 
+Pendant un build, le PBO conserve les implémentations `.purmeta` récemment
+utilisées dans un cache LRU. À la frontière de chaque module, il ramène le
+poids des entrées retenues à 64 Mio de données sérialisées. Cette limite ne
+mesure pas le tas JavaScript décodé ; les imports d'un module peuvent aussi
+dépasser ce budget pendant son traitement. Le début du build suivant purge
+le cache et les validations des modules, afin de ne jamais reprendre une
+spécialisation périmée. `clearPurmetaCache` permet toujours une purge explicite.
+
 Le backend ne purge pas les anciens fichiers de `output` lorsqu'un module ou
 une FFI disparaît. Pour comparer deux générateurs, conserver les mêmes entrées
 TAST et inventorier les sorties ; pour une fixture, le runner fournit un
