@@ -45,7 +45,7 @@ exprImports = case _ of
     _ -> []
   GoBlock stmts -> foldMap exprImports stmts
   GoReturn expr -> exprImports expr
-  GoAssign _ expr -> exprImports expr
+  GoAssign _ expr -> bindingImports expr
   GoRecordDict ty props ->
     typeImports ty <> foldMap (\(Tuple _ expr) -> exprImports expr) props <> case ty of
       TypeRecord _ -> []
@@ -55,14 +55,13 @@ exprImports = case _ of
   GoRecordUpdateStatic obj _ updates fallback -> runtime <> [ "unsafe" ] <> exprImports obj
     <> foldMap (\(Tuple _ expr) -> exprImports expr) updates <> foldMap (\(Tuple _ expr) -> exprImports expr) fallback
   GoRecordUpdateNative ty obj props -> typeImports ty <> exprImports obj <> foldMap (\(Tuple _ expr) -> exprImports expr) props
-  GoIIFE _ value body -> runtime <> exprImports value <> exprImports body
+  GoIIFE _ value body -> runtime <> bindingImports value <> exprImports body
   GoLetRec bindings body -> runtime <> foldMap (\(Tuple _ expr) -> exprImports expr) bindings <> exprImports body
   GoRecordAccess obj _ -> runtime <> exprImports obj
   GoStructAccess obj _ -> exprImports obj
   GoRecordAccessStatic obj _ _ -> runtime <> exprImports obj
   GoConstructor _ _ types args ->
-    -- Empty constructors print as nil, so neither arguments nor type names
-    -- introduce an import at this site.
+    -- Only a binding without a type context prints a typed nil.
     if Array.null args then [] else foldMap typeImports types <> foldMap exprImports args
   GoConstructorDict _ args -> runtime <> foldMap exprImports args
   GoConstructorAccess obj _ types _ native -> exprImports obj <> if native then [] else foldMap typeImports types
@@ -83,3 +82,7 @@ exprImports = case _ of
   GoFuncBlock params stmts ret -> foldMap (\(Tuple _ ty) -> typeImports ty) params <> foldMap exprImports stmts <> typeImports ret
   GoFuncLit params stmts expr ret -> foldMap (\(Tuple _ ty) -> typeImports ty) params <> foldMap exprImports stmts <> exprImports expr <> typeImports ret
   GoStructValue _ types exprs -> foldMap typeImports types <> foldMap exprImports exprs
+
+bindingImports :: GoExpr -> Array String
+bindingImports (GoConstructor _ _ types []) = foldMap typeImports types
+bindingImports expr = exprImports expr

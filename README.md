@@ -147,6 +147,52 @@ install the application compiler or the Go library overrides. The local
 archive installation was checked offline in an empty npm project; rebuilding
 the backend there is unnecessary.
 
+### Experimental native compiler
+
+```bash
+npm run build:native
+# Override discovery of the local TAST compiler fork when needed:
+GOPURS_PURS=/absolute/path/to/typed/purs npm run build:native
+# Preserve the successful bootstrap workspace and its logs for inspection:
+npm run build:native -- --keep-workspace
+```
+
+This bootstraps `bin/gopurs-native` with the existing Node backend. It requires
+the npm dependencies above, Go, the local `purescript-backend-optimizer-gopurs`
+checkout and the sibling Go library checkouts. The Node backend is rebuilt with
+this repository's npm toolchain. The isolated TAST build uses a separately selected
+typed `purs`: `GOPURS_PURS` when set, otherwise the newest compiler binary under
+`../../purescript/.stack-work/dist/*/*/build/purs/purs`. Its path is printed, and
+every generated module is checked for `typeTable`, `dataDecls` and `classDecls`
+before Go generation. A stock compiler with the same version number is rejected.
+The command then generates Go and links the FFI parser into the executable. Its package set is
+`77.10.1`; sibling `gopurs-*` packages with `spago.yaml` provide the native FFI.
+This includes the native persistent Map from `gopurs-ordered-collections`.
+
+The existing native binary is replaced only after Go compilation succeeds.
+Failures retain the isolated workspace and print the failed stage and log paths.
+The resulting executable accepts the backend's usual arguments, such as
+`--main Main`, from a project containing typed `output/<Module>/corefn.json`.
+Its backend and FFI parser run without Node. The PureScript frontend that creates
+the TAST and Go compilation of the generated application remain separate steps.
+
+Native bootstrapping is experimental. Its PBO implementation cache currently
+retains immutable modules in memory for one build, without the JavaScript
+backend's disk spill or memory budget. The unused legacy JSON BackendModule
+cache is unsupported: reads miss and an attempted write fails explicitly.
+The native JSON parser currently replaces isolated UTF-16 surrogates with
+U+FFFD, so literals containing those code units do not yet have JavaScript
+parity. Ordinary Unicode strings, including valid surrogate pairs, are unaffected
+by this specific limitation.
+The bootstrap was validated on 2026-09-17 by running the native backend on its
+own 448 TAST modules: all 543 generated Go files matched the Node backend byte
+for byte, and rebuilding them produced an identical second-generation binary.
+That binary also generated identical Go for the Hello and NativeArrayReboxing
+fixtures (80 and 193 files), whose applications compiled and ran successfully.
+This establishes functional parity on these inputs, not general equivalence.
+The native backend remains slower on these validation workloads; its CPU-heavy
+compiler passes are not yet explicitly parallelized.
+
 ### Compile and run an application
 
 For `workspace/hello`, create `src/Main.purs`:

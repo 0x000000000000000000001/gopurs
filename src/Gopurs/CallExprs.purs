@@ -97,18 +97,20 @@ nativeCall context@{ codegenStateRef, modNameStr } fn expected ret arity args =
 uncurriedApplication :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> TcoExpr -> Array TcoExpr -> ExprResult
 uncurriedApplication translate context nextId expression fn args =
   -- Uncurried calls recognize intrinsics before considering a tail jump.
-  case ArrayIntrinsics.recognize ArrayIntrinsics.Uncurried context.modNameStr (qualifiedTarget fn) (Array.length args) of
-    Just intrinsic ->
-      let translated = CallArguments.translate translate context Nothing { stmts: StmtEmpty, nextId } args
-      in ArrayIntrinsics.emitUncurried context args intrinsic translated
-    Nothing ->
-      let
-        Tuple flatFn spine = collectGoSpine expression
-        flatArgs = getGoSpineArgs spine
-      in
-        case tailTarget context flatFn of
-          Just target -> tailCall translate context nextId expression flatArgs target
-          Nothing -> uncurriedCall translate context 10 nextId fn args
+  case ArrayIntrinsics.safeIndex translate context nextId (qualifiedTarget fn) args of
+    Just result -> result
+    Nothing -> case ArrayIntrinsics.recognize ArrayIntrinsics.Uncurried context.modNameStr (qualifiedTarget fn) (Array.length args) of
+      Just intrinsic ->
+        let translated = CallArguments.translate translate context Nothing { stmts: StmtEmpty, nextId } args
+        in ArrayIntrinsics.emitUncurried context args intrinsic translated
+      Nothing ->
+        let
+          Tuple flatFn spine = collectGoSpine expression
+          flatArgs = getGoSpineArgs spine
+        in
+          case tailTarget context flatFn of
+            Just target -> tailCall translate context nextId expression flatArgs target
+            Nothing -> uncurriedCall translate context 10 nextId fn args
 
 effectApplication :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> Array TcoExpr -> ExprResult
 effectApplication translate context = uncurriedCall translate context 5

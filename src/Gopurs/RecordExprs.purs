@@ -110,7 +110,7 @@ update codegenStateRef modNameStr expectedType obj props = case obj.exprType of
       copyField (Tuple key targetType) =
         let sourceType = fromMaybe TypeValue (Map.lookup key (Map.fromFoldable fields))
         in GoMutate ("clone." <> sanitizeName key)
-          (coerceGoExpr codegenStateRef modNameStr (GoStructAccess (GoVar "originalRecord") key) sourceType targetType)
+          (coerceGoExpr codegenStateRef modNameStr (GoStructAccess (GoVar "originalRecord") (sanitizeName key)) sourceType targetType)
       -- A type-changing update needs a new native layout. Do not convert the
       -- overwritten fields through their old types while copying the record.
       changedLayout = GoCall (GoFuncLit []

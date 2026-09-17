@@ -10,7 +10,9 @@ purs_files.txt
 .gopurs-cache.json
 /tests/runner/
 bin/gopurs.js
+bin/gopurs-native
 /src/Gopurs/Runtime.js
+/src/Gopurs/Runtime.go
 .psci*
 psci*
 .purmeta/

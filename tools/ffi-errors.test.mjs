@@ -94,6 +94,22 @@ test('the compiled API prepares names and internal references together', () => {
     assert.match(prepared.content, /return Test_Invalid_Words\(s\)/);
 });
 
+test('prepared FFI removes the package clause and preserves package words in literals and comments', () => {
+    const declarations = 'const Text = "package literal"\n'
+        + 'var Multiline = `first\npackage embedded\nlast`\n'
+        + '// package trailing comment\nfunc Read() string { return Text + Multiline }\n';
+    for (const clause of ['', 'package ffi\n', '\tpackage\tffi;', 'package /* middle */ ffi /* trailing */ ;']) {
+        const prepared = prepareFfi(source)('Fixture_')('// package comment\n' + clause + declarations)();
+        assert.ok(prepared.content.includes('"package literal"'));
+        assert.ok(prepared.content.includes('`first\npackage embedded\nlast`'));
+        assert.ok(prepared.content.includes('// package comment\n'));
+        assert.ok(prepared.content.includes('// package trailing comment\n'));
+        assert.match(prepared.content, /var Fixture_Multiline =/);
+        assert.match(prepared.content, /func Fixture_Read\(/);
+        assert.doesNotMatch(prepared.content, /package\s+(?:\/\* middle \*\/\s*)?ffi/);
+    }
+});
+
 test('preparing invalid Go preserves the source context', () => {
     assert.throws(() => prepareFfi(source)('Test_Invalid_')('func Broken(')(), error =>
         error.message.includes(source.moduleName) && error.message.includes(source.path));

@@ -272,8 +272,15 @@ translateExprWithExpectedType metadata codegenStateRef depth modNameStr recVars 
               Just elemType | (isAllSame || Array.length xs == 0) && elemType /= TypeValue ->
                 let
                   goTypeArr = TypeNativeArray elemType
+                  -- The expected element layout can specialize a polymorphic
+                  -- constructor field. Convert each value before assembling
+                  -- the native slice, just as for typed record fields.
+                  elements = Array.zipWith
+                    (\itemExpr ty -> coerceGoExpr codegenStateRef modNameStr itemExpr ty elemType)
+                    accXs.exprs
+                    accXs.exprTypes
                 in
-                  { stmts: accXs.stmts, expr: rawGo (goTypeToStr goTypeArr <> "{" <> String.joinWith ", " (map printGoExpr accXs.exprs) <> "}"), exprType: goTypeArr, nextId: accXs.nextId }
+                  { stmts: accXs.stmts, expr: rawGo (goTypeToStr goTypeArr <> "{" <> String.joinWith ", " (map printGoExpr elements) <> "}"), exprType: goTypeArr, nextId: accXs.nextId }
               _ ->
                 let
                   boxedExprs = Array.zipWith (\itemExpr ty -> boxGoExpr codegenStateRef modNameStr itemExpr ty) accXs.exprs accXs.exprTypes

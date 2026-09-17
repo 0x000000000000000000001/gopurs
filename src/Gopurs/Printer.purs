@@ -11,6 +11,14 @@ foreign import escapeGoStringImpl :: String -> String
 escapeGoString :: String -> String
 escapeGoString = escapeGoStringImpl
 
+-- A short declaration (or blank assignment) provides no type for nil.
+-- Other expression positions retain the surrounding Go type context.
+printBindingRhs :: GoExpr -> String
+printBindingRhs (GoConstructor _ structName typeArgs []) =
+  let typeArgsStr = if Array.null typeArgs then "" else "[" <> String.joinWith ", " (map goTypeToStr typeArgs) <> "]"
+  in "(*" <> structName <> typeArgsStr <> ")(nil)"
+printBindingRhs expr = printGoExpr expr
+
 printGoExpr :: GoExpr -> String
 printGoExpr goExpr = case goExpr of
   GoVar name ->
@@ -28,7 +36,7 @@ printGoExpr goExpr = case goExpr of
   GoReturn e ->
     "return " <> printGoExpr e
   GoAssign name e ->
-    name <> " := " <> printGoExpr e <> "\n_ = " <> name
+    name <> " := " <> printBindingRhs e <> "\n_ = " <> name
   GoRecordDict goType props ->
     case goType of
       TypeRecord _ ->
@@ -109,7 +117,7 @@ printGoExpr goExpr = case goExpr of
     in
       "func() " <> goTypeToStr goType <> " {\nclone := " <> printGoExpr orig <> "\n" <> assignments <> "\nreturn clone\n}()"
   GoIIFE name binding body ->
-    let assignment = if name == "_" then name <> " = " <> printGoExpr binding else name <> " := " <> printGoExpr binding <> "\n_ = " <> name
+    let assignment = if name == "_" then name <> " = " <> printBindingRhs binding else name <> " := " <> printBindingRhs binding <> "\n_ = " <> name
     in case body of
       GoBlock _ -> "func() gopurs_runtime.Value {\n" <> assignment <> "\n" <> printGoExpr body <> "\n}()"
       _ -> "func() gopurs_runtime.Value {\n" <> assignment <> "\nreturn " <> printGoExpr body <> "\n}()"

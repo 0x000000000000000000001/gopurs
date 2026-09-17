@@ -176,12 +176,10 @@ func TestRenamedFFI(t *testing.T) {
 			if strings.Contains(result.Content, "invalid old generated wrapper") {
 				t.Error("generated wrappers were retained")
 			}
-			if !withPackage {
-				if strings.HasPrefix(result.Content, "package ") {
-					t.Fatal("synthetic package retained in source")
-				}
-				result.Content = "package main\n" + result.Content
+			if strings.HasPrefix(result.Content, "package ") {
+				t.Fatal("package retained in prepared source")
 			}
+			result.Content = "package main\n" + result.Content
 			dir := t.TempDir()
 			ffiPath := filepath.Join(dir, "ffi.go")
 			testPath := filepath.Join(dir, "ffi_test.go")
@@ -228,13 +226,6 @@ func TestParseFFIRejectsInvalidInput(t *testing.T) {
 			column:   0,
 			offset:   35,
 			filename: "generated.go",
-		},
-		{
-			name:    "package detection remains a literal substring check",
-			content: "// package name omitted\nfunc Visible() {}",
-			line:    2,
-			column:  1,
-			offset:  24,
 		},
 		{
 			name:    "marker remains a literal substring check",

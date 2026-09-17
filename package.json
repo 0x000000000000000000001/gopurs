@@ -9,6 +9,7 @@
   "scripts": {
     "build": "npm run build:runtime && spago build && spago bundle --module Main --platform node --outfile bin/gopurs.js --bundle-type app",
     "build:runtime": "node tools/embed-runtime.mjs",
+    "build:native": "node tools/build-native.mjs",
     "build:ffi": "node tools/build-ffi.mjs",
     "test:ffi": "node --test tools/ffi-errors.test.mjs",
     "test:runner": "node --test tools/test-runner.test.mjs",

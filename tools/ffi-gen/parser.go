@@ -70,7 +70,19 @@ func parseFFI(content string, prefixes ...string) (string, error) {
 	src := content
 	// Preserve source lines and columns while allowing later //line directives.
 	const packagePrefix = "package main\n//line :1:1\n"
-	addedPackage := !strings.Contains(content, "package ")
+	var sourceScanner scanner.Scanner
+	sourceFile := token.NewFileSet().AddFile("", -1, len(content))
+	sourceScanner.Init(sourceFile, []byte(content), nil, 0)
+	_, firstToken, _ := sourceScanner.Scan()
+	addedPackage := firstToken != token.PACKAGE
+	packageSemicolon := -1
+	if !addedPackage {
+		sourceScanner.Scan() // package name; ParseFile below validates it.
+		position, kind, literal := sourceScanner.Scan()
+		if kind == token.SEMICOLON && literal == ";" {
+			packageSemicolon = sourceFile.Offset(position)
+		}
+	}
 	if addedPackage {
 		src = packagePrefix + content
 	}
@@ -179,7 +191,22 @@ func parseFFI(content string, prefixes ...string) (string, error) {
 
 	var result any = decls
 	if len(prefixes) > 0 {
-		var offsets []int
+		type sourceEdit struct {
+			start, end int
+			text       string
+		}
+		var edits []sourceEdit
+		if !addedPackage {
+			// Main supplies the destination package. Remove only its source
+			// tokens, retaining comments, whitespace and literal contents.
+			packageStart := fset.PositionFor(f.Package, false).Offset
+			nameStart := fset.PositionFor(f.Name.Pos(), false).Offset
+			nameEnd := fset.PositionFor(f.Name.End(), false).Offset
+			edits = append(edits, sourceEdit{packageStart, packageStart + len("package"), ""}, sourceEdit{nameStart, nameEnd, ""})
+			if packageSemicolon >= 0 {
+				edits = append(edits, sourceEdit{packageSemicolon, packageSemicolon + 1, ""})
+			}
+		}
 		selectorNames := make(map[*ast.Ident]bool)
 		ast.Inspect(f, func(node ast.Node) bool {
 			switch node := node.(type) {
@@ -191,18 +218,18 @@ func parseFFI(content string, prefixes ...string) (string, error) {
 					if addedPackage {
 						offset -= len(packagePrefix)
 					}
-					offsets = append(offsets, offset)
+					edits = append(edits, sourceEdit{offset, offset, prefix})
 				}
 			}
 			return true
 		})
-		sort.Ints(offsets)
+		sort.Slice(edits, func(i, j int) bool { return edits[i].start < edits[j].start })
 		var renamed strings.Builder
 		start := 0
-		for _, offset := range offsets {
-			renamed.WriteString(content[start:offset])
-			renamed.WriteString(prefix)
-			start = offset
+		for _, edit := range edits {
+			renamed.WriteString(content[start:edit.start])
+			renamed.WriteString(edit.text)
+			start = edit.end
 		}
 		renamed.WriteString(content[start:])
 		result = struct {

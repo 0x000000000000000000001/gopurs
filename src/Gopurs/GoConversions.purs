@@ -107,10 +107,9 @@ coerceGoExpr _ _ ctor@(GoConstructor _ structName _ args) _ (TypeStructValue adt
 coerceGoExpr _ _ expr (TypeStructPointer { baseStructName: b1, fullPath: s1, typeArgs: a1 }) (TypeStructPointer { baseStructName: b2, fullPath: s2, typeArgs: a2 }) | b1 == b2 && s1 == s2 && a1 == a2 = expr
 
 coerceGoExpr codegenStateRef modNameStr expr srcT@(TypeStructPointer { baseStructName: b1, fullPath: s1 }) destT@(TypeStructPointer { baseStructName: b2, fullPath: s2 }) | b1 == b2 =
-  let
-    _register = unsafePerformEffect (registerReboxPair codegenStateRef srcT destT)
-  in
-    GoCall (GoVar ("Rebox_" <> modNameStr <> "_" <> hashString s1 <> "_" <> hashString s2)) [ expr ]
+  unsafePerformEffect do
+    registerReboxPair codegenStateRef srcT destT
+    pure $ GoCall (GoVar ("Rebox_" <> modNameStr <> "_" <> hashString s1 <> "_" <> hashString s2)) [ expr ]
 
 coerceGoExpr codegenStateRef modNameStr expr srcT@(TypeStructPointer _) destT@(TypeStructPointer _) =
   unboxGoExpr codegenStateRef modNameStr (boxGoExpr codegenStateRef modNameStr expr srcT) TypeValue destT
@@ -202,6 +201,10 @@ unboxGoExpr codegenStateRef modNameStr expr currentType desiredType =
     TypeUint32 -> rawGo ("uint32(" <> printGoExpr (GoSelector expr "IntVal") <> ")")
     (TypeStructPointer { fullPath }) -> GoCall (rawGo ("gopurs_runtime.CoerceToStruct[" <> fullPath <> "]")) [ expr ]
     (TypeInterface _) -> expr
+    -- Array Value already has this representation. Borrow its immutable slice,
+    -- just as boxing a native []Value shares the backing storage.
+    (TypeNativeArray TypeValue) ->
+      rawGo ("(*(*[]gopurs_runtime.Value)((" <> printGoExpr expr <> ").UnsafePtr))")
     (TypeNativeArray TypeInt64) -> GoUnboxIntArray expr
     (TypeNativeArray inner) -> case currentType of
       TypeNativeArray currentInner ->
@@ -254,11 +257,9 @@ findReboxFields metadata baseStructName =
       Nothing -> case mbClass of
         Just (Tuple _ classInfo) ->
           Just { vars: classInfo.vars, fields: map (\field -> field."type") classInfo.fields }
-        Nothing ->
-          let
-            _trace = unsafePerformEffect (Console.log ("ERROR: Rebox missing! b1=" <> baseStructName <> " keysCtor: " <> String.joinWith ", " (map fst (Map.toUnfoldable metadata.ctorTypes :: Array (Tuple String _)))))
-          in
-            Nothing
+        Nothing -> unsafePerformEffect do
+          Console.log ("ERROR: Rebox missing! b1=" <> baseStructName <> " keysCtor: " <> String.joinWith ", " (map fst (Map.toUnfoldable metadata.ctorTypes :: Array (Tuple String _))))
+          pure Nothing
 
 renderReboxFunction :: Ref CodegenState -> CodegenMetadata -> String -> Map String GoDecl -> Tuple GoType GoType -> Maybe (Tuple String GoDecl)
 renderReboxFunction codegenStateRef metadata modNameStr generatedFuncs (Tuple srcT destT) =

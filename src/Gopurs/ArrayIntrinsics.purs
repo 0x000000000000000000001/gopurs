@@ -4,10 +4,12 @@ module Gopurs.ArrayIntrinsics
   , recognize
   , emitCurried
   , emitUncurried
+  , safeIndex
   ) where
 
 import Prelude
 import Data.Array as Array
+import Data.Foldable (foldl)
 import Data.Map as Map
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.String as String
@@ -16,17 +18,75 @@ import Gopurs.CallAnalysis (CallTarget, qualifiedTarget)
 import Gopurs.CallArguments (Arguments, applyBoxed)
 import Gopurs.CallArguments as CallArguments
 import Gopurs.CodegenState (FunctionInfo)
-import Gopurs.ExprAnalysis (extractFuncType, unwrapTcoExpr)
-import Gopurs.ExprContext (ExprContext, ExprResult)
+import Gopurs.ExprAnalysis (extractFuncType, getExprType, unwrapTcoExpr)
+import Gopurs.ExprContext (ExprContext, ExprResult, StmtTree(..), TranslateExpr)
 import Gopurs.GoAst (rawGo, GoExpr(..), GoType(..), goTypeToStr)
-import Gopurs.GoConversions (boxGoExpr, unboxGoExpr)
-import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr)
+import Gopurs.GoConversions (boxGoExpr, coerceGoExpr, unboxGoExpr)
+import Gopurs.GoTypes (exprTypeToGoType)
+import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..), Ident(..), Literal(..), ModuleName(..), Qualified(..))
 import PureScript.Backend.Optimizer.Syntax (BackendSyntax(..))
 
 data ArrayIntrinsic = MapArray | FoldlArray | FilterArray
 
 data Convention = Curried | Uncurried
+
+-- indexImpl's FFI bridge converts its entire array to []any. Retain the
+-- source representation and convert only the element passed to Just.
+safeIndex :: TranslateExpr -> ExprContext -> Int -> Maybe CallTarget -> Array TcoExpr -> Maybe ExprResult
+safeIndex translate context@{ metadata, codegenStateRef, modNameStr } nextId target args = case target, args of
+  Just { mbMod, name: "indexImpl" }, [ justArg, nothingArg, arrayArg, indexArg ]
+    | mbMod == Just (ModuleName "Data.Array") || (mbMod == Nothing && modNameStr == "Data_Array") ->
+      let
+        captured = foldl capture { stmts: StmtEmpty, exprs: [], exprTypes: [], nextId }
+          [ justArg, nothingArg, withoutArrayAnnotation arrayArg, indexArg ]
+        arg n = fromMaybe (rawGo "nil") (Array.index captured.exprs n)
+        argType n = fromMaybe TypeValue (Array.index captured.exprTypes n)
+        boxed n = boxGoExpr codegenStateRef modNameStr (arg n) (argType n)
+        arrayName = "arrayIndex_source_" <> show captured.nextId
+        -- The captured argument is a variable, so this binding cannot repeat
+        -- evaluation or traverse the array.
+        source = arraySource "arrayIndex_value" arrayName (argType 2)
+        elementType = case getExprType arrayArg of
+          Array inner -> exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr inner
+          _ -> source.elementType
+        index = coerceGoExpr codegenStateRef modNameStr (arg 3) (argType 3) TypeInt64
+        element = GoIndex (rawGo ("(" <> source.target <> ")")) index
+        converted = coerceGoExpr codegenStateRef modNameStr element source.elementType elementType
+        selected = boxGoExpr codegenStateRef modNameStr converted elementType
+        onFound = case argType 0 of
+          TypeFunc [ inputType ] outputType -> boxGoExpr codegenStateRef modNameStr
+            (GoCall (arg 0) [ coerceGoExpr codegenStateRef modNameStr converted elementType inputType ]) outputType
+          _ -> applyBoxed (boxed 0) [ selected ]
+        inBounds = GoBinOp "&&"
+          (GoBinOp ">=" index (rawGo "0"))
+          (GoBinOp "<" index (GoCall (GoVar "int64") [ GoCall (GoVar "len") [ rawGo source.target ] ]))
+        expr = GoCall (GoFuncLit []
+          [ GoAssign "arrayIndex_value" (arg 2)
+          , source.assignment
+          , GoIfElse inBounds [ GoReturn onFound ] []
+          ] (boxed 1) TypeValue) []
+      in
+        Just { stmts: captured.stmts, expr, exprType: TypeValue, nextId: captured.nextId }
+  _, _ -> Nothing
+  where
+  -- Capture each expression immediately after its statements: collecting all
+  -- statements before evaluating the expressions would reorder arguments.
+  capture acc arg =
+    let
+      result = translate (CallArguments.childContext context Nothing) acc.nextId arg
+      name = "arrayIndex_arg_" <> show result.nextId
+    in
+      { stmts: acc.stmts <> result.stmts <> StmtLeaf (GoAssign name result.expr)
+      , exprs: Array.snoc acc.exprs (GoVar name)
+      , exprTypes: Array.snoc acc.exprTypes result.exprType
+      , nextId: result.nextId + 1
+      }
+
+  -- Typed array coercions are element-wise. Moving this coercion onto the
+  -- selected element preserves its TAST type without copying the container.
+  withoutArrayAnnotation (TcoExpr _ (Typed (Array _) inner)) = withoutArrayAnnotation inner
+  withoutArrayAnnotation arg = arg
 
 -- Preserve each calling convention's name and qualification guards.
 recognize :: Convention -> String -> Maybe CallTarget -> Int -> Maybe ArrayIntrinsic
@@ -294,4 +354,3 @@ normalizeFreshIntArrayRoundtrip suffix expr = case expr of
     in
       GoIIFE sourceName source body
   _ -> expr
-

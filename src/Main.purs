@@ -114,13 +114,11 @@ emitModule prepared mbFfiDir (Module coreFnMod) backendMod = do
         content <- FS.readTextFile UTF8 ffiPath
         ffi <- liftEffect $ prepareFfi { moduleName: modNameStr, path: ffiPath } (safeModName <> "_") content
 
-        let lines = String.split (Pattern "\n") (String.replaceAll (Pattern "\r") (Replacement "") ffi.content)
-        let otherLines = Array.filter (\l -> not (String.contains (Pattern "package ") l)) lines
         let finalPkgLine = "package purescript"
         let hasImport = String.contains (Pattern "\"gopurs/output/gopurs_runtime\"") content
         let importLine = if hasImport then "" else "import \"gopurs/output/gopurs_runtime\"\n"
 
-        let newContent = finalPkgLine <> "\n\n" <> importLine <> "\n" <> String.joinWith "\n" otherLines <> "\n\n// --- Auto-generated FFI wrappers ---\n" <> FfiBridge.generateFfiBridge safeModName backendMod.dataDecls ffi.decls (Map.toUnfoldable backendMod.foreign)
+        let newContent = finalPkgLine <> "\n\n" <> importLine <> "\n" <> ffi.content <> "\n\n// --- Auto-generated FFI wrappers ---\n" <> FfiBridge.generateFfiBridge safeModName backendMod.dataDecls ffi.decls (Map.toUnfoldable backendMod.foreign)
         FS.writeTextFile UTF8 ("output/purescript/" <> safeModName <> "_ffi.go") newContent
       Nothing -> do
 

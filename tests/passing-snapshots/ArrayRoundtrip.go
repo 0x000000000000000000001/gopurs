@@ -243,44 +243,23 @@ func Call_Main_filterEvens(arr_0_loop []int64) []int64 {
 	var arr_0 []int64 = arr_0_loop
 	_ = arr_0
 	return func() []int64 {
-		arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array(func() []gopurs_runtime.Value {
-			arr := *(*[]gopurs_runtime.Value)(func() gopurs_runtime.Value {
-				arr := func() []int64 {
-					arr_val_filterImpl0 := arr_0
-					_ = arr_val_filterImpl0
-					_ = arr_val_filterImpl0
-					arr_go_filterImpl0 := arr_val_filterImpl0
-					_ = arr_go_filterImpl0
-					res_go_filterImpl0 := make([]int64, 0)
-					_ = res_go_filterImpl0
-					for _, v_filterImpl0 := range arr_go_filterImpl0 {
-						if gopurs_runtime.Apply(gopurs_runtime.Func(func(x_1 gopurs_runtime.Value) gopurs_runtime.Value {
-							return gopurs_runtime.Bool((gopurs_runtime.IntMod(x_1.IntVal, int64(2))) == (int64(0)))
-						}), gopurs_runtime.Int(v_filterImpl0)).BoolVal() {
-							res_go_filterImpl0 = append(res_go_filterImpl0, v_filterImpl0)
-						} else {
+		arr_val_filterImpl0 := arr_0
+		_ = arr_val_filterImpl0
+		_ = arr_val_filterImpl0
+		arr_go_filterImpl0 := arr_val_filterImpl0
+		_ = arr_go_filterImpl0
+		res_go_filterImpl0 := make([]int64, 0)
+		_ = res_go_filterImpl0
+		for _, v_filterImpl0 := range arr_go_filterImpl0 {
+			if gopurs_runtime.Apply(gopurs_runtime.Func(func(x_1 gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Bool((gopurs_runtime.IntMod(x_1.IntVal, int64(2))) == (int64(0)))
+			}), gopurs_runtime.Int(v_filterImpl0)).BoolVal() {
+				res_go_filterImpl0 = append(res_go_filterImpl0, v_filterImpl0)
+			} else {
 
-						}
-					}
-					return res_go_filterImpl0
-				}()
-				boxed := make([]gopurs_runtime.Value, len(arr))
-				for i, v := range arr {
-					boxed[i] = gopurs_runtime.Int(v)
-				}
-				return gopurs_runtime.Array(boxed)
-			}().UnsafePtr)
-			unboxed := make([]gopurs_runtime.Value, len(arr))
-			for i, v := range arr {
-				unboxed[i] = v
 			}
-			return unboxed
-		}()).UnsafePtr)
-		unboxed := make([]int64, len(arr))
-		for i, v := range arr {
-			unboxed[i] = v.IntVal
 		}
-		return unboxed
+		return res_go_filterImpl0
 	}()
 }
 

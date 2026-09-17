@@ -489,6 +489,282 @@ func Get_Main_main() gopurs_runtime.Value {
 	return cache_Main_main
 }
 
+func Call_Main___gopurs_owned_mixSources_0_consume(__arg0 *Constructor_Main_Node, __arg1 *Constructor_Main_Node, __donor *Constructor_Main_Node) *Constructor_Main_Node {
+__owned_loop:
+	for {
+		if false {
+			continue __owned_loop
+		}
+		if ((__arg0) != (nil)) && ((__arg1) != (nil)) {
+			__scalar_3 := uint32(939353081)
+			_ = __scalar_3
+			__read_4 := __arg0.V1
+			_ = __read_4
+			__scalar_5 := int64(__arg0.V2)
+			_ = __scalar_5
+			__scalar_6 := bool(__arg0.V3)
+			_ = __scalar_6
+			__read_7 := __arg1.V4
+			_ = __read_7
+			__donor_slot_10 := __donor
+			_ = __donor_slot_10
+			__dead_8 := __arg0
+			_ = __dead_8
+			__dead_9 := __arg1
+			_ = __dead_9
+			__dead_8.Rc = 1
+			__dead_8.V0 = __scalar_3
+			__dead_8.V1 = __read_4
+			__dead_8.V2 = __scalar_5
+			__dead_8.V3 = __scalar_6
+			__dead_8.V4 = __read_7
+			return __dead_8
+		} else {
+			__read_0 := __arg0
+			_ = __read_0
+			__donor_slot_2 := __donor
+			_ = __donor_slot_2
+			__dead_1 := __arg1
+			_ = __dead_1
+			return __read_0
+		}
+	}
+}
+
+func Call_Main___gopurs_owned_mixSources_0(__arg0 *Constructor_Main_Node, __arg1 *Constructor_Main_Node) *Constructor_Main_Node {
+	return Call_Main___gopurs_owned_mixSources_0_consume(__arg0, __arg1, nil)
+}
+
+func Call_Main___gopurs_owned_setBlack_0_consume(__arg0 *Constructor_Main_Node, __donor *Constructor_Main_Node) *Constructor_Main_Node {
+__owned_loop:
+	for {
+		if false {
+			continue __owned_loop
+		}
+		if (__arg0) != (nil) {
+			__scalar_0 := uint32(939353081)
+			_ = __scalar_0
+			__read_1 := __arg0.V1
+			_ = __read_1
+			__scalar_2 := int64(__arg0.V2)
+			_ = __scalar_2
+			__scalar_3 := bool(__arg0.V3)
+			_ = __scalar_3
+			__read_4 := __arg0.V4
+			_ = __read_4
+			__donor_slot_6 := __donor
+			_ = __donor_slot_6
+			__dead_5 := __arg0
+			_ = __dead_5
+			__dead_5.Rc = 1
+			__dead_5.V0 = __scalar_0
+			__dead_5.V1 = __read_1
+			__dead_5.V2 = __scalar_2
+			__dead_5.V3 = __scalar_3
+			__dead_5.V4 = __read_4
+			return __dead_5
+		} else {
+			if (__arg0) == (nil) {
+				__donor_slot_8 := __donor
+				_ = __donor_slot_8
+				__dead_7 := __arg0
+				_ = __dead_7
+				return nil
+			} else {
+				panic("Failed pattern match")
+			}
+		}
+	}
+}
+
+func Call_Main___gopurs_owned_setBlack_0(__arg0 *Constructor_Main_Node) *Constructor_Main_Node {
+	return Call_Main___gopurs_owned_setBlack_0_consume(__arg0, nil)
+}
+
+func Call_Main___gopurs_owned_setBlackTrue_0_consume(__arg0 *Constructor_Main_Node, __donor *Constructor_Main_Node) *Constructor_Main_Node {
+__owned_loop:
+	for {
+		if false {
+			continue __owned_loop
+		}
+		if (__arg0) != (nil) {
+			__scalar_0 := uint32(939353081)
+			_ = __scalar_0
+			__read_1 := __arg0.V1
+			_ = __read_1
+			__scalar_2 := int64(__arg0.V2)
+			_ = __scalar_2
+			__scalar_3 := bool(true)
+			_ = __scalar_3
+			__read_4 := __arg0.V4
+			_ = __read_4
+			__donor_slot_6 := __donor
+			_ = __donor_slot_6
+			__dead_5 := __arg0
+			_ = __dead_5
+			__dead_5.Rc = 1
+			__dead_5.V0 = __scalar_0
+			__dead_5.V1 = __read_1
+			__dead_5.V2 = __scalar_2
+			__dead_5.V3 = __scalar_3
+			__dead_5.V4 = __read_4
+			return __dead_5
+		} else {
+			if (__arg0) == (nil) {
+				__donor_slot_8 := __donor
+				_ = __donor_slot_8
+				__dead_7 := __arg0
+				_ = __dead_7
+				return nil
+			} else {
+				panic("Failed pattern match")
+			}
+		}
+	}
+}
+
+func Call_Main___gopurs_owned_setBlackTrue_0(__arg0 *Constructor_Main_Node) *Constructor_Main_Node {
+	return Call_Main___gopurs_owned_setBlackTrue_0_consume(__arg0, nil)
+}
+
+func Call_Main___gopurs_owned_setSeven_0_consume(__arg0 *Constructor_Main_Node, __donor *Constructor_Main_Node) *Constructor_Main_Node {
+__owned_loop:
+	for {
+		if false {
+			continue __owned_loop
+		}
+		if (__arg0) != (nil) {
+			__scalar_0 := uint32(__arg0.V0)
+			_ = __scalar_0
+			__read_1 := __arg0.V1
+			_ = __read_1
+			__scalar_2 := int64(int64(7))
+			_ = __scalar_2
+			__scalar_3 := bool(__arg0.V3)
+			_ = __scalar_3
+			__read_4 := __arg0.V4
+			_ = __read_4
+			__donor_slot_6 := __donor
+			_ = __donor_slot_6
+			__dead_5 := __arg0
+			_ = __dead_5
+			__dead_5.Rc = 1
+			__dead_5.V0 = __scalar_0
+			__dead_5.V1 = __read_1
+			__dead_5.V2 = __scalar_2
+			__dead_5.V3 = __scalar_3
+			__dead_5.V4 = __read_4
+			return __dead_5
+		} else {
+			if (__arg0) == (nil) {
+				__donor_slot_8 := __donor
+				_ = __donor_slot_8
+				__dead_7 := __arg0
+				_ = __dead_7
+				return nil
+			} else {
+				panic("Failed pattern match")
+			}
+		}
+	}
+}
+
+func Call_Main___gopurs_owned_setSeven_0(__arg0 *Constructor_Main_Node) *Constructor_Main_Node {
+	return Call_Main___gopurs_owned_setSeven_0_consume(__arg0, nil)
+}
+
+func Call_Main___gopurs_owned_setTrue_0_consume(__arg0 *Constructor_Main_Node, __donor *Constructor_Main_Node) *Constructor_Main_Node {
+__owned_loop:
+	for {
+		if false {
+			continue __owned_loop
+		}
+		if (__arg0) != (nil) {
+			__scalar_0 := uint32(__arg0.V0)
+			_ = __scalar_0
+			__read_1 := __arg0.V1
+			_ = __read_1
+			__scalar_2 := int64(__arg0.V2)
+			_ = __scalar_2
+			__scalar_3 := bool(true)
+			_ = __scalar_3
+			__read_4 := __arg0.V4
+			_ = __read_4
+			__donor_slot_6 := __donor
+			_ = __donor_slot_6
+			__dead_5 := __arg0
+			_ = __dead_5
+			__dead_5.Rc = 1
+			__dead_5.V0 = __scalar_0
+			__dead_5.V1 = __read_1
+			__dead_5.V2 = __scalar_2
+			__dead_5.V3 = __scalar_3
+			__dead_5.V4 = __read_4
+			return __dead_5
+		} else {
+			if (__arg0) == (nil) {
+				__donor_slot_8 := __donor
+				_ = __donor_slot_8
+				__dead_7 := __arg0
+				_ = __dead_7
+				return nil
+			} else {
+				panic("Failed pattern match")
+			}
+		}
+	}
+}
+
+func Call_Main___gopurs_owned_setTrue_0(__arg0 *Constructor_Main_Node) *Constructor_Main_Node {
+	return Call_Main___gopurs_owned_setTrue_0_consume(__arg0, nil)
+}
+
+func Call_Main___gopurs_owned_swapChildren_0_consume(__arg0 *Constructor_Main_Node, __donor *Constructor_Main_Node) *Constructor_Main_Node {
+__owned_loop:
+	for {
+		if false {
+			continue __owned_loop
+		}
+		if (__arg0) != (nil) {
+			__scalar_0 := uint32(939353081)
+			_ = __scalar_0
+			__read_1 := __arg0.V4
+			_ = __read_1
+			__scalar_2 := int64(__arg0.V2)
+			_ = __scalar_2
+			__scalar_3 := bool(__arg0.V3)
+			_ = __scalar_3
+			__read_4 := __arg0.V1
+			_ = __read_4
+			__donor_slot_6 := __donor
+			_ = __donor_slot_6
+			__dead_5 := __arg0
+			_ = __dead_5
+			__dead_5.Rc = 1
+			__dead_5.V0 = __scalar_0
+			__dead_5.V1 = __read_1
+			__dead_5.V2 = __scalar_2
+			__dead_5.V3 = __scalar_3
+			__dead_5.V4 = __read_4
+			return __dead_5
+		} else {
+			if (__arg0) == (nil) {
+				__donor_slot_8 := __donor
+				_ = __donor_slot_8
+				__dead_7 := __arg0
+				_ = __dead_7
+				return nil
+			} else {
+				panic("Failed pattern match")
+			}
+		}
+	}
+}
+
+func Call_Main___gopurs_owned_swapChildren_0(__arg0 *Constructor_Main_Node) *Constructor_Main_Node {
+	return Call_Main___gopurs_owned_swapChildren_0_consume(__arg0, nil)
+}
+
 type Constructor_Main_NumberCell struct {
 	Rc uint32
 	V0 float64

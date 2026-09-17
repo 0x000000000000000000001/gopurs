@@ -243,62 +243,17 @@ func Get_Main_main() gopurs_runtime.Value {
 																					_ = __local_var_20_3
 																					__local_var_21_4 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_20_3), gopurs_runtime.Value{})
 																					_ = __local_var_21_4
-																					// TAST (Let): result_22_5 shape=App(Var) bindingType=(Record (Row [init: (Array (TypeVar a$scope353)), rest: (Array (TypeVar a$scope353))] Empty))
-																					result_22_5 := func() struct {
-																						go__init []gopurs_runtime.Value
-																						rest     []gopurs_runtime.Value
-																					} {
-																						orig := func() gopurs_runtime.Value {
-																							orig := Call_Data_Array_span__2676604243(gopurs_runtime.Func(func(v_22 gopurs_runtime.Value) gopurs_runtime.Value {
-																								return gopurs_runtime.Bool(true)
-																							}), func() []int64 {
-																								arr := *(*[]gopurs_runtime.Value)(__local_var_21_4.UnsafePtr)
-																								unboxed := make([]int64, len(arr))
-																								for i, v := range arr {
-																									unboxed[i] = v.IntVal
-																								}
-																								return unboxed
-																							}())
-																							_ = orig
-																							return gopurs_runtime.RecordDict2("init", "rest", func() gopurs_runtime.Value {
-																								arr := orig.go__init
-																								boxed := make([]gopurs_runtime.Value, len(arr))
-																								for i, v := range arr {
-																									boxed[i] = gopurs_runtime.Int(v)
-																								}
-																								return gopurs_runtime.Array(boxed)
-																							}(), func() gopurs_runtime.Value {
-																								arr := orig.rest
-																								boxed := make([]gopurs_runtime.Value, len(arr))
-																								for i, v := range arr {
-																									boxed[i] = gopurs_runtime.Int(v)
-																								}
-																								return gopurs_runtime.Array(boxed)
-																							}())
-																						}()
-																						_ = orig
-																						clone := struct {
-																							go__init []gopurs_runtime.Value
-																							rest     []gopurs_runtime.Value
-																						}{}
-																						clone.go__init = func() []gopurs_runtime.Value {
-																							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "init").UnsafePtr)
-																							unboxed := make([]gopurs_runtime.Value, len(arr))
-																							for i, v := range arr {
-																								unboxed[i] = v
-																							}
-																							return unboxed
-																						}()
-																						clone.rest = func() []gopurs_runtime.Value {
-																							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "rest").UnsafePtr)
-																							unboxed := make([]gopurs_runtime.Value, len(arr))
-																							for i, v := range arr {
-																								unboxed[i] = v
-																							}
-																							return unboxed
-																						}()
-																						return clone
-																					}()
+																					// TAST (Let): result_22_5 shape=App(Var) bindingType=(Record (Row [init: (Array Int), rest: (Array Int)] Empty))
+																					result_22_5 := Call_Data_Array_span__2676604243(gopurs_runtime.Func(func(v_22 gopurs_runtime.Value) gopurs_runtime.Value {
+																						return gopurs_runtime.Bool(true)
+																					}), func() []int64 {
+																						arr := *(*[]gopurs_runtime.Value)(__local_var_21_4.UnsafePtr)
+																						unboxed := make([]int64, len(arr))
+																						for i, v := range arr {
+																							unboxed[i] = v.IntVal
+																						}
+																						return unboxed
+																					}())
 																					_ = result_22_5
 																					return gopurs_runtime.Apply(gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___627669702("", struct {
 																						actual   int64
@@ -413,83 +368,24 @@ func Call_Main_checkSpan(label_0_loop string, predicate_1_loop gopurs_runtime.Va
 		_ = __local_var_6_1
 		__local_var_7_2 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_6_1), gopurs_runtime.Value{})
 		_ = __local_var_7_2
-		// TAST (Let): actual_8_3 shape=App(Var) bindingType=(Record (Row [init: (Array (TypeVar a$scope353)), rest: (Array (TypeVar a$scope353))] Empty))
-		actual_8_3 := func() struct {
-			go__init []gopurs_runtime.Value
-			rest     []gopurs_runtime.Value
-		} {
-			orig := func() gopurs_runtime.Value {
-				orig := Call_Data_Array_span__2676604243(predicate_1, func() []int64 {
-					arr := *(*[]gopurs_runtime.Value)(__local_var_7_2.UnsafePtr)
-					unboxed := make([]int64, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.IntVal
-					}
-					return unboxed
-				}())
-				_ = orig
-				return gopurs_runtime.RecordDict2("init", "rest", func() gopurs_runtime.Value {
-					arr := orig.go__init
-					boxed := make([]gopurs_runtime.Value, len(arr))
-					for i, v := range arr {
-						boxed[i] = gopurs_runtime.Int(v)
-					}
-					return gopurs_runtime.Array(boxed)
-				}(), func() gopurs_runtime.Value {
-					arr := orig.rest
-					boxed := make([]gopurs_runtime.Value, len(arr))
-					for i, v := range arr {
-						boxed[i] = gopurs_runtime.Int(v)
-					}
-					return gopurs_runtime.Array(boxed)
-				}())
-			}()
-			_ = orig
-			clone := struct {
-				go__init []gopurs_runtime.Value
-				rest     []gopurs_runtime.Value
-			}{}
-			clone.go__init = func() []gopurs_runtime.Value {
-				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "init").UnsafePtr)
-				unboxed := make([]gopurs_runtime.Value, len(arr))
-				for i, v := range arr {
-					unboxed[i] = v
-				}
-				return unboxed
-			}()
-			clone.rest = func() []gopurs_runtime.Value {
-				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "rest").UnsafePtr)
-				unboxed := make([]gopurs_runtime.Value, len(arr))
-				for i, v := range arr {
-					unboxed[i] = v
-				}
-				return unboxed
-			}()
-			return clone
-		}()
-		_ = actual_8_3
-		return gopurs_runtime.Apply(gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___1772858129("", struct {
-			actual   []int64
-			expected []int64
-		}{func() []int64 {
-			arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array(actual_8_3.go__init).UnsafePtr)
+		// TAST (Let): actual_8_3 shape=App(Var) bindingType=(Record (Row [init: (Array Int), rest: (Array Int)] Empty))
+		actual_8_3 := Call_Data_Array_span__2676604243(predicate_1, func() []int64 {
+			arr := *(*[]gopurs_runtime.Value)(__local_var_7_2.UnsafePtr)
 			unboxed := make([]int64, len(arr))
 			for i, v := range arr {
 				unboxed[i] = v.IntVal
 			}
 			return unboxed
-		}(), expectedInit_3}), gopurs_runtime.Func(func(_dollar___unused_9 gopurs_runtime.Value) gopurs_runtime.Value {
+		}())
+		_ = actual_8_3
+		return gopurs_runtime.Apply(gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___1772858129("", struct {
+			actual   []int64
+			expected []int64
+		}{actual_8_3.go__init, expectedInit_3}), gopurs_runtime.Func(func(_dollar___unused_9 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___1772858129("", struct {
 				actual   []int64
 				expected []int64
-			}{func() []int64 {
-				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array(actual_8_3.rest).UnsafePtr)
-				unboxed := make([]int64, len(arr))
-				for i, v := range arr {
-					unboxed[i] = v.IntVal
-				}
-				return unboxed
-			}(), expectedRest_4}), gopurs_runtime.Func(func(_dollar___unused_10 gopurs_runtime.Value) gopurs_runtime.Value {
+			}{actual_8_3.rest, expectedRest_4}), gopurs_runtime.Func(func(_dollar___unused_10 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(label_0))
 			}))
 		})), gopurs_runtime.Value{})

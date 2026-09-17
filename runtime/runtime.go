@@ -478,8 +478,13 @@ type ConstructorData5 struct { V0, V1, V2, V3, V4 Value }
 func Constructor5(tag string, v0, v1, v2, v3, v4 Value) Value { return Value{Type: TypeConstructor, UnsafePtr: unsafe.Pointer(&ConstructorData5{v0, v1, v2, v3, v4})} }
 
 var EscapeSink any
+var escapeSinkMu sync.Mutex
+
 func forceEscape(f any) {
+	// Keep the closure escaping to the heap without racing between Aff fibers.
+	escapeSinkMu.Lock()
 	EscapeSink = f
+	escapeSinkMu.Unlock()
 }
 
 // Function with 1 arg (curried)
