@@ -190,32 +190,25 @@ func Get_Main_main() gopurs_runtime.Value {
 				actual   []string
 				expected []string
 			}{func() []string {
-				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array(func() []gopurs_runtime.Value {
-					arr := *(*[]gopurs_runtime.Value)(func() gopurs_runtime.Value {
-						arr_val_arrayMap6 := func() gopurs_runtime.Value {
-							arr := Call_Main_flatten(__local_var_2_2)
-							boxed := make([]gopurs_runtime.Value, len(arr))
-							for i, v := range arr {
-								boxed[i] = gopurs_runtime.Value{Type: 9, IntVal: 3177043775, UnsafePtr: unsafe.Pointer(Rebox_Main_3242760310_4122662347(v))}
-							}
-							return gopurs_runtime.Array(boxed)
-						}()
-						_ = arr_val_arrayMap6
-						arr_go_arrayMap6 := (*[]gopurs_runtime.Value)(arr_val_arrayMap6.UnsafePtr)
-						_ = arr_go_arrayMap6
-						res_go_arrayMap6 := make([]gopurs_runtime.Value, len(*arr_go_arrayMap6))
-						_ = res_go_arrayMap6
-						for i_arrayMap6, v_arrayMap6 := range *arr_go_arrayMap6 {
-							res_go_arrayMap6[i_arrayMap6] = gopurs_runtime.Apply(Get_Main_describe(), v_arrayMap6)
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((func() gopurs_runtime.Value {
+					arr_val_arrayMap6 := func() gopurs_runtime.Value {
+						arr := Call_Main_flatten(__local_var_2_2)
+						boxed := make([]gopurs_runtime.Value, len(arr))
+						for i, v := range arr {
+							boxed[i] = gopurs_runtime.Value{Type: 9, IntVal: 3177043775, UnsafePtr: unsafe.Pointer(Rebox_Main_3242760310_4122662347(v))}
 						}
-						return gopurs_runtime.Array(res_go_arrayMap6)
-					}().UnsafePtr)
-					unboxed := make([]gopurs_runtime.Value, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v
+						return gopurs_runtime.Array(boxed)
+					}()
+					_ = arr_val_arrayMap6
+					arr_go_arrayMap6 := (*[]gopurs_runtime.Value)(arr_val_arrayMap6.UnsafePtr)
+					_ = arr_go_arrayMap6
+					res_go_arrayMap6 := make([]gopurs_runtime.Value, len(*arr_go_arrayMap6))
+					_ = res_go_arrayMap6
+					for i_arrayMap6, v_arrayMap6 := range *arr_go_arrayMap6 {
+						res_go_arrayMap6[i_arrayMap6] = gopurs_runtime.Apply(Get_Main_describe(), v_arrayMap6)
 					}
-					return unboxed
-				}()).UnsafePtr)
+					return gopurs_runtime.Array(res_go_arrayMap6)
+				}()).UnsafePtr))).UnsafePtr)
 				unboxed := make([]string, len(arr))
 				for i, v := range arr {
 					unboxed[i] = v.StrVal()

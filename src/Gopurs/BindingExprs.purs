@@ -51,19 +51,22 @@ nonRecursive translate context@{ metadata, codegenStateRef, depth, modNameStr, m
             (fArgsAst <> Array.replicate (max 0 (Array.length abs.args - Array.length fArgsAst)) Any)
           goTypes = map snd paramsWithTypes
 
-          localModuleFunctions = Map.insert name { fullName: "Call_local_" <> modNameStr <> "_" <> name, fArgs: goTypes, fRet: TypeValue, arity: Array.length abs.args } moduleFunctions
-          declStmts = [ rawGo ("var Call_local_" <> modNameStr <> "_" <> name <> " func(" <> String.joinWith ", " (map goTypeToStr goTypes) <> ") gopurs_runtime.Value"), rawGo ("_ = Call_local_" <> modNameStr <> "_" <> name), rawGo ("var " <> name <> " gopurs_runtime.Value"), rawGo ("_ = " <> name) ]
-
           loopBound = foldl (\acc (Tuple idStr goT) -> Map.insert idStr { name: idStr, goType: goT } acc) bound paramsWithTypes
-          resBodyMut = translate (context { depth = (depth + 1), moduleFunctions = localModuleFunctions, bound = loopBound, tcoIdent = (Just name), loopCtx = [], options = { isTail: true, inEffectBlock: false }, mbExpectedExprType = Nothing }) (nextId + 1) abs.body
+          resBodyMut = translate (context { depth = (depth + 1), bound = loopBound, tcoIdent = (Just name), loopCtx = [], options = { isTail: true, inEffectBlock: false }, mbExpectedExprType = Nothing }) (nextId + 1) abs.body
+          -- The binding is non-recursive: infer its native result before
+          -- publishing the signature to callers. Only its curried wrapper
+          -- crosses the Value boundary, which can otherwise copy whole lists.
+          trueFRet = resBodyMut.exprType
+          localModuleFunctions = Map.insert name { fullName: "Call_local_" <> modNameStr <> "_" <> name, fArgs: goTypes, fRet: trueFRet, arity: Array.length abs.args } moduleFunctions
+          declStmts = [ rawGo ("var Call_local_" <> modNameStr <> "_" <> name <> " func(" <> String.joinWith ", " (map goTypeToStr goTypes) <> ") " <> goTypeToStr trueFRet), rawGo ("_ = Call_local_" <> modNameStr <> "_" <> name), rawGo ("var " <> name <> " gopurs_runtime.Value"), rawGo ("_ = " <> name) ]
 
           goParamsNative = map (\(Tuple p goT) -> Tuple (p <> "_loop") goT) paramsWithTypes
           initVars = Array.concatMap (\(Tuple p goT) -> [ rawGo ("var " <> p <> " " <> goTypeToStr goT <> " = " <> p <> "_loop"), rawGo ("_ = " <> p) ]) paramsWithTypes
-          funcBody = GoBlock (initVars <> flattenStmts resBodyMut.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr resBodyMut.expr resBodyMut.exprType) ])
-          nativeAssignment = GoMutate ("Call_local_" <> modNameStr <> "_" <> name) (GoFuncBlock goParamsNative [ funcBody ] TypeValue)
+          funcBody = GoBlock (initVars <> flattenStmts resBodyMut.stmts <> [ GoReturn resBodyMut.expr ])
+          nativeAssignment = GoMutate ("Call_local_" <> modNameStr <> "_" <> name) (GoFuncBlock goParamsNative [ funcBody ] trueFRet)
 
           nativeCallExpr = GoCall (GoVar ("Call_local_" <> modNameStr <> "_" <> name)) (map (\(Tuple p goT) -> coerceGoExpr codegenStateRef modNameStr (GoVar (p <> "_loop_val")) TypeValue goT) paramsWithTypes)
-          funcExpr = Array.foldr (\(Tuple p _) acc -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoFuncLit [ Tuple (p <> "_loop_val") TypeValue ] [] acc TypeValue ]) nativeCallExpr paramsWithTypes
+          funcExpr = Array.foldr (\(Tuple p _) acc -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoFuncLit [ Tuple (p <> "_loop_val") TypeValue ] [] acc TypeValue ]) (boxGoExpr codegenStateRef modNameStr nativeCallExpr trueFRet) paramsWithTypes
 
           newBound = Map.insert originalName { name, goType: TypeValue } bound
           resBodyOuter = translate (context { depth = (depth + 1), moduleFunctions = localModuleFunctions, bound = newBound, tcoIdent = Nothing, mbExpectedExprType = Nothing }) resBodyMut.nextId body

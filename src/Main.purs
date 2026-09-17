@@ -10,6 +10,7 @@ import Node.FS.Aff as FS
 import Node.Encoding (Encoding(..))
 import Node.Process as Process
 import Gopurs.FfiBridge as FfiBridge
+import Gopurs.Metrics as Metrics
 import Data.Array as Array
 import Data.List as List
 import Data.List (List)
@@ -48,42 +49,43 @@ type PreparedData =
 
 loadAndPrepareModules :: { mbMainModule :: Maybe String } -> Aff PreparedData
 loadAndPrepareModules args = do
-  finalModules <- coreFnModulesFromOutput "output"
+  finalModules <- Metrics.measure "load TAST + sort" \_ -> coreFnModulesFromOutput "output"
 
-  let elidedCtors = collectElidedConstructors (Array.fromFoldable finalModules)
+  Metrics.measure "prepare + monomorphize" \_ -> do
+    let elidedCtors = collectElidedConstructors (Array.fromFoldable finalModules)
 
-  directives <- loadDirectives
+    directives <- loadDirectives
 
-  let ctorTypes = buildConstructorTypes (Array.fromFoldable finalModules)
+    let ctorTypes = buildConstructorTypes (Array.fromFoldable finalModules)
 
-  let globalTypes = buildGlobalTypes (Array.fromFoldable finalModules)
-  let
-    classDeclsFields = buildClassFields (Array.fromFoldable finalModules)
-    finalModulesWithClassDecls = map addClassDataDeclarations finalModules
+    let globalTypes = buildGlobalTypes (Array.fromFoldable finalModules)
+    let
+      classDeclsFields = buildClassFields (Array.fromFoldable finalModules)
+      finalModulesWithClassDecls = map addClassDataDeclarations finalModules
 
-  let monomorphizedModules = monomorphizeModules globalTypes finalModulesWithClassDecls
-  let
-    { pointerAdtPaths, pointerAdtNodes, pointerAdtLeaves } = buildPointerAdtMetadata (Array.fromFoldable finalModulesWithClassDecls)
-    { enumAdts, enumCtors } = buildEnumAdtMetadata (Array.fromFoldable finalModules)
+    let monomorphizedModules = monomorphizeModules globalTypes finalModulesWithClassDecls
+    let
+      { pointerAdtPaths, pointerAdtNodes, pointerAdtLeaves } = buildPointerAdtMetadata (Array.fromFoldable finalModulesWithClassDecls)
+      { enumAdts, enumCtors } = buildEnumAdtMetadata (Array.fromFoldable finalModules)
 
-    targetMainModules = case args.mbMainModule of
-      Just mainMod -> [ mainMod ]
-      Nothing -> Array.mapMaybe (\(Module m) -> if isJust (Array.elemIndex (Ident "main") m.exports) then Just (unwrap m.name) else Nothing) (Array.fromFoldable finalModules)
+      targetMainModules = case args.mbMainModule of
+        Just mainMod -> [ mainMod ]
+        Nothing -> Array.mapMaybe (\(Module m) -> if isJust (Array.elemIndex (Ident "main") m.exports) then Just (unwrap m.name) else Nothing) (Array.fromFoldable finalModules)
 
-  pure { directives
-       , elidedCtors
-       , ctorTypes
-       , globalTypes
-       , globalFunctions: Map.empty
-       , classDeclsFields
-       , monomorphizedModules
-       , pointerAdtPaths
-       , pointerAdtNodes
-       , pointerAdtLeaves
-       , enumAdts
-       , enumCtors
-       , targetMainModules
-       }
+    pure { directives
+         , elidedCtors
+         , ctorTypes
+         , globalTypes
+         , globalFunctions: Map.empty
+         , classDeclsFields
+         , monomorphizedModules
+         , pointerAdtPaths
+         , pointerAdtNodes
+         , pointerAdtLeaves
+         , enumAdts
+         , enumCtors
+         , targetMainModules
+         }
 
 emitModule :: PreparedData -> Maybe String -> Module Ann -> BackendModule -> Aff ModuleFunctions
 emitModule prepared mbFfiDir (Module coreFnMod) backendMod = do
@@ -128,26 +130,27 @@ emitModule prepared mbFfiDir (Module coreFnMod) backendMod = do
   pure translated.functions
 
 main :: Effect Unit
-main = launchAff_ do
+main = launchAff_ $ Metrics.measure "backend total" \_ -> do
   argsRaw <- liftEffect Process.argv
   let args = parseCLIArgs argsRaw
 
   prepared <- loadAndPrepareModules { mbMainModule: args.mbMainModule }
   globalFunctionsRef <- liftEffect (Ref.new Map.empty)
 
-  _ <- attempt (FS.mkdir "output/gopurs_runtime")
-  FS.writeTextFile UTF8 "output/gopurs_runtime/runtime.go" runtimeGoCode
+  Metrics.measure "runtime" \_ -> do
+    _ <- attempt (FS.mkdir "output/gopurs_runtime")
+    FS.writeTextFile UTF8 "output/gopurs_runtime/runtime.go" runtimeGoCode
 
-  _ <- attempt (FS.mkdir "output/purescript")
+    _ <- attempt (FS.mkdir "output/purescript")
 
-  FS.writeTextFile UTF8 "output/go.mod" "module gopurs/output\n\ngo 1.22\n"
+    FS.writeTextFile UTF8 "output/go.mod" "module gopurs/output\n\ngo 1.22\n"
 
   let
     directives = prepared.directives
     monomorphizedModules = prepared.monomorphizedModules
     targetMainModules = prepared.targetMainModules
 
-  buildModules
+  Metrics.measure "optimize + emit" \_ -> buildModules
     { directives: directives
     , analyzeCustom: \_ _ -> Nothing
     , foreignSemantics: coreForeignSemantics
@@ -163,7 +166,7 @@ main = launchAff_ do
     }
     (List.fromFoldable monomorphizedModules)
 
-  _ <- traverse
+  _ <- Metrics.measure "entry points" \_ -> traverse
     ( \mainMod -> do
         let pkgName = String.replaceAll (Pattern ".") (Replacement "_") mainMod
         let mainEntryPoint = "package main\n\nimport (\n\t\"os\"\n\t\"runtime/pprof\"\n\t\"gopurs/output/purescript\"\n\t\"gopurs/output/gopurs_runtime\"\n)\n\nfunc main() {\n\tif os.Getenv(\"PPROF\") == \"1\" {\n\t\tf, err := os.Create(\"cpu.prof\")\n\t\tif err != nil { panic(err) }\n\t\tpprof.StartCPUProfile(f)\n\t\tdefer pprof.StopCPUProfile()\n\t}\n\n\tgopurs_runtime.Apply(purescript.Get_" <> pkgName <> "_main(), gopurs_runtime.Value{})\n\n\tgopurs_runtime.EventLoopWait()\n\n\tif os.Getenv(\"PPROF\") == \"1\" {\n\t\tmf, err := os.Create(\"mem.prof\")\n\t\tif err != nil { panic(err) }\n\t\tpprof.WriteHeapProfile(mf)\n\t\tmf.Close()\n\t}\n}\n"

@@ -262,6 +262,21 @@ by the current gopurs entrypoint are:
 The shared optimizer argument parser also recognizes options such as `--output`
 and `--bundle`, but `Main` does not use them to change gopurs output behavior.
 
+### Backend compilation timings
+
+Every invocation reports phase durations and `[gopurs] backend total: … ms`
+on stderr. The PureScript entrypoint measures loading and sorting the TAST,
+preparation and monomorphization, runtime output, optimization and emission,
+and entrypoint output. The total includes these phases; do not add it to them.
+It excludes the preceding `purs` compilation, process startup, and subsequent
+`go build`. Failed actions report elapsed time with `(failed)` and rethrow the
+original error.
+
+`Gopurs.Metrics` uses a monotonic clock, following altbak's `Bench` approach:
+`performance.now()` under Node and `time.Since` in the native Go compiler.
+No flag is needed; both compiler builds report the same phases. These are real
+elapsed times for the current invocation, not warm-up or repeated benchmarks.
+
 ## Develop one library locally
 
 Each library keeps its own Spago configuration and repository. The
