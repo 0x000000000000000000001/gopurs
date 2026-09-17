@@ -25,6 +25,16 @@ test('opaque Go imports ignore string, rune, raw-string and comment contents', (
     assert.deepEqual(referencedImports('math.Mod(1, 2) + math.Mod(3, 4)'), ['math']);
 });
 
+test('opaque Go imports retain UTF-16 boundaries through Unicode and long fragments', () => {
+    for (const prefix of ['ÿ', '≠', '·', '😀', '\ud800', '\udfff']) {
+        assert.deepEqual(referencedImports(`${prefix}math.Mod(1, 2)`), [], prefix);
+        assert.deepEqual(referencedImports(`"${prefix}"; math.Mod(1, 2)`), ['math'], prefix);
+        assert.deepEqual(referencedImports(`/* ${prefix} unsafe.Pointer */ sync.Once{}`), ['sync'], prefix);
+    }
+    const fragment = `${'/* 😀 math.Mod */ \"ÿ unsafe.Pointer\"; '.repeat(512)}gopurs_runtime.Value{}; math.Mod(1, 2); sync.Once{}; unsafe.Pointer(nil)`;
+    assert.deepEqual(referencedImports(fragment), ['gopurs/output/gopurs_runtime', 'math', 'sync', 'unsafe']);
+});
+
 for (const [name, source, result, expectedImports] of [
     ['literal', '"math.Mod sync.Once unsafe.Pointer gopurs_runtime.Value"', TypeString.value, []],
     ['call', 'math.Mod(7, 2)', TypeFloat64.value, ['math']],

@@ -19,8 +19,11 @@ opaqueCode text = { text, imports: referencedImports text }
 referencedImports :: String -> Array String
 referencedImports text = Array.sort (scan 0 [])
   where
-  size = CodeUnits.length text
-  charAt index = fromMaybe ' ' (CodeUnits.charAt index text)
+  -- Native strings are UTF-8: repeatedly looking up a UTF-16 position would
+  -- rescan their prefix. Decode once, then retain constant-time indexing.
+  chars = CodeUnits.toCharArray text
+  size = Array.length chars
+  charAt index = fromMaybe ' ' (Array.index chars index)
 
   isIdentifierChar char =
     (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z')
@@ -57,7 +60,7 @@ referencedImports text = Array.sort (scan 0 [])
           let
             end = skipIdentifier (index + 1)
             dependency = if charAt end == '.' then
-              case CodeUnits.slice index end text of
+              case CodeUnits.fromCharArray (map charAt (Array.range index (end - 1))) of
                 "gopurs_runtime" -> Just "gopurs/output/gopurs_runtime"
                 "math" -> Just "math"
                 "sync" -> Just "sync"
