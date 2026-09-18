@@ -50,25 +50,30 @@ referencedImports text = Array.sort (scan 0 [])
 
   scan index imports
     | index >= size = imports
-    | otherwise = case charAt index of
-        '"' -> scan (skipQuoted '"' (index + 1)) imports
-        '\'' -> scan (skipQuoted '\'' (index + 1)) imports
-        '`' -> scan (skipQuoted '`' (index + 1)) imports
-        '/' | charAt (index + 1) == '/' -> scan (skipLine (index + 2)) imports
-        '/' | charAt (index + 1) == '*' -> scan (skipComment (index + 2)) imports
-        char | isIdentifierChar char ->
-          let
-            end = skipIdentifier (index + 1)
-            dependency = if charAt end == '.' then
-              case CodeUnits.fromCharArray (map charAt (Array.range index (end - 1))) of
-                "gopurs_runtime" -> Just "gopurs/output/gopurs_runtime"
-                "math" -> Just "math"
-                "sync" -> Just "sync"
-                "unsafe" -> Just "unsafe"
-                _ -> Nothing
-              else Nothing
-            nextImports = case dependency of
-              Just path | not (Array.elem path imports) -> Array.snoc imports path
-              _ -> imports
-          in scan end nextImports
-        _ -> scan (index + 1) imports
+    | otherwise =
+        let
+          next = case charAt index of
+            '"' -> { index: skipQuoted '"' (index + 1), imports }
+            '\'' -> { index: skipQuoted '\'' (index + 1), imports }
+            '`' -> { index: skipQuoted '`' (index + 1), imports }
+            '/' | charAt (index + 1) == '/' -> { index: skipLine (index + 2), imports }
+            '/' | charAt (index + 1) == '*' -> { index: skipComment (index + 2), imports }
+            char | isIdentifierChar char ->
+              let
+                end = skipIdentifier (index + 1)
+                dependency = if charAt end == '.' then
+                  case CodeUnits.fromCharArray (map charAt (Array.range index (end - 1))) of
+                    "gopurs_runtime" -> Just "gopurs/output/gopurs_runtime"
+                    "math" -> Just "math"
+                    "sync" -> Just "sync"
+                    "unsafe" -> Just "unsafe"
+                    _ -> Nothing
+                  else Nothing
+                nextImports = case dependency of
+                  Just path | not (Array.elem path imports) -> Array.snoc imports path
+                  _ -> imports
+              in { index: end, imports: nextImports }
+            _ -> { index: index + 1, imports }
+        -- Keep the only recursive call outside guarded branches: their local
+        -- helper functions must return a step, never recurse back into scan.
+        in scan next.index next.imports

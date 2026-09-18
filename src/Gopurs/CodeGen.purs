@@ -474,7 +474,17 @@ translateExprWithExpectedType metadata codegenStateRef depth modNameStr recVars 
 
         PrimOp (Op1 (OpIsTag (Qualified mbMod (Ident tag))) e) ->
           let
-            resE = translateExpr metadata codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } nextId e
+            -- A pointer ADT's tag is independent of its type arguments. Keep
+            -- the operand's representation: coercing a boxed List here would
+            -- copy its entire tail merely to distinguish Nil from Cons.
+            translateOperand expected operand@(TcoExpr _ syntax) =
+              case syntax of
+                Typed type_ inner
+                  | TypeStructPointer _ <- exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr type_ ->
+                      translateOperand (Just type_) inner
+                _ ->
+                  translateExprWithExpectedType metadata codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } expected nextId operand
+            resE = translateOperand Nothing e
           in
             AdtExprs.isTag metadata codegenStateRef modNameStr mbMod tag resE
 

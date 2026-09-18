@@ -5,6 +5,7 @@ import Prelude
 import Effect (Effect)
 import Effect.Ref as Ref
 import Effect.Class (liftEffect)
+import Effect.Console as Console
 import Effect.Aff (Aff, launchAff_, attempt)
 import Node.FS.Aff as FS
 import Node.Encoding (Encoding(..))
@@ -87,24 +88,10 @@ loadAndPrepareModules args = do
          , targetMainModules
          }
 
-emitModule :: PreparedData -> Maybe String -> Module Ann -> BackendModule -> Aff ModuleFunctions
-emitModule prepared mbFfiDir (Module coreFnMod) backendMod = do
+emitModule :: CodegenMetadata -> Maybe String -> Module Ann -> BackendModule -> Aff ModuleFunctions
+emitModule metadata mbFfiDir (Module coreFnMod) backendMod = do
   let modNameStr = unwrap backendMod.name
   let safeModName = String.replaceAll (Pattern ".") (Replacement "_") modNameStr
-  let
-    metadata :: CodegenMetadata
-    metadata =
-      { enumAdts: prepared.enumAdts
-      , enumCtors: prepared.enumCtors
-      , pointerAdtPaths: prepared.pointerAdtPaths
-      , pointerAdtNodes: prepared.pointerAdtNodes
-      , pointerAdtLeaves: prepared.pointerAdtLeaves
-      , elidedCtors: prepared.elidedCtors
-      , ctorTypes: prepared.ctorTypes
-      , globalTypes: prepared.globalTypes
-      , globalFunctions: prepared.globalFunctions
-      , classDeclsFields: prepared.classDeclsFields
-      }
 
   let translated = translateWithFunctions metadata backendMod
   FS.writeTextFile UTF8 ("output/purescript/" <> safeModName <> ".go") translated.code
@@ -149,6 +136,19 @@ main = launchAff_ $ Metrics.measure "backend total" \_ -> do
     directives = prepared.directives
     monomorphizedModules = prepared.monomorphizedModules
     targetMainModules = prepared.targetMainModules
+    metadata :: CodegenMetadata
+    metadata =
+      { enumAdts: prepared.enumAdts
+      , enumCtors: prepared.enumCtors
+      , pointerAdtPaths: prepared.pointerAdtPaths
+      , pointerAdtNodes: prepared.pointerAdtNodes
+      , pointerAdtLeaves: prepared.pointerAdtLeaves
+      , elidedCtors: prepared.elidedCtors
+      , ctorTypes: prepared.ctorTypes
+      , globalTypes: prepared.globalTypes
+      , globalFunctions: prepared.globalFunctions
+      , classDeclsFields: prepared.classDeclsFields
+      }
 
   Metrics.measure "optimize + emit" \_ -> buildModules
     { directives: directives
@@ -156,12 +156,16 @@ main = launchAff_ $ Metrics.measure "backend total" \_ -> do
     , foreignSemantics: coreForeignSemantics
     , traceIdents: Set.empty
     , rewriteLimit: fromMaybe 10_000 args.mbRewriteLimit
-    , onPrepareModule: \_ (Module m) -> pure (Module m)
+    , onPrepareModule: \env (Module m) -> do
+        when (env.moduleIndex `mod` 100 == 0) $ liftEffect $ Console.error $
+          "[gopurs] optimize + emit: module " <> show (env.moduleIndex + 1)
+            <> "/" <> show env.moduleCount <> " (" <> unwrap m.name <> ")"
+        pure (Module m)
     -- Regenerate every module and its FFI output on each invocation.
     , onSkipModule: \_ _ -> pure Nothing
     , onCodegenModule: \_ coreFnModule backendMod _ -> do
         globalFunctions <- liftEffect (Ref.read globalFunctionsRef)
-        functions <- emitModule (prepared { globalFunctions = globalFunctions }) args.mbFfiDir coreFnModule backendMod
+        functions <- emitModule (metadata { globalFunctions = globalFunctions }) args.mbFfiDir coreFnModule backendMod
         liftEffect (Ref.modify_ (Map.union functions) globalFunctionsRef)
     }
     (List.fromFoldable monomorphizedModules)

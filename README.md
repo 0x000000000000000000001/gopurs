@@ -272,6 +272,9 @@ It excludes the preceding `purs` compilation, process startup, and subsequent
 `go build`. Failed actions report elapsed time with `(failed)` and rethrow the
 original error.
 
+Optimization and emission also report the current module every 100 modules,
+starting with the first, so long builds show progress before the phase completes.
+
 `Gopurs.Metrics` uses a monotonic clock, following altbak's `Bench` approach:
 `performance.now()` under Node and `time.Since` in the native Go compiler.
 No flag is needed; both compiler builds report the same phases. These are real

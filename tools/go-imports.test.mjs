@@ -33,6 +33,7 @@ test('opaque Go imports retain UTF-16 boundaries through Unicode and long fragme
     }
     const fragment = `${'/* 😀 math.Mod */ \"ÿ unsafe.Pointer\"; '.repeat(512)}gopurs_runtime.Value{}; math.Mod(1, 2); sync.Once{}; unsafe.Pointer(nil)`;
     assert.deepEqual(referencedImports(fragment), ['gopurs/output/gopurs_runtime', 'math', 'sync', 'unsafe']);
+    assert.deepEqual(referencedImports(`${'x; '.repeat(10_000)}math.Abs(1)`), ['math']);
 });
 
 for (const [name, source, result, expectedImports] of [
