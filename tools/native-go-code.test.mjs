@@ -6,14 +6,35 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
+import { referencedImports } from '../output/Gopurs.GoCode/index.js';
 
 const nativeOutput = process.env.GOPURS_NATIVE_OUTPUT;
+const boundaryCases = [
+    ['/', []],
+    ['math.Abs(1)/', ['math']],
+    ['math', []],
+    ['math.', ['math']],
+    ['/*', []],
+    ['/* math.Abs*', []],
+    ['// unsafe.Pointer', []],
+    ['"math.Abs', []],
+    ['"math.Abs\\', []],
+    ["'\\", []],
+    ['`unsafe.Pointer', []],
+];
 
-test('native Go import scanning uses bounded stack for long token sequences', {
+test('Go import scanning handles lookahead and escapes at the end of input', () => {
+    for (const [source, expected] of boundaryCases) {
+        assert.deepEqual(referencedImports(source), expected, JSON.stringify(source));
+    }
+});
+
+test('native Go import scanning matches JavaScript at boundaries and uses bounded stack', {
     skip: nativeOutput ? false : 'requires GOPURS_NATIVE_OUTPUT from a native bootstrap',
 }, t => {
     const cases = [
         ['', []],
+        ...boundaryCases,
         ['math.Abs(1); unsafe.Pointer(nil); sync.Once{}; gopurs_runtime.Value{}',
             ['gopurs/output/gopurs_runtime', 'math', 'sync', 'unsafe']],
         ['"math.Abs sync.Once"; `unsafe.Pointer`; /* gopurs_runtime.Value */', []],
@@ -63,5 +84,8 @@ func main() {
     });
     assert.ifError(result.error);
     assert.equal(result.status, 0, result.stderr);
-    assert.deepEqual(JSON.parse(result.stdout), cases.map(([, expected]) => expected));
+    const nativeResults = JSON.parse(result.stdout);
+    const jsResults = cases.map(([source]) => referencedImports(source));
+    assert.deepEqual(jsResults, cases.map(([, expected]) => expected));
+    assert.deepEqual(nativeResults, jsResults);
 });

@@ -6,8 +6,9 @@ module Gopurs.GoCode
 
 import Prelude
 import Data.Array as Array
-import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Maybe (Maybe(..))
 import Data.String.CodeUnits as CodeUnits
+import Partial.Unsafe (unsafePartial)
 
 type GoCode = { text :: String, imports :: Array String }
 
@@ -16,6 +17,13 @@ type GoCode = { text :: String, imports :: Array String }
 opaqueCode :: String -> GoCode
 opaqueCode text = { text, imports: referencedImports text }
 
+-- A separate typed worker keeps this frequent lookup unboxed in native code.
+charAtOrSpace :: Array Char -> Int -> Char
+charAtOrSpace chars index =
+  if index >= 0 && index < Array.length chars then
+    unsafePartial (Array.unsafeIndex chars index)
+  else ' '
+
 referencedImports :: String -> Array String
 referencedImports text = Array.sort (scan 0 [])
   where
@@ -23,7 +31,7 @@ referencedImports text = Array.sort (scan 0 [])
   -- rescan their prefix. Decode once, then retain constant-time indexing.
   chars = CodeUnits.toCharArray text
   size = Array.length chars
-  charAt index = fromMaybe ' ' (Array.index chars index)
+  charAt index = charAtOrSpace chars index
 
   isIdentifierChar char =
     (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z')
