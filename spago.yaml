@@ -7,11 +7,13 @@ package:
     - arrays
     - bifunctors
     - console
+    - control
     - effect
     - either
     - node-buffer
     - node-fs
     - node-process
+    - parallel
     - prelude
     - strings
     - backend-optimizer

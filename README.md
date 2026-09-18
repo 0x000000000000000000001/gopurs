@@ -190,8 +190,9 @@ for byte, and rebuilding them produced an identical second-generation binary.
 That binary also generated identical Go for the Hello and NativeArrayReboxing
 fixtures (80 and 193 files), whose applications compiled and ran successfully.
 This establishes functional parity on these inputs, not general equivalence.
-The native backend remains slower on these validation workloads; its CPU-heavy
-compiler passes are not yet explicitly parallelized.
+The native backend was slower on those validation workloads. TAST loading and
+decoding support optional bounded parallel batches. Go emission also supports
+bounded parallel batches; optimization remains sequential.
 
 ### Compile and run an application
 
@@ -279,6 +280,31 @@ starting with the first, so long builds show progress before the phase completes
 `performance.now()` under Node and `time.Since` in the native Go compiler.
 No flag is needed; both compiler builds report the same phases. These are real
 elapsed times for the current invocation, not warm-up or repeated benchmarks.
+
+TAST loading and decoding remain sequential by default. Set `GOPURS_JOBS` from
+1 to 64 to select a worker count (for example, `GOPURS_JOBS=4 b -n` in b8x).
+Invalid values use the default. Batches preserve input order before
+dependency sorting. Native workers run on goroutines; Node overlaps file I/O
+but still decodes JSON on its JavaScript thread. Other compiler passes are
+unaffected by this setting.
+
+Parallel loading is experimental: on 2026-09-18, a sample of 133 b8x modules
+(7.1 MiB of TAST) took 1.26 s with one worker, 1.70 s with four and 2.39 s with
+eight (two runs per setting, without race instrumentation). Limiting
+`GOMAXPROCS` to four did not reverse this regression. These measurements cover
+loading and sorting only, not a complete b8x build or altbak runtime benchmarks.
+The native race check passed on this sample, and Node tests compare complete
+decoded modules and dependency order between sequential and parallel loading.
+
+`GOPURS_EMIT_JOBS` controls Go emission separately (1 to 64, defaulting to 2;
+set it to 1 for sequential emission). The compiler batches consecutive independent modules, using the
+optimizer's effective imports to wait for generated function signatures before
+emitting a dependent module. Workers receive immutable metadata snapshots and
+publish their signatures in the original order after the batch completes.
+Translation is deferred until its Aff worker runs, so native workers execute
+the CPU work concurrently. PBO optimization and directive propagation retain
+their original sequential order. See [parallel emission](docs/parallel-emission.md)
+for measurements and validation.
 
 ## Develop one library locally
 
