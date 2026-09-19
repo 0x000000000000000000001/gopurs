@@ -1,12 +1,12 @@
 # Gopurs — réduire le temps de compilation de b8x
 
-État au 19 septembre 2026 : profilage du vrai `b -c -n` terminé ; les chantiers ci-dessous restent à traiter. Ce document remplace intégralement l’ancienne liste.
+État au 19 septembre 2026 : point 1 intégré et validé sur le vrai `b -c -n` de b8x. Backend −16,64 %, commande entière −11,77 %, allocations cumulées −16,66 % sur la paire mesurée. Les points 2 à 7 restent à traiter. Ce document remplace intégralement l’ancienne liste.
 
 ## Points à traiter un par un, ultérieurement
 
 Travailler sur un seul point à la fois. Commencer par une expérience courte, vérifier le comportement et mesurer le gain avant de passer au suivant. Les chiffres du diagnostic ci-dessous sont des observations ; les gains proposés restent à établir.
 
-- [ ] **1. Comparaisons Char/String et adaptation FFI.** Isoler les allocations de `OrdCharImpl` et `OrdStringImpl` dans un microbenchmark : signature actuelle contre variante évitant les conversions inutiles vers `interface{}`. Vérifier LT/EQ/GT, octets et allocations par appel. Examiner ensuite la génération de comparaisons natives en exploitant le typage TAST, avec validation des cas Unicode.
+- [x] **1. Comparaisons Char/String et adaptation FFI.** Deux signatures Go génériques dans gopurs-prelude, arguments génériques transmis directement par le bridge. Suppression des trois allocations/72 octets par comparaison confirmée ; tests JS/natifs et mesure complète b8x terminés. Backend : 591,665 → 493,217 s ; allocations : 1 030,31 → 858,66 Gio. Bilan et limites ci-dessous.
 - [ ] **2. Scanner d’imports Go.** Réduire le coût de `referencedImports` et `opaqueCode` : comparaisons, closures intermédiaires, création de chaînes et scans évitables par propagation des imports. Préserver la reconnaissance des identifiants, chaînes et commentaires. Mesurer séparément le gain de ce point après le point 1, car leurs coûts se recouvrent.
 - [ ] **3. Préparation et monomorphisation.** Cibler `transitiveCollect`, `collectExpr`, les substitutions de types et `mangleType`. Instrumenter un parcours précis, vérifier les recalculs et allocations évitables avant toute transformation globale.
 - [ ] **4. Parallélisme applicatif au-delà de l’émission.** Identifier les calculs indépendants de la préparation et de l’optimisation PBO ; expliciter la transmission des directives entre modules avant de modifier l’ordonnancement. Mesurer sur b8x, conserver le déterminisme du résultat et vérifier les accès partagés. Augmenter seulement le nombre de workers d’émission ne résout pas les dépendances séquentielles.
@@ -15,6 +15,51 @@ Travailler sur un seul point à la fois. Commencer par une expérience courte, v
 - [ ] **7. Bilan complet sur le vrai workflow.** Après validation de chaque changement isolé, répéter `b -c -n` avec les mêmes entrées, paramètres et conditions de cache ; publier le détail des phases, allocations, pic mémoire et statuts. Comparer aux références de compilation b8x ci-dessous ; garder les baselines d’exécution officielles d’altbak.pub pour leur périmètre propre.
 
 Chaque point doit laisser un résultat vérifié, les mesures avant/après et ses limites dans ce document. Aucun gain ×2 n’est établi par le profil actuel.
+
+## Point 1 — microbenchmark terminé le 19 septembre 2026
+
+Copies exactes du runtime et des wrappers du compilateur profilé ; seule la signature des paramètres et du retour `Ordering` change de `interface{}` vers `gopurs_runtime.Value`. `Func5`, `Apply5`, `Unbox` et `Box` sont conservés. Go 1.27.0, Apple M4 Pro, un P, cinq répétitions par cas ; médianes :
+
+| Cas | Temps actuel → typé | Allocations/appel | Octets/appel |
+|---|---:|---:|---:|
+| Char, valeurs String préparées | 46,52 → 8,564 ns | 3 → 0 | 72 → 0 |
+| String, valeurs String préparées | 53,98 → 9,488 ns | 3 → 0 | 72 → 0 |
+| Char, `Str` à chaque appel | 64,67 → 27,15 ns | 5 → 2 | 104 → 32 |
+| String, `Str` à chaque appel | 63,71 → 29,40 ns | 5 → 2 | 104 → 32 |
+
+Les 28 paires testées passent pour les deux variantes : LT/EQ/GT, ASCII, Unicode, chaînes vides, préfixes et chaînes longues. L’analyse d’échappement confirme la fuite des trois arguments LT/EQ/GT au point d’appel FFI, via les interfaces et le retour vers `Box[interface{}]`. Cela explique les allocations de 24 octets vues dans le profil.
+
+L’appel avec création des valeurs String est ×2,17 à ×2,38 plus rapide dans cette expérience. **Ce n’est pas un gain mesuré sur la compilation b8x.** Le profil b8x attribuait environ 171,38 Gio aux deux wrappers ; leur suppression effective dans le compilateur complet reste à vérifier.
+
+La variante explicitement typée a servi de preuve expérimentale. L’intégration utilise ensuite des fonctions FFI Go génériques, comme décrit ci-dessous.
+
+[Rapport du microbenchmark](/Users/0x1/Documents/htdocs/scratch/gopurs-ord-bench-20260919/rapport.md) · [Mesures brutes](/Users/0x1/Documents/htdocs/scratch/gopurs-ord-bench-20260919/bench.txt) · [Code et vérifications](/Users/0x1/Documents/htdocs/scratch/gopurs-ord-bench-20260919/ord_test.go) · [Analyse d’échappement](/Users/0x1/Documents/htdocs/scratch/gopurs-ord-bench-20260919/escape.log).
+
+## Point 1 — intégration validée sur b8x
+
+`OrdCharImpl[T any]` et `OrdStringImpl[T any]` conservent LT/EQ/GT dans le type `T`, avec les mêmes corps de comparaison. Le bridge instancie déjà les fonctions génériques avec `gopurs_runtime.Value` ; il transmet maintenant directement les arguments portant ces paramètres génériques. La FFI ne dépend pas du runtime gopurs. Les changements de **gopurs et gopurs-prelude doivent être livrés ensemble**.
+
+| Mesure | Référence | Après correction | Variation |
+|---|---:|---:|---:|
+| Chargement/tri TAST | 34,283 s | 34,278 s | stable |
+| Préparation/monomorphisation | 131,432 s | 117,134 s | −10,88 % |
+| Optimisation/émission | 425,946 s | 341,801 s | −19,75 % |
+| **Backend interne** | **591,665 s** | **493,217 s** | **−16,64 %** |
+| **`b -c -n` entier** | **676,083 s** | **596,490 s** | **−11,77 %** |
+| CPU système du backend | 2 642,935 s | 2 199,249 s | −16,79 % |
+| Allocations cumulées | 1 030,31 Gio | 858,66 Gio | −16,66 % |
+| Objets alloués, estimés | 32,467 milliards | 24,837 milliards | −23,50 % |
+| Pic de RSS | 6,599 Gio | 6,639 Gio | environ stable |
+
+Le backend gagne **1 min 38 s** et la commande entière **1 min 20 s**, malgré environ 20 s supplémentaires pour reconstruire le compilateur. Le temps CPU du GC diminue également d’environ 17 %, avec une part du CPU presque inchangée autour de 72 %.
+
+Validation : build sans erreur/avertissement ; 16 tests FFI ; fixture Comparisons dynamique avec générateurs JS et natif (même snapshot) ; 2 tests du scanner incluant le vrai natif. Les **2 655 TAST sont identiques par SHA-256** avant/après ; parmi les **2 959 Go**, seul `Data_Ord_ffi.go` change. Les autres points n’ont pas été implémentés.
+
+Limites : une référence du matin et un run après correction du soir, même instrumentation et mêmes paramètres, pas une série alternée répétée. Les sourcemaps et `conf` échouent toujours silencieusement : leur correction reste au point 5. Le gain mural d’une configuration réussie n’est pas établi.
+
+[Rapport d’intégration](/Users/0x1/Documents/htdocs/scratch/b8x-ord-after-20260919/rapport.md) · [Mesures](/Users/0x1/Documents/htdocs/scratch/b8x-ord-after-20260919/summary.json) · [Comparaison des fichiers](/Users/0x1/Documents/htdocs/scratch/b8x-ord-after-20260919/file-comparison.json) · [Profil CPU comparé](/Users/0x1/Documents/htdocs/scratch/b8x-ord-after-20260919/cpu-summary.md).
+
+Prochain chantier : **point 2, scanner d’imports**, avec la version après point 1 comme nouvelle référence. Ne pas réattribuer au point 2 les allocations déjà supprimées ici.
 
 ## Diagnostic de référence — vrai `b -c -n` du 19 septembre 2026
 
@@ -95,7 +140,7 @@ Le profil mémoire estime **1 030,31 Gio alloués cumulativement**, soit environ
 
 La lecture du code généré explique une partie du coût. Dans [GoCode.purs:36](/Users/0x1/Documents/htdocs/gopurs/gopurs/src/Gopurs/GoCode.purs:36), la reconnaissance d’un caractère d’identifiant utilise sept comparaisons d’ordre. Le [Go réellement exécuté](/Users/0x1/Documents/htdocs/scratch/b8x-profile-20260919/native-source/purescript/Gopurs_GoCode.go:472) appelle pour chacune `Apply5(ordCharImpl, LT, EQ, GT, Str(char), Str(constante))`, avec aussi des closures intermédiaires pour les booléens. Les sept comparaisons sont calculées avant le résultat final. L’accès au caractère est déjà direct : il ne s’agit pas d’un retour au parcours répété des préfixes UTF-16.
 
-Les fonctions anonymes `init.func197` et `init.func200` correspondent aux wrappers `OrdCharImpl` et `OrdStringImpl`. Le profil attribue leurs allocations aux appels FFI [ligne 85](/Users/0x1/Documents/htdocs/scratch/b8x-profile-20260919/native-source/purescript/Data_Ord_ffi.go:85) et [ligne 115](/Users/0x1/Documents/htdocs/scratch/b8x-profile-20260919/native-source/purescript/Data_Ord_ffi.go:115), pas aux lignes `Unbox` ou `Box` voisines. La FFI reçoit les trois valeurs `Ordering` comme `interface{}` : les conversions des `Value` constituent une cause très probable, cohérente avec les objets de 24 octets observés. Cette attribution précise doit encore être confirmée par un microbenchmark.
+Les fonctions anonymes `init.func197` et `init.func200` correspondent aux wrappers `OrdCharImpl` et `OrdStringImpl`. Le profil attribue leurs allocations aux appels FFI [ligne 85](/Users/0x1/Documents/htdocs/scratch/b8x-profile-20260919/native-source/purescript/Data_Ord_ffi.go:85) et [ligne 115](/Users/0x1/Documents/htdocs/scratch/b8x-profile-20260919/native-source/purescript/Data_Ord_ffi.go:115), pas aux lignes `Unbox` ou `Box` voisines. La FFI reçoit les trois valeurs `Ordering` comme `interface{}` : les conversions des `Value` expliquent les objets de 24 octets observés. Le microbenchmark et l’analyse d’échappement ajoutés au point 1 confirment désormais ce mécanisme.
 
 ## Conséquences pour le parallélisme et les prochains gains
 

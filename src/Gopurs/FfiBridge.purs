@@ -340,6 +340,9 @@ generateWrapperFunc dataDecls d mbTast =
                 TNamed "any" -> [ "\tgo_arg" <> show i <> " := arg" <> show i ]
                 TNamed "interface{}" -> [ "\tgo_arg" <> show i <> " := arg" <> show i ]
                 TNamed "gopurs_runtime.Value" -> [ "\tgo_arg" <> show i <> " := arg" <> show i ]
+                -- callFunc instantiates Go type parameters with Value. Preserve
+                -- that representation instead of unboxing an out-of-scope T.
+                TNamed n | Array.elem n d.typeParams -> [ "\tgo_arg" <> show i <> " := arg" <> show i ]
                 TMap _ _ ->
                   let
                     et = String.drop (String.indexOf (Pattern "]") typStr # fromMaybe 0 # add 1) typStr
