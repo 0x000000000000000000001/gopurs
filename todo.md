@@ -1,266 +1,134 @@
-# Gopurs — contrat d’usage et réutilisation des nœuds
+# Gopurs — réduire le temps de compilation de b8x
 
-Plan terminé le 16 septembre 2026. Le lot 1 a été validé par l’utilisateur. Les lots 2 à 5 sont implémentés et vérifiés pour le périmètre conservateur décrit ci-dessous : arbres monomorphes, fonctions de premier ordre et entrées dont toute la forêt est exclusive.
+État au 19 septembre 2026 : profilage du vrai `b -c -n` terminé ; les chantiers ci-dessous restent à traiter. Ce document remplace intégralement l’ancienne liste.
 
-Le 17 septembre, le contrat est simplifié à la demande de l’utilisateur : seuls `bindingUsage` et `variableUse` sont conservés, sans marqueur de version ou de phase. Les champs historiques `usageCount` et `escapes` sont retirés du producteur et des lecteurs PBO de Gopurs/Purust. Cette migration est distincte des mesures du 16 septembre ; la nouvelle compilation Haskell reste à faire par l’utilisateur. Côté Gopurs, build/bundle sans avertissement, 12 tests du contrat direct, 41 tests PBO et 64 tests outils passent. Le snapshot et l’exécution de `OwnedTrees` passent avec le compilateur TAST installé. Les JSON déjà présents ne sont pas réécrits.
+## Points à traiter un par un, ultérieurement
 
-## Objectif et ordre de réalisation
+Travailler sur un seul point à la fois. Commencer par une expérience courte, vérifier le comportement et mesurer le gain avant de passer au suivant. Les chiffres du diagnostic ci-dessous sont des observations ; les gains proposés restent à établir.
 
-Réduire les allocations du Go généré en réutilisant les cellules dont la modification ne peut affecter aucune autre référence observable. Le premier cas concret est le Red-Black Tree d’altbak.pub. Les optimisations doivent découler des propriétés du programme, sans reconnaître le nom du benchmark.
+- [ ] **1. Comparaisons Char/String et adaptation FFI.** Isoler les allocations de `OrdCharImpl` et `OrdStringImpl` dans un microbenchmark : signature actuelle contre variante évitant les conversions inutiles vers `interface{}`. Vérifier LT/EQ/GT, octets et allocations par appel. Examiner ensuite la génération de comparaisons natives en exploitant le typage TAST, avec validation des cas Unicode.
+- [ ] **2. Scanner d’imports Go.** Réduire le coût de `referencedImports` et `opaqueCode` : comparaisons, closures intermédiaires, création de chaînes et scans évitables par propagation des imports. Préserver la reconnaissance des identifiants, chaînes et commentaires. Mesurer séparément le gain de ce point après le point 1, car leurs coûts se recouvrent.
+- [ ] **3. Préparation et monomorphisation.** Cibler `transitiveCollect`, `collectExpr`, les substitutions de types et `mangleType`. Instrumenter un parcours précis, vérifier les recalculs et allocations évitables avant toute transformation globale.
+- [ ] **4. Parallélisme applicatif au-delà de l’émission.** Identifier les calculs indépendants de la préparation et de l’optimisation PBO ; expliciter la transmission des directives entre modules avant de modifier l’ordonnancement. Mesurer sur b8x, conserver le déterminisme du résultat et vérifier les accès partagés. Augmenter seulement le nombre de workers d’émission ne résout pas les dépendances séquentielles.
+- [ ] **5. Échecs masqués dans le build b8x.** Diagnostiquer puis corriger l’échec des sourcemaps et de `conf`, et rendre leurs statuts visibles. Le glob des sourcemaps ne trouve aucun `.purs` ; la cause précise de l’échec de configuration reste inconnue. Mesurer le coût de la configuration lorsqu’elle réussit.
+- [ ] **6. GC, après réduction des allocations.** Reprofiler le même travail ; distinguer GC idle, autres travaux GC, pauses et coût mural. N’évaluer un réglage du GC qu’avec une comparaison contrôlée temps/mémoire. Ne pas convertir les 72,8 % de CPU échantillonné en promesse de gain mural.
+- [ ] **7. Bilan complet sur le vrai workflow.** Après validation de chaque changement isolé, répéter `b -c -n` avec les mêmes entrées, paramètres et conditions de cache ; publier le détail des phases, allocations, pic mémoire et statuts. Comparer aux références de compilation b8x ci-dessous ; garder les baselines d’exécution officielles d’altbak.pub pour leur périmètre propre.
 
-1. **Haskell :** produire un contrat explicite distinguant usages des bindings et des occurrences.
-2. **PBO de Gopurs :** lire ce contrat et maintenir sa validité après transformation.
-3. **Analyse sur l’IR transformé :** établir les alias, le partage des champs et les conditions d’exclusivité.
-4. **Gopurs :** réutiliser les cellules dans les chemins où ces conditions sont prouvées.
-5. **Validation :** contrôler la persistance et les invariants, puis mesurer allocations et temps.
+Chaque point doit laisser un résultat vérifié, les mesures avant/après et ses limites dans ce document. Aucun gain ×2 n’est établi par le profil actuel.
 
-Le TAST enrichi fournit déjà les types, `dataDecls`, `classDecls`, `ForAll`, contraintes, `TypeApp`, champs et queues de rangées. Les nouvelles informations complètent ce typage. Elles doivent distinguer trois propriétés : nombre d’usages d’un binding, dernier usage d’une référence locale, exclusivité de l’objet mémoire.
+## Diagnostic de référence — vrai `b -c -n` du 19 septembre 2026
 
-Un dernier usage peut aider à transférer une référence ou éviter un clone tout en laissant d’autres références vers l’objet. Il ne suffit pas à autoriser une mutation destructive.
+Révisions mesurées : b8x `3ea9c731cbef5c7bb8593b4d2e8a5594a313bb26`, gopurs `fdd3113d08784f5337058a8b22f015379475ae35`, PBO gopurs `87f6d0220aae744a3538513dd4aaeebe8cfcb05c`. Les versions détaillées et profils sont référencés ci-dessous.
 
-## Lot 1 — Contrat d’usage Haskell
+**Le backend reste le principal coût : 9 min 52 s de travail interne sur 11 min 16 s au total. Une cible précise ressort : le scanner d’imports Go et les comparaisons Char/String qu’il utilise produisent énormément d’allocations. Le GC domine le CPU échantillonné, mais cela ne signifie pas qu’il explique la même proportion du temps d’attente.**
 
-**Livraison attendue :** un schéma précis, son calcul conservateur, sa lecture/écriture JSON et des tests des propriétés annoncées. Le générateur Go et les optimisations de Purust ne sont pas modifiés dans ce lot.
+La génération Go et `go mod tidy` ont réussi. Deux étapes finales ont échoué silencieusement : sourcemaps et configuration. Le script a néanmoins affiché `Done!` et retourné 0. Cette mesure décrit donc le parcours réellement exécuté, avec ces échecs ; elle ne mesure pas une génération de configuration réussie.
 
-**État :** code, documentation et tests livrés ; compilation et tests Haskell pris en charge puis validés par l’utilisateur après correction des avertissements et examen des nouveaux snapshots. Aucun build ou test Haskell supplémentaire lancé par l’agent. Le JSON réel de `.test_modules/TastCoverage/corefn.json`, produit avec le contrat version 1, a ensuite été décodé avec succès par le nouveau lecteur PBO.
+## Ce qui a été exécuté
 
-### 1.1. Définir les faits et leur portée
+Un seul `b -c -n`, depuis b8x, avec son frontend PureScript habituel et la reconstruction effective du compilateur natif. 2 655 modules TAST, 204,56 Mio de JSON, puis 2 959 fichiers Go produits. Le TAST est enregistré sous le nom `corefn.json` : le nom du fichier n’en fait pas le CoreFn standard.
 
-- [x] Distinguer les informations du binding de celles de chacune de ses occurrences.
-- [x] Définir les usages par **instance du binding**, dans la portée analysée. Un paramètre peut avoir un usage par invocation alors qu’une variable extérieure capturée peut servir à plusieurs appels de closure.
-- [x] Représenter explicitement l’inconnu. Un champ absent ne devient jamais zéro usage ou preuve de non-échappement.
-- [x] Conserver le caractère contextuel de l’indication d’échappement ; ne pas la présenter comme une analyse des alias mémoire.
-- [x] Définir `lastLocalUse` sur les chemins d’exécution, y compris gardes et captures. Un compteur décrémenté pendant un parcours d’AST ne constitue pas à lui seul une preuve suffisante.
+- Go 1.27.0, darwin/arm64 ; runtime natif configuré avec 14 P.
+- Chargement TAST séquentiel et émission jusqu’à 2 modules indépendants, réglages par défaut ; aucune surcharge `GOPURS_JOBS`, `GOPURS_EMIT_JOBS`, `GOGC`, `GOMEMLIMIT` ou `GOMAXPROCS`.
+- `PPROF=1` et `GODEBUG=gctrace=1` activés uniquement sur le gopurs natif qui compile b8x.
+- Marqueurs temporaires autour des étapes du script ; binaire exact et sources Go du compilateur conservés pour lire les profils.
+- Aucun fichier source suivi modifié. Le build a normalement reconstruit les sorties et le binaire ignorés par Git. Les dépôts b8x et gopurs étaient propres à la fin de cette mesure.
 
-### 1.2. Schéma JSON implémenté
+Les versions, SHA Git et SHA-256 du binaire sont dans [provenance.json](/Users/0x1/Documents/htdocs/scratch/b8x-profile-20260919/provenance.json) et [events.jsonl](/Users/0x1/Documents/htdocs/scratch/b8x-profile-20260919/events.jsonl).
 
-Les exemples sont des fragments ; les autres champs TAST de chaque nœud sont conservés. Aucun bloc `usageAnalysis`, numéro de contrat ou champ de phase n’est émis. Les lecteurs interprètent directement les blocs présents sur les annotations.
+## Où passent les 11 min 16 s
 
-Sur l’annotation d’un binding local ou du paramètre lié par une abstraction :
+Les lignes suivantes sont additives, arrondies au centième de seconde.
 
-```json
-{
-  "annotation": {
-    "bindingUsage": {
-      "bindingId": 17,
-      "maxUses": 1,
-      "hasEscapingUseContext": false
-    }
-  }
-}
-```
+| Étape | Durée murale |
+|---|---:|
+| Reconstruction de gopurs natif | 42,40 s |
+| Nettoyage b8x | 1,97 s |
+| Frontend PureScript de b8x | 27,60 s |
+| Gopurs : chargement/tri du TAST | 34,28 s |
+| Gopurs : préparation + monomorphisation | 131,43 s |
+| Gopurs : optimisation + émission | 425,95 s |
+| Reste du processus natif, dont finalisation des profils | 5,12 s |
+| `go mod tidy` | 1,04 s |
+| Sourcemaps — échec | 0,18 s |
+| Configuration — échec | 1,61 s |
+| Autres coûts d’orchestration et étapes mineures | 4,51 s |
+| **Total** | **676,08 s** |
 
-Sur l’annotation d’une occurrence de cette variable :
+Le chronomètre interne du backend indique **591,665 s** ; son processus complet dure **596,775 s**, profils compris. L’optimisation/émission représente 72 % du temps interne du backend et 63 % du total. La préparation/monomorphisation en représente respectivement 22 % et 19 %. Le profil n’isole pas leurs sous-étapes murales davantage.
 
-```json
-{
-  "annotation": {
-    "variableUse": {
-      "bindingId": 17,
-      "lastLocalUse": true
-    }
-  }
-}
-```
+La reconstruction de gopurs comprend 1,2 s de backend Node, 9,5 s de frontend TAST, 29,1 s de génération Go, puis environ 1,8 s pour l’étape de build Go. Les caches globaux habituels restent actifs : `-c` nettoie les sorties du projet, pas tous les caches de la machine.
 
-Cas où l’analyse ne fournit pas de borne, par exemple certaines captures réutilisables :
+## Ce que le GC révèle vraiment
 
-```json
-{
-  "bindingUsage": {
-    "bindingId": 17,
-    "maxUses": null,
-    "hasEscapingUseContext": true
-  }
-}
-```
+Le profil contient 2 023,53 secondes CPU échantillonnées, réparties sur environ 596 secondes murales. Une union des piles GC, sans additionner les cumuls imbriqués, donne :
 
-| Champ | Contrat |
-| --- | --- |
-| `bindingId` | Identifiant unique du binding dans le module exporté, attribué avec résolution des portées lexicales. Les occurrences locales désignent cet identifiant. Il ne s’agit pas d’une adresse d’objet ni d’un identifiant persistant entre versions du programme. |
-| `maxUses` | Entier positif ou nul : borne supérieure des usages directs de cette instance du binding dans la portée analysée. `null` : borne non établie. Zéro n’est émis que lorsque l’absence d’usage est établie. |
-| `hasEscapingUseContext` | `true` : un usage dans un contexte classé potentiellement échappant a été rencontré ; `false` : aucun tel contexte n’a été détecté dans l’analyse de ce binding ; `null` : information inconnue. Aucune valeur ne prouve l’exclusivité de l’objet ou de ses champs. |
-| `lastLocalUse` | `true` : après cette occurrence, aucun usage direct ultérieur de cette instance du binding n’est possible sur les chemins concernés. `null` : propriété non établie. Ce champ ne décrit pas les autres alias vers la valeur. |
+| CPU échantillonné | Secondes CPU | Part du profil |
+|---|---:|---:|
+| GC sur workers idle | 921,00 | 45,51 % |
+| Autre travail GC | 552,22 | 27,29 % |
+| **Ensemble GC** | **1 473,22** | **72,80 %** |
 
-L’absence d’un bloc ou d’un champ optionnel équivaut à une information inconnue. Un bloc présent exige un identifiant valide ; un champ invalide n’est pas silencieusement accepté. Les références globales/importées conservent leur qualification existante ; aucun compte global n’est déduit d’un comptage local incomplet, notamment pour les exports. Ces faits décrivent le CoreFn source et doivent être invalidés ou recalculés après transformation.
+Les workers idle exécutent le GC lorsqu’un P ne trouve pas d’autre travail Go prêt à s’exécuter. Ils peuvent céder lorsque du travail arrive. Cela montre de la capacité disponible pendant ces fenêtres ; cela ne distingue pas à lui seul une partie séquentielle, des dépendances ou une attente. Ce travail peut néanmoins concurrencer le programme en mémoire/cache.
 
-- [x] Formaliser ce schéma et les nœuds auxquels chaque bloc s’applique, notamment paramètres d’abstractions, bindings de `let`, binders de patterns et occurrences `Var`.
-- [x] Implémenter la vérification de l’unicité et de la résolution des identifiants, y compris en présence de noms identiques dans des portées distinctes et de groupes récursifs.
-- [x] Définir les invariants des valeurs sérialisées et des champs absents ; une borne négative n’est pas une valeur valide de `maxUses`.
+Les traces enregistrent **1 206 cycles**, environ **0,106 s de pauses globales cumulées**, et une pause individuelle maximale de **8,21 ms**. L’assistance au marquage imposée aux allocations ne représente qu’environ **0,67 s CPU estimée**. Ces chiffres ne mesurent pas tous les effets indirects du GC ni le coût de l’allocation et du balayage.
 
-### 1.3. Implémentation Haskell
+**Je corrige donc la portée du constat précédent : le GC est lourd en CPU sur le vrai b8x, mais ce profil ne prouve pas qu’un réglage du GC diviserait le temps de compilation.** Le pourcentage `gctrace` utilise encore un autre dénominateur — la capacité cumulée des P, avec marquage idle exclu — et ne se compare pas directement à pprof.
 
-- [x] Dans `CoreFn/Ann.hs`, remplacer le couple opaque d’information d’usage par des types distinguant faits du binding, faits d’occurrence et inconnus, sans refondre les autres annotations.
-- [x] Depuis `CoreFn/Usage.hs`, appeler `CoreFn/Usage/Analysis.hs` pour attribuer les identifiants et calculer les faits selon le contrat. Sommes séquentielles, branches exclusives, gardes successives et répétitions ont des règles explicites.
-- [x] Tenir compte des captures et de la récursion. Si le nombre de réutilisations n’est pas établi, garder une borne inconnue ; ne pas déduire un dernier usage de l’ordre textuel de définition d’une closure.
-- [x] Établir les derniers usages par une analyse arrière des chemins ; garder la propriété inconnue lorsque les informations disponibles sont insuffisantes.
-- [x] Adapter `CoreFn/ToJSON.hs`, `CoreFn/FromJSON.hs` et documenter le point d’appel dans `Make/Actions.hs`.
-- [x] Ne produire aucun certificat `unique`, `canMutate`, de fraîcheur de résultat ou d’exclusivité transitive à partir de ces seuls faits d’usage.
+La mesure système du processus donne 2 642,93 s CPU, soit environ **4,43 CPU utilisés en moyenne**, GC compris, pour 14 P configurés. Pprof donne environ 3,40 CPU échantillonnés ; cet écart reste inexpliqué ici. Les chiffres pprof servent à localiser les coûts, pas à remplacer la mesure CPU système.
 
-### 1.4. Migration du format d’usage
+## Le principal problème concret : les allocations
 
-- [x] Retirer `usageCount` et `escapes`, initialement conservés pendant la migration additive. Les lecteurs Gopurs/Purust ne les interprètent plus.
-- [x] Émettre les nouveaux blocs directement, sans marqueur racine, et conserver les autres champs du TAST à l’identique. Le lecteur Haskell résout les références à `typeTable` et lit les expressions `TypeApp`, nécessaires aux tests d’aller-retour typés.
-- [x] Lire les anciens JSON sans inventer de nouveaux certificats à partir des champs historiques. En particulier, un ancien marqueur d’occurrence ne devient pas automatiquement une preuve conforme au nouveau contrat.
-- [x] Vérifier que les lecteurs des forks PBO existants acceptent les champs supplémentaires : les artefacts déjà compilés Gopurs/Purust donnent le même module décodé pour un JSON `Test.Fib` enrichi en mémoire. Cela vérifie les champs ignorés, pas le futur consommateur du contrat.
-- [x] Couvrir l’aller-retour du nouveau format par le lecteur Haskell et la compatibilité avec le format historique dans les tests confiés à l’utilisateur et validés par lui.
-- [x] Ne jamais reprendre pour `maxUses` l’ancien comportement qui convertissait un `usageCount` absent en `0`.
+Le profil mémoire estime **1 030,31 Gio alloués cumulativement**, soit environ **1,01 Tio**, et **32,47 milliards d’allocations d’objets**. Ce n’est pas la RAM occupée simultanément : le pic de RSS du processus est **6,60 Gio**. Le profil de fin rapporte environ **1,82 Gio vivants** ; il décrit l’état du dernier GC, pas un pic exact ni un diagnostic de fuite.
 
-L’implémentation des nouvelles optimisations des backends n’est pas une condition de compatibilité du lot 1. Leur absence doit seulement laisser les informations supplémentaires inutilisées.
+| Chemin observé | Octets alloués cumulés | Part des allocations |
+|---|---:|---:|
+| `GoCode.referencedImports`, appels descendants inclus | 238,87 Gio | 23,18 % |
+| Monomorphisation des modules, appels descendants inclus | 209,14 Gio | 20,30 % |
+| Wrapper FFI de comparaison `Char`, allocations propres | 114,73 Gio | 11,14 % |
+| `gopurs_runtime.Str`, allocations propres | 103,02 Gio | 10,00 % |
+| Wrapper FFI de comparaison `String`, allocations propres | 56,65 Gio | 5,50 % |
 
-### 1.5. Tests du contrat
+**Les lignes de ce tableau se recouvrent et ne s’additionnent pas.** Les mesures mémoire sont des estimations extrapolées à partir de l’échantillonnage Go. Les substitutions de types et `mangleType` ressortent aussi : le problème ne se limite pas au scanner.
 
-- [x] Écrire les cas ci-dessous dans `tests/TestCoreFn.hs`, avec tests supplémentaires des annotations périmées, identifiants invalides et bornes négatives/fractionnaires. La suppression des anciens champs et du marqueur racine est également couverte.
-- [x] Compilation et tests Haskell validés par l’utilisateur ; JSON réel du compilateur reconstruit inspecté et accepté par le nouveau lecteur PBO.
+`referencedImports` coûte **100,37 s CPU échantillonnées hors GC**. Cela représente 52,7 % des échantillons reconnus comme génération Go hors GC, selon une classification par piles ; ce n’est ni une durée murale du scanner ni un gain garanti.
 
-| Cas témoin | Propriété à vérifier |
-| --- | --- |
-| Variable inutilisée, utilisée une fois, puis deux fois | Bornes locales respectivement établies, avec distinction entre compte du binding et dernier usage d’une occurrence. |
-| Paramètre utilisé une fois dans une fonction appelée plusieurs fois | Compte par instance du paramètre, sans confusion avec un total global. |
-| Une utilisation dans chacune de deux branches exclusives | Borne par chemin et derniers usages propres aux branches. |
-| Garde qui échoue avant une autre utilisation | Inclusion du chemin qui évalue la garde puis poursuit vers une alternative suivante. |
-| Utilisation après un `case` | Une occurrence dans une branche ne devient pas un dernier usage si le binding est réutilisé ensuite. |
-| Capture dans une closure réutilisable | Aucun dernier usage déduit de la seule occurrence textuelle ; borne inconnue si la répétition n’est pas établie. |
-| Noms identiques dans des portées distinctes | Identifiants distincts et occurrences rattachées au bon binding. |
-| Récursion et groupes de bindings récursifs | Traitement conservateur des répétitions et résolution correcte des identifiants. |
-| Valeur globale exportée ou référence importée | Aucune borne globale nulle déduite de l’absence d’usage local. |
-| Alias local, arbre conservé par l’appelant, sous-arbre retourné | Les faits locaux ne sont jamais présentés comme une preuve d’exclusivité mémoire. |
-| JSON historique, nouveau ou incomplet | Les anciens champs sont ignorés ; les nouveaux blocs sont validés sans marqueur racine ; l’inconnu ne devient jamais un fait positif. |
+La lecture du code généré explique une partie du coût. Dans [GoCode.purs:36](/Users/0x1/Documents/htdocs/gopurs/gopurs/src/Gopurs/GoCode.purs:36), la reconnaissance d’un caractère d’identifiant utilise sept comparaisons d’ordre. Le [Go réellement exécuté](/Users/0x1/Documents/htdocs/scratch/b8x-profile-20260919/native-source/purescript/Gopurs_GoCode.go:472) appelle pour chacune `Apply5(ordCharImpl, LT, EQ, GT, Str(char), Str(constante))`, avec aussi des closures intermédiaires pour les booléens. Les sept comparaisons sont calculées avant le résultat final. L’accès au caractère est déjà direct : il ne s’agit pas d’un retour au parcours répété des préfixes UTF-16.
 
-Exemple de limite à conserver dans la documentation et les tests :
+Les fonctions anonymes `init.func197` et `init.func200` correspondent aux wrappers `OrdCharImpl` et `OrdStringImpl`. Le profil attribue leurs allocations aux appels FFI [ligne 85](/Users/0x1/Documents/htdocs/scratch/b8x-profile-20260919/native-source/purescript/Data_Ord_ffi.go:85) et [ligne 115](/Users/0x1/Documents/htdocs/scratch/b8x-profile-20260919/native-source/purescript/Data_Ord_ffi.go:115), pas aux lignes `Unbox` ou `Box` voisines. La FFI reçoit les trois valeurs `Ordering` comme `interface{}` : les conversions des `Value` constituent une cause très probable, cohérente avec les objets de 24 octets observés. Cette attribution précise doit encore être confirmée par un microbenchmark.
 
-```purescript
-child t = case t of
-  Node x -> x
-```
+## Conséquences pour le parallélisme et les prochains gains
 
-Le scrutinee `t` peut être utilisé une seule fois sans contexte directement classé échappant, tandis que son champ `x` est retourné. Son éventuel `maxUses = 1` et `hasEscapingUseContext = false` ne doivent donc pas autoriser une mutation.
+Aff permet déjà l’émission parallèle de deux modules indépendants. Cela ne rend pas automatiquement parallèles les calculs purs, la monomorphisation et tout l’optimiseur. Le PBO actuel transmet les directives exportées d’un module au suivant ; son ordonnanceur reste séquentiel. La configuration de 14 P ne signifie donc pas 14 compilations applicatives actives.
 
-**Critère de fin du lot 1 :** schéma et types explicites, tests des chemins et captures réussis, compatibilité vérifiée, exemples JSON réels inspectés. Aucune mutation destructive n’est activée par ce lot.
+Il existe bien des chantiers concrets, dans cet ordre de vérification :
 
-## Lot 2 — Lecture et validité après PBO
+1. **Réduire le coût des comparaisons Char/String et du scanner d’imports.** Commencer par un microbenchmark isolé de l’adaptation FFI actuelle contre une variante sans conversions inutiles, avec mesure des octets/allocations par appel et vérification de LT/EQ/GT. Puis examiner la génération de comparaisons natives grâce aux types connus du TAST, et la propagation des imports pour éviter des scans inutiles. Le profil établit le coût ; aucun gain de cette modification n’a encore été mesuré.
+2. **Cibler les parcours et substitutions de la monomorphisation.** La phase dure 131 s et alloue environ 209 Gio dans les piles reconnues. Les parcours `transitiveCollect`/`collectExpr` et substitutions fournissent des points de départ précis, avant tout refactoring global.
+3. **Élargir le parallélisme applicatif au-delà de l’émission.** La capacité disponible rend la piste pertinente. Il faut d’abord séparer les calculs indépendants de la transmission des directives et mesurer le résultat sur b8x. Augmenter seulement `GOPURS_EMIT_JOBS` n’enlève pas ces dépendances.
 
-**État : terminé.** Le [PBO utilisé par Gopurs](/Users/0x1/Documents/htdocs/purescript-backend-optimizer-gopurs/CORE_FN_USAGE.md) lit explicitement le contrat et l’invalide aux frontières de transformation.
+Le profil ne permet pas de promettre ×2, ni de convertir les 100 s CPU du scanner en 100 s murales récupérables. Il apporte en revanche une cible beaucoup plus précise qu’« ajouter des goroutines » ou « régler le GC ».
 
-- [x] Ajouter `sourceUsage :: Maybe SourceUsage` aux annotations ; lire directement les blocs `bindingUsage` et `variableUse`, sans condition de version ou de phase.
-- [x] Garder la provenance module + identifiant lors de la lecture, vérifier les placements, la résolution lexicale et l’unicité, y compris les masquages sans métadonnées.
-- [x] Conserver l’inconnu : absence ou `null` ne donnent aucun certificat. Une borne entière dépassant l’intervalle `Int` devient inconnue ; les bornes négatives ou fractionnaires sont rejetées.
-- [x] Invalider complètement identités et faits source avant la collecte des corps de monomorphisation de Gopurs, à la sortie du monomorphiseur PBO et à l’entrée de `Convert.toBackendModule`.
-- [x] Utiliser les identités lexicales de l’IR final pour les nouvelles preuves. Les niveaux sont interprétés dans leur fonction et leur portée, pas comme des identifiants globaux.
-- [x] Vérifier la lecture, l’invalidation immuable et l’absence de ces faits dans le résultat converti ; les tests existants de spécialisation restent passants.
+## Comparaison avec les références et limites
 
-**Choix par rapport au plan initial :** aucun remappage des identifiants source copiés n’est nécessaire : la pipeline Gopurs les efface avant la copie ; le monomorphiseur PBO les invalide aussi en sortie lorsqu’il est appelé directement. Les preuves de possession sont recalculées après transformation. Ce choix évite de faire dépendre la sûreté de l’inlining de faits devenus périmés. Les anciens `usageCount`, `escapes` et les nouveaux derniers usages ne sont pas promus en preuve d’exclusivité.
+La référence b8x documentée dans [parallel-emission.md](/Users/0x1/Documents/htdocs/gopurs/gopurs/docs/parallel-emission.md) est de 581,421 s pour le backend après parallélisation, contre 614,509 s avant. Ici, 591,665 s instrumentées restent du même ordre (+1,8 % par rapport au précédent après-changement). Les entrées ont 2 655 modules contre 2 657 dans cette référence, et le contexte/cache/profilage diffère : ceci n’est pas une nouvelle comparaison contrôlée avant/après.
 
-**Validation :** 10 tests du contrat source et 41 tests PBO existants passent ; le lecteur accepte également un JSON réel produit par le Haskell reconstruit.
+Les baselines officielles du [README altbak.pub](/Users/0x1/Documents/htdocs/altbak.pub/README.md:53) mesurent l’exécution des programmes compilés, pas cette compilation. Elles ne fournissent donc pas un objectif directement comparable aux 676 s mesurées ici. L’ancien profil GC altbak ne sert plus de substitut à b8x.
 
-## Lot 3 — Analyse du partage et de la possession sur l’IR transformé
+Les sorties de sourcemaps sont masquées dans [build:120](/Users/0x1/Documents/htdocs/b8x/bin/build:120) ; le wrapper a enregistré un code 1, et le glob `output/*/*.purs` ne contient aucun fichier. L’échec de `conf` est explicitement absorbé dans [build:124](/Users/0x1/Documents/htdocs/b8x/bin/build:124), avec un code 1 relevé par le marqueur de sortie. Sa cause exacte n’a pas été collectée puisque le script supprime ses sorties. **Le temps d’un éventuel build Go de configuration réussi n’est donc pas établi par ce run.**
 
-**État : terminé pour le sous-ensemble pris en charge**, dans [Gopurs.Ownership](/Users/0x1/Documents/htdocs/gopurs/gopurs/src/Gopurs/Ownership.purs).
+Un seul run complet a été effectué. Le coût de finalisation du profil mémoire et les effets du profilage sont présents ; les allocations sont échantillonnées, les piles CPU ne couvrent pas exhaustivement chaque phase. Aucune optimisation ni correction de ces échecs n’a été implémentée dans cette tâche de diagnostic.
 
-- [x] Analyser l’IR après PBO et fusion des thunks. Résoudre chaque alias en racine + chemin de champs dans son environnement lexical.
-- [x] Calculer les lectures nécessaires, les sous-arbres conservés dans le résultat ou consommés par un appel, les cellules mortes et les références encore observables dans la continuation.
-- [x] Exiger que les sous-arbres transférés soient disjoints : ni chemin dupliqué, ni parent conservé avec son descendant. Une racine fraîche contenant un enfant partagé est refusée.
-- [x] Valider par point fixe les familles de fonctions, y compris récursives, qui préservent une forêt exclusive. Les appels inconnus, FFI, closures et effets sont refusés.
-- [x] Distinguer les cellules parents mortes des sous-arbres conservés lors des rotations et des appels intermédiaires. Retirer de l’environnement les références vers toutes les cellules consommées ou données à un appel.
-- [x] Vérifier dans l’IR et le Go de RBTree que `depth` lit les enfants et retourne un scalaire, sans mutation ni conservation de références. Il reste appelé normalement après la construction ; cette inspection n’est pas une passe générale de résumés d’observateurs.
-- [x] Prouver les entrées par des constructions récursivement fraîches ou vides. `nil` peut être partagé ; les paramètres empruntés gardent le chemin persistant.
+## Preuves conservées
 
-Le contrat conditionnel est : **forêt d’entrée exclusive et disjointe → forêt de résultat exclusive et disjointe**. L’analyse utilise les types et les corps disponibles après PBO, sans reconnaître un nom de benchmark. Les tests utilisent également un autre ADT et un autre ordre de champs.
+- [Synthèse chiffrée JSON](/Users/0x1/Documents/htdocs/scratch/b8x-profile-20260919/summary.json), [journal du build](/Users/0x1/Documents/htdocs/scratch/b8x-profile-20260919/build.log), [chronométrage et GC natifs](/Users/0x1/Documents/htdocs/scratch/b8x-profile-20260919/native.stderr.log).
+- [Analyse CPU détaillée](/Users/0x1/Documents/htdocs/scratch/b8x-profile-20260919/cpu-analysis.md), [allocations par site](/Users/0x1/Documents/htdocs/scratch/b8x-profile-20260919/alloc-space-top.txt), [allocations par chemin](/Users/0x1/Documents/htdocs/scratch/b8x-profile-20260919/alloc-space-cum.txt), [mémoire vivante](/Users/0x1/Documents/htdocs/scratch/b8x-profile-20260919/live-space-top.txt).
+- [Profil CPU brut](/Users/0x1/Documents/htdocs/scratch/b8x-profile-20260919/cpu.prof), [profil mémoire brut](/Users/0x1/Documents/htdocs/scratch/b8x-profile-20260919/mem.prof), [binaire exact](/Users/0x1/Documents/htdocs/scratch/b8x-profile-20260919/gopurs-native).
 
-**Limites explicites :** ADT monomorphes du module avec un constructeur portant des champs et au plus un constructeur vide ; champs scalaires, enums ou récursifs du même type ; fonctions de premier ordre retournant cet arbre. Pas d’analyse générale des conteneurs opaques, des closures, des résumés importés ou de tous les observateurs. Les cas hors périmètre restent persistants. Les optimisations Records de Purust sont indépendantes de ce travail.
-
-## Lot 4 — Génération Go avec réutilisation des cellules
-
-**État : terminé**, intégré avant la génération des fonctions ordinaires.
-
-- [x] Générer des fonctions internes consommantes qui recyclent les cellules mortes et peuvent transmettre une cellule donneuse au rééquilibrage.
-- [x] Matérialiser les lectures avant les mutations, traiter les branches séparément et conserver le contrôle des gardes. Convertir les appels récursifs terminaux en boucles.
-- [x] Sélectionner ces fonctions seulement aux entrées fraîches prouvées ; conserver les signatures et la sémantique persistante des fonctions publiques pour les arbres empruntés ou partagés.
-- [x] Réserver les noms internes avec leur forme Go, y compris face aux FFI et aux collisions après normalisation des noms.
-- [x] Examiner le Go réel : cinq fonctions consommantes pour RBTree (`makeBlack`, `balance`, `ins`, `insert`, `buildTree`) ; `act` sélectionne la construction depuis `nil`.
-- [x] Mesurer une médiane de 100 000 allocations pour 100 000 clés, contre 2 483 949 auparavant. Le champ `Rc` n’est jamais utilisé comme preuve d’exclusivité.
-
-Une invocation externe du `buildTree` public reste persistante. La sonde mesure un adaptateur depuis `nil` vers le même point d’entrée consommant que celui choisi dans le `act` généré. Les tests d’anciennes versions passent par les fonctions publiques.
-
-## Lot 5 — Correction et mesures comparables
-
-**État : terminé.** Protocole, sources, binaires, empreintes et sorties conservés dans [PROTOCOL.md](/Users/0x1/Documents/htdocs/altbak.pub/scratch/gopurs-adt-reuse-validation-20260916/PROTOCOL.md).
-
-- [x] Vérifier quatre rotations, ordre BST, couleurs, hauteur noire, profondeur, doublons, insertions ascendantes, descendantes et mélangées.
-- [x] Vérifier les anciennes versions, 32 snapshots, les enfants retenus et une racine fraîche contenant un enfant partagé.
-- [x] Comparer structure et couleurs à la version persistante ; vérifier l’absence de cycles et d’alias ainsi que la construction de 100 000 nœuds.
-- [x] Mesurer allocations Runtime et octets cumulés. Ces compteurs incluent le bruit du Runtime ; ils ne constituent pas une instrumentation des seuls constructeurs.
-- [x] Comparer avant/après/manuscrit dans trois processus par variante, ordre tournant, sans compilation simultanée : Go 1.27 darwin/arm64, `GOGC=800`, PGO désactivé.
-- [x] Valider les 126 résultats numériques des neuf suites et conserver séparément les baselines historiques du README.
-
-| Campagne contrôlée finale | Compilé avant | Compilé après | Manuscrit |
-| --- | ---: | ---: | ---: |
-| Suite complète, somme des médianes par test | 27,51207 ms | 13,21992 ms | 11,27350 ms |
-| RBTree, médiane du harnais | 24,19912 ms | 9,94929 ms | 8,92221 ms |
-| Allocations RBTree, médiane de la sonde | 2 483 949 | 100 000 | 100 000 |
-| Octets cumulés RBTree, médiane de la sonde | 79 486 352 | 3 200 000 | 3 200 000 |
-
-Les sondes d’allocations comportent 15 échantillons par variante, avec GC préalable. Après optimisation, les valeurs varient entre 100 000 et 100 001 allocations, et entre 3 200 000 et 3 200 016 octets. La profondeur reste 22. Les durées de ces sondes suivent un protocole différent du harnais et ne sont pas mélangées au tableau temporel ci-dessus.
-
-**Vérifications réalisées :** build et bundle sans erreur ni avertissement ; 10 nouveaux tests PBO et 41 existants ; 64 tests outils Gopurs, dont 21 tests de possession ; fixture `OwnedTrees` compilée et exécutée avant/après, puis snapshot contrôlé en mode normal sans mise à jour ; harnais Go de persistance et de consommation. La totalité des autres fixtures de compilation Gopurs n’a pas été relancée.
-
-## Contexte factuel conservé
-
-Dans le [README examiné](/Users/0x1/Documents/htdocs/altbak.pub/README.md:55), le compilé Go affichait 24,02 ms et le manuscrit 11,09 ms, contre 27,44 ms auparavant pour ce dernier. RBTree passe de 24,856 ms à 8,75242 ms dans le manuscrit, tandis que la colonne compilée affiche 20,93562 ms. RBTree représente environ 98,5 % de la baisse historique du total manuscrit.
-
-Le commit altbak.pub `6e85c35b1` du 9 septembre a remplacé un pool de dix millions de cases et la reconstruction des nœuds par des insertions/rotations en place. Le [manuscrit actuel](/Users/0x1/Documents/htdocs/altbak.pub/src/Test/RBTreeFFICheatcode.go:69) crée une cellule par clé distincte. Le Go généré avant ce travail utilisait déjà structs typées et appels directs, mais reconstruisait le chemin d’insertion.
-
-L’[audit historique du 8 septembre](/Users/0x1/Documents/htdocs/altbak.pub/scratch/gopurs-allocation-audit-20260908/AUDIT.md:65) comptait environ 2,48 millions d’allocations et 79,5 Mo cumulés pour RBTree compilé, principalement dans `balance`. Ce n’est pas une nouvelle mesure de l’artefact actuel.
-
-Les 11,09 ms ont été publiées le 15 septembre dans `e0eda4141`, en conservant les 24,02 ms compilées. Elles correspondent à un run archivé ; la campagne distincte à trois processus donne environ 11,72 ms. Horloge et protocole ont aussi évolué. Les chiffres historiques ne permettent pas d’attribuer chaque milliseconde à une transformation isolée, et les 11 ms ne sont pas une garantie pour ce plan.
-
-## Livraison et reproduction
-
-Le [contrat Haskell](/Users/0x1/Documents/htdocs/purescript/CORE_FN_USAGE.md), le [contrat lecteur PBO](/Users/0x1/Documents/htdocs/purescript-backend-optimizer-gopurs/CORE_FN_USAGE.md) et la [description de la passe Go](/Users/0x1/Documents/htdocs/gopurs/gopurs/docs/adt-reuse.md) explicitent leurs garanties respectives. Les cinq lots sont livrés dans le périmètre ci-dessus. Le README officiel d’altbak n’a pas été réécrit avec les résultats de cette campagne.
-
-Depuis `gopurs/gopurs`, les vérifications ciblées peuvent être reproduites avec :
+Depuis ce dossier, les profils se relisent sans lancer de build :
 
 ```sh
-npm run build --silent
-GOCACHE=/private/tmp/gopurs-adt-reuse-gocache node --test --test-concurrency=1 tools/*.test.mjs
-PATH="$HOME/.local/bin:$PATH" ./bin/test OwnedTrees --keep-workspace
+go tool pprof -top ./gopurs-native ./cpu.prof
+go tool pprof -top -sample_index=alloc_space ./gopurs-native ./mem.prof
+go tool pprof -top -sample_index=inuse_space ./gopurs-native ./mem.prof
 ```
-
-Les commandes de compilation et de mesure d’altbak ainsi que l’adaptation des sondes sont décrites dans le protocole archivé. Les extensions à d’autres formes d’ADT, aux closures ou à une analyse générale des observateurs demanderaient des preuves supplémentaires ; elles ne sont pas activées implicitement.
-
-## Essai du 17 septembre — recoloration avec copies conditionnelles
-
-Un prototype limité au Go généré de `insert` et `makeBlack` omet les copies des enfants et de la clé lorsque la cellule réutilisée est précisément le nœud d’origine. Un donneur distinct reçoit toujours tous les champs ; la sélection des cellules, la couleur et `Rc` restent inchangés. Aucun changement correspondant n’est intégré au générateur.
-
-Les huit tests Go passent avant/après, dont deux cas supplémentaires avec donneur distinct. Sur cinq paires de processus alternées, cinq appels mesurés par processus, 100 000 clés et `GOGC=800`, la variation appariée médiane est de **+0,055 %**, avec des paires allant de −1,468 % à +2,179 %. Les médianes des 25 échantillons sont **9,992250 → 10,050541 ms**. Les allocations restent à **100 000 / 3 200 000 octets** : aucun gain temporel reproductible ne justifie cette garde supplémentaire.
-
-Le [prototype et ses mesures](/Users/0x1/Documents/htdocs/altbak.pub/scratch/gopurs-field-updates-20260917-prototype/REPORT.md) sont conservés pour éviter de reprendre cette variante sans nouvelle hypothèse. Ces durées de sonde ne remplacent ni le total du README ni les mesures du harnais complet. La simplification de la sélection des cellules et des branches de rééquilibrage reste une piste distincte à mesurer.
-
-## Livraison du 17 septembre — sélection statique des cellules
-
-**État : intégré et validé.** Le générateur distingue les cellules mortes dont la non-nullité est prouvée par les captures de champs des cellules nullable. Il consomme les premières directement, sans balayage ni garde d’allocation, puis garde le repli existant pour les autres. Le stock restant est transmis entre les arguments frères, les constructions et le choix du donneur des appels, y compris récursifs terminaux. Les lectures scalaires conditionnelles ne donnent aucune preuve supplémentaire.
-
-À CoreFn identique (301 fichiers), seul le Go de RBTree change parmi les 388 fichiers produits : les corps consommants de `balance` et `makeBlack`. Le fichier passe de 5 141 à 3 932 lignes. Les types, le runtime, les FFI et les autres modules sont identiques.
-
-| Nouvelle campagne contrôlée | Compilé avant | Compilé après | Manuscrit |
-| --- | ---: | ---: | ---: |
-| Suite complète, somme des médianes par test | 12,58267 ms | 12,26888 ms | 10,59596 ms |
-| RBTree, médiane du harnais | 9,40708 ms | 9,09525 ms | 8,28300 ms |
-
-Trois processus par variante, ordre tournant, 126 résultats numériques validés : le gain total est de **2,49 %**, dont presque toute la baisse vient de RBTree (**3,31 %**). Dans la sonde séparée à cinq paires, quatre sont favorables ; la variation appariée médiane est de **−3,53 %**, et les médianes des 25 appels passent de **9,370458 à 9,080833 ms** (−3,09 %). Les allocations restent à une médiane de **100 000 / 3 200 000 octets**. Les chiffres de sonde et de harnais ne sont pas mélangés.
-
-**Vérifications :** build et bundle sans erreur ni avertissement ; 64 tests outils existants et quatre nouvelles régressions exécutant le Go généré ; fixture `OwnedTrees` compilée et exécutée, snapshot mis à jour après inspection puis contrôlé sans réécriture ; huit tests Go avant et huit après. Les nouvelles régressions couvrent les captures avant réemploi du parent, les arguments frères, le repli nullable et la consommation du donneur d’un appel récursif terminal. Les autres fixtures de compilation n’ont pas été relancées.
-
-Le [rapport, les sources et les mesures brutes](/Users/0x1/Documents/htdocs/altbak.pub/scratch/gopurs-static-cells-20260917/integration/REPORT.md) conservent le protocole et les empreintes. Cette campagne ne remplace pas la baseline officielle actuelle du [README d’altbak](/Users/0x1/Documents/htdocs/altbak.pub/README.md:55), **13,01 ms compilées / 11,09 ms manuscrites** ; le README reste inchangé.
-
-## Livraison du 17 septembre — producteurs de fonctions comptées
-
-**État : intégré et validé.** [Gopurs.FunctionFusion](/Users/0x1/Documents/htdocs/gopurs/gopurs/src/Gopurs/FunctionFusion.purs) reconnaît le producteur typé `build 0 = identity; build n = let previous = build (n - 1) in \f x -> f (previous f x)`. Pour les compteurs non négatifs, une closure capture le compteur et appelle un worker bouclé par la TCO existante. Le corps négatif, l’arité publique, les callbacks et les usages sauvegardés/partiels sont préservés. Le motif est structurel, sans nom de benchmark ; les formes non prouvées conservent leur code.
-
-À 301 CoreFn identiques, seul `Test_Church.go` change. La sonde du vrai générateur passe de **490,800 à 236,358 µs**, avec cinq paires favorables (variation appariée médiane **−51,96 %**), **157 → 112 allocations** et **6 800 → 5 280 octets** par calcul. Le prototype préalable et ses propres mesures restent archivés séparément.
-
-Le harnais complet confirme Church à **486,04 → 233,92 µs**, puis **480,54 → 236,29 µs** dans une seconde série. En revanche, **la baisse du total n’est pas établie** : première série **13,50499 → 13,55479 ms**, seconde **13,58096 → 13,50085 ms**, avec seulement trois paires favorables sur cinq dans cette dernière. Les écarts des autres lignes ne sont pas attribués à une cause précise. Les 266 résultats numériques des deux campagnes complètes sont validés et conservés, sans exclusion.
-
-**Vérifications :** build/bundle sans erreur ni avertissement ; 68 tests outils existants et 29 nouveaux ; nouvelle fixture `CountedFunctions` exécutée avant/après, snapshot créé puis vérifié sans réécriture ; fixture `ThunkFusion` inchangée et passante ; trois tests Go sur le module réel dans chaque variante. Les autres fixtures de compilation n’ont pas été relancées. [Contrat et limites](/Users/0x1/Documents/htdocs/gopurs/gopurs/docs/function-fusion.md).
-
-La table d’altbak reflète désormais **D45 🟡**, avec **D3/D4 toujours 🟡**. Le [rapport et les preuves](/Users/0x1/Documents/htdocs/altbak.pub/scratch/gopurs-counted-functions-20260917/REPORT.md) distinguent ces campagnes de la baseline officielle relue, **Church 499,42 / 29,21 µs**, **total 12,26 / 11,09 ms**, compilé/manuscrit. Le README reste inchangé.
