@@ -1,13 +1,13 @@
 # Gopurs — réduire le temps de compilation de b8x
 
-État au 19 septembre 2026 : point 1 intégré et validé sur le vrai `b -c -n` de b8x. Backend −16,64 %, commande entière −11,77 %, allocations cumulées −16,66 % sur la paire mesurée. Les points 2 à 7 restent à traiter. Ce document remplace intégralement l’ancienne liste.
+État au 20 septembre 2026 : points 1 et 2 intégrés et validés sur le vrai `b -c -n` de b8x. Le scanner apporte encore −8,84 % sur le backend après le point 1 ; les deux changements réunis ramènent le backend de 591,665 à 449,638 s (−24,00 %). Les points 3 à 7 restent à traiter. Ce document remplace intégralement l’ancienne liste.
 
 ## Points à traiter un par un, ultérieurement
 
 Travailler sur un seul point à la fois. Commencer par une expérience courte, vérifier le comportement et mesurer le gain avant de passer au suivant. Les chiffres du diagnostic ci-dessous sont des observations ; les gains proposés restent à établir.
 
 - [x] **1. Comparaisons Char/String et adaptation FFI.** Deux signatures Go génériques dans gopurs-prelude, arguments génériques transmis directement par le bridge. Suppression des trois allocations/72 octets par comparaison confirmée ; tests JS/natifs et mesure complète b8x terminés. Backend : 591,665 → 493,217 s ; allocations : 1 030,31 → 858,66 Gio. Bilan et limites ci-dessous.
-- [ ] **2. Scanner d’imports Go.** Réduire le coût de `referencedImports` et `opaqueCode` : comparaisons, closures intermédiaires, création de chaînes et scans évitables par propagation des imports. Préserver la reconnaissance des identifiants, chaînes et commentaires. Mesurer séparément le gain de ce point après le point 1, car leurs coûts se recouvrent.
+- [x] **2. Scanner d’imports Go.** Prédicat d’identifiant avec une conversion en entier et des conditions explicites : moins de chaînes et de closures. Microbenchmark ×3,04 ; backend b8x 493,217 → 449,638 s (−8,84 %), allocations 858,66 → 789,39 Gio. Les 2 959 Go produits restent identiques. La propagation des imports pour éviter des scans reste une piste distincte, non implémentée. Bilan ci-dessous.
 - [ ] **3. Préparation et monomorphisation.** Cibler `transitiveCollect`, `collectExpr`, les substitutions de types et `mangleType`. Instrumenter un parcours précis, vérifier les recalculs et allocations évitables avant toute transformation globale.
 - [ ] **4. Parallélisme applicatif au-delà de l’émission.** Identifier les calculs indépendants de la préparation et de l’optimisation PBO ; expliciter la transmission des directives entre modules avant de modifier l’ordonnancement. Mesurer sur b8x, conserver le déterminisme du résultat et vérifier les accès partagés. Augmenter seulement le nombre de workers d’émission ne résout pas les dépendances séquentielles.
 - [ ] **5. Échecs masqués dans le build b8x.** Diagnostiquer puis corriger l’échec des sourcemaps et de `conf`, et rendre leurs statuts visibles. Le glob des sourcemaps ne trouve aucun `.purs` ; la cause précise de l’échec de configuration reste inconnue. Mesurer le coût de la configuration lorsqu’elle réussit.
@@ -59,7 +59,29 @@ Limites : une référence du matin et un run après correction du soir, même in
 
 [Rapport d’intégration](/Users/0x1/Documents/htdocs/scratch/b8x-ord-after-20260919/rapport.md) · [Mesures](/Users/0x1/Documents/htdocs/scratch/b8x-ord-after-20260919/summary.json) · [Comparaison des fichiers](/Users/0x1/Documents/htdocs/scratch/b8x-ord-after-20260919/file-comparison.json) · [Profil CPU comparé](/Users/0x1/Documents/htdocs/scratch/b8x-ord-after-20260919/cpu-summary.md).
 
-Prochain chantier : **point 2, scanner d’imports**, avec la version après point 1 comme nouvelle référence. Ne pas réattribuer au point 2 les allocations déjà supprimées ici.
+## Point 2 — scanner validé le 20 septembre 2026
+
+`isIdentifierChar` convertit le caractère une fois avec `Data.Char.toCharCode`, puis compare des entiers avec des conditions explicites. Cela supprime les créations de chaînes pour les bornes et les closures booléennes du prédicat. Le scanner conserve sa reconnaissance des identifiants ASCII et de tout caractère supérieur à 127, ainsi que les chaînes, commentaires, imports triés et dédupliqués.
+
+Microbenchmark natif sur 160 fragments réels de b8x, cinq répétitions : **4,332 → 1,423 ms (×3,04)**, −57,4 % d’octets alloués et −72,4 % d’allocations. Les 1 713 cas par variante passent en JS et Go, avec pile Go limitée à 1 Mio. Le test de production enrichi passe aussi sur le compilateur natif reconstruit.
+
+| Mesure | Après point 1 | Après scanner | Variation |
+|---|---:|---:|---:|
+| Préparation/monomorphisation | 117,134 s | 118,488 s | +1,16 % |
+| Optimisation/émission | 341,801 s | 297,364 s | −13,00 % |
+| **Backend interne** | **493,217 s** | **449,638 s** | **−8,84 %** |
+| **`b -c -n` entier** | **596,490 s** | **550,478 s** | **−7,71 %** |
+| Allocations cumulées | 858,66 Gio | 789,39 Gio | −8,07 % |
+| Objets alloués estimés | 24,837 milliards | 20,182 milliards | −18,74 % |
+| Pic RSS | 6,639 Gio | 6,347 Gio | −4,41 % |
+
+Le CPU cumulé échantillonné de `referencedImports` baisse de **59,80 à 20,60 s (−65,55 %)**. Sur cette paire de mesures, le backend gagne encore **43,579 s** et la commande entière **46,011 s**. Depuis la référence initiale : **2 min 22 s gagnées sur le backend (−24,00 %)**.
+
+Les **2 655 TAST et les 2 959 fichiers Go sont tous identiques** avant/après. Même commande et instrumentation, mêmes paramètres, une paire de runs non alternée. Les sourcemaps et `conf` échouent toujours : point 5 inchangé. Aucun changement du parallélisme, du GC ou de la propagation des imports.
+
+[Microbenchmark](/Users/0x1/Documents/htdocs/scratch/gopurs-scanner-bench-20260920/rapport.md) · [Rapport d’intégration](/Users/0x1/Documents/htdocs/scratch/b8x-scanner-after-20260920/rapport.md) · [Mesures](/Users/0x1/Documents/htdocs/scratch/b8x-scanner-after-20260920/comparison.json) · [Comparaison des fichiers](/Users/0x1/Documents/htdocs/scratch/b8x-scanner-after-20260920/file-comparison.json).
+
+Prochain chantier : **point 3, préparation et monomorphisation**, avec le profil après scanner comme référence. Commencer par une expérience courte sur un parcours ou recalcul précis.
 
 ## Diagnostic de référence — vrai `b -c -n` du 19 septembre 2026
 

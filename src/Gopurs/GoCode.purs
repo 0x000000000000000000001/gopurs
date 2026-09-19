@@ -6,6 +6,7 @@ module Gopurs.GoCode
 
 import Prelude
 import Data.Array as Array
+import Data.Char as Char
 import Data.Maybe (Maybe(..))
 import Data.String.CodeUnits as CodeUnits
 import Partial.Unsafe (unsafePartial)
@@ -34,8 +35,14 @@ referencedImports text = Array.sort (scan 0 [])
   charAt index = charAtOrSpace chars index
 
   isIdentifierChar char =
-    (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z')
-      || (char >= '0' && char <= '9') || char == '_' || char > '\x7F'
+    -- Compare one numeric code instead of repeatedly boxing Char bounds.
+    -- Explicit branches also avoid closures for partially applied booleans.
+    let code = Char.toCharCode char
+    in if code > 127 then true
+       else if code >= 97 then code <= 122
+       else if code >= 65 then if code <= 90 then true else code == 95
+       else if code >= 48 then code <= 57
+       else false
 
   skipIdentifier index
     | index < size && isIdentifierChar (charAt index) = skipIdentifier (index + 1)

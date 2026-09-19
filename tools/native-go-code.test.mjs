@@ -21,6 +21,13 @@ const boundaryCases = [
     ['"math.Abs\\', []],
     ["'\\", []],
     ['`unsafe.Pointer', []],
+    ['@math.Abs; [sync.Once{}; /unsafe.Pointer(nil)', ['math', 'sync', 'unsafe']],
+    ['0math.Abs; _math.Abs; Zmath.Abs; amath.Abs; math0.Abs; math_.Abs', []],
+    ['\x7Fmath.Abs; \x80unsafe.Pointer(nil)', ['math']],
+    ['math .Abs; math\n.Abs; math/* x */.Abs', []],
+    ['9math.Abs; :math.Abs; Zsync.Once; [sync.Once; zunsafe.Pointer; {unsafe.Pointer',
+        ['math', 'sync', 'unsafe']],
+    ['_math.Abs; `sync.Once`; gopurs_runtime0.Value; gopurs_runtime_.Value', []],
 ];
 
 test('Go import scanning handles lookahead and escapes at the end of input', () => {
