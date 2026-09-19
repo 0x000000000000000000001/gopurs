@@ -1,4 +1,4 @@
-# gopurs
+# 🐹 gopurs
 
 <img height="160" alt="gopurs" src="https://github.com/user-attachments/assets/b013e7c3-fac6-4ee8-9d4c-f39ac8c2c921" />
 
