@@ -197,6 +197,18 @@ Le travail séquentiel de PBO devient la cible prioritaire sur ce corpus. Procha
 
 [Diagnostic détaillé](/Users/0x1/Documents/htdocs/scratch/gopurs-pipeline-waits-20260920/rapport.md) · [Intervalles et synthèse](/Users/0x1/Documents/htdocs/scratch/gopurs-pipeline-waits-20260920/summary.json).
 
+## Point 4 — quatrième sous-étape : coûts et indépendance dans PBO
+
+Deux runs instrumentés encadrés par deux contrôles sur les 304 TAST figés. Sur **6,352 s de PBO**, l’optimisation des expressions prend **4,896 s (77,1 %)**, la conversion initiale **1,096 s (17,3 %)**. Les préparatifs clairement indépendants — invalidation des annotations d’usage, parsing des directives locales, métadonnées des constructeurs — ne totalisent que **0,036 s (0,57 % de PBO)**. Leur parallélisation seule ne justifie pas un chantier.
+
+La conversion initiale n’est pas indépendante des publications : **12 640 lectures réelles de purmeta par run, dont 11 195 trouvent des implémentations publiées**. `buildM/getCtx/analyze` consulte déjà les implémentations pour l’analyse et les simplifications ; le mutex du cache ne remplace pas l’ordre de disponibilité. L’optimisation consomme ensuite les directives. Le simple déplacement de `toBackendExpr` avant le module précédent n’est donc pas retenu.
+
+**399 Go et 304 TAST identiques dans les quatre runs**, mêmes compteurs sur les deux captures. Écart moyen de la phase instrumentée aux contrôles : +0,43 %, bruit et surcoût non séparés. Code de production et binaire installé inchangés ; aucune extrapolation à b8x et aucun nouveau build complet.
+
+Prochaine expérience à potentiel : rendre explicites les dépendances aux implémentations/directives et tester deux modules indépendants en parallèle, en comparant résultats et publications à l’ordre actuel. Aucun gain n’est encore établi ; cette expérience doit précéder toute modification générale du builder.
+
+[Rapport et dépendances](/Users/0x1/Documents/htdocs/scratch/gopurs-pbo-parts-20260920/rapport.md) · [Coûts et compteurs](/Users/0x1/Documents/htdocs/scratch/gopurs-pbo-parts-20260920/parts-summary.json).
+
 ## Diagnostic de référence — vrai `b -c -n` du 19 septembre 2026
 
 Révisions mesurées : b8x `3ea9c731cbef5c7bb8593b4d2e8a5594a313bb26`, gopurs `fdd3113d08784f5337058a8b22f015379475ae35`, PBO gopurs `87f6d0220aae744a3538513dd4aaeebe8cfcb05c`. Les versions détaillées et profils sont référencés ci-dessous.
