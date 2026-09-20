@@ -8,7 +8,7 @@ Travailler sur un seul point à la fois. Commencer par une expérience courte, v
 
 - [x] **1. Comparaisons Char/String et adaptation FFI.** Deux signatures Go génériques dans gopurs-prelude, arguments génériques transmis directement par le bridge. Suppression des trois allocations/72 octets par comparaison confirmée ; tests JS/natifs et mesure complète b8x terminés. Backend : 591,665 → 493,217 s ; allocations : 1 030,31 → 858,66 Gio. Bilan et limites ci-dessous.
 - [x] **2. Scanner d’imports Go.** Prédicat d’identifiant avec une conversion en entier et des conditions explicites : moins de chaînes et de closures. Microbenchmark ×3,04 ; backend b8x 493,217 → 449,638 s (−8,84 %), allocations 858,66 → 789,39 Gio. Les 2 959 Go produits restent identiques. La propagation des imports pour éviter des scans reste une piste distincte, non implémentée. Bilan ci-dessous.
-- [ ] **3. Préparation et monomorphisation.** Une garde dans `TypeSubstitution.substitute` est intégrée : elle concerne surtout l’optimisation/émission, pas `Substitute.substituteExprType` de la monomorphisation. Gain backend observé : 449,638 → 433,732 s. Le cœur du point reste ouvert : cibler `transitiveCollect`, `collectExpr`, `mangleType` et les substitutions de la monomorphisation ; vérifier un recalcul précis avant toute transformation globale.
+- [ ] **3. Préparation et monomorphisation.** Une garde dans `TypeSubstitution.substitute` est intégrée : elle concerne surtout l’optimisation/émission, pas `Substitute.substituteExprType` de la monomorphisation. Gain backend observé : 449,638 → 433,732 s. Deux gardes évitent maintenant les clés de spécialisation inutiles : préparation 116,209 → 100,035 s, backend 433,732 → 424,522 s. Le cœur du point reste ouvert : cibler `transitiveCollect`, `collectExpr`, `mangleType` et les substitutions de la monomorphisation ; vérifier un recalcul précis avant toute transformation globale.
 - [ ] **4. Parallélisme applicatif au-delà de l’émission.** Identifier les calculs indépendants de la préparation et de l’optimisation PBO ; expliciter la transmission des directives entre modules avant de modifier l’ordonnancement. Mesurer sur b8x, conserver le déterminisme du résultat et vérifier les accès partagés. Augmenter seulement le nombre de workers d’émission ne résout pas les dépendances séquentielles.
 - [ ] **5. Échecs masqués dans le build b8x.** Diagnostiquer puis corriger l’échec des sourcemaps et de `conf`, et rendre leurs statuts visibles. Le glob des sourcemaps ne trouve aucun `.purs` ; la cause précise de l’échec de configuration reste inconnue. Mesurer le coût de la configuration lorsqu’elle réussit.
 - [ ] **6. GC, après réduction des allocations.** Reprofiler le même travail ; distinguer GC idle, autres travaux GC, pauses et coût mural. N’évaluer un réglage du GC qu’avec une comparaison contrôlée temps/mémoire. Ne pas convertir les 72,8 % de CPU échantillonné en promesse de gain mural.
@@ -103,7 +103,29 @@ Validation : **30 tests de portée/substitution**, les **512 cas sur le compilat
 
 [Capture et microbenchmark](/Users/0x1/Documents/htdocs/scratch/gopurs-substitution-bench-20260920/rapport.md) · [Rapport d’intégration](/Users/0x1/Documents/htdocs/scratch/b8x-substitution-after-20260920/rapport.md) · [Mesures](/Users/0x1/Documents/htdocs/scratch/b8x-substitution-after-20260920/comparison.json) · [Comparaison des fichiers](/Users/0x1/Documents/htdocs/scratch/b8x-substitution-after-20260920/file-comparison.json).
 
-Prochaine micro-étape du **point 3** : mesurer les répétitions de `mangleType` ou de `transitiveCollect` dans la préparation/monomorphisation. Référence actuelle du backend : **433,732 s**.
+## Point 3 — deuxième sous-étape : clés de spécialisation après les gardes
+
+La capture réelle sur les 2 655 TAST détecte **1 477 535 clés calculées puis rejetées**. `collectExpr` calcule désormais sa clé après les gardes sur les types ; `monomorphizeExpr` vérifie d’abord la présence de la fonction dans la table, puis calcule le hash seulement si la spécialisation existe. Aucun cache ajouté, mêmes clés et mêmes noms.
+
+Les appels récursifs JS à `mangleType` passent de **79,66 à 45,51 millions (−42,87 %)**. Le cache par identité n’a pas été retenu : seulement 2,47 % de répétitions du même objet aux appels racines avant changement. Les noms répétés ne prouvent pas à eux seuls l’égalité des types.
+
+| Mesure | Après garde de substitution | Après clés différées | Variation |
+|---|---:|---:|---:|
+| Préparation/monomorphisation | 116,209 s | 100,035 s | −13,92 % |
+| Optimisation/émission | 283,705 s | 289,795 s | +2,15 % |
+| **Backend interne** | **433,732 s** | **424,522 s** | **−2,12 %** |
+| **`b -c -n` entier** | **537,635 s** | **528,775 s** | **−1,65 %** |
+| Allocations cumulées | 774,71 Gio | 737,44 Gio | −4,81 % |
+| Objets alloués estimés | 20,236 milliards | 19,641 milliards | −2,94 % |
+| Pic RSS | 6,489 Gio | 6,403 Gio | −1,32 % |
+
+**16,174 s gagnées dans la phase ciblée, 9,210 s au total du backend** : la variation des autres phases empêche d’attribuer tout le gain ciblé à la commande entière. Allocations cumulées de `mangleType` : environ 51,16 → 26,68 Gio. Une paire de runs non alternée ; mêmes TAST, paramètres et instrumentation. **21 tests passent ; 2 655 TAST et 2 959 Go tous identiques**. Échecs sourcemaps/conf inchangés.
+
+Depuis le départ : **591,665 → 424,522 s sur le backend, −28,25 % (2 min 47 gagnées)**.
+
+[Capture](/Users/0x1/Documents/htdocs/scratch/gopurs-mangle-bench-20260920/rapport.md) · [Rapport natif](/Users/0x1/Documents/htdocs/scratch/b8x-mangle-after-20260920/rapport.md) · [Mesures](/Users/0x1/Documents/htdocs/scratch/b8x-mangle-after-20260920/comparison.json) · [Comparaison des fichiers](/Users/0x1/Documents/htdocs/scratch/b8x-mangle-after-20260920/file-comparison.json).
+
+Prochaine micro-étape possible du **point 3** : compter les unifications/substitutions effectuées avant les mêmes gardes de `collectExpr`, et déterminer lesquelles peuvent être évitées. Le parallélisme reste le **point 4**. Référence actuelle du backend : **424,522 s**.
 
 ## Diagnostic de référence — vrai `b -c -n` du 19 septembre 2026
 
