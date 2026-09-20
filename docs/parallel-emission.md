@@ -4,16 +4,48 @@
 (default 2; set 1 for sequential emission).
 It is independent of `GOPURS_JOBS`, which only controls TAST loading.
 
-The sequential PBO builder enqueues optimized modules. A full batch, a module
+The sequential PBO builder enqueues optimized modules. By default it can optimize
+the next modules while the preceding batch emits Go. `GOPURS_PIPELINE=0` disables
+this overlap; `GOPURS_EMIT_JOBS=1` also retains immediate sequential emission.
+
+At most one emission batch is active and one is pending, in addition to the
+module currently being optimized by the producer. A full batch, a module
 depending on a queued module, or the end of the build flushes the queue. The
 dependency check uses optimized imports, including references introduced by
-inlining. Each batch receives one immutable function-signature snapshot;
-signatures are merged in source traversal order after all workers finish.
-The Go translation itself runs inside deferred Aff computations.
+inlining. A new batch starts only after the preceding batch finishes. Its
+immutable function-signature snapshot is read at that point; signatures are
+merged in source traversal order after all module workers finish. Go translation
+runs inside deferred Aff computations on native Aff goroutines.
+
+`finish` waits for emission. On producer failure, `cancel` stops new admissions,
+discards the pending batch, and drains the active batch naturally. It does not
+interrupt filesystem effects: their `nonCanceler` does not guarantee that the
+underlying OS callback has stopped. Main brackets the builder with this cleanup.
+An emission error still propagates through `enqueue` or `finish`.
 
 PBO optimization stays sequential. Its current builder passes the preceding
 module's exported directives to the next module, so scheduling optimization
 solely by the original import graph would change this behavior.
+
+## Pipeline measurements on 2026-09-20
+
+A 304-module altbak corpus was compiled in four isolated native processes with
+the same binary, toggling the pipeline in the order 0 / 1 / 1 / 0. Emission used
+two workers throughout. Mean optimize/emit time decreased from 8.219 to 7.714 s
+(6.1%); mean total backend time decreased from 13.627 to 13.049 s (4.2%). All
+399 generated Go files matched the preceding compiler byte for byte.
+
+On the real b8x `b -c -n`, optimize/emit decreased from 289.795 to 256.177 s
+(11.6%), backend time from 424.522 to 388.011 s (8.6%), and the whole command from
+528.775 to 490.771 s (7.2%). All 2,655 TAST inputs and 2,959 generated Go files
+matched. This is one full pair, supported by the smaller alternating runs;
+variation in unchanged preparation/bootstrap phases is not attributed to the
+pipeline. The existing sourcemap/config failures remain unchanged.
+
+The full profile preceded the final producer-failure cleanup adjustment from
+interrupting to draining the active batch. That branch was not exercised by the
+successful backend run; its successful emission path is unchanged. Final cleanup
+is separately covered by JS/native tests and a rebuilt native compiler.
 
 ## Measurements on 2026-09-18
 
@@ -59,3 +91,10 @@ A native compiler built with `go build -race` also completed emission with two
 workers on a 98-module corpus (the dependency closure of `Data.Array`,
 `Data.List`, and `Data.Map`) without a race report. This check is separate from
 the uninstrumented timing runs.
+
+The pipeline adds tests for producer overlap, bounded backpressure, ordered
+snapshots, failure propagation, and non-preemptive cleanup. Native tests are in
+`tools/emission-native_test.go`: copy them into a retained bootstrap's
+`output/purescript` directory and run the command in the file header. The native
+pipeline also completed the full 304-module corpus under `go build -race` with
+no race report and identical output; race timings are excluded from benchmarks.

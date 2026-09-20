@@ -1,6 +1,6 @@
 # Gopurs — réduire le temps de compilation de b8x
 
-État au 20 septembre 2026 : points 1 et 2 intégrés, puis une première sous-étape de substitution validée sur le vrai `b -c -n`. Le backend passe désormais de la référence initiale de 591,665 à 433,732 s (−26,69 %). La garde de substitution ajoute un gain observé de 15,906 s (−3,54 %) après le scanner. Le cœur préparation/monomorphisation du point 3 et les points 4 à 7 restent ouverts. Ce document remplace intégralement l’ancienne liste.
+État au 20 septembre 2026 : points 1 et 2 intégrés, puis garde de substitution, clés de spécialisation différées et chevauchement de l’optimisation PBO avec l’émission Go. Le backend passe de 591,665 à **388,011 s (−34,42 %, 3 min 24 gagnées)**. La dernière sous-étape du point 4 gagne 36,511 s sur le backend. L’essai de garde avant unification reste retiré faute de gain établi. Les points 3 et 4 restent ouverts, comme les points 5 à 7. Ce document remplace intégralement l’ancienne liste.
 
 ## Points à traiter un par un, ultérieurement
 
@@ -9,7 +9,7 @@ Travailler sur un seul point à la fois. Commencer par une expérience courte, v
 - [x] **1. Comparaisons Char/String et adaptation FFI.** Deux signatures Go génériques dans gopurs-prelude, arguments génériques transmis directement par le bridge. Suppression des trois allocations/72 octets par comparaison confirmée ; tests JS/natifs et mesure complète b8x terminés. Backend : 591,665 → 493,217 s ; allocations : 1 030,31 → 858,66 Gio. Bilan et limites ci-dessous.
 - [x] **2. Scanner d’imports Go.** Prédicat d’identifiant avec une conversion en entier et des conditions explicites : moins de chaînes et de closures. Microbenchmark ×3,04 ; backend b8x 493,217 → 449,638 s (−8,84 %), allocations 858,66 → 789,39 Gio. Les 2 959 Go produits restent identiques. La propagation des imports pour éviter des scans reste une piste distincte, non implémentée. Bilan ci-dessous.
 - [ ] **3. Préparation et monomorphisation.** Une garde dans `TypeSubstitution.substitute` est intégrée : elle concerne surtout l’optimisation/émission, pas `Substitute.substituteExprType` de la monomorphisation. Gain backend observé : 449,638 → 433,732 s. Deux gardes évitent maintenant les clés de spécialisation inutiles : préparation 116,209 → 100,035 s, backend 433,732 → 424,522 s. Le cœur du point reste ouvert : cibler `transitiveCollect`, `collectExpr`, `mangleType` et les substitutions de la monomorphisation ; vérifier un recalcul précis avant toute transformation globale.
-- [ ] **4. Parallélisme applicatif au-delà de l’émission.** Identifier les calculs indépendants de la préparation et de l’optimisation PBO ; expliciter la transmission des directives entre modules avant de modifier l’ordonnancement. Mesurer sur b8x, conserver le déterminisme du résultat et vérifier les accès partagés. Augmenter seulement le nombre de workers d’émission ne résout pas les dépendances séquentielles.
+- [ ] **4. Parallélisme applicatif au-delà de l’émission.** Première sous-étape intégrée : le producteur PBO séquentiel optimise pendant que le lot précédent émet du Go. Optimisation/émission : 289,795 → 256,177 s (−11,60 %), backend : 424,522 → 388,011 s. Un lot actif, un lot en attente, ordre des signatures et des directives conservé ; tests JS/natifs et détection des courses validés. Pour aller plus loin, identifier les calculs indépendants de préparation/PBO et traiter explicitement la transmission des directives entre modules avant de paralléliser l’optimisation elle-même.
 - [ ] **5. Échecs masqués dans le build b8x.** Diagnostiquer puis corriger l’échec des sourcemaps et de `conf`, et rendre leurs statuts visibles. Le glob des sourcemaps ne trouve aucun `.purs` ; la cause précise de l’échec de configuration reste inconnue. Mesurer le coût de la configuration lorsqu’elle réussit.
 - [ ] **6. GC, après réduction des allocations.** Reprofiler le même travail ; distinguer GC idle, autres travaux GC, pauses et coût mural. N’évaluer un réglage du GC qu’avec une comparaison contrôlée temps/mémoire. Ne pas convertir les 72,8 % de CPU échantillonné en promesse de gain mural.
 - [ ] **7. Bilan complet sur le vrai workflow.** Après validation de chaque changement isolé, répéter `b -c -n` avec les mêmes entrées, paramètres et conditions de cache ; publier le détail des phases, allocations, pic mémoire et statuts. Comparer aux références de compilation b8x ci-dessous ; garder les baselines d’exécution officielles d’altbak.pub pour leur périmètre propre.
@@ -125,7 +125,47 @@ Depuis le départ : **591,665 → 424,522 s sur le backend, −28,25 % (2 min 47
 
 [Capture](/Users/0x1/Documents/htdocs/scratch/gopurs-mangle-bench-20260920/rapport.md) · [Rapport natif](/Users/0x1/Documents/htdocs/scratch/b8x-mangle-after-20260920/rapport.md) · [Mesures](/Users/0x1/Documents/htdocs/scratch/b8x-mangle-after-20260920/comparison.json) · [Comparaison des fichiers](/Users/0x1/Documents/htdocs/scratch/b8x-mangle-after-20260920/file-comparison.json).
 
-Prochaine micro-étape possible du **point 3** : compter les unifications/substitutions effectuées avant les mêmes gardes de `collectExpr`, et déterminer lesquelles peuvent être évitées. Le parallélisme reste le **point 4**. Référence actuelle du backend : **424,522 s**.
+## Point 3 — troisième sous-étape : garde avant unification, essai retiré
+
+La capture observe **902 306 substitutions (68,10 %) et 1 193 583 paires d’unification (70,70 %) évitables** dans le chemin `collectExpr / ExprApp`. La garde existante a été avancée avant ces calculs en conservant la collecte des appels imbriqués via `acc2`.
+
+Le vrai `b -c -n` ne confirme pas de gain :
+
+| Mesure | Référence conservée | Essai retiré |
+|---|---:|---:|
+| Préparation/monomorphisation | 100,035 s | 102,456 s |
+| Backend interne | 424,522 s | 433,681 s |
+| Commande entière | 528,775 s | 542,073 s |
+| Allocations cumulées | 737,44 Gio | 730,99 Gio (−0,87 %) |
+
+**21 tests passent, 2 655 TAST et 2 959 Go identiques.** Le Go saute bien les calculs sans surcoût de génération identifié. Une seule paire non alternée : toutes les grandes phases ralentissent d’environ 2 %, donc le lien causal avec la modification n’est pas établi. Le nombre d’appels évités surestime leur importance si l’on ne considère pas leur coût. La faible baisse mémoire et l’absence de gain de temps démontré conduisent à **retirer uniquement cet essai** et rétablir les sources et exécutables précédents. Échecs sourcemaps/conf inchangés.
+
+[Capture](/Users/0x1/Documents/htdocs/scratch/gopurs-early-guard-20260920/rapport.md) · [Rapport natif](/Users/0x1/Documents/htdocs/scratch/b8x-early-guard-after-20260920/rapport.md) · [Mesures](/Users/0x1/Documents/htdocs/scratch/b8x-early-guard-after-20260920/comparison.json).
+
+À l’issue de cet essai, la référence conservée était **424,522 s**. Le point 3 n’est pas déclaré terminé ; la sous-étape suivante porte sur le point 4.
+
+## Point 4 — première sous-étape : optimisation et émission simultanées
+
+L’optimisation PBO reste séquentielle : le builder transmet les directives exportées par un module au suivant. En revanche, elle peut avancer pendant que le lot précédent émet du Go dans ses goroutines Aff. Le pipeline borne les travaux retenus à un lot actif, un lot en attente et le module en cours d’optimisation. Les lots restent ordonnés, avec leurs barrières de dépendance et leurs snapshots de signatures. Le nettoyage attend naturellement le lot actif, y compris les écritures asynchrones non annulables.
+
+Activé par défaut ; `GOPURS_PIPELINE=0` rétablit le fonctionnement précédent. `GOPURS_EMIT_JOBS` reste à 2 par défaut ; à 1, l’émission reste immédiate et séquentielle. Aucun changement PBO supplémentaire dans cette sous-étape.
+
+| Mesure | Après clés différées | Avec pipeline | Variation |
+|---|---:|---:|---:|
+| Optimisation/émission | 289,795 s | 256,177 s | −11,60 % |
+| **Backend interne** | **424,522 s** | **388,011 s** | **−8,60 %** |
+| **`b -c -n` entier** | **528,775 s** | **490,771 s** | **−7,19 %** |
+| CPU utilisateur + système | 1 872,318 s | 1 867,965 s | −0,23 % |
+| Allocations cumulées | 737,44 Gio | 737,44 Gio | stable à l’arrondi |
+| Pic RSS | 6,403 Gio | 6,222 Gio | −2,82 % |
+
+**33,618 s gagnées dans la phase ciblée, 36,511 s sur le backend et 38,004 s sur la commande entière.** Le CPU et les allocations sont quasi inchangés : le résultat est cohérent avec un meilleur chevauchement du même travail. La préparation et le bootstrap ont aussi varié ; leurs gains ne sont pas attribués au pipeline. Une seule paire complète b8x, complétée par quatre runs natifs alternés sur 304 TAST altbak : −6,14 % dans la phase ciblée et −4,24 % sur le backend en moyenne. Ces temps de compilation sont distincts des baselines officielles d’exécution d’altbak.pub.
+
+Validation : **2 655 TAST et 2 959 Go identiques** sur b8x ; **10 tests JS**, **3 tests natifs principaux sous Go -race**, corpus de **304 TAST sous -race sans course signalée et 399 Go identiques**. Après le profil complet, le nettoyage sur échec du producteur a été corrigé pour attendre les callbacks non annulables ; cette branche n’avait pas été exercée par le backend réussi. Le compilateur final est reconstruit, ses tests repassent et deux compilations avec/sans pipeline donnent les mêmes 399 Go. Le profil b8x n’a pas été répété pour cette branche d’échec ; le chemin réussi est inchangé.
+
+Les échecs sourcemaps/conf restent inchangés au point 5. Le point 4 reste ouvert : optimiser plusieurs modules PBO simultanément nécessite d’abord un contrat explicite sur leurs directives et dépendances. Aucun gain supplémentaire n’est chiffré à ce stade.
+
+[Expérience courte et tests](/Users/0x1/Documents/htdocs/scratch/gopurs-pipeline-20260920/rapport.md) · [Rapport b8x](/Users/0x1/Documents/htdocs/scratch/b8x-pipeline-after-20260920/rapport.md) · [Mesures](/Users/0x1/Documents/htdocs/scratch/b8x-pipeline-after-20260920/comparison.json) · [Comparaison des fichiers](/Users/0x1/Documents/htdocs/scratch/b8x-pipeline-after-20260920/file-comparison.json).
 
 ## Diagnostic de référence — vrai `b -c -n` du 19 septembre 2026
 

@@ -8,13 +8,13 @@ import Effect (Effect)
 import Effect.Ref as Ref
 import Effect.Class (liftEffect)
 import Effect.Console as Console
-import Effect.Aff (Aff, launchAff_, attempt)
+import Effect.Aff (Aff, launchAff_, attempt, bracket)
 import Node.FS.Aff as FS
 import Node.Encoding (Encoding(..))
 import Node.Process as Process
 import Gopurs.FfiBridge as FfiBridge
 import Gopurs.Metrics as Metrics
-import Gopurs.Emission (createEmitter)
+import Gopurs.Emission (createEmitter, createPipelinedEmitter)
 import Data.Array as Array
 import Data.Foldable (foldl)
 import Data.Int as Int
@@ -129,6 +129,7 @@ main = launchAff_ $ Metrics.measure "backend total" \_ -> do
   prepared <- loadAndPrepareModules { mbMainModule: args.mbMainModule }
   globalFunctionsRef <- liftEffect (Ref.new Map.empty)
   configuredEmitJobs <- liftEffect (Process.lookupEnv "GOPURS_EMIT_JOBS")
+  configuredPipeline <- liftEffect (Process.lookupEnv "GOPURS_PIPELINE")
   let emitJobs = max 1 (min 64 (fromMaybe 2 (configuredEmitJobs >>= Int.fromString)))
 
   Metrics.measure "runtime" \_ -> do
@@ -157,36 +158,43 @@ main = launchAff_ $ Metrics.measure "backend total" \_ -> do
       , classDeclsFields: prepared.classDeclsFields
       }
 
-  emitter <- liftEffect $ createEmitter emitJobs \batch -> do
-    globalFunctions <- liftEffect (Ref.read globalFunctionsRef)
-    let emit entry = emitModule (metadata { globalFunctions = globalFunctions }) args.mbFfiDir entry.coreFnModule entry.backendMod
-    functions <- if emitJobs == 1 then traverse emit batch else parTraverse emit batch
-    -- No worker mutates shared metadata. Publish in the original module order.
-    liftEffect (Ref.write (foldl (flip Map.union) globalFunctions functions) globalFunctionsRef)
+  let
+    emitBatch batch = do
+      globalFunctions <- liftEffect (Ref.read globalFunctionsRef)
+      let emit entry = emitModule (metadata { globalFunctions = globalFunctions }) args.mbFfiDir entry.coreFnModule entry.backendMod
+      functions <- if emitJobs == 1 then traverse emit batch else parTraverse emit batch
+      -- No worker mutates shared metadata. Publish in the original module order.
+      liftEffect (Ref.write (foldl (flip Map.union) globalFunctions functions) globalFunctionsRef)
+    makeEmitter =
+      if configuredPipeline /= Just "0" then createPipelinedEmitter emitJobs emitBatch
+      else do
+        emitter <- createEmitter emitJobs emitBatch
+        pure { enqueue: emitter.enqueue, finish: emitter.finish, cancel: pure unit }
 
-  Metrics.measure "optimize + emit" \_ -> do
-    buildModules
-      { directives: directives
-      , analyzeCustom: \_ _ -> Nothing
-      , foreignSemantics: coreForeignSemantics
-      , traceIdents: Set.empty
-      , rewriteLimit: fromMaybe 10_000 args.mbRewriteLimit
-      , onPrepareModule: \env (Module m) -> do
-          when (env.moduleIndex `mod` 100 == 0) $ liftEffect $ Console.error $
-            "[gopurs] optimize + emit: module " <> show (env.moduleIndex + 1)
-              <> "/" <> show env.moduleCount <> " (" <> unwrap m.name <> ")"
-          pure (Module m)
-      -- Regenerate every module and its FFI output on each invocation.
-      , onSkipModule: \_ _ -> pure Nothing
-      , onCodegenModule: \_ coreFnModule backendMod _ -> do
-          emitter.enqueue
-            { name: backendMod.name
-            , imports: backendMod.imports
-            , value: { coreFnModule, backendMod }
-            }
-      }
-      (List.fromFoldable monomorphizedModules)
-    emitter.finish
+  Metrics.measure "optimize + emit" \_ ->
+    bracket (liftEffect makeEmitter) _.cancel \emitter -> do
+      buildModules
+        { directives: directives
+        , analyzeCustom: \_ _ -> Nothing
+        , foreignSemantics: coreForeignSemantics
+        , traceIdents: Set.empty
+        , rewriteLimit: fromMaybe 10_000 args.mbRewriteLimit
+        , onPrepareModule: \env (Module m) -> do
+            when (env.moduleIndex `mod` 100 == 0) $ liftEffect $ Console.error $
+              "[gopurs] optimize + emit: module " <> show (env.moduleIndex + 1)
+                <> "/" <> show env.moduleCount <> " (" <> unwrap m.name <> ")"
+            pure (Module m)
+        -- Regenerate every module and its FFI output on each invocation.
+        , onSkipModule: \_ _ -> pure Nothing
+        , onCodegenModule: \_ coreFnModule backendMod _ -> do
+            emitter.enqueue
+              { name: backendMod.name
+              , imports: backendMod.imports
+              , value: { coreFnModule, backendMod }
+              }
+        }
+        (List.fromFoldable monomorphizedModules)
+      emitter.finish
 
   _ <- Metrics.measure "entry points" \_ -> traverse
     ( \mainMod -> do

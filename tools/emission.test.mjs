@@ -1,7 +1,7 @@
 // After npm run build: node --test tools/emission.test.mjs
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { createEmitter } from "../output/Gopurs.Emission/index.js";
+import { createEmitter, createPipelinedEmitter } from "../output/Gopurs.Emission/index.js";
 import * as Aff from "../output/Effect.Aff/index.js";
 import * as Either from "../output/Data.Either/index.js";
 import * as Set from "../output/Data.Set/index.js";
@@ -82,4 +82,155 @@ test("a failed dependency flush rejects without emitting or queueing the success
   assert.deepEqual(batches, [["A", "B"], ["A", "B"]]);
   await runAff(emitter.finish);
   assert.equal(batches.length, 2);
+});
+
+const nextTurn = () => new Promise(setImmediate);
+
+function suspendedEmission() {
+  const batches = [];
+  const published = [];
+  const cancelled = [];
+  const emit = values => {
+    // Snapshot at construction deliberately detects eager emit calls before join.
+    const snapshot = published.slice();
+    return Aff.makeAff(done => () => {
+      const batch = {
+        values, snapshot,
+        complete: () => {
+          published.push(...values);
+          done(new Either.Right(undefined))();
+        },
+        fail: error => done(new Either.Left(error))(),
+      };
+      batches.push(batch);
+      return Aff.effectCanceler(() => { cancelled.push(values); });
+    });
+  };
+  return { batches, published, cancelled, emit };
+}
+
+test("pipelined jobs at or below one retain immediate emission", async () => {
+  for (const jobs of [-1, 0, 1]) {
+    const batches = [];
+    const emitter = createPipelinedEmitter(jobs)(batch => effect(() => { batches.push(batch); }))();
+    await runAff(emitter.enqueue(entry("A")));
+    assert.deepEqual(batches, [["A"]]);
+    await runAff(emitter.finish);
+    await runAff(emitter.cancel);
+    assert.deepEqual(batches, [["A"]]);
+  }
+});
+
+test("pipelined emission overlaps the producer with bounded backpressure and ordered snapshots", async () => {
+  const probe = suspendedEmission();
+  const emitter = createPipelinedEmitter(2)(probe.emit)();
+  await runAff(emitter.enqueue(entry("A")));
+  await runAff(emitter.enqueue(entry("B")));
+  await nextTurn();
+  assert.deepEqual(probe.batches.map(batch => batch.values), [["A", "B"]]);
+  // The producer advances while the first batch is still suspended.
+  await runAff(emitter.enqueue(entry("C", ["A"])));
+  let advanced = false;
+  const enqueueD = runAff(emitter.enqueue(entry("D"))).then(() => { advanced = true; });
+  await nextTurn();
+  assert.equal(advanced, false);
+  assert.equal(probe.batches.length, 1);
+  probe.batches[0].complete();
+  await enqueueD;
+  await nextTurn();
+  assert.deepEqual(probe.batches.map(batch => batch.values), [["A", "B"], ["C", "D"]]);
+  assert.deepEqual(probe.batches[1].snapshot, ["A", "B"]);
+
+  await runAff(emitter.enqueue(entry("E")));
+  let finished = false;
+  const finish = runAff(emitter.finish).then(() => { finished = true; });
+  await nextTurn();
+  assert.equal(finished, false);
+  assert.equal(probe.batches.length, 2);
+  probe.batches[1].complete();
+  await nextTurn();
+  assert.deepEqual(probe.batches[2].values, ["E"]);
+  assert.deepEqual(probe.batches[2].snapshot, ["A", "B", "C", "D"]);
+  assert.equal(finished, false);
+  probe.batches[2].complete();
+  await finish;
+  await runAff(emitter.finish);
+  assert.deepEqual(probe.published, ["A", "B", "C", "D", "E"]);
+});
+
+test("pipelined dependency barriers keep dependent modules in separate ordered batches", async () => {
+  const probe = suspendedEmission();
+  const emitter = createPipelinedEmitter(4)(probe.emit)();
+  await runAff(emitter.enqueue(entry("A")));
+  await runAff(emitter.enqueue(entry("B", ["A"])));
+  await nextTurn();
+  assert.deepEqual(probe.batches.map(batch => batch.values), [["A"]]);
+  const finish = runAff(emitter.finish);
+  await nextTurn();
+  assert.equal(probe.batches.length, 1);
+  probe.batches[0].complete();
+  await nextTurn();
+  assert.deepEqual(probe.batches[1].values, ["B"]);
+  assert.deepEqual(probe.batches[1].snapshot, ["A"]);
+  probe.batches[1].complete();
+  await finish;
+});
+
+test("pipelined worker failure propagates at backpressure without starting the pending batch", async () => {
+  const probe = suspendedEmission();
+  const emitter = createPipelinedEmitter(2)(probe.emit)();
+  await runAff(emitter.enqueue(entry("A")));
+  await runAff(emitter.enqueue(entry("B")));
+  await nextTurn();
+  await runAff(emitter.enqueue(entry("C")));
+  const failure = new Error("worker failed");
+  const rejected = assert.rejects(runAff(emitter.enqueue(entry("D"))), error => error === failure);
+  probe.batches[0].fail(failure);
+  await rejected;
+  assert.equal(probe.batches.length, 1);
+  await runAff(emitter.cancel);
+  await runAff(emitter.finish);
+  assert.equal(probe.batches.length, 1);
+});
+
+test("pipelined finish propagates the final worker failure", async () => {
+  const probe = suspendedEmission();
+  const emitter = createPipelinedEmitter(2)(probe.emit)();
+  await runAff(emitter.enqueue(entry("A")));
+  const failure = new Error("final worker failed");
+  const rejected = assert.rejects(runAff(emitter.finish), error => error === failure);
+  await nextTurn();
+  probe.batches[0].fail(failure);
+  await rejected;
+  await runAff(emitter.cancel);
+});
+
+test("pipelined cancellation drains non-cancellable work and discards the pending batch", async () => {
+  const events = [];
+  let complete;
+  const emit = values => Aff.makeAff(done => () => {
+    events.push(["start", values]);
+    complete = () => {
+      events.push(["completed", values]);
+      done(new Either.Right(undefined))();
+    };
+    return Aff.nonCanceler;
+  });
+  const emitter = createPipelinedEmitter(2)(emit)();
+  await runAff(emitter.enqueue(entry("A")));
+  await runAff(emitter.enqueue(entry("B")));
+  await runAff(emitter.enqueue(entry("C")));
+  let cancelled = false;
+  const cancel = runAff(emitter.cancel).then(() => { cancelled = true; });
+  await nextTurn();
+  assert.deepEqual(events, [["start", ["A", "B"]]]);
+  assert.equal(cancelled, false);
+  complete();
+  await cancel;
+  await runAff(emitter.cancel);
+  await runAff(emitter.finish);
+  await assert.rejects(runAff(emitter.enqueue(entry("D"))), /Go emission cancelled/);
+  assert.deepEqual(events, [
+    ["start", ["A", "B"]], ["completed", ["A", "B"]],
+  ]);
 });
