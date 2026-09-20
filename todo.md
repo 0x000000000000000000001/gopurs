@@ -1,6 +1,6 @@
 # Gopurs — réduire le temps de compilation de b8x
 
-État au 20 septembre 2026 : points 1 et 2 intégrés, puis garde de substitution, clés de spécialisation différées et chevauchement de l’optimisation PBO avec l’émission Go. Le backend passe de 591,665 à **388,011 s (−34,42 %, 3 min 24 gagnées)**. La dernière sous-étape du point 4 gagne 36,511 s sur le backend. L’essai de garde avant unification reste retiré faute de gain établi. Les points 3 et 4 restent ouverts, comme les points 5 à 7. Ce document remplace intégralement l’ancienne liste.
+État au 20 septembre 2026 : comparaisons Char/String, scanner, garde de substitution, clés différées, pipeline PBO/émission et cache local des corps préparés de la collecte transitive intégrés. Le backend passe de 591,665 à **374,255 s (−36,75 %, 3 min 37 gagnées)**. La dernière intégration gagne 15,211 s dans la préparation et **13,756 s sur le backend**. Les essais de garde avant unification et d’ordonnanceur PBO à 91 paires ne sont pas retenus faute de gain établi. Les points 3 et 4 restent ouverts, comme les points 5 à 7.
 
 ## Points à traiter un par un, ultérieurement
 
@@ -8,7 +8,7 @@ Travailler sur un seul point à la fois. Commencer par une expérience courte, v
 
 - [x] **1. Comparaisons Char/String et adaptation FFI.** Deux signatures Go génériques dans gopurs-prelude, arguments génériques transmis directement par le bridge. Suppression des trois allocations/72 octets par comparaison confirmée ; tests JS/natifs et mesure complète b8x terminés. Backend : 591,665 → 493,217 s ; allocations : 1 030,31 → 858,66 Gio. Bilan et limites ci-dessous.
 - [x] **2. Scanner d’imports Go.** Prédicat d’identifiant avec une conversion en entier et des conditions explicites : moins de chaînes et de closures. Microbenchmark ×3,04 ; backend b8x 493,217 → 449,638 s (−8,84 %), allocations 858,66 → 789,39 Gio. Les 2 959 Go produits restent identiques. La propagation des imports pour éviter des scans reste une piste distincte, non implémentée. Bilan ci-dessous.
-- [ ] **3. Préparation et monomorphisation.** Une garde dans `TypeSubstitution.substitute` est intégrée : elle concerne surtout l’optimisation/émission, pas `Substitute.substituteExprType` de la monomorphisation. Gain backend observé : 449,638 → 433,732 s. Deux gardes évitent maintenant les clés de spécialisation inutiles : préparation 116,209 → 100,035 s, backend 433,732 → 424,522 s. Le cœur du point reste ouvert : cibler `transitiveCollect`, `collectExpr`, `mangleType` et les substitutions de la monomorphisation ; vérifier un recalcul précis avant toute transformation globale.
+- [ ] **3. Préparation et monomorphisation.** Une garde dans `TypeSubstitution.substitute` est intégrée : elle concerne surtout l’optimisation/émission, pas `Substitute.substituteExprType` de la monomorphisation. Gain backend observé : 449,638 → 433,732 s. Deux gardes évitent maintenant les clés de spécialisation inutiles : préparation 116,209 → 100,035 s, backend 433,732 → 424,522 s. Le cache local du préfixe de `transitiveCollect` est maintenant intégré : préparation 96,746 → 81,535 s, backend 388,011 → 374,255 s ; 2 655 TAST et 2 959 Go identiques. Le cœur du point reste ouvert, notamment les passes `monomorphizeExpr`/`collectExpr` encore répétées ; établir leurs dépendances avant de supprimer un calcul.
 - [ ] **4. Parallélisme applicatif au-delà de l’émission.** Première sous-étape intégrée : le producteur PBO séquentiel optimise pendant que le lot précédent émet du Go. Optimisation/émission : 289,795 → 256,177 s (−11,60 %), backend : 424,522 → 388,011 s. Un lot actif, un lot en attente, ordre des signatures et des directives conservé ; tests JS/natifs et détection des courses validés. Pour aller plus loin, identifier les calculs indépendants de préparation/PBO et traiter explicitement la transmission des directives entre modules avant de paralléliser l’optimisation elle-même.
 - [ ] **5. Échecs masqués dans le build b8x.** Diagnostiquer puis corriger l’échec des sourcemaps et de `conf`, et rendre leurs statuts visibles. Le glob des sourcemaps ne trouve aucun `.purs` ; la cause précise de l’échec de configuration reste inconnue. Mesurer le coût de la configuration lorsqu’elle réussit.
 - [ ] **6. GC, après réduction des allocations.** Reprofiler le même travail ; distinguer GC idle, autres travaux GC, pauses et coût mural. N’évaluer un réglage du GC qu’avec une comparaison contrôlée temps/mémoire. Ne pas convertir les 72,8 % de CPU échantillonné en promesse de gain mural.
@@ -144,6 +144,49 @@ Le vrai `b -c -n` ne confirme pas de gain :
 
 À l’issue de cet essai, la référence conservée était **424,522 s**. Le point 3 n’est pas déclaré terminé ; la sous-étape suivante porte sur le point 4.
 
+## Point 3 — quatrième sous-étape : cache du préfixe de collecte transitive, prototype prometteur
+
+Après l’absence de gain de l’ordonnanceur à 91 paires, retour au chantier de préparation demandé par l’utilisateur. La capture des 2 655 TAST b8x relève **31 tours, 493 656 traitements pour 16 258 instanciations** : 477 398 répétitions avec les mêmes entrées. Le prototype conserve le corps après `applyStaticArgs → resolveGlobals → rewriteExpr`. Chaque `monomorphizeExpr` et `collectExpr` reste exécuté dans l’ordre, car la table de spécialisations évolue entre les tours.
+
+**Preuve JS complète** : table transitive, 2 655 modules et métadonnées identiques sur quatre préparations alternées. Temps instrumentés : 40,886 → 35,219 s (−13,86 %), distincts d’un benchmark natif.
+
+**Première paire native sur les vrais TAST b8x**, préparation seule, même binaire avec/sans cache :
+
+| Mesure | Référence | Cache |
+|---|---:|---:|
+| Préparation/monomorphisation | 97,092 s | **78,106 s (−19,55 %)** |
+| Collecte transitive | 88,153 s | 68,704 s |
+| Reconstructions du préfixe | 20,565 s | 0,673 s |
+| Chargement + préparation, processus | 129,910 s | 111,479 s |
+
+**18,986 s gagnées dans la préparation**, 37,48 Gio d’allocations évitées sur chargement + préparation (−17,32 %), pic RSS +2,07 %. Le cache natif retrouve 16 258 calculs et 477 398 hits ; il vérifie l’identité des types/substitutions et de chaque argument, avec recalcul en cas de différence. Cache local, entrées immuables conservées, aucune hypothèse d’exclusivité du TAST.
+
+**16 contrôles d’invalidation passent** ; deux parcours natifs complets du petit corpus produisent **399 Go et 304 TAST identiques**. Leur total reste stable (12,816 → 12,872 s), malgré une préparation plus courte : aucun gain global déduit de ce petit corpus. Les 2 655 contenus préparés b8x ont été comparés en JS ; la sonde native b8x ne vérifie que leur nombre et les entrées.
+
+Le prototype reste en scratch, sources et compilateur installés inchangés. **Prochaine étape : intégration propre puis comparaison des sorties natives b8x et vrai `b -c -n`**, avec mesure de l’effet mémoire sur PBO et répétition avant de consolider le gain. Une seule paire native de préparation ne donne pas le nouveau total : la référence backend complète reste **388,011 s** ; la préparation historique était 96,746 s, cohérente avec le contrôle à 97,092 s.
+
+[Preuve JS](/Users/0x1/Documents/htdocs/scratch/gopurs-transitive-probe-20260920/rapport.md) · [Rapport natif](/Users/0x1/Documents/htdocs/scratch/gopurs-transitive-native-20260920/rapport.md) · [Mesures](/Users/0x1/Documents/htdocs/scratch/gopurs-transitive-native-20260920/summary.json) · [Sorties natives](/Users/0x1/Documents/htdocs/scratch/gopurs-transitive-native-20260920/go-validation.json).
+
+## Point 3 — cinquième sous-étape : cache intégré, vrai build b8x validé
+
+Le cache du préfixe de `transitiveCollect` est intégré en PureScript, avec une garde d’identité privée en JS/Go. Il est local à chaque appel et vérifie types, substitutions, longueurs et éléments des arguments avant réutilisation. Les passes dépendant de la table courante (`monomorphizeExpr` puis `collectExpr`) continuent dans le même ordre. Aucun changement du parallélisme ni mutation des entrées.
+
+| Mesure | Référence après pipeline | Après cache | Variation |
+|---|---:|---:|---:|
+| Préparation/monomorphisation | 96,746 s | 81,535 s | −15,72 % |
+| Optimisation/émission | 256,177 s | 258,985 s | +1,10 % |
+| **Backend interne** | **388,011 s** | **374,255 s** | **−3,55 %** |
+| Allocations cumulées | 737,44 Gio | 702,92 Gio | −4,68 % |
+| Pic RSS | 6,222 Gio | 6,358 Gio | +2,17 % |
+
+**15,211 s gagnées dans la préparation, 13,756 s sur le backend et 34,52 Gio d’allocations évitées.** La commande entière passe de 490,771 à 458,578 s, mais la reconstruction du compilateur gagne aussi 18,885 s avec un cache Go réchauffé par la validation préalable : ne pas attribuer les 32,193 s totales au seul changement.
+
+Validation : **50 tests JS et 13 cas de garde native passent** ; builds sans erreur/avertissement ; petit corpus natif avec 399 Go identiques, puis vrai `b -c -n` avec **2 655 TAST et 2 959 Go tous identiques**. Les sources b8x restent inchangées, et le binaire installé est exactement celui profilé. Les échecs sourcemaps/conf préexistants restent au point 5.
+
+Une seule nouvelle mesure complète face à la référence historique, pas une série alternée répétée. Le cache est conservé : le gain ciblé est cohérent avec le prototype et la baisse des allocations. Le point 3 reste ouvert pour les autres recalculs ; aucun gain supplémentaire n’est présumé. Nouvelle référence complète : **374,255 s**, soit **−36,75 % depuis 591,665 s**.
+
+[Rapport](/Users/0x1/Documents/htdocs/scratch/b8x-transitive-after-20260920/rapport.md) · [Comparaison](/Users/0x1/Documents/htdocs/scratch/b8x-transitive-after-20260920/comparison.json) · [Identité des sorties](/Users/0x1/Documents/htdocs/scratch/b8x-transitive-after-20260920/file-comparison.json).
+
 ## Point 4 — première sous-étape : optimisation et émission simultanées
 
 L’optimisation PBO reste séquentielle : le builder transmet les directives exportées par un module au suivant. En revanche, elle peut avancer pendant que le lot précédent émet du Go dans ses goroutines Aff. Le pipeline borne les travaux retenus à un lot actif, un lot en attente et le module en cours d’optimisation. Les lots restent ordonnés, avec leurs barrières de dépendance et leurs snapshots de signatures. Le nettoyage attend naturellement le lot actif, y compris les écritures asynchrones non annulables.
@@ -237,6 +280,65 @@ Trois répétitions par mode après chauffe, ordre S/P/P/S/S/P : la somme des mo
 Le résultat positif dépasse désormais la paire initiale. Le prototype reste en scratch, sans modification du compilateur installé ; la référence b8x demeure **388,011 s**. Prochaine étape possible : prototype d’ordonnancement sur le corpus complet, avec dépendances déterminées avant calcul et contrat explicite des directives, puis mesure incluant coordination, publication et émission. Les lectures observées après une compilation séquentielle ne suffisent pas comme ordonnanceur de production.
 
 [Rapport et limites](/Users/0x1/Documents/htdocs/scratch/gopurs-pbo-pairs-20260920/rapport.md) · [Mesures des six paires](/Users/0x1/Documents/htdocs/scratch/gopurs-pbo-pairs-20260920/summary.json) · [Validations](/Users/0x1/Documents/htdocs/scratch/gopurs-pbo-pairs-20260920/proof.json).
+
+## Point 4 — septième sous-étape : ordonnanceur sur tout le corpus, aucun gain démontré
+
+Prototype natif en scratch sur les **304 modules**, avec émission réelle des résultats parallèles. Le plan est calculé **avant PBO**, à partir des imports, réexports et références qualifiées du TAST déjà monomorphisé, puis de leur fermeture transitive. Il retient **29 paires contiguës disjointes, soit 58 modules**, et conserve l’ordre des callbacks/publications du builder.
+
+Le contrat des directives a été précisé : dans le parcours sans cache actuel, la sortie d’un module ne contient que ses propres directives et remplace celles transmises au suivant. A reçoit son environnement réel ; B reçoit des directives initiales vides lorsqu’il ne peut pas référencer A. Le prototype est limité aux callbacks actuels de gopurs, sans cache-hit ni semantics personnalisées.
+
+Deux chauffes exclues, puis trois mesures par variante dans un ordre alterné, mêmes entrées figées et réglages que les expériences précédentes :
+
+| Mesure moyenne | Référence | Prototype | Variation |
+|---|---:|---:|---:|
+| Optimisation + émission | 7,485 s | 7,541 s | +0,76 % |
+| Backend complet | 12,616 s | 12,694 s | +0,62 % |
+
+**Aucun bénéfice mesuré : cette version n’est pas intégrée.** La planification prend 35 à 49 ms et est incluse. La référence historique de 7,482 s sur ce corpus est cohérente avec le nouveau contrôle. Ces petits écarts ne démontrent pas une régression générale de la parallélisation PBO.
+
+Validation : **304 comparaisons complètes des résultats PBO** contre leur calcul séquentiel au même point du parcours, analyses/directives incluses ; **2 906 noms de dépendances audités**, tous couverts par le graphe hors références au module courant. **Le même plan passe sous Go -race**, avec 304 comparaisons supplémentaires et aucune course signalée. Les **399 Go et 304 TAST sont identiques** dans les dix runs réussis, dont deux chauffes et deux validations instrumentées. Cette fois les résultats parallèles sont bien réémis en Go.
+
+Indice concret pour la suite : **quatre des six paires précédemment validées sont interdites par la fermeture conservatrice**, une cinquième est séparée par la sélection gloutonne et une seule est reprise telle quelle. Le gain local des six paires ne s’extrapole donc pas à ce plan global. Prochaine micro-étape possible : préciser les dépendances qui bloquent les modules coûteux, avant d’élargir l’ordonnancement. Aucun nouveau build b8x ; compilateur installé inchangé et référence backend maintenue à **388,011 s**.
+
+[Rapport et limites](/Users/0x1/Documents/htdocs/scratch/gopurs-pbo-scheduler-20260920/rapport.md) · [Mesures](/Users/0x1/Documents/htdocs/scratch/gopurs-pbo-scheduler-20260920/summary.json) · [Validations](/Users/0x1/Documents/htdocs/scratch/gopurs-pbo-scheduler-20260920/proof.json) · [Couverture des anciennes paires](/Users/0x1/Documents/htdocs/scratch/gopurs-pbo-scheduler-20260920/previous-pairs-coverage.json).
+
+## Point 4 — huitième sous-étape : affiner les dépendances, 29 → 91 paires
+
+Le graphe précédent parcourait des modules encore non publiés et utilisait les imports comme s’ils étaient tous lus par PBO. La fermeture est désormais testée avec deux règles : conserver les références aux modules absents comme feuilles, sans parcourir leur corps ; utiliser les références qualifiées du TAST préparé comme racines. Seule la dépendance du second module vers le premier interdit une paire, car la disponibilité du second ne change pas pour le premier.
+
+Sur les mêmes 304 modules, les paires adjacentes admissibles passent de **47 à 128 puis 149** ; la sélection disjointe passe de **29 à 82 puis 91**, soit **182 modules regroupables**. `Data.List / Data.Map.Internal` et `Data.Foldable / Data.FunctorWithIndex` sont libérées et retenues. Les deux autres paires examinées restent bloquées par la granularité des modules intermédiaires ; leurs bindings responsables sont enregistrés.
+
+**Validation sémantique JavaScript : 304 résultats PBO identiques**, analyses et directives incluses, avec un cache en mémoire reproduisant la disponibilité native et un plan figé avant optimisation. Toutes les lectures observées sont couvertes ; aucun second module regroupé ne lit le premier. Contrôle négatif sur `analysis.externs` réussi. Les `Map` sont comparées par leurs entrées après vérification de leurs tailles/hauteurs, sans exiger la même forme d’arbre. Les **304 fermetures initiales natives** et les **304 TAST** correspondent exactement aux références.
+
+**Aucun gain de temps natif encore mesuré.** Ce rejeu utilise des calculs JS successifs sur un cache figé ; il ne teste pas les goroutines ni l’émission. Le patch du planificateur natif est préparé, non appliqué et non compilé. Prochaine étape : validation native et `-race`, puis benchmark incluant l’émission. Compilateur installé inchangé ; référence b8x maintenue à **388,011 s**.
+
+[Rapport](/Users/0x1/Documents/htdocs/scratch/gopurs-pbo-dependencies-20260920/rapport.md) · [Plans](/Users/0x1/Documents/htdocs/scratch/gopurs-pbo-dependencies-20260920/plans.json) · [Validation](/Users/0x1/Documents/htdocs/scratch/gopurs-pbo-dependencies-20260920/validation.json) · [Patch natif à tester](/Users/0x1/Documents/htdocs/scratch/gopurs-pbo-dependencies-20260920/native-planner.patch).
+
+## Point 4 — neuvième sous-étape : 91 paires en natif, aucun gain mesuré
+
+Le plan affiné est testé dans une copie native du prototype : **91 paires disjointes**, noms et indices identiques au plan JavaScript préalable, soit 182 modules regroupés sur 304. Les goroutines calculent les résultats PBO sur le cache figé ; les publications et l’émission Go conservent leur ordre.
+
+**Validation native et `-race` réussies** : 304 comparaisons complètes des résultats PBO par parcours, analyses/directives incluses, 2 906 noms de dépendances audités et aucune course signalée. Les **399 Go et 304 TAST restent identiques** dans les dix runs, comprenant deux validations, deux chauffes et six mesures.
+
+| Mesure moyenne, trois runs par variante | Référence | 91 paires | Variation |
+|---|---:|---:|---:|
+| Optimisation + émission | 7,688 s | 7,877 s | +2,45 % |
+| Backend complet | 13,169 s | 13,155 s | −0,11 % |
+| CPU utilisateur + système | 60,764 s | 61,835 s | +1,76 % |
+
+La planification prend 19,85 à 20,66 ms, incluses dans la phase. **Aucune accélération démontrée ; pas d’intégration.** La stabilité du total masque les variations de chargement/préparation et ne prouve pas un gain de l’ordonnanceur. La référence historique du corpus était 7,482 s ; la comparaison pertinente reste ici celle des variantes alternées dans la même session. Trois répétitions ne démontrent pas une régression générale du parallélisme PBO.
+
+L’élargissement du plan de 29 à 91 paires ne suffit donc pas. Prochaine question à mesurer : quelles durées des calculs simultanés et quelles attentes de l’émission annulent les gains locaux ? Leur cause précise n’est pas établie ; ne pas élargir encore le graphe sans cette mesure. Aucun nouveau build b8x, sources et compilateur installés inchangés ; référence backend maintenue à **388,011 s**.
+
+[Rapport](/Users/0x1/Documents/htdocs/scratch/gopurs-pbo-prefix-native-20260920/rapport.md) · [Mesures](/Users/0x1/Documents/htdocs/scratch/gopurs-pbo-prefix-native-20260920/summary.json) · [Validations](/Users/0x1/Documents/htdocs/scratch/gopurs-pbo-prefix-native-20260920/proof.json).
+
+## Point 4 — dixième sous-étape : le chevauchement est annulé par l’allongement des calculs
+
+Quatre parcours instrumentés du même binaire (séquentiel/parallèle/parallèle/séquentiel), mêmes entrées et sorties vérifiées. Avec les 91 paires, la somme des durées PBO passe de **6,377 à 8,115 s**, tandis que leur union reste à **6,377 → 6,441 s**. Pour les seuls 182 modules regroupés : **3,312 → 4,996 s** cumulées. L’attente de l’émission ne baisse pas : **1,264 → 1,327 s**. La phase complète reste **7,685 → 7,814 s**. Ce sont des intervalles muraux, pas du CPU ; leurs chevauchements empêchent de les additionner.
+
+Les **399 Go et 304 TAST sont identiques** dans les quatre runs. Le parallélisme est réel, mais aucun gain exploitable n’est établi. La part du GC, du scheduling et de la contention mémoire dans l’allongement reste inconnue. Conformément à la demande utilisateur, on passe au chantier plus large du **point 3 : réduire les reconstructions répétées de la collecte transitive**, en conservant ce diagnostic. Pas de modification du compilateur installé ni de nouveau build b8x.
+
+[Rapport](/Users/0x1/Documents/htdocs/scratch/gopurs-pbo-waits-20260920/rapport.md) · [Mesures](/Users/0x1/Documents/htdocs/scratch/gopurs-pbo-waits-20260920/summary.json).
 
 ## Diagnostic de référence — vrai `b -c -n` du 19 septembre 2026
 
