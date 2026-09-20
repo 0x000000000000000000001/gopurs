@@ -1,6 +1,6 @@
 # Gopurs — réduire le temps de compilation de b8x
 
-État au 20 septembre 2026 : points 1 et 2 intégrés et validés sur le vrai `b -c -n` de b8x. Le scanner apporte encore −8,84 % sur le backend après le point 1 ; les deux changements réunis ramènent le backend de 591,665 à 449,638 s (−24,00 %). Les points 3 à 7 restent à traiter. Ce document remplace intégralement l’ancienne liste.
+État au 20 septembre 2026 : points 1 et 2 intégrés, puis une première sous-étape de substitution validée sur le vrai `b -c -n`. Le backend passe désormais de la référence initiale de 591,665 à 433,732 s (−26,69 %). La garde de substitution ajoute un gain observé de 15,906 s (−3,54 %) après le scanner. Le cœur préparation/monomorphisation du point 3 et les points 4 à 7 restent ouverts. Ce document remplace intégralement l’ancienne liste.
 
 ## Points à traiter un par un, ultérieurement
 
@@ -8,7 +8,7 @@ Travailler sur un seul point à la fois. Commencer par une expérience courte, v
 
 - [x] **1. Comparaisons Char/String et adaptation FFI.** Deux signatures Go génériques dans gopurs-prelude, arguments génériques transmis directement par le bridge. Suppression des trois allocations/72 octets par comparaison confirmée ; tests JS/natifs et mesure complète b8x terminés. Backend : 591,665 → 493,217 s ; allocations : 1 030,31 → 858,66 Gio. Bilan et limites ci-dessous.
 - [x] **2. Scanner d’imports Go.** Prédicat d’identifiant avec une conversion en entier et des conditions explicites : moins de chaînes et de closures. Microbenchmark ×3,04 ; backend b8x 493,217 → 449,638 s (−8,84 %), allocations 858,66 → 789,39 Gio. Les 2 959 Go produits restent identiques. La propagation des imports pour éviter des scans reste une piste distincte, non implémentée. Bilan ci-dessous.
-- [ ] **3. Préparation et monomorphisation.** Cibler `transitiveCollect`, `collectExpr`, les substitutions de types et `mangleType`. Instrumenter un parcours précis, vérifier les recalculs et allocations évitables avant toute transformation globale.
+- [ ] **3. Préparation et monomorphisation.** Une garde dans `TypeSubstitution.substitute` est intégrée : elle concerne surtout l’optimisation/émission, pas `Substitute.substituteExprType` de la monomorphisation. Gain backend observé : 449,638 → 433,732 s. Le cœur du point reste ouvert : cibler `transitiveCollect`, `collectExpr`, `mangleType` et les substitutions de la monomorphisation ; vérifier un recalcul précis avant toute transformation globale.
 - [ ] **4. Parallélisme applicatif au-delà de l’émission.** Identifier les calculs indépendants de la préparation et de l’optimisation PBO ; expliciter la transmission des directives entre modules avant de modifier l’ordonnancement. Mesurer sur b8x, conserver le déterminisme du résultat et vérifier les accès partagés. Augmenter seulement le nombre de workers d’émission ne résout pas les dépendances séquentielles.
 - [ ] **5. Échecs masqués dans le build b8x.** Diagnostiquer puis corriger l’échec des sourcemaps et de `conf`, et rendre leurs statuts visibles. Le glob des sourcemaps ne trouve aucun `.purs` ; la cause précise de l’échec de configuration reste inconnue. Mesurer le coût de la configuration lorsqu’elle réussit.
 - [ ] **6. GC, après réduction des allocations.** Reprofiler le même travail ; distinguer GC idle, autres travaux GC, pauses et coût mural. N’évaluer un réglage du GC qu’avec une comparaison contrôlée temps/mémoire. Ne pas convertir les 72,8 % de CPU échantillonné en promesse de gain mural.
@@ -81,7 +81,29 @@ Les **2 655 TAST et les 2 959 fichiers Go sont tous identiques** avant/après. M
 
 [Microbenchmark](/Users/0x1/Documents/htdocs/scratch/gopurs-scanner-bench-20260920/rapport.md) · [Rapport d’intégration](/Users/0x1/Documents/htdocs/scratch/b8x-scanner-after-20260920/rapport.md) · [Mesures](/Users/0x1/Documents/htdocs/scratch/b8x-scanner-after-20260920/comparison.json) · [Comparaison des fichiers](/Users/0x1/Documents/htdocs/scratch/b8x-scanner-after-20260920/file-comparison.json).
 
-Prochain chantier : **point 3, préparation et monomorphisation**, avec le profil après scanner comme référence. Commencer par une expérience courte sur un parcours ou recalcul précis.
+## Point 3 — première sous-étape : garde de substitution
+
+Le profil et la capture ont distingué deux chemins : `TypeSubstitution.substitute`, qui allouait environ 101 Gio pendant l’optimisation via `Semantics`, et `Substitute.substituteExprType`, utilisé par la monomorphisation. L’estimation initiale de 20–40 s basée sur la phase préparation était donc trop directe ; le gain observé de cette sous-étape est **15,906 s sur le backend**.
+
+Une capture JS sur les 2 655 TAST, sans émission Go, observe 23,2 millions d’appels et échantillonne 512 cas. La garde peut conserver l’arbre d’origine dans 442 cas : aucune variable n’est une clé de substitution, et aucun `ForAll` n’impose le parcours conservateur. Le renommage sous quantificateur, la substitution simultanée et les rangées ouvertes restent inchangés.
+
+Le microbenchmark natif mesure −12 à −14 % de temps et −24 % d’octets sur ce corpus. Les variantes « types fermés uniquement » et « prédicat à appels directs » régressent et sont écartées. La garde retenue ralentit les cas qui doivent encore être substitués ; sa portée reste locale, sans cache global ni mutation.
+
+| Mesure | Après scanner | Après garde | Variation |
+|---|---:|---:|---:|
+| Préparation/monomorphisation | 118,488 s | 116,209 s | −1,92 % |
+| Optimisation/émission | 297,364 s | 283,705 s | −4,59 % |
+| **Backend interne** | **449,638 s** | **433,732 s** | **−3,54 %** |
+| **`b -c -n` entier** | **550,478 s** | **537,635 s** | **−2,33 %** |
+| Allocations cumulées | 789,39 Gio | 774,71 Gio | −1,86 % |
+| Objets alloués estimés | 20,182 milliards | 20,236 milliards | +0,27 % |
+| Pic RSS | 6,347 Gio | 6,489 Gio | +2,24 % |
+
+Validation : **30 tests de portée/substitution**, les **512 cas sur le compilateur natif reconstruit**, **2 655 TAST et 2 959 Go tous identiques** par SHA-256. Une seule paire de runs non alternée ; la petite variation de préparation n’est pas attribuée à cette garde. Aucune réduction du nombre d’allocations ou du pic mémoire n’est établie. Les échecs `sourcemaps/conf` restent au point 5.
+
+[Capture et microbenchmark](/Users/0x1/Documents/htdocs/scratch/gopurs-substitution-bench-20260920/rapport.md) · [Rapport d’intégration](/Users/0x1/Documents/htdocs/scratch/b8x-substitution-after-20260920/rapport.md) · [Mesures](/Users/0x1/Documents/htdocs/scratch/b8x-substitution-after-20260920/comparison.json) · [Comparaison des fichiers](/Users/0x1/Documents/htdocs/scratch/b8x-substitution-after-20260920/file-comparison.json).
+
+Prochaine micro-étape du **point 3** : mesurer les répétitions de `mangleType` ou de `transitiveCollect` dans la préparation/monomorphisation. Référence actuelle du backend : **433,732 s**.
 
 ## Diagnostic de référence — vrai `b -c -n` du 19 septembre 2026
 
