@@ -47,6 +47,39 @@ interrupting to draining the active batch. That branch was not exercised by the
 successful backend run; its successful emission path is unchanged. Final cleanup
 is separately covered by JS/native tests and a rebuilt native compiler.
 
+## Worker count with the pipeline on 2026-09-20
+
+Nine sequential native processes compared 2 / 4 / 8 workers with the pipeline
+enabled, using the same binary and frozen inputs from the 304-module corpus.
+After one excluded warmup, the order was 2/4/8, 8/2/4, 4/8/2. All 399 generated
+Go files matched the historical reference in every run.
+
+| Emission workers | Mean optimize + emit | Mean backend total |
+| --- | --- | --- |
+| 2 | 7.482 s | 12.671 s |
+| 4 | 7.613 s | 12.751 s |
+| 8 | 7.737 s | 12.886 s |
+
+Neither higher setting improved compilation time on this corpus; medians led to
+the same decision. The default remains 2. No new full b8x run was warranted by
+this experiment, and no further b8x gain is claimed.
+
+## Pipeline wait diagnosis on 2026-09-20
+
+Scratch-only probes on two runs of the frozen 304-module corpus measured a mean
+7.783 s optimize/emit phase. Synchronous PBO conversion occupied 6.554 s (84.2%),
+including 2.700 s overlapping emission. Producer joins occupied 1.210 s (15.5%);
+the final join was only 1.56 ms. An emission batch was active for 3.914 s (50.3%).
+These wall-time intervals overlap and must not be added as CPU times.
+
+Both captures observed 304 PBO conversions, 304 translations and 175 ordered
+batches, with at most two translations in flight. All output matched two
+uninstrumented controls. Instrumented phase time averaged 2.64% above controls;
+measurement overhead and run variation are not separated by this small sample.
+The result prioritizes studying independent work inside the sequential PBO
+producer. It is not extrapolated to b8x and does not establish that module
+optimization can safely ignore preceding directives.
+
 ## Measurements on 2026-09-18
 
 Go 1.27.0, darwin/arm64. Existing TAST inputs, isolated output directories,

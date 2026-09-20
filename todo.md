@@ -167,6 +167,36 @@ Les échecs sourcemaps/conf restent inchangés au point 5. Le point 4 reste ouve
 
 [Expérience courte et tests](/Users/0x1/Documents/htdocs/scratch/gopurs-pipeline-20260920/rapport.md) · [Rapport b8x](/Users/0x1/Documents/htdocs/scratch/b8x-pipeline-after-20260920/rapport.md) · [Mesures](/Users/0x1/Documents/htdocs/scratch/b8x-pipeline-after-20260920/comparison.json) · [Comparaison des fichiers](/Users/0x1/Documents/htdocs/scratch/b8x-pipeline-after-20260920/file-comparison.json).
 
+## Point 4 — deuxième sous-étape : 2, 4 ou 8 workers, réglage conservé
+
+Neuf compilations natives du même corpus de 304 TAST, pipeline activé, trois passages par réglage dans l’ordre 2/4/8, 8/2/4, 4/8/2. Une chauffe exclue, répertoires frais, même binaire, entrées FFI figées, aucun profilage. Moyennes :
+
+| Workers | Optimisation/émission | Écart vs 2 | Backend total |
+|---|---:|---:|---:|
+| **2** | **7,482 s** | référence | **12,671 s** |
+| 4 | 7,613 s | +1,76 % | 12,751 s |
+| 8 | 7,737 s | +3,41 % | 12,886 s |
+
+**Aucun gain : le réglage reste à 2.** Les médianes confirment cette décision. Les **399 Go sont identiques à la référence historique dans les neuf runs**. Le premier essai de chauffe avait détecté neuf FFI modifiées depuis la mesure précédente ; il a été exclu, puis les sources historiques ont été figées dans scratch avant de recommencer. Aucun code de production modifié, aucun nouveau build b8x lancé. Référence b8x conservée : **388,011 s de backend**.
+
+Ces chiffres ne permettent pas de désigner PBO comme unique goulot. La prochaine expérience sur le parallélisme peut mesurer les attentes entre producteur et émission ; paralléliser plusieurs modules PBO nécessite toujours de préserver les directives entre modules.
+
+[Rapport et protocole](/Users/0x1/Documents/htdocs/scratch/gopurs-pipeline-workers-20260920/rapport.md) · [Neuf mesures](/Users/0x1/Documents/htdocs/scratch/gopurs-pipeline-workers-20260920/benchmark.json) · [Statistiques](/Users/0x1/Documents/htdocs/scratch/gopurs-pipeline-workers-20260920/summary.json).
+
+## Point 4 — troisième sous-étape : mesurer les attentes du pipeline
+
+Sondes limitées à une copie native dans scratch, sur les mêmes 304 TAST et FFI figées. Deux runs instrumentés encadrés par deux références, pipeline actif et 2 workers. Moyennes dans la phase optimisation/émission de **7,783 s** :
+
+- **PBO synchrone : 6,554 s (84,2 %)**, dont 2,700 s simultanées avec l’émission.
+- **Jonctions du producteur : 1,210 s (15,5 %)**, presque entièrement pendant les appels `enqueue` ; jonction finale de 1,56 ms seulement.
+- Un lot d’émission est actif 3,914 s ; **aucun lot actif pendant 49,7 % de la phase**. Cela ne signifie pas que tous les cœurs sont inactifs.
+
+Ces durées se recouvrent, elles ne s’additionnent pas. Les deux captures concordent ; 304 conversions PBO, 304 traductions, 175 lots et jusqu’à 2 traductions simultanées. **399 Go et 304 TAST identiques dans les quatre runs**. La phase instrumentée est 2,64 % plus lente en moyenne que les deux contrôles ; bruit et surcoût ne sont pas séparés. Aucun code de production modifié, aucun build b8x complet relancé et aucune extrapolation chiffrée à b8x.
+
+Le travail séquentiel de PBO devient la cible prioritaire sur ce corpus. Prochaine micro-étape : identifier dans `toBackendModule` une portion coûteuse indépendante des directives/publications précédentes et vérifier cette indépendance avant de paralléliser. Aucun gain supplémentaire n’est encore établi.
+
+[Diagnostic détaillé](/Users/0x1/Documents/htdocs/scratch/gopurs-pipeline-waits-20260920/rapport.md) · [Intervalles et synthèse](/Users/0x1/Documents/htdocs/scratch/gopurs-pipeline-waits-20260920/summary.json).
+
 ## Diagnostic de référence — vrai `b -c -n` du 19 septembre 2026
 
 Révisions mesurées : b8x `3ea9c731cbef5c7bb8593b4d2e8a5594a313bb26`, gopurs `fdd3113d08784f5337058a8b22f015379475ae35`, PBO gopurs `87f6d0220aae744a3538513dd4aaeebe8cfcb05c`. Les versions détaillées et profils sont référencés ci-dessous.
