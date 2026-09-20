@@ -209,6 +209,35 @@ Prochaine expérience à potentiel : rendre explicites les dépendances aux impl
 
 [Rapport et dépendances](/Users/0x1/Documents/htdocs/scratch/gopurs-pbo-parts-20260920/rapport.md) · [Coûts et compteurs](/Users/0x1/Documents/htdocs/scratch/gopurs-pbo-parts-20260920/parts-summary.json).
 
+## Point 4 — cinquième sous-étape : prototype de deux optimisations simultanées
+
+**Preuve positive en natif sur `Data.List` et `Data.Map.Internal`**, adjacents aux indices 247/248 du corpus de 304 TAST. Les 247 publications précédentes sont figées ; les deux actions utilisent les directives disponibles avant `Data.List`. Leurs lectures de cache observées sont compatibles avec cet état commun, sans lecture de l’autre module. Après calcul, les résultats sont publiés dans l’ordre initial.
+
+| Mode | Trois mesures hors chauffe | Moyenne |
+|---|---|---:|
+| Séquentiel | 392,112 / 391,573 / 396,143 ms | **393,276 ms** |
+| Deux goroutines | 343,118 / 346,469 / 350,163 ms | **346,583 ms** |
+
+**46,693 ms gagnées sur cette paire (−11,87 %, facteur 1,135).** Même processus, GC hors chrono, ordre S/P/P/S/S/P après une chauffe par mode. Les actions capturées sont déjà préparées ; le chrono exclut invalidation initiale, comparaison, publication et émission Go. Chaque tâche ralentit individuellement en concurrence, limitant le gain total ; la cause précise n’est pas isolée.
+
+Comparaison des **12 champs de BackendModule**, incluant tous les champs des analyses publiées, la syntaxe, les directives et les implémentations : mêmes résultats que la référence dans tous les replays. Une mutation volontaire de `analysis.externs` est détectée. OptimizationSteps est vérifié vide, comme dans le build habituel. **Le même couple passe sous Go -race sans course signalée.** Les compilations séquentielles préparatoires donnent les mêmes 399 Go ; les résultats parallèles sont comparés comme IR, sans réémission Go.
+
+Le prototype reste en scratch : compilateur installé et ordonnanceur de production inchangés. Le gain de la paire ne s’extrapole pas à b8x. Prochaine étape possible : plusieurs paires, puis détermination des dépendances avant exécution et contrat explicite sur les directives ; cet essai identifie les dépendances lors d’un parcours de référence séquentiel.
+
+[Rapport et limites](/Users/0x1/Documents/htdocs/scratch/gopurs-pbo-pair-20260920/rapport.md) · [Mesures](/Users/0x1/Documents/htdocs/scratch/gopurs-pbo-pair-20260920/summary.json) · [Validations](/Users/0x1/Documents/htdocs/scratch/gopurs-pbo-pair-20260920/proof.json).
+
+## Point 4 — sixième sous-étape : six paires d’optimisations simultanées
+
+Extension du prototype à **six paires adjacentes et disjointes**, retenues avant les replays parmi 212 candidates selon les durées observées du parcours séquentiel. Aucun échec remplacé : **six paires sur six passent**, soit douze modules. Même cache figé et mêmes directives avant chaque paire, jonction des deux goroutines puis publication dans l’ordre initial.
+
+Trois répétitions par mode après chauffe, ordre S/P/P/S/S/P : la somme des moyennes passe de **1,091643 à 0,990776 s (−9,24 %, 100,867 ms gagnées)**. Les gains par paire vont de **3,28 à 17,72 %**. Ce total additionne six replays isolés ; il exclut notamment publication et émission. Les paires sont choisies pour leur coût, donc ces chiffres ne représentent pas un build complet.
+
+**48 replays natifs valident l’égalité complète des résultats PBO et publications**, analyses incluses ; les mutations volontaires des analyses des douze modules sont détectées. **Les six mêmes paires passent sous Go -race**, avec 12 replays supplémentaires et aucune course signalée. Les deux compilations préparatoires conservent **399 Go et 304 TAST identiques**. Les résultats parallèles sont comparés comme IR, sans réémission Go.
+
+Le résultat positif dépasse désormais la paire initiale. Le prototype reste en scratch, sans modification du compilateur installé ; la référence b8x demeure **388,011 s**. Prochaine étape possible : prototype d’ordonnancement sur le corpus complet, avec dépendances déterminées avant calcul et contrat explicite des directives, puis mesure incluant coordination, publication et émission. Les lectures observées après une compilation séquentielle ne suffisent pas comme ordonnanceur de production.
+
+[Rapport et limites](/Users/0x1/Documents/htdocs/scratch/gopurs-pbo-pairs-20260920/rapport.md) · [Mesures des six paires](/Users/0x1/Documents/htdocs/scratch/gopurs-pbo-pairs-20260920/summary.json) · [Validations](/Users/0x1/Documents/htdocs/scratch/gopurs-pbo-pairs-20260920/proof.json).
+
 ## Diagnostic de référence — vrai `b -c -n` du 19 septembre 2026
 
 Révisions mesurées : b8x `3ea9c731cbef5c7bb8593b4d2e8a5594a313bb26`, gopurs `fdd3113d08784f5337058a8b22f015379475ae35`, PBO gopurs `87f6d0220aae744a3538513dd4aaeebe8cfcb05c`. Les versions détaillées et profils sont référencés ci-dessous.
