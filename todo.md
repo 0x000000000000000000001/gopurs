@@ -1,8 +1,8 @@
 # Gopurs — réduire le temps de compilation de b8x
 
-État au 21 septembre 2026 : comparaisons Char/String, scanner, garde de substitution, clés différées, pipeline PBO/émission, cache local des corps préparés et **index des champs de conversion** intégrés. Dernier backend b8x : **342,863 s (5 min 43)**, contre 591,665 s au départ (évolution historique **−42,05 %, 4 min 09 gagnées**). Les essais de garde avant unification et d’ordonnanceur PBO à 91 paires ne sont pas retenus faute de gain établi.
+État au 21 septembre 2026 : comparaisons Char/String, scanner, garde de substitution, clés différées, pipeline PBO/émission, cache local des corps préparés, index des champs de conversion et **Array.any générique** intégrés. Dernier backend b8x : **319,381 s (5 min 19)**, contre 591,665 s au départ (évolution historique **−46,02 %, 4 min 32 gagnées**). Les essais de garde avant unification et d’ordonnanceur PBO à 91 paires ne sont pas retenus faute de gain établi.
 
-**Dernière intégration, point 9 : 401,157 → 342,863 s de backend (−14,53 %), allocations 704,04 → 554,31 Gio (−21,27 %).** Comparaison plus prudente à la référence du 20 septembre : 374,255 → 342,863 s (−8,39 %). `b -c -n` entier : **434,000 s (7 min 14)**. Les 2 655 TAST et 2 959 Go sont identiques ; 90 tests passent. Un seul nouveau run complet, charge machine variable : les secondes murales exactes restent à consolider. **Point 9 terminé ; prochaine priorité : point 8, les passes internes PBO.** Les points 3 à 8 et 10 restent ouverts.
+**Dernière sous-étape, point 8 : 342,863 → 319,381 s de backend sur un run, allocations 554,31 → 541,68 Gio (−2,28 %).** `b -c -n` entier : **415,464 s (6 min 55)**. La baisse des allocations est confirmée ; les 23,482 s murales restent à consolider, car le petit corpus est presque stable et la charge varie. **46 tests ciblés et 512 substitutions réelles passent ; 2 655 TAST identiques, seul Data_Array_ffi.go change parmi 2 959 Go.** Le pic RSS ne baisse pas et les échecs sourcemaps/conf persistent. Point 9 terminé ; point 8 encore prioritaire pour les instanciations neutres répétées. Les points 3 à 8 et 10 restent ouverts.
 
 ## Points à traiter un par un, ultérieurement
 
@@ -15,11 +15,36 @@ Travailler sur un seul point à la fois. Commencer par une expérience courte, v
 - [ ] **5. Échecs masqués dans le build b8x.** Diagnostiquer puis corriger l’échec des sourcemaps et de `conf`, et rendre leurs statuts visibles. Le glob des sourcemaps ne trouve aucun `.purs` ; la cause précise de l’échec de configuration reste inconnue. Mesurer le coût de la configuration lorsqu’elle réussit.
 - [ ] **6. GC, après réduction des allocations.** Reprofiler le même travail ; distinguer GC idle, autres travaux GC, pauses et coût mural. N’évaluer un réglage du GC qu’avec une comparaison contrôlée temps/mémoire. Ne pas convertir les 72,8 % de CPU échantillonné en promesse de gain mural.
 - [ ] **7. Bilan complet sur le vrai workflow.** Après validation de chaque changement isolé, répéter `b -c -n` avec les mêmes entrées, paramètres et conditions de cache ; publier le détail des phases, allocations, pic mémoire et statuts. Comparer aux références de compilation b8x ci-dessous ; garder les baselines d’exécution officielles d’altbak.pub pour leur périmètre propre.
-- [ ] **8. Coût interne des passes PBO, au-delà du parallélisme.** Le profil b8x du 21 septembre attribue 86,69 s CPU hors GC aux piles Convert/Semantics/Builder reconnues. `substituteNeutralTypes` et `makeExternEvalSpine` ressortent ; leurs chemins se recouvrent. `TypeSubstitution.substitute`, descendants compris, représente 87,36 Gio et 32,82 s CPU hors GC. Mesurer les instanciations répétées, les annotations réellement modifiées et les reconstructions d’expressions neutres avant de proposer une garde ou un cache. Ne pas confondre la garde sur les arbres de types déjà intégrée avec tout le parcours des expressions. Une ventilation murale exhaustive de PBO sur b8x reste à faire.
+- [ ] **8. Coût interne des passes PBO, au-delà du parallélisme.** Capture complète : 734 669 substitutions racines, 44,78 millions de visites de nœuds. Une garde conservatrice sur les expressions complètes ne couvrirait que 0,12 % des visites : non retenue. Premier coût indirect supprimé : copies en interfaces de `Array.any`, via FFI générique et résolution récursive de ses paramètres dans le bridge. Allocations b8x −12,63 Gio ; backend observé 342,863 → 319,381 s. La sonde détecte aussi 223 641 paires expression/argument répétées par identité (28,51 % des appels d’instanciation). **Prochaine expérience : pondérer ces répétitions par leur coût et mesurer la mémoire retenue avant un cache borné.** Aucun gain de cache établi ; les pourcentages d’appels ne sont pas des pourcentages de temps.
 - [x] **9. Indexer les champs de conversion Go.** Index immuable construit une fois depuis les layouts TAST, partagé entre émissions. Premier résultat dans l’ordre des clés, priorité constructeur/classe et deux alias conservés. `findReboxFields` passe de **150,56 Gio à 69 Mio** et de 53,78 à 0,04 s CPU échantillonnées hors GC. Backend b8x : **401,157 → 342,863 s**, allocations totales −21,27 %. Les **90 tests**, 4 468 recherches sur les métadonnées b8x et les comparaisons natives passent ; **2 655 TAST et 2 959 Go identiques**. Bilan et limites ci-dessous.
 - [ ] **10. Compilation incrémentale entre builds.** Réutiliser les résultats des modules inchangés pour le cycle quotidien. Définir l’invalidation des signatures, directives PBO, spécialisations transitives, FFI et versions du compilateur ; comparer les sorties avec un build propre. Ce chantier est distinct de l’accélération de `b -c -n` : un cache invalidé par `-c` n’améliore pas ce rebuild forcé. Potentiel à mesurer sur une modification réelle de b8x, pas sur la seule commande propre.
 
 Chaque point doit laisser un résultat vérifié, les mesures avant/après et ses limites dans ce document. Aucun gain ×2 n’est établi par le profil actuel.
+
+## Point 8 — capture des parcours PBO et Array.any générique
+
+La sonde JS sur les **2 655 TAST b8x** observe **734 669 substitutions racines / 44 779 920 visites de nœuds**. Avec le critère conservateur « aucune référence d’annotation remplacée », seules 1 234 racines / 53 643 visites restent inchangées (**0,12 % des visites**). Une garde à l’entrée des expressions complètes est écartée. Les sous-arbres inchangés sont plus nombreux (87,93 %), mais leur détection a elle-même un coût. Les 223 641 répétitions d’une paire expression/argument par identité sont une piste à mesurer, sans cache encore ajouté.
+
+Le profil révélait **11,94 Gio d’allocations directes** dans la passerelle de `Array.any` : copie du tableau puis emballage de tous ses éléments en interfaces, avant le premier test du prédicat. `AnyImpl[A any]` supprime ces conversions. `FfiBridge` résout désormais récursivement les paramètres génériques dans les callbacks, tableaux et retours, en cohérence avec l’instanciation Go. La bibliothèque n’expose pas la représentation du runtime.
+
+**512 substitutions réelles validées** : −17,27 % d’octets et −19,60 % d’objets sur ce microbenchmark. **46 tests ciblés passent**, dont ordre, court-circuit, tableau vide, immutabilité, callbacks/retours génériques et portée TypeApp. Builds JS/natif sans avertissement ni erreur. Petit corpus natif alterné : backend **12,984 → 12,933 s**, phase optimisation/émission **7,496 → 7,515 s**, soit **pas de gain mural établi** ; 304 TAST et 399 Go identiques dans six runs.
+
+| Vrai `b -c -n`, même instrumentation | Avant | Après |
+|---|---:|---:|
+| Chargement/tri TAST | 35,275 s | 34,616 s |
+| Préparation/monomorphisation | 91,296 s | 83,987 s |
+| Optimisation/émission | 216,283 s | 200,769 s |
+| **Backend interne** | **342,863 s** | **319,381 s** |
+| **Commande entière** | **434,000 s** | **415,464 s** |
+| CPU utilisateur + système | 1 424,706 s | 1 393,516 s |
+| Allocations cumulées estimées | 554,31 Gio | **541,68 Gio** |
+| Pic RSS | 6,290 Gio | 6,444 Gio |
+
+**−12,63 Gio / −2,28 % d’allocations**, −489,6 millions d’objets / −3,44 %. Plus aucune allocation directe échantillonnée dans la passerelle AnyImpl. **2 655 TAST inchangés ; 2 958 Go identiques et uniquement Data_Array_ffi.go modifié**, exactement pour la signature et son bridge. Le binaire du profil est identique au candidat testé et à celui installé. Sources b8x inchangées ; seul `.DS_Store`, métadonnée Finder, change dans le relevé large des fichiers.
+
+**Correction conservée pour la réduction démontrée des allocations. Les 23,482 s de gain mural restent indicatives** : un seul nouveau run complet, petit corpus presque stable, CPU réel −2,19 % et charge variable. Le CPU échantillonné pprof augmente de 1 075,96 à 1 098,46 s et n’est pas interchangeable avec le CPU système. Le pic RSS augmente de 2,44 %. Sourcemaps/conf échouent toujours avec le code 1, masqué par le script ; ils restent au point 5. Les baselines d’exécution du README altbak.pub restent distinctes de ces durées de compilation.
+
+[Rapport, capture et limites](/Users/0x1/Documents/htdocs/scratch/gopurs-neutral-probe-20260921/rapport.md) · [Microbenchmark FFI](/Users/0x1/Documents/htdocs/scratch/gopurs-any-probe-20260921/rapport.md) · [Profil b8x](/Users/0x1/Documents/htdocs/scratch/b8x-any-after-20260921/comparison.json) · [Comparaison des sorties](/Users/0x1/Documents/htdocs/scratch/b8x-any-after-20260921/file-comparison.json).
 
 ## Point 9 — index intégré et validé sur b8x le 21 septembre 2026
 
