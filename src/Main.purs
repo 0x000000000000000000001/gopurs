@@ -139,7 +139,7 @@ main = launchAff_ $ Metrics.measure "backend total" \_ -> do
   globalFunctionsRef <- liftEffect (Ref.new Map.empty)
   configuredEmitJobs <- liftEffect (Process.lookupEnv "GOPURS_EMIT_JOBS")
   configuredPipeline <- liftEffect (Process.lookupEnv "GOPURS_PIPELINE")
-  let emitJobs = max 1 (min 64 (fromMaybe 2 (configuredEmitJobs >>= Int.fromString)))
+  let emitJobs = max 1 (min 64 (fromMaybe 8 (configuredEmitJobs >>= Int.fromString)))
 
   Metrics.measure "runtime" \_ -> do
     _ <- attempt (FS.mkdir "output/gopurs_runtime")

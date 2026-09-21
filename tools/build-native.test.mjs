@@ -60,7 +60,7 @@ if (name === 'go') fs.writeFileSync(process.argv[process.argv.indexOf('-o') + 1]
   for (const name of ['npm', 'spago', 'purs', 'go']) put(join(localBin, name), mockTool, 0o755);
   const fork = join(temporary, 'checkout/purescript/.stack-work/dist/mock/ghc-test/build/purs/purs');
   const explicitFork = join(temporary, 'explicit-typed-purs');
-  for (const file of [fork, explicitFork, join(root, 'bin/gopurs')]) put(file, mockTool, 0o755);
+  for (const file of [fork, explicitFork, join(root, 'bin/gopurs'), join(root, 'bin/gopurs.js')]) put(file, mockTool, 0o755);
   const binary = join(root, 'bin/gopurs-native');
   put(binary, 'old-native-binary', 0o755);
   put(join(root, 'tools/prepare-native-output.mjs'), `
@@ -90,7 +90,7 @@ for (const explicit of [false, true]) {
     const f = fixture(t);
     const result = f.run(explicit ? { GOPURS_PURS: f.explicitFork } : {});
     assert.equal(result.status, 0, result.stdout + result.stderr);
-    assert.deepEqual(result.calls.map(call => call.name), ['npm', 'spago', 'gopurs', 'parser', 'go']);
+    assert.deepEqual(result.calls.map(call => call.name), ['npm', 'spago', 'gopurs.js', 'parser', 'go']);
     const selected = realpathSync(explicit ? f.explicitFork : f.fork);
     for (const call of result.calls.filter(call => call.name !== 'parser')) {
       assert.equal(call.purs, call.name === 'spago' ? selected : realpathSync(join(f.localBin, 'purs')));
@@ -124,7 +124,7 @@ test('native helper preserves the published binary when Go compilation fails', t
   const result = f.run({ MOCK_FAIL: 'go' });
   assert.equal(result.status, 1);
   assert.match(result.stderr, /failed during go-build/);
-  assert.deepEqual(result.calls.map(call => call.name), ['npm', 'spago', 'gopurs', 'parser', 'go']);
+  assert.deepEqual(result.calls.map(call => call.name), ['npm', 'spago', 'gopurs.js', 'parser', 'go']);
   assert.equal(readFileSync(f.binary, 'utf8'), 'old-native-binary');
   assert.ok(existsSync(join(result.workspace, 'go-build.log')), 'failure logs must remain available');
 });

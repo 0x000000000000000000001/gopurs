@@ -1,7 +1,7 @@
 # Parallel Go emission
 
 `GOPURS_EMIT_JOBS` selects the maximum number of modules emitted together
-(default 2; set 1 for sequential emission).
+(default 8; set 1 for sequential emission).
 It is independent of `GOPURS_JOBS`, which only controls TAST loading.
 
 The sequential PBO builder enqueues optimized modules. By default it can optimize
@@ -26,6 +26,33 @@ An emission error still propagates through `enqueue` or `finish`.
 PBO optimization stays sequential. Its current builder passes the preceding
 module's exported directives to the next module, so scheduling optimization
 solely by the original import graph would change this behavior.
+
+## Worker counts after forceEscape correction, 2026-09-21
+
+The default is now **8**. On the corrected native runtime, three alternating
+passes per setting on 304 modules compared 1/2/4/8 emission workers, keeping
+preparation at 2. Mean optimize/emit times were 6.915 / 5.438 / 5.517 / 5.115 s.
+All 399 Go files matched. Moving from 1 to 2 also enables producer overlap.
+
+On b8x, two isolated controls at 2 workers took 124.229 and 132.346 s for
+optimize/emit, versus 113.532 s at 8. Backend times were 203.089 / 208.951 s
+versus 186.326 s. Loading and preparation varied too, so the full difference
+cannot be attributed to emission. Peak RSS at 8 remained close to the controls.
+
+A real `b -c -n` rebuilt the compiler with the new default, without any
+`GOPURS_*` environment overrides: 120.331 s optimize/emit, 197.565 s backend,
+304.738 s for the command. This validates the default and provides a second
+observation at 8, under a different workflow from the isolated backend runs.
+All 2,655 TAST and 2,959 Go files matched; the 10 emission tests passed.
+The complete command did not improve over the previous historical profile;
+that profile used pprof/gctrace and is not a controlled whole-workflow comparison.
+
+Preparation remains at 2: increasing it to 8 did not establish a clear benefit
+beyond run variation. These measurements use GOMAXPROCS=14 on this machine;
+8 is a measured choice, not a universal optimum. PBO optimization remains
+sequential. Earlier worker-count conclusions below predate the runtime fix.
+
+[Detailed measurements](../../../scratch/gopurs-workers-20260921/rapport.md).
 
 ## Pipeline measurements on 2026-09-20
 

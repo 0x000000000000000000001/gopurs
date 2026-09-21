@@ -175,7 +175,7 @@ try {
   stage = "verify-tast";
   const output = join(workspace, "output");
   verifyTypedOutput(output, compiler);
-  await run("generate-go", join(root, "bin/gopurs"), ["--main", "Main"], workspace);
+  await run("generate-go", process.execPath, [join(root, "bin/gopurs.js"), "--main", "Main"], workspace);
   await run("native-parser", process.execPath, [join(root, "tools/prepare-native-output.mjs"), output], root);
   const binary = join(workspace, "gopurs-native");
   await run("go-build", "go", ["build", "-trimpath", "-o", binary, "./main/main.go"], output);

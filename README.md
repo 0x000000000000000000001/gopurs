@@ -296,7 +296,7 @@ loading and sorting only, not a complete b8x build or altbak runtime benchmarks.
 The native race check passed on this sample, and Node tests compare complete
 decoded modules and dependency order between sequential and parallel loading.
 
-`GOPURS_EMIT_JOBS` controls Go emission separately (1 to 64, defaulting to 2;
+`GOPURS_EMIT_JOBS` controls Go emission separately (1 to 64, defaulting to 8;
 set it to 1 for sequential emission). The compiler batches consecutive independent modules, using the
 optimizer's effective imports to wait for generated function signatures before
 emitting a dependent module. Workers receive immutable metadata snapshots and

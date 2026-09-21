@@ -20,7 +20,7 @@ async function runFixture(fixture, options, processes) {
   const { directory } = fixture;
   const phase = (name, command, args, cwd = directory, display = false) => processes.run(name, command, args, { cwd, display, log: join(directory, "logs", name + ".log") });
   await phase("purescript", "spago", ["build", "-q"]);
-  await phase("generate-go", join(root, "bin/gopurs-native"), ["--main", "Main"]);
+  await phase("generate-go", join(root, "bin/gopurs"), ["--main", "Main"]);
   const snapshots = snapshotFiles(root, fixture);
   for (const { generated } of snapshots) if (!existsSync(generated)) throw new Error(`Missing generated snapshot source: ${generated}`);
   if (!existsSync(join(directory, "output/main/main.go"))) throw new Error("gopurs did not generate output/main/main.go");
