@@ -1,4 +1,13 @@
 #!/usr/bin/env bash
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-exec "$DIR/gopurs-native" "$@"
+if [[ "${GOPURS_JS:-0}" == "1" ]]; then
+  NODE_BIN=$(command -v node)
+  if [ -z "$NODE_BIN" ]; then
+      echo "Error: 'node' is not installed or not in the PATH." >&2
+      exit 1
+  fi
+  exec "$NODE_BIN" "$DIR/gopurs.js" "$@"
+else
+  exec "$DIR/gopurs-native" "$@"
+fi

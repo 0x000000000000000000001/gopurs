@@ -36,6 +36,7 @@ import Gopurs.GoConversions (boxGoExpr, coerceGoExpr, generateReboxFunctions, un
 import Gopurs.PrimitiveExprs as PrimitiveExprs
 import Gopurs.RecordExprs as RecordExprs
 import Gopurs.AdtExprs as AdtExprs
+import Gopurs.ArrayIntrinsics as ArrayIntrinsics
 import Gopurs.CallAnalysis (isClosureNode)
 import Gopurs.CallExprs as CallExprs
 import Gopurs.FunctionExprs as FunctionExprs
@@ -503,14 +504,7 @@ translateExprWithExpectedType metadata codegenStateRef depth modNameStr recVars 
           ControlExprs.booleanOr translateInContext context nextId e1 e2
 
         PrimOp (Op2 OpArrayIndex e1 e2) ->
-          let
-            res1 = translateExpr metadata codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } nextId e1
-            res2 = translateExpr metadata codegenStateRef (depth + 1) modNameStr recVars moduleFunctions bound Nothing [] { isTail: false, inEffectBlock: false } res1.nextId e2
-            result = case res1.exprType of
-              TypeNativeArray innerType -> { expr: boxGoExpr codegenStateRef modNameStr (rawGo (printGoExpr res1.expr <> "[" <> printGoExpr (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeInt64) <> "]")) innerType, exprType: TypeValue }
-              _ -> { expr: GoCall (GoSelector (GoVar "gopurs_runtime") "ArrayAccess") [ boxGoExpr codegenStateRef modNameStr res1.expr res1.exprType, GoCall (GoVar "int") [ unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeInt64 ] ], exprType: TypeValue }
-          in
-            { stmts: res1.stmts <> res2.stmts, expr: result.expr, exprType: result.exprType, nextId: res2.nextId }
+          ArrayIntrinsics.unsafeIndex translateInContext context nextId e1 e2
 
         PrimOp (Op2 op2 e1 e2)
           | Just emit <- PrimitiveExprs.binary codegenStateRef modNameStr op2 ->

@@ -281,16 +281,23 @@ starting with the first, so long builds show progress before the phase completes
 No flag is needed; both compiler builds report the same phases. These are real
 elapsed times for the current invocation, not warm-up or repeated benchmarks.
 
-TAST loading and decoding remain sequential by default. Set `GOPURS_JOBS` from
-1 to 64 to select a worker count (for example, `GOPURS_JOBS=4 b -n` in b8x).
-Invalid values use the default. Batches preserve input order before
+TAST loading and decoding use eight workers by default in the native Go compiler;
+the JavaScript compiler defaults to one. Set `GOPURS_JOBS` from 1 to 64 to select
+a worker count (for example, `GOPURS_JOBS=1 b` in b8x).
+Missing or invalid values use the backend's default. Batches preserve input order before
 dependency sorting. Native workers run on goroutines; Node overlaps file I/O
 but still decodes JSON on its JavaScript thread. Other compiler passes are
 unaffected by this setting.
 
-Parallel loading is experimental: on 2026-09-18, a sample of 133 b8x modules
+On 2026-09-21, after removing whole-array conversions from individual indexed
+reads, an alternating comparison on the same b8x TAST and native binary measured
+21.077/21.174 s with one worker and 13.659/13.536 s with eight: about 36% less
+elapsed loading time, with similar CPU time. Peak RSS rose from about 1.59 GiB
+to 2.24 GiB. These measurements cover loading and sorting, not a complete build.
+
+For historical context, on 2026-09-18 a sample of 133 b8x modules
 (7.1 MiB of TAST) took 1.26 s with one worker, 1.70 s with four and 2.39 s with
-eight (two runs per setting, without race instrumentation). Limiting
+eight with the earlier implementation (two runs per setting, without race instrumentation). Limiting
 `GOMAXPROCS` to four did not reverse this regression. These measurements cover
 loading and sorting only, not a complete b8x build or altbak runtime benchmarks.
 The native race check passed on this sample, and Node tests compare complete

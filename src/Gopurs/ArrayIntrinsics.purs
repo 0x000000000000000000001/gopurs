@@ -5,6 +5,7 @@ module Gopurs.ArrayIntrinsics
   , emitCurried
   , emitUncurried
   , safeIndex
+  , unsafeIndex
   ) where
 
 import Prelude
@@ -83,10 +84,39 @@ safeIndex translate context@{ metadata, codegenStateRef, modNameStr } nextId tar
       , nextId: result.nextId + 1
       }
 
-  -- Typed array coercions are element-wise. Moving this coercion onto the
-  -- selected element preserves its TAST type without copying the container.
-  withoutArrayAnnotation (TcoExpr _ (Typed (Array _) inner)) = withoutArrayAnnotation inner
-  withoutArrayAnnotation arg = arg
+-- Typed array coercions are element-wise. Moving this coercion onto the
+-- selected element preserves its TAST type without copying the container.
+withoutArrayAnnotation :: TcoExpr -> TcoExpr
+withoutArrayAnnotation (TcoExpr _ (Typed (Array _) inner)) = withoutArrayAnnotation inner
+withoutArrayAnnotation arg = arg
+
+-- OpArrayIndex requires an in-bounds index. Retain the array's
+-- representation just as for indexImpl, then convert only the selected item.
+unsafeIndex :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> TcoExpr -> ExprResult
+unsafeIndex translate context@{ metadata, codegenStateRef, modNameStr } nextId arrayArg indexArg =
+  let
+    child = CallArguments.childContext context Nothing
+    array = translate child nextId (withoutArrayAnnotation arrayArg)
+    arrayName = "arrayUnsafe_value_" <> show array.nextId
+    sourceName = "arrayUnsafe_source_" <> show array.nextId
+    source = arraySource arrayName sourceName array.exprType
+    index = translate child (array.nextId + 1) indexArg
+    indexName = "arrayUnsafe_index_" <> show index.nextId
+    elementType = case getExprType arrayArg of
+      Array inner -> exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr inner
+      _ -> source.elementType
+    selected = GoIndex (rawGo ("(" <> source.target <> ")")) (GoVar indexName)
+    converted = coerceGoExpr codegenStateRef modNameStr selected source.elementType elementType
+  in
+    { stmts: array.stmts
+        <> StmtLeaf (GoAssign arrayName array.expr)
+        <> StmtLeaf source.assignment
+        <> index.stmts
+        <> StmtLeaf (GoAssign indexName (coerceGoExpr codegenStateRef modNameStr index.expr index.exprType TypeInt64))
+    , expr: boxGoExpr codegenStateRef modNameStr converted elementType
+    , exprType: TypeValue
+    , nextId: index.nextId + 1
+    }
 
 -- Preserve each calling convention's name and qualification guards.
 recognize :: Convention -> String -> Maybe CallTarget -> Int -> Maybe ArrayIntrinsic
