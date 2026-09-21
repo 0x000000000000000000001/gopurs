@@ -1,8 +1,8 @@
 # Gopurs — réduire le temps de compilation de b8x
 
-État au 21 septembre 2026 : comparaisons Char/String, scanner, garde de substitution, clés différées, pipeline PBO/émission, cache local des corps préparés, index des champs de conversion et **Array.any générique** intégrés. Dernier backend b8x : **319,381 s (5 min 19)**, contre 591,665 s au départ (évolution historique **−46,02 %, 4 min 32 gagnées**). Les essais de garde avant unification et d’ordonnanceur PBO à 91 paires ne sont pas retenus faute de gain établi.
+État au 21 septembre 2026 : comparaisons Char/String, scanner, garde de substitution, clés différées, pipeline PBO/émission, cache local des corps préparés, index des champs de conversion, Array.any générique et **cache borné des instanciations PBO** intégrés. Dernier backend b8x : **268,011 s (4 min 28)**, contre 591,665 s au départ (évolution historique **−54,70 %, 5 min 24 gagnées**). Les essais de garde avant unification et d’ordonnanceur PBO à 91 paires ne sont pas retenus faute de gain établi.
 
-**Dernière sous-étape, point 8 : 342,863 → 319,381 s de backend sur un run, allocations 554,31 → 541,68 Gio (−2,28 %).** `b -c -n` entier : **415,464 s (6 min 55)**. La baisse des allocations est confirmée ; les 23,482 s murales restent à consolider, car le petit corpus est presque stable et la charge varie. **46 tests ciblés et 512 substitutions réelles passent ; 2 655 TAST identiques, seul Data_Array_ffi.go change parmi 2 959 Go.** Le pic RSS ne baisse pas et les échecs sourcemaps/conf persistent. Point 9 terminé ; point 8 encore prioritaire pour les instanciations neutres répétées. Les points 3 à 8 et 10 restent ouverts.
+**Dernière sous-étape, point 8 : 319,381 → 268,011 s de backend (−16,08 %), allocations 541,68 → 458,57 Gio (−15,34 %).** `b -c -n` entier : **349,175 s (5 min 49)**. **63 tests JS et 9 tests Go sous `-race` passent ; 2 655 TAST et 2 959 Go strictement identiques.** Gain également observé sur le petit corpus alterné ; un seul nouveau run complet, secondes exactes à consolider. Pic RSS : 6,444 → 6,190 Gio. Sourcemaps encore en échec, statut conf toujours masqué. Points 8/9 : sous-étapes conservées ; prochaine priorité importante : **point 3, les parcours restants de collecte transitive**. Les points 3 à 8 et 10 restent ouverts.
 
 ## Points à traiter un par un, ultérieurement
 
@@ -15,11 +15,40 @@ Travailler sur un seul point à la fois. Commencer par une expérience courte, v
 - [ ] **5. Échecs masqués dans le build b8x.** Diagnostiquer puis corriger l’échec des sourcemaps et de `conf`, et rendre leurs statuts visibles. Le glob des sourcemaps ne trouve aucun `.purs` ; la cause précise de l’échec de configuration reste inconnue. Mesurer le coût de la configuration lorsqu’elle réussit.
 - [ ] **6. GC, après réduction des allocations.** Reprofiler le même travail ; distinguer GC idle, autres travaux GC, pauses et coût mural. N’évaluer un réglage du GC qu’avec une comparaison contrôlée temps/mémoire. Ne pas convertir les 72,8 % de CPU échantillonné en promesse de gain mural.
 - [ ] **7. Bilan complet sur le vrai workflow.** Après validation de chaque changement isolé, répéter `b -c -n` avec les mêmes entrées, paramètres et conditions de cache ; publier le détail des phases, allocations, pic mémoire et statuts. Comparer aux références de compilation b8x ci-dessous ; garder les baselines d’exécution officielles d’altbak.pub pour leur périmètre propre.
-- [ ] **8. Coût interne des passes PBO, au-delà du parallélisme.** Capture complète : 734 669 substitutions racines, 44,78 millions de visites de nœuds. Une garde conservatrice sur les expressions complètes ne couvrirait que 0,12 % des visites : non retenue. Premier coût indirect supprimé : copies en interfaces de `Array.any`, via FFI générique et résolution récursive de ses paramètres dans le bridge. Allocations b8x −12,63 Gio ; backend observé 342,863 → 319,381 s. La sonde détecte aussi 223 641 paires expression/argument répétées par identité (28,51 % des appels d’instanciation). **Prochaine expérience : pondérer ces répétitions par leur coût et mesurer la mémoire retenue avant un cache borné.** Aucun gain de cache établi ; les pourcentages d’appels ne sont pas des pourcentages de temps.
+- [ ] **8. Coût interne des passes PBO, au-delà du parallélisme.** Garde générale sur les expressions écartée ; `Array.any` générique intégré. **Cache FIFO de 512 instanciations par module désormais intégré**, créé explicitement dans le builder, clés expression/type complets, résultats immuables et directives conservées. La réutilisation des résultats favorise aussi les instanciations suivantes. Backend b8x **319,381 → 268,011 s**, allocations **−83,11 Gio**, 2 655 TAST/2 959 Go identiques. Les autres parcours PBO restent à traiter selon un profil actualisé ; le gros chantier suivant est la collecte transitive du point 3.
 - [x] **9. Indexer les champs de conversion Go.** Index immuable construit une fois depuis les layouts TAST, partagé entre émissions. Premier résultat dans l’ordre des clés, priorité constructeur/classe et deux alias conservés. `findReboxFields` passe de **150,56 Gio à 69 Mio** et de 53,78 à 0,04 s CPU échantillonnées hors GC. Backend b8x : **401,157 → 342,863 s**, allocations totales −21,27 %. Les **90 tests**, 4 468 recherches sur les métadonnées b8x et les comparaisons natives passent ; **2 655 TAST et 2 959 Go identiques**. Bilan et limites ci-dessous.
 - [ ] **10. Compilation incrémentale entre builds.** Réutiliser les résultats des modules inchangés pour le cycle quotidien. Définir l’invalidation des signatures, directives PBO, spécialisations transitives, FFI et versions du compilateur ; comparer les sorties avec un build propre. Ce chantier est distinct de l’accélération de `b -c -n` : un cache invalidé par `-c` n’améliore pas ce rebuild forcé. Potentiel à mesurer sur une modification réelle de b8x, pas sur la seule commande propre.
 
-Chaque point doit laisser un résultat vérifié, les mesures avant/après et ses limites dans ce document. Aucun gain ×2 n’est établi par le profil actuel.
+Chaque point doit laisser un résultat vérifié, les mesures avant/après et ses limites dans ce document. Consolider les gains cumulés historiques avec des séries de runs comparables.
+
+## Point 8 — cache des instanciations intégré et validé
+
+La sonde native sur 304 modules attribue **38,89 % du temps des instanciations** aux paires expression/type déjà rencontrées dans le module. Un cache réel réutilise aussi les résultats intermédiaires des applications à plusieurs types : le prototype atteint **55 795 hits / 67 011 appels** sur ce corpus, puis **720 602 / 784 523** sur b8x. Ces compteurs appartiennent au prototype, pas à une instrumentation permanente.
+
+Le builder crée par Effect un cache FIFO de **512 entrées maximum par module**, alloué paresseusement. `ConvertEnv` et `Env` transmettent uniquement la fonction d’instanciation. Les clés conservent les références complètes ; les arbres restent immuables. La résolution des implémentations et `InlineNever` précèdent le cache. Les résultats publiés ne contiennent ni son état ni son Env. Le cache Go est protégé par mutex et calcule hors verrou. La borne porte sur les entrées, pas sur un nombre absolu d’octets.
+
+**63 tests JS et 9 tests Go sous `-race` passent** : FIFO, identité, GC, indépendance des Effects, réentrance/concurrence, quantificateurs et capture comparés au calcul original, changement de directive après un hit et remplacement d’un corps portant le même nom. Builds JS/natif sans erreur ni avertissement. Le retour FFI curryfié utilise le bridge existant ; aucun changement du runtime ni du générateur Go dans cette étape.
+
+Comparaison native finale, avec les FFI réelles : deux chauffes puis référence/candidat/candidat/référence. **304 TAST et 399 Go identiques dans six runs**. Optimisation/émission **7,405 → 6,580 s (−11,14 %)**, backend **12,762 → 12,009 s (−5,90 %)**, CPU −6,47 %. Pic RSS moyen +3,17 %. Les premiers scratchs omettaient le lien `../gopurs` des FFI ; leurs durées ne servent pas de référence de compilation complète.
+
+| Vrai `b -c -n` | Avant cache | Après cache |
+|---|---:|---:|
+| Chargement TAST | 34,616 s | 34,676 s |
+| Préparation/monomorphisation | 83,987 s | 82,013 s |
+| Optimisation/émission | 200,769 s | **151,315 s** |
+| **Backend** | **319,381 s** | **268,011 s** |
+| **Commande entière** | **415,464 s** | **349,175 s** |
+| CPU utilisateur + système | 1 393,516 s | 1 175,454 s |
+| Allocations estimées | 541,68 Gio | **458,57 Gio** |
+| Pic RSS | 6,444 Gio | 6,190 Gio |
+
+**−51,370 s de backend / −16,08 %, −83,11 Gio d’allocations / −15,34 %, CPU −15,65 %.** Optimisation/émission −24,63 %. La baisse cohérente du CPU et des allocations conforte le gain mural. Les 66,289 s de baisse de la commande entière incluent aussi les variations des autres étapes. Un seul nouveau run complet : secondes exactes à consolider. Le pic RSS global baisse de 3,93 % ; le poids exclusif des objets retenus par le cache n’est pas isolé.
+
+**2 655 TAST et 2 959 Go identiques**, aucun ajout ni retrait, FFI réelles incluses. Le binaire testé, celui reconstruit par `b -c -n` et celui installé sont identiques. Les sourcemaps retournent toujours 1. Le statut de `conf`, enveloppé dans `|| true`, n’a pas été capturé dans ce passage : le hook visait la ligne 123, l’appel étant ligne 124. Le point 5 reste ouvert.
+
+**Cache conservé ; point 8 encore ouvert.** Prochaine étape importante : mesurer les recalculs `monomorphizeExpr`/`collectExpr` du point 3 et établir leurs invalidations avant réutilisation. Les anciens profils scratch ont été nettoyés avant cette tâche ; la référence historique ci-dessus provient du relevé conservé dans ce todo. Les baselines d’exécution officielles d’altbak.pub restent distinctes de ces temps de compilation.
+
+[Implémentation et sondes](/Users/0x1/Documents/htdocs/scratch/gopurs-neutral-cache-20260921/rapport.md) · [Profil b8x et limites](/Users/0x1/Documents/htdocs/scratch/b8x-neutral-cache-after-20260921/rapport.md) · [Mesures](/Users/0x1/Documents/htdocs/scratch/b8x-neutral-cache-after-20260921/comparison.json) · [Sorties identiques](/Users/0x1/Documents/htdocs/scratch/b8x-neutral-cache-after-20260921/file-comparison.json).
 
 ## Point 8 — capture des parcours PBO et Array.any générique
 
