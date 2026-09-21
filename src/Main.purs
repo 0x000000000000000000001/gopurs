@@ -42,7 +42,9 @@ import Gopurs.Runtime (runtimeGoCode)
 import PureScript.Backend.Optimizer.FfiSupport (findFfiFile)
 import Gopurs.FfiSupport (prepareFfi)
 import Gopurs.GlobalTypes (buildGlobalTypes)
-import Gopurs.Monomorphization (monomorphizeModules)
+import Gopurs.Monomorphization (monomorphizeModulesWith)
+import Gopurs.Preparation (runPreparationJobs)
+import PureScript.Backend.Optimizer.Monomorphize (transitiveCollectWith)
 import Gopurs.ReboxMetadata (buildReboxFieldIndex)
 import PureScript.Backend.Optimizer.App (coreFnModulesFromOutput, parseCLIArgs, loadDirectives)
 import PureScript.Backend.Optimizer.Semantics (InlineDirectiveMap)
@@ -71,7 +73,11 @@ loadAndPrepareModules args = do
       reboxFields = buildReboxFieldIndex ctorTypes classDeclsFields
       finalModulesWithClassDecls = map addClassDataDeclarations finalModules
 
-    let monomorphizedModules = monomorphizeModules globalTypes finalModulesWithClassDecls
+    configuredPrepareJobs <- liftEffect (Process.lookupEnv "GOPURS_PREPARE_JOBS")
+    let prepareJobs = fromMaybe 2 (configuredPrepareJobs >>= Int.fromString)
+    monomorphizedModules <- monomorphizeModulesWith
+      (\ast instantiations -> Metrics.measure "transitive specializations" \_ ->
+        transitiveCollectWith (runPreparationJobs prepareJobs) ast instantiations) globalTypes finalModulesWithClassDecls
     let
       { pointerAdtPaths, pointerAdtNodes, pointerAdtLeaves } = buildPointerAdtMetadata (Array.fromFoldable finalModulesWithClassDecls)
       { enumAdts, enumCtors } = buildEnumAdtMetadata (Array.fromFoldable finalModules)

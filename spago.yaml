@@ -9,6 +9,7 @@ package:
     - console
     - control
     - effect
+    - identity
     - either
     - node-buffer
     - node-fs
@@ -16,6 +17,7 @@ package:
     - parallel
     - prelude
     - strings
+    - tailrec
     - backend-optimizer
   test:
     main: Test.Main

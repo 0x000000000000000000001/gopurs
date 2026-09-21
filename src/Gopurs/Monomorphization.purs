@@ -1,11 +1,13 @@
 module Gopurs.Monomorphization
   ( monomorphizeModules
+  , monomorphizeModulesWith
   ) where
 
 import Prelude
 
 import Data.Array as Array
 import Data.Foldable (foldl)
+import Data.Identity (Identity(..))
 import Data.List (List)
 import Data.Map (Map)
 import Data.Map as Map
@@ -17,13 +19,27 @@ import Data.String as String
 import Data.Tuple (Tuple(..))
 import PureScript.Backend.Optimizer.CoreFn (Ann, Bind(..), Binding(..), ExprType(..), Ident(..), Module(..))
 import PureScript.Backend.Optimizer.CoreFn.Usage (invalidateSourceUsageModule)
-import PureScript.Backend.Optimizer.Monomorphize (collectInstantiations, monomorphize, transitiveCollect)
+import PureScript.Backend.Optimizer.Monomorphize (InstantiationMap, collectInstantiations, monomorphize, transitiveCollect)
 
 type GlobalAstMap = Map String (Binding Ann)
 
 -- Receive the original global types and modules enriched with class declarations.
 monomorphizeModules :: Map String ExprType -> List (Module Ann) -> List (Module Ann)
-monomorphizeModules globalTypes inputModules =
+monomorphizeModules globalTypes inputModules = runIdentity $
+  monomorphizeModulesWith (\ast instantiations -> pure (transitiveCollect ast instantiations)) globalTypes inputModules
+  where
+  runIdentity (Identity result) = result
+
+-- The sequential entry point and Aff preparation share the same barriers and
+-- final module ordering. Only the transitive collector is supplied by callers.
+monomorphizeModulesWith
+  :: forall m
+   . Monad m
+  => (GlobalAstMap -> InstantiationMap -> m InstantiationMap)
+  -> Map String ExprType
+  -> List (Module Ann)
+  -> m (List (Module Ann))
+monomorphizeModulesWith collectTransitive globalTypes inputModules = do
   let
     -- Source identities and usage proofs belong to the exported CoreFn.
     -- Specialization copies bindings; analyze the final IR afresh instead.
@@ -33,11 +49,10 @@ monomorphizeModules globalTypes inputModules =
     intrinsicGlobals = Set.singleton "Data.Ring.negate"
     globalAstMap = Map.filterKeys (not <<< flip Set.member intrinsicGlobals) (buildGlobalAstMap modules)
     rawInstantiations = foldl (collectInstantiations globalAstMap) Map.empty modules
-    transitiveInstantiations = transitiveCollect globalAstMap rawInstantiations
     foreignGlobals = Set.union intrinsicGlobals (collectForeignGlobals modules)
-    instantiations = Map.filterKeys (shouldMonomorphize globalTypes foreignGlobals) transitiveInstantiations
-  in
-    if Map.isEmpty instantiations then
+  transitiveInstantiations <- collectTransitive globalAstMap rawInstantiations
+  let instantiations = Map.filterKeys (shouldMonomorphize globalTypes foreignGlobals) transitiveInstantiations
+  pure $ if Map.isEmpty instantiations then
       modules
     else
       map (monomorphize globalAstMap instantiations) modules

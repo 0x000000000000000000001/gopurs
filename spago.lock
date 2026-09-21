@@ -15,12 +15,14 @@
             "control",
             "effect",
             "either",
+            "identity",
             "node-buffer",
             "node-fs",
             "node-process",
             "parallel",
             "prelude",
-            "strings"
+            "strings",
+            "tailrec"
           ],
           "build_plan": [
             "aff",
@@ -905,6 +907,8 @@
         "enums",
         "foldable-traversable",
         "foreign-object",
+        "functions",
+        "identity",
         "integers",
         "language-cst-parser",
         "lazy",
@@ -921,6 +925,7 @@
         "safe-coerce",
         "st",
         "strings",
+        "tailrec",
         "transformers",
         "tuples",
         "unsafe-coerce"
