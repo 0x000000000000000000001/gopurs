@@ -276,8 +276,18 @@ isStandardPursFunc (TFunc args ret) =
 isStandardPursFunc _ = false
 
 generateWrapperFunc :: Array DataDecl -> FfiDecl -> Maybe ExprType -> String
-generateWrapperFunc dataDecls d mbTast =
+generateWrapperFunc dataDecls declaration mbTast =
   let
+    -- Go type parameters are instantiated with Value at the call below. Apply
+    -- the same substitution inside callbacks and containers before adapting
+    -- their arguments and results.
+    instantiate = case _ of
+      TNamed name | Array.elem name declaration.typeParams -> TNamed "gopurs_runtime.Value"
+      TFunc args ret -> TFunc (map instantiate args) (map instantiate ret)
+      TArray item -> TArray (instantiate item)
+      TMap key value -> TMap (instantiate key) (instantiate value)
+      other -> other
+    d = declaration { args = map instantiate declaration.args, ret = map instantiate declaration.ret }
     tastComment = case mbTast of
       Just tast -> "// TAST: " <> printExprType tast <> "\n"
       Nothing -> "// TAST: Unknown\n"
@@ -340,9 +350,6 @@ generateWrapperFunc dataDecls d mbTast =
                 TNamed "any" -> [ "\tgo_arg" <> show i <> " := arg" <> show i ]
                 TNamed "interface{}" -> [ "\tgo_arg" <> show i <> " := arg" <> show i ]
                 TNamed "gopurs_runtime.Value" -> [ "\tgo_arg" <> show i <> " := arg" <> show i ]
-                -- callFunc instantiates Go type parameters with Value. Preserve
-                -- that representation instead of unboxing an out-of-scope T.
-                TNamed n | Array.elem n d.typeParams -> [ "\tgo_arg" <> show i <> " := arg" <> show i ]
                 TMap _ _ ->
                   let
                     et = String.drop (String.indexOf (Pattern "]") typStr # fromMaybe 0 # add 1) typStr
