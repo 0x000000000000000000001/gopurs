@@ -22,14 +22,7 @@ var once_Main_Y sync.Once
 func Get_Main_Y() gopurs_runtime.Value {
 	once_Main_Y.Do(func() {
 		cache_Main_Y = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Array(Call_Main_Y(func() []gopurs_runtime.Value {
-				arr := *(*[]gopurs_runtime.Value)(x_0_box.UnsafePtr)
-				unboxed := make([]gopurs_runtime.Value, len(arr))
-				for i, v := range arr {
-					unboxed[i] = v
-				}
-				return unboxed
-			}()))
+			return gopurs_runtime.Array(Call_Main_Y((*(*[]gopurs_runtime.Value)((x_0_box).UnsafePtr))))
 		})
 	})
 	return cache_Main_Y
@@ -63,14 +56,7 @@ var once_Main_ProxyArray sync.Once
 func Get_Main_ProxyArray() gopurs_runtime.Value {
 	once_Main_ProxyArray.Do(func() {
 		cache_Main_ProxyArray = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_ProxyArray(func() []gopurs_runtime.Value {
-				arr := *(*[]gopurs_runtime.Value)(x_0_box.UnsafePtr)
-				unboxed := make([]gopurs_runtime.Value, len(arr))
-				for i, v := range arr {
-					unboxed[i] = v
-				}
-				return unboxed
-			}())
+			return Call_Main_ProxyArray((*(*[]gopurs_runtime.Value)((x_0_box).UnsafePtr)))
 		})
 	})
 	return cache_Main_ProxyArray
@@ -119,14 +105,7 @@ var once_Main_MyArray sync.Once
 func Get_Main_MyArray() gopurs_runtime.Value {
 	once_Main_MyArray.Do(func() {
 		cache_Main_MyArray = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Array(Call_Main_MyArray(func() []gopurs_runtime.Value {
-				arr := *(*[]gopurs_runtime.Value)(x_0_box.UnsafePtr)
-				unboxed := make([]gopurs_runtime.Value, len(arr))
-				for i, v := range arr {
-					unboxed[i] = v
-				}
-				return unboxed
-			}()))
+			return gopurs_runtime.Array(Call_Main_MyArray((*(*[]gopurs_runtime.Value)((x_0_box).UnsafePtr))))
 		})
 	})
 	return cache_Main_MyArray
@@ -250,14 +229,7 @@ var once_Main_singletonArray sync.Once
 func Get_Main_singletonArray() gopurs_runtime.Value {
 	once_Main_singletonArray.Do(func() {
 		cache_Main_singletonArray = gopurs_runtime.Value{Type: 9, IntVal: 3773262993, UnsafePtr: unsafe.Pointer(Rebox_Main_2655323845_2269342371((&Constructor_Main_Singleton[gopurs_runtime.Value, []gopurs_runtime.Value]{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Array(func() []gopurs_runtime.Value {
-				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array([]gopurs_runtime.Value{x_0}).UnsafePtr)
-				unboxed := make([]gopurs_runtime.Value, len(arr))
-				for i, v := range arr {
-					unboxed[i] = v
-				}
-				return unboxed
-			}())
+			return gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.Array([]gopurs_runtime.Value{x_0})).UnsafePtr)))
 		})})))}
 	})
 	return cache_Main_singletonArray

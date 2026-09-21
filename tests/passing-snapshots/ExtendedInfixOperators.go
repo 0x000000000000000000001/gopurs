@@ -11,14 +11,7 @@ var once_Main_null sync.Once
 func Get_Main_null() gopurs_runtime.Value {
 	once_Main_null.Do(func() {
 		cache_Main_null = gopurs_runtime.Func(func(v_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Bool(Call_Main_null(func() []gopurs_runtime.Value {
-				arr := *(*[]gopurs_runtime.Value)(v_0_box.UnsafePtr)
-				unboxed := make([]gopurs_runtime.Value, len(arr))
-				for i, v := range arr {
-					unboxed[i] = v
-				}
-				return unboxed
-			}()))
+			return gopurs_runtime.Bool(Call_Main_null((*(*[]gopurs_runtime.Value)((v_0_box).UnsafePtr))))
 		})
 	})
 	return cache_Main_null
@@ -150,35 +143,21 @@ comparing__1991096015:
 		_ = __eta_norm_1_1
 		var __eta_norm_0_2 []float64 = __eta_norm_0_2_loop
 		_ = __eta_norm_0_2
-		return uint32(gopurs_runtime.Apply2(Call_Data_Ord_compare(Rebox_Main_219188042_4177771502(Rebox_Main_4177771502_219188042(gopurs_runtime.CoerceToStruct[Constructor_Data_Ord_Ord[gopurs_runtime.Value]](Get_Data_Ord_ordBoolean())))), gopurs_runtime.Bool((gopurs_runtime.Int(int64(len(func() []gopurs_runtime.Value {
-			arr := *(*[]gopurs_runtime.Value)(func() gopurs_runtime.Value {
-				arr := __eta_norm_1_1
-				boxed := make([]gopurs_runtime.Value, len(arr))
-				for i, v := range arr {
-					boxed[i] = gopurs_runtime.Float(v)
-				}
-				return gopurs_runtime.Array(boxed)
-			}().UnsafePtr)
-			unboxed := make([]gopurs_runtime.Value, len(arr))
+		return uint32(gopurs_runtime.Apply2(Call_Data_Ord_compare(Rebox_Main_219188042_4177771502(Rebox_Main_4177771502_219188042(gopurs_runtime.CoerceToStruct[Constructor_Data_Ord_Ord[gopurs_runtime.Value]](Get_Data_Ord_ordBoolean())))), gopurs_runtime.Bool((gopurs_runtime.Int(int64(len((*(*[]gopurs_runtime.Value)((func() gopurs_runtime.Value {
+			arr := __eta_norm_1_1
+			boxed := make([]gopurs_runtime.Value, len(arr))
 			for i, v := range arr {
-				unboxed[i] = v
+				boxed[i] = gopurs_runtime.Float(v)
 			}
-			return unboxed
-		}()))).IntVal) == (int64(0))), gopurs_runtime.Bool((gopurs_runtime.Int(int64(len(func() []gopurs_runtime.Value {
-			arr := *(*[]gopurs_runtime.Value)(func() gopurs_runtime.Value {
-				arr := __eta_norm_0_2
-				boxed := make([]gopurs_runtime.Value, len(arr))
-				for i, v := range arr {
-					boxed[i] = gopurs_runtime.Float(v)
-				}
-				return gopurs_runtime.Array(boxed)
-			}().UnsafePtr)
-			unboxed := make([]gopurs_runtime.Value, len(arr))
+			return gopurs_runtime.Array(boxed)
+		}()).UnsafePtr))))).IntVal) == (int64(0))), gopurs_runtime.Bool((gopurs_runtime.Int(int64(len((*(*[]gopurs_runtime.Value)((func() gopurs_runtime.Value {
+			arr := __eta_norm_0_2
+			boxed := make([]gopurs_runtime.Value, len(arr))
 			for i, v := range arr {
-				unboxed[i] = v
+				boxed[i] = gopurs_runtime.Float(v)
 			}
-			return unboxed
-		}()))).IntVal) == (int64(0)))).IntVal)
+			return gopurs_runtime.Array(boxed)
+		}()).UnsafePtr))))).IntVal) == (int64(0)))).IntVal)
 	}
 }
 

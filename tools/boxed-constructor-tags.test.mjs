@@ -1,3 +1,4 @@
+import { withReboxFields } from './codegen-metadata.mjs';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
@@ -51,11 +52,11 @@ test('boxed constructor tests inspect the tag without copying recursive payloads
             )] });
         }
     }
-    const code = CodeGen.translate({
+    const code = CodeGen.translate(withReboxFields({
         ...pointerMetadata, elidedCtors: emptySet, ctorTypes: buildConstructorTypes(modules),
         enumAdts: emptySet, enumCtors: emptySet, globalTypes: emptyMap,
         globalFunctions: emptyMap, classDeclsFields: emptyMap,
-    })({ name: 'TagChecks', bindings, comments: [], imports: emptySet,
+    }))({ name: 'TagChecks', bindings, comments: [], imports: emptySet,
         exports: emptySet, reExports: emptySet, dataTypes: emptyMap,
         dataDecls: [], classDecls: [], foreign: emptyMap,
         implementations: emptyMap, directives: emptyMap });

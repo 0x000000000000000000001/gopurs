@@ -22,7 +22,7 @@ var once_Main_Learn_dollar_Dict sync.Once
 func Get_Main_Learn_dollar_Dict() gopurs_runtime.Value {
 	once_Main_Learn_dollar_Dict.Do(func() {
 		cache_Main_Learn_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_Learn_dollar_Dict(func() struct {
+			return Call_Main_Learn_dollar_Dict(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -30,7 +30,7 @@ func Get_Main_Learn_dollar_Dict() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_Learn_dollar_Dict
@@ -42,7 +42,7 @@ var once_Main_IsString_dollar_Dict sync.Once
 func Get_Main_IsString_dollar_Dict() gopurs_runtime.Value {
 	once_Main_IsString_dollar_Dict.Do(func() {
 		cache_Main_IsString_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_IsString_dollar_Dict(func() struct {
+			return Call_Main_IsString_dollar_Dict(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -50,7 +50,7 @@ func Get_Main_IsString_dollar_Dict() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_IsString_dollar_Dict
@@ -62,7 +62,7 @@ var once_Main_IsString_dollar_Dict__2463103355 sync.Once
 func Get_Main_IsString_dollar_Dict__2463103355() gopurs_runtime.Value {
 	once_Main_IsString_dollar_Dict__2463103355.Do(func() {
 		cache_Main_IsString_dollar_Dict__2463103355 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_IsString_dollar_Dict__2463103355(func() struct {
+			return Call_Main_IsString_dollar_Dict__2463103355(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -70,7 +70,7 @@ func Get_Main_IsString_dollar_Dict__2463103355() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_IsString_dollar_Dict__2463103355
@@ -82,7 +82,7 @@ var once_Main_IsEq_dollar_Dict sync.Once
 func Get_Main_IsEq_dollar_Dict() gopurs_runtime.Value {
 	once_Main_IsEq_dollar_Dict.Do(func() {
 		cache_Main_IsEq_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_IsEq_dollar_Dict(func() struct {
+			return Call_Main_IsEq_dollar_Dict(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -90,7 +90,7 @@ func Get_Main_IsEq_dollar_Dict() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_IsEq_dollar_Dict
@@ -102,7 +102,7 @@ var once_Main_Arg_dollar_Dict sync.Once
 func Get_Main_Arg_dollar_Dict() gopurs_runtime.Value {
 	once_Main_Arg_dollar_Dict.Do(func() {
 		cache_Main_Arg_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_Arg_dollar_Dict(func() struct {
+			return Call_Main_Arg_dollar_Dict(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -110,7 +110,7 @@ func Get_Main_Arg_dollar_Dict() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_Arg_dollar_Dict
@@ -121,12 +121,12 @@ var once_Main_reflIsEq sync.Once
 
 func Get_Main_reflIsEq() gopurs_runtime.Value {
 	once_Main_reflIsEq.Do(func() {
-		cache_Main_reflIsEq = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		cache_Main_reflIsEq = func() gopurs_runtime.Value {
 			orig := struct {
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)), UnsafePtr: nil}
+		}()
 	})
 	return cache_Main_reflIsEq
 }
@@ -136,12 +136,12 @@ var once_Main_reflArg sync.Once
 
 func Get_Main_reflArg() gopurs_runtime.Value {
 	once_Main_reflArg.Do(func() {
-		cache_Main_reflArg = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		cache_Main_reflArg = func() gopurs_runtime.Value {
 			orig := struct {
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)), UnsafePtr: nil}
+		}()
 	})
 	return cache_Main_reflArg
 }
@@ -151,12 +151,12 @@ var once_Main_notIsEq sync.Once
 
 func Get_Main_notIsEq() gopurs_runtime.Value {
 	once_Main_notIsEq.Do(func() {
-		cache_Main_notIsEq = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		cache_Main_notIsEq = func() gopurs_runtime.Value {
 			orig := struct {
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)), UnsafePtr: nil}
+		}()
 	})
 	return cache_Main_notIsEq
 }
@@ -177,7 +177,7 @@ var once_Main_learnIsString sync.Once
 func Get_Main_learnIsString() gopurs_runtime.Value {
 	once_Main_learnIsString.Do(func() {
 		cache_Main_learnIsString = gopurs_runtime.Func3(func(_dollar___unused_0_box gopurs_runtime.Value, _dollar___unused_1_box gopurs_runtime.Value, v_2_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_learnIsString(uint32(_dollar___unused_0_box.IntVal), uint32(_dollar___unused_1_box.IntVal), uint32(v_2_box.IntVal))), UnsafePtr: nil}
+			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_learnIsString(_dollar___unused_0_box, _dollar___unused_1_box, uint32(v_2_box.IntVal))), UnsafePtr: nil}
 		})
 	})
 	return cache_Main_learnIsString
@@ -212,12 +212,12 @@ var once_Main_learnInst sync.Once
 
 func Get_Main_learnInst() gopurs_runtime.Value {
 	once_Main_learnInst.Do(func() {
-		cache_Main_learnInst = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		cache_Main_learnInst = func() gopurs_runtime.Value {
 			orig := struct {
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)), UnsafePtr: nil}
+		}()
 	})
 	return cache_Main_learnInst
 }
@@ -227,12 +227,12 @@ var once_Main_isStringString sync.Once
 
 func Get_Main_isStringString() gopurs_runtime.Value {
 	once_Main_isStringString.Do(func() {
-		cache_Main_isStringString = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		cache_Main_isStringString = func() gopurs_runtime.Value {
 			orig := struct {
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)), UnsafePtr: nil}
+		}()
 	})
 	return cache_Main_isStringString
 }
@@ -242,12 +242,12 @@ var once_Main_isStringElse sync.Once
 
 func Get_Main_isStringElse() gopurs_runtime.Value {
 	once_Main_isStringElse.Do(func() {
-		cache_Main_isStringElse = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		cache_Main_isStringElse = func() gopurs_runtime.Value {
 			orig := struct {
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)), UnsafePtr: nil}
+		}()
 	})
 	return cache_Main_isStringElse
 }
@@ -257,7 +257,7 @@ var once_Main_isStringEg1 sync.Once
 
 func Get_Main_isStringEg1() gopurs_runtime.Value {
 	once_Main_isStringEg1.Do(func() {
-		cache_Main_isStringEg1 = gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_learnIsString(uint32(gopurs_runtime.Value{}.IntVal), uint32(gopurs_runtime.Value{}.IntVal), 227768594)), UnsafePtr: nil}
+		cache_Main_isStringEg1 = gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_learnIsString(gopurs_runtime.Value{}, gopurs_runtime.Value{}, 227768594)), UnsafePtr: nil}
 	})
 	return cache_Main_isStringEg1
 }
@@ -267,7 +267,7 @@ var once_Main_isStringEg0 sync.Once
 
 func Get_Main_isStringEg0() gopurs_runtime.Value {
 	once_Main_isStringEg0.Do(func() {
-		cache_Main_isStringEg0 = gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_learnIsString(uint32(gopurs_runtime.Value{}.IntVal), uint32(gopurs_runtime.Value{}.IntVal), 227768594)), UnsafePtr: nil}
+		cache_Main_isStringEg0 = gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_learnIsString(gopurs_runtime.Value{}, gopurs_runtime.Value{}, 227768594)), UnsafePtr: nil}
 	})
 	return cache_Main_isStringEg0
 }
@@ -278,7 +278,7 @@ var once_Main_isEq sync.Once
 func Get_Main_isEq() gopurs_runtime.Value {
 	once_Main_isEq.Do(func() {
 		cache_Main_isEq = gopurs_runtime.Func3(func(_dollar___unused_0_box gopurs_runtime.Value, v_1_box gopurs_runtime.Value, v1_2_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_isEq(uint32(_dollar___unused_0_box.IntVal), uint32(v_1_box.IntVal), uint32(v1_2_box.IntVal))), UnsafePtr: nil}
+			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_isEq(_dollar___unused_0_box, uint32(v_1_box.IntVal), uint32(v1_2_box.IntVal))), UnsafePtr: nil}
 		})
 	})
 	return cache_Main_isEq
@@ -325,7 +325,7 @@ var once_Main_isEqEg0 sync.Once
 
 func Get_Main_isEqEg0() gopurs_runtime.Value {
 	once_Main_isEqEg0.Do(func() {
-		cache_Main_isEqEg0 = gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_isEq(uint32(gopurs_runtime.Value{}.IntVal), 227768594, 227768594)), UnsafePtr: nil}
+		cache_Main_isEqEg0 = gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_isEq(gopurs_runtime.Value{}, 227768594, 227768594)), UnsafePtr: nil}
 	})
 	return cache_Main_isEqEg0
 }
@@ -335,7 +335,7 @@ var once_Main_isEqEg1 sync.Once
 
 func Get_Main_isEqEg1() gopurs_runtime.Value {
 	once_Main_isEqEg1.Do(func() {
-		cache_Main_isEqEg1 = gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_isEq(uint32(gopurs_runtime.Value{}.IntVal), 227768594, 227768594)), UnsafePtr: nil}
+		cache_Main_isEqEg1 = gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_isEq(gopurs_runtime.Value{}, 227768594, 227768594)), UnsafePtr: nil}
 	})
 	return cache_Main_isEqEg1
 }
@@ -345,7 +345,7 @@ var once_Main_isEqEg2 sync.Once
 
 func Get_Main_isEqEg2() gopurs_runtime.Value {
 	once_Main_isEqEg2.Do(func() {
-		cache_Main_isEqEg2 = gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_isEq(uint32(gopurs_runtime.Value{}.IntVal), 227768594, 227768594)), UnsafePtr: nil}
+		cache_Main_isEqEg2 = gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_isEq(gopurs_runtime.Value{}, 227768594, 227768594)), UnsafePtr: nil}
 	})
 	return cache_Main_isEqEg2
 }
@@ -356,7 +356,7 @@ var once_Main_arg sync.Once
 func Get_Main_arg() gopurs_runtime.Value {
 	once_Main_arg.Do(func() {
 		cache_Main_arg = gopurs_runtime.Func2(func(_dollar___unused_0_box gopurs_runtime.Value, v_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_arg(uint32(_dollar___unused_0_box.IntVal), uint32(v_1_box.IntVal))), UnsafePtr: nil}
+			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_arg(_dollar___unused_0_box, uint32(v_1_box.IntVal))), UnsafePtr: nil}
 		})
 	})
 	return cache_Main_arg
@@ -403,7 +403,7 @@ var once_Main_argEg0 sync.Once
 
 func Get_Main_argEg0() gopurs_runtime.Value {
 	once_Main_argEg0.Do(func() {
-		cache_Main_argEg0 = gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_arg(uint32(gopurs_runtime.Value{}.IntVal), 227768594)), UnsafePtr: nil}
+		cache_Main_argEg0 = gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_arg(gopurs_runtime.Value{}, 227768594)), UnsafePtr: nil}
 	})
 	return cache_Main_argEg0
 }
@@ -425,7 +425,7 @@ var once_Main_argEg1 sync.Once
 
 func Get_Main_argEg1() gopurs_runtime.Value {
 	once_Main_argEg1.Do(func() {
-		cache_Main_argEg1 = gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_arg(uint32(gopurs_runtime.Value{}.IntVal), 227768594)), UnsafePtr: nil}
+		cache_Main_argEg1 = gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_arg(gopurs_runtime.Value{}, 227768594)), UnsafePtr: nil}
 	})
 	return cache_Main_argEg1
 }
@@ -435,7 +435,7 @@ var once_Main_argEg2 sync.Once
 
 func Get_Main_argEg2() gopurs_runtime.Value {
 	once_Main_argEg2.Do(func() {
-		cache_Main_argEg2 = gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_arg(uint32(gopurs_runtime.Value{}.IntVal), 227768594)), UnsafePtr: nil}
+		cache_Main_argEg2 = gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_arg(gopurs_runtime.Value{}, 227768594)), UnsafePtr: nil}
 	})
 	return cache_Main_argEg2
 }
@@ -509,31 +509,31 @@ func init() {
 }
 
 func Call_Main_Learn_dollar_Dict(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 	var x_0 struct {
 	} = x_0_loop
 	_ = x_0
-	return uint32(func() gopurs_runtime.Value {
+	return func() gopurs_runtime.Value {
 		orig := x_0
 		_ = orig
 		return gopurs_runtime.RecordDict0()
-	}().IntVal)
+	}()
 }
 
 func Call_Main_IsString_dollar_Dict(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 	var x_0 struct {
 	} = x_0_loop
 	_ = x_0
-	return uint32(func() gopurs_runtime.Value {
+	return func() gopurs_runtime.Value {
 		orig := x_0
 		_ = orig
 		return gopurs_runtime.RecordDict0()
-	}().IntVal)
+	}()
 }
 
 func Call_Main_IsString_dollar_Dict__2463103355(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 IsString_dollar_Dict__2463103355:
 	for {
 		if false {
@@ -542,42 +542,42 @@ IsString_dollar_Dict__2463103355:
 		var x_0 struct {
 		} = x_0_loop
 		_ = x_0
-		return uint32(func() gopurs_runtime.Value {
+		return func() gopurs_runtime.Value {
 			orig := x_0
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)
+		}()
 	}
 }
 
 func Call_Main_IsEq_dollar_Dict(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 	var x_0 struct {
 	} = x_0_loop
 	_ = x_0
-	return uint32(func() gopurs_runtime.Value {
+	return func() gopurs_runtime.Value {
 		orig := x_0
 		_ = orig
 		return gopurs_runtime.RecordDict0()
-	}().IntVal)
+	}()
 }
 
 func Call_Main_Arg_dollar_Dict(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 	var x_0 struct {
 	} = x_0_loop
 	_ = x_0
-	return uint32(func() gopurs_runtime.Value {
+	return func() gopurs_runtime.Value {
 		orig := x_0
 		_ = orig
 		return gopurs_runtime.RecordDict0()
-	}().IntVal)
+	}()
 }
 
-func Call_Main_learnIsString(_dollar___unused_0_loop uint32, _dollar___unused_1_loop uint32, v_2_loop uint32) uint32 {
-	var _dollar___unused_0 uint32 = _dollar___unused_0_loop
+func Call_Main_learnIsString(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___unused_1_loop gopurs_runtime.Value, v_2_loop uint32) uint32 {
+	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
-	var _dollar___unused_1 uint32 = _dollar___unused_1_loop
+	var _dollar___unused_1 gopurs_runtime.Value = _dollar___unused_1_loop
 	_ = _dollar___unused_1
 	var v_2 uint32 = v_2_loop
 	_ = v_2
@@ -608,8 +608,8 @@ learnIsString__2315041832:
 	}
 }
 
-func Call_Main_isEq(_dollar___unused_0_loop uint32, v_1_loop uint32, v1_2_loop uint32) uint32 {
-	var _dollar___unused_0 uint32 = _dollar___unused_0_loop
+func Call_Main_isEq(_dollar___unused_0_loop gopurs_runtime.Value, v_1_loop uint32, v1_2_loop uint32) uint32 {
+	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
 	var v_1 uint32 = v_1_loop
 	_ = v_1
@@ -660,8 +660,8 @@ isEq__3632306064:
 	}
 }
 
-func Call_Main_arg(_dollar___unused_0_loop uint32, v_1_loop uint32) uint32 {
-	var _dollar___unused_0 uint32 = _dollar___unused_0_loop
+func Call_Main_arg(_dollar___unused_0_loop gopurs_runtime.Value, v_1_loop uint32) uint32 {
+	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
 	var v_1 uint32 = v_1_loop
 	_ = v_1
@@ -707,10 +707,10 @@ arg__2274491521:
 func Call_Main_appArg(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
-	return gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+	return func() gopurs_runtime.Value {
 		orig := struct {
 		}{}
 		_ = orig
 		return gopurs_runtime.RecordDict0()
-	}().IntVal)), UnsafePtr: nil}
+	}()
 }

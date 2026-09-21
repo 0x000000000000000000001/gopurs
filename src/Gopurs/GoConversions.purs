@@ -27,6 +27,7 @@ import Gopurs.CodegenState (CodegenMetadata, CodegenState)
 import Gopurs.GoAst (rawGo, GoExpr(..), GoDecl(..), GoType(..), goTypeToStr, structPointer, sanitizeName)
 import Gopurs.GoTypes as GoTypes
 import Gopurs.Printer (printGoExpr)
+import Gopurs.ReboxMetadata (ReboxFields)
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..))
 import PureScript.Backend.Optimizer.FfiSupport (hashString)
 
@@ -218,11 +219,6 @@ unboxGoExpr codegenStateRef modNameStr expr currentType desiredType =
         Just adt -> adt.unboxExpr expr
         Nothing -> rawGo ("func() " <> goTypeToStr (TypeStructValue adtName fields) <> " {\n\t\t\t\t_ = " <> printGoExpr expr <> "\n\t\t\t\tpanic(\"unboxTypeStructValue not implemented yet for " <> adtName <> "\")\n\t\t\t}()")
 
-type ReboxFields =
-  { vars :: Array String
-  , fields :: Array ExprType
-  }
-
 registerReboxPair :: Ref CodegenState -> GoType -> GoType -> Effect Unit
 registerReboxPair codegenStateRef srcT destT = do
   state <- Ref.read codegenStateRef
@@ -232,34 +228,11 @@ registerReboxPair codegenStateRef srcT destT = do
 
 findReboxFields :: CodegenMetadata -> String -> Maybe ReboxFields
 findReboxFields metadata baseStructName =
-  let
-    matchesConstructor key =
-      let
-        parts = String.split (Pattern ".") key
-      in
-        if Array.length parts >= 2 then
-          let
-            ctorName = fromMaybe "" (Array.last parts)
-            pkgName = String.joinWith "_" (Array.slice 0 (Array.length parts - 1) parts)
-            constructorName = "Constructor_" <> pkgName <> "_" <> sanitizeName ctorName
-            dataName = "Data_" <> pkgName <> "_" <> sanitizeName ctorName
-          in
-            constructorName == baseStructName || dataName == baseStructName
-        else false
-
-    mbCtor = Array.find (\(Tuple key _) -> matchesConstructor key)
-      (Map.toUnfoldable metadata.ctorTypes :: Array (Tuple String ReboxFields))
-    mbClass = Array.find (\(Tuple key _) -> matchesConstructor key)
-      (Map.toUnfoldable metadata.classDeclsFields :: Array (Tuple String { vars :: Array String, fields :: Array { name :: String, "type" :: ExprType } }))
-  in
-    case mbCtor of
-      Just (Tuple _ info) -> Just info
-      Nothing -> case mbClass of
-        Just (Tuple _ classInfo) ->
-          Just { vars: classInfo.vars, fields: map (\field -> field."type") classInfo.fields }
-        Nothing -> unsafePerformEffect do
-          Console.log ("ERROR: Rebox missing! b1=" <> baseStructName <> " keysCtor: " <> String.joinWith ", " (map fst (Map.toUnfoldable metadata.ctorTypes :: Array (Tuple String _))))
-          pure Nothing
+  case Map.lookup baseStructName metadata.reboxFields of
+    Just info -> Just info
+    Nothing -> unsafePerformEffect do
+      Console.log ("ERROR: Rebox missing! b1=" <> baseStructName <> " keysCtor: " <> String.joinWith ", " (map fst (Map.toUnfoldable metadata.ctorTypes :: Array (Tuple String _))))
+      pure Nothing
 
 renderReboxFunction :: Ref CodegenState -> CodegenMetadata -> String -> Map String GoDecl -> Tuple GoType GoType -> Maybe (Tuple String GoDecl)
 renderReboxFunction codegenStateRef metadata modNameStr generatedFuncs (Tuple srcT destT) =

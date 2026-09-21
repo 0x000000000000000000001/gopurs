@@ -1,6 +1,8 @@
 # Gopurs — réduire le temps de compilation de b8x
 
-État au 20 septembre 2026 : comparaisons Char/String, scanner, garde de substitution, clés différées, pipeline PBO/émission et cache local des corps préparés de la collecte transitive intégrés. Le backend passe de 591,665 à **374,255 s (−36,75 %, 3 min 37 gagnées)**. La dernière intégration gagne 15,211 s dans la préparation et **13,756 s sur le backend**. Les essais de garde avant unification et d’ordonnanceur PBO à 91 paires ne sont pas retenus faute de gain établi. Les points 3 et 4 restent ouverts, comme les points 5 à 7.
+État au 21 septembre 2026 : comparaisons Char/String, scanner, garde de substitution, clés différées, pipeline PBO/émission, cache local des corps préparés et **index des champs de conversion** intégrés. Dernier backend b8x : **342,863 s (5 min 43)**, contre 591,665 s au départ (évolution historique **−42,05 %, 4 min 09 gagnées**). Les essais de garde avant unification et d’ordonnanceur PBO à 91 paires ne sont pas retenus faute de gain établi.
+
+**Dernière intégration, point 9 : 401,157 → 342,863 s de backend (−14,53 %), allocations 704,04 → 554,31 Gio (−21,27 %).** Comparaison plus prudente à la référence du 20 septembre : 374,255 → 342,863 s (−8,39 %). `b -c -n` entier : **434,000 s (7 min 14)**. Les 2 655 TAST et 2 959 Go sont identiques ; 90 tests passent. Un seul nouveau run complet, charge machine variable : les secondes murales exactes restent à consolider. **Point 9 terminé ; prochaine priorité : point 8, les passes internes PBO.** Les points 3 à 8 et 10 restent ouverts.
 
 ## Points à traiter un par un, ultérieurement
 
@@ -13,8 +15,61 @@ Travailler sur un seul point à la fois. Commencer par une expérience courte, v
 - [ ] **5. Échecs masqués dans le build b8x.** Diagnostiquer puis corriger l’échec des sourcemaps et de `conf`, et rendre leurs statuts visibles. Le glob des sourcemaps ne trouve aucun `.purs` ; la cause précise de l’échec de configuration reste inconnue. Mesurer le coût de la configuration lorsqu’elle réussit.
 - [ ] **6. GC, après réduction des allocations.** Reprofiler le même travail ; distinguer GC idle, autres travaux GC, pauses et coût mural. N’évaluer un réglage du GC qu’avec une comparaison contrôlée temps/mémoire. Ne pas convertir les 72,8 % de CPU échantillonné en promesse de gain mural.
 - [ ] **7. Bilan complet sur le vrai workflow.** Après validation de chaque changement isolé, répéter `b -c -n` avec les mêmes entrées, paramètres et conditions de cache ; publier le détail des phases, allocations, pic mémoire et statuts. Comparer aux références de compilation b8x ci-dessous ; garder les baselines d’exécution officielles d’altbak.pub pour leur périmètre propre.
+- [ ] **8. Coût interne des passes PBO, au-delà du parallélisme.** Le profil b8x du 21 septembre attribue 86,69 s CPU hors GC aux piles Convert/Semantics/Builder reconnues. `substituteNeutralTypes` et `makeExternEvalSpine` ressortent ; leurs chemins se recouvrent. `TypeSubstitution.substitute`, descendants compris, représente 87,36 Gio et 32,82 s CPU hors GC. Mesurer les instanciations répétées, les annotations réellement modifiées et les reconstructions d’expressions neutres avant de proposer une garde ou un cache. Ne pas confondre la garde sur les arbres de types déjà intégrée avec tout le parcours des expressions. Une ventilation murale exhaustive de PBO sur b8x reste à faire.
+- [x] **9. Indexer les champs de conversion Go.** Index immuable construit une fois depuis les layouts TAST, partagé entre émissions. Premier résultat dans l’ordre des clés, priorité constructeur/classe et deux alias conservés. `findReboxFields` passe de **150,56 Gio à 69 Mio** et de 53,78 à 0,04 s CPU échantillonnées hors GC. Backend b8x : **401,157 → 342,863 s**, allocations totales −21,27 %. Les **90 tests**, 4 468 recherches sur les métadonnées b8x et les comparaisons natives passent ; **2 655 TAST et 2 959 Go identiques**. Bilan et limites ci-dessous.
+- [ ] **10. Compilation incrémentale entre builds.** Réutiliser les résultats des modules inchangés pour le cycle quotidien. Définir l’invalidation des signatures, directives PBO, spécialisations transitives, FFI et versions du compilateur ; comparer les sorties avec un build propre. Ce chantier est distinct de l’accélération de `b -c -n` : un cache invalidé par `-c` n’améliore pas ce rebuild forcé. Potentiel à mesurer sur une modification réelle de b8x, pas sur la seule commande propre.
 
 Chaque point doit laisser un résultat vérifié, les mesures avant/après et ses limites dans ce document. Aucun gain ×2 n’est établi par le profil actuel.
+
+## Point 9 — index intégré et validé sur b8x le 21 septembre 2026
+
+`Gopurs.ReboxMetadata` indexe les alias `Constructor_…` et `Data_…` à partir des tables originales des constructeurs/classes. Une insertion n’écrase jamais une clé existante : même premier résultat que les anciens scans croissants, et constructeurs prioritaires. `Main.loadAndPrepareModules` construit l’index une seule fois ; les mises à jour de `globalFunctions` le conservent. Aucun cache mutable global ni nouvelle FFI.
+
+La sonde initiale vérifie **4 468 recherches** sur les métadonnées réelles b8x. **90 tests ciblés passent**, dont 10 sur les collisions, alias, ordre des champs, absences et indépendance des métadonnées. Builds JS/natif sans erreur ni avertissement. Sur le petit corpus, deux chauffes puis référence/candidat/candidat/référence : optimisation/émission **8,464 → 7,844 s (−7,32 %)**, backend **14,125 → 13,602 s (−3,71 %)** ; **399 Go et 304 TAST identiques dans les six runs**.
+
+| Vrai `b -c -n`, même instrumentation | Avant index | Après index |
+|---|---:|---:|
+| Chargement/tri TAST | 34,061 s | 35,275 s |
+| Préparation/monomorphisation | 83,683 s | 91,296 s |
+| Optimisation/émission | 283,405 s | **216,283 s** |
+| **Backend interne** | **401,157 s** | **342,863 s** |
+| **Commande entière** | **486,084 s** | **434,000 s** |
+| CPU utilisateur + système | 1 806,211 s | 1 424,706 s |
+| Allocations cumulées estimées | 704,04 Gio | **554,31 Gio** |
+| Pic RSS | 6,215 Gio | 6,290 Gio |
+
+**2 655 TAST et 2 959 Go identiques**, mêmes sources pendant le run, binaire reconstruit identique au candidat du petit benchmark. Les allocations du chemin ciblé passent de **150,56 Gio à 69 Mio**, et le CPU total baisse de **21,12 %**. L’index lui-même représente environ 24 Mio d’allocations échantillonnées ; son coût est inclus dans les totaux.
+
+Le backend gagne **58,294 s** sur cette paire, mais la référence plus rapide du 20 septembre donne **31,392 s / −8,39 %** de gain. Le frontend b8x et la préparation augmentent pendant ce run ; la charge concurrente empêche une attribution exacte de toutes les secondes murales. Un seul nouveau run complet ; pas de gain extrapolé à une compilation sans profilage. Le pic mémoire augmente de **1,21 %**. Les échecs masqués sourcemaps/configuration persistent.
+
+**Index conservé et compilateur natif installé.** Prochaine priorité : point 8 (passes internes PBO), puis point 3 (collecte transitive répétée), selon les prochaines captures.
+
+[Rapport et limites](/Users/0x1/Documents/htdocs/scratch/gopurs-rebox-index-20260921/rapport.md) · [Benchmark natif alterné](/Users/0x1/Documents/htdocs/scratch/gopurs-rebox-index-20260921/native-benchmark.json) · [Mesures b8x](/Users/0x1/Documents/htdocs/scratch/b8x-rebox-after-20260921/comparison.json) · [Sorties identiques](/Users/0x1/Documents/htdocs/scratch/b8x-rebox-after-20260921/file-comparison.json).
+
+## Points 6/7 — profil complet du 21 septembre 2026, avant index
+
+Même binaire exact que le 20 septembre, **2 655 TAST et 2 959 Go identiques** à la référence. Les 1 957 fichiers source suivis par le manifeste n’ont pas changé pendant le run. Aucune optimisation de code appliquée.
+
+| Mesure | 20 septembre | 21 septembre |
+|---|---:|---:|
+| Chargement/tri TAST | 33,731 s | 34,061 s |
+| Préparation/monomorphisation | 81,535 s | 83,683 s |
+| Optimisation/émission | 258,985 s | 283,405 s |
+| **Backend interne** | **374,255 s** | **401,157 s** |
+| **Commande entière** | **458,578 s** | **486,084 s** |
+| CPU utilisateur + système | 1 801,035 s | 1 806,211 s |
+| Allocations cumulées estimées | 702,92 Gio | 704,04 Gio |
+| Pic RSS | 6,358 Gio | 6,215 Gio |
+
+Le temps mural varie de +7,19 %, alors que CPU (+0,29 %), allocations (+0,16 %) et travail produit restent stables. Des services macOS de gestion du stockage étaient actifs vers la fin ; leur contribution à l’écart n’est pas quantifiée. **Cette répétition ne démontre pas une régression**, ni des conditions système parfaitement comparables. Les échecs masqués sourcemaps/configuration restent présents.
+
+Les cibles prioritaires sont désormais l’index de `findReboxFields` (point 9), les passes internes PBO (point 8) et les parcours encore répétés de la collecte transitive (point 3). Le scanner reste secondaire : `referencedImports` représente encore 55,11 Gio et 19,23 s CPU hors GC ; propager les imports pourrait éviter des scans. Tous ces cumuls incluent leurs descendants et peuvent se recouvrir ; ils ne sont pas des gains muraux promis.
+
+L’union GC représente **69,81 % du CPU échantillonné**, dont 43,27 points de workers idle. Les pauses globales ne totalisent que **83,39 ms** sur 921 cycles. Les coûts du profilage lui-même et les limites d’attribution des piles restent présents. Régler le GC ou multiplier les goroutines ne fournit toujours pas de gain garanti.
+
+Le JS est déjà désactivé pour b8x cible Go. Le passage TAST du bootstrap gopurs émet encore du JS ; sa suppression ne pourrait économiser qu’une fraction de cette étape de 9,7 s. C’est une piste secondaire, distincte des gros chantiers ci-dessus.
+
+[Rapport et limites](/Users/0x1/Documents/htdocs/scratch/b8x-profile-20260921/rapport.md) · [Mesures comparées](/Users/0x1/Documents/htdocs/scratch/b8x-profile-20260921/comparison.json) · [Profils CPU/mémoire et filtres](/Users/0x1/Documents/htdocs/scratch/b8x-profile-20260921/profile-totals.json) · [Identité des sorties](/Users/0x1/Documents/htdocs/scratch/b8x-profile-20260921/previous-output-comparison.json).
 
 ## Point 1 — microbenchmark terminé le 19 septembre 2026
 

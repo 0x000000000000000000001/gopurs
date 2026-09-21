@@ -32,7 +32,7 @@ var once_Main_Test_dollar_Dict sync.Once
 func Get_Main_Test_dollar_Dict() gopurs_runtime.Value {
 	once_Main_Test_dollar_Dict.Do(func() {
 		cache_Main_Test_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_Test_dollar_Dict(func() struct {
+			return Call_Main_Test_dollar_Dict(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -40,7 +40,7 @@ func Get_Main_Test_dollar_Dict() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_Test_dollar_Dict
@@ -52,7 +52,7 @@ var once_Main_Test_dollar_Dict__3889889207 sync.Once
 func Get_Main_Test_dollar_Dict__3889889207() gopurs_runtime.Value {
 	once_Main_Test_dollar_Dict__3889889207.Do(func() {
 		cache_Main_Test_dollar_Dict__3889889207 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_Test_dollar_Dict__3889889207(func() struct {
+			return Call_Main_Test_dollar_Dict__3889889207(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -60,7 +60,7 @@ func Get_Main_Test_dollar_Dict__3889889207() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_Test_dollar_Dict__3889889207
@@ -72,7 +72,7 @@ var once_Main_Test_dollar_Dict__1879757193 sync.Once
 func Get_Main_Test_dollar_Dict__1879757193() gopurs_runtime.Value {
 	once_Main_Test_dollar_Dict__1879757193.Do(func() {
 		cache_Main_Test_dollar_Dict__1879757193 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_Test_dollar_Dict__1879757193(func() struct {
+			return Call_Main_Test_dollar_Dict__1879757193(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -80,7 +80,7 @@ func Get_Main_Test_dollar_Dict__1879757193() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_Test_dollar_Dict__1879757193
@@ -91,12 +91,12 @@ var once_Main_testClass2 sync.Once
 
 func Get_Main_testClass2() gopurs_runtime.Value {
 	once_Main_testClass2.Do(func() {
-		cache_Main_testClass2 = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		cache_Main_testClass2 = func() gopurs_runtime.Value {
 			orig := struct {
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)), UnsafePtr: nil}
+		}()
 	})
 	return cache_Main_testClass2
 }
@@ -106,12 +106,12 @@ var once_Main_testClass1 sync.Once
 
 func Get_Main_testClass1() gopurs_runtime.Value {
 	once_Main_testClass1.Do(func() {
-		cache_Main_testClass1 = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		cache_Main_testClass1 = func() gopurs_runtime.Value {
 			orig := struct {
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)), UnsafePtr: nil}
+		}()
 	})
 	return cache_Main_testClass1
 }
@@ -191,19 +191,19 @@ func init() {
 }
 
 func Call_Main_Test_dollar_Dict(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 	var x_0 struct {
 	} = x_0_loop
 	_ = x_0
-	return uint32(func() gopurs_runtime.Value {
+	return func() gopurs_runtime.Value {
 		orig := x_0
 		_ = orig
 		return gopurs_runtime.RecordDict0()
-	}().IntVal)
+	}()
 }
 
 func Call_Main_Test_dollar_Dict__3889889207(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 Test_dollar_Dict__3889889207:
 	for {
 		if false {
@@ -212,16 +212,16 @@ Test_dollar_Dict__3889889207:
 		var x_0 struct {
 		} = x_0_loop
 		_ = x_0
-		return uint32(func() gopurs_runtime.Value {
+		return func() gopurs_runtime.Value {
 			orig := x_0
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)
+		}()
 	}
 }
 
 func Call_Main_Test_dollar_Dict__1879757193(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 Test_dollar_Dict__1879757193:
 	for {
 		if false {
@@ -230,10 +230,10 @@ Test_dollar_Dict__1879757193:
 		var x_0 struct {
 		} = x_0_loop
 		_ = x_0
-		return uint32(func() gopurs_runtime.Value {
+		return func() gopurs_runtime.Value {
 			orig := x_0
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)
+		}()
 	}
 }

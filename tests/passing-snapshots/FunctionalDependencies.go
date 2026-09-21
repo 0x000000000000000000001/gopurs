@@ -22,7 +22,7 @@ var once_Main_Append_dollar_Dict sync.Once
 func Get_Main_Append_dollar_Dict() gopurs_runtime.Value {
 	once_Main_Append_dollar_Dict.Do(func() {
 		cache_Main_Append_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_Append_dollar_Dict(func() struct {
+			return Call_Main_Append_dollar_Dict(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -30,7 +30,7 @@ func Get_Main_Append_dollar_Dict() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_Append_dollar_Dict
@@ -52,7 +52,7 @@ var once_Main_appendProxy sync.Once
 func Get_Main_appendProxy() gopurs_runtime.Value {
 	once_Main_appendProxy.Do(func() {
 		cache_Main_appendProxy = gopurs_runtime.Func3(func(_dollar___unused_0_box gopurs_runtime.Value, v_1_box gopurs_runtime.Value, v1_2_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_appendProxy(uint32(_dollar___unused_0_box.IntVal), uint32(v_1_box.IntVal), uint32(v1_2_box.IntVal))), UnsafePtr: nil}
+			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_appendProxy(_dollar___unused_0_box, uint32(v_1_box.IntVal), uint32(v1_2_box.IntVal))), UnsafePtr: nil}
 		})
 	})
 	return cache_Main_appendProxy
@@ -63,12 +63,12 @@ var once_Main_appendNil sync.Once
 
 func Get_Main_appendNil() gopurs_runtime.Value {
 	once_Main_appendNil.Do(func() {
-		cache_Main_appendNil = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		cache_Main_appendNil = func() gopurs_runtime.Value {
 			orig := struct {
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)), UnsafePtr: nil}
+		}()
 	})
 	return cache_Main_appendNil
 }
@@ -90,7 +90,7 @@ var once_Main_test sync.Once
 
 func Get_Main_test() gopurs_runtime.Value {
 	once_Main_test.Do(func() {
-		cache_Main_test = gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_appendProxy(uint32(gopurs_runtime.Value{}.IntVal), 227768594, 227768594)), UnsafePtr: nil}
+		cache_Main_test = gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_appendProxy(gopurs_runtime.Value{}, 227768594, 227768594)), UnsafePtr: nil}
 	})
 	return cache_Main_test
 }
@@ -116,19 +116,19 @@ func init() {
 }
 
 func Call_Main_Append_dollar_Dict(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 	var x_0 struct {
 	} = x_0_loop
 	_ = x_0
-	return uint32(func() gopurs_runtime.Value {
+	return func() gopurs_runtime.Value {
 		orig := x_0
 		_ = orig
 		return gopurs_runtime.RecordDict0()
-	}().IntVal)
+	}()
 }
 
-func Call_Main_appendProxy(_dollar___unused_0_loop uint32, v_1_loop uint32, v1_2_loop uint32) uint32 {
-	var _dollar___unused_0 uint32 = _dollar___unused_0_loop
+func Call_Main_appendProxy(_dollar___unused_0_loop gopurs_runtime.Value, v_1_loop uint32, v1_2_loop uint32) uint32 {
+	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
 	var v_1 uint32 = v_1_loop
 	_ = v_1
@@ -140,10 +140,10 @@ func Call_Main_appendProxy(_dollar___unused_0_loop uint32, v_1_loop uint32, v1_2
 func Call_Main_appendCons(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
-	return gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+	return func() gopurs_runtime.Value {
 		orig := struct {
 		}{}
 		_ = orig
 		return gopurs_runtime.RecordDict0()
-	}().IntVal)), UnsafePtr: nil}
+	}()
 }

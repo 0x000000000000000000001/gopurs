@@ -131,21 +131,7 @@ var once_Main_op5 sync.Once
 func Get_Main_op5() gopurs_runtime.Value {
 	once_Main_op5.Do(func() {
 		cache_Main_op5 = gopurs_runtime.Func2(func(as_0_box gopurs_runtime.Value, bs_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Array(Call_Main_op5(func() []gopurs_runtime.Value {
-				arr := *(*[]gopurs_runtime.Value)(as_0_box.UnsafePtr)
-				unboxed := make([]gopurs_runtime.Value, len(arr))
-				for i, v := range arr {
-					unboxed[i] = v
-				}
-				return unboxed
-			}(), func() []gopurs_runtime.Value {
-				arr := *(*[]gopurs_runtime.Value)(bs_1_box.UnsafePtr)
-				unboxed := make([]gopurs_runtime.Value, len(arr))
-				for i, v := range arr {
-					unboxed[i] = v
-				}
-				return unboxed
-			}()))
+			return gopurs_runtime.Array(Call_Main_op5((*(*[]gopurs_runtime.Value)((as_0_box).UnsafePtr)), (*(*[]gopurs_runtime.Value)((bs_1_box).UnsafePtr))))
 		})
 	})
 	return cache_Main_op5

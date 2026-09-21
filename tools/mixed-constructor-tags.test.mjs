@@ -1,3 +1,4 @@
+import { withReboxFields } from './codegen-metadata.mjs';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
@@ -47,11 +48,11 @@ test('mixed ADTs retain every nullary tag and their payload through generated wo
                     typed(family, expr(new S.Local(new Just('value'), 0))),
                 ))))))))],
     }));
-    const code = CodeGen.translate({
+    const code = CodeGen.translate(withReboxFields({
         ...pointerMetadata, elidedCtors: emptySet, ctorTypes: emptyMap,
         enumAdts: emptySet, enumCtors: emptySet, globalTypes: emptyMap,
         globalFunctions: emptyMap, classDeclsFields: emptyMap,
-    })({ name: 'Consumer', bindings, comments: [], imports: emptySet,
+    }))({ name: 'Consumer', bindings, comments: [], imports: emptySet,
         exports: emptySet, reExports: emptySet, dataTypes: emptyMap,
         dataDecls: [], classDecls: [], foreign: emptyMap,
         implementations: emptyMap, directives: emptyMap });

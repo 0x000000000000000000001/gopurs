@@ -12,7 +12,7 @@ var once_Main_WithArgEmpty_dollar_Dict sync.Once
 func Get_Main_WithArgEmpty_dollar_Dict() gopurs_runtime.Value {
 	once_Main_WithArgEmpty_dollar_Dict.Do(func() {
 		cache_Main_WithArgEmpty_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_WithArgEmpty_dollar_Dict(func() struct {
+			return Call_Main_WithArgEmpty_dollar_Dict(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -20,7 +20,7 @@ func Get_Main_WithArgEmpty_dollar_Dict() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_WithArgEmpty_dollar_Dict
@@ -32,7 +32,7 @@ var once_Main_WithArgEmpty_dollar_Dict__3150569997 sync.Once
 func Get_Main_WithArgEmpty_dollar_Dict__3150569997() gopurs_runtime.Value {
 	once_Main_WithArgEmpty_dollar_Dict__3150569997.Do(func() {
 		cache_Main_WithArgEmpty_dollar_Dict__3150569997 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_WithArgEmpty_dollar_Dict__3150569997(func() struct {
+			return Call_Main_WithArgEmpty_dollar_Dict__3150569997(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -40,7 +40,7 @@ func Get_Main_WithArgEmpty_dollar_Dict__3150569997() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_WithArgEmpty_dollar_Dict__3150569997
@@ -102,7 +102,7 @@ var once_Main_EmptyClass_dollar_Dict sync.Once
 func Get_Main_EmptyClass_dollar_Dict() gopurs_runtime.Value {
 	once_Main_EmptyClass_dollar_Dict.Do(func() {
 		cache_Main_EmptyClass_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_EmptyClass_dollar_Dict(func() struct {
+			return Call_Main_EmptyClass_dollar_Dict(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -110,7 +110,7 @@ func Get_Main_EmptyClass_dollar_Dict() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_EmptyClass_dollar_Dict
@@ -212,12 +212,12 @@ var once_Main_withArgEmptyCheck sync.Once
 
 func Get_Main_withArgEmptyCheck() gopurs_runtime.Value {
 	once_Main_withArgEmptyCheck.Do(func() {
-		cache_Main_withArgEmptyCheck = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		cache_Main_withArgEmptyCheck = func() gopurs_runtime.Value {
 			orig := struct {
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)), UnsafePtr: nil}
+		}()
 	})
 	return cache_Main_withArgEmptyCheck
 }
@@ -285,12 +285,12 @@ var once_Main_emptyDictInst sync.Once
 
 func Get_Main_emptyDictInst() gopurs_runtime.Value {
 	once_Main_emptyDictInst.Do(func() {
-		cache_Main_emptyDictInst = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		cache_Main_emptyDictInst = func() gopurs_runtime.Value {
 			orig := struct {
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)), UnsafePtr: nil}
+		}()
 	})
 	return cache_Main_emptyDictInst
 }
@@ -440,7 +440,7 @@ func init() {
 		case "EmptyClass0":
 			return gopurs_runtime.Box(c.V0)
 		case "hasEmptySuper":
-			return gopurs_runtime.Box(c.V1)
+			return gopurs_runtime.Value{Type: 9, IntVal: int64(c.V1)}
 		default:
 			panic("Key not found in dictionary Constructor_Main_HasEmptySuper: " + key)
 		}
@@ -484,19 +484,19 @@ func init() {
 }
 
 func Call_Main_WithArgEmpty_dollar_Dict(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 	var x_0 struct {
 	} = x_0_loop
 	_ = x_0
-	return uint32(func() gopurs_runtime.Value {
+	return func() gopurs_runtime.Value {
 		orig := x_0
 		_ = orig
 		return gopurs_runtime.RecordDict0()
-	}().IntVal)
+	}()
 }
 
 func Call_Main_WithArgEmpty_dollar_Dict__3150569997(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 WithArgEmpty_dollar_Dict__3150569997:
 	for {
 		if false {
@@ -505,11 +505,11 @@ WithArgEmpty_dollar_Dict__3150569997:
 		var x_0 struct {
 		} = x_0_loop
 		_ = x_0
-		return uint32(func() gopurs_runtime.Value {
+		return func() gopurs_runtime.Value {
 			orig := x_0
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)
+		}()
 	}
 }
 
@@ -552,15 +552,15 @@ WithArgHasEmptySuper_dollar_Dict__2442956343:
 }
 
 func Call_Main_EmptyClass_dollar_Dict(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 	var x_0 struct {
 	} = x_0_loop
 	_ = x_0
-	return uint32(func() gopurs_runtime.Value {
+	return func() gopurs_runtime.Value {
 		orig := x_0
 		_ = orig
 		return gopurs_runtime.RecordDict0()
-	}().IntVal)
+	}()
 }
 
 func Call_Main_HasEmptySuper_dollar_Dict(x_0_loop struct {

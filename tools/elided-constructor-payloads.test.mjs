@@ -1,3 +1,4 @@
+import { withReboxFields } from './codegen-metadata.mjs';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
@@ -26,13 +27,13 @@ const wrap = (type, value) => typed(idType(type), expr(new S.CtorSaturated(
 )));
 
 test('elided polymorphic constructors box instantiated fields in workers and closures', t => {
-    const metadata = {
+    const metadata = withReboxFields({
         elidedCtors: singleton('Constructor_Payload_Id'),
         ctorTypes: insert(ordString)('Payload.Id')({ vars: ['a'], fields: [new C.TypeVar('a')] })(emptyMap),
         pointerAdtPaths: emptyMap, pointerAdtNodes: emptySet, pointerAdtLeaves: emptyMap,
         enumAdts: emptySet, enumCtors: emptySet, globalTypes: emptyMap,
         globalFunctions: emptyMap, classDeclsFields: emptyMap,
-    };
+    });
     const add = typed(new C.Func([C.Number.value, C.Number.value], idType(C.Number.value)),
         lambda(['left', 'right'], wrap(C.Number.value, expr(new S.PrimOp(new S.Op2(
             new S.OpNumberNum(S.OpAdd.value), typed(C.Number.value, local('left')), typed(C.Number.value, local('right')),

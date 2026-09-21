@@ -12,7 +12,7 @@ var once_Main_X_dollar_Dict sync.Once
 func Get_Main_X_dollar_Dict() gopurs_runtime.Value {
 	once_Main_X_dollar_Dict.Do(func() {
 		cache_Main_X_dollar_Dict = gopurs_runtime.Func(func(x1_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_X_dollar_Dict(func() struct {
+			return Call_Main_X_dollar_Dict(func() struct {
 			} {
 				orig := x1_0_box
 				_ = orig
@@ -20,7 +20,7 @@ func Get_Main_X_dollar_Dict() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_X_dollar_Dict
@@ -65,24 +65,24 @@ func init() {
 }
 
 func Call_Main_X_dollar_Dict(x1_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 	var x1_0 struct {
 	} = x1_0_loop
 	_ = x1_0
-	return uint32(func() gopurs_runtime.Value {
+	return func() gopurs_runtime.Value {
 		orig := x1_0
 		_ = orig
 		return gopurs_runtime.RecordDict0()
-	}().IntVal)
+	}()
 }
 
 func Call_Main_x(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
-	return gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+	return func() gopurs_runtime.Value {
 		orig := struct {
 		}{}
 		_ = orig
 		return gopurs_runtime.RecordDict0()
-	}().IntVal)), UnsafePtr: nil}
+	}()
 }

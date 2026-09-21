@@ -1,3 +1,4 @@
+import { withReboxFields } from './codegen-metadata.mjs';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
@@ -21,11 +22,11 @@ import { TcoExpr } from '../output/PureScript.Backend.Optimizer.Codegen.Tco/inde
 import * as Core from '../output/PureScript.Backend.Optimizer.CoreFn/index.js';
 import * as Syntax from '../output/PureScript.Backend.Optimizer.Syntax/index.js';
 
-const metadata = {
+const metadata = withReboxFields({
     pointerAdtPaths: emptyMap, pointerAdtNodes: emptySet, pointerAdtLeaves: emptyMap,
     enumAdts: emptySet, enumCtors: emptySet, elidedCtors: emptySet,
     ctorTypes: emptyMap, classDeclsFields: emptyMap, globalTypes: emptyMap, globalFunctions: emptyMap,
-};
+});
 const context = () => ({
     metadata, codegenStateRef: Ref.new({ declarations: [], globalId: 0, reboxPairs: emptySet })(),
     depth: 0, modNameStr: 'Probe', recVars: [], moduleFunctions: emptyMap, bound: emptyMap,

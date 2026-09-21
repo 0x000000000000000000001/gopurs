@@ -52,14 +52,7 @@ var once_Main_foldMap sync.Once
 func Get_Main_foldMap() gopurs_runtime.Value {
 	once_Main_foldMap.Do(func() {
 		cache_Main_foldMap = gopurs_runtime.Func3(func(dictSemigroup_0_box gopurs_runtime.Value, v_1_box gopurs_runtime.Value, v1_2_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_foldMap(gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup[gopurs_runtime.Value]](dictSemigroup_0_box), v_1_box, func() []gopurs_runtime.Value {
-				arr := *(*[]gopurs_runtime.Value)(v1_2_box.UnsafePtr)
-				unboxed := make([]gopurs_runtime.Value, len(arr))
-				for i, v := range arr {
-					unboxed[i] = v
-				}
-				return unboxed
-			}())
+			return Call_Main_foldMap(gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup[gopurs_runtime.Value]](dictSemigroup_0_box), v_1_box, (*(*[]gopurs_runtime.Value)((v1_2_box).UnsafePtr)))
 		})
 	})
 	return cache_Main_foldMap
@@ -96,14 +89,7 @@ var once_Main_empty sync.Once
 
 func Get_Main_empty() gopurs_runtime.Value {
 	once_Main_empty.Do(func() {
-		cache_Main_empty = gopurs_runtime.Array(func() []gopurs_runtime.Value {
-			arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array([]gopurs_runtime.Value{}).UnsafePtr)
-			unboxed := make([]gopurs_runtime.Value, len(arr))
-			for i, v := range arr {
-				unboxed[i] = v
-			}
-			return unboxed
-		}())
+		cache_Main_empty = gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.Array([]gopurs_runtime.Value{})).UnsafePtr)))
 	})
 	return cache_Main_empty
 }
@@ -150,14 +136,7 @@ func Get_Main_regression() gopurs_runtime.Value {
 func Call_Main_singleton(x_0_loop gopurs_runtime.Value) []gopurs_runtime.Value {
 	var x_0 gopurs_runtime.Value = x_0_loop
 	_ = x_0
-	return func() []gopurs_runtime.Value {
-		arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array([]gopurs_runtime.Value{x_0}).UnsafePtr)
-		unboxed := make([]gopurs_runtime.Value, len(arr))
-		for i, v := range arr {
-			unboxed[i] = v
-		}
-		return unboxed
-	}()
+	return (*(*[]gopurs_runtime.Value)((gopurs_runtime.Array([]gopurs_runtime.Value{x_0})).UnsafePtr))
 }
 
 func Call_Main_singleton__2309289500(x_0_loop int64) []int64 {
@@ -218,70 +197,56 @@ foldMap__869368821:
 		var __t0 gopurs_runtime.Value
 		{
 			if (gopurs_runtime.Int(int64(len(v1_1))).IntVal) == (int64(5)) {
-				__t0 = gopurs_runtime.Array(func() []gopurs_runtime.Value {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), gopurs_runtime.Apply(v_0, gopurs_runtime.Int(gopurs_runtime.ArrayAccess(func() gopurs_runtime.Value {
-						arr := v1_1
-						boxed := make([]gopurs_runtime.Value, len(arr))
-						for i, v := range arr {
-							boxed[i] = gopurs_runtime.Int(v)
-						}
-						return gopurs_runtime.Array(boxed)
-					}(), 0).IntVal)), gopurs_runtime.Apply(v_0, gopurs_runtime.Int(gopurs_runtime.ArrayAccess(func() gopurs_runtime.Value {
-						arr := v1_1
-						boxed := make([]gopurs_runtime.Value, len(arr))
-						for i, v := range arr {
-							boxed[i] = gopurs_runtime.Int(v)
-						}
-						return gopurs_runtime.Array(boxed)
-					}(), 1).IntVal))), gopurs_runtime.Apply(v_0, gopurs_runtime.Int(gopurs_runtime.ArrayAccess(func() gopurs_runtime.Value {
-						arr := v1_1
-						boxed := make([]gopurs_runtime.Value, len(arr))
-						for i, v := range arr {
-							boxed[i] = gopurs_runtime.Int(v)
-						}
-						return gopurs_runtime.Array(boxed)
-					}(), 2).IntVal))), gopurs_runtime.Apply(v_0, gopurs_runtime.Int(gopurs_runtime.ArrayAccess(func() gopurs_runtime.Value {
-						arr := v1_1
-						boxed := make([]gopurs_runtime.Value, len(arr))
-						for i, v := range arr {
-							boxed[i] = gopurs_runtime.Int(v)
-						}
-						return gopurs_runtime.Array(boxed)
-					}(), 3).IntVal))), gopurs_runtime.Apply(v_0, gopurs_runtime.Int(gopurs_runtime.ArrayAccess(func() gopurs_runtime.Value {
-						arr := v1_1
-						boxed := make([]gopurs_runtime.Value, len(arr))
-						for i, v := range arr {
-							boxed[i] = gopurs_runtime.Int(v)
-						}
-						return gopurs_runtime.Array(boxed)
-					}(), 4).IntVal))).UnsafePtr)
-					unboxed := make([]gopurs_runtime.Value, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v
-					}
-					return unboxed
-				}())
-				goto end_branch_0
-			} else {
-
-			}
-		}
-		{
-			__t0 = Call_Main_foldMap(Rebox_Main_4291402899_4179793454(Rebox_Main_4179793454_4291402899(gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup[gopurs_runtime.Value]](Get_Data_Semigroup_semigroupArray()))), v_0, func() []gopurs_runtime.Value {
-				arr := *(*[]gopurs_runtime.Value)(func() gopurs_runtime.Value {
+				__t0 = gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), gopurs_runtime.Apply(v_0, gopurs_runtime.Int(gopurs_runtime.ArrayAccess(func() gopurs_runtime.Value {
 					arr := v1_1
 					boxed := make([]gopurs_runtime.Value, len(arr))
 					for i, v := range arr {
 						boxed[i] = gopurs_runtime.Int(v)
 					}
 					return gopurs_runtime.Array(boxed)
-				}().UnsafePtr)
-				unboxed := make([]gopurs_runtime.Value, len(arr))
+				}(), 0).IntVal)), gopurs_runtime.Apply(v_0, gopurs_runtime.Int(gopurs_runtime.ArrayAccess(func() gopurs_runtime.Value {
+					arr := v1_1
+					boxed := make([]gopurs_runtime.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = gopurs_runtime.Int(v)
+					}
+					return gopurs_runtime.Array(boxed)
+				}(), 1).IntVal))), gopurs_runtime.Apply(v_0, gopurs_runtime.Int(gopurs_runtime.ArrayAccess(func() gopurs_runtime.Value {
+					arr := v1_1
+					boxed := make([]gopurs_runtime.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = gopurs_runtime.Int(v)
+					}
+					return gopurs_runtime.Array(boxed)
+				}(), 2).IntVal))), gopurs_runtime.Apply(v_0, gopurs_runtime.Int(gopurs_runtime.ArrayAccess(func() gopurs_runtime.Value {
+					arr := v1_1
+					boxed := make([]gopurs_runtime.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = gopurs_runtime.Int(v)
+					}
+					return gopurs_runtime.Array(boxed)
+				}(), 3).IntVal))), gopurs_runtime.Apply(v_0, gopurs_runtime.Int(gopurs_runtime.ArrayAccess(func() gopurs_runtime.Value {
+					arr := v1_1
+					boxed := make([]gopurs_runtime.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = gopurs_runtime.Int(v)
+					}
+					return gopurs_runtime.Array(boxed)
+				}(), 4).IntVal)))).UnsafePtr)))
+				goto end_branch_0
+			} else {
+
+			}
+		}
+		{
+			__t0 = Call_Main_foldMap(Rebox_Main_4291402899_4179793454(Rebox_Main_4179793454_4291402899(gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup[gopurs_runtime.Value]](Get_Data_Semigroup_semigroupArray()))), v_0, (*(*[]gopurs_runtime.Value)((func() gopurs_runtime.Value {
+				arr := v1_1
+				boxed := make([]gopurs_runtime.Value, len(arr))
 				for i, v := range arr {
-					unboxed[i] = v
+					boxed[i] = gopurs_runtime.Int(v)
 				}
-				return unboxed
-			}())
+				return gopurs_runtime.Array(boxed)
+			}()).UnsafePtr)))
 		}
 	end_branch_0:
 		return func() []int64 {

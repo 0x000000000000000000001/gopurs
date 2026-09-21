@@ -103,7 +103,7 @@ func init() {
 		_ = c
 		switch key {
 		case "unified":
-			return gopurs_runtime.Box(c.V0)
+			return gopurs_runtime.Value{Type: 9, IntVal: int64(c.V0)}
 		default:
 			panic("Key not found in dictionary Constructor_Main_SingleInstanceFundep: " + key)
 		}

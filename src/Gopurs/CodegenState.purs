@@ -11,6 +11,7 @@ import Data.Set (Set)
 import Data.Set as Set
 import Data.Tuple (Tuple)
 import Gopurs.GoAst (GoDecl, GoType)
+import Gopurs.ReboxMetadata (ReboxFieldIndex)
 import PureScript.Backend.Optimizer.CoreFn (ExprType)
 
 type FunctionInfo =
@@ -34,6 +35,7 @@ type CodegenMetadataRow =
   , globalTypes :: Map.Map String ExprType
   , globalFunctions :: Map String FunctionInfo
   , classDeclsFields :: Map String { vars :: Array String, fields :: Array { name :: String, "type" :: ExprType } }
+  , reboxFields :: ReboxFieldIndex
   )
 
 type CodegenMetadata = { | CodegenMetadataRow }

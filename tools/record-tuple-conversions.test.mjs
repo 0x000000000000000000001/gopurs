@@ -1,3 +1,4 @@
+import { withReboxFields } from './codegen-metadata.mjs';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
@@ -20,11 +21,11 @@ import { runtimeGoCode } from '../output/Gopurs.Runtime/index.js';
 import * as Core from '../output/PureScript.Backend.Optimizer.CoreFn/index.js';
 import { hashString } from '../output/PureScript.Backend.Optimizer.FfiSupport/index.js';
 
-const emptyMetadata = {
+const emptyMetadata = withReboxFields({
     pointerAdtPaths: emptyMap, pointerAdtNodes: emptySet, pointerAdtLeaves: emptyMap,
     enumAdts: emptySet, enumCtors: emptySet, elidedCtors: emptySet,
     ctorTypes: emptyMap, classDeclsFields: emptyMap, globalTypes: emptyMap, globalFunctions: emptyMap,
-};
+});
 const newState = () => Ref.new({ declarations: [], globalId: 0, reboxPairs: emptySet })();
 
 const goType = exprTypeToGoType(emptyMap)(emptySet)(emptySet)('Test');
@@ -140,12 +141,12 @@ test('native Tuple payloads are converted before accessing a typed pointer', () 
 
 test('arrays of boxed Tuple values preserve fields when converted to native tuples', t => {
     const ref = newState();
-    const metadata = {
+    const metadata = withReboxFields({
         ...emptyMetadata,
         ctorTypes: insert(ordString)('Data_Tuple.Tuple')({
             vars: ['a', 'b'], fields: [new Core.TypeVar('a'), new Core.TypeVar('b')],
         })(emptyMap),
-    };
+    });
     const tuple = Go.structPointer({ baseStructName: 'Data_Data_Tuple_Tuple', fullName: 'Data.Tuple.Tuple', structName: 'Constructor_Data_Tuple_Tuple' })([Go.TypeInt64.value, Go.TypeInt64.value]);
     const expression = coerceGoExpr(ref)('Test')(new Go.GoVar('input'))
         (Go.TypeValue.value)(new Go.TypeNativeArray(tuple));
@@ -193,12 +194,12 @@ test('generic class properties retain the tag and fields of native ADT values', 
     const dateType = Go.structPointer({ baseStructName: 'Data_Fixture_Date', fullName: 'Fixture.Date', structName: 'Constructor_Fixture_Date' })([]);
     const boundedType = Go.structPointer({ baseStructName: 'Data_Fixture_Bounded', fullName: 'Fixture.Bounded', structName: 'Constructor_Fixture_Bounded' })([dateType]);
     const ref = newState();
-    const metadata = {
+    const metadata = withReboxFields({
         ...emptyMetadata,
         classDeclsFields: insert(ordString)('Fixture.Bounded')({
             vars: ['a'], fields: [{ name: 'bottom', type: new Core.TypeVar('a') }],
         })(emptyMap),
-    };
+    });
     const property = getProp(metadata)(ref)('Test')('bottom')({ expr: new Go.GoVar('dictionary'), exprType: boundedType });
     const directory = mkdtempSync(join(tmpdir(), 'gopurs-class-adt-field-'));
     t.after(() => rmSync(directory, { recursive: true, force: true }));
@@ -237,12 +238,12 @@ func main() {
 
 test('boxed record fields convert generic ADT payloads to their native layout', t => {
     const ref = newState();
-    const metadata = {
+    const metadata = withReboxFields({
         ...emptyMetadata,
         ctorTypes: insert(ordString)('Data_Tuple.Tuple')({
             vars: ['a', 'b'], fields: [new Core.TypeVar('a'), new Core.TypeVar('b')],
         })(emptyMap),
-    };
+    });
     const tuple = Go.structPointer({ baseStructName: 'Data_Data_Tuple_Tuple', fullName: 'Data.Tuple.Tuple', structName: 'Constructor_Data_Tuple_Tuple' })([Go.TypeInt64.value, Go.TypeInt64.value]);
     const recordType = new Go.TypeRecord([new Tuple('payload', tuple)]);
     const expression = unboxGoExpr(ref)('Test')(new Go.GoVar('input'))(Go.TypeValue.value)(recordType);

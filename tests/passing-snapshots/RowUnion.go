@@ -12,7 +12,7 @@ var once_Main_Subrow_dollar_Dict sync.Once
 func Get_Main_Subrow_dollar_Dict() gopurs_runtime.Value {
 	once_Main_Subrow_dollar_Dict.Do(func() {
 		cache_Main_Subrow_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_Subrow_dollar_Dict(func() struct {
+			return Call_Main_Subrow_dollar_Dict(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -20,7 +20,7 @@ func Get_Main_Subrow_dollar_Dict() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_Subrow_dollar_Dict
@@ -251,7 +251,7 @@ var once_Main_withDefaultsClosed sync.Once
 func Get_Main_withDefaultsClosed() gopurs_runtime.Value {
 	once_Main_withDefaultsClosed.Do(func() {
 		cache_Main_withDefaultsClosed = gopurs_runtime.Func3(func(_dollar___unused_0_box gopurs_runtime.Value, _dollar___unused_1_box gopurs_runtime.Value, p_2_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_withDefaultsClosed(_dollar___unused_0_box, uint32(_dollar___unused_1_box.IntVal), p_2_box)
+			return Call_Main_withDefaultsClosed(_dollar___unused_0_box, _dollar___unused_1_box, p_2_box)
 		})
 	})
 	return cache_Main_withDefaultsClosed
@@ -417,26 +417,26 @@ func init() {
 }
 
 func Call_Main_Subrow_dollar_Dict(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 	var x_0 struct {
 	} = x_0_loop
 	_ = x_0
-	return uint32(func() gopurs_runtime.Value {
+	return func() gopurs_runtime.Value {
 		orig := x_0
 		_ = orig
 		return gopurs_runtime.RecordDict0()
-	}().IntVal)
+	}()
 }
 
 func Call_Main_subrow(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
-	return gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+	return func() gopurs_runtime.Value {
 		orig := struct {
 		}{}
 		_ = orig
 		return gopurs_runtime.RecordDict0()
-	}().IntVal)), UnsafePtr: nil}
+	}()
 }
 
 func Call_Main_solve(_dollar___unused_0_loop gopurs_runtime.Value, v_1_loop uint32, v1_2_loop uint32) uint32 {
@@ -530,10 +530,10 @@ func Call_Main_withDefaults(_dollar___unused_0_loop gopurs_runtime.Value, p_1_lo
 	}())
 }
 
-func Call_Main_withDefaultsClosed(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___unused_1_loop uint32, p_2_loop gopurs_runtime.Value) gopurs_runtime.Value {
+func Call_Main_withDefaultsClosed(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___unused_1_loop gopurs_runtime.Value, p_2_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
-	var _dollar___unused_1 uint32 = _dollar___unused_1_loop
+	var _dollar___unused_1 gopurs_runtime.Value = _dollar___unused_1_loop
 	_ = _dollar___unused_1
 	var p_2 gopurs_runtime.Value = p_2_loop
 	_ = p_2

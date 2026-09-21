@@ -1,3 +1,4 @@
+import { withReboxFields } from './codegen-metadata.mjs';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
@@ -27,7 +28,7 @@ const tuple = new C.ADT('Data.Tuple.Tuple', ['Data', 'Tuple', 'Tuple'], [C.Int.v
 const unary = new C.Func([bool], bool);
 
 test('constructor tests evaluate imported native Maybe, Either and Tuple workers once', t => {
-    const metadata = {
+    const metadata = withReboxFields({
         elidedCtors: emptySet, ctorTypes: emptyMap, pointerAdtPaths: emptyMap,
         pointerAdtNodes: singleton('Data_Data_Maybe_Just'),
         pointerAdtLeaves: map([['Data_Data_Maybe_Nothing', {
@@ -48,7 +49,7 @@ test('constructor tests evaluate imported native Maybe, Either and Tuple workers
                 fRet: new Go.TypeStructValue('Data.Tuple.Tuple',
                     [Go.TypeValue.value, Go.TypeValue.value]) }],
         ]),
-    };
+    });
     const bindings = [
         ['isJust', 'maybe', maybe, 'Data.Maybe', 'Just'],
         ['isNothing', 'maybe', maybe, 'Data.Maybe', 'Nothing'],

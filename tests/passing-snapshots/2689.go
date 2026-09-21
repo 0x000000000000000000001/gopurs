@@ -312,14 +312,7 @@ func Call_Main_count(p_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 				}
 			end_branch_2:
 				v_2_loop = __t2
-				v1_3_loop = func() []gopurs_runtime.Value {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.UncurriedApp3(Get_Data_Array_sliceImpl(), gopurs_runtime.Int(int64(1)), gopurs_runtime.Int(int64(len(v1_3))), gopurs_runtime.Array(v1_3)).UnsafePtr)
-					unboxed := make([]gopurs_runtime.Value, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v
-					}
-					return unboxed
-				}()
+				v1_3_loop = (*(*[]gopurs_runtime.Value)((gopurs_runtime.UncurriedApp3(Get_Data_Array_sliceImpl(), gopurs_runtime.Int(int64(1)), gopurs_runtime.Int(int64(len(v1_3))), gopurs_runtime.Array(v1_3))).UnsafePtr))
 				continue count_prime___1086705844_1_0_4
 				__t3 = func() int64 { panic("unreachable") }()
 			}
@@ -329,14 +322,7 @@ func Call_Main_count(p_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	}
 	count_prime___1086705844_1_0_4 = gopurs_runtime.Func(func(v_2_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
 		return gopurs_runtime.Func(func(v1_3_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Int(Call_local_Main_count_prime___1086705844_1_0_4(v_2_loop_val.IntVal, func() []gopurs_runtime.Value {
-				arr := *(*[]gopurs_runtime.Value)(v1_3_loop_val.UnsafePtr)
-				unboxed := make([]gopurs_runtime.Value, len(arr))
-				for i, v := range arr {
-					unboxed[i] = v
-				}
-				return unboxed
-			}()))
+			return gopurs_runtime.Int(Call_local_Main_count_prime___1086705844_1_0_4(v_2_loop_val.IntVal, (*(*[]gopurs_runtime.Value)((v1_3_loop_val).UnsafePtr))))
 		})
 	})
 	Call_local_Main_count_prime__1_1_5 = func(v_2_loop int64, v1_3_loop []gopurs_runtime.Value) int64 {
@@ -372,14 +358,7 @@ func Call_Main_count(p_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 					__t4 = (v_2) + (int64(0))
 				}
 			end_branch_4:
-				__t5 = Call_local_Main_count_prime___1086705844_1_0_4(__t4, func() []gopurs_runtime.Value {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.UncurriedApp3(Get_Data_Array_sliceImpl(), gopurs_runtime.Int(int64(1)), gopurs_runtime.Int(int64(len(v1_3))), gopurs_runtime.Array(v1_3)).UnsafePtr)
-					unboxed := make([]gopurs_runtime.Value, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v
-					}
-					return unboxed
-				}())
+				__t5 = Call_local_Main_count_prime___1086705844_1_0_4(__t4, (*(*[]gopurs_runtime.Value)((gopurs_runtime.UncurriedApp3(Get_Data_Array_sliceImpl(), gopurs_runtime.Int(int64(1)), gopurs_runtime.Int(int64(len(v1_3))), gopurs_runtime.Array(v1_3))).UnsafePtr)))
 			}
 		end_branch_5:
 			return __t5
@@ -387,14 +366,7 @@ func Call_Main_count(p_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	}
 	count_prime__1_1_5 = gopurs_runtime.Func(func(v_2_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
 		return gopurs_runtime.Func(func(v1_3_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Int(Call_local_Main_count_prime__1_1_5(v_2_loop_val.IntVal, func() []gopurs_runtime.Value {
-				arr := *(*[]gopurs_runtime.Value)(v1_3_loop_val.UnsafePtr)
-				unboxed := make([]gopurs_runtime.Value, len(arr))
-				for i, v := range arr {
-					unboxed[i] = v
-				}
-				return unboxed
-			}()))
+			return gopurs_runtime.Int(Call_local_Main_count_prime__1_1_5(v_2_loop_val.IntVal, (*(*[]gopurs_runtime.Value)((v1_3_loop_val).UnsafePtr))))
 		})
 	})
 	return gopurs_runtime.Apply(count_prime___1086705844_1_0_4, gopurs_runtime.Int(int64(0)))

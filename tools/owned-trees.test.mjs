@@ -1,3 +1,4 @@
+import { withReboxFields } from './codegen-metadata.mjs';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { spawnSync } from 'node:child_process';
@@ -23,7 +24,7 @@ const tree = new C.ADT(`${moduleName}.Shape`, [moduleName, 'Shape'], []);
 const fields = [C.Int.value, tree, tree];
 const map = entries => entries.reduce((result, [key, value]) =>
     insert(ordString)(key)(value)(result), emptyMap);
-const metadata = {
+const metadata = withReboxFields({
     elidedCtors: emptySet,
     ctorTypes: map([[`${moduleName}.Cell`, { vars: [], fields }],
         [`${moduleName}.Vacant`, { vars: [], fields: [] }]]),
@@ -34,7 +35,7 @@ const metadata = {
     }]]),
     enumAdts: emptySet, enumCtors: emptySet, globalTypes: emptyMap,
     globalFunctions: emptyMap, classDeclsFields: emptyMap,
-};
+});
 const expr = syntax => new NeutralExpr(syntax);
 const typed = (type, value) => expr(new S.Typed(type, value));
 const local = (level = 0) => typed(tree, expr(new S.Local(new Just('input'), level)));

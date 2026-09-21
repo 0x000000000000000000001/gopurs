@@ -93,29 +93,20 @@ var once_Main_applicativeMaybe sync.Once
 func Get_Main_applicativeMaybe() gopurs_runtime.Value {
 	once_Main_applicativeMaybe.Do(func() {
 		cache_Main_applicativeMaybe = gopurs_runtime.Value{Type: 9, IntVal: 4228518006, UnsafePtr: unsafe.Pointer(Rebox_Main_2015372117_1467411426((&Constructor_Main_Applicative[*Constructor_Main_Just[gopurs_runtime.Value]]{1, gopurs_runtime.Func2(func(v_0 gopurs_runtime.Value, v1_1 gopurs_runtime.Value) gopurs_runtime.Value {
-			var __t3 *Constructor_Main_Just[gopurs_runtime.Value]
+			var __t0 *Constructor_Main_Just[gopurs_runtime.Value]
 			{
-				var __t_tag_0 *Constructor_Main_Just[gopurs_runtime.Value] = gopurs_runtime.CoerceToStruct[Constructor_Main_Just[gopurs_runtime.Value]](v_0)
-				_ = __t_tag_0
-				var __t_and_2 bool = false
-				if __t_tag_0 != nil {
-
-					var __t_tag_1 *Constructor_Main_Just[gopurs_runtime.Value] = gopurs_runtime.CoerceToStruct[Constructor_Main_Just[gopurs_runtime.Value]](v1_1)
-					_ = __t_tag_1
-					__t_and_2 = (__t_tag_1 != nil)
-				}
-				if __t_and_2 {
-					__t3 = (&Constructor_Main_Just[gopurs_runtime.Value]{1, gopurs_runtime.Apply((*Constructor_Main_Just[gopurs_runtime.Value])(v_0.UnsafePtr).V0, (*Constructor_Main_Just[gopurs_runtime.Value])(v1_1.UnsafePtr).V0)})
-					goto end_branch_3
+				if (v_0.Type == 9 && v_0.IntVal == 3271839782 && v_0.UnsafePtr != nil) && (v1_1.Type == 9 && v1_1.IntVal == 3271839782 && v1_1.UnsafePtr != nil) {
+					__t0 = (&Constructor_Main_Just[gopurs_runtime.Value]{1, gopurs_runtime.Apply((*Constructor_Main_Just[gopurs_runtime.Value])(v_0.UnsafePtr).V0, (*Constructor_Main_Just[gopurs_runtime.Value])(v1_1.UnsafePtr).V0)})
+					goto end_branch_0
 				} else {
 
 				}
 			}
 			{
-				__t3 = (*Constructor_Main_Just[gopurs_runtime.Value])(nil)
+				__t0 = (*Constructor_Main_Just[gopurs_runtime.Value])(nil)
 			}
-		end_branch_3:
-			return gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer(__t3)}
+		end_branch_0:
+			return gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer(__t0)}
 		}), Get_Main_Just()})))}
 	})
 	return cache_Main_applicativeMaybe

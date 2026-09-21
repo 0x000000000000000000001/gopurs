@@ -738,14 +738,7 @@ func Get_Main_main() gopurs_runtime.Value {
 																						label  string
 																						values []gopurs_runtime.Value
 																					} {
-																						orig := gopurs_runtime.RecordUpdate1(__local_var_13_13, "values", gopurs_runtime.Array(func() []gopurs_runtime.Value {
-																							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array([]gopurs_runtime.Value{}).UnsafePtr)
-																							unboxed := make([]gopurs_runtime.Value, len(arr))
-																							for i, v := range arr {
-																								unboxed[i] = v
-																							}
-																							return unboxed
-																						}()))
+																						orig := gopurs_runtime.RecordUpdate1(__local_var_13_13, "values", gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.Array([]gopurs_runtime.Value{})).UnsafePtr))))
 																						_ = orig
 																						clone := struct {
 																							child struct {
@@ -772,14 +765,7 @@ func Get_Main_main() gopurs_runtime.Value {
 																						}()
 																						clone.count = gopurs_runtime.RecordGet(orig, "count").IntVal
 																						clone.label = gopurs_runtime.RecordGet(orig, "label").StrVal()
-																						clone.values = func() []gopurs_runtime.Value {
-																							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "values").UnsafePtr)
-																							unboxed := make([]gopurs_runtime.Value, len(arr))
-																							for i, v := range arr {
-																								unboxed[i] = v
-																							}
-																							return unboxed
-																						}()
+																						clone.values = (*(*[]gopurs_runtime.Value)((gopurs_runtime.RecordGet(orig, "values")).UnsafePtr))
 																						return clone
 																					}()
 																					_ = orig
@@ -1037,21 +1023,14 @@ func Get_Main_main() gopurs_runtime.Value {
 																																		return gopurs_runtime.Apply(gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply2(Get_Effect_Ref_modify_(), gopurs_runtime.Func(func(v_54 gopurs_runtime.Value) gopurs_runtime.Value {
 																																			return func() gopurs_runtime.Value {
 																																				arr := func() []string {
-																																					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array(func() []gopurs_runtime.Value {
-																																						arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), v_54, func() gopurs_runtime.Value {
-																																							arr := []string{"before"}
-																																							boxed := make([]gopurs_runtime.Value, len(arr))
-																																							for i, v := range arr {
-																																								boxed[i] = gopurs_runtime.Str(v)
-																																							}
-																																							return gopurs_runtime.Array(boxed)
-																																						}()).UnsafePtr)
-																																						unboxed := make([]gopurs_runtime.Value, len(arr))
+																																					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), v_54, func() gopurs_runtime.Value {
+																																						arr := []string{"before"}
+																																						boxed := make([]gopurs_runtime.Value, len(arr))
 																																						for i, v := range arr {
-																																							unboxed[i] = v
+																																							boxed[i] = gopurs_runtime.Str(v)
 																																						}
-																																						return unboxed
-																																					}()).UnsafePtr)
+																																						return gopurs_runtime.Array(boxed)
+																																					}())).UnsafePtr))).UnsafePtr)
 																																					unboxed := make([]string, len(arr))
 																																					for i, v := range arr {
 																																						unboxed[i] = v.StrVal()
@@ -1074,9 +1053,19 @@ func Get_Main_main() gopurs_runtime.Value {
 																																				return gopurs_runtime.Apply(gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply2(Get_Effect_Ref_modify_(), gopurs_runtime.Func(func(v_57 gopurs_runtime.Value) gopurs_runtime.Value {
 																																					return func() gopurs_runtime.Value {
 																																						arr := func() []string {
-																																							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array(func() []gopurs_runtime.Value {
-																																								arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), v_57, func() gopurs_runtime.Value {
-																																									arr := []string{("consume:") + (Call_Main_shapeFour(func() struct {
+																																							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), v_57, func() gopurs_runtime.Value {
+																																								arr := []string{("consume:") + (Call_Main_shapeFour(func() struct {
+																																									child struct {
+																																										count int64
+																																										label string
+																																									}
+																																									count  int64
+																																									label  string
+																																									values []int64
+																																								} {
+																																									orig := __local_var_56_27
+																																									_ = orig
+																																									clone := struct {
 																																										child struct {
 																																											count int64
 																																											label string
@@ -1084,56 +1073,39 @@ func Get_Main_main() gopurs_runtime.Value {
 																																										count  int64
 																																										label  string
 																																										values []int64
+																																									}{}
+																																									clone.child = func() struct {
+																																										count int64
+																																										label string
 																																									} {
-																																										orig := __local_var_56_27
+																																										orig := gopurs_runtime.RecordGet(orig, "child")
 																																										_ = orig
 																																										clone := struct {
-																																											child struct {
-																																												count int64
-																																												label string
-																																											}
-																																											count  int64
-																																											label  string
-																																											values []int64
-																																										}{}
-																																										clone.child = func() struct {
 																																											count int64
 																																											label string
-																																										} {
-																																											orig := gopurs_runtime.RecordGet(orig, "child")
-																																											_ = orig
-																																											clone := struct {
-																																												count int64
-																																												label string
-																																											}{}
-																																											clone.count = gopurs_runtime.RecordGet(orig, "count").IntVal
-																																											clone.label = gopurs_runtime.RecordGet(orig, "label").StrVal()
-																																											return clone
-																																										}()
+																																										}{}
 																																										clone.count = gopurs_runtime.RecordGet(orig, "count").IntVal
 																																										clone.label = gopurs_runtime.RecordGet(orig, "label").StrVal()
-																																										clone.values = func() []int64 {
-																																											arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "values").UnsafePtr)
-																																											unboxed := make([]int64, len(arr))
-																																											for i, v := range arr {
-																																												unboxed[i] = v.IntVal
-																																											}
-																																											return unboxed
-																																										}()
 																																										return clone
-																																									}()))}
-																																									boxed := make([]gopurs_runtime.Value, len(arr))
-																																									for i, v := range arr {
-																																										boxed[i] = gopurs_runtime.Str(v)
-																																									}
-																																									return gopurs_runtime.Array(boxed)
-																																								}()).UnsafePtr)
-																																								unboxed := make([]gopurs_runtime.Value, len(arr))
+																																									}()
+																																									clone.count = gopurs_runtime.RecordGet(orig, "count").IntVal
+																																									clone.label = gopurs_runtime.RecordGet(orig, "label").StrVal()
+																																									clone.values = func() []int64 {
+																																										arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "values").UnsafePtr)
+																																										unboxed := make([]int64, len(arr))
+																																										for i, v := range arr {
+																																											unboxed[i] = v.IntVal
+																																										}
+																																										return unboxed
+																																									}()
+																																									return clone
+																																								}()))}
+																																								boxed := make([]gopurs_runtime.Value, len(arr))
 																																								for i, v := range arr {
-																																									unboxed[i] = v
+																																									boxed[i] = gopurs_runtime.Str(v)
 																																								}
-																																								return unboxed
-																																							}()).UnsafePtr)
+																																								return gopurs_runtime.Array(boxed)
+																																							}())).UnsafePtr))).UnsafePtr)
 																																							unboxed := make([]string, len(arr))
 																																							for i, v := range arr {
 																																								unboxed[i] = v.StrVal()
@@ -1150,21 +1122,14 @@ func Get_Main_main() gopurs_runtime.Value {
 																																					return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply2(Get_Effect_Ref_modify_(), gopurs_runtime.Func(func(v_58 gopurs_runtime.Value) gopurs_runtime.Value {
 																																						return func() gopurs_runtime.Value {
 																																							arr := func() []string {
-																																								arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array(func() []gopurs_runtime.Value {
-																																									arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), v_58, func() gopurs_runtime.Value {
-																																										arr := []string{"after"}
-																																										boxed := make([]gopurs_runtime.Value, len(arr))
-																																										for i, v := range arr {
-																																											boxed[i] = gopurs_runtime.Str(v)
-																																										}
-																																										return gopurs_runtime.Array(boxed)
-																																									}()).UnsafePtr)
-																																									unboxed := make([]gopurs_runtime.Value, len(arr))
+																																								arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), v_58, func() gopurs_runtime.Value {
+																																									arr := []string{"after"}
+																																									boxed := make([]gopurs_runtime.Value, len(arr))
 																																									for i, v := range arr {
-																																										unboxed[i] = v
+																																										boxed[i] = gopurs_runtime.Str(v)
 																																									}
-																																									return unboxed
-																																								}()).UnsafePtr)
+																																									return gopurs_runtime.Array(boxed)
+																																								}())).UnsafePtr))).UnsafePtr)
 																																								unboxed := make([]string, len(arr))
 																																								for i, v := range arr {
 																																									unboxed[i] = v.StrVal()
@@ -1443,21 +1408,14 @@ func Call_Main_produceFour(trace_0_loop gopurs_runtime.Value, count_1_loop int64
 	return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply2(Get_Effect_Ref_modify_(), gopurs_runtime.Func(func(v_2 gopurs_runtime.Value) gopurs_runtime.Value {
 		return func() gopurs_runtime.Value {
 			arr := func() []string {
-				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array(func() []gopurs_runtime.Value {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), v_2, func() gopurs_runtime.Value {
-						arr := []string{"produce"}
-						boxed := make([]gopurs_runtime.Value, len(arr))
-						for i, v := range arr {
-							boxed[i] = gopurs_runtime.Str(v)
-						}
-						return gopurs_runtime.Array(boxed)
-					}()).UnsafePtr)
-					unboxed := make([]gopurs_runtime.Value, len(arr))
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), v_2, func() gopurs_runtime.Value {
+					arr := []string{"produce"}
+					boxed := make([]gopurs_runtime.Value, len(arr))
 					for i, v := range arr {
-						unboxed[i] = v
+						boxed[i] = gopurs_runtime.Str(v)
 					}
-					return unboxed
-				}()).UnsafePtr)
+					return gopurs_runtime.Array(boxed)
+				}())).UnsafePtr))).UnsafePtr)
 				unboxed := make([]string, len(arr))
 				for i, v := range arr {
 					unboxed[i] = v.StrVal()

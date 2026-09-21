@@ -260,55 +260,51 @@ var once_Main_genericB_ sync.Once
 func Get_Main_genericB_() gopurs_runtime.Value {
 	once_Main_genericB_.Do(func() {
 		cache_Main_genericB_ = gopurs_runtime.Value{Type: 9, IntVal: 1921946594, UnsafePtr: unsafe.Pointer(Rebox_Main_2147772913_2818661616((&Constructor_Data_Generic_Rep_Generic[*Constructor_Main_B, gopurs_runtime.Value]{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			var __t2 gopurs_runtime.Value
+			var __t0 gopurs_runtime.Value
 			{
-				var __t_tag_0 *Constructor_Main_B = gopurs_runtime.CoerceToStruct[Constructor_Main_B](x_0)
-				_ = __t_tag_0
-				if __t_tag_0 != nil {
-					__t2 = gopurs_runtime.Value{Type: 9, IntVal: 3478632216, UnsafePtr: unsafe.Pointer(Rebox_Main_3895662118_1323331594((&Constructor_Data_Generic_Rep_Inl[*Constructor_Main_B, uint32]{1, (*Constructor_Main_B)(x_0.UnsafePtr).V0})))}
-					goto end_branch_2
+				if x_0.Type == 9 && x_0.IntVal == 4250879068 && x_0.UnsafePtr != nil {
+					__t0 = gopurs_runtime.Value{Type: 9, IntVal: 3478632216, UnsafePtr: unsafe.Pointer(Rebox_Main_3895662118_1323331594((&Constructor_Data_Generic_Rep_Inl[*Constructor_Main_B, uint32]{1, (*Constructor_Main_B)(x_0.UnsafePtr).V0})))}
+					goto end_branch_0
 				} else {
 
 				}
 			}
 			{
-				var __t_tag_1 *Constructor_Main_B = gopurs_runtime.CoerceToStruct[Constructor_Main_B](x_0)
-				_ = __t_tag_1
-				if __t_tag_1 == nil {
-					__t2 = gopurs_runtime.Value{Type: 9, IntVal: 492034566, UnsafePtr: unsafe.Pointer(Rebox_Main_3658796408_2687169876((&Constructor_Data_Generic_Rep_Inr[*Constructor_Main_B, uint32]{1, 1454898258})))}
-					goto end_branch_2
+				if x_0.Type == 9 && x_0.IntVal == 4250879068 && x_0.UnsafePtr == nil {
+					__t0 = gopurs_runtime.Value{Type: 9, IntVal: 492034566, UnsafePtr: unsafe.Pointer(Rebox_Main_3658796408_2687169876((&Constructor_Data_Generic_Rep_Inr[*Constructor_Main_B, uint32]{1, 1454898258})))}
+					goto end_branch_0
 				} else {
 
 				}
 			}
 			{
-				__t2 = func() gopurs_runtime.Value { panic("Failed pattern match") }()
+				__t0 = func() gopurs_runtime.Value { panic("Failed pattern match") }()
 			}
-		end_branch_2:
-			return __t2
+		end_branch_0:
+			return __t0
 		}), gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			var __t3 *Constructor_Main_B
+			var __t1 *Constructor_Main_B
 			{
 				if x_0.Type == 9 && x_0.IntVal == 3478632216 {
-					__t3 = (&Constructor_Main_B{1, gopurs_runtime.CoerceToStruct[Constructor_Main_B]((*Constructor_Data_Generic_Rep_Inl[gopurs_runtime.Value, gopurs_runtime.Value])(x_0.UnsafePtr).V0)})
-					goto end_branch_3
+					__t1 = (&Constructor_Main_B{1, gopurs_runtime.CoerceToStruct[Constructor_Main_B]((*Constructor_Data_Generic_Rep_Inl[gopurs_runtime.Value, gopurs_runtime.Value])(x_0.UnsafePtr).V0)})
+					goto end_branch_1
 				} else {
 
 				}
 			}
 			{
 				if x_0.Type == 9 && x_0.IntVal == 492034566 {
-					__t3 = (*Constructor_Main_B)(nil)
-					goto end_branch_3
+					__t1 = (*Constructor_Main_B)(nil)
+					goto end_branch_1
 				} else {
 
 				}
 			}
 			{
-				__t3 = func() *Constructor_Main_B { panic("Failed pattern match") }()
+				__t1 = func() *Constructor_Main_B { panic("Failed pattern match") }()
 			}
-		end_branch_3:
-			return gopurs_runtime.Value{Type: 9, IntVal: 4250879068, UnsafePtr: unsafe.Pointer(__t3)}
+		end_branch_1:
+			return gopurs_runtime.Value{Type: 9, IntVal: 4250879068, UnsafePtr: unsafe.Pointer(__t1)}
 		})})))}
 	})
 	return cache_Main_genericB_
@@ -354,41 +350,37 @@ var once_Main_genericB2_ sync.Once
 func Get_Main_genericB2_() gopurs_runtime.Value {
 	once_Main_genericB2_.Do(func() {
 		cache_Main_genericB2_ = gopurs_runtime.Value{Type: 9, IntVal: 1921946594, UnsafePtr: unsafe.Pointer(Rebox_Main_3587705155_2818661616((&Constructor_Data_Generic_Rep_Generic[*Constructor_Main_B2, gopurs_runtime.Value]{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			var __t2 gopurs_runtime.Value
+			var __t0 gopurs_runtime.Value
 			{
-				var __t_tag_0 *Constructor_Main_B2 = gopurs_runtime.CoerceToStruct[Constructor_Main_B2](x_0)
-				_ = __t_tag_0
-				if __t_tag_0 != nil {
-					__t2 = gopurs_runtime.Value{Type: 9, IntVal: 3478632216, UnsafePtr: unsafe.Pointer(Rebox_Main_615526420_1323331594((&Constructor_Data_Generic_Rep_Inl[struct {
+				if x_0.Type == 9 && x_0.IntVal == 4102534158 && x_0.UnsafePtr != nil {
+					__t0 = gopurs_runtime.Value{Type: 9, IntVal: 3478632216, UnsafePtr: unsafe.Pointer(Rebox_Main_615526420_1323331594((&Constructor_Data_Generic_Rep_Inl[struct {
 						x *Constructor_Main_B2
 					}, uint32]{1, (*Constructor_Main_B2)(x_0.UnsafePtr).V0})))}
-					goto end_branch_2
+					goto end_branch_0
 				} else {
 
 				}
 			}
 			{
-				var __t_tag_1 *Constructor_Main_B2 = gopurs_runtime.CoerceToStruct[Constructor_Main_B2](x_0)
-				_ = __t_tag_1
-				if __t_tag_1 == nil {
-					__t2 = gopurs_runtime.Value{Type: 9, IntVal: 492034566, UnsafePtr: unsafe.Pointer(Rebox_Main_3485313226_2687169876((&Constructor_Data_Generic_Rep_Inr[struct {
+				if x_0.Type == 9 && x_0.IntVal == 4102534158 && x_0.UnsafePtr == nil {
+					__t0 = gopurs_runtime.Value{Type: 9, IntVal: 492034566, UnsafePtr: unsafe.Pointer(Rebox_Main_3485313226_2687169876((&Constructor_Data_Generic_Rep_Inr[struct {
 						x *Constructor_Main_B2
 					}, uint32]{1, 1454898258})))}
-					goto end_branch_2
+					goto end_branch_0
 				} else {
 
 				}
 			}
 			{
-				__t2 = func() gopurs_runtime.Value { panic("Failed pattern match") }()
+				__t0 = func() gopurs_runtime.Value { panic("Failed pattern match") }()
 			}
-		end_branch_2:
-			return __t2
+		end_branch_0:
+			return __t0
 		}), gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			var __t3 *Constructor_Main_B2
+			var __t1 *Constructor_Main_B2
 			{
 				if x_0.Type == 9 && x_0.IntVal == 3478632216 {
-					__t3 = (&Constructor_Main_B2{1, func() struct {
+					__t1 = (&Constructor_Main_B2{1, func() struct {
 						x *Constructor_Main_B2
 					} {
 						orig := (*Constructor_Data_Generic_Rep_Inl[gopurs_runtime.Value, gopurs_runtime.Value])(x_0.UnsafePtr).V0
@@ -399,24 +391,24 @@ func Get_Main_genericB2_() gopurs_runtime.Value {
 						clone.x = gopurs_runtime.CoerceToStruct[Constructor_Main_B2](gopurs_runtime.RecordGet(orig, "x"))
 						return clone
 					}()})
-					goto end_branch_3
+					goto end_branch_1
 				} else {
 
 				}
 			}
 			{
 				if x_0.Type == 9 && x_0.IntVal == 492034566 {
-					__t3 = (*Constructor_Main_B2)(nil)
-					goto end_branch_3
+					__t1 = (*Constructor_Main_B2)(nil)
+					goto end_branch_1
 				} else {
 
 				}
 			}
 			{
-				__t3 = func() *Constructor_Main_B2 { panic("Failed pattern match") }()
+				__t1 = func() *Constructor_Main_B2 { panic("Failed pattern match") }()
 			}
-		end_branch_3:
-			return gopurs_runtime.Value{Type: 9, IntVal: 4102534158, UnsafePtr: unsafe.Pointer(__t3)}
+		end_branch_1:
+			return gopurs_runtime.Value{Type: 9, IntVal: 4102534158, UnsafePtr: unsafe.Pointer(__t1)}
 		})})))}
 	})
 	return cache_Main_genericB2_
@@ -468,6 +460,42 @@ func Get_Main_main() gopurs_runtime.Value {
 		cache_Main_main = gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
 	})
 	return cache_Main_main
+}
+
+func Call_Main___gopurs_owned_A_0_consume(__arg0 *Constructor_Main_B, __donor *Constructor_Main_B) *Constructor_Main_B {
+__owned_loop:
+	for {
+		if false {
+			continue __owned_loop
+		}
+		__read_0 := __arg0
+		_ = __read_0
+		__donor_slot_1 := __donor
+		_ = __donor_slot_1
+		return __read_0
+	}
+}
+
+func Call_Main___gopurs_owned_A_0(__arg0 *Constructor_Main_B) *Constructor_Main_B {
+	return Call_Main___gopurs_owned_A_0_consume(__arg0, nil)
+}
+
+func Call_Main___gopurs_owned_C_0_consume(__arg0 *Constructor_Main_B, __donor *Constructor_Main_B) *Constructor_Main_B {
+__owned_loop:
+	for {
+		if false {
+			continue __owned_loop
+		}
+		__read_0 := __arg0
+		_ = __read_0
+		__donor_slot_1 := __donor
+		_ = __donor_slot_1
+		return __read_0
+	}
+}
+
+func Call_Main___gopurs_owned_C_0(__arg0 *Constructor_Main_B) *Constructor_Main_B {
+	return Call_Main___gopurs_owned_C_0_consume(__arg0, nil)
 }
 
 type Constructor_Main_B2 struct {

@@ -241,7 +241,7 @@ func Get_Main_main() gopurs_runtime.Value {
 						return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___627669702("", struct {
 							actual   int64
 							expected int64
-						}{gopurs_runtime.Int(gopurs_runtime.Apply((__local_var_9_7).V0, (__local_var_9_7).V1).IntVal).IntVal, int64(44)}), gopurs_runtime.Func(func(_dollar___unused_8 gopurs_runtime.Value) gopurs_runtime.Value {
+						}{gopurs_runtime.Apply((__local_var_9_7).V0, (__local_var_9_7).V1).IntVal, int64(44)}), gopurs_runtime.Func(func(_dollar___unused_8 gopurs_runtime.Value) gopurs_runtime.Value {
 							return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
 						}))
 					})), gopurs_runtime.Value{})

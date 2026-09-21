@@ -12,7 +12,7 @@ var once_Main_ReservedWord_dollar_Dict sync.Once
 func Get_Main_ReservedWord_dollar_Dict() gopurs_runtime.Value {
 	once_Main_ReservedWord_dollar_Dict.Do(func() {
 		cache_Main_ReservedWord_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_ReservedWord_dollar_Dict(func() struct {
+			return Call_Main_ReservedWord_dollar_Dict(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -20,7 +20,7 @@ func Get_Main_ReservedWord_dollar_Dict() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_ReservedWord_dollar_Dict
@@ -32,7 +32,7 @@ var once_Main_OverlappingStillCompiles_dollar_Dict sync.Once
 func Get_Main_OverlappingStillCompiles_dollar_Dict() gopurs_runtime.Value {
 	once_Main_OverlappingStillCompiles_dollar_Dict.Do(func() {
 		cache_Main_OverlappingStillCompiles_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_OverlappingStillCompiles_dollar_Dict(func() struct {
+			return Call_Main_OverlappingStillCompiles_dollar_Dict(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -40,7 +40,7 @@ func Get_Main_OverlappingStillCompiles_dollar_Dict() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_OverlappingStillCompiles_dollar_Dict
@@ -52,7 +52,7 @@ var once_Main_OneTypeParamChain_dollar_Dict sync.Once
 func Get_Main_OneTypeParamChain_dollar_Dict() gopurs_runtime.Value {
 	once_Main_OneTypeParamChain_dollar_Dict.Do(func() {
 		cache_Main_OneTypeParamChain_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_OneTypeParamChain_dollar_Dict(func() struct {
+			return Call_Main_OneTypeParamChain_dollar_Dict(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -60,7 +60,7 @@ func Get_Main_OneTypeParamChain_dollar_Dict() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_OneTypeParamChain_dollar_Dict
@@ -72,7 +72,7 @@ var once_Main_OneTypeParamChain_dollar_Dict__2829754120 sync.Once
 func Get_Main_OneTypeParamChain_dollar_Dict__2829754120() gopurs_runtime.Value {
 	once_Main_OneTypeParamChain_dollar_Dict__2829754120.Do(func() {
 		cache_Main_OneTypeParamChain_dollar_Dict__2829754120 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_OneTypeParamChain_dollar_Dict__2829754120(func() struct {
+			return Call_Main_OneTypeParamChain_dollar_Dict__2829754120(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -80,7 +80,7 @@ func Get_Main_OneTypeParamChain_dollar_Dict__2829754120() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_OneTypeParamChain_dollar_Dict__2829754120
@@ -92,7 +92,7 @@ var once_Main_OneTypeParamChain_dollar_Dict__591223737 sync.Once
 func Get_Main_OneTypeParamChain_dollar_Dict__591223737() gopurs_runtime.Value {
 	once_Main_OneTypeParamChain_dollar_Dict__591223737.Do(func() {
 		cache_Main_OneTypeParamChain_dollar_Dict__591223737 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_OneTypeParamChain_dollar_Dict__591223737(func() struct {
+			return Call_Main_OneTypeParamChain_dollar_Dict__591223737(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -100,7 +100,7 @@ func Get_Main_OneTypeParamChain_dollar_Dict__591223737() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_OneTypeParamChain_dollar_Dict__591223737
@@ -112,7 +112,7 @@ var once_Main_OneTypeParam_dollar_Dict sync.Once
 func Get_Main_OneTypeParam_dollar_Dict() gopurs_runtime.Value {
 	once_Main_OneTypeParam_dollar_Dict.Do(func() {
 		cache_Main_OneTypeParam_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_OneTypeParam_dollar_Dict(func() struct {
+			return Call_Main_OneTypeParam_dollar_Dict(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -120,7 +120,7 @@ func Get_Main_OneTypeParam_dollar_Dict() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_OneTypeParam_dollar_Dict
@@ -132,7 +132,7 @@ var once_Main_OneTypeParam_dollar_Dict__3018055877 sync.Once
 func Get_Main_OneTypeParam_dollar_Dict__3018055877() gopurs_runtime.Value {
 	once_Main_OneTypeParam_dollar_Dict__3018055877.Do(func() {
 		cache_Main_OneTypeParam_dollar_Dict__3018055877 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_OneTypeParam_dollar_Dict__3018055877(func() struct {
+			return Call_Main_OneTypeParam_dollar_Dict__3018055877(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -140,7 +140,7 @@ func Get_Main_OneTypeParam_dollar_Dict__3018055877() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_OneTypeParam_dollar_Dict__3018055877
@@ -152,7 +152,7 @@ var once_Main_NoTypeParams_dollar_Dict sync.Once
 func Get_Main_NoTypeParams_dollar_Dict() gopurs_runtime.Value {
 	once_Main_NoTypeParams_dollar_Dict.Do(func() {
 		cache_Main_NoTypeParams_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_NoTypeParams_dollar_Dict(func() struct {
+			return Call_Main_NoTypeParams_dollar_Dict(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -160,7 +160,7 @@ func Get_Main_NoTypeParams_dollar_Dict() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_NoTypeParams_dollar_Dict
@@ -172,7 +172,7 @@ var once_Main_MultipleTypeParamsChain_dollar_Dict sync.Once
 func Get_Main_MultipleTypeParamsChain_dollar_Dict() gopurs_runtime.Value {
 	once_Main_MultipleTypeParamsChain_dollar_Dict.Do(func() {
 		cache_Main_MultipleTypeParamsChain_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_MultipleTypeParamsChain_dollar_Dict(func() struct {
+			return Call_Main_MultipleTypeParamsChain_dollar_Dict(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -180,7 +180,7 @@ func Get_Main_MultipleTypeParamsChain_dollar_Dict() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_MultipleTypeParamsChain_dollar_Dict
@@ -192,7 +192,7 @@ var once_Main_MultipleTypeParamsChain_dollar_Dict__1805770947 sync.Once
 func Get_Main_MultipleTypeParamsChain_dollar_Dict__1805770947() gopurs_runtime.Value {
 	once_Main_MultipleTypeParamsChain_dollar_Dict__1805770947.Do(func() {
 		cache_Main_MultipleTypeParamsChain_dollar_Dict__1805770947 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_MultipleTypeParamsChain_dollar_Dict__1805770947(func() struct {
+			return Call_Main_MultipleTypeParamsChain_dollar_Dict__1805770947(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -200,7 +200,7 @@ func Get_Main_MultipleTypeParamsChain_dollar_Dict__1805770947() gopurs_runtime.V
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_MultipleTypeParamsChain_dollar_Dict__1805770947
@@ -212,7 +212,7 @@ var once_Main_MultipleTypeParamsChain_dollar_Dict__378537983 sync.Once
 func Get_Main_MultipleTypeParamsChain_dollar_Dict__378537983() gopurs_runtime.Value {
 	once_Main_MultipleTypeParamsChain_dollar_Dict__378537983.Do(func() {
 		cache_Main_MultipleTypeParamsChain_dollar_Dict__378537983 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_MultipleTypeParamsChain_dollar_Dict__378537983(func() struct {
+			return Call_Main_MultipleTypeParamsChain_dollar_Dict__378537983(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -220,7 +220,7 @@ func Get_Main_MultipleTypeParamsChain_dollar_Dict__378537983() gopurs_runtime.Va
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_MultipleTypeParamsChain_dollar_Dict__378537983
@@ -232,7 +232,7 @@ var once_Main_MultipleTypeParamsChain_dollar_Dict__3594680916 sync.Once
 func Get_Main_MultipleTypeParamsChain_dollar_Dict__3594680916() gopurs_runtime.Value {
 	once_Main_MultipleTypeParamsChain_dollar_Dict__3594680916.Do(func() {
 		cache_Main_MultipleTypeParamsChain_dollar_Dict__3594680916 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_MultipleTypeParamsChain_dollar_Dict__3594680916(func() struct {
+			return Call_Main_MultipleTypeParamsChain_dollar_Dict__3594680916(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -240,7 +240,7 @@ func Get_Main_MultipleTypeParamsChain_dollar_Dict__3594680916() gopurs_runtime.V
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_MultipleTypeParamsChain_dollar_Dict__3594680916
@@ -252,7 +252,7 @@ var once_Main_MultipleTypeParamsChain_dollar_Dict__2431780932 sync.Once
 func Get_Main_MultipleTypeParamsChain_dollar_Dict__2431780932() gopurs_runtime.Value {
 	once_Main_MultipleTypeParamsChain_dollar_Dict__2431780932.Do(func() {
 		cache_Main_MultipleTypeParamsChain_dollar_Dict__2431780932 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_MultipleTypeParamsChain_dollar_Dict__2431780932(func() struct {
+			return Call_Main_MultipleTypeParamsChain_dollar_Dict__2431780932(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -260,7 +260,7 @@ func Get_Main_MultipleTypeParamsChain_dollar_Dict__2431780932() gopurs_runtime.V
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_MultipleTypeParamsChain_dollar_Dict__2431780932
@@ -272,7 +272,7 @@ var once_Main_MultipleTypeParamsChain_dollar_Dict__3275490162 sync.Once
 func Get_Main_MultipleTypeParamsChain_dollar_Dict__3275490162() gopurs_runtime.Value {
 	once_Main_MultipleTypeParamsChain_dollar_Dict__3275490162.Do(func() {
 		cache_Main_MultipleTypeParamsChain_dollar_Dict__3275490162 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_MultipleTypeParamsChain_dollar_Dict__3275490162(func() struct {
+			return Call_Main_MultipleTypeParamsChain_dollar_Dict__3275490162(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -280,7 +280,7 @@ func Get_Main_MultipleTypeParamsChain_dollar_Dict__3275490162() gopurs_runtime.V
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_MultipleTypeParamsChain_dollar_Dict__3275490162
@@ -292,7 +292,7 @@ var once_Main_MultipleTypeParams_dollar_Dict sync.Once
 func Get_Main_MultipleTypeParams_dollar_Dict() gopurs_runtime.Value {
 	once_Main_MultipleTypeParams_dollar_Dict.Do(func() {
 		cache_Main_MultipleTypeParams_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_MultipleTypeParams_dollar_Dict(func() struct {
+			return Call_Main_MultipleTypeParams_dollar_Dict(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -300,7 +300,7 @@ func Get_Main_MultipleTypeParams_dollar_Dict() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_MultipleTypeParams_dollar_Dict
@@ -312,7 +312,7 @@ var once_Main_MultipleTypeParams_dollar_Dict__1171758367 sync.Once
 func Get_Main_MultipleTypeParams_dollar_Dict__1171758367() gopurs_runtime.Value {
 	once_Main_MultipleTypeParams_dollar_Dict__1171758367.Do(func() {
 		cache_Main_MultipleTypeParams_dollar_Dict__1171758367 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_MultipleTypeParams_dollar_Dict__1171758367(func() struct {
+			return Call_Main_MultipleTypeParams_dollar_Dict__1171758367(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -320,7 +320,7 @@ func Get_Main_MultipleTypeParams_dollar_Dict__1171758367() gopurs_runtime.Value 
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_MultipleTypeParams_dollar_Dict__1171758367
@@ -332,7 +332,7 @@ var once_Main_MultipleKindParamsChain_dollar_Dict sync.Once
 func Get_Main_MultipleKindParamsChain_dollar_Dict() gopurs_runtime.Value {
 	once_Main_MultipleKindParamsChain_dollar_Dict.Do(func() {
 		cache_Main_MultipleKindParamsChain_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_MultipleKindParamsChain_dollar_Dict(func() struct {
+			return Call_Main_MultipleKindParamsChain_dollar_Dict(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -340,7 +340,7 @@ func Get_Main_MultipleKindParamsChain_dollar_Dict() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_MultipleKindParamsChain_dollar_Dict
@@ -352,7 +352,7 @@ var once_Main_MultipleKindParamsChain_dollar_Dict__1453658104 sync.Once
 func Get_Main_MultipleKindParamsChain_dollar_Dict__1453658104() gopurs_runtime.Value {
 	once_Main_MultipleKindParamsChain_dollar_Dict__1453658104.Do(func() {
 		cache_Main_MultipleKindParamsChain_dollar_Dict__1453658104 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_MultipleKindParamsChain_dollar_Dict__1453658104(func() struct {
+			return Call_Main_MultipleKindParamsChain_dollar_Dict__1453658104(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -360,7 +360,7 @@ func Get_Main_MultipleKindParamsChain_dollar_Dict__1453658104() gopurs_runtime.V
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_MultipleKindParamsChain_dollar_Dict__1453658104
@@ -372,7 +372,7 @@ var once_Main_MultipleKindParamsChain_dollar_Dict__312808059 sync.Once
 func Get_Main_MultipleKindParamsChain_dollar_Dict__312808059() gopurs_runtime.Value {
 	once_Main_MultipleKindParamsChain_dollar_Dict__312808059.Do(func() {
 		cache_Main_MultipleKindParamsChain_dollar_Dict__312808059 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_MultipleKindParamsChain_dollar_Dict__312808059(func() struct {
+			return Call_Main_MultipleKindParamsChain_dollar_Dict__312808059(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -380,7 +380,7 @@ func Get_Main_MultipleKindParamsChain_dollar_Dict__312808059() gopurs_runtime.Va
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_MultipleKindParamsChain_dollar_Dict__312808059
@@ -392,7 +392,7 @@ var once_Main_MultipleKindParamsChain_dollar_Dict__218284922 sync.Once
 func Get_Main_MultipleKindParamsChain_dollar_Dict__218284922() gopurs_runtime.Value {
 	once_Main_MultipleKindParamsChain_dollar_Dict__218284922.Do(func() {
 		cache_Main_MultipleKindParamsChain_dollar_Dict__218284922 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_MultipleKindParamsChain_dollar_Dict__218284922(func() struct {
+			return Call_Main_MultipleKindParamsChain_dollar_Dict__218284922(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -400,7 +400,7 @@ func Get_Main_MultipleKindParamsChain_dollar_Dict__218284922() gopurs_runtime.Va
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_MultipleKindParamsChain_dollar_Dict__218284922
@@ -412,7 +412,7 @@ var once_Main_MultipleKindParams_dollar_Dict sync.Once
 func Get_Main_MultipleKindParams_dollar_Dict() gopurs_runtime.Value {
 	once_Main_MultipleKindParams_dollar_Dict.Do(func() {
 		cache_Main_MultipleKindParams_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_MultipleKindParams_dollar_Dict(func() struct {
+			return Call_Main_MultipleKindParams_dollar_Dict(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -420,7 +420,7 @@ func Get_Main_MultipleKindParams_dollar_Dict() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_MultipleKindParams_dollar_Dict
@@ -432,7 +432,7 @@ var once_Main_MultipleKindParams_dollar_Dict__141469205 sync.Once
 func Get_Main_MultipleKindParams_dollar_Dict__141469205() gopurs_runtime.Value {
 	once_Main_MultipleKindParams_dollar_Dict__141469205.Do(func() {
 		cache_Main_MultipleKindParams_dollar_Dict__141469205 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_MultipleKindParams_dollar_Dict__141469205(func() struct {
+			return Call_Main_MultipleKindParams_dollar_Dict__141469205(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -440,7 +440,7 @@ func Get_Main_MultipleKindParams_dollar_Dict__141469205() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_MultipleKindParams_dollar_Dict__141469205
@@ -609,12 +609,12 @@ var once_Main_reservedWordFunction sync.Once
 
 func Get_Main_reservedWordFunction() gopurs_runtime.Value {
 	once_Main_reservedWordFunction.Do(func() {
-		cache_Main_reservedWordFunction = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		cache_Main_reservedWordFunction = func() gopurs_runtime.Value {
 			orig := struct {
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)), UnsafePtr: nil}
+		}()
 	})
 	return cache_Main_reservedWordFunction
 }
@@ -624,12 +624,12 @@ var once_Main_reservedWordArrow sync.Once
 
 func Get_Main_reservedWordArrow() gopurs_runtime.Value {
 	once_Main_reservedWordArrow.Do(func() {
-		cache_Main_reservedWordArrow = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		cache_Main_reservedWordArrow = func() gopurs_runtime.Value {
 			orig := struct {
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)), UnsafePtr: nil}
+		}()
 	})
 	return cache_Main_reservedWordArrow
 }
@@ -639,12 +639,12 @@ var once_Main_overlappingStillCompiles sync.Once
 
 func Get_Main_overlappingStillCompiles() gopurs_runtime.Value {
 	once_Main_overlappingStillCompiles.Do(func() {
-		cache_Main_overlappingStillCompiles = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		cache_Main_overlappingStillCompiles = func() gopurs_runtime.Value {
 			orig := struct {
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)), UnsafePtr: nil}
+		}()
 	})
 	return cache_Main_overlappingStillCompiles
 }
@@ -654,12 +654,12 @@ var once_Main_overlappingStillCompiles1 sync.Once
 
 func Get_Main_overlappingStillCompiles1() gopurs_runtime.Value {
 	once_Main_overlappingStillCompiles1.Do(func() {
-		cache_Main_overlappingStillCompiles1 = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		cache_Main_overlappingStillCompiles1 = func() gopurs_runtime.Value {
 			orig := struct {
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)), UnsafePtr: nil}
+		}()
 	})
 	return cache_Main_overlappingStillCompiles1
 }
@@ -669,12 +669,12 @@ var once_Main_oneTypeParamChainString sync.Once
 
 func Get_Main_oneTypeParamChainString() gopurs_runtime.Value {
 	once_Main_oneTypeParamChainString.Do(func() {
-		cache_Main_oneTypeParamChainString = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		cache_Main_oneTypeParamChainString = func() gopurs_runtime.Value {
 			orig := struct {
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)), UnsafePtr: nil}
+		}()
 	})
 	return cache_Main_oneTypeParamChainString
 }
@@ -684,12 +684,12 @@ var once_Main_oneTypeParamChainBoolean sync.Once
 
 func Get_Main_oneTypeParamChainBoolean() gopurs_runtime.Value {
 	once_Main_oneTypeParamChainBoolean.Do(func() {
-		cache_Main_oneTypeParamChainBoolean = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		cache_Main_oneTypeParamChainBoolean = func() gopurs_runtime.Value {
 			orig := struct {
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)), UnsafePtr: nil}
+		}()
 	})
 	return cache_Main_oneTypeParamChainBoolean
 }
@@ -699,12 +699,12 @@ var once_Main_oneTypeParamBoolean sync.Once
 
 func Get_Main_oneTypeParamBoolean() gopurs_runtime.Value {
 	once_Main_oneTypeParamBoolean.Do(func() {
-		cache_Main_oneTypeParamBoolean = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		cache_Main_oneTypeParamBoolean = func() gopurs_runtime.Value {
 			orig := struct {
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)), UnsafePtr: nil}
+		}()
 	})
 	return cache_Main_oneTypeParamBoolean
 }
@@ -714,12 +714,12 @@ var once_Main_noTypeParams sync.Once
 
 func Get_Main_noTypeParams() gopurs_runtime.Value {
 	once_Main_noTypeParams.Do(func() {
-		cache_Main_noTypeParams = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		cache_Main_noTypeParams = func() gopurs_runtime.Value {
 			orig := struct {
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)), UnsafePtr: nil}
+		}()
 	})
 	return cache_Main_noTypeParams
 }
@@ -729,12 +729,12 @@ var once_Main_multipleTypeParamsChainBo sync.Once
 
 func Get_Main_multipleTypeParamsChainBo() gopurs_runtime.Value {
 	once_Main_multipleTypeParamsChainBo.Do(func() {
-		cache_Main_multipleTypeParamsChainBo = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		cache_Main_multipleTypeParamsChainBo = func() gopurs_runtime.Value {
 			orig := struct {
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)), UnsafePtr: nil}
+		}()
 	})
 	return cache_Main_multipleTypeParamsChainBo
 }
@@ -744,12 +744,12 @@ var once_Main_multipleTypeParamsChainBo1 sync.Once
 
 func Get_Main_multipleTypeParamsChainBo1() gopurs_runtime.Value {
 	once_Main_multipleTypeParamsChainBo1.Do(func() {
-		cache_Main_multipleTypeParamsChainBo1 = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		cache_Main_multipleTypeParamsChainBo1 = func() gopurs_runtime.Value {
 			orig := struct {
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)), UnsafePtr: nil}
+		}()
 	})
 	return cache_Main_multipleTypeParamsChainBo1
 }
@@ -759,12 +759,12 @@ var once_Main_multipleTypeParamsChainBo2 sync.Once
 
 func Get_Main_multipleTypeParamsChainBo2() gopurs_runtime.Value {
 	once_Main_multipleTypeParamsChainBo2.Do(func() {
-		cache_Main_multipleTypeParamsChainBo2 = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		cache_Main_multipleTypeParamsChainBo2 = func() gopurs_runtime.Value {
 			orig := struct {
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)), UnsafePtr: nil}
+		}()
 	})
 	return cache_Main_multipleTypeParamsChainBo2
 }
@@ -774,12 +774,12 @@ var once_Main_multipleTypeParamsChainBo3 sync.Once
 
 func Get_Main_multipleTypeParamsChainBo3() gopurs_runtime.Value {
 	once_Main_multipleTypeParamsChainBo3.Do(func() {
-		cache_Main_multipleTypeParamsChainBo3 = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		cache_Main_multipleTypeParamsChainBo3 = func() gopurs_runtime.Value {
 			orig := struct {
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)), UnsafePtr: nil}
+		}()
 	})
 	return cache_Main_multipleTypeParamsChainBo3
 }
@@ -789,12 +789,12 @@ var once_Main_multipleTypeParamsChainBo4 sync.Once
 
 func Get_Main_multipleTypeParamsChainBo4() gopurs_runtime.Value {
 	once_Main_multipleTypeParamsChainBo4.Do(func() {
-		cache_Main_multipleTypeParamsChainBo4 = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		cache_Main_multipleTypeParamsChainBo4 = func() gopurs_runtime.Value {
 			orig := struct {
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)), UnsafePtr: nil}
+		}()
 	})
 	return cache_Main_multipleTypeParamsChainBo4
 }
@@ -804,12 +804,12 @@ var once_Main_multipleTypeParamsBoolean sync.Once
 
 func Get_Main_multipleTypeParamsBoolean() gopurs_runtime.Value {
 	once_Main_multipleTypeParamsBoolean.Do(func() {
-		cache_Main_multipleTypeParamsBoolean = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		cache_Main_multipleTypeParamsBoolean = func() gopurs_runtime.Value {
 			orig := struct {
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)), UnsafePtr: nil}
+		}()
 	})
 	return cache_Main_multipleTypeParamsBoolean
 }
@@ -819,12 +819,12 @@ var once_Main_multipleKindParamsConstru sync.Once
 
 func Get_Main_multipleKindParamsConstru() gopurs_runtime.Value {
 	once_Main_multipleKindParamsConstru.Do(func() {
-		cache_Main_multipleKindParamsConstru = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		cache_Main_multipleKindParamsConstru = func() gopurs_runtime.Value {
 			orig := struct {
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)), UnsafePtr: nil}
+		}()
 	})
 	return cache_Main_multipleKindParamsConstru
 }
@@ -834,12 +834,12 @@ var once_Main_multipleKindParamsChainCo sync.Once
 
 func Get_Main_multipleKindParamsChainCo() gopurs_runtime.Value {
 	once_Main_multipleKindParamsChainCo.Do(func() {
-		cache_Main_multipleKindParamsChainCo = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		cache_Main_multipleKindParamsChainCo = func() gopurs_runtime.Value {
 			orig := struct {
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)), UnsafePtr: nil}
+		}()
 	})
 	return cache_Main_multipleKindParamsChainCo
 }
@@ -849,12 +849,12 @@ var once_Main_multipleKindParamsChainCo1 sync.Once
 
 func Get_Main_multipleKindParamsChainCo1() gopurs_runtime.Value {
 	once_Main_multipleKindParamsChainCo1.Do(func() {
-		cache_Main_multipleKindParamsChainCo1 = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		cache_Main_multipleKindParamsChainCo1 = func() gopurs_runtime.Value {
 			orig := struct {
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)), UnsafePtr: nil}
+		}()
 	})
 	return cache_Main_multipleKindParamsChainCo1
 }
@@ -864,12 +864,12 @@ var once_Main_multipleKindParamsChainCo2 sync.Once
 
 func Get_Main_multipleKindParamsChainCo2() gopurs_runtime.Value {
 	once_Main_multipleKindParamsChainCo2.Do(func() {
-		cache_Main_multipleKindParamsChainCo2 = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		cache_Main_multipleKindParamsChainCo2 = func() gopurs_runtime.Value {
 			orig := struct {
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)), UnsafePtr: nil}
+		}()
 	})
 	return cache_Main_multipleKindParamsChainCo2
 }
@@ -1161,43 +1161,43 @@ func init() {
 }
 
 func Call_Main_ReservedWord_dollar_Dict(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 	var x_0 struct {
 	} = x_0_loop
 	_ = x_0
-	return uint32(func() gopurs_runtime.Value {
+	return func() gopurs_runtime.Value {
 		orig := x_0
 		_ = orig
 		return gopurs_runtime.RecordDict0()
-	}().IntVal)
+	}()
 }
 
 func Call_Main_OverlappingStillCompiles_dollar_Dict(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 	var x_0 struct {
 	} = x_0_loop
 	_ = x_0
-	return uint32(func() gopurs_runtime.Value {
+	return func() gopurs_runtime.Value {
 		orig := x_0
 		_ = orig
 		return gopurs_runtime.RecordDict0()
-	}().IntVal)
+	}()
 }
 
 func Call_Main_OneTypeParamChain_dollar_Dict(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 	var x_0 struct {
 	} = x_0_loop
 	_ = x_0
-	return uint32(func() gopurs_runtime.Value {
+	return func() gopurs_runtime.Value {
 		orig := x_0
 		_ = orig
 		return gopurs_runtime.RecordDict0()
-	}().IntVal)
+	}()
 }
 
 func Call_Main_OneTypeParamChain_dollar_Dict__2829754120(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 OneTypeParamChain_dollar_Dict__2829754120:
 	for {
 		if false {
@@ -1206,16 +1206,16 @@ OneTypeParamChain_dollar_Dict__2829754120:
 		var x_0 struct {
 		} = x_0_loop
 		_ = x_0
-		return uint32(func() gopurs_runtime.Value {
+		return func() gopurs_runtime.Value {
 			orig := x_0
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)
+		}()
 	}
 }
 
 func Call_Main_OneTypeParamChain_dollar_Dict__591223737(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 OneTypeParamChain_dollar_Dict__591223737:
 	for {
 		if false {
@@ -1224,28 +1224,28 @@ OneTypeParamChain_dollar_Dict__591223737:
 		var x_0 struct {
 		} = x_0_loop
 		_ = x_0
-		return uint32(func() gopurs_runtime.Value {
+		return func() gopurs_runtime.Value {
 			orig := x_0
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)
+		}()
 	}
 }
 
 func Call_Main_OneTypeParam_dollar_Dict(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 	var x_0 struct {
 	} = x_0_loop
 	_ = x_0
-	return uint32(func() gopurs_runtime.Value {
+	return func() gopurs_runtime.Value {
 		orig := x_0
 		_ = orig
 		return gopurs_runtime.RecordDict0()
-	}().IntVal)
+	}()
 }
 
 func Call_Main_OneTypeParam_dollar_Dict__3018055877(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 OneTypeParam_dollar_Dict__3018055877:
 	for {
 		if false {
@@ -1254,40 +1254,40 @@ OneTypeParam_dollar_Dict__3018055877:
 		var x_0 struct {
 		} = x_0_loop
 		_ = x_0
-		return uint32(func() gopurs_runtime.Value {
+		return func() gopurs_runtime.Value {
 			orig := x_0
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)
+		}()
 	}
 }
 
 func Call_Main_NoTypeParams_dollar_Dict(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 	var x_0 struct {
 	} = x_0_loop
 	_ = x_0
-	return uint32(func() gopurs_runtime.Value {
+	return func() gopurs_runtime.Value {
 		orig := x_0
 		_ = orig
 		return gopurs_runtime.RecordDict0()
-	}().IntVal)
+	}()
 }
 
 func Call_Main_MultipleTypeParamsChain_dollar_Dict(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 	var x_0 struct {
 	} = x_0_loop
 	_ = x_0
-	return uint32(func() gopurs_runtime.Value {
+	return func() gopurs_runtime.Value {
 		orig := x_0
 		_ = orig
 		return gopurs_runtime.RecordDict0()
-	}().IntVal)
+	}()
 }
 
 func Call_Main_MultipleTypeParamsChain_dollar_Dict__1805770947(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 MultipleTypeParamsChain_dollar_Dict__1805770947:
 	for {
 		if false {
@@ -1296,16 +1296,16 @@ MultipleTypeParamsChain_dollar_Dict__1805770947:
 		var x_0 struct {
 		} = x_0_loop
 		_ = x_0
-		return uint32(func() gopurs_runtime.Value {
+		return func() gopurs_runtime.Value {
 			orig := x_0
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)
+		}()
 	}
 }
 
 func Call_Main_MultipleTypeParamsChain_dollar_Dict__378537983(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 MultipleTypeParamsChain_dollar_Dict__378537983:
 	for {
 		if false {
@@ -1314,16 +1314,16 @@ MultipleTypeParamsChain_dollar_Dict__378537983:
 		var x_0 struct {
 		} = x_0_loop
 		_ = x_0
-		return uint32(func() gopurs_runtime.Value {
+		return func() gopurs_runtime.Value {
 			orig := x_0
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)
+		}()
 	}
 }
 
 func Call_Main_MultipleTypeParamsChain_dollar_Dict__3594680916(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 MultipleTypeParamsChain_dollar_Dict__3594680916:
 	for {
 		if false {
@@ -1332,16 +1332,16 @@ MultipleTypeParamsChain_dollar_Dict__3594680916:
 		var x_0 struct {
 		} = x_0_loop
 		_ = x_0
-		return uint32(func() gopurs_runtime.Value {
+		return func() gopurs_runtime.Value {
 			orig := x_0
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)
+		}()
 	}
 }
 
 func Call_Main_MultipleTypeParamsChain_dollar_Dict__2431780932(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 MultipleTypeParamsChain_dollar_Dict__2431780932:
 	for {
 		if false {
@@ -1350,16 +1350,16 @@ MultipleTypeParamsChain_dollar_Dict__2431780932:
 		var x_0 struct {
 		} = x_0_loop
 		_ = x_0
-		return uint32(func() gopurs_runtime.Value {
+		return func() gopurs_runtime.Value {
 			orig := x_0
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)
+		}()
 	}
 }
 
 func Call_Main_MultipleTypeParamsChain_dollar_Dict__3275490162(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 MultipleTypeParamsChain_dollar_Dict__3275490162:
 	for {
 		if false {
@@ -1368,28 +1368,28 @@ MultipleTypeParamsChain_dollar_Dict__3275490162:
 		var x_0 struct {
 		} = x_0_loop
 		_ = x_0
-		return uint32(func() gopurs_runtime.Value {
+		return func() gopurs_runtime.Value {
 			orig := x_0
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)
+		}()
 	}
 }
 
 func Call_Main_MultipleTypeParams_dollar_Dict(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 	var x_0 struct {
 	} = x_0_loop
 	_ = x_0
-	return uint32(func() gopurs_runtime.Value {
+	return func() gopurs_runtime.Value {
 		orig := x_0
 		_ = orig
 		return gopurs_runtime.RecordDict0()
-	}().IntVal)
+	}()
 }
 
 func Call_Main_MultipleTypeParams_dollar_Dict__1171758367(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 MultipleTypeParams_dollar_Dict__1171758367:
 	for {
 		if false {
@@ -1398,28 +1398,28 @@ MultipleTypeParams_dollar_Dict__1171758367:
 		var x_0 struct {
 		} = x_0_loop
 		_ = x_0
-		return uint32(func() gopurs_runtime.Value {
+		return func() gopurs_runtime.Value {
 			orig := x_0
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)
+		}()
 	}
 }
 
 func Call_Main_MultipleKindParamsChain_dollar_Dict(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 	var x_0 struct {
 	} = x_0_loop
 	_ = x_0
-	return uint32(func() gopurs_runtime.Value {
+	return func() gopurs_runtime.Value {
 		orig := x_0
 		_ = orig
 		return gopurs_runtime.RecordDict0()
-	}().IntVal)
+	}()
 }
 
 func Call_Main_MultipleKindParamsChain_dollar_Dict__1453658104(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 MultipleKindParamsChain_dollar_Dict__1453658104:
 	for {
 		if false {
@@ -1428,16 +1428,16 @@ MultipleKindParamsChain_dollar_Dict__1453658104:
 		var x_0 struct {
 		} = x_0_loop
 		_ = x_0
-		return uint32(func() gopurs_runtime.Value {
+		return func() gopurs_runtime.Value {
 			orig := x_0
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)
+		}()
 	}
 }
 
 func Call_Main_MultipleKindParamsChain_dollar_Dict__312808059(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 MultipleKindParamsChain_dollar_Dict__312808059:
 	for {
 		if false {
@@ -1446,16 +1446,16 @@ MultipleKindParamsChain_dollar_Dict__312808059:
 		var x_0 struct {
 		} = x_0_loop
 		_ = x_0
-		return uint32(func() gopurs_runtime.Value {
+		return func() gopurs_runtime.Value {
 			orig := x_0
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)
+		}()
 	}
 }
 
 func Call_Main_MultipleKindParamsChain_dollar_Dict__218284922(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 MultipleKindParamsChain_dollar_Dict__218284922:
 	for {
 		if false {
@@ -1464,28 +1464,28 @@ MultipleKindParamsChain_dollar_Dict__218284922:
 		var x_0 struct {
 		} = x_0_loop
 		_ = x_0
-		return uint32(func() gopurs_runtime.Value {
+		return func() gopurs_runtime.Value {
 			orig := x_0
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)
+		}()
 	}
 }
 
 func Call_Main_MultipleKindParams_dollar_Dict(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 	var x_0 struct {
 	} = x_0_loop
 	_ = x_0
-	return uint32(func() gopurs_runtime.Value {
+	return func() gopurs_runtime.Value {
 		orig := x_0
 		_ = orig
 		return gopurs_runtime.RecordDict0()
-	}().IntVal)
+	}()
 }
 
 func Call_Main_MultipleKindParams_dollar_Dict__141469205(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 MultipleKindParams_dollar_Dict__141469205:
 	for {
 		if false {
@@ -1494,11 +1494,11 @@ MultipleKindParams_dollar_Dict__141469205:
 		var x_0 struct {
 		} = x_0_loop
 		_ = x_0
-		return uint32(func() gopurs_runtime.Value {
+		return func() gopurs_runtime.Value {
 			orig := x_0
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)
+		}()
 	}
 }
 

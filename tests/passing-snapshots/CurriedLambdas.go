@@ -74,6 +74,18 @@ func Get_Main_repeatEffects() gopurs_runtime.Value {
 	return cache_Main_repeatEffects
 }
 
+var cache_Main_repeatApply__gopurs_counted_function_0 gopurs_runtime.Value
+var once_Main_repeatApply__gopurs_counted_function_0 sync.Once
+
+func Get_Main_repeatApply__gopurs_counted_function_0() gopurs_runtime.Value {
+	once_Main_repeatApply__gopurs_counted_function_0.Do(func() {
+		cache_Main_repeatApply__gopurs_counted_function_0 = gopurs_runtime.Func3(func(remaining_0_box gopurs_runtime.Value, callback_1_box gopurs_runtime.Value, result_2_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Int(Call_Main_repeatApply__gopurs_counted_function_0(remaining_0_box.IntVal, callback_1_box, result_2_box.IntVal))
+		})
+	})
+	return cache_Main_repeatApply__gopurs_counted_function_0
+}
+
 var cache_Main_repeatApply gopurs_runtime.Value
 var once_Main_repeatApply sync.Once
 
@@ -399,6 +411,39 @@ repeatEffects:
 	}
 }
 
+func Call_Main_repeatApply__gopurs_counted_function_0(remaining_0_loop int64, callback_1_loop gopurs_runtime.Value, result_2_loop int64) int64 {
+repeatApply__gopurs_counted_function_0:
+	for {
+		if false {
+			continue repeatApply__gopurs_counted_function_0
+		}
+		var remaining_0 int64 = remaining_0_loop
+		_ = remaining_0
+		var callback_1 gopurs_runtime.Value = callback_1_loop
+		_ = callback_1
+		var result_2 int64 = result_2_loop
+		_ = result_2
+		var __t0 int64
+		{
+			if (remaining_0) == (int64(0)) {
+				__t0 = result_2
+				goto end_branch_0
+			} else {
+
+			}
+		}
+		{
+			remaining_0_loop = (remaining_0) - (int64(1))
+			callback_1_loop = callback_1
+			result_2_loop = gopurs_runtime.Apply(callback_1, gopurs_runtime.Int(result_2)).IntVal
+			continue repeatApply__gopurs_counted_function_0
+			__t0 = func() int64 { panic("unreachable") }()
+		}
+	end_branch_0:
+		return __t0
+	}
+}
+
 func Call_Main_repeatApply(v_0_loop int64) gopurs_runtime.Value {
 repeatApply:
 	for {
@@ -407,27 +452,42 @@ repeatApply:
 		}
 		var v_0 int64 = v_0_loop
 		_ = v_0
-		var __t1 gopurs_runtime.Value
+		var __t2 gopurs_runtime.Value
 		{
-			if (v_0) == (int64(0)) {
-				__t1 = gopurs_runtime.Func2(func(v1_1 gopurs_runtime.Value, seed_2 gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Int(seed_2.IntVal)
+			if (v_0) >= (int64(0)) {
+				__t2 = gopurs_runtime.Func2(func(step_2 gopurs_runtime.Value, seed_3 gopurs_runtime.Value) gopurs_runtime.Value {
+					return gopurs_runtime.Int(Call_Main_repeatApply__gopurs_counted_function_0(v_0, step_2, seed_3.IntVal))
 				})
-				goto end_branch_1
+				goto end_branch_2
 			} else {
 
 			}
 		}
 		{
-			// TAST (Let): previous__4066693242_1_0 shape=App(Var) bindingType=(Func [(Func [Int] Int), Int] Int)
-			previous__4066693242_1_0 := Call_Main_repeatApply((v_0) - (int64(1)))
-			_ = previous__4066693242_1_0
-			__t1 = gopurs_runtime.Func2(func(step_2 gopurs_runtime.Value, seed_3 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Int(gopurs_runtime.Apply(step_2, gopurs_runtime.Int(gopurs_runtime.Apply2(previous__4066693242_1_0, step_2, gopurs_runtime.Int(seed_3.IntVal)).IntVal)).IntVal)
-			})
+			var __t1 gopurs_runtime.Value
+			{
+				if (v_0) == (int64(0)) {
+					__t1 = gopurs_runtime.Func2(func(v1_1 gopurs_runtime.Value, seed_2 gopurs_runtime.Value) gopurs_runtime.Value {
+						return gopurs_runtime.Int(seed_2.IntVal)
+					})
+					goto end_branch_1
+				} else {
+
+				}
+			}
+			{
+				// TAST (Let): previous__4066693242_1_0 shape=App(Var) bindingType=(Func [(Func [Int] Int), Int] Int)
+				previous__4066693242_1_0 := Call_Main_repeatApply((v_0) - (int64(1)))
+				_ = previous__4066693242_1_0
+				__t1 = gopurs_runtime.Func2(func(step_2 gopurs_runtime.Value, seed_3 gopurs_runtime.Value) gopurs_runtime.Value {
+					return gopurs_runtime.Int(gopurs_runtime.Apply(step_2, gopurs_runtime.Int(gopurs_runtime.Apply2(previous__4066693242_1_0, step_2, gopurs_runtime.Int(seed_3.IntVal)).IntVal)).IntVal)
+				})
+			}
+		end_branch_1:
+			__t2 = __t1
 		}
-	end_branch_1:
-		return __t1
+	end_branch_2:
+		return __t2
 	}
 }
 

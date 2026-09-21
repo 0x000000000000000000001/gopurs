@@ -21,14 +21,7 @@ var once_Main_length sync.Once
 func Get_Main_length() gopurs_runtime.Value {
 	once_Main_length.Do(func() {
 		cache_Main_length = gopurs_runtime.Func(func(v_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Int(Call_Main_length(func() []gopurs_runtime.Value {
-				arr := *(*[]gopurs_runtime.Value)(v_0_box.UnsafePtr)
-				unboxed := make([]gopurs_runtime.Value, len(arr))
-				for i, v := range arr {
-					unboxed[i] = v
-				}
-				return unboxed
-			}()))
+			return gopurs_runtime.Int(Call_Main_length((*(*[]gopurs_runtime.Value)((v_0_box).UnsafePtr))))
 		})
 	})
 	return cache_Main_length

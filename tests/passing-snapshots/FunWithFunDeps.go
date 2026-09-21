@@ -12,7 +12,7 @@ var once_Main_NatPlus_dollar_Dict sync.Once
 func Get_Main_NatPlus_dollar_Dict() gopurs_runtime.Value {
 	once_Main_NatPlus_dollar_Dict.Do(func() {
 		cache_Main_NatPlus_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_NatPlus_dollar_Dict(func() struct {
+			return Call_Main_NatPlus_dollar_Dict(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -20,7 +20,7 @@ func Get_Main_NatPlus_dollar_Dict() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_NatPlus_dollar_Dict
@@ -32,7 +32,7 @@ var once_Main_NatMult_dollar_Dict sync.Once
 func Get_Main_NatMult_dollar_Dict() gopurs_runtime.Value {
 	once_Main_NatMult_dollar_Dict.Do(func() {
 		cache_Main_NatMult_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_NatMult_dollar_Dict(func() struct {
+			return Call_Main_NatMult_dollar_Dict(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -40,7 +40,7 @@ func Get_Main_NatMult_dollar_Dict() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_NatMult_dollar_Dict
@@ -51,12 +51,12 @@ var once_Main_natPlusZ sync.Once
 
 func Get_Main_natPlusZ() gopurs_runtime.Value {
 	once_Main_natPlusZ.Do(func() {
-		cache_Main_natPlusZ = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		cache_Main_natPlusZ = func() gopurs_runtime.Value {
 			orig := struct {
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)), UnsafePtr: nil}
+		}()
 	})
 	return cache_Main_natPlusZ
 }
@@ -78,12 +78,12 @@ var once_Main_natMultZ sync.Once
 
 func Get_Main_natMultZ() gopurs_runtime.Value {
 	once_Main_natMultZ.Do(func() {
-		cache_Main_natMultZ = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		cache_Main_natMultZ = func() gopurs_runtime.Value {
 			orig := struct {
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)), UnsafePtr: nil}
+		}()
 	})
 	return cache_Main_natMultZ
 }
@@ -128,7 +128,7 @@ var once_Main_fflatten sync.Once
 func Get_Main_fflatten() gopurs_runtime.Value {
 	once_Main_fflatten.Do(func() {
 		cache_Main_fflatten = gopurs_runtime.Func(func(_dollar___unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_fflatten(uint32(_dollar___unused_0_box.IntVal))
+			return Call_Main_fflatten(_dollar___unused_0_box)
 		})
 	})
 	return cache_Main_fflatten
@@ -140,7 +140,7 @@ var once_Main_fappend sync.Once
 func Get_Main_fappend() gopurs_runtime.Value {
 	once_Main_fappend.Do(func() {
 		cache_Main_fappend = gopurs_runtime.Func(func(_dollar___unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_fappend(uint32(_dollar___unused_0_box.IntVal))
+			return Call_Main_fappend(_dollar___unused_0_box)
 		})
 	})
 	return cache_Main_fappend
@@ -219,38 +219,38 @@ func init() {
 }
 
 func Call_Main_NatPlus_dollar_Dict(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 	var x_0 struct {
 	} = x_0_loop
 	_ = x_0
-	return uint32(func() gopurs_runtime.Value {
+	return func() gopurs_runtime.Value {
 		orig := x_0
 		_ = orig
 		return gopurs_runtime.RecordDict0()
-	}().IntVal)
+	}()
 }
 
 func Call_Main_NatMult_dollar_Dict(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 	var x_0 struct {
 	} = x_0_loop
 	_ = x_0
-	return uint32(func() gopurs_runtime.Value {
+	return func() gopurs_runtime.Value {
 		orig := x_0
 		_ = orig
 		return gopurs_runtime.RecordDict0()
-	}().IntVal)
+	}()
 }
 
 func Call_Main_natPlusS(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
-	return gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+	return func() gopurs_runtime.Value {
 		orig := struct {
 		}{}
 		_ = orig
 		return gopurs_runtime.RecordDict0()
-	}().IntVal)), UnsafePtr: nil}
+	}()
 }
 
 func Call_Main_natMultS(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___unused_1_loop gopurs_runtime.Value) gopurs_runtime.Value {
@@ -258,12 +258,12 @@ func Call_Main_natMultS(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___
 	_ = _dollar___unused_0
 	var _dollar___unused_1 gopurs_runtime.Value = _dollar___unused_1_loop
 	_ = _dollar___unused_1
-	return gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+	return func() gopurs_runtime.Value {
 		orig := struct {
 		}{}
 		_ = orig
 		return gopurs_runtime.RecordDict0()
-	}().IntVal)), UnsafePtr: nil}
+	}()
 }
 
 func Call_Main_fsingleton(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
@@ -272,14 +272,14 @@ func Call_Main_fsingleton(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	return gopurs_runtime.Apply2(Get_Main_fcons(), x_0, Get_Main_fnil())
 }
 
-func Call_Main_fflatten(_dollar___unused_0_loop uint32) gopurs_runtime.Value {
-	var _dollar___unused_0 uint32 = _dollar___unused_0_loop
+func Call_Main_fflatten(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
 	return Get_Main_fflattenImpl()
 }
 
-func Call_Main_fappend(_dollar___unused_0_loop uint32) gopurs_runtime.Value {
-	var _dollar___unused_0 uint32 = _dollar___unused_0_loop
+func Call_Main_fappend(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
 	return Get_Main_fappendImpl()
 }

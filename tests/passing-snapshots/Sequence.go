@@ -95,32 +95,28 @@ func Get_Main_sequenceList() gopurs_runtime.Value {
 			Functor0_4_3 := gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor[gopurs_runtime.Value]](gopurs_runtime.Apply(gopurs_runtime.RecordGet(gopurs_runtime.Apply(gopurs_runtime.RecordGet(Bind1_2_1, "Apply0"), gopurs_runtime.Value{}), "Functor0"), gopurs_runtime.Value{}))
 			_ = Functor0_4_3
 			return gopurs_runtime.Func(func(v_5 gopurs_runtime.Value) gopurs_runtime.Value {
-				var __t6 gopurs_runtime.Value
+				var __t4 gopurs_runtime.Value
 				{
-					var __t_tag_4 *Constructor_Main_Cons[gopurs_runtime.Value] = gopurs_runtime.CoerceToStruct[Constructor_Main_Cons[gopurs_runtime.Value]](v_5)
-					_ = __t_tag_4
-					if __t_tag_4 == nil {
-						__t6 = gopurs_runtime.Apply(Applicative0_1_0.V1, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_Cons[gopurs_runtime.Value]](gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons[gopurs_runtime.Value])(nil))}))})
-						goto end_branch_6
+					if v_5.Type == 9 && v_5.IntVal == 322902991 && v_5.UnsafePtr == nil {
+						__t4 = gopurs_runtime.Apply(Applicative0_1_0.V1, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_Cons[gopurs_runtime.Value]](gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons[gopurs_runtime.Value])(nil))}))})
+						goto end_branch_4
 					} else {
 
 					}
 				}
 				{
-					var __t_tag_5 *Constructor_Main_Cons[gopurs_runtime.Value] = gopurs_runtime.CoerceToStruct[Constructor_Main_Cons[gopurs_runtime.Value]](v_5)
-					_ = __t_tag_5
-					if __t_tag_5 != nil {
-						__t6 = gopurs_runtime.Apply2(Apply0_3_2.V1, gopurs_runtime.Apply2(Functor0_4_3.V0, Get_Main_Cons(), (*Constructor_Main_Cons[gopurs_runtime.Value])(v_5.UnsafePtr).V0), gopurs_runtime.Apply2(Rebox_Main_916613845_2264881643(gopurs_runtime.CoerceToStruct[Constructor_Main_Sequence[gopurs_runtime.Value]](Get_Main_sequenceList())).V0, gopurs_runtime.Value{Type: 9, IntVal: 778916621, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad[gopurs_runtime.Value]](dictMonad_0))}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons[gopurs_runtime.Value])(v_5.UnsafePtr).V1)}))
-						goto end_branch_6
+					if v_5.Type == 9 && v_5.IntVal == 322902991 && v_5.UnsafePtr != nil {
+						__t4 = gopurs_runtime.Apply2(Apply0_3_2.V1, gopurs_runtime.Apply2(Functor0_4_3.V0, Get_Main_Cons(), (*Constructor_Main_Cons[gopurs_runtime.Value])(v_5.UnsafePtr).V0), gopurs_runtime.Apply2(Rebox_Main_916613845_2264881643(gopurs_runtime.CoerceToStruct[Constructor_Main_Sequence[gopurs_runtime.Value]](Get_Main_sequenceList())).V0, gopurs_runtime.Value{Type: 9, IntVal: 778916621, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad[gopurs_runtime.Value]](dictMonad_0))}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons[gopurs_runtime.Value])(v_5.UnsafePtr).V1)}))
+						goto end_branch_4
 					} else {
 
 					}
 				}
 				{
-					__t6 = func() gopurs_runtime.Value { panic("Failed pattern match") }()
+					__t4 = func() gopurs_runtime.Value { panic("Failed pattern match") }()
 				}
-			end_branch_6:
-				return __t6
+			end_branch_4:
+				return __t4
 			})
 		})})))}
 	})

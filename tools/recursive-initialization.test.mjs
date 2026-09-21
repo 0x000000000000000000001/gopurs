@@ -1,3 +1,4 @@
+import { withReboxFields } from './codegen-metadata.mjs';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
@@ -15,12 +16,12 @@ import * as C from '../output/PureScript.Backend.Optimizer.CoreFn/index.js';
 import { NeutralExpr } from '../output/PureScript.Backend.Optimizer.Semantics/index.js';
 import * as S from '../output/PureScript.Backend.Optimizer.Syntax/index.js';
 
-const metadata = {
+const metadata = withReboxFields({
     elidedCtors: emptySet, ctorTypes: emptyMap, pointerAdtPaths: emptyMap,
     pointerAdtNodes: emptySet, pointerAdtLeaves: emptyMap, enumAdts: emptySet,
     enumCtors: emptySet, globalTypes: emptyMap, globalFunctions: emptyMap,
     classDeclsFields: emptyMap,
-};
+});
 const expr = syntax => new NeutralExpr(syntax);
 const typed = (type, value) => expr(new S.Typed(type, value));
 const local = (name, level = 1) => expr(new S.Local(new Just(name), level));
@@ -70,10 +71,10 @@ test('recursive native values reject early reads and publish complete initialize
                 ]))))]], app(streamField(1)))],
     ];
     const streamFields = [new C.TypeVar('a'), C.Any.value];
-    const code = CodeGen.translate({ ...metadata,
+    const code = CodeGen.translate(withReboxFields({ ...metadata,
         ctorTypes: insert(ordString)('Recursive.Stream')({ vars: ['a'], fields: streamFields })(emptyMap),
         pointerAdtPaths: insert(ordString)('Recursive.Stream')({ ctorName: 'Stream', arity: 1 })(emptyMap),
-    })({
+    }))({
         name: 'Recursive', bindings: fixtures.map(([name, body]) => ({
             recursive: false, bindings: [new Tuple(name, lambda('ignored', 0, body))],
         })),

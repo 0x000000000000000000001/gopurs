@@ -21,14 +21,7 @@ var once_Main_head sync.Once
 func Get_Main_head() gopurs_runtime.Value {
 	once_Main_head.Do(func() {
 		cache_Main_head = gopurs_runtime.Func2(func(_dollar___unused_0_box gopurs_runtime.Value, v_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_head(_dollar___unused_0_box, func() []gopurs_runtime.Value {
-				arr := *(*[]gopurs_runtime.Value)(v_1_box.UnsafePtr)
-				unboxed := make([]gopurs_runtime.Value, len(arr))
-				for i, v := range arr {
-					unboxed[i] = v
-				}
-				return unboxed
-			}())
+			return Call_Main_head(_dollar___unused_0_box, (*(*[]gopurs_runtime.Value)((v_1_box).UnsafePtr)))
 		})
 	})
 	return cache_Main_head

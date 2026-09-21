@@ -12,7 +12,7 @@ var once_Main_Test_dollar_Dict sync.Once
 func Get_Main_Test_dollar_Dict() gopurs_runtime.Value {
 	once_Main_Test_dollar_Dict.Do(func() {
 		cache_Main_Test_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_Test_dollar_Dict(func() struct {
+			return Call_Main_Test_dollar_Dict(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -20,7 +20,7 @@ func Get_Main_Test_dollar_Dict() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_Test_dollar_Dict
@@ -32,7 +32,7 @@ var once_Main_Test_dollar_Dict__3889889207 sync.Once
 func Get_Main_Test_dollar_Dict__3889889207() gopurs_runtime.Value {
 	once_Main_Test_dollar_Dict__3889889207.Do(func() {
 		cache_Main_Test_dollar_Dict__3889889207 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_Test_dollar_Dict__3889889207(func() struct {
+			return Call_Main_Test_dollar_Dict__3889889207(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -40,7 +40,7 @@ func Get_Main_Test_dollar_Dict__3889889207() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_Test_dollar_Dict__3889889207
@@ -51,12 +51,12 @@ var once_Main_testUnit sync.Once
 
 func Get_Main_testUnit() gopurs_runtime.Value {
 	once_Main_testUnit.Do(func() {
-		cache_Main_testUnit = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		cache_Main_testUnit = func() gopurs_runtime.Value {
 			orig := struct {
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)), UnsafePtr: nil}
+		}()
 	})
 	return cache_Main_testUnit
 }
@@ -67,7 +67,7 @@ var once_Main_test sync.Once
 func Get_Main_test() gopurs_runtime.Value {
 	once_Main_test.Do(func() {
 		cache_Main_test = gopurs_runtime.Func2(func(_dollar___unused_0_box gopurs_runtime.Value, a_1_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_test(uint32(_dollar___unused_0_box.IntVal), a_1_box)
+			return Call_Main_test(_dollar___unused_0_box, a_1_box)
 		})
 	})
 	return cache_Main_test
@@ -112,19 +112,19 @@ func init() {
 }
 
 func Call_Main_Test_dollar_Dict(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 	var x_0 struct {
 	} = x_0_loop
 	_ = x_0
-	return uint32(func() gopurs_runtime.Value {
+	return func() gopurs_runtime.Value {
 		orig := x_0
 		_ = orig
 		return gopurs_runtime.RecordDict0()
-	}().IntVal)
+	}()
 }
 
 func Call_Main_Test_dollar_Dict__3889889207(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 Test_dollar_Dict__3889889207:
 	for {
 		if false {
@@ -133,16 +133,16 @@ Test_dollar_Dict__3889889207:
 		var x_0 struct {
 		} = x_0_loop
 		_ = x_0
-		return uint32(func() gopurs_runtime.Value {
+		return func() gopurs_runtime.Value {
 			orig := x_0
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)
+		}()
 	}
 }
 
-func Call_Main_test(_dollar___unused_0_loop uint32, a_1_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var _dollar___unused_0 uint32 = _dollar___unused_0_loop
+func Call_Main_test(_dollar___unused_0_loop gopurs_runtime.Value, a_1_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
 	_ = _dollar___unused_0
 	var a_1 gopurs_runtime.Value = a_1_loop
 	_ = a_1

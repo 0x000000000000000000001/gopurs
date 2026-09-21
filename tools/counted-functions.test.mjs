@@ -1,3 +1,4 @@
+import { withReboxFields } from './codegen-metadata.mjs';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
@@ -38,12 +39,12 @@ const bindings = source => source.bindings.flatMap(group => group.bindings);
 const binding = (source, name) => bindings(source).find(pair => pair.value0 === name).value1;
 const strip = value => value instanceof S.Typed ? strip(value.value1)
     : value instanceof S.TypeApp ? strip(value.value0) : value;
-const metadata = {
+const metadata = withReboxFields({
     elidedCtors: emptySet, ctorTypes: emptyMap, pointerAdtPaths: emptyMap,
     pointerAdtNodes: emptySet, pointerAdtLeaves: emptyMap, enumAdts: emptySet,
     enumCtors: emptySet, globalTypes: emptyMap, globalFunctions: emptyMap,
     classDeclsFields: emptyMap,
-};
+});
 
 function fixture(options = {}) {
     const { name = 'repeat', base = variable('empty'), step = 1, reversed = false,

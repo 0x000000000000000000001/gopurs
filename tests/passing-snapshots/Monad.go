@@ -75,32 +75,28 @@ func Get_Main_maybe() gopurs_runtime.Value {
 				bind       gopurs_runtime.Value
 				go__return gopurs_runtime.Value
 			}{gopurs_runtime.Func2(func(ma_0 gopurs_runtime.Value, f_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				var __t2 *Constructor_Main_Just[gopurs_runtime.Value]
+				var __t0 *Constructor_Main_Just[gopurs_runtime.Value]
 				{
-					var __t_tag_0 *Constructor_Main_Just[gopurs_runtime.Value] = gopurs_runtime.CoerceToStruct[Constructor_Main_Just[gopurs_runtime.Value]](ma_0)
-					_ = __t_tag_0
-					if __t_tag_0 == nil {
-						__t2 = (*Constructor_Main_Just[gopurs_runtime.Value])(nil)
-						goto end_branch_2
+					if ma_0.Type == 9 && ma_0.IntVal == 3271839782 && ma_0.UnsafePtr == nil {
+						__t0 = (*Constructor_Main_Just[gopurs_runtime.Value])(nil)
+						goto end_branch_0
 					} else {
 
 					}
 				}
 				{
-					var __t_tag_1 *Constructor_Main_Just[gopurs_runtime.Value] = gopurs_runtime.CoerceToStruct[Constructor_Main_Just[gopurs_runtime.Value]](ma_0)
-					_ = __t_tag_1
-					if __t_tag_1 != nil {
-						__t2 = gopurs_runtime.CoerceToStruct[Constructor_Main_Just[gopurs_runtime.Value]](gopurs_runtime.Apply(f_1, (*Constructor_Main_Just[gopurs_runtime.Value])(ma_0.UnsafePtr).V0))
-						goto end_branch_2
+					if ma_0.Type == 9 && ma_0.IntVal == 3271839782 && ma_0.UnsafePtr != nil {
+						__t0 = gopurs_runtime.CoerceToStruct[Constructor_Main_Just[gopurs_runtime.Value]](gopurs_runtime.Apply(f_1, (*Constructor_Main_Just[gopurs_runtime.Value])(ma_0.UnsafePtr).V0))
+						goto end_branch_0
 					} else {
 
 					}
 				}
 				{
-					__t2 = func() *Constructor_Main_Just[gopurs_runtime.Value] { panic("Failed pattern match") }()
+					__t0 = func() *Constructor_Main_Just[gopurs_runtime.Value] { panic("Failed pattern match") }()
 				}
-			end_branch_2:
-				return gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer(__t2)}
+			end_branch_0:
+				return gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer(__t0)}
 			}), Get_Main_Just()}
 			_ = orig
 			return gopurs_runtime.RecordDict2("bind", "return", orig.bind, orig.go__return)

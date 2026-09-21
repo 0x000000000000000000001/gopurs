@@ -12,7 +12,7 @@ var once_Main_LtEq_dollar_Dict sync.Once
 func Get_Main_LtEq_dollar_Dict() gopurs_runtime.Value {
 	once_Main_LtEq_dollar_Dict.Do(func() {
 		cache_Main_LtEq_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_LtEq_dollar_Dict(func() struct {
+			return Call_Main_LtEq_dollar_Dict(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -20,7 +20,7 @@ func Get_Main_LtEq_dollar_Dict() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_LtEq_dollar_Dict
@@ -32,7 +32,7 @@ var once_Main_LtEq_dollar_Dict__3764444104 sync.Once
 func Get_Main_LtEq_dollar_Dict__3764444104() gopurs_runtime.Value {
 	once_Main_LtEq_dollar_Dict__3764444104.Do(func() {
 		cache_Main_LtEq_dollar_Dict__3764444104 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_LtEq_dollar_Dict__3764444104(func() struct {
+			return Call_Main_LtEq_dollar_Dict__3764444104(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -40,7 +40,7 @@ func Get_Main_LtEq_dollar_Dict__3764444104() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_LtEq_dollar_Dict__3764444104
@@ -83,12 +83,12 @@ var once_Main_ltEqD8D256 sync.Once
 
 func Get_Main_ltEqD8D256() gopurs_runtime.Value {
 	once_Main_ltEqD8D256.Do(func() {
-		cache_Main_ltEqD8D256 = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(func() gopurs_runtime.Value {
+		cache_Main_ltEqD8D256 = func() gopurs_runtime.Value {
 			orig := struct {
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)), UnsafePtr: nil}
+		}()
 	})
 	return cache_Main_ltEqD8D256
 }
@@ -140,19 +140,19 @@ func init() {
 }
 
 func Call_Main_LtEq_dollar_Dict(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 	var x_0 struct {
 	} = x_0_loop
 	_ = x_0
-	return uint32(func() gopurs_runtime.Value {
+	return func() gopurs_runtime.Value {
 		orig := x_0
 		_ = orig
 		return gopurs_runtime.RecordDict0()
-	}().IntVal)
+	}()
 }
 
 func Call_Main_LtEq_dollar_Dict__3764444104(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 LtEq_dollar_Dict__3764444104:
 	for {
 		if false {
@@ -161,11 +161,11 @@ LtEq_dollar_Dict__3764444104:
 		var x_0 struct {
 		} = x_0_loop
 		_ = x_0
-		return uint32(func() gopurs_runtime.Value {
+		return func() gopurs_runtime.Value {
 			orig := x_0
 			_ = orig
 			return gopurs_runtime.RecordDict0()
-		}().IntVal)
+		}()
 	}
 }
 

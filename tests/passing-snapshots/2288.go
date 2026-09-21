@@ -40,14 +40,7 @@ func Get_Main_length() gopurs_runtime.Value {
 					}
 					{
 						acc_1_loop = (acc_1) + (int64(1))
-						arr_2_loop = func() []gopurs_runtime.Value {
-							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.UncurriedApp3(Get_Data_Array_sliceImpl(), gopurs_runtime.Int(int64(1)), gopurs_runtime.Int(int64(len(arr_2))), gopurs_runtime.Array(arr_2)).UnsafePtr)
-							unboxed := make([]gopurs_runtime.Value, len(arr))
-							for i, v := range arr {
-								unboxed[i] = v
-							}
-							return unboxed
-						}()
+						arr_2_loop = (*(*[]gopurs_runtime.Value)((gopurs_runtime.UncurriedApp3(Get_Data_Array_sliceImpl(), gopurs_runtime.Int(int64(1)), gopurs_runtime.Int(int64(len(arr_2))), gopurs_runtime.Array(arr_2))).UnsafePtr))
 						continue go__1086705844_0_0_0
 						__t2 = func() int64 { panic("unreachable") }()
 					}
@@ -57,14 +50,7 @@ func Get_Main_length() gopurs_runtime.Value {
 			}
 			go__1086705844_0_0_0 = gopurs_runtime.Func(func(acc_1_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(arr_2_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Int(Call_local_Main_go__1086705844_0_0_0(acc_1_loop_val.IntVal, func() []gopurs_runtime.Value {
-						arr := *(*[]gopurs_runtime.Value)(arr_2_loop_val.UnsafePtr)
-						unboxed := make([]gopurs_runtime.Value, len(arr))
-						for i, v := range arr {
-							unboxed[i] = v
-						}
-						return unboxed
-					}()))
+					return gopurs_runtime.Int(Call_local_Main_go__1086705844_0_0_0(acc_1_loop_val.IntVal, (*(*[]gopurs_runtime.Value)((arr_2_loop_val).UnsafePtr))))
 				})
 			})
 			Call_local_Main_go__go_0_1_1 = func(acc_1_loop int64, arr_2_loop []gopurs_runtime.Value) int64 {
@@ -87,14 +73,7 @@ func Get_Main_length() gopurs_runtime.Value {
 						}
 					}
 					{
-						__t3 = Call_local_Main_go__1086705844_0_0_0((acc_1)+(int64(1)), func() []gopurs_runtime.Value {
-							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.UncurriedApp3(Get_Data_Array_sliceImpl(), gopurs_runtime.Int(int64(1)), gopurs_runtime.Int(int64(len(arr_2))), gopurs_runtime.Array(arr_2)).UnsafePtr)
-							unboxed := make([]gopurs_runtime.Value, len(arr))
-							for i, v := range arr {
-								unboxed[i] = v
-							}
-							return unboxed
-						}())
+						__t3 = Call_local_Main_go__1086705844_0_0_0((acc_1)+(int64(1)), (*(*[]gopurs_runtime.Value)((gopurs_runtime.UncurriedApp3(Get_Data_Array_sliceImpl(), gopurs_runtime.Int(int64(1)), gopurs_runtime.Int(int64(len(arr_2))), gopurs_runtime.Array(arr_2))).UnsafePtr)))
 					}
 				end_branch_3:
 					return __t3
@@ -102,14 +81,7 @@ func Get_Main_length() gopurs_runtime.Value {
 			}
 			go__go_0_1_1 = gopurs_runtime.Func(func(acc_1_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(arr_2_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Int(Call_local_Main_go__go_0_1_1(acc_1_loop_val.IntVal, func() []gopurs_runtime.Value {
-						arr := *(*[]gopurs_runtime.Value)(arr_2_loop_val.UnsafePtr)
-						unboxed := make([]gopurs_runtime.Value, len(arr))
-						for i, v := range arr {
-							unboxed[i] = v
-						}
-						return unboxed
-					}()))
+					return gopurs_runtime.Int(Call_local_Main_go__go_0_1_1(acc_1_loop_val.IntVal, (*(*[]gopurs_runtime.Value)((arr_2_loop_val).UnsafePtr))))
 				})
 			})
 			return gopurs_runtime.Apply(go__1086705844_0_0_0, gopurs_runtime.Int(int64(0)))

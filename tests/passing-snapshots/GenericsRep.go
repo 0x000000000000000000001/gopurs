@@ -125,55 +125,51 @@ var once_Main_genericY sync.Once
 func Get_Main_genericY() gopurs_runtime.Value {
 	once_Main_genericY.Do(func() {
 		cache_Main_genericY = gopurs_runtime.Value{Type: 9, IntVal: 1921946594, UnsafePtr: unsafe.Pointer(Rebox_Main_2045408645_2818661616((&Constructor_Data_Generic_Rep_Generic[*Constructor_Main_Z[gopurs_runtime.Value], gopurs_runtime.Value]{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			var __t2 gopurs_runtime.Value
+			var __t0 gopurs_runtime.Value
 			{
-				var __t_tag_0 *Constructor_Main_Z[gopurs_runtime.Value] = gopurs_runtime.CoerceToStruct[Constructor_Main_Z[gopurs_runtime.Value]](x_0)
-				_ = __t_tag_0
-				if __t_tag_0 == nil {
-					__t2 = gopurs_runtime.Value{Type: 9, IntVal: 3478632216, UnsafePtr: unsafe.Pointer(Rebox_Main_4264667741_1323331594((&Constructor_Data_Generic_Rep_Inl[uint32, *Constructor_Data_Generic_Rep_Product[gopurs_runtime.Value, *Constructor_Main_Z[gopurs_runtime.Value]]]{1, 1454898258})))}
-					goto end_branch_2
+				if x_0.Type == 9 && x_0.IntVal == 1714575428 && x_0.UnsafePtr == nil {
+					__t0 = gopurs_runtime.Value{Type: 9, IntVal: 3478632216, UnsafePtr: unsafe.Pointer(Rebox_Main_4264667741_1323331594((&Constructor_Data_Generic_Rep_Inl[uint32, *Constructor_Data_Generic_Rep_Product[gopurs_runtime.Value, *Constructor_Main_Z[gopurs_runtime.Value]]]{1, 1454898258})))}
+					goto end_branch_0
 				} else {
 
 				}
 			}
 			{
-				var __t_tag_1 *Constructor_Main_Z[gopurs_runtime.Value] = gopurs_runtime.CoerceToStruct[Constructor_Main_Z[gopurs_runtime.Value]](x_0)
-				_ = __t_tag_1
-				if __t_tag_1 != nil {
-					__t2 = gopurs_runtime.Value{Type: 9, IntVal: 492034566, UnsafePtr: unsafe.Pointer(Rebox_Main_1784434947_2687169876((&Constructor_Data_Generic_Rep_Inr[uint32, *Constructor_Data_Generic_Rep_Product[gopurs_runtime.Value, *Constructor_Main_Z[gopurs_runtime.Value]]]{1, Rebox_Main_372708202_966244383((&Constructor_Data_Generic_Rep_Product[gopurs_runtime.Value, gopurs_runtime.Value]{1, (*Constructor_Main_Z[gopurs_runtime.Value])(x_0.UnsafePtr).V0, gopurs_runtime.Value{Type: 9, IntVal: 1714575428, UnsafePtr: unsafe.Pointer((*Constructor_Main_Z[gopurs_runtime.Value])(x_0.UnsafePtr).V1)}}))})))}
-					goto end_branch_2
+				if x_0.Type == 9 && x_0.IntVal == 1714575428 && x_0.UnsafePtr != nil {
+					__t0 = gopurs_runtime.Value{Type: 9, IntVal: 492034566, UnsafePtr: unsafe.Pointer(Rebox_Main_1784434947_2687169876((&Constructor_Data_Generic_Rep_Inr[uint32, *Constructor_Data_Generic_Rep_Product[gopurs_runtime.Value, *Constructor_Main_Z[gopurs_runtime.Value]]]{1, Rebox_Main_372708202_966244383((&Constructor_Data_Generic_Rep_Product[gopurs_runtime.Value, gopurs_runtime.Value]{1, (*Constructor_Main_Z[gopurs_runtime.Value])(x_0.UnsafePtr).V0, gopurs_runtime.Value{Type: 9, IntVal: 1714575428, UnsafePtr: unsafe.Pointer((*Constructor_Main_Z[gopurs_runtime.Value])(x_0.UnsafePtr).V1)}}))})))}
+					goto end_branch_0
 				} else {
 
 				}
 			}
 			{
-				__t2 = func() gopurs_runtime.Value { panic("Failed pattern match") }()
+				__t0 = func() gopurs_runtime.Value { panic("Failed pattern match") }()
 			}
-		end_branch_2:
-			return __t2
+		end_branch_0:
+			return __t0
 		}), gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			var __t3 *Constructor_Main_Z[gopurs_runtime.Value]
+			var __t1 *Constructor_Main_Z[gopurs_runtime.Value]
 			{
 				if x_0.Type == 9 && x_0.IntVal == 3478632216 {
-					__t3 = gopurs_runtime.CoerceToStruct[Constructor_Main_Z[gopurs_runtime.Value]](gopurs_runtime.Value{Type: 9, IntVal: 1714575428, UnsafePtr: unsafe.Pointer((*Constructor_Main_Z[gopurs_runtime.Value])(nil))})
-					goto end_branch_3
+					__t1 = gopurs_runtime.CoerceToStruct[Constructor_Main_Z[gopurs_runtime.Value]](gopurs_runtime.Value{Type: 9, IntVal: 1714575428, UnsafePtr: unsafe.Pointer((*Constructor_Main_Z[gopurs_runtime.Value])(nil))})
+					goto end_branch_1
 				} else {
 
 				}
 			}
 			{
 				if x_0.Type == 9 && x_0.IntVal == 492034566 {
-					__t3 = (&Constructor_Main_Z[gopurs_runtime.Value]{1, (*Constructor_Data_Generic_Rep_Product[gopurs_runtime.Value, gopurs_runtime.Value])((*Constructor_Data_Generic_Rep_Inr[gopurs_runtime.Value, gopurs_runtime.Value])(x_0.UnsafePtr).V0.UnsafePtr).V0, gopurs_runtime.CoerceToStruct[Constructor_Main_Z[gopurs_runtime.Value]]((*Constructor_Data_Generic_Rep_Product[gopurs_runtime.Value, gopurs_runtime.Value])((*Constructor_Data_Generic_Rep_Inr[gopurs_runtime.Value, gopurs_runtime.Value])(x_0.UnsafePtr).V0.UnsafePtr).V1)})
-					goto end_branch_3
+					__t1 = (&Constructor_Main_Z[gopurs_runtime.Value]{1, (*Constructor_Data_Generic_Rep_Product[gopurs_runtime.Value, gopurs_runtime.Value])((*Constructor_Data_Generic_Rep_Inr[gopurs_runtime.Value, gopurs_runtime.Value])(x_0.UnsafePtr).V0.UnsafePtr).V0, gopurs_runtime.CoerceToStruct[Constructor_Main_Z[gopurs_runtime.Value]]((*Constructor_Data_Generic_Rep_Product[gopurs_runtime.Value, gopurs_runtime.Value])((*Constructor_Data_Generic_Rep_Inr[gopurs_runtime.Value, gopurs_runtime.Value])(x_0.UnsafePtr).V0.UnsafePtr).V1)})
+					goto end_branch_1
 				} else {
 
 				}
 			}
 			{
-				__t3 = func() *Constructor_Main_Z[gopurs_runtime.Value] { panic("Failed pattern match") }()
+				__t1 = func() *Constructor_Main_Z[gopurs_runtime.Value] { panic("Failed pattern match") }()
 			}
-		end_branch_3:
-			return gopurs_runtime.Value{Type: 9, IntVal: 1714575428, UnsafePtr: unsafe.Pointer(__t3)}
+		end_branch_1:
+			return gopurs_runtime.Value{Type: 9, IntVal: 1714575428, UnsafePtr: unsafe.Pointer(__t1)}
 		})})))}
 	})
 	return cache_Main_genericY
@@ -502,57 +498,49 @@ eqY:
 		genericEqProduct_1_0 := gopurs_runtime.Apply(Get_Data_Eq_Generic_genericEqProduct(), Call_Data_Eq_Generic_genericEqArgument(dictEq_0))
 		_ = genericEqProduct_1_0
 		return gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_3989972411_3790796878((&Constructor_Data_Eq_Eq[*Constructor_Main_Z[gopurs_runtime.Value]]{1, gopurs_runtime.Func2(func(xs_2 gopurs_runtime.Value, ys_3 gopurs_runtime.Value) gopurs_runtime.Value {
-			var __t3 gopurs_runtime.Value
+			var __t1 gopurs_runtime.Value
 			{
-				var __t_tag_1 *Constructor_Main_Z[gopurs_runtime.Value] = gopurs_runtime.CoerceToStruct[Constructor_Main_Z[gopurs_runtime.Value]](xs_2)
-				_ = __t_tag_1
-				if __t_tag_1 == nil {
-					__t3 = gopurs_runtime.Value{Type: 9, IntVal: 3478632216, UnsafePtr: unsafe.Pointer(Rebox_Main_4264667741_1323331594((&Constructor_Data_Generic_Rep_Inl[uint32, *Constructor_Data_Generic_Rep_Product[gopurs_runtime.Value, *Constructor_Main_Z[gopurs_runtime.Value]]]{1, 1454898258})))}
-					goto end_branch_3
+				if xs_2.Type == 9 && xs_2.IntVal == 1714575428 && xs_2.UnsafePtr == nil {
+					__t1 = gopurs_runtime.Value{Type: 9, IntVal: 3478632216, UnsafePtr: unsafe.Pointer(Rebox_Main_4264667741_1323331594((&Constructor_Data_Generic_Rep_Inl[uint32, *Constructor_Data_Generic_Rep_Product[gopurs_runtime.Value, *Constructor_Main_Z[gopurs_runtime.Value]]]{1, 1454898258})))}
+					goto end_branch_1
 				} else {
 
 				}
 			}
 			{
-				var __t_tag_2 *Constructor_Main_Z[gopurs_runtime.Value] = gopurs_runtime.CoerceToStruct[Constructor_Main_Z[gopurs_runtime.Value]](xs_2)
-				_ = __t_tag_2
-				if __t_tag_2 != nil {
-					__t3 = gopurs_runtime.Value{Type: 9, IntVal: 492034566, UnsafePtr: unsafe.Pointer(Rebox_Main_1784434947_2687169876((&Constructor_Data_Generic_Rep_Inr[uint32, *Constructor_Data_Generic_Rep_Product[gopurs_runtime.Value, *Constructor_Main_Z[gopurs_runtime.Value]]]{1, Rebox_Main_372708202_966244383((&Constructor_Data_Generic_Rep_Product[gopurs_runtime.Value, gopurs_runtime.Value]{1, (*Constructor_Main_Z[gopurs_runtime.Value])(xs_2.UnsafePtr).V0, gopurs_runtime.Value{Type: 9, IntVal: 1714575428, UnsafePtr: unsafe.Pointer((*Constructor_Main_Z[gopurs_runtime.Value])(xs_2.UnsafePtr).V1)}}))})))}
-					goto end_branch_3
+				if xs_2.Type == 9 && xs_2.IntVal == 1714575428 && xs_2.UnsafePtr != nil {
+					__t1 = gopurs_runtime.Value{Type: 9, IntVal: 492034566, UnsafePtr: unsafe.Pointer(Rebox_Main_1784434947_2687169876((&Constructor_Data_Generic_Rep_Inr[uint32, *Constructor_Data_Generic_Rep_Product[gopurs_runtime.Value, *Constructor_Main_Z[gopurs_runtime.Value]]]{1, Rebox_Main_372708202_966244383((&Constructor_Data_Generic_Rep_Product[gopurs_runtime.Value, gopurs_runtime.Value]{1, (*Constructor_Main_Z[gopurs_runtime.Value])(xs_2.UnsafePtr).V0, gopurs_runtime.Value{Type: 9, IntVal: 1714575428, UnsafePtr: unsafe.Pointer((*Constructor_Main_Z[gopurs_runtime.Value])(xs_2.UnsafePtr).V1)}}))})))}
+					goto end_branch_1
 				} else {
 
 				}
 			}
 			{
-				__t3 = func() gopurs_runtime.Value { panic("Failed pattern match") }()
+				__t1 = func() gopurs_runtime.Value { panic("Failed pattern match") }()
 			}
-		end_branch_3:
-			var __t6 gopurs_runtime.Value
+		end_branch_1:
+			var __t2 gopurs_runtime.Value
 			{
-				var __t_tag_4 *Constructor_Main_Z[gopurs_runtime.Value] = gopurs_runtime.CoerceToStruct[Constructor_Main_Z[gopurs_runtime.Value]](ys_3)
-				_ = __t_tag_4
-				if __t_tag_4 == nil {
-					__t6 = gopurs_runtime.Value{Type: 9, IntVal: 3478632216, UnsafePtr: unsafe.Pointer(Rebox_Main_4264667741_1323331594((&Constructor_Data_Generic_Rep_Inl[uint32, *Constructor_Data_Generic_Rep_Product[gopurs_runtime.Value, *Constructor_Main_Z[gopurs_runtime.Value]]]{1, 1454898258})))}
-					goto end_branch_6
+				if ys_3.Type == 9 && ys_3.IntVal == 1714575428 && ys_3.UnsafePtr == nil {
+					__t2 = gopurs_runtime.Value{Type: 9, IntVal: 3478632216, UnsafePtr: unsafe.Pointer(Rebox_Main_4264667741_1323331594((&Constructor_Data_Generic_Rep_Inl[uint32, *Constructor_Data_Generic_Rep_Product[gopurs_runtime.Value, *Constructor_Main_Z[gopurs_runtime.Value]]]{1, 1454898258})))}
+					goto end_branch_2
 				} else {
 
 				}
 			}
 			{
-				var __t_tag_5 *Constructor_Main_Z[gopurs_runtime.Value] = gopurs_runtime.CoerceToStruct[Constructor_Main_Z[gopurs_runtime.Value]](ys_3)
-				_ = __t_tag_5
-				if __t_tag_5 != nil {
-					__t6 = gopurs_runtime.Value{Type: 9, IntVal: 492034566, UnsafePtr: unsafe.Pointer(Rebox_Main_1784434947_2687169876((&Constructor_Data_Generic_Rep_Inr[uint32, *Constructor_Data_Generic_Rep_Product[gopurs_runtime.Value, *Constructor_Main_Z[gopurs_runtime.Value]]]{1, Rebox_Main_372708202_966244383((&Constructor_Data_Generic_Rep_Product[gopurs_runtime.Value, gopurs_runtime.Value]{1, (*Constructor_Main_Z[gopurs_runtime.Value])(ys_3.UnsafePtr).V0, gopurs_runtime.Value{Type: 9, IntVal: 1714575428, UnsafePtr: unsafe.Pointer((*Constructor_Main_Z[gopurs_runtime.Value])(ys_3.UnsafePtr).V1)}}))})))}
-					goto end_branch_6
+				if ys_3.Type == 9 && ys_3.IntVal == 1714575428 && ys_3.UnsafePtr != nil {
+					__t2 = gopurs_runtime.Value{Type: 9, IntVal: 492034566, UnsafePtr: unsafe.Pointer(Rebox_Main_1784434947_2687169876((&Constructor_Data_Generic_Rep_Inr[uint32, *Constructor_Data_Generic_Rep_Product[gopurs_runtime.Value, *Constructor_Main_Z[gopurs_runtime.Value]]]{1, Rebox_Main_372708202_966244383((&Constructor_Data_Generic_Rep_Product[gopurs_runtime.Value, gopurs_runtime.Value]{1, (*Constructor_Main_Z[gopurs_runtime.Value])(ys_3.UnsafePtr).V0, gopurs_runtime.Value{Type: 9, IntVal: 1714575428, UnsafePtr: unsafe.Pointer((*Constructor_Main_Z[gopurs_runtime.Value])(ys_3.UnsafePtr).V1)}}))})))}
+					goto end_branch_2
 				} else {
 
 				}
 			}
 			{
-				__t6 = func() gopurs_runtime.Value { panic("Failed pattern match") }()
+				__t2 = func() gopurs_runtime.Value { panic("Failed pattern match") }()
 			}
-		end_branch_6:
-			return gopurs_runtime.Bool((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(Call_Data_Eq_Generic_genericEqSum(Call_Data_Eq_Generic_genericEqConstructor(gopurs_runtime.Value{Type: 9, IntVal: 106035173, UnsafePtr: unsafe.Pointer(Rebox_Main_4167548092_1498596945(Rebox_Main_1498596945_4167548092(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Generic_GenericEq[gopurs_runtime.Value]](Get_Data_Eq_Generic_genericEqNoArguments()))))}), Call_Data_Eq_Generic_genericEqConstructor(gopurs_runtime.Apply(genericEqProduct_1_0, Call_Data_Eq_Generic_genericEqArgument(Call_Main_eqY(dictEq_0))))), "genericEq'"), __t3, __t6).IntVal) != (0))
+		end_branch_2:
+			return gopurs_runtime.Bool((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(Call_Data_Eq_Generic_genericEqSum(Call_Data_Eq_Generic_genericEqConstructor(gopurs_runtime.Value{Type: 9, IntVal: 106035173, UnsafePtr: unsafe.Pointer(Rebox_Main_4167548092_1498596945(Rebox_Main_1498596945_4167548092(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Generic_GenericEq[gopurs_runtime.Value]](Get_Data_Eq_Generic_genericEqNoArguments()))))}), Call_Data_Eq_Generic_genericEqConstructor(gopurs_runtime.Apply(genericEqProduct_1_0, Call_Data_Eq_Generic_genericEqArgument(Call_Main_eqY(dictEq_0))))), "genericEq'"), __t1, __t2).IntVal) != (0))
 		})})))}
 	}
 }

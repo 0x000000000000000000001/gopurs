@@ -182,7 +182,7 @@ var once_Main_Unary_dollar_Dict sync.Once
 func Get_Main_Unary_dollar_Dict() gopurs_runtime.Value {
 	once_Main_Unary_dollar_Dict.Do(func() {
 		cache_Main_Unary_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(Call_Main_Unary_dollar_Dict(func() struct {
+			return Call_Main_Unary_dollar_Dict(func() struct {
 			} {
 				orig := x_0_box
 				_ = orig
@@ -190,7 +190,7 @@ func Get_Main_Unary_dollar_Dict() gopurs_runtime.Value {
 				}{}
 
 				return clone
-			}())), UnsafePtr: nil}
+			}())
 		})
 	})
 	return cache_Main_Unary_dollar_Dict
@@ -567,21 +567,7 @@ func Get_Main_Arr1() gopurs_runtime.Value {
 	once_Main_Arr1.Do(func() {
 		cache_Main_Arr1 = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(value1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Value{Type: 9, IntVal: 2324537070, UnsafePtr: unsafe.Pointer((&Constructor_Main_Arr1[gopurs_runtime.Value, gopurs_runtime.Value]{1, func() []gopurs_runtime.Value {
-					arr := *(*[]gopurs_runtime.Value)(value0.UnsafePtr)
-					unboxed := make([]gopurs_runtime.Value, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v
-					}
-					return unboxed
-				}(), func() []gopurs_runtime.Value {
-					arr := *(*[]gopurs_runtime.Value)(value1.UnsafePtr)
-					unboxed := make([]gopurs_runtime.Value, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v
-					}
-					return unboxed
-				}()}))}
+				return gopurs_runtime.Value{Type: 9, IntVal: 2324537070, UnsafePtr: unsafe.Pointer((&Constructor_Main_Arr1[gopurs_runtime.Value, gopurs_runtime.Value]{1, (*(*[]gopurs_runtime.Value)((value0).UnsafePtr)), (*(*[]gopurs_runtime.Value)((value1).UnsafePtr))}))}
 			})
 		})
 	})
@@ -1358,15 +1344,15 @@ func init() {
 }
 
 func Call_Main_Unary_dollar_Dict(x_0_loop struct {
-}) uint32 {
+}) gopurs_runtime.Value {
 	var x_0 struct {
 	} = x_0_loop
 	_ = x_0
-	return uint32(func() gopurs_runtime.Value {
+	return func() gopurs_runtime.Value {
 		orig := x_0
 		_ = orig
 		return gopurs_runtime.RecordDict0()
-	}().IntVal)
+	}()
 }
 
 func Call_Main_RecursiveRepresentational(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {

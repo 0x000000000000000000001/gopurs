@@ -1,3 +1,4 @@
+import { withReboxFields } from './codegen-metadata.mjs';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
@@ -14,12 +15,12 @@ import * as C from '../output/PureScript.Backend.Optimizer.CoreFn/index.js';
 import { NeutralExpr } from '../output/PureScript.Backend.Optimizer.Semantics/index.js';
 import * as S from '../output/PureScript.Backend.Optimizer.Syntax/index.js';
 
-const metadata = {
+const metadata = withReboxFields({
     elidedCtors: emptySet, ctorTypes: emptyMap, pointerAdtPaths: emptyMap,
     pointerAdtNodes: emptySet, pointerAdtLeaves: emptyMap, enumAdts: emptySet,
     enumCtors: emptySet, globalTypes: emptyMap, globalFunctions: emptyMap,
     classDeclsFields: emptyMap,
-};
+});
 const int = C.Int.value;
 const unary = new C.Func([int], int);
 const binary = new C.Func([int, int], int);

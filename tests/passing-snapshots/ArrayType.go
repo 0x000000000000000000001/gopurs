@@ -34,14 +34,7 @@ var once_Main_pointedArray sync.Once
 func Get_Main_pointedArray() gopurs_runtime.Value {
 	once_Main_pointedArray.Do(func() {
 		cache_Main_pointedArray = gopurs_runtime.Value{Type: 9, IntVal: 4236620371, UnsafePtr: unsafe.Pointer((&Constructor_Main_Pointed[gopurs_runtime.Value]{1, gopurs_runtime.Func(func(a_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Array(func() []gopurs_runtime.Value {
-				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array([]gopurs_runtime.Value{a_0}).UnsafePtr)
-				unboxed := make([]gopurs_runtime.Value, len(arr))
-				for i, v := range arr {
-					unboxed[i] = v
-				}
-				return unboxed
-			}())
+			return gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.Array([]gopurs_runtime.Value{a_0})).UnsafePtr)))
 		})}))}
 	})
 	return cache_Main_pointedArray

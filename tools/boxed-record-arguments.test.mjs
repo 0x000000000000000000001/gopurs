@@ -1,3 +1,4 @@
+import { withReboxFields } from './codegen-metadata.mjs';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
@@ -15,12 +16,12 @@ import { NeutralExpr } from '../output/PureScript.Backend.Optimizer.Semantics/in
 import * as S from '../output/PureScript.Backend.Optimizer.Syntax/index.js';
 
 test('a dynamic consumer receives the original boxed record without rebuilding its layout', t => {
-    const metadata = {
+    const metadata = withReboxFields({
         elidedCtors: emptySet, ctorTypes: emptyMap, pointerAdtPaths: emptyMap,
         pointerAdtNodes: emptySet, pointerAdtLeaves: emptyMap, enumAdts: emptySet,
         enumCtors: emptySet, globalTypes: emptyMap, globalFunctions: emptyMap,
         classDeclsFields: emptyMap,
-    };
+    });
     const expr = syntax => new NeutralExpr(syntax);
     const local = (name, level) => expr(new S.Local(new Just(name), level));
     const entry = new C.Record(new C.Row([

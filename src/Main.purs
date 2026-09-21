@@ -43,6 +43,7 @@ import PureScript.Backend.Optimizer.FfiSupport (findFfiFile)
 import Gopurs.FfiSupport (prepareFfi)
 import Gopurs.GlobalTypes (buildGlobalTypes)
 import Gopurs.Monomorphization (monomorphizeModules)
+import Gopurs.ReboxMetadata (buildReboxFieldIndex)
 import PureScript.Backend.Optimizer.App (coreFnModulesFromOutput, parseCLIArgs, loadDirectives)
 import PureScript.Backend.Optimizer.Semantics (InlineDirectiveMap)
 
@@ -67,6 +68,7 @@ loadAndPrepareModules args = do
     let globalTypes = buildGlobalTypes (Array.fromFoldable finalModules)
     let
       classDeclsFields = buildClassFields (Array.fromFoldable finalModules)
+      reboxFields = buildReboxFieldIndex ctorTypes classDeclsFields
       finalModulesWithClassDecls = map addClassDataDeclarations finalModules
 
     let monomorphizedModules = monomorphizeModules globalTypes finalModulesWithClassDecls
@@ -84,6 +86,7 @@ loadAndPrepareModules args = do
          , globalTypes
          , globalFunctions: Map.empty
          , classDeclsFields
+         , reboxFields
          , monomorphizedModules
          , pointerAdtPaths
          , pointerAdtNodes
@@ -156,6 +159,7 @@ main = launchAff_ $ Metrics.measure "backend total" \_ -> do
       , globalTypes: prepared.globalTypes
       , globalFunctions: prepared.globalFunctions
       , classDeclsFields: prepared.classDeclsFields
+      , reboxFields: prepared.reboxFields
       }
 
   let

@@ -170,21 +170,14 @@ func Get_Main_checkEffects() gopurs_runtime.Value {
 				return gopurs_runtime.Apply2(Get_Effect_Ref_modify_(), gopurs_runtime.Func(func(v_3 gopurs_runtime.Value) gopurs_runtime.Value {
 					return func() gopurs_runtime.Value {
 						arr := func() []string {
-							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array(func() []gopurs_runtime.Value {
-								arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), v_3, func() gopurs_runtime.Value {
-									arr := []string{("consume:") + (gopurs_runtime.Apply(Get_Main_describeEntryMap(), entry_2).StrVal())}
-									boxed := make([]gopurs_runtime.Value, len(arr))
-									for i, v := range arr {
-										boxed[i] = gopurs_runtime.Str(v)
-									}
-									return gopurs_runtime.Array(boxed)
-								}()).UnsafePtr)
-								unboxed := make([]gopurs_runtime.Value, len(arr))
+							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), v_3, func() gopurs_runtime.Value {
+								arr := []string{("consume:") + (gopurs_runtime.Apply(Get_Main_describeEntryMap(), entry_2).StrVal())}
+								boxed := make([]gopurs_runtime.Value, len(arr))
 								for i, v := range arr {
-									unboxed[i] = v
+									boxed[i] = gopurs_runtime.Str(v)
 								}
-								return unboxed
-							}()).UnsafePtr)
+								return gopurs_runtime.Array(boxed)
+							}())).UnsafePtr))).UnsafePtr)
 							unboxed := make([]string, len(arr))
 							for i, v := range arr {
 								unboxed[i] = v.StrVal()
@@ -205,21 +198,14 @@ func Get_Main_checkEffects() gopurs_runtime.Value {
 			return gopurs_runtime.Apply(gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply2(Get_Effect_Ref_modify_(), gopurs_runtime.Func(func(v_4 gopurs_runtime.Value) gopurs_runtime.Value {
 				return func() gopurs_runtime.Value {
 					arr := func() []string {
-						arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array(func() []gopurs_runtime.Value {
-							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), v_4, func() gopurs_runtime.Value {
-								arr := []string{"before"}
-								boxed := make([]gopurs_runtime.Value, len(arr))
-								for i, v := range arr {
-									boxed[i] = gopurs_runtime.Str(v)
-								}
-								return gopurs_runtime.Array(boxed)
-							}()).UnsafePtr)
-							unboxed := make([]gopurs_runtime.Value, len(arr))
+						arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), v_4, func() gopurs_runtime.Value {
+							arr := []string{"before"}
+							boxed := make([]gopurs_runtime.Value, len(arr))
 							for i, v := range arr {
-								unboxed[i] = v
+								boxed[i] = gopurs_runtime.Str(v)
 							}
-							return unboxed
-						}()).UnsafePtr)
+							return gopurs_runtime.Array(boxed)
+						}())).UnsafePtr))).UnsafePtr)
 						unboxed := make([]string, len(arr))
 						for i, v := range arr {
 							unboxed[i] = v.StrVal()
@@ -243,21 +229,14 @@ func Get_Main_checkEffects() gopurs_runtime.Value {
 						return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply2(Get_Effect_Ref_modify_(), gopurs_runtime.Func(func(v_8 gopurs_runtime.Value) gopurs_runtime.Value {
 							return func() gopurs_runtime.Value {
 								arr := func() []string {
-									arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array(func() []gopurs_runtime.Value {
-										arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), v_8, func() gopurs_runtime.Value {
-											arr := []string{"after"}
-											boxed := make([]gopurs_runtime.Value, len(arr))
-											for i, v := range arr {
-												boxed[i] = gopurs_runtime.Str(v)
-											}
-											return gopurs_runtime.Array(boxed)
-										}()).UnsafePtr)
-										unboxed := make([]gopurs_runtime.Value, len(arr))
+									arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), v_8, func() gopurs_runtime.Value {
+										arr := []string{"after"}
+										boxed := make([]gopurs_runtime.Value, len(arr))
 										for i, v := range arr {
-											unboxed[i] = v
+											boxed[i] = gopurs_runtime.Str(v)
 										}
-										return unboxed
-									}()).UnsafePtr)
+										return gopurs_runtime.Array(boxed)
+									}())).UnsafePtr))).UnsafePtr)
 									unboxed := make([]string, len(arr))
 									for i, v := range arr {
 										unboxed[i] = v.StrVal()
@@ -682,21 +661,14 @@ func Call_Main_produceEntry(trace_0_loop gopurs_runtime.Value) gopurs_runtime.Va
 	return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply2(Get_Effect_Ref_modify_(), gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
 		return func() gopurs_runtime.Value {
 			arr := func() []string {
-				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array(func() []gopurs_runtime.Value {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), v_1, func() gopurs_runtime.Value {
-						arr := []string{"produce"}
-						boxed := make([]gopurs_runtime.Value, len(arr))
-						for i, v := range arr {
-							boxed[i] = gopurs_runtime.Str(v)
-						}
-						return gopurs_runtime.Array(boxed)
-					}()).UnsafePtr)
-					unboxed := make([]gopurs_runtime.Value, len(arr))
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), v_1, func() gopurs_runtime.Value {
+					arr := []string{"produce"}
+					boxed := make([]gopurs_runtime.Value, len(arr))
 					for i, v := range arr {
-						unboxed[i] = v
+						boxed[i] = gopurs_runtime.Str(v)
 					}
-					return unboxed
-				}()).UnsafePtr)
+					return gopurs_runtime.Array(boxed)
+				}())).UnsafePtr))).UnsafePtr)
 				unboxed := make([]string, len(arr))
 				for i, v := range arr {
 					unboxed[i] = v.StrVal()
