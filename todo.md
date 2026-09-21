@@ -1,12 +1,14 @@
 # Gopurs — réduire le temps de compilation de b8x
 
-État au 21 septembre 2026 : **indexation Go corrigée et chargement TAST natif à 8 workers par défaut**. Sur les 238 modules de gopurs-aff : backend natif **9,167 → 7,8185 s (−14,71 %)** dans les séries mesurées ; dernier contrôle JS **6,9665 s**, soit encore **12,23 % d'écart**. Le vrai `gopurs-aff/bin/test -c` passe entièrement : backend **7,864 s**.
+État au 22 septembre 2026 : **applications multiarguments du runtime corrigées et passerelle JSON allégée**. Sur le diagnostic altbak JSON/TAST (12 modules, 1 P, GOGC=100), Go passe de **720,986 à 599,956 ms (−16,79 %)** et alloue **19,98 % de moins** ; JS contrôle **85,856 ms**, soit encore **×6,99**. Compilateur reconstruit, résultats structurels identiques, détail ci-dessous.
 
-**Dernière sous-étape, point 11 : suppression d'une copie du tableau entier à chaque lecture d'indice**, révélée par pprof dans la liste d'attente du décodeur de types. Le chargement Aff passe de **2,9315 à 1,3380 s** avec les deux changements. Sur b8x, contrôle limité au chargement : **21,1255 → 13,5975 s** avec 1 puis 8 workers (−35,64 %, +0,650 Gio de pic RSS de cette phase). **Pas de nouveau backend b8x complet** : le dernier `b -c` avant ces changements reste **181,220 s de backend / 267,697 s de commande**, référence initiale historique 591,665 s. Les points 3, 4, 6, 7, 8, 10 et 11 restent ouverts.
+État précédent du compilateur complet : **indexation Go corrigée et chargement TAST natif à 8 workers par défaut**. Sur les 238 modules de gopurs-aff : backend natif **9,167 → 7,8185 s (−14,71 %)** dans les séries mesurées ; dernier contrôle JS **6,9665 s**, soit encore **12,23 % d'écart**. Le vrai `gopurs-aff/bin/test -c` passe entièrement : backend **7,864 s**.
+
+**Sous-étape précédente, point 11 : suppression d'une copie du tableau entier à chaque lecture d'indice**, révélée par pprof dans la liste d'attente du décodeur de types. Le chargement Aff passe de **2,9315 à 1,3380 s** avec les deux changements. Sur b8x, contrôle limité au chargement : **21,1255 → 13,5975 s** avec 1 puis 8 workers (−35,64 %, +0,650 Gio de pic RSS de cette phase). **Pas de nouveau backend b8x complet** : le dernier `b -c` avant ces changements reste **181,220 s de backend / 267,697 s de commande**, référence initiale historique 591,665 s. Les points 3, 4, 6, 7, 8, 10 et 11 restent ouverts.
 
 ## Points à traiter un par un, ultérieurement
 
-**Suite des points 11/3 : profiler à nouveau le décodage et la préparation sur le corpus Aff corrigé**, où ils restent environ ×2,29 et ×2,75 plus lents que JS, puis confirmer temps global et mémoire dans le vrai `b -c` b8x (point 7). Le défaut quadratique et le nombre de workers ont maintenant été mesurés ; un remplacement du parseur JSON reste à justifier. Le prochain gros chantier de parallélisme reste le point 4 : ordonnancement PBO entre modules avec transmission des directives conservée. Défauts natifs : chargement 8, émission 8, préparation 2 ; chargement JS 1.
+**Suite du point 11 : mesurer les traversées du décodeur de table des types et leurs conversions tableaux/callbacks**, encore visibles dans le nouveau profil altbak. Les applications génériques à 6–10 arguments ont été corrigées ; restent notamment `traverse` ST puis `sequence` Maybe/Either, les adaptations `TraverseArrayImpl`, et les paires unbox/rebox de tableaux dans le code généré. Préserver la priorité des erreurs et toutes les informations TAST. La préparation Aff du point 3 reste distincte. Confirmer ensuite temps global et mémoire dans le vrai `b -c` b8x (point 7) ; aucun gain global b8x n’est extrapolé du diagnostic. Le parseur n’a pas été changé ; son remplacement reste à justifier. Le prochain gros chantier de parallélisme reste le point 4 : ordonnancement PBO entre modules avec transmission des directives conservée. Défauts natifs : chargement 8, émission 8, préparation 2 ; chargement JS 1.
 
 Travailler sur un seul point à la fois. Commencer par une expérience courte, vérifier le comportement et mesurer le gain avant de passer au suivant. Les chiffres du diagnostic ci-dessous sont des observations ; les gains proposés restent à établir.
 
@@ -23,6 +25,27 @@ Travailler sur un seul point à la fois. Commencer par une expérience courte, v
 - [ ] **11. Écart JS/natif au chargement TAST.** Descriptions des types décodées une seule fois dans PBO, puis correction générale de `OpArrayIndex` dans gopurs : convertir seulement l'élément sélectionné évite les copies répétées du tableau d'indices en attente. Cette ligne représentait **3,15 Go d'allocations** dans le profil Aff. À 1 worker : chargement **2,9315 → 2,4540 s** ; avec le nouveau défaut natif à 8 : **1,3380 s**. JS final : **0,5855 s**. Backend natif **7,8185 s / JS 6,9665 s** ; tests Aff complets et sorties JS/native comparées. Chargement b8x −35,64 % entre 1 et 8 workers, mémoire de phase +0,650 Gio ; validation du backend b8x complet à refaire. Le natif utilise déjà `encoding/json.Unmarshal` ; profiler les coûts restants avant de changer de parseur. Aucun cache entre builds ni perte d'information TAST.
 
 Chaque point doit laisser un résultat vérifié, les mesures avant/après et ses limites dans ce document. Consolider les gains cumulés historiques avec des séries de runs comparables.
+
+## Point 11 — applications multiarguments et FFI JSON, 22 septembre 2026
+
+Profil isolé du décodeur sur les 12 vrais TAST figés d’altbak : `Apply` représente **26,31 % des allocations directes échantillonnées**, notamment parce que `Apply6`…`Apply10` passent par des chaînes de closures alors que tous les arguments sont déjà disponibles. Le dispatch JSON a sept arguments. Une expérience courte confirme **610 → 509 ms** pour le seul décodage avec cette correction limitée.
+
+Correction générale retenue : chemins directs `Apply2`…`Apply10` pour les fonctions saturées, une seule capture pour une application partielle jusqu’à `Func11`, fallback séquentiel conservé pour les fonctions qui retournent des fonctions. `CaseJsonImpl` dans gopurs-argonaut-core passe aussi directement ses arguments et son retour en `Value`, sans conversions en interfaces. **PBO, le parseur et le TAST restent inchangés.**
+
+| Diagnostic altbak, corpus entier | Go avant | Go après | JS contrôle |
+|---|---:|---:|---:|
+| Parsing | 76,483 ms | 75,850 ms | 20,219 ms |
+| Décodage | 616,670 ms | 507,676 ms | 62,653 ms |
+| Parse + decode | **720,986 ms** | **599,956 ms** | **85,856 ms** |
+| Allocations parse + decode | 744,781 Mio | **595,948 Mio** | — |
+
+**−16,79 % de temps, −19,98 % d’allocations ; écart Go/JS encore ×6,99.** Face à la baseline publiée de 717,160 ms, le gain est de 16,34 %. Trois processus par version/runtime, deux chauffes et cinq échantillons par phase, médiane des minima de processus. GOMAXPROCS=1, GOGC=100 ; Node conserve ses threads de fond. JS est strictement le même bundle. Les fingerprints restent hors chrono, avec allocations de validation entre passes. Aucun nouveau workflow b8x complet : ces chiffres ne mesurent ni son gain global, ni son chargement parallèle par défaut.
+
+Les neuf processus avant/après concordent avec les empreintes JSON/AST de référence. **501 fichiers Go sur 503 identiques** : seuls runtime et FFI Argonaut changent. Tests runtime optimisés et `-race` : 99 combinaisons d’arités, 27 panics, zéro allocation des applications saturées 2–10, durées de vie et concurrence. Suite Argonaut : 32 assertions/propriétés, 536 cas QuickCheck ; neuf contrôles de runners/publication passent. Compilateurs JS et natif reconstruits, binaire natif installé. Les manifests du diagnostic incluent désormais les sources des bibliothèques natives pour invalider les anciens builds après un changement FFI.
+
+Le profil après correction attribue encore des allocations aux applications partielles, records, `Either`/`Maybe`, traversées et adaptations FFI. `TraverseArrayImpl` représente 19,23 % en cumul (callbacks inclus, pas un gain récupérable garanti). Prochaines sondes : fusionner les traversées du résolveur de types en conservant les erreurs, puis supprimer les conversions de tableaux réellement annulées immédiatement. **Point 11 encore ouvert.**
+
+[Rapport et archive](/Users/0x1/Documents/htdocs/altbak.pub-gopurs/docs/benchmark-results/2026-09-22-json-typed-ast.md) · [Profils et expériences](/Users/0x1/Documents/htdocs/scratch/json-decode-20260922) · [Garanties du runtime](docs/runtime-closures.md).
 
 ## Point 11 — indexation sans copie et chargement parallèle, intégrés et mesurés
 

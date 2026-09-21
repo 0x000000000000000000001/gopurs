@@ -24,3 +24,13 @@ closures, partial applications, exited creator goroutines, stack churn and
 forced GC, both normally and under Go's race detector. When changing the unsafe
 representation or upgrading the Go toolchain, also inspect escape analysis and
 validate a generated application.
+
+`Apply2` through `Apply10` call a matching `FuncN` directly. For a larger
+arity (up to `Func11`), they capture the supplied arguments in one closure,
+using the same heap-escape guarantee. Smaller arities fall back to sequential
+application, preserving the order of calls when a function returns another
+function. These paths avoid allocating temporary closures for saturated calls.
+
+`node --test tools/apply-arity.test.mjs` checks the arity matrix, argument order,
+panics and saturated-call allocations, together with the lifetime/concurrency
+suite above, both normally and under the race detector.

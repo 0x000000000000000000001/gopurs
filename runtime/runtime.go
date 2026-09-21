@@ -556,6 +556,9 @@ func Apply(f Value, arg Value) Value {
 	}
 }
 
+// ApplyN invokes saturated functions directly and captures partial arguments once.
+// A smaller arity falls back to sequential application so curried functions and
+// overapplication keep their evaluation order.
 func Apply2(f Value, arg1, arg2 Value) Value {
 	switch f.Type {
 	case TypeFunc2:
@@ -569,9 +572,26 @@ func Apply2(f Value, arg1, arg2 Value) Value {
 	case TypeFunc5:
 		fn := *(*func(Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
 		return Func3(func(a, b, c Value) Value { return fn(arg1, arg2, a, b, c) })
+	case TypeFunc6:
+		fn := *(*func(Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func4(func(a, b, c, d Value) Value { return fn(arg1, arg2, a, b, c, d) })
+	case TypeFunc7:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func5(func(a, b, c, d, e Value) Value { return fn(arg1, arg2, a, b, c, d, e) })
+	case TypeFunc8:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func6(func(a, b, c, d, e, f Value) Value { return fn(arg1, arg2, a, b, c, d, e, f) })
+	case TypeFunc9:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func7(func(a, b, c, d, e, f, g Value) Value { return fn(arg1, arg2, a, b, c, d, e, f, g) })
+	case TypeFunc10:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func8(func(a, b, c, d, e, f, g, h Value) Value { return fn(arg1, arg2, a, b, c, d, e, f, g, h) })
+	case TypeFunc11:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func9(func(a, b, c, d, e, f, g, h, i Value) Value { return fn(arg1, arg2, a, b, c, d, e, f, g, h, i) })
 	}
-	res1 := Apply(f, arg1)
-	return Apply(res1, arg2)
+	return Apply(Apply(f, arg1), arg2)
 }
 
 func Apply3(f Value, arg1, arg2, arg3 Value) Value {
@@ -584,6 +604,24 @@ func Apply3(f Value, arg1, arg2, arg3 Value) Value {
 	case TypeFunc5:
 		fn := *(*func(Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
 		return Func2(func(a, b Value) Value { return fn(arg1, arg2, arg3, a, b) })
+	case TypeFunc6:
+		fn := *(*func(Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func3(func(a, b, c Value) Value { return fn(arg1, arg2, arg3, a, b, c) })
+	case TypeFunc7:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func4(func(a, b, c, d Value) Value { return fn(arg1, arg2, arg3, a, b, c, d) })
+	case TypeFunc8:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func5(func(a, b, c, d, e Value) Value { return fn(arg1, arg2, arg3, a, b, c, d, e) })
+	case TypeFunc9:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func6(func(a, b, c, d, e, f Value) Value { return fn(arg1, arg2, arg3, a, b, c, d, e, f) })
+	case TypeFunc10:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func7(func(a, b, c, d, e, f, g Value) Value { return fn(arg1, arg2, arg3, a, b, c, d, e, f, g) })
+	case TypeFunc11:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func8(func(a, b, c, d, e, f, g, h Value) Value { return fn(arg1, arg2, arg3, a, b, c, d, e, f, g, h) })
 	}
 	return Apply(Apply2(f, arg1, arg2), arg3)
 }
@@ -595,13 +633,50 @@ func Apply4(f Value, arg1, arg2, arg3, arg4 Value) Value {
 	case TypeFunc5:
 		fn := *(*func(Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
 		return Func(func(a Value) Value { return fn(arg1, arg2, arg3, arg4, a) })
+	case TypeFunc6:
+		fn := *(*func(Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func2(func(a, b Value) Value { return fn(arg1, arg2, arg3, arg4, a, b) })
+	case TypeFunc7:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func3(func(a, b, c Value) Value { return fn(arg1, arg2, arg3, arg4, a, b, c) })
+	case TypeFunc8:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func4(func(a, b, c, d Value) Value { return fn(arg1, arg2, arg3, arg4, a, b, c, d) })
+	case TypeFunc9:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func5(func(a, b, c, d, e Value) Value { return fn(arg1, arg2, arg3, arg4, a, b, c, d, e) })
+	case TypeFunc10:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func6(func(a, b, c, d, e, f Value) Value { return fn(arg1, arg2, arg3, arg4, a, b, c, d, e, f) })
+	case TypeFunc11:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func7(func(a, b, c, d, e, f, g Value) Value { return fn(arg1, arg2, arg3, arg4, a, b, c, d, e, f, g) })
 	}
 	return Apply(Apply3(f, arg1, arg2, arg3), arg4)
 }
 
 func Apply5(f Value, arg1, arg2, arg3, arg4, arg5 Value) Value {
-	if f.Type == TypeFunc5 {
+	switch f.Type {
+	case TypeFunc5:
 		return (*(*func(Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr)))(arg1, arg2, arg3, arg4, arg5)
+	case TypeFunc6:
+		fn := *(*func(Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func(func(a Value) Value { return fn(arg1, arg2, arg3, arg4, arg5, a) })
+	case TypeFunc7:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func2(func(a, b Value) Value { return fn(arg1, arg2, arg3, arg4, arg5, a, b) })
+	case TypeFunc8:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func3(func(a, b, c Value) Value { return fn(arg1, arg2, arg3, arg4, arg5, a, b, c) })
+	case TypeFunc9:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func4(func(a, b, c, d Value) Value { return fn(arg1, arg2, arg3, arg4, arg5, a, b, c, d) })
+	case TypeFunc10:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func5(func(a, b, c, d, e Value) Value { return fn(arg1, arg2, arg3, arg4, arg5, a, b, c, d, e) })
+	case TypeFunc11:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func6(func(a, b, c, d, e, f Value) Value { return fn(arg1, arg2, arg3, arg4, arg5, a, b, c, d, e, f) })
 	}
 	return Apply(Apply4(f, arg1, arg2, arg3, arg4), arg5)
 }
@@ -848,12 +923,47 @@ func Wrap5[A, B, C, D, E, R any](f func(A, B, C, D, E) R) Value {
 	})
 }
 
-func Apply6(fn Value, arg1 Value, arg2 Value, arg3 Value, arg4 Value, arg5 Value, arg6 Value) Value {
-	return Apply(Apply(Apply(Apply(Apply(Apply(fn, arg1), arg2), arg3), arg4), arg5), arg6)
+func Apply6(f Value, arg1, arg2, arg3, arg4, arg5, arg6 Value) Value {
+	switch f.Type {
+	case TypeFunc6:
+		return (*(*func(Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr)))(arg1, arg2, arg3, arg4, arg5, arg6)
+	case TypeFunc7:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func(func(a Value) Value { return fn(arg1, arg2, arg3, arg4, arg5, arg6, a) })
+	case TypeFunc8:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func2(func(a, b Value) Value { return fn(arg1, arg2, arg3, arg4, arg5, arg6, a, b) })
+	case TypeFunc9:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func3(func(a, b, c Value) Value { return fn(arg1, arg2, arg3, arg4, arg5, arg6, a, b, c) })
+	case TypeFunc10:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func4(func(a, b, c, d Value) Value { return fn(arg1, arg2, arg3, arg4, arg5, arg6, a, b, c, d) })
+	case TypeFunc11:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func5(func(a, b, c, d, e Value) Value { return fn(arg1, arg2, arg3, arg4, arg5, arg6, a, b, c, d, e) })
+	}
+	return Apply(Apply5(f, arg1, arg2, arg3, arg4, arg5), arg6)
 }
 
-func Apply7(fn Value, arg1 Value, arg2 Value, arg3 Value, arg4 Value, arg5 Value, arg6 Value, arg7 Value) Value {
-	return Apply(Apply(Apply(Apply(Apply(Apply(Apply(fn, arg1), arg2), arg3), arg4), arg5), arg6), arg7)
+func Apply7(f Value, arg1, arg2, arg3, arg4, arg5, arg6, arg7 Value) Value {
+	switch f.Type {
+	case TypeFunc7:
+		return (*(*func(Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr)))(arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+	case TypeFunc8:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func(func(a Value) Value { return fn(arg1, arg2, arg3, arg4, arg5, arg6, arg7, a) })
+	case TypeFunc9:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func2(func(a, b Value) Value { return fn(arg1, arg2, arg3, arg4, arg5, arg6, arg7, a, b) })
+	case TypeFunc10:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func3(func(a, b, c Value) Value { return fn(arg1, arg2, arg3, arg4, arg5, arg6, arg7, a, b, c) })
+	case TypeFunc11:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func4(func(a, b, c, d Value) Value { return fn(arg1, arg2, arg3, arg4, arg5, arg6, arg7, a, b, c, d) })
+	}
+	return Apply(Apply6(f, arg1, arg2, arg3, arg4, arg5, arg6), arg7)
 }
 
 func AnyToValue(val any) Value {
@@ -877,16 +987,46 @@ func ValueToAny(val Value) any {
 	return val
 }
 
-func Apply8(fn Value, arg1 Value, arg2 Value, arg3 Value, arg4 Value, arg5 Value, arg6 Value, arg7 Value, arg8 Value) Value {
-	return Apply(Apply(Apply(Apply(Apply(Apply(Apply(Apply(fn, arg1), arg2), arg3), arg4), arg5), arg6), arg7), arg8)
+func Apply8(f Value, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8 Value) Value {
+	switch f.Type {
+	case TypeFunc8:
+		return (*(*func(Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr)))(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+	case TypeFunc9:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func(func(a Value) Value { return fn(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, a) })
+	case TypeFunc10:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func2(func(a, b Value) Value { return fn(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, a, b) })
+	case TypeFunc11:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func3(func(a, b, c Value) Value { return fn(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, a, b, c) })
+	}
+	return Apply(Apply7(f, arg1, arg2, arg3, arg4, arg5, arg6, arg7), arg8)
 }
 
-func Apply9(fn Value, arg1 Value, arg2 Value, arg3 Value, arg4 Value, arg5 Value, arg6 Value, arg7 Value, arg8 Value, arg9 Value) Value {
-	return Apply(Apply(Apply(Apply(Apply(Apply(Apply(Apply(Apply(fn, arg1), arg2), arg3), arg4), arg5), arg6), arg7), arg8), arg9)
+func Apply9(f Value, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9 Value) Value {
+	switch f.Type {
+	case TypeFunc9:
+		return (*(*func(Value, Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr)))(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+	case TypeFunc10:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func(func(a Value) Value { return fn(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, a) })
+	case TypeFunc11:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func2(func(a, b Value) Value { return fn(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, a, b) })
+	}
+	return Apply(Apply8(f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8), arg9)
 }
 
-func Apply10(fn Value, arg1 Value, arg2 Value, arg3 Value, arg4 Value, arg5 Value, arg6 Value, arg7 Value, arg8 Value, arg9 Value, arg10 Value) Value {
-	return Apply(Apply(Apply(Apply(Apply(Apply(Apply(Apply(Apply(Apply(fn, arg1), arg2), arg3), arg4), arg5), arg6), arg7), arg8), arg9), arg10)
+func Apply10(f Value, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 Value) Value {
+	switch f.Type {
+	case TypeFunc10:
+		return (*(*func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr)))(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
+	case TypeFunc11:
+		fn := *(*func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr))
+		return Func(func(a Value) Value { return fn(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, a) })
+	}
+	return Apply(Apply9(f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9), arg10)
 }
 
 
