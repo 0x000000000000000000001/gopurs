@@ -70,6 +70,7 @@ exprImports = case _ of
   GoPrefixOp _ expr -> exprImports expr
   GoTypeAssertion expr ty -> exprImports expr <> referencedImports ty
   GoIndex expr index -> exprImports expr <> exprImports index
+  GoBoxStructPointer _ expr -> runtime <> [ "unsafe" ] <> exprImports expr
   GoBoxIntArray expr -> runtime <> exprImports expr
   GoUnboxIntArray expr -> runtime <> exprImports expr
   GoFreshFilterArray expr -> exprImports expr

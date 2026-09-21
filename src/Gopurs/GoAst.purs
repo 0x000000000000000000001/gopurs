@@ -36,6 +36,8 @@ data GoExpr
   | GoPrefixOp String GoExpr
   | GoTypeAssertion GoExpr String
   | GoIndex GoExpr GoExpr
+  -- Retain the operand and its imports until the final rendering.
+  | GoBoxStructPointer String GoExpr
   -- Keep these conversions structured until the array consumer is known.
   | GoBoxIntArray GoExpr
   | GoUnboxIntArray GoExpr

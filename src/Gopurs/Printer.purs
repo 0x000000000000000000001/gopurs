@@ -166,6 +166,8 @@ printGoExpr goExpr = case goExpr of
     printGoExpr expr <> ".(" <> t <> ")"
   GoIndex expr index ->
     "(" <> printGoExpr expr <> ")[" <> printGoExpr index <> "]"
+  GoBoxStructPointer tag expr ->
+    "gopurs_runtime.Value{Type: 9, IntVal: " <> tag <> ", UnsafePtr: unsafe.Pointer(" <> printGoExpr expr <> ")}"
   GoBoxIntArray expr ->
     "func() gopurs_runtime.Value {\n\t\t\t\t\tarr := " <> printGoExpr expr <> "\n\t\t\t\t\tboxed := make([]gopurs_runtime.Value, len(arr))\n\t\t\t\t\tfor i, v := range arr { boxed[i] = gopurs_runtime.Int(v) }\n\t\t\t\t\treturn gopurs_runtime.Array(boxed)\n\t\t\t\t}()"
   GoUnboxIntArray expr ->

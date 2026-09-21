@@ -154,7 +154,7 @@ boxGoExprImpl _ _ expr TypeInt64 = GoCall (GoSelector (GoVar "gopurs_runtime") "
 boxGoExprImpl _ _ expr TypeFloat64 = GoCall (GoSelector (GoVar "gopurs_runtime") "Float") [ expr ]
 boxGoExprImpl _ _ expr TypeString = GoCall (GoSelector (GoVar "gopurs_runtime") "Str") [ expr ]
 boxGoExprImpl _ _ expr TypeBool = GoCall (GoSelector (GoVar "gopurs_runtime") "Bool") [ expr ]
-boxGoExprImpl _ _ expr (TypeStructPointer { baseStructName }) = rawGo ("gopurs_runtime.Value{Type: 9, IntVal: " <> hashString baseStructName <> ", UnsafePtr: unsafe.Pointer(" <> printGoExpr expr <> ")}")
+boxGoExprImpl _ _ expr (TypeStructPointer { baseStructName }) = GoBoxStructPointer (hashString baseStructName) expr
 boxGoExprImpl codegenStateRef modNameStr expr (TypeRecord fields) =
   let
     keys = map (\(Tuple k _) -> k) fields
