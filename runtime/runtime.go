@@ -478,13 +478,15 @@ type ConstructorData5 struct { V0, V1, V2, V3, V4 Value }
 func Constructor5(tag string, v0, v1, v2, v3, v4 Value) Value { return Value{Type: TypeConstructor, UnsafePtr: unsafe.Pointer(&ConstructorData5{v0, v1, v2, v3, v4})} }
 
 var EscapeSink any
-var escapeSinkMu sync.Mutex
+var escapeAlwaysFalse bool
 
 func forceEscape(f any) {
-	// Keep the closure escaping to the heap without racing between Aff fibers.
-	escapeSinkMu.Lock()
-	EscapeSink = f
-	escapeSinkMu.Unlock()
+	// As in Go's internal/abi.Escape, a variable (not a constant) keeps the
+	// global store visible to escape analysis without executing it. Never set
+	// escapeAlwaysFalse: closures must escape without a shared write or lock.
+	if escapeAlwaysFalse {
+		EscapeSink = f
+	}
 }
 
 // Function with 1 arg (curried)
