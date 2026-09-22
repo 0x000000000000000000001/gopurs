@@ -17,6 +17,7 @@ import Data.Set (Set)
 import Data.Set as Set
 import Data.String as String
 import Data.Tuple (Tuple(..))
+import Gopurs.NativeRecordArgs (candidateToShare)
 import PureScript.Backend.Optimizer.CoreFn (Ann, Bind(..), Binding(..), ExprType(..), Ident(..), Module(..))
 import PureScript.Backend.Optimizer.CoreFn.Usage (invalidateSourceUsageModule)
 import PureScript.Backend.Optimizer.Monomorphize (InstantiationMap, collectInstantiations, monomorphize, transitiveCollect)
@@ -48,10 +49,15 @@ monomorphizeModulesWith collectTransitive globalTypes inputModules = do
     -- Other known definitions must remain available for static evaluation.
     intrinsicGlobals = Set.singleton "Data.Ring.negate"
     globalAstMap = Map.filterKeys (not <<< flip Set.member intrinsicGlobals) (buildGlobalAstMap modules)
+    -- Row-only readers can share one native worker across record shapes. The
+    -- emitter rechecks their uses after PBO; other polymorphism stays eligible.
+    sharedRecordWorkers = Map.keys (Map.filter candidateToShare globalAstMap)
     rawInstantiations = foldl (collectInstantiations globalAstMap) Map.empty modules
     foreignGlobals = Set.union intrinsicGlobals (collectForeignGlobals modules)
   transitiveInstantiations <- collectTransitive globalAstMap rawInstantiations
-  let instantiations = Map.filterKeys (shouldMonomorphize globalTypes foreignGlobals) transitiveInstantiations
+  let instantiations = Map.filterKeys
+        (\name -> not (Set.member name sharedRecordWorkers) && shouldMonomorphize globalTypes foreignGlobals name)
+        transitiveInstantiations
   pure $ if Map.isEmpty instantiations then
       modules
     else

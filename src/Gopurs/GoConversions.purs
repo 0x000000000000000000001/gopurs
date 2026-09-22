@@ -97,6 +97,21 @@ getUnboxedADT _ = Nothing
 -- translation. Keep their registration and generation in this module.
 coerceGoExpr :: Ref CodegenState -> String -> GoExpr -> GoType -> GoType -> GoExpr
 coerceGoExpr _ _ expr from to | from == to = expr
+-- A known record can supply a smaller native worker argument without boxing
+-- every field first. Evaluate the source once, including unused extra fields.
+coerceGoExpr codegenStateRef modNameStr expr source@(TypeRecord sourceFields) target@(TypeRecord targetFields)
+  | canProjectRecord sourceFields targetFields =
+      let sourceTypes = Map.fromFoldable sourceFields
+      in
+      GoCall
+        (GoFuncLit [ Tuple "record" source ] []
+          (GoRecordDict target (map
+            (\(Tuple key targetType) -> Tuple key
+              (coerceGoExpr codegenStateRef modNameStr
+                (GoStructAccess (GoVar "record") (sanitizeName key))
+                (fromMaybe TypeValue (Map.lookup key sourceTypes)) targetType))
+            targetFields)) target)
+        [ expr ]
 coerceGoExpr _ _ ctor@(GoConstructor _ structName _ args) _ (TypeStructValue adtName fields) =
   let
     parts = String.split (Pattern "_") structName
@@ -135,6 +150,11 @@ coerceGoExpr codegenStateRef modNameStr expr srcT@(TypeStructValue srcAdt _) des
 coerceGoExpr codegenStateRef modNameStr expr from TypeValue = boxGoExpr codegenStateRef modNameStr expr from
 coerceGoExpr codegenStateRef modNameStr expr TypeValue to = unboxGoExpr codegenStateRef modNameStr expr TypeValue to
 coerceGoExpr codegenStateRef modNameStr expr from to = unboxGoExpr codegenStateRef modNameStr (boxGoExpr codegenStateRef modNameStr expr from) TypeValue to
+
+canProjectRecord :: Array (Tuple String GoType) -> Array (Tuple String GoType) -> Boolean
+canProjectRecord sourceFields targetFields =
+  let sourceTypes = Map.fromFoldable sourceFields
+  in Array.all (\(Tuple key _) -> Map.member key sourceTypes) targetFields
 
 -- Before boxing a generic pointer, Rebox converts its type arguments to
 -- Value. boxGoExprImpl then emits the box without repeating that conversion.

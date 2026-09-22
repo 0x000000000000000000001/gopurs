@@ -32,7 +32,7 @@ import Gopurs.FunctionFusion (optimizeFunctionProducers)
 import Gopurs.Ownership as Ownership
 import Gopurs.GoTypes (exprTypeToGenericGoType, exprTypeToGoType, instantiateGenericGoType)
 import Gopurs.CodegenState (CodegenMetadata, CodegenState)
-import Gopurs.GoConversions (boxGoExpr, coerceGoExpr, generateReboxFunctions, unboxGoExpr)
+import Gopurs.GoConversions (boxGoExpr, coerceGoExpr, generateReboxFunctions)
 import Gopurs.PrimitiveExprs as PrimitiveExprs
 import Gopurs.RecordExprs as RecordExprs
 import Gopurs.AdtExprs as AdtExprs
@@ -198,11 +198,17 @@ translateExprWithExpectedType metadata codegenStateRef depth modNameStr recVars 
                   preserveBoxedRecord = case expectedGoType, mbExpectedExprType of
                     TypeRecord _, Just Any -> res.exprType == TypeValue
                     _, _ -> false
+                  -- An open-row annotation must not box a native local before
+                  -- its field is read. Projected worker parameters are admitted
+                  -- only after proving that every use is a known-field read.
+                  preserveNativeRecord = case type_, unwrapTcoExpr a, res.exprType of
+                    Record (Row _ (Just _)), Local _ _, TypeRecord _ -> true
+                    _, _, _ -> false
                 in
                   case res.exprType of
                     TypeStructPointer _ -> res
                     _ ->
-                      if expectedGoType == res.exprType || preserveBoxedRecord then res
+                      if expectedGoType == res.exprType || preserveBoxedRecord || preserveNativeRecord then res
                       else if isClosureNode metadata a then res
                       else
                         { stmts: res.stmts, expr: coerceGoExpr codegenStateRef modNameStr res.expr res.exprType expectedGoType, exprType: expectedGoType, nextId: res.nextId }

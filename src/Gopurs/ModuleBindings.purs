@@ -23,6 +23,7 @@ import Gopurs.GoAst (rawGo, GoDecl(..), GoExpr(..), GoType(..), goTypeToStr, san
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr, getUnboxedADT)
 import Gopurs.GoTypes (exprTypeToGoType)
 import Gopurs.GoFunctions (curriedFunction)
+import Gopurs.NativeRecordArgs (workerArguments)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.Codegen.Tco as Tco
 import PureScript.Backend.Optimizer.Convert (BackendModule)
@@ -61,11 +62,15 @@ prepare metadata modNameStr mod =
       Array.concatMap
         ( \(Tuple (Ident name) val) ->
             case extractUncurriedAbs val of
-              Just { args } ->
+              Just { args, body } ->
                 let
                   typeSig = extractFuncType val
                   fArgsGo = case typeSig of
-                    Just { fArgs } -> map (exprTypeToGoType pointerAdtPaths enumAdts elidedCtors modNameStr) (Array.take (Array.length args) fArgs) <> Array.replicate (Array.length args - Array.length fArgs) TypeValue
+                    Just { fArgs, fRet } -> workerArguments
+                      (exprTypeToGoType pointerAdtPaths enumAdts elidedCtors modNameStr)
+                      args body (Array.take (Array.length args) fArgs)
+                      (if Array.length args < Array.length fArgs then Any else fRet)
+                      <> Array.replicate (Array.length args - Array.length fArgs) TypeValue
                     Nothing -> Array.replicate (Array.length args) TypeValue
                   fRetGo = case typeSig of
                     Just { fArgs, fRet } ->
@@ -126,8 +131,11 @@ declarations translate metadata codegenStateRef modNameStr moduleFunctions group
                     fnWrapperStmts = map
                       ( \fn ->
                           let
-                            paramsWithTypes = case extractExprFuncType (getExprType fn.val) of
-                              Just { fArgs } -> Array.zipWith (\p goType -> Tuple p goType) fn.args (map (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr) fArgs <> Array.replicate (Array.length fn.args - Array.length fArgs) TypeValue)
+                            -- Use precisely the published worker ABI, including
+                            -- any read-only native record projections.
+                            paramsWithTypes = case Map.lookup fn.ident moduleFunctions of
+                              Just { fArgs } -> Array.zipWith Tuple fn.args
+                                (fArgs <> Array.replicate (Array.length fn.args - Array.length fArgs) TypeValue)
                               Nothing -> map (\p -> Tuple p TypeValue) fn.args
 
                             newBound = foldl (\acc (Tuple idStr goType) -> Map.insert idStr { name: idStr, goType } acc) Map.empty paramsWithTypes
