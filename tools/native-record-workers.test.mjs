@@ -84,7 +84,17 @@ function fallbackModule() {
     const unknown = record([['id', C.Any.value]], new Just(new C.TypeVar('r')));
     const element = new C.TypeVar('a');
     const generic = record([['id', element]], new Just(new C.TypeVar('r')));
+    const labelCases = [
+        ['blankLabel', [['_', int]]],
+        ['spacedLabel', [['a b', int]]],
+        ['collidingLabels', [['a-b', int], ['a_minus_b', int]]],
+    ].map(([name, fields]) => {
+        const ty = record(fields, new Just(new C.TypeVar('r')));
+        return [name, lambda([['row', 0]], field(local('row', 0, ty), fields[0][0], int),
+            new C.ForAll(['r'], new C.Func([ty], int)))];
+    });
     return CodeGen.translateWithFunctions(metadata)(moduleOf('NativeRecordFallback', [
+        ...labelCases,
         ['returned', lambda([['row', 0]], row(),
             new C.ForAll(['r'], new C.Func([openRecord], openRecord)))],
         ['forwarded', lambda([['row', 0], ['consume', 1]],
@@ -222,6 +232,7 @@ test('escaping or unsupported open-row uses keep the complete Value argument', (
     const generated = fallbackModule();
     for (const name of [
         'returned', 'forwarded', 'updated', 'unknownField', 'polymorphicField', 'missingField', 'captured',
+        'blankLabel', 'spacedLabel', 'collidingLabels',
     ]) {
         assert.deepEqual(info(generated, 'NativeRecordFallback', name).fArgs[0], Go.TypeValue.value,
             `${name} cannot safely project away the row tail`);

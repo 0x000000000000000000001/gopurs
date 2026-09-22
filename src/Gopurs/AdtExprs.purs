@@ -140,13 +140,26 @@ getField
   -> AdtExpr
 getField metadata codegenStateRef modNameStr { moduleName: mbMod, ctorName, index: idx } object =
   let
-    defMod = case mbMod of
-      Just (ModuleName mod) -> mod
-      Nothing -> modNameStr
-    ctorLayout = ConstructorLayout.layout metadata defMod ctorName Nothing
-    { structName } = ctorLayout.identity
+    nativeField = case object.exprType of
+      TypeStructValue adtName signature -> do
+        adt <- Map.lookup adtName unboxableADTs
+        slot <- adt.fieldIndex (getStructName modNameStr mbMod ctorName) idx
+        fieldType <- Array.index signature slot
+        pure { expr: GoSelector object.expr ("V" <> show slot), exprType: fieldType }
+      _ -> Nothing
   in
-    if Set.member structName metadata.elidedCtors then
+    case nativeField of
+      Just result -> result
+      Nothing -> getBoxedField
+  where
+  getBoxedField =
+    let
+      defMod = case mbMod of
+        Just (ModuleName mod) -> mod
+        Nothing -> modNameStr
+      ctorLayout = ConstructorLayout.layout metadata defMod ctorName Nothing
+      { structName } = ctorLayout.identity
+    in if Set.member structName metadata.elidedCtors then
       { expr: coerceGoExpr codegenStateRef modNameStr object.expr object.exprType TypeValue, exprType: TypeValue }
     else
       let

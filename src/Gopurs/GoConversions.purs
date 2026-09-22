@@ -37,6 +37,7 @@ type UnboxedADT =
   { signature :: Array GoType
   , mapConstructor :: String -> Array GoExpr -> Array GoExpr
   , isConstructor :: String -> GoExpr -> GoExpr
+  , fieldIndex :: String -> Int -> Maybe Int
   , boxExpr :: GoExpr -> GoExpr
   , unboxExpr :: GoExpr -> GoExpr
   }
@@ -54,6 +55,7 @@ unboxableADTs = Map.fromFoldable
           "Data_Data_Maybe_Just" -> GoSelector expr "V1"
           "Data_Data_Maybe_Nothing" -> rawGo ("(!" <> printGoExpr (GoSelector expr "V1") <> ")")
           _ -> rawGo "false"
+      , fieldIndex: \ctor index -> if ctor == "Data_Data_Maybe_Just" && index == 0 then Just 0 else Nothing
       , boxExpr: \expr ->
           -- Maybe uses the Just constructor id for both cases, with a nil pointer for Nothing.
           rawGo ("func() gopurs_runtime.Value {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\tif _v.V1 {\n\t\t\t\t\treturn gopurs_runtime.Value{Type: 9, IntVal: " <> hashString "Data_Data_Maybe_Just" <> ", UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: _v.V0})}\n\t\t\t\t}\n\t\t\t\treturn gopurs_runtime.Value{Type: 9, IntVal: " <> hashString "Data_Data_Maybe_Just" <> "}\n\t\t\t}()")
@@ -64,6 +66,7 @@ unboxableADTs = Map.fromFoldable
       { signature: [ TypeValue, TypeValue ]
       , mapConstructor: \_ args -> args
       , isConstructor: \ctor _ -> rawGo (if ctor == "Data_Data_Tuple_Tuple" then "true" else "false")
+      , fieldIndex: \ctor index -> if ctor == "Data_Data_Tuple_Tuple" && index >= 0 && index < 2 then Just index else Nothing
       , boxExpr: \expr ->
           rawGo ("func() gopurs_runtime.Value {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\treturn gopurs_runtime.Value{Type: 9, IntVal: " <> hashString "Data_Data_Tuple_Tuple" <> ", UnsafePtr: unsafe.Pointer(&Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V0, V1: _v.V1})}\n\t\t\t}()")
       , unboxExpr: \expr ->
@@ -79,6 +82,10 @@ unboxableADTs = Map.fromFoldable
           "Data_Data_Either_Right" -> GoSelector expr "V2"
           "Data_Data_Either_Left" -> rawGo ("(!" <> printGoExpr (GoSelector expr "V2") <> ")")
           _ -> rawGo "false"
+      , fieldIndex: \ctor index -> if index /= 0 then Nothing else case ctor of
+          "Data_Data_Either_Left" -> Just 0
+          "Data_Data_Either_Right" -> Just 1
+          _ -> Nothing
       , boxExpr: \expr ->
           rawGo ("func() gopurs_runtime.Value {\n\t\t\t\t_v := " <> printGoExpr expr <> "\n\t\t\t\tif _v.V2 {\n\t\t\t\t\treturn gopurs_runtime.Value{Type: 9, IntVal: " <> hashString "Data_Data_Either_Right" <> ", UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V1})}\n\t\t\t\t}\n\t\t\t\treturn gopurs_runtime.Value{Type: 9, IntVal: " <> hashString "Data_Data_Either_Left" <> ", UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V0})}\n\t\t\t}()")
       , unboxExpr: \expr ->

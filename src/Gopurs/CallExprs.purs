@@ -14,6 +14,7 @@ import Data.String as String
 import Data.String.Pattern (Pattern(..), Replacement(..))
 import Data.Tuple (Tuple(..))
 import Gopurs.ArrayIntrinsics as ArrayIntrinsics
+import Gopurs.ArrayTraverse as ArrayTraverse
 import Gopurs.CallAnalysis (CallTarget, collectGoSpine, getGoSpineArgs, curriedTarget, qualifiedTarget)
 import Gopurs.CallArguments (Arguments, applyBoxed)
 import Gopurs.CallArguments as CallArguments
@@ -37,17 +38,19 @@ application translate context nextId expression =
     -- Curried calls give a tail jump priority over intrinsic recognition.
     case tailTarget context fn of
       Just target -> tailCall translate context nextId expression args target
-      Nothing ->
-        let target = curriedTarget context.bound fn
-        in case ArrayIntrinsics.recognize ArrayIntrinsics.Curried context.modNameStr target (Array.length args) of
-          Just intrinsic ->
-            let translated = CallArguments.translateBoxed translate context { stmts: StmtEmpty, nextId } args
-            in ArrayIntrinsics.emitCurried context fn args intrinsic translated
-          Nothing -> case directFunction context target (Array.length args) of
-            Just info ->
-              let translated = CallArguments.translate translate context Nothing { stmts: StmtEmpty, nextId } args
-              in nativeCall context (GoVar info.fullName) info.fArgs info.fRet info.arity translated
-            Nothing -> curriedCall translate context nextId fn args
+      Nothing -> case ArrayTraverse.emit translate context nextId (qualifiedTarget fn) args of
+        Just result -> result
+        Nothing ->
+          let target = curriedTarget context.bound fn
+          in case ArrayIntrinsics.recognize ArrayIntrinsics.Curried context.modNameStr target (Array.length args) of
+            Just intrinsic ->
+              let translated = CallArguments.translateBoxed translate context { stmts: StmtEmpty, nextId } args
+              in ArrayIntrinsics.emitCurried context fn args intrinsic translated
+            Nothing -> case directFunction context target (Array.length args) of
+              Just info ->
+                let translated = CallArguments.translate translate context Nothing { stmts: StmtEmpty, nextId } args
+                in nativeCall context (GoVar info.fullName) info.fArgs info.fRet info.arity translated
+              Nothing -> curriedCall translate context nextId fn args
 
 -- A direct worker must be saturated; partial calls retain the boxed path.
 directFunction :: ExprContext -> Maybe CallTarget -> Int -> Maybe FunctionInfo

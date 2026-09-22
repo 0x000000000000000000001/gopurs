@@ -9,8 +9,9 @@ import Prelude
 import Data.Array as Array
 import Data.Foldable (all, any)
 import Data.Maybe (Maybe(..), fromMaybe)
+import Data.String.CodeUnits as CodeUnits
 import Data.Tuple (Tuple(..), fst)
-import Gopurs.GoAst (GoType(..))
+import Gopurs.GoAst (GoType(..), sanitizeName)
 import Gopurs.GoTypes (visibleRecordFields)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.CoreFn (Ann(..), Bind(..), Binder(..), Binding(..), CaseAlternative(..), CaseGuard(..), Expr(..), ExprType(..), Guard(..), Ident, Qualified(..), propValue)
@@ -27,11 +28,23 @@ projectedArgument toGoType ty = map
 
 projectableFields :: ExprType -> Maybe (Array (Tuple String ExprType))
 projectableFields (Record (Row fields (Just (TypeVar _)))) =
-  let visible = visibleRecordFields fields
-  in if not (Array.null visible) && all (\(Tuple _ ty) -> isScalar ty) visible then
+  let
+    visible = visibleRecordFields fields
+    names = map (sanitizeName <<< fst) visible
+  in if not (Array.null visible) && all (\(Tuple _ ty) -> isScalar ty) visible
+      && all usableFieldName names && Array.length (Array.nub names) == Array.length names then
     Just (Array.sortBy (comparing fst) visible)
   else Nothing
 projectableFields _ = Nothing
+
+-- Quoted PureScript labels need not be usable Go fields, and sanitizing two
+-- different labels can yield the same name. Keep the ordinary record ABI in
+-- those cases. Unicode names conservatively stay there too for this first path.
+usableFieldName :: String -> Boolean
+usableFieldName name = name /= "_" && all
+  (\char -> char == '_' || (char >= 'a' && char <= 'z')
+    || (char >= 'A' && char <= 'Z') || (char >= '0' && char <= '9'))
+  (CodeUnits.toCharArray name)
 
 isScalar :: ExprType -> Boolean
 isScalar = case _ of

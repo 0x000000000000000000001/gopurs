@@ -29,10 +29,11 @@ import PureScript.Backend.Optimizer.FreeVars (localId)
 import PureScript.Backend.Optimizer.FfiSupport (hashString)
 import Gopurs.ThunkFusion (optimizeThunkProducers)
 import Gopurs.FunctionFusion (optimizeFunctionProducers)
+import Gopurs.ImmediateApplications (optimizeImmediateApplications)
 import Gopurs.Ownership as Ownership
 import Gopurs.GoTypes (exprTypeToGenericGoType, exprTypeToGoType, instantiateGenericGoType)
 import Gopurs.CodegenState (CodegenMetadata, CodegenState)
-import Gopurs.GoConversions (boxGoExpr, coerceGoExpr, generateReboxFunctions)
+import Gopurs.GoConversions (boxGoExpr, coerceGoExpr, generateReboxFunctions, getUnboxedADT)
 import Gopurs.PrimitiveExprs as PrimitiveExprs
 import Gopurs.RecordExprs as RecordExprs
 import Gopurs.AdtExprs as AdtExprs
@@ -56,7 +57,7 @@ translateWithFunctions :: CodegenMetadata -> BackendModule -> { code :: String, 
 translateWithFunctions metadata inputMod =
 
   let
-    owned = Ownership.prepare metadata (optimizeFunctionProducers (optimizeThunkProducers inputMod))
+    owned = Ownership.prepare metadata (optimizeImmediateApplications (optimizeFunctionProducers (optimizeThunkProducers inputMod)))
     mod = owned.module
     modNameStrOrig = unwrap mod.name
     modNameStr = String.replaceAll (Pattern ".") (Replacement "_") modNameStrOrig
@@ -204,11 +205,18 @@ translateExprWithExpectedType metadata codegenStateRef depth modNameStr recVars 
                   preserveNativeRecord = case type_, unwrapTcoExpr a, res.exprType of
                     Record (Row _ (Just _)), Local _ _, TypeRecord _ -> true
                     _, _, _ -> false
+                  -- An annotation describes the value, not its allocation.
+                  -- Keep a native sum when this annotation would only box it.
+                  -- A typed pointer layout can have more precise payloads and
+                  -- must still receive its ordinary native conversion.
+                  preserveNativeSum = expectedGoType == TypeValue && case res.exprType, getUnboxedADT type_ of
+                    TypeStructValue actual _, Just (Tuple expected _) -> actual == expected
+                    _, _ -> false
                 in
                   case res.exprType of
                     TypeStructPointer _ -> res
                     _ ->
-                      if expectedGoType == res.exprType || preserveBoxedRecord || preserveNativeRecord then res
+                      if expectedGoType == res.exprType || preserveBoxedRecord || preserveNativeRecord || preserveNativeSum then res
                       else if isClosureNode metadata a then res
                       else
                         { stmts: res.stmts, expr: coerceGoExpr codegenStateRef modNameStr res.expr res.exprType expectedGoType, exprType: expectedGoType, nextId: res.nextId }
