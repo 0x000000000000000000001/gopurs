@@ -53,6 +53,7 @@ const (
 	TypeRecord5 = 24
 	TypeRecordData = 25
 	TypeFunc11 = 26
+	TypeFunctionData = 27
 )
 
 // We do not add FloatVal or BoolVal fields to keep the struct size minimal.
@@ -636,12 +637,46 @@ func FuncAny(f any) Value {
 	return Value{Type: TypeFunc, UnsafePtr: unsafe.Pointer(ptr)}
 }
 
+// Function data is immutable metadata owned by the callback, not a global
+// registry. The ordinary entry remains callable through every Apply variant.
+// Keeping a separate tag avoids depending on Go's closure memory layout.
+type functionData struct {
+	function Value
+	data any
+}
+
+func WithFunctionData(function Value, data any) Value {
+	if function.Type == TypeFunctionData {
+		function = (*functionData)(function.UnsafePtr).function
+	}
+	switch function.Type {
+	case TypeFunc, TypeFunc2, TypeFunc3, TypeFunc4, TypeFunc5,
+		TypeFunc6, TypeFunc7, TypeFunc8, TypeFunc9, TypeFunc10, TypeFunc11:
+	default:
+		panic("WithFunctionData requires a function")
+	}
+	return Value{Type: TypeFunctionData, UnsafePtr: unsafe.Pointer(&functionData{function, data})}
+}
+
+// Only an exact metadata type is recognized. Partial application returns the
+// ordinary partial callback: metadata describing the full call no longer fits.
+func FunctionData[T any](function Value) (T, bool) {
+	if function.Type == TypeFunctionData && function.UnsafePtr != nil {
+		data, ok := (*functionData)(function.UnsafePtr).data.(T)
+		return data, ok
+	}
+	var zero T
+	return zero, false
+}
+
 
 func Apply(f Value, arg Value) Value {
 	if f.UnsafePtr == nil {
 		panic(fmt.Sprintf("PANIC in Apply: f.Type = %v, f.UnsafePtr is nil", f.Type))
 	}
 	switch f.Type {
+	case TypeFunctionData:
+		return Apply((*functionData)(f.UnsafePtr).function, arg)
 	case TypeFunc:
 		return (*(*func(Value) Value)(unsafe.Pointer(&f.UnsafePtr)))(arg)
 	case TypeFunc2:
@@ -684,6 +719,8 @@ func Apply(f Value, arg Value) Value {
 // overapplication keep their evaluation order.
 func Apply2(f Value, arg1, arg2 Value) Value {
 	switch f.Type {
+	case TypeFunctionData:
+		return Apply2((*functionData)(f.UnsafePtr).function, arg1, arg2)
 	case TypeFunc2:
 		return (*(*func(Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr)))(arg1, arg2)
 	case TypeFunc3:
@@ -719,6 +756,8 @@ func Apply2(f Value, arg1, arg2 Value) Value {
 
 func Apply3(f Value, arg1, arg2, arg3 Value) Value {
 	switch f.Type {
+	case TypeFunctionData:
+		return Apply3((*functionData)(f.UnsafePtr).function, arg1, arg2, arg3)
 	case TypeFunc3:
 		return (*(*func(Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr)))(arg1, arg2, arg3)
 	case TypeFunc4:
@@ -751,6 +790,8 @@ func Apply3(f Value, arg1, arg2, arg3 Value) Value {
 
 func Apply4(f Value, arg1, arg2, arg3, arg4 Value) Value {
 	switch f.Type {
+	case TypeFunctionData:
+		return Apply4((*functionData)(f.UnsafePtr).function, arg1, arg2, arg3, arg4)
 	case TypeFunc4:
 		return (*(*func(Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr)))(arg1, arg2, arg3, arg4)
 	case TypeFunc5:
@@ -780,6 +821,8 @@ func Apply4(f Value, arg1, arg2, arg3, arg4 Value) Value {
 
 func Apply5(f Value, arg1, arg2, arg3, arg4, arg5 Value) Value {
 	switch f.Type {
+	case TypeFunctionData:
+		return Apply5((*functionData)(f.UnsafePtr).function, arg1, arg2, arg3, arg4, arg5)
 	case TypeFunc5:
 		return (*(*func(Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr)))(arg1, arg2, arg3, arg4, arg5)
 	case TypeFunc6:
@@ -823,6 +866,9 @@ func Any(v any) Value {
 }
 
 func UncurriedApp2(fn Value, a, b Value) Value {
+	if fn.Type == TypeFunctionData {
+		return Apply2(fn, a, b)
+	}
 	if fn.Type == TypeFunc2 {
 		return (*(*func(Value, Value) Value)(unsafe.Pointer(&fn.UnsafePtr)))(a, b)
 	}
@@ -830,6 +876,9 @@ func UncurriedApp2(fn Value, a, b Value) Value {
 }
 
 func UncurriedApp3(fn Value, a, b, c Value) Value {
+	if fn.Type == TypeFunctionData {
+		return Apply3(fn, a, b, c)
+	}
 	if fn.Type == TypeFunc3 {
 		return (*(*func(Value, Value, Value) Value)(unsafe.Pointer(&fn.UnsafePtr)))(a, b, c)
 	}
@@ -837,6 +886,9 @@ func UncurriedApp3(fn Value, a, b, c Value) Value {
 }
 
 func UncurriedApp4(fn Value, a, b, c, d Value) Value {
+	if fn.Type == TypeFunctionData {
+		return Apply4(fn, a, b, c, d)
+	}
 	if fn.Type == TypeFunc4 {
 		return (*(*func(Value, Value, Value, Value) Value)(unsafe.Pointer(&fn.UnsafePtr)))(a, b, c, d)
 	}
@@ -844,6 +896,9 @@ func UncurriedApp4(fn Value, a, b, c, d Value) Value {
 }
 
 func UncurriedApp5(fn Value, a, b, c, d, e Value) Value {
+	if fn.Type == TypeFunctionData {
+		return Apply5(fn, a, b, c, d, e)
+	}
 	if fn.Type == TypeFunc5 {
 		return (*(*func(Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&fn.UnsafePtr)))(a, b, c, d, e)
 	}
@@ -1048,6 +1103,8 @@ func Wrap5[A, B, C, D, E, R any](f func(A, B, C, D, E) R) Value {
 
 func Apply6(f Value, arg1, arg2, arg3, arg4, arg5, arg6 Value) Value {
 	switch f.Type {
+	case TypeFunctionData:
+		return Apply6((*functionData)(f.UnsafePtr).function, arg1, arg2, arg3, arg4, arg5, arg6)
 	case TypeFunc6:
 		return (*(*func(Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr)))(arg1, arg2, arg3, arg4, arg5, arg6)
 	case TypeFunc7:
@@ -1071,6 +1128,8 @@ func Apply6(f Value, arg1, arg2, arg3, arg4, arg5, arg6 Value) Value {
 
 func Apply7(f Value, arg1, arg2, arg3, arg4, arg5, arg6, arg7 Value) Value {
 	switch f.Type {
+	case TypeFunctionData:
+		return Apply7((*functionData)(f.UnsafePtr).function, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
 	case TypeFunc7:
 		return (*(*func(Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr)))(arg1, arg2, arg3, arg4, arg5, arg6, arg7)
 	case TypeFunc8:
@@ -1112,6 +1171,8 @@ func ValueToAny(val Value) any {
 
 func Apply8(f Value, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8 Value) Value {
 	switch f.Type {
+	case TypeFunctionData:
+		return Apply8((*functionData)(f.UnsafePtr).function, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
 	case TypeFunc8:
 		return (*(*func(Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr)))(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
 	case TypeFunc9:
@@ -1129,6 +1190,8 @@ func Apply8(f Value, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8 Value) Value
 
 func Apply9(f Value, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9 Value) Value {
 	switch f.Type {
+	case TypeFunctionData:
+		return Apply9((*functionData)(f.UnsafePtr).function, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
 	case TypeFunc9:
 		return (*(*func(Value, Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr)))(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
 	case TypeFunc10:
@@ -1143,6 +1206,8 @@ func Apply9(f Value, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9 Value)
 
 func Apply10(f Value, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 Value) Value {
 	switch f.Type {
+	case TypeFunctionData:
+		return Apply10((*functionData)(f.UnsafePtr).function, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
 	case TypeFunc10:
 		return (*(*func(Value, Value, Value, Value, Value, Value, Value, Value, Value, Value) Value)(unsafe.Pointer(&f.UnsafePtr)))(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
 	case TypeFunc11:

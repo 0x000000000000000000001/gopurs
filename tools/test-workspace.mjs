@@ -23,6 +23,11 @@ export function prepareFixture(root, workspace, file, index, packages) {
   const declared = [...content.matchAll(/^-- @dependencies: (.*)$/gm)].map(match => match[1]).join(" ").trim();
   const dependencies = declared ? declared.split(/\s+/) : packages;
   if (!dependencies.every(name => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name))) throw new Error(`Invalid @dependencies in ${file}`);
+  // Explicit fixture dependencies can include native libraries outside the
+  // bootstrap's core set. Use their local FFI instead of the registry's JS-only
+  // package, while retaining the registry for dependencies without a checkout.
+  const overrides = [...new Set([...packages, ...dependencies.filter(name =>
+    existsSync(join(dirname(root), "gopurs-" + name, "spago.yaml")))])];
 
   const name = basename(file, ".purs");
   const directory = join(workspace, `${index}-${name}`);
@@ -40,7 +45,7 @@ export function prepareFixture(root, workspace, file, index, packages) {
   if (statSync(companionDirectory, { throwIfNoEntry: false })?.isDirectory()) cpSync(companionDirectory, source, { recursive: true });
 
   const config = "package:\n  name: runner\n  dependencies:\n" + dependencies.map(name => `    - ${name}\n`).join("") +
-    "workspace:\n  packageSet:\n    registry: 77.10.1\n  extraPackages:\n" + packages.map(name =>
+    "workspace:\n  packageSet:\n    registry: 77.10.1\n  extraPackages:\n" + overrides.map(name =>
       `    ${name}:\n      path: ${JSON.stringify(join(dirname(root), "gopurs-" + name))}\n`).join("");
   writeFileSync(join(directory, "spago.yaml"), config);
   return { name, directory, snapshotFfi: /^-- @snapshot-ffi\r?$/m.test(content) };

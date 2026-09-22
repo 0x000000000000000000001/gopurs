@@ -120,6 +120,21 @@ test("fixtures own their sources, companions, config, lock and output", async t 
   assert.notEqual(...simultaneous.map(run => run.output.match(/Workspace: (.+)/)[1]));
 });
 
+test("explicit dependencies use native checkouts beyond the core package set", async t => {
+  const f = fixture(t);
+  f.source("Alpha", "-- @dependencies: prelude native-extra registry-only\nmodule Main where\n");
+  mkdirSync(join(f.base, "gopurs-native-extra"));
+  writeFileSync(join(f.base, "gopurs-native-extra/spago.yaml"), "package:\n  name: native-extra\n");
+  const result = await f.run(["Alpha", "--keep-workspace"]);
+  assert.equal(result.code, 0, result.output);
+  const workspace = result.output.match(/Kept workspace: (.+)/)[1];
+  const config = readFileSync(join(workspace, "0-Alpha/spago.yaml"), "utf8");
+  assert.match(config, /    - registry-only/);
+  assert.match(config, /    native-extra:\n      path: .*gopurs-native-extra/);
+  assert.doesNotMatch(config, /    registry-only:/);
+  assert.equal((config.match(/    prelude:/g) ?? []).length, 1);
+});
+
 test("snapshot creation and replacement require opt-in, including FFI", async t => {
   const f = fixture(t);
   f.source("Alpha", "-- @snapshot-ffi\nmodule Main where\n");
