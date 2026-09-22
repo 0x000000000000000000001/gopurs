@@ -15,6 +15,7 @@ import Data.String.Pattern (Pattern(..), Replacement(..))
 import Data.Tuple (Tuple(..))
 import Gopurs.ArrayIntrinsics as ArrayIntrinsics
 import Gopurs.ArrayTraverse as ArrayTraverse
+import Gopurs.ObjectTraverse as ObjectTraverse
 import Gopurs.CallAnalysis (CallTarget, collectGoSpine, getGoSpineArgs, curriedTarget, qualifiedTarget)
 import Gopurs.CallArguments (Arguments, applyBoxed)
 import Gopurs.CallArguments as CallArguments
@@ -38,7 +39,11 @@ application translate context nextId expression =
     -- Curried calls give a tail jump priority over intrinsic recognition.
     case tailTarget context fn of
       Just target -> tailCall translate context nextId expression args target
-      Nothing -> case ArrayTraverse.emit translate context nextId (qualifiedTarget fn) args of
+      Nothing -> case ObjectTraverse.emit translate context nextId (qualifiedTarget fn) args of
+        Just result -> result
+        Nothing -> regularApplication fn args
+  where
+  regularApplication fn args = case ArrayTraverse.emit translate context nextId fn args of
         Just result -> result
         Nothing ->
           let target = curriedTarget context.bound fn

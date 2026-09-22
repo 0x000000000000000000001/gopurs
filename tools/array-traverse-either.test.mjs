@@ -38,7 +38,7 @@ const context = () => ({
     mbExpectedExprType: Nothing.value,
 });
 const variable = (module, name) => new TcoExpr(null, new S.Var(new C.Qualified(new Just(module), name)));
-const target = new Just({ mbMod: new Just('Data.TraversableWithIndex'), name: 'traverseWithIndexDefault' });
+const target = variable('Data.TraversableWithIndex', 'traverseWithIndexDefault');
 const args = [variable('Data.TraversableWithIndex', 'traversableWithIndexArray'),
     variable('Data.Either', 'applicativeEither'), variable('Probe', 'callback'), variable('Probe', 'array')];
 
@@ -46,18 +46,72 @@ test('Either traversal fusion requires the standard qualified Array and Either d
     const forbidden = () => { throw new Error('unexpected translation'); };
     const reject = (candidate, supplied) => assert.deepEqual(
         emit(forbidden)(context())(0)(candidate)(supplied), Nothing.value);
-    for (const candidate of [Nothing.value,
-        new Just({ mbMod: new Just('Other'), name: 'traverseWithIndexDefault' }),
-        new Just({ mbMod: Nothing.value, name: 'traverseWithIndexDefault' }),
-        new Just({ mbMod: new Just('Data.TraversableWithIndex'), name: 'forWithIndex' })]) {
+    for (const candidate of [new TcoExpr(null, new S.Local(new Just('unknown'), 0)),
+        variable('Other', 'traverseWithIndexDefault'),
+        new TcoExpr(null, new S.Var(new C.Qualified(Nothing.value, 'traverseWithIndexDefault'))),
+        variable('Data.TraversableWithIndex', 'forWithIndex')]) {
         reject(candidate, args);
     }
-    reject(target, args.slice(0, 2));
+    reject(target, args.slice(0, 1));
     reject(target, [...args, args[3]]);
     reject(target, [variable('Other', 'traversableWithIndexArray'), ...args.slice(1)]);
     reject(target, [args[0], variable('Other', 'applicativeEither'), ...args.slice(2)]);
     reject(target, [args[0], variable('Data.Maybe', 'applicativeMaybe'), ...args.slice(2)]);
     reject(target, [args[0], new TcoExpr(null, new S.Local(new Just('dictionary'), 0)), ...args.slice(2)]);
+});
+
+test('nonindexed traversal accepts only the standard dictionary accessor and exact Either FFI methods', () => {
+    const translate = _context => nextId => _expression => ({
+        stmts: StmtEmpty.value, expr: Go.rawGo('placeholder'), exprType: Go.TypeValue.value, nextId,
+    });
+    const accept = (candidate, supplied) => {
+        const result = emit(translate)(context())(0)(candidate)(supplied);
+        assert.ok(result instanceof Just);
+        return printGoExpr(result.value0.expr);
+    };
+    const reject = (candidate, supplied) => assert.deepEqual(
+        emit(() => { throw new Error('unexpected translation'); })(context())(0)(candidate)(supplied), Nothing.value);
+    assert.match(accept(target, args.slice(0, 2)), /gopurs_runtime.Func2\(/,
+        'a dictionary-only indexed application creates a reusable binary worker');
+
+    const traversal = variable('Data.Traversable', 'traversableArray');
+    const method = new TcoExpr(null, new S.Accessor(traversal, new S.GetProp('traverse')));
+    const nonindexed = variable('Data.Traversable', 'traverse');
+    const nonindexedArgs = [traversal, ...args.slice(1)];
+    for (const supplied of [2, 3, 4]) accept(nonindexed, nonindexedArgs.slice(0, supplied));
+    for (const supplied of [1, 2, 3]) accept(method, args.slice(1, supplied + 1));
+    reject(nonindexed, nonindexedArgs.slice(0, 1));
+    reject(nonindexed, [...nonindexedArgs, args[3]]);
+    reject(method, []);
+    reject(method, args);
+    reject(method, [variable('Data.Maybe', 'applicativeMaybe'), ...args.slice(2)]);
+    reject(new TcoExpr(null, new S.Accessor(variable('Other', 'traversableArray'), new S.GetProp('traverse'))), args.slice(1));
+    reject(new TcoExpr(null, new S.Accessor(traversal, new S.GetProp('sequence'))), args.slice(1));
+
+    const apply = (module, name, dictionary) => new TcoExpr(null, new S.App(variable(module, name), [dictionary]));
+    const ffi = variable('Data.Traversable', 'traverseArrayImpl');
+    const prefix = [
+        apply('Control.Apply', 'apply', variable('Data.Either', 'applyEither')),
+        apply('Data.Functor', 'map', variable('Data.Either', 'functorEither')),
+        apply('Control.Applicative', 'pure', variable('Data.Either', 'applicativeEither')),
+        apply('Data.Semigroup', 'append', variable('Data.Semigroup', 'semigroupArray')),
+    ];
+    const ffiArgs = [...prefix, ...args.slice(2)];
+    for (const supplied of [4, 5, 6]) accept(ffi, ffiArgs.slice(0, supplied));
+    reject(ffi, prefix.slice(0, 3));
+    reject(ffi, [...ffiArgs, args[3]]);
+    for (let i = 0; i < prefix.length; i++) {
+        const changed = ffiArgs.slice();
+        changed[i] = new TcoExpr(null, new S.Local(new Just('unknownMethod'), i));
+        reject(ffi, changed);
+        const original = prefix[i].value1;
+        changed[i] = new TcoExpr(null, new S.App(original.value0, [variable('Other', original.value1[0].value1.value0.value1)]));
+        reject(ffi, changed);
+        changed[i] = new TcoExpr(null, new S.App(variable('Other', original.value0.value1.value0.value1), original.value1));
+        reject(ffi, changed);
+        changed[i] = new TcoExpr(null, new S.App(original.value0, [...original.value1, args[3]]));
+        reject(ffi, changed);
+    }
 });
 
 function generatedFixture() {
