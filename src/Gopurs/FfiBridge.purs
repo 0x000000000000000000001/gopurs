@@ -138,11 +138,18 @@ unwrapValueToFunc dataDecls (TNamed anyT) mbTast valName depth cidx | anyT == "a
 unwrapValueToFunc _ t _ valName _ _ = "gopurs_runtime.Unbox[" <> printTypeNode t <> "](" <> valName <> ")"
 
 boxFfiValue :: TypeNode -> String -> String
+boxFfiValue (TNamed "gopurs_runtime.Value") valName = valName
 boxFfiValue (TNamed "int64") valName = "gopurs_runtime.Int(" <> valName <> ")"
 boxFfiValue (TNamed "int") valName = "gopurs_runtime.Int(int64(" <> valName <> "))"
 boxFfiValue _ valName = "gopurs_runtime.Box(" <> valName <> ")"
 
 wrapReturn :: Array DataDecl -> TypeNode -> Maybe ExprType -> String -> String
+-- A runtime Value already has the required representation, including when its
+-- PureScript type is a record or function. Native callbacks with this exact
+-- signature likewise need no argument/result conversion or forwarding closure.
+wrapReturn _ (TNamed "gopurs_runtime.Value") _ valName = valName
+wrapReturn _ (TFunc [ TNamed "gopurs_runtime.Value" ] (Just (TNamed "gopurs_runtime.Value"))) _ valName =
+  "gopurs_runtime.Func(" <> valName <> ")"
 wrapReturn dataDecls (TFunc args ret) mbTast valName =
   let
     innerT = ret
@@ -193,7 +200,7 @@ wrapReturn dataDecls (TMap _ _) mbTast valName =
       "gopurs_runtime.Any(" <> valName <> ")"
     else
       "func() gopurs_runtime.Value {\n\t\t\tres_map := make(map[string]gopurs_runtime.Value)\n\t\t\tfor k, v := range " <> valName <> " { res_map[k] = gopurs_runtime.Box(v) }\n\t\t\treturn gopurs_runtime.Record(res_map)\n\t\t}()"
-wrapReturn dataDecls (TNamed anyT) mbTast valName | anyT == "any" || anyT == "interface{}" || anyT == "gopurs_runtime.Value" =
+wrapReturn dataDecls (TNamed anyT) mbTast valName | anyT == "any" || anyT == "interface{}" =
   let
     resolvedTast = map (resolveNewtype dataDecls) mbTast
   in

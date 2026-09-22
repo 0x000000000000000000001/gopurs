@@ -1,16 +1,22 @@
 # Gopurs — réduire le temps de compilation de b8x
 
-État au 22 septembre 2026 : **fusion de `resolveArgs` PBO intégrée**, avec gain Go modeste sur le diagnostic JSON/TAST : **590,273 → 573,631 ms (−2,82 %)** et **595,948 → 586,711 Mio (−1,55 %)** par corpus. JS : **83,381 → 75,899 ms**. Erreurs, cycles et AST préservés ; détails ci-dessous.
+État au 22 septembre 2026 : **records compacts et traversée FFI Value intégrés**. Diagnostic applicatif JSON général : **61,042 → 45,816 ms (−24,94 %)**, décodage seul **−27,14 %**, allocations combinées **−24,84 %**. JS actuel **8,647 ms**, écart restant **×5,30**. Le TAST profite peu de ces changements : **582,022 → 567,609 ms (−2,48 % observés, plages qui se recoupent)**. Baselines README précédentes : Go **57,43 / 573,63 ms** pour JSON général / TAST. Aucun nouveau b8x complet. Détail et suites générales au point 12 ci-dessous.
+
+**Comparaison des pistes, 22 septembre :** 16 variantes × 3 processus, puis sonde de mises à jour immuables. Sur le **vrai Go généré modifié en scratch**, fusionner le décodage des tableaux donne **45,364 → 35,193 ms (−22,42 %)** ; avec bêta-réduction **34,709 ms (−23,49 %)**, JS témoin **9,051 ms**. Dans le moteur manuel partagé, modifier seulement l'accès au dictionnaire gagne **6,02 %** ; enlever aussi les enveloppes `Value` aux appels/résultats accélère le décodage de **×4,35**. Les prototypes natifs complets restent vers **8,3–8,5 ms** avec parsing. **Aucun de ces nouveaux gains n'est intégré.** Priorité immédiate : fusion des tableaux ; chantier architectural : appels/résultats natifs et stockage stable, fonctions polymorphes partagées. Interfaces et descripteurs restent des outils complémentaires ; les chaînes naïves de wrappers se dégradent fortement. Détails dans la première section du point 12.
+
+Étape précédente : **fusion de `resolveArgs` PBO intégrée**, avec gain Go modeste sur le diagnostic JSON/TAST : **590,273 → 573,631 ms (−2,82 %)** et **595,948 → 586,711 Mio (−1,55 %)** par corpus. JS : **83,381 → 75,899 ms**. Erreurs, cycles et AST préservés ; détails ci-dessous.
 
 Étape précédente : **applications multiarguments du runtime corrigées et passerelle JSON allégée**. Sur le diagnostic altbak JSON/TAST (12 modules, 1 P, GOGC=100), Go passe de **720,986 à 599,956 ms (−16,79 %)** et alloue **19,98 % de moins** ; JS contrôle **85,856 ms**, soit encore **×6,99**. Compilateur reconstruit, résultats structurels identiques, détail ci-dessous.
 
 État précédent du compilateur complet : **indexation Go corrigée et chargement TAST natif à 8 workers par défaut**. Sur les 238 modules de gopurs-aff : backend natif **9,167 → 7,8185 s (−14,71 %)** dans les séries mesurées ; dernier contrôle JS **6,9665 s**, soit encore **12,23 % d'écart**. Le vrai `gopurs-aff/bin/test -c` passe entièrement : backend **7,864 s**.
 
-**Sous-étape précédente, point 11 : suppression d'une copie du tableau entier à chaque lecture d'indice**, révélée par pprof dans la liste d'attente du décodeur de types. Le chargement Aff passe de **2,9315 à 1,3380 s** avec les deux changements. Sur b8x, contrôle limité au chargement : **21,1255 → 13,5975 s** avec 1 puis 8 workers (−35,64 %, +0,650 Gio de pic RSS de cette phase). **Pas de nouveau backend b8x complet** : le dernier `b -c` avant ces changements reste **181,220 s de backend / 267,697 s de commande**, référence initiale historique 591,665 s. Les points 3, 4, 6, 7, 8, 10 et 11 restent ouverts.
+**Sous-étape précédente, point 11 : suppression d'une copie du tableau entier à chaque lecture d'indice**, révélée par pprof dans la liste d'attente du décodeur de types. Le chargement Aff passe de **2,9315 à 1,3380 s** avec les deux changements. Sur b8x, contrôle limité au chargement : **21,1255 → 13,5975 s** avec 1 puis 8 workers (−35,64 %, +0,650 Gio de pic RSS de cette phase). **Pas de nouveau backend b8x complet** : le dernier `b -c` avant ces changements reste **181,220 s de backend / 267,697 s de commande**, référence initiale historique 591,665 s. Les points 3, 4, 6, 7, 8, 10, 11 et 12 restent ouverts.
 
 ## Points à traiter un par un, ultérieurement
 
-**Suite du point 11 : mesurer les traversées du décodeur de table des types et leurs conversions tableaux/callbacks**, encore visibles dans le nouveau profil altbak. Les applications génériques à 6–10 arguments et la triple traversée de `resolveArgs` sont corrigées. Le gain de cette fusion est modeste : déplacer l’effort vers les traversées restantes des champs Row/contraintes, les adaptations `TraverseArrayImpl` et les paires unbox/rebox de tableaux dans le code généré, avec une sonde mesurée avant intégration. Préserver la priorité des erreurs et toutes les informations TAST. La préparation Aff du point 3 reste distincte. Confirmer ensuite temps global et mémoire dans le vrai `b -c` b8x (point 7) ; aucun gain global b8x n’est extrapolé du diagnostic. Le parseur n’a pas été changé ; son remplacement reste à justifier. Le prochain gros chantier de parallélisme reste le point 4 : ordonnancement PBO entre modules avec transmission des directives conservée. Défauts natifs : chargement 8, émission 8, préparation 2 ; chargement JS 1.
+**Priorité : point 12, intégrer la fusion du décodage des tableaux dont le gain est maintenant mesuré sur le Go généré.** La version scratch conserve chaque appel au décodeur, son ordre et la première erreur : **−22,42 % au total**. Ensuite, établir sur du vrai PureScript une **convention d'appel native pour des fonctions polymorphes partagées**, gardant records et résultats natifs à travers l'appel. Les sondes isolées montrent que changer seulement le dictionnaire est insuffisant ; les enveloppes et intermédiaires coûtent davantage. Comparer interfaces/accesseurs et descripteurs sans dupliquer le corps par record, mesurer allocations et taille. Éviter les chaînes de wrappers : 32 mises à jour font passer une lecture à 525 ns contre 20 ns avec les records actuels. La bêta-réduction ciblée est utile mais son gain total isolé reste modeste. Les sondes manuelles vers 8 ms ne prouvent pas encore une traduction générale par gopurs.
+
+**Point 11 toujours ouvert :** la FFI de traversée est allégée, mais le TAST ne gagne que modestement. Reprofiler ce décodeur avant sa prochaine optimisation propre ; `resolveArgs` et les applications à 6–10 arguments sont déjà corrigés. Le parseur n'a pas été changé. Confirmer ultérieurement le gain global et la mémoire sur le vrai b8x (point 7). Le prochain gros chantier de parallélisme reste le point 4 : ordonnancement PBO entre modules avec transmission des directives conservée. Défauts natifs : chargement 8, émission 8, préparation 2 ; chargement JS 1.
 
 Travailler sur un seul point à la fois. Commencer par une expérience courte, vérifier le comportement et mesurer le gain avant de passer au suivant. Les chiffres du diagnostic ci-dessous sont des observations ; les gains proposés restent à établir.
 
@@ -26,7 +32,79 @@ Travailler sur un seul point à la fois. Commencer par une expérience courte, v
 - [ ] **10. Compilation incrémentale entre builds.** Réutiliser les résultats des modules inchangés pour le cycle quotidien. Définir l’invalidation des signatures, directives PBO, spécialisations transitives, FFI et versions du compilateur ; comparer les sorties avec un build propre. Ce chantier est distinct de l’accélération de `b -c -n` : un cache invalidé par `-c` n’améliore pas ce rebuild forcé. Potentiel à mesurer sur une modification réelle de b8x, pas sur la seule commande propre.
 - [ ] **11. Écart JS/natif au chargement TAST.** Descriptions des types décodées une seule fois dans PBO, puis correction générale de `OpArrayIndex` dans gopurs : convertir seulement l'élément sélectionné évite les copies répétées du tableau d'indices en attente. Cette ligne représentait **3,15 Go d'allocations** dans le profil Aff. À 1 worker : chargement **2,9315 → 2,4540 s** ; avec le nouveau défaut natif à 8 : **1,3380 s**. JS final : **0,5855 s**. Backend natif **7,8185 s / JS 6,9665 s** ; tests Aff complets et sorties JS/native comparées. Chargement b8x −35,64 % entre 1 et 8 workers, mémoire de phase +0,650 Gio ; validation du backend b8x complet à refaire. Le natif utilise déjà `encoding/json.Unmarshal` ; profiler les coûts restants avant de changer de parseur. Aucun cache entre builds ni perte d'information TAST.
 
+- [ ] **12. Performances générales du code Go, révélées par JSON Decoding.** Corrections runtime/FFI intégrées : −24,94 % sur le JSON général dans leur comparaison contrôlée. **Comparaison des pistes terminée, nouveaux prototypes non intégrés.** Suite ordonnée : **(a)** fusion des tableaux/décodage connu, gain scratch −22,42 % sur le Go réellement généré ; **(b)** convention d'appel native pour fonctions polymorphes partagées, stockage stable et résultats natifs ; **(c)** suppression des closures/ADT immédiatement consommés ; **(d)** adaptation des records par interfaces ou descripteurs selon l'usage, sans chaînes de wrappers. Dictionnaire natif seul : 6,02 % dans la sonde, passage à des arguments/résultats natifs : ×4,35 sur le décodage de ce moteur manuel. Les prototypes complets avoisinent JS, sans démontrer la généralité de toute instance `DecodeJson`. Conserver rangées, immutabilité, ordre/erreurs/effets, fonctions échappantes et ABI FFI ; mesurer taille du code partagé. Gain propre à `Maybe` encore non établi. Tester JSON général puis TAST ; refaire b8x après intégration. Le parseur devient dominant seulement dans les prototypes natifs.
+
 Chaque point doit laisser un résultat vérifié, les mesures avant/après et ses limites dans ce document. Consolider les gains cumulés historiques avec des séries de runs comparables.
+
+## Point 12 — sélection des axes après comparaison, 22 septembre 2026
+
+**16 variantes, 48 processus**, ordre alterné/rotatif, deux chauffes et cinq échantillons par phase, médiane des minima de processus ; 1 P, GOGC=100, PGO désactivé. Aucun build/test/profil concurrent. Baselines officielles README **45,82 ms Go / 8,65 ms JS**, inchangées ; les témoins de cette campagne donnent **45,364 / 9,051 ms**. Les nouvelles modifications restent en scratch.
+
+| Vrai Go généré, modifié en scratch | Décodage (ms) | Parse + decode (ms) | Allocations décodage (Mio) |
+|---|---:|---:|---:|
+| Témoin | 38,327 | 45,364 | 56,729 |
+| Application dans les branches + bêta-réduction | 35,124 | 44,020 | 54,489 |
+| Fusion du décodage des tableaux | 26,939 | **35,193** | 42,107 |
+| Fusion + bêta-réduction/retour du Left existant | 27,425 | **34,709** | **39,867** |
+| JS témoin | 7,307 | 9,051 | — |
+
+**Fusion : −22,42 % au total, −25,77 % d'octets de décodage.** Le décodeur fourni, son ABI, les constructeurs d'erreur et l'ordre restent identiques ; tous les callbacks sont appelés même après une erreur. Le résultat conserve la première erreur. Ce n'est pas une autorisation de court-circuiter un `traverse` Applicative arbitraire. La combinaison réduit les allocations de 29,72 %, mais ne démontre pas un gain de débit supplémentaire face à la fusion seule. Bêta-réduction isolée : −2,96 % au total, plages recoupées. Binaires stables ou plus petits (6 458 962 octets témoin ; 6 420 194 combiné).
+
+**Sondes architecturales séparées**, même moteur partagé et même stockage entre variantes :
+
+- Dictionnaire `Value`/RecordGet/Apply → dictionnaire natif conservant l'ABI Value : **2,835 → 2,664 ms**, −6,02 %, allocations identiques. Puis arguments/résultats natifs : **0,613 ms**, soit **×4,35**, allocations **4,659 → 1,035 Mio**. Ce résultat isole la frontière d'appel ; son tuple boxé n'est pas l'exact layout `Either` généré.
+- Tableaux directs contre arbre de concaténations, résultats natifs constants : **1,141 → 0,656 ms** (−42,50 %). Résultats par valeur contre enveloppes allouées, tableaux directs constants : **1,013 → 0,656 ms** (−35,22 %). Ce modèle force les allocations d'enveloppes pour étudier le mécanisme ; il ne mesure pas exactement les ADT de gopurs ni un gain propre à `Maybe`. Ne pas sommer ces pourcentages.
+- Reprise interfaces/descripteurs : **0,548 / 0,708 ms de décodage**, **8,501 / 8,324 ms avec parsing**. Structs typées plus sobres ; pas de vainqueur fiable au total dominé par le parsing. Les schémas de ces moteurs restent manuels.
+- **Limite des interfaces imbriquées :** après 1/8/32 remplacements immuables du même champ, lecture **52,05 / 153,40 / 525,30 ns**, contre environ **20 ns Value / 2,8 ns slots plats**. Construction exclue ; toutes les versions intermédiaires restent accessibles via les wrappers. Ce défaut vient du chaînage naïf et peut être évité par un autre stockage ; ce n'est pas une limite intrinsèque des interfaces.
+
+**Voie retenue : fonctions polymorphes partagées avec arguments/résultats natifs, records stables et construction fusionnée.** Exploiter les types du TAST ; garder les corps communs, adapter seulement layouts/accesseurs aux formes. Interfaces utiles comme vues, descripteurs utiles pour les rangées ouvertes ; pas de remplacement universel des records par des wrappers. Garder un repli générique pour les valeurs/fonctions échappantes, instances inconnues et FFI. Prochaine intégration concrète : la fusion des tableaux, puis une preuve générée du nouvel appel polymorphe. Le vrai prototype généré combiné reste **environ ×3,8 derrière JS** ; les 8 ms manuelles sont un potentiel architectural, pas un gain acquis.
+
+**Validation :** 17 cas fixes pour toutes les variantes ; 317 différentiels JS pour les moteurs manuels. Les modifications du Go généré sont identiques au Go témoin sur 317 cas, dont 10 écarts JS/Go préexistants sur les Int hors bornes signées 32 bits (contrat natif documenté). Aucun cas chronométré n'est concerné. Ordre des callbacks, erreurs, immutabilité et résultats complets contrôlés. Pas de nouvelle mesure TAST/b8x ; aucune cellule README remplacée par un prototype.
+
+[Rapport détaillé](/Users/0x1/Documents/htdocs/altbak.pub-gopurs/docs/benchmark-results/2026-09-22-json-options.md) · [Archive des résultats et scripts](/Users/0x1/Documents/htdocs/altbak.pub-gopurs/docs/benchmark-results/2026-09-22-json-options.json).
+
+## Point 12 — comparaison architecturale, prototypes du 22 septembre 2026
+
+Première campagne, conservée comme historique ; la comparaison plus large ci-dessus précise les contributions et remplace son ordre de priorité.
+
+Expérience demandée sur **interfaces composées + structs privées** face à **descripteurs de layout + slots**, en conservant un corps de décodeur partagé entre tous les schémas. Le prototype matérialise les résultats ; aucun cache ni retour du JSON brut. Deux mesures distinctes : décodage du corpus général complet, puis opérations polymorphes sur 1/8/32 layouts. **Aucune nouvelle correction de production dans cette étape.**
+
+| Médiane, même corpus (ms) | Go actuel | Prototype interfaces | Prototype descripteurs | JS |
+|---|---:|---:|---:|---:|
+| Parsing | 6,834 | 6,708 | 6,659 | 1,518 |
+| Décodage | 35,191 | **0,525** | **0,602** | 7,007 |
+| Parse + decode | 44,385 | **7,871** | **8,064** | 8,485 |
+
+Baselines officielles README inchangées : **45,82 ms Go / 8,65 ms JS**. Les prototypes n'alimentent pas ces cellules. Trois processus par modèle, ordre alterné, deux chauffes/cinq échantillons, 1 P/GOGC=100/PGO off, contrôles hors mesure. Allocations décodage : **56,729 → 1,035 Mio** avec structs/interfaces (−98,17 %), ou 1,676 Mio avec descripteurs. **×5,64 sur parse + decode**, **×67 sur décodage** face au Go actuel dans cette expérience. Le prototype se situe près de JS au total ; son avance de 7,24 % dans cette série ne prouve pas une supériorité générale. **Les deux prototypes partagent exactement le même moteur** : les interfaces gagnent 12,73 % sur le décodage face aux slots. Le gros écart avec gopurs inclut aussi la suppression des dictionnaires/closures, enveloppes ADT et tableaux intermédiaires. Il ne mesure pas l'embedding isolé.
+
+Les **17 cas de l'oracle indépendant** et **317 cas différentiels face au véritable décodeur JS** passent pour chaque modèle : valeurs complètes, erreurs/priorités, limites Int, champs absents, options, variantes et tableaux. Le moteur emploie des schémas manuels ; la généralité des instances arbitraires `DecodeJson`, des opérations de rangées et de l'ABI PureScript n'est pas démontrée. Pas de nouveau TAST ou b8x.
+
+**Sonde records, 32 layouts :** lecture/calcul **12,24 ns Value / 5,41 ns interfaces / 1,89 ns descripteurs** ; construction+lecture **82,73 / 18,01 / 64,19 ns** ; insertion immuable+lecture **143,50 / 57,76 / 51,85 ns**. Les interfaces économisent la construction, les descripteurs gagnent en accès pur. L'extension par interface retient la source : chaînes d'extensions, rétention mémoire, suppressions et remplacement changeant le type restent à étudier. Tests : 32 × 256 valeurs avec tous les champs, immutabilité et GC.
+
+**Taille :** 1/8/32 types, toujours **un seul symbole de fonction de calcul** ; binaire sans symboles **1 571 554 / 1 605 458 / 1 624 994 octets** (+3,40 % de 1 à 32). Les accesseurs/métadonnées croissent ; ce test ne prédit pas la taille complète de gopurs et ne mesure pas le coût d'une monomorphisation totale.
+
+**Décision : poursuivre par une preuve générée depuis PureScript du stockage natif à travers le polymorphisme**, puis traiter conjointement les intermédiaires de contrôle/ADT/tableaux. Le prototype justifie ce chantier architectural ; il ne constitue pas une solution prête à généraliser ni une promesse de gain identique.
+
+[Rapport et archive reproductible](/Users/0x1/Documents/htdocs/altbak.pub-gopurs/docs/benchmark-results/2026-09-22-json-architecture.md) · [Scripts exécutés](/Users/0x1/Documents/htdocs/scratch/json-architecture-20260922).
+
+## Point 12 — records compacts et traversée FFI Value, intégrés le 22 septembre 2026
+
+Le profil initial du décodage général attribuait environ **23 % des octets alloués directement à `RecordToMap`** : insertion des champs et conversion de petits dictionnaires. Trois sondes isolées, puis combinées, ont précédé l'intégration. `CoerceToStruct` évite map et tri pour 0/1 champ ; `RecordSet` insère/remplace sans modifier la source et conserve les représentations compactes ; `TraverseArrayImpl` et le bridge transmettent directement les `Value`, sans conversion `[]any` ni callbacks relais inutiles. Même algorithme de traversée, sans changement de PBO ou du parseur.
+
+| Comparaison alternée, médianes (ms) | Go avant | Go après | JS après |
+|---|---:|---:|---:|
+| JSON général, décodage | 50,175 | **36,556** | 7,086 |
+| JSON général, parse + decode | 61,042 | **45,816** | 8,647 |
+| TAST, décodage | 466,219 | 457,856 | 57,565 |
+| TAST, parse + decode | 582,022 | **567,609** | 79,059 |
+
+Trois processus par version/runtime, deux chauffes et cinq échantillons par phase, médiane des minima par processus ; 1 P, GOGC=100, aucun build/profil en parallèle. **Allocations combinées JSON : 83,099 → 62,460 Mio (−24,84 %) ; TAST : 586,711 → 569,378 Mio (−2,95 %)**. Face aux cellules historiques README Go **57,43 / 573,63 ms**, gains observés **20,22 % / 1,05 %**. L'amélioration TAST reste faible avec recouvrement des plages ; ne pas extrapoler au chargement complet ni à b8x.
+
+Les 24 processus retrouvent les mêmes oracles (17 cas JSON et 12 modules TAST). Bundle JS du JSON général identique ; pour TAST, le fingerprint avait été fusionné dans le module principal : imports/liste des sources réparés, définitions chronométrées et fingerprint inchangés vérifiés. Runtime complet `-race`, 15 tests FFI/records et 13 vérifications de runners passent. Compilateurs JS et natif reconstruits. Le profil d'allocations final place `RecordToMap` autour de **1,4 % direct** ; restent callbacks/applications, adaptateurs de primitives JSON, constructeurs `Either`/`Maybe`, concaténations et copies d'objets. Pourcentages cumulés non additionnables.
+
+**Prochaine sonde concrète :** `gDecodeJsonCons` génère encore `(case result of Left e -> \_ -> Left e; Right r -> \k -> k r) (\r -> Right (insert field value r))`. Distribuer l'application puis réduire les lambdas peut supprimer deux fonctions intermédiaires. Tester l'évaluation unique du scrutateur, l'ordre, la première erreur/son chemin, l'absence d'insertion sur `Left`, les fonctions échappantes et les applications partielles. La fusion des enveloppes ADT est un axe distinct à mesurer ensuite, puis les traversées spécialisées. **Aucun gain futur chiffré n'est encore établi.**
+
+[Rapport et mesures](/Users/0x1/Documents/htdocs/altbak.pub-gopurs/docs/benchmark-results/2026-09-22-json-general-runtime.md) · [Profils, sondes et builds figés](/Users/0x1/Documents/htdocs/scratch/json-general-20260922).
 
 ## Point 11 — fusion de resolveArgs, intégrée le 22 septembre 2026
 

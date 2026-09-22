@@ -302,7 +302,13 @@ func CoerceToStruct[T any](val Value) *T {
 		return (*T)(val.UnsafePtr)
 	}
 	res := new(T)
+	// Empty and single-field records need neither a map nor key sorting.
+	if val.Type == TypeRecord0 { return res }
 	resVal := reflect.ValueOf(res).Elem()
+	if val.Type == TypeRecord1 {
+		resVal.Field(1).Set(reflect.ValueOf((*RecordData1)(val.UnsafePtr).V0))
+		return res
+	}
 	m := RecordToMap(val)
 	keys := make([]string, 0, len(m))
 	for k := range m {
@@ -377,6 +383,109 @@ func RecordGet(obj Value, key string) Value {
 		strVal = *(*string)(obj.UnsafePtr)
 	}
 	panic(fmt.Sprintf("Key '%s' not found in record. Object type: %d, String value: '%s', Object: %+v\n", key, obj.Type, strVal, obj))
+}
+
+// RecordSet inserts or replaces a field without modifying the original record.
+// Unlike RecordUpdateDict, it supports extending compact records with new keys.
+func RecordSet(orig Value, key string, value Value) Value {
+	switch orig.Type {
+	case TypeRecord0:
+		return RecordDict1(key, value)
+	case TypeRecord1:
+		r := (*RecordData1)(orig.UnsafePtr)
+		if key == r.K0 {
+			return RecordDict1(r.K0, value)
+		}
+		return RecordDict2(r.K0, key, r.V0, value)
+	case TypeRecord2:
+		r := (*RecordData2)(orig.UnsafePtr)
+		switch key {
+		case r.K0:
+			return RecordDict2(r.K0, r.K1, value, r.V1)
+		case r.K1:
+			return RecordDict2(r.K0, r.K1, r.V0, value)
+		}
+		return RecordDict3(r.K0, r.K1, key, r.V0, r.V1, value)
+	case TypeRecord3:
+		r := (*RecordData3)(orig.UnsafePtr)
+		switch key {
+		case r.K0:
+			return RecordDict3(r.K0, r.K1, r.K2, value, r.V1, r.V2)
+		case r.K1:
+			return RecordDict3(r.K0, r.K1, r.K2, r.V0, value, r.V2)
+		case r.K2:
+			return RecordDict3(r.K0, r.K1, r.K2, r.V0, r.V1, value)
+		}
+		return RecordDict4(r.K0, r.K1, r.K2, key, r.V0, r.V1, r.V2, value)
+	case TypeRecord4:
+		r := (*RecordData4)(orig.UnsafePtr)
+		switch key {
+		case r.K0:
+			return RecordDict4(r.K0, r.K1, r.K2, r.K3, value, r.V1, r.V2, r.V3)
+		case r.K1:
+			return RecordDict4(r.K0, r.K1, r.K2, r.K3, r.V0, value, r.V2, r.V3)
+		case r.K2:
+			return RecordDict4(r.K0, r.K1, r.K2, r.K3, r.V0, r.V1, value, r.V3)
+		case r.K3:
+			return RecordDict4(r.K0, r.K1, r.K2, r.K3, r.V0, r.V1, r.V2, value)
+		}
+		return RecordDict5(r.K0, r.K1, r.K2, r.K3, key, r.V0, r.V1, r.V2, r.V3, value)
+	case TypeRecord5:
+		r := (*RecordData5)(orig.UnsafePtr)
+		switch key {
+		case r.K0:
+			return RecordDict5(r.K0, r.K1, r.K2, r.K3, r.K4, value, r.V1, r.V2, r.V3, r.V4)
+		case r.K1:
+			return RecordDict5(r.K0, r.K1, r.K2, r.K3, r.K4, r.V0, value, r.V2, r.V3, r.V4)
+		case r.K2:
+			return RecordDict5(r.K0, r.K1, r.K2, r.K3, r.K4, r.V0, r.V1, value, r.V3, r.V4)
+		case r.K3:
+			return RecordDict5(r.K0, r.K1, r.K2, r.K3, r.K4, r.V0, r.V1, r.V2, value, r.V4)
+		case r.K4:
+			return RecordDict5(r.K0, r.K1, r.K2, r.K3, r.K4, r.V0, r.V1, r.V2, r.V3, value)
+		}
+		return RecordDict([]string{r.K0, r.K1, r.K2, r.K3, r.K4, key}, []Value{r.V0, r.V1, r.V2, r.V3, r.V4, value})
+	case TypeRecordData:
+		r := (*RecordData)(orig.UnsafePtr)
+		for i, field := range r.Keys {
+			if field == key {
+				vals := append([]Value(nil), r.Vals...)
+				vals[i] = value
+				return RecordDict(r.Keys, vals)
+			}
+		}
+		keys := make([]string, len(r.Keys)+1)
+		copy(keys, r.Keys)
+		keys[len(r.Keys)] = key
+		vals := make([]Value, len(r.Vals)+1)
+		copy(vals, r.Vals)
+		vals[len(r.Vals)] = value
+		return RecordDict(keys, vals)
+	case TypeRecord:
+		return recordMapSet(*(*map[string]Value)(orig.UnsafePtr), key, value)
+	case TypeAny:
+		switch m := orig.PtrVal().(type) {
+		case map[string]Value:
+			return recordMapSet(m, key, value)
+		case map[string]any:
+			result := make(map[string]Value, len(m)+1)
+			for k, v := range m {
+				result[k] = Box(v)
+			}
+			result[key] = value
+			return Record(result)
+		}
+	}
+	return recordMapSet(RecordToMap(orig), key, value)
+}
+
+func recordMapSet(orig map[string]Value, key string, value Value) Value {
+	result := make(map[string]Value, len(orig)+1)
+	for k, v := range orig {
+		result[k] = v
+	}
+	result[key] = value
+	return Record(result)
 }
 
 func RecordUpdateDict(orig Value, keys []string, vals []Value) Value {

@@ -265,3 +265,174 @@ func TestGenericCallbackAndArrayResults(t *testing.T) {
     assert.match(result.stdout, /--- PASS: TestAnyAllocationsDoNotGrowWithArrayLength/);
     assert.match(result.stdout, /--- PASS: TestGenericCallbackAndArrayResults/);
 });
+
+test('Value FFI callbacks and traversal preserve Applicative values and evaluation order', t => {
+    const traversePath = fileURLToPath(new URL('../../gopurs-foldable-traversable/src/Data/Traversable.go', import.meta.url));
+    const traversal = prepare('Data.Traversable', traversePath, readFileSync(traversePath, 'utf8'), ['traverseArrayImpl']);
+    const fixture = prepare('ValueFixture', 'ValueFixture.go', `
+import "gopurs/output/gopurs_runtime"
+var Calls int64
+func HigherOrder(f func(func(gopurs_runtime.Value) gopurs_runtime.Value, gopurs_runtime.Value) gopurs_runtime.Value, value gopurs_runtime.Value) gopurs_runtime.Value {
+    return f(func(x gopurs_runtime.Value) gopurs_runtime.Value {
+        Calls++
+        return gopurs_runtime.Int(x.IntVal + 1)
+    }, value)
+}
+func Deferred() func(gopurs_runtime.Value) gopurs_runtime.Value {
+    return func(x gopurs_runtime.Value) gopurs_runtime.Value {
+        Calls++
+        return x
+    }
+}
+`, ['higherOrder', 'deferred']);
+    assert.match(fixture.code, /gopurs_runtime\.Func\(p0_0\)/);
+    assert.match(fixture.code, /return gopurs_runtime\.Func\(go_res\)/);
+    assert.doesNotMatch(fixture.code + traversal.code, /gopurs_runtime\.Box\(|make\(\[\](?:any|interface\{\})/);
+
+    const directory = mkdtempSync(join(tmpdir(), 'gopurs-ffi-value-traverse-'));
+    t.after(() => rmSync(directory, { recursive: true, force: true }));
+    mkdirSync(join(directory, 'gopurs_runtime'));
+    writeFileSync(join(directory, 'go.mod'), 'module gopurs/output\n\ngo 1.22\n');
+    writeFileSync(join(directory, 'gopurs_runtime/runtime.go'), readFileSync(join(root, 'runtime/runtime.go')));
+    // These production/fixture sources supply their own runtime import.
+    writeFileSync(join(directory, 'traversal.go'), 'package main\n' + traversal.code);
+    writeFileSync(join(directory, 'fixture.go'), 'package main\n' + fixture.code);
+    writeFileSync(join(directory, 'ffi_test.go'), `package main
+import (
+    "reflect"
+    "testing"
+    rt "gopurs/output/gopurs_runtime"
+)
+
+func TestHigherOrderValueCallbacks(t *testing.T) {
+    ValueFixture_Calls = 0
+    deferred := rt.Apply(_Gopurs_ValueFixture_Deferred, rt.Value{})
+    if ValueFixture_Calls != 0 { t.Fatal("returned callback ran during conversion") }
+    value := rt.Str("same boxed value")
+    if got := rt.Apply(deferred, value); got != value || ValueFixture_Calls != 1 {
+        t.Fatalf("callback lost its value or effects: %+v, calls=%d", got, ValueFixture_Calls)
+    }
+    higher := rt.Func2(func(f, x rt.Value) rt.Value {
+        return rt.Apply(f, rt.Apply(f, x))
+    })
+    if got := rt.Apply2(_Gopurs_ValueFixture_HigherOrder, higher, rt.Int(40)); got.IntVal != 42 || ValueFixture_Calls != 3 {
+        t.Fatalf("higher-order callback: %+v, calls=%d", got, ValueFixture_Calls)
+    }
+}
+
+func values(n int) []rt.Value {
+    out := make([]rt.Value, n)
+    for i := range out { out[i] = rt.Int(int64(i)) }
+    return out
+}
+func array(v rt.Value) []rt.Value { return rt.Unbox[[]rt.Value](v) }
+func traverse(apply, mapFn, pure, f rt.Value, input []rt.Value) rt.Value {
+    concat := rt.Func2(func(a, b rt.Value) rt.Value {
+        out := append([]rt.Value{}, array(a)...)
+        return rt.Array(append(out, array(b)...))
+    })
+    return rt.Apply6(_Gopurs_Data_Traversable_TraverseArrayImpl, apply, mapFn, pure, concat, f, rt.Array(input))
+}
+
+type either struct { failed bool; value rt.Value }
+func TestTraversalEitherAndStrictCallbackOrder(t *testing.T) {
+    pure := rt.Func(func(x rt.Value) rt.Value { return rt.Any(either{value: x}) })
+    mapFn := rt.Func2(func(f, x rt.Value) rt.Value {
+        e := x.PtrVal().(either)
+        if e.failed { return x }
+        return rt.Any(either{value: rt.Apply(f, e.value)})
+    })
+    apply := rt.Func2(func(f, x rt.Value) rt.Value {
+        ef, ex := f.PtrVal().(either), x.PtrVal().(either)
+        if ef.failed { return f }; if ex.failed { return x }
+        return rt.Any(either{value: rt.Apply(ef.value, ex.value)})
+    })
+    for _, n := range []int{0, 1, 2, 3, 4, 7, 8, 9} {
+        input := values(n)
+        for fail := -1; fail < n; fail++ {
+            visited := []int64{}
+            f := rt.Func(func(x rt.Value) rt.Value {
+                visited = append(visited, x.IntVal)
+                // Multiple failures must still retain the first error.
+                return rt.Any(either{failed: fail >= 0 && x.IntVal >= int64(fail), value: x})
+            })
+            got := traverse(apply, mapFn, pure, f, input).PtrVal().(either)
+            wantVisits := make([]int64, n)
+            for i := range wantVisits { wantVisits[i] = int64(i) }
+            if !reflect.DeepEqual(visited, wantVisits) { t.Fatalf("n=%d fail=%d visits=%v", n, fail, visited) }
+            if fail >= 0 {
+                if !got.failed || got.value.IntVal != int64(fail) { t.Fatalf("first error changed: %+v", got) }
+            } else if got.failed || !reflect.DeepEqual(array(got.value), input) { t.Fatalf("success changed: %+v", got) }
+            if !reflect.DeepEqual(input, values(n)) { t.Fatal("input mutated") }
+        }
+    }
+}
+
+func TestTraversalArrayCartesianOrder(t *testing.T) {
+    pure := rt.Func(func(x rt.Value) rt.Value { return rt.Array([]rt.Value{x}) })
+    mapFn := rt.Func2(func(f, x rt.Value) rt.Value {
+        out := make([]rt.Value, len(array(x)))
+        for i, v := range array(x) { out[i] = rt.Apply(f, v) }
+        return rt.Array(out)
+    })
+    apply := rt.Func2(func(f, x rt.Value) rt.Value {
+        out := []rt.Value{}
+        for _, fn := range array(f) { for _, v := range array(x) { out = append(out, rt.Apply(fn, v)) } }
+        return rt.Array(out)
+    })
+    f := rt.Func(func(x rt.Value) rt.Value { return rt.Array([]rt.Value{x, rt.Int(x.IntVal + 10)}) })
+    for _, n := range []int{0, 1, 2, 3, 4, 7} {
+        got := array(traverse(apply, mapFn, pure, f, values(n)))
+        if len(got) != 1 << n { t.Fatalf("n=%d alternatives=%d", n, len(got)) }
+        for i, result := range got {
+            row := array(result)
+            if len(row) != n { t.Fatalf("n=%d row length=%d", n, len(row)) }
+            for j, x := range row {
+                want := int64(j + 10 * ((i >> (n - 1 - j)) & 1))
+                if x.IntVal != want { t.Fatalf("n=%d row=%d column=%d: %d != %d", n, i, j, x.IntVal, want) }
+            }
+        }
+    }
+}
+
+type stateResult struct { value rt.Value; state int64 }
+func TestTraversalStateEffectOrder(t *testing.T) {
+    pure := rt.Func(func(x rt.Value) rt.Value { return rt.Func(func(s rt.Value) rt.Value {
+        return rt.Any(stateResult{x, s.IntVal})
+    }) })
+    mapFn := rt.Func2(func(f, x rt.Value) rt.Value { return rt.Func(func(s rt.Value) rt.Value {
+        result := rt.Apply(x, s).PtrVal().(stateResult)
+        return rt.Any(stateResult{rt.Apply(f, result.value), result.state})
+    }) })
+    apply := rt.Func2(func(f, x rt.Value) rt.Value { return rt.Func(func(s rt.Value) rt.Value {
+        left := rt.Apply(f, s).PtrVal().(stateResult)
+        right := rt.Apply(x, rt.Int(left.state)).PtrVal().(stateResult)
+        return rt.Any(stateResult{rt.Apply(left.value, right.value), right.state})
+    }) })
+    for _, n := range []int{0, 1, 2, 3, 4, 7, 8, 9} {
+        effects := []int64{}
+        f := rt.Func(func(x rt.Value) rt.Value { return rt.Func(func(s rt.Value) rt.Value {
+            effects = append(effects, x.IntVal)
+            return rt.Any(stateResult{rt.Int(x.IntVal + s.IntVal), s.IntVal + 1})
+        }) })
+        computation := traverse(apply, mapFn, pure, f, values(n))
+        if len(effects) != 0 { t.Fatal("State effects ran during traversal construction") }
+        result := rt.Apply(computation, rt.Int(10)).PtrVal().(stateResult)
+        if result.state != int64(10+n) || len(effects) != n { t.Fatalf("State result: %+v effects=%v", result, effects) }
+        for i, v := range array(result.value) {
+            if v.IntVal != int64(10+2*i) || effects[i] != int64(i) { t.Fatalf("State order: %+v effects=%v", result, effects) }
+        }
+    }
+}
+`);
+    const result = spawnSync('go', ['test', '-count=1', '-v', './...'], {
+        cwd: directory, encoding: 'utf8', timeout: 60_000,
+        env: { ...process.env, GOWORK: 'off' }, maxBuffer: 1024 * 1024,
+    });
+    assert.ifError(result.error);
+    assert.equal(result.signal, null);
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    for (const name of ['HigherOrderValueCallbacks', 'TraversalEitherAndStrictCallbackOrder', 'TraversalArrayCartesianOrder', 'TraversalStateEffectOrder']) {
+        assert.match(result.stdout, new RegExp(`--- PASS: Test${name}`));
+    }
+});
