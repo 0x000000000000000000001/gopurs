@@ -97,9 +97,16 @@ saturatedFieldType :: SaturatedConstructor -> Int -> { exprType :: ExprType, goT
 saturatedFieldType (SaturatedConstructor { metadata, modNameStr, prepared }) fieldIdx =
   let
     expectedExprType = fromMaybe Any (Array.index prepared.layout.fields.fields fieldIdx)
+    fallbackType = ConstructorLayout.fieldType metadata modNameStr prepared.layout.fields prepared.fieldTypeArgs fieldIdx
     expectedType = case prepared.adtFullName >>= \fn -> Map.lookup fn unboxableADTs of
-      Just adt -> fromMaybe TypeValue (Array.index adt.signature fieldIdx)
-      Nothing -> ConstructorLayout.fieldType metadata modNameStr prepared.layout.fields prepared.fieldTypeArgs fieldIdx
+      Just adt ->
+        let
+          signature = adt.signature prepared.typeArgs
+        in
+          case adt.fieldIndex prepared.layout.identity.baseStructName fieldIdx >>= \slot -> Array.index signature slot of
+            Just slotType -> slotType
+            Nothing -> fallbackType
+      Nothing -> fallbackType
   in
     { exprType: expectedExprType, goType: expectedType }
 
@@ -121,9 +128,12 @@ saturated codegenStateRef (SaturatedConstructor { metadata, modNameStr, name, pr
         Nothing -> native
     else case prepared.adtFullName >>= \fn -> Map.lookup fn unboxableADTs >>= \adt -> Just (Tuple fn adt) of
       Just (Tuple fn adt) ->
-        { expr: GoStructValue fn adt.signature (adt.mapConstructor name accProps.exprs)
-        , exprType: TypeStructValue fn adt.signature
-        }
+        let
+          signature = adt.signature prepared.typeArgs
+        in
+          { expr: GoStructValue fn signature (adt.mapConstructor prepared.typeArgs name accProps.exprs)
+          , exprType: TypeStructValue fn signature
+          }
       Nothing -> case prepared.leafPointerType of
         Just pointer -> { expr: rawGo ("(" <> goTypeToStr pointer <> ")(nil)"), exprType: pointer }
         Nothing ->

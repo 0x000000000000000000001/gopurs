@@ -81,14 +81,28 @@ func (v Value) FloatVal() float64 {
 	return math.Float64frombits(uint64(v.IntVal))
 }
 
+// StrValue reads a TypeString payload.
+//
+// Strings are packed into the Value: IntVal holds the byte length and
+// UnsafePtr the immutable string data (unsafe.StringData). The referenced
+// bytes must never be mutated for the whole lifetime of the Value, as
+// required by unsafe.String. A substring keeps its whole backing alive.
+func StrValue(v Value) string {
+	if v.UnsafePtr == nil {
+		return ""
+	}
+	return unsafe.String((*byte)(v.UnsafePtr), int(v.IntVal))
+}
+
 func Str(v string) Value {
-	ptr := new(string)
-	*ptr = v
-	return Value{Type: TypeString, UnsafePtr: unsafe.Pointer(ptr)}
+	if len(v) == 0 {
+		return Value{Type: TypeString}
+	}
+	return Value{Type: TypeString, IntVal: int64(len(v)), UnsafePtr: unsafe.Pointer(unsafe.StringData(v))}
 }
 
 func (v Value) StrVal() string {
-	return *(*string)(v.UnsafePtr)
+	return StrValue(v)
 }
 
 func Int(v int64) Value {
@@ -198,7 +212,7 @@ func (v Value) AnyVal() any {
 	switch v.Type {
 	case TypeInt: return v.IntVal
 	case TypeFloat: return math.Float64frombits(uint64(v.IntVal))
-	case TypeString: return *(*string)(v.UnsafePtr)
+	case TypeString: return StrValue(v)
 	case TypeBool: return v.IntVal != 0
 	case TypeArray: return *(*[]Value)(v.UnsafePtr)
 	case TypeRecord: return *(*map[string]Value)(v.UnsafePtr)
@@ -380,7 +394,7 @@ func RecordGet(obj Value, key string) Value {
 	}
 	strVal := ""
 	if obj.Type == TypeString && obj.UnsafePtr != nil {
-		strVal = *(*string)(obj.UnsafePtr)
+		strVal = StrValue(obj)
 	}
 	panic(fmt.Sprintf("Key '%s' not found in record. Object type: %d, String value: '%s', Object: %+v\n", key, obj.Type, strVal, obj))
 }
@@ -913,7 +927,7 @@ func Unbox[T any](v any) T {
 			return any(0).(T)
 		}
 		return any(int(val.IntVal)).(T)
-	case string: return any(*(*string)(val.UnsafePtr)).(T)
+	case string: return any(StrValue(val)).(T)
 	case float64:
 		if val.Type == TypeInt {
 			return any(float64(val.IntVal)).(T)
@@ -1089,7 +1103,7 @@ func ValueToAny(val Value) any {
 	case TypeFloat:
 		return *(*float64)(val.UnsafePtr)
 	case TypeString:
-		return *(*string)(val.UnsafePtr)
+		return StrValue(val)
 	case TypeBool:
 		return val.IntVal != 0
 	}
@@ -1148,7 +1162,7 @@ func ExtractVariant(variant interface{}) (string, interface{}, bool) {
 			m := *(*map[string]Value)(val.UnsafePtr)
 			if typVal, ok := m["type"]; ok {
 				if typVal.Type == TypeString {
-					str := *(*string)(typVal.UnsafePtr)
+					str := StrValue(typVal)
 					valVal, hasVal := m["value"]
 					if hasVal {
 						return str, valVal, true
@@ -1162,9 +1176,9 @@ func ExtractVariant(variant interface{}) (string, interface{}, bool) {
             var valVal interface{}
             hasVal := false
             if rec.K0 == "type" && rec.V0.Type == TypeString {
-                str = *(*string)(rec.V0.UnsafePtr)
+                str = StrValue(rec.V0)
             } else if rec.K1 == "type" && rec.V1.Type == TypeString {
-                str = *(*string)(rec.V1.UnsafePtr)
+                str = StrValue(rec.V1)
             } else {
                 return "", nil, false
             }
@@ -1188,11 +1202,11 @@ func ExtractVariant(variant interface{}) (string, interface{}, bool) {
             hasVal := false
             
             if rec.K0 == "type" && rec.V0.Type == TypeString {
-                str = *(*string)(rec.V0.UnsafePtr)
+                str = StrValue(rec.V0)
             } else if rec.K1 == "type" && rec.V1.Type == TypeString {
-                str = *(*string)(rec.V1.UnsafePtr)
+                str = StrValue(rec.V1)
             } else if rec.K2 == "type" && rec.V2.Type == TypeString {
-                str = *(*string)(rec.V2.UnsafePtr)
+                str = StrValue(rec.V2)
             } else {
                 return "", nil, false
             }
@@ -1213,7 +1227,7 @@ func ExtractVariant(variant interface{}) (string, interface{}, bool) {
             }
             return str, nil, true
         } else if val.Type == TypeString {
-			str := *(*string)(val.UnsafePtr)
+			str := StrValue(val)
 			return str, nil, true
 		}
 	}
@@ -1261,7 +1275,7 @@ func copyReflectField(src reflect.Value, destType reflect.Type) reflect.Value {
 			return reflect.ValueOf(int(val.IntVal))
 		case reflect.String:
 			if val.UnsafePtr != nil {
-				return reflect.ValueOf(*(*string)(val.UnsafePtr))
+				return reflect.ValueOf(StrValue(val))
 			}
 			return reflect.ValueOf("")
 		case reflect.Bool:

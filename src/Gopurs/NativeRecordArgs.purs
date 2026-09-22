@@ -12,6 +12,7 @@ import Data.Maybe (Maybe(..), fromMaybe)
 import Data.String.CodeUnits as CodeUnits
 import Data.Tuple (Tuple(..), fst)
 import Gopurs.GoAst (GoType(..), sanitizeName)
+import Gopurs.GoConversions (getUnboxedADT)
 import Gopurs.GoTypes (visibleRecordFields)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.CoreFn (Ann(..), Bind(..), Binder(..), Binding(..), CaseAlternative(..), CaseGuard(..), Expr(..), ExprType(..), Guard(..), Ident, Qualified(..), propValue)
@@ -55,6 +56,14 @@ isScalar = case _ of
   Boolean -> true
   _ -> false
 
+-- The worker result may stay a native scalar or a native Maybe/Either/Tuple
+-- layout: those results are already generated without boxing, so the projected
+-- argument ABI can be shared for them too.
+shareableResult :: ExprType -> Boolean
+shareableResult result = isScalar result || case getUnboxedADT result of
+  Just _ -> true
+  Nothing -> false
+
 -- Excluding a binding from monomorphisation requires a source-level proof.
 -- Code generation independently rechecks uses on the transformed TCO body.
 -- Explicit Any annotations remain unknown; they never fall through to another
@@ -78,7 +87,7 @@ candidateToShare (Binding (Ann ann) _ expr) =
           Just fields -> safeSourceUse true ident (map fst fields) lambdas.body
           Nothing -> true
       in
-        isScalar result
+        shareableResult result
           && not (Array.null tails)
           && all (flip Array.elem tails) quantified
           && all validType args
@@ -169,7 +178,7 @@ binds target = case _ of
 -- Partial and dynamic calls continue to use the existing boxed wrapper.
 workerArguments :: (ExprType -> GoType) -> Array String -> TcoExpr -> Array ExprType -> ExprType -> Array GoType
 workerArguments toGoType names body types result =
-  if isScalar result then Array.mapWithIndex choose types else map toGoType types
+  if shareableResult result then Array.mapWithIndex choose types else map toGoType types
   where
   choose index ty = fromMaybe (toGoType ty) do
     name <- Array.index names index

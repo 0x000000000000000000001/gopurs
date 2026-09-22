@@ -130,7 +130,7 @@ func TestOrderingAllocations(t *testing.T) {
                 index++
                 sink = gopurs_runtime.Apply5(fn, lt, eq, gt, gopurs_runtime.Str(p.x), gopurs_runtime.Str(p.y))
             })
-            if boxed != 2 { t.Fatalf("Str per call: got %g allocations, want 2 string boxes only", boxed) }
+            if boxed != 0 { t.Fatalf("Str per call: got %g allocations, want 0 (packed strings)", boxed) }
         })
     }
 }

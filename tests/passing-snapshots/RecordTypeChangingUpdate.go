@@ -227,17 +227,19 @@ func Get_Main_main() gopurs_runtime.Value {
 				go__type  string
 			}{Rebox_Main_3094389156_3543310304(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](func() gopurs_runtime.Value {
 				_v := struct {
-					V0 gopurs_runtime.Value
-					V1 bool
-				}{func() gopurs_runtime.Value {
-					orig := struct {
+					V0 struct {
 						identifier string
-					}{"book-42"}
-					_ = orig
-					return gopurs_runtime.RecordDict1("identifier", gopurs_runtime.Str(orig.identifier))
-				}(), true}
+					}
+					V1 bool
+				}{struct {
+					identifier string
+				}{"book-42"}, true}
 				if _v.V1 {
-					return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: _v.V0})}
+					return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: func() gopurs_runtime.Value {
+						orig := _v.V0
+						_ = orig
+						return gopurs_runtime.RecordDict1("identifier", gopurs_runtime.Str(orig.identifier))
+					}()})}
 				}
 				return gopurs_runtime.Value{Type: 9, IntVal: 930809136}
 			}())), true, int64(10), "book"}}), gopurs_runtime.Func(func(_dollar___unused_3 gopurs_runtime.Value) gopurs_runtime.Value {

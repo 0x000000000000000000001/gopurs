@@ -20,7 +20,7 @@ import Gopurs.CodegenState (CodegenMetadata, CodegenState, FunctionInfo)
 import Gopurs.ExprAnalysis (extractExprFuncType, extractFuncType)
 import Gopurs.ExprContext (LoopContext, ModuleFunctions, TranslateExpr, flattenStmts, wrapInStmts)
 import Gopurs.GoAst (rawGo, GoDecl(..), GoExpr(..), GoType(..), goTypeToStr, sanitizeName)
-import Gopurs.GoConversions (boxGoExpr, coerceGoExpr, getUnboxedADT)
+import Gopurs.GoConversions (adtPayloadTypes, boxGoExpr, coerceGoExpr, getUnboxedADT)
 import Gopurs.GoTypes (exprTypeToGoType)
 import Gopurs.GoFunctions (curriedFunction)
 import Gopurs.NativeRecordArgs (workerArguments)
@@ -77,7 +77,7 @@ prepare metadata modNameStr mod =
                       if Array.length args < Array.length fArgs then TypeValue
                       else
                         case getUnboxedADT fRet of
-                          Just (Tuple adtName adt) -> TypeStructValue adtName adt.signature
+                          Just (Tuple adtName adt) -> TypeStructValue adtName (adt.signature (adtPayloadTypes (exprTypeToGoType pointerAdtPaths enumAdts elidedCtors modNameStr) fRet))
                           Nothing -> exprTypeToGoType pointerAdtPaths enumAdts elidedCtors modNameStr fRet
                     Nothing -> TypeValue
                   fullName = "Call_" <> modNameStr <> "_" <> sanitizeName name

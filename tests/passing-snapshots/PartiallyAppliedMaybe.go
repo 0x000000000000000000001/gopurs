@@ -178,7 +178,7 @@ end_branch_0:
 		return struct {
 			V0 gopurs_runtime.Value
 			V1 bool
-		}{V0: (*Constructor_Data_Maybe_Just[gopurs_runtime.Value])(_v.UnsafePtr).V0, V1: true}
+		}{V0: (*(*Constructor_Data_Maybe_Just[gopurs_runtime.Value])(_v.UnsafePtr)).V0, V1: true}
 	}; return struct {
 		V0 gopurs_runtime.Value
 		V1 bool
