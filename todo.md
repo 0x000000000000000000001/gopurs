@@ -49,16 +49,31 @@ voir les phases 3–5.
       comme corpus de contrôle. Le décodeur n'est qu'une partie du chargement
       TAST.
 
-## Phase 3 — Passes PBO chaudes (prochain gros levier)
+## Phase 3 — Passes PBO chaudes (profilage fait, correctifs en cours)
 
-- [ ] **Profiler le pipeline PBO** sur un chargement TAST réel pour attribuer
-      les passes (simplification/inlining, monomorphisation, usage, codegen,
-      collecte transitive) et choisir les 2–3 dominantes.
-- [ ] **Les porter une par une** avec le même schéma (Go natif + repli JS +
-      différentiel), avec mesure appariée après chaque portage.
-- [ ] Contrainte : chaque portage doit être justifié par une attribution
-      mesurée et validé par un oracle différentiel ; pas de Go manuel non
-      mesuré.
+- [x] **Profilage du backend b8x** (`PPROF=1`, 237 modules) : backend 139,3 s
+      dont `optimize + emit` 103,1 s. **GC ≈ 57 % du CPU** (`gcBgMarkWorker`
+      244 s sur 430 s d'échantillons, `mProf` du profilage inclus) ; le CPU
+      applicatif est dispersé. Profil d'allocations (312 Go sur le run) :
+      `Data.Map` (`(*Node).clone` 32,6 Go = 10,4 %, `(*Node).find` et
+      comparateurs ~16 Go), concaténation de tableaux 10,6 Go, `RecordDict*`
+      ~20 Go, rebox PBO ~24 Go, `Monomorphize` ~30 Go, `Semantics.quote` 19 %
+      cum, `emitModule` 33 % cum (codegen + imprimante + `referencedImports`).
+      Conclusion : **aucune passe unique ne domine** — le coût est le volume
+      d'allocations et le GC, réparti entre Map, représentations/rebox,
+      tableaux et émission.
+- [x] **Premier correctif ciblé** : `Data.Map` `insertClone` (capacité `len+1`
+      au lieu de `maxDegree` sur le chemin d'insertion) → backend
+      **−6,5 % / −14,0 %** sur deux paires appariées (médianes 148,6 → 133,3 s),
+      RSS légèrement en baisse ; oracles altbak validés après reconstruction.
+- [x] **Balayage GC** (backend, `GOGC`) : 140,2 s (100) → 125,2 s (300,
+      −10,7 %) → 117,7 s (600, −16,1 %), RSS 5,3 → 9,0 → 14,9 Gio. Un défaut
+      `GOGC` dans le lanceur est une décision de politique (mémoire) à trancher.
+- [ ] **Suite** : traiter les postes identifiés — comparateurs de `Map`
+      (FFI Value-native, ou comparateur natif pour les clés `String`/`Ident`),
+      concaténations de tableaux (sites `<>` en boucle), rebox PBO, chemin
+      d'émission (`referencedImports`, `printGoExpr`, `toCharArray`). Chaque
+      correctif : mesure appariée sur le backend + oracles altbak.
 
 ## Phase 4 — Généralisation (le bout de la logique)
 
