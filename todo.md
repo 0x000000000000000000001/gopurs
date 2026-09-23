@@ -71,21 +71,33 @@ Validation : suite `gopurs-st` verte, bootstrap natif OK, 12 modules conformes.
 systématiquement (~2 %) et le chargement TAST progresse. Question laissée
 ouverte pour le point 7.
 
-**Intégration suivante (23 septembre) : la résolution de la table de types passe
-en Go natif.** Le chemin `decodeTypeTable` (51,3 % des allocations de décodage,
-~11 Ko et ~280 objets par type) est implémenté en FFI Go
-(`CoreFn/Json.go`) derrière `foreign import decodeTypeTableImpl` ; le JS
-conserve l’algorithme PureScript via `TypeTable.decodeTypeTablePS`. Campagne
-appariée (5 paires, deux workspaces régénérés, oracles dans chaque processus) :
-décodage **363,41 → 186,06 ms (−48,80 %)**, allocations
-**402 378 424 → 213 520 672 (−46,94 %)**, total **418,35 → 228,95 ms
-(−45,27 %)**, parsing inchangé (+0,21 %, allocations identiques). Cellules
-officielles : **Go 246,45 ms**, contrôle JS **87,60 ms** (algorithme JS
-inchangé, bundle désormais différent). Validation sémantique : différentiel
-natif vs PureScript sur 20 cas fixés et 400 tables aléatoires (cycles,
-références hors borne, erreurs différées, `Row`/`ForAll`/`ConstrainedType`),
-12 empreintes conformes, bootstrap natif OK. Rapport :
-[2026-09-23-native-type-table.md](../../altbak.pub-gopurs/docs/benchmark-results/2026-09-23-native-type-table.md).
+**Intégration (23 septembre) : le décodage TAST passe en Go natif.** Trois
+chemins sont désormais implémentés en FFI Go derrière des `foreign import` de
+`CoreFn/{Json,TypeTable,Usage}.purs`, le JS conservant les algorithmes
+PureScript via un argument de repli :
+la **table de types** (`decodeTypeTableImpl`), la **boucle `decodeArray`** et la
+**validation d'usage** (`validateSourceUsageModuleImpl`). Campagnes appariées
+(5 paires, workspaces régénérés, oracles dans chaque processus) :
+
+- table de types seule : décodage **363,41 → 186,06 ms (−48,80 %)**,
+  allocations **−46,94 %**, total 418,35 → 228,95 ms (−45,27 %) ;
+- boucle `decodeArray` : décodage **184,69 → 165,84 ms (−10,21 %)**,
+  allocations **−6,84 %** ;
+- validation d'usage native : décodage **177,48 → 96,78 ms (−45,47 %)**,
+  allocations **−41,03 %** ;
+- **cumulé depuis l'état publié : décodage 356,28 → 100,08 ms (−71,91 %),
+  allocations 402 378 408 → 117 293 240 octets (−70,85 %), total
+  392,98 → 146,54 ms (−62,71 %)** ; parsing inchangé (+0,14 %, allocations
+  identiques).
+
+Cellules officielles : **Go 102,54 / 140,76 ms**, contrôle JS **64,99 / 88,43 ms**
+(algorithme JS inchangé, bundle différent) ; le ratio face au JS passe de
+×5,92 à **×1,58** en décodage et de ×4,85 à **×1,59** en total. Validation :
+différentiel natif vs PureScript sur 20 cas fixés et 400 tables aléatoires
+(table de types), bootstrap du compilateur sur ses 458 modules TAST (deux bugs
+sémantiques de la validation d'usage y ont été corrigés), 12 empreintes
+conformes. Rapport :
+[2026-09-23-tast-native-decoding.md](../../altbak.pub-gopurs/docs/benchmark-results/2026-09-23-tast-native-decoding.md).
 
 **Lecture GC.** Sur le Go généré figé, à code identique : `GOGC=100` 322,0 ms
 contre `GOGC=1200` 164,6 ms ; la variante native 163,1 ms à 100 et 88,3 ms à
@@ -114,13 +126,17 @@ travail de décodage. Les variantes natives (table de types seule :
    régression murale établis**, CPU en baisse (~2 %), chargement plus rapide.
 7. [x] **Table de types native** : FFI Go derrière `decodeTypeTableImpl`, JS
    délégué à l’algorithme PureScript. **−48,80 % de décodage sur 5 paires
-   appariées, −46,94 % d’allocations** ; cellules **246,45 / 87,60 ms**.
-8. [ ] **Suite du chantier** : intégrer la boucle `decodeArray` directe
-   (−7,1 % d’allocations de plus sur la sonde), puis étendre le décodage natif
-   au reste du décodeur (`decodeExpr`, `decodeAnnWithUsage`,
-   `decodeSourceUsage`), avant les passerelles `unsafePartial`/
-   `Array.unsafeIndex` et l’ABI native complète. Reprendre b8x avec une mesure
-   appariée dédiée lorsque la question murale devra être tranchée.
+   appariées, −46,94 % d’allocations.**
+8. [x] **Boucle `decodeArray` native** (−10,21 % de décodage, −6,84 %
+   d’allocations) et **validation d’usage native** (−45,47 % de décodage,
+   −41,03 % d’allocations) ; **cumulé −71,91 % / −70,85 %**, cellules
+   **102,54 / 140,76 ms**, ratio JS ×1,58.
+9. [ ] **Suite du chantier** : porter le décodeur d’expressions (`decodeExpr`,
+   `decodeBinder`, `decodeLiteral`, `decodeBind`, `decodeModule'`) en Go natif
+   avec le même schéma de repli JS ; c’est le coût restant du décodage. Puis les
+   passerelles `unsafePartial`/`Array.unsafeIndex` et l’ABI native complète.
+   Reprendre b8x avec une mesure appariée dédiée lorsque la question murale
+   devra être tranchée.
 
 **Validation obligatoire à chaque étape : répéter `b -c` sur le vrai b8x**
 (mêmes entrées, paramètres et état de cache), publier le détail des phases, le
@@ -195,10 +211,12 @@ construction unique des records comme une ABI native complète.
 - Migration ST/FFI : `gopurs/gopurs-st/src/Control/Monad/ST/{Internal,Uncurried}.go`,
   workspace `altbak.pub-gopurs/var/benchmark/json-tast-stf-20260923`, campagnes
   `stf-campaign-20260923` et `stf-campaign-2-20260923`.
-- Table de types native : `purescript-backend-optimizer-gopurs/src/PureScript/Backend/Optimizer/CoreFn/{Json.purs,Json.go,Json.js,TypeTable.purs}`,
-  workspace `altbak.pub-gopurs/var/benchmark/json-tast-native-tt-20260923`,
-  résultats `native-tt-results-20260923`, campagne appariée
-  `native-tt-campaign-20260923`, rapport
-  [2026-09-23-native-type-table.md](../../altbak.pub-gopurs/docs/benchmark-results/2026-09-23-native-type-table.md).
+- Table de types native : `purescript-backend-optimizer-gopurs/src/PureScript/Backend/Optimizer/CoreFn/{Json.purs,Json.go,Json.js,TypeTable.purs,Usage.purs,Usage.go,Usage.js}`,
+  workspaces `altbak.pub-gopurs/var/benchmark/json-tast-native-tt-20260923`,
+  `json-tast-native-arr-20260923`, `json-tast-native-usage2-20260923`,
+  résultats `native-*-results-20260923`, campagnes appariées
+  `native-*-campaign-20260923` et `native-cumulative-campaign-20260923`,
+  rapport
+  [2026-09-23-tast-native-decoding.md](../../altbak.pub-gopurs/docs/benchmark-results/2026-09-23-tast-native-decoding.md).
 - Les pourcentages cumulés (`Apply2`, `TraverseArrayImpl`, …) ne mesurent pas
   un coût propre et ne s’additionnent pas.
