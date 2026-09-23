@@ -85,18 +85,20 @@ la **table de types** (`decodeTypeTableImpl`), la **boucle `decodeArray`** et la
   allocations **−6,84 %** ;
 - validation d'usage native : décodage **177,48 → 96,78 ms (−45,47 %)**,
   allocations **−41,03 %** ;
-- **cumulé depuis l'état publié : décodage 356,28 → 100,08 ms (−71,91 %),
-  allocations 402 378 408 → 117 293 240 octets (−70,85 %), total
-  392,98 → 146,54 ms (−62,71 %)** ; parsing inchangé (+0,14 %, allocations
+- décodeur d'annotations natif (`decodeAnnWithUsage`) : décodage
+  **99,93 → 39,02 ms (−60,96 %)**, allocations **−47,09 %** ;
+- **cumulé depuis l'état publié : décodage 366,61 → 45,81 ms (−87,51 %),
+  allocations 402 378 408 → 62 058 680 octets (−84,58 %), total
+  393,18 → 101,59 ms (−74,16 %)** ; parsing inchangé (−2,96 %, allocations
   identiques).
 
-Cellules officielles : **Go 102,54 / 140,76 ms**, contrôle JS **64,99 / 88,43 ms**
-(algorithme JS inchangé, bundle différent) ; le ratio face au JS passe de
-×5,92 à **×1,58** en décodage et de ×4,85 à **×1,59** en total. Validation :
-différentiel natif vs PureScript sur 20 cas fixés et 400 tables aléatoires
-(table de types), bootstrap du compilateur sur ses 458 modules TAST (deux bugs
-sémantiques de la validation d'usage y ont été corrigés), 12 empreintes
-conformes. Rapport :
+Cellules officielles : **Go 40,11 / 107,58 ms**, contrôle JS **67,79 / 87,64 ms**
+(algorithme JS inchangé, bundle différent) ; le décodage Go est désormais
+**plus rapide que le JS (×0,59)** et le total passe de ×4,85 à **×1,23**.
+Validation : différentiel natif vs PureScript sur 20 cas fixés et 400 tables
+aléatoires (table de types), bootstrap du compilateur sur ses 458 modules TAST
+(trois bugs sémantiques corrigés avant mesure : deux dans la validation
+d'usage, un dans le décodeur d'annotations), 12 empreintes conformes. Rapport :
 [2026-09-23-tast-native-decoding.md](../../altbak.pub-gopurs/docs/benchmark-results/2026-09-23-tast-native-decoding.md).
 
 **Lecture GC.** Sur le Go généré figé, à code identique : `GOGC=100` 322,0 ms
@@ -128,15 +130,17 @@ travail de décodage. Les variantes natives (table de types seule :
    délégué à l’algorithme PureScript. **−48,80 % de décodage sur 5 paires
    appariées, −46,94 % d’allocations.**
 8. [x] **Boucle `decodeArray` native** (−10,21 % de décodage, −6,84 %
-   d’allocations) et **validation d’usage native** (−45,47 % de décodage,
-   −41,03 % d’allocations) ; **cumulé −71,91 % / −70,85 %**, cellules
-   **102,54 / 140,76 ms**, ratio JS ×1,58.
+   d’allocations), **validation d’usage native** (−45,47 %, −41,03 %) et
+   **décodeur d’annotations natif** (−60,96 %, −47,09 %) ; **cumulé
+   −87,51 % / −84,58 %**, cellules **40,11 / 107,58 ms**, décodage Go
+   **×0,59** du JS, total ×1,23.
 9. [ ] **Suite du chantier** : porter le décodeur d’expressions (`decodeExpr`,
    `decodeBinder`, `decodeLiteral`, `decodeBind`, `decodeModule'`) en Go natif
-   avec le même schéma de repli JS ; c’est le coût restant du décodage. Puis les
-   passerelles `unsafePartial`/`Array.unsafeIndex` et l’ABI native complète.
-   Reprendre b8x avec une mesure appariée dédiée lorsque la question murale
-   devra être tranchée.
+   avec le même schéma de repli JS ; c’est le coût restant du décodage, et le
+   parsing devient la moitié dominante du total. Puis les passerelles
+   `unsafePartial`/`Array.unsafeIndex` et l’ABI native complète. Reprendre b8x
+   avec une mesure appariée dédiée lorsque la question murale devra être
+   tranchée.
 
 **Validation obligatoire à chaque étape : répéter `b -c` sur le vrai b8x**
 (mêmes entrées, paramètres et état de cache), publier le détail des phases, le
@@ -212,10 +216,9 @@ construction unique des records comme une ABI native complète.
   workspace `altbak.pub-gopurs/var/benchmark/json-tast-stf-20260923`, campagnes
   `stf-campaign-20260923` et `stf-campaign-2-20260923`.
 - Table de types native : `purescript-backend-optimizer-gopurs/src/PureScript/Backend/Optimizer/CoreFn/{Json.purs,Json.go,Json.js,TypeTable.purs,Usage.purs,Usage.go,Usage.js}`,
-  workspaces `altbak.pub-gopurs/var/benchmark/json-tast-native-tt-20260923`,
-  `json-tast-native-arr-20260923`, `json-tast-native-usage2-20260923`,
+  workspaces `altbak.pub-gopurs/var/benchmark/json-tast-native-{tt,arr,usage2,ann}-20260923`,
   résultats `native-*-results-20260923`, campagnes appariées
-  `native-*-campaign-20260923` et `native-cumulative-campaign-20260923`,
+  `native-*-campaign-20260923` et `native-ann-cumulative-20260923`,
   rapport
   [2026-09-23-tast-native-decoding.md](../../altbak.pub-gopurs/docs/benchmark-results/2026-09-23-tast-native-decoding.md).
 - Les pourcentages cumulés (`Apply2`, `TraverseArrayImpl`, …) ne mesurent pas
