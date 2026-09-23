@@ -71,13 +71,16 @@ Validation : suite `gopurs-st` verte, bootstrap natif OK, 12 modules conformes.
 systématiquement (~2 %) et le chargement TAST progresse. Question laissée
 ouverte pour le point 7.
 
-**Intégration (23 septembre) : le décodage TAST passe en Go natif.** Trois
+**Intégration (23 septembre) : le décodage TAST passe en Go natif.** Cinq
 chemins sont désormais implémentés en FFI Go derrière des `foreign import` de
 `CoreFn/{Json,TypeTable,Usage}.purs`, le JS conservant les algorithmes
 PureScript via un argument de repli :
-la **table de types** (`decodeTypeTableImpl`), la **boucle `decodeArray`** et la
-**validation d'usage** (`validateSourceUsageModuleImpl`). Campagnes appariées
-(5 paires, workspaces régénérés, oracles dans chaque processus) :
+la **table de types** (`decodeTypeTableImpl`), la **boucle `decodeArray`**, la
+**validation d'usage** (`validateSourceUsageModuleImpl`), le **décodeur
+d'annotations** (`decodeAnnWithUsageImpl`) et le **décodeur de module complet**
+(`decodeModuleImpl` : expressions, binders, littéraux, binds, imports,
+déclarations, map des annotations étrangères). Campagnes appariées (5 paires,
+workspaces régénérés, oracles dans chaque processus) :
 
 - table de types seule : décodage **363,41 → 186,06 ms (−48,80 %)**,
   allocations **−46,94 %**, total 418,35 → 228,95 ms (−45,27 %) ;
@@ -87,18 +90,20 @@ la **table de types** (`decodeTypeTableImpl`), la **boucle `decodeArray`** et la
   allocations **−41,03 %** ;
 - décodeur d'annotations natif (`decodeAnnWithUsage`) : décodage
   **99,93 → 39,02 ms (−60,96 %)**, allocations **−47,09 %** ;
-- **cumulé depuis l'état publié : décodage 366,61 → 45,81 ms (−87,51 %),
-  allocations 402 378 408 → 62 058 680 octets (−84,58 %), total
-  393,18 → 101,59 ms (−74,16 %)** ; parsing inchangé (−2,96 %, allocations
+- décodeur de module natif (`decodeModule`) : décodage
+  **37,28 → 16,30 ms (−56,27 %)**, allocations **−53,71 %** ;
+- **cumulé depuis l'état publié : décodage 348,13 → 16,18 ms (−95,35 %),
+  allocations 402 378 424 → 28 724 952 octets (−92,86 %), total
+  389,05 → 53,20 ms (−86,33 %)** ; parsing inchangé (+1,46 %, allocations
   identiques).
 
-Cellules officielles : **Go 40,11 / 107,58 ms**, contrôle JS **67,79 / 87,64 ms**
-(algorithme JS inchangé, bundle différent) ; le décodage Go est désormais
-**plus rapide que le JS (×0,59)** et le total passe de ×4,85 à **×1,23**.
-Validation : différentiel natif vs PureScript sur 20 cas fixés et 400 tables
-aléatoires (table de types), bootstrap du compilateur sur ses 458 modules TAST
-(trois bugs sémantiques corrigés avant mesure : deux dans la validation
-d'usage, un dans le décodeur d'annotations), 12 empreintes conformes. Rapport :
+Cellules officielles : **Go 15,68 / 57,32 ms**, contrôle JS **60,78 / 81,70 ms**
+(algorithme JS inchangé, bundle différent) ; **le Go est désormais devant le JS
+sur les deux cellules** : ×0,26 en décodage (3,9× plus rapide) et ×0,70 en
+total. Validation : différentiel natif vs PureScript (12 modules du corpus pour
+le décodeur de module, 20 cas + 400 tables aléatoires pour la table de types),
+bootstrap du compilateur sur ses 458 modules TAST (trois bugs sémantiques
+corrigés avant mesure), 12 empreintes conformes. Rapport :
 [2026-09-23-tast-native-decoding.md](../../altbak.pub-gopurs/docs/benchmark-results/2026-09-23-tast-native-decoding.md).
 
 **Lecture GC.** Sur le Go généré figé, à code identique : `GOGC=100` 322,0 ms
@@ -129,18 +134,17 @@ travail de décodage. Les variantes natives (table de types seule :
 7. [x] **Table de types native** : FFI Go derrière `decodeTypeTableImpl`, JS
    délégué à l’algorithme PureScript. **−48,80 % de décodage sur 5 paires
    appariées, −46,94 % d’allocations.**
-8. [x] **Boucle `decodeArray` native** (−10,21 % de décodage, −6,84 %
-   d’allocations), **validation d’usage native** (−45,47 %, −41,03 %) et
-   **décodeur d’annotations natif** (−60,96 %, −47,09 %) ; **cumulé
-   −87,51 % / −84,58 %**, cellules **40,11 / 107,58 ms**, décodage Go
-   **×0,59** du JS, total ×1,23.
-9. [ ] **Suite du chantier** : porter le décodeur d’expressions (`decodeExpr`,
-   `decodeBinder`, `decodeLiteral`, `decodeBind`, `decodeModule'`) en Go natif
-   avec le même schéma de repli JS ; c’est le coût restant du décodage, et le
-   parsing devient la moitié dominante du total. Puis les passerelles
-   `unsafePartial`/`Array.unsafeIndex` et l’ABI native complète. Reprendre b8x
-   avec une mesure appariée dédiée lorsque la question murale devra être
-   tranchée.
+8. [x] **Décodage natif complet** : boucle `decodeArray` (−10,21 %), validation
+   d’usage (−45,47 %), décodeur d’annotations (−60,96 %) et décodeur de module
+   (−56,27 %) ; **cumulé −95,35 % / −92,86 %**, cellules **15,68 / 57,32 ms**,
+   **Go devant le JS sur les deux cellules** (×0,26 en décodage, ×0,70 en
+   total).
+9. [ ] **Suite du chantier** : le décodeur n’est plus le goulot de ce
+   diagnostic — les coûts restants sont le parsing JSON et le reste du
+   pipeline PBO. Prochaines pistes : appliquer le même traitement natif aux
+   passes PBO chaudes (chargement/optimisation), aux passerelles
+   `unsafePartial`/`Array.unsafeIndex`, et reprendre b8x avec une mesure
+   appariée dédiée lorsque la question murale devra être tranchée.
 
 **Validation obligatoire à chaque étape : répéter `b -c` sur le vrai b8x**
 (mêmes entrées, paramètres et état de cache), publier le détail des phases, le
