@@ -281,6 +281,13 @@ starting with the first, so long builds show progress before the phase completes
 No flag is needed; both compiler builds report the same phases. These are real
 elapsed times for the current invocation, not warm-up or repeated benchmarks.
 
+The `bin/gopurs` launcher runs `bin/gopurs-native`, unless `GOPURS_JS=1` selects
+the Node bundle `bin/gopurs.js`. Both backends report identical phases, so
+`GOPURS_JS=1 ../gopurs/bin/gopurs --main Main` in a project with a typed `output`
+measures the JavaScript compiler with the same instrumentation as the native one.
+`npm run build` refreshes the bundle; `npm run build:native` refreshes the
+executable.
+
 TAST loading and decoding use eight workers by default in the native Go compiler;
 the JavaScript compiler defaults to one. Set `GOPURS_JOBS` from 1 to 64 to select
 a worker count (for example, `GOPURS_JOBS=1 b` in b8x).
