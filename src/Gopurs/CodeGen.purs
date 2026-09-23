@@ -39,6 +39,7 @@ import Gopurs.RecordExprs as RecordExprs
 import Gopurs.AdtExprs as AdtExprs
 import Gopurs.ArrayIntrinsics as ArrayIntrinsics
 import Gopurs.CallAnalysis (isClosureNode)
+import Gopurs.ClosedDictionaries (cacheClosedDictionaries)
 import Gopurs.CallExprs as CallExprs
 import Gopurs.FunctionExprs as FunctionExprs
 import Gopurs.BindingExprs as BindingExprs
@@ -57,7 +58,7 @@ translateWithFunctions :: CodegenMetadata -> BackendModule -> { code :: String, 
 translateWithFunctions metadata inputMod =
 
   let
-    owned = Ownership.prepare metadata (optimizeImmediateApplications (optimizeFunctionProducers (optimizeThunkProducers inputMod)))
+    owned = Ownership.prepare metadata (cacheClosedDictionaries metadata (optimizeImmediateApplications (optimizeFunctionProducers (optimizeThunkProducers inputMod))))
     mod = owned.module
     modNameStrOrig = unwrap mod.name
     modNameStr = String.replaceAll (Pattern ".") (Replacement "_") modNameStrOrig

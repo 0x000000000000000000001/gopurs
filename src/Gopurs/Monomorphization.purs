@@ -48,6 +48,19 @@ monomorphizeModulesWith collectTransitive globalTypes inputModules = do
     -- Keep negate's dictionary until its signed-zero intrinsic is recognized.
     -- Other known definitions must remain available for static evaluation.
     intrinsicGlobals = Set.singleton "Data.Ring.negate"
+    -- The `caseJson*` accessors are thin wrappers over value-level FFI. Their
+    -- specializations substitute static arguments but also force a native
+    -- return representation that the cached wrapper immediately boxes again
+    -- (measured as the `caseJson*` wrapper allocations). Keeping them
+    -- polymorphic leaves the whole chain in value form.
+    boxedFfiAccessors = Set.fromFoldable
+      [ "Data.Argonaut.Core.caseJsonNull"
+      , "Data.Argonaut.Core.caseJsonBoolean"
+      , "Data.Argonaut.Core.caseJsonNumber"
+      , "Data.Argonaut.Core.caseJsonString"
+      , "Data.Argonaut.Core.caseJsonArray"
+      , "Data.Argonaut.Core.caseJsonObject"
+      ]
     globalAstMap = Map.filterKeys (not <<< flip Set.member intrinsicGlobals) (buildGlobalAstMap modules)
     -- Row-only readers can share one native worker across record shapes. The
     -- emitter rechecks their uses after PBO; other polymorphism stays eligible.
@@ -56,7 +69,10 @@ monomorphizeModulesWith collectTransitive globalTypes inputModules = do
     foreignGlobals = Set.union intrinsicGlobals (collectForeignGlobals modules)
   transitiveInstantiations <- collectTransitive globalAstMap rawInstantiations
   let instantiations = Map.filterKeys
-        (\name -> not (Set.member name sharedRecordWorkers) && shouldMonomorphize globalTypes foreignGlobals name)
+        (\name ->
+          not (Set.member name sharedRecordWorkers)
+            && not (Set.member name boxedFfiAccessors)
+            && shouldMonomorphize globalTypes foreignGlobals name)
         transitiveInstantiations
   pure $ if Map.isEmpty instantiations then
       modules
