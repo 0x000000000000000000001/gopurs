@@ -17,6 +17,17 @@ processus) : décodage **336,61 → 15,16 ms (−95,50 %)**, allocations
 (−87,54 %)** ; parsing inchangé. Détail, provenance et limites :
 [2026-09-23-tast-native-decoding.md](../../altbak.pub-gopurs/docs/benchmark-results/2026-09-23-tast-native-decoding.md).
 
+**Compilateur (b8x, charge réelle, 2 655 modules).** Chargement TAST **2,29 s**
+contre 9,64 s publiés (−76 %). Backend : 157,6 s (compilateur d'entrée de
+session) → **143,2 s** avec la `Map` et le scanner natifs (−9,1 %), puis
+**129,6 s** à `GOGC=300` (−17,8 %) et **113,6 s** à `GOGC=600` (−27,9 %).
+
+**Protocole backend.** Lancer depuis la racine `b8x` **sans `--main`** : les
+`modulePath` du TAST sont relatifs et les FFI ne sont résolues que depuis ce
+répertoire. Les mesures faites en `cwd=run/bak/go` avec `--main Main` tournaient
+sur une charge dégradée (FFI en stubs) et ne valent pas pour le vrai build ;
+elles ont été refaites.
+
 **Lecture honnête.** Ces chiffres opposent du Go *écrit à la main* à du JS
 *généré*. Le levier démontré est « contrôle direct + moins de transitoires »,
 pas « le compilateur Go bat le compilateur JS ». La logique n'est pas terminée :
@@ -49,31 +60,27 @@ voir les phases 3–5.
       comme corpus de contrôle. Le décodeur n'est qu'une partie du chargement
       TAST.
 
-## Phase 3 — Passes PBO chaudes (profilage fait, correctifs en cours)
+## Phase 3 — Passes PBO chaudes (profilage fait, gains mesurés)
 
-- [x] **Profilage du backend b8x** (`PPROF=1`, 237 modules) : backend 139,3 s
-      dont `optimize + emit` 103,1 s. **GC ≈ 57 % du CPU** (`gcBgMarkWorker`
-      244 s sur 430 s d'échantillons, `mProf` du profilage inclus) ; le CPU
-      applicatif est dispersé. Profil d'allocations (312 Go sur le run) :
-      `Data.Map` (`(*Node).clone` 32,6 Go = 10,4 %, `(*Node).find` et
+- [x] **Profilage** (`PPROF=1`, charge réelle) : backend ~154 s dont
+      `optimize + emit` ~103 s ; **GC ≈ 57 % du CPU** ; 312 Go alloués sur le
+      run. Top : `Data.Map` (`(*Node).clone` 32,6 Go = 10,4 %, `find` et
       comparateurs ~16 Go), concaténation de tableaux 10,6 Go, `RecordDict*`
-      ~20 Go, rebox PBO ~24 Go, `Monomorphize` ~30 Go, `Semantics.quote` 19 %
-      cum, `emitModule` 33 % cum (codegen + imprimante + `referencedImports`).
-      Conclusion : **aucune passe unique ne domine** — le coût est le volume
-      d'allocations et le GC, réparti entre Map, représentations/rebox,
-      tableaux et émission.
-- [x] **Premier correctif ciblé** : `Data.Map` `insertClone` (capacité `len+1`
-      au lieu de `maxDegree` sur le chemin d'insertion) → backend
-      **−6,5 % / −14,0 %** sur deux paires appariées (médianes 148,6 → 133,3 s),
-      RSS légèrement en baisse ; oracles altbak validés après reconstruction.
-- [x] **Balayage GC** (backend, `GOGC`) : 140,2 s (100) → 125,2 s (300,
-      −10,7 %) → 117,7 s (600, −16,1 %), RSS 5,3 → 9,0 → 14,9 Gio. Un défaut
-      `GOGC` dans le lanceur est une décision de politique (mémoire) à trancher.
-- [ ] **Suite** : traiter les postes identifiés — comparateurs de `Map`
-      (FFI Value-native, ou comparateur natif pour les clés `String`/`Ident`),
-      concaténations de tableaux (sites `<>` en boucle), rebox PBO, chemin
-      d'émission (`referencedImports`, `printGoExpr`, `toCharArray`). Chaque
-      correctif : mesure appariée sur le backend + oracles altbak.
+      ~20 Go, rebox ~24 Go, `Monomorphize` ~30 Go, `Semantics.quote` 19 % cum,
+      `emitModule` 33 % cum (dont `referencedImports` 26,6 Go = 8,5 %).
+      **Aucune passe unique ne domine** : le coût est le volume d'allocations.
+- [x] **`Data.Map` `insertClone`** (~15 lignes natives) : **157,6 → 153,4 s
+      (−2,7 %)** sur la charge réelle, RSS stable.
+- [x] **Scanner d'imports natif** (`Gopurs.GoCode.referencedImports`) :
+      **sortie Go byte-identique** (A/B sur 2 655 modules, 2 960 fichiers) et
+      backend **153,4 → 143,2 s (−6,6 %)** ; cumulé avec la `Map` : **−9,1 %**.
+- [x] **Balayage GC (charge réelle)** : 143,2 s (100) → 129,6 s (300, −9,5 %)
+      → 113,6 s (600, −20,7 %) ; RSS 5,1 → 8,8 → 13,9 Gio. Décider du défaut
+      `GOGC` du lanceur (politique mémoire).
+- [ ] **Suite** : comparateurs de `Map` (FFI Value-native ou comparateur natif
+      `String`/`Ident`), sites `<>` en boucle, rebox PBO, reste du chemin
+      d'émission (`printGoExpr` 5,9 Go, `toCharArray`) — chaque correctif :
+      sortie Go byte-identique + mesure appariée sur la charge réelle.
 
 ## Phase 4 — Généralisation (le bout de la logique)
 
@@ -87,9 +94,29 @@ voir les phases 3–5.
 
 ## Phase 5 — JSON général
 
+- [x] **Référence C mesurée** (rapport altbak
+      `2026-09-23-native-c-references.md`, lignes ajoutées à la table C) :
+      JSON Decoding **644,96 µs** (simdjson + arène) contre Go 14,67 ms et
+      JS 8,94 ms → **×22,7** de marge côté natif (décodage seul ×41,9,
+      parsing ×6,3). L'écart est dominé par l'allocation et le GC, pas par le
+      parseur. Array Indexing : sur le même noyau, Go (4,21 ms) est 1,6× plus
+      rapide que `clang -O3` (6,59 ms) ; la représentation boxed coûte ≤2 % ;
+      une reformulation en blocs (vectorisable) descend à ~0,51 ms → le levier
+      restant est algorithmique.
 - [ ] Le chemin `DecodeJson` générique reste à ×1,6 du JS (15,11 / 9,28 ms).
-      Appliquer la méthode aux primitives de décodage plutôt qu'aux instances,
-      ou assumer l'écart.
+      Cible : s'approcher de la référence C par un décodeur natif (mêmes
+      primitives que le décodeur TAST), pas par les instances génériques.
+- [x] **Référence C pour JSON to Typed AST** (`typed-ast.cc`, simdjson + arène,
+      ~1 100 lignes) : les **12 empreintes** du corpus sont reproduites à
+      l'identique (validées d'abord textuellement contre la PS, puis par
+      l'oracle figé dans chaque processus). Mesure officielle : C
+      **4,26 / 4,52 / 8,76 ms** contre Go 27,46 / 15,38 / 56,99 ms et JS
+      20,36 / 61,99 / 80,35 ms → **×6,5** au total (×6,4 au parsing, ×3,4 au
+      décodage). Seule la passe **pure** de validation d'usage n'est pas
+      reproduite : mesurée sur le même build Go, elle pèse **872,8 µs sur
+      13 206,6 µs (6,6 %)** → une référence C équivalente serait ~4,8 ms, soit
+      encore ×3,2. Le principal écart restant est le **parsing** (×6,4) et non
+      le décodeur, déjà natif des deux côtés.
 
 ## Décisions ouvertes
 

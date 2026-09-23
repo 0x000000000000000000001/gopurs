@@ -26,7 +26,16 @@ charAtOrSpace chars index =
   else ' '
 
 referencedImports :: String -> Array String
-referencedImports text = Array.sort (scan 0 [])
+referencedImports text = referencedImportsImpl referencedImportsPS text
+
+-- The Go backend scans in one byte pass without decoding the text to code
+-- points or building intermediate import arrays. The JavaScript backend calls
+-- the PureScript implementation passed as the first argument, so the JS bundle
+-- keeps the exact previous behaviour.
+foreign import referencedImportsImpl :: (String -> Array String) -> String -> Array String
+
+referencedImportsPS :: String -> Array String
+referencedImportsPS text = Array.sort (scan 0 [])
   where
   -- Native strings are UTF-8: repeatedly looking up a UTF-16 position would
   -- rescan their prefix. Decode once, then retain constant-time indexing.
