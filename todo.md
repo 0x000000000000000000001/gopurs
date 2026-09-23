@@ -54,28 +54,45 @@ c’est un **plafond de la couche ST/FFI**, pas encore un résultat du
 compilateur. Le rapport complet, les protocoles et la provenance sont dans
 [2026-09-23-tast-decode-profile.md](../../altbak.pub-gopurs/docs/benchmark-results/2026-09-23-tast-decode-profile.md).
 
+**Portage intégré (23 septembre) : la couche ST/FFI est passée en `Value` natif.**
+`Control.Monad.ST.Internal` (`map_`, `pure_`, `bind_`, `run`, `while`,
+`forImpl`, `foreach`, `newImpl`, `read`, `modifyImpl`, `write`) et
+`Control.Monad.ST.Uncurried` (`mkSTFn1..9`, `runSTFn1..9`) déclarent désormais
+callbacks et résultats en `gopurs_runtime.Value` ; le pont FFI les passe
+directement, sans closures d’adaptation `any` ni boîtes. Décodage TAST :
+**−11,88 % en médiane sur 10 paires appariées** (avant 398,36 → après
+352,75 ms), allocations **−9,09 %** (442 632 472 → 402 378 424 octets).
+Mesure officielle : **Go 358,78 / 396,74 ms**, contrôle JS 60,64 / 81,77 ms
+(bundle identique) ; cellules README Go **396,74 ms**, JS **81,77 ms**.
+Validation : suite `gopurs-st` verte, bootstrap natif OK, 12 modules conformes.
+**Côté compilateur : aucun gain ni régression mural établi** (b8x `b -c` :
+250,0 s avant, 260,9 / 258,5 s après ; A/B backend contrôlé et A/B
+`gopurs-aff` recoupés, dérive machine non séparée) ; le CPU baisse
+systématiquement (~2 %) et le chargement TAST progresse. Question laissée
+ouverte pour le point 7.
+
 ### Déroulement prévu
 
 1. [x] **Référence** compilateur actuel : corpus TAST puis b8x complet.
 2. [x] **Profil du décodage seul** (CPU, allocations, vivant), hors
    empreintes, avec oracles dans le processus.
 3. [x] **Sonde scratch** : helpers ST `Value` natifs sur le Go généré figé —
-   **−13,42 % temps / −9,09 % octets**, oracles identiques. Le gain est
-   démontré ; la prochaine étape est de l’obtenir depuis gopurs lui-même
-   (intrinsèques de codegen pour `Control.Monad.ST` ou ABI `Value`),
-   puis de mesurer la campagne appariée et le b8x complet.
-4. [ ] **Portage dans gopurs** : intrinsèques de codegen pour les opérations
-   ST (ou ABI `Value` pour `Control.Monad.ST`), en gardant le comportement des
-   dictionnaires, des applications partielles et des ordres d’évaluation.
-   Étendre ensuite aux implémentations `Data.Array.ST` si le gain se
-   confirme, puis mesurer.
-5. [ ] **Validation sur le code réellement régénéré** : AST complets, erreurs
-   et leur priorité, références de types et cycles, ordre des callbacks,
-   immutabilité.
-6. [ ] **Mesure appariée avant/après** : décodage, total, allocations, taille
-   du binaire, puis phases et pic mémoire du workflow b8x.
-7. [ ] **Décision d’intégration** fondée sur les chiffres ; documenter le gain
-   et ses limites ici.
+   **−13,42 % temps / −9,09 % octets**, oracles identiques.
+4. [x] **Portage dans gopurs** : la FFI Go de `Control.Monad.ST.Internal` et
+   `Uncurried` déclare callbacks et résultats en `gopurs_runtime.Value` ; le
+   pont passe directement (pas d’intrinsèques de codegen nécessaires).
+   **−11,88 % de décodage sur 10 paires, −9,09 % d’allocations.**
+5. [x] **Validation sur le code réellement régénéré** : suite `gopurs-st`
+   verte, bootstrap natif, oracles 12 modules dans chaque processus, A/B
+   backend et `gopurs-aff`.
+6. [x] **Mesure appariée avant/après** : décodage, total, allocations ;
+   cellules officielles et README mises à jour. **b8x : pas de gain ni de
+   régression murale établis**, CPU en baisse (~2 %), chargement plus rapide.
+7. [ ] **Suite du chantier** : étendre la migration aux implémentations
+   `Data.Array.ST` (conversions `[]Value` ↔ `[]any` restantes), puis aux
+   passerelles `unsafePartial`/`Array.unsafeIndex`, avant l’ABI native
+   complète. Reprendre le point 7 (b8x) avec une mesure appariée dédiée
+   lorsque la question murale devra être tranchée.
 
 **Validation obligatoire à chaque étape : répéter `b -c` sur le vrai b8x**
 (mêmes entrées, paramètres et état de cache), publier le détail des phases, le
@@ -138,9 +155,16 @@ construction unique des records comme une ABI native complète.
 - Sonde TAST : `scratch/tast-decode-20260923` (`build-profile.sh`,
   `run-profile.sh cpu|alloc|validate|live`), corpus
   `ef5ed1bae6ae52d084a4b3fd9d1e9e90a5da2c3a2d1e6e3aa56122007e0b223a`.
-- Baselines README (23 septembre 2026) : **Go 15,11 / 424,10 ms**,
-  **JS 9,28 / 80,26 ms**. Baselines de compilation b8x (23 septembre 2026) :
-  **chargement 9,638 s, préparation 38,991 s, optimisation/émission
-  111,579 s, backend 160,212 s, commande 250,01 s, pic RSS 5,70 Gio**.
+- Baselines README (23 septembre 2026, après migration ST/FFI) : **Go
+  358,78 / 396,74 ms**, **JS 60,64 / 81,77 ms** pour TAST ; JSON général
+  **Go 15,11 / 424,10 ms**, **JS 9,28 / 80,26 ms** (inchangés). Baselines de
+  compilation b8x (23 septembre 2026, avant migration) : chargement 9,638 s,
+  préparation 38,991 s, optimisation/émission 111,579 s, backend 160,212 s,
+  commande 250,01 s, pic RSS 5,70 Gio. Après migration : commande 258,5–260,9 s,
+  backend 167,3–170,6 s ; A/B backend contrôlé 167,5/172,2 s (avant) contre
+  174,1/174,5 s (après) ; minima `gopurs-aff` 7,009 s contre 7,242 s.
+- Migration ST/FFI : `gopurs/gopurs-st/src/Control/Monad/ST/{Internal,Uncurried}.go`,
+  workspace `altbak.pub-gopurs/var/benchmark/json-tast-stf-20260923`, campagnes
+  `stf-campaign-20260923` et `stf-campaign-2-20260923`.
 - Les pourcentages cumulés (`Apply2`, `TraverseArrayImpl`, …) ne mesurent pas
   un coût propre et ne s’additionnent pas.
