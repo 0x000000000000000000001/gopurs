@@ -71,6 +71,30 @@ Validation : suite `gopurs-st` verte, bootstrap natif OK, 12 modules conformes.
 systématiquement (~2 %) et le chargement TAST progresse. Question laissée
 ouverte pour le point 7.
 
+**Intégration suivante (23 septembre) : la résolution de la table de types passe
+en Go natif.** Le chemin `decodeTypeTable` (51,3 % des allocations de décodage,
+~11 Ko et ~280 objets par type) est implémenté en FFI Go
+(`CoreFn/Json.go`) derrière `foreign import decodeTypeTableImpl` ; le JS
+conserve l’algorithme PureScript via `TypeTable.decodeTypeTablePS`. Campagne
+appariée (5 paires, deux workspaces régénérés, oracles dans chaque processus) :
+décodage **363,41 → 186,06 ms (−48,80 %)**, allocations
+**402 378 424 → 213 520 672 (−46,94 %)**, total **418,35 → 228,95 ms
+(−45,27 %)**, parsing inchangé (+0,21 %, allocations identiques). Cellules
+officielles : **Go 246,45 ms**, contrôle JS **87,60 ms** (algorithme JS
+inchangé, bundle désormais différent). Validation sémantique : différentiel
+natif vs PureScript sur 20 cas fixés et 400 tables aléatoires (cycles,
+références hors borne, erreurs différées, `Row`/`ForAll`/`ConstrainedType`),
+12 empreintes conformes, bootstrap natif OK. Rapport :
+[2026-09-23-native-type-table.md](../../altbak.pub-gopurs/docs/benchmark-results/2026-09-23-native-type-table.md).
+
+**Lecture GC.** Sur le Go généré figé, à code identique : `GOGC=100` 322,0 ms
+contre `GOGC=1200` 164,6 ms ; la variante native 163,1 ms à 100 et 88,3 ms à
+1200. La moitié du coût antérieur était de la pression GC transitoire, pas du
+travail de décodage. Les variantes natives (table de types seule :
+−47,5 % min / −46,9 % octets ; + boucles `decodeArray` directes : −49,4 % /
+−50,7 % cumulés) sont consignées dans
+`scratch/tast-revolution-20260923/README.md`.
+
 ### Déroulement prévu
 
 1. [x] **Référence** compilateur actuel : corpus TAST puis b8x complet.
@@ -88,11 +112,15 @@ ouverte pour le point 7.
 6. [x] **Mesure appariée avant/après** : décodage, total, allocations ;
    cellules officielles et README mises à jour. **b8x : pas de gain ni de
    régression murale établis**, CPU en baisse (~2 %), chargement plus rapide.
-7. [ ] **Suite du chantier** : étendre la migration aux implémentations
-   `Data.Array.ST` (conversions `[]Value` ↔ `[]any` restantes), puis aux
-   passerelles `unsafePartial`/`Array.unsafeIndex`, avant l’ABI native
-   complète. Reprendre le point 7 (b8x) avec une mesure appariée dédiée
-   lorsque la question murale devra être tranchée.
+7. [x] **Table de types native** : FFI Go derrière `decodeTypeTableImpl`, JS
+   délégué à l’algorithme PureScript. **−48,80 % de décodage sur 5 paires
+   appariées, −46,94 % d’allocations** ; cellules **246,45 / 87,60 ms**.
+8. [ ] **Suite du chantier** : intégrer la boucle `decodeArray` directe
+   (−7,1 % d’allocations de plus sur la sonde), puis étendre le décodage natif
+   au reste du décodeur (`decodeExpr`, `decodeAnnWithUsage`,
+   `decodeSourceUsage`), avant les passerelles `unsafePartial`/
+   `Array.unsafeIndex` et l’ABI native complète. Reprendre b8x avec une mesure
+   appariée dédiée lorsque la question murale devra être tranchée.
 
 **Validation obligatoire à chaque étape : répéter `b -c` sur le vrai b8x**
 (mêmes entrées, paramètres et état de cache), publier le détail des phases, le
@@ -155,16 +183,22 @@ construction unique des records comme une ABI native complète.
 - Sonde TAST : `scratch/tast-decode-20260923` (`build-profile.sh`,
   `run-profile.sh cpu|alloc|validate|live`), corpus
   `ef5ed1bae6ae52d084a4b3fd9d1e9e90a5da2c3a2d1e6e3aa56122007e0b223a`.
-- Baselines README (23 septembre 2026, après migration ST/FFI) : **Go
-  358,78 / 396,74 ms**, **JS 60,64 / 81,77 ms** pour TAST ; JSON général
-  **Go 15,11 / 424,10 ms**, **JS 9,28 / 80,26 ms** (inchangés). Baselines de
-  compilation b8x (23 septembre 2026, avant migration) : chargement 9,638 s,
-  préparation 38,991 s, optimisation/émission 111,579 s, backend 160,212 s,
-  commande 250,01 s, pic RSS 5,70 Gio. Après migration : commande 258,5–260,9 s,
-  backend 167,3–170,6 s ; A/B backend contrôlé 167,5/172,2 s (avant) contre
-  174,1/174,5 s (après) ; minima `gopurs-aff` 7,009 s contre 7,242 s.
+- Baselines README (23 septembre 2026, après table de types native) : **Go
+  191,59 / 246,45 ms**, **JS 65,67 / 87,60 ms** pour TAST (décodage / total) ;
+  JSON général **Go 15,11 / 424,10 ms**, **JS 9,28 / 80,26 ms** (inchangés,
+  chemin non concerné). Baselines b8x (23 septembre 2026, avant migration) :
+  chargement 9,638 s, préparation 38,991 s, optimisation/émission 111,579 s,
+  backend 160,212 s, commande 250,01 s, pic RSS 5,70 Gio. Après migration ST :
+  commande 258,5–260,9 s, backend 167,3–170,6 s ; A/B backend contrôlé
+  167,5/172,2 s (avant) contre 174,1/174,5 s (après) ; minima `gopurs-aff`
+  7,009 s contre 7,242 s.
 - Migration ST/FFI : `gopurs/gopurs-st/src/Control/Monad/ST/{Internal,Uncurried}.go`,
   workspace `altbak.pub-gopurs/var/benchmark/json-tast-stf-20260923`, campagnes
   `stf-campaign-20260923` et `stf-campaign-2-20260923`.
+- Table de types native : `purescript-backend-optimizer-gopurs/src/PureScript/Backend/Optimizer/CoreFn/{Json.purs,Json.go,Json.js,TypeTable.purs}`,
+  workspace `altbak.pub-gopurs/var/benchmark/json-tast-native-tt-20260923`,
+  résultats `native-tt-results-20260923`, campagne appariée
+  `native-tt-campaign-20260923`, rapport
+  [2026-09-23-native-type-table.md](../../altbak.pub-gopurs/docs/benchmark-results/2026-09-23-native-type-table.md).
 - Les pourcentages cumulés (`Apply2`, `TraverseArrayImpl`, …) ne mesurent pas
   un coût propre et ne s’additionnent pas.
