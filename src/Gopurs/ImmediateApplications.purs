@@ -18,7 +18,8 @@ import PureScript.Backend.Optimizer.Syntax (BackendSyntax(..), Level(..), Pair(.
 -- Run after PBO, before ownership and TCO recompute local usage. This is
 -- ordinary capture-avoiding beta reduction, including an immediately applied
 -- branch result. It never substitutes an evaluated call/effect as an argument
--- or duplicates a parameter's uses. Recursive initialization scopes are left
+-- or duplicates a callback value. Already-evaluated local/scalar arguments may
+-- replace multiple parameter uses. Recursive initialization scopes are left
 -- untouched. Bound duplicated syntax, not the size of a callback that moves
 -- into just one live branch: a single insertion causes no callback code growth.
 optimizeImmediateApplications :: BackendModule -> BackendModule
@@ -36,21 +37,21 @@ rewrite original@(NeutralExpr syn) = case syn of
     children <- traverse rewrite syn
     case children of
       App fn args -> case NEA.toArray args of
-        [ arg ] | movable arg && reducible fn && boundedGrowth fn arg -> applyInto fn arg
+        [ arg ] | movable arg && reducible arg fn && boundedGrowth fn arg -> applyInto fn arg
         _ -> pure (NeutralExpr children)
       _ -> pure (NeutralExpr children)
 
 -- Do not distribute applications of opaque functions merely because their
 -- producer is a branch. Every possible result must eliminate the application.
-reducible :: NeutralExpr -> Boolean
-reducible expr = case strip expr of
+reducible :: NeutralExpr -> NeutralExpr -> Boolean
+reducible arg expr = case strip expr of
   Abs refs body -> case NEA.toArray refs of
-    [ Tuple _ level ] -> not (hasRecursion body) && occurrences level body <= 1
+    [ Tuple _ level ] -> not (hasRecursion body) && (occurrences level body <= 1 || repeatable arg)
     _ -> false
-  Let _ _ _ body -> reducible body
+  Let _ _ _ body -> reducible arg body
   Branch cases fallback -> NEA.length cases <= 4
-    && foldl (\accepted (Pair _ body) -> accepted && reducible body) true cases
-    && reducible fallback
+    && foldl (\accepted (Pair _ body) -> accepted && reducible arg body) true cases
+    && reducible arg fallback
   Fail _ -> true
   _ -> false
 
@@ -75,7 +76,7 @@ substitutionCopies expr = case strip expr of
 applyInto :: NeutralExpr -> NeutralExpr -> State Int NeutralExpr
 applyInto original arg = case strip original of
   Abs refs body -> case NEA.toArray refs of
-    [ Tuple _ level ] | not (hasRecursion body) && occurrences level body <= 1 -> do
+    [ Tuple _ level ] | not (hasRecursion body) && (occurrences level body <= 1 || repeatable arg) -> do
       -- An argument lambda may reuse levels from a sibling branch. Rename its
       -- bound locals before transplanting it below that branch's local binds.
       if occurrences level body == 0 then pure body
@@ -108,6 +109,19 @@ movable :: NeutralExpr -> Boolean
 movable expr = case strip expr of
   Local _ _ -> true
   Abs _ body -> not (hasRecursion body)
+  Lit (LitInt _) -> true
+  Lit (LitNumber _) -> true
+  Lit (LitString _) -> true
+  Lit (LitChar _) -> true
+  Lit (LitBoolean _) -> true
+  _ -> false
+
+-- A local reference reuses exactly the already-created value, including a
+-- function or object. It never repeats evaluation or creates another closure.
+-- A lambda is deliberately excluded even when its body is pure.
+repeatable :: NeutralExpr -> Boolean
+repeatable expr = case strip expr of
+  Local _ _ -> true
   Lit (LitInt _) -> true
   Lit (LitNumber _) -> true
   Lit (LitString _) -> true
