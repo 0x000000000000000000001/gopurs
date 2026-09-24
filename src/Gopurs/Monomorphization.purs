@@ -1,6 +1,7 @@
 module Gopurs.Monomorphization
   ( monomorphizeModules
   , monomorphizeModulesWith
+  , collectForeignForwarders
   ) where
 
 import Prelude
@@ -138,10 +139,13 @@ addForwarder moduleName foreignIdents acc (Binding _ (Ident ident) body) =
 isForeignForwarder :: String -> Set String -> Expr Ann -> Boolean
 isForeignForwarder moduleName foreignIdents body = case collectLambdaParams body of
   { params, body: inner } ->
-    not (Array.null params) && case unapplyExpr inner of
+    not (Array.null params)
+      && Set.size (Set.fromFoldable params) == Array.length params
+      && case unapplyExpr inner of
       { head: ExprVar _ (Qualified mbModule (Ident ffi)), args } ->
         Set.member ffi foreignIdents
           && sameModule mbModule
+          && (mbModule /= Nothing || not (Array.elem (Ident ffi) params))
           && Array.length args == Array.length params
           && foldl (&&) true (Array.zipWith isParameterReference args params)
       _ -> false
@@ -172,7 +176,7 @@ stripCoercions expr = case expr of
 -- `unsafeCoerce` is polymorphic, so its use is wrapped in type applications.
 isUnsafeCoerce :: Expr Ann -> Boolean
 isUnsafeCoerce fn = case stripTypeApps fn of
-  ExprVar _ (Qualified _ (Ident "unsafeCoerce")) -> true
+  ExprVar _ (Qualified (Just moduleName) (Ident "unsafeCoerce")) -> unwrap moduleName == "Unsafe.Coerce"
   _ -> false
 
 stripTypeApps :: Expr Ann -> Expr Ann

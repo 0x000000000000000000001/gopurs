@@ -490,16 +490,16 @@ func Get_Main_decodeProbe() gopurs_runtime.Value {
 					// TAST (Let): __local_var_2_2 shape=Other bindingType=(TypeVar b$scope119)
 					__local_var_2_2 := (*Constructor_Data_Either_Right[gopurs_runtime.Value, gopurs_runtime.Value])(__local_var_1_0.UnsafePtr).V0
 					_ = __local_var_2_2
-					// TAST (Let): observed_7_3 shape=App(Var) bindingType=Int
-					observed_7_3 := Call_Main_observe(__local_var_2_2.IntVal)
-					_ = observed_7_3
+					// TAST (Let): observed_5_3 shape=App(Var) bindingType=Int
+					observed_5_3 := Call_Main_observe(__local_var_2_2.IntVal)
+					_ = observed_5_3
 					var __t4 struct {
 						V0 gopurs_runtime.Value
 						V1 gopurs_runtime.Value
 						V2 bool
 					}
 					{
-						if (observed_7_3) < (int64(0)) {
+						if (observed_5_3) < (int64(0)) {
 							__t4 = struct {
 								V0 gopurs_runtime.Value
 								V1 gopurs_runtime.Value
@@ -515,7 +515,7 @@ func Get_Main_decodeProbe() gopurs_runtime.Value {
 							V0 gopurs_runtime.Value
 							V1 gopurs_runtime.Value
 							V2 bool
-						}{gopurs_runtime.Value{}, gopurs_runtime.Int(observed_7_3), true}
+						}{gopurs_runtime.Value{}, gopurs_runtime.Int(observed_5_3), true}
 					}
 				end_branch_4:
 					__t5 = __t4

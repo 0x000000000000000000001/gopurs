@@ -103,9 +103,37 @@ test('partially applied multi-argument lambdas remain unchanged', () => {
 test('large callback bodies are not duplicated across branches', () => {
   let body = ref(1);
   for (let i = 0; i < 80; i++) body = add(body, literal(i));
+  const original = call(branch(ref(0, bool), lambda(1, call(ref(1, unary), literal(1)), higher),
+    lambda(1, call(ref(1, unary), literal(2)), higher), higher), lambda(1, body));
+  assert.deepEqual(optimize(original), original);
+});
+
+test('large callback bodies move into exactly one live branch without code growth', () => {
+  let body = ref(1);
+  for (let i = 0; i < 80; i++) body = add(body, literal(i));
+  const original = call(branch(ref(0, bool), lambda(1, literal(-1), higher),
+    lambda(1, call(ref(1, unary), literal(7)), higher), higher), lambda(1, body));
+  const result = optimize(original);
+  assert.equal(count(result, S.Abs), 0);
+  assert.equal(count(result, S.App), 0);
+  assert.equal(count(result, S.PrimOp), 80, 'the large callback body exists once');
+});
+
+test('large unused callbacks are discarded without evaluating their bodies', () => {
+  let body = call(ref(3, unary), literal(99));
+  for (let i = 0; i < 80; i++) body = add(body, literal(i));
   const original = call(branch(ref(0, bool), lambda(1, literal(1), higher),
     lambda(1, literal(2), higher), higher), lambda(1, body));
-  assert.deepEqual(optimize(original), original);
+  assert.deepEqual(optimize(original), branch(ref(0, bool), literal(1), literal(2)));
+});
+
+test('duplication budget sums all syntactic leaves in nested branches', () => {
+  let body = ref(1);
+  for (let i = 0; i < 12; i++) body = add(body, literal(i));
+  const leaf = lambda(1, call(ref(1, unary), literal(1)), higher);
+  const nested = branch(ref(0, bool), leaf, leaf, higher);
+  const original = call(branch(ref(0, bool), nested, nested, higher), lambda(1, body));
+  assert.deepEqual(optimize(original), original, 'four copies exceed the extra-syntax budget');
 });
 
 // The callback's parameter (3) and the selected branch's payload (3) occupy
@@ -115,7 +143,9 @@ function executionFixture(name) {
   const returned = branch(ref(0, bool),
     letIn(3, call(ref(1, unary), literal(11)), lambda(4, literal(-1), higher), higher),
     letIn(3, call(ref(1, unary), literal(20)), lambda(4, call(ref(4, unary), ref(3)), higher), higher), higher);
-  const result = letIn(2, literal(100), call(returned, lambda(3, call(ref(1, unary), add(ref(3), ref(2))))));
+  let callbackBody = call(ref(1, unary), add(ref(3), ref(2)));
+  for (let i = 0; i < 80; i++) callbackBody = add(callbackBody, literal(0));
+  const result = letIn(2, literal(100), call(returned, lambda(3, callbackBody)));
   return moduleOf(typed(new C.Func([bool, unary], int), expr(new S.Abs([
     new Tuple(Nothing.value, 0), new Tuple(Nothing.value, 1),
   ], result))), name);

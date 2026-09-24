@@ -10,6 +10,7 @@ import Data.Foldable (class Foldable, foldl)
 import Data.Map as Map
 import Data.Maybe (Maybe(..))
 import Data.Set as Set
+import Data.String as String
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
 import Gopurs.CodegenState (CodegenMetadata)
@@ -18,6 +19,8 @@ import PureScript.Backend.Optimizer.CoreFn (ExprType, Ident(..), Literal(..), Mo
 import PureScript.Backend.Optimizer.CoreFn as CoreFn
 import PureScript.Backend.Optimizer.Semantics (NeutralExpr(..))
 import PureScript.Backend.Optimizer.Syntax (BackendOperator(..), BackendSyntax(..), Level(..), Pair(..))
+import PureScript.Backend.Optimizer.Substitute (unify)
+import PureScript.Backend.Optimizer.TypeSubstitution (substitute)
 
 -- Class dictionaries and other closed instance values are rebuilt at every
 -- evaluation of the expression that constructs them. When such an expression
@@ -30,7 +33,7 @@ import PureScript.Backend.Optimizer.Syntax (BackendOperator(..), BackendSyntax(.
 --
 -- Conditions are deliberately narrow: the expression must be an application
 -- (not a bare reference or literal), free of local variables, and its
--- annotation must be a class type from the metadata. Effects are out of scope
+-- annotation (or a verified shared binding) must have a class type. Effects are out of scope
 -- because a class dictionary value is never an effect computation.
 
 type LiftState =
@@ -38,7 +41,96 @@ type LiftState =
   , names :: Set.Set String
   , moduleName :: ModuleName
   , lifted :: Array (Tuple Ident NeutralExpr)
+  , shared :: Map.Map ApplicationKey { ident :: Ident, type :: ExprType }
   }
+
+-- PBO can inline an instance application's body while losing the result's
+-- annotation. Reuse an existing typed top-level dictionary for an identical
+-- application of globals. Keep curried/uncurried spines distinct and reject
+-- locals, type applications and annotated children: erased syntax alone must
+-- not conflate different instantiations or coercions. Shared candidates must
+-- use imported globals only (no new local-module initialization dependency),
+-- and their result type must be uniquely determined by monomorphic arguments.
+data ApplicationKey
+  = GlobalKey (Qualified Ident)
+  | CurriedKey ApplicationKey (Array ApplicationKey)
+  | UncurriedKey ApplicationKey (Array ApplicationKey)
+
+derive instance eqApplicationKey :: Eq ApplicationKey
+derive instance ordApplicationKey :: Ord ApplicationKey
+
+applicationKey :: NeutralExpr -> Maybe ApplicationKey
+applicationKey (NeutralExpr syn) = case syn of
+  Var name -> Just (GlobalKey name)
+  App fn args -> CurriedKey <$> applicationKey fn <*> traverse applicationKey (toArray args)
+  UncurriedApp fn args -> UncurriedKey <$> applicationKey fn <*> traverse applicationKey args
+  _ -> Nothing
+
+sharedDictionaries :: CodegenMetadata -> BackendModule -> Map.Map ApplicationKey { ident :: Ident, type :: ExprType }
+sharedDictionaries metadata mod = foldl addGroup Map.empty mod.bindings
+  where
+  addGroup entries group
+    | group.recursive = entries
+    | otherwise = foldl addBinding entries group.bindings
+
+  addBinding entries (Tuple ident expr) = case expr of
+    NeutralExpr (Typed ty body) -> case dictionaryClass ty, applicationKey body of
+      Just name, Just key | Map.member name metadata.classDeclsFields && isApplication body
+        && monomorphic ty && importedApplicationType metadata mod.name key == Just ty ->
+        -- Preserve the first source binding when equivalent names exist.
+        if Map.member key entries then entries
+        else Map.insert key { ident, type: ty } entries
+      _, _ -> entries
+    _ -> entries
+
+-- This is intentionally not general inference. Missing types, local globals,
+-- higher-rank arguments, unresolved variables and dynamic Any all decline reuse.
+importedApplicationType :: CodegenMetadata -> ModuleName -> ApplicationKey -> Maybe ExprType
+importedApplicationType metadata current = case _ of
+  GlobalKey (Qualified (Just moduleName@(CoreFn.ModuleName name)) (Ident ident)) -> do
+    guard (moduleName /= current)
+    Map.lookup (name <> "." <> ident) metadata.globalTypes
+  CurriedKey fn args -> infer fn args
+  UncurriedKey fn args -> infer fn args
+  _ -> Nothing
+  where
+  infer fn args = do
+    fnType <- importedApplicationType metadata current fn
+    argTypes <- traverse (importedApplicationType metadata current) args
+    guard (Array.all monomorphic argTypes)
+    applicationResult fnType argTypes
+
+applicationResult :: ExprType -> Array ExprType -> Maybe ExprType
+applicationResult ty args = case Array.uncons args of
+  Nothing -> Just ty
+  Just { head: arg, tail: rest } -> case ty of
+    CoreFn.ForAll _ body -> applicationResult body args
+    CoreFn.ConstrainedType constraints body -> applicationResult
+      (CoreFn.Func (map (\(Tuple path types) -> CoreFn.ADT (String.joinWith "." path) path types) constraints) body) args
+    CoreFn.Func params result -> do
+      { head: param, tail: remaining } <- Array.uncons params
+      let substitution = unify param arg Map.empty
+      guard (substitute substitution param == arg)
+      let next = if Array.null remaining then result else CoreFn.Func remaining result
+      applicationResult (substitute substitution next) rest
+    _ -> Nothing
+
+monomorphic :: ExprType -> Boolean
+monomorphic = case _ of
+  CoreFn.Any -> false
+  CoreFn.TypeVar _ -> false
+  CoreFn.ForAll _ _ -> false
+  CoreFn.ConstrainedType _ _ -> false
+  CoreFn.ADT _ _ args -> Array.all monomorphic args
+  CoreFn.Array item -> monomorphic item
+  CoreFn.Func args result -> Array.all monomorphic args && monomorphic result
+  CoreFn.TypeApp fn args -> monomorphic fn && Array.all monomorphic args
+  CoreFn.Record row -> monomorphic row
+  CoreFn.Row fields tail -> Array.all (\(Tuple _ field) -> monomorphic field) fields
+    && case tail of
+      Nothing -> true
+      Just row -> monomorphic row
+  _ -> true
 
 cacheClosedDictionaries :: CodegenMetadata -> BackendModule -> BackendModule
 cacheClosedDictionaries metadata mod =
@@ -49,40 +141,58 @@ cacheClosedDictionaries metadata mod =
       (Array.concatMap _.bindings mod.bindings)
 
     initial :: LiftState
-    initial = { next: 0, names: existing, moduleName: mod.name, lifted: [] }
+    initial = { next: 0, names: existing, moduleName: mod.name, lifted: [], shared: sharedDictionaries metadata mod }
 
     Tuple rewritten liftedState = runState (traverse (rewriteGroup metadata) mod.bindings) initial
   in
-    if Array.null liftedState.lifted then mod
+    if Array.null liftedState.lifted then mod { bindings = rewritten }
     else mod
       { bindings = rewritten <> [ { recursive: false, bindings: liftedState.lifted } ]
       }
 
 rewriteGroup :: CodegenMetadata -> BackendBindingGroup Ident NeutralExpr -> State LiftState (BackendBindingGroup Ident NeutralExpr)
-rewriteGroup metadata group = do
-  bindings <- traverse
-    (\(Tuple ident expr) -> Tuple ident <$> rewriteNested metadata expr)
-    group.bindings
-  pure group { bindings = bindings }
+rewriteGroup metadata group
+  | group.recursive = pure group
+  | otherwise = do
+      bindings <- traverse
+        (\(Tuple ident expr) -> Tuple ident <$> rewriteNested metadata expr)
+        group.bindings
+      pure group { bindings = bindings }
 
 -- A top-level binding body already lives in a cached getter, so it is not
 -- lifted a second time; only constructions nested below it are.
 rewriteNested :: CodegenMetadata -> NeutralExpr -> State LiftState NeutralExpr
 rewriteNested metadata (NeutralExpr syn) =
-  NeutralExpr <$> traverse (rewriteExpr metadata) syn
+  case syn of
+    LetRec _ _ _ -> pure (NeutralExpr syn)
+    Typed ty body -> NeutralExpr <<< Typed ty <$> rewriteNested metadata body
+    TypeApp body ty -> NeutralExpr <<< flip TypeApp ty <$> rewriteNested metadata body
+    _ -> NeutralExpr <$> traverse (rewriteExpr metadata) syn
 
 rewriteExpr :: CodegenMetadata -> NeutralExpr -> State LiftState NeutralExpr
-rewriteExpr metadata expr@(NeutralExpr syn) =
-  case liftable metadata expr of
-    Just ty -> lift ty expr
-    Nothing ->
-      NeutralExpr <$> traverse (rewriteExpr metadata) syn
+rewriteExpr metadata expr@(NeutralExpr syn) = do
+  state <- get
+  case applicationKey expr >>= flip Map.lookup state.shared of
+    Just known -> pure (reference state.moduleName known.ident known.type)
+    Nothing -> case liftable metadata expr of
+      Just ty -> lift ty expr
+      Nothing -> case syn of
+        -- A recursive local scope can include early reads of otherwise global
+        -- values; do not introduce shared-getter dependencies inside it.
+        LetRec _ _ _ -> pure expr
+        Typed ty body -> NeutralExpr <<< Typed ty <$> rewriteNested metadata body
+        TypeApp body ty -> NeutralExpr <<< flip TypeApp ty <$> rewriteNested metadata body
+        _ -> NeutralExpr <$> traverse (rewriteExpr metadata) syn
+
+reference :: ModuleName -> Ident -> ExprType -> NeutralExpr
+reference moduleName ident ty = NeutralExpr (Typed ty (NeutralExpr (Var (Qualified (Just moduleName) ident))))
 
 liftable :: CodegenMetadata -> NeutralExpr -> Maybe ExprType
 liftable metadata expr = do
   guard (isApplication expr)
   guard (Set.isEmpty (freeVars expr))
   guard (not (containsEffect expr))
+  guard (not (containsRecursion expr))
   ty <- annotatedType expr
   className <- dictionaryClass ty
   guard (Map.member className metadata.classDeclsFields)
@@ -99,6 +209,11 @@ containsEffect (NeutralExpr syn) = case syn of
   UncurriedEffectApp _ _ -> true
   UncurriedEffectAbs _ _ -> true
   _ -> foldl (\found child -> found || containsEffect child) false syn
+
+containsRecursion :: NeutralExpr -> Boolean
+containsRecursion (NeutralExpr syn) = case syn of
+  LetRec _ _ _ -> true
+  _ -> foldl (\found child -> found || containsRecursion child) false syn
 
 isApplication :: NeutralExpr -> Boolean
 isApplication expr = case strip expr of
@@ -136,7 +251,7 @@ lift ty expr = do
     , names = Set.insert allocated.name st.names
     , lifted = Array.snoc st.lifted (Tuple ident expr)
     }
-  pure (NeutralExpr (Typed ty (NeutralExpr (Var (Qualified (Just st.moduleName) ident)))))
+  pure (reference st.moduleName ident ty)
 
 allocate :: Set.Set String -> Int -> { name :: String, next :: Int }
 allocate names index =

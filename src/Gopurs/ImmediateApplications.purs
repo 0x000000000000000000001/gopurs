@@ -19,7 +19,8 @@ import PureScript.Backend.Optimizer.Syntax (BackendSyntax(..), Level(..), Pair(.
 -- ordinary capture-avoiding beta reduction, including an immediately applied
 -- branch result. It never substitutes an evaluated call/effect as an argument
 -- or duplicates a parameter's uses. Recursive initialization scopes are left
--- untouched. Small syntax bounds limit branch-distribution code growth.
+-- untouched. Bound duplicated syntax, not the size of a callback that moves
+-- into just one live branch: a single insertion causes no callback code growth.
 optimizeImmediateApplications :: BackendModule -> BackendModule
 optimizeImmediateApplications mod = mod
   { bindings = map (\group -> group
@@ -35,7 +36,7 @@ rewrite original@(NeutralExpr syn) = case syn of
     children <- traverse rewrite syn
     case children of
       App fn args -> case NEA.toArray args of
-        [ arg ] | movable arg && size arg <= 128 && reducible fn -> applyInto fn arg
+        [ arg ] | movable arg && reducible fn && boundedGrowth fn arg -> applyInto fn arg
         _ -> pure (NeutralExpr children)
       _ -> pure (NeutralExpr children)
 
@@ -53,14 +54,34 @@ reducible expr = case strip expr of
   Fail _ -> true
   _ -> false
 
+-- Called only for a reducible function. Sum syntactic substitutions across
+-- branches, rather than taking their maximum: mutually exclusive branches
+-- still duplicate generated code. Zero/one substitution can admit a large body.
+boundedGrowth :: NeutralExpr -> NeutralExpr -> Boolean
+boundedGrowth fn arg =
+  let copies = substitutionCopies fn
+  in copies <= 1 || size arg <= 128 / (copies - 1)
+
+substitutionCopies :: NeutralExpr -> Int
+substitutionCopies expr = case strip expr of
+  Abs refs body -> case NEA.toArray refs of
+    [ Tuple _ level ] -> occurrences level body
+    _ -> 0
+  Let _ _ _ body -> substitutionCopies body
+  Branch cases fallback ->
+    foldl (\n (Pair _ body) -> n + substitutionCopies body) (substitutionCopies fallback) cases
+  _ -> 0
+
 applyInto :: NeutralExpr -> NeutralExpr -> State Int NeutralExpr
 applyInto original arg = case strip original of
   Abs refs body -> case NEA.toArray refs of
     [ Tuple _ level ] | not (hasRecursion body) && occurrences level body <= 1 -> do
       -- An argument lambda may reuse levels from a sibling branch. Rename its
       -- bound locals before transplanting it below that branch's local binds.
-      renamed <- freshen Map.empty arg
-      rewrite (substitute level renamed body)
+      if occurrences level body == 0 then pure body
+      else do
+        renamed <- freshen Map.empty arg
+        rewrite (substitute level renamed body)
     _ -> unchanged
   Let ident level value body -> do
     applied <- applyInto body arg
