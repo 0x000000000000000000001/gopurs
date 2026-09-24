@@ -97,18 +97,21 @@ voir les phases 3–5.
       compilées/exécutées OK ; le seul snapshot modifié (`DerivingFunctor.go`)
       était déjà obsolète depuis le 21/09. Bootstrap du compilateur (459
       modules) OK. Rapport `2026-09-23-closed-dictionary-caching.md`.
-- [x] **Déspecialisation des accesseurs `caseJson*` (fusion, premier morceau)** :
-      PBO spécialisait ces fins wrappers FFI en forçant un retour ADT natif que
-      le wrapper re-boxait (aller-retour boxed→native→boxed, 2 allocations par
-      appel). Exclusion de la famille dans `Gopurs.Monomorphization` : décodage
-      **−17,6 %** (apparié vs cache3), allocations décodage **15,04 → 13,49 Mo
-      (−10,3 %)** ; cumulé depuis la baseline : allocations **−18,5 %**,
-      décodage −19,1 % (apparié direct). Oracle JSON exact, 4 spécialisations
-      éliminées. Rapport `2026-09-24-accessor-despecialization.md`.
-- [ ] **Étendre la règle aux autres forwarders FFI** : le filtre est
-      volontairement nommé ; identifier mécaniquement les corps « fin wrapper
-      FFI » avant d'élargir. Les constructeurs `Right`/`Just` (~24 % des
-      allocations restantes) relèvent, eux, de l'ABI native.
+- [x] **Déspecialisation des forwarders FFI (fusion, premier morceau)** :
+      PBO spécialisait les fins wrappers FFI (`caseJson*`) en forçant un retour
+      ADT natif que le wrapper re-boxait (aller-retour boxed→native→boxed,
+      2 allocations par appel). `Gopurs.Monomorphization` détecte désormais
+      **mécaniquement** les forwarders (lambda eta-expansé appliquant un import
+      étranger du même module à ses paramètres, à travers `unsafeCoerce`) et
+      les exclut de la spécialisation. JSON : décodage **−17,6 %** (apparié vs
+      état précédent), allocations décodage **15,04 → 13,49 Mo (−10,3 %)** ;
+      cumulé depuis la baseline : allocations **−18,5 %**, décodage −19,1 %.
+      Code généré identique au byte à l'exclusion nommée sur le corpus (562
+      spécialisations), oracle JSON exact, 13 fixtures OK. Rapport
+      `2026-09-24-accessor-despecialization.md`.
+- [ ] **Constructeurs `Right`/`Just`** (~24 % des allocations restantes
+      mesurées) : relèvent de l'ABI native (représentation), pas d'un filtre de
+      spécialisation.
 - [ ] **Suite du hissage** : dictionnaires partiellement appliqués ; mesurer sur
       une charge réelle (b8x ou gopurs-aff) et vérifier les chemins d'erreur.
       Variante élargie (`LitRecord`, `CtorSaturated`) **testée et rejetée** :

@@ -18,7 +18,7 @@ import Data.Set as Set
 import Data.String as String
 import Data.Tuple (Tuple(..))
 import Gopurs.NativeRecordArgs (candidateToShare)
-import PureScript.Backend.Optimizer.CoreFn (Ann, Bind(..), Binding(..), ExprType(..), Ident(..), Module(..))
+import PureScript.Backend.Optimizer.CoreFn (Ann, Bind(..), Binding(..), Expr(..), ExprType(..), Ident(..), Module(..), Qualified(..))
 import PureScript.Backend.Optimizer.CoreFn.Usage (invalidateSourceUsageModule)
 import PureScript.Backend.Optimizer.Monomorphize (InstantiationMap, collectInstantiations, monomorphize, transitiveCollect)
 
@@ -48,19 +48,12 @@ monomorphizeModulesWith collectTransitive globalTypes inputModules = do
     -- Keep negate's dictionary until its signed-zero intrinsic is recognized.
     -- Other known definitions must remain available for static evaluation.
     intrinsicGlobals = Set.singleton "Data.Ring.negate"
-    -- The `caseJson*` accessors are thin wrappers over value-level FFI. Their
-    -- specializations substitute static arguments but also force a native
-    -- return representation that the cached wrapper immediately boxes again
-    -- (measured as the `caseJson*` wrapper allocations). Keeping them
-    -- polymorphic leaves the whole chain in value form.
-    boxedFfiAccessors = Set.fromFoldable
-      [ "Data.Argonaut.Core.caseJsonNull"
-      , "Data.Argonaut.Core.caseJsonBoolean"
-      , "Data.Argonaut.Core.caseJsonNumber"
-      , "Data.Argonaut.Core.caseJsonString"
-      , "Data.Argonaut.Core.caseJsonArray"
-      , "Data.Argonaut.Core.caseJsonObject"
-      ]
+    -- Thin wrappers over value-level foreign imports gain nothing from
+    -- specialization: the FFI boundary is boxed by construction, so a
+    -- specialized copy only rewrites the wrapper's own boundary to native
+    -- representations and adds conversions around a foreign call that cannot
+    -- use them. This subsumes the named `caseJson*` accessors.
+    foreignForwarders = collectForeignForwarders modules
     globalAstMap = Map.filterKeys (not <<< flip Set.member intrinsicGlobals) (buildGlobalAstMap modules)
     -- Row-only readers can share one native worker across record shapes. The
     -- emitter rechecks their uses after PBO; other polymorphism stays eligible.
@@ -71,7 +64,7 @@ monomorphizeModulesWith collectTransitive globalTypes inputModules = do
   let instantiations = Map.filterKeys
         (\name ->
           not (Set.member name sharedRecordWorkers)
-            && not (Set.member name boxedFfiAccessors)
+            && not (Set.member name foreignForwarders)
             && shouldMonomorphize globalTypes foreignGlobals name)
         transitiveInstantiations
   pure $ if Map.isEmpty instantiations then
@@ -115,6 +108,81 @@ shouldMonomorphize globalTypes foreignGlobals name =
   not (Set.member name foreignGlobals) && case Map.lookup name globalTypes of
     Just ty -> hasTypeVariables ty
     Nothing -> false
+
+-- | Bindings whose body eta-forwards to a foreign import of the same module,
+-- | optionally wrapping arguments and result in `unsafeCoerce`. Specializing
+-- | such a binding cannot unbox anything across the FFI, so it is skipped.
+collectForeignForwarders :: List (Module Ann) -> Set String
+collectForeignForwarders = foldl addModuleForwarders Set.empty
+
+addModuleForwarders :: Set String -> Module Ann -> Set String
+addModuleForwarders acc (Module mod) =
+  let
+    moduleName = unwrap mod.name
+    foreignIdents = Set.fromFoldable
+      (map (\(Tuple (Ident name) _) -> name) (Map.toUnfoldable mod.foreign :: Array (Tuple Ident (Maybe ExprType))))
+  in
+    Array.foldl (addForwardingBind moduleName foreignIdents) acc mod.decls
+
+addForwardingBind :: String -> Set String -> Set String -> Bind Ann -> Set String
+addForwardingBind moduleName foreignIdents acc = case _ of
+  NonRec binding -> addForwarder moduleName foreignIdents acc binding
+  Rec group -> Array.foldl (addForwarder moduleName foreignIdents) acc group
+
+addForwarder :: String -> Set String -> Set String -> Binding Ann -> Set String
+addForwarder moduleName foreignIdents acc (Binding _ (Ident ident) body) =
+  if isForeignForwarder moduleName foreignIdents body then
+    Set.insert (moduleName <> "." <> ident) acc
+  else acc
+
+isForeignForwarder :: String -> Set String -> Expr Ann -> Boolean
+isForeignForwarder moduleName foreignIdents body = case collectLambdaParams body of
+  { params, body: inner } ->
+    not (Array.null params) && case unapplyExpr inner of
+      { head: ExprVar _ (Qualified mbModule (Ident ffi)), args } ->
+        Set.member ffi foreignIdents
+          && sameModule mbModule
+          && Array.length args == Array.length params
+          && foldl (&&) true (Array.zipWith isParameterReference args params)
+      _ -> false
+  where
+  sameModule = case _ of
+    Just mn -> unwrap mn == moduleName
+    Nothing -> true
+
+collectLambdaParams :: Expr Ann -> { params :: Array Ident, body :: Expr Ann }
+collectLambdaParams (ExprAbs _ param body) =
+  case collectLambdaParams body of
+    rest -> rest { params = Array.cons param rest.params }
+collectLambdaParams body = { params: [], body }
+
+unapplyExpr :: Expr Ann -> { head :: Expr Ann, args :: Array (Expr Ann) }
+unapplyExpr expr = case stripCoercions expr of
+  ExprApp _ fn arg ->
+    case unapplyExpr fn of
+      inner -> inner { args = Array.snoc inner.args arg }
+  other -> { head: other, args: [] }
+
+stripCoercions :: Expr Ann -> Expr Ann
+stripCoercions expr = case expr of
+  ExprTypeApp _ inner _ -> stripCoercions inner
+  ExprApp _ fn arg | isUnsafeCoerce fn -> stripCoercions arg
+  _ -> expr
+
+-- `unsafeCoerce` is polymorphic, so its use is wrapped in type applications.
+isUnsafeCoerce :: Expr Ann -> Boolean
+isUnsafeCoerce fn = case stripTypeApps fn of
+  ExprVar _ (Qualified _ (Ident "unsafeCoerce")) -> true
+  _ -> false
+
+stripTypeApps :: Expr Ann -> Expr Ann
+stripTypeApps (ExprTypeApp _ inner _) = stripTypeApps inner
+stripTypeApps expr = expr
+
+isParameterReference :: Expr Ann -> Ident -> Boolean
+isParameterReference expr (Ident name) = case stripCoercions expr of
+  ExprVar _ (Qualified Nothing (Ident used)) -> used == name
+  _ -> false
 
 hasTypeVariables :: ExprType -> Boolean
 hasTypeVariables (TypeVar v) = String.take 1 v == String.toLower (String.take 1 v) && v /= "gopurs_runtime.Value"
