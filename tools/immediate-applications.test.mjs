@@ -81,6 +81,18 @@ test('a callback used twice is kept once, without duplicating its closure body',
   assert.deepEqual(optimize(original), original);
 });
 
+test('multiple uses reuse an already evaluated local or scalar', () => {
+  for (const arg of [ref(9), literal(7)]) {
+    const original = call(lambda(0, add(ref(0), ref(0))), arg);
+    assert.deepEqual(optimize(original), typed(int, add(typed(int,arg), typed(int,arg))));
+  }
+  const callOnce = letIn(9, call(ref(10, unary), literal(7)),
+    call(lambda(0, add(ref(0), ref(0))), ref(9)));
+  const result = optimize(callOnce);
+  assert.equal(count(result, S.App), 1, 'the producer stays evaluated exactly once');
+  assert.equal(count(result, S.Abs), 0);
+});
+
 test('a branch returning an opaque function is not distributed speculatively', () => {
   const original = call(branch(ref(0, bool), lambda(1, literal(1), higher), ref(1, higher), higher),
     lambda(1, add(ref(1), literal(2))));
