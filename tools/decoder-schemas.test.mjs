@@ -25,6 +25,7 @@ const field=(key,decoder,tail=cls('gDecodeJsonNil'))=>app(cls('gDecodeJsonCons')
 const record=row=>app(cls('decodeRecord'),row,erased);
 const method=dict=>app(cls('decodeJson'),dict);
 const metadata={globalTypes:Map.insert(ordString)('Data.Argonaut.Decode.Internal.Record.schemaDecoderABI1')(C.Int.value)(Map.empty)};
+const textMetadata={globalTypes:Map.insert(ordString)('Data.Argonaut.Decode.Parser.textDecoderABI1')(C.Int.value)(metadata.globalTypes)};
 function run(dict,extra=[],recursive=false,meta=metadata){
  const mod={name:'Probe',bindings:[{recursive,bindings:[...extra,new Tuple('decode',method(dict))]}]};
  const snapshot=JSON.stringify(mod);const result=specializeDecoderSchemas(meta)(mod);
@@ -40,6 +41,15 @@ test('resolved standard dictionaries emit direct workers and one original source
  assert.match(result.code,/argonautCompileSchema/);
  assert.equal(result.module.bindings.at(-1).bindings.length,1);
  assert.ok(JSON.stringify(result.module.bindings.at(-1)).includes('decodeJsonInt'));
+});
+test('text workers require their ABI and share the original schema proof and constructor sources',()=>{
+ const dict=record(field('rows',app(cls('decodeArray'),record(field('text',str)))));
+ assert.doesNotMatch(run(dict).code,/argonautCompileTextSchema|argonautTextCursor/);
+ const result=run(dict,[],false,textMetadata);
+ assert.match(result.code,/argonautCompileTextSchema/);
+ assert.match(result.code,/raw argonautTextCursor/);
+ assert.match(result.code,/at = raw.document.tokens\[at\].next/);
+ assert.equal(result.module.bindings.at(-1).bindings.length,1);
 });
 test('aliases and partial standard dictionary applications resolve without changing construction',()=>{
  const result=run(global('Probe','dict'),[
@@ -59,6 +69,8 @@ test('custom container methods retain ordinary dispatch, no type-derived decoder
  assert.match(result.code,/argonautSchemaCustom/);
  assert.match(result.code,/argonautSchemaField/);
  assert.match(result.code,/_accepts/);
+ const text=run(record(field('events',app(cls('decodeArray'),global('Opaque','custom')))),[],false,textMetadata);
+ assert.doesNotMatch(text.code,/argonautCompileTextSchema|argonautTextCursor/);
 });
 
 const local=i=>new E(new S.Local(Nothing.value,i));
@@ -109,26 +121,61 @@ test('annotations, type applications and generated-name collisions are preserved
  assert.equal(result.module.bindings[0].bindings[0].value0,'__json_schema_0_decode');
 });
 
-test('emitted duplicate-label workers compile and preserve the head value',()=>{
- const result=run(record(field('same',int,field('same',app(cls('decodeJsonMaybe'),int)))));
+test('emitted DOM and text workers preserve duplicate labels, exact errors and owned output',()=>{
+ const result=run(record(field('same',int,field('same',app(cls('decodeJsonMaybe'),int),field('text',str)))),[],false,textMetadata);
  const declarations=result.declarations.map(printGoDecl).filter(text=>text.startsWith('func ')).join('\n');
  const work=mkdtempSync(join(tmpdir(),'gopurs-schema-emission-'));
  try {
   mkdirSync(join(work,'output/gopurs_runtime'),{recursive:true});mkdirSync(join(work,'record'));
   writeFileSync(join(work,'go.mod'),'module gopurs\n\ngo 1.22\n');
   writeFileSync(join(work,'output/gopurs_runtime/runtime.go'),readFileSync(new URL('../runtime/runtime.go',import.meta.url)));
-  writeFileSync(join(work,'record/record.go'),readFileSync(new URL('../../gopurs-argonaut-codecs/src/Data/Argonaut/Decode/Internal/Record.go',import.meta.url)));
-  writeFileSync(join(work,'record/record_test.go'),readFileSync(new URL('../../gopurs-argonaut-codecs/test/record-plan_test.go',import.meta.url)));
-  writeFileSync(join(work,'record/emitted_test.go'),`package Record
-import ("testing"; "gopurs/output/gopurs_runtime")
+   writeFileSync(join(work,'record/record.go'),readFileSync(new URL('../../gopurs-argonaut-codecs/src/Data/Argonaut/Decode/Internal/Record.go',import.meta.url)));
+   for(const [name,path] of [['parser','../../gopurs-argonaut-core/src/Data/Argonaut/Parser.go'],['text','../../gopurs-argonaut-codecs/src/Data/Argonaut/Decode/Parser.go']])
+     writeFileSync(join(work,`record/${name}.go`),readFileSync(new URL(path,import.meta.url),'utf8').replace('package Parser','package Record'));
+   writeFileSync(join(work,'record/record_test.go'),readFileSync(new URL('../../gopurs-argonaut-codecs/test/record-plan_test.go',import.meta.url)));
+   writeFileSync(join(work,'record/emitted_test.go'),`package Record
+import ("testing"; "reflect"; "unsafe"; "gopurs/output/gopurs_runtime")
 ${declarations}
+func comparable(v gopurs_runtime.Value) any {
+ switch v.Type {
+ case gopurs_runtime.TypeString: return v.StrVal()
+ case gopurs_runtime.TypeInt: return v.IntVal
+ case gopurs_runtime.TypeBool: return v.BoolVal()
+ }
+ out:=map[string]any{};for k,x:=range gopurs_runtime.RecordToMap(v) {out[k]=comparable(x)};return out
+}
 func TestEmittedDuplicateLabel(t *testing.T) {
  plan:=newErrorPlan(testErrorSupport)
- plan.fields=[]recordDecodeField{{kind:&fieldKind{tag:kindInt}},{kind:&fieldKind{tag:kindMaybe,inner:&fieldKind{tag:kindInt}}}}
+ plan.fields=[]recordDecodeField{{kind:&fieldKind{tag:kindInt}},{kind:&fieldKind{tag:kindMaybe,inner:&fieldKind{tag:kindInt}}},{kind:&fieldKind{tag:kindString}}}
  kind:=&fieldKind{tag:kindRecord,plan:plan}
  if !Probe___json_schema_0_decode_accepts(kind) {t.Fatal("schema guard")}
- result:=Probe___json_schema_0_decode(plan,kind,map[string]any{"same":float64(9)})
+ if !Probe___json_schema_0_decode_text_accepts(kind) {t.Fatal("text schema guard")}
+ plan.fields[0].kind=nil
+ if Probe___json_schema_0_decode_text_accepts(kind) {t.Fatal("text guard accepted an opaque replacement")}
+ original:=gopurs_runtime.WithFunctionData(gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {panic("direct worker must not run")}),&typedKind{kind:kind,errors:plan,worker:Probe___json_schema_0_decode})
+ rejected:=argonautCompileTextSchema(original,Probe___json_schema_0_decode_text,Probe___json_schema_0_decode_text_accepts)
+ fallbackCalls:=0
+ fallback:=gopurs_runtime.Func(func(text gopurs_runtime.Value) gopurs_runtime.Value {fallbackCalls++;if text.StrVal()!="original input" {t.Fatal("fallback input changed")};return gopurs_runtime.Int(42)})
+ if got:=DecodeJsonStringImpl(1,fallback,rejected,"original input");got.IntVal!=42 || fallbackCalls!=1 {t.Fatal("opaque replacement did not use the whole original composition")}
+ plan.fields[0].kind=&fieldKind{tag:kindInt}
+ result:=Probe___json_schema_0_decode(plan,kind,map[string]any{"same":float64(9),"text":"owned"})
  if !result.ok || gopurs_runtime.RecordGet(result.value,"same").IntVal!=9 {t.Fatal("duplicate-label precedence")}
+ for _,text:=range []string{
+  \`{"same":0,"same":9,"text":"owned"}\`, \`{"same":null,"text":false}\`, \`{"text":false}\`,
+  \`{"same":false,"text":"x"}\`, \`{"same":2147483648,"text":"x"}\`,
+  \`{"same":9,"text":"é🙂"}\`, \`{"same":9,"text":"x","ignored":{"a":[1,true,null]}}\`,
+ } {
+  parsed,err:=argonautParseJSON(text);if err!=nil {t.Fatal(err)}
+  input,ok:=argonautTextIndex(text);if !ok {t.Fatal("index")}
+  want,got:=Probe___json_schema_0_decode(plan,kind,parsed),Probe___json_schema_0_decode_text(plan,kind,input)
+  if want.ok!=got.ok {t.Fatal(text)}
+  if want.ok {if !reflect.DeepEqual(comparable(want.value),comparable(got.value)) {t.Fatal("value",text)}} else if !reflect.DeepEqual(comparable(want.err),comparable(got.err)) {t.Fatal("error",text)}
+ }
+ bytes:=[]byte(\`{"same":9,"text":"owned-é🙂"}\`)
+ input,ok:=argonautTextIndex(unsafe.String(unsafe.SliceData(bytes),len(bytes)));if !ok {t.Fatal("owned index")}
+ saved:=Probe___json_schema_0_decode_text(plan,kind,input)
+ for i:=range bytes {bytes[i]='x'}
+ if !saved.ok || gopurs_runtime.RecordGet(saved.value,"text").StrVal()!="owned-é🙂" {t.Fatal("borrowed final string")}
 }
 `);
   const checked=spawnSync('go',['test','-race','-run','^TestEmittedDuplicateLabel$','./record'],{cwd:work,encoding:'utf8',env:{...process.env,GOWORK:'off',GOMAXPROCS:'2'}});
