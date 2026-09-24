@@ -669,6 +669,47 @@ func FunctionData[T any](function Value) (T, bool) {
 	return zero, false
 }
 
+// ---------------------------------------------------------------------------
+// Typed decoder tags
+//
+// Argonaut decoder values are ordinary closures. Attaching a schema tag lets a
+// record plan recognise primitive and container decoders and decode the
+// parser's DOM directly, instead of driving the generic dictionary machinery.
+// A tag never changes behaviour: every Apply variant still reaches the
+// original closure, and untagged decoders keep the existing path.
+// ---------------------------------------------------------------------------
+
+const (
+	DecodeKindInt     = "Int"
+	DecodeKindNumber  = "Number"
+	DecodeKindString  = "String"
+	DecodeKindBoolean = "Boolean"
+	DecodeKindMaybe   = "Maybe"
+	DecodeKindArray   = "Array"
+)
+
+// DecodeKind is the immutable tag a decoder can carry. Inner is the element
+// decoder of a Maybe or Array.
+type DecodeKind struct {
+	Tag   string
+	Inner Value
+}
+
+// WithDecodeKind tags a decoder without changing its behaviour.
+func WithDecodeKind(decoder Value, tag string) Value {
+	return WithFunctionData(decoder, DecodeKind{Tag: tag})
+}
+
+// WithDecodeKindInner tags a container decoder and records its element decoder.
+func WithDecodeKindInner(decoder Value, tag string, inner Value) Value {
+	return WithFunctionData(decoder, DecodeKind{Tag: tag, Inner: inner})
+}
+
+// DecodeKindOf reports the tag attached to a decoder, if any.
+func DecodeKindOf(decoder Value) (DecodeKind, bool) {
+	return FunctionData[DecodeKind](decoder)
+}
+
 
 func Apply(f Value, arg Value) Value {
 	if f.UnsafePtr == nil {
