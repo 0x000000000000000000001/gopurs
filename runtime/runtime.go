@@ -238,6 +238,88 @@ type RecordData struct {
 	Vals []Value
 }
 
+// JSONObject is an immutable, compact JSON object supplied by the parser.
+// Accessors borrow it; APIs needing a mutable foreign map materialise their own
+// container. The object and every string it contains own their storage.
+type JSONObject interface {
+	JSONLookup(string) (any, bool)
+	JSONLength() int
+	JSONEntry(int) (string, any)
+}
+
+type JSONObjectView struct {
+	raw     map[string]any
+	boxed   map[string]Value
+	compact JSONObject
+}
+
+func ReadJSONObject(raw any) (JSONObjectView, bool) {
+	switch value := raw.(type) {
+	case map[string]any:
+		return JSONObjectView{raw: value}, true
+	case map[string]Value:
+		return JSONObjectView{boxed: value}, true
+	case JSONObject:
+		return JSONObjectView{compact: value}, true
+	case Value:
+		return ReadJSONObjectValue(value)
+	}
+	return JSONObjectView{}, false
+}
+
+// Value-level FFI callers avoid allocating an interface box for a Value merely
+// to unwrap its TypeAny payload again.
+func ReadJSONObjectValue(value Value) (JSONObjectView, bool) {
+	if value.Type == TypeAny && value.UnsafePtr != nil {
+		return ReadJSONObject(value.PtrVal())
+	}
+	if value.Type == TypeRecord || (value.Type >= TypeRecord0 && value.Type <= TypeRecordData) {
+		return JSONObjectView{boxed: RecordToMap(value)}, true
+	}
+	return JSONObjectView{}, false
+}
+
+func (object JSONObjectView) Lookup(key string) (any, bool) {
+	if object.compact != nil {
+		return object.compact.JSONLookup(key)
+	}
+	if object.boxed != nil {
+		v, ok := object.boxed[key]
+		return v, ok
+	}
+	v, ok := object.raw[key]
+	return v, ok
+}
+
+func (object JSONObjectView) Length() int {
+	if object.compact != nil {
+		return object.compact.JSONLength()
+	}
+	return len(object.raw) + len(object.boxed)
+}
+
+func (object JSONObjectView) Each(visit func(string, any)) {
+	if object.compact != nil {
+		for i := 0; i < object.compact.JSONLength(); i++ {
+			key, value := object.compact.JSONEntry(i)
+			visit(key, value)
+		}
+		return
+	}
+	for key, value := range object.raw {
+		visit(key, value)
+	}
+	for key, value := range object.boxed {
+		visit(key, value)
+	}
+}
+
+func (object JSONObjectView) Keys() []string {
+	keys := make([]string, 0, object.Length())
+	object.Each(func(key string, _ any) { keys = append(keys, key) })
+	return keys
+}
+
 func RecordDict(keys []string, vals []Value) Value {
 	r := &RecordData{keys, vals}
 	return Value{Type: TypeRecordData, UnsafePtr: unsafe.Pointer(r)}
@@ -267,6 +349,14 @@ func UnboxObject(v Value) map[string]any {
 		if m, ok := val.(map[string]any); ok {
 			return m
 		}
+		if object, ok := val.(JSONObject); ok {
+			result := make(map[string]any, object.JSONLength())
+			for i := 0; i < object.JSONLength(); i++ {
+				key, value := object.JSONEntry(i)
+				result[key] = value
+			}
+			return result
+		}
 	}
 	m := RecordToMap(v)
 	res := make(map[string]any, len(m))
@@ -290,6 +380,14 @@ func RecordToMap(obj Value) map[string]Value {
 		}
 		if m, ok := v.(map[string]Value); ok {
 			return m
+		}
+		if object, ok := v.(JSONObject); ok {
+			result := make(map[string]Value, object.JSONLength())
+			for i := 0; i < object.JSONLength(); i++ {
+				key, value := object.JSONEntry(i)
+				result[key] = Box(value)
+			}
+			return result
 		}
 	}
 	res := make(map[string]Value)
@@ -354,6 +452,10 @@ func RecordGet(obj Value, key string) Value {
 		}
 		if m, ok := v.(map[string]Value); ok {
 			return m[key]
+		}
+		if object, ok := v.(JSONObject); ok {
+			value, _ := object.JSONLookup(key)
+			return Box(value)
 		}
 	}
     switch obj.Type {
