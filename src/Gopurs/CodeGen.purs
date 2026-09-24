@@ -41,6 +41,7 @@ import Gopurs.ArrayIntrinsics as ArrayIntrinsics
 import Gopurs.CallAnalysis (isClosureNode)
 import Gopurs.ClosedDictionaries (cacheClosedDictionaries)
 import Gopurs.BorrowedObjects (borrowReadOnlyObjects)
+import Gopurs.DecoderSchemas (specializeDecoderSchemas)
 import Gopurs.CallExprs as CallExprs
 import Gopurs.FunctionExprs as FunctionExprs
 import Gopurs.BindingExprs as BindingExprs
@@ -59,7 +60,8 @@ translateWithFunctions :: CodegenMetadata -> BackendModule -> { code :: String, 
 translateWithFunctions metadata inputMod =
 
   let
-    owned = Ownership.prepare metadata (borrowReadOnlyObjects metadata (cacheClosedDictionaries metadata (optimizeImmediateApplications (optimizeFunctionProducers (optimizeThunkProducers inputMod)))))
+    schemas = specializeDecoderSchemas metadata (borrowReadOnlyObjects metadata (cacheClosedDictionaries metadata (optimizeImmediateApplications (optimizeFunctionProducers (optimizeThunkProducers inputMod)))))
+    owned = Ownership.prepare metadata schemas.module
     mod = owned.module
     modNameStrOrig = unwrap mod.name
     modNameStr = String.replaceAll (Pattern ".") (Replacement "_") modNameStrOrig
@@ -84,7 +86,7 @@ translateWithFunctions metadata inputMod =
         })
       (Map.toUnfoldable mod.foreign)
     declarationGroups =
-      [ allDeclsAst <> owned.declarations
+      [ allDeclsAst <> owned.declarations <> schemas.declarations
       , helpers.declarations <> unsafePerformEffect (generateReboxFunctions metadata codegenStateRef modNameStr)
       , foreignGetters
       ]
