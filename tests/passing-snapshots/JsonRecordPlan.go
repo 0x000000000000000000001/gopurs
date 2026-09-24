@@ -416,7 +416,54 @@ func Get_Main_decodeProbe() gopurs_runtime.Value {
 	once_Main_decodeProbe.Do(func() {
 		cache_Main_decodeProbe = gopurs_runtime.Value{Type: 9, IntVal: 1358001017, UnsafePtr: unsafe.Pointer(Rebox_Main_1405234230_1277236813((&Constructor_Data_Argonaut_Decode_Class_DecodeJson[int64]{1, gopurs_runtime.Func(func(json_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			// TAST (Let): __local_var_1_0 shape=App(Var) bindingType=Any
-			__local_var_1_0 := gopurs_runtime.Apply2(Get_Data_Argonaut_Decode_Internal_Typed_typedInt(), Get_Data_Argonaut_Decode_Decoders_decodeInt(), json_0)
+			__local_var_1_0 := gopurs_runtime.Apply3(Get_Data_Argonaut_Decode_Internal_Record_typedInt(), func() gopurs_runtime.Value {
+				orig := func() struct {
+					atIndex      gopurs_runtime.Value
+					atKey        gopurs_runtime.Value
+					isRight      gopurs_runtime.Value
+					just         gopurs_runtime.Value
+					left         gopurs_runtime.Value
+					leftOf       gopurs_runtime.Value
+					missingValue gopurs_runtime.Value
+					named        gopurs_runtime.Value
+					nothing      *Constructor_Data_Maybe_Just[gopurs_runtime.Value]
+					right        gopurs_runtime.Value
+					rightValue   gopurs_runtime.Value
+					typeMismatch gopurs_runtime.Value
+				} {
+					orig := Get_Data_Argonaut_Decode_Class_recordErrorSupport()
+					_ = orig
+					clone := struct {
+						atIndex      gopurs_runtime.Value
+						atKey        gopurs_runtime.Value
+						isRight      gopurs_runtime.Value
+						just         gopurs_runtime.Value
+						left         gopurs_runtime.Value
+						leftOf       gopurs_runtime.Value
+						missingValue gopurs_runtime.Value
+						named        gopurs_runtime.Value
+						nothing      *Constructor_Data_Maybe_Just[gopurs_runtime.Value]
+						right        gopurs_runtime.Value
+						rightValue   gopurs_runtime.Value
+						typeMismatch gopurs_runtime.Value
+					}{}
+					clone.atIndex = gopurs_runtime.RecordGet(orig, "atIndex")
+					clone.atKey = gopurs_runtime.RecordGet(orig, "atKey")
+					clone.isRight = gopurs_runtime.RecordGet(orig, "isRight")
+					clone.just = gopurs_runtime.RecordGet(orig, "just")
+					clone.left = gopurs_runtime.RecordGet(orig, "left")
+					clone.leftOf = gopurs_runtime.RecordGet(orig, "leftOf")
+					clone.missingValue = gopurs_runtime.RecordGet(orig, "missingValue")
+					clone.named = gopurs_runtime.RecordGet(orig, "named")
+					clone.nothing = gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](gopurs_runtime.RecordGet(orig, "nothing"))
+					clone.right = gopurs_runtime.RecordGet(orig, "right")
+					clone.rightValue = gopurs_runtime.RecordGet(orig, "rightValue")
+					clone.typeMismatch = gopurs_runtime.RecordGet(orig, "typeMismatch")
+					return clone
+				}()
+				_ = orig
+				return gopurs_runtime.RecordDict([]string{"atIndex", "atKey", "isRight", "just", "left", "leftOf", "missingValue", "named", "nothing", "right", "rightValue", "typeMismatch"}, []gopurs_runtime.Value{orig.atIndex, orig.atKey, orig.isRight, orig.just, orig.left, orig.leftOf, orig.missingValue, orig.named, gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(orig.nothing)}, orig.right, orig.rightValue, orig.typeMismatch})
+			}(), Get_Data_Argonaut_Decode_Decoders_decodeInt(), json_0)
 			_ = __local_var_1_0
 			var __t5 struct {
 				V0 gopurs_runtime.Value
