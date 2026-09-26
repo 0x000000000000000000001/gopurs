@@ -199,16 +199,20 @@ main = launchAff_ $ Metrics.measure "backend total" \_ -> do
           , foreignSemantics: coreForeignSemantics
           , traceIdents: Set.empty
           , rewriteLimit: fromMaybe 10_000 args.mbRewriteLimit
-          , onPrepareModule: \env (Module m) -> do
+          -- Les tentatives peuvent être rejouées : les compteurs sont
+          -- affichés à la fin, pas ici.
+          , onPrepareModule: \_ m -> do
               liftEffect (Ref.modify_ (_ + 1) pboAttemptsRef)
-              when (env.moduleIndex `mod` 100 == 0) $ liftEffect $ Console.error $
-                "[gopurs] optimize + emit: module " <> show (env.moduleIndex + 1)
-                  <> "/" <> show env.moduleCount <> " (" <> unwrap m.name <> ")"
-              pure (Module m)
+              pure m
           -- Regenerate every module and its FFI output on each invocation.
           , onSkipModule: \_ _ -> pure Nothing
-          , onCodegenModule: \_ coreFnModule backendMod _ -> do
+          -- Un appel par module finalisé, dans l'ordre canonique : la seule
+          -- progression monotone, quel que soit l'ordonnancement.
+          , onCodegenModule: \env coreFnModule backendMod _ -> do
               liftEffect (Ref.modify_ (_ + 1) pboCodegenRef)
+              when (env.moduleIndex `mod` 100 == 0) $ liftEffect $ Console.error $
+                "[gopurs] optimize + emit: module " <> show (env.moduleIndex + 1)
+                  <> "/" <> show env.moduleCount <> " (" <> unwrap backendMod.name <> ")"
               emitter.enqueue
                 { name: backendMod.name
                 , imports: backendMod.imports
