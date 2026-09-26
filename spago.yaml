@@ -11,6 +11,7 @@ package:
     - control
     - effect
     - identity
+    - lists
     - either
     - node-buffer
     - node-fs
