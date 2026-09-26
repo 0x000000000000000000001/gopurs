@@ -98,6 +98,11 @@ Les chemins de sources ci-dessous sont relatifs à `htdocs/`.
 >   le lanceur pose `GOGC=off`, `GOMEMLIMIT=10GiB` et `GOPURS_PBO_JOBS=8` si
 >   l'utilisateur n'a rien défini ; les machines plus petites gardent les
 >   défauts. Donc `b -c` nu en profite.
+> - **`b -c` de bout en bout sur b8x** (avec les nouveaux défauts) : **146,5 s**
+>   au total, dont bootstrap du compilateur ~36,5 s, **backend b8x 69,9 s**
+>   (load 1,3 + préparation 26,8 + optim+émission 41,7), le reste étant le
+>   frontend PureScript et `go mod tidy`. Parité byte-exacte validée, build OK.
+>   Le backend était ~136 s en séquentiel corrigé → **−49 %**.
 > - **Politique recommandée** : `GOGC=off` + `GOMEMLIMIT=10GiB` (pic ~12 Go),
 >   ou 8 GiB (pic ~10 Go) sur CI ; `GOPURS_PBO_JOBS=8` à basculer par défaut
 >   après le dispatch continu (ou tout de suite : parallèle toujours devant
