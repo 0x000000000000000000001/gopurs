@@ -121,41 +121,41 @@ test("pipelined jobs at or below one retain immediate emission", async () => {
   }
 });
 
-test("pipelined emission overlaps the producer with bounded backpressure and ordered snapshots", async () => {
+test("pipelined emission orders batches and bounds batches in flight", async () => {
   const probe = suspendedEmission();
-  const emitter = createPipelinedEmitter(2)(probe.emit)();
-  await runAff(emitter.enqueue(entry("A")));
-  await runAff(emitter.enqueue(entry("B")));
+  const emitter = createPipelinedEmitter(2)(probe.emit)(); // cap = 4 batches
+  for (const name of ["A", "B", "C", "D", "E", "F", "G", "H", "I"]) await runAff(emitter.enqueue(entry(name)));
   await nextTurn();
-  assert.deepEqual(probe.batches.map(batch => batch.values), [["A", "B"]]);
-  // The producer advances while the first batch is still suspended.
-  await runAff(emitter.enqueue(entry("C", ["A"])));
-  let advanced = false;
-  const enqueueD = runAff(emitter.enqueue(entry("D"))).then(() => { advanced = true; });
+  // Four batches are in flight (only the first has started emitting); the
+  // fifth launch blocks until the chain drains.
+  let tenth = false;
+  const enqueueJ = runAff(emitter.enqueue(entry("J"))).then(() => { tenth = true; });
   await nextTurn();
-  assert.equal(advanced, false);
+  assert.equal(tenth, false);
   assert.equal(probe.batches.length, 1);
+  assert.deepEqual(probe.batches[0].values, ["A", "B"]);
+  // Batches start strictly in order, each seeing the previous publications.
   probe.batches[0].complete();
-  await enqueueD;
   await nextTurn();
-  assert.deepEqual(probe.batches.map(batch => batch.values), [["A", "B"], ["C", "D"]]);
+  assert.deepEqual(probe.batches[1].values, ["C", "D"]);
   assert.deepEqual(probe.batches[1].snapshot, ["A", "B"]);
-
-  await runAff(emitter.enqueue(entry("E")));
-  let finished = false;
-  const finish = runAff(emitter.finish).then(() => { finished = true; });
-  await nextTurn();
-  assert.equal(finished, false);
-  assert.equal(probe.batches.length, 2);
   probe.batches[1].complete();
   await nextTurn();
-  assert.deepEqual(probe.batches[2].values, ["E"]);
   assert.deepEqual(probe.batches[2].snapshot, ["A", "B", "C", "D"]);
-  assert.equal(finished, false);
   probe.batches[2].complete();
+  await nextTurn();
+  assert.deepEqual(probe.batches[3].snapshot, ["A", "B", "C", "D", "E", "F"]);
+  probe.batches[3].complete();
+  await enqueueJ;
+  await nextTurn();
+  assert.deepEqual(probe.batches[4].values, ["I", "J"]);
+  assert.deepEqual(probe.batches[4].snapshot, ["A", "B", "C", "D", "E", "F", "G", "H"]);
+  const finish = runAff(emitter.finish);
+  await nextTurn();
+  probe.batches[4].complete();
   await finish;
-  await runAff(emitter.finish);
-  assert.deepEqual(probe.published, ["A", "B", "C", "D", "E"]);
+  await nextTurn();
+  assert.deepEqual(probe.published, ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]);
 });
 
 test("pipelined dependency barriers keep dependent modules in separate ordered batches", async () => {
@@ -176,7 +176,7 @@ test("pipelined dependency barriers keep dependent modules in separate ordered b
   await finish;
 });
 
-test("pipelined worker failure propagates at backpressure without starting the pending batch", async () => {
+test("pipelined worker failure is sticky and never starts the queued batch", async () => {
   const probe = suspendedEmission();
   const emitter = createPipelinedEmitter(2)(probe.emit)();
   await runAff(emitter.enqueue(entry("A")));
@@ -184,10 +184,10 @@ test("pipelined worker failure propagates at backpressure without starting the p
   await nextTurn();
   await runAff(emitter.enqueue(entry("C")));
   const failure = new Error("worker failed");
-  const rejected = assert.rejects(runAff(emitter.enqueue(entry("D"))), error => error === failure);
   probe.batches[0].fail(failure);
-  await rejected;
-  assert.equal(probe.batches.length, 1);
+  await nextTurn();
+  assert.equal(probe.batches.length, 1, "the chained batch must not start");
+  await assert.rejects(runAff(emitter.enqueue(entry("D"))), error => error === failure);
   await runAff(emitter.cancel);
   await runAff(emitter.finish);
   assert.equal(probe.batches.length, 1);

@@ -69,12 +69,39 @@ Les chemins de sources ci-dessous sont relatifs à `htdocs/`.
 >   cumulés, `printGoExpr` 7,2 Go.
 > - **Temps finaux** (binaire `38dfd114`, parité 0 divergence partout) :
 >   `jobs=8` + `GOGC=off` + `GOMEMLIMIT=10GiB` → **89,4 / 92,7 s** (moyenne
->   91,0 s, optim+émission 62-65 s, CPU user ~210 s) ; `jobs=8` par défaut
->   106-126 s (variance machine) ; référence corrigée du matin 136 s →
->   **−33 %**. Allocations cumulées : 274 Go (profil initial) → 223,9 Go.
+>   91,0 s, optim+émission 62-65 s, CPU user ~210 s) ; `jobs=1` + limiteur →
+>   **103,2 s** (CPU user 167 s) contre 128,6 s en séquentiel par défaut ;
+>   `jobs=8` par défaut 106-126 s (variance machine) ; référence corrigée du
+>   matin 136 s → **−33 %** au meilleur réglage, −24 % avec le seul limiteur.
+>   Allocations cumulées : 274 Go (profil initial) → 223,9 Go.
+> - **Politique par défaut appliquée** (`gopurs/bin/gopurs`) : si ni `GOGC`
+>   ni `GOMEMLIMIT` ne sont définis et que la machine a ≥ 32 Go, le lanceur
+>   exporte `GOGC=off` + `GOMEMLIMIT=10GiB`. Réglages explicites respectés,
+>   petites machines inchangées. Comme `b -c` passe par `bin/_gopurs`, un
+>   build nu gagne ~20 % (backend séquentiel ~103 s au lieu de ~128 s) ;
+>   `GOPURS_PBO_JOBS=8` reste opt-in (~91 s).
+> - **Émetteur chaîné (étape 2, moitié émission)** : les lots d'émission sont
+>   chaînés en fibres (chacun attend son prédécesseur) et le producteur ne se
+>   bloque plus que par backpressure grossière ou à `finish`. Parité
+>   0 divergence ; attente d'émission **23,2 → 14,7 s** ; phase optim+émission
+>   **61,5 → 56,3 s** ; `jobs=8 + limiteur` : **85,3 / 89,8 / 81,3 s**
+>   (moyenne 85,4 s) contre 103,2 s en séquentiel+limiteur. Tests d'émission
+>   réécrits pour le nouveau contrat (10/10).
+> - **Étape 2 terminée — backpressure fine + dispatch continu** : le builder
+>   maintient jusqu'à `jobs` conversions en vol (`fork`/`await`), les lots sont
+>   remplacés par une file continue, et l'émetteur attend le plus ancien lot au
+>   lieu de drainer la chaîne. Parité **0 divergence** ; `jobs=8 + limiteur` :
+>   **68,8 / 69,1 / 67,6 / 69,4 s** (moyenne 68,7 s, dispersion ±1 s) contre
+>   85,4 s avant et 103,2 s en séquentiel+limiteur. Phase optim+émission
+>   41,0 s. Tests : émission 10/10, PBO 140/140.
+> - **Défaut parallèle activé** (`gopurs/bin/gopurs`) : sur une machine ≥ 32 Go,
+>   le lanceur pose `GOGC=off`, `GOMEMLIMIT=10GiB` et `GOPURS_PBO_JOBS=8` si
+>   l'utilisateur n'a rien défini ; les machines plus petites gardent les
+>   défauts. Donc `b -c` nu en profite.
 > - **Politique recommandée** : `GOGC=off` + `GOMEMLIMIT=10GiB` (pic ~12 Go),
->   ou 8 GiB (pic ~10 Go) sur CI ; activer le parallèle par défaut après
->   stabilisation de l'ordonnanceur.
+>   ou 8 GiB (pic ~10 Go) sur CI ; `GOPURS_PBO_JOBS=8` à basculer par défaut
+>   après le dispatch continu (ou tout de suite : parallèle toujours devant
+>   dans les mesures actuelles).
 > - **Différé, non fait** : reprise des conversions rejetées ; degré du
 >   B-tree ; réduction des dictionnaires et du reboxing côté codegen.
 > - **Suite à trancher selon les compteurs** : réduire le coût des relances

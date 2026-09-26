@@ -5,6 +5,7 @@ package:
     - argonaut-codecs
     - argonaut-core
     - arrays
+    - avar
     - bifunctors
     - console
     - control

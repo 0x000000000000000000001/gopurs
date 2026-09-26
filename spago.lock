@@ -9,6 +9,7 @@
             "argonaut-codecs",
             "argonaut-core",
             "arrays",
+            "avar",
             "backend-optimizer",
             "bifunctors",
             "console",
@@ -33,6 +34,7 @@
             "argonaut-traversals",
             "arraybuffer-types",
             "arrays",
+            "avar",
             "backend-optimizer",
             "bifunctors",
             "catenable-lists",
@@ -892,6 +894,19 @@
         "tuples",
         "unfoldable",
         "unsafe-coerce"
+      ]
+    },
+    "avar": {
+      "type": "registry",
+      "version": "5.0.1",
+      "integrity": "sha256-8V4SxF4TIWZ9Ik1P4lPzIRUAZeFBe8w5WA2VcCEKsIk=",
+      "dependencies": [
+        "aff",
+        "effect",
+        "either",
+        "exceptions",
+        "functions",
+        "maybe"
       ]
     },
     "backend-optimizer": {

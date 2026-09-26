@@ -8,7 +8,8 @@ import Effect (Effect)
 import Effect.Ref as Ref
 import Effect.Class (liftEffect)
 import Effect.Console as Console
-import Effect.Aff (Aff, launchAff_, attempt, bracket)
+import Effect.Aff (Aff, launchAff_, attempt, bracket, forkAff, throwError)
+import Effect.Aff.AVar as Avar
 import Node.FS.Aff as FS
 import Node.Encoding (Encoding(..))
 import Node.Process as Process
@@ -17,6 +18,7 @@ import Gopurs.Metrics as Metrics
 import Gopurs.Emission (createEmitter, createPipelinedEmitter)
 import Data.Array as Array
 import Data.Foldable (foldl)
+import Data.Either (Either(..), either)
 import Data.Int as Int
 import Data.List as List
 import Data.List (List)
@@ -214,20 +216,33 @@ main = launchAff_ $ Metrics.measure "backend total" \_ -> do
                 }
           }
         sortedModules = List.fromFoldable monomorphizedModules
-        runJobs jobs = parTraverse (\job -> defer job) jobs
         onStats stats = liftEffect $ Console.error $
-          "[gopurs] pbo stats: batches=" <> show stats.batches
-            <> ", dispatched=" <> show stats.dispatched
-            <> ", maxReady=" <> show stats.maxReady
-            <> ", fallbackPasses=" <> show stats.fallbackPasses
+          "[gopurs] pbo stats: dispatched=" <> show stats.dispatched
             <> ", fallbackDispatched=" <> show stats.fallbackDispatched
+            <> ", maxReady=" <> show stats.maxReady
             <> ", deferredAttempts=" <> show stats.deferredAttempts
             <> ", wakeups=" <> show stats.wakeups
             <> ", waitingPeak=" <> show stats.waitingPeak
+            <> ", attemptMillis=" <> show (Int.round stats.attemptMillis)
+            <> ", attemptMaxMillis=" <> show (Int.round stats.attemptMaxMillis)
+            <> ", coordinatorMillis=" <> show (Int.round stats.coordinatorMillis)
+            <> ", awaitMillis=" <> show (Int.round stats.awaitMillis)
+            <> ", emitMillis=" <> show (Int.round stats.emitMillis)
       if pboJobs <= 1 then
         buildModules buildOpts sortedModules
-      else
-        buildModulesParallel { jobs: pboJobs, runJobs, onStats: Just onStats } buildOpts sortedModules
+      else do
+        resultsVar <- Avar.empty
+        let
+          forkJob job = void $ forkAff do
+            outcome <- attempt (job unit)
+            Avar.put outcome resultsVar
+          awaitJob = do
+            outcome <- Avar.take resultsVar
+            either throwError pure outcome
+        buildModulesParallel
+          { jobs: pboJobs, scheduler: { fork: forkJob, await: awaitJob }, onStats: Just onStats }
+          buildOpts
+          sortedModules
       emitter.finish
       attempts <- liftEffect (Ref.read pboAttemptsRef)
       codegen <- liftEffect (Ref.read pboCodegenRef)

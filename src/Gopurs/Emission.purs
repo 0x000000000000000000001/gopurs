@@ -4,7 +4,7 @@ import Prelude
 
 import Control.Lazy (defer)
 import Data.Array as Array
-import Data.Either (either)
+import Data.Either (Either(..), either)
 import Data.Maybe (Maybe(..))
 import Data.Set (Set)
 import Data.Set as Set
@@ -44,11 +44,12 @@ createEmitter jobs emit = do
           when (Array.length next >= jobs) finish
   pure { enqueue, finish }
 
--- The producer alone owns both queue references. It can prepare the next batch
--- while one worker emits, but waits before starting another worker. For jobs > 1,
--- cancel stops admission and drains the active worker without starting pending
--- work. It is non-preemptive: filesystem callbacks must finish before cleanup
--- returns. The producer must call it when exiting without finishing.
+-- The producer owns the chain; batches are appended as fibers that first wait
+-- for their predecessor, so emission stays strictly ordered while the producer
+-- keeps converting. When more than `cap` batches are in flight, the producer
+-- waits for the oldest one only (fine backpressure) instead of draining the
+-- whole chain. Failures are sticky: the first error is stored and rethrown by
+-- later enqueues and by `finish`.
 createPipelinedEmitter
   :: forall a
    . Int
@@ -63,47 +64,74 @@ createPipelinedEmitter jobs emit
       emitter <- createEmitter jobs emit
       pure { enqueue: emitter.enqueue, finish: emitter.finish, cancel: pure unit }
   | otherwise = do
-      active <- Ref.new Nothing
+      tail <- Ref.new Nothing
+      inFlight <- Ref.new []
       cancelled <- Ref.new false
+      failure <- Ref.new Nothing
       let
-        joinActive = do
-          current <- liftEffect (Ref.read active)
+        cap = max 2 (jobs * 2)
+
+        joinTail :: Aff Unit
+        joinTail = do
+          current <- liftEffect (Ref.read tail)
           case current of
             Nothing -> pure unit
             Just fiber -> do
-              result <- joinFiber fiber
+              result <- attempt (joinFiber fiber)
+              liftEffect (Ref.write Nothing tail)
+              liftEffect (Ref.write [] inFlight)
               either throwError pure result
-              liftEffect (Ref.write Nothing active)
+
+        waitForSlot = do
+          queued <- liftEffect (Ref.read inFlight)
+          when (Array.length queued >= cap) do
+            case Array.uncons queued of
+              Nothing -> pure unit
+              Just { head: oldest, tail: rest } -> do
+                result <- attempt (joinFiber oldest)
+                liftEffect (Ref.write rest inFlight)
+                case result of
+                  Left err -> do
+                    liftEffect (Ref.write (Just err) failure)
+                    throwError err
+                  Right _ -> pure unit
+                waitForSlot
 
         launch batch = do
-          joinActive
-          -- Register ownership before cancellation may resume in the producer.
-          -- Construct emit inside the worker so its metadata snapshot is taken
-          -- after the preceding worker has published its results.
+          waitForSlot
+          previous <- liftEffect (Ref.read tail)
           invincible do
-            fiber <- forkAff (attempt (defer \_ -> emit batch))
-            liftEffect (Ref.write (Just fiber) active)
-
-        cancel = invincible do
-          liftEffect (Ref.write true cancelled)
-          current <- liftEffect (Ref.read active)
-          case current of
-            Nothing -> pure unit
-            Just fiber -> do
-              -- Killing an Aff using nonCanceler can leave its OS write running.
-              -- Drain naturally, preserving the producer's primary failure.
-              void (joinFiber fiber)
-              liftEffect (Ref.write Nothing active)
+            fiber <- forkAff do
+              result <- attempt do
+                case previous of
+                  Nothing -> pure unit
+                  Just previousFiber -> void (joinFiber previousFiber)
+                emit batch
+              case result of
+                Left err -> do
+                  liftEffect (Ref.write (Just err) failure)
+                  throwError err
+                Right _ -> pure unit
+            liftEffect (Ref.write (Just fiber) tail)
+            liftEffect (Ref.modify_ (flip Array.snoc fiber) inFlight)
 
       emitter <- createEmitter jobs launch
       let
         enqueue entry = do
           stopped <- liftEffect (Ref.read cancelled)
           when stopped (throwError (error "Go emission cancelled"))
-          emitter.enqueue entry
+          stored <- liftEffect (Ref.read failure)
+          case stored of
+            Just err -> throwError err
+            Nothing -> emitter.enqueue entry
         finish = do
           stopped <- liftEffect (Ref.read cancelled)
           unless stopped do
             emitter.finish
-            joinActive
+            joinTail
+        cancel = do
+          liftEffect (Ref.write true cancelled)
+          -- Best effort: drain whatever is already in flight, ignoring errors
+          -- (the build is failing for another reason).
+          void (attempt joinTail)
       pure { enqueue, finish, cancel }
