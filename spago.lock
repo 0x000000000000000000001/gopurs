@@ -17,7 +17,6 @@
             "effect",
             "either",
             "identity",
-            "lists",
             "node-buffer",
             "node-fs",
             "node-process",
