@@ -110,13 +110,20 @@ au décodage JSON d'altbak.
       et −2,1 Go de rebox `Qualified` ; les 12 764 call sites du code
       utilisateur neuf n'allouent plus).
 
-### 2 — `Array.bind` / `concatMap` (~24,5 Go cumulés)
+### 2 — `Array.bind` / `concatMap` (~23,4 Go cumulés)
 
-- [ ] Localiser les sites via `-peek 'Control_Bind_ArrayBind'` (appelants par
-      fonction).
-- [ ] Remplacer les accumulations quadratiques par une accumulation linéaire
-      (liste) ou une concaténation native, comme `concatStringArrays` dans
-      `Gopurs.GoImports`.
+- [x] **Optimisé (26/09)** : `arrayBind` (FFI Go de `Control.Bind`) prend
+      désormais `[]gopurs_runtime.Value` en entrée/sortie (au lieu de
+      `[]interface{}`) : plus aucune copie de conversion ni box/unbox par
+      élément dans le pont (`Unbox[[]Value]` est un alias direct). Validation :
+      sortie b8x identique (seul `Control_Bind_ffi.go`, l'implémentation
+      elle-même, change), total **204,7 → 199,3 Go**, 8 workers
+      **64,2 → 62,9-63,4 s**.
+- [ ] Le concat lui-même (~23,4 Go cumulés, dont les callbacks) reste : les
+      sites (`Gopurs.ModuleBindings`, `FunctionFusion`, `DecoderSchemas`,
+      `CallAnalysis`, `BindingExprs`, `AdtMetadata`, `ThunkFusion`,
+      `ArrayTraverse`…) utilisent `do` sur les tableaux. Piste : accumuler via
+      `push`/`foldl` (une seule sortie) là où le parcours est linéaire.
 - [ ] Vérifier l'absence de tempête de reboxage (leçon de l'incident
       `GoImports` : toute modification du code gopurs doit être validée par un
       profil d'allocations, pas seulement par la parité).
@@ -136,12 +143,13 @@ au décodage JSON d'altbak.
 - [ ] Vérifier que les types réutilisés sont partagés (sinon le mémo ne sert
       à rien) et mesurer taux de succès.
 
-### 5 — B-tree `insert` (17,6 / 25,2 Go)
+### 5 — B-tree `insert` (17,5 Go à plat, 19 Go cumulés)
 
-- [ ] Réduire le nombre d'insertions dans les chemins chauds (accumulateurs,
-      `Map.insertWith`/`alter` évités, structures dédiées).
-- [ ] Option : étudier le degré du B-tree (compromis allocations)
-      comparaisons) — expérience d'une ligne, à mesurer.
+- [ ] **Expérience degré** : `maxDegree` 16 → 8 (copies de nœuds plus petites,
+      un niveau de plus) — campagne en cours ; si insuffisant, essayer 32.
+      La forme de l'arbre ne change pas l'ordre d'itération (trié par clé) :
+      la sortie du compilateur doit rester identique.
+- [ ] Réduire le nombre d'insertions (unions structurelles, accumulateurs).
 
 ### 6 — Relances du builder parallèle (+40 % d'allocations)
 
