@@ -1,211 +1,299 @@
-# Gopurs — plan : du décodage natif à la généralisation
+# Gopurs — parallélisme déterministe de PBO et accélération de b8x
 
-## État mesuré (23 septembre 2026)
+Date : 26 septembre 2026.
 
-Le décodage TAST est intégralement natif en Go derrière la FFI existante
-(cinq `foreign import` dans `CoreFn/{Json,TypeTable,Usage}.purs`, repli
-PureScript pour le JS). Cellules officielles du diagnostic TAST :
+Les chemins de sources ci-dessous sont relatifs à `htdocs/`.
 
-| Cellule | Go | JS | Ratio |
-|---|---:|---:|---:|
-| Décodage | **15,41 ms** | 59,54 ms | **×0,26** |
-| Total | **48,00 ms** | 78,19 ms | **×0,61** |
+> Le contenu précédent de ce fichier (phases décodeur TAST / JSON général)
+> reste dans l'historique Git — dernier commit `92c55b9` touchant ce fichier.
+> Les rapports associés sont dans `altbak.pub-gopurs/docs/benchmark-results/`.
 
-Campagne cumulée appariée (5 paires, workspaces régénérés, oracles dans chaque
-processus) : décodage **336,61 → 15,16 ms (−95,50 %)**, allocations
-**402 378 424 → 27 106 040 octets (−93,26 %)**, total **386,41 → 48,13 ms
-(−87,54 %)** ; parsing inchangé. Détail, provenance et limites :
-[2026-09-23-tast-native-decoding.md](../../altbak.pub-gopurs/docs/benchmark-results/2026-09-23-tast-native-decoding.md).
+## Objectif et critères de réussite
 
-**Compilateur (b8x, charge réelle, 2 655 modules).** Chargement TAST **2,29 s**
-contre 9,64 s publiés (−76 %). Backend : 157,6 s (compilateur d'entrée de
-session) → **143,2 s** avec la `Map` et le scanner natifs (−9,1 %), puis
-**129,6 s** à `GOGC=300` (−17,8 %) et **113,6 s** à `GOGC=600` (−27,9 %).
+Accélérer le backend natif sur le corpus réel de b8x en rendant explicites les
+informations partagées entre optimisations, puis en exploitant les cœurs
+disponibles et en réduisant les allocations des chemins dominants.
 
-**Protocole backend.** Lancer depuis la racine `b8x` **sans `--main`** : les
-`modulePath` du TAST sont relatifs et les FFI ne sont résolues que depuis ce
-répertoire. Les mesures faites en `cwd=run/bak/go` avec `--main Main` tournaient
-sur une charge dégradée (FFI en stubs) et ne valent pas pour le vrai build ;
-elles ont été refaites.
+- **Premier objectif : environ 80 s de backend**, contre le passage séquentiel
+  corrigé à environ 136 s. **Environ 60 s serait un très bon résultat** ;
+  45–65 s constitue une ambition ultérieure incluant la préparation et la mémoire.
+- Ces temps sont des objectifs de travail, à confirmer par des mesures appariées.
+- L'oracle de cette refonte est le **builder séquentiel avec accumulation correcte
+  des directives**, conservé comme référence indépendante.
+- Même corpus et mêmes options : couverture complète et Go byte-identique entre
+  séquentiel et parallèle, pour 1/2/4/8 workers, puis compilation et exécution
+  des tests pertinents.
+- Les résultats de performance doivent préciser le CPU, les allocations, le RSS
+  et la variabilité, en plus du temps mural.
+- Le benchmark backend part de TAST existants. Le gain sur `b -c` sera mesuré
+  séparément, avec le frontend PureScript et la compilation Go.
 
-**Lecture honnête.** Ces chiffres opposent du Go *écrit à la main* à du JS
-*généré*. Le levier démontré est « contrôle direct + moins de transitoires »,
-pas « le compilateur Go bat le compilateur JS ». La logique n'est pas terminée :
-voir les phases 3–5.
+## Point de départ
 
-## Phase 1 — Finir le décodeur (borné, rapide)
+Corpus historique : 2 683 modules TAST, 2 987 fichiers Go, environ 217,8 Mo de
+TAST, M4 Pro à 14 cœurs. Relever à nouveau ces nombres et les empreintes au
+démarrage de la campagne.
 
-- [x] **Différentiel des chemins d'erreur** : **2 210 mutations sur 6 graines
-      → 1 493 cas d'erreur + 717 décodages réussis**, messages et empreintes
-      identiques au PureScript, testé sur la sortie intégrée du compilateur. Il
-      a fait apparaître 5 divergences réelles (messages `Object`/`Array`,
-      wrapping `AtKey` de `getFieldOptional'`, `AtIndex` sur
-      `decodeModuleName`, message `Array` de la table de types, règle
-      d'emballage par clé de `decodeReExports`), toutes corrigées.
-- [x] **Transitoires réduits** : entrée native de la table de types (plus
-      d'aller-retour `Box`), suppression de la closure par appel dans `cndExpr`,
-      scopes persistants (chaîne) dans la validation d'usage.
-      Allocations décodage : **28 724 952 → 27 106 040 B (−5,6 %)** ; campagne
-      cumulée appariée : décodage **−95,50 %**, total **−87,54 %**, allocations
-      **−93,26 %** ; cellules officielles **15,41 / 48,00 ms**.
-- [x] **Couplages aux noms générés documentés** (`Call_…_decodeSourceSpan`,
-      `Call_Data_Map_Internal_fromFoldable__…`) : commentaires explicites aux
-      deux sites d’appel (chemin froid, échec bruyant à la compilation si le
-      nom change). Un remplacement stable est possible mais différé.
+| Configuration historique | Optimisation + émission | Backend |
+|---|---:|---:|
+| Ancien binaire, passage de confirmation | 89,2 s | 120,4 s |
+| Séquentiel corrigé | 103,3 s | 136,0 s |
+| Prototype corrigé, 8 workers PBO | 72,4 s | 106,5 s |
 
-## Phase 2 — Effet compilateur (à trancher)
+Les deux derniers résultats sont des passages individuels. Le prototype
+parallèle diverge encore dans `Data_Either.go`. La sortie séquentielle corrigée
+diffère elle-même de l'ancien compilateur dans 945 fichiers ; sa validation à
+l'exécution doit être complétée.
 
-- [ ] Reprendre b8x quand la question murale sera prioritaire : mesure appariée
-      (`b -c` avant/après, phases, RSS, CPU) et `gopurs-aff` (238 modules)
-      comme corpus de contrôle. Le décodeur n'est qu'une partie du chargement
-      TAST.
+Le profil initial estime environ 274 Go d'allocations cumulées et 57 % du CPU
+échantillonné dans le GC. Ce profil concerne l'ancien binaire et l'ensemble de
+l'invocation ; il faudra le renouveler sur le candidat.
 
-## Phase 3 — Passes PBO chaudes (profilage fait, gains mesurés)
+La simulation pondérée par les octets TAST et le graphe approximatif extrait du
+Go généré ne permettent pas de déterminer le chemin critique réel de PBO.
 
-- [x] **Profilage** (`PPROF=1`, charge réelle) : backend ~154 s dont
-      `optimize + emit` ~103 s ; **GC ≈ 57 % du CPU** ; 312 Go alloués sur le
-      run. Top : `Data.Map` (`(*Node).clone` 32,6 Go = 10,4 %, `find` et
-      comparateurs ~16 Go), concaténation de tableaux 10,6 Go, `RecordDict*`
-      ~20 Go, rebox ~24 Go, `Monomorphize` ~30 Go, `Semantics.quote` 19 % cum,
-      `emitModule` 33 % cum (dont `referencedImports` 26,6 Go = 8,5 %).
-      **Aucune passe unique ne domine** : le coût est le volume d'allocations.
-- [x] **`Data.Map` `insertClone`** (~15 lignes natives) : **157,6 → 153,4 s
-      (−2,7 %)** sur la charge réelle, RSS stable.
-- [x] **Scanner d'imports natif** (`Gopurs.GoCode.referencedImports`) :
-      **sortie Go byte-identique** (A/B sur 2 655 modules, 2 960 fichiers) et
-      backend **153,4 → 143,2 s (−6,6 %)** ; cumulé avec la `Map` : **−9,1 %**.
-- [x] **Balayage GC (charge réelle)** : 143,2 s (100) → 129,6 s (300, −9,5 %)
-      → 113,6 s (600, −20,7 %) ; RSS 5,1 → 8,8 → 13,9 Gio. Décider du défaut
-      `GOGC` du lanceur (politique mémoire).
-- [ ] **Suite** : comparateurs de `Map` (FFI Value-native ou comparateur natif
-      `String`/`Ident`), sites `<>` en boucle, rebox PBO, reste du chemin
-      d'émission (`printGoExpr` 5,9 Go, `toCharArray`) — chaque correctif :
-      sortie Go byte-identique + mesure appariée sur la charge réelle.
+## Principes retenus, inspirés de TypeScript
 
-## Phase 4 — Généralisation (le bout de la logique)
+- Entrées partagées stables, état de travail privé, résultats immuables.
+- Distinguer une référence à un module d'une dépendance envers un résultat
+  d'optimisation de ce module.
+- Déterminer la visibilité par une règle explicite, indépendamment de l'heure
+  de fin des workers.
+- Réutiliser les caches selon leur véritable contexte de validité.
+- Employer l'affinité entre modules pour améliorer la localité une fois les
+  dépendances et les coûts mesurés.
 
-- [x] **Hissage des dictionnaires clos (première passe codegen généralisée)** :
-      `Gopurs.ClosedDictionaries` hie les constructions de dictionnaires de
-      classe closes (sans capture locale, sans nœuds d'effet, type de classe
-      annoté) en getters `sync.Once` de niveau module, uniquement sous les
-      corps de liaisons déjà cachés. JSON général, campagne appariée :
-      décodage **−14,5 %**, allocations **−9,2 %**, total **−5,4 %**, parsing
-      inchangé ; plans de records reconstruits **91 368 → 18** (copies
-      instrumentées) ; le module de test ne gagne qu'un getter (la chaîne
-      réellement reconstruite à chaque variante d'événement). TAST : neutre
-      (chemin déjà natif, allocations identiques au byte). 13 fixtures
-      compilées/exécutées OK ; le seul snapshot modifié (`DerivingFunctor.go`)
-      était déjà obsolète depuis le 21/09. Bootstrap du compilateur (459
-      modules) OK. Rapport `2026-09-23-closed-dictionary-caching.md`.
-- [x] **Déspecialisation des forwarders FFI (fusion, premier morceau)** :
-      PBO spécialisait les fins wrappers FFI (`caseJson*`) en forçant un retour
-      ADT natif que le wrapper re-boxait (aller-retour boxed→native→boxed,
-      2 allocations par appel). `Gopurs.Monomorphization` détecte désormais
-      **mécaniquement** les forwarders (lambda eta-expansé appliquant un import
-      étranger du même module à ses paramètres, à travers `unsafeCoerce`) et
-      les exclut de la spécialisation. JSON : décodage **−17,6 %** (apparié vs
-      état précédent), allocations décodage **15,04 → 13,49 Mo (−10,3 %)** ;
-      cumulé depuis la baseline : allocations **−18,5 %**, décodage −19,1 %.
-      Code généré identique au byte à l'exclusion nommée sur le corpus (562
-      spécialisations), oracle JSON exact, 13 fixtures OK. Rapport
-      `2026-09-24-accessor-despecialization.md`.
-- [ ] **Constructeurs `Right`/`Just`** (~24 % des allocations restantes
-      mesurées) : relèvent de l'ABI native (représentation), pas d'un filtre de
-      spécialisation.
-- [ ] **Suite du hissage** : dictionnaires partiellement appliqués ; mesurer sur
-      une charge réelle (b8x ou gopurs-aff) et vérifier les chemins d'erreur.
-      Variante élargie (`LitRecord`, `CtorSaturated`) **testée et rejetée** :
-      568 getters au lieu de 19, −1,3 % d'allocations seulement, +1,4 % de
-      temps au décodage (campagne appariée) → forme étroite conservée.
-- [ ] **Prochain gros poste (profil à jour, 500 passes)** : constructeurs
-      `Just`/`Right` **20,8 %** des allocations de décodage, adaptateurs
-      `Foreign.Object.lookup` **10,1 %**, `decodeForeignObject` 7,0 % (dont
-      l'essentiel est la construction des maps `FO.Object`), plan de records
-      6,6 %, accesseurs `caseJson*` 7,3 % (encodage CPS qui re-construit des
-      `Maybe`/`Either`). Cible recommandée : fusion codegen des résultats
-      immédiatement déstructurés (case-of-known-constructor) avant les FFI
-      natives ponctuelles.
-- [ ] **Politique GC (levier mesuré)** : même binaire, runs intercalés —
-      `GOGC=100→300` à 1 P : cycles GC 196→42, décodage **−26,9 %**, total
-      −23,3 % ; à 4 P (forme applicative) : **−5,9 %** décodage, −9,6 % total ;
-      `GOGC=600` ≈ −28 % à 1 P. Le protocole de campagne reste à `GOGC=100`
-      (comparabilité JS/C) ; le défaut des applications générées est une
-      décision mémoire (RSS) non tranchée. Détail :
-      `2026-09-23-json-general-profiling.md`.
-- [ ] **Plan de records — décision de contrat** : précalculer les noms et la
-      disposition à la construction du plan éviterait 2 évaluations de symbole
-      par champ et par enregistrement, mais les tests figent la fidélité à
-      `Record.insert` (double évaluation, disposition recalculée). Gain estimé
-      ~2-4 % du décodage ; à trancher avant de toucher au contrat Go/JS.
-- [ ] Trancher entre **ABI native** (arguments et résultats typés de bout en
-      bout, point 12 du plan historique) et **codegen ciblé** (émettre du
-      contrôle direct pour les schémas monadiques connus).
-- [ ] Prototyper sur un chemin chaud complet (décodeur de champ → worker
-      partagé → stockage), mesurer le potentiel, puis généraliser.
-- [ ] Critère de succès : le gain apparaît **sans portage manuel** — c'est le
-      compilateur qui le produit.
+Références locales :
 
-## Phase 5 — JSON général
+- `TypeScript/tsc/internal/compiler/checkerpool.go` : partitionnement équilibré,
+  affinité, caches par checker, ordre de parcours stable.
+- `TypeScript/tsc/internal/checker/checker.go` : calcul des informations à la
+  demande dans l'état propre au checker.
+- `TypeScript/tsc/internal/checker/utilities.go` : ordre des types et symboles.
+- `TypeScript/tsc/internal/compiler/program.go` : émission parallèle et collecte
+  ordonnée des résultats.
+- `TypeScript/tsc/internal/core/{arena,linkstore}.go` : allocations groupées et
+  tables d'informations associées aux nœuds.
 
-- [x] **Référence C mesurée** (rapport altbak
-      `2026-09-23-native-c-references.md`, lignes ajoutées à la table C) :
-      JSON Decoding **644,96 µs** (simdjson + arène) contre Go 14,67 ms et
-      JS 8,94 ms → **×22,7** de marge côté natif (décodage seul ×41,9,
-      parsing ×6,3). L'écart est dominé par l'allocation et le GC, pas par le
-      parseur. Array Indexing : sur le même noyau, Go (4,21 ms) est 1,6× plus
-      rapide que `clang -O3` (6,59 ms) ; la représentation boxed coûte ≤2 % ;
-      une reformulation en blocs (vectorisable) descend à ~0,51 ms → le levier
-      restant est algorithmique.
-- [x] **Baseline et profils par phase (23 sept.)** : baseline re-mesurée
-      (`var/benchmark/json-dec-baseline{-results}-20260923`, Go seul) —
-      parsing **2 366,2** / décodage **11 232,6** / total **14 294,3 µs**,
-      allocations identiques à la campagne publiée (4 612 800 / 16 556 992 /
-      21 169 776 B). Le profileur CPU `runtime/pprof` est inexploitable sur
-      cette machine (échantillons attribués aux threads `kevent`/`madvise`
-      alors que `sys` réel ≈ 0,01 s) → lecture par `sample(1)` + profils
-      d'allocation ; rapport `2026-09-23-json-general-profiling.md`. GC ≈ 14 %
-      du décodage (`gctrace`, GOGC=100). Postes locaux mesurés : reconstruction
-      du plan de records **2 393 appels/pass ≈ 645 µs (6,5 %)** — dictionnaires
-      et closures neufs à chaque appel, donc pas de cache possible côté
-      runtime ; setup `decodeArray` ≈ 0,6 % ; setup `decodeForeignObject`
-      ≈ 1,6 %. Constructeurs `Right`/`Just` ≈ 19,5 % des allocations,
-      adaptateurs `Foreign.Object.lookup` ≈ 9 %.
-- [ ] **Cible prioritaire** : hoisting codegen des constructions de
-      dictionnaires constantes dans les lambdas (le plan de records est
-      reconstruit à chaque enregistrement décodé) ; puis chemin `lookup`
-      Value-level. Le chemin `DecodeJson` générique reste à ×1,6 du JS
-      (15,11 / 9,28 ms) : le levier restant est la construction de
-      dictionnaires et la représentation boxed, pas les algorithmes de
-      décodage.
-- [x] **Référence C pour JSON to Typed AST** (`typed-ast.cc`, simdjson + arène,
-      ~1 100 lignes) : les **12 empreintes** du corpus sont reproduites à
-      l'identique (validées d'abord textuellement contre la PS, puis par
-      l'oracle figé dans chaque processus). Mesure officielle : C
-      **4,26 / 4,52 / 8,76 ms** contre Go 27,46 / 15,38 / 56,99 ms et JS
-      20,36 / 61,99 / 80,35 ms → **×6,5** au total (×6,4 au parsing, ×3,4 au
-      décodage). Seule la passe **pure** de validation d'usage n'est pas
-      reproduite : mesurée sur le même build Go, elle pèse **872,8 µs sur
-      13 206,6 µs (6,6 %)** → une référence C équivalente serait ~4,8 ms, soit
-      encore ×3,2. Le principal écart restant est le **parsing** (×6,4) et non
-      le décodeur, déjà natif des deux côtés.
+## 0 — Figer une référence reproductible
 
-## Décisions ouvertes
+- [ ] Relever les révisions, modifications locales, versions d'outils et SHA-256
+      des sources et binaires utilisés, y compris le bootstrap et les FFI.
+- [ ] Produire des artefacts distincts pour la référence séquentielle corrigée
+      et le candidat, à partir d'états de sources figés pendant chaque bootstrap.
+      Le script actuel `tools/build-native.mjs` publie le binaire installé :
+      prévoir une destination de candidat explicite pour les campagnes.
+- [ ] Fixer l'accumulation correcte des directives comme contrat de référence
+      pendant les comparaisons ; vérifier le probe A/B/C et les tests applicatifs.
+- [ ] Préparer des sorties de benchmark vierges, isolées des sorties usuelles de
+      b8x, tout en préservant les chemins relatifs réels des FFI. Chaque invocation
+      doit produire tous les fichiers attendus.
+- [ ] Refaire trois passages de référence, sans campagnes concurrentes, avec
+      manifeste TAST/FFI et manifeste des sorties complètes.
+- [ ] Rectifier les conclusions trop fortes du rapport historique et des
+      commentaires du prototype : impossibilité byte-exacte non démontrée,
+      facteur d'accélération distinct de l'occupation des workers, temps PBO
+      distinct de la phase combinée optimisation/émission.
 
-- **Comparaison** : « Go manuel vs JS généré ». Si une comparaison symétrique
-  est voulue, porter aussi un chemin JS natif pour mesurer l'écart réel des
-  compilateurs.
-- **Maintenance** du Go manuel dans PBO (taille, revue, couplage aux noms
-  générés et aux spécialisations).
-- **Chemins d'erreur** : non couverts par les 12 modules valides du corpus ;
-  seul le différentiel de la table de types les exerce.
+Sources : `scratch/b8x-profile-20260925/`,
+`gopurs/gopurs/tools/build-native.mjs` et
+`purescript-backend-optimizer-gopurs/src/PureScript/Backend/Optimizer/Builder.purs`.
 
-## Références
+## 1 — Mesurer le travail et les attentes réels
 
-- Rapport : [2026-09-23-tast-native-decoding.md](../../altbak.pub-gopurs/docs/benchmark-results/2026-09-23-tast-native-decoding.md)
-- Sources : `purescript-backend-optimizer-gopurs/src/PureScript/Backend/Optimizer/CoreFn/{Json,TypeTable,Usage}.{purs,go,js}`
-- Workspaces et campagnes : `altbak.pub-gopurs/var/benchmark/json-tast-native-{tt,arr,usage2,ann,dec,dec5}-20260923`,
-  `native-*-campaign-20260923`, `native-dec-cumulative-20260923`
-- Différentiels, tests et variantes : `scratch/tast-revolution-20260923/`
-- Protocole : `altbak.pub-gopurs/bin/benchmark/json-diagnostic.py`
-  (GOMAXPROCS=1, GOGC=100, PGO désactivé, médiane des minima de processus) ;
-  campagnes appariées : `scratch/tast-decode-20260923/campaign.py`.
+- [ ] Instrumenter la conversion de chaque module, la publication des résultats,
+      la préparation du codegen, la génération des corps et l'impression/écriture.
+- [ ] Relever les durées murales par module ; utiliser les profils/labels et
+      traces natifs pour l'attribution CPU, le GC et la contention.
+- [ ] Compter les tâches prêtes, actives et bloquées, les barrières, les lectures
+      d'implémentations et de directives, les hits, absences et dépendances en attente.
+- [ ] Identifier les lectures transitives introduites par l'inlining et les
+      spécialisations, notamment le cas `Data.Either` / `Effect.applicativeEffect`.
+- [ ] Construire un graphe des dépendances effectivement rencontrées, pondéré
+      avec les temps observés ; identifier les modules lourds et les longues chaînes.
+- [ ] Garder les métriques désactivables et comparer les performances sans
+      instrumentation de diagnostic.
+
+Livrable : une attribution du temps suffisante pour distinguer manque de travail
+prêt, déséquilibre, publication, codegen et pression mémoire.
+
+## 2 — Expliciter l'environnement d'optimisation
+
+### Contrat de visibilité
+
+Attribuer à chaque module son rang dans l'ordre canonique du builder séquentiel.
+Pour le consommateur de rang `i`, après consultation de ses implémentations locales :
+
+1. Un module externe de rang `j >= i` reste invisible, même si son calcul est fini.
+2. Un module de rang `j < i` fournit son résultat final lorsqu'il est prêt.
+3. Si ce prédécesseur n'est pas prêt, la lecture signale une dépendance en attente.
+4. Un identifiant absent d'un résultat final constitue une absence définitive.
+5. Un module extérieur au build suit le contrat de la référence ; les métadonnées
+   d'un ancien build ne deviennent pas visibles par accident.
+
+Cette règle permet de calculer un module tardif sans modifier les décisions des
+modules qui le précèdent. Les attentes entre modules suivent des rangs strictement
+décroissants ; leur profondeur réelle reste à mesurer.
+
+- [ ] Introduire un contexte de build explicite : identité du build, index des
+      modules et emplacements de résultats finaux immuables.
+- [ ] Faire passer toutes les lectures externes par une interface contrôlée,
+      en distinguant valeur disponible, absence définitive et résultat en attente.
+- [ ] Remplacer les lectures implicites du magasin global dans la conversion
+      par une vue propre au consommateur.
+- [ ] Appliquer ce contrat aux directives externes inférées, tout en reproduisant
+      exactement la priorité des directives de configuration, des directives
+      locales/exportées et des règles inférées.
+- [ ] Auditer aussi les opérations autres que `lookup` : fusion, export des
+      directives du module et `addStop`. Les arrêts d'inlining restent locaux
+      à l'évaluation ; leur insertion préserve les autres accessors de l'entrée.
+- [ ] Garder les implémentations locales évolutives au fil des bindings, avec
+      le même traitement des groupes récursifs que la référence.
+- [ ] Rendre la validité des mémos explicite : les absences dépendent de la vue
+      du consommateur ; une dépendance en attente ne devient jamais un miss définitif.
+- [ ] Comparer ce nouveau chemin en mode séquentiel à la référence indépendante
+      avant d'ajouter l'ordonnancement parallèle.
+
+Sources principales dans `purescript-backend-optimizer-gopurs/` :
+`src/PureScript/Backend/Optimizer/{Builder,Convert,Semantics,Cache,BoundedMemo}`.
+
+## 3 — Remplacer les lots par un ordonnancement continu
+
+Première mise en œuvre : conversions sur vues fixes avec découverte des
+dépendances manquantes et relances contrôlées. Cela permet de conserver le cœur
+de l'évaluateur synchrone et de mesurer le coût des relances.
+
+- [ ] Préparer les entrées et isoler les hooks ayant des effets des tentatives
+      de conversion ; un résultat provisoire n'est ni émis ni publié.
+- [ ] Donner à chaque tentative une vue fixe des résultats disponibles et des
+      mémos privés. Journaliser toute lecture d'un prédécesseur encore manquant.
+- [ ] Accepter un résultat uniquement si toutes ses lectures sont définitives.
+      Sinon, écarter ce résultat et remettre le module en attente de ses dépendances.
+- [ ] Amorcer les dépendances avec les imports antérieurs connus, en excluant
+      auto-imports et modules absents du corpus. Compléter avec les consultations
+      réelles ; les références tardives sont traitées par la visibilité.
+- [ ] Maintenir une file prête et un nombre borné de conversions actives ;
+      réapprovisionner les workers à chaque achèvement utile.
+- [ ] Donner priorité à la progression des prédécesseurs requis, avec un ordre
+      de départ reproductible. Les tâches en attente libèrent leur place d'exécution.
+- [ ] Publier chaque résultat final dans son emplacement ; les autres conversions
+      y accèdent selon leur vue, indépendamment du curseur de sortie du coordinateur.
+- [ ] Alimenter initialement le codegen dans l'ordre canonique, avec les snapshots
+      attendus par l'émetteur existant, afin d'isoler la validation de PBO.
+- [ ] Remplacer le fallback actuel qui contourne les dépendances par un diagnostic
+      d'invariant précis si des modules restent bloqués sans travail possible.
+- [ ] Mesurer le nombre et le coût des tentatives rejetées, l'attente et le RSS.
+      Si les relances dominent, affiner la reprise aux groupes de bindings avant
+      d'augmenter le nombre de workers.
+- [ ] Après validation, tester une priorité pondérée par les coûts observés et
+      une affinité de worker pour les caches réutilisables, à capacité mémoire bornée.
+
+Sources : `Builder.purs`, `Cache.{purs,js,go}`, `BoundedMemo.{purs,js,go}`,
+`gopurs/gopurs/src/Main.purs` et la FFI d'ordonnancement strictement nécessaire.
+
+Livrable : parité complète séquentiel/parallèle, notamment pour `Data_Either.go`,
+et première campagne de scaling 1/2/4/8 workers.
+
+## 4 — Avancer la publication des signatures utilisées par l'émission
+
+Le codegen consulte `metadata.globalFunctions` pour choisir certains appels
+directs. Cette visibilité doit être traitée aussi soigneusement que `purmeta`.
+
+- [ ] Mesurer le temps de préparation des signatures et celui de l'émission des
+      corps, puis leur impact sur l'attente du producteur.
+- [ ] Extraire une préparation de codegen réutilisable contenant le module
+      transformé, les bindings TCO, les signatures et les auxiliaires nécessaires.
+      Inclure les transformations précédant `ModuleBindings.prepare`, notamment
+      les schémas de décodeurs et l'ownership, ainsi que `owned.functions`.
+- [ ] Calculer une seule fois cette préparation et la consommer lors de la
+      génération des corps.
+- [ ] Construire les vues de signatures correspondant à l'ordre logique de
+      référence ; rendre ces vues disponibles dès que leurs informations sont prêtes.
+- [ ] Autoriser le chevauchement de générations de corps qui disposent déjà de
+      leurs vues complètes, en conservant la parité des choix d'appels et de l'ABI.
+- [ ] Vérifier les appels importés, récursifs, partiels et les wrappers FFI.
+
+Sources : `gopurs/gopurs/src/Gopurs/{CodeGen,ModuleBindings,CallExprs,Emission}.purs`
+et `gopurs/gopurs/src/Main.purs`.
+
+## 5 — Réduire les allocations et accélérer la préparation
+
+- [ ] Reprofiler le candidat déterministe pour sélectionner les deux ou trois
+      postes les plus coûteux, avec attribution non additive des profils cumulés.
+- [ ] Améliorer les représentations/clés des tables chaudes : identifiants
+      compacts, comparateurs spécialisés et suppression des conversions intermédiaires.
+- [ ] Employer des structures mutables à propriétaire unique pour l'état de
+      travail local quand le contrat le permet ; figer les résultats partagés.
+- [ ] Évaluer la réutilisation bornée des mémos et buffers ; mesurer leur taux
+      de succès, le travail économisé et les données retenues.
+- [ ] Appliquer les enseignements de répartition à la préparation et aux tours
+      de spécialisations transitives, en conservant leurs snapshots et fusions
+      déterministes. Mesurer la fusion et le point fixe séparément des workers.
+- [ ] Pour chaque changement, mesurer son effet isolément et conserver la parité
+      avec la référence. Les réglages GC restent constants dans les comparaisons.
+
+L'objectif est que les gains apparaissent dans le compilateur généré et soient
+réutilisables par les autres programmes compilés lorsque la transformation est générale.
+
+## 6 — Validation et campagne finale
+
+### Régressions ciblées nécessaires
+
+- [ ] Corpus vide, auto-imports, imports externes et couverture de tous les modules.
+- [ ] Directive A/B/C, directives par défaut, locales, exportées, inférées et arrêts
+      d'inlining, avec vérification des priorités et des accessors.
+- [ ] Référence transitive par inlining et référence introduite par spécialisation.
+- [ ] Module tardif déjà calculé mais invisible ; prédécesseur manquant puis
+      disponible ; identifiant réellement absent ; isolation de deux builds successifs.
+- [ ] Achèvements volontairement désordonnés, relances, erreurs et annulation :
+      publication et émission uniques des résultats finaux.
+- [ ] Reproduction réduite du cas `Data.Either` / `Effect`, comparée entre JS
+      et natif, puis exécutée pour vérifier son comportement.
+- [ ] Tests natifs avec `-race` sur les nouveaux magasins, workers et mémos,
+      plus un parcours intégré du compilateur reconstruit avec le détecteur.
+
+### Vérifications existantes à réutiliser
+
+- [ ] Construire le JS et le natif (`npm run build`, `npm run build:native` dans
+      le checkout de candidat), puis vérifier la provenance du binaire exécuté.
+- [ ] Exécuter les régressions PBO pertinentes : `implementation-lookup`,
+      `binding-order`, `bounded-memo`, `purmeta-build-cache`, `monomorphize-*`
+      et `transitive-parallel`, puis la suite PBO appropriée.
+- [ ] Résoudre l'échec de dépendance `esbuild` précédemment signalé pour
+      `monomorphize-cache.mjs` afin d'obtenir un bilan complet.
+- [ ] Exécuter `node --test tools/emission.test.mjs`, les tests natifs de
+      préparation et les tests de workers importés/ABI après les modifications
+      correspondantes.
+- [ ] Utiliser `./bin/test` pour compiler et exécuter les fixtures concernées,
+      puis la sélection complète lors de la validation finale.
+- [ ] Comparer les sorties b8x dans des destinations vierges : ensemble des
+      chemins, nombres de fichiers, contenu et SHA-256. Un répertoire contenant
+      des fichiers d'un ancien passage ne constitue pas un oracle de couverture.
+- [ ] Exécuter `go build ./...` sur la sortie b8x candidate et les tests
+      d'application pertinents ; distinguer compilation, exécution et performances.
+
+### Mesures
+
+- [ ] Utiliser des TAST et FFI figés ; préserver le cwd/résolution de b8x et
+      l'invocation backend sans `--main` pour la comparabilité historique.
+- [ ] Comparer 1/2/4/8 workers PBO sur le même binaire candidat ; fixer les autres
+      paramètres, notamment préparation, émission, pipeline, GC et processeurs.
+- [ ] Faire au moins trois passages appariés pour les configurations finales,
+      sans chevauchement avec un bootstrap ou une autre campagne ; publier
+      médiane et dispersion. Profiler séparément des passages chronométrés.
+- [ ] Publier les temps de phases, CPU, RSS, allocations, GC, couverture,
+      divergences, relances et occupation utile mesurée.
+- [ ] Mesurer ensuite `b -c` de bout en bout avec un protocole explicite de caches.
+- [ ] Choisir le nombre de workers par défaut à partir des résultats de correction,
+      de temps et de mémoire, puis documenter `GOPURS_PBO_JOBS`.
+
+## Jalons
+
+1. **Référence et diagnostic** : baseline corrigée validée, lectures et temps mesurés.
+2. **Parité** : environnement explicite et conversions parallèles byte-identiques.
+3. **Premier gain confirmé** : scaling apparié, cible de travail autour de 80 s.
+4. **Optimisation étendue** : émission, allocations et préparation, cible autour de 60 s.
+5. **Intégration** : tests complets, mesure de `b -c`, choix du défaut et documentation.
+
+Les temps observés et le profil des attentes déterminent les priorités après
+chaque jalon ; les objectifs de durée sont réévalués à partir de ces mesures.
