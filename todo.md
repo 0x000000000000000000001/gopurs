@@ -145,10 +145,15 @@ au décodage JSON d'altbak.
 
 ### 5 — B-tree `insert` (17,5 Go à plat, 19 Go cumulés)
 
-- [ ] **Expérience degré** : `maxDegree` 16 → 8 (copies de nœuds plus petites,
-      un niveau de plus) — campagne en cours ; si insuffisant, essayer 32.
-      La forme de l'arbre ne change pas l'ordre d'itération (trié par clé) :
-      la sortie du compilateur doit rester identique.
+- [x] **Degré du B-tree (26/09)** : `maxDegree` **16 → 6** dans
+      `gopurs-ordered-collections/src/Data/Map/Internal.go` (copies de nœuds
+      plus petites). L'ordre d'itération trié est inchangé : la sortie du
+      compilateur reste identique au bit. Mesures : séquentiel
+      **88,0 → 84,4 s**, 8 workers **62,9-63,4 → 60,0-60,8 s**, total
+      allocations **199,3 → 194,2 Go**, famille insert **19,0 → 15,0 Go**.
+      Tests natifs du Map (insert/delete/union/persistance/concurrence) OK.
+      Comparatif des degrés : 16 → 88,0/62,9-63,4 s ; 8 → 84,9/61,6-61,9 s ;
+      **6 → 84,4/60,0-60,8 s** ; 4 → 86,0/60,5-60,7 s.
 - [ ] Réduire le nombre d'insertions (unions structurelles, accumulateurs).
 
 ### 6 — Relances du builder parallèle (+40 % d'allocations)
