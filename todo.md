@@ -38,12 +38,45 @@ Les chemins de sources ci-dessous sont relatifs à `htdocs/`.
 > - **Postes d'allocation restants** (profil 231 Go) : `insertClone` 16,9 Go,
 >   callbacks `Map` ~26 Go cumulés, dictionnaires `RecordDict*` ~19 Go,
 >   `mangleType` 13,2 Go, reboxing ~10 Go, `printGoExpr` ~7 Go.
-> - **Différé, non fait** : reprise des conversions rejetées ; mémo
->   `mangleType` ; réglage du degré du B-tree ; réduction des dictionnaires et
->   du reboxing côté codegen.
-> - **En cours** : instrumentation de l'ordonnanceur (lots, file prête,
->   relances, réveils) dans `ParallelStats` ; campagne GC à refaire machine au
->   repos (la première a tourné pendant une reconstruction et est contaminée).
+> - **`GOMEMLIMIT`** (parité 0 divergence) : `GOGC=off` + limites 8/10/12 GiB →
+>   97,9 / **95,6** / 95,5 s, pics 10,0 / 12,0 / 14,5 Go. Genou à 10 GiB ; le
+>   pic dépasse la limite d'environ 25 %. Politique recommandée : 8 GiB (CI) ou
+>   10 GiB (station), au lieu de `GOGC=600` non borné (91,7 s, 14,2 Go).
+> - **Profil du réglage cible** (`jobs=8`, `GOGC=off`, `GOMEMLIMIT=10GiB`) :
+>   70 % des échantillons actifs en GC/allocateur, émission ~0,8 % — le mur
+>   reste la mémoire, pas l'ordonnanceur.
+> - **B-tree** : le chemin « clé trouvée » ne copie plus la liste d'enfants
+>   (nœuds immuables) ; tests natifs du Map réécrits pour la nouvelle ABI et
+>   passants. Mesure d'allocations : **neutre** (`insert` 17,31 vs 17,33 Go) ;
+>   parité 0 divergence. Les temps de la campagne B-tree ont tourné pendant un
+>   `rustc` extérieur (load > 20) et ne sont pas exploitables.
+> - **Piège documenté — reboxage** : une première réécriture de
+>   `Gopurs.GoImports` (accumulation en `List`) a produit **+240 Go
+>   d'allocations** (`Rebox_Gopurs_GoImports_*`) : les dictionnaires des folds
+>   sont recoercés par élément. Changement reverté. Leçon : toute modification
+>   du code gopurs lui-même doit être validée par un profil d'allocations, pas
+>   seulement par la parité.
+> - **Imports (2e tentative, retenue)** : concaténation native
+>   `Array (Array String) -> Array String` (FFI Go + JS) à la place des folds
+>   `foldMap` quadratiques de `collectImports`, puis des 31 folds récursifs de
+>   `declImports`/`typeImports`/`exprImports`. Parité **0 divergence** ;
+>   allocations **236,7 → 223,9 Go** (−5,4 %) ; aucun reboxage ;
+>   `init.func230` 15,7 → 2,7 Go cumulés. Temps à confirmer machine au repos
+>   (campagnes `rustc` extérieures à répétition).
+> - **Reste à cibler** : `foldMapDefaultR` résiduel 8,5 Go cumulés (folds PBO
+>   `TypeSubstitution`, `mapAccumL`), mémo `mangleType` 13,3 Go,
+>   dictionnaires/reboxing ~19 Go, `insert` 17,3 Go, callbacks `Map` ~26 Go
+>   cumulés, `printGoExpr` 7,2 Go.
+> - **Temps finaux** (binaire `38dfd114`, parité 0 divergence partout) :
+>   `jobs=8` + `GOGC=off` + `GOMEMLIMIT=10GiB` → **89,4 / 92,7 s** (moyenne
+>   91,0 s, optim+émission 62-65 s, CPU user ~210 s) ; `jobs=8` par défaut
+>   106-126 s (variance machine) ; référence corrigée du matin 136 s →
+>   **−33 %**. Allocations cumulées : 274 Go (profil initial) → 223,9 Go.
+> - **Politique recommandée** : `GOGC=off` + `GOMEMLIMIT=10GiB` (pic ~12 Go),
+>   ou 8 GiB (pic ~10 Go) sur CI ; activer le parallèle par défaut après
+>   stabilisation de l'ordonnanceur.
+> - **Différé, non fait** : reprise des conversions rejetées ; degré du
+>   B-tree ; réduction des dictionnaires et du reboxing côté codegen.
 > - **Suite à trancher selon les compteurs** : réduire le coût des relances
 >   (reprise à granularité fine) ou alléger la coordination/allocations.
 
