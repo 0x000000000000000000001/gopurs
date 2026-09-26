@@ -29,6 +29,7 @@ import Data.String.Pattern (Pattern(..), Replacement(..))
 import Data.String as String
 import Data.Newtype (unwrap)
 import PureScript.Backend.Optimizer.Builder (buildModules, buildModulesParallel)
+import PureScript.Backend.Optimizer.Cache as Cache
 import PureScript.Backend.Optimizer.Convert (BackendModule)
 import PureScript.Backend.Optimizer.Semantics.Foreign (coreForeignSemantics)
 import PureScript.Backend.Optimizer.CoreFn (Module(..), Ann, Ident(..))
@@ -140,6 +141,7 @@ main = launchAff_ $ Metrics.measure "backend total" \_ -> do
   configuredEmitJobs <- liftEffect (Process.lookupEnv "GOPURS_EMIT_JOBS")
   configuredPipeline <- liftEffect (Process.lookupEnv "GOPURS_PIPELINE")
   configuredPboJobs <- liftEffect (Process.lookupEnv "GOPURS_PBO_JOBS")
+  mbAllocProfile <- liftEffect (Process.lookupEnv "GOPURS_ALLOC_PROFILE")
   let
     emitJobs = max 1 (min 64 (fromMaybe 8 (configuredEmitJobs >>= Int.fromString)))
     pboJobs = max 1 (min 64 (fromMaybe 1 (configuredPboJobs >>= Int.fromString)))
@@ -184,6 +186,8 @@ main = launchAff_ $ Metrics.measure "backend total" \_ -> do
         emitter <- createEmitter emitJobs emitBatch
         pure { enqueue: emitter.enqueue, finish: emitter.finish, cancel: pure unit }
 
+  pboAttemptsRef <- liftEffect (Ref.new 0)
+  pboCodegenRef <- liftEffect (Ref.new 0)
   Metrics.measure "optimize + emit" \_ ->
     bracket (liftEffect makeEmitter) _.cancel \emitter -> do
       let
@@ -194,6 +198,7 @@ main = launchAff_ $ Metrics.measure "backend total" \_ -> do
           , traceIdents: Set.empty
           , rewriteLimit: fromMaybe 10_000 args.mbRewriteLimit
           , onPrepareModule: \env (Module m) -> do
+              liftEffect (Ref.modify_ (_ + 1) pboAttemptsRef)
               when (env.moduleIndex `mod` 100 == 0) $ liftEffect $ Console.error $
                 "[gopurs] optimize + emit: module " <> show (env.moduleIndex + 1)
                   <> "/" <> show env.moduleCount <> " (" <> unwrap m.name <> ")"
@@ -201,6 +206,7 @@ main = launchAff_ $ Metrics.measure "backend total" \_ -> do
           -- Regenerate every module and its FFI output on each invocation.
           , onSkipModule: \_ _ -> pure Nothing
           , onCodegenModule: \_ coreFnModule backendMod _ -> do
+              liftEffect (Ref.modify_ (_ + 1) pboCodegenRef)
               emitter.enqueue
                 { name: backendMod.name
                 , imports: backendMod.imports
@@ -209,11 +215,24 @@ main = launchAff_ $ Metrics.measure "backend total" \_ -> do
           }
         sortedModules = List.fromFoldable monomorphizedModules
         runJobs jobs = parTraverse (\job -> defer job) jobs
+        onStats stats = liftEffect $ Console.error $
+          "[gopurs] pbo stats: batches=" <> show stats.batches
+            <> ", dispatched=" <> show stats.dispatched
+            <> ", maxReady=" <> show stats.maxReady
+            <> ", fallbackPasses=" <> show stats.fallbackPasses
+            <> ", fallbackDispatched=" <> show stats.fallbackDispatched
+            <> ", deferredAttempts=" <> show stats.deferredAttempts
+            <> ", wakeups=" <> show stats.wakeups
+            <> ", waitingPeak=" <> show stats.waitingPeak
       if pboJobs <= 1 then
         buildModules buildOpts sortedModules
       else
-        buildModulesParallel { jobs: pboJobs, runJobs } buildOpts sortedModules
+        buildModulesParallel { jobs: pboJobs, runJobs, onStats: Just onStats } buildOpts sortedModules
       emitter.finish
+      attempts <- liftEffect (Ref.read pboAttemptsRef)
+      codegen <- liftEffect (Ref.read pboCodegenRef)
+      liftEffect $ Console.error $
+        "[gopurs] pbo module attempts: " <> show attempts <> ", codegen: " <> show codegen
 
   _ <- Metrics.measure "entry points" \_ -> traverse
     ( \mainMod -> do
@@ -228,5 +247,9 @@ main = launchAff_ $ Metrics.measure "backend total" \_ -> do
         FS.writeTextFile UTF8 ("output/" <> mainMod <> "/main/main.go") mainEntryPoint
     )
     targetMainModules
+
+  case mbAllocProfile of
+    Just path -> liftEffect (Cache.writeAllocProfile path)
+    Nothing -> pure unit
 
   pure unit

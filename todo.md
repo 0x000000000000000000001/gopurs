@@ -4,6 +4,49 @@ Date : 26 septembre 2026.
 
 Les chemins de sources ci-dessous sont relatifs à `htdocs/`.
 
+> **Journal (26 septembre, soirée).**
+>
+> - **Parité byte-exacte atteinte** : binaire `1860e443` (visibilité par rang,
+>   relances, directives accumulées + propriété testée). Sur b8x, `jobs=1/2/4/8`
+>   produisent les mêmes 2 987 fichiers Go (0 ajouté, 0 retiré, 0 modifié),
+>   vérifié aussi pour `jobs=64`.
+> - **Gains mesurés** (passages individuels) : `jobs=1` 144,4 s de backend
+>   (105,4 s d'optim+émission) ; `jobs=8` 133,9 s (100,1 s) ; `jobs=64` 128,7 s
+>   (95,5 s). Tentatives : 2 683 / 3 269 (+22 %) / 4 194 (+56 %). Le plateau
+>   vient du chemin critique de conversion, pas du nombre de workers.
+> - **Correction notable** : `foldlWithIndex` de `Data.Map` passe
+>   `(clé, accumulateur, élément)` ; deux types identiques avaient masqué
+>   l'inversion. Remplacé par `foldrWithIndex`, avec test de propriété
+>   `test/directives-removal.mjs` (300 cas aléatoires × tous les indices).
+> - **Comparateurs manuels** (`Qualified`, `EvalRef`) : évite le boxage
+>   d'`ordMaybe` ; ordre vérifié identique (400 cas) ; **−11 % partout**
+>   (séquentiel 128,3 s ; `jobs=8` 120,5 s ; `jobs=8` + `GOGC=600` 100,4 s),
+>   parité 0 divergence.
+> - **Profil d'allocations pprof** ajouté au compilateur natif
+>   (`GOPURS_ALLOC_PROFILE`) : **242,9 Go** au total. Postes : callbacks du
+>   `Map` natif ~53 Go (cumulé), `insertClone` 16,9 Go, dictionnaires ~19 Go,
+>   `mangleType` 13,2 Go, reboxing ~10 Go, `printGoExpr` ~7 Go.
+> - **`Map` natif** (`gopurs-ordered-collections`) : les deux callbacks
+>   `compare` + `fromOrdering` fusionnés en un comparateur natif
+>   `k -> k -> Int` pour les sept opérations — une frontière FFI et un boxage
+>   en moins par comparaison. Validation parité/temps en cours.
+> - **Bilan campagne finale** (binaire `5d1c88fe`, parité 0 divergence partout) :
+>   `jobs=1` 116,4 s ; `2` 119,6 s ; `4` 113,7 s ; `8` 110,4 s ;
+>   `8 + GOGC=600` **91,7 s** (RSS 14,2 Go). Cumulé sur la journée :
+>   séquentiel 144,4 → 116,4 s, `jobs=8` 133,9 → 110,4 s, meilleure config
+>   115,6 → 91,7 s. Référence corrigée du matin : 136 s → **91,7 s (−33 %)**.
+> - **Postes d'allocation restants** (profil 231 Go) : `insertClone` 16,9 Go,
+>   callbacks `Map` ~26 Go cumulés, dictionnaires `RecordDict*` ~19 Go,
+>   `mangleType` 13,2 Go, reboxing ~10 Go, `printGoExpr` ~7 Go.
+> - **Différé, non fait** : reprise des conversions rejetées ; mémo
+>   `mangleType` ; réglage du degré du B-tree ; réduction des dictionnaires et
+>   du reboxing côté codegen.
+> - **En cours** : instrumentation de l'ordonnanceur (lots, file prête,
+>   relances, réveils) dans `ParallelStats` ; campagne GC à refaire machine au
+>   repos (la première a tourné pendant une reconstruction et est contaminée).
+> - **Suite à trancher selon les compteurs** : réduire le coût des relances
+>   (reprise à granularité fine) ou alléger la coordination/allocations.
+
 > Le contenu précédent de ce fichier (phases décodeur TAST / JSON général)
 > reste dans l'historique Git — dernier commit `92c55b9` touchant ce fichier.
 > Les rapports associés sont dans `altbak.pub-gopurs/docs/benchmark-results/`.
