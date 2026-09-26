@@ -108,9 +108,17 @@ au décodage JSON d'altbak.
       temps inchangés (84,9 s séquentiel / 60,0 s 8 workers), **parité j1/d8
       OK**, fixtures exécutées, compilateur reconstruit.
       Écarté en v1 : FFI `Effect`, paramètres fonction/map/opaques, résultats
-      `any`/`[]any`/void. Extensions v2 : boxer les résultats `any`, gérer les
-      paramètres fonction (callbacks), `int`/`map`, et étendre la
-      reconnaissance (appels via dictionnaires).
+      `any`/`[]any`/void.
+- [x] **v2 (workers « résultat boxé », 26/09)** : `FfiBridge.ffiValueWorkers`
+      génère dans `_ffi.go` des workers `<Nom>_nativeValue` pour les retours
+      `any`/`interface{}`/`[]any`/void des FFI appariées (boxage dans le
+      worker, sélection via `ffiFunctionInfos`). Sur b8x : **85 workers
+      définis, 450 sites d'appel abaissés**. Natif reconstruit (le Go généré
+      compile), **parité j1/d8 OK**. Totaux d'allocations : 191-194 Go selon
+      les fenêtres (profil échantillonné) ; **temps à re-mesurer machine au
+      repos** (charge > 100 lors des derniers passages).
+- [ ] Extensions v3 : paramètres fonction (callbacks `Map`/`arrayBind`),
+      FFI `Effect`, `int`/`map`/opaques.
 - [ ] Rebox restants (29,3 Go) : conversions réelles, par ex.
       `Tuple[string, Value]` → `Tuple[Value, Value]` et boxage d'arrays
       élément par élément (`Value{… UnsafePtr: Rebox_…}`). Pistes : construire

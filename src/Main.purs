@@ -139,7 +139,9 @@ emitModule metadata mbFfiDir (Module coreFnMod) backendMod = defer \_ -> do
         let hasImport = String.contains (Pattern "\"gopurs/output/gopurs_runtime\"") content
         let importLine = if hasImport then "" else "import \"gopurs/output/gopurs_runtime\"\n"
 
-        let newContent = finalPkgLine <> "\n\n" <> importLine <> "\n" <> ffi.content <> "\n\n// --- Auto-generated FFI wrappers ---\n" <> FfiBridge.generateFfiBridge safeModName backendMod.dataDecls ffi.decls foreigns
+        let workers = FfiBridge.ffiValueWorkers safeModName foreigns ffi.decls
+        let workersBlock = if String.length workers == 0 then "" else "\n\n// --- Boxed-result FFI workers ---\n" <> workers
+        let newContent = finalPkgLine <> "\n\n" <> importLine <> "\n" <> ffi.content <> "\n\n// --- Auto-generated FFI wrappers ---\n" <> FfiBridge.generateFfiBridge safeModName backendMod.dataDecls ffi.decls foreigns <> workersBlock
         FS.writeTextFile UTF8 ("output/purescript/" <> safeModName <> "_ffi.go") newContent
       Nothing -> do
 

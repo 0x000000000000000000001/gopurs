@@ -1,6 +1,7 @@
 module Gopurs.FfiBridge
   ( generateFfiBridge
   , ffiFunctionInfos
+  , ffiValueWorkers
   ) where
 
 import Prelude
@@ -451,25 +452,90 @@ ffiFunctionInfos modNameStr foreigns decls = Map.fromFoldable (Array.mapMaybe mk
   where
   mk (Tuple (Ident name) mbTast) = case mbTast of
     Just tast | isPureConcreteResult tast -> do
-      decl <- matchDecl name
+      decl <- matchFfiDecl modNameStr decls name
+      guardArity decl
       args <- traverse typeNodeToGoType decl.args
-      ret <- case decl.ret of
-        Just t | not (containsInterface t) -> typeNodeToGoType t
-        _ -> Nothing
-      if Array.length decl.args >= 1 && not decl.isVar then
-        Just (Tuple name { fullName: decl.name, fArgs: args, fRet: ret, arity: Array.length decl.args })
-      else Nothing
+      ret <- ffiReturnType decl.ret tast
+      let boxedResult = ffiNeedsValueWorker decl.ret
+      Just (Tuple name
+        { fullName: (if boxedResult then decl.name <> "_nativeValue" else decl.name)
+        , fArgs: args
+        , fRet: ret
+        , arity: Array.length decl.args
+        })
     _ -> Nothing
 
-  matchDecl pursName =
-    let
-      fallback1 = modNameStr <> "_" <> capitalize pursName
-      fallback2 = fallback1 <> "_"
-      findDecl n = Array.find (\d -> d.name == n) decls
-    in
-      case findDecl fallback1 of
-        Just d -> Just d
-        Nothing -> findDecl fallback2
+-- | Workers « résultat boxé » pour les FFI appariées dont le retour natif
+-- | n'est pas directement une `Value` (any/interface/[]any/void). Générés
+-- | dans `_ffi.go` ; le site d'appel les utilise via `ffiFunctionInfos`.
+ffiValueWorkers :: String -> Array (Tuple Ident (Maybe ExprType)) -> Array FfiDecl -> String
+ffiValueWorkers modNameStr foreigns decls = String.joinWith "\n" (Array.mapMaybe worker foreigns)
+  where
+  worker (Tuple (Ident name) mbTast) = case mbTast of
+    Just tast | isPureConcreteResult tast -> do
+      decl <- matchFfiDecl modNameStr decls name
+      guardArity decl
+      if ffiNeedsValueWorker decl.ret then Just (declCode decl) else Nothing
+    _ -> Nothing
+
+  callCode d = d.name <> "(" <> String.joinWith ", " (Array.mapWithIndex (\i _ -> "arg" <> show i) d.args) <> ")"
+
+  boxBody t call = case t of
+    TArray _ ->
+      [ "\tgo_res := " <> call
+      , "\tout := make([]gopurs_runtime.Value, len(go_res))"
+      , "\tfor i, v := range go_res { out[i] = gopurs_runtime.Box(v) }"
+      , "\treturn gopurs_runtime.Array(out)"
+      ]
+    _ -> [ "\treturn gopurs_runtime.Box(" <> call <> ")" ]
+
+  declCode d =
+    case d.ret of
+      Nothing ->
+        "func " <> d.name <> "_nativeValue(" <> paramsCode d <> ") gopurs_runtime.Value {\n"
+          <> "\t" <> callCode d <> "\n"
+          <> "\treturn gopurs_runtime.Value{}\n}\n"
+      Just t ->
+        "func " <> d.name <> "_nativeValue(" <> paramsCode d <> ") gopurs_runtime.Value {\n"
+          <> String.joinWith "\n" (boxBody t (callCode d)) <> "\n}\n"
+
+  paramsCode d = String.joinWith ", " (Array.mapWithIndex (\i t -> "arg" <> show i <> " " <> printTypeNode t) d.args)
+
+guardArity :: FfiDecl -> Maybe Unit
+guardArity d = if not d.isVar && Array.length d.args >= 1 then Just unit else Nothing
+
+ffiNeedsValueWorker :: Maybe TypeNode -> Boolean
+ffiNeedsValueWorker = case _ of
+  Nothing -> true
+  Just t -> needsValueWorker t
+
+ffiReturnType :: Maybe TypeNode -> ExprType -> Maybe GoType
+ffiReturnType retTast tast = case retTast of
+  Just t | needsValueWorker t -> if isRecordResult tast then Nothing else Just TypeValue
+  Just t -> typeNodeToGoType t
+  Nothing -> if isRecordResult tast then Nothing else Just TypeValue
+
+matchFfiDecl :: String -> Array FfiDecl -> String -> Maybe FfiDecl
+matchFfiDecl modNameStr decls pursName =
+  let
+    fallback1 = modNameStr <> "_" <> capitalize pursName
+    fallback2 = fallback1 <> "_"
+    findDecl n = Array.find (\d -> d.name == n) decls
+  in
+    case findDecl fallback1 of
+      Just d -> Just d
+      Nothing -> findDecl fallback2
+
+isRecordResult :: ExprType -> Boolean
+isRecordResult t = case resultType t of
+  Record _ -> true
+  Row _ _ -> true
+  _ -> false
+
+resultType :: ExprType -> ExprType
+resultType = case _ of
+  Func _ ret -> resultType ret
+  t -> t
 
 typeNodeToGoType :: TypeNode -> Maybe GoType
 typeNodeToGoType = case _ of
@@ -484,11 +550,11 @@ typeNodeToGoType = case _ of
   TArray elem -> TypeNativeArray <$> typeNodeToGoType elem
   _ -> Nothing
 
-containsInterface :: TypeNode -> Boolean
-containsInterface = case _ of
+needsValueWorker :: TypeNode -> Boolean
+needsValueWorker = case _ of
   TNamed "any" -> true
   TNamed "interface{}" -> true
-  TArray elem -> containsInterface elem
+  TArray elem -> needsValueWorker elem
   _ -> false
 
 -- | Résultat PureScript « simple » : ni fonction, ni `Effect`, ni
