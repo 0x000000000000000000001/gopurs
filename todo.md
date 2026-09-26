@@ -199,23 +199,17 @@ au décodage JSON d'altbak.
 
 ### 7 — Imprimante et chaînes (~11 Go)
 
-- [x] **Tentative « writer PS » (26/09) — REVERTÉE** : accumulation des morceaux
-      dans `Data.List (List String)` + jointure finale unique. Byte-parité
-      parfaite (fixtures et sortie b8x identiques au bit), mais **catastrophe
-      d'allocations** : la liste accumulée subit une conversion récursive
-      (rebox) de sa queue à chaque `emit` — profil à **6 297 Go** dont
-      **3 656 Go dans un seul rebox `Gopurs_Printer_*`** (quadratique).
-      Revert propre (`git revert`), performances revenues. Conclusion : le
-      writer doit passer par un **builder natif** avec appels FFI directs (ou
-      une structure non polymorphe), pas par une liste polymorphe.
-- [ ] **Writer natif** (conditionnel) : `printGoExpr` alloue une chaîne par
-      nœud (cumul ~7,1 Go) plus les buffers `strings.Join` (~4,5 Go via
-      `MakeNoZero`). Un builder unique supprimerait ces intermédiaires — mais
-      le pont FFI boxe chaque morceau poussé : **prérequis** = *native call
-      lowering* des FFI (voir §1). Byte-parité vérifiable par diff des
-      2 974 fichiers générés.
-- [ ] À défaut : réduire les `<>` par branche dans `printGoExpr`, vérifier
-      `escapeGoString`, et le pré-dimensionnement des `strings.Join`.
+- [x] **Writer natif avec builder opaque (27/09)** : `printGoExpr` pousse des
+      morceaux dans un `strings.Builder` natif via des FFI **pures**
+      (`newBuilderImpl`/`pushImpl`/`toStringImpl`) **abaissées** par le
+      lowering FFI → aucun boxage par morceau, aucune chaîne intermédiaire.
+      Sortie **byte-identique** (fixtures validées sans mise à jour des
+      snapshots ; 2 974 fichiers b8x identiques aux seuls `go.mod` près).
+      Famille imprimante **6,8 → 0,2 Go**, total **195,4 → 189,1 Go**.
+      Remplace la tentative « liste polymorphe » du 26/09 (leçon : builder
+      natif opaque, jamais de structure polymorphe comme accumulateur).
+- [ ] Reste : `MakeNoZero`/`chaînes` résiduels (~4 Go, autres `joinWith` du
+      compilateur).
 
 ### 8 — Finitions
 

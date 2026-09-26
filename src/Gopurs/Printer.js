@@ -31,3 +31,8 @@ export const escapeGoStringImpl = function(s) {
   }
   return out;
 };
+
+// Builder natif (opaque) pour l'imprimante « writer ».
+export const newBuilderImpl = () => ({ parts: [] });
+export const pushImpl = (builder) => (chunk) => { builder.parts.push(chunk); return builder; };
+export const toStringImpl = (builder) => builder.parts.join('');
