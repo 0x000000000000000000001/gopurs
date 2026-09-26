@@ -359,19 +359,32 @@ renderReboxFunction codegenStateRef metadata modNameStr generatedFuncs (Tuple sr
             let
               env1 = Map.fromFoldable (Array.zip info.vars a1)
               env2 = Map.fromFoldable (Array.zip info.vars a2)
-              assignments = String.joinWith "\n" (Array.mapWithIndex
+              coerced = Array.mapWithIndex
                 (\i fieldExprType ->
                   let
+                    fieldName = "V" <> show i
                     genericTy = GoTypes.structFieldGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors info.vars modNameStr fieldExprType
                     t1 = GoTypes.instantiateGenericGoType env1 genericTy
                     t2 = GoTypes.instantiateGenericGoType env2 genericTy
                   in
-                    "\t\tout.V" <> show i <> " = " <> printGoExpr (coerceGoExpr codegenStateRef modNameStr (GoStructAccess (GoVar "in") ("V" <> show i)) t1 t2)
+                    Tuple fieldName (coerceGoExpr codegenStateRef modNameStr (GoStructAccess (GoVar "in") fieldName) t1 t2)
                 )
-                info.fields)
+                info.fields
+              -- Copie identique champ à champ : les deux instanciations ont
+              -- le même layout (paramètres de type fantômes), et les champs
+              -- sont immuables (`Rc` n'est jamais lu). Un cast de pointeur
+              -- évite l'allocation et la copie par appel.
+              allIdentity = Array.all (\(Tuple fieldName e) -> printGoExpr e == "in." <> fieldName) coerced
+              bodyText = if allIdentity then
+                "\tif in == nil { return nil }\n\treturn (*" <> s2 <> ")(unsafe.Pointer(in))"
+              else
+                let
+                  assignments = String.joinWith "\n" (map (\(Tuple fieldName e) -> "\t\tout." <> fieldName <> " = " <> printGoExpr e) coerced)
+                in
+                  "\tif in == nil { return nil }\n\tout := &" <> s2 <> "{}\n" <> assignments <> "\n\treturn out"
               funcBody = GoFunctionDecl
                 { name: funcName, params: [ Tuple "in" srcT ], result: destT
-                , body: rawGo ("\tif in == nil { return nil }\n\tout := &" <> s2 <> "{}\n" <> assignments <> "\n\treturn out")
+                , body: rawGo bodyText
                 }
             in
               Just (Tuple funcName funcBody)

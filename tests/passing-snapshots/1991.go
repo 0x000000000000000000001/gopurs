@@ -3,6 +3,7 @@ package purescript
 import (
 	gopurs_runtime "gopurs/output/gopurs_runtime"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 var cache_Main_singleton gopurs_runtime.Value
@@ -264,16 +265,12 @@ func Rebox_Main_4179793454_4291402899(in *Constructor_Data_Semigroup_Semigroup[g
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Semigroup_Semigroup[[]int64]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Semigroup_Semigroup[[]int64])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_4291402899_4179793454(in *Constructor_Data_Semigroup_Semigroup[[]int64]) *Constructor_Data_Semigroup_Semigroup[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Semigroup_Semigroup[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Semigroup_Semigroup[gopurs_runtime.Value])(unsafe.Pointer(in))
 }

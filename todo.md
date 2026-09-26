@@ -60,15 +60,32 @@ au décodage JSON d'altbak.
 
 ### 1 — Reboxing et dictionnaires (le plus gros poste)
 
-- [ ] Classer les 647 `Rebox_*` par module appelant et par paire de types
-      (`go tool pprof -peek`), identifier les 10 patterns dominants.
-- [ ] Comprendre pourquoi deux représentations d'un même dictionnaire
-      coexistent (adaptateurs par module, spécialisations, forwarders).
-- [ ] Étendre les passes codegen existantes (`ClosedDictionaries`,
-      déspecialisation des forwarders FFI, hissage) aux patterns identifiés,
-      en réutilisant la campagne JSON d'altbak comme banc d'essai rapide.
-- [ ] Mesurer chaque passe séparément : allocations avant/après + parité.
-- [ ] Objectif indicatif : −30 Go séquentiel (41,3 → ~30 Go).
+- [x] **Diagnostic (26/09)** : le reboxage est partout (tous les modules PBO) et
+      vient d'instanciations distinctes de structs génériques dont les
+      paramètres de type sont **fantômes** (aucun champ ne les utilise). Sur le
+      Go généré de b8x : 12 764 des 20 579 rebox sont des copies identiques
+      champ à champ (structs à 1 champ le plus souvent).
+- [x] **Passe codegen** : `renderReboxFunction` émet un cast
+      `(*Dest)(unsafe.Pointer(in))` quand toutes les affectations sont
+      identiques (champs immuables, `Rc` jamais lu dans le Go généré).
+      Validation : diff exhaustif de la sortie b8x — **12 764 conversions,
+      0 autre changement** (déclarations et imports compris), 4 fixtures
+      exécutées OK, `b -c` OK.
+      Mesures : rebox **41,3 → 31,4 Go**, total **214,2 → 208,8 Go**,
+      backend **69,9 → 64,3 s** (`b -c`), **68,8 → 64,7 s** (8 workers),
+      **101,8 → 87,6 s** (séquentiel). Parité séquentiel ↔ parallèle
+      re-vérifiée (0 divergence) sur le nouveau compilateur.
+- [ ] Rebox restants (31,4 Go) : conversions réelles, par ex.
+      `Tuple[string, Value]` → `Tuple[Value, Value]` et boxage d'arrays
+      élément par élément (`Value{… UnsafePtr: Rebox_…}`). Pistes : construire
+      directement le type cible dans les coercions d'arrays (éviter box/unbox
+      par élément), mutualiser les paires identiques entre modules,
+      canonicaliser les instanciations à paramètres fantômes.
+- [ ] Dictionnaires `RecordDict*` (19,1 Go) : identifier les constructions
+      répétées et les hisser.
+- [x] Objectif indicatif : −30 Go séquentiel → **dépassé sur la partie
+      rebox identité** (−9,9 Go sur le compilateur mesuré ; les 12 764 call
+      sites du code utilisateur neuf n'allouent plus).
 
 ### 2 — `Array.bind` / `concatMap` (~24,5 Go cumulés)
 
