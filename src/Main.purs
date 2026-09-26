@@ -23,6 +23,7 @@ import Data.Int as Int
 import Data.List as List
 import Data.List (List)
 import Data.Traversable (traverse)
+import Data.Tuple (Tuple(..))
 import Data.Maybe (Maybe(..), isJust, fromMaybe)
 import Data.Map as Map
 
@@ -94,6 +95,7 @@ loadAndPrepareModules args = do
          , ctorTypes
          , globalTypes
          , globalFunctions: Map.empty
+         , ffiFunctions: Map.empty
          , classDeclsFields
          , reboxFields
          , monomorphizedModules
@@ -109,26 +111,39 @@ emitModule :: CodegenMetadata -> Maybe String -> Module Ann -> BackendModule -> 
 emitModule metadata mbFfiDir (Module coreFnMod) backendMod = defer \_ -> do
   let modNameStr = unwrap backendMod.name
   let safeModName = String.replaceAll (Pattern ".") (Replacement "_") modNameStr
+  let foreigns = Map.toUnfoldable backendMod.foreign
 
-  let translated = translateWithFunctions metadata backendMod
-  FS.writeTextFile UTF8 ("output/purescript/" <> safeModName <> ".go") translated.code
-
-  when (Array.length (Array.fromFoldable backendMod.foreign) > 0) do
+  -- Les déclarations FFI sont lues avant la traduction : leurs signatures
+  -- natives alimentent l'abaissement des appels saturés (worker direct).
+  ffiMb <- if Array.length foreigns > 0 then do
     ffiPathMb <- liftEffect $ findFfiFile ".go" [] mbFfiDir modNameStr (Just coreFnMod.path)
     case ffiPathMb of
       Just ffiPath -> do
         content <- FS.readTextFile UTF8 ffiPath
         ffi <- liftEffect $ prepareFfi { moduleName: modNameStr, path: ffiPath } (safeModName <> "_") content
+        pure (Just (Tuple content ffi))
+      Nothing -> pure Nothing
+    else pure Nothing
 
+  let ffiFunctions = case ffiMb of
+        Just (Tuple _ ffi) -> FfiBridge.ffiFunctionInfos safeModName foreigns ffi.decls
+        Nothing -> Map.empty
+
+  let translated = translateWithFunctions (metadata { ffiFunctions = ffiFunctions }) backendMod
+  FS.writeTextFile UTF8 ("output/purescript/" <> safeModName <> ".go") translated.code
+
+  when (Array.length foreigns > 0) do
+    case ffiMb of
+      Just (Tuple content ffi) -> do
         let finalPkgLine = "package purescript"
         let hasImport = String.contains (Pattern "\"gopurs/output/gopurs_runtime\"") content
         let importLine = if hasImport then "" else "import \"gopurs/output/gopurs_runtime\"\n"
 
-        let newContent = finalPkgLine <> "\n\n" <> importLine <> "\n" <> ffi.content <> "\n\n// --- Auto-generated FFI wrappers ---\n" <> FfiBridge.generateFfiBridge safeModName backendMod.dataDecls ffi.decls (Map.toUnfoldable backendMod.foreign)
+        let newContent = finalPkgLine <> "\n\n" <> importLine <> "\n" <> ffi.content <> "\n\n// --- Auto-generated FFI wrappers ---\n" <> FfiBridge.generateFfiBridge safeModName backendMod.dataDecls ffi.decls foreigns
         FS.writeTextFile UTF8 ("output/purescript/" <> safeModName <> "_ffi.go") newContent
       Nothing -> do
 
-        let dummyContent = "package purescript\n\nimport \"gopurs/output/gopurs_runtime\"\n\n" <> FfiBridge.generateFfiBridge safeModName backendMod.dataDecls [] (Map.toUnfoldable backendMod.foreign)
+        let dummyContent = "package purescript\n\nimport \"gopurs/output/gopurs_runtime\"\n\n" <> FfiBridge.generateFfiBridge safeModName backendMod.dataDecls [] foreigns
         FS.writeTextFile UTF8 ("output/purescript/" <> safeModName <> "_ffi.go") dummyContent
 
   pure translated.functions
@@ -171,6 +186,7 @@ main = launchAff_ $ Metrics.measure "backend total" \_ -> do
       , ctorTypes: prepared.ctorTypes
       , globalTypes: prepared.globalTypes
       , globalFunctions: prepared.globalFunctions
+      , ffiFunctions: prepared.ffiFunctions
       , classDeclsFields: prepared.classDeclsFields
       , reboxFields: prepared.reboxFields
       }

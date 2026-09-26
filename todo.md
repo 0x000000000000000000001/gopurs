@@ -99,6 +99,18 @@ au décodage JSON d'altbak.
       *native call lowering* pour les FFI connues (arguments concrets) retirerait
       ces boîtes — 2 par comparaison de chaîne ici, mais le levier est général
       (hashString, comparateurs, etc.).
+- [x] **MVP du native call lowering (26/09)** : `FfiBridge.ffiFunctionInfos`
+      enregistre les FFI **pures** à résultat **concret** (signature native
+      convertible) dans `globalFunctions`, ce qui fait passer
+      `directFunction`/`nativeCall` par le **worker Go typé** sans enveloppe.
+      Effet premier : `hashString` (cross-module, chaud) n'a plus aucun appel
+      par enveloppe (30 → 0). Mesures : allocations **194,2 → 191,4 Go**,
+      temps inchangés (84,9 s séquentiel / 60,0 s 8 workers), **parité j1/d8
+      OK**, fixtures exécutées, compilateur reconstruit.
+      Écarté en v1 : FFI `Effect`, paramètres fonction/map/opaques, résultats
+      `any`/`[]any`/void. Extensions v2 : boxer les résultats `any`, gérer les
+      paramètres fonction (callbacks), `int`/`map`, et étendre la
+      reconnaissance (appels via dictionnaires).
 - [ ] Rebox restants (29,3 Go) : conversions réelles, par ex.
       `Tuple[string, Value]` → `Tuple[Value, Value]` et boxage d'arrays
       élément par élément (`Value{… UnsafePtr: Rebox_…}`). Pistes : construire

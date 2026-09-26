@@ -1,19 +1,24 @@
 module Gopurs.FfiBridge
   ( generateFfiBridge
+  , ffiFunctionInfos
   ) where
 
 import Prelude
 
 import Data.Array as Array
+import Data.Map (Map)
+import Data.Map as Map
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Newtype (unwrap)
 import Data.String as String
 import Data.String.Pattern (Pattern(..), Replacement(..))
+import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
 import Gopurs.FfiTypes (TypeNode(..), FfiDecl)
-import Gopurs.GoAst (capitalize, sanitizeName)
+import Gopurs.CodegenState (FunctionInfo)
+import Gopurs.GoAst (GoType(..), capitalize, sanitizeName)
 import Gopurs.GoTypes (isClosedRowTail, printExprType)
-import PureScript.Backend.Optimizer.CoreFn (DataDecl, ExprType(..), Ident)
+import PureScript.Backend.Optimizer.CoreFn (DataDecl, ExprType(..), Ident(..))
 
 printTypeNode :: TypeNode -> String
 printTypeNode (TNamed n) = n
@@ -428,3 +433,89 @@ generateFfiBridge modNameStr dataDecls decls foreigns =
           "var " <> exportName <> " = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value { panic(\"FFI not implemented: " <> pursName <> "\"); return gopurs_runtime.Value{} })"
         Just d ->
           "var " <> exportName <> " = " <> generateWrapperFunc dataDecls d mbTast
+
+
+-- | Infos d'appel natif pour les FFI d'un module : le worker Go typé
+-- | (`fullName`, tel qu'il est embarqué dans `<Module>_ffi.go`), ses
+-- | paramètres/résultat natifs et son arité. `directFunction`/`nativeCall`
+-- | s'en servent pour abaisser les appels saturés en appels directs, sans
+-- | passer par l'enveloppe `_Gopurs_*` (qui reste utilisée pour les usages
+-- | comme valeur).
+-- |
+-- | Prudence : seules les FFI **pures**, à résultat **concret**, dont toute
+-- | la signature native se convertit sans perte sont abaissées. Les FFI
+-- | `Effect`, les paramètres fonction/map/opaques et les résultats `any` ou
+-- | sans retour restent sur l'enveloppe (sémantique inchangée).
+ffiFunctionInfos :: String -> Array (Tuple Ident (Maybe ExprType)) -> Array FfiDecl -> Map String FunctionInfo
+ffiFunctionInfos modNameStr foreigns decls = Map.fromFoldable (Array.mapMaybe mk foreigns)
+  where
+  mk (Tuple (Ident name) mbTast) = case mbTast of
+    Just tast | isPureConcreteResult tast -> do
+      decl <- matchDecl name
+      args <- traverse typeNodeToGoType decl.args
+      ret <- case decl.ret of
+        Just t | not (containsInterface t) -> typeNodeToGoType t
+        _ -> Nothing
+      if Array.length decl.args >= 1 && not decl.isVar then
+        Just (Tuple name { fullName: decl.name, fArgs: args, fRet: ret, arity: Array.length decl.args })
+      else Nothing
+    _ -> Nothing
+
+  matchDecl pursName =
+    let
+      fallback1 = modNameStr <> "_" <> capitalize pursName
+      fallback2 = fallback1 <> "_"
+      findDecl n = Array.find (\d -> d.name == n) decls
+    in
+      case findDecl fallback1 of
+        Just d -> Just d
+        Nothing -> findDecl fallback2
+
+typeNodeToGoType :: TypeNode -> Maybe GoType
+typeNodeToGoType = case _ of
+  TNamed "gopurs_runtime.Value" -> Just TypeValue
+  TNamed "string" -> Just TypeString
+  TNamed "int64" -> Just TypeInt64
+  TNamed "float64" -> Just TypeFloat64
+  TNamed "bool" -> Just TypeBool
+  TNamed "uint32" -> Just TypeUint32
+  TNamed "any" -> Just (TypeInterface "any")
+  TNamed "interface{}" -> Just (TypeInterface "interface{}")
+  TArray elem -> TypeNativeArray <$> typeNodeToGoType elem
+  _ -> Nothing
+
+containsInterface :: TypeNode -> Boolean
+containsInterface = case _ of
+  TNamed "any" -> true
+  TNamed "interface{}" -> true
+  TArray elem -> containsInterface elem
+  _ -> false
+
+-- | Résultat PureScript « simple » : ni fonction, ni `Effect`, ni
+-- | quantifié/contraint, ni variable de type.
+isPureConcreteResult :: ExprType -> Boolean
+isPureConcreteResult = case _ of
+  -- Le type PS d'une FFI fonctionnelle est un `Func` ; on teste son résultat.
+  Func _ ret -> isPureConcreteResult ret
+  ForAll _ _ -> false
+  ConstrainedType _ _ -> false
+  TypeVar _ -> false
+  Any -> false
+  other -> not (mentionsEffect other)
+
+mentionsEffect :: ExprType -> Boolean
+mentionsEffect = case _ of
+  ADT fullName _ args -> String.contains (Pattern "Effect") fullName || Array.any mentionsEffect args
+  TypeApp c args -> mentionsEffect c || Array.any mentionsEffect args
+  Array t -> mentionsEffect t
+  Func args ret -> Array.any mentionsEffect args || mentionsEffect ret
+  Record row -> mentionsEffect row
+  Row fields tail ->
+    Array.any (\(Tuple _ v) -> mentionsEffect v) fields
+      || case tail of
+        Just t -> mentionsEffect t
+        Nothing -> false
+  ForAll _ t -> mentionsEffect t
+  ConstrainedType constraints t ->
+    Array.any (\(Tuple _ as) -> Array.any mentionsEffect as) constraints || mentionsEffect t
+  _ -> false

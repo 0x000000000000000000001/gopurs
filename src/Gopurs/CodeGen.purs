@@ -32,7 +32,7 @@ import Gopurs.FunctionFusion (optimizeFunctionProducers)
 import Gopurs.ImmediateApplications (optimizeImmediateApplications)
 import Gopurs.Ownership as Ownership
 import Gopurs.GoTypes (exprTypeToGenericGoType, exprTypeToGoType, instantiateGenericGoType)
-import Gopurs.CodegenState (CodegenMetadata, CodegenState)
+import Gopurs.CodegenState (CodegenMetadata, CodegenState, FunctionInfo)
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr, generateReboxFunctions, getUnboxedADT)
 import Gopurs.PrimitiveExprs as PrimitiveExprs
 import Gopurs.RecordExprs as RecordExprs
@@ -71,7 +71,22 @@ translateWithFunctions metadata inputMod =
       Ref.new { declarations: ModuleDeclarations.constructors metadata modNameStr mod, globalId: 0, reboxPairs: Set.empty }
 
     preparedBindings = ModuleBindings.prepare metadata modNameStr mod
-    moduleFunctions = Map.union owned.functions preparedBindings.functions
+    -- Les FFI du module sont connues par ident brut ; les fonctions locales
+    -- gardent la priorité en cas d'homonymie.
+    ffiLocalFunctions = Map.fromFoldable (map (\(Tuple k v) -> Tuple (sanitizeName k) v) (Map.toUnfoldable metadata.ffiFunctions :: Array (Tuple String FunctionInfo)))
+    moduleFunctions = Map.union (Map.union owned.functions preparedBindings.functions) ffiLocalFunctions
+    normalFunctions = Map.fromFoldable $ Array.concatMap
+      (\group -> Array.mapMaybe
+        (\(Tuple (Ident name) _) -> do
+          info <- Map.lookup (sanitizeName name) moduleFunctions
+          guard (info.arity >= 1 && info.arity <= 10)
+          pure (Tuple (unwrap mod.name <> "." <> name) info))
+        group.bindings)
+      preparedBindings.bindings
+    -- FFI exportées sous `<Module>.<ident>` pour les appelants d'autres modules.
+    ffiGlobalFunctions = Map.fromFoldable $ Array.mapMaybe
+      (\(Tuple (Ident name) _) -> map (Tuple (unwrap mod.name <> "." <> name)) (Map.lookup name metadata.ffiFunctions))
+      (Map.toUnfoldable mod.foreign)
 
     Tuple allDeclsAst helpers = unsafePerformEffect do
       let
@@ -94,14 +109,7 @@ translateWithFunctions metadata inputMod =
 
   in
     { code: printGoFile goFile
-    , functions: Map.fromFoldable $ Array.concatMap
-        (\group -> Array.mapMaybe
-          (\(Tuple (Ident name) _) -> do
-            info <- Map.lookup (sanitizeName name) moduleFunctions
-            guard (info.arity >= 1 && info.arity <= 10)
-            pure (Tuple (unwrap mod.name <> "." <> name) info))
-          group.bindings)
-        preparedBindings.bindings
+    , functions: Map.union normalFunctions ffiGlobalFunctions
     }
 
 translateInContext :: TranslateExpr

@@ -34,6 +34,8 @@ type CodegenMetadataRow =
   , enumCtors :: Set.Set String
   , globalTypes :: Map.Map String ExprType
   , globalFunctions :: Map String FunctionInfo
+  -- | Infos d'appel natif des FFI du module courant (clé : ident brut).
+  , ffiFunctions :: Map String FunctionInfo
   , classDeclsFields :: Map String { vars :: Array String, fields :: Array { name :: String, "type" :: ExprType } }
   , reboxFields :: ReboxFieldIndex
   )
