@@ -28,7 +28,7 @@ import Data.Set as Set
 import Data.String.Pattern (Pattern(..), Replacement(..))
 import Data.String as String
 import Data.Newtype (unwrap)
-import PureScript.Backend.Optimizer.Builder (buildModules)
+import PureScript.Backend.Optimizer.Builder (buildModules, buildModulesParallel)
 import PureScript.Backend.Optimizer.Convert (BackendModule)
 import PureScript.Backend.Optimizer.Semantics.Foreign (coreForeignSemantics)
 import PureScript.Backend.Optimizer.CoreFn (Module(..), Ann, Ident(..))
@@ -139,7 +139,10 @@ main = launchAff_ $ Metrics.measure "backend total" \_ -> do
   globalFunctionsRef <- liftEffect (Ref.new Map.empty)
   configuredEmitJobs <- liftEffect (Process.lookupEnv "GOPURS_EMIT_JOBS")
   configuredPipeline <- liftEffect (Process.lookupEnv "GOPURS_PIPELINE")
-  let emitJobs = max 1 (min 64 (fromMaybe 8 (configuredEmitJobs >>= Int.fromString)))
+  configuredPboJobs <- liftEffect (Process.lookupEnv "GOPURS_PBO_JOBS")
+  let
+    emitJobs = max 1 (min 64 (fromMaybe 8 (configuredEmitJobs >>= Int.fromString)))
+    pboJobs = max 1 (min 64 (fromMaybe 1 (configuredPboJobs >>= Int.fromString)))
 
   Metrics.measure "runtime" \_ -> do
     _ <- attempt (FS.mkdir "output/gopurs_runtime")
@@ -183,27 +186,33 @@ main = launchAff_ $ Metrics.measure "backend total" \_ -> do
 
   Metrics.measure "optimize + emit" \_ ->
     bracket (liftEffect makeEmitter) _.cancel \emitter -> do
-      buildModules
-        { directives: directives
-        , analyzeCustom: \_ _ -> Nothing
-        , foreignSemantics: coreForeignSemantics
-        , traceIdents: Set.empty
-        , rewriteLimit: fromMaybe 10_000 args.mbRewriteLimit
-        , onPrepareModule: \env (Module m) -> do
-            when (env.moduleIndex `mod` 100 == 0) $ liftEffect $ Console.error $
-              "[gopurs] optimize + emit: module " <> show (env.moduleIndex + 1)
-                <> "/" <> show env.moduleCount <> " (" <> unwrap m.name <> ")"
-            pure (Module m)
-        -- Regenerate every module and its FFI output on each invocation.
-        , onSkipModule: \_ _ -> pure Nothing
-        , onCodegenModule: \_ coreFnModule backendMod _ -> do
-            emitter.enqueue
-              { name: backendMod.name
-              , imports: backendMod.imports
-              , value: { coreFnModule, backendMod }
-              }
-        }
-        (List.fromFoldable monomorphizedModules)
+      let
+        buildOpts =
+          { directives: directives
+          , analyzeCustom: \_ _ -> Nothing
+          , foreignSemantics: coreForeignSemantics
+          , traceIdents: Set.empty
+          , rewriteLimit: fromMaybe 10_000 args.mbRewriteLimit
+          , onPrepareModule: \env (Module m) -> do
+              when (env.moduleIndex `mod` 100 == 0) $ liftEffect $ Console.error $
+                "[gopurs] optimize + emit: module " <> show (env.moduleIndex + 1)
+                  <> "/" <> show env.moduleCount <> " (" <> unwrap m.name <> ")"
+              pure (Module m)
+          -- Regenerate every module and its FFI output on each invocation.
+          , onSkipModule: \_ _ -> pure Nothing
+          , onCodegenModule: \_ coreFnModule backendMod _ -> do
+              emitter.enqueue
+                { name: backendMod.name
+                , imports: backendMod.imports
+                , value: { coreFnModule, backendMod }
+                }
+          }
+        sortedModules = List.fromFoldable monomorphizedModules
+        runJobs jobs = parTraverse (\job -> defer job) jobs
+      if pboJobs <= 1 then
+        buildModules buildOpts sortedModules
+      else
+        buildModulesParallel { jobs: pboJobs, runJobs } buildOpts sortedModules
       emitter.finish
 
   _ <- Metrics.measure "entry points" \_ -> traverse
