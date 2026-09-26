@@ -117,8 +117,18 @@ au décodage JSON d'altbak.
       compile), **parité j1/d8 OK**. Totaux d'allocations : 191-194 Go selon
       les fenêtres (profil échantillonné) ; **temps à re-mesurer machine au
       repos** (charge > 100 lors des derniers passages).
-- [ ] Extensions v3 : paramètres fonction (callbacks `Map`/`arrayBind`),
-      FFI `Effect`, `int`/`map`/opaques.
+- [x] **v3 (paramètres fonction, 27/09)** : les FFI avec **callbacks** sont
+      abaissées via un worker unique `<Nom>_nativeWorker` (les fonctions PS
+      arrivent en `Value` et sont adaptées par `unwrapValueToFunc`, y compris
+      les **newtypes opaques** `Pattern`/`Replacement` et les **retours
+      fonction** via `wrapReturn`). Deux bugs corrigés au passage (panic
+      « apply non-function » : extraction opaque manquante, puis retour
+      fonction boxing au lieu de `wrapReturn`). Sur b8x : **463 sites
+      abaissés**. Parité j1/d8 OK. Effet mesuré dans le bruit (±2 Go,
+      fenêtres chargées) ; les FFI `Map` restent peu couvertes car leurs
+      appels passent par les dictionnaires (chemin dynamique).
+- [ ] Extensions v4 : FFI `Effect` (débloque le builder d'imprimante),
+      abaissement des appels via dictionnaires, `int`/`map`/opaques.
 - [ ] Rebox restants (29,3 Go) : conversions réelles, par ex.
       `Tuple[string, Value]` → `Tuple[Value, Value]` et boxage d'arrays
       élément par élément (`Value{… UnsafePtr: Rebox_…}`). Pistes : construire

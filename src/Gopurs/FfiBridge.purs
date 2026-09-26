@@ -454,11 +454,14 @@ ffiFunctionInfos modNameStr foreigns decls = Map.fromFoldable (Array.mapMaybe mk
     Just tast | isPureConcreteResult tast -> do
       decl <- matchFfiDecl modNameStr decls name
       guardArity decl
-      args <- traverse typeNodeToGoType decl.args
-      ret <- ffiReturnType decl.ret tast
-      let boxedResult = ffiNeedsValueWorker decl.ret
+      let workerNeeded = hasFunctionParam decl.args || ffiNeedsValueWorker decl.ret
+      args <- traverse (ffiArgType workerNeeded) decl.args
+      ret <- case decl.ret of
+        Just t | workerNeeded -> if isRecordResult tast then Nothing else Just TypeValue
+        Just t -> typeNodeToGoType t
+        Nothing -> if isRecordResult tast then Nothing else Just TypeValue
       Just (Tuple name
-        { fullName: (if boxedResult then decl.name <> "_nativeValue" else decl.name)
+        { fullName: (if workerNeeded then decl.name <> "_nativeWorker" else decl.name)
         , fArgs: args
         , fRet: ret
         , arity: Array.length decl.args
@@ -468,38 +471,87 @@ ffiFunctionInfos modNameStr foreigns decls = Map.fromFoldable (Array.mapMaybe mk
 -- | Workers « résultat boxé » pour les FFI appariées dont le retour natif
 -- | n'est pas directement une `Value` (any/interface/[]any/void). Générés
 -- | dans `_ffi.go` ; le site d'appel les utilise via `ffiFunctionInfos`.
-ffiValueWorkers :: String -> Array (Tuple Ident (Maybe ExprType)) -> Array FfiDecl -> String
-ffiValueWorkers modNameStr foreigns decls = String.joinWith "\n" (Array.mapMaybe worker foreigns)
+ffiValueWorkers :: String -> Array DataDecl -> Array (Tuple Ident (Maybe ExprType)) -> Array FfiDecl -> String
+ffiValueWorkers modNameStr dataDecls foreigns decls = String.joinWith "\n" (Array.mapMaybe worker foreigns)
   where
   worker (Tuple (Ident name) mbTast) = case mbTast of
     Just tast | isPureConcreteResult tast -> do
       decl <- matchFfiDecl modNameStr decls name
       guardArity decl
-      if ffiNeedsValueWorker decl.ret then Just (declCode decl) else Nothing
+      if hasFunctionParam decl.args || ffiNeedsValueWorker decl.ret then Just (declCode decl tast) else Nothing
     _ -> Nothing
 
-  callCode d = d.name <> "(" <> String.joinWith ", " (Array.mapWithIndex (\i _ -> "arg" <> show i) d.args) <> ")"
+  callCode d = d.name <> "(" <> String.joinWith ", " (Array.mapWithIndex (\i _ -> "go_arg" <> show i) d.args) <> ")"
 
-  boxBody t call = case t of
-    TArray _ ->
-      [ "\tgo_res := " <> call
-      , "\tout := make([]gopurs_runtime.Value, len(go_res))"
-      , "\tfor i, v := range go_res { out[i] = gopurs_runtime.Box(v) }"
-      , "\treturn gopurs_runtime.Array(out)"
-      ]
-    _ -> [ "\treturn gopurs_runtime.Box(" <> call <> ")" ]
+  declCode d tast =
+    "func " <> d.name <> "_nativeWorker(" <> paramsCode d <> ") gopurs_runtime.Value {\n"
+      <> String.joinWith "\n" (Array.concat (argLines d tast))
+      <> "\n" <> callLine d
+      <> "\n" <> String.joinWith "\n" (retLines d tast d.ret)
+      <> "\n}\n"
 
-  declCode d =
-    case d.ret of
-      Nothing ->
-        "func " <> d.name <> "_nativeValue(" <> paramsCode d <> ") gopurs_runtime.Value {\n"
-          <> "\t" <> callCode d <> "\n"
-          <> "\treturn gopurs_runtime.Value{}\n}\n"
-      Just t ->
-        "func " <> d.name <> "_nativeValue(" <> paramsCode d <> ") gopurs_runtime.Value {\n"
-          <> String.joinWith "\n" (boxBody t (callCode d)) <> "\n}\n"
+  paramsCode d = String.joinWith ", " (Array.mapWithIndex (\i t -> "arg" <> show i <> " " <> case t of
+    TFunc _ _ -> "gopurs_runtime.Value"
+    _ -> printTypeNode t) d.args)
 
-  paramsCode d = String.joinWith ", " (Array.mapWithIndex (\i t -> "arg" <> show i <> " " <> printTypeNode t) d.args)
+  argLines d tast = Array.mapWithIndex (\i t -> case t of
+    TFunc _ _ ->
+      let
+        typStr = printTypeNode t
+        tastArg = getTastArgType tast i
+        -- Newtypes opaques (Pattern, Replacement...) : la valeur PS porte une
+        -- fonction native, pas une fonction PS boxée (cf. `processArg`).
+        isOpaque = case tastArg of
+          Just (ADT _ _ _) -> true
+          Just Any -> true
+          Just (TypeVar _) -> true
+          _ -> false
+      in
+        if isOpaque && not (isStandardPursFunc t) then
+          [ "\tgo_arg" <> show i <> " := (*(*any)(arg" <> show i <> ".UnsafePtr)).(" <> typStr <> ")" ]
+        else
+          let
+            adapter = unwrapValueToFunc dataDecls t tastArg ("arg" <> show i) 0 0
+            indented = String.replaceAll (Pattern "\n") (Replacement "\n\t") adapter
+          in
+            [ "\tgo_arg" <> show i <> " := " <> indented ]
+    _ -> [ "\tgo_arg" <> show i <> " := arg" <> show i ]) d.args
+
+  callLine d = case d.ret of
+    Nothing -> "\t" <> callCode d
+    Just _ -> "\tgo_res := " <> callCode d
+
+  retLines d tast ret = case ret of
+    Nothing -> [ "\treturn gopurs_runtime.Value{}" ]
+    Just t -> case t of
+      -- Retour fonction : même conversion que l'enveloppe (`wrapReturn`).
+      TFunc _ _ ->
+        let
+          wrapped = wrapReturn dataDecls t (getTastReturnType tast) "go_res"
+          indented = String.replaceAll (Pattern "\n") (Replacement "\n\t") wrapped
+        in
+          [ "\treturn " <> indented ]
+      TArray elem | not (isRuntimeValueNode elem) ->
+        [ "\tout := make([]gopurs_runtime.Value, len(go_res))"
+        , "\tfor i, v := range go_res { out[i] = gopurs_runtime.Box(v) }"
+        , "\treturn gopurs_runtime.Array(out)"
+        ]
+      _ -> [ "\treturn gopurs_runtime.Box(go_res)" ]
+
+ffiArgType :: Boolean -> TypeNode -> Maybe GoType
+ffiArgType workerNeeded t = case t of
+  TFunc _ _ | workerNeeded -> Just TypeValue
+  _ -> typeNodeToGoType t
+
+hasFunctionParam :: Array TypeNode -> Boolean
+hasFunctionParam = Array.any case _ of
+  TFunc _ _ -> true
+  _ -> false
+
+isRuntimeValueNode :: TypeNode -> Boolean
+isRuntimeValueNode = case _ of
+  TNamed "gopurs_runtime.Value" -> true
+  _ -> false
 
 guardArity :: FfiDecl -> Maybe Unit
 guardArity d = if not d.isVar && Array.length d.args >= 1 then Just unit else Nothing
