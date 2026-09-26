@@ -169,14 +169,21 @@ au décodage JSON d'altbak.
 
 ### 7 — Imprimante et chaînes (~11 Go)
 
-- [ ] **Writer natif** : `printGoExpr` alloue une chaîne par nœud (cumul
-      ~7,1 Go) plus les buffers `strings.Join` (~4,5 Go via
-      `MakeNoZero`). Une version « writer » (morceaux poussés dans un builder
-      unique, jointure finale) supprimerait ces intermédiaires — mais le pont
-      FFI boxe chaque morceau poussé (pas d'appel natif direct depuis PS) : le
-      gain dépend donc du nombre de morceaux. **Prérequis** : le *native call
-      lowering* des FFI (voir §1) ou un builder manipulé en appels directs.
-      Byte-parité vérifiable par diff des 2 974 fichiers générés.
+- [x] **Tentative « writer PS » (26/09) — REVERTÉE** : accumulation des morceaux
+      dans `Data.List (List String)` + jointure finale unique. Byte-parité
+      parfaite (fixtures et sortie b8x identiques au bit), mais **catastrophe
+      d'allocations** : la liste accumulée subit une conversion récursive
+      (rebox) de sa queue à chaque `emit` — profil à **6 297 Go** dont
+      **3 656 Go dans un seul rebox `Gopurs_Printer_*`** (quadratique).
+      Revert propre (`git revert`), performances revenues. Conclusion : le
+      writer doit passer par un **builder natif** avec appels FFI directs (ou
+      une structure non polymorphe), pas par une liste polymorphe.
+- [ ] **Writer natif** (conditionnel) : `printGoExpr` alloue une chaîne par
+      nœud (cumul ~7,1 Go) plus les buffers `strings.Join` (~4,5 Go via
+      `MakeNoZero`). Un builder unique supprimerait ces intermédiaires — mais
+      le pont FFI boxe chaque morceau poussé : **prérequis** = *native call
+      lowering* des FFI (voir §1). Byte-parité vérifiable par diff des
+      2 974 fichiers générés.
 - [ ] À défaut : réduire les `<>` par branche dans `printGoExpr`, vérifier
       `escapeGoString`, et le pré-dimensionnement des `strings.Join`.
 
