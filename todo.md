@@ -42,6 +42,10 @@ Ce fichier remplace le journal de la session précédente (sauvegardé dans
 Les constructeurs `Maybe`/`Either` sont marginaux ici (~0,7 Go), contrairement
 au décodage JSON d'altbak.
 
+> Après les deux passes d'optimisation (rebox identité → cast, comparaison
+> native `EvalRef`) : total **204,7 Go** séquentiel et backend **64,2 s**
+> (8 workers, 63,8-64,8 s sur 3 passages).
+
 ## Enseignements
 
 1. **L'hypothèse « perfs du code compilé gopurs » est confirmée** : le
@@ -75,17 +79,36 @@ au décodage JSON d'altbak.
       backend **69,9 → 64,3 s** (`b -c`), **68,8 → 64,7 s** (8 workers),
       **101,8 → 87,6 s** (séquentiel). Parité séquentiel ↔ parallèle
       re-vérifiée (0 divergence) sur le nouveau compilateur.
-- [ ] Rebox restants (31,4 Go) : conversions réelles, par ex.
+- [x] **Deuxième passe (26/09) — comparaison native des clés `EvalRef`** :
+      `Ord EvalRef`/`Eq EvalRef` comparaient `Qualified Ident` via l'instance
+      polymorphe `ordQualified`, compilée déspecialisée en `Value` par le
+      backend : chaque comparaison construisait un dictionnaire
+      `Ord (Qualified Value)` et reboxait les deux idents (2,46 Go, le plus
+      gros rebox restant à lui seul). Les instances sont maintenant manuelles
+      et monomorphes (`compareQualifiedIdent`/`eqQualifiedIdent` dans
+      `CoreFn`, `compareMaybeIdents`/`compareLevels` dans `Semantics`, FFI
+      natives `compareStringImpl`/`compareIntImpl` dans `FfiSupport`).
+      Validation : sortie b8x **identique au bit** (0 fichier modifié), tests
+      PBO 140/140, symbole chaud disparu du profil.
+      Mesures : total **208,8 → 204,7 Go**, séquentiel **87,6 → 86,8 s**,
+      8 workers **64,7 → 64,2 s** (63,8-64,8 sur 3 passages).
+- [ ] **Limite identifiée — le pont FFI boxe** : toute FFI PS↔Go passe par un
+      wrapper `_Gopurs_*` `Value` (unbox/box par appel). Une passe de
+      *native call lowering* pour les FFI connues (arguments concrets) retirerait
+      ces boîtes — 2 par comparaison de chaîne ici, mais le levier est général
+      (hashString, comparateurs, etc.).
+- [ ] Rebox restants (29,3 Go) : conversions réelles, par ex.
       `Tuple[string, Value]` → `Tuple[Value, Value]` et boxage d'arrays
       élément par élément (`Value{… UnsafePtr: Rebox_…}`). Pistes : construire
       directement le type cible dans les coercions d'arrays (éviter box/unbox
       par élément), mutualiser les paires identiques entre modules,
       canonicaliser les instanciations à paramètres fantômes.
-- [ ] Dictionnaires `RecordDict*` (19,1 Go) : identifier les constructions
+- [ ] Dictionnaires `RecordDict*` (19,3 Go) : identifier les constructions
       répétées et les hisser.
-- [x] Objectif indicatif : −30 Go séquentiel → **dépassé sur la partie
-      rebox identité** (−9,9 Go sur le compilateur mesuré ; les 12 764 call
-      sites du code utilisateur neuf n'allouent plus).
+- [x] Objectif indicatif : −30 Go séquentiel → **atteint** (214,2 → 204,7 Go
+      avec les deux passes, dont −9,9 Go de rebox identité sur le compilateur
+      et −2,1 Go de rebox `Qualified` ; les 12 764 call sites du code
+      utilisateur neuf n'allouent plus).
 
 ### 2 — `Array.bind` / `concatMap` (~24,5 Go cumulés)
 
