@@ -42,9 +42,11 @@ Ce fichier remplace le journal de la session précédente (sauvegardé dans
 Les constructeurs `Maybe`/`Either` sont marginaux ici (~0,7 Go), contrairement
 au décodage JSON d'altbak.
 
-> Après les deux passes d'optimisation (rebox identité → cast, comparaison
-> native `EvalRef`) : total **204,7 Go** séquentiel et backend **64,2 s**
-> (8 workers, 63,8-64,8 s sur 3 passages).
+> Après les quatre passes d'optimisation (rebox identité → cast, comparaison
+> native `EvalRef`, `arrayBind` sur `[]Value`, degré B-tree 6) : total
+> **194,2 Go** séquentiel ; backend **84,4 s** (séquentiel) et **60,0-60,8 s**
+> (8 workers) ; **`b -c` complet 145,4 s dont backend 61,3 s**
+> (optimize+emit 35,0 s contre 41,7 s en début de session).
 
 ## Enseignements
 
@@ -167,8 +169,16 @@ au décodage JSON d'altbak.
 
 ### 7 — Imprimante et chaînes (~11 Go)
 
-- [ ] `printGoExpr`/`printGoFile` : pré-dimensionner les `strings.Builder`
-      ou réutiliser des buffers ; mesurer `MakeNoZero`.
+- [ ] **Writer natif** : `printGoExpr` alloue une chaîne par nœud (cumul
+      ~7,1 Go) plus les buffers `strings.Join` (~4,5 Go via
+      `MakeNoZero`). Une version « writer » (morceaux poussés dans un builder
+      unique, jointure finale) supprimerait ces intermédiaires — mais le pont
+      FFI boxe chaque morceau poussé (pas d'appel natif direct depuis PS) : le
+      gain dépend donc du nombre de morceaux. **Prérequis** : le *native call
+      lowering* des FFI (voir §1) ou un builder manipulé en appels directs.
+      Byte-parité vérifiable par diff des 2 974 fichiers générés.
+- [ ] À défaut : réduire les `<>` par branche dans `printGoExpr`, vérifier
+      `escapeGoString`, et le pré-dimensionnement des `strings.Join`.
 
 ### 8 — Finitions
 
