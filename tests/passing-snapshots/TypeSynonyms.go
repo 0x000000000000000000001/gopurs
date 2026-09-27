@@ -110,41 +110,27 @@ func Get_Main_test1() gopurs_runtime.Value {
 				return gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(a_0, "fst"), "fst")
 			}), gopurs_runtime.Func2(func(a_0 gopurs_runtime.Value, c_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return func() gopurs_runtime.Value {
-					orig := func() struct {
+					orig := func(record struct {
+						fst gopurs_runtime.Value
+						snd gopurs_runtime.Value
+					}) struct {
 						fst struct {
 							fst gopurs_runtime.Value
 							snd gopurs_runtime.Value
 						}
 						snd gopurs_runtime.Value
 					} {
-						orig := func() gopurs_runtime.Value {
-							orig := struct {
-								fst gopurs_runtime.Value
-								snd gopurs_runtime.Value
-							}{func() gopurs_runtime.Value {
-								orig := struct {
-									fst gopurs_runtime.Value
-									snd gopurs_runtime.Value
-								}{c_1, gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(a_0, "fst"), "snd")}
-								_ = orig
-								return gopurs_runtime.RecordDict2("fst", "snd", orig.fst, orig.snd)
-							}(), gopurs_runtime.RecordGet(a_0, "snd")}
-							_ = orig
-							return gopurs_runtime.RecordDict2("fst", "snd", orig.fst, orig.snd)
-						}()
-						_ = orig
-						clone := struct {
+						return struct {
 							fst struct {
 								fst gopurs_runtime.Value
 								snd gopurs_runtime.Value
 							}
 							snd gopurs_runtime.Value
-						}{}
-						clone.fst = func() struct {
+						}{func() struct {
 							fst gopurs_runtime.Value
 							snd gopurs_runtime.Value
 						} {
-							orig := gopurs_runtime.RecordGet(orig, "fst")
+							orig := record.fst
 							_ = orig
 							clone := struct {
 								fst gopurs_runtime.Value
@@ -153,10 +139,18 @@ func Get_Main_test1() gopurs_runtime.Value {
 							clone.fst = gopurs_runtime.RecordGet(orig, "fst")
 							clone.snd = gopurs_runtime.RecordGet(orig, "snd")
 							return clone
-						}()
-						clone.snd = gopurs_runtime.RecordGet(orig, "snd")
-						return clone
-					}()
+						}(), record.snd}
+					}(struct {
+						fst gopurs_runtime.Value
+						snd gopurs_runtime.Value
+					}{func() gopurs_runtime.Value {
+						orig := struct {
+							fst gopurs_runtime.Value
+							snd gopurs_runtime.Value
+						}{c_1, gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(a_0, "fst"), "snd")}
+						_ = orig
+						return gopurs_runtime.RecordDict2("fst", "snd", orig.fst, orig.snd)
+					}(), gopurs_runtime.RecordGet(a_0, "snd")})
 					_ = orig
 					return gopurs_runtime.RecordDict2("fst", "snd", func() gopurs_runtime.Value {
 						orig := orig.fst

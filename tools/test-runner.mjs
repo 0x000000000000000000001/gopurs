@@ -47,6 +47,12 @@ async function main() {
     if (options.help) { console.log(help); return; }
     const { selected, skipped } = selectFixtures(root, options);
     if (options.list) { for (const file of selected) console.log(file); return; }
+    // Fixture compilations are tiny: use the sequential PBO builder so the
+    // suite stays deterministic. The parallel scheduler shares the Aff runtime
+    // with corpus builds and has a rare deadlock on failure paths (todo.md);
+    // sequential and parallel output is byte-identical (validated on b8x).
+    process.env.GOPURS_PBO_JOBS ??= "1";
+    process.env.GOPURS_PREPARE_JOBS ??= "1";
     console.log(`Selected ${selected.length} fixtures; ${skipped.length} excluded.`);
     for (const file of skipped) console.log(`=> Skipping ${basename(file)} (excluded)`);
     const packages = corePackages(root);
@@ -61,6 +67,9 @@ async function main() {
       await runFixture(fixture, options, processes);
       console.log("   [OK]");
       passed++;
+      // Keep the run bounded on disk: a successful fixture needs no workspace
+      // unless the caller asked to inspect every run.
+      if (!options.keep) rmSync(fixture.directory, { recursive: true, force: true });
     }
     success = true;
     console.log(`Summary: ${passed} passed, 0 failed.`);

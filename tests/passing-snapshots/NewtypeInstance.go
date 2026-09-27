@@ -11,7 +11,7 @@ var once_Main_show sync.Once
 
 func Get_Main_show() gopurs_runtime.Value {
 	once_Main_show.Do(func() {
-		cache_Main_show = Call_Data_Show_show(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showInt()))))
+		cache_Main_show = Get_Data_Show_showIntImpl()
 	})
 	return cache_Main_show
 }
@@ -409,31 +409,36 @@ var once_Main_main sync.Once
 
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
-		cache_Main_main = gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showStringImpl(), gopurs_runtime.Str("test")).StrVal())), gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.RecordGet(Call_Data_Show_showArray(gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showString()))))}), "show"), gopurs_runtime.Apply(gopurs_runtime.RecordGet(Get_Main_singletonY(), "singleton"), gopurs_runtime.Str("test"))).StrVal())), gopurs_runtime.Func(func(_dollar___unused_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.RecordGet(Call_Main_showMyArray(gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showString()))))}), "show"), func() gopurs_runtime.Value {
-					arr_val_arrayMap7 := func() gopurs_runtime.Value {
-						arr := []int64{int64(1), int64(2), int64(3)}
-						boxed := make([]gopurs_runtime.Value, len(arr))
-						for i, v := range arr {
-							boxed[i] = gopurs_runtime.Int(v)
-						}
-						return gopurs_runtime.Array(boxed)
-					}()
-					_ = arr_val_arrayMap7
-					arr_go_arrayMap7 := (*[]gopurs_runtime.Value)(arr_val_arrayMap7.UnsafePtr)
-					_ = arr_go_arrayMap7
-					res_go_arrayMap7 := make([]gopurs_runtime.Value, len(*arr_go_arrayMap7))
-					_ = res_go_arrayMap7
-					for i_arrayMap7, v_arrayMap7 := range *arr_go_arrayMap7 {
-						res_go_arrayMap7[i_arrayMap7] = gopurs_runtime.Apply(Call_Data_Show_show(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showInt())))), v_arrayMap7)
+		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
+			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Data_Show_ShowStringImpl(gopurs_runtime.Str("test").StrVal())))
+			_ = __local_var_0_0
+			__local_var_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
+			_ = __local_var_1_1
+			__local_var_2_2 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Rebox_Main_1386611502_1953100407(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Main_showY())).V0, gopurs_runtime.Apply(gopurs_runtime.RecordGet(Get_Main_singletonY(), "singleton"), gopurs_runtime.Str("test"))).StrVal())), gopurs_runtime.Value{})
+			_ = __local_var_2_2
+			__local_var_3_3 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.RecordGet(Call_Main_showMyArray(gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showString()))))}), "show"), func() gopurs_runtime.Value {
+				arr_val_arrayMap6 := func() gopurs_runtime.Value {
+					arr := []int64{int64(1), int64(2), int64(3)}
+					boxed := make([]gopurs_runtime.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = gopurs_runtime.Int(v)
 					}
-					return gopurs_runtime.Array(res_go_arrayMap7)
-				}()).StrVal())), gopurs_runtime.Func(func(_dollar___unused_2 gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
-				}))
-			}))
-		}))
+					return gopurs_runtime.Array(boxed)
+				}()
+				_ = arr_val_arrayMap6
+				arr_go_arrayMap6 := (*[]gopurs_runtime.Value)(arr_val_arrayMap6.UnsafePtr)
+				_ = arr_go_arrayMap6
+				res_go_arrayMap6 := make([]gopurs_runtime.Value, len(*arr_go_arrayMap6))
+				_ = res_go_arrayMap6
+				for i_arrayMap6, v_arrayMap6 := range *arr_go_arrayMap6 {
+					res_go_arrayMap6[i_arrayMap6] = gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), v_arrayMap6)
+				}
+				return gopurs_runtime.Array(res_go_arrayMap6)
+			}()).StrVal())), gopurs_runtime.Value{})
+			_ = __local_var_3_3
+			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
+		})
 	})
 	return cache_Main_main
 }
@@ -565,10 +570,10 @@ func Call_Main_MyWriter(x_0_loop *Constructor_Data_Tuple_Tuple[gopurs_runtime.Va
 	return func() struct {
 		V0 gopurs_runtime.Value
 		V1 gopurs_runtime.Value
-	} { _v := gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(x_0)}; _p := (*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(_v.UnsafePtr); return struct {
+	} { _v := gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(x_0)}; return struct {
 		V0 gopurs_runtime.Value
 		V1 gopurs_runtime.Value
-	}{V0: _p.V0, V1: _p.V1} }()
+	}{V0: (*(*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(_v.UnsafePtr)).V0, V1: (*(*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(_v.UnsafePtr)).V1} }()
 }
 
 func Call_Main_X(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
@@ -717,264 +722,180 @@ func Rebox_Main_1140313009_3790796878(in *Constructor_Data_Eq_Eq[string]) *Const
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Eq_Eq[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Eq_Eq[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1356436936_1386611502(in *Constructor_Data_Show_Show[[]gopurs_runtime.Value]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1386611502_1356436936(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[[]gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[[]gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[[]gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1386611502_1514099793(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[string] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[string]{}
-	out.V0 = in.V0
-	return out
-}
-
-func Rebox_Main_1386611502_1636311157(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[int64] {
-	if in == nil {
-		return nil
-	}
-	out := &Constructor_Data_Show_Show[int64]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[string])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1386611502_1953100407(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[[]string] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[[]string]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[[]string])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1439734649_894579924(in *Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]) *Constructor_Control_Applicative_Applicative[*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Control_Applicative_Applicative[*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	return out
+	return (*Constructor_Control_Applicative_Applicative[*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1514099793_1386611502(in *Constructor_Data_Show_Show[string]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
-}
-
-func Rebox_Main_1636311157_1386611502(in *Constructor_Data_Show_Show[int64]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
-	if in == nil {
-		return nil
-	}
-	out := &Constructor_Data_Show_Show[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1953100407_1386611502(in *Constructor_Data_Show_Show[[]string]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_2157788756_2568689657(in *Constructor_Control_Monad_Monad[*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]]) *Constructor_Control_Monad_Monad[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Control_Monad_Monad[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	return out
+	return (*Constructor_Control_Monad_Monad[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_2269342371_2655323845(in *Constructor_Main_Singleton[gopurs_runtime.Value, gopurs_runtime.Value]) *Constructor_Main_Singleton[gopurs_runtime.Value, []gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_Singleton[gopurs_runtime.Value, []gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Main_Singleton[gopurs_runtime.Value, []gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_2363162019_2812149806(in *Constructor_Data_Functor_Functor[*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]]) *Constructor_Data_Functor_Functor[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Functor_Functor[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Functor_Functor[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_2406510097_4177771502(in *Constructor_Data_Ord_Ord[string]) *Constructor_Data_Ord_Ord[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Ord_Ord[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	return out
+	return (*Constructor_Data_Ord_Ord[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_2495815764_2748095225(in *Constructor_Control_Bind_Bind[*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]]) *Constructor_Control_Bind_Bind[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Control_Bind_Bind[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	return out
+	return (*Constructor_Control_Bind_Bind[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_2568689657_2157788756(in *Constructor_Control_Monad_Monad[gopurs_runtime.Value]) *Constructor_Control_Monad_Monad[*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Control_Monad_Monad[*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	return out
+	return (*Constructor_Control_Monad_Monad[*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_2655323845_2269342371(in *Constructor_Main_Singleton[gopurs_runtime.Value, []gopurs_runtime.Value]) *Constructor_Main_Singleton[gopurs_runtime.Value, gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_Singleton[gopurs_runtime.Value, gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Main_Singleton[gopurs_runtime.Value, gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_2708463828_3741347833(in *Constructor_Control_Apply_Apply[*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]]) *Constructor_Control_Apply_Apply[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Control_Apply_Apply[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	return out
+	return (*Constructor_Control_Apply_Apply[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_2748095225_2495815764(in *Constructor_Control_Bind_Bind[gopurs_runtime.Value]) *Constructor_Control_Bind_Bind[*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Control_Bind_Bind[*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	return out
+	return (*Constructor_Control_Bind_Bind[*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_2812149806_2363162019(in *Constructor_Data_Functor_Functor[gopurs_runtime.Value]) *Constructor_Data_Functor_Functor[*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Functor_Functor[*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Functor_Functor[*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_2812149806_562069347(in *Constructor_Data_Functor_Functor[gopurs_runtime.Value]) *Constructor_Data_Functor_Functor[uint32] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Functor_Functor[uint32]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Functor_Functor[uint32])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_2915227655_72788106(in *Constructor_Main_MonadWriter[gopurs_runtime.Value, *Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]]) *Constructor_Main_MonadWriter[gopurs_runtime.Value, gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_MonadWriter[gopurs_runtime.Value, gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	out.V2 = in.V2
-	return out
+	return (*Constructor_Main_MonadWriter[gopurs_runtime.Value, gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_3741347833_2708463828(in *Constructor_Control_Apply_Apply[gopurs_runtime.Value]) *Constructor_Control_Apply_Apply[*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Control_Apply_Apply[*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	return out
+	return (*Constructor_Control_Apply_Apply[*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_3790796878_1140313009(in *Constructor_Data_Eq_Eq[gopurs_runtime.Value]) *Constructor_Data_Eq_Eq[string] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Eq_Eq[string]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Eq_Eq[string])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_4177771502_2406510097(in *Constructor_Data_Ord_Ord[gopurs_runtime.Value]) *Constructor_Data_Ord_Ord[string] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Ord_Ord[string]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	return out
+	return (*Constructor_Data_Ord_Ord[string])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_562069347_2812149806(in *Constructor_Data_Functor_Functor[uint32]) *Constructor_Data_Functor_Functor[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Functor_Functor[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Functor_Functor[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_72788106_2915227655(in *Constructor_Main_MonadWriter[gopurs_runtime.Value, gopurs_runtime.Value]) *Constructor_Main_MonadWriter[gopurs_runtime.Value, *Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_MonadWriter[gopurs_runtime.Value, *Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	out.V2 = in.V2
-	return out
+	return (*Constructor_Main_MonadWriter[gopurs_runtime.Value, *Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_894579924_1439734649(in *Constructor_Control_Applicative_Applicative[*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]]) *Constructor_Control_Applicative_Applicative[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	return out
+	return (*Constructor_Control_Applicative_Applicative[gopurs_runtime.Value])(unsafe.Pointer(in))
 }

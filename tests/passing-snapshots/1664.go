@@ -10,7 +10,7 @@ var once_Main_pure sync.Once
 
 func Get_Main_pure() gopurs_runtime.Value {
 	once_Main_pure.Do(func() {
-		cache_Main_pure = Call_Control_Applicative_pure(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](Get_Effect_applicativeEffect()))
+		cache_Main_pure = Get_Effect_pureE()
 	})
 	return cache_Main_pure
 }
@@ -126,6 +126,6 @@ func Call_Main_test(v_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 		v1_1_0 := gopurs_runtime.Apply(v_0, gopurs_runtime.Value{})
 		_ = v1_1_0
-		return gopurs_runtime.Apply(gopurs_runtime.Apply(Call_Control_Applicative_pure(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](Get_Effect_applicativeEffect())), Get_Data_Unit_unit()), gopurs_runtime.Value{})
+		return Get_Data_Unit_unit()
 	})
 }

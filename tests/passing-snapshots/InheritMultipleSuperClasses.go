@@ -11,7 +11,9 @@ var once_Main_identity sync.Once
 
 func Get_Main_identity() gopurs_runtime.Value {
 	once_Main_identity.Do(func() {
-		cache_Main_identity = Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))})
+		cache_Main_identity = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_identity(x_0_box)
+		})
 	})
 	return cache_Main_identity
 }
@@ -21,7 +23,9 @@ var once_Main_identity1 sync.Once
 
 func Get_Main_identity1() gopurs_runtime.Value {
 	once_Main_identity1.Do(func() {
-		cache_Main_identity1 = Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))})
+		cache_Main_identity1 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_identity1(x_0_box)
+		})
 	})
 	return cache_Main_identity1
 }
@@ -31,7 +35,9 @@ var once_Main_identity2 sync.Once
 
 func Get_Main_identity2() gopurs_runtime.Value {
 	once_Main_identity2.Do(func() {
-		cache_Main_identity2 = Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))})
+		cache_Main_identity2 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_identity2(x_0_box)
+		})
 	})
 	return cache_Main_identity2
 }
@@ -41,7 +47,9 @@ var once_Main_identity3 sync.Once
 
 func Get_Main_identity3() gopurs_runtime.Value {
 	once_Main_identity3.Do(func() {
-		cache_Main_identity3 = Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))})
+		cache_Main_identity3 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_identity3(x_0_box)
+		})
 	})
 	return cache_Main_identity3
 }
@@ -196,6 +204,30 @@ func init() {
 	}
 }
 
+func Call_Main_identity(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var x_0 gopurs_runtime.Value = x_0_loop
+	_ = x_0
+	return x_0
+}
+
+func Call_Main_identity1(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var x_0 gopurs_runtime.Value = x_0_loop
+	_ = x_0
+	return x_0
+}
+
+func Call_Main_identity2(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var x_0 gopurs_runtime.Value = x_0_loop
+	_ = x_0
+	return x_0
+}
+
+func Call_Main_identity3(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var x_0 gopurs_runtime.Value = x_0_loop
+	_ = x_0
+	return x_0
+}
+
 func Call_Main_Eg2_dollar_Dict(x_0_loop struct {
 	Functor0 gopurs_runtime.Value
 	Functor1 gopurs_runtime.Value
@@ -231,23 +263,31 @@ func Call_Main_Eg1_dollar_Dict(x_0_loop struct {
 func Call_Main_g2(dictEg2_0_loop *Constructor_Main_Eg2[gopurs_runtime.Value, gopurs_runtime.Value]) gopurs_runtime.Value {
 	var dictEg2_0 *Constructor_Main_Eg2[gopurs_runtime.Value, gopurs_runtime.Value] = dictEg2_0_loop
 	_ = dictEg2_0
-	return gopurs_runtime.Apply(gopurs_runtime.RecordGet(gopurs_runtime.Apply(dictEg2_0.V0, gopurs_runtime.Value{}), "map"), Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))}))
+	return gopurs_runtime.Apply(gopurs_runtime.RecordGet(gopurs_runtime.Apply(dictEg2_0.V0, gopurs_runtime.Value{}), "map"), gopurs_runtime.Func(func(x_1 gopurs_runtime.Value) gopurs_runtime.Value {
+		return x_1
+	}))
 }
 
 func Call_Main_g1(dictEg1_0_loop *Constructor_Main_Eg1[gopurs_runtime.Value, gopurs_runtime.Value]) gopurs_runtime.Value {
 	var dictEg1_0 *Constructor_Main_Eg1[gopurs_runtime.Value, gopurs_runtime.Value] = dictEg1_0_loop
 	_ = dictEg1_0
-	return gopurs_runtime.Apply(gopurs_runtime.RecordGet(gopurs_runtime.Apply(dictEg1_0.V1, gopurs_runtime.Value{}), "map"), Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))}))
+	return gopurs_runtime.Apply(gopurs_runtime.RecordGet(gopurs_runtime.Apply(dictEg1_0.V1, gopurs_runtime.Value{}), "map"), gopurs_runtime.Func(func(x_1 gopurs_runtime.Value) gopurs_runtime.Value {
+		return x_1
+	}))
 }
 
 func Call_Main_f2(dictEg2_0_loop *Constructor_Main_Eg2[gopurs_runtime.Value, gopurs_runtime.Value]) gopurs_runtime.Value {
 	var dictEg2_0 *Constructor_Main_Eg2[gopurs_runtime.Value, gopurs_runtime.Value] = dictEg2_0_loop
 	_ = dictEg2_0
-	return gopurs_runtime.Apply(gopurs_runtime.RecordGet(gopurs_runtime.Apply(dictEg2_0.V1, gopurs_runtime.Value{}), "map"), Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))}))
+	return gopurs_runtime.Apply(gopurs_runtime.RecordGet(gopurs_runtime.Apply(dictEg2_0.V1, gopurs_runtime.Value{}), "map"), gopurs_runtime.Func(func(x_1 gopurs_runtime.Value) gopurs_runtime.Value {
+		return x_1
+	}))
 }
 
 func Call_Main_f1(dictEg1_0_loop *Constructor_Main_Eg1[gopurs_runtime.Value, gopurs_runtime.Value]) gopurs_runtime.Value {
 	var dictEg1_0 *Constructor_Main_Eg1[gopurs_runtime.Value, gopurs_runtime.Value] = dictEg1_0_loop
 	_ = dictEg1_0
-	return gopurs_runtime.Apply(gopurs_runtime.RecordGet(gopurs_runtime.Apply(dictEg1_0.V0, gopurs_runtime.Value{}), "map"), Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))}))
+	return gopurs_runtime.Apply(gopurs_runtime.RecordGet(gopurs_runtime.Apply(dictEg1_0.V0, gopurs_runtime.Value{}), "map"), gopurs_runtime.Func(func(x_1 gopurs_runtime.Value) gopurs_runtime.Value {
+		return x_1
+	}))
 }

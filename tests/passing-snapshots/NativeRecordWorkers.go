@@ -175,7 +175,7 @@ var once_Main_eqRec2 sync.Once
 
 func Get_Main_eqRec2() gopurs_runtime.Value {
 	once_Main_eqRec2.Do(func() {
-		cache_Main_eqRec2 = gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_2543566495_3790796878(Rebox_Main_3790796878_2543566495(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Call_Data_Eq_eqRec(gopurs_runtime.Value{}, Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Get_Data_Eq_eqRowNil(), gopurs_runtime.Value{}, Get_Main_nestedIsSymbol(), Call_Data_Eq_eqRec(gopurs_runtime.Value{}, Call_Data_Eq_eqRowCons(Get_Data_Eq_eqRowNil(), gopurs_runtime.Value{}, Get_Main_retainedIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqString()))))}))), gopurs_runtime.Value{}, Get_Main_nameIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqString()))))}), gopurs_runtime.Value{}, Get_Main_idIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))))}), gopurs_runtime.Value{}, Get_Main_beforeIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_687527510_3790796878(Rebox_Main_3790796878_687527510(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqNumber()))))}), gopurs_runtime.Value{}, Get_Main_activeIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_2737952170_3790796878(Rebox_Main_3790796878_2737952170(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqBoolean()))))}))))))}
+		cache_Main_eqRec2 = gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_2543566495_3790796878(Rebox_Main_3790796878_2543566495(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Call_Data_Eq_eqRec(gopurs_runtime.Value{}, Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Get_Data_Eq_eqRowNil(), gopurs_runtime.Value{}, Get_Main_nestedIsSymbol(), Call_Data_Eq_eqRec(gopurs_runtime.Value{}, Get_Main_eqRowCons1())), gopurs_runtime.Value{}, Get_Main_nameIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqString()))))}), gopurs_runtime.Value{}, Get_Main_idIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))))}), gopurs_runtime.Value{}, Get_Main_beforeIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_687527510_3790796878(Rebox_Main_3790796878_687527510(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqNumber()))))}), gopurs_runtime.Value{}, Get_Main_activeIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_2737952170_3790796878(Rebox_Main_3790796878_2737952170(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqBoolean()))))}))))))}
 	})
 	return cache_Main_eqRec2
 }
@@ -205,7 +205,7 @@ var once_Main_showRecord2 sync.Once
 
 func Get_Main_showRecord2() gopurs_runtime.Value {
 	once_Main_showRecord2.Do(func() {
-		cache_Main_showRecord2 = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_872707775_1386611502(Rebox_Main_1386611502_872707775(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Call_Data_Show_showRecord(gopurs_runtime.Value{}, gopurs_runtime.Value{}, Call_Data_Show_showRecordFieldsCons(Get_Main_activeIsSymbol(), Call_Data_Show_showRecordFieldsCons(Get_Main_beforeIsSymbol(), Call_Data_Show_showRecordFieldsCons(Get_Main_idIsSymbol(), Call_Data_Show_showRecordFieldsCons(Get_Main_nameIsSymbol(), Call_Data_Show_showRecordFieldsConsNil(Get_Main_nestedIsSymbol(), Call_Data_Show_showRecord(gopurs_runtime.Value{}, gopurs_runtime.Value{}, Call_Data_Show_showRecordFieldsConsNil(Get_Main_retainedIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showString()))))}))), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showString()))))}), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showInt()))))}), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_3263178038_1386611502(Rebox_Main_1386611502_3263178038(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showNumber()))))}), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_2735895690_1386611502(Rebox_Main_1386611502_2735895690(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showBoolean()))))}))))))}
+		cache_Main_showRecord2 = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_872707775_1386611502(Rebox_Main_1386611502_872707775(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Call_Data_Show_showRecord(gopurs_runtime.Value{}, gopurs_runtime.Value{}, Call_Data_Show_showRecordFieldsCons(Get_Main_activeIsSymbol(), Call_Data_Show_showRecordFieldsCons(Get_Main_beforeIsSymbol(), Call_Data_Show_showRecordFieldsCons(Get_Main_idIsSymbol(), Call_Data_Show_showRecordFieldsCons(Get_Main_nameIsSymbol(), Call_Data_Show_showRecordFieldsConsNil(Get_Main_nestedIsSymbol(), Call_Data_Show_showRecord(gopurs_runtime.Value{}, gopurs_runtime.Value{}, Get_Main_showRecordFieldsConsNil())), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showString()))))}), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showInt()))))}), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_3263178038_1386611502(Rebox_Main_1386611502_3263178038(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showNumber()))))}), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_2735895690_1386611502(Rebox_Main_1386611502_2735895690(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showBoolean()))))}))))))}
 	})
 	return cache_Main_showRecord2
 }
@@ -251,7 +251,7 @@ var once_Main_eqRec3 sync.Once
 
 func Get_Main_eqRec3() gopurs_runtime.Value {
 	once_Main_eqRec3.Do(func() {
-		cache_Main_eqRec3 = gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_2267788589_3790796878(Rebox_Main_3790796878_2267788589(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Call_Data_Eq_eqRec(gopurs_runtime.Value{}, Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Get_Data_Eq_eqRowNil(), gopurs_runtime.Value{}, Get_Main_zIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqString()))))}), gopurs_runtime.Value{}, Get_Main_valuesIsSymbol(), Call_Data_Eq_eqArray(gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))))})), gopurs_runtime.Value{}, Get_Main_tailIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_2737952170_3790796878(Rebox_Main_3790796878_2737952170(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqBoolean()))))}), gopurs_runtime.Value{}, Get_Main_nameIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqString()))))}), gopurs_runtime.Value{}, Get_Main_idIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))))}), gopurs_runtime.Value{}, Get_Main_activeIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_2737952170_3790796878(Rebox_Main_3790796878_2737952170(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqBoolean()))))}))))))}
+		cache_Main_eqRec3 = gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_2267788589_3790796878(Rebox_Main_3790796878_2267788589(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Call_Data_Eq_eqRec(gopurs_runtime.Value{}, Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Get_Data_Eq_eqRowNil(), gopurs_runtime.Value{}, Get_Main_zIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqString()))))}), gopurs_runtime.Value{}, Get_Main_valuesIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_378698611_3790796878(Rebox_Main_3790796878_378698611(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Main_eqArray()))))}), gopurs_runtime.Value{}, Get_Main_tailIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_2737952170_3790796878(Rebox_Main_3790796878_2737952170(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqBoolean()))))}), gopurs_runtime.Value{}, Get_Main_nameIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqString()))))}), gopurs_runtime.Value{}, Get_Main_idIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))))}), gopurs_runtime.Value{}, Get_Main_activeIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_2737952170_3790796878(Rebox_Main_3790796878_2737952170(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqBoolean()))))}))))))}
 	})
 	return cache_Main_eqRec3
 }
@@ -261,7 +261,7 @@ var once_Main_showRecord3 sync.Once
 
 func Get_Main_showRecord3() gopurs_runtime.Value {
 	once_Main_showRecord3.Do(func() {
-		cache_Main_showRecord3 = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1517968077_1386611502(Rebox_Main_1386611502_1517968077(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Call_Data_Show_showRecord(gopurs_runtime.Value{}, gopurs_runtime.Value{}, Call_Data_Show_showRecordFieldsCons(Get_Main_activeIsSymbol(), Call_Data_Show_showRecordFieldsCons(Get_Main_idIsSymbol(), Call_Data_Show_showRecordFieldsCons(Get_Main_nameIsSymbol(), Call_Data_Show_showRecordFieldsCons(Get_Main_tailIsSymbol(), Call_Data_Show_showRecordFieldsCons(Get_Main_valuesIsSymbol(), Call_Data_Show_showRecordFieldsConsNil(Get_Main_zIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showString()))))}), Call_Data_Show_showArray(gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showInt()))))})), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_2735895690_1386611502(Rebox_Main_1386611502_2735895690(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showBoolean()))))}), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showString()))))}), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showInt()))))}), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_2735895690_1386611502(Rebox_Main_1386611502_2735895690(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showBoolean()))))}))))))}
+		cache_Main_showRecord3 = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1517968077_1386611502(Rebox_Main_1386611502_1517968077(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Call_Data_Show_showRecord(gopurs_runtime.Value{}, gopurs_runtime.Value{}, Call_Data_Show_showRecordFieldsCons(Get_Main_activeIsSymbol(), Call_Data_Show_showRecordFieldsCons(Get_Main_idIsSymbol(), Call_Data_Show_showRecordFieldsCons(Get_Main_nameIsSymbol(), Call_Data_Show_showRecordFieldsCons(Get_Main_tailIsSymbol(), Call_Data_Show_showRecordFieldsCons(Get_Main_valuesIsSymbol(), Call_Data_Show_showRecordFieldsConsNil(Get_Main_zIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showString()))))}), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1469227923_1386611502(Rebox_Main_1386611502_1469227923(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Main_showArray()))))}), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_2735895690_1386611502(Rebox_Main_1386611502_2735895690(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showBoolean()))))}), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showString()))))}), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showInt()))))}), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_2735895690_1386611502(Rebox_Main_1386611502_2735895690(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showBoolean()))))}))))))}
 	})
 	return cache_Main_showRecord3
 }
@@ -271,7 +271,7 @@ var once_Main_eqRec4 sync.Once
 
 func Get_Main_eqRec4() gopurs_runtime.Value {
 	once_Main_eqRec4.Do(func() {
-		cache_Main_eqRec4 = gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1830338253_3790796878(Rebox_Main_3790796878_1830338253(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Call_Data_Eq_eqRec(gopurs_runtime.Value{}, Call_Data_Eq_eqRowCons(Get_Data_Eq_eqRowNil(), gopurs_runtime.Value{}, Get_Main_retainedIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqString()))))}))))))}
+		cache_Main_eqRec4 = gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1830338253_3790796878(Rebox_Main_3790796878_1830338253(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Call_Data_Eq_eqRec(gopurs_runtime.Value{}, Get_Main_eqRowCons1())))))}
 	})
 	return cache_Main_eqRec4
 }
@@ -281,7 +281,7 @@ var once_Main_showRecord4 sync.Once
 
 func Get_Main_showRecord4() gopurs_runtime.Value {
 	once_Main_showRecord4.Do(func() {
-		cache_Main_showRecord4 = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_920949869_1386611502(Rebox_Main_1386611502_920949869(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Call_Data_Show_showRecord(gopurs_runtime.Value{}, gopurs_runtime.Value{}, Call_Data_Show_showRecordFieldsConsNil(Get_Main_retainedIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showString()))))}))))))}
+		cache_Main_showRecord4 = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_920949869_1386611502(Rebox_Main_1386611502_920949869(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Call_Data_Show_showRecord(gopurs_runtime.Value{}, gopurs_runtime.Value{}, Get_Main_showRecordFieldsConsNil())))))}
 	})
 	return cache_Main_showRecord4
 }
@@ -449,7 +449,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = __local_var_7_7
 			__local_var_8_8 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_5_5), gopurs_runtime.Value{})
 			_ = __local_var_8_8
-			return gopurs_runtime.Apply(gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___627669702("", struct {
+			__local_var_9_9 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
 			}{Call_Worker_score(func(record struct {
@@ -486,11 +486,41 @@ func Get_Main_main() gopurs_runtime.Value {
 				clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
 				clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
 				return clone
-			}())), int64(2851)}), gopurs_runtime.Func(func(_dollar___unused_9 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___627669702("", struct {
-					actual   int64
-					expected int64
-				}{Call_Worker_score(func(record struct {
+			}())), int64(2851)}), gopurs_runtime.Value{})
+			_ = __local_var_9_9
+			__local_var_10_10 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
+				actual   int64
+				expected int64
+			}{Call_Worker_score(func(record struct {
+				active bool
+				before float64
+				id     int64
+				name   string
+				nested struct {
+					retained string
+				}
+			}) struct {
+				active bool
+				id     int64
+				name   string
+			} {
+				return struct {
+					active bool
+					id     int64
+					name   string
+				}{record.active, record.id, record.name}
+			}(func() struct {
+				active bool
+				before float64
+				id     int64
+				name   string
+				nested struct {
+					retained string
+				}
+			} {
+				orig := __local_var_7_7
+				_ = orig
+				clone := struct {
 					active bool
 					before float64
 					id     int64
@@ -498,542 +528,507 @@ func Get_Main_main() gopurs_runtime.Value {
 					nested struct {
 						retained string
 					}
-				}) struct {
-					active bool
-					id     int64
-					name   string
+				}{}
+				clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
+				clone.before = gopurs_runtime.RecordGet(orig, "before").FloatVal()
+				clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
+				clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
+				clone.nested = func() struct {
+					retained string
 				} {
-					return struct {
-						active bool
-						id     int64
-						name   string
-					}{record.active, record.id, record.name}
-				}(func() struct {
-					active bool
-					before float64
-					id     int64
-					name   string
-					nested struct {
-						retained string
-					}
-				} {
-					orig := __local_var_7_7
+					orig := gopurs_runtime.RecordGet(orig, "nested")
 					_ = orig
 					clone := struct {
-						active bool
-						before float64
-						id     int64
-						name   string
-						nested struct {
-							retained string
-						}
-					}{}
-					clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
-					clone.before = gopurs_runtime.RecordGet(orig, "before").FloatVal()
-					clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
-					clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
-					clone.nested = func() struct {
 						retained string
-					} {
-						orig := gopurs_runtime.RecordGet(orig, "nested")
-						_ = orig
-						clone := struct {
-							retained string
-						}{}
-						clone.retained = gopurs_runtime.RecordGet(orig, "retained").StrVal()
-						return clone
-					}()
+					}{}
+					clone.retained = gopurs_runtime.RecordGet(orig, "retained").StrVal()
 					return clone
-				}())), int64(-195)}), gopurs_runtime.Func(func(_dollar___unused_10 gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___627669702("", struct {
-						actual   int64
-						expected int64
-					}{Call_Worker_score(func(record struct {
-						active bool
-						id     int64
-						name   string
-						tail   bool
-						values []int64
-						z      string
-					}) struct {
-						active bool
-						id     int64
-						name   string
-					} {
-						return struct {
-							active bool
-							id     int64
-							name   string
-						}{record.active, record.id, record.name}
-					}(func() struct {
-						active bool
-						id     int64
-						name   string
-						tail   bool
-						values []int64
-						z      string
-					} {
-						orig := __local_var_8_8
-						_ = orig
-						clone := struct {
-							active bool
-							id     int64
-							name   string
-							tail   bool
-							values []int64
-							z      string
-						}{}
-						clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
-						clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
-						clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
-						clone.tail = (gopurs_runtime.RecordGet(orig, "tail").IntVal) != (0)
-						clone.values = func() []int64 {
-							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "values").UnsafePtr)
-							unboxed := make([]int64, len(arr))
-							for i, v := range arr {
-								unboxed[i] = v.IntVal
-							}
-							return unboxed
-						}()
-						clone.z = gopurs_runtime.RecordGet(orig, "z").StrVal()
-						return clone
-					}())), int64(2851)}), gopurs_runtime.Func(func(_dollar___unused_11 gopurs_runtime.Value) gopurs_runtime.Value {
-						// TAST (Let): a2_12_9 shape=Other bindingType=(Record (Row [id: Int, active: Boolean, extra: Int, name: String] Empty))
-						a2_12_9 := func() struct {
-							active bool
-							extra  int64
-							id     int64
-							name   string
-						} {
-							orig := gopurs_runtime.RecordUpdate1(__local_var_6_6, "id", gopurs_runtime.Int(int64(9)))
-							_ = orig
-							clone := struct {
-								active bool
-								extra  int64
-								id     int64
-								name   string
-							}{}
-							clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
-							clone.extra = gopurs_runtime.RecordGet(orig, "extra").IntVal
-							clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
-							clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
-							return clone
-						}()
-						_ = a2_12_9
-						// TAST (Let): b2_13_10 shape=Other bindingType=(Record (Row [name: String, active: Boolean, before: Number, id: Int, nested: (Record (Row [retained: String] Empty))] Empty))
-						b2_13_10 := func() struct {
-							active bool
-							before float64
-							id     int64
-							name   string
-							nested struct {
-								retained string
-							}
-						} {
-							orig := gopurs_runtime.RecordUpdate1(__local_var_7_7, "name", gopurs_runtime.Str("alpha"))
-							_ = orig
-							clone := struct {
-								active bool
-								before float64
-								id     int64
-								name   string
-								nested struct {
-									retained string
-								}
-							}{}
-							clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
-							clone.before = gopurs_runtime.RecordGet(orig, "before").FloatVal()
-							clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
-							clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
-							clone.nested = func() struct {
-								retained string
-							} {
-								orig := gopurs_runtime.RecordGet(orig, "nested")
-								_ = orig
-								clone := struct {
-									retained string
-								}{}
-								clone.retained = gopurs_runtime.RecordGet(orig, "retained").StrVal()
-								return clone
-							}()
-							return clone
-						}()
-						_ = b2_13_10
-						// TAST (Let): c2_14_11 shape=Other bindingType=(Record (Row [active: Boolean, id: Int, name: String, tail: Boolean, values: (Array Int), z: String] Empty))
-						c2_14_11 := func() struct {
-							active bool
-							id     int64
-							name   string
-							tail   bool
-							values []int64
-							z      string
-						} {
-							orig := gopurs_runtime.RecordUpdate1(__local_var_8_8, "active", gopurs_runtime.Bool(false))
-							_ = orig
-							clone := struct {
-								active bool
-								id     int64
-								name   string
-								tail   bool
-								values []int64
-								z      string
-							}{}
-							clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
-							clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
-							clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
-							clone.tail = (gopurs_runtime.RecordGet(orig, "tail").IntVal) != (0)
-							clone.values = func() []int64 {
-								arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "values").UnsafePtr)
-								unboxed := make([]int64, len(arr))
-								for i, v := range arr {
-									unboxed[i] = v.IntVal
-								}
-								return unboxed
-							}()
-							clone.z = gopurs_runtime.RecordGet(orig, "z").StrVal()
-							return clone
-						}()
-						_ = c2_14_11
-						return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___627669702("", struct {
-							actual   int64
-							expected int64
-						}{Call_Worker_score(func(record struct {
-							active bool
-							extra  int64
-							id     int64
-							name   string
-						}) struct {
-							active bool
-							id     int64
-							name   string
-						} {
-							return struct {
-								active bool
-								id     int64
-								name   string
-							}{record.active, record.id, record.name}
-						}(a2_12_9)), int64(4435)}), gopurs_runtime.Func(func(_dollar___unused_15 gopurs_runtime.Value) gopurs_runtime.Value {
-							return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___627669702("", struct {
-								actual   int64
-								expected int64
-							}{Call_Worker_score(func(record struct {
-								active bool
-								before float64
-								id     int64
-								name   string
-								nested struct {
-									retained string
-								}
-							}) struct {
-								active bool
-								id     int64
-								name   string
-							} {
-								return struct {
-									active bool
-									id     int64
-									name   string
-								}{record.active, record.id, record.name}
-							}(b2_13_10)), int64(1057)}), gopurs_runtime.Func(func(_dollar___unused_16 gopurs_runtime.Value) gopurs_runtime.Value {
-								return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___627669702("", struct {
-									actual   int64
-									expected int64
-								}{Call_Worker_score(func(record struct {
-									active bool
-									id     int64
-									name   string
-									tail   bool
-									values []int64
-									z      string
-								}) struct {
-									active bool
-									id     int64
-									name   string
-								} {
-									return struct {
-										active bool
-										id     int64
-										name   string
-									}{record.active, record.id, record.name}
-								}(c2_14_11)), int64(1057)}), gopurs_runtime.Func(func(_dollar___unused_17 gopurs_runtime.Value) gopurs_runtime.Value {
-									return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-										// TAST (Let): __local_var_18_12 shape=App(Var) bindingType=Any
-										__local_var_18_12 := gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_3_3)
-										_ = __local_var_18_12
-										__local_var_19_13 := gopurs_runtime.Apply(__local_var_18_12, gopurs_runtime.Value{})
-										_ = __local_var_19_13
-										__local_var_20_14 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_4_4), gopurs_runtime.Value{})
-										_ = __local_var_20_14
-										__local_var_21_15 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_5_5), gopurs_runtime.Value{})
-										_ = __local_var_21_15
-										return gopurs_runtime.Apply(gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___2008691784("", struct {
-											actual struct {
-												active bool
-												extra  int64
-												id     int64
-												name   string
-											}
-											expected struct {
-												active bool
-												extra  int64
-												id     int64
-												name   string
-											}
-										}{func() struct {
-											active bool
-											extra  int64
-											id     int64
-											name   string
-										} {
-											orig := __local_var_19_13
-											_ = orig
-											clone := struct {
-												active bool
-												extra  int64
-												id     int64
-												name   string
-											}{}
-											clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
-											clone.extra = gopurs_runtime.RecordGet(orig, "extra").IntVal
-											clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
-											clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
-											return clone
-										}(), func() struct {
-											active bool
-											extra  int64
-											id     int64
-											name   string
-										} {
-											orig := __local_var_6_6
-											_ = orig
-											clone := struct {
-												active bool
-												extra  int64
-												id     int64
-												name   string
-											}{}
-											clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
-											clone.extra = gopurs_runtime.RecordGet(orig, "extra").IntVal
-											clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
-											clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
-											return clone
-										}()}), gopurs_runtime.Func(func(_dollar___unused_22 gopurs_runtime.Value) gopurs_runtime.Value {
-											return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___2892873416("", struct {
-												actual struct {
-													active bool
-													before float64
-													id     int64
-													name   string
-													nested struct {
-														retained string
-													}
-												}
-												expected struct {
-													active bool
-													before float64
-													id     int64
-													name   string
-													nested struct {
-														retained string
-													}
-												}
-											}{func() struct {
-												active bool
-												before float64
-												id     int64
-												name   string
-												nested struct {
-													retained string
-												}
-											} {
-												orig := __local_var_20_14
-												_ = orig
-												clone := struct {
-													active bool
-													before float64
-													id     int64
-													name   string
-													nested struct {
-														retained string
-													}
-												}{}
-												clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
-												clone.before = gopurs_runtime.RecordGet(orig, "before").FloatVal()
-												clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
-												clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
-												clone.nested = func() struct {
-													retained string
-												} {
-													orig := gopurs_runtime.RecordGet(orig, "nested")
-													_ = orig
-													clone := struct {
-														retained string
-													}{}
-													clone.retained = gopurs_runtime.RecordGet(orig, "retained").StrVal()
-													return clone
-												}()
-												return clone
-											}(), func() struct {
-												active bool
-												before float64
-												id     int64
-												name   string
-												nested struct {
-													retained string
-												}
-											} {
-												orig := __local_var_7_7
-												_ = orig
-												clone := struct {
-													active bool
-													before float64
-													id     int64
-													name   string
-													nested struct {
-														retained string
-													}
-												}{}
-												clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
-												clone.before = gopurs_runtime.RecordGet(orig, "before").FloatVal()
-												clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
-												clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
-												clone.nested = func() struct {
-													retained string
-												} {
-													orig := gopurs_runtime.RecordGet(orig, "nested")
-													_ = orig
-													clone := struct {
-														retained string
-													}{}
-													clone.retained = gopurs_runtime.RecordGet(orig, "retained").StrVal()
-													return clone
-												}()
-												return clone
-											}()}), gopurs_runtime.Func(func(_dollar___unused_23 gopurs_runtime.Value) gopurs_runtime.Value {
-												return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___1234170632("", struct {
-													actual struct {
-														active bool
-														id     int64
-														name   string
-														tail   bool
-														values []int64
-														z      string
-													}
-													expected struct {
-														active bool
-														id     int64
-														name   string
-														tail   bool
-														values []int64
-														z      string
-													}
-												}{func() struct {
-													active bool
-													id     int64
-													name   string
-													tail   bool
-													values []int64
-													z      string
-												} {
-													orig := __local_var_21_15
-													_ = orig
-													clone := struct {
-														active bool
-														id     int64
-														name   string
-														tail   bool
-														values []int64
-														z      string
-													}{}
-													clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
-													clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
-													clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
-													clone.tail = (gopurs_runtime.RecordGet(orig, "tail").IntVal) != (0)
-													clone.values = func() []int64 {
-														arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "values").UnsafePtr)
-														unboxed := make([]int64, len(arr))
-														for i, v := range arr {
-															unboxed[i] = v.IntVal
-														}
-														return unboxed
-													}()
-													clone.z = gopurs_runtime.RecordGet(orig, "z").StrVal()
-													return clone
-												}(), func() struct {
-													active bool
-													id     int64
-													name   string
-													tail   bool
-													values []int64
-													z      string
-												} {
-													orig := __local_var_8_8
-													_ = orig
-													clone := struct {
-														active bool
-														id     int64
-														name   string
-														tail   bool
-														values []int64
-														z      string
-													}{}
-													clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
-													clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
-													clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
-													clone.tail = (gopurs_runtime.RecordGet(orig, "tail").IntVal) != (0)
-													clone.values = func() []int64 {
-														arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "values").UnsafePtr)
-														unboxed := make([]int64, len(arr))
-														for i, v := range arr {
-															unboxed[i] = v.IntVal
-														}
-														return unboxed
-													}()
-													clone.z = gopurs_runtime.RecordGet(orig, "z").StrVal()
-													return clone
-												}()}), gopurs_runtime.Func(func(_dollar___unused_24 gopurs_runtime.Value) gopurs_runtime.Value {
-													return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___627669702("", struct {
-														actual   int64
-														expected int64
-													}{a2_12_9.extra, int64(42)}), gopurs_runtime.Func(func(_dollar___unused_25 gopurs_runtime.Value) gopurs_runtime.Value {
-														return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___3008771400("", struct {
-															actual struct {
-																retained string
-															}
-															expected struct {
-																retained string
-															}
-														}{b2_13_10.nested, struct {
-															retained string
-														}{"keep"}}), gopurs_runtime.Func(func(_dollar___unused_26 gopurs_runtime.Value) gopurs_runtime.Value {
-															return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___1772858129("", struct {
-																actual   []int64
-																expected []int64
-															}{c2_14_11.values, []int64{int64(1), int64(2), int64(3)}}), gopurs_runtime.Func(func(_dollar___unused_27 gopurs_runtime.Value) gopurs_runtime.Value {
-																return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___1138829510("", struct {
-																	actual   bool
-																	expected bool
-																}{c2_14_11.tail, false}), gopurs_runtime.Func(func(_dollar___unused_28 gopurs_runtime.Value) gopurs_runtime.Value {
-																	return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___4176622598("", struct {
-																		actual   string
-																		expected string
-																	}{c2_14_11.z, "last"}), gopurs_runtime.Func(func(_dollar___unused_29 gopurs_runtime.Value) gopurs_runtime.Value {
-																		return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
-																	}))
-																}))
-															}))
-														}))
-													}))
-												}))
-											}))
-										})), gopurs_runtime.Value{})
-									})
-								}))
-							}))
-						}))
-					}))
-				}))
-			})), gopurs_runtime.Value{})
+				}()
+				return clone
+			}())), int64(-195)}), gopurs_runtime.Value{})
+			_ = __local_var_10_10
+			__local_var_11_11 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
+				actual   int64
+				expected int64
+			}{Call_Worker_score(func(record struct {
+				active bool
+				id     int64
+				name   string
+				tail   bool
+				values []int64
+				z      string
+			}) struct {
+				active bool
+				id     int64
+				name   string
+			} {
+				return struct {
+					active bool
+					id     int64
+					name   string
+				}{record.active, record.id, record.name}
+			}(func() struct {
+				active bool
+				id     int64
+				name   string
+				tail   bool
+				values []int64
+				z      string
+			} {
+				orig := __local_var_8_8
+				_ = orig
+				clone := struct {
+					active bool
+					id     int64
+					name   string
+					tail   bool
+					values []int64
+					z      string
+				}{}
+				clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
+				clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
+				clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
+				clone.tail = (gopurs_runtime.RecordGet(orig, "tail").IntVal) != (0)
+				clone.values = func() []int64 {
+					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "values").UnsafePtr)
+					unboxed := make([]int64, len(arr))
+					for i, v := range arr {
+						unboxed[i] = v.IntVal
+					}
+					return unboxed
+				}()
+				clone.z = gopurs_runtime.RecordGet(orig, "z").StrVal()
+				return clone
+			}())), int64(2851)}), gopurs_runtime.Value{})
+			_ = __local_var_11_11
+			// TAST (Let): a2_12_12 shape=Other bindingType=(Record (Row [id: Int, active: Boolean, extra: Int, name: String] Empty))
+			a2_12_12 := func() struct {
+				active bool
+				extra  int64
+				id     int64
+				name   string
+			} {
+				orig := gopurs_runtime.RecordUpdate1(__local_var_6_6, "id", gopurs_runtime.Int(int64(9)))
+				_ = orig
+				clone := struct {
+					active bool
+					extra  int64
+					id     int64
+					name   string
+				}{}
+				clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
+				clone.extra = gopurs_runtime.RecordGet(orig, "extra").IntVal
+				clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
+				clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
+				return clone
+			}()
+			_ = a2_12_12
+			// TAST (Let): b2_13_13 shape=Other bindingType=(Record (Row [name: String, active: Boolean, before: Number, id: Int, nested: (Record (Row [retained: String] Empty))] Empty))
+			b2_13_13 := func() struct {
+				active bool
+				before float64
+				id     int64
+				name   string
+				nested struct {
+					retained string
+				}
+			} {
+				orig := gopurs_runtime.RecordUpdate1(__local_var_7_7, "name", gopurs_runtime.Str("alpha"))
+				_ = orig
+				clone := struct {
+					active bool
+					before float64
+					id     int64
+					name   string
+					nested struct {
+						retained string
+					}
+				}{}
+				clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
+				clone.before = gopurs_runtime.RecordGet(orig, "before").FloatVal()
+				clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
+				clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
+				clone.nested = func() struct {
+					retained string
+				} {
+					orig := gopurs_runtime.RecordGet(orig, "nested")
+					_ = orig
+					clone := struct {
+						retained string
+					}{}
+					clone.retained = gopurs_runtime.RecordGet(orig, "retained").StrVal()
+					return clone
+				}()
+				return clone
+			}()
+			_ = b2_13_13
+			// TAST (Let): c2_14_14 shape=Other bindingType=(Record (Row [active: Boolean, id: Int, name: String, tail: Boolean, values: (Array Int), z: String] Empty))
+			c2_14_14 := func() struct {
+				active bool
+				id     int64
+				name   string
+				tail   bool
+				values []int64
+				z      string
+			} {
+				orig := gopurs_runtime.RecordUpdate1(__local_var_8_8, "active", gopurs_runtime.Bool(false))
+				_ = orig
+				clone := struct {
+					active bool
+					id     int64
+					name   string
+					tail   bool
+					values []int64
+					z      string
+				}{}
+				clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
+				clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
+				clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
+				clone.tail = (gopurs_runtime.RecordGet(orig, "tail").IntVal) != (0)
+				clone.values = func() []int64 {
+					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "values").UnsafePtr)
+					unboxed := make([]int64, len(arr))
+					for i, v := range arr {
+						unboxed[i] = v.IntVal
+					}
+					return unboxed
+				}()
+				clone.z = gopurs_runtime.RecordGet(orig, "z").StrVal()
+				return clone
+			}()
+			_ = c2_14_14
+			__local_var_15_15 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
+				actual   int64
+				expected int64
+			}{Call_Worker_score(func(record struct {
+				active bool
+				extra  int64
+				id     int64
+				name   string
+			}) struct {
+				active bool
+				id     int64
+				name   string
+			} {
+				return struct {
+					active bool
+					id     int64
+					name   string
+				}{record.active, record.id, record.name}
+			}(a2_12_12)), int64(4435)}), gopurs_runtime.Value{})
+			_ = __local_var_15_15
+			__local_var_16_16 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
+				actual   int64
+				expected int64
+			}{Call_Worker_score(func(record struct {
+				active bool
+				before float64
+				id     int64
+				name   string
+				nested struct {
+					retained string
+				}
+			}) struct {
+				active bool
+				id     int64
+				name   string
+			} {
+				return struct {
+					active bool
+					id     int64
+					name   string
+				}{record.active, record.id, record.name}
+			}(b2_13_13)), int64(1057)}), gopurs_runtime.Value{})
+			_ = __local_var_16_16
+			__local_var_17_17 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
+				actual   int64
+				expected int64
+			}{Call_Worker_score(func(record struct {
+				active bool
+				id     int64
+				name   string
+				tail   bool
+				values []int64
+				z      string
+			}) struct {
+				active bool
+				id     int64
+				name   string
+			} {
+				return struct {
+					active bool
+					id     int64
+					name   string
+				}{record.active, record.id, record.name}
+			}(c2_14_14)), int64(1057)}), gopurs_runtime.Value{})
+			_ = __local_var_17_17
+			__local_var_18_18 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_3_3), gopurs_runtime.Value{})
+			_ = __local_var_18_18
+			__local_var_19_19 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_4_4), gopurs_runtime.Value{})
+			_ = __local_var_19_19
+			__local_var_20_20 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_5_5), gopurs_runtime.Value{})
+			_ = __local_var_20_20
+			__local_var_21_21 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2008691784("", struct {
+				actual struct {
+					active bool
+					extra  int64
+					id     int64
+					name   string
+				}
+				expected struct {
+					active bool
+					extra  int64
+					id     int64
+					name   string
+				}
+			}{func() struct {
+				active bool
+				extra  int64
+				id     int64
+				name   string
+			} {
+				orig := __local_var_18_18
+				_ = orig
+				clone := struct {
+					active bool
+					extra  int64
+					id     int64
+					name   string
+				}{}
+				clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
+				clone.extra = gopurs_runtime.RecordGet(orig, "extra").IntVal
+				clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
+				clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
+				return clone
+			}(), func() struct {
+				active bool
+				extra  int64
+				id     int64
+				name   string
+			} {
+				orig := __local_var_6_6
+				_ = orig
+				clone := struct {
+					active bool
+					extra  int64
+					id     int64
+					name   string
+				}{}
+				clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
+				clone.extra = gopurs_runtime.RecordGet(orig, "extra").IntVal
+				clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
+				clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
+				return clone
+			}()}), gopurs_runtime.Value{})
+			_ = __local_var_21_21
+			__local_var_22_22 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2892873416("", struct {
+				actual struct {
+					active bool
+					before float64
+					id     int64
+					name   string
+					nested struct {
+						retained string
+					}
+				}
+				expected struct {
+					active bool
+					before float64
+					id     int64
+					name   string
+					nested struct {
+						retained string
+					}
+				}
+			}{func() struct {
+				active bool
+				before float64
+				id     int64
+				name   string
+				nested struct {
+					retained string
+				}
+			} {
+				orig := __local_var_19_19
+				_ = orig
+				clone := struct {
+					active bool
+					before float64
+					id     int64
+					name   string
+					nested struct {
+						retained string
+					}
+				}{}
+				clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
+				clone.before = gopurs_runtime.RecordGet(orig, "before").FloatVal()
+				clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
+				clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
+				clone.nested = func() struct {
+					retained string
+				} {
+					orig := gopurs_runtime.RecordGet(orig, "nested")
+					_ = orig
+					clone := struct {
+						retained string
+					}{}
+					clone.retained = gopurs_runtime.RecordGet(orig, "retained").StrVal()
+					return clone
+				}()
+				return clone
+			}(), func() struct {
+				active bool
+				before float64
+				id     int64
+				name   string
+				nested struct {
+					retained string
+				}
+			} {
+				orig := __local_var_7_7
+				_ = orig
+				clone := struct {
+					active bool
+					before float64
+					id     int64
+					name   string
+					nested struct {
+						retained string
+					}
+				}{}
+				clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
+				clone.before = gopurs_runtime.RecordGet(orig, "before").FloatVal()
+				clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
+				clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
+				clone.nested = func() struct {
+					retained string
+				} {
+					orig := gopurs_runtime.RecordGet(orig, "nested")
+					_ = orig
+					clone := struct {
+						retained string
+					}{}
+					clone.retained = gopurs_runtime.RecordGet(orig, "retained").StrVal()
+					return clone
+				}()
+				return clone
+			}()}), gopurs_runtime.Value{})
+			_ = __local_var_22_22
+			__local_var_23_23 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1234170632("", struct {
+				actual struct {
+					active bool
+					id     int64
+					name   string
+					tail   bool
+					values []int64
+					z      string
+				}
+				expected struct {
+					active bool
+					id     int64
+					name   string
+					tail   bool
+					values []int64
+					z      string
+				}
+			}{func() struct {
+				active bool
+				id     int64
+				name   string
+				tail   bool
+				values []int64
+				z      string
+			} {
+				orig := __local_var_20_20
+				_ = orig
+				clone := struct {
+					active bool
+					id     int64
+					name   string
+					tail   bool
+					values []int64
+					z      string
+				}{}
+				clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
+				clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
+				clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
+				clone.tail = (gopurs_runtime.RecordGet(orig, "tail").IntVal) != (0)
+				clone.values = func() []int64 {
+					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "values").UnsafePtr)
+					unboxed := make([]int64, len(arr))
+					for i, v := range arr {
+						unboxed[i] = v.IntVal
+					}
+					return unboxed
+				}()
+				clone.z = gopurs_runtime.RecordGet(orig, "z").StrVal()
+				return clone
+			}(), func() struct {
+				active bool
+				id     int64
+				name   string
+				tail   bool
+				values []int64
+				z      string
+			} {
+				orig := __local_var_8_8
+				_ = orig
+				clone := struct {
+					active bool
+					id     int64
+					name   string
+					tail   bool
+					values []int64
+					z      string
+				}{}
+				clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
+				clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
+				clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
+				clone.tail = (gopurs_runtime.RecordGet(orig, "tail").IntVal) != (0)
+				clone.values = func() []int64 {
+					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "values").UnsafePtr)
+					unboxed := make([]int64, len(arr))
+					for i, v := range arr {
+						unboxed[i] = v.IntVal
+					}
+					return unboxed
+				}()
+				clone.z = gopurs_runtime.RecordGet(orig, "z").StrVal()
+				return clone
+			}()}), gopurs_runtime.Value{})
+			_ = __local_var_23_23
+			__local_var_24_24 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
+				actual   int64
+				expected int64
+			}{a2_12_12.extra, int64(42)}), gopurs_runtime.Value{})
+			_ = __local_var_24_24
+			__local_var_25_25 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___3008771400("", struct {
+				actual struct {
+					retained string
+				}
+				expected struct {
+					retained string
+				}
+			}{b2_13_13.nested, struct {
+				retained string
+			}{"keep"}}), gopurs_runtime.Value{})
+			_ = __local_var_25_25
+			__local_var_26_26 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1772858129("", struct {
+				actual   []int64
+				expected []int64
+			}{c2_14_14.values, []int64{int64(1), int64(2), int64(3)}}), gopurs_runtime.Value{})
+			_ = __local_var_26_26
+			__local_var_27_27 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
+				actual   bool
+				expected bool
+			}{c2_14_14.tail, false}), gopurs_runtime.Value{})
+			_ = __local_var_27_27
+			__local_var_28_28 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("", struct {
+				actual   string
+				expected string
+			}{c2_14_14.z, "last"}), gopurs_runtime.Value{})
+			_ = __local_var_28_28
+			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
 		})
 	})
 	return cache_Main_main
@@ -1171,36 +1166,28 @@ func Rebox_Main_1053099733_3790796878(in *Constructor_Data_Eq_Eq[int64]) *Constr
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Eq_Eq[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Eq_Eq[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1140313009_3790796878(in *Constructor_Data_Eq_Eq[string]) *Constructor_Data_Eq_Eq[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Eq_Eq[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Eq_Eq[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1386611502_1469227923(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[[]int64] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[[]int64]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[[]int64])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1386611502_1514099793(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[string] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[string]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[string])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1386611502_1517968077(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[struct {
@@ -1214,25 +1201,21 @@ func Rebox_Main_1386611502_1517968077(in *Constructor_Data_Show_Show[gopurs_runt
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[struct {
+	return (*Constructor_Data_Show_Show[struct {
 		active bool
 		id     int64
 		name   string
 		tail   bool
 		values []int64
 		z      string
-	}]{}
-	out.V0 = in.V0
-	return out
+	}])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1386611502_1636311157(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[int64] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[int64]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[int64])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1386611502_1994653624(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[struct {
@@ -1244,32 +1227,26 @@ func Rebox_Main_1386611502_1994653624(in *Constructor_Data_Show_Show[gopurs_runt
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[struct {
+	return (*Constructor_Data_Show_Show[struct {
 		active bool
 		extra  int64
 		id     int64
 		name   string
-	}]{}
-	out.V0 = in.V0
-	return out
+	}])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1386611502_2735895690(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[bool] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[bool]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[bool])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1386611502_3263178038(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[float64] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[float64]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[float64])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1386611502_872707775(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[struct {
@@ -1284,7 +1261,7 @@ func Rebox_Main_1386611502_872707775(in *Constructor_Data_Show_Show[gopurs_runti
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[struct {
+	return (*Constructor_Data_Show_Show[struct {
 		active bool
 		before float64
 		id     int64
@@ -1292,9 +1269,7 @@ func Rebox_Main_1386611502_872707775(in *Constructor_Data_Show_Show[gopurs_runti
 		nested struct {
 			retained string
 		}
-	}]{}
-	out.V0 = in.V0
-	return out
+	}])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1386611502_920949869(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[struct {
@@ -1303,29 +1278,23 @@ func Rebox_Main_1386611502_920949869(in *Constructor_Data_Show_Show[gopurs_runti
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[struct {
+	return (*Constructor_Data_Show_Show[struct {
 		retained string
-	}]{}
-	out.V0 = in.V0
-	return out
+	}])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1469227923_1386611502(in *Constructor_Data_Show_Show[[]int64]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1514099793_1386611502(in *Constructor_Data_Show_Show[string]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1517968077_1386611502(in *Constructor_Data_Show_Show[struct {
@@ -1339,18 +1308,14 @@ func Rebox_Main_1517968077_1386611502(in *Constructor_Data_Show_Show[struct {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1636311157_1386611502(in *Constructor_Data_Show_Show[int64]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1830338253_3790796878(in *Constructor_Data_Eq_Eq[struct {
@@ -1359,9 +1324,7 @@ func Rebox_Main_1830338253_3790796878(in *Constructor_Data_Eq_Eq[struct {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Eq_Eq[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Eq_Eq[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1994653624_1386611502(in *Constructor_Data_Show_Show[struct {
@@ -1373,9 +1336,7 @@ func Rebox_Main_1994653624_1386611502(in *Constructor_Data_Show_Show[struct {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_2267788589_3790796878(in *Constructor_Data_Eq_Eq[struct {
@@ -1389,9 +1350,7 @@ func Rebox_Main_2267788589_3790796878(in *Constructor_Data_Eq_Eq[struct {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Eq_Eq[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Eq_Eq[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_2543566495_3790796878(in *Constructor_Data_Eq_Eq[struct {
@@ -1406,27 +1365,21 @@ func Rebox_Main_2543566495_3790796878(in *Constructor_Data_Eq_Eq[struct {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Eq_Eq[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Eq_Eq[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_2735895690_1386611502(in *Constructor_Data_Show_Show[bool]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_2737952170_3790796878(in *Constructor_Data_Eq_Eq[bool]) *Constructor_Data_Eq_Eq[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Eq_Eq[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Eq_Eq[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_2758774104_3790796878(in *Constructor_Data_Eq_Eq[struct {
@@ -1438,45 +1391,35 @@ func Rebox_Main_2758774104_3790796878(in *Constructor_Data_Eq_Eq[struct {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Eq_Eq[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Eq_Eq[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_3263178038_1386611502(in *Constructor_Data_Show_Show[float64]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_378698611_3790796878(in *Constructor_Data_Eq_Eq[[]int64]) *Constructor_Data_Eq_Eq[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Eq_Eq[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Eq_Eq[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_3790796878_1053099733(in *Constructor_Data_Eq_Eq[gopurs_runtime.Value]) *Constructor_Data_Eq_Eq[int64] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Eq_Eq[int64]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Eq_Eq[int64])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_3790796878_1140313009(in *Constructor_Data_Eq_Eq[gopurs_runtime.Value]) *Constructor_Data_Eq_Eq[string] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Eq_Eq[string]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Eq_Eq[string])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_3790796878_1830338253(in *Constructor_Data_Eq_Eq[gopurs_runtime.Value]) *Constructor_Data_Eq_Eq[struct {
@@ -1485,11 +1428,9 @@ func Rebox_Main_3790796878_1830338253(in *Constructor_Data_Eq_Eq[gopurs_runtime.
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Eq_Eq[struct {
+	return (*Constructor_Data_Eq_Eq[struct {
 		retained string
-	}]{}
-	out.V0 = in.V0
-	return out
+	}])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_3790796878_2267788589(in *Constructor_Data_Eq_Eq[gopurs_runtime.Value]) *Constructor_Data_Eq_Eq[struct {
@@ -1503,16 +1444,14 @@ func Rebox_Main_3790796878_2267788589(in *Constructor_Data_Eq_Eq[gopurs_runtime.
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Eq_Eq[struct {
+	return (*Constructor_Data_Eq_Eq[struct {
 		active bool
 		id     int64
 		name   string
 		tail   bool
 		values []int64
 		z      string
-	}]{}
-	out.V0 = in.V0
-	return out
+	}])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_3790796878_2543566495(in *Constructor_Data_Eq_Eq[gopurs_runtime.Value]) *Constructor_Data_Eq_Eq[struct {
@@ -1527,7 +1466,7 @@ func Rebox_Main_3790796878_2543566495(in *Constructor_Data_Eq_Eq[gopurs_runtime.
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Eq_Eq[struct {
+	return (*Constructor_Data_Eq_Eq[struct {
 		active bool
 		before float64
 		id     int64
@@ -1535,18 +1474,14 @@ func Rebox_Main_3790796878_2543566495(in *Constructor_Data_Eq_Eq[gopurs_runtime.
 		nested struct {
 			retained string
 		}
-	}]{}
-	out.V0 = in.V0
-	return out
+	}])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_3790796878_2737952170(in *Constructor_Data_Eq_Eq[gopurs_runtime.Value]) *Constructor_Data_Eq_Eq[bool] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Eq_Eq[bool]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Eq_Eq[bool])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_3790796878_2758774104(in *Constructor_Data_Eq_Eq[gopurs_runtime.Value]) *Constructor_Data_Eq_Eq[struct {
@@ -1558,41 +1493,33 @@ func Rebox_Main_3790796878_2758774104(in *Constructor_Data_Eq_Eq[gopurs_runtime.
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Eq_Eq[struct {
+	return (*Constructor_Data_Eq_Eq[struct {
 		active bool
 		extra  int64
 		id     int64
 		name   string
-	}]{}
-	out.V0 = in.V0
-	return out
+	}])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_3790796878_378698611(in *Constructor_Data_Eq_Eq[gopurs_runtime.Value]) *Constructor_Data_Eq_Eq[[]int64] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Eq_Eq[[]int64]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Eq_Eq[[]int64])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_3790796878_687527510(in *Constructor_Data_Eq_Eq[gopurs_runtime.Value]) *Constructor_Data_Eq_Eq[float64] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Eq_Eq[float64]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Eq_Eq[float64])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_687527510_3790796878(in *Constructor_Data_Eq_Eq[float64]) *Constructor_Data_Eq_Eq[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Eq_Eq[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Eq_Eq[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_872707775_1386611502(in *Constructor_Data_Show_Show[struct {
@@ -1607,9 +1534,7 @@ func Rebox_Main_872707775_1386611502(in *Constructor_Data_Show_Show[struct {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_920949869_1386611502(in *Constructor_Data_Show_Show[struct {
@@ -1618,7 +1543,5 @@ func Rebox_Main_920949869_1386611502(in *Constructor_Data_Show_Show[struct {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
 }

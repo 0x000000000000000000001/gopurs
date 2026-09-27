@@ -21,7 +21,17 @@ var once_Main_getFoo sync.Once
 func Get_Main_getFoo() gopurs_runtime.Value {
 	once_Main_getFoo.Do(func() {
 		cache_Main_getFoo = gopurs_runtime.Func(func(o_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_getFoo(o_0_box))
+			return gopurs_runtime.Str(Call_Main_getFoo(func() struct {
+				foo string
+			} {
+				orig := o_0_box
+				_ = orig
+				clone := struct {
+					foo string
+				}{}
+				clone.foo = gopurs_runtime.RecordGet(orig, "foo").StrVal()
+				return clone
+			}()))
 		})
 	})
 	return cache_Main_getFoo
@@ -51,10 +61,14 @@ func Get_Main_f() gopurs_runtime.Value {
 	return cache_Main_f
 }
 
-func Call_Main_getFoo(o_0_loop gopurs_runtime.Value) string {
-	var o_0 gopurs_runtime.Value = o_0_loop
+func Call_Main_getFoo(o_0_loop struct {
+	foo string
+}) string {
+	var o_0 struct {
+		foo string
+	} = o_0_loop
 	_ = o_0
-	return gopurs_runtime.RecordGet(o_0, "foo").StrVal()
+	return o_0.foo
 }
 
 func Call_Main_foo(s_0_loop string) string {

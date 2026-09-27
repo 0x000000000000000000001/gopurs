@@ -140,7 +140,12 @@ var once_Main_main sync.Once
 
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
-		cache_Main_main = gopurs_runtime.Apply2(Call_Main_sequence(Rebox_Main_2264881643_916613845(Rebox_Main_916613845_2264881643(gopurs_runtime.CoerceToStruct[Constructor_Main_Sequence[gopurs_runtime.Value]](Get_Main_sequenceList())))), gopurs_runtime.Value{Type: 9, IntVal: 778916621, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad[gopurs_runtime.Value]](Get_Effect_monadEffect()))}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((&Constructor_Main_Cons[gopurs_runtime.Value]{1, gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), (*Constructor_Main_Cons[gopurs_runtime.Value])(nil)}))})
+		cache_Main_main = func() gopurs_runtime.Value {
+			// TAST (Let): __local_var_0_0 shape=Other bindingType=(ADT ["Main","List"] [(ADT ["Effect","Effect"] [Unit])])
+			__local_var_0_0 := (&Constructor_Main_Cons[gopurs_runtime.Value]{1, gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), (*Constructor_Main_Cons[gopurs_runtime.Value])(nil)})
+			_ = __local_var_0_0
+			return gopurs_runtime.Apply2(Call_Control_Monad_ap(gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad[gopurs_runtime.Value]](Get_Effect_monadEffect())), gopurs_runtime.Apply2(Call_Control_Applicative_liftA1(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](Get_Effect_applicativeEffect())), Get_Main_Cons(), (__local_var_0_0).V0), gopurs_runtime.Apply2(Rebox_Main_916613845_2264881643(gopurs_runtime.CoerceToStruct[Constructor_Main_Sequence[gopurs_runtime.Value]](Get_Main_sequenceList())).V0, gopurs_runtime.Value{Type: 9, IntVal: 778916621, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad[gopurs_runtime.Value]](Get_Effect_monadEffect()))}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((__local_var_0_0).V1)}))
+		}()
 	})
 	return cache_Main_main
 }
@@ -228,7 +233,7 @@ sequence__3019187691:
 		}
 		{
 			if __eta_norm_0_0 != nil {
-				__t0 = gopurs_runtime.Apply2(gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply[gopurs_runtime.Value]](Get_Effect_applyEffect()).V1, gopurs_runtime.Apply2(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor[gopurs_runtime.Value]](Get_Effect_functorEffect()).V0, Get_Main_Cons(), (__eta_norm_0_0).V0), gopurs_runtime.Apply2(Rebox_Main_916613845_2264881643(gopurs_runtime.CoerceToStruct[Constructor_Main_Sequence[gopurs_runtime.Value]](Get_Main_sequenceList())).V0, gopurs_runtime.Value{Type: 9, IntVal: 778916621, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad[gopurs_runtime.Value]](Get_Effect_monadEffect()))}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((__eta_norm_0_0).V1)}))
+				__t0 = gopurs_runtime.Apply2(Call_Control_Monad_ap(gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad[gopurs_runtime.Value]](Get_Effect_monadEffect())), gopurs_runtime.Apply2(Call_Control_Applicative_liftA1(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](Get_Effect_applicativeEffect())), Get_Main_Cons(), (__eta_norm_0_0).V0), gopurs_runtime.Apply2(Rebox_Main_916613845_2264881643(gopurs_runtime.CoerceToStruct[Constructor_Main_Sequence[gopurs_runtime.Value]](Get_Main_sequenceList())).V0, gopurs_runtime.Value{Type: 9, IntVal: 778916621, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad[gopurs_runtime.Value]](Get_Effect_monadEffect()))}, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((__eta_norm_0_0).V1)}))
 				goto end_branch_0
 			} else {
 
@@ -246,16 +251,12 @@ func Rebox_Main_2264881643_916613845(in *Constructor_Main_Sequence[*Constructor_
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_Sequence[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Main_Sequence[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_916613845_2264881643(in *Constructor_Main_Sequence[gopurs_runtime.Value]) *Constructor_Main_Sequence[*Constructor_Main_Cons[gopurs_runtime.Value]] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_Sequence[*Constructor_Main_Cons[gopurs_runtime.Value]]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Main_Sequence[*Constructor_Main_Cons[gopurs_runtime.Value]])(unsafe.Pointer(in))
 }

@@ -11,7 +11,9 @@ var once_Main_identity sync.Once
 
 func Get_Main_identity() gopurs_runtime.Value {
 	once_Main_identity.Do(func() {
-		cache_Main_identity = Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))})
+		cache_Main_identity = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_identity(x_0_box)
+		})
 	})
 	return cache_Main_identity
 }
@@ -236,11 +238,13 @@ var once_Main_main sync.Once
 
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
-		cache_Main_main = gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Effect_Console_logShow(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Call_Main_showTuple(gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showInt()))))}, gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showUnit()))})), gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer(Call_Main_runState(gopurs_runtime.Int(int64(0)), Call_Main_modify__86672813(gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Int((v_0.IntVal) + (int64(1)))
-		}))))}), gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
-		}))
+		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+			__local_var_0_0 := gopurs_runtime.Apply(Call_Effect_Console_logShow(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Call_Main_showTuple(gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showInt()))))}, gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showUnit()))})), gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer(Call_Main_runState(gopurs_runtime.Int(int64(0)), Call_Main_modify__86672813(gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Int((v_0.IntVal) + (int64(1)))
+			}))))}), gopurs_runtime.Value{})
+			_ = __local_var_0_0
+			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
+		})
 	})
 	return cache_Main_main
 }
@@ -278,6 +282,12 @@ func init() {
 			panic("Key not found in dictionary Constructor_Main_MonadState: " + key)
 		}
 	}
+}
+
+func Call_Main_identity(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var x_0 gopurs_runtime.Value = x_0_loop
+	_ = x_0
+	return x_0
 }
 
 func Call_Main_MonadState_dollar_Dict(x_0_loop struct {
@@ -338,7 +348,7 @@ func Call_Main_modify(dictBind_0_loop *Constructor_Control_Bind_Bind[gopurs_runt
 	_ = get1_2_0
 	return gopurs_runtime.Func(func(f_3 gopurs_runtime.Value) gopurs_runtime.Value {
 		return gopurs_runtime.Apply2(dictBind_0.V1, get1_2_0, gopurs_runtime.Func(func(s_4 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Apply(dictMonadState_1.V2, gopurs_runtime.Apply2(Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))}), f_3, s_4))
+			return gopurs_runtime.Apply(dictMonadState_1.V2, gopurs_runtime.Apply(f_3, s_4))
 		}))
 	})
 }
@@ -351,18 +361,17 @@ modify__86672813:
 		}
 		var __eta_norm_0_0 gopurs_runtime.Value = __eta_norm_0_0_loop
 		_ = __eta_norm_0_0
-		// TAST (Let): __local_var_1_0 shape=App(Var) bindingType=(TypeApp Any [Any])
-		__local_var_1_0 := Call_Main_get(gopurs_runtime.Value{Type: 9, IntVal: 2980279296, UnsafePtr: unsafe.Pointer(Rebox_Main_1994721641_934605138(Rebox_Main_934605138_1994721641(gopurs_runtime.CoerceToStruct[Constructor_Main_MonadState[gopurs_runtime.Value, gopurs_runtime.Value]](Get_Main_monadStateState()))))})
-		_ = __local_var_1_0
-		return gopurs_runtime.Func(func(s_2 gopurs_runtime.Value) gopurs_runtime.Value {
-			// TAST (Let): v_3_1 shape=App(Var) bindingType=(ADT ["Main","Tuple"] [(TypeVar s$scope39), (TypeVar a$scope43)])
-			v_3_1 := Call_Main_runState(s_2, __local_var_1_0)
-			_ = v_3_1
-			// TAST (Let): __local_var_4_2 shape=App(Var) bindingType=Any
-			__local_var_4_2 := gopurs_runtime.Apply2(Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))}), __eta_norm_0_0, (v_3_1).V1)
-			_ = __local_var_4_2
-			return gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer(Call_Main_runState((v_3_1).V0, gopurs_runtime.Func(func(v_5 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer((&Constructor_Main_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{1, __local_var_4_2, Get_Data_Unit_unit()}))}
+		return gopurs_runtime.Func(func(s_1 gopurs_runtime.Value) gopurs_runtime.Value {
+			// TAST (Let): v_2_0 shape=App(Var) bindingType=(ADT ["Main","Tuple"] [(TypeVar s$scope39), (TypeVar a$scope43)])
+			v_2_0 := Call_Main_runState(s_1, gopurs_runtime.Func(func(s_2 gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer((&Constructor_Main_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{1, s_2, s_2}))}
+			}))
+			_ = v_2_0
+			// TAST (Let): __local_var_3_1 shape=App(Other) bindingType=Any
+			__local_var_3_1 := gopurs_runtime.Apply(__eta_norm_0_0, (v_2_0).V1)
+			_ = __local_var_3_1
+			return gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer(Call_Main_runState((v_2_0).V0, gopurs_runtime.Func(func(v_4 gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer((&Constructor_Main_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{1, __local_var_3_1, Get_Data_Unit_unit()}))}
 			})))}
 		})
 	}
@@ -372,47 +381,19 @@ func Rebox_Main_1386611502_1636311157(in *Constructor_Data_Show_Show[gopurs_runt
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[int64]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[int64])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1636311157_1386611502(in *Constructor_Data_Show_Show[int64]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1668656255_1386611502(in *Constructor_Data_Show_Show[*Constructor_Main_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
-}
-
-func Rebox_Main_1994721641_934605138(in *Constructor_Main_MonadState[int64, gopurs_runtime.Value]) *Constructor_Main_MonadState[gopurs_runtime.Value, gopurs_runtime.Value] {
-	if in == nil {
-		return nil
-	}
-	out := &Constructor_Main_MonadState[gopurs_runtime.Value, gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	out.V2 = in.V2
-	return out
-}
-
-func Rebox_Main_934605138_1994721641(in *Constructor_Main_MonadState[gopurs_runtime.Value, gopurs_runtime.Value]) *Constructor_Main_MonadState[int64, gopurs_runtime.Value] {
-	if in == nil {
-		return nil
-	}
-	out := &Constructor_Main_MonadState[int64, gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	out.V2 = in.V2
-	return out
+	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
 }

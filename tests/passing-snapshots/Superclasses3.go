@@ -195,7 +195,7 @@ func Get_Main_applicativeMTrace() gopurs_runtime.Value {
 	once_Main_applicativeMTrace.Do(func() {
 		cache_Main_applicativeMTrace = gopurs_runtime.Value{Type: 9, IntVal: 1459134221, UnsafePtr: unsafe.Pointer((&Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 3032403085, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply[gopurs_runtime.Value]](Get_Main_applyMTrace()))}
-		}), gopurs_runtime.Apply2(Call_Control_Semigroupoid_compose(gopurs_runtime.CoerceToStruct[Constructor_Control_Semigroupoid_Semigroupoid[gopurs_runtime.Value]](Get_Control_Semigroupoid_semigroupoidFn())), Get_Main_MTrace(), Call_Control_Applicative_pure(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](Get_Effect_applicativeEffect())))}))}
+		}), gopurs_runtime.Apply2(Call_Control_Semigroupoid_compose(gopurs_runtime.CoerceToStruct[Constructor_Control_Semigroupoid_Semigroupoid[gopurs_runtime.Value]](Get_Control_Semigroupoid_semigroupoidFn())), Get_Main_MTrace(), Get_Effect_pureE())}))}
 	})
 	return cache_Main_applicativeMTrace
 }
@@ -372,11 +372,31 @@ test__1489837928:
 		}
 		var __eta_norm_0_0 string = __eta_norm_0_0_loop
 		_ = __eta_norm_0_0
-		return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Main_bindMTrace())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(__eta_norm_0_0)), gopurs_runtime.Func(func(_dollar___unused_1 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Main_bindMTrace())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(__eta_norm_0_0)), gopurs_runtime.Func(func(_dollar___unused_2 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(__eta_norm_0_0))
+		return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+			// TAST (Let): __local_var_1_0 shape=App(Var) bindingType=(ADT ["Effect","Effect"] [Unit])
+			__local_var_1_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(__eta_norm_0_0))
+			_ = __local_var_1_0
+			// TAST (Let): __local_var_2_1 shape=App(Var) bindingType=Any
+			__local_var_2_1 := gopurs_runtime.Apply2(Call_Control_Semigroupoid_compose(gopurs_runtime.CoerceToStruct[Constructor_Control_Semigroupoid_Semigroupoid[gopurs_runtime.Value]](Get_Control_Semigroupoid_semigroupoidFn())), Get_Main_runMTrace(), gopurs_runtime.Func(func(_dollar___unused_2 gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+					// TAST (Let): __local_var_3_2 shape=App(Var) bindingType=(ADT ["Effect","Effect"] [Unit])
+					__local_var_3_2 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(__eta_norm_0_0))
+					_ = __local_var_3_2
+					// TAST (Let): __local_var_4_3 shape=App(Var) bindingType=Any
+					__local_var_4_3 := gopurs_runtime.Apply2(Call_Control_Semigroupoid_compose(gopurs_runtime.CoerceToStruct[Constructor_Control_Semigroupoid_Semigroupoid[gopurs_runtime.Value]](Get_Control_Semigroupoid_semigroupoidFn())), Get_Main_runMTrace(), gopurs_runtime.Func(func(_dollar___unused_4 gopurs_runtime.Value) gopurs_runtime.Value {
+						return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(__eta_norm_0_0))
+					}))
+					_ = __local_var_4_3
+					__local_var_5_4 := gopurs_runtime.Apply(__local_var_3_2, gopurs_runtime.Value{})
+					_ = __local_var_5_4
+					return gopurs_runtime.Apply(gopurs_runtime.Apply(__local_var_4_3, __local_var_5_4), gopurs_runtime.Value{})
+				})
 			}))
-		}))
+			_ = __local_var_2_1
+			__local_var_3_5 := gopurs_runtime.Apply(__local_var_1_0, gopurs_runtime.Value{})
+			_ = __local_var_3_5
+			return gopurs_runtime.Apply(gopurs_runtime.Apply(__local_var_2_1, __local_var_3_5), gopurs_runtime.Value{})
+		})
 	}
 }
 
@@ -396,8 +416,5 @@ func Rebox_Main_1480135733_72788106(in *Constructor_Main_MonadWriter[string, gop
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_MonadWriter[gopurs_runtime.Value, gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	return out
+	return (*Constructor_Main_MonadWriter[gopurs_runtime.Value, gopurs_runtime.Value])(unsafe.Pointer(in))
 }

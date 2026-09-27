@@ -35,21 +35,15 @@ func Get_Main_test2() gopurs_runtime.Value {
 		cache_Main_test2 = func() gopurs_runtime.Value {
 			var __t0 int64
 			{
-				if (gopurs_runtime.Apply(gopurs_runtime.Func(func(y_0 gopurs_runtime.Value) gopurs_runtime.Value {
-					return y_0
-				}), gopurs_runtime.Bool(true)).IntVal) != (0) {
-					__t0 = gopurs_runtime.Apply(gopurs_runtime.Func(func(y_0 gopurs_runtime.Value) gopurs_runtime.Value {
-						return y_0
-					}), gopurs_runtime.Int(int64(0))).IntVal
+				if (gopurs_runtime.Bool(true).IntVal) != (0) {
+					__t0 = gopurs_runtime.Int(int64(0)).IntVal
 					goto end_branch_0
 				} else {
 
 				}
 			}
 			{
-				__t0 = gopurs_runtime.Apply(gopurs_runtime.Func(func(y_0 gopurs_runtime.Value) gopurs_runtime.Value {
-					return y_0
-				}), gopurs_runtime.Int(int64(1))).IntVal
+				__t0 = gopurs_runtime.Int(int64(1)).IntVal
 			}
 		end_branch_0:
 			return gopurs_runtime.Int(__t0)

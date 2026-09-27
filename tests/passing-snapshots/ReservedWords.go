@@ -57,7 +57,17 @@ var once_Main_f sync.Once
 func Get_Main_f() gopurs_runtime.Value {
 	once_Main_f.Do(func() {
 		cache_Main_f = gopurs_runtime.Func(func(v_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(Call_Main_f(v_0_box))
+			return gopurs_runtime.Str(Call_Main_f(func() struct {
+				go__type string
+			} {
+				orig := v_0_box
+				_ = orig
+				clone := struct {
+					go__type string
+				}{}
+				clone.go__type = gopurs_runtime.RecordGet(orig, "type").StrVal()
+				return clone
+			}()))
 		})
 	})
 	return cache_Main_f
@@ -110,12 +120,16 @@ func Get_Main_main() gopurs_runtime.Value {
 	return cache_Main_main
 }
 
-func Call_Main_f(v_0_loop gopurs_runtime.Value) string {
-	var v_0 gopurs_runtime.Value = v_0_loop
+func Call_Main_f(v_0_loop struct {
+	go__type string
+}) string {
+	var v_0 struct {
+		go__type string
+	} = v_0_loop
 	_ = v_0
 	var __t0 string
 	{
-		if (gopurs_runtime.RecordGet(v_0, "type").StrVal()) == ("p") {
+		if (v_0.go__type) == ("p") {
 			__t0 = "Done"
 			goto end_branch_0
 		} else {

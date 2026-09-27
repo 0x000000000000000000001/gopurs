@@ -172,16 +172,12 @@ func Rebox_Main_1049220494_954425347(in *Constructor_Main_ClassName[uint32]) *Co
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_ClassName[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Main_ClassName[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_2145685968_2100274173(in *Constructor_ImportedClassName_ClassName[uint32]) *Constructor_ImportedClassName_ClassName[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_ImportedClassName_ClassName[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_ImportedClassName_ClassName[gopurs_runtime.Value])(unsafe.Pointer(in))
 }

@@ -55,98 +55,103 @@ var once_Main_main sync.Once
 
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
-		cache_Main_main = gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Data_Function_Uncurried_runFn0(), gopurs_runtime.Apply(Get_Data_Function_Uncurried_mkFn0(), gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showNumberImpl(), gopurs_runtime.Float(0.0)).StrVal()))
-		}))), gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(gopurs_runtime.Func(func(__local_var_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showNumberImpl(), __local_var_1).StrVal()))
-			}), gopurs_runtime.Float(0.0)), gopurs_runtime.Func(func(_dollar___unused_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.RecordGet(Call_Data_Show_showArray(gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_3263178038_1386611502(Rebox_Main_1386611502_3263178038(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showNumber()))))}), "show"), func() gopurs_runtime.Value {
-					arr := []float64{0.0, 0.0}
-					boxed := make([]gopurs_runtime.Value, len(arr))
-					for i, v := range arr {
-						boxed[i] = gopurs_runtime.Float(v)
-					}
-					return gopurs_runtime.Array(boxed)
-				}()).StrVal())), gopurs_runtime.Func(func(_dollar___unused_2 gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.RecordGet(Call_Data_Show_showArray(gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_3263178038_1386611502(Rebox_Main_1386611502_3263178038(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showNumber()))))}), "show"), func() gopurs_runtime.Value {
-						arr := []float64{0.0, 0.0, 0.0}
-						boxed := make([]gopurs_runtime.Value, len(arr))
-						for i, v := range arr {
-							boxed[i] = gopurs_runtime.Float(v)
-						}
-						return gopurs_runtime.Array(boxed)
-					}()).StrVal())), gopurs_runtime.Func(func(_dollar___unused_3 gopurs_runtime.Value) gopurs_runtime.Value {
-						return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.RecordGet(Call_Data_Show_showArray(gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_3263178038_1386611502(Rebox_Main_1386611502_3263178038(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showNumber()))))}), "show"), func() gopurs_runtime.Value {
-							arr := []float64{0.0, 0.0, 0.0, 0.0}
-							boxed := make([]gopurs_runtime.Value, len(arr))
-							for i, v := range arr {
-								boxed[i] = gopurs_runtime.Float(v)
-							}
-							return gopurs_runtime.Array(boxed)
-						}()).StrVal())), gopurs_runtime.Func(func(_dollar___unused_4 gopurs_runtime.Value) gopurs_runtime.Value {
-							return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.RecordGet(Call_Data_Show_showArray(gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_3263178038_1386611502(Rebox_Main_1386611502_3263178038(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showNumber()))))}), "show"), func() gopurs_runtime.Value {
-								arr := []float64{0.0, 0.0, 0.0, 0.0, 0.0}
-								boxed := make([]gopurs_runtime.Value, len(arr))
-								for i, v := range arr {
-									boxed[i] = gopurs_runtime.Float(v)
-								}
-								return gopurs_runtime.Array(boxed)
-							}()).StrVal())), gopurs_runtime.Func(func(_dollar___unused_5 gopurs_runtime.Value) gopurs_runtime.Value {
-								return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.RecordGet(Call_Data_Show_showArray(gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_3263178038_1386611502(Rebox_Main_1386611502_3263178038(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showNumber()))))}), "show"), func() gopurs_runtime.Value {
-									arr := []float64{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
-									boxed := make([]gopurs_runtime.Value, len(arr))
-									for i, v := range arr {
-										boxed[i] = gopurs_runtime.Float(v)
-									}
-									return gopurs_runtime.Array(boxed)
-								}()).StrVal())), gopurs_runtime.Func(func(_dollar___unused_6 gopurs_runtime.Value) gopurs_runtime.Value {
-									return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.RecordGet(Call_Data_Show_showArray(gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_3263178038_1386611502(Rebox_Main_1386611502_3263178038(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showNumber()))))}), "show"), func() gopurs_runtime.Value {
-										arr := []float64{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
-										boxed := make([]gopurs_runtime.Value, len(arr))
-										for i, v := range arr {
-											boxed[i] = gopurs_runtime.Float(v)
-										}
-										return gopurs_runtime.Array(boxed)
-									}()).StrVal())), gopurs_runtime.Func(func(_dollar___unused_7 gopurs_runtime.Value) gopurs_runtime.Value {
-										return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.RecordGet(Call_Data_Show_showArray(gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_3263178038_1386611502(Rebox_Main_1386611502_3263178038(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showNumber()))))}), "show"), func() gopurs_runtime.Value {
-											arr := []float64{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
-											boxed := make([]gopurs_runtime.Value, len(arr))
-											for i, v := range arr {
-												boxed[i] = gopurs_runtime.Float(v)
-											}
-											return gopurs_runtime.Array(boxed)
-										}()).StrVal())), gopurs_runtime.Func(func(_dollar___unused_8 gopurs_runtime.Value) gopurs_runtime.Value {
-											return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.RecordGet(Call_Data_Show_showArray(gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_3263178038_1386611502(Rebox_Main_1386611502_3263178038(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showNumber()))))}), "show"), func() gopurs_runtime.Value {
-												arr := []float64{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
-												boxed := make([]gopurs_runtime.Value, len(arr))
-												for i, v := range arr {
-													boxed[i] = gopurs_runtime.Float(v)
-												}
-												return gopurs_runtime.Array(boxed)
-											}()).StrVal())), gopurs_runtime.Func(func(_dollar___unused_9 gopurs_runtime.Value) gopurs_runtime.Value {
-												return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.RecordGet(Call_Data_Show_showArray(gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_3263178038_1386611502(Rebox_Main_1386611502_3263178038(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showNumber()))))}), "show"), func() gopurs_runtime.Value {
-													arr := []float64{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
-													boxed := make([]gopurs_runtime.Value, len(arr))
-													for i, v := range arr {
-														boxed[i] = gopurs_runtime.Float(v)
-													}
-													return gopurs_runtime.Array(boxed)
-												}()).StrVal())), gopurs_runtime.Func(func(_dollar___unused_10 gopurs_runtime.Value) gopurs_runtime.Value {
-													return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Effect_Console_logShow(Rebox_Main_3263178038_1386611502(Rebox_Main_1386611502_3263178038(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showNumber()))), gopurs_runtime.Float(gopurs_runtime.UncurriedApp2(Get_Main_g(), gopurs_runtime.Float(0.0), gopurs_runtime.Float(0.0)).FloatVal())), gopurs_runtime.Func(func(_dollar___unused_11 gopurs_runtime.Value) gopurs_runtime.Value {
-														return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
-													}))
-												}))
-											}))
-										}))
-									}))
-								}))
-							}))
-						}))
-					}))
-				}))
-			}))
-		}))
+		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
+			__local_var_0_0 := gopurs_runtime.Apply(Get_Data_Function_Uncurried_runFn0(), gopurs_runtime.Apply(Get_Data_Function_Uncurried_mkFn0(), gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Data_Show_ShowNumberImpl(0.0)))
+			})))
+			_ = __local_var_0_0
+			__local_var_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
+			_ = __local_var_1_1
+			__local_var_2_2 := gopurs_runtime.Apply(gopurs_runtime.Apply(gopurs_runtime.Func(func(__local_var_2 gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Data_Show_ShowNumberImpl(__local_var_2.FloatVal())))
+			}), gopurs_runtime.Float(0.0)), gopurs_runtime.Value{})
+			_ = __local_var_2_2
+			__local_var_3_3 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Rebox_Main_1386611502_3467499472(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Main_showArray())).V0, func() gopurs_runtime.Value {
+				arr := []float64{0.0, 0.0}
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Float(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}()).StrVal())), gopurs_runtime.Value{})
+			_ = __local_var_3_3
+			__local_var_4_4 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Rebox_Main_1386611502_3467499472(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Main_showArray())).V0, func() gopurs_runtime.Value {
+				arr := []float64{0.0, 0.0, 0.0}
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Float(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}()).StrVal())), gopurs_runtime.Value{})
+			_ = __local_var_4_4
+			__local_var_5_5 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Rebox_Main_1386611502_3467499472(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Main_showArray())).V0, func() gopurs_runtime.Value {
+				arr := []float64{0.0, 0.0, 0.0, 0.0}
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Float(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}()).StrVal())), gopurs_runtime.Value{})
+			_ = __local_var_5_5
+			__local_var_6_6 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Rebox_Main_1386611502_3467499472(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Main_showArray())).V0, func() gopurs_runtime.Value {
+				arr := []float64{0.0, 0.0, 0.0, 0.0, 0.0}
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Float(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}()).StrVal())), gopurs_runtime.Value{})
+			_ = __local_var_6_6
+			__local_var_7_7 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Rebox_Main_1386611502_3467499472(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Main_showArray())).V0, func() gopurs_runtime.Value {
+				arr := []float64{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Float(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}()).StrVal())), gopurs_runtime.Value{})
+			_ = __local_var_7_7
+			__local_var_8_8 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Rebox_Main_1386611502_3467499472(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Main_showArray())).V0, func() gopurs_runtime.Value {
+				arr := []float64{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Float(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}()).StrVal())), gopurs_runtime.Value{})
+			_ = __local_var_8_8
+			__local_var_9_9 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Rebox_Main_1386611502_3467499472(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Main_showArray())).V0, func() gopurs_runtime.Value {
+				arr := []float64{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Float(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}()).StrVal())), gopurs_runtime.Value{})
+			_ = __local_var_9_9
+			__local_var_10_10 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Rebox_Main_1386611502_3467499472(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Main_showArray())).V0, func() gopurs_runtime.Value {
+				arr := []float64{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Float(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}()).StrVal())), gopurs_runtime.Value{})
+			_ = __local_var_10_10
+			__local_var_11_11 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Rebox_Main_1386611502_3467499472(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Main_showArray())).V0, func() gopurs_runtime.Value {
+				arr := []float64{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Float(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}()).StrVal())), gopurs_runtime.Value{})
+			_ = __local_var_11_11
+			__local_var_12_12 := gopurs_runtime.Apply(Call_Effect_Console_logShow(Rebox_Main_3263178038_1386611502(Rebox_Main_1386611502_3263178038(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showNumber()))), gopurs_runtime.Float(gopurs_runtime.UncurriedApp2(Get_Main_g(), gopurs_runtime.Float(0.0), gopurs_runtime.Float(0.0)).FloatVal())), gopurs_runtime.Value{})
+			_ = __local_var_12_12
+			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
+		})
 	})
 	return cache_Main_main
 }
@@ -158,12 +163,12 @@ func Call_Main_g(__local_var_0_loop gopurs_runtime.Value, __local_var_1_loop gop
 	_ = __local_var_1
 	var __t3 float64
 	{
-		var __t_tag_0 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordNumberImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_0, gopurs_runtime.Float(0.0))
+		var __t_tag_0 gopurs_runtime.Value = Data_Ord_OrdNumberImpl_nativeWorker(gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_0.FloatVal(), 0.0)
 		_ = __t_tag_0
 		var __t_or_2 bool = true
 		if !((uint32(__t_tag_0.IntVal) == 380165415) != (true)) {
 
-			var __t_tag_1 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordNumberImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_1, gopurs_runtime.Float(0.0))
+			var __t_tag_1 gopurs_runtime.Value = Data_Ord_OrdNumberImpl_nativeWorker(gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_1.FloatVal(), 0.0)
 			_ = __t_tag_1
 			__t_or_2 = (uint32(__t_tag_1.IntVal) == 380165415) != (true)
 		}
@@ -193,34 +198,26 @@ func Rebox_Main_1386611502_3263178038(in *Constructor_Data_Show_Show[gopurs_runt
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[float64]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[float64])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1386611502_3467499472(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[[]float64] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[[]float64]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[[]float64])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_3263178038_1386611502(in *Constructor_Data_Show_Show[float64]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_3467499472_1386611502(in *Constructor_Data_Show_Show[[]float64]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
 }

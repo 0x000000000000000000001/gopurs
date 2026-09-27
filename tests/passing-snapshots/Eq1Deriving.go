@@ -82,16 +82,12 @@ func Rebox_Main_1881195965_1766074591(in *Constructor_Data_Eq_Eq1[*Constructor_M
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Eq_Eq1[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Eq_Eq1[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_2869892012_3790796878(in *Constructor_Data_Eq_Eq[*Constructor_Main_Product[gopurs_runtime.Value, gopurs_runtime.Value]]) *Constructor_Data_Eq_Eq[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Eq_Eq[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Eq_Eq[gopurs_runtime.Value])(unsafe.Pointer(in))
 }

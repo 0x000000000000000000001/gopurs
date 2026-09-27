@@ -10,7 +10,7 @@ var once_Main_add sync.Once
 
 func Get_Main_add() gopurs_runtime.Value {
 	once_Main_add.Do(func() {
-		cache_Main_add = Call_Data_Semiring_add(Rebox_Main_602713622_2826095630(Rebox_Main_2826095630_602713622(gopurs_runtime.CoerceToStruct[Constructor_Data_Semiring_Semiring[gopurs_runtime.Value]](Get_Data_Semiring_semiringNumber()))))
+		cache_Main_add = Get_Data_Semiring_numAdd()
 	})
 	return cache_Main_add
 }
@@ -69,7 +69,7 @@ func Get_Main_test5() gopurs_runtime.Value {
 			f_0_2_4 = gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				var __t4 float64
 				{
-					var __t_tag_3 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordNumberImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, v_1, gopurs_runtime.Float(0.0))
+					var __t_tag_3 gopurs_runtime.Value = Data_Ord_OrdNumberImpl_nativeWorker(gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, v_1.FloatVal(), 0.0)
 					_ = __t_tag_3
 					if uint32(__t_tag_3.IntVal) == 380165415 {
 						__t4 = (gopurs_runtime.Apply((*g__512709115_0_0_2_cell), gopurs_runtime.Float((v_1.FloatVal())/(2.0))).FloatVal()) + (1.0)
@@ -142,38 +142,26 @@ var once_Main_main sync.Once
 
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
-		cache_Main_main = gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showNumberImpl(), gopurs_runtime.Float(2.0)).StrVal())), gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showNumberImpl(), gopurs_runtime.Float(5.0)).StrVal())), gopurs_runtime.Func(func(_dollar___unused_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showNumberImpl(), gopurs_runtime.Float(6.0)).StrVal())), gopurs_runtime.Func(func(_dollar___unused_2 gopurs_runtime.Value) gopurs_runtime.Value {
-					// TAST (Let): __local_var_3_0 shape=LitArray bindingType=(Array Number)
-					__local_var_3_0 := []float64{1.0, 2.0}
-					_ = __local_var_3_0
-					return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showNumberImpl(), gopurs_runtime.Float(gopurs_runtime.Apply2(Call_Data_Semiring_add(Rebox_Main_602713622_2826095630(Rebox_Main_2826095630_602713622(gopurs_runtime.CoerceToStruct[Constructor_Data_Semiring_Semiring[gopurs_runtime.Value]](Get_Data_Semiring_semiringNumber())))), gopurs_runtime.Float(gopurs_runtime.ArrayAccess(func() gopurs_runtime.Value {
-						arr := __local_var_3_0
-						boxed := make([]gopurs_runtime.Value, len(arr))
-						for i, v := range arr {
-							boxed[i] = gopurs_runtime.Float(v)
-						}
-						return gopurs_runtime.Array(boxed)
-					}(), 0).FloatVal()), gopurs_runtime.Float(gopurs_runtime.ArrayAccess(func() gopurs_runtime.Value {
-						arr := __local_var_3_0
-						boxed := make([]gopurs_runtime.Value, len(arr))
-						for i, v := range arr {
-							boxed[i] = gopurs_runtime.Float(v)
-						}
-						return gopurs_runtime.Array(boxed)
-					}(), 1).FloatVal())).FloatVal())).StrVal())), gopurs_runtime.Func(func(_dollar___unused_3 gopurs_runtime.Value) gopurs_runtime.Value {
-						return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showNumberImpl(), gopurs_runtime.Float(Get_Main_test5().FloatVal())).StrVal())), gopurs_runtime.Func(func(_dollar___unused_4 gopurs_runtime.Value) gopurs_runtime.Value {
-							return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showNumberImpl(), gopurs_runtime.Float(1.0)).StrVal())), gopurs_runtime.Func(func(_dollar___unused_5 gopurs_runtime.Value) gopurs_runtime.Value {
-								return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showNumberImpl(), gopurs_runtime.Float(Call_Main_test7(100.0))).StrVal())), gopurs_runtime.Func(func(_dollar___unused_6 gopurs_runtime.Value) gopurs_runtime.Value {
-									return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
-								}))
-							}))
-						}))
-					}))
-				}))
-			}))
-		}))
+		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
+			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Data_Show_ShowNumberImpl(2.0)))
+			_ = __local_var_0_0
+			__local_var_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
+			_ = __local_var_1_1
+			__local_var_2_2 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Data_Show_ShowNumberImpl(5.0))), gopurs_runtime.Value{})
+			_ = __local_var_2_2
+			_dollar___unused_3_3 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Data_Show_ShowNumberImpl(6.0))), gopurs_runtime.Value{})
+			_ = _dollar___unused_3_3
+			__local_var_4_4 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Data_Show_ShowNumberImpl(3.0))), gopurs_runtime.Value{})
+			_ = __local_var_4_4
+			_dollar___unused_5_5 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Data_Show_ShowNumberImpl(Get_Main_test5().FloatVal()))), gopurs_runtime.Value{})
+			_ = _dollar___unused_5_5
+			_dollar___unused_6_6 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Data_Show_ShowNumberImpl(1.0))), gopurs_runtime.Value{})
+			_ = _dollar___unused_6_6
+			__local_var_7_7 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Data_Show_ShowNumberImpl(Call_Main_test7(100.0)))), gopurs_runtime.Value{})
+			_ = __local_var_7_7
+			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
+		})
 	})
 	return cache_Main_main
 }
@@ -199,12 +187,12 @@ func Call_Main_test7(x_0_loop float64) float64 {
 			_ = v_2
 			var __t5 float64
 			{
-				var __t_tag_2 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordNumberImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, gopurs_runtime.Float((x_0)-(0.1)), gopurs_runtime.Float((v_2)*(v_2)))
+				var __t_tag_2 gopurs_runtime.Value = Data_Ord_OrdNumberImpl_nativeWorker(gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, (x_0)-(0.1), (v_2)*(v_2))
 				_ = __t_tag_2
 				var __t_and_4 bool = false
 				if uint32(__t_tag_2.IntVal) == 1527465420 {
 
-					var __t_tag_3 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordNumberImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, gopurs_runtime.Float((v_2)*(v_2)), gopurs_runtime.Float((x_0)+(0.1)))
+					var __t_tag_3 gopurs_runtime.Value = Data_Ord_OrdNumberImpl_nativeWorker(gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, (v_2)*(v_2), (x_0)+(0.1))
 					_ = __t_tag_3
 					__t_and_4 = (uint32(__t_tag_3.IntVal) == 1527465420)
 				}
@@ -235,12 +223,12 @@ func Call_Main_test7(x_0_loop float64) float64 {
 			_ = v_2
 			var __t9 float64
 			{
-				var __t_tag_6 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordNumberImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, gopurs_runtime.Float((x_0)-(0.1)), gopurs_runtime.Float((v_2)*(v_2)))
+				var __t_tag_6 gopurs_runtime.Value = Data_Ord_OrdNumberImpl_nativeWorker(gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, (x_0)-(0.1), (v_2)*(v_2))
 				_ = __t_tag_6
 				var __t_and_8 bool = false
 				if uint32(__t_tag_6.IntVal) == 1527465420 {
 
-					var __t_tag_7 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordNumberImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, gopurs_runtime.Float((v_2)*(v_2)), gopurs_runtime.Float((x_0)+(0.1)))
+					var __t_tag_7 gopurs_runtime.Value = Data_Ord_OrdNumberImpl_nativeWorker(gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, (v_2)*(v_2), (x_0)+(0.1))
 					_ = __t_tag_7
 					__t_and_8 = (uint32(__t_tag_7.IntVal) == 1527465420)
 				}
@@ -269,24 +257,7 @@ func Call_Main_test7(x_0_loop float64) float64 {
 func Call_Main_test4(dictPartial_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var dictPartial_0 gopurs_runtime.Value = dictPartial_0_loop
 	_ = dictPartial_0
-	// TAST (Let): __local_var_1_0 shape=LitArray bindingType=(Array Number)
-	__local_var_1_0 := []float64{1.0, 2.0}
-	_ = __local_var_1_0
-	return gopurs_runtime.Float(gopurs_runtime.Apply2(Call_Data_Semiring_add(Rebox_Main_602713622_2826095630(Rebox_Main_2826095630_602713622(gopurs_runtime.CoerceToStruct[Constructor_Data_Semiring_Semiring[gopurs_runtime.Value]](Get_Data_Semiring_semiringNumber())))), gopurs_runtime.Float(gopurs_runtime.ArrayAccess(func() gopurs_runtime.Value {
-		arr := __local_var_1_0
-		boxed := make([]gopurs_runtime.Value, len(arr))
-		for i, v := range arr {
-			boxed[i] = gopurs_runtime.Float(v)
-		}
-		return gopurs_runtime.Array(boxed)
-	}(), 0).FloatVal()), gopurs_runtime.Float(gopurs_runtime.ArrayAccess(func() gopurs_runtime.Value {
-		arr := __local_var_1_0
-		boxed := make([]gopurs_runtime.Value, len(arr))
-		for i, v := range arr {
-			boxed[i] = gopurs_runtime.Float(v)
-		}
-		return gopurs_runtime.Array(boxed)
-	}(), 1).FloatVal())).FloatVal())
+	return gopurs_runtime.Float(3.0)
 }
 
 func Call_Main_test2(x_0_loop float64, y_1_loop float64) float64 {
@@ -301,28 +272,4 @@ func Call_Main_test1(x_0_loop float64) float64 {
 	var x_0 float64 = x_0_loop
 	_ = x_0
 	return (x_0) + (1.0)
-}
-
-func Rebox_Main_2826095630_602713622(in *Constructor_Data_Semiring_Semiring[gopurs_runtime.Value]) *Constructor_Data_Semiring_Semiring[float64] {
-	if in == nil {
-		return nil
-	}
-	out := &Constructor_Data_Semiring_Semiring[float64]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	out.V2 = in.V2.FloatVal()
-	out.V3 = in.V3.FloatVal()
-	return out
-}
-
-func Rebox_Main_602713622_2826095630(in *Constructor_Data_Semiring_Semiring[float64]) *Constructor_Data_Semiring_Semiring[gopurs_runtime.Value] {
-	if in == nil {
-		return nil
-	}
-	out := &Constructor_Data_Semiring_Semiring[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	out.V2 = gopurs_runtime.Float(in.V2)
-	out.V3 = gopurs_runtime.Float(in.V3)
-	return out
 }

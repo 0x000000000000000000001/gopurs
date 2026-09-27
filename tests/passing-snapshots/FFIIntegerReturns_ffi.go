@@ -103,3 +103,28 @@ gopurs_runtime.Func(func(arg0 gopurs_runtime.Value) gopurs_runtime.Value {
 		return gopurs_runtime.Array(res_arr)
 	}()
 })
+
+// --- Boxed-result FFI workers ---
+func Main_DynamicBoolean_nativeWorker(arg0 bool) gopurs_runtime.Value {
+	go_arg0 := arg0
+	go_res := Main_DynamicBoolean(go_arg0)
+	return gopurs_runtime.Box(go_res)
+}
+
+func Main_DynamicInt_nativeWorker(arg0 int) gopurs_runtime.Value {
+	go_arg0 := arg0
+	go_res := Main_DynamicInt(go_arg0)
+	return gopurs_runtime.Box(go_res)
+}
+
+func Main_DynamicInt64_nativeWorker(arg0 int64) gopurs_runtime.Value {
+	go_arg0 := arg0
+	go_res := Main_DynamicInt64(go_arg0)
+	return gopurs_runtime.Box(go_res)
+}
+
+func Main_DynamicString_nativeWorker(arg0 string) gopurs_runtime.Value {
+	go_arg0 := arg0
+	go_res := Main_DynamicString(go_arg0)
+	return gopurs_runtime.Box(go_res)
+}

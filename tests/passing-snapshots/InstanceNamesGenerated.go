@@ -929,9 +929,9 @@ var once_Main_main sync.Once
 
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
-		cache_Main_main = gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Lib_doTest(gopurs_runtime.Value{Type: 9, IntVal: 2230863625, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Lib_NamedExportStillWorks[gopurs_runtime.Value]](Get_Lib_namedExportStillWorksUnit1()))}), gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
-		}))
+		})
 	})
 	return cache_Main_main
 }
@@ -1606,8 +1606,5 @@ func Rebox_Main_855013872_2818661616(in *Constructor_Data_Generic_Rep_Generic[ui
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Generic_Rep_Generic[gopurs_runtime.Value, gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	return out
+	return (*Constructor_Data_Generic_Rep_Generic[gopurs_runtime.Value, gopurs_runtime.Value])(unsafe.Pointer(in))
 }

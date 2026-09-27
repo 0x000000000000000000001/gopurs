@@ -91,7 +91,7 @@ var once_Main_two2 sync.Once
 
 func Get_Main_two2() gopurs_runtime.Value {
 	once_Main_two2.Do(func() {
-		cache_Main_two2 = gopurs_runtime.Str(gopurs_runtime.Apply(Call_Data_Symbol_reflectSymbol(gopurs_runtime.CoerceToStruct[Constructor_Data_Symbol_IsSymbol[gopurs_runtime.Value]](Get_Main_X_2IsSymbol())), gopurs_runtime.Value{Type: 9, IntVal: int64(513803634), UnsafePtr: nil}).StrVal())
+		cache_Main_two2 = gopurs_runtime.Str("2")
 	})
 	return cache_Main_two2
 }
@@ -101,7 +101,7 @@ var once_Main_twoThirty2 sync.Once
 
 func Get_Main_twoThirty2() gopurs_runtime.Value {
 	once_Main_twoThirty2.Do(func() {
-		cache_Main_twoThirty2 = gopurs_runtime.Str(gopurs_runtime.Apply(Call_Data_Symbol_reflectSymbol(gopurs_runtime.CoerceToStruct[Constructor_Data_Symbol_IsSymbol[gopurs_runtime.Value]](Get_Main_X_2_colon_30IsSymbol())), gopurs_runtime.Value{Type: 9, IntVal: int64(513803634), UnsafePtr: nil}).StrVal())
+		cache_Main_twoThirty2 = gopurs_runtime.Str("2:30")
 	})
 	return cache_Main_twoThirty2
 }
@@ -130,7 +130,7 @@ reflectSymbol_prime___1436918783:
 		}
 		var __eta_norm_0_unused_0 uint32 = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
-		return gopurs_runtime.Apply(Call_Data_Symbol_reflectSymbol(gopurs_runtime.CoerceToStruct[Constructor_Data_Symbol_IsSymbol[gopurs_runtime.Value]](Get_Main_X_2_colon_30IsSymbol())), gopurs_runtime.Value{Type: 9, IntVal: int64(513803634), UnsafePtr: nil}).StrVal()
+		return "2:30"
 	}
 }
 
@@ -142,6 +142,6 @@ reflectSymbol_prime___781938175:
 		}
 		var __eta_norm_0_unused_0 uint32 = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
-		return gopurs_runtime.Apply(Call_Data_Symbol_reflectSymbol(gopurs_runtime.CoerceToStruct[Constructor_Data_Symbol_IsSymbol[gopurs_runtime.Value]](Get_Main_X_2IsSymbol())), gopurs_runtime.Value{Type: 9, IntVal: int64(513803634), UnsafePtr: nil}).StrVal()
+		return "2"
 	}
 }

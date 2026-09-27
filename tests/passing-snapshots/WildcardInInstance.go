@@ -38,7 +38,9 @@ func Get_Main_monadAskFun() gopurs_runtime.Value {
 	once_Main_monadAskFun.Do(func() {
 		cache_Main_monadAskFun = gopurs_runtime.Value{Type: 9, IntVal: 1125470254, UnsafePtr: unsafe.Pointer((&Constructor_Main_MonadAsk[gopurs_runtime.Value, gopurs_runtime.Value]{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 778916621, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad[gopurs_runtime.Value]](Get_Control_Monad_monadFn()))}
-		}), Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))})}))}
+		}), gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			return x_0
+		})}))}
 	})
 	return cache_Main_monadAskFun
 }

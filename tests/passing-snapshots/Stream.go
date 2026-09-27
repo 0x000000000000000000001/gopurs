@@ -223,27 +223,21 @@ uncons__3690923209:
 		}
 		var __eta_norm_0_0 *Constructor_Main_Stream[string] = __eta_norm_0_0_loop
 		_ = __eta_norm_0_0
-		return func() struct {
+		return func(record struct {
+			head gopurs_runtime.Value
+			tail *Constructor_Main_Stream[gopurs_runtime.Value]
+		}) struct {
 			head string
 			tail *Constructor_Main_Stream[string]
 		} {
-			orig := func() gopurs_runtime.Value {
-				orig := struct {
-					head gopurs_runtime.Value
-					tail *Constructor_Main_Stream[gopurs_runtime.Value]
-				}{gopurs_runtime.Str((__eta_norm_0_0).V0), gopurs_runtime.CoerceToStruct[Constructor_Main_Stream[gopurs_runtime.Value]](gopurs_runtime.Apply((__eta_norm_0_0).V1, Get_Data_Unit_unit()))}
-				_ = orig
-				return gopurs_runtime.RecordDict2("head", "tail", orig.head, gopurs_runtime.Value{Type: 9, IntVal: 1020906690, UnsafePtr: unsafe.Pointer(orig.tail)})
-			}()
-			_ = orig
-			clone := struct {
+			return struct {
 				head string
 				tail *Constructor_Main_Stream[string]
-			}{}
-			clone.head = gopurs_runtime.RecordGet(orig, "head").StrVal()
-			clone.tail = Rebox_Main_356935894_759323721(gopurs_runtime.CoerceToStruct[Constructor_Main_Stream[gopurs_runtime.Value]](gopurs_runtime.RecordGet(orig, "tail")))
-			return clone
-		}()
+			}{record.head.StrVal(), Rebox_Main_356935894_759323721(record.tail)}
+		}(struct {
+			head gopurs_runtime.Value
+			tail *Constructor_Main_Stream[gopurs_runtime.Value]
+		}{gopurs_runtime.Str((__eta_norm_0_0).V0), gopurs_runtime.CoerceToStruct[Constructor_Main_Stream[gopurs_runtime.Value]](gopurs_runtime.Apply((__eta_norm_0_0).V1, Get_Data_Unit_unit()))})
 	}
 }
 
@@ -305,27 +299,21 @@ test__483983286:
 		var s_0 *Constructor_Main_Stream[string] = s_0_loop
 		_ = s_0
 		// TAST (Let): v_1_0 shape=LitRecord bindingType=(Record (Row [head: Any, tail: (TypeVar s$scope12)] Empty))
-		v_1_0 := func() struct {
+		v_1_0 := func(record struct {
+			head gopurs_runtime.Value
+			tail *Constructor_Main_Stream[gopurs_runtime.Value]
+		}) struct {
 			head gopurs_runtime.Value
 			tail gopurs_runtime.Value
 		} {
-			orig := func() gopurs_runtime.Value {
-				orig := struct {
-					head gopurs_runtime.Value
-					tail *Constructor_Main_Stream[gopurs_runtime.Value]
-				}{gopurs_runtime.Str((s_0).V0), gopurs_runtime.CoerceToStruct[Constructor_Main_Stream[gopurs_runtime.Value]](gopurs_runtime.Apply((s_0).V1, Get_Data_Unit_unit()))}
-				_ = orig
-				return gopurs_runtime.RecordDict2("head", "tail", orig.head, gopurs_runtime.Value{Type: 9, IntVal: 1020906690, UnsafePtr: unsafe.Pointer(orig.tail)})
-			}()
-			_ = orig
-			clone := struct {
+			return struct {
 				head gopurs_runtime.Value
 				tail gopurs_runtime.Value
-			}{}
-			clone.head = gopurs_runtime.RecordGet(orig, "head")
-			clone.tail = gopurs_runtime.RecordGet(orig, "tail")
-			return clone
-		}()
+			}{record.head, gopurs_runtime.Value{Type: 9, IntVal: 1020906690, UnsafePtr: unsafe.Pointer(record.tail)}}
+		}(struct {
+			head gopurs_runtime.Value
+			tail *Constructor_Main_Stream[gopurs_runtime.Value]
+		}{gopurs_runtime.Str((s_0).V0), gopurs_runtime.CoerceToStruct[Constructor_Main_Stream[gopurs_runtime.Value]](gopurs_runtime.Apply((s_0).V1, Get_Data_Unit_unit()))})
 		_ = v_1_0
 		// TAST (Let): __local_var_2_1 shape=Other bindingType=Any
 		__local_var_2_1 := v_1_0.tail
@@ -350,10 +338,7 @@ func Rebox_Main_506827641_2356788234(in *Constructor_Main_IsStream[gopurs_runtim
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_IsStream[gopurs_runtime.Value, gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	return out
+	return (*Constructor_Main_IsStream[gopurs_runtime.Value, gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_759323721_356935894(in *Constructor_Main_Stream[string]) *Constructor_Main_Stream[gopurs_runtime.Value] {

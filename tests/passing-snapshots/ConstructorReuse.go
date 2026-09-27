@@ -314,176 +314,162 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = __local_var_5_5
 			__local_var_6_6 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_5_5), gopurs_runtime.Value{})
 			_ = __local_var_6_6
-			return gopurs_runtime.Apply(gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___4176622598("", struct {
+			__local_var_7_7 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("", struct {
 				actual   string
 				expected string
-			}{Call_Main_render(Call_Main_setBlack(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "red")))), blackText_3_3}), gopurs_runtime.Func(func(_dollar___unused_7 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___4176622598("", struct {
-					actual   string
-					expected string
-				}{Call_Main_render(Call_Main_setBlack(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "black")))), blackText_3_3}), gopurs_runtime.Func(func(_dollar___unused_8 gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___4176622598("", struct {
-						actual   string
-						expected string
-					}{Call_Main_render(Call_Main_setBlack(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "empty")))), "E"}), gopurs_runtime.Func(func(_dollar___unused_9 gopurs_runtime.Value) gopurs_runtime.Value {
-						return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___4176622598("", struct {
-							actual   string
-							expected string
-						}{Call_Main_render(Call_Main_setSeven(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "red")))), sevenText_1_1}), gopurs_runtime.Func(func(_dollar___unused_10 gopurs_runtime.Value) gopurs_runtime.Value {
-							return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___4176622598("", struct {
-								actual   string
-								expected string
-							}{Call_Main_render(Call_Main_setSeven(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "seven")))), sevenText_1_1}), gopurs_runtime.Func(func(_dollar___unused_11 gopurs_runtime.Value) gopurs_runtime.Value {
-								return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___4176622598("", struct {
-									actual   string
-									expected string
-								}{Call_Main_render(Call_Main_setTrue(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "red")))), trueText_2_2}), gopurs_runtime.Func(func(_dollar___unused_12 gopurs_runtime.Value) gopurs_runtime.Value {
-									return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___4176622598("", struct {
-										actual   string
-										expected string
-									}{Call_Main_render(Call_Main_setTrue(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "flagged")))), trueText_2_2}), gopurs_runtime.Func(func(_dollar___unused_13 gopurs_runtime.Value) gopurs_runtime.Value {
-										return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___4176622598("", struct {
-											actual   string
-											expected string
-										}{Call_Main_render(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "red"))), redText_0_0}), gopurs_runtime.Func(func(_dollar___unused_14 gopurs_runtime.Value) gopurs_runtime.Value {
-											return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___4176622598("", struct {
-												actual   string
-												expected string
-											}{Call_Main_render(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "black"))), blackText_3_3}), gopurs_runtime.Func(func(_dollar___unused_15 gopurs_runtime.Value) gopurs_runtime.Value {
-												return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___4176622598("", struct {
-													actual   string
-													expected string
-												}{Call_Main_render(Call_Main_setSeven(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "empty")))), "E"}), gopurs_runtime.Func(func(_dollar___unused_16 gopurs_runtime.Value) gopurs_runtime.Value {
-													return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___4176622598("", struct {
-														actual   string
-														expected string
-													}{Call_Main_render(Call_Main_setTrue(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "empty")))), "E"}), gopurs_runtime.Func(func(_dollar___unused_17 gopurs_runtime.Value) gopurs_runtime.Value {
-														return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-															__local_var_18_7 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Value{Type: 9, IntVal: 4068147934, UnsafePtr: unsafe.Pointer(Call_Main_setBlack(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "red"))))}), gopurs_runtime.Value{})
-															_ = __local_var_18_7
-															__local_var_19_8 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_18_7), gopurs_runtime.Value{})
-															_ = __local_var_19_8
-															__local_var_20_9 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Value{Type: 9, IntVal: 4068147934, UnsafePtr: unsafe.Pointer(Call_Main_setSeven(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](__local_var_19_8)))}), gopurs_runtime.Value{})
-															_ = __local_var_20_9
-															__local_var_21_10 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_20_9), gopurs_runtime.Value{})
-															_ = __local_var_21_10
-															return gopurs_runtime.Apply(gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___4176622598("", struct {
-																actual   string
-																expected string
-															}{Call_Main_render(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](__local_var_21_10)), Call_Main_nodeText("B", int64(7), false, "B:-3:true[E][E]", "R:9:false[E][E]")}), gopurs_runtime.Func(func(_dollar___unused_22 gopurs_runtime.Value) gopurs_runtime.Value {
-																return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___4176622598("", struct {
-																	actual   string
-																	expected string
-																}{Call_Main_render(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](__local_var_19_8)), blackText_3_3}), gopurs_runtime.Func(func(_dollar___unused_23 gopurs_runtime.Value) gopurs_runtime.Value {
-																	return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___4176622598("", struct {
-																		actual   string
-																		expected string
-																	}{Call_Main_render(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "red"))), redText_0_0}), gopurs_runtime.Func(func(_dollar___unused_24 gopurs_runtime.Value) gopurs_runtime.Value {
-																		return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___4176622598("", struct {
-																			actual   string
-																			expected string
-																		}{Call_Main_render(Call_Main_swapChildren(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "black")))), Call_Main_nodeText("B", int64(17), false, "R:9:false[E][E]", "B:-3:true[E][E]")}), gopurs_runtime.Func(func(_dollar___unused_25 gopurs_runtime.Value) gopurs_runtime.Value {
-																			return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___4176622598("", struct {
-																				actual   string
-																				expected string
-																			}{Call_Main_render(Call_Main_mixSources(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "black")), gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "other")))), Call_Main_nodeText("B", int64(17), false, "B:-3:true[E][E]", "B:42:true[E][E]")}), gopurs_runtime.Func(func(_dollar___unused_26 gopurs_runtime.Value) gopurs_runtime.Value {
-																				return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___4176622598("", struct {
-																					actual   string
-																					expected string
-																				}{Call_Main_render(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "black"))), blackText_3_3}), gopurs_runtime.Func(func(_dollar___unused_27 gopurs_runtime.Value) gopurs_runtime.Value {
-																					return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___4176622598("", struct {
-																						actual   string
-																						expected string
-																					}{Call_Main_render(Call_Main_setBlackTrue(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "black")))), Call_Main_nodeText("B", int64(17), true, "B:-3:true[E][E]", "R:9:false[E][E]")}), gopurs_runtime.Func(func(_dollar___unused_28 gopurs_runtime.Value) gopurs_runtime.Value {
-																						return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___4176622598("", struct {
-																							actual   string
-																							expected string
-																						}{Call_Main_render(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "black"))), blackText_3_3}), gopurs_runtime.Func(func(_dollar___unused_29 gopurs_runtime.Value) gopurs_runtime.Value {
-																							return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-																								// TAST (Let): __local_var_30_11 shape=App(Var) bindingType=Any
-																								__local_var_30_11 := gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Value{Type: 9, IntVal: 2444816644, UnsafePtr: unsafe.Pointer((&Constructor_Main_First{1, 939353081, int64(41)}))})
-																								_ = __local_var_30_11
-																								__local_var_31_12 := gopurs_runtime.Apply(__local_var_30_11, gopurs_runtime.Value{})
-																								_ = __local_var_31_12
-																								__local_var_32_13 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_31_12), gopurs_runtime.Value{})
-																								_ = __local_var_32_13
-																								return gopurs_runtime.Apply(gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___4176622598("", struct {
-																									actual   string
-																									expected string
-																								}{Call_Main_renderTagged(Call_Main_toSecond(__local_var_32_13)), "second:B:41"}), gopurs_runtime.Func(func(_dollar___unused_33 gopurs_runtime.Value) gopurs_runtime.Value {
-																									return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___4176622598("", struct {
-																										actual   string
-																										expected string
-																									}{Call_Main_renderTagged(__local_var_32_13), "first:B:41"}), gopurs_runtime.Func(func(_dollar___unused_34 gopurs_runtime.Value) gopurs_runtime.Value {
-																										return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-																											// TAST (Let): __local_var_35_14 shape=App(Var) bindingType=Any
-																											__local_var_35_14 := gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Float(0.0))
-																											_ = __local_var_35_14
-																											__local_var_36_15 := gopurs_runtime.Apply(__local_var_35_14, gopurs_runtime.Value{})
-																											_ = __local_var_36_15
-																											__local_var_37_16 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_36_15), gopurs_runtime.Value{})
-																											_ = __local_var_37_16
-																											__local_var_38_17 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Value{Type: 9, IntVal: 1758940859, UnsafePtr: unsafe.Pointer((&Constructor_Main_NumberCell{1, -(__local_var_37_16.FloatVal()), int64(5)}))}), gopurs_runtime.Value{})
-																											_ = __local_var_38_17
-																											__local_var_39_18 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_38_17), gopurs_runtime.Value{})
-																											_ = __local_var_39_18
-																											var __t_tag_19 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordNumberImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, gopurs_runtime.Float((1.0)/((*Constructor_Main_NumberCell)(__local_var_39_18.UnsafePtr).V0)), gopurs_runtime.Float(0.0))
-																											_ = __t_tag_19
-																											return gopurs_runtime.Apply(gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___1138829510("", struct {
-																												actual   bool
-																												expected bool
-																											}{(uint32(__t_tag_19.IntVal) == 1527465420), true}), gopurs_runtime.Func(func(_dollar___unused_40 gopurs_runtime.Value) gopurs_runtime.Value {
-																												return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
-																													__local_var_41_20 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Value{Type: 9, IntVal: 1758940859, UnsafePtr: unsafe.Pointer(Call_Main_positiveZero(gopurs_runtime.CoerceToStruct[Constructor_Main_NumberCell](__local_var_39_18)))}), gopurs_runtime.Value{})
-																													_ = __local_var_41_20
-																													__local_var_42_21 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_41_20), gopurs_runtime.Value{})
-																													_ = __local_var_42_21
-																													var __t_tag_22 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordNumberImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, gopurs_runtime.Float((1.0)/((*Constructor_Main_NumberCell)(__local_var_42_21.UnsafePtr).V0)), gopurs_runtime.Float(0.0))
-																													_ = __t_tag_22
-																													return gopurs_runtime.Apply(gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___1138829510("", struct {
-																														actual   bool
-																														expected bool
-																													}{(uint32(__t_tag_22.IntVal) == 1527465420), false}), gopurs_runtime.Func(func(_dollar___unused_43 gopurs_runtime.Value) gopurs_runtime.Value {
-																														var __t_tag_23 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordNumberImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, gopurs_runtime.Float((1.0)/((*Constructor_Main_NumberCell)(__local_var_39_18.UnsafePtr).V0)), gopurs_runtime.Float(0.0))
-																														_ = __t_tag_23
-																														return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___1138829510("", struct {
-																															actual   bool
-																															expected bool
-																														}{(uint32(__t_tag_23.IntVal) == 1527465420), true}), gopurs_runtime.Func(func(_dollar___unused_44 gopurs_runtime.Value) gopurs_runtime.Value {
-																															return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___627669702("", struct {
-																																actual   int64
-																																expected int64
-																															}{(*Constructor_Main_NumberCell)(__local_var_42_21.UnsafePtr).V1, int64(5)}), gopurs_runtime.Func(func(_dollar___unused_45 gopurs_runtime.Value) gopurs_runtime.Value {
-																																return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
-																															}))
-																														}))
-																													})), gopurs_runtime.Value{})
-																												})
-																											})), gopurs_runtime.Value{})
-																										})
-																									}))
-																								})), gopurs_runtime.Value{})
-																							})
-																						}))
-																					}))
-																				}))
-																			}))
-																		}))
-																	}))
-																}))
-															})), gopurs_runtime.Value{})
-														})
-													}))
-												}))
-											}))
-										}))
-									}))
-								}))
-							}))
-						}))
-					}))
-				}))
-			})), gopurs_runtime.Value{})
+			}{Call_Main_render(Call_Main_setBlack(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "red")))), blackText_3_3}), gopurs_runtime.Value{})
+			_ = __local_var_7_7
+			__local_var_8_8 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("", struct {
+				actual   string
+				expected string
+			}{Call_Main_render(Call_Main_setBlack(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "black")))), blackText_3_3}), gopurs_runtime.Value{})
+			_ = __local_var_8_8
+			__local_var_9_9 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("", struct {
+				actual   string
+				expected string
+			}{Call_Main_render(Call_Main_setBlack(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "empty")))), "E"}), gopurs_runtime.Value{})
+			_ = __local_var_9_9
+			__local_var_10_10 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("", struct {
+				actual   string
+				expected string
+			}{Call_Main_render(Call_Main_setSeven(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "red")))), sevenText_1_1}), gopurs_runtime.Value{})
+			_ = __local_var_10_10
+			__local_var_11_11 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("", struct {
+				actual   string
+				expected string
+			}{Call_Main_render(Call_Main_setSeven(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "seven")))), sevenText_1_1}), gopurs_runtime.Value{})
+			_ = __local_var_11_11
+			__local_var_12_12 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("", struct {
+				actual   string
+				expected string
+			}{Call_Main_render(Call_Main_setTrue(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "red")))), trueText_2_2}), gopurs_runtime.Value{})
+			_ = __local_var_12_12
+			__local_var_13_13 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("", struct {
+				actual   string
+				expected string
+			}{Call_Main_render(Call_Main_setTrue(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "flagged")))), trueText_2_2}), gopurs_runtime.Value{})
+			_ = __local_var_13_13
+			__local_var_14_14 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("", struct {
+				actual   string
+				expected string
+			}{Call_Main_render(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "red"))), redText_0_0}), gopurs_runtime.Value{})
+			_ = __local_var_14_14
+			__local_var_15_15 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("", struct {
+				actual   string
+				expected string
+			}{Call_Main_render(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "black"))), blackText_3_3}), gopurs_runtime.Value{})
+			_ = __local_var_15_15
+			__local_var_16_16 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("", struct {
+				actual   string
+				expected string
+			}{Call_Main_render(Call_Main_setSeven(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "empty")))), "E"}), gopurs_runtime.Value{})
+			_ = __local_var_16_16
+			__local_var_17_17 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("", struct {
+				actual   string
+				expected string
+			}{Call_Main_render(Call_Main_setTrue(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "empty")))), "E"}), gopurs_runtime.Value{})
+			_ = __local_var_17_17
+			__local_var_18_18 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Value{Type: 9, IntVal: 4068147934, UnsafePtr: unsafe.Pointer(Call_Main_setBlack(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "red"))))}), gopurs_runtime.Value{})
+			_ = __local_var_18_18
+			__local_var_19_19 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_18_18), gopurs_runtime.Value{})
+			_ = __local_var_19_19
+			__local_var_20_20 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Value{Type: 9, IntVal: 4068147934, UnsafePtr: unsafe.Pointer(Call_Main_setSeven(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](__local_var_19_19)))}), gopurs_runtime.Value{})
+			_ = __local_var_20_20
+			__local_var_21_21 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_20_20), gopurs_runtime.Value{})
+			_ = __local_var_21_21
+			__local_var_22_22 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("", struct {
+				actual   string
+				expected string
+			}{Call_Main_render(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](__local_var_21_21)), Call_Main_nodeText("B", int64(7), false, "B:-3:true[E][E]", "R:9:false[E][E]")}), gopurs_runtime.Value{})
+			_ = __local_var_22_22
+			__local_var_23_23 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("", struct {
+				actual   string
+				expected string
+			}{Call_Main_render(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](__local_var_19_19)), blackText_3_3}), gopurs_runtime.Value{})
+			_ = __local_var_23_23
+			__local_var_24_24 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("", struct {
+				actual   string
+				expected string
+			}{Call_Main_render(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "red"))), redText_0_0}), gopurs_runtime.Value{})
+			_ = __local_var_24_24
+			__local_var_25_25 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("", struct {
+				actual   string
+				expected string
+			}{Call_Main_render(Call_Main_swapChildren(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "black")))), Call_Main_nodeText("B", int64(17), false, "R:9:false[E][E]", "B:-3:true[E][E]")}), gopurs_runtime.Value{})
+			_ = __local_var_25_25
+			__local_var_26_26 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("", struct {
+				actual   string
+				expected string
+			}{Call_Main_render(Call_Main_mixSources(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "black")), gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "other")))), Call_Main_nodeText("B", int64(17), false, "B:-3:true[E][E]", "B:42:true[E][E]")}), gopurs_runtime.Value{})
+			_ = __local_var_26_26
+			__local_var_27_27 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("", struct {
+				actual   string
+				expected string
+			}{Call_Main_render(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "black"))), blackText_3_3}), gopurs_runtime.Value{})
+			_ = __local_var_27_27
+			__local_var_28_28 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("", struct {
+				actual   string
+				expected string
+			}{Call_Main_render(Call_Main_setBlackTrue(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "black")))), Call_Main_nodeText("B", int64(17), true, "B:-3:true[E][E]", "R:9:false[E][E]")}), gopurs_runtime.Value{})
+			_ = __local_var_28_28
+			__local_var_29_29 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("", struct {
+				actual   string
+				expected string
+			}{Call_Main_render(gopurs_runtime.CoerceToStruct[Constructor_Main_Node](gopurs_runtime.RecordGet(__local_var_6_6, "black"))), blackText_3_3}), gopurs_runtime.Value{})
+			_ = __local_var_29_29
+			__local_var_30_30 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Value{Type: 9, IntVal: 2444816644, UnsafePtr: unsafe.Pointer((&Constructor_Main_First{1, 939353081, int64(41)}))}), gopurs_runtime.Value{})
+			_ = __local_var_30_30
+			__local_var_31_31 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_30_30), gopurs_runtime.Value{})
+			_ = __local_var_31_31
+			__local_var_32_32 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("", struct {
+				actual   string
+				expected string
+			}{Call_Main_renderTagged(Call_Main_toSecond(__local_var_31_31)), "second:B:41"}), gopurs_runtime.Value{})
+			_ = __local_var_32_32
+			__local_var_33_33 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("", struct {
+				actual   string
+				expected string
+			}{Call_Main_renderTagged(__local_var_31_31), "first:B:41"}), gopurs_runtime.Value{})
+			_ = __local_var_33_33
+			__local_var_34_34 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Float(0.0)), gopurs_runtime.Value{})
+			_ = __local_var_34_34
+			__local_var_35_35 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_34_34), gopurs_runtime.Value{})
+			_ = __local_var_35_35
+			__local_var_36_36 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Value{Type: 9, IntVal: 1758940859, UnsafePtr: unsafe.Pointer((&Constructor_Main_NumberCell{1, -(__local_var_35_35.FloatVal()), int64(5)}))}), gopurs_runtime.Value{})
+			_ = __local_var_36_36
+			__local_var_37_37 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_36_36), gopurs_runtime.Value{})
+			_ = __local_var_37_37
+			var __t_tag_39 gopurs_runtime.Value = Data_Ord_OrdNumberImpl_nativeWorker(gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, (1.0)/((*Constructor_Main_NumberCell)(__local_var_37_37.UnsafePtr).V0), 0.0)
+			_ = __t_tag_39
+			__local_var_38_38 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
+				actual   bool
+				expected bool
+			}{(uint32(__t_tag_39.IntVal) == 1527465420), true}), gopurs_runtime.Value{})
+			_ = __local_var_38_38
+			__local_var_39_40 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Value{Type: 9, IntVal: 1758940859, UnsafePtr: unsafe.Pointer(Call_Main_positiveZero(gopurs_runtime.CoerceToStruct[Constructor_Main_NumberCell](__local_var_37_37)))}), gopurs_runtime.Value{})
+			_ = __local_var_39_40
+			__local_var_40_41 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_39_40), gopurs_runtime.Value{})
+			_ = __local_var_40_41
+			var __t_tag_43 gopurs_runtime.Value = Data_Ord_OrdNumberImpl_nativeWorker(gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, (1.0)/((*Constructor_Main_NumberCell)(__local_var_40_41.UnsafePtr).V0), 0.0)
+			_ = __t_tag_43
+			__local_var_41_42 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
+				actual   bool
+				expected bool
+			}{(uint32(__t_tag_43.IntVal) == 1527465420), false}), gopurs_runtime.Value{})
+			_ = __local_var_41_42
+			var __t_tag_45 gopurs_runtime.Value = Data_Ord_OrdNumberImpl_nativeWorker(gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, (1.0)/((*Constructor_Main_NumberCell)(__local_var_37_37.UnsafePtr).V0), 0.0)
+			_ = __t_tag_45
+			__local_var_42_44 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
+				actual   bool
+				expected bool
+			}{(uint32(__t_tag_45.IntVal) == 1527465420), true}), gopurs_runtime.Value{})
+			_ = __local_var_42_44
+			__local_var_43_46 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
+				actual   int64
+				expected int64
+			}{(*Constructor_Main_NumberCell)(__local_var_40_41.UnsafePtr).V1, int64(5)}), gopurs_runtime.Value{})
+			_ = __local_var_43_46
+			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
 		})
 	})
 	return cache_Main_main
@@ -1020,7 +1006,7 @@ func Call_Main_nodeText(color_0_loop string, key_1_loop int64, active_2_loop boo
 		__t0 = "false"
 	}
 end_branch_0:
-	return (((((((((color_0) + (":")) + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.Int(key_1)).StrVal())) + (":")) + (__t0)) + ("[")) + (left_3)) + ("][")) + (right_4)) + ("]")
+	return (((((((((color_0) + (":")) + (Data_Show_ShowIntImpl(key_1))) + (":")) + (__t0)) + ("[")) + (left_3)) + ("][")) + (right_4)) + ("]")
 }
 
 func Call_Main_mixSources(v_0_loop *Constructor_Main_Node, v1_1_loop *Constructor_Main_Node) *Constructor_Main_Node {
@@ -1047,7 +1033,7 @@ end_branch_0:
 func Call_Main_isNegativeZero(v_0_loop *Constructor_Main_NumberCell) bool {
 	var v_0 *Constructor_Main_NumberCell = v_0_loop
 	_ = v_0
-	var __t_tag_0 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordNumberImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, gopurs_runtime.Float((1.0)/((v_0).V0)), gopurs_runtime.Float(0.0))
+	var __t_tag_0 gopurs_runtime.Value = Data_Ord_OrdNumberImpl_nativeWorker(gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, (1.0)/((v_0).V0), 0.0)
 	_ = __t_tag_0
 	return (uint32(__t_tag_0.IntVal) == 1527465420)
 }
@@ -1179,7 +1165,7 @@ func Call_Main_renderTagged(v_0_loop gopurs_runtime.Value) string {
 				__t2 = func() gopurs_runtime.Value { panic("Failed pattern match") }().StrVal()
 			}
 		end_branch_2:
-			__t6 = (__t2) + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.Int((*Constructor_Main_First)(v_0.UnsafePtr).V1)).StrVal())
+			__t6 = (__t2) + (Data_Show_ShowIntImpl((*Constructor_Main_First)(v_0.UnsafePtr).V1))
 			goto end_branch_6
 		} else {
 
@@ -1212,7 +1198,7 @@ func Call_Main_renderTagged(v_0_loop gopurs_runtime.Value) string {
 				__t5 = func() gopurs_runtime.Value { panic("Failed pattern match") }().StrVal()
 			}
 		end_branch_5:
-			__t6 = (__t5) + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.Int((*Constructor_Main_Second)(v_0.UnsafePtr).V1)).StrVal())
+			__t6 = (__t5) + (Data_Show_ShowIntImpl((*Constructor_Main_Second)(v_0.UnsafePtr).V1))
 			goto end_branch_6
 		} else {
 

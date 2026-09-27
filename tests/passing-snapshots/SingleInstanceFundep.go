@@ -77,7 +77,7 @@ var once_Main_test sync.Once
 
 func Get_Main_test() gopurs_runtime.Value {
 	once_Main_test.Do(func() {
-		cache_Main_test = gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(Call_Main_unified(gopurs_runtime.Value{Type: 9, IntVal: 4179949665, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_SingleInstanceFundep[gopurs_runtime.Value]](Get_Main_singleInstanceFundepRow()))}).IntVal)), UnsafePtr: nil}
+		cache_Main_test = gopurs_runtime.Value{Type: 9, IntVal: int64(513803634), UnsafePtr: nil}
 	})
 	return cache_Main_test
 }

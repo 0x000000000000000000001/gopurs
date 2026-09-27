@@ -11,7 +11,9 @@ var once_Main_identity sync.Once
 
 func Get_Main_identity() gopurs_runtime.Value {
 	once_Main_identity.Do(func() {
-		cache_Main_identity = Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))})
+		cache_Main_identity = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_identity(x_0_box)
+		})
 	})
 	return cache_Main_identity
 }
@@ -121,7 +123,11 @@ var once_Main_refl sync.Once
 
 func Get_Main_refl() gopurs_runtime.Value {
 	once_Main_refl.Do(func() {
-		cache_Main_refl = gopurs_runtime.Value{Type: 9, IntVal: 2698051417, UnsafePtr: unsafe.Pointer((&Constructor_Main_TypeEquals[gopurs_runtime.Value, gopurs_runtime.Value]{1, Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))}), Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))})}))}
+		cache_Main_refl = gopurs_runtime.Value{Type: 9, IntVal: 2698051417, UnsafePtr: unsafe.Pointer((&Constructor_Main_TypeEquals[gopurs_runtime.Value, gopurs_runtime.Value]{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			return x_0
+		}), gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			return x_0
+		})}))}
 	})
 	return cache_Main_refl
 }
@@ -218,6 +224,12 @@ func init() {
 			panic("Key not found in dictionary Constructor_Main_OldStyleNewtype: " + key)
 		}
 	}
+}
+
+func Call_Main_identity(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var x_0 gopurs_runtime.Value = x_0_loop
+	_ = x_0
+	return x_0
 }
 
 func Call_Main_TypeEquals_dollar_Dict(x_0_loop struct {
@@ -320,8 +332,5 @@ func Rebox_Main_2718996007_2559642264(in *Constructor_Main_OldStyleNewtype[struc
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_OldStyleNewtype[gopurs_runtime.Value, gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	return out
+	return (*Constructor_Main_OldStyleNewtype[gopurs_runtime.Value, gopurs_runtime.Value])(unsafe.Pointer(in))
 }

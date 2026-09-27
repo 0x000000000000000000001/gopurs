@@ -110,14 +110,14 @@ func Call_Main_guardsTest(v_0_loop []float64) []float64 {
 		var __t_and_1 bool = false
 		if (gopurs_runtime.Int(int64(len(v_0))).IntVal) == (int64(1)) {
 
-			var __t_tag_0 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordNumberImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, gopurs_runtime.ArrayAccess(func() gopurs_runtime.Value {
+			var __t_tag_0 gopurs_runtime.Value = Data_Ord_OrdNumberImpl_nativeWorker(gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, gopurs_runtime.ArrayAccess(func() gopurs_runtime.Value {
 				arr := v_0
 				boxed := make([]gopurs_runtime.Value, len(arr))
 				for i, v := range arr {
 					boxed[i] = gopurs_runtime.Float(v)
 				}
 				return gopurs_runtime.Array(boxed)
-			}(), 0), gopurs_runtime.Float(0.0))
+			}(), 0).FloatVal(), 0.0)
 			_ = __t_tag_0
 			__t_and_1 = (uint32(__t_tag_0.IntVal) == 380165415)
 		}
@@ -163,7 +163,7 @@ gcd:
 			}
 		}
 		{
-			var __t_tag_0 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordNumberImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, gopurs_runtime.Float(v_0), gopurs_runtime.Float(v1_1))
+			var __t_tag_0 gopurs_runtime.Value = Data_Ord_OrdNumberImpl_nativeWorker(gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, v_0, v1_1)
 			_ = __t_tag_0
 			if uint32(__t_tag_0.IntVal) == 380165415 {
 				v_0_loop = 0.0

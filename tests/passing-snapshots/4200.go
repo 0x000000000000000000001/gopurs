@@ -50,7 +50,5 @@ func Rebox_Main_3272106341_385277032(in *Constructor_Data_Newtype_Newtype[gopurs
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Newtype_Newtype[gopurs_runtime.Value, gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Newtype_Newtype[gopurs_runtime.Value, gopurs_runtime.Value])(unsafe.Pointer(in))
 }

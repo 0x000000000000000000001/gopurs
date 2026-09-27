@@ -57,7 +57,5 @@ func Rebox_Main_2898740081_2812149806(in *Constructor_Data_Functor_Functor[*Cons
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Functor_Functor[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Functor_Functor[gopurs_runtime.Value])(unsafe.Pointer(in))
 }

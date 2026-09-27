@@ -55,7 +55,9 @@ func Get_Main_applyN() gopurs_runtime.Value {
 					})
 				})
 			})
-			return gopurs_runtime.Apply(go__go_0_0_0, Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))}))
+			return gopurs_runtime.Apply(go__go_0_0_0, gopurs_runtime.Func(func(x_1 gopurs_runtime.Value) gopurs_runtime.Value {
+				return x_1
+			}))
 		}()
 	})
 	return cache_Main_applyN
@@ -78,55 +80,57 @@ var once_Main_main sync.Once
 
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
-		cache_Main_main = gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.Int(Call_Main_applyN__1066644181(int64(0), gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Int((x_0.IntVal) + (int64(1)))
-		}), int64(0)))).StrVal())), gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.Int(Call_Main_applyN__1066644181(int64(1), gopurs_runtime.Func(func(x_1 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+			__local_var_0_0 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Data_Show_ShowIntImpl(Call_Main_applyN__1066644181(int64(0), gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Int((x_0.IntVal) + (int64(1)))
+			}), int64(0))))), gopurs_runtime.Value{})
+			_ = __local_var_0_0
+			__local_var_1_1 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Data_Show_ShowIntImpl(Call_Main_applyN__1066644181(int64(1), gopurs_runtime.Func(func(x_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Int((x_1.IntVal) + (int64(1)))
-			}), int64(0)))).StrVal())), gopurs_runtime.Func(func(_dollar___unused_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.Int(Call_Main_applyN__1066644181(int64(2), gopurs_runtime.Func(func(x_2 gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Int((x_2.IntVal) + (int64(1)))
-				}), int64(0)))).StrVal())), gopurs_runtime.Func(func(_dollar___unused_2 gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.Int(Call_Main_applyN__1066644181(int64(3), gopurs_runtime.Func(func(x_3 gopurs_runtime.Value) gopurs_runtime.Value {
-						return gopurs_runtime.Int((x_3.IntVal) + (int64(1)))
-					}), int64(0)))).StrVal())), gopurs_runtime.Func(func(_dollar___unused_3 gopurs_runtime.Value) gopurs_runtime.Value {
-						return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.Int(Call_Main_applyN__1066644181(int64(4), gopurs_runtime.Func(func(x_4 gopurs_runtime.Value) gopurs_runtime.Value {
-							return gopurs_runtime.Int((x_4.IntVal) + (int64(1)))
-						}), int64(0)))).StrVal())), gopurs_runtime.Func(func(_dollar___unused_4 gopurs_runtime.Value) gopurs_runtime.Value {
-							return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.Int(int64(len(Call_Data_Array_span__2676604243(gopurs_runtime.Func(func(v1_5 gopurs_runtime.Value) gopurs_runtime.Value {
-								return gopurs_runtime.Bool(true)
-							}), func() []int64 {
-								arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.UncurriedApp2(Get_Data_Array_rangeImpl(), gopurs_runtime.Int(int64(1)), gopurs_runtime.Int(int64(10000))).UnsafePtr)
-								unboxed := make([]int64, len(arr))
-								for i, v := range arr {
-									unboxed[i] = v.IntVal
-								}
-								return unboxed
-							}()).go__init)))).StrVal())), gopurs_runtime.Func(func(_dollar___unused_5 gopurs_runtime.Value) gopurs_runtime.Value {
-								return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.Int(Call_Control_Monad_Rec_Class_tailRec__196765010(gopurs_runtime.Func(func(n_6 gopurs_runtime.Value) gopurs_runtime.Value {
-									var __t0 gopurs_runtime.Value
-									{
-										if (n_6.IntVal) < (int64(10000)) {
-											__t0 = gopurs_runtime.Value{Type: 9, IntVal: 525585346, UnsafePtr: unsafe.Pointer(Rebox_Main_2795810992_4008603408((&Constructor_Control_Monad_Rec_Class_Loop[int64, int64]{1, (n_6.IntVal) + (int64(1))})))}
-											goto end_branch_0
-										} else {
+			}), int64(0))))), gopurs_runtime.Value{})
+			_ = __local_var_1_1
+			__local_var_2_2 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Data_Show_ShowIntImpl(Call_Main_applyN__1066644181(int64(2), gopurs_runtime.Func(func(x_2 gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Int((x_2.IntVal) + (int64(1)))
+			}), int64(0))))), gopurs_runtime.Value{})
+			_ = __local_var_2_2
+			__local_var_3_3 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Data_Show_ShowIntImpl(Call_Main_applyN__1066644181(int64(3), gopurs_runtime.Func(func(x_3 gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Int((x_3.IntVal) + (int64(1)))
+			}), int64(0))))), gopurs_runtime.Value{})
+			_ = __local_var_3_3
+			__local_var_4_4 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Data_Show_ShowIntImpl(Call_Main_applyN__1066644181(int64(4), gopurs_runtime.Func(func(x_4 gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Int((x_4.IntVal) + (int64(1)))
+			}), int64(0))))), gopurs_runtime.Value{})
+			_ = __local_var_4_4
+			__local_var_5_5 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Data_Show_ShowIntImpl(gopurs_runtime.Int(int64(len(Call_Data_Array_span__2676604243(gopurs_runtime.Func(func(v1_5 gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Bool(true)
+			}), func() []int64 {
+				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.UncurriedApp2(Get_Data_Array_rangeImpl(), gopurs_runtime.Int(int64(1)), gopurs_runtime.Int(int64(10000))).UnsafePtr)
+				unboxed := make([]int64, len(arr))
+				for i, v := range arr {
+					unboxed[i] = v.IntVal
+				}
+				return unboxed
+			}()).go__init))).IntVal))), gopurs_runtime.Value{})
+			_ = __local_var_5_5
+			__local_var_6_6 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Data_Show_ShowIntImpl(Call_Control_Monad_Rec_Class_tailRec__196765010(gopurs_runtime.Func(func(n_6 gopurs_runtime.Value) gopurs_runtime.Value {
+				var __t7 gopurs_runtime.Value
+				{
+					if (n_6.IntVal) < (int64(10000)) {
+						__t7 = gopurs_runtime.Value{Type: 9, IntVal: 525585346, UnsafePtr: unsafe.Pointer(Rebox_Main_2795810992_4008603408((&Constructor_Control_Monad_Rec_Class_Loop[int64, int64]{1, (n_6.IntVal) + (int64(1))})))}
+						goto end_branch_7
+					} else {
 
-										}
-									}
-									{
-										__t0 = gopurs_runtime.Value{Type: 9, IntVal: 60402430, UnsafePtr: unsafe.Pointer(Rebox_Main_1462327052_3603546092((&Constructor_Control_Monad_Rec_Class_Done[int64, int64]{1, int64(42)})))}
-									}
-								end_branch_0:
-									return __t0
-								}), int64(0)))).StrVal())), gopurs_runtime.Func(func(_dollar___unused_6 gopurs_runtime.Value) gopurs_runtime.Value {
-									return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
-								}))
-							}))
-						}))
-					}))
-				}))
-			}))
-		}))
+					}
+				}
+				{
+					__t7 = gopurs_runtime.Value{Type: 9, IntVal: 60402430, UnsafePtr: unsafe.Pointer(Rebox_Main_1462327052_3603546092((&Constructor_Control_Monad_Rec_Class_Done[int64, int64]{1, int64(42)})))}
+				}
+			end_branch_7:
+				return __t7
+			}), int64(0))))), gopurs_runtime.Value{})
+			_ = __local_var_6_6
+			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
+		})
 	})
 	return cache_Main_main
 }
@@ -225,7 +229,9 @@ applyN__1066644181:
 				})
 			})
 		})
-		return gopurs_runtime.Apply(Call_local_Main_go__1633702519_3_0_1(Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))}), __eta_norm_2_0, __eta_norm_1_1), gopurs_runtime.Int(__eta_norm_0_2)).IntVal
+		return gopurs_runtime.Apply(Call_local_Main_go__1633702519_3_0_1(gopurs_runtime.Func(func(x_4 gopurs_runtime.Value) gopurs_runtime.Value {
+			return x_4
+		}), __eta_norm_2_0, __eta_norm_1_1), gopurs_runtime.Int(__eta_norm_0_2)).IntVal
 	}
 }
 

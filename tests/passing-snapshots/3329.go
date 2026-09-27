@@ -138,7 +138,15 @@ var once_Main_injL sync.Once
 
 func Get_Main_injL() gopurs_runtime.Value {
 	once_Main_injL.Do(func() {
-		cache_Main_injL = Call_Main_inj(gopurs_runtime.CoerceToStruct[Constructor_Main_Inject[gopurs_runtime.Value, gopurs_runtime.Value]](Get_Main_injectLeft()))
+		cache_Main_injL = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return func() gopurs_runtime.Value {
+				_v := Call_Main_injL(x_0_box)
+				if _v.V2 {
+					return gopurs_runtime.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V1})}
+				}
+				return gopurs_runtime.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V0})}
+			}()
+		})
 	})
 	return cache_Main_injL
 }
@@ -212,6 +220,20 @@ func Call_Main_inj(dict_0_loop *Constructor_Main_Inject[gopurs_runtime.Value, go
 	var dict_0 *Constructor_Main_Inject[gopurs_runtime.Value, gopurs_runtime.Value] = dict_0_loop
 	_ = dict_0
 	return dict_0.V0
+}
+
+func Call_Main_injL(x_0_loop gopurs_runtime.Value) struct {
+	V0 gopurs_runtime.Value
+	V1 gopurs_runtime.Value
+	V2 bool
+} {
+	var x_0 gopurs_runtime.Value = x_0_loop
+	_ = x_0
+	return struct {
+		V0 gopurs_runtime.Value
+		V1 gopurs_runtime.Value
+		V2 bool
+	}{x_0, gopurs_runtime.Value{}, false}
 }
 
 func Call_Main_injectRight(dictInject_0_loop gopurs_runtime.Value) gopurs_runtime.Value {

@@ -164,54 +164,40 @@ func Rebox_Main_1766074591_1881195965(in *Constructor_Data_Eq_Eq1[gopurs_runtime
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Eq_Eq1[*Constructor_Main_Product[gopurs_runtime.Value, gopurs_runtime.Value]]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Eq_Eq1[*Constructor_Main_Product[gopurs_runtime.Value, gopurs_runtime.Value]])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1881195965_1766074591(in *Constructor_Data_Eq_Eq1[*Constructor_Main_Product[gopurs_runtime.Value, gopurs_runtime.Value]]) *Constructor_Data_Eq_Eq1[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Eq_Eq1[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Eq_Eq1[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1924226333_3985601471(in *Constructor_Data_Ord_Ord1[*Constructor_Main_Product[gopurs_runtime.Value, gopurs_runtime.Value]]) *Constructor_Data_Ord_Ord1[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Ord_Ord1[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	return out
+	return (*Constructor_Data_Ord_Ord1[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_2869892012_3790796878(in *Constructor_Data_Eq_Eq[*Constructor_Main_Product[gopurs_runtime.Value, gopurs_runtime.Value]]) *Constructor_Data_Eq_Eq[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Eq_Eq[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Eq_Eq[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_3332832716_4177771502(in *Constructor_Data_Ord_Ord[*Constructor_Main_Product[gopurs_runtime.Value, gopurs_runtime.Value]]) *Constructor_Data_Ord_Ord[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Ord_Ord[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	return out
+	return (*Constructor_Data_Ord_Ord[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_3790796878_2869892012(in *Constructor_Data_Eq_Eq[gopurs_runtime.Value]) *Constructor_Data_Eq_Eq[*Constructor_Main_Product[gopurs_runtime.Value, gopurs_runtime.Value]] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Eq_Eq[*Constructor_Main_Product[gopurs_runtime.Value, gopurs_runtime.Value]]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Eq_Eq[*Constructor_Main_Product[gopurs_runtime.Value, gopurs_runtime.Value]])(unsafe.Pointer(in))
 }

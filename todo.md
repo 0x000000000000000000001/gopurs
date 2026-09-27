@@ -22,9 +22,18 @@
 ## Chantiers (par impact murale)
 
 1. [ ] **Relances du builder parallèle** — ~830 tentatives rejetées à
-   8 workers, +40 % d'allocations. Indices d'ordonnancement profondeur 2
-   (références/imports utiles), reprise plus fine que la reconversion
-   complète. Le plus gros levier restant (seule piste crédible sous ~45 s).
+   8 workers, +40 % d'allocations. Indices d'ordonnancement profondeur 2,
+   reprise plus fine que la reconversion complète. Le plus gros levier restant
+   (seule piste crédible sous ~45 s).
+   - **Vue vivante testée puis écartée** (27/09) : miroir `Ref`
+     implémentations + directives, utilisable quand la contribution de
+     directives du prédécesseur est vide. Résultat : **−41 relances sur 844**
+     seulement (mesure sous charge, compteurs indicatifs) — les rejeux viennent
+     de courses réelles (le prédécesseur n'est pas finalisé au moment du
+     lookup), pas de l'instantané. Sous le seuil : sources et binaire restaurés.
+   - Restes possibles mais incertains : ordonnancement strict (moins de
+     parallélisme), priorité aux relances, checkpoint de conversion — à
+     n'ouvrir que si une mesure au repos démontre ≥ ~2 s.
 2. [ ] **Chaînes / `memmove`** (~15 s CPU) — généraliser le writer natif de
    l'imprimante aux derniers `<>`/`joinWith` chauds (émission, préparation).
 3. [ ] **Lowering FFI v4** — FFI `Effect` (builders purs côté FFI), appels
@@ -35,6 +44,12 @@
    uniquement si le gain murale est démontré.
 5. [ ] **`gopurs-aff` (runtime b8x)** — pool de goroutines pour les fibres,
    pour les programmes compilés (et la machinerie Aff du compilateur).
+   - **Bug connu (fixtures)** : sur les petits corpus, une compilation
+     parallèle peut finir en `all goroutines are asleep - deadlock!`
+     (fibres forkées non relâchées après une erreur de conversion).
+     Repro ~1/600, non reproductible en boucle serrée ; `bin/test` force
+     désormais `GOPURS_PBO_JOBS=1`/`GOPURS_PREPARE_JOBS=1` (sortie identique,
+     validée sur b8x) pour rester déterministe. À élucider avec le pool.
 
 ## Méthode
 

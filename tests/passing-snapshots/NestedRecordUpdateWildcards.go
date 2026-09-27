@@ -191,10 +191,7 @@ var once_Main_main sync.Once
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = func() gopurs_runtime.Value {
-			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
-			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
-			_ = __local_var_0_0
-			var __t1 gopurs_runtime.Value
+			var __t0 gopurs_runtime.Value
 			{
 				if Call_Main_check__1055591803(func() gopurs_runtime.Value {
 					orig := func() struct {
@@ -277,19 +274,19 @@ func Get_Main_main() gopurs_runtime.Value {
 						return gopurs_runtime.RecordDict2("baz", "qux", gopurs_runtime.Int(orig.baz), gopurs_runtime.Int(orig.qux))
 					}(), gopurs_runtime.Int(orig.foo))
 				}()) {
-					__t1 = __local_var_0_0
-					goto end_branch_1
+					__t0 = gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
+					goto end_branch_0
 				} else {
 
 				}
 			}
 			{
-				__t1 = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+				__t0 = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 					return Get_Data_Unit_unit()
 				})
 			}
-		end_branch_1:
-			return __t1
+		end_branch_0:
+			return __t0
 		}()
 	})
 	return cache_Main_main

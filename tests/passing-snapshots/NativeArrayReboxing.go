@@ -186,7 +186,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = __local_var_1_1
 			__local_var_2_2 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_1_1), gopurs_runtime.Value{})
 			_ = __local_var_2_2
-			return gopurs_runtime.Apply(gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___2499841393("", struct {
+			__local_var_3_3 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2499841393("", struct {
 				actual   []string
 				expected []string
 			}{func() []string {
@@ -214,34 +214,34 @@ func Get_Main_main() gopurs_runtime.Value {
 					unboxed[i] = v.StrVal()
 				}
 				return unboxed
-			}(), []string{"x:typed:42"}}), gopurs_runtime.Func(func(_dollar___unused_3 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___627669702("", struct {
-					actual   int64
-					expected int64
-				}{gopurs_runtime.Int(int64(len(Call_Main_flatten(gopurs_runtime.Value{Type: 9, IntVal: 4196596074, UnsafePtr: unsafe.Pointer(Rebox_Main_2297685059_1811419774((&Constructor_Main_Rec[struct {
-					label string
-					line  int64
-				}]{1, func() []*Constructor_Main_Binding[gopurs_runtime.Value] {
-					arr := *(*[]gopurs_runtime.Value)(func() gopurs_runtime.Value {
-						arr := []*Constructor_Main_Binding[struct {
-							label string
-							line  int64
-						}]{}
-						boxed := make([]gopurs_runtime.Value, len(arr))
-						for i, v := range arr {
-							boxed[i] = gopurs_runtime.Value{Type: 9, IntVal: 3177043775, UnsafePtr: unsafe.Pointer(Rebox_Main_3242760310_4122662347(v))}
-						}
-						return gopurs_runtime.Array(boxed)
-					}().UnsafePtr)
-					unboxed := make([]*Constructor_Main_Binding[gopurs_runtime.Value], len(arr))
+			}(), []string{"x:typed:42"}}), gopurs_runtime.Value{})
+			_ = __local_var_3_3
+			__local_var_4_4 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
+				actual   int64
+				expected int64
+			}{gopurs_runtime.Int(int64(len(Call_Main_flatten(gopurs_runtime.Value{Type: 9, IntVal: 4196596074, UnsafePtr: unsafe.Pointer(Rebox_Main_2297685059_1811419774((&Constructor_Main_Rec[struct {
+				label string
+				line  int64
+			}]{1, func() []*Constructor_Main_Binding[gopurs_runtime.Value] {
+				arr := *(*[]gopurs_runtime.Value)(func() gopurs_runtime.Value {
+					arr := []*Constructor_Main_Binding[struct {
+						label string
+						line  int64
+					}]{}
+					boxed := make([]gopurs_runtime.Value, len(arr))
 					for i, v := range arr {
-						unboxed[i] = gopurs_runtime.CoerceToStruct[Constructor_Main_Binding[gopurs_runtime.Value]](v)
+						boxed[i] = gopurs_runtime.Value{Type: 9, IntVal: 3177043775, UnsafePtr: unsafe.Pointer(Rebox_Main_3242760310_4122662347(v))}
 					}
-					return unboxed
-				}()})))})))).IntVal, int64(0)}), gopurs_runtime.Func(func(_dollar___unused_4 gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
-				}))
-			})), gopurs_runtime.Value{})
+					return gopurs_runtime.Array(boxed)
+				}().UnsafePtr)
+				unboxed := make([]*Constructor_Main_Binding[gopurs_runtime.Value], len(arr))
+				for i, v := range arr {
+					unboxed[i] = gopurs_runtime.CoerceToStruct[Constructor_Main_Binding[gopurs_runtime.Value]](v)
+				}
+				return unboxed
+			}()})))})))).IntVal, int64(0)}), gopurs_runtime.Value{})
+			_ = __local_var_4_4
+			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
 		})
 	})
 	return cache_Main_main
@@ -415,61 +415,49 @@ func Call_Main_describe(v_0_loop *Constructor_Main_Binding[struct {
 		line  int64
 	}] = v_0_loop
 	_ = v_0
-	return (((((v_0).V1) + (":")) + ((v_0).V0.label)) + (":")) + (gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.Int((v_0).V0.line)).StrVal())
+	return (((((v_0).V1) + (":")) + ((v_0).V0.label)) + (":")) + (Data_Show_ShowIntImpl((v_0).V0.line))
 }
 
 func Rebox_Main_1140313009_3790796878(in *Constructor_Data_Eq_Eq[string]) *Constructor_Data_Eq_Eq[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Eq_Eq[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Eq_Eq[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_131790935_3790796878(in *Constructor_Data_Eq_Eq[[]string]) *Constructor_Data_Eq_Eq[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Eq_Eq[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Eq_Eq[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1386611502_1514099793(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[string] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[string]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[string])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1386611502_1953100407(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[[]string] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[[]string]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[[]string])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1514099793_1386611502(in *Constructor_Data_Show_Show[string]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1953100407_1386611502(in *Constructor_Data_Show_Show[[]string]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_2297685059_1811419774(in *Constructor_Main_Rec[struct {
@@ -479,9 +467,7 @@ func Rebox_Main_2297685059_1811419774(in *Constructor_Main_Rec[struct {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_Rec[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Main_Rec[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_3242760310_4122662347(in *Constructor_Main_Binding[struct {
@@ -505,18 +491,14 @@ func Rebox_Main_3790796878_1140313009(in *Constructor_Data_Eq_Eq[gopurs_runtime.
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Eq_Eq[string]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Eq_Eq[string])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_3790796878_131790935(in *Constructor_Data_Eq_Eq[gopurs_runtime.Value]) *Constructor_Data_Eq_Eq[[]string] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Eq_Eq[[]string]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Eq_Eq[[]string])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_4122662347_3242760310(in *Constructor_Main_Binding[gopurs_runtime.Value]) *Constructor_Main_Binding[struct {

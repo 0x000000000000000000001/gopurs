@@ -3,7 +3,6 @@ package purescript
 import (
 	gopurs_runtime "gopurs/output/gopurs_runtime"
 	sync "sync"
-	unsafe "unsafe"
 )
 
 var cache_Main_wildcard_prime_ gopurs_runtime.Value
@@ -69,7 +68,29 @@ var once_Main_id_prime_ sync.Once
 
 func Get_Main_id_prime_() gopurs_runtime.Value {
 	once_Main_id_prime_.Do(func() {
-		cache_Main_id_prime_ = Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))})
+		cache_Main_id_prime_ = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return func() gopurs_runtime.Value {
+				orig := Call_Main_id_prime_(func() struct {
+					x float64
+					y float64
+					z float64
+				} {
+					orig := x_0_box
+					_ = orig
+					clone := struct {
+						x float64
+						y float64
+						z float64
+					}{}
+					clone.x = gopurs_runtime.RecordGet(orig, "x").FloatVal()
+					clone.y = gopurs_runtime.RecordGet(orig, "y").FloatVal()
+					clone.z = gopurs_runtime.RecordGet(orig, "z").FloatVal()
+					return clone
+				}())
+				_ = orig
+				return gopurs_runtime.RecordDict3("x", "y", "z", gopurs_runtime.Float(orig.x), gopurs_runtime.Float(orig.y), gopurs_runtime.Float(orig.z))
+			}()
+		})
 	})
 	return cache_Main_id_prime_
 }
@@ -103,7 +124,7 @@ func Get_Main_foo_prime_() gopurs_runtime.Value {
 				y float64
 				z float64
 			} {
-				orig := gopurs_runtime.Apply(Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))}), func() gopurs_runtime.Value {
+				orig := func() gopurs_runtime.Value {
 					orig := func() struct {
 						x float64
 						y float64
@@ -123,7 +144,7 @@ func Get_Main_foo_prime_() gopurs_runtime.Value {
 					}()
 					_ = orig
 					return gopurs_runtime.RecordDict3("x", "y", "z", gopurs_runtime.Float(orig.x), gopurs_runtime.Float(orig.y), gopurs_runtime.Float(orig.z))
-				}())
+				}()
 				_ = orig
 				clone := struct {
 					x float64
@@ -163,7 +184,27 @@ func Get_Main_quux() gopurs_runtime.Value {
 				y float64
 				z float64
 			} {
-				orig := Get_Main_foo_prime_()
+				orig := func() gopurs_runtime.Value {
+					orig := func() struct {
+						x float64
+						y float64
+						z float64
+					} {
+						orig := Get_Main_foo()
+						_ = orig
+						clone := struct {
+							x float64
+							y float64
+							z float64
+						}{}
+						clone.x = gopurs_runtime.RecordGet(orig, "x").FloatVal()
+						clone.y = gopurs_runtime.RecordGet(orig, "y").FloatVal()
+						clone.z = gopurs_runtime.RecordGet(orig, "z").FloatVal()
+						return clone
+					}()
+					_ = orig
+					return gopurs_runtime.RecordDict3("x", "y", "z", gopurs_runtime.Float(orig.x), gopurs_runtime.Float(orig.y), gopurs_runtime.Float(orig.z))
+				}()
 				_ = orig
 				clone := struct {
 					x float64
@@ -234,7 +275,7 @@ func Get_Main_bar_prime_() gopurs_runtime.Value {
 				y float64
 				z float64
 			} {
-				orig := gopurs_runtime.Apply(Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))}), func() gopurs_runtime.Value {
+				orig := func() gopurs_runtime.Value {
 					orig := func() struct {
 						x float64
 						y float64
@@ -254,7 +295,7 @@ func Get_Main_bar_prime_() gopurs_runtime.Value {
 					}()
 					_ = orig
 					return gopurs_runtime.RecordDict3("x", "y", "z", gopurs_runtime.Float(orig.x), gopurs_runtime.Float(orig.y), gopurs_runtime.Float(orig.z))
-				}())
+				}()
 				_ = orig
 				clone := struct {
 					x float64
@@ -293,4 +334,42 @@ func Call_Main_wildcard(v_0_loop gopurs_runtime.Value) struct {
 		y float64
 		z float64
 	}{gopurs_runtime.RecordGet(v_0, "w").FloatVal(), gopurs_runtime.RecordGet(v_0, "w").FloatVal(), gopurs_runtime.RecordGet(v_0, "w").FloatVal(), gopurs_runtime.RecordGet(v_0, "w").FloatVal()}
+}
+
+func Call_Main_id_prime_(x_0_loop struct {
+	x float64
+	y float64
+	z float64
+}) struct {
+	x float64
+	y float64
+	z float64
+} {
+	var x_0 struct {
+		x float64
+		y float64
+		z float64
+	} = x_0_loop
+	_ = x_0
+	return func() struct {
+		x float64
+		y float64
+		z float64
+	} {
+		orig := func() gopurs_runtime.Value {
+			orig := x_0
+			_ = orig
+			return gopurs_runtime.RecordDict3("x", "y", "z", gopurs_runtime.Float(orig.x), gopurs_runtime.Float(orig.y), gopurs_runtime.Float(orig.z))
+		}()
+		_ = orig
+		clone := struct {
+			x float64
+			y float64
+			z float64
+		}{}
+		clone.x = gopurs_runtime.RecordGet(orig, "x").FloatVal()
+		clone.y = gopurs_runtime.RecordGet(orig, "y").FloatVal()
+		clone.z = gopurs_runtime.RecordGet(orig, "z").FloatVal()
+		return clone
+	}()
 }

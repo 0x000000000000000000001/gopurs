@@ -669,7 +669,7 @@ func Get_Main_multiCoveringSetsIntIntSt() gopurs_runtime.Value {
 				orig := struct {
 					c string
 					d string
-				}{gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), a_0).StrVal(), "2"}
+				}{Data_Show_ShowIntImpl(a_0.IntVal), "2"}
 				_ = orig
 				return gopurs_runtime.RecordDict2("c", "d", gopurs_runtime.Str(orig.c), gopurs_runtime.Str(orig.d))
 			}()
@@ -732,7 +732,7 @@ func Get_Main_multiCoveringSetsBooleanB() gopurs_runtime.Value {
 				orig := struct {
 					c string
 					d string
-				}{gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), f_0).StrVal(), "1"}
+				}{Data_Show_ShowIntImpl(f_0.IntVal), "1"}
 				_ = orig
 				return gopurs_runtime.RecordDict2("c", "d", gopurs_runtime.Str(orig.c), gopurs_runtime.Str(orig.d))
 			}()
@@ -1222,7 +1222,7 @@ func Get_Main_multiCoveringSetsWorks() gopurs_runtime.Value {
 		cache_Main_multiCoveringSetsWorks = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 			var __t1 *Constructor_Data_Maybe_Just[string]
 			{
-				if ((int64(1)) == (Call_Main_noneOfSets(gopurs_runtime.Value{Type: 9, IntVal: 2410351339, UnsafePtr: unsafe.Pointer(Rebox_Main_2270461177_2880574873(Rebox_Main_2880574873_2270461177(gopurs_runtime.CoerceToStruct[Constructor_Main_MultiCoveringSets[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value]](Get_Main_multiCoveringSetsBooleanB()))))}).IntVal)) && ((("101") == (gopurs_runtime.RecordGet(gopurs_runtime.Apply(Call_Main_partialOfABSet(Rebox_Main_2270461177_2880574873(Rebox_Main_2880574873_2270461177(gopurs_runtime.CoerceToStruct[Constructor_Main_MultiCoveringSets[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value]](Get_Main_multiCoveringSetsBooleanB())))), gopurs_runtime.Bool(true)), "c").StrVal())) && (((gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.Int(int64(3))).StrVal()) == (gopurs_runtime.RecordGet(gopurs_runtime.Apply(Call_Main_partialOfFESet(Rebox_Main_2270461177_2880574873(Rebox_Main_2880574873_2270461177(gopurs_runtime.CoerceToStruct[Constructor_Main_MultiCoveringSets[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value]](Get_Main_multiCoveringSetsBooleanB())))), gopurs_runtime.Int(int64(3))), "c").StrVal())) && (((int64(2)) == (Call_Main_noneOfSets(gopurs_runtime.Value{Type: 9, IntVal: 2410351339, UnsafePtr: unsafe.Pointer(Rebox_Main_2402463609_2880574873(Rebox_Main_2880574873_2402463609(gopurs_runtime.CoerceToStruct[Constructor_Main_MultiCoveringSets[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value]](Get_Main_multiCoveringSetsIntIntSt()))))}).IntVal)) && (((gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.Int(int64(20))).StrVal()) == (gopurs_runtime.RecordGet(gopurs_runtime.Apply(Call_Main_partialOfABSet(Rebox_Main_2402463609_2880574873(Rebox_Main_2880574873_2402463609(gopurs_runtime.CoerceToStruct[Constructor_Main_MultiCoveringSets[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value]](Get_Main_multiCoveringSetsIntIntSt())))), gopurs_runtime.Int(int64(20))), "c").StrVal())) && (("false") == (gopurs_runtime.RecordGet(gopurs_runtime.Apply(Call_Main_partialOfFESet(Rebox_Main_2402463609_2880574873(Rebox_Main_2880574873_2402463609(gopurs_runtime.CoerceToStruct[Constructor_Main_MultiCoveringSets[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value]](Get_Main_multiCoveringSetsIntIntSt())))), gopurs_runtime.Bool(false)), "c").StrVal())))))) {
+				if (("101") == (gopurs_runtime.RecordGet(gopurs_runtime.Apply(Call_Main_partialOfABSet(Rebox_Main_2270461177_2880574873(Rebox_Main_2880574873_2270461177(gopurs_runtime.CoerceToStruct[Constructor_Main_MultiCoveringSets[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value]](Get_Main_multiCoveringSetsBooleanB())))), gopurs_runtime.Bool(true)), "c").StrVal())) && (((Data_Show_ShowIntImpl(int64(3))) == (gopurs_runtime.RecordGet(gopurs_runtime.Apply(Call_Main_partialOfFESet(Rebox_Main_2270461177_2880574873(Rebox_Main_2880574873_2270461177(gopurs_runtime.CoerceToStruct[Constructor_Main_MultiCoveringSets[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value]](Get_Main_multiCoveringSetsBooleanB())))), gopurs_runtime.Int(int64(3))), "c").StrVal())) && (((int64(2)) == (Call_Main_noneOfSets(gopurs_runtime.Value{Type: 9, IntVal: 2410351339, UnsafePtr: unsafe.Pointer(Rebox_Main_2402463609_2880574873(Rebox_Main_2880574873_2402463609(gopurs_runtime.CoerceToStruct[Constructor_Main_MultiCoveringSets[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value]](Get_Main_multiCoveringSetsIntIntSt()))))}).IntVal)) && (((Data_Show_ShowIntImpl(int64(20))) == (gopurs_runtime.RecordGet(gopurs_runtime.Apply(Call_Main_partialOfABSet(Rebox_Main_2402463609_2880574873(Rebox_Main_2880574873_2402463609(gopurs_runtime.CoerceToStruct[Constructor_Main_MultiCoveringSets[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value]](Get_Main_multiCoveringSetsIntIntSt())))), gopurs_runtime.Int(int64(20))), "c").StrVal())) && (("false") == (gopurs_runtime.RecordGet(gopurs_runtime.Apply(Call_Main_partialOfFESet(Rebox_Main_2402463609_2880574873(Rebox_Main_2880574873_2402463609(gopurs_runtime.CoerceToStruct[Constructor_Main_MultiCoveringSets[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value]](Get_Main_multiCoveringSetsIntIntSt())))), gopurs_runtime.Bool(false)), "c").StrVal()))))) {
 					__t1 = Rebox_Main_3094389156_742090555(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer((*Constructor_Data_Maybe_Just[gopurs_runtime.Value])(nil))}))
 					goto end_branch_1
 				} else {
@@ -1281,7 +1281,7 @@ func Get_Main_mainClassWorks() gopurs_runtime.Value {
 		cache_Main_mainClassWorks = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 			var __t1 *Constructor_Data_Maybe_Just[string]
 			{
-				if (int64(0)) == (Call_Main_mainClassInt(gopurs_runtime.Value{Type: 9, IntVal: 1673006587, UnsafePtr: unsafe.Pointer(Rebox_Main_3107240322_1441597775(Rebox_Main_1441597775_3107240322(gopurs_runtime.CoerceToStruct[Constructor_Main_MainClass[gopurs_runtime.Value]](Get_Main_mainClassA2()))))}).IntVal) {
+				if (int64(0)) == (gopurs_runtime.Int(int64(0)).IntVal) {
 					__t1 = Rebox_Main_3094389156_742090555(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer((*Constructor_Data_Maybe_Just[gopurs_runtime.Value])(nil))}))
 					goto end_branch_1
 				} else {
@@ -1342,7 +1342,7 @@ func Get_Main_conflictingIdentSynonymWorks() gopurs_runtime.Value {
 		cache_Main_conflictingIdentSynonymWorks = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 			var __t1 *Constructor_Data_Maybe_Just[string]
 			{
-				if (int64(1)) == (gopurs_runtime.Apply(Call_Main_conflictingIdentSynonym(Rebox_Main_2443084704_894194143(Rebox_Main_894194143_2443084704(gopurs_runtime.CoerceToStruct[Constructor_Main_ConflictingIdentSynonym[gopurs_runtime.Value]](Get_Main_conflictingIdentSynonymSt())))), gopurs_runtime.Int(int64(4))).IntVal) {
+				if (int64(1)) == (int64(1)) {
 					__t1 = Rebox_Main_3094389156_742090555(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer((*Constructor_Data_Maybe_Just[gopurs_runtime.Value])(nil))}))
 					goto end_branch_1
 				} else {
@@ -1420,8 +1420,10 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = __local_var_0_0
 			__local_var_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
 			_ = __local_var_1_1
-			// TAST (Let): __local_var_2_3 shape=App(Var) bindingType=Any
-			__local_var_2_3 := Call_Data_Array_mapMaybe__2990902083(Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))}), func() []*Constructor_Data_Maybe_Just[string] {
+			// TAST (Let): __local_var_2_2 shape=App(Var) bindingType=Any
+			__local_var_2_2 := Call_Data_Array_mapMaybe__2990902083(gopurs_runtime.Func(func(x_2 gopurs_runtime.Value) gopurs_runtime.Value {
+				return x_2
+			}), func() []*Constructor_Data_Maybe_Just[string] {
 				arr := *(*[]gopurs_runtime.Value)(__local_var_1_1.UnsafePtr)
 				unboxed := make([]*Constructor_Data_Maybe_Just[string], len(arr))
 				for i, v := range arr {
@@ -1429,77 +1431,28 @@ func Get_Main_main() gopurs_runtime.Value {
 				}
 				return unboxed
 			}())
-			_ = __local_var_2_3
-			var __t4 *Constructor_Data_Maybe_Just[[]string]
+			_ = __local_var_2_2
+			var __t3 gopurs_runtime.Value
 			{
-				if (gopurs_runtime.Int(int64(len(__local_var_2_3))).IntVal) > (int64(0)) {
-					__t4 = Rebox_Main_3094389156_1731162461(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](func() gopurs_runtime.Value {
-						_v := struct {
-							V0 gopurs_runtime.Value
-							V1 bool
-						}{func() gopurs_runtime.Value {
-							arr := __local_var_2_3
-							boxed := make([]gopurs_runtime.Value, len(arr))
-							for i, v := range arr {
-								boxed[i] = gopurs_runtime.Str(v)
-							}
-							return gopurs_runtime.Array(boxed)
-						}(), true}
-						if _v.V1 {
-							return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: _v.V0})}
-						}
-						return gopurs_runtime.Value{Type: 9, IntVal: 930809136}
-					}()))
-					goto end_branch_4
-				} else {
-
-				}
-			}
-			{
-				__t4 = Rebox_Main_3094389156_1731162461(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](func() gopurs_runtime.Value {
-					_v := struct {
-						V0 gopurs_runtime.Value
-						V1 bool
-					}{gopurs_runtime.Value{}, false}
-					if _v.V1 {
-						return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: _v.V0})}
-					}
-					return gopurs_runtime.Value{Type: 9, IntVal: 930809136}
-				}()))
-			}
-		end_branch_4:
-			// TAST (Let): v_2_2 shape=Let(Branch(Other, def=Other)) bindingType=(ADT ["Data","Maybe","Maybe"] [(Array String)])
-			v_2_2 := __t4
-			_ = v_2_2
-			var __t5 gopurs_runtime.Value
-			{
-				if v_2_2 != nil {
-					__t5 = gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(("Errors...")+(gopurs_runtime.Apply2(Call_Data_Foldable_intercalate(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()), Rebox_Main_1950344881_1201789390(Rebox_Main_1201789390_1950344881(gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid[gopurs_runtime.Value]](Get_Data_Monoid_monoidString())))), gopurs_runtime.Str("\x0a"), func() gopurs_runtime.Value {
-						arr := (v_2_2).V0
+				if (gopurs_runtime.Int(int64(len(__local_var_2_2))).IntVal) > (int64(0)) {
+					__t3 = gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(("Errors...")+(gopurs_runtime.Apply2(Call_Data_Foldable_intercalate(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()), Rebox_Main_1950344881_1201789390(Rebox_Main_1201789390_1950344881(gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid[gopurs_runtime.Value]](Get_Data_Monoid_monoidString())))), gopurs_runtime.Str("\x0a"), func() gopurs_runtime.Value {
+						arr := __local_var_2_2
 						boxed := make([]gopurs_runtime.Value, len(arr))
 						for i, v := range arr {
 							boxed[i] = gopurs_runtime.Str(v)
 						}
 						return gopurs_runtime.Array(boxed)
 					}()).StrVal())))
-					goto end_branch_5
+					goto end_branch_3
 				} else {
 
 				}
 			}
 			{
-				if v_2_2 == nil {
-					__t5 = gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
-					goto end_branch_5
-				} else {
-
-				}
+				__t3 = gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
 			}
-			{
-				__t5 = func() gopurs_runtime.Value { panic("Failed pattern match") }()
-			}
-		end_branch_5:
-			return gopurs_runtime.Apply(__t5, gopurs_runtime.Value{})
+		end_branch_3:
+			return gopurs_runtime.Apply(__t3, gopurs_runtime.Value{})
 		})
 	})
 	return cache_Main_main
@@ -2156,27 +2109,21 @@ partialOfABSet__1140860974:
 			__t0 = "100"
 		}
 	end_branch_0:
-		return func() struct {
+		return func(record struct {
+			c string
+			d string
+		}) struct {
 			c bool
 			d bool
 		} {
-			orig := func() gopurs_runtime.Value {
-				orig := struct {
-					c string
-					d string
-				}{__t0, "1"}
-				_ = orig
-				return gopurs_runtime.RecordDict2("c", "d", gopurs_runtime.Str(orig.c), gopurs_runtime.Str(orig.d))
-			}()
-			_ = orig
-			clone := struct {
+			return struct {
 				c bool
 				d bool
-			}{}
-			clone.c = (gopurs_runtime.RecordGet(orig, "c").IntVal) != (0)
-			clone.d = (gopurs_runtime.RecordGet(orig, "d").IntVal) != (0)
-			return clone
-		}()
+			}{(gopurs_runtime.Str(record.c).IntVal) != (0), (gopurs_runtime.Str(record.d).IntVal) != (0)}
+		}(struct {
+			c string
+			d string
+		}{__t0, "1"})
 	}
 }
 
@@ -2256,23 +2203,11 @@ func Rebox_Main_1201789390_1950344881(in *Constructor_Data_Monoid_Monoid[gopurs_
 	return out
 }
 
-func Rebox_Main_1441597775_3107240322(in *Constructor_Main_MainClass[gopurs_runtime.Value]) *Constructor_Main_MainClass[uint32] {
-	if in == nil {
-		return nil
-	}
-	out := &Constructor_Main_MainClass[uint32]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	return out
-}
-
 func Rebox_Main_1655796530_2009327254(in *Constructor_Main_MultiWithFDs[string, int64]) *Constructor_Main_MultiWithFDs[gopurs_runtime.Value, gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_MultiWithFDs[gopurs_runtime.Value, gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Main_MultiWithFDs[gopurs_runtime.Value, gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1743531624_470725445(in *Constructor_Main_Superclass[uint32]) *Constructor_Main_Superclass[gopurs_runtime.Value] {
@@ -2288,9 +2223,7 @@ func Rebox_Main_1773804058_825457317(in *Constructor_Main_Singleton[string]) *Co
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_Singleton[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Main_Singleton[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1950344881_1201789390(in *Constructor_Data_Monoid_Monoid[string]) *Constructor_Data_Monoid_Monoid[gopurs_runtime.Value] {
@@ -2307,123 +2240,77 @@ func Rebox_Main_2009327254_1655796530(in *Constructor_Main_MultiWithFDs[gopurs_r
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_MultiWithFDs[string, int64]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Main_MultiWithFDs[string, int64])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_2009327254_625849654(in *Constructor_Main_MultiWithFDs[gopurs_runtime.Value, gopurs_runtime.Value]) *Constructor_Main_MultiWithFDs[int64, int64] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_MultiWithFDs[int64, int64]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Main_MultiWithFDs[int64, int64])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_2228149845_252480501(in *Constructor_Main_MultiNoFDs[gopurs_runtime.Value, gopurs_runtime.Value]) *Constructor_Main_MultiNoFDs[int64, int64] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_MultiNoFDs[int64, int64]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Main_MultiNoFDs[int64, int64])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_2228149845_3635165681(in *Constructor_Main_MultiNoFDs[gopurs_runtime.Value, gopurs_runtime.Value]) *Constructor_Main_MultiNoFDs[string, int64] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_MultiNoFDs[string, int64]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Main_MultiNoFDs[string, int64])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_2270461177_2880574873(in *Constructor_Main_MultiCoveringSets[bool, bool, string, string, int64, int64]) *Constructor_Main_MultiCoveringSets[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_MultiCoveringSets[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	out.V2 = in.V2
-	return out
+	return (*Constructor_Main_MultiCoveringSets[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_237558933_2825386606(in *Constructor_Main_ConflictingIdent[int64]) *Constructor_Main_ConflictingIdent[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_ConflictingIdent[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Main_ConflictingIdent[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_2402463609_2880574873(in *Constructor_Main_MultiCoveringSets[int64, int64, string, string, bool, bool]) *Constructor_Main_MultiCoveringSets[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_MultiCoveringSets[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	out.V2 = in.V2
-	return out
+	return (*Constructor_Main_MultiCoveringSets[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_2443084704_894194143(in *Constructor_Main_ConflictingIdentSynonym[string]) *Constructor_Main_ConflictingIdentSynonym[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_ConflictingIdentSynonym[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Main_ConflictingIdentSynonym[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_252480501_2228149845(in *Constructor_Main_MultiNoFDs[int64, int64]) *Constructor_Main_MultiNoFDs[gopurs_runtime.Value, gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_MultiNoFDs[gopurs_runtime.Value, gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Main_MultiNoFDs[gopurs_runtime.Value, gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_2880574873_2270461177(in *Constructor_Main_MultiCoveringSets[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value]) *Constructor_Main_MultiCoveringSets[bool, bool, string, string, int64, int64] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_MultiCoveringSets[bool, bool, string, string, int64, int64]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	out.V2 = in.V2
-	return out
+	return (*Constructor_Main_MultiCoveringSets[bool, bool, string, string, int64, int64])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_2880574873_2402463609(in *Constructor_Main_MultiCoveringSets[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value]) *Constructor_Main_MultiCoveringSets[int64, int64, string, string, bool, bool] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_MultiCoveringSets[int64, int64, string, string, bool, bool]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	out.V2 = in.V2
-	return out
-}
-
-func Rebox_Main_3094389156_1731162461(in *Constructor_Data_Maybe_Just[gopurs_runtime.Value]) *Constructor_Data_Maybe_Just[[]string] {
-	if in == nil {
-		return nil
-	}
-	out := &Constructor_Data_Maybe_Just[[]string]{}
-	out.V0 = func() []string {
-		arr := *(*[]gopurs_runtime.Value)(in.V0.UnsafePtr)
-		unboxed := make([]string, len(arr))
-		for i, v := range arr {
-			unboxed[i] = v.StrVal()
-		}
-		return unboxed
-	}()
-	return out
+	return (*Constructor_Main_MultiCoveringSets[int64, int64, string, string, bool, bool])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_3094389156_742090555(in *Constructor_Data_Maybe_Just[gopurs_runtime.Value]) *Constructor_Data_Maybe_Just[string] {
@@ -2439,55 +2326,42 @@ func Rebox_Main_3107240322_1441597775(in *Constructor_Main_MainClass[uint32]) *C
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_MainClass[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	return out
+	return (*Constructor_Main_MainClass[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_3423874878_825457317(in *Constructor_Main_Singleton[int64]) *Constructor_Main_Singleton[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_Singleton[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Main_Singleton[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_3635165681_2228149845(in *Constructor_Main_MultiNoFDs[string, int64]) *Constructor_Main_MultiNoFDs[gopurs_runtime.Value, gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_MultiNoFDs[gopurs_runtime.Value, gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Main_MultiNoFDs[gopurs_runtime.Value, gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_3638271217_2825386606(in *Constructor_Main_ConflictingIdent[string]) *Constructor_Main_ConflictingIdent[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_ConflictingIdent[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Main_ConflictingIdent[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_3768443459_3790796878(in *Constructor_Data_Eq_Eq[uint32]) *Constructor_Data_Eq_Eq[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Eq_Eq[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Eq_Eq[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_4110399984_77741296(in *Constructor_Main_MultiWithBidiFDs[string, string]) *Constructor_Main_MultiWithBidiFDs[gopurs_runtime.Value, gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_MultiWithBidiFDs[gopurs_runtime.Value, gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Main_MultiWithBidiFDs[gopurs_runtime.Value, gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_470725445_1743531624(in *Constructor_Main_Superclass[gopurs_runtime.Value]) *Constructor_Main_Superclass[uint32] {
@@ -2503,18 +2377,14 @@ func Rebox_Main_625849654_2009327254(in *Constructor_Main_MultiWithFDs[int64, in
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_MultiWithFDs[gopurs_runtime.Value, gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Main_MultiWithFDs[gopurs_runtime.Value, gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_682835396_894194143(in *Constructor_Main_ConflictingIdentSynonym[int64]) *Constructor_Main_ConflictingIdentSynonym[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_ConflictingIdentSynonym[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Main_ConflictingIdentSynonym[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_742090555_3094389156(in *Constructor_Data_Maybe_Just[string]) *Constructor_Data_Maybe_Just[gopurs_runtime.Value] {
@@ -2530,34 +2400,19 @@ func Rebox_Main_77741296_4110399984(in *Constructor_Main_MultiWithBidiFDs[gopurs
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_MultiWithBidiFDs[string, string]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Main_MultiWithBidiFDs[string, string])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_77741296_787286736(in *Constructor_Main_MultiWithBidiFDs[gopurs_runtime.Value, gopurs_runtime.Value]) *Constructor_Main_MultiWithBidiFDs[int64, int64] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_MultiWithBidiFDs[int64, int64]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Main_MultiWithBidiFDs[int64, int64])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_787286736_77741296(in *Constructor_Main_MultiWithBidiFDs[int64, int64]) *Constructor_Main_MultiWithBidiFDs[gopurs_runtime.Value, gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_MultiWithBidiFDs[gopurs_runtime.Value, gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
-}
-
-func Rebox_Main_894194143_2443084704(in *Constructor_Main_ConflictingIdentSynonym[gopurs_runtime.Value]) *Constructor_Main_ConflictingIdentSynonym[string] {
-	if in == nil {
-		return nil
-	}
-	out := &Constructor_Main_ConflictingIdentSynonym[string]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Main_MultiWithBidiFDs[gopurs_runtime.Value, gopurs_runtime.Value])(unsafe.Pointer(in))
 }

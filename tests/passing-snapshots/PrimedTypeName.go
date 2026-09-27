@@ -60,7 +60,5 @@ func Rebox_Main_3768443459_3790796878(in *Constructor_Data_Eq_Eq[uint32]) *Const
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Eq_Eq[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Eq_Eq[gopurs_runtime.Value])(unsafe.Pointer(in))
 }

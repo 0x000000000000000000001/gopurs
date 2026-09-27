@@ -71,9 +71,14 @@ var once_Main_main sync.Once
 
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
-		cache_Main_main = gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("Incorrect result!"), gopurs_runtime.Bool((Call_Main_match2((&Constructor_Main_Cons[float64]{1, 1.0, (&Constructor_Main_Cons[float64]{1, 2.0, (&Constructor_Main_Cons[float64]{1, 3.0, (&Constructor_Main_Cons[float64]{1, 4.0, (&Constructor_Main_Cons[float64]{1, 5.0, (&Constructor_Main_Cons[float64]{1, 6.0, (&Constructor_Main_Cons[float64]{1, 7.0, (&Constructor_Main_Cons[float64]{1, 8.0, (&Constructor_Main_Cons[float64]{1, 9.0, (*Constructor_Main_Cons[float64])(nil)})})})})})})})})}))) == (100.0))), gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
-		}))
+		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
+			__local_var_0_0 := gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("Incorrect result!"), gopurs_runtime.Bool((Call_Main_match2((&Constructor_Main_Cons[float64]{1, 1.0, (&Constructor_Main_Cons[float64]{1, 2.0, (&Constructor_Main_Cons[float64]{1, 3.0, (&Constructor_Main_Cons[float64]{1, 4.0, (&Constructor_Main_Cons[float64]{1, 5.0, (&Constructor_Main_Cons[float64]{1, 6.0, (&Constructor_Main_Cons[float64]{1, 7.0, (&Constructor_Main_Cons[float64]{1, 8.0, (&Constructor_Main_Cons[float64]{1, 9.0, (*Constructor_Main_Cons[float64])(nil)})})})})})})})})}))) == (100.0)))
+			_ = __local_var_0_0
+			__local_var_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
+			_ = __local_var_1_1
+			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
+		})
 	})
 	return cache_Main_main
 }

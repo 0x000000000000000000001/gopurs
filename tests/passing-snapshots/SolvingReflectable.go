@@ -3,6 +3,7 @@ package purescript
 import (
 	gopurs_runtime "gopurs/output/gopurs_runtime"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 var cache_Main_refString gopurs_runtime.Value
@@ -181,34 +182,26 @@ func Rebox_Main_308661683_465586088(in *Constructor_Data_Reflectable_Reflectable
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Reflectable_Reflectable[gopurs_runtime.Value, gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Reflectable_Reflectable[gopurs_runtime.Value, gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_3507070629_465586088(in *Constructor_Data_Reflectable_Reflectable[gopurs_runtime.Value, uint32]) *Constructor_Data_Reflectable_Reflectable[gopurs_runtime.Value, gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Reflectable_Reflectable[gopurs_runtime.Value, gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Reflectable_Reflectable[gopurs_runtime.Value, gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_3689533068_465586088(in *Constructor_Data_Reflectable_Reflectable[gopurs_runtime.Value, bool]) *Constructor_Data_Reflectable_Reflectable[gopurs_runtime.Value, gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Reflectable_Reflectable[gopurs_runtime.Value, gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Reflectable_Reflectable[gopurs_runtime.Value, gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_42398615_465586088(in *Constructor_Data_Reflectable_Reflectable[gopurs_runtime.Value, string]) *Constructor_Data_Reflectable_Reflectable[gopurs_runtime.Value, gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Reflectable_Reflectable[gopurs_runtime.Value, gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Reflectable_Reflectable[gopurs_runtime.Value, gopurs_runtime.Value])(unsafe.Pointer(in))
 }

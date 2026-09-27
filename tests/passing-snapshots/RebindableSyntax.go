@@ -103,7 +103,7 @@ var once_Main_example2 sync.Once
 
 func Get_Main_example2() gopurs_runtime.Value {
 	once_Main_example2.Do(func() {
-		cache_Main_example2 = gopurs_runtime.Apply2(Call_Main_applySecond(gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply[gopurs_runtime.Value]](Call_Main_applyConst(gopurs_runtime.Value{Type: 9, IntVal: 2053112122, UnsafePtr: unsafe.Pointer(Rebox_Main_443971153_4179793454(Rebox_Main_4179793454_443971153(gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup[gopurs_runtime.Value]](Get_Data_Semigroup_semigroupString()))))}))), gopurs_runtime.Str("Do"), gopurs_runtime.Apply2(Call_Main_applySecond(gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply[gopurs_runtime.Value]](Call_Main_applyConst(gopurs_runtime.Value{Type: 9, IntVal: 2053112122, UnsafePtr: unsafe.Pointer(Rebox_Main_443971153_4179793454(Rebox_Main_4179793454_443971153(gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup[gopurs_runtime.Value]](Get_Data_Semigroup_semigroupString()))))}))), gopurs_runtime.Str(" notation"), gopurs_runtime.Apply2(Call_Main_applySecond(gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply[gopurs_runtime.Value]](Call_Main_applyConst(gopurs_runtime.Value{Type: 9, IntVal: 2053112122, UnsafePtr: unsafe.Pointer(Rebox_Main_443971153_4179793454(Rebox_Main_4179793454_443971153(gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup[gopurs_runtime.Value]](Get_Data_Semigroup_semigroupString()))))}))), gopurs_runtime.Str(" for"), gopurs_runtime.Str(" Apply"))))
+		cache_Main_example2 = gopurs_runtime.Apply2(Call_Main_applySecond(gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply[gopurs_runtime.Value]](Get_Main___cached_dict_0())), gopurs_runtime.Str("Do"), gopurs_runtime.Apply2(Call_Main_applySecond(gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply[gopurs_runtime.Value]](Get_Main___cached_dict_1())), gopurs_runtime.Str(" notation"), gopurs_runtime.Apply2(Call_Main_applySecond(gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply[gopurs_runtime.Value]](Get_Main___cached_dict_2())), gopurs_runtime.Str(" for"), gopurs_runtime.Str(" Apply"))))
 	})
 	return cache_Main_example2
 }
@@ -113,13 +113,48 @@ var once_Main_main sync.Once
 
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
-		cache_Main_main = gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Get_Main_example1().StrVal())), gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Call_Main_runConst(Get_Main_example2()).StrVal())), gopurs_runtime.Func(func(_dollar___unused_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
-			}))
-		}))
+		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
+			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Get_Main_example1().StrVal()))
+			_ = __local_var_0_0
+			__local_var_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
+			_ = __local_var_1_1
+			__local_var_2_2 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Call_Main_runConst(Get_Main_example2()).StrVal())), gopurs_runtime.Value{})
+			_ = __local_var_2_2
+			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
+		})
 	})
 	return cache_Main_main
+}
+
+var cache_Main___cached_dict_0 gopurs_runtime.Value
+var once_Main___cached_dict_0 sync.Once
+
+func Get_Main___cached_dict_0() gopurs_runtime.Value {
+	once_Main___cached_dict_0.Do(func() {
+		cache_Main___cached_dict_0 = gopurs_runtime.Value{Type: 9, IntVal: 3032403085, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply[gopurs_runtime.Value]](Call_Main_applyConst(gopurs_runtime.Value{Type: 9, IntVal: 2053112122, UnsafePtr: unsafe.Pointer(Rebox_Main_443971153_4179793454(Rebox_Main_4179793454_443971153(gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup[gopurs_runtime.Value]](Get_Data_Semigroup_semigroupString()))))})))}
+	})
+	return cache_Main___cached_dict_0
+}
+
+var cache_Main___cached_dict_1 gopurs_runtime.Value
+var once_Main___cached_dict_1 sync.Once
+
+func Get_Main___cached_dict_1() gopurs_runtime.Value {
+	once_Main___cached_dict_1.Do(func() {
+		cache_Main___cached_dict_1 = gopurs_runtime.Value{Type: 9, IntVal: 3032403085, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply[gopurs_runtime.Value]](Call_Main_applyConst(gopurs_runtime.Value{Type: 9, IntVal: 2053112122, UnsafePtr: unsafe.Pointer(Rebox_Main_443971153_4179793454(Rebox_Main_4179793454_443971153(gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup[gopurs_runtime.Value]](Get_Data_Semigroup_semigroupString()))))})))}
+	})
+	return cache_Main___cached_dict_1
+}
+
+var cache_Main___cached_dict_2 gopurs_runtime.Value
+var once_Main___cached_dict_2 sync.Once
+
+func Get_Main___cached_dict_2() gopurs_runtime.Value {
+	once_Main___cached_dict_2.Do(func() {
+		cache_Main___cached_dict_2 = gopurs_runtime.Value{Type: 9, IntVal: 3032403085, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply[gopurs_runtime.Value]](Call_Main_applyConst(gopurs_runtime.Value{Type: 9, IntVal: 2053112122, UnsafePtr: unsafe.Pointer(Rebox_Main_443971153_4179793454(Rebox_Main_4179793454_443971153(gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup[gopurs_runtime.Value]](Get_Data_Semigroup_semigroupString()))))})))}
+	})
+	return cache_Main___cached_dict_2
 }
 
 func Call_Main_Const(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
@@ -176,16 +211,12 @@ func Rebox_Main_4179793454_443971153(in *Constructor_Data_Semigroup_Semigroup[go
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Semigroup_Semigroup[string]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Semigroup_Semigroup[string])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_443971153_4179793454(in *Constructor_Data_Semigroup_Semigroup[string]) *Constructor_Data_Semigroup_Semigroup[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Semigroup_Semigroup[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Semigroup_Semigroup[gopurs_runtime.Value])(unsafe.Pointer(in))
 }

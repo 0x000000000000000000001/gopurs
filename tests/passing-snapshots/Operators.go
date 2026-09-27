@@ -342,7 +342,7 @@ func Call_Main_test14(a_0_loop float64, b_1_loop float64) bool {
 	_ = a_0
 	var b_1 float64 = b_1_loop
 	_ = b_1
-	var __t_tag_0 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordNumberImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, gopurs_runtime.Float(a_0), gopurs_runtime.Float(b_1))
+	var __t_tag_0 gopurs_runtime.Value = Data_Ord_OrdNumberImpl_nativeWorker(gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, a_0, b_1)
 	_ = __t_tag_0
 	return (uint32(__t_tag_0.IntVal) == 1527465420)
 }

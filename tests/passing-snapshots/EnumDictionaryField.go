@@ -239,17 +239,22 @@ var once_Main_main sync.Once
 
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
-		cache_Main_main = gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___1138829510("", struct {
-			actual   bool
-			expected bool
-		}{(Call_Main_isSafe(gopurs_runtime.Value{Type: 9, IntVal: 2242194644, UnsafePtr: unsafe.Pointer(Rebox_Main_3555759771_48729792(Rebox_Main_48729792_3555759771(gopurs_runtime.CoerceToStruct[Constructor_Main_Protected[gopurs_runtime.Value]](Get_Main_protectedInt()))))}).IntVal) != (0), true}), gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___1138829510("", struct {
+		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
+			__local_var_0_0 := Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
-			}{(Call_Main_isSafe(gopurs_runtime.Value{Type: 9, IntVal: 2242194644, UnsafePtr: unsafe.Pointer(Rebox_Main_2202314751_48729792(Rebox_Main_48729792_2202314751(gopurs_runtime.CoerceToStruct[Constructor_Main_Protected[gopurs_runtime.Value]](Get_Main_protectedString()))))}).IntVal) != (0), false}), gopurs_runtime.Func(func(_dollar___unused_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
-			}))
-		}))
+			}{(Call_Main_isSafe(gopurs_runtime.Value{Type: 9, IntVal: 2242194644, UnsafePtr: unsafe.Pointer(Rebox_Main_3555759771_48729792(Rebox_Main_48729792_3555759771(gopurs_runtime.CoerceToStruct[Constructor_Main_Protected[gopurs_runtime.Value]](Get_Main_protectedInt()))))}).IntVal) != (0), true})
+			_ = __local_var_0_0
+			__local_var_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
+			_ = __local_var_1_1
+			__local_var_2_2 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
+				actual   bool
+				expected bool
+			}{(Call_Main_isSafe(gopurs_runtime.Value{Type: 9, IntVal: 2242194644, UnsafePtr: unsafe.Pointer(Rebox_Main_2202314751_48729792(Rebox_Main_48729792_2202314751(gopurs_runtime.CoerceToStruct[Constructor_Main_Protected[gopurs_runtime.Value]](Get_Main_protectedString()))))}).IntVal) != (0), false}), gopurs_runtime.Value{})
+			_ = __local_var_2_2
+			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
+		})
 	})
 	return cache_Main_main
 }
@@ -364,43 +369,33 @@ func Rebox_Main_2202314751_48729792(in *Constructor_Main_Protected[string]) *Con
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_Protected[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Main_Protected[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_3555759771_48729792(in *Constructor_Main_Protected[int64]) *Constructor_Main_Protected[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_Protected[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Main_Protected[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_3768443459_3790796878(in *Constructor_Data_Eq_Eq[uint32]) *Constructor_Data_Eq_Eq[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Eq_Eq[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Eq_Eq[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_48729792_2202314751(in *Constructor_Main_Protected[gopurs_runtime.Value]) *Constructor_Main_Protected[string] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_Protected[string]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Main_Protected[string])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_48729792_3555759771(in *Constructor_Main_Protected[gopurs_runtime.Value]) *Constructor_Main_Protected[int64] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_Protected[int64]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Main_Protected[int64])(unsafe.Pointer(in))
 }

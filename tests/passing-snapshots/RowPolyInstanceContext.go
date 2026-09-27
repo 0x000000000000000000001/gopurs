@@ -90,9 +90,16 @@ var once_Main_test1 sync.Once
 
 func Get_Main_test1() gopurs_runtime.Value {
 	once_Main_test1.Do(func() {
-		cache_Main_test1 = gopurs_runtime.Apply(Call_Main_state(gopurs_runtime.CoerceToStruct[Constructor_Main_T[gopurs_runtime.Value, gopurs_runtime.Value]](Get_Main_st())), gopurs_runtime.Func(func(o_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.RecordUpdate1(o_0, "foo", gopurs_runtime.Str((gopurs_runtime.RecordGet(o_0, "foo").StrVal())+("!")))
-		}))
+		cache_Main_test1 = gopurs_runtime.Func(func(s_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			return func() gopurs_runtime.Value {
+				orig := struct {
+					go__new gopurs_runtime.Value
+					ret     gopurs_runtime.Value
+				}{gopurs_runtime.RecordUpdate1(s_0, "foo", gopurs_runtime.Str((gopurs_runtime.RecordGet(s_0, "foo").StrVal())+("!"))), Get_Data_Unit_unit()}
+				_ = orig
+				return gopurs_runtime.RecordDict2("new", "ret", orig.go__new, orig.ret)
+			}()
+		})
 	})
 	return cache_Main_test1
 }

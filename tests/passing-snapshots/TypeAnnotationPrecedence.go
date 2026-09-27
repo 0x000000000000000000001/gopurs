@@ -11,7 +11,9 @@ var once_Main_appendAndLog sync.Once
 
 func Get_Main_appendAndLog() gopurs_runtime.Value {
 	once_Main_appendAndLog.Do(func() {
-		cache_Main_appendAndLog = gopurs_runtime.Apply2(Call_Control_Semigroupoid_compose(gopurs_runtime.CoerceToStruct[Constructor_Control_Semigroupoid_Semigroupoid[gopurs_runtime.Value]](Get_Control_Semigroupoid_semigroupoidFn())), Get_Effect_Console_log(), gopurs_runtime.Apply(Get_Data_Tuple_uncurry__1230334089(), Call_Data_Semigroup_go__append(Rebox_Main_443971153_4179793454(Rebox_Main_4179793454_443971153(gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup[gopurs_runtime.Value]](Get_Data_Semigroup_semigroupString()))))))
+		cache_Main_appendAndLog = gopurs_runtime.Apply2(Call_Control_Semigroupoid_compose(gopurs_runtime.CoerceToStruct[Constructor_Control_Semigroupoid_Semigroupoid[gopurs_runtime.Value]](Get_Control_Semigroupoid_semigroupoidFn())), Get_Effect_Console_log(), gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(((*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(v_0.UnsafePtr).V0.StrVal()) + ((*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(v_0.UnsafePtr).V1.StrVal()))
+		}))
 	})
 	return cache_Main_appendAndLog
 }
@@ -49,23 +51,5 @@ func Rebox_Main_2080100712_138441832(in *Constructor_Data_Tuple_Tuple[string, st
 	out := &Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{}
 	out.V0 = gopurs_runtime.Str(in.V0)
 	out.V1 = gopurs_runtime.Str(in.V1)
-	return out
-}
-
-func Rebox_Main_4179793454_443971153(in *Constructor_Data_Semigroup_Semigroup[gopurs_runtime.Value]) *Constructor_Data_Semigroup_Semigroup[string] {
-	if in == nil {
-		return nil
-	}
-	out := &Constructor_Data_Semigroup_Semigroup[string]{}
-	out.V0 = in.V0
-	return out
-}
-
-func Rebox_Main_443971153_4179793454(in *Constructor_Data_Semigroup_Semigroup[string]) *Constructor_Data_Semigroup_Semigroup[gopurs_runtime.Value] {
-	if in == nil {
-		return nil
-	}
-	out := &Constructor_Data_Semigroup_Semigroup[gopurs_runtime.Value]{}
-	out.V0 = in.V0
 	return out
 }

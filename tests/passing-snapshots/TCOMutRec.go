@@ -545,540 +545,543 @@ var once_Main_main sync.Once
 
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
-		cache_Main_main = func() gopurs_runtime.Value {
-			var Call_local_Main_f__467072791_0_0_20 func(int64, int64) int64
-			_ = Call_local_Main_f__467072791_0_0_20
-			var f__467072791_0_0_20 gopurs_runtime.Value
-			_ = f__467072791_0_0_20
-			var Call_local_Main_f_0_1_21 func(int64, int64) int64
-			_ = Call_local_Main_f_0_1_21
-			var f_0_1_21 gopurs_runtime.Value
-			_ = f_0_1_21
-			Call_local_Main_f__467072791_0_0_20 = func(x_1_loop int64, y_2_loop int64) int64 {
-			f__467072791_0_0_20:
+		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+			var Call_local_Main_f__467072791_0_1_20 func(int64, int64) int64
+			_ = Call_local_Main_f__467072791_0_1_20
+			var f__467072791_0_1_20 gopurs_runtime.Value
+			_ = f__467072791_0_1_20
+			var Call_local_Main_f_0_2_21 func(int64, int64) int64
+			_ = Call_local_Main_f_0_2_21
+			var f_0_2_21 gopurs_runtime.Value
+			_ = f_0_2_21
+			Call_local_Main_f__467072791_0_1_20 = func(x_1_loop int64, y_2_loop int64) int64 {
+			f__467072791_0_1_20:
 				for {
 					if false {
-						continue f__467072791_0_0_20
+						continue f__467072791_0_1_20
 					}
 					var x_1 int64 = x_1_loop
 					_ = x_1
 					var y_2 int64 = y_2_loop
 					_ = y_2
-					// TAST (Let): __local_var_3_2 shape=Other bindingType=Int
-					__local_var_3_2 := (x_1) + (int64(2))
-					_ = __local_var_3_2
-					// TAST (Let): __local_var_4_3 shape=Other bindingType=Int
-					__local_var_4_3 := (y_2) - (int64(1))
-					_ = __local_var_4_3
-					var __t4 int64
+					// TAST (Let): __local_var_3_3 shape=Other bindingType=Int
+					__local_var_3_3 := (x_1) + (int64(2))
+					_ = __local_var_3_3
+					// TAST (Let): __local_var_4_4 shape=Other bindingType=Int
+					__local_var_4_4 := (y_2) - (int64(1))
+					_ = __local_var_4_4
+					var __t5 int64
 					{
-						if (__local_var_4_3) <= (int64(0)) {
-							__t4 = __local_var_3_2
-							goto end_branch_4
+						if (__local_var_4_4) <= (int64(0)) {
+							__t5 = __local_var_3_3
+							goto end_branch_5
 						} else {
 
 						}
 					}
 					{
-						x_1_loop = __local_var_3_2
-						y_2_loop = __local_var_4_3
-						continue f__467072791_0_0_20
-						__t4 = func() int64 { panic("unreachable") }()
+						x_1_loop = __local_var_3_3
+						y_2_loop = __local_var_4_4
+						continue f__467072791_0_1_20
+						__t5 = func() int64 { panic("unreachable") }()
 					}
-				end_branch_4:
-					return __t4
+				end_branch_5:
+					return __t5
 				}
 			}
-			f__467072791_0_0_20 = gopurs_runtime.Func(func(x_1_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
+			f__467072791_0_1_20 = gopurs_runtime.Func(func(x_1_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(y_2_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Int(Call_local_Main_f__467072791_0_0_20(x_1_loop_val.IntVal, y_2_loop_val.IntVal))
+					return gopurs_runtime.Int(Call_local_Main_f__467072791_0_1_20(x_1_loop_val.IntVal, y_2_loop_val.IntVal))
 				})
 			})
-			Call_local_Main_f_0_1_21 = func(x_1_loop int64, y_2_loop int64) int64 {
-			f_0_1_21:
+			Call_local_Main_f_0_2_21 = func(x_1_loop int64, y_2_loop int64) int64 {
+			f_0_2_21:
 				for {
 					if false {
-						continue f_0_1_21
+						continue f_0_2_21
 					}
 					var x_1 int64 = x_1_loop
 					_ = x_1
 					var y_2 int64 = y_2_loop
 					_ = y_2
-					// TAST (Let): __local_var_3_5 shape=Other bindingType=Int
-					__local_var_3_5 := (x_1) + (int64(2))
-					_ = __local_var_3_5
-					// TAST (Let): __local_var_4_6 shape=Other bindingType=Int
-					__local_var_4_6 := (y_2) - (int64(1))
-					_ = __local_var_4_6
-					var __t7 int64
+					// TAST (Let): __local_var_3_6 shape=Other bindingType=Int
+					__local_var_3_6 := (x_1) + (int64(2))
+					_ = __local_var_3_6
+					// TAST (Let): __local_var_4_7 shape=Other bindingType=Int
+					__local_var_4_7 := (y_2) - (int64(1))
+					_ = __local_var_4_7
+					var __t8 int64
 					{
-						if (__local_var_4_6) <= (int64(0)) {
-							__t7 = __local_var_3_5
-							goto end_branch_7
+						if (__local_var_4_7) <= (int64(0)) {
+							__t8 = __local_var_3_6
+							goto end_branch_8
 						} else {
 
 						}
 					}
 					{
-						__t7 = Call_local_Main_f__467072791_0_0_20(__local_var_3_5, __local_var_4_6)
+						__t8 = Call_local_Main_f__467072791_0_1_20(__local_var_3_6, __local_var_4_7)
 					}
-				end_branch_7:
-					return __t7
+				end_branch_8:
+					return __t8
 				}
 			}
-			f_0_1_21 = gopurs_runtime.Func(func(x_1_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
+			f_0_2_21 = gopurs_runtime.Func(func(x_1_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(y_2_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Int(Call_local_Main_f_0_1_21(x_1_loop_val.IntVal, y_2_loop_val.IntVal))
+					return gopurs_runtime.Int(Call_local_Main_f_0_2_21(x_1_loop_val.IntVal, y_2_loop_val.IntVal))
 				})
 			})
-			return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___627669702("", struct {
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
+			__local_var_0_0 := Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
-			}{Call_local_Main_f__467072791_0_0_20(int64(0), int64(100000)), int64(200000)}), gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
-				var Call_local_Main_f__467072791_1_8_22 func(int64, int64) int64
-				_ = Call_local_Main_f__467072791_1_8_22
-				var f__467072791_1_8_22 gopurs_runtime.Value
-				_ = f__467072791_1_8_22
-				var Call_local_Main_f_1_9_23 func(int64, int64) int64
-				_ = Call_local_Main_f_1_9_23
-				var f_1_9_23 gopurs_runtime.Value
-				_ = f_1_9_23
-				Call_local_Main_f__467072791_1_8_22 = func(x_2_loop int64, y_3_loop int64) int64 {
-				f__467072791_1_8_22:
-					for {
-						if false {
-							continue f__467072791_1_8_22
-						}
-						var x_2 int64 = x_2_loop
-						_ = x_2
-						var y_3 int64 = y_3_loop
-						_ = y_3
-						// TAST (Let): __local_var_4_10 shape=Other bindingType=Int
-						__local_var_4_10 := (x_2) + (int64(2))
-						_ = __local_var_4_10
-						// TAST (Let): __local_var_5_11 shape=Other bindingType=Int
-						__local_var_5_11 := (y_3) - (int64(1))
-						_ = __local_var_5_11
-						var __t12 int64
-						{
-							if (__local_var_5_11) <= (int64(0)) {
-								__t12 = __local_var_4_10
-								goto end_branch_12
-							} else {
+			}{Call_local_Main_f__467072791_0_1_20(int64(0), int64(100000)), int64(200000)})
+			_ = __local_var_0_0
+			__local_var_1_9 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
+			_ = __local_var_1_9
+			var Call_local_Main_f__467072791_2_11_22 func(int64, int64) int64
+			_ = Call_local_Main_f__467072791_2_11_22
+			var f__467072791_2_11_22 gopurs_runtime.Value
+			_ = f__467072791_2_11_22
+			var Call_local_Main_f_2_12_23 func(int64, int64) int64
+			_ = Call_local_Main_f_2_12_23
+			var f_2_12_23 gopurs_runtime.Value
+			_ = f_2_12_23
+			Call_local_Main_f__467072791_2_11_22 = func(x_3_loop int64, y_4_loop int64) int64 {
+			f__467072791_2_11_22:
+				for {
+					if false {
+						continue f__467072791_2_11_22
+					}
+					var x_3 int64 = x_3_loop
+					_ = x_3
+					var y_4 int64 = y_4_loop
+					_ = y_4
+					// TAST (Let): __local_var_5_13 shape=Other bindingType=Int
+					__local_var_5_13 := (x_3) + (int64(2))
+					_ = __local_var_5_13
+					// TAST (Let): __local_var_6_14 shape=Other bindingType=Int
+					__local_var_6_14 := (y_4) - (int64(1))
+					_ = __local_var_6_14
+					var __t15 int64
+					{
+						if (__local_var_6_14) <= (int64(0)) {
+							__t15 = __local_var_5_13
+							goto end_branch_15
+						} else {
 
-							}
 						}
-						{
-							x_2_loop = __local_var_4_10
-							y_3_loop = __local_var_5_11
-							continue f__467072791_1_8_22
-							__t12 = func() int64 { panic("unreachable") }()
+					}
+					{
+						x_3_loop = __local_var_5_13
+						y_4_loop = __local_var_6_14
+						continue f__467072791_2_11_22
+						__t15 = func() int64 { panic("unreachable") }()
+					}
+				end_branch_15:
+					return __t15
+				}
+			}
+			f__467072791_2_11_22 = gopurs_runtime.Func(func(x_3_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Func(func(y_4_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
+					return gopurs_runtime.Int(Call_local_Main_f__467072791_2_11_22(x_3_loop_val.IntVal, y_4_loop_val.IntVal))
+				})
+			})
+			Call_local_Main_f_2_12_23 = func(x_3_loop int64, y_4_loop int64) int64 {
+			f_2_12_23:
+				for {
+					if false {
+						continue f_2_12_23
+					}
+					var x_3 int64 = x_3_loop
+					_ = x_3
+					var y_4 int64 = y_4_loop
+					_ = y_4
+					// TAST (Let): __local_var_5_16 shape=Other bindingType=Int
+					__local_var_5_16 := (x_3) + (int64(2))
+					_ = __local_var_5_16
+					// TAST (Let): __local_var_6_17 shape=Other bindingType=Int
+					__local_var_6_17 := (y_4) - (int64(1))
+					_ = __local_var_6_17
+					var __t18 int64
+					{
+						if (__local_var_6_17) <= (int64(0)) {
+							__t18 = __local_var_5_16
+							goto end_branch_18
+						} else {
+
 						}
-					end_branch_12:
-						return __t12
+					}
+					{
+						__t18 = Call_local_Main_f__467072791_2_11_22(__local_var_5_16, __local_var_6_17)
+					}
+				end_branch_18:
+					return __t18
+				}
+			}
+			f_2_12_23 = gopurs_runtime.Func(func(x_3_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Func(func(y_4_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
+					return gopurs_runtime.Int(Call_local_Main_f_2_12_23(x_3_loop_val.IntVal, y_4_loop_val.IntVal))
+				})
+			})
+			__local_var_2_10 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
+				actual   int64
+				expected int64
+			}{Call_local_Main_f__467072791_2_11_22(int64(0), int64(100000)), int64(200000)}), gopurs_runtime.Value{})
+			_ = __local_var_2_10
+			__local_var_3_19 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
+				actual   int64
+				expected int64
+			}{Call_Main_tco3(int64(100000)), int64(249997)}), gopurs_runtime.Value{})
+			_ = __local_var_3_19
+			var Call_local_Main_f__467072791_4_21_24 func(int64, int64) int64
+			_ = Call_local_Main_f__467072791_4_21_24
+			var f__467072791_4_21_24 gopurs_runtime.Value
+			_ = f__467072791_4_21_24
+			var Call_local_Main_f_4_22_25 func(int64, int64) int64
+			_ = Call_local_Main_f_4_22_25
+			var f_4_22_25 gopurs_runtime.Value
+			_ = f_4_22_25
+			Call_local_Main_f__467072791_4_21_24 = func(x_5_loop int64, y_6_loop int64) int64 {
+			f__467072791_4_21_24:
+				for {
+					if false {
+						continue f__467072791_4_21_24
+					}
+					var x_5 int64 = x_5_loop
+					_ = x_5
+					var y_6 int64 = y_6_loop
+					_ = y_6
+					var __t23 int64
+					{
+						if (y_6) <= (int64(0)) {
+							__t23 = x_5
+							goto end_branch_23
+						} else {
+
+						}
+					}
+					{
+						x_5_loop = (x_5) + (int64(2))
+						y_6_loop = (y_6) - (int64(1))
+						continue f__467072791_4_21_24
+						__t23 = func() int64 { panic("unreachable") }()
+					}
+				end_branch_23:
+					return __t23
+				}
+			}
+			f__467072791_4_21_24 = gopurs_runtime.Func(func(x_5_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Func(func(y_6_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
+					return gopurs_runtime.Int(Call_local_Main_f__467072791_4_21_24(x_5_loop_val.IntVal, y_6_loop_val.IntVal))
+				})
+			})
+			Call_local_Main_f_4_22_25 = func(x_5_loop int64, y_6_loop int64) int64 {
+			f_4_22_25:
+				for {
+					if false {
+						continue f_4_22_25
+					}
+					var x_5 int64 = x_5_loop
+					_ = x_5
+					var y_6 int64 = y_6_loop
+					_ = y_6
+					var __t24 int64
+					{
+						if (y_6) <= (int64(0)) {
+							__t24 = x_5
+							goto end_branch_24
+						} else {
+
+						}
+					}
+					{
+						__t24 = Call_local_Main_f__467072791_4_21_24((x_5)+(int64(2)), (y_6)-(int64(1)))
+					}
+				end_branch_24:
+					return __t24
+				}
+			}
+			f_4_22_25 = gopurs_runtime.Func(func(x_5_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Func(func(y_6_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
+					return gopurs_runtime.Int(Call_local_Main_f_4_22_25(x_5_loop_val.IntVal, y_6_loop_val.IntVal))
+				})
+			})
+			__local_var_4_20 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
+				actual   int64
+				expected int64
+			}{Call_local_Main_f__467072791_4_21_24(int64(0), int64(100000)), int64(200000)}), gopurs_runtime.Value{})
+			_ = __local_var_4_20
+			var f__467072791_5_26_26 gopurs_runtime.Value
+			_ = f__467072791_5_26_26
+			var f__467072791_5_26_26_cell *gopurs_runtime.Value
+			_ = f__467072791_5_26_26_cell
+			// FALLBACK TCO: isLoop=false len=2
+			var f_5_27_27 gopurs_runtime.Value
+			_ = f_5_27_27
+			var f_5_27_27_cell *gopurs_runtime.Value
+			_ = f_5_27_27_cell
+			// FALLBACK TCO: isLoop=false len=2
+			f__467072791_5_26_26 = gopurs_runtime.Func(func(x_6 gopurs_runtime.Value) gopurs_runtime.Value {
+				var __t28 gopurs_runtime.Value
+				{
+					if (x_6.IntVal) > (int64(1000)) {
+						__t28 = gopurs_runtime.Func(func(v_7 gopurs_runtime.Value) gopurs_runtime.Value {
+							return gopurs_runtime.Int((x_6.IntVal) + (v_7.IntVal))
+						})
+						goto end_branch_28
+					} else {
+
 					}
 				}
-				f__467072791_1_8_22 = gopurs_runtime.Func(func(x_2_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Func(func(y_3_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
-						return gopurs_runtime.Int(Call_local_Main_f__467072791_1_8_22(x_2_loop_val.IntVal, y_3_loop_val.IntVal))
+				{
+					__t28 = gopurs_runtime.Func(func(y_prime__7 gopurs_runtime.Value) gopurs_runtime.Value {
+						return gopurs_runtime.Int(gopurs_runtime.Apply2((*f__467072791_5_26_26_cell), gopurs_runtime.Int((x_6.IntVal)+(int64(10))), gopurs_runtime.Int((y_prime__7.IntVal)-(int64(1)))).IntVal)
 					})
-				})
-				Call_local_Main_f_1_9_23 = func(x_2_loop int64, y_3_loop int64) int64 {
-				f_1_9_23:
-					for {
-						if false {
-							continue f_1_9_23
-						}
-						var x_2 int64 = x_2_loop
-						_ = x_2
-						var y_3 int64 = y_3_loop
-						_ = y_3
-						// TAST (Let): __local_var_4_13 shape=Other bindingType=Int
-						__local_var_4_13 := (x_2) + (int64(2))
-						_ = __local_var_4_13
-						// TAST (Let): __local_var_5_14 shape=Other bindingType=Int
-						__local_var_5_14 := (y_3) - (int64(1))
-						_ = __local_var_5_14
-						var __t15 int64
-						{
-							if (__local_var_5_14) <= (int64(0)) {
-								__t15 = __local_var_4_13
-								goto end_branch_15
-							} else {
+				}
+			end_branch_28:
+				return __t28
+			})
+			f__467072791_5_26_26_cell = &f__467072791_5_26_26
+			f_5_27_27 = gopurs_runtime.Func(func(x_6 gopurs_runtime.Value) gopurs_runtime.Value {
+				var __t29 gopurs_runtime.Value
+				{
+					if (x_6.IntVal) > (int64(1000)) {
+						__t29 = gopurs_runtime.Func(func(v_7 gopurs_runtime.Value) gopurs_runtime.Value {
+							return gopurs_runtime.Int((x_6.IntVal) + (v_7.IntVal))
+						})
+						goto end_branch_29
+					} else {
 
-							}
-						}
-						{
-							__t15 = Call_local_Main_f__467072791_1_8_22(__local_var_4_13, __local_var_5_14)
-						}
-					end_branch_15:
-						return __t15
 					}
 				}
-				f_1_9_23 = gopurs_runtime.Func(func(x_2_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Func(func(y_3_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
-						return gopurs_runtime.Int(Call_local_Main_f_1_9_23(x_2_loop_val.IntVal, y_3_loop_val.IntVal))
+				{
+					__t29 = gopurs_runtime.Func(func(y_prime__7 gopurs_runtime.Value) gopurs_runtime.Value {
+						return gopurs_runtime.Int(gopurs_runtime.Apply2((*f__467072791_5_26_26_cell), gopurs_runtime.Int((x_6.IntVal)+(int64(10))), gopurs_runtime.Int((y_prime__7.IntVal)-(int64(1)))).IntVal)
 					})
+				}
+			end_branch_29:
+				return __t29
+			})
+			f_5_27_27_cell = &f_5_27_27
+			__local_var_5_25 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
+				actual   int64
+				expected int64
+			}{gopurs_runtime.Apply2(f__467072791_5_26_26, gopurs_runtime.Int(int64(0)), gopurs_runtime.Int(int64(100))).IntVal, int64(1009)}), gopurs_runtime.Value{})
+			_ = __local_var_5_25
+			var Call_local_Main_f__467072791_6_31_28 func(int64, int64) int64
+			_ = Call_local_Main_f__467072791_6_31_28
+			var f__467072791_6_31_28 gopurs_runtime.Value
+			_ = f__467072791_6_31_28
+			var Call_local_Main_f_6_32_29 func(int64, int64) int64
+			_ = Call_local_Main_f_6_32_29
+			var f_6_32_29 gopurs_runtime.Value
+			_ = f_6_32_29
+			Call_local_Main_f__467072791_6_31_28 = func(x_7_loop int64, y_8_loop int64) int64 {
+			f__467072791_6_31_28:
+				for {
+					if false {
+						continue f__467072791_6_31_28
+					}
+					var x_7 int64 = x_7_loop
+					_ = x_7
+					var y_8 int64 = y_8_loop
+					_ = y_8
+					var __t33 int64
+					{
+						if (y_8) <= (int64(0)) {
+							__t33 = x_7
+							goto end_branch_33
+						} else {
+
+						}
+					}
+					{
+						x_7_loop = (x_7) + (int64(2))
+						y_8_loop = (y_8) - (int64(1))
+						continue f__467072791_6_31_28
+						__t33 = func() int64 { panic("unreachable") }()
+					}
+				end_branch_33:
+					return __t33
+				}
+			}
+			f__467072791_6_31_28 = gopurs_runtime.Func(func(x_7_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Func(func(y_8_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
+					return gopurs_runtime.Int(Call_local_Main_f__467072791_6_31_28(x_7_loop_val.IntVal, y_8_loop_val.IntVal))
 				})
-				return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___627669702("", struct {
-					actual   int64
-					expected int64
-				}{Call_local_Main_f__467072791_1_8_22(int64(0), int64(100000)), int64(200000)}), gopurs_runtime.Func(func(_dollar___unused_1 gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___627669702("", struct {
-						actual   int64
-						expected int64
-					}{Call_Main_tco3(int64(100000)), int64(249997)}), gopurs_runtime.Func(func(_dollar___unused_2 gopurs_runtime.Value) gopurs_runtime.Value {
-						var Call_local_Main_f__467072791_3_16_24 func(int64, int64) int64
-						_ = Call_local_Main_f__467072791_3_16_24
-						var f__467072791_3_16_24 gopurs_runtime.Value
-						_ = f__467072791_3_16_24
-						var Call_local_Main_f_3_17_25 func(int64, int64) int64
-						_ = Call_local_Main_f_3_17_25
-						var f_3_17_25 gopurs_runtime.Value
-						_ = f_3_17_25
-						Call_local_Main_f__467072791_3_16_24 = func(x_4_loop int64, y_5_loop int64) int64 {
-						f__467072791_3_16_24:
-							for {
-								if false {
-									continue f__467072791_3_16_24
-								}
-								var x_4 int64 = x_4_loop
-								_ = x_4
-								var y_5 int64 = y_5_loop
-								_ = y_5
-								var __t18 int64
-								{
-									if (y_5) <= (int64(0)) {
-										__t18 = x_4
-										goto end_branch_18
-									} else {
+			})
+			Call_local_Main_f_6_32_29 = func(x_7_loop int64, y_8_loop int64) int64 {
+			f_6_32_29:
+				for {
+					if false {
+						continue f_6_32_29
+					}
+					var x_7 int64 = x_7_loop
+					_ = x_7
+					var y_8 int64 = y_8_loop
+					_ = y_8
+					var __t34 int64
+					{
+						if (y_8) <= (int64(0)) {
+							__t34 = x_7
+							goto end_branch_34
+						} else {
 
-									}
-								}
-								{
-									x_4_loop = (x_4) + (int64(2))
-									y_5_loop = (y_5) - (int64(1))
-									continue f__467072791_3_16_24
-									__t18 = func() int64 { panic("unreachable") }()
-								}
-							end_branch_18:
-								return __t18
-							}
 						}
-						f__467072791_3_16_24 = gopurs_runtime.Func(func(x_4_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
-							return gopurs_runtime.Func(func(y_5_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
-								return gopurs_runtime.Int(Call_local_Main_f__467072791_3_16_24(x_4_loop_val.IntVal, y_5_loop_val.IntVal))
-							})
-						})
-						Call_local_Main_f_3_17_25 = func(x_4_loop int64, y_5_loop int64) int64 {
-						f_3_17_25:
-							for {
-								if false {
-									continue f_3_17_25
-								}
-								var x_4 int64 = x_4_loop
-								_ = x_4
-								var y_5 int64 = y_5_loop
-								_ = y_5
-								var __t19 int64
-								{
-									if (y_5) <= (int64(0)) {
-										__t19 = x_4
-										goto end_branch_19
-									} else {
+					}
+					{
+						__t34 = Call_local_Main_f__467072791_6_31_28((x_7)+(int64(2)), (y_8)-(int64(1)))
+					}
+				end_branch_34:
+					return __t34
+				}
+			}
+			f_6_32_29 = gopurs_runtime.Func(func(x_7_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Func(func(y_8_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
+					return gopurs_runtime.Int(Call_local_Main_f_6_32_29(x_7_loop_val.IntVal, y_8_loop_val.IntVal))
+				})
+			})
+			__local_var_6_30 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
+				actual   int64
+				expected int64
+			}{Call_local_Main_f__467072791_6_31_28(int64(0), int64(100)), int64(200)}), gopurs_runtime.Value{})
+			_ = __local_var_6_30
+			var f__467072791_7_36_30 gopurs_runtime.Value
+			_ = f__467072791_7_36_30
+			var f__467072791_7_36_30_cell *gopurs_runtime.Value
+			_ = f__467072791_7_36_30_cell
+			// FALLBACK TCO: isLoop=false len=2
+			var f_7_37_31 gopurs_runtime.Value
+			_ = f_7_37_31
+			var f_7_37_31_cell *gopurs_runtime.Value
+			_ = f_7_37_31_cell
+			// FALLBACK TCO: isLoop=false len=2
+			f__467072791_7_36_30 = gopurs_runtime.Func2(func(x_8 gopurs_runtime.Value, y_9 gopurs_runtime.Value) gopurs_runtime.Value {
+				// TAST (Let): g__3466805691_10_38 shape=App(Other) bindingType=(Func [Int] Int)
+				g__3466805691_10_38 := gopurs_runtime.Apply((*f__467072791_7_36_30_cell), gopurs_runtime.Int((x_8.IntVal)+(int64(2))))
+				_ = g__3466805691_10_38
+				var __t39 int64
+				{
+					if (y_9.IntVal) <= (int64(0)) {
+						__t39 = x_8.IntVal
+						goto end_branch_39
+					} else {
 
-									}
-								}
-								{
-									__t19 = Call_local_Main_f__467072791_3_16_24((x_4)+(int64(2)), (y_5)-(int64(1)))
-								}
-							end_branch_19:
-								return __t19
-							}
+					}
+				}
+				{
+					__t39 = gopurs_runtime.Apply(g__3466805691_10_38, gopurs_runtime.Int((y_9.IntVal)-(int64(1)))).IntVal
+				}
+			end_branch_39:
+				return gopurs_runtime.Int(__t39)
+			})
+			f__467072791_7_36_30_cell = &f__467072791_7_36_30
+			f_7_37_31 = gopurs_runtime.Func2(func(x_8 gopurs_runtime.Value, y_9 gopurs_runtime.Value) gopurs_runtime.Value {
+				// TAST (Let): g__3466805691_10_40 shape=App(Other) bindingType=(Func [Int] Int)
+				g__3466805691_10_40 := gopurs_runtime.Apply((*f__467072791_7_36_30_cell), gopurs_runtime.Int((x_8.IntVal)+(int64(2))))
+				_ = g__3466805691_10_40
+				var __t41 int64
+				{
+					if (y_9.IntVal) <= (int64(0)) {
+						__t41 = x_8.IntVal
+						goto end_branch_41
+					} else {
+
+					}
+				}
+				{
+					__t41 = gopurs_runtime.Apply(g__3466805691_10_40, gopurs_runtime.Int((y_9.IntVal)-(int64(1)))).IntVal
+				}
+			end_branch_41:
+				return gopurs_runtime.Int(__t41)
+			})
+			f_7_37_31_cell = &f_7_37_31
+			__local_var_7_35 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
+				actual   int64
+				expected int64
+			}{gopurs_runtime.Apply2(f__467072791_7_36_30, gopurs_runtime.Int(int64(0)), gopurs_runtime.Int(int64(100))).IntVal, int64(200)}), gopurs_runtime.Value{})
+			_ = __local_var_7_35
+			var Call_local_Main_f__467072791_8_43_32 func(int64, int64) int64
+			_ = Call_local_Main_f__467072791_8_43_32
+			var f__467072791_8_43_32 gopurs_runtime.Value
+			_ = f__467072791_8_43_32
+			var Call_local_Main_f_8_44_33 func(int64, int64) int64
+			_ = Call_local_Main_f_8_44_33
+			var f_8_44_33 gopurs_runtime.Value
+			_ = f_8_44_33
+			Call_local_Main_f__467072791_8_43_32 = func(x_9_loop int64, y_10_loop int64) int64 {
+			f__467072791_8_43_32:
+				for {
+					if false {
+						continue f__467072791_8_43_32
+					}
+					var x_9 int64 = x_9_loop
+					_ = x_9
+					var y_10 int64 = y_10_loop
+					_ = y_10
+					var __t45 int64
+					{
+						if (y_10) <= (int64(0)) {
+							__t45 = x_9
+							goto end_branch_45
+						} else {
+
 						}
-						f_3_17_25 = gopurs_runtime.Func(func(x_4_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
-							return gopurs_runtime.Func(func(y_5_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
-								return gopurs_runtime.Int(Call_local_Main_f_3_17_25(x_4_loop_val.IntVal, y_5_loop_val.IntVal))
-							})
-						})
-						return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___627669702("", struct {
-							actual   int64
-							expected int64
-						}{Call_local_Main_f__467072791_3_16_24(int64(0), int64(100000)), int64(200000)}), gopurs_runtime.Func(func(_dollar___unused_3 gopurs_runtime.Value) gopurs_runtime.Value {
-							var f__467072791_4_20_26 gopurs_runtime.Value
-							_ = f__467072791_4_20_26
-							var f__467072791_4_20_26_cell *gopurs_runtime.Value
-							_ = f__467072791_4_20_26_cell
-							// FALLBACK TCO: isLoop=false len=2
-							var f_4_21_27 gopurs_runtime.Value
-							_ = f_4_21_27
-							var f_4_21_27_cell *gopurs_runtime.Value
-							_ = f_4_21_27_cell
-							// FALLBACK TCO: isLoop=false len=2
-							f__467072791_4_20_26 = gopurs_runtime.Func(func(x_5 gopurs_runtime.Value) gopurs_runtime.Value {
-								var __t22 gopurs_runtime.Value
-								{
-									if (x_5.IntVal) > (int64(1000)) {
-										__t22 = gopurs_runtime.Func(func(v_6 gopurs_runtime.Value) gopurs_runtime.Value {
-											return gopurs_runtime.Int((x_5.IntVal) + (v_6.IntVal))
-										})
-										goto end_branch_22
-									} else {
+					}
+					{
+						x_9_loop = (x_9) + (int64(2))
+						y_10_loop = (y_10) - (int64(1))
+						continue f__467072791_8_43_32
+						__t45 = func() int64 { panic("unreachable") }()
+					}
+				end_branch_45:
+					return __t45
+				}
+			}
+			f__467072791_8_43_32 = gopurs_runtime.Func(func(x_9_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Func(func(y_10_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
+					return gopurs_runtime.Int(Call_local_Main_f__467072791_8_43_32(x_9_loop_val.IntVal, y_10_loop_val.IntVal))
+				})
+			})
+			Call_local_Main_f_8_44_33 = func(x_9_loop int64, y_10_loop int64) int64 {
+			f_8_44_33:
+				for {
+					if false {
+						continue f_8_44_33
+					}
+					var x_9 int64 = x_9_loop
+					_ = x_9
+					var y_10 int64 = y_10_loop
+					_ = y_10
+					var __t46 int64
+					{
+						if (y_10) <= (int64(0)) {
+							__t46 = x_9
+							goto end_branch_46
+						} else {
 
-									}
-								}
-								{
-									__t22 = gopurs_runtime.Func(func(y_prime__6 gopurs_runtime.Value) gopurs_runtime.Value {
-										return gopurs_runtime.Int(gopurs_runtime.Apply2((*f__467072791_4_20_26_cell), gopurs_runtime.Int((x_5.IntVal)+(int64(10))), gopurs_runtime.Int((y_prime__6.IntVal)-(int64(1)))).IntVal)
-									})
-								}
-							end_branch_22:
-								return __t22
-							})
-							f__467072791_4_20_26_cell = &f__467072791_4_20_26
-							f_4_21_27 = gopurs_runtime.Func(func(x_5 gopurs_runtime.Value) gopurs_runtime.Value {
-								var __t23 gopurs_runtime.Value
-								{
-									if (x_5.IntVal) > (int64(1000)) {
-										__t23 = gopurs_runtime.Func(func(v_6 gopurs_runtime.Value) gopurs_runtime.Value {
-											return gopurs_runtime.Int((x_5.IntVal) + (v_6.IntVal))
-										})
-										goto end_branch_23
-									} else {
-
-									}
-								}
-								{
-									__t23 = gopurs_runtime.Func(func(y_prime__6 gopurs_runtime.Value) gopurs_runtime.Value {
-										return gopurs_runtime.Int(gopurs_runtime.Apply2((*f__467072791_4_20_26_cell), gopurs_runtime.Int((x_5.IntVal)+(int64(10))), gopurs_runtime.Int((y_prime__6.IntVal)-(int64(1)))).IntVal)
-									})
-								}
-							end_branch_23:
-								return __t23
-							})
-							f_4_21_27_cell = &f_4_21_27
-							return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___627669702("", struct {
-								actual   int64
-								expected int64
-							}{gopurs_runtime.Apply2(f__467072791_4_20_26, gopurs_runtime.Int(int64(0)), gopurs_runtime.Int(int64(100))).IntVal, int64(1009)}), gopurs_runtime.Func(func(_dollar___unused_4 gopurs_runtime.Value) gopurs_runtime.Value {
-								var Call_local_Main_f__467072791_5_24_28 func(int64, int64) int64
-								_ = Call_local_Main_f__467072791_5_24_28
-								var f__467072791_5_24_28 gopurs_runtime.Value
-								_ = f__467072791_5_24_28
-								var Call_local_Main_f_5_25_29 func(int64, int64) int64
-								_ = Call_local_Main_f_5_25_29
-								var f_5_25_29 gopurs_runtime.Value
-								_ = f_5_25_29
-								Call_local_Main_f__467072791_5_24_28 = func(x_6_loop int64, y_7_loop int64) int64 {
-								f__467072791_5_24_28:
-									for {
-										if false {
-											continue f__467072791_5_24_28
-										}
-										var x_6 int64 = x_6_loop
-										_ = x_6
-										var y_7 int64 = y_7_loop
-										_ = y_7
-										var __t26 int64
-										{
-											if (y_7) <= (int64(0)) {
-												__t26 = x_6
-												goto end_branch_26
-											} else {
-
-											}
-										}
-										{
-											x_6_loop = (x_6) + (int64(2))
-											y_7_loop = (y_7) - (int64(1))
-											continue f__467072791_5_24_28
-											__t26 = func() int64 { panic("unreachable") }()
-										}
-									end_branch_26:
-										return __t26
-									}
-								}
-								f__467072791_5_24_28 = gopurs_runtime.Func(func(x_6_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
-									return gopurs_runtime.Func(func(y_7_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
-										return gopurs_runtime.Int(Call_local_Main_f__467072791_5_24_28(x_6_loop_val.IntVal, y_7_loop_val.IntVal))
-									})
-								})
-								Call_local_Main_f_5_25_29 = func(x_6_loop int64, y_7_loop int64) int64 {
-								f_5_25_29:
-									for {
-										if false {
-											continue f_5_25_29
-										}
-										var x_6 int64 = x_6_loop
-										_ = x_6
-										var y_7 int64 = y_7_loop
-										_ = y_7
-										var __t27 int64
-										{
-											if (y_7) <= (int64(0)) {
-												__t27 = x_6
-												goto end_branch_27
-											} else {
-
-											}
-										}
-										{
-											__t27 = Call_local_Main_f__467072791_5_24_28((x_6)+(int64(2)), (y_7)-(int64(1)))
-										}
-									end_branch_27:
-										return __t27
-									}
-								}
-								f_5_25_29 = gopurs_runtime.Func(func(x_6_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
-									return gopurs_runtime.Func(func(y_7_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
-										return gopurs_runtime.Int(Call_local_Main_f_5_25_29(x_6_loop_val.IntVal, y_7_loop_val.IntVal))
-									})
-								})
-								return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___627669702("", struct {
-									actual   int64
-									expected int64
-								}{Call_local_Main_f__467072791_5_24_28(int64(0), int64(100)), int64(200)}), gopurs_runtime.Func(func(_dollar___unused_5 gopurs_runtime.Value) gopurs_runtime.Value {
-									var f__467072791_6_28_30 gopurs_runtime.Value
-									_ = f__467072791_6_28_30
-									var f__467072791_6_28_30_cell *gopurs_runtime.Value
-									_ = f__467072791_6_28_30_cell
-									// FALLBACK TCO: isLoop=false len=2
-									var f_6_29_31 gopurs_runtime.Value
-									_ = f_6_29_31
-									var f_6_29_31_cell *gopurs_runtime.Value
-									_ = f_6_29_31_cell
-									// FALLBACK TCO: isLoop=false len=2
-									f__467072791_6_28_30 = gopurs_runtime.Func2(func(x_7 gopurs_runtime.Value, y_8 gopurs_runtime.Value) gopurs_runtime.Value {
-										// TAST (Let): g__3466805691_9_30 shape=App(Other) bindingType=(Func [Int] Int)
-										g__3466805691_9_30 := gopurs_runtime.Apply((*f__467072791_6_28_30_cell), gopurs_runtime.Int((x_7.IntVal)+(int64(2))))
-										_ = g__3466805691_9_30
-										var __t31 int64
-										{
-											if (y_8.IntVal) <= (int64(0)) {
-												__t31 = x_7.IntVal
-												goto end_branch_31
-											} else {
-
-											}
-										}
-										{
-											__t31 = gopurs_runtime.Apply(g__3466805691_9_30, gopurs_runtime.Int((y_8.IntVal)-(int64(1)))).IntVal
-										}
-									end_branch_31:
-										return gopurs_runtime.Int(__t31)
-									})
-									f__467072791_6_28_30_cell = &f__467072791_6_28_30
-									f_6_29_31 = gopurs_runtime.Func2(func(x_7 gopurs_runtime.Value, y_8 gopurs_runtime.Value) gopurs_runtime.Value {
-										// TAST (Let): g__3466805691_9_32 shape=App(Other) bindingType=(Func [Int] Int)
-										g__3466805691_9_32 := gopurs_runtime.Apply((*f__467072791_6_28_30_cell), gopurs_runtime.Int((x_7.IntVal)+(int64(2))))
-										_ = g__3466805691_9_32
-										var __t33 int64
-										{
-											if (y_8.IntVal) <= (int64(0)) {
-												__t33 = x_7.IntVal
-												goto end_branch_33
-											} else {
-
-											}
-										}
-										{
-											__t33 = gopurs_runtime.Apply(g__3466805691_9_32, gopurs_runtime.Int((y_8.IntVal)-(int64(1)))).IntVal
-										}
-									end_branch_33:
-										return gopurs_runtime.Int(__t33)
-									})
-									f_6_29_31_cell = &f_6_29_31
-									return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___627669702("", struct {
-										actual   int64
-										expected int64
-									}{gopurs_runtime.Apply2(f__467072791_6_28_30, gopurs_runtime.Int(int64(0)), gopurs_runtime.Int(int64(100))).IntVal, int64(200)}), gopurs_runtime.Func(func(_dollar___unused_6 gopurs_runtime.Value) gopurs_runtime.Value {
-										var Call_local_Main_f__467072791_7_34_32 func(int64, int64) int64
-										_ = Call_local_Main_f__467072791_7_34_32
-										var f__467072791_7_34_32 gopurs_runtime.Value
-										_ = f__467072791_7_34_32
-										var Call_local_Main_f_7_35_33 func(int64, int64) int64
-										_ = Call_local_Main_f_7_35_33
-										var f_7_35_33 gopurs_runtime.Value
-										_ = f_7_35_33
-										Call_local_Main_f__467072791_7_34_32 = func(x_8_loop int64, y_9_loop int64) int64 {
-										f__467072791_7_34_32:
-											for {
-												if false {
-													continue f__467072791_7_34_32
-												}
-												var x_8 int64 = x_8_loop
-												_ = x_8
-												var y_9 int64 = y_9_loop
-												_ = y_9
-												var __t36 int64
-												{
-													if (y_9) <= (int64(0)) {
-														__t36 = x_8
-														goto end_branch_36
-													} else {
-
-													}
-												}
-												{
-													x_8_loop = (x_8) + (int64(2))
-													y_9_loop = (y_9) - (int64(1))
-													continue f__467072791_7_34_32
-													__t36 = func() int64 { panic("unreachable") }()
-												}
-											end_branch_36:
-												return __t36
-											}
-										}
-										f__467072791_7_34_32 = gopurs_runtime.Func(func(x_8_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
-											return gopurs_runtime.Func(func(y_9_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
-												return gopurs_runtime.Int(Call_local_Main_f__467072791_7_34_32(x_8_loop_val.IntVal, y_9_loop_val.IntVal))
-											})
-										})
-										Call_local_Main_f_7_35_33 = func(x_8_loop int64, y_9_loop int64) int64 {
-										f_7_35_33:
-											for {
-												if false {
-													continue f_7_35_33
-												}
-												var x_8 int64 = x_8_loop
-												_ = x_8
-												var y_9 int64 = y_9_loop
-												_ = y_9
-												var __t37 int64
-												{
-													if (y_9) <= (int64(0)) {
-														__t37 = x_8
-														goto end_branch_37
-													} else {
-
-													}
-												}
-												{
-													__t37 = Call_local_Main_f__467072791_7_34_32((x_8)+(int64(2)), (y_9)-(int64(1)))
-												}
-											end_branch_37:
-												return __t37
-											}
-										}
-										f_7_35_33 = gopurs_runtime.Func(func(x_8_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
-											return gopurs_runtime.Func(func(y_9_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
-												return gopurs_runtime.Int(Call_local_Main_f_7_35_33(x_8_loop_val.IntVal, y_9_loop_val.IntVal))
-											})
-										})
-										return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), Call_Test_Assert_assertEqual_prime___627669702("", struct {
-											actual   int64
-											expected int64
-										}{Call_local_Main_f__467072791_7_34_32(int64(0), int64(100)), int64(200)}), gopurs_runtime.Func(func(_dollar___unused_7 gopurs_runtime.Value) gopurs_runtime.Value {
-											return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
-										}))
-									}))
-								}))
-							}))
-						}))
-					}))
-				}))
-			}))
-		}()
+						}
+					}
+					{
+						__t46 = Call_local_Main_f__467072791_8_43_32((x_9)+(int64(2)), (y_10)-(int64(1)))
+					}
+				end_branch_46:
+					return __t46
+				}
+			}
+			f_8_44_33 = gopurs_runtime.Func(func(x_9_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Func(func(y_10_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
+					return gopurs_runtime.Int(Call_local_Main_f_8_44_33(x_9_loop_val.IntVal, y_10_loop_val.IntVal))
+				})
+			})
+			__local_var_8_42 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
+				actual   int64
+				expected int64
+			}{Call_local_Main_f__467072791_8_43_32(int64(0), int64(100)), int64(200)}), gopurs_runtime.Value{})
+			_ = __local_var_8_42
+			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
+		})
 	})
 	return cache_Main_main
 }

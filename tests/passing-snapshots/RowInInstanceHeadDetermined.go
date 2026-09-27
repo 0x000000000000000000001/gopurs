@@ -689,9 +689,7 @@ func Rebox_Main_2568002420_373320770(in *Constructor_Main_Simple[uint32, struct 
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_Simple[gopurs_runtime.Value, gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Main_Simple[gopurs_runtime.Value, gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_3392908154_1025015703(in *Constructor_Main_Transitive[uint32, struct {
@@ -700,9 +698,7 @@ func Rebox_Main_3392908154_1025015703(in *Constructor_Main_Transitive[uint32, st
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_Transitive[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Main_Transitive[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_866733052_373320770(in *Constructor_Main_Simple[uint32, struct {
@@ -711,7 +707,5 @@ func Rebox_Main_866733052_373320770(in *Constructor_Main_Simple[uint32, struct {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_Simple[gopurs_runtime.Value, gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Main_Simple[gopurs_runtime.Value, gopurs_runtime.Value])(unsafe.Pointer(in))
 }

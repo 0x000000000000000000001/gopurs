@@ -3,7 +3,6 @@ package purescript
 import (
 	gopurs_runtime "gopurs/output/gopurs_runtime"
 	sync "sync"
-	unsafe "unsafe"
 )
 
 var cache_Main_identity gopurs_runtime.Value
@@ -11,7 +10,9 @@ var once_Main_identity sync.Once
 
 func Get_Main_identity() gopurs_runtime.Value {
 	once_Main_identity.Do(func() {
-		cache_Main_identity = Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))})
+		cache_Main_identity = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str(Call_Main_identity(x_0_box.StrVal()))
+		})
 	})
 	return cache_Main_identity
 }
@@ -45,9 +46,15 @@ var once_Main_main sync.Once
 
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
-		cache_Main_main = gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Call_Main_either__1840012924(Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))}), Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))}), gopurs_runtime.Value{Type: 9, IntVal: 1485529257, UnsafePtr: unsafe.Pointer(Rebox_Main_234776603_17902363((&Constructor_Either_Left[string, string]{1, "Done"})))})))
+		cache_Main_main = gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
 	})
 	return cache_Main_main
+}
+
+func Call_Main_identity(x_0_loop string) string {
+	var x_0 string = x_0_loop
+	_ = x_0
+	return gopurs_runtime.Str(x_0).StrVal()
 }
 
 func Call_Main_either(v_0_loop gopurs_runtime.Value, v1_1_loop gopurs_runtime.Value, v2_2_loop gopurs_runtime.Value) gopurs_runtime.Value {
@@ -96,7 +103,7 @@ either__1840012924:
 		var __t0 gopurs_runtime.Value
 		{
 			if v2_2.Type == 9 && v2_2.IntVal == 1485529257 {
-				__t0 = gopurs_runtime.Str(gopurs_runtime.Apply(Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))}), gopurs_runtime.Str((*Constructor_Either_Left[gopurs_runtime.Value, gopurs_runtime.Value])(v2_2.UnsafePtr).V0.StrVal())).StrVal())
+				__t0 = gopurs_runtime.Str((*Constructor_Either_Left[gopurs_runtime.Value, gopurs_runtime.Value])(v2_2.UnsafePtr).V0.StrVal())
 				goto end_branch_0
 			} else {
 
@@ -104,7 +111,7 @@ either__1840012924:
 		}
 		{
 			if v2_2.Type == 9 && v2_2.IntVal == 3726768370 {
-				__t0 = gopurs_runtime.Str(gopurs_runtime.Apply(Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))}), (*Constructor_Either_Right[gopurs_runtime.Value, gopurs_runtime.Value])(v2_2.UnsafePtr).V0).StrVal())
+				__t0 = (*Constructor_Either_Right[gopurs_runtime.Value, gopurs_runtime.Value])(v2_2.UnsafePtr).V0
 				goto end_branch_0
 			} else {
 
@@ -116,13 +123,4 @@ either__1840012924:
 	end_branch_0:
 		return __t0.StrVal()
 	}
-}
-
-func Rebox_Main_234776603_17902363(in *Constructor_Either_Left[string, string]) *Constructor_Either_Left[gopurs_runtime.Value, gopurs_runtime.Value] {
-	if in == nil {
-		return nil
-	}
-	out := &Constructor_Either_Left[gopurs_runtime.Value, gopurs_runtime.Value]{}
-	out.V0 = gopurs_runtime.Str(in.V0)
-	return out
 }

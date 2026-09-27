@@ -174,7 +174,9 @@ var once_Main_get1 sync.Once
 
 func Get_Main_get1() gopurs_runtime.Value {
 	once_Main_get1.Do(func() {
-		cache_Main_get1 = Call_Main_get(Get_Main_monadStateState())
+		cache_Main_get1 = gopurs_runtime.Func(func(s_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer((&Constructor_Main_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{1, s_0, s_0}))}
+		})
 	})
 	return cache_Main_get1
 }
@@ -277,28 +279,35 @@ var once_Main_test sync.Once
 
 func Get_Main_test() gopurs_runtime.Value {
 	once_Main_test.Do(func() {
-		cache_Main_test = gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer(Call_Main_runState(gopurs_runtime.Str(""), gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Main_bindState())), gopurs_runtime.Apply2(Call_Main_modify(gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad[gopurs_runtime.Value]](Get_Main_monadState())), Get_Main_monadStateState(), gopurs_runtime.Func(func(__local_var_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(("World!") + (__local_var_0.StrVal()))
-		})), gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Main_bindState())), gopurs_runtime.Apply2(Call_Main_modify(gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad[gopurs_runtime.Value]](Get_Main_monadState())), Get_Main_monadStateState(), gopurs_runtime.Func(func(__local_var_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Str(("Hello, ") + (__local_var_1.StrVal()))
-			})), gopurs_runtime.Func(func(_dollar___unused_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				// TAST (Let): __local_var_2_0 shape=App(Var) bindingType=(ADT ["Main","State"] [String, String])
-				__local_var_2_0 := Call_Main_get(Get_Main_monadStateState())
-				_ = __local_var_2_0
-				return gopurs_runtime.Func(func(s_3 gopurs_runtime.Value) gopurs_runtime.Value {
-					// TAST (Let): v_4_1 shape=App(Var) bindingType=(ADT ["Main","Tuple"] [(TypeVar s$scope38), (TypeVar a$scope42)])
-					v_4_1 := Call_Main_runState(s_3, __local_var_2_0)
-					_ = v_4_1
-					// TAST (Let): __local_var_5_2 shape=Other bindingType=(TypeVar a$scope42)
-					__local_var_5_2 := (v_4_1).V1
-					_ = __local_var_5_2
-					return gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer(Call_Main_runState((v_4_1).V0, gopurs_runtime.Func(func(s_6 gopurs_runtime.Value) gopurs_runtime.Value {
-						return gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer((&Constructor_Main_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{1, s_6, gopurs_runtime.Str(__local_var_5_2.StrVal())}))}
-					})))}
-				})
+		cache_Main_test = func() gopurs_runtime.Value {
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=(ADT ["Main","State"] [String, Unit])
+			__local_var_0_0 := gopurs_runtime.Apply2(Call_Main_modify(gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad[gopurs_runtime.Value]](Get_Main_monadState())), Get_Main_monadStateState(), gopurs_runtime.Func(func(__local_var_0 gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Str(("World!") + (__local_var_0.StrVal()))
 			}))
-		}))))}
+			_ = __local_var_0_0
+			return gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer(Call_Main_runState(gopurs_runtime.Str(""), gopurs_runtime.Func(func(s_1 gopurs_runtime.Value) gopurs_runtime.Value {
+				// TAST (Let): __local_var_2_1 shape=App(Var) bindingType=(ADT ["Main","State"] [String, Unit])
+				__local_var_2_1 := gopurs_runtime.Apply2(Call_Main_modify(gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad[gopurs_runtime.Value]](Get_Main_monadState())), Get_Main_monadStateState(), gopurs_runtime.Func(func(__local_var_2 gopurs_runtime.Value) gopurs_runtime.Value {
+					return gopurs_runtime.Str(("Hello, ") + (__local_var_2.StrVal()))
+				}))
+				_ = __local_var_2_1
+				return gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer(Call_Main_runState((Call_Main_runState(s_1, __local_var_0_0)).V0, gopurs_runtime.Func(func(s_3 gopurs_runtime.Value) gopurs_runtime.Value {
+					return gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer(Call_Main_runState((Call_Main_runState(s_3, __local_var_2_1)).V0, gopurs_runtime.Func(func(s_4 gopurs_runtime.Value) gopurs_runtime.Value {
+						// TAST (Let): v_5_2 shape=App(Var) bindingType=(ADT ["Main","Tuple"] [(TypeVar s$scope38), (TypeVar a$scope42)])
+						v_5_2 := Call_Main_runState(s_4, gopurs_runtime.Func(func(s_5 gopurs_runtime.Value) gopurs_runtime.Value {
+							return gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer((&Constructor_Main_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{1, s_5, s_5}))}
+						}))
+						_ = v_5_2
+						// TAST (Let): __local_var_6_3 shape=Other bindingType=(TypeVar a$scope42)
+						__local_var_6_3 := (v_5_2).V1
+						_ = __local_var_6_3
+						return gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer(Call_Main_runState((v_5_2).V0, gopurs_runtime.Func(func(s_7 gopurs_runtime.Value) gopurs_runtime.Value {
+							return gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer((&Constructor_Main_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{1, s_7, gopurs_runtime.Str(__local_var_6_3.StrVal())}))}
+						})))}
+					})))}
+				})))}
+			})))}
+		}()
 	})
 	return cache_Main_test
 }

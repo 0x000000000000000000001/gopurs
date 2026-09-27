@@ -262,136 +262,141 @@ var once_Main_main sync.Once
 
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
-		cache_Main_main = gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.Int(gopurs_runtime.RecordGet(Get_Main_test1(), "x").IntVal)).StrVal())), gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			var __t0 string
+		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
+			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Data_Show_ShowIntImpl(gopurs_runtime.RecordGet(Get_Main_test1(), "x").IntVal)))
+			_ = __local_var_0_0
+			_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
+			_ = _dollar___unused_1_1
+			var __t3 string
 			{
 				if (gopurs_runtime.RecordGet(Get_Main_test1(), "y").IntVal) != (0) {
-					__t0 = "true"
-					goto end_branch_0
+					__t3 = "true"
+					goto end_branch_3
 				} else {
 
 				}
 			}
 			{
-				__t0 = "false"
+				__t3 = "false"
 			}
-		end_branch_0:
-			return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(__t0)), gopurs_runtime.Func(func(_dollar___unused_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				var __t1 string
-				{
-					if (gopurs_runtime.RecordGet(Get_Main_test1(), "x").IntVal) == (int64(1)) {
-						__t1 = "true"
-						goto end_branch_1
-					} else {
+		end_branch_3:
+			_dollar___unused_2_2 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(__t3)), gopurs_runtime.Value{})
+			_ = _dollar___unused_2_2
+			var __t5 string
+			{
+				if (gopurs_runtime.RecordGet(Get_Main_test1(), "x").IntVal) == (int64(1)) {
+					__t5 = "true"
+					goto end_branch_5
+				} else {
 
-					}
 				}
-				{
-					__t1 = "false"
-				}
-			end_branch_1:
-				return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(__t1)), gopurs_runtime.Func(func(_dollar___unused_2 gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(gopurs_runtime.Apply2(Call_Main_merge(gopurs_runtime.Value{}), func() gopurs_runtime.Value {
-						orig := struct {
-							x int64
-						}{int64(1)}
-						_ = orig
-						return gopurs_runtime.RecordDict1("x", gopurs_runtime.Int(orig.x))
-					}(), func() gopurs_runtime.Value {
-						orig := struct {
-							x int64
-							y bool
-							z float64
-						}{int64(0), true, 42.0}
-						_ = orig
-						return gopurs_runtime.RecordDict3("x", "y", "z", gopurs_runtime.Int(orig.x), gopurs_runtime.Bool(orig.y), gopurs_runtime.Float(orig.z))
-					}()), "x")).StrVal())), gopurs_runtime.Func(func(_dollar___unused_3 gopurs_runtime.Value) gopurs_runtime.Value {
-						return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(gopurs_runtime.Apply2(Get_Main_mergeImpl(), gopurs_runtime.RecordDict1("x", gopurs_runtime.Int(int64(1))), func() gopurs_runtime.Value {
-							orig := struct {
-								y int64
-								z int64
-							}{int64(1), int64(1)}
-							_ = orig
-							return gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(orig.y), gopurs_runtime.Int(orig.z))
-						}()), "x")).StrVal())), gopurs_runtime.Func(func(_dollar___unused_4 gopurs_runtime.Value) gopurs_runtime.Value {
-							return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(gopurs_runtime.Apply2(Get_Main_mergeImpl(), gopurs_runtime.RecordDict1("x", gopurs_runtime.Int(int64(1))), func() gopurs_runtime.Value {
-								orig := struct {
-									y int64
-									z int64
-								}{int64(1), int64(1)}
-								_ = orig
-								return gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(orig.y), gopurs_runtime.Int(orig.z))
-							}()), "y")).StrVal())), gopurs_runtime.Func(func(_dollar___unused_5 gopurs_runtime.Value) gopurs_runtime.Value {
-								return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(gopurs_runtime.Apply2(Get_Main_mergeImpl(), gopurs_runtime.RecordDict1("x", gopurs_runtime.Int(int64(1))), func() gopurs_runtime.Value {
-									orig := struct {
-										y int64
-										z int64
-									}{int64(1), int64(1)}
-									_ = orig
-									return gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(orig.y), gopurs_runtime.Int(orig.z))
-								}()), "z")).StrVal())), gopurs_runtime.Func(func(_dollar___unused_6 gopurs_runtime.Value) gopurs_runtime.Value {
-									return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(gopurs_runtime.Apply2(Get_Main_mergeImpl(), gopurs_runtime.RecordDict2("x", "y", gopurs_runtime.Int(int64(1)), gopurs_runtime.Int(int64(2))), func() gopurs_runtime.Value {
-										orig := struct {
-											y int64
-											z int64
-										}{int64(1), int64(1)}
-										_ = orig
-										return gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(orig.y), gopurs_runtime.Int(orig.z))
-									}()), "x")).StrVal())), gopurs_runtime.Func(func(_dollar___unused_7 gopurs_runtime.Value) gopurs_runtime.Value {
-										return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(gopurs_runtime.Apply2(Get_Main_mergeImpl(), gopurs_runtime.RecordDict2("x", "y", gopurs_runtime.Int(int64(1)), gopurs_runtime.Int(int64(2))), func() gopurs_runtime.Value {
-											orig := struct {
-												y int64
-												z int64
-											}{int64(1), int64(1)}
-											_ = orig
-											return gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(orig.y), gopurs_runtime.Int(orig.z))
-										}()), "y")).StrVal())), gopurs_runtime.Func(func(_dollar___unused_8 gopurs_runtime.Value) gopurs_runtime.Value {
-											return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(gopurs_runtime.Apply2(Get_Main_mergeImpl(), gopurs_runtime.RecordDict2("x", "y", gopurs_runtime.Int(int64(1)), gopurs_runtime.Int(int64(2))), func() gopurs_runtime.Value {
-												orig := struct {
-													y int64
-													z int64
-												}{int64(1), int64(1)}
-												_ = orig
-												return gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(orig.y), gopurs_runtime.Int(orig.z))
-											}()), "z")).StrVal())), gopurs_runtime.Func(func(_dollar___unused_9 gopurs_runtime.Value) gopurs_runtime.Value {
-												return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(gopurs_runtime.Apply2(Get_Main_mergeImpl(), gopurs_runtime.RecordDict2("x", "y", gopurs_runtime.Int(int64(1)), gopurs_runtime.Int(int64(2))), func() gopurs_runtime.Value {
-													orig := struct {
-														y int64
-														z int64
-													}{int64(1), int64(1)}
-													_ = orig
-													return gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(orig.y), gopurs_runtime.Int(orig.z))
-												}()), "x")).StrVal())), gopurs_runtime.Func(func(_dollar___unused_10 gopurs_runtime.Value) gopurs_runtime.Value {
-													return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(gopurs_runtime.Apply2(Get_Main_mergeImpl(), gopurs_runtime.RecordDict2("x", "y", gopurs_runtime.Int(int64(1)), gopurs_runtime.Int(int64(2))), func() gopurs_runtime.Value {
-														orig := struct {
-															y int64
-															z int64
-														}{int64(1), int64(1)}
-														_ = orig
-														return gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(orig.y), gopurs_runtime.Int(orig.z))
-													}()), "y")).StrVal())), gopurs_runtime.Func(func(_dollar___unused_11 gopurs_runtime.Value) gopurs_runtime.Value {
-														return gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.RecordGet(gopurs_runtime.Apply2(Get_Main_mergeImpl(), gopurs_runtime.RecordDict2("x", "y", gopurs_runtime.Int(int64(1)), gopurs_runtime.Int(int64(2))), func() gopurs_runtime.Value {
-															orig := struct {
-																y int64
-																z int64
-															}{int64(1), int64(1)}
-															_ = orig
-															return gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(orig.y), gopurs_runtime.Int(orig.z))
-														}()), "z")).StrVal())), gopurs_runtime.Func(func(_dollar___unused_12 gopurs_runtime.Value) gopurs_runtime.Value {
-															return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
-														}))
-													}))
-												}))
-											}))
-										}))
-									}))
-								}))
-							}))
-						}))
-					}))
-				}))
-			}))
-		}))
+			}
+			{
+				__t5 = "false"
+			}
+		end_branch_5:
+			__local_var_3_4 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(__t5)), gopurs_runtime.Value{})
+			_ = __local_var_3_4
+			__local_var_4_6 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Data_Show_ShowIntImpl(gopurs_runtime.RecordGet(gopurs_runtime.Apply2(Call_Main_merge(gopurs_runtime.Value{}), func() gopurs_runtime.Value {
+				orig := struct {
+					x int64
+				}{int64(1)}
+				_ = orig
+				return gopurs_runtime.RecordDict1("x", gopurs_runtime.Int(orig.x))
+			}(), func() gopurs_runtime.Value {
+				orig := struct {
+					x int64
+					y bool
+					z float64
+				}{int64(0), true, 42.0}
+				_ = orig
+				return gopurs_runtime.RecordDict3("x", "y", "z", gopurs_runtime.Int(orig.x), gopurs_runtime.Bool(orig.y), gopurs_runtime.Float(orig.z))
+			}()), "x").IntVal))), gopurs_runtime.Value{})
+			_ = __local_var_4_6
+			__local_var_5_7 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Data_Show_ShowIntImpl(gopurs_runtime.RecordGet(gopurs_runtime.Apply2(Get_Main_mergeImpl(), gopurs_runtime.RecordDict1("x", gopurs_runtime.Int(int64(1))), func() gopurs_runtime.Value {
+				orig := struct {
+					y int64
+					z int64
+				}{int64(1), int64(1)}
+				_ = orig
+				return gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(orig.y), gopurs_runtime.Int(orig.z))
+			}()), "x").IntVal))), gopurs_runtime.Value{})
+			_ = __local_var_5_7
+			__local_var_6_8 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Data_Show_ShowIntImpl(gopurs_runtime.RecordGet(gopurs_runtime.Apply2(Get_Main_mergeImpl(), gopurs_runtime.RecordDict1("x", gopurs_runtime.Int(int64(1))), func() gopurs_runtime.Value {
+				orig := struct {
+					y int64
+					z int64
+				}{int64(1), int64(1)}
+				_ = orig
+				return gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(orig.y), gopurs_runtime.Int(orig.z))
+			}()), "y").IntVal))), gopurs_runtime.Value{})
+			_ = __local_var_6_8
+			__local_var_7_9 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Data_Show_ShowIntImpl(gopurs_runtime.RecordGet(gopurs_runtime.Apply2(Get_Main_mergeImpl(), gopurs_runtime.RecordDict1("x", gopurs_runtime.Int(int64(1))), func() gopurs_runtime.Value {
+				orig := struct {
+					y int64
+					z int64
+				}{int64(1), int64(1)}
+				_ = orig
+				return gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(orig.y), gopurs_runtime.Int(orig.z))
+			}()), "z").IntVal))), gopurs_runtime.Value{})
+			_ = __local_var_7_9
+			__local_var_8_10 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Data_Show_ShowIntImpl(gopurs_runtime.RecordGet(gopurs_runtime.Apply2(Get_Main_mergeImpl(), gopurs_runtime.RecordDict2("x", "y", gopurs_runtime.Int(int64(1)), gopurs_runtime.Int(int64(2))), func() gopurs_runtime.Value {
+				orig := struct {
+					y int64
+					z int64
+				}{int64(1), int64(1)}
+				_ = orig
+				return gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(orig.y), gopurs_runtime.Int(orig.z))
+			}()), "x").IntVal))), gopurs_runtime.Value{})
+			_ = __local_var_8_10
+			__local_var_9_11 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Data_Show_ShowIntImpl(gopurs_runtime.RecordGet(gopurs_runtime.Apply2(Get_Main_mergeImpl(), gopurs_runtime.RecordDict2("x", "y", gopurs_runtime.Int(int64(1)), gopurs_runtime.Int(int64(2))), func() gopurs_runtime.Value {
+				orig := struct {
+					y int64
+					z int64
+				}{int64(1), int64(1)}
+				_ = orig
+				return gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(orig.y), gopurs_runtime.Int(orig.z))
+			}()), "y").IntVal))), gopurs_runtime.Value{})
+			_ = __local_var_9_11
+			__local_var_10_12 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Data_Show_ShowIntImpl(gopurs_runtime.RecordGet(gopurs_runtime.Apply2(Get_Main_mergeImpl(), gopurs_runtime.RecordDict2("x", "y", gopurs_runtime.Int(int64(1)), gopurs_runtime.Int(int64(2))), func() gopurs_runtime.Value {
+				orig := struct {
+					y int64
+					z int64
+				}{int64(1), int64(1)}
+				_ = orig
+				return gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(orig.y), gopurs_runtime.Int(orig.z))
+			}()), "z").IntVal))), gopurs_runtime.Value{})
+			_ = __local_var_10_12
+			__local_var_11_13 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Data_Show_ShowIntImpl(gopurs_runtime.RecordGet(gopurs_runtime.Apply2(Get_Main_mergeImpl(), gopurs_runtime.RecordDict2("x", "y", gopurs_runtime.Int(int64(1)), gopurs_runtime.Int(int64(2))), func() gopurs_runtime.Value {
+				orig := struct {
+					y int64
+					z int64
+				}{int64(1), int64(1)}
+				_ = orig
+				return gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(orig.y), gopurs_runtime.Int(orig.z))
+			}()), "x").IntVal))), gopurs_runtime.Value{})
+			_ = __local_var_11_13
+			__local_var_12_14 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Data_Show_ShowIntImpl(gopurs_runtime.RecordGet(gopurs_runtime.Apply2(Get_Main_mergeImpl(), gopurs_runtime.RecordDict2("x", "y", gopurs_runtime.Int(int64(1)), gopurs_runtime.Int(int64(2))), func() gopurs_runtime.Value {
+				orig := struct {
+					y int64
+					z int64
+				}{int64(1), int64(1)}
+				_ = orig
+				return gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(orig.y), gopurs_runtime.Int(orig.z))
+			}()), "y").IntVal))), gopurs_runtime.Value{})
+			_ = __local_var_12_14
+			__local_var_13_15 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Data_Show_ShowIntImpl(gopurs_runtime.RecordGet(gopurs_runtime.Apply2(Get_Main_mergeImpl(), gopurs_runtime.RecordDict2("x", "y", gopurs_runtime.Int(int64(1)), gopurs_runtime.Int(int64(2))), func() gopurs_runtime.Value {
+				orig := struct {
+					y int64
+					z int64
+				}{int64(1), int64(1)}
+				_ = orig
+				return gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(orig.y), gopurs_runtime.Int(orig.z))
+			}()), "z").IntVal))), gopurs_runtime.Value{})
+			_ = __local_var_13_15
+			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
+		})
 	})
 	return cache_Main_main
 }

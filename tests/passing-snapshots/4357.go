@@ -74,6 +74,16 @@ func Get_Main_g() gopurs_runtime.Value {
 	return cache_Main_g
 }
 
+var cache_Main___cached_dict_0 gopurs_runtime.Value
+var once_Main___cached_dict_0 sync.Once
+
+func Get_Main___cached_dict_0() gopurs_runtime.Value {
+	once_Main___cached_dict_0.Do(func() {
+		cache_Main___cached_dict_0 = gopurs_runtime.Value{Type: 9, IntVal: 1722653594, UnsafePtr: unsafe.Pointer(Rebox_Main_2095395797_1201789390(Rebox_Main_1201789390_2095395797(gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid[gopurs_runtime.Value]](Call_Data_Monoid_Additive_monoidAdditive(gopurs_runtime.Value{Type: 9, IntVal: 134961754, UnsafePtr: unsafe.Pointer(Rebox_Main_348932501_2826095630(Rebox_Main_2826095630_348932501(gopurs_runtime.CoerceToStruct[Constructor_Data_Semiring_Semiring[gopurs_runtime.Value]](Get_Data_Semiring_semiringInt()))))})))))}
+	})
+	return cache_Main___cached_dict_0
+}
+
 type Constructor_Main_Foo struct {
 	Rc uint32
 	V0 int64
@@ -97,7 +107,9 @@ func Call_Main_test(v_0_loop *Constructor_Data_Maybe_Just[int64]) int64 {
 		}
 	}
 	{
-		__t0 = gopurs_runtime.Apply2(Call_Data_Foldable_foldMapDefaultR(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()), Rebox_Main_2095395797_1201789390(Rebox_Main_1201789390_2095395797(gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid[gopurs_runtime.Value]](Call_Data_Monoid_Additive_monoidAdditive(gopurs_runtime.Value{Type: 9, IntVal: 134961754, UnsafePtr: unsafe.Pointer(Rebox_Main_348932501_2826095630(Rebox_Main_2826095630_348932501(gopurs_runtime.CoerceToStruct[Constructor_Data_Semiring_Semiring[gopurs_runtime.Value]](Get_Data_Semiring_semiringInt()))))}))))), Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))}), gopurs_runtime.Array([]gopurs_runtime.Value{})).IntVal
+		__t0 = gopurs_runtime.Apply2(Call_Data_Foldable_foldMapDefaultR(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()), Rebox_Main_2095395797_1201789390(Rebox_Main_1201789390_2095395797(gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid[gopurs_runtime.Value]](Get_Main___cached_dict_0())))), gopurs_runtime.Func(func(x_1 gopurs_runtime.Value) gopurs_runtime.Value {
+			return x_1
+		}), gopurs_runtime.Array([]gopurs_runtime.Value{})).IntVal
 	}
 end_branch_0:
 	return __t0

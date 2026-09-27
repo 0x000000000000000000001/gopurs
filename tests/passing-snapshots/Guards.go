@@ -183,7 +183,7 @@ func Call_Main_testIndentation(x_0_loop float64, y_1_loop float64) float64 {
 	_ = y_1
 	var __t1 float64
 	{
-		var __t_tag_0 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordNumberImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, gopurs_runtime.Float(x_0), gopurs_runtime.Float(0.0))
+		var __t_tag_0 gopurs_runtime.Value = Data_Ord_OrdNumberImpl_nativeWorker(gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, x_0, 0.0)
 		_ = __t_tag_0
 		if uint32(__t_tag_0.IntVal) == 380165415 {
 			__t1 = (x_0) + (y_1)
@@ -208,9 +208,9 @@ func Call_Main_min(dictOrd_0_loop *Constructor_Data_Ord_Ord[gopurs_runtime.Value
 	_ = m_2
 	var __t1 gopurs_runtime.Value
 	{
-		var __t_tag_0 uint32 = uint32(gopurs_runtime.Apply2(dictOrd_0.V1, n_1, m_2).IntVal)
+		var __t_tag_0 gopurs_runtime.Value = gopurs_runtime.Apply2(dictOrd_0.V1, n_1, m_2)
 		_ = __t_tag_0
-		if uint32(__t_tag_0) == 1527465420 {
+		if uint32(__t_tag_0.IntVal) == 1527465420 {
 			__t1 = n_1
 			goto end_branch_1
 		} else {
@@ -262,9 +262,9 @@ func Call_Main_max(dictOrd_0_loop *Constructor_Data_Ord_Ord[gopurs_runtime.Value
 	_ = m_2
 	var __t1 gopurs_runtime.Value
 	{
-		var __t_tag_0 uint32 = uint32(gopurs_runtime.Apply2(dictOrd_0.V1, m_2, n_1).IntVal)
+		var __t_tag_0 gopurs_runtime.Value = gopurs_runtime.Apply2(dictOrd_0.V1, m_2, n_1)
 		_ = __t_tag_0
-		if uint32(__t_tag_0) == 1527465420 {
+		if uint32(__t_tag_0.IntVal) == 1527465420 {
 			__t1 = n_1
 			goto end_branch_1
 		} else {
@@ -312,7 +312,7 @@ func Call_Main_collatz2(x_0_loop float64, y_1_loop float64) float64 {
 	_ = y_1
 	var __t1 float64
 	{
-		var __t_tag_0 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordNumberImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, gopurs_runtime.Float(y_1), gopurs_runtime.Float(0.0))
+		var __t_tag_0 gopurs_runtime.Value = Data_Ord_OrdNumberImpl_nativeWorker(gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, y_1, 0.0)
 		_ = __t_tag_0
 		if uint32(__t_tag_0.IntVal) == 380165415 {
 			__t1 = (x_0) / (2.0)

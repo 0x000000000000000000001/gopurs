@@ -174,7 +174,5 @@ func Rebox_Main_3484061825_1752060876(in *Constructor_Main_F[uint32]) *Construct
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Main_F[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Main_F[gopurs_runtime.Value])(unsafe.Pointer(in))
 }

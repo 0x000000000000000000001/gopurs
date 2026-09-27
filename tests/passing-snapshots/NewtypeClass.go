@@ -219,9 +219,14 @@ var once_Main_main sync.Once
 
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
-		cache_Main_main = gopurs_runtime.Apply2(Call_Control_Bind_bind(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Effect_bindEffect())), gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), gopurs_runtime.Int(gopurs_runtime.Apply(Call_Main_ala(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor[gopurs_runtime.Value]](Get_Data_Functor_functorFn()), gopurs_runtime.CoerceToStruct[Constructor_Main_Newtype[gopurs_runtime.Value, gopurs_runtime.Value]](gopurs_runtime.Value{}), Get_Main_Multiplicative(), gopurs_runtime.Apply(Get_Main_foldPair(), Call_Main_semiringMultiplicative(gopurs_runtime.Value{Type: 9, IntVal: 134961754, UnsafePtr: unsafe.Pointer(Rebox_Main_348932501_2826095630(Rebox_Main_2826095630_348932501(gopurs_runtime.CoerceToStruct[Constructor_Data_Semiring_Semiring[gopurs_runtime.Value]](Get_Data_Semiring_semiringInt()))))}))), gopurs_runtime.Value{Type: 9, IntVal: 893478516, UnsafePtr: unsafe.Pointer(Rebox_Main_1557125915_791404512((&Constructor_Main_Pair[int64]{1, int64(2), int64(3)})))}).IntVal)).StrVal())), gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
-		}))
+		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=(ADT ["Effect","Effect"] [Unit])
+			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Data_Show_ShowIntImpl(gopurs_runtime.Apply(Call_Main_ala(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor[gopurs_runtime.Value]](Get_Data_Functor_functorFn()), gopurs_runtime.CoerceToStruct[Constructor_Main_Newtype[gopurs_runtime.Value, gopurs_runtime.Value]](gopurs_runtime.Value{}), Get_Main_Multiplicative(), gopurs_runtime.Apply(Get_Main_foldPair(), Call_Main_semiringMultiplicative(gopurs_runtime.Value{Type: 9, IntVal: 134961754, UnsafePtr: unsafe.Pointer(Rebox_Main_348932501_2826095630(Rebox_Main_2826095630_348932501(gopurs_runtime.CoerceToStruct[Constructor_Data_Semiring_Semiring[gopurs_runtime.Value]](Get_Data_Semiring_semiringInt()))))}))), gopurs_runtime.Value{Type: 9, IntVal: 893478516, UnsafePtr: unsafe.Pointer(Rebox_Main_1557125915_791404512((&Constructor_Main_Pair[int64]{1, int64(2), int64(3)})))}).IntVal)))
+			_ = __local_var_0_0
+			__local_var_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
+			_ = __local_var_1_1
+			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
+		})
 	})
 	return cache_Main_main
 }
@@ -348,7 +353,7 @@ ala__754736784:
 		_ = f_unused_1
 		var __eta_norm_0_2 gopurs_runtime.Value = __eta_norm_0_2_loop
 		_ = __eta_norm_0_2
-		return gopurs_runtime.Apply3(gopurs_runtime.RecordGet(Get_Data_Functor_functorFn(), "map"), Call_Main_unwrap(gopurs_runtime.CoerceToStruct[Constructor_Main_Newtype[gopurs_runtime.Value, gopurs_runtime.Value]](gopurs_runtime.Value{})), gopurs_runtime.Apply2(Get_Main_foldPair(), Call_Main_semiringMultiplicative(gopurs_runtime.Value{Type: 9, IntVal: 134961754, UnsafePtr: unsafe.Pointer(Rebox_Main_348932501_2826095630(Rebox_Main_2826095630_348932501(gopurs_runtime.CoerceToStruct[Constructor_Data_Semiring_Semiring[gopurs_runtime.Value]](Get_Data_Semiring_semiringInt()))))}), Call_Main_wrap(gopurs_runtime.CoerceToStruct[Constructor_Main_Newtype[gopurs_runtime.Value, gopurs_runtime.Value]](gopurs_runtime.Value{}))), __eta_norm_0_2)
+		return gopurs_runtime.Apply(Call_Main_unwrap(gopurs_runtime.CoerceToStruct[Constructor_Main_Newtype[gopurs_runtime.Value, gopurs_runtime.Value]](gopurs_runtime.Value{})), Call_Main_foldPair(gopurs_runtime.CoerceToStruct[Constructor_Data_Semigroup_Semigroup[gopurs_runtime.Value]](Call_Main_semiringMultiplicative(gopurs_runtime.Value{Type: 9, IntVal: 134961754, UnsafePtr: unsafe.Pointer(Rebox_Main_348932501_2826095630(Rebox_Main_2826095630_348932501(gopurs_runtime.CoerceToStruct[Constructor_Data_Semiring_Semiring[gopurs_runtime.Value]](Get_Data_Semiring_semiringInt()))))})), Call_Main_wrap(gopurs_runtime.CoerceToStruct[Constructor_Main_Newtype[gopurs_runtime.Value, gopurs_runtime.Value]](gopurs_runtime.Value{})), gopurs_runtime.CoerceToStruct[Constructor_Main_Pair[gopurs_runtime.Value]](__eta_norm_0_2)))
 	}
 }
 

@@ -558,19 +558,14 @@ func Rebox_Main_1009504592_2818661616(in *Constructor_Data_Generic_Rep_Generic[*
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Generic_Rep_Generic[gopurs_runtime.Value, gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	return out
+	return (*Constructor_Data_Generic_Rep_Generic[gopurs_runtime.Value, gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_127695515_242610358(in *Constructor_Data_Show_Generic_GenericShowArgs[uint32]) *Constructor_Data_Show_Generic_GenericShowArgs[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Generic_GenericShowArgs[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Generic_GenericShowArgs[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1291651792_2818661616(in *Constructor_Data_Generic_Rep_Generic[struct {
@@ -581,19 +576,14 @@ func Rebox_Main_1291651792_2818661616(in *Constructor_Data_Generic_Rep_Generic[s
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Generic_Rep_Generic[gopurs_runtime.Value, gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	return out
+	return (*Constructor_Data_Generic_Rep_Generic[gopurs_runtime.Value, gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1386611502_2461310173(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[*Constructor_Main_B2] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[*Constructor_Main_B2]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[*Constructor_Main_B2])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1386611502_4853725(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[struct {
@@ -602,58 +592,44 @@ func Rebox_Main_1386611502_4853725(in *Constructor_Data_Show_Show[gopurs_runtime
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[struct {
+	return (*Constructor_Data_Show_Show[struct {
 		x *Constructor_Main_B2
-	}]{}
-	out.V0 = in.V0
-	return out
+	}])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_1386611502_576757679(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[*Constructor_Main_B] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[*Constructor_Main_B]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[*Constructor_Main_B])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_2147772913_2818661616(in *Constructor_Data_Generic_Rep_Generic[*Constructor_Main_B, gopurs_runtime.Value]) *Constructor_Data_Generic_Rep_Generic[gopurs_runtime.Value, gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Generic_Rep_Generic[gopurs_runtime.Value, gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	return out
+	return (*Constructor_Data_Generic_Rep_Generic[gopurs_runtime.Value, gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_242610358_127695515(in *Constructor_Data_Show_Generic_GenericShowArgs[gopurs_runtime.Value]) *Constructor_Data_Show_Generic_GenericShowArgs[uint32] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Generic_GenericShowArgs[uint32]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Generic_GenericShowArgs[uint32])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_2461310173_1386611502(in *Constructor_Data_Show_Show[*Constructor_Main_B2]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_2818661616_1009504592(in *Constructor_Data_Generic_Rep_Generic[gopurs_runtime.Value, gopurs_runtime.Value]) *Constructor_Data_Generic_Rep_Generic[*Constructor_Main_B, *Constructor_Main_B] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Generic_Rep_Generic[*Constructor_Main_B, *Constructor_Main_B]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	return out
+	return (*Constructor_Data_Generic_Rep_Generic[*Constructor_Main_B, *Constructor_Main_B])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_2818661616_1291651792(in *Constructor_Data_Generic_Rep_Generic[gopurs_runtime.Value, gopurs_runtime.Value]) *Constructor_Data_Generic_Rep_Generic[struct {
@@ -664,14 +640,11 @@ func Rebox_Main_2818661616_1291651792(in *Constructor_Data_Generic_Rep_Generic[g
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Generic_Rep_Generic[struct {
+	return (*Constructor_Data_Generic_Rep_Generic[struct {
 		x *Constructor_Main_B2
 	}, struct {
 		x *Constructor_Main_B2
-	}]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	return out
+	}])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_3485313226_2687169876(in *Constructor_Data_Generic_Rep_Inr[struct {
@@ -689,10 +662,7 @@ func Rebox_Main_3587705155_2818661616(in *Constructor_Data_Generic_Rep_Generic[*
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Generic_Rep_Generic[gopurs_runtime.Value, gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	return out
+	return (*Constructor_Data_Generic_Rep_Generic[gopurs_runtime.Value, gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_3658796408_2687169876(in *Constructor_Data_Generic_Rep_Inr[*Constructor_Main_B, uint32]) *Constructor_Data_Generic_Rep_Inr[gopurs_runtime.Value, gopurs_runtime.Value] {
@@ -719,18 +689,14 @@ func Rebox_Main_4853725_1386611502(in *Constructor_Data_Show_Show[struct {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_576757679_1386611502(in *Constructor_Data_Show_Show[*Constructor_Main_B]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Show_Show[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
+	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_615526420_1323331594(in *Constructor_Data_Generic_Rep_Inl[struct {

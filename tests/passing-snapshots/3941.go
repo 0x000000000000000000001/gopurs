@@ -67,7 +67,9 @@ var once_Main_testEquals sync.Once
 
 func Get_Main_testEquals() gopurs_runtime.Value {
 	once_Main_testEquals.Do(func() {
-		cache_Main_testEquals = gopurs_runtime.Apply(Get_Main_go__func(), Get_Main_equals())
+		cache_Main_testEquals = gopurs_runtime.Func(func(a_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_testEquals(a_0_box)
+		})
 	})
 	return cache_Main_testEquals
 }
@@ -87,7 +89,7 @@ var once_Main_testAny sync.Once
 
 func Get_Main_testAny() gopurs_runtime.Value {
 	once_Main_testAny.Do(func() {
-		cache_Main_testAny = gopurs_runtime.Apply(Get_Main_go__func(), Get_Main_any())
+		cache_Main_testAny = Get_Unsafe_Coerce_unsafeCoerce()
 	})
 	return cache_Main_testAny
 }
@@ -97,7 +99,7 @@ var once_Main_thisShouldBeCompiled sync.Once
 
 func Get_Main_thisShouldBeCompiled() gopurs_runtime.Value {
 	once_Main_thisShouldBeCompiled.Do(func() {
-		cache_Main_thisShouldBeCompiled = gopurs_runtime.Apply(Get_Main_go__func(), Get_Main_any())
+		cache_Main_thisShouldBeCompiled = Get_Unsafe_Coerce_unsafeCoerce()
 	})
 	return cache_Main_thisShouldBeCompiled
 }
@@ -138,4 +140,10 @@ func Call_Main_go__func(dict_0_loop *Constructor_Main_TwoParams[gopurs_runtime.V
 	var dict_0 *Constructor_Main_TwoParams[gopurs_runtime.Value, gopurs_runtime.Value] = dict_0_loop
 	_ = dict_0
 	return dict_0.V0
+}
+
+func Call_Main_testEquals(a_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var a_0 gopurs_runtime.Value = a_0_loop
+	_ = a_0
+	return a_0
 }

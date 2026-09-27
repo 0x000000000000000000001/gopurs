@@ -99,7 +99,9 @@ var once_Main_c1 sync.Once
 
 func Get_Main_c1() gopurs_runtime.Value {
 	once_Main_c1.Do(func() {
-		cache_Main_c1 = Call_Main_c(gopurs_runtime.CoerceToStruct[Constructor_Main_C[gopurs_runtime.Value]](Get_Main_cA()))
+		cache_Main_c1 = gopurs_runtime.Func2(func(x1_0_box gopurs_runtime.Value, v_1_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Array(Call_Main_c1((*(*[]gopurs_runtime.Value)((x1_0_box).UnsafePtr)), v_1_box))
+		})
 	})
 	return cache_Main_c1
 }
@@ -170,13 +172,23 @@ func Call_Main_c(dict_0_loop *Constructor_Main_C[gopurs_runtime.Value]) gopurs_r
 	return dict_0.V0
 }
 
+func Call_Main_c1(x1_0_loop []gopurs_runtime.Value, v_1_loop gopurs_runtime.Value) []gopurs_runtime.Value {
+	var x1_0 []gopurs_runtime.Value = x1_0_loop
+	_ = x1_0
+	var v_1 gopurs_runtime.Value = v_1_loop
+	_ = v_1
+	return x1_0
+}
+
 func Call_Main_test2(dictMonad_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var dictMonad_0 gopurs_runtime.Value = dictMonad_0_loop
 	_ = dictMonad_0
 	return gopurs_runtime.Apply(gopurs_runtime.RecordGet(gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonad_0, "Applicative0"), gopurs_runtime.Value{}), "pure"), func() gopurs_runtime.Value {
 		orig := struct {
 			ccc gopurs_runtime.Value
-		}{Call_Main_c(gopurs_runtime.CoerceToStruct[Constructor_Main_C[gopurs_runtime.Value]](Get_Main_cA()))}
+		}{gopurs_runtime.Func2(func(x1_1 gopurs_runtime.Value, v_2 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((x1_1).UnsafePtr)))
+		})}
 		_ = orig
 		return gopurs_runtime.RecordDict1("ccc", orig.ccc)
 	}())

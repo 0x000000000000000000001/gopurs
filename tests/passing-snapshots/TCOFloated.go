@@ -99,20 +99,14 @@ func Rebox_Main_290402411_4177771502(in *Constructor_Data_Ord_Ord[struct {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Ord_Ord[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	return out
+	return (*Constructor_Data_Ord_Ord[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_3308271157_4177771502(in *Constructor_Data_Ord_Ord[int64]) *Constructor_Data_Ord_Ord[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Ord_Ord[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	return out
+	return (*Constructor_Data_Ord_Ord[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_4177771502_290402411(in *Constructor_Data_Ord_Ord[gopurs_runtime.Value]) *Constructor_Data_Ord_Ord[struct {
@@ -121,20 +115,14 @@ func Rebox_Main_4177771502_290402411(in *Constructor_Data_Ord_Ord[gopurs_runtime
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Ord_Ord[struct {
+	return (*Constructor_Data_Ord_Ord[struct {
 		foo int64
-	}]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	return out
+	}])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_4177771502_3308271157(in *Constructor_Data_Ord_Ord[gopurs_runtime.Value]) *Constructor_Data_Ord_Ord[int64] {
 	if in == nil {
 		return nil
 	}
-	out := &Constructor_Data_Ord_Ord[int64]{}
-	out.V0 = in.V0
-	out.V1 = in.V1
-	return out
+	return (*Constructor_Data_Ord_Ord[int64])(unsafe.Pointer(in))
 }

@@ -133,7 +133,9 @@ var once_Main_constClassInt sync.Once
 
 func Get_Main_constClassInt() gopurs_runtime.Value {
 	once_Main_constClassInt.Do(func() {
-		cache_Main_constClassInt = Call_Main_constClass(Rebox_Main_662423258_1962053153(Rebox_Main_1962053153_662423258(gopurs_runtime.CoerceToStruct[Constructor_Main_ConstClass[gopurs_runtime.Value]](Get_Main_constClass1()))))
+		cache_Main_constClassInt = gopurs_runtime.Func2(func(a_0 gopurs_runtime.Value, v_1 gopurs_runtime.Value) gopurs_runtime.Value {
+			return a_0
+		})
 	})
 	return cache_Main_constClassInt
 }
@@ -205,22 +207,4 @@ func Call_Main_constClass(dict_0_loop *Constructor_Main_ConstClass[gopurs_runtim
 	var dict_0 *Constructor_Main_ConstClass[gopurs_runtime.Value] = dict_0_loop
 	_ = dict_0
 	return dict_0.V0
-}
-
-func Rebox_Main_1962053153_662423258(in *Constructor_Main_ConstClass[gopurs_runtime.Value]) *Constructor_Main_ConstClass[int64] {
-	if in == nil {
-		return nil
-	}
-	out := &Constructor_Main_ConstClass[int64]{}
-	out.V0 = in.V0
-	return out
-}
-
-func Rebox_Main_662423258_1962053153(in *Constructor_Main_ConstClass[int64]) *Constructor_Main_ConstClass[gopurs_runtime.Value] {
-	if in == nil {
-		return nil
-	}
-	out := &Constructor_Main_ConstClass[gopurs_runtime.Value]{}
-	out.V0 = in.V0
-	return out
 }
