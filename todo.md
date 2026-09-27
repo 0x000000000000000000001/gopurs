@@ -5,26 +5,29 @@ Ce fichier remplace le journal précédent (sauvegardé dans
 
 ## État acquis
 
-- **Backend** (b8x, 2 683 modules) : **48,5-48,7 s** en 8 workers (défauts du
+- **Backend** (b8x, 2 683 modules) : **46,0-46,4 s** en 8 workers (défauts du
   lanceur : `GOPURS_PBO_JOBS=8`, `GOPURS_PREPARE_JOBS=8`, `GOGC=off`,
-  `GOMEMLIMIT=10GiB`), **74,5-82 s** en séquentiel ; **JS 77,4 s** →
-  `/JS = 0,63x` (table `altbak.pub/README.md`). Mesure appariée de l'étape 2 :
-  **56,1-56,5 → 48,5-48,7 s** à réglages identiques.
-- **Allocations** : 214,2 → 189,1 → **175,8 Go** (profil échantillonné).
-  Sept leviers livrés : rebox identité → cast, comparaisons `EvalRef` natives,
-  `arrayBind` en `[]Value`, degré B-tree 6, native call lowering (v1→v3),
-  imprimante « writer » avec builder natif, comparateurs natifs `Map` +
-  `Set.map` incrémental (étape 2).
+  `GOMEMLIMIT=10GiB`), **69,3-69,5 s** en séquentiel ; **JS 77,4 s** →
+  `/JS = 0,60x` (table `altbak.pub/README.md`). Mesures appariées : étape 2
+  **56,1-56,5 → 48,5-48,7 s**, puis clés `Int`/`String`/`EvalRef`/`TcoRef`
+  **47,8 → 46,4 s** (médianes d8).
+- **Allocations** : 214,2 → 189,1 → 175,8 → **174,8 Go** (profil
+  échantillonné). Huit leviers livrés : rebox identité → cast, comparaisons
+  `EvalRef` natives, `arrayBind` en `[]Value`, degré B-tree 6, native call
+  lowering (v1→v3), imprimante « writer » avec builder natif, comparateurs
+  natifs `Map` + `Set.map` incrémental (étape 2), unions/lookups natifs des
+  clés chaudes (Int/Level, String, EvalRef, TcoRef).
 - **Parité** byte-exacte séquentiel ↔ parallèle ↔ JS (2 974 fichiers) ;
   fixtures validées sans mise à jour des snapshots.
 - **Défauts du lanceur** (`gopurs/bin/gopurs`) : ≥ 32 Go → `GOGC=off`,
   `GOMEMLIMIT=10GiB`, `GOPURS_PBO_JOBS=8`, `GOPURS_PREPARE_JOBS=8`
   (surchargeables) ; branche `GOPURS_JS=1` → `node --stack-size=65536`.
-- **Profil CPU (8 workers, après étape 2)** : comparateur `Map` **6,5 s**
-  (contre 8,2 s), `Set.map` quadratique de `ThunkFusion` disparu ; `Apply`/
-  `Apply2` et la machinerie Aff restent les premiers postes ; GC réelle ~2-3 %
-  (`gctrace`, 37 cycles) — l'échantillonnage du profil mémoire Go reste
-  désactivé sauf `GOPURS_ALLOC_PROFILE`.
+- **Profil CPU (8 workers, après étape 2 et clés chaudes)** : comparateur
+  `Map` **4,3 s** (8,2 s avant l'étape 2), `(*Node).find` 7,5 s, `Set.map`
+  quadratique de `ThunkFusion` disparu ; `Apply`/`Apply2` et la machinerie Aff
+  restent les premiers postes ; GC réelle ~2-3 % (`gctrace`) —
+  l'échantillonnage du profil mémoire Go reste désactivé sauf
+  `GOPURS_ALLOC_PROFILE`.
 
 ## Plan
 
@@ -77,20 +80,34 @@ Profil (parallèle, hors symboles runtime) : `(*Node).foldl` **17,7 s cum**
       groupe de bindings (`Set.map sanitizeName` sur l'ensemble complet) —
       ~4,8 s CPU pour ThunkFusion seul. Ensemble `emitted :: Set String`
       maintenu incrémentalement.
+- [x] **Clés chaudes restantes (`Int`/`Level`, `String`, `EvalRef`, `TcoRef`)** :
+      comparateurs natifs supplémentaires dans `NativeMaps` + unions natives
+      (`UnionWithNative` dans le fork : le combine reste PS, seules les
+      comparaisons disparaissent). Routés : unions `usages` d'`Analysis`
+      (`Level`), unions `usages`/`tailCalls` de `Tco` (`TcoRef`), unions
+      `String` de `Monomorphize` (`buildSubst`, `mergeInstantiations`,
+      `insertWith`), lookups/insertions `EvalRef` des directives (`Semantics`
+      : 16 sites ; `Convert` : 3 ; `Builder` : `member`/`insert`/
+      `foldrWithIndex`). Les tags de constructeurs (`EvalExtern`/`EvalLocal`,
+      `TcoTopLevel`/`TcoLocal`) sont figés dans le comparateur ; la parité du
+      corpus les garde honnêtes.
 - Mesures appariées (même session, deux binaires) : 8 workers **60,6 → 54,1 s**
       (avec le `GOPURS_PREPARE_JOBS` par défaut), **56,1-56,5 → 48,5-48,7 s**
-      (défauts du lanceur) ; séquentiel **84-91 → 74,5-82 s** ; CPU total **192,6 →
-      185,0 s** ; allocations **190,3 → 175,8 Go** ; `compareInt` **8,2 →
-      6,5 s**. Parité byte-exacte (0 `.go` modifié sur 2 974).
-- [ ] **Reste** : le coût `compareInt` restant (~6,5 s) est une longue traîne —
-      `LookupImpl` 3,3 s (aucun site dominant : `foreignSemantics` puis
-      `Preparation`, planificateur, `Monomorphize`, `GoTypes`) et
-      `unionWithSameOrdering` 2,5 s (`Map.union` des directives `EvalRef` et
-      des instantiations). Prochains leviers : comparateur `EvalRef` natif
-      (lookup + union), unions natives `String`, maps `Int` du planificateur,
-      `isIdentity` de `FunctionFusion` (~1,9 s CPU).
-- [ ] **`Map.foldl` chauds** : remplacer par `toUnfoldable` + boucle
-      (supprime le callback boxé par élément, `FoldlImpl.func1` ~8,6 s cum).
+      (défauts du lanceur, étape 2), puis **47,8 → 46,4 s** (clés chaudes) ;
+      séquentiel **84-91 → 69,3-69,5 s** ; CPU total **192,6 → 178,4 s** ;
+      allocations **190,3 → 174,8 Go** ; `compareInt` **8,2 → 4,3 s**.
+      Parité byte-exacte (0 `.go` modifié sur 2 974, en j1, d8 et JS).
+- **Micro-gains écartés** (décision 27/09) : reste de `compareInt` (**4,3 s** :
+      lookups 2,5 s en longue traîne sans site dominant, unions ~1,1 s),
+      `FunctionFusion.isIdentity` (1,8 s intrinsèque : `abstractions` +
+      égalités de types), `mangleType` unitaire. Ne plus y consacrer de passe.
+- [ ] **Priorité suivante — relances du builder parallèle** (~830 tentatives
+      rejetées à 8 workers, +40 % d'allocations) : indices d'ordonnancement
+      profondeur 2, reprise plus fine que la reconversion complète. C'est le
+      plus gros poste murale restant.
+- [ ] **`Map.foldl` chauds** (~8,6 s cum, callback currifié par élément) :
+      entrée native à callback non currifié ou conversion des sites en
+      boucles — à ne traiter que si le gain murale est démontré.
 
 ### 3 — GC et tas vivant (clos)
 
