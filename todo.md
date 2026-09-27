@@ -132,12 +132,15 @@ Profil (parallèle, hors symboles runtime) : `(*Node).foldl` **17,7 s cum**
 
 ### 6 — Divers
 
-- [ ] Chaînes : derniers `<>` par builders (cf. `memmove` du profil).
-- [ ] `mangleType` : mémoïsation par identité (2-4 Go potentiels).
-- [ ] Relances du builder parallèle (réduire les ~830 tentatives rejetées).
+- [ ] Chaînes : derniers `<>` par builders (cf. `memmove` du profil, ~15 s).
+- ~~`mangleType` : mémoïsation par identité~~ — écarté (micro-gain).
+- [ ] Relances du builder parallèle (réduire les ~830 tentatives rejetées) —
+      voir priorité en fin d'étape 2.
 
 ## Méthode de validation
 
+- **Seuil d'effort** (décision 27/09) : ne traiter que les leviers ≥ ~2-3 s CPU
+  ou à effet murale mesuré ; les micro-gains sont documentés puis écartés.
 - Parité byte-exacte (b8x + fixtures), profil d'allocations
   (`GOPURS_ALLOC_PROFILE`) **et** profil CPU (`PPROF=1` → `cpu.prof`).
 - Temps appariés, machine au repos ; ne pas superposer builds et campagnes.
