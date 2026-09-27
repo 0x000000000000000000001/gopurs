@@ -56,8 +56,11 @@ optimizeThunkProducers mod =
     initialNames = Set.fromFoldable
       (Array.concatMap (map fst <<< _.bindings) mod.bindings)
       <> Map.keys mod.foreign
+    -- Les noms « émis » (assainis) ne sont pas recalculés par `Set.map` à
+    -- chaque binding : le parcours est linéaire, cet ensemble l'est aussi.
+    initialEmitted = Set.map sanitizeIdent initialNames
     found = foldl (collectProducer mod.name)
-      { names: initialNames, producers: [] } mod.bindings
+      { names: initialNames, emitted: initialEmitted, producers: [] } mod.bindings
     producers = found.producers
   in if Array.null producers then mod else rewriteModule producers mod
 
@@ -85,25 +88,31 @@ rewriteModule producers mod =
 
 collectProducer
   :: ModuleName
-  -> { names :: Set.Set Ident, producers :: Array Producer }
+  -> { names :: Set.Set Ident, emitted :: Set.Set String, producers :: Array Producer }
   -> BackendBindingGroup Ident NeutralExpr
-  -> { names :: Set.Set Ident, producers :: Array Producer }
+  -> { names :: Set.Set Ident, emitted :: Set.Set String, producers :: Array Producer }
 collectProducer moduleName acc group = case group.bindings of
   [ Tuple ident expr ] | group.recursive ->
-    let worker = freshWorker acc.names ident 0
+    let worker = freshWorker acc.names acc.emitted ident 0
     in case recognizeProducer moduleName ident worker expr of
-      Just p -> { names: Set.insert worker acc.names, producers: Array.snoc acc.producers p }
+      Just p ->
+        { names: Set.insert worker acc.names
+        , emitted: Set.insert (sanitizeIdent worker) acc.emitted
+        , producers: Array.snoc acc.producers p
+        }
       Nothing -> acc
   _ -> acc
 
-freshWorker :: Set.Set Ident -> Ident -> Int -> Ident
-freshWorker names (Ident original) index =
+sanitizeIdent :: Ident -> String
+sanitizeIdent (Ident name) = sanitizeName name
+
+freshWorker :: Set.Set Ident -> Set.Set String -> Ident -> Int -> Ident
+freshWorker names emittedNames (Ident original) index =
   let
     candidateName = original <> "__gopurs_strict_thunk_" <> show index
     candidate = Ident candidateName
-    emittedNames = Set.map (\(Ident name) -> sanitizeName name) names
   in if Set.member candidate names || Set.member (sanitizeName candidateName) emittedNames
-     then freshWorker names (Ident original) (index + 1)
+     then freshWorker names emittedNames (Ident original) (index + 1)
      else candidate
 
 strip :: NeutralExpr -> Syn.BackendSyntax NeutralExpr

@@ -20,6 +20,11 @@ if [[ -z "${GOGC:-}" && -z "${GOMEMLIMIT:-}" ]]; then
     if [[ -z "${GOPURS_PBO_JOBS:-}" ]]; then
       export GOPURS_PBO_JOBS=8
     fi
+    # Les spécialisations transitives se parallélisent aussi (défaut 2 dans le
+    # compilateur) : 8 travailleurs donnent ~-4 s sur b8x à backend constant.
+    if [[ -z "${GOPURS_PREPARE_JOBS:-}" ]]; then
+      export GOPURS_PREPARE_JOBS=8
+    fi
   fi
 fi
 
@@ -29,7 +34,10 @@ if [[ "${GOPURS_JS:-0}" == "1" ]]; then
       echo "Error: 'node' is not installed or not in the PATH." >&2
       exit 1
   fi
-  exec "$NODE_BIN" "$DIR/gopurs.js" "$@"
+  # Le backend JS récurse sur les structures du corpus (listes/maps) : Node a
+  # un stack fixe, contrairement au Go natif. Même valeur que les autres
+  # chemins JS du projet.
+  exec "$NODE_BIN" --stack-size=65536 "$DIR/gopurs.js" "$@"
 else
   exec "$DIR/gopurs-native" "$@"
 fi

@@ -1,4 +1,4 @@
-module Gopurs.Metrics (measure) where
+module Gopurs.Metrics (measure, setMemProfileRate) where
 
 import Prelude
 
@@ -11,6 +11,11 @@ import Effect.Console as Console
 
 -- Milliseconds from a monotonic clock; only the clock is host-specific.
 foreign import now :: Effect Number
+
+-- | Règle l'échantillonnage du profil mémoire Go (`runtime.MemProfileRate`).
+-- | Un compileur alloue des centaines de Go : le taux par défaut (512 Kio)
+-- | coûte ~15 % de CPU en pure perte quand aucun profil n'est demandé.
+foreign import setMemProfileRate :: Int -> Effect Unit
 
 -- Delay construction of the action until after the first clock read.
 -- Nested phases are included in the outer total; they are not additive to it.

@@ -161,6 +161,11 @@ main = launchAff_ $ Metrics.measure "backend total" \_ -> do
   configuredPipeline <- liftEffect (Process.lookupEnv "GOPURS_PIPELINE")
   configuredPboJobs <- liftEffect (Process.lookupEnv "GOPURS_PBO_JOBS")
   mbAllocProfile <- liftEffect (Process.lookupEnv "GOPURS_ALLOC_PROFILE")
+  -- Sans profil demandé, l'échantillonnage mémoire Go (512 Kio par défaut)
+  -- coûte ~15 % de CPU pour un compileur qui alloue des centaines de Go.
+  case mbAllocProfile of
+    Nothing -> liftEffect (Metrics.setMemProfileRate 0)
+    Just _ -> pure unit
   let
     emitJobs = max 1 (min 64 (fromMaybe 8 (configuredEmitJobs >>= Int.fromString)))
     pboJobs = max 1 (min 64 (fromMaybe 1 (configuredPboJobs >>= Int.fromString)))

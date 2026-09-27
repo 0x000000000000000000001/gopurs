@@ -1,249 +1,140 @@
-# Gopurs — PBO : réduction des allocations et finitions (26 septembre 2026)
+# Gopurs — PBO : runtime, ordonnanceur et finitions (27 septembre 2026)
 
-Ce fichier remplace le journal de la session précédente (sauvegardé dans
-`scratch/b8x-pbo-visibility-20260926/todo-journal-20260926.md`).
+Ce fichier remplace le journal précédent (sauvegardé dans
+`scratch/b8x-pbo-visibility-20260926/todo-journal-20260927.md`).
 
 ## État acquis
 
-- **Parité byte-exacte** séquentiel ↔ parallèle sur b8x (2 987 fichiers Go),
-  vérifiée pour `jobs=1/2/4/8/64` et à chaque passe de validation.
-- **Backend : 136 s (référence corrigée) → 68,7 s stable** (`jobs=8` +
-  `GOGC=off` + `GOMEMLIMIT=10GiB` ; 4 passages entre 67,6 et 69,4 s).
-- **`b -c` de bout en bout sur b8x** : 146,5 s au total, dont **backend
-  69,9 s** (chargement 1,3 + préparation 26,8 + optim+émission 41,7), le
-  reste étant le bootstrap du compilateur (~36,5 s), le frontend PureScript
-  et `go mod tidy`.
-- **Défauts du lanceur** (`gopurs/bin/gopurs`) : sur une machine ≥ 32 Go,
-  `GOGC=off`, `GOMEMLIMIT=10GiB` et `GOPURS_PBO_JOBS=8` si l'utilisateur n'a
-  rien défini ; réglages explicites respectés ; petites machines inchangées.
-- **Tests** : émission 10/10 ; suite PBO 140/140 ; tests natifs du `Map`
-  (ABI comparateur) passants.
-- **Correctif d'affichage** : la progression est imprimée dans
-  `onCodegenModule` (un appel par module finalisé, ordre canonique) — **à
-  vérifier au prochain build du compilateur**.
-- Profils, rapports et campagnes : `scratch/b8x-pbo-visibility-20260926/`
-  (`rapport.md`, `pbo-parallel-rapport.md`, `verify/`, `cont/`, `e2e/`).
-
-## Mesures d'allocations actuelles (pprof, binaire `751d2ab4`)
-
-| Famille | Séquentiel | 8 workers | Nature |
-|---|---:|---:|---|
-| **`Rebox_*`** (647 fonctions) | **41,3 Go** | **70,3 Go** | coercions de dictionnaires (codegen) |
-| Dictionnaires `RecordDict*` | 18,9 Go | 24,1 Go | dictionnaires construits à l'exécution |
-| Callbacks `Map` (insert/lookup/union) | 23,0 Go (~50 cumulés) | 33,3 Go | pont FFI, boxage par comparaison |
-| `insert`/`clone` B-tree | 17,6 Go | 25,2 Go | copies de chemins des `Map` |
-| `Array.bind` (`concatMap`) | ~24,5 Go cumulés | — | concaténations de tableaux |
-| PBO Semantics | 21,4 Go | 35,0 Go | optimiseur |
-| `mangleType` | 8,6 à plat / 13,5 cumulés | 8,8 Go | préparation |
-| Imprimante + chaînes | ~11 Go | ~11 Go | impression Go |
-| `Apply` / runtime | ~21 Go | ~27 Go | application générique, boxage |
-| **Total** | **214,2 Go** | **300,7 Go** | +40 % en parallèle (relances) |
-
-Les constructeurs `Maybe`/`Either` sont marginaux ici (~0,7 Go), contrairement
-au décodage JSON d'altbak.
-
-> Après les quatre passes d'optimisation (rebox identité → cast, comparaison
-> native `EvalRef`, `arrayBind` sur `[]Value`, degré B-tree 6) : total
-> **194,2 Go** séquentiel ; backend **84,4 s** (séquentiel) et **60,0-60,8 s**
-> (8 workers) ; **`b -c` complet 145,4 s dont backend 61,3 s**
-> (optimize+emit 35,0 s contre 41,7 s en début de session).
-
-## Enseignements
-
-1. **L'hypothèse « perfs du code compilé gopurs » est confirmée** : le
-   reboxing et les dictionnaires pèsent ~60 Go en séquentiel et ~94 Go en
-   parallèle, la même famille que les gains d'altbak (dictionnaires clos,
-   déspecialisation des forwarders). L'estimation antérieure « reboxing
-   ~10 Go » était très sous-évaluée.
-2. **Nouvelle cible** : les `bind` de tableaux (`concatMap`), même classe que
-   les folds d'imports déjà corrigés.
-3. Les **callbacks `Map`** restent ~50 Go cumulés : le pont boxe encore chaque
-   comparaison malgré la fusion `compareInt`.
-4. Le mode 8 workers **alloue +40 %** (3 508 tentatives contre 2 683) :
-   réduire les relances améliore temps et mémoire.
+- **Backend** (b8x, 2 683 modules) : **48,5-48,7 s** en 8 workers (défauts du
+  lanceur : `GOPURS_PBO_JOBS=8`, `GOPURS_PREPARE_JOBS=8`, `GOGC=off`,
+  `GOMEMLIMIT=10GiB`), **74,5-82 s** en séquentiel ; **JS 77,4 s** →
+  `/JS = 0,63x` (table `altbak.pub/README.md`). Mesure appariée de l'étape 2 :
+  **56,1-56,5 → 48,5-48,7 s** à réglages identiques.
+- **Allocations** : 214,2 → 189,1 → **175,8 Go** (profil échantillonné).
+  Sept leviers livrés : rebox identité → cast, comparaisons `EvalRef` natives,
+  `arrayBind` en `[]Value`, degré B-tree 6, native call lowering (v1→v3),
+  imprimante « writer » avec builder natif, comparateurs natifs `Map` +
+  `Set.map` incrémental (étape 2).
+- **Parité** byte-exacte séquentiel ↔ parallèle ↔ JS (2 974 fichiers) ;
+  fixtures validées sans mise à jour des snapshots.
+- **Défauts du lanceur** (`gopurs/bin/gopurs`) : ≥ 32 Go → `GOGC=off`,
+  `GOMEMLIMIT=10GiB`, `GOPURS_PBO_JOBS=8`, `GOPURS_PREPARE_JOBS=8`
+  (surchargeables) ; branche `GOPURS_JS=1` → `node --stack-size=65536`.
+- **Profil CPU (8 workers, après étape 2)** : comparateur `Map` **6,5 s**
+  (contre 8,2 s), `Set.map` quadratique de `ThunkFusion` disparu ; `Apply`/
+  `Apply2` et la machinerie Aff restent les premiers postes ; GC réelle ~2-3 %
+  (`gctrace`, 37 cycles) — l'échantillonnage du profil mémoire Go reste
+  désactivé sauf `GOPURS_ALLOC_PROFILE`.
 
 ## Plan
 
-### 1 — Reboxing et dictionnaires (le plus gros poste)
+### 1 — Runtime Go et concurrence du compilateur (terminé)
 
-- [x] **Diagnostic (26/09)** : le reboxage est partout (tous les modules PBO) et
-      vient d'instanciations distinctes de structs génériques dont les
-      paramètres de type sont **fantômes** (aucun champ ne les utilise). Sur le
-      Go généré de b8x : 12 764 des 20 579 rebox sont des copies identiques
-      champ à champ (structs à 1 champ le plus souvent).
-- [x] **Passe codegen** : `renderReboxFunction` émet un cast
-      `(*Dest)(unsafe.Pointer(in))` quand toutes les affectations sont
-      identiques (champs immuables, `Rc` jamais lu dans le Go généré).
-      Validation : diff exhaustif de la sortie b8x — **12 764 conversions,
-      0 autre changement** (déclarations et imports compris), 4 fixtures
-      exécutées OK, `b -c` OK.
-      Mesures : rebox **41,3 → 31,4 Go**, total **214,2 → 208,8 Go**,
-      backend **69,9 → 64,3 s** (`b -c`), **68,8 → 64,7 s** (8 workers),
-      **101,8 → 87,6 s** (séquentiel). Parité séquentiel ↔ parallèle
-      re-vérifiée (0 divergence) sur le nouveau compilateur.
-- [x] **Deuxième passe (26/09) — comparaison native des clés `EvalRef`** :
-      `Ord EvalRef`/`Eq EvalRef` comparaient `Qualified Ident` via l'instance
-      polymorphe `ordQualified`, compilée déspecialisée en `Value` par le
-      backend : chaque comparaison construisait un dictionnaire
-      `Ord (Qualified Value)` et reboxait les deux idents (2,46 Go, le plus
-      gros rebox restant à lui seul). Les instances sont maintenant manuelles
-      et monomorphes (`compareQualifiedIdent`/`eqQualifiedIdent` dans
-      `CoreFn`, `compareMaybeIdents`/`compareLevels` dans `Semantics`, FFI
-      natives `compareStringImpl`/`compareIntImpl` dans `FfiSupport`).
-      Validation : sortie b8x **identique au bit** (0 fichier modifié), tests
-      PBO 140/140, symbole chaud disparu du profil.
-      Mesures : total **208,8 → 204,7 Go**, séquentiel **87,6 → 86,8 s**,
-      8 workers **64,7 → 64,2 s** (63,8-64,8 sur 3 passages).
-- [ ] **Limite identifiée — le pont FFI boxe** : toute FFI PS↔Go passe par un
-      wrapper `_Gopurs_*` `Value` (unbox/box par appel). Une passe de
-      *native call lowering* pour les FFI connues (arguments concrets) retirerait
-      ces boîtes — 2 par comparaison de chaîne ici, mais le levier est général
-      (hashString, comparateurs, etc.).
-- [x] **MVP du native call lowering (26/09)** : `FfiBridge.ffiFunctionInfos`
-      enregistre les FFI **pures** à résultat **concret** (signature native
-      convertible) dans `globalFunctions`, ce qui fait passer
-      `directFunction`/`nativeCall` par le **worker Go typé** sans enveloppe.
-      Effet premier : `hashString` (cross-module, chaud) n'a plus aucun appel
-      par enveloppe (30 → 0). Mesures : allocations **194,2 → 191,4 Go**,
-      temps inchangés (84,9 s séquentiel / 60,0 s 8 workers), **parité j1/d8
-      OK**, fixtures exécutées, compilateur reconstruit.
-      Écarté en v1 : FFI `Effect`, paramètres fonction/map/opaques, résultats
-      `any`/`[]any`/void.
-- [x] **v2 (workers « résultat boxé », 26/09)** : `FfiBridge.ffiValueWorkers`
-      génère dans `_ffi.go` des workers `<Nom>_nativeValue` pour les retours
-      `any`/`interface{}`/`[]any`/void des FFI appariées (boxage dans le
-      worker, sélection via `ffiFunctionInfos`). Sur b8x : **85 workers
-      définis, 450 sites d'appel abaissés**. Natif reconstruit (le Go généré
-      compile), **parité j1/d8 OK**. Totaux d'allocations : 191-194 Go selon
-      les fenêtres (profil échantillonné) ; **temps à re-mesurer machine au
-      repos** (charge > 100 lors des derniers passages).
-- [x] **v3 (paramètres fonction, 27/09)** : les FFI avec **callbacks** sont
-      abaissées via un worker unique `<Nom>_nativeWorker` (les fonctions PS
-      arrivent en `Value` et sont adaptées par `unwrapValueToFunc`, y compris
-      les **newtypes opaques** `Pattern`/`Replacement` et les **retours
-      fonction** via `wrapReturn`). Deux bugs corrigés au passage (panic
-      « apply non-function » : extraction opaque manquante, puis retour
-      fonction boxing au lieu de `wrapReturn`). Sur b8x : **463 sites
-      abaissés**. Parité j1/d8 OK. Effet mesuré dans le bruit (±2 Go,
-      fenêtres chargées) ; les FFI `Map` restent peu couvertes car leurs
-      appels passent par les dictionnaires (chemin dynamique).
-- [ ] Extensions v4 : FFI `Effect` (débloque le builder d'imprimante),
-      abaissement des appels via dictionnaires, `int`/`map`/opaques.
-- [ ] Rebox restants (29,3 Go) : conversions réelles, par ex.
-      `Tuple[string, Value]` → `Tuple[Value, Value]` et boxage d'arrays
-      élément par élément (`Value{… UnsafePtr: Rebox_…}`). Pistes : construire
-      directement le type cible dans les coercions d'arrays (éviter box/unbox
-      par élément), mutualiser les paires identiques entre modules,
-      canonicaliser les instanciations à paramètres fantômes.
-- [ ] Dictionnaires `RecordDict*` (19,3 Go) : identifier les constructions
-      répétées et les hisser.
-- [x] Objectif indicatif : −30 Go séquentiel → **atteint** (214,2 → 204,7 Go
-      avec les deux passes, dont −9,9 Go de rebox identité sur le compilateur
-      et −2,1 Go de rebox `Qualified` ; les 12 764 call sites du code
-      utilisateur neuf n'allouent plus).
+- [x] Désactiver l'échantillonnage mémoire Go quand aucun profil n'est
+      demandé : **~15 % de CPU en moins** (séquentiel 84-87 → **76,6 s** ;
+      parallèle neutre car le surcoût y était recouvert).
+- [x] `GOPURS_PREPARE_JOBS=8` par défaut (transitive 16,8 → 13,8 s,
+      parallèle 57,5 → **53,7 s**).
+- [x] Re-profilé (parallèle) : `lock2`/`osyield` ~18 % — dont une part
+      d'**artefact** (le profiler échantillonne les threads endormis :
+      `usleep`/`pthread_cond_*`) ; GC ~17 % ; `Apply` ~45 % cum ;
+      comparateur `Map` ~4 %.
+- [x] `GOMAXPROCS` 8/10/12 : **pires** que le défaut (14) → rien à changer
+      (60,9 / 62,0 / 57,8 s vs 52,6-54,7 s).
+- [x] `GOMEMLIMIT=12GiB` et `GODEBUG=madvdontneed=0` : sans gain → politique
+      (off + 10 GiB) inchangée.
+- [x] **Pool de workers** : non justifié par les mesures (peu de fibres
+      vivantes, création en µs, `GOMAXPROCS` neutre) — abandonné au profit
+      des étapes suivantes.
 
-### 2 — `Array.bind` / `concatMap` (~23,4 Go cumulés)
+### 2 — Machines `Map` (le plus gros poste gopurs après le lowering)
 
-- [x] **Optimisé (26/09)** : `arrayBind` (FFI Go de `Control.Bind`) prend
-      désormais `[]gopurs_runtime.Value` en entrée/sortie (au lieu de
-      `[]interface{}`) : plus aucune copie de conversion ni box/unbox par
-      élément dans le pont (`Unbox[[]Value]` est un alias direct). Validation :
-      sortie b8x identique (seul `Control_Bind_ffi.go`, l'implémentation
-      elle-même, change), total **204,7 → 199,3 Go**, 8 workers
-      **64,2 → 62,9-63,4 s**.
-- [ ] Le concat lui-même (~23,4 Go cumulés, dont les callbacks) reste : les
-      sites (`Gopurs.ModuleBindings`, `FunctionFusion`, `DecoderSchemas`,
-      `CallAnalysis`, `BindingExprs`, `AdtMetadata`, `ThunkFusion`,
-      `ArrayTraverse`…) utilisent `do` sur les tableaux. Piste : accumuler via
-      `push`/`foldl` (une seule sortie) là où le parcours est linéaire.
-- [ ] Vérifier l'absence de tempête de reboxage (leçon de l'incident
-      `GoImports` : toute modification du code gopurs doit être validée par un
-      profil d'allocations, pas seulement par la parité).
+Profil (parallèle, hors symboles runtime) : `(*Node).foldl` **17,7 s cum**
+(callback PS par élément), `(*Node).find` **10,9 s cum**,
+`Call_Data_Map_Internal_compareInt` **7,5 s dont 7,2 s dans `Apply2`**
+(dispatch du dictionnaire) + `OrdStringImpl` 2,0 s ; `insert` 7,3 s,
+`lookup` 6,8 s. **Nos helpers monomorphes** (`compareIdents`) ne pèsent que
+**0,83 s** → les variantes monomorphes « côté PBO » ne valent pas le coup.
 
-### 3 — Callbacks `Map` (~50 Go cumulés)
+- [x] **Comparateurs natifs dans le B-tree (fork `gopurs-ordered-collections`)** :
+      `lookupNativeImpl`/`insertNativeImpl` prennent un comparateur Go opaque
+      (`asTree(m).withCompare(cmp)` par opération, arbre partagé intact), plus
+      des helpers Go bruts `LookupNative`/`InsertNative` (valeur + booléen, le
+      `Maybe` reste côté appelant). Comparateur `String` = `strings.Compare`
+      sur la chaîne déballée. Tests natifs du fork ajoutés
+      (`TestNativeComparatorEntryPoints`), suite complète OK.
+- [x] **PBO : module `NativeMaps` (`{purs,go,js}`)** — comparateur
+      `Qualified Ident` (déballe `Qualified[string]` du CoreFn décodé *et*
+      `Qualified[Value]` de l'optimiseur : module puis ident) et comparateur
+      `String` ; repli JS sur `Data.Map.Internal`. Routés :
+      `BackendImplementations` (`Convert` : 2 insertions par binding,
+      `lookupImplementation`, `lookupPurmetaImplementation` ; `Builder` :
+      `createRankLookup`), `foreignSemantics`, `Map Ident Level` (`toLevel`),
+      `Map ProperName` (`dataTypes`). Séparé de `FfiSupport` pour préserver le
+      test FFI natif autonome (`native-ffi-support.mjs`).
+- [x] **`Set.map` quadratique de `freshWorker`** (`ThunkFusion`,
+      `FunctionFusion`) : les noms assainis étaient reconstruits à *chaque*
+      groupe de bindings (`Set.map sanitizeName` sur l'ensemble complet) —
+      ~4,8 s CPU pour ThunkFusion seul. Ensemble `emitted :: Set String`
+      maintenu incrémentalement.
+- Mesures appariées (même session, deux binaires) : 8 workers **60,6 → 54,1 s**
+      (avec le `GOPURS_PREPARE_JOBS` par défaut), **56,1-56,5 → 48,5-48,7 s**
+      (défauts du lanceur) ; séquentiel **84-91 → 74,5-82 s** ; CPU total **192,6 →
+      185,0 s** ; allocations **190,3 → 175,8 Go** ; `compareInt` **8,2 →
+      6,5 s**. Parité byte-exacte (0 `.go` modifié sur 2 974).
+- [ ] **Reste** : le coût `compareInt` restant (~6,5 s) est une longue traîne —
+      `LookupImpl` 3,3 s (aucun site dominant : `foreignSemantics` puis
+      `Preparation`, planificateur, `Monomorphize`, `GoTypes`) et
+      `unionWithSameOrdering` 2,5 s (`Map.union` des directives `EvalRef` et
+      des instantiations). Prochains leviers : comparateur `EvalRef` natif
+      (lookup + union), unions natives `String`, maps `Int` du planificateur,
+      `isIdentity` de `FunctionFusion` (~1,9 s CPU).
+- [ ] **`Map.foldl` chauds** : remplacer par `toUnfoldable` + boucle
+      (supprime le callback boxé par élément, `FoldlImpl.func1` ~8,6 s cum).
 
-- [ ] Documenter le coût résiduel : boxage des clés par comparaison dans le
-      pont (`InsertImpl`/`LookupImpl`/`UnionWithImpl`).
-- [ ] Étudier une spécialisation native par type de clé (chemins dédiés pour
-      `String`, `Qualified Ident`, `EvalRef`) évitant la fonction PS.
-- [ ] Mesurer sur le corpus et vérifier la parité.
+### 3 — GC et tas vivant (clos)
 
-### 4 — `mangleType` (13,5 Go cumulés)
+- [x] `gctrace` : **GC = 2-3 % de CPU** (39 cycles, vivant 1,5-2,7 Go après
+      GC, pauses ~0,1-0,3 ms) — les ~17 % vus au profil étaient un artefact
+      (échantillonnage des threads endormis). Rien à gagner côté politique ;
+      la réduction du tas vivant reste marginale. Politique (off + 10 GiB)
+      conservée.
 
-- [ ] Mémoïsation bornée par identité aux sites `collectExpr` et
-      `specializationKey` (réutiliser `BoundedMemo`/`SameIdentity`).
-- [ ] Vérifier que les types réutilisés sont partagés (sinon le mémo ne sert
-      à rien) et mesurer taux de succès.
+### 4 — Extensions du lowering FFI
 
-### 5 — B-tree `insert` (17,5 Go à plat, 19 Go cumulés)
+- [ ] FFI `Effect` (débloque des builders purs côté FFI) et appels via
+      dictionnaires ; `int`/`map`/opaques.
 
-- [x] **Degré du B-tree (26/09)** : `maxDegree` **16 → 6** dans
-      `gopurs-ordered-collections/src/Data/Map/Internal.go` (copies de nœuds
-      plus petites). L'ordre d'itération trié est inchangé : la sortie du
-      compilateur reste identique au bit. Mesures : séquentiel
-      **88,0 → 84,4 s**, 8 workers **62,9-63,4 → 60,0-60,8 s**, total
-      allocations **199,3 → 194,2 Go**, famille insert **19,0 → 15,0 Go**.
-      Tests natifs du Map (insert/delete/union/persistance/concurrence) OK.
-      Comparatif des degrés : 16 → 88,0/62,9-63,4 s ; 8 → 84,9/61,6-61,9 s ;
-      **6 → 84,4/60,0-60,8 s** ; 4 → 86,0/60,5-60,7 s.
-- [ ] Réduire le nombre d'insertions (unions structurelles, accumulateurs).
+### 5 — `gopurs-*` structurel (protocole élargi : fixtures + runtime b8x)
 
-### 6 — Relances du builder parallèle (+40 % d'allocations)
+- [ ] `gopurs-aff` : pool de goroutines pour les fibres (bénéfice compileur
+      **et** runtime b8x) — après la variante gopurs de l'étape 1.
+- [x] `gopurs-ordered-collections` : comparateurs natifs (livrés à l'étape 2 :
+      points d'entrée à comparateur opaque + helpers Go bruts + comparateur
+      `String`).
 
-- [ ] Mesurer les tentatives rejetées (825-850 à 8 workers) et leurs causes
-      (`pendingDeps` par module).
-- [ ] Renforcer les indices d'ordonnancement (profondeur 2 des références,
-      imports utiles) pour éviter les tentatives perdues.
-- [ ] Si les rejets restent nombreux, envisager une reprise à granularité
-      plus fine (par groupes de bindings) plutôt qu'une reconversion entière.
+### 6 — Divers
 
-### 7 — Imprimante et chaînes (~11 Go)
-
-- [x] **Writer natif avec builder opaque (27/09)** : `printGoExpr` pousse des
-      morceaux dans un `strings.Builder` natif via des FFI **pures**
-      (`newBuilderImpl`/`pushImpl`/`toStringImpl`) **abaissées** par le
-      lowering FFI → aucun boxage par morceau, aucune chaîne intermédiaire.
-      Sortie **byte-identique** (fixtures validées sans mise à jour des
-      snapshots ; 2 974 fichiers b8x identiques aux seuls `go.mod` près).
-      Famille imprimante **6,8 → 0,2 Go**, total **195,4 → 189,1 Go**.
-      Remplace la tentative « liste polymorphe » du 26/09 (leçon : builder
-      natif opaque, jamais de structure polymorphe comme accumulateur).
-- [ ] Reste : `MakeNoZero`/`chaînes` résiduels (~4 Go, autres `joinWith` du
-      compilateur).
-
-### 8 — Finitions
-
-- [ ] Vérifier l'affichage de progression corrigé au prochain build
-      (numéros croissants, sans doublons).
-- [ ] Documenter les variables du lanceur (`GOGC`, `GOMEMLIMIT`,
-      `GOPURS_PBO_JOBS`, `GOPURS_EMIT_JOBS`, `GOPURS_PREPARE_JOBS`,
-      `GOPURS_PIPELINE`, `GOPURS_ALLOC_PROFILE`).
-- [ ] Envisager un contrôle de non-régression d'allocations (profil pprof
-      sur un corpus réduit) dans la validation.
-- [ ] Réévaluer le bootstrap du compilateur (~36 s dans `b -c`) : seule
-      partie incompressible du flux `-c`.
+- [ ] Chaînes : derniers `<>` par builders (cf. `memmove` du profil).
+- [ ] `mangleType` : mémoïsation par identité (2-4 Go potentiels).
+- [ ] Relances du builder parallèle (réduire les ~830 tentatives rejetées).
 
 ## Méthode de validation
 
-- **Parité byte-exacte** : manifester les sorties dans des répertoires
-  propres, comparer séquentiel ↔ parallèle à chaque changement.
-- **Allocations** : profil `GOPURS_ALLOC_PROFILE` avant/après, analyse par
-  familles (`scratch/b8x-pbo-visibility-20260926/verify/analyze.py`).
-- **Tests** : `node --test tools/emission.test.mjs` (émission) et
-  `node --test test/*.mjs` (PBO, 140 tests), tests natifs du `Map`.
-- **Temps** : machine au repos, répétitions (médiane), ne pas superposer
-  builds et campagnes ; noter la charge système.
-- **Piège connu** : une réécriture en `List` de folds gopurs a produit
-  +240 Go de reboxage (`Rebox_Gopurs_GoImports_*`). Toujours mesurer les
-  allocations après une modification du code gopurs lui-même.
+- Parité byte-exacte (b8x + fixtures), profil d'allocations
+  (`GOPURS_ALLOC_PROFILE`) **et** profil CPU (`PPROF=1` → `cpu.prof`).
+- Temps appariés, machine au repos ; ne pas superposer builds et campagnes.
+- Piège connu : toute structure polymorphe accumulée peut produire des rebox
+  quadratiques (incidents `GoImports`, liste de l'imprimante : 6 297 Go) —
+  toujours profiler, pas seulement vérifier la parité.
+- Pour la table `altbak.pub` : comparer le **backend seul** (hors bootstrap du
+  compilateur et hors frontend purs).
 
 ## Références
 
-- Rapports : `scratch/b8x-pbo-visibility-20260926/rapport.md`,
-  `pbo-parallel-rapport.md`.
-- Profils et analyseur : `scratch/b8x-pbo-visibility-20260926/verify/`.
-- Dernières campagnes : `cont/` (dispatch continu), `e2e/b-c.log`.
-- Code : `purescript-backend-optimizer-gopurs/src/PureScript/Backend/Optimizer/`
-  (`Builder.purs`, `Convert.purs`, `Semantics.purs`, `Cache.*`),
-  `gopurs/gopurs/src/Gopurs/` (`Emission.purs`, `GoImports.*`, …),
-  `gopurs/gopurs-ordered-collections/src/Data/Map/Internal.*`.
+- Campagnes : `scratch/b8x-pbo-visibility-20260926/` (`printer2/`,
+  `jsbackend/`, `lowering/`, `verify/`).
+- Profils : `jsbackend/cpu.prof`, `printer2/alloc-j1.prof`.
+- Code : `gopurs/gopurs/src/Gopurs/` (`Main.purs`, `Emission.purs`,
+  `Monomorphization.purs`, `Preparation.purs`, `FfiBridge.purs`)
+  et `purescript-backend-optimizer-gopurs/`.

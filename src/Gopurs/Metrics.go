@@ -1,6 +1,14 @@
 package Gopurs_Metrics
 
-import "time"
+import (
+	"runtime"
+	"time"
+)
+
+func SetMemProfileRate(rate int64, _ gopurs_runtime.Value) gopurs_runtime.Value {
+	runtime.MemProfileRate = int(rate)
+	return gopurs_runtime.Value{}
+}
 
 var metricsEpoch = time.Now()
 

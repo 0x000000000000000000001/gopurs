@@ -37,41 +37,45 @@ optimizeFunctionProducers mod =
   let
     names = Set.fromFoldable (Array.concatMap (map fst <<< _.bindings) mod.bindings)
       <> Map.keys mod.foreign
+    emitted = Set.map sanitizeIdent names
     identities = Set.fromFoldable $ Array.concatMap
       (Array.mapMaybe (\(Tuple name expr) -> if isIdentity expr then Just name else Nothing) <<< _.bindings)
       mod.bindings
-    rewritten = foldl (rewriteGroup mod.name identities) { names, bindings: [] } mod.bindings
+    rewritten = foldl (rewriteGroup mod.name identities) { names, emitted, bindings: [] } mod.bindings
   in mod { bindings = rewritten.bindings }
+
+sanitizeIdent :: Ident -> String
+sanitizeIdent (Ident name) = sanitizeName name
 
 rewriteGroup
   :: ModuleName
   -> Set Ident
-  -> { names :: Set Ident, bindings :: Array Group }
+  -> { names :: Set Ident, emitted :: Set String, bindings :: Array Group }
   -> Group
-  -> { names :: Set Ident, bindings :: Array Group }
+  -> { names :: Set Ident, emitted :: Set String, bindings :: Array Group }
 rewriteGroup moduleName identities acc group = case group.bindings of
   [ Tuple name expr ] | group.recursive -> case recognize moduleName identities name expr of
     Just producer ->
       let
-        worker = freshWorker acc.names name 0
+        worker = freshWorker acc.names acc.emitted name 0
         qualifiedWorker = Qualified (Just moduleName) worker
         workerGroup = { recursive: true, bindings: [ Tuple worker (iteratorWorker qualifiedWorker) ] }
         originalGroup = group { bindings = [ Tuple name (compactProducer qualifiedWorker producer) ] }
       in
         { names: Set.insert worker acc.names
+        , emitted: Set.insert (sanitizeIdent worker) acc.emitted
         , bindings: acc.bindings <> [ workerGroup, originalGroup ]
         }
     Nothing -> acc { bindings = Array.snoc acc.bindings group }
   _ -> acc { bindings = Array.snoc acc.bindings group }
 
-freshWorker :: Set Ident -> Ident -> Int -> Ident
-freshWorker names (Ident original) index =
+freshWorker :: Set Ident -> Set String -> Ident -> Int -> Ident
+freshWorker names emittedNames (Ident original) index =
   let
     name = original <> "__gopurs_counted_function_" <> show index
     candidate = Ident name
-    emittedNames = Set.map (\(Ident ident) -> sanitizeName ident) names
   in if Set.member candidate names || Set.member (sanitizeName name) emittedNames
-     then freshWorker names (Ident original) (index + 1)
+     then freshWorker names emittedNames (Ident original) (index + 1)
      else candidate
 
 recognize :: ModuleName -> Set Ident -> Ident -> NeutralExpr -> Maybe Producer
