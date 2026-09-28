@@ -44,12 +44,19 @@
    uniquement si le gain murale est démontré.
 5. [ ] **`gopurs-aff` (runtime b8x)** — pool de goroutines pour les fibres,
    pour les programmes compilés (et la machinerie Aff du compilateur).
-   - **Bug connu (fixtures)** : sur les petits corpus, une compilation
-     parallèle peut finir en `all goroutines are asleep - deadlock!`
-     (fibres forkées non relâchées après une erreur de conversion).
-     Repro ~1/600, non reproductible en boucle serrée ; `bin/test` force
-     désormais `GOPURS_PBO_JOBS=1`/`GOPURS_PREPARE_JOBS=1` (sortie identique,
-     validée sur b8x) pour rester déterministe. À élucider avec le pool.
+   - **Deadlock du builder parallèle : corrigé (28/09).** Cause : sur échec
+     de `optimize + emit`, les fibres `forkAff` (jobs et émetteur) n'étaient
+     pas supervisées ; bloquées dans un `makeAff` (joinFiber/AVar) avec des
+     contextes jamais annulés, elles empêchaient `EventLoopWait` de rendre la
+     main (`all goroutines are asleep - deadlock!`, 1/600). Correctif :
+     `supervise` autour du corps de l'optimize+emit (`Main.purs`) — annule et
+     attend les enfants en cas d'échec. Repro déterministe : remplacer un `.go`
+     de sortie par un répertoire (échec d'écriture en cours d'émission) →
+     avant : deadlock, après : sortie propre en ~5 s. `bin/test` garde
+     `GOPURS_PBO_JOBS=1`/`GOPURS_PREPARE_JOBS=1` par déterminisme (sortie
+     identique, validée aussi en jobs=8 sur échantillon).
+   - Reste possible : durcir le runtime pour qu'un programme utilisateur qui
+     fuit une fibre ne bloque pas non plus `EventLoopWait` (garde-fou).
 
 ## Méthode
 

@@ -8,7 +8,7 @@ import Effect (Effect)
 import Effect.Ref as Ref
 import Effect.Class (liftEffect)
 import Effect.Console as Console
-import Effect.Aff (Aff, launchAff_, attempt, bracket, forkAff, throwError)
+import Effect.Aff (Aff, launchAff_, attempt, bracket, forkAff, supervise, throwError)
 import Effect.Aff.AVar as Avar
 import Node.FS.Aff as FS
 import Node.Encoding (Encoding(..))
@@ -214,7 +214,7 @@ main = launchAff_ $ Metrics.measure "backend total" \_ -> do
   pboAttemptsRef <- liftEffect (Ref.new 0)
   pboCodegenRef <- liftEffect (Ref.new 0)
   Metrics.measure "optimize + emit" \_ ->
-    bracket (liftEffect makeEmitter) _.cancel \emitter -> do
+    bracket (liftEffect makeEmitter) _.cancel \emitter -> supervise do
       let
         buildOpts =
           { directives: directives

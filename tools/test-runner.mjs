@@ -48,9 +48,9 @@ async function main() {
     const { selected, skipped } = selectFixtures(root, options);
     if (options.list) { for (const file of selected) console.log(file); return; }
     // Fixture compilations are tiny: use the sequential PBO builder so the
-    // suite stays deterministic. The parallel scheduler shares the Aff runtime
-    // with corpus builds and has a rare deadlock on failure paths (todo.md);
-    // sequential and parallel output is byte-identical (validated on b8x).
+    // harness stays deterministic and independent from machine sizing rules.
+    // Sequential and parallel output is byte-identical (validated on b8x and
+    // on a fixture sample run with GOPURS_PBO_JOBS=8).
     process.env.GOPURS_PBO_JOBS ??= "1";
     process.env.GOPURS_PREPARE_JOBS ??= "1";
     console.log(`Selected ${selected.length} fixtures; ${skipped.length} excluded.`);
