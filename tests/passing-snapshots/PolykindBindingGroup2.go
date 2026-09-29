@@ -78,7 +78,7 @@ var once_Main_Y_dollar_Dict sync.Once
 func Get_Main_Y_dollar_Dict() gopurs_runtime.Value {
 	once_Main_Y_dollar_Dict.Do(func() {
 		cache_Main_Y_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_Y_dollar_Dict(func() struct {
+			return gopurs_runtime.Value{Type: 9, IntVal: 1682951303, UnsafePtr: unsafe.Pointer(Call_Main_Y_dollar_Dict(func() struct {
 				Z0 gopurs_runtime.Value
 			} {
 				orig := x_0_box
@@ -88,7 +88,7 @@ func Get_Main_Y_dollar_Dict() gopurs_runtime.Value {
 				}{}
 				clone.Z0 = gopurs_runtime.RecordGet(orig, "Z0")
 				return clone
-			}())
+			}()))}
 		})
 	})
 	return cache_Main_Y_dollar_Dict
@@ -153,6 +153,24 @@ func init() {
 	}
 }
 
+type Constructor_Main_Y[T_a any] struct {
+	Rc uint32
+	V0 gopurs_runtime.Value
+}
+
+func init() {
+	gopurs_runtime.StructGetters[1682951303] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
+		c := (*Constructor_Main_Y[gopurs_runtime.Value])(ptr)
+		_ = c
+		switch key {
+		case "Z0":
+			return gopurs_runtime.Box(c.V0)
+		default:
+			panic("Key not found in dictionary Constructor_Main_Y: " + key)
+		}
+	}
+}
+
 func Call_Main_Z_dollar_Dict(x_0_loop struct {
 }) gopurs_runtime.Value {
 	var x_0 struct {
@@ -191,14 +209,14 @@ X__3274571222:
 
 func Call_Main_Y_dollar_Dict(x_0_loop struct {
 	Z0 gopurs_runtime.Value
-}) gopurs_runtime.Value {
+}) *Constructor_Main_Y[gopurs_runtime.Value] {
 	var x_0 struct {
 		Z0 gopurs_runtime.Value
 	} = x_0_loop
 	_ = x_0
-	return func() gopurs_runtime.Value {
+	return gopurs_runtime.CoerceToStruct[Constructor_Main_Y[gopurs_runtime.Value]](func() gopurs_runtime.Value {
 		orig := x_0
 		_ = orig
 		return gopurs_runtime.RecordDict1("Z0", orig.Z0)
-	}()
+	}())
 }
