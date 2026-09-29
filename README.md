@@ -90,6 +90,23 @@ npm ci
 npm run build
 ```
 
+### Nix environment
+
+A [Nix flake](flake.nix) supplies a development shell with the PureScript
+tooling, Node.js, the Go toolchain and the test helpers:
+
+```bash
+nix develop
+```
+
+The shell deliberately does not provide an upstream `purs`: gopurs needs the
+TAST-capable compiler fork built from `../purescript`, and a nix-provided
+`purs` would shadow it inside `nix develop`. It is development tooling only —
+the sibling checkouts (`../purescript`,
+`../../purescript-backend-optimizer-gopurs`, `../gopurs-*`) and the fork's
+compiler still have to be supplied locally, so the file alone does not
+establish a portable, fully pinned build of this checkout.
+
 ### Choose the library checkouts
 
 ```bash
