@@ -10,7 +10,6 @@ module Gopurs.Emission
 
 import Prelude
 
-import Control.Lazy (defer)
 import Data.Array as Array
 import Data.Either (Either(..), either)
 import Data.Maybe (Maybe(..))
@@ -47,8 +46,8 @@ type Emitter a =
 
 -- Own the whole build lifetime, including workers forked by the producer.
 -- Flush the final batch on success. On failure, supervision cancels and joins
--- children BEFORE the bracket drains the emitter; reversing this nesting can
--- wait forever for workers whose result will never be consumed.
+-- children before the bracket drains the emitter. Keep this nesting: producer
+-- workers can be suspended publishing results that nobody will consume.
 withEmitter
   :: forall a
    . EmissionOptions
@@ -73,7 +72,7 @@ createEmitter
   :: forall a
    . Int
   -> (Array a -> Aff Unit)
-   -> Effect (BatchEmitter a)
+  -> Effect (BatchEmitter a)
 createEmitter jobs emit = do
   pending <- Ref.new []
   let
@@ -103,7 +102,7 @@ createPipelinedEmitter
   :: forall a
    . Int
   -> (Array a -> Aff Unit)
-   -> Effect (Emitter a)
+  -> Effect (Emitter a)
 createPipelinedEmitter jobs emit
   | jobs <= 1 = do
       emitter <- createEmitter jobs emit

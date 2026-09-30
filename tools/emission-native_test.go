@@ -41,9 +41,12 @@ func pipelineNativeEmitter(emit func([]int64) AffFn) rt.Value {
 }
 
 func pipelineNativeEnqueue(emitter rt.Value, id int64) rt.Value {
-	entry := rt.RecordDict3("imports", "name", "value",
+	return rt.Apply(rt.RecordGet(emitter, "enqueue"), pipelineNativeEntry(id))
+}
+
+func pipelineNativeEntry(id int64) rt.Value {
+	return rt.RecordDict3("imports", "name", "value",
 		Get_Data_Set_empty(), rt.Str(fmt.Sprintf("Pipeline%d", id)), rt.Int(id))
-	return rt.Apply(rt.RecordGet(emitter, "enqueue"), entry)
 }
 
 func pipelineNativeStart(aff rt.Value) <-chan error {
@@ -149,17 +152,15 @@ func TestPipelineNativeOverlapOrderAndFinish(t *testing.T) {
 		t.Fatalf("first batch: %v", got)
 	}
 	pipelineNativeRun(t, "enqueue pending 3", pipelineNativeEnqueue(emitter, 3))
-	next := pipelineNativeStart(pipelineNativeEnqueue(emitter, 4))
-	pipelineNativeBlocked(t, "launch of second batch", next)
+	// Two jobs allow four batches in flight. The second batch is admitted
+	// immediately, but must wait for its predecessor before reading metadata.
+	pipelineNativeRun(t, "enqueue second batch before first completes", pipelineNativeEnqueue(emitter, 4))
 	select {
 	case ids := <-constructed:
 		t.Fatalf("second callback constructed before first finished: %v", ids)
 	default:
 	}
 	first.release()
-	if err := pipelineNativeAwait(t, "enqueue 4 after first worker stops", next); err != nil {
-		t.Fatal(err)
-	}
 	pipelineNativeSignal(t, "second worker start", secondStarted)
 	select {
 	case <-constructedTooSoon:
@@ -178,23 +179,38 @@ func TestPipelineNativeOverlapOrderAndFinish(t *testing.T) {
 }
 
 func TestPipelineNativePropagatesEmissionErrors(t *testing.T) {
-	for _, via := range []string{"finish", "next-batch"} {
+	for _, via := range []string{"finish", "backpressure"} {
 		t.Run(via, func(t *testing.T) {
 			failure := errors.New("pipeline-native-emission-failed")
+			fail := newPipelineNativeGate()
 			calls := make(chan struct{}, 4)
 			emitter := pipelineNativeEmitter(func(_ []int64) AffFn {
 				calls <- struct{}{}
-				return func(context.Context) (any, error) { return nil, failure }
+				return func(ctx context.Context) (any, error) {
+					select {
+					case <-fail.ch:
+						return nil, failure
+					case <-ctx.Done():
+						return nil, context.Cause(ctx)
+					}
+				}
 			})
-			pipelineNativeCleanup(t, emitter)
+			pipelineNativeCleanup(t, emitter, fail)
 			pipelineNativeRun(t, "enqueue 1", pipelineNativeEnqueue(emitter, 1))
 			pipelineNativeRun(t, "enqueue 2", pipelineNativeEnqueue(emitter, 2))
 			action := rt.RecordGet(emitter, "finish")
-			if via == "next-batch" {
-				pipelineNativeRun(t, "enqueue pending 3", pipelineNativeEnqueue(emitter, 3))
-				action = pipelineNativeEnqueue(emitter, 4)
+			if via == "backpressure" {
+				// Fill four batches and leave one pending module. The fifth
+				// batch must wait for a slot, then report its predecessor's error.
+				for id := int64(3); id <= 9; id++ {
+					pipelineNativeRun(t, fmt.Sprintf("enqueue %d", id), pipelineNativeEnqueue(emitter, id))
+				}
+				action = pipelineNativeEnqueue(emitter, 10)
 			}
-			err := pipelineNativeAwait(t, via, pipelineNativeStart(action))
+			done := pipelineNativeStart(action)
+			pipelineNativeBlocked(t, via, done)
+			fail.release()
+			err := pipelineNativeAwait(t, via, done)
 			if err == nil || !strings.Contains(err.Error(), failure.Error()) {
 				t.Fatalf("%s: got %v, want emission error", via, err)
 			}
@@ -202,6 +218,79 @@ func TestPipelineNativePropagatesEmissionErrors(t *testing.T) {
 				t.Fatalf("callbacks constructed after failure: got %d, want 1", got)
 			}
 		})
+	}
+}
+
+func TestPipelineNativeManagedFailureJoinsProducerWorkers(t *testing.T) {
+	for _, mode := range []struct {
+		name      string
+		jobs      int64
+		pipelined bool
+	}{
+		{"sequential", 1, true},
+		{"batched", 3, false},
+		{"pipeline", 3, true},
+	} {
+		for _, stage := range []string{"producer", "emission"} {
+			t.Run(mode.name+"/"+stage, func(t *testing.T) {
+				failure := errors.New("managed-" + stage + "-failed")
+				started, stopped := make(chan struct{}), make(chan struct{})
+				// Model an optimizer worker publishing to an occupied result slot.
+				results := make(chan int, 1)
+				results <- 1
+				t.Cleanup(func() {
+					// Release a stranded worker too if supervision is accidentally removed.
+					select {
+					case <-results:
+					default:
+					}
+				})
+				worker := AffFn(func(ctx context.Context) (any, error) {
+					close(started)
+					defer close(stopped)
+					select {
+					case results <- 2:
+						return rt.Value{}, nil
+					case <-ctx.Done():
+						return nil, context.Cause(ctx)
+					}
+				})
+				emit := rt.Func(func(rt.Value) rt.Value {
+					return rt.Box(AffFn(func(context.Context) (any, error) { return nil, failure }))
+				})
+				produce := rt.Func(func(enqueue rt.Value) rt.Value {
+					return rt.Box(AffFn(func(ctx context.Context) (any, error) {
+						fork := rt.Apply(Get_Effect_Aff_forkAff(), rt.Box(worker))
+						if _, err := runAffSync(rt.Unbox[AffFn](fork), ctx); err != nil {
+							return nil, err
+						}
+						select {
+						case <-started:
+						case <-ctx.Done():
+							return nil, context.Cause(ctx)
+						}
+						if stage == "producer" {
+							return nil, failure
+						}
+						return runAffSync(rt.Unbox[AffFn](rt.Apply(enqueue, pipelineNativeEntry(1))), ctx)
+					}))
+				})
+				options := rt.RecordDict2("jobs", "pipelined", rt.Int(mode.jobs), rt.Bool(mode.pipelined))
+				build := rt.Apply3(Get_Gopurs_Emission_withEmitter(), options, emit, produce)
+				err := pipelineNativeAwait(t, "managed build", pipelineNativeStart(build))
+				if err == nil || !strings.Contains(err.Error(), failure.Error()) {
+					t.Fatalf("got %v, want original build error", err)
+				}
+				select {
+				case <-stopped:
+				default:
+					t.Fatal("build returned before its producer worker stopped")
+				}
+				if got := <-results; got != 1 {
+					t.Fatalf("result slot was consumed: got %d, want 1", got)
+				}
+			})
+		}
 	}
 }
 

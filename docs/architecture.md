@@ -1,7 +1,7 @@
 # Architecture du backend
 
-État vérifié le 14 septembre 2026. Les noms ci-dessous renvoient aux propriétaires
-actuels du code ; les étapes suivent le chemin actif de [Main](../src/Main.purs).
+Les étapes suivent le chemin actif de [Driver](../src/Gopurs/Driver.purs), appelé
+par [Main](../src/Main.purs). Le pilote et ses frontières sont décrits ci-dessous.
 
 ## Entrée typée et ordre des passes
 
@@ -10,35 +10,66 @@ actuels du code ; les étapes suivent le chemin actif de [Main](../src/Main.purs
    modules par dépendances. Le nom de fichier ne signifie pas que le backend
    utilise le CoreFn standard : `dataDecls`, `classDecls`, les annotations de
    types et les instanciations `TypeApp` restent accessibles après décodage.
-2. `Main.loadAndPrepareModules` collecte les constructeurs éliminés, charge les
+2. `Driver.Prepare.prepareModules` collecte les constructeurs éliminés, charge les
    directives, puis construit les types des constructeurs, les types globaux
    et les champs des classes. Il enrichit les modules avec les déclarations de
    données synthétiques des classes.
-3. `Monomorphization.monomorphizeModules` collecte les instanciations, propage
+3. `Monomorphization.monomorphizeModulesWith` collecte les instanciations, propage
    les besoins transitifs, filtre les candidats et spécialise les modules.
    Les métadonnées de représentation des ADT sont calculées depuis les modules
    enrichis avant spécialisation ; les types globaux viennent des modules
    d'origine. Ces tables accompagnent ensuite les modules monomorphisés.
-4. `Builder.buildModules` du PBO reçoit ces modules et les convertit en
-   `BackendModule` optimisés, avec les directives et `coreForeignSemantics`.
+4. `Driver.Build` choisit `Builder.buildModules` ou `buildModulesParallel` du PBO.
+   Ces builders convertissent les modules en `BackendModule` optimisés, avec les
+   directives et `coreForeignSemantics`.
    **La monomorphisation de gopurs précède donc cette optimisation PBO.**
-5. `Main.emitModule` transmet chaque module à `CodeGen.translateWithFunctions`.
+5. `Driver.Output.emitModule` lit les signatures FFI natives, puis transmet
+   chaque module à `CodeGen.translateWithFunctions`.
    Celui-ci applique `ThunkFusion.optimizeThunkProducers`, crée un état local
    de traduction, prépare l'analyse TCO et les signatures des fonctions via
    `ModuleBindings`, puis traduit les déclarations et leurs expressions.
 6. Les émetteurs construisent les expressions et les déclarations `GoDecl`,
    dont les helpers de conversion. `GoImports.collectImports` collecte leurs
    dépendances avant que `Printer.printGoFile` les rende en texte Go. Les
-   signatures produites sont rendues à `Main`, qui les transporte vers les
-   modules suivants pour les appels directs entre modules.
-7. Après le code du module, `emitModule` traite sa FFI Go : localisation,
-   préparation et décodage des déclarations, puis génération du bridge typé.
-   Les entrées exécutables sont écrites après le parcours des modules.
+   signatures produites sont rendues à `Driver.Build`. Chaque lot lit une vue
+   immuable ; ses résultats sont fusionnés dans l'ordre des modules avant que
+   le lot suivant puisse les consulter pour les appels directs entre modules.
+7. `Driver.Output` écrit le code du module et son bridge FFI typé. Il fournit
+   aussi l'écriture du runtime, de `go.mod` et des entrées exécutables. `Driver`
+   écrit le runtime avant le build, puis les entrées après sa réussite.
 
 Les `ForAll`, contraintes, types structurels, ordre des champs et queues de
 rangées font partie des données typées utilisées par le backend. Une décision
 de représentation doit partir de ces informations, pas d'une reconstruction
 à partir de chaînes Go déjà imprimées.
+
+## Pilote de compilation
+
+`Main` lance l'effet avec `runAff_` et traite son résultat après le nettoyage du
+pilote. Sur erreur, il écrit le diagnostic original sur stderr puis demande une
+sortie de statut 1. La petite FFI `Main.js` laisse Node vider ses écritures ;
+`Main.go` termine le processus après le diagnostic synchrone. Le point d'entrée
+Go ne consulte pas le code stocké par `Node.Process.setExitCode`.
+
+À la frontière FFI, `Driver.Output` convertit explicitement les exceptions de
+préparation `Effect` en erreurs `Aff` : le `liftEffect` natif ne les intercepte
+pas. Elles suivent ainsi le même nettoyage et le même diagnostic CLI que les
+erreurs des opérations de fichiers asynchrones.
+
+`Driver.compile` rend visible l'ordre des phases. Les options sont lues une
+fois par `Driver.Config`, avec les valeurs par défaut et les bornes existantes.
+`Driver.Prepare` rend un `PreparedModules` contenant les
+modules spécialisés, les directives, les modules exécutables et un champ
+`metadata :: CodegenMetadata` distinct de ces données d'orchestration.
+
+`Driver.Build` possède les références mutables de la compilation : signatures
+déjà publiées et compteurs de progression. Son coordinateur est le seul
+producteur de la file d'émission, même avec le builder PBO parallèle.
+`Emission.withEmitter` encadre **tout** le build : producteur, workers PBO et
+émetteurs. Il termine le dernier lot sur succès et supervise les fibres avant
+la fermeture de l'émetteur. Un worker peut être suspendu en publiant son
+résultat dans l'AVar ; il doit aussi être arrêté si le coordinateur échoue.
+Voir le [contrat du pipeline](parallel-emission.md) et ses tests JS/natifs.
 
 ## Où modifier une responsabilité
 
@@ -46,6 +77,12 @@ Tous les modules gopurs de ce tableau se trouvent dans [src/Gopurs](../src/Gopur
 
 | Responsabilité | Modules |
 | --- | --- |
+| Ordre des phases et mesures | `Driver` |
+| Arguments et variables d'environnement du pilote | `Driver.Config` |
+| Chargement du TAST et assemblage des métadonnées | `Driver.Prepare` |
+| Choix du builder, ordonnanceur Aff et publication des signatures | `Driver.Build` |
+| Lots, dépendances, contre-pression et durée de vie des fibres | `Emission` |
+| Traduction d'un module, assemblage FFI et fichiers de sortie | `Driver.Output` |
 | Types globaux, constructeurs et classes | `GlobalTypes`, `ConstructorMetadata`, `ClassMetadata` |
 | Représentations des ADT et spécialisation | `AdtMetadata`, `Monomorphization` |
 | Contrats distincts des métadonnées immuables et de l'état mutable | `CodegenState` |

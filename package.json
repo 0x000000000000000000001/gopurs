@@ -12,6 +12,7 @@
     "build:native": "node tools/build-native.mjs",
     "build:ffi": "node tools/build-ffi.mjs",
     "test:ffi": "node --test tools/ffi-errors.test.mjs",
+    "test:cli": "node --test tools/cli.test.mjs",
     "test:runner": "node --test tools/test-runner.test.mjs",
     "prepare": "npm run build"
   },

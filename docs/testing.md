@@ -2,12 +2,17 @@
 
 Les commandes de cette page partent de la racine de gopurs, avec Go, Node,
 Spago et le `purs` TAST sur `PATH`. Voir [l'installation](../README.md).
-Le runner utilise le bundle existant ; `-c` le reconstruit une fois via npm.
+Le runner utilise `bin/gopurs`, donc le binaire natif existant par défaut ;
+`GOPURS_JS=1` sélectionne le bundle JS. `-c` reconstruit le bundle JS une fois via
+npm. Après une modification du compilateur, `npm run build:native -- --keep-workspace`
+reconstruit les deux versions et conserve le workspace pour les tests natifs.
 
 ## Choisir un contrôle court
 
 | Famille modifiée | Commande ciblée |
 | --- | --- |
+| Pilote et durée de vie des tâches | `node --test tools/emission.test.mjs`, après le build ; tests natifs ci-dessous |
+| Statut de sortie et diagnostics CLI | `npm run test:cli`, après `npm run build:native` |
 | Types et records | `./bin/test NativeRecordBoxing NativeRecordSizes -c` |
 | Bridge FFI | `./bin/test FFIIntegerReturns -c` |
 | Appels et fonctions | `./bin/test CurriedLambdas -c` |
@@ -23,6 +28,31 @@ snapshot validé avec le dernier générateur. Les limites connues figurent plus
 bas. Le parser ne doit être reconstruit avec `npm run build:ffi` que si ses
 sources changent ; le WASM et son runtime JavaScript doivent alors rester
 appariés, comme décrit dans le README.
+
+Pour le pilote, comparer également le Go généré sur les **mêmes entrées TAST**
+avec l'ancien compilateur, le nouveau natif séquentiel, le natif parallèle et
+le bundle JS. Comparer les fichiers octet par octet, y compris runtime, bridges
+FFI et entrées exécutables. Les tests de
+[l'émetteur natif](../tools/emission-native_test.go) se copient dans le répertoire
+`output/purescript` du workspace conservé ; depuis son répertoire `output` :
+
+```bash
+go test -race -run '^TestPipelineNative' -count=1 -timeout 30s ./purescript
+```
+
+## Contrat de sortie CLI
+
+`npm run test:cli` compile une fixture réelle dans un workspace temporaire,
+puis appelle `bin/gopurs` en JS, natif séquentiel et natif parallèle. Chaque mode
+vérifie le succès (statut 0 et Go identique) et cinq erreurs réelles (statut 1) :
+chargement du TAST, écriture du runtime, écriture d'un module avec workers PBO,
+FFI invalide et écriture de l'entrée exécutable.
+
+Les erreurs doivent conserver leur message d'origine sur stderr, avec un seul
+préfixe `[gopurs] error:`, et terminer avant le délai du test. Le résultat est
+traité par `Main` après la sortie des brackets et de la supervision du pilote.
+Les tests de l'émetteur ci-dessus vérifient séparément que les workers ont bien
+terminé leur nettoyage à cette frontière.
 
 ## Sélection et snapshots
 
@@ -102,6 +132,28 @@ La sélection complète est le défaut. Les noms avec ou sans `gopurs-` sont
 acceptés ; `-c` reconstruit le backend depuis ce checkout. Chaque script frère
 gère encore ses propres sorties et nettoyages ; l'isolation des fixtures de
 `bin/test` ne s'étend pas automatiquement à ces scripts.
+
+## Validation du pilote au 30 septembre 2026
+
+Le découpage `Driver` / `Config` / `Prepare` / `Build` / `Output` et le scope
+`Emission.withEmitter` ont été validés par :
+
+- la reconstruction des compilateurs JS et natif ;
+- les **19 tests JS** de l'émetteur et la suite native `TestPipelineNative`
+  sous `go test -race`, notamment l'arrêt des workers sur erreur ;
+- **8 fixtures**, snapshots stricts, compilation et exécution Go avec 8 workers :
+  `FFIIntegerReturns`, `ArrayRoundtrip`, `ObjectUpdate2`, `NativeRecordBoxing`,
+  `TCOMutRec`, `ThunkFusion`, `1664`, `test-int` ;
+- b8x : **2 684 entrées TAST identiques**, **2 989 fichiers Go identiques octet
+  par octet** entre l'ancien compilateur et les nouveaux natif parallèle,
+  natif séquentiel et JS. Ce contrôle porte sur la génération de code ;
+- une erreur d'écriture réelle, en remplaçant temporairement `Control_Bind.go`
+  par un répertoire dans un workspace de fixture : arrêt en environ une seconde,
+  sans deadlock. Le code de sortie zéro observé avec `launchAff_` a ensuite été
+  corrigé par le traitement du résultat via `runAff_` et le contrat CLI ci-dessus ;
+- les **18 scénarios CLI** de succès et d'échec sur les trois modes. La FFI Go
+  invalide, qui déclenchait un `panic` natif, est désormais convertie en erreur
+  Aff et rend le statut 1 avec le diagnostic contextualisé.
 
 ## Bilan du nettoyage au 14 septembre 2026
 

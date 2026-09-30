@@ -1,8 +1,9 @@
 // After npm run build: node --test tools/emission.test.mjs
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { createEmitter, createPipelinedEmitter } from "../output/Gopurs.Emission/index.js";
+import { createEmitter, createPipelinedEmitter, withEmitter } from "../output/Gopurs.Emission/index.js";
 import * as Aff from "../output/Effect.Aff/index.js";
+import * as AVar from "../output/Effect.Aff.AVar/index.js";
 import * as Either from "../output/Data.Either/index.js";
 import * as Set from "../output/Data.Set/index.js";
 import { foldableArray } from "../output/Data.Foldable/index.js";
@@ -15,6 +16,7 @@ const runAff = aff => new Promise((resolve, reject) => {
     ? reject(result.value0) : resolve(result.value0))(aff)();
 });
 const effect = Aff.monadEffectAff.liftEffect;
+const bind = Aff.bindAff.bind;
 
 test("jobs at or below one emit each module immediately", async () => {
   for (const jobs of [-1, 0, 1]) {
@@ -234,3 +236,51 @@ test("pipelined cancellation drains non-cancellable work and discards the pendin
     ["start", ["A", "B"]], ["completed", ["A", "B"]],
   ]);
 });
+
+for (const options of [
+  { jobs: 1, pipelined: true },
+  { jobs: 3, pipelined: false },
+  { jobs: 3, pipelined: true },
+]) {
+  const mode = options.jobs === 1 ? "sequential" : options.pipelined ? "pipeline" : "batched";
+
+  test(`managed ${mode} emission waits for the final partial batch`, { timeout: 3000 }, async () => {
+    const probe = suspendedEmission();
+    let completed = false;
+    const build = runAff(withEmitter(options)(probe.emit)(enqueue => enqueue(entry("A"))))
+      .then(() => { completed = true; });
+    await nextTurn();
+    assert.deepEqual(probe.batches.map(batch => batch.values), [["A"]]);
+    assert.equal(completed, false);
+    probe.batches[0].complete();
+    await build;
+    assert.deepEqual(probe.published, ["A"]);
+    assert.deepEqual(probe.cancelled, []);
+  });
+
+  for (const stage of ["producer", "emission"]) {
+    test(`managed ${mode} ${stage} failure joins workers with unconsumed results`, { timeout: 3000 }, async t => {
+      const results = await runAff(AVar.new("occupied"));
+      const started = await runAff(AVar.empty);
+      const failure = new Error(`${stage} failed`);
+      let stopped = false;
+      let published = false;
+      const fail = effect(() => { throw failure; });
+      const worker = Aff.finally(effect(() => { stopped = true; }))(
+        bind(AVar.put(undefined)(started))(() =>
+          bind(AVar.put("orphaned result")(results))(() => effect(() => { published = true; }))),
+      );
+      // Also release a stranded worker if an assertion exposes missing supervision.
+      t.after(() => runAff(AVar.tryTake(results)));
+
+      const build = withEmitter(options)(() => fail)(enqueue =>
+        bind(Aff.forkAff(worker))(() =>
+          bind(AVar.take(started))(() => stage === "producer" ? fail : enqueue(entry("A")))),
+      );
+      await assert.rejects(runAff(build), error => error === failure);
+      assert.equal(stopped, true, "worker cleanup must finish before the build returns");
+      assert.equal(published, false, "the full result slot must suspend the worker");
+      assert.equal(await runAff(AVar.take(results)), "occupied");
+    });
+  }
+}

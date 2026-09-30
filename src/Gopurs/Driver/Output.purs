@@ -4,6 +4,7 @@ import Prelude
 
 import Control.Lazy (defer)
 import Data.Array as Array
+import Data.Either (either)
 import Data.Foldable (for_)
 import Data.Map as Map
 import Data.Maybe (Maybe(..))
@@ -11,8 +12,9 @@ import Data.Newtype (unwrap)
 import Data.String as String
 import Data.String.Pattern (Pattern(..), Replacement(..))
 import Data.Tuple (Tuple)
-import Effect.Aff (Aff, attempt)
+import Effect.Aff (Aff, attempt, throwError)
 import Effect.Class (liftEffect)
+import Effect.Exception (try)
 import Gopurs.CodeGen (translateWithFunctions)
 import Gopurs.CodegenState (CodegenMetadata)
 import Gopurs.ExprContext (ModuleFunctions)
@@ -48,7 +50,10 @@ emitModule metadata ffiDirectory (Module coreFnMod) backendMod = defer \_ -> do
       Nothing -> pure Nothing
       Just ffiPath -> do
         original <- FS.readTextFile UTF8 ffiPath
-        prepared <- liftEffect $ prepareFfi { moduleName, path: ffiPath } (goName <> "_") original
+        -- Native liftEffect does not catch synchronous Effect exceptions.
+        -- Move parser failures into Aff so supervision and CLI reporting run.
+        result <- liftEffect $ try $ prepareFfi { moduleName, path: ffiPath } (goName <> "_") original
+        prepared <- either throwError pure result
         pure $ Just
           { content: prepared.content
           , decls: prepared.decls

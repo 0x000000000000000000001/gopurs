@@ -280,6 +280,11 @@ by the current gopurs entrypoint are:
 The shared optimizer argument parser also recognizes options such as `--output`
 and `--bundle`, but `Main` does not use them to change gopurs output behavior.
 
+The CLI exits with status **0** on successful compilation and **1** when the
+driver raises an error. After compilation cleanup, it reports the original
+message once on stderr, prefixed with `[gopurs] error:`. This contract applies
+to both the native launcher and `GOPURS_JS=1`.
+
 ### Backend compilation timings
 
 Every invocation reports phase durations and `[gopurs] backend total: … ms`
@@ -333,9 +338,10 @@ optimizer's effective imports to wait for generated function signatures before
 emitting a dependent module. Workers receive immutable metadata snapshots and
 publish their signatures in the original order after the batch completes.
 Translation is deferred until its Aff worker runs, so native workers execute
-the CPU work concurrently. PBO optimization and directive propagation retain
-their original sequential order. See [parallel emission](docs/parallel-emission.md)
-for measurements and validation.
+the CPU work concurrently. `GOPURS_PBO_JOBS` independently controls optimization
+concurrency while preserving sequential directive visibility and publication
+order. See [parallel emission](docs/parallel-emission.md) for the lifecycle
+contract, defaults, measurements and validation.
 
 ## Develop one library locally
 
@@ -527,10 +533,12 @@ build artifacts; commit the Go source and build tooling.
 
 ## Architecture
 
-1. **Load and prepare:** [Main](src/Main.purs) loads enriched CoreFn, builds type and constructor metadata, and applies partial monomorphization.
-2. **Optimize and lower:** the optimizer produces backend modules; [CodeGen](src/Gopurs/CodeGen.purs) and the specialized `Gopurs` modules lower them to Go representations and expressions.
+[`Main`](src/Main.purs) launches [`Driver`](src/Gopurs/Driver.purs), which owns phase ordering:
+
+1. **Load and prepare:** [Driver.Prepare](src/Gopurs/Driver/Prepare.purs) loads enriched CoreFn, builds type and constructor metadata, and applies partial monomorphization.
+2. **Optimize and lower:** [Driver.Build](src/Gopurs/Driver/Build.purs) runs the optimizer and publishes module signatures; [CodeGen](src/Gopurs/CodeGen.purs) and the specialized `Gopurs` modules lower backend modules to Go representations and expressions.
 3. **Print and bridge:** [Printer](src/Gopurs/Printer.purs) emits Go source; [FfiSupport](src/Gopurs/FfiSupport.purs) prepares foreign declarations for [FfiBridge](src/Gopurs/FfiBridge.purs).
-4. **Assemble and execute:** the backend writes modules, the embedded runtime, `go.mod`, and entrypoints. Go's tools resolve dependencies and compile the application.
+4. **Assemble and execute:** [Driver.Output](src/Gopurs/Driver/Output.purs) writes modules, the embedded runtime, `go.mod`, and entrypoints. Go's tools resolve dependencies and compile the application.
 
 The [architecture map](docs/architecture.md) gives a detailed guide to module responsibilities.
 

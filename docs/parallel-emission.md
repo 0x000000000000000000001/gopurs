@@ -4,12 +4,15 @@
 (default 8; set 1 for sequential emission).
 It is independent of `GOPURS_JOBS`, which only controls TAST loading.
 
-The sequential PBO builder enqueues optimized modules. By default it can optimize
-the next modules while the preceding batch emits Go. `GOPURS_PIPELINE=0` disables
+The PBO coordinator enqueues finalized modules in canonical order, with either
+the sequential or parallel optimizer. By default it can optimize the next
+modules while preceding batches wait or emit Go. `GOPURS_PIPELINE=0` disables
 this overlap; `GOPURS_EMIT_JOBS=1` also retains immediate sequential emission.
 
-At most one emission batch is active and one is pending, in addition to the
-module currently being optimized by the producer. A full batch, a module
+At most one emission batch executes at a time. The pipeline tracks up to
+`max 2 (GOPURS_EMIT_JOBS * 2)` launched batches, including those waiting for
+their predecessor, plus one partially filled batch. At capacity, the producer
+joins the oldest batch before launching another. A full batch, a module
 depending on a queued module, or the end of the build flushes the queue. The
 dependency check uses optimized imports, including references introduced by
 inlining. A new batch starts only after the preceding batch finishes. Its
@@ -17,15 +20,28 @@ immutable function-signature snapshot is read at that point; signatures are
 merged in source traversal order after all module workers finish. Go translation
 runs inside deferred Aff computations on native Aff goroutines.
 
-`finish` waits for emission. On producer failure, `cancel` stops new admissions,
-discards the pending batch, and drains the active batch naturally. It does not
-interrupt filesystem effects: their `nonCanceler` does not guarantee that the
-underlying OS callback has stopped. Main brackets the builder with this cleanup.
-An emission error still propagates through `enqueue` or `finish`.
+`Driver.Build` uses `Emission.withEmitter` to own the build lifetime. The scope
+flushes and joins the final batch on success. Its `supervise` wraps both the
+producer and emission, inside the emitter's `bracket`: all remaining child
+fibers are cancelled and joined before emitter cleanup runs. This includes PBO
+workers suspended while publishing a result that a failed coordinator will no
+longer consume. Errors propagate through `enqueue`, `finish`, or the producer.
 
-PBO optimization stays sequential. Its current builder passes the preceding
-module's exported directives to the next module, so scheduling optimization
-solely by the original import graph would change this behavior.
+The low-level `createPipelinedEmitter` API also exposes `cancel`. On its own,
+this method stops new admissions, skips the pending batch, and drains the
+launched chain without interrupting it. It does not supervise producer workers;
+the compiler uses `withEmitter` for that. Joining Aff children does not join
+detached filesystem callbacks whose `nonCanceler` cannot stop the OS operation.
+
+`GOPURS_PBO_JOBS` selects optimizer concurrency (compiler default 1; the launcher
+selects 8 on sufficiently large machines unless overridden). The parallel
+builder preserves sequential directive visibility through ranked snapshots and
+replays attempts whose predecessors are not finalized yet. Original imports
+alone are insufficient for scheduling. `Driver.Build` owns the Aff scheduler
+and publishes generated signatures in module order.
+
+The measurements below are historical; each section records the implementation
+and defaults in use on that date.
 
 ## Worker counts after forceEscape correction, 2026-09-21
 
@@ -153,7 +169,9 @@ workers on a 98-module corpus (the dependency closure of `Data.Array`,
 the uninstrumented timing runs.
 
 The pipeline adds tests for producer overlap, bounded backpressure, ordered
-snapshots, failure propagation, and non-preemptive cleanup. Native tests are in
+snapshots, failure propagation, and low-level draining. Managed-scope tests
+exercise producer and emission failures with workers blocked on unconsumed
+results, in sequential, batched and pipelined modes. Native tests are in
 `tools/emission-native_test.go`: copy them into a retained bootstrap's
 `output/purescript` directory and run the command in the file header. The native
 pipeline also completed the full 304-module corpus under `go build -race` with
