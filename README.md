@@ -188,6 +188,9 @@ This includes the native persistent Map from `gopurs-ordered-collections`.
 
 The existing native binary is replaced only after Go compilation succeeds.
 Failures retain the isolated workspace and print the failed stage and log paths.
+SIGINT/SIGTERM also stop the active command's descendants and return status
+130/143. See the [tooling map](docs/architecture.md#outils-de-build-et-de-validation)
+and [bootstrap checks](docs/testing.md#bootstrap-natif-et-processus-des-runners).
 The resulting executable accepts the backend's usual arguments, such as
 `--main Main`, from a project containing typed `output/<Module>/corefn.json`.
 Its backend and FFI parser run without Node. The PureScript frontend that creates

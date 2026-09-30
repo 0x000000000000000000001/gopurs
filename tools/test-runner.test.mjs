@@ -49,7 +49,7 @@ function fixture(t) {
   for (const dir of ["mockbin", "tmp", "gopurs-prelude"]) mkdirSync(join(base, dir));
   writeFileSync(join(base, "package.json"), '{"type":"module"}');
   for (const name of ["test", "modtest"]) cpSync(join(repository, "bin", name), join(root, "bin", name));
-  for (const name of ["test-selection", "test-process", "test-workspace", "test-snapshots", "test-runner", "modtest-runner"]) cpSync(join(repository, "tools", name + ".mjs"), join(root, "tools", name + ".mjs"));
+  for (const name of ["command-runner", "test-selection", "test-process", "test-workspace", "test-snapshots", "test-runner", "modtest-runner"]) cpSync(join(repository, "tools", name + ".mjs"), join(root, "tools", name + ".mjs"));
   writeFileSync(join(root, "bin/pkg"), "CORE_PACKAGES=(prelude)\n");
   for (const name of ["spago", "gofmt", "go", "npm"]) writeFileSync(join(base, "mockbin", name), fakeTool, { mode: 0o755 });
   writeFileSync(join(root, "bin/gopurs"), fakeTool, { mode: 0o755 });

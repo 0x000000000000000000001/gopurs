@@ -13,6 +13,7 @@ reconstruit les deux versions et conserve le workspace pour les tests natifs.
 | --- | --- |
 | Pilote et durée de vie des tâches | `node --test tools/emission.test.mjs`, après le build ; tests natifs ci-dessous |
 | Statut de sortie et diagnostics CLI | `npm run test:cli`, après `npm run build:native` |
+| Bootstrap natif et gestion des processus | `node --test tools/build-native.test.mjs tools/test-runner.test.mjs` |
 | Types et records | `./bin/test NativeRecordBoxing NativeRecordSizes -c` |
 | Bridge FFI | `./bin/test FFIIntegerReturns -c` |
 | Appels et fonctions | `./bin/test CurriedLambdas -c` |
@@ -39,6 +40,27 @@ FFI et entrées exécutables. Les tests de
 ```bash
 go test -race -run '^TestPipelineNative' -count=1 -timeout 30s ./purescript
 ```
+
+## Bootstrap natif et processus des runners
+
+Les tests `build-native.test.mjs` remplacent les commandes de compilation par
+des outils simulés. Ils vérifient la sélection du fork typé le plus récent ou
+de `GOPURS_PURS`, son isolation du toolchain npm, le rejet d'un TAST incomplet,
+la conservation du binaire précédent sur échec, et la politique de nettoyage
+du workspace. Les interruptions SIGINT/SIGTERM doivent arrêter les descendants,
+conserver les logs et rendre les statuts 130/143.
+
+`test-runner.test.mjs` exerce aussi la gestion partagée des processus à travers
+les campagnes de fixtures et de bibliothèques. Pour valider un changement du
+bootstrap avec les vrais outils, exécuter `npm run build:native -- --keep-workspace`.
+Un refactoring de cet outillage à sources et toolchains identiques peut ensuite
+être contrôlé par comparaison des artefacts `bin/gopurs.js` et `bin/gopurs-native`.
+
+La passe du 30 septembre 2026 a validé les **15 tests d'outillage**, puis un
+bootstrap réel : les deux artefacts reconstruits avaient les mêmes empreintes
+SHA-256 qu'avant le refactoring. `FFIIntegerReturns` et `ObjectUpdate2` ont aussi
+passé leurs snapshots stricts, leur compilation Go et leur exécution avec le
+runner partagé.
 
 ## Contrat de sortie CLI
 

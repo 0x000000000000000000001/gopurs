@@ -188,6 +188,30 @@ une FFI disparaît. Pour comparer deux générateurs, conserver les mêmes entr�
 TAST et inventorier les sorties ; pour une fixture, le runner fournit un
 workspace neuf. Voir [les vérifications](testing.md).
 
+## Outils de build et de validation
+
+Les scripts de [tools](../tools) ont des responsabilités distinctes :
+
+| Responsabilité | Fichier |
+| --- | --- |
+| Ordre des étapes du bootstrap, logs et publication atomique du binaire | `build-native.mjs` |
+| Configuration Spago native, sélection du fork `purs`, vérification du TAST | `native-workspace.mjs` |
+| Sous-processus, groupes de processus, signaux et descripteurs des logs | `command-runner.mjs` |
+| Présentation des commandes et erreurs des campagnes de tests | `test-process.mjs` |
+| Sélection des fixtures, snapshots et workspaces | `test-runner.mjs` et ses helpers `test-*` |
+| Parcours des bibliothèques sœurs | `modtest-runner.mjs` |
+
+`CommandRunner` exécute une commande à la fois. Il rend son statut de sortie ;
+le client interprète les échecs après avoir affiché les logs et appelé
+`checkInterrupted`. SIGINT/SIGTERM sont transmis au groupe actif, descendants
+compris. Chaque propriétaire appelle `dispose` dans un `finally` pour retirer
+les handlers de signaux. Le build natif et `TestProcesses` utilisent ce même
+contrat, avec leur propre présentation des étapes.
+
+Le bootstrap conserve son workspace sur échec et installe le nouveau binaire
+par renommage d'un fichier préparé sur le même système de fichiers. La
+vérification du TAST et la compilation Go précèdent cette publication.
+
 ## Carte des dépôts et des consommateurs
 
 Le [suivi du lot 1](../todo.md#lot-1--carte-et-référence-du-14-septembre-2026)
