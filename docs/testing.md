@@ -16,7 +16,7 @@ reconstruit les deux versions et conserve le workspace pour les tests natifs.
 | Bootstrap natif et gestion des processus | `node --test tools/build-native.test.mjs tools/test-runner.test.mjs` |
 | Annotations et représentations natives | `node --test tools/native-record-workers.test.mjs tools/boxed-record-arguments.test.mjs tools/native-sum-results.test.mjs`, après le build |
 | Types et records | `./bin/test NativeRecordBoxing NativeRecordSizes -c` |
-| Bridge FFI | `./bin/test FFIIntegerReturns -c` |
+| Bridge FFI | `node --test tools/ffi-bridge.test.mjs tools/ffi-generics.test.mjs`, après le build ; `./bin/test FFIIntegerReturns -c` |
 | Appels et fonctions | `./bin/test CurriedLambdas -c` |
 | Conversions de tableaux | `./bin/test ArrayRoundtrip -c` |
 | Récursion | `./bin/test TCO TCOMutRec -c` |
@@ -76,6 +76,19 @@ préfixe `[gopurs] error:`, et terminer avant le délai du test. Le résultat es
 traité par `Main` après la sortie des brackets et de la supervision du pilote.
 Les tests de l'émetteur ci-dessus vérifient séparément que les workers ont bien
 terminé leur nettoyage à cette frontière.
+
+## Contrat du bridge FFI
+
+`ffi-bridge.test.mjs` exerce les trois entrées publiques de `FfiBridge` avec des
+déclarations analysées par le vrai parser. Il vérifie que les noms et signatures
+publiés correspondent aux workers émis, et distingue les workers générés des
+signatures admissibles pour un appel direct. Le Go produit est compilé et exécuté
+pour contrôler les callbacks, les records, les retours sans valeur, les effets
+différés, les variables étrangères et les replis de noms ou de déclaration.
+
+`ffi-generics.test.mjs` complète ce contrat avec les paramètres génériques,
+callbacks de tableaux, fonctions renvoyées et valeurs Applicative. Les erreurs
+de source et de transport restent couvertes par `ffi-errors.test.mjs`.
 
 ## Sélection et snapshots
 
@@ -155,6 +168,28 @@ La sélection complète est le défaut. Les noms avec ou sans `gopurs-` sont
 acceptés ; `-c` reconstruit le backend depuis ce checkout. Chaque script frère
 gère encore ses propres sorties et nettoyages ; l'isolation des fixtures de
 `bin/test` ne s'étend pas automatiquement à ces scripts.
+
+## Validation du bridge FFI — lot 05, 30 septembre 2026
+
+Le découpage de `FfiBridge` en façade, `Signatures`, `TypeSupport`, `Values`
+et `Render` a été validé par :
+
+- la reconstruction des compilateurs JS et natif ;
+- les **19 tests** de `ffi-bridge.test.mjs`, `ffi-generics.test.mjs` et
+  `ffi-errors.test.mjs`. Les deux nouveaux tests du contrat public ont aussi
+  été exécutés avec les modules JS précédents avant leur reconstruction ;
+- **8 fixtures**, snapshots stricts, compilation et exécution Go avec 8 workers :
+  `FFIIntegerReturns`, `FFIConstraintWorkaround`, `CompactRecordConsumers`,
+  `NativeRecordSizes`, `EffFn`, `FFIDefaultESExport`, `ESFFIFunctionFunction`,
+  `ESFFIValueVar`. Les trois fixtures déclarant `@snapshot-ffi` vérifient aussi
+  le texte de leur bridge ;
+- b8x : référence régénérée avec le binaire précédent, **2 684 entrées TAST
+  figées**, **2 989 fichiers Go identiques octet par octet** en natif parallèle,
+  natif séquentiel et JS, sans ajout ni suppression. Les bridges, le runtime,
+  les entrées exécutables et `go.mod` sont inclus dans la comparaison.
+
+Ce contrôle b8x porte sur la génération. Les tests du bridge et les fixtures
+ci-dessus couvrent séparément la compilation et l'exécution du Go produit.
 
 ## Validation du contexte de traduction au 30 septembre 2026
 

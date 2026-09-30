@@ -7,7 +7,7 @@ une génération Go identique. Périmètre : compilateur, runtime, FFI et outill
 de ce dépôt ; les interfaces avec PBO et les bibliothèques sœurs sont incluses.
 Les optimisations de performance restent en pause.
 
-## Avancement : 30 % — 30/100 points, 4/15 lots validés
+## Avancement : 40 % — 40/100 points, 5/15 lots validés
 
 - **Calcul :** somme des points des cases cochées, sur un total fixe de 100.
   Les poids sont des unités de suivi ; le pourcentage mesure les livrables
@@ -32,9 +32,9 @@ Les optimisations de performance restent en pause.
 - [x] **04 — Contexte de traduction et annotations (5 pts).** `ExprContext`
   utilisé directement par le dispatcher ; annotations et dictionnaires de
   classes isolés dans `TypedExprs` ; parité vérifiée.
-- [ ] **05 — Bridge FFI (10 pts).** Dans `FfiBridge`, séparer les décisions de
-  signature, l'adaptation des arguments/résultats et le rendu des wrappers.
-  Fin : chaque règle a un emplacement nommé et les chemins de secours sont explicites.
+- [x] **05 — Bridge FFI (10 pts).** Façade `FfiBridge` et responsabilités
+  séparées dans `Signatures`, `TypeSupport`, `Values` et `Render` ; admission des
+  appels directs, workers et chemins de repli explicités. Contrats et parité validés.
 - [ ] **06 — Choix des représentations (5 pts).** Revoir `GoTypes`,
   `ConstructorLayout` et les métadonnées ADT/classes.
   Fin : décisions de layout et d'instanciation regroupées, invariants documentés.
@@ -81,4 +81,4 @@ Les optimisations de performance restent en pause.
 - Documentation des responsabilités et preuves de validation à jour ;
   `git diff --check` propre.
 
-**Prochaine passe : lot 05 — bridge FFI.** Sa clôture portera l'avancement à **40 %**.
+**Prochaine passe : lot 06 — choix des représentations.** Sa clôture portera l'avancement à **45 %**.

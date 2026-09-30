@@ -103,7 +103,11 @@ Tous les modules gopurs de ce tableau se trouvent dans [src/Gopurs](../src/Gopur
 | Préparation des enveloppes curryfiées | `GoFunctions` |
 | Dépendances des fragments opaques et imports du module | `GoCode`, `GoImports` |
 | Représentation et rendu Go | `GoAst`, `Printer` |
-| Frontière FFI et adaptation des signatures | `FfiSupport`, `FfiBridge` |
+| Analyse du Go FFI et façade du bridge | `FfiSupport`, `FfiBridge` |
+| Appariement des déclarations et signatures d'appel natif | `FfiBridge.Signatures` |
+| Types du bridge et instanciation générique | `FfiBridge.TypeSupport` |
+| Adaptation des arguments, callbacks et résultats FFI | `FfiBridge.Values` |
+| Rendu des wrappers, workers et déclarations manquantes | `FfiBridge.Render` |
 
 `ExprContext` permet aux familles d'expressions de rappeler le dispatcher sans
 importer `CodeGen`. Il transporte directement les tables immuables de
@@ -171,7 +175,25 @@ le WASM ; `FfiSupport` prépare la source et décode la réponse, puis `FfiBridg
 rapproche les déclarations Go des types TAST. Une erreur de syntaxe, de runner
 ou de décodage fait échouer le build ; elle ne devient pas une liste vide de
 fonctions. L'absence de fichier FFI suit encore le chemin de bridge de secours
-de `Main`, distinct d'un échec d'analyse.
+de `Driver.Output`, distinct d'un échec d'analyse.
+
+`FfiBridge` expose trois opérations : enveloppes boxées, signatures publiées
+et workers à résultat boxé. `Signatures` centralise l'appariement des noms
+(`<Module>_<Nom>`, puis sa variante suffixée `_`) et l'admission d'un
+`NativeCandidate`. Ce candidat porte la déclaration Go, son type TAST, le besoin
+d'un worker et le nom à appeler. La publication d'une `FunctionInfo` vérifie
+ensuite les types de tous les arguments et du résultat. Cette étape est plus
+stricte que l'émission des workers : certains workers générés restent inutilisés
+par les appels directs, notamment avec un retour record ou un argument natif
+non représentable par cette interface.
+
+`TypeSupport` instancie les paramètres génériques des wrappers jusque dans les
+callbacks et les conteneurs. `Values` possède les adaptations dans les deux sens
+et partage le traitement des callbacks entre wrappers et workers. `Render`
+assemble leurs déclarations Go. Les valeurs étrangères, les fonctions sans
+argument et les signatures non admissibles conservent leur enveloppe boxée.
+Une déclaration Go absente produit l'enveloppe qui signale « FFI not implemented »
+à l'utilisation ; une source Go mal formée reste une erreur de compilation.
 
 ## Sorties et cache
 
