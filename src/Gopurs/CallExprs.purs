@@ -21,7 +21,7 @@ import Gopurs.CallArguments (Arguments, applyBoxed)
 import Gopurs.CallArguments as CallArguments
 import Gopurs.CodegenState (FunctionInfo)
 import Gopurs.ExprAnalysis (getExprType, unwrapTcoExpr)
-import Gopurs.ExprContext (ExprContext, ExprResult, LoopTarget, TranslateExpr, StmtTree(..))
+import Gopurs.ExprContext (ExprContext, ExprResult, LoopTarget, TranslateExpr, StmtTree(..), childContext)
 import Gopurs.GoAst (rawGo, GoExpr(..), GoType(..), goTypeToStr, sanitizeName)
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr)
 import Gopurs.GoTypes (exprTypeToGoType)
@@ -71,7 +71,7 @@ directFunction { metadata, modNameStr, moduleFunctions } target count = do
 curriedCall :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> Array TcoExpr -> ExprResult
 curriedCall translate context@{ codegenStateRef, modNameStr } nextId fn args =
   let
-    resFn = translate (CallArguments.childContext context Nothing) nextId fn
+    resFn = translate (childContext context Nothing) nextId fn
     -- Dynamic calls consume boxed records. A native function instead supplies
     -- its expected argument types when the translated values are coerced.
     expected = case resFn.exprType of
@@ -128,7 +128,7 @@ effectApplication translate context = uncurriedCall translate context 5
 uncurriedCall :: TranslateExpr -> ExprContext -> Int -> Int -> TcoExpr -> Array TcoExpr -> ExprResult
 uncurriedCall translate context@{ codegenStateRef, modNameStr } maxArity nextId fn args =
   let
-    resFn = translate (CallArguments.childContext context Nothing) nextId fn
+    resFn = translate (childContext context Nothing) nextId fn
     translated = CallArguments.translate translate context Nothing { stmts: resFn.stmts, nextId: resFn.nextId } args
     len = Array.length args
     goFuncName = if len >= 2 && len <= maxArity then "UncurriedApp" <> show len else "UncurriedApp"

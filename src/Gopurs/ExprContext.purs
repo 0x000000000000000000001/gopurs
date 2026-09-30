@@ -11,13 +11,14 @@ module Gopurs.ExprContext
   , wrapInStmts
   , ExprContext
   , TranslateExpr
+  , childContext
   ) where
 
 import Prelude
 import Data.Array as Array
 import Data.List as List
 import Data.Map (Map)
-import Data.Maybe (Maybe)
+import Data.Maybe (Maybe(..))
 import Effect.Ref (Ref)
 import Gopurs.CodegenState (CodegenMetadata, CodegenState, FunctionInfo)
 import Gopurs.GoAst (GoExpr(..), GoType)
@@ -103,3 +104,14 @@ type ExprContext =
   }
 
 type TranslateExpr = ExprContext -> Int -> TcoExpr -> ExprResult
+
+-- Ordinary operands are non-tail values, outside the enclosing effect block.
+-- Their expected type is explicit rather than inherited from the parent.
+childContext :: ExprContext -> Maybe ExprType -> ExprContext
+childContext context expected = context
+  { depth = context.depth + 1
+  , tcoIdent = Nothing
+  , loopCtx = []
+  , options = { isTail: false, inEffectBlock: false }
+  , mbExpectedExprType = expected
+  }

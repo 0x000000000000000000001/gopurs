@@ -20,7 +20,7 @@ import Gopurs.CallArguments (Arguments, applyBoxed)
 import Gopurs.CallArguments as CallArguments
 import Gopurs.CodegenState (FunctionInfo)
 import Gopurs.ExprAnalysis (extractFuncType, getExprType, unwrapTcoExpr)
-import Gopurs.ExprContext (ExprContext, ExprResult, StmtTree(..), TranslateExpr)
+import Gopurs.ExprContext (ExprContext, ExprResult, StmtTree(..), TranslateExpr, childContext)
 import Gopurs.GoAst (rawGo, GoExpr(..), GoType(..), goTypeToStr)
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr, unboxGoExpr)
 import Gopurs.GoTypes (exprTypeToGoType)
@@ -75,7 +75,7 @@ safeIndex translate context@{ metadata, codegenStateRef, modNameStr } nextId tar
   -- statements before evaluating the expressions would reorder arguments.
   capture acc arg =
     let
-      result = translate (CallArguments.childContext context Nothing) acc.nextId arg
+      result = translate (childContext context Nothing) acc.nextId arg
       name = "arrayIndex_arg_" <> show result.nextId
     in
       { stmts: acc.stmts <> result.stmts <> StmtLeaf (GoAssign name result.expr)
@@ -95,7 +95,7 @@ withoutArrayAnnotation arg = arg
 unsafeIndex :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> TcoExpr -> ExprResult
 unsafeIndex translate context@{ metadata, codegenStateRef, modNameStr } nextId arrayArg indexArg =
   let
-    child = CallArguments.childContext context Nothing
+    child = childContext context Nothing
     array = translate child nextId (withoutArrayAnnotation arrayArg)
     arrayName = "arrayUnsafe_value_" <> show array.nextId
     sourceName = "arrayUnsafe_source_" <> show array.nextId

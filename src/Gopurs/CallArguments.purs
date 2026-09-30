@@ -1,6 +1,5 @@
 module Gopurs.CallArguments
   ( Arguments
-  , childContext
   , translate
   , translateBoxed
   , coercePrefix
@@ -12,7 +11,7 @@ import Prelude
 import Data.Array as Array
 import Data.Foldable (foldl)
 import Data.Maybe (Maybe(..), fromMaybe)
-import Gopurs.ExprContext (ExprContext, ExprResult, TranslateExpr, StmtTree)
+import Gopurs.ExprContext (ExprContext, ExprResult, TranslateExpr, StmtTree, childContext)
 import Gopurs.GoAst (rawGo, GoExpr(..), GoType(..))
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr)
@@ -23,15 +22,6 @@ type Arguments =
   , exprs :: Array GoExpr
   , exprTypes :: Array GoType
   , nextId :: Int
-  }
-
-childContext :: ExprContext -> Maybe ExprType -> ExprContext
-childContext context expected = context
-  { depth = context.depth + 1
-  , tcoIdent = Nothing
-  , loopCtx = []
-  , options = { isTail: false, inEffectBlock: false }
-  , mbExpectedExprType = expected
   }
 
 translate :: TranslateExpr -> ExprContext -> Maybe ExprType -> { stmts :: StmtTree, nextId :: Int } -> Array TcoExpr -> Arguments

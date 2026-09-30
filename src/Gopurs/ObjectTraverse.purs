@@ -10,8 +10,7 @@ import Data.Tuple (Tuple(..))
 import Gopurs.AdtExprs as AdtExprs
 import Gopurs.CallAnalysis (CallTarget, qualifiedTarget)
 import Gopurs.CallArguments (applyBoxed)
-import Gopurs.CallArguments as CallArguments
-import Gopurs.ExprContext (ExprContext, ExprResult, StmtTree(..), TranslateExpr)
+import Gopurs.ExprContext (ExprContext, ExprResult, StmtTree(..), TranslateExpr, childContext)
 import Gopurs.GoAst (rawGo, GoExpr(..), GoType(..))
 import Gopurs.GoConversions (boxGoExpr)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr)
@@ -113,7 +112,7 @@ emitKnownEither translate context@{ metadata, codegenStateRef, modNameStr } next
   where
   capture acc arg =
     let
-      result = translate (CallArguments.childContext context Nothing) acc.nextId arg
+      result = translate (childContext context Nothing) acc.nextId arg
       name = "traverseObjectEither_arg_" <> show result.nextId
     in
       { stmts: acc.stmts <> result.stmts

@@ -14,6 +14,7 @@ reconstruit les deux versions et conserve le workspace pour les tests natifs.
 | Pilote et durée de vie des tâches | `node --test tools/emission.test.mjs`, après le build ; tests natifs ci-dessous |
 | Statut de sortie et diagnostics CLI | `npm run test:cli`, après `npm run build:native` |
 | Bootstrap natif et gestion des processus | `node --test tools/build-native.test.mjs tools/test-runner.test.mjs` |
+| Annotations et représentations natives | `node --test tools/native-record-workers.test.mjs tools/boxed-record-arguments.test.mjs tools/native-sum-results.test.mjs`, après le build |
 | Types et records | `./bin/test NativeRecordBoxing NativeRecordSizes -c` |
 | Bridge FFI | `./bin/test FFIIntegerReturns -c` |
 | Appels et fonctions | `./bin/test CurriedLambdas -c` |
@@ -154,6 +155,27 @@ La sélection complète est le défaut. Les noms avec ou sans `gopurs-` sont
 acceptés ; `-c` reconstruit le backend depuis ce checkout. Chaque script frère
 gère encore ses propres sorties et nettoyages ; l'isolation des fixtures de
 `bin/test` ne s'étend pas automatiquement à ces scripts.
+
+## Validation du contexte de traduction au 30 septembre 2026
+
+Le dispatcher `CodeGen` utilise directement `ExprContext`, dont `childContext`
+définit le contexte des opérandes ordinaires. Le traitement des annotations et
+des dictionnaires de classes est isolé dans `TypedExprs`. Cette passe a validé :
+
+- la reconstruction des compilateurs JS et natif ;
+- **28 tests ciblés** : records boxés et natifs, sommes natives, retours de
+  fonctions locales, initialisation récursive, dictionnaires fermés, tests de
+  constructeurs et traversées Array/Object ; le helper de métadonnées des tests
+  fournit désormais aussi la table `ffiFunctions` requise par le générateur ;
+- **10 fixtures**, snapshots stricts, compilation et exécution Go avec 8 workers :
+  `TypeClassMemberOrderChange`, `EnumDictionaryField`, `StaticDictionary`,
+  `NativeRecordWorkers`, `NativeRecordBoxing`, `ArrayRoundtrip`, `TCO`,
+  `TCOMutRec`, `LetInInstance`, `PolykindBindingGroup2` ;
+- b8x : une référence régénérée avec le binaire précédent sur une copie figée
+  des **2 684 entrées TAST**, puis **2 989 fichiers Go identiques octet par octet**
+  en natif parallèle, natif séquentiel et JS, sans ajout ni suppression. Runtime,
+  bridges FFI et entrées exécutables sont inclus ; `go.mod` est également
+  identique. Ce dernier contrôle porte sur la génération de code.
 
 ## Validation du pilote au 30 septembre 2026
 

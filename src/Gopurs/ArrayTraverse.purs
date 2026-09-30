@@ -14,9 +14,8 @@ import Data.Tuple (Tuple(..))
 import Gopurs.AdtExprs as AdtExprs
 import Gopurs.CallAnalysis (collectCurriedAbs, collectGoSpine, getGoSpineArgs, qualifiedTarget)
 import Gopurs.CallArguments (applyBoxed)
-import Gopurs.CallArguments as CallArguments
 import Gopurs.ExprAnalysis (extractFuncType, unwrapTcoExpr)
-import Gopurs.ExprContext (ExprContext, ExprResult, StmtTree(..), TranslateExpr, flattenStmts)
+import Gopurs.ExprContext (ExprContext, ExprResult, StmtTree(..), TranslateExpr, childContext, flattenStmts)
 import Gopurs.GoAst (rawGo, GoExpr(..), GoType(..))
 import Gopurs.GoConversions (boxGoExpr)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr)
@@ -176,7 +175,7 @@ emitKnownEither translate context@{ metadata, codegenStateRef, modNameStr } next
     let
       result = case if Array.length acc.exprs == callbackOffset then nativeCallback translate context acc.nextId indexed arg else Nothing of
         Just native -> native
-        Nothing -> translate (CallArguments.childContext context Nothing) acc.nextId arg
+        Nothing -> translate (childContext context Nothing) acc.nextId arg
       name = "traverseEither_arg_" <> show result.nextId
     in
       { stmts: acc.stmts <> result.stmts <> StmtLeaf (GoAssign name result.expr) <> StmtLeaf (GoMutate "_" (GoVar name))

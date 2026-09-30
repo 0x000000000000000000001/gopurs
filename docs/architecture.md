@@ -88,6 +88,7 @@ Tous les modules gopurs de ce tableau se trouvent dans [src/Gopurs](../src/Gopur
 | Contrats distincts des métadonnées immuables et de l'état mutable | `CodegenState` |
 | Dispatcher récursif, assemblage du fichier | `CodeGen` |
 | Contexte, résultat et callbacks de traduction | `ExprContext` |
+| Annotations typées, propagation et dictionnaires de classes | `TypedExprs` |
 | Fonctions de module, signatures, groupes TCO | `ModuleBindings` |
 | Structs ADT et enregistrement des getters de classes | `ModuleDeclarations` |
 | Bindings locaux, récursion locale et initialisation | `BindingExprs` |
@@ -109,6 +110,20 @@ importer `CodeGen`. Il transporte directement les tables immuables de
 `CodegenMetadata`, utilisées pour le typage, les signatures et la préparation
 des constructeurs et des records. Ces décisions ne lisent aucune référence
 mutable.
+
+Le dispatcher reçoit lui-même un `ExprContext`, comme les émetteurs spécialisés.
+`ExprContext.childContext` prépare les opérandes ordinaires : profondeur suivante,
+hors position terminale et hors bloc d'effet, sans cible TCO ni boucle héritée.
+Le type attendu est passé explicitement. Les corps de bindings, branches et
+fonctions conservent leurs propres règles de propagation du contexte.
+
+`TypedExprs` traite les annotations `Typed` : il propage le type vers le résultat
+des `Let`/`LetRec`, construit les dictionnaires dans l'ordre des champs de la
+classe et adapte les autres résultats. Il garde explicites les cas où le boxing
+doit être évité : records déjà boxés destinés à un consommateur dynamique, records
+natifs projetés, sommes natives, pointeurs et closures. Chaque champ de dictionnaire
+est traduit puis converti avant le suivant, car la conversion peut enregistrer
+des helpers Rebox dans l'état du module.
 
 La référence `CodegenState` contient uniquement les déclarations structurées
 produites (`declarations`), le compteur des bindings récursifs (`globalId`) et les
