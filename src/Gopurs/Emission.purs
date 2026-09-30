@@ -1,4 +1,12 @@
-module Gopurs.Emission (createEmitter, createPipelinedEmitter) where
+module Gopurs.Emission
+  ( EmissionEntry
+  , EmissionOptions
+  , BatchEmitter
+  , Emitter
+  , withEmitter
+  , createEmitter
+  , createPipelinedEmitter
+  ) where
 
 import Prelude
 
@@ -9,22 +17,63 @@ import Data.Maybe (Maybe(..))
 import Data.Set (Set)
 import Data.Set as Set
 import Effect (Effect)
-import Effect.Aff (Aff, attempt, forkAff, invincible, joinFiber, throwError)
+import Effect.Aff (Aff, attempt, bracket, forkAff, invincible, joinFiber, supervise, throwError)
 import Effect.Class (liftEffect)
 import Effect.Exception (error)
 import Effect.Ref as Ref
 import PureScript.Backend.Optimizer.CoreFn (ModuleName)
 
--- Only the sequential builder accesses the queue. Workers receive a completed
--- batch, and their results must be published before a dependent batch starts.
+type EmissionEntry a =
+  { name :: ModuleName
+  , imports :: Set ModuleName
+  , value :: a
+  }
+
+type EmissionOptions =
+  { jobs :: Int
+  , pipelined :: Boolean
+  }
+
+type BatchEmitter a =
+  { enqueue :: EmissionEntry a -> Aff Unit
+  , finish :: Aff Unit
+  }
+
+type Emitter a =
+  { enqueue :: EmissionEntry a -> Aff Unit
+  , finish :: Aff Unit
+  , cancel :: Aff Unit
+  }
+
+-- Own the whole build lifetime, including workers forked by the producer.
+-- Flush the final batch on success. On failure, supervision cancels and joins
+-- children BEFORE the bracket drains the emitter; reversing this nesting can
+-- wait forever for workers whose result will never be consumed.
+withEmitter
+  :: forall a
+   . EmissionOptions
+  -> (Array a -> Aff Unit)
+  -> ((EmissionEntry a -> Aff Unit) -> Aff Unit)
+  -> Aff Unit
+withEmitter options emit produce =
+  bracket create _.cancel \emitter -> supervise do
+    produce emitter.enqueue
+    emitter.finish
+  where
+  create = liftEffect do
+    if options.pipelined then createPipelinedEmitter options.jobs emit
+    else do
+      emitter <- createEmitter options.jobs emit
+      pure { enqueue: emitter.enqueue, finish: emitter.finish, cancel: pure unit }
+
+-- Only the builder's coordinator accesses the queue, even when optimisation
+-- runs in parallel. Workers receive a completed batch, and their results must
+-- be published before a dependent batch starts.
 createEmitter
   :: forall a
    . Int
   -> (Array a -> Aff Unit)
-  -> Effect
-       { enqueue :: { name :: ModuleName, imports :: Set ModuleName, value :: a } -> Aff Unit
-       , finish :: Aff Unit
-       }
+   -> Effect (BatchEmitter a)
 createEmitter jobs emit = do
   pending <- Ref.new []
   let
@@ -46,7 +95,7 @@ createEmitter jobs emit = do
 
 -- The producer owns the chain; batches are appended as fibers that first wait
 -- for their predecessor, so emission stays strictly ordered while the producer
--- keeps converting. When more than `cap` batches are in flight, the producer
+-- keeps converting. When `cap` batches are in flight, the producer
 -- waits for the oldest one only (fine backpressure) instead of draining the
 -- whole chain. Failures are sticky: the first error is stored and rethrown by
 -- later enqueues and by `finish`.
@@ -54,11 +103,7 @@ createPipelinedEmitter
   :: forall a
    . Int
   -> (Array a -> Aff Unit)
-  -> Effect
-       { enqueue :: { name :: ModuleName, imports :: Set ModuleName, value :: a } -> Aff Unit
-       , finish :: Aff Unit
-       , cancel :: Aff Unit
-       }
+   -> Effect (Emitter a)
 createPipelinedEmitter jobs emit
   | jobs <= 1 = do
       emitter <- createEmitter jobs emit
