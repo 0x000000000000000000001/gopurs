@@ -12,13 +12,17 @@ module Gopurs.ExprContext
   , ExprContext
   , TranslateExpr
   , childContext
+  , bindParameters
   ) where
 
 import Prelude
 import Data.Array as Array
 import Data.List as List
+import Data.Foldable (foldl)
 import Data.Map (Map)
+import Data.Map as Map
 import Data.Maybe (Maybe(..))
+import Data.Tuple (Tuple(..))
 import Effect.Ref (Ref)
 import Gopurs.CodegenState (CodegenMetadata, CodegenState, FunctionInfo)
 import Gopurs.GoAst (GoExpr(..), GoType)
@@ -38,10 +42,8 @@ type ModuleFunctions = Map String FunctionInfo
 
 type LoopTarget =
   { ident :: String
-  , params :: Array String
   , loopParams :: Array String
   , goTypes :: Array GoType
-  , fRet :: GoType
   }
 
 type LoopContext = Array LoopTarget
@@ -104,6 +106,12 @@ type ExprContext =
   }
 
 type TranslateExpr = ExprContext -> Int -> TcoExpr -> ExprResult
+
+-- Extend a lexical environment without discarding captured outer bindings.
+-- Only parameters shadow their original localId keys.
+bindParameters :: Array (Tuple String GoType) -> LocalEnv -> LocalEnv
+bindParameters params bound =
+  foldl (\acc (Tuple name goType) -> Map.insert name { name, goType } acc) bound params
 
 -- Ordinary operands are non-tail values, outside the enclosing effect block.
 -- Their expected type is explicit rather than inherited from the parent.

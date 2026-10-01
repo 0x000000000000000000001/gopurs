@@ -11,18 +11,16 @@ import Data.Foldable (foldl)
 import Data.Map as Map
 import Data.Maybe (Maybe(..))
 import Data.Traversable (traverse)
-import Data.Tuple (Tuple(..), fst, snd)
+import Data.Tuple (Tuple(..))
 import Effect.Ref (Ref)
-import Effect.Ref as Ref
-import Effect.Unsafe (unsafePerformEffect)
 import Gopurs.CallAnalysis (extractUncurriedAbs)
 import Gopurs.CodegenState (CodegenMetadata, CodegenState, FunctionInfo)
-import Gopurs.ExprAnalysis (extractExprFuncType, extractFuncType)
-import Gopurs.ExprContext (LoopContext, ModuleFunctions, TranslateExpr, flattenStmts, wrapInStmts)
-import Gopurs.GoAst (rawGo, GoDecl(..), GoExpr(..), GoType(..), goTypeToStr, sanitizeName)
-import Gopurs.GoConversions (adtPayloadTypes, boxGoExpr, coerceGoExpr, getUnboxedADT)
+import Gopurs.ExprAnalysis (extractFuncType)
+import Gopurs.ExprContext (ModuleFunctions, TranslateExpr, wrapInStmts)
+import Gopurs.GoAst (GoDecl(..), GoType(..), sanitizeName)
+import Gopurs.GoConversions (adtPayloadTypes, boxGoExpr, getUnboxedADT)
 import Gopurs.GoTypes (exprTypeToGoType)
-import Gopurs.GoFunctions (curriedFunction)
+import Gopurs.ModuleWorkers as ModuleWorkers
 import Gopurs.NativeRecordArgs (workerArguments)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.Codegen.Tco as Tco
@@ -39,7 +37,6 @@ type TcoBindingGroup =
 prepare :: CodegenMetadata -> String -> BackendModule -> { bindings :: Array TcoBindingGroup, functions :: ModuleFunctions }
 prepare metadata modNameStr mod =
   let
-    { pointerAdtPaths, enumAdts, elidedCtors } = metadata
     Tuple _ tcoBindings = foldl
       ( \(Tuple env acc) group ->
           let
@@ -57,40 +54,6 @@ prepare metadata modNameStr mod =
       (Tuple [] [])
       mod.bindings
 
-    unwrapFunc :: Array (Tuple Ident TcoExpr) -> Array (Tuple String FunctionInfo)
-    unwrapFunc binds =
-      Array.concatMap
-        ( \(Tuple (Ident name) val) ->
-            case extractUncurriedAbs val of
-              Just { args, body } ->
-                let
-                  typeSig = extractFuncType val
-                  fArgsGo = case typeSig of
-                    Just { fArgs, fRet } -> workerArguments
-                      (exprTypeToGoType pointerAdtPaths enumAdts elidedCtors modNameStr)
-                      args body (Array.take (Array.length args) fArgs)
-                      (if Array.length args < Array.length fArgs then Any else fRet)
-                      <> Array.replicate (Array.length args - Array.length fArgs) TypeValue
-                    Nothing -> Array.replicate (Array.length args) TypeValue
-                  fRetGo = case typeSig of
-                    Just { fArgs, fRet } ->
-                      if Array.length args < Array.length fArgs then TypeValue
-                      else
-                        case getUnboxedADT fRet of
-                          Just (Tuple adtName adt) -> TypeStructValue adtName (adt.signature (adtPayloadTypes (exprTypeToGoType pointerAdtPaths enumAdts elidedCtors modNameStr) fRet))
-                          Nothing -> exprTypeToGoType pointerAdtPaths enumAdts elidedCtors modNameStr fRet
-                    Nothing -> TypeValue
-                  fullName = "Call_" <> modNameStr <> "_" <> sanitizeName name
-                in
-                  [ Tuple (sanitizeName name) { fullName, fArgs: fArgsGo, fRet: fRetGo, arity: Array.length args } ]
-              Nothing ->
-                let
-                  fullName = "Call_" <> modNameStr <> "_" <> sanitizeName name
-                in
-                  [ Tuple (sanitizeName name) { fullName, fArgs: [], fRet: TypeValue, arity: 0 } ]
-        )
-        binds
-
     moduleFunctions :: ModuleFunctions
     moduleFunctions = Map.fromFoldable $ Array.concatMap
       ( \group ->
@@ -99,15 +62,48 @@ prepare metadata modNameStr mod =
               mutRecBinds = traverse (\(Tuple _ val) -> extractUncurriedAbs val) group.bindings
             in
               case mutRecBinds of
-                Just _ -> unwrapFunc group.bindings
-                Nothing -> map (\(Tuple (Ident name) _) -> Tuple (sanitizeName name) { fullName: "Call_" <> modNameStr <> "_" <> sanitizeName name, fArgs: [], fRet: TypeValue, arity: 0 }) group.bindings
+                Just _ -> map (bindingSignature metadata modNameStr) group.bindings
+                Nothing -> map (\(Tuple (Ident name) _) -> Tuple (sanitizeName name) (boxedSignature modNameStr name)) group.bindings
           else
-            unwrapFunc group.bindings
+            map (bindingSignature metadata modNameStr) group.bindings
       )
       tcoBindings
   in
     { bindings: tcoBindings, functions: moduleFunctions }
 
+boxedSignature :: String -> String -> FunctionInfo
+boxedSignature modNameStr name =
+  { fullName: "Call_" <> modNameStr <> "_" <> sanitizeName name, fArgs: [], fRet: TypeValue, arity: 0 }
+
+-- Syntax fixes worker arity. A computation between lambdas leaves a boxed
+-- function result; fully consumed native sums use their specialized ABI.
+-- Read-only record projections are selected here and reused by ModuleWorkers.
+bindingSignature :: CodegenMetadata -> String -> Tuple Ident TcoExpr -> Tuple String FunctionInfo
+bindingSignature metadata modNameStr (Tuple (Ident name) value) =
+  let
+    fallback = boxedSignature modNameStr name
+    toGoType = exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr
+    signature = case extractUncurriedAbs value of
+      Just { args, body } ->
+        let
+          annotation = extractFuncType value
+          parameters = case annotation of
+            Just { fArgs, fRet } -> workerArguments toGoType args body
+              (Array.take (Array.length args) fArgs)
+              (if Array.length args < Array.length fArgs then Any else fRet)
+              <> Array.replicate (Array.length args - Array.length fArgs) TypeValue
+            Nothing -> Array.replicate (Array.length args) TypeValue
+          result = case annotation of
+            Just { fArgs, fRet } | Array.length args >= Array.length fArgs ->
+              case getUnboxedADT fRet of
+                Just (Tuple adtName adt) -> TypeStructValue adtName (adt.signature (adtPayloadTypes toGoType fRet))
+                Nothing -> toGoType fRet
+            _ -> TypeValue
+        in
+          fallback { fArgs = parameters, fRet = result, arity = Array.length args }
+      Nothing -> fallback
+  in
+    Tuple (sanitizeName name) signature
 
 -- Declarations and loop bodies share the same child translator as local
 -- bindings. Each recursive group publishes its function declarations together.
@@ -127,85 +123,12 @@ declarations translate metadata codegenStateRef modNameStr moduleFunctions group
             in
               case mutRecBinds of
                 Just fns ->
-                  let
-                    fnWrapperStmts = map
-                      ( \fn ->
-                          let
-                            -- Use precisely the published worker ABI, including
-                            -- any read-only native record projections.
-                            paramsWithTypes = case Map.lookup fn.ident moduleFunctions of
-                              Just { fArgs } -> Array.zipWith Tuple fn.args
-                                (fArgs <> Array.replicate (Array.length fn.args - Array.length fArgs) TypeValue)
-                              Nothing -> map (\p -> Tuple p TypeValue) fn.args
-
-                            newBound = foldl (\acc (Tuple idStr goType) -> Map.insert idStr { name: idStr, goType } acc) Map.empty paramsWithTypes
-
-                            isSelfRecursiveLoop = group.recursive && Array.length group.bindings == 1
-                            mbExpectedRet = case extractExprFuncType (getExprType fn.val) of
-                              Just { fArgs, fRet: rt } -> Just case Array.drop (Array.length fn.args) fArgs of
-                                [] -> rt
-                                remaining -> Func remaining rt
-                              Nothing -> Nothing
-                            fRet = case mbExpectedRet of
-                              Just rt -> exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr rt
-                              Nothing -> TypeValue
-
-                            currentLoopCtx :: LoopContext
-                            currentLoopCtx = if isSelfRecursiveLoop then [ { ident: fn.ident, params: map fst paramsWithTypes, loopParams: map (\p -> fst p <> "_loop") paramsWithTypes, goTypes: map snd paramsWithTypes, fRet } ] else []
-                            resBodyMut = translate (context { depth = 0, bound = newBound, tcoIdent = (Just fn.ident), loopCtx = currentLoopCtx, options = { isTail: isSelfRecursiveLoop, inEffectBlock: false }, mbExpectedExprType = mbExpectedRet }) 0 fn.body
-
-                            goName = fn.ident
-                            initVars = Array.concatMap (\(Tuple p goT) -> [ rawGo ("var " <> p <> " " <> goTypeToStr goT <> " = " <> p <> "_loop"), rawGo ("_ = " <> p) ]) paramsWithTypes
-
-                            arity = Array.length fn.args
-
-                            expectedRetType = case Map.lookup goName moduleFunctions of
-                              Just { fArgs } | arity < Array.length fArgs -> TypeValue
-                              Just { fRet: resultType } -> resultType
-                              Nothing -> TypeValue
-
-                            goParams = map (\(Tuple p goT) -> Tuple (p <> "_loop") goT) paramsWithTypes
-
-                            funcExpr =
-                              if arity >= 1 then
-                                let
-                                  coercedExpr = coerceGoExpr codegenStateRef modNameStr resBodyMut.expr resBodyMut.exprType expectedRetType
-                                  bodyStmts = initVars <> flattenStmts resBodyMut.stmts <> [ GoReturn coercedExpr ]
-                                  funcBody = if isSelfRecursiveLoop then GoFor goName bodyStmts else GoBlock bodyStmts
-                                in
-                                  unsafePerformEffect do
-                                    let callFuncDecl = GoFunctionDecl { name: "Call_" <> modNameStr <> "_" <> goName, params: goParams, result: expectedRetType, body: funcBody }
-                                    Ref.modify_ (\r -> r { declarations = Array.snoc r.declarations callFuncDecl }) codegenStateRef
-                                    let wrapperParams = map (\(Tuple p _) -> p <> "_box") paramsWithTypes
-                                    let callExpr = GoCall (GoVar ("Call_" <> modNameStr <> "_" <> goName)) (map (\(Tuple p goT) -> coerceGoExpr codegenStateRef modNameStr (GoVar (p <> "_box")) TypeValue goT) paramsWithTypes)
-                                    let boxedRes = boxGoExpr codegenStateRef modNameStr callExpr expectedRetType
-                                    let wrapperFunc = GoFuncLit (map (\p -> Tuple p TypeValue) wrapperParams) [] boxedRes TypeValue
-                                    let funcWrapperName = if arity == 1 then "gopurs_runtime.Func" else "gopurs_runtime.Func" <> show arity
-                                    pure $ if arity <= 10 then
-                                      GoCall (GoVar funcWrapperName) [ wrapperFunc ]
-                                    else
-                                      Array.foldr
-                                        (\p acc -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func")
-                                          [ GoFuncLit [ Tuple p TypeValue ] [] acc TypeValue ])
-                                        boxedRes
-                                        wrapperParams
-                              else
-                                let
-                                  bodyStmts = initVars <> flattenStmts resBodyMut.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr resBodyMut.expr resBodyMut.exprType) ]
-                                  funcBody = if isSelfRecursiveLoop then GoFor goName bodyStmts else GoBlock bodyStmts
-                                in
-                                  curriedFunction [ Tuple "_" TypeValue ] TypeValue funcBody
-                          in
-                            GoCachedValue { identifier: modNameStr <> "_" <> goName, expression: funcExpr, goType: TypeValue }
-                      )
-                      fns
-                  in
-                    fnWrapperStmts
+                  map (ModuleWorkers.declaration translate context (group.recursive && Array.length group.bindings == 1)) fns
                 Nothing ->
                   Array.concatMap
                     ( \(Tuple (Ident name) expr) ->
                         let
-                          res = translate (context { depth = 0, bound = Map.empty, tcoIdent = (Just (sanitizeName name)), loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = (Just (getExprType expr)) }) 0 expr
+                          res = translate (context { depth = 0, bound = Map.empty, tcoIdent = (Just (sanitizeName name)), loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = (Just (annotationType expr)) }) 0 expr
                         in
                           [ GoCachedValue { identifier: modNameStr <> "_" <> sanitizeName name, expression: wrapInStmts [] res.stmts TypeValue (boxGoExpr codegenStateRef modNameStr res.expr res.exprType), goType: TypeValue } ]
                     )
@@ -218,6 +141,7 @@ declarations translate metadata codegenStateRef modNameStr moduleFunctions group
     )
     groups
 
-getExprType :: TcoExpr -> ExprType
-getExprType (TcoExpr _ (Typed ty _)) = ty
-getExprType _ = Any -- fallback
+-- Cached values use only an outer annotation, not primitive-result inference.
+annotationType :: TcoExpr -> ExprType
+annotationType (TcoExpr _ (Typed ty _)) = ty
+annotationType _ = Any

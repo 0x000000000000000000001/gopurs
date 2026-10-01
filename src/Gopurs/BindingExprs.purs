@@ -10,21 +10,20 @@ import Data.Foldable (foldMap, foldl)
 import Data.Map as Map
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Newtype (unwrap)
-import Data.String as String
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..), snd)
 import Effect.Ref as Ref
 import Effect.Unsafe (unsafePerformEffect)
 import Gopurs.CallAnalysis (extractUncurriedAbs)
 import Gopurs.ExprAnalysis (extractExprFuncType, getExprType, printTcoExprShape)
-import Gopurs.ExprContext (ExprContext, ExprResult, TranslateExpr, StmtTree(..), flattenStmts)
+import Gopurs.ExprContext (ExprContext, ExprResult, TranslateExpr, StmtTree(..), bindParameters)
 import Gopurs.GoAst (rawGo, GoExpr(..), GoType(..), goTypeToStr, sanitizeName)
-import Gopurs.GoConversions (boxGoExpr, coerceGoExpr)
+import Gopurs.GoConversions (coerceGoExpr)
 import Gopurs.GoTypes (exprTypeToGoType, printExprType)
-import Gopurs.GoFunctions (curriedFunction)
+import Gopurs.LocalWorkers as LocalWorkers
 import Gopurs.Printer (printGoExpr)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
-import PureScript.Backend.Optimizer.CoreFn (ExprType(..), Ident(..))
+import PureScript.Backend.Optimizer.CoreFn (Ident(..))
 import PureScript.Backend.Optimizer.FreeVars (localId)
 import PureScript.Backend.Optimizer.Syntax (Level)
 
@@ -40,38 +39,20 @@ nonRecursive translate context@{ metadata, codegenStateRef, depth, modNameStr, m
     case mbFunc of
       Just abs | Array.length abs.args > 0 ->
         let
-          fArgsAst = case extractExprFuncType (getExprType binding) of
-            Just { fArgs } -> fArgs
-            Nothing -> []
-          paramsWithTypes = Array.zipWith
-            ( \idStr ty ->
-                Tuple idStr (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr ty)
-            )
-            abs.args
-            (fArgsAst <> Array.replicate (max 0 (Array.length abs.args - Array.length fArgsAst)) Any)
-          goTypes = map snd paramsWithTypes
-
-          loopBound = foldl (\acc (Tuple idStr goT) -> Map.insert idStr { name: idStr, goType: goT } acc) bound paramsWithTypes
+          params = LocalWorkers.parameters context abs.args binding
+          loopBound = bindParameters params bound
           resBodyMut = translate (context { depth = (depth + 1), bound = loopBound, tcoIdent = (Just name), loopCtx = [], options = { isTail: true, inEffectBlock: false }, mbExpectedExprType = Nothing }) (nextId + 1) abs.body
           -- The binding is non-recursive: infer its native result before
           -- publishing the signature to callers. Only its curried wrapper
           -- crosses the Value boundary, which can otherwise copy whole lists.
           trueFRet = resBodyMut.exprType
-          localModuleFunctions = Map.insert name { fullName: "Call_local_" <> modNameStr <> "_" <> name, fArgs: goTypes, fRet: trueFRet, arity: Array.length abs.args } moduleFunctions
-          declStmts = [ rawGo ("var Call_local_" <> modNameStr <> "_" <> name <> " func(" <> String.joinWith ", " (map goTypeToStr goTypes) <> ") " <> goTypeToStr trueFRet), rawGo ("_ = Call_local_" <> modNameStr <> "_" <> name), rawGo ("var " <> name <> " gopurs_runtime.Value"), rawGo ("_ = " <> name) ]
-
-          goParamsNative = map (\(Tuple p goT) -> Tuple (p <> "_loop") goT) paramsWithTypes
-          initVars = Array.concatMap (\(Tuple p goT) -> [ rawGo ("var " <> p <> " " <> goTypeToStr goT <> " = " <> p <> "_loop"), rawGo ("_ = " <> p) ]) paramsWithTypes
-          funcBody = GoBlock (initVars <> flattenStmts resBodyMut.stmts <> [ GoReturn resBodyMut.expr ])
-          nativeAssignment = GoMutate ("Call_local_" <> modNameStr <> "_" <> name) (GoFuncBlock goParamsNative [ funcBody ] trueFRet)
-
-          nativeCallExpr = GoCall (GoVar ("Call_local_" <> modNameStr <> "_" <> name)) (map (\(Tuple p goT) -> coerceGoExpr codegenStateRef modNameStr (GoVar (p <> "_loop_val")) TypeValue goT) paramsWithTypes)
-          funcExpr = Array.foldr (\(Tuple p _) acc -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoFuncLit [ Tuple (p <> "_loop_val") TypeValue ] [] acc TypeValue ]) (boxGoExpr codegenStateRef modNameStr nativeCallExpr trueFRet) paramsWithTypes
+          localModuleFunctions = Map.insert name (LocalWorkers.signature context name params trueFRet) moduleFunctions
+          worker = LocalWorkers.emit context name params false resBodyMut
 
           newBound = Map.insert originalName { name, goType: TypeValue } bound
           resBodyOuter = translate (context { depth = (depth + 1), moduleFunctions = localModuleFunctions, bound = newBound, tcoIdent = Nothing, mbExpectedExprType = Nothing }) resBodyMut.nextId body
         in
-          { stmts: foldMap StmtLeaf declStmts <> StmtLeaf nativeAssignment <> StmtLeaf (GoMutate name funcExpr) <> resBodyOuter.stmts, expr: resBodyOuter.expr, exprType: resBodyOuter.exprType, nextId: resBodyOuter.nextId }
+          { stmts: foldMap StmtLeaf (worker.declarations <> worker.assignments) <> resBodyOuter.stmts, expr: resBodyOuter.expr, exprType: resBodyOuter.exprType, nextId: resBodyOuter.nextId }
 
       _ ->
         let
@@ -101,9 +82,9 @@ recursive translate context@{ metadata, codegenStateRef, depth, modNameStr, recV
             newName = oldName <> "_" <> show acc.nextId <> "_" <> show gId
             expectedGoTypeFromAst = exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr (getExprType val)
           in
-            { newBound: Map.insert oldName { name: newName, goType: expectedGoTypeFromAst } acc.newBound, newNames: Array.snoc acc.newNames { oldName, newName }, exprType: TypeValue, nextId: acc.nextId + 1 }
+            { newBound: Map.insert oldName { name: newName, goType: expectedGoTypeFromAst } acc.newBound, newNames: Array.snoc acc.newNames { oldName, newName }, nextId: acc.nextId + 1 }
       )
-      { newBound: bound, newNames: [], exprType: TypeValue, nextId }
+      { newBound: bound, newNames: [], nextId }
       (toArray bindings)
 
     combinedRecVars = recVars <> map (\(Tuple (Ident i) _) -> sanitizeName i) (toArray bindings)
@@ -117,84 +98,50 @@ recursive translate context@{ metadata, codegenStateRef, depth, modNameStr, recV
     case mutRecBinds of
       Just fns ->
         let
-          prepopulatedFunctions = foldl
-            ( \accCtx fn ->
+          -- Resolve parameters once, then publish every provisional signature
+          -- before translating any body. The annotated return is provisional:
+          -- bodies refine the function table in source order.
+          workers = map
+            ( \fn ->
                 let
                   oldName = localId (Just (Ident fn.ident)) lvl
                   boundInfo = fromMaybe { name: oldName, goType: TypeValue } (Map.lookup oldName allocRes.newBound)
                   newName = boundInfo.name
-                  fArgs = case extractExprFuncType (getExprType fn.val) of
-                    Just { fArgs: a } -> map (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr) a
-                    Nothing -> []
-                  fRet = case extractExprFuncType (getExprType fn.val) of
-                    Just { fRet: r } -> exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr r
+                  params = LocalWorkers.parameters context fn.args fn.val
+                  expectedReturn = map _.fRet (extractExprFuncType (getExprType fn.val))
+                  resultType = case expectedReturn of
+                    Just ty -> exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr ty
                     Nothing -> TypeValue
-                  paramsWithTypes = Array.zipWith (\idStr goT -> Tuple idStr goT) fn.args (fArgs <> Array.replicate (max 0 (Array.length fn.args - Array.length fArgs)) TypeValue)
                 in
-                  Map.insert newName { fullName: "Call_local_" <> modNameStr <> "_" <> newName, fArgs: map snd paramsWithTypes, fRet: fRet, arity: Array.length fn.args } accCtx
+                  { oldName, newName, params, expectedReturn, resultType, body: fn.body }
             )
-            moduleFunctions
             fns
-
-          prepopulatedBound = foldl
-            ( \accCtx fn ->
-                let
-                  oldName = localId (Just (Ident fn.ident)) lvl
-                  boundInfo = fromMaybe { name: oldName, goType: TypeValue } (Map.lookup oldName allocRes.newBound)
-                  newName = boundInfo.name
-                  fArgs = case extractExprFuncType (getExprType fn.val) of
-                    Just { fArgs: a } -> map (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr) a
-                    Nothing -> []
-                  fRet = case extractExprFuncType (getExprType fn.val) of
-                    Just { fRet: r } -> exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr r
-                    Nothing -> TypeValue
-                  paramsWithTypes = Array.zipWith (\idStr goT -> Tuple idStr goT) fn.args (fArgs <> Array.replicate (max 0 (Array.length fn.args - Array.length fArgs)) TypeValue)
-                in
-                  Map.insert oldName { name: newName, goType: TypeFunc (map snd paramsWithTypes) fRet } accCtx
-            )
-            allocRes.newBound
-            fns
+          published = foldl
+            (\acc worker ->
+              { functions: Map.insert worker.newName (LocalWorkers.signature context worker.newName worker.params worker.resultType) acc.functions
+              , bound: Map.insert worker.oldName { name: worker.newName, goType: TypeFunc (map snd worker.params) worker.resultType } acc.bound
+              })
+            { functions: moduleFunctions, bound: allocRes.newBound }
+            workers
 
           resData = foldl
-            ( \acc fn ->
+            ( \acc worker ->
                 let
-                  oldName = localId (Just (Ident fn.ident)) lvl
-                  boundInfo = fromMaybe { name: oldName, goType: TypeValue } (Map.lookup oldName prepopulatedBound)
-                  newName = boundInfo.name
-                  fArgs = case extractExprFuncType (getExprType fn.val) of
-                    Just { fArgs: a } -> map (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr) a
-                    Nothing -> []
-                  paramsWithTypes = Array.zipWith (\idStr goT -> Tuple idStr goT) fn.args (fArgs <> Array.replicate (max 0 (Array.length fn.args - Array.length fArgs)) TypeValue)
-                  currentLoopCtx = [ { ident: newName, params: fn.args, loopParams: map (\p -> p <> "_loop") fn.args, goTypes: map snd paramsWithTypes, fRet: TypeValue } ]
-                  loopBound = foldl (\acc2 (Tuple idStr goT) -> Map.insert idStr { name: idStr, goType: goT } acc2) prepopulatedBound paramsWithTypes
-                  mbExpectedRet = case extractExprFuncType (getExprType fn.val) of
-                    Just { fRet: r } -> Just r
-                    Nothing -> Nothing
-                  resBodyMut = translate (context { depth = (depth + 1), recVars = combinedRecVars, moduleFunctions = acc.moduleFunctions, bound = loopBound, tcoIdent = (Just newName), loopCtx = currentLoopCtx, options = { isTail: true, inEffectBlock: false }, mbExpectedExprType = mbExpectedRet }) acc.nextId fn.body
+                  { oldName, newName, params } = worker
+                  currentLoopCtx = [ { ident: newName, loopParams: map (\(Tuple p _) -> p <> "_loop") params, goTypes: map snd params } ]
+                  -- Peer bindings keep the provisional view; only the function
+                  -- table sees results inferred for earlier bodies in the group.
+                  loopBound = bindParameters params published.bound
+                  resBodyMut = translate (context { depth = (depth + 1), recVars = combinedRecVars, moduleFunctions = acc.moduleFunctions, bound = loopBound, tcoIdent = (Just newName), loopCtx = currentLoopCtx, options = { isTail: true, inEffectBlock: false }, mbExpectedExprType = worker.expectedReturn }) acc.nextId worker.body
                   trueFRet = resBodyMut.exprType
-
-                  initVars = Array.concatMap (\(Tuple p goT) -> [ rawGo ("var " <> p <> " " <> goTypeToStr goT <> " = " <> p <> "_loop"), rawGo ("_ = " <> p) ]) paramsWithTypes
-
-                  funcBody = GoFor newName (initVars <> flattenStmts resBodyMut.stmts <> [ GoReturn resBodyMut.expr ])
-
-                  goParamsNative = map (\(Tuple p goT) -> Tuple (p <> "_loop") goT) paramsWithTypes
-                  nativeAssignment = GoMutate ("Call_local_" <> modNameStr <> "_" <> newName) (GoFuncBlock goParamsNative [ funcBody ] trueFRet)
-
-                  nativeCallExpr = GoCall (GoVar ("Call_local_" <> modNameStr <> "_" <> newName)) (map (\(Tuple p goT) -> coerceGoExpr codegenStateRef modNameStr (GoVar (p <> "_loop_val")) TypeValue goT) paramsWithTypes)
-                  funcExpr =
-                    if Array.null paramsWithTypes then
-                      curriedFunction [ Tuple "_" TypeValue ] TypeValue (GoBlock [ GoReturn (boxGoExpr codegenStateRef modNameStr nativeCallExpr trueFRet) ])
-                    else
-                      Array.foldr (\(Tuple p _) accExpr -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoFuncLit [ Tuple (p <> "_loop_val") TypeValue ] [] accExpr TypeValue ]) (boxGoExpr codegenStateRef modNameStr nativeCallExpr trueFRet) paramsWithTypes
-
-                  newFunctions = Map.insert newName { fullName: "Call_local_" <> modNameStr <> "_" <> newName, fArgs: map snd paramsWithTypes, fRet: trueFRet, arity: Array.length fn.args } acc.moduleFunctions
-                  newBound2 = Map.insert oldName { name: newName, goType: TypeFunc (map snd paramsWithTypes) trueFRet } acc.newBound
-                  declStmtsLocal = [ rawGo ("var Call_local_" <> modNameStr <> "_" <> newName <> " func(" <> String.joinWith ", " (map goTypeToStr (map snd paramsWithTypes)) <> ") " <> goTypeToStr trueFRet), rawGo ("_ = Call_local_" <> modNameStr <> "_" <> newName), rawGo ("var " <> newName <> " gopurs_runtime.Value"), rawGo ("_ = " <> newName) ]
+                  emitted = LocalWorkers.emit context newName params true resBodyMut
+                  newFunctions = Map.insert newName (LocalWorkers.signature context newName params trueFRet) acc.moduleFunctions
+                  newBound2 = Map.insert oldName { name: newName, goType: TypeFunc (map snd params) trueFRet } acc.newBound
                 in
-                  { declarations: acc.declarations <> declStmtsLocal, stmts: acc.stmts <> [ nativeAssignment, GoMutate newName funcExpr ], nextId: resBodyMut.nextId, moduleFunctions: newFunctions, newBound: newBound2 }
+                  { declarations: acc.declarations <> emitted.declarations, stmts: acc.stmts <> emitted.assignments, nextId: resBodyMut.nextId, moduleFunctions: newFunctions, newBound: newBound2 }
             )
-            { declarations: [], stmts: [], nextId: allocRes.nextId, moduleFunctions: prepopulatedFunctions, newBound: prepopulatedBound }
-            fns
+            { declarations: [], stmts: [], nextId: allocRes.nextId, moduleFunctions: published.functions, newBound: published.bound }
+            workers
 
           resBodyOuter = translate (context { depth = (depth + 1), recVars = combinedRecVars, moduleFunctions = resData.moduleFunctions, bound = resData.newBound, tcoIdent = Nothing, mbExpectedExprType = Nothing }) resData.nextId body
         in
@@ -228,11 +175,10 @@ recursive translate context@{ metadata, codegenStateRef, depth, modNameStr, recV
                       <> StmtLeaf (GoMutate alloc.newName assignedVal)
                       <> StmtLeaf (GoMutate (alloc.newName <> "_cell") (rawGo ("&" <> alloc.newName)))
                   , exprs: Array.snoc acc.exprs { key: alloc.newName, goType: expectedGoType }
-                  , exprType: TypeValue
                   , nextId: res.nextId
                   }
             )
-            { stmts: StmtEmpty, exprs: [], exprType: TypeValue, nextId: allocRes.nextId }
+            { stmts: StmtEmpty, exprs: [], nextId: allocRes.nextId }
             (Array.zip (toArray bindings) allocRes.newNames)
 
           declStmts = map (\b -> rawGo ("var " <> b.key <> " " <> goTypeToStr b.goType <> "\n_ = " <> b.key

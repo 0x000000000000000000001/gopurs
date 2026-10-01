@@ -3,6 +3,8 @@ module Gopurs.ExprAnalysis
   , unwrapTcoExpr
   , printTcoExprShape
   , extractExprFuncType
+  , FunctionType
+  , functionResultAfter
   , extractFuncType
   , getExprType
   , executeIfOpaque
@@ -13,12 +15,11 @@ module Gopurs.ExprAnalysis
 import Prelude
 import Data.Array as Array
 import Data.Array.NonEmpty (toArray)
-import Data.Foldable (foldl, any)
-import Data.Map as Map
+import Data.Foldable (any)
 import Data.Maybe (Maybe(..))
 import Data.String as String
 import Data.Tuple (Tuple(..))
-import Gopurs.ExprContext (LocalEnv)
+import Gopurs.ExprContext (LocalEnv, bindParameters)
 import Gopurs.GoAst (rawGo, GoExpr(..), GoType)
 import Gopurs.GoTypes (printExprType)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
@@ -68,7 +69,16 @@ printTcoExprShape e = case unwrapTcoExpr e of
   Typed tp inner -> "Typed(" <> printExprType tp <> ", " <> printTcoExprShape inner <> ")"
   _ -> "Other"
 
-extractExprFuncType :: ExprType -> Maybe { fArgs :: Array ExprType, fRet :: ExprType }
+type FunctionType = { fArgs :: Array ExprType, fRet :: ExprType }
+
+-- Keep the unconsumed arrows when a computation interrupts adjacent lambdas.
+-- The caller decides whether consuming more than the known arity is admissible.
+functionResultAfter :: Int -> FunctionType -> ExprType
+functionResultAfter consumed { fArgs, fRet } = case Array.drop consumed fArgs of
+  [] -> fRet
+  remaining -> Func remaining fRet
+
+extractExprFuncType :: ExprType -> Maybe FunctionType
 extractExprFuncType ty =
   let
     flattenFuncType acc (Func args ret) = flattenFuncType (acc <> args) ret
@@ -95,7 +105,7 @@ extractExprFuncType ty =
   in
     getFunc ty
 
-extractFuncType :: TcoExpr -> Maybe { fArgs :: Array ExprType, fRet :: ExprType }
+extractFuncType :: TcoExpr -> Maybe FunctionType
 extractFuncType (TcoExpr _ (Typed ty inner)) =
   case extractExprFuncType ty of
     Just r -> Just r
@@ -145,7 +155,7 @@ bindFieldFunctionParameters toGoType bound expectedExprType value =
         let
           paramsWithTypes = Array.zipWith (\(Tuple mbI lvl) fArgTy -> Tuple (localId mbI lvl) (toGoType fArgTy)) args (fArgs <> Array.replicate (Array.length args - Array.length fArgs) Any)
         in
-          foldl (\b (Tuple idStr goType) -> Map.insert idStr { name: idStr, goType } b) bound paramsWithTypes
+          bindParameters paramsWithTypes bound
       _, _ -> bound
 
 hasTypeVars :: ExprType -> Boolean

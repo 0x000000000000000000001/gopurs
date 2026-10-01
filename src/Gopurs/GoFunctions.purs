@@ -1,10 +1,35 @@
-module Gopurs.GoFunctions (curriedFunction) where
+module Gopurs.GoFunctions
+  ( Parameters
+  , namedParameters
+  , loopParameters
+  , iterationBindings
+  , curriedFunction
+  ) where
 
 import Prelude
 import Data.Array as Array
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
-import Gopurs.GoAst (GoExpr(..), GoType(..))
+import Gopurs.GoAst (GoExpr(..), GoType(..), goTypeToStr, rawGo)
+
+type Parameters = Array (Tuple String GoType)
+
+-- Syntax determines arity; missing type slots are boxed, surplus slots ignored.
+namedParameters :: Array String -> Array GoType -> Parameters
+namedParameters names types =
+  Array.zipWith Tuple names (types <> Array.replicate (Array.length names - Array.length types) TypeValue)
+
+loopParameters :: Parameters -> Parameters
+loopParameters = map (\(Tuple name ty) -> Tuple (name <> "_loop") ty)
+
+-- The mutable slots are separate from the source parameters. Rebind inside each
+-- iteration so argument permutations and escaping closures see that iteration's
+-- values, even after a tail jump writes the next set of slots.
+iterationBindings :: Parameters -> Array GoExpr
+iterationBindings = Array.concatMap (\(Tuple name ty) ->
+  [ rawGo ("var " <> name <> " " <> goTypeToStr ty <> " = " <> name <> "_loop")
+  , rawGo ("_ = " <> name)
+  ])
 
 -- Preserve the former GoFunc grouping: with more than ten parameters, emit
 -- one unary layer at a time until the remaining group fits a runtime FuncN.

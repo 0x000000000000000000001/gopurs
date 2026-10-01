@@ -8,50 +8,41 @@ import Prelude
 import Data.Array as Array
 import Data.Array.NonEmpty (NonEmptyArray, toArray)
 import Data.Array.NonEmpty as NonEmptyArray
-import Data.Foldable (foldl)
-import Data.Map as Map
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Tuple (Tuple(..), fst)
 import Effect.Ref as Ref
 import Effect.Unsafe (unsafePerformEffect)
 import Gopurs.CallAnalysis (collectCurriedAbs)
-import Gopurs.ExprAnalysis (extractExprFuncType, extractFuncType, getExprType)
-import Gopurs.ExprContext (ExprContext, ExprResult, TranslateExpr, StmtTree(..), flattenStmts)
+import Gopurs.ExprAnalysis (FunctionType, extractExprFuncType, extractFuncType, functionResultAfter, getExprType)
+import Gopurs.ExprContext (ExprContext, ExprResult, TranslateExpr, StmtTree(..), bindParameters, childContext, flattenStmts)
 import Gopurs.GoAst (rawGo, GoExpr(..), GoDecl(..), GoType(..))
 import Gopurs.GoConversions (boxGoExpr)
-import Gopurs.GoFunctions (curriedFunction)
+import Gopurs.GoFunctions (Parameters, curriedFunction)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr)
-import PureScript.Backend.Optimizer.CoreFn (ExprType(..), Ident)
+import PureScript.Backend.Optimizer.CoreFn (ExprType, Ident)
 import PureScript.Backend.Optimizer.FreeVars (localId)
 import PureScript.Backend.Optimizer.Syntax (Level)
 
 abstraction :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> NonEmptyArray (Tuple (Maybe Ident) Level) -> TcoExpr -> ExprResult
-abstraction translate context@{ codegenStateRef, depth, modNameStr, bound, mbExpectedExprType, options: { isTail } } nextId tcoExpr args body =
+abstraction translate context@{ codegenStateRef, modNameStr, mbExpectedExprType } nextId tcoExpr args body =
   let
     grouped = collectCurriedAbs args body
     consumed = NonEmptyArray.length grouped.args
-    mbFuncTy = case extractFuncType tcoExpr of
-      Just r -> Just r
-      Nothing -> case mbExpectedExprType of
-        Just ty -> extractExprFuncType ty
-        Nothing -> Nothing
+    mbFuncTy = functionTypeOrExpected (extractFuncType tcoExpr) mbExpectedExprType
 
     -- A computation may still separate us from further lambdas.
     -- Consume only the parameters actually collected, not the full
     -- flattened function type's argument list.
     mbBodyType = case mbFuncTy of
-      Just { fArgs, fRet } | consumed <= Array.length fArgs ->
-        Just case Array.drop consumed fArgs of
-          [] -> fRet
-          remaining -> Func remaining fRet
+      Just signature | consumed <= Array.length signature.fArgs -> Just (functionResultAfter consumed signature)
       _ -> Nothing
 
-    paramsWithTypes = map (\(Tuple mbI lvl) -> Tuple (localId mbI lvl) TypeValue) (toArray grouped.args)
-
-    newBound = foldl (\acc (Tuple idStr goType) -> Map.insert idStr { name: idStr, goType } acc) bound paramsWithTypes
+    paramsWithTypes = boxedParameters (toArray grouped.args)
     params = map fst paramsWithTypes
-    resBody = translate (context { depth = (depth + 1), bound = newBound, tcoIdent = Nothing, loopCtx = [], options = { isTail, inEffectBlock: false }, mbExpectedExprType = mbBodyType }) nextId grouped.body
+    resBody = translate (closureContext context paramsWithTypes mbBodyType) nextId grouped.body
 
+    -- Anonymous curried closures group by five. Do not substitute the module
+    -- wrapper's ten-argument policy or cross a computation between lambdas.
     buildFunc :: Array String -> GoExpr -> GoExpr
     buildFunc ps innerExpr =
       let
@@ -79,22 +70,11 @@ abstraction translate context@{ codegenStateRef, depth, modNameStr, bound, mbExp
     { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: resBody.nextId }
 
 uncurriedAbstraction :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> Array (Tuple (Maybe Ident) Level) -> TcoExpr -> ExprResult
-uncurriedAbstraction translate context@{ codegenStateRef, depth, modNameStr, bound, tcoIdent, mbExpectedExprType, options: { isTail } } nextId tcoExpr args body =
+uncurriedAbstraction translate context@{ codegenStateRef, modNameStr, tcoIdent, mbExpectedExprType } nextId tcoExpr args body =
   let
-    mbFuncTy = case extractExprFuncType (getExprType tcoExpr) of
-      Just r -> Just r
-      Nothing -> case mbExpectedExprType of
-        Just ty -> extractExprFuncType ty
-        Nothing -> Nothing
-
-    paramsWithTypes = map (\(Tuple mbI lvl) -> Tuple (localId mbI lvl) TypeValue) args
-
-    newBound = foldl (\acc (Tuple idStr goType) -> Map.insert idStr { name: idStr, goType } acc) bound paramsWithTypes
-
-    resBody = translate (context { depth = (depth + 1), bound = newBound, tcoIdent = Nothing, loopCtx = [], options = { isTail, inEffectBlock: false }, mbExpectedExprType = ( case mbFuncTy of
-          Just { fRet } -> Just fRet
-          Nothing -> Nothing
-      ) }) nextId body
+    mbFuncTy = functionTypeOrExpected (extractExprFuncType (getExprType tcoExpr)) mbExpectedExprType
+    paramsWithTypes = boxedParameters args
+    resBody = translate (closureContext context paramsWithTypes (map _.fRet mbFuncTy)) nextId body
     arity = Array.length args
   in
     if arity >= 2 && arity <= 10 then
@@ -124,20 +104,11 @@ uncurriedAbstraction translate context@{ codegenStateRef, depth, modNameStr, bou
         { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: resBody.nextId }
 
 effectAbstraction :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> Array (Tuple (Maybe Ident) Level) -> TcoExpr -> ExprResult
-effectAbstraction translate context@{ codegenStateRef, depth, modNameStr, bound, mbExpectedExprType, options: { isTail } } nextId tcoExpr args body =
+effectAbstraction translate context@{ codegenStateRef, modNameStr, mbExpectedExprType } nextId tcoExpr args body =
   let
-    mbFuncTy = case extractExprFuncType (getExprType tcoExpr) of
-      Just r -> Just r
-      Nothing -> case mbExpectedExprType of
-        Just ty -> extractExprFuncType ty
-        Nothing -> Nothing
-
-    paramsWithTypes = map (\(Tuple mbI lvl) -> Tuple (localId mbI lvl) TypeValue) args
-    newBound = foldl (\acc (Tuple idStr goType) -> Map.insert idStr { name: idStr, goType } acc) bound paramsWithTypes
-    resBody = translate (context { depth = (depth + 1), bound = newBound, tcoIdent = Nothing, loopCtx = [], options = { isTail, inEffectBlock: false }, mbExpectedExprType = ( case mbFuncTy of
-          Just { fRet } -> Just fRet
-          Nothing -> Nothing
-      ) }) nextId body
+    mbFuncTy = functionTypeOrExpected (extractExprFuncType (getExprType tcoExpr)) mbExpectedExprType
+    paramsWithTypes = boxedParameters args
+    resBody = translate (closureContext context paramsWithTypes (map _.fRet mbFuncTy)) nextId body
     arity = Array.length args
   in
     if arity >= 2 && arity <= 5 then
@@ -149,9 +120,26 @@ effectAbstraction translate context@{ codegenStateRef, depth, modNameStr, bound,
           ]
       in
         { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: resBody.nextId }
+
     else
       let
         funcExpr = curriedFunction paramsWithTypes TypeValue
           (GoBlock (flattenStmts resBody.stmts <> [ GoReturn (GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType, rawGo "gopurs_runtime.Value{}" ]) ]))
       in
         { stmts: StmtEmpty, expr: funcExpr, exprType: TypeValue, nextId: resBody.nextId }
+
+functionTypeOrExpected :: Maybe FunctionType -> Maybe ExprType -> Maybe FunctionType
+functionTypeOrExpected actual expected = case actual of
+  Just signature -> Just signature
+  Nothing -> expected >>= extractExprFuncType
+
+boxedParameters :: Array (Tuple (Maybe Ident) Level) -> Parameters
+boxedParameters = map (\(Tuple ident level) -> Tuple (localId ident level) TypeValue)
+
+-- Capture the outer lexical bindings, but never inherit its loop targets: a
+-- deferred function body cannot jump into the loop that created the closure.
+closureContext :: ExprContext -> Parameters -> Maybe ExprType -> ExprContext
+closureContext context params expected = (childContext context expected)
+  { bound = bindParameters params context.bound
+  , options = { isTail: context.options.isTail, inEffectBlock: false }
+  }

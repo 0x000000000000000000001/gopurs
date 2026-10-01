@@ -156,6 +156,9 @@ tailTarget { bound, loopCtx, options: { isTail } } fn =
 tailCall :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> Array TcoExpr -> LoopTarget -> ExprResult
 tailCall translate context@{ metadata, codegenStateRef, modNameStr, mbExpectedExprType } nextId expression args target =
   let
+    -- Translate all operands outside tail position before updating the loop
+    -- slots. Their references use the current iteration's immutable parameters
+    -- (GoFunctions.iterationBindings), not slots changed by earlier assignments.
     translated = CallArguments.translate translate context Nothing { stmts: StmtEmpty, nextId } args
     assigns = Array.mapWithIndex
       (\index param -> GoMutate param (coerceGoExpr codegenStateRef modNameStr
