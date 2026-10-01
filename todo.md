@@ -7,7 +7,7 @@ une génération Go identique. Périmètre : compilateur, runtime, FFI et outill
 de ce dépôt ; les interfaces avec PBO et les bibliothèques sœurs sont incluses.
 Les optimisations de performance restent en pause.
 
-## Avancement : 65 % — 65/100 points, 9/15 lots validés
+## Avancement : 70 % — 70/100 points, 10/15 lots validés
 
 - **Calcul :** somme des points des cases cochées, sur un total fixe de 100.
   Les poids sont des unités de suivi ; le pourcentage mesure les livrables
@@ -49,9 +49,10 @@ Les optimisations de performance restent en pause.
   `ModuleWorkers` et `LocalWorkers` ; publication des signatures, captures et
   initialisation récursive explicites. Paramètres d'itération et types résiduels
   partagés ; contrats TCO, tests et parité validés.
-- [ ] **10 — Fusions et applications immédiates (5 pts).** Revoir
-  `ThunkFusion`, `FunctionFusion` et `ImmediateApplications`.
-  Fin : reconnaissance, conditions d'admission et réécriture distinguées et nommées.
+- [x] **10 — Fusions et applications immédiates (5 pts).** Motifs et preuves
+  des fusions nommés ; réservation des workers partagée dans `WorkerNames`.
+  Plan d'admission explicite pour les applications immédiates, opérations de
+  portée isolées dans `Scope` ; tests et parité validés.
 - [ ] **11 — Intrinsics et traversées (5 pts).** Revoir `ArrayIntrinsics`,
   `ArrayTraverse` et `ObjectTraverse`.
   Fin : reconnaissance, capture ordonnée des arguments et émission des boucles identifiables.
@@ -83,4 +84,4 @@ Les optimisations de performance restent en pause.
 - Documentation des responsabilités et preuves de validation à jour ;
   `git diff --check` propre.
 
-**Prochaine passe : lot 10 — fusions et applications immédiates.** Sa clôture portera l'avancement à **70 %**.
+**Prochaine passe : lot 11 — intrinsics et traversées.** Sa clôture portera l'avancement à **75 %**.

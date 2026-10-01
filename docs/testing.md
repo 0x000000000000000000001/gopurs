@@ -247,6 +247,37 @@ acceptés ; `-c` reconstruit le backend depuis ce checkout. Chaque script frère
 gère encore ses propres sorties et nettoyages ; l'isolation des fixtures de
 `bin/test` ne s'étend pas automatiquement à ces scripts.
 
+## Validation des fusions — lot 10, 1er octobre 2026
+
+`ThunkFusion` nomme la reconnaissance des paramètres, des corps suspendus et des
+arguments récursifs et initiaux. `FunctionFusion` distingue les preuves du cas zéro,
+de la décrémentation et de la composition du callback. `WorkerNames` partage la
+réservation des identifiants source et Go. `ImmediateApplications` produit un plan
+d'admission consommé par la réécriture ; `Scope` possède le comptage des occurrences,
+la substitution et le renommage des locaux.
+
+Vérifications effectuées :
+
+- reconstruction JS et native sans avertissement ; bootstrap avec TAST vérifié
+  sur **483 modules et 284 959 types** ;
+- **63 tests ciblés** : `thunk-fusion`, `counted-functions`,
+  `immediate-applications`. Les trois suites, dont les 21 nouveaux tests de thunks
+  et les programmes Go des callbacks/captures, ont réussi avant et après le
+  refactoring ;
+- **12 fixtures**, snapshots stricts, compilation et exécution Go avec 8 workers :
+  `ThunkFusion`, `ThunkFusionNewtype`, `CountedFunctions`, `CurriedLambdas`,
+  `FunctionScope`, `PartialFunction`, `PartialTCO`, `TCO`, `TCOMutRec`,
+  `ShadowedTCOLet`, `ArrayTraverseEither`, `ObjectTraverseEither` ;
+- b8x : référence régénérée avec le compilateur précédent sur **2 683 entrées
+  TAST figées**, puis **2 987 fichiers Go identiques octet par octet** en natif
+  parallèle, natif séquentiel et JS, sans ajout ni suppression. Runtime, bridges
+  FFI, entrées exécutables et `go.mod` sont inclus. Le manifeste des **69 fichiers
+  sources et artefacts compilateur** est stable avant et après ces comparaisons.
+
+Le contrôle b8x porte sur la génération ; les tests et fixtures ci-dessus valident
+la compilation et l'exécution Go. Le score du plan est passé à **70/100**, avec
+dix lots clôturés ; `git diff --check` est propre.
+
 ## Validation des bindings et fonctions — lot 09, 1er octobre 2026
 
 `ModuleBindings` publie les signatures et confie l'émission à `ModuleWorkers`.
