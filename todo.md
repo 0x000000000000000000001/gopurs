@@ -7,7 +7,7 @@ une génération Go identique. Périmètre : compilateur, runtime, FFI et outill
 de ce dépôt ; les interfaces avec PBO et les bibliothèques sœurs sont incluses.
 Les optimisations de performance restent en pause.
 
-## Avancement : 60 % — 60/100 points, 8/15 lots validés
+## Avancement : 65 % — 65/100 points, 9/15 lots validés
 
 - **Calcul :** somme des points des cases cochées, sur un total fixe de 100.
   Les poids sont des unités de suivi ; le pourcentage mesure les livrables
@@ -45,9 +45,10 @@ Les optimisations de performance restent en pause.
   isolés dans `LiteralExprs`, définitions et constructions saturées dans
   `ConstructorExprs` ; ordre de traduction, coercitions et réutilisation explicites.
   Typage des callbacks partagé, tests et parité validés.
-- [ ] **09 — Bindings, fonctions et TCO (5 pts).** Revoir `ModuleBindings`,
-  `BindingExprs`, `FunctionExprs` et leurs analyses partagées.
-  Fin : signatures, captures, initialisation récursive et sauts TCO faciles à suivre.
+- [x] **09 — Bindings, fonctions et TCO (5 pts).** Émission séparée dans
+  `ModuleWorkers` et `LocalWorkers` ; publication des signatures, captures et
+  initialisation récursive explicites. Paramètres d'itération et types résiduels
+  partagés ; contrats TCO, tests et parité validés.
 - [ ] **10 — Fusions et applications immédiates (5 pts).** Revoir
   `ThunkFusion`, `FunctionFusion` et `ImmediateApplications`.
   Fin : reconnaissance, conditions d'admission et réécriture distinguées et nommées.
@@ -82,4 +83,4 @@ Les optimisations de performance restent en pause.
 - Documentation des responsabilités et preuves de validation à jour ;
   `git diff --check` propre.
 
-**Prochaine passe : lot 09 — bindings, fonctions et TCO.** Sa clôture portera l'avancement à **65 %**.
+**Prochaine passe : lot 10 — fusions et applications immédiates.** Sa clôture portera l'avancement à **70 %**.

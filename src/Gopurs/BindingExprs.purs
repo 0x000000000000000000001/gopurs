@@ -11,15 +11,16 @@ import Data.Map as Map
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Newtype (unwrap)
 import Data.Traversable (traverse)
-import Data.Tuple (Tuple(..), snd)
+import Data.Tuple (Tuple(..), fst, snd)
 import Effect.Ref as Ref
 import Effect.Unsafe (unsafePerformEffect)
 import Gopurs.CallAnalysis (extractUncurriedAbs)
 import Gopurs.ExprAnalysis (extractExprFuncType, getExprType, printTcoExprShape)
-import Gopurs.ExprContext (ExprContext, ExprResult, TranslateExpr, StmtTree(..), bindParameters)
+import Gopurs.ExprContext (ExprContext, ExprResult, LocalEnv, TranslateExpr, StmtTree(..), bindParameters, childContext)
 import Gopurs.GoAst (rawGo, GoExpr(..), GoType(..), goTypeToStr, sanitizeName)
 import Gopurs.GoConversions (coerceGoExpr)
 import Gopurs.GoTypes (exprTypeToGoType, printExprType)
+import Gopurs.GoFunctions (loopParameters)
 import Gopurs.LocalWorkers as LocalWorkers
 import Gopurs.Printer (printGoExpr)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
@@ -69,24 +70,9 @@ nonRecursive translate context@{ metadata, codegenStateRef, depth, modNameStr, m
           { stmts: resBinding.stmts <> StmtLeaf (rawGo ("// TAST (Let): " <> name <> " shape=" <> printTcoExprShape binding <> " bindingType=" <> printExprType (getExprType binding))) <> letStmt <> resBody.stmts, expr: resBody.expr, exprType: resBody.exprType, nextId: resBody.nextId }
 
 recursive :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> Level -> NonEmptyArray (Tuple Ident TcoExpr) -> TcoExpr -> ExprResult
-recursive translate context@{ metadata, codegenStateRef, depth, modNameStr, recVars, moduleFunctions, bound } nextId (TcoExpr tcoAnalysis _) lvl bindings body =
+recursive translate context@{ metadata, depth, modNameStr, recVars, moduleFunctions } nextId (TcoExpr tcoAnalysis _) lvl bindings body =
   let
-    allocRes = foldl
-      ( \acc (Tuple (Ident ident) val) ->
-          let
-            oldName = localId (Just (Ident ident)) lvl
-            gId = unsafePerformEffect do
-              curr <- Ref.read codegenStateRef
-              Ref.modify_ (\r -> r { globalId = r.globalId + 1 }) codegenStateRef
-              pure curr.globalId
-            newName = oldName <> "_" <> show acc.nextId <> "_" <> show gId
-            expectedGoTypeFromAst = exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr (getExprType val)
-          in
-            { newBound: Map.insert oldName { name: newName, goType: expectedGoTypeFromAst } acc.newBound, newNames: Array.snoc acc.newNames { oldName, newName }, nextId: acc.nextId + 1 }
-      )
-      { newBound: bound, newNames: [], nextId }
-      (toArray bindings)
-
+    allocated = allocateRecursive context nextId lvl (toArray bindings)
     combinedRecVars = recVars <> map (\(Tuple (Ident i) _) -> sanitizeName i) (toArray bindings)
 
     isLoop = (unwrap tcoAnalysis).role.isLoop
@@ -105,7 +91,7 @@ recursive translate context@{ metadata, codegenStateRef, depth, modNameStr, recV
             ( \fn ->
                 let
                   oldName = localId (Just (Ident fn.ident)) lvl
-                  boundInfo = fromMaybe { name: oldName, goType: TypeValue } (Map.lookup oldName allocRes.newBound)
+                  boundInfo = fromMaybe { name: oldName, goType: TypeValue } (Map.lookup oldName allocated.newBound)
                   newName = boundInfo.name
                   params = LocalWorkers.parameters context fn.args fn.val
                   expectedReturn = map _.fRet (extractExprFuncType (getExprType fn.val))
@@ -121,14 +107,14 @@ recursive translate context@{ metadata, codegenStateRef, depth, modNameStr, recV
               { functions: Map.insert worker.newName (LocalWorkers.signature context worker.newName worker.params worker.resultType) acc.functions
               , bound: Map.insert worker.oldName { name: worker.newName, goType: TypeFunc (map snd worker.params) worker.resultType } acc.bound
               })
-            { functions: moduleFunctions, bound: allocRes.newBound }
+            { functions: moduleFunctions, bound: allocated.newBound }
             workers
 
-          resData = foldl
+          translatedWorkers = foldl
             ( \acc worker ->
                 let
                   { oldName, newName, params } = worker
-                  currentLoopCtx = [ { ident: newName, loopParams: map (\(Tuple p _) -> p <> "_loop") params, goTypes: map snd params } ]
+                  currentLoopCtx = [ { ident: newName, loopParams: map fst (loopParameters params), goTypes: map snd params } ]
                   -- Peer bindings keep the provisional view; only the function
                   -- table sees results inferred for earlier bodies in the group.
                   loopBound = bindParameters params published.bound
@@ -140,51 +126,72 @@ recursive translate context@{ metadata, codegenStateRef, depth, modNameStr, recV
                 in
                   { declarations: acc.declarations <> emitted.declarations, stmts: acc.stmts <> emitted.assignments, nextId: resBodyMut.nextId, moduleFunctions: newFunctions, newBound: newBound2 }
             )
-            { declarations: [], stmts: [], nextId: allocRes.nextId, moduleFunctions: published.functions, newBound: published.bound }
+            { declarations: [], stmts: [], nextId: allocated.nextId, moduleFunctions: published.functions, newBound: published.bound }
             workers
 
-          resBodyOuter = translate (context { depth = (depth + 1), recVars = combinedRecVars, moduleFunctions = resData.moduleFunctions, bound = resData.newBound, tcoIdent = Nothing, mbExpectedExprType = Nothing }) resData.nextId body
+          resBodyOuter = translate (context { depth = (depth + 1), recVars = combinedRecVars, moduleFunctions = translatedWorkers.moduleFunctions, bound = translatedWorkers.newBound, tcoIdent = Nothing, mbExpectedExprType = Nothing }) translatedWorkers.nextId body
         in
           -- Every function in the recursive group must be in scope
           -- before emitting bodies that can refer to its peers.
-          { stmts: foldMap StmtLeaf (resData.declarations <> resData.stmts) <> resBodyOuter.stmts, expr: resBodyOuter.expr, exprType: resBodyOuter.exprType, nextId: resBodyOuter.nextId }
+          { stmts: foldMap StmtLeaf (translatedWorkers.declarations <> translatedWorkers.stmts) <> resBodyOuter.stmts, expr: resBodyOuter.expr, exprType: resBodyOuter.exprType, nextId: resBodyOuter.nextId }
 
       Nothing ->
+        initializeRecursiveValues translate (context { recVars = combinedRecVars }) isLoop allocated (toArray bindings) body
+
+type RecursiveAllocation =
+  { newBound :: LocalEnv
+  , newNames :: Array { oldName :: String, newName :: String }
+  , nextId :: Int
+  }
+
+-- Reserve both local and module-wide identifiers before inspecting the group.
+-- Every initializer receives the same complete set of renamed bindings.
+allocateRecursive :: ExprContext -> Int -> Level -> Array (Tuple Ident TcoExpr) -> RecursiveAllocation
+allocateRecursive { metadata, codegenStateRef, modNameStr, bound } nextId lvl =
+  foldl
+    (\acc (Tuple ident value) ->
+      let
+        oldName = localId (Just ident) lvl
+        globalId = unsafePerformEffect do
+          state <- Ref.read codegenStateRef
+          Ref.modify_ (\current -> current { globalId = current.globalId + 1 }) codegenStateRef
+          pure state.globalId
+        newName = oldName <> "_" <> show acc.nextId <> "_" <> show globalId
+        goType = exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr (getExprType value)
+      in
+        { newBound: Map.insert oldName { name: newName, goType } acc.newBound
+        , newNames: Array.snoc acc.newNames { oldName, newName }
+        , nextId: acc.nextId + 1
+        })
+    { newBound: bound, newNames: [], nextId }
+
+-- An early read must not observe Go's zero value. Initializers and the closures
+-- they create read through cells; publish each pointer only after its complete
+-- initializer and coercion. The enclosing body uses the initialized values.
+initializeRecursiveValues :: TranslateExpr -> ExprContext -> Boolean -> RecursiveAllocation -> Array (Tuple Ident TcoExpr) -> TcoExpr -> ExprResult
+initializeRecursiveValues translate context@{ codegenStateRef, modNameStr, depth } isLoop allocated bindings body =
+  let
+    initializingBound = foldl
+      (\acc name -> Map.update (\binding -> Just (binding { name = "(*" <> name.newName <> "_cell)" })) name.oldName acc)
+      allocated.newBound allocated.newNames
+    initialized = foldl
+      (\acc (Tuple (Tuple _ value) name) ->
         let
-          -- An initializer must not observe Go's zero value for an
-          -- uninitialized recursive binding. Publish a pointer only
-          -- after its complete initializer has run; closures capture
-          -- that cell and can safely read it once initialization ends.
-          initializingBound = foldl
-            ( \acc alloc -> Map.update
-                (\binding -> Just (binding { name = "(*" <> alloc.newName <> "_cell)" }))
-                alloc.oldName
-                acc
-            )
-            allocRes.newBound
-            allocRes.newNames
-
-          accBindings = foldl
-            ( \acc (Tuple (Tuple _ val) alloc) ->
-                let
-                  res = translate (context { depth = (depth + 1), recVars = combinedRecVars, bound = initializingBound, tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing }) acc.nextId val
-                  expectedGoType = (fromMaybe { name: alloc.newName, goType: TypeValue } (Map.lookup alloc.oldName allocRes.newBound)).goType
-                  assignedVal = coerceGoExpr codegenStateRef modNameStr res.expr res.exprType expectedGoType
-                in
-                  { stmts: acc.stmts <> res.stmts
-                      <> StmtLeaf (GoMutate alloc.newName assignedVal)
-                      <> StmtLeaf (GoMutate (alloc.newName <> "_cell") (rawGo ("&" <> alloc.newName)))
-                  , exprs: Array.snoc acc.exprs { key: alloc.newName, goType: expectedGoType }
-                  , nextId: res.nextId
-                  }
-            )
-            { stmts: StmtEmpty, exprs: [], nextId: allocRes.nextId }
-            (Array.zip (toArray bindings) allocRes.newNames)
-
-          declStmts = map (\b -> rawGo ("var " <> b.key <> " " <> goTypeToStr b.goType <> "\n_ = " <> b.key
-            <> "\nvar " <> b.key <> "_cell *" <> goTypeToStr b.goType <> "\n_ = " <> b.key <> "_cell"
-            <> "\n// FALLBACK TCO: isLoop=" <> show isLoop <> " len=" <> show (Array.length (toArray bindings)))) accBindings.exprs
-
-          resBody = translate (context { depth = (depth + 1), recVars = combinedRecVars, bound = allocRes.newBound, tcoIdent = Nothing }) accBindings.nextId body
+          valueResult = translate ((childContext context Nothing) { bound = initializingBound }) acc.nextId value
+          expected = (fromMaybe { name: name.newName, goType: TypeValue } (Map.lookup name.oldName allocated.newBound)).goType
+          assigned = coerceGoExpr codegenStateRef modNameStr valueResult.expr valueResult.exprType expected
         in
-          { stmts: foldMap StmtLeaf declStmts <> accBindings.stmts <> resBody.stmts, expr: resBody.expr, exprType: resBody.exprType, nextId: resBody.nextId }
+          { stmts: acc.stmts <> valueResult.stmts
+              <> StmtLeaf (GoMutate name.newName assigned)
+              <> StmtLeaf (GoMutate (name.newName <> "_cell") (rawGo ("&" <> name.newName)))
+          , values: Array.snoc acc.values { name: name.newName, goType: expected }
+          , nextId: valueResult.nextId
+          })
+      { stmts: StmtEmpty, values: [], nextId: allocated.nextId }
+      (Array.zip bindings allocated.newNames)
+    declarations = map (\value -> rawGo ("var " <> value.name <> " " <> goTypeToStr value.goType <> "\n_ = " <> value.name
+      <> "\nvar " <> value.name <> "_cell *" <> goTypeToStr value.goType <> "\n_ = " <> value.name <> "_cell"
+      <> "\n// FALLBACK TCO: isLoop=" <> show isLoop <> " len=" <> show (Array.length bindings))) initialized.values
+    result = translate (context { depth = depth + 1, bound = allocated.newBound, tcoIdent = Nothing }) initialized.nextId body
+  in
+    { stmts: foldMap StmtLeaf declarations <> initialized.stmts <> result.stmts, expr: result.expr, exprType: result.exprType, nextId: result.nextId }

@@ -23,6 +23,7 @@ reconstruit les deux versions et conserve le workspace pour les tests natifs.
 | Appels et fonctions | `./bin/test CurriedLambdas -c` |
 | Conversions de tableaux | `./bin/test ArrayRoundtrip -c` |
 | Récursion | `./bin/test TCO TCOMutRec -c` |
+| Bindings, captures et signatures de workers | `node --test tools/binding-contracts.test.mjs tools/recursive-initialization.test.mjs tools/local-native-returns.test.mjs tools/zero-arity-functions.test.mjs`, après le build |
 | Fusion de thunks | `./bin/test ThunkFusion -c` |
 | Contrat du parser Go | `go test ./...` depuis `tools/ffi-gen` |
 | Parser WASM et erreurs FFI | `npm run test:ffi`, après `npm run build` |
@@ -92,6 +93,21 @@ déjà présentes avant le refactoring.
 Les tests `mixed-constructor-tags`, `elided-constructor-payloads` et
 `record-tuple-conversions` complètent ce contrat par compilation et exécution
 du Go produit : tags distincts, payloads polymorphes, records et champs de classes.
+
+## Contrat des bindings et des fonctions
+
+`binding-contracts.test.mjs` vérifie la publication préalable des signatures
+récursives locales, leur affinement dans l'ordre source et la déclaration de tout
+le groupe avant ses affectations. Un programme Go généré vérifie les permutations
+d'arguments lors des sauts TCO et les captures de closures propres à chaque
+itération. Ces deux tests ont aussi réussi avec le compilateur JS antérieur à
+l'extraction de `LocalWorkers` et `ModuleWorkers`.
+
+`recursive-initialization.test.mjs` contrôle les lectures anticipées, les cellules
+publiées après initialisation et les références différées. `local-native-returns`
+et `zero-arity-functions` exercent les frontières entre lambdas, les résultats
+natifs et l'évaluation différée des fonctions sans argument. Les fixtures TCO et
+de portée complètent ces contrats par snapshots stricts et exécution Go.
 
 ## Contrat des expressions composites
 
@@ -211,6 +227,40 @@ La sélection complète est le défaut. Les noms avec ou sans `gopurs-` sont
 acceptés ; `-c` reconstruit le backend depuis ce checkout. Chaque script frère
 gère encore ses propres sorties et nettoyages ; l'isolation des fixtures de
 `bin/test` ne s'étend pas automatiquement à ces scripts.
+
+## Validation des bindings et fonctions — lot 09, 1er octobre 2026
+
+`ModuleBindings` publie les signatures et confie l'émission à `ModuleWorkers`.
+`BindingExprs` distingue allocation des noms, publication des signatures locales
+et initialisation des cellules ; `LocalWorkers` partage l'émission native et
+curryfiée. Les environnements capturés, les paramètres d'itération et les types
+résiduels des fonctions ont des helpers communs. Les champs inutilisés de
+`LoopTarget` ont été retirés ; sélection et émission des sauts restent nommées
+dans `CallExprs`.
+
+Vérifications effectuées :
+
+- reconstruction JS et native sans avertissement ; bootstrap avec TAST vérifié
+  sur **481 modules et 284 456 types** ;
+- **32 tests ciblés** : `binding-contracts`, `recursive-initialization`,
+  `local-native-returns`, `zero-arity-functions`, `imported-workers`,
+  `native-record-workers`, `native-sum-results`, `boxed-record-arguments`,
+  `composite-expressions`, `representation-contract`, `elided-constructor-payloads`,
+  `nullary-constructor-bindings`. Les deux nouveaux tests, dont la compilation
+  et l'exécution Go des captures TCO, ont aussi réussi avant le refactoring ;
+- **15 fixtures**, snapshots stricts, compilation et exécution Go avec 8 workers :
+  `TCO`, `TCOCase`, `TCOFloated`, `TCOMutRec`, `ShadowedTCO`, `ShadowedTCOLet`,
+  `PartialTCO`, `MutRec`, `MutRec2`, `MutRec3`, `CurriedLambdas`, `FunctionScope`,
+  `BigFunction`, `NativeRecordWorkers`, `NativeRecordReturns` ;
+- b8x : référence régénérée avec le compilateur précédent sur **2 683 entrées
+  TAST figées**, puis **2 987 fichiers Go identiques octet par octet** en natif
+  parallèle, natif séquentiel et JS, sans ajout ni suppression. Runtime, bridges
+  FFI, entrées exécutables et `go.mod` sont inclus. Le manifeste des **67 fichiers
+  sources et artefacts compilateur** est stable avant et après ces comparaisons.
+
+Le contrôle b8x porte sur la génération ; les tests et fixtures ci-dessus valident
+la compilation et l'exécution Go. Le score du plan est passé à **65/100**, avec
+neuf lots clôturés ; `git diff --check` est propre.
 
 ## Validation du dispatcher — lot 08, 1er octobre 2026
 

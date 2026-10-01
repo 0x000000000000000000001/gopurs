@@ -90,8 +90,10 @@ Tous les modules gopurs de ce tableau se trouvent dans [src/Gopurs](../src/Gopur
 | Contexte, résultat et callbacks de traduction | `ExprContext` |
 | Annotations typées, propagation et dictionnaires de classes | `TypedExprs` |
 | Fonctions de module, signatures, groupes TCO | `ModuleBindings` |
+| Émission des workers de module et de leurs wrappers | `ModuleWorkers` |
 | Structs ADT et enregistrement des getters de classes | `ModuleDeclarations` |
 | Bindings locaux, récursion locale et initialisation | `BindingExprs` |
+| Paramètres, signatures et émission des workers locaux | `LocalWorkers` |
 | Sélection des appels, surapplications et sauts TCO | `CallExprs`, `CallAnalysis` |
 | Traduction ordonnée et adaptation des arguments | `CallArguments` |
 | Reconnaissance et émission de map, filter et foldl | `ArrayIntrinsics` |
@@ -105,7 +107,7 @@ Tous les modules gopurs de ce tableau se trouvent dans [src/Gopurs](../src/Gopur
 | Choix des conversions, boxing et lecture de Value | `GoConversions` |
 | Layouts natifs de Maybe, Either et Tuple, adaptation de leurs slots | `GoConversions.NativeAdts` |
 | Demandes de helpers, conversion des champs et émission transitive Rebox | `GoConversions.Rebox`, `ReboxMetadata` |
-| Préparation des enveloppes curryfiées | `GoFunctions` |
+| Paramètres Go, variables d'itération et enveloppes curryfiées | `GoFunctions` |
 | Dépendances des fragments opaques et imports du module | `GoCode`, `GoImports` |
 | Représentation et rendu Go | `GoAst`, `Printer` |
 | Analyse du Go FFI et façade du bridge | `FfiSupport`, `FfiBridge` |
@@ -183,6 +185,55 @@ argument immédiatement ; les autres chemins conservent sa représentation
 native jusqu'à l'adaptation de l'appel. `ArrayIntrinsics` reçoit ces arguments
 déjà traduits et émet les boucles. `CallExprs` conserve les priorités existantes :
 TCO avant les intrinsics pour `App`, intrinsics avant TCO pour `UncurriedApp`.
+
+## Bindings, captures et TCO
+
+`ModuleBindings.prepare` analyse les groupes récursifs avant de publier leurs
+signatures. L'arité vient des lambdas réellement adjacentes : une computation
+intermédiaire conserve un résultat fonctionnel boxé. Les signatures de module
+choisissent aussi les projections de records en lecture seule et les résultats
+de sommes natifs. `ModuleWorkers` consomme exactement cette ABI pour traduire le
+corps, publier la déclaration native puis adapter le wrapper. Un groupe récursif
+contenant une valeur non fonctionnelle garde ses getters boxés ; seul un groupe
+fonctionnel récursif singleton reçoit une boucle de module.
+
+`BindingExprs` possède la portée lexicale et l'ordre des bindings locaux.
+`LocalWorkers` partage la préparation des paramètres et l'émission du worker et
+de son wrapper, avec une signature résultat inférée à partir du corps traduit.
+Pour un groupe récursif local reconnu comme boucle par PBO, les noms et signatures
+provisoires sont publiés avant le premier corps. Les résultats affinent la table
+des fonctions dans l'ordre source ; l'environnement lexical utilisé par ces
+corps garde la vue provisoire commune. Le corps englobant reçoit les signatures
+et bindings affinés. Toutes les déclarations du groupe précèdent ses affectations.
+
+Pour les valeurs récursives, `allocateRecursive` réserve les noms et
+`initializeRecursiveValues` fait lire les initialiseurs à travers des cellules
+pointeurs. Chaque cellule est publiée après la traduction et la coercition de
+sa valeur complète : une lecture anticipée échoue, une closure différée peut
+relire la valeur après initialisation. Le corps englobant utilise les valeurs
+initialisées directement.
+
+`ExprContext.bindParameters` étend l'environnement capturé et ne masque que les
+paramètres. `FunctionExprs.closureContext` retire les cibles de boucle héritées :
+une closure ne peut pas sauter dans la boucle qui l'a créée. Les frontières entre
+lambdas restent définies par `CallAnalysis` ; une abstraction sans argument est
+une étape d'évaluation distincte. `ExprAnalysis.functionResultAfter` conserve les
+flèches non consommées quand la traduction d'une abstraction s'arrête avant la
+fin du type fonctionnel.
+
+`GoFunctions.loopParameters` nomme les slots mutables et `iterationBindings`
+recrée les paramètres source à chaque itération. Les captures de closures gardent
+ainsi les valeurs de leur itération. `CallExprs.tailTarget` sélectionne une cible
+en position terminale ; `tailCall` traduit les arguments, adapte et affecte les
+slots, puis émet le `continue`. Les arguments lisent les paramètres de l'itération
+courante, ce qui préserve notamment les permutations. `LoopTarget` contient le
+label, les slots et leurs types ; son ancien résultat et sa liste de paramètres
+inutilisés ont été retirés.
+
+Les politiques d'enveloppes restent explicites : modules regroupés jusqu'à dix
+arguments, workers locaux curryfiés un argument à la fois, closures curryfiées
+anonymes par groupes de cinq. Les abstractions non curryfiées et à effets gardent
+leurs seuils respectifs ; les fonctions sans argument restent différées.
 
 ## Choix des représentations
 
