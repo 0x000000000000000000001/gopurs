@@ -16,9 +16,9 @@ par [Main](../src/Main.purs). Le pilote et ses frontières sont décrits ci-dess
    données synthétiques des classes.
 3. `Monomorphization.monomorphizeModulesWith` collecte les instanciations, propage
    les besoins transitifs, filtre les candidats et spécialise les modules.
-   Les métadonnées de représentation des ADT sont calculées depuis les modules
-   enrichis avant spécialisation ; les types globaux viennent des modules
-   d'origine. Ces tables accompagnent ensuite les modules monomorphisés.
+   Les métadonnées pointeurs viennent des modules enrichis avant spécialisation ;
+   les enums et types globaux viennent des modules d'origine. Ces tables
+   accompagnent ensuite les modules monomorphisés.
 4. `Driver.Build` choisit `Builder.buildModules` ou `buildModulesParallel` du PBO.
    Ces builders convertissent les modules en `BackendModule` optimisés, avec les
    directives et `coreForeignSemantics`.
@@ -147,20 +147,71 @@ portent leur texte et leurs dépendances dans `GoCode`. Le constructeur `rawGo`
 reconnaît les imports historiques à la création du fragment ; aucun module
 Go imprimé n'est reparcouru pour calculer ses imports.
 
-`ConstructorLayout` partage la préparation entre définitions, constructions
-saturées et accès aux champs. Il garde explicites les variantes d'instanciation
-des champs et du pointeur. `TypeStructPointer` porte un record nommé : identité
-du tag runtime, type PureScript, constructeur Go, nom Go instancié et arguments
-de type. `GoAst.structPointer` construit le nom instancié ; les conversions et
-l'instanciation générique réutilisent le nom du constructeur sans découper le
-texte imprimé.
-
 `CallArguments` traduit chaque argument dans l'ordre, en conservant ses
 statements et le compteur de noms. Les intrinsics curryfiés boxent chaque
 argument immédiatement ; les autres chemins conservent sa représentation
 native jusqu'à l'adaptation de l'appel. `ArrayIntrinsics` reçoit ces arguments
 déjà traduits et émet les boucles. `CallExprs` conserve les priorités existantes :
 TCO avant les intrinsics pour `App`, intrinsics avant TCO pour `UncurriedApp`.
+
+## Choix des représentations
+
+Les tables assemblées par `Driver.Prepare` ont des contrats distincts, repris
+par les alias de types de `CodegenMetadata` :
+
+| Table | Entrée et identité |
+| --- | --- |
+| `ConstructorMetadata.ConstructorTypes` | ADT d'origine ; clé `<module_avec_underscores>.<constructeur_brut>`, champs dans l'ordre de déclaration |
+| `elidedCtors` | ADT d'origine avec un seul constructeur et un seul champ ; noms `Constructor_…`, avec les points du module historiquement conservés |
+| `ClassMetadata.ClassFields` | Classes d'origine ; clé PureScript qualifiée avec points, méthodes et superclasses triées ensemble par label |
+| `AdtMetadata.PointerAdtPaths` | ADT enrichis des dictionnaires synthétiques ; clé du type PureScript qualifié, constructeur à payload et arité déclarée |
+| `pointerAdtNodes`, `pointerAdtLeaves`, `enumCtors` | Identités runtime `Data_<module_avec_underscores>_<constructeur_sanitisé>` |
+| `enumAdts` | Types PureScript qualifiés, depuis les ADT d'origine |
+
+Un ADT pointeur possède exactement un constructeur à payload et au plus une
+alternative sans champ, représentable par `nil`. Plusieurs alternatives sans
+champ doivent conserver leurs tags distincts. Un enum possède au moins un
+constructeur, tous sans champ ; un dictionnaire de classe vide reste exclu des
+enums. Les dictionnaires synthétiques sont ajoutés après
+la collecte des constructeurs éliminés : une classe à une méthode conserve son
+wrapper. `ClassMetadata.sortedClassFields` fournit déjà le même ordre à la table
+nommée et au constructeur synthétique ; `ModuleDeclarations` s'en sert pour les
+champs `V0…` et les getters.
+
+`GoTypes.appliedAdt` rassemble les arguments d'un ADT puis de ses `TypeApp`, de
+l'intérieur vers l'extérieur. Il ne retire ni `ForAll` ni les contraintes.
+La recherche d'un pointeur préfère le nom exact, puis son alias `$Dict`.
+L'instanciation conserve les politiques suivantes :
+
+| Contexte | Arguments Go |
+| --- | --- |
+| Type de valeur | Préfixe fourni, tronqué à l'arité ; positions manquantes complétées par `Value` |
+| Champ générique | Arguments fournis si leur nombre est exact ; sinon tous les paramètres déclarés si leur nombre convient ; sinon tous `Value` |
+| Constructeur annoté par un ADT simple | Arité explicite du layout prioritaire ; si des arguments manquent, tous deviennent `Value`, sinon le préfixe est conservé |
+| Définition annotée par un `TypeApp` | Préfixe des arguments appliqués, limité aux variables du layout, sans compléter les positions manquantes |
+| Construction saturée annotée par un `TypeApp` | Variables du layout effacées en `Value` |
+
+Les arités nulles ne produisent aucun argument générique. Les types de valeur
+testent l'élimination sur le nom porté par le chemin ADT avant de choisir enum
+ou pointeur ; les champs génériques choisissent l'enum d'abord, puis testent
+l'élimination sur le constructeur à payload résolu. Ces priorités sont explicites
+dans `GoTypes`. Les tableaux génériques gardent la traduction de valeur de leurs
+éléments. Un record natif exige une queue de rangée absente ; le premier champ
+de chaque label gagne, puis les labels sont triés.
+
+`ConstructorLayout` résout l'identité avant les champs : le type pointeur attendu
+peut fournir le module de définition ; un accès aux champs garde son qualificateur
+explicite. Les champs ADT priment sur ceux d'une classe. La préparation choisit
+une fois les arguments pour le pointeur et ses champs. Pour une alternative
+`nil`, une définition résout le worker dans le module courant, une construction
+saturée dans le module résolu ; l'identité runtime reste celle du payload.
+
+`GoAst.constructorNames` partage les noms du constructeur Go et du tag runtime,
+en laissant le préfixe de module à l'appelant. `TypeStructPointer` conserve ces noms,
+le type PureScript qualifié et les arguments. `GoAst.structPointer` est le point
+de construction du nom Go instancié. `instantiateGenericGoType` le reconstruit
+après substitution, sans découper de texte imprimé ; une variable absente de
+l'environnement devient `Value`.
 
 ## Runtime et FFI
 

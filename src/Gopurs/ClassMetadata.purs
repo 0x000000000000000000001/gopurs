@@ -14,6 +14,8 @@ import Data.Newtype (unwrap)
 import Data.Tuple (Tuple(..), fst, snd)
 import PureScript.Backend.Optimizer.CoreFn (Ann, ClassDecl, DataDecl, ExprType(..), Module(..))
 
+-- Keys retain the dotted PureScript module name. Unlike ADT fields, dictionary
+-- fields are sorted by label, including synthetic superclass fields.
 type ClassFields = Map String
   { vars :: Array String
   , fields :: Array { name :: String, "type" :: ExprType }

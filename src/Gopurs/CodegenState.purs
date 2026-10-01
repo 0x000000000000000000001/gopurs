@@ -10,6 +10,9 @@ import Data.Map as Map
 import Data.Set (Set)
 import Data.Set as Set
 import Data.Tuple (Tuple)
+import Gopurs.AdtMetadata (PointerAdtLeaf, PointerAdtPaths)
+import Gopurs.ClassMetadata (ClassFields)
+import Gopurs.ConstructorMetadata (ConstructorTypes)
 import Gopurs.GoAst (GoDecl, GoType)
 import Gopurs.ReboxMetadata (ReboxFieldIndex)
 import PureScript.Backend.Optimizer.CoreFn (ExprType)
@@ -26,17 +29,17 @@ type FunctionInfo =
 type CodegenMetadataRow :: Row Type
 type CodegenMetadataRow =
   ( elidedCtors :: Set.Set String
-  , ctorTypes :: Map String { vars :: Array String, fields :: Array ExprType }
-  , pointerAdtPaths :: Map String { ctorName :: String, arity :: Int }
+  , ctorTypes :: ConstructorTypes
+  , pointerAdtPaths :: PointerAdtPaths
   , pointerAdtNodes :: Set String
-  , pointerAdtLeaves :: Map String { nodeBaseStruct :: String, nodeCtor :: String }
+  , pointerAdtLeaves :: Map String PointerAdtLeaf
   , enumAdts :: Set.Set String
   , enumCtors :: Set.Set String
   , globalTypes :: Map.Map String ExprType
   , globalFunctions :: Map String FunctionInfo
   -- | Infos d'appel natif des FFI du module courant (clé : ident brut).
   , ffiFunctions :: Map String FunctionInfo
-  , classDeclsFields :: Map String { vars :: Array String, fields :: Array { name :: String, "type" :: ExprType } }
+  , classDeclsFields :: ClassFields
   , reboxFields :: ReboxFieldIndex
   )
 

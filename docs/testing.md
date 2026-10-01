@@ -15,6 +15,7 @@ reconstruit les deux versions et conserve le workspace pour les tests natifs.
 | Statut de sortie et diagnostics CLI | `npm run test:cli`, après `npm run build:native` |
 | Bootstrap natif et gestion des processus | `node --test tools/build-native.test.mjs tools/test-runner.test.mjs` |
 | Annotations et représentations natives | `node --test tools/native-record-workers.test.mjs tools/boxed-record-arguments.test.mjs tools/native-sum-results.test.mjs`, après le build |
+| Layouts, métadonnées et instanciation | `node --test tools/representation-contract.test.mjs tools/mixed-constructor-tags.test.mjs tools/elided-constructor-payloads.test.mjs tools/record-tuple-conversions.test.mjs`, après le build |
 | Types et records | `./bin/test NativeRecordBoxing NativeRecordSizes -c` |
 | Bridge FFI | `node --test tools/ffi-bridge.test.mjs tools/ffi-generics.test.mjs`, après le build ; `./bin/test FFIIntegerReturns -c` |
 | Appels et fonctions | `./bin/test CurriedLambdas -c` |
@@ -76,6 +77,19 @@ préfixe `[gopurs] error:`, et terminer avant le délai du test. Le résultat es
 traité par `Main` après la sortie des brackets et de la supervision du pilote.
 Les tests de l'émetteur ci-dessus vérifient séparément que les workers ont bien
 terminé leur nettoyage à cette frontière.
+
+## Contrat des représentations
+
+`representation-contract.test.mjs` croise les métadonnées d'origine et enrichies,
+les déclarations Go et les champs de dictionnaires instanciés. Il fixe aussi les
+différences d'arité entre valeurs, champs génériques, définitions et constructions
+saturées, l'ordre des `TypeApp`, la résolution `$Dict`, les priorités d'élimination
+et l'identité des alternatives `nil` importées. Il utilise les entrées publiques
+déjà présentes avant le refactoring.
+
+Les tests `mixed-constructor-tags`, `elided-constructor-payloads` et
+`record-tuple-conversions` complètent ce contrat par compilation et exécution
+du Go produit : tags distincts, payloads polymorphes, records et champs de classes.
 
 ## Contrat du bridge FFI
 
@@ -168,6 +182,37 @@ La sélection complète est le défaut. Les noms avec ou sans `gopurs-` sont
 acceptés ; `-c` reconstruit le backend depuis ce checkout. Chaque script frère
 gère encore ses propres sorties et nettoyages ; l'isolation des fixtures de
 `bin/test` ne s'étend pas automatiquement à ces scripts.
+
+## Validation des représentations — lot 06, 1er octobre 2026
+
+La lecture des `TypeApp`, le nommage des constructeurs et les règles
+d'instanciation sont regroupés dans `GoTypes`, `GoAst` et `ConstructorLayout`.
+Les tables ADT/classes portent leurs types et conventions de clés. La revue des
+classes a confirmé que leur ordre de champs était déjà partagé ; le commentaire
+de collecte des enums a été corrigé pour refléter les déclarations d'origine.
+
+Vérifications effectuées, puis builds et parité reconfirmés sur les artefacts
+finaux :
+
+- reconstruction des compilateurs JS et natif ;
+- **43 tests ciblés** : `representation-contract`, `mixed-constructor-tags`,
+  `elided-constructor-payloads`, `record-tuple-conversions`,
+  `native-constructor-tags`, `boxed-constructor-tags`,
+  `nullary-constructor-bindings`, `rebox-metadata` et `closed-dictionaries`.
+  Les contrats d'instanciation ont aussi été contrôlés avec les modules JS
+  précédents avant reconstruction ;
+- **10 fixtures**, snapshots stricts, compilation et exécution Go avec 8 workers :
+  `OneConstructor`, `PartiallyAppliedMaybe`, `PrimedTypeName`, `ConstructorReuse`,
+  `RBTree`, `TypeClassMemberOrderChange`, `EnumDictionaryField`,
+  `InheritMultipleSuperClasses`, `NativeRecordBoxing`, `NativeArrayReboxing` ;
+- b8x : référence régénérée avec le compilateur précédent sur **2 683 entrées
+  TAST figées**, puis **2 987 fichiers Go identiques octet par octet** en natif
+  parallèle, natif séquentiel et JS, sans ajout ni suppression. Les bridges,
+  le runtime, les entrées exécutables et `go.mod` sont inclus. Les TAST viennent
+  de `b8x/run/bak/go/output`, le lien `b8x/output` ciblant alors le backend Rust.
+
+La parité b8x contrôle la génération ; la compilation et l'exécution Go sont
+couvertes par les tests ciblés et les fixtures ci-dessus.
 
 ## Validation du bridge FFI — lot 05, 30 septembre 2026
 

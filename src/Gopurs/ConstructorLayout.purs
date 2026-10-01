@@ -16,10 +16,10 @@ import Data.Map as Map
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.String as String
 import Data.String.Pattern (Pattern(..), Replacement(..))
-import Data.Tuple (Tuple(..))
 import Gopurs.CodegenState (CodegenMetadata)
-import Gopurs.GoAst (GoType(..), sanitizeName, structPointer)
-import Gopurs.GoTypes (exprTypeToGoType, exprTypeToGenericGoType, instantiateGenericGoType)
+import Gopurs.ConstructorMetadata as ConstructorMetadata
+import Gopurs.GoAst (GoType(..), constructorNames, structPointer)
+import Gopurs.GoTypes (appliedAdt, exprTypeToGoType, exprTypeToGenericGoType, instantiateGenericGoType)
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..))
 
 type ConstructorIdentity =
@@ -30,7 +30,7 @@ type ConstructorIdentity =
   , fullName :: String
   }
 
-type ConstructorFields = { vars :: Array String, fields :: Array ExprType }
+type ConstructorFields = ConstructorMetadata.ConstructorFields
 
 type ConstructorLayout =
   { identity :: ConstructorIdentity
@@ -43,6 +43,20 @@ type ConstructorLayout =
 layout :: CodegenMetadata -> String -> String -> Maybe GoType -> ConstructorLayout
 layout metadata fallbackModule name expectedType =
   let
+    identity = constructorIdentity fallbackModule name expectedType
+    constructorFields = Map.lookup identity.key metadata.ctorTypes
+    -- Original constructor fields take precedence over dictionary metadata.
+    fields = case constructorFields of
+      Just info -> info
+      Nothing -> case Map.lookup identity.fullName metadata.classDeclsFields of
+        Just info -> { vars: info.vars, fields: map _."type" info.fields }
+        Nothing -> { vars: [], fields: [] }
+  in
+    { identity, constructorFields, fields }
+
+constructorIdentity :: String -> String -> Maybe GoType -> ConstructorIdentity
+constructorIdentity fallbackModule name expectedType =
+  let
     moduleName = String.replaceAll (Pattern ".") (Replacement "_") case expectedType of
       Just (TypeStructPointer { fullName: typeName }) ->
         let parts = String.split (Pattern ".") typeName
@@ -51,25 +65,17 @@ layout metadata fallbackModule name expectedType =
     key = moduleName <> "." <> name
     fullName = case expectedType of
       Just (TypeStructPointer pointer) -> pointer.fullName
+      -- Historical type hint for the empty RBTree constructor.
       _ -> if key == "Test_RBTree.E" then "Test.RBTree.Tree" else key
-    identity =
-      { moduleName, key, fullName
-      , structName: "Constructor_" <> moduleName <> "_" <> sanitizeName name
-      , baseStructName: "Data_" <> moduleName <> "_" <> sanitizeName name
-      }
-    constructorFields = Map.lookup key metadata.ctorTypes
-    fields = case constructorFields of
-      Just info -> info
-      Nothing -> case Map.lookup fullName metadata.classDeclsFields of
-        Just info -> { vars: info.vars, fields: map _."type" info.fields }
-        Nothing -> { vars: [], fields: [] }
+    names = constructorNames moduleName name
   in
-    { identity, constructorFields, fields }
+    { moduleName, key, fullName, structName: names.structName, baseStructName: names.baseStructName }
 
--- Metadata fixes an ADT's arity. The caller specifies the fallback because
--- field instantiation and pointer construction have different information.
+-- The layout's explicit arity wins over pointer metadata, then the annotation's
+-- own argument count. Only plain ADTs use those arguments; other annotations
+-- erase the supplied variables. Definition TypeApps are handled separately.
 typeArguments :: CodegenMetadata -> String -> Maybe Int -> Array String -> ExprType -> Array GoType
-typeArguments metadata modNameStr fallbackArity vars = case _ of
+typeArguments metadata modNameStr layoutArity vars = case _ of
   ADT name _ args ->
     let
       mapped = map (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr) args
@@ -77,7 +83,7 @@ typeArguments metadata modNameStr fallbackArity vars = case _ of
         (case Map.lookup name metadata.pointerAdtPaths of
           Just info -> info.arity
           Nothing -> Array.length mapped)
-        fallbackArity
+        layoutArity
     in
       -- An opaque type introduced by unsafeCoerce can hide constructor
       -- parameters. Its shorter argument list cannot instantiate this layout.
@@ -86,6 +92,16 @@ typeArguments metadata modNameStr fallbackArity vars = case _ of
   _ -> map (const TypeValue) vars
 
 data ConstructionForm = Definition | Saturated
+
+constructionTypeArguments :: ConstructionForm -> CodegenMetadata -> String -> ConstructorFields -> ExprType -> Array GoType
+constructionTypeArguments form metadata modNameStr fields ctorType = case form, ctorType of
+  -- Definitions retain the available prefix of a TypeApp, without padding.
+  -- Saturated TypeApps use the ordinary erased fallback in typeArguments.
+  Definition, TypeApp _ _ -> case appliedAdt ctorType of
+    Just adt -> Array.take (Array.length fields.vars)
+      (map (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr) adt.args)
+    Nothing -> map (const TypeValue) fields.vars
+  _, _ -> typeArguments metadata modNameStr (Just (Array.length fields.vars)) fields.vars ctorType
 
 type PreparedConstructor =
   { layout :: ConstructorLayout
@@ -102,21 +118,7 @@ prepare form metadata modNameStr fallbackModule name ctorType =
     expectedType = exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr ctorType
     ctorLayout = layout metadata fallbackModule name (Just expectedType)
     { identity, fields } = ctorLayout
-    fieldTypeArgs = case form, ctorType of
-      Definition, TypeApp _ _ ->
-        let
-          unwrap (TypeApp fn args) acc = unwrap fn (args <> acc)
-          unwrap other acc = Tuple other acc
-        in
-          case unwrap ctorType [] of
-            Tuple (ADT _ _ args) applied ->
-              Array.take (Array.length fields.vars)
-                (map (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr) (args <> applied))
-            _ -> map (const TypeValue) fields.vars
-      _, _ -> typeArguments metadata modNameStr (Just (Array.length fields.vars)) fields.vars ctorType
-    typeArgs = case form of
-      Definition -> fieldTypeArgs
-      Saturated -> typeArguments metadata modNameStr (Just (Array.length fields.vars)) fields.vars ctorType
+    typeArgs = constructionTypeArguments form metadata modNameStr fields ctorType
     pointerType = structPointer identity typeArgs
     leafPointerType = map
       (\leaf ->
@@ -130,7 +132,7 @@ prepare form metadata modNameStr fallbackModule name ctorType =
           structPointer
             { baseStructName: leaf.nodeBaseStruct
             , fullName: identity.fullName
-            , structName: "Constructor_" <> leafModule <> "_" <> sanitizeName leaf.nodeCtor
+            , structName: (constructorNames leafModule leaf.nodeCtor).structName
             }
             typeArgs)
       (Map.lookup identity.baseStructName metadata.pointerAdtLeaves)
@@ -138,7 +140,7 @@ prepare form metadata modNameStr fallbackModule name ctorType =
       ADT fullName _ _ -> Just fullName
       _ -> Nothing
   in
-    { layout: ctorLayout, fieldTypeArgs, typeArgs, pointerType, leafPointerType, adtFullName }
+    { layout: ctorLayout, fieldTypeArgs: typeArgs, typeArgs, pointerType, leafPointerType, adtFullName }
 
 fieldType :: CodegenMetadata -> String -> ConstructorFields -> Array GoType -> Int -> GoType
 fieldType metadata modNameStr info args index = case Array.index info.fields index of

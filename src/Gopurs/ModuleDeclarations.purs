@@ -9,7 +9,7 @@ import Data.String as String
 import Data.String.Pattern (Pattern(..), Replacement(..))
 import Data.Tuple (Tuple(..))
 import Gopurs.CodegenState (CodegenMetadata)
-import Gopurs.GoAst (GoDecl(..), GoType(..), rawGo, sanitizeName)
+import Gopurs.GoAst (GoDecl(..), GoType(..), constructorNames, rawGo, sanitizeName)
 import Gopurs.GoTypes (structFieldGoType)
 import PureScript.Backend.Optimizer.Convert (BackendModule)
 import PureScript.Backend.Optimizer.FfiSupport (hashString)
@@ -22,7 +22,7 @@ constructors { pointerAdtPaths, enumAdts, elidedCtors, classDeclsFields } modNam
       (\ctor ->
         let
           goFieldTypes = map (structFieldGoType pointerAdtPaths enumAdts elidedCtors decl.vars modNameStr) ctor.fields
-          structName = "Constructor_" <> modNameStr <> "_" <> sanitizeName ctor.name
+          structName = (constructorNames modNameStr ctor.name).structName
           structDecl = GoStructDecl
             { name: structName
             , typeParams: map (\v -> Tuple ("T_" <> sanitizeName v) (TypeInterface "any")) decl.vars
@@ -47,7 +47,7 @@ constructors { pointerAdtPaths, enumAdts, elidedCtors, classDeclsFields } modNam
                       "\t\tcase \"" <> f.name <> "\": return " <> boxed)
                   info.fields
                 pkgNameStr = String.replaceAll (Pattern ".") (Replacement "_") (unwrap mod.name)
-                baseStructName = "Data_" <> pkgNameStr <> "_" <> sanitizeName ctor.name
+                baseStructName = (constructorNames pkgNameStr ctor.name).baseStructName
                 hashStr = hashString baseStructName
                 -- The registration body remains an opaque fragment with its
                 -- runtime/unsafe dependencies; its declaration is structured.

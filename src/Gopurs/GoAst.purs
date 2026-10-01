@@ -100,6 +100,13 @@ type StructPointer =
   , typeArgs :: Array GoType
   }
 
+-- The caller supplies its module prefix. In particular, metadata for elided
+-- constructors retains module dots; normal Go declarations supply underscores.
+constructorNames :: String -> String -> { baseStructName :: String, structName :: String }
+constructorNames modulePrefix constructorName =
+  let suffix = modulePrefix <> "_" <> sanitizeName constructorName
+  in { baseStructName: "Data_" <> suffix, structName: "Constructor_" <> suffix }
+
 structPointer :: forall r. { baseStructName :: String, fullName :: String, structName :: String | r } -> Array GoType -> GoType
 structPointer { baseStructName, fullName, structName } typeArgs =
   TypeStructPointer { baseStructName, fullName, structName, fullPath: structTypeName structName typeArgs, typeArgs }
@@ -202,4 +209,4 @@ getStructName modNameStr mbMod ctorName =
       Just mn -> sanitizeName (String.replaceAll (Pattern ".") (Replacement "_") (unwrap mn))
       Nothing -> modNameStr
   in
-    "Data_" <> modNamePart <> "_" <> sanitizeName ctorName
+    (constructorNames modNamePart ctorName).baseStructName

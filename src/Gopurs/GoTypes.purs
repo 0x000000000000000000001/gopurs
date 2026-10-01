@@ -2,6 +2,8 @@ module Gopurs.GoTypes
   ( isClosedRowTail
   , visibleRecordFields
   , printExprType
+  , AppliedAdt
+  , appliedAdt
   , exprTypeToGoType
   , exprTypeToGenericGoType
   , structFieldGoType
@@ -17,7 +19,8 @@ import Data.Set as Set
 import Data.String as String
 import Data.String.Pattern (Pattern(..), Replacement(..))
 import Data.Tuple (Tuple(..))
-import Gopurs.GoAst (GoType(..), structPointer, sanitizeName)
+import Gopurs.AdtMetadata (PointerAdtPaths)
+import Gopurs.GoAst (GoType(..), constructorNames, structPointer)
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..))
 
 -- Diagnostic rendering of TAST annotations, shared by codegen and FFI comments.
@@ -58,101 +61,103 @@ isClosedRowTail _ = false
 visibleRecordFields :: forall a. Array (Tuple String a) -> Array (Tuple String a)
 visibleRecordFields = Array.nubBy (comparing \(Tuple label _) -> label)
 
+type AppliedAdt = { fullName :: String, path :: Array String, args :: Array ExprType }
+
+-- Read nested applications from the inside out, after the arguments already
+-- carried by the ADT. This does not unwrap ForAll or constrained annotations.
+appliedAdt :: ExprType -> Maybe AppliedAdt
+appliedAdt ty = go ty []
+  where
+  go (TypeApp fn args) applied = go fn (args <> applied)
+  go (ADT fullName path args) applied = Just { fullName, path, args: args <> applied }
+  go _ _ = Nothing
+
 -- TAST annotations and ADT metadata select the internal Go representation.
 -- FFI wrappers separately reconcile it with the declared foreign Go signature.
-exprTypeToGoType :: Map.Map String { ctorName :: String, arity :: Int } -> Set.Set String -> Set.Set String -> String -> ExprType -> GoType
+exprTypeToGoType :: PointerAdtPaths -> Set.Set String -> Set.Set String -> String -> ExprType -> GoType
 exprTypeToGoType _ _ _ _ Int = TypeInt64
 exprTypeToGoType _ _ _ _ Number = TypeFloat64
 exprTypeToGoType _ _ _ _ String = TypeString
 exprTypeToGoType _ _ _ _ Char = TypeString
 exprTypeToGoType _ _ _ _ Boolean = TypeBool
 exprTypeToGoType ptrPaths enumAdts elided modNameStr (Array ty) = TypeNativeArray (exprTypeToGoType ptrPaths enumAdts elided modNameStr ty)
-exprTypeToGoType ptrPaths enumAdts elided modNameStr (Record (Row fields tail)) | isClosedRowTail tail = TypeRecord (map (\(Tuple k v) -> Tuple k (exprTypeToGoType ptrPaths enumAdts elided modNameStr v)) (Array.sortBy (comparing \(Tuple k _) -> k) (visibleRecordFields fields)))
-exprTypeToGoType _ _ _ _ (Record _) = TypeValue
-exprTypeToGoType ptrPaths enumAdts elided modNameStr (ADT fullName path args) =
-  let
-    ctorName = fromMaybe "" (Array.last path)
-    pkgNameStr = String.replaceAll (Pattern ".") (Replacement "_") (String.joinWith "." (Array.slice 0 (Array.length path - 1) path))
-    monoStructName = "Constructor_" <> pkgNameStr <> "_" <> sanitizeName ctorName
-  in
-    if Set.member monoStructName elided then TypeValue
-    else if Set.member fullName enumAdts then TypeUint32
-    else
-      case
-        ( case Map.lookup fullName ptrPaths of
-            Just i -> Just i
-            Nothing -> Map.lookup (fullName <> "$Dict") ptrPaths
-        )
-        of
+exprTypeToGoType ptrPaths enumAdts elided modNameStr (Record (Row fields tail)) | isClosedRowTail tail =
+  recordGoType (exprTypeToGoType ptrPaths enumAdts elided modNameStr) fields
+exprTypeToGoType ptrPaths enumAdts elided modNameStr ty = case appliedAdt ty of
+  Just { fullName, path, args } ->
+    let
+      -- Value annotations test elision using the ADT path, before looking up
+      -- its payload constructor. Generic fields below use that constructor.
+      annotationNames = adtConstructorNames path (fromMaybe "" (Array.last path))
+      toGoType = exprTypeToGoType ptrPaths enumAdts elided modNameStr
+    in
+      if Set.member annotationNames.structName elided then TypeValue
+      else if Set.member fullName enumAdts then TypeUint32
+      else case lookupPointerAdt fullName ptrPaths of
         Just info ->
-          let
-            baseStructName = "Data_" <> pkgNameStr <> "_" <> sanitizeName info.ctorName
-            monoStructName' = "Constructor_" <> pkgNameStr <> "_" <> sanitizeName info.ctorName
-            typeArgsMapped = map (exprTypeToGoType ptrPaths enumAdts elided modNameStr) args
-            typeArgsMappedTruncated = Array.take info.arity typeArgsMapped
-            paddedTypeArgs = typeArgsMappedTruncated <> Array.replicate (info.arity - Array.length typeArgsMappedTruncated) TypeValue
-          in
-            structPointer { baseStructName, fullName, structName: monoStructName' } paddedTypeArgs
+          let names = adtConstructorNames path info.ctorName
+          in structPointer { baseStructName: names.baseStructName, fullName, structName: names.structName }
+            (valueTypeArguments info.arity (map toGoType args))
         Nothing -> TypeValue
-exprTypeToGoType ptrPaths enumAdts elided modNameStr (TypeApp fn arg) =
-  let
-    unwrapTypeApp :: ExprType -> Array ExprType -> Tuple ExprType (Array ExprType)
-    unwrapTypeApp (TypeApp f a) acc = unwrapTypeApp f (a <> acc)
-    unwrapTypeApp other acc = Tuple other acc
-  in
-    case unwrapTypeApp (TypeApp fn arg) [] of
-      Tuple (ADT fullName path args) allArgs -> exprTypeToGoType ptrPaths enumAdts elided modNameStr (ADT fullName path (args <> allArgs))
-      _ -> TypeValue
-exprTypeToGoType _ _ _ _ (TypeVar _) = TypeValue
-exprTypeToGoType _ _ _ _ _ = TypeValue
+  Nothing -> TypeValue
 
 -- Ordinary type variables fall back to Value. In a generic declaration,
 -- variables listed in typeVars can instead become Go type parameters.
-exprTypeToGenericGoType :: Map.Map String { ctorName :: String, arity :: Int } -> Set.Set String -> Set.Set String -> Array String -> String -> ExprType -> GoType
-exprTypeToGenericGoType ptrPaths enumAdts elidedCtors typeVars modNameStr (Record (Row fields tail)) | isClosedRowTail tail = TypeRecord (map (\(Tuple k v) -> Tuple k (exprTypeToGenericGoType ptrPaths enumAdts elidedCtors typeVars modNameStr v)) (Array.sortBy (comparing \(Tuple k _) -> k) (visibleRecordFields fields)))
-exprTypeToGenericGoType _ _ _ _ _ (Record _) = TypeValue
-exprTypeToGenericGoType ptrPaths enumAdts elidedCtors typeVars modNameStr (TypeApp fn arg) =
-  let
-    unwrapTypeApp :: ExprType -> Array ExprType -> Tuple ExprType (Array ExprType)
-    unwrapTypeApp (TypeApp f a) acc = unwrapTypeApp f (a <> acc)
-    unwrapTypeApp other acc = Tuple other acc
-  in
-    case unwrapTypeApp (TypeApp fn arg) [] of
-      Tuple (ADT fullName path args) allArgs -> exprTypeToGenericGoType ptrPaths enumAdts elidedCtors typeVars modNameStr (ADT fullName path (args <> allArgs))
-      _ -> TypeValue
+exprTypeToGenericGoType :: PointerAdtPaths -> Set.Set String -> Set.Set String -> Array String -> String -> ExprType -> GoType
+exprTypeToGenericGoType ptrPaths enumAdts elided typeVars modNameStr (Record (Row fields tail)) | isClosedRowTail tail =
+  recordGoType (exprTypeToGenericGoType ptrPaths enumAdts elided typeVars modNameStr) fields
 exprTypeToGenericGoType _ _ _ typeVars _ (TypeVar v) | Array.elem v typeVars = TypeGenericParam v
-exprTypeToGenericGoType ptrPaths enumAdts elided typeVars modNameStr (ADT fullName path args) =
-  if Set.member fullName enumAdts then TypeUint32
-  else
-    case
-      ( case Map.lookup fullName ptrPaths of
-          Just i -> Just i
-          Nothing -> Map.lookup (fullName <> "$Dict") ptrPaths
-      )
-      of
-        Just info ->
-          let
-            pkgNameStr = String.replaceAll (Pattern ".") (Replacement "_") (String.joinWith "." (Array.slice 0 (Array.length path - 1) path))
-            monoStructName = "Constructor_" <> pkgNameStr <> "_" <> sanitizeName info.ctorName
-            baseStructName = "Data_" <> pkgNameStr <> "_" <> sanitizeName info.ctorName
-          in
-          if Set.member monoStructName elided then TypeValue
-          else if info.arity == 0 then structPointer { baseStructName, fullName, structName: monoStructName } []
-          else
-            let
-              finalArgs =
-                if Array.length args == info.arity then
-                  map (exprTypeToGenericGoType ptrPaths enumAdts elided typeVars modNameStr) args
-                else if Array.length typeVars == info.arity then
-                  map TypeGenericParam typeVars
-                else
-                  Array.replicate info.arity TypeValue
-            in
-              structPointer { baseStructName, fullName, structName: monoStructName } finalArgs
-        Nothing -> TypeValue
-exprTypeToGenericGoType ptrPaths enumAdts elidedCtors _ modNameStr ty = exprTypeToGoType ptrPaths enumAdts elidedCtors modNameStr ty
+exprTypeToGenericGoType ptrPaths enumAdts elided typeVars modNameStr ty = case appliedAdt ty of
+  Just { fullName, path, args } ->
+    if Set.member fullName enumAdts then TypeUint32
+    else case lookupPointerAdt fullName ptrPaths of
+      Just info ->
+        let
+          names = adtConstructorNames path info.ctorName
+          toGoType = exprTypeToGenericGoType ptrPaths enumAdts elided typeVars modNameStr
+        in
+          if Set.member names.structName elided then TypeValue
+          else structPointer { baseStructName: names.baseStructName, fullName, structName: names.structName }
+            (genericTypeArguments toGoType typeVars info.arity args)
+      Nothing -> TypeValue
+  -- Arrays and other annotations retain the ordinary value representation.
+  Nothing -> exprTypeToGoType ptrPaths enumAdts elided modNameStr ty
 
-structFieldGoType :: Map.Map String { ctorName :: String, arity :: Int } -> Set.Set String -> Set.Set String -> Array String -> String -> ExprType -> GoType
+recordGoType :: (ExprType -> GoType) -> Array (Tuple String ExprType) -> GoType
+recordGoType toGoType fields =
+  TypeRecord (map (\(Tuple name ty) -> Tuple name (toGoType ty))
+    (Array.sortBy (comparing \(Tuple name _) -> name) (visibleRecordFields fields)))
+
+lookupPointerAdt :: String -> PointerAdtPaths -> Maybe { ctorName :: String, arity :: Int }
+lookupPointerAdt fullName paths = case Map.lookup fullName paths of
+  Just info -> Just info
+  Nothing -> Map.lookup (fullName <> "$Dict") paths
+
+adtConstructorNames :: Array String -> String -> { baseStructName :: String, structName :: String }
+adtConstructorNames path =
+  let
+    moduleName = String.joinWith "." (Array.take (Array.length path - 1) path)
+    modulePrefix = String.replaceAll (Pattern ".") (Replacement "_") moduleName
+  in
+    constructorNames modulePrefix
+
+-- A value keeps the supplied prefix, pads missing slots with Value, and drops
+-- excess arguments. Its pointer always has the metadata's declared arity.
+valueTypeArguments :: Int -> Array GoType -> Array GoType
+valueTypeArguments arity args =
+  let supplied = Array.take arity args
+  in supplied <> Array.replicate (arity - Array.length supplied) TypeValue
+
+-- A generic field needs a complete instantiation. Otherwise it inherits all
+-- declaration parameters when their count fits, or erases every slot to Value.
+genericTypeArguments :: (ExprType -> GoType) -> Array String -> Int -> Array ExprType -> Array GoType
+genericTypeArguments toGoType vars arity args
+  | arity == 0 = []
+  | Array.length args == arity = map toGoType args
+  | Array.length vars == arity = map TypeGenericParam vars
+  | otherwise = Array.replicate arity TypeValue
+
+structFieldGoType :: PointerAdtPaths -> Set.Set String -> Set.Set String -> Array String -> String -> ExprType -> GoType
 structFieldGoType ptrPaths enumAdts elidedCtors typeVars modStr ty =
   case exprTypeToGenericGoType ptrPaths enumAdts elidedCtors typeVars modStr ty of
     TypeInterface _ -> TypeValue

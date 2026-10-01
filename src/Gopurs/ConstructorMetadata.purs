@@ -1,5 +1,6 @@
 module Gopurs.ConstructorMetadata
   ( ConstructorTypes
+  , ConstructorFields
   , buildConstructorTypes
   , collectElidedConstructors
   ) where
@@ -9,16 +10,19 @@ import Prelude
 import Data.Array as Array
 import Data.Map (Map)
 import Data.Map as Map
-import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap)
 import Data.Set (Set)
 import Data.Set as Set
 import Data.String as String
 import Data.String.Pattern (Pattern(..), Replacement(..))
-import Gopurs.GoAst (getStructName)
+import Gopurs.GoAst (constructorNames)
 import PureScript.Backend.Optimizer.CoreFn (Ann, DataConstructor, DataDecl, ExprType, Module(..))
 
-type ConstructorTypes = Map String { vars :: Array String, fields :: Array ExprType }
+type ConstructorFields = { vars :: Array String, fields :: Array ExprType }
+
+-- Keys use the Go module prefix but the original PureScript constructor name.
+-- Fields keep declaration order; vars fixes the constructor's generic arity.
+type ConstructorTypes = Map String ConstructorFields
 
 -- Read the original TAST dataDecls, before adding synthetic class declarations.
 buildConstructorTypes :: Array (Module Ann) -> ConstructorTypes
@@ -57,8 +61,5 @@ addElidedConstructor moduleName constructors declaration =
 
 elidedConstructorName :: String -> String -> String
 elidedConstructorName moduleName constructorName =
-  let
-    -- Preserve the existing struct naming convention, including module dots.
-    structName = getStructName moduleName Nothing constructorName
-  in
-    "Constructor_" <> String.drop 5 structName
+  -- Preserve the existing convention, including module dots.
+  (constructorNames moduleName constructorName).structName

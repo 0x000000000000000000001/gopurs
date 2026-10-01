@@ -1,5 +1,7 @@
 module Gopurs.AdtMetadata
   ( PointerAdtMetadata
+  , PointerAdtPaths
+  , PointerAdtLeaf
   , EnumAdtMetadata
   , buildPointerAdtMetadata
   , buildEnumAdtMetadata
@@ -17,13 +19,20 @@ import Data.Set as Set
 import Data.String as String
 import Data.String.Pattern (Pattern(..), Replacement(..))
 import Data.Tuple (Tuple(..))
-import Gopurs.GoAst (sanitizeName)
+import Gopurs.GoAst (constructorNames)
 import PureScript.Backend.Optimizer.CoreFn (Ann, DataConstructor, DataDecl, Module(..))
 
+-- Keys are fully qualified PureScript type names. Arity comes from the
+-- declaration, including synthetic class dictionaries.
+type PointerAdtPaths = Map String { ctorName :: String, arity :: Int }
+
+-- The leaf table is keyed by Data_<module>_<nullary constructor> runtime tags.
+type PointerAdtLeaf = { nodeBaseStruct :: String, nodeCtor :: String }
+
 type PointerAdtMetadata =
-  { pointerAdtPaths :: Map String { ctorName :: String, arity :: Int }
+  { pointerAdtPaths :: PointerAdtPaths
   , pointerAdtNodes :: Set String
-  , pointerAdtLeaves :: Map String { nodeBaseStruct :: String, nodeCtor :: String }
+  , pointerAdtLeaves :: Map String PointerAdtLeaf
   }
 
 type EnumAdtMetadata =
@@ -79,11 +88,11 @@ uniqueLeafStructName moduleName constructors =
     [ leaf ] | leaf.name /= "" -> Just (constructorStructName moduleName leaf.name)
     _ -> Nothing
 
-pointerLeafEntry :: PointerAdtInfo -> Maybe (Tuple String { nodeBaseStruct :: String, nodeCtor :: String })
+pointerLeafEntry :: PointerAdtInfo -> Maybe (Tuple String PointerAdtLeaf)
 pointerLeafEntry info =
   map (\name -> Tuple name { nodeBaseStruct: info.nodeBaseStruct, nodeCtor: info.nodeCtor }) info.leafBaseStruct
 
--- Use the same enriched dataDecls as the pointer metadata.
+-- Inspect original ADTs. In particular, an empty class dictionary is not an enum.
 buildEnumAdtMetadata :: Array (Module Ann) -> EnumAdtMetadata
 buildEnumAdtMetadata modules =
   let
@@ -111,4 +120,4 @@ constructorStructName moduleName constructorName =
   let
     packageName = String.replaceAll (Pattern ".") (Replacement "_") moduleName
   in
-    "Data_" <> packageName <> "_" <> sanitizeName constructorName
+    (constructorNames packageName constructorName).baseStructName
