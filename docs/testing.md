@@ -16,6 +16,7 @@ reconstruit les deux versions et conserve le workspace pour les tests natifs.
 | Bootstrap natif et gestion des processus | `node --test tools/build-native.test.mjs tools/test-runner.test.mjs` |
 | Annotations et représentations natives | `node --test tools/native-record-workers.test.mjs tools/boxed-record-arguments.test.mjs tools/native-sum-results.test.mjs`, après le build |
 | Layouts, métadonnées et instanciation | `node --test tools/representation-contract.test.mjs tools/mixed-constructor-tags.test.mjs tools/elided-constructor-payloads.test.mjs tools/record-tuple-conversions.test.mjs`, après le build |
+| Boxing et émission transitive Rebox | `node --test tools/rebox-generation.test.mjs tools/rebox-metadata.test.mjs tools/struct-pointer-boxing.test.mjs tools/value-array-unboxing.test.mjs`, après le build |
 | Types et records | `./bin/test NativeRecordBoxing NativeRecordSizes -c` |
 | Bridge FFI | `node --test tools/ffi-bridge.test.mjs tools/ffi-generics.test.mjs`, après le build ; `./bin/test FFIIntegerReturns -c` |
 | Appels et fonctions | `./bin/test CurriedLambdas -c` |
@@ -90,6 +91,20 @@ déjà présentes avant le refactoring.
 Les tests `mixed-constructor-tags`, `elided-constructor-payloads` et
 `record-tuple-conversions` complètent ce contrat par compilation et exécution
 du Go produit : tags distincts, payloads polymorphes, records et champs de classes.
+
+## Contrat Rebox
+
+`rebox-generation.test.mjs` part des appels publics de conversion, puis émet
+leurs helpers. Il vérifie la fermeture transitive dans les deux sens, la
+convergence des champs récursifs, la déduplication et l'ordre indépendant de
+l'insertion des demandes. Le Go généré est compilé et exécuté pour contrôler
+les payloads imbriqués, `nil`, l'identité des pointeurs à paramètres fantômes,
+les tableaux natifs et l'évaluation unique des opérandes. Un cas sans métadonnées
+fixe également le diagnostic et l'omission historiques du helper.
+
+`rebox-metadata.test.mjs` couvre les collisions et priorités de l'index de champs.
+`struct-pointer-boxing.test.mjs`, `value-array-unboxing.test.mjs` et les tests de
+records/sommes natifs complètent les passages par `Value` et leurs imports.
 
 ## Contrat du bridge FFI
 
@@ -182,6 +197,29 @@ La sélection complète est le défaut. Les noms avec ou sans `gopurs-` sont
 acceptés ; `-c` reconstruit le backend depuis ce checkout. Chaque script frère
 gère encore ses propres sorties et nettoyages ; l'isolation des fixtures de
 `bin/test` ne s'étend pas automatiquement à ces scripts.
+
+## Validation des conversions et de Rebox — lot 07, 1er octobre 2026
+
+`GoConversions` porte le choix des conversions et la normalisation des passages
+par `Value`. Les layouts de `Maybe`/`Either`/`Tuple sont isolés dans `NativeAdts` ;
+`Rebox` possède les demandes, la traduction des champs et l'émission transitive.
+Les helpers de records/tableaux sont nommés et la branche de tableau source natif
+inaccessible après normalisation a été retirée.
+
+Vérifications effectuées :
+
+- reconstruction des compilateurs JS et natif ;
+- **43 tests ciblés** : `rebox-generation`, `rebox-metadata`,
+  `struct-pointer-boxing`, `value-array-unboxing`, `record-tuple-conversions`,
+  `native-sum-results`, `native-record-workers`, `boxed-record-arguments`,
+  `array-traverse-either`, `object-traverse-either`, `elided-constructor-payloads`.
+  Les trois nouveaux tests Rebox, dont la compilation/exécution Go, ont aussi
+  réussi avec les modules JS précédents avant reconstruction ;
+- **12 fixtures**, snapshots stricts, compilation et exécution Go avec 8 workers :
+  `NativeArrayReboxing`, `ArrayRoundtrip`, `NativeRecordBoxing`, `NativeRecordSizes`,
+  `NativeRecordWorkers`, `NativeRecordReturns`, `CompactRecordConsumers`,
+  `EnumDictionaryField`, `ArrayTraverseEither`, `ObjectTraverseEither`,
+  `MaybeFfiRoundtrip`, `RBTree`.
 
 ## Validation des représentations — lot 06, 1er octobre 2026
 

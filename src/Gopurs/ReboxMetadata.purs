@@ -14,14 +14,10 @@ import Data.String as String
 import Data.String.Pattern (Pattern(..))
 import Data.Tuple (Tuple(..))
 import Gopurs.ClassMetadata (ClassFields)
-import Gopurs.ConstructorMetadata (ConstructorTypes)
-import Gopurs.GoAst (sanitizeName)
-import PureScript.Backend.Optimizer.CoreFn (ExprType)
+import Gopurs.ConstructorMetadata (ConstructorFields, ConstructorTypes)
+import Gopurs.GoAst (constructorNames)
 
-type ReboxFields =
-  { vars :: Array String
-  , fields :: Array ExprType
-  }
+type ReboxFields = ConstructorFields
 
 type ReboxFieldIndex = Map String ReboxFields
 
@@ -50,9 +46,9 @@ addFields key fields index =
       let
         ctorName = fromMaybe "" (Array.last parts)
         pkgName = String.joinWith "_" (Array.slice 0 (Array.length parts - 1) parts)
-        suffix = pkgName <> "_" <> sanitizeName ctorName
+        names = constructorNames pkgName ctorName
         insertFirst name entries =
           if Map.member name entries then entries
           else Map.insert name fields entries
       in
-        insertFirst ("Data_" <> suffix) (insertFirst ("Constructor_" <> suffix) index)
+        insertFirst names.baseStructName (insertFirst names.structName index)

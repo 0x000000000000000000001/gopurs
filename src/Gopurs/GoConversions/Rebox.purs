@@ -1,6 +1,7 @@
 module Gopurs.GoConversions.Rebox
   ( request
   , generate
+  , CoerceField
   ) where
 
 import Prelude

@@ -99,7 +99,10 @@ Tous les modules gopurs de ce tableau se trouvent dans [src/Gopurs](../src/Gopur
 | ADT, records et primitives | `AdtExprs`, `RecordExprs`, `PrimitiveExprs` |
 | Identité, champs et arguments génériques des constructeurs | `ConstructorLayout` |
 | Analyses d'expressions | `ExprAnalysis` |
-| Types Go, boxing et conversions | `GoTypes`, `GoConversions` |
+| Traduction des annotations en types Go | `GoTypes` |
+| Choix des conversions, boxing et lecture de Value | `GoConversions` |
+| Layouts natifs de Maybe, Either et Tuple, adaptation de leurs slots | `GoConversions.NativeAdts` |
+| Demandes de helpers, conversion des champs et émission transitive Rebox | `GoConversions.Rebox`, `ReboxMetadata` |
 | Préparation des enveloppes curryfiées | `GoFunctions` |
 | Dépendances des fragments opaques et imports du module | `GoCode`, `GoImports` |
 | Représentation et rendu Go | `GoAst`, `Printer` |
@@ -212,6 +215,59 @@ le type PureScript qualifié et les arguments. `GoAst.structPointer` est le poin
 de construction du nom Go instancié. `instantiateGenericGoType` le reconstruit
 après substitution, sans découper de texte imprimé ; une variable absente de
 l'environnement devient `Value`.
+
+## Boxing, conversions et Rebox
+
+`GoConversions` conserve les entrées de conversion et réexporte le contrat des
+ADT natifs. `coerceGoExpr` choisit d'abord les conversions qui connaissent leur
+layout : identité, projection d'un record vers les champs attendus, slots d'un
+ADT natif, puis pointeurs d'un même constructeur. Les autres chemins passent par
+`Value`. Une projection évalue le record source une fois, y compris ses champs
+supplémentaires, puis convertit les champs demandés.
+
+Le boxing d'un pointeur générique doit d'abord convertir ses arguments en
+`Value` ; le déboxing typé suit le chemin inverse : lire le pointeur à payloads
+`Value`, puis convertir ses champs. `coerceGoExpr` porte ce choix de layout et
+`boxGoExpr` l'applique avant d'émettre la boîte. `unboxGoExpr` normalise son entrée
+en `Value` avant de lire la représentation demandée ; une conversion entre deux
+représentations distinctes de tableaux natifs emprunte donc aussi cette frontière.
+Les lecteurs de destination
+ne traitent plus un cas de tableau source natif devenu inaccessible après cette
+normalisation.
+
+Les helpers de records et de tableaux prennent un callback d'adaptation des
+champs ou éléments. Ils capturent leur opérande une fois et conservent l'ordre
+fourni. Les tableaux `[]Value` partagent leur stockage immuable ; les tableaux
+`[]int64` utilisent leurs nœuds dédiés de l'AST ; les autres éléments sont
+convertis individuellement.
+
+`GoConversions.NativeAdts` possède les signatures, constructeurs, tests de tags,
+indices de slots et passages par `Value` de `Maybe`, `Either` et `Tuple`. Seuls les
+slots instanciés par un record fermé restent natifs ; les autres payloads sont
+des `Value`. Les callbacks de boxing/déboxing rappellent le convertisseur pour
+les payloads composites, sans créer de dépendance de module circulaire.
+
+`GoConversions.Rebox` distingue trois étapes :
+
+1. `request` enregistre le couple **orienté** source/destination dans le `Set`
+   du module et produit l'appel au helper. Son nom est calculé au même endroit
+   pour l'appel et la déclaration, depuis les chemins Go instanciés.
+2. L'émission consulte `ReboxMetadata`, puis `convertFields` instancie chaque
+   champ dans les deux environnements génériques et rappelle `coerceGoExpr`
+   avec le même état de module. Cette traduction peut enregistrer d'autres
+   couples, y compris le couple récursif en cours.
+3. `generate` lit les demandes par vagues et déduplique les déclarations par
+   nom. Il s'arrête quand une vague n'ajoute aucun helper, puis retourne les
+   déclarations dans l'ordre de la `Map`. L'ordre des demandes ne détermine pas
+   celui du Go émis.
+
+Chaque helper préserve `nil`. Si tous ses champs sont rendus comme des accès
+identiques `in.Vn`, les paramètres fantômes permettent un cast du pointeur vers
+le même layout immuable ; sinon le helper alloue et convertit champ par champ.
+`Rc` n'intervient pas dans cette décision. L'absence de métadonnées conserve le
+diagnostic `ERROR: Rebox missing!` et l'omission du helper. `ReboxMetadata` garde
+la priorité des constructeurs sur les classes et du premier alias rencontré ;
+ses noms passent par `GoAst.constructorNames`.
 
 ## Runtime et FFI
 
