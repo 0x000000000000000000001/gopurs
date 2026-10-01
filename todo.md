@@ -7,7 +7,7 @@ une génération Go identique. Périmètre : compilateur, runtime, FFI et outill
 de ce dépôt ; les interfaces avec PBO et les bibliothèques sœurs sont incluses.
 Les optimisations de performance restent en pause.
 
-## Avancement : 45 % — 45/100 points, 6/15 lots validés
+## Avancement : 55 % — 55/100 points, 7/15 lots validés
 
 - **Calcul :** somme des points des cases cochées, sur un total fixe de 100.
   Les poids sont des unités de suivi ; le pourcentage mesure les livrables
@@ -38,9 +38,9 @@ Les optimisations de performance restent en pause.
 - [x] **06 — Choix des représentations (5 pts).** Lecture des `TypeApp`, nommage
   et instanciation regroupés dans `GoTypes`, `GoAst` et `ConstructorLayout` ;
   contrats des métadonnées ADT/classes documentés, tests et parité validés.
-- [ ] **07 — Boxing, conversions et Rebox (10 pts).** Clarifier les cas de
-  `GoConversions` et les dépendances entre helpers.
-  Fin : choix de conversion, enregistrement et émission transitive lisibles séparément.
+- [x] **07 — Boxing, conversions et Rebox (10 pts).** Choix de conversion et
+  passages par `Value` clarifiés ; layouts natifs isolés dans `NativeAdts`, demandes
+  et émission transitive dans `Rebox`. Contrats récursifs, tests et parité validés.
 - [ ] **08 — Expressions restantes du dispatcher (5 pts).** Extraire de
   `CodeGen` la traduction des littéraux composites et des constructeurs saturés.
   Fin : dispatcher court, ordre d'évaluation et de coercition explicite dans les émetteurs.
@@ -81,4 +81,4 @@ Les optimisations de performance restent en pause.
 - Documentation des responsabilités et preuves de validation à jour ;
   `git diff --check` propre.
 
-**Prochaine passe : lot 07 — boxing, conversions et Rebox.** Sa clôture portera l'avancement à **55 %**.
+**Prochaine passe : lot 08 — expressions restantes du dispatcher.** Sa clôture portera l'avancement à **60 %**.

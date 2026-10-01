@@ -219,7 +219,15 @@ Vérifications effectuées :
   `NativeArrayReboxing`, `ArrayRoundtrip`, `NativeRecordBoxing`, `NativeRecordSizes`,
   `NativeRecordWorkers`, `NativeRecordReturns`, `CompactRecordConsumers`,
   `EnumDictionaryField`, `ArrayTraverseEither`, `ObjectTraverseEither`,
-  `MaybeFfiRoundtrip`, `RBTree`.
+  `MaybeFfiRoundtrip`, `RBTree` ;
+- b8x : référence régénérée avec le compilateur précédent sur **2 683 entrées
+  TAST figées**, puis **2 987 fichiers Go identiques octet par octet** en natif
+  parallèle, natif séquentiel et JS, sans ajout ni suppression. Runtime, bridges
+  FFI, entrées exécutables et `go.mod` sont inclus. Le manifeste des sources et
+  des deux binaires est identique avant et après ces trois comparaisons.
+
+Ce contrôle b8x porte sur la génération ; les tests et fixtures ci-dessus
+valident séparément la compilation et l'exécution Go.
 
 ## Validation des représentations — lot 06, 1er octobre 2026
 
