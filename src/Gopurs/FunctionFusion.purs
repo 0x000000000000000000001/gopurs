@@ -6,12 +6,11 @@ import Control.Alternative (guard)
 import Data.Array as Array
 import Data.Array.NonEmpty as NEA
 import Data.Foldable (foldl)
-import Data.Map as Map
 import Data.Maybe (Maybe(..))
 import Data.Set (Set)
 import Data.Set as Set
-import Data.Tuple (Tuple(..), fst, snd)
-import Gopurs.GoAst (sanitizeName)
+import Data.Tuple (Tuple(..), snd)
+import Gopurs.WorkerNames as WorkerNames
 import PureScript.Backend.Optimizer.Convert (BackendBindingGroup, BackendModule)
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..), Ident(..), Literal(..), ModuleName, Qualified(..))
 import PureScript.Backend.Optimizer.Semantics (NeutralExpr(..))
@@ -35,55 +34,52 @@ type Producer =
 optimizeFunctionProducers :: BackendModule -> BackendModule
 optimizeFunctionProducers mod =
   let
-    names = Set.fromFoldable (Array.concatMap (map fst <<< _.bindings) mod.bindings)
-      <> Map.keys mod.foreign
-    emitted = Set.map sanitizeIdent names
+    names = WorkerNames.fromModule mod
     identities = Set.fromFoldable $ Array.concatMap
       (Array.mapMaybe (\(Tuple name expr) -> if isIdentity expr then Just name else Nothing) <<< _.bindings)
       mod.bindings
-    rewritten = foldl (rewriteGroup mod.name identities) { names, emitted, bindings: [] } mod.bindings
+    rewritten = foldl (rewriteGroup mod.name identities) { names, bindings: [] } mod.bindings
   in mod { bindings = rewritten.bindings }
-
-sanitizeIdent :: Ident -> String
-sanitizeIdent (Ident name) = sanitizeName name
 
 rewriteGroup
   :: ModuleName
   -> Set Ident
-  -> { names :: Set Ident, emitted :: Set String, bindings :: Array Group }
+  -> { names :: WorkerNames.Names, bindings :: Array Group }
   -> Group
-  -> { names :: Set Ident, emitted :: Set String, bindings :: Array Group }
+  -> { names :: WorkerNames.Names, bindings :: Array Group }
 rewriteGroup moduleName identities acc group = case group.bindings of
   [ Tuple name expr ] | group.recursive -> case recognize moduleName identities name expr of
     Just producer ->
       let
-        worker = freshWorker acc.names acc.emitted name 0
+        worker = WorkerNames.fresh "__gopurs_counted_function_" name acc.names
         qualifiedWorker = Qualified (Just moduleName) worker
         workerGroup = { recursive: true, bindings: [ Tuple worker (iteratorWorker qualifiedWorker) ] }
         originalGroup = group { bindings = [ Tuple name (compactProducer qualifiedWorker producer) ] }
       in
-        { names: Set.insert worker acc.names
-        , emitted: Set.insert (sanitizeIdent worker) acc.emitted
+        { names: WorkerNames.reserve worker acc.names
         , bindings: acc.bindings <> [ workerGroup, originalGroup ]
         }
     Nothing -> acc { bindings = Array.snoc acc.bindings group }
   _ -> acc { bindings = Array.snoc acc.bindings group }
 
-freshWorker :: Set Ident -> Set String -> Ident -> Int -> Ident
-freshWorker names emittedNames (Ident original) index =
-  let
-    name = original <> "__gopurs_counted_function_" <> show index
-    candidate = Ident name
-  in if Set.member candidate names || Set.member (sanitizeName name) emittedNames
-     then freshWorker names emittedNames (Ident original) (index + 1)
-     else candidate
-
+-- Admission proves the complete recurrence before any worker is allocated or
+-- emitted: identity at zero, decrement by one, then callback(previous f seed).
 recognize :: ModuleName -> Set Ident -> Ident -> NeutralExpr -> Maybe Producer
 recognize current identities name expr = do
   guard (annotation expr == Just producerType)
   lambda <- abstractions producerType expr
   counter <- one lambda.args
-  branch <- case at functionType lambda.body of
+  branch <- zeroCase counter lambda.body
+  guard (identitySeed current identities branch.seed)
+  previous <- recursiveStep current name counter branch.step
+  returned <- callbackChain previous.level previous.continuation
+  pure { counter, callback: returned.callback, seed: returned.seed, body: lambda.body }
+
+type ZeroCase = { seed :: NeutralExpr, step :: NeutralExpr }
+
+zeroCase :: LocalRef -> NeutralExpr -> Maybe ZeroCase
+zeroCase counter body = do
+  branch <- case at functionType body of
     Just (Branch branches step) -> case NEA.toArray branches of
       [ Pair condition seed ] -> Just { condition, seed, step }
       _ -> Nothing
@@ -92,37 +88,48 @@ recognize current identities name expr = do
     Just (PrimOp (Syn.Op2 (Syn.OpIntOrd Syn.OpEq) left right)) -> Just (Tuple left right)
     _ -> Nothing
   guard ((local Int counter left && literal 0 right) || (literal 0 left && local Int counter right))
-  guard (identitySeed branch.seed)
-  step <- case at functionType branch.step of
+  pure { seed: branch.seed, step: branch.step }
+
+recursiveStep :: ModuleName -> Ident -> LocalRef -> NeutralExpr -> Maybe { level :: Level, continuation :: NeutralExpr }
+recursiveStep current name counter expr = do
+  step <- case at functionType expr of
     Just (Let _ previous built continuation) -> Just { previous, built, continuation }
     _ -> Nothing
   built <- application functionType step.built
   qualified <- case at producerType built.head of
     Just (Var qualifiedName) -> Just qualifiedName
     _ -> Nothing
-  guard (here name qualified)
+  guard (sameBinding current name qualified)
   decrement <- one built.args
   Tuple n amount <- case at Int decrement of
     Just (PrimOp (Syn.Op2 (Syn.OpIntNum Syn.OpSubtract) n amount)) -> Just (Tuple n amount)
     _ -> Nothing
   guard (local Int counter n && literal 1 amount)
-  returned <- abstractions functionType step.continuation
+  pure { level: step.previous, continuation: step.continuation }
+
+callbackChain :: Level -> NeutralExpr -> Maybe { callback :: LocalRef, seed :: LocalRef }
+callbackChain previous continuation = do
+  returned <- abstractions functionType continuation
   Tuple callback seed <- two returned.args
   applied <- application Int returned.body
   guard (local callbackType callback applied.head)
   inner <- one applied.args
   nested <- application Int inner
   guard (case at functionType nested.head of
-    Just (Local _ level) -> level == step.previous
+    Just (Local _ level) -> level == previous
     _ -> false)
   Tuple passedCallback passedSeed <- two nested.args
   guard (local callbackType callback passedCallback && local Int seed passedSeed)
-  pure { counter, callback, seed, body: lambda.body }
-  where
-  here ident (Qualified moduleName found) = ident == found && (moduleName == Nothing || moduleName == Just current)
-  identitySeed seed = case at functionType seed of
-    Just (Var qualified@(Qualified _ ident)) -> here ident qualified && Set.member ident identities
-    _ -> isIdentity seed
+  pure { callback, seed }
+
+sameBinding :: ModuleName -> Ident -> Qualified Ident -> Boolean
+sameBinding current ident (Qualified moduleName found) =
+  ident == found && (moduleName == Nothing || moduleName == Just current)
+
+identitySeed :: ModuleName -> Set Ident -> NeutralExpr -> Boolean
+identitySeed current identities seed = case at functionType seed of
+  Just (Var qualified@(Qualified _ ident)) -> sameBinding current ident qualified && Set.member ident identities
+  _ -> isIdentity seed
 
 callbackType :: ExprType
 callbackType = Func [ Int ] Int
@@ -153,6 +160,8 @@ compactProducer worker producer =
     condition = typed Boolean (NeutralExpr (PrimOp (Syn.Op2 (Syn.OpIntOrd Syn.OpGte) count (integer 0))))
     loop = workerCall worker count (reference callbackType producer.callback) (reference Int producer.seed)
     compact = typed functionType (NeutralExpr (Abs (NEA.cons' producer.callback [ producer.seed ]) loop))
+    -- Preserve the entire negative path before the returned lambda, including
+    -- its divergence and the evaluation boundary of a partial application.
     body = typed functionType (NeutralExpr (Branch (NEA.singleton (Pair condition compact)) producer.body))
   in typed producerType (NeutralExpr (Abs (NEA.singleton producer.counter) body))
 

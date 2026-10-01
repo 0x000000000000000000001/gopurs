@@ -25,9 +25,11 @@ par [Main](../src/Main.purs). Le pilote et ses frontières sont décrits ci-dess
    **La monomorphisation de gopurs précède donc cette optimisation PBO.**
 5. `Driver.Output.emitModule` lit les signatures FFI natives, puis transmet
    chaque module à `CodeGen.translateWithFunctions`.
-   Celui-ci applique `ThunkFusion.optimizeThunkProducers`, crée un état local
-   de traduction, prépare l'analyse TCO et les signatures des fonctions via
-   `ModuleBindings`, puis traduit les déclarations et leurs expressions.
+   Celui-ci applique dans l'ordre `ThunkFusion`, `FunctionFusion`,
+   `ImmediateApplications`, `ClosedDictionaries`, `BorrowedObjects`,
+   `DecoderSchemas` et `Ownership`. Il crée l'état local de traduction, prépare
+   l'analyse TCO et les signatures via `ModuleBindings`, puis traduit les
+   déclarations et leurs expressions.
 6. Les émetteurs construisent les expressions et les déclarations `GoDecl`,
    dont les helpers de conversion. `GoImports.collectImports` collecte leurs
    dépendances avant que `Printer.printGoFile` les rende en texte Go. Les
@@ -87,6 +89,10 @@ Tous les modules gopurs de ce tableau se trouvent dans [src/Gopurs](../src/Gopur
 | Représentations des ADT et spécialisation | `AdtMetadata`, `Monomorphization` |
 | Contrats distincts des métadonnées immuables et de l'état mutable | `CodegenState` |
 | Dispatcher récursif, assemblage du fichier | `CodeGen` |
+| Admission et réécriture des producteurs de thunks/fonctions | `ThunkFusion`, `FunctionFusion` |
+| Admission et réduction des applications immédiates | `ImmediateApplications` |
+| Occurrences, substitution et renommage des niveaux locaux | `ImmediateApplications.Scope` |
+| Réservation des noms de workers des fusions | `WorkerNames` |
 | Contexte, résultat et callbacks de traduction | `ExprContext` |
 | Annotations typées, propagation et dictionnaires de classes | `TypedExprs` |
 | Fonctions de module, signatures, groupes TCO | `ModuleBindings` |
@@ -185,6 +191,52 @@ argument immédiatement ; les autres chemins conservent sa représentation
 native jusqu'à l'adaptation de l'appel. `ArrayIntrinsics` reçoit ces arguments
 déjà traduits et émet les boucles. `CallExprs` conserve les priorités existantes :
 TCO avant les intrinsics pour `App`, intrinsics avant TCO pour `UncurriedApp`.
+
+## Fusions et applications immédiates
+
+Ces passes travaillent sur les `NeutralExpr` optimisés par PBO, avant que
+`ModuleBindings` recalcule les informations TCO. Les wrappers/newtypes effacés par
+PBO peuvent ainsi exposer un motif admissible. Chaque passe conserve ses propres
+règles de lecture des annotations.
+
+`ThunkFusion.producerParameters` vérifie la signature : un unique paramètre
+`Unit -> Int`, les autres paramètres `Int`, puis un résultat `Unit -> Int`.
+`producerTail` valide et réécrit les branches et appels récursifs ; il exige une
+base et une récursion. `suspendedBody` reconnaît les thunks unaires dont le
+paramètre Unit est inutilisé. `recursiveArgument` exige exactement un forçage du
+prédécesseur ; `seedArgument` admet seulement une expression entière totale.
+`integerTerm` et `booleanTerm` portent la liste fermée des opérations permises.
+La réécriture des consommateurs conserve intégralement les scopes `LetRec`.
+Le producteur initial reste présent, et le worker strict n'est inséré que si un
+consommateur immédiat admissible l'utilise.
+
+`FunctionFusion.recognize` compose trois preuves nommées : `zeroCase`,
+`recursiveStep` et `callbackChain`. Elles établissent l'identité à zéro, la
+décrémentation de un et la composition `callback (previous callback seed)`.
+Le contrôle typé `at` vérifie aussi les annotations imbriquées. `compactProducer`
+et `iteratorWorker` construisent ensuite la réécriture : la branche du compteur
+non négatif capture le compte, tandis que le corps d'origine conserve le chemin
+négatif avant la lambda retournée. Le callback reste différé jusqu'à l'appel.
+
+`WorkerNames` maintient les noms source et leurs formes Go assainies, y compris
+les déclarations étrangères. Chaque fusion fournit son suffixe, réserve les noms
+retenus dans l'ordre du module et garde sa politique d'insertion des workers.
+
+`ImmediateApplications` réécrit d'abord les enfants, hors scopes `LetRec`.
+`admitApplication` produit un plan de réduction pour les lambdas unaires, les
+résultats de `Let`, les branches et les échecs. Chaque résultat possible doit
+éliminer l'application. Le plan compte les substitutions syntaxiques dans toutes
+les branches, puis `boundedGrowth` applique le budget de duplication de 128 nœuds
+supplémentaires ; au plus quatre alternatives explicites sont admises par branche.
+Une valeur locale ou scalaire peut être réutilisée, une lambda seulement une fois
+par résultat. Zéro ou une insertion totale peut accepter une grande lambda.
+
+`applyInto` exécute ce plan sans refaire les contrôles d'admission. Les opérations
+de `Scope` respectent les bindings masqués et renomment les locaux liés avant
+transplantation, en conservant les références libres. La réserve de niveaux est
+propre à chaque binding et commence au-dessus du maximum de l'expression
+d'origine. Substitution et renommage portent sur les fragments sans récursion
+déjà admis ; l'ordre de visite des branches fixe l'ordre des nouveaux niveaux.
 
 ## Bindings, captures et TCO
 

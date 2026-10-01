@@ -25,6 +25,7 @@ reconstruit les deux versions et conserve le workspace pour les tests natifs.
 | Récursion | `./bin/test TCO TCOMutRec -c` |
 | Bindings, captures et signatures de workers | `node --test tools/binding-contracts.test.mjs tools/recursive-initialization.test.mjs tools/local-native-returns.test.mjs tools/zero-arity-functions.test.mjs`, après le build |
 | Fusion de thunks | `./bin/test ThunkFusion -c` |
+| Admission des fusions et applications immédiates | `node --test tools/thunk-fusion.test.mjs tools/counted-functions.test.mjs tools/immediate-applications.test.mjs`, après le build |
 | Contrat du parser Go | `go test ./...` depuis `tools/ffi-gen` |
 | Parser WASM et erreurs FFI | `npm run test:ffi`, après `npm run build` |
 | Sélection, isolation et erreurs du runner | `npm run test:runner` |
@@ -93,6 +94,24 @@ déjà présentes avant le refactoring.
 Les tests `mixed-constructor-tags`, `elided-constructor-payloads` et
 `record-tuple-conversions` complètent ce contrat par compilation et exécution
 du Go produit : tags distincts, payloads polymorphes, records et champs de classes.
+
+## Contrat des fusions et applications immédiates
+
+Les 21 tests de `thunk-fusion.test.mjs` contrôlent la conservation du producteur,
+l'omission des workers inutilisés, le forçage unique, les opérations entières
+admises, les scopes récursifs et les collisions de noms source/Go/FFI.
+`counted-functions.test.mjs` vérifie le motif récursif complet, le chemin négatif,
+les annotations et les collisions ; ses programmes Go contrôlent les applications
+partielles, les valeurs réutilisées, l'ordre et les échecs des callbacks.
+
+`immediate-applications.test.mjs` vérifie l'admission de tous les résultats d'une
+branche, le budget de duplication cumulé, la conservation des évaluations et les
+scopes récursifs. Son programme Go vérifie les captures après transplantation,
+les effets, les échecs et la réutilisation. Les **63 tests** de ces trois suites
+ont réussi avant et après le refactoring du lot 10.
+
+Les fixtures `ThunkFusion`, `ThunkFusionNewtype` et `CountedFunctions` complètent
+ces contrats sur le chemin TAST/PBO avec snapshots stricts et exécution Go.
 
 ## Contrat des bindings et des fonctions
 

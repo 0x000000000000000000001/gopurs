@@ -10,8 +10,8 @@ import Data.Map as Map
 import Data.Maybe (Maybe(..))
 import Data.Set as Set
 import Data.Traversable (traverse)
-import Data.Tuple (Tuple(..), fst, snd)
-import Gopurs.GoAst (sanitizeName)
+import Data.Tuple (Tuple(..), snd)
+import Gopurs.WorkerNames as WorkerNames
 import PureScript.Backend.Optimizer.Convert (BackendBindingGroup, BackendModule)
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..), Ident(..), Literal(..), ModuleName(..), Qualified(..))
 import PureScript.Backend.Optimizer.Semantics (NeutralExpr(..))
@@ -19,6 +19,14 @@ import PureScript.Backend.Optimizer.Syntax (BackendOperator(..), BackendOperator
 import PureScript.Backend.Optimizer.Syntax as Syn
 
 type LocalRef = Tuple (Maybe Ident) Level
+
+type ProducerParameters =
+  { args :: NEA.NonEmptyArray LocalRef
+  , body :: NeutralExpr
+  , thunkIndex :: Int
+  , thunkRef :: LocalRef
+  , intLocals :: Set.Set Level
+  }
 
 type Producer =
   { original :: Ident
@@ -53,14 +61,8 @@ type Rewritten = { expr :: NeutralExpr, used :: Set.Set Ident }
 optimizeThunkProducers :: BackendModule -> BackendModule
 optimizeThunkProducers mod =
   let
-    initialNames = Set.fromFoldable
-      (Array.concatMap (map fst <<< _.bindings) mod.bindings)
-      <> Map.keys mod.foreign
-    -- Les noms « émis » (assainis) ne sont pas recalculés par `Set.map` à
-    -- chaque binding : le parcours est linéaire, cet ensemble l'est aussi.
-    initialEmitted = Set.map sanitizeIdent initialNames
     found = foldl (collectProducer mod.name)
-      { names: initialNames, emitted: initialEmitted, producers: [] } mod.bindings
+      { names: WorkerNames.fromModule mod, producers: [] } mod.bindings
     producers = found.producers
   in if Array.null producers then mod else rewriteModule producers mod
 
@@ -88,32 +90,19 @@ rewriteModule producers mod =
 
 collectProducer
   :: ModuleName
-  -> { names :: Set.Set Ident, emitted :: Set.Set String, producers :: Array Producer }
+  -> { names :: WorkerNames.Names, producers :: Array Producer }
   -> BackendBindingGroup Ident NeutralExpr
-  -> { names :: Set.Set Ident, emitted :: Set.Set String, producers :: Array Producer }
+  -> { names :: WorkerNames.Names, producers :: Array Producer }
 collectProducer moduleName acc group = case group.bindings of
   [ Tuple ident expr ] | group.recursive ->
-    let worker = freshWorker acc.names acc.emitted ident 0
+    let worker = WorkerNames.fresh "__gopurs_strict_thunk_" ident acc.names
     in case recognizeProducer moduleName ident worker expr of
       Just p ->
-        { names: Set.insert worker acc.names
-        , emitted: Set.insert (sanitizeIdent worker) acc.emitted
+        { names: WorkerNames.reserve worker acc.names
         , producers: Array.snoc acc.producers p
         }
       Nothing -> acc
   _ -> acc
-
-sanitizeIdent :: Ident -> String
-sanitizeIdent (Ident name) = sanitizeName name
-
-freshWorker :: Set.Set Ident -> Set.Set String -> Ident -> Int -> Ident
-freshWorker names emittedNames (Ident original) index =
-  let
-    candidateName = original <> "__gopurs_strict_thunk_" <> show index
-    candidate = Ident candidateName
-  in if Set.member candidate names || Set.member (sanitizeName candidateName) emittedNames
-     then freshWorker names emittedNames (Ident original) (index + 1)
-     else candidate
 
 strip :: NeutralExpr -> Syn.BackendSyntax NeutralExpr
 strip (NeutralExpr syn) = case syn of
@@ -225,6 +214,23 @@ booleanTerm locals expr = case strip expr of
 
 recognizeProducer :: ModuleName -> Ident -> Ident -> NeutralExpr -> Maybe Producer
 recognizeProducer moduleName original worker expr = do
+  parameters <- producerParameters expr
+  let
+    { args, thunkIndex, thunkRef, intLocals } = parameters
+    arity = NEA.length args
+    workerType = Func (map (const Int) (NEA.toArray args)) Int
+    env = { moduleName, original, worker, arity, thunkIndex, thunkRef, intLocals, workerType }
+  body <- producerTail env parameters.body
+  guard (body.hasBase && body.hasRecursion)
+  pure
+    { original, worker, arity, thunkIndex, workerType
+    , binding: NeutralExpr (Typed workerType (NeutralExpr (Abs args body.expr)))
+    }
+
+-- Exactly one Unit -> Int parameter may become strict. All other parameters
+-- are Int, and the returned Unit -> Int remains outside the collected lambdas.
+producerParameters :: NeutralExpr -> Maybe ProducerParameters
+producerParameters expr = do
   ty <- annotation expr
   let
     signature = arrow ty
@@ -241,16 +247,9 @@ recognizeProducer moduleName original worker expr = do
   thunkRef <- Array.index lambda.args thunkIndex
   args <- NEA.fromArray lambda.args
   let
-    workerType = Func (map (const Int) lambda.args) Int
     intLocals = Set.fromFoldable (Array.mapMaybe (\(Tuple i (Tuple _ level)) ->
       if i == thunkIndex then Nothing else Just level) (Array.mapWithIndex Tuple lambda.args))
-    env = { moduleName, original, worker, arity, thunkIndex, thunkRef, intLocals, workerType }
-  body <- producerTail env lambda.body
-  guard (body.hasBase && body.hasRecursion)
-  pure
-    { original, worker, arity, thunkIndex, workerType
-    , binding: NeutralExpr (Typed workerType (NeutralExpr (Abs args body.expr)))
-    }
+  pure { args, body: lambda.body, thunkIndex, thunkRef, intLocals }
 
 producerTail :: ProducerEnv -> NeutralExpr -> Maybe TailTerm
 producerTail env expr = case strip expr of
@@ -274,27 +273,42 @@ producerTail env expr = case strip expr of
     case strip applied.head of
       Var (Qualified (Just moduleName) ident) | moduleName == env.moduleName && ident == env.original -> pure unit
       _ -> Nothing
-    args <- traverse (\(Tuple index arg) ->
-      if index == env.thunkIndex then do
-        let lambda = abstractions arg
-        guard (case annotation arg of
-          Just ty -> intThunk ty
-          Nothing -> false)
-        case lambda.args of
-          [ Tuple _ unitLevel ] -> do
-            guard (not (containsLocal unitLevel lambda.body))
-            term <- integerTerm env.intLocals (Just env.thunkRef) lambda.body
-            guard (term.demands == 1)
-            pure term.expr
-          _ -> Nothing
-      else do
-        guard (not (containsLocal (snd env.thunkRef) arg))
-        term <- integerTerm env.intLocals Nothing arg
-        pure term.expr
-      ) (Array.mapWithIndex Tuple applied.args)
+    args <- traverse (recursiveArgument env) (Array.mapWithIndex Tuple applied.args)
     result <- call (Qualified (Just env.moduleName) env.worker) env.workerType args
     pure { expr: result, hasBase: false, hasRecursion: true }
   _ -> Nothing
+
+-- Both seeds and updates must be annotated unary thunks with an unused Unit
+-- parameter. Their integer admission differs: an update demands the predecessor
+-- exactly once, whereas a seed cannot call any thunk or unknown function.
+suspendedBody :: NeutralExpr -> Maybe NeutralExpr
+suspendedBody expr = do
+  ty <- annotation expr
+  guard (intThunk ty)
+  let lambda = abstractions expr
+  case lambda.args of
+    [ Tuple _ unitLevel ] -> do
+      guard (not (containsLocal unitLevel lambda.body))
+      pure lambda.body
+    _ -> Nothing
+
+recursiveArgument :: ProducerEnv -> Tuple Int NeutralExpr -> Maybe NeutralExpr
+recursiveArgument env (Tuple index arg)
+  | index == env.thunkIndex = do
+      body <- suspendedBody arg
+      term <- integerTerm env.intLocals (Just env.thunkRef) body
+      guard (term.demands == 1)
+      pure term.expr
+  | otherwise = do
+      guard (not (containsLocal (snd env.thunkRef) arg))
+      term <- integerTerm env.intLocals Nothing arg
+      pure term.expr
+
+seedArgument :: Int -> Tuple Int NeutralExpr -> Maybe NeutralExpr
+seedArgument thunkIndex (Tuple index arg) = do
+  value <- if index == thunkIndex then suspendedBody arg else pure arg
+  term <- integerTerm Set.empty Nothing value
+  pure term.expr
 
 rewriteConsumers :: ModuleName -> Map.Map Ident Producer -> NeutralExpr -> Rewritten
 rewriteConsumers moduleName producers expr@(NeutralExpr syn) =
@@ -320,21 +334,7 @@ immediateConsumer moduleName producers expr = do
   guard (Array.length applied.args == producer.arity + 1)
   unitArg <- Array.last applied.args
   guard (isUnit unitArg)
-  args <- traverse (\(Tuple index arg) ->
-    if index == producer.thunkIndex then do
-      let lambda = abstractions arg
-      guard (case annotation arg of
-        Just ty -> intThunk ty
-        Nothing -> false)
-      case lambda.args of
-        [ Tuple _ unitLevel ] -> do
-          guard (not (containsLocal unitLevel lambda.body))
-          seed <- integerTerm Set.empty Nothing lambda.body
-          pure seed.expr
-        _ -> Nothing
-    else do
-      term <- integerTerm Set.empty Nothing arg
-      pure term.expr
-    ) (Array.mapWithIndex Tuple (Array.take producer.arity applied.args))
+  args <- traverse (seedArgument producer.thunkIndex)
+    (Array.mapWithIndex Tuple (Array.take producer.arity applied.args))
   result <- call (Qualified (Just moduleName) producer.worker) producer.workerType args
   pure { expr: result, used: Set.singleton producer.worker }
