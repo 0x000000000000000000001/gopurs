@@ -17,6 +17,7 @@ reconstruit les deux versions et conserve le workspace pour les tests natifs.
 | Annotations et représentations natives | `node --test tools/native-record-workers.test.mjs tools/boxed-record-arguments.test.mjs tools/native-sum-results.test.mjs`, après le build |
 | Layouts, métadonnées et instanciation | `node --test tools/representation-contract.test.mjs tools/mixed-constructor-tags.test.mjs tools/elided-constructor-payloads.test.mjs tools/record-tuple-conversions.test.mjs`, après le build |
 | Boxing et émission transitive Rebox | `node --test tools/rebox-generation.test.mjs tools/rebox-metadata.test.mjs tools/struct-pointer-boxing.test.mjs tools/value-array-unboxing.test.mjs`, après le build |
+| Littéraux composites et constructeurs | `node --test tools/composite-expressions.test.mjs tools/elided-constructor-payloads.test.mjs tools/nullary-constructor-bindings.test.mjs`, après le build ; `./bin/test ConstructorReuse NativeArrayReboxing` |
 | Types et records | `./bin/test NativeRecordBoxing NativeRecordSizes -c` |
 | Bridge FFI | `node --test tools/ffi-bridge.test.mjs tools/ffi-generics.test.mjs`, après le build ; `./bin/test FFIIntegerReturns -c` |
 | Appels et fonctions | `./bin/test CurriedLambdas -c` |
@@ -91,6 +92,19 @@ déjà présentes avant le refactoring.
 Les tests `mixed-constructor-tags`, `elided-constructor-payloads` et
 `record-tuple-conversions` complètent ce contrat par compilation et exécution
 du Go produit : tags distincts, payloads polymorphes, records et champs de classes.
+
+## Contrat des expressions composites
+
+`composite-expressions.test.mjs` observe les contextes enfants, les statements,
+les compteurs de noms et l'état Rebox aux frontières des émetteurs. Il distingue
+la traduction complète d'un tableau avant adaptation de la conversion immédiate
+de chaque champ de record ou de constructeur. Il contrôle aussi les tableaux
+vides/hétérogènes, les paramètres de callbacks curryfiés et non curryfiés, leur
+portée locale et la réservation du nom lors d'une réutilisation de constructeur.
+
+Les fixtures `ConstructorReuse`, `NativeArrayReboxing`, `NativeRecordBoxing` et
+les tests de constructeurs/sommes natifs vérifient le raccordement au dispatcher,
+les snapshots et le comportement du Go généré.
 
 ## Contrat Rebox
 
@@ -197,6 +211,41 @@ La sélection complète est le défaut. Les noms avec ou sans `gopurs-` sont
 acceptés ; `-c` reconstruit le backend depuis ce checkout. Chaque script frère
 gère encore ses propres sorties et nettoyages ; l'isolation des fixtures de
 `bin/test` ne s'étend pas automatiquement à ces scripts.
+
+## Validation du dispatcher — lot 08, 1er octobre 2026
+
+Les tableaux et records littéraux passent par `LiteralExprs` ; définitions et
+constructions saturées passent par `ConstructorExprs`. L'ordre de traduction,
+les conversions immédiates ou différées et la réutilisation des constructeurs
+sont explicites dans ces émetteurs. Le typage des paramètres de callbacks utilise
+le helper commun déjà employé par les records.
+
+Vérifications effectuées :
+
+- reconstruction des compilateurs JS et natif ; bootstrap avec TAST vérifié sur
+  **479 modules et 284 264 types** ;
+- **39 tests ciblés** : `composite-expressions`, `record-tuple-conversions`,
+  `elided-constructor-payloads`, `nullary-constructor-bindings`,
+  `native-sum-results`, `native-record-workers`, `boxed-record-arguments`,
+  `local-native-returns`, `representation-contract`, `rebox-generation`,
+  `native-constructor-tags`. Les six nouveaux tests contrôlent notamment l'état
+  Rebox visible au champ suivant, la portée des paramètres et le compteur de noms ;
+- **12 fixtures**, snapshots stricts, compilation et exécution Go avec 8 workers :
+  `ConstructorReuse`, `NativeArrayReboxing`, `ArrayRoundtrip`, `NativeRecordBoxing`,
+  `NativeRecordSizes`, `NativeRecordReturns`, `CompactRecordConsumers`,
+  `TypeClassMemberOrderChange`, `EnumDictionaryField`, `PartiallyAppliedMaybe`,
+  `DuplicateProperties`, `RBTree` ;
+- b8x : référence régénérée avec le compilateur précédent sur **2 683 entrées
+  TAST figées**, puis **2 987 fichiers Go identiques octet par octet** en natif
+  parallèle, natif séquentiel et JS, sans ajout ni suppression. Runtime, bridges
+  FFI, entrées exécutables et `go.mod` sont inclus.
+
+Les builds, les 39 tests ciblés et les trois comparaisons b8x ont été reconfirmés
+après le nettoyage final des imports et noms locaux. Le manifeste des **65 fichiers
+sources et artefacts compilateur** est stable avant et après ces comparaisons.
+Le contrôle b8x porte sur la génération ; les tests et fixtures ci-dessus valident
+la compilation et l'exécution Go. Le score du plan est passé à **60/100**, avec
+huit lots clôturés ; `git diff --check` est propre.
 
 ## Validation des conversions et de Rebox — lot 07, 1er octobre 2026
 

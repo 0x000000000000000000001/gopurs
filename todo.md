@@ -7,7 +7,7 @@ une génération Go identique. Périmètre : compilateur, runtime, FFI et outill
 de ce dépôt ; les interfaces avec PBO et les bibliothèques sœurs sont incluses.
 Les optimisations de performance restent en pause.
 
-## Avancement : 55 % — 55/100 points, 7/15 lots validés
+## Avancement : 60 % — 60/100 points, 8/15 lots validés
 
 - **Calcul :** somme des points des cases cochées, sur un total fixe de 100.
   Les poids sont des unités de suivi ; le pourcentage mesure les livrables
@@ -41,9 +41,10 @@ Les optimisations de performance restent en pause.
 - [x] **07 — Boxing, conversions et Rebox (10 pts).** Choix de conversion et
   passages par `Value` clarifiés ; layouts natifs isolés dans `NativeAdts`, demandes
   et émission transitive dans `Rebox`. Contrats récursifs, tests et parité validés.
-- [ ] **08 — Expressions restantes du dispatcher (5 pts).** Extraire de
-  `CodeGen` la traduction des littéraux composites et des constructeurs saturés.
-  Fin : dispatcher court, ordre d'évaluation et de coercition explicite dans les émetteurs.
+- [x] **08 — Expressions restantes du dispatcher (5 pts).** Littéraux composites
+  isolés dans `LiteralExprs`, définitions et constructions saturées dans
+  `ConstructorExprs` ; ordre de traduction, coercitions et réutilisation explicites.
+  Typage des callbacks partagé, tests et parité validés.
 - [ ] **09 — Bindings, fonctions et TCO (5 pts).** Revoir `ModuleBindings`,
   `BindingExprs`, `FunctionExprs` et leurs analyses partagées.
   Fin : signatures, captures, initialisation récursive et sauts TCO faciles à suivre.
@@ -81,4 +82,4 @@ Les optimisations de performance restent en pause.
 - Documentation des responsabilités et preuves de validation à jour ;
   `git diff --check` propre.
 
-**Prochaine passe : lot 08 — expressions restantes du dispatcher.** Sa clôture portera l'avancement à **60 %**.
+**Prochaine passe : lot 09 — bindings, fonctions et TCO.** Sa clôture portera l'avancement à **65 %**.

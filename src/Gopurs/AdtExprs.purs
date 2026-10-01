@@ -111,7 +111,7 @@ saturatedFieldType (SaturatedConstructor { metadata, modNameStr, prepared }) fie
     { exprType: expectedExprType, goType: expectedType }
 
 -- Fields arrive in source order, already translated and immediately coerced.
--- Constructor reuse and statement assembly remain with the caller.
+-- ConstructorExprs owns reuse and statement assembly after field translation.
 saturated :: Ref CodegenState -> SaturatedConstructor -> { exprs :: Array GoExpr, exprTypes :: Array GoType } -> AdtExpr
 saturated codegenStateRef (SaturatedConstructor { metadata, modNameStr, name, prepared }) accProps =
   let

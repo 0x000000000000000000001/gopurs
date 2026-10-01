@@ -12,9 +12,8 @@ import Data.String as String
 import Data.Array as Array
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Newtype (unwrap)
-import PureScript.Backend.Optimizer.CoreFn (ExprType(..), Ident(..), Literal(..), Prop(..), Qualified(..))
+import PureScript.Backend.Optimizer.CoreFn (Ident(..), Literal(..), Prop(..), Qualified(..))
 import Data.Tuple (Tuple(..))
-import Data.Array.NonEmpty (toArray)
 import Effect.Unsafe (unsafePerformEffect)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
@@ -22,20 +21,22 @@ import Data.String.Pattern (Pattern(..), Replacement(..))
 import Data.Map as Map
 import Data.Set as Set
 import Data.Foldable (foldl)
-import Gopurs.GoAst (rawGo, GoExpr(..), GoDecl(..), GoType(..), capitalize, goTypeToStr, sanitizeName)
-import Gopurs.Printer (printGoFile, printGoExpr)
+import Gopurs.GoAst (GoExpr(..), GoDecl(..), GoType(..), capitalize, sanitizeName)
+import Gopurs.Printer (printGoFile)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.FreeVars (localId)
 import Gopurs.ThunkFusion (optimizeThunkProducers)
 import Gopurs.FunctionFusion (optimizeFunctionProducers)
 import Gopurs.ImmediateApplications (optimizeImmediateApplications)
 import Gopurs.Ownership as Ownership
-import Gopurs.GoTypes (exprTypeToGenericGoType, exprTypeToGoType)
+import Gopurs.GoTypes (exprTypeToGoType)
 import Gopurs.CodegenState (CodegenMetadata, CodegenState, FunctionInfo)
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr, generateReboxFunctions)
 import Gopurs.PrimitiveExprs as PrimitiveExprs
 import Gopurs.RecordExprs as RecordExprs
 import Gopurs.AdtExprs as AdtExprs
+import Gopurs.ConstructorExprs as ConstructorExprs
+import Gopurs.LiteralExprs as LiteralExprs
 import Gopurs.ArrayIntrinsics as ArrayIntrinsics
 import Gopurs.ClosedDictionaries (cacheClosedDictionaries)
 import Gopurs.BorrowedObjects (borrowReadOnlyObjects)
@@ -49,7 +50,7 @@ import Gopurs.TypedExprs as TypedExprs
 import Gopurs.ModuleBindings as ModuleBindings
 import Gopurs.ModuleDeclarations as ModuleDeclarations
 import Gopurs.GoImports (collectImports)
-import Gopurs.ExprAnalysis (bindFieldFunctionParameters, extractExprFuncType, getExprType, hasTypeVars, isEffectNode, unwrapTcoExpr)
+import Gopurs.ExprAnalysis (getExprType, isEffectNode)
 import Gopurs.ExprContext (ModuleFunctions, StmtTree(..), TranslateExpr, childContext)
 
 translate :: CodegenMetadata -> BackendModule -> String
@@ -161,75 +162,10 @@ translateExpr context@{ metadata, codegenStateRef, modNameStr, bound, options: {
               { stmts: StmtEmpty, expr: result.expr, exprType: result.exprType, nextId }
 
         Lit (LitArray xs) ->
-          let
-            accXs = foldl
-              ( \acc val ->
-                  let
-                    resVal = translateExpr child acc.nextId val
-                  in
-                    { stmts: acc.stmts <> resVal.stmts, exprs: Array.snoc acc.exprs resVal.expr, exprTypes: Array.snoc acc.exprTypes resVal.exprType, nextId: resVal.nextId }
-              )
-              { stmts: StmtEmpty, exprs: [], exprTypes: [], nextId }
-              xs
-
-            mbElemType = Array.head accXs.exprTypes
-            isAllSame = Array.all (\t -> Just t == mbElemType) accXs.exprTypes
-
-            expectedElemType = case mbExpectedExprType of
-              Just exTy ->
-                case exprTypeToGenericGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors [] modNameStr exTy of
-                  TypeNativeArray et -> Just et
-                  _ -> Nothing
-              Nothing -> Nothing
-
-            finalElemType = case expectedElemType of
-              Just t -> Just t
-              Nothing -> if isAllSame then mbElemType else Nothing
-          in
-            case finalElemType of
-              Just elemType | (isAllSame || Array.length xs == 0) && elemType /= TypeValue ->
-                let
-                  goTypeArr = TypeNativeArray elemType
-                  -- The expected element layout can specialize a polymorphic
-                  -- constructor field. Convert each value before assembling
-                  -- the native slice, just as for typed record fields.
-                  elements = Array.zipWith
-                    (\itemExpr ty -> coerceGoExpr codegenStateRef modNameStr itemExpr ty elemType)
-                    accXs.exprs
-                    accXs.exprTypes
-                in
-                  { stmts: accXs.stmts, expr: rawGo (goTypeToStr goTypeArr <> "{" <> String.joinWith ", " (map printGoExpr elements) <> "}"), exprType: goTypeArr, nextId: accXs.nextId }
-              _ ->
-                let
-                  boxedExprs = Array.zipWith (\itemExpr ty -> boxGoExpr codegenStateRef modNameStr itemExpr ty) accXs.exprs accXs.exprTypes
-                in
-                  { stmts: accXs.stmts, expr: GoCall (GoSelector (GoVar "gopurs_runtime") "Array") [ rawGo ("[]gopurs_runtime.Value{" <> String.joinWith ", " (map printGoExpr boxedExprs) <> "}") ], exprType: TypeValue, nextId: accXs.nextId }
+          LiteralExprs.array translateExpr context nextId xs
 
         Lit (LitRecord props) ->
-          let
-            sortedProps = Array.sortBy (comparing \(Prop k _) -> k) props
-            recordInfo = RecordExprs.prepareLiteral metadata modNameStr (getExprType tcoExpr) mbExpectedExprType
-
-            accProps = foldl
-              ( \acc (Prop key val) ->
-                  let
-                    expectedExprType = fromMaybe Any (Map.lookup key recordInfo.fields)
-                    newBound = bindFieldFunctionParameters
-                      (\fArgTy -> exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr fArgTy)
-                      bound
-                      expectedExprType
-                      val
-
-                    resVal = translateExpr (child { bound = newBound }) acc.nextId val
-                    field = RecordExprs.coerceLiteralField codegenStateRef modNameStr key recordInfo.recordType { expr: resVal.expr, exprType: resVal.exprType }
-                  in
-                    { stmts: acc.stmts <> resVal.stmts, exprs: Array.snoc acc.exprs field, exprType: TypeValue, nextId: resVal.nextId }
-              )
-              { stmts: StmtEmpty, exprs: [], exprType: TypeValue, nextId }
-              sortedProps
-            result = RecordExprs.literal recordInfo.recordType accProps.exprs
-          in
-            { stmts: accProps.stmts, expr: result.expr, exprType: result.exprType, nextId: accProps.nextId }
+          LiteralExprs.record translateExpr context nextId (getExprType tcoExpr) props
 
         expr_
           | ( case expr_ of
@@ -306,75 +242,10 @@ translateExpr context@{ metadata, codegenStateRef, modNameStr, bound, options: {
             { stmts: resObj.stmts <> accProps.stmts, expr: result.expr, exprType: result.exprType, nextId: accProps.nextId }
 
         CtorDef _ _ (Ident name) fields ->
-          let
-            annotatedType = fromMaybe (getExprType tcoExpr) mbExpectedExprType
-            ctorType = case extractExprFuncType annotatedType of
-              Just { fRet } -> fRet
-              Nothing -> annotatedType
-            result = AdtExprs.definition metadata codegenStateRef modNameStr name fields ctorType
-          in
-            { stmts: StmtEmpty, expr: result.expr, exprType: result.exprType, nextId }
+          ConstructorExprs.definition context nextId tcoExpr name fields
 
         CtorSaturated (Qualified mbMod _) _ _ (Ident name) props ->
-          let
-            ctorType = case getExprType tcoExpr of
-              Any -> fromMaybe Any mbExpectedExprType
-              ty ->
-                if hasTypeVars ty then
-                  case mbExpectedExprType of
-                    Just expectedTy | not (hasTypeVars expectedTy) -> expectedTy
-                    _ -> ty
-                else ty
-
-            prepared = AdtExprs.prepareSaturated metadata modNameStr mbMod name ctorType
-
-            accProps = foldl
-              ( \acc (Tuple _ val) ->
-                  let
-                    { exprType: expectedExprType, goType: expectedType } = AdtExprs.saturatedFieldType prepared acc.fieldIdx
-
-                    newBound = case unwrapTcoExpr val, extractExprFuncType expectedExprType of
-                      Abs args _, Just { fArgs } ->
-                        let
-                          paramsWithTypes = Array.zipWith (\(Tuple mbI lvl) fArgTy -> Tuple (localId mbI lvl) (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr fArgTy)) (toArray args) (fArgs <> Array.replicate (Array.length (toArray args) - Array.length fArgs) Any)
-                        in
-                          foldl (\b (Tuple idStr goType) -> Map.insert idStr { name: idStr, goType } b) bound paramsWithTypes
-                      UncurriedAbs args _, Just { fArgs } ->
-                        let
-                          paramsWithTypes = Array.zipWith (\(Tuple mbI lvl) fArgTy -> Tuple (localId mbI lvl) (exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr fArgTy)) args (fArgs <> Array.replicate (Array.length args - Array.length fArgs) Any)
-                        in
-                          foldl (\b (Tuple idStr goType) -> Map.insert idStr { name: idStr, goType } b) bound paramsWithTypes
-                      _, _ -> bound
-
-                    resVal = translateExpr (child { bound = newBound }) acc.nextId val
-                    coercedExpr = coerceGoExpr codegenStateRef modNameStr resVal.expr resVal.exprType expectedType
-                    isConstant = expectedType == resVal.exprType && case expectedType, unwrapTcoExpr val of
-                      TypeInt64, Lit (LitInt _) -> true
-                      TypeBool, Lit (LitBoolean _) -> true
-                      TypeUint32, CtorSaturated _ _ _ _ ctorFields -> Array.null ctorFields
-                      TypeUint32, CtorDef _ _ _ ctorFields -> Array.null ctorFields
-                      _, _ -> false
-                  in
-                    { stmts: acc.stmts <> resVal.stmts, exprs: Array.snoc acc.exprs coercedExpr, exprTypes: Array.snoc acc.exprTypes expectedType, exprType: TypeValue, nextId: resVal.nextId, fieldIdx: acc.fieldIdx + 1, constants: Array.snoc acc.constants isConstant }
-              )
-              { stmts: StmtEmpty, exprs: [], exprTypes: [], exprType: TypeValue, nextId, fieldIdx: 0, constants: [] }
-              props
-
-            res = AdtExprs.saturated codegenStateRef prepared { exprs: accProps.exprs, exprTypes: accProps.exprTypes }
-            reuse = case accProps.stmts of
-              StmtEmpty -> AdtExprs.constructorReuse bound res.exprType accProps.constants res.expr
-              _ -> Nothing
-          in
-            case reuse of
-              Just { source, condition } ->
-                let
-                  resultName = "__reuse_" <> show accProps.nextId
-                  declare = rawGo ("var " <> resultName <> " " <> goTypeToStr res.exprType)
-                  choose = GoIfElse condition [ GoMutate resultName source ] [ GoMutate resultName res.expr ]
-                in
-                  { stmts: StmtLeaf declare <> StmtLeaf choose, expr: GoVar resultName, exprType: res.exprType, nextId: accProps.nextId + 1 }
-              Nothing ->
-                { stmts: accProps.stmts, expr: res.expr, exprType: res.exprType, nextId: accProps.nextId }
+          ConstructorExprs.saturated translateExpr context nextId tcoExpr mbMod name props
 
         Fail msg ->
           ControlExprs.failure context nextId tcoExpr msg

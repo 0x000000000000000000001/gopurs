@@ -42,7 +42,7 @@ prepareLiteral metadata modNameStr baseExprType mbExpectedExprType =
   in
     { recordType, fields: recordFields }
 
--- CodeGen calls this immediately after translating each field. Delaying these
+-- LiteralExprs calls this immediately after translating each field. Delaying these
 -- conversions until all fields are translated would change reboxing state.
 coerceLiteralField :: Ref CodegenState -> String -> String -> GoType -> RecordExpr -> Tuple String GoExpr
 coerceLiteralField codegenStateRef modNameStr key recordType value =

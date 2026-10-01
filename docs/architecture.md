@@ -97,6 +97,8 @@ Tous les modules gopurs de ce tableau se trouvent dans [src/Gopurs](../src/Gopur
 | Reconnaissance et émission de map, filter et foldl | `ArrayIntrinsics` |
 | Abstractions, branches et effets | `FunctionExprs`, `ControlExprs`, `EffectExprs` |
 | ADT, records et primitives | `AdtExprs`, `RecordExprs`, `PrimitiveExprs` |
+| Traduction des littéraux tableaux et records | `LiteralExprs` |
+| Traduction des définitions et constructions saturées | `ConstructorExprs` |
 | Identité, champs et arguments génériques des constructeurs | `ConstructorLayout` |
 | Analyses d'expressions | `ExprAnalysis` |
 | Traduction des annotations en types Go | `GoTypes` |
@@ -131,6 +133,31 @@ doit être évité : records déjà boxés destinés à un consommateur dynamiqu
 natifs projetés, sommes natives, pointeurs et closures. Chaque champ de dictionnaire
 est traduit puis converti avant le suivant, car la conversion peut enregistrer
 des helpers Rebox dans l'état du module.
+
+`LiteralExprs` conserve deux ordres d'adaptation distincts. Pour un tableau, tous
+les éléments sont traduits dans l'ordre source, puis leur représentation commune
+est choisie et les conversions sont émises. L'annotation peut spécialiser des
+éléments homogènes ou un tableau vide ; des représentations sources hétérogènes
+restent boxées. Pour un record, les labels sont triés, puis chaque champ est
+traduit et converti avant le suivant. Les deux chemins transmettent les statements
+et le prochain identifiant libre sans les réordonner.
+
+`ConstructorExprs` résout le type résultat des définitions et prépare le layout
+des constructions saturées. Une attente concrète peut préciser une annotation
+absente ou polymorphe. Les champs sont traduits et convertis immédiatement dans
+l'ordre source, puis `AdtExprs` assemble la représentation choisie. Records et
+constructeurs partagent `ExprAnalysis.bindFieldFunctionParameters` pour typer les
+paramètres des callbacks curryfiés ou non curryfiés ; leurs bindings restent
+locaux au champ. Le contexte ordinaire des enfants ne reçoit pas le type attendu
+du conteneur.
+
+La réutilisation d'un constructeur intervient après ses champs et seulement si
+aucun statement n'a été produit. `AdtExprs.constructorReuse` établit la preuve
+d'une reconstruction inchangée avec un remplacement constant unique ;
+`ConstructorExprs` reconnaît les constantes Int, Boolean et enum sans conversion,
+puis assemble la condition et réserve un identifiant `__reuse_…`. Number reste
+exclu pour préserver le zéro signé. Les chemins sans réutilisation gardent le
+compteur renvoyé par le dernier champ.
 
 La référence `CodegenState` contient uniquement les déclarations structurées
 produites (`declarations`), le compteur des bindings récursifs (`globalId`) et les
