@@ -4,119 +4,32 @@ module Gopurs.ArrayIntrinsics
   , recognize
   , emitCurried
   , emitUncurried
-  , safeIndex
-  , unsafeIndex
+  , module Index
   ) where
 
 import Prelude
 import Data.Array as Array
-import Data.Foldable (foldl)
 import Data.Map as Map
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.String as String
 import Data.String.Pattern (Pattern(..), Replacement(..))
+import Gopurs.ArrayIntrinsics.Index (safeIndex, unsafeIndex) as Index
+import Gopurs.ArrayIntrinsics.Source (arraySource)
 import Gopurs.CallAnalysis (CallTarget, qualifiedTarget)
 import Gopurs.CallArguments (Arguments, applyBoxed)
 import Gopurs.CallArguments as CallArguments
 import Gopurs.CodegenState (FunctionInfo)
-import Gopurs.ExprAnalysis (extractFuncType, getExprType, unwrapTcoExpr)
-import Gopurs.ExprContext (ExprContext, ExprResult, StmtTree(..), TranslateExpr, childContext)
+import Gopurs.ExprAnalysis (extractFuncType, unwrapTcoExpr)
+import Gopurs.ExprContext (ExprContext, ExprResult)
 import Gopurs.GoAst (rawGo, GoExpr(..), GoType(..), goTypeToStr)
-import Gopurs.GoConversions (boxGoExpr, coerceGoExpr, unboxGoExpr)
-import Gopurs.GoTypes (exprTypeToGoType)
-import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
+import Gopurs.GoConversions (boxGoExpr, unboxGoExpr)
+import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr)
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..), Ident(..), Literal(..), ModuleName(..), Qualified(..))
 import PureScript.Backend.Optimizer.Syntax (BackendSyntax(..))
 
 data ArrayIntrinsic = MapArray | FoldlArray | FilterArray
 
 data Convention = Curried | Uncurried
-
--- indexImpl's FFI bridge converts its entire array to []any. Retain the
--- source representation and convert only the element passed to Just.
-safeIndex :: TranslateExpr -> ExprContext -> Int -> Maybe CallTarget -> Array TcoExpr -> Maybe ExprResult
-safeIndex translate context@{ metadata, codegenStateRef, modNameStr } nextId target args = case target, args of
-  Just { mbMod, name: "indexImpl" }, [ justArg, nothingArg, arrayArg, indexArg ]
-    | mbMod == Just (ModuleName "Data.Array") || (mbMod == Nothing && modNameStr == "Data_Array") ->
-      let
-        captured = foldl capture { stmts: StmtEmpty, exprs: [], exprTypes: [], nextId }
-          [ justArg, nothingArg, withoutArrayAnnotation arrayArg, indexArg ]
-        arg n = fromMaybe (rawGo "nil") (Array.index captured.exprs n)
-        argType n = fromMaybe TypeValue (Array.index captured.exprTypes n)
-        boxed n = boxGoExpr codegenStateRef modNameStr (arg n) (argType n)
-        arrayName = "arrayIndex_source_" <> show captured.nextId
-        -- The captured argument is a variable, so this binding cannot repeat
-        -- evaluation or traverse the array.
-        source = arraySource "arrayIndex_value" arrayName (argType 2)
-        elementType = case getExprType arrayArg of
-          Array inner -> exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr inner
-          _ -> source.elementType
-        index = coerceGoExpr codegenStateRef modNameStr (arg 3) (argType 3) TypeInt64
-        element = GoIndex (rawGo ("(" <> source.target <> ")")) index
-        converted = coerceGoExpr codegenStateRef modNameStr element source.elementType elementType
-        selected = boxGoExpr codegenStateRef modNameStr converted elementType
-        onFound = case argType 0 of
-          TypeFunc [ inputType ] outputType -> boxGoExpr codegenStateRef modNameStr
-            (GoCall (arg 0) [ coerceGoExpr codegenStateRef modNameStr converted elementType inputType ]) outputType
-          _ -> applyBoxed (boxed 0) [ selected ]
-        inBounds = GoBinOp "&&"
-          (GoBinOp ">=" index (rawGo "0"))
-          (GoBinOp "<" index (GoCall (GoVar "int64") [ GoCall (GoVar "len") [ rawGo source.target ] ]))
-        expr = GoCall (GoFuncLit []
-          [ GoAssign "arrayIndex_value" (arg 2)
-          , source.assignment
-          , GoIfElse inBounds [ GoReturn onFound ] []
-          ] (boxed 1) TypeValue) []
-      in
-        Just { stmts: captured.stmts, expr, exprType: TypeValue, nextId: captured.nextId }
-  _, _ -> Nothing
-  where
-  -- Capture each expression immediately after its statements: collecting all
-  -- statements before evaluating the expressions would reorder arguments.
-  capture acc arg =
-    let
-      result = translate (childContext context Nothing) acc.nextId arg
-      name = "arrayIndex_arg_" <> show result.nextId
-    in
-      { stmts: acc.stmts <> result.stmts <> StmtLeaf (GoAssign name result.expr)
-      , exprs: Array.snoc acc.exprs (GoVar name)
-      , exprTypes: Array.snoc acc.exprTypes result.exprType
-      , nextId: result.nextId + 1
-      }
-
--- Typed array coercions are element-wise. Moving this coercion onto the
--- selected element preserves its TAST type without copying the container.
-withoutArrayAnnotation :: TcoExpr -> TcoExpr
-withoutArrayAnnotation (TcoExpr _ (Typed (Array _) inner)) = withoutArrayAnnotation inner
-withoutArrayAnnotation arg = arg
-
--- OpArrayIndex requires an in-bounds index. Retain the array's
--- representation just as for indexImpl, then convert only the selected item.
-unsafeIndex :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> TcoExpr -> ExprResult
-unsafeIndex translate context@{ metadata, codegenStateRef, modNameStr } nextId arrayArg indexArg =
-  let
-    child = childContext context Nothing
-    array = translate child nextId (withoutArrayAnnotation arrayArg)
-    arrayName = "arrayUnsafe_value_" <> show array.nextId
-    sourceName = "arrayUnsafe_source_" <> show array.nextId
-    source = arraySource arrayName sourceName array.exprType
-    index = translate child (array.nextId + 1) indexArg
-    indexName = "arrayUnsafe_index_" <> show index.nextId
-    elementType = case getExprType arrayArg of
-      Array inner -> exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr inner
-      _ -> source.elementType
-    selected = GoIndex (rawGo ("(" <> source.target <> ")")) (GoVar indexName)
-    converted = coerceGoExpr codegenStateRef modNameStr selected source.elementType elementType
-  in
-    { stmts: array.stmts
-        <> StmtLeaf (GoAssign arrayName array.expr)
-        <> StmtLeaf source.assignment
-        <> index.stmts
-        <> StmtLeaf (GoAssign indexName (coerceGoExpr codegenStateRef modNameStr index.expr index.exprType TypeInt64))
-    , expr: boxGoExpr codegenStateRef modNameStr converted elementType
-    , exprType: TypeValue
-    , nextId: index.nextId + 1
-    }
 
 -- Preserve each calling convention's name and qualification guards.
 recognize :: Convention -> String -> Maybe CallTarget -> Int -> Maybe ArrayIntrinsic
@@ -146,11 +59,22 @@ loopNames convention intrinsic depth =
 
 -- Arguments are already boxed in source order by the caller.
 emitCurried :: ExprContext -> TcoExpr -> Array TcoExpr -> ArrayIntrinsic -> Arguments -> ExprResult
-emitCurried context@{ depth } fn args intrinsic accArgs =
+emitCurried context fn args intrinsic accArgs =
+  let
+    loop = curriedLoop context fn args intrinsic accArgs
+    arity = case intrinsic of
+      FoldlArray -> 3
+      _ -> 2
+    remaining = CallArguments.boxRemaining context arity accArgs
+  in
+    { stmts: accArgs.stmts, expr: applyBoxed loop remaining, exprType: TypeValue, nextId: accArgs.nextId }
+
+curriedLoop :: ExprContext -> TcoExpr -> Array TcoExpr -> ArrayIntrinsic -> Arguments -> GoExpr
+curriedLoop { depth } fn args intrinsic accArgs =
   let
     { iifeName, arrValName, arrGoName, resGoName, iName, vName } = loopNames Curried intrinsic depth
-
-    iifeExpr = case intrinsic of
+  in
+    case intrinsic of
       MapArray ->
         let
           fExpr = fromMaybe (rawGo "nil") (Array.index accArgs.exprs 0)
@@ -200,23 +124,14 @@ emitCurried context@{ depth } fn args intrinsic accArgs =
         in
           GoIIFE arrValName arrExpr iifeBody
 
-    arity = case intrinsic of
-      FoldlArray -> 3
-      _ -> 2
-    accArgsRemainingBoxed = CallArguments.boxRemaining context arity accArgs
-
-    finalExpr = applyBoxed iifeExpr accArgsRemainingBoxed
-  in
-    { stmts: accArgs.stmts, expr: finalExpr, exprType: TypeValue, nextId: accArgs.nextId }
-
 -- Native arrays and callback signatures are preserved on this path.
 emitUncurried :: ExprContext -> Array TcoExpr -> ArrayIntrinsic -> Arguments -> ExprResult
 emitUncurried context@{ codegenStateRef, modNameStr, depth } args intrinsic accArgs =
   let
     { arrValName, arrGoName, resGoName, iName, vName } = loopNames Uncurried intrinsic depth
-    { fullName: fnFullName, info: mbFnArityInfo } = callbackInfo context args
-
-    iifeExpr = case intrinsic of
+    { worker, info: mbFnArityInfo } = callbackInfo context args
+  in
+    case intrinsic of
       MapArray ->
         let
           fExprRaw = fromMaybe (rawGo "nil") (Array.index accArgs.exprs 0)
@@ -235,22 +150,23 @@ emitUncurried context@{ codegenStateRef, modNameStr, depth } args intrinsic accA
 
           finalRetType = TypeNativeArray retType
 
-          arrGoAssignment = source.assignment
-          arrGoRangeTarget = source.target
-
           loopBody = case mbFnArityInfo of
             Just info | info.arity == 1 ->
               let
                 expectedArgType = fromMaybe TypeValue (Array.index info.fArgs 0)
+                value = unboxGoExpr codegenStateRef modNameStr (GoVar vName) elemType expectedArgType
+                call = GoCall worker [ value ]
               in
-                GoMutate (resGoName <> "[" <> iName <> "]") (unboxGoExpr codegenStateRef modNameStr (GoCall (GoVar ("Call_" <> String.replaceAll (Pattern ".") (Replacement "_") fnFullName)) [ unboxGoExpr codegenStateRef modNameStr (GoVar vName) elemType expectedArgType ]) info.fRet retType)
+                GoMutate (resGoName <> "[" <> iName <> "]") (unboxGoExpr codegenStateRef modNameStr call info.fRet retType)
             _ ->
-              GoMutate (resGoName <> "[" <> iName <> "]") (unboxGoExpr codegenStateRef modNameStr (GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ boxGoExpr codegenStateRef modNameStr fExprRaw fExprType, boxGoExpr codegenStateRef modNameStr (GoVar vName) elemType ]) TypeValue retType)
+              let call = applyBoxed (boxGoExpr codegenStateRef modNameStr fExprRaw fExprType)
+                    [ boxGoExpr codegenStateRef modNameStr (GoVar vName) elemType ]
+              in GoMutate (resGoName <> "[" <> iName <> "]") (unboxGoExpr codegenStateRef modNameStr call TypeValue retType)
 
           iifeBodyStmts =
-            [ arrGoAssignment
-            , GoAssign resGoName (GoCall (GoVar "make") [ rawGo ("[]" <> goTypeToStr retType), GoCall (GoVar "len") [ rawGo arrGoRangeTarget ] ])
-            , GoForRange (iName <> ", " <> vName <> " := range " <> arrGoRangeTarget) [ loopBody ]
+            [ source.assignment
+            , GoAssign resGoName (GoCall (GoVar "make") [ rawGo ("[]" <> goTypeToStr retType), GoCall (GoVar "len") [ rawGo source.target ] ])
+            , GoForRange (iName <> ", " <> vName <> " := range " <> source.target) [ loopBody ]
             ]
         in
           { stmts: accArgs.stmts, expr: GoCall (GoFuncLit [] (Array.cons (GoAssign arrValName arrExprRaw) (Array.cons (GoMutate "_" (GoVar arrValName)) iifeBodyStmts)) (GoVar resGoName) finalRetType) [], exprType: finalRetType, nextId: accArgs.nextId }
@@ -272,18 +188,22 @@ emitUncurried context@{ codegenStateRef, modNameStr, depth } args intrinsic accA
               let
                 expectedArg0 = fromMaybe TypeValue (Array.index info.fArgs 0)
                 expectedArg1 = fromMaybe TypeValue (Array.index info.fArgs 1)
+                accumulator = unboxGoExpr codegenStateRef modNameStr (GoVar resGoName) initExprType expectedArg0
+                value = unboxGoExpr codegenStateRef modNameStr (GoVar vName) elemType expectedArg1
+                call = GoCall worker [ accumulator, value ]
               in
-                GoMutate resGoName (unboxGoExpr codegenStateRef modNameStr (GoCall (GoVar ("Call_" <> String.replaceAll (Pattern ".") (Replacement "_") fnFullName)) [ unboxGoExpr codegenStateRef modNameStr (GoVar resGoName) initExprType expectedArg0, unboxGoExpr codegenStateRef modNameStr (GoVar vName) elemType expectedArg1 ]) info.fRet initExprType)
+                GoMutate resGoName (unboxGoExpr codegenStateRef modNameStr call info.fRet initExprType)
             _ ->
-              GoMutate resGoName (unboxGoExpr codegenStateRef modNameStr (GoCall (GoSelector (GoVar "gopurs_runtime") "Apply2") [ boxGoExpr codegenStateRef modNameStr fExpr fExprType, boxGoExpr codegenStateRef modNameStr (GoVar resGoName) initExprType, boxGoExpr codegenStateRef modNameStr (GoVar vName) elemType ]) TypeValue initExprType)
-
-          arrGoAssignment = source.assignment
-          arrGoRangeTarget = source.target
+              let call = applyBoxed (boxGoExpr codegenStateRef modNameStr fExpr fExprType)
+                    [ boxGoExpr codegenStateRef modNameStr (GoVar resGoName) initExprType
+                    , boxGoExpr codegenStateRef modNameStr (GoVar vName) elemType
+                    ]
+              in GoMutate resGoName (unboxGoExpr codegenStateRef modNameStr call TypeValue initExprType)
 
           iifeBody = GoBlock
             [ GoAssign resGoName initExpr
-            , arrGoAssignment
-            , GoForRange ("_, " <> vName <> " := range " <> arrGoRangeTarget) [ loopBody ]
+            , source.assignment
+            , GoForRange ("_, " <> vName <> " := range " <> source.target) [ loopBody ]
             , GoReturn (GoVar resGoName)
             ]
         in
@@ -304,32 +224,27 @@ emitUncurried context@{ codegenStateRef, modNameStr, depth } args intrinsic accA
               let
                 expectedArgType = fromMaybe TypeValue (Array.index info.fArgs 0)
               in
-                GoCall (GoVar ("Call_" <> String.replaceAll (Pattern ".") (Replacement "_") fnFullName)) [ unboxGoExpr codegenStateRef modNameStr (GoVar vName) elemType expectedArgType ]
+                GoCall worker [ unboxGoExpr codegenStateRef modNameStr (GoVar vName) elemType expectedArgType ]
             _ ->
               let
-                condExpr = GoCall (GoSelector (GoVar "gopurs_runtime") "Apply") [ boxGoExpr codegenStateRef modNameStr fExprRaw fExprType, boxGoExpr codegenStateRef modNameStr (GoVar vName) elemType ]
+                condExpr = applyBoxed (boxGoExpr codegenStateRef modNameStr fExprRaw fExprType)
+                  [ boxGoExpr codegenStateRef modNameStr (GoVar vName) elemType ]
               in
                 GoCall (GoSelector condExpr "BoolVal") []
 
           loopBody = GoIfElse isTrueExpr [ GoMutate resGoName (GoCall (GoVar "append") [ GoVar resGoName, GoVar vName ]) ] []
 
-          arrGoAssignment = source.assignment
-          arrGoRangeTarget = source.target
-
           iifeBodyStmts =
-            [ arrGoAssignment
+            [ source.assignment
             , GoAssign resGoName (GoCall (GoVar "make") [ rawGo ("[]" <> goTypeToStr elemType), rawGo "0" ])
-            , GoForRange ("_, " <> vName <> " := range " <> arrGoRangeTarget) [ loopBody ]
+            , GoForRange ("_, " <> vName <> " := range " <> source.target) [ loopBody ]
             ]
           filterExpr = GoCall (GoFuncLit [] (Array.cons (GoAssign arrValName arrExprRaw) (Array.cons (GoMutate "_" (GoVar arrValName)) iifeBodyStmts)) (GoVar resGoName) (TypeNativeArray elemType)) []
           freshFilterExpr = if elemType == TypeValue && Array.length args == 2 then GoFreshFilterArray filterExpr else filterExpr
         in
           { stmts: accArgs.stmts, expr: freshFilterExpr, exprType: TypeNativeArray elemType, nextId: accArgs.nextId }
 
-  in
-    iifeExpr
-
-callbackInfo :: ExprContext -> Array TcoExpr -> { fullName :: String, info :: Maybe FunctionInfo }
+callbackInfo :: ExprContext -> Array TcoExpr -> { worker :: GoExpr, info :: Maybe FunctionInfo }
 callbackInfo { modNameStr, moduleFunctions } args =
   let
     target = Array.index args 0 >>= qualifiedTarget
@@ -338,15 +253,8 @@ callbackInfo { modNameStr, moduleFunctions } args =
       Just { mbMod: Nothing, name } -> modNameStr <> "." <> name
       Nothing -> ""
   in
-    { fullName, info: Map.lookup fullName moduleFunctions }
-
-arraySource :: String -> String -> GoType -> { assignment :: GoExpr, target :: String, elementType :: GoType }
-arraySource valueName arrayName = case _ of
-  TypeNativeArray inner ->
-    { assignment: GoAssign arrayName (GoVar valueName), target: arrayName, elementType: inner }
-  _ ->
-    { assignment: GoAssign arrayName (GoCall (rawGo "(*[]gopurs_runtime.Value)") [ GoSelector (GoVar valueName) "UnsafePtr" ])
-    , target: "*" <> arrayName, elementType: TypeValue
+    { worker: GoVar ("Call_" <> String.replaceAll (Pattern ".") (Replacement "_") fullName)
+    , info: Map.lookup fullName moduleFunctions
     }
 
 -- Require the resolved intrinsic and concrete scalar callback. Outer Typed

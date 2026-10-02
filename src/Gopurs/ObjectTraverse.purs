@@ -4,12 +4,12 @@ import Prelude
 
 import Control.Alternative (guard)
 import Data.Array as Array
-import Data.Foldable (foldl)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Tuple (Tuple(..))
 import Gopurs.AdtExprs as AdtExprs
 import Gopurs.CallAnalysis (CallTarget, qualifiedTarget)
-import Gopurs.CallArguments (applyBoxed)
+import Gopurs.CallArguments (Arguments, applyBoxed)
+import Gopurs.CallArguments as CallArguments
 import Gopurs.ExprContext (ExprContext, ExprResult, StmtTree(..), TranslateExpr, childContext)
 import Gopurs.GoAst (rawGo, GoExpr(..), GoType(..))
 import Gopurs.GoConversions (boxGoExpr)
@@ -24,6 +24,12 @@ import PureScript.Backend.Optimizer.CoreFn (ExprType(..), ModuleName(..))
 -- its callback order is not the sorted fold order, so it must stay generic.
 emit :: TranslateExpr -> ExprContext -> Int -> Maybe CallTarget -> Array TcoExpr -> Maybe ExprResult
 emit translate context nextId target args = do
+  recognize target args
+  let captured = captureArguments translate context nextId args
+  pure (emitLoop context captured)
+
+recognize :: Maybe CallTarget -> Array TcoExpr -> Maybe Unit
+recognize target args = do
   { mbMod, name } <- target
   guard (mbMod == Just (ModuleName "Data.TraversableWithIndex"))
   guard (name == "traverseWithIndex")
@@ -32,15 +38,24 @@ emit translate context nextId target args = do
   applicative <- Array.index args 1 >>= qualifiedTarget
   guard (traversal.mbMod == Just (ModuleName "Foreign.Object") && traversal.name == "traversableWithIndexObject")
   guard (applicative.mbMod == Just (ModuleName "Data.Either") && applicative.name == "applicativeEither")
-  pure (emitKnownEither translate context nextId args)
 
-emitKnownEither :: TranslateExpr -> ExprContext -> Int -> Array TcoExpr -> ExprResult
-emitKnownEither translate context@{ metadata, codegenStateRef, modNameStr } nextId args =
+-- Box and capture each supplied argument before translating the next one.
+-- A dictionary-only application neither evaluates an absent callback nor
+-- allocates output storage: both remain inside the binary worker below.
+captureArguments :: TranslateExpr -> ExprContext -> Int -> Array TcoExpr -> Arguments
+captureArguments translate context@{ codegenStateRef, modNameStr } =
+  CallArguments.capture { prefix: "traverseObjectEither_arg_", markUsed: true } boxArgument
+  where
+  boxArgument _ nextId arg =
+    let result = translate (childContext context Nothing) nextId arg
+    in result
+      { expr = boxGoExpr codegenStateRef modNameStr result.expr result.exprType
+      , exprType = TypeValue
+      }
+
+emitLoop :: ExprContext -> Arguments -> ExprResult
+emitLoop { metadata, codegenStateRef, modNameStr } captured =
   let
-    -- Capture supplied arguments in source order, before the next argument's
-    -- statements. In particular, two arguments create a reusable binary worker
-    -- without evaluating the still-absent callback or allocating an output map.
-    captured = foldl capture { stmts: StmtEmpty, exprs: [], nextId } args
     argument index = fromMaybe (rawGo "nil") (Array.index captured.exprs index)
     suffix = show captured.nextId
     callbackName = "traverseObjectEither_callback_" <> suffix
@@ -52,7 +67,7 @@ emitKnownEither translate context@{ metadata, codegenStateRef, modNameStr } next
     resultName = "traverseObjectEither_result_" <> suffix
     errorName = "traverseObjectEither_firstError_" <> suffix
     failedName = "traverseObjectEither_failed_" <> suffix
-    supplied = Array.length args
+    supplied = Array.length captured.exprs
     callback = if supplied == 2 then GoVar callbackName else argument 2
     input = if supplied < 4 then GoVar inputName else argument 3
     runtime name expressions = GoCall (GoSelector (GoVar "gopurs_runtime") name) expressions
@@ -109,15 +124,3 @@ emitKnownEither translate context@{ metadata, codegenStateRef, modNameStr } next
       _ -> GoCall (GoFuncLit [] body boxedSuccess TypeValue) []
   in
     { stmts: captured.stmts, expr: expression, exprType: TypeValue, nextId: captured.nextId + 1 }
-  where
-  capture acc arg =
-    let
-      result = translate (childContext context Nothing) acc.nextId arg
-      name = "traverseObjectEither_arg_" <> show result.nextId
-    in
-      { stmts: acc.stmts <> result.stmts
-          <> StmtLeaf (GoAssign name (boxGoExpr codegenStateRef modNameStr result.expr result.exprType))
-          <> StmtLeaf (GoMutate "_" (GoVar name))
-      , exprs: Array.snoc acc.exprs (GoVar name)
-      , nextId: result.nextId + 1
-      }

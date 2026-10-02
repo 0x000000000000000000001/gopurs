@@ -2,6 +2,7 @@ module Gopurs.CallArguments
   ( Arguments
   , translate
   , translateBoxed
+  , capture
   , coercePrefix
   , boxRemaining
   , applyBoxed
@@ -11,7 +12,7 @@ import Prelude
 import Data.Array as Array
 import Data.Foldable (foldl)
 import Data.Maybe (Maybe(..), fromMaybe)
-import Gopurs.ExprContext (ExprContext, ExprResult, TranslateExpr, StmtTree, childContext)
+import Gopurs.ExprContext (ExprContext, ExprResult, TranslateExpr, StmtTree(..), childContext)
 import Gopurs.GoAst (rawGo, GoExpr(..), GoType(..))
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr)
@@ -46,6 +47,32 @@ translateWith translateExpr context adapt initial =
         , nextId: result.nextId
         })
     { stmts: initial.stmts, exprs: [], exprTypes: [], nextId: initial.nextId }
+
+-- Unlike translate, capture binds each expression immediately after its own
+-- statements, before translating the next argument. The supplied translator
+-- owns adaptation (boxing or a native callback); exprTypes describe the bound
+-- values. Traversals mark captures used because known dictionaries/methods are
+-- evaluated at this application stage but do not appear in the generated loop.
+capture
+  :: { prefix :: String, markUsed :: Boolean }
+  -> (Int -> Int -> TcoExpr -> ExprResult)
+  -> Int
+  -> Array TcoExpr
+  -> Arguments
+capture options translateArgument nextId =
+  foldl captureArgument { stmts: StmtEmpty, exprs: [], exprTypes: [], nextId }
+  where
+  captureArgument acc arg =
+    let
+      result = translateArgument (Array.length acc.exprs) acc.nextId arg
+      name = options.prefix <> show result.nextId
+      used = if options.markUsed then StmtLeaf (GoMutate "_" (GoVar name)) else StmtEmpty
+    in
+      { stmts: acc.stmts <> result.stmts <> StmtLeaf (GoAssign name result.expr) <> used
+      , exprs: Array.snoc acc.exprs (GoVar name)
+      , exprTypes: Array.snoc acc.exprTypes result.exprType
+      , nextId: result.nextId + 1
+      }
 
 coercePrefix :: ExprContext -> Int -> Array GoType -> Arguments -> Array GoExpr
 coercePrefix { codegenStateRef, modNameStr } arity expected args =

@@ -26,6 +26,7 @@ reconstruit les deux versions et conserve le workspace pour les tests natifs.
 | Bindings, captures et signatures de workers | `node --test tools/binding-contracts.test.mjs tools/recursive-initialization.test.mjs tools/local-native-returns.test.mjs tools/zero-arity-functions.test.mjs`, après le build |
 | Fusion de thunks | `./bin/test ThunkFusion -c` |
 | Admission des fusions et applications immédiates | `node --test tools/thunk-fusion.test.mjs tools/counted-functions.test.mjs tools/immediate-applications.test.mjs`, après le build |
+| Intrinsics, indexation et traversées Either | `node --test tools/array-intrinsics.test.mjs tools/array-safe-index.test.mjs tools/array-unsafe-index.test.mjs tools/array-traverse-either.test.mjs tools/object-traverse-either.test.mjs tools/value-array-unboxing.test.mjs`, après le build |
 | Contrat du parser Go | `go test ./...` depuis `tools/ffi-gen` |
 | Parser WASM et erreurs FFI | `npm run test:ffi`, après `npm run build` |
 | Sélection, isolation et erreurs du runner | `npm run test:runner` |
@@ -94,6 +95,27 @@ déjà présentes avant le refactoring.
 Les tests `mixed-constructor-tags`, `elided-constructor-payloads` et
 `record-tuple-conversions` complètent ce contrat par compilation et exécution
 du Go produit : tags distincts, payloads polymorphes, records et champs de classes.
+
+## Contrat des intrinsics et traversées
+
+`array-intrinsics.test.mjs` vérifie les noms, qualifications et arités admis selon
+la convention, ainsi que les limites de la normalisation du buffer entier frais.
+Son programme Go compare les chemins curryfié, boxé, slice native et worker natif
+de map/filter/fold : tableaux vides, ordre des callbacks, fold gauche à accumulateur
+boxé et absence d'alias entre entrées et résultats réutilisés.
+
+Les tests d'indexation contrôlent l'ordre des arguments, les bornes, les types des
+éléments et la conversion d'un seul élément. `array-traverse-either` et
+`object-traverse-either` rejettent les dictionnaires et formes inconnus avant
+toute traduction ; leurs programmes Go vérifient respectivement **11 055** et
+**270 comparaisons** avec les traversées strictes de référence. Ils contrôlent
+les captures au bon stade, tous les callbacks après le premier `Left`, l'ordre
+des clés Go et le stockage neuf des closures réutilisées.
+
+La fixture `NativeTraverseCallback` complète ces contrats avec les captures
+lexicales des callbacks natifs et le repli lorsqu'un calcul sépare deux lambdas.
+`ArrayTraverseEither`, `ObjectTraverseEither` et `ArrayRoundtrip` exercent les
+formes produites par le chemin TAST/PBO, avec snapshots stricts et exécution Go.
 
 ## Contrat des fusions et applications immédiates
 
@@ -246,6 +268,40 @@ La sélection complète est le défaut. Les noms avec ou sans `gopurs-` sont
 acceptés ; `-c` reconstruit le backend depuis ce checkout. Chaque script frère
 gère encore ses propres sorties et nettoyages ; l'isolation des fixtures de
 `bin/test` ne s'étend pas automatiquement à ces scripts.
+
+## Validation des intrinsics et traversées — lot 11, 2 octobre 2026
+
+`ArrayTraverse` et `ObjectTraverse` séparent reconnaissance, capture des arguments
+et émission de la boucle. `CallArguments.capture` partage les liaisons ordonnées
+en laissant au consommateur le choix de représentation. `ArrayIntrinsics.Index`
+isole l'indexation et la conversion de l'élément sélectionné ; `Source` partage
+l'accès aux buffers. Map/filter/fold distinguent la boucle, l'adaptation des
+callbacks connus et les arguments restants.
+
+Vérifications effectuées :
+
+- reconstruction JS et native ; bootstrap TAST vérifié sur **485 modules et
+  285 099 types**. Le build JS est sans avertissement ; le build TAST neuf signale
+  cinq avertissements dans `DecoderSchemas` et PBO, hors des modules modifiés ;
+- **12 tests ciblés avant et après** : `array-intrinsics`, `array-safe-index`,
+  `array-unsafe-index`, `array-traverse-either`, `object-traverse-either`,
+  `value-array-unboxing`. Les trois nouveaux contrats d'intrinsics ont aussi été
+  exécutés avec le générateur précédent. Les programmes Go couvrent notamment
+  les **11 055 comparaisons de tableaux** et **270 comparaisons d'objets** ;
+- **12 fixtures**, snapshots stricts, compilation et exécution Go avec 8 workers :
+  `ArrayRoundtrip`, `ArrayTraverseEither`, `ObjectTraverseEither`,
+  `NativeTraverseCallback`, `NativeArrayReboxing`, `ArrayType`, `DerivingFoldable`,
+  `DerivingFunctor`, `CurriedLambdas`, `FunctionScope`, `JsonRecordPlan`,
+  `FFIIntegerReturns` ;
+- b8x : référence régénérée avec le compilateur précédent sur **2 683 entrées
+  TAST figées**, puis **2 987 fichiers Go identiques octet par octet** en natif
+  parallèle, natif séquentiel et JS, sans ajout ni suppression. Runtime, bridges
+  FFI, entrées exécutables et `go.mod` sont inclus. Le manifeste des **93 fichiers
+  sources et artefacts compilateur/runtime** est stable pendant ces comparaisons.
+
+Le contrôle b8x porte sur la génération ; les tests et fixtures ci-dessus valident
+la compilation et l'exécution Go. Le score du plan est passé à **75/100**, avec
+onze lots clôturés ; `git diff --check` est propre.
 
 ## Validation des fusions — lot 10, 1er octobre 2026
 

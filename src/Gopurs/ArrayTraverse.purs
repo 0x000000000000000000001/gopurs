@@ -7,15 +7,14 @@ import Prelude
 import Control.Alternative (guard)
 import Data.Array as Array
 import Data.Array.NonEmpty as NonEmptyArray
-import Data.Foldable (foldl)
-import Data.Map as Map
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Tuple (Tuple(..))
 import Gopurs.AdtExprs as AdtExprs
 import Gopurs.CallAnalysis (collectCurriedAbs, collectGoSpine, getGoSpineArgs, qualifiedTarget)
-import Gopurs.CallArguments (applyBoxed)
+import Gopurs.CallArguments (Arguments, applyBoxed)
+import Gopurs.CallArguments as CallArguments
 import Gopurs.ExprAnalysis (extractFuncType, unwrapTcoExpr)
-import Gopurs.ExprContext (ExprContext, ExprResult, StmtTree(..), TranslateExpr, childContext, flattenStmts)
+import Gopurs.ExprContext (ExprContext, ExprResult, StmtTree(..), TranslateExpr, bindParameters, childContext, flattenStmts)
 import Gopurs.GoAst (rawGo, GoExpr(..), GoType(..))
 import Gopurs.GoConversions (boxGoExpr)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr)
@@ -31,14 +30,20 @@ import PureScript.Backend.Optimizer.Syntax (BackendAccessor(GetProp), BackendSyn
 emit :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> Array TcoExpr -> Maybe ExprResult
 emit translate context nextId fn args = do
   traversal <- recognize fn args
-  guard (Array.length traversal.args >= traversal.callbackOffset)
-  guard (Array.length traversal.args <= traversal.callbackOffset + 2)
-  pure (emitKnownEither translate context nextId traversal.indexed traversal.callbackOffset traversal.args)
+  let captured = captureArguments translate context nextId traversal
+  pure (emitLoop context traversal captured)
 
 type Traversal = { indexed :: Boolean, callbackOffset :: Int, args :: Array TcoExpr }
 
 recognize :: TcoExpr -> Array TcoExpr -> Maybe Traversal
-recognize fn args = case unwrapTcoExpr fn of
+recognize fn args = do
+  traversal <- recognizeForm fn args
+  guard (Array.length traversal.args >= traversal.callbackOffset)
+  guard (Array.length traversal.args <= traversal.callbackOffset + 2)
+  pure traversal
+
+recognizeForm :: TcoExpr -> Array TcoExpr -> Maybe Traversal
+recognizeForm fn args = case unwrapTcoExpr fn of
   Accessor dictionary (GetProp "traverse") -> do
     guard (isNamed "Data.Traversable" "traversableArray" dictionary)
     applicative <- Array.index args 0
@@ -83,13 +88,22 @@ isMethod mod name dictMod dictName expression =
     [ dictionary ] -> isNamed dictMod dictName dictionary
     _ -> false
 
-emitKnownEither :: TranslateExpr -> ExprContext -> Int -> Boolean -> Int -> Array TcoExpr -> ExprResult
-emitKnownEither translate context@{ metadata, codegenStateRef, modNameStr } nextId indexed callbackOffset args =
+-- Dictionary getters and callback construction run at the current application
+-- stage, including when the input is absent and the result is a reusable closure.
+-- Only the callback position may bypass the ordinary boxed function ABI.
+captureArguments :: TranslateExpr -> ExprContext -> Int -> Traversal -> Arguments
+captureArguments translate context nextId traversal =
+  CallArguments.capture { prefix: "traverseEither_arg_", markUsed: true }
+    translateArgument nextId traversal.args
+  where
+  translateArgument index currentId arg =
+    case if index == traversal.callbackOffset then nativeCallback translate context currentId traversal.indexed arg else Nothing of
+      Just native -> native
+      Nothing -> translate (childContext context Nothing) currentId arg
+
+emitLoop :: ExprContext -> Traversal -> Arguments -> ExprResult
+emitLoop { metadata, codegenStateRef, modNameStr } { indexed, callbackOffset, args } captured =
   let
-    -- Capture each expression before translating the next argument's statements.
-    -- Dictionary getter evaluation and callback construction remain at the same
-    -- application stage even when this call returns a closure.
-    captured = foldl capture { stmts: StmtEmpty, exprs: [], exprTypes: [], nextId } args
     argument index = fromMaybe (rawGo "nil") (Array.index captured.exprs index)
     argumentType index = fromMaybe TypeValue (Array.index captured.exprTypes index)
     hasCallback = Array.length args > callbackOffset
@@ -171,19 +185,6 @@ emitKnownEither translate context@{ metadata, codegenStateRef, modNameStr } next
     , nextId: captured.nextId + 1
     }
   where
-  capture acc arg =
-    let
-      result = case if Array.length acc.exprs == callbackOffset then nativeCallback translate context acc.nextId indexed arg else Nothing of
-        Just native -> native
-        Nothing -> translate (childContext context Nothing) acc.nextId arg
-      name = "traverseEither_arg_" <> show result.nextId
-    in
-      { stmts: acc.stmts <> result.stmts <> StmtLeaf (GoAssign name result.expr) <> StmtLeaf (GoMutate "_" (GoVar name))
-      , exprs: Array.snoc acc.exprs (GoVar name)
-      , exprTypes: Array.snoc acc.exprTypes result.exprType
-      , nextId: result.nextId + 1
-      }
-
   rawArray input = GoPrefixOp "*" (GoCall (rawGo "(*[]gopurs_runtime.Value)") [ GoSelector input "UnsafePtr" ])
 
 -- This callback is consumed only by the known traversal, so it needs no boxed
@@ -201,7 +202,7 @@ nativeCallback translate context nextId indexed callback = case unwrapTcoExpr ca
     let
       names = map (\(Tuple ident level) -> localId ident level) (NonEmptyArray.toArray grouped.args)
       params = Array.zip names parameterTypes
-      bound = foldl (\acc (Tuple name goType) -> Map.insert name { name, goType } acc) context.bound params
+      bound = bindParameters params context.bound
       expectedResult = map _.fRet (extractFuncType callback)
       result = translate
         (context

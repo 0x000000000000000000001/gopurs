@@ -1,13 +1,13 @@
 # Gopurs — plan de maintenabilité
 
-Plan v1 — mise à jour : 1er octobre 2026.
+Plan v1 — mise à jour : 2 octobre 2026.
 
 Objectif : un backend clair, lisible et modifiable par responsabilités, avec
 une génération Go identique. Périmètre : compilateur, runtime, FFI et outillage
 de ce dépôt ; les interfaces avec PBO et les bibliothèques sœurs sont incluses.
 Les optimisations de performance restent en pause.
 
-## Avancement : 70 % — 70/100 points, 10/15 lots validés
+## Avancement : 75 % — 75/100 points, 11/15 lots validés
 
 - **Calcul :** somme des points des cases cochées, sur un total fixe de 100.
   Les poids sont des unités de suivi ; le pourcentage mesure les livrables
@@ -53,9 +53,10 @@ Les optimisations de performance restent en pause.
   des fusions nommés ; réservation des workers partagée dans `WorkerNames`.
   Plan d'admission explicite pour les applications immédiates, opérations de
   portée isolées dans `Scope` ; tests et parité validés.
-- [ ] **11 — Intrinsics et traversées (5 pts).** Revoir `ArrayIntrinsics`,
-  `ArrayTraverse` et `ObjectTraverse`.
-  Fin : reconnaissance, capture ordonnée des arguments et émission des boucles identifiables.
+- [x] **11 — Intrinsics et traversées (5 pts).** Reconnaissance, capture ordonnée
+  et émission des boucles séparées ; captures partagées dans `CallArguments`.
+  Indexation isolée dans `ArrayIntrinsics.Index`, lecture des buffers partagée
+  dans `Source` ; contrats, snapshots et parité des trois modes validés.
 - [ ] **12 — Analyses spécialisées (10 pts).** Revoir successivement
   `Ownership`, `BorrowedObjects`, `ClosedDictionaries`, `NativeRecordArgs`
   et `DecoderSchemas`. Fin : pour chaque passe, preuves d'admission, transformation
@@ -84,4 +85,5 @@ Les optimisations de performance restent en pause.
 - Documentation des responsabilités et preuves de validation à jour ;
   `git diff --check` propre.
 
-**Prochaine passe : lot 11 — intrinsics et traversées.** Sa clôture portera l'avancement à **75 %**.
+**Prochaine passe : lot 12 — analyses spécialisées**, en commençant par `Ownership`.
+La clôture du lot complet portera l'avancement à **85 %**.

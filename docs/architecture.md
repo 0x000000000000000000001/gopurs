@@ -101,8 +101,11 @@ Tous les modules gopurs de ce tableau se trouvent dans [src/Gopurs](../src/Gopur
 | Bindings locaux, récursion locale et initialisation | `BindingExprs` |
 | Paramètres, signatures et émission des workers locaux | `LocalWorkers` |
 | Sélection des appels, surapplications et sauts TCO | `CallExprs`, `CallAnalysis` |
-| Traduction ordonnée et adaptation des arguments | `CallArguments` |
+| Traduction, capture ordonnée et adaptation des arguments | `CallArguments` |
 | Reconnaissance et émission de map, filter et foldl | `ArrayIntrinsics` |
+| Admission de l'indexation et conversion de l'élément sélectionné | `ArrayIntrinsics.Index` |
+| Accès au buffer natif ou boxé sans copie | `ArrayIntrinsics.Source` |
+| Admission, captures et boucles des traversées Either | `ArrayTraverse`, `ObjectTraverse` |
 | Abstractions, branches et effets | `FunctionExprs`, `ControlExprs`, `EffectExprs` |
 | ADT, records et primitives | `AdtExprs`, `RecordExprs`, `PrimitiveExprs` |
 | Traduction des littéraux tableaux et records | `LiteralExprs` |
@@ -189,8 +192,45 @@ Go imprimé n'est reparcouru pour calculer ses imports.
 statements et le compteur de noms. Les intrinsics curryfiés boxent chaque
 argument immédiatement ; les autres chemins conservent sa représentation
 native jusqu'à l'adaptation de l'appel. `ArrayIntrinsics` reçoit ces arguments
-déjà traduits et émet les boucles. `CallExprs` conserve les priorités existantes :
+déjà traduits et émet les boucles. `translate` conserve séparément les expressions
+et les statements ; `capture` lie chaque expression immédiatement après ses
+propres statements, avant de traduire l'argument suivant. Le traducteur fourni à
+`capture` choisit le boxing ou le callback natif, et le helper réserve le nom de la
+capture. Les traversées émettent aussi `_ = capture` pour les dictionnaires et
+méthodes évalués mais inutilisés par leur boucle.
+
+`CallExprs` conserve les priorités existantes :
 TCO avant les intrinsics pour `App`, intrinsics avant TCO pour `UncurriedApp`.
+
+## Intrinsics et traversées
+
+`ArrayIntrinsics.recognize` garde les gardes propres à chaque convention : noms
+historiques de map/fold, qualification et nom de filter, arité minimale.
+`emitCurried` distingue la boucle boxée et l'application des arguments restants ;
+`emitUncurried` conserve les slices natives et sélectionne les workers connus ou
+les appels boxés. La normalisation des entiers reste limitée au filtre frais
+immédiatement consommé par un fold scalaire résolu, avec seed littéral.
+
+`ArrayIntrinsics.Index` possède l'admission exacte de `indexImpl`, la capture de
+ses quatre arguments et les bornes. Les indexations sûre et non sûre retirent
+l'annotation du tableau et convertissent seulement l'élément sélectionné.
+`Source.arraySource` partage la lecture du buffer avec les boucles, sans copie.
+L'indexation non sûre émet sa liaison du buffer avant les statements de l'index ;
+l'indexation sûre la place dans l'IIFE, après la capture des arguments.
+
+`ArrayTraverse` et `ObjectTraverse` suivent trois étapes nommées : `recognize`,
+`captureArguments`, `emitLoop`. La reconnaissance précède toute traduction et
+prouve les dictionnaires standard ainsi que l'arité admise. Les captures restent
+au stade d'application courant ; la boucle et son stockage neuf restent dans le
+worker tant que des arguments manquent. Les tableaux conservent les types natifs
+et peuvent regrouper un callback formé de lambdas adjacentes ; les objets boxent
+chaque argument. Un calcul entre lambdas conserve le chemin curryfié ordinaire.
+
+Les deux boucles gardent le premier `Left` tout en exécutant les callbacks
+suivants. Le tableau parcourt les indices source ; l'objet trie ses clés avec
+`sort.Strings`, comme son fold Go de référence. `traverseWithIndexDefault` reste
+générique pour les objets, car son map préalable a un autre ordre de callbacks.
+Chaque invocation alloue son propre résultat, y compris via une closure réutilisée.
 
 ## Fusions et applications immédiates
 

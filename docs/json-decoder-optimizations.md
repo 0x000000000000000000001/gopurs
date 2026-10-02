@@ -29,8 +29,9 @@ contenant le tableau lorsque tous les éléments réussissent.
 
 Les gardes et contraintes sont les suivantes :
 
-- Trois arguments créent une fermeture attendant le tableau. Quatre arguments
-  exécutent la traversée. Les autres arités conservent le chemin ordinaire.
+- Deux arguments créent un worker binaire réutilisable, trois arguments créent
+  une fermeture attendant le tableau et quatre exécutent la traversée. Les autres
+  arités conservent le chemin ordinaire.
 - Les symboles homonymes d'autres modules, les dictionnaires locaux ou opaques et
   les autres `Applicative` ne déclenchent pas la règle.
 - Chaque argument est capturé une fois, dans l'ordre, avant les instructions du
