@@ -93,6 +93,7 @@ Tous les modules gopurs de ce tableau se trouvent dans [src/Gopurs](../src/Gopur
 | Admission et réduction des applications immédiates | `ImmediateApplications` |
 | Occurrences, substitution et renommage des niveaux locaux | `ImmediateApplications.Scope` |
 | Réservation des noms de workers des fusions | `WorkerNames` |
+| Admission d'un emprunt d'objet, preuve des usages et réécriture | `BorrowedObjects` |
 | Point fixe des contrats consommants et sélection des appels frais | `Ownership` |
 | Admission des layouts/signatures et réservation des paires de noms | `Ownership.Candidates` |
 | Chemins, scalaires, termes d'arbres et fraîcheur | `Ownership.Analysis`, `Ownership.Types` |
@@ -281,6 +282,30 @@ transplantation, en conservant les références libres. La réserve de niveaux e
 propre à chaque binding et commence au-dessus du maximum de l'expression
 d'origine. Substitution et renommage portent sur les fragments sans récursion
 déjà admis ; l'ordre de visite des branches fixe l'ordre des nouveaux niveaux.
+
+## Emprunt des objets JSON en lecture seule
+
+`BorrowedObjects` intervient après le partage des dictionnaires fermés, avant
+les schémas de décodeurs. `admitBorrowing` produit un plan contenant la méthode
+et l'entrée JSON uniquement après reconnaissance du décodeur identité et preuve
+de tous les usages de son résultat. Les alias de dictionnaires suivis sont des
+références qualifiées du module, définies hors groupes récursifs ; un ensemble
+des noms visités interrompt les cycles.
+
+`BorrowScope` distingue le niveau de l'enveloppe `Either` et les niveaux des alias
+de son payload `Right`. `readOnlyUses` autorise les tests de tags, la propagation
+de `Left` et les lecteurs de champs standard saturés, dans leur seul argument
+objet. Les closures, scopes récursifs et formes à effets doivent être entièrement
+indépendants des références empruntées. Le contrôle reste conservateur lors du
+masquage de l'enveloppe ou dans une portée différée.
+
+`borrowedDecode` construit l'appel au helper existant avec les opérandes d'origine ;
+`replaceAnnotated` conserve les enveloppes `Typed`/`TypeApp` du site d'appel.
+Un producteur admis ne descend pas à nouveau dans ses opérandes ; un refus permet
+d'y chercher des candidats indépendants. Les continuations sont réécrites, hors `LetRec`.
+Cette passe ne crée aucune déclaration et exige la signature du helper dans les
+types globaux. Le helper Go confirme l'identité à l'exécution et délègue les
+décodeurs inconnus ou entrées invalides au chemin ordinaire.
 
 ## Workers consommants des arbres
 

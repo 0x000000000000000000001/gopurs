@@ -28,6 +28,7 @@ reconstruit les deux versions et conserve le workspace pour les tests natifs.
 | Admission des fusions et applications immédiates | `node --test tools/thunk-fusion.test.mjs tools/counted-functions.test.mjs tools/immediate-applications.test.mjs`, après le build |
 | Intrinsics, indexation et traversées Either | `node --test tools/array-intrinsics.test.mjs tools/array-safe-index.test.mjs tools/array-unsafe-index.test.mjs tools/array-traverse-either.test.mjs tools/object-traverse-either.test.mjs tools/value-array-unboxing.test.mjs`, après le build |
 | Propriété des arbres et workers consommants | `node --test tools/owned-trees.test.mjs`, après le build ; `./bin/test OwnedTrees RBTree ConstructorReuse` |
+| Emprunt d'objets et composition des décodeurs | `node --test tools/borrowed-objects.test.mjs tools/closed-dictionaries.test.mjs tools/decoder-schemas.test.mjs`, après le build ; `./bin/test JsonRecordPlan` |
 | Contrat du parser Go | `go test ./...` depuis `tools/ffi-gen` |
 | Parser WASM et erreurs FFI | `npm run test:ffi`, après `npm run build` |
 | Sélection, isolation et erreurs du runner | `npm run test:runner` |
@@ -96,6 +97,22 @@ déjà présentes avant le refactoring.
 Les tests `mixed-constructor-tags`, `elided-constructor-payloads` et
 `record-tuple-conversions` complètent ce contrat par compilation et exécution
 du Go produit : tags distincts, payloads polymorphes, records et champs de classes.
+
+## Contrat de l'emprunt d'objets
+
+`borrowed-objects.test.mjs` couvre les alias de dictionnaires, les cycles, les
+qualifications et arités exactes, les annotations préservées et la descente
+distincte dans les producteurs admis ou rejetés. Les lecteurs de champs sont
+contrôlés par nom, suffixe numérique et position de l'argument emprunté. Les
+témoins de portée vérifient les niveaux locaux, leur masquage et les neuf formes
+de closure, récursion ou effet, avec des contrôles positifs indépendants.
+
+La suite exécute aussi les deux tests natifs du helper réel dans un workspace
+isolé, avec `go test -race` : emprunt identité, copie du conteneur sur le chemin
+possédé et replis exacts sur entrée invalide ou décodeur inconnu. Les suites
+`closed-dictionaries` et `decoder-schemas` contrôlent les passes voisines ; la
+fixture `JsonRecordPlan` vérifie l'ordre des callbacks, les erreurs et les
+résultats persistants sur le chemin TAST/PBO.
 
 ## Contrat des workers consommants
 
@@ -284,6 +301,36 @@ acceptés ; `-c` reconstruit le backend depuis ce checkout. Chaque script frère
 gère encore ses propres sorties et nettoyages ; l'isolation des fixtures de
 `bin/test` ne s'étend pas automatiquement à ces scripts.
 
+## Analyses spécialisées — lot 12, passe BorrowedObjects, 2 octobre 2026
+
+`BorrowedObjects` reste dans un seul module : `admitBorrowing` sépare l'admission
+du producteur et la preuve des usages de la construction de l'appel helper.
+`BorrowContext` porte les définitions admissibles et la signature du helper ;
+`BorrowScope` distingue l'enveloppe `Either` de ses alias d'objet. Les annotations,
+les barrières de portée et l'ordre de descente de la réécriture sont explicites.
+
+Vérifications effectuées :
+
+- reconstruction JS et native ; bootstrap TAST vérifié sur **489 modules et
+  286 220 types**. Le build JS est sans avertissement ; les cinq avertissements
+  du build TAST dans `DecoderSchemas` et PBO sont identiques à la passe précédente ;
+- **40 tests ciblés avant et après** : `borrowed-objects`, `closed-dictionaries`
+  et `decoder-schemas`. Les 19 nouveaux tests d'emprunt couvrent les alias,
+  annotations, qualifications, arités, scopes et replis ; deux tests Go du helper
+  réel sont exécutés avec le détecteur de courses ;
+- **4 fixtures**, snapshots stricts, compilation et exécution Go avec 8 workers :
+  `JsonRecordPlan`, `ObjectTraverseEither`, `ObjectUpdate2`, `FunctionScope` ;
+- b8x : référence régénérée avec le compilateur précédent sur **2 683 entrées
+  TAST figées**, puis **2 987 fichiers Go identiques octet par octet** en natif
+  parallèle, natif séquentiel et JS, sans ajout ni suppression. Runtime, bridges
+  FFI, entrées exécutables et `go.mod` sont inclus. Le manifeste des **97 fichiers
+  sources et artefacts compilateur/runtime** est stable pendant ces comparaisons.
+
+La passe `BorrowedObjects` est validée ; `ClosedDictionaries`, `NativeRecordArgs`
+et `DecoderSchemas` restent à revoir dans le lot 12. Le score reste à **75/100**,
+avec onze lots clôturés. Le contrôle b8x porte sur la génération, les tests et
+fixtures sur la compilation et l'exécution Go ; `git diff --check` est propre.
+
 ## Analyses spécialisées — lot 12, passe Ownership, 2 octobre 2026
 
 `Ownership` conserve l'orchestration du point fixe et la sélection des appels
@@ -305,7 +352,17 @@ Vérifications effectuées :
   les donneurs et l'absence de cycles ou d'alias introduits par le réemploi ;
 - **8 fixtures**, snapshots stricts, compilation et exécution Go avec 8 workers :
   `OwnedTrees`, `RBTree`, `ConstructorReuse`, `Recursion`, `TCO`, `TCOMutRec`,
-  `ShadowedTCOLet`, `OneConstructor`.
+  `ShadowedTCOLet`, `OneConstructor` ;
+- b8x : référence régénérée avec le compilateur précédent sur **2 683 entrées
+  TAST figées**, puis **2 987 fichiers Go identiques octet par octet** en natif
+  parallèle, natif séquentiel et JS, sans ajout ni suppression. Runtime, bridges
+  FFI, entrées exécutables et `go.mod` sont inclus. Le manifeste des **97 fichiers
+  sources et artefacts compilateur/runtime** est stable pendant ces comparaisons.
+
+La passe `Ownership` a été validée avec quatre analyses encore à revoir dans le
+lot 12. Le score est resté à **75/100**, avec onze lots clôturés. Le contrôle b8x
+porte sur la génération, les tests et fixtures sur la compilation et l'exécution
+Go ; `git diff --check` est propre.
 
 ## Validation des intrinsics et traversées — lot 11, 2 octobre 2026
 
