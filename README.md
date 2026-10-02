@@ -3,8 +3,8 @@
 <img height="160" alt="gopurs" src="https://github.com/user-attachments/assets/b013e7c3-fac6-4ee8-9d4c-f39ac8c2c921" />
 
 An experimental **PureScript-to-Go backend**. The compiler is written in
-PureScript, with a Go runtime, a Go parser compiled to WebAssembly for FFI
-signatures, and JavaScript build tooling.
+PureScript, with JavaScript and native Go compiler builds, a shared Go parser
+for FFI signatures, a Go runtime, and JavaScript build tooling.
 
 `gopurs` consumes the enriched TAST (`tcorefn`) produced by our
 [PureScript fork](https://github.com/0x000000000000000000001/purescript).
@@ -23,7 +23,7 @@ records the earlier design work.
 
 - **Type-guided Go generation.** TAST expression types, ADT layouts, and type-class declarations guide native records, constructors, dictionaries, and specialized functions. Partial monomorphization reduces generic representations where supported.
 - **Optimization before code generation.** The backend combines the shared optimizer with Go-specific handling of function calls, tail recursion, records, arrays, and effect thunks.
-- **Native FFI bridges.** A Go parser compiled to WebAssembly reads foreign declarations; generated wrappers adapt supported Go signatures to PureScript calls.
+- **Native FFI bridges.** The same Go parser reads foreign declarations through WebAssembly in the JS compiler and direct calls in the native compiler; generated wrappers adapt supported Go signatures to PureScript calls.
 - **Go runtime and library ports.** Generated programs include the runtime. The Go `Aff` port uses goroutines, and generated entrypoints wait for work registered with the runtime event loop.
 
 ## Benchmarks
@@ -37,7 +37,7 @@ The sequential core campaign does not establish multicore scaling.
 
 ### Prerequisites
 
-- Node.js and npm to build and run the backend. Node.js `24.8.0` is the documented development reference; a minimum Node version is not declared in `package.json`.
+- Node.js and npm to build the backend and run its JavaScript version. The native executable runs without Node. Node.js `24.8.0` is the documented development reference; a minimum Node version is not declared in `package.json`.
 - A TAST-capable `purs` from the compiler fork for applications, plus Spago with YAML configuration support.
 - Go to compile generated applications. Their `go.mod` declares Go 1.22; the walkthrough was checked with Go `1.27.0`, without establishing the minimum working version across library ports.
 - Git and Bash for the checkout and helper scripts.
@@ -84,10 +84,12 @@ npm ci
 ```
 
 `npm ci` installs the locked npm dependencies and its `prepare` hook runs
-`npm run build`. Later edits need only:
+`npm run build`, producing the JS compiler. After later edits, choose the build
+matching the launcher you use:
 
 ```bash
-npm run build
+npm run build          # refresh bin/gopurs.js; run it with GOPURS_JS=1
+npm run build:native   # rebuild JS and bootstrap bin/gopurs-native (the default launcher)
 ```
 
 ### Nix environment
@@ -100,12 +102,18 @@ nix develop
 ```
 
 The shell deliberately does not provide an upstream `purs`: gopurs needs the
-TAST-capable compiler fork built from `../purescript`, and a nix-provided
+TAST-capable compiler fork built from `../../purescript`, and a nix-provided
 `purs` would shadow it inside `nix develop`. It is development tooling only —
-the sibling checkouts (`../purescript`,
+the sibling checkouts (`../../purescript`,
 `../../purescript-backend-optimizer-gopurs`, `../gopurs-*`) and the fork's
 compiler still have to be supplied locally, so the file alone does not
 establish a portable, fully pinned build of this checkout.
+
+**Verification status (2 October 2026):** Nix is not installed in the validation
+environment. The flake and `shell.nix` were reviewed, but `nix flake check` and
+`nix develop` have not been executed. The flake exposes development shells,
+overlays and a formatter, with no `packages` or `apps` outputs. Native and JS
+builds described below were checked with the local non-Nix toolchain.
 
 ### Choose the library checkouts
 
@@ -200,19 +208,18 @@ Native bootstrapping is experimental. Its PBO implementation cache currently
 retains immutable modules in memory for one build, without the JavaScript
 backend's disk spill or memory budget. The unused legacy JSON BackendModule
 cache is unsupported: reads miss and an attempted write fails explicitly.
-The native JSON parser currently replaces isolated UTF-16 surrogates with
-U+FFFD, so literals containing those code units do not yet have JavaScript
-parity. Ordinary Unicode strings, including valid surrogate pairs, are unaffected
-by this specific limitation.
-The bootstrap was validated on 2026-09-17 by running the native backend on its
-own 448 TAST modules: all 543 generated Go files matched the Node backend byte
-for byte, and rebuilding them produced an identical second-generation binary.
-That binary also generated identical Go for the Hello and NativeArrayReboxing
-fixtures (80 and 193 files), whose applications compiled and ran successfully.
-This establishes functional parity on these inputs, not general equivalence.
-The native backend was slower on those validation workloads. TAST loading and
-decoding support optional bounded parallel batches. Go emission also supports
-bounded parallel batches; optimization remains sequential.
+The native TAST decoder preserves integer magnitudes and isolated UTF-16
+surrogates as WTF-8, while combining valid surrogate pairs. Literal preservation
+does not establish every JavaScript string operation's semantics; the dated
+[exclusion review](docs/testing.md#exclusions-et-modules-frères) records remaining cases.
+
+The 2 October 2026 reconstruction covers **500 modules and 287,550 types**.
+Rebuilding the same source snapshot reproduced both compiler artifacts exactly.
+TAST loading, transitive preparation, PBO optimization and Go emission each have
+their own bounded parallelism controls. Native sequential, native parallel and
+JS generation are compared on frozen inputs; see [the validation record](docs/testing.md)
+for corpus sizes, execution campaigns and their limits. These checks establish
+functional results, not performance gains.
 
 ### Compile and run an application
 
@@ -281,7 +288,7 @@ by the current gopurs entrypoint are:
 | `--rewrite-limit number` | Set the optimizer rewrite limit; default 10000. |
 
 The shared optimizer argument parser also recognizes options such as `--output`
-and `--bundle`, but `Main` does not use them to change gopurs output behavior.
+and `--bundle`, but `Driver.Config` does not use them to change gopurs output behavior.
 
 The CLI exits with status **0** on successful compilation and **1** when the
 driver raises an error. After compilation cleanup, it reports the original
@@ -310,8 +317,8 @@ The `bin/gopurs` launcher runs `bin/gopurs-native`, unless `GOPURS_JS=1` selects
 the Node bundle `bin/gopurs.js`. Both backends report identical phases, so
 `GOPURS_JS=1 ../gopurs/bin/gopurs --main Main` in a project with a typed `output`
 measures the JavaScript compiler with the same instrumentation as the native one.
-`npm run build` refreshes the bundle; `npm run build:native` refreshes the
-executable.
+`npm run build` refreshes the bundle; `npm run build:native` refreshes both
+the bundle and executable.
 
 TAST loading and decoding use eight workers by default in the native Go compiler;
 the JavaScript compiler defaults to one. Set `GOPURS_JOBS` from 1 to 64 to select
@@ -346,17 +353,26 @@ concurrency while preserving sequential directive visibility and publication
 order. See [parallel emission](docs/parallel-emission.md) for the lifecycle
 contract, defaults, measurements and validation.
 
+`GOPURS_PREPARE_JOBS` controls transitive specialization preparation separately
+(default 2, clamped to 1–8); each round merges ordered results before starting
+the next. The launcher may select eight preparation and PBO workers on machines
+with at least 32 GiB when it also installs its default memory policy. Set the
+environment variables explicitly for reproducible comparisons. See
+[parallel preparation](docs/parallel-preparation.md).
+
 ## Develop one library locally
 
 Each library keeps its own Spago configuration and repository. The
-[51-directory map](todo.md#dossiers-api-et-commandes-actuelles) identifies its
-API, test entrypoint and review owner. The Go development section in each
+[repository map](docs/architecture.md#carte-des-dépôts-et-des-consommateurs) describes
+the source families and their consumers. `./bin/modtest --all --list` gives the
+current executable library suite. The Go development section in each
 library README links back to this procedure.
 
 1. Build gopurs as above and prepare the required sibling checkouts. `--core`
    covers the 22 core libraries and their supporting dependencies; use `--all`
    for the complete family, including the adapted QuickCheck prerequisite.
-2. Put the TAST compiler and **Spago 1.0.4** on `PATH`. Check both with
+2. Put the TAST compiler and YAML-capable Spago on `PATH` (**1.0.3** in the
+   2 October campaign; earlier checks also used 1.0.4). Check both with
    `command -v purs spago` and `purs --version; spago --version`. The interactive
    shell, npm and altbak can select different tools. A stock compiler's version
    number alone does not prove that it emits TAST.
@@ -381,7 +397,8 @@ library README links back to this procedure.
 QuickCheck has a local package configuration but no Go runner or `package.test`
 declaration yet; use `spago build` for its package, and the consuming package's
 Go tests to exercise it. `node-net` also lacks a `package.test` declaration;
-its test entrypoint must be reconciled with the suite in the later test review.
+its runner's result is recorded separately from a test-suite execution in
+[the module campaign](docs/testing.md).
 
 ### Configuration and lockfiles
 
@@ -515,22 +532,23 @@ See [validation and remaining limits](docs/testing.md) for the scope of the chec
 ### Editing the Go runtime
 
 The canonical runtime source is [`runtime/runtime.go`](runtime/runtime.go).
-Edit that file, then rebuild the backend:
+Edit that file, then rebuild both compiler versions:
 
 ```bash
-npm run build
+npm run build:native
 ```
 
 The build first runs `tools/embed-runtime.mjs`, which writes the ignored
-`src/Gopurs/Runtime.js` FFI module. `Gopurs.Runtime.runtimeGoCode` remains a
-PureScript `String`; Spago and esbuild embed it in `bin/gopurs.js`. The installed
+`src/Gopurs/Runtime.js` and `Runtime.go` FFI companions.
+`Gopurs.Runtime.runtimeGoCode` remains a PureScript `String`; the JS bundle and
+native executable embed the same constant. The installed
 backend does not read the Go source at execution time, and the generated
 `output/gopurs_runtime/runtime.go` contains its exact text.
 
-`npm run build:runtime` regenerates only the FFI module. Run it before a direct
+`npm run build:runtime` regenerates only the FFI companions. Run it before a direct
 `spago build` after changing the Go source or starting from a fresh checkout.
 When the source is unchanged, regeneration preserves the FFI file's timestamp
-so Spago can reuse its compiled output. The npm `prepare` hook runs the full
+so Spago can reuse its compiled output. The npm `prepare` hook runs the JS
 build and includes this step automatically. Generated FFI and bundle files are
 build artifacts; commit the Go source and build tooling.
 
@@ -544,6 +562,8 @@ build artifacts; commit the Go source and build tooling.
 4. **Assemble and execute:** [Driver.Output](src/Gopurs/Driver/Output.purs) writes modules, the embedded runtime, `go.mod`, and entrypoints. Go's tools resolve dependencies and compile the application.
 
 The [architecture map](docs/architecture.md) gives a detailed guide to module responsibilities.
+The [runtime/FFI contracts](docs/runtime-ffi-contracts.md) cover shared storage,
+closure lifetime, and the per-render mutable buffer owned by `Printer.Builder`.
 
 ## Current status and limitations
 

@@ -1,7 +1,8 @@
 // GOPURS_NATIVE_OUTPUT=/path/to/bootstrap/output node --test tools/preparation-native.test.mjs
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
 
@@ -18,11 +19,23 @@ test('native preparation defers work, overlaps bounded workers, and preserves re
     const nativeTest = join(output, 'purescript', 'preparation_native_test.go');
     writeFileSync(nativeTest, readFileSync(new URL('./preparation-native_test.go', import.meta.url)), { flag: 'wx' });
     t.after(() => rmSync(nativeTest, { force: true }));
-    const result = spawnSync('go', [
-        'test', '-race', '-count=1', '-timeout=30s',
-        '-run', '^TestPreparationNative', '-v', './purescript',
+    // Compilation includes the whole native compiler; keep its cold-cache
+    // budget separate from the 30-second execution limit of these contracts.
+    const directory = mkdtempSync(join(tmpdir(), 'gopurs-preparation-native-'));
+    t.after(() => rmSync(directory, { recursive: true, force: true }));
+    const executable = join(directory, 'preparation.test');
+    const build = spawnSync('go', [
+        'test', '-race', '-c', '-o', executable, './purescript',
     ], {
-        cwd: output, encoding: 'utf8', timeout: 120_000,
+        cwd: output, encoding: 'utf8', timeout: 900_000,
+        env: { ...process.env, GOWORK: 'off' }, maxBuffer: 1024 * 1024,
+    });
+    assert.ifError(build.error);
+    assert.equal(build.status, 0, build.stdout + build.stderr);
+    const result = spawnSync(executable, [
+        '-test.count=1', '-test.timeout=30s', '-test.run=^TestPreparationNative', '-test.v',
+    ], {
+        cwd: output, encoding: 'utf8', timeout: 60_000,
         env: { ...process.env, GOWORK: 'off' }, maxBuffer: 1024 * 1024,
     });
     assert.ifError(result.error);

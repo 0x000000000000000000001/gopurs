@@ -1,13 +1,14 @@
 import { accessSync, constants, readdirSync, statSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 
-// Preserve the exclusions of the original passing-test runner.
+// Rechecked on 2026-10-02; evidence and exact failures are in docs/testing.md.
 const excluded = new Set([
-  // Compiler features newer than the version supported by these fixtures.
-  "DerivingClause.purs", "DerivingContravariant.purs", "DerivingFunctorFromBi.purs",
+  // The current frontend rejects these with CannotDeriveInvalidConstructorArg.
+  "DerivingContravariant.purs", "DerivingFunctorFromBi.purs",
   "DerivingFunctorFromPro.purs", "DerivingProfunctor.purs",
-  "NumberLiterals.purs", // Precise IEEE-754 serialization differences.
-  "StringEdgeCases.purs", "StringEscapes.purs", // Lone surrogates in Go UTF-8 strings.
+  "NumberLiterals.purs", // Number Show spelling differs from the fixture's oracle.
+  "StringEdgeCases.purs", // Native TAST type-level strings/row labels fail decoding.
+  "StringEscapes.purs", // Folding concatenated surrogate halves differs from JS.
   "2136.purs", // 32-bit boundary overflow, with native 64-bit integers in gopurs.
 ]);
 

@@ -59,7 +59,7 @@
             packages = [
               # PureScript toolchain. Upstream `purs` is deliberately not
               # included: gopurs consumes the enriched TAST produced by the
-              # compiler fork from ../purescript (see README.md), and a
+              # compiler fork from ../../purescript (see README.md), and a
               # nix-provided purs would shadow it inside `nix develop`.
               pkgs.spago-unstable
               pkgs.purs-tidy
@@ -71,7 +71,7 @@
               pkgs.esbuild
 
               # Generated Go output and the compiler's own native build.
-              # Go 1.27+ is only needed to rebuild the FFI parser; ordinary
+              # Go 1.27.0 is required to rebuild the FFI parser; ordinary
               # builds use the checked-in WASM/JavaScript runtime.
               pkgs.go
               pkgs.gopls
@@ -85,8 +85,8 @@
 
             shellHook = ''
               echo "gopurs dev shell"
-              echo "  - sibling checkouts required: ../purescript, ../../purescript-backend-optimizer-gopurs, ../gopurs-*"
-              echo "  - put the TAST-capable purs fork (built from ../purescript) ahead of any other purs in PATH"
+              echo "  - sibling checkouts required: ../../purescript, ../../purescript-backend-optimizer-gopurs, ../gopurs-*"
+              echo "  - put the TAST-capable purs fork (built from ../../purescript) ahead of any other purs in PATH"
               if ! command -v purs >/dev/null 2>&1; then
                 echo "  - warning: no purs found; spago build needs the TAST-capable fork" >&2
               fi
