@@ -148,15 +148,17 @@ snapshot `OwnedTrees` ne change que trois corps de fonctions consommantes ; son
 code public et persistant reste identique. La fixture s’exécute et un nouveau
 passage contrôle le snapshot sans le réécrire.
 
-Les mesures avant/après utilisent le [protocole et les artefacts archivés](/Users/0x1/Documents/htdocs/altbak.pub/scratch/gopurs-adt-reuse-validation-20260916/PROTOCOL.md).
+Les mesures avant/après utilisent le protocole et les artefacts archivés
+localement sous `altbak.pub/scratch/gopurs-adt-reuse-validation-20260916/PROTOCOL.md`.
 Pour 100 000 clés, les médianes passent de 2 483 949 à 100 000 allocations et
 de 79 486 352 à 3 200 000 octets cumulés. Dans la campagne à trois processus
 par variante, RBTree passe de 24,20 à 9,95 ms, contre 8,92 ms pour le manuscrit.
 Les baselines historiques du README d’altbak restent distinctes des mesures
-contrôlées de cette campagne. Le [bilan complet](/Users/0x1/Documents/htdocs/gopurs/gopurs/todo.md)
-précise les limites et les commandes de reproduction.
+contrôlées de cette campagne. Ce protocole précise les limites et les commandes
+de reproduction ; les validations actuelles sont dans [testing.md](testing.md).
 
-La [campagne de sélection statique du 17 septembre](/Users/0x1/Documents/htdocs/altbak.pub/scratch/gopurs-static-cells-20260917/integration/REPORT.md)
+La campagne de sélection statique du 17 septembre, archivée localement sous
+`altbak.pub/scratch/gopurs-static-cells-20260917/integration/REPORT.md`,
 compare le vrai générateur avant/après à CoreFn identique. Seuls les corps
 consommants de `balance` et `makeBlack` changent dans le Go d’altbak. Sur trois
 processus par variante, le total passe de 12,58267 à 12,26888 ms (−2,49 %),

@@ -6,15 +6,15 @@ L'objectif est de supprimer les deux buffers de conversion lorsqu'un **résultat
 
 **1. Où le motif apparaît et où l'information disparaît**
 
-Le témoin `sumEvens` de 3.1 suivait ce chemin avant optimisation. Son [snapshot actuel](/Users/0x1/Documents/htdocs/gopurs/gopurs/tests/passing-snapshots/ArrayRoundtrip.go:328) montre désormais la normalisation décrite en section 4. Les liens ci-dessous pointent vers les sites actuels du générateur :
+Le témoin `sumEvens` de 3.1 suivait ce chemin avant optimisation. Son [snapshot actuel](../tests/passing-snapshots/ArrayRoundtrip.go) montre désormais la normalisation décrite en section 4. Les liens ci-dessous pointent vers les sites actuels du générateur :
 
 | Étape | Représentation et site du générateur |
 |---|---|
 | Range | L'appel existant à `rangeImpl` fournit ici un `Value` contenant un tableau. Son bridge FFI reste exécuté. |
 | Filtre | Le chemin `UncurriedApp Data.Array.filterImpl` génère un buffer neuf par `make([]Value, 0)` puis `append`. Son résultat Go est `TypeNativeArray TypeValue`. [ArrayIntrinsics](../src/Gopurs/ArrayIntrinsics.purs). |
-| Contrainte `Array Int` | Le traitement de `Typed` impose `TypeNativeArray TypeInt64`, via `coerceGoExpr`. [CodeGen](../src/Gopurs/CodeGen.purs#L176). |
-| Première conversion | Emballage du header par `Array`, puis copie des `.IntVal` vers `[]int64`. Auparavant imprimée immédiatement en `GoRaw`, elle reste désormais structurée en `GoUnboxIntArray`. [GoConversions](../src/Gopurs/GoConversions.purs#L211). |
-| Deuxième conversion | `boxGoExprImpl` recrée un `[]Value` avec `Int(v)`, désormais représenté par `GoBoxIntArray`. [GoConversions](../src/Gopurs/GoConversions.purs#L180). |
+| Contrainte `Array Int` | Le traitement de `Typed` impose `TypeNativeArray TypeInt64`, via `coerceGoExpr`. [TypedExprs](../src/Gopurs/TypedExprs.purs). |
+| Première conversion | Emballage du header par `Array`, puis copie des `.IntVal` vers `[]int64`. Auparavant imprimée immédiatement en `GoRaw`, elle reste désormais structurée en `GoUnboxIntArray`. [GoConversions](../src/Gopurs/GoConversions.purs). |
+| Deuxième conversion | `boxGoExprImpl` recrée un `[]Value` avec `Int(v)`, désormais représenté par `GoBoxIntArray`. [GoConversions](../src/Gopurs/GoConversions.purs). |
 | Fold | Dans ce témoin, le fold emprunte le chemin **App**, qui boxe ses arguments puis lit un `[]Value` avec `Apply2`. Ce n'est pas le chemin `UncurriedApp foldlArray`. [Arguments](../src/Gopurs/CallArguments.purs), [boucle](../src/Gopurs/ArrayIntrinsics.purs). |
 
 Le boxing final peut être provoqué par un `Typed` extérieur ou par le boxing des arguments de `App`. Le point de reconnaissance doit donc examiner l'argument **après son boxing normal**, tout en conservant les conversions structurées jusque-là.
@@ -73,7 +73,7 @@ Les noms temporaires doivent être frais et locaux à l'IIFE, selon les mécanis
 
 Conserver précisément `.IntVal` puis `Int`, sans conversion Int32, contrôle de tag ajouté ou changement de calcul. L'aller-retour actuel transforme chaque élément en `Value` de type entier avec pointeur nul. Le simple remplacement par la `Value` d'origine ne préserverait pas cette propriété pour des valeurs non canoniques.
 
-La normalisation se termine **avant le premier appel du fold**. La déplacer seulement dans l'argument de chaque `Apply2` pourrait prolonger la rétention des pointeurs présents dans le buffer source. La passe sur place les efface avant consommation, comme le font les copies actuelles. Elle n'exige donc pas de nouvelle analyse des signatures Go des bridges FFI, actuellement traitées après `translate` dans Main.
+La normalisation se termine **avant le premier appel du fold**. La déplacer seulement dans l'argument de chaque `Apply2` pourrait prolonger la rétention des pointeurs présents dans le buffer source. La passe sur place les efface avant consommation, comme le font les copies actuelles. Cette preuve reste locale au motif et ne dépend pas des signatures Go des bridges FFI.
 
 **5. Fallbacks et limites**
 
@@ -110,7 +110,7 @@ La suite complète `passing` et les nouveaux témoins de refus, d'effets et de p
 
 **8. Mesures de l'étape 3.5**
 
-Le [bilan sur le Go régénéré](/Users/0x1/Documents/htdocs/altbak.pub/scratch/gopurs-array-roundtrip-3-5-20260908/RESULTS.md) conserve le protocole, les dix paires de chaque série et la dispersion. Les économies d'allocation sont confirmées : −19,44 % d'octets/op à 900, −15,57 % à 90 000, deux allocations supprimées dans les deux cas. Les temps médians du noyau baissent de 2,47 % et 0,86 %, sans gain global d'altbak démontré. Le RSS de la sonde répétée reste stable à 900 et baisse à 90 000 ; ce n'est pas une garantie de RAM pour tout programme. Un petit ralentissement de Fib est reproduit par un contrôle isolé (+3 % environ), malgré son Go inchangé, avec cause non établie. La validation étendue de 3.4 reste ouverte.
+Le bilan local `altbak.pub/scratch/gopurs-array-roundtrip-3-5-20260908/RESULTS.md` conserve le protocole, les dix paires de chaque série et la dispersion. Les économies d'allocation sont confirmées : −19,44 % d'octets/op à 900, −15,57 % à 90 000, deux allocations supprimées dans les deux cas. Les temps médians du noyau baissent de 2,47 % et 0,86 %, sans gain global d'altbak démontré. Le RSS de la sonde répétée reste stable à 900 et baisse à 90 000 ; ce n'est pas une garantie de RAM pour tout programme. Un petit ralentissement de Fib est reproduit par un contrôle isolé (+3 % environ), malgré son Go inchangé, avec cause non établie. La validation étendue de 3.4 restait ouverte à cette date.
 
 **9. Réexamen de la fixture — 14 septembre 2026**
 
@@ -123,3 +123,8 @@ sources et outils actuels.
 Aucun correctif ni changement de snapshot n'a été nécessaire pour ce contrôle.
 Les témoins supplémentaires prévus en 3.4 ne sont pas ajoutés par cette
 réexécution. Preuves : `/private/tmp/gopurs-array-check-hm1393_z/`.
+
+Les étapes 3.3–3.5 ci-dessus décrivent le chantier historique. Les contrats
+actuels de reconnaissance, capture ordonnée, refus et émission des intrinsics,
+ainsi que la campagne finale de fixtures, sont consignés dans
+[testing.md](testing.md).

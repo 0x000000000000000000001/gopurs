@@ -363,19 +363,26 @@ ne demande pas de recompiler le PureScript si les entrées TAST sont inchangées
 
 ## Exclusions et modules frères
 
-Les neuf exclusions historiques sont conservées dans
-[tools/test-selection.mjs](../tools/test-selection.mjs) :
+Les exclusions de [tools/test-selection.mjs](../tools/test-selection.mjs) ont été
+réexécutées le **2 octobre 2026**, avec le même compilateur que la campagne
+finale. **Huit** restent justifiées :
 
-| Fixtures | Motif enregistré dans le runner |
+| Fixtures | Échec observé et portée |
 | --- | --- |
-| `DerivingClause`, `DerivingContravariant`, `DerivingFunctorFromBi`, `DerivingFunctorFromPro`, `DerivingProfunctor` | Fonctionnalités de compilateur plus récentes que celles prises en charge par ces fixtures |
-| `NumberLiterals` | Différences de sérialisation IEEE-754 |
-| `StringEdgeCases`, `StringEscapes` | Surrogates isolés et chaînes Go UTF-8 |
-| `2136` | Débordement aux bornes 32 bits, avec les entiers natifs 64 bits de gopurs |
+| `DerivingContravariant`, `DerivingFunctorFromBi`, `DerivingFunctorFromPro`, `DerivingProfunctor` | Le frontend TAST rejette les déclarations avec `CannotDeriveInvalidConstructorArg`. Aucun Go n'est produit. |
+| `NumberLiterals` | Exécution : l'oracle de `Show Number` attend `0.25996181067142`, mais reçoit `0.25996181067141905`. |
+| `StringEdgeCases` | Le natif rejette des entrées `typeTable` de `Records` et `Symbols` aux champs `value` et `fields.label` ; les getters manquants font ensuite échouer Go. Six fichiers divergent de JS, dont ces deux modules. |
+| `StringEscapes` | L'exécution des assertions actives réussit, mais le pliage de `loneSurrogates` produit `false` en natif et `true` en JS. L'assertion sur cette concaténation est commentée dans la fixture. Les littéraux isolés sont préservés ; un succès d'exécution seul ne suffit pas à lever cette exclusion. |
+| `2136` | Compilation réussie, sortie `Fail` : la négation native 64 bits de la borne inférieure 32 bits dépasse `top`. |
 
-Ces motifs décrivent les exclusions existantes, pas une nouvelle vérification
-de chacune. `bin/modtest` sélectionne les checkouts frères `gopurs-*` possédant
-un `bin/test` exécutable :
+`DerivingClause` réintègre la sélection : compilation et exécution Go réussies,
+**334 fichiers Go identiques** entre natif séquentiel, natif parallèle et JS
+sur les mêmes entrées TAST. Son snapshot, auparavant absent, a été créé puis
+revérifié en mode strict. Les snapshots existants n'ont pas été remplacés.
+Les **391 fixtures sélectionnables** sont distinctes des huit exclusions.
+
+`bin/modtest` sélectionne les checkouts frères `gopurs-*` possédant un
+`bin/test` exécutable :
 
 ```bash
 ./bin/modtest --all --list
@@ -387,6 +394,106 @@ La sélection complète est le défaut. Les noms avec ou sans `gopurs-` sont
 acceptés ; `-c` reconstruit le backend depuis ce checkout. Chaque script frère
 gère encore ses propres sorties et nettoyages ; l'isolation des fixtures de
 `bin/test` ne s'étend pas automatiquement à ces scripts.
+
+## Consolidation finale — lot 15, 2 octobre 2026
+
+La référence est une arborescence compilateur/runtime figée, contrôlée par
+empreintes avant et après reconstruction et génération. Le bootstrap couvre
+**500 modules et 287 550 types** ; `bin/gopurs.js` et `bin/gopurs-native`
+reconstruits sont identiques octet par octet aux artefacts sauvegardés. Le
+manifeste des **111 fichiers compilateur/runtime** est stable. Les modifications
+du lot portent sur la documentation, le harnais de tests natifs, la sélection
+des fixtures et le nouveau snapshot `DerivingClause`.
+
+Toolchain : Node **24.8.0**, Go **1.27.0**, Spago **1.0.3** et fork `purs`
+**0.15.16 development**, commit affiché `3c8fcfd7a3d440bba487fe9fe059284cffc6e908`
+avec arbre modifié. L'empreinte du binaire frontend est conservée dans
+`toolchain.json` ; PBO est à `0f41544464ec0f42e6cb0dd77b206852813f904f`.
+Le build JS de gopurs emploie son toolchain npm verrouillé, distinct de celui
+des applications et du bootstrap TAST.
+
+Contrôles terminés :
+
+- `npm run build:native -- --keep-workspace`, puis campagne
+  `node --test tools/*.test.mjs` avec `GOPURS_NATIVE_OUTPUT` renseigné :
+  **359 tests réussis, zéro échec et zéro saut**, y compris la préparation
+  native sous `-race` et les deux contrôles du scanner natif complet.
+  `preparation-native.test.mjs` sépare désormais le budget de compilation à
+  froid de 900 s du délai Go d'exécution de 30 s et du budget hôte de 60 s ;
+- **44 tests Node PBO réussis** : les cinq suites du lot 13 et les trois tests
+  `parallel-load`. L'oracle autonome `type-table` et les tests Go du parser FFI
+  réussissent également ; ils ne sont pas comptés comme tests Node ;
+- pipeline natif : **quatre tests sous `-race`**, puis contrôle des bornes et
+  chargement séquentiel/parallèle d'un échantillon figé de **133 modules b8x** ;
+- b8x : **2 683 entrées TAST figées**, **2 987 fichiers Go identiques octet par
+  octet** à la référence et entre les compilateurs natif séquentiel, natif
+  parallèle et JS. Inventaires, runtime, bridges, entrées et `go.mod` sont
+  comparés. Une passe complémentaire avec `GOPURS_JOBS=1`, préparation/PBO/
+  émission à 1 et `GOPURS_PIPELINE=0` confirme la même identité. Ce contrôle
+  porte sur la génération, pas sur l'exécution de b8x ;
+- `argonaut-codecs/test/typed-plans.mjs`, dans une copie isolée : compilation
+  PureScript, exécution JS, génération native, exécution Go sous `-race` et
+  contrôle de propriété du texte réussis ;
+- compilation frontend du paquet QuickCheck isolé : **231 modules**, zéro
+  erreur ni avertissement. Le paquet n'a pas de runner Go autonome ; ce build
+  n'est pas compté comme une suite Go ;
+- les neuf exclusions historiques ont été réexécutées. `DerivingClause`
+  réintègre le runner après exécution, parité des trois modes et snapshot strict ;
+  les huit motifs restants sont détaillés ci-dessus.
+
+La campagne longue utilise une copie de **1 365 fichiers source/configuration
+de 52 répertoires frères**, car leurs scripts peuvent supprimer les sorties et
+caches des autres paquets. Chaque cible possède son journal et son statut ;
+l'échec d'une cible n'empêche pas les autres tentatives.
+
+**Modules : 50/50 runners réussis**, dont `assert` en compilation seule ; les
+49 autres exécutent leur programme Go, notamment `node-net`. `spec` réussit
+avec **70 tests et 3 pending**, y compris ses huit intégrations imbriquées.
+La première tentative avait échoué à initialiser le `node_modules` temporaire,
+puis produit sept erreurs Go en cascade ; la suivante a rencontré `ENOSPC`.
+Après restauration du répertoire vide ignoré `env-template/node_modules`
+présent dans le checkout d'origine et libération d'espace, le runner complet
+réussit sans changement de source. Ses intégrations invoquent `npx spago` et
+le bundle JS, même quand le runner extérieur utilise le compilateur natif.
+
+**Fixtures : 391/391 réussies**, avec snapshots stricts, compilation et exécution
+Go. La sélection initiale de 390 a été exécutée avec préparation/PBO/émission
+à huit workers ; `DerivingClause`, ajoutée après son examen, a passé séparément
+le runner courant. Aucun snapshot existant n'a changé.
+
+Les incidents de campagne restent dans les journaux : `ENOSPC` a interrompu les
+shards après 266 succès ; les 124 cibles sans résultat valide ont été reprises
+après purge du cache Go. Cette reprise a donné 120 succès et quatre erreurs
+d'extraction Spago (`ENOENT` dans le répertoire temporaire partagé, ou module
+de dépendance absent). Les quatre cibles — `OperatorAliasElsewhere`,
+`PendingConflictingImports2`, `PolykindBindingGroup1`,
+`PolykindInstantiatedInstance` — réussissent en relance séquentielle, dans un
+`TMPDIR` dédié, avec les mêmes sources et compilateurs. L'agrégation vérifie
+l'inventaire complet de la sélection courante, pas seulement le nombre de succès.
+
+**Nix : non vérifié à l'exécution.** L'exécutable `nix` est absent. La revue de
+`flake.nix` et `shell.nix` confirme un environnement de développement, sans
+`packages` ni `apps`, qui laisse le frontend TAST et les checkouts frères à
+fournir localement. Ni `nix flake check` ni `nix develop` n'ont été exécutés.
+Les builds réussis ci-dessus utilisent le toolchain local non-Nix.
+
+Le README, la carte d'architecture et les renvois historiques ont été consolidés.
+L'audit des **17 documents et 90 liens locaux** ne relève aucun fichier ni ancre
+manquants. Les **1 365 fichiers frères** et les **111 fichiers compilateur/runtime**
+conservent leurs empreintes de référence ; `git diff --check` est propre.
+
+Les preuves, références, manifests et journaux sont conservés sous
+`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/gopurs-final-consolidation-xy_5fmmn/`.
+Le bootstrap natif est dans `gopurs-native-build-Hezybl/` sous le même parent ;
+le workspace `typed-plans` est `gopurs-tests-Qhgufu/`. `final-results.json`
+agrège les résultats, et `final.diff` conserve le diff complet du lot par rapport
+à l'arborescence figée, y compris les changements déjà repris par le bot de commit.
+
+Le lot 15 est validé : **100/100 points, 15/15 lots** du plan v1 clôturés.
+Cette clôture couvre la maintenabilité et les validations décrites : les huit
+exclusions, les trois `pending` de `spec`, l'absence de suite Go autonome de
+QuickCheck et l'exécution Nix non vérifiée restent des limites explicites.
+Aucun gain de performance n'est déduit de ces validations.
 
 ## Runtime et FFI du compilateur — lot 14, 2 octobre 2026
 
@@ -442,9 +549,8 @@ b8x porte sur la génération ; les tests natifs et fixtures vérifient l'exécu
 complet de cette passe sont conservés dans
 `/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/gopurs-runtime-ffi-cleanup-6052azh5/`.
 Le workspace bootstrap est conservé sous le même parent dans
-`gopurs-native-build-TLO4c1/`. La prochaine passe est le lot 15 : consolidation
-des campagnes sur une même révision, documentation et exclusions, avec statut
-explicite de la vérification Nix.
+`gopurs-native-build-TLO4c1/`. Le lot 15, consolidation des campagnes et de la
+documentation avec statut explicite de Nix, constituait alors la prochaine passe.
 
 ## Frontière TAST/PBO — lot 13, 2 octobre 2026
 
@@ -951,11 +1057,11 @@ Le lot runner a passé sept contrats avec commandes de compilation simulées,
 puis deux fixtures minimales avec les vrais outils dans des workspaces
 séparés. Ces checks ne constituent pas une campagne complète du compilateur.
 
-Restent ouverts : la référence des snapshots TCO/TCOMutRec et le contrôle
+À l'issue de cette vague historique restaient ouverts : les snapshots TCO/TCOMutRec et le contrôle
 ciblé de fusion du bilan de la première vague, la validation étendue de
 la [règle ArrayRoundtrip](array-roundtrip.md) prévue en 3.4 de ce chantier, et
-une campagne complète `passing` / modules frères. Les contrôles ciblés plus
-anciens et leurs écarts préexistants sont datés dans le todo. L'ancienne
+une campagne complète `passing` / modules frères. La consolidation du lot 15
+ci-dessus donne l'état actuel ; les constats de cette section sont datés. L'ancienne
 affirmation « 100 % des tests officiels verts » ne décrit pas cette validation.
 
 Le lot documentaire a reconstruit le backend sans artefacts compilés, installé
@@ -968,7 +1074,7 @@ compilations de référence sans sorties préexistantes ont recompilé chacune l
 438 modules, passant de 85 à **zéro avertissement et zéro erreur**. Un build
 incrémental silencieux ne suffit pas à établir ce résultat. Les preuves
 détaillées jusqu’au lot 12 restent consultables avec `git show baa1e071:todo.md`.
-Le [todo actuel](../todo.md) décrit la deuxième vague de nettoyage.
+Le [todo actuel](../todo.md) décrit le plan versionné de maintenabilité.
 
 Le contrôle `ArrayRoundtrip -c --keep-workspace` du 14 septembre confirme les
 28 assertions existantes et le snapshot inchangé. Le résultat incorrect du
@@ -978,9 +1084,9 @@ elle ne désigne pas la cause ni la correction de l'ancien échec.
 
 ## Référence du lot 1 de maintenance — 14 septembre 2026
 
-Cette référence accompagne la [carte des 51 dépôts](../todo.md#lot-1--carte-et-référence-du-14-septembre-2026).
-Elle vérifie les points d'entrée et les comportements ci-dessous ; la revue
-interne de tous les fichiers et la campagne des bibliothèques restent à faire.
+Cette référence historique accompagne la [carte des dépôts](architecture.md#carte-des-dépôts-et-des-consommateurs).
+Elle vérifiait les points d'entrée et les comportements ci-dessous ; la revue
+interne et la campagne des bibliothèques étaient encore à faire à cette date.
 
 | Contrôle exécuté | Résultat et portée |
 | --- | --- |
@@ -1022,6 +1128,10 @@ README d'altbak, sans conclusion tirée de ce seul run.
 
 ## Limites de configuration et de couverture relevées au lot 1
 
+Cette section conserve le constat du **14 septembre 2026**. Les numéros de lots
+renvoient à l'ancien journal de maintenance ; la campagne du lot 15 du plan
+actuel donne le dernier état des fixtures et bibliothèques.
+
 - **45 des 49 `bin/test` frères** nettoient aussi les `output`, `.spago` et
   `.cache` des autres `gopurs-*`. Les quatre nettoyages limités au paquet sont
   ceux de `functions`, `lazy`, `js-bigints` et `strings-extra`. Ce dernier
@@ -1060,10 +1170,13 @@ README d'altbak, sans conclusion tirée de ce seul run.
   reconstruise à l'identique ; revue au lot 2.
 
 Les écarts de snapshots et les campagnes non exécutées décrits plus haut
-restent ouverts. Le lot 1 n'établit ni un build intégral de chaque bibliothèque,
+restaient ouverts à cette date. Le lot 1 n'établit ni un build intégral de chaque bibliothèque,
 ni une validation réseau/FS/Aff, ni un build sans caches de dépendances.
 
 ## Lot 2 — installation et configurations
+
+Cette section décrit la vague de maintenance du **14 septembre 2026**, antérieure
+au plan versionné actuel.
 
 Le [guide local](../README.md#develop-one-library-locally) décrit désormais le
 parcours de chaque bibliothèque. Le lot 2 a examiné les **404 fichiers de
@@ -1072,7 +1185,7 @@ configuration** inventoriés : **91 modifiés, 313 conservés**, ainsi que
 formatage, lint et règles d'exclusion gardent leurs rôles existants. Les
 configurations des exemples et le template d'intégration de `spec` sont aussi
 identifiés ; `SPEC_REPO_PATH` y est remplacé par le runner, et leur revue de
-tests reste au lot 14.
+tests était attribuée au lot 14 de cette ancienne vague.
 
 **1 106 overrides inutilisés ont été retirés de 46 configurations Spago
 principales**, y compris les références aux six noms de dossiers absents.

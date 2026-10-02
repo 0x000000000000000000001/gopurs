@@ -32,6 +32,8 @@ The [altbak README](https://github.com/0x000000000000000000001/altbak.pub#go)
 contains the reference results, workloads, and benchmark context. Compare
 changes against those baselines; results depend on the workload and toolchain.
 The sequential core campaign does not establish multicore scaling.
+Performance work is paused during this maintainability plan. Validation timings
+are not benchmark results; future optimization work requires meaningful measured gains.
 
 ## Getting started
 
@@ -289,6 +291,8 @@ by the current gopurs entrypoint are:
 
 The shared optimizer argument parser also recognizes options such as `--output`
 and `--bundle`, but `Driver.Config` does not use them to change gopurs output behavior.
+Argument values containing spaces are not supported by this parser, including
+quoted `--ffi` paths. There is no dedicated `--help` handler.
 
 The CLI exits with status **0** on successful compilation and **1** when the
 driver raises an error. After compilation cleanup, it reports the original
@@ -396,9 +400,9 @@ library README links back to this procedure.
 `../gopurs/bin/gopurs`, then `(cd output && go mod tidy && go build ./...)`.
 QuickCheck has a local package configuration but no Go runner or `package.test`
 declaration yet; use `spago build` for its package, and the consuming package's
-Go tests to exercise it. `node-net` also lacks a `package.test` declaration;
-its runner's result is recorded separately from a test-suite execution in
-[the module campaign](docs/testing.md).
+Go tests to exercise it. `node-net` has a `test/Test/Main.purs` entrypoint that
+the current Spago command compiles despite the absent `package.test` stanza;
+its runner executes that Go program. See [the module campaign](docs/testing.md).
 
 ### Configuration and lockfiles
 
@@ -433,8 +437,6 @@ Follow a library's existing npm/CI commands for those workflows; `npm test`
 does not universally run Go. Preserve npm lockfiles used by those commands.
 The Go parser has the only maintained `go.mod`, in `tools/ffi-gen`; the backend
 creates each application's Go module under `output`.
-Argument values containing spaces are not supported by that parser, including
-quoted `--ffi` paths. There is no dedicated `--help` handler.
 
 ## Foreign function interface
 
@@ -467,9 +469,14 @@ coverage gaps.
 
 ```bash
 ./bin/test --list
-./bin/test FFIIntegerReturns -c
+npm run build:native -- --keep-workspace
+./bin/test FFIIntegerReturns
 npm run test:runner
 ```
+
+`bin/test -c` retains its historical JS-only rebuild. Use `GOPURS_JS=1` with
+that option, or rebuild native explicitly as above before testing the default
+launcher.
 
 For a broader integration check, run `bin/go/run -c` from an `altbak.pub`
 checkout. It rebuilds the backend and application, compiles Go, and executes
@@ -571,16 +578,22 @@ The backend remains experimental. Native representations coexist with a tagged
 `Value` runtime; general unboxing and complete library compatibility are not
 promised. Go implementations are needed for every reachable foreign binding.
 
-The fixture runner records known exclusions for integer overflow at 32-bit
-boundaries, floating-point serialization, isolated UTF-16 surrogates, and some
-compiler-feature fixtures. Go's native integer and string representations need
-care when porting code that depends on those JavaScript edge cases. See
+The fixture runner records eight rechecked exclusions: integer overflow at
+32-bit boundaries, `Show Number` spelling, type-level string decoding,
+concatenated surrogate halves, and four derived-instance fixtures rejected by
+the frontend. `DerivingClause` is covered by the strict suite. See
 [the exclusions and validation gaps](docs/testing.md#exclusions-et-modules-frères).
 
-Targeted fixtures and the core benchmark campaign have recorded successful
-checks; a complete green run of all `passing` fixtures and sibling-library
-suites is not established by those results. The [development plan](todo.md)
-tracks remaining work.
+The **2 October 2026 consolidation** validated all **391 selectable fixtures**
+with strict snapshots and Go execution, plus **50 sibling-library runners**
+(49 Go test programs and the compile-only `assert` check). `spec` reports
+70 passing tests and 3 pending; QuickCheck has no standalone Go suite.
+The compiler's 359 Node tests passed without skips, and 2,987 generated Go files
+from frozen b8x inputs are byte-identical across native sequential, native
+parallel and JS compilation. Nix execution remains unverified locally.
+See [the validation record](docs/testing.md) for the retained evidence, campaign
+retries and coverage limits. The [maintainability plan](todo.md) is complete:
+**15/15 lots, 100/100 points**. Performance work remains paused.
 
 ## License
 

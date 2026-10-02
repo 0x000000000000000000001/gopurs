@@ -27,4 +27,4 @@ node ../../purescript-backend-optimizer-gopurs/test/transitive-parallel.mjs outp
 GOPURS_NATIVE_OUTPUT=/chemin/bootstrap/output node --test tools/preparation-native.test.mjs
 ```
 
-Le test natif requiert les marqueurs PASS des cas effectivement exécutés sous `-race`. Il contrôle le différé, la réexécution, l’exécution unique, le chevauchement, la borne de concurrence et l’ordre des résultats. Le fichier Go de test est installé temporairement dans le bootstrap généré puis supprimé.
+Le test natif requiert les marqueurs PASS des cas effectivement exécutés sous `-race`. Il contrôle le différé, la réexécution, l'exécution unique, le chevauchement, la borne de concurrence et l'ordre des résultats. Le fichier Go de test est installé temporairement dans le bootstrap généré puis supprimé. La compilation du binaire de test dispose de son propre budget (900 s maximum) ; l'exécution conserve son délai Go de 30 s et un budget hôte de 60 s.

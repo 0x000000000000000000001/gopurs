@@ -7,7 +7,7 @@ une génération Go identique. Périmètre : compilateur, runtime, FFI et outill
 de ce dépôt ; les interfaces avec PBO et les bibliothèques sœurs sont incluses.
 Les optimisations de performance restent en pause.
 
-## Avancement : 95 % — 95/100 points, 14/15 lots validés
+## Avancement : 100 % — 100/100 points, 15/15 lots validés
 
 - **Calcul :** somme des points des cases cochées, sur un total fixe de 100.
   Les poids sont des unités de suivi ; le pourcentage mesure les livrables
@@ -69,10 +69,10 @@ Les optimisations de performance restent en pause.
   dans `Printer.Builder` ; scanner Go séparé de l'adaptation FFI. Propriété,
   durée de vie et contrats JS/Go documentés ; GC, concurrence, embarquement,
   snapshots stricts, exécution Go et parité des trois modes validés.
-- [ ] **15 — Consolidation finale (5 pts).** Sur une même révision, reconstruire
-  les deux compilateurs, exécuter les campagnes fixtures/modules et vérifier la
-  parité b8x. Fin : résultats et exclusions justifiés, README et architecture
-  cohérents, liens documentaires réparés, statut de l'installation Nix renseigné.
+- [x] **15 — Consolidation finale (5 pts).** Compilateurs reconstruits sur les
+  mêmes sources ; 391 fixtures, 50 runners frères et parité b8x validés.
+  Résultats et exclusions justifiés, README et architecture cohérents, liens
+  réparés ; Nix absent, vérification à l'exécution explicitement non réalisée.
 
 ## Vérifications communes pour clôturer un lot
 
@@ -87,4 +87,5 @@ Les optimisations de performance restent en pause.
 - Documentation des responsabilités et preuves de validation à jour ;
   `git diff --check` propre.
 
-**Prochaine passe : lot 15 — consolidation finale.**
+**Plan v1 clôturé.** Preuves et limites : [docs/testing.md](docs/testing.md).
+Les optimisations restent en pause ; toute reprise exige un gain mesuré significatif.

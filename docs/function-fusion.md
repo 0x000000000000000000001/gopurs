@@ -55,7 +55,8 @@ passe. Son nouveau snapshot et celui de `ThunkFusion` ont ensuite été vérifi�
 sans mise à jour, avec compilation et exécution Go réussies. La totalité des
 autres fixtures de compilation n’a pas été relancée.
 
-Dans la [campagne archivée](/Users/0x1/Documents/htdocs/altbak.pub/scratch/gopurs-counted-functions-20260917/REPORT.md),
+Dans la campagne archivée localement sous
+`altbak.pub/scratch/gopurs-counted-functions-20260917/REPORT.md`,
 301 CoreFn identiques produisent un changement limité à `Test_Church.go`.
 La sonde indépendante passe de 490,800 à 236,358 µs, avec cinq paires favorables,
 157 à 112 allocations et 6 800 à 5 280 octets par calcul. Le harnais complet
