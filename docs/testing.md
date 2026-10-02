@@ -15,6 +15,7 @@ reconstruit les deux versions et conserve le workspace pour les tests natifs.
 | Statut de sortie et diagnostics CLI | `npm run test:cli`, après `npm run build:native` |
 | Bootstrap natif et gestion des processus | `node --test tools/build-native.test.mjs tools/test-runner.test.mjs` |
 | Annotations et représentations natives | `node --test tools/native-record-workers.test.mjs tools/boxed-record-arguments.test.mjs tools/native-sum-results.test.mjs`, après le build |
+| Preuves source/TCO des arguments record projetés | `node --test tools/native-record-args.test.mjs tools/native-record-workers.test.mjs`, après le build ; `./bin/test NativeRecordWorkers NativeRecordReturns` |
 | Layouts, métadonnées et instanciation | `node --test tools/representation-contract.test.mjs tools/mixed-constructor-tags.test.mjs tools/elided-constructor-payloads.test.mjs tools/record-tuple-conversions.test.mjs`, après le build |
 | Boxing et émission transitive Rebox | `node --test tools/rebox-generation.test.mjs tools/rebox-metadata.test.mjs tools/struct-pointer-boxing.test.mjs tools/value-array-unboxing.test.mjs`, après le build |
 | Littéraux composites et constructeurs | `node --test tools/composite-expressions.test.mjs tools/elided-constructor-payloads.test.mjs tools/nullary-constructor-bindings.test.mjs`, après le build ; `./bin/test ConstructorReuse NativeArrayReboxing` |
@@ -28,6 +29,7 @@ reconstruit les deux versions et conserve le workspace pour les tests natifs.
 | Admission des fusions et applications immédiates | `node --test tools/thunk-fusion.test.mjs tools/counted-functions.test.mjs tools/immediate-applications.test.mjs`, après le build |
 | Intrinsics, indexation et traversées Either | `node --test tools/array-intrinsics.test.mjs tools/array-safe-index.test.mjs tools/array-unsafe-index.test.mjs tools/array-traverse-either.test.mjs tools/object-traverse-either.test.mjs tools/value-array-unboxing.test.mjs`, après le build |
 | Propriété des arbres et workers consommants | `node --test tools/owned-trees.test.mjs`, après le build ; `./bin/test OwnedTrees RBTree ConstructorReuse` |
+| Mise en cache des dictionnaires fermés | `node --test tools/closed-dictionaries.test.mjs`, après le build ; `./bin/test StaticDictionary JsonRecordPlan` |
 | Emprunt d'objets et composition des décodeurs | `node --test tools/borrowed-objects.test.mjs tools/closed-dictionaries.test.mjs tools/decoder-schemas.test.mjs`, après le build ; `./bin/test JsonRecordPlan` |
 | Contrat du parser Go | `go test ./...` depuis `tools/ffi-gen` |
 | Parser WASM et erreurs FFI | `npm run test:ffi`, après `npm run build` |
@@ -97,6 +99,37 @@ déjà présentes avant le refactoring.
 Les tests `mixed-constructor-tags`, `elided-constructor-payloads` et
 `record-tuple-conversions` complètent ce contrat par compilation et exécution
 du Go produit : tags distincts, payloads polymorphes, records et champs de classes.
+
+## Contrat des arguments record projetés
+
+`native-record-args.test.mjs` exerce les trois entrées publiques de l'analyse.
+Les contrats fixent les champs visibles et leurs collisions Go, la priorité des
+annotations, les quantificateurs de ligne et les paramètres monomorphes associés.
+Ils distinguent les portées source des identités TCO, y compris les initialisations,
+les patterns imbriqués, les gardes et les captures différées.
+
+La vérification finale rejette une preuve source devenue invalide et choisit
+chaque argument indépendamment. Les résultats natifs `Maybe`/`Either`/`Tuple`
+sont contrôlés aux deux étapes. `native-record-workers` compile et exécute les
+workers et leurs appelants Go : layouts plus larges, wrappers dynamiques/partiels,
+préservation des champs supplémentaires et replis. `NativeRecordReturns` complète
+ces contrats sur le chemin TAST/PBO avec un payload record transporté par `Either`.
+
+## Contrat des dictionnaires fermés
+
+`closed-dictionaries.test.mjs` distingue la preuve de réutilisation sans
+annotation de celle du déplacement d'un site annoté. Les tests vérifient la
+priorité du premier binding admissible, les qualifications et formes exactes
+d'applications, la substitution entre arguments et le refus des types ambigus,
+dynamiques ou de rang supérieur.
+
+Les contrats de réécriture couvrent les racines protégées par leurs annotations,
+les captures lexicales, les initialisations de `let`, les barrières récursives,
+les effets et leurs enfants indépendants. Ils fixent aussi l'ordre des nouveaux
+bindings, la réservation des noms et le maintien de sites de cache distincts.
+Un programme Go généré, exécuté avec `go test -race`, vérifie l'évaluation
+paresseuse, le partage du binding d'origine, une construction par site déplacé
+et la réévaluation des constructions capturant les arguments de chaque appel.
 
 ## Contrat de l'emprunt d'objets
 
@@ -301,6 +334,75 @@ acceptés ; `-c` reconstruit le backend depuis ce checkout. Chaque script frère
 gère encore ses propres sorties et nettoyages ; l'isolation des fixtures de
 `bin/test` ne s'étend pas automatiquement à ces scripts.
 
+## Analyses spécialisées — lot 12, passe NativeRecordArgs, 2 octobre 2026
+
+`NativeRecordArgs` conserve l'API et la preuve TCO qui sélectionne chaque argument
+du worker. `Source` possède l'admission avant monomorphisation et les portées
+CoreFn ; `Projection` possède les champs visibles, les labels Go et la politique
+des résultats natifs. La sélection finale réutilise les champs déjà reconnus.
+Le contrat documentaire inclut désormais les résultats `Maybe`/`Either`/`Tuple`
+déjà admis par le code.
+
+Vérifications effectuées :
+
+- reconstruction JS et native ; bootstrap TAST vérifié sur **493 modules et
+  286 672 types**. Le build JS est sans avertissement ; les cinq avertissements
+  du build TAST dans `DecoderSchemas` et PBO sont identiques à la passe précédente ;
+- **36 tests ciblés avant et après** : `native-record-args`, `native-record-workers`,
+  `boxed-record-arguments`, `native-sum-results`, `record-tuple-conversions` et
+  `foreign-forwarders`. Les douze nouveaux contrats couvrent les priorités
+  d'annotations, les signatures source, les portées, les labels et la vérification
+  indépendante du TCO. Les programmes Go contrôlent les appels natifs et boxés,
+  les résultats natifs, les captures et la conservation des records complets ;
+- **8 fixtures**, snapshots stricts, compilation et exécution Go avec 8 workers :
+  `NativeRecordWorkers`, `NativeRecordReturns`, `NativeRecordBoxing`,
+  `NativeRecordSizes`, `CompactRecordConsumers`, `DuplicateProperties`,
+  `FunctionScope`, `StaticDictionary` ;
+- b8x : référence régénérée avec le compilateur précédent sur **2 683 entrées
+  TAST figées**, puis **2 987 fichiers Go identiques octet par octet** en natif
+  parallèle, natif séquentiel et JS, sans ajout ni suppression. Runtime, bridges
+  FFI, entrées exécutables et `go.mod` sont inclus. Le manifeste des **101 fichiers
+  sources et artefacts compilateur/runtime** est stable pendant ces comparaisons.
+
+La passe `NativeRecordArgs` est validée ; seule `DecoderSchemas` reste à revoir
+dans le lot 12. Le score reste à **75/100**, avec onze lots clôturés. Le contrôle
+b8x porte sur la génération, les tests et fixtures sur la compilation et
+l'exécution Go ; `git diff --check` est propre.
+
+## Analyses spécialisées — lot 12, passe ClosedDictionaries, 2 octobre 2026
+
+`ClosedDictionaries` conserve la réécriture et la publication des bindings.
+`Admission` possède les preuves distinctes de réutilisation et de déplacement ;
+`Scope` porte la fermeture lexicale et les exclusions d'effets/récursion. L'index
+des bindings partagés est immuable, séparé de l'état des nouveaux bindings.
+La descente commune protège les racines annotées ; le parcours des références
+libres utilise le pli structurel du backend, avec les portées de binding explicites.
+
+Vérifications effectuées :
+
+- reconstruction JS et native ; bootstrap TAST vérifié sur **491 modules et
+  286 441 types**. Le build JS est sans avertissement ; les cinq avertissements
+  du build TAST dans `DecoderSchemas` et PBO sont identiques à la passe précédente ;
+- **49 tests ciblés avant et après** : `closed-dictionaries`, `borrowed-objects`
+  et `decoder-schemas`. Les neuf nouveaux tests fixent les politiques d'admission,
+  l'ordre source, les annotations et les portées. Le programme Go généré vérifie
+  avec `go test -race` la paresse des getters, une construction par site et les
+  captures réévaluées à chaque appel ;
+- **8 fixtures**, snapshots stricts, compilation et exécution Go avec 8 workers :
+  `StaticDictionary`, `JsonRecordPlan`, `EnumDictionaryField`,
+  `TypeClassMemberOrderChange`, `EmptyDicts`, `3558-UpToDateDictsForHigherOrderFns`,
+  `FunctionScope`, `MutRec` ;
+- b8x : référence régénérée avec le compilateur précédent sur **2 683 entrées
+  TAST figées**, puis **2 987 fichiers Go identiques octet par octet** en natif
+  parallèle, natif séquentiel et JS, sans ajout ni suppression. Runtime, bridges
+  FFI, entrées exécutables et `go.mod` sont inclus. Le manifeste des **99 fichiers
+  sources et artefacts compilateur/runtime** est stable pendant ces comparaisons.
+
+La passe `ClosedDictionaries` a été validée avec deux analyses encore à revoir
+dans le lot 12. Le score est resté à **75/100**, avec onze lots clôturés.
+Le contrôle b8x porte sur la génération, les tests et fixtures sur la
+compilation et l'exécution Go ; `git diff --check` est propre.
+
 ## Analyses spécialisées — lot 12, passe BorrowedObjects, 2 octobre 2026
 
 `BorrowedObjects` reste dans un seul module : `admitBorrowing` sépare l'admission
@@ -326,9 +428,9 @@ Vérifications effectuées :
   FFI, entrées exécutables et `go.mod` sont inclus. Le manifeste des **97 fichiers
   sources et artefacts compilateur/runtime** est stable pendant ces comparaisons.
 
-La passe `BorrowedObjects` est validée ; `ClosedDictionaries`, `NativeRecordArgs`
-et `DecoderSchemas` restent à revoir dans le lot 12. Le score reste à **75/100**,
-avec onze lots clôturés. Le contrôle b8x porte sur la génération, les tests et
+La passe `BorrowedObjects` a été validée avec trois analyses encore à revoir dans
+le lot 12. Le score est resté à **75/100**, avec onze lots clôturés.
+Le contrôle b8x porte sur la génération, les tests et
 fixtures sur la compilation et l'exécution Go ; `git diff --check` est propre.
 
 ## Analyses spécialisées — lot 12, passe Ownership, 2 octobre 2026

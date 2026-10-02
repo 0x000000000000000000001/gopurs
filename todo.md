@@ -61,7 +61,8 @@ Les optimisations de performance restent en pause.
   `Ownership`, `BorrowedObjects`, `ClosedDictionaries`, `NativeRecordArgs`
   et `DecoderSchemas`. Fin : pour chaque passe, preuves d'admission, transformation
   et déclarations produites ont des responsabilités et des contrats explicites.
-  `Ownership` et `BorrowedObjects` validés : responsabilités, contrats et parité vérifiés.
+  `Ownership`, `BorrowedObjects`, `ClosedDictionaries` et `NativeRecordArgs`
+  validés : responsabilités, contrats et parité vérifiés.
 - [ ] **13 — Frontière TAST/PBO (5 pts).** Revoir `Monomorphization`,
   `Preparation` et les informations typées consommées par le backend.
   Fin : provenance des métadonnées, barrières et ordre des passes documentés au point d'usage.
@@ -86,5 +87,5 @@ Les optimisations de performance restent en pause.
 - Documentation des responsabilités et preuves de validation à jour ;
   `git diff --check` propre.
 
-**Prochaine passe : lot 12 — `ClosedDictionaries`.**
+**Prochaine passe : lot 12 — `DecoderSchemas`.**
 La clôture du lot complet portera l'avancement à **85 %**.

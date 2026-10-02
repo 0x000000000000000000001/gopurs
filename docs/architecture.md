@@ -93,6 +93,9 @@ Tous les modules gopurs de ce tableau se trouvent dans [src/Gopurs](../src/Gopur
 | Admission et réduction des applications immédiates | `ImmediateApplications` |
 | Occurrences, substitution et renommage des niveaux locaux | `ImmediateApplications.Scope` |
 | Réservation des noms de workers des fusions | `WorkerNames` |
+| Réécriture, réservation des noms et publication des dictionnaires en cache | `ClosedDictionaries` |
+| Preuves distinctes de réutilisation et de nouvelle mise en cache | `ClosedDictionaries.Admission` |
+| Fermeture lexicale, exclusion des effets et de la récursion | `ClosedDictionaries.Scope` |
 | Admission d'un emprunt d'objet, preuve des usages et réécriture | `BorrowedObjects` |
 | Point fixe des contrats consommants et sélection des appels frais | `Ownership` |
 | Admission des layouts/signatures et réservation des paires de noms | `Ownership.Candidates` |
@@ -101,6 +104,9 @@ Tous les modules gopurs de ce tableau se trouvent dans [src/Gopurs](../src/Gopur
 | Contexte, résultat et callbacks de traduction | `ExprContext` |
 | Annotations typées, propagation et dictionnaires de classes | `TypedExprs` |
 | Fonctions de module, signatures, groupes TCO | `ModuleBindings` |
+| Vérification TCO des arguments record et sélection de leur ABI | `NativeRecordArgs` |
+| Projection des champs et admission des résultats natifs | `NativeRecordArgs.Projection` |
+| Preuve source des lecteurs partagés avant monomorphisation | `NativeRecordArgs.Source` |
 | Émission des workers de module et de leurs wrappers | `ModuleWorkers` |
 | Structs ADT et enregistrement des getters de classes | `ModuleDeclarations` |
 | Bindings locaux, récursion locale et initialisation | `BindingExprs` |
@@ -283,6 +289,38 @@ propre à chaque binding et commence au-dessus du maximum de l'expression
 d'origine. Substitution et renommage portent sur les fragments sans récursion
 déjà admis ; l'ordre de visite des branches fixe l'ordre des nouveaux niveaux.
 
+## Mise en cache des dictionnaires fermés
+
+`ClosedDictionaries` intervient après les fusions et applications immédiates,
+avant `BorrowedObjects`. La passe remplace des constructions répétées par des
+références à des bindings de module, dont les getters ordinaires assurent ensuite
+l'évaluation paresseuse et la mise en cache.
+
+`Admission` distingue deux preuves. La réutilisation d'un binding existant
+sans annotation au site d'usage exige une application exacte de globals importés,
+un résultat monomorphe et un type retrouvé identique à l'annotation du binding.
+Les qualifications, conventions curryfiées/non curryfiées et regroupements
+d'applications restent distincts ; les enfants annotés ne forment pas de clés.
+La création d'un nouveau binding repose sur l'annotation de classe du site et
+la fermeture de toute l'application ; elle n'exige pas cette inférence monomorphe.
+
+`Scope` possède la preuve de fermeture : seules les formes de binding modifient
+la portée, les autres réunissent les références libres de leurs enfants. Les
+identités locales associent le nom source et le niveau, avant assainissement Go.
+Les effets et la récursion excluent une construction entière de la mise en cache.
+
+`RewriteContext` garde l'index immuable des bindings d'origine : le premier
+candidat admissible dans l'ordre source gagne. `rewriteBelowRoot` conserve les
+enveloppes `Typed`/`TypeApp` sans réadmettre leur racine ; les groupes récursifs
+et `LetRec` arrêtent la réécriture. Un effet empêche le déplacement de l'expression
+qui le contient, mais ses enfants indépendants restent visités.
+
+`LiftState` ne porte que les noms réservés, le compteur et les nouveaux bindings.
+Le déplacement privilégie l'application admissible la plus extérieure, conservée
+telle quelle sans réécriture de ses enfants. Les sites nouvellement mis en cache
+restent distincts et ne rejoignent pas l'index de réutilisation. Le groupe final
+non récursif suit l'ordre de visite, après tous les groupes d'origine.
+
 ## Emprunt des objets JSON en lecture seule
 
 `BorrowedObjects` intervient après le partage des dictionnaires fermés, avant
@@ -379,6 +417,32 @@ Les politiques d'enveloppes restent explicites : modules regroupés jusqu'à dix
 arguments, workers locaux curryfiés un argument à la fois, closures curryfiées
 anonymes par groupes de cinq. Les abstractions non curryfiées et à effets gardent
 leurs seuils respectifs ; les fonctions sans argument restent différées.
+
+## Arguments record projetés
+
+`NativeRecordArgs` relie deux preuves indépendantes. Avant PBO, `Source` décide
+si un lecteur de record ouvert peut être partagé entre plusieurs instanciations.
+L'annotation du binding prime, même si elle vaut `Any` ; seule son absence permet
+le repli sur celle de l'expression. Les lambdas doivent correspondre exactement
+aux arguments, et les lectures respectent les portées des `let`, lambdas et cases.
+
+`Projection` possède les champs admissibles : ligne non vide dont la queue est
+une variable de type, champs visibles scalaires et labels utilisables sans
+collision après assainissement Go. Le premier label dupliqué gagne, puis les
+champs sont triés par label source.
+La politique commune des résultats accepte les scalaires et les layouts natifs
+`Maybe`/`Either`/`Tuple` existants ; leurs payloads restent gérés par les conversions.
+
+Après PBO, `workerArguments` vérifie séparément chaque argument sur le corps TCO,
+avec les identités locales de l'émetteur. Un accès direct à un champ connu est
+admis ; une capture différée ou un usage du record entier impose le type ordinaire.
+Une preuve source périmée ne peut donc imposer une projection. Les champs déjà
+reconnus servent directement à construire le type de l'argument admis.
+
+`Monomorphization` possède le filtre des instanciations ; `ModuleBindings` publie
+les signatures finales utilisées par `ModuleWorkers` et les appels directs.
+Les wrappers boxés conservent les appels dynamiques et partiels. Le contrat
+détaillé figure dans [native-record-workers.md](native-record-workers.md).
 
 ## Choix des représentations
 
