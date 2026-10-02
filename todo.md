@@ -7,7 +7,7 @@ une génération Go identique. Périmètre : compilateur, runtime, FFI et outill
 de ce dépôt ; les interfaces avec PBO et les bibliothèques sœurs sont incluses.
 Les optimisations de performance restent en pause.
 
-## Avancement : 75 % — 75/100 points, 11/15 lots validés
+## Avancement : 85 % — 85/100 points, 12/15 lots validés
 
 - **Calcul :** somme des points des cases cochées, sur un total fixe de 100.
   Les poids sont des unités de suivi ; le pourcentage mesure les livrables
@@ -57,12 +57,10 @@ Les optimisations de performance restent en pause.
   et émission des boucles séparées ; captures partagées dans `CallArguments`.
   Indexation isolée dans `ArrayIntrinsics.Index`, lecture des buffers partagée
   dans `Source` ; contrats, snapshots et parité des trois modes validés.
-- [ ] **12 — Analyses spécialisées (10 pts).** Revoir successivement
-  `Ownership`, `BorrowedObjects`, `ClosedDictionaries`, `NativeRecordArgs`
-  et `DecoderSchemas`. Fin : pour chaque passe, preuves d'admission, transformation
-  et déclarations produites ont des responsabilités et des contrats explicites.
-  `Ownership`, `BorrowedObjects`, `ClosedDictionaries` et `NativeRecordArgs`
-  validés : responsabilités, contrats et parité vérifiés.
+- [x] **12 — Analyses spécialisées (10 pts).** `Ownership`, `BorrowedObjects`,
+  `ClosedDictionaries`, `NativeRecordArgs` et `DecoderSchemas` revus : admission,
+  preuves, transformation et émission ont des responsabilités explicites.
+  Contrats, snapshots stricts, exécution Go et parité des trois modes validés.
 - [ ] **13 — Frontière TAST/PBO (5 pts).** Revoir `Monomorphization`,
   `Preparation` et les informations typées consommées par le backend.
   Fin : provenance des métadonnées, barrières et ordre des passes documentés au point d'usage.
@@ -87,5 +85,4 @@ Les optimisations de performance restent en pause.
 - Documentation des responsabilités et preuves de validation à jour ;
   `git diff --check` propre.
 
-**Prochaine passe : lot 12 — `DecoderSchemas`.**
-La clôture du lot complet portera l'avancement à **85 %**.
+**Prochaine passe : lot 13 — frontière TAST/PBO, `Monomorphization` et `Preparation`.**

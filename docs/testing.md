@@ -147,6 +147,23 @@ possédé et replis exacts sur entrée invalide ou décodeur inconnu. Les suites
 fixture `JsonRecordPlan` vérifie l'ordre des callbacks, les erreurs et les
 résultats persistants sur le chemin TAST/PBO.
 
+## Contrat des schémas de décodeurs
+
+`decoder-schemas.test.mjs` exerce la façade sur les formes exactes d'applications,
+les ABI, les proxies et symboles, les limites de taille/profondeur, les alias et
+les barrières récursives. Les tests contrôlent les annotations, la réservation de
+toute la famille de noms et la publication des sources dans l'ordre de visite.
+
+Les corps personnalisés sont contrôlés avec leurs vraies lectures et branches :
+provenance de l'objet, distinction absent/null, schémas complets, transmission du
+payload `Left`, masquage des niveaux, constructeurs annotés et captures triées.
+Deux programmes Go exécutent les workers émis avec les helpers Argonaut réels
+et `go test -race`. Ils vérifient les labels dupliqués, la propriété des chaînes,
+le repli texte sur une méthode opaque, les choix ordonnés, les lectures imbriquées
+et les erreurs exactes. Les getters de construction du second programme sont
+produits par le générateur Go ordinaire ; les tests du helper `CompiledSchema`
+sont également exécutés dans ces workspaces isolés.
+
 ## Contrat des workers consommants
 
 `owned-trees.test.mjs` vérifie les chemins disjoints, les continuations encore
@@ -334,6 +351,49 @@ acceptés ; `-c` reconstruit le backend depuis ce checkout. Chaque script frère
 gère encore ses propres sorties et nettoyages ; l'isolation des fixtures de
 `bin/test` ne s'étend pas automatiquement à ces scripts.
 
+## Analyses spécialisées — lot 12, passe DecoderSchemas, 2 octobre 2026
+
+`DecoderSchemas` conserve l'orchestration dans une façade de 85 lignes, contre
+595 auparavant. `Source` possède la résolution des dictionnaires, `Admission`
+les critères de spécialisation, `Programs` la preuve des corps personnalisés,
+`Types` les capacités du schéma et `Workers` l'émission DOM/texte. Les sources de
+constructeurs restent compilées par le générateur ordinaire et partagées entre
+les deux modes. L'argument de préfixe inutilisé de l'émetteur a été retiré ; ses
+choix de mode sont désormais nommés.
+
+Vérifications effectuées :
+
+- reconstruction JS et native ; bootstrap TAST vérifié sur **498 modules et
+  287 336 types**. Le build JS est sans avertissement ; le build TAST ne conserve
+  que les quatre avertissements préexistants de PBO. L'extraction de la
+  construction des records supprime le masquage de nom de `DecoderSchemas` ;
+- **105 tests ciblés avant et après** : `decoder-schemas`, `borrowed-objects`,
+  `closed-dictionaries`, `owned-trees`, `native-record-args` et
+  `native-record-workers`. Les treize nouveaux contrats couvrent les gardes ABI,
+  les formes exactes, les budgets, les barrières, la réservation des noms, les
+  lectures prouvées, les erreurs, les branches et les captures de constructeurs.
+  Les deux programmes Go de schémas et les tests du helper réel `CompiledSchema`
+  passent avec le détecteur de courses ;
+- **8 fixtures**, snapshots stricts, compilation et exécution Go avec 8 workers :
+  `JsonRecordPlan`, `StaticDictionary`, `DuplicateProperties`,
+  `NativeRecordReturns`, `ObjectTraverseEither`, `FunctionScope`, `MutRec`,
+  `OneConstructor` ;
+- programme Argonaut `test/typed-plans.purs` dans un workspace isolé : **263
+  entrées TAST figées**, **330 fichiers Go et `go.mod` identiques** entre le
+  compilateur de référence et le nouveau natif, puis compilation et exécution
+  réussies. Ce contrôle exerce les plans imbriqués et les workers texte ; les
+  corps personnalisés prouvés sont couverts par les contrats d'IR ci-dessus ;
+- b8x : référence régénérée avec le compilateur précédent sur **2 683 entrées
+  TAST figées**, puis **2 987 fichiers Go identiques octet par octet** en natif
+  parallèle, natif séquentiel et JS, sans ajout ni suppression. Runtime, bridges
+  FFI, entrées exécutables et `go.mod` sont inclus. Le manifeste des **106 fichiers
+  sources et artefacts compilateur/runtime** est stable pendant ces comparaisons.
+
+Les cinq analyses du lot 12 sont désormais validées. Le score passe à **85/100**,
+avec **12 lots sur 15** clôturés. Le contrôle b8x porte sur la génération, les
+tests et fixtures sur la compilation et l'exécution Go ; `git diff --check` est
+propre. La prochaine passe porte sur la frontière TAST/PBO du lot 13.
+
 ## Analyses spécialisées — lot 12, passe NativeRecordArgs, 2 octobre 2026
 
 `NativeRecordArgs` conserve l'API et la preuve TCO qui sélectionne chaque argument
@@ -364,8 +424,8 @@ Vérifications effectuées :
   FFI, entrées exécutables et `go.mod` sont inclus. Le manifeste des **101 fichiers
   sources et artefacts compilateur/runtime** est stable pendant ces comparaisons.
 
-La passe `NativeRecordArgs` est validée ; seule `DecoderSchemas` reste à revoir
-dans le lot 12. Le score reste à **75/100**, avec onze lots clôturés. Le contrôle
+La passe `NativeRecordArgs` a été validée avec `DecoderSchemas` encore à revoir
+dans le lot 12. Le score est resté à **75/100**, avec onze lots clôturés. Le contrôle
 b8x porte sur la génération, les tests et fixtures sur la compilation et
 l'exécution Go ; `git diff --check` est propre.
 

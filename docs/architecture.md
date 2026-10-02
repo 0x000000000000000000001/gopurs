@@ -345,6 +345,51 @@ Cette passe ne crée aucune déclaration et exige la signature du helper dans le
 types globaux. Le helper Go confirme l'identité à l'exécution et délègue les
 décodeurs inconnus ou entrées invalides au chemin ordinaire.
 
+## Spécialisation des schémas de décodeurs
+
+`DecoderSchemas` intervient après `BorrowedObjects`, avant `Ownership`. La façade
+possède les gardes ABI, la réécriture et la publication des sources. `Source`
+résout les alias qualifiés du module et les applications partielles à partir d'un
+index immuable des bindings d'origine non récursifs. La reconnaissance ignore
+les enveloppes `Typed`/`TypeApp`, mais la réécriture et le getter source conservent
+les expressions et annotations d'origine.
+
+`Admission` exige une application unaire exacte de `Decode.Class.decodeJson`,
+sans local, effet ni récursion dans sa construction. Les instances standard,
+les proxies effacés et les méthodes constantes `reflectSymbol` établissent le
+schéma ; les types de résultat seuls ne suffisent pas. La résolution démarre
+avec 64 unités de profondeur et la taille pondérée doit être comprise entre
+2 et 128. `Types` distingue les feuilles opaques, les corps prouvés et les
+compositions munies d'un tag natif : seules ces dernières sont admises à la racine.
+
+`Programs` prouve un petit langage de corps personnalisés : emprunt de l'objet
+identité, lectures standard de champs, tests ordonnés d'égalité à une chaîne,
+constructions réelles de valeurs et erreurs `TypeMismatch` explicites. Ses atomes
+distinguent l'entrée, l'objet emprunté, les valeurs décodées et les payloads d'erreur.
+Chaque lecture exige un schéma entièrement standard et la transmission exacte de
+son `Left`. Les lectures obligatoires, optionnelles et optionnelles-nullables
+gardent leurs politiques distinctes ; les producteurs qui masquent un niveau
+déjà prouvé sont refusés. Les budgets des continuations d'erreur (128) et de
+l'abaissement du corps (256) restent indépendants du budget des dictionnaires.
+
+`Workers` consomme ce schéma pour produire les workers DOM, leurs gardes natives,
+le getter mis en cache et, si son ABI est présente, le chemin texte. Les feuilles
+opaques gardent leurs callbacks dans le plan DOM. Elles interdisent le chemin
+texte entier : matérialiser seulement leur sous-arbre pourrait perdre les alias
+observables par ces callbacks. Les lectures des corps prouvés utilisent au
+contraire un appel direct. Les constructeurs passent par le générateur ordinaire,
+avec leurs annotations et un seul getter source partagé entre DOM et texte ;
+leurs captures uniques sont triées par niveau.
+
+La réécriture privilégie le candidat admissible le plus extérieur. Un refus
+permet de visiter ses enfants, hors groupes récursifs et `LetRec`. Les noms sont
+réservés par famille dans l'ordre source : une collision avec un descendant,
+même dans un groupe récursif, fait avancer le compteur. Les sources originales
+et les constructeurs rejoignent un unique groupe final non récursif. L'émission
+conserve l'ordre des lectures et la première erreur ; les labels répétés du
+record gardent la priorité de la tête de ligne, tandis que les clés JSON répétées
+gardent la dernière occurrence d'entrée.
+
 ## Workers consommants des arbres
 
 `Ownership.prepare` intervient après les passes spécialisées de `CodeGen`, avant

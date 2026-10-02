@@ -13,6 +13,9 @@ import * as S from '../output/PureScript.Backend.Optimizer.Syntax/index.js';
 import { NeutralExpr as E } from '../output/PureScript.Backend.Optimizer.Semantics/index.js';
 import { specializeDecoderSchemas } from '../output/Gopurs.DecoderSchemas/index.js';
 import { printGoDecl } from '../output/Gopurs.Printer/index.js';
+import { empty as emptySet } from '../output/Data.Set/index.js';
+import { translate } from '../output/Gopurs.CodeGen/index.js';
+import { withReboxFields } from './codegen-metadata.mjs';
 
 const global=(m,n)=>new E(new S.Var(new C.Qualified(m===null?Nothing.value:new Just(m),n)));
 const cls=n=>global('Data.Argonaut.Decode.Class',n);
@@ -81,6 +84,17 @@ const is=(name,i)=>new E(new S.PrimOp(new S.Op1(new S.OpIsTag(either(name)),loca
 const bind=(i,value,next)=>new E(new S.Let(Nothing.value,i,value,new E(new S.Branch([
  new S.Pair(is('Left',i),ctor('Left',access('Left',i))),new S.Pair(is('Right',i),next)
 ],new E(new S.Fail('Failed pattern match'))))));
+const typed=(type,value)=>new E(new S.Typed(type,value));
+const array=values=>new E(new S.Lit(new C.LitArray(values)));
+const dictionary=body=>new E(new S.Lit(new C.LitRecord([
+ new C.Prop('decodeJson',new E(new S.Abs([new Tuple(Nothing.value,0)],body))),
+])));
+const borrow=app(global('Data.Argonaut.Decode.Internal.Record','borrowObject'),
+ new E(new S.Accessor(app(cls('decodeForeignObject'),cls('decodeJsonJson')),new S.GetProp('decodeJson'))),local(0));
+const getField=(key,decoder=str,reader='getField')=>app(global('Data.Argonaut.Decode.Decoders',reader),method(decoder),access('Right',1),literal(key));
+const derived=(continuation,meta=textMetadata)=>run(app(cls('decodeArray'),global('Probe','custom')),
+ [new Tuple('custom',dictionary(bind(1,borrow,continuation)))],false,meta);
+const hasProgram=result=>result.module.bindings.at(-1).bindings.some(pair=>pair.value0.endsWith('_construct'));
 test('custom bodies specialize only proven reads, forwarding errors and actual constructors',()=>{
  const object=app(cls('decodeForeignObject'),cls('decodeJsonJson'));
  const borrow=app(global('Data.Argonaut.Decode.Internal.Record','borrowObject'),new E(new S.Accessor(object,new S.GetProp('decodeJson'))),local(0));
@@ -118,12 +132,155 @@ test('annotations, type applications and generated-name collisions are preserved
  const replacement=result.module.bindings[0].bindings[1].value1;
  assert.ok(replacement instanceof S.Typed);
  assert.ok(replacement.value1 instanceof S.TypeApp);
- assert.equal(result.module.bindings[0].bindings[0].value0,'__json_schema_0_decode');
+  assert.equal(result.module.bindings[0].bindings[0].value0,'__json_schema_0_decode');
 });
 
-test('emitted DOM and text workers preserve duplicate labels, exact errors and owned output',()=>{
- const result=run(record(field('same',int,field('same',app(cls('decodeJsonMaybe'),int),field('text',str)))),[],false,textMetadata);
- const declarations=result.declarations.map(printGoDecl).filter(text=>text.startsWith('func ')).join('\n');
+test('only an exact qualified unary decodeJson method is admitted, even with the text ABI',()=>{
+ const dict=record(field('x',int));
+ const textOnly={globalTypes:Map.insert(ordString)('Data.Argonaut.Decode.Parser.textDecoderABI1')(C.Int.value)(Map.empty)};
+ assert.equal(run(dict,[],false,textOnly).declarations.length,0);
+ for(const expr of [app(global('Other','decodeJson'),dict),app(global(null,'decodeJson'),dict),
+  app(cls('decodeJson'),dict,erased),new E(new S.UncurriedApp(cls('decodeJson'),[dict]))]){
+  const mod={name:'Probe',bindings:[{recursive:false,bindings:[new Tuple('decode',expr)]}]};
+  const result=specializeDecoderSchemas(textMetadata)(mod);
+  assert.deepEqual(result.module.bindings,mod.bindings);
+  assert.deepEqual(result.declarations,[]);
+ }
+});
+
+test('record proofs require erased proxies and a single constant symbol method',()=>{
+ const row=(key=symbol('x'),cons=erased,lacks=erased)=>app(cls('gDecodeJsonCons'),app(cls('decodeFieldId'),int),cls('gDecodeJsonNil'),key,cons,lacks);
+ const twoArgs=new E(new S.Lit(new C.LitRecord([new C.Prop('reflectSymbol',new E(new S.Abs([
+  new Tuple(Nothing.value,0),new Tuple(Nothing.value,1),
+ ],literal('x'))))])));
+ const extraMember=new E(new S.Lit(new C.LitRecord([
+  new C.Prop('reflectSymbol',new E(new S.Abs([new Tuple(Nothing.value,0)],literal('x')))),new C.Prop('extra',erased),
+ ])));
+ for(const dict of [app(cls('decodeRecord'),row(),literal('proxy')),record(row(symbol('x'),literal('cons'))),
+  record(row(symbol('x'),erased,literal('lacks'))),record(row(twoArgs)),record(row(extraMember))]){
+  assert.equal(run(dict).declarations.length,0);
+ }
+ assert.match(run(app(cls('decodeRecord'),row(typed(C.Any.value,symbol('x'))),typed(C.Any.value,erased))).code,/object.Lookup\("x"\)/);
+});
+
+test('schema budgets keep scalar, untagged and oversized roots on their original path',()=>{
+ for(const dict of [int,record(cls('gDecodeJsonNil')),global('Opaque','custom'),app(cls('decodeArray'),global('Opaque','custom'))]){
+  assert.equal(run(dict).declarations.length,0);
+ }
+ const tree=depth=>depth===0?int:record(field('left',tree(depth-1),field('right',tree(depth-1))));
+ const boundary=app(cls('decodeJsonMaybe'),tree(6));
+ assert.ok(run(boundary).declarations.length>0,'128 weighted schema nodes remain admissible');
+ assert.equal(run(app(cls('decodeJsonMaybe'),boundary)).declarations.length,0);
+});
+
+test('alias resolution is bounded, qualified, and excludes missing or cyclic local definitions',()=>{
+ const aliases=count=>Array.from({length:count},(_,i)=>new Tuple(`alias${i}`,i+1===count?int:global('Probe',`alias${i+1}`)));
+ const dict=app(cls('decodeArray'),global('Probe','alias0'));
+ assert.ok(run(dict,aliases(62)).declarations.length>0);
+ assert.equal(run(dict,aliases(63)).declarations.length,0);
+ assert.equal(run(dict,[new Tuple('alias0',global('Probe','alias1')),new Tuple('alias1',global('Probe','alias0'))]).declarations.length,0);
+ assert.equal(run(app(cls('decodeArray'),global(null,'alias0')),aliases(1)).declarations.length,0);
+});
+
+test('rejected scopes allow independent children while recursive groups and LetRec stop rewriting',()=>{
+ const source=method(record(field('x',int)));
+ const recursive=new E(new S.LetRec(0,[new Tuple(new Just('loop'),source)],source));
+ const effect=new E(new S.EffectPure(source));
+ const mod={name:'Probe',bindings:[
+  {recursive:true,bindings:[new Tuple('recursive',source),new Tuple('recursiveDict',record(field('x',int)))]},
+  {recursive:false,bindings:[new Tuple('localRec',recursive),new Tuple('effect',effect),
+   new Tuple('missing',method(global('Probe','recursiveDict')))]},
+ ]};
+ const result=specializeDecoderSchemas(metadata)(mod);
+ assert.deepEqual(result.module.bindings[0],mod.bindings[0]);
+ assert.deepEqual(result.module.bindings[1].bindings[0],mod.bindings[1].bindings[0]);
+ assert.deepEqual(result.module.bindings[1].bindings[1].value1,new E(new S.EffectPure(global('Probe','__json_schema_0'))));
+ assert.deepEqual(result.module.bindings[1].bindings[2],mod.bindings[1].bindings[2]);
+ assert.deepEqual(result.module.bindings.at(-1).bindings,[new Tuple('__json_schema_0_source',typed(C.Any.value,source))]);
+});
+
+test('worker families reserve descendant names in all groups and publish untouched sources in visit order',()=>{
+ const source=typed(C.Any.value,new E(new S.TypeApp(method(record(field('x',int))),C.Int.value)));
+ const mod={name:'Probe',bindings:[
+  {recursive:true,bindings:[new Tuple('__json_schema_0_decode_item_text',literal('reserved'))]},
+  {recursive:false,bindings:[new Tuple('pair',array([source,source])),new Tuple('__json_schema_2_source',erased)]},
+ ]};
+ const result=specializeDecoderSchemas(textMetadata)(mod);
+ assert.deepEqual(result.module.bindings[0],mod.bindings[0]);
+ assert.deepEqual(result.module.bindings[1].bindings[0].value1,array([1,3].map(n=>typed(C.Any.value,
+  new E(new S.TypeApp(global('Probe',`__json_schema_${n}`),C.Int.value))))));
+ assert.deepEqual(result.module.bindings.at(-1).bindings,[1,3].map(n=>new Tuple(`__json_schema_${n}_source`,typed(C.Any.value,source))));
+});
+
+test('derived bodies retain required, optional and nullable reader policies and numeric specializations',()=>{
+ for(const reader of ['getField','getField__17','getFieldOptional','getFieldOptional__2',"getFieldOptional'","getFieldOptional'__3"]){
+  const result=derived(bind(2,getField('payload',str,reader),ctor('Right',access('Right',2))));
+  assert.ok(hasProgram(result),reader);
+  assert.match(result.code,/argonautCompileTextSchema/);
+  assert.equal(result.code.includes('field_2 = plan.mkNothing()'),reader.startsWith('getFieldOptional'));
+  assert.equal(result.code.includes('!present || domNull(input)'),reader.startsWith("getFieldOptional'"));
+ }
+ for(const reader of ['getField__','getField__x','getField__2x','other']){
+  const result=derived(bind(2,getField('payload',str,reader),ctor('Right',access('Right',2))));
+  assert.equal(hasProgram(result),false,reader);
+  assert.doesNotMatch(result.code,/argonautCompileTextSchema/);
+ }
+});
+
+test('derived reads require complete dictionaries, literal keys and the proven borrowed object',()=>{
+ const changedObject=app(global('Data.Argonaut.Decode.Decoders','getField'),method(str),local(0),literal('payload'));
+ const dynamicKey=app(global('Data.Argonaut.Decode.Decoders','getField'),method(str),access('Right',1),global('Probe','key'));
+ for(const read of [changedObject,dynamicKey,getField('payload',global('Opaque','custom')),
+  getField('payload',app(cls('decodeArray'),global('Opaque','custom')))]){
+  const result=derived(bind(2,read,ctor('Right',access('Right',2))));
+  assert.equal(hasProgram(result),false);
+  assert.equal(result.declarations.length,0);
+  assert.doesNotMatch(result.code,/argonautCompileTextSchema/);
+ }
+});
+
+test('each derived read must forward its exact Left payload, including through aliases',()=>{
+ const read=getField('payload');
+ const branch=failure=>new E(new S.Branch([
+  new S.Pair(is('Left',2),failure),new S.Pair(is('Right',2),ctor('Right',access('Right',2))),
+ ],new E(new S.Fail('unreachable'))));
+ const alias=new E(new S.Let(Nothing.value,5,access('Left',2),ctor('Left',local(5))));
+ for(const failure of [local(2),ctor('Left',access('Left',2)),alias]){
+  assert.ok(hasProgram(derived(new E(new S.Let(Nothing.value,2,read,branch(failure))))));
+ }
+ for(const failure of [ctor('Left',literal('changed')),ctor('Left',access('Left',1)),
+  app(global('Opaque','changeError'),access('Left',2))]){
+  assert.equal(hasProgram(derived(new E(new S.Let(Nothing.value,2,read,branch(failure))))),false);
+ }
+});
+
+test('derived producers cannot shadow proven levels or return opaque computations',()=>{
+ assert.equal(hasProgram(derived(bind(1,getField('payload'),ctor('Right',access('Right',1))))),false);
+ for(const value of [app(global('Opaque','construct'),access('Right',2)),local(0),access('Right',1)]){
+  assert.equal(hasProgram(derived(bind(2,getField('payload'),ctor('Right',value)))),false);
+ }
+});
+
+test('derived constructors retain annotations and capture distinct decoded levels in level order',()=>{
+ const pair=new E(new S.CtorSaturated(new C.Qualified(new Just('Probe'),'Payload'),C.ProductType.value,'Payload','Payload',[
+  new Tuple('value0',typed(C.String.value,access('Right',7))),
+  new Tuple('value1',new E(new S.TypeApp(access('Right',2),C.Any.value))),
+  new Tuple('value2',access('Right',7)),
+ ]));
+ const result=derived(bind(7,getField('first'),bind(2,getField('second'),ctor('Right',pair))));
+ const construction=result.module.bindings.at(-1).bindings.find(pair=>pair.value0.endsWith('_construct'));
+ assert.ok(construction);
+ assert.deepEqual(construction.value1,typed(C.Any.value,new E(new S.Abs([
+  new Tuple(Nothing.value,2),new Tuple(Nothing.value,7),
+ ],new E(new S.CtorSaturated(new C.Qualified(new Just('Probe'),'Payload'),C.ProductType.value,'Payload','Payload',[
+  new Tuple('value0',typed(C.String.value,local(7))),new Tuple('value1',new E(new S.TypeApp(local(2),C.Any.value))),new Tuple('value2',local(7)),
+ ]))))));
+ assert.match(result.code,/Apply2\(Get_.*_construct\(\), field_2, field_7\)/);
+ assert.equal(result.module.bindings.at(-1).bindings.filter(pair=>pair.value0.endsWith('_construct')).length,1,'DOM and text share constructors');
+});
+
+function checkEmitted(result,testCode,constructors=''){
+  const declarations=result.declarations.map(printGoDecl).filter(text=>text.startsWith('func ')).join('\n');
  const work=mkdtempSync(join(tmpdir(),'gopurs-schema-emission-'));
  try {
   mkdirSync(join(work,'output/gopurs_runtime'),{recursive:true});mkdirSync(join(work,'record'));
@@ -133,17 +290,33 @@ test('emitted DOM and text workers preserve duplicate labels, exact errors and o
    for(const [name,path] of [['parser','../../gopurs-argonaut-core/src/Data/Argonaut/Parser.go'],['text','../../gopurs-argonaut-codecs/src/Data/Argonaut/Decode/Parser.go']])
      writeFileSync(join(work,`record/${name}.go`),readFileSync(new URL(path,import.meta.url),'utf8').replace('package Parser','package Record'));
    writeFileSync(join(work,'record/record_test.go'),readFileSync(new URL('../../gopurs-argonaut-codecs/test/record-plan_test.go',import.meta.url)));
-   writeFileSync(join(work,'record/emitted_test.go'),`package Record
-import ("testing"; "reflect"; "unsafe"; "gopurs/output/gopurs_runtime")
-${declarations}
+    writeFileSync(join(work,'record/workers.go'),`package Record\nimport "gopurs/output/gopurs_runtime"\n${declarations}`);
+    if(constructors)writeFileSync(join(work,'record/constructors.go'),constructors.replace('package purescript','package Record'));
+    writeFileSync(join(work,'record/emitted_test.go'),testCode);
+    writeFileSync(join(work,'record/comparison_test.go'),`package Record
+import "gopurs/output/gopurs_runtime"
 func comparable(v gopurs_runtime.Value) any {
  switch v.Type {
  case gopurs_runtime.TypeString: return v.StrVal()
  case gopurs_runtime.TypeInt: return v.IntVal
  case gopurs_runtime.TypeBool: return v.BoolVal()
+ case gopurs_runtime.TypeArray:
+  out:=make([]any,gopurs_runtime.ArrayLength(v));for i:=range out {out[i]=comparable(gopurs_runtime.ArrayAccess(v,i))};return out
  }
  out:=map[string]any{};for k,x:=range gopurs_runtime.RecordToMap(v) {out[k]=comparable(x)};return out
 }
+`);
+   const checked=spawnSync('go',['test','-v','-race','-count=1','-run','^Test(Emitted|CompiledSchema)','./record'],{cwd:work,encoding:'utf8',timeout:60_000,env:{...process.env,GOWORK:'off',GOMAXPROCS:'2'}});
+   assert.ifError(checked.error);
+   assert.equal(checked.status,0,(checked.stdout??'')+(checked.stderr??''));
+   assert.match(checked.stdout,/--- PASS: TestEmitted/);
+  } finally {rmSync(work,{recursive:true,force:true});}
+}
+
+test('emitted DOM and text workers preserve duplicate labels, exact errors and owned output',()=>{
+  const result=run(record(field('same',int,field('same',app(cls('decodeJsonMaybe'),int),field('text',str)))),[],false,textMetadata);
+  checkEmitted(result,`package Record
+import ("testing"; "reflect"; "unsafe"; "gopurs/output/gopurs_runtime")
 func TestEmittedDuplicateLabel(t *testing.T) {
  plan:=newErrorPlan(testErrorSupport)
  plan.fields=[]recordDecodeField{{kind:&fieldKind{tag:kindInt}},{kind:&fieldKind{tag:kindMaybe,inner:&fieldKind{tag:kindInt}}},{kind:&fieldKind{tag:kindString}}}
@@ -178,7 +351,92 @@ func TestEmittedDuplicateLabel(t *testing.T) {
  if !saved.ok || gopurs_runtime.RecordGet(saved.value,"text").StrVal()!="owned-é🙂" {t.Fatal("borrowed final string")}
 }
 `);
-  const checked=spawnSync('go',['test','-race','-run','^TestEmittedDuplicateLabel$','./record'],{cwd:work,encoding:'utf8',env:{...process.env,GOWORK:'off',GOMAXPROCS:'2'}});
-  assert.equal(checked.status,0,(checked.stdout??'')+(checked.stderr??''));
- } finally {rmSync(work,{recursive:true,force:true});}
+});
+
+const equal=(left,right)=>new E(new S.PrimOp(new S.Op2(new S.OpStringOrd(S.OpEq.value),left,right)));
+const mismatch=message=>ctor('Left',new E(new S.CtorSaturated(
+ new C.Qualified(new Just('Data.Argonaut.Decode.Error'),'TypeMismatch'),C.SumType.value,'JsonDecodeError','TypeMismatch',
+ [new Tuple('value0',literal(message))],
+)));
+
+test('derived choices follow actual ordered string comparisons and explicit mismatch constructors',()=>{
+ const choose=condition=>bind(9,getField('kind'),new E(new S.Branch([
+  new S.Pair(condition,ctor('Right',literal('first'))),
+  new S.Pair(equal(access('Right',9),literal('same')),ctor('Right',literal('second'))),
+ ],mismatch('unknown kind'))));
+ const result=derived(choose(equal(access('Right',9),literal('same'))));
+ assert.ok(hasProgram(result));
+ assert.match(result.code,/field_9.StrVal\(\) == "same"/);
+ assert.match(result.code,/plan.mkTypeMismatch\("unknown kind"\)/);
+ const sources=result.module.bindings.at(-1).bindings.slice(1);
+ assert.deepEqual(sources.map(pair=>pair.value0),[
+  '__json_schema_0_decode_item_next_case0_construct','__json_schema_0_decode_item_next_case1_construct',
+ ]);
+ assert.deepEqual(sources.map(pair=>pair.value1),['first','second'].map(value=>typed(C.Any.value,literal(value))));
+ for(const condition of [equal(literal('same'),access('Right',9)),equal(access('Right',9),global('Probe','label')),
+  new E(new S.PrimOp(new S.Op2(new S.OpStringOrd(S.OpNotEq.value),access('Right',9),literal('same'))))]){
+  assert.equal(hasProgram(derived(choose(condition))),false);
+ }
+});
+
+test('emitted derived programs execute real constructor getters, ordered choices, optional reads and exact errors',()=>{
+ const read=(decoder,reader='getField')=>bind(4,getField('payload',decoder,reader),ctor('Right',access('Right',4)));
+ const result=derived(bind(9,getField('kind'),new E(new S.Branch([
+  new S.Pair(equal(access('Right',9),literal('int')),read(int)),
+  new S.Pair(equal(access('Right',9),literal('int')),ctor('Right',literal('unreachable'))),
+  new S.Pair(equal(access('Right',9),literal('optional')),read(int,'getFieldOptional')),
+  new S.Pair(equal(access('Right',9),literal('nullable')),read(int,"getFieldOptional'")),
+  new S.Pair(equal(access('Right',9),literal('record')),read(record(field('name',str)))),
+ ],mismatch('unknown kind')))));
+ assert.ok(hasProgram(result));
+ const compilerMetadata=withReboxFields({
+  elidedCtors:emptySet,ctorTypes:Map.empty,pointerAdtPaths:Map.empty,pointerAdtNodes:emptySet,
+  pointerAdtLeaves:Map.empty,enumAdts:emptySet,enumCtors:emptySet,globalFunctions:Map.empty,
+  globalTypes:Map.empty,classDeclsFields:Map.empty,
+ });
+ const constructors=translate(compilerMetadata)({
+  name:'Probe',bindings:[{recursive:false,bindings:result.module.bindings.at(-1).bindings.filter(pair=>pair.value0.endsWith('_construct'))}],
+  comments:[],imports:emptySet,exports:emptySet,reExports:emptySet,dataTypes:Map.empty,dataDecls:[],
+  classDecls:[],foreign:Map.empty,implementations:Map.empty,directives:Map.empty,
+ });
+ const worker=`Probe_${result.module.bindings[0].bindings.at(-1).value1.value0.value1}_decode`;
+ checkEmitted(result,`package Record
+import ("testing"; "reflect"; "gopurs/output/gopurs_runtime")
+func TestEmittedDerived(t *testing.T) {
+ plan:=newErrorPlan(testErrorSupport)
+ kind:=&fieldKind{tag:kindArray}
+ if !Probe___json_schema_0_decode_accepts(kind) || !Probe___json_schema_0_decode_text_accepts(kind) {t.Fatal("derived guard needs no opaque child tag")}
+ tests:=[]struct {text string; ok bool; want any}{
+  {\`[{"kind":"int","payload":7}]\`,true,[]any{int64(7)}},
+  {\`[{"kind":"ignored","kind":"int","payload":1,"payload":9}]\`,true,[]any{int64(9)}},
+  {\`[{"kind":"optional"},{"kind":"nullable","payload":null}]\`,true,[]any{comparable(plan.mkNothing()),comparable(plan.mkNothing())}},
+  {\`[{"kind":"optional","payload":8}]\`,true,[]any{comparable(plan.mkJust(gopurs_runtime.Int(8)))}},
+  {\`[{"kind":"record","payload":{"name":"é🙂"}}]\`,true,[]any{map[string]any{"name":"é🙂"}}},
+ }
+ for _,tc:=range tests {
+  parsed,err:=argonautParseJSON(tc.text);if err!=nil {t.Fatal(err)}
+  cursor,ok:=argonautTextIndex(tc.text);if !ok {t.Fatal("index")}
+  for _,got:=range []argonautSchemaResult{Probe___json_schema_0_decode(plan,kind,parsed),Probe___json_schema_0_decode_text(plan,kind,cursor)} {
+   if got.ok!=tc.ok || !reflect.DeepEqual(comparable(got.value),tc.want) {t.Fatalf("%s: %#v",tc.text,comparable(got.value))}
+  }
+ }
+ errors:=[]struct {text string; err gopurs_runtime.Value}{
+  {\`[{}]\`,plan.mkAtKey("kind",plan.missingValue)},
+  {\`[{"kind":"other"}]\`,plan.mkTypeMismatch("unknown kind")},
+  {\`[{"kind":"int"}]\`,plan.mkAtKey("payload",plan.missingValue)},
+  {\`[{"kind":"optional","payload":null}]\`,plan.mkAtKey("payload",plan.mkTypeMismatch("Number"))},
+  {\`[{"kind":"int","payload":1.5}]\`,plan.mkAtKey("payload",plan.mkTypeMismatch("Integer"))},
+  {\`[{"kind":"record","payload":{}}]\`,plan.mkAtKey("payload",plan.mkAtKey("name",plan.missingValue))},
+  {\`[false,{"kind":"int"}]\`,plan.mkTypeMismatch("Object")},
+ }
+ for _,tc:=range errors {
+  parsed,err:=argonautParseJSON(tc.text);if err!=nil {t.Fatal(err)}
+  cursor,ok:=argonautTextIndex(tc.text);if !ok {t.Fatal("index")}
+  want:=comparable(plan.mkNamed("Array",plan.mkAtIndex(0,tc.err)))
+  for _,got:=range []argonautSchemaResult{Probe___json_schema_0_decode(plan,kind,parsed),Probe___json_schema_0_decode_text(plan,kind,cursor)} {
+   if got.ok || !reflect.DeepEqual(comparable(got.err),want) {t.Fatalf("%s: error %#v, want %#v",tc.text,comparable(got.err),want)}
+  }
+ }
+}
+`.replaceAll('Probe___json_schema_0_decode',worker),constructors);
 });
