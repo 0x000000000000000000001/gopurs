@@ -24,6 +24,7 @@ import PureScript.Backend.Optimizer.Semantics (InlineDirectiveMap)
 
 type PreparedModules =
   { directives :: InlineDirectiveMap
+  -- Specialized CoreFn for PBO; metadata below still describes source layouts.
   , modules :: List (Module Ann)
   , mainModules :: Array String
   , metadata :: CodegenMetadata
@@ -39,8 +40,9 @@ prepareModules jobs mainModule = do
 
     directives <- loadDirectives
 
-    -- Global types describe the original program. Pointer layouts also need
-    -- synthetic class declarations, but still precede monomorphisation.
+    -- Freeze source metadata before any binding copies or substitutions. The
+    -- constructor/class tables and their rebox index must describe declarations,
+    -- not one caller's specialized instantiation. Explicit Any stays explicit.
     let
       ctorTypes = buildConstructorTypes sourceModules
       globalTypes = buildGlobalTypes sourceModules
@@ -55,6 +57,9 @@ prepareModules jobs mainModule = do
       modulesWithClasses
 
     let
+      -- Deliberately use the enriched source list, not `modules`: dictionary
+      -- layouts need synthetic class declarations, while enum/elision policy
+      -- only sees original ADTs. Specialization does not redefine either ABI.
       { pointerAdtPaths, pointerAdtNodes, pointerAdtLeaves } =
         buildPointerAdtMetadata (Array.fromFoldable modulesWithClasses)
       { enumAdts, enumCtors } = buildEnumAdtMetadata sourceModules
@@ -73,6 +78,8 @@ prepareModules jobs mainModule = do
         , enumCtors
         }
 
+    -- Entry selection is also source-based. Generated bindings do not export
+    -- additional mains; an explicit request keeps its original CLI semantics.
     pure { directives, modules, metadata, mainModules: selectMainModules mainModule sourceModules }
 
 selectMainModules :: Maybe String -> Array (Module Ann) -> Array String

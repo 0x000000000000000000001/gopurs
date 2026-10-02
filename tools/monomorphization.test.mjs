@@ -87,7 +87,9 @@ test('monomorphic definitions stay visible during transitive collection but do n
  assert.equal(observed,true);
  assert.ok(specialized(result,'Generic.identity').length>0);
  assert.deepEqual(specialized(result,'Wrapper.wrap'),[]);
- assert.ok(JSON.stringify(result.find(mod=>mod.name==='Wrapper')).includes('identity__'));
+ const wrapper=result.find(mod=>mod.name==='Wrapper').decls[0].value0;
+ assert.equal(wrapper.value1,'wrap');
+ assert.deepEqual(wrapper.value0.type,new Just(mono),'the original wrapper ABI is retained');
 });
 
 test('post-collection admission uses original global types, including explicit Any and opaque runtime names',()=>{

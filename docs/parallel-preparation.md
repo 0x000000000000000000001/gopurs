@@ -10,9 +10,18 @@ Le premier prototype découpait répétitivement le tableau restant en petits lo
 
 L’API pure PBO `transitiveCollect` reste disponible via le même moteur exécuté séquentiellement. `transitiveCollectWith` reçoit un dispatcher dont le contrat impose de rendre les résultats dans l’ordre des travaux. Les caches appartiennent à un appel et ne sont pas partagés entre builds.
 
+La construction du `Aff` ne doit exécuter aucun travail, y compris en mode
+séquentiel ou avec une entrée vide. Réexécuter la même action recalcule tous les
+résultats. `Preparation` ne possède ni le cache, ni la fusion, ni le critère
+d'arrêt : ces responsabilités restent dans PBO. La table d'entrée d'un tour
+n'est filtrée par les barrières de gopurs qu'après la collecte transitive complète.
+La [provenance des métadonnées](architecture.md#provenance-des-métadonnées) distingue
+cette préparation des signatures publiées plus tard pendant l'émission.
+
 Vérifications ciblées après construction du compilateur :
 
 ```sh
+node --test tools/monomorphization.test.mjs tools/preparation.test.mjs
 node ../../purescript-backend-optimizer-gopurs/test/monomorphize-transitive.mjs output
 node ../../purescript-backend-optimizer-gopurs/test/transitive-parallel.mjs output
 GOPURS_NATIVE_OUTPUT=/chemin/bootstrap/output node --test tools/preparation-native.test.mjs

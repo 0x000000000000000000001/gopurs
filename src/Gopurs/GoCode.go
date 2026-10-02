@@ -6,13 +6,21 @@ import (
 	"gopurs/output/gopurs_runtime"
 )
 
-// ReferencedImportsImpl scans Go code text for the runtime dependencies it
-// mentions. Same rules and result order as the PureScript implementation, in a
-// single byte pass: no code-point array, no intermediate import arrays, no
-// per-character dispatch.
+// The FFI boundary borrows the immutable text for this call and returns a fresh
+// boxed array. Only the JavaScript backend invokes the PureScript fallback.
 func ReferencedImportsImpl(fallback gopurs_runtime.Value, textValue gopurs_runtime.Value) gopurs_runtime.Value {
 	_ = fallback
-	text := textValue.StrVal()
+	imports := scanReferencedImports(textValue.StrVal())
+	out := make([]gopurs_runtime.Value, len(imports))
+	for i, path := range imports {
+		out[i] = gopurs_runtime.Str(path)
+	}
+	return gopurs_runtime.Array(out)
+}
+
+// Same token boundaries and sorted unique result as referencedImportsPS.
+// Byte scanning also preserves isolated UTF-16 surrogates encoded as WTF-8.
+func scanReferencedImports(text string) []string {
 	size := len(text)
 	imports := make([]string, 0, 4)
 	for index := 0; index < size; {
@@ -37,11 +45,7 @@ func ReferencedImportsImpl(fallback gopurs_runtime.Value, textValue gopurs_runti
 		}
 	}
 	sort.Strings(imports)
-	out := make([]gopurs_runtime.Value, len(imports))
-	for i, path := range imports {
-		out[i] = gopurs_runtime.Str(path)
-	}
-	return gopurs_runtime.Array(out)
+	return imports
 }
 
 // isIdentifierByte mirrors the PureScript code-point test: ASCII letters,

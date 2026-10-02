@@ -4,10 +4,10 @@ import (
 	"gopurs/output/gopurs_runtime"
 )
 
-// ConcatStringArrays flattens an array of string arrays in one native pass.
-// PureScript fold alternatives copy the growing accumulator at every step
-// (`foldMap` on arrays is quadratic), and summing the imports of a large
-// module's declarations dominated code generation.
+// The PureScript signature guarantees TypeArray at both levels and TypeString
+// elements. Borrow the input slices read-only, then copy their Values into an
+// independent buffer. Packed string bytes remain immutable and may be shared.
+// Preserve order and duplicates: collectImports owns deduplication and sorting.
 func ConcatStringArrays(arrays gopurs_runtime.Value) gopurs_runtime.Value {
 	outer := *(*[]gopurs_runtime.Value)(arrays.UnsafePtr)
 	total := 0

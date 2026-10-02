@@ -3,6 +3,8 @@ package Gopurs_Metrics
 import (
 	"runtime"
 	"time"
+
+	"gopurs/output/gopurs_runtime"
 )
 
 func SetMemProfileRate(rate int64, _ gopurs_runtime.Value) gopurs_runtime.Value {

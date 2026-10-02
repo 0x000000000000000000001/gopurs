@@ -9,10 +9,8 @@ import Gopurs.GoCode (referencedImports)
 runtime :: Array String
 runtime = [ "gopurs/output/gopurs_runtime" ]
 
--- Concaténation native de tableaux de chaînes. Les folds PureScript
--- recopient l'accumulateur à chaque étape (`foldMap` par défaut des tableaux
--- est quadratique), et le regroupement des imports d'un gros module domine
--- alors le codegen.
+-- Both FFI implementations borrow the inputs and return a fresh array,
+-- preserving order and duplicates. This collector owns normalization.
 foreign import concatStringArrays :: Array (Array String) -> Array String
 
 -- One file-level owner. Opaque fragments arrive with their dependencies;

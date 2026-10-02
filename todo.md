@@ -7,7 +7,7 @@ une génération Go identique. Périmètre : compilateur, runtime, FFI et outill
 de ce dépôt ; les interfaces avec PBO et les bibliothèques sœurs sont incluses.
 Les optimisations de performance restent en pause.
 
-## Avancement : 85 % — 85/100 points, 12/15 lots validés
+## Avancement : 95 % — 95/100 points, 14/15 lots validés
 
 - **Calcul :** somme des points des cases cochées, sur un total fixe de 100.
   Les poids sont des unités de suivi ; le pourcentage mesure les livrables
@@ -61,12 +61,14 @@ Les optimisations de performance restent en pause.
   `ClosedDictionaries`, `NativeRecordArgs` et `DecoderSchemas` revus : admission,
   preuves, transformation et émission ont des responsabilités explicites.
   Contrats, snapshots stricts, exécution Go et parité des trois modes validés.
-- [ ] **13 — Frontière TAST/PBO (5 pts).** Revoir `Monomorphization`,
-  `Preparation` et les informations typées consommées par le backend.
-  Fin : provenance des métadonnées, barrières et ordre des passes documentés au point d'usage.
-- [ ] **14 — Runtime et FFI JS/Go du compilateur (5 pts).** Revoir les
-  frontières entre code PureScript, FFI et `runtime/runtime.go`.
-  Fin : responsabilités, durée de vie des valeurs et contrats communs aux deux backends explicites.
+- [x] **13 — Frontière TAST/PBO (5 pts).** Wrappers FFI isolés dans
+  `Monomorphization.ForeignForwarders` ; barrières, invalidation source et
+  provenance des métadonnées explicites. Contrats du point fixe et de `Preparation`,
+  snapshots stricts, exécution Go et parité des trois modes validés.
+- [x] **14 — Runtime et FFI JS/Go du compilateur (5 pts).** Buffer mutable isolé
+  dans `Printer.Builder` ; scanner Go séparé de l'adaptation FFI. Propriété,
+  durée de vie et contrats JS/Go documentés ; GC, concurrence, embarquement,
+  snapshots stricts, exécution Go et parité des trois modes validés.
 - [ ] **15 — Consolidation finale (5 pts).** Sur une même révision, reconstruire
   les deux compilateurs, exécuter les campagnes fixtures/modules et vérifier la
   parité b8x. Fin : résultats et exclusions justifiés, README et architecture
@@ -85,4 +87,4 @@ Les optimisations de performance restent en pause.
 - Documentation des responsabilités et preuves de validation à jour ;
   `git diff --check` propre.
 
-**Prochaine passe : lot 13 — frontière TAST/PBO, `Monomorphization` et `Preparation`.**
+**Prochaine passe : lot 15 — consolidation finale.**

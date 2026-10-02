@@ -15,6 +15,8 @@ import PureScript.Backend.Optimizer.CoreFn (Ann(..), Bind(..), Binding(..), Expr
 import PureScript.Backend.Optimizer.Monomorphize (getExprAnn)
 
 -- Index TAST types by qualified name, including foreign declarations.
+-- This is the original-program table: specialization eligibility consults it
+-- after transitive collection, and codegen keeps it for original global names.
 buildGlobalTypes :: Array (Module Ann) -> Map String ExprType
 buildGlobalTypes = Array.foldl addModuleTypes Map.empty
 

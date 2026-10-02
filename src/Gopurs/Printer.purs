@@ -3,42 +3,15 @@ module Gopurs.Printer where
 import Prelude
 import Data.Array as Array
 import Data.Maybe (Maybe(..), fromMaybe)
-import Effect (Effect)
-import Effect.Unsafe (unsafePerformEffect)
 import Data.String as String
 import Data.Tuple (Tuple(..))
 import Gopurs.GoAst (GoExpr(..), GoDecl(..), GoBinding, GoFile, GoType(..), goTypeToStr, sanitizeName)
+import Gopurs.Printer.Builder (Out, emit, emitMany, withOut)
 
 foreign import escapeGoStringImpl :: String -> String
-foreign import data Builder :: Type
-foreign import newBuilderImpl :: Effect Builder
-foreign import pushImpl :: Builder -> String -> Builder
-foreign import toStringImpl :: Builder -> String
 
 escapeGoString :: String -> String
 escapeGoString = escapeGoStringImpl
-
--- | Accumulateur « writer » : une seule poignée de builder natif mutable,
--- | on pousse des morceaux et on ne matérialise la chaîne qu'à la fin.
--- | `pushImpl`/`toStringImpl` sont des FFI pures abaissées en appels directs
--- | (aucun boxage par morceau) ; l'ancienne version renvoyait une chaîne par
--- | nœud (somme des tailles de sous-arbres) et refabriquait une chaîne à
--- | chaque `joinWith`.
-newtype Out = Out Builder
-
-emit :: Out -> String -> Out
-emit (Out builder) piece = Out (pushImpl builder piece)
-
-emitMany :: Out -> Array String -> Out
-emitMany = Array.foldl emit
-
-finish :: Out -> String
-finish (Out builder) = toStringImpl builder
-
-withOut :: (Out -> Out) -> String
-withOut write = unsafePerformEffect do
-  builder <- newBuilderImpl
-  pure (finish (write (Out builder)))
 
 -- | Écrit des éléments séparés par `separator` (sans séparateur avant le
 -- | premier).

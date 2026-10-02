@@ -26,6 +26,10 @@ type FunctionInfo =
 
 -- Prepared metadata is shared by the generator and value conversions.
 -- It is passed directly to each translation, never stored in a mutable Ref.
+-- Driver.Prepare builds declaration/type tables from the original TAST, with
+-- synthetic class data declarations used only for pointer layouts. Driver.Build
+-- supplies the published native signatures for the current emission batch;
+-- Driver.Output adds the current module's FFI signatures before translation.
 type CodegenMetadataRow :: Row Type
 type CodegenMetadataRow =
   ( elidedCtors :: Set.Set String

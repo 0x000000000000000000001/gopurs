@@ -14,6 +14,7 @@ reconstruit les deux versions et conserve le workspace pour les tests natifs.
 | Pilote et durée de vie des tâches | `node --test tools/emission.test.mjs`, après le build ; tests natifs ci-dessous |
 | Statut de sortie et diagnostics CLI | `npm run test:cli`, après `npm run build:native` |
 | Bootstrap natif et gestion des processus | `node --test tools/build-native.test.mjs tools/test-runner.test.mjs` |
+| Frontière TAST/PBO, types globaux et spécialisation | `node --test tools/monomorphization.test.mjs tools/global-types.test.mjs tools/preparation.test.mjs tools/foreign-forwarders.test.mjs`, après le build ; préparation native ci-dessous |
 | Annotations et représentations natives | `node --test tools/native-record-workers.test.mjs tools/boxed-record-arguments.test.mjs tools/native-sum-results.test.mjs`, après le build |
 | Preuves source/TCO des arguments record projetés | `node --test tools/native-record-args.test.mjs tools/native-record-workers.test.mjs`, après le build ; `./bin/test NativeRecordWorkers NativeRecordReturns` |
 | Layouts, métadonnées et instanciation | `node --test tools/representation-contract.test.mjs tools/mixed-constructor-tags.test.mjs tools/elided-constructor-payloads.test.mjs tools/record-tuple-conversions.test.mjs`, après le build |
@@ -21,6 +22,8 @@ reconstruit les deux versions et conserve le workspace pour les tests natifs.
 | Littéraux composites et constructeurs | `node --test tools/composite-expressions.test.mjs tools/elided-constructor-payloads.test.mjs tools/nullary-constructor-bindings.test.mjs`, après le build ; `./bin/test ConstructorReuse NativeArrayReboxing` |
 | Types et records | `./bin/test NativeRecordBoxing NativeRecordSizes -c` |
 | Bridge FFI | `node --test tools/ffi-bridge.test.mjs tools/ffi-generics.test.mjs`, après le build ; `./bin/test FFIIntegerReturns -c` |
+| FFI JS/Go du compilateur et embarquement | `node --test tools/native-ffi.test.mjs tools/embed-runtime.test.mjs tools/go-imports.test.mjs`, après le build ; `native-go-code.test.mjs` avec `GOPURS_NATIVE_OUTPUT` |
+| Stockage et durée de vie du runtime | `node --test tools/runtime-contracts.test.mjs tools/closure-lifetime.test.mjs tools/apply-arity.test.mjs tools/function-data.test.mjs` ; [contrats](runtime-ffi-contracts.md) |
 | Appels et fonctions | `./bin/test CurriedLambdas -c` |
 | Conversions de tableaux | `./bin/test ArrayRoundtrip -c` |
 | Récursion | `./bin/test TCO TCOMutRec -c` |
@@ -72,6 +75,40 @@ bootstrap réel : les deux artefacts reconstruits avaient les mêmes empreintes
 SHA-256 qu'avant le refactoring. `FFIIntegerReturns` et `ObjectUpdate2` ont aussi
 passé leurs snapshots stricts, leur compilation Go et leur exécution avec le
 runner partagé.
+
+## Contrat de la frontière TAST/PBO
+
+`monomorphization.test.mjs` contrôle les entrées publiques de l'adaptateur gopurs :
+invalidation des faits source avant la collecte, conservation des corps utiles,
+distinction entre barrière intrinsèque précoce et exclusions tardives, admission
+par les types d'origine et ordre des modules. Il compare aussi la sortie pure
+avec le chemin `Aff` utilisant réellement le collecteur PBO et `Preparation`.
+
+`global-types.test.mjs` fixe les priorités binding/expression/FFI, le maintien
+d'un `Any` explicite, les qualifications et le repli limité sur les applications.
+Les contrats de représentations et de Rebox contrôlent les tables originales
+et enrichies. `foreign-forwarders.test.mjs` vérifie la reconnaissance exacte
+des wrappers, indépendamment de l'admission finale de leurs spécialisations.
+
+`preparation.test.mjs` vérifie le différé, la réexécution, l'unicité des appels et
+l'ordre des résultats en JS. Les tests natifs exercent le même `Preparation`
+compilé, avec des travaux bloqués par des canaux et terminés hors ordre :
+
+```sh
+GOPURS_NATIVE_OUTPUT=/chemin/bootstrap/output node --test tools/preparation-native.test.mjs
+```
+
+Ils exigent les marqueurs PASS du différé, de la réexécution, du chevauchement,
+de la borne à huit et des modes séquentiels sous `go test -race`. Le délai de
+compilation à froid du gros package bootstrap est distinct du délai de 30 s
+fixé pour exécuter les tests Go.
+
+Les suites PBO `monomorphize-transitive`, `transitive-parallel`,
+`monomorphize-callsite`, `monomorphize-cache` et `source-usage` s'exécutent avec
+`node ../../purescript-backend-optimizer-gopurs/test/<suite>.mjs output`. Elles
+contrôlent le moteur consommé par cet adaptateur : propagation, cache, priorité
+des contributions, arités et portée des annotations ; elles ne reconstruisent
+pas une autre copie du backend.
 
 ## Contrat de sortie CLI
 
@@ -351,6 +388,111 @@ acceptés ; `-c` reconstruit le backend depuis ce checkout. Chaque script frère
 gère encore ses propres sorties et nettoyages ; l'isolation des fixtures de
 `bin/test` ne s'étend pas automatiquement à ces scripts.
 
+## Runtime et FFI du compilateur — lot 14, 2 octobre 2026
+
+`Printer.Builder` possède maintenant le buffer mutable, les opérations FFI
+JS/Go et le confinement par `withOut`. `Printer` conserve le rendu et
+l'échappement. La FFI `GoCode` sépare l'adaptation des valeurs boxées du scanner
+`scanReferencedImports` ; `GoImports` explicite l'emprunt des entrées et la
+propriété du résultat. Les imports runtime de la FFI native sont explicites.
+
+La revue des autres compagnons confirme leur responsabilité unique : cache de
+noms, transport du parser, constante runtime, horloge/configuration du profil
+et sortie du processus. Le runtime canonique conserve ses octets et son ABI
+partagée avec les bibliothèques ; ses familles, alias, copies, captures et
+retenues sont décrits dans [runtime-ffi-contracts.md](runtime-ffi-contracts.md).
+
+Vérifications effectuées :
+
+- reconstruction JS et native via `npm run build:native -- --keep-workspace` ;
+  bootstrap vérifié sur **500 modules et 287 550 types**, zéro avertissement JS
+  et les mêmes quatre avertissements TAST de PBO ;
+- **42 tests ciblés avant et après**, sans saut : `native-ffi`,
+  `runtime-contracts`, `embed-runtime`, `closure-lifetime`, `apply-arity`,
+  `function-data`, `value-array-unboxing`, `go-imports`, `ffi-errors`,
+  `ffi-bridge` et `ffi-generics`. Le premier état du harnais natif échouait sur
+  l'import runtime absent de sa copie autonome de `Printer.go` ; ce harnais a
+  été réparé avant d'établir le passage vert de référence ;
+- ces suites exécutent **13 tests Go du runtime**, normalement et sous `-race`,
+  et **8 tests Go des compagnons FFI sous `-race`**. Chaînes packées et WTF-8,
+  sous-chaînes, buffers d'impression, graphes de conteneurs après sortie du
+  créateur, GC forcé, caches synchronisés, copies de maps et travail retenu
+  sont couverts, avec les matrices de closures/applications déjà présentes ;
+- **2 contrats de scan natif complet avant et après**, sans saut, à partir des
+  workspaces bootstrap. Le lancement après extraction a d'abord dépassé le
+  budget global de 60 s de `go run`. Le harnais distingue désormais compilation
+  (900 s maximum) et exécution (60 s), en gardant la pile bornée à 1 Mio ; le
+  contrôle complet réussit ;
+- **8 fixtures**, snapshots stricts puis compilation et exécution Go avec
+  `GOPURS_PBO_JOBS=8 GOPURS_PREPARE_JOBS=8` : `FFIIntegerReturns`,
+  `CurriedLambdas`, `NativeArrayReboxing`, `ObjectUpdate2`, `ConstructorReuse`,
+  `JsonRecordPlan`, `FFIConstraintWorkaround`, `StaticDictionary`.
+  `StringEdgeCases` et `StringEscapes`, demandées initialement, restent filtrées
+  par les exclusions du runner et ne sont pas comptées comme validées. Les
+  surrogates sont exercés ici par les contrats FFI/runtime ;
+- b8x : référence produite avec le compilateur vivant sauvegardé avant la passe,
+  sur **2 683 entrées TAST figées**, puis **2 987 fichiers Go identiques octet
+  par octet** en natif parallèle, natif séquentiel et JS. Inventaires, runtime,
+  bridges, entrées exécutables et `go.mod` sont inclus. Le manifeste des
+  **111 fichiers sources et artefacts compilateur/runtime** reste stable.
+
+Le lot 14 est validé : **95/100 points, 14 lots sur 15** clôturés. Le contrôle
+b8x porte sur la génération ; les tests natifs et fixtures vérifient l'exécution.
+`git diff --check` est propre. Les preuves locales, la référence et le diff
+complet de cette passe sont conservés dans
+`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/gopurs-runtime-ffi-cleanup-6052azh5/`.
+Le workspace bootstrap est conservé sous le même parent dans
+`gopurs-native-build-TLO4c1/`. La prochaine passe est le lot 15 : consolidation
+des campagnes sur une même révision, documentation et exclusions, avec statut
+explicite de la vérification Nix.
+
+## Frontière TAST/PBO — lot 13, 2 octobre 2026
+
+`Monomorphization` sépare la reconnaissance des wrappers dans `ForeignForwarders`
+et nomme les exclusions tardives avec `SpecializationBarriers`. L'invalidation
+source et l'exception intrinsèque précèdent la collecte ; l'admission par les
+types d'origine suit le point fixe. La provenance des tables est explicitée
+dans `Driver.Prepare`, `GlobalTypes`, `CodegenState` et l'architecture.
+
+La revue confirme que `Preparation` possède déjà une seule responsabilité dans
+un petit module : exécuter un tour différé en conservant l'ordre. PBO possède
+le cache, la fusion et la barrière entre tours. Le contrat est précisé au point
+d'appel et vérifié sur les deux runtimes ; les fonctions de métadonnées gardent
+leurs modules et leurs politiques distinctes.
+
+Vérifications effectuées :
+
+- reconstruction JS et native ; bootstrap TAST vérifié sur **499 modules et
+  287 541 types**. Le build JS est sans avertissement ; les quatre avertissements
+  TAST de PBO sont identiques à la passe précédente ;
+- **46 tests gopurs avant et après**, dont treize nouveaux contrats dans
+  `monomorphization`, `global-types` et `preparation`. Les suites voisines sont
+  `foreign-forwarders`, `native-record-args`, `representation-contract` et
+  `rebox-metadata` ;
+- **41 tests PBO avant et après**, sans saut : `monomorphize-transitive` (12),
+  `transitive-parallel` (5), `monomorphize-callsite` (3), `monomorphize-cache` (9)
+  et `source-usage` (12), exécutés sur le même `output` compilé que gopurs ;
+- tests natifs de préparation **avant et après sous `-race`** : trois tests
+  principaux et cinq sous-cas, avec tous les marqueurs PASS attendus. Le premier
+  lancement du wrapper Node a dépassé son budget global de 120 s ; la relance Go
+  directe autorise une compilation froide plus longue et conserve le délai
+  d'exécution de 30 s. Différé, réexécution, unicité, chevauchement, borne à huit
+  et restitution ordonnée sont validés ;
+- **8 fixtures**, snapshots stricts, compilation et exécution Go avec 8 workers :
+  `NativeRecordWorkers`, `StaticDictionary`, `TypeClassMemberOrderChange`,
+  `VisibleTypeApplications`, `Rank2Types`, `FFIConstraintWorkaround`,
+  `ConstructorReuse`, `MutRec` ;
+- b8x : référence régénérée avec le compilateur précédent sur **2 683 entrées
+  TAST figées**, puis **2 987 fichiers Go identiques octet par octet** en natif
+  parallèle, natif séquentiel et JS, sans ajout ni suppression. Runtime, bridges
+  FFI, entrées exécutables et `go.mod` sont inclus. Le manifeste des **107 fichiers
+  sources et artefacts compilateur/runtime** est stable pendant ces comparaisons.
+
+Le lot 13 est validé : **90/100 points, 13 lots sur 15** clôturés. Le contrôle
+b8x porte sur la génération ; les tests natifs et fixtures vérifient l'exécution
+Go. `git diff --check` est propre. Le runtime et les FFI JS/Go du compilateur,
+au lot 14, constituaient alors la prochaine passe.
+
 ## Analyses spécialisées — lot 12, passe DecoderSchemas, 2 octobre 2026
 
 `DecoderSchemas` conserve l'orchestration dans une façade de 85 lignes, contre
@@ -389,10 +531,10 @@ Vérifications effectuées :
   FFI, entrées exécutables et `go.mod` sont inclus. Le manifeste des **106 fichiers
   sources et artefacts compilateur/runtime** est stable pendant ces comparaisons.
 
-Les cinq analyses du lot 12 sont désormais validées. Le score passe à **85/100**,
+La validation des cinq analyses du lot 12 a porté le score à **85/100**,
 avec **12 lots sur 15** clôturés. Le contrôle b8x porte sur la génération, les
 tests et fixtures sur la compilation et l'exécution Go ; `git diff --check` est
-propre. La prochaine passe porte sur la frontière TAST/PBO du lot 13.
+propre. La frontière TAST/PBO du lot 13 constituait alors la prochaine passe.
 
 ## Analyses spécialisées — lot 12, passe NativeRecordArgs, 2 octobre 2026
 

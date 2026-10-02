@@ -33,19 +33,3 @@ func EscapeGoStringImpl(value string) string {
 	}
 	return out.String()
 }
-
-// Builder natif (opaque) pour l'imprimante « writer ».
-func NewBuilderImpl(_ gopurs_runtime.Value) gopurs_runtime.Value {
-	return gopurs_runtime.Any(new(strings.Builder))
-}
-
-// PushImpl ajoute un morceau ; la poignée est threadée purement par
-// l'appelant, le pointeur sous-jacent est muté en place.
-func PushImpl(builder gopurs_runtime.Value, chunk string) gopurs_runtime.Value {
-	builder.AnyVal().(*strings.Builder).WriteString(chunk)
-	return builder
-}
-
-func ToStringImpl(builder gopurs_runtime.Value) string {
-	return builder.AnyVal().(*strings.Builder).String()
-}

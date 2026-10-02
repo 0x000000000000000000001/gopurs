@@ -9,6 +9,9 @@ import Effect.Aff (Aff)
 
 -- Each round reads a fixed snapshot. Only the caller merges returned results,
 -- in input order, before allowing the next round to observe them.
+-- PBO's transitiveCollectWith owns that merge, its cache and its stopping rule.
+-- This dispatcher only schedules a round: constructing Aff must not run a job,
+-- and running the same Aff again must recompute every result.
 runPreparationJobs :: forall a. Int -> Array (Unit -> a) -> Aff (Array a)
 runPreparationJobs configured tasks
   | configured <= 1 || Array.null tasks = defer \_ -> pure (map (_ $ unit) tasks)

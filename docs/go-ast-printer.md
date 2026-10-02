@@ -4,6 +4,12 @@
 
 Les émetteurs construisent les expressions et statements Go à partir du TAST. Ils décident des types natifs, du boxing, des noms, de l'ordre d'évaluation, des paramètres, des captures et des cibles TCO. `Printer` rend les nœuds obtenus sans lire ni modifier `CodegenState`.
 
+Depuis le lot 14 du plan de maintenabilité (2 octobre 2026),
+`Printer.Builder` possède le buffer mutable de chaque rendu et ses compagnons
+FFI JS/Go. `withOut` confine la poignée au callback d'impression ; `emit` et
+`emitMany` la chaînent dans l'ordre. Seule la chaîne terminée sort de ce rendu.
+Voir les [contrats runtime/FFI](runtime-ffi-contracts.md).
+
 ## Inventaire des fragments bruts
 
 L'inventaire porte sur les sites du générateur, pas sur le nombre d'occurrences dans les fichiers Go produits.

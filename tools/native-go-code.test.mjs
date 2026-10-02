@@ -85,7 +85,16 @@ func main() {
     json.NewEncoder(os.Stdout).Encode(results)
 }
 `);
-    const result = spawnSync('go', ['run', '-trimpath', '.'], {
+    // A cold build compiles the whole bootstrapped compiler. Give compilation
+    // its own budget while retaining the scanner's bounded execution time.
+    const executable = join(directory, 'scannerprobe');
+    const build = spawnSync('go', ['build', '-trimpath', '-o', executable, '.'], {
+        cwd: directory, encoding: 'utf8', timeout: 900_000,
+        env: { ...process.env, GOWORK: 'off' }, maxBuffer: 1024 * 1024,
+    });
+    assert.ifError(build.error);
+    assert.equal(build.status, 0, build.stdout + build.stderr);
+    const result = spawnSync(executable, [], {
         cwd: directory, encoding: 'utf8', timeout: 60_000,
         env: { ...process.env, GOWORK: 'off' }, maxBuffer: 1024 * 1024,
     });

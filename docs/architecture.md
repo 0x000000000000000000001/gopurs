@@ -45,6 +45,67 @@ rangées font partie des données typées utilisées par le backend. Une décisi
 de représentation doit partir de ces informations, pas d'une reconstruction
 à partir de chaînes Go déjà imprimées.
 
+### Provenance des métadonnées
+
+Les modules spécialisés et les tables de déclarations n'ont pas la même origine.
+`Driver.Prepare` conserve ces vues distinctes ; `CodegenState` décrit leur contrat
+au point où les émetteurs les reçoivent.
+
+| Table ou donnée | Origine et moment de publication |
+| --- | --- |
+| `ctorTypes`, `elidedCtors`, `enumAdts`, `enumCtors` | Déclarations ADT du TAST d'origine, avant ajout des classes synthétiques |
+| `classDeclsFields` | Classes d'origine ; superclasses et méthodes triées par label |
+| `globalTypes` | Bindings et imports FFI du TAST d'origine ; noms qualifiés PureScript, pas noms des copies spécialisées |
+| `reboxFields` | Index dérivé de `ctorTypes` et `classDeclsFields`, avec leurs priorités et identités propres |
+| `pointerAdtPaths`, `pointerAdtNodes`, `pointerAdtLeaves` | Modules enrichis des déclarations de classes, avant spécialisation |
+| `PreparedModules.modules` | CoreFn invalidé puis spécialisé, fourni au builder PBO dans l'ordre chargé |
+| `mainModules` | Exports des modules d'origine, ou nom demandé explicitement par la CLI |
+| `globalFunctions` | Signatures natives produites par les modules déjà émis ; une vue immuable par lot, publiée dans l'ordre des modules |
+| `ffiFunctions` | Signatures reconnues dans la FFI du seul module courant, avant sa traduction |
+
+`GlobalTypes` préfère l'annotation du binding, puis celle de l'expression. Un
+`Any` explicite arrête cette recherche. Le dernier repli ne constitue pas une
+inférence générale : il suit seulement les résultats d'applications, en retirant
+les enveloppes de quantification/contraintes. Les groupes récursifs sont indexés
+comme les bindings ordinaires ; un import FFI annoté prend ensuite priorité sur
+une définition de même nom, tandis qu'un import sans type n'efface rien.
+
+### Barrières de spécialisation et préparation
+
+`Monomorphization` invalide les identités et preuves `sourceUsage` dans toutes
+les déclarations avant de construire l'index global, même si aucune spécialisation
+n'est finalement retenue. Le décodage PBO valide leur provenance lexicale ; ces
+faits ne sont pas transportables après copie ou substitution de bindings. Les
+analyses backend et TCO recalculent leurs preuves sur l'IR qu'elles consomment.
+
+L'index conserve les corps monomorphes, les dictionnaires, les wrappers FFI et
+les lecteurs de records : ils peuvent révéler des appels génériques pendant
+la collecte transitive. L'exception précoce est le nom exact `Data.Ring.negate`,
+retiré de l'index pour conserver son dictionnaire jusqu'à l'intrinsic du zéro
+signé. Ses appels typés restent collectables.
+
+Après le point fixe PBO, `SpecializationBarriers` exclut les globals FFI et
+l'intrinsic, les wrappers reconnus par `Monomorphization.ForeignForwarders` et
+les lecteurs admis par `NativeRecordArgs.candidateToShare`. `eligible` consulte
+alors le type global d'origine : un type absent, `Any` ou sans variable admissible
+ne justifie pas de copie. Les quantificateurs seuls ne suffisent pas. Les preuves
+de partage des records restent distinctes de la vérification TCO finale.
+
+`ForeignForwarders` exige une lambda de paramètres distincts qui transmet chacun
+exactement une fois, dans l'ordre, à une FFI du même module. Les `TypeApp` et
+coercions qualifiées `Unsafe.Coerce.unsafeCoerce` peuvent envelopper les arguments
+et le résultat. Les captures, calculs supplémentaires, changements d'arité,
+permutations et masquages d'une référence FFI non qualifiée excluent le wrapper.
+L'appartenance à un groupe récursif ne remplace pas cette preuve du corps.
+
+`Preparation.runPreparationJobs` possède uniquement l'exécution d'un tour :
+évaluation différée dans `Aff`, blocs contigus, concurrence bornée à huit et
+résultats dans l'ordre des travaux. PBO possède les snapshots, le cache local à
+l'appel, la fusion ordonnée et la barrière entre tours du point fixe. Réexécuter
+le même `Aff` recalcule les travaux. Le chemin JS respecte ce contrat sans
+parallélisme CPU multithread ; le test natif contrôle le chevauchement réel.
+Voir [la préparation parallèle](parallel-preparation.md).
+
 ## Pilote de compilation
 
 `Main` lance l'effet avec `runAff_` et traite son résultat après le nettoyage du
@@ -86,7 +147,10 @@ Tous les modules gopurs de ce tableau se trouvent dans [src/Gopurs](../src/Gopur
 | Lots, dépendances, contre-pression et durée de vie des fibres | `Emission` |
 | Traduction d'un module, assemblage FFI et fichiers de sortie | `Driver.Output` |
 | Types globaux, constructeurs et classes | `GlobalTypes`, `ConstructorMetadata`, `ClassMetadata` |
-| Représentations des ADT et spécialisation | `AdtMetadata`, `Monomorphization` |
+| Représentations des ADT | `AdtMetadata` |
+| Invalidation source, collecte et barrières de spécialisation | `Monomorphization` |
+| Reconnaissance des wrappers FFI exclus des copies spécialisées | `Monomorphization.ForeignForwarders` |
+| Exécution différée et ordonnée des travaux d'un tour PBO | `Preparation` |
 | Contrats distincts des métadonnées immuables et de l'état mutable | `CodegenState` |
 | Dispatcher récursif, assemblage du fichier | `CodeGen` |
 | Admission et réécriture des producteurs de thunks/fonctions | `ThunkFusion`, `FunctionFusion` |
@@ -130,6 +194,7 @@ Tous les modules gopurs de ce tableau se trouvent dans [src/Gopurs](../src/Gopur
 | Paramètres Go, variables d'itération et enveloppes curryfiées | `GoFunctions` |
 | Dépendances des fragments opaques et imports du module | `GoCode`, `GoImports` |
 | Représentation et rendu Go | `GoAst`, `Printer` |
+| Stockage mutable privé d'un rendu et FFI JS/Go associée | `Printer.Builder` |
 | Analyse du Go FFI et façade du bridge | `FfiSupport`, `FfiBridge` |
 | Appariement des déclarations et signatures d'appel natif | `FfiBridge.Signatures` |
 | Types du bridge et instanciation générique | `FfiBridge.TypeSupport` |
@@ -604,13 +669,22 @@ ses noms passent par `GoAst.constructorNames`.
 ## Runtime et FFI
 
 [runtime/runtime.go](../runtime/runtime.go) est la source canonique du runtime.
-`tools/embed-runtime.mjs` génère le module FFI `Runtime.js` au build ; Spago puis
-esbuild embarquent sa constante dans le bundle. `Main` écrit ce texte dans
-l'application générée, sans relire la source Go au lancement du backend.
+`tools/embed-runtime.mjs` génère les compagnons FFI `Runtime.js` et `Runtime.go`
+au build ; le bundle JS et le compilateur natif embarquent la même constante.
+`Driver.Output.writeRuntime` écrit ce texte dans l'application générée, sans
+relire la source Go au lancement du backend.
+
+`Printer.Builder` possède la poignée mutable du rendu, confinée par `withOut` ;
+`Printer` possède les décisions de mise en forme et l'échappement des littéraux.
+La FFI `GoCode` adapte les valeurs boxées au scanner natif `scanReferencedImports`.
+`GoImports` concatène dans un buffer privé ; le collecteur PureScript garde le
+tri et la déduplication. Les contrats de stockage, vues JSON, caches, captures et
+travail retenu sont détaillés dans [runtime-ffi-contracts.md](runtime-ffi-contracts.md).
 
 La FFI utilise une autre chaîne : `tools/ffi-gen` analyse le Go avec son AST
-natif et expose le contrat JSON par WebAssembly. `tools/ffi-runner.mjs` exécute
-le WASM ; `FfiSupport` prépare la source et décode la réponse, puis `FfiBridge`
+natif et expose le contrat JSON par WebAssembly ou appel Go direct.
+`tools/ffi-runner.mjs` exécute le WASM ; `prepare-native-output.mjs` fournit les
+mêmes sources au compilateur Go. `FfiSupport` prépare la source et décode la réponse, puis `FfiBridge`
 rapproche les déclarations Go des types TAST. Une erreur de syntaxe, de runner
 ou de décodage fait échouer le build ; elle ne devient pas une liste vide de
 fonctions. L'absence de fichier FFI suit encore le chemin de bridge de secours
@@ -700,7 +774,7 @@ indépendamment du préfixe `gopurs-` des répertoires.
 | Famille et propriétaire | Entrées → traitement → sorties | Consommateurs et revue |
 | --- | --- | --- |
 | Configuration de chaque dépôt | `package.json`, Bower/Dhall, Spago et lockfiles → choix des outils, dépendances et sources | npm, Spago, Pulp, CI et éditeurs ; lot 2 |
-| Build de gopurs | `runtime/runtime.go` → `embed-runtime.mjs` → `Runtime.js` ; `src/**/*.purs` et FFI JS → Spago/esbuild → `bin/gopurs.js` | npm `prepare`, `bin/gopurs`, runners et applications ; lot 4 |
+| Build de gopurs | `runtime/runtime.go` → `embed-runtime.mjs` → `Runtime.js`/`Runtime.go` ; `src/**/*.purs` et FFI → bundle JS puis bootstrap TAST/Go natif | npm `prepare`, `build:native`, `bin/gopurs`, runners et applications ; lot 4 |
 | Entrée et pipeline gopurs | TAST de l'application → métadonnées → monomorphisation → PBO → émetteurs → AST/printer | Fichiers Go et signatures utilisées par les modules suivants ; lots 5–7 |
 | Bibliothèque `gopurs-*` | `src/**/*.purs` → modules publics, réexports, instances et signatures étrangères ; compagnons `.go`/`.js` | Imports des autres paquets, des applications et des tests ; lots 9–14 |
 | Bridge gopurs et FFI de bibliothèque | Chemin source du TAST + `.go` → recherche PBO → parser → déclarations JSON → rapprochement avec les types → `<Module>_ffi.go` | Programme Go généré ; lot 7 et lot de la bibliothèque |
@@ -795,8 +869,8 @@ sa provenance du seul nom du paquet.
 
 Les artefacts distribués suivis de gopurs sont `tools/ffi_gen.wasm` et
 `tools/wasm_exec.js` ; leur reconstruction est `npm run build:ffi`, avec
-Go **1.27.0** imposé par `tools/ffi-gen/go.mod`. `bin/gopurs.js` et
-`src/Gopurs/Runtime.js` sont générés et ignorés. Les `output/`, `.spago/`,
+Go **1.27.0** imposé par `tools/ffi-gen/go.mod`. `bin/gopurs.js`,
+`bin/gopurs-native` et `src/Gopurs/Runtime.{js,go}` sont générés et ignorés. Les `output/`, `.spago/`,
 `.purmeta/`, caches npm et `node_modules/`, y compris ceux des exemples et
 environnements d'intégration, se contrôlent par leurs entrées et leur commande
 de reconstruction. Ne pas y reporter des modifications de sources.
