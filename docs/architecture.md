@@ -93,6 +93,10 @@ Tous les modules gopurs de ce tableau se trouvent dans [src/Gopurs](../src/Gopur
 | Admission et réduction des applications immédiates | `ImmediateApplications` |
 | Occurrences, substitution et renommage des niveaux locaux | `ImmediateApplications.Scope` |
 | Réservation des noms de workers des fusions | `WorkerNames` |
+| Point fixe des contrats consommants et sélection des appels frais | `Ownership` |
+| Admission des layouts/signatures et réservation des paires de noms | `Ownership.Candidates` |
+| Chemins, scalaires, termes d'arbres et fraîcheur | `Ownership.Analysis`, `Ownership.Types` |
+| Captures, cellules réutilisables et déclarations consommantes | `Ownership.Workers` |
 | Contexte, résultat et callbacks de traduction | `ExprContext` |
 | Annotations typées, propagation et dictionnaires de classes | `TypedExprs` |
 | Fonctions de module, signatures, groupes TCO | `ModuleBindings` |
@@ -277,6 +281,30 @@ transplantation, en conservant les références libres. La réserve de niveaux e
 propre à chaque binding et commence au-dessus du maximum de l'expression
 d'origine. Substitution et renommage portent sur les fragments sans récursion
 déjà admis ; l'ordre de visite des branches fixe l'ordre des nouveaux niveaux.
+
+## Workers consommants des arbres
+
+`Ownership.prepare` intervient après les passes spécialisées de `CodeGen`, avant
+la préparation TCO des bindings. `Candidates.collect` admet les layouts d'arbres
+monomorphes et les signatures de premier ordre, puis réserve chaque paire de noms
+worker/helper dans l'ordre source. La validation des corps élimine les candidats
+rejetés et leurs appelants jusqu'au point fixe, y compris les familles mutuellement
+récursives. Seuls les survivants publient des signatures et des déclarations.
+
+`Analysis` résout les alias en chemins canoniques, reconnaît le langage fermé des
+scalaires et des termes d'arbres, et relève les chemins encore observables dans une
+continuation. `Workers.declarations` est une tentative indivisible de preuve et
+d'émission : elle utilise un compteur local neuf, sans publier de déclaration
+partielle si un corps est rejeté. `planCells` capture toutes les lectures avant
+mutation ; `reusablePaths` distingue les cellules connues non nulles des cellules
+nécessitant une sélection à l'exécution. Le stock restant passe entre arguments
+frères avant le choix du donneur de l'appel extérieur.
+
+L'admission `freshCall` exige des constructions fraîches pour chaque argument
+arbre avant la réécriture. Les fonctions persistantes restent disponibles ; la
+preuve ignore les annotations d'usage source et le champ `Rc`. Les politiques de
+capture, de retrait des alias et de donation sont détaillées dans
+[la réutilisation des arbres](adt-reuse.md).
 
 ## Bindings, captures et TCO
 

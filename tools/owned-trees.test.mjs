@@ -276,6 +276,50 @@ test('foreign bindings also reserve the generated worker namespace', () => {
     assertUniqueDeclarations(result);
 });
 
+test('rejecting a worker invalidates its transitive callers while an independent family remains usable', () => {
+    const bad = lambda(branch(cell(literal(9), field(local(), 1), field(local(), 1))));
+    const callers = ['bad', 'middle', 'outer'].map(name => [`use_${name}`, freshCaller(call(name, freshTree()))]);
+    const goodCaller = freshCaller(call('independent', freshTree()));
+    const result = prepare([
+        ['bad', bad], ['middle', lambda(call('bad', local()))],
+        ['outer', lambda(call('middle', local()))], ['independent', change()],
+        ...callers, ['good', goodCaller],
+    ]);
+    for (const [name, caller] of callers) assert.deepEqual(binding(result, name), caller);
+    assert.notDeepEqual(binding(result, 'good'), goodCaller);
+    assert.equal(declarationNames(result).length, 2, 'only the independent wrapper and consume worker survive');
+});
+
+test('a rejected dependency invalidates a mutually recursive family to a fixed point', () => {
+    const caller = freshCaller(call('cycleA', freshTree()));
+    const goodCaller = freshCaller(call('independent', freshTree()));
+    const result = prepare([
+        ['cycleA', lambda(branch(call('cycleB', local())))],
+        ['cycleB', lambda(branch(cell(literal(9),
+            call('cycleA', field(local(), 1)), call('bad', field(local(), 2)))))],
+        ['bad', lambda(branch(cell(literal(9), field(local(), 1), field(local(), 1))))],
+        ['independent', change()], ['fresh', caller], ['good', goodCaller],
+    ]);
+    assert.deepEqual(binding(result, 'fresh'), caller);
+    assert.notDeepEqual(binding(result, 'good'), goodCaller);
+    assert.equal(declarationNames(result).length, 2, 'no partial declarations from the rejected cycle escape');
+});
+
+test('a foreign consume-helper name reserves the whole worker/helper pair', () => {
+    const caller = freshCaller();
+    const first = prepare([['change', change()], ['fresh', caller]]);
+    const worker = referencedLocals(binding(first, 'fresh')).find(name => name !== 'change');
+    assert.ok(worker);
+    const source = moduleOf([['change', change()], ['fresh', caller]]);
+    const result = Ownership.prepare(metadata)({
+        ...source, foreign: map([[`${worker}_consume`, new Just(functionType)]]),
+    });
+    assert.notDeepEqual(binding(result, 'fresh'), caller);
+    assert.ok(!referencedLocals(binding(result, 'fresh')).includes(worker),
+        'a collision on the helper must also rename the entry worker');
+    assertUniqueDeclarations(result);
+});
+
 test('a dead root donated through a computed let cannot be recycled again as its own parent', t => {
     const caller = freshCaller();
     const source = moduleOf([
@@ -509,4 +553,20 @@ test('tail calls do not donate known cells already used by their constructed arg
         renderCellTree(result, map[*tree]bool{}, nil)
     }
 `, ['repeatSwap']);
+});
+
+test('mutually recursive consuming workers retain the selected subtree and terminate on the leaf case', t => {
+    const walk = peer => lambda(branch(chooseTree(cellPoolIsCell(field(local(), 1)),
+        call(peer, field(local(), 1)), local())));
+    runCellPoolFixture(t, [
+        ['walkA', walk('walkB')], ['walkB', walk('walkA')],
+        ['fresh', freshCaller(call('walkA', freshTree()))],
+    ], native => `
+    leaf := &tree{Rc: 1, V0: 30}
+    input := &tree{Rc: 1, V0: 10, V1: &tree{Rc: 1, V0: 20, V1: leaf}}
+    result := purescript.${native}(input)
+    if result != leaf { panic("the mutual workers did not retain the original subtree") }
+    checkCellTree(result, "30(E)(E)", nil)
+    if purescript.${native}(nil) != nil { panic("the empty mutual traversal must stay empty") }
+`, ['walkA', 'walkB']);
 });

@@ -1,9 +1,33 @@
 # Réutilisation des cellules d’arbres
 
-La passe `Gopurs.Ownership` analyse le `BackendModule` après PBO et la fusion des
-thunks, avant l’analyse TCO et la génération des fonctions ordinaires. Elle
-produit des fonctions spécialisées qui consomment un arbre possédé exclusivement.
+La passe `Gopurs.Ownership` analyse le `BackendModule` après PBO et les passes
+spécialisées de `CodeGen`, avant l’analyse TCO et la génération des fonctions
+ordinaires. Elle produit des fonctions spécialisées qui consomment un arbre
+possédé exclusivement.
 Les fonctions ordinaires gardent leur sémantique persistante.
+
+## Responsabilités de l'implémentation
+
+- `Ownership.prepare` assemble les phases : collecte, validation au point fixe,
+  publication des déclarations/signatures et réécriture des appels frais.
+- `Ownership.Candidates` prouve les layouts et signatures admissibles. La paire
+  worker/helper est réservée une seule fois, dans l'ordre source, avant toute
+  élimination de candidats. Les noms d'un candidat rejeté restent donc réservés.
+- `Ownership.Types` définit les chemins, l'environnement et le langage d'arbres.
+  `Ownership.Analysis` reconnaît ces termes et les scalaires autorisés, contrôle
+  la disjonction et la fraîcheur, et relève les observations des continuations.
+- `Ownership.Workers` capture les valeurs, planifie les cellules réutilisables et
+  émet les déclarations Go. Chaque tentative de worker possède son propre compteur
+  de noms ; un échec rejette le corps entier. La même tentative valide les corps
+  au point fixe puis produit les déclarations des seuls candidats survivants.
+
+`snapshot` transforme les chemins `Keep` en valeurs `Existing` déjà lues.
+`planCells` exige leur disjonction avant cette capture. `reusablePaths` identifie
+ensuite les cellules mortes sans confondre les préfixes réellement déréférencés
+et les lectures scalaires conditionnelles. `emitLet` retire les anciens alias et
+réinitialise le donneur avant la continuation ; `emitTerminal` sélectionne le
+donneur après émission des arguments, puis retourne ou boucle. Les noms sont
+alloués en commençant par la branche de repli, comme avant l'extraction.
 
 ## Propriété établie
 
@@ -96,7 +120,10 @@ marqueur de contexte échappant en preuve d’exclusivité. Les anciens champs
 
 Les tests `tools/owned-trees.test.mjs` construisent des IR ciblés pour vérifier
 l’acceptation des chemins disjoints et le refus des alias, des continuations
-encore observables, des gardes et des collisions de noms. La fixture
+encore observables, des gardes et des collisions de noms. Ils contrôlent aussi
+le rejet transitif des appelants, les cycles dépendant d'un candidat rejeté, les
+collisions sur le helper consommant et l'exécution d'une famille mutuellement
+récursive admise. La fixture
 `tests/passing/OwnedTrees.purs` vérifie quatre rotations, l’ordre des clés, les
 couleurs, la hauteur noire, les doublons, les anciennes versions et les enfants
 partagés, avec des noms différents du benchmark.

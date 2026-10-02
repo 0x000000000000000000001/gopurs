@@ -27,6 +27,7 @@ reconstruit les deux versions et conserve le workspace pour les tests natifs.
 | Fusion de thunks | `./bin/test ThunkFusion -c` |
 | Admission des fusions et applications immédiates | `node --test tools/thunk-fusion.test.mjs tools/counted-functions.test.mjs tools/immediate-applications.test.mjs`, après le build |
 | Intrinsics, indexation et traversées Either | `node --test tools/array-intrinsics.test.mjs tools/array-safe-index.test.mjs tools/array-unsafe-index.test.mjs tools/array-traverse-either.test.mjs tools/object-traverse-either.test.mjs tools/value-array-unboxing.test.mjs`, après le build |
+| Propriété des arbres et workers consommants | `node --test tools/owned-trees.test.mjs`, après le build ; `./bin/test OwnedTrees RBTree ConstructorReuse` |
 | Contrat du parser Go | `go test ./...` depuis `tools/ffi-gen` |
 | Parser WASM et erreurs FFI | `npm run test:ffi`, après `npm run build` |
 | Sélection, isolation et erreurs du runner | `npm run test:runner` |
@@ -95,6 +96,20 @@ déjà présentes avant le refactoring.
 Les tests `mixed-constructor-tags`, `elided-constructor-payloads` et
 `record-tuple-conversions` complètent ce contrat par compilation et exécution
 du Go produit : tags distincts, payloads polymorphes, records et champs de classes.
+
+## Contrat des workers consommants
+
+`owned-trees.test.mjs` vérifie les chemins disjoints, les continuations encore
+observables, les gardes, les captures avant mutation et les collisions des noms
+worker/helper, y compris avec les FFI. Ses témoins de point fixe contrôlent le
+rejet transitif des appelants et d'une famille mutuellement récursive dépendant
+d'un worker rejeté, avec une famille indépendante comme contrôle positif.
+
+Les programmes Go générés vérifient le réemploi des cellules sans alias ni cycle,
+les cellules connues et nullables, le donneur des appels terminaux et le sous-arbre
+conservé par une famille mutuellement récursive admise. `OwnedTrees` complète ces
+contrats sur le chemin TAST/PBO : rotations, invariants de l'arbre, anciennes
+versions encore observables et enfants partagés.
 
 ## Contrat des intrinsics et traversées
 
@@ -268,6 +283,29 @@ La sélection complète est le défaut. Les noms avec ou sans `gopurs-` sont
 acceptés ; `-c` reconstruit le backend depuis ce checkout. Chaque script frère
 gère encore ses propres sorties et nettoyages ; l'isolation des fixtures de
 `bin/test` ne s'étend pas automatiquement à ces scripts.
+
+## Analyses spécialisées — lot 12, passe Ownership, 2 octobre 2026
+
+`Ownership` conserve l'orchestration du point fixe et la sélection des appels
+frais. `Candidates` possède l'admission des layouts/signatures et la réservation
+des paires de noms ; `Analysis` et `Types` portent le langage de preuve et les
+chemins canoniques ; `Workers` possède les captures, le plan de cellules, le
+retrait des alias et les déclarations Go. La construction redondante de noms
+provisoires et le contexte inutilisé du plan ont été retirés.
+
+Vérifications effectuées :
+
+- reconstruction JS et native ; bootstrap TAST vérifié sur **489 modules et
+  286 160 types**. Le build JS est sans avertissement ; les cinq avertissements
+  du build TAST dans `DecoderSchemas` et PBO sont les mêmes qu'au lot 11 ;
+- **29 tests de possession avant et après**, dont quatre nouveaux contrats :
+  rejet transitif des appelants, cycle dépendant d'un worker rejeté, collision
+  sur un helper consommant FFI et exécution d'une famille mutuellement récursive
+  admise. Les programmes Go vérifient aussi les captures, les stocks de cellules,
+  les donneurs et l'absence de cycles ou d'alias introduits par le réemploi ;
+- **8 fixtures**, snapshots stricts, compilation et exécution Go avec 8 workers :
+  `OwnedTrees`, `RBTree`, `ConstructorReuse`, `Recursion`, `TCO`, `TCOMutRec`,
+  `ShadowedTCOLet`, `OneConstructor`.
 
 ## Validation des intrinsics et traversées — lot 11, 2 octobre 2026
 
