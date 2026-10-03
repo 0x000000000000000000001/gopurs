@@ -239,9 +239,11 @@ runtime. The same Go FFI parser is linked through a C archive into the executabl
 
 The bootstrap requires the npm dependencies, typed `purs`, Go with cgo and a C
 toolchain, Cargo, Purust and its sibling library ports. It builds threaded Rust
-with release O3 and no LTO, then compiles and executes a fresh Go/FFI smoke test
+with release O3 and ThinLTO, then compiles and executes a fresh Go/FFI smoke test
 before atomically installing the compiler. Failures retain the workspace/logs;
 `--keep-workspace` retains successful builds too.
+On macOS it uses the Mach-O linker bundled with the Rust toolchain, keeping
+the linker compatible with rustc's LLVM bitcode version.
 
 `GOPURS_PURS` overrides the frontend, `PURUST_DIR` the Purust checkout,
 `GOPURS_NATIVE_TMPDIR` the workspace parent, and `GOPURS_RUST_OUTPUT` the binary

@@ -11,7 +11,7 @@ utile et rendre les campagnes et l'installation reproductibles. Périmètre :
 compilateur, runtime, FFI, outillage et bibliothèques sœurs ; interventions dans
 PBO et le frontend TAST limitées aux besoins démontrés.
 
-## Avancement : 15 % — 15/100 points, 1/8 lots validés
+## Avancement : 30 % — 30/100 points, 2/8 lots validés
 
 - **Calcul :** somme des points des cases cochées, sur un total fixe de 100.
 - Un lot peut demander plusieurs passes ; aucun point partiel n'est acquis.
@@ -28,7 +28,7 @@ PBO et le frontend TAST limitées aux besoins démontrés.
   `spec`, dépendante d'un répertoire ignoré. Fin : démarrage dans une copie
   fraîche, reprise des échecs et bilan complet vérifiés, sans altérer les autres
   checkouts.
-- [ ] **02 — Décodage des chaînes dans le TAST (15 pts).** Corriger le décodage
+- [x] **02 — Décodage des chaînes dans le TAST (15 pts).** Corriger le décodage
   natif des symboles et labels de records exposé par `StringEdgeCases`.
   Fin : fixture réintégrée, exécution et parité JS/natif validées.
 - [ ] **03 — Sémantique des chaînes UTF-16 (15 pts).** Résoudre la divergence
@@ -71,6 +71,6 @@ PBO et le frontend TAST limitées aux besoins démontrés.
 - Preuves identifiées par plan et lot dans `docs/testing.md`, documentation à
   jour et `git diff --check` propre.
 
-**Prochaine passe : lot 02 — décodage des chaînes dans le TAST.**
+**Prochaine passe : lot 03 — sémantique des chaînes UTF-16.**
 Les optimisations de performance restent en pause ; toute reprise exige un gain
 mesuré significatif.

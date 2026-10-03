@@ -21,6 +21,7 @@ reconstruit les deux versions et conserve le workspace pour les tests natifs.
 | Boxing et émission transitive Rebox | `node --test tools/rebox-generation.test.mjs tools/rebox-metadata.test.mjs tools/struct-pointer-boxing.test.mjs tools/value-array-unboxing.test.mjs`, après le build |
 | Littéraux composites et constructeurs | `node --test tools/composite-expressions.test.mjs tools/elided-constructor-payloads.test.mjs tools/nullary-constructor-bindings.test.mjs`, après le build ; `./bin/test ConstructorReuse NativeArrayReboxing` |
 | Types et records | `./bin/test NativeRecordBoxing NativeRecordSizes -c` |
+| Chaînes TAST et labels de records | `./bin/test StringEdgeCases CompilerHostStrings` ; `node --test tools/record-tuple-conversions.test.mjs`, après le build ; décodeurs PBO ci-dessous |
 | Bridge FFI | `node --test tools/ffi-bridge.test.mjs tools/ffi-generics.test.mjs`, après le build ; `./bin/test FFIIntegerReturns -c` |
 | FFI JS/Go du compilateur et embarquement | `node --test tools/native-ffi.test.mjs tools/embed-runtime.test.mjs tools/go-imports.test.mjs`, après le build ; `native-go-code.test.mjs` avec `GOPURS_NATIVE_OUTPUT` |
 | Stockage et durée de vie du runtime | `node --test tools/runtime-contracts.test.mjs tools/closure-lifetime.test.mjs tools/apply-arity.test.mjs tools/function-data.test.mjs` ; [contrats](runtime-ffi-contracts.md) |
@@ -109,6 +110,29 @@ Les suites PBO `monomorphize-transitive`, `transitive-parallel`,
 contrôlent le moteur consommé par cet adaptateur : propagation, cache, priorité
 des contributions, arités et portée des annotations ; elles ne reconstruisent
 pas une autre copie du backend.
+
+### Chaînes et labels du TAST
+
+Le frontend encode les `PSString` contenant des surrogates isolés en tableaux
+d'unités UTF-16. Les champs `TypeLevelString.value` et `Row.fields.label` doivent
+accepter ces tableaux, recomposer les paires valides et conserver les surrogates
+isolés en WTF-8 côté Go. La référence PureScript et les deux chemins natifs
+(JSON déjà analysé et texte JSON indexé) disposent de régressions PBO :
+
+```sh
+node ../../purescript-backend-optimizer-gopurs/test/type-table-strings.mjs output
+# GOPURS_NATIVE_OUTPUT désigne le output du bootstrap conservé.
+cp ../../purescript-backend-optimizer-gopurs/test/type-table-strings_test.go \
+  "$GOPURS_NATIVE_OUTPUT/purescript/type_table_strings_test.go"
+go -C "$GOPURS_NATIVE_OUTPUT" test -race ./purescript -run '^TestTypeTablePSString' -count=1 -v
+```
+
+Ces tests couvrent les valeurs et labels, les paires valides/inversées/incomplètes,
+les unités invalides et les chemins d'erreur. Après modification de `Json.go`,
+exécuter `python3 bin/json-text/generate.py`, puis `--check`, depuis PBO.
+`record-tuple-conversions.test.mjs` compile et exécute le Go produit pour les
+labels inhabituels : champs natifs, boxing/unboxing, accès, mises à jour, tailles
+de dictionnaires 1 à 7 et collision avec le préfixe d'encodage réservé.
 
 ## Contrat de sortie CLI
 
@@ -388,13 +412,13 @@ ne demande pas de recompiler le PureScript si les entrées TAST sont inchangées
 
 Les exclusions de [tools/test-selection.mjs](../tools/test-selection.mjs) ont été
 réexécutées le **2 octobre 2026**, avec le même compilateur que la campagne
-finale. **Huit** restent justifiées :
+finale. Après réintégration de `StringEdgeCases` le **3 octobre**, **sept** restent
+justifiées :
 
 | Fixtures | Échec observé et portée |
 | --- | --- |
 | `DerivingContravariant`, `DerivingFunctorFromBi`, `DerivingFunctorFromPro`, `DerivingProfunctor` | Le frontend TAST rejette les déclarations avec `CannotDeriveInvalidConstructorArg`. Aucun Go n'est produit. |
 | `NumberLiterals` | Exécution : l'oracle de `Show Number` attend `0.25996181067142`, mais reçoit `0.25996181067141905`. |
-| `StringEdgeCases` | Le natif rejette des entrées `typeTable` de `Records` et `Symbols` aux champs `value` et `fields.label` ; les getters manquants font ensuite échouer Go. Six fichiers divergent de JS, dont ces deux modules. |
 | `StringEscapes` | L'exécution des assertions actives réussit, mais le pliage de `loneSurrogates` produit `false` en natif et `true` en JS. L'assertion sur cette concaténation est commentée dans la fixture. Les littéraux isolés sont préservés ; un succès d'exécution seul ne suffit pas à lever cette exclusion. |
 | `2136` | Compilation réussie, sortie `Fail` : la négation native 64 bits de la borne inférieure 32 bits dépasse `top`. |
 
@@ -403,6 +427,11 @@ finale. **Huit** restent justifiées :
 sur les mêmes entrées TAST. Son snapshot, auparavant absent, a été créé puis
 revérifié en mode strict. Les snapshots existants n'ont pas été remplacés.
 Cette campagne comptait **391 fixtures sélectionnables**, distinctes des huit exclusions.
+
+`StringEdgeCases` réintègre aussi la sélection après correction du décodage TAST
+et des labels de records : exécution dans les trois modes, parité octet par octet,
+création puis vérification stricte du snapshot. Les preuves figurent au
+[lot 02 du plan v2](#plan-v2--lot-02--chaînes-tast-et-records-3-octobre-2026).
 
 `bin/modtest` sélectionne les checkouts frères `gopurs-*` possédant un
 `bin/test` exécutable :
@@ -483,6 +512,66 @@ artefacts et journaux sont conservés dans
 Toolchain : Node **24.8.0**, Go **1.27.0**, Spago **1.0.3**, même frontend TAST
 **0.15.16 development** que la clôture v1 ; `toolchain.json` conserve les SHA-256
 du frontend et des deux compilateurs utilisés.
+
+## Plan v2 — lot 02 : chaînes TAST et records, 3 octobre 2026
+
+`StringEdgeCases` est réintégrée. Lot validé : **30/100 points, 2/8 lots** du
+plan v2.
+
+La reproduction avant correction rejetait `Symbols.typeTable.value` et
+`Records.typeTable.fields.label` en natif ; **six fichiers** divergeaient du
+backend JS. L'exécution Go échouait aussi côté JS : champs `�`/emoji invalides et
+clés de records émises sans échappement. L'exécution directe du frontend JS
+réussissait et fournit l'oracle `Done\nDone\n`.
+
+Le décodeur natif PBO accepte maintenant les chaînes ou tableaux d'unités UTF-16
+`0..65535`, recompose les paires valides, conserve les surrogates isolés en WTF-8
+et garde les chemins d'erreur. `Json/Text.go` est régénéré depuis `Json.go` ; le
+générateur reproduit également la politique existante des littéraux entiers et
+le parcours linéaire des tableaux de littéraux. Côté gopurs, `recordFieldName`
+encode les labels inhabituels avec le préfixe réservé `gopurs_field_`, et les clés
+passent par l'échappement des littéraux Go dans toutes les conversions et
+opérations de records.
+
+Vérifications terminées sur les copies figées :
+
+- Régressions avant/après : les deux décodeurs natifs échouent sur les tableaux
+  UTF-16 avant correction ; le test exécutable des labels échoue à la compilation
+  Go. Tous passent après correction.
+- **33 tests Node** sur les records et représentations, dont le nouveau test
+  compilant/exécutant les labels isolés, astraux, guillemets, antislash et saut de
+  ligne, les tailles 1 à 7, les mises à jour et la réservation du préfixe.
+- **Neuf tests Node PBO**, plus la suite `type-table.mjs` : référence PSString,
+  valeurs, labels, erreurs, références et ordre de résolution.
+- **Cinq tests Go PBO sous `-race`**, couvrant les deux chemins PSString, les
+  arguments/résolutions de types et **2 025 cas** de frontière parser/schéma.
+- Bootstrap JS et natif réussi : **500 modules, 287 718 types**. La vérification
+  `python3 bin/json-text/generate.py --check` passe sur les sources livrées.
+- **271 entrées TAST identiques** avant/après et entre les trois modes :
+  **336 fichiers Go et `go.mod` identiques octet par octet** entre JS, natif Go
+  séquentiel (workers à 1, pipeline désactivé) et parallèle (workers à 4).
+  Les trois exécutables produisent exactement l'oracle JS.
+- Revue complète du diff généré : seul **`Records.go`** change par rapport à
+  l'ancien JS, pour les noms de champs et l'échappement des clés. Les six écarts
+  de l'ancien natif disparaissent après décodage complet de `Records`/`Symbols`.
+- Snapshot `StringEdgeCases.go` créé après revue/exécution, puis **12 fixtures**
+  réussies en mode strict sur le compilateur final : `StringEdgeCases`,
+  `NativeRecordBoxing`, `NativeRecordSizes`, `NativeRecordReturns`,
+  `NativeRecordWorkers`, `RecordTypeChangingUpdate`, `NestedRecordUpdate`,
+  `NewtypeWithRecordUpdate`, `PolyLabels`, `CompilerHostStrings`,
+  `BlockStringEdgeCases` et `CompactRecordConsumers`.
+- Audit des **184 entrées source** figées du compilateur : les six fichiers
+  source attendus changent. Les corrections, dépendances et tests livrés
+  correspondent aux copies validées ; liens locaux et `git diff --check` passent.
+
+Preuves, empreintes, sorties avant/après et rapports conservés dans
+`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/gopurs-v2-tast-strings-5p8w6c8y/`,
+notamment `fixture-before.json`, `fixture-after.json`, `generated-go-review.diff`,
+`bootstrap-after-final.log`, `pbo-native-after.log`, `fixtures-strict.log` et
+`final-results.json`. Toolchain : Node **24.8.0**, Go **1.27.0**, Spago **1.0.3**,
+frontend TAST **0.15.16 development**. Le nettoyage préalable demandé a libéré
+**1,07 Gio** de caches et anciens workspaces de tests ; `gopurs-cleanup.json`
+confirme des statuts Git identiques avant/après suppression.
 
 ## Consolidation finale — lot 15, 2 octobre 2026
 

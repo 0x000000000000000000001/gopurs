@@ -2,6 +2,7 @@ import {
   accessSync, chmodSync, constants, copyFileSync, mkdirSync, mkdtempSync,
   readFileSync, renameSync, rmSync, symlinkSync, writeFileSync,
 } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { delimiter, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -72,9 +73,22 @@ try {
     "-o", join(parser, "libgopurs_ffi.a"), "."], join(root, "tools/ffi-gen"));
   copyFileSync(join(root, "tools/ffi-gen/rust-build.rs"), join(rust, "Purs_Gopurs_FfiSupport", "build.rs"));
   const target = resolve(environment.CARGO_TARGET_DIR ?? join(workspace, "target"));
-  await run("cargo-build", "cargo", ["build", "--release", "--target-dir", target,
-    "--config", "profile.release.lto=false", "--config", "profile.release.opt-level=3",
-    "--config", "profile.release.debug=false", "--manifest-path", join(rust, "Cargo.toml")], workspace);
+  const linkArgs = [];
+  if (process.platform === "darwin") {
+    // Keep the linker aligned with rustc's LLVM bitcode version. Apple's
+    // system libLTO may be older than the Rust toolchain used for ThinLTO.
+    const rustc = environment.RUSTC ?? "rustc";
+    const options = { env: environment, encoding: "utf8" };
+    const sysroot = execFileSync(rustc, ["--print", "sysroot"], options).trim();
+    const host = execFileSync(rustc, ["-vV"], options).match(/^host: (.+)$/m)?.[1];
+    if (!host) throw new Error("Cannot determine the Rust toolchain host for ThinLTO");
+    const linker = join(sysroot, "lib/rustlib", host, "bin/gcc-ld/ld64.lld");
+    accessSync(linker, constants.X_OK);
+    linkArgs.push("--bin", "purust_output", "--", "-C", "link-arg=-fuse-ld=" + linker);
+  }
+  await run("cargo-build", "cargo", [linkArgs.length ? "rustc" : "build", "--release", "--target-dir", target,
+    "--config", 'profile.release.lto="thin"', "--config", "profile.release.opt-level=3",
+    "--config", "profile.release.debug=false", "--manifest-path", join(rust, "Cargo.toml"), ...linkArgs], workspace);
   const binary = join(target, "release", process.platform === "win32" ? "purust_output.exe" : "purust_output");
 
   // A fresh Go-target fixture exercises FFI parsing, generation and application
