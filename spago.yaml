@@ -10,6 +10,7 @@ package:
     - console
     - control
     - effect
+    - enums
     - identity
     - either
     - node-buffer

@@ -34,7 +34,8 @@ the compiler uses `withEmitter` for that. Joining Aff children does not join
 detached filesystem callbacks whose `nonCanceler` cannot stop the OS operation.
 
 `GOPURS_PBO_JOBS` selects optimizer concurrency (compiler default 1; the launcher
-selects 8 on sufficiently large machines unless overridden). The parallel
+selects 8 on machines with at least 32 GiB for Go, Rust and JS unless overridden).
+An explicit Go GC policy does not change this worker selection. The parallel
 builder preserves sequential directive visibility through ranked snapshots and
 replays attempts whose predecessors are not finalized yet. Original imports
 alone are insufficient for scheduling. `Driver.Build` owns the Aff scheduler

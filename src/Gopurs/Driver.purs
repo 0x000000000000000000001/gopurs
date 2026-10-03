@@ -5,6 +5,7 @@ import Prelude
 import Data.Maybe (Maybe(..))
 import Effect.Aff (Aff)
 import Effect.Class (liftEffect)
+import Effect.Console as Console
 import Gopurs.Driver.Build (build)
 import Gopurs.Driver.Config (readConfig)
 import Gopurs.Driver.Output (writeEntryPoints, writeRuntime)
@@ -16,6 +17,11 @@ import PureScript.Backend.Optimizer.Cache as Cache
 compile :: Aff Unit
 compile = Metrics.measure "backend total" \_ -> do
   config <- liftEffect readConfig
+  liftEffect $ Console.error $
+    "[gopurs] workers: prepare=" <> show config.prepareJobs
+      <> ", pbo=" <> show config.optimizerJobs
+      <> ", emit=" <> show config.emission.jobs
+      <> ", pipeline=" <> show (config.emission.pipelined && config.emission.jobs > 1)
   prepared <- prepareModules config.prepareJobs config.mainModule
 
   -- Keep allocation sampling disabled unless explicitly requested. The native

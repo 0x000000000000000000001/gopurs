@@ -17,7 +17,7 @@ import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Ref (Ref)
 import Gopurs.CodegenState (CodegenMetadata, CodegenState)
-import Gopurs.GoAst (rawGo, GoExpr(..), GoDecl, GoType(..), StructPointer, goTypeToStr, structPointer, sanitizeName)
+import Gopurs.GoAst (rawGo, GoExpr(..), GoDecl, GoType(..), StructPointer, goTypeToStr, structPointer, recordFieldName)
 import Gopurs.GoConversions.NativeAdts (UnboxedADT, unboxableADTs, getUnboxedADT, adtPayloadTypes) as NativeAdts
 import Gopurs.GoConversions.NativeAdts (slotType, zeroGoExpr)
 import Gopurs.GoConversions.Rebox as Rebox
@@ -94,7 +94,7 @@ projectRecord coerceField expr sourceFields targetFields =
     target = TypeRecord targetFields
     fields = map
       (\(Tuple key targetType) -> Tuple key
-        (coerceField (GoStructAccess (GoVar "record") (sanitizeName key))
+        (coerceField (GoStructAccess (GoVar "record") (recordFieldName key))
           (fromMaybe TypeValue (Map.lookup key sourceTypes)) targetType))
       targetFields
   in
@@ -164,8 +164,8 @@ boxRecord :: (GoExpr -> GoType -> GoExpr) -> GoExpr -> Array (Tuple String GoTyp
 boxRecord boxField expr fields =
   let
     keys = map (\(Tuple key _) -> key) fields
-    keysStr = String.joinWith ", " (map (\key -> "\"" <> key <> "\"") keys)
-    valsStr = String.joinWith ", " (map (\(Tuple key fieldType) -> printGoExpr (boxField (GoStructAccess (GoVar "orig") (sanitizeName key)) fieldType)) fields)
+    keysStr = String.joinWith ", " (map (printGoExpr <<< GoString) keys)
+    valsStr = String.joinWith ", " (map (\(Tuple key fieldType) -> printGoExpr (boxField (GoStructAccess (GoVar "orig") (recordFieldName key)) fieldType)) fields)
     boxedRecord = case Array.length fields of
       0 -> "gopurs_runtime.RecordDict0()"
       size | size <= 5 -> "gopurs_runtime.RecordDict" <> show size <> "(" <> keysStr <> ", " <> valsStr <> ")"
@@ -177,7 +177,7 @@ unboxRecord :: (GoExpr -> GoType -> GoType -> GoExpr) -> GoExpr -> Array (Tuple 
 unboxRecord coerceField expr fields =
   let
     recordType = goTypeToStr (TypeRecord fields)
-    assignments = String.joinWith "\n" (map (\(Tuple key fieldType) -> "\t\t\t\t\tclone." <> sanitizeName key <> " = " <> printGoExpr (coerceField (GoCall (GoSelector (GoVar "gopurs_runtime") "RecordGet") [ GoVar "orig", GoString key ]) TypeValue fieldType)) fields)
+    assignments = String.joinWith "\n" (map (\(Tuple key fieldType) -> "\t\t\t\t\tclone." <> recordFieldName key <> " = " <> printGoExpr (coerceField (GoCall (GoSelector (GoVar "gopurs_runtime") "RecordGet") [ GoVar "orig", GoString key ]) TypeValue fieldType)) fields)
   in
     rawGo ("func() " <> recordType <> " {\n\t\t\t\t\torig := " <> printGoExpr expr <> "\n\t\t\t\t\t_ = orig\n\t\t\t\t\tclone := " <> recordType <> "{}\n" <> assignments <> "\n\t\t\t\t\treturn clone\n\t\t\t\t}()")
 

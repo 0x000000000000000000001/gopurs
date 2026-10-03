@@ -8,11 +8,11 @@ export function snapshotFiles(root, fixture) {
   }));
 }
 
-export async function verifySnapshots(files, processes, fixture) {
+export async function verifySnapshots(files, processes, fixture, env) {
   for (const { generated, expected } of files) {
     if (!existsSync(expected)) throw new Error(`Missing snapshot: ${expected}. Use --update-snapshots to create it explicitly.`);
     if (!readFileSync(expected).equals(readFileSync(generated))) {
-      await processes.run("snapshot diff", "diff", ["-u", expected, generated], { cwd: fixture.directory, log: join(fixture.directory, "logs/snapshot.diff"), display: true });
+      await processes.run("snapshot diff", "diff", ["-u", expected, generated], { cwd: fixture.directory, env, log: join(fixture.directory, "logs/snapshot.diff"), display: true });
     }
   }
 }

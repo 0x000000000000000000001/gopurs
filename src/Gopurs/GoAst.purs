@@ -9,6 +9,8 @@ import Gopurs.GoCode (GoCode, opaqueCode)
 import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap)
 import Data.Array as Array
+import Data.Enum (fromEnum)
+import Data.String.CodePoints as CodePoints
 
 data GoExpr
   = GoVar String
@@ -149,7 +151,23 @@ goTypeToStr _ = "gopurs_runtime.Value"
 
 goRecordStructName :: Array (Tuple String GoType) -> String
 goRecordStructName fields =
-  "struct{\n" <> String.joinWith "\n" (map (\(Tuple k v) -> "\t" <> sanitizeName k <> " " <> goTypeToStr v) fields) <> "\n}"
+  "struct{\n" <> String.joinWith "\n" (map (\(Tuple k v) -> "\t" <> recordFieldName k <> " " <> goTypeToStr v) fields) <> "\n}"
+
+-- Labels are arbitrary PSStrings, unlike identifiers. Keep the established
+-- ASCII spelling, encoding other labels into a portable Go field name. Reserve
+-- the encoding prefix so a literal label cannot collide with an encoded one.
+recordFieldName :: String -> String
+recordFieldName = memoizeName \label ->
+  let
+    name = sanitizeName label
+    prefix = "gopurs_field_"
+    asciiIdentifier code =
+      let n = fromEnum code
+      in n == 95 || (n >= 48 && n <= 57) || (n >= 65 && n <= 90) || (n >= 97 && n <= 122)
+  in
+    if name /= "_" && String.take (String.length prefix) name /= prefix
+        && Array.all asciiIdentifier (CodePoints.toCodePointArray name) then name
+    else prefix <> String.joinWith "_" (map (show <<< fromEnum) (CodePoints.toCodePointArray label))
 
 
 

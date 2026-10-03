@@ -754,6 +754,7 @@ Les scripts de [tools](../tools) ont des responsabilités distinctes :
 | Configuration Spago native, sélection du fork `purs`, vérification du TAST | `native-workspace.mjs` |
 | Sous-processus, groupes de processus, signaux et descripteurs des logs | `command-runner.mjs` |
 | Présentation des commandes et erreurs des campagnes de tests | `test-process.mjs` |
+| Rapports atomiques, statuts par cible, reprise et conservation des campagnes | `test-campaign.mjs` |
 | Sélection des fixtures, snapshots et workspaces | `test-runner.mjs` et ses helpers `test-*` |
 | Parcours des bibliothèques sœurs | `modtest-runner.mjs` |
 
@@ -763,6 +764,13 @@ le client interprète les échecs après avoir affiché les logs et appelé
 compris. Chaque propriétaire appelle `dispose` dans un `finally` pour retirer
 les handlers de signaux. Le build natif et `TestProcesses` utilisent ce même
 contrat, avec leur propre présentation des étapes.
+
+`TestCampaign` conserve toute la sélection dans `results.json`, même après un
+arrêt anticipé. Les runners lui fournissent leur action par cible et utilisent
+son environnement de temporaires privés. `test-workspace.mjs` prépare les
+fixtures et les copies de bibliothèques ; chaque bibliothèque reçoit sa propre
+famille de sources, afin que les nettoyages ne touchent ni les checkouts vivants
+ni les preuves d'une autre cible. Les logs restent disponibles après succès.
 
 Le bootstrap conserve son workspace sur échec et installe le nouveau binaire
 par renommage d'un fichier préparé sur le même système de fichiers. La

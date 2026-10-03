@@ -13,12 +13,12 @@ export class TestProcesses {
     this.commands.checkInterrupted();
   }
 
-  async run(label, command, args, { cwd, log, display = false } = {}) {
+  async run(label, command, args, { cwd, env, log, display = false } = {}) {
     this.checkInterrupted();
     console.log(`   [${label}] ${command} ${args.join(" ")}`);
     let status;
     try {
-      status = await this.commands.run(command, args, { cwd, log });
+      status = await this.commands.run(command, args, { cwd, env, log });
     } catch (error) {
       if (error instanceof Interrupted) throw error;
       throw new Error(`${label}: ${error.message}`);

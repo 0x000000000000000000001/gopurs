@@ -16,7 +16,7 @@ import * as Go from '../output/Gopurs.GoAst/index.js';
 import { boxGoExpr, coerceGoExpr, generateReboxFunctions, unboxGoExpr } from '../output/Gopurs.GoConversions/index.js';
 import { exprTypeToGoType, exprTypeToGenericGoType } from '../output/Gopurs.GoTypes/index.js';
 import { printGoDecl, printGoExpr } from '../output/Gopurs.Printer/index.js';
-import { coerceLiteralField, getProp, prepareLiteral } from '../output/Gopurs.RecordExprs/index.js';
+import { coerceLiteralField, getProp, prepareLiteral, update } from '../output/Gopurs.RecordExprs/index.js';
 import { runtimeGoCode } from '../output/Gopurs.Runtime/index.js';
 import * as Core from '../output/PureScript.Backend.Optimizer.CoreFn/index.js';
 import { hashString } from '../output/PureScript.Backend.Optimizer.FfiSupport/index.js';
@@ -105,6 +105,55 @@ test('record literals use the first duplicate label for field typing, including 
         const literal = prepareLiteral(emptyMetadata)('Test')(row)(Nothing.value);
         assert.deepEqual(lookup(ordString)('y')(literal.fields), new Just(Core.String.value));
     }
+});
+
+test('record labels survive native layouts, boxing, accesses and every dictionary size', t => {
+    const labels = ['\ud800', '\ud801', '\udf06', '💡', '💢', 'quote"slash\\\n', 'gopurs_field_55296'];
+    const blocks = [];
+    for (let size = 1; size <= labels.length; size++) {
+        const names = labels.slice(0, size);
+        const fields = names.map(name => new Tuple(name, Go.TypeInt64.value));
+        const type = new Go.TypeRecord(fields);
+        const ref = newState();
+        const props = names.map((name, i) => new Tuple(name, Go.rawGo(`gopurs_runtime.Int(${i + 1})`)));
+        const input = printGoExpr(new Go.GoRecordDict(Go.TypeValue.value, props));
+        const unboxed = printGoExpr(unboxGoExpr(ref)('Test')(new Go.GoVar('input'))(Go.TypeValue.value)(type));
+        const boxed = printGoExpr(boxGoExpr(ref)('Test')(new Go.GoVar('native'))(type));
+        const nativeUpdate = printGoExpr(update(ref)('Test')(Nothing.value)({ expr: new Go.GoVar('native'), exprType: type })
+            (names.map(key => ({ key, expr: new Go.GoInt(9), goType: Go.TypeInt64.value }))).expr);
+        const updatedProps = names.map(name => new Tuple(name, Go.rawGo('gopurs_runtime.Int(9)')));
+        const dictUpdate = printGoExpr(new Go.GoRecordUpdateDict(new Go.GoVar('input'), updatedProps));
+        // A mismatching runtime tag takes the name-based static-update fallback.
+        const staticUpdate = printGoExpr(new Go.GoRecordUpdateStatic(new Go.GoVar('input'), size + 1,
+            names.map((_, i) => new Tuple(i, Go.rawGo('gopurs_runtime.Int(9)'))), updatedProps));
+        blocks.push(`{
+    input := ${input}
+    native := ${unboxed}
+    boxed := ${boxed}
+    updated := ${nativeUpdate}
+    dictUpdated := ${dictUpdate}
+    staticUpdated := ${staticUpdate}
+    ${names.map((key, i) => {
+        const access = variable => printGoExpr(getProp(emptyMetadata)(ref)('Test')(key)({ expr: new Go.GoVar(variable), exprType: type }).expr);
+        const dynamic = variable => printGoExpr(new Go.GoRecordAccess(new Go.GoVar(variable), key));
+        return `if ${access('native')} != ${i + 1} || ${dynamic('boxed')}.IntVal != ${i + 1} || ${access('updated')} != 9 || ${dynamic('dictUpdated')}.IntVal != 9 || ${dynamic('staticUpdated')}.IntVal != 9 { panic("record label roundtrip failed") }`;
+    }).join('\n')}
+}`);
+    }
+    const directory = mkdtempSync(join(tmpdir(), 'gopurs-record-labels-'));
+    t.after(() => rmSync(directory, { recursive: true, force: true }));
+    mkdirSync(join(directory, 'gopurs_runtime'));
+    writeFileSync(join(directory, 'go.mod'), 'module gopurs/output\n\ngo 1.22\n');
+    writeFileSync(join(directory, 'gopurs_runtime/runtime.go'), runtimeGoCode);
+    writeFileSync(join(directory, 'main.go'), `package main
+import ("fmt"; "unsafe"; "gopurs/output/gopurs_runtime")
+func main() { ${blocks.join('\n')}\nfmt.Println("record labels passed") }
+`);
+    const result = spawnSync('go', ['run', '.'], { cwd: directory, encoding: 'utf8', timeout: 60_000,
+        env: { ...process.env, GOWORK: 'off' } });
+    assert.ifError(result.error);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout, 'record labels passed\n');
 });
 
 test('boxed record literals box their native scalar and array fields', () => {

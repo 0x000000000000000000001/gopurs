@@ -1,13 +1,13 @@
 import { accessSync, constants, readdirSync, statSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 
-// Rechecked on 2026-10-02; evidence and exact failures are in docs/testing.md.
+// Rechecked on 2026-10-02; StringEdgeCases reintegrated on 2026-10-03.
+// Evidence and exact failures are in docs/testing.md.
 const excluded = new Set([
   // The current frontend rejects these with CannotDeriveInvalidConstructorArg.
   "DerivingContravariant.purs", "DerivingFunctorFromBi.purs",
   "DerivingFunctorFromPro.purs", "DerivingProfunctor.purs",
   "NumberLiterals.purs", // Number Show spelling differs from the fixture's oracle.
-  "StringEdgeCases.purs", // Native TAST type-level strings/row labels fail decoding.
   "StringEscapes.purs", // Folding concatenated surrogate halves differs from JS.
   "2136.purs", // 32-bit boundary overflow, with native 64-bit integers in gopurs.
 ]);
@@ -15,7 +15,7 @@ const excluded = new Set([
 export class UsageError extends Error {}
 
 export function parseOptions(args, { modules = false, env = process.env } = {}) {
-  const options = { targets: [], clean: false, list: false, all: false, keep: false, update: false, resume: null, help: false };
+  const options = { targets: [], clean: false, list: false, all: false, keep: false, keepGoing: false, update: false, resume: null, resumeFailed: null, help: false };
   if (!modules) {
     const update = env.UPDATE_SNAPSHOTS ?? "0";
     if (update !== "0" && update !== "1") throw new UsageError("UPDATE_SNAPSHOTS must be 0 or 1.");
@@ -29,7 +29,13 @@ export function parseOptions(args, { modules = false, env = process.env } = {}) 
     else if (arg === "--all") options.all = true;
     else if (arg === "--help" || arg === "-h") options.help = true;
     else if (!modules && arg === "--update-snapshots") options.update = true;
-    else if (!modules && arg === "--keep-workspace") options.keep = true;
+    else if (arg === "--keep-workspace") options.keep = true;
+    else if (arg === "--keep-going") options.keepGoing = true;
+    else if (arg === "--resume-failed") {
+      const value = args[++i];
+      if (!value || value.startsWith("-")) throw new UsageError("--resume-failed needs a report file.");
+      options.resumeFailed = value;
+    }
     else if (arg === "--skip-before") {
       const value = args[++i];
       if (!value || value.startsWith("-")) throw new UsageError("--skip-before needs a name.");
@@ -41,6 +47,9 @@ export function parseOptions(args, { modules = false, env = process.env } = {}) 
     else options.targets.push(arg);
   }
   if (options.all && options.targets.length) throw new UsageError("Use --all or explicit names, not both.");
+  if (options.resumeFailed && (options.all || options.targets.length || options.resume)) {
+    throw new UsageError("Use --resume-failed without targets, --all or --skip-before.");
+  }
   return options;
 }
 

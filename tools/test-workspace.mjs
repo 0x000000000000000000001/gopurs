@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 
@@ -33,7 +33,7 @@ export function prepareFixture(root, workspace, file, index, packages) {
   const directory = join(workspace, `${index}-${name}`);
   const source = join(directory, "src");
   mkdirSync(source, { recursive: true });
-  mkdirSync(join(directory, "logs"));
+  mkdirSync(join(directory, "logs"), { recursive: true });
   // A fresh source/output directory replaces timestamp edits and module-name
   // cleanup. No files from tests/runner are read, modified, or removed.
   cpSync(file, join(source, "Main.purs"));
@@ -49,4 +49,25 @@ export function prepareFixture(root, workspace, file, index, packages) {
       `    ${name}:\n      path: ${JSON.stringify(join(dirname(root), "gopurs-" + name))}\n`).join("");
   writeFileSync(join(directory, "spago.yaml"), config);
   return { name, directory, snapshotFfi: /^-- @snapshot-ffi\r?$/m.test(content) };
+}
+
+// Library runners assume sibling-relative paths and can clean their siblings.
+// Give each target its own complete source family; never symlink a library back
+// to a live checkout. Relative config symlinks stay relative inside the copy.
+export function prepareModule(root, directory, name) {
+  const packages = join(directory, "packages");
+  mkdirSync(packages);
+  const generated = new Set([".git", ".spago", ".cache", ".purmeta", "node_modules", "output", ".stack-work", ".pulp-cache"]);
+  const parent = dirname(root);
+  for (const sibling of readdirSync(parent)) {
+    const source = join(parent, sibling);
+    if (!sibling.startsWith("gopurs-") || !statSync(source, { throwIfNoEntry: false })?.isDirectory()) continue;
+    cpSync(realpathSync(source), join(packages, sibling), {
+      recursive: true, verbatimSymlinks: true,
+      filter: path => !generated.has(basename(path)),
+    });
+  }
+  // The compiler is consumed read-only; -c is handled once by the outer runner.
+  symlinkSync(root, join(packages, "gopurs"), "dir");
+  return join(packages, name);
 }

@@ -11,7 +11,7 @@ utile et rendre les campagnes et l'installation reproductibles. Périmètre :
 compilateur, runtime, FFI, outillage et bibliothèques sœurs ; interventions dans
 PBO et le frontend TAST limitées aux besoins démontrés.
 
-## Avancement : 0 % — 0/100 points, 0/8 lots validés
+## Avancement : 15 % — 15/100 points, 1/8 lots validés
 
 - **Calcul :** somme des points des cases cochées, sur un total fixe de 100.
 - Un lot peut demander plusieurs passes ; aucun point partiel n'est acquis.
@@ -23,7 +23,7 @@ PBO et le frontend TAST limitées aux besoins démontrés.
 
 ## Lots — ordre de travail
 
-- [ ] **01 — Campagnes de tests reproductibles (15 pts).** Isoler les temporaires
+- [x] **01 — Campagnes de tests reproductibles (15 pts).** Isoler les temporaires
   Spago et les nettoyages des runners frères ; corriger l'initialisation de
   `spec`, dépendante d'un répertoire ignoré. Fin : démarrage dans une copie
   fraîche, reprise des échecs et bilan complet vérifiés, sans altérer les autres
@@ -71,6 +71,6 @@ PBO et le frontend TAST limitées aux besoins démontrés.
 - Preuves identifiées par plan et lot dans `docs/testing.md`, documentation à
   jour et `git diff --check` propre.
 
-**Prochaine passe : lot 01 — campagnes de tests reproductibles.**
+**Prochaine passe : lot 02 — décodage des chaînes dans le TAST.**
 Les optimisations de performance restent en pause ; toute reprise exige un gain
 mesuré significatif.

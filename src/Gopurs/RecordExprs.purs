@@ -16,7 +16,7 @@ import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Tuple (Tuple(..))
 import Effect.Ref (Ref)
 import Gopurs.CodegenState (CodegenMetadata, CodegenState)
-import Gopurs.GoAst (GoExpr(..), GoType(..), goTypeToStr, rawGo, sanitizeName)
+import Gopurs.GoAst (GoExpr(..), GoType(..), goTypeToStr, rawGo, recordFieldName)
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr, unboxGoExpr)
 import Gopurs.GoTypes (exprTypeToGoType, instantiateGenericGoType, structFieldGoType, visibleRecordFields)
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..))
@@ -63,7 +63,7 @@ getProp metadata codegenStateRef modNameStr prop obj = case obj.exprType of
     let
       fieldGoType = fromMaybe TypeValue (Map.lookup prop (Map.fromFoldable fields))
     in
-      { expr: GoStructAccess obj.expr (sanitizeName prop), exprType: fieldGoType }
+      { expr: GoStructAccess obj.expr (recordFieldName prop), exprType: fieldGoType }
   TypeStructPointer { fullName, typeArgs } ->
     case Map.lookup fullName metadata.classDeclsFields of
       Just info ->
@@ -109,8 +109,8 @@ update codegenStateRef modNameStr expectedType obj props = case obj.exprType of
       unchangedFields = Array.filter (\(Tuple key _) -> not (Array.any (\p -> p.key == key) props)) resultFields
       copyField (Tuple key targetType) =
         let sourceType = fromMaybe TypeValue (Map.lookup key (Map.fromFoldable fields))
-        in GoMutate ("clone." <> sanitizeName key)
-          (coerceGoExpr codegenStateRef modNameStr (GoStructAccess (GoVar "originalRecord") (sanitizeName key)) sourceType targetType)
+        in GoMutate ("clone." <> recordFieldName key)
+          (coerceGoExpr codegenStateRef modNameStr (GoStructAccess (GoVar "originalRecord") (recordFieldName key)) sourceType targetType)
       -- A type-changing update needs a new native layout. Do not convert the
       -- overwritten fields through their old types while copying the record.
       changedLayout = GoCall (GoFuncLit []
@@ -118,7 +118,7 @@ update codegenStateRef modNameStr expectedType obj props = case obj.exprType of
          , rawGo "_ = originalRecord"
          , rawGo ("var clone " <> goTypeToStr resultType)
          ] <> map copyField unchangedFields
-           <> map (\(Tuple key value) -> GoMutate ("clone." <> sanitizeName key) value) coercedUpdates)
+           <> map (\(Tuple key value) -> GoMutate ("clone." <> recordFieldName key) value) coercedUpdates)
         (GoVar "clone") resultType) []
     in
       { expr: if resultType == obj.exprType then GoRecordUpdateNative resultType obj.expr coercedUpdates else changedLayout

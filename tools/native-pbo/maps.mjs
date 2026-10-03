@@ -1,6 +1,6 @@
 // Persistent native maps must interoperate with generated generic operations.
 import assert from "node:assert/strict";
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   createWorkspace, fixtureSource, generatedCrateSource, loadThreadedRust,
@@ -19,7 +19,10 @@ await runCase("maps", rust, async ctx => {
     "Purs_PureScript_Backend_Optimizer_CoreFn", "Purs_PureScript_Backend_Optimizer_NativeMaps",
   ], rust);
   writeFileSync(join(directory, "src/main.rs"),
-    fixtureSource("test-native-maps.rs").replace(/^\s*\/\/ NATIVE_FFI$/m, () => ffi));
+    fixtureSource("test-native-maps.rs")
+      .replace(/^\s*\/\/ NATIVE_FFI$/m, () => ffi)
+      .replace("fn main() {", "fn main() {\n    check_native_insert_with();") +
+    readFileSync(new URL("./maps-insert-with.rs", import.meta.url), "utf8"));
   const binary = ctx.cargoBuild(directory, "purust_native_maps_test");
   ctx.spawn("run", binary, []);
 });

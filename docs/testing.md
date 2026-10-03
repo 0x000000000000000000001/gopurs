@@ -336,25 +336,48 @@ Une mise à jour intentionnelle s'effectue ainsi :
 ```
 
 Les snapshots ne sont écrits qu'après compilation et exécution Go réussies de
-la fixture concernée. La campagne s'arrête au premier échec ; les mises à jour
+la fixture concernée. Par défaut, la campagne s'arrête au premier échec ; les mises à jour
 des fixtures déjà réussies restent écrites. Le contrôle d'exécution conserve
 le contrat historique : statut zéro et absence de `Fail` dans la sortie.
 
 ## Isolation, logs et caches
 
 Chaque fixture reçoit son propre répertoire temporaire : sources, configuration
-Spago, lockfile, `.spago` et `output`. `tests/runner` n'est ni lu ni modifié.
+Spago, lockfile, `.spago`, `output` et `tmp`. `TMPDIR`, `TMP` et `TEMP` désignent
+ce dernier pour toutes ses commandes, afin d'isoler les extractions Spago entre
+campagnes concurrentes. `tests/runner` n'est ni lu ni modifié.
 Les `.go`, `.js` et répertoires compagnons d'une fixture sont copiés avec sa
 source. `-- @dependencies: assert prelude effect console` peut limiter ses
 dépendances ; sans directive, la liste de `bin/pkg` est utilisée. Les checkouts
 core restent requis et les paquets utilisent le cache global de Spago.
 
 Les logs distinguent compilation PureScript, génération Go, formatage,
-snapshots, dépendances Go, compilation Go et exécution. Les workspaces réussis
-sont supprimés, sauf avec `--keep-workspace`. Échecs et interruptions conservent
+snapshots, dépendances Go, compilation Go et exécution. Les rapports et logs sont
+toujours conservés ; les autres fichiers d'une cible réussie sont supprimés,
+sauf avec `--keep-workspace`. Échecs et interruptions conservent
 le workspace et affichent son chemin. SIGINT/SIGTERM sont transmis à la
 commande active et ses sous-processus. Une compilation PureScript échouée
 n'est pas relancée automatiquement.
+
+Les deux runners affichent `Results: /…/results.json`. Le rapport versionné est
+remplacé atomiquement avant/après chaque cible ; il contient toute la sélection,
+les états `pending`, `running`, `passed`, `failed` ou `interrupted`, les chemins,
+les dates et les diagnostics. `--keep-going` continue après un échec individuel
+et rend un statut non nul dès qu'une cible échoue. Sans cette option, les cibles
+suivantes restent `pending` dans le bilan.
+
+```bash
+./bin/test --all --keep-going
+./bin/test --resume-failed /chemin/results.json --list
+./bin/test --resume-failed /chemin/results.json --keep-going
+```
+
+`--resume-failed` sélectionne les cibles non réussies du rapport, y compris un
+`running` laissé par un arrêt brutal. Il vérifie le type de campagne et la racine
+du dépôt, puis crée une nouvelle campagne avec `resumedFrom`. Les anciens résultats
+restent intacts ; un succès antérieur n'est pas présenté comme un succès sur les
+sources actuelles. Les noms, `--all` et `--skip-before` ne se combinent pas avec
+cette option. La vérification stricte des snapshots reste le défaut de la reprise.
 
 `-c` ne réinitialise pas les caches globaux : il reconstruit gopurs. Les sorties
 de fixture sont neuves avec ou sans cette option. À l'intérieur du backend,
@@ -379,7 +402,7 @@ finale. **Huit** restent justifiées :
 **334 fichiers Go identiques** entre natif séquentiel, natif parallèle et JS
 sur les mêmes entrées TAST. Son snapshot, auparavant absent, a été créé puis
 revérifié en mode strict. Les snapshots existants n'ont pas été remplacés.
-Les **391 fixtures sélectionnables** sont distinctes des huit exclusions.
+Cette campagne comptait **391 fixtures sélectionnables**, distinctes des huit exclusions.
 
 `bin/modtest` sélectionne les checkouts frères `gopurs-*` possédant un
 `bin/test` exécutable :
@@ -391,9 +414,75 @@ Les **391 fixtures sélectionnables** sont distinctes des huit exclusions.
 ```
 
 La sélection complète est le défaut. Les noms avec ou sans `gopurs-` sont
-acceptés ; `-c` reconstruit le backend depuis ce checkout. Chaque script frère
-gère encore ses propres sorties et nettoyages ; l'isolation des fixtures de
-`bin/test` ne s'étend pas automatiquement à ces scripts.
+acceptés ; `-c` reconstruit le backend depuis ce checkout. Chaque cible reçoit
+sa propre copie des sources de toute la famille de bibliothèques, sans `.git`,
+`node_modules`, `.spago`, `.cache` ni `output`. Les liens relatifs de configuration
+restent relatifs. Le compilateur préconstruit est partagé par lien et les scripts
+s'exécutent dans les copies, avec des temporaires privés. Les runners frères
+nettoient uniquement leur propre checkout lors d'une invocation directe.
+Les options de bilan, reprise et conservation ci-dessus s'appliquent aussi à
+`bin/modtest` ; son log par cible est `logs/test.log`.
+
+Dans `spec`, l'environnement d'intégration copie le template en lecture seule,
+ignore ses éventuels `node_modules`/`output`, puis remplace `SPEC_REPO_PATH`.
+Il utilise `spago` sur le `PATH` et le lanceur `bin/gopurs` avec les variables du
+mode appelant, y compris pour les huit cas imbriqués. Une initialisation échouée
+ou annulée détruit sa copie avant une nouvelle tentative. Son `bin/test` exécute
+aussi les deux régressions de `test/integration-environment.mjs`, contre le vrai
+programme Go `Test.IntegrationEnvironment` et des commandes externes simulées.
+
+## Plan v2 — lot 01 : campagnes reproductibles, 3 octobre 2026
+
+Les runners partagent désormais les rapports/reprises et les temporaires privés.
+`modtest` copie les bibliothèques par cible ; les **46 scripts** qui nettoyaient
+leurs voisins ont été corrigés. `spec` initialise une copie autonome du template
+et ne publie sa référence qu'une fois la préparation terminée.
+
+Lot validé : **15/100 points, 1/8 lots** du plan v2. Vérifications terminées :
+
+- **70 tests Node** de runners/bootstrap, dont les nettoyages directs des
+  **50 scripts** installés, les rapports complets, les reprises, les snapshots
+  stricts et les signaux aux descendants. Les quatre nouveaux scénarios de
+  campagne et les 46 nettoyages défectueux ont d'abord échoué sur la référence.
+- **Deux régressions natives de `spec`** échouent avant correction : lecture de
+  `node_modules` absent et répertoire incomplet laissé après initialisation
+  échouée. Elles passent après correction, dont une nouvelle tentative sur le
+  même environnement. Elles sont intégrées à son `bin/test`.
+- Les quatre fixtures touchées par les erreurs d'extraction de la campagne v1
+  (`OperatorAliasElsewhere`, `PendingConflictingImports2`, `PolykindBindingGroup1`,
+  `PolykindInstantiatedInstance`) passent en **deux campagnes concurrentes**,
+  avec snapshots stricts et exécution Go. `TCOMutRec` et `ThunkFusion` passent
+  aussi pendant les contrôles de reprise.
+- Erreur PureScript réelle puis reprise : rapport `failed/passed`, nouvelle
+  campagne limitée à la cible corrigée et rapport précédent préservé. SIGTERM
+  pendant la compilation par le vrai `purs` : statut **143**, descendant arrêté,
+  rapport `interrupted/pending`, puis reprise **2/2** réussie.
+- Erreur YAML réelle dans une copie de `prelude` : rapport `failed/pending`,
+  puis reprise de `prelude` et `strings` **2/2** après correction.
+- Campagne complète sur des copies fraîches : **50/50 runners réussis**, dont
+  49 exécutent du Go et `assert` vérifie sa compilation. `spec` réussit ses deux
+  nouvelles régressions, puis **70 tests, dont huit intégrations imbriquées** ; ses
+  **trois pending** restent consignés pour le lot 07.
+- L'espace libre étant descendu sous 1 Gio, la campagne a été arrêtée par
+  SIGTERM avant épuisement du disque : **41 réussites, une interruption de
+  `spec`, huit cibles en attente**. Après `go clean -cache`, la commande
+  `--resume-failed …/results.json --keep-going` réussit les **neuf cibles**,
+  sans modifier le premier rapport. `real-modules-results.json` relie les deux
+  bilans sur les mêmes sources et artefacts figés.
+- Parité de `spec` sur **390 entrées TAST figées** : **490 fichiers Go et
+  `go.mod` identiques octet par octet** entre JS, natif Go entièrement séquentiel
+  (tous les workers à 1, pipeline désactivé) et parallèle (workers à 4).
+- Préservation vérifiée des **5 506 fichiers/liens** de la famille source
+  copiée et des **2 160 entrées** de caches/sorties des checkouts d'origine.
+  Les sources exécutées correspondent aux fichiers livrés. L'audit des liens
+  locaux et ancres, la syntaxe des scripts modifiés et `git diff --check` passent.
+
+Les preuves avant/après, scripts de reproduction, rapports, empreintes des
+artefacts et journaux sont conservés dans
+`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/gopurs-v2-campaigns-koy5tymo/`.
+Toolchain : Node **24.8.0**, Go **1.27.0**, Spago **1.0.3**, même frontend TAST
+**0.15.16 development** que la clôture v1 ; `toolchain.json` conserve les SHA-256
+du frontend et des deux compilateurs utilisés.
 
 ## Consolidation finale — lot 15, 2 octobre 2026
 

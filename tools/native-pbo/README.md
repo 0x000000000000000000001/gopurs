@@ -1,6 +1,6 @@
 # Native-PBO differential qualification
 
-Runs the seven native FFI differential contracts of the Rust-hosted gopurs
+Runs the eight native FFI differential contracts of the Rust-hosted gopurs
 compiler against a **retained** `npm run build:rust` workspace. The candidate
 native sources are taken from the local gopurs PBO checkout; the PureScript
 oracles and the embedded FFI under test come from the generated crates.
@@ -9,16 +9,23 @@ oracles and the embedded FFI under test come from the generated crates.
 | --- | --- | --- | --- |
 | `memo` | `BoundedMemo.rs` inner-tree keys, FIFO, reentrancy | generated crate only | no |
 | `directives` | `Directives.rs` ASCII fast path and exact fallback | generated crate only | no |
+| `qualified` | `CoreFn.rs` borrowed `Qualified Ident` compare/eq vs the PS oracle, wrappers and generic `Ord` | `CoreFn.rs` | no |
 | `source-usage` | `CoreFn/Usage.rs` validator vs `validateSourceUsageModulePS` | `CoreFn/Usage.rs` | yes |
 | `tast` | `CoreFn/Json.rs` array loop + annotation decoder | `CoreFn/Json.rs` | yes |
 | `tast-module` | `CoreFn/Json.rs` module decoder + usage validation | `CoreFn/Json.rs` | yes |
 | `type-table` | `CoreFn/Json.rs` type-table resolution | `CoreFn/Json.rs` | yes |
-| `maps` | Persistent native/generic map interoperability and Unicode keys | `NativeMaps.rs` | no |
+| `maps` | Persistent native/generic map interoperability, insertWith merge order and Unicode keys | `NativeMaps.rs` | no |
 
 The fixture programs (`test-native-*.rs`) and the TAST-module boundary table are
-reused from `PURUST_DIR/tools`. Before Cargo runs, the orchestrator compares the
-full threaded FFI source with the code embedded in `GENERATED_RUST` and records
-its SHA-256. A mismatched source or stale generated compiler fails the check.
+reused from `PURUST_DIR/tools`; the `qualified` fixture ships next to its case
+script under `tools/native-pbo/fixtures/`. Before Cargo runs, the orchestrator
+compares the full threaded FFI source with the code embedded in
+`GENERATED_RUST` and records its SHA-256. A mismatched source or stale generated
+compiler fails the check.
+
+The local `maps-insert-with.rs` supplement checks 4,000 updates against both
+the generated map implementation and a key/value model, including callback
+counts, existing/incoming argument order and persistent versions.
 
 ## Prerequisites
 
@@ -46,7 +53,7 @@ its SHA-256. A mismatched source or stale generated compiler fails the check.
 
 ## Commands
 
-Full campaign (all seven cases, sequential, one shared target):
+Full campaign (all eight cases, sequential, one shared target):
 
 ```sh
 node tools/test-native-pbo.mjs <workspace>/rust <log-dir>

@@ -5,13 +5,16 @@ import Data.Array as Array
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.String as String
 import Data.Tuple (Tuple(..))
-import Gopurs.GoAst (GoExpr(..), GoDecl(..), GoBinding, GoFile, GoType(..), goTypeToStr, sanitizeName)
+import Gopurs.GoAst (GoExpr(..), GoDecl(..), GoBinding, GoFile, GoType(..), goTypeToStr, recordFieldName)
 import Gopurs.Printer.Builder (Out, emit, emitMany, withOut)
 
 foreign import escapeGoStringImpl :: String -> String
 
 escapeGoString :: String -> String
 escapeGoString = escapeGoStringImpl
+
+quoteGoString :: String -> String
+quoteGoString s = "\"" <> escapeGoString s <> "\""
 
 -- | Écrit des éléments séparés par `separator` (sans séparateur avant le
 -- | premier).
@@ -88,39 +91,39 @@ writeGoExpr out goExpr = case goExpr of
           0 -> emit out "gopurs_runtime.RecordDict0()"
           1 -> case Array.index props 0 of
             Just (Tuple k0 v0) ->
-              let out1 = emitMany out [ "gopurs_runtime.RecordDict1(\"", k0, "\", " ]
+              let out1 = emitMany out [ "gopurs_runtime.RecordDict1(", quoteGoString k0, ", " ]
               in emit (writeGoExpr out1 v0) ")"
             Nothing -> out
           2 -> case Tuple (Array.index props 0) (Array.index props 1) of
             Tuple (Just (Tuple k0 v0)) (Just (Tuple k1 v1)) ->
-              let out1 = emitMany out [ "gopurs_runtime.RecordDict2(\"", k0, "\", \"", k1, "\", " ]
+              let out1 = emitMany out [ "gopurs_runtime.RecordDict2(", quoteGoString k0, ", ", quoteGoString k1, ", " ]
               in emit (writeExprArray out1 [ v0, v1 ]) ")"
             _ -> out
           3 -> case Tuple (Tuple (Array.index props 0) (Array.index props 1)) (Array.index props 2) of
             Tuple (Tuple (Just (Tuple k0 v0)) (Just (Tuple k1 v1))) (Just (Tuple k2 v2)) ->
-              let out1 = emitMany out [ "gopurs_runtime.RecordDict3(\"", k0, "\", \"", k1, "\", \"", k2, "\", " ]
+              let out1 = emitMany out [ "gopurs_runtime.RecordDict3(", quoteGoString k0, ", ", quoteGoString k1, ", ", quoteGoString k2, ", " ]
               in emit (writeExprArray out1 [ v0, v1, v2 ]) ")"
             _ -> out
           4 -> case Tuple (Tuple (Array.index props 0) (Array.index props 1)) (Tuple (Array.index props 2) (Array.index props 3)) of
             Tuple (Tuple (Just (Tuple k0 v0)) (Just (Tuple k1 v1))) (Tuple (Just (Tuple k2 v2)) (Just (Tuple k3 v3))) ->
-              let out1 = emitMany out [ "gopurs_runtime.RecordDict4(\"", k0, "\", \"", k1, "\", \"", k2, "\", \"", k3, "\", " ]
+              let out1 = emitMany out [ "gopurs_runtime.RecordDict4(", quoteGoString k0, ", ", quoteGoString k1, ", ", quoteGoString k2, ", ", quoteGoString k3, ", " ]
               in emit (writeExprArray out1 [ v0, v1, v2, v3 ]) ")"
             _ -> out
           5 -> case Tuple (Tuple (Array.index props 0) (Array.index props 1)) (Tuple (Tuple (Array.index props 2) (Array.index props 3)) (Array.index props 4)) of
             Tuple (Tuple (Just (Tuple k0 v0)) (Just (Tuple k1 v1))) (Tuple (Tuple (Just (Tuple k2 v2)) (Just (Tuple k3 v3))) (Just (Tuple k4 v4))) ->
-              let out1 = emitMany out [ "gopurs_runtime.RecordDict5(\"", k0, "\", \"", k1, "\", \"", k2, "\", \"", k3, "\", \"", k4, "\", " ]
+              let out1 = emitMany out [ "gopurs_runtime.RecordDict5(", quoteGoString k0, ", ", quoteGoString k1, ", ", quoteGoString k2, ", ", quoteGoString k3, ", ", quoteGoString k4, ", " ]
               in emit (writeExprArray out1 [ v0, v1, v2, v3, v4 ]) ")"
             _ -> out
           _ ->
             let
-              keysStr = String.joinWith ", " (map (\(Tuple k _) -> "\"" <> k <> "\"") props)
+              keysStr = String.joinWith ", " (map (\(Tuple k _) -> quoteGoString k) props)
               out1 = emitMany out [ "gopurs_runtime.RecordDict([]string{", keysStr, "}, []gopurs_runtime.Value{" ]
               out2 = writeExprArray out1 (map (\(Tuple _ v) -> v) props)
             in
               emit out2 "})"
   GoRecordUpdateDict orig props ->
     let
-      keysStr = String.joinWith ", " (map (\(Tuple k _) -> "\"" <> k <> "\"") props)
+      keysStr = String.joinWith ", " (map (\(Tuple k _) -> quoteGoString k) props)
       writeGeneric o =
         let
           out1 = emitMany o [ "gopurs_runtime.RecordUpdateDict(" ]
@@ -136,7 +139,7 @@ writeGoExpr out goExpr = case goExpr of
             let
               out1 = emitMany out [ "gopurs_runtime.RecordUpdate1(" ]
               out2 = writeGoExpr out1 orig
-              out3 = emitMany out2 [ ", \"", k, "\", " ]
+              out3 = emitMany out2 [ ", ", quoteGoString k, ", " ]
             in
               emit (writeGoExpr out3 v) ")"
           _ -> writeGeneric out
@@ -145,9 +148,9 @@ writeGoExpr out goExpr = case goExpr of
             let
               out1 = emitMany out [ "gopurs_runtime.RecordUpdate2(" ]
               out2 = writeGoExpr out1 orig
-              out3 = emitMany out2 [ ", \"", k1, "\", " ]
+              out3 = emitMany out2 [ ", ", quoteGoString k1, ", " ]
               out4 = writeGoExpr out3 v1
-              out5 = emitMany out4 [ ", \"", k2, "\", " ]
+              out5 = emitMany out4 [ ", ", quoteGoString k2, ", " ]
             in
               emit (writeGoExpr out5 v2) ")"
           _ -> writeGeneric out
@@ -156,11 +159,11 @@ writeGoExpr out goExpr = case goExpr of
             let
               out1 = emitMany out [ "gopurs_runtime.RecordUpdate3(" ]
               out2 = writeGoExpr out1 orig
-              out3 = emitMany out2 [ ", \"", k1, "\", " ]
+              out3 = emitMany out2 [ ", ", quoteGoString k1, ", " ]
               out4 = writeGoExpr out3 v1
-              out5 = emitMany out4 [ ", \"", k2, "\", " ]
+              out5 = emitMany out4 [ ", ", quoteGoString k2, ", " ]
               out6 = writeGoExpr out5 v2
-              out7 = emitMany out6 [ ", \"", k3, "\", " ]
+              out7 = emitMany out6 [ ", ", quoteGoString k3, ", " ]
             in
               emit (writeGoExpr out7 v3) ")"
           _ -> writeGeneric out
@@ -171,7 +174,7 @@ writeGoExpr out goExpr = case goExpr of
       typeVal = if size >= 6 then "gopurs_runtime.TypeRecordData" else "gopurs_runtime.TypeRecord" <> show size
       writeFallback o =
         let
-          fallbackKeys = String.joinWith ", " (map (\(Tuple k _) -> "\"" <> k <> "\"") fallbackUpdates)
+          fallbackKeys = String.joinWith ", " (map (\(Tuple k _) -> quoteGoString k) fallbackUpdates)
           out1 = emitMany o [ "gopurs_runtime.RecordUpdateDict(origVal, []string{", fallbackKeys, "}, []gopurs_runtime.Value{" ]
         in
           emit (writeExprArray out1 (map (\(Tuple _ v) -> v) fallbackUpdates)) "})"
@@ -213,7 +216,7 @@ writeGoExpr out goExpr = case goExpr of
     let
       out1 = emitMany out [ "func() ", goTypeToStr goType, " {\nclone := " ]
       out2 = writeGoExpr out1 orig
-      out3 = writeJoined "\n" (\o (Tuple prop val) -> writeGoExpr (emitMany o [ "clone.", sanitizeName prop, " = " ]) val) (emit out2 "\n") updates
+      out3 = writeJoined "\n" (\o (Tuple prop val) -> writeGoExpr (emitMany o [ "clone.", recordFieldName prop, " = " ]) val) (emit out2 "\n") updates
     in
       emit out3 "\nreturn clone\n}()"
   GoIIFE name binding body ->
@@ -236,7 +239,7 @@ writeGoExpr out goExpr = case goExpr of
     in
       emit (writeGoExpr (emit out4 "return ") body) "\n}()"
   GoRecordAccess obj prop ->
-    emitMany (writeGoExpr (emit out "gopurs_runtime.RecordGet(") obj) [ ", \"", prop, "\")" ]
+    emitMany (writeGoExpr (emit out "gopurs_runtime.RecordGet(") obj) [ ", ", quoteGoString prop, ")" ]
   GoStructAccess obj prop ->
     emitMany (writeGoExpr out obj) [ ".", prop ]
   GoRecordAccessStatic obj size idx ->

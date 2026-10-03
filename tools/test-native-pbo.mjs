@@ -1,17 +1,18 @@
 #!/usr/bin/env node
 // Native-PBO differential qualification for the Rust-hosted gopurs compiler.
 //
-// Runs seven native FFI differential contracts against a retained Rust-hosted
+// Runs eight native FFI differential contracts against a retained Rust-hosted
 // gopurs workspace (the rust/ directory produced by `npm run build:rust` with
 // GOPURS_KEEP_WORKSPACE=1 or `-- --keep-workspace`):
 //
-//   memo, directives, source-usage, tast, tast-module, type-table, maps
+//   memo, directives, qualified, source-usage, tast, tast-module, type-table, maps
 //
 // Candidate native sources are injected from the local gopurs PBO checkout
 // (GOPURS_PBO_DIR, default ../../purescript-backend-optimizer-gopurs);
 // PureScript oracles and the embedded FFI come from the generated crates in
-// GENERATED_RUST. Case scripts live in tools/native-pbo/ and reuse the fixture
-// programs from PURUST_DIR/tools. All builds share one cargo target
+// GENERATED_RUST. Case scripts live in tools/native-pbo/; fixtures come from
+// PURUST_DIR/tools, except the qualified fixture which ships next to its case
+// script. All builds share one cargo target
 // directory and force profile.release {opt-level=3, debug=false, lto=false}.
 //
 // Usage:
@@ -26,7 +27,8 @@
 //   --help, -h
 //
 // The TAST corpus defaults to <GENERATED_RUST>/../output, the typed output of
-// the retained build. Four cases need it; memo and directives run without it.
+// the retained build. Four cases need it; memo, directives and qualified run
+// without it.
 // Failed fixture workspaces and all logs stay under NEW_LOG_DIR.
 import assert from "node:assert/strict";
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
@@ -46,6 +48,7 @@ const CASES = [
   { name: "tast-module", script: "tast-module.mjs", corpus: true, injects: ["PureScript/Backend/Optimizer/CoreFn/Json.rs"] },
   { name: "type-table", script: "type-table.mjs", corpus: true, injects: ["PureScript/Backend/Optimizer/CoreFn/Json.rs"] },
   { name: "maps", script: "maps.mjs", corpus: false, injects: ["PureScript/Backend/Optimizer/NativeMaps.rs"] },
+  { name: "qualified", script: "qualified.mjs", corpus: false, injects: ["PureScript/Backend/Optimizer/CoreFn.rs"] },
 ];
 
 function usage() {

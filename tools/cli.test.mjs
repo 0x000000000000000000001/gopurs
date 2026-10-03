@@ -89,6 +89,7 @@ test("CLI reports failures and preserves successful output across backends", asy
       reset();
       const result = compile();
       assert.equal(result.status, 0, result.stdout + result.stderr);
+      assert.ok(result.stderr.includes(`[gopurs] workers: prepare=${mode.jobs}, pbo=${mode.jobs}, emit=${mode.jobs}, pipeline=${mode.pipeline === "1"}`), result.stderr);
       assert.doesNotMatch(result.stderr, /\(failed\)|\[gopurs\] error:/);
       assert.ok(existsSync(join(output, "main/main.go")));
       assert.ok(existsSync(join(output, "purescript/Main_ffi.go")));

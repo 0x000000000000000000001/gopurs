@@ -34,7 +34,7 @@ readConfig = do
     , ffiDirectory: args.mbFfiDir
     , rewriteLimit: fromMaybe 10_000 args.mbRewriteLimit
     -- Preparation partitions its own tasks and caps concurrency at eight.
-    , prepareJobs
+    , prepareJobs: max 1 (min 8 prepareJobs)
     , optimizerJobs: boundedJobs optimizerJobs
     , emission: { jobs: boundedJobs emitJobs, pipelined: pipeline /= Just "0" }
     , allocationProfile

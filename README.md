@@ -252,6 +252,9 @@ compiler's host selection. `GOPURS_JS=1` and `GOPURS_RUST=1` are mutually exclus
 
 In `../gopurs-aff`, `GOPURS_RUST=1 ./bin/test` generates, builds and executes Go;
 adding `-c` rebuilds this Rust-hosted compiler first.
+On machines with at least 32 GiB of RAM, the launcher selects eight preparation
+and PBO workers for Rust as well as Go and JavaScript. Explicit worker settings
+take precedence; the automatic Go GC policy applies only to the Go compiler host.
 
 With all three compiler executables built, `npm run test:rust` checks exact Go
 output and CLI failures in sequential/parallel modes, then compiles and executes
@@ -346,6 +349,10 @@ original error.
 
 Optimization and emission also report the current module every 100 modules,
 starting with the first, so long builds show progress before the phase completes.
+The initial `[gopurs] workers: prepare=…, pbo=…, emit=…, pipeline=…` line reports
+the effective worker limits and emission pipeline state after configuration is
+resolved. Preparation is capped at eight, and PBO/emission at 64. A limit of one
+selects the sequential path; emission at one also disables pipeline overlap.
 
 `Gopurs.Metrics` uses a monotonic clock, following altbak's `Bench` approach:
 `performance.now()` under Node, `time.Since` in Go and `Instant` in Rust.
@@ -360,7 +367,7 @@ measures the JavaScript compiler with the same instrumentation as the native one
 `npm run build` refreshes the bundle; `npm run build:native` refreshes the bundle
 and Go executable; `npm run build:rust` refreshes the Rust executable.
 
-TAST loading and decoding use eight workers by default in the native Go compiler;
+TAST loading and decoding use eight workers by default in the native Go and Rust compilers;
 the JavaScript compiler defaults to one. Set `GOPURS_JOBS` from 1 to 64 to select
 a worker count (for example, `GOPURS_JOBS=1 b` in b8x).
 Missing or invalid values use the backend's default. Batches preserve input order before
@@ -394,10 +401,12 @@ order. See [parallel emission](docs/parallel-emission.md) for the lifecycle
 contract, defaults, measurements and validation.
 
 `GOPURS_PREPARE_JOBS` controls transitive specialization preparation separately
-(default 2, clamped to 1–8); each round merges ordered results before starting
-the next. The launcher may select eight preparation and PBO workers on machines
-with at least 32 GiB when it also installs its default memory policy. Set the
-environment variables explicitly for reproducible comparisons. See
+(compiler default 2, clamped to 1–8); each round merges ordered results before starting
+the next. The launcher selects eight preparation and PBO workers on machines
+with at least 32 GiB for every host, unless those variables are explicitly set.
+This choice is independent of `GOGC` and `GOMEMLIMIT`. Smaller machines retain
+the compiler defaults (preparation 2, PBO 1); emission defaults to 8 everywhere.
+Set the environment variables explicitly for reproducible comparisons. See
 [parallel preparation](docs/parallel-preparation.md).
 
 ## Develop one library locally
@@ -427,10 +436,19 @@ library README links back to this procedure.
 
    Add `--offline` to the Spago commands when all dependencies are cached.
    Start with an empty local `output` when validating a removed or renamed
-   module: gopurs does not purge obsolete Go files. These direct commands do
-   not run the sibling cleanup performed by many existing `bin/test` scripts.
+   module: gopurs does not purge obsolete Go files. Library `bin/test` scripts
+   clean only their own build directories. For an isolated campaign, run
+   `./bin/modtest prelude strings --keep-going` from gopurs: each target gets a
+   fresh copy of the library family and private Spago temporaries.
    They describe the test path; they do not establish that every library's
    tests are already passing. See the [coverage limits](docs/testing.md).
+
+Both `bin/test` and `bin/modtest` print a `Results:` JSON report path. Reports
+and per-target logs are retained; `--keep-workspace` also retains successful
+builds. Resume unsuccessful or unattempted targets with
+`./bin/modtest --resume-failed /path/to/results.json --keep-going` (or `bin/test`
+for fixtures). The retry creates a new report linked to the original campaign.
+See [isolation and reports](docs/testing.md#isolation-logs-et-caches).
 
 `assert` has no executable test suite: use `spago build`, then
 `../gopurs/bin/gopurs`, then `(cd output && go mod tidy && go build ./...)`.
