@@ -1,91 +1,76 @@
-# Gopurs — plan de maintenabilité
+# Gopurs — fiabilité et reproductibilité
 
-Plan v1 — mise à jour : 2 octobre 2026.
+Plan v2 — mise à jour : 3 octobre 2026.
 
-Objectif : un backend clair, lisible et modifiable par responsabilités, avec
-une génération Go identique. Périmètre : compilateur, runtime, FFI et outillage
-de ce dépôt ; les interfaces avec PBO et les bibliothèques sœurs sont incluses.
-Les optimisations de performance restent en pause.
+Le plan v1 de maintenabilité est clôturé à **100/100 points, 15/15 lots**.
+Sa [validation finale](docs/testing.md#consolidation-finale--lot-15-2-octobre-2026)
+conserve les preuves et les limites à l'origine de ce nouveau plan.
 
-## Avancement : 100 % — 100/100 points, 15/15 lots validés
+Objectif : résoudre les écarts de comportement identifiés, compléter la couverture
+utile et rendre les campagnes et l'installation reproductibles. Périmètre :
+compilateur, runtime, FFI, outillage et bibliothèques sœurs ; interventions dans
+PBO et le frontend TAST limitées aux besoins démontrés.
+
+## Avancement : 0 % — 0/100 points, 0/8 lots validés
 
 - **Calcul :** somme des points des cases cochées, sur un total fixe de 100.
-  Les poids sont des unités de suivi ; le pourcentage mesure les livrables
-  validés de ce plan.
-- Un lot peut demander plusieurs passes courtes. Ses points sont acquis
-  lorsque son critère de fin et les vérifications communes sont satisfaits.
-- À chaque clôture : cocher le lot, actualiser ce compteur et la date, puis
-  consigner les preuves dans [docs/testing.md](docs/testing.md).
-- Scinder un lot conserve son poids total. Une extension du périmètre donne
-  lieu à une nouvelle version du plan.
+- Un lot peut demander plusieurs passes ; aucun point partiel n'est acquis.
+  Son critère de fin et les vérifications communes doivent être satisfaits.
+- À chaque clôture : cocher le lot, actualiser le compteur et la date, puis
+  consigner les preuves dans [docs/testing.md](docs/testing.md), sous le plan v2.
+- Scinder un lot conserve son poids total ; étendre le périmètre exige une
+  nouvelle version du plan.
 
 ## Lots — ordre de travail
 
-- [x] **01 — Pilote de compilation (10 pts).** `Main` réduit au lancement ;
-  phases, configuration, préparation, build et sorties répartis dans `Driver`.
-- [x] **02 — Pipeline et erreurs CLI (10 pts).** Durée de vie de l'émetteur et
-  des workers encadrée ; nettoyage, diagnostic unique et statut d'échec validés
+- [ ] **01 — Campagnes de tests reproductibles (15 pts).** Isoler les temporaires
+  Spago et les nettoyages des runners frères ; corriger l'initialisation de
+  `spec`, dépendante d'un répertoire ignoré. Fin : démarrage dans une copie
+  fraîche, reprise des échecs et bilan complet vérifiés, sans altérer les autres
+  checkouts.
+- [ ] **02 — Décodage des chaînes dans le TAST (15 pts).** Corriger le décodage
+  natif des symboles et labels de records exposé par `StringEdgeCases`.
+  Fin : fixture réintégrée, exécution et parité JS/natif validées.
+- [ ] **03 — Sémantique des chaînes UTF-16 (15 pts).** Résoudre la divergence
+  de pliage de `StringEscapes`, notamment la concaténation de deux moitiés de
+  surrogate. Fin : assertion réactivée, fixture réintégrée et résultat validé
   en JS, natif séquentiel et natif parallèle.
-- [x] **03 — Outillage de build et de tests (5 pts).** Bootstrap, préparation
-  du workspace et gestion des sous-processus séparés ; runner partagé,
-  interruptions et publication atomique du binaire validés.
-- [x] **04 — Contexte de traduction et annotations (5 pts).** `ExprContext`
-  utilisé directement par le dispatcher ; annotations et dictionnaires de
-  classes isolés dans `TypedExprs` ; parité vérifiée.
-- [x] **05 — Bridge FFI (10 pts).** Façade `FfiBridge` et responsabilités
-  séparées dans `Signatures`, `TypeSupport`, `Values` et `Render` ; admission des
-  appels directs, workers et chemins de repli explicités. Contrats et parité validés.
-- [x] **06 — Choix des représentations (5 pts).** Lecture des `TypeApp`, nommage
-  et instanciation regroupés dans `GoTypes`, `GoAst` et `ConstructorLayout` ;
-  contrats des métadonnées ADT/classes documentés, tests et parité validés.
-- [x] **07 — Boxing, conversions et Rebox (10 pts).** Choix de conversion et
-  passages par `Value` clarifiés ; layouts natifs isolés dans `NativeAdts`, demandes
-  et émission transitive dans `Rebox`. Contrats récursifs, tests et parité validés.
-- [x] **08 — Expressions restantes du dispatcher (5 pts).** Littéraux composites
-  isolés dans `LiteralExprs`, définitions et constructions saturées dans
-  `ConstructorExprs` ; ordre de traduction, coercitions et réutilisation explicites.
-  Typage des callbacks partagé, tests et parité validés.
-- [x] **09 — Bindings, fonctions et TCO (5 pts).** Émission séparée dans
-  `ModuleWorkers` et `LocalWorkers` ; publication des signatures, captures et
-  initialisation récursive explicites. Paramètres d'itération et types résiduels
-  partagés ; contrats TCO, tests et parité validés.
-- [x] **10 — Fusions et applications immédiates (5 pts).** Motifs et preuves
-  des fusions nommés ; réservation des workers partagée dans `WorkerNames`.
-  Plan d'admission explicite pour les applications immédiates, opérations de
-  portée isolées dans `Scope` ; tests et parité validés.
-- [x] **11 — Intrinsics et traversées (5 pts).** Reconnaissance, capture ordonnée
-  et émission des boucles séparées ; captures partagées dans `CallArguments`.
-  Indexation isolée dans `ArrayIntrinsics.Index`, lecture des buffers partagée
-  dans `Source` ; contrats, snapshots et parité des trois modes validés.
-- [x] **12 — Analyses spécialisées (10 pts).** `Ownership`, `BorrowedObjects`,
-  `ClosedDictionaries`, `NativeRecordArgs` et `DecoderSchemas` revus : admission,
-  preuves, transformation et émission ont des responsabilités explicites.
-  Contrats, snapshots stricts, exécution Go et parité des trois modes validés.
-- [x] **13 — Frontière TAST/PBO (5 pts).** Wrappers FFI isolés dans
-  `Monomorphization.ForeignForwarders` ; barrières, invalidation source et
-  provenance des métadonnées explicites. Contrats du point fixe et de `Preparation`,
-  snapshots stricts, exécution Go et parité des trois modes validés.
-- [x] **14 — Runtime et FFI JS/Go du compilateur (5 pts).** Buffer mutable isolé
-  dans `Printer.Builder` ; scanner Go séparé de l'adaptation FFI. Propriété,
-  durée de vie et contrats JS/Go documentés ; GC, concurrence, embarquement,
-  snapshots stricts, exécution Go et parité des trois modes validés.
-- [x] **15 — Consolidation finale (5 pts).** Compilateurs reconstruits sur les
-  mêmes sources ; 391 fixtures, 50 runners frères et parité b8x validés.
-  Résultats et exclusions justifiés, README et architecture cohérents, liens
-  réparés ; Nix absent, vérification à l'exécution explicitement non réalisée.
+- [ ] **04 — Bornes et opérations sur Int (10 pts).** Établir le comportement
+  attendu aux bornes 32 bits, puis corriger l'écart confirmé par `2136`.
+  Fin : fixture réintégrée, négation et opérations voisines concernées couvertes.
+- [ ] **05 — Affichage des Number (10 pts).** Comparer `NumberLiterals` au
+  comportement JS de référence et résoudre l'écart de `Show Number`.
+  Fin : oracle justifié, fixture réintégrée et cas limites pertinents validés.
+- [ ] **06 — Dérivations rejetées par le frontend (10 pts).** Comparer les quatre
+  fixtures exclues au fork et à la référence amont ; corriger les incompatibilités
+  confirmées. Fin : pour chaque cas, prise en charge validée ou limitation de
+  version établie par une reproduction comparative et documentée.
+- [ ] **07 — Couverture des bibliothèques (15 pts).** Ajouter une suite Go
+  autonome pour l'adaptation QuickCheck ; examiner les trois `pending` de
+  `spec`, compléter les lacunes réelles et expliciter les cas intentionnels.
+  Fin : contrôles utiles intégrés au parcours standard et exécutés avec succès.
+- [ ] **08 — Installation et validation finale (10 pts).** Vérifier le parcours
+  depuis des checkouts frais et exécuter `nix flake check` et `nix develop` dans
+  un environnement équipé. Fin : compilateurs JS et natif Go reconstruits sur
+  les mêmes sources, campagnes fixtures/modules et parité b8x validées ;
+  résultats, dépendances locales et limites documentés.
 
 ## Vérifications communes pour clôturer un lot
 
-- Responsabilités et noms relus ; code mort et doublons repérés traités.
-  Une revue peut confirmer qu'une partie est déjà conforme, avec justification.
-- Builds et tests ciblés adaptés aux fichiers modifiés réussis ; snapshots
-  stricts et exécution Go pour les comportements concernés.
-- Pour une modification de génération : mêmes entrées TAST, comparaison octet
-  par octet avec la référence puis entre natif séquentiel, natif parallèle et JS,
-  y compris l'inventaire des fichiers. Pour l'outillage : contrats de processus
-  et bootstrap réel. Pour le runtime : tests de comportement et de durée de vie.
-- Documentation des responsabilités et preuves de validation à jour ;
-  `git diff --check` propre.
+- Chaque correction de comportement dispose d'un test reproduisant le défaut
+  avant correction, puis réussi après correction.
+- Builds et tests ciblés adaptés aux fichiers modifiés réussis ; exécution Go
+  et snapshots stricts pour les comportements concernés.
+- Pour une modification de génération : mêmes entrées TAST, inventaires et
+  comparaison octet par octet entre JS, natif Go séquentiel et natif Go parallèle.
+  Les écarts avec la référence précédente doivent être expliqués par la correction.
+- Examiner les changements de Go généré avant de mettre à jour un snapshot,
+  puis le revérifier strictement. Lever une exclusion après validation effective.
+- Pour l'outillage : isolation, reprise, statuts et sous-processus vérifiés avec
+  les vrais outils. Pour le runtime : comportement et durée de vie vérifiés.
+- Preuves identifiées par plan et lot dans `docs/testing.md`, documentation à
+  jour et `git diff --check` propre.
 
-**Plan v1 clôturé.** Preuves et limites : [docs/testing.md](docs/testing.md).
-Les optimisations restent en pause ; toute reprise exige un gain mesuré significatif.
+**Prochaine passe : lot 01 — campagnes de tests reproductibles.**
+Les optimisations de performance restent en pause ; toute reprise exige un gain
+mesuré significatif.

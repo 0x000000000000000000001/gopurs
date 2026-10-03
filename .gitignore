@@ -11,8 +11,10 @@ purs_files.txt
 /tests/runner/
 bin/gopurs.js
 bin/gopurs-native
+bin/gopurs-rust
 /src/Gopurs/Runtime.js
 /src/Gopurs/Runtime.go
+/src/Gopurs/Runtime.rs
 .psci*
 psci*
 .purmeta/

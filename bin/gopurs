@@ -1,6 +1,19 @@
 #!/usr/bin/env bash
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
+if [[ "${GOPURS_RUST:-0}" == "1" && "${GOPURS_JS:-0}" == "1" ]]; then
+  echo "Error: select only one compiler host: GOPURS_RUST=1 or GOPURS_JS=1." >&2
+  exit 1
+fi
+
+if [[ "${GOPURS_RUST:-0}" == "1" ]]; then
+  if [[ ! -x "$DIR/gopurs-rust" ]]; then
+    echo "Error: Rust-hosted gopurs is not built. Run npm run build:rust in $(dirname "$DIR")." >&2
+    exit 1
+  fi
+  exec "$DIR/gopurs-rust" "$@"
+fi
+
 # Bounded-memory GC policy for the native compiler: fewer and longer GC cycles
 # while keeping a predictable peak (measured: ~-20% backend time, peak ~12 GiB).
 # Only applied when the caller has not chosen a policy and the machine can

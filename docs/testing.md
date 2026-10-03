@@ -1074,7 +1074,7 @@ compilations de référence sans sorties préexistantes ont recompilé chacune l
 438 modules, passant de 85 à **zéro avertissement et zéro erreur**. Un build
 incrémental silencieux ne suffit pas à établir ce résultat. Les preuves
 détaillées jusqu’au lot 12 restent consultables avec `git show baa1e071:todo.md`.
-Le [todo actuel](../todo.md) décrit le plan versionné de maintenabilité.
+Le [todo actuel](../todo.md) décrit le plan v2 de fiabilité et reproductibilité.
 
 Le contrôle `ArrayRoundtrip -c --keep-workspace` du 14 septembre confirme les
 28 assertions existantes et le snapshot inchangé. Le résultat incorrect du
@@ -1129,8 +1129,8 @@ README d'altbak, sans conclusion tirée de ce seul run.
 ## Limites de configuration et de couverture relevées au lot 1
 
 Cette section conserve le constat du **14 septembre 2026**. Les numéros de lots
-renvoient à l'ancien journal de maintenance ; la campagne du lot 15 du plan
-actuel donne le dernier état des fixtures et bibliothèques.
+renvoient à l'ancien journal de maintenance ; la campagne du lot 15 du plan v1
+donne le bilan consolidé des fixtures et bibliothèques au 2 octobre 2026.
 
 - **45 des 49 `bin/test` frères** nettoient aussi les `output`, `.spago` et
   `.cache` des autres `gopurs-*`. Les quatre nettoyages limités au paquet sont
@@ -1176,7 +1176,7 @@ ni une validation réseau/FS/Aff, ni un build sans caches de dépendances.
 ## Lot 2 — installation et configurations
 
 Cette section décrit la vague de maintenance du **14 septembre 2026**, antérieure
-au plan versionné actuel.
+au plan v1 de maintenabilité.
 
 Le [guide local](../README.md#develop-one-library-locally) décrit désormais le
 parcours de chaque bibliothèque. Le lot 2 a examiné les **404 fichiers de

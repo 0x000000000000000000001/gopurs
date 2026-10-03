@@ -9,6 +9,8 @@ import { corePackages, createWorkspace, prepareFixture } from "./test-workspace.
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const launcher = join(root, "bin/gopurs");
+const testRust = process.env.GOPURS_TEST_RUST === "1";
+const rustCandidate = process.env.GOPURS_TEST_RUST_BINARY;
 const environment = {
   ...process.env,
   PATH: join(root, "node_modules/.bin") + delimiter + process.env.PATH,
@@ -40,6 +42,7 @@ function generatedFiles(output, directory = output, files = {}) {
 
 test("CLI reports failures and preserves successful output across backends", async t => {
   assert.ok(existsSync(join(root, "bin/gopurs-native")), "run npm run build:native first");
+  if (testRust) assert.ok(existsSync(rustCandidate ?? join(root, "bin/gopurs-rust")), "run npm run build:rust first");
   const workspace = createWorkspace();
   t.after(() => rmSync(workspace, { recursive: true, force: true }));
   const fixture = prepareFixture(root, workspace,
@@ -65,17 +68,22 @@ test("CLI reports failures and preserves successful output across backends", asy
     { name: "JS", js: "1", jobs: "1", pipeline: "0" },
     { name: "native sequential", js: "0", jobs: "1", pipeline: "0" },
     { name: "native parallel", js: "0", jobs: "8", pipeline: "1" },
+    ...(testRust ? [
+      { name: "Rust sequential", js: "0", rust: "1", jobs: "1", pipeline: "0" },
+      { name: "Rust parallel", js: "0", rust: "1", jobs: "8", pipeline: "1" },
+    ] : []),
   ]) {
     const env = {
       ...environment,
       GOPURS_JS: mode.js,
+      GOPURS_RUST: mode.rust ?? "0",
       GOPURS_JOBS: mode.jobs,
       GOPURS_PBO_JOBS: mode.jobs,
       GOPURS_PREPARE_JOBS: mode.jobs,
       GOPURS_EMIT_JOBS: mode.jobs,
       GOPURS_PIPELINE: mode.pipeline,
     };
-    const compile = () => run(launcher, ["--main", "Main"], fixture.directory, env);
+    const compile = () => run(mode.rust && rustCandidate ? rustCandidate : launcher, ["--main", "Main"], fixture.directory, env);
 
     await t.test(`${mode.name}: success exits zero with byte-identical Go`, () => {
       reset();

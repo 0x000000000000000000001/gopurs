@@ -3,7 +3,7 @@
 <img height="160" alt="gopurs" src="https://github.com/user-attachments/assets/b013e7c3-fac6-4ee8-9d4c-f39ac8c2c921" />
 
 An experimental **PureScript-to-Go backend**. The compiler is written in
-PureScript, with JavaScript and native Go compiler builds, a shared Go parser
+PureScript, with JavaScript, native Go and native Rust compiler builds, a shared Go parser
 for FFI signatures, a Go runtime, and JavaScript build tooling.
 
 `gopurs` consumes the enriched TAST (`tcorefn`) produced by our
@@ -32,7 +32,7 @@ The [altbak README](https://github.com/0x000000000000000000001/altbak.pub#go)
 contains the reference results, workloads, and benchmark context. Compare
 changes against those baselines; results depend on the workload and toolchain.
 The sequential core campaign does not establish multicore scaling.
-Performance work is paused during this maintainability plan. Validation timings
+Performance work remains paused. Validation timings
 are not benchmark results; future optimization work requires meaningful measured gains.
 
 ## Getting started
@@ -92,6 +92,7 @@ matching the launcher you use:
 ```bash
 npm run build          # refresh bin/gopurs.js; run it with GOPURS_JS=1
 npm run build:native   # rebuild JS and bootstrap bin/gopurs-native (the default launcher)
+npm run build:rust     # bootstrap bin/gopurs-rust; select it with GOPURS_RUST=1
 ```
 
 ### Nix environment
@@ -223,6 +224,40 @@ JS generation are compared on frozen inputs; see [the validation record](docs/te
 for corpus sizes, execution campaigns and their limits. These checks establish
 functional results, not performance gains.
 
+### Rust-hosted gopurs
+
+```bash
+npm run build:rust
+GOPURS_RUST=1 ../gopurs/bin/gopurs --main Main # from a project with typed output/
+```
+
+`build:rust` compiles **gopurs itself** through the sibling `../../purust/purust`
+backend and Cargo. The resulting `bin/gopurs-rust` generates Go, just like the
+Go and JavaScript executables. It uses this repository's PureScript sources,
+`purescript-backend-optimizer-gopurs`, and the `purust-*` libraries for its host
+runtime. The same Go FFI parser is linked through a C archive into the executable.
+
+The bootstrap requires the npm dependencies, typed `purs`, Go with cgo and a C
+toolchain, Cargo, Purust and its sibling library ports. It builds threaded Rust
+with release O3 and no LTO, then compiles and executes a fresh Go/FFI smoke test
+before atomically installing the compiler. Failures retain the workspace/logs;
+`--keep-workspace` retains successful builds too.
+
+`GOPURS_PURS` overrides the frontend, `PURUST_DIR` the Purust checkout,
+`GOPURS_NATIVE_TMPDIR` the workspace parent, and `GOPURS_RUST_OUTPUT` the binary
+destination. `GOPURS_KEEP_WORKSPACE=1` also retains successful builds invoked by
+library runners. Cargo honors `CARGO_TARGET_DIR`. `PURUST_JS=1` selects the JavaScript
+Purust executable for this bootstrap; it has no effect on an installed gopurs
+compiler's host selection. `GOPURS_JS=1` and `GOPURS_RUST=1` are mutually exclusive.
+
+In `../gopurs-aff`, `GOPURS_RUST=1 ./bin/test` generates, builds and executes Go;
+adding `-c` rebuilds this Rust-hosted compiler first.
+
+With all three compiler executables built, `npm run test:rust` checks exact Go
+output and CLI failures in sequential/parallel modes, then compiles and executes
+the string, FFI, record-worker, owned-tree and JSON regression fixtures on each
+host. `GOPURS_TEST_KEEP_WORKSPACE=1` retains successful fixture workspaces.
+
 ### Compile and run an application
 
 For `workspace/hello`, create `src/Main.purs`:
@@ -297,7 +332,7 @@ quoted `--ffi` paths. There is no dedicated `--help` handler.
 The CLI exits with status **0** on successful compilation and **1** when the
 driver raises an error. After compilation cleanup, it reports the original
 message once on stderr, prefixed with `[gopurs] error:`. This contract applies
-to both the native launcher and `GOPURS_JS=1`.
+to all three compiler hosts selected by the launcher.
 
 ### Backend compilation timings
 
@@ -313,16 +348,17 @@ Optimization and emission also report the current module every 100 modules,
 starting with the first, so long builds show progress before the phase completes.
 
 `Gopurs.Metrics` uses a monotonic clock, following altbak's `Bench` approach:
-`performance.now()` under Node and `time.Since` in the native Go compiler.
-No flag is needed; both compiler builds report the same phases. These are real
+`performance.now()` under Node, `time.Since` in Go and `Instant` in Rust.
+No flag is needed; all three compiler builds report the same phases. These are real
 elapsed times for the current invocation, not warm-up or repeated benchmarks.
 
 The `bin/gopurs` launcher runs `bin/gopurs-native`, unless `GOPURS_JS=1` selects
-the Node bundle `bin/gopurs.js`. Both backends report identical phases, so
+the Node bundle `bin/gopurs.js` or `GOPURS_RUST=1` selects `bin/gopurs-rust`.
+All three hosts report identical phases, so
 `GOPURS_JS=1 ../gopurs/bin/gopurs --main Main` in a project with a typed `output`
 measures the JavaScript compiler with the same instrumentation as the native one.
-`npm run build` refreshes the bundle; `npm run build:native` refreshes both
-the bundle and executable.
+`npm run build` refreshes the bundle; `npm run build:native` refreshes the bundle
+and Go executable; `npm run build:rust` refreshes the Rust executable.
 
 TAST loading and decoding use eight workers by default in the native Go compiler;
 the JavaScript compiler defaults to one. Set `GOPURS_JOBS` from 1 to 64 to select
@@ -539,16 +575,17 @@ See [validation and remaining limits](docs/testing.md) for the scope of the chec
 ### Editing the Go runtime
 
 The canonical runtime source is [`runtime/runtime.go`](runtime/runtime.go).
-Edit that file, then rebuild both compiler versions:
+Edit that file, then rebuild the compiler hosts you use:
 
 ```bash
 npm run build:native
+npm run build:rust
 ```
 
 The build first runs `tools/embed-runtime.mjs`, which writes the ignored
-`src/Gopurs/Runtime.js` and `Runtime.go` FFI companions.
-`Gopurs.Runtime.runtimeGoCode` remains a PureScript `String`; the JS bundle and
-native executable embed the same constant. The installed
+`src/Gopurs/Runtime.js`, `Runtime.go` and `Runtime.rs` FFI companions.
+`Gopurs.Runtime.runtimeGoCode` remains a PureScript `String`; all three compiler
+hosts embed the same constant. The installed
 backend does not read the Go source at execution time, and the generated
 `output/gopurs_runtime/runtime.go` contains its exact text.
 
@@ -592,8 +629,9 @@ The compiler's 359 Node tests passed without skips, and 2,987 generated Go files
 from frozen b8x inputs are byte-identical across native sequential, native
 parallel and JS compilation. Nix execution remains unverified locally.
 See [the validation record](docs/testing.md) for the retained evidence, campaign
-retries and coverage limits. The [maintainability plan](todo.md) is complete:
-**15/15 lots, 100/100 points**. Performance work remains paused.
+retries and coverage limits. The [v1 maintainability plan](docs/testing.md#consolidation-finale--lot-15-2-octobre-2026)
+is complete: **15/15 lots, 100/100 points**. The [v2 reliability and reproducibility plan](todo.md)
+tracks the next eight lots. Performance work remains paused.
 
 ## License
 

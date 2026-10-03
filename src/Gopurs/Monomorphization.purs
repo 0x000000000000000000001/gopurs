@@ -23,6 +23,7 @@ import Gopurs.NativeRecordArgs (candidateToShare)
 import PureScript.Backend.Optimizer.CoreFn (Ann, Bind(..), Binding(..), ExprType(..), Ident(..), Module(..))
 import PureScript.Backend.Optimizer.CoreFn.Usage (invalidateSourceUsageModule)
 import PureScript.Backend.Optimizer.Monomorphize (InstantiationMap, collectInstantiations, monomorphize, transitiveCollect)
+import PureScript.Backend.Optimizer.NativeMaps (insertStringImpl, stringCompare)
 
 type GlobalAstMap = Map String (Binding Ann)
 
@@ -91,7 +92,7 @@ addBind moduleName bindings = case _ of
 
 addBinding :: String -> GlobalAstMap -> Binding Ann -> GlobalAstMap
 addBinding moduleName bindings binding@(Binding _ ident _) =
-  Map.insert (moduleName <> "." <> unwrap ident) binding bindings
+  insertStringImpl stringCompare (moduleName <> "." <> unwrap ident) binding bindings
 
 collectForeignGlobals :: List (Module Ann) -> Set String
 collectForeignGlobals = foldl addModuleForeignGlobals Set.empty

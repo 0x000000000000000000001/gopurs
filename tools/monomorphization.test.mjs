@@ -158,6 +158,27 @@ test('recursive groups are indexed and rewritten without reordering modules',()=
  assert.ok(specialized(result,'Generic.identity').length>0);
 });
 
+test('the global AST index remains compatible with generic maps across groups and key orderings',()=>{
+ const modules=['Z.Shared','A.Shared','A','M.é','M.𐐀','M.\uff23'].map((name,i)=>moduleOf(name,[
+  nonrec('same',int,literal(i)),
+  new C.Rec([binding('rec',int,literal(i+10)),binding('same',int,literal(i+20))]),
+  nonrec('samePrefix',int,literal(i+30)),
+ ]));
+ const entries=modules.flatMap(mod=>mod.decls.flatMap(group=>
+  (group instanceof C.NonRec?[group.value0]:group.value0).map(b=>[`${mod.name}.${b.value1}`,b])));
+ const reference=mapOf(entries);
+ let collected=false;
+ run(modules,Map.empty,ast=>_raw=>{
+  collected=true;
+  assert.deepEqual(Map.toUnfoldable(unfoldableArray)(ast),Map.toUnfoldable(unfoldableArray)(reference));
+  for(const [key] of entries)assert.deepEqual(Map.lookup(ordString)(key)(ast),Map.lookup(ordString)(key)(reference));
+  assert.deepEqual(Map.filterKeys(ordString)(key=>key.startsWith('A'))(ast),Map.filterKeys(ordString)(key=>key.startsWith('A'))(reference));
+  assert.deepEqual(Map.filter(ordString)(b=>b.value1==='same')(ast),Map.filter(ordString)(b=>b.value1==='same')(reference));
+  return Map.empty;
+ });
+ assert.equal(collected,true);
+});
+
 test('pure and Aff preparation produce identical specialized modules at every supported job bound',async()=>{
  const modules=program(),types=buildGlobalTypes(modules),input=list(modules);
  const expected=array(monomorphizeModules(types)(input));

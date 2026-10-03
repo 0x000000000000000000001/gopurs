@@ -21,25 +21,29 @@ function compilerPackage(root) {
   return result.join("\n").trimEnd() + "\n";
 }
 
-export function nativeWorkspaceConfig(root) {
+export function nativeWorkspaceConfig(root, { runtime = "go", purust = resolve(root, "../../purust/purust") } = {}) {
+  if (!["go", "rust"].includes(runtime)) throw new Error(`Unknown compiler runtime: ${runtime}`);
   const optimizer = resolve(root, "../../purescript-backend-optimizer-gopurs");
   if (!existsSync(join(optimizer, "spago.yaml"))) {
     throw new Error(`Missing local backend optimizer: ${optimizer}`);
   }
   const packages = new Map([["backend-optimizer", optimizer]]);
-  for (const name of readdirSync(dirname(root)).sort()) {
-    if (!name.startsWith("gopurs-")) continue;
-    const directory = join(dirname(root), name);
+  const family = runtime === "rust" ? "purust-" : "gopurs-";
+  const libraries = dirname(runtime === "rust" ? purust : root);
+  for (const name of readdirSync(libraries).sort()) {
+    if (!name.startsWith(family)) continue;
+    const directory = join(libraries, name);
     if (!statSync(directory, { throwIfNoEntry: false })?.isDirectory()) continue;
     const config = join(directory, "spago.yaml");
     if (!statSync(config, { throwIfNoEntry: false })?.isFile()) continue;
     // The checkout name supplies the registry override, even if its package is
     // prefixed: gopurs-node-process provides the node-process dependency.
-    const packageName = name.slice("gopurs-".length);
+    const packageName = name.slice(family.length);
     if (packages.has(packageName)) throw new Error(`Duplicate local package: ${packageName}`);
     packages.set(packageName, directory);
   }
-  // Native library overrides keep foreign types such as Map opaque in Go.
+  // Select the host runtime's library representations, retaining gopurs's PBO
+  // sources and Go code generator for either native executable.
   return compilerPackage(root) + "workspace:\n  packageSet:\n    registry: 77.10.1\n  extraPackages:\n" +
     [...packages].map(([name, directory]) => `    ${name}:\n      path: ${JSON.stringify(directory)}\n`).join("");
 }
