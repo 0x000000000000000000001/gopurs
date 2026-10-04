@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { cpSync, existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
-import { delimiter, join } from "node:path";
+import { basename, delimiter, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import { corePackages, createWorkspace, prepareFixture } from "./test-workspace.mjs";
@@ -43,10 +43,15 @@ test("Rust-hosted gopurs preserves Go sources and execution on native regression
     if (passed && process.env.GOPURS_TEST_KEEP_WORKSPACE !== "1") rmSync(workspace, { recursive: true, force: true });
     else console.log(`Rust host test workspace retained: ${workspace}`);
   });
-  const fixtures = ["CompilerHostStrings", "FFIIntegerReturns", "NativeRecordWorkers", "OwnedTrees", "JsonRecordPlan"];
-  for (const [index, name] of fixtures.entries()) {
+  const fixtures = [
+    ...["CompilerHostStrings", "FFIIntegerReturns", "NativeRecordWorkers", "OwnedTrees", "JsonRecordPlan"]
+      .map(name => join(root, "tests/passing", name + ".purs")),
+    join(root, "tests/host/CompilerHostNumbers.purs"),
+  ];
+  for (const [index, source] of fixtures.entries()) {
+    const name = basename(source, ".purs");
     await t.test(name, () => {
-      const fixture = prepareFixture(root, workspace, join(root, "tests/passing", name + ".purs"), index, packages);
+      const fixture = prepareFixture(root, workspace, source, index, packages);
       const directory = fixture.directory, output = join(directory, "output"), logs = join(directory, "logs");
       run("spago", ["build", "-q"], directory, environment, join(logs, "frontend"));
       const inputs = join(directory, "frozen-output");
