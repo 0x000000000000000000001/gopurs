@@ -4,7 +4,7 @@ import { monadIdentity } from '../output/Data.Identity/index.js';
 import { Cons, Nil } from '../output/Data.List.Types/index.js';
 import * as Map from '../output/Data.Map/index.js';
 import { Just, Nothing } from '../output/Data.Maybe/index.js';
-import { Left } from '../output/Data.Either/index.js';
+import { Left, Right } from '../output/Data.Either/index.js';
 import { ordString } from '../output/Data.Ord/index.js';
 import { Tuple } from '../output/Data.Tuple/index.js';
 import { unfoldableArray } from '../output/Data.Unfoldable/index.js';
@@ -12,7 +12,7 @@ import * as Aff from '../output/Effect.Aff/index.js';
 import * as C from '../output/PureScript.Backend.Optimizer.CoreFn/index.js';
 import * as PBO from '../output/PureScript.Backend.Optimizer.Monomorphize/index.js';
 import { buildGlobalTypes } from '../output/Gopurs.GlobalTypes/index.js';
-import { monomorphizeModules, monomorphizeModulesWith } from '../output/Gopurs.Monomorphization/index.js';
+import { monomorphizeModules, monomorphizeModulesWith, monomorphizeModulesWithDispatch } from '../output/Gopurs.Monomorphization/index.js';
 import { runPreparationJobs } from '../output/Gopurs.Preparation/index.js';
 
 const mapOf=entries=>entries.reduce((map,[key,value])=>Map.insert(ordString)(key)(value)(map),Map.empty);
@@ -185,6 +185,68 @@ test('pure and Aff preparation produce identical specialized modules at every su
  for(const jobs of [-1,0,1,3,8,99]){
   const collect=ast=>raw=>PBO.transitiveCollectWith(Aff.monadRecAff)(runPreparationJobs(jobs))(ast)(raw);
   const result=await runAff(monomorphizeModulesWith(Aff.monadAff)(collect)(types)(input));
+  assert.deepEqual(array(result),expected,`jobs=${jobs}`);
+ }
+});
+
+test('dispatch preparation matches the sequential rewrite with reversed per-module execution',async()=>{
+ const modules=program(),types=buildGlobalTypes(modules),input=list(modules);
+ const expected=array(monomorphizeModules(types)(input));
+ // The dispatcher evaluates tasks last-first but stores every result at its
+ // input index: scheduling order must not leak into the produced modules.
+ const dispatch=tasks=>Aff.makeAff(done=>()=>{
+  const results=[];
+  for(let index=tasks.length-1;index>=0;index-=1)results[index]=tasks[index](undefined);
+  done(new Right(results))();
+  return Aff.nonCanceler;
+ });
+ const collect=ast=>raw=>PBO.transitiveCollectWith(Aff.monadRecAff)(runPreparationJobs(2))(ast)(raw);
+ const result=await runAff(monomorphizeModulesWithDispatch(Aff.monadAff)(collect)(dispatch)(types)(input));
+ assert.deepEqual(array(result),expected);
+ assert.deepEqual(array(result).map(mod=>mod.name),modules.map(mod=>mod.name),'module order is preserved');
+});
+
+test('dispatch actions are deferred and re-running the same Aff recomputes every module',async()=>{
+ const modules=program(),types=buildGlobalTypes(modules),input=list(modules);
+ let dispatchCalls=0,evaluations=0;
+ const dispatch=tasks=>{
+  dispatchCalls+=1;
+  return Aff.makeAff(done=>()=>{
+   evaluations+=1;
+   done(new Right(tasks.map(task=>task(undefined))))();
+   return Aff.nonCanceler;
+  });
+ };
+ const collect=ast=>raw=>PBO.transitiveCollectWith(Aff.monadRecAff)(runPreparationJobs(1))(ast)(raw);
+ const aff=monomorphizeModulesWithDispatch(Aff.monadAff)(collect)(dispatch)(types)(input);
+ assert.equal(dispatchCalls,0,'constructing the action must not dispatch');
+ assert.equal(evaluations,0,'constructing the action must not evaluate a module');
+ const first=await runAff(aff);
+ assert.equal(dispatchCalls,1,'the dispatch runs once with the action');
+ assert.equal(evaluations,1,'every module is evaluated on the first run');
+ const second=await runAff(aff);
+ assert.equal(dispatchCalls,2,'re-running the action recomputes the rewrite');
+ assert.equal(evaluations,2,'no result is cached across runs');
+ assert.deepEqual(array(first),array(second));
+});
+
+test('dispatch failures surface when the action runs, not when it is built',async()=>{
+ const modules=program(),types=buildGlobalTypes(modules),input=list(modules);
+ const failure=new Error('dispatch failure');
+ const dispatch=()=>Aff.throwError(Aff.monadThrowAff)(failure);
+ const collect=ast=>raw=>PBO.transitiveCollectWith(Aff.monadRecAff)(runPreparationJobs(1))(ast)(raw);
+ let aff=null;
+ assert.doesNotThrow(()=>{aff=monomorphizeModulesWithDispatch(Aff.monadAff)(collect)(dispatch)(types)(input);});
+ assert.ok(aff,'the action is built without running the dispatch');
+ await assert.rejects(runAff(aff),error=>error===failure);
+});
+
+test('preparation dispatches the final rewrite through runPreparationJobs at every job bound',async()=>{
+ const modules=program(),types=buildGlobalTypes(modules),input=list(modules);
+ const expected=array(monomorphizeModules(types)(input));
+ for(const jobs of [-1,0,1,3,8,99]){
+  const collect=ast=>raw=>PBO.transitiveCollectWith(Aff.monadRecAff)(runPreparationJobs(jobs))(ast)(raw);
+  const result=await runAff(monomorphizeModulesWithDispatch(Aff.monadAff)(collect)(runPreparationJobs(jobs))(types)(input));
   assert.deepEqual(array(result),expected,`jobs=${jobs}`);
  }
 });

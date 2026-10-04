@@ -20,6 +20,7 @@ import Effect.Aff (Aff, attempt, bracket, forkAff, invincible, joinFiber, superv
 import Effect.Class (liftEffect)
 import Effect.Exception (error)
 import Effect.Ref as Ref
+import Gopurs.Metrics as Metrics
 import PureScript.Backend.Optimizer.CoreFn (ModuleName)
 
 type EmissionEntry a =
@@ -57,7 +58,7 @@ withEmitter
 withEmitter options emit produce =
   bracket create _.cancel \emitter -> supervise do
     produce emitter.enqueue
-    emitter.finish
+    Metrics.measure "emitter drain" \_ -> emitter.finish
   where
   create = liftEffect do
     if options.pipelined then createPipelinedEmitter options.jobs emit

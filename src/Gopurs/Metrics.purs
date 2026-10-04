@@ -1,4 +1,4 @@
-module Gopurs.Metrics (measure, setMemProfileRate) where
+module Gopurs.Metrics (measure, accumulate, setMemProfileRate) where
 
 import Prelude
 
@@ -8,6 +8,7 @@ import Effect (Effect)
 import Effect.Aff (Aff, attempt, throwError)
 import Effect.Class (liftEffect)
 import Effect.Console as Console
+import Effect.Ref as Ref
 
 -- Milliseconds from a monotonic clock; only the clock is host-specific.
 foreign import now :: Effect Number
@@ -29,4 +30,15 @@ measure label action = do
         Right _ -> ""
   liftEffect $ Console.error $ "[gopurs] " <> label <> ": "
     <> show (Int.round (ended - started)) <> " ms" <> status
+  either throwError pure result
+
+-- Sum batch wall times without logging from concurrent emission workers.
+-- This overlaps the producer clock in pipelined mode; it is not an additive
+-- component of backend total. Construction remains inside the timed action.
+accumulate :: forall a. Ref.Ref Number -> (Unit -> Aff a) -> Aff a
+accumulate counter action = do
+  started <- liftEffect now
+  result <- attempt (pure unit >>= action)
+  ended <- liftEffect now
+  liftEffect $ Ref.modify_ (\total -> total + (ended - started)) counter
   either throwError pure result

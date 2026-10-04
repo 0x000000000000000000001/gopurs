@@ -21,6 +21,7 @@ import Gopurs.Driver.Config (CompilerConfig)
 import Gopurs.Driver.Output (emitModule)
 import Gopurs.Driver.Prepare (PreparedModules)
 import Gopurs.Emission (EmissionEntry, withEmitter)
+import Gopurs.Metrics as Metrics
 import PureScript.Backend.Optimizer.Builder (BuildOptions, JobScheduler, ParallelStats, buildModules, buildModulesParallel)
 import PureScript.Backend.Optimizer.Convert (BackendModule)
 import PureScript.Backend.Optimizer.CoreFn (Ann, Module)
@@ -36,9 +37,10 @@ build config prepared = do
   globalFunctionsRef <- liftEffect (Ref.new Map.empty)
   attemptsRef <- liftEffect (Ref.new 0)
   codegenRef <- liftEffect (Ref.new 0)
+  emissionMillisRef <- liftEffect (Ref.new 0.0)
   let
     emitBatch :: Array OptimizedModule -> Aff Unit
-    emitBatch batch = do
+    emitBatch batch = Metrics.accumulate emissionMillisRef \_ -> do
       globalFunctions <- liftEffect (Ref.read globalFunctionsRef)
       let
         metadata = prepared.metadata { globalFunctions = globalFunctions }
@@ -74,10 +76,14 @@ build config prepared = do
       }
 
   withEmitter config.emission emitBatch \enqueue ->
-    runBuilder config.optimizerJobs (buildOptions enqueue) prepared.modules
+    Metrics.measure "PBO producer" \_ ->
+      runBuilder config.optimizerJobs (buildOptions enqueue) prepared.modules
 
   attempts <- liftEffect (Ref.read attemptsRef)
   codegen <- liftEffect (Ref.read codegenRef)
+  emissionMillis <- liftEffect (Ref.read emissionMillisRef)
+  liftEffect $ Console.error $
+    "[gopurs] generation + writes (cumulative batches): " <> show (Int.round emissionMillis) <> " ms"
   liftEffect $ Console.error $
     "[gopurs] pbo module attempts: " <> show attempts <> ", codegen: " <> show codegen
 

@@ -1,6 +1,7 @@
 module Gopurs.Monomorphization
   ( monomorphizeModules
   , monomorphizeModulesWith
+  , monomorphizeModulesWithDispatch
   , collectForeignForwarders
   ) where
 
@@ -10,6 +11,7 @@ import Data.Array as Array
 import Data.Foldable (foldl)
 import Data.Identity (Identity(..))
 import Data.List (List)
+import Data.List as List
 import Data.Map (Map)
 import Data.Map as Map
 import Data.Maybe (Maybe(..))
@@ -45,6 +47,9 @@ monomorphizeModules globalTypes inputModules = runIdentity $
 
 -- The sequential entry point and Aff preparation share the same barriers and
 -- final module ordering. Only the transitive collector is supplied by callers.
+-- The final per-module rewrite stays inside the same `m` action: the
+-- sequential lane evaluates one pure thunk at a time through
+-- `monomorphizeModulesWithDispatch`.
 monomorphizeModulesWith
   :: forall m
    . Monad m
@@ -52,7 +57,27 @@ monomorphizeModulesWith
   -> Map String ExprType
   -> List (Module Ann)
   -> m (List (Module Ann))
-monomorphizeModulesWith collectTransitive globalTypes inputModules = do
+monomorphizeModulesWith collectTransitive =
+  monomorphizeModulesWithDispatch collectTransitive sequentialDispatch
+  where
+  sequentialDispatch tasks = pure (map (_ $ unit) tasks)
+
+-- Same preparation pipeline as `monomorphizeModulesWith`, but the final
+-- per-module rewrite is handed to `dispatch`. Every task is a pure thunk over
+-- the same immutable `globalAstMap`/`instantiations` snapshots; a dispatcher
+-- may evaluate them concurrently, but must return results in input order and
+-- must not run a task before its `m` action is executed (`Aff` lanes rely on
+-- `defer`), so re-running the action recomputes every module. Errors surface
+-- through that action.
+monomorphizeModulesWithDispatch
+  :: forall m
+   . Monad m
+  => (GlobalAstMap -> InstantiationMap -> m InstantiationMap)
+  -> (Array (Unit -> Module Ann) -> m (Array (Module Ann)))
+  -> Map String ExprType
+  -> List (Module Ann)
+  -> m (List (Module Ann))
+monomorphizeModulesWithDispatch collectTransitive dispatch globalTypes inputModules = do
   let
     -- Source identities and usage proofs belong to the exported CoreFn.
     -- Specialization copies bindings; analyze the final IR afresh instead.
@@ -73,10 +98,17 @@ monomorphizeModulesWith collectTransitive globalTypes inputModules = do
   -- not filter its inputs: excluded definitions can expose eligible callees.
   transitiveInstantiations <- collectTransitive globalAstMap rawInstantiations
   let instantiations = Map.filterKeys (eligible globalTypes barriers) transitiveInstantiations
-  pure $ if Map.isEmpty instantiations then
-      modules
-    else
-      map (monomorphize globalAstMap instantiations) modules
+  if Map.isEmpty instantiations then
+    pure modules
+  else do
+    -- One independent task per module, in the caller's order. The dispatcher
+    -- owns scheduling only; it must return the array in this same order.
+    rewritten <- dispatch
+      ( map
+          (\coreFnModule _ -> monomorphize globalAstMap instantiations coreFnModule)
+          (Array.fromFoldable modules)
+      )
+    pure (List.fromFoldable rewritten)
 
 buildGlobalAstMap :: List (Module Ann) -> GlobalAstMap
 buildGlobalAstMap = foldl addModuleBindings Map.empty

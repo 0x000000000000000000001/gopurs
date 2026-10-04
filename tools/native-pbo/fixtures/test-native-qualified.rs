@@ -106,6 +106,12 @@ fn boxed(value: &Rc<Qualified>) -> Value {
     Value::Class(Rc::new(value.clone()))
 }
 
+// Generator-produced shared owner. The generic Ord instance must read it and
+// mixed carriers through the same `unwrap_class_shared` path.
+fn boxed_shared(value: &Rc<Qualified>) -> Value {
+    Value::ClassShared(value.clone())
+}
+
 fn rank(ordering: &Ordering) -> i8 {
     match ordering {
         Ordering::LT => -1,
@@ -178,7 +184,38 @@ fn main() {
             }
         }
     }
+    // ClassShared and mixed carriers on the generic instance: the same pairs
+    // must keep the PS oracle ordering through the shared reader.
+    let mut shared_pairs = 0usize;
+    for module_a in modules.iter().step_by(4) {
+        for module_b in modules.iter().step_by(5) {
+            for ident_a in idents.iter().step_by(6) {
+                for ident_b in idents.iter().step_by(7) {
+                    let a = qualified(module_a.as_deref(), ident_a);
+                    let b = qualified(module_b.as_deref(), ident_b);
+                    let label = format!("{module_a:?}:{ident_a:?} vs {module_b:?}:{ident_b:?}");
+                    let oracle_ordering = compare_oracle(a.clone(), b.clone());
+                    assert_eq!(
+                        rank(&generic_compare(boxed_shared(&a), boxed_shared(&b))),
+                        rank(&oracle_ordering),
+                        "shared generic Ord differs from the PS oracle: {label}"
+                    );
+                    assert_eq!(
+                        rank(&generic_compare(boxed(&a), boxed_shared(&b))),
+                        rank(&oracle_ordering),
+                        "mixed generic Ord differs from the PS oracle: {label}"
+                    );
+                    assert_eq!(
+                        rank(&generic_compare(boxed_shared(&a), boxed(&b))),
+                        rank(&oracle_ordering),
+                        "mixed generic Ord differs from the PS oracle: {label}"
+                    );
+                    shared_pairs += 1;
+                }
+            }
+        }
+    }
     println!(
-        "Native Qualified comparison: {pairs} pairs against the PS oracle, generated wrappers and generic Ord; ASCII, Unicode, NUL and surrogate module/ident keys passed"
+        "Native Qualified comparison: {pairs} pairs against the PS oracle, generated wrappers and generic Ord; {shared_pairs} shared/mixed-carrier pairs; ASCII, Unicode, NUL and surrogate module/ident keys passed"
     );
 }

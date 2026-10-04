@@ -108,3 +108,37 @@ the memo and directives cases that call their generated crates directly.
 When a corpus is present the orchestrator reads `modulePath` from the corefn
 modules and fails if the corpus names the Purust fork and no gopurs fork path.
 Pass `TAST_CORPUS` for a corpus outside the retained workspace.
+
+## Standalone text gate (`text.mjs`)
+
+Final gate for the native CoreFn JSON text decoder (not part of the eight-case
+`test-native-pbo.mjs` list, which keeps the older ABI and does not expect the
+cursor path for every case). Run it standalone:
+
+```sh
+node tools/native-pbo/text.mjs --workspace PATH --corpus PATH \
+  --expect-cases 4030 --expect-corpus 238 --log DIR
+```
+
+- Candidate FFI defaults to the live gopurs PBO
+  `src/PureScript/Backend/Optimizer/CoreFn/Json/Text.rs` through the shared
+  `pboSource` helper; `--text FILE` overrides it.
+- Reference: **full PureScript oracle**. The runner copies the generated
+  Json/Usage crates into `*Oracle` packages (Cargo paths rewritten absolute,
+  `JsonOracle` depending on `UsageOracle`), rewrites the FFI entry points
+  (`decodeAnnWithUsageImpl`/`decodeArrayImpl`/`decodeModuleImpl` to their PS
+  fallbacks, `decodeTypeTableImpl` to `decodeTypeTablePS`,
+  `validateSourceUsageModuleImpl` to its PS fallback) and drops the dead native
+  helpers. Static checks assert unique anchors, exact PS-only bodies, zero
+  native calls and no fallback loops.
+- Cases: frozen corpus + deterministic contract mutations + boundary matrix
+  (4030 with the gopurs-aff corpus). Errors compare the printed `Left` byte for
+  byte; successes compare a full structural dump (types, annotations, usage,
+  expressions, cold declarations); `valid-sharing` keeps the type-table alias
+  check.
+- Artifacts: `<log>/report.json`, the first-failure snapshot, and
+  `<log>/oracle-report.json` plus the rewritten oracle sources and original/
+  rewritten hashes.
+- The gate verifies `PurustJsonCursor::materialize` is present in the workspace
+  before building; JSON syntax errors keep the Argonaut parser as the byte
+  source of truth, and the fixture workspace is retained on failure.

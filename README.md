@@ -95,6 +95,12 @@ npm run build:native   # rebuild JS and bootstrap bin/gopurs-native (the default
 npm run build:rust     # bootstrap bin/gopurs-rust; select it with GOPURS_RUST=1
 ```
 
+`npm run build:rust` profiles the Rust host by default: it trains on the
+compiler's own Go-runtime modules and rebuilds with the merged profile. Set
+`GOPURS_RUST_PGO=0` for the plain O3 ThinLTO binary, and
+`GOPURS_KEEP_WORKSPACE=1` to retain logs, raw profiles and `pgo-profile.json`
+(see [docs/pgo.md](docs/pgo.md)).
+
 ### Nix environment
 
 A [Nix flake](flake.nix) supplies a development shell with the PureScript

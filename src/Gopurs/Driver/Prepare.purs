@@ -14,7 +14,7 @@ import Gopurs.CodegenState (CodegenMetadata)
 import Gopurs.ConstructorMetadata (buildConstructorTypes, collectElidedConstructors)
 import Gopurs.GlobalTypes (buildGlobalTypes)
 import Gopurs.Metrics as Metrics
-import Gopurs.Monomorphization (monomorphizeModulesWith)
+import Gopurs.Monomorphization (monomorphizeModulesWithDispatch)
 import Gopurs.Preparation (runPreparationJobs)
 import Gopurs.ReboxMetadata (buildReboxFieldIndex)
 import PureScript.Backend.Optimizer.App (coreFnModulesFromOutput, loadDirectives)
@@ -50,9 +50,14 @@ prepareModules jobs mainModule = do
       reboxFields = buildReboxFieldIndex ctorTypes classDeclsFields
       modulesWithClasses = map addClassDataDeclarations sortedModules
 
-    modules <- monomorphizeModulesWith
+    -- The final per-module rewrite joins the same preparation pool as the
+    -- transitive rounds: pure thunks over immutable snapshots, results in
+    -- caller order, evaluated only while this Aff runs (so the phase measure
+    -- below still covers it).
+    modules <- monomorphizeModulesWithDispatch
       (\ast instantiations -> Metrics.measure "transitive specializations" \_ ->
         transitiveCollectWith (runPreparationJobs jobs) ast instantiations)
+      (runPreparationJobs jobs)
       globalTypes
       modulesWithClasses
 
