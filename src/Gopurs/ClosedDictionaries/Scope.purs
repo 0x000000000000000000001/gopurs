@@ -2,7 +2,6 @@ module Gopurs.ClosedDictionaries.Scope (closedConstruction) where
 
 import Prelude
 
-import Data.Array.NonEmpty (toArray)
 import Data.Foldable (class Foldable, foldl)
 import Data.Maybe (Maybe(..))
 import Data.Set as Set
@@ -14,52 +13,29 @@ import PureScript.Backend.Optimizer.Syntax (BackendSyntax(..), Level(..))
 -- This proof concerns the entire proposed getter, including deferred bodies.
 -- Effects and recursive initialization cannot move into a shared construction.
 closedConstruction :: NeutralExpr -> Boolean
-closedConstruction expr = Set.isEmpty (freeVars expr)
-  && not (containsEffect expr)
-  && not (containsRecursion expr)
+closedConstruction = closedIn Set.empty
 
-containsEffect :: NeutralExpr -> Boolean
-containsEffect (NeutralExpr syn) = case syn of
-  PrimEffect _ -> true
-  EffectBind _ _ _ _ -> true
-  EffectPure _ -> true
-  EffectDefer _ -> true
-  UncurriedEffectApp _ _ -> true
-  UncurriedEffectAbs _ _ -> true
-  _ -> foldl (\found child -> found || containsEffect child) false syn
+-- Carry the lexical environment down instead of allocating and merging every
+-- subtree's free-variable set. Effect/recursive nodes reject the same proof
+-- immediately, including when nested inside a deferred function body.
+closedIn :: Set.Set String -> NeutralExpr -> Boolean
+closedIn bound (NeutralExpr syn) = case syn of
+  Local mbIdent lvl -> Set.member (localId mbIdent lvl) bound
+  Abs args body -> closedIn (bindArgs bound args) body
+  UncurriedAbs args body -> closedIn (bindArgs bound args) body
+  Let mbIdent lvl val body -> closedIn bound val
+    && closedIn (Set.insert (localId mbIdent lvl) bound) body
+  LetRec _ _ _ -> false
+  PrimEffect _ -> false
+  EffectBind _ _ _ _ -> false
+  EffectPure _ -> false
+  EffectDefer _ -> false
+  UncurriedEffectApp _ _ -> false
+  UncurriedEffectAbs _ _ -> false
+  _ -> foldl (\valid child -> valid && closedIn bound child) true syn
 
-containsRecursion :: NeutralExpr -> Boolean
-containsRecursion (NeutralExpr syn) = case syn of
-  LetRec _ _ _ -> true
-  _ -> foldl (\found child -> found || containsRecursion child) false syn
-
--- Only binding forms change scope; every other form unions its children's free
--- references. A let binds its body, never its own initializer.
-freeVars :: NeutralExpr -> Set.Set String
-freeVars (NeutralExpr syn) = case syn of
-  Local mbIdent lvl -> Set.singleton (localId mbIdent lvl)
-  Abs args body -> differenceBound args body
-  UncurriedAbs args body -> differenceBound args body
-  UncurriedEffectAbs args body -> differenceBound args body
-  LetRec lvl binds body ->
-    let
-      bindsSet = foldl (\acc (Tuple ident _) -> Set.insert (localId (Just ident) lvl) acc) Set.empty (toArray binds)
-      bodyVars = freeVars body
-      bindsVars = foldl (\acc (Tuple _ e) -> Set.union acc (freeVars e)) Set.empty (toArray binds)
-    in
-      Set.difference (Set.union bodyVars bindsVars) bindsSet
-  Let mbIdent lvl val body ->
-    Set.union (freeVars val) (Set.difference (freeVars body) (Set.singleton (localId mbIdent lvl)))
-  EffectBind mbIdent lvl val body ->
-    Set.union (freeVars val) (Set.difference (freeVars body) (Set.singleton (localId mbIdent lvl)))
-  _ -> foldl (\acc child -> Set.union acc (freeVars child)) Set.empty syn
-
-differenceBound :: forall f. Foldable f => f (Tuple (Maybe Ident) Level) -> NeutralExpr -> Set.Set String
-differenceBound args body =
-  let
-    argsSet = foldl (\acc (Tuple mbIdent lvl) -> Set.insert (localId mbIdent lvl) acc) Set.empty args
-  in
-    Set.difference (freeVars body) argsSet
+bindArgs :: forall f. Foldable f => Set.Set String -> f (Tuple (Maybe Ident) Level) -> Set.Set String
+bindArgs = foldl (\bound (Tuple mbIdent lvl) -> Set.insert (localId mbIdent lvl) bound)
 
 -- This proof uses the original source spelling and level. Go-sanitized names
 -- can collide and must not identify two different source references here.

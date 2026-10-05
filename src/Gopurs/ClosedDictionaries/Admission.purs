@@ -126,10 +126,10 @@ monomorphic = case _ of
 liftable :: CodegenMetadata -> NeutralExpr -> Maybe ExprType
 liftable metadata expr = do
   guard (isApplication expr)
-  guard (closedConstruction expr)
   ty <- annotatedType expr
   className <- dictionaryClass ty
   guard (Map.member className metadata.classDeclsFields)
+  guard (closedConstruction expr)
   pure ty
 
 isApplication :: NeutralExpr -> Boolean
