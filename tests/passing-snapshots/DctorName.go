@@ -150,7 +150,7 @@ func Call_Main_h(v_0_loop int64) int64 {
 	var __t0 int64
 	{
 		if (v_0) <= (int64(10)) {
-			__t0 = (v_0) * (int64(2))
+			__t0 = gopurs_runtime.IntMul(v_0, int64(2))
 			goto end_branch_0
 		} else {
 

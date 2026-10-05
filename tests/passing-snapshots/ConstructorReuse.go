@@ -1006,7 +1006,7 @@ func Call_Main_nodeText(color_0_loop string, key_1_loop int64, active_2_loop boo
 		__t0 = "false"
 	}
 end_branch_0:
-	return (((((((((color_0) + (":")) + (Data_Show_ShowIntImpl(key_1))) + (":")) + (__t0)) + ("[")) + (left_3)) + ("][")) + (right_4)) + ("]")
+	return gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(color_0, ":"), Data_Show_ShowIntImpl(key_1)), ":"), __t0), "["), left_3), "]["), right_4), "]")
 }
 
 func Call_Main_mixSources(v_0_loop *Constructor_Main_Node, v1_1_loop *Constructor_Main_Node) *Constructor_Main_Node {
@@ -1165,7 +1165,7 @@ func Call_Main_renderTagged(v_0_loop gopurs_runtime.Value) string {
 				__t2 = func() gopurs_runtime.Value { panic("Failed pattern match") }().StrVal()
 			}
 		end_branch_2:
-			__t6 = (__t2) + (Data_Show_ShowIntImpl((*Constructor_Main_First)(v_0.UnsafePtr).V1))
+			__t6 = gopurs_runtime.ConcatString(__t2, Data_Show_ShowIntImpl((*Constructor_Main_First)(v_0.UnsafePtr).V1))
 			goto end_branch_6
 		} else {
 
@@ -1198,7 +1198,7 @@ func Call_Main_renderTagged(v_0_loop gopurs_runtime.Value) string {
 				__t5 = func() gopurs_runtime.Value { panic("Failed pattern match") }().StrVal()
 			}
 		end_branch_5:
-			__t6 = (__t5) + (Data_Show_ShowIntImpl((*Constructor_Main_Second)(v_0.UnsafePtr).V1))
+			__t6 = gopurs_runtime.ConcatString(__t5, Data_Show_ShowIntImpl((*Constructor_Main_Second)(v_0.UnsafePtr).V1))
 			goto end_branch_6
 		} else {
 

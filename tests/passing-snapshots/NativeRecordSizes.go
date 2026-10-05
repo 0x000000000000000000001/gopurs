@@ -939,17 +939,17 @@ func Get_Main_main() gopurs_runtime.Value {
 			var __t49 string
 			{
 				if (gopurs_runtime.RecordGet(__local_var_12_12, "flag").IntVal) != (0) {
-					__t49 = ((((("true:") + (Data_Show_ShowNumberImpl(gopurs_runtime.RecordGet(__local_var_12_12, "number").FloatVal()))) + (":")) + (gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(__local_var_13_13, "child"), "label").StrVal())) + (":")) + (gopurs_runtime.Apply(Rebox_Main_1386611502_1469227923(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Main_showArray())).V0, gopurs_runtime.RecordGet(__local_var_13_13, "values")).StrVal())
+					__t49 = gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString("true:", Data_Show_ShowNumberImpl(gopurs_runtime.RecordGet(__local_var_12_12, "number").FloatVal())), ":"), gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(__local_var_13_13, "child"), "label").StrVal()), ":"), gopurs_runtime.Apply(Rebox_Main_1386611502_1469227923(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Main_showArray())).V0, gopurs_runtime.RecordGet(__local_var_13_13, "values")).StrVal())
 					goto end_branch_49
 				} else {
 
 				}
 			}
 			{
-				__t49 = ((((("false:") + (Data_Show_ShowNumberImpl(gopurs_runtime.RecordGet(__local_var_12_12, "number").FloatVal()))) + (":")) + (gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(__local_var_13_13, "child"), "label").StrVal())) + (":")) + (gopurs_runtime.Apply(Rebox_Main_1386611502_1469227923(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Main_showArray())).V0, gopurs_runtime.RecordGet(__local_var_13_13, "values")).StrVal())
+				__t49 = gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString("false:", Data_Show_ShowNumberImpl(gopurs_runtime.RecordGet(__local_var_12_12, "number").FloatVal())), ":"), gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(__local_var_13_13, "child"), "label").StrVal()), ":"), gopurs_runtime.Apply(Rebox_Main_1386611502_1469227923(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Main_showArray())).V0, gopurs_runtime.RecordGet(__local_var_13_13, "values")).StrVal())
 			}
 		end_branch_49:
-			__local_var_48_48 := gopurs_runtime.Apply(Call_Main_check("native field access", "5:true:-1.25:nested:[-3,0,7]", ((Data_Show_ShowIntImpl(gopurs_runtime.RecordGet(__local_var_12_12, "count").IntVal))+(":"))+(__t49)), gopurs_runtime.Value{})
+			__local_var_48_48 := gopurs_runtime.Apply(Call_Main_check("native field access", "5:true:-1.25:nested:[-3,0,7]", gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(Data_Show_ShowIntImpl(gopurs_runtime.RecordGet(__local_var_12_12, "count").IntVal), ":"), __t49)), gopurs_runtime.Value{})
 			_ = __local_var_48_48
 			__local_var_49_50 := gopurs_runtime.Apply(Call_Main_check("nested update", "{child={count=i:2,label=s:changed},count=i:5,label=s:four,values=[i:-3,i:0,i:7]}", gopurs_runtime.Apply(Get_Main_nativeMap(), func() gopurs_runtime.Value {
 				orig := func() struct {
@@ -1072,7 +1072,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				return func() gopurs_runtime.Value {
 					arr := func() []string {
 						arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), v_54, func() gopurs_runtime.Value {
-							arr := []string{("consume:") + (Call_Main_shapeFour(func() struct {
+							arr := []string{gopurs_runtime.ConcatString("consume:", Call_Main_shapeFour(func() struct {
 								child struct {
 									count int64
 									label string
@@ -1177,7 +1177,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				return unboxed
 			}(), []string{"before", "produce", "consume:compact4:child|count|label|values", "after"}}), gopurs_runtime.Value{})
 			_ = __local_var_57_58
-			__local_var_58_59 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(("effect order: ")+(gopurs_runtime.Apply(Rebox_Main_1386611502_1953100407(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Main_showArray1())).V0, __local_var_56_57).StrVal()))), gopurs_runtime.Value{})
+			__local_var_58_59 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.ConcatString("effect order: ", gopurs_runtime.Apply(Rebox_Main_1386611502_1953100407(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Main_showArray1())).V0, __local_var_56_57).StrVal()))), gopurs_runtime.Value{})
 			_ = __local_var_58_59
 			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
 		})
@@ -1449,7 +1449,7 @@ func Call_Main_check(label_0_loop string, expected_1_loop string, actual_2_loop 
 		_ = __local_var_3_0
 		__local_var_4_1 := gopurs_runtime.Apply(__local_var_3_0, gopurs_runtime.Value{})
 		_ = __local_var_4_1
-		return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(((label_0)+(": "))+(actual_2))), gopurs_runtime.Value{})
+		return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(label_0, ": "), actual_2))), gopurs_runtime.Value{})
 	})
 }
 

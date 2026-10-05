@@ -54,7 +54,7 @@ partialTCO:
 				{
 					_dollar___unused_0_loop = gopurs_runtime.Value{}
 					v_1_loop = true
-					v1_2_loop = (v1_2) - (int64(1))
+					v1_2_loop = gopurs_runtime.IntSub(v1_2, int64(1))
 					continue partialTCO
 					__t0 = func() int64 { panic("unreachable") }()
 				}

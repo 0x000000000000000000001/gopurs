@@ -106,7 +106,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				expected *Constructor_Data_Maybe_Just[int64]
 			}{Rebox_Main_3094389156_1170268447(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](gopurs_runtime.Apply(__local_var_4_4, gopurs_runtime.Int(int64(-1))))), Rebox_Main_3094389156_1170268447(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer((*Constructor_Data_Maybe_Just[gopurs_runtime.Value])(nil))}))}), gopurs_runtime.Value{})
 			_ = __local_var_7_7
-			__local_var_8_8 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), Call_Main_partialMaybe(-(__local_var_2_2.IntVal))), gopurs_runtime.Value{})
+			__local_var_8_8 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), Call_Main_partialMaybe(gopurs_runtime.IntNegate(__local_var_2_2.IntVal))), gopurs_runtime.Value{})
 			_ = __local_var_8_8
 			__local_var_9_9 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_8_8), gopurs_runtime.Value{})
 			_ = __local_var_9_9
@@ -161,7 +161,7 @@ func Call_Main_addMaybe(left_0_loop int64, right_1_loop int64) struct {
 			_v := struct {
 				V0 gopurs_runtime.Value
 				V1 bool
-			}{gopurs_runtime.Int((left_0) + (right_1)), true}
+			}{gopurs_runtime.Int(gopurs_runtime.IntAdd(left_0, right_1)), true}
 			if _v.V1 {
 				return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: _v.V0})}
 			}
@@ -189,7 +189,7 @@ func Call_Main_partialMaybe(left_0_loop int64) gopurs_runtime.Value {
 	var __t0 gopurs_runtime.Value
 	{
 		if (left_0) < (int64(0)) {
-			__t0 = gopurs_runtime.Apply(Get_Main_addMaybe(), gopurs_runtime.Int(-(left_0)))
+			__t0 = gopurs_runtime.Apply(Get_Main_addMaybe(), gopurs_runtime.Int(gopurs_runtime.IntNegate(left_0)))
 			goto end_branch_0
 		} else {
 

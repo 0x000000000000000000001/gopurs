@@ -536,7 +536,7 @@ func Call_Main_staged(calls_0_loop gopurs_runtime.Value, values_1_loop []int64) 
 	_ = traverseEither_arg_1
 	traverseEither_arg_4 := gopurs_runtime.Func(func(i_2 gopurs_runtime.Value) gopurs_runtime.Value {
 		// TAST (Let): captured_3_2 shape=App(Var) bindingType=Int
-		captured_3_2 := Call_Main_track(calls_0, (int64(100))+(i_2.IntVal), i_2.IntVal)
+		captured_3_2 := Call_Main_track(calls_0, gopurs_runtime.IntAdd(int64(100), i_2.IntVal), i_2.IntVal)
 		_ = captured_3_2
 		return gopurs_runtime.Func(func(value_4 gopurs_runtime.Value) gopurs_runtime.Value {
 			var __t3 struct {
@@ -836,7 +836,7 @@ func Call_Main_partial(calls_0_loop gopurs_runtime.Value, offset_1_loop int64) g
 		}{gopurs_runtime.Value{}, struct {
 			index int64
 			value int64
-		}{i_3, (value_4.IntVal) + (captured_2_0)}, true}
+		}{i_3, gopurs_runtime.IntAdd(value_4.IntVal, captured_2_0)}, true}
 	}
 	_ = traverseEither_arg_3
 	_ = traverseEither_arg_3

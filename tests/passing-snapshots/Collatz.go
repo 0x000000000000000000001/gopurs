@@ -60,8 +60,8 @@ func Call_Main_collatz(n_0_loop int64) int64 {
 		}), gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 			__local_var_4_6 := (*(count_3_2.PtrVal().(*interface{}))).(gopurs_runtime.Value)
 			_ = __local_var_4_6
-			*(count_3_2.PtrVal().(*interface{})) = gopurs_runtime.Int((__local_var_4_6.IntVal) + (int64(1)))
-			_dollar___unused_4_5 := gopurs_runtime.Int((__local_var_4_6.IntVal) + (int64(1)))
+			*(count_3_2.PtrVal().(*interface{})) = gopurs_runtime.Int(gopurs_runtime.IntAdd(__local_var_4_6.IntVal, int64(1)))
+			_dollar___unused_4_5 := gopurs_runtime.Int(gopurs_runtime.IntAdd(__local_var_4_6.IntVal, int64(1)))
 			_ = _dollar___unused_4_5
 			m_5_7 := (*(r_2_1.PtrVal().(*interface{}))).(gopurs_runtime.Value)
 			_ = m_5_7
@@ -75,7 +75,7 @@ func Call_Main_collatz(n_0_loop int64) int64 {
 				}
 			}
 			{
-				__t9 = ((int64(3)) * (m_5_7.IntVal)) + (int64(1))
+				__t9 = gopurs_runtime.IntAdd(gopurs_runtime.IntMul(int64(3), m_5_7.IntVal), int64(1))
 			}
 		end_branch_9:
 			// TAST (Let): __local_var_6_8 shape=Branch(Other, def=Other) bindingType=Any

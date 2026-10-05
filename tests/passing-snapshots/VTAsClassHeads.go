@@ -1435,7 +1435,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			var __t3 gopurs_runtime.Value
 			{
 				if (gopurs_runtime.Int(int64(len(__local_var_2_2))).IntVal) > (int64(0)) {
-					__t3 = gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(("Errors...")+(gopurs_runtime.Apply2(Call_Data_Foldable_intercalate(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()), Rebox_Main_1950344881_1201789390(Rebox_Main_1201789390_1950344881(gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid[gopurs_runtime.Value]](Get_Data_Monoid_monoidString())))), gopurs_runtime.Str("\x0a"), func() gopurs_runtime.Value {
+					__t3 = gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.ConcatString("Errors...", gopurs_runtime.Apply2(Call_Data_Foldable_intercalate(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()), Rebox_Main_1950344881_1201789390(Rebox_Main_1201789390_1950344881(gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid[gopurs_runtime.Value]](Get_Data_Monoid_monoidString())))), gopurs_runtime.Str("\x0a"), func() gopurs_runtime.Value {
 						arr := __local_var_2_2
 						boxed := make([]gopurs_runtime.Value, len(arr))
 						for i, v := range arr {

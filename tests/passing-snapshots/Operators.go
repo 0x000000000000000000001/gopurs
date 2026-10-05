@@ -248,7 +248,7 @@ var once_Main_test7 sync.Once
 
 func Get_Main_test7() gopurs_runtime.Value {
 	once_Main_test7.Do(func() {
-		cache_Main_test7 = gopurs_runtime.Str(("Hello") + ("World!"))
+		cache_Main_test7 = gopurs_runtime.Str(gopurs_runtime.ConcatString("Hello", "World!"))
 	})
 	return cache_Main_test7
 }
@@ -432,7 +432,7 @@ func Call_Main_op3(s1_0_loop string, s2_1_loop string) string {
 	_ = s1_0
 	var s2_1 string = s2_1_loop
 	_ = s2_1
-	return (s1_0) + (s2_1)
+	return gopurs_runtime.ConcatString(s1_0, s2_1)
 }
 
 func Call_Main_op2(x_0_loop float64, y_1_loop float64) float64 {

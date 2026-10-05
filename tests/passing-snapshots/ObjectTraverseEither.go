@@ -449,7 +449,7 @@ func Call_Main_run(calls_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 				V0 gopurs_runtime.Value
 				V1 gopurs_runtime.Value
 				V2 bool
-			}{gopurs_runtime.Value{}, gopurs_runtime.Int((observed_3_2) * (int64(2))), true}
+			}{gopurs_runtime.Value{}, gopurs_runtime.Int(gopurs_runtime.IntMul(observed_3_2, int64(2))), true}
 		}
 	end_branch_3:
 		return func() gopurs_runtime.Value {
@@ -534,7 +534,7 @@ func Call_Main_partial(calls_0_loop gopurs_runtime.Value, offset_1_loop int64) g
 				V0 gopurs_runtime.Value
 				V1 gopurs_runtime.Value
 				V2 bool
-			}{gopurs_runtime.Value{}, gopurs_runtime.Int((value_4.IntVal) + (captured_2_0)), true}
+			}{gopurs_runtime.Value{}, gopurs_runtime.Int(gopurs_runtime.IntAdd(value_4.IntVal, captured_2_0)), true}
 			if _v.V2 {
 				return gopurs_runtime.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V1})}
 			}

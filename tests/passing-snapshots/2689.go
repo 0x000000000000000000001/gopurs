@@ -52,7 +52,7 @@ func Get_Main_sumTCObug_prime_() gopurs_runtime.Value {
 					}
 					{
 						v_1_loop = gopurs_runtime.Func(func(a_3 gopurs_runtime.Value) gopurs_runtime.Value {
-							return gopurs_runtime.Int((v1_2) + (a_3.IntVal))
+							return gopurs_runtime.Int(gopurs_runtime.IntAdd(v1_2, a_3.IntVal))
 						})
 						v1_2_loop = int64(0)
 						continue go__2680466838_0_0_0
@@ -88,7 +88,7 @@ func Get_Main_sumTCObug_prime_() gopurs_runtime.Value {
 					}
 					{
 						__t3 = Call_local_Main_go__2680466838_0_0_0(gopurs_runtime.Func(func(a_3 gopurs_runtime.Value) gopurs_runtime.Value {
-							return gopurs_runtime.Int((v1_2) + (a_3.IntVal))
+							return gopurs_runtime.Int(gopurs_runtime.IntAdd(v1_2, a_3.IntVal))
 						}), int64(0))
 					}
 				end_branch_3:
@@ -143,7 +143,7 @@ func Get_Main_sumTCObug() gopurs_runtime.Value {
 					}
 					{
 						v_1_loop = gopurs_runtime.Func(func(a_3 gopurs_runtime.Value) gopurs_runtime.Value {
-							return gopurs_runtime.Int((v1_2) + (a_3.IntVal))
+							return gopurs_runtime.Int(gopurs_runtime.IntAdd(v1_2, a_3.IntVal))
 						})
 						v1_2_loop = int64(0)
 						continue go__2680466838_0_0_2
@@ -179,7 +179,7 @@ func Get_Main_sumTCObug() gopurs_runtime.Value {
 					}
 					{
 						__t3 = Call_local_Main_go__2680466838_0_0_2(gopurs_runtime.Func(func(a_3 gopurs_runtime.Value) gopurs_runtime.Value {
-							return gopurs_runtime.Int((v1_2) + (a_3.IntVal))
+							return gopurs_runtime.Int(gopurs_runtime.IntAdd(v1_2, a_3.IntVal))
 						}), int64(0))
 					}
 				end_branch_3:
@@ -270,7 +270,7 @@ func Get_Main_main() gopurs_runtime.Value {
 					}
 					{
 						v_2_loop = gopurs_runtime.Func(func(a_4 gopurs_runtime.Value) gopurs_runtime.Value {
-							return gopurs_runtime.Int((v1_3) + (a_4.IntVal))
+							return gopurs_runtime.Int(gopurs_runtime.IntAdd(v1_3, a_4.IntVal))
 						})
 						v1_3_loop = int64(0)
 						continue go__2680466838_1_1_8
@@ -306,7 +306,7 @@ func Get_Main_main() gopurs_runtime.Value {
 					}
 					{
 						__t4 = Call_local_Main_go__2680466838_1_1_8(gopurs_runtime.Func(func(a_4 gopurs_runtime.Value) gopurs_runtime.Value {
-							return gopurs_runtime.Int((v1_3) + (a_4.IntVal))
+							return gopurs_runtime.Int(gopurs_runtime.IntAdd(v1_3, a_4.IntVal))
 						}), int64(0))
 					}
 				end_branch_4:
@@ -352,7 +352,7 @@ func Get_Main_main() gopurs_runtime.Value {
 					}
 					{
 						v_4_loop = gopurs_runtime.Func(func(a_6 gopurs_runtime.Value) gopurs_runtime.Value {
-							return gopurs_runtime.Int((v1_5) + (a_6.IntVal))
+							return gopurs_runtime.Int(gopurs_runtime.IntAdd(v1_5, a_6.IntVal))
 						})
 						v1_5_loop = int64(0)
 						continue go__2680466838_3_6_10
@@ -388,7 +388,7 @@ func Get_Main_main() gopurs_runtime.Value {
 					}
 					{
 						__t9 = Call_local_Main_go__2680466838_3_6_10(gopurs_runtime.Func(func(a_6 gopurs_runtime.Value) gopurs_runtime.Value {
-							return gopurs_runtime.Int((v1_5) + (a_6.IntVal))
+							return gopurs_runtime.Int(gopurs_runtime.IntAdd(v1_5, a_6.IntVal))
 						}), int64(0))
 					}
 				end_branch_9:
@@ -479,14 +479,14 @@ func Call_Main_count(p_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 					arrayUnsafe_index_3 := int64(0)
 					_ = arrayUnsafe_index_3
 					if (gopurs_runtime.Apply(p_0, (arrayUnsafe_source_2)[arrayUnsafe_index_3]).IntVal) != (0) {
-						__t4 = (v_2) + (int64(1))
+						__t4 = gopurs_runtime.IntAdd(v_2, int64(1))
 						goto end_branch_4
 					} else {
 
 					}
 				}
 				{
-					__t4 = (v_2) + (int64(0))
+					__t4 = gopurs_runtime.IntAdd(v_2, int64(0))
 				}
 			end_branch_4:
 				v_2_loop = __t4
@@ -532,14 +532,14 @@ func Call_Main_count(p_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 					arrayUnsafe_index_7 := int64(0)
 					_ = arrayUnsafe_index_7
 					if (gopurs_runtime.Apply(p_0, (arrayUnsafe_source_6)[arrayUnsafe_index_7]).IntVal) != (0) {
-						__t8 = (v_2) + (int64(1))
+						__t8 = gopurs_runtime.IntAdd(v_2, int64(1))
 						goto end_branch_8
 					} else {
 
 					}
 				}
 				{
-					__t8 = (v_2) + (int64(0))
+					__t8 = gopurs_runtime.IntAdd(v_2, int64(0))
 				}
 			end_branch_8:
 				__t9 = Call_local_Main_count_prime___1086705844_1_0_4(__t8, (*(*[]gopurs_runtime.Value)((gopurs_runtime.UncurriedApp3(Get_Data_Array_sliceImpl(), gopurs_runtime.Int(int64(1)), gopurs_runtime.Int(int64(len(v1_3))), gopurs_runtime.Array(v1_3))).UnsafePtr)))
@@ -603,14 +603,14 @@ count__3963975448:
 						arrayUnsafe_index_3 := int64(0)
 						_ = arrayUnsafe_index_3
 						if (gopurs_runtime.Apply(p_0, gopurs_runtime.Int(gopurs_runtime.Int((arrayUnsafe_source_2)[arrayUnsafe_index_3]).IntVal)).IntVal) != (0) {
-							__t4 = (v_3) + (int64(1))
+							__t4 = gopurs_runtime.IntAdd(v_3, int64(1))
 							goto end_branch_4
 						} else {
 
 						}
 					}
 					{
-						__t4 = (v_3) + (int64(0))
+						__t4 = gopurs_runtime.IntAdd(v_3, int64(0))
 					}
 				end_branch_4:
 					v_3_loop = __t4
@@ -677,14 +677,14 @@ count__3963975448:
 						arrayUnsafe_index_7 := int64(0)
 						_ = arrayUnsafe_index_7
 						if (gopurs_runtime.Apply(p_0, gopurs_runtime.Int(gopurs_runtime.Int((arrayUnsafe_source_6)[arrayUnsafe_index_7]).IntVal)).IntVal) != (0) {
-							__t8 = (v_3) + (int64(1))
+							__t8 = gopurs_runtime.IntAdd(v_3, int64(1))
 							goto end_branch_8
 						} else {
 
 						}
 					}
 					{
-						__t8 = (v_3) + (int64(0))
+						__t8 = gopurs_runtime.IntAdd(v_3, int64(0))
 					}
 				end_branch_8:
 					__t9 = Call_local_Main_count_prime___4172905617_2_0_6(__t8, func() []int64 {

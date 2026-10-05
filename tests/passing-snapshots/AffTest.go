@@ -163,7 +163,7 @@ loop:
 		}
 		{
 			__t0 = gopurs_runtime.Apply2(Get_Effect_Aff__bind(), v1_1, gopurs_runtime.Func(func(_dollar___unused_2 gopurs_runtime.Value) gopurs_runtime.Value {
-				return Call_Main_loop((v_0)-(int64(1)), v1_1)
+				return Call_Main_loop(gopurs_runtime.IntSub(v_0, int64(1)), v1_1)
 			}))
 		}
 	end_branch_0:
@@ -176,7 +176,7 @@ func Call_Main_incrementTask(ref_0_loop gopurs_runtime.Value) gopurs_runtime.Val
 	_ = ref_0
 	return gopurs_runtime.Apply2(Get_Effect_Aff__bind(), gopurs_runtime.UncurriedApp2(Get_Effect_Aff__delay(), Get_Data_Either_Right(), gopurs_runtime.Float(1.0)), gopurs_runtime.Func(func(_dollar___unused_1 gopurs_runtime.Value) gopurs_runtime.Value {
 		return gopurs_runtime.Apply(Get_Effect_Aff__liftEffect(), gopurs_runtime.Apply2(Get_Effect_Ref_modify_(), gopurs_runtime.Func(func(x_2 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Int((x_2.IntVal) + (int64(1)))
+			return gopurs_runtime.Int(gopurs_runtime.IntAdd(x_2.IntVal, int64(1)))
 		}), ref_0))
 	}))
 }

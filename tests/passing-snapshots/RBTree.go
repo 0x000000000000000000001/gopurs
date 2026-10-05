@@ -2225,7 +2225,7 @@ depth:
 					__t2 = __local_var_2_1
 				}
 			end_branch_2:
-				__t3 = (int64(1)) + (__t2)
+				__t3 = gopurs_runtime.IntAdd(int64(1), __t2)
 				goto end_branch_3
 			} else {
 
@@ -3685,7 +3685,7 @@ buildTree:
 			}
 		}
 		{
-			v_0_loop = (v_0) - (int64(1))
+			v_0_loop = gopurs_runtime.IntSub(v_0, int64(1))
 			v1_1_loop = Call_Main_insert(v_0, v1_1)
 			continue buildTree
 			__t0 = func() *Constructor_Main_T { panic("unreachable") }()

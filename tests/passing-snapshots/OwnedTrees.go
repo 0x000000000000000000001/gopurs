@@ -2759,7 +2759,7 @@ render:
 					__t2 = func() gopurs_runtime.Value { panic("Failed pattern match") }().StrVal()
 				}
 			end_branch_2:
-				__t3 = ((((((__t2) + (Data_Show_ShowIntImpl((v_0).V2))) + ("(")) + (Call_Main_render((v_0).V1))) + (")(")) + (Call_Main_render((v_0).V3))) + (")")
+				__t3 = gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(__t2, Data_Show_ShowIntImpl((v_0).V2)), "("), Call_Main_render((v_0).V1)), ")("), Call_Main_render((v_0).V3)), ")")
 				goto end_branch_3
 			} else {
 
@@ -4208,9 +4208,9 @@ build:
 			}
 		}
 		{
-			v_0_loop = (v_0) - (int64(1))
+			v_0_loop = gopurs_runtime.IntSub(v_0, int64(1))
 			v1_1_loop = v1_1
-			v2_2_loop = Call_Main_put((v_0)*(v1_1), v2_2)
+			v2_2_loop = Call_Main_put(gopurs_runtime.IntMul(v_0, v1_1), v2_2)
 			continue build
 			__t0 = func() *Constructor_Main_Branch { panic("unreachable") }()
 		}
@@ -4245,8 +4245,8 @@ mixed:
 			}
 		}
 		{
-			v_0_loop = (v_0) - (int64(1))
-			v1_1_loop = Call_Main_put(gopurs_runtime.IntMod((v_0)*(int64(37)), int64(127)), v1_1)
+			v_0_loop = gopurs_runtime.IntSub(v_0, int64(1))
+			v1_1_loop = Call_Main_put(gopurs_runtime.IntMod(gopurs_runtime.IntMul(v_0, int64(37)), int64(127)), v1_1)
 			continue mixed
 			__t0 = func() *Constructor_Main_Branch { panic("unreachable") }()
 		}
@@ -4301,7 +4301,7 @@ audit:
 					var __t_tag_2 uint32 = (v2_2).V0
 					_ = __t_tag_2
 					if uint32(__t_tag_2) == 1685833310 {
-						__t4 = (l_4_1.blackHeight) + (int64(1))
+						__t4 = gopurs_runtime.IntAdd(l_4_1.blackHeight, int64(1))
 						goto end_branch_4
 					} else {
 
@@ -4311,7 +4311,7 @@ audit:
 					var __t_tag_3 uint32 = (v2_2).V0
 					_ = __t_tag_3
 					if uint32(__t_tag_3) == 2247809753 {
-						__t4 = (l_4_1.blackHeight) + (int64(0))
+						__t4 = gopurs_runtime.IntAdd(l_4_1.blackHeight, int64(0))
 						goto end_branch_4
 					} else {
 
@@ -4385,7 +4385,7 @@ audit:
 					blackHeight int64
 					size        int64
 					valid       bool
-				}{__t4, ((l_4_1.size) + (r_3_0.size)) + (int64(1)), __t_and_19}
+				}{__t4, gopurs_runtime.IntAdd(gopurs_runtime.IntAdd(l_4_1.size, r_3_0.size), int64(1)), __t_and_19}
 				goto end_branch_20
 			} else {
 
@@ -4477,9 +4477,9 @@ snapshots:
 				_ = __local_var_7_5
 				__local_var_8_6 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_7_5), gopurs_runtime.Value{})
 				_ = __local_var_8_6
-				__local_var_9_7 := gopurs_runtime.Apply(Call_Main_check((int64(33))-(v_0), gopurs_runtime.CoerceToStruct[Constructor_Main_Branch](__local_var_8_6)), gopurs_runtime.Value{})
+				__local_var_9_7 := gopurs_runtime.Apply(Call_Main_check(gopurs_runtime.IntSub(int64(33), v_0), gopurs_runtime.CoerceToStruct[Constructor_Main_Branch](__local_var_8_6)), gopurs_runtime.Value{})
 				_ = __local_var_9_7
-				__local_var_10_8 := gopurs_runtime.Apply(Call_Main_snapshots((v_0)-(int64(1)), gopurs_runtime.CoerceToStruct[Constructor_Main_Branch](__local_var_8_6)), gopurs_runtime.Value{})
+				__local_var_10_8 := gopurs_runtime.Apply(Call_Main_snapshots(gopurs_runtime.IntSub(v_0, int64(1)), gopurs_runtime.CoerceToStruct[Constructor_Main_Branch](__local_var_8_6)), gopurs_runtime.Value{})
 				_ = __local_var_10_8
 				return gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("", struct {
 					actual   string

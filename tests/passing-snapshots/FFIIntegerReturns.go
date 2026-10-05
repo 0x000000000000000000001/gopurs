@@ -191,7 +191,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			}{(Main_DynamicBoolean_nativeWorker(true).IntVal) != (0), true}), gopurs_runtime.Value{})
 			_ = __local_var_23_23
 			__local_var_24_24 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Func(func(value_24 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Int(((value_24.IntVal) * (value_24.IntVal)) + (int64(1)))
+				return gopurs_runtime.Int(gopurs_runtime.IntAdd(gopurs_runtime.IntMul(value_24.IntVal, value_24.IntVal), int64(1)))
 			})), gopurs_runtime.Value{})
 			_ = __local_var_24_24
 			__local_var_25_25 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_24_24), gopurs_runtime.Value{})

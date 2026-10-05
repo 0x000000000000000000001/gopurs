@@ -12,7 +12,7 @@ var once_Main_appendAndLog sync.Once
 func Get_Main_appendAndLog() gopurs_runtime.Value {
 	once_Main_appendAndLog.Do(func() {
 		cache_Main_appendAndLog = gopurs_runtime.Apply2(Call_Control_Semigroupoid_compose(gopurs_runtime.CoerceToStruct[Constructor_Control_Semigroupoid_Semigroupoid[gopurs_runtime.Value]](Get_Control_Semigroupoid_semigroupoidFn())), Get_Effect_Console_log(), gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(((*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(v_0.UnsafePtr).V0.StrVal()) + ((*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(v_0.UnsafePtr).V1.StrVal()))
+			return gopurs_runtime.Str(gopurs_runtime.ConcatString((*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(v_0.UnsafePtr).V0.StrVal(), (*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(v_0.UnsafePtr).V1.StrVal()))
 		}))
 	})
 	return cache_Main_appendAndLog

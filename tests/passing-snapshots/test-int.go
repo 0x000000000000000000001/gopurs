@@ -17,7 +17,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			var __t1 gopurs_runtime.Value
 			{
 				if v_0_0 != nil {
-					__t1 = gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(("Just ")+(Data_Show_ShowIntImpl((v_0_0).V0))))
+					__t1 = gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.ConcatString("Just ", Data_Show_ShowIntImpl((v_0_0).V0))))
 					goto end_branch_1
 				} else {
 

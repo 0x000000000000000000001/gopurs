@@ -49,7 +49,7 @@ test:
 			}
 		}
 		{
-			v_0_loop = (int64(1)) + (v_0)
+			v_0_loop = gopurs_runtime.IntAdd(int64(1), v_0)
 			continue test
 			__t0 = func() int64 { panic("unreachable") }()
 		}

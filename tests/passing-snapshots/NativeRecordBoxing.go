@@ -270,7 +270,7 @@ func Call_Main_describeEntry(entry_0_loop struct {
 		label string
 	} = entry_0_loop
 	_ = entry_0
-	return ((Data_Show_ShowIntImpl(entry_0.count)) + (":")) + (entry_0.label)
+	return gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(Data_Show_ShowIntImpl(entry_0.count), ":"), entry_0.label)
 }
 
 func Call_Main_consumeEntry(consume_0_loop gopurs_runtime.Value, entry_1_loop struct {
@@ -307,6 +307,6 @@ func Call_Main_check(label_0_loop string, expected_1_loop string, actual_2_loop 
 		_ = __local_var_3_0
 		__local_var_4_1 := gopurs_runtime.Apply(__local_var_3_0, gopurs_runtime.Value{})
 		_ = __local_var_4_1
-		return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(((label_0)+(": "))+(actual_2))), gopurs_runtime.Value{})
+		return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(label_0, ": "), actual_2))), gopurs_runtime.Value{})
 	})
 }

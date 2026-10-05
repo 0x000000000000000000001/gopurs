@@ -385,7 +385,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_17_17 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
-			}{(__local_var_5_5.IntVal) + (int64(100)), int64(107)}), gopurs_runtime.Value{})
+			}{gopurs_runtime.IntAdd(__local_var_5_5.IntVal, int64(100)), int64(107)}), gopurs_runtime.Value{})
 			_ = __local_var_17_17
 			// TAST (Let): escaped__3314126478_18_18 shape=App(Var) bindingType=(Func [Unit] Int)
 			escaped__3314126478_18_18 := Call_Main_suspendAdds(int64(7), int64(2), gopurs_runtime.Func(func(v_18 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -395,7 +395,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_19_19 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
-			}{(gopurs_runtime.Apply(escaped__3314126478_18_18, Get_Data_Unit_unit()).IntVal) + (gopurs_runtime.Apply(escaped__3314126478_18_18, Get_Data_Unit_unit()).IntVal), int64(42)}), gopurs_runtime.Value{})
+			}{gopurs_runtime.IntAdd(gopurs_runtime.Apply(escaped__3314126478_18_18, Get_Data_Unit_unit()).IntVal, gopurs_runtime.Apply(escaped__3314126478_18_18, Get_Data_Unit_unit()).IntVal), int64(42)}), gopurs_runtime.Value{})
 			_ = __local_var_19_19
 			__local_var_20_20 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
@@ -469,12 +469,12 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_31_31 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
-			}{Call_Main_runRecursiveBinding(__local_var_4_4.IntVal, __local_var_5_5.IntVal), (__local_var_5_5.IntVal) + (int64(3000))}), gopurs_runtime.Value{})
+			}{Call_Main_runRecursiveBinding(__local_var_4_4.IntVal, __local_var_5_5.IntVal), gopurs_runtime.IntAdd(__local_var_5_5.IntVal, int64(3000))}), gopurs_runtime.Value{})
 			_ = __local_var_31_31
 			__local_var_32_32 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
-			}{Call_Main_runRecursiveBody(int64(0), __local_var_5_5.IntVal), (int64(2)) * (__local_var_5_5.IntVal)}), gopurs_runtime.Value{})
+			}{Call_Main_runRecursiveBody(int64(0), __local_var_5_5.IntVal), gopurs_runtime.IntMul(int64(2), __local_var_5_5.IntVal)}), gopurs_runtime.Value{})
 			_ = __local_var_32_32
 			__local_var_33_33 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
@@ -484,7 +484,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_34_34 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
-			}{Call_Main_runRecursiveBody(__local_var_4_4.IntVal, __local_var_5_5.IntVal), ((int64(2)) * (__local_var_5_5.IntVal)) + (int64(3000))}), gopurs_runtime.Value{})
+			}{Call_Main_runRecursiveBody(__local_var_4_4.IntVal, __local_var_5_5.IntVal), gopurs_runtime.IntAdd(gopurs_runtime.IntMul(int64(2), __local_var_5_5.IntVal), int64(3000))}), gopurs_runtime.Value{})
 			_ = __local_var_34_34
 			__local_var_35_35 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Int(int64(0))), gopurs_runtime.Value{})
 			_ = __local_var_35_35
@@ -493,7 +493,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 					// TAST (Let): __local_var_37_37 shape=App(Var) bindingType=Any
 					__local_var_37_37 := gopurs_runtime.Apply2(Get_Effect_Ref_modify_(), gopurs_runtime.Func(func(count_37 gopurs_runtime.Value) gopurs_runtime.Value {
-						return gopurs_runtime.Int((count_37.IntVal) + (int64(1)))
+						return gopurs_runtime.Int(gopurs_runtime.IntAdd(count_37.IntVal, int64(1)))
 					}), __local_var_35_35)
 					_ = __local_var_37_37
 					__local_var_38_38 := gopurs_runtime.Apply(__local_var_37_37, gopurs_runtime.Value{})
@@ -558,9 +558,9 @@ suspendVary__gopurs_strict_thunk_0:
 			}
 		}
 		{
-			v_0_loop = (v_0) - (int64(1))
-			v1_1_loop = (v1_1) + (v_0)
-			v2_2_loop = (v2_2) + ((v1_1) * (v_0))
+			v_0_loop = gopurs_runtime.IntSub(v_0, int64(1))
+			v1_1_loop = gopurs_runtime.IntAdd(v1_1, v_0)
+			v2_2_loop = gopurs_runtime.IntAdd(v2_2, gopurs_runtime.IntMul(v1_1, v_0))
 			continue suspendVary__gopurs_strict_thunk_0
 			__t0 = func() int64 { panic("unreachable") }()
 		}
@@ -591,10 +591,10 @@ suspendVary:
 			}
 		}
 		{
-			v_0_loop = (v_0) - (int64(1))
-			v1_1_loop = (v1_1) + (v_0)
+			v_0_loop = gopurs_runtime.IntSub(v_0, int64(1))
+			v1_1_loop = gopurs_runtime.IntAdd(v1_1, v_0)
 			v2_2_loop = gopurs_runtime.Func(func(v3_3 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Int((gopurs_runtime.Apply(v2_2, Get_Data_Unit_unit()).IntVal) + ((v1_1) * (v_0)))
+				return gopurs_runtime.Int(gopurs_runtime.IntAdd(gopurs_runtime.Apply(v2_2, Get_Data_Unit_unit()).IntVal, gopurs_runtime.IntMul(v1_1, v_0)))
 			})
 			continue suspendVary
 			__t0 = func() gopurs_runtime.Value { panic("unreachable") }()
@@ -624,9 +624,9 @@ suspendTwice:
 			}
 		}
 		{
-			v_0_loop = (v_0) - (int64(1))
+			v_0_loop = gopurs_runtime.IntSub(v_0, int64(1))
 			v1_1_loop = gopurs_runtime.Func(func(v2_2 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Int((gopurs_runtime.Apply(v1_1, Get_Data_Unit_unit()).IntVal) + (gopurs_runtime.Apply(v1_1, Get_Data_Unit_unit()).IntVal))
+				return gopurs_runtime.Int(gopurs_runtime.IntAdd(gopurs_runtime.Apply(v1_1, Get_Data_Unit_unit()).IntVal, gopurs_runtime.Apply(v1_1, Get_Data_Unit_unit()).IntVal))
 			})
 			continue suspendTwice
 			__t0 = func() gopurs_runtime.Value { panic("unreachable") }()
@@ -656,7 +656,7 @@ suspendOverwrite:
 			}
 		}
 		{
-			v_0_loop = (v_0) - (int64(1))
+			v_0_loop = gopurs_runtime.IntSub(v_0, int64(1))
 			v1_1_loop = gopurs_runtime.Func(func(v2_2 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Int(v_0)
 			})
@@ -688,8 +688,8 @@ suspendOrder__gopurs_strict_thunk_0:
 			}
 		}
 		{
-			v_0_loop = (v_0) - (int64(1))
-			v1_1_loop = ((int64(2)) * (v1_1)) + (v_0)
+			v_0_loop = gopurs_runtime.IntSub(v_0, int64(1))
+			v1_1_loop = gopurs_runtime.IntAdd(gopurs_runtime.IntMul(int64(2), v1_1), v_0)
 			continue suspendOrder__gopurs_strict_thunk_0
 			__t0 = func() int64 { panic("unreachable") }()
 		}
@@ -718,9 +718,9 @@ suspendOrder:
 			}
 		}
 		{
-			v_0_loop = (v_0) - (int64(1))
+			v_0_loop = gopurs_runtime.IntSub(v_0, int64(1))
 			v1_1_loop = gopurs_runtime.Func(func(v2_2 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Int(((int64(2)) * (gopurs_runtime.Apply(v1_1, Get_Data_Unit_unit()).IntVal)) + (v_0))
+				return gopurs_runtime.Int(gopurs_runtime.IntAdd(gopurs_runtime.IntMul(int64(2), gopurs_runtime.Apply(v1_1, Get_Data_Unit_unit()).IntVal), v_0))
 			})
 			continue suspendOrder
 			__t0 = func() gopurs_runtime.Value { panic("unreachable") }()
@@ -750,7 +750,7 @@ suspendConditionalInt:
 			}
 		}
 		{
-			v_0_loop = (v_0) - (int64(1))
+			v_0_loop = gopurs_runtime.IntSub(v_0, int64(1))
 			v1_1_loop = gopurs_runtime.Func(func(v2_2 gopurs_runtime.Value) gopurs_runtime.Value {
 				var __t0 int64
 				{
@@ -762,7 +762,7 @@ suspendConditionalInt:
 					}
 				}
 				{
-					__t0 = (gopurs_runtime.Apply(v1_1, Get_Data_Unit_unit()).IntVal) + (int64(1))
+					__t0 = gopurs_runtime.IntAdd(gopurs_runtime.Apply(v1_1, Get_Data_Unit_unit()).IntVal, int64(1))
 				}
 			end_branch_0:
 				return gopurs_runtime.Int(__t0)
@@ -797,13 +797,13 @@ suspendConditional:
 			}
 		}
 		{
-			v_0_loop = (v_0) - (int64(1))
+			v_0_loop = gopurs_runtime.IntSub(v_0, int64(1))
 			v1_1_loop = v1_1
 			v2_2_loop = gopurs_runtime.Func(func(v3_3 gopurs_runtime.Value) gopurs_runtime.Value {
 				var __t0 int64
 				{
 					if v1_1 {
-						__t0 = (gopurs_runtime.Apply(v2_2, Get_Data_Unit_unit()).IntVal) + (int64(1))
+						__t0 = gopurs_runtime.IntAdd(gopurs_runtime.Apply(v2_2, Get_Data_Unit_unit()).IntVal, int64(1))
 						goto end_branch_0
 					} else {
 
@@ -826,7 +826,7 @@ suspendConditional:
 func Call_Main_suspendClash_prime___gopurs_strict_thunk_0(x_0_loop int64) int64 {
 	var x_0 int64 = x_0_loop
 	_ = x_0
-	return (x_0) + (int64(100))
+	return gopurs_runtime.IntAdd(x_0, int64(100))
 }
 
 func Call_Main_suspendClash_prime___gopurs_strict_thunk_1(v_0_loop int64, v1_1_loop int64) int64 {
@@ -849,8 +849,8 @@ suspendClash_prime___gopurs_strict_thunk_1:
 			}
 		}
 		{
-			v_0_loop = (v_0) - (int64(1))
-			v1_1_loop = (v1_1) + (int64(1))
+			v_0_loop = gopurs_runtime.IntSub(v_0, int64(1))
+			v1_1_loop = gopurs_runtime.IntAdd(v1_1, int64(1))
 			continue suspendClash_prime___gopurs_strict_thunk_1
 			__t0 = func() int64 { panic("unreachable") }()
 		}
@@ -879,9 +879,9 @@ suspendClash_prime_:
 			}
 		}
 		{
-			v_0_loop = (v_0) - (int64(1))
+			v_0_loop = gopurs_runtime.IntSub(v_0, int64(1))
 			v1_1_loop = gopurs_runtime.Func(func(v2_2 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Int((gopurs_runtime.Apply(v1_1, Get_Data_Unit_unit()).IntVal) + (int64(1)))
+				return gopurs_runtime.Int(gopurs_runtime.IntAdd(gopurs_runtime.Apply(v1_1, Get_Data_Unit_unit()).IntVal, int64(1)))
 			})
 			continue suspendClash_prime_
 			__t0 = func() gopurs_runtime.Value { panic("unreachable") }()
@@ -913,9 +913,9 @@ suspendAdds__gopurs_strict_thunk_0:
 			}
 		}
 		{
-			v_0_loop = (v_0) - (int64(1))
+			v_0_loop = gopurs_runtime.IntSub(v_0, int64(1))
 			v1_1_loop = v1_1
-			v2_2_loop = (v2_2) + (v1_1)
+			v2_2_loop = gopurs_runtime.IntAdd(v2_2, v1_1)
 			continue suspendAdds__gopurs_strict_thunk_0
 			__t0 = func() int64 { panic("unreachable") }()
 		}
@@ -946,10 +946,10 @@ suspendAdds:
 			}
 		}
 		{
-			v_0_loop = (v_0) - (int64(1))
+			v_0_loop = gopurs_runtime.IntSub(v_0, int64(1))
 			v1_1_loop = v1_1
 			v2_2_loop = gopurs_runtime.Func(func(v3_3 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Int((gopurs_runtime.Apply(v2_2, Get_Data_Unit_unit()).IntVal) + (v1_1))
+				return gopurs_runtime.Int(gopurs_runtime.IntAdd(gopurs_runtime.Apply(v2_2, Get_Data_Unit_unit()).IntVal, v1_1))
 			})
 			continue suspendAdds
 			__t0 = func() gopurs_runtime.Value { panic("unreachable") }()
@@ -979,7 +979,7 @@ scheduleEffects:
 			}
 		}
 		{
-			v_0_loop = (v_0) - (int64(1))
+			v_0_loop = gopurs_runtime.IntSub(v_0, int64(1))
 			v1_1_loop = gopurs_runtime.Func(func(v2_2 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 					// TAST (Let): __local_var_3_0 shape=App(Other) bindingType=(ADT ["Effect","Effect"] [Int])
@@ -987,7 +987,7 @@ scheduleEffects:
 					_ = __local_var_3_0
 					__local_var_4_1 := gopurs_runtime.Apply(__local_var_3_0, gopurs_runtime.Value{})
 					_ = __local_var_4_1
-					return gopurs_runtime.Int((__local_var_4_1.IntVal) + (int64(1)))
+					return gopurs_runtime.Int(gopurs_runtime.IntAdd(__local_var_4_1.IntVal, int64(1)))
 				})
 			})
 			continue scheduleEffects
@@ -1044,7 +1044,7 @@ func Call_Main_runRecursiveBody(depth_0_loop int64, seed_1_loop int64) int64 {
 			}
 		}
 		{
-			__t2 = (gopurs_runtime.Apply((*visit__3466805691_2_0_0_cell), gopurs_runtime.Int((n_3.IntVal)-(int64(1)))).IntVal) + (int64(1))
+			__t2 = gopurs_runtime.IntAdd(gopurs_runtime.Apply((*visit__3466805691_2_0_0_cell), gopurs_runtime.Int(gopurs_runtime.IntSub(n_3.IntVal, int64(1)))).IntVal, int64(1))
 		}
 	end_branch_2:
 		return gopurs_runtime.Int(__t2)
@@ -1061,13 +1061,13 @@ func Call_Main_runRecursiveBody(depth_0_loop int64, seed_1_loop int64) int64 {
 			}
 		}
 		{
-			__t3 = (gopurs_runtime.Apply((*visit__3466805691_2_0_0_cell), gopurs_runtime.Int((n_3.IntVal)-(int64(1)))).IntVal) + (int64(1))
+			__t3 = gopurs_runtime.IntAdd(gopurs_runtime.Apply((*visit__3466805691_2_0_0_cell), gopurs_runtime.Int(gopurs_runtime.IntSub(n_3.IntVal, int64(1)))).IntVal, int64(1))
 		}
 	end_branch_3:
 		return gopurs_runtime.Int(__t3)
 	})
 	visit_2_1_1_cell = &visit_2_1_1
-	return (gopurs_runtime.Apply(visit__3466805691_2_0_0, gopurs_runtime.Int(depth_0)).IntVal) + (gopurs_runtime.Apply(Call_Main_suspendAdds(depth_0, int64(2), gopurs_runtime.Func(func(v_3 gopurs_runtime.Value) gopurs_runtime.Value {
+	return gopurs_runtime.IntAdd(gopurs_runtime.Apply(visit__3466805691_2_0_0, gopurs_runtime.Int(depth_0)).IntVal, gopurs_runtime.Apply(Call_Main_suspendAdds(depth_0, int64(2), gopurs_runtime.Func(func(v_3 gopurs_runtime.Value) gopurs_runtime.Value {
 		return gopurs_runtime.Int(seed_1)
 	})), Get_Data_Unit_unit()).IntVal)
 }
@@ -1100,7 +1100,7 @@ func Call_Main_runRecursiveBinding(depth_0_loop int64, seed_1_loop int64) int64 
 			}
 		}
 		{
-			__t2 = (gopurs_runtime.Apply((*visit__3466805691_2_0_2_cell), gopurs_runtime.Int((n_3.IntVal)-(int64(1)))).IntVal) + (int64(1))
+			__t2 = gopurs_runtime.IntAdd(gopurs_runtime.Apply((*visit__3466805691_2_0_2_cell), gopurs_runtime.Int(gopurs_runtime.IntSub(n_3.IntVal, int64(1)))).IntVal, int64(1))
 		}
 	end_branch_2:
 		return gopurs_runtime.Int(__t2)
@@ -1119,7 +1119,7 @@ func Call_Main_runRecursiveBinding(depth_0_loop int64, seed_1_loop int64) int64 
 			}
 		}
 		{
-			__t3 = (gopurs_runtime.Apply((*visit__3466805691_2_0_2_cell), gopurs_runtime.Int((n_3.IntVal)-(int64(1)))).IntVal) + (int64(1))
+			__t3 = gopurs_runtime.IntAdd(gopurs_runtime.Apply((*visit__3466805691_2_0_2_cell), gopurs_runtime.Int(gopurs_runtime.IntSub(n_3.IntVal, int64(1)))).IntVal, int64(1))
 		}
 	end_branch_3:
 		return gopurs_runtime.Int(__t3)
@@ -1143,7 +1143,7 @@ func Call_Main_runOverwriteTotal(depth_0_loop int64, seed_1_loop int64) int64 {
 		}
 	}
 	{
-		__t0 = gopurs_runtime.Apply(Call_Main_suspendOverwrite((depth_0)-(int64(1)), gopurs_runtime.Func(func(v2_2 gopurs_runtime.Value) gopurs_runtime.Value {
+		__t0 = gopurs_runtime.Apply(Call_Main_suspendOverwrite(gopurs_runtime.IntSub(depth_0, int64(1)), gopurs_runtime.Func(func(v2_2 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Int(depth_0)
 		})), Get_Data_Unit_unit()).IntVal
 	}
@@ -1164,7 +1164,7 @@ func Call_Main_runOverwrite(depth_0_loop int64) int64 {
 		}
 	}
 	{
-		__t0 = gopurs_runtime.Apply(Call_Main_suspendOverwrite((depth_0)-(int64(1)), gopurs_runtime.Func(func(v2_1 gopurs_runtime.Value) gopurs_runtime.Value {
+		__t0 = gopurs_runtime.Apply(Call_Main_suspendOverwrite(gopurs_runtime.IntSub(depth_0, int64(1)), gopurs_runtime.Func(func(v2_1 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Int(depth_0)
 		})), Get_Data_Unit_unit()).IntVal
 	}
@@ -1238,5 +1238,5 @@ func Call_Main_checkAdds(depth_0_loop int64, seed_1_loop int64, step_2_loop int6
 	return Call_Test_Assert_assertEqual_prime___627669702("", struct {
 		actual   int64
 		expected int64
-	}{Call_Main_suspendAdds__gopurs_strict_thunk_0(depth_0, step_2, seed_1), (seed_1) + ((depth_0) * (step_2))})
+	}{Call_Main_suspendAdds__gopurs_strict_thunk_0(depth_0, step_2, seed_1), gopurs_runtime.IntAdd(seed_1, gopurs_runtime.IntMul(depth_0, step_2))})
 }

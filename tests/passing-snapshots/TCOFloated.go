@@ -84,7 +84,7 @@ looper:
 		{
 			x_0_loop = struct {
 				foo int64
-			}{(x_0.foo) - (int64(1))}
+			}{gopurs_runtime.IntSub(x_0.foo, int64(1))}
 			continue looper
 			__t1 = func() string { panic("unreachable") }()
 		}

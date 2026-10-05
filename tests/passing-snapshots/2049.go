@@ -74,7 +74,7 @@ func Call_Main_f(v_0_loop *Constructor_Main_Cons[struct {
 	var __t0 int64
 	{
 		if v_0 != nil {
-			__t0 = ((v_0).V0.x) + ((v_0).V0.y)
+			__t0 = gopurs_runtime.IntAdd((v_0).V0.x, (v_0).V0.y)
 			goto end_branch_0
 		} else {
 

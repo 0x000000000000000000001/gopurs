@@ -147,7 +147,7 @@ func Get_Main_complicatedIdentity() gopurs_runtime.Value {
 					}
 				}
 				{
-					__t3 = gopurs_runtime.Apply(gopurs_runtime.RecordGet(gopurs_runtime.Apply((*f_0_2_2_cell), gopurs_runtime.Int((n_1.IntVal)-(int64(1)))), "tock"), Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))}))
+					__t3 = gopurs_runtime.Apply(gopurs_runtime.RecordGet(gopurs_runtime.Apply((*f_0_2_2_cell), gopurs_runtime.Int(gopurs_runtime.IntSub(n_1.IntVal, int64(1)))), "tock"), Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))}))
 				}
 			end_branch_3:
 				return func() gopurs_runtime.Value {

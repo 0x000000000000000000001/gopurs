@@ -132,6 +132,6 @@ func Call_Main_test(dictMonadAsk_0_loop gopurs_runtime.Value) gopurs_runtime.Val
 	Applicative0_2_1 := gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](gopurs_runtime.Apply(gopurs_runtime.RecordGet(Monad0_1_0, "Applicative0"), gopurs_runtime.Value{}))
 	_ = Applicative0_2_1
 	return gopurs_runtime.Apply2(gopurs_runtime.RecordGet(gopurs_runtime.Apply(gopurs_runtime.RecordGet(Monad0_1_0, "Bind1"), gopurs_runtime.Value{}), "bind"), Call_Main_ask(dictMonadAsk_0), gopurs_runtime.Func(func(x_3 gopurs_runtime.Value) gopurs_runtime.Value {
-		return gopurs_runtime.Apply(Applicative0_2_1.V1, gopurs_runtime.Int((x_3.IntVal)+(int64(1))))
+		return gopurs_runtime.Apply(Applicative0_2_1.V1, gopurs_runtime.Int(gopurs_runtime.IntAdd(x_3.IntVal, int64(1))))
 	}))
 }

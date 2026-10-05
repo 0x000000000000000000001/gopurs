@@ -415,7 +415,7 @@ func Call_Main_describe(v_0_loop *Constructor_Main_Binding[struct {
 		line  int64
 	}] = v_0_loop
 	_ = v_0
-	return (((((v_0).V1) + (":")) + ((v_0).V0.label)) + (":")) + (Data_Show_ShowIntImpl((v_0).V0.line))
+	return gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString((v_0).V1, ":"), (v_0).V0.label), ":"), Data_Show_ShowIntImpl((v_0).V0.line))
 }
 
 func Rebox_Main_1140313009_3790796878(in *Constructor_Data_Eq_Eq[string]) *Constructor_Data_Eq_Eq[gopurs_runtime.Value] {

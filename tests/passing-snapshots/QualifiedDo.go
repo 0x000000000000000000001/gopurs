@@ -50,7 +50,7 @@ func Call_Main_testMonad(dictMonad_0_loop gopurs_runtime.Value) gopurs_runtime.V
 	_ = Applicative0_2_1
 	return gopurs_runtime.Apply2(Bind1_1_0.V1, gopurs_runtime.Apply(Applicative0_2_1.V1, gopurs_runtime.Str("test")), gopurs_runtime.Func(func(a_3 gopurs_runtime.Value) gopurs_runtime.Value {
 		return gopurs_runtime.Apply2(Bind1_1_0.V1, gopurs_runtime.Apply(Applicative0_2_1.V1, gopurs_runtime.Str("test")), gopurs_runtime.Func(func(b_4 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Apply(Applicative0_2_1.V1, gopurs_runtime.Str((a_3.StrVal())+(b_4.StrVal())))
+			return gopurs_runtime.Apply(Applicative0_2_1.V1, gopurs_runtime.Str(gopurs_runtime.ConcatString(a_3.StrVal(), b_4.StrVal())))
 		}))
 	}))
 }
@@ -60,7 +60,7 @@ func Call_Main_testIMonad(dictIxMonad_0_loop gopurs_runtime.Value) gopurs_runtim
 	_ = dictIxMonad_0
 	return gopurs_runtime.Apply2(Call_IxMonad_bind(gopurs_runtime.CoerceToStruct[Constructor_IxMonad_IxMonad[gopurs_runtime.Value]](dictIxMonad_0)), gopurs_runtime.Apply(Call_IxMonad_pure(gopurs_runtime.CoerceToStruct[Constructor_IxMonad_IxMonad[gopurs_runtime.Value]](dictIxMonad_0)), gopurs_runtime.Str("test")), gopurs_runtime.Func(func(a_1 gopurs_runtime.Value) gopurs_runtime.Value {
 		return gopurs_runtime.Apply2(Call_IxMonad_bind(gopurs_runtime.CoerceToStruct[Constructor_IxMonad_IxMonad[gopurs_runtime.Value]](dictIxMonad_0)), gopurs_runtime.Apply(Call_IxMonad_pure(gopurs_runtime.CoerceToStruct[Constructor_IxMonad_IxMonad[gopurs_runtime.Value]](dictIxMonad_0)), gopurs_runtime.Str("test")), gopurs_runtime.Func(func(b_2 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Apply(Call_IxMonad_pure(gopurs_runtime.CoerceToStruct[Constructor_IxMonad_IxMonad[gopurs_runtime.Value]](dictIxMonad_0)), gopurs_runtime.Str((a_1.StrVal())+(b_2.StrVal())))
+			return gopurs_runtime.Apply(Call_IxMonad_pure(gopurs_runtime.CoerceToStruct[Constructor_IxMonad_IxMonad[gopurs_runtime.Value]](dictIxMonad_0)), gopurs_runtime.Str(gopurs_runtime.ConcatString(a_1.StrVal(), b_2.StrVal())))
 		}))
 	}))
 }

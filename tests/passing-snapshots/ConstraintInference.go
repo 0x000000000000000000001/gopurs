@@ -50,7 +50,7 @@ func Call_Main_shout(dictShow_0_loop *Constructor_Data_Show_Show[gopurs_runtime.
 	var dictShow_0 *Constructor_Data_Show_Show[gopurs_runtime.Value] = dictShow_0_loop
 	_ = dictShow_0
 	return gopurs_runtime.Apply2(Call_Control_Semigroupoid_compose(gopurs_runtime.CoerceToStruct[Constructor_Control_Semigroupoid_Semigroupoid[gopurs_runtime.Value]](Get_Control_Semigroupoid_semigroupoidFn())), Get_Effect_Console_log(), gopurs_runtime.Apply2(Call_Control_Semigroupoid_compose(gopurs_runtime.CoerceToStruct[Constructor_Control_Semigroupoid_Semigroupoid[gopurs_runtime.Value]](Get_Control_Semigroupoid_semigroupoidFn())), gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
-		return gopurs_runtime.Str((v_1.StrVal()) + ("!"))
+		return gopurs_runtime.Str(gopurs_runtime.ConcatString(v_1.StrVal(), "!"))
 	}), Call_Data_Show_show(dictShow_0)))
 }
 
@@ -63,7 +63,7 @@ shout__2753497937:
 		var __eta_norm_0_0 string = __eta_norm_0_0_loop
 		_ = __eta_norm_0_0
 		return gopurs_runtime.Apply3(Call_Control_Semigroupoid_compose(gopurs_runtime.CoerceToStruct[Constructor_Control_Semigroupoid_Semigroupoid[gopurs_runtime.Value]](Get_Control_Semigroupoid_semigroupoidFn())), Get_Effect_Console_log(), gopurs_runtime.Apply2(Call_Control_Semigroupoid_compose(gopurs_runtime.CoerceToStruct[Constructor_Control_Semigroupoid_Semigroupoid[gopurs_runtime.Value]](Get_Control_Semigroupoid_semigroupoidFn())), gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str((v_1.StrVal()) + ("!"))
+			return gopurs_runtime.Str(gopurs_runtime.ConcatString(v_1.StrVal(), "!"))
 		}), Get_Data_Show_showStringImpl()), gopurs_runtime.Str(__eta_norm_0_0))
 	}
 }

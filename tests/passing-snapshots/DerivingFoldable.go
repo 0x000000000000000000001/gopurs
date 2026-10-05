@@ -1201,7 +1201,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				actual   string
 				expected string
 			}{gopurs_runtime.Apply3(gopurs_runtime.RecordGet(Call_Main_foldableM(gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()))}), "foldl"), gopurs_runtime.Func2(func(acc_0 gopurs_runtime.Value, next_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Str(((acc_0.StrVal()) + ("<")) + (next_1.StrVal()))
+				return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(acc_0.StrVal(), "<"), next_1.StrVal()))
 			}), gopurs_runtime.Str("Start"), gopurs_runtime.Value{Type: 9, IntVal: 3852365315, UnsafePtr: unsafe.Pointer(Rebox_Main_3741832558_67812977(nil))}).StrVal(), "Start"})
 			_ = __local_var_0_0
 			__local_var_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
@@ -1210,28 +1210,28 @@ func Get_Main_main() gopurs_runtime.Value {
 				actual   string
 				expected string
 			}{gopurs_runtime.Apply3(gopurs_runtime.RecordGet(Call_Main_foldableM(gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()))}), "foldl"), gopurs_runtime.Func2(func(acc_2 gopurs_runtime.Value, next_3 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Str(((acc_2.StrVal()) + ("<")) + (next_3.StrVal()))
+				return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(acc_2.StrVal(), "<"), next_3.StrVal()))
 			}), gopurs_runtime.Str("Start"), Get_Main_m1()).StrVal(), "Start<a<b<c"}), gopurs_runtime.Value{})
 			_ = __local_var_2_2
 			__local_var_3_3 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldl - M2", struct {
 				actual   string
 				expected string
 			}{gopurs_runtime.Apply3(gopurs_runtime.RecordGet(Call_Main_foldableM(gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()))}), "foldl"), gopurs_runtime.Func2(func(acc_3 gopurs_runtime.Value, next_4 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Str(((acc_3.StrVal()) + ("<")) + (next_4.StrVal()))
+				return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(acc_3.StrVal(), "<"), next_4.StrVal()))
 			}), gopurs_runtime.Str("Start"), Get_Main_m2()).StrVal(), "Start"}), gopurs_runtime.Value{})
 			_ = __local_var_3_3
 			__local_var_4_4 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldl - M3", struct {
 				actual   string
 				expected string
 			}{gopurs_runtime.Apply3(gopurs_runtime.RecordGet(Call_Main_foldableM(gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()))}), "foldl"), gopurs_runtime.Func2(func(acc_4 gopurs_runtime.Value, next_5 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Str(((acc_4.StrVal()) + ("<")) + (next_5.StrVal()))
+				return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(acc_4.StrVal(), "<"), next_5.StrVal()))
 			}), gopurs_runtime.Str("Start"), Get_Main_m3()).StrVal(), "Start<a<b<c"}), gopurs_runtime.Value{})
 			_ = __local_var_4_4
 			__local_var_5_5 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldl - M4", struct {
 				actual   string
 				expected string
 			}{gopurs_runtime.Apply3(gopurs_runtime.RecordGet(Call_Main_foldableM(gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()))}), "foldl"), gopurs_runtime.Func2(func(acc_5 gopurs_runtime.Value, next_6 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Str(((acc_5.StrVal()) + ("<")) + (next_6.StrVal()))
+				return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(acc_5.StrVal(), "<"), next_6.StrVal()))
 			}), gopurs_runtime.Str("Start"), gopurs_runtime.Value{Type: 9, IntVal: 3190619783, UnsafePtr: unsafe.Pointer(Rebox_Main_1039524714_2770120821((&Constructor_Main_M4[gopurs_runtime.Value, string]{1, func() gopurs_runtime.Value {
 				orig := func() struct {
 					a           string
@@ -1323,56 +1323,56 @@ func Get_Main_main() gopurs_runtime.Value {
 				actual   string
 				expected string
 			}{gopurs_runtime.Apply3(gopurs_runtime.RecordGet(Call_Main_foldableM(gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()))}), "foldl"), gopurs_runtime.Func2(func(acc_6 gopurs_runtime.Value, next_7 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Str(((acc_6.StrVal()) + ("<")) + (next_7.StrVal()))
+				return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(acc_6.StrVal(), "<"), next_7.StrVal()))
 			}), gopurs_runtime.Str("Start"), Get_Main_m5()).StrVal(), "Start<a<b<c"}), gopurs_runtime.Value{})
 			_ = __local_var_6_6
 			__local_var_7_7 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldl - M6", struct {
 				actual   string
 				expected string
 			}{gopurs_runtime.Apply3(gopurs_runtime.RecordGet(Call_Main_foldableM(gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()))}), "foldl"), gopurs_runtime.Func2(func(acc_7 gopurs_runtime.Value, next_8 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Str(((acc_7.StrVal()) + ("<")) + (next_8.StrVal()))
+				return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(acc_7.StrVal(), "<"), next_8.StrVal()))
 			}), gopurs_runtime.Str("Start"), Get_Main_m6()).StrVal(), "Start<a<b<c<a<b<c<a<b<c"}), gopurs_runtime.Value{})
 			_ = __local_var_7_7
 			__local_var_8_8 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldl - M7", struct {
 				actual   string
 				expected string
 			}{gopurs_runtime.Apply3(gopurs_runtime.RecordGet(Call_Main_foldableM(gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()))}), "foldl"), gopurs_runtime.Func2(func(acc_8 gopurs_runtime.Value, next_9 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Str(((acc_8.StrVal()) + ("<")) + (next_9.StrVal()))
+				return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(acc_8.StrVal(), "<"), next_9.StrVal()))
 			}), gopurs_runtime.Str("Start"), Get_Main_m7()).StrVal(), "Start<a<b<c"}), gopurs_runtime.Value{})
 			_ = __local_var_8_8
 			__local_var_9_9 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldr - M0", struct {
 				actual   string
 				expected string
 			}{gopurs_runtime.Apply3(gopurs_runtime.RecordGet(Call_Main_foldableM(gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()))}), "foldr"), gopurs_runtime.Func2(func(next_9 gopurs_runtime.Value, acc_10 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Str(((next_9.StrVal()) + (">")) + (acc_10.StrVal()))
+				return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(next_9.StrVal(), ">"), acc_10.StrVal()))
 			}), gopurs_runtime.Str("Start"), gopurs_runtime.Value{Type: 9, IntVal: 3852365315, UnsafePtr: unsafe.Pointer(Rebox_Main_3741832558_67812977(nil))}).StrVal(), "Start"}), gopurs_runtime.Value{})
 			_ = __local_var_9_9
 			__local_var_10_10 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldr - M1", struct {
 				actual   string
 				expected string
 			}{gopurs_runtime.Apply3(gopurs_runtime.RecordGet(Call_Main_foldableM(gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()))}), "foldr"), gopurs_runtime.Func2(func(next_10 gopurs_runtime.Value, acc_11 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Str(((next_10.StrVal()) + (">")) + (acc_11.StrVal()))
+				return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(next_10.StrVal(), ">"), acc_11.StrVal()))
 			}), gopurs_runtime.Str("Start"), Get_Main_m1()).StrVal(), "a>b>c>Start"}), gopurs_runtime.Value{})
 			_ = __local_var_10_10
 			__local_var_11_11 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldr - M2", struct {
 				actual   string
 				expected string
 			}{gopurs_runtime.Apply3(gopurs_runtime.RecordGet(Call_Main_foldableM(gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()))}), "foldr"), gopurs_runtime.Func2(func(next_11 gopurs_runtime.Value, acc_12 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Str(((next_11.StrVal()) + (">")) + (acc_12.StrVal()))
+				return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(next_11.StrVal(), ">"), acc_12.StrVal()))
 			}), gopurs_runtime.Str("Start"), Get_Main_m2()).StrVal(), "Start"}), gopurs_runtime.Value{})
 			_ = __local_var_11_11
 			__local_var_12_12 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldr - M3", struct {
 				actual   string
 				expected string
 			}{gopurs_runtime.Apply3(gopurs_runtime.RecordGet(Call_Main_foldableM(gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()))}), "foldr"), gopurs_runtime.Func2(func(next_12 gopurs_runtime.Value, acc_13 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Str(((next_12.StrVal()) + (">")) + (acc_13.StrVal()))
+				return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(next_12.StrVal(), ">"), acc_13.StrVal()))
 			}), gopurs_runtime.Str("Start"), Get_Main_m3()).StrVal(), "a>b>c>Start"}), gopurs_runtime.Value{})
 			_ = __local_var_12_12
 			__local_var_13_13 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldr - M4", struct {
 				actual   string
 				expected string
 			}{gopurs_runtime.Apply3(gopurs_runtime.RecordGet(Call_Main_foldableM(gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()))}), "foldr"), gopurs_runtime.Func2(func(next_13 gopurs_runtime.Value, acc_14 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Str(((next_13.StrVal()) + (">")) + (acc_14.StrVal()))
+				return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(next_13.StrVal(), ">"), acc_14.StrVal()))
 			}), gopurs_runtime.Str("Start"), gopurs_runtime.Value{Type: 9, IntVal: 3190619783, UnsafePtr: unsafe.Pointer(Rebox_Main_1039524714_2770120821((&Constructor_Main_M4[gopurs_runtime.Value, string]{1, func() gopurs_runtime.Value {
 				orig := func() struct {
 					a           string
@@ -1464,21 +1464,21 @@ func Get_Main_main() gopurs_runtime.Value {
 				actual   string
 				expected string
 			}{gopurs_runtime.Apply3(gopurs_runtime.RecordGet(Call_Main_foldableM(gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()))}), "foldr"), gopurs_runtime.Func2(func(next_14 gopurs_runtime.Value, acc_15 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Str(((next_14.StrVal()) + (">")) + (acc_15.StrVal()))
+				return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(next_14.StrVal(), ">"), acc_15.StrVal()))
 			}), gopurs_runtime.Str("Start"), Get_Main_m5()).StrVal(), "a>b>c>Start"}), gopurs_runtime.Value{})
 			_ = __local_var_14_14
 			__local_var_15_15 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldr - M6", struct {
 				actual   string
 				expected string
 			}{gopurs_runtime.Apply3(gopurs_runtime.RecordGet(Call_Main_foldableM(gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()))}), "foldr"), gopurs_runtime.Func2(func(next_15 gopurs_runtime.Value, acc_16 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Str(((next_15.StrVal()) + (">")) + (acc_16.StrVal()))
+				return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(next_15.StrVal(), ">"), acc_16.StrVal()))
 			}), gopurs_runtime.Str("Start"), Get_Main_m6()).StrVal(), "a>b>c>a>b>c>a>b>c>Start"}), gopurs_runtime.Value{})
 			_ = __local_var_15_15
 			__local_var_16_16 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldr - M7", struct {
 				actual   string
 				expected string
 			}{gopurs_runtime.Apply3(gopurs_runtime.RecordGet(Call_Main_foldableM(gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()))}), "foldr"), gopurs_runtime.Func2(func(next_16 gopurs_runtime.Value, acc_17 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Str(((next_16.StrVal()) + (">")) + (acc_17.StrVal()))
+				return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(next_16.StrVal(), ">"), acc_17.StrVal()))
 			}), gopurs_runtime.Str("Start"), Get_Main_m7()).StrVal(), "a>b>c>Start"}), gopurs_runtime.Value{})
 			_ = __local_var_16_16
 			__local_var_17_17 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("foldMap - M0", struct {
@@ -1723,7 +1723,7 @@ func Call_Main_foldrStr(dictFoldable_0_loop *Constructor_Data_Foldable_Foldable[
 	var dictFoldable_0 *Constructor_Data_Foldable_Foldable[gopurs_runtime.Value] = dictFoldable_0_loop
 	_ = dictFoldable_0
 	return gopurs_runtime.Apply2(dictFoldable_0.V2, gopurs_runtime.Func2(func(next_1 gopurs_runtime.Value, acc_2 gopurs_runtime.Value) gopurs_runtime.Value {
-		return gopurs_runtime.Str(((next_1.StrVal()) + (">")) + (acc_2.StrVal()))
+		return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(next_1.StrVal(), ">"), acc_2.StrVal()))
 	}), gopurs_runtime.Str("Start"))
 }
 
@@ -2051,7 +2051,7 @@ foldrStr__2116068004:
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
 		return gopurs_runtime.Apply3(gopurs_runtime.RecordGet(Call_Main_foldableM(gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()))}), "foldr"), gopurs_runtime.Func2(func(next_1 gopurs_runtime.Value, acc_2 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(((next_1.StrVal()) + (">")) + (acc_2.StrVal()))
+			return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(next_1.StrVal(), ">"), acc_2.StrVal()))
 		}), gopurs_runtime.Str("Start"), gopurs_runtime.Value{Type: 9, IntVal: 3852365315, UnsafePtr: unsafe.Pointer(Rebox_Main_3741832558_67812977(nil))}).StrVal()
 	}
 }
@@ -2065,7 +2065,7 @@ foldrStr__325071877:
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
 		return gopurs_runtime.Apply3(gopurs_runtime.RecordGet(Call_Main_foldableM(gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()))}), "foldr"), gopurs_runtime.Func2(func(next_1 gopurs_runtime.Value, acc_2 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(((next_1.StrVal()) + (">")) + (acc_2.StrVal()))
+			return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(next_1.StrVal(), ">"), acc_2.StrVal()))
 		}), gopurs_runtime.Str("Start"), Get_Main_m1()).StrVal()
 	}
 }
@@ -2079,7 +2079,7 @@ foldrStr__412824550:
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
 		return gopurs_runtime.Apply3(gopurs_runtime.RecordGet(Call_Main_foldableM(gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()))}), "foldr"), gopurs_runtime.Func2(func(next_1 gopurs_runtime.Value, acc_2 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(((next_1.StrVal()) + (">")) + (acc_2.StrVal()))
+			return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(next_1.StrVal(), ">"), acc_2.StrVal()))
 		}), gopurs_runtime.Str("Start"), Get_Main_m2()).StrVal()
 	}
 }
@@ -2093,7 +2093,7 @@ foldrStr__3602154567:
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
 		return gopurs_runtime.Apply3(gopurs_runtime.RecordGet(Call_Main_foldableM(gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()))}), "foldr"), gopurs_runtime.Func2(func(next_1 gopurs_runtime.Value, acc_2 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(((next_1.StrVal()) + (">")) + (acc_2.StrVal()))
+			return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(next_1.StrVal(), ">"), acc_2.StrVal()))
 		}), gopurs_runtime.Str("Start"), Get_Main_m3()).StrVal()
 	}
 }
@@ -2107,7 +2107,7 @@ foldrStr__3287222048:
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
 		return gopurs_runtime.Apply3(gopurs_runtime.RecordGet(Call_Main_foldableM(gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()))}), "foldr"), gopurs_runtime.Func2(func(next_1 gopurs_runtime.Value, acc_2 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(((next_1.StrVal()) + (">")) + (acc_2.StrVal()))
+			return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(next_1.StrVal(), ">"), acc_2.StrVal()))
 		}), gopurs_runtime.Str("Start"), gopurs_runtime.Value{Type: 9, IntVal: 3190619783, UnsafePtr: unsafe.Pointer(Rebox_Main_1039524714_2770120821((&Constructor_Main_M4[gopurs_runtime.Value, string]{1, func() gopurs_runtime.Value {
 			orig := func() struct {
 				a           string
@@ -2206,7 +2206,7 @@ foldrStr__1496225921:
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
 		return gopurs_runtime.Apply3(gopurs_runtime.RecordGet(Call_Main_foldableM(gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()))}), "foldr"), gopurs_runtime.Func2(func(next_1 gopurs_runtime.Value, acc_2 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(((next_1.StrVal()) + (">")) + (acc_2.StrVal()))
+			return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(next_1.StrVal(), ">"), acc_2.StrVal()))
 		}), gopurs_runtime.Str("Start"), Get_Main_m5()).StrVal()
 	}
 }
@@ -2220,7 +2220,7 @@ foldrStr__1583978594:
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
 		return gopurs_runtime.Apply3(gopurs_runtime.RecordGet(Call_Main_foldableM(gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()))}), "foldr"), gopurs_runtime.Func2(func(next_1 gopurs_runtime.Value, acc_2 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(((next_1.StrVal()) + (">")) + (acc_2.StrVal()))
+			return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(next_1.StrVal(), ">"), acc_2.StrVal()))
 		}), gopurs_runtime.Str("Start"), Get_Main_m6()).StrVal()
 	}
 }
@@ -2234,7 +2234,7 @@ foldrStr__478341315:
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
 		return gopurs_runtime.Apply3(gopurs_runtime.RecordGet(Call_Main_foldableM(gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()))}), "foldr"), gopurs_runtime.Func2(func(next_1 gopurs_runtime.Value, acc_2 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(((next_1.StrVal()) + (">")) + (acc_2.StrVal()))
+			return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(next_1.StrVal(), ">"), acc_2.StrVal()))
 		}), gopurs_runtime.Str("Start"), Get_Main_m7()).StrVal()
 	}
 }
@@ -2243,7 +2243,7 @@ func Call_Main_foldlStr(dictFoldable_0_loop *Constructor_Data_Foldable_Foldable[
 	var dictFoldable_0 *Constructor_Data_Foldable_Foldable[gopurs_runtime.Value] = dictFoldable_0_loop
 	_ = dictFoldable_0
 	return gopurs_runtime.Apply2(dictFoldable_0.V1, gopurs_runtime.Func2(func(acc_1 gopurs_runtime.Value, next_2 gopurs_runtime.Value) gopurs_runtime.Value {
-		return gopurs_runtime.Str(((acc_1.StrVal()) + ("<")) + (next_2.StrVal()))
+		return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(acc_1.StrVal(), "<"), next_2.StrVal()))
 	}), gopurs_runtime.Str("Start"))
 }
 
@@ -2256,7 +2256,7 @@ foldlStr__2116068004:
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
 		return gopurs_runtime.Apply3(gopurs_runtime.RecordGet(Call_Main_foldableM(gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()))}), "foldl"), gopurs_runtime.Func2(func(acc_1 gopurs_runtime.Value, next_2 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(((acc_1.StrVal()) + ("<")) + (next_2.StrVal()))
+			return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(acc_1.StrVal(), "<"), next_2.StrVal()))
 		}), gopurs_runtime.Str("Start"), gopurs_runtime.Value{Type: 9, IntVal: 3852365315, UnsafePtr: unsafe.Pointer(Rebox_Main_3741832558_67812977(nil))}).StrVal()
 	}
 }
@@ -2270,7 +2270,7 @@ foldlStr__325071877:
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
 		return gopurs_runtime.Apply3(gopurs_runtime.RecordGet(Call_Main_foldableM(gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()))}), "foldl"), gopurs_runtime.Func2(func(acc_1 gopurs_runtime.Value, next_2 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(((acc_1.StrVal()) + ("<")) + (next_2.StrVal()))
+			return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(acc_1.StrVal(), "<"), next_2.StrVal()))
 		}), gopurs_runtime.Str("Start"), Get_Main_m1()).StrVal()
 	}
 }
@@ -2284,7 +2284,7 @@ foldlStr__412824550:
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
 		return gopurs_runtime.Apply3(gopurs_runtime.RecordGet(Call_Main_foldableM(gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()))}), "foldl"), gopurs_runtime.Func2(func(acc_1 gopurs_runtime.Value, next_2 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(((acc_1.StrVal()) + ("<")) + (next_2.StrVal()))
+			return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(acc_1.StrVal(), "<"), next_2.StrVal()))
 		}), gopurs_runtime.Str("Start"), Get_Main_m2()).StrVal()
 	}
 }
@@ -2298,7 +2298,7 @@ foldlStr__3602154567:
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
 		return gopurs_runtime.Apply3(gopurs_runtime.RecordGet(Call_Main_foldableM(gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()))}), "foldl"), gopurs_runtime.Func2(func(acc_1 gopurs_runtime.Value, next_2 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(((acc_1.StrVal()) + ("<")) + (next_2.StrVal()))
+			return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(acc_1.StrVal(), "<"), next_2.StrVal()))
 		}), gopurs_runtime.Str("Start"), Get_Main_m3()).StrVal()
 	}
 }
@@ -2312,7 +2312,7 @@ foldlStr__3287222048:
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
 		return gopurs_runtime.Apply3(gopurs_runtime.RecordGet(Call_Main_foldableM(gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()))}), "foldl"), gopurs_runtime.Func2(func(acc_1 gopurs_runtime.Value, next_2 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(((acc_1.StrVal()) + ("<")) + (next_2.StrVal()))
+			return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(acc_1.StrVal(), "<"), next_2.StrVal()))
 		}), gopurs_runtime.Str("Start"), gopurs_runtime.Value{Type: 9, IntVal: 3190619783, UnsafePtr: unsafe.Pointer(Rebox_Main_1039524714_2770120821((&Constructor_Main_M4[gopurs_runtime.Value, string]{1, func() gopurs_runtime.Value {
 			orig := func() struct {
 				a           string
@@ -2411,7 +2411,7 @@ foldlStr__1496225921:
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
 		return gopurs_runtime.Apply3(gopurs_runtime.RecordGet(Call_Main_foldableM(gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()))}), "foldl"), gopurs_runtime.Func2(func(acc_1 gopurs_runtime.Value, next_2 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(((acc_1.StrVal()) + ("<")) + (next_2.StrVal()))
+			return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(acc_1.StrVal(), "<"), next_2.StrVal()))
 		}), gopurs_runtime.Str("Start"), Get_Main_m5()).StrVal()
 	}
 }
@@ -2425,7 +2425,7 @@ foldlStr__1583978594:
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
 		return gopurs_runtime.Apply3(gopurs_runtime.RecordGet(Call_Main_foldableM(gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()))}), "foldl"), gopurs_runtime.Func2(func(acc_1 gopurs_runtime.Value, next_2 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(((acc_1.StrVal()) + ("<")) + (next_2.StrVal()))
+			return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(acc_1.StrVal(), "<"), next_2.StrVal()))
 		}), gopurs_runtime.Str("Start"), Get_Main_m6()).StrVal()
 	}
 }
@@ -2439,7 +2439,7 @@ foldlStr__478341315:
 		var __eta_norm_0_unused_0 gopurs_runtime.Value = __eta_norm_0_unused_0_loop
 		_ = __eta_norm_0_unused_0
 		return gopurs_runtime.Apply3(gopurs_runtime.RecordGet(Call_Main_foldableM(gopurs_runtime.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Foldable_Foldable[gopurs_runtime.Value]](Get_Data_Foldable_foldableArray()))}), "foldl"), gopurs_runtime.Func2(func(acc_1 gopurs_runtime.Value, next_2 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(((acc_1.StrVal()) + ("<")) + (next_2.StrVal()))
+			return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(acc_1.StrVal(), "<"), next_2.StrVal()))
 		}), gopurs_runtime.Str("Start"), Get_Main_m7()).StrVal()
 	}
 }

@@ -42,5 +42,5 @@ func Call_Main_g(a_0_loop int64, b_1_loop int64) int64 {
 	_ = a_0
 	var b_1 int64 = b_1_loop
 	_ = b_1
-	return (a_0) + (b_1)
+	return gopurs_runtime.IntAdd(a_0, b_1)
 }

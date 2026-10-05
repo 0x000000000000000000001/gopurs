@@ -284,12 +284,12 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_8_8 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
-			}{Call_Main_wrapIncrements__gopurs_strict_thunk_0(int64(1), __local_var_5_5.IntVal), (__local_var_5_5.IntVal) + (int64(1))}), gopurs_runtime.Value{})
+			}{Call_Main_wrapIncrements__gopurs_strict_thunk_0(int64(1), __local_var_5_5.IntVal), gopurs_runtime.IntAdd(__local_var_5_5.IntVal, int64(1))}), gopurs_runtime.Value{})
 			_ = __local_var_8_8
 			__local_var_9_9 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
-			}{Call_Main_wrapIncrements__gopurs_strict_thunk_0(__local_var_4_4.IntVal, __local_var_5_5.IntVal), (__local_var_5_5.IntVal) + (__local_var_4_4.IntVal)}), gopurs_runtime.Value{})
+			}{Call_Main_wrapIncrements__gopurs_strict_thunk_0(__local_var_4_4.IntVal, __local_var_5_5.IntVal), gopurs_runtime.IntAdd(__local_var_5_5.IntVal, __local_var_4_4.IntVal)}), gopurs_runtime.Value{})
 			_ = __local_var_9_9
 			__local_var_10_10 := gopurs_runtime.Apply(Call_Main_checkAdds(int64(0), __local_var_5_5.IntVal, __local_var_6_6.IntVal), gopurs_runtime.Value{})
 			_ = __local_var_10_10
@@ -325,7 +325,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_20_20 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
-			}{(gopurs_runtime.Apply(__local_var_19_19, Get_Data_Unit_unit()).IntVal) + (gopurs_runtime.Apply(__local_var_19_19, Get_Data_Unit_unit()).IntVal), (int64(2)) * ((__local_var_5_5.IntVal) + (__local_var_4_4.IntVal))}), gopurs_runtime.Value{})
+			}{gopurs_runtime.IntAdd(gopurs_runtime.Apply(__local_var_19_19, Get_Data_Unit_unit()).IntVal, gopurs_runtime.Apply(__local_var_19_19, Get_Data_Unit_unit()).IntVal), gopurs_runtime.IntMul(int64(2), gopurs_runtime.IntAdd(__local_var_5_5.IntVal, __local_var_4_4.IntVal))}), gopurs_runtime.Value{})
 			_ = __local_var_20_20
 			__local_var_21_21 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Int(int64(0))), gopurs_runtime.Value{})
 			_ = __local_var_21_21
@@ -334,7 +334,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 					// TAST (Let): __local_var_23_23 shape=App(Var) bindingType=Any
 					__local_var_23_23 := gopurs_runtime.Apply2(Get_Effect_Ref_modify_(), gopurs_runtime.Func(func(count_23 gopurs_runtime.Value) gopurs_runtime.Value {
-						return gopurs_runtime.Int((count_23.IntVal) + (int64(1)))
+						return gopurs_runtime.Int(gopurs_runtime.IntAdd(count_23.IntVal, int64(1)))
 					}), __local_var_21_21)
 					_ = __local_var_23_23
 					__local_var_24_24 := gopurs_runtime.Apply(__local_var_23_23, gopurs_runtime.Value{})
@@ -483,9 +483,9 @@ wrapAdds__gopurs_strict_thunk_0:
 			}
 		}
 		{
-			v_0_loop = (v_0) - (int64(1))
+			v_0_loop = gopurs_runtime.IntSub(v_0, int64(1))
 			v1_1_loop = v1_1
-			v2_2_loop = (v2_2) + (v1_1)
+			v2_2_loop = gopurs_runtime.IntAdd(v2_2, v1_1)
 			continue wrapAdds__gopurs_strict_thunk_0
 			__t0 = func() int64 { panic("unreachable") }()
 		}
@@ -516,10 +516,10 @@ wrapAdds:
 			}
 		}
 		{
-			v_0_loop = (v_0) - (int64(1))
+			v_0_loop = gopurs_runtime.IntSub(v_0, int64(1))
 			v1_1_loop = v1_1
 			v2_2_loop = gopurs_runtime.Func(func(v3_3 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Int((gopurs_runtime.Apply(v2_2, Get_Data_Unit_unit()).IntVal) + (v1_1))
+				return gopurs_runtime.Int(gopurs_runtime.IntAdd(gopurs_runtime.Apply(v2_2, Get_Data_Unit_unit()).IntVal, v1_1))
 			})
 			continue wrapAdds
 			__t0 = func() gopurs_runtime.Value { panic("unreachable") }()
@@ -559,7 +559,7 @@ wrapEffects:
 			}
 		}
 		{
-			v_0_loop = (v_0) - (int64(1))
+			v_0_loop = gopurs_runtime.IntSub(v_0, int64(1))
 			v1_1_loop = gopurs_runtime.Func(func(v2_2 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 					// TAST (Let): __local_var_3_0 shape=App(Other) bindingType=(ADT ["Effect","Effect"] [Int])
@@ -567,7 +567,7 @@ wrapEffects:
 					_ = __local_var_3_0
 					__local_var_4_1 := gopurs_runtime.Apply(__local_var_3_0, gopurs_runtime.Value{})
 					_ = __local_var_4_1
-					return gopurs_runtime.Int((__local_var_4_1.IntVal) + (int64(1)))
+					return gopurs_runtime.Int(gopurs_runtime.IntAdd(__local_var_4_1.IntVal, int64(1)))
 				})
 			})
 			continue wrapEffects
@@ -598,8 +598,8 @@ wrapIncrements__gopurs_strict_thunk_0:
 			}
 		}
 		{
-			v_0_loop = (v_0) - (int64(1))
-			v1_1_loop = (v1_1) + (int64(1))
+			v_0_loop = gopurs_runtime.IntSub(v_0, int64(1))
+			v1_1_loop = gopurs_runtime.IntAdd(v1_1, int64(1))
 			continue wrapIncrements__gopurs_strict_thunk_0
 			__t0 = func() int64 { panic("unreachable") }()
 		}
@@ -628,9 +628,9 @@ wrapIncrements:
 			}
 		}
 		{
-			v_0_loop = (v_0) - (int64(1))
+			v_0_loop = gopurs_runtime.IntSub(v_0, int64(1))
 			v1_1_loop = gopurs_runtime.Func(func(v2_2 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Int((gopurs_runtime.Apply(v1_1, Get_Data_Unit_unit()).IntVal) + (int64(1)))
+				return gopurs_runtime.Int(gopurs_runtime.IntAdd(gopurs_runtime.Apply(v1_1, Get_Data_Unit_unit()).IntVal, int64(1)))
 			})
 			continue wrapIncrements
 			__t0 = func() gopurs_runtime.Value { panic("unreachable") }()
@@ -678,8 +678,8 @@ wrapOrder__gopurs_strict_thunk_0:
 			}
 		}
 		{
-			v_0_loop = (v_0) - (int64(1))
-			v1_1_loop = ((int64(2)) * (v1_1)) + (v_0)
+			v_0_loop = gopurs_runtime.IntSub(v_0, int64(1))
+			v1_1_loop = gopurs_runtime.IntAdd(gopurs_runtime.IntMul(int64(2), v1_1), v_0)
 			continue wrapOrder__gopurs_strict_thunk_0
 			__t0 = func() int64 { panic("unreachable") }()
 		}
@@ -708,9 +708,9 @@ wrapOrder:
 			}
 		}
 		{
-			v_0_loop = (v_0) - (int64(1))
+			v_0_loop = gopurs_runtime.IntSub(v_0, int64(1))
 			v1_1_loop = gopurs_runtime.Func(func(v2_2 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Int(((int64(2)) * (gopurs_runtime.Apply(v1_1, Get_Data_Unit_unit()).IntVal)) + (v_0))
+				return gopurs_runtime.Int(gopurs_runtime.IntAdd(gopurs_runtime.IntMul(int64(2), gopurs_runtime.Apply(v1_1, Get_Data_Unit_unit()).IntVal), v_0))
 			})
 			continue wrapOrder
 			__t0 = func() gopurs_runtime.Value { panic("unreachable") }()
@@ -738,5 +738,5 @@ func Call_Main_checkAdds(depth_0_loop int64, seed_1_loop int64, step_2_loop int6
 	return Call_Test_Assert_assertEqual_prime___627669702("", struct {
 		actual   int64
 		expected int64
-	}{Call_Main_wrapAdds__gopurs_strict_thunk_0(depth_0, step_2, seed_1), (seed_1) + ((depth_0) * (step_2))})
+	}{Call_Main_wrapAdds__gopurs_strict_thunk_0(depth_0, step_2, seed_1), gopurs_runtime.IntAdd(seed_1, gopurs_runtime.IntMul(depth_0, step_2))})
 }

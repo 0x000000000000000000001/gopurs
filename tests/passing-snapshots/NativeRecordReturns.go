@@ -546,7 +546,7 @@ func Call_Main_runC(n_0_loop int64) int64 {
 				__t1 = int64(0)
 			}
 		end_branch_1:
-			__t2 = ((v_1_0.V1.id) * (int64(3))) + (__t1)
+			__t2 = gopurs_runtime.IntAdd(gopurs_runtime.IntMul(v_1_0.V1.id, int64(3)), __t1)
 			goto end_branch_2
 		} else {
 
@@ -641,7 +641,7 @@ func Call_Main_runB(n_0_loop int64) int64 {
 				__t1 = int64(0)
 			}
 		end_branch_1:
-			__t2 = ((v_1_0.V1.id) * (int64(3))) + (__t1)
+			__t2 = gopurs_runtime.IntAdd(gopurs_runtime.IntMul(v_1_0.V1.id, int64(3)), __t1)
 			goto end_branch_2
 		} else {
 
@@ -720,7 +720,7 @@ func Call_Main_runA(n_0_loop int64) int64 {
 				__t1 = int64(0)
 			}
 		end_branch_1:
-			__t2 = ((v_1_0.V1.id) * (int64(3))) + (__t1)
+			__t2 = gopurs_runtime.IntAdd(gopurs_runtime.IntMul(v_1_0.V1.id, int64(3)), __t1)
 			goto end_branch_2
 		} else {
 

@@ -1,6 +1,6 @@
 # Gopurs — fiabilité et reproductibilité
 
-Plan v2 — mise à jour : 3 octobre 2026.
+Plan v2 — mise à jour : 5 octobre 2026.
 
 Le plan v1 de maintenabilité est clôturé à **100/100 points, 15/15 lots**.
 Sa [validation finale](docs/testing.md#consolidation-finale--lot-15-2-octobre-2026)
@@ -11,7 +11,7 @@ utile et rendre les campagnes et l'installation reproductibles. Périmètre :
 compilateur, runtime, FFI, outillage et bibliothèques sœurs ; interventions dans
 PBO et le frontend TAST limitées aux besoins démontrés.
 
-## Avancement : 30 % — 30/100 points, 2/8 lots validés
+## Avancement : 55 % — 55/100 points, 4/8 lots validés
 
 - **Calcul :** somme des points des cases cochées, sur un total fixe de 100.
 - Un lot peut demander plusieurs passes ; aucun point partiel n'est acquis.
@@ -31,11 +31,11 @@ PBO et le frontend TAST limitées aux besoins démontrés.
 - [x] **02 — Décodage des chaînes dans le TAST (15 pts).** Corriger le décodage
   natif des symboles et labels de records exposé par `StringEdgeCases`.
   Fin : fixture réintégrée, exécution et parité JS/natif validées.
-- [ ] **03 — Sémantique des chaînes UTF-16 (15 pts).** Résoudre la divergence
+- [x] **03 — Sémantique des chaînes UTF-16 (15 pts).** Résoudre la divergence
   de pliage de `StringEscapes`, notamment la concaténation de deux moitiés de
   surrogate. Fin : assertion réactivée, fixture réintégrée et résultat validé
   en JS, natif séquentiel et natif parallèle.
-- [ ] **04 — Bornes et opérations sur Int (10 pts).** Établir le comportement
+- [x] **04 — Bornes et opérations sur Int (10 pts).** Établir le comportement
   attendu aux bornes 32 bits, puis corriger l'écart confirmé par `2136`.
   Fin : fixture réintégrée, négation et opérations voisines concernées couvertes.
 - [ ] **05 — Affichage des Number (10 pts).** Comparer `NumberLiterals` au
@@ -61,6 +61,8 @@ PBO et le frontend TAST limitées aux besoins démontrés.
   avant correction, puis réussi après correction.
 - Builds et tests ciblés adaptés aux fichiers modifiés réussis ; exécution Go
   et snapshots stricts pour les comportements concernés.
+- Après évolution du runtime ou des FFI, reconstruire aussi l'hôte utilisé dans
+  le checkout actif et vérifier le build d'une application consommatrice.
 - Pour une modification de génération : mêmes entrées TAST, inventaires et
   comparaison octet par octet entre JS, natif Go séquentiel et natif Go parallèle.
   Les écarts avec la référence précédente doivent être expliqués par la correction.
@@ -71,6 +73,6 @@ PBO et le frontend TAST limitées aux besoins démontrés.
 - Preuves identifiées par plan et lot dans `docs/testing.md`, documentation à
   jour et `git diff --check` propre.
 
-**Prochaine passe : lot 03 — sémantique des chaînes UTF-16.**
+**Prochaine passe : lot 05 — affichage des Number.**
 Les optimisations de performance restent en pause ; toute reprise exige un gain
 mesuré significatif.

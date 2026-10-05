@@ -1,15 +1,14 @@
 import { accessSync, constants, readdirSync, statSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 
-// Rechecked on 2026-10-02; StringEdgeCases reintegrated on 2026-10-03.
+// Rechecked on 2026-10-02; StringEdgeCases reintegrated on 2026-10-03,
+// StringEscapes and 2136 on 2026-10-05.
 // Evidence and exact failures are in docs/testing.md.
 const excluded = new Set([
   // The current frontend rejects these with CannotDeriveInvalidConstructorArg.
   "DerivingContravariant.purs", "DerivingFunctorFromBi.purs",
   "DerivingFunctorFromPro.purs", "DerivingProfunctor.purs",
   "NumberLiterals.purs", // Number Show spelling differs from the fixture's oracle.
-  "StringEscapes.purs", // Folding concatenated surrogate halves differs from JS.
-  "2136.purs", // 32-bit boundary overflow, with native 64-bit integers in gopurs.
 ]);
 
 export class UsageError extends Error {}

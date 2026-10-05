@@ -50,5 +50,5 @@ type Constructor_Main_Person struct {
 func Call_Main_showPerson(p_0_loop gopurs_runtime.Value) string {
 	var p_0 gopurs_runtime.Value = p_0_loop
 	_ = p_0
-	return ((gopurs_runtime.RecordGet(p_0, "name").StrVal()) + (", aged ")) + (Data_Show_ShowNumberImpl(gopurs_runtime.RecordGet(p_0, "age").FloatVal()))
+	return gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(gopurs_runtime.RecordGet(p_0, "name").StrVal(), ", aged "), Data_Show_ShowNumberImpl(gopurs_runtime.RecordGet(p_0, "age").FloatVal()))
 }

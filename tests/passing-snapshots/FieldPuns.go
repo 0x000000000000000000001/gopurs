@@ -44,5 +44,5 @@ func Get_Main_main() gopurs_runtime.Value {
 func Call_Main_greet(v_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var v_0 gopurs_runtime.Value = v_0_loop
 	_ = v_0
-	return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str((((gopurs_runtime.RecordGet(v_0, "greeting").StrVal())+(", "))+(gopurs_runtime.RecordGet(v_0, "name").StrVal()))+(".")))
+	return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(gopurs_runtime.RecordGet(v_0, "greeting").StrVal(), ", "), gopurs_runtime.RecordGet(v_0, "name").StrVal()), ".")))
 }

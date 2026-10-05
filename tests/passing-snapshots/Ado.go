@@ -156,7 +156,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
 			_ = __local_var_1_1
 			__local_var_2_2 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Call_Control_Monad_ap(gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad[gopurs_runtime.Value]](Get_Effect_monadEffect())), gopurs_runtime.Apply2(Call_Control_Monad_ap(gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad[gopurs_runtime.Value]](Get_Effect_monadEffect())), gopurs_runtime.Apply2(Call_Control_Monad_ap(gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad[gopurs_runtime.Value]](Get_Effect_monadEffect())), gopurs_runtime.Apply2(Call_Control_Applicative_liftA1(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](Get_Effect_applicativeEffect())), gopurs_runtime.Func4(func(v_2 gopurs_runtime.Value, v1_3 gopurs_runtime.Value, v2_4 gopurs_runtime.Value, v3_5 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Str((((v1_3.StrVal()) + (v2_4.StrVal())) + ("n")) + (v3_5.StrVal()))
+				return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(v1_3.StrVal(), v2_4.StrVal()), "n"), v3_5.StrVal()))
 			}), gopurs_runtime.Apply2(Get_Effect_Ref_write(), gopurs_runtime.Str("D"), __local_var_1_1)), gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_1_1)), gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Str("o")
 			})), gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
@@ -372,7 +372,7 @@ func Call_Main_test11(dictApply_0_loop *Constructor_Control_Apply_Apply[gopurs_r
 	_ = Functor0_1_0
 	return gopurs_runtime.Func2(func(dictApplicative_2 gopurs_runtime.Value, v_3 gopurs_runtime.Value) gopurs_runtime.Value {
 		return gopurs_runtime.Apply2(dictApply_0.V1, gopurs_runtime.Apply2(dictApply_0.V1, gopurs_runtime.Apply2(Functor0_1_0.V0, gopurs_runtime.Func3(func(v1_4 gopurs_runtime.Value, v2_5 gopurs_runtime.Value, v3_6 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(((Data_Show_ShowIntImpl(v1_4.IntVal)) + (v2_5.StrVal())) + (gopurs_runtime.Apply(Rebox_Main_1386611502_1469227923(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Main_showArray())).V0, func() gopurs_runtime.Value {
+			return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(Data_Show_ShowIntImpl(v1_4.IntVal), v2_5.StrVal()), gopurs_runtime.Apply(Rebox_Main_1386611502_1469227923(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Main_showArray())).V0, func() gopurs_runtime.Value {
 				arr := func() []int64 {
 					arr := *(*[]gopurs_runtime.Value)(v3_6.UnsafePtr)
 					unboxed := make([]int64, len(arr))

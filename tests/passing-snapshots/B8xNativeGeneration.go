@@ -228,12 +228,12 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = __local_var_6_6
 			// TAST (Let): __local_var_7_8 shape=Other bindingType=(ADT ["Main","Erased"] [Int])
 			__local_var_7_8 := (&Constructor_Main_Packed[int64, int64]{1, gopurs_runtime.Func(func(v_7 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Int((v_7.IntVal) + (int64(1)))
+				return gopurs_runtime.Int(gopurs_runtime.IntAdd(v_7.IntVal, int64(1)))
 			}), int64(21)})
 			_ = __local_var_7_8
 			// TAST (Let): __local_var_8_9 shape=Other bindingType=(ADT ["Main","Erased"] [(TypeVar b$scope13)])
 			__local_var_8_9 := (&Constructor_Main_Packed[gopurs_runtime.Value, gopurs_runtime.Value]{1, gopurs_runtime.Apply2(Call_Control_Semigroupoid_compose(gopurs_runtime.CoerceToStruct[Constructor_Control_Semigroupoid_Semigroupoid[gopurs_runtime.Value]](Get_Control_Semigroupoid_semigroupoidFn())), gopurs_runtime.Func(func(v_8 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Int((v_8.IntVal) * (int64(2)))
+				return gopurs_runtime.Int(gopurs_runtime.IntMul(v_8.IntVal, int64(2)))
 			}), (__local_var_7_8).V0), gopurs_runtime.Int((__local_var_7_8).V1)})
 			_ = __local_var_8_9
 			__local_var_7_7 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
@@ -336,7 +336,7 @@ func Call_Main_sumEleven(a_0_loop int64, b_1_loop int64, c_2_loop int64, d_3_loo
 	_ = j_9
 	var k_10 int64 = k_10_loop
 	_ = k_10
-	return ((((((((((a_0) + (b_1)) + (c_2)) + (d_3)) + (e_4)) + (f_5)) + (g_6)) + (h_7)) + (i_8)) + (j_9)) + (k_10)
+	return gopurs_runtime.IntAdd(gopurs_runtime.IntAdd(gopurs_runtime.IntAdd(gopurs_runtime.IntAdd(gopurs_runtime.IntAdd(gopurs_runtime.IntAdd(gopurs_runtime.IntAdd(gopurs_runtime.IntAdd(gopurs_runtime.IntAdd(gopurs_runtime.IntAdd(a_0, b_1), c_2), d_3), e_4), f_5), g_6), h_7), i_8), j_9), k_10)
 }
 
 func Call_Main_runErased(v_0_loop gopurs_runtime.Value) gopurs_runtime.Value {

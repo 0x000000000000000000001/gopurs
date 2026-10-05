@@ -171,7 +171,7 @@ func Get_Main_checkEffects() gopurs_runtime.Value {
 					return func() gopurs_runtime.Value {
 						arr := func() []string {
 							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), v_3, func() gopurs_runtime.Value {
-								arr := []string{("consume:") + (gopurs_runtime.Apply(Get_Main_describeEntryMap(), entry_2).StrVal())}
+								arr := []string{gopurs_runtime.ConcatString("consume:", gopurs_runtime.Apply(Get_Main_describeEntryMap(), entry_2).StrVal())}
 								boxed := make([]gopurs_runtime.Value, len(arr))
 								for i, v := range arr {
 									boxed[i] = gopurs_runtime.Str(v)
@@ -263,7 +263,7 @@ func Get_Main_checkEffects() gopurs_runtime.Value {
 				return unboxed
 			}(), []string{"before", "produce", "consume:9:created", "after"}}), gopurs_runtime.Value{})
 			_ = __local_var_9_9
-			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(("effect order: ")+(gopurs_runtime.Apply(Rebox_Main_1386611502_1953100407(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Main_showArray())).V0, __local_var_8_8).StrVal()))), gopurs_runtime.Value{})
+			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.ConcatString("effect order: ", gopurs_runtime.Apply(Rebox_Main_1386611502_1953100407(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Main_showArray())).V0, __local_var_8_8).StrVal()))), gopurs_runtime.Value{})
 		})
 	})
 	return cache_Main_checkEffects
@@ -811,7 +811,7 @@ func Call_Main_check(label_0_loop string, expected_1_loop string, actual_2_loop 
 		_ = __local_var_3_0
 		__local_var_4_1 := gopurs_runtime.Apply(__local_var_3_0, gopurs_runtime.Value{})
 		_ = __local_var_4_1
-		return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(((label_0)+(": "))+(actual_2))), gopurs_runtime.Value{})
+		return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(label_0, ": "), actual_2))), gopurs_runtime.Value{})
 	})
 }
 
@@ -859,19 +859,19 @@ func Call_Main_checkEntry(reverse_0_loop bool) gopurs_runtime.Value {
 			__t8 = "count|label"
 		}
 	end_branch_8:
-		__local_var_6_7 := gopurs_runtime.Apply(Call_Main_check((prefix_4_3)+("compact keys"), __t8, __local_var_5_5.StrVal()), gopurs_runtime.Value{})
+		__local_var_6_7 := gopurs_runtime.Apply(Call_Main_check(gopurs_runtime.ConcatString(prefix_4_3, "compact keys"), __t8, __local_var_5_5.StrVal()), gopurs_runtime.Value{})
 		_ = __local_var_6_7
-		__local_var_7_9 := gopurs_runtime.Apply(Call_Main_check((prefix_4_3)+("count access"), "5", Data_Show_ShowIntImpl(gopurs_runtime.RecordGet(__local_var_2_1, "count").IntVal)), gopurs_runtime.Value{})
+		__local_var_7_9 := gopurs_runtime.Apply(Call_Main_check(gopurs_runtime.ConcatString(prefix_4_3, "count access"), "5", Data_Show_ShowIntImpl(gopurs_runtime.RecordGet(__local_var_2_1, "count").IntVal)), gopurs_runtime.Value{})
 		_ = __local_var_7_9
-		__local_var_8_10 := gopurs_runtime.Apply(Call_Main_check((prefix_4_3)+("label access"), "alpha", gopurs_runtime.RecordGet(__local_var_2_1, "label").StrVal()), gopurs_runtime.Value{})
+		__local_var_8_10 := gopurs_runtime.Apply(Call_Main_check(gopurs_runtime.ConcatString(prefix_4_3, "label access"), "alpha", gopurs_runtime.RecordGet(__local_var_2_1, "label").StrVal()), gopurs_runtime.Value{})
 		_ = __local_var_8_10
-		__local_var_9_11 := gopurs_runtime.Apply(Call_Main_check((prefix_4_3)+("FFI map"), "5:alpha", gopurs_runtime.Apply(Get_Main_describeEntryMap(), __local_var_2_1).StrVal()), gopurs_runtime.Value{})
+		__local_var_9_11 := gopurs_runtime.Apply(Call_Main_check(gopurs_runtime.ConcatString(prefix_4_3, "FFI map"), "5:alpha", gopurs_runtime.Apply(Get_Main_describeEntryMap(), __local_var_2_1).StrVal()), gopurs_runtime.Value{})
 		_ = __local_var_9_11
 		__local_var_10_13 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Main_compactEntry(), gopurs_runtime.Bool(reverse_0)), gopurs_runtime.Value{})
 		_ = __local_var_10_13
 		__local_var_10_12 := gopurs_runtime.Apply(Get_Main_describeEntryMap(), __local_var_10_13)
 		_ = __local_var_10_12
-		__local_var_11_14 := gopurs_runtime.Apply(Call_Main_check((prefix_4_3)+("compact FFI map"), "5:alpha", __local_var_10_12.StrVal()), gopurs_runtime.Value{})
+		__local_var_11_14 := gopurs_runtime.Apply(Call_Main_check(gopurs_runtime.ConcatString(prefix_4_3, "compact FFI map"), "5:alpha", __local_var_10_12.StrVal()), gopurs_runtime.Value{})
 		_ = __local_var_11_14
 		// TAST (Let): changedCount_12_15 shape=Other bindingType=(Record (Row [count: Int, label: String] Empty))
 		changedCount_12_15 := func() struct {
@@ -895,13 +895,13 @@ func Call_Main_checkEntry(reverse_0_loop bool) gopurs_runtime.Value {
 			return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
 		}()), gopurs_runtime.Value{})
 		_ = __local_var_13_16
-		__local_var_14_17 := gopurs_runtime.Apply(Call_Main_check((prefix_4_3)+("count update"), "-7:alpha", gopurs_runtime.Apply(Get_Main_describeEntryMap(), func() gopurs_runtime.Value {
+		__local_var_14_17 := gopurs_runtime.Apply(Call_Main_check(gopurs_runtime.ConcatString(prefix_4_3, "count update"), "-7:alpha", gopurs_runtime.Apply(Get_Main_describeEntryMap(), func() gopurs_runtime.Value {
 			orig := changedCount_12_15
 			_ = orig
 			return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
 		}()).StrVal()), gopurs_runtime.Value{})
 		_ = __local_var_14_17
-		__local_var_15_18 := gopurs_runtime.Apply(Call_Main_check((prefix_4_3)+("label update"), "5:beta", gopurs_runtime.Apply(Get_Main_describeEntryMap(), func() gopurs_runtime.Value {
+		__local_var_15_18 := gopurs_runtime.Apply(Call_Main_check(gopurs_runtime.ConcatString(prefix_4_3, "label update"), "5:beta", gopurs_runtime.Apply(Get_Main_describeEntryMap(), func() gopurs_runtime.Value {
 			orig := func() struct {
 				count int64
 				label string
@@ -920,7 +920,7 @@ func Call_Main_checkEntry(reverse_0_loop bool) gopurs_runtime.Value {
 			return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
 		}()).StrVal()), gopurs_runtime.Value{})
 		_ = __local_var_15_18
-		__local_var_16_19 := gopurs_runtime.Apply(Call_Main_check((prefix_4_3)+("both updates"), "0:", gopurs_runtime.Apply(Get_Main_describeEntryMap(), func() gopurs_runtime.Value {
+		__local_var_16_19 := gopurs_runtime.Apply(Call_Main_check(gopurs_runtime.ConcatString(prefix_4_3, "both updates"), "0:", gopurs_runtime.Apply(Get_Main_describeEntryMap(), func() gopurs_runtime.Value {
 			orig := func() struct {
 				count int64
 				label string
@@ -939,15 +939,15 @@ func Call_Main_checkEntry(reverse_0_loop bool) gopurs_runtime.Value {
 			return gopurs_runtime.RecordDict2("count", "label", gopurs_runtime.Int(orig.count), gopurs_runtime.Str(orig.label))
 		}()).StrVal()), gopurs_runtime.Value{})
 		_ = __local_var_16_19
-		__local_var_17_20 := gopurs_runtime.Apply(Call_Main_check((prefix_4_3)+("original after updates"), "5:alpha", gopurs_runtime.Apply(Get_Main_describeEntryMap(), __local_var_2_1).StrVal()), gopurs_runtime.Value{})
+		__local_var_17_20 := gopurs_runtime.Apply(Call_Main_check(gopurs_runtime.ConcatString(prefix_4_3, "original after updates"), "5:alpha", gopurs_runtime.Apply(Get_Main_describeEntryMap(), __local_var_2_1).StrVal()), gopurs_runtime.Value{})
 		_ = __local_var_17_20
 		__local_var_18_21 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_3_2), gopurs_runtime.Value{})
 		_ = __local_var_18_21
 		__local_var_19_22 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_13_16), gopurs_runtime.Value{})
 		_ = __local_var_19_22
-		__local_var_20_23 := gopurs_runtime.Apply(Call_Main_check((prefix_4_3)+("retained original"), "5:alpha", gopurs_runtime.Apply(Get_Main_describeEntryMap(), __local_var_18_21).StrVal()), gopurs_runtime.Value{})
+		__local_var_20_23 := gopurs_runtime.Apply(Call_Main_check(gopurs_runtime.ConcatString(prefix_4_3, "retained original"), "5:alpha", gopurs_runtime.Apply(Get_Main_describeEntryMap(), __local_var_18_21).StrVal()), gopurs_runtime.Value{})
 		_ = __local_var_20_23
-		return gopurs_runtime.Apply(Call_Main_check((prefix_4_3)+("retained count update"), "-7:alpha", gopurs_runtime.Apply(Get_Main_describeEntryMap(), __local_var_19_22).StrVal()), gopurs_runtime.Value{})
+		return gopurs_runtime.Apply(Call_Main_check(gopurs_runtime.ConcatString(prefix_4_3, "retained count update"), "-7:alpha", gopurs_runtime.Apply(Get_Main_describeEntryMap(), __local_var_19_22).StrVal()), gopurs_runtime.Value{})
 	})
 }
 

@@ -426,7 +426,7 @@ func Call_Main_check(label_0_loop string, expected_1_loop int64, actual_2_loop i
 		_ = __local_var_3_0
 		__local_var_4_1 := gopurs_runtime.Apply(__local_var_3_0, gopurs_runtime.Value{})
 		_ = __local_var_4_1
-		return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(((label_0)+(": "))+(Data_Show_ShowIntImpl(actual_2)))), gopurs_runtime.Value{})
+		return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(label_0, ": "), Data_Show_ShowIntImpl(actual_2)))), gopurs_runtime.Value{})
 	})
 }
 

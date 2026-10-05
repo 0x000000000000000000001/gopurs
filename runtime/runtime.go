@@ -106,9 +106,47 @@ func (v Value) StrVal() string {
 	return StrValue(v)
 }
 
+// ConcatString concatenates PureScript UTF-16 strings in their canonical WTF-8
+// representation. Each operand already combines its valid surrogate pairs;
+// only a trailing high surrogate and a leading low surrogate can form a new
+// pair at the join. Preserve all other bytes, including isolated surrogates.
+func ConcatString(left, right string) string {
+	n := len(left)
+	if n >= 3 && len(right) >= 3 &&
+		left[n-3] == 0xed && left[n-2]&0xf0 == 0xa0 && left[n-1]&0xc0 == 0x80 &&
+		right[0] == 0xed && right[1]&0xf0 == 0xb0 && right[2]&0xc0 == 0x80 {
+		high := rune(left[n-2]&0x0f)<<6 | rune(left[n-1]&0x3f)
+		low := rune(right[1]&0x0f)<<6 | rune(right[2]&0x3f)
+		return left[:n-3] + string(0x10000+(high<<10)+low) + right[3:]
+	}
+	return left + right
+}
+
 func Int(v int64) Value {
 	return Value{Type: TypeInt, IntVal: v}
 }
+
+// Int storage also carries the unsigned result of >>> and the boundary
+// quotient bottom / -1. Coerce at the same operations as the JS Prelude,
+// rather than narrowing every stored value.
+func IntNegate(a int64) int64 { return int64(-int32(a)) }
+func IntAdd(a, b int64) int64 { return int64(int32(a + b)) }
+func IntSub(a, b int64) int64 { return int64(int32(a - b)) }
+
+func IntMul(a, b int64) int64 {
+	// The reference Prelude uses (a * b) | 0: Number multiplication rounds
+	// before ToInt32. An exact integer product (or Math.imul) differs near
+	// the bounds. Reduce before converting, since a product can exceed int64.
+	return int64(int32(int64(math.Mod(float64(a)*float64(b), 4294967296))))
+}
+
+func IntBitNot(a int64) int64 { return int64(^int32(a)) }
+func IntBitAnd(a, b int64) int64 { return int64(int32(a) & int32(b)) }
+func IntBitOr(a, b int64) int64 { return int64(int32(a) | int32(b)) }
+func IntBitXor(a, b int64) int64 { return int64(int32(a) ^ int32(b)) }
+func IntShl(a, b int64) int64 { return int64(int32(a) << (uint32(b) & 31)) }
+func IntShr(a, b int64) int64 { return int64(int32(a) >> (uint32(b) & 31)) }
+func IntZshr(a, b int64) int64 { return int64(uint32(a) >> (uint32(b) & 31)) }
 
 // PureScript uses Euclidean division: a non-negative remainder, and zero
 // for both division and modulo by zero. Go instead truncates toward zero.
@@ -172,27 +210,27 @@ func FloatGt(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVa
 func FloatGte(a, b Value) Value { return Bool(math.Float64frombits(uint64(a.IntVal)) >= math.Float64frombits(uint64(b.IntVal))) }
 
 func Zshr(a Value, b Value) Value {
-	return Int(int64(uint32(a.IntVal) >> uint32(b.IntVal)))
+	return Int(IntZshr(a.IntVal, b.IntVal))
 }
 
 func Shl(a Value, b Value) Value {
-	return Int(int64(int32(a.IntVal) << uint32(b.IntVal)))
+	return Int(IntShl(a.IntVal, b.IntVal))
 }
 
 func Shr(a Value, b Value) Value {
-	return Int(int64(int32(a.IntVal) >> uint32(b.IntVal)))
+	return Int(IntShr(a.IntVal, b.IntVal))
 }
 
 func BitAnd(a Value, b Value) Value {
-	return Int(int64(int32(a.IntVal) & int32(b.IntVal)))
+	return Int(IntBitAnd(a.IntVal, b.IntVal))
 }
 
 func BitOr(a Value, b Value) Value {
-	return Int(int64(int32(a.IntVal) | int32(b.IntVal)))
+	return Int(IntBitOr(a.IntVal, b.IntVal))
 }
 
 func BitXor(a Value, b Value) Value {
-	return Int(int64(int32(a.IntVal) ^ int32(b.IntVal)))
+	return Int(IntBitXor(a.IntVal, b.IntVal))
 }
 
 func Array(v []Value) Value {

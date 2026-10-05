@@ -39,8 +39,8 @@ func Get_Main_tco4() gopurs_runtime.Value {
 						}
 					}
 					{
-						x_1_loop = (x_1) + (int64(2))
-						y_2_loop = (y_2) - (int64(1))
+						x_1_loop = gopurs_runtime.IntAdd(x_1, int64(2))
+						y_2_loop = gopurs_runtime.IntSub(y_2, int64(1))
 						continue f__467072791_0_0_0
 						__t2 = func() int64 { panic("unreachable") }()
 					}
@@ -73,7 +73,7 @@ func Get_Main_tco4() gopurs_runtime.Value {
 						}
 					}
 					{
-						__t3 = Call_local_Main_f__467072791_0_0_0((x_1)+(int64(2)), (y_2)-(int64(1)))
+						__t3 = Call_local_Main_f__467072791_0_0_0(gopurs_runtime.IntAdd(x_1, int64(2)), gopurs_runtime.IntSub(y_2, int64(1)))
 					}
 				end_branch_3:
 					return __t3
@@ -127,10 +127,10 @@ func Get_Main_tco2() gopurs_runtime.Value {
 					var y_2 int64 = y_2_loop
 					_ = y_2
 					// TAST (Let): __local_var_3_2 shape=Other bindingType=Int
-					__local_var_3_2 := (x_1) + (int64(2))
+					__local_var_3_2 := gopurs_runtime.IntAdd(x_1, int64(2))
 					_ = __local_var_3_2
 					// TAST (Let): __local_var_4_3 shape=Other bindingType=Int
-					__local_var_4_3 := (y_2) - (int64(1))
+					__local_var_4_3 := gopurs_runtime.IntSub(y_2, int64(1))
 					_ = __local_var_4_3
 					var __t4 int64
 					{
@@ -167,10 +167,10 @@ func Get_Main_tco2() gopurs_runtime.Value {
 					var y_2 int64 = y_2_loop
 					_ = y_2
 					// TAST (Let): __local_var_3_5 shape=Other bindingType=Int
-					__local_var_3_5 := (x_1) + (int64(2))
+					__local_var_3_5 := gopurs_runtime.IntAdd(x_1, int64(2))
 					_ = __local_var_3_5
 					// TAST (Let): __local_var_4_6 shape=Other bindingType=Int
-					__local_var_4_6 := (y_2) - (int64(1))
+					__local_var_4_6 := gopurs_runtime.IntSub(y_2, int64(1))
 					_ = __local_var_4_6
 					var __t7 int64
 					{
@@ -224,10 +224,10 @@ func Get_Main_tco1() gopurs_runtime.Value {
 					var y_2 int64 = y_2_loop
 					_ = y_2
 					// TAST (Let): __local_var_3_2 shape=Other bindingType=Int
-					__local_var_3_2 := (x_1) + (int64(2))
+					__local_var_3_2 := gopurs_runtime.IntAdd(x_1, int64(2))
 					_ = __local_var_3_2
 					// TAST (Let): __local_var_4_3 shape=Other bindingType=Int
-					__local_var_4_3 := (y_2) - (int64(1))
+					__local_var_4_3 := gopurs_runtime.IntSub(y_2, int64(1))
 					_ = __local_var_4_3
 					var __t4 int64
 					{
@@ -264,10 +264,10 @@ func Get_Main_tco1() gopurs_runtime.Value {
 					var y_2 int64 = y_2_loop
 					_ = y_2
 					// TAST (Let): __local_var_3_5 shape=Other bindingType=Int
-					__local_var_3_5 := (x_1) + (int64(2))
+					__local_var_3_5 := gopurs_runtime.IntAdd(x_1, int64(2))
 					_ = __local_var_3_5
 					// TAST (Let): __local_var_4_6 shape=Other bindingType=Int
-					__local_var_4_6 := (y_2) - (int64(1))
+					__local_var_4_6 := gopurs_runtime.IntSub(y_2, int64(1))
 					_ = __local_var_4_6
 					var __t7 int64
 					{
@@ -330,8 +330,8 @@ func Get_Main_ntco4() gopurs_runtime.Value {
 						}
 					}
 					{
-						x_1_loop = (x_1) + (int64(2))
-						y_2_loop = (y_2) - (int64(1))
+						x_1_loop = gopurs_runtime.IntAdd(x_1, int64(2))
+						y_2_loop = gopurs_runtime.IntSub(y_2, int64(1))
 						continue f__467072791_0_0_12
 						__t2 = func() int64 { panic("unreachable") }()
 					}
@@ -364,7 +364,7 @@ func Get_Main_ntco4() gopurs_runtime.Value {
 						}
 					}
 					{
-						__t3 = Call_local_Main_f__467072791_0_0_12((x_1)+(int64(2)), (y_2)-(int64(1)))
+						__t3 = Call_local_Main_f__467072791_0_0_12(gopurs_runtime.IntAdd(x_1, int64(2)), gopurs_runtime.IntSub(y_2, int64(1)))
 					}
 				end_branch_3:
 					return __t3
@@ -399,7 +399,7 @@ func Get_Main_ntco3() gopurs_runtime.Value {
 			// FALLBACK TCO: isLoop=false len=2
 			f__467072791_0_0_14 = gopurs_runtime.Func2(func(x_1 gopurs_runtime.Value, y_2 gopurs_runtime.Value) gopurs_runtime.Value {
 				// TAST (Let): g__3466805691_3_2 shape=App(Other) bindingType=(Func [Int] Int)
-				g__3466805691_3_2 := gopurs_runtime.Apply((*f__467072791_0_0_14_cell), gopurs_runtime.Int((x_1.IntVal)+(int64(2))))
+				g__3466805691_3_2 := gopurs_runtime.Apply((*f__467072791_0_0_14_cell), gopurs_runtime.Int(gopurs_runtime.IntAdd(x_1.IntVal, int64(2))))
 				_ = g__3466805691_3_2
 				var __t3 int64
 				{
@@ -411,7 +411,7 @@ func Get_Main_ntco3() gopurs_runtime.Value {
 					}
 				}
 				{
-					__t3 = gopurs_runtime.Apply(g__3466805691_3_2, gopurs_runtime.Int((y_2.IntVal)-(int64(1)))).IntVal
+					__t3 = gopurs_runtime.Apply(g__3466805691_3_2, gopurs_runtime.Int(gopurs_runtime.IntSub(y_2.IntVal, int64(1)))).IntVal
 				}
 			end_branch_3:
 				return gopurs_runtime.Int(__t3)
@@ -419,7 +419,7 @@ func Get_Main_ntco3() gopurs_runtime.Value {
 			f__467072791_0_0_14_cell = &f__467072791_0_0_14
 			f_0_1_15 = gopurs_runtime.Func2(func(x_1 gopurs_runtime.Value, y_2 gopurs_runtime.Value) gopurs_runtime.Value {
 				// TAST (Let): g__3466805691_3_4 shape=App(Other) bindingType=(Func [Int] Int)
-				g__3466805691_3_4 := gopurs_runtime.Apply((*f__467072791_0_0_14_cell), gopurs_runtime.Int((x_1.IntVal)+(int64(2))))
+				g__3466805691_3_4 := gopurs_runtime.Apply((*f__467072791_0_0_14_cell), gopurs_runtime.Int(gopurs_runtime.IntAdd(x_1.IntVal, int64(2))))
 				_ = g__3466805691_3_4
 				var __t5 int64
 				{
@@ -431,7 +431,7 @@ func Get_Main_ntco3() gopurs_runtime.Value {
 					}
 				}
 				{
-					__t5 = gopurs_runtime.Apply(g__3466805691_3_4, gopurs_runtime.Int((y_2.IntVal)-(int64(1)))).IntVal
+					__t5 = gopurs_runtime.Apply(g__3466805691_3_4, gopurs_runtime.Int(gopurs_runtime.IntSub(y_2.IntVal, int64(1)))).IntVal
 				}
 			end_branch_5:
 				return gopurs_runtime.Int(__t5)
@@ -477,8 +477,8 @@ func Get_Main_ntco2() gopurs_runtime.Value {
 						}
 					}
 					{
-						x_1_loop = (x_1) + (int64(2))
-						y_2_loop = (y_2) - (int64(1))
+						x_1_loop = gopurs_runtime.IntAdd(x_1, int64(2))
+						y_2_loop = gopurs_runtime.IntSub(y_2, int64(1))
 						continue f__467072791_0_0_16
 						__t2 = func() int64 { panic("unreachable") }()
 					}
@@ -511,7 +511,7 @@ func Get_Main_ntco2() gopurs_runtime.Value {
 						}
 					}
 					{
-						__t3 = Call_local_Main_f__467072791_0_0_16((x_1)+(int64(2)), (y_2)-(int64(1)))
+						__t3 = Call_local_Main_f__467072791_0_0_16(gopurs_runtime.IntAdd(x_1, int64(2)), gopurs_runtime.IntSub(y_2, int64(1)))
 					}
 				end_branch_3:
 					return __t3
@@ -565,10 +565,10 @@ func Get_Main_main() gopurs_runtime.Value {
 					var y_2 int64 = y_2_loop
 					_ = y_2
 					// TAST (Let): __local_var_3_3 shape=Other bindingType=Int
-					__local_var_3_3 := (x_1) + (int64(2))
+					__local_var_3_3 := gopurs_runtime.IntAdd(x_1, int64(2))
 					_ = __local_var_3_3
 					// TAST (Let): __local_var_4_4 shape=Other bindingType=Int
-					__local_var_4_4 := (y_2) - (int64(1))
+					__local_var_4_4 := gopurs_runtime.IntSub(y_2, int64(1))
 					_ = __local_var_4_4
 					var __t5 int64
 					{
@@ -605,10 +605,10 @@ func Get_Main_main() gopurs_runtime.Value {
 					var y_2 int64 = y_2_loop
 					_ = y_2
 					// TAST (Let): __local_var_3_6 shape=Other bindingType=Int
-					__local_var_3_6 := (x_1) + (int64(2))
+					__local_var_3_6 := gopurs_runtime.IntAdd(x_1, int64(2))
 					_ = __local_var_3_6
 					// TAST (Let): __local_var_4_7 shape=Other bindingType=Int
-					__local_var_4_7 := (y_2) - (int64(1))
+					__local_var_4_7 := gopurs_runtime.IntSub(y_2, int64(1))
 					_ = __local_var_4_7
 					var __t8 int64
 					{
@@ -658,10 +658,10 @@ func Get_Main_main() gopurs_runtime.Value {
 					var y_4 int64 = y_4_loop
 					_ = y_4
 					// TAST (Let): __local_var_5_13 shape=Other bindingType=Int
-					__local_var_5_13 := (x_3) + (int64(2))
+					__local_var_5_13 := gopurs_runtime.IntAdd(x_3, int64(2))
 					_ = __local_var_5_13
 					// TAST (Let): __local_var_6_14 shape=Other bindingType=Int
-					__local_var_6_14 := (y_4) - (int64(1))
+					__local_var_6_14 := gopurs_runtime.IntSub(y_4, int64(1))
 					_ = __local_var_6_14
 					var __t15 int64
 					{
@@ -698,10 +698,10 @@ func Get_Main_main() gopurs_runtime.Value {
 					var y_4 int64 = y_4_loop
 					_ = y_4
 					// TAST (Let): __local_var_5_16 shape=Other bindingType=Int
-					__local_var_5_16 := (x_3) + (int64(2))
+					__local_var_5_16 := gopurs_runtime.IntAdd(x_3, int64(2))
 					_ = __local_var_5_16
 					// TAST (Let): __local_var_6_17 shape=Other bindingType=Int
-					__local_var_6_17 := (y_4) - (int64(1))
+					__local_var_6_17 := gopurs_runtime.IntSub(y_4, int64(1))
 					_ = __local_var_6_17
 					var __t18 int64
 					{
@@ -762,8 +762,8 @@ func Get_Main_main() gopurs_runtime.Value {
 						}
 					}
 					{
-						x_5_loop = (x_5) + (int64(2))
-						y_6_loop = (y_6) - (int64(1))
+						x_5_loop = gopurs_runtime.IntAdd(x_5, int64(2))
+						y_6_loop = gopurs_runtime.IntSub(y_6, int64(1))
 						continue f__467072791_4_21_24
 						__t23 = func() int64 { panic("unreachable") }()
 					}
@@ -796,7 +796,7 @@ func Get_Main_main() gopurs_runtime.Value {
 						}
 					}
 					{
-						__t24 = Call_local_Main_f__467072791_4_21_24((x_5)+(int64(2)), (y_6)-(int64(1)))
+						__t24 = Call_local_Main_f__467072791_4_21_24(gopurs_runtime.IntAdd(x_5, int64(2)), gopurs_runtime.IntSub(y_6, int64(1)))
 					}
 				end_branch_24:
 					return __t24
@@ -827,7 +827,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				{
 					if (x_6.IntVal) > (int64(1000)) {
 						__t28 = gopurs_runtime.Func(func(v_7 gopurs_runtime.Value) gopurs_runtime.Value {
-							return gopurs_runtime.Int((x_6.IntVal) + (v_7.IntVal))
+							return gopurs_runtime.Int(gopurs_runtime.IntAdd(x_6.IntVal, v_7.IntVal))
 						})
 						goto end_branch_28
 					} else {
@@ -836,7 +836,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				}
 				{
 					__t28 = gopurs_runtime.Func(func(y_prime__7 gopurs_runtime.Value) gopurs_runtime.Value {
-						return gopurs_runtime.Int(gopurs_runtime.Apply2((*f__467072791_5_26_26_cell), gopurs_runtime.Int((x_6.IntVal)+(int64(10))), gopurs_runtime.Int((y_prime__7.IntVal)-(int64(1)))).IntVal)
+						return gopurs_runtime.Int(gopurs_runtime.Apply2((*f__467072791_5_26_26_cell), gopurs_runtime.Int(gopurs_runtime.IntAdd(x_6.IntVal, int64(10))), gopurs_runtime.Int(gopurs_runtime.IntSub(y_prime__7.IntVal, int64(1)))).IntVal)
 					})
 				}
 			end_branch_28:
@@ -848,7 +848,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				{
 					if (x_6.IntVal) > (int64(1000)) {
 						__t29 = gopurs_runtime.Func(func(v_7 gopurs_runtime.Value) gopurs_runtime.Value {
-							return gopurs_runtime.Int((x_6.IntVal) + (v_7.IntVal))
+							return gopurs_runtime.Int(gopurs_runtime.IntAdd(x_6.IntVal, v_7.IntVal))
 						})
 						goto end_branch_29
 					} else {
@@ -857,7 +857,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				}
 				{
 					__t29 = gopurs_runtime.Func(func(y_prime__7 gopurs_runtime.Value) gopurs_runtime.Value {
-						return gopurs_runtime.Int(gopurs_runtime.Apply2((*f__467072791_5_26_26_cell), gopurs_runtime.Int((x_6.IntVal)+(int64(10))), gopurs_runtime.Int((y_prime__7.IntVal)-(int64(1)))).IntVal)
+						return gopurs_runtime.Int(gopurs_runtime.Apply2((*f__467072791_5_26_26_cell), gopurs_runtime.Int(gopurs_runtime.IntAdd(x_6.IntVal, int64(10))), gopurs_runtime.Int(gopurs_runtime.IntSub(y_prime__7.IntVal, int64(1)))).IntVal)
 					})
 				}
 			end_branch_29:
@@ -897,8 +897,8 @@ func Get_Main_main() gopurs_runtime.Value {
 						}
 					}
 					{
-						x_7_loop = (x_7) + (int64(2))
-						y_8_loop = (y_8) - (int64(1))
+						x_7_loop = gopurs_runtime.IntAdd(x_7, int64(2))
+						y_8_loop = gopurs_runtime.IntSub(y_8, int64(1))
 						continue f__467072791_6_31_28
 						__t33 = func() int64 { panic("unreachable") }()
 					}
@@ -931,7 +931,7 @@ func Get_Main_main() gopurs_runtime.Value {
 						}
 					}
 					{
-						__t34 = Call_local_Main_f__467072791_6_31_28((x_7)+(int64(2)), (y_8)-(int64(1)))
+						__t34 = Call_local_Main_f__467072791_6_31_28(gopurs_runtime.IntAdd(x_7, int64(2)), gopurs_runtime.IntSub(y_8, int64(1)))
 					}
 				end_branch_34:
 					return __t34
@@ -959,7 +959,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			// FALLBACK TCO: isLoop=false len=2
 			f__467072791_7_36_30 = gopurs_runtime.Func2(func(x_8 gopurs_runtime.Value, y_9 gopurs_runtime.Value) gopurs_runtime.Value {
 				// TAST (Let): g__3466805691_10_38 shape=App(Other) bindingType=(Func [Int] Int)
-				g__3466805691_10_38 := gopurs_runtime.Apply((*f__467072791_7_36_30_cell), gopurs_runtime.Int((x_8.IntVal)+(int64(2))))
+				g__3466805691_10_38 := gopurs_runtime.Apply((*f__467072791_7_36_30_cell), gopurs_runtime.Int(gopurs_runtime.IntAdd(x_8.IntVal, int64(2))))
 				_ = g__3466805691_10_38
 				var __t39 int64
 				{
@@ -971,7 +971,7 @@ func Get_Main_main() gopurs_runtime.Value {
 					}
 				}
 				{
-					__t39 = gopurs_runtime.Apply(g__3466805691_10_38, gopurs_runtime.Int((y_9.IntVal)-(int64(1)))).IntVal
+					__t39 = gopurs_runtime.Apply(g__3466805691_10_38, gopurs_runtime.Int(gopurs_runtime.IntSub(y_9.IntVal, int64(1)))).IntVal
 				}
 			end_branch_39:
 				return gopurs_runtime.Int(__t39)
@@ -979,7 +979,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			f__467072791_7_36_30_cell = &f__467072791_7_36_30
 			f_7_37_31 = gopurs_runtime.Func2(func(x_8 gopurs_runtime.Value, y_9 gopurs_runtime.Value) gopurs_runtime.Value {
 				// TAST (Let): g__3466805691_10_40 shape=App(Other) bindingType=(Func [Int] Int)
-				g__3466805691_10_40 := gopurs_runtime.Apply((*f__467072791_7_36_30_cell), gopurs_runtime.Int((x_8.IntVal)+(int64(2))))
+				g__3466805691_10_40 := gopurs_runtime.Apply((*f__467072791_7_36_30_cell), gopurs_runtime.Int(gopurs_runtime.IntAdd(x_8.IntVal, int64(2))))
 				_ = g__3466805691_10_40
 				var __t41 int64
 				{
@@ -991,7 +991,7 @@ func Get_Main_main() gopurs_runtime.Value {
 					}
 				}
 				{
-					__t41 = gopurs_runtime.Apply(g__3466805691_10_40, gopurs_runtime.Int((y_9.IntVal)-(int64(1)))).IntVal
+					__t41 = gopurs_runtime.Apply(g__3466805691_10_40, gopurs_runtime.Int(gopurs_runtime.IntSub(y_9.IntVal, int64(1)))).IntVal
 				}
 			end_branch_41:
 				return gopurs_runtime.Int(__t41)
@@ -1030,8 +1030,8 @@ func Get_Main_main() gopurs_runtime.Value {
 						}
 					}
 					{
-						x_9_loop = (x_9) + (int64(2))
-						y_10_loop = (y_10) - (int64(1))
+						x_9_loop = gopurs_runtime.IntAdd(x_9, int64(2))
+						y_10_loop = gopurs_runtime.IntSub(y_10, int64(1))
 						continue f__467072791_8_43_32
 						__t45 = func() int64 { panic("unreachable") }()
 					}
@@ -1064,7 +1064,7 @@ func Get_Main_main() gopurs_runtime.Value {
 						}
 					}
 					{
-						__t46 = Call_local_Main_f__467072791_8_43_32((x_9)+(int64(2)), (y_10)-(int64(1)))
+						__t46 = Call_local_Main_f__467072791_8_43_32(gopurs_runtime.IntAdd(x_9, int64(2)), gopurs_runtime.IntSub(y_10, int64(1)))
 					}
 				end_branch_46:
 					return __t46
@@ -1138,8 +1138,8 @@ func Call_Main_tco3(y0_0_loop int64) int64 {
 						var __t4 int64
 						{
 							if (y_prime__6) > (gopurs_runtime.IntDiv(y0_0, int64(2))) {
-								x_prime__5_loop = (x_prime__5) + (int64(3))
-								y_prime__6_loop = (y_prime__6) - (int64(1))
+								x_prime__5_loop = gopurs_runtime.IntAdd(x_prime__5, int64(3))
+								y_prime__6_loop = gopurs_runtime.IntSub(y_prime__6, int64(1))
 								continue g__467072791_4_2_4
 								__t4 = func() int64 { panic("unreachable") }()
 								goto end_branch_4
@@ -1148,7 +1148,7 @@ func Call_Main_tco3(y0_0_loop int64) int64 {
 							}
 						}
 						{
-							__t4 = Call_local_Main_f__467072791_1_0_2((x_prime__5)+(int64(2)), y_prime__6)
+							__t4 = Call_local_Main_f__467072791_1_0_2(gopurs_runtime.IntAdd(x_prime__5, int64(2)), y_prime__6)
 						}
 					end_branch_4:
 						__t5 = __t4
@@ -1185,14 +1185,14 @@ func Call_Main_tco3(y0_0_loop int64) int64 {
 						var __t6 int64
 						{
 							if (y_prime__6) > (gopurs_runtime.IntDiv(y0_0, int64(2))) {
-								__t6 = Call_local_Main_g__467072791_4_2_4((x_prime__5)+(int64(3)), (y_prime__6)-(int64(1)))
+								__t6 = Call_local_Main_g__467072791_4_2_4(gopurs_runtime.IntAdd(x_prime__5, int64(3)), gopurs_runtime.IntSub(y_prime__6, int64(1)))
 								goto end_branch_6
 							} else {
 
 							}
 						}
 						{
-							__t6 = Call_local_Main_f__467072791_1_0_2((x_prime__5)+(int64(2)), y_prime__6)
+							__t6 = Call_local_Main_f__467072791_1_0_2(gopurs_runtime.IntAdd(x_prime__5, int64(2)), y_prime__6)
 						}
 					end_branch_6:
 						__t7 = __t6
@@ -1206,7 +1206,7 @@ func Call_Main_tco3(y0_0_loop int64) int64 {
 					return gopurs_runtime.Int(Call_local_Main_g_4_3_5(x_prime__5_loop_val.IntVal, y_prime__6_loop_val.IntVal))
 				})
 			})
-			return Call_local_Main_g__467072791_4_2_4(x_2, (y_3)-(int64(1)))
+			return Call_local_Main_g__467072791_4_2_4(x_2, gopurs_runtime.IntSub(y_3, int64(1)))
 		}
 	}
 	f__467072791_1_0_2 = gopurs_runtime.Func(func(x_2_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
@@ -1255,8 +1255,8 @@ func Call_Main_tco3(y0_0_loop int64) int64 {
 						var __t10 int64
 						{
 							if (y_prime__6) > (gopurs_runtime.IntDiv(y0_0, int64(2))) {
-								x_prime__5_loop = (x_prime__5) + (int64(3))
-								y_prime__6_loop = (y_prime__6) - (int64(1))
+								x_prime__5_loop = gopurs_runtime.IntAdd(x_prime__5, int64(3))
+								y_prime__6_loop = gopurs_runtime.IntSub(y_prime__6, int64(1))
 								continue g__467072791_4_8_6
 								__t10 = func() int64 { panic("unreachable") }()
 								goto end_branch_10
@@ -1265,7 +1265,7 @@ func Call_Main_tco3(y0_0_loop int64) int64 {
 							}
 						}
 						{
-							__t10 = Call_local_Main_f__467072791_1_0_2((x_prime__5)+(int64(2)), y_prime__6)
+							__t10 = Call_local_Main_f__467072791_1_0_2(gopurs_runtime.IntAdd(x_prime__5, int64(2)), y_prime__6)
 						}
 					end_branch_10:
 						__t11 = __t10
@@ -1302,14 +1302,14 @@ func Call_Main_tco3(y0_0_loop int64) int64 {
 						var __t12 int64
 						{
 							if (y_prime__6) > (gopurs_runtime.IntDiv(y0_0, int64(2))) {
-								__t12 = Call_local_Main_g__467072791_4_8_6((x_prime__5)+(int64(3)), (y_prime__6)-(int64(1)))
+								__t12 = Call_local_Main_g__467072791_4_8_6(gopurs_runtime.IntAdd(x_prime__5, int64(3)), gopurs_runtime.IntSub(y_prime__6, int64(1)))
 								goto end_branch_12
 							} else {
 
 							}
 						}
 						{
-							__t12 = Call_local_Main_f__467072791_1_0_2((x_prime__5)+(int64(2)), y_prime__6)
+							__t12 = Call_local_Main_f__467072791_1_0_2(gopurs_runtime.IntAdd(x_prime__5, int64(2)), y_prime__6)
 						}
 					end_branch_12:
 						__t13 = __t12
@@ -1323,7 +1323,7 @@ func Call_Main_tco3(y0_0_loop int64) int64 {
 					return gopurs_runtime.Int(Call_local_Main_g_4_9_7(x_prime__5_loop_val.IntVal, y_prime__6_loop_val.IntVal))
 				})
 			})
-			return Call_local_Main_g__467072791_4_8_6(x_2, (y_3)-(int64(1)))
+			return Call_local_Main_g__467072791_4_8_6(x_2, gopurs_runtime.IntSub(y_3, int64(1)))
 		}
 	}
 	f_1_1_3 = gopurs_runtime.Func(func(x_2_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
@@ -1350,9 +1350,9 @@ func Call_Main_ntco1(y0_0_loop int64) int64 {
 	f__467072791_1_0_18 = gopurs_runtime.Func(func(x_2 gopurs_runtime.Value) gopurs_runtime.Value {
 		var __t2 gopurs_runtime.Value
 		{
-			if (x_2.IntVal) > ((int64(10)) * (y0_0)) {
+			if (x_2.IntVal) > (gopurs_runtime.IntMul(int64(10), y0_0)) {
 				__t2 = gopurs_runtime.Func(func(v_3 gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Int((x_2.IntVal) + (v_3.IntVal))
+					return gopurs_runtime.Int(gopurs_runtime.IntAdd(x_2.IntVal, v_3.IntVal))
 				})
 				goto end_branch_2
 			} else {
@@ -1361,7 +1361,7 @@ func Call_Main_ntco1(y0_0_loop int64) int64 {
 		}
 		{
 			__t2 = gopurs_runtime.Func(func(y_prime__3 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Int(gopurs_runtime.Apply2((*f__467072791_1_0_18_cell), gopurs_runtime.Int((x_2.IntVal)+(int64(10))), gopurs_runtime.Int((y_prime__3.IntVal)-(int64(1)))).IntVal)
+				return gopurs_runtime.Int(gopurs_runtime.Apply2((*f__467072791_1_0_18_cell), gopurs_runtime.Int(gopurs_runtime.IntAdd(x_2.IntVal, int64(10))), gopurs_runtime.Int(gopurs_runtime.IntSub(y_prime__3.IntVal, int64(1)))).IntVal)
 			})
 		}
 	end_branch_2:
@@ -1371,9 +1371,9 @@ func Call_Main_ntco1(y0_0_loop int64) int64 {
 	f_1_1_19 = gopurs_runtime.Func(func(x_2 gopurs_runtime.Value) gopurs_runtime.Value {
 		var __t3 gopurs_runtime.Value
 		{
-			if (x_2.IntVal) > ((int64(10)) * (y0_0)) {
+			if (x_2.IntVal) > (gopurs_runtime.IntMul(int64(10), y0_0)) {
 				__t3 = gopurs_runtime.Func(func(v_3 gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Int((x_2.IntVal) + (v_3.IntVal))
+					return gopurs_runtime.Int(gopurs_runtime.IntAdd(x_2.IntVal, v_3.IntVal))
 				})
 				goto end_branch_3
 			} else {
@@ -1382,7 +1382,7 @@ func Call_Main_ntco1(y0_0_loop int64) int64 {
 		}
 		{
 			__t3 = gopurs_runtime.Func(func(y_prime__3 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Int(gopurs_runtime.Apply2((*f__467072791_1_0_18_cell), gopurs_runtime.Int((x_2.IntVal)+(int64(10))), gopurs_runtime.Int((y_prime__3.IntVal)-(int64(1)))).IntVal)
+				return gopurs_runtime.Int(gopurs_runtime.Apply2((*f__467072791_1_0_18_cell), gopurs_runtime.Int(gopurs_runtime.IntAdd(x_2.IntVal, int64(10))), gopurs_runtime.Int(gopurs_runtime.IntSub(y_prime__3.IntVal, int64(1)))).IntVal)
 			})
 		}
 	end_branch_3:

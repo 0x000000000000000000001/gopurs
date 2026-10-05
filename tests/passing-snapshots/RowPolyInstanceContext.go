@@ -95,7 +95,7 @@ func Get_Main_test1() gopurs_runtime.Value {
 				orig := struct {
 					go__new gopurs_runtime.Value
 					ret     gopurs_runtime.Value
-				}{gopurs_runtime.RecordUpdate1(s_0, "foo", gopurs_runtime.Str((gopurs_runtime.RecordGet(s_0, "foo").StrVal())+("!"))), Get_Data_Unit_unit()}
+				}{gopurs_runtime.RecordUpdate1(s_0, "foo", gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.RecordGet(s_0, "foo").StrVal(), "!"))), Get_Data_Unit_unit()}
 				_ = orig
 				return gopurs_runtime.RecordDict2("new", "ret", orig.go__new, orig.ret)
 			}()
@@ -161,6 +161,6 @@ func Call_Main_test2(dictT_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	var dictT_0 gopurs_runtime.Value = dictT_0_loop
 	_ = dictT_0
 	return gopurs_runtime.Apply(Call_Main_state(gopurs_runtime.CoerceToStruct[Constructor_Main_T[gopurs_runtime.Value, gopurs_runtime.Value]](dictT_0)), gopurs_runtime.Func(func(o_1 gopurs_runtime.Value) gopurs_runtime.Value {
-		return gopurs_runtime.RecordUpdate1(o_1, "foo", gopurs_runtime.Str((gopurs_runtime.RecordGet(o_1, "foo").StrVal())+("!")))
+		return gopurs_runtime.RecordUpdate1(o_1, "foo", gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.RecordGet(o_1, "foo").StrVal(), "!")))
 	}))
 }

@@ -298,7 +298,7 @@ func Call_Main_check(name_0_loop string, condition_1_loop bool) gopurs_runtime.V
 		}
 	}
 	{
-		__t0 = ("Fail: ") + (name_0)
+		__t0 = gopurs_runtime.ConcatString("Fail: ", name_0)
 	}
 end_branch_0:
 	return gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(__t0))

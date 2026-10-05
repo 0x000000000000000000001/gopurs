@@ -77,7 +77,7 @@ sum__1135989556:
 		_ = x_0
 		var y_1 int64 = y_1_loop
 		_ = y_1
-		return gopurs_runtime.Int((x_0) + (y_1)).IntVal
+		return gopurs_runtime.Int(gopurs_runtime.IntAdd(x_0, y_1)).IntVal
 	}
 }
 

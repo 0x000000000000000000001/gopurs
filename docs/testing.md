@@ -412,15 +412,13 @@ ne demande pas de recompiler le PureScript si les entrées TAST sont inchangées
 
 Les exclusions de [tools/test-selection.mjs](../tools/test-selection.mjs) ont été
 réexécutées le **2 octobre 2026**, avec le même compilateur que la campagne
-finale. Après réintégration de `StringEdgeCases` le **3 octobre**, **sept** restent
-justifiées :
+finale. Après réintégration de `StringEdgeCases` le **3 octobre**, puis de
+`StringEscapes` et `2136` le **5 octobre**, **cinq** restent justifiées :
 
 | Fixtures | Échec observé et portée |
 | --- | --- |
 | `DerivingContravariant`, `DerivingFunctorFromBi`, `DerivingFunctorFromPro`, `DerivingProfunctor` | Le frontend TAST rejette les déclarations avec `CannotDeriveInvalidConstructorArg`. Aucun Go n'est produit. |
 | `NumberLiterals` | Exécution : l'oracle de `Show Number` attend `0.25996181067142`, mais reçoit `0.25996181067141905`. |
-| `StringEscapes` | L'exécution des assertions actives réussit, mais le pliage de `loneSurrogates` produit `false` en natif et `true` en JS. L'assertion sur cette concaténation est commentée dans la fixture. Les littéraux isolés sont préservés ; un succès d'exécution seul ne suffit pas à lever cette exclusion. |
-| `2136` | Compilation réussie, sortie `Fail` : la négation native 64 bits de la borne inférieure 32 bits dépasse `top`. |
 
 `DerivingClause` réintègre la sélection : compilation et exécution Go réussies,
 **334 fichiers Go identiques** entre natif séquentiel, natif parallèle et JS
@@ -432,6 +430,18 @@ Cette campagne comptait **391 fixtures sélectionnables**, distinctes des huit e
 et des labels de records : exécution dans les trois modes, parité octet par octet,
 création puis vérification stricte du snapshot. Les preuves figurent au
 [lot 02 du plan v2](#plan-v2--lot-02--chaînes-tast-et-records-3-octobre-2026).
+
+`StringEscapes` réintègre la sélection avec l'assertion de concaténation des
+surrogates réactivée et huit cas maintenus à l'exécution par `Effect.Ref`.
+Le pliage et l'exécution respectent l'oracle JS dans les trois modes ; son
+snapshot est créé puis vérifié strictement au
+[lot 03 du plan v2](#plan-v2--lot-03--concaténation-utf-16-5-octobre-2026).
+
+`2136` réintègre la sélection après correction des opérations entières aux bornes
+32 bits. Son prédicat original est conservé comme assertion, avec des contrôles
+de constantes et d'exécution ; les trois modes rendent l'oracle JS et leur Go
+est identique. Le snapshot revu passe strictement au
+[lot 04 du plan v2](#plan-v2--lot-04--bornes-et-opérations-int-5-octobre-2026).
 
 `bin/modtest` sélectionne les checkouts frères `gopurs-*` possédant un
 `bin/test` exécutable :
@@ -572,6 +582,161 @@ notamment `fixture-before.json`, `fixture-after.json`, `generated-go-review.diff
 frontend TAST **0.15.16 development**. Le nettoyage préalable demandé a libéré
 **1,07 Gio** de caches et anciens workspaces de tests ; `gopurs-cleanup.json`
 confirme des statuts Git identiques avant/après suppression.
+
+## Plan v2 — lot 03 : concaténation UTF-16, 5 octobre 2026
+
+`StringEscapes` est réintégrée. Lot validé : **45/100 points, 3/8 lots** du
+plan v2.
+
+Avant correction, le natif pliait `loneSurrogates` à `false`, contre `true` en
+JS : seul `Main.go` divergeait. L'assertion réactivée échouait en natif ; le Go
+produit par JS échouait sur le nouveau contrôle de concaténation à l'exécution.
+Le test isolé échouait aussi pour le code émis et la FFI Prelude :
+`ed a0 80` suivi de `ed b0 80` restait six octets au lieu de `f0 90 80 80`.
+
+`runtime.ConcatString` recompose maintenant la paire pouvant apparaître à la
+jonction de deux chaînes WTF-8 canoniques. Les autres octets, dont les surrogates
+isolés, sont préservés. `PrimitiveExprs` émet ce helper pour `OpStringAppend` et
+`gopurs-prelude/src/Data/Semigroup.go` l'utilise également. Le bootstrap donne
+ainsi au pliage du compilateur natif la même sémantique qu'aux programmes produits.
+
+Vérifications terminées sur les copies figées :
+
+- **801 couples UTF-16 et quatre cas d'associativité**, comparés à l'oracle JS
+  pour les deux chemins, sous `-race`. Ils couvrent chaînes vides, caractères
+  BMP/astraux, bornes des surrogates, ordre inversé, préfixes et suffixes.
+- **69 tests Node réussis** : quatre contrôles runtime/concaténation, dont les
+  contrats de durée de vie normalement et sous `-race`, et 65 contrôles des
+  runners et de l'embarquement exact du runtime.
+- Bootstrap JS et natif réussi : **499 modules, 287 679 types**.
+- **269 entrées TAST identiques** avant/après et entre JS, natif Go séquentiel
+  (workers à 1, pipeline désactivé) et parallèle (workers à 4, pipeline activé).
+  Les **334 fichiers Go et `go.mod` sont identiques octet par octet** ; les trois
+  exécutables produisent exactement l'oracle du frontend JS, `Done\n`.
+- Revue de tous les écarts avec l'ancien JS : **283 remplacements de
+  concaténation dans 69 fichiers**, l'ajout du helper au runtime et l'appel
+  correspondant dans la FFI Prelude. Les **264 autres fichiers** sont inchangés.
+  L'analyse Go inverse les seuls appels au helper et retrouve exactement
+  l'ancien code après gofmt, en conservant l'ordre et le parenthésage.
+- **150 fixtures compilées et exécutées** pour examiner les snapshots contenant
+  une addition et les cas voisins de chaînes. **24 snapshots** sont actualisés
+  après revue de leurs **157 remplacements de concaténation** ; le nouveau
+  `StringEscapes.go` correspond à la sortie exécutée dans les trois modes.
+  Les **128 autres snapshots examinés** restent identiques.
+- Après mise à jour, **28 fixtures réussies avec snapshots stricts et exécution
+  Go** : les 25 fixtures actualisées, plus `StringEdgeCases`,
+  `CompilerHostStrings` et `BlockStringEdgeCases`.
+- Les runners **`prelude` et `strings` réussissent tous les deux** dans leurs
+  copies isolées. La première collecte de snapshots a rencontré `ENOSPC` après
+  78 réussites ; les **72 cibles restantes** ont réussi à la reprise avec un
+  cache Go privé par shard, réduit entre les cibles. Les premiers rapports et
+  diagnostics sont conservés ; les caches privés de collecte sont supprimés.
+- Audit des **2 940 entrées source archivées** : seuls les correctifs attendus
+  et les snapshots revus changent. Les six fichiers de correction/test/sélection
+  et les 25 snapshots livrés correspondent aux copies validées. Liens locaux,
+  ancres, syntaxe du nouveau test et `git diff --check` vérifiés.
+
+Les **53 dépôts archivés** sont identifiés dans `source-heads.json`, dont gopurs
+`8581703`, PBO `157a544` et Prelude `82e63fe`. Preuves, scripts, rapports et
+empreintes conservés dans
+`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/gopurs-v2-utf16-aaiyq81c/`,
+notamment `REPRODUCTION.md`, `fixture-before.json`, `fixture-after.json`,
+`generated-go-review.diff`, `snapshot-review.diff`, `fixtures-strict.log` et
+`final-results.json`. Toolchain : Node **24.8.0**, Go **1.27.0**, Spago **1.0.3**,
+frontend TAST **0.15.16 development**.
+
+## Plan v2 — lot 04 : bornes et opérations Int, 5 octobre 2026
+
+`2136` est réintégrée. Lot validé : **55/100 points, 4/8 lots** du plan v2.
+
+La référence est constituée des FFI JS de Prelude et `Data.Int.Bits`, exécutées
+directement comme oracles. Avant correction, onze opérations échouent sur les
+deux chemins Go testés ; division et modulo passent déjà. Le Go produit par
+chacun des trois compilateurs échoue sur le prédicat original de `2136`, et
+seul `Main.go` diffère entre JS et natif lors du pliage des constantes.
+
+Les helpers du runtime sont partagés par `PrimitiveExprs` et les FFI Go de
+`Data.Semiring`, `Data.Ring` et `Data.Int.Bits` : négation/addition/soustraction
+avec débordement signé sur 32 bits, opérations binaires sur 32 bits et comptes
+de décalage masqués par `31`. La multiplication reproduit **`(a * b) | 0`**,
+avec l'arrondi `Number` avant conversion : `top * top` vaut donc **0**.
+Le stockage `int64` conserve les résultats non signés de `zshr` et le quotient
+`bottom / -1 == 2147483648`. Ces contrats sont détaillés dans
+[runtime-ffi-contracts.md](runtime-ffi-contracts.md#opérations-sur-int).
+Le bootstrap corrige aussi le pliage natif avec ces mêmes primitives.
+
+Vérifications terminées sur les copies figées :
+
+- **5 978 cas par chemin, soit 11 956 comparaisons sur 13 opérations**, sous
+  `-race`, contre les quatre vraies FFI JS. Les chemins code émis et FFI Go
+  couvrent bornes signées/non signées, comptes négatifs ou supérieurs à 31,
+  couples pseudo-aléatoires, ordre et évaluation unique des opérandes.
+  Les quatre oracles sont identiques à l'octet près aux `foreign.js` exécutés
+  par le frontend.
+- `2136` garde son prédicat original sous une assertion, ajoute cinq contrôles
+  avec opérandes issus de littéraux et quinze contrôles dynamiques via
+  `Effect.Ref`. Les trois modes rendent exactement l'oracle JS **`Done\n`**.
+- **114 tests Node réussis** : sept contrôles entiers/division/runtime et
+  embarquement, puis 107 tests voisins de génération. Les runners **`prelude`
+  et `integers` réussissent tous les deux** dans leurs copies isolées.
+- Bootstrap JS et natif réussi : **499 modules, 287 679 types**.
+- **269 entrées TAST identiques** avant/après et entre JS, natif Go séquentiel
+  (workers à 1, pipeline désactivé) et parallèle (workers à 4, pipeline activé).
+  Les **334 fichiers Go et `go.mod` sont identiques octet par octet**.
+- Revue complète du Go produit : **221 remplacements de primitives dans
+  31 fichiers**, plus le runtime et les trois FFI revus séparément ; les
+  **300 autres fichiers** restent identiques à l'ancien JS. L'inversion des
+  seuls appels aux helpers retrouve exactement la référence après gofmt.
+- **82 fixtures compilées et exécutées**, avec **83 snapshots examinés** :
+  40 identiques et 43 installés après revue. Parmi ces derniers, 36 comportent
+  uniquement les **3 991 remplacements Int**, et le nouveau `2136.go` correspond
+  exactement à la sortie exécutée dans les trois modes.
+- Les six autres snapshots (`ArrayRoundtrip`, `DerivingClause`, `FieldConsPuns`,
+  `FieldPuns`, `QualifiedDo`, `test-int`) rattrapent **12 concaténations du lot 03**.
+  Son filtre textuel ` + ` avait manqué les opérateurs sans espaces. L'analyse
+  Go confirme que ces seuls appels à `ConcatString` expliquent leurs écarts.
+- Après installation, **47 fixtures réussies avec snapshots stricts et
+  exécution Go**, via le vrai `bin/test` et `UPDATE_SNAPSHOTS=0`. Cette passe
+  couvre tous les snapshots actualisés, `NegativeIntInRange`, `SolvingAddInt`,
+  `SolvingMulInt`, `FFIIntegerReturns`, `test-int` et `StringEscapes`.
+- Audit des **2 942 entrées source archivées** : les huit fichiers livrés de
+  correction/test/sélection et les 43 snapshots correspondent aux copies
+  validées. Liens locaux, ancres, syntaxe du nouveau test, réintégration effective
+  de `2136` et `git diff --check` vérifiés.
+
+Les **53 dépôts archivés** et les **34 fichiers du lot 03 superposés** sont
+identifiés dans `source-heads.json` et `lot03-overlay.json` : notamment gopurs
+`8581703`, PBO `157a544`, Prelude `82e63fe` et integers `37b9dbe`.
+Les preuves, rapports, scripts et empreintes sont conservés dans
+`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/gopurs-v2-int32-d3hedy_d/`,
+notamment `REPRODUCTION.md`, `integers-red.log`, `integers-green.log`,
+`fixture-before.json`, `fixture-after.json`, `generated-review.json`,
+`snapshot-review.json`, `snapshot-review.diff`, `fixtures-strict.log` et
+`final-results.json`. Toolchain : Node **24.8.0**, Go **1.27.0**, Spago **1.0.3**,
+frontend TAST **0.15.16 development**.
+
+### Suivi du lot 04 — installation locale et `rung`
+
+Le signalement `rung` a révélé que le natif du checkout actif datait encore du
+5 octobre à 03 h 12 : les copies figées étaient validées, mais ce binaire local
+embarquait l'ancien runtime. Les FFI actualisées appelaient donc des helpers
+absents. Le runner `altbak.pub-gopurs/bin/native/driver.py` reconstruisait seulement
+le JS avec `--clean`, puis lançait le natif par défaut.
+
+Le natif local a été reconstruit. Le runner choisit maintenant `build:native`
+par défaut, `build` pour `GOPURS_JS=1` et `build:rust` pour `GOPURS_RUST=1`.
+La régression reproduit le runtime périmé avant correction et réussit après :
+**sept tests du runner et douze tests de dispatch réussis**. La fixture isolée
+du test d'empreintes JSON fournit aussi son fichier frontend factice manquant.
+La commande réelle `./bin/go/run --clean` réussit la reconstruction, le build
+Go et la validation des **14 résultats du benchmark**. Le runtime produit est
+identique à la source canonique ; les **831 fichiers source/configuration**
+inventoriés du compilateur, de PBO et des bibliothèques sont préservés.
+
+Journaux avant/après, anciens binaires, empreintes et résultats conservés dans
+`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/gopurs-v2-local-install-7cj5t5s4/`,
+notamment `runner-red.log`, `runner-green.log`, `bootstrap.log`, `rung-after.log`
+et `final-results.json`. Le plan reste à **55/100, 4/8 lots**.
 
 ## Consolidation finale — lot 15, 2 octobre 2026
 

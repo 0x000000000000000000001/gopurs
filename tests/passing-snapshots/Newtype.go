@@ -48,7 +48,7 @@ var once_Main_showThing sync.Once
 func Get_Main_showThing() gopurs_runtime.Value {
 	once_Main_showThing.Do(func() {
 		cache_Main_showThing = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1514099793_1386611502((&Constructor_Data_Show_Show[string]{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(("Thing ") + (Data_Show_ShowStringImpl(v_0.StrVal())))
+			return gopurs_runtime.Str(gopurs_runtime.ConcatString("Thing ", Data_Show_ShowStringImpl(v_0.StrVal())))
 		})})))}
 	})
 	return cache_Main_showThing
@@ -134,7 +134,7 @@ func Call_Main_showBox(dictShow_0_loop gopurs_runtime.Value) gopurs_runtime.Valu
 	var dictShow_0 gopurs_runtime.Value = dictShow_0_loop
 	_ = dictShow_0
 	return gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer((&Constructor_Data_Show_Show[gopurs_runtime.Value]{1, gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
-		return gopurs_runtime.Str(("Box ") + (gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictShow_0, "show"), v_1).StrVal()))
+		return gopurs_runtime.Str(gopurs_runtime.ConcatString("Box ", gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictShow_0, "show"), v_1).StrVal()))
 	})}))}
 }
 

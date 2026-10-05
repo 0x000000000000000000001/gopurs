@@ -365,7 +365,7 @@ end_branch_1:
 		}
 	}
 	{
-		__t2 = (a_0) + (b_1)
+		__t2 = gopurs_runtime.IntAdd(a_0, b_1)
 	}
 end_branch_2:
 	return __t2
@@ -402,7 +402,7 @@ end_branch_1:
 		}
 	}
 	{
-		__t2 = (a_0) + (b_1)
+		__t2 = gopurs_runtime.IntAdd(a_0, b_1)
 	}
 end_branch_2:
 	return __t2
@@ -439,7 +439,7 @@ end_branch_1:
 		}
 	}
 	{
-		__t2 = (a_0) + (b_1)
+		__t2 = gopurs_runtime.IntAdd(a_0, b_1)
 	}
 end_branch_2:
 	return __t2

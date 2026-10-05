@@ -329,14 +329,14 @@ func Get_Main_main() gopurs_runtime.Value {
 				actual   int64
 				expected int64
 			}{gopurs_runtime.Apply2(Call_Main_composeRepeats(__local_var_4_4.IntVal, int64(2)), gopurs_runtime.Func(func(value_14 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Int((value_14.IntVal) + (__local_var_6_6.IntVal))
-			}), gopurs_runtime.Int(__local_var_5_5.IntVal)).IntVal, (__local_var_5_5.IntVal) + (((__local_var_4_4.IntVal) + (int64(2))) * (__local_var_6_6.IntVal))}), gopurs_runtime.Value{})
+				return gopurs_runtime.Int(gopurs_runtime.IntAdd(value_14.IntVal, __local_var_6_6.IntVal))
+			}), gopurs_runtime.Int(__local_var_5_5.IntVal)).IntVal, gopurs_runtime.IntAdd(__local_var_5_5.IntVal, gopurs_runtime.IntMul(gopurs_runtime.IntAdd(__local_var_4_4.IntVal, int64(2)), __local_var_6_6.IntVal))}), gopurs_runtime.Value{})
 			_ = __local_var_14_14
 			__local_var_15_15 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
 			}{gopurs_runtime.Apply2(Call_Main_composeRepeats(int64(0), int64(0)), gopurs_runtime.Func(func(value_15 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Int((value_15.IntVal) + (__local_var_6_6.IntVal))
+				return gopurs_runtime.Int(gopurs_runtime.IntAdd(value_15.IntVal, __local_var_6_6.IntVal))
 			}), gopurs_runtime.Int(__local_var_5_5.IntVal)).IntVal, __local_var_5_5.IntVal}), gopurs_runtime.Value{})
 			_ = __local_var_15_15
 			__local_var_16_16 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Int(int64(3))), gopurs_runtime.Value{})
@@ -362,7 +362,7 @@ func Get_Main_main() gopurs_runtime.Value {
 func Call_Main_squarePlusOne(value_0_loop int64) int64 {
 	var value_0 int64 = value_0_loop
 	_ = value_0
-	return ((value_0) * (value_0)) + (int64(1))
+	return gopurs_runtime.IntAdd(gopurs_runtime.IntMul(value_0, value_0), int64(1))
 }
 
 func Call_Main_repeatEffects(v_0_loop int64) gopurs_runtime.Value {
@@ -388,7 +388,7 @@ repeatEffects:
 		}
 		{
 			// TAST (Let): previous__2632949050_1_0 shape=App(Var) bindingType=(Func [(Func [Int] (ADT ["Effect","Effect"] [Int])), Int] (ADT ["Effect","Effect"] [Int]))
-			previous__2632949050_1_0 := Call_Main_repeatEffects((v_0) - (int64(1)))
+			previous__2632949050_1_0 := Call_Main_repeatEffects(gopurs_runtime.IntSub(v_0, int64(1)))
 			_ = previous__2632949050_1_0
 			__t3 = gopurs_runtime.Func2(func(step_2 gopurs_runtime.Value, seed_3 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
@@ -428,7 +428,7 @@ repeatApply__gopurs_counted_function_0:
 			}
 		}
 		{
-			remaining_0_loop = (remaining_0) - (int64(1))
+			remaining_0_loop = gopurs_runtime.IntSub(remaining_0, int64(1))
 			callback_1_loop = callback_1
 			result_2_loop = gopurs_runtime.Apply(callback_1, gopurs_runtime.Int(result_2)).IntVal
 			continue repeatApply__gopurs_counted_function_0
@@ -472,7 +472,7 @@ repeatApply:
 			}
 			{
 				// TAST (Let): previous__4066693242_1_0 shape=App(Var) bindingType=(Func [(Func [Int] Int), Int] Int)
-				previous__4066693242_1_0 := Call_Main_repeatApply((v_0) - (int64(1)))
+				previous__4066693242_1_0 := Call_Main_repeatApply(gopurs_runtime.IntSub(v_0, int64(1)))
 				_ = previous__4066693242_1_0
 				__t1 = gopurs_runtime.Func2(func(step_2 gopurs_runtime.Value, seed_3 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Int(gopurs_runtime.Apply(step_2, gopurs_runtime.Int(gopurs_runtime.Apply2(previous__4066693242_1_0, step_2, gopurs_runtime.Int(seed_3.IntVal)).IntVal)).IntVal)
@@ -495,8 +495,8 @@ func Call_Main_makeUncurriedBoundary(count_0_loop int64) gopurs_runtime.Value {
 	return gopurs_runtime.Func(func(a_2 gopurs_runtime.Value) gopurs_runtime.Value {
 		return gopurs_runtime.Func2(func(b_3 gopurs_runtime.Value, __local_var_4 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Int(gopurs_runtime.Apply2(previous__4066693242_1_0, gopurs_runtime.Func(func(value_5 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Int((value_5.IntVal) + (int64(1)))
-			}), gopurs_runtime.Int(((a_2.IntVal)+((int64(10))*(b_3.IntVal)))+((int64(100))*(__local_var_4.IntVal)))).IntVal)
+				return gopurs_runtime.Int(gopurs_runtime.IntAdd(value_5.IntVal, int64(1)))
+			}), gopurs_runtime.Int(gopurs_runtime.IntAdd(gopurs_runtime.IntAdd(a_2.IntVal, gopurs_runtime.IntMul(int64(10), b_3.IntVal)), gopurs_runtime.IntMul(int64(100), __local_var_4.IntVal)))).IntVal)
 		})
 	})
 }
@@ -514,7 +514,7 @@ func Call_Main_makeTypeAppBoundary(count_0_loop int64) gopurs_runtime.Value {
 					left  int64
 					right gopurs_runtime.Value
 				}{gopurs_runtime.Apply2(previous__4066693242_1_0, gopurs_runtime.Func(func(value_4 gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Int((value_4.IntVal) + (int64(1)))
+					return gopurs_runtime.Int(gopurs_runtime.IntAdd(value_4.IntVal, int64(1)))
 				}), gopurs_runtime.Int(a_2.IntVal)).IntVal, b_3}
 				_ = orig
 				return gopurs_runtime.RecordDict2("left", "right", gopurs_runtime.Int(orig.left), orig.right)
@@ -531,8 +531,8 @@ func Call_Main_makeThree(count_0_loop int64) gopurs_runtime.Value {
 	_ = previous__4066693242_1_0
 	return gopurs_runtime.Func3(func(a_2 gopurs_runtime.Value, b_3 gopurs_runtime.Value, c_4 gopurs_runtime.Value) gopurs_runtime.Value {
 		return gopurs_runtime.Int(gopurs_runtime.Apply2(previous__4066693242_1_0, gopurs_runtime.Func(func(value_5 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Int((value_5.IntVal) + (int64(1)))
-		}), gopurs_runtime.Int(((a_2.IntVal)+((int64(10))*(b_3.IntVal)))+((int64(100))*(c_4.IntVal)))).IntVal)
+			return gopurs_runtime.Int(gopurs_runtime.IntAdd(value_5.IntVal, int64(1)))
+		}), gopurs_runtime.Int(gopurs_runtime.IntAdd(gopurs_runtime.IntAdd(a_2.IntVal, gopurs_runtime.IntMul(int64(10), b_3.IntVal)), gopurs_runtime.IntMul(int64(100), c_4.IntVal)))).IntVal)
 	})
 }
 
@@ -545,8 +545,8 @@ func Call_Main_makeSix(count_0_loop int64) gopurs_runtime.Value {
 	return gopurs_runtime.Func5(func(a_2 gopurs_runtime.Value, b_3 gopurs_runtime.Value, c_4 gopurs_runtime.Value, d_5 gopurs_runtime.Value, e_6 gopurs_runtime.Value) gopurs_runtime.Value {
 		return gopurs_runtime.Func(func(f_7 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Int(gopurs_runtime.Apply2(previous__4066693242_1_0, gopurs_runtime.Func(func(value_8 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Int((value_8.IntVal) + (int64(1)))
-			}), gopurs_runtime.Int((((((a_2.IntVal)+((int64(10))*(b_3.IntVal)))+((int64(100))*(c_4.IntVal)))+((int64(1000))*(d_5.IntVal)))+((int64(10000))*(e_6.IntVal)))+((int64(100000))*(f_7.IntVal)))).IntVal)
+				return gopurs_runtime.Int(gopurs_runtime.IntAdd(value_8.IntVal, int64(1)))
+			}), gopurs_runtime.Int(gopurs_runtime.IntAdd(gopurs_runtime.IntAdd(gopurs_runtime.IntAdd(gopurs_runtime.IntAdd(gopurs_runtime.IntAdd(a_2.IntVal, gopurs_runtime.IntMul(int64(10), b_3.IntVal)), gopurs_runtime.IntMul(int64(100), c_4.IntVal)), gopurs_runtime.IntMul(int64(1000), d_5.IntVal)), gopurs_runtime.IntMul(int64(10000), e_6.IntVal)), gopurs_runtime.IntMul(int64(100000), f_7.IntVal)))).IntVal)
 		})
 	})
 }
@@ -573,7 +573,7 @@ func Call_Main_makeRecursiveBoundary(count_0_loop int64) gopurs_runtime.Value {
 			{
 				if (n_4.IntVal) == (int64(0)) {
 					__t3 = gopurs_runtime.Apply2(previous__4066693242_1_0, gopurs_runtime.Func(func(value_5 gopurs_runtime.Value) gopurs_runtime.Value {
-						return gopurs_runtime.Int((value_5.IntVal) + (int64(1)))
+						return gopurs_runtime.Int(gopurs_runtime.IntAdd(value_5.IntVal, int64(1)))
 					}), gopurs_runtime.Int(a_2.IntVal)).IntVal
 					goto end_branch_3
 				} else {
@@ -581,7 +581,7 @@ func Call_Main_makeRecursiveBoundary(count_0_loop int64) gopurs_runtime.Value {
 				}
 			}
 			{
-				__t3 = (gopurs_runtime.Apply((*visit__3466805691_3_1_0_cell), gopurs_runtime.Int((n_4.IntVal)-(int64(1)))).IntVal) + (int64(1))
+				__t3 = gopurs_runtime.IntAdd(gopurs_runtime.Apply((*visit__3466805691_3_1_0_cell), gopurs_runtime.Int(gopurs_runtime.IntSub(n_4.IntVal, int64(1)))).IntVal, int64(1))
 			}
 		end_branch_3:
 			return gopurs_runtime.Int(__t3)
@@ -592,7 +592,7 @@ func Call_Main_makeRecursiveBoundary(count_0_loop int64) gopurs_runtime.Value {
 			{
 				if (n_4.IntVal) == (int64(0)) {
 					__t4 = gopurs_runtime.Apply2(previous__4066693242_1_0, gopurs_runtime.Func(func(value_5 gopurs_runtime.Value) gopurs_runtime.Value {
-						return gopurs_runtime.Int((value_5.IntVal) + (int64(1)))
+						return gopurs_runtime.Int(gopurs_runtime.IntAdd(value_5.IntVal, int64(1)))
 					}), gopurs_runtime.Int(a_2.IntVal)).IntVal
 					goto end_branch_4
 				} else {
@@ -600,14 +600,14 @@ func Call_Main_makeRecursiveBoundary(count_0_loop int64) gopurs_runtime.Value {
 				}
 			}
 			{
-				__t4 = (gopurs_runtime.Apply((*visit__3466805691_3_1_0_cell), gopurs_runtime.Int((n_4.IntVal)-(int64(1)))).IntVal) + (int64(1))
+				__t4 = gopurs_runtime.IntAdd(gopurs_runtime.Apply((*visit__3466805691_3_1_0_cell), gopurs_runtime.Int(gopurs_runtime.IntSub(n_4.IntVal, int64(1)))).IntVal, int64(1))
 			}
 		end_branch_4:
 			return gopurs_runtime.Int(__t4)
 		})
 		visit_3_2_1_cell = &visit_3_2_1
 		return gopurs_runtime.Func(func(b_4 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Int((gopurs_runtime.Apply(visit__3466805691_3_1_0, gopurs_runtime.Int(b_4.IntVal)).IntVal) + (gopurs_runtime.Apply(visit__3466805691_3_1_0, gopurs_runtime.Int((b_4.IntVal)+(int64(1)))).IntVal))
+			return gopurs_runtime.Int(gopurs_runtime.IntAdd(gopurs_runtime.Apply(visit__3466805691_3_1_0, gopurs_runtime.Int(b_4.IntVal)).IntVal, gopurs_runtime.Apply(visit__3466805691_3_1_0, gopurs_runtime.Int(gopurs_runtime.IntAdd(b_4.IntVal, int64(1)))).IntVal))
 		})
 	})
 }
@@ -623,7 +623,7 @@ func Call_Main_makeLetBoundary(count_0_loop int64) gopurs_runtime.Value {
 		cached_3_1 := gopurs_runtime.Apply2(previous__4066693242_1_0, Get_Main_squarePlusOne(), gopurs_runtime.Int(a_2.IntVal)).IntVal
 		_ = cached_3_1
 		return gopurs_runtime.Func(func(b_4 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Int(((cached_3_1) + (cached_3_1)) + (b_4.IntVal))
+			return gopurs_runtime.Int(gopurs_runtime.IntAdd(gopurs_runtime.IntAdd(cached_3_1, cached_3_1), b_4.IntVal))
 		})
 	})
 }
@@ -643,12 +643,12 @@ func Call_Main_makeEffectBoundary(count_0_loop int64, state_1_loop gopurs_runtim
 			_ = __local_var_4_1
 			__local_var_5_2 := gopurs_runtime.Apply(__local_var_4_1, gopurs_runtime.Value{})
 			_ = __local_var_5_2
-			__local_var_6_3 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Effect_Ref_write(), gopurs_runtime.Int((__local_var_5_2.IntVal)+(int64(1))), state_1), gopurs_runtime.Value{})
+			__local_var_6_3 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Effect_Ref_write(), gopurs_runtime.Int(gopurs_runtime.IntAdd(__local_var_5_2.IntVal, int64(1))), state_1), gopurs_runtime.Value{})
 			_ = __local_var_6_3
 			return gopurs_runtime.Func(func(b_7 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Int((gopurs_runtime.Apply2(previous__4066693242_2_0, gopurs_runtime.Func(func(value_8 gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Int((value_8.IntVal) + (int64(1)))
-				}), gopurs_runtime.Int((a_3.IntVal)+(__local_var_5_2.IntVal))).IntVal) + (b_7.IntVal))
+				return gopurs_runtime.Int(gopurs_runtime.IntAdd(gopurs_runtime.Apply2(previous__4066693242_2_0, gopurs_runtime.Func(func(value_8 gopurs_runtime.Value) gopurs_runtime.Value {
+					return gopurs_runtime.Int(gopurs_runtime.IntAdd(value_8.IntVal, int64(1)))
+				}), gopurs_runtime.Int(gopurs_runtime.IntAdd(a_3.IntVal, __local_var_5_2.IntVal))).IntVal, b_7.IntVal))
 			})
 		})
 	})
@@ -664,7 +664,7 @@ func Call_Main_makeCallBoundary(count_0_loop int64, factory_1_loop gopurs_runtim
 	_ = previous__4066693242_2_0
 	return gopurs_runtime.Func(func(a_3 gopurs_runtime.Value) gopurs_runtime.Value {
 		return gopurs_runtime.Apply(factory_1, gopurs_runtime.Int(gopurs_runtime.Apply2(previous__4066693242_2_0, gopurs_runtime.Func(func(value_4 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Int((value_4.IntVal) + (int64(1)))
+			return gopurs_runtime.Int(gopurs_runtime.IntAdd(value_4.IntVal, int64(1)))
 		}), gopurs_runtime.Int(a_3.IntVal)).IntVal))
 	})
 }
@@ -681,8 +681,8 @@ func Call_Main_makeBranchBoundary(count_0_loop int64) gopurs_runtime.Value {
 			if (a_2.IntVal) < (int64(0)) {
 				__t1 = gopurs_runtime.Func(func(b_3 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Int(gopurs_runtime.Apply2(previous__4066693242_1_0, gopurs_runtime.Func(func(value_4 gopurs_runtime.Value) gopurs_runtime.Value {
-						return gopurs_runtime.Int((value_4.IntVal) + (int64(1)))
-					}), gopurs_runtime.Int((a_2.IntVal)-(b_3.IntVal))).IntVal)
+						return gopurs_runtime.Int(gopurs_runtime.IntAdd(value_4.IntVal, int64(1)))
+					}), gopurs_runtime.Int(gopurs_runtime.IntSub(a_2.IntVal, b_3.IntVal))).IntVal)
 				})
 				goto end_branch_1
 			} else {
@@ -692,8 +692,8 @@ func Call_Main_makeBranchBoundary(count_0_loop int64) gopurs_runtime.Value {
 		{
 			__t1 = gopurs_runtime.Func(func(b_3 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Int(gopurs_runtime.Apply2(previous__4066693242_1_0, gopurs_runtime.Func(func(value_4 gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Int((value_4.IntVal) + (int64(1)))
-				}), gopurs_runtime.Int((a_2.IntVal)+((int64(2))*(b_3.IntVal)))).IntVal)
+					return gopurs_runtime.Int(gopurs_runtime.IntAdd(value_4.IntVal, int64(1)))
+				}), gopurs_runtime.Int(gopurs_runtime.IntAdd(a_2.IntVal, gopurs_runtime.IntMul(int64(2), b_3.IntVal)))).IntVal)
 			})
 		}
 	end_branch_1:
@@ -728,8 +728,8 @@ func Call_Main_checkRepeat(count_0_loop int64, step_1_loop int64, seed_2_loop in
 		actual   int64
 		expected int64
 	}{gopurs_runtime.Apply2(Call_Main_repeatApply(count_0), gopurs_runtime.Func(func(value_3 gopurs_runtime.Value) gopurs_runtime.Value {
-		return gopurs_runtime.Int((value_3.IntVal) + (step_1))
-	}), gopurs_runtime.Int(seed_2)).IntVal, (seed_2) + ((count_0) * (step_1))})
+		return gopurs_runtime.Int(gopurs_runtime.IntAdd(value_3.IntVal, step_1))
+	}), gopurs_runtime.Int(seed_2)).IntVal, gopurs_runtime.IntAdd(seed_2, gopurs_runtime.IntMul(count_0, step_1))})
 }
 
 func Call_Main_checkPartialApplications(count_0_loop int64) gopurs_runtime.Value {
@@ -789,12 +789,12 @@ func Call_Main_checkEffectOrder(count_0_loop int64) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 				// TAST (Let): __local_var_4_3 shape=App(Var) bindingType=Any
 				__local_var_4_3 := gopurs_runtime.Apply2(Get_Effect_Ref_modify_(), gopurs_runtime.Func(func(seen_4 gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Str(((seen_4.StrVal()) + (Data_Show_ShowIntImpl(value_3.IntVal))) + (","))
+					return gopurs_runtime.Str(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(seen_4.StrVal(), Data_Show_ShowIntImpl(value_3.IntVal)), ","))
 				}), __local_var_2_1)
 				_ = __local_var_4_3
 				__local_var_5_4 := gopurs_runtime.Apply(__local_var_4_3, gopurs_runtime.Value{})
 				_ = __local_var_5_4
-				return gopurs_runtime.Int(((value_3.IntVal) * (value_3.IntVal)) + (int64(1)))
+				return gopurs_runtime.Int(gopurs_runtime.IntAdd(gopurs_runtime.IntMul(value_3.IntVal, value_3.IntVal), int64(1)))
 			})
 		}
 		step_3_2 = gopurs_runtime.Func(func(value_3_loop_val gopurs_runtime.Value) gopurs_runtime.Value {
@@ -1007,7 +1007,7 @@ func Call_Main_checkBoundaries(count_0_loop int64) gopurs_runtime.Value {
 		}{gopurs_runtime.Apply(__local_var_18_17, gopurs_runtime.Int(int64(0))).IntVal, int64(21)}), gopurs_runtime.Value{})
 		_ = __local_var_20_19
 		__local_var_21_20 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Func2(func(a_21 gopurs_runtime.Value, b_22 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Int(((int64(100)) * (a_21.IntVal)) + (b_22.IntVal))
+			return gopurs_runtime.Int(gopurs_runtime.IntAdd(gopurs_runtime.IntMul(int64(100), a_21.IntVal), b_22.IntVal))
 		})), gopurs_runtime.Value{})
 		_ = __local_var_21_20
 		__local_var_22_21 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_21_20), gopurs_runtime.Value{})
@@ -1128,7 +1128,7 @@ func Call_Main_checkArities(count_0_loop int64) gopurs_runtime.Value {
 		__local_var_3_2 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 			actual   int64
 			expected int64
-		}{gopurs_runtime.Apply3(__local_var_2_1, gopurs_runtime.Int(int64(1)), gopurs_runtime.Int(int64(2)), gopurs_runtime.Int(int64(3))).IntVal, (count_0) + (int64(321))}), gopurs_runtime.Value{})
+		}{gopurs_runtime.Apply3(__local_var_2_1, gopurs_runtime.Int(int64(1)), gopurs_runtime.Int(int64(2)), gopurs_runtime.Int(int64(3))).IntVal, gopurs_runtime.IntAdd(count_0, int64(321))}), gopurs_runtime.Value{})
 		_ = __local_var_3_2
 		__local_var_4_3 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Apply(__local_var_2_1, gopurs_runtime.Int(int64(4)))), gopurs_runtime.Value{})
 		_ = __local_var_4_3
@@ -1137,12 +1137,12 @@ func Call_Main_checkArities(count_0_loop int64) gopurs_runtime.Value {
 		__local_var_6_5 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 			actual   int64
 			expected int64
-		}{gopurs_runtime.Apply2(__local_var_5_4, gopurs_runtime.Int(int64(5)), gopurs_runtime.Int(int64(6))).IntVal, (count_0) + (int64(654))}), gopurs_runtime.Value{})
+		}{gopurs_runtime.Apply2(__local_var_5_4, gopurs_runtime.Int(int64(5)), gopurs_runtime.Int(int64(6))).IntVal, gopurs_runtime.IntAdd(count_0, int64(654))}), gopurs_runtime.Value{})
 		_ = __local_var_6_5
 		__local_var_7_6 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 			actual   int64
 			expected int64
-		}{gopurs_runtime.Apply2(__local_var_5_4, gopurs_runtime.Int(int64(3)), gopurs_runtime.Int(int64(0))).IntVal, (count_0) + (int64(34))}), gopurs_runtime.Value{})
+		}{gopurs_runtime.Apply2(__local_var_5_4, gopurs_runtime.Int(int64(3)), gopurs_runtime.Int(int64(0))).IntVal, gopurs_runtime.IntAdd(count_0, int64(34))}), gopurs_runtime.Value{})
 		_ = __local_var_7_6
 		__local_var_8_7 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), Call_Main_makeSix(count_0)), gopurs_runtime.Value{})
 		_ = __local_var_8_7
@@ -1151,7 +1151,7 @@ func Call_Main_checkArities(count_0_loop int64) gopurs_runtime.Value {
 		__local_var_10_9 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 			actual   int64
 			expected int64
-		}{gopurs_runtime.Apply6(__local_var_9_8, gopurs_runtime.Int(int64(1)), gopurs_runtime.Int(int64(2)), gopurs_runtime.Int(int64(3)), gopurs_runtime.Int(int64(4)), gopurs_runtime.Int(int64(5)), gopurs_runtime.Int(int64(6))).IntVal, (count_0) + (int64(654321))}), gopurs_runtime.Value{})
+		}{gopurs_runtime.Apply6(__local_var_9_8, gopurs_runtime.Int(int64(1)), gopurs_runtime.Int(int64(2)), gopurs_runtime.Int(int64(3)), gopurs_runtime.Int(int64(4)), gopurs_runtime.Int(int64(5)), gopurs_runtime.Int(int64(6))).IntVal, gopurs_runtime.IntAdd(count_0, int64(654321))}), gopurs_runtime.Value{})
 		_ = __local_var_10_9
 		__local_var_11_10 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Apply2(__local_var_9_8, gopurs_runtime.Int(int64(1)), gopurs_runtime.Int(int64(2)))), gopurs_runtime.Value{})
 		_ = __local_var_11_10
@@ -1160,12 +1160,12 @@ func Call_Main_checkArities(count_0_loop int64) gopurs_runtime.Value {
 		__local_var_13_12 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 			actual   int64
 			expected int64
-		}{gopurs_runtime.Apply4(__local_var_12_11, gopurs_runtime.Int(int64(3)), gopurs_runtime.Int(int64(4)), gopurs_runtime.Int(int64(5)), gopurs_runtime.Int(int64(6))).IntVal, (count_0) + (int64(654321))}), gopurs_runtime.Value{})
+		}{gopurs_runtime.Apply4(__local_var_12_11, gopurs_runtime.Int(int64(3)), gopurs_runtime.Int(int64(4)), gopurs_runtime.Int(int64(5)), gopurs_runtime.Int(int64(6))).IntVal, gopurs_runtime.IntAdd(count_0, int64(654321))}), gopurs_runtime.Value{})
 		_ = __local_var_13_12
 		__local_var_14_13 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 			actual   int64
 			expected int64
-		}{gopurs_runtime.Apply4(__local_var_12_11, gopurs_runtime.Int(int64(6)), gopurs_runtime.Int(int64(5)), gopurs_runtime.Int(int64(4)), gopurs_runtime.Int(int64(3))).IntVal, (count_0) + (int64(345621))}), gopurs_runtime.Value{})
+		}{gopurs_runtime.Apply4(__local_var_12_11, gopurs_runtime.Int(int64(6)), gopurs_runtime.Int(int64(5)), gopurs_runtime.Int(int64(4)), gopurs_runtime.Int(int64(3))).IntVal, gopurs_runtime.IntAdd(count_0, int64(345621))}), gopurs_runtime.Value{})
 		_ = __local_var_14_13
 		__local_var_15_14 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Apply5(__local_var_9_8, gopurs_runtime.Int(int64(1)), gopurs_runtime.Int(int64(2)), gopurs_runtime.Int(int64(3)), gopurs_runtime.Int(int64(4)), gopurs_runtime.Int(int64(5)))), gopurs_runtime.Value{})
 		_ = __local_var_15_14
@@ -1174,12 +1174,12 @@ func Call_Main_checkArities(count_0_loop int64) gopurs_runtime.Value {
 		__local_var_17_16 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 			actual   int64
 			expected int64
-		}{gopurs_runtime.Apply(__local_var_16_15, gopurs_runtime.Int(int64(6))).IntVal, (count_0) + (int64(654321))}), gopurs_runtime.Value{})
+		}{gopurs_runtime.Apply(__local_var_16_15, gopurs_runtime.Int(int64(6))).IntVal, gopurs_runtime.IntAdd(count_0, int64(654321))}), gopurs_runtime.Value{})
 		_ = __local_var_17_16
 		return gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 			actual   int64
 			expected int64
-		}{gopurs_runtime.Apply(__local_var_16_15, gopurs_runtime.Int(int64(9))).IntVal, (count_0) + (int64(954321))}), gopurs_runtime.Value{})
+		}{gopurs_runtime.Apply(__local_var_16_15, gopurs_runtime.Int(int64(9))).IntVal, gopurs_runtime.IntAdd(count_0, int64(954321))}), gopurs_runtime.Value{})
 	})
 }
 

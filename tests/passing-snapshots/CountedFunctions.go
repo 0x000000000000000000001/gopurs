@@ -71,7 +71,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = saved__4066693242_3_3
 			// TAST (Let): applied__3466805691_4_4 shape=App(Other) bindingType=(Func [Int] Int)
 			applied__3466805691_4_4 := gopurs_runtime.Apply(saved__4066693242_3_3, gopurs_runtime.Func(func(value_4 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Int(((value_4.IntVal) * (int64(3))) - (int64(7)))
+				return gopurs_runtime.Int(gopurs_runtime.IntSub(gopurs_runtime.IntMul(value_4.IntVal, int64(3)), int64(7)))
 			}))
 			_ = applied__3466805691_4_4
 			__local_var_5_5 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
@@ -93,13 +93,13 @@ func Get_Main_main() gopurs_runtime.Value {
 				actual   int64
 				expected int64
 			}{gopurs_runtime.Apply2(saved__4066693242_3_3, gopurs_runtime.Func(func(value_8 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Int((value_8.IntVal) + (int64(2)))
+				return gopurs_runtime.Int(gopurs_runtime.IntAdd(value_8.IntVal, int64(2)))
 			}), gopurs_runtime.Int(int64(11))).IntVal, int64(19)}), gopurs_runtime.Value{})
 			_ = __local_var_8_8
 			__local_var_9_9 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
-			}{gopurs_runtime.Apply2(Call_Main_repeatStep((__local_var_2_2.IntVal)-(int64(4))), gopurs_runtime.Func(func(v_9 gopurs_runtime.Value) gopurs_runtime.Value {
+			}{gopurs_runtime.Apply2(Call_Main_repeatStep(gopurs_runtime.IntSub(__local_var_2_2.IntVal, int64(4))), gopurs_runtime.Func(func(v_9 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Int(int64(999))
 			}), gopurs_runtime.Int(int64(11))).IntVal, int64(11)}), gopurs_runtime.Value{})
 			_ = __local_var_9_9
@@ -107,14 +107,14 @@ func Get_Main_main() gopurs_runtime.Value {
 				actual   int64
 				expected int64
 			}{gopurs_runtime.Apply2(Call_Main_repeatStep(__local_var_2_2.IntVal), gopurs_runtime.Func(func(value_10 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Int(-(value_10.IntVal))
+				return gopurs_runtime.Int(gopurs_runtime.IntNegate(value_10.IntVal))
 			}), gopurs_runtime.Int(int64(0))).IntVal, int64(0)}), gopurs_runtime.Value{})
 			_ = __local_var_10_10
 			__local_var_11_11 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
 			}{gopurs_runtime.Apply2(Call_Main_repeatWithCounter(__local_var_2_2.IntVal), gopurs_runtime.Func(func(value_11 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Int((value_11.IntVal) + (int64(2)))
+				return gopurs_runtime.Int(gopurs_runtime.IntAdd(value_11.IntVal, int64(2)))
 			}), gopurs_runtime.Int(int64(11))).IntVal, int64(29)}), gopurs_runtime.Value{})
 			_ = __local_var_11_11
 			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
@@ -153,7 +153,7 @@ repeatStep__gopurs_counted_function_0:
 			}
 		}
 		{
-			remaining_0_loop = (remaining_0) - (int64(1))
+			remaining_0_loop = gopurs_runtime.IntSub(remaining_0, int64(1))
 			callback_1_loop = callback_1
 			result_2_loop = gopurs_runtime.Apply(callback_1, gopurs_runtime.Int(result_2)).IntVal
 			continue repeatStep__gopurs_counted_function_0
@@ -195,7 +195,7 @@ repeatStep:
 			}
 			{
 				// TAST (Let): previous__4066693242_1_0 shape=App(Var) bindingType=(Func [(Func [Int] Int), Int] Int)
-				previous__4066693242_1_0 := Call_Main_repeatStep((v_0) - (int64(1)))
+				previous__4066693242_1_0 := Call_Main_repeatStep(gopurs_runtime.IntSub(v_0, int64(1)))
 				_ = previous__4066693242_1_0
 				__t1 = gopurs_runtime.Func2(func(step_2 gopurs_runtime.Value, value_3 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Int(gopurs_runtime.Apply(step_2, gopurs_runtime.Int(gopurs_runtime.Apply2(previous__4066693242_1_0, step_2, gopurs_runtime.Int(value_3.IntVal)).IntVal)).IntVal)
@@ -228,10 +228,10 @@ repeatWithCounter:
 		}
 		{
 			// TAST (Let): previous__4066693242_1_0 shape=App(Var) bindingType=(Func [(Func [Int] Int), Int] Int)
-			previous__4066693242_1_0 := Call_Main_repeatWithCounter((v_0) - (int64(1)))
+			previous__4066693242_1_0 := Call_Main_repeatWithCounter(gopurs_runtime.IntSub(v_0, int64(1)))
 			_ = previous__4066693242_1_0
 			__t1 = gopurs_runtime.Func2(func(step_2 gopurs_runtime.Value, value_3 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Int((gopurs_runtime.Apply(step_2, gopurs_runtime.Int(gopurs_runtime.Apply2(previous__4066693242_1_0, step_2, gopurs_runtime.Int(value_3.IntVal)).IntVal)).IntVal) + (v_0))
+				return gopurs_runtime.Int(gopurs_runtime.IntAdd(gopurs_runtime.Apply(step_2, gopurs_runtime.Int(gopurs_runtime.Apply2(previous__4066693242_1_0, step_2, gopurs_runtime.Int(value_3.IntVal)).IntVal)).IntVal, v_0))
 			})
 		}
 	end_branch_1:

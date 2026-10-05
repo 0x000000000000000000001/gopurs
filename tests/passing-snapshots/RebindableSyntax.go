@@ -59,7 +59,7 @@ var once_Main_example1 sync.Once
 
 func Get_Main_example1() gopurs_runtime.Value {
 	once_Main_example1.Do(func() {
-		cache_Main_example1 = gopurs_runtime.Str(("Do notation") + (" for Semigroup"))
+		cache_Main_example1 = gopurs_runtime.Str(gopurs_runtime.ConcatString("Do notation", " for Semigroup"))
 	})
 	return cache_Main_example1
 }

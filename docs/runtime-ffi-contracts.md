@@ -47,6 +47,43 @@ et la [réutilisation d'ADT](adt-reuse.md) détaillent ces protocoles. En
 particulier, `runtime.KeepAlive` seul ne remplace pas l'échappement sur le tas
 des captures imposé par `forceEscape`.
 
+### Concaténation UTF-16
+
+Les chaînes PureScript sont stockées en WTF-8 canonique : les paires de
+surrogates valides forment un scalaire UTF-8, et les surrogates isolés gardent
+leurs trois octets WTF-8. `ConcatString` recompose la paire pouvant apparaître
+entre un surrogate haut en fin d'opérande gauche et un surrogate bas en début
+d'opérande droit. Les opérandes restent immuables.
+
+`PrimitiveExprs` émet ce helper pour `OpStringAppend` ; la FFI Go
+`Data.Semigroup.concatString` l'utilise aussi. Le compilateur natif emploie ainsi
+la même sémantique pendant le pliage des constantes. Une addition Go brute de
+deux chaînes ne suffit pas à respecter ce contrat UTF-16.
+
+### Opérations sur `Int`
+
+Les primitives suivent les FFI JS de référence de Prelude et `Data.Int.Bits` :
+
+- `IntNegate`, `IntAdd` et `IntSub` rendent un entier signé sur 32 bits avec
+  débordement circulaire ; `negate bottom` vaut donc `bottom`.
+- `IntMul` reproduit `(a * b) | 0` : le produit est d'abord arrondi comme un
+  `Number`, puis converti sur 32 bits. Par exemple, `top * top` vaut `0` dans
+  cette référence. Le modulo `2^32` précède la conversion Go pour accepter les
+  produits dépassant la capacité d'un `int64`.
+- `IntBitNot`, `IntBitAnd`, `IntBitOr` et `IntBitXor` utilisent des opérandes
+  sur 32 bits. `IntShl`, `IntShr` et `IntZshr` masquent le compte par `31`, y
+  compris pour les comptes négatifs. `IntZshr` rend le résultat non signé.
+- `IntDiv` et `IntMod` respectent la division euclidienne de Prelude, avec zéro
+  pour un diviseur nul. La division `bottom / -1` rend `2147483648` ; le test
+  conserve explicitement ce comportement de la référence.
+
+`PrimitiveExprs` et les FFI Go de `Data.Semiring`, `Data.Ring` et
+`Data.Int.Bits` partagent ces helpers. Les wrappers binaires boxés délèguent aux
+mêmes opérations. Le stockage `int64` de `Value` porte aussi les résultats
+positifs de `zshr` et le quotient frontière : la conversion sur 32 bits se fait
+aux opérations concernées. Le compilateur natif utilise ces contrats pendant
+le pliage, et chaque opérande émis est évalué une seule fois, dans l'ordre.
+
 ### Vues JSON et mises à jour
 
 - `ReadJSONObject` emprunte les maps étrangères et les `JSONObject` compacts.
@@ -106,7 +143,8 @@ Après `npm run build` :
 
 ```sh
 node --test tools/native-ffi.test.mjs tools/embed-runtime.test.mjs \
-  tools/runtime-contracts.test.mjs tools/closure-lifetime.test.mjs \
+  tools/runtime-contracts.test.mjs tools/string-concat.test.mjs tools/closure-lifetime.test.mjs \
+  tools/integer-boundaries.test.mjs tools/integer-division.test.mjs \
   tools/apply-arity.test.mjs tools/function-data.test.mjs \
   tools/value-array-unboxing.test.mjs tools/go-imports.test.mjs
 ```
@@ -119,6 +157,14 @@ node --test tools/native-ffi.test.mjs tools/embed-runtime.test.mjs \
   sous `-race` : chaînes/sous-chaînes après GC, graphes de conteneurs après
   sortie du créateur, lectures concurrentes, alias de stockage, maps JSON,
   mises à jour immuables et retenues asynchrones.
+- `string-concat` compare le Go émis par `PrimitiveExprs` et la FFI Prelude à
+  l'oracle JS, sous `-race` : 801 couples UTF-16, bornes des surrogates, chaînes
+  vides, caractères BMP/astraux, préfixes/suffixes et associativité.
+- `integer-boundaries` importe les vraies FFI JS comme oracles : **5 978 cas**
+  sur 13 opérations, exécutés sur le Go émis et sur les FFI Go sous `-race`,
+  avec vérification de l'ordre et du nombre d'évaluations. Les bornes signées,
+  résultats non signés, comptes de décalage et couples pseudo-aléatoires sont
+  couverts. `integer-division` conserve ses 24 cas de lois euclidiennes.
 - `embed-runtime` vérifie les octets embarqués, la résolution relative au script,
   les timestamps stables, la régénération après changement et le chargement JS
   sans le fichier source du runtime.

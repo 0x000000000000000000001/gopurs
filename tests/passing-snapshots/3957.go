@@ -114,7 +114,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				var __t4 *Constructor_Main_Just[int64]
 				{
 					if (x_3.IntVal) < (int64(5)) {
-						__t4 = (&Constructor_Main_Just[int64]{1, (int64(2)) * (x_3.IntVal)})
+						__t4 = (&Constructor_Main_Just[int64]{1, gopurs_runtime.IntMul(int64(2), x_3.IntVal)})
 						goto end_branch_4
 					} else {
 
@@ -187,9 +187,9 @@ weirdsum:
 			var __t1 int64
 			{
 				if __local_var_3_0 != nil {
-					accum_0_loop = (accum_0) + ((__local_var_3_0).V0)
+					accum_0_loop = gopurs_runtime.IntAdd(accum_0, (__local_var_3_0).V0)
 					f1_1_loop = f1_1
-					n_2_loop = (n_2) - (int64(1))
+					n_2_loop = gopurs_runtime.IntSub(n_2, int64(1))
 					continue weirdsum
 					__t1 = func() int64 { panic("unreachable") }()
 					goto end_branch_1
@@ -200,7 +200,7 @@ weirdsum:
 			{
 				accum_0_loop = accum_0
 				f1_1_loop = f1_1
-				n_2_loop = (n_2) - (int64(1))
+				n_2_loop = gopurs_runtime.IntSub(n_2, int64(1))
 				continue weirdsum
 				__t1 = func() int64 { panic("unreachable") }()
 			}
@@ -225,15 +225,15 @@ tricksyinners:
 		var __t0 int64
 		{
 			if (x_1) == (int64(0)) {
-				__t0 = (accum_0) + (((x_1) + (int64(3))) * ((x_1) + (int64(3))))
+				__t0 = gopurs_runtime.IntAdd(accum_0, gopurs_runtime.IntMul(gopurs_runtime.IntAdd(x_1, int64(3)), gopurs_runtime.IntAdd(x_1, int64(3))))
 				goto end_branch_0
 			} else {
 
 			}
 		}
 		{
-			accum_0_loop = (accum_0) + (int64(2))
-			x_1_loop = (x_1) - (int64(1))
+			accum_0_loop = gopurs_runtime.IntAdd(accum_0, int64(2))
+			x_1_loop = gopurs_runtime.IntSub(x_1, int64(1))
 			continue tricksyinners
 			__t0 = func() int64 { panic("unreachable") }()
 		}
@@ -261,7 +261,7 @@ g:
 		}
 		{
 			if (x_0) == (x_0) {
-				x_0_loop = (x_0) - (int64(1))
+				x_0_loop = gopurs_runtime.IntSub(x_0, int64(1))
 				continue g
 				__t0 = func() int64 { panic("unreachable") }()
 				goto end_branch_0
@@ -270,7 +270,7 @@ g:
 			}
 		}
 		{
-			x_0_loop = (x_0) - (int64(2))
+			x_0_loop = gopurs_runtime.IntSub(x_0, int64(2))
 			continue g
 			__t0 = func() int64 { panic("unreachable") }()
 		}
@@ -297,7 +297,7 @@ f:
 			}
 		}
 		{
-			x_0_loop = (x_0) - (int64(1))
+			x_0_loop = gopurs_runtime.IntSub(x_0, int64(1))
 			continue f
 			__t0 = func() int64 { panic("unreachable") }()
 		}

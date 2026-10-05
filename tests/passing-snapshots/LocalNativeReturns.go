@@ -688,7 +688,7 @@ func Get_Main_checkRecordReturns() gopurs_runtime.Value {
 			}{struct {
 				keep  bool
 				value int64
-			}{true, (__local_var_2_2.IntVal) + (int64(2))}, struct {
+			}{true, gopurs_runtime.IntAdd(__local_var_2_2.IntVal, int64(2))}, struct {
 				keep  bool
 				value int64
 			}{true, int64(42)}}), gopurs_runtime.Value{})
@@ -698,7 +698,7 @@ func Get_Main_checkRecordReturns() gopurs_runtime.Value {
 					orig := struct {
 						keep  bool
 						value int64
-					}{(offset_4.IntVal) >= (int64(0)), (__local_var_2_2.IntVal) + (offset_4.IntVal)}
+					}{(offset_4.IntVal) >= (int64(0)), gopurs_runtime.IntAdd(__local_var_2_2.IntVal, offset_4.IntVal)}
 					_ = orig
 					return gopurs_runtime.RecordDict2("keep", "value", gopurs_runtime.Bool(orig.keep), gopurs_runtime.Int(orig.value))
 				}()
@@ -762,13 +762,13 @@ func Get_Main_checkRecordReturns() gopurs_runtime.Value {
 			_ = __local_var_7_7
 			__local_var_8_8 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Func(func(second_8 gopurs_runtime.Value) gopurs_runtime.Value {
 				// TAST (Let): __local_var_9_9 shape=Other bindingType=Int
-				__local_var_9_9 := (int64(2)) + (second_8.IntVal)
+				__local_var_9_9 := gopurs_runtime.IntAdd(int64(2), second_8.IntVal)
 				_ = __local_var_9_9
 				return func() gopurs_runtime.Value {
 					orig := struct {
 						keep  bool
 						value int64
-					}{(__local_var_9_9) >= (int64(0)), (__local_var_2_2.IntVal) + (__local_var_9_9)}
+					}{(__local_var_9_9) >= (int64(0)), gopurs_runtime.IntAdd(__local_var_2_2.IntVal, __local_var_9_9)}
 					_ = orig
 					return gopurs_runtime.RecordDict2("keep", "value", gopurs_runtime.Bool(orig.keep), gopurs_runtime.Int(orig.value))
 				}()

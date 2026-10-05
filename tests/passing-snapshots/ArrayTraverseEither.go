@@ -1077,7 +1077,7 @@ func Get_Main_main() gopurs_runtime.Value {
 						_v := struct {
 							V0 gopurs_runtime.Value
 							V1 bool
-						}{gopurs_runtime.Int((value_22.IntVal) + (int64(1))), true}
+						}{gopurs_runtime.Int(gopurs_runtime.IntAdd(value_22.IntVal, int64(1))), true}
 						if _v.V1 {
 							return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: _v.V0})}
 						}
@@ -1405,7 +1405,7 @@ func Call_Main_run(calls_0_loop gopurs_runtime.Value, values_1_loop []int64) str
 				V2 bool
 			}{gopurs_runtime.Value{}, struct {
 				value int64
-			}{(observed_3_3) * (int64(2))}, true}
+			}{gopurs_runtime.IntMul(observed_3_3, int64(2))}, true}
 		}
 	end_branch_4:
 		return func() gopurs_runtime.Value {
