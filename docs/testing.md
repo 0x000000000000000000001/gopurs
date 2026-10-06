@@ -413,12 +413,12 @@ ne demande pas de recompiler le PureScript si les entrées TAST sont inchangées
 Les exclusions de [tools/test-selection.mjs](../tools/test-selection.mjs) ont été
 réexécutées le **2 octobre 2026**, avec le même compilateur que la campagne
 finale. Après réintégration de `StringEdgeCases` le **3 octobre**, puis de
-`StringEscapes` et `2136` le **5 octobre**, **cinq** restent justifiées :
+`StringEscapes`, `2136` et `NumberLiterals` le **5 octobre**, **quatre** restent
+justifiées :
 
 | Fixtures | Échec observé et portée |
 | --- | --- |
 | `DerivingContravariant`, `DerivingFunctorFromBi`, `DerivingFunctorFromPro`, `DerivingProfunctor` | Le frontend TAST rejette les déclarations avec `CannotDeriveInvalidConstructorArg`. Aucun Go n'est produit. |
-| `NumberLiterals` | Exécution : l'oracle de `Show Number` attend `0.25996181067142`, mais reçoit `0.25996181067141905`. |
 
 `DerivingClause` réintègre la sélection : compilation et exécution Go réussies,
 **334 fichiers Go identiques** entre natif séquentiel, natif parallèle et JS
@@ -442,6 +442,12 @@ snapshot est créé puis vérifié strictement au
 de constantes et d'exécution ; les trois modes rendent l'oracle JS et leur Go
 est identique. Le snapshot revu passe strictement au
 [lot 04 du plan v2](#plan-v2--lot-04--bornes-et-opérations-int-5-octobre-2026).
+
+`NumberLiterals` réintègre la sélection avec l'oracle du Prelude JS actuel et
+les corrections Go de zéro signé et d'exposants. Les trois modes produisent
+le même Go et exécutent les 41 cas littéraux et dynamiques ; le nouveau snapshot
+est revu puis vérifié strictement au
+[lot 05 du plan v2](#plan-v2--lot-05--affichage-des-number-5-octobre-2026).
 
 `bin/modtest` sélectionne les checkouts frères `gopurs-*` possédant un
 `bin/test` exécutable :
@@ -737,6 +743,73 @@ Journaux avant/après, anciens binaires, empreintes et résultats conservés dan
 `/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/gopurs-v2-local-install-7cj5t5s4/`,
 notamment `runner-red.log`, `runner-green.log`, `bootstrap.log`, `rung-after.log`
 et `final-results.json`. Le plan reste à **55/100, 4/8 lots**.
+
+## Plan v2 — lot 05 : affichage des Number, 5 octobre 2026
+
+`NumberLiterals` est réintégrée. Lot validé : **65/100 points, 5/8 lots** du
+plan v2.
+
+La fixture initiale échoue aussi en JS : son ancien oracle à 14 chiffres attend
+`0.25996181067142` pour le littéral `0.25996181067141905`. Les valeurs attendues
+sont alignées sur la FFI JS Prelude réellement exécutée, également employées par
+la fixture actuelle du frontend local. L'identité octet par octet de `Show.js`
+et du `Data.Show/foreign.js` exécuté est enregistrée.
+
+Deux écarts Go sont reproduits séparément : `show (-0.0)` rendait `-0.0` au lieu
+de `0.0`, et les exposants étaient complétés par un zéro (`e-08` contre `e-8`).
+La FFI `Data/Show.go` conserve les chiffres les plus courts retrouvant le même
+binary64, les seuils JS de notation décimale `1e-6`/`1e21`, le suffixe `.0` des
+entiers décimaux et les valeurs spéciales. Elle normalise maintenant les zéros
+signés et les exposants. Le bootstrap applique aussi ce contrat à l'écriture
+des littéraux par le compilateur natif ; le signe des valeurs reste préservé.
+Voir les [contrats Number](runtime-ffi-contracts.md#affichage-des-number).
+
+Vérifications terminées :
+
+- **32 527 cas binary64 comparés à la vraie FFI JS sous `-race`** : zéros signés,
+  NaN/infinis, chacun des exposants binaires finis, sous-normaux, voisins des
+  puissances de dix, frontières de notation et 4 096 motifs pseudo-aléatoires.
+  Le test échoue avant la correction et réussit après.
+- **41 cas dans `NumberLiterals`, chacun vérifié deux fois**, depuis son littéral
+  puis via `Effect.Ref` : 82 comparaisons exécutées. La version renforcée échoue
+  avec les trois anciens compilateurs ; après correction, tous rendent l'oracle
+  frontend JS **`Done\n`**.
+- Bootstrap JS et natif avant/après réussi : **499 modules, 287 679 types**.
+- **269 entrées TAST identiques** avant/après et entre JS, natif Go séquentiel
+  (workers à 1, pipeline désactivé) et parallèle (workers à 4, pipeline activé).
+  Les **334 fichiers Go et `go.mod` sont identiques octet par octet**. Le seul
+  changement par rapport à l'ancien JS est **`Data_Show_ffi.go`**, revu en entier ;
+  l'ancien écart natif de notation des littéraux dans `Main.go` disparaît.
+- `CompilerHostNumbers` conserve le signe des zéros pliés et dynamiques :
+  exécution réussie dans les trois modes, sur **60 entrées TAST**, avec
+  **86 fichiers Go et `go.mod` identiques**.
+- **11 tests Node réussis** : la régression numérique et dix contrôles des
+  bridges FFI, génériques, callbacks et forwarders.
+- Nouveau snapshot **`NumberLiterals.go` revu avant installation**, correspondant
+  exactement au Main exécuté dans les trois modes après gofmt. **27 fixtures
+  passent avec snapshots stricts et exécution Go**, dont tous les snapshots
+  appelant Show Number, ainsi que `2136` et `StringEscapes`. Les 28 snapshots
+  existants, dont deux FFI, restent identiques.
+- Les runners **`prelude` et `numbers` réussissent** dans leurs copies isolées.
+- Le parcours réel **`altbak ./bin/go/run --clean` réussit** : reconstruction du
+  natif actif, compilation Go et **14 résultats du benchmark validés**. Cette
+  reconstruction locale couvre 500 modules et 288 603 types ; ses 847 fichiers
+  source/configuration inventoriés, dont les travaux PBO concurrents, sont
+  préservés. Sa FFI Show générée est identique à celle de la validation figée.
+- Audit des **2 944 fichiers archivés** : les quatre fichiers de correction,
+  test et sélection, ainsi que le nouveau snapshot, correspondent aux copies
+  validées. Liens et ancres, syntaxe du test, sélection effective de la fixture
+  et `git diff --check` vérifiés.
+
+Les **53 dépôts archivés** sont identifiés par leurs empreintes et HEAD,
+notamment gopurs `141d6fc`, PBO `157a544` et Prelude `3ee1343`.
+Preuves, scripts et rapports conservés dans
+`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/gopurs-v2-number-show-mw16tagz/`,
+notamment `REPRODUCTION.md`, `original-js.log`, `show-red.log`, `show-green.log`,
+`fixture-before.json`, `fixture-after.json`, `generated-go-review.diff`,
+`snapshot-review.json`, `fixtures-strict.log`, `host-results.json`,
+`local-application.log` et `final-results.json`. Toolchain : Node **24.8.0**,
+Go **1.27.0**, Spago **1.0.3**, frontend TAST **0.15.16 development**.
 
 ## Consolidation finale — lot 15, 2 octobre 2026
 

@@ -11,7 +11,7 @@ utile et rendre les campagnes et l'installation reproductibles. Périmètre :
 compilateur, runtime, FFI, outillage et bibliothèques sœurs ; interventions dans
 PBO et le frontend TAST limitées aux besoins démontrés.
 
-## Avancement : 55 % — 55/100 points, 4/8 lots validés
+## Avancement : 65 % — 65/100 points, 5/8 lots validés
 
 - **Calcul :** somme des points des cases cochées, sur un total fixe de 100.
 - Un lot peut demander plusieurs passes ; aucun point partiel n'est acquis.
@@ -38,7 +38,7 @@ PBO et le frontend TAST limitées aux besoins démontrés.
 - [x] **04 — Bornes et opérations sur Int (10 pts).** Établir le comportement
   attendu aux bornes 32 bits, puis corriger l'écart confirmé par `2136`.
   Fin : fixture réintégrée, négation et opérations voisines concernées couvertes.
-- [ ] **05 — Affichage des Number (10 pts).** Comparer `NumberLiterals` au
+- [x] **05 — Affichage des Number (10 pts).** Comparer `NumberLiterals` au
   comportement JS de référence et résoudre l'écart de `Show Number`.
   Fin : oracle justifié, fixture réintégrée et cas limites pertinents validés.
 - [ ] **06 — Dérivations rejetées par le frontend (10 pts).** Comparer les quatre
@@ -73,6 +73,6 @@ PBO et le frontend TAST limitées aux besoins démontrés.
 - Preuves identifiées par plan et lot dans `docs/testing.md`, documentation à
   jour et `git diff --check` propre.
 
-**Prochaine passe : lot 05 — affichage des Number.**
+**Prochaine passe : lot 06 — dérivations rejetées par le frontend.**
 Les optimisations de performance restent en pause ; toute reprise exige un gain
 mesuré significatif.

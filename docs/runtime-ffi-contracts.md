@@ -84,6 +84,23 @@ positifs de `zshr` et le quotient frontière : la conversion sur 32 bits se fait
 aux opérations concernées. Le compilateur natif utilise ces contrats pendant
 le pliage, et chaque opérande émis est évalué une seule fois, dans l'ordre.
 
+### Affichage des `Number`
+
+La FFI Go `Data.Show.ShowNumberImpl` suit la FFI JS Prelude `showNumberImpl` :
+chiffres les plus courts permettant de retrouver le même binary64, notation
+décimale pour `1e-6 <= abs(n) < 1e21`, notation scientifique en dehors de cet
+intervalle. Les exposants utilisent `e`, un signe explicite et aucun zéro de
+remplissage (`1e-7`, `1e+21`). Un entier en notation décimale reçoit `.0`.
+
+Les deux zéros s'affichent `0.0` ; les valeurs spéciales sont `NaN`, `Infinity`
+et `-Infinity`. Cela ne modifie pas la valeur stockée : le générateur préserve
+les littéraux `-0` avec `runtime.NegativeZero`. Le compilateur natif utilise
+aussi cette FFI pour écrire les littéraux numériques Go.
+
+L'oracle est la FFI JS exécutée, sans arrondi arbitraire à 14 chiffres.
+`NumberLiterals` vérifie les mêmes valeurs depuis leurs littéraux et après
+lecture d'une `Effect.Ref`, dont les sous-normaux et les limites de notation.
+
 ### Vues JSON et mises à jour
 
 - `ReadJSONObject` emprunte les maps étrangères et les `JSONObject` compacts.
@@ -144,7 +161,7 @@ Après `npm run build` :
 ```sh
 node --test tools/native-ffi.test.mjs tools/embed-runtime.test.mjs \
   tools/runtime-contracts.test.mjs tools/string-concat.test.mjs tools/closure-lifetime.test.mjs \
-  tools/integer-boundaries.test.mjs tools/integer-division.test.mjs \
+  tools/integer-boundaries.test.mjs tools/integer-division.test.mjs tools/number-show.test.mjs \
   tools/apply-arity.test.mjs tools/function-data.test.mjs \
   tools/value-array-unboxing.test.mjs tools/go-imports.test.mjs
 ```
@@ -165,6 +182,9 @@ node --test tools/native-ffi.test.mjs tools/embed-runtime.test.mjs \
   avec vérification de l'ordre et du nombre d'évaluations. Les bornes signées,
   résultats non signés, comptes de décalage et couples pseudo-aléatoires sont
   couverts. `integer-division` conserve ses 24 cas de lois euclidiennes.
+- `number-show` compare **32 527 cas binary64** à la vraie FFI JS sous `-race` :
+  zéros signés, NaN/infinis, chacun des exposants binaires finis, voisins des
+  puissances de dix, sous-normaux et 4 096 motifs de bits pseudo-aléatoires.
 - `embed-runtime` vérifie les octets embarqués, la résolution relative au script,
   les timestamps stables, la régénération après changement et le chargement JS
   sans le fichier source du runtime.

@@ -2,13 +2,12 @@ import { accessSync, constants, readdirSync, statSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 
 // Rechecked on 2026-10-02; StringEdgeCases reintegrated on 2026-10-03,
-// StringEscapes and 2136 on 2026-10-05.
+// StringEscapes, 2136 and NumberLiterals on 2026-10-05.
 // Evidence and exact failures are in docs/testing.md.
 const excluded = new Set([
   // The current frontend rejects these with CannotDeriveInvalidConstructorArg.
   "DerivingContravariant.purs", "DerivingFunctorFromBi.purs",
   "DerivingFunctorFromPro.purs", "DerivingProfunctor.purs",
-  "NumberLiterals.purs", // Number Show spelling differs from the fixture's oracle.
 ]);
 
 export class UsageError extends Error {}
