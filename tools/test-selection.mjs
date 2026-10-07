@@ -1,14 +1,9 @@
 import { accessSync, constants, readdirSync, statSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 
-// Rechecked on 2026-10-02; StringEdgeCases reintegrated on 2026-10-03,
-// StringEscapes, 2136 and NumberLiterals on 2026-10-05.
-// Evidence and exact failures are in docs/testing.md.
-const excluded = new Set([
-  // The current frontend rejects these with CannotDeriveInvalidConstructorArg.
-  "DerivingContravariant.purs", "DerivingFunctorFromBi.purs",
-  "DerivingFunctorFromPro.purs", "DerivingProfunctor.purs",
-]);
+// No exclusions remain after plan v2, lot 06 (2026-10-06).
+// Reproductions and reintegration evidence are in docs/testing.md.
+const excluded = new Set();
 
 export class UsageError extends Error {}
 

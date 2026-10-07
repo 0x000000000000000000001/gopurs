@@ -118,26 +118,29 @@ the sibling checkouts (`../../purescript`,
 compiler still have to be supplied locally, so the file alone does not
 establish a portable, fully pinned build of this checkout.
 
-**Verification status (2 October 2026):** Nix is not installed in the validation
-environment. The flake and `shell.nix` were reviewed, but `nix flake check` and
-`nix develop` have not been executed. The flake exposes development shells,
-overlays and a formatter, with no `packages` or `apps` outputs. Native and JS
-builds described below were checked with the local non-Nix toolchain.
+**Verification status (6 October 2026):** `nix flake check`, `nix develop` and
+`nix-instantiate shell.nix` pass on **aarch64-linux**, using Nix **2.31.2** in an
+isolated Docker container and the unchanged lockfile. The shell supplies Node
+**24.18.0**, Spago **1.0.4** and Go **1.26.4**; rebuilding the FFI parser still
+requires Go **1.27.0**. The flake exposes development shells, overlays and a
+formatter, with no `packages` or `apps` outputs. The JS/native compiler builds
+use the local non-Nix toolchain and the separately supplied TAST frontend.
+The Darwin and x86_64-linux shells have not been executed.
 
 ### Choose the library checkouts
 
 ```bash
 ./bin/setup --core --list  # 22 core libraries + lazy, ordered-collections, random
 ./bin/setup --core         # default; install missing checkouts, preserve existing ones
-./bin/setup --all --list   # complete inventory of 50 libraries
+./bin/setup --all --list   # complete inventory of 51 libraries
 ./bin/setup --all          # requires the local Go-adapted QuickCheck checkout
 ```
 
 The **22 `CORE_PACKAGES`** are the default dependencies of compiler fixtures.
 The **three `CORE_CHECKOUT_DEPENDENCIES`** are additional local overrides used
 when developing those core libraries themselves. `ADDITIONAL_PACKAGES` completes
-the list of 50. All three lists live in `bin/pkg`; setup never changes the
-fixture dependency list. An unknown option, an invalid existing destination or
+the list of 51, including `js-uri`. All three lists live in `bin/pkg`; setup never
+changes the fixture dependency list. An unknown option, an invalid existing destination or
 a failed clone stops setup with a nonzero status.
 
 QuickCheck is a specific local prerequisite for the complete library suite.
@@ -147,6 +150,8 @@ not supply these two files. Keep the adapted checkout, including those files,
 at `../gopurs-quickcheck`; `--all` checks it before cloning anything. No remotely
 installable Go fork was established in this review, so setup does not invent
 one. Publishing that adaptation is separate from local setup.
+The complete test campaign also uses its standalone `bin/test` and `test/Go.purs`
+suite introduced in lot 07.
 
 The build embeds the Go runtime, compiles PureScript, and bundles `Main` into
 `bin/gopurs.js`. The checked-in FFI WASM and its matching JavaScript runtime are
@@ -191,6 +196,13 @@ GOPURS_PURS=/absolute/path/to/typed/purs npm run build:native
 npm run build:native -- --keep-workspace
 ```
 
+For the complete native validation path, provide the Go-adapted QuickCheck
+checkout and run `./bin/setup --all` before bootstrapping. The recorded
+500-module bootstrap also uses the local `gopurs-argonaut-codecs` adaptation;
+its 21 unversioned source/test/configuration files are identified by hashes in
+[the final-validation record](docs/testing.md#plan-v2--lot-08--installation-et-validation-finale-7-octobre-2026).
+Setup does not fetch that additional local adaptation.
+
 This bootstraps `bin/gopurs-native` with the existing Node backend. It requires
 the npm dependencies above, Go, the local `purescript-backend-optimizer-gopurs`
 checkout and the sibling Go library checkouts. The Node backend is rebuilt with
@@ -199,6 +211,8 @@ typed `purs`: `GOPURS_PURS` when set, otherwise the newest compiler binary under
 `../../purescript/.stack-work/dist/*/*/build/purs/purs`. Its path is printed, and
 every generated module is checked for `typeTable`, `dataDecls` and `classDecls`
 before Go generation. A stock compiler with the same version number is rejected.
+`npm run test:cli` uses the same typed-compiler discovery; set `GOPURS_PURS` there
+as well when the fork is supplied outside `../../purescript`.
 The command then generates Go and links the FFI parser into the executable. Its package set is
 `77.10.1`; sibling `gopurs-*` packages with `spago.yaml` provide the native FFI.
 This includes the native persistent Map from `gopurs-ordered-collections`.
@@ -220,10 +234,12 @@ cache is unsupported: reads miss and an attempted write fails explicitly.
 The native TAST decoder preserves integer magnitudes and isolated UTF-16
 surrogates as WTF-8, while combining valid surrogate pairs. Literal preservation
 does not establish every JavaScript string operation's semantics; the dated
-[exclusion review](docs/testing.md#exclusions-et-modules-frères) records remaining cases.
+[validation record](docs/testing.md#exclusions-et-modules-frères) documents the
+string corrections and fixture reintegrations.
 
-The 2 October 2026 reconstruction covers **500 modules and 287,550 types**.
-Rebuilding the same source snapshot reproduced both compiler artifacts exactly.
+The 6 October 2026 reconstruction covers **500 modules and 288,603 types**.
+Two fresh JS builds are byte-identical; the rebuilt native compiler also matches
+the active native binary exactly.
 TAST loading, transitive preparation, PBO optimization and Go emission each have
 their own bounded parallelism controls. Native sequential, native parallel and
 JS generation are compared on frozen inputs; see [the validation record](docs/testing.md)
@@ -460,9 +476,10 @@ See [isolation and reports](docs/testing.md#isolation-logs-et-caches).
 
 `assert` has no executable test suite: use `spago build`, then
 `../gopurs/bin/gopurs`, then `(cd output && go mod tidy && go build ./...)`.
-QuickCheck has a local package configuration but no Go runner or `package.test`
-declaration yet; use `spago build` for its package, and the consuming package's
-Go tests to exercise it. `node-net` has a `test/Test/Main.purs` entrypoint that
+QuickCheck has a standalone deterministic `Test.Go` suite: use
+`./bin/modtest quickcheck` from gopurs, or `./bin/test` from its checkout. The
+runner builds and executes JavaScript and Go, then compares their transcripts.
+`node-net` has a `test/Test/Main.purs` entrypoint that
 the current Spago command compiles despite the absent `package.test` stanza;
 its runner executes that Go program. See [the module campaign](docs/testing.md).
 
@@ -641,23 +658,32 @@ The backend remains experimental. Native representations coexist with a tagged
 `Value` runtime; general unboxing and complete library compatibility are not
 promised. Go implementations are needed for every reachable foreign binding.
 
-The fixture runner records eight rechecked exclusions: integer overflow at
-32-bit boundaries, `Show Number` spelling, type-level string decoding,
-concatenated surrogate halves, and four derived-instance fixtures rejected by
-the frontend. `DerivingClause` is covered by the strict suite. See
-[the exclusions and validation gaps](docs/testing.md#exclusions-et-modules-frères).
+As of **7 October 2026**, the fixture runner has **no exclusions**. The v2 work
+resolved the integer, number-display and string cases, then restored the four
+derived-instance fixtures by importing the instance modules needed for isolated
+compilation. Their derived methods are exercised in JS and Go. See
+[the reintegration evidence](docs/testing.md#exclusions-et-modules-frères).
 
-The **2 October 2026 consolidation** validated all **391 selectable fixtures**
-with strict snapshots and Go execution, plus **50 sibling-library runners**
-(49 Go test programs and the compile-only `assert` check). `spec` reports
-70 passing tests and 3 pending; QuickCheck has no standalone Go suite.
-The compiler's 359 Node tests passed without skips, and 2,987 generated Go files
-from frozen b8x inputs are byte-identical across native sequential, native
-parallel and JS compilation. Nix execution remains unverified locally.
-See [the validation record](docs/testing.md) for the retained evidence, campaign
-retries and coverage limits. The [v1 maintainability plan](docs/testing.md#consolidation-finale--lot-15-2-octobre-2026)
-is complete: **15/15 lots, 100/100 points**. The [v2 reliability and reproducibility plan](todo.md)
-tracks the next eight lots. Performance work remains paused.
+The **6–7 October final validation** passes all **400 fixtures** with strict
+snapshots and Go execution, plus **51 sibling-library runners**: 50 with Go
+execution and the compile-only `assert` check. QuickCheck includes a deterministic
+JavaScript/Go transcript comparison. `spec` passes **74 tests**, including nine
+integration cases, and retains **3 intentional pending fixtures**; its two
+initialization tests also pass.
+
+The JS/native builds from fresh checkouts, offline npm archive installation and
+**435 Node/Go checks** pass. On **2,683 frozen b8x TAST inputs**, all **2,987 Go
+files plus `go.mod`** are byte-identical across the previous JS bundle, rebuilt
+JS, native sequential and native parallel hosts. `nix flake check`, `nix develop`
+and the legacy shell evaluation pass on **aarch64-linux**; see
+[the Nix section](#nix-environment) for the toolchain scope.
+
+The [final validation record](docs/testing.md#plan-v2--lot-08--installation-et-validation-finale-7-octobre-2026)
+identifies the local dependencies, retained evidence and disk-space retries.
+The [v1 maintainability plan](docs/testing.md#consolidation-finale--lot-15-2-octobre-2026)
+is complete at **15/15 lots, 100/100 points**, and the
+[v2 reliability and reproducibility plan](todo.md) is complete at
+**8/8 lots, 100/100 points**. Performance work remains paused.
 
 ## License
 

@@ -10,7 +10,7 @@ usage() {
 Usage: ./bin/setup [--core | --all] [--list]
 
   --core  Install the 22 core libraries and their 3 supporting checkouts (default).
-  --all   Install all 50 libraries. Requires the local Go QuickCheck checkout.
+  --all   Install all 51 libraries. Requires the local Go QuickCheck checkout.
   --list  Print the selected directories without cloning or changing files.
 
 Existing checkouts are preserved. The TAST compiler and the Go optimizer fork

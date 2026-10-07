@@ -53,7 +53,7 @@ function fixture(t) {
   writeFileSync(join(root, "bin/pkg"), "CORE_PACKAGES=(prelude)\n");
   for (const name of ["spago", "gofmt", "go", "npm"]) writeFileSync(join(base, "mockbin", name), fakeTool, { mode: 0o755 });
   writeFileSync(join(root, "bin/gopurs"), fakeTool, { mode: 0o755 });
-  for (const name of ["Alpha", "Beta", "DerivingContravariant"]) writeFileSync(join(root, "tests/passing", name + ".purs"), `module Main where\n-- ${name}\n`);
+  for (const name of ["Alpha", "Beta"]) writeFileSync(join(root, "tests/passing", name + ".purs"), `module Main where\n-- ${name}\n`);
   for (const name of ["Alpha", "Beta"]) writeFileSync(join(root, "tests/passing-snapshots", name + ".go"), "package purescript\n");
   writeFileSync(join(root, "tests/runner/spago.yaml"), "shared config sentinel");
   writeFileSync(join(root, "tests/runner/spago.lock"), "shared lock sentinel");
@@ -87,7 +87,7 @@ test("selection is read-only, ordered, inclusive and rejects unknown names", asy
   assert.equal(ordered.code, 0, ordered.output);
   assert.match(ordered.output, /Alpha.purs\n$/);
   assert.doesNotMatch(ordered.output, /Beta.purs/);
-  for (const args of [["Missing"], ["Alpha", "Missing"], ["Alpha", "--skip-before=Missing"], ["--unknown"], ["DerivingContravariant"], ["--all", "Alpha"]]) {
+  for (const args of [["Missing"], ["Alpha", "Missing"], ["Alpha", "--skip-before=Missing"], ["--unknown"], ["--all", "Alpha"]]) {
     const result = await f.run(args);
     assert.equal(result.code, 2, result.output);
   }

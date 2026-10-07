@@ -1,6 +1,6 @@
 # Gopurs — fiabilité et reproductibilité
 
-Plan v2 — mise à jour : 5 octobre 2026.
+Plan v2 — mise à jour : 7 octobre 2026.
 
 Le plan v1 de maintenabilité est clôturé à **100/100 points, 15/15 lots**.
 Sa [validation finale](docs/testing.md#consolidation-finale--lot-15-2-octobre-2026)
@@ -11,7 +11,7 @@ utile et rendre les campagnes et l'installation reproductibles. Périmètre :
 compilateur, runtime, FFI, outillage et bibliothèques sœurs ; interventions dans
 PBO et le frontend TAST limitées aux besoins démontrés.
 
-## Avancement : 65 % — 65/100 points, 5/8 lots validés
+## Avancement : 100 % — 100/100 points, 8/8 lots validés
 
 - **Calcul :** somme des points des cases cochées, sur un total fixe de 100.
 - Un lot peut demander plusieurs passes ; aucun point partiel n'est acquis.
@@ -41,15 +41,15 @@ PBO et le frontend TAST limitées aux besoins démontrés.
 - [x] **05 — Affichage des Number (10 pts).** Comparer `NumberLiterals` au
   comportement JS de référence et résoudre l'écart de `Show Number`.
   Fin : oracle justifié, fixture réintégrée et cas limites pertinents validés.
-- [ ] **06 — Dérivations rejetées par le frontend (10 pts).** Comparer les quatre
+- [x] **06 — Dérivations rejetées par le frontend (10 pts).** Comparer les quatre
   fixtures exclues au fork et à la référence amont ; corriger les incompatibilités
   confirmées. Fin : pour chaque cas, prise en charge validée ou limitation de
   version établie par une reproduction comparative et documentée.
-- [ ] **07 — Couverture des bibliothèques (15 pts).** Ajouter une suite Go
+- [x] **07 — Couverture des bibliothèques (15 pts).** Ajouter une suite Go
   autonome pour l'adaptation QuickCheck ; examiner les trois `pending` de
   `spec`, compléter les lacunes réelles et expliciter les cas intentionnels.
   Fin : contrôles utiles intégrés au parcours standard et exécutés avec succès.
-- [ ] **08 — Installation et validation finale (10 pts).** Vérifier le parcours
+- [x] **08 — Installation et validation finale (10 pts).** Vérifier le parcours
   depuis des checkouts frais et exécuter `nix flake check` et `nix develop` dans
   un environnement équipé. Fin : compilateurs JS et natif Go reconstruits sur
   les mêmes sources, campagnes fixtures/modules et parité b8x validées ;
@@ -73,6 +73,8 @@ PBO et le frontend TAST limitées aux besoins démontrés.
 - Preuves identifiées par plan et lot dans `docs/testing.md`, documentation à
   jour et `git diff --check` propre.
 
-**Prochaine passe : lot 06 — dérivations rejetées par le frontend.**
+**Plan v2 clôturé le 7 octobre 2026.** La
+[validation finale](docs/testing.md#plan-v2--lot-08--installation-et-validation-finale-7-octobre-2026)
+consigne les 400 fixtures, les 51 runners, la parité b8x et la vérification Nix.
 Les optimisations de performance restent en pause ; toute reprise exige un gain
 mesuré significatif.

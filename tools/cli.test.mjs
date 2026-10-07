@@ -1,11 +1,12 @@
 // After npm run build:native: npm run test:cli
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { delimiter, join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { corePackages, createWorkspace, prepareFixture } from "./test-workspace.mjs";
+import { findTypedCompiler } from "./native-workspace.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const launcher = join(root, "bin/gopurs");
@@ -45,12 +46,18 @@ test("CLI reports failures and preserves successful output across backends", asy
   if (testRust) assert.ok(existsSync(rustCandidate ?? join(root, "bin/gopurs-rust")), "run npm run build:rust first");
   const workspace = createWorkspace();
   t.after(() => rmSync(workspace, { recursive: true, force: true }));
+  // npm's frontend builds the JS host but need not emit TAST. Select the same
+  // typed compiler as the native bootstrap, including an explicit GOPURS_PURS.
+  const typedBin = join(workspace, "typed-bin");
+  mkdirSync(typedBin);
+  symlinkSync(findTypedCompiler(root, process.env.GOPURS_PURS), join(typedBin, "purs"));
+  const fixtureEnvironment = { ...environment, PATH: typedBin + delimiter + environment.PATH };
   const fixture = prepareFixture(root, workspace,
     join(root, "tests/passing/FFIIntegerReturns.purs"), 0, corePackages(root));
   const output = join(fixture.directory, "output");
   const ffiPath = join(fixture.directory, "src/Main.go");
   const originalFfi = readFileSync(ffiPath, "utf8");
-  const compiled = run("spago", ["build", "-q"], fixture.directory);
+  const compiled = run("spago", ["build", "-q"], fixture.directory, fixtureEnvironment);
   assert.equal(compiled.status, 0, compiled.stdout + compiled.stderr);
   assert.ok(Array.isArray(JSON.parse(readFileSync(join(output, "Main/corefn.json"), "utf8")).typeTable),
     "the fixture requires the TAST-capable purs fork");

@@ -69,7 +69,9 @@ beyond run variation. These measurements use GOMAXPROCS=14 on this machine;
 8 is a measured choice, not a universal optimum. PBO optimization remains
 sequential. Earlier worker-count conclusions below predate the runtime fix.
 
-[Detailed measurements](../../../scratch/gopurs-workers-20260921/rapport.md).
+The original detailed report was stored outside this repository at
+`scratch/gopurs-workers-20260921/rapport.md`. That scratch file is no longer
+available in the validation workspace; the historical summary above remains.
 
 ## Pipeline measurements on 2026-09-20
 

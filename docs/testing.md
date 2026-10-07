@@ -21,6 +21,7 @@ reconstruit les deux versions et conserve le workspace pour les tests natifs.
 | Boxing et émission transitive Rebox | `node --test tools/rebox-generation.test.mjs tools/rebox-metadata.test.mjs tools/struct-pointer-boxing.test.mjs tools/value-array-unboxing.test.mjs`, après le build |
 | Littéraux composites et constructeurs | `node --test tools/composite-expressions.test.mjs tools/elided-constructor-payloads.test.mjs tools/nullary-constructor-bindings.test.mjs`, après le build ; `./bin/test ConstructorReuse NativeArrayReboxing` |
 | Types et records | `./bin/test NativeRecordBoxing NativeRecordSizes -c` |
+| Dérivations et portée des instances | `./bin/test DerivingContravariant DerivingFunctorFromBi DerivingFunctorFromPro DerivingProfunctor` ; [comparaison des frontends](#plan-v2--lot-06--dérivations-et-imports-6-octobre-2026) |
 | Chaînes TAST et labels de records | `./bin/test StringEdgeCases CompilerHostStrings` ; `node --test tools/record-tuple-conversions.test.mjs`, après le build ; décodeurs PBO ci-dessous |
 | Bridge FFI | `node --test tools/ffi-bridge.test.mjs tools/ffi-generics.test.mjs`, après le build ; `./bin/test FFIIntegerReturns -c` |
 | FFI JS/Go du compilateur et embarquement | `node --test tools/native-ffi.test.mjs tools/embed-runtime.test.mjs tools/go-imports.test.mjs`, après le build ; `native-go-code.test.mjs` avec `GOPURS_NATIVE_OUTPUT` |
@@ -141,6 +142,8 @@ puis appelle `bin/gopurs` en JS, natif séquentiel et natif parallèle. Chaque m
 vérifie le succès (statut 0 et Go identique) et cinq erreurs réelles (statut 1) :
 chargement du TAST, écriture du runtime, écriture d'un module avec workers PBO,
 FFI invalide et écriture de l'entrée exécutable.
+Le frontend de la fixture est sélectionné comme pour le bootstrap natif :
+`GOPURS_PURS` si renseigné, sinon le fork local sous `../../purescript`.
 
 Les erreurs doivent conserver leur message d'origine sur stderr, avec un seul
 préfixe `[gopurs] error:`, et terminer avant le délai du test. Le résultat est
@@ -412,13 +415,16 @@ ne demande pas de recompiler le PureScript si les entrées TAST sont inchangées
 
 Les exclusions de [tools/test-selection.mjs](../tools/test-selection.mjs) ont été
 réexécutées le **2 octobre 2026**, avec le même compilateur que la campagne
-finale. Après réintégration de `StringEdgeCases` le **3 octobre**, puis de
-`StringEscapes`, `2136` et `NumberLiterals` le **5 octobre**, **quatre** restent
-justifiées :
+finale. Après réintégration de `StringEdgeCases` le **3 octobre**, de
+`StringEscapes`, `2136` et `NumberLiterals` le **5 octobre**, puis des quatre
+fixtures de dérivation le **6 octobre**, **aucune exclusion ne subsiste**.
 
-| Fixtures | Échec observé et portée |
-| --- | --- |
-| `DerivingContravariant`, `DerivingFunctorFromBi`, `DerivingFunctorFromPro`, `DerivingProfunctor` | Le frontend TAST rejette les déclarations avec `CannotDeriveInvalidConstructorArg`. Aucun Go n'est produit. |
+`DerivingContravariant`, `DerivingFunctorFromBi`, `DerivingFunctorFromPro` et
+`DerivingProfunctor` échouaient aussi avec le frontend amont : leurs imports
+ne rendaient pas toutes les instances nécessaires disponibles en compilation
+isolée. Les imports explicites corrigent les quatre cas ; leurs méthodes
+dérivées sont maintenant exécutées et vérifiées dans les trois modes. Voir le
+[lot 06 du plan v2](#plan-v2--lot-06--dérivations-et-imports-6-octobre-2026).
 
 `DerivingClause` réintègre la sélection : compilation et exécution Go réussies,
 **334 fichiers Go identiques** entre natif séquentiel, natif parallèle et JS
@@ -471,10 +477,17 @@ Les options de bilan, reprise et conservation ci-dessus s'appliquent aussi à
 Dans `spec`, l'environnement d'intégration copie le template en lecture seule,
 ignore ses éventuels `node_modules`/`output`, puis remplace `SPEC_REPO_PATH`.
 Il utilise `spago` sur le `PATH` et le lanceur `bin/gopurs` avec les variables du
-mode appelant, y compris pour les huit cas imbriqués. Une initialisation échouée
+mode appelant, y compris pour les neuf cas imbriqués. Une initialisation échouée
 ou annulée détruit sa copie avant une nouvelle tentative. Son `bin/test` exécute
 aussi les deux régressions de `test/integration-environment.mjs`, contre le vrai
 programme Go `Test.IntegrationEnvironment` et des commandes externes simulées.
+
+QuickCheck possède désormais `package.test.main: Test.Go` et un `bin/test`
+exécutable, sélectionné par `./bin/modtest quickcheck`. La suite utilise une
+graine fixe et compare les sorties JavaScript/Go. Les trois `pending` de `spec`
+sont des fixtures intentionnelles ; leurs contrats d'exécution et d'affichage
+sont vérifiés dans le parcours standard. Voir le
+[lot 07 du plan v2](#plan-v2--lot-07--couverture-des-bibliothèques-6-octobre-2026).
 
 ## Plan v2 — lot 01 : campagnes reproductibles, 3 octobre 2026
 
@@ -810,6 +823,276 @@ notamment `REPRODUCTION.md`, `original-js.log`, `show-red.log`, `show-green.log`
 `snapshot-review.json`, `fixtures-strict.log`, `host-results.json`,
 `local-application.log` et `final-results.json`. Toolchain : Node **24.8.0**,
 Go **1.27.0**, Spago **1.0.3**, frontend TAST **0.15.16 development**.
+
+## Plan v2 — lot 06 : dérivations et imports, 6 octobre 2026
+
+Les quatre fixtures de dérivation sont réintégrées. Lot validé :
+**75/100 points, 6/8 lots** du plan v2.
+
+Les originaux sont identiques aux fixtures du frontend local. Leur compilation
+isolée échoue avec `CannotDeriveInvalidConstructorArg` aussi bien sur le fork
+TAST **0.15.16 development** que sur la référence amont **0.15.15**, avec les
+mêmes sources de dépendances du package set **77.10.1**. Les modules
+`bifunctors` et `profunctor` sont déjà présents dans les globs de compilation.
+Le problème est la portée des instances : les modules qui les définissent
+doivent appartenir à la fermeture des imports du module testé. Le harnais du
+frontend local appelle `rebuildModule` avec tous les `supportExterns` pour ses
+fixtures à module unique ; ce contexte masque les imports manquants.
+
+La reproduction minimale ajoute uniquement les imports suivants aux originaux.
+Les **huit compilations** réussissent alors, quatre par frontend :
+
+| Fixture | Modules d'instances ajoutés | Assertions exécutées par la fixture renforcée |
+| --- | --- | --- |
+| `DerivingContravariant` | `Data.Bifunctor`, `Data.Profunctor` | 7 : tous les constructeurs, triple contravariance, fonctions, tuples, records imbriqués et argument quantifié |
+| `DerivingFunctorFromBi` | `Data.Bifunctor`, `Data.Bifoldable`, `Data.Bitraversable` | 24 : `map`, `foldl`, `foldr`, `foldMap`, `traverse`, `sequence` et ordre des effets sur les trois constructeurs |
+| `DerivingFunctorFromPro` | `Data.Profunctor` | 2 : double contravariance des fonctions, tableaux et records imbriqués |
+| `DerivingProfunctor` | `Data.Bifunctor` | 6 : tous les constructeurs, transformations gauche/droite, champs constants et quantifiés, tuples et records imbriqués |
+
+Les **39 assertions** utilisent une entrée lue via `Effect.Ref` pour conserver
+les chemins dynamiques ; les transformations changent aussi les types des
+paramètres. Les deux frontends signalent encore ces imports d'instances seuls
+comme `UnusedImport` : les commentaires des fixtures expliquent leur nécessité.
+
+Vérifications terminées :
+
+- Comparaison avant/après sur chaque cas : **huit rejets initiaux**, puis
+  **huit succès** après les seuls imports. Les diagnostics complets et les
+  empreintes des originaux sont conservés.
+- Fixtures renforcées compilées puis exécutées en JavaScript par **les deux
+  frontends**, soit huit exécutions réussies avec exactement **`Done\n`**.
+- Pour **chacune des quatre fixtures**, **268 entrées TAST figées** et
+  **333 fichiers Go plus `go.mod` identiques octet par octet** entre le backend
+  JS, le natif Go séquentiel (tous les workers à 1, pipeline désactivé) et le
+  natif Go parallèle (workers à 4, pipeline activé). Les **douze compilations
+  et exécutions Go** réussissent avec le même résultat que les frontends JS.
+- Les quatre nouveaux snapshots sont revus : dictionnaires et branches dérivés,
+  variance, conversions de tuples/records, préservation des champs constants
+  et quantifiés, assertions et ordre des effets. Ils correspondent exactement
+  aux `Main.go` exécutés dans les trois modes après gofmt.
+- Création par le vrai `bin/test`, puis **4/4 fixtures réussies en mode strict**
+  avec `UPDATE_SNAPSHOTS=0`, compilation et exécution Go.
+- **63 tests Node du runner réussis**, zéro échec et zéro saut, après retrait
+  des quatre exclusions et adaptation de sa fixture de sélection.
+- `./bin/test --list` sélectionne les **400 fixtures présentes**, sans exclusion.
+  Ce comptage est une vérification de sélection ; les validations d'exécution
+  de cette passe portent sur les quatre fixtures ci-dessus.
+- Empreintes des sources, dépendances et compilateurs vérifiées ; snapshots
+  installés identiques aux références validées, liens locaux et `git diff --check`
+  propres.
+
+Preuves, scripts de reproduction, sources originales, inventaires TAST/Go et
+journaux conservés dans
+`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/gopurs-v2-deriving-bgLIyO/`,
+notamment `REPRODUCTION.md`, `comparison-before.json`, `comparison-imports.json`,
+`validation.json`, `snapshot-review.json`, `fixtures-strict.log`,
+`runner-tests.log` et `final-results.json`. Toolchain : Node **24.8.0**, Go
+**1.27.0**, Spago **1.0.3**. `validation.json` identifie les deux frontends et
+les deux hôtes gopurs par leurs SHA-256 ; `sources.json` identifie les checkouts,
+dont gopurs **`475c954`** et frontend **`b4a7fb1`**. Le binaire frontend utilisé
+annonce le commit **`3c8fcfd… DIRTY`** : son empreinte, plutôt que le seul HEAD
+du checkout, désigne la version effectivement testée.
+
+Les workspaces volumineux de ce lot sont conservés dans `workspaces.tar.gz` ;
+`archive.json` donne son empreinte et les **33 058 fichiers vérifiés** avant
+suppression des copies non compressées. Les journaux et manifests restent
+accessibles directement à la racine des preuves.
+
+## Plan v2 — lot 07 : couverture des bibliothèques, 6 octobre 2026
+
+QuickCheck dispose d'une suite Go autonome, intégrée au runner standard ; les
+trois `pending` de `spec` sont examinés, documentés et couverts par des tests
+actifs. Lot validé : **90/100 points, 7/8 lots** du plan v2.
+
+### QuickCheck
+
+`gopurs-quickcheck/bin/test` compile `Test.Go`, exécute l'oracle JavaScript puis
+le programme Go et compare les deux transcriptions octet par octet. La
+configuration Spago déclare les dépendances de test et les overrides Go du
+graphe résolu ; `npm run test:go` expose le même parcours. La graine **12345**,
+lue via `Effect.Ref`, conserve des entrées dynamiques et un résultat reproductible.
+
+La suite couvre l'état et le rejeu des générateurs, la restauration de taille,
+les intervalles Int/Number, les combinators, les records imbriqués, les sommes
+génériques et les fonctions arbitraires. **Seize cas de perturbation Float32**
+exercent la FFI, dont les zéros signés, l'arrondi, les sous-normaux, les débordements,
+les infinis et NaN. Une propriété mixte donne **33 succès et 31 échecs attendus
+sur 64 essais** : chaque échec est rejoué depuis sa graine et l'exception du
+premier essai est vérifiée. Un vecteur de **100 000 éléments** et **100 000 essais
+de propriété** contrôlent aussi les parcours longs.
+
+### Spec
+
+Les trois feuilles de `ParallelSpec` sont intentionnelles : `g.3` dans un groupe
+séquentiel, `ppp.1` dans un groupe imbriqué ne contenant que du pending et `z.3`
+dans un groupe parallèle. Les anciens tests de collecte annonçaient du pending
+dans leur nom sans en contenir ; leurs noms décrivent maintenant leur vrai contenu.
+
+Les trois tests actifs de `PendingSpec` vérifient les corps et hooks par test
+ignorés, l'arbre des résultats, les chemins et comptes des événements, le bilan,
+un rendez-vous entre pairs parallèles via AVar et l'ordre séquentiel imbriqué.
+Ce dernier vérifie aussi le mode annoncé par les événements, pour qu'un
+ordonnancement parallèle rapide ne puisse satisfaire accidentellement le test.
+Le neuvième cas d'intégration, `pending-mixed-contexts`, vérifie le rendu attendu.
+Son action séquentielle sépare les groupes adjacents et stabilise l'ordre des
+titres du golden.
+
+Vérifications terminées :
+
+- **QuickCheck réussit via le vrai `bin/modtest`**, dans une copie fraîche, avec
+  zéro erreur ni avertissement frontend et une sortie Go identique à son oracle JS.
+- Sur **234 entrées TAST figées**, les **292 fichiers Go et `go.mod` sont
+  identiques octet par octet** entre l'hôte JS, le natif Go séquentiel (workers
+  à 1, pipeline désactivé) et le natif Go parallèle (workers à 4, pipeline activé).
+  Les trois programmes Go compilent et rendent la même transcription que l'oracle JS.
+- Une mutation isolée de sa FFI, lisant les bits Float32 comme un entier non signé,
+  est rejetée par le vrai `bin/test` : le diff des graines et fonctions générées
+  propage un statut d'échec. La FFI originale est ensuite restaurée.
+- **`spec` réussit avec 74 tests et 3 pending intentionnels**, dont les neuf cas
+  d'intégration Go ; ses **deux tests d'initialisation** réussissent également.
+  La version livrée de `PendingSpec` est incluse dans cette campagne.
+- Les **trois nouveaux tests et le golden** passent aussi en JavaScript avec les
+  dépendances de référence du package set **77.7.0**. Ce contrôle emploie les
+  paquets du registre : les adaptations locales Aff/AVar ont des contrats FFI
+  natifs et ne constituent pas un environnement JS exécutable pour cette suite.
+- Dans cette copie JS, trois mutations indépendantes de `Test.Spec` sont
+  détectées : exécuter le corps de `pending'`, désactiver `parallel`, ou ignorer
+  `sequential`. Les trois tests repassent après restauration.
+- **64 tests Node des runners réussissent**, zéro échec ni saut, dont le contrôle
+  du nettoyage local du nouveau script QuickCheck. La sélection courante compte
+  **51 runners** ; les exécutions de bibliothèques de cette passe concernent
+  QuickCheck et `spec`.
+- Les **4 515 entrées source/artefact initiales** sont auditées : les changements
+  se limitent aux fichiers du lot, et les travaux du lot 06 sont préservés.
+  **63 liens locaux et ancres**, la syntaxe du script, les manifestes JSON et
+  `git diff --check` sont vérifiés.
+
+Les incidents restent consignés : le premier golden supposait un ordre fixe
+entre deux groupes parallélisables ; la fixture ajoute une frontière séquentielle
+avant de conserver cet ordre. Une relance ultérieure a rencontré `ENOSPC` après
+les nouveaux tests actifs ; sa reprise complète via `--resume-failed` réussit
+une fois l'espace disponible. Les rapports d'échec et de reprise sont conservés.
+
+Preuves et scripts dans
+`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/gopurs-v2-libraries-FnSmNh/`,
+notamment `sources-before.json`, `toolchain.json`, `quickcheck-first.log`,
+`quickcheck-validation.py`, `quickcheck-validation.json`, `spec-focused-validation.py`,
+`spec-focused-validation.json`, `spec-validated.log`, `runner-tests.log` et
+`final-results.json`. Toolchain : Node **24.8.0**, Go **1.27.0**, Spago **1.0.3**,
+frontend TAST **0.15.16 development** ; les bibliothèques utilisent le package
+set **77.7.0**, les intégrations imbriquées de `spec` le **75.0.0**.
+
+## Plan v2 — lot 08 : installation et validation finale, 7 octobre 2026
+
+Le lot est validé : **100/100 points, 8/8 lots clôturés**. La passe des
+**6 et 7 octobre 2026** couvre les installations, les reconstructions et les
+campagnes complètes sur les sources inventoriées.
+
+Toolchain local : macOS ARM64, Node **24.8.0**, npm **11.6.0**, Go **1.27.0** et
+Spago **1.0.3** pour les applications. Le build JS utilise le toolchain npm
+verrouillé, notamment Spago **0.93.45** et esbuild **0.28.1**. Les frontends et
+artefacts sont identifiés par SHA-256 dans `toolchain.json`.
+
+Vérifications terminées :
+
+- **Nix vérifié à l'exécution sur aarch64-linux** : `nix flake check`,
+  `nix develop` et `nix-instantiate shell.nix` réussissent avec Nix **2.31.2**.
+  Le conteneur Docker utilise un magasin Nix en mémoire et les trois fichiers
+  Nix copiés en lecture seule ; leurs empreintes et le lockfile restent identiques.
+  Le shell fournit Node **24.18.0**, npm **11.16.0**, Go **1.26.4**, Spago **1.0.4**,
+  esbuild **0.27.2**, purs-tidy **0.11.1**, PLS **0.18.5**, Python **3.14.6** et
+  Git **2.54.0**. Il ne fournit pas `purs`. Les shells Darwin et x86_64-linux
+  n'ont pas été exécutés ; les builds du compilateur utilisent le toolchain local
+  non-Nix, notamment Go **1.27.0** et le frontend TAST.
+- **Installation dans des checkouts neufs** : clonages réels via `bin/setup
+  --core`, puis `--all`, avec l'adaptation locale QuickCheck fournie séparément.
+  La sélection fraîche ne contenait que **50 des 51 runners** du checkout actif :
+  `js-uri` manquait dans `ADDITIONAL_PACKAGES`. Après correction, le vrai setup
+  clone ce dépôt et les deux inventaires des **51 runners** coïncident.
+- Les bibliothèques clonées sont ensuite placées aux références locales
+  inventoriées, avec les modifications non commitées des lots 06/07 superposées.
+  Le paquet local `gopurs-argonaut-codecs`, **21 fichiers hors dépôt Git**, est
+  également copié et identifié par empreintes pour reproduire le graphe natif.
+- **`npm ci` puis bootstrap natif réussis** : **500 modules et 288 603 types**.
+  Les deux reconstructions du bundle JS dans le checkout neuf sont identiques.
+  Le natif Go reconstruit est identique à celui du checkout actif.
+  Le frontend npm frais annonce **`87c821c… DIRTY`**, tandis que le frontend TAST
+  local annonce **`3c8fcfd… DIRTY`** ; les deux sont identifiés par leur binaire.
+  Le bundle JS frais diffère de l'ancien bundle, dont le frontend local est
+  sélectionné par un lien npm vers le frontend TAST. La parité de génération
+  vérifiée ci-dessous confirme les mêmes résultats Go.
+- **b8x : 2 683 entrées TAST figées et 2 987 fichiers Go plus `go.mod` identiques
+  octet par octet**, entre l'ancien bundle JS, le nouveau JS, le natif séquentiel
+  et le natif parallèle. Les entrées et compagnons FFI sont vérifiés avant/après
+  chaque génération. Ce contrôle concerne la génération de b8x.
+- **Archive npm installée offline dans une application vide**, puis compilation
+  TAST, génération par le binaire installé et exécution Go réussies avec exactement
+  `packaged backend ok`. Le paquet est construit depuis le checkout neuf.
+- La campagne Node révèle que `test:cli` sélectionnait implicitement le frontend
+  npm, qui n'émet pas le TAST attendu dans une installation fraîche. Le test
+  utilise désormais `findTypedCompiler`, comme le bootstrap natif, et respecte
+  `GOPURS_PURS` ; **ses 19 contrôles passent après correction**, avec les trois hôtes.
+- **435 contrôles Node réussis, zéro échec final ni saut**, sur les 60 fichiers
+  de tests des hôtes JS et natif Go. Le fichier Rust optionnel, activé séparément
+  par `npm run test:rust`, n'appartient pas à cette campagne. La préparation native
+  sous `-race` a rencontré `ENOSPC` à la compilation sur macOS ; le même harnais,
+  avec les **615 fichiers Go du bootstrap**, passe dans un conteneur Linux ARM64
+  en mémoire avec Go **1.27.0** et Node **25.7.0**. Ses trois tests Go et cinq
+  sous-cas valident le différé, la réexécution, le chevauchement, les bornes et
+  l'ordre des résultats. Les autres contrôles s'exécutent sous Node **24.8.0**
+  sur macOS ARM64.
+- **51/51 runners de bibliothèques réussis**, dont le contrôle `assert` en
+  compilation seule et les 50 autres avec exécution Go. QuickCheck compare ses
+  sorties JS/Go ; `spec` passe **74 tests, 3 pending intentionnels**, ses neuf
+  intégrations et ses deux tests d'initialisation. Après deux tentatives limitées
+  par `ENOSPC`, la reprise isolée de `spec` avec `--resume-failed` réussit ; le
+  rapport final est `campaign-modules/gopurs-tests-ijAzEq/results.json`.
+- **400/400 fixtures réussies**, avec snapshots stricts, compilation et exécution
+  Go, sans exclusion ni mise à jour des snapshots. La comparaison des inventaires
+  vérifie chaque nom entre la sélection active et celle du checkout neuf.
+  Les agrégats référencent les **262 rapports de fixtures** et les **53 rapports
+  de bibliothèques**, reprises et tentatives initiales comprises.
+
+Les campagnes utilisent des temporaires et caches privés. Deux saturations
+disque ont interrompu les fixtures après **119**, puis **171 succès** préservés
+dans les rapports individuels. Les bilans agrégés, arrêtés respectivement à
+115 et 170 succès, sont reconstruits depuis ces rapports atomiques.
+`--resume-failed` reprend réellement `DeepArrayBinder`, puis
+`FunctionalDependencies`, `Functions`, `Functions2` et `Generalization1` : les
+cinq cas passent avec les mêmes sources et binaires. Les **225 dernières
+fixtures** passent ensuite une par une, avec contrôle d'espace avant chaque
+cible et réduction du cache Go avant l'écriture du bilan. Aucun succès antérieur
+n'est réattribué à des sources différentes ; les rapports initiaux restent intacts.
+
+Les premiers journaux conservent aussi les incidents du harnais de validation :
+le premier conteneur Nix n'exportait pas `USER`, empêchant l'activation du PATH ;
+la reprise corrige son environnement. La première compilation d'intégration en
+mode offline manquait du checkout Git `spec-node` ; son téléchargement permet
+la compilation. Le chemin `js-uri` inutilisé dans ce graphe n'empêche pas ce
+build : la correction du setup porte sur l'inventaire des runners.
+
+L'audit couvre **4 928 entrées source dans 54 dépôts**, plus les **21 fichiers**
+du paquet local `argonaut-codecs`. Les différences de cette passe se limitent
+à l'inventaire de setup, au test CLI et à la documentation ; les sources des
+bibliothèques, du frontend et de PBO gardent leurs empreintes. Les liens locaux,
+les scripts modifiés et `git diff --check` sont vérifiés. Le lien vers le rapport
+scratch disparu du 21 septembre est remplacé par sa provenance textuelle dans
+`parallel-emission.md`.
+
+Preuves conservées dans
+`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/gopurs-v2-final-DFj3Sa/`,
+notamment `sources-before.json`, `installed-remote-heads.json`,
+`setup-selection-before.json`, `fresh-checkouts.json`, `unversioned-argonaut-codecs.json`,
+`nix-results.json`, `nix-second.log`, `build-results.json`, `b8x-results.json`,
+`package-results.json`, `node-cli-fixed.log`, `campaign-fixtures-results.json`,
+`campaign-modules-results.json`, `source-audit.json`, `REPRODUCTION.md` et
+`final-results.json`. Les workspaces b8x sont archivés
+dans `b8x-workspaces.tar.gz`, après vérification des **11 554 fichiers** conservés.
+`node-final-results.json` agrège les reprises CLI et `-race` ; le bootstrap est
+conservé dans `bootstrap-workspace.tar.gz`, dont les **4 106 fichiers** sont vérifiés.
+Les workspaces du lot 07 sont désormais archivés dans son `workspaces.tar.gz` ;
+son `archive.json` enregistre les **30 744 fichiers vérifiés** avant suppression
+des copies non compressées.
 
 ## Consolidation finale — lot 15, 2 octobre 2026
 
