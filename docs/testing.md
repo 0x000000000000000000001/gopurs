@@ -29,6 +29,7 @@ reconstruit les deux versions et conserve le workspace pour les tests natifs.
 | Appels et fonctions | `./bin/test CurriedLambdas -c` |
 | Conversions de tableaux | `./bin/test ArrayRoundtrip -c` |
 | Récursion | `./bin/test TCO TCOMutRec -c` |
+| Boucles scalaires en `int32` | `node --test tools/int32-loops.test.mjs tools/integer-boundaries.test.mjs tools/binding-contracts.test.mjs`, après le build ; `./bin/test Int32Loops TCO ThunkFusion 2136` ; [mesures et campagne à trois modes](int32-loops.md) |
 | Bindings, captures et signatures de workers | `node --test tools/binding-contracts.test.mjs tools/recursive-initialization.test.mjs tools/local-native-returns.test.mjs tools/zero-arity-functions.test.mjs`, après le build |
 | Fusion de thunks | `./bin/test ThunkFusion -c` |
 | Admission des fusions et applications immédiates | `node --test tools/thunk-fusion.test.mjs tools/counted-functions.test.mjs tools/immediate-applications.test.mjs`, après le build |

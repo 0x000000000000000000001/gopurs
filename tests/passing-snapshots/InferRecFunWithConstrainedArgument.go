@@ -32,6 +32,38 @@ func Get_Main_main() gopurs_runtime.Value {
 }
 
 func Call_Main_test(v_0_loop int64) int64 {
+	if (v_0_loop) == (int64(int32(v_0_loop))) {
+		return func() int64 {
+			v_0_loop := int32(v_0_loop)
+			_ = v_0_loop
+		test:
+			for {
+				if false {
+					continue test
+				}
+				v_0 := v_0_loop
+				_ = v_0
+				var __t0 int64
+				{
+					if (v_0) == (int32(100)) {
+						__t0 = int64(100)
+						goto end_branch_0
+					} else {
+
+					}
+				}
+				{
+					v_0_loop = (int32(1)) + (v_0)
+					continue test
+					__t0 = func() int64 { panic("unreachable") }()
+				}
+			end_branch_0:
+				return __t0
+			}
+		}()
+	} else {
+
+	}
 test:
 	for {
 		if false {

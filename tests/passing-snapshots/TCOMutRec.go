@@ -20,6 +20,43 @@ func Get_Main_tco4() gopurs_runtime.Value {
 			var f_0_1_1 gopurs_runtime.Value
 			_ = f_0_1_1
 			Call_local_Main_f__467072791_0_0_0 = func(x_1_loop int64, y_2_loop int64) int64 {
+				if ((x_1_loop) == (int64(int32(x_1_loop)))) && ((y_2_loop) == (int64(int32(y_2_loop)))) {
+					return func() int64 {
+						x_1_loop := int32(x_1_loop)
+						_ = x_1_loop
+						y_2_loop := int32(y_2_loop)
+						_ = y_2_loop
+					f__467072791_0_0_0:
+						for {
+							if false {
+								continue f__467072791_0_0_0
+							}
+							x_1 := x_1_loop
+							_ = x_1
+							y_2 := y_2_loop
+							_ = y_2
+							var __t2 int64
+							{
+								if (y_2) <= (int32(0)) {
+									__t2 = int64(x_1)
+									goto end_branch_2
+								} else {
+
+								}
+							}
+							{
+								x_1_loop = (x_1) + (int32(2))
+								y_2_loop = (y_2) - (int32(1))
+								continue f__467072791_0_0_0
+								__t2 = func() int64 { panic("unreachable") }()
+							}
+						end_branch_2:
+							return __t2
+						}
+					}()
+				} else {
+
+				}
 			f__467072791_0_0_0:
 				for {
 					if false {
@@ -311,6 +348,43 @@ func Get_Main_ntco4() gopurs_runtime.Value {
 			var f_0_1_13 gopurs_runtime.Value
 			_ = f_0_1_13
 			Call_local_Main_f__467072791_0_0_12 = func(x_1_loop int64, y_2_loop int64) int64 {
+				if ((x_1_loop) == (int64(int32(x_1_loop)))) && ((y_2_loop) == (int64(int32(y_2_loop)))) {
+					return func() int64 {
+						x_1_loop := int32(x_1_loop)
+						_ = x_1_loop
+						y_2_loop := int32(y_2_loop)
+						_ = y_2_loop
+					f__467072791_0_0_12:
+						for {
+							if false {
+								continue f__467072791_0_0_12
+							}
+							x_1 := x_1_loop
+							_ = x_1
+							y_2 := y_2_loop
+							_ = y_2
+							var __t2 int64
+							{
+								if (y_2) <= (int32(0)) {
+									__t2 = int64(x_1)
+									goto end_branch_2
+								} else {
+
+								}
+							}
+							{
+								x_1_loop = (x_1) + (int32(2))
+								y_2_loop = (y_2) - (int32(1))
+								continue f__467072791_0_0_12
+								__t2 = func() int64 { panic("unreachable") }()
+							}
+						end_branch_2:
+							return __t2
+						}
+					}()
+				} else {
+
+				}
 			f__467072791_0_0_12:
 				for {
 					if false {
@@ -458,6 +532,43 @@ func Get_Main_ntco2() gopurs_runtime.Value {
 			var f_0_1_17 gopurs_runtime.Value
 			_ = f_0_1_17
 			Call_local_Main_f__467072791_0_0_16 = func(x_1_loop int64, y_2_loop int64) int64 {
+				if ((x_1_loop) == (int64(int32(x_1_loop)))) && ((y_2_loop) == (int64(int32(y_2_loop)))) {
+					return func() int64 {
+						x_1_loop := int32(x_1_loop)
+						_ = x_1_loop
+						y_2_loop := int32(y_2_loop)
+						_ = y_2_loop
+					f__467072791_0_0_16:
+						for {
+							if false {
+								continue f__467072791_0_0_16
+							}
+							x_1 := x_1_loop
+							_ = x_1
+							y_2 := y_2_loop
+							_ = y_2
+							var __t2 int64
+							{
+								if (y_2) <= (int32(0)) {
+									__t2 = int64(x_1)
+									goto end_branch_2
+								} else {
+
+								}
+							}
+							{
+								x_1_loop = (x_1) + (int32(2))
+								y_2_loop = (y_2) - (int32(1))
+								continue f__467072791_0_0_16
+								__t2 = func() int64 { panic("unreachable") }()
+							}
+						end_branch_2:
+							return __t2
+						}
+					}()
+				} else {
+
+				}
 			f__467072791_0_0_16:
 				for {
 					if false {
@@ -743,6 +854,43 @@ func Get_Main_main() gopurs_runtime.Value {
 			var f_4_22_25 gopurs_runtime.Value
 			_ = f_4_22_25
 			Call_local_Main_f__467072791_4_21_24 = func(x_5_loop int64, y_6_loop int64) int64 {
+				if ((x_5_loop) == (int64(int32(x_5_loop)))) && ((y_6_loop) == (int64(int32(y_6_loop)))) {
+					return func() int64 {
+						x_5_loop := int32(x_5_loop)
+						_ = x_5_loop
+						y_6_loop := int32(y_6_loop)
+						_ = y_6_loop
+					f__467072791_4_21_24:
+						for {
+							if false {
+								continue f__467072791_4_21_24
+							}
+							x_5 := x_5_loop
+							_ = x_5
+							y_6 := y_6_loop
+							_ = y_6
+							var __t23 int64
+							{
+								if (y_6) <= (int32(0)) {
+									__t23 = int64(x_5)
+									goto end_branch_23
+								} else {
+
+								}
+							}
+							{
+								x_5_loop = (x_5) + (int32(2))
+								y_6_loop = (y_6) - (int32(1))
+								continue f__467072791_4_21_24
+								__t23 = func() int64 { panic("unreachable") }()
+							}
+						end_branch_23:
+							return __t23
+						}
+					}()
+				} else {
+
+				}
 			f__467072791_4_21_24:
 				for {
 					if false {
@@ -878,6 +1026,43 @@ func Get_Main_main() gopurs_runtime.Value {
 			var f_6_32_29 gopurs_runtime.Value
 			_ = f_6_32_29
 			Call_local_Main_f__467072791_6_31_28 = func(x_7_loop int64, y_8_loop int64) int64 {
+				if ((x_7_loop) == (int64(int32(x_7_loop)))) && ((y_8_loop) == (int64(int32(y_8_loop)))) {
+					return func() int64 {
+						x_7_loop := int32(x_7_loop)
+						_ = x_7_loop
+						y_8_loop := int32(y_8_loop)
+						_ = y_8_loop
+					f__467072791_6_31_28:
+						for {
+							if false {
+								continue f__467072791_6_31_28
+							}
+							x_7 := x_7_loop
+							_ = x_7
+							y_8 := y_8_loop
+							_ = y_8
+							var __t33 int64
+							{
+								if (y_8) <= (int32(0)) {
+									__t33 = int64(x_7)
+									goto end_branch_33
+								} else {
+
+								}
+							}
+							{
+								x_7_loop = (x_7) + (int32(2))
+								y_8_loop = (y_8) - (int32(1))
+								continue f__467072791_6_31_28
+								__t33 = func() int64 { panic("unreachable") }()
+							}
+						end_branch_33:
+							return __t33
+						}
+					}()
+				} else {
+
+				}
 			f__467072791_6_31_28:
 				for {
 					if false {
@@ -1011,6 +1196,43 @@ func Get_Main_main() gopurs_runtime.Value {
 			var f_8_44_33 gopurs_runtime.Value
 			_ = f_8_44_33
 			Call_local_Main_f__467072791_8_43_32 = func(x_9_loop int64, y_10_loop int64) int64 {
+				if ((x_9_loop) == (int64(int32(x_9_loop)))) && ((y_10_loop) == (int64(int32(y_10_loop)))) {
+					return func() int64 {
+						x_9_loop := int32(x_9_loop)
+						_ = x_9_loop
+						y_10_loop := int32(y_10_loop)
+						_ = y_10_loop
+					f__467072791_8_43_32:
+						for {
+							if false {
+								continue f__467072791_8_43_32
+							}
+							x_9 := x_9_loop
+							_ = x_9
+							y_10 := y_10_loop
+							_ = y_10
+							var __t45 int64
+							{
+								if (y_10) <= (int32(0)) {
+									__t45 = int64(x_9)
+									goto end_branch_45
+								} else {
+
+								}
+							}
+							{
+								x_9_loop = (x_9) + (int32(2))
+								y_10_loop = (y_10) - (int32(1))
+								continue f__467072791_8_43_32
+								__t45 = func() int64 { panic("unreachable") }()
+							}
+						end_branch_45:
+							return __t45
+						}
+					}()
+				} else {
+
+				}
 			f__467072791_8_43_32:
 				for {
 					if false {
@@ -1116,6 +1338,56 @@ func Call_Main_tco3(y0_0_loop int64) int64 {
 			var g_4_3_5 gopurs_runtime.Value
 			_ = g_4_3_5
 			Call_local_Main_g__467072791_4_2_4 = func(x_prime__5_loop int64, y_prime__6_loop int64) int64 {
+				if ((x_prime__5_loop) == (int64(int32(x_prime__5_loop)))) && ((y_prime__6_loop) == (int64(int32(y_prime__6_loop)))) {
+					return func() int64 {
+						x_prime__5_loop := int32(x_prime__5_loop)
+						_ = x_prime__5_loop
+						y_prime__6_loop := int32(y_prime__6_loop)
+						_ = y_prime__6_loop
+					g__467072791_4_2_4:
+						for {
+							if false {
+								continue g__467072791_4_2_4
+							}
+							x_prime__5 := x_prime__5_loop
+							_ = x_prime__5
+							y_prime__6 := y_prime__6_loop
+							_ = y_prime__6
+							var __t5 int64
+							{
+								if (y_prime__6) <= (int32(0)) {
+									__t5 = int64(x_prime__5)
+									goto end_branch_5
+								} else {
+
+								}
+							}
+							{
+								var __t4 int64
+								{
+									if (int64(y_prime__6)) > (gopurs_runtime.IntDiv(y0_0, int64(2))) {
+										x_prime__5_loop = (x_prime__5) + (int32(3))
+										y_prime__6_loop = (y_prime__6) - (int32(1))
+										continue g__467072791_4_2_4
+										__t4 = func() int64 { panic("unreachable") }()
+										goto end_branch_4
+									} else {
+
+									}
+								}
+								{
+									__t4 = Call_local_Main_f__467072791_1_0_2(int64((x_prime__5)+(int32(2))), int64(y_prime__6))
+								}
+							end_branch_4:
+								__t5 = __t4
+							}
+						end_branch_5:
+							return __t5
+						}
+					}()
+				} else {
+
+				}
 			g__467072791_4_2_4:
 				for {
 					if false {
@@ -1233,6 +1505,56 @@ func Call_Main_tco3(y0_0_loop int64) int64 {
 			var g_4_9_7 gopurs_runtime.Value
 			_ = g_4_9_7
 			Call_local_Main_g__467072791_4_8_6 = func(x_prime__5_loop int64, y_prime__6_loop int64) int64 {
+				if ((x_prime__5_loop) == (int64(int32(x_prime__5_loop)))) && ((y_prime__6_loop) == (int64(int32(y_prime__6_loop)))) {
+					return func() int64 {
+						x_prime__5_loop := int32(x_prime__5_loop)
+						_ = x_prime__5_loop
+						y_prime__6_loop := int32(y_prime__6_loop)
+						_ = y_prime__6_loop
+					g__467072791_4_8_6:
+						for {
+							if false {
+								continue g__467072791_4_8_6
+							}
+							x_prime__5 := x_prime__5_loop
+							_ = x_prime__5
+							y_prime__6 := y_prime__6_loop
+							_ = y_prime__6
+							var __t11 int64
+							{
+								if (y_prime__6) <= (int32(0)) {
+									__t11 = int64(x_prime__5)
+									goto end_branch_11
+								} else {
+
+								}
+							}
+							{
+								var __t10 int64
+								{
+									if (int64(y_prime__6)) > (gopurs_runtime.IntDiv(y0_0, int64(2))) {
+										x_prime__5_loop = (x_prime__5) + (int32(3))
+										y_prime__6_loop = (y_prime__6) - (int32(1))
+										continue g__467072791_4_8_6
+										__t10 = func() int64 { panic("unreachable") }()
+										goto end_branch_10
+									} else {
+
+									}
+								}
+								{
+									__t10 = Call_local_Main_f__467072791_1_0_2(int64((x_prime__5)+(int32(2))), int64(y_prime__6))
+								}
+							end_branch_10:
+								__t11 = __t10
+							}
+						end_branch_11:
+							return __t11
+						}
+					}()
+				} else {
+
+				}
 			g__467072791_4_8_6:
 				for {
 					if false {

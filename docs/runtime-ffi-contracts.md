@@ -84,6 +84,14 @@ positifs de `zshr` et le quotient frontière : la conversion sur 32 bits se fait
 aux opérations concernées. Le compilateur natif utilise ces contrats pendant
 le pliage, et chaque opérande émis est évalué une seule fois, dans l'ordre.
 
+Les boucles scalaires admises par `Gopurs.Int32Loops` peuvent conserver un état
+local `int32` après vérification de sa plage initiale et de toutes ses écritures.
+Les additions et soustractions de ce chemin natif ont le même débordement signé.
+Le chemin général et les frontières des workers gardent le stockage `int64`,
+notamment pour les valeurs non signées et les sorties sans itération. La preuve
+et les limites de cette optimisation sont décrites dans
+[Bindings, captures et TCO](architecture.md#bindings-captures-et-tco).
+
 ### Affichage des `Number`
 
 La FFI Go `Data.Show.ShowNumberImpl` suit la FFI JS Prelude `showNumberImpl` :

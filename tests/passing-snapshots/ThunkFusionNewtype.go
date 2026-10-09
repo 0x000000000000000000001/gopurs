@@ -462,6 +462,46 @@ defer__3873826587:
 }
 
 func Call_Main_wrapAdds__gopurs_strict_thunk_0(v_0_loop int64, v1_1_loop int64, v2_2_loop int64) int64 {
+	if ((v_0_loop) == (int64(int32(v_0_loop)))) && ((v2_2_loop) == (int64(int32(v2_2_loop)))) {
+		return func() int64 {
+			v_0_loop := int32(v_0_loop)
+			_ = v_0_loop
+			v2_2_loop := int32(v2_2_loop)
+			_ = v2_2_loop
+		wrapAdds__gopurs_strict_thunk_0:
+			for {
+				if false {
+					continue wrapAdds__gopurs_strict_thunk_0
+				}
+				v_0 := v_0_loop
+				_ = v_0
+				var v1_1 int64 = v1_1_loop
+				_ = v1_1
+				v2_2 := v2_2_loop
+				_ = v2_2
+				var __t0 int64
+				{
+					if (v_0) == (int32(0)) {
+						__t0 = int64(v2_2)
+						goto end_branch_0
+					} else {
+
+					}
+				}
+				{
+					v_0_loop = (v_0) - (int32(1))
+					v1_1_loop = v1_1
+					v2_2_loop = (v2_2) + (int32(gopurs_runtime.IntAdd(v1_1, int64(0))))
+					continue wrapAdds__gopurs_strict_thunk_0
+					__t0 = func() int64 { panic("unreachable") }()
+				}
+			end_branch_0:
+				return __t0
+			}
+		}()
+	} else {
+
+	}
 wrapAdds__gopurs_strict_thunk_0:
 	for {
 		if false {
@@ -579,6 +619,43 @@ wrapEffects:
 }
 
 func Call_Main_wrapIncrements__gopurs_strict_thunk_0(v_0_loop int64, v1_1_loop int64) int64 {
+	if ((v_0_loop) == (int64(int32(v_0_loop)))) && ((v1_1_loop) == (int64(int32(v1_1_loop)))) {
+		return func() int64 {
+			v_0_loop := int32(v_0_loop)
+			_ = v_0_loop
+			v1_1_loop := int32(v1_1_loop)
+			_ = v1_1_loop
+		wrapIncrements__gopurs_strict_thunk_0:
+			for {
+				if false {
+					continue wrapIncrements__gopurs_strict_thunk_0
+				}
+				v_0 := v_0_loop
+				_ = v_0
+				v1_1 := v1_1_loop
+				_ = v1_1
+				var __t0 int64
+				{
+					if (v_0) == (int32(0)) {
+						__t0 = int64(v1_1)
+						goto end_branch_0
+					} else {
+
+					}
+				}
+				{
+					v_0_loop = (v_0) - (int32(1))
+					v1_1_loop = (v1_1) + (int32(1))
+					continue wrapIncrements__gopurs_strict_thunk_0
+					__t0 = func() int64 { panic("unreachable") }()
+				}
+			end_branch_0:
+				return __t0
+			}
+		}()
+	} else {
+
+	}
 wrapIncrements__gopurs_strict_thunk_0:
 	for {
 		if false {
@@ -659,6 +736,43 @@ func Call_Main_runIncrements(depth_0_loop int64, seed_1_loop int64) int64 {
 }
 
 func Call_Main_wrapOrder__gopurs_strict_thunk_0(v_0_loop int64, v1_1_loop int64) int64 {
+	if ((v_0_loop) == (int64(int32(v_0_loop)))) && ((v1_1_loop) == (int64(int32(v1_1_loop)))) {
+		return func() int64 {
+			v_0_loop := int32(v_0_loop)
+			_ = v_0_loop
+			v1_1_loop := int32(v1_1_loop)
+			_ = v1_1_loop
+		wrapOrder__gopurs_strict_thunk_0:
+			for {
+				if false {
+					continue wrapOrder__gopurs_strict_thunk_0
+				}
+				v_0 := v_0_loop
+				_ = v_0
+				v1_1 := v1_1_loop
+				_ = v1_1
+				var __t0 int64
+				{
+					if (v_0) == (int32(0)) {
+						__t0 = int64(v1_1)
+						goto end_branch_0
+					} else {
+
+					}
+				}
+				{
+					v_0_loop = (v_0) - (int32(1))
+					v1_1_loop = (int32(gopurs_runtime.IntAdd(gopurs_runtime.IntMul(int64(2), int64(v1_1)), int64(0)))) + (v_0)
+					continue wrapOrder__gopurs_strict_thunk_0
+					__t0 = func() int64 { panic("unreachable") }()
+				}
+			end_branch_0:
+				return __t0
+			}
+		}()
+	} else {
+
+	}
 wrapOrder__gopurs_strict_thunk_0:
 	for {
 		if false {

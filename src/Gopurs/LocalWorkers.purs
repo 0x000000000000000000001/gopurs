@@ -15,6 +15,7 @@ import Gopurs.ExprContext (ExprContext, ExprResult, flattenStmts)
 import Gopurs.GoAst (GoExpr(..), GoType(..), goTypeToStr, rawGo)
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr)
 import Gopurs.GoFunctions (Parameters, curriedFunction, iterationBindings, loopParameters, namedParameters)
+import Gopurs.Int32Loops as Int32Loops
 import Gopurs.GoTypes (exprTypeToGoType)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr)
 
@@ -50,8 +51,9 @@ emit { codegenStateRef, modNameStr } name params isLoop result =
       , rawGo ("var " <> name <> " gopurs_runtime.Value")
       , rawGo ("_ = " <> name)
       ]
-    body = iterationBindings params <> flattenStmts result.stmts <> [ GoReturn result.expr ]
-    functionBody = if isLoop then GoFor name body else GoBlock body
+    body = flattenStmts result.stmts <> [ GoReturn result.expr ]
+    functionBody = if isLoop then Int32Loops.loop name params resultType body
+      else GoBlock (iterationBindings params <> body)
     nativeAssignment = GoMutate nativeName (GoFuncBlock (loopParameters params) [ functionBody ] resultType)
     call = GoCall (GoVar nativeName) (map (\(Tuple param ty) ->
       coerceGoExpr codegenStateRef modNameStr (GoVar (param <> "_loop_val")) TypeValue ty) params)

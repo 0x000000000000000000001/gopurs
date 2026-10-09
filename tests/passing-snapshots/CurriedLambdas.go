@@ -407,6 +407,44 @@ repeatEffects:
 }
 
 func Call_Main_repeatApply__gopurs_counted_function_0(remaining_0_loop int64, callback_1_loop gopurs_runtime.Value, result_2_loop int64) int64 {
+	if (remaining_0_loop) == (int64(int32(remaining_0_loop))) {
+		return func() int64 {
+			remaining_0_loop := int32(remaining_0_loop)
+			_ = remaining_0_loop
+		repeatApply__gopurs_counted_function_0:
+			for {
+				if false {
+					continue repeatApply__gopurs_counted_function_0
+				}
+				remaining_0 := remaining_0_loop
+				_ = remaining_0
+				var callback_1 gopurs_runtime.Value = callback_1_loop
+				_ = callback_1
+				var result_2 int64 = result_2_loop
+				_ = result_2
+				var __t0 int64
+				{
+					if (remaining_0) == (int32(0)) {
+						__t0 = result_2
+						goto end_branch_0
+					} else {
+
+					}
+				}
+				{
+					remaining_0_loop = (remaining_0) - (int32(1))
+					callback_1_loop = callback_1
+					result_2_loop = gopurs_runtime.Apply(callback_1, gopurs_runtime.Int(result_2)).IntVal
+					continue repeatApply__gopurs_counted_function_0
+					__t0 = func() int64 { panic("unreachable") }()
+				}
+			end_branch_0:
+				return __t0
+			}
+		}()
+	} else {
+
+	}
 repeatApply__gopurs_counted_function_0:
 	for {
 		if false {

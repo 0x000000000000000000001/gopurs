@@ -537,6 +537,48 @@ func Get_Main_main() gopurs_runtime.Value {
 }
 
 func Call_Main_suspendVary__gopurs_strict_thunk_0(v_0_loop int64, v1_1_loop int64, v2_2_loop int64) int64 {
+	if (((v_0_loop) == (int64(int32(v_0_loop)))) && ((v1_1_loop) == (int64(int32(v1_1_loop))))) && ((v2_2_loop) == (int64(int32(v2_2_loop)))) {
+		return func() int64 {
+			v_0_loop := int32(v_0_loop)
+			_ = v_0_loop
+			v1_1_loop := int32(v1_1_loop)
+			_ = v1_1_loop
+			v2_2_loop := int32(v2_2_loop)
+			_ = v2_2_loop
+		suspendVary__gopurs_strict_thunk_0:
+			for {
+				if false {
+					continue suspendVary__gopurs_strict_thunk_0
+				}
+				v_0 := v_0_loop
+				_ = v_0
+				v1_1 := v1_1_loop
+				_ = v1_1
+				v2_2 := v2_2_loop
+				_ = v2_2
+				var __t0 int64
+				{
+					if (v_0) == (int32(0)) {
+						__t0 = int64(v2_2)
+						goto end_branch_0
+					} else {
+
+					}
+				}
+				{
+					v_0_loop = (v_0) - (int32(1))
+					v1_1_loop = (v1_1) + (v_0)
+					v2_2_loop = (v2_2) + (int32(gopurs_runtime.IntAdd(gopurs_runtime.IntMul(int64(v1_1), int64(v_0)), int64(0))))
+					continue suspendVary__gopurs_strict_thunk_0
+					__t0 = func() int64 { panic("unreachable") }()
+				}
+			end_branch_0:
+				return __t0
+			}
+		}()
+	} else {
+
+	}
 suspendVary__gopurs_strict_thunk_0:
 	for {
 		if false {
@@ -669,6 +711,43 @@ suspendOverwrite:
 }
 
 func Call_Main_suspendOrder__gopurs_strict_thunk_0(v_0_loop int64, v1_1_loop int64) int64 {
+	if ((v_0_loop) == (int64(int32(v_0_loop)))) && ((v1_1_loop) == (int64(int32(v1_1_loop)))) {
+		return func() int64 {
+			v_0_loop := int32(v_0_loop)
+			_ = v_0_loop
+			v1_1_loop := int32(v1_1_loop)
+			_ = v1_1_loop
+		suspendOrder__gopurs_strict_thunk_0:
+			for {
+				if false {
+					continue suspendOrder__gopurs_strict_thunk_0
+				}
+				v_0 := v_0_loop
+				_ = v_0
+				v1_1 := v1_1_loop
+				_ = v1_1
+				var __t0 int64
+				{
+					if (v_0) == (int32(0)) {
+						__t0 = int64(v1_1)
+						goto end_branch_0
+					} else {
+
+					}
+				}
+				{
+					v_0_loop = (v_0) - (int32(1))
+					v1_1_loop = (int32(gopurs_runtime.IntAdd(gopurs_runtime.IntMul(int64(2), int64(v1_1)), int64(0)))) + (v_0)
+					continue suspendOrder__gopurs_strict_thunk_0
+					__t0 = func() int64 { panic("unreachable") }()
+				}
+			end_branch_0:
+				return __t0
+			}
+		}()
+	} else {
+
+	}
 suspendOrder__gopurs_strict_thunk_0:
 	for {
 		if false {
@@ -830,6 +909,43 @@ func Call_Main_suspendClash_prime___gopurs_strict_thunk_0(x_0_loop int64) int64 
 }
 
 func Call_Main_suspendClash_prime___gopurs_strict_thunk_1(v_0_loop int64, v1_1_loop int64) int64 {
+	if ((v_0_loop) == (int64(int32(v_0_loop)))) && ((v1_1_loop) == (int64(int32(v1_1_loop)))) {
+		return func() int64 {
+			v_0_loop := int32(v_0_loop)
+			_ = v_0_loop
+			v1_1_loop := int32(v1_1_loop)
+			_ = v1_1_loop
+		suspendClash_prime___gopurs_strict_thunk_1:
+			for {
+				if false {
+					continue suspendClash_prime___gopurs_strict_thunk_1
+				}
+				v_0 := v_0_loop
+				_ = v_0
+				v1_1 := v1_1_loop
+				_ = v1_1
+				var __t0 int64
+				{
+					if (v_0) == (int32(0)) {
+						__t0 = int64(v1_1)
+						goto end_branch_0
+					} else {
+
+					}
+				}
+				{
+					v_0_loop = (v_0) - (int32(1))
+					v1_1_loop = (v1_1) + (int32(1))
+					continue suspendClash_prime___gopurs_strict_thunk_1
+					__t0 = func() int64 { panic("unreachable") }()
+				}
+			end_branch_0:
+				return __t0
+			}
+		}()
+	} else {
+
+	}
 suspendClash_prime___gopurs_strict_thunk_1:
 	for {
 		if false {
@@ -892,6 +1008,46 @@ suspendClash_prime_:
 }
 
 func Call_Main_suspendAdds__gopurs_strict_thunk_0(v_0_loop int64, v1_1_loop int64, v2_2_loop int64) int64 {
+	if ((v_0_loop) == (int64(int32(v_0_loop)))) && ((v2_2_loop) == (int64(int32(v2_2_loop)))) {
+		return func() int64 {
+			v_0_loop := int32(v_0_loop)
+			_ = v_0_loop
+			v2_2_loop := int32(v2_2_loop)
+			_ = v2_2_loop
+		suspendAdds__gopurs_strict_thunk_0:
+			for {
+				if false {
+					continue suspendAdds__gopurs_strict_thunk_0
+				}
+				v_0 := v_0_loop
+				_ = v_0
+				var v1_1 int64 = v1_1_loop
+				_ = v1_1
+				v2_2 := v2_2_loop
+				_ = v2_2
+				var __t0 int64
+				{
+					if (v_0) == (int32(0)) {
+						__t0 = int64(v2_2)
+						goto end_branch_0
+					} else {
+
+					}
+				}
+				{
+					v_0_loop = (v_0) - (int32(1))
+					v1_1_loop = v1_1
+					v2_2_loop = (v2_2) + (int32(gopurs_runtime.IntAdd(v1_1, int64(0))))
+					continue suspendAdds__gopurs_strict_thunk_0
+					__t0 = func() int64 { panic("unreachable") }()
+				}
+			end_branch_0:
+				return __t0
+			}
+		}()
+	} else {
+
+	}
 suspendAdds__gopurs_strict_thunk_0:
 	for {
 		if false {

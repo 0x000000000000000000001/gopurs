@@ -192,6 +192,7 @@ Tous les modules gopurs de ce tableau se trouvent dans [src/Gopurs](../src/Gopur
 | Layouts natifs de Maybe, Either et Tuple, adaptation de leurs slots | `GoConversions.NativeAdts` |
 | Demandes de helpers, conversion des champs et émission transitive Rebox | `GoConversions.Rebox`, `ReboxMetadata` |
 | Paramètres Go, variables d'itération et enveloppes curryfiées | `GoFunctions` |
+| Preuve et versionnement des boucles scalaires à état signé 32 bits | `Int32Loops` |
 | Dépendances des fragments opaques et imports du module | `GoCode`, `GoImports` |
 | Représentation et rendu Go | `GoAst`, `Printer` |
 | Stockage mutable privé d'un rendu et FFI JS/Go associée | `Printer.Builder` |
@@ -522,6 +523,27 @@ slots, puis émet le `continue`. Les arguments lisent les paramètres de l'itér
 courante, ce qui préserve notamment les permutations. `LoopTarget` contient le
 label, les slots et leurs types ; son ancien résultat et sa liste de paramètres
 inutilisés ont été retirés.
+
+`Int32Loops.loop`, appelé par les émetteurs de workers locaux et de module,
+versionne certaines boucles à résultat `int64`. Il choisit indépendamment les
+slots `int64` effectivement réaffectés dont toutes les écritures visibles sont
+des additions/soustractions normalisées ou des littéraux dans la plage signée
+32 bits. Une référence opaque, un masquage du paramètre, une closure, une boucle
+imbriquée ou une forme AST non reconnue invalide la preuve concernée. Les appels
+arbitraires, la division et `zshr` ne prouvent pas un résultat signé.
+
+Une garde à l'entrée vérifie `slot == int64(int32(slot))` pour chaque slot
+retenu. Le chemin admis utilise des slots et paramètres d'itération `int32`,
+des additions/soustractions natives et des comparaisons natives lorsque les deux
+opérandes sont prouvés signés. Il élargit aux frontières des appels et du retour.
+La boucle originale traite les entrées hors plage, y compris une sortie immédiate
+sans opération arithmétique. Une IIFE donne une portée propre aux labels copiés.
+Les signatures des workers, des wrappers et des bridges restent en `int64`.
+
+Le type `Int` du compilateur ne suffit pas non plus pour borner un littéral :
+PBO peut plier un décalage non signé en `4294967295`. Les opérations constantes
+et les conversions de constantes hors plage gardent un helper runtime pour
+éviter un débordement de constante rejeté par le vérificateur de types Go.
 
 Les politiques d'enveloppes restent explicites : modules regroupés jusqu'à dix
 arguments, workers locaux curryfiés un argument à la fois, closures curryfiées

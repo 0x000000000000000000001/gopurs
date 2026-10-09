@@ -20,6 +20,41 @@ func Get_Main_length() gopurs_runtime.Value {
 			var go__go_0_1_1 gopurs_runtime.Value
 			_ = go__go_0_1_1
 			Call_local_Main_go__1086705844_0_0_0 = func(acc_1_loop int64, arr_2_loop []gopurs_runtime.Value) int64 {
+				if (acc_1_loop) == (int64(int32(acc_1_loop))) {
+					return func() int64 {
+						acc_1_loop := int32(acc_1_loop)
+						_ = acc_1_loop
+					go__1086705844_0_0_0:
+						for {
+							if false {
+								continue go__1086705844_0_0_0
+							}
+							acc_1 := acc_1_loop
+							_ = acc_1
+							var arr_2 []gopurs_runtime.Value = arr_2_loop
+							_ = arr_2
+							var __t2 int64
+							{
+								if (gopurs_runtime.Int(int64(len(arr_2))).IntVal) == (int64(0)) {
+									__t2 = int64(acc_1)
+									goto end_branch_2
+								} else {
+
+								}
+							}
+							{
+								acc_1_loop = (acc_1) + (int32(1))
+								arr_2_loop = (*(*[]gopurs_runtime.Value)((gopurs_runtime.UncurriedApp3(Get_Data_Array_sliceImpl(), gopurs_runtime.Int(int64(1)), gopurs_runtime.Int(int64(len(arr_2))), gopurs_runtime.Array(arr_2))).UnsafePtr))
+								continue go__1086705844_0_0_0
+								__t2 = func() int64 { panic("unreachable") }()
+							}
+						end_branch_2:
+							return __t2
+						}
+					}()
+				} else {
+
+				}
 			go__1086705844_0_0_0:
 				for {
 					if false {

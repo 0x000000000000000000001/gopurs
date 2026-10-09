@@ -12,6 +12,7 @@ import Gopurs.ExprContext (ExprContext, TranslateExpr, bindParameters, flattenSt
 import Gopurs.GoAst (GoDecl(..), GoExpr(..), GoType(..))
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr)
 import Gopurs.GoFunctions (Parameters, curriedFunction, iterationBindings, loopParameters, namedParameters)
+import Gopurs.Int32Loops as Int32Loops
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr)
 
 type Worker =
@@ -48,8 +49,9 @@ declaration translate context@{ codegenStateRef, modNameStr, moduleFunctions } i
       Just signature -> signature.fRet
       Nothing -> TypeValue
     body returning =
-      let statements = iterationBindings params <> flattenStmts result.stmts <> [ GoReturn returning ]
-      in if isSelfRecursive then GoFor fn.ident statements else GoBlock statements
+      let statements = flattenStmts result.stmts <> [ GoReturn returning ]
+      in if isSelfRecursive then Int32Loops.loop fn.ident params resultType statements
+        else GoBlock (iterationBindings params <> statements)
     value = if Array.null fn.args then
       -- A zero-argument abstraction still defers its whole body until called.
       curriedFunction [ Tuple "_" TypeValue ] TypeValue

@@ -28,6 +28,57 @@ func Get_Main_main() gopurs_runtime.Value {
 }
 
 func Call_Main_partialTCO(_dollar___unused_0_loop gopurs_runtime.Value, v_1_loop bool, v1_2_loop int64) int64 {
+	if (v1_2_loop) == (int64(int32(v1_2_loop))) {
+		return func() int64 {
+			v1_2_loop := int32(v1_2_loop)
+			_ = v1_2_loop
+		partialTCO:
+			for {
+				if false {
+					continue partialTCO
+				}
+				var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
+				_ = _dollar___unused_0
+				var v_1 bool = v_1_loop
+				_ = v_1
+				v1_2 := v1_2_loop
+				_ = v1_2
+				var __t1 int64
+				{
+					if v_1 {
+						var __t0 int64
+						{
+							if (v1_2) == (int32(0)) {
+								__t0 = int64(0)
+								goto end_branch_0
+							} else {
+
+							}
+						}
+						{
+							_dollar___unused_0_loop = gopurs_runtime.Value{}
+							v_1_loop = true
+							v1_2_loop = (v1_2) - (int32(1))
+							continue partialTCO
+							__t0 = func() int64 { panic("unreachable") }()
+						}
+					end_branch_0:
+						__t1 = __t0
+						goto end_branch_1
+					} else {
+
+					}
+				}
+				{
+					__t1 = func() int64 { panic("Failed pattern match") }()
+				}
+			end_branch_1:
+				return __t1
+			}
+		}()
+	} else {
+
+	}
 partialTCO:
 	for {
 		if false {

@@ -213,6 +213,43 @@ weirdsum:
 }
 
 func Call_Main_tricksyinners(accum_0_loop int64, x_1_loop int64) int64 {
+	if ((accum_0_loop) == (int64(int32(accum_0_loop)))) && ((x_1_loop) == (int64(int32(x_1_loop)))) {
+		return func() int64 {
+			accum_0_loop := int32(accum_0_loop)
+			_ = accum_0_loop
+			x_1_loop := int32(x_1_loop)
+			_ = x_1_loop
+		tricksyinners:
+			for {
+				if false {
+					continue tricksyinners
+				}
+				accum_0 := accum_0_loop
+				_ = accum_0
+				x_1 := x_1_loop
+				_ = x_1
+				var __t0 int64
+				{
+					if (x_1) == (int32(0)) {
+						__t0 = int64((accum_0) + (int32(gopurs_runtime.IntAdd(gopurs_runtime.IntMul(int64((x_1)+(int32(3))), int64((x_1)+(int32(3)))), int64(0)))))
+						goto end_branch_0
+					} else {
+
+					}
+				}
+				{
+					accum_0_loop = (accum_0) + (int32(2))
+					x_1_loop = (x_1) - (int32(1))
+					continue tricksyinners
+					__t0 = func() int64 { panic("unreachable") }()
+				}
+			end_branch_0:
+				return __t0
+			}
+		}()
+	} else {
+
+	}
 tricksyinners:
 	for {
 		if false {
@@ -243,6 +280,48 @@ tricksyinners:
 }
 
 func Call_Main_g(x_0_loop int64) int64 {
+	if (x_0_loop) == (int64(int32(x_0_loop))) {
+		return func() int64 {
+			x_0_loop := int32(x_0_loop)
+			_ = x_0_loop
+		g:
+			for {
+				if false {
+					continue g
+				}
+				x_0 := x_0_loop
+				_ = x_0
+				var __t0 int64
+				{
+					if (x_0) == (int32(0)) {
+						__t0 = int64(0)
+						goto end_branch_0
+					} else {
+
+					}
+				}
+				{
+					if (x_0) == (x_0) {
+						x_0_loop = (x_0) - (int32(1))
+						continue g
+						__t0 = func() int64 { panic("unreachable") }()
+						goto end_branch_0
+					} else {
+
+					}
+				}
+				{
+					x_0_loop = (x_0) - (int32(2))
+					continue g
+					__t0 = func() int64 { panic("unreachable") }()
+				}
+			end_branch_0:
+				return __t0
+			}
+		}()
+	} else {
+
+	}
 g:
 	for {
 		if false {
@@ -280,6 +359,38 @@ g:
 }
 
 func Call_Main_f(x_0_loop int64) int64 {
+	if (x_0_loop) == (int64(int32(x_0_loop))) {
+		return func() int64 {
+			x_0_loop := int32(x_0_loop)
+			_ = x_0_loop
+		f:
+			for {
+				if false {
+					continue f
+				}
+				x_0 := x_0_loop
+				_ = x_0
+				var __t0 int64
+				{
+					if (x_0) == (int32(0)) {
+						__t0 = int64(0)
+						goto end_branch_0
+					} else {
+
+					}
+				}
+				{
+					x_0_loop = (x_0) - (int32(1))
+					continue f
+					__t0 = func() int64 { panic("unreachable") }()
+				}
+			end_branch_0:
+				return __t0
+			}
+		}()
+	} else {
+
+	}
 f:
 	for {
 		if false {
