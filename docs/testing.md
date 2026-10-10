@@ -41,6 +41,7 @@ reconstruit les deux versions et conserve le workspace pour les tests natifs.
 | Parser WASM et erreurs FFI | `npm run test:ffi`, après `npm run build` |
 | Sélection, isolation et erreurs du runner | `npm run test:runner` |
 | Cache des exécutables et verrou du runner b8x | Depuis `../../b8x` : `B8X_GO_RUN_NATIVE_TEST=1 node --test test/go-run.mjs` ; [contrats et commande conteneur](../../../b8x/test/go-run.md) |
+| Contrat persistant du cache gopurs, intégrité et publication | `npm run test:cache` ; [protocole, propriété et invalidation](build-cache.md) |
 
 Cette table indique quel contrôle choisir, pas que chaque fixture possède un
 snapshot validé avec le dernier générateur. Les limites connues figurent plus
@@ -600,6 +601,75 @@ Preuves conservées dans
 `final-audit.json` et `README.md`. Les échecs et reprises préparatoires y sont
 également conservés ; les fichiers générés et les dépendances sont figés dans
 `typed-workspace-v2/`.
+
+## Plan v3 — lot 02 : contrat du cache persistant, 10 octobre 2026
+
+Le lot 02 est validé : **2/7 lots du plan v3**. Le
+[contrat versionné](build-cache.md) précise les clés, la recette complète à
+fournir, les artefacts par module, le format de valeurs portable, l'identité du
+compilateur, les sorties possédées et les règles de publication/invalidation.
+
+Le stockage Go fournit `snapshot`, `lookup` et `publish`, avec SHA-256,
+publication atomique des fichiers et du manifeste, verrou noyau et journal de
+propriété pour les reprises. Le même code est utilisé par le bridge JS et lié
+au bridge Go. `go.mod` est créé seulement en son absence ; les dépendances
+existantes et `go.sum` restent la propriété du parcours Go.
+
+### Vérifications effectuées
+
+- `npm run test:cache` réussit : tests du stockage sous race detector et échange
+  de manifestes/publications entre la FFI JS et la FFI Go compilée contre le
+  package réellement préparé pour le bootstrap.
+- **38 cas de stockage**, plus le harnais de sous-processus, réussissent sous
+  `go test -race -count=1 -v -timeout 90s ./...`, avec Go **1.27.0 macOS ARM64**
+  et Go **1.26.8 Linux ARM64**. La passe Linux utilise un conteneur isolé de la
+  même image que l'API, source montée en lecture seule, réseau désactivé,
+  `GOMAXPROCS=2`, deux CPU et 4 GiB ; il est supprimé après le test.
+- Couverture : edits à date conservée, ajout/retrait/renommage de TAST, FFI
+  présente/absente, racines de résolution, directives/options, compilateur et
+  ressources, liens symboliques, versions et corruption, sorties abîmées,
+  propriété et suppression, écritures identiques, `go.mod`/`go.sum`, requêtes
+  périmées, six publications concurrentes, verrou d'un processus tué et
+  récupération d'une première publication interrompue.
+- La revue a identifié le cas du journal absent avec manifeste précédent valide.
+  Le reproducteur conservé laisse une sortie obsolète avec le premier auxiliaire
+  (**rouge**), puis passe après récupération de la propriété depuis ce manifeste
+  (**vert**). Les deux auxiliaires et les logs sont conservés.
+- `npm run build:native -- --keep-workspace` reconstruit le bundle JS et le natif
+  final depuis **502 TAST / 288 955 types**. Le package de cache est copié par
+  `prepare-native-output.mjs` puis compilé avec le compilateur natif.
+- Les anciens compilateurs sont conservés. `FFIIntegerReturns` et
+  `NativeRecordWorkers` partagent les **mêmes 121 TAST / 27 950 types cumulés**
+  entre avant/après et entre **JS, natif séquentiel et natif parallèle**.
+  Chaque mode produit exactement les mêmes **174 fichiers Go et deux `go.mod`**,
+  runtime, FFI et points d'entrée compris. Chaque programme Go compile, s'exécute
+  avec le statut 0 et affiche `Done`.
+- Les **trois snapshots** versionnés correspondent aux sorties formatées lors
+  de la revue. **Six replays stricts** réussissent ensuite, deux fixtures dans
+  chacun des trois modes. Aucune actualisation de snapshot n'a été nécessaire.
+- `go vet ./...` et `git diff --check` réussissent.
+
+### Portée et suite
+
+Le pilote effectue encore un build complet. Le producteur de recette, les codecs
+métier PBO et les raccordements de réutilisation relèvent des lots 03–04 ; les
+tests du format de valeurs valident la grammaire et la conservation des octets,
+pas encore un aller-retour de vrais `BackendModule`. Le contrat distingue
+explicitement ces obligations du stockage déjà testé.
+
+La validation de ce lot n'est pas une mesure de performances. Le lot 00 doit
+établir les références du backend et du cycle réel avant la mesure du gain du
+chemin sans changement. Le changement de politique `go.mod` du protocole sera
+appliqué au pilote lors de ce raccordement.
+
+Preuves conservées dans
+`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/gopurs-cache-contract-uynq0oxb/` :
+`before.json`, compilateurs `before/` et `after/`,
+`verify-codegen.mjs`, `before-codegen.json`, `after-codegen.json`,
+`final-codegen.json`, les TAST et sorties de `fixtures/`, les workspaces natifs,
+`cache-tests-final.log`, `linux-cache-tests-final.log`, `linux-command.json`,
+`repro-missing-journal.mjs`, `journal-{before,after}.log`,
+`snapshot-review.json`, `strict-replays.json`, `final-audit.json` et `README.md`.
 
 ## Plan v2 — lot 01 : campagnes reproductibles, 3 octobre 2026
 

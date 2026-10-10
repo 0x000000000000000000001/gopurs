@@ -18,7 +18,7 @@ Le plan v2 est clôturé ; sa
 [validation finale](docs/testing.md#plan-v2--lot-08--installation-et-validation-finale-7-octobre-2026)
 conserve les preuves historiques.
 
-## Avancement : 1/7 lots validés
+## Avancement : 2/7 lots validés
 
 Cocher un lot uniquement après satisfaction de son critère de fin et des
 vérifications communes. Actualiser ce compteur et consigner les résultats par
@@ -86,7 +86,7 @@ plan et lot dans [docs/testing.md](docs/testing.md).
 
 ### 02 — Définir le cache persistant et la propriété des sorties
 
-- [ ] **Introduire un contrat de cache versionné et vérifiable.**
+- [x] **Introduire un contrat de cache versionné et vérifiable.**
   - Identifier les entrées par contenu : inventaire des TAST, FFI résolues et
     leur présence/absence, chemins pertinents, directives et options sémantiques.
   - Inclure une identité du compilateur couvrant PBO, runtime et parseur FFI,
@@ -101,6 +101,13 @@ plan et lot dans [docs/testing.md](docs/testing.md).
   - Une entrée absente, incompatible ou corrompue déclenche une reconstruction.
   - **Fin :** clés, schéma, publication et invalidation documentés, avec tests
     ciblés d'intégrité, de version et d'isolation.
+
+  **Validé le 10 octobre 2026 :** [contrat v1](docs/build-cache.md), stockage
+  partagé JS/Go et journal de propriété ; tests sous race detector sur macOS et
+  Linux, reprise après interruption, parité avant/après sur 121 TAST dans les
+  trois modes et six replays stricts réussis. Le pilote sera raccordé aux lots
+  03–04 ; la mesure de référence du lot 00 précède l'évaluation de son gain.
+  Voir le [bilan et les preuves](docs/testing.md#plan-v3--lot-02--contrat-du-cache-persistant-10-octobre-2026).
 
 ### 03 — Build sans changement et écritures minimales
 

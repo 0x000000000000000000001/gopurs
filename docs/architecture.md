@@ -136,6 +136,11 @@ Voir le [contrat du pipeline](parallel-emission.md) et ses tests JS/natifs.
 
 ## Où modifier une responsabilité
 
+Le [contrat du cache persistant](build-cache.md) décrit la recette, le format
+commun aux hôtes et la propriété transactionnelle des sorties. Son stockage
+est exposé par `BuildCache` ; le raccordement au pilote suit les lots 03–04 du
+[plan incrémental](../todo.md).
+
 Tous les modules gopurs de ce tableau se trouvent dans [src/Gopurs](../src/Gopurs).
 
 | Responsabilité | Modules |
@@ -146,6 +151,7 @@ Tous les modules gopurs de ce tableau se trouvent dans [src/Gopurs](../src/Gopur
 | Choix du builder, ordonnanceur Aff et publication des signatures | `Driver.Build` |
 | Lots, dépendances, contre-pression et durée de vie des fibres | `Emission` |
 | Traduction d'un module, assemblage FFI et fichiers de sortie | `Driver.Output` |
+| Protocole de stockage persistant et publication vérifiée | `BuildCache`, `tools/build-cache` |
 | Types globaux, constructeurs et classes | `GlobalTypes`, `ConstructorMetadata`, `ClassMetadata` |
 | Représentations des ADT | `AdtMetadata` |
 | Invalidation source, collecte et barrières de spécialisation | `Monomorphization` |

@@ -8,23 +8,28 @@ const output = process.argv[2];
 if (!output || process.argv.length !== 3) {
   throw new Error("Usage: node tools/prepare-native-output.mjs <generated-output-directory>");
 }
-const sourceDirectory = fileURLToPath(new URL("./ffi-gen/", import.meta.url));
-const destination = join(resolve(output), "gopurs_ffi_parser");
-const sources = ["parser.go", "types.go", "native_api.go"].map(name => {
-  const source = readFileSync(join(sourceDirectory, name), "utf8");
-  if (!source.startsWith("package main\n")) {
-    throw new Error(`Unexpected parser package in ${name}`);
+for (const [directory, packageName, files] of [
+  ["ffi-gen", "gopurs_ffi_parser", ["parser.go", "types.go", "native_api.go"]],
+  ["build-cache", "gopurs_build_cache", ["contract.go", "store.go"]],
+]) {
+  const sourceDirectory = fileURLToPath(new URL(`./${directory}/`, import.meta.url));
+  const destination = join(resolve(output), packageName);
+  const sources = files.map(name => {
+    const source = readFileSync(join(sourceDirectory, name), "utf8");
+    if (!source.startsWith("package main\n")) {
+      throw new Error(`Unexpected package in ${directory}/${name}`);
+    }
+    return [name, source.replace(/^package main\n/, `package ${packageName}\n`)];
+  });
+  mkdirSync(destination, { recursive: true });
+  for (const [name, source] of sources) {
+    const target = join(destination, name);
+    let previous;
+    try {
+      previous = readFileSync(target, "utf8");
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+    }
+    if (previous !== source) writeFileSync(target, source);
   }
-  return [name, source.replace(/^package main\n/, "package gopurs_ffi_parser\n")];
-});
-mkdirSync(destination, { recursive: true });
-for (const [name, source] of sources) {
-  const target = join(destination, name);
-  let previous;
-  try {
-    previous = readFileSync(target, "utf8");
-  } catch (error) {
-    if (error.code !== "ENOENT") throw error;
-  }
-  if (previous !== source) writeFileSync(target, source);
 }
