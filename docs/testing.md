@@ -40,6 +40,7 @@ reconstruit les deux versions et conserve le workspace pour les tests natifs.
 | Contrat du parser Go | `go test ./...` depuis `tools/ffi-gen` |
 | Parser WASM et erreurs FFI | `npm run test:ffi`, après `npm run build` |
 | Sélection, isolation et erreurs du runner | `npm run test:runner` |
+| Cache des exécutables et verrou du runner b8x | Depuis `../../b8x` : `B8X_GO_RUN_NATIVE_TEST=1 node --test test/go-run.mjs` ; [contrats et commande conteneur](../../../b8x/test/go-run.md) |
 
 Cette table indique quel contrôle choisir, pas que chaque fixture possède un
 snapshot validé avec le dernier générateur. Les limites connues figurent plus
@@ -489,6 +490,116 @@ graine fixe et compare les sorties JavaScript/Go. Les trois `pending` de `spec`
 sont des fixtures intentionnelles ; leurs contrats d'exécution et d'affichage
 sont vérifiés dans le parcours standard. Voir le
 [lot 07 du plan v2](#plan-v2--lot-07--couverture-des-bibliothèques-6-octobre-2026).
+
+## Plan v3 — lot 01 : réutilisation des exécutables b8x, 10 octobre 2026
+
+Le lot 01 est validé : **1/7 lots du plan v3**. `b8x/bin/_go-run` présente à Go
+une copie privée, vérifiée par SHA-256, du dernier exécutable publié pour ce
+point d'entrée. `go build` valide toujours les sources, dépendances et options ;
+il peut ainsi éviter le lien lorsque son build ID est à jour. L'indice `latest`
+est publié atomiquement après succès. Les publications valides sont immuables,
+et chaque invocation conserve son propre chemin après libération du verrou.
+
+Les diagnostics distinguent l'acquisition du verrou, la validation/build et les
+limites `GOMAXPROCS`, `-p` et `GOMEMLIMIT`. Le message d'attente n'apparaît que
+sur contention. Les [contrats et commandes de reproduction du runner](../../../b8x/test/go-run.md)
+décrivent le cache et les contrôles intégrés.
+
+### Contrôles de correction
+
+- **10/10 contrôles réussis** avec Go **1.26.8**, Node **25.7.0**, Bash **5.2.15**
+  et util-linux dans le conteneur API Linux ARM64. Les neuf contrôles de contrats
+  réussissent aussi sur macOS avec ses shims `flock`/`setsid`, puis le contrôle
+  natif est exécuté séparément avec Go **1.27.0** et Node **24.8.0**.
+- Les sept contrôles historiques passent avant modification dans le conteneur.
+  Le nouveau reproducteur natif échoue contre l'ancien runner au deuxième
+  lancement : il observe encore un lien. Le même reproducteur passe après.
+- Sources, dépendance modifiée à date conservée, `go.mod` et options de lien
+  sont pris en compte. Un build échoué n'exécute pas l'ancien binaire et conserve
+  la publication précédente. Les indices absents/invalides et les exécutables
+  absents/altérés sont couverts, y compris une altération conservant le build ID.
+- Les tests vérifient la copie privée, les artefacts propres à chaque invocation,
+  les applications concurrentes, les annulations du build et du demandeur de
+  verrou, les descendants, arguments, statuts, signaux et environnements.
+  Le test d'annulation attend désormais une contention effective plutôt qu'un
+  délai fixe ; l'ancienne synchronisation avait produit `null !== 143` sur macOS.
+- **Trois exécutions réelles de `Ping`** renvoient exactement `pong\n`, statut 0.
+  L'entrée Go `Ping` conservée est liée aux packages b8x figés. La dernière
+  relance prend **0,405 s**, sans compilation ni lien ; il s'agit d'un contrôle
+  fonctionnel, pas d'une seconde campagne statistique.
+- À la reprise du 10 octobre, les empreintes du runner et de son harnais sont
+  identiques aux copies validées. `bash -n` et `git diff --check` sont vérifiés.
+
+### Mesure à cache chaud
+
+Cinq paires alternées utilisent les mêmes **2 984 fichiers Go, `go.mod` et
+`go.sum`**, le même point d'entrée `Test.Main`, la même image API et les mêmes
+caches de packages/modules. Les sorties proviennent d'une génération isolée
+de **2 688 TAST**. Le cache des exécutables et son verrou sont privés, sur le
+même montage partagé que le cache habituel. Paramètres : **Go 1.26.8 Linux ARM64,
+`GOMAXPROCS=2`, `-p 1`, `GOMEMLIMIT=12GiB`, `GOWORK=off`, `GOFLAGS=-x`**.
+
+Le chronométrage couvre le runner jusqu'au transfert à l'exécutable : validation,
+lien éventuel, copies, empreintes, publication et libération du verrou. Un
+harnais externe `BASH_ENV` s'arrête au dernier diagnostic, juste avant `exec`.
+`Test.Main` appelle directement `runSpecAndGetResults` et ne traite pas `--help` :
+la suite métier n'entre donc pas dans cette mesure. L'exécution réelle est
+éprouvée par les tests natifs et par `Ping`.
+
+| Mesure par relance chaude | Avant | Après |
+| --- | ---: | ---: |
+| Médiane jusqu'à `exec` | 1,812 s | 0,745 s |
+| Minimum | 1,599 s | 0,701 s |
+| Maximum, tous échantillons conservés | 1,938 s | 11,008 s |
+| Compilations Go | 0 | 0 |
+| Liens | 1 | 0 |
+
+La réduction médiane est de **58,9 %**, soit **1,067 s** économisée. Les cinq
+relances optimisées passent de **0,270 à 0,290 s dans `go build`**. L'acquisition
+du verrou y est affichée à `0.000 s`, avec une résolution de 10 ms ; cette campagne
+isolée ne mesure pas la contention des services/healthchecks en production.
+
+L'échantillon après à **11,008 s** reste inclus. Son appel Go dure 0,280 s et son
+acquisition de verrou est affichée à zéro ; le retard se situe hors de ces deux
+temps mesurés, sans cause identifiée. Les quatre autres échantillons après vont
+de 0,701 à 0,823 s. Le résultat établit un gain médian, pas une borne de latence.
+
+Les dix invocations publient le **même exécutable de 74 672 311 octets**, SHA-256
+`50880fc828e2931d101281b4e0f55b09f57398e0fdc7df6db8e42b5807face06`.
+L'inventaire et les octets des 2 986 fichiers Go/module restent identiques ;
+l'audit final contrôle également les 2 688 TAST et 3 098 sources/compagnons.
+
+### Préparation et limites de portée
+
+La sortie Go active au début de la campagne échouait déjà avec l'ancien runner
+(`Constructor_Data_Maybe_Just` absent). Ses CoreFn annonçaient `0.15.15` sans les
+tables TAST. Le corpus de mesure est donc reconstruit dans un workspace isolé,
+avec les overrides de bibliothèques de b8x et le fork typé. L'override inutilisé
+`gopurs-math`, qui pointait vers un checkout absent, y est omis.
+
+La première tentative est interrompue par un redémarrage du conteneur API
+(statut 137). La campagne reprend dans un conteneur dédié de la même image.
+Le build Go préparatoire à `12GiB` dépasse 900 s et est annulé par le harnais.
+Une préparation ponctuelle à `18GiB` réussit la compilation et le lien, puis
+l'application échoue sur sa configuration PostgreSQL absente ; l'invocation
+complète dure 889,529 s. L'inspection du runner de tests explique alors pourquoi
+`--help` n'évitait pas l'exécution, et conduit au chronométrage avant `exec`.
+Ces préparations sont exclues des médianes ; les deux variantes mesurées utilisent
+les réglages habituels `2 / 1 / 12GiB`.
+
+Cette campagne établit le bénéfice des **relances Go à chaud**. La ventilation
+du cycle PureScript/gopurs et l'incrémentalité du backend restent les objets
+des lots 00 et 02–06 du plan v3.
+
+Preuves conservées dans
+`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/b8x-go-run-lot01-aa6h2e9b/` :
+`before/`, `after/`, les logs rouge/vert et natifs, `comparison.json`, les traces
+`measurements/handoff-*`, `measure-runner.mjs`, `compare-runners.mjs`,
+`handoff-only.sh`, `ping-results.json`, `ping-entry-provenance.json`,
+`published-binaries/`, `typed-final-inputs.json`, `normalized-module/`,
+`final-audit.json` et `README.md`. Les échecs et reprises préparatoires y sont
+également conservés ; les fichiers générés et les dépendances sont figés dans
+`typed-workspace-v2/`.
 
 ## Plan v2 — lot 01 : campagnes reproductibles, 3 octobre 2026
 
