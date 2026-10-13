@@ -12,6 +12,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"syscall"
 )
 
@@ -164,8 +165,10 @@ func execute(req Request) (Response, error) {
 			}
 		}
 		for _, part := range artifacts(*old) {
-			data, err := s.readObject(part.Object)
-			if err != nil || validateWire(data) != nil {
+			// Publication validated the grammar of these exact bytes. Integrity
+			// is checked on every read; reparsing an unchanged committed object
+			// proves nothing additional and dominates large no-change builds.
+			if _, err := s.readObject(part.Object); err != nil {
 				response.Reason = "artifact-corrupt"
 				return response, nil
 			}
@@ -192,7 +195,7 @@ func execute(req Request) (Response, error) {
 		response.Reason = "inputs-changed"
 		return response, nil
 	}
-	manifest, err := s.stage(req, snap)
+	manifest, err := s.stage(req, snap, old)
 	if err != nil {
 		return Response{}, err
 	}
@@ -202,13 +205,32 @@ func execute(req Request) (Response, error) {
 	if old != nil && old.Snapshot.Output == output {
 		owned = mergeOwnership(owned, old.Outputs)
 	}
+	if req.checkLegacy && old == nil && owned == nil {
+		if err := s.checkLegacyOutputs(manifest); err != nil {
+			return Response{}, err
+		}
+	}
 	// Never infer ownership by scanning *.go. An externally edited obsolete file
 	// is a conflict; new intended bytes may replace a damaged current output.
+	ownedPaths := map[string]bool{}
+	for _, out := range owned {
+		ownedPaths[out.Path] = true
+	}
 	current := map[string]bool{}
 	for _, out := range manifest.Outputs {
 		current[out.Path] = true
-		if _, err := s.destination(out.Path); err != nil {
+		path, err := s.destination(out.Path)
+		if err != nil {
 			return Response{}, err
+		}
+		if !ownedPaths[out.Path] {
+			if _, err := os.Lstat(path); err == nil {
+				if !fileMatches(path, out.Object) {
+					return Response{}, fmt.Errorf("unowned output differs from fresh generation: %s", out.Path)
+				}
+			} else if !os.IsNotExist(err) {
+				return Response{}, err
+			}
 		}
 	}
 	obsolete := []string{}
@@ -253,21 +275,8 @@ func execute(req Request) (Response, error) {
 	if err := s.writeOwnership(mergeOwnership(owned, manifest.Outputs)); err != nil {
 		return Response{}, err
 	}
-	for _, out := range manifest.Outputs {
-		path, _ := s.destination(out.Path)
-		if fileMatches(path, out.Object) {
-			continue
-		}
-		data, err := s.readObject(out.Object)
-		if err != nil {
-			return Response{}, err
-		}
-		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
-			return Response{}, err
-		}
-		if err := atomicWrite(path, data, 0644); err != nil {
-			return Response{}, err
-		}
+	if err := s.writeOutputs(manifest.Outputs); err != nil {
+		return Response{}, err
 	}
 	for _, path := range obsolete {
 		if err := os.Remove(path); err != nil {
@@ -382,39 +391,52 @@ func fingerprints(root string, inputs []Input) ([]Fingerprint, error) {
 }
 
 func fingerprint(root string, input Input) (Fingerprint, error) {
+	f, _, _, err := readObservation(root, input)
+	return f, err
+}
+
+// The resolver consumes exactly the bytes/entries whose fingerprint it records.
+func readObservation(root string, input Input) (Fingerprint, []byte, []os.DirEntry, error) {
 	f := Fingerprint{Name: input.Name, Kind: input.Kind, Path: absolute(root, input.Path), State: "missing"}
 	if input.Kind != "file" && input.Kind != "directory" && input.Kind != "tast" {
-		return f, fmt.Errorf("unknown input kind")
+		return f, nil, nil, fmt.Errorf("unknown input kind")
 	}
 	info, err := os.Stat(f.Path)
 	if os.IsNotExist(err) {
-		return f, nil
+		return f, nil, nil, nil
 	}
 	if err != nil {
-		return f, err
+		return f, nil, nil, err
 	}
 	f.Resolved, err = filepath.EvalSymlinks(f.Path)
 	if err != nil {
-		return f, err
+		return f, nil, nil, err
 	}
 	if input.Kind == "file" {
 		if !info.Mode().IsRegular() {
-			return f, fmt.Errorf("input is not a regular file: %s", f.Path)
+			return f, nil, nil, fmt.Errorf("input is not a regular file: %s", f.Path)
 		}
 		data, err := os.ReadFile(f.Path)
 		if err != nil {
-			return f, err
+			return f, nil, nil, err
 		}
 		f.State = "file"
 		f.Digest = digest(data)
-		return f, nil
+		return f, data, nil, nil
 	}
 	if !info.IsDir() {
-		return f, fmt.Errorf("input is not a directory: %s", f.Path)
+		// A symlink's target can become a directory without changing its parent.
+		// Record skipped non-directories too, so new search roots invalidate hits.
+		if input.Kind == "directory" {
+			f.State = "not-directory"
+			f.Digest = Key("file-type", strconv.FormatUint(uint64(info.Mode().Type()), 10))
+			return f, nil, nil, nil
+		}
+		return f, nil, nil, fmt.Errorf("input is not a directory: %s", f.Path)
 	}
 	entries, err := os.ReadDir(f.Path)
 	if err != nil {
-		return f, err
+		return f, nil, nil, err
 	}
 	parts := []string{}
 	for _, entry := range entries {
@@ -425,14 +447,14 @@ func fingerprint(root string, input Input) (Fingerprint, error) {
 				continue
 			}
 			if err != nil {
-				return f, err
+				return f, nil, nil, err
 			}
 			if !info.IsDir() {
 				continue
 			}
 			child, err := fingerprint(root, Input{Name: entry.Name(), Kind: "file", Path: filepath.Join(path, "corefn.json")})
 			if err != nil {
-				return f, err
+				return f, nil, nil, err
 			}
 			if child.State == "missing" {
 				continue
@@ -441,13 +463,13 @@ func fingerprint(root string, input Input) (Fingerprint, error) {
 		} else {
 			info, err := os.Lstat(path)
 			if err != nil {
-				return f, err
+				return f, nil, nil, err
 			}
 			link := ""
 			if info.Mode()&os.ModeSymlink != 0 {
 				link, err = os.Readlink(path)
 				if err != nil {
-					return f, err
+					return f, nil, nil, err
 				}
 			}
 			parts = append(parts, entry.Name(), strconv.FormatUint(uint64(info.Mode().Type()), 10), link)
@@ -455,7 +477,7 @@ func fingerprint(root string, input Input) (Fingerprint, error) {
 	}
 	f.State = "directory"
 	f.Digest = Key(input.Kind, parts...)
-	return f, nil
+	return f, nil, entries, nil
 }
 
 func (s store) destination(relative string) (string, error) {
@@ -494,6 +516,67 @@ func fileMatches(path string, obj Object) bool {
 	return err == nil && digest(data) == obj.SHA256
 }
 
+// Called under the publication lock, after all conflicts have been checked and
+// the union ownership journal is durable. Paths are unique in the validated
+// manifest. Every write finishes before commit (or return on error); a partial
+// publication is recoverable from the journal, just like process interruption.
+func (s store) writeOutputs(outputs []OwnedOutput) error {
+	paths := make([]string, len(outputs))
+	if err := boundedEach(len(outputs), func(i int) error {
+		out := outputs[i]
+		path, err := s.destination(out.Path)
+		if err != nil {
+			return err
+		}
+		paths[i] = path
+		if fileMatches(path, out.Object) {
+			return nil
+		}
+		data, err := s.readObject(out.Object)
+		if err != nil {
+			return err
+		}
+		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+			return err
+		}
+		return atomicReplaceFile(path, data, 0644)
+	}); err != nil {
+		return err
+	}
+	// Each file's contents are durable before its rename. Join all writers, then
+	// persist directory entries once per directory before deletion or commit.
+	// Include byte-identical outputs: a previous failed/interrupted publication
+	// may have left their renames visible without reaching this barrier.
+	parents := map[string]bool{}
+	root := filepath.Clean(s.root)
+	for _, path := range paths {
+		for directory := filepath.Dir(path); ; directory = filepath.Dir(directory) {
+			parents[directory] = true
+			if directory == root {
+				break
+			}
+		}
+	}
+	directories := make([]string, 0, len(parents))
+	for directory := range parents {
+		directories = append(directories, directory)
+	}
+	// A newly created directory's entries precede the entry naming it in its
+	// parent. Descending path length orders every descendant before its ancestors.
+	sort.Slice(directories, func(i, j int) bool {
+		if len(directories[i]) == len(directories[j]) {
+			return directories[i] < directories[j]
+		}
+		return len(directories[i]) > len(directories[j])
+	})
+	for _, directory := range directories {
+		if err := syncDirectory(directory); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (s store) putObject(data []byte) (Object, error) {
 	obj := Object{SHA256: digest(data), Bytes: int64(len(data))}
 	path := filepath.Join(s.cache, "objects", obj.SHA256)
@@ -501,6 +584,18 @@ func (s store) putObject(data []byte) (Object, error) {
 		return obj, nil
 	}
 	return obj, atomicWrite(path, data, 0600)
+}
+
+// Stage owns the publication lock and joins all writers before syncing this
+// one directory. Until that barrier, these immutable objects are private hints:
+// no journal, output or manifest can refer to the new transaction yet.
+func (s store) putStagedObject(data []byte) (Object, error) {
+	obj := Object{SHA256: digest(data), Bytes: int64(len(data))}
+	path := filepath.Join(s.cache, "objects", obj.SHA256)
+	if fileMatches(path, obj) {
+		return obj, nil
+	}
+	return obj, atomicReplaceFile(path, data, 0600)
 }
 
 func (s store) readObject(obj Object) ([]byte, error) {
@@ -616,53 +711,102 @@ func (s store) readManifest() (*Manifest, string) {
 	return &m, ""
 }
 
-func (s store) stage(req Request, snap Snapshot) (Manifest, error) {
-	m := Manifest{Format: Format, Schema: Schema, Snapshot: snap, Outputs: []OwnedOutput{}, Modules: []ModuleMemo{}, GoMod: "create-if-absent", GoSum: "external"}
-	for _, out := range req.Outputs {
+func (s store) stage(req Request, snap Snapshot, previous *Manifest) (Manifest, error) {
+	m := Manifest{Format: Format, Schema: Schema, Snapshot: snap, Outputs: make([]OwnedOutput, len(req.Outputs)), Modules: make([]ModuleMemo, len(req.Modules)), GoMod: "create-if-absent", GoSum: "external"}
+	validated := map[Artifact]bool{}
+	if previous != nil {
+		for _, part := range artifacts(*previous) {
+			validated[part] = true
+		}
+	}
+	if err := boundedEach(len(req.Outputs), func(i int) error {
+		out := req.Outputs[i]
 		if !outputPath(out.Kind, out.Module, out.Path) {
-			return m, fmt.Errorf("unowned output path: %s", out.Path)
+			return fmt.Errorf("unowned output path: %s", out.Path)
 		}
 		data, err := os.ReadFile(absolute(req.Spec.Workspace, out.Source))
 		if err != nil {
-			return m, err
+			return err
 		}
-		obj, err := s.putObject(data)
+		obj, err := s.putStagedObject(data)
 		if err != nil {
-			return m, err
+			return err
 		}
-		m.Outputs = append(m.Outputs, OwnedOutput{Path: out.Path, Kind: out.Kind, Module: out.Module, Object: obj})
+		m.Outputs[i] = OwnedOutput{Path: out.Path, Kind: out.Kind, Module: out.Module, Object: obj}
+		return nil
+	}); err != nil {
+		return m, err
 	}
 	sort.Slice(m.Outputs, func(i, j int) bool { return m.Outputs[i].Path < m.Outputs[j].Path })
-	for _, mod := range req.Modules {
+	if err := boundedEach(len(req.Modules), func(i int) error {
+		mod := req.Modules[i]
 		memo := ModuleMemo{Name: mod.Name, Prepared: mod.Prepared, OptimizerEnvironment: mod.OptimizerEnvironment, EmitterEnvironment: mod.EmitterEnvironment, CallerDemands: mod.CallerDemands, Parts: []Artifact{}}
 		for _, part := range mod.Parts {
-			a, err := s.stageArtifact(req.Spec.Workspace, part)
+			a, err := s.stageArtifact(req.Spec.Workspace, part, validated)
 			if err != nil {
-				return m, err
+				return err
 			}
 			memo.Parts = append(memo.Parts, a)
 		}
-		m.Modules = append(m.Modules, memo)
+		m.Modules[i] = memo
+		return nil
+	}); err != nil {
+		return m, err
 	}
 	if req.Diagnostics != nil {
-		a, err := s.stageArtifact(req.Spec.Workspace, *req.Diagnostics)
+		a, err := s.stageArtifact(req.Spec.Workspace, *req.Diagnostics, validated)
 		if err != nil {
 			return m, err
 		}
 		m.Diagnostics = &a
 	}
-	return m, validateManifest(m)
+	if err := validateManifest(m); err != nil {
+		return m, err
+	}
+	// This also covers byte-identical objects left by an interrupted/failed stage
+	// whose renames were not yet durable. It precedes ownership and public writes.
+	return m, syncDirectory(filepath.Join(s.cache, "objects"))
 }
 
-func (s store) stageArtifact(root string, part StagedArtifact) (Artifact, error) {
+// Each task owns its result slot; completion order cannot reorder a manifest.
+// The caller retains the publication lock until every task has been joined,
+// including on failure. Staging joins before ownership/public writes; output
+// publication joins before deletion, the final input check and commit. Equal
+// objects may race to replace the same digest with the same durable bytes.
+func boundedEach(count int, task func(int) error) error {
+	errors := make([]error, count)
+	workers := min(8, count)
+	var pending sync.WaitGroup
+	for worker := 0; worker < workers; worker++ {
+		pending.Add(1)
+		go func(start int) {
+			defer pending.Done()
+			for i := start; i < count; i += workers {
+				errors[i] = task(i)
+			}
+		}(worker)
+	}
+	pending.Wait()
+	for _, err := range errors {
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s store) stageArtifact(root string, part StagedArtifact, validated map[Artifact]bool) (Artifact, error) {
 	data, err := os.ReadFile(absolute(root, part.Source))
 	if err != nil {
 		return Artifact{}, err
 	}
-	if err := validateWire(data); err != nil {
-		return Artifact{}, err
+	identity := Artifact{Codec: part.Codec, Object: Object{SHA256: digest(data), Bytes: int64(len(data))}}
+	if !validated[identity] {
+		if err := validateWire(data); err != nil {
+			return Artifact{}, err
+		}
 	}
-	obj, err := s.putObject(data)
+	obj, err := s.putStagedObject(data)
 	return Artifact{Codec: part.Codec, Object: obj}, err
 }
 
@@ -678,6 +822,17 @@ func artifacts(m Manifest) []Artifact {
 }
 
 func atomicWrite(path string, data []byte, mode os.FileMode) error {
+	if err := atomicReplaceFile(path, data, mode); err != nil {
+		return err
+	}
+	return syncDirectory(filepath.Dir(path))
+}
+
+// The replacement has durable contents. Its directory entry becomes durable
+// only after the caller's directory barrier (immediate in atomicWrite, grouped
+// for private staged objects and journal-covered public outputs). A failure
+// before that barrier cannot commit a manifest referencing the replacement.
+func atomicReplaceFile(path string, data []byte, mode os.FileMode) error {
 	f, err := os.CreateTemp(filepath.Dir(path), ".gopurs-txn-")
 	if err != nil {
 		return err
@@ -698,10 +853,7 @@ func atomicWrite(path string, data []byte, mode os.FileMode) error {
 	if err := f.Close(); err != nil {
 		return err
 	}
-	if err := os.Rename(f.Name(), path); err != nil {
-		return err
-	}
-	return syncDirectory(filepath.Dir(path))
+	return os.Rename(f.Name(), path)
 }
 
 func syncDirectory(path string) error {

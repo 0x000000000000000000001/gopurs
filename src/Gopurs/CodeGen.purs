@@ -1,6 +1,10 @@
 module Gopurs.CodeGen
   ( translate
   , translateWithFunctions
+  , PreparedModule
+  , prepareModule
+  , workerInputs
+  , translatePreparedWithFunctions
   ) where
 
 import Prelude
@@ -8,6 +12,7 @@ import Control.Alternative (guard)
 import PureScript.Backend.Optimizer.Syntax (BackendAccessor(..), BackendOperator(..), BackendOperator1(..), BackendOperator2(..), BackendSyntax(PrimEffect, PrimOp, Branch, Fail, CtorDef, CtorSaturated, Lit, UncurriedAbs, Abs, Update, Accessor, LetRec, Let, EffectDefer, EffectPure, EffectBind, UncurriedEffectAbs, UncurriedEffectApp, UncurriedApp, App, Local, Var, Typed))
 import PureScript.Backend.Optimizer.Syntax as Syn
 import PureScript.Backend.Optimizer.Convert (BackendModule)
+import PureScript.Backend.Optimizer.Semantics (NeutralExpr(..))
 import Data.String as String
 import Data.Array as Array
 import Data.Maybe (Maybe(..), fromMaybe)
@@ -57,12 +62,54 @@ translate :: CodegenMetadata -> BackendModule -> String
 translate metadata inputMod = (translateWithFunctions metadata inputMod).code
 
 translateWithFunctions :: CodegenMetadata -> BackendModule -> { code :: String, functions :: ModuleFunctions }
-translateWithFunctions metadata inputMod =
+translateWithFunctions metadata inputMod = translatePreparedWithFunctions metadata (prepareModule metadata inputMod)
 
+type PreparedModule =
+  { module :: BackendModule
+  , declarations :: Array GoDecl
+  , functions :: ModuleFunctions
+  , workers :: Map.Map String (Maybe FunctionInfo)
+  }
+
+-- These transformations consume source metadata, not imported worker signatures
+-- or module-local FFI signatures. Prepare once, before computing the emission
+-- key, so references introduced by a transformation belong to its proof too.
+prepareModule :: CodegenMetadata -> BackendModule -> PreparedModule
+prepareModule metadata inputMod =
   let
     schemas = specializeDecoderSchemas metadata (borrowReadOnlyObjects metadata (cacheClosedDictionaries metadata (optimizeImmediateApplications (optimizeFunctionProducers (optimizeThunkProducers inputMod)))))
     owned = Ownership.prepare metadata schemas.module
-    mod = owned.module
+  in
+    { module: owned.module
+    , declarations: owned.declarations <> schemas.declarations
+    , functions: owned.functions
+    , workers: workerInputs metadata.globalFunctions owned.module
+    }
+
+-- CallExprs.directFunction is the only consumer of imported worker signatures.
+-- Its external targets are qualified Var nodes; local targets use the module's
+-- own signatures. Include every such Var, even if it is not called, and record
+-- absences in the exact batch snapshot. TCO preserves these qualifications.
+workerInputs :: ModuleFunctions -> BackendModule -> Map.Map String (Maybe FunctionInfo)
+workerInputs available mod = foldl
+  (\acc group -> foldl (\entries (Tuple _ value) -> visit entries value) acc group.bindings)
+  Map.empty
+  mod.bindings
+  where
+  visit acc (NeutralExpr syntax) = case syntax of
+    Var (Qualified (Just owner) (Ident name)) | owner /= mod.name ->
+      let key = unwrap owner <> "." <> name
+      in Map.insert key (Map.lookup key available) acc
+    _ -> foldl visit acc syntax
+
+-- Source metadata must be the same as at preparation. Output supplies the
+-- freshly parsed local FFI signatures here. Restrict imported signatures to
+-- exactly the snapshot covered by the emission key, including on fresh builds.
+translatePreparedWithFunctions :: CodegenMetadata -> PreparedModule -> { code :: String, functions :: ModuleFunctions }
+translatePreparedWithFunctions sourceMetadata prepared =
+  let
+    metadata = sourceMetadata { globalFunctions = Map.mapMaybe identity prepared.workers }
+    mod = prepared.module
     modNameStrOrig = unwrap mod.name
     modNameStr = String.replaceAll (Pattern ".") (Replacement "_") modNameStrOrig
 
@@ -74,7 +121,7 @@ translateWithFunctions metadata inputMod =
     -- Les FFI du module sont connues par ident brut ; les fonctions locales
     -- gardent la priorité en cas d'homonymie.
     ffiLocalFunctions = Map.fromFoldable (map (\(Tuple k v) -> Tuple (sanitizeName k) v) (Map.toUnfoldable metadata.ffiFunctions :: Array (Tuple String FunctionInfo)))
-    moduleFunctions = Map.union (Map.union owned.functions preparedBindings.functions) ffiLocalFunctions
+    moduleFunctions = Map.union (Map.union prepared.functions preparedBindings.functions) ffiLocalFunctions
     normalFunctions = Map.fromFoldable $ Array.concatMap
       (\group -> Array.mapMaybe
         (\(Tuple (Ident name) _) -> do
@@ -101,7 +148,7 @@ translateWithFunctions metadata inputMod =
         })
       (Map.toUnfoldable mod.foreign)
     declarationGroups =
-      [ allDeclsAst <> owned.declarations <> schemas.declarations
+      [ allDeclsAst <> prepared.declarations
       , helpers.declarations <> unsafePerformEffect (generateReboxFunctions metadata codegenStateRef modNameStr)
       , foreignGetters
       ]

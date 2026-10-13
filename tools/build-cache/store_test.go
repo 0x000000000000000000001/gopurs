@@ -21,6 +21,25 @@ type fixture struct {
 	s    store
 }
 
+func TestNewOutputDoesNotOverwriteExternalFile(t *testing.T) {
+	f := newFixture(t)
+	response := call(t, f.req, "snapshot")
+	req := f.req
+	req.Operation, req.ExpectedKey = "publish", response.Snapshot.Key
+	call(t, req, "published")
+	put(t, filepath.Join(f.s.root, "purescript/Added.go"), "// external file, not compiler-owned\n")
+	put(t, filepath.Join(f.root, "stage/Added.go"), "package purescript\n")
+	req.Outputs = append(req.Outputs, StagedOutput{Path: "purescript/Added.go", Kind: "module", Module: "Added", Source: "stage/Added.go"})
+	result, err := execute(req)
+	if err == nil || !strings.Contains(err.Error(), "unowned output differs") {
+		t.Fatalf("overwrote external output: %+v, %v", result, err)
+	}
+	bytes, err := os.ReadFile(filepath.Join(f.s.root, "purescript/Added.go"))
+	if err != nil || string(bytes) != "// external file, not compiler-owned\n" {
+		t.Fatalf("external bytes changed: %s %v", bytes, err)
+	}
+}
+
 func put(t *testing.T, path, content string) {
 	t.Helper()
 	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
@@ -373,8 +392,27 @@ func TestWireArtifacts(t *testing.T) {
 	if err != nil || string(data) != valid {
 		t.Fatal("wire bytes changed")
 	}
+	// Only byte-identical committed artifacts may reuse grammar validation.
+	// Reusing the source path or the producer keys grants no such authority.
+	publish(t, f)
+	before, err := os.ReadFile(filepath.Join(f.s.cache, "current.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	put(t, filepath.Join(f.root, "stage/value.json"), `["unknown"]`)
+	invalid := f.req
+	invalid.Operation = "publish"
+	invalid.ExpectedKey = call(t, f.req, "snapshot").Snapshot.Key
+	call(t, invalid, "error")
+	after, err := os.ReadFile(filepath.Join(f.s.cache, "current.json"))
+	if err != nil || !bytes.Equal(before, after) {
+		t.Fatal("invalid replacement published")
+	}
+	put(t, filepath.Join(f.root, "stage/value.json"), valid)
 	put(t, filepath.Join(f.s.cache, "objects", part.Object.SHA256), `["unit"]`)
 	lookup(t, f, "miss")
+	publish(t, f)
+	lookup(t, f, "hit")
 	f.req.Modules[0].Parts[0].Codec = "v8/serialize"
 	req := f.req
 	req.ExpectedKey = call(t, req, "snapshot").Snapshot.Key

@@ -1,6 +1,6 @@
 -- | Versioned storage protocol; see docs/build-cache.md. The driver will supply
 -- | complete input recipes and private staging outputs when cache reuse is wired.
-module Gopurs.BuildCache (exchange) where
+module Gopurs.BuildCache (exchange, sessionExchange) where
 
 import Effect (Effect)
 
@@ -8,3 +8,5 @@ import Effect (Effect)
 -- | Host/process I/O failures are Effect exceptions. Domain values cross this
 -- | boundary through explicit codecs, never the host's ADT representation.
 foreign import exchange :: String -> Effect String
+
+foreign import sessionExchange :: String -> Effect String

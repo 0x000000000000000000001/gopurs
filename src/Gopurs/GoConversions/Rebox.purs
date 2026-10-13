@@ -14,11 +14,11 @@ import Data.Set as Set
 import Data.String as String
 import Data.Tuple (Tuple(..), fst)
 import Effect (Effect)
-import Effect.Console as Console
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import Effect.Unsafe (unsafePerformEffect)
 import Gopurs.CodegenState (CodegenMetadata, CodegenState)
+import Gopurs.Diagnostics as Diagnostics
 import Gopurs.GoAst (GoDecl(..), GoExpr(..), GoType(..), StructPointer, rawGo)
 import Gopurs.GoTypes as GoTypes
 import Gopurs.Printer (printGoExpr)
@@ -51,7 +51,7 @@ findFields metadata baseStructName =
   case Map.lookup baseStructName metadata.reboxFields of
     Just info -> Just info
     Nothing -> unsafePerformEffect do
-      Console.log ("ERROR: Rebox missing! b1=" <> baseStructName <> " keysCtor: " <> String.joinWith ", " (map fst (Map.toUnfoldable metadata.ctorTypes :: Array (Tuple String _))))
+      Diagnostics.log ("ERROR: Rebox missing! b1=" <> baseStructName <> " keysCtor: " <> String.joinWith ", " (map fst (Map.toUnfoldable metadata.ctorTypes :: Array (Tuple String _))))
       pure Nothing
 
 -- Instantiating a field in both environments chooses its conversion. Calling

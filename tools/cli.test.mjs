@@ -115,19 +115,19 @@ test("CLI reports failures and preserves successful output across backends", asy
         name: "TAST loading",
         prepare: () => rmSync(output, { recursive: true }),
         diagnostic: /output/,
-        phase: "load TAST + sort",
+        phase: "cache lookup + freeze",
       },
       {
         name: "runtime write",
         prepare: () => mkdirSync(join(output, "gopurs_runtime/runtime.go"), { recursive: true }),
         diagnostic: /gopurs_runtime\/runtime\.go/,
-        phase: "runtime",
+        phase: "cache publish",
       },
       {
         name: "module write with optimizer workers",
         prepare: () => mkdirSync(join(output, "purescript/Control_Bind.go"), { recursive: true }),
         diagnostic: /Control_Bind\.go/,
-        phase: "optimize + emit",
+        phase: "cache publish",
       },
       {
         name: "invalid FFI",
@@ -139,7 +139,7 @@ test("CLI reports failures and preserves successful output across backends", asy
         name: "entry point write",
         prepare: () => mkdirSync(join(output, "main/main.go"), { recursive: true }),
         diagnostic: /main\/main\.go/,
-        phase: "entry points",
+        phase: "cache publish",
       },
     ]) {
       await t.test(`${mode.name}: ${scenario.name} exits one with the original diagnostic`, () => {

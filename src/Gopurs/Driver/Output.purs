@@ -1,4 +1,4 @@
-module Gopurs.Driver.Output (emitModule, writeEntryPoints, writeRuntime) where
+module Gopurs.Driver.Output (emitModule, emitPreparedModule, writeEntryPoints, writeRuntime) where
 
 import Prelude
 
@@ -14,10 +14,11 @@ import Data.String.Pattern (Pattern(..), Replacement(..))
 import Data.Tuple (Tuple)
 import Effect.Aff (Aff, attempt, throwError)
 import Effect.Class (liftEffect)
-import Effect.Exception (try)
-import Gopurs.CodeGen (translateWithFunctions)
+import Effect.Exception (error, try)
+import Gopurs.CodeGen (PreparedModule, prepareModule, translatePreparedWithFunctions)
 import Gopurs.CodegenState (CodegenMetadata)
 import Gopurs.ExprContext (ModuleFunctions)
+import Gopurs.Driver.Cache (FrozenFFI)
 import Gopurs.FfiBridge as FfiBridge
 import Gopurs.FfiSupport (prepareFfi)
 import Gopurs.FfiTypes (FfiDecl)
@@ -25,8 +26,7 @@ import Gopurs.Runtime (runtimeGoCode)
 import Node.Encoding (Encoding(..))
 import Node.FS.Aff as FS
 import PureScript.Backend.Optimizer.Convert (BackendModule)
-import PureScript.Backend.Optimizer.CoreFn (Ann, ExprType, Ident, Module(..))
-import PureScript.Backend.Optimizer.FfiSupport (findFfiFile)
+import PureScript.Backend.Optimizer.CoreFn (Ann, ExprType, Ident, Module)
 
 type ModuleFfi =
   { content :: String
@@ -34,8 +34,12 @@ type ModuleFfi =
   , importsRuntime :: Boolean
   }
 
-emitModule :: CodegenMetadata -> Maybe String -> Module Ann -> BackendModule -> Aff ModuleFunctions
-emitModule metadata ffiDirectory (Module coreFnMod) backendMod = defer \_ -> do
+emitModule :: String -> Map.Map String FrozenFFI -> CodegenMetadata -> Module Ann -> BackendModule -> Aff ModuleFunctions
+emitModule output frozen metadata coreFnModule backendMod = defer \_ ->
+  emitPreparedModule output frozen metadata coreFnModule backendMod (prepareModule metadata backendMod)
+
+emitPreparedModule :: String -> Map.Map String FrozenFFI -> CodegenMetadata -> Module Ann -> BackendModule -> PreparedModule -> Aff ModuleFunctions
+emitPreparedModule output frozen metadata _ backendMod preparedModule = defer \_ -> do
   let
     moduleName = unwrap backendMod.name
     goName = moduleGoName moduleName
@@ -45,14 +49,14 @@ emitModule metadata ffiDirectory (Module coreFnMod) backendMod = defer \_ -> do
   -- Read native signatures before translation: saturated FFI calls can then
   -- use direct workers. Missing FFI and malformed FFI are distinct paths.
   ffi <- if hasForeigns then do
-    path <- liftEffect $ findFfiFile ".go" [] ffiDirectory moduleName (Just coreFnMod.path)
-    case path of
-      Nothing -> pure Nothing
-      Just ffiPath -> do
-        original <- FS.readTextFile UTF8 ffiPath
+    case Map.lookup moduleName frozen of
+      Nothing -> throwError (error ("FFI inputs were not frozen for " <> moduleName))
+      Just source | not source.found -> pure Nothing
+      Just source -> do
+        original <- FS.readTextFile UTF8 source.file
         -- Native liftEffect does not catch synchronous Effect exceptions.
         -- Move parser failures into Aff so supervision and CLI reporting run.
-        result <- liftEffect $ try $ prepareFfi { moduleName, path: ffiPath } (goName <> "_") original
+        result <- liftEffect $ try $ prepareFfi { moduleName, path: source.path } (goName <> "_") original
         prepared <- either throwError pure result
         pure $ Just
           { content: prepared.content
@@ -65,11 +69,11 @@ emitModule metadata ffiDirectory (Module coreFnMod) backendMod = defer \_ -> do
     ffiFunctions = case ffi of
       Just source -> FfiBridge.ffiFunctionInfos goName foreigns source.decls
       Nothing -> Map.empty
-    translated = translateWithFunctions (metadata { ffiFunctions = ffiFunctions }) backendMod
+    translated = translatePreparedWithFunctions (metadata { ffiFunctions = ffiFunctions }) preparedModule
 
-  FS.writeTextFile UTF8 ("output/purescript/" <> goName <> ".go") translated.code
+  FS.writeTextFile UTF8 (output <> "/purescript/" <> goName <> ".go") translated.code
   when hasForeigns $
-    FS.writeTextFile UTF8 ("output/purescript/" <> goName <> "_ffi.go")
+    FS.writeTextFile UTF8 (output <> "/purescript/" <> goName <> "_ffi.go")
       (renderFfiModule goName backendMod foreigns ffi)
   pure translated.functions
 
@@ -93,23 +97,22 @@ renderFfiModule goName backendMod foreigns ffi = case ffi of
       "package purescript\n\n" <> runtimeImport <> "\n" <> source.content
         <> "\n\n// --- Auto-generated FFI wrappers ---\n" <> wrappers <> workersBlock
 
-writeRuntime :: Aff Unit
-writeRuntime = do
-  void $ attempt (FS.mkdir "output/gopurs_runtime")
-  FS.writeTextFile UTF8 "output/gopurs_runtime/runtime.go" runtimeGoCode
-  void $ attempt (FS.mkdir "output/purescript")
-  FS.writeTextFile UTF8 "output/go.mod" "module gopurs/output\n\ngo 1.22\n"
+writeRuntime :: String -> Aff Unit
+writeRuntime output = do
+  FS.mkdir (output <> "/gopurs_runtime")
+  FS.writeTextFile UTF8 (output <> "/gopurs_runtime/runtime.go") runtimeGoCode
+  FS.mkdir (output <> "/purescript")
 
-writeEntryPoints :: Array String -> Aff Unit
-writeEntryPoints modules = for_ modules \moduleName -> do
+writeEntryPoints :: String -> Array String -> Aff Unit
+writeEntryPoints output modules = for_ modules \moduleName -> do
   let source = renderEntryPoint moduleName
   -- The shared entry follows traversal order; each module also keeps its own
   -- executable entry. An explicit --main selects exactly one module upstream.
-  void $ attempt (FS.mkdir "output/main")
-  FS.writeTextFile UTF8 "output/main/main.go" source
-  void $ attempt (FS.mkdir ("output/" <> moduleName))
-  void $ attempt (FS.mkdir ("output/" <> moduleName <> "/main"))
-  FS.writeTextFile UTF8 ("output/" <> moduleName <> "/main/main.go") source
+  void $ attempt (FS.mkdir (output <> "/main"))
+  FS.writeTextFile UTF8 (output <> "/main/main.go") source
+  void $ attempt (FS.mkdir (output <> "/" <> moduleName))
+  void $ attempt (FS.mkdir (output <> "/" <> moduleName <> "/main"))
+  FS.writeTextFile UTF8 (output <> "/" <> moduleName <> "/main/main.go") source
 
 moduleGoName :: String -> String
 moduleGoName = String.replaceAll (Pattern ".") (Replacement "_")

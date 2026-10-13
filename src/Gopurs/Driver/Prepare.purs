@@ -7,17 +7,19 @@ import Data.List (List)
 import Data.Map as Map
 import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap)
-import Effect.Aff (Aff)
+import Effect.Aff (Aff, throwError)
+import Effect.Exception (error)
 import Gopurs.AdtMetadata (buildEnumAdtMetadata, buildPointerAdtMetadata)
 import Gopurs.ClassMetadata (addClassDataDeclarations, buildClassFields)
 import Gopurs.CodegenState (CodegenMetadata)
 import Gopurs.ConstructorMetadata (buildConstructorTypes, collectElidedConstructors)
+import Gopurs.Driver.Cache (SourceModule)
 import Gopurs.GlobalTypes (buildGlobalTypes)
 import Gopurs.Metrics as Metrics
 import Gopurs.Monomorphization (monomorphizeModulesWithDispatch)
 import Gopurs.Preparation (runPreparationJobs)
 import Gopurs.ReboxMetadata (buildReboxFieldIndex)
-import PureScript.Backend.Optimizer.App (coreFnModulesFromOutput, loadDirectives)
+import PureScript.Backend.Optimizer.App (coreFnModulesFromOutput)
 import PureScript.Backend.Optimizer.CoreFn (Ann, Ident(..), Module(..))
 import PureScript.Backend.Optimizer.Monomorphize (transitiveCollectWith)
 import PureScript.Backend.Optimizer.Semantics (InlineDirectiveMap)
@@ -28,17 +30,18 @@ type PreparedModules =
   , modules :: List (Module Ann)
   , mainModules :: Array String
   , metadata :: CodegenMetadata
+  , sources :: Array SourceModule
   }
 
-prepareModules :: Int -> Maybe String -> Aff PreparedModules
-prepareModules jobs mainModule = do
-  sortedModules <- Metrics.measure "load TAST + sort" \_ -> coreFnModulesFromOutput "output"
+prepareModules :: String -> Int -> Int -> Maybe String -> InlineDirectiveMap -> Aff PreparedModules
+prepareModules input expectedCount jobs mainModule directives = do
+  sortedModules <- Metrics.measure "load TAST + sort" \_ -> coreFnModulesFromOutput input
+  when (Array.length (Array.fromFoldable sortedModules) /= expectedCount) $
+    throwError (error "TAST decoding did not produce every inventoried module")
   Metrics.measure "prepare + monomorphize" \_ -> do
     let
       sourceModules = Array.fromFoldable sortedModules
       elidedCtors = collectElidedConstructors sourceModules
-
-    directives <- loadDirectives
 
     -- Freeze source metadata before any binding copies or substitutions. The
     -- constructor/class tables and their rebox index must describe declarations,
@@ -85,7 +88,10 @@ prepareModules jobs mainModule = do
 
     -- Entry selection is also source-based. Generated bindings do not export
     -- additional mains; an explicit request keeps its original CLI semantics.
-    pure { directives, modules, metadata, mainModules: selectMainModules mainModule sourceModules }
+    pure
+      { directives, modules, metadata, mainModules: selectMainModules mainModule sourceModules
+      , sources: map (\(Module m) -> { name: unwrap m.name, path: m.path, hasForeign: not (Map.isEmpty m.foreign) }) sourceModules
+      }
 
 selectMainModules :: Maybe String -> Array (Module Ann) -> Array String
 selectMainModules requested modules = case requested of

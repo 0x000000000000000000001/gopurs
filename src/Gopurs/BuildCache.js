@@ -15,3 +15,14 @@ export const exchange = request => () => {
     stdio: ["pipe", "pipe", "pipe"],
   }).trimEnd();
 };
+
+export const sessionExchange = request => () => {
+  const root = process.env.GOPURS_COMPILER_SNAPSHOT;
+  if (!root) throw new Error("Compiler snapshot is required");
+  const message = JSON.parse(request);
+  if (message.operation === "begin") message.options.push({ name: "js-runtime", value: JSON.stringify(process.versions) });
+  return execFileSync(join(root, "tools/build-cache-helper"), ["--session"], {
+    input: JSON.stringify(message), encoding: "utf8", maxBuffer: 64 * 1024 * 1024,
+    stdio: ["pipe", "pipe", "pipe"],
+  }).trimEnd();
+};

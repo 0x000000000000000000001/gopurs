@@ -1,6 +1,7 @@
 module Gopurs.GoAst where
 
 import Prelude
+import Data.Generic.Rep (class Generic)
 import Data.Tuple (Tuple(..))
 import Data.String as String
 import Data.String (Pattern(..), Replacement(..))
@@ -133,6 +134,7 @@ data GoType
 
 derive instance eqGoType :: Eq GoType
 derive instance ordGoType :: Ord GoType
+derive instance Generic GoType _
 
 goTypeToStr :: GoType -> String
 goTypeToStr TypeInt64 = "int64"

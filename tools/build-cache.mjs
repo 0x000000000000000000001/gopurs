@@ -15,7 +15,7 @@ export function resolveBuildCacheHelper() {
     throw new Error(`Build cache locking is unsupported on ${process.platform}`);
   }
   const hash = createHash("sha256");
-  for (const name of ["go.mod", "contract.go", "store.go", "main.go"]) {
+  for (const name of ["go.mod", "contract.go", "store.go", "session.go", "compiler.go", "modules.go", "main.go"]) {
     const content = readFileSync(join(sources, name));
     hash.update(`${name}:${content.length}:`).update(content);
   }
@@ -49,5 +49,5 @@ export function exchange(request) {
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === script) {
-  process.stdout.write(exchange(readFileSync(0, "utf8")) + "\n");
+  process.stdout.write((process.argv[2] === "--helper" ? resolveBuildCacheHelper() : exchange(readFileSync(0, "utf8"))) + "\n");
 }

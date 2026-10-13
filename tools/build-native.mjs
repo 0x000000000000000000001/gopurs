@@ -84,7 +84,7 @@ async function buildNative({ keepWorkspace }) {
     writeFileSync(join(workspace, "verify-tast.log"), verification);
     console.log(verification.trimEnd());
 
-    await runStage("generate-go", process.execPath, [join(root, "bin/gopurs.js"), "--main", "Main"], { cwd: workspace });
+    await runStage("generate-go", process.execPath, ["--stack-size=65536", join(root, "bin/gopurs.js"), "--main", "Main"], { cwd: workspace });
     await runStage("native-parser", process.execPath, [join(root, "tools/prepare-native-output.mjs"), output], { cwd: root });
     const binary = join(workspace, "gopurs-native");
     await runStage("go-build", "go", ["build", "-trimpath", "-o", binary, "./main/main.go"], { cwd: output });

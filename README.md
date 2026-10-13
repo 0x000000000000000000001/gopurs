@@ -246,6 +246,31 @@ JS generation are compared on frozen inputs; see [the validation record](docs/te
 for corpus sizes, execution campaigns and their limits. These checks establish
 functional results, not performance gains.
 
+### Content-verified build reuse
+
+The driver checks typed inputs, FFI resolution, compiler resources and generated
+outputs before decoding the TAST. An identical build reports a cache hit and
+skips preparation, optimization and emission. After an input change, the driver
+prepares global metadata and specializations, then reuses verified module-level
+optimization and emission results. It works from private copies of its inputs
+and publishes only changed files.
+`go.mod` is created only when absent; existing dependency declarations and
+`go.sum` are preserved. Continue to run `go build` to validate the application.
+
+Use `--force` or `GOPURS_FORCE_BUILD=1` to force a complete generation.
+`GOPURS_ALLOC_PROFILE` also forces the measured passes. Cache data lives under
+`output/.gopurs-cache`; the separate `output/.gopurs-ownership.json` journal
+tracks generated files and must survive a cache reset. A historical output is
+adopted only when its generated files match a fresh generation. See the
+[cache usage and maintenance commands](docs/build-cache.md#usage-quotidien-et-maintenance)
+for forcing generation, resetting the reusable cache and reading diagnostics,
+the [cache contract](docs/build-cache.md) for migration and concurrency,
+and the [incremental-build results](docs/build-incremental.md) for the
+measured edit-time gains, cold-build overhead, cache size and validation evidence.
+The completed b8x cycle campaign includes [all 24 measurements](docs/build-cycle-lot06.csv):
+the common Go package still dominates rebuilds after edits, motivating the next
+package-granularity work. The report includes regressions and pair-to-pair variation.
+
 ### Rust-hosted gopurs
 
 ```bash
@@ -350,6 +375,7 @@ by the current gopurs entrypoint are:
 | `--main Module` | Select the entry module explicitly. Without it, discover all loaded modules exporting `main`; each gets `output/<Module>/main/main.go`, and the shared `output/main/main.go` belongs to the last discovered target. |
 | `--ffi directory` | Supply an additional FFI lookup directory. |
 | `--rewrite-limit number` | Set the optimizer rewrite limit; default 10000. |
+| `--force` | Recompute preparation, optimization and emission; publish only changed Go files. Also available as `GOPURS_FORCE_BUILD=1`. |
 
 The shared optimizer argument parser also recognizes options such as `--output`
 and `--bundle`, but `Driver.Config` does not use them to change gopurs output behavior.
@@ -459,8 +485,10 @@ library README links back to this procedure.
    ```
 
    Add `--offline` to the Spago commands when all dependencies are cached.
-   Start with an empty local `output` when validating a removed or renamed
-   module: gopurs does not purge obsolete Go files. Library `bin/test` scripts
+    Remove stale frontend TAST when validating a removed or renamed module, or
+    compile the frontend into a fresh output. gopurs removes obsolete Go files
+    owned by its journal; module discovery follows the TAST that remain present.
+    Library `bin/test` scripts
    clean only their own build directories. For an isolated campaign, run
    `./bin/modtest prelude strings --keep-going` from gopurs: each target gets a
    fresh copy of the library family and private Spago temporaries.

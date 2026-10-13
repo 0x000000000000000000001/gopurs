@@ -6,39 +6,52 @@ par [Main](../src/Main.purs). Le pilote et ses frontières sont décrits ci-dess
 ## Entrée typée et ordre des passes
 
 1. Le fork PureScript émet le TAST enrichi dans `output/<Module>/corefn.json`.
-   `coreFnModulesFromOutput` du PBO local lit ces fichiers, les décode et trie les
+   Le cache vérifie leur contenu avant décodage. Sur un miss, le pilote les copie
+   dans un staging privé ; `coreFnModulesFromOutput` du PBO local lit ces copies,
+   les décode et trie les
    modules par dépendances. Le nom de fichier ne signifie pas que le backend
    utilise le CoreFn standard : `dataDecls`, `classDecls`, les annotations de
    types et les instanciations `TypeApp` restent accessibles après décodage.
-2. `Driver.Prepare.prepareModules` collecte les constructeurs éliminés, charge les
-   directives, puis construit les types des constructeurs, les types globaux
+2. `Driver` charge les directives (aussi sur un hit). `Driver.Prepare.prepareModules`
+   collecte les constructeurs éliminés, puis construit les types des constructeurs, les types globaux
    et les champs des classes. Il enrichit les modules avec les déclarations de
    données synthétiques des classes.
 3. `Monomorphization.monomorphizeModulesWith` collecte les instanciations, propage
    les besoins transitifs, filtre les candidats et spécialise les modules.
-   Les métadonnées pointeurs viennent des modules enrichis avant spécialisation ;
-   les enums et types globaux viennent des modules d'origine. Ces tables
-   accompagnent ensuite les modules monomorphisés.
-4. `Driver.Build` choisit `Builder.buildModules` ou `buildModulesParallel` du PBO.
-   Ces builders convertissent les modules en `BackendModule` optimisés, avec les
-   directives et `coreForeignSemantics`.
+    Les métadonnées pointeurs viennent des modules enrichis avant spécialisation ;
+    les enums et types globaux viennent des modules d'origine. Ces tables
+    accompagnent ensuite les modules monomorphisés. `Driver.Cache.plan` résout
+    et fige les FFI, avec leurs candidats absents et répertoires parcourus.
+4. `Driver.Build` établit les clés des modules préparés. Si toutes les clés PBO
+   correspondent, il valide les backends/workers et transmet les backends à
+   l'émetteur dans l'ordre canonique. Sinon, `Builder.buildModulesWithReuse` ou
+   `buildModulesParallelWithReuse` restaure les résultats valides et convertit
+   les autres en `BackendModule` optimisés, avec les directives et
+   `coreForeignSemantics`. Les contributions restaurées deviennent visibles aux
+   mêmes barrières que les résultats calculés.
    **La monomorphisation de gopurs précède donc cette optimisation PBO.**
-5. `Driver.Output.emitModule` lit les signatures FFI natives, puis transmet
-   chaque module à `CodeGen.translateWithFunctions`.
-   Celui-ci applique dans l'ordre `ThunkFusion`, `FunctionFusion`,
+5. `Cache.Modules.emit` tente d'abord la restauration des émissions dont la
+   preuve engagée couvre les transformations via les références du backend
+   d'entrée. À défaut, `CodeGen.prepareModule` applique dans l'ordre `ThunkFusion`, `FunctionFusion`,
    `ImmediateApplications`, `ClosedDictionaries`, `BorrowedObjects`,
-   `DecoderSchemas` et `Ownership`. Il crée l'état local de traduction, prépare
-   l'analyse TCO et les signatures via `ModuleBindings`, puis traduit les
-   déclarations et leurs expressions.
+   `DecoderSchemas` et `Ownership`. Les références qualifiées externes du résultat
+   sélectionnent les signatures de workers couvertes par la clé d'émission,
+   absences comprises. Sur un hit, les sorties privées vérifiées sont restaurées.
+   Sinon, `Driver.Output.emitPreparedModule` lit les signatures FFI figées puis
+   appelle `CodeGen.translatePreparedWithFunctions` avec la préparation déjà
+   calculée. Celui-ci crée l'état local, prépare l'analyse TCO et les signatures
+   via `ModuleBindings`, puis traduit les déclarations et leurs expressions.
 6. Les émetteurs construisent les expressions et les déclarations `GoDecl`,
    dont les helpers de conversion. `GoImports.collectImports` collecte leurs
    dépendances avant que `Printer.printGoFile` les rende en texte Go. Les
    signatures produites sont rendues à `Driver.Build`. Chaque lot lit une vue
    immuable ; ses résultats sont fusionnés dans l'ordre des modules avant que
    le lot suivant puisse les consulter pour les appels directs entre modules.
-7. `Driver.Output` écrit le code du module et son bridge FFI typé. Il fournit
-   aussi l'écriture du runtime, de `go.mod` et des entrées exécutables. `Driver`
-   écrit le runtime avant le build, puis les entrées après sa réussite.
+7. `Driver.Output` écrit le code du module et son bridge FFI typé dans le staging.
+   `Driver` y écrit le runtime avant le build, puis les entrées après sa réussite.
+   `Driver.Cache.publish` publie les contenus modifiés et retire les anciennes
+   sorties possédées. Le stockage crée `go.mod` seulement s'il manque et conserve
+   `go.sum` comme fichier externe.
 
 Les `ForAll`, contraintes, types structurels, ordre des champs et queues de
 rangées font partie des données typées utilisées par le backend. Une décision
@@ -108,7 +121,11 @@ Voir [la préparation parallèle](parallel-preparation.md).
 
 ## Pilote de compilation
 
-`Main` lance l'effet avec `runAff_` et traite son résultat après le nettoyage du
+`Main` entre d'abord dans `CompilerSnapshot` : le bundle et ses ressources, ou
+l'exécutable natif, sont copiés puis réexécutés depuis un emplacement privé.
+L'identité du cache correspond ainsi au code réellement exécuté, même si
+l'installation est remplacée pendant le lancement. `Main` lance ensuite l'effet
+avec `runAff_` et traite son résultat après le nettoyage du
 pilote. Sur erreur, il écrit le diagnostic original sur stderr puis demande une
 sortie de statut 1. La petite FFI `Main.js` laisse Node vider ses écritures ;
 `Main.go` termine le processus après le diagnostic synchrone. Le point d'entrée
@@ -125,11 +142,107 @@ fois par `Driver.Config`, avec les valeurs par défaut et les bornes existantes.
 modules spécialisés, les directives, les modules exécutables et un champ
 `metadata :: CodegenMetadata` distinct de ces données d'orchestration.
 
+`Driver.Cache.begin` peut terminer avant `Driver.Prepare` lorsque les empreintes
+des entrées, objets et sorties sont valides. Sur un miss, un bracket possède le
+staging et la session jusqu'à la fin de la publication. Les TAST et FFI consommés
+sont les copies des octets inventoriés ; les entrées vivantes sont revérifiées
+avant publication. Les erreurs laissent le dernier manifeste engagé intact.
+`--force`, `GOPURS_FORCE_BUILD=1` ou `GOPURS_ALLOC_PROFILE` forcent le calcul ;
+les écritures identiques restent élidées. Les diagnostics Rebox rendent le
+manifeste non réutilisable afin d'être reproduits lors du prochain calcul.
+
+`Cache.Modules` vérifie les empreintes des modules spécialisés et le préfixe PBO
+conservateur. La préparation globale précède cette vérification. Lorsque le
+stockage prouve que tous les TAST et le compilateur sont identiques (`sameTast`),
+le pilote peut reprendre les empreintes préparées si le contexte options/directives
+correspond aussi. Une modification de TAST impose leur recalcul, y compris pour
+les fournisseurs de spécialisations demandées par un appelant modifié.
+
+L'optimisation `pboreads` ajoute `Observation` à PBO. Les variantes du builder avec
+observation fournissent une vue de rang aux lookups de cache, observent les
+implémentations et directives pendant une conversion fraîche, puis transmettent
+les lectures à la barrière canonique. `Cache.Modules` les conserve avec le corps
+dans `pbo/backend-v2`. Si le préfixe change, ces lectures peuvent encore prouver
+la validité du résultat : mêmes valeurs/absences et directives initiales, sans
+prédécesseur en attente. Les empreintes d'implémentations courantes ne concernent
+que des contributions finalisées, immuables pour le build. Les anciennes API de
+skip restent disponibles. Le candidat est retenu après un gain partagé de
+16,09 % sur trois paires face à `restoreprep`. Sa validation complète multi-hôtes
+passe ; les paires de cette étape face au lot 03 restaient à +16,97 % sur le
+partagé, avant les optimisations suivantes.
+
+Le candidat suivant `scalarhex` remplace le tableau temporaire de caractères
+de la validation hexadécimale par un parcours direct dans les bridges scalaires.
+Le codec partagé garde les contrôles de longueur et de réencodage. Les quatre
+artefacts restent byte-exacts ; trois paires partagées gagnent 10,05 % face à
+`pboreads-final`. Sa validation complète multi-hôtes passe ; les paires de cette
+étape face au lot 03 restaient à +6,99 % sur le partagé.
+
+Le candidat `typeintern` conserve le raccourci d'identité des types, puis utilise
+leurs références de graphe canoniques pour attribuer les indices locaux. Il
+remplace les comparaisons récursives de `Map ExprType Int` par le second pool de
+chaînes, avec les bridges existants et les mêmes octets. Les trois paires face
+à `scalarhex` gagnent **7,03 %** ; la validation complète multi-hôtes passe.
+Les trois paires de cette étape face au lot 03 donnent **39,273 → 38,480 s (−2,02 %)**
+sur le partagé. Le froid reste à **127,687 s**, dont **66,593 s de publication**,
+contre les **93,599 s historiques** du lot 03 ; ce coût a motivé le travail de publication.
+
+`publicpool2` partage le pool borné du stockage entre staging et publication
+publique, avec une barrière complète entre les deux. La publication démarre
+après le journal durable ; chaque fichier conserve son écriture atomique et ses
+synchronisations. Toutes les tâches sont jointes avant suppression ou commit,
+même sur erreur. Les trois paires de build froid donnent **127,163 → 120,354 s
+(−5,35 %)** face à `typeintern`, après **−17,16 %** sur le stockage isolé. Le
+candidat est installé après audit du relien Go ; sa validation complète passe.
+Les trois paires de cette étape face au lot 03 donnent **−4,57 % sur la feuille /
++2,78 % sur le partagé / −24,85 % sur la FFI**. Le bilan final de `publicsync`
+figure ci-dessous. Le protocole et les bridges conservent leur contrat.
+
+`publicsync` conserve les writers et la synchronisation de chaque fichier avant
+son renommage, puis synchronise une fois chaque répertoire public et ses ancêtres
+après leur jonction. Cette barrière couvre les sorties identiques d'une reprise
+et précède suppression et commit. Le journal d'union reste durable avant les
+writes. Les trois paires froides donnent **118,971 → 112,857 s (−5,14 %)** face à
+`publicpool2`, après **−14,48 %** sur la publication isolée. Les budgets de
+non-régression passent : **−0,71 % feuille / −5,19 % partagé / +1,71 % FFI** ;
+l'identique passe de **1,658 à 1,612 s**. Les reproducteurs d'erreur et de SIGKILL,
+le race detector macOS/Linux et le relien natif audité passent. Le candidat
+mesuré est installé et sa validation complète passe : parité b8x des trois
+hôtes, bootstrap Rust, transitions pilote/sources/contexte des quatre hôtes,
+replays stricts, CLI et audit des 430 fichiers. Les trois paires actuelles face
+au lot 03 donnent **−10,37 % feuille / −4,48 % partagé / −32,76 % FFI**. Les
+paires froides actuelles mesurent **94,191 → 113,213 s (+20,19 %)** ; les hits
+suivants passent de **1,366 à 1,716 s**. Les lots 04–05 sont clos avec ce
+compromis explicitement documenté dans le [bilan](build-incremental.md).
+Le lot 06 clôt ensuite le plan v3 : **24 chaînes / 24 oracles**, mêmes Go/TAST
+et binaires par scénario. Les médianes jusqu'à `exec` varient de **−1,44 %
+feuille / +1,01 % partagé / −5,50 % FFI**, et de **+0,403 s** sur l'identique.
+La compilation du package `purescript` domine encore le cycle ; la suite G
+précède donc P, selon les seuils fixés dans le plan.
+
+`workerkeys` extrait `CodeGen.prepareModule` : fusions, dictionnaires,
+emprunts, décodeurs et ownership déterminent les entrées de la clé d'émission.
+Les références qualifiées externes du module transformé sélectionnent une vue
+des signatures globales, absences comprises. `translatePreparedWithFunctions`
+consomme cette vue et la préparation déjà calculée ; les signatures FFI locales
+sont ajoutées par `Driver.Output`. Les métadonnées source et le résultat PBO
+complet restent couverts par la clé. Le bilan du lot 04 décrit les mesures et
+la validation du candidat qui intègre cette optimisation.
+
+`restoreprep` peut éviter cette préparation sur un hit : il compare une clé des
+références d'entrée, engagée seulement lorsque la préparation précédente a prouvé
+qu'elles couvraient les références transformées. La stabilité du backend, des
+métadonnées et du compilateur reproduit cette preuve ; les signatures importées,
+y compris leurs absences, et la FFI sont aussi vérifiées. Si une transformation
+introduit une référence supplémentaire, comme `borrowObject`, la clé reste fondée
+sur les références transformées et son lookup suit la préparation.
+
 `Driver.Build` possède les références mutables de la compilation : signatures
 déjà publiées et compteurs de progression. Son coordinateur est le seul
 producteur de la file d'émission, même avec le builder PBO parallèle.
-`Emission.withEmitter` encadre **tout** le build : producteur, workers PBO et
-émetteurs. Il termine le dernier lot sur succès et supervise les fibres avant
+`Emission.withEmitter` encadre le producteur, ses workers PBO et les émetteurs.
+Le décodage indépendant du chemin où toutes les clés PBO correspondent est
+terminé avant son ouverture. Il termine le dernier lot sur succès et supervise les fibres avant
 la fermeture de l'émetteur. Un worker peut être suspendu en publiant son
 résultat dans l'AVar ; il doit aussi être arrêté si le coordinateur échoue.
 Voir le [contrat du pipeline](parallel-emission.md) et ses tests JS/natifs.
@@ -138,8 +251,9 @@ Voir le [contrat du pipeline](parallel-emission.md) et ses tests JS/natifs.
 
 Le [contrat du cache persistant](build-cache.md) décrit la recette, le format
 commun aux hôtes et la propriété transactionnelle des sorties. Son stockage
-est exposé par `BuildCache` ; le raccordement au pilote suit les lots 03–04 du
-[plan incrémental](../todo.md).
+est exposé par `BuildCache` et raccordé au pilote par `Driver.Cache` et
+`Cache.Modules`. La réutilisation par module est livrée au lot 04, validée au
+lot 05 et mesurée jusqu'au runner au lot 06 du [plan incrémental](../todo.md).
 
 Tous les modules gopurs de ce tableau se trouvent dans [src/Gopurs](../src/Gopurs).
 
@@ -152,6 +266,10 @@ Tous les modules gopurs de ce tableau se trouvent dans [src/Gopurs](../src/Gopur
 | Lots, dépendances, contre-pression et durée de vie des fibres | `Emission` |
 | Traduction d'un module, assemblage FFI et fichiers de sortie | `Driver.Output` |
 | Protocole de stockage persistant et publication vérifiée | `BuildCache`, `tools/build-cache` |
+| Lookup avant décodage, staging et recette FFI | `Driver.Cache`, `tools/build-cache/session.go` |
+| Clés préparées/PBO/émission et réutilisation par module | `Cache.Modules`, `tools/build-cache/modules.go` |
+| Codecs métier portables, tables locales et partage des valeurs | `Cache.Wire`, `Cache.Pool`, `Cache.TypeMemo` |
+| Identité du code exécuté et ressources privées | `CompilerSnapshot`, `tools/build-cache/compiler.go` |
 | Types globaux, constructeurs et classes | `GlobalTypes`, `ConstructorMetadata`, `ClassMetadata` |
 | Représentations des ADT | `AdtMetadata` |
 | Invalidation source, collecte et barrières de spécialisation | `Monomorphization` |

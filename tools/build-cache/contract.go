@@ -135,6 +135,7 @@ type Request struct {
 	Outputs     []StagedOutput  `json:"outputs"`
 	Modules     []StagedModule  `json:"modules"`
 	Diagnostics *StagedArtifact `json:"diagnostics"`
+	checkLegacy bool
 }
 
 type Response struct {
@@ -151,7 +152,7 @@ var floatPattern = regexp.MustCompile(`^[0-9a-f]{16}$`)
 var integerPattern = regexp.MustCompile(`^(0|-?[1-9][0-9]*)$`)
 var tagPattern = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9_./-]*$`)
 
-var moduleCodecs = []string{"pbo/backend-v1", "pbo/implementations-v1", "pbo/directives-v1", "gopurs/workers-v1"}
+var moduleCodecs = []string{"pbo/backend-v2", "pbo/implementations-v1", "pbo/directives-v1", "gopurs/workers-v1"}
 
 func validModule(name string) bool {
 	if name == "" || strings.ContainsAny(name, "/\\\x00") {
@@ -221,7 +222,10 @@ func validateManifest(m Manifest) error {
 			return fmt.Errorf("module-parts")
 		}
 		for i, part := range mod.Parts {
-			if part.Codec != moduleCodecs[i] || !validObject(part.Object) {
+			// Keep legacy manifests readable for ownership and recovery. The typed
+			// producer only reuses a backend whose business codec it understands.
+			legacyBody := i == 0 && part.Codec == "pbo/backend-v1"
+			if (part.Codec != moduleCodecs[i] && !legacyBody) || !validObject(part.Object) {
 				return fmt.Errorf("module-codec")
 			}
 		}

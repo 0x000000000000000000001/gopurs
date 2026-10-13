@@ -1,13 +1,107 @@
 # Contrat du cache de build — version 1
 
 Le lot 02 fournit le stockage exécutable et son protocole commun aux hôtes JS et
-Go. Le raccordement au pilote appartient aux lots 03 (build identique) et 04
-(réutilisation par module). À ce stade, le pilote exécute encore un build complet ;
-aucun gain sur les quelque 33 secondes de gopurs n'est attribué à ce lot.
+Go. Le lot 03 raccorde la vérification du build identique avant le décodage des
+TAST, les entrées figées et la publication des sorties. Le lot 04 livré
+réutilise l'optimisation et l'émission des modules après une préparation globale ;
+sa validation et ses coûts figurent dans le [bilan des lots 04–05](build-incremental.md).
+La [référence avant raccordement](build-baseline.md) mesure **36,902 s**
+de médiane pour une relance gopurs identique.
+
+## Usage quotidien et maintenance
+
+Exécuter les commandes depuis la racine de l'application, avec le compilateur
+TAST et le Spago de cette application sur le `PATH`. Les commandes npm du dépôt
+gopurs sélectionnent sa propre toolchain de bootstrap ; vérifier les chemins avec
+`command -v purs spago`. La référence b8x utilise Spago **1.0.3**, distinct du
+Spago **0.93.45** installé pour construire le backend.
+
+Lorsque `workspace.backend.cmd` de `spago.yaml` désigne gopurs, `spago build`
+construit les TAST puis lance le backend. Le cache est actif par défaut :
+
+```sh
+spago build
+go -C output mod tidy
+# Pour une entrée sélectionnée explicitement par --main Main :
+go -C output run ./main
+```
+
+Sans backend configuré dans Spago, lancer gopurs après la compilation frontend,
+avec les mêmes options d'entrée/FFI à chaque invocation, comme dans le
+[parcours d'installation](../README.md#getting-started). Dans b8x, le runner
+habituel valide le cache Go avant de lancer le binaire ; ses ressources de
+référence sont **GOMAXPROCS=2 / -p 1 / GOMEMLIMIT=12GiB**.
+
+### Forcer la génération complète
+
+Avec le backend configuré dans Spago :
+
+```sh
+GOPURS_FORCE_BUILD=1 spago build
+```
+
+Pour appeler directement un backend déjà construit, depuis l'application :
+
+```sh
+/chemin/vers/gopurs/bin/gopurs --force --main Main
+```
+
+Conserver les options du build habituel. Le forçage refait préparation,
+optimisation et émission ; il publie le résultat et conserve les dates des Go
+dont le contenu est identique. Il ne force pas la recompilation du frontend ni
+celle des packages Go déjà valides.
+
+### Réinitialiser le cache réutilisable du projet
+
+Sur Linux ou macOS avec Python 3, arrêter les builds de ce projet, puis exécuter
+ce bloc depuis sa racine. `output` est résolu physiquement : un lien vers la
+sortie Go de b8x est donc accepté.
+
+```sh
+python3 - <<'PY'
+from pathlib import Path
+import fcntl
+import shutil
+
+cache = Path("output").resolve(strict=True) / ".gopurs-cache"
+with (cache / "write.lock").open("a+b") as lock:
+    fcntl.flock(lock, fcntl.LOCK_EX)
+    for name in ("current.json", "recipe.json"):
+        (cache / name).unlink(missing_ok=True)
+    objects = cache / "objects"
+    if objects.exists():
+        shutil.rmtree(objects)
+PY
+spago build
+```
+
+Cette procédure enlève le pointeur, la recette et les objets réutilisables. Elle
+conserve `write.lock`, `output/.gopurs-ownership.json`, les TAST, les Go publiés,
+`go.mod` et `go.sum`. Le prochain build reconstruit les objets et réutilise le
+journal pour gérer les sorties obsolètes. Les éventuels stagings d'invocations
+interrompues restent distincts du cache réutilisable.
+
+Le journal appartient à sa racine de sortie ; il ne doit pas être transplanté
+dans une autre racine. Pour une sortie historique sans journal, suivre les
+[règles d'adoption et de reprise](#invalidation-et-reprise).
+
+### Lire les diagnostics
+
+- Un hit global termine avant le décodage des TAST et annonce zéro module
+  optimisé/émis. Aucun Go n'est réécrit.
+- Après édition, les compteurs `optimized`/`reused` et `emitted`/`restored`
+  distinguent les calculs des restaurations ; la préparation reste globale.
+- Les motifs d'invalidation indiquent l'entrée, la preuve ou l'artefact qui
+  impose un recalcul. Un objet manquant/corrompu provoque un miss ; un conflit
+  avec une sortie externe différente provoque une erreur.
+- Les temps de passes du pipeline peuvent se chevaucher. Le total backend
+  exclut Spago, le démarrage du processus et `go build` ; mesurer la chaîne
+  directement pour évaluer le cycle utilisateur.
 
 ## Implémentation et frontière d'hôte
 
-- `src/Gopurs/BuildCache.purs` expose `exchange :: String -> Effect String`.
+- `src/Gopurs/BuildCache.purs` expose `exchange` pour le stockage et
+  `sessionExchange` pour le producteur du pilote, tous deux `String -> Effect String`.
 - `tools/build-cache/{contract,store}.go` possède les clés, validations, lectures,
   verrouillage et publications.
 - `BuildCache.go` appelle directement ce code. `prepare-native-output.mjs` le
@@ -17,6 +111,10 @@ aucun gain sur les quelque 33 secondes de gopurs n'est attribué à ce lot.
   plateforme dans `node_modules/.cache/gopurs-build-cache/`. Son lancement JS
   requiert Go lors de cette première compilation. Le protocole de verrouillage
   est prévu pour Linux et macOS.
+- `tools/build-cache/session.go` possède la recette FFI, les copies privées et
+  l'inventaire complet ; `Driver.Cache` est son adaptateur PureScript.
+- L'hôte Rust optionnel relie ce même package dans son archive Go de support FFI.
+  L'archive contient un seul runtime Go pour le parseur et le cache.
 
 La requête et la réponse sont du JSON UTF-8. La requête porte `schema: 1` et une
 opération `snapshot`, `lookup` ou `publish`. Les réponses portent `schema: 1` et
@@ -74,10 +172,19 @@ et l'ordre de priorité de la recherche. En cas de résolution entièrement abse
 tous les candidats consultés font partie de la recette. L'apparition d'une FFI
 plus prioritaire ou d'un nouveau répertoire doit invalider la recette.
 
-Le lot 03 devra produire cette trace depuis le résolveur réellement utilisé,
-puis la vérifier avant le décodage complet des TAST. Le stockage ne déduit pas
-les chemins FFI en analysant les modules. Une trace incomplète ne peut pas servir
-de preuve de réutilisation.
+Le résolveur de `session.go`, commun aux hôtes, produit cette trace en même temps
+qu'il lit les octets FFI à consommer. Sa priorité reprend celle du résolveur PBO :
+compagnon `.purs` → `.go`, puis `.spago`, `spago.d`, packages et versions `v*`
+dans l'ordre lexical, répertoire `--ffi`, racine locale. Pour chaque racine, les
+candidats sont `src/A/B.go`, `src/A.B.go`, puis `A.B.go`. Les chemins inspectés
+qui ne sont pas des répertoires sont enregistrés aussi : une cible de symlink
+peut devenir un répertoire sans changer les entrées de son parent.
+
+La liste des observations est conservée dans `.gopurs-cache/recipe.json`. Au
+prochain lancement, elle permet de vérifier le contenu avant tout décodage TAST.
+Cette recette est un indice : seule une clé correspondant au manifeste vérifié
+autorise un hit. Son absence, sa corruption ou sa désynchronisation après deux
+publications concurrentes provoquent au plus un miss.
 
 Les options sémantiques comprennent la sélection des points d'entrée, le
 répertoire FFI, la limite de réécriture, les directives et tout mode changeant
@@ -100,10 +207,15 @@ et les SHA-256 des ressources de `spec.compiler`, toutes présentes :
 
 Les changements locaux reconstruits sont donc couverts, même sans nouveau
 commit Git. Une modification source non reconstruite n'est pas un changement
-du compilateur exécuté. Le pilote doit figer l'identité de l'artefact qu'il
-exécute : un chemin remplacé pendant le build ne prouve pas l'identité du code
-déjà chargé. Des artefacts immuables ou une identité embarquée couvrant toutes
-leurs sources/ressources devront assurer cette association lors du raccordement.
+du compilateur exécuté. `CompilerSnapshot` copie l'exécutable ou le bundle et ses
+ressources dans un répertoire privé, puis **réexécute cette copie avant le cache**.
+Une installation remplacée entre le chargement du premier processus et la copie
+fait ainsi exécuter la nouvelle copie ; les anciens objets mémoire ne sont pas
+attribués au nouveau fichier. Les noms temporaires sont exclus de la clé du
+compilateur ; seuls les noms logiques et les contenus comptent. JS inclut aussi
+`process.versions` dans les options. Le processus final libère sa copie sur
+succès ou erreur traitée ; un arrêt brutal peut laisser une copie orpheline,
+qui n'est jamais réutilisée.
 
 Les hôtes lisent le même format. Leurs identités d'exécutables distinctes causent
 une invalidation conservatrice ; un format portable ne constitue pas à lui seul
@@ -141,9 +253,9 @@ Chaque mémo de module est indivisible : `name`, quatre clés (`prepared`,
 `optimizerEnvironment`, `emitterEnvironment`, `callerDemands`) et les quatre
 parties suivantes, dans cet ordre :
 
-| Codec réservé | Données que le codec du lot 04 devra couvrir |
+| Codec | Données couvertes par le codec du lot 04 |
 | --- | --- |
-| `pbo/backend-v1` | `BackendModule` : nom, commentaires, imports, types ADT, groupes de bindings récursifs ou non et leurs `NeutralExpr`, exports/réexports, déclarations ADT/classes, imports FFI et types |
+| `pbo/backend-v2` (`v1` antérieur) | `BackendModule` : nom, commentaires, imports, types ADT, groupes de bindings récursifs ou non et leurs `NeutralExpr`, exports/réexports, déclarations ADT/classes, imports FFI et types ; le v2 ajoute l'enveloppe `body` et les lectures PBO optionnelles |
 | `pbo/implementations-v1` | Map qualifiée vers `BackendAnalysis` et `ExternImpl` : usages, tailles, complexité, args, dépendances, résultats et corps/dictionnaires/constructeurs complets |
 | `pbo/directives-v1` | Contributions `InlineDirectiveMap`, avec références, accesseurs et directives explicites |
 | `gopurs/workers-v1` | `ModuleFunctions` : `fullName`, `fArgs`, `fRet`, `arity`, avec les `GoType` structurels |
@@ -165,10 +277,11 @@ de fin des workers parallèles est incorrecte.
 
 ### Encodage portable des valeurs
 
-Le stockage valide une grammaire JSON explicite ; les codecs métier devront en
-plus valider les constructeurs, arités, champs et invariants avant toute
-réutilisation. **La validation du stockage ne remplace pas ces codecs**, dont
-l'implémentation et les vrais allers-retours PBO relèvent du lot 04.
+Le stockage valide une grammaire JSON explicite ; les codecs métier valident en
+plus les constructeurs, arités, champs et invariants avant consommation des
+valeurs. **La validation du stockage ne remplace pas ces codecs.** Le chemin
+sans conversion PBO conserve les contributions non consommées sous forme
+d'octets vérifiés ; une conversion qui en a besoin exige leur décodage métier.
 
 | Valeur | Forme JSON |
 | --- | --- |
@@ -190,6 +303,189 @@ chaînes conservent les surrogates isolés, les nombres conservent `-0`, infinis
 payloads NaN. Une valeur non représentable par un hôte fait échouer son décodage
 de cache. Les erreurs de version, de shape ou d'invariant sont des cache misses.
 Changer la grammaire ou les schémas métier exige une nouvelle version.
+
+## Parcours du pilote — lots 03 et 04
+
+<a id="lot-04--raccordement-en-cours-de-validation"></a>
+
+### Lot 04 — raccordement livré
+
+Le lot 04 ajoute `Gopurs.Cache.Modules` et les codecs typés de
+`Gopurs.Cache.Wire`. Les lots 04–05 sont validés sur `publicsync` ; les mesures,
+les compromis et les preuves sont publiés dans le [bilan](build-incremental.md).
+
+- `begin` copie les candidats d'un manifeste engagé dans `stage/prior`, après
+  vérification de leurs objets. Les candidats restent privés et immuables pendant
+  le calcul ; les sorties publiques ne servent pas à reconstituer leur contenu.
+- La préparation reste globale. `prepared` hache le module réellement spécialisé,
+  y compris les arguments statiques introduits par les appelants. La première
+  clé `optimizerEnvironment` est amorcée par les directives et le contexte
+  compilateur/options ; chaque module ajoute son empreinte au préfixe suivant.
+  Cette preuve couvre les corps, contributions, absences et rangs, avec une
+  invalidation conservatrice de tout le suffixe après un changement.
+- L'optimisation `pboreads` conserve cette preuve et ajoute un repli plus précis lorsque
+  seul le préfixe diffère : même contexte initial, même module préparé et mêmes
+  demandes des appelants, puis validation des lectures PBO antérieures dans la
+  vue courante. Une implémentation lue couvre sa présence/absence et, si présente,
+  le couple complet analyse/corps. Les valeurs attendues viennent des anciennes
+  contributions privées ; leurs empreintes par binding sont mémorisées pour le
+  build. Un fournisseur déjà restauré prouve directement l'égalité de sa table,
+  après résolution de sa visibilité et de la présence de la référence.
+- Les directives lues sont celles de l'environnement initial de la conversion,
+  incluant les forced private inlines. Les overrides locaux sont déterminés par
+  l'entrée et les mêmes lectures. Une référence à un prédécesseur non finalisé
+  met la tentative en attente, même si seule sa directive est consultée. Une
+  absence ne peut pas remplacer cet état d'attente. Les observations sont
+  propres à la tentative et ne sont transmises qu'à la publication canonique
+  d'un résultat final. Une preuve absente ou refusée entraîne la reconstruction.
+  Son seuil de performance face à `restoreprep` est atteint et les validations
+  complètes multi-hôtes passent. Le bilan distingue ce gain local des mesures
+  finales face au lot 03.
+- Les empreintes préparées sont calculées dans un pool borné par `prepareJobs`,
+  avec un contexte d'encodage privé par module, puis assemblées dans l'ordre
+  canonique. Une édition FFI peut conserver ces empreintes lorsque `sameTast`
+  prouve l'identité de l'inventaire TAST complet et du compilateur, et que le
+  premier préfixe engagé correspond au contexte options/directives courant.
+  La préparation globale s'exécute toujours. Toute modification de TAST, même
+  limitée à un appelant, impose le recalcul des empreintes préparées.
+- `buildModulesWithReuse` et `buildModulesParallelWithReuse` ajoutent un callback
+  aux barrières canoniques de publication. L'API historique conserve sa sémantique.
+  Les résultats réutilisés alimentent le même pipeline d'émission que les résultats
+  recalculés ; l'ordre de fin des tâches ne détermine aucune publication.
+- Si toutes les clés PBO correspondent, le pilote valide les backends et workers
+  dans un pool borné, puis alimente directement l'émetteur en ordre canonique.
+  Aucun optimiseur n'est démarré : les implémentations/directives, qui ne sont
+  consommées par aucune conversion, sont republiées depuis les copies privées
+  vérifiées. Leurs digests restent dans la clé d'émission. Une seule clé absente
+  ou un échec de décodage des backends/workers rétablit le builder normal, qui
+  décode les contributions avant de les rendre visibles aux conversions.
+  Une nouvelle signature FFI peut toujours changer les workers et invalider
+  l'émission des consommateurs, même si tous les TAST sont identiques.
+- La clé d'émission couvre le résultat PBO complet, les métadonnées globales et
+  layouts, les signatures de workers utilisées et la FFI résolue (chemin,
+  présence, contenu), ainsi que le contexte compilateur/options.
+  `workerkeys` remplace le préfixe de toutes les signatures visibles par la vue
+  des références qualifiées externes de l'IR après les transformations locales
+  de `CodeGen.prepareModule`. Chaque référence porte `Maybe FunctionInfo` dans
+  le snapshot du lot : les absences font partie de la clé. Le rendu reçoit
+  exactement les signatures présentes dans cette vue. Les workers restaurés
+  sont fusionnés dans l'ordre canonique.
+- `restoreprep` permet un lookup avant les transformations locales. Une clé du
+  domaine `input-workers-contained-v1` couvre les références externes du backend
+  d'entrée et ne peut être engagée qu'après avoir vérifié, sur un miss, que toutes
+  les références transformées y sont incluses. Les transformations sont
+  déterminées par le backend, les métadonnées source et le compilateur, qui sont
+  couverts par cette clé ; elles ne consomment pas les signatures importées.
+  Chaque référence d'entrée porte sa signature présente ou absente. Si une passe
+  introduit une référence supplémentaire, le domaine `prepared-workers-v1`
+  impose un lookup après préparation. Le rendu consomme dans les deux cas la vue
+  transformée exacte. Le digest des workers restaurés vient de leur artefact
+  privé vérifié, sans réencodage. La décision de performance
+  figure dans [le bilan](testing.md#optimisation-du-rendu-après-le-bilan-allhit).
+- Les quatre parties sont publiées avec les sorties Go via le stockage v1.
+  `--force`, le profilage d'allocations et le marqueur de diagnostics désactivent également la
+  réutilisation par module.
+
+Depuis `pboreads`, la première partie est `pbo/backend-v2` : un record
+`{ body, reads :: Maybe Observation.Reads }` encodé dans le même wire v1. Le corps
+est encodé en premier et garde ses octets v1 après retrait de l'enveloppe ; les
+trois autres parties conservent leur codec. Il reste quatre objets durables par
+module. Le stockage accepte les manifestes `backend-v1` antérieurs pour préserver
+la propriété des sorties et la récupération ; le producteur typé ne les restaure
+pas comme des corps v2. La migration est éprouvée avec une sortie détenue modifiée
+et conservation du même fichier de verrou.
+
+Le format métier utilise des constructeurs explicites `WithGraph`,
+`WithTypes` et `TypeRef`, dans la grammaire wire v1. Les références d'objets sont
+des indices wire `Int`, distincts des nœuds dans la table. Les références d'objets et de
+types sont locales à un artefact ; les arêtes d'objets doivent aller vers un indice
+antérieur, les types sont reconstruits dans l'ordre avec leurs seuls prédécesseurs.
+Les références absentes, cycliques ou vers l'avant produisent un miss.
+Le prédicat scalaire `hex` parcourt directement la chaîne dans les bridges
+JS/Go/Rust et accepte exactement `[0-9a-f]*`. La longueur des unités UTF-16 et des
+bits IEEE-754, ainsi que leur réencodage exact, restent vérifiés par le codec
+partagé. Le bilan `scalarhex` consigne les vecteurs et mesures de ce changement.
+
+L'internage travaille sur les fragments JSON canoniques, pas sur la représentation
+d'un hôte. Les Maps/Sets sont triés explicitement selon l'ordre PureScript, y
+compris l'ordre UTF-16 des chaînes.
+
+La table de types dispose d'un raccourci d'identité privé (`TypeMemo`) : il retient
+les objets immuables pendant l'encodage d'un artefact et retrouve un indice déjà
+attribué. `typeintern` conserve ce lookup, puis encode un type absent et interne
+sa référence de graphe canonique dans un second `Pool`. Un type nouveau reçoit
+son indice après ses enfants, dans l'ordre antérieur. Deux objets distincts de
+même structure retrouvent les mêmes références et le même indice, sans ajouter
+de nœud ; aucun ordre de comparaison ni identité d'hôte n'entre dans les octets
+persistants. Le raccourci d'identité évite de redéployer les sous-types partagés.
+Les bridges JS/Go/Rust existants ne définissent pas le schéma métier. La décision
+de performance et la validation complète réussie figurent dans le bilan du lot 04,
+désormais clos avec le surcoût de publication froide documenté.
+À la lecture, une table typée
+PureScript reconstruit chaque `NeutralExpr` une seule fois, dans l'ordre des
+références antérieures, pour conserver le partage du graphe.
+
+Les branches de `BackendSyntax` sont communes à l'instance `Codec` et aux
+fonctions directes du parcours `NeutralExpr`. Cette organisation évite de
+reconstruire le dictionnaire complet du codec à chaque nœud récursif, tout en
+conservant les noms, arités, contrôles et l'ordre d'internage du format v1.
+
+La grammaire est validée à la publication d'un contenu nouveau. Un objet déjà
+présent dans le manifeste engagé, avec même codec, taille et SHA-256, conserve
+cette preuve : le stockage relit et vérifie ses octets, sans reparcourir sa
+grammaire. Le décodage métier reste obligatoire avant sa réutilisation par PBO.
+
+Les compteurs indiquent `optimized`, `reused`, `emitted` et `restored`, avec les
+raisons `no-entry`, `prepared-or-callers`, `optimizer-prefix`, `optimizer-reads`
+ou `business-codec`.
+Le compteur `prepared fingerprints` distingue les empreintes calculées et
+réutilisées. La préparation, les clés des modules, la clé des métadonnées globales
+et le traitement des artefacts sont chronométrés séparément.
+
+### Parcours commun
+
+1. `Main` entre dans le compilateur figé. `Driver.Config` lit les options, puis
+   `loadDirectives` conserve ses diagnostics habituels, y compris sur un hit.
+2. `Driver.Cache.begin` vérifie la recette, les blobs et les sorties sous verrou.
+   Un hit retourne immédiatement : zéro décodage, préparation, optimisation ou
+   émission. Les mesures et le message de hit rendent ce chemin observable.
+3. Sur un miss, `begin` crée `.gopurs-cache/stages/build-*` et copie les TAST
+   inventoriés. Leur digest combiné doit correspondre à l'empreinte initiale ;
+   les entrées sont recontrôlées. PBO décode exclusivement ces copies. Un TAST
+   rejeté par le décodeur fait échouer le build entier et ne peut produire un hit.
+4. La préparation globale fournit les noms, chemins et imports étrangers des
+   modules source. `plan` résout et copie les FFI ; ses empreintes sont calculées
+   à partir des mêmes lectures que ces copies. Il complète la recette et vérifie
+   qu'elle est toujours actuelle. L'émetteur lit uniquement les copies FFI,
+   avec le chemin source canonique pour contextualiser les erreurs.
+5. Le runtime, les modules, bridges et entrées sont générés dans le staging.
+   `publish` construit leur inventaire, exige la clé prévue et applique la
+   transaction ci-dessous. Le bracket du pilote libère ensuite son staging.
+
+Une édition aller-retour des sources pendant le calcul ne peut donc attribuer
+des octets intermédiaires à une clé différente : les octets consommés sont les
+octets figés. Un changement encore présent à la publication fait échouer le
+build avec une demande de relance. Les espaces `.purmeta` JS sont également
+privés par invocation, via `GOPURS_PURMETA_DIRECTORY` dans le PBO.
+
+### Calcul forcé et diagnostics
+
+```sh
+./bin/gopurs --force          # calcul complet, publication et écritures minimales
+GOPURS_FORCE_BUILD=1 ./bin/gopurs
+```
+
+`GOPURS_ALLOC_PROFILE` force également le calcul, même lorsque les entrées et
+sorties sont valides. Les compteurs et horloges de passes ne sont pas rejoués
+sur un hit : le message annonce explicitement zéro module optimisé/émis.
+
+Le diagnostic sémantique `Rebox missing` est marqué par `Gopurs.Diagnostics`.
+Un manifeste marqué force le prochain calcul pour reproduire le diagnostic ;
+le marqueur wire `gopurs/diagnostics-v1` contient `["unit"]`, et n'est pas un
+texte à rejouer. Les erreurs de directives sont recalculées avant le lookup.
+Les erreurs de décodage, FFI ou émission empêchent toute nouvelle publication.
+Les options de parallélisme restent dans la clé, avec une invalidation
+conservatrice lors d'un changement de configuration.
 
 ## Propriété et publication
 
@@ -213,9 +509,9 @@ Un fichier existant est conservé, y compris les `require`, `replace`, `toolchai
 et changements de version effectués par Go. `go.sum` est externe. Les deux
 fichiers sont exclus du hash des sorties Go ; `go build` reste responsable de
 valider le graphe de dépendances. Un hit gopurs n'autorise pas à éviter ce build.
-La suppression de `go.mod` produit un miss. Ces règles sont celles du protocole ;
-le lot 03 adaptera `Driver.Output.writeRuntime`, qui écrit actuellement le modèle
-minimal à chaque build.
+La suppression de `go.mod` produit un miss. `Driver.Output.writeRuntime` écrit
+seulement le runtime dans le staging ; la création éventuelle de `go.mod` est
+désormais confiée au stockage lors de la publication.
 
 ### Transaction
 
@@ -232,11 +528,44 @@ minimal à chaque build.
    reçoit l'union des anciennes sorties et des octets qui vont être publiés.
    Il survit à une réinitialisation du cache d'objets.
 5. Chaque fichier modifié est écrit temporairement, synchronisé et renommé
-   atomiquement. Un contenu identique conserve sa date. Les fichiers obsolètes
-   du journal sont retirés seulement si leurs octets correspondent à une version
-   possédée ; une modification externe d'un fichier à retirer est un conflit.
+   atomiquement. Un contenu identique conserve sa date. Après jonction des
+   writers, les répertoires des sorties et leurs ancêtres jusqu'à la racine de
+   sortie sont synchronisés de bas en haut, y compris pour les fichiers déjà
+   identiques lors d'une reprise. Les fichiers obsolètes du journal sont ensuite
+   retirés seulement si leurs octets correspondent à une version possédée ; une
+   modification externe d'un fichier à retirer est un conflit.
 6. Après un dernier contrôle des entrées, le nouveau manifeste puis le pointeur
    sont publiés atomiquement. Le journal est ensuite réduit à l'inventaire final.
+
+Le staging des objets utilise au plus huit tâches, chacune écrivant son
+emplacement fixe du manifeste ; les octets identiques peuvent viser le même
+digest. Toutes ces tâches sont terminées avant de publier le journal ou de
+rendre une erreur. `publicpool2` utilise ensuite le même pool borné à huit tâches
+pour les sorties publiques, après vérification des conflits et engagement durable
+du journal d'union. Chaque tâche revérifie sa destination unique et les octets de
+son objet ; toutes sont jointes avant suppression, contrôle final des entrées,
+commit ou retour sur erreur. Une publication partielle reste récupérable depuis
+le journal.
+`batchsync` conserve la synchronisation de chaque fichier objet, puis
+regroupe celle du répertoire `objects` après jonction de toutes les tâches et
+validation du manifeste, avant le journal. Cette barrière s'exécute aussi lorsque
+tous les objets existaient déjà, afin de couvrir les renommages laissés par un
+staging interrompu. `publicsync` regroupe aussi les barrières des répertoires
+publics, après jonction des writers et avant toute suppression ou commit. Chaque
+fichier conserve sa synchronisation avant renommage ; chaque répertoire et ses
+ancêtres sont synchronisés une fois. Un échec conserve le journal d'union et le
+pointeur précédent. Le manifeste et le pointeur utilisent toujours `atomicWrite`,
+avec leur synchronisation immédiate du répertoire. Le pointeur est engagé en
+dernier, sous le même verrou stable.
+
+`tools/build-cache-output.test.mjs`, inclus dans `npm run test:cache`, éprouve
+les barrières et leur ordre, une erreur de synchronisation puis un SIGKILL avant
+la première barrière publique. Il utilise des copies instrumentées du stockage
+réel et conserve les workspaces en cas d'échec, ou avec
+`GOPURS_TEST_KEEP_WORKSPACE=1`. Les tests macOS/Linux sous race detector et les
+paires froides de `publicsync` passent ; le candidat mesuré est installé et sa
+validation complète multi-hôtes réussit. Les lots 04–05 sont clos ; leur
+[bilan](build-incremental.md) documente aussi le surcoût froid face au lot 03.
 
 Le verrou utilise `flock` sur `.gopurs-cache/write.lock`. Son inode reste stable ;
 il est fermé et libéré par le noyau après la mort d'un processus. Les projets
@@ -248,9 +577,8 @@ La transaction rend les publications cohérentes pour les clients de ce
 protocole ; elle n'est pas un renommage atomique de tout le répertoire Go. Un
 consommateur externe lisant les fichiers pendant la publication doit être
 coordonné au niveau du parcours de build. Les dates/hashes avant et après ne
-remplacent pas une vue stable des sources : le futur pilote doit décoder les
-octets inventoriés ou coordonner la génération TAST, afin d'éviter les edits
-aller-retour pendant une compilation.
+remplacent pas une vue stable des sources : le pilote décode les copies des
+octets inventoriés, afin de couvrir les edits aller-retour pendant le calcul.
 
 ## Invalidation et reprise
 
@@ -267,9 +595,15 @@ aller-retour pendant une compilation.
 - Journal de propriété corrompu : erreur explicite, sans suppression devinée de
   fichiers. Il faut retrouver un inventaire fiable ou reconstruire dans une
   sortie neuve. Ce journal est un état de propriété, distinct du cache jetable.
-- Première migration d'une sortie historique : le pilote doit établir un
-  inventaire fiable ou utiliser une sortie neuve ; il ne peut pas attribuer
-  arbitrairement à gopurs tous les fichiers Go préexistants.
+- Première migration d'une sortie historique : le pilote compare les fichiers
+  des espaces générés à une génération fraîche. Il adopte seulement les chemins
+  et octets identiques. Un fichier ancien inconnu ou différent provoque une
+  erreur explicite et demande une sortie contenant seulement les artefacts du
+  frontend. Les assets externes sont conservés. Une fois le journal établi,
+  seuls ses fichiers obsolètes peuvent être retirés ; les fichiers externes
+  ajoutés ensuite restent hors inventaire.
+  Si un nouveau chemin généré rencontre un fichier externe différent, la
+  publication échoue avant toute écriture publique (`unowned output differs`).
 
 La recette, les codecs métier et l'inventaire complet sont des obligations du
 producteur. Le stockage garantit leur intégrité et leur publication ; la preuve
@@ -281,6 +615,9 @@ constitue jamais un hit.
 
 ```sh
 npm run test:cache
+npm run test:cache-driver # après reconstruction des compilateurs
+npm run test:cache-sources
+npm run test:cache-context
 # Stockage seul :
 go -C tools/build-cache test -race -count=1 -v -timeout 90s ./...
 ```
@@ -293,5 +630,28 @@ concurrents et la reprise après mort réelle d'un détenteur du verrou. Le test
 d'hôtes compile la FFI Go réelle contre le package préparé pour le bootstrap et
 échange des publications JS → Go puis Go → JS.
 
+`compiler-snapshot.test.mjs` remplace réellement le bundle/binaire après son
+chargement et vérifie le marqueur exécuté et son SHA-256 après réexécution.
+`driver-cache.test.mjs` compare les transitions à une génération neuve sur les
+mêmes TAST et entre JS, Go séquentiel et Go parallèle : hits sans passes, dates,
+edits à date conservée, ajouts/retraits, priorités FFI, points d'entrée, fichiers
+altérés, erreurs, SIGTERM, publications concurrentes, profils et corruption.
+`GOPURS_TEST_RUST=1` ajoute l'hôte Rust ; `GOPURS_TEST_KEEP_WORKSPACE=1` conserve
+les logs et inventaires. Les tests Go du producteur couvrent aussi les edits
+aller-retour, les diagnostics et l'adoption historique.
+
+`driver-source-cache.test.mjs` couvre les corps privés/exportés, directives,
+layouts et demandes transitives de spécialisation sur 14 états de sources.
+`driver-context-cache.test.mjs` vérifie 16 états d'options/ordonnancement/entrées,
+étendus à 20 avec un catalogue de versions réelles de compilateur et de runtime.
+Chaque état compare l'incrémental au frais sur les mêmes TAST, les quatre parties,
+les clés, les octets Go, le hit sans réécriture et l'exécution de l'oracle.
+`tools/cache-context-runtime.mjs` construit les variantes privées ; la
+[procédure et les preuves](testing.md#plan-v3--lot-05--transitions-de-sources-campagne-en-cours-12-octobre-2026)
+décrivent le catalogue, les quatre hôtes et la conservation des workspaces.
+
 Le [bilan du lot 02](testing.md#plan-v3--lot-02--contrat-du-cache-persistant-10-octobre-2026)
 conserve les vérifications du bootstrap, des sorties applicatives et des snapshots.
+Le [bilan du lot 03](testing.md#plan-v3--lot-03--build-identique-vérifié-10-octobre-2026)
+consigne les transitions, la parité b8x, les gains appariés (**35,732 → 1,257 s**
+pour gopurs ; **38,145 → 3,958 s** pour la chaîne) et le coût de publication initiale.

@@ -17,7 +17,11 @@
     "test:launcher": "node --test tools/launcher.test.mjs",
     "test:rust": "GOPURS_TEST_RUST=1 node --test --test-concurrency=1 tools/launcher.test.mjs tools/cli.test.mjs tools/rust-host.test.mjs",
     "test:runner": "node --test tools/test-runner.test.mjs",
-    "test:cache": "node --test tools/build-cache.test.mjs",
+    "test:cache": "node --test tools/build-cache.test.mjs tools/build-cache-output.test.mjs tools/compiler-snapshot.test.mjs",
+    "test:cache-driver": "node --test tools/driver-cache.test.mjs",
+    "test:cache-sources": "node --test tools/driver-source-cache.test.mjs",
+    "test:cache-context": "node --test tools/driver-context-cache.test.mjs",
+    "test:cache-codecs": "node --test tools/module-codec.test.mjs",
     "prepare": "npm run build"
   },
   "devDependencies": {

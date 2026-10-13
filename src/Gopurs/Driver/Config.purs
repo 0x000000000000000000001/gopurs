@@ -2,6 +2,7 @@ module Gopurs.Driver.Config (CompilerConfig, readConfig) where
 
 import Prelude
 
+import Data.Array as Array
 import Data.Int as Int
 import Data.Maybe (Maybe(..), fromMaybe)
 import Effect (Effect)
@@ -19,16 +20,19 @@ type CompilerConfig =
   , optimizerJobs :: Int
   , emission :: EmissionOptions
   , allocationProfile :: Maybe String
+  , forceBuild :: Boolean
   }
 
 readConfig :: Effect CompilerConfig
 readConfig = do
-  args <- parseCLIArgs <$> Process.argv
+  argv <- Process.argv
+  let args = parseCLIArgs argv
   prepareJobs <- readJobs "GOPURS_PREPARE_JOBS" 2
   emitJobs <- readJobs "GOPURS_EMIT_JOBS" 8
   optimizerJobs <- readJobs "GOPURS_PBO_JOBS" 1
   pipeline <- Process.lookupEnv "GOPURS_PIPELINE"
   allocationProfile <- Process.lookupEnv "GOPURS_ALLOC_PROFILE"
+  forceBuild <- Process.lookupEnv "GOPURS_FORCE_BUILD"
   pure
     { mainModule: args.mbMainModule
     , ffiDirectory: args.mbFfiDir
@@ -38,6 +42,7 @@ readConfig = do
     , optimizerJobs: boundedJobs optimizerJobs
     , emission: { jobs: boundedJobs emitJobs, pipelined: pipeline /= Just "0" }
     , allocationProfile
+    , forceBuild: forceBuild == Just "1" || Array.elem "--force" argv
     }
 
 readJobs :: String -> Int -> Effect Int

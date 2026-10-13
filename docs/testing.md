@@ -42,6 +42,8 @@ reconstruit les deux versions et conserve le workspace pour les tests natifs.
 | Sélection, isolation et erreurs du runner | `npm run test:runner` |
 | Cache des exécutables et verrou du runner b8x | Depuis `../../b8x` : `B8X_GO_RUN_NATIVE_TEST=1 node --test test/go-run.mjs` ; [contrats et commande conteneur](../../../b8x/test/go-run.md) |
 | Contrat persistant du cache gopurs, intégrité et publication | `npm run test:cache` ; [protocole, propriété et invalidation](build-cache.md) |
+| Hit avant décodage, invalidations et publication du pilote | `npm run test:cache-driver`, après le bootstrap ; `GOPURS_TEST_RUST=1` ajoute l'hôte Rust |
+| Corps, layouts, demandes de spécialisation et renommages sur cache engagé | `npm run test:cache-sources`, après le bootstrap ; `GOPURS_TEST_RUST=1` ajoute l'hôte Rust |
 
 Cette table indique quel contrôle choisir, pas que chaque fixture possède un
 snapshot validé avec le dernier générateur. Les limites connues figurent plus
@@ -144,7 +146,9 @@ de dictionnaires 1 à 7 et collision avec le préfixe d'encodage réservé.
 puis appelle `bin/gopurs` en JS, natif séquentiel et natif parallèle. Chaque mode
 vérifie le succès (statut 0 et Go identique) et cinq erreurs réelles (statut 1) :
 chargement du TAST, écriture du runtime, écriture d'un module avec workers PBO,
-FFI invalide et écriture de l'entrée exécutable.
+FFI invalide et écriture de l'entrée exécutable. Depuis le lot 03, l'absence de
+sortie est détectée pendant `cache lookup + freeze` ; les conflits des destinations
+publiques sont détectés pendant `cache publish`, après la génération privée.
 Le frontend de la fixture est sélectionné comme pour le bootstrap natif :
 `GOPURS_PURS` si renseigné, sinon le fork local sous `../../purescript`.
 
@@ -492,6 +496,72 @@ sont des fixtures intentionnelles ; leurs contrats d'exécution et d'affichage
 sont vérifiés dans le parcours standard. Voir le
 [lot 07 du plan v2](#plan-v2--lot-07--couverture-des-bibliothèques-6-octobre-2026).
 
+## Plan v3 — lot 00 : référence du cycle b8x, 10 octobre 2026
+
+Le lot 00 est validé : **3/7 lots du plan v3**, après les lots 01 et 02. La
+[référence détaillée](build-baseline.md) conserve les scénarios, la ventilation,
+les outils et les limites des mesures sur un corpus figé de **2 704 TAST /
+755 005 types**. Au départ, b8x sélectionne JS ; la campagne construit une copie
+avec sa configuration Go et ses dépendances locales.
+
+### Résultats
+
+- **Relance identique : 36,902 s dans le processus gopurs**, médiane de trois
+  passages ; les **3 010 fichiers Go sont réécrits**, alors que leur contenu est
+  identique. Les médianes internes sont 1,298 s pour chargement/tri, 10,710 s pour
+  préparation/spécialisation et 24,486 s pour optimisation/émission. Les lots
+  d'émission se chevauchent avec PBO et ne s'ajoutent pas au total.
+- **Chaîne Spago/backend → tidy → Docker/runner : 40,808 s de médiane**,
+  étendue 38,892–42,134 s, jusqu'à la frontière `exec` de `Test.Main`. Les trois
+  passages ne compilent ni ne lient en Go. La suite métier n'entre pas dans
+  cette horloge ; les exécutions effectives sont contrôlées par les oracles.
+- **Runner seul à chaud : 0,770 s de médiane**, même exécutable à l'octet près,
+  sans compilation ni lien. Acquisition du verrou affichée à 0,000 s dans toutes
+  les invocations. Les observations avant/après retrouvent des services et
+  healthchecks JS ; le verrou de mesure est privé.
+- **Feuille / partagée / FFI : 1 / 5 / 1 Go modifiés** par rapport à la référence.
+  Chaque nouvelle variante demande **212–220 s** pour compiler le package commun
+  `purescript`, avec **2 CPU / `-p 1` / `GOMEMLIMIT=12GiB`**. Un échantillon par
+  première construction, dépendances déjà en cache ; pics RSS observés de
+  14,5 à 14,9 GiB. Les limites du runner sont celles du parcours habituel.
+- La modification partagée recompile **1 375 modules frontend** en **20,685 s**
+  de médiane, mais un seul TAST change de contenu. Son Go modifié comprend
+  `Control.Semigroupoid`, ce qui confirme la portée des demandes de spécialisation
+  provenant des appelants. La modification FFI ne change aucun TAST.
+
+### Vérifications et reproductibilité
+
+- Les treize mesures frontend ont été corrigées après revue du harnais : retirer
+  le backend Spago activait JS/sourcemaps. Un backend neutre maintient les options
+  réelles `corefn,docs` ; tous les TAST sont byte-identiques aux entrées des
+  mesures gopurs/Go déjà réalisées. Les relevés préliminaires restent archivés.
+- **Quatre corpus, trois modes** : JS, natif séquentiel et natif parallèle
+  produisent les mêmes **3 010 Go par corpus**, runtime, bridges et entrées
+  compris, ainsi que le même `go.mod` minimal. Inventaires et octets sont
+  également identiques entre les répétitions de chaque scénario.
+- **Cinq oracles Go réussis** sous Linux : référence, identique et trois
+  modifications, avec les résultats attendus de `caseToCamel`, `RemoveAccents`
+  et `Ping`. Les constructions de `Test.Main` réussissent aussi.
+- **Trois snapshots revus, six replays stricts réussis** : `FFIIntegerReturns`
+  et `NativeRecordWorkers` dans les trois modes, avec compilation/exécution Go.
+  Les snapshots et les octets des compilateurs correspondent à la référence.
+- Audit final de **4 318 fichiers inventoriés**, **8 112 observations de
+  sources/compagnons**, TAST, sorties et binaires publiés ; contrôles de syntaxe,
+  formatage de l'oracle et `git diff --check` réussis. Les mutations privées sont
+  restaurées et les deux conteneurs dédiés sont supprimés.
+
+La prochaine étape est le raccordement du chemin sans changement au lot 03.
+La compilation monolithique Go constitue un coût distinct ; sa granularité reste
+une suite mesurée du plan, après la livraison initiale du cache.
+
+Preuves conservées dans
+`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/b8x-incremental-lot00-srr89dtf/` :
+`README.md`, `summary.json`, `backend-results.json`, `frontend-corefn-results.json`,
+`cycle-results.json`, graphes d'actions de `measurements-go/`, `parity-results.json`,
+`snapshot-review.json`, `strict-replays.json` et `final-audit.json`. Les sources,
+TAST, Go, compilateurs, ressources FFI et exécutables sont conservés ; le README
+fournit le rejeu de parité sur une copie neuve du corpus figé.
+
 ## Plan v3 — lot 01 : réutilisation des exécutables b8x, 10 octobre 2026
 
 Le lot 01 est validé : **1/7 lots du plan v3**. `b8x/bin/_go-run` présente à Go
@@ -670,6 +740,1390 @@ Preuves conservées dans
 `cache-tests-final.log`, `linux-cache-tests-final.log`, `linux-command.json`,
 `repro-missing-journal.mjs`, `journal-{before,after}.log`,
 `snapshot-review.json`, `strict-replays.json`, `final-audit.json` et `README.md`.
+
+## Plan v3 — lot 03 : build identique vérifié, 10 octobre 2026
+
+**Lot validé** après les contrôles de correction, les mesures appariées et
+l'audit final. Le plan v3 compte **4/7 lots validés**.
+
+### Raccordement et contrats exercés
+
+Le pilote vérifie maintenant les empreintes avant le décodage des TAST. Un hit
+saute préparation, monomorphisation, optimisation et émission ; un miss consomme
+des copies privées des TAST et FFI, puis publie par le stockage du lot 02.
+La résolution FFI commune produit sa propre trace des candidats absents et des
+répertoires parcourus. `CompilerSnapshot` copie puis réexécute les octets
+identifiés, avec les ressources WASM/JS ou l'archive native intégrée.
+
+Le protocole conserve `go.mod` existant et `go.sum`, retire seulement les sorties
+obsolètes possédées et élide les écritures byte-identiques. La migration d'une
+ancienne sortie exige une correspondance avec la génération fraîche. Un nouvel
+output ne peut pas écraser un fichier externe différent, même après la création
+du journal. `--force`, `GOPURS_FORCE_BUILD=1` et `GOPURS_ALLOC_PROFILE` demandent
+un calcul complet. Les directives sont toujours chargées ; un diagnostic Rebox
+marque le manifeste pour imposer un nouveau calcul au lieu de masquer le message.
+Le cache de travail `.purmeta` du PBO JS est privé par invocation.
+
+### Vérifications
+
+- Bootstrap JS/Go réussi : **505 modules / 289 658 types**. Les compilateurs
+  utilisés sont copiés et inventoriés avant les mesures.
+- `npm run test:cache` : stockage sous détecteur de courses, vrais bridges
+  JS/Go, remplacement du bundle et du binaire **après leur chargement**, puis
+  vérification du code exécuté et de son SHA-256 après réexécution.
+- Le stockage et le producteur passent aussi sous détecteur de courses avec
+  le **Go 1.26.8 Linux/arm64** de l'image b8x ; le contrôle hôte utilise
+  **Go 1.27.0 macOS/arm64**. Les éditions aller-retour consomment les octets
+  figés ; une édition persistante refuse la publication.
+- `test:cache-driver` : quatre modes **JS / Go séquentiel / Go parallèle / Rust**,
+  chaque transition comparée octet par octet à une génération neuve des mêmes
+  TAST et aux autres modes. La suite couvre hits sans passes ni changements de
+  dates, calcul forcé, tidy, sorties endommagées, edits à date conservée,
+  ajouts/retraits de modules et bridges, entrées, priorités et absences FFI,
+  collisions externes, TAST/FFI invalides, SIGTERM, concurrence, profils et
+  récupération des métadonnées. Les quatre applications finales s'exécutent
+  avec Go et rendent `Done`.
+- **31 contrôles CLI** réussis, incluant Rust séquentiel/parallèle. Les erreurs
+  restent de statut 1 ; les conflits des destinations publiques sont désormais
+  signalés à `cache publish`, et les erreurs de TAST incomplet empêchent une
+  publication partielle.
+- Trois snapshots `FFIIntegerReturns`, son bridge, et `NativeRecordWorkers`
+  examinés et **inchangés** ; **six replays stricts** réussis avec compilation
+  et exécution Go dans les trois modes demandés. Aucune mise à jour de snapshot.
+- Suite PBO `purmeta-build-cache` réussie avec le bundle reconstruit.
+- L'hôte Rust optionnel est construit et vérifié dans un candidat O3/ThinLTO
+  **sans PGO**, sélectionné explicitement par les tests ; son binaire installé
+  n'est pas remplacé par ce candidat de vérification.
+
+Deux reproducteurs sont conservés : le hit sans réécriture échoue avec l'ancien
+compilateur puis passe avec le nouveau ; la collision d'une nouvelle sortie avec
+un fichier externe échoue avant le correctif de propriété puis passe après.
+
+### Mesure du backend b8x
+
+La copie du corpus du lot 00 contient les mêmes **2 704 TAST / 755 005 types**.
+Les **3 010 fichiers Go**, runtime, bridges et entrées compris, sont byte-exacts
+avec cette référence dans les trois modes demandés. Les comparaisons de contenu
+et de dates sont effectuées hors chronométrage. Les tests de correction sont
+terminés avant les mesures ; aucun autre build de cette campagne n'est lancé
+pendant ces mesures.
+
+Trois paires alternées, avec le launcher et ses huit workers usuels :
+
+| Processus gopurs | Avant | Hit après raccordement |
+| --- | ---: | ---: |
+| Échantillons | 35,798 / 35,498 / 35,732 s | 1,257 / 1,249 / 1,521 s |
+| Médiane | **35,732 s** | **1,257 s** |
+| Fichiers Go réécrits par invocation | 3 010 | **0** |
+
+La durée médiane diminue de **96,5 %** (environ **28,4×**). La médiane interne
+de vérification du cache est **684 ms** ; les **1,257 s** mesurent le processus
+entier, copie/réexécution du compilateur comprises. Aucun hit ne décode les
+TAST ni n'entre dans les passes coûteuses. La référence historique du lot 00
+reste **36,902 s** ; le chiffre avant ci-dessus est la mesure appariée du lot 03.
+
+Le coût froid est significatif et conservé explicitement :
+
+| Parcours après raccordement — un passage par ligne | Total | Publication |
+| --- | ---: | ---: |
+| Première adoption, Go parallèle, sorties Go déjà présentes | **65,054 s** | **25,660 s** |
+| Sortie et cache neufs, Go séquentiel | 135,060 s | 53,396 s |
+| Sortie et cache neufs, JS | 117,375 s | 53,979 s |
+| Retour JS → Go parallèle, objets déjà présents | 39,936 s | 1,371 s |
+
+L'adoption initiale conserve les dates des 3 010 Go identiques, mais crée les
+objets durables. Une sortie neuve écrit aussi les fichiers publics : les écritures
+et synchronisations du stockage expliquent le coût de publication observé. Les
+deux générations neuves ci-dessus servent aussi à la parité ; ce ne sont pas des
+médianes. Leurs hits suivants prennent respectivement **1,453 s** et **1,420 s**.
+Un miss conserve encore le calcul global ; les gains par module restent au lot 04.
+
+### Parcours Spago → tidy → runner
+
+Une préparation puis trois paires alternées utilisent le même frontend figé,
+le Go Linux de b8x, les caches Go chauds et un verrou/exécutable privés. La
+fenêtre continue inclut Docker et s'arrête avant `exec` de `Test.Main` ; elle
+exclut les inventaires et la suite métier PostgreSQL.
+
+| Mesure | Avant | Après |
+| --- | ---: | ---: |
+| Chaîne — échantillons | 38,145 / 39,290 / 37,611 s | 4,180 / 3,958 / 3,539 s |
+| **Chaîne — médiane** | **38,145 s** | **3,958 s** |
+| Spago + backend — médiane | 36,022 s | 2,933 s |
+| `go mod tidy` — médiane | 1,070 s | 0,256 s |
+| Docker + runner jusqu'à `exec` — médiane | 1,051 s | 0,794 s |
+
+Le gain médian de la chaîne est **89,6 %**, environ **9,64×**. Les médianes des
+phases ne s'additionnent pas nécessairement à celle de la chaîne. La référence
+historique du lot 00 était **40,808 s**. Le gain de tidy accompagne la
+conservation de `go.mod`, que l'ancien pilote réinitialisait à chaque passage.
+
+Tous les graphes d'actions mesurés contiennent **zéro compilation et zéro lien**.
+Les réglages restent `GOMAXPROCS=2`, `-p 1`, `GOMEMLIMIT=12GiB` ; chaque attente
+du verrou privé est affichée à **0,000 s**. L'exécutable de tests conserve le
+SHA-256 du lot 00, `9e08ce7474320728fac10c16d721e050b827a495f14eb3c10a70de970a546378`.
+Après les horloges, l'oracle rend `camel=""`, `accent="e"`, `pong` et le vrai
+`Ping` rend `pong\n`. Le conteneur dédié est supprimé.
+
+Le cache final occupe **137 272 731 octets** (environ **131 MiB**, 2 670 fichiers),
+avec un journal de propriété séparé de **675 784 octets**. L'audit contrôle
+**4 318 fichiers inventoriés**, la constance des **8 112 observations de
+sources/compagnons** du lot 00, les 14 passages backend, les sept passages de chaîne,
+les artefacts figés, les sorties finales et les snapshots. La configuration
+backend est la seule différence de la copie source ; b8x actif reste en JS.
+
+Le premier harnais de chaîne incluait le pré-inventaire des dates dans l'horloge.
+Ses résultats sont conservés dans `cycle-preliminary-inventory-clock/` ; seules
+les mesures corrigées, avec cet inventaire hors horloge, alimentent ce bilan.
+
+### Preuves et rejeu
+
+Répertoire local :
+`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/gopurs-nochange-lot03-b33v4ie0/`.
+Son `README.md` documente les artefacts `before`, `candidate-1`, `after`, les
+reproducteurs, les commandes de campagne et le rejeu sur une copie neuve.
+Les workspaces des transitions et des replays stricts sont conservés avec leurs
+logs et inventaires ; les compilateurs, ressources et corpus portent leurs
+SHA-256. Les essais intermédiaires échoués sont gardés avec les campagnes finales.
+
+<a id="plan-v3--lot-04--incrémentalité-par-module-validation-en-cours-11-octobre-2026"></a>
+
+## Plan v3 — lot 04 : incrémentalité par module, validée (12 octobre 2026)
+
+**Clôturé sur `publicsync`.** Le [bilan livré](build-incremental.md) rassemble les
+mesures appariées, les compteurs, les limites et les preuves des lots 04–05.
+Face au lot 03 : **−10,37 % feuille / −4,48 % partagé / −32,76 % FFI**, avec
+**+20,19 % à froid**, **+0,350 s sur l'identique suivant le froid** et **+413,347 Mo
+d'objets**. L'utilisateur confirme la poursuite avec ce compromis. La validation
+complète réussit sur les compilateurs installés ; l'historique des essais suit.
+
+Le candidat `allhit` conserve la préparation globale et utilise les clés des
+modules spécialisés, le préfixe PBO conservateur et le contexte complet de
+l'émetteur. Si toutes les clés PBO correspondent, les backends/workers sont
+validés puis transmis directement à l'émetteur canonique ; les contributions PBO
+non consommées sont republiées depuis leurs copies privées vérifiées. Un miss
+réactive le builder et le décodage métier de ses contributions. Le contrat et
+les bridges sont décrits dans [build-cache.md](build-cache.md).
+
+### Gain confirmé sur édition FFI
+
+Cinq paires alternées utilisent les compilateurs figés, le corpus TAST du lot 00,
+des caches engagés propres à chaque copie et les mêmes options natives parallèles
+(`prepare=8`, `pbo=8`, `emit=8`, pipeline actif). Aucune compilation lourde ne
+tourne pendant ces mesures. Les horloges incluent le lancement et la réexécution
+du compilateur figé ; elles excluent le frontend, le build Go et les inventaires.
+
+| Passage | Lot 03 | Candidat allhit |
+| --- | ---: | ---: |
+| 1 | 37,898 s | 30,816 s |
+| 2 | 38,332 s | 30,724 s |
+| 3 | 38,594 s | 31,156 s |
+| 4 | 38,124 s | 30,542 s |
+| 5 | 38,525 s | 30,663 s |
+| **Médiane** | **38,332 s** | **30,724 s** |
+
+Gain médian : **19,85 %**, soit environ **7,61 s**. Les dix inventaires contiennent
+les **3 010 Go** attendus du lot 00 ; chaque édition ne réécrit que
+`Util_Type_String_String_ffi.go`. Le candidat réutilise les **2 704 résultats PBO**
+et restaure **2 703 émissions**, avec les mêmes empreintes préparées et les mêmes
+**397 516 134 octets** des quatre parties métier que les candidats antérieurs.
+
+### Campagne b8x complète : correction acquise, performances insuffisantes
+
+La campagne suivante exécute successivement le candidat et le lot 03 sur des
+racines privées neuves, sans objets préchargés. Elle supprime seulement les
+3 010 Go connus de la copie du corpus avant le premier passage, puis compare
+chaque variante aux inventaires du lot 00 et à une génération forcée sur les
+mêmes TAST. Les chronos ci-dessous sont des passages isolés, pas des médianes.
+
+| Scénario | Lot 03 | Candidat allhit | Go réécrits |
+| --- | ---: | ---: | ---: |
+| Cache et sorties neufs | 93,599 s | 239,367 s | 3 010 |
+| Relance identique | 1,471 s | 2,355 s | 0 |
+| Édition feuille | 39,505 s | 53,865 s | 1 |
+| Fonction partagée | 39,111 s | 88,715 s | 5 |
+| Édition FFI | 37,789 s | 32,151 s | 1 |
+
+| Variante incrémentale | PBO recalculés / réutilisés | Émissions nouvelles / restaurées | Candidat forcé |
+| --- | ---: | ---: | ---: |
+| Feuille | 800 / 1 904 | 1 / 2 703 | 88,826 s |
+| Partagée | 2 697 / 7 | 2 697 / 7 | 85,337 s |
+| FFI | 0 / 2 704 | 1 / 2 703 | 90,340 s |
+
+Chaque build forcé conserve les dates des sorties byte-identiques. Les quatre
+artefacts métier et les empreintes préparées correspondent aux builds
+incrémentaux. Pour la feuille, un module préparé change et le préfixe invalide
+799 successeurs. Pour la fonction partagée, deux modules préparés changent
+(spécialisations incluses) et le préfixe invalide 2 695 successeurs. La clé des
+métadonnées globales et les environnements d'émission limitent aussi la
+restauration, bien que seuls cinq contenus Go changent réellement.
+
+Sur le premier build neuf, la publication durable prend **152,943 s**, contre
+**55,330 s** au lot 03. Les objets occupent respectivement **534 973 714 octets /
+10 992 objets** et **135 273 391 octets / 2 666 objets**. Après les variantes,
+le candidat conserve **552 370 422 octets / 11 016 objets** ; ces tailles incluent
+les sorties et les manifestes adressés par contenu, pas le staging ni le journal
+de propriété. Le volume logique des quatre artefacts de référence est toujours
+**397 516 134 octets**.
+
+L'audit complet `audit-allhit.json` passe : **2 704 TAST et 3 010 Go**, mêmes
+inventaires TAST, sorties et quatre artefacts métier entre JS, Go séquentiel et
+Go parallèle sur le corpus original puis l'édition FFI. Les passages JS et Go
+séquentiel utilisent des objets préchargés et servent à la parité ; leurs temps
+ne sont pas des mesures de cache froid. Les treize transitions plus petites
+couvrent en plus Rust sur les mêmes TAST.
+
+**Le lot 04 reste non validé (4/7)** : la réutilisation et la correction sont
+vérifiées, mais le gain FFI ne compense pas les régressions des éditions TAST et
+du premier build. L'encodage des clés/artefacts et l'invalidation conservatrice
+restent à traiter avant de conclure au bénéfice global. Les variantes complètes
+conservent les preuves de cette régression ; elles ne sont pas remplacées par
+les seuls résultats favorables du chemin FFI.
+
+### Optimisation du rendu après le bilan allhit
+
+Le candidat `wirecalls` remplace les compositions de fonctions du rendu wire
+par des appels explicites et construit directement les enveloppes JSON fixes.
+Les bridges et les octets persistants restent identiques. Sur trois paires
+alternées de bascules de la fonction partagée, la médiane passe de **91,353 s
+(`allhit`) à 80,329 s (`wirecalls`), soit −12,07 %**. Les six passages vérifient
+les artefacts, les empreintes préparées, les 3 010 Go et exactement cinq
+réécritures. Le bootstrap Go, huit tests de codecs et le rejeu JS des
+193 248 099 octets d'implémentations PBO passent.
+
+L'essai `exprmemo` corrige le parcours répété des expressions
+partagées lors de l'encodage. `encode-sharing-before.log` échoue dès la profondeur
+1 sur deux visites de la même feuille ; `encode-sharing-after.log` passe jusqu'à
+la profondeur 24 sans développer les 16 777 216 feuilles logiques. Les neuf
+contrôles de codecs/bridges passent, y compris rétention des objets après GC,
+isolation des artefacts et distinction des tags nuls. Les bootstraps Go/Rust,
+le rejeu JS du corpus et les quatre artefacts du probe sont byte-exacts. Le
+temps sur édition partagée, **76,695 s contre 77,223 s pour `wirecalls`**, ne
+confirme toutefois pas de gain significatif. L'essai et son reproducteur sont
+conservés dans les preuves ; les sources, tests et compilateurs actifs sont
+revenus à `wirecalls` (`restore-wirecalls-build.log`).
+
+`smallctors` remplace ensuite les codecs génériques des petits constructeurs
+fréquents (`Maybe`, `Tuple`, noms, `Qualified`, `Prop`, `Literal`) par des
+branches PureScript explicites. Trois paires alternées confirment **76,673 s
+(`wirecalls`) → 69,201 s (`smallctors`), soit −9,75 %** sur l'édition partagée.
+Les artefacts, les clés préparées et les 3 010 Go sont byte-exacts, avec cinq
+réécritures par bascule. Le bootstrap Go, les huit tests de codecs et le rejeu
+JS des implémentations passent. `smallctors-wire-audit.json` vérifie aussi les
+clés dans les manifestes conservés : le premier bilan avait échoué sur un
+fichier de preuve non exporté, puis l'export du harnais a été complété.
+
+Le coût froid fait l'objet d'un essai indépendant, `stagepool` : staging des
+objets dans huit tâches au plus, emplacements fixes du manifeste et attente de
+toutes les tâches avant toute publication, y compris après une erreur. Le
+protocole, les SHA-256 et les synchronisations de chaque objet restent les mêmes.
+La suite Go du stockage passe sous race detector sur macOS, notamment le test
+des objets partagés, de l'ordre canonique et d'un échec tardif avant publication.
+Deux paires alternées de publication froide des mêmes 3 010 sorties et 2 704
+mémos, dans des racines neuves, confirment **174,391 → 95,186 s en moyenne,
+soit −45,42 %**. Les sorties, mémos et objets sont byte-exacts, puis le lookup
+retourne un hit. La mesure isole le stockage : l'inventaire TAST est vide et
+aucune conversion ne s'exécute. `stagepool-corpus-files-summary.json` conserve
+ce bilan. La campagne initiale par pipes avait dépassé son délai sur la seconde
+référence avant toute écriture d'objet ; les quatre mesures retenues utilisent
+des fichiers pour stdin/stdout/stderr. `stagepool` est retenu.
+
+L'essai `workerkeys` remplace le préfixe des workers dans la clé d'émission par
+les signatures référencées après les transformations locales de `CodeGen`,
+avec leurs absences. Le rendu consomme exactement cette vue ; les métadonnées
+globales, le résultat PBO complet et la FFI restent dans la clé. Le reproducteur
+`workerkeys-before-2.log` échoue sur une invalidation par un worker sans rapport ;
+le correctif passe aussi les changements de signature, retraits et ajouts, et
+le test compilé des appels natifs importés. Son bootstrap natif réussit.
+Le premier probe, combiné à `stagepool`, prend **59,547 s** sur l'édition
+partagée, avec **6 émissions / 2 698 restaurations**, cinq réécritures et les
+3 010 Go, quatre artefacts et clés préparées byte-exacts. Trois paires alternées
+contre `stagepool` seul confirment ensuite **68,087 → 60,866 s de médiane,
+soit −10,60 %**, avec cinq réécritures à chaque bascule et les mêmes parties et
+empreintes préparées. `workerkeys` est retenu. Le candidat `stagepool` a été
+relié depuis une copie du bootstrap `smallctors` ; `stagepool-native-audit.json`
+confirme que seul `gopurs_build_cache/store.go` diffère dans le Go compilé.
+
+L'essai suivant, `publishpool`, applique la même borne de huit tâches aux
+écritures publiques, après publication durable du journal d'union. Un test
+injecte une corruption d'objet après cette barrière, exige la fin des autres
+écritures et un pointeur inchangé, puis reprend par le protocole normal. Les
+tests passent sous race detector, mais les deux paires froides ne gagnent que
+**5,87 %** (**92,655 → 87,215 s** en moyenne), sous le seuil préalable de 10 %.
+L'essai est retiré ; `store.go` et `stage_test.go` sont restaurés à l'octet près
+depuis `stagepool`, avec leurs versions expérimentales et les mesures conservées.
+La condition de gain a arrêté la campagne avant le relien natif et le probe b8x
+neuf : aucun résultat b8x froid ne lui est attribué.
+
+`wireids` essaie ensuite de transporter les références du codec sous forme
+d'entiers et de rendre les constructeurs/tableaux dans le pool générique.
+Le bootstrap Go, onze contrôles de codecs/bridges et d'émission, le rejeu JS
+des 193 248 099 octets d'implémentations et les deux corpus du probe sont
+byte-exacts. Le probe partagé prend toutefois **62,814 s**, sans gain établi
+face à `workerkeys` (**59,547 s** sur son probe et **60,866 s** de médiane sur
+les paires précédentes). L'essai est retiré ; les cinq sources et le test restent
+dans `candidate-wireids`. Les sources actives reviennent à `workerkeys`, avec
+reconstruction JS et restauration atomique de son binaire natif conservé.
+Les bridges Rust expérimentaux n'ont pas fait l'objet d'un bootstrap.
+
+Le profil du stockage `stagepool` mesure **88,26 s écoulées / 25,56 s de CPU**,
+dont **3,11 s de CPU** pour la validation wire ; les opérations de fichiers
+dominent. L'essai `batchsync` conserve le `fsync` de chaque fichier et son
+renommage atomique, mais synchronise le répertoire des objets une fois après
+jonction de toutes les tâches. La barrière précède le journal de propriété et
+s'applique même aux objets déjà présents. Les sorties publiques et le commit
+conservent leur synchronisation immédiate. Les tests passent sous race detector
+macOS et Linux/arm64 Go 1.26.8. Deux paires froides alternées confirment
+**93,644 → 71,312 s en moyenne, soit −23,85 %** ; les 3 010 sorties, 2 704 mémos
+et objets sont byte-exacts et les lookups retournent un hit. `batchsync` est
+retenu. L'audit du relien natif montre que seul `gopurs_build_cache/store.go`
+diffère du bootstrap `workerkeys`.
+
+Le probe b8x sans objets préalimentés ni sorties Go prend **146,488 s**, dont
+**76,246 s** de publication ; il écrit les 3 010 Go attendus. La relance identique
+prend **2,010 s**, sans réécriture, et l'édition partagée **64,642 s**, avec cinq
+réécritures, 6 émissions et 2 698 restaurations. Les sorties, parties métier et
+clés préparées sont identiques à `workerkeys`. Ces passages isolés ne sont pas
+des paires ; le froid reste au-dessus des **93,599 s** du lot 03.
+
+Le profil séparé des codecs `workerkeys` conserve les allers-retours byte-exacts.
+Backend et implémentations allouent respectivement **26,51 / 29,04 Go** en
+écriture et **34,35 / 41,43 Go** en lecture, pour **179,41 / 193,25 Mo** de wire.
+Le profil d'allocations échantillonné, séparé des mesures de vitesse, attribue
+**22,56 %** des octets alloués à la construction de `codecBackendSyntax` et de
+ses codecs auxiliaires. L'essai `syntaxfns` extrait les branches dans des
+fonctions appelées directement par le parcours récursif. Le bootstrap Go, les
+dix contrôles de codecs/workers, le corpus JS et les deux corpus b8x passent.
+Les allocations d'encodage backend/implémentations passent à **15,86 / 18,56 Go**
+(contre **26,51 / 29,04 Go**), et celles de décodage à **28,38 / 35,62 Go**
+(contre **34,35 / 41,43 Go**). Chaque aller-retour natif reproduit les octets.
+Le probe partagé prend **59,284 s**, contre **64,642 s** pour `batchsync`, avec
+les mêmes parties, clés préparées, 3 010 Go et cinq réécritures. Trois paires
+alternées contre `batchsync` confirment **63,502 → 59,211 s de médiane,
+soit −6,76 % / −4,29 s**. Chaque paire gagne entre **3,31 et 5,60 s** ; les
+artefacts, empreintes et Go restent byte-exacts, avec cinq réécritures par
+bascule. `syntaxfns` est retenu, avec les bridges et le schéma wire actuels.
+
+`validate-syntaxfns.py` lance ensuite la campagne complète froide/identique/
+feuille/partagée/FFI, trois paires actuelles face au lot 03, la parité b8x JS/Go
+séquentiel/parallèle, le bootstrap Rust, les transitions dans les quatre hôtes,
+les six replays stricts et les contrôles CLI. Les sources et binaires sont
+audités contre `candidate-syntaxfns` avant et après. Les trois snapshots sont
+byte-identiques aux références lot 03/allhit déjà examinées, avec le réexamen
+conservé dans `snapshot-review-post-batchsync.json`.
+
+La campagne b8x complète passe, avec artefacts et sorties incrémentaux/forcés
+byte-exacts et zéro réécriture sur chaque passage forcé après mutation :
+
+| Scénario | Lot 03, référence conservée | `allhit` | `syntaxfns` |
+| --- | ---: | ---: | ---: |
+| Cache et sorties neufs | 93,599 s | 239,367 s | 133,543 s |
+| Identique | 1,471 s | 2,355 s | 2,019 s |
+| Feuille | 39,505 s | 53,865 s | 49,502 s |
+| Partagée | 39,111 s | 88,715 s | 59,785 s |
+| FFI | 37,789 s | 32,151 s | 35,500 s |
+
+Ce sont des passages isolés. Le froid publie en **73,303 s** ; les mutations
+réécrivent toujours **1 / 5 / 1 Go**. Feuille et partagée réutilisent respectivement
+**1 904 / 7 résultats PBO** et **2 703 / 2 698 émissions**. La FFI réutilise les
+2 704 résultats PBO et 2 703 émissions, mais les transformations locales avant
+chaque lookup d'émission contribuent encore au coût des hits.
+
+Le harnais s'est ensuite arrêté sur `after-full-prepared.json`, absent de
+l'ancienne campagne `allhit` qui n'exportait pas encore ces clés. Le script
+initial est conservé dans `validate-syntaxfns-before-recovery.py` ;
+`recover-allhit-prepared.py` récupère les clés des manifestes adressés par contenu
+en exigeant les mêmes sorties et parties métier, ainsi que l'accord de tous les
+manifestes correspondants. La reprise conserve les dix passages réussis et
+termine toutes les vérifications :
+
+- **Trois paires actuelles face au lot 03** sur l'édition partagée : médianes
+  **37,785 → 58,459 s**, soit une régression de **54,72 %**. Le gain cumulé des
+  optimisations du lot 04 ne suffit toujours pas sur ce scénario.
+- Parité **JS / Go séquentiel / Go parallèle** sur le corpus original puis FFI :
+  mêmes **2 704 TAST, 3 010 Go**, parties métier et empreintes préparées.
+- Bootstrap Rust privé, puis treize transitions incrémental/frais dans les
+  **quatre hôtes**, avec comparaisons des sorties, parties et clés préparées.
+  Workspace conservé : `gopurs-tests-fKXOWc`.
+- **Six replays stricts / 35 commandes réussies**, sans mise à jour des trois
+  snapshots réexaminés, puis **19 contrôles CLI** verts.
+- Audits avant/après de **346 fichiers des sources, outils et binaires**, tous
+  identiques au candidat figé `syntaxfns`. Le Rust privé est identifié par
+  `gopurs-rust-syntaxfns.json` ; les binaires Rust des anciennes copies ne le
+  remplacent pas.
+
+`validation-syntaxfns-summary.json` et `validation-syntaxfns-counts.json` consignent
+ce bilan. **Le lot reste non validé**, à cause des régressions des éditions TAST
+et du froid.
+
+L'essai suivant, `restoreprep`, anticipe le lookup d'émission à partir des
+références externes du backend d'entrée. Cette clé n'est engagée qu'après
+vérification, sur un miss, que les références transformées y sont incluses.
+Backend, métadonnées, compilateur/options, signatures concernées (absences
+comprises) et FFI sont couverts. Une référence introduite hors de cette vue
+conserve le chemin post-transformation. Le hit reprend également le digest
+vérifié des workers plutôt que de les réencoder. Les bridges et les quatre
+schémas métier restent identiques. Le reproducteur `restoreprep-before.log`
+échoue sur **deux lectures de métadonnées de préparation au lieu de zéro** pour
+un hit. Après application, le reproducteur passe, ainsi que le bootstrap Go et
+les dix contrôles de codecs/workers. Les probes prennent **30,485 s en FFI** et
+**53,037 s sur l'édition partagée**, avec parties, clés préparées et sorties
+byte-exactes ; les réécritures restent **1 / 5 Go**. En FFI, le temps cumulé des
+lots d'émission descend de **10,575 à 3,686 s**. Les probes sont préalimentés en
+objets et ne constituent pas une mesure froide.
+
+Trois paires FFI alternées face à `syntaxfns` confirment **36,325 → 29,725 s**,
+soit **−18,17 %**, au-dessus du seuil fixé avant confirmation de **10 %**.
+Les trois paires partagées donnent **58,859 → 54,223 s**, soit **−7,88 %**.
+Chaque paire gagne dans les deux scénarios. `restoreprep` est retenu. Le harnais
+`paired-modules.mjs` vérifie aussi les 2 704 TAST inchangés lors des bascules FFI,
+les compteurs attendus et la réécriture du seul bridge FFI concerné. Un complément
+du reproducteur couvre le cas où `BorrowedObjects` introduit `borrowObject`
+hors des références d'entrée : le lookup doit alors suivre la préparation et
+couvrir la présence, la signature et l'absence de ce helper. Il passe dans
+`restoreprep-fallback-1.log`, puis est intégré à `emitter-worker-keys.test.mjs`.
+
+`candidate-restoreprep-final` reprend les sources de production et binaires
+mesurés ; seul ce complément du test diffère (`restoreprep-final-freeze.json`).
+`validate-restoreprep.py` lance ensuite la campagne froide complète, les paires
+actuelles contre le lot 03, la parité b8x des trois hôtes, le bootstrap Rust,
+les transitions des quatre hôtes, les replays stricts, la CLI et les audits.
+Les tests de stockage macOS/Linux restent rattachés à `batchsync`, avec contrôle
+byte-exact des sources du stockage. La campagne est terminée et verte :
+
+| Scénario | `restoreprep`, passage complet |
+| --- | ---: |
+| Cache et sorties neufs | 136,821 s |
+| Identique | 2,045 s |
+| Feuille | 45,440 s |
+| Partagée | 55,780 s |
+| FFI | 30,215 s |
+
+Le froid part sans objet préalimenté ni sortie Go et publie en **74,458 s**.
+Les trois mutations réécrivent **1 / 5 / 1 Go** ; leurs contrôles forcés donnent
+les mêmes sorties, parties métier et clés préparées, sans réécriture. Les trois
+paires actuelles face au lot 03 donnent **37,550 → 51,087 s (+36,05 %)** sur
+l'édition partagée. Les gains intermédiaires sont confirmés, mais ce scénario,
+la feuille et le froid restent au-dessus de la référence lot 03.
+
+La parité b8x original/FFI est byte-exacte entre JS, Go séquentiel et Go parallèle :
+**2 704 TAST / 3 010 Go**, quatre parties et clés préparées identiques. Le
+bootstrap Rust privé et les treize transitions des quatre hôtes passent
+(`gopurs-tests-1dm4oB`). Les **six replays stricts / 35 commandes**, les trois
+snapshots inchangés, les **19 contrôles CLI** et l'audit des **346 fichiers** de
+sources/outils/binaires passent également. `validation-restoreprep-summary.json`
+et `validation-restoreprep-counts.json` consignent le bilan ; le Rust correspondant
+est identifié dans `gopurs-rust-restoreprep.json`. **Le lot 04 reste non validé.**
+
+La piste suivante est diagnostique : `trace-pbo-reads.py` instrumente une copie
+privée du bundle JS, avec toutes les valeurs des lookups retournées à l'identique.
+Il enregistre les implémentations consultées et absentes, les directives lues et
+les contributions par binding, sous empreintes wire v1. Deux builds forcés du
+corpus original/partagé doivent rester byte-exacts. La comparaison confronte les
+lectures du build original à l'environnement du build partagé, dans l'ordre
+canonique, puis vérifie toute réutilisation prédite contre les trois vrais
+artefacts PBO. Elle mesure le potentiel d'une preuve plus fine que le préfixe,
+sans encore établir sa correction générale ni un gain de vitesse. Les temps de
+cette instrumentation sont exclusivement diagnostiques.
+
+La trace termine avec parité byte-exacte du corpus original/partagé. Elle prédit
+**2 643 modules réutilisables / 61 invalidations**, contre sept hits avec le
+préfixe ; les trois artefacts PBO de chaque réutilisation prédite sont identiques
+au build forcé. Elle compte **65 178 lectures d'implémentations**, dont **10 565
+absentes**, et **44 624 lectures de directives**. Une dépendance au module entier
+invaliderait encore **899 consommateurs**. `pboreads-trace/summary.json` conserve
+les détails, et `pbo-read-proof-design.md` la conception préalable.
+
+L'essai `pboreads` ajoute une observation propre à chaque conversion et valide
+ses lectures dans la vue de rang courante lorsque le préfixe diffère. La première
+partie devient `pbo/backend-v2` (`body` puis preuve optionnelle), avec les trois
+autres codecs et la grammaire wire inchangés. Les anciens manifestes v1 restent
+lisibles par le stockage pour la propriété/récupération. Le seuil d'acceptation
+annoncé avant mesure est **10 % sur trois paires partagées face à `restoreprep`**.
+
+Le reproducteur `pboreads-before.log` échoue sur **« an unrelated predecessor
+invalidated optimization »** ; après raccordement il passe, ainsi que les
+contrôles de signatures workers. `optimizer-observation.mjs` passe sur les
+directives initiales malgré overrides, absences, références tardives, forced
+private inlines, tentative différée et publication canonique. Les cinq contrôles
+de visibilité/API historiques et les quatre contrôles de lookup passent aussi.
+Le contrôle de publication des directives passe ; l'autre cas de l'ancien
+`module-directive-range.mjs` appelle `Native.filterRange`, absent également des
+sources de `restoreprep-final`. Cet échec de harnais est conservé dans
+`pboreads-targeted-js-2.log`, puis seul le contrôle applicable est rejoué.
+Le bootstrap Go, le stockage macOS sous race detector, les quatre autres fixtures
+sémantiques et les **onze contrôles codecs/workers/cache** passent. Le natif est
+conservé dans `gopurs-native-build-1Vpr2c`, avec pointeur
+`pboreads-native-output.json`. Le probe partagé prend **43,631 s** : **61 modules
+optimisés / 2 643 réutilisés**, **6 émissions / 2 698 restaurations**, cinq sorties
+Go réécrites. La partie backend-v2 porte le total des quatre artefacts de
+**397 516 134 à 411 148 559 octets** sur l'original. L'initialisation est
+préalimentée en objets et ne mesure pas un cache froid.
+
+Les trois paires alternées face à `restoreprep-final` confirment **53,687 →
+45,051 s**, soit **−16,09 %**, avec un gain dans chaque paire. Le seuil préalable
+est atteint : **`pboreads` est retenu**. Les corps v1 extraits et les trois autres
+parties, TAST, clés préparées et sorties Go sont byte-exacts. Les preuves
+persistées de l'original contiennent **63 588 références d'implémentations et
+32 561 références de directives** : les références locales/au module courant,
+présentes dans la trace diagnostique, sont couvertes par le module préparé et
+le contexte initial et ne sont pas persistées.
+
+Le probe conserve aussi un écart diagnostique :
+64 raisons d'invalidation pour 61 reconstructions, car une tentative différée
+devenue hit conserve sa raison spéculative. `pboreads-counter-before.log`
+reproduit cet écart ; le hit retire maintenant sa raison devenue caduque. Le
+reproducteur enrichi est intégré à `optimizer-read-cache.test.mjs` et passe.
+`optimizer-read-build.test.mjs` ajoute **sept transitions** cache/frais, chacune
+en séquentiel et LIFO : module sans rapport, binding sans rapport dans un
+fournisseur consulté, corps inliné, directive, apparition/disparition d'une
+référence et changement de rang. Les sorties Go et les quatre parties, preuves
+comprises, sont identiques aux générations fraîches. Le comptage ne conserve
+que les misses finaux.
+
+`backend-body-v1.mjs` extrait le préfixe de graphe du champ `body` du v2 et
+reconstitue le wire v1 exact, avec contrôle de la table de types. Le harnais
+`paired-readproof.mjs` compare ainsi les octets du corps et les trois autres
+parties entre candidats, puis les quatre objets complets lors des retours à un
+même état pour un même candidat. Toutes ces vérifications, avec les mêmes TAST
+et inventaires Go, sont hors des chronométrages.
+
+`candidate-pboreads-final` est reconstruit et figé après la correction du compteur
+et les compléments de tests. Le delta vérifié est dans
+`pboreads-final-delta.json` : seul `Cache.Modules` change dans les sources de
+production. Le bootstrap Go et les **douze contrôles codecs/workers/cache**
+passent (`native-build-pboreads-final.log`, `pboreads-final-codecs-workers.log`).
+`validate-pboreads.py` termine la campagne froide complète, les paires actuelles
+face au lot 03, la parité b8x JS/Go sur original, feuille, partagé et FFI avec
+preuves v2, le bootstrap Rust, les transitions des quatre hôtes, le stockage
+Linux sous race detector, les replays stricts et les audits. Toutes ces
+vérifications passent. **Le lot 04 reste non validé pour ses performances.**
+
+Les dix passages Go parallèles passent,
+avec **135,630 s froid / 1,738 s identique / 42,671 s feuille / 44,590 s partagée /
+30,768 s FFI**. Le froid publie en **71,822 s**. La feuille réoptimise un module
+et en restaure 2 703 ; le partagé réoptimise 61 modules et en restaure 2 643.
+Les raisons d'invalidation sont maintenant cohérentes avec ces comptes :
+**59 lectures modifiées + deux modules préparés** sur le partagé. Les mutations
+réécrivent **1 / 5 / 1 Go** ; les contrôles forcés donnent les mêmes quatre parties
+et sorties, sans réécriture supplémentaire.
+
+Les trois paires actuelles face au lot 03 donnent **39,404 → 46,093 s**, soit
+**+16,97 %** sur le partagé. La régression se réduit, mais demeure. Les campagnes
+JS et Go séquentiel passent également : mêmes **2 704 TAST / 3 010 Go**, clés
+préparées et quatre parties, preuves de lecture comprises, dans les trois hôtes
+sur les états original, feuille, partagé et FFI. Le stockage Linux/arm64 passe
+sous race detector avec Go **1.26.8**, sur les mêmes sources que le test macOS.
+
+Le bootstrap Rust privé sans PGO et les **treize transitions dans les quatre
+hôtes** passent. Le workspace des transitions est `gopurs-tests-NYbvFq` ; le
+binaire effectivement testé est `gopurs-rust-pboreads`, SHA-256
+`010c32157b43e86cf3a055e38bdc053652253a3834d6d2489225852947b1f22e`.
+Les six replays stricts comportent **35 commandes réussies**, puis les **19
+contrôles CLI** passent. Les trois snapshots examinés restent byte-identiques.
+L'audit final couvre **411 fichiers des sources/outils et binaires**, égaux au
+candidat figé ; son périmètre inclut aussi les tests PBO. Les pointeurs et comptes
+sont dans `validation-pboreads-summary.json` et `validation-pboreads-counts.json`.
+
+Le profil partagé suivant (`probe-b8x-pboreads-shared-profile`) conserve les
+mêmes octets et compteurs. `Wire.read` cumule **19,70 s CPU** ; le profil met
+aussi en évidence le coût du GC et des allocations. Le harnais lié au vrai
+package Go `gopurs-native-build-Zo3sdv` mesure **32,210 / 36,017 / 1,748 /
+4,283 Go d'allocations cumulées** pour décoder les quatre parties. Il conserve
+ses profils et résultats dans `codec-pboreads-decode-2`. La première tentative
+avait sélectionné un mauvais getter généré pour les workers ; son échec après
+les trois autres parties reste dans `codec-pboreads-decode.log`.
+
+L'essai suivant, `scalarhex`, remplace le tableau temporaire de caractères du
+prédicat `hex` par un parcours direct dans les bridges scalaires JS/Go/Rust.
+L'ensemble accepté reste `[0-9a-f]*`, chaîne vide comprise ; les contrôles de
+longueur et de réencodage restent dans le codec partagé. Le reproducteur parcourt
+les **65 536 unités UTF-16** via le vrai décodeur, avec empreinte avant/après.
+Le seuil fixé avant mesure est **5 % sur trois paires partagées** face à
+`pboreads-final`, avec égalité des quatre parties complètes.
+
+Le bootstrap Go et les **douze contrôles codecs/workers/cache** passent. Les
+vecteurs avant/après donnent la même empreinte
+`08995d9410ca41459f341113acbe9d544865b67135ba62f50ecfc0a0ce6a74f6` ; le bridge
+Go vérifie aussi toutes les unités UTF-16, les grandes chaînes et les suffixes
+invalides sous race detector. Le probe partagé prend **39,454 s**, avec
+**61 optimisés / 2 643 réutilisés / 6 émissions / 2 698 restaurations** et cinq
+Go réécrits. Les quatre parties complètes, clés préparées et TAST sont égaux à
+`pboreads-final` sur les états original/partagé.
+
+Les trois paires confirment **45,346 → 40,791 s**, soit **−10,05 %**. Chaque
+paire gagne et le seuil de 5 % est atteint : **`scalarhex` est retenu**. Le
+candidat est figé dans `candidate-scalarhex`, avec seulement les quatre fichiers
+du codec scalaire et son test modifiés depuis `pboreads-final`. La compilation
+native est conservée dans `gopurs-native-build-V7HgZQ`.
+`validate-scalarhex.py` termine le froid complet, les paires actuelles
+face au lot 03, la parité b8x des trois hôtes sur les quatre états, le bootstrap
+Rust privé, les transitions des quatre hôtes, les replays stricts, la CLI et les
+audits. Le stockage commun est byte-identique aux sources déjà testées sous race
+detector macOS/Linux pour `pboreads`. **La validation complète passe ; le lot 04
+reste non validé pour les performances.**
+
+Les dix passages Go parallèles sont réussis, avec
+**131,050 s froid / 1,982 s identique / 37,781 s feuille / 39,396 s partagée /
+27,924 s FFI**. Les mutations réécrivent **1 / 5 / 1 Go** et les builds forcés
+retrouvent les mêmes parties/sorties, sans réécriture. Les trois paires actuelles
+face au lot 03 donnent **37,404 → 40,019 s (+6,99 %)** sur le partagé : le coût
+supplémentaire se réduit encore, sans établir de gain global sur ce scénario.
+Les campagnes JS et Go séquentiel sont terminées ; la parité des trois hôtes est
+byte-exacte sur les quatre états, preuves v2 comprises. Le bootstrap Rust privé
+passe, avec SHA-256
+`0a3d9cbcc0b25fd8d6b83128da9c9241bd417c0c01d196549b14575d953d9bef`.
+Les **treize transitions des quatre hôtes** passent dans `gopurs-tests-S1crHw`,
+avec ce Rust privé sans PGO. Les six replays stricts comptent **35 commandes
+réussies** ; les **19 contrôles CLI** et l'audit de **411 fichiers** passent.
+Les trois snapshots examinés restent byte-identiques. Les pointeurs et comptes
+finaux sont dans `validation-scalarhex-summary.json` et
+`validation-scalarhex-counts.json`. Le diagnostic d'allocations suivant relie
+le même harnais aux codecs du package natif `scalarhex` conservé.
+
+Ce diagnostic confirme **74,258 → 47,813 Go alloués (−35,61 %)** pour le décodage
+des quatre parties. Les décompositions JSON et lectures des références restent
+coûteuses. L'essai suivant, `nodeviews`, remplace les nœuds JSON bruts du contexte
+de décodage par des vues typées et des arêtes `Int` déjà vérifiées. Les scalaires
+et noms non consommés gardent leur comportement antérieur ; les arêtes vers
+l'avant, cycliques ou non canoniques restent rejetées avant décodage métier.
+Le wire et les bridges restent identiques.
+
+`nodeviews-before.log` conserve le reproducteur rouge : **8 195 lectures de
+champs JSON bruts** pour **4 096 références au même scalaire**. Le nouveau
+décodeur doit analyser cette forme une seule fois. Le JS précédent est conservé
+dans `nodeviews-before-output` pour la comparaison différentielle des vecteurs
+valides/malformés et de leurs réencodages. Le seuil annoncé avant mesure est
+**10 % sur trois paires partagées face à `scalarhex`**. Bootstrap, tests ciblés,
+comparaisons des quatre artefacts et paires sont lancés par `build-nodeviews.py`.
+Le reproducteur passe à **quatre lectures brutes**. Le différentiel compare
+**4 136 vecteurs × 15 codecs = 62 040 résultats**, dont 372 acceptés, avec les
+mêmes acceptations/refus et réencodages. Les quatorze contrôles ciblés, le
+bootstrap Go et la parité b8x original/partagé passent. Cependant les trois
+paires donnent **41,029 → 41,001 s (−0,07 %)** : le seuil de 10 % n'est pas
+atteint. **`nodeviews` est rejeté**, candidat et preuves conservés.
+
+Les deux fichiers expérimentaux sont rétablis depuis `scalarhex`, le JS est
+reconstruit et le natif restauré atomiquement. `restore-scalarhex-audit.json`
+confirme les **411 fichiers** identiques au candidat pleinement validé. Ce
+retour conserve l'optimisation `scalarhex` et retire seulement `nodeviews`.
+
+L'essai suivant, `inttables`, cible les tables `Map Int ExprType` et
+`Map Int NeutralExpr` du décodeur. Le profil attribue **4,87 Gio d'allocations
+propres** au wrapper `Data_Ord_OrdIntImpl`. Les quatre insertions/lookups de ces
+tables passent maintenant par les helpers `NativeMaps` existants à comparaison
+entière directe ; le JS conserve `Data.Map` avec `Ord Int`. Seul `Wire.purs`
+change, sans nouveau bridge ni changement des octets wire. Le différentiel de
+référence est conservé dans `inttables-before-differential.json`. Le seuil
+préalable est **5 % sur trois paires partagées face à `scalarhex`**. Le bootstrap,
+les contrôles, le différentiel et le probe byte-exact passent. Les trois paires
+donnent cependant **41,110 → 40,348 s (−1,85 %)** : **`inttables` est rejeté**.
+Le patch inverse rétablit `Wire.purs`, puis `restore-after-inttables.py`
+reconstruit le JS et restaure le natif atomiquement. L'audit
+`restore-after-inttables-audit.json` confirme les **411 fichiers** identiques au
+candidat `scalarhex` validé. Le candidat et les mesures de l'essai sont conservés.
+
+Le diagnostic suivant mesure les copies internes au staging sur les **13 813
+fichiers / 544 896 118 octets** d'un manifeste réel, avec huit tâches. Les trois
+paires donnent **1,762 s de médiane par copie contre 3,205 s par lien physique**.
+Les octets sont identiques et les fichiers privés indépendants du cache vivant,
+mais cette piste est écartée avant modification du pilote. Ces mesures isolées
+ne sont pas des temps de build.
+
+`profile-prepared-keys.py` relie ensuite un harnais au package natif `scalarhex`
+validé pour profiler l'encodage des modules réellement préparés et des métadonnées
+globales. Chaque empreinte de module doit correspondre à la campagne b8x validée.
+La préparation précède le profil d'allocations ; ce diagnostic est distinct des
+paires de performance. Le harnais termine avec les **2 704 empreintes exactes** :
+**64,829 Go alloués** pour **282,025 Mo** de wire des modules, puis **3,418 Go**
+pour les **20,134 Mo** des métadonnées. `ordExprType` représente environ **41 %**
+des allocations échantillonnées des modules (coût cumulé, non additionnable aux
+autres lignes du profil).
+
+L'essai `typeintern` conserve le raccourci d'identité `TypeMemo`, puis remplace
+la table `Map ExprType Int` par l'internage des références canoniques de types
+dans un second `Pool`. Il évite les comparaisons structurelles récursives tout
+en préservant l'ordre d'encodage des enfants et la localité des tables. L'ancien
+`typepool` rejeté n'avait pas ce raccourci d'identité et redéployait les sous-types
+partagés. Les bridges existants sont réutilisés ; seuls `Wire.purs` et son test
+changent. Les octets wire et les clés doivent rester identiques.
+
+Le reproducteur préalable `typeintern-before.log` est rouge sur **44 594
+comparaisons structurelles**, pour 27 racines et 1 774 octets wire. Les vecteurs
+comparent les 17 constructeurs, les types égaux-distincts/partagés, l'ordre des
+indices et l'isolation des artefacts. `build-typeintern.py` termine les vérifications,
+le bootstrap Go, le probe byte-exact et trois paires partagées. Le reproducteur
+passe à **zéro comparaison structurelle**, avec les mêmes 1 774 octets et SHA-256
+`227056a7cb411debe5935a6f1f0748e89c0f2e307d7ed5ff05beba4f91cd527e`.
+Les **1 007 descripteurs de types / 17 constructeurs**, leurs variantes de
+partage/ordre et allers-retours, les **62 040 comparaisons différentielles** et
+les **13 contrôles ciblés** passent. Le bootstrap est conservé dans
+`gopurs-native-build-zPeOcl` ; les quatre parties complètes, TAST, empreintes
+préparées et Go du probe original/partagé restent byte-exacts.
+
+Les trois paires confirment **43,923 → 40,838 s**, soit **−7,03 % / −3,086 s**,
+avec un gain dans chaque paire et cinq réécritures à chaque bascule. Le calcul
+des clés passe de **8,119 à 5,341 s de médiane**. Le seuil préalable de 5 % est
+atteint : **`typeintern` est retenu**, figé dans `candidate-typeintern`.
+`validate-typeintern.py` termine ensuite la campagne réellement froide complète,
+les paires actuelles face au lot 03, la parité b8x des trois hôtes sur les quatre
+états, le bootstrap Rust privé, les treize transitions des quatre hôtes, les
+replays stricts, la CLI et les audits. Le stockage est byte-identique à la version
+déjà testée sous race detector macOS/Linux. **La validation complète passe le
+12 octobre 2026 ; le lot 04 reste ouvert pour le bilan de performances.**
+
+Les dix passages Go parallèles sont réussis : **127,687 s froid / 1,900 s
+identique / 38,493 s feuille / 37,654 s partagée / 29,235 s FFI**. Les mutations
+réécrivent **1 / 5 / 1 Go** ; les builds forcés retrouvent les mêmes sorties et
+parties, sans réécriture. La feuille réutilise **2 703 optimisations/émissions** ;
+le partagé réutilise **2 643 optimisations / 2 698 émissions** ; la FFI réutilise
+**2 704 optimisations / 2 703 émissions**. Les quatre parties complètes, les
+empreintes préparées et les TAST restent égaux à `scalarhex-final` sur les
+quatre états. La parité JS/Go séquentiel/Go parallèle retrouve les **3 010 Go**
+byte-exacts par état.
+
+Les trois paires actuelles face au lot 03 donnent **39,273 → 38,480 s**, soit
+**−2,02 %** sur le partagé. Ce faible gain remplace la régression observée lors
+des paires précédentes, mais le froid reste à **127,687 s** contre les
+**93,599 s historiques** du lot 03. Sa publication prend **66,593 s** ; elle
+produit **10 992 objets / 548 620 453 octets**, puis le cache atteint **11 016
+objets / 566 151 451 octets** après les mutations. Ces passages froids ne sont
+pas une nouvelle comparaison par paires. Le coût de publication reste à traiter.
+
+Le bootstrap Rust privé sans PGO est identifié par SHA-256
+`544c15ba0c2b7a83151a25167d5a774638212513d3bea062dda6819c025efbb3`.
+Les **treize transitions des quatre hôtes** passent dans `gopurs-tests-MDbt3V`,
+avec ce binaire Rust. Les six replays stricts comptent **35 commandes réussies**,
+les **19 contrôles CLI** passent et l'audit retrouve les **411 fichiers** du
+candidat figé. Les trois snapshots examinés sont inchangés. Les pointeurs,
+comptes et statuts sont dans `validation-typeintern-summary.json`,
+`validation-typeintern-counts.json` et `validation-typeintern-records.json` ;
+`typeintern-decision.json` porte désormais `validationComplete: true`.
+
+Le diagnostic `profile-storage-typeintern.py` rejoue ensuite la publication des
+octets validés dans une racine privée neuve, avec une copie instrumentée du
+stockage. Les sorties, mémos et objets sont exacts, puis le lookup réussit. Sur
+**65,919 s** de publication isolée, le staging prend **38,676 s** et les écritures
+publiques **27,032 s**. Ces dernières comprennent **12,041 s** de synchronisation
+des fichiers et **11,441 s** des répertoires. Les temps cumulés des workers du
+staging se recouvrent ; ce diagnostic ne constitue pas une paire de performances.
+
+L'essai privé `publicpool2` reprend la publication publique à huit tâches sur
+cette référence qui intègre `batchsync`. Chaque fichier conserve `atomicWrite`,
+sa synchronisation et celle du répertoire ; toutes les tâches sont jointes avant
+retour, même sur erreur, et avant suppression/commit. Le protocole et les bridges
+restent identiques. L'ancien `publishpool`, rejeté à **−5,87 %** avant `batchsync`,
+garde sa décision. Les seuils du nouvel essai sont fixés à **10 % sur trois paires
+de publication froide**, puis **5 % sur trois paires de build froid complet**.
+`measure-publicpool2.py` termine les tests macOS sous race detector et les trois
+paires de stockage : **72,155 → 59,773 s de médiane (−17,16 %)**, avec un gain dans
+chaque paire. Les **3 010 sorties / 2 704 modules / 10 991 objets de contenu
+uniques** sont byte-exacts et les six lookups réussissent. Le premier seuil est
+atteint ; la confirmation est exécutée avec un candidat privé.
+`build-publicpool2-cold.py` termine le stockage Linux sous race detector, le relien
+depuis les sources Go du bootstrap `typeintern`, puis trois paires réellement
+froides. L'audit confirme une seule différence de code Go,
+`gopurs_build_cache/store.go`. Chaque passage contrôle aussi la relance identique
+et une édition feuille, partagée ou FFI. Go **1.26.8 linux/arm64** exécute la suite
+de stockage avec l'image b8x identifiée par digest.
+
+Les paires froides complètes donnent **127,163 → 120,354 s de médiane**, soit
+**−5,35 % / −6,809 s**, avec un gain dans chaque paire. Les six passages démarrent
+sans cache ni Go généré et réécrivent **3 010 Go**. Les hits identiques ne
+réécrivent rien ; les éditions réécrivent **1 / 5 / 1 Go**, avec les mêmes TAST,
+clés préparées, quatre parties et sorties que `typeintern-final`. Le seuil
+préalable de 5 % est atteint : **`publicpool2` est retenu pour validation complète**.
+
+`install-publicpool2.py` vérifie les **411 fichiers**, applique le natif par
+renommage atomique et confirme les sources/outils face au candidat figé. Seuls
+`tools/build-cache/store.go`, `tools/build-cache/stage_test.go` et le natif
+diffèrent de `typeintern` ; le SHA-256 natif est
+`b152c19bca501a71d0a0f3749728b1342faee8c7fa99bccfffb80804f6a05c43`.
+`validate-publicpool2.py` lance le froid complet avec builds forcés, trois paires
+actuelles face au lot 03 **pour chacun des scénarios feuille/partagé/FFI**, la
+parité b8x des trois hôtes sur les quatre états, le bootstrap Rust privé, les
+treize transitions des quatre hôtes, les replays stricts, la CLI et les audits.
+Le stockage audité reprend ses preuves macOS/Linux. **La validation complète
+passe le 12 octobre ; le lot 04 reste ouvert pour les performances.**
+
+La campagne Go parallèle est terminée : **121,921 s froid / 1,785 s identique /
+41,478 s feuille / 43,920 s partagée / 29,764 s FFI**. Ce sont des passages
+uniques. Les mutations réécrivent **1 / 5 / 1 Go** ; les trois contrôles forcés
+retrouvent les mêmes octets sans réécriture. Les quatre parties métier et les
+empreintes préparées restent égales à `typeintern-final`. Les trois paires
+actuelles face au lot 03 donnent **42,186 → 40,256 s (−4,57 %)** sur la feuille
+et **43,255 → 44,457 s (+2,78 %)** sur le partagé : le gain ciblé au froid ne
+suffit donc pas à établir un gain global significatif.
+
+La première comparaison FFI s'arrête sur une assertion du harnais : elle exige
+du lot 03 les compteurs de réutilisation ajoutés au lot 04. Le build concerné a
+réussi et ses **3 010 Go** sont byte-exacts ; son inventaire de mémos est vide,
+conformément à cette référence. L'essai et les scripts antérieurs sont conservés.
+La correction fige la capacité attendue depuis le probe initial de chaque
+compilateur, impose l'inventaire correspondant à chaque passage et conserve les
+compteurs stricts pour `publicpool2`, ainsi que la vérification du seul chemin FFI
+réécrit pour les deux variantes. `audit-publicpool2-ffi-recovery.py` retrouve les
+**411 fichiers** inchangés et contrôle les résultats déjà réussis. La validation
+reprend avec `paired-ffi-lot03-publicpool2-retry1.log` et un nouveau répertoire de
+mesures ; `publicpool2-ffi-recovery.json` consigne la reprise auditée.
+
+La reprise FFI réussit les trois paires : **41,195 → 30,960 s (−24,85 %)** face
+au lot 03. Les campagnes b8x JS/Go séquentiel/Go parallèle retrouvent les mêmes
+TAST, empreintes préparées, quatre parties et **3 010 Go** sur les quatre états.
+Le bootstrap Rust privé sans PGO est réellement construit puis utilisé dans les
+treize transitions des quatre hôtes (`gopurs-tests-JLVF5c`) ; SHA-256
+`8f9d04580b0882550abdf13c5adbff95bec37655211f6102af989e480c16bdd3`.
+Les **35 commandes strictes**, les **19 contrôles CLI** et l'audit des **411
+fichiers** passent. Les trois snapshots examinés sont inchangés.
+`validation-publicpool2-{summary,counts,records}.json` conserve les preuves,
+y compris l'échec initial du harnais et sa reprise ; `publicpool2-decision.json`
+porte `validationComplete: true`. `publicpool2` devient la référence entièrement
+validée pour la suite des essais.
+
+Le profil des clés est ensuite rejoué avec le paquet Go validé de `publicpool2`
+et les points d'entrée réexaminés. Il retrouve les **2 704 clés**, les
+**282 024 665 octets wire des modules** et les **20 134 333 octets des métadonnées**,
+avec le même digest de métadonnées. Face au profil `scalarhex`, l'encodeur
+`typeintern` réduit les allocations des modules de **64,829 à 45,466 Go
+(−29,87 %)** et celles des métadonnées de **3,418 à 1,259 Go (−63,18 %)**. Les
+allocations échantillonnées attribuent encore **17,85 %** au chemin de suppression
+des champs record (`Record.Unsafe.unsafeDelete`, coût cumulé incluant
+`RecordToMap`). Les temps de ce profil séquentiel instrumenté ne sont pas des
+paires de performances. `prepared-keys-publicpool2-{summary,input-audit}.json`
+et les profils complets conservent ces mesures.
+
+L'essai `recordfields` ajoute une traversée typée des champs qui lit le record
+initial sans le copier après chaque champ. L'ordre canonique et le décodeur
+restent ceux du codec ; les bridges existants servent les lectures. Le seuil
+préalable est **5 % sur trois paires partagées face à `publicpool2-final`**.
+Le reproducteur observe **72 → 0 énumérations/copies des records d'entrée**,
+avec les mêmes **5 891 octets** et le SHA-256
+`d1dcfc64da2303b28b8eab428529bc621f5ae5a0ccce42b262c95d9066759de3`.
+Les **200 vecteurs de records**, les **62 040 comparaisons différentielles** et
+les **14 contrôles ciblés** passent. Le bootstrap Go réussit dans
+`gopurs-native-build-eVHfKt` (**510 modules / 309 930 types**).
+Le harnais s'arrête ensuite sur un libellé de journal obsolète ; la reprise
+vérifie les **425 fichiers**, les cinq commandes réussies et l'identité du
+binaire installé avec celui du bootstrap avant de reprendre les probes et
+paires. `recordfields-workspace-recovery.json` conserve l'audit et le script
+antérieur. Les probes retrouvent les mêmes TAST, clés, quatre parties et Go.
+Les trois paires donnent pourtant **37,437 → 38,824 s (+3,71 %)** sur le build
+partagé, avec une régression dans chaque paire. Les clés préparées passent de
+**4,572 à 4,207 s** de médiane, mais ce gain local ne suffit pas. **L'essai est
+rejeté.** Le retour au codec et aux binaires `publicpool2` est exact sur les
+**425 fichiers**, avec les tests de sources du lot 05 préservés ; le bundle est
+reconstruit à l'identique et les 13 contrôles ciblés passent.
+`recordfields-rejection-audit-{before,after}.json` et `recordfields-decision.json`
+conservent le rejet ; le candidat et tous les résultats restent disponibles.
+
+L'essai suivant `backrefs` porte sur les tables du décodeur. Les deux
+`Map Int` des types et expressions deviennent des tables indexées locales,
+avec vues bornées au préfixe déjà décodé. De petits bridges JS/Go/Rust conservent
+les valeurs opaques et appliquent les bornes ; la validation du schéma reste en
+PureScript. Les types invalides inutilisés rejettent toujours l'artefact et les
+expressions invalides restent absentes. Le seuil préalable est **5 % sur trois
+paires partagées face à `publicpool2-final`**. Le reproducteur de référence
+compte **411 comparaisons de types / 287 comparaisons d'expressions** pour
+**33 types / 100 nœuds d'expression**, dont un partage de profondeur 24. Les
+**8 895 octets** et le SHA-256
+`50cf809afaf3b7709aee67e74615584e4362e113f7b1eacd9e81afb0957ca057`
+sont conservés avant changement. Le reproducteur après changement observe zéro
+comparaison, avec les mêmes octets ; les **1 007 descripteurs de types**, les
+**62 040 cas différentiels**, les **16 contrôles ciblés** et le bootstrap Go
+passent. Le premier bootstrap Rust échoue sur `RefCell` en mode multithread ;
+le remplacement par des accès courts `Mutex`, sans verrou pendant les callbacks,
+permet le bootstrap réel et son smoke test.
+
+La revue du Rust généré révèle ensuite que le retour fonctionnel de `types` et
+`expressions` reconstruit la table à chaque lecture. Le reproducteur exécuté sur
+ce crate compte **256 callbacks au lieu de 32 pour huit lectures**, dans chacune
+des deux tables. La tentative de paires est interrompue et conservée après audit
+des **430 fichiers** ; elle ne sert pas à une décision de performances.
+Le correctif `backrefs-table` retourne une table opaque, conservée dans le
+contexte puis lue par `lookup`. Les bridges de stockage conviennent déjà à cette
+interface. La nouvelle campagne réussit les **17 contrôles ciblés**, les deux
+bootstraps et le reproducteur Rust (**256 → 32 callbacks**). Les probes
+retrouvent les mêmes TAST, clés, quatre parties et Go.
+Les trois paires donnent **35,982 → 34,995 s (−2,74 %)**, sous le seuil fixé de
+5 % : **essai rejeté**. Deux paires gagnent, la deuxième régresse de 8,49 % ;
+la baisse locale du producteur PBO (**11,421 → 9,963 s** de médiane) ne suffit
+pas à justifier la conservation. Le retour au codec et aux binaires `publicpool2`
+est exact sur les **425 fichiers**, tests de sources du lot 05 compris ; le
+bundle est reconstruit à l'identique et les 13 contrôles ciblés passent.
+`backrefs-table-decision.json` et `backrefs-table-rejection-audit-after.json`
+conservent la décision et l'audit. Les candidats et essais restent disponibles.
+
+L'essai privé suivant `publicsync` regroupe les synchronisations de répertoires
+des sorties publiques. `writeOutputs` conserve chaque écriture temporaire, la
+synchronisation du fichier et le renommage, puis joint les huit writers avant
+une barrière par répertoire et ancêtre, de bas en haut. Cette barrière couvre
+aussi les sorties identiques d'une reprise et précède suppression et commit.
+Les bridges et les octets wire restent identiques. Le reproducteur passe de
+**34 synchronisations de répertoire à 4** pour 34 sorties ; le chemin de reprise
+retrouve les quatre barrières même sans réécriture. Une erreur de barrière garde
+le pointeur précédent, les sorties obsolètes et le journal d'union ; la reprise
+restaure une sortie perdue sans réécrire les autres et conserve l'inode du verrou.
+Les tests du reproducteur passent sous race detector. Seuils préalables face à
+`publicpool2` : **10 % sur trois paires de publication froide isolée**, puis
+**5 % sur trois paires froides complètes**. Les trois paires de stockage donnent
+**59,636 → 50,999 s (−14,48 %)**, avec un gain dans chaque paire, les **3 010 Go /
+2 704 modules / 10 991 objets** exacts et les lookups réussis. Le race detector
+macOS passe aussi sur le stockage complet. Le SIGKILL avant la première barrière
+est ensuite éprouvé : récupération de 33 sorties, fichiers survivants et inode
+du verrou conservés. Les tests sous race detector passent avec **Go 1.26.8
+linux/arm64**. Le relien natif ne change que `gopurs_build_cache/store.go` dans
+les sources générées. Les trois paires froides complètes donnent **118,971 →
+112,857 s (−5,14 %)**, avec un gain dans chaque paire, les quatre parties et Go
+exacts, et **0 / 1 / 5 / 1** réécritures pour identique/feuille/partagé/FFI.
+Les trois paires de non-régression donnent **34,587 → 34,341 s (−0,71 %) feuille /
+38,374 → 36,384 s (−5,19 %) partagé / 25,228 → 25,659 s (+1,71 %) FFI**. Le budget
+de 5 % passe dans les trois cas. L'identique passe de **1,658 à 1,612 s**, dans
+son budget de `max(5 %, 0,100 s)`. Le candidat mesuré est installé atomiquement
+après audit ; **430 fichiers** identifient les sources/outils/fixtures/binaires.
+Le natif a pour SHA-256
+`841646465c860666e56e37e5064c9db734c31c1570b1707d601286a208739462`.
+
+Les reproducteurs sont intégrés dans `tools/build-cache-output.test.mjs` et
+`tools/build-cache-fixtures/`, puis ajoutés à `npm run test:cache`. Ils
+instrumentent des copies privées du vrai stockage pour observer les barrières
+et provoquer l'échec/SIGKILL. `validate-publicsync.py` réussit leur validation
+intégrée, les bridges, la campagne b8x, les paires actuelles face au lot 03,
+la parité des trois hôtes sur les mêmes TAST, le bootstrap Rust, les transitions
+pilote/sources/contexte dans les quatre hôtes et les replays stricts. Les trois
+snapshots examinés sont inchangés. **La validation complète de `publicsync`
+est réussie** ; les paires froides actuelles face au lot 03 complètent le bilan.
+
+Les barrières intégrées passent dans `gopurs-cache-output-Oek4EG`, ainsi que les
+quatre contrôles du stockage, des bridges et de l'identité du compilateur. La
+campagne native complète réussit, avec **116,835 s froid / 1,739 s identique /
+33,888 s feuille / 35,994 s partagé / 25,625 s FFI**, et contrôles forcés à octets exacts sans
+réécriture. Les trois paires actuelles face au lot 03 donnent :
+
+| Édition — temps gopurs | Lot 03 | `publicsync` | Gain |
+| --- | ---: | ---: | ---: |
+| Feuille | 37,958 s | 34,020 s | 10,37 % |
+| Partagée | 37,832 s | 36,138 s | 4,48 % |
+| FFI | 37,722 s | 25,364 s | 32,76 % |
+
+Les campagnes JS, Go séquentiel et Go parallèle passent sur les quatre états,
+avec mêmes TAST, clés, parties et Go. Le bootstrap Rust privé sans PGO réussit ;
+son SHA-256 est
+`155d915ca48698e7546788be0e79c0c825aff66cca42b7fc5f195ab50ac995c4`.
+Les transitions du pilote passent dans les quatre hôtes (`gopurs-tests-YyIejA`).
+Les sources passent dans `gopurs-tests-9VGNGK` (**56 comparaisons / 294 commandes**)
+et le contexte dans `gopurs-tests-7uwezQ` (**80 comparaisons / 401 commandes**),
+avec variantes de compilateur/runtime réellement reconstruites, mêmes TAST,
+quatre parties, clés et Go, hits sans réécriture et oracles exécutés.
+
+Les **35 commandes de replays stricts**, les **19 contrôles CLI** et l'audit final
+des **430 fichiers** passent. `validation-publicsync-summary.json` et
+`validation-publicsync-counts.json` identifient ces résultats ;
+`publicsync-decision.json` porte `validationComplete: true`. Le gain partagé
+reste modeste. `measure-publicsync-lot03-cold.py` termine les trois paires froides
+actuelles face au lot 03, avec caches et sorties neufs : **94,191 → 113,213 s
+(+20,19 %)**. L'identique suivant ces froids passe de **1,366 à 1,716 s** et les
+objets de **135 326 356 à 548 673 418 octets**. Les six échantillons gardent les
+3 010 Go et 2 704 TAST exacts ; l'audit final des compilateurs et des sources est
+inchangé. `paired-cold-lot03-publicsync/summary.json` conserve les mesures et les
+phases ; le [bilan](build-incremental.md) détaille les limites et la dispersion.
+
+L'utilisateur confirme la poursuite avec `publicsync` après explicitation du
+surcoût froid. Ce candidat fixe la fin des essais d'optimisation du lot 04 ;
+les paires froides actuelles et leur bilan étant terminés, le lot est clos.
+Le retour à environ 30 s à froid n'est pas un résultat établi.
+
+Les validations complètes ci-dessous conservent les preuves historiques de `allhit`.
+
+### Vérifications déjà terminées sur le candidat allhit
+
+- Treize transitions comparées à une génération fraîche dans les quatre modes
+  **JS, Go séquentiel, Go parallèle et Rust**, sur les mêmes TAST. Les inventaires
+  Go, les quatre artefacts métier et les empreintes préparées sont identiques
+  entre hôtes. Le changement de retour FFI Go `int64` → `any`, à TAST inchangés,
+  modifie le module, son bridge et le consommateur `Extra.go` ; le programme
+  compilé s'exécute. La corruption d'un backend interdit le raccourci global et
+  déclenche sa réparation par le builder normal.
+- Bootstrap Rust reconstruit avec `GOPURS_RUST_PGO=0`, archive Go de support
+  unique, compilation et exécution du programme Go de contrôle réussies. Le
+  binaire privé est identifié par `gopurs-rust-allhit.json`.
+- Les trois snapshots ont été réexaminés sans mise à jour. Les **six replays
+  stricts** de `FFIIntegerReturns` et `NativeRecordWorkers` passent en JS,
+  natif séquentiel et natif parallèle : inventaires Go byte-exacts, comparaison
+  stricte après `gofmt`, compilation et exécution.
+- **19 contrôles CLI** passent, y compris les erreurs de TAST, FFI et écritures,
+  avec conservation des diagnostics et des sorties engagées.
+- Stockage sous race detector : macOS après ajout de `sameTast`, puis campagne
+  Linux/arm64 du code courant avec le Go 1.26.8 de l'image b8x.
+
+### Preuves locales
+
+`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/gopurs-module-cache-lot04-nj_1suxg/`
+conserve les candidats et leurs SHA-256, les reproducteurs rouges, les profils,
+les essais écartés et les workspaces isolés. Voir notamment `candidate-allhit.json`,
+`allhit-before.log`, `driver-allhit-four-hosts.log`, `paired-ffi-allhit/`,
+`snapshot-review-inputproof.json`, `strict-replays-allhit/records.json`,
+`cli-allhit.log` et `storage-allhit-linux-race.log`. Le `README.md` retrace les
+transformations et distingue les probes avec objets préchargés des caches froids.
+La campagne multi-hôtes conserve son workspace dans
+`/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/gopurs-tests-wEqaby/`.
+`allhit-source-audit.json` vérifie que 221 fichiers des sources gopurs/PBO et du
+stockage correspondent au candidat figé testé.
+`final-campaign-allhit.json` identifie les quatre campagnes successives ;
+`probe-b8x-allhit-final/`, `probe-b8x-lot03-final/`, `probe-b8x-allhit-js/` et
+`probe-b8x-allhit-sequential/` conservent les chronos, compteurs et inventaires.
+
+<a id="plan-v3--lot-05--transitions-de-sources-campagne-en-cours-12-octobre-2026"></a>
+
+## Plan v3 — lot 05 : correction incrémental/complet, validée (12 octobre 2026)
+
+**Clôturé sur `publicsync`.** La campagne finale décrite ci-dessous satisfait la
+[matrice de couverture](build-incremental.md#validation-de-correction--lot-05),
+avec comparaisons incrémental/frais et multi-hôtes, compilation/exécution des
+oracles, hits sans réécriture et audit du candidat livré.
+
+Le complément `tests/host/CacheTransitions/`, construit par
+`tools/cache-source-variants.mjs`, fait évoluer un programme sur **14 états** :
+initial, corps privé/exporté, directive d'inlining, constructeur, record, type de
+champ, dictionnaire, demandes transitives ajoutées/remplacées/retirées, module
+renommé/restauré et retour global. Chaque état TAST est construit une fois puis
+consommé par les hôtes. Les layouts traversent des appels conservés avec des
+directives `never` ; les données d'exécution proviennent d'une `Effect.Ref`.
+
+La campagne privée `lot05-source-transitions/run-4uQJYd` passe **56 comparaisons**
+dans **JS, Go séquentiel, Go parallèle et Rust** : inventaires et octets Go,
+quatre parties du cache, empreintes préparées, reconstruction dans une sortie
+neuve, hit identique sans réécriture et compilation/exécution de chaque oracle.
+Les fournisseurs `Cache.Poly` et `Cache.Relay` conservent leurs TAST lors des
+changements d'appels, mais leurs clés et sorties changent ; le retrait retrouve
+les clés initiales. Le renommage retire les anciennes sorties du module, de sa
+FFI et de son entrée secondaire. Les changements de layouts invalident
+conservativement les 66 émissions, avec sorties égales au frais.
+
+Le premier essai `run-hKAAde` est conservé : l'inventaire textuel échouait sur
+l'alias macOS `main/main.go` / `Main/main.go`. L'audit retrouve les **93 fichiers
+Go exacts** et un inode distinct pour chaque sortie possédée. Le harnais exige
+une bijection manifeste/fichiers physiques, avec hashes et tailles contrôlés ;
+les inventaires physiques restent comparés entre hôtes et au build frais.
+
+Le parcours est intégré dans `tools/driver-source-cache.test.mjs` et lancé par
+`npm run test:cache-sources`. Les 14 variantes et oracles du dépôt sont exacts
+par rapport au reproducteur privé. Le contrôle d'intégration des quatre hôtes
+passe avec `publicpool2` et son Rust privé validé dans `gopurs-tests-S2M1Cn` :
+**294 commandes réussies**, dont **56 reconstructions fraîches, 56 hits sans
+réécriture et 56 compilations/exécutions**. L'audit retrouve les sources du test
+et des fixtures exactes, ainsi que les binaires figés et les objets finaux du
+cache. `lot05-source-transitions/integration-publicpool2.json` fixe les preuves.
+`GOPURS_TEST_MODES` permet
+de choisir les hôtes ; `GOPURS_TEST_COMPILER` et `GOPURS_TEST_RUST_BINARY` fixent
+les exécutables. `GOPURS_TEST_KEEP_WORKSPACE=1` conserve sources, TAST, commandes,
+résultats, binaires des oracles et caches finaux ; un échec conserve toujours
+les preuves. Cette intégration est la référence historique `publicpool2` ; le
+rejeu final `publicsync` est décrit en fin de section.
+
+Le complément `lot05-context-transitions/` prépare maintenant **20 états ×
+4 hôtes** : limite de réécriture, workers de préparation/PBO/émission, pipeline,
+racine FFI, entrées, version de compilateur, runtime et retours à l'état initial.
+Le runtime de référence est embarqué dans des copies privées JS/Go/Rust ; une
+variante y ajoute un commentaire distinctif, avec reconstructions réelles Go et
+Rust. Le harnais exige les miss de contexte, les mêmes sorties au frais, les
+hits sans réécriture, la propriété exacte des sorties et les oracles exécutables.
+`build-lot05-context.py` lance cette campagne sur les versions validées
+`typeintern`/`publicpool2` et le runtime privé. Les constructions privées Go/Rust
+réussissent. La première tentative valide 13 états JS puis s'arrête sur une
+attente erronée du harnais : `--main` conserve l'entrée du module choisi ainsi
+que l'entrée commune. L'audit retrouve les **92 Go attendus**, les **67 commandes
+réussies** et les **425 fichiers de production inchangés**. La tentative est
+conservée dans `run-5U2bRd` ; le retry exige les deux chemins et reprend dans une
+nouvelle racine. La reprise `run-OfOWca` réussit les **80 comparaisons / 401
+commandes** : quatre parties, clés et Go exacts au frais et entre les quatre
+hôtes, hits sans réécriture et oracles exécutés. Le changement de runtime et
+son retour réécrivent uniquement `gopurs_runtime/runtime.go` ; les changements
+d'options et de version de compilateur ne réécrivent aucun Go identique.
+Les **425 fichiers de production restent inchangés**.
+
+Le test est maintenant intégré dans `tools/driver-context-cache.test.mjs` :
+
+```sh
+npm run test:cache-context
+```
+
+Le parcours courant couvre **16 états par hôte** dans JS/Go séquentiel/Go
+parallèle. `GOPURS_TEST_MODES`, `GOPURS_TEST_COMPILER`, `GOPURS_TEST_RUST_BINARY`
+et `GOPURS_TEST_KEEP_WORKSPACE` suivent les conventions du test de sources.
+`GOPURS_TEST_RUST=1` ajoute le quatrième hôte. Une erreur conserve son workspace,
+les TAST, les résultats, les commandes, les caches et les exécutables des oracles.
+
+Pour éprouver aussi deux versions de compilateur et le runtime, construire le
+catalogue avec `tools/cache-context-runtime.mjs`. Sa configuration JSON indique
+deux compilateurs figés et les sorties retenues des bootstraps Go/Rust de la
+version `baseline` :
+
+```json
+{
+  "baseline": { "compiler": "/compiler-a/bin/gopurs", "rust": "/compiler-a/gopurs-rust" },
+  "alternate": { "compiler": "/compiler-b/bin/gopurs", "rust": "/compiler-b/gopurs-rust" },
+  "nativeOutput": "/retained-go-bootstrap/output",
+  "rustOutput": "/retained-rust-bootstrap/rust",
+  "destination": "/new-private-runtime-variants"
+}
+```
+
+```sh
+node tools/cache-context-runtime.mjs context-variants.json
+GOPURS_TEST_CONTEXT_VARIANTS=/new-private-runtime-variants/variants.json \
+GOPURS_TEST_MODES=js,native-sequential,native-parallel,rust \
+GOPURS_TEST_KEEP_WORKSPACE=1 npm run test:cache-context
+```
+
+L'outil copie les ressources et les sources générées, substitue uniquement le
+runtime embarqué, reconstruit les binaires Go/Rust et fige les hashes des trois
+variantes. Le test étend alors la matrice à **20 états par hôte** et contrôle les
+changements effectifs d'identité. La campagne d'intégration reconstruit ces
+variantes avec l'outil du dépôt et rejoue les quatre hôtes, puis le parcours
+sans catalogue en JS. Cette intégration réussit dans `gopurs-tests-v2nL09`
+(**80 comparaisons / 401 commandes**, quatre hôtes), puis `gopurs-tests-O8cZFe`
+(**16 comparaisons / 81 commandes**, JS sans catalogue). Les variantes sont
+construites par l'outil du dépôt ; les 96 oracles sont compilés et exécutés.
+
+L'audit croisé final a d'abord exigé à tort l'égalité brute des TAST avec la
+campagne privée, située à une autre profondeur. Les **57 différences** se limitent
+aux `modulePath` relatifs des bibliothèques : leurs chemins résolus, leurs sources
+et tous les autres champs TAST sont exacts. Les TAST intégrés sont byte-exacts
+avec l'état initial de `gopurs-tests-S2M1Cn`, ainsi que toutes leurs clés préparées.
+Les parties et Go restent byte-exacts avec la campagne privée. Le validateur
+initial et son échec sont conservés ; `audit-integration-recovery.py` termine
+l'audit, y compris les objets finaux et les **427 fichiers** sources/outils/FFI/
+binaires. `integration-completed.json` conserve les résultats et les chemins
+audités.
+
+### Validation sur le candidat de clôture `publicsync`
+
+Le rejeu sur `publicsync` réussit les **14 états sources × 4 hôtes**, soit **56
+comparaisons et 294 commandes**, dans `gopurs-tests-9VGNGK`. Le catalogue de
+contexte est reconstruit avec `publicsync`, `publicpool2` et une variante runtime
+privée ; les **20 états × 4 hôtes**, soit **80 comparaisons et 401 commandes**,
+passent dans `gopurs-tests-7uwezQ`. Les quatre hôtes partagent les mêmes TAST ;
+les résultats incrémentaux/frais ont les mêmes parties, clés et Go, avec hits
+sans réécriture et oracles compilés/exécutés. Les changements de runtime et
+retours réécrivent uniquement `gopurs_runtime/runtime.go`.
+
+Les treize transitions du pilote, les contrôles de corruption/propriété/
+concurrence/interruption, les barrières publiques avec SIGKILL, les **35 commandes
+strictes** et les **19 contrôles CLI** passent également. L'audit final couvre
+**430 fichiers**, les trois snapshots restent inchangés et Rust est réellement
+reconstruit sans PGO. `publicsync-source-transitions.json`,
+`publicsync-context-transitions.json` et `validation-publicsync-summary.json`
+fixent les preuves. La revue `lot05-coverage-review.md` relie chaque exigence au
+test livré. Le bilan du lot 04 et cette revue étant terminés, **le lot 05 est
+validé ; le plan v3 passe à 6/7 lots**.
+
+<a id="plan-v3--lot-06--mesures-du-parcours-complet-en-cours-12-octobre-2026"></a>
+
+## Plan v3 — lot 06 : mesures du parcours complet validées (12 octobre 2026)
+
+**Lot validé ; plan v3 clôturé à 7/7.** La campagne complète et son audit
+réussissent : **24 chaînes, 24 oracles**, quatre scénarios de trois paires,
+inventaires TAST/Go/modules exacts, même binaire par scénario, **430 fichiers
+de production**, caches Go de base et inodes de verrou inchangés. Les trois
+snapshots déjà examinés restent exacts ; les 35 replays stricts du lot 05
+portaient sur ce même compilateur, sans changement de code depuis.
+Le [bilan final](build-incremental.md#parcours-complet--lot-06) et les
+[24 mesures individuelles](build-cycle-lot06.csv) publient les résultats.
+
+Les compilateurs et le corpus des lots 04–05 sont figés. Le harnais privé
+`measure-lot06-cycle.py` chronomètre directement `spago build` avec le backend
+réel, `go mod tidy`, puis le runner b8x jusqu'à la frontière `exec Test.Main`.
+Un wrapper mesure l'invocation réelle de gopurs à l'intérieur de Spago ; les
+traces Go identifient compilations et liens. Les ressources restent fixées à
+**GOMAXPROCS=2 / -p 1 / GOMEMLIMIT=12GiB**.
+
+Chaque générateur prépare son GOCACHE privé sur la base seulement ; chaque
+échantillon en reçoit une copie neuve, avec les indices du binaire de base du
+runner. Trois paires alternées sont prévues pour identique/feuille/partagé/FFI.
+Les journals gopurs restent dans leur racine ; un vrai build restaure la base
+avant chaque mutation. Les 3 010 Go, les 2 704 TAST et les fichiers de modules
+sont vérifiés, puis l'oracle de la mutation est compilé et exécuté hors chrono.
+Le premier lancement est conservé dans la preuve privée
+`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/gopurs-cycle-lot06-publicsync/`.
+Il échoue au contrôle d'inventaire : le `PATH` sélectionnait Spago **0.93.45** du
+bootstrap gopurs au lieu du **1.0.3** du lot 00. Trois modules sont ajoutés et
+`Spago.Generated.BuildInfo` change ; ces temps sont exclus des résultats.
+`failure-audit.json`, l'ancien harnais et le workspace restent conservés.
+
+La correction invoque le Spago du lot 00 par son chemin explicite, avec contrôle
+de version et de SHA-256. Le contrôle préalable
+`gopurs-lot06-frontend-preflight/` passe **7 transitions**, chacune avec les
+**2 704 TAST byte-exacts** et le lockfile inchangé. La deuxième tentative dans
+`gopurs-cycle-lot06-publicsync-spago103/` reproduit les **3 010 Go et 2 704 TAST**,
+mais `tidy` échoue sur la résolution DNS de `proxy.golang.org` : des dépendances
+de test manquaient au cache de modules copié. Ce deuxième échec et son audit
+restent conservés, avec des temps exclus des résultats.
+
+`gopurs-lot06-offline-modules/` prépare une copie privée complète des
+téléchargements, vérifie `tidy`, `go mod verify` et une seconde relance `tidy`
+hors ligne, puis fige l'inventaire des **3 094 fichiers**. `go.mod`, `go.sum`, les
+Go et les TAST restent exacts. Les **7 transitions frontend** passent aussi avec
+`spago build --offline`, dans `gopurs-lot06-frontend-offline-preflight/`.
+La campagne est relancée dans `gopurs-cycle-lot06-publicsync-offline/`, avec
+`GOPROXY=off` et `GOSUMDB=off` et des GOCACHE toujours construits séparément sur
+la base. Le protocole précise les passages
+froids isolés, leurs états de cache et la durée séparée de construction/exécution
+des oracles. Les configurations Docker effectives sont conservées avec les
+traces et les inventaires.
+
+### Point intermédiaire et reprise des mesures
+
+La campagne hors ligne valide **16 chaînes sur 24** : trois paires identiques,
+trois paires feuille et deux paires partagées. Tous ces échantillons ont leurs
+inventaires byte-exacts et leurs oracles réussis. Le passage `shared-3-lot03`
+est rejeté : `docker exec` termine en statut 0 après **53,760 s**, mais sans
+marqueur `exec` ni rapport du runner ; la trace s'arrête pendant la compilation.
+Le harnais refuse correctement ce passage. La cause de l'interruption n'est
+pas établie par les traces conservées ; `interruption-audit.json` en fixe les
+faits. Les **430 fichiers de production** et les toolchains sont inchangés.
+
+| Scénario complet (3 paires) | Mesure | Lot 03 | `publicsync` | Variation |
+| --- | --- | ---: | ---: | ---: |
+| Identique | gopurs | 1,123 s | 1,559 s | +0,436 s / +38,81 % |
+| Identique | chaîne jusqu'à `exec` | 3,559 s | 3,962 s | +0,403 s / +11,33 % |
+| Feuille | gopurs | 37,457 s | 35,030 s | −6,48 % |
+| Feuille | chaîne jusqu'à `exec` | 247,982 s | 244,403 s | −1,44 % |
+
+Ce sont les médianes observées, avec leur dispersion conservée : les trois
+paires feuille gagnent **7,62 / 5,30 / 7,08 %** sur gopurs, mais la chaîne varie
+de **−2,59 / −1,93 / +1,34 %**. La compilation Go reste autour de **207 s** ;
+le faible écart de chaîne ne démontre pas un gain robuste du cycle complet.
+L'identique ne réécrit aucun Go et ne compile/lie rien.
+
+`measure-lot06-cycle.py --resume PREVIOUS NEW_DESTINATION` reprend les huit
+chaînes manquantes dans `gopurs-cycle-lot06-publicsync-resume1/`. Le corps des
+mesures/oracles et sept fonctions du harnais sont AST-identiques à la version
+figée. Les résultats acquis sont relus avec leurs inventaires/hashes/oracles ;
+les projets restent à leurs racines d'origine. Des clones forensiques de leur
+état interrompu sont conservés sans être exécutés. Les seeds Go sont inventoriés
+et recontrôlés sur des copies privées : zéro compilation/lien et binaire de base
+exact requis avant la reprise. Chaque mesure reçoit ensuite sa propre copie du
+seed. Les signaux reçus et l'état du conteneur lors d'un échec sont désormais
+consignés ; le journal de lancement est conservé dans la preuve principale.
+La reprise se termine avec succès. `summary.json` et `results.json` dans
+`gopurs-cycle-lot06-publicsync-resume1/` couvrent les **24 échantillons** ;
+`sample-evidence.json` conserve leur provenance. `analyze-lot06-cycle.py`
+recontrôle chaque inventaire, oracle, action Go et hash de binaire, les audits
+avant/après et les snapshots. Sa synthèse est conservée dans
+`gopurs-cycle-lot06-analysis-final/`.
+
+Les médianes finales de chaîne sont **3,559 → 3,962 s** sur l'identique,
+**247,982 → 244,403 s** sur la feuille, **265,895 → 268,585 s** sur le partagé,
+et **250,273 → 236,510 s** sur la FFI. Les variations sont donc **+11,33 %
+(+0,403 s) / −1,44 % / +1,01 % / −5,50 %**, avec toutes les paires conservées.
+La chaîne partagée ne gagne pas en médiane et la dispersion de la feuille
+empêche d'attribuer un gain robuste au cycle complet. Le backend gagne
+respectivement **6,48 / 1,40 / 32,70 %** après édition. Les temps Go de
+**206,820 / 209,650 / 208,470 s**, soit environ **85 / 78 / 88 %** de la chaîne
+livrée, confirment **G avant P**. Les observations froides de chaîne restent
+identifiées comme passages uniques, et le surcoût froid backend apparié
+**+20,19 %** est conservé au bilan.
+
+Le bloc de réinitialisation publié dans `build-cache.md` est exécuté tel quel
+sur une fixture privée : attente d'un `flock` réellement détenu, résolution
+d'une sortie symbolique, répétition de la commande, conservation byte-exacte du
+journal, des TAST, des Go et des fichiers de modules, avec dates et inode du
+verrou inchangés. Preuve : `gopurs-lot06-reset-doc-check/summary.json`.
+
+## Suite G — G00 : graphe typé et références validés (13 octobre 2026)
+
+Le [rapport G00](build-go-packages.md) reprend le compilateur livré après v3/06.
+L'analyse des **2 997 Go du package b8x** résout tous les corps avec `go/types`
+et les exports réels de Go **1.26.8 linux/arm64**. La base et les trois éditions
+ont chacune leur graphe typé et leurs inventaires exacts. Le bootstrap conservé
+est vérifié de la même manière : **625 Go / 115 FFI**, sources exactes face à
+l'audit du binaire livré.
+
+Le graphe par module conserve **94,53 %** du code dans une seule composante
+cyclique. Le graphe par déclaration relève **185 667 unités**, avec contraintes
+de méthodes et champs distinguées. Les fermetures statiques des éditions
+représentent **0,0006 / 6,12 / 11,48 %** des octets de déclarations, avant
+regroupement, contraintes d'ABI et initialisation : ces tailles ne sont pas
+des gains de temps. Les **348 tags `StructGetters`** sont distincts ; les usages
+FFI interunités et les chemins réflexifs sont inventoriés.
+
+L'audit en lecture seule vérifie les **430 fichiers de production**, les hashes
+des cinq graphes, le seed Go original et les binaires `Test.Main`, puis relève
+le stockage des douze échantillons `publicsync` de v3/06. Les budgets avant
+candidats sont fixés à **+5 % mémoire / +10 % par catégorie de stockage**, avec
+les seuils de temps déjà inscrits au plan.
+
+La première calibration mémoire est **rejetée** : le harnais avait oublié les
+bibliothèques sœurs `workspace/gopurs`, rendant certaines FFI introuvables.
+L'inventaire exact échoue ; la tentative et ses stubs sont conservés, temps/RSS
+exclus. Après correction et préflight des **2 704 chemins source/FFI**, le froid
+passe : **113,687 s / 9,841 GiB de RSS maximal**, **3 010 Go** exacts et
+**10 992 objets**.
+
+Le harnais s'arrête ensuite avant l'identique, faute de marge disque : **7,9 GiB
+libres**, sous le plancher de **8 GiB**. Le froid reste validé. Après libération
+d'espace par l'utilisateur (**19,1 GiB disponibles**), la reprise termine les
+six autres passages dans la même racine/journal. Les sept inventaires sont
+exacts ; zéro réécriture sur l'identique, **1 / 5 / 1** sur les éditions, inode
+du verrou inchangé. La commande chronométrée est AST-identique au harnais figé.
+Les sept reproducteurs de contrats Go et le contrôle de réflexion passent,
+dont quatre erreurs de compilation attendues. Le froid applicatif Go prend
+**255,780 s**, avec deux compilations/un lien, **15 433 168 KiB** de pic RSS et
+le binaire exact de v3/06. La relance identique ne compile ni ne lie ; l'oracle
+passe. Ce passage unique est plus lent que l'ancien froid intégral de
+**221,830 s** ; les observations ne sont pas appariées, l'écart est conservé
+sans l'attribuer au préchauffage. **G00 est validé, suite G à 1/7.**
+
+Preuve : `gopurs-go-packages-g00-20261012/`, notamment
+`declaration-analysis-1/`, `bootstrap-typed-graph-1/`, `reference-audit-1/`,
+`backend-memory-reference-1/rejection.json` et
+`backend-memory-reference-2/pause.json`, `backend-memory-resume1/` et
+`record-contracts-1/`, `go-application-cold-1/` et `final-reference/summary.json`.
+L'audit final confirme de nouveau les 430 fichiers de production et les preuves
+requises ; la calibration mémoire et le détail des reprises sont publiés dans
+le rapport G00.
+
+## Suite G — G01 : plan canonique validé (13 octobre 2026)
+
+Le [plan de placement](build-go-package-plan.md) conserve les FFI entières,
+les méthodes/receveurs, les cellules des getters et l'ordre d'initialisation Go.
+Les identités des inscriptions sont ancrées à leur constructeur, celles des
+méthodes à leur type receveur. Les intervalles topologiques de densité 1/128
+donnent **525 packages b8x / 158 pour le bootstrap**. Les densités 1/256 et 1/512
+sont également conservées.
+
+Un contrôle indépendant vérifie la couverture exacte des déclarations, les
+arêtes du quotient et le DAG des **douze plans b8x et trois plans du bootstrap**.
+La permutation des 185 667 identifiants et de l'ordre d'énumération conserve
+les empreintes de placement. Les contrats d'identité couvrent insertion d'une
+inscription, offsets/corps, nom local du receveur, remplacement à cardinalité
+égale, rétraction et collision forcée. **95 graphes** sont comparés à un oracle
+de fermeture transitive pour les SCC.
+
+**Sept programmes Go** comparent l'initialisation commune, la séparation naïve,
+le regroupement ordonné, la perte d'une inscription, un initialiseur central
+et deux cas de RHS intercalées. Les deux écarts attendus sont conservés. Les
+cas corrigés préservent les effets d'un package externe importé par du code
+inutilisé, les inscriptions d'une entrée partielle, et une seule cellule lazy
+pour 64 appels concurrents depuis deux packages.
+
+La tentative `initialization-contracts-3/` est rejetée : l'ordre écrit à la main
+pour les RHS intercalées différait de Go. La reprise `-4` utilise
+`go/types.Info.InitOrder` et passe, y compris groupe `var`, résultats multiples
+et variable `_`. Une incompatibilité Python 3.9 (`int.bit_count`) est aussi
+conservée dans `consumer-set-models-1/`, puis corrigée avant le relevé `-2`.
+
+Les modèles non retenus restent archivés. Les fermetures du plan canonique
+représentent **38 792 440 / 63 388 578 / 65 252 780 octets** après les trois
+éditions ; le partagé déplace **1 818 déclarations inchangées**, contre zéro
+pour les modifications de corps feuille/FFI. Il s'agit de tailles statiques ;
+le Go multipackage n'est pas encore émis ni chronométré.
+
+Preuve : `gopurs-go-packages-g01-20261013/`, notamment
+`canonical-interval-models-1/`, `canonical-verification-1/`,
+`identity-contracts-1/`, `initialization-contracts-4/` et `final-plan/`.
+L'audit final confirme les **430 fichiers de production** de G00.
+**G01 est validé, suite G à 2/7 ; G02 porte les références jusqu'au rendu.**
 
 ## Plan v2 — lot 01 : campagnes reproductibles, 3 octobre 2026
 

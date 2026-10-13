@@ -12,5 +12,9 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	fmt.Println(Exchange(string(request)))
+	if len(os.Args) == 2 && os.Args[1] == "--session" {
+		fmt.Println(SessionExchange(string(request)))
+	} else {
+		fmt.Println(Exchange(string(request)))
+	}
 }

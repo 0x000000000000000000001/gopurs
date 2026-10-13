@@ -1,6 +1,6 @@
 import {
   accessSync, chmodSync, constants, copyFileSync, mkdirSync, mkdtempSync,
-  readFileSync, renameSync, rmSync, symlinkSync, writeFileSync,
+  readFileSync, readdirSync, renameSync, rmSync, symlinkSync, writeFileSync,
 } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
@@ -74,8 +74,18 @@ try {
   // runtime is needed when the resulting compiler generates a project's Go.
   const parser = join(rust, "Purs_Gopurs_FfiSupport", "native-parser");
   mkdirSync(parser);
-  await run("native-parser", "go", ["build", "-trimpath", "-tags=carchive", "-buildmode=c-archive",
-    "-o", join(parser, "libgopurs_ffi.a"), "."], join(root, "tools/ffi-gen"));
+  const archiveSource = join(workspace, "go-host-support");
+  mkdirSync(join(archiveSource, "gopurs_build_cache"), { recursive: true });
+  for (const name of readdirSync(join(root, "tools/ffi-gen"))) {
+    if (name === "go.mod" || name.endsWith(".go") && !name.endsWith("_test.go"))
+      copyFileSync(join(root, "tools/ffi-gen", name), join(archiveSource, name));
+  }
+  for (const name of ["contract.go", "store.go", "session.go", "compiler.go", "modules.go"]) {
+    writeFileSync(join(archiveSource, "gopurs_build_cache", name),
+      readFileSync(join(root, "tools/build-cache", name), "utf8").replace("package main", "package gopurs_build_cache"));
+  }
+  await run("native-parser", "go", ["build", "-trimpath", "-tags=carchive,gopurscache", "-buildmode=c-archive",
+    "-o", join(parser, "libgopurs_ffi.a"), "."], archiveSource);
   copyFileSync(join(root, "tools/ffi-gen/rust-build.rs"), join(rust, "Purs_Gopurs_FfiSupport", "build.rs"));
   const target = resolve(environment.CARGO_TARGET_DIR ?? join(workspace, "target"));
   const rustc = environment.RUSTC ?? "rustc";
