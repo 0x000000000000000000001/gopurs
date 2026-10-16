@@ -36,15 +36,16 @@ type SessionRequest struct {
 }
 
 type SessionResponse struct {
-	Status   string      `json:"status"`
-	Reason   string      `json:"reason"`
-	Stage    string      `json:"stage"`
-	Input    string      `json:"input"`
-	Output   string      `json:"output"`
-	Count    int         `json:"count"`
-	Context  string      `json:"context"`
-	SameTAST bool        `json:"sameTast"`
-	FFI      []FrozenFFI `json:"ffi"`
+	Status         string      `json:"status"`
+	Reason         string      `json:"reason"`
+	Stage          string      `json:"stage"`
+	Input          string      `json:"input"`
+	Output         string      `json:"output"`
+	Count          int         `json:"count"`
+	Context        string      `json:"context"`
+	SameTAST       bool        `json:"sameTast"`
+	FFI            []FrozenFFI `json:"ffi"`
+	PackageRequest string      `json:"packageRequest"`
 }
 
 type buildSession struct {
@@ -92,8 +93,17 @@ func sessionOperation(req SessionRequest, result *SessionResponse) error {
 		if err != nil {
 			return err
 		}
-		return beginSession(Spec{Workspace: workspace, Output: output, Compiler: compiler, Options: req.Options,
-			Inputs: []Input{{Name: "tast", Kind: "tast", Path: output}}}, req.Force, result)
+		spec := Spec{Workspace: workspace, Output: output, Compiler: compiler, Options: req.Options,
+			Inputs: []Input{{Name: "tast", Kind: "tast", Path: output}}}
+		if usesGoPackages(spec) {
+			if err := (store{root: output}).ensureGoMod(); err != nil {
+				return err
+			}
+			if err := packageToolchain(&spec); err != nil {
+				return err
+			}
+		}
+		return beginSession(spec, req.Force, result)
 	}
 	stage := filepath.Clean(req.Stage)
 	if filepath.Dir(stage) != filepath.Join(output, ".gopurs-cache", "stages") || !strings.HasPrefix(filepath.Base(stage), "build-") {
@@ -114,6 +124,8 @@ func sessionOperation(req SessionRequest, result *SessionResponse) error {
 	switch req.Operation {
 	case "plan":
 		return planSession(stage, &state, req.Modules, result)
+	case "packages":
+		return preparePackageSession(stage, &state, req.Entries, result)
 	case "publish":
 		return publishSession(stage, state, req, result)
 	case "abort":
@@ -446,14 +458,22 @@ func publishSession(stage string, state buildSession, req SessionRequest, result
 	if err := add("runtime", "", "gopurs_runtime/runtime.go", false); err != nil {
 		return err
 	}
-	for _, module := range state.Modules {
-		name := strings.ReplaceAll(module.Name, ".", "_")
-		if err := add("module", module.Name, "purescript/"+name+".go", false); err != nil {
+	if usesGoPackages(state.Spec) {
+		files, err := packageOutputs(stage, state.Modules, req.Entries)
+		if err != nil {
 			return err
 		}
-		if module.HasForeign {
-			if err := add("ffi", module.Name, "purescript/"+name+"_ffi.go", true); err != nil {
+		outputs = append(outputs, files...)
+	} else {
+		for _, module := range state.Modules {
+			name := strings.ReplaceAll(module.Name, ".", "_")
+			if err := add("module", module.Name, "purescript/"+name+".go", false); err != nil {
 				return err
+			}
+			if module.HasForeign {
+				if err := add("ffi", module.Name, "purescript/"+name+"_ffi.go", true); err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -487,6 +507,13 @@ func publishSession(stage string, state buildSession, req SessionRequest, result
 			for i, codec := range moduleCodecs {
 				mod.Parts = append(mod.Parts, StagedArtifact{Codec: codec, Source: filepath.Join(directory, fmt.Sprintf("%d.json", i))})
 			}
+			if usesGoPackages(state.Spec) {
+				name := strings.ReplaceAll(source.Name, ".", "_")
+				mod.Sources = append(mod.Sources, StagedModuleSource{"module", filepath.Join(stage, "output", "purescript", name+".go")})
+				if source.HasForeign {
+					mod.Sources = append(mod.Sources, StagedModuleSource{"ffi", filepath.Join(stage, "output", "purescript", name+"_ffi.go")})
+				}
+			}
 			publication.Modules = append(publication.Modules, mod)
 		}
 	}
@@ -509,6 +536,12 @@ func publishSession(stage string, state buildSession, req SessionRequest, result
 	data, _ := json.Marshal(recipe{Schema: Schema, Inputs: state.Spec.Inputs})
 	if err := atomicWrite(filepath.Join(state.Spec.Output, ".gopurs-cache", "recipe.json"), data, 0600); err != nil {
 		return err
+	}
+	if usesGoPackages(state.Spec) {
+		// Cache maintenance is best-effort after the semantic commit. A failed
+		// removal leaves disposable objects; it cannot undo a successful build.
+		s := store{root: state.Spec.Output, cache: filepath.Join(state.Spec.Output, ".gopurs-cache")}
+		_ = s.retirePackageObjects()
 	}
 	result.Status = "published"
 	return nil

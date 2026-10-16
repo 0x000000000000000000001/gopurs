@@ -35,6 +35,7 @@ import Gopurs.Driver.Cache (FrozenFFI, Session)
 import Gopurs.Driver.Output as Output
 import Gopurs.Driver.Prepare (PreparedModules)
 import Gopurs.ExprContext (ModuleFunctions)
+import Gopurs.GoSymbol (GoReference(..))
 import Gopurs.Metrics as Metrics
 import Node.Encoding (Encoding(..))
 import Node.FS.Aff as FS
@@ -282,10 +283,14 @@ validateReads cache view reads = do
 
 readWorkers :: ModuleCache -> String -> Aff (Maybe ModuleFunctions)
 readWorkers cache name = do
-  workers <- readPart (prior cache name <> "3.json") :: Aff (Maybe ModuleFunctions)
+  workers <- case Map.lookup name cache.candidates >>= \memo -> Array.index memo.parts 3 of
+    Just part | part.codec == "gopurs/workers-v2" -> readPart (prior cache name <> "3.json")
+    _ -> pure Nothing
   pure do
     functions <- workers
-    guard (Array.all (\info -> info.arity >= 0 && info.fullName /= "") (Array.fromFoldable (Map.values functions)))
+    guard (Array.all (\info -> info.arity >= 0 && case info.reference of
+      SymbolReference symbol -> symbol.owner /= "" && symbol.name /= ""
+      LocalReference _ -> false) (Array.fromFoldable (Map.values functions)))
     pure functions
 
 emit

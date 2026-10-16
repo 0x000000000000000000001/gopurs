@@ -26,7 +26,8 @@ import Data.String.Pattern (Pattern(..), Replacement(..))
 import Data.Map as Map
 import Data.Set as Set
 import Data.Foldable (foldl)
-import Gopurs.GoAst (GoExpr(..), GoDecl(..), GoType(..), capitalize, sanitizeName)
+import Gopurs.GoAst (GoExpr(..), GoDecl(..), GoType(..), GoFile, capitalize, sanitizeName)
+import Gopurs.GoSymbol (GoReference(..), generated, foreignSymbol)
 import Gopurs.Printer (printGoFile)
 import PureScript.Backend.Optimizer.Codegen.Tco (TcoExpr(..))
 import PureScript.Backend.Optimizer.FreeVars (localId)
@@ -61,7 +62,7 @@ import Gopurs.ExprContext (ModuleFunctions, StmtTree(..), TranslateExpr, childCo
 translate :: CodegenMetadata -> BackendModule -> String
 translate metadata inputMod = (translateWithFunctions metadata inputMod).code
 
-translateWithFunctions :: CodegenMetadata -> BackendModule -> { code :: String, functions :: ModuleFunctions }
+translateWithFunctions :: CodegenMetadata -> BackendModule -> { code :: String, functions :: ModuleFunctions, file :: GoFile }
 translateWithFunctions metadata inputMod = translatePreparedWithFunctions metadata (prepareModule metadata inputMod)
 
 type PreparedModule =
@@ -105,7 +106,7 @@ workerInputs available mod = foldl
 -- Source metadata must be the same as at preparation. Output supplies the
 -- freshly parsed local FFI signatures here. Restrict imported signatures to
 -- exactly the snapshot covered by the emission key, including on fresh builds.
-translatePreparedWithFunctions :: CodegenMetadata -> PreparedModule -> { code :: String, functions :: ModuleFunctions }
+translatePreparedWithFunctions :: CodegenMetadata -> PreparedModule -> { code :: String, functions :: ModuleFunctions, file :: GoFile }
 translatePreparedWithFunctions sourceMetadata prepared =
   let
     metadata = sourceMetadata { globalFunctions = Map.mapMaybe identity prepared.workers }
@@ -143,8 +144,8 @@ translatePreparedWithFunctions sourceMetadata prepared =
 
     foreignGetters = map
       (\(Tuple (Ident name) _) -> GoForeignGetter
-        { name: "Get_" <> modNameStr <> "_" <> sanitizeName name
-        , value: "_Gopurs_" <> modNameStr <> "_" <> capitalize (sanitizeName name)
+        { name: generated modNameStr ("Get_" <> modNameStr <> "_" <> sanitizeName name)
+        , value: foreignSymbol modNameStr ("_Gopurs_" <> modNameStr <> "_" <> capitalize (sanitizeName name))
         })
       (Map.toUnfoldable mod.foreign)
     declarationGroups =
@@ -157,6 +158,7 @@ translatePreparedWithFunctions sourceMetadata prepared =
   in
     { code: printGoFile goFile
     , functions: Map.union normalFunctions ffiGlobalFunctions
+    , file: goFile
     }
 
 translateExpr :: TranslateExpr
@@ -189,12 +191,12 @@ translateExpr context@{ metadata, codegenStateRef, modNameStr, bound, options: {
                 let
                   modStr = unwrap mn
                   modPkg = String.replaceAll (Pattern ".") (Replacement "_") modStr
-                  rawCall = GoCall (GoVar ("Get_" <> modPkg <> "_" <> safeName)) []
+                  rawCall = GoCall (GoRef (SymbolReference (generated modPkg ("Get_" <> modPkg <> "_" <> safeName)))) []
                 in
                   { stmts: StmtEmpty, expr: coerceGoExpr codegenStateRef modNameStr rawCall TypeValue vType, exprType: vType, nextId }
               Nothing ->
                 let
-                  rawCall = GoCall (GoVar ("Get_" <> modNameStr <> "_" <> safeName)) []
+                  rawCall = GoCall (GoRef (SymbolReference (generated modNameStr ("Get_" <> modNameStr <> "_" <> safeName)))) []
                 in
                   { stmts: StmtEmpty, expr: coerceGoExpr codegenStateRef modNameStr rawCall TypeValue vType, exprType: vType, nextId }
 

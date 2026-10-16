@@ -476,10 +476,13 @@ func TestCacheProcess(t *testing.T) {
 	}
 	content := []byte("// partial publication\n")
 	out := OwnedOutput{Path: "purescript/Partial.go", Kind: "module", Module: "Partial", Object: Object{SHA256: digest(content), Bytes: int64(len(content))}}
+	if usesGoPackages(req.Spec) {
+		out.Path, out.Kind = "purescript/p_root/Partial.go", "package"
+	}
 	if err := s.writeOwnership(mergeOwnership(owned, []OwnedOutput{out})); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.MkdirAll(filepath.Join(root, "purescript"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(filepath.Join(root, out.Path)), 0755); err != nil {
 		t.Fatal(err)
 	}
 	if err := atomicWrite(filepath.Join(root, out.Path), content, 0644); err != nil {
@@ -500,55 +503,63 @@ func child(t *testing.T, f fixture, mode string, req Request) *exec.Cmd {
 }
 
 func TestInterruptedPublicationAndKernelLock(t *testing.T) {
-	for _, firstBuild := range []bool{true, false} {
-		t.Run(fmt.Sprint(firstBuild), func(t *testing.T) {
-			f := newFixture(t)
-			call(t, f.req, "snapshot")
-			if !firstBuild {
+	for _, packages := range []bool{false, true} {
+		for _, firstBuild := range []bool{true, false} {
+			t.Run(fmt.Sprint(packages, "/", firstBuild), func(t *testing.T) {
+				f := newFixture(t)
+				partial := "purescript/Partial.go"
+				if packages {
+					f.req.Spec.Options = append(f.req.Spec.Options, Setting{"go-layout", packageLayout})
+					f.req.Outputs[0].Path, f.req.Outputs[0].Kind = "purescript/p_root/Main.go", "package"
+					partial = "purescript/p_root/Partial.go"
+				}
+				call(t, f.req, "snapshot")
+				if !firstBuild {
+					publish(t, f)
+				}
+				cmd := child(t, f, "partial", f.req)
+				stdout, err := cmd.StdoutPipe()
+				if err != nil {
+					t.Fatal(err)
+				}
+				var stderr bytes.Buffer
+				cmd.Stderr = &stderr
+				if err := cmd.Start(); err != nil {
+					t.Fatal(err)
+				}
+				t.Cleanup(func() { _ = cmd.Process.Kill() })
+				ready := make([]byte, 6)
+				if _, err := io.ReadFull(stdout, ready); err != nil || string(ready) != "ready\n" {
+					t.Fatalf("not ready: %q %v %s", ready, err, stderr.String())
+				}
+				lock, err := os.OpenFile(filepath.Join(f.s.cache, "write.lock"), os.O_RDWR, 0600)
+				if err != nil {
+					t.Fatal(err)
+				}
+				defer lock.Close()
+				if err := syscall.Flock(int(lock.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != syscall.EWOULDBLOCK {
+					t.Fatalf("expected contention, got %v", err)
+				}
+				other := newFixture(t)
+				publish(t, other) // unrelated workspace never waits
+				if err := cmd.Process.Kill(); err != nil {
+					t.Fatal(err)
+				}
+				_ = cmd.Wait()
+				if err := syscall.Flock(int(lock.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
+					t.Fatalf("kernel retained dead owner's lock: %v", err)
+				}
+				if err := syscall.Flock(int(lock.Fd()), syscall.LOCK_UN); err != nil {
+					t.Fatal(err)
+				}
+				lookup(t, f, "miss")
 				publish(t, f)
-			}
-			cmd := child(t, f, "partial", f.req)
-			stdout, err := cmd.StdoutPipe()
-			if err != nil {
-				t.Fatal(err)
-			}
-			var stderr bytes.Buffer
-			cmd.Stderr = &stderr
-			if err := cmd.Start(); err != nil {
-				t.Fatal(err)
-			}
-			t.Cleanup(func() { _ = cmd.Process.Kill() })
-			ready := make([]byte, 6)
-			if _, err := io.ReadFull(stdout, ready); err != nil || string(ready) != "ready\n" {
-				t.Fatalf("not ready: %q %v %s", ready, err, stderr.String())
-			}
-			lock, err := os.OpenFile(filepath.Join(f.s.cache, "write.lock"), os.O_RDWR, 0600)
-			if err != nil {
-				t.Fatal(err)
-			}
-			defer lock.Close()
-			if err := syscall.Flock(int(lock.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != syscall.EWOULDBLOCK {
-				t.Fatalf("expected contention, got %v", err)
-			}
-			other := newFixture(t)
-			publish(t, other) // unrelated workspace never waits
-			if err := cmd.Process.Kill(); err != nil {
-				t.Fatal(err)
-			}
-			_ = cmd.Wait()
-			if err := syscall.Flock(int(lock.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
-				t.Fatalf("kernel retained dead owner's lock: %v", err)
-			}
-			if err := syscall.Flock(int(lock.Fd()), syscall.LOCK_UN); err != nil {
-				t.Fatal(err)
-			}
-			lookup(t, f, "miss")
-			publish(t, f)
-			lookup(t, f, "hit")
-			if _, err := os.Stat(filepath.Join(f.s.root, "purescript/Partial.go")); !os.IsNotExist(err) {
-				t.Fatal("interrupted output left behind")
-			}
-		})
+				lookup(t, f, "hit")
+				if _, err := os.Stat(filepath.Join(f.s.root, partial)); !os.IsNotExist(err) {
+					t.Fatal("interrupted output left behind")
+				}
+			})
+		}
 	}
 }
 

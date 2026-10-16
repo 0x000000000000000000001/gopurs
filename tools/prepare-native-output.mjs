@@ -9,8 +9,8 @@ if (!output || process.argv.length !== 3) {
   throw new Error("Usage: node tools/prepare-native-output.mjs <generated-output-directory>");
 }
 for (const [directory, packageName, files] of [
-  ["ffi-gen", "gopurs_ffi_parser", ["parser.go", "types.go", "native_api.go"]],
-  ["build-cache", "gopurs_build_cache", ["contract.go", "store.go", "session.go", "compiler.go", "modules.go"]],
+  ["ffi-gen", "gopurs_ffi_parser", ["parser.go", "types.go", "native_api.go", "bindings.go", "packages.go", "workspace.go"]],
+  ["build-cache", "gopurs_build_cache", ["contract.go", "store.go", "session.go", "compiler.go", "modules.go", "packages.go"]],
 ]) {
   const sourceDirectory = fileURLToPath(new URL(`./${directory}/`, import.meta.url));
   const destination = join(resolve(output), packageName);

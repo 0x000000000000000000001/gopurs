@@ -10,6 +10,7 @@ import Effect.Unsafe (unsafePerformEffect)
 import Gopurs.ExprAnalysis (extractExprFuncType, functionResultAfter, getExprType)
 import Gopurs.ExprContext (ExprContext, TranslateExpr, bindParameters, flattenStmts)
 import Gopurs.GoAst (GoDecl(..), GoExpr(..), GoType(..))
+import Gopurs.GoSymbol (GoReference(..), generated)
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr)
 import Gopurs.GoFunctions (Parameters, curriedFunction, iterationBindings, loopParameters, namedParameters)
 import Gopurs.Int32Loops as Int32Loops
@@ -59,7 +60,7 @@ declaration translate context@{ codegenStateRef, modNameStr, moduleFunctions } i
       else
         let
           worker = GoFunctionDecl
-            { name: "Call_" <> modNameStr <> "_" <> fn.ident
+            { name: generated modNameStr ("Call_" <> modNameStr <> "_" <> fn.ident)
             , params: loopParameters params
             , result: resultType
             , body: body (coerceGoExpr codegenStateRef modNameStr result.expr result.exprType resultType)
@@ -69,7 +70,7 @@ declaration translate context@{ codegenStateRef, modNameStr, moduleFunctions } i
             Ref.modify_ (\state -> state { declarations = Array.snoc state.declarations worker }) codegenStateRef
             pure (boxedWrapper context fn.ident params resultType)
   in
-    GoCachedValue { identifier: modNameStr <> "_" <> fn.ident, expression: value, goType: TypeValue }
+    GoCachedValue { identifier: generated modNameStr (modNameStr <> "_" <> fn.ident), expression: value, goType: TypeValue }
 
 -- Module wrappers group up to ten arguments; larger arities keep unary layers.
 -- LocalWorkers and anonymous closures retain their own grouping policies.
@@ -77,7 +78,7 @@ boxedWrapper :: ExprContext -> String -> Parameters -> GoType -> GoExpr
 boxedWrapper { codegenStateRef, modNameStr } name params resultType =
   let
     wrapperParams = map (\(Tuple param _) -> param <> "_box") params
-    call = GoCall (GoVar ("Call_" <> modNameStr <> "_" <> name))
+    call = GoCall (GoRef (SymbolReference (generated modNameStr ("Call_" <> modNameStr <> "_" <> name))))
       (map (\(Tuple param ty) -> coerceGoExpr codegenStateRef modNameStr (GoVar (param <> "_box")) TypeValue ty) params)
     boxed = boxGoExpr codegenStateRef modNameStr call resultType
     arity = Array.length params

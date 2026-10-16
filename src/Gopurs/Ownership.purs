@@ -14,6 +14,9 @@ import Data.Newtype (unwrap)
 import Data.Tuple (Tuple(..))
 import Gopurs.CodegenState (CodegenMetadata, FunctionInfo)
 import Gopurs.GoAst (GoDecl, sanitizeName)
+import Gopurs.GoSymbol (GoReference(..), generated)
+import Data.String as String
+import Data.String.Pattern (Pattern(..), Replacement(..))
 import Gopurs.Ownership.Analysis (freshTree, qualify, spine, strip)
 import Gopurs.Ownership.Candidates as Candidates
 import Gopurs.Ownership.Types (Candidate, Candidates)
@@ -33,7 +36,7 @@ prepare metadata mod =
       accepted = validateCandidates metadata mod.name initial
       workers = Array.fromFoldable (Map.values accepted)
       declarations = foldMap (fromMaybe [] <<< Workers.declarations metadata mod.name accepted) workers
-      functions = functionSignatures workers
+      functions = functionSignatures (String.replaceAll (Pattern ".") (Replacement "_") (unwrap mod.name)) workers
       bindings = map (\group -> group { bindings = map (\(Tuple name expr) ->
         Tuple name (rewrite metadata mod.name accepted expr)) group.bindings }) mod.bindings
   in { module: mod { bindings = bindings }, declarations, functions }
@@ -47,9 +50,9 @@ validateCandidates metadata moduleName candidates =
   let accepted = Map.filter (isJust <<< Workers.declarations metadata moduleName candidates) candidates
   in if Map.size accepted == Map.size candidates then accepted else validateCandidates metadata moduleName accepted
 
-functionSignatures :: Array Candidate -> Map.Map String FunctionInfo
-functionSignatures = Map.fromFoldable <<< map (\fn -> Tuple (sanitizeName $ unwrap fn.worker)
-  { fullName: fn.native, fArgs: fn.argTypes, fRet: fn.spec.goType, arity: Array.length fn.args })
+functionSignatures :: String -> Array Candidate -> Map.Map String FunctionInfo
+functionSignatures unit = Map.fromFoldable <<< map (\fn -> Tuple (sanitizeName $ unwrap fn.worker)
+  { reference: SymbolReference (generated unit fn.native), fArgs: fn.argTypes, fRet: fn.spec.goType, arity: Array.length fn.args })
 
 -- Every tree argument must be fresh on entry. Scalar arguments retain their
 -- ordinary evaluation; only the closed constructor trees need this proof.

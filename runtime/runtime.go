@@ -6,7 +6,9 @@ import (
 	"math"
 	"reflect"
 	"sort"
+	"strings"
 	"sync"
+	"unicode/utf8"
 	"unsafe"
 )
 
@@ -269,6 +271,87 @@ func (v Value) AnyVal() any {
 		}
 		return nil
 	}
+}
+
+// RecordFieldName is the exported field ABI for native PureScript records.
+// Native Go structs keep their own field contract; callers select this mapping
+// explicitly when reflecting on a PureScript record.
+func RecordFieldName(label string) string {
+	ascii := len(label) != 0
+	for i := 0; i < len(label); i++ {
+		c := label[i]
+		letter := c == '_' || c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z'
+		ascii = ascii && (letter || i > 0 && c >= '0' && c <= '9')
+	}
+	if ascii {
+		return "P_" + label
+	}
+	const hex = "0123456789abcdef"
+	var result strings.Builder
+	result.WriteString("PX_")
+	unit := func(value rune) {
+		for shift := 12; shift >= 0; shift -= 4 {
+			result.WriteByte(hex[(value>>shift)&15])
+		}
+	}
+	for i := 0; i < len(label); {
+		var char rune
+		var width int
+		if i+2 < len(label) && label[i] == 0xed && label[i+1] >= 0xa0 && label[i+1] <= 0xbf && label[i+2]&0xc0 == 0x80 {
+			char, width = rune(label[i]&15)<<12|rune(label[i+1]&63)<<6|rune(label[i+2]&63), 3
+		} else {
+			char, width = utf8.DecodeRuneInString(label[i:])
+		}
+		i += width
+		if char > 0xffff {
+			char -= 0x10000
+			unit(0xd800 + char>>10)
+			unit(0xdc00 + char&0x3ff)
+		} else {
+			unit(char)
+		}
+	}
+	return result.String()
+}
+
+// RecordFieldLabel reverses only canonical PureScript record field names.
+// Preserve isolated surrogates as WTF-8, just like boxed record keys.
+func RecordFieldLabel(name string) (string, bool) {
+	if strings.HasPrefix(name, "P_") {
+		label := name[2:]
+		return label, RecordFieldName(label) == name
+	}
+	if !strings.HasPrefix(name, "PX_") || (len(name)-3)%4 != 0 {
+		return "", false
+	}
+	units := make([]rune, 0, (len(name)-3)/4)
+	for i := 3; i < len(name); i += 4 {
+		var unit rune
+		for _, digit := range name[i : i+4] {
+			value := strings.IndexRune("0123456789abcdef", digit)
+			if value < 0 {
+				return "", false
+			}
+			unit = unit<<4 | rune(value)
+		}
+		units = append(units, unit)
+	}
+	var label strings.Builder
+	for i := 0; i < len(units); i++ {
+		unit := units[i]
+		if unit >= 0xd800 && unit <= 0xdbff && i+1 < len(units) && units[i+1] >= 0xdc00 && units[i+1] <= 0xdfff {
+			label.WriteRune(0x10000 + (unit-0xd800)<<10 + units[i+1] - 0xdc00)
+			i++
+		} else if unit >= 0xd800 && unit <= 0xdfff {
+			label.WriteByte(0xe0 | byte(unit>>12))
+			label.WriteByte(0x80 | byte(unit>>6&63))
+			label.WriteByte(0x80 | byte(unit&63))
+		} else {
+			label.WriteRune(unit)
+		}
+	}
+	text := label.String()
+	return text, RecordFieldName(text) == name
 }
 
 type RecordData struct {

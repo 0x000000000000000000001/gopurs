@@ -206,7 +206,7 @@ const referencedLocals = root => {
 };
 const declarationNames = result => result.declarations
     .filter(declaration => declaration instanceof Go.GoFunctionDecl)
-    .map(declaration => declaration.value0.name);
+    .map(declaration => declaration.value0.name.name);
 const assertUniqueDeclarations = result => {
     const names = declarationNames(result);
     assert.ok(names.length > 0, 'workers must exist for this collision fixture');

@@ -19,7 +19,9 @@ import Effect.Ref as Ref
 import Effect.Unsafe (unsafePerformEffect)
 import Gopurs.CodegenState (CodegenMetadata, CodegenState)
 import Gopurs.Diagnostics as Diagnostics
-import Gopurs.GoAst (GoDecl(..), GoExpr(..), GoType(..), StructPointer, rawGo)
+import Gopurs.GoAst (GoDecl(..), GoExpr(..), GoType(..), StructPointer, rawGo, structTypeIdentity)
+import Gopurs.GoSymbol as Symbol
+import Gopurs.GoSymbol (GoReference(..))
 import Gopurs.GoTypes as GoTypes
 import Gopurs.Printer (printGoExpr)
 import Gopurs.ReboxMetadata (ReboxFields)
@@ -29,14 +31,15 @@ type CoerceField = GoExpr -> GoType -> GoType -> GoExpr
 
 functionName :: String -> StructPointer -> StructPointer -> String
 functionName moduleName source target =
-  "Rebox_" <> moduleName <> "_" <> hashString source.fullPath <> "_" <> hashString target.fullPath
+  "Rebox_" <> moduleName <> "_" <> hashString (structTypeIdentity source.structName source.typeArgs)
+    <> "_" <> hashString (structTypeIdentity target.structName target.typeArgs)
 
 -- The converter has already established equal runtime constructor identities.
 -- Requesting a helper records the directed pair; it does not render fields yet.
 request :: Ref CodegenState -> String -> GoExpr -> StructPointer -> StructPointer -> GoExpr
 request stateRef moduleName expr source target = unsafePerformEffect do
   registerPair stateRef (TypeStructPointer source) (TypeStructPointer target)
-  pure (GoCall (GoVar (functionName moduleName source target)) [ expr ])
+  pure (GoCall (GoRef (SymbolReference (Symbol.generated moduleName (functionName moduleName source target)))) [ expr ])
 
 registerPair :: Ref CodegenState -> GoType -> GoType -> Effect Unit
 registerPair stateRef source target = do
@@ -98,7 +101,7 @@ renderFunction coerceField metadata moduleName generated (Tuple sourceType targe
             let
               fields = convertFields coerceField metadata moduleName info source.typeArgs target.typeArgs
               declaration = GoFunctionDecl
-                { name, params: [ Tuple "in" sourceType ], result: targetType
+                { name: Symbol.generated moduleName name, params: [ Tuple "in" sourceType ], result: targetType
                 , body: rawGo (renderBody target.fullPath fields)
                 }
             in

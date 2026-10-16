@@ -13,6 +13,7 @@ import Gopurs.CodegenState (FunctionInfo)
 import Gopurs.ExprAnalysis (extractExprFuncType, getExprType)
 import Gopurs.ExprContext (ExprContext, ExprResult, flattenStmts)
 import Gopurs.GoAst (GoExpr(..), GoType(..), goTypeToStr, rawGo)
+import Gopurs.GoSymbol (GoReference(..))
 import Gopurs.GoConversions (boxGoExpr, coerceGoExpr)
 import Gopurs.GoFunctions (Parameters, curriedFunction, iterationBindings, loopParameters, namedParameters)
 import Gopurs.Int32Loops as Int32Loops
@@ -35,7 +36,7 @@ workerName modName name = "Call_local_" <> modName <> "_" <> name
 
 signature :: ExprContext -> String -> Parameters -> GoType -> FunctionInfo
 signature { modNameStr } name params result =
-  { fullName: workerName modNameStr name, fArgs: map snd params, fRet: result, arity: Array.length params }
+  { reference: LocalReference (workerName modNameStr name), fArgs: map snd params, fRet: result, arity: Array.length params }
 
 -- The translated body determines the native result. Only the curried wrapper
 -- crosses Value. Declarations stay separate so recursive callers can place the

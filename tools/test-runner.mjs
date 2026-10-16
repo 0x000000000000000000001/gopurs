@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { parseOptions, selectFixtures, UsageError } from "./test-selection.mjs";
 import { Interrupted, TestProcesses } from "./test-process.mjs";
 import { corePackages, prepareFixture } from "./test-workspace.mjs";
-import { snapshotFiles, updateSnapshots, verifySnapshots } from "./test-snapshots.mjs";
+import { formatSnapshots, snapshotFiles, updateSnapshots, verifySnapshots } from "./test-snapshots.mjs";
 import { resumeTargets, TestCampaign } from "./test-campaign.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
@@ -23,11 +23,10 @@ async function runFixture(fixture, options, processes, env) {
   const { directory } = fixture;
   const phase = (name, command, args, cwd = directory, display = false) => processes.run(name, command, args, { cwd, env, display, log: join(directory, "logs", name + ".log") });
   await phase("purescript", "spago", ["build", "-q"]);
-  await phase("generate-go", join(root, "bin/gopurs"), ["--main", "Main"]);
-  const snapshots = snapshotFiles(root, fixture);
-  for (const { generated } of snapshots) if (!existsSync(generated)) throw new Error(`Missing generated snapshot source: ${generated}`);
+  await phase("generate-go", process.env.GOPURS_TEST_COMPILER ?? join(root, "bin/gopurs"), ["--main", "Main"]);
+  const snapshots = snapshotFiles(root, fixture, env);
   if (!existsSync(join(directory, "output/main/main.go"))) throw new Error("gopurs did not generate output/main/main.go");
-  await phase("format", "gofmt", ["-w", ...snapshots.map(file => file.generated)]);
+  await formatSnapshots(snapshots, processes, fixture, env);
   if (!options.update) await verifySnapshots(snapshots, processes, fixture, env);
   const output = join(directory, "output");
   // Main already writes go.mod. Keep its Go version instead of recreating it.

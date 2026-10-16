@@ -1,6 +1,6 @@
 # Gopurs — build incrémental et lancement Go
 
-Plan v3 et suites — mise à jour : 13 octobre 2026.
+Plan v3 et suites — mise à jour : 16 octobre 2026.
 
 ## Objectif et périmètre
 
@@ -11,6 +11,12 @@ au lot 00 ; la chaîne jusqu'à l'exécution prend **40,808 s**. La
 [référence ventilée](docs/build-baseline.md) fixe les conditions de comparaison.
 Le lot 03 ramène la médiane gopurs identique à **1,257 s** et la chaîne à
 **3,958 s**, avec zéro sortie Go réécrite et zéro compilation/lien Go.
+
+Les repères initiaux rappelés par l'utilisateur restent visibles dans les bilans :
+**~60 s de backend à froid et ~30 s après modification**. Ce sont des repères
+historiques, à distinguer des mesures appariées de chaque lot. Les références
+intermédiaires v3/06 (`publicsync`) et G06 servent à attribuer les gains ; le
+retour vers ces temps initiaux reste l'objectif de performance du backend.
 
 La première livraison doit couvrir les builds sans changement et les
 modifications localisées. Elle concerne gopurs, les adaptations nécessaires du
@@ -452,20 +458,37 @@ plan et lot dans [docs/testing.md](docs/testing.md).
 
 ## Suites planifiées — préparation incrémentale et packages Go
 
-**Mise à jour du 13 octobre 2026 : 0/7 lots P et 2/7 lots G validés.** Ces
+**Mise à jour du 16 octobre 2026 : 0/7 lots P et 7/7 lots G validés.** Ces
 quatorze lots ont leurs propres critères de fin ; le compteur du plan v3 reste
-celui des lots 00–06. Le lot 06 fournit désormais la référence validée et les
-coûts actualisés pour engager les deux suites.
+celui des lots 00–06. La référence v3/06 est conservée ; G06 fournit désormais
+la référence immédiate pour une éventuelle reprise de P.
 
 ### Priorité et dépendances
 
-Ordre confirmé par v3/06 : **G00 → G01…G06 → P00 → P01…P06**.
-La priorité va au découpage Go : le lot 06 mesure **206,820 / 209,650 / 208,470 s**
-de `go build` après feuille/partagé/FFI, dont **202,788 / 205,196 / 204,576 s**
-dans les commandes de l'action du package `purescript`. Go représente **78–88 %**
-de la chaîne, contre environ **9–10 s** de préparation globale gopurs.
-Les références détaillées figurent dans `docs/build-incremental.md` ; P00 les
-remesurera sur le compilateur livré après G.
+Ordre confirmé par v3/06, avec point de décision avant P01 :
+**G00 → G01…G06 → P00 → décision → P01…P06**.
+**Borne de travail confirmée le 16 octobre 2026 : finir G, puis faire une pause
+avant P. G est maintenant livré ; la pause avant P00 est effective.** La campagne
+du candidat 7, son bilan et les validations nécessaires à G06 ont réussi.
+La borne fixée était de terminer les validations
+nécessaires à G06 si les critères passent. Un critère bloquant doit être présenté
+avant toute nouvelle série de candidats ; aucune nouvelle recherche
+d'optimisation n'est engagée automatiquement. P00–P06 restent planifiés mais
+ne démarrent pas dans cette séquence.
+Une reprise explicitement autorisée commence par **P00 seul** : son bilan chiffré
+est présenté avant de décider de l'engagement de P01–P06.
+
+La priorité donnée au découpage Go s'appuyait sur v3/06 : **206,820 / 209,650 /
+208,470 s** de `go build` après feuille/partagé/FFI, dont **202,788 / 205,196 /
+204,576 s** dans les commandes de l'action du package `purescript`. Go
+représentait **78–88 %** de la chaîne, contre environ **9–10 s** de préparation
+globale gopurs. Ces références figurent dans `docs/build-incremental.md`.
+
+Après G06, le backend mesuré en layout packages (`GOPURS_GO_PACKAGES=1`) prend
+**48,487 / 49,672 / 40,001 s** après feuille/partagé/FFI et **117,830 / 117,740 s**
+aux froids applicatif/complet. Le [bilan G06](docs/build-go-measurements.md)
+conserve les paires ; P00 devra déterminer quelle part de ces temps la
+préparation incrémentale peut réellement supprimer, net du coût de son cache.
 
 - **G00 → G01 → G02 → G03 → G04 → G05 → G06** : graphe réel, partition,
   références qualifiées, émission, FFI/bootstrap, cache/runner, livraison.
@@ -488,10 +511,19 @@ remesurera sur le compilateur livré après G.
   lourde concurrente. Comparer les médianes, conserver chaque paire et augmenter
   l'échantillon si la dispersion empêche de conclure. Les longues campagnes
   tournent en arrière-plan.
-- **Suite P :** objectif d'acceptation d'au moins **10 % de réduction du temps
-  gopurs** sur chacune des éditions feuille et partagée. Chaque optimisation
+- **Suite P :** minimum d'acceptation d'au moins **10 % de réduction du temps
+  gopurs total** sur chacune des éditions feuille et partagée. Chaque optimisation
   autonome doit gagner au moins **5 %** sur son scénario annoncé avant l'essai.
   Les coûts de lecture, décodage, preuve et publication font partie de ce temps.
+  L'objectif reste un retour vers **~30 s après modification** : depuis G06,
+  cela demande environ **38–40 %** sur feuille/partagé. Le minimum de 10 %
+  laisserait encore environ **44–45 s** ; son atteinte ne suffit donc pas à
+  déclarer cet objectif rempli.
+- **Dette froide du backend :** conserver explicitement le repère **~60 s**
+  face aux **~118 s** de G06. P00 doit chiffrer la contribution possible de P
+  à cette réduction ; la réutilisation après édition ne garantit pas un gain
+  au premier build. Le respect du budget de régression au froid laisse cette
+  dette ouverte tant que le retour vers le repère initial n'est pas établi.
 - **Suite G :** objectif d'acceptation d'au moins **30 % de réduction du temps
   `go build`** et **20 % sur la chaîne mesurée jusqu'à `exec`**, pour chacune des
   éditions feuille, partagée et FFI. Garder initialement les ressources du runner
@@ -509,6 +541,12 @@ remesurera sur le compilateur livré après G.
 - Chronométrer directement la chaîne jusqu'à `exec`, puis l'exécution des tests.
   Relever aussi frontend, gopurs, tidy, attente du verrou, compilation, lien,
   RSS, allocations, octets persistés, fichiers réécrits et packages recompilés.
+- **Priorité utilisateur révisée le 14 octobre, pendant le pilote G06/3 :** le
+  temps prime ; le RSS est secondaire sauf aggravation démesurée. Le seuil
+  historique de +5 % RSS sert désormais d'indicateur, sans rejet automatique.
+  Continuer à mesurer backend et compilateur Go séparément et documenter le coût
+  mémoire. Aucun nouveau plafond numérique n'a été fixé. Conserver les anciens
+  protocoles/résultats ; les seuils temporels et de stockage restent applicables.
 
 ### Suite P — Préparation incrémentale : 0/7 lots validés
 
@@ -522,20 +560,37 @@ les mêmes métadonnées en réévaluant seulement les contributions invalidées
 
 #### P00 — Référence et dépendances de préparation
 
-- [ ] **Délimiter les unités réutilisables et leur coût complet.**
+- [ ] **Délimiter les unités réutilisables, leur coût complet et le gain accessible.**
+  - Établir la référence sur le compilateur livré G06, avec layout packages
+    explicite et protocole figé : froid applicatif/complet, identique, feuille,
+    partagée et FFI. Conserver les références v3/06 et les repères initiaux.
   - Ventiler `Driver.Prepare`, les constructeurs de métadonnées,
     `Gopurs.Monomorphization` et le collecteur transitif du PBO : chargement,
     enrichissement des classes, index des corps/types, demandes directes,
     tours transitifs, réécriture et calcul des clés.
+  - Rapprocher cette ventilation du temps backend total, en isolant aussi les
+    coûts du cache, de l'émission et de l'analyse/partition Go. Éviter les doubles
+    comptes et conserver les coûts non attribués ; les anciens 9–10 s de
+    préparation ne suffisent pas à expliquer les 40–50 s actuelles après édition.
   - Inventorier les lectures de corps, types, dictionnaires, arguments statiques,
     présences/absences et barrières d'éligibilité de chaque passe. Conserver les
     contributions intermédiaires et leurs empreintes comme oracles.
+  - Chiffrer par scénario le temps évitable brut, les coûts de restauration,
+    validation, sérialisation et publication des unités envisagées, puis le
+    **gain net plausible en secondes et en pourcentage** et le **temps résiduel
+    estimé**. Distinguer mesures, bornes et hypothèses, avec leur incertitude ;
+    confronter ce potentiel au minimum de 10 %, à l'objectif ~30 s après édition
+    et à la dette froide ~60 s.
   - Ajouter au corpus les retraits de demandes, substitutions à cardinalité
     égale, cycles, changements de fournisseur et transitions FFI seules.
   - **Bridges :** recenser les transports de `Preparation`, `Wire`, du cache
     commun et des observations PBO nécessaires à ces données.
-  - **Fin :** référence reproductible, graphe des lectures et budget de stockage/
-    restauration ; choix des unités persistées motivé par les mesures.
+  - **Fin :** référence reproductible, graphe des lectures, budget de stockage/
+    restauration et bilan du gain net accessible ; choix des unités persistées
+    motivé par les mesures et l'effort d'implémentation attendu. Présenter ce
+    bilan à l'utilisateur pour une **décision explicite avant P01** : poursuivre,
+    ajuster le périmètre ou s'arrêter. Si le potentiel est insuffisant ou reste
+    indéterminé, exposer ce constat avant toute nouvelle série de candidats.
 
 #### P01 — Entrées et objets de préparation persistants
 
@@ -633,12 +688,14 @@ les mêmes métadonnées en réévaluant seulement les contributions invalidées
     pour JS, Go séquentiel/parallèle et le bootstrap Rust ; comparer les modules
     préparés, sorties, diagnostics, puis compiler et exécuter les régressions.
   - Mesurer froid, identique, feuille, partagée et FFI, taille du cache, mémoire,
-    lectures et recalculs. Vérifier les seuils face à P00 et le bilan cumulé
-    face à v3/06 ; examiner les snapshots puis effectuer les replays stricts.
-  - **Fin :** gains confirmés, preuves conservées et documentation de préparation,
-    cache, invalidations et récupération publiée.
+    lectures et recalculs. Vérifier les seuils face à P00/G06 et le bilan cumulé
+    face à v3/06 ; publier aussi l'écart restant aux repères ~30 s après édition
+    et ~60 s à froid. Examiner les snapshots puis effectuer les replays stricts.
+  - **Fin :** gains confirmés, minimum d'acceptation et objectif utilisateur
+    évalués séparément, dette froide restante explicitée, preuves conservées et
+    documentation de préparation, cache, invalidations et récupération publiée.
 
-### Suite G — Granularité des packages Go : 2/7 lots validés
+### Suite G — Granularité des packages Go : 7/7 lots validés
 
 **Point de départ :** `Driver.Output` écrit modules et FFI dans `purescript` et
 les entrées appellent `purescript.Get_…_main`. `GoAst`, `GoImports` et `Printer`
@@ -711,7 +768,18 @@ G02–G06. Audit final : **430 fichiers de production inchangés**, preuve
 
 #### G02 — Références et types Go qualifiables
 
-- [ ] **Porter la propriété des références jusqu'au rendu.**
+**Validé le 13 octobre 2026 :** les [références possédées](docs/build-go-references.md)
+couvrent AST, workers, types, rendu et liaison typée des fragments/FFI. Les cinq
+corpus G00 sont résolus ; b8x et bootstrap représentent **2 997 / 625 unités**.
+Les **18 passages b8x** sont byte-exacts sur les mêmes TAST, Rust inclus dans
+la campagne finale. Les objets workers v2 sont exacts entre hôtes. Les trois
+transports du résolveur, les race detectors, les replays stricts et la reprise
+v1 → v2 à journal absent passent. Les trois snapshots restent inchangés.
+Le relevé JSON exhaustif n'est pas publié au cache ; G03 doit raccorder un plan
+compact au pilote. Aucun gain temporel n'est revendiqué. Preuve :
+`gopurs-go-packages-g02-20261013/final-reference/`.
+
+- [x] **Porter la propriété des références jusqu'au rendu.**
   - Introduire les identités propriétaire/symbole nécessaires dans `GoAst`, les
     métadonnées et signatures de workers ; qualifier au rendu selon le package
     consommateur. Mettre à jour `GoImports`, `Printer` et leurs producteurs.
@@ -728,7 +796,29 @@ G02–G06. Audit final : **430 fichiers de production inchangés**, preuve
 
 #### G03 — Émission multipackage, ABI et initialisation
 
-- [ ] **Émettre un programme compilable selon le plan G01.**
+**Validé le 14 octobre 2026 :** l'[émetteur typé et le writer](docs/build-go-emission.md) portent
+le plan 1/128, les annotations de records/initialiseurs et les trois transports.
+Les fixtures compilent et s'exécutent, avec oracles SCC, ordre des effets et
+cellule lazy partagée. La campagne réelle termine **12/12 passages exacts** sur
+les quatre hôtes, y compris `StringEdgeCases` (**271 TAST / 33 packages**). Les
+reproducteurs du trap WASM, du tampon JS et des annotations UTF-16 sont conservés.
+Le pilote complet acquiert les exports compacts et publie par le journal ; les
+quatre hôtes passent migration, entrées, forcé, dépendance locale et identique
+sans compilation/lien. b8x publie **39 613 Go / 525 packages** et son oracle
+compilé passe, avec reconstruction identique sans compilation/lien. Le bootstrap
+courant produit **150 packages**, compile et passe le test CLI comme compilateur.
+Le rapprochement des graphes émis retrouve **185 667 placements / 35 596 arêtes**
+b8x et **65 964 placements / 5 875 arêtes** bootstrap ; les renommages de helpers
+et différences de corpus sont expliqués. Après revue, les deux snapshots ne
+reçoivent que **27 / 134 lignes d'annotations**, puis les **67 commandes strictes**
+des trois fixtures passent sur les quatre hôtes. Les **huit comparaisons / 28
+commandes** des grands corpus sont byte-exactes sur les quatre hôtes, avec quatre
+objets de modules exacts, hits sans réécriture et reconstructions sans compilation
+ni lien. Les **348 tags** b8x et les **185 667 corps de déclarations**, normalisés
+pour les seuls renommages prévus, restent équivalents. Les sources du compilateur
+figé sont auditées dans `gopurs-go-packages-g03-20261013/final-reference/`.
+
+- [x] **Émettre un programme compilable selon le plan G01.**
   - Raccorder les chemins, imports, alias et entrées de `Driver.Output` au plan ;
     choisir une visibilité légale pour chaque valeur, type et champ traversant
     une frontière Go. Couvrir notamment les records à champs non exportés et
@@ -748,7 +838,16 @@ G02–G06. Audit final : **430 fichiers de production inchangés**, preuve
 
 #### G04 — FFI réelles, bibliothèques et bootstrap
 
-- [ ] **Faire fonctionner les consommateurs avec les frontières de packages.**
+**Validé le 14 octobre 2026 :** les [consommateurs réels](docs/build-go-consumers.md)
+passent **36 passages / 207 commandes strictes** sur les quatre hôtes, avec les
+mêmes TAST et les résultats du monolithe. Les neuf snapshots multipackages ont
+été examinés (**592 déclarations / 57 fragments**), créés après exécution puis
+rejoués sans modification. Les **89 commandes** CLI couvrent FFI absente,
+syntaxe invalide, retour de FFI et signatures/dépendances natives. Les suites
+`foreign`/`js-promise`, les **onze probes réfléchies** b8x et le bootstrap courant
+sont verts. Preuve : `gopurs-go-packages-g04-20261014/final-reference/`.
+
+- [x] **Faire fonctionner les consommateurs avec les frontières de packages.**
   - Placer chaque FFI avec son propriétaire et réécrire par AST les références
     qui doivent traverser un package, en respectant variables locales, imports,
     noms exportés, helpers et alias. Vérifier corps/signatures, FFI absentes,
@@ -766,7 +865,19 @@ G02–G06. Audit final : **430 fichiers de production inchangés**, preuve
 
 #### G05 — Cache, migration des sorties et runner b8x
 
-- [ ] **Rendre le nouveau layout incrémental et récupérable.**
+**Validé le 14 octobre 2026 :** les [sources avant partition](docs/build-go-incremental.md)
+sont conservées sous `gopurs/go-source-gzip-v1`. Restauration, intégrité,
+récupération et migrations passent avec détection de races, Go 1.22 inclus.
+Les **56 comparaisons / 350 commandes** de transitions réelles passent sur les
+quatre hôtes. L'artefact Rust incorrect reste conservé et son remplacement est
+validé. b8x restaure **2 703 émissions** après une édition FFI et ne réécrit qu'un
+Go, avec forcé/retour exacts, oracle et identique sans compilation/lien. Les dix
+contrôles du runner passent, avec migration de layout, dépendance transitive et
+deux entrées. La récupération finale des objets décodés est intégrée au candidat
+1 G06, qui passe **89 commandes CLI** sur les quatre hôtes. Preuve :
+`gopurs-go-packages-g05-20261014/final-reference/`.
+
+- [x] **Rendre le nouveau layout incrémental et récupérable.**
   - Versionner le layout dans le contrat de cache ; couvrir dans les clés
     d'émission le propriétaire du module, les placements/ABI référencés et les
     règles de nommage. Une édition isolée doit garder les sorties des packages
@@ -785,7 +896,195 @@ G02–G06. Audit final : **430 fichiers de production inchangés**, preuve
 
 #### G06 — Mesures finales, snapshots et livraison
 
-- [ ] **Confirmer le gain de bout en bout et livrer le layout retenu.**
+**Validé le 16 octobre 2026 :** le candidat 7 à densité **1/8192** est installé
+avec ses artefacts exacts. Les **36 chaînes / 36 oracles** et **39 critères
+temps/stockage** passent. La chaîne gagne **62,88 % feuille / 48,36 % partagé /
+54,50 % FFI**, malgré les surcoûts backend de **26,88 / 34,37 / 42,62 %**. Le
+backend reste à **~118 s à froid / 40–50 s après édition**, loin des repères
+initiaux **~60 s / ~30 s** respectivement ; face à `publicsync`, le froid complet
+est à **+2,23 %**, dans le budget. Le GOCACHE identique est à
+**+9,997897 %**. Le [bilan complet](docs/build-go-measurements.md) publie les
+paires, plages, ressources, graphes, actions Go et commandes de migration.
+
+La parité des deux grands corpus passe sur les quatre hôtes, comme les **56
+comparaisons de transitions**. Les **612 déclarations** des neuf snapshots sont
+revues avant mise à jour, puis les **207 commandes strictes** et **89 commandes
+CLI** passent sur l'installation. Intégrité/récupération du cache, bootstrap
+courant (**512 TAST / 23 Go / binaire exact**) et **10 contrôles du runner sur
+chacun de macOS et Linux** passent. L'audit final porte sur les artefacts mesurés,
+295 fichiers source/outils, les snapshots et les preuves conservées :
+`gopurs-go-packages-g06-20261014/final-reference/summary.json`.
+**G est clos à 7/7 ; P reste à 0/7, en pause.**
+
+**Historique des candidats et reprises, 14–16 octobre :** un alias runtime court,
+résolu par `go/types` avec contrôle des
+noms réservés, vise le dépassement de stockage relevé sur G03 (**+16,82 %**).
+Le résolveur et les quatre hôtes CLI passent. Le
+[protocole G06](docs/build-go-measurements.md) conserve les seuils, la référence
+`publicsync`, les ressources du runner et les GOCACHE privés de base.
+Le pilote 1 gagne **83,63 % de Go / 60,22 % de chaîne** sur la feuille (une
+paire seulement), mais son candidat est rejeté : froid backend, RSS froid et
+GOCACHE dépassent les budgets. Le candidat 2 regroupe les fichiers par package,
+avec contrôle typé des imports et maintien des frontières requises par les
+directives. Il passe **56 comparaisons de transitions / 89 commandes CLI** sur
+les quatre hôtes. Les **612 déclarations Main/FFI** des neuf snapshots sont
+examinées avant mise à jour, puis **207 commandes** les rejouent strictement sur
+les quatre hôtes. Preuve : `functional-candidate-2/summary.json`. Le pilote 2
+termine avec les volumes après oracle et les caches d'exports isolés : feuille
+**−84,71 % Go / −66,46 % chaîne**, mais GOCACHE de base **+57,07 %**, RSS backend
+froid **+12,13 %**, gopurs froid **+22,54 %** et chaîne identique **+0,724 s**.
+Le candidat 2 est rejeté pour l'acceptation. Les diagnostics de mémoire et
+d'archives sont conservés ; la restitution mémoire à la frontière du résolveur
+est rejetée à **+6,25 % de RSS** dans le diagnostic, puis le partage des
+identifiants à **+5,94 %**, avec sorties exactes et retour audité au candidat 2.
+Les probes 1/512 et 1/2048 passent leurs oracles, mais dépassent encore le budget
+GOCACHE runner (**+22,94 % / +16,61 %**). Le probe 1/8192 passe l'oracle avec
+**6 packages et +9,59 % de GOCACHE runner** ; le cache total reste à mesurer.
+Les exports allégés reproduisent les sources exactement et passent les suites
+cache/race Go 1.27.0 et 1.22.12. Le candidat 3 privé réunit ces deux essais et
+passe le résolveur, **89 commandes CLI / 56 comparaisons de transitions** sur
+les quatre hôtes. Son pilote termine avec **10 oracles passants** : chaîne
+feuille **−62,80 %**, partagée **−44,99 %**, FFI **−52,88 %**, identique
+**−6,23 %**, sur une seule paire. Restent hors budget le backend du seed froid
+(**+10,01 %**), le GOCACHE total de base (**+10,005 %**) et les objets gopurs après
+partagé/FFI (**+21,09 % / +26,22 %**). Un entretien des objets non référencés après
+publication et une réduction des copies du rendu sont en validation. L'essai
+GC à 100 % est rejeté : **+3,59 % de temps** sur trois paires locales malgré la
+baisse de RSS. La réduction des copies gagne **10,06 %** sur trois paires de
+partition seule, avec sorties exactes ; les exports sans chemins locaux
+économisent **85 714 octets** de cache dans le probe. Les suites cache/race
+passent sous Go 1.27.0 et 1.22.12. Le candidat 4 privé est reconstruit et audité ;
+il passe **89 commandes CLI / 56 comparaisons de transitions** sur les quatre
+hôtes. Les trois paires du contrôle froid ciblé donnent **112,674 → 120,893 s
+(+7,29 %)**, au-dessus du budget dans chaque paire, avec six inventaires exacts :
+le candidat 4 est refusé au contrôle froid. La réutilisation des compresseurs de
+sources G05 est rejetée (**+0,57 % de temps** local malgré moins d'allocations),
+avec retour byte-exact au code antérieur. L'acquisition d'exports à quatre
+processus gagne **60,41 %** sur trois paires froides locales, avec mêmes exports,
+cache et Go ; les suites cache/race passent sous Go 1.27.0 et 1.22.12.
+Le candidat 5 privé est reconstruit, audité et passe **89 commandes CLI /
+56 comparaisons de transitions** sur les quatre hôtes. Ses trois paires froides
+donnent **110,519 → 117,662 s (+6,46 %)**, avec dépassement dans chaque paire et
+six inventaires exacts : il est refusé au contrôle froid, à **1,616 s** de la
+limite médiane. Les profils CPU/allocations/GC réellement froids terminent avec
+sorties exactes ; ils servent au diagnostic. Le Go du driver conserve encore
+la préparation entière après émission pour relire les seules entrées : cette
+piste est testée par un probe natif privé, construit avec avant/après conservés.
+Il est **rejeté** après trois paires : **−2,87 % après émission**, sous le seuil
+préalable de 5 %, malgré **−3,40 % de backend total** en médiane ; six inventaires
+exacts, une légère régression totale dans la deuxième paire. Le probe d'exports
+à huit processus gagne ensuite **15,22 %** sur trois paires froides locales,
+avec mêmes exports, cache et Go ; son raccordement est en validation. La séquence
+du candidat 6 termine : suites cache/race des deux Go, reconstruction des
+quatre hôtes, audit et **89 commandes CLI / 56 comparaisons de transitions**
+passants. Le contrôle froid à trois paires passe sur les médianes,
+**112,299 → 117,026 s (+4,21 %)**, avec six inventaires exacts ; la deuxième paire
+reste à **+5,18 %**, et la marge médiane n'est que de **0,888 s**. La campagne
+complète `full-1/` de **36 chaînes** est lancée : trois paires alternées par
+scénario, archivage vérifié entre scénarios et ressources G00/v3 conservées.
+Elle est interrompue par **SIGTERM à 28/36 chaînes**, toutes exactes avec leurs
+oracles, pendant le troisième froid applicatif. Sur trois paires complètes,
+la chaîne gagne **62,16 % feuille / 46,96 % partagé / 53,21 % FFI**, malgré un
+surcoût backend ; les seuils Go/chaîne et le stockage chauds passent. Le GOCACHE
+identique reste juste sous la limite, à **+9,9979 %**. Les deux paires froides
+applicatives donnent **−31,17 % de chaîne / +3,18 % backend**, encore provisoires.
+La première reprise des huit mesures restantes utilise les fonctions du
+harnais figé, racines neuves pour la paire interrompue et sauvegarde des
+28 mesures acquises. L'entretien préalable archive les quatre échantillons
+froids terminés, hors chronométrages ; la couverture des six échantillons sera
+vérifiée entre les archives avant/après reprise. `caffeinate` protège la
+séquence contre la veille automatique. Elle termine à **33 chaînes avec oracles
+passants**, puis le garde-fou disque arrête la suivante avant `tidy`. Le froid
+applicatif passe sur trois paires : **−31,31 % chaîne / −49,52 % Go / +1,53 %
+backend** en médiane. La première paire de froid complet donne **−27,42 % de
+chaîne**, mais **+7,74 % de backend** : les deux autres paires restent nécessaires.
+La deuxième reprise est lancée avec archivage après chaque paire froide. Les
+33 chaînes complètes sont sauvegardées ; le côté candidat de la paire
+interrompue est mis à part pour rejouer cette paire entièrement. Le jeu retenu
+repart de **32 chaînes**, puis termine à **36 chaînes / 36 oracles passants**.
+Les TAST/Go sont exacts ; les 28 résultats initiaux, les 32 retenus avant reprise
+et le côté isolé sauvegardé sont vérifiés. Les archives couvrent les six
+échantillons retenus et le côté isolé. Le froid complet donne **−27,42 % chaîne /
+−45,86 % Go**, mais **117,121 → 125,117 s (+6,83 %) de backend**, seul critère
+temps/stockage en échec. Les écarts backend par paire sont **+7,74 / +4,90 /
++2,90 %** : l'extension prévue en cas de dispersion est fixée à **trois paires
+supplémentaires**, avec décision sur **les six réunies** et mêmes seuils.
+Le harnais réutilise ses 15 fonctions et son environnement par AST, avec racines
+neuves et archivage après chaque paire. Les 36 résultats/analyses sont conservés ;
+le bilan cumulé attend 42 chaînes. Réserve préalable de **16 GiB**, plancher de
+**8 GiB** pendant les commandes. L'extension est lancée sous `caffeinate`, après
+archivage restauré/vérifié de **41 racines historiques supplémentaires**, avec
+**17,49 Go libres** au contrôle préalable. Elle termine à **42 chaînes / 42
+oracles**, avec les 36 mesures initiales et toutes les preuves préservées. Les
+six paires froides réunies donnent **398,610 → 292,306 s (−26,67 %) de chaîne**,
+**247,900 → 137,115 s (−44,69 %) de Go** et **117,733 → 124,544 s (+5,79 %)
+de backend**. Le candidat 6 est **refusé au froid**, à **0,925 s** du budget ;
+le stockage passe. Les paires supplémentaires backend sont à **+2,71 / +4,69 /
++8,71 %**. Un probe privé supprime le deuxième parcours AST du rendu : seuil
+préalable de **5 % sur trois paires `PackageFiles`**. Il gagne **6,12 %
+(11,463 → 10,761 s)**, avec gain dans chaque paire, suites du résolveur et six
+plans/Go exacts. Ce gain local est retenu pour validation dans un candidat
+complet reconstruit. Le rendu est reporté à l'identique dans le dépôt, puis la
+séquence du **candidat 7** est lancée sous `caffeinate` : archivage de neuf racines
+historiques terminées, race detectors Go 1.27.0/1.22.12, reconstruction quatre
+hôtes et contrôles CLI/transitions. Son contrôle suivant est préparé sur
+**trois paires froides complètes, frontend compris**, avec les fonctions du
+harnais figé et mêmes seuils. La reconstruction, les deux race detectors et les
+**89 commandes CLI / 56 comparaisons** terminent avec succès : mêmes TAST,
+objets métier/préparés et Go exécutés sur les quatre hôtes. L'audit confirme
+le rendu en une passe et son WASM reconstruit comme seuls changements depuis 6.
+Le cache privé de construction est archivé/restauré/vérifié ; **12,50 Go libres**
+restent avant le contrôle froid. La séquence d'entretien complémentaire puis
+des paires froides est lancée sous `caffeinate`, avec contrôle préalable des
+inventaires publiés et réserve de 16 GiB. Le contrôle termine avec **six chaînes /
+six oracles passants** et tous ses critères temps/stockage validés :
+**115,177 → 117,740 s (+2,23 %) de backend**, **239,500 → 128,850 s (−46,20 %)
+de Go**, **385,109 → 276,664 s (−28,16 %) de chaîne**. Les trois paires backend
+sont à **+4,10 / +3,45 / +1,95 %**, toutes sous +5 %, avec **3,196 s** de marge
+médiane. Le GOCACHE total reste à **+9,9914 %** ; les six archives/volumes et
+TAST/Go sont vérifiés. Restent les **30 chaînes des cinq autres scénarios** du
+candidat 7, les grands corpus quatre hôtes, le bootstrap courant et les
+snapshots examinés/rejoués strictement ; G06 reste ouvert.
+L'archivage supplémentaire autorisé des targets Cargo 5–7 et des sorties frontend
+de **26 échantillons terminés** est achevé : **7 626 fichiers Cargo / 210 054
+fichiers frontend** restaurés/vérifiés avant retrait, binaires, journaux, pointeurs
+et inodes des verrous préservés. Le harnais des 30 chaînes reprend les 15 helpers
+et quatre instructions d'environnement figés, avec archivage après chaque paire
+et libération des caches chauds après leurs 24 mesures. Le contrôle du lanceur et
+de l'archivage passe, avec **16 racines restaurées** ; réserve de départ **20 GiB**.
+Douze anciennes racines de stockage supplémentaires sont archivées avec
+restauration vérifiée (**131 904 fichiers**), portant l'espace libre observé à
+**26,27 Go**. Les **30 chaînes** du candidat 7 sont lancées sous `caffeinate`
+dans `full-2/` ; leur bilan sera réuni aux six froides de `cold-complete-7/`.
+La campagne termine le **16 octobre** : **36 chaînes / 36 oracles** réunis,
+**39 critères temps/stockage passants**, données froides initiales inchangées.
+Les médianes de chaîne gagnent **62,88 % feuille / 48,36 % partagé / 54,50 % FFI**,
+avec **26,88 / 34,37 / 42,62 % de surcoût backend** respectivement. Le froid
+applicatif est à **−31,89 % de chaîne / +2,15 % de backend** ; le froid complet
+reste à **−28,16 % / +2,23 %**. Le GOCACHE identique est à **+9,997897 %**,
+extrêmement proche du plafond. Le backend reste à **~118 s à froid** : ce verdict
+face à `publicsync` ne vaut pas retour aux repères initiaux de **~60 s à froid /
+~30 s après modification**.
+Les 36 lignes sont publiées dans `docs/build-go-cycle-g06.csv`. La validation
+finale privée passe : **huit comparaisons / 28 commandes** des grands corpus
+quatre hôtes, bootstrap émis fonctionnel et **neuf fixtures / 207 commandes**.
+La revue des nouveaux snapshots retrouve **612 déclarations Main/FFI**, entrées
+et imports d'initialisation externes exacts après normalisation des qualifications.
+La densité **1/8192** et les artefacts mesurés sont installés après audit des
+**295 fichiers source/outils**. Les replays sur l'installation et le bootstrap
+courant passent ; deux fixtures reçoivent des identités d'ancres fixes pour
+éprouver les frontières à cette densité. Les erreurs de sélection de Spago,
+profondeur de workspace et PATH Go du harnais final sont conservées et corrigées
+dans des reprises distinctes. Les commandes réussies antérieures sont préservées.
+Les dix contrôles du runner passent sur macOS et Linux. G06 est livré, puis pause
+avant P.
+Les objets de **55 racines terminées** sont
+archivés avec restauration vérifiée, journaux et inodes des verrous conservés ;
+**26,5 Go libres** sont observés au lancement historique du candidat 6. La densité
+du dépôt, restée 1/128 pendant les essais, passe à **1/8192** à l'installation du 7.
+G est clos à **7/7**, P reste à **0/7, en pause**.
+
+- [x] **Confirmer le gain de bout en bout et livrer le layout retenu.**
   - Exécuter le protocole de paires sur les trois éditions et mesurer aussi
     froid/identique, frontend, gopurs, compilation, lien, ressources et suite de
     tests. Vérifier les seuils G avec le runner réel, à ressources constantes.

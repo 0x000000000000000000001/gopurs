@@ -12,6 +12,7 @@ import { empty as emptySet, singleton } from '../output/Data.Set/index.js';
 import { Tuple } from '../output/Data.Tuple/index.js';
 import * as CodeGen from '../output/Gopurs.CodeGen/index.js';
 import * as Go from '../output/Gopurs.GoAst/index.js';
+import { SymbolReference, generated } from '../output/Gopurs.GoSymbol/index.js';
 import { runtimeGoCode } from '../output/Gopurs.Runtime/index.js';
 import * as C from '../output/PureScript.Backend.Optimizer.CoreFn/index.js';
 import { NeutralExpr } from '../output/PureScript.Backend.Optimizer.Semantics/index.js';
@@ -37,14 +38,14 @@ test('constructor tests evaluate imported native Maybe, Either and Tuple workers
         enumAdts: emptySet, enumCtors: emptySet, globalTypes: emptyMap,
         classDeclsFields: emptyMap,
         globalFunctions: map([
-            ['Producer.maybe', { fullName: 'Call_Producer_maybe', arity: 1,
+            ['Producer.maybe', { reference: new SymbolReference(generated('Producer')('Call_Producer_maybe')), arity: 1,
                 fArgs: [Go.TypeBool.value],
                 fRet: new Go.TypeStructValue('Data.Maybe.Maybe', [Go.TypeValue.value, Go.TypeBool.value]) }],
-            ['Producer.either', { fullName: 'Call_Producer_either', arity: 1,
+            ['Producer.either', { reference: new SymbolReference(generated('Producer')('Call_Producer_either')), arity: 1,
                 fArgs: [Go.TypeBool.value],
                 fRet: new Go.TypeStructValue('Data.Either.Either',
                     [Go.TypeValue.value, Go.TypeValue.value, Go.TypeBool.value]) }],
-            ['Producer.tuple', { fullName: 'Call_Producer_tuple', arity: 1,
+            ['Producer.tuple', { reference: new SymbolReference(generated('Producer')('Call_Producer_tuple')), arity: 1,
                 fArgs: [Go.TypeBool.value],
                 fRet: new Go.TypeStructValue('Data.Tuple.Tuple',
                     [Go.TypeValue.value, Go.TypeValue.value]) }],

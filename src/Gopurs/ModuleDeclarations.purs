@@ -10,6 +10,7 @@ import Data.String.Pattern (Pattern(..), Replacement(..))
 import Data.Tuple (Tuple(..))
 import Gopurs.CodegenState (CodegenMetadata)
 import Gopurs.GoAst (GoDecl(..), GoType(..), constructorNames, rawGo, sanitizeName)
+import Gopurs.GoSymbol (generated)
 import Gopurs.GoTypes (structFieldGoType)
 import PureScript.Backend.Optimizer.Convert (BackendModule)
 import PureScript.Backend.Optimizer.FfiSupport (hashString)
@@ -24,7 +25,7 @@ constructors { pointerAdtPaths, enumAdts, elidedCtors, classDeclsFields } modNam
           goFieldTypes = map (structFieldGoType pointerAdtPaths enumAdts elidedCtors decl.vars modNameStr) ctor.fields
           structName = (constructorNames modNameStr ctor.name).structName
           structDecl = GoStructDecl
-            { name: structName
+            { name: (constructorNames modNameStr ctor.name).symbol
             , typeParams: map (\v -> Tuple ("T_" <> sanitizeName v) (TypeInterface "any")) decl.vars
             , fields: Array.cons (Tuple "Rc" TypeUint32) (Array.mapWithIndex (\i ty -> Tuple ("V" <> show i) ty) goFieldTypes)
             }
@@ -53,6 +54,6 @@ constructors { pointerAdtPaths, enumAdts, elidedCtors, classDeclsFields } modNam
                 -- runtime/unsafe dependencies; its declaration is structured.
                 body = rawGo ("\tgopurs_runtime.StructGetters[" <> hashStr <> "] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {\n\t\tc := (*" <> structName <> typeParamsGetter <> ")(ptr)\n\t\t_ = c\n\t\tswitch key {\n" <> String.joinWith "\n" cases <> "\n\t\tdefault: panic(\"Key not found in dictionary " <> structName <> ": \" + key)\n\t\t}\n\t}")
               in
-                [ structDecl, GoInitDecl body ])
+                [ structDecl, GoInitDecl (generated modNameStr ("register/" <> structName)) body ])
       decl.constructors)
     mod.dataDecls

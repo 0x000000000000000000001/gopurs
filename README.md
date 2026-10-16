@@ -95,6 +95,12 @@ npm run build:native   # rebuild JS and bootstrap bin/gopurs-native (the default
 npm run build:rust     # bootstrap bin/gopurs-rust; select it with GOPURS_RUST=1
 ```
 
+The incremental Go package layout is selected with `GOPURS_GO_PACKAGES=1` when
+building an application. Keep that setting across builds; `GOPURS_GO_PACKAGES=0`
+selects the monolithic layout. See the [build and migration guide](docs/build-cache.md#sélectionner-le-découpage-go-g06)
+and the [G06 measurements](docs/build-go-measurements.md) for the delivered
+1/8192 partition, compiler identities, measured cycle gains and backend costs.
+
 `npm run build:rust` profiles the Rust host by default: it trains on the
 compiler's own Go-runtime modules and rebuilds with the merged profile. Set
 `GOPURS_RUST_PGO=0` for the plain O3 ThinLTO binary, and

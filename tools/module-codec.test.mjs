@@ -14,6 +14,7 @@ const ctor = (name, ...args) => ["ctor", name, args];
 const array = values => ["array", values];
 const string = value => ["string", Scalars.stringUnits(value)];
 const int = value => ["int", String(value)];
+const record = fields => ["record", fields.map(([name, value]) => [Scalars.stringUnits(name), value])];
 const ref = index => ctor("TypeRef", int(index));
 // Independent, tiny encoder for test vectors. Production decoding must accept
 // these portable bytes; production encoding must reproduce their exact order.
@@ -97,6 +98,20 @@ test("business codecs validate constructor names, arities and ordered containers
   reject(codec, ctor("Map", array([entries[0], entries[0]])));
   reject(codec, ctor("Map", array(entries.toReversed())));
   roundTrip(codec, ctor("Map", array([ctor("Tuple", string("💻"), int(1)), ctor("Tuple", string("\ue000"), int(2))])));
+});
+
+test("owned Go references and type identities survive portable worker encoding", () => {
+  const symbol = record([["name", string("Constructor_Model_Box")], ["owner", string("generated/Model")]]);
+  roundTrip(Wire.codecGoReference, ctor("SymbolReference", symbol));
+  roundTrip(Wire.codecGoReference, ctor("LocalReference", string("lexical_worker")));
+  roundTrip(Wire.codecGoType, ctor("TypePointer", ctor("TypeNamed", symbol)));
+  roundTrip(Wire.codecGoType, ctor("TypeStructPointer", record([
+    ["baseStructName", string("Data_Model_Box")], ["fullName", string("Model.Box")],
+    ["fullPath", string("Constructor_Model_Box[int64]")], ["structName", string("Constructor_Model_Box")],
+    ["symbol", symbol], ["typeArgs", array([ctor("TypeInt64")])],
+  ])));
+  reject(Wire.codecGoReference, ctor("SymbolReference", record([["name", string("Call_f")]])));
+  reject(Wire.codecGoReference, ctor("SymbolReference", string("Call_f")));
 });
 
 test("type tables reject missing, forward and cyclic references", () => {

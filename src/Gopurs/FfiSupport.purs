@@ -2,6 +2,9 @@ module Gopurs.FfiSupport
   ( extractFfiDecls
   , decodeFfiDecls
   , prepareFfi
+  , bindGoSourceImpl
+  , packageGoSourceImpl
+  , packageGoFilesImpl
   ) where
 
 import Prelude
@@ -17,6 +20,9 @@ import Gopurs.FfiTypes (FfiDecl)
 
 foreign import extractFfiAstImpl :: String -> Effect String
 foreign import prepareFfiAstImpl :: String -> String -> Effect String
+foreign import bindGoSourceImpl :: String -> Effect String
+foreign import packageGoSourceImpl :: String -> Effect String
+foreign import packageGoFilesImpl :: String -> Effect String
 
 decodeFfiDecls :: String -> Either String (Array FfiDecl)
 decodeFfiDecls content = do

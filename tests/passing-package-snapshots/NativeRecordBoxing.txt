@@ -1,0 +1,395 @@
+// gopurs-package-file: main/main.go
+package main
+
+import (
+	"gopurs/output/gopurs_runtime"
+	_ "gopurs/output/purescript/init_all"
+	purescript "gopurs/output/purescript/p_root"
+	"os"
+	"runtime/pprof"
+)
+
+func main() {
+	if os.Getenv("PPROF") == "1" {
+		f, err := os.Create("cpu.prof")
+		if err != nil {
+			panic(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
+
+	gopurs_runtime.Apply(purescript.Get_Main_main(), gopurs_runtime.Value{})
+
+	gopurs_runtime.EventLoopWait()
+
+	if os.Getenv("PPROF") == "1" {
+		mf, err := os.Create("mem.prof")
+		if err != nil {
+			panic(err)
+		}
+		pprof.WriteHeapProfile(mf)
+		mf.Close()
+	}
+}
+
+// gopurs-package-file: purescript/init_all/init.go
+package init_all
+
+import (
+	_ "gopurs/output/purescript/init_external"
+	_ "gopurs/output/purescript/p_root"
+)
+
+// gopurs-package-file: purescript/init_external/init.go
+package init_external
+
+import (
+	_ "fmt"
+	_ "gopurs/output/gopurs_runtime"
+	_ "math"
+	_ "os"
+	_ "strconv"
+	_ "strings"
+	_ "sync"
+	_ "sync/atomic"
+	_ "unsafe"
+)
+
+// gopurs-package-file: purescript/p_root/0_gopurs_package.go
+package p_root
+
+import (
+	fmt "fmt"
+	r_ "gopurs/output/gopurs_runtime"
+	math "math"
+	os "os"
+	strconv "strconv"
+	strings "strings"
+	sync "sync"
+	atomic "sync/atomic"
+	unsafe "unsafe"
+)
+
+// gopurs-source-v1: 4d61696e2e676f
+
+var cache_Main_makeEntry r_.Value
+
+var once_Main_makeEntry sync.Once
+
+func Get_Main_makeEntry() r_.Value {
+	once_Main_makeEntry.Do(func() {
+		cache_Main_makeEntry = r_.Func2(func(count_0_box r_.Value, label_1_box r_.Value) r_.Value {
+			return func() r_.Value {
+				orig := Call_Main_makeEntry(count_0_box.IntVal, label_1_box.StrVal())
+				_ = orig
+				return r_.RecordDict2("count", "label", r_.Int(orig.P_count), r_.Str(orig.P_label))
+			}()
+		})
+	})
+	return cache_Main_makeEntry
+}
+
+var cache_Main_describeEntry r_.Value
+
+var once_Main_describeEntry sync.Once
+
+func Get_Main_describeEntry() r_.Value {
+	once_Main_describeEntry.Do(func() {
+		cache_Main_describeEntry = r_.Func(func(entry_0_box r_.Value) r_.Value {
+			return r_.Str(Call_Main_describeEntry(func() struct {
+				P_count int64
+				P_label string
+			} {
+				orig := entry_0_box
+				_ = orig
+				clone := struct {
+					P_count int64
+					P_label string
+				}{}
+				clone.P_count = r_.RecordGet(orig, "count").IntVal
+				clone.P_label = r_.RecordGet(orig, "label").StrVal()
+				return clone
+			}()))
+		})
+	})
+	return cache_Main_describeEntry
+}
+
+var cache_Main_consumeEntry r_.Value
+
+var once_Main_consumeEntry sync.Once
+
+func Get_Main_consumeEntry() r_.Value {
+	once_Main_consumeEntry.Do(func() {
+		cache_Main_consumeEntry = r_.Func2(func(consume_0_box r_.Value, entry_1_box r_.Value) r_.Value {
+			return r_.Str(Call_Main_consumeEntry(consume_0_box, func() struct {
+				P_count int64
+				P_label string
+			} {
+				orig := entry_1_box
+				_ = orig
+				clone := struct {
+					P_count int64
+					P_label string
+				}{}
+				clone.P_count = r_.RecordGet(orig, "count").IntVal
+				clone.P_label = r_.RecordGet(orig, "label").StrVal()
+				return clone
+			}()))
+		})
+	})
+	return cache_Main_consumeEntry
+}
+
+var cache_Main_check r_.Value
+
+var once_Main_check sync.Once
+
+func Get_Main_check() r_.Value {
+	once_Main_check.Do(func() {
+		cache_Main_check = r_.Func3(func(label_0_box r_.Value, expected_1_box r_.Value, actual_2_box r_.Value) r_.Value {
+			return Call_Main_check(label_0_box.StrVal(), expected_1_box.StrVal(), actual_2_box.StrVal())
+		})
+	})
+	return cache_Main_check
+}
+
+var cache_Main_main r_.Value
+
+var once_Main_main sync.Once
+
+func Get_Main_main() r_.Value {
+	once_Main_main.Do(func() {
+		cache_Main_main = r_.Func(func(_ r_.Value) r_.Value {
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
+			__local_var_0_0 := r_.Apply(Get_Effect_Ref__new(), Get_Main_describeEntry())
+			_ = __local_var_0_0
+			consumerRef_1_1 := r_.Apply(__local_var_0_0, r_.Value{})
+			_ = consumerRef_1_1
+			__local_var_2_2 := r_.Apply(r_.Apply(Get_Effect_Ref_read(), consumerRef_1_1), r_.Value{})
+			_ = __local_var_2_2
+			__local_var_3_3 := r_.Apply(r_.Apply(Get_Effect_Ref__new(), func() r_.Value {
+				orig := Call_Main_makeEntry(int64(5), "alpha")
+				_ = orig
+				return r_.RecordDict2("count", "label", r_.Int(orig.P_count), r_.Str(orig.P_label))
+			}()), r_.Value{})
+			_ = __local_var_3_3
+			__local_var_4_4 := r_.Apply(r_.Apply(Get_Effect_Ref_read(), __local_var_3_3), r_.Value{})
+			_ = __local_var_4_4
+			__local_var_5_5 := r_.Apply(Call_Main_check("original", "5:alpha", Call_Main_consumeEntry(__local_var_2_2, func() struct {
+				P_count int64
+				P_label string
+			} {
+				orig := __local_var_4_4
+				_ = orig
+				clone := struct {
+					P_count int64
+					P_label string
+				}{}
+				clone.P_count = r_.RecordGet(orig, "count").IntVal
+				clone.P_label = r_.RecordGet(orig, "label").StrVal()
+				return clone
+			}())), r_.Value{})
+			_ = __local_var_5_5
+			// TAST (Let): changedCount_6_6 shape=Other bindingType=(Record (Row [count: Int, label: String] Empty))
+			changedCount_6_6 := func() struct {
+				P_count int64
+				P_label string
+			} {
+				orig := r_.RecordUpdate1(__local_var_4_4, "count", r_.Int(int64(-7)))
+				_ = orig
+				clone := struct {
+					P_count int64
+					P_label string
+				}{}
+				clone.P_count = r_.RecordGet(orig, "count").IntVal
+				clone.P_label = r_.RecordGet(orig, "label").StrVal()
+				return clone
+			}()
+			_ = changedCount_6_6
+			__local_var_7_7 := r_.Apply(r_.Apply(Get_Effect_Ref__new(), func() r_.Value {
+				orig := changedCount_6_6
+				_ = orig
+				return r_.RecordDict2("count", "label", r_.Int(orig.P_count), r_.Str(orig.P_label))
+			}()), r_.Value{})
+			_ = __local_var_7_7
+			__local_var_8_8 := r_.Apply(Call_Main_check("count updated", "-7:alpha", Call_Main_consumeEntry(__local_var_2_2, changedCount_6_6)), r_.Value{})
+			_ = __local_var_8_8
+			__local_var_9_9 := r_.Apply(Call_Main_check("original after count update", "5:alpha", Call_Main_consumeEntry(__local_var_2_2, func() struct {
+				P_count int64
+				P_label string
+			} {
+				orig := __local_var_4_4
+				_ = orig
+				clone := struct {
+					P_count int64
+					P_label string
+				}{}
+				clone.P_count = r_.RecordGet(orig, "count").IntVal
+				clone.P_label = r_.RecordGet(orig, "label").StrVal()
+				return clone
+			}())), r_.Value{})
+			_ = __local_var_9_9
+			// TAST (Let): changedLabel_10_10 shape=Other bindingType=(Record (Row [label: String, count: Int] Empty))
+			changedLabel_10_10 := func() struct {
+				P_count int64
+				P_label string
+			} {
+				clone := changedCount_6_6
+				clone.P_label = "beta"
+				return clone
+			}()
+			_ = changedLabel_10_10
+			__local_var_11_11 := r_.Apply(r_.Apply(Get_Effect_Ref__new(), func() r_.Value {
+				orig := changedLabel_10_10
+				_ = orig
+				return r_.RecordDict2("count", "label", r_.Int(orig.P_count), r_.Str(orig.P_label))
+			}()), r_.Value{})
+			_ = __local_var_11_11
+			__local_var_12_12 := r_.Apply(Call_Main_check("label updated", "-7:beta", Call_Main_consumeEntry(__local_var_2_2, changedLabel_10_10)), r_.Value{})
+			_ = __local_var_12_12
+			__local_var_13_13 := r_.Apply(Call_Main_check("count version after label update", "-7:alpha", Call_Main_consumeEntry(__local_var_2_2, changedCount_6_6)), r_.Value{})
+			_ = __local_var_13_13
+			__local_var_14_14 := r_.Apply(Call_Main_check("both fields updated", "0:", Call_Main_consumeEntry(__local_var_2_2, func() struct {
+				P_count int64
+				P_label string
+			} {
+				clone := changedLabel_10_10
+				clone.P_count = int64(0)
+				clone.P_label = ""
+				return clone
+			}())), r_.Value{})
+			_ = __local_var_14_14
+			__local_var_15_15 := r_.Apply(Call_Main_check("label version after both updates", "-7:beta", Call_Main_consumeEntry(__local_var_2_2, changedLabel_10_10)), r_.Value{})
+			_ = __local_var_15_15
+			__local_var_16_16 := r_.Apply(r_.Apply(Get_Effect_Ref_read(), __local_var_3_3), r_.Value{})
+			_ = __local_var_16_16
+			__local_var_17_17 := r_.Apply(r_.Apply(Get_Effect_Ref_read(), __local_var_7_7), r_.Value{})
+			_ = __local_var_17_17
+			__local_var_18_18 := r_.Apply(r_.Apply(Get_Effect_Ref_read(), __local_var_11_11), r_.Value{})
+			_ = __local_var_18_18
+			__local_var_19_19 := r_.Apply(Call_Main_check("retained original", "5:alpha", Call_Main_consumeEntry(__local_var_2_2, func() struct {
+				P_count int64
+				P_label string
+			} {
+				orig := __local_var_16_16
+				_ = orig
+				clone := struct {
+					P_count int64
+					P_label string
+				}{}
+				clone.P_count = r_.RecordGet(orig, "count").IntVal
+				clone.P_label = r_.RecordGet(orig, "label").StrVal()
+				return clone
+			}())), r_.Value{})
+			_ = __local_var_19_19
+			__local_var_20_20 := r_.Apply(Call_Main_check("retained count version", "-7:alpha", Call_Main_consumeEntry(__local_var_2_2, func() struct {
+				P_count int64
+				P_label string
+			} {
+				orig := __local_var_17_17
+				_ = orig
+				clone := struct {
+					P_count int64
+					P_label string
+				}{}
+				clone.P_count = r_.RecordGet(orig, "count").IntVal
+				clone.P_label = r_.RecordGet(orig, "label").StrVal()
+				return clone
+			}())), r_.Value{})
+			_ = __local_var_20_20
+			__local_var_21_21 := r_.Apply(Call_Main_check("retained label version", "-7:beta", Call_Main_consumeEntry(__local_var_2_2, func() struct {
+				P_count int64
+				P_label string
+			} {
+				orig := __local_var_18_18
+				_ = orig
+				clone := struct {
+					P_count int64
+					P_label string
+				}{}
+				clone.P_count = r_.RecordGet(orig, "count").IntVal
+				clone.P_label = r_.RecordGet(orig, "label").StrVal()
+				return clone
+			}())), r_.Value{})
+			_ = __local_var_21_21
+			return r_.Apply(r_.Apply(Get_Effect_Console_log(), r_.Str("Done")), r_.Value{})
+		})
+	})
+	return cache_Main_main
+}
+
+func Call_Main_makeEntry(count_0_loop int64, label_1_loop string) struct {
+	P_count int64
+	P_label string
+} {
+	var count_0 int64 = count_0_loop
+	_ = count_0
+	var label_1 string = label_1_loop
+	_ = label_1
+	return struct {
+		P_count int64
+		P_label string
+	}{count_0, label_1}
+}
+
+func Call_Main_describeEntry(entry_0_loop struct {
+	P_count int64
+	P_label string
+}) string {
+	var entry_0 struct {
+		P_count int64
+		P_label string
+	} = entry_0_loop
+	_ = entry_0
+	return r_.ConcatString(r_.ConcatString(Data_Show_ShowIntImpl(entry_0.P_count), ":"), entry_0.P_label)
+}
+
+func Call_Main_consumeEntry(consume_0_loop r_.Value, entry_1_loop struct {
+	P_count int64
+	P_label string
+}) string {
+	var consume_0 r_.Value = consume_0_loop
+	_ = consume_0
+	var entry_1 struct {
+		P_count int64
+		P_label string
+	} = entry_1_loop
+	_ = entry_1
+	return r_.Apply(consume_0, func() r_.Value {
+		orig := entry_1
+		_ = orig
+		return r_.RecordDict2("count", "label", r_.Int(orig.P_count), r_.Str(orig.P_label))
+	}()).StrVal()
+}
+
+func Call_Main_check(label_0_loop string, expected_1_loop string, actual_2_loop string) r_.Value {
+	var label_0 string = label_0_loop
+	_ = label_0
+	var expected_1 string = expected_1_loop
+	_ = expected_1
+	var actual_2 string = actual_2_loop
+	_ = actual_2
+	return r_.Func(func(_ r_.Value) r_.Value {
+		// TAST (Let): __local_var_3_0 shape=App(Var) bindingType=Any
+		__local_var_3_0 := Call_Test_Assert_assertEqual_prime___4176622598("", struct {
+			P_actual   string
+			P_expected string
+		}{actual_2, expected_1})
+		_ = __local_var_3_0
+		__local_var_4_1 := r_.Apply(__local_var_3_0, r_.Value{})
+		_ = __local_var_4_1
+		return r_.Apply(r_.Apply(Get_Effect_Console_log(), r_.Str(r_.ConcatString(r_.ConcatString(label_0, ": "), actual_2))), r_.Value{})
+	})
+}
+
+// gopurs-source-end-v1
+
+// gopurs-package-file: purescript/p_root/zz_gopurs_order.go
+package p_root
+
+import (
+	_ "gopurs/output/purescript/init_external"
+)
+

@@ -54,7 +54,7 @@ application translate context nextId expression =
             Nothing -> case directFunction context target (Array.length args) of
               Just info ->
                 let translated = CallArguments.translate translate context Nothing { stmts: StmtEmpty, nextId } args
-                in nativeCall context (GoVar info.fullName) info.fArgs info.fRet info.arity translated
+                in nativeCall context (GoRef info.reference) info.fArgs info.fRet info.arity translated
               Nothing -> curriedCall translate context nextId fn args
 
 -- A direct worker must be saturated; partial calls retain the boxed path.

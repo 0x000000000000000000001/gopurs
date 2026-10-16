@@ -51,7 +51,7 @@ const fixture = ({ body = 10, spare = 1, other = 41, directive = false, missing 
 const metadata = withReboxFields({ elidedCtors: Set.empty, ctorTypes: Map.empty, pointerAdtPaths: Map.empty,
   pointerAdtNodes: Set.empty, pointerAdtLeaves: Map.empty, enumAdts: Set.empty, enumCtors: Set.empty,
   globalTypes: Map.empty, globalFunctions: Map.empty, classDeclsFields: Map.empty });
-const codecs = ["pbo/backend-v2", "pbo/implementations-v1", "pbo/directives-v1", "gopurs/workers-v1"];
+const codecs = ["pbo/backend-v2", "pbo/implementations-v1", "pbo/directives-v1", "gopurs/workers-v2"];
 
 test("observed PBO reuse matches fresh generation through body, directive, absence and rank transitions", async t => {
   const directory = mkdtempSync(join(tmpdir(), "gopurs-observed-build-")), cwd = process.cwd();

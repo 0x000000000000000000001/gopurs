@@ -1,8 +1,8 @@
 # Granularité des packages Go — référence G00
 
 **G00 validé le 13 octobre 2026**, après les relevés commencés le 12. Le plan v3
-est clos à **7/7** ; G00 puis le [plan G01](build-go-package-plan.md) portent
-la suite G à **2/7 lots validés**. Le
+est clos à **7/7** ; G00, le [plan G01](build-go-package-plan.md) et les
+[références G02](build-go-references.md) portent la suite G à **3/7 lots validés**. Le
 [bilan v3/06](build-incremental.md#parcours-complet--lot-06) donne la référence
 du parcours complet. Les mesures ci-dessous portent sur les sorties du
 compilateur livré, `publicsync`.

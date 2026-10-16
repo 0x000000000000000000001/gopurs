@@ -11,7 +11,7 @@ import Effect.Console as Console
 import Gopurs.Driver.Build (build)
 import Gopurs.Driver.Cache as BuildCache
 import Gopurs.Driver.Config (readConfig)
-import Gopurs.Driver.Output (writeEntryPoints, writeRuntime)
+import Gopurs.Driver.Output (writeEntryPoints, writeRuntime, writePackageFiles)
 import Gopurs.Driver.Prepare (prepareModules)
 import Gopurs.Metrics as Metrics
 import Gopurs.Diagnostics as Diagnostics
@@ -46,7 +46,11 @@ compile = Metrics.measure "backend total" \_ -> do
       let ffi = Map.fromFoldable (map (\source -> Tuple source.name source) frozen)
       Metrics.measure "runtime" \_ -> writeRuntime session.output
       Metrics.measure "optimize + emit" \_ -> build session ffi config prepared
-      Metrics.measure "entry points" \_ -> writeEntryPoints session.output prepared.mainModules
+      if config.goPackages then do
+        request <- Metrics.measure "Go exports" \_ -> BuildCache.packages session prepared.mainModules
+        Metrics.measure "Go packages" \_ -> writePackageFiles session.output prepared.mainModules request (session.stage <> "/package-result.json")
+      else
+        Metrics.measure "entry points" \_ -> writeEntryPoints session.output prepared.mainModules
       diagnostics <- liftEffect Diagnostics.recorded
       Metrics.measure "cache publish" \_ -> BuildCache.publish session prepared.mainModules diagnostics
 

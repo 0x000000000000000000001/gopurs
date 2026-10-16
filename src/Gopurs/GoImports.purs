@@ -1,14 +1,20 @@
-module Gopurs.GoImports (collectImports) where
+module Gopurs.GoImports (collectImports, boundImports) where
 
 import Prelude
 import Data.Array as Array
+import Data.Either (Either)
 import Data.Set (Set)
 import Data.Set as Set
 import Data.Tuple (Tuple(..))
 import Gopurs.GoAst (GoDecl(..), GoExpr(..), GoType(..))
-import Gopurs.GoCode (referencedImports)
+import Gopurs.GoCode (referencedImports, BoundGoCode)
+import Gopurs.GoCode as GoCode
+import Gopurs.GoSymbol (RenderContext)
 
 type Imports = Set String
+
+boundImports :: RenderContext -> BoundGoCode -> Either String (Array String)
+boundImports = GoCode.boundImports
 
 add :: String -> Imports -> Imports
 add name imports = if Set.member name imports then imports else Set.insert name imports
@@ -42,7 +48,7 @@ declImports decl imports = case decl of
   GoCachedValue binding -> imports # runtime # add "sync" # typeImports binding.goType # exprImports binding.expression
   GoStructDecl fields -> imports # fieldTypes fields.typeParams # fieldTypes fields.fields
   GoFunctionDecl fn -> imports # fieldTypes fn.params # typeImports fn.result # exprImports fn.body
-  GoInitDecl body -> exprImports body imports
+  GoInitDecl _ body -> exprImports body imports
   GoForeignGetter _ -> runtime imports
 
 typeImports :: GoType -> Imports -> Imports
@@ -51,6 +57,8 @@ typeImports ty imports = case ty of
   TypeStructPointer pointer -> many typeImports pointer.typeArgs imports
   TypeRecord fields -> fieldTypes fields imports
   TypeInterface name -> referenced name imports
+  TypeNamed _ -> imports
+  TypePointer inner -> typeImports inner imports
   TypeNativeArray element -> typeImports element imports
   TypeFunc args ret -> imports # many typeImports args # typeImports ret
   TypeStructValue _ fields -> many typeImports fields imports
@@ -59,9 +67,11 @@ typeImports ty imports = case ty of
 exprImports :: GoExpr -> Imports -> Imports
 exprImports expression imports = case expression of
   GoVar name -> referenced name imports
+  GoRef _ -> imports
   GoString _ -> imports
   GoInt _ -> imports
   GoCall fn args -> imports # exprImports fn # many exprImports args
+  GoTypeApply fn types -> imports # exprImports fn # many typeImports types
   GoSelector obj field ->
     let base = exprImports obj imports
     in case obj of
@@ -84,6 +94,7 @@ exprImports expression imports = case expression of
   GoLetRec bindings body -> imports # runtime # fieldExprs bindings # exprImports body
   GoRecordAccess obj _ -> imports # runtime # exprImports obj
   GoStructAccess obj _ -> exprImports obj imports
+  GoRecordFieldAccess obj _ -> exprImports obj imports
   GoRecordAccessStatic obj _ _ -> imports # runtime # exprImports obj
   GoConstructor _ _ types args ->
     -- Only a binding without a type context prints a typed nil.
@@ -96,7 +107,7 @@ exprImports expression imports = case expression of
     # many (\(Tuple cond value) -> exprImports value <<< exprImports cond) branches # exprImports def
   GoBinOp _ left right -> imports # exprImports left # exprImports right
   GoPrefixOp _ expr -> exprImports expr imports
-  GoTypeAssertion expr ty -> imports # exprImports expr # referenced ty
+  GoTypeAssertion expr ty -> imports # exprImports expr # typeImports ty
   GoIndex expr index -> imports # exprImports expr # exprImports index
   GoBoxStructPointer _ expr -> imports # runtime # add "unsafe" # exprImports expr
   GoBoxIntArray expr -> imports # runtime # exprImports expr

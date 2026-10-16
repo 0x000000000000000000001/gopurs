@@ -1,6 +1,6 @@
 # Frontière entre AST Go et impression
 
-État du 14 septembre 2026, après le lot 4 de la deuxième vague de nettoyage.
+État du 13 octobre 2026, après les références possédées de G02.
 
 Les émetteurs construisent les expressions et statements Go à partir du TAST. Ils décident des types natifs, du boxing, des noms, de l'ordre d'évaluation, des paramètres, des captures et des cibles TCO. `Printer` rend les nœuds obtenus sans lire ni modifier `CodegenState`.
 
@@ -40,6 +40,22 @@ Le nœud historique `GoFunc` est supprimé. `GoFunctions.curriedFunction` prépa
 `GoImports.collectImports` est l'unique propriétaire des imports du fichier. Il parcourt les déclarations, expressions et types structurés, puis trie et déduplique leurs dépendances. `Printer.printGoFile` imprime la liste reçue sans rendre les déclarations une première fois pour y rechercher des noms de packages.
 
 `GoRaw` transporte un `GoCode` contenant `{ text, imports }`. Pour les fragments historiques, `rawGo` reconnaît les références à `gopurs_runtime`, `math`, `sync` et `unsafe` au moment de leur création. Cette détection textuelle locale reste un mécanisme de compatibilité ; un fragment peut aussi fournir explicitement sa liste d'imports. Le collecteur lit ces dépendances sans inspecter à nouveau le texte. Les corps opaques d'initialisation des getters et d'affectation Rebox restent distincts des en-têtes de déclaration désormais structurés.
+
+## Références possédées et qualification
+
+`GoRef` distingue références lexicales et symboles possédés. Les déclarations,
+constructeurs, pointeurs et signatures de workers conservent le propriétaire
+fourni par leur producteur. `GoTypeApply` garde les arguments de type ;
+`GoTypeAssertion` prend un `GoType`. `GoRecordFieldAccess` conserve le label
+PureScript indépendamment de son nom de champ Go.
+
+Le rendu monolithique restitue les noms historiques. Pour la qualification,
+`GoSource.bindSources` résout les sources complètes, fragments opaques et FFI
+compris, avec le parser Go et `go/types`. `BoundGoCode` retient les spans et
+cibles, en distinguant références ordinaires, champs et méthodes.
+`printBoundGoCode` et `boundImports` utilisent le placement du consommateur.
+Les [contrats et preuves G02](build-go-references.md) précisent les transports,
+les limites du relevé exhaustif et le raccordement restant au pilote en G03.
 
 ## Contrat pour les prochains changements
 

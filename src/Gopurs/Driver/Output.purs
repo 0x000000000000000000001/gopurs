@@ -1,8 +1,10 @@
-module Gopurs.Driver.Output (emitModule, emitPreparedModule, writeEntryPoints, writeRuntime) where
+module Gopurs.Driver.Output (emitModule, emitPreparedModule, writeEntryPoints, writeRuntime, writePackageOutput, writePackageFiles) where
 
 import Prelude
 
 import Control.Lazy (defer)
+import Data.Argonaut.Core (stringify)
+import Data.Argonaut.Encode (encodeJson)
 import Data.Array as Array
 import Data.Either (either)
 import Data.Foldable (for_)
@@ -11,7 +13,8 @@ import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap)
 import Data.String as String
 import Data.String.Pattern (Pattern(..), Replacement(..))
-import Data.Tuple (Tuple)
+import Data.Traversable (traverse)
+import Data.Tuple (Tuple(..))
 import Effect.Aff (Aff, attempt, throwError)
 import Effect.Class (liftEffect)
 import Effect.Exception (error, try)
@@ -22,6 +25,8 @@ import Gopurs.Driver.Cache (FrozenFFI)
 import Gopurs.FfiBridge as FfiBridge
 import Gopurs.FfiSupport (prepareFfi)
 import Gopurs.FfiTypes (FfiDecl)
+import Gopurs.GoSource (PackageRequest, PackageResult, packageSources, packageFiles)
+import Gopurs.GoSymbol (GoSymbol, generated)
 import Gopurs.Runtime (runtimeGoCode)
 import Node.Encoding (Encoding(..))
 import Node.FS.Aff as FS
@@ -104,8 +109,11 @@ writeRuntime output = do
   FS.mkdir (output <> "/purescript")
 
 writeEntryPoints :: String -> Array String -> Aff Unit
-writeEntryPoints output modules = for_ modules \moduleName -> do
-  let source = renderEntryPoint moduleName
+writeEntryPoints output modules = for_ modules \moduleName ->
+  writeEntryPoint output moduleName (renderEntryPoint moduleName Nothing)
+
+writeEntryPoint :: String -> String -> String -> Aff Unit
+writeEntryPoint output moduleName source = do
   -- The shared entry follows traversal order; each module also keeps its own
   -- executable entry. An explicit --main selects exactly one module upstream.
   void $ attempt (FS.mkdir (output <> "/main"))
@@ -114,19 +122,63 @@ writeEntryPoints output modules = for_ modules \moduleName -> do
   void $ attempt (FS.mkdir (output <> "/" <> moduleName <> "/main"))
   FS.writeTextFile UTF8 (output <> "/" <> moduleName <> "/main/main.go") source
 
+-- Bind/type-check the complete private generation before writing fragments.
+-- Publication and recovery own the destination afterwards; this writer never
+-- promotes a staging tree to the public cache on its own.
+writePackageOutput :: String -> Array String -> PackageRequest -> Aff PackageResult
+writePackageOutput output modules request = do
+  bound <- liftEffect $ try $ packageSources request
+  result <- either throwError pure bound
+  entries <- packageEntries modules result.entries
+  void $ attempt (FS.mkdir (output <> "/purescript"))
+  for_ result.files \file -> do
+    case String.split (Pattern "/") file.path of
+      [ directory, name ] | directory /= "" && name /= "" && directory /= "." && directory /= ".." -> do
+        void $ attempt (FS.mkdir (output <> "/purescript/" <> directory))
+        FS.writeTextFile UTF8 (output <> "/purescript/" <> file.path) file.content
+      _ -> throwError (error ("Invalid generated package path: " <> file.path))
+  for_ modules \moduleName -> case Map.lookup moduleName entries of
+    Just target -> writeEntryPoint output moduleName (renderEntryPoint moduleName (Just { target, initialization: request.packagePath <> "/init_all" }))
+    Nothing -> throwError (error ("Missing generated entry: " <> moduleName))
+  pure result
+
+packageEntries :: Array String -> Array { symbol :: GoSymbol, "package" :: String } -> Aff (Map.Map String String)
+packageEntries modules placements = Map.fromFoldable <$> traverse entry modules
+  where
+  entry moduleName = do
+    let goName = moduleGoName moduleName
+        symbol = generated goName ("Get_" <> goName <> "_main")
+    -- Validate entries against the exact response, before creating any output.
+    case Array.find (\value -> value.symbol == symbol) placements of
+      Just value -> pure (Tuple moduleName value."package")
+      Nothing -> throwError (error ("Missing generated entry: " <> moduleName))
+
+writePackageFiles :: String -> Array String -> String -> String -> Aff Unit
+writePackageFiles output modules requestPath resultPath = do
+  request <- FS.readTextFile UTF8 requestPath
+  emission <- liftEffect $ try $ packageFiles request
+  result <- either throwError pure emission
+  entries <- packageEntries modules result.entries
+  for_ modules \moduleName -> case Map.lookup moduleName entries of
+    Just target -> writeEntryPoint output moduleName (renderEntryPoint moduleName (Just { target, initialization: "gopurs/output/purescript/init_all" }))
+    Nothing -> throwError (error ("Missing generated entry: " <> moduleName))
+  FS.writeTextFile UTF8 resultPath (stringify (encodeJson result))
+
 moduleGoName :: String -> String
 moduleGoName = String.replaceAll (Pattern ".") (Replacement "_")
 
 -- Keep the executable template readable, including its final newline. Module
 -- bodies go through the Go AST/printer; this fixed wrapper only varies by name.
-renderEntryPoint :: String -> String
-renderEntryPoint moduleName = String.joinWith "\n"
+renderEntryPoint :: String -> Maybe { target :: String, initialization :: String } -> String
+renderEntryPoint moduleName placement = String.joinWith "\n"
   [ "package main"
   , ""
   , "import ("
   , "\t\"os\""
   , "\t\"runtime/pprof\""
-  , "\t\"gopurs/output/purescript\""
+  , case placement of
+      Nothing -> "\t\"gopurs/output/purescript\""
+      Just plan -> "\tpurescript \"" <> plan.target <> "\"\n\t_ \"" <> plan.initialization <> "\""
   , "\t\"gopurs/output/gopurs_runtime\""
   , ")"
   , ""

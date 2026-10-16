@@ -71,7 +71,7 @@ test('dictionary declarations, getters and instantiated fields agree on supercla
     const fields = get(metadata.classDeclsFields, 'Fixture.Model.C').value0.fields;
     assert.deepEqual(fields.map(field => field.name), ['Ord0', 'alpha', 'z']);
     const declarations = constructors(metadata)('Fixture_Model')(enriched);
-    const index = declarations.findIndex(decl => decl instanceof Go.GoStructDecl && decl.value0.name === 'Constructor_Fixture_Model_C');
+    const index = declarations.findIndex(decl => decl instanceof Go.GoStructDecl && decl.value0.name.name === 'Constructor_Fixture_Model_C');
     const structure = declarations[index].value0;
     assert.deepEqual(structure.fields.map(field => [field.value0, Go.goTypeToStr(field.value1)]),
         [['Rc', 'uint32'], ['V0', boxed], ['V1', 'T_a'], ['V2', 'bool']]);

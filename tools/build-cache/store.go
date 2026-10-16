@@ -714,9 +714,13 @@ func (s store) readManifest() (*Manifest, string) {
 func (s store) stage(req Request, snap Snapshot, previous *Manifest) (Manifest, error) {
 	m := Manifest{Format: Format, Schema: Schema, Snapshot: snap, Outputs: make([]OwnedOutput, len(req.Outputs)), Modules: make([]ModuleMemo, len(req.Modules)), GoMod: "create-if-absent", GoSum: "external"}
 	validated := map[Artifact]bool{}
+	priorSources := map[string][]ModuleSource{}
 	if previous != nil {
 		for _, part := range artifacts(*previous) {
 			validated[part] = true
+		}
+		for _, memo := range previous.Modules {
+			priorSources[memo.Name] = memo.Sources
 		}
 	}
 	if err := boundedEach(len(req.Outputs), func(i int) error {
@@ -747,6 +751,13 @@ func (s store) stage(req Request, snap Snapshot, previous *Manifest) (Manifest, 
 				return err
 			}
 			memo.Parts = append(memo.Parts, a)
+		}
+		for _, source := range mod.Sources {
+			a, err := s.stageModuleSource(req.Spec.Workspace, source, priorSources[mod.Name])
+			if err != nil {
+				return err
+			}
+			memo.Sources = append(memo.Sources, a)
 		}
 		m.Modules[i] = memo
 		return nil
@@ -814,6 +825,9 @@ func artifacts(m Manifest) []Artifact {
 	parts := []Artifact{}
 	for _, mod := range m.Modules {
 		parts = append(parts, mod.Parts...)
+		for _, source := range mod.Sources {
+			parts = append(parts, Artifact{Codec: source.Codec, Object: source.Object})
+		}
 	}
 	if m.Diagnostics != nil {
 		parts = append(parts, *m.Diagnostics)

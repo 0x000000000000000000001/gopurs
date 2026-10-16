@@ -21,6 +21,7 @@ import Data.String.Pattern (Pattern(..), Replacement(..))
 import Data.Tuple (Tuple(..))
 import Gopurs.AdtMetadata (PointerAdtPaths)
 import Gopurs.GoAst (GoType(..), constructorNames, structPointer)
+import Gopurs.GoSymbol (GoSymbol)
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..))
 
 -- Diagnostic rendering of TAST annotations, shared by codegen and FFI comments.
@@ -96,7 +97,7 @@ exprTypeToGoType ptrPaths enumAdts elided modNameStr ty = case appliedAdt ty of
       else case lookupPointerAdt fullName ptrPaths of
         Just info ->
           let names = adtConstructorNames path info.ctorName
-          in structPointer { baseStructName: names.baseStructName, fullName, structName: names.structName }
+          in structPointer { baseStructName: names.baseStructName, fullName, structName: names.structName, symbol: names.symbol }
             (valueTypeArguments info.arity (map toGoType args))
         Nothing -> TypeValue
   Nothing -> TypeValue
@@ -117,7 +118,7 @@ exprTypeToGenericGoType ptrPaths enumAdts elided typeVars modNameStr ty = case a
           toGoType = exprTypeToGenericGoType ptrPaths enumAdts elided typeVars modNameStr
         in
           if Set.member names.structName elided then TypeValue
-          else structPointer { baseStructName: names.baseStructName, fullName, structName: names.structName }
+          else structPointer { baseStructName: names.baseStructName, fullName, structName: names.structName, symbol: names.symbol }
             (genericTypeArguments toGoType typeVars info.arity args)
       Nothing -> TypeValue
   -- Arrays and other annotations retain the ordinary value representation.
@@ -133,7 +134,7 @@ lookupPointerAdt fullName paths = case Map.lookup fullName paths of
   Just info -> Just info
   Nothing -> Map.lookup (fullName <> "$Dict") paths
 
-adtConstructorNames :: Array String -> String -> { baseStructName :: String, structName :: String }
+adtConstructorNames :: Array String -> String -> { baseStructName :: String, structName :: String, symbol :: GoSymbol }
 adtConstructorNames path =
   let
     moduleName = String.joinWith "." (Array.take (Array.length path - 1) path)

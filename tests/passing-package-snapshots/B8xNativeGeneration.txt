@@ -1,0 +1,503 @@
+// gopurs-package-file: main/main.go
+package main
+
+import (
+	"gopurs/output/gopurs_runtime"
+	_ "gopurs/output/purescript/init_all"
+	purescript "gopurs/output/purescript/p_root"
+	"os"
+	"runtime/pprof"
+)
+
+func main() {
+	if os.Getenv("PPROF") == "1" {
+		f, err := os.Create("cpu.prof")
+		if err != nil {
+			panic(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
+
+	gopurs_runtime.Apply(purescript.Get_Main_main(), gopurs_runtime.Value{})
+
+	gopurs_runtime.EventLoopWait()
+
+	if os.Getenv("PPROF") == "1" {
+		mf, err := os.Create("mem.prof")
+		if err != nil {
+			panic(err)
+		}
+		pprof.WriteHeapProfile(mf)
+		mf.Close()
+	}
+}
+
+// gopurs-package-file: purescript/init_all/init.go
+package init_all
+
+import (
+	_ "gopurs/output/purescript/init_external"
+	_ "gopurs/output/purescript/p_root"
+)
+
+// gopurs-package-file: purescript/init_external/init.go
+package init_external
+
+import (
+	_ "fmt"
+	_ "gopurs/output/gopurs_runtime"
+	_ "math"
+	_ "os"
+	_ "strconv"
+	_ "strings"
+	_ "sync"
+	_ "sync/atomic"
+	_ "unsafe"
+)
+
+// gopurs-package-file: purescript/p_root/0_gopurs_package.go
+package p_root
+
+import (
+	fmt "fmt"
+	r_ "gopurs/output/gopurs_runtime"
+	math "math"
+	os "os"
+	strconv "strconv"
+	strings "strings"
+	sync "sync"
+	atomic "sync/atomic"
+	unsafe "unsafe"
+)
+
+// gopurs-source-v1: 4d61696e2e676f
+
+var cache_Main_Packed r_.Value
+
+var once_Main_Packed sync.Once
+
+func Get_Main_Packed() r_.Value {
+	once_Main_Packed.Do(func() {
+		cache_Main_Packed = r_.Func(func(value0 r_.Value) r_.Value {
+			return r_.Func(func(value1 r_.Value) r_.Value {
+				return r_.Value{Type: 9, IntVal: 214700806, UnsafePtr: unsafe.Pointer((&Constructor_Main_Packed[r_.Value, r_.Value]{1, value0, value1}))}
+			})
+		})
+	})
+	return cache_Main_Packed
+}
+
+var cache_Main_Packed__592525336 r_.Value
+
+var once_Main_Packed__592525336 sync.Once
+
+func Get_Main_Packed__592525336() r_.Value {
+	once_Main_Packed__592525336.Do(func() {
+		cache_Main_Packed__592525336 = r_.Func2(func(__eta_norm_1_0_box r_.Value, __eta_norm_0_1_box r_.Value) r_.Value {
+			return r_.Value{Type: 9, IntVal: 214700806, UnsafePtr: unsafe.Pointer(Rebox_Main_3409422644_1106105172(Call_Main_Packed__592525336(__eta_norm_1_0_box, __eta_norm_0_1_box.IntVal)))}
+		})
+	})
+	return cache_Main_Packed__592525336
+}
+
+var cache_Main_Marker_dollar_Dict r_.Value
+
+var once_Main_Marker_dollar_Dict sync.Once
+
+func Get_Main_Marker_dollar_Dict() r_.Value {
+	once_Main_Marker_dollar_Dict.Do(func() {
+		cache_Main_Marker_dollar_Dict = r_.Func(func(x_0_box r_.Value) r_.Value {
+			return Call_Main_Marker_dollar_Dict(func() struct {
+			} {
+				orig := x_0_box
+				_ = orig
+				clone := struct {
+				}{}
+
+				return clone
+			}())
+		})
+	})
+	return cache_Main_Marker_dollar_Dict
+}
+
+var cache_Main_Marker_dollar_Dict__1545153923 r_.Value
+
+var once_Main_Marker_dollar_Dict__1545153923 sync.Once
+
+func Get_Main_Marker_dollar_Dict__1545153923() r_.Value {
+	once_Main_Marker_dollar_Dict__1545153923.Do(func() {
+		cache_Main_Marker_dollar_Dict__1545153923 = r_.Func(func(x_0_box r_.Value) r_.Value {
+			return Call_Main_Marker_dollar_Dict__1545153923(func() struct {
+			} {
+				orig := x_0_box
+				_ = orig
+				clone := struct {
+				}{}
+
+				return clone
+			}())
+		})
+	})
+	return cache_Main_Marker_dollar_Dict__1545153923
+}
+
+var cache_Main_unpack r_.Value
+
+var once_Main_unpack sync.Once
+
+func Get_Main_unpack() r_.Value {
+	once_Main_unpack.Do(func() {
+		cache_Main_unpack = Get_Unsafe_Coerce_unsafeCoerce()
+	})
+	return cache_Main_unpack
+}
+
+var cache_Main_sumEleven r_.Value
+
+var once_Main_sumEleven sync.Once
+
+func Get_Main_sumEleven() r_.Value {
+	once_Main_sumEleven.Do(func() {
+		cache_Main_sumEleven = r_.Func(func(a_0_box r_.Value) r_.Value {
+			return r_.Func(func(b_1_box r_.Value) r_.Value {
+				return r_.Func(func(c_2_box r_.Value) r_.Value {
+					return r_.Func(func(d_3_box r_.Value) r_.Value {
+						return r_.Func(func(e_4_box r_.Value) r_.Value {
+							return r_.Func(func(f_5_box r_.Value) r_.Value {
+								return r_.Func(func(g_6_box r_.Value) r_.Value {
+									return r_.Func(func(h_7_box r_.Value) r_.Value {
+										return r_.Func(func(i_8_box r_.Value) r_.Value {
+											return r_.Func(func(j_9_box r_.Value) r_.Value {
+												return r_.Func(func(k_10_box r_.Value) r_.Value {
+													return r_.Int(Call_Main_sumEleven(a_0_box.IntVal, b_1_box.IntVal, c_2_box.IntVal, d_3_box.IntVal, e_4_box.IntVal, f_5_box.IntVal, g_6_box.IntVal, h_7_box.IntVal, i_8_box.IntVal, j_9_box.IntVal, k_10_box.IntVal))
+												})
+											})
+										})
+									})
+								})
+							})
+						})
+					})
+				})
+			})
+		})
+	})
+	return cache_Main_sumEleven
+}
+
+var cache_Main_runErased r_.Value
+
+var once_Main_runErased sync.Once
+
+func Get_Main_runErased() r_.Value {
+	once_Main_runErased.Do(func() {
+		cache_Main_runErased = r_.Func(func(v_0_box r_.Value) r_.Value {
+			return Call_Main_runErased(v_0_box)
+		})
+	})
+	return cache_Main_runErased
+}
+
+var cache_Main_runErased__2704168187 r_.Value
+
+var once_Main_runErased__2704168187 sync.Once
+
+func Get_Main_runErased__2704168187() r_.Value {
+	once_Main_runErased__2704168187.Do(func() {
+		cache_Main_runErased__2704168187 = r_.Func(func(__eta_norm_0_0_box r_.Value) r_.Value {
+			return r_.Int(Call_Main_runErased__2704168187(__eta_norm_0_0_box))
+		})
+	})
+	return cache_Main_runErased__2704168187
+}
+
+var cache_Main_pack r_.Value
+
+var once_Main_pack sync.Once
+
+func Get_Main_pack() r_.Value {
+	once_Main_pack.Do(func() {
+		cache_Main_pack = Get_Unsafe_Coerce_unsafeCoerce()
+	})
+	return cache_Main_pack
+}
+
+var cache_Main_pack__3800196234 r_.Value
+
+var once_Main_pack__3800196234 sync.Once
+
+func Get_Main_pack__3800196234() r_.Value {
+	once_Main_pack__3800196234.Do(func() {
+		cache_Main_pack__3800196234 = r_.Func(func(__eta_norm_0_0_box r_.Value) r_.Value {
+			return Call_Main_pack__3800196234(Rebox_Main_1106105172_3409422644(r_.CoerceToStruct[Constructor_Main_Packed[r_.Value, r_.Value]](__eta_norm_0_0_box)))
+		})
+	})
+	return cache_Main_pack__3800196234
+}
+
+var cache_Main_markerInt r_.Value
+
+var once_Main_markerInt sync.Once
+
+func Get_Main_markerInt() r_.Value {
+	once_Main_markerInt.Do(func() {
+		cache_Main_markerInt = func() r_.Value {
+			orig := struct {
+			}{}
+			_ = orig
+			return r_.RecordDict0()
+		}()
+	})
+	return cache_Main_markerInt
+}
+
+var cache_Main_mapErased r_.Value
+
+var once_Main_mapErased sync.Once
+
+func Get_Main_mapErased() r_.Value {
+	once_Main_mapErased.Do(func() {
+		cache_Main_mapErased = r_.Func2(func(f_0_box r_.Value, v_1_box r_.Value) r_.Value {
+			return Call_Main_mapErased(f_0_box, v_1_box)
+		})
+	})
+	return cache_Main_mapErased
+}
+
+var cache_Main_mapErased__4236014793 r_.Value
+
+var once_Main_mapErased__4236014793 sync.Once
+
+func Get_Main_mapErased__4236014793() r_.Value {
+	once_Main_mapErased__4236014793.Do(func() {
+		cache_Main_mapErased__4236014793 = r_.Func2(func(f_0_box r_.Value, __eta_norm_0_1_box r_.Value) r_.Value {
+			return Call_Main_mapErased__4236014793(f_0_box, __eta_norm_0_1_box)
+		})
+	})
+	return cache_Main_mapErased__4236014793
+}
+
+var cache_Main_main r_.Value
+
+var once_Main_main sync.Once
+
+func Get_Main_main() r_.Value {
+	once_Main_main.Do(func() {
+		cache_Main_main = r_.Func(func(_ r_.Value) r_.Value {
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
+			__local_var_0_0 := r_.Apply(Get_Effect_Ref__new(), r_.Int(int64(1)))
+			_ = __local_var_0_0
+			__local_var_1_1 := r_.Apply(__local_var_0_0, r_.Value{})
+			_ = __local_var_1_1
+			__local_var_2_2 := r_.Apply(r_.Apply(Get_Effect_Ref_read(), __local_var_1_1), r_.Value{})
+			_ = __local_var_2_2
+			__local_var_3_3 := r_.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
+				P_actual   int64
+				P_expected int64
+			}{Call_Main_sumEleven(__local_var_2_2.IntVal, int64(2), int64(3), int64(4), int64(5), int64(6), int64(7), int64(8), int64(9), int64(10), int64(11)), int64(66)}), r_.Value{})
+			_ = __local_var_3_3
+			fnRef_4_4 := r_.Apply(r_.Apply(Get_Effect_Ref__new(), Get_Main_sumEleven()), r_.Value{})
+			_ = fnRef_4_4
+			__local_var_5_5 := r_.Apply(r_.Apply(Get_Effect_Ref_read(), fnRef_4_4), r_.Value{})
+			_ = __local_var_5_5
+			__local_var_6_6 := r_.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
+				P_actual   int64
+				P_expected int64
+			}{r_.Apply(r_.Apply10(__local_var_5_5, r_.Int(__local_var_2_2.IntVal), r_.Int(int64(2)), r_.Int(int64(3)), r_.Int(int64(4)), r_.Int(int64(5)), r_.Int(int64(6)), r_.Int(int64(7)), r_.Int(int64(8)), r_.Int(int64(9)), r_.Int(int64(10))), r_.Int(int64(11))).IntVal, int64(66)}), r_.Value{})
+			_ = __local_var_6_6
+			// TAST (Let): __local_var_7_8 shape=Other bindingType=(ADT ["Main","Erased"] [Int])
+			__local_var_7_8 := (&Constructor_Main_Packed[int64, int64]{1, r_.Func(func(v_7 r_.Value) r_.Value {
+				return r_.Int(r_.IntAdd(v_7.IntVal, int64(1)))
+			}), int64(21)})
+			_ = __local_var_7_8
+			// TAST (Let): __local_var_8_9 shape=Other bindingType=(ADT ["Main","Erased"] [(TypeVar b$scope13)])
+			__local_var_8_9 := (&Constructor_Main_Packed[r_.Value, r_.Value]{1, r_.Apply2(Call_Control_Semigroupoid_compose(r_.CoerceToStruct[Constructor_Control_Semigroupoid_Semigroupoid[r_.Value]](Get_Control_Semigroupoid_semigroupoidFn())), r_.Func(func(v_8 r_.Value) r_.Value {
+				return r_.Int(r_.IntMul(v_8.IntVal, int64(2)))
+			}), (__local_var_7_8).V0), r_.Int((__local_var_7_8).V1)})
+			_ = __local_var_8_9
+			__local_var_7_7 := r_.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
+				P_actual   int64
+				P_expected int64
+			}{r_.Apply((__local_var_8_9).V0, (__local_var_8_9).V1).IntVal, int64(44)}), r_.Value{})
+			_ = __local_var_7_7
+			return r_.Apply(r_.Apply(Get_Effect_Console_log(), r_.Str("Done")), r_.Value{})
+		})
+	})
+	return cache_Main_main
+}
+
+type Constructor_Main_Packed[T_a any, T_b any] struct {
+	Rc uint32
+	V0 r_.Value
+	V1 T_a
+}
+
+type Constructor_Main_Marker[T_a any] struct {
+	Rc uint32
+}
+
+func init() {
+	r_.StructGetters[185911708] = func(ptr unsafe.Pointer, key string) r_.Value {
+		c := (*Constructor_Main_Marker[r_.Value])(ptr)
+		_ = c
+		switch key {
+
+		default:
+			panic("Key not found in dictionary Constructor_Main_Marker: " + key)
+		}
+	}
+}
+
+func Call_Main_Packed__592525336(__eta_norm_1_0_loop r_.Value, __eta_norm_0_1_loop int64) *Constructor_Main_Packed[int64, int64] {
+Packed__592525336:
+	for {
+		if false {
+			continue Packed__592525336
+		}
+		var __eta_norm_1_0 r_.Value = __eta_norm_1_0_loop
+		_ = __eta_norm_1_0
+		var __eta_norm_0_1 int64 = __eta_norm_0_1_loop
+		_ = __eta_norm_0_1
+		return (&Constructor_Main_Packed[int64, int64]{1, __eta_norm_1_0, __eta_norm_0_1})
+	}
+}
+
+func Call_Main_Marker_dollar_Dict(x_0_loop struct {
+}) r_.Value {
+	var x_0 struct {
+	} = x_0_loop
+	_ = x_0
+	return func() r_.Value {
+		orig := x_0
+		_ = orig
+		return r_.RecordDict0()
+	}()
+}
+
+func Call_Main_Marker_dollar_Dict__1545153923(x_0_loop struct {
+}) r_.Value {
+Marker_dollar_Dict__1545153923:
+	for {
+		if false {
+			continue Marker_dollar_Dict__1545153923
+		}
+		var x_0 struct {
+		} = x_0_loop
+		_ = x_0
+		return func() r_.Value {
+			orig := x_0
+			_ = orig
+			return r_.RecordDict0()
+		}()
+	}
+}
+
+func Call_Main_sumEleven(a_0_loop int64, b_1_loop int64, c_2_loop int64, d_3_loop int64, e_4_loop int64, f_5_loop int64, g_6_loop int64, h_7_loop int64, i_8_loop int64, j_9_loop int64, k_10_loop int64) int64 {
+	var a_0 int64 = a_0_loop
+	_ = a_0
+	var b_1 int64 = b_1_loop
+	_ = b_1
+	var c_2 int64 = c_2_loop
+	_ = c_2
+	var d_3 int64 = d_3_loop
+	_ = d_3
+	var e_4 int64 = e_4_loop
+	_ = e_4
+	var f_5 int64 = f_5_loop
+	_ = f_5
+	var g_6 int64 = g_6_loop
+	_ = g_6
+	var h_7 int64 = h_7_loop
+	_ = h_7
+	var i_8 int64 = i_8_loop
+	_ = i_8
+	var j_9 int64 = j_9_loop
+	_ = j_9
+	var k_10 int64 = k_10_loop
+	_ = k_10
+	return r_.IntAdd(r_.IntAdd(r_.IntAdd(r_.IntAdd(r_.IntAdd(r_.IntAdd(r_.IntAdd(r_.IntAdd(r_.IntAdd(r_.IntAdd(a_0, b_1), c_2), d_3), e_4), f_5), g_6), h_7), i_8), j_9), k_10)
+}
+
+func Call_Main_runErased(v_0_loop r_.Value) r_.Value {
+	var v_0 r_.Value = v_0_loop
+	_ = v_0
+	return r_.Apply((*Constructor_Main_Packed[r_.Value, r_.Value])(v_0.UnsafePtr).V0, (*Constructor_Main_Packed[r_.Value, r_.Value])(v_0.UnsafePtr).V1)
+}
+
+func Call_Main_runErased__2704168187(__eta_norm_0_0_loop r_.Value) int64 {
+runErased__2704168187:
+	for {
+		if false {
+			continue runErased__2704168187
+		}
+		var __eta_norm_0_0 r_.Value = __eta_norm_0_0_loop
+		_ = __eta_norm_0_0
+		return r_.Apply((*Constructor_Main_Packed[r_.Value, r_.Value])(__eta_norm_0_0.UnsafePtr).V0, (*Constructor_Main_Packed[r_.Value, r_.Value])(__eta_norm_0_0.UnsafePtr).V1).IntVal
+	}
+}
+
+func Call_Main_pack__3800196234(__eta_norm_0_0_loop *Constructor_Main_Packed[int64, int64]) r_.Value {
+pack__3800196234:
+	for {
+		if false {
+			continue pack__3800196234
+		}
+		var __eta_norm_0_0 *Constructor_Main_Packed[int64, int64] = __eta_norm_0_0_loop
+		_ = __eta_norm_0_0
+		return r_.Value{Type: 9, IntVal: 214700806, UnsafePtr: unsafe.Pointer(Rebox_Main_3409422644_1106105172(__eta_norm_0_0))}
+	}
+}
+
+func Call_Main_mapErased(f_0_loop r_.Value, v_1_loop r_.Value) r_.Value {
+	var f_0 r_.Value = f_0_loop
+	_ = f_0
+	var v_1 r_.Value = v_1_loop
+	_ = v_1
+	return r_.Value{Type: 9, IntVal: 214700806, UnsafePtr: unsafe.Pointer((&Constructor_Main_Packed[r_.Value, r_.Value]{1, r_.Apply2(Call_Control_Semigroupoid_compose(r_.CoerceToStruct[Constructor_Control_Semigroupoid_Semigroupoid[r_.Value]](Get_Control_Semigroupoid_semigroupoidFn())), f_0, (*Constructor_Main_Packed[r_.Value, r_.Value])(v_1.UnsafePtr).V0), (*Constructor_Main_Packed[r_.Value, r_.Value])(v_1.UnsafePtr).V1}))}
+}
+
+func Call_Main_mapErased__4236014793(f_0_loop r_.Value, __eta_norm_0_1_loop r_.Value) r_.Value {
+mapErased__4236014793:
+	for {
+		if false {
+			continue mapErased__4236014793
+		}
+		var f_0 r_.Value = f_0_loop
+		_ = f_0
+		var __eta_norm_0_1 r_.Value = __eta_norm_0_1_loop
+		_ = __eta_norm_0_1
+		return r_.Value{Type: 9, IntVal: 214700806, UnsafePtr: unsafe.Pointer((&Constructor_Main_Packed[r_.Value, r_.Value]{1, r_.Apply2(Call_Control_Semigroupoid_compose(r_.CoerceToStruct[Constructor_Control_Semigroupoid_Semigroupoid[r_.Value]](Get_Control_Semigroupoid_semigroupoidFn())), f_0, (*Constructor_Main_Packed[r_.Value, r_.Value])(__eta_norm_0_1.UnsafePtr).V0), (*Constructor_Main_Packed[r_.Value, r_.Value])(__eta_norm_0_1.UnsafePtr).V1}))}
+	}
+}
+
+func Rebox_Main_1106105172_3409422644(in *Constructor_Main_Packed[r_.Value, r_.Value]) *Constructor_Main_Packed[int64, int64] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Main_Packed[int64, int64]{}
+	out.V0 = in.V0
+	out.V1 = in.V1.IntVal
+	return out
+}
+
+func Rebox_Main_3409422644_1106105172(in *Constructor_Main_Packed[int64, int64]) *Constructor_Main_Packed[r_.Value, r_.Value] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Main_Packed[r_.Value, r_.Value]{}
+	out.V0 = in.V0
+	out.V1 = r_.Int(in.V1)
+	return out
+}
+
+// gopurs-source-end-v1
+
+// gopurs-package-file: purescript/p_root/zz_gopurs_order.go
+package p_root
+
+import (
+	_ "gopurs/output/purescript/init_external"
+)
+

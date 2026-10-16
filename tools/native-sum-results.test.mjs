@@ -14,6 +14,7 @@ import * as Ref from '../output/Effect.Ref/index.js';
 import * as Adt from '../output/Gopurs.AdtExprs/index.js';
 import * as CodeGen from '../output/Gopurs.CodeGen/index.js';
 import * as Go from '../output/Gopurs.GoAst/index.js';
+import { SymbolReference, generated } from '../output/Gopurs.GoSymbol/index.js';
 import { printGoExpr } from '../output/Gopurs.Printer/index.js';
 import { runtimeGoCode } from '../output/Gopurs.Runtime/index.js';
 import * as C from '../output/PureScript.Backend.Optimizer.CoreFn/index.js';
@@ -36,7 +37,7 @@ const metadata = withReboxFields({
     pointerAdtLeaves: map([['Data_Data_Maybe_Nothing', { nodeBaseStruct: 'Data_Data_Maybe_Just', nodeCtor: 'Just' }]]),
     enumAdts: emptySet, enumCtors: emptySet, globalTypes: emptyMap, classDeclsFields: emptyMap,
     globalFunctions: map(cases.map(fixture => [`Producer.${fixture.name}`, {
-        fullName: `Call_Producer_${fixture.name}`, arity: 1, fArgs: [Go.TypeBool.value], fRet: nativeType(fixture),
+        reference: new SymbolReference(generated('Producer')(`Call_Producer_${fixture.name}`)), arity: 1, fArgs: [Go.TypeBool.value], fRet: nativeType(fixture),
     }])),
 });
 const expr = syntax => new NeutralExpr(syntax);

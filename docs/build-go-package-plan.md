@@ -3,8 +3,16 @@
 **Plan canonique vérifié le 13 octobre 2026.** La référence et les budgets
 figurent dans [G00](build-go-packages.md). G01 définit le placement ; les
 qualifications, l'émission compilable et les mesures Go sont les étapes G02–G06.
+Les [références G02](build-go-references.md) sont validées le 13 octobre ; le
+raccordement du pilote au placement est G03.
 Les tailles de fermeture ci-dessous sont des estimations statiques, sans gain
 de temps attribué au compilateur.
+
+**Mise à jour G06, 16 octobre :** la densité mesurée et installée est **1/8192**,
+avec le même algorithme d'intervalles canoniques. Elle donne **6 packages / 15
+arêtes** sur b8x. Le [bilan G06](build-go-measurements.md) porte les mesures et
+la décision de livraison ; les chiffres **1/128** de ce document restent la
+référence historique G01, antérieure aux contraintes de GOCACHE mesurées.
 
 ## Décision et portée
 
@@ -29,7 +37,7 @@ sur chaque édition, avec les budgets de froid, mémoire et stockage de G00.
 
 ## Identités et propriété
 
-Aujourd'hui, les noms internes sont surtout des chaînes dans `GoAst`,
+Au début de G01, les noms internes sont surtout des chaînes dans `GoAst`,
 `GoCode`, les signatures des workers et les FFI. `Driver.Output` écrit tout
 dans `purescript`. Le plan introduit une identité logique avant le placement :
 

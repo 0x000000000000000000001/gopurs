@@ -1,12 +1,65 @@
 package main
 
 import (
+	"bytes"
+	"compress/gzip"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"syscall"
 )
+
+const moduleSourceCodec = "gopurs/go-source-gzip-v1"
+
+func (s store) stageModuleSource(root string, source StagedModuleSource, previous []ModuleSource) (ModuleSource, error) {
+	data, err := os.ReadFile(absolute(root, source.Source))
+	if err != nil {
+		return ModuleSource{}, err
+	}
+	raw := Object{SHA256: digest(data), Bytes: int64(len(data))}
+	for _, prior := range previous {
+		if prior.Kind == source.Kind && prior.Codec == moduleSourceCodec && prior.Raw == raw {
+			if _, err := s.readModuleSource(prior); err == nil {
+				return prior, nil
+			}
+		}
+	}
+	var compressed bytes.Buffer
+	writer, err := gzip.NewWriterLevel(&compressed, gzip.BestSpeed)
+	if err != nil {
+		return ModuleSource{}, err
+	}
+	// No timestamp or filename: all hosts use this producer and byte framing.
+	if _, err := writer.Write(data); err != nil {
+		return ModuleSource{}, err
+	}
+	if err := writer.Close(); err != nil {
+		return ModuleSource{}, err
+	}
+	object, err := s.putStagedObject(compressed.Bytes())
+	return ModuleSource{Kind: source.Kind, Codec: moduleSourceCodec, Object: object, Raw: raw}, err
+}
+
+func (s store) readModuleSource(source ModuleSource) ([]byte, error) {
+	data, err := s.readObject(source.Object)
+	if err != nil {
+		return nil, err
+	}
+	input := bytes.NewReader(data)
+	reader, err := gzip.NewReader(input)
+	if err != nil {
+		return nil, err
+	}
+	defer reader.Close()
+	reader.Multistream(false)
+	raw, err := io.ReadAll(io.LimitReader(reader, source.Raw.Bytes+1))
+	if err != nil || int64(len(raw)) != source.Raw.Bytes || digest(raw) != source.Raw.SHA256 || input.Len() != 0 {
+		return nil, fmt.Errorf("invalid module source object: %s", source.Object.SHA256)
+	}
+	return raw, nil
+}
 
 // Module candidates are an immutable private copy of one committed manifest.
 // They are hints until the typed producer checks the prepared/optimizer/emitter
@@ -51,14 +104,28 @@ func freezeModuleCache(stage string, state buildSession, force bool, result *Ses
 				files[fmt.Sprintf("%d.json", i)] = data
 			}
 			body := false
-			for _, output := range outputs[memo.Name] {
-				data, err := s.readObject(output.Object)
-				if err != nil {
-					valid = false
-					break
+			if len(memo.Sources) != 0 {
+				for _, source := range memo.Sources {
+					data, err := s.readModuleSource(source)
+					if err != nil {
+						valid = false
+						break
+					}
+					files[source.Kind+".go"] = data
+					body = body || source.Kind == "module"
 				}
-				files[output.Kind+".go"] = data
-				body = body || output.Kind == "module"
+			} else {
+				// Legacy and monolithic manifests already retain these exact bytes
+				// as outputs; migration needs no duplicate compressed object.
+				for _, output := range outputs[memo.Name] {
+					data, err := s.readObject(output.Object)
+					if err != nil {
+						valid = false
+						break
+					}
+					files[output.Kind+".go"] = data
+					body = body || output.Kind == "module"
+				}
 			}
 			if !valid || !body {
 				continue

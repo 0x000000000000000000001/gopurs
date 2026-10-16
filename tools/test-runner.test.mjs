@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
+import { formatSnapshots, packageSourceSections, snapshotFiles } from "./test-snapshots.mjs";
 
 const repository = fileURLToPath(new URL("../", import.meta.url));
 const fakeTool = `#!/usr/bin/env node
@@ -30,8 +31,17 @@ if (process.env.RUNNER_PAUSE && phase === "spago") {
 } else if (phase === "gopurs") {
   mkdirSync("output/purescript", { recursive: true });
   mkdirSync("output/main", { recursive: true });
-  writeFileSync("output/purescript/Main.go", "package purescript\\n");
-  writeFileSync("output/purescript/Main_ffi.go", "package purescript // ffi\\n");
+  if (process.env.GOPURS_GO_PACKAGES === "1") {
+    const group = process.env.RUNNER_PACKAGE_SPLIT ? "p_0123456789abcdef0123456789abcdef" : "p_root";
+    for (const dir of [group, "init_all", "init_external"]) mkdirSync("output/purescript/" + dir, { recursive: true });
+    writeFileSync("output/purescript/" + group + "/Main.go", "package " + group + "\\n");
+    writeFileSync("output/purescript/" + group + "/Main_ffi.go", "package " + group + " // ffi\\n");
+    writeFileSync("output/purescript/" + group + "/zz_gopurs_order.go", "package " + group + "\\n");
+    for (const name of ["init_all", "init_external"]) writeFileSync("output/purescript/" + name + "/init.go", "package " + name + "\\n");
+  } else {
+    writeFileSync("output/purescript/Main.go", "package purescript\\n");
+    writeFileSync("output/purescript/Main_ffi.go", "package purescript // ffi\\n");
+  }
   writeFileSync("output/main/main.go", "package main\\n");
   writeFileSync("output/go.mod", "module gopurs/output\\n\\ngo 1.22\\n");
 } else if (phase === "build") {
@@ -157,6 +167,65 @@ test("snapshot creation and replacement require opt-in, including FFI", async t 
   const legacy = await f.run(["Alpha"], { UPDATE_SNAPSHOTS: "1" });
   assert.equal(legacy.code, 0, legacy.output);
   assert.equal(readFileSync(expected, "utf8"), "package purescript\n");
+});
+
+test("package snapshots cover fragments, FFI, order and entry paths with strict replays", async t => {
+  const f = fixture(t);
+  f.source("Alpha", "-- @snapshot-ffi\nmodule Main where\n");
+  const env = { GOPURS_GO_PACKAGES: "1" };
+  const missing = await f.run(["Alpha"], env);
+  assert.equal(missing.code, 1, missing.output);
+  assert.match(missing.output, /Missing snapshot/);
+  const snapshot = join(f.root, "tests/passing-package-snapshots/Alpha.txt");
+  assert(!existsSync(snapshot));
+  const update = await f.run(["Alpha", "--update-snapshots"], env);
+  assert.equal(update.code, 0, update.output);
+  const contents = readFileSync(snapshot, "utf8");
+  for (const path of ["main/main.go", "purescript/init_all/init.go", "purescript/init_external/init.go",
+    "purescript/p_root/Main.go", "purescript/p_root/Main_ffi.go", "purescript/p_root/zz_gopurs_order.go"]) {
+    assert(contents.includes("// gopurs-package-file: " + path + "\n"), path);
+  }
+  const replay = await f.run(["Alpha"], env);
+  assert.equal(replay.code, 0, replay.output);
+  const moved = await f.run(["Alpha"], { ...env, RUNNER_PACKAGE_SPLIT: "1" });
+  assert.equal(moved.code, 1, moved.output);
+  assert.match(moved.output, /snapshot diff/);
+  assert.equal(readFileSync(snapshot, "utf8"), contents);
+  const failed = await f.run(["Alpha", "--update-snapshots"], { ...env, RUNNER_PACKAGE_SPLIT: "1", RUNNER_FAIL: "build" });
+  assert.equal(failed.code, 1, failed.output);
+  assert.equal(readFileSync(snapshot, "utf8"), contents);
+  assert.equal(readFileSync(join(f.root, "tests/passing-snapshots/Alpha.go"), "utf8"), "package purescript\n");
+});
+
+test("coalesced snapshots select source sections without treating Go literals as markers", async t => {
+  const f = fixture(t), directory = join(f.base, "projection"), group = "p_11111111111111111111111111111111";
+  const output = join(directory, "output"), bundle = `purescript/${group}/0_gopurs_package.go`;
+  for (const name of [`purescript/${group}`, "purescript/init_all", "purescript/init_external", "main"])
+    mkdirSync(join(output, name), { recursive: true });
+  mkdirSync(join(directory, "logs"));
+  for (const [name, pkg] of [["main/main.go", "main"], ["purescript/init_all/init.go", "init_all"],
+    ["purescript/init_external/init.go", "init_external"], [`purescript/${group}/zz_gopurs_order.go`, group]])
+    writeFileSync(join(output, name), `package ${pkg}\n`);
+  const section = (name, code) => `// gopurs-source-v1: ${Buffer.from(name).toString("hex")}\n${code}\n// gopurs-source-end-v1\n`;
+  const code = `package ${group}\n\n` + section("Extra.go", "var Excluded = 17") +
+    section("Main.go", 'var Literal = `\n// gopurs-source-v1: 66616b65\n// gopurs-source-end-v1\n`') +
+    section("Main_ffi.go", "func Native() int { return Excluded }");
+  writeFileSync(join(output, bundle), code);
+  assert.deepEqual(packageSourceSections(code).sections.map(section => section.name), ["Extra.go", "Main.go", "Main_ffi.go"]);
+  for (const snapshotFfi of [false, true]) {
+    const selected = { directory, name: "Alpha", snapshotFfi }, env = { ...process.env, GOPURS_GO_PACKAGES: "1" };
+    const files = snapshotFiles(f.root, selected, env);
+    await formatSnapshots(files, { run: async (_, command, args, options) => {
+      const result = spawnSync(command, args, { ...options, encoding: "utf8" });
+      assert.equal(result.status, 0, result.stderr);
+    } }, selected, env);
+    const view = readFileSync(files[0].generated, "utf8");
+    assert(view.includes("// gopurs-package-file: " + bundle));
+    assert(view.includes("var Literal = `"));
+    assert(!view.includes("var Excluded"));
+    assert.equal(view.includes("func Native()"), snapshotFfi);
+    assert.equal(readFileSync(join(output, bundle), "utf8").includes("var Excluded"), true);
+  }
 });
 
 test("every failed phase stops the run and keeps diagnostics without updating snapshots", async t => {

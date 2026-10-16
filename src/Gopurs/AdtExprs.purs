@@ -52,7 +52,7 @@ definition metadata codegenStateRef modNameStr name fields ctorType =
     isElided = Set.member structName metadata.elidedCtors
     isEnum = Set.member baseStructName metadata.enumCtors
     boxedCtor = boxGoExpr codegenStateRef modNameStr
-      (GoConstructor (hashString baseStructName) structName typeArgs coercedFields) prepared.pointerType
+      (GoConstructor (hashString baseStructName) identity.symbol typeArgs coercedFields) prepared.pointerType
     finalExprType =
       if isEnum then TypeUint32
       else case prepared.leafPointerType of
@@ -68,7 +68,7 @@ definition metadata codegenStateRef modNameStr name fields ctorType =
         Just pointer -> rawGo ("(" <> goTypeToStr pointer <> ")(nil)")
         Nothing ->
           if isEnum then rawGo (hashString baseStructName)
-          else if Array.null fields then GoConstructor (hashString baseStructName) structName typeArgs coercedFields
+          else if Array.null fields then GoConstructor (hashString baseStructName) identity.symbol typeArgs coercedFields
           else Array.foldr (\f inner -> GoCall (GoSelector (GoVar "gopurs_runtime") "Func") [ GoFuncLit [ Tuple (sanitizeName f) TypeValue ] [] inner TypeValue ]) boxedCtor fields
 
   in
@@ -117,7 +117,7 @@ saturated codegenStateRef (SaturatedConstructor { metadata, modNameStr, name, pr
   let
     { structName, baseStructName } = prepared.layout.identity
     native =
-      { expr: GoConstructor (hashString baseStructName) structName prepared.typeArgs accProps.exprs
+      { expr: GoConstructor (hashString baseStructName) prepared.layout.identity.symbol prepared.typeArgs accProps.exprs
       , exprType: prepared.pointerType
       }
   in
@@ -174,7 +174,7 @@ getField metadata codegenStateRef modNameStr { moduleName: mbMod, ctorName, inde
     else
       let
         fields = fromMaybe [] (map _.fields ctorLayout.constructorFields)
-        monoStructName = structName
+        monoStructName = ctorLayout.identity.symbol
 
         expectedType = case Array.index fields idx of
           Just ty -> exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr ty

@@ -40,6 +40,7 @@ import Effect (Effect)
 import Gopurs.Cache.Pool as Pool
 import Gopurs.Cache.TypeMemo as TypeMemo
 import Gopurs.GoAst (GoType)
+import Gopurs.GoSymbol (GoReference)
 import PureScript.Backend.Optimizer.Analysis as A
 import PureScript.Backend.Optimizer.CoreFn as C
 import PureScript.Backend.Optimizer.Semantics as S
@@ -864,3 +865,6 @@ instance Codec S.NeutralExpr where
 instance Codec GoType where
   encode value = genericEncode value
   decode value = genericDecode value
+instance Codec GoReference where
+  encode = genericEncode
+  decode = genericDecode

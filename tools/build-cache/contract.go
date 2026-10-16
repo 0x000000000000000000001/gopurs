@@ -94,25 +94,41 @@ type StagedArtifact struct {
 	Source string `json:"source"`
 }
 
+// The package resolver consumes the unqualified module/FFI source again after
+// an edit. Its compressed object is private, never a compiler-owned Go output.
+type ModuleSource struct {
+	Kind   string `json:"kind"`
+	Codec  string `json:"codec"`
+	Object Object `json:"object"`
+	Raw    Object `json:"raw"`
+}
+
+type StagedModuleSource struct {
+	Kind   string `json:"kind"`
+	Source string `json:"source"`
+}
+
 // A module memo is all-or-nothing. These are independent semantic environments,
 // not merely an import/signature hash. Their producer must include absent reads,
 // inlined bodies, ABI/layouts and transitive caller specialization demands.
 type ModuleMemo struct {
-	Name                 string     `json:"name"`
-	Prepared             string     `json:"prepared"`
-	OptimizerEnvironment string     `json:"optimizerEnvironment"`
-	EmitterEnvironment   string     `json:"emitterEnvironment"`
-	CallerDemands        string     `json:"callerDemands"`
-	Parts                []Artifact `json:"parts"`
+	Name                 string         `json:"name"`
+	Prepared             string         `json:"prepared"`
+	OptimizerEnvironment string         `json:"optimizerEnvironment"`
+	EmitterEnvironment   string         `json:"emitterEnvironment"`
+	CallerDemands        string         `json:"callerDemands"`
+	Parts                []Artifact     `json:"parts"`
+	Sources              []ModuleSource `json:"sources,omitempty"`
 }
 
 type StagedModule struct {
-	Name                 string           `json:"name"`
-	Prepared             string           `json:"prepared"`
-	OptimizerEnvironment string           `json:"optimizerEnvironment"`
-	EmitterEnvironment   string           `json:"emitterEnvironment"`
-	CallerDemands        string           `json:"callerDemands"`
-	Parts                []StagedArtifact `json:"parts"`
+	Name                 string               `json:"name"`
+	Prepared             string               `json:"prepared"`
+	OptimizerEnvironment string               `json:"optimizerEnvironment"`
+	EmitterEnvironment   string               `json:"emitterEnvironment"`
+	CallerDemands        string               `json:"callerDemands"`
+	Parts                []StagedArtifact     `json:"parts"`
+	Sources              []StagedModuleSource `json:"sources,omitempty"`
 }
 
 type Manifest struct {
@@ -147,12 +163,13 @@ type Response struct {
 }
 
 var digestPattern = regexp.MustCompile(`^[0-9a-f]{64}$`)
+var goPackagePattern = regexp.MustCompile(`^p_(root|[0-9a-f]{32})$`)
 var hexUnitsPattern = regexp.MustCompile(`^([0-9a-f]{4})*$`)
 var floatPattern = regexp.MustCompile(`^[0-9a-f]{16}$`)
 var integerPattern = regexp.MustCompile(`^(0|-?[1-9][0-9]*)$`)
 var tagPattern = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9_./-]*$`)
 
-var moduleCodecs = []string{"pbo/backend-v2", "pbo/implementations-v1", "pbo/directives-v1", "gopurs/workers-v1"}
+var moduleCodecs = []string{"pbo/backend-v2", "pbo/implementations-v1", "pbo/directives-v1", "gopurs/workers-v2"}
 
 func validModule(name string) bool {
 	if name == "" || strings.ContainsAny(name, "/\\\x00") {
@@ -180,6 +197,28 @@ func outputPath(kind, module, path string) bool {
 		return module == "" && path == "gopurs_runtime/runtime.go"
 	case "entry":
 		return validModule(module) && (path == "main/main.go" || path == module+"/main/main.go")
+	case "package", "ffi-package", "order", "package-init":
+		parts := strings.Split(path, "/")
+		if len(parts) != 3 || parts[0] != "purescript" {
+			return false
+		}
+		if kind == "package-init" {
+			return module == "" && (parts[1] == "init_all" || parts[1] == "init_external") && parts[2] == "init.go"
+		}
+		if !goPackagePattern.MatchString(parts[1]) {
+			return false
+		}
+		if kind == "order" {
+			return module == "" && parts[2] == "zz_gopurs_order.go"
+		}
+		if kind == "package" && module == "" {
+			return parts[2] == "0_gopurs_package.go"
+		}
+		suffix := ".go"
+		if kind == "ffi-package" {
+			suffix = "_ffi.go"
+		}
+		return validModule(module) && parts[2] == goName+suffix
 	}
 	return false
 }
@@ -225,8 +264,17 @@ func validateManifest(m Manifest) error {
 			// Keep legacy manifests readable for ownership and recovery. The typed
 			// producer only reuses a backend whose business codec it understands.
 			legacyBody := i == 0 && part.Codec == "pbo/backend-v1"
-			if (part.Codec != moduleCodecs[i] && !legacyBody) || !validObject(part.Object) {
+			legacyWorkers := i == 3 && part.Codec == "gopurs/workers-v1"
+			if (part.Codec != moduleCodecs[i] && !legacyBody && !legacyWorkers) || !validObject(part.Object) {
 				return fmt.Errorf("module-codec")
+			}
+		}
+		if len(mod.Sources) > 2 {
+			return fmt.Errorf("module-source-inventory")
+		}
+		for i, source := range mod.Sources {
+			if source.Kind != []string{"module", "ffi"}[i] || source.Codec != moduleSourceCodec || !validObject(source.Object) || !validObject(source.Raw) {
+				return fmt.Errorf("module-source-codec")
 			}
 		}
 	}

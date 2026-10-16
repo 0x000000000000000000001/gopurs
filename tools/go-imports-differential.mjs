@@ -20,6 +20,7 @@ const [before, after, G, T] = await Promise.all([
   referenceModule, join(output, 'Gopurs.GoImports/index.js'), join(output, 'Gopurs.GoAst/index.js'), join(output, 'Data.Tuple/index.js'),
 ].map(path => import(pathToFileURL(path))));
 const pair = (a, b) => new T.Tuple(a, b), fields = values => values.map((value, i) => pair('v' + i, value));
+const symbol = name => ({ owner: 'generated/Probe', name });
 const raw = path => new G.GoRaw({ text: '', imports: [path] });
 const leaves = [raw('math'), raw('sync'), raw('unsafe'), raw('gopurs/output/gopurs_runtime'),
   raw('α'), raw('😀'), raw('\ud800'), new G.GoString('math.Mod'), new G.GoInt(7)];
@@ -27,36 +28,46 @@ const types = [G.TypeValue.value, G.TypeInt64.value, G.TypeFloat64.value, G.Type
   new G.TypeInterface('unsafe.Pointer'), new G.TypeGenericParam('T')];
 types.push(new G.TypeNativeArray(types[0]), new G.TypeRecord(fields(types.slice(0, 7))),
   new G.TypeFunc(types.slice(0, 7), types[6]), new G.TypeStructValue('Pair', types.slice(0, 7)),
-  new G.TypeStructPointer({ baseStructName: 'D', fullName: 'D.D', fullPath: 'D', structName: 'D', typeArgs: types.slice(0, 7) }));
+  new G.TypeStructPointer({ baseStructName: 'D', fullName: 'D.D', fullPath: 'D', structName: 'D', symbol: symbol('D'), typeArgs: types.slice(0, 7) }));
 const wrap = (a, b, c, ty) => [
   new G.GoVar('math.Pi'), new G.GoCall(a, [b, c]), new G.GoSelector(new G.GoVar('math'), 'Mod'), new G.GoSelector(a, 'field'),
   new G.GoBlock([a, b, c]), new G.GoReturn(a), new G.GoAssign('x', a), new G.GoRecordDict(ty, fields([a, b])),
   new G.GoRecordUpdateDict(a, fields([b, c])), new G.GoRecordUpdateStatic(a, 2, [pair(0, b)], fields([c])),
   new G.GoRecordUpdateNative(ty, a, fields([b, c])), new G.GoIIFE('x', a, b), new G.GoLetRec(fields([a, b]), c),
   new G.GoRecordAccess(a, 'field'), new G.GoStructAccess(a, 'field'), new G.GoRecordAccessStatic(a, 0, 2),
-  new G.GoConstructor('D', 'C', [ty], [a, b]), new G.GoConstructor('D', 'C', [ty], []),
-  new G.GoConstructorDict('C', [a, b]), new G.GoConstructorAccess(a, 'C', [ty], 0, false),
-  new G.GoConstructorAccess(a, 'C', [ty], 0, true), new G.GoBranch([pair(a, b)], c), new G.GoBinOp('+', a, b),
-  new G.GoPrefixOp('-', a), new G.GoTypeAssertion(a, 'unsafe.Pointer'), new G.GoIndex(a, b),
+  new G.GoConstructor('D', symbol('C'), [ty], [a, b]), new G.GoConstructor('D', symbol('C'), [ty], []),
+  new G.GoConstructorDict('C', [a, b]), new G.GoConstructorAccess(a, symbol('C'), [ty], 0, false),
+  new G.GoConstructorAccess(a, symbol('C'), [ty], 0, true), new G.GoBranch([pair(a, b)], c), new G.GoBinOp('+', a, b),
+  new G.GoPrefixOp('-', a), new G.GoTypeAssertion(a, new G.TypeInterface('unsafe.Pointer')), new G.GoIndex(a, b),
   new G.GoBoxStructPointer('D', a), new G.GoBoxIntArray(a), new G.GoUnboxIntArray(a), new G.GoFreshFilterArray(a),
   new G.GoFor('i', [a, b]), new G.GoForRange('gopurs_runtime.Value', [a, b]), new G.GoContinue('loop'),
   new G.GoMutate('x', a), new G.GoIfElse(a, [b], [c]), new G.GoFuncBlock(fields([ty]), [a, b], ty),
   new G.GoFuncLit(fields([ty]), [a, b], c, ty), new G.GoStructValue('D', [ty], [a, b]),
 ];
 let checks = 0;
+// The frozen v3 collector predates the owned init token and structured type
+// assertions. Adapt those two representation changes, retaining its algorithm.
+function legacy(value) {
+  if (value instanceof G.GoInitDecl) return new G.GoInitDecl(legacy(value.value1));
+  if (value instanceof G.GoTypeAssertion) return new G.GoTypeAssertion(legacy(value.value0), G.goTypeToStr(value.value1));
+  if (Array.isArray(value)) return value.map(legacy);
+  if (value && typeof value === 'object') return Object.assign(Object.create(Object.getPrototypeOf(value)),
+    Object.fromEntries(Object.entries(value).map(([key, field]) => [key, legacy(field)])));
+  return value;
+}
 function check(expr, ty = G.TypeInt64.value) {
-  const groups = [[new G.GoFunctionDecl({ name: 'f', params: fields([ty]), result: ty, body: expr }),
-    new G.GoInitDecl(expr), new G.GoCachedValue({ identifier: 'x', goType: ty, expression: expr })],
-    [new G.GoStructDecl({ name: 'D', typeParams: fields([ty]), fields: fields([ty]) }),
-      new G.GoForeignGetter({ name: 'ffi', value: 'ffi' })]];
+  const groups = [[new G.GoFunctionDecl({ name: symbol('f'), params: fields([ty]), result: ty, body: expr }),
+    new G.GoInitDecl(symbol('register/D'), expr), new G.GoCachedValue({ identifier: symbol('x'), goType: ty, expression: expr })],
+    [new G.GoStructDecl({ name: symbol('D'), typeParams: fields([ty]), fields: fields([ty]) }),
+      new G.GoForeignGetter({ name: symbol('ffi'), value: symbol('ffi') })]];
   // Check each declaration separately so one cannot conceal another's imports.
   for (const declarations of [...groups.flat().map(item => [[item]]), groups]) {
-    assert.deepEqual(after.collectImports(declarations), before.collectImports(declarations)); checks++;
+    assert.deepEqual(after.collectImports(declarations), before.collectImports(legacy(declarations))); checks++;
   }
 }
 test('all structured nodes and type forms retain exactly their prior dependencies', () => {
   for (const ty of types) for (const expr of wrap(leaves[0], leaves[1], leaves[2], ty)) check(expr, ty);
-  for (const ty of types) check(new G.GoAssign('nilBinding', new G.GoConstructor('D', 'C', [ty], [])));
+  for (const ty of types) check(new G.GoAssign('nilBinding', new G.GoConstructor('D', symbol('C'), [ty], [])));
 });
 test('nested, wide and duplicate-rich expressions retain sorted unique imports', () => {
   let seed = 0x6a09e667;

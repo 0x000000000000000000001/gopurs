@@ -5,8 +5,12 @@ import Data.Array as Array
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.String as String
 import Data.Tuple (Tuple(..))
-import Gopurs.GoAst (GoExpr(..), GoDecl(..), GoBinding, GoFile, GoType(..), goTypeToStr, recordFieldName)
+import Gopurs.GoAst (GoExpr(..), GoDecl(..), GoBinding, GoFile, GoType(..), goTypeToStr, recordFieldName, recordLabelUnits)
 import Gopurs.Printer.Builder (Out, emit, emitMany, withOut)
+import Gopurs.GoSymbol (referenceName)
+import Gopurs.GoCode (BoundGoCode, renderBoundCode)
+import Gopurs.GoSymbol (GoSymbol, RenderContext)
+import Data.Either (Either)
 
 foreign import escapeGoStringImpl :: String -> String
 
@@ -43,7 +47,7 @@ printBindingRhs expr = withOut (\out -> writeBindingRhs out expr)
 writeBindingRhs :: Out -> GoExpr -> Out
 writeBindingRhs out (GoConstructor _ structName typeArgs []) =
   let typeArgsStr = if Array.null typeArgs then "" else "[" <> String.joinWith ", " (map goTypeToStr typeArgs) <> "]"
-  in emit out ("(*" <> structName <> typeArgsStr <> ")(nil)")
+  in emit out ("(*" <> structName.name <> typeArgsStr <> ")(nil)")
 writeBindingRhs out expr = writeGoExpr out expr
 
 printGoExpr :: GoExpr -> String
@@ -53,12 +57,16 @@ writeGoExpr :: Out -> GoExpr -> Out
 writeGoExpr out goExpr = case goExpr of
   GoVar name ->
     emit out name
+  GoRef reference ->
+    emit out (referenceName reference)
   GoString s ->
     emitMany out [ "\"", escapeGoString s, "\"" ]
   GoInt i ->
     emit out (show i)
   GoCall f args ->
     emit (writeExprArray (emit (writeGoExpr out f) "(") args) ")"
+  GoTypeApply f types ->
+    emitMany (writeGoExpr out f) [ "[", String.joinWith ", " (map goTypeToStr types), "]" ]
   GoSelector obj field ->
     emitMany (writeGoExpr out obj) [ ".", field ]
   GoBlock stmts ->
@@ -242,6 +250,8 @@ writeGoExpr out goExpr = case goExpr of
     emitMany (writeGoExpr (emit out "gopurs_runtime.RecordGet(") obj) [ ", ", quoteGoString prop, ")" ]
   GoStructAccess obj prop ->
     emitMany (writeGoExpr out obj) [ ".", prop ]
+  GoRecordFieldAccess obj label ->
+    emitMany (writeGoExpr out obj) [ ".", recordFieldName label ]
   GoRecordAccessStatic obj size idx ->
     if size >= 6 then
       emitMany (writeGoExpr (emit out "((*gopurs_runtime.RecordData)(") obj) [ ".UnsafePtr)).Vals[", show idx, "]" ]
@@ -252,7 +262,7 @@ writeGoExpr out goExpr = case goExpr of
     in if Array.null args then
       emit out "nil"
     else
-      let out1 = emitMany out [ "(&", structName, typeArgsStr, "{1, " ]
+      let out1 = emitMany out [ "(&", structName.name, typeArgsStr, "{1, " ]
       in emit (writeExprArray out1 args) "})"
   GoConstructorDict tag args ->
     let len = Array.length args
@@ -268,7 +278,7 @@ writeGoExpr out goExpr = case goExpr of
     else
       let typeArgsStr = if Array.length typeArgs > 0 then "[" <> String.joinWith ", " (map goTypeToStr typeArgs) <> "]" else ""
       in
-        emitMany (writeGoExpr (emitMany out [ "(*", structName, typeArgsStr, ")(" ]) obj) [ ".UnsafePtr).V", show idx ]
+        emitMany (writeGoExpr (emitMany out [ "(*", structName.name, typeArgsStr, ")(" ]) obj) [ ".UnsafePtr).V", show idx ]
   GoBranch branches def ->
     let
       out1 = emit out "func() gopurs_runtime.Value {\n"
@@ -288,7 +298,7 @@ writeGoExpr out goExpr = case goExpr of
   GoPrefixOp op expr ->
     emit (writeGoExpr (emitMany out [ op, "(" ]) expr) ")"
   GoTypeAssertion expr t ->
-    emitMany (writeGoExpr out expr) [ ".(", t, ")" ]
+    emitMany (writeGoExpr out expr) [ ".(", goTypeToStr t, ")" ]
   GoIndex expr index ->
     emit (writeGoExpr (emitMany (writeGoExpr (emit out "(") expr) [ ")[" ]) index) "]"
   GoBoxStructPointer tag expr ->
@@ -342,8 +352,9 @@ printGoDeclVar :: GoBinding -> String
 printGoDeclVar binding = withOut (\out -> writeGoDeclVar out binding)
 
 writeGoDeclVar :: Out -> GoBinding -> Out
-writeGoDeclVar out { identifier, expression, goType } =
+writeGoDeclVar out { identifier: symbol, expression, goType } =
   let
+    identifier = symbol.name
     typeStr = goTypeToStr goType
     out1 = emitMany out
       [ "var cache_", identifier, " ", typeStr
@@ -363,21 +374,23 @@ writeGoDecl out = case _ of
   GoStructDecl { name, typeParams, fields } ->
     let
       params = if Array.null typeParams then "" else "[" <> printParams typeParams <> "]"
-      out1 = emitMany out [ "type ", name, params, " struct {\n\t" ]
+      out1 = emitMany out [ "type ", name.name, params, " struct {\n\t" ]
       out2 = writeJoined "\n\t" (\o (Tuple field ty) -> emitMany o [ field, " ", goTypeToStr ty ]) out1 fields
     in
       emit out2 "\n}\n"
   GoFunctionDecl { name, params, result, body } ->
     let
-      out1 = emitMany out [ "func ", name, "(" ]
+      out1 = emitMany out [ "func ", name.name, "(" ]
       out2 = writeParams out1 params
       out3 = emitMany out2 [ ") ", goTypeToStr result, " {\n" ]
     in
       emit (writeGoExpr out3 body) "\n}"
-  GoInitDecl body ->
-    emit (writeGoExpr (emit out "func init() {\n") body) "\n}\n"
+  GoInitDecl symbol body ->
+    emit (writeGoExpr (emitMany out
+      [ "//gopurs:init-v1:", recordLabelUnits symbol.owner, ":", recordLabelUnits symbol.name
+      , "\nfunc init() {\n" ]) body) "\n}\n"
   GoForeignGetter { name, value } ->
-    emitMany out [ "func ", name, "() gopurs_runtime.Value {\n\treturn ", value, "\n}" ]
+    emitMany out [ "func ", name.name, "() gopurs_runtime.Value {\n\treturn ", value.name, "\n}" ]
 
 printParams :: Array (Tuple String GoType) -> String
 printParams params = withOut (\out -> writeParams out params)
@@ -387,6 +400,27 @@ writeParams = writeJoined ", " (\o (Tuple name ty) -> emitMany o [ name, " ", go
 
 printGoFile :: GoFile -> String
 printGoFile file = withOut (\out -> writeGoFile out file)
+
+printBoundGoCode :: RenderContext -> BoundGoCode -> Either String String
+printBoundGoCode = renderBoundCode
+
+-- Metadata accompanying the exact monolithic text. The parser checks lexical
+-- bindings later, including opaque fragments, without inventing init ordinals.
+declaredSymbols :: GoFile -> Array GoSymbol
+declaredSymbols file = Array.concatMap (Array.concatMap symbols) file.declarationGroups
+  where
+  symbols = case _ of
+    GoCachedValue { identifier } -> map
+      (\prefix -> identifier { name = prefix <> identifier.name }) [ "cache_", "once_", "Get_" ]
+    GoStructDecl { name } -> [ name ]
+    GoFunctionDecl { name } -> [ name ]
+    GoForeignGetter { name } -> [ name ]
+    GoInitDecl _ _ -> []
+
+initializerSymbols :: GoFile -> Array GoSymbol
+initializerSymbols file = Array.concatMap (Array.mapMaybe case _ of
+  GoInitDecl symbol _ -> Just symbol
+  _ -> Nothing) file.declarationGroups
 
 writeGoFile :: Out -> GoFile -> Out
 writeGoFile out { packageName, imports, declarationGroups } =

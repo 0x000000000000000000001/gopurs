@@ -16,6 +16,7 @@ reconstruit les deux versions et conserve le workspace pour les tests natifs.
 | Bootstrap natif et gestion des processus | `node --test tools/build-native.test.mjs tools/test-runner.test.mjs` |
 | Frontière TAST/PBO, types globaux et spécialisation | `node --test tools/monomorphization.test.mjs tools/global-types.test.mjs tools/preparation.test.mjs tools/foreign-forwarders.test.mjs`, après le build ; préparation native ci-dessous |
 | Annotations et représentations natives | `node --test tools/native-record-workers.test.mjs tools/boxed-record-arguments.test.mjs tools/native-sum-results.test.mjs`, après le build |
+| Références Go possédées et portées FFI | `npm run build:ffi`, puis `node --test tools/go-source.test.mjs tools/module-codec.test.mjs tools/emitter-worker-keys.test.mjs`, après le build ; `go test -race -count=1 ./...` dans `tools/ffi-gen` et `tools/build-cache` |
 | Preuves source/TCO des arguments record projetés | `node --test tools/native-record-args.test.mjs tools/native-record-workers.test.mjs`, après le build ; `./bin/test NativeRecordWorkers NativeRecordReturns` |
 | Layouts, métadonnées et instanciation | `node --test tools/representation-contract.test.mjs tools/mixed-constructor-tags.test.mjs tools/elided-constructor-payloads.test.mjs tools/record-tuple-conversions.test.mjs`, après le build |
 | Boxing et émission transitive Rebox | `node --test tools/rebox-generation.test.mjs tools/rebox-metadata.test.mjs tools/struct-pointer-boxing.test.mjs tools/value-array-unboxing.test.mjs`, après le build |
@@ -2124,6 +2125,224 @@ Preuve : `gopurs-go-packages-g01-20261013/`, notamment
 `identity-contracts-1/`, `initialization-contracts-4/` et `final-plan/`.
 L'audit final confirme les **430 fichiers de production** de G00.
 **G01 est validé, suite G à 2/7 ; G02 porte les références jusqu'au rendu.**
+
+## Suite G — G02 : références qualifiables validées (13 octobre 2026)
+
+Le [contrat G02](build-go-references.md) porte les symboles des getters,
+workers, constructeurs et helpers jusqu'au rendu. Les workers locaux sont
+distingués des symboles publiés ; les types nommés portent leur propriétaire.
+`GoSource.bindSources` résout les unités complètes avec `go/types`, corps et
+exports réels compris. `printBoundGoCode` qualifie selon le consommateur en
+préservant les membres et portées locales.
+
+La campagne initiale fournit **12 comparaisons b8x** : base/feuille/partagé/FFI,
+JS/Go séquentiel/Go parallèle, **2 704 TAST / 3 010 Go** par passage, exacts
+face à v3. Les objets `workers-v2` des quatre états sont également exacts.
+La campagne finale ajoute **six passages** : base native, identique sans
+réécriture, feuille incrémentale/forcée, puis base JS/Rust. Elle conserve la
+même racine et l'inode **286740996**. Ces durées de validation ne remplacent
+pas les paires de mesures G03/G06.
+
+Les cinq corpus G00 passent la liaison typée. Base/feuille/FFI : **185 671
+symboles**, partagé : **185 672**, bootstrap : **65 338**. Le contrôle vérifie
+les cibles internes et tous les spans ; le rendu monolithique restitue les noms
+et octets historiques. Les métadonnées exhaustives de diagnostic restent hors
+du cache de production ; leur taille impose un transport compact en G03.
+
+Les contrôles ciblés couvrent AST, signatures et codecs, records/tuples,
+Rebox, arbres possédés, tags, workers et contrats des bridges. Les replays
+stricts finaux exécutent **46 commandes**, deux fixtures et quatre hôtes ;
+les trois snapshots examinés par empreinte ne changent pas. Le résolveur rend
+des JSON identiques via WASM, appel Go direct et bridge C/Rust, avec génériques,
+callbacks, assertions, champs embarqués, interfaces et exports Go réels.
+Les tests des packages parseur et cache passent sous `-race` ; les compagnons
+natifs passent aussi dans leur module de compatibilité Go 1.22.
+
+La migration `workers-v1` → `workers-v2` est éprouvée sur **61 modules** :
+source modifiée, reprise depuis le seul manifeste, identique, forcé byte-exact,
+compilation/exécution, **dix commandes**, inode **287016135** conservé. Le
+premier candidat reste disponible comme oracle négatif de la reprise.
+
+Tentatives conservées : classification initiale de `init`, méthodes
+d'interface et champs embarqués ; assertion Rebox historique ; vecteur de
+codec avec labels de champs non encodés ; première hypothèse de migration
+avec journal encore valide ; usage de `utf16.RuneLen` refusé par le vet Go 1.22.
+La dernière correction ne touche que le comptage UTF-16 du résolveur.
+Les bootstraps et transports finaux sont identifiés séparément des campagnes
+b8x dans `gopurs-go-packages-g02-20261013/final-reference/summary.json`.
+
+**G02 est validé, suite G à 3/7 ; P reste à 0/7.** L'émission multipackage,
+les changements d'ABI/réflexion, la publication et les gains mesurés relèvent
+des quatre lots G restants.
+
+## Suite G — G03 : émission multipackage validée (14 octobre 2026)
+
+L'[émetteur typé](build-go-emission.md) est raccordé au CLI avec
+`GOPURS_GO_PACKAGES=1`. Les sources, packages, entrées et exports figés sont
+transportés en WASM, Go direct et C/Rust ; le CLI utilise le transport compact
+par fichiers. Les tests couvrent scopes, cycles, records privés/exportés,
+génériques, ordre des effets et cellule lazy partagée par 64 appels concurrents.
+
+Les quatre hôtes réussissent les fixtures réelles et les migrations CLI. Après
+revue des annotations et correction de l'identité Rebox, deux snapshots reçoivent
+uniquement **27 / 134 lignes d'annotations**, puis **67 commandes strictes**
+rejouent trois fixtures sur les quatre hôtes.
+
+b8x publie **2 704 TAST / 39 613 Go / 525 packages** ; son oracle compile et rend
+`camel=""`, `accent="e"`, `pong`. Le bootstrap courant publie **512 TAST /
+8 389 Go / 150 packages** ; son binaire compile et passe lui-même les contrôles
+CLI. La campagne finale termine **huit comparaisons / 28 commandes** avec
+inventaires Go, quatre objets par module, TAST et dates byte-exacts entre hôtes.
+Les hits identiques ne réécrivent aucun Go et Go ne compile ni ne lie.
+
+Les **15 plans G01** figés sont reproduits. Les plans réellement émis retrouvent
+exactement les modèles actualisés : **35 596 arêtes b8x / 5 875 bootstrap**.
+Les 76 renommages de helpers, leurs 51 déplacements et les différences de corpus
+bootstrap sont documentés. Les **348 tags runtime** b8x sont uniques et exacts ;
+les **185 667 déclarations** sont syntaxiquement équivalentes après les seuls
+renommages prévus. Le parseur et le cache passent aussi sous Go 1.22.12.
+
+Les reproducteurs du trap WASM, du tampon JS, des annotations UTF-16, des noms
+Rebox, de la propriété des anciennes sorties b8x et des échecs de harnais sont
+conservés. `gopurs-go-packages-g03-20261013/final-reference/summary.json` identifie
+les candidats et l'audit final. **G03 est clos, suite G à 4/7 ; P à 0/7.** Ces
+campagnes valident la correction ; les seuils temporels restent à vérifier en G06.
+
+## Suite G — G04 : consommateurs validés (14 octobre 2026)
+
+Les [consommateurs multipackages](build-go-consumers.md) passent sur JS, Go
+séquentiel/parallèle et Rust : **36 passages / 207 commandes strictes**, mêmes
+TAST, sources exactes et exécution égale au monolithe. La revue des neuf nouveaux
+snapshots couvre **592 déclarations / 57 fragments**, les wrappers FFI, chemins,
+imports d'ordre et entrées. Les références sont créées après compilation et
+exécution, puis restent inchangées pendant le rejeu strict.
+
+Les **89 commandes** de `driver-packages` vérifient aussi les FFI absentes,
+erreurs de syntaxe, reprises, signatures et dépendances natives. Les suites
+réelles `foreign`/`js-promise`, onze probes réfléchies b8x et le bootstrap courant
+passent. `gopurs-go-packages-g04-20261014/final-reference/summary.json` conserve
+les empreintes et compteurs ; les tentatives préalables restent disponibles.
+**G04 est clos, suite G à 5/7 ; P reste à 0/7.**
+
+## Suite G — G05 : cache et runner validés (14 octobre 2026)
+
+Le [cache multipackage](build-go-incremental.md) passe **56 comparaisons /
+350 commandes** de transitions sur les quatre hôtes. Les sources avant partition
+sont des objets gzip privés, vérifiés en forme compressée et décompressée ; les
+quatre objets métier conservent leurs codecs. Les corruptions, récupérations,
+migrations, morts de processus et verrous passent, avec détection de races et
+Go 1.22.12. Le candidat Rust à archive périmée reste conservé et le remplacement
+est validé. Les **89 commandes CLI** du candidat final embarquent aussi le
+contrôle de récupération après un flux gzip invalide rehashé.
+
+b8x ne réécrit qu'un Go après l'édition FFI, avec **2 704 backends repris /
+2 703 émissions restaurées**, exactitude face au forcé puis au retour à la base,
+oracle et identique sans compilation/lien. Ses sources compressées uniques
+occupent **12 641 367 octets**. Le runner b8x passe dix contrôles, dont migration,
+dépendance transitive et deux entrées. Preuves :
+`gopurs-go-packages-g05-20261014/final-reference/summary.json`.
+**G05 est clos, suite G à 6/7 ; P reste à 0/7.**
+
+## Suite G — G06 : candidat regroupé, correction validée (14 octobre 2026)
+
+Le candidat 2 de `gopurs-go-packages-g06-20261014` regroupe les sources par
+package avec des imports résolus par `go/types`. Les directives exigeant des
+frontières de fichiers gardent le rendu fragmenté, avec le même résolveur.
+
+- Suites du résolveur et du cache passées, dont cache avec détection de races
+  sous Go 1.22.12, migrations fragmenté/regroupé et ordre des initialiseurs FFI.
+- **56 comparaisons / 350 commandes** de transitions, récupération du cache et
+  **89 commandes CLI** sur JS, Go séquentiel/parallèle et Rust.
+- **612 déclarations Main/FFI** examinées dans neuf snapshots, avant mise à jour
+  après compilation/exécution ; **36 passages / 207 commandes** de rejeu strict,
+  avec empreintes inchangées pendant le rejeu.
+- Transports purs WASM/Go/C-Rust et writer éprouvés ; le WASM du dépôt est
+  byte-exact face au candidat figé.
+
+Preuve : `gopurs-go-packages-g06-20261014/functional-candidate-2/summary.json`.
+Le [bilan G06](build-go-measurements.md) conserve les deux pilotes rejetés pour
+l'acceptation. Le pilote 2 passe ses quatre oracles mesurés et les deux seeds,
+avec **−84,71 % Go / −66,46 % chaîne** sur une paire feuille, mais dépasse les
+budgets GOCACHE de base, RSS backend, gopurs froid et identique. Les diagnostics
+suivants conservent les octets Go et situent le pic RSS pendant la publication.
+Le candidat 3 privé, à ancres 1/8192 avec acquisition d'exports allégés, passe
+ensuite le résolveur, **89 commandes CLI et 56 comparaisons de transitions**
+sur les quatre hôtes (`functional-private-3/summary.json`). Son pilote de
+performance est en cours ; les snapshots du dépôt restent ceux du candidat 2.
+**À ce stade du 14 octobre, G06 reste ouvert : G à 6/7, P à 0/7.**
+
+## Suite G — G06 : livraison validée, pause avant P (16 octobre 2026)
+
+Le **candidat 7** est retenu et installé à densité **1/8192**, avec ses binaires
+JS/Go/Rust et son WASM identiques aux artefacts mesurés. Le découpage conserve
+l'algorithme canonique G01, les contraintes d'initialisation et les bridges ;
+b8x produit **6 packages / 15 arêtes / 27 Go**, soit **122 994 214 octets**.
+
+### Acceptation mesurée
+
+Les **36 chaînes / 36 oracles** représentent trois paires alternées pour chacun
+des six scénarios. Les **39 critères de temps et de stockage passent**, avec
+ressources du runner inchangées. Le [bilan ventilé](build-go-measurements.md) et
+les [36 lignes brutes](build-go-cycle-g06.csv) publient médianes, plages et paires.
+
+| Scénario | Go | Chaîne jusqu'à `exec` | Backend |
+| --- | ---: | ---: | ---: |
+| Feuille | −78,73 % | −62,88 % | **+26,88 %** |
+| Partagé | −65,95 % | −48,36 % | **+34,37 %** |
+| FFI | −66,98 % | −54,50 % | **+42,62 %** |
+| Froid applicatif | −49,14 % | −31,89 % | +2,15 % |
+| Froid complet | −46,20 % | −28,16 % | +2,23 % |
+
+L'identique ne réécrit, ne compile et ne lie rien : **4,160 → 4,050 s de chaîne**.
+Le GOCACHE identique est à **+9,997897 %**, à environ **23 976 octets** du plafond.
+Le RSS backend augmente de **1,09–11,21 %** selon le scénario, celui du compilateur
+Go baisse de **43,41–47,01 %** sur les builds qui compilent. Le RSS reste un
+indicateur secondaire selon la décision utilisateur du 14 octobre.
+
+**La référence immédiate `publicsync` était déjà ralentie.** Le backend reste
+à **~118 s à froid**, loin des **~30 s initialement évoquées**, et à **48,5 s sur
+la feuille**. La livraison valide les gains Go/chaîne de G ; elle conserve le
+surcoût de préparation et de cache accumulé avant G. Aucun gain futur de P
+n'entre dans ce verdict. Le temps d'exécution métier/PostgreSQL est hors du
+chronomètre jusqu'à `exec`.
+
+### Correction et installation
+
+- **Huit comparaisons / 28 commandes** des grands corpus : b8x **2 704 TAST /
+  27 Go**, bootstrap **512 TAST / 23 Go**, byte-exacts entre JS, Go séquentiel,
+  Go parallèle et Rust ; forcé/hit exacts, dates conservées, reconstruction
+  sans compilation/lien et oracle b8x exécuté.
+- **56 comparaisons / 350 commandes de transitions** sur le candidat 7 : mêmes
+  TAST, parties métier/préparées, sources privées et Go exécutés dans les quatre
+  hôtes ; les **89 commandes CLI** passent avant et après installation.
+- **612 déclarations Main/FFI** examinées dans neuf snapshots. Leurs changements
+  de chemins, imports et qualifications sont revus avant mise à jour. Les
+  **207 commandes strictes sur l'installation** passent, avec références et
+  snapshots monolithiques inchangés pendant le rejeu.
+- **82 tests ciblés** des transports, writer, lanceurs et runners de tests ;
+  intégrité, publication interrompue, récupération et transitions du pilote dans
+  les quatre hôtes. Les suites Go avec détection de races et compatibilité
+  **Go 1.22.12** sont conservées dans les validations du candidat.
+- Bootstrap régénéré depuis les sources courantes : **512 TAST / 23 Go exacts**,
+  binaire reproduit à l'octet près, puis contrôle CLI séquentiel/parallèle.
+- Runner b8x : **10 contrôles sur macOS et 10 sur Linux**, dont migration,
+  dépendance transitive, deux entrées, concurrence, annulation et réutilisation.
+- Audit des artefacts installés et de **295 fichiers source/outils** ; deux
+  fixtures ajoutent des identités d'ancre fixes pour conserver leurs frontières
+  avec la nouvelle densité. `git diff --check` passe dans gopurs et b8x.
+
+Les échecs de harnais sont conservés : fillers insuffisants à la nouvelle densité,
+vrai compilateur transmis aux mocks, mauvais Spago/profondeur de workspace et
+PATH Go absent dans le conteneur. Les reprises gardent les contrôles stricts et
+les preuves réussies ; aucun changement du compilateur mesuré n'est introduit.
+
+Preuves : `gopurs-go-packages-g06-20261014/final-reference/summary.json`,
+`delivery-7/replays-2/`, `delivery-7/replays-3/`, `current-bootstrap-7/`,
+`final-private-7/`, `snapshot-review-7.json`, `full-2/combined/`.
+L'[usage et la migration](build-cache.md#sélectionner-le-découpage-go-g06) sont
+documentés dans gopurs et `b8x/test/go-run.md`, avec sélection
+`GOPURS_GO_PACKAGES=1` et retour monolithique explicite.
+**G est clos à 7/7. P reste à 0/7 : pause effective avant P00.**
 
 ## Plan v2 — lot 01 : campagnes reproductibles, 3 octobre 2026
 

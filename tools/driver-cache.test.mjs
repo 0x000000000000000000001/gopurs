@@ -2,17 +2,28 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { spawn, spawnSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, statSync, symlinkSync, utimesSync, writeFileSync } from "node:fs";
-import { delimiter, join } from "node:path";
+import { delimiter, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import { corePackages, createWorkspace, prepareFixture } from "./test-workspace.mjs";
 import { findTypedCompiler } from "./native-workspace.mjs";
+import { packageSourceSections } from "./test-snapshots.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const baseEnvironment = { ...process.env, GOWORK: "off", GOPURS_RUST: "0",
   PATH: join(root, "node_modules/.bin") + delimiter + process.env.PATH };
 for (const key of ["GOPURS_ALLOC_PROFILE", "GOPURS_FORCE_BUILD", "GOPURS_COMPILER_SNAPSHOT", "PPROF"]) delete baseEnvironment[key];
 const hash = bytes => createHash("sha256").update(bytes).digest("hex");
+const packages = process.env.GOPURS_GO_PACKAGES === "1";
+const sectionsByHash = new Map();
+const moduleFiles = (files, module, ffi = false) => {
+  const source = module.replaceAll(".", "_") + (ffi ? "_ffi.go" : ".go");
+  return Object.fromEntries(Object.entries(files).flatMap(([path, digest]) => {
+    if (path.endsWith("/" + source)) return [[path, digest]];
+    const section = sectionsByHash.get(digest)?.find(section => section.name === source);
+    return section ? [[path, hash(section.content)]] : [];
+  }));
+};
 function generated(output) {
   const files = {};
   function visit(directory, prefix = "") {
@@ -20,7 +31,11 @@ function generated(output) {
       if (entry.name.startsWith(".")) continue;
       const name = prefix + entry.name, path = join(directory, entry.name);
       if (entry.isDirectory()) visit(path, name + "/");
-      else if (name.endsWith(".go") || name === "go.mod") files[name] = hash(readFileSync(path));
+      else if (name.endsWith(".go") || name === "go.mod") {
+        const data = readFileSync(path), digest = hash(data);
+        files[name] = digest;
+        if (name.endsWith("/0_gopurs_package.go")) sectionsByHash.set(digest, packageSourceSections(data.toString("utf8")).sections);
+      }
     }
   }
   visit(output);
@@ -125,14 +140,16 @@ test("driver cache transitions equal clean generation in every supported host mo
 
     const goMod = "module gopurs/output\n\ngo 1.22\n// external tidy changes\n";
     writeFileSync(join(output, "go.mod"), goMod);
-    writeFileSync(join(output, "go.sum"), "external sum\n");
+    const goSum = "example.invalid/external v1.0.0 h1:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\n";
+    writeFileSync(join(output, "go.sum"), goSum);
     writeFileSync(join(output, "purescript/user.txt"), "external asset\n");
+    if (packages) assert.match(invoke("tidy-inputs").stderr, /cache miss: inputs-changed/);
     hit("tidy");
-    rmSync(join(output, "purescript/Main.go"));
+    for (const name of Object.keys(moduleFiles(generated(output), "Main"))) rmSync(join(output, name));
     writeFileSync(join(output, "gopurs_runtime/runtime.go"), "corrupt bytes");
     invoke("repair");
     assert.equal(readFileSync(join(output, "go.mod"), "utf8"), goMod);
-    assert.equal(readFileSync(join(output, "go.sum"), "utf8"), "external sum\n");
+    assert.equal(readFileSync(join(output, "go.sum"), "utf8"), goSum);
     assert.equal(readFileSync(join(output, "purescript/user.txt"), "utf8"), "external asset\n");
     compare("repair");
 
@@ -144,7 +161,7 @@ test("driver cache transitions equal clean generation in every supported host mo
     assert.match(ffiEdit.stderr, /module cache: optimized=0, reused=\d+, emitted=1, restored=\d+/);
     assert.match(ffiEdit.stderr, /prepared fingerprints: computed=0, reused=[1-9]\d*/);
     assert.match(ffiEdit.stderr, /PBO cache: all \d+ backends validated; optimizer not started/);
-    assert.notEqual(generated(output)["purescript/Main_ffi.go"], first["purescript/Main_ffi.go"]);
+    assert.notDeepEqual(moduleFiles(generated(output), "Main", true), moduleFiles(first, "Main", true));
     compare("ffi-edit");
     hit("ffi-identical");
     // A Go signature can change the native worker ABI while the PureScript
@@ -155,8 +172,8 @@ test("driver cache transitions equal clean generation in every supported host mo
     writeFileSync(ffiPath, changedSignature);
     const ffiSignature = invoke("ffi-signature");
     assert.match(ffiSignature.stderr, /PBO cache: all \d+ backends validated; optimizer not started/);
-    assert.notEqual(generated(output)["purescript/Main.go"], first["purescript/Main.go"]);
-    assert.notEqual(generated(output)["purescript/Extra.go"], first["purescript/Extra.go"], "foreign worker ABI invalidates its cross-module consumer");
+    assert.notDeepEqual(moduleFiles(generated(output), "Main"), moduleFiles(first, "Main"));
+    assert.notDeepEqual(moduleFiles(generated(output), "Extra"), moduleFiles(first, "Extra"), "foreign worker ABI invalidates its cross-module consumer");
     compare("ffi-signature");
     const externalSum = readFileSync(join(output, "go.sum"));
     rmSync(join(output, "go.sum"));
@@ -173,6 +190,16 @@ test("driver cache transitions equal clean generation in every supported host mo
     assert.doesNotMatch(corruptBackend.stderr, /optimizer not started/);
     assert.match(corruptBackend.stderr, /module cache: optimized=[1-9]\d*, reused=[1-9]\d*/);
     compare("corrupt-cached-backend");
+    if (packages) {
+      const pointer = JSON.parse(readFileSync(join(cacheDirectory, "current.json")));
+      const manifest = JSON.parse(readFileSync(join(cacheDirectory, "objects", pointer.manifest.sha256)));
+      const source = manifest.modules.find(mod => mod.name === "Main").sources[0];
+      writeFileSync(join(cacheDirectory, "objects", source.object.sha256), "corrupt cached unqualified source");
+      const repaired = invoke("corrupt-cached-source");
+      assert.doesNotMatch(repaired.stderr, /optimizer not started/);
+      assert.match(repaired.stderr, /module cache: optimized=[1-9]\d*, reused=[1-9]\d*/);
+      compare("corrupt-cached-source");
+    }
     const oldExtraTime = statSync(join(output, "Extra/corefn.json"));
     const extraText = readFileSync(join(output, "Extra/corefn.json"), "utf8");
     assert.ok(extraText.includes('"extra"'));
@@ -183,12 +210,18 @@ test("driver cache transitions equal clean generation in every supported host mo
     assert.match(tastEdit.stderr, /prepared fingerprints: computed=[1-9]\d*, reused=0/);
     assert.match(tastEdit.stderr, /module cache: optimized=\d+, reused=[1-9]\d*, emitted=\d+, restored=[1-9]\d*/);
     compare("tast-edit");
+    const beforeRemoval = generated(output);
     rmSync(join(output, "Extra/corefn.json"));
     invoke("module-removed");
-    for (const name of ["purescript/Extra.go", "purescript/Extra_ffi.go", "Extra/main/main.go"]) assert.ok(!existsSync(join(output, name)), name);
+    assert.deepEqual(moduleFiles(generated(output), "Extra"), {});
+    assert.deepEqual(moduleFiles(generated(output), "Extra", true), {});
+    assert.ok(!existsSync(join(output, "Extra/main/main.go")));
     compare("module-removed");
     cpSync(join(tast, "Extra/corefn.json"), join(output, "Extra/corefn.json"));
-    const external = join(output, "purescript/Extra.go");
+    const removedPath = Object.keys(beforeRemoval).find(path => !existsSync(join(output, path)));
+    assert(removedPath, "removal must release an owned output");
+    const external = join(output, removedPath);
+    mkdirSync(dirname(external), { recursive: true });
     writeFileSync(external, "// external bytes, after removal from ownership\n");
     assert.match(invoke("new-output-collision", [], {}, 1).stderr, /unowned output differs/);
     assert.equal(readFileSync(external, "utf8"), "// external bytes, after removal from ownership\n");

@@ -26,11 +26,19 @@ func GopursParseFFI(content *C.uchar, contentLen C.size_t, prefix *C.uchar, pref
 	source := string(unsafe.Slice((*byte)(unsafe.Pointer(content)), int(contentLen)))
 	var output string
 	var err error
-	if prepare != 0 {
+	if prepare == 4 {
+		output, err = PackageFiles(source)
+	} else if prepare == 3 {
+		output, err = Packages(source)
+	} else if prepare == 2 {
+		output, err = Bind(source)
+	} else if prepare == 1 {
 		name := string(unsafe.Slice((*byte)(unsafe.Pointer(prefix)), int(prefixLen)))
 		output, err = Prepare(name, source)
-	} else {
+	} else if prepare == 0 {
 		output, err = Extract(source)
+	} else {
+		err = fmt.Errorf("unknown Go parser operation: %d", prepare)
 	}
 	if err != nil {
 		*failed = 1

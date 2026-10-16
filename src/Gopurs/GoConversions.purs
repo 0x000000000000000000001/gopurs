@@ -33,7 +33,7 @@ coerceGoExpr stateRef moduleName expr (TypeRecord sourceFields) (TypeRecord targ
       projectRecord (coerceGoExpr stateRef moduleName) expr sourceFields targetFields
 coerceGoExpr stateRef moduleName ctor@(GoConstructor _ structName typeArgs args) _ (TypeStructValue adtName fields) =
   let
-    parts = String.split (Pattern "_") structName
+    parts = String.split (Pattern "_") structName.name
     ctorName = fromMaybe "" (Array.last parts)
   in
     case Map.lookup adtName NativeAdts.unboxableADTs of
@@ -94,7 +94,7 @@ projectRecord coerceField expr sourceFields targetFields =
     target = TypeRecord targetFields
     fields = map
       (\(Tuple key targetType) -> Tuple key
-        (coerceField (GoStructAccess (GoVar "record") (recordFieldName key))
+        (coerceField (GoRecordFieldAccess (GoVar "record") key)
           (fromMaybe TypeValue (Map.lookup key sourceTypes)) targetType))
       targetFields
   in
@@ -116,6 +116,8 @@ boxNativeExpr _ _ expr TypeBool = GoCall (GoSelector (GoVar "gopurs_runtime") "B
 boxNativeExpr _ _ expr (TypeStructPointer { baseStructName }) = GoBoxStructPointer (hashString baseStructName) expr
 boxNativeExpr stateRef moduleName expr (TypeRecord fields) = boxRecord (boxGoExpr stateRef moduleName) expr fields
 boxNativeExpr _ _ expr (TypeInterface _) = expr
+boxNativeExpr _ _ expr (TypeNamed _) = GoCall (GoSelector (GoVar "gopurs_runtime") "Box") [ expr ]
+boxNativeExpr _ _ expr (TypePointer _) = GoCall (GoSelector (GoVar "gopurs_runtime") "Box") [ expr ]
 boxNativeExpr _ _ expr (TypeNativeArray TypeValue) = GoCall (GoSelector (GoVar "gopurs_runtime") "Array") [ expr ]
 boxNativeExpr _ _ expr (TypeNativeArray TypeInt64) = GoBoxIntArray expr
 boxNativeExpr stateRef moduleName expr (TypeNativeArray inner) = boxArray (boxGoExpr stateRef moduleName) expr inner
@@ -147,6 +149,8 @@ unboxValue stateRef moduleName expr desiredType = case desiredType of
   TypeUint32 -> rawGo ("uint32(" <> printGoExpr (GoSelector expr "IntVal") <> ")")
   TypeStructPointer { fullPath } -> GoCall (rawGo ("gopurs_runtime.CoerceToStruct[" <> fullPath <> "]")) [ expr ]
   TypeInterface _ -> expr
+  TypeNamed _ -> GoCall (GoTypeApply (GoSelector (GoVar "gopurs_runtime") "Unbox") [ desiredType ]) [ expr ]
+  TypePointer _ -> GoCall (GoTypeApply (GoSelector (GoVar "gopurs_runtime") "Unbox") [ desiredType ]) [ expr ]
   -- Value arrays borrow their immutable slice; boxing []Value also shares it.
   TypeNativeArray TypeValue -> rawGo ("(*(*[]gopurs_runtime.Value)((" <> printGoExpr expr <> ").UnsafePtr))")
   TypeNativeArray TypeInt64 -> GoUnboxIntArray expr

@@ -117,7 +117,7 @@ test('native loops preserve signed overflow, wide entry/exit values and operand 
         const statements = body(scenario.update);
         for (const [prefix, value] of [['Before', original(statements)], ['After', optimized(statements)]]) {
             definitions.push(printGoDecl(new Go.GoFunctionDecl({
-                name: prefix + scenario.name, params: loopParameters(params), result: i64, body: value,
+                name: { owner: 'generated/Probe', name: prefix + scenario.name }, params: loopParameters(params), result: i64, body: value,
             })));
         }
         for (const count of [0, 1, 2, 7, 4294967297, -4294967295]) {

@@ -38,6 +38,7 @@ const metadata = withReboxFields({
 });
 const pointer = (name, args = []) => Go.structPointer({
     baseStructName: `Data_Probe_${name}`, fullName: `Probe.${name}`, structName: `Constructor_Probe_${name}`,
+    symbol: { owner: 'generated/Probe', name: `Constructor_Probe_${name}` },
 })(args);
 const boxedPointer = pointer('Box', [Go.TypeValue.value]);
 const intPointer = pointer('Box', [Go.TypeInt64.value]);
@@ -166,7 +167,7 @@ test('constructor reuse owns one identifier and is disabled by field statements 
             stmts: mode === 'statement' && value === replacement ? new StmtLeaf(Go.rawGo('observe()')) : StmtEmpty.value,
             expr: value === replacement ? (mode === 'boxed'
                 ? new Go.GoCall(new Go.GoSelector(new Go.GoVar('gopurs_runtime'), 'Int'), [new Go.GoInt(7)]) : new Go.GoInt(7))
-                : new Go.GoConstructorAccess(new Go.GoVar('source'), 'Constructor_Probe_Cell', [], 1, true),
+                : new Go.GoConstructorAccess(new Go.GoVar('source'), { owner: 'generated/Probe', name: 'Constructor_Probe_Cell' }, [], 1, true),
             exprType: mode === 'boxed' && value === replacement ? Go.TypeValue.value : Go.TypeInt64.value,
             nextId: nextId + 1,
         });

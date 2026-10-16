@@ -16,6 +16,8 @@ import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..), fst)
 import Gopurs.CodegenState (CodegenMetadata)
 import Gopurs.GoAst (GoDecl(..), GoExpr(..), GoType(..), rawGo, goTypeToStr)
+import Gopurs.GoSymbol (GoReference(..), generated)
+import Data.Newtype (unwrap)
 import Gopurs.Ownership.Analysis (continuationPaths, disjoint, leaves, overlap, pathExpr, pathValue, prefix, prefixes, scalar, strip, treeTerm)
 import Gopurs.Ownership.Types (Argument(..), Candidate, Candidates, Context, Env, LocalRef, Path(..), TreeSpec, TreeTerm(..), Value(..))
 import PureScript.Backend.Optimizer.CoreFn (ModuleName)
@@ -33,15 +35,16 @@ type Gen = StateT Int Maybe
 declarations :: CodegenMetadata -> ModuleName -> Candidates -> Candidate -> Maybe (Array GoDecl)
 declarations metadata moduleName candidates fn = do
   let context = { metadata, moduleName, candidates, candidate: fn }
+      owner = String.replaceAll (Pattern ".") (Replacement "_") (unwrap moduleName)
       params = Array.mapWithIndex (\index ty -> Tuple ("__arg" <> show index) ty) fn.argTypes
       env = Map.fromFoldable $ Array.zipWith (\ref (Tuple name ty) -> Tuple ref
         (if ty == fn.spec.goType then Tree (Path name []) else Scalar { expr: GoVar name, goType: ty, reads: [] })) fn.args params
   body <- evalStateT (emitBody context env fn.body) 0
   pure
-    [ GoFunctionDecl { name: fn.consume, params: params <> [ Tuple "__donor" fn.spec.goType ]
+    [ GoFunctionDecl { name: generated owner fn.consume, params: params <> [ Tuple "__donor" fn.spec.goType ]
         , result: fn.spec.goType, body: GoFor "__owned_loop" body }
-    , GoFunctionDecl { name: fn.native, params, result: fn.spec.goType
-        , body: GoReturn (GoCall (GoVar fn.consume) (map (GoVar <<< fst) params <> [ rawGo "nil" ])) }
+    , GoFunctionDecl { name: generated owner fn.native, params, result: fn.spec.goType
+        , body: GoReturn (GoCall (GoRef (SymbolReference (generated owner fn.consume))) (map (GoVar <<< fst) params <> [ rawGo "nil" ])) }
     ]
 
 freshName :: String -> Gen String

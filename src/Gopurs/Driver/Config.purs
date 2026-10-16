@@ -21,6 +21,7 @@ type CompilerConfig =
   , emission :: EmissionOptions
   , allocationProfile :: Maybe String
   , forceBuild :: Boolean
+  , goPackages :: Boolean
   }
 
 readConfig :: Effect CompilerConfig
@@ -33,6 +34,7 @@ readConfig = do
   pipeline <- Process.lookupEnv "GOPURS_PIPELINE"
   allocationProfile <- Process.lookupEnv "GOPURS_ALLOC_PROFILE"
   forceBuild <- Process.lookupEnv "GOPURS_FORCE_BUILD"
+  goPackages <- Process.lookupEnv "GOPURS_GO_PACKAGES"
   pure
     { mainModule: args.mbMainModule
     , ffiDirectory: args.mbFfiDir
@@ -43,6 +45,7 @@ readConfig = do
     , emission: { jobs: boundedJobs emitJobs, pipelined: pipeline /= Just "0" }
     , allocationProfile
     , forceBuild: forceBuild == Just "1" || Array.elem "--force" argv
+    , goPackages: goPackages == Just "1"
     }
 
 readJobs :: String -> Int -> Effect Int

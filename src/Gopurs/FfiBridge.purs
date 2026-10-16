@@ -38,7 +38,7 @@ ffiFunctionInfos modNameStr foreigns decls = Map.fromFoldable (Array.mapMaybe si
   where
   signature foreignBinding@(Tuple (Ident name) _) = do
     candidate <- nativeForeign modNameStr decls foreignBinding
-    info <- Signatures.functionInfo candidate
+    info <- Signatures.functionInfo modNameStr candidate
     pure (Tuple name info)
 
 -- Worker emission uses candidate eligibility, before the stricter signature

@@ -5,6 +5,7 @@ module Gopurs.FunctionExprs
   ) where
 
 import Prelude
+import Gopurs.GoSymbol (generated)
 import Data.Array as Array
 import Data.Array.NonEmpty (NonEmptyArray, toArray)
 import Data.Array.NonEmpty as NonEmptyArray
@@ -81,7 +82,7 @@ uncurriedAbstraction translate context@{ codegenStateRef, modNameStr, tcoIdent, 
       case tcoIdent of
         Just topName ->
           let
-            callFuncDecl = GoFunctionDecl { name: "Call_" <> modNameStr <> "_" <> topName, params: paramsWithTypes, result: TypeValue, body: GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType) ]) }
+            callFuncDecl = GoFunctionDecl { name: generated modNameStr ("Call_" <> modNameStr <> "_" <> topName), params: paramsWithTypes, result: TypeValue, body: GoBlock (flattenStmts resBody.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr resBody.expr resBody.exprType) ]) }
             funcExpr = unsafePerformEffect do
               Ref.modify_ (\r -> r { declarations = Array.snoc r.declarations callFuncDecl }) codegenStateRef
               pure $ GoCall (GoSelector (GoVar "gopurs_runtime") ("Func" <> show arity)) [ GoVar ("Call_" <> modNameStr <> "_" <> topName) ]

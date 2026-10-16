@@ -48,6 +48,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_0_0 := Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Main_ReturnInt64(int64(0)), int64(0)})
 			_ = __local_var_0_0
 			__local_var_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
@@ -55,61 +56,73 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_2_2 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Main_ReturnInt64(int64(-7)), int64(-7)}), gopurs_runtime.Value{})
 			_ = __local_var_2_2
 			__local_var_3_3 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Main_ReturnInt64(int64(42)), int64(42)}), gopurs_runtime.Value{})
 			_ = __local_var_3_3
 			__local_var_4_4 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Main_ReturnInt64(int64(-2147483648)), int64(-2147483648)}), gopurs_runtime.Value{})
 			_ = __local_var_4_4
 			__local_var_5_5 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Main_ReturnInt64(int64(2147483647)), int64(2147483647)}), gopurs_runtime.Value{})
 			_ = __local_var_5_5
 			__local_var_6_6 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{gopurs_runtime.Apply(Get_Main_returnInt(), gopurs_runtime.Int(int64(0))).IntVal, int64(0)}), gopurs_runtime.Value{})
 			_ = __local_var_6_6
 			__local_var_7_7 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{gopurs_runtime.Apply(Get_Main_returnInt(), gopurs_runtime.Int(int64(-7))).IntVal, int64(-7)}), gopurs_runtime.Value{})
 			_ = __local_var_7_7
 			__local_var_8_8 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{gopurs_runtime.Apply(Get_Main_returnInt(), gopurs_runtime.Int(int64(42))).IntVal, int64(42)}), gopurs_runtime.Value{})
 			_ = __local_var_8_8
 			__local_var_9_9 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{gopurs_runtime.Apply(Get_Main_returnInt(), gopurs_runtime.Int(int64(-2147483648))).IntVal, int64(-2147483648)}), gopurs_runtime.Value{})
 			_ = __local_var_9_9
 			__local_var_10_10 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{gopurs_runtime.Apply(Get_Main_returnInt(), gopurs_runtime.Int(int64(2147483647))).IntVal, int64(2147483647)}), gopurs_runtime.Value{})
 			_ = __local_var_10_10
 			__local_var_11_11 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1772858129("", struct {
 				actual   []int64
 				expected []int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Main_ReturnInt64Array([]int64{}), []int64{}}), gopurs_runtime.Value{})
 			_ = __local_var_11_11
 			__local_var_12_12 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1772858129("", struct {
 				actual   []int64
 				expected []int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Main_ReturnInt64Array([]int64{int64(0), int64(-7), int64(42), int64(-2147483648), int64(2147483647)}), []int64{int64(0), int64(-7), int64(42), int64(-2147483648), int64(2147483647)}}), gopurs_runtime.Value{})
 			_ = __local_var_12_12
 			__local_var_13_13 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1772858129("", struct {
 				actual   []int64
 				expected []int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{func() []int64 {
 				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply(Get_Main_returnIntArray(), func() gopurs_runtime.Value {
 					arr := []int64{}
@@ -129,6 +142,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_14_14 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1772858129("", struct {
 				actual   []int64
 				expected []int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{func() []int64 {
 				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply(Get_Main_returnIntArray(), func() gopurs_runtime.Value {
 					arr := []int64{int64(0), int64(-7), int64(42), int64(-2147483648), int64(2147483647)}
@@ -148,46 +162,55 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_15_15 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Main_DynamicInt64_nativeWorker(int64(0)).IntVal, int64(0)}), gopurs_runtime.Value{})
 			_ = __local_var_15_15
 			__local_var_16_16 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Main_DynamicInt64_nativeWorker(int64(-2147483648)).IntVal, int64(-2147483648)}), gopurs_runtime.Value{})
 			_ = __local_var_16_16
 			__local_var_17_17 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Main_DynamicInt64_nativeWorker(int64(2147483647)).IntVal, int64(2147483647)}), gopurs_runtime.Value{})
 			_ = __local_var_17_17
 			__local_var_18_18 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{gopurs_runtime.Apply(Get_Main_dynamicInt(), gopurs_runtime.Int(int64(-7))).IntVal, int64(-7)}), gopurs_runtime.Value{})
 			_ = __local_var_18_18
 			__local_var_19_19 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{gopurs_runtime.Apply(Get_Main_dynamicInt(), gopurs_runtime.Int(int64(-2147483648))).IntVal, int64(-2147483648)}), gopurs_runtime.Value{})
 			_ = __local_var_19_19
 			__local_var_20_20 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{gopurs_runtime.Apply(Get_Main_dynamicInt(), gopurs_runtime.Int(int64(2147483647))).IntVal, int64(2147483647)}), gopurs_runtime.Value{})
 			_ = __local_var_20_20
 			__local_var_21_21 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("", struct {
 				actual   string
 				expected string
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Main_DynamicString_nativeWorker("fallback").StrVal(), "fallback"}), gopurs_runtime.Value{})
 			_ = __local_var_21_21
 			__local_var_22_22 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(Main_DynamicBoolean_nativeWorker(false).IntVal) != (0), false}), gopurs_runtime.Value{})
 			_ = __local_var_22_22
 			__local_var_23_23 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(Main_DynamicBoolean_nativeWorker(true).IntVal) != (0), true}), gopurs_runtime.Value{})
 			_ = __local_var_23_23
 			__local_var_24_24 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Func(func(value_24 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -212,6 +235,7 @@ func Call_Main_checkConsumer(consume_0_loop gopurs_runtime.Value) gopurs_runtime
 		__local_var_1_0 := Call_Test_Assert_assertEqual_prime___627669702("", struct {
 			actual   int64
 			expected int64
+			/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 		}{gopurs_runtime.Apply(consume_0, gopurs_runtime.Int(Main_ReturnInt64(int64(-7)))).IntVal, int64(50)})
 		_ = __local_var_1_0
 		__local_var_2_1 := gopurs_runtime.Apply(__local_var_1_0, gopurs_runtime.Value{})
@@ -219,16 +243,19 @@ func Call_Main_checkConsumer(consume_0_loop gopurs_runtime.Value) gopurs_runtime
 		__local_var_3_2 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 			actual   int64
 			expected int64
+			/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 		}{gopurs_runtime.Apply(consume_0, gopurs_runtime.Int(gopurs_runtime.Apply(Get_Main_returnInt(), gopurs_runtime.Int(int64(5))).IntVal)).IntVal, int64(26)}), gopurs_runtime.Value{})
 		_ = __local_var_3_2
 		__local_var_4_3 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 			actual   int64
 			expected int64
+			/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 		}{gopurs_runtime.Apply(consume_0, gopurs_runtime.Int(Main_DynamicInt64_nativeWorker(int64(-3)).IntVal)).IntVal, int64(10)}), gopurs_runtime.Value{})
 		_ = __local_var_4_3
 		return gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 			actual   int64
 			expected int64
+			/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 		}{gopurs_runtime.Apply(consume_0, gopurs_runtime.Int(gopurs_runtime.Apply(Get_Main_dynamicInt(), gopurs_runtime.Int(int64(0))).IntVal)).IntVal, int64(1)}), gopurs_runtime.Value{})
 	})
 }

@@ -41,7 +41,7 @@ for (const [name, source, result, expectedImports] of [
     ['call', 'math.Mod(7, 2)', TypeFloat64.value, ['math']],
 ]) test(`opaque ${name} produces Go with exactly the imports it uses`, t => {
     const declarationGroups = [[new GoFunctionDecl({
-        name: 'probe', params: [], result, body: new GoReturn(new GoRaw(opaqueCode(source))),
+        name: { owner: 'generated/Probe', name: 'probe' }, params: [], result, body: new GoReturn(new GoRaw(opaqueCode(source))),
     })]];
     const imports = collectImports(declarationGroups);
     assert.deepEqual(imports, expectedImports);

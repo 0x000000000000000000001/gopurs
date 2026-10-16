@@ -7,12 +7,13 @@ import test from 'node:test';
 import * as Go from '../output/Gopurs.GoAst/index.js';
 import { collectImports } from '../output/Gopurs.GoImports/index.js';
 import { printGoExpr } from '../output/Gopurs.Printer/index.js';
+const symbol = name => ({ owner: 'generated/Probe', name });
 
 test('nullary constructor values infer their type in local bindings, including generic imports', t => {
-    const empty = new Go.GoConstructor('123', 'Constructor_Empty', [], []);
-    const generic = new Go.GoConstructor('456', 'Constructor_Generic', [Go.TypeValue.value], []);
+    const empty = new Go.GoConstructor('123', symbol('Constructor_Empty'), [], []);
+    const generic = new Go.GoConstructor('456', symbol('Constructor_Generic'), [Go.TypeValue.value], []);
     const declarations = [[new Go.GoFunctionDecl({
-        name: 'Probe', params: [], result: Go.TypeBool.value,
+        name: symbol('Probe'), params: [], result: Go.TypeBool.value,
         body: new Go.GoBlock([
             new Go.GoAssign('plain', empty),
             new Go.GoAssign('generic', generic),
@@ -23,12 +24,12 @@ test('nullary constructor values infer their type in local bindings, including g
     })]];
     assert.deepEqual(collectImports(declarations), ['gopurs/output/gopurs_runtime'],
         'a nullary constructor still refers to its generic argument types');
-    const syncGeneric = new Go.GoConstructor('789', 'Constructor_Generic', [new Go.TypeInterface('sync.Mutex')], []);
+    const syncGeneric = new Go.GoConstructor('789', symbol('Constructor_Generic'), [new Go.TypeInterface('sync.Mutex')], []);
     const iife = new Go.GoIIFE('inside', syncGeneric, Go.rawGo('gopurs_runtime.Value{}'));
     const discardIife = new Go.GoIIFE('_', generic, Go.rawGo('gopurs_runtime.Value{}'));
-    assert.deepEqual(collectImports([[new Go.GoInitDecl(new Go.GoAssign('value', iife))]]),
+    assert.deepEqual(collectImports([[new Go.GoInitDecl(symbol('init/0'), new Go.GoAssign('value', iife))]]),
         ['gopurs/output/gopurs_runtime', 'sync']);
-    const imports = collectImports([...declarations, [new Go.GoInitDecl(new Go.GoAssign('value', iife))]]);
+    const imports = collectImports([...declarations, [new Go.GoInitDecl(symbol('init/0'), new Go.GoAssign('value', iife))]]);
     const directory = mkdtempSync(join(tmpdir(), 'gopurs-nullary-bindings-'));
     t.after(() => rmSync(directory, { recursive: true, force: true }));
     mkdirSync(join(directory, 'gopurs_runtime'));
@@ -60,11 +61,11 @@ func main() {
 });
 
 test('nullary constructors use their surrounding type without unnecessary imports', () => {
-    const generic = new Go.GoConstructor('456', 'Constructor_Generic', [Go.TypeValue.value], []);
+    const generic = new Go.GoConstructor('456', symbol('Constructor_Generic'), [Go.TypeValue.value], []);
     assert.equal(printGoExpr(generic), 'nil');
     assert.equal(printGoExpr(new Go.GoReturn(generic)), 'return nil');
     const nilComparison = new Go.GoBinOp('==', new Go.GoVar('pointer'), generic);
     assert.deepEqual(collectImports([[new Go.GoFunctionDecl({
-        name: 'Probe', params: [], result: Go.TypeBool.value, body: new Go.GoReturn(nilComparison),
+        name: symbol('Probe'), params: [], result: Go.TypeBool.value, body: new Go.GoReturn(nilComparison),
     })]]), [], 'a nil comparison does not render the generic type argument');
 });

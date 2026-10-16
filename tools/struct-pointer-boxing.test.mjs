@@ -14,9 +14,9 @@ import { runtimeGoCode } from '../output/Gopurs.Runtime/index.js';
 import { hashString } from '../output/PureScript.Backend.Optimizer.FfiSupport/index.js';
 
 const base = 'Constructor_Probe_Node';
-const pointer = Go.structPointer({ baseStructName: base, fullName: 'Probe.Node', structName: base })([]);
+const pointer = Go.structPointer({ baseStructName: base, fullName: 'Probe.Node', structName: base, symbol: { owner: 'generated/Probe', name: base } })([]);
 const box = expression => boxGoExpr(Ref.new({ declarations: [], globalId: 0, reboxPairs: emptySet })())('Probe')(expression)(pointer);
-const importsOf = expression => collectImports([[new Go.GoFunctionDecl({ name: 'probe', params: [], result: Go.TypeValue.value, body: new Go.GoReturn(expression) })]]);
+const importsOf = expression => collectImports([[new Go.GoFunctionDecl({ name: { owner: 'generated/Probe', name: 'probe' }, params: [], result: Go.TypeValue.value, body: new Go.GoReturn(expression) })]]);
 const legacy = expression => `gopurs_runtime.Value{Type: 9, IntVal: ${hashString(base)}, UnsafePtr: unsafe.Pointer(${printGoExpr(expression)})}`;
 
 for (const [name, operand, imports] of [
@@ -33,7 +33,7 @@ for (const [name, operand, imports] of [
 
 test('structured pointer boxing preserves tag, pointer identity, nil, and single evaluation', t => {
     const expression = box(new Go.GoCall(new Go.GoVar('next'), []));
-    const declarationGroups = [[new Go.GoFunctionDecl({ name: 'boxed', params: [], result: Go.TypeValue.value, body: new Go.GoReturn(expression) })]];
+    const declarationGroups = [[new Go.GoFunctionDecl({ name: { owner: 'generated/Probe', name: 'boxed' }, params: [], result: Go.TypeValue.value, body: new Go.GoReturn(expression) })]];
     const code = printGoFile({ packageName: 'main', imports: collectImports(declarationGroups), declarationGroups });
     const directory = mkdtempSync(join(tmpdir(), 'gopurs-struct-pointer-boxing-'));
     t.after(() => rmSync(directory, { recursive: true, force: true }));

@@ -13,6 +13,8 @@ import Data.String.Pattern (Pattern(..), Replacement(..))
 import Data.Tuple (Tuple(..))
 import Gopurs.DecoderSchemas.Types (Program(..), Schema(..), textComplete)
 import Gopurs.GoAst (GoDecl(..), GoExpr(..), GoType(..), rawGo, sanitizeName)
+import Gopurs.GoSymbol as Symbol
+import Gopurs.GoSymbol (GoReference(..))
 import Gopurs.Printer (printGoExpr)
 import PureScript.Backend.Optimizer.CoreFn (Ident(..))
 import PureScript.Backend.Optimizer.CoreFn as CoreFn
@@ -31,16 +33,17 @@ build { prefix, name, source, textEnabled } schema =
     qualified = prefix <> "_" <> sanitizeName name
     worker = qualified <> "_decode"
     withText = textEnabled && textComplete schema
-    generated = emit { direct: false, text: false } worker schema
-      <> if withText then emit { direct: false, text: true } worker schema else []
-    compiled = GoCall (GoVar "argonautCompileSchema")
-      [ GoCall (GoVar ("Get_" <> prefix <> "_" <> sanitizeName source)) []
-      , GoVar worker, GoVar (worker <> "_accepts")
+    generated = emit prefix { direct: false, text: false } worker schema
+      <> if withText then emit prefix { direct: false, text: true } worker schema else []
+    ref = GoRef <<< SymbolReference <<< Symbol.generated prefix
+    compiled = GoCall (GoRef (SymbolReference (Symbol.foreignSymbol "Data_Argonaut_Decode_Internal_Record" "argonautCompileSchema")))
+      [ GoCall (ref ("Get_" <> prefix <> "_" <> sanitizeName source)) []
+      , ref worker, ref (worker <> "_accepts")
       ]
     getter = GoCachedValue
-      { identifier: qualified, goType: TypeValue
-      , expression: if withText then GoCall (GoVar "argonautCompileTextSchema")
-          [ compiled, GoVar (worker <> "_text"), GoVar (worker <> "_text_accepts") ] else compiled
+      { identifier: Symbol.generated prefix qualified, goType: TypeValue
+      , expression: if withText then GoCall (GoRef (SymbolReference (Symbol.foreignSymbol "Data_Argonaut_Decode_Parser" "argonautCompileTextSchema")))
+          [ compiled, ref (worker <> "_text"), ref (worker <> "_text_accepts") ] else compiled
       }
   in { sources: programSources prefix worker schema, declarations: generated <> [ getter ] }
 
@@ -119,10 +122,11 @@ programCode text lookup name = case _ of
 -- Ordinary compositions consult the runtime plan and retain opaque callbacks.
 -- Reads in a proven program are complete and dispatch directly with no child tag.
 -- Text mode has stricter guards: it cannot fall back on partially parsed input.
-emit :: { direct :: Boolean, text :: Boolean } -> String -> Schema -> Array GoDecl
-emit mode@{ direct, text } name schema = [ worker, checker ] <> nested
+emit :: String -> { direct :: Boolean, text :: Boolean } -> String -> Schema -> Array GoDecl
+emit owner mode@{ direct, text } name schema = [ worker, checker ] <> nested
   where
   entry path = path <> if text then "_text" else ""
+  recordType = TypeNamed <<< Symbol.foreignSymbol "Data_Argonaut_Decode_Internal_Record"
   inputFn fn = if text then String.replaceAll (Pattern "dom") (Replacement "argonautText") fn else fn
   materialized = if text then "raw.materialize()" else "raw"
   keys = Array.nub case schema of
@@ -141,10 +145,10 @@ emit mode@{ direct, text } name schema = [ worker, checker ] <> nested
       <> "\n}\n}\n"
   children = schemaChildren name schema
   nested = case schema of
-    Derived program -> Array.concatMap (\(Tuple child value) -> emit (mode { direct = true }) child value) (programSchemas name program)
-    _ -> Array.concatMap (\(Tuple child value) -> emit mode child value) children
+    Derived program -> Array.concatMap (\(Tuple child value) -> emit owner (mode { direct = true }) child value) (programSchemas name program)
+    _ -> Array.concatMap (\(Tuple child value) -> emit owner mode child value) children
   checker = GoFunctionDecl
-    { name: entry name <> "_accepts", params: [ Tuple "kind" (TypeInterface "*fieldKind") ], result: TypeBool
+    { name: Symbol.generated owner (entry name <> "_accepts"), params: [ Tuple "kind" (TypePointer (recordType "fieldKind")) ], result: TypeBool
     , body: rawGo ("return " <> accepts schema)
     }
   accepts = case _ of
@@ -162,8 +166,8 @@ emit mode@{ direct, text } name schema = [ worker, checker ] <> nested
     | otherwise = " && (" <> member <> " == nil || " <> path <> "_accepts(" <> member <> "))"
   containerCheck tag child = "kind != nil && kind.tag == " <> quote tag <> childCheck "kind.inner" (name <> "_item") child
   worker = GoFunctionDecl
-    { name: entry name, params: [ Tuple "plan" (TypeInterface "*recordDecodePlan"), Tuple "kind" (TypeInterface "*fieldKind"), Tuple "raw" (TypeInterface (if text then "argonautTextCursor" else "any")) ]
-    , result: TypeInterface "argonautSchemaResult", body: rawGo (body schema)
+    { name: Symbol.generated owner (entry name), params: [ Tuple "plan" (TypePointer (recordType "recordDecodePlan")), Tuple "kind" (TypePointer (recordType "fieldKind")), Tuple "raw" (if text then TypeNamed (Symbol.foreignSymbol "Data_Argonaut_Decode_Parser" "argonautTextCursor") else TypeInterface "any") ]
+    , result: recordType "argonautSchemaResult", body: rawGo (body schema)
     }
   success value = "return argonautSchemaResult{value:" <> value <> ", ok:true}\n"
   failure message = "return argonautSchemaResult{err:plan.mkTypeMismatch(" <> quote message <> ")}\n"

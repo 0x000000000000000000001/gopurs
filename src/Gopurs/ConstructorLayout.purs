@@ -19,12 +19,14 @@ import Data.String.Pattern (Pattern(..), Replacement(..))
 import Gopurs.CodegenState (CodegenMetadata)
 import Gopurs.ConstructorMetadata as ConstructorMetadata
 import Gopurs.GoAst (GoType(..), constructorNames, structPointer)
+import Gopurs.GoSymbol (GoSymbol)
 import Gopurs.GoTypes (appliedAdt, exprTypeToGoType, exprTypeToGenericGoType, instantiateGenericGoType)
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..))
 
 type ConstructorIdentity =
   { moduleName :: String
   , structName :: String
+  , symbol :: GoSymbol
   , baseStructName :: String
   , key :: String
   , fullName :: String
@@ -69,7 +71,7 @@ constructorIdentity fallbackModule name expectedType =
       _ -> if key == "Test_RBTree.E" then "Test.RBTree.Tree" else key
     names = constructorNames moduleName name
   in
-    { moduleName, key, fullName, structName: names.structName, baseStructName: names.baseStructName }
+    { moduleName, key, fullName, structName: names.structName, symbol: names.symbol, baseStructName: names.baseStructName }
 
 -- The layout's explicit arity wins over pointer metadata, then the annotation's
 -- own argument count. Only plain ADTs use those arguments; other annotations
@@ -132,7 +134,8 @@ prepare form metadata modNameStr fallbackModule name ctorType =
           structPointer
             { baseStructName: leaf.nodeBaseStruct
             , fullName: identity.fullName
-            , structName: (constructorNames leafModule leaf.nodeCtor).structName
+             , structName: (constructorNames leafModule leaf.nodeCtor).structName
+             , symbol: (constructorNames leafModule leaf.nodeCtor).symbol
             }
             typeArgs)
       (Map.lookup identity.baseStructName metadata.pointerAdtLeaves)

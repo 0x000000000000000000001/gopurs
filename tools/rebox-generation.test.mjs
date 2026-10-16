@@ -9,6 +9,8 @@ import { ordString } from '../output/Data.Ord/index.js';
 import { empty as emptySet, toUnfoldable } from '../output/Data.Set/index.js';
 import { unfoldableArray } from '../output/Data.Unfoldable/index.js';
 import * as Ref from '../output/Effect.Ref/index.js';
+import { Tuple } from '../output/Data.Tuple/index.js';
+import { hashString } from '../output/PureScript.Backend.Optimizer.FfiSupport/index.js';
 import * as Go from '../output/Gopurs.GoAst/index.js';
 import { coerceGoExpr, generateReboxFunctions, unboxGoExpr } from '../output/Gopurs.GoConversions/index.js';
 import { printGoDecl, printGoExpr } from '../output/Gopurs.Printer/index.js';
@@ -32,6 +34,7 @@ const metadata = withReboxFields({
 });
 const pointer = (name, argument) => Go.structPointer({
     baseStructName: `Data_Probe_${name}`, fullName: `Probe.${name}`, structName: `Constructor_Probe_${name}`,
+    symbol: { owner: 'generated/Probe', name: `Constructor_Probe_${name}` },
 })([argument]);
 const boxedRoot = pointer('Root', Go.TypeValue.value);
 const nativeRoot = pointer('Root', Go.TypeInt64.value);
@@ -39,6 +42,17 @@ const newState = () => Ref.new({ declarations: [], globalId: 0, reboxPairs: empt
 const pairs = state => toUnfoldable(unfoldableArray)(Ref.read(state)().reboxPairs);
 const convert = state => expr => from => to => coerceGoExpr(state)('Consumer')(expr)(from)(to);
 const generate = state => generateReboxFunctions(metadata)(state)('Consumer')();
+
+test('record transport annotations do not rename Rebox helpers, including nested type arguments', () => {
+    const record = new Go.TypeRecord([new Tuple('value', Go.TypeInt64.value)]);
+    const argument = new Go.TypeFunc([new Go.TypePointer(record)], new Go.TypeNativeArray(
+        new Go.TypeStructValue('Probe.Tuple', [pointer('Branch', record)])));
+    const source = pointer('Root', argument);
+    const legacy = 'Constructor_Probe_Root[func(*struct{\n\tvalue int64\n}) []struct{V0 *Constructor_Probe_Branch[struct{\n\tvalue int64\n}]}]';
+    assert.match(source.value0.fullPath, /gopurs:record-v1:/, 'the emitted type must still carry ownership metadata');
+    const call = convert(newState())(new Go.GoVar('source'))(source)(boxedRoot);
+    assert.equal(printGoExpr(call), `Rebox_Consumer_${hashString(legacy)}_${hashString('Constructor_Probe_Root[gopurs_runtime.Value]')}(source)`);
+});
 
 test('Rebox emits the directed transitive closure once, including recursive and phantom dependencies', () => {
     const forward = [boxedRoot, nativeRoot];
@@ -53,7 +67,7 @@ test('Rebox emits the directed transitive closure once, including recursive and 
         const declarations = generate(state);
         assert.equal(declarations.length, 6, 'root helpers must discover both nested layouts in both directions');
         assert.equal(pairs(state).length, 6, 'recursive branch fields must converge to the existing pair');
-        const names = declarations.map(declaration => declaration.value0.name);
+        const names = declarations.map(declaration => declaration.value0.name.name);
         assert.equal(new Set(names).size, names.length);
         assert.deepEqual(names, [...names].sort(), 'emission order is determined by helper names');
         const text = declarations.map(printGoDecl);

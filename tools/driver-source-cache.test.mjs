@@ -5,9 +5,11 @@ import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, readdirSync,
 import { delimiter, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
+import { gunzipSync } from "node:zlib";
 import { corePackages, createWorkspace, prepareFixture } from "./test-workspace.mjs";
 import { findTypedCompiler, verifyTypedOutput } from "./native-workspace.mjs";
 import { sourceVariants } from "./cache-source-variants.mjs";
+import { packageSourceSections } from "./test-snapshots.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const hash = bytes => createHash("sha256").update(bytes).digest("hex");
@@ -102,12 +104,22 @@ test("source edits, ABI layouts, specialization retraction and renames equal fre
       return bytes;
     };
     const manifest = JSON.parse(readObject(pointer.manifest));
-    const parts = {}, keys = {};
+    const parts = {}, keys = {}, sources = {}, moduleOutputs = {};
     for (const module of manifest.modules) {
       for (const part of module.parts) readObject(part.object);
       assert.equal(module.parts.length, 4);
       parts[module.name] = module.parts;
       keys[module.name] = [module.prepared, module.callerDemands];
+      if (process.env.GOPURS_GO_PACKAGES === "1") {
+        assert(module.sources?.length >= 1, module.name + ": unqualified source required");
+        sources[module.name] = module.sources;
+        for (const source of module.sources) {
+          assert.equal(source.codec, "gopurs/go-source-gzip-v1");
+          const raw = gunzipSync(readObject(source.object));
+          assert.equal(raw.length, source.raw.bytes);
+          assert.equal(hash(raw), source.raw.sha256);
+        }
+      }
     }
     const files = generated();
     const identity = path => {
@@ -120,6 +132,10 @@ test("source edits, ABI layouts, specialization retraction and renames equal fre
     const byIdentity = new Map(Object.keys(files).map(path => [identity(path), path]));
     assert.equal(byIdentity.size, Object.keys(files).length, "distinct physical outputs");
     const owned = new Set();
+    const sourceOwners = new Map(manifest.modules.flatMap(module => [
+      [module.name.replaceAll(".", "_") + ".go", { module: module.name, kind: "package" }],
+      [module.name.replaceAll(".", "_") + "_ffi.go", { module: module.name, kind: "ffi-package" }],
+    ]));
     for (const item of manifest.outputs) {
       const key = identity(item.path), physical = byIdentity.get(key);
       assert.ok(physical !== undefined, item.path + ": unlisted physical output");
@@ -128,10 +144,21 @@ test("source edits, ABI layouts, specialization retraction and renames equal fre
       assert.equal(files[physical], item.object.sha256, item.path + ": output hash");
       assert.equal(statSync(join(output, item.path)).size, item.object.bytes, item.path + ": output size");
       if (physical !== item.path) pathAliases.set(item.path, physical);
+      if (item.module) (moduleOutputs[item.module] ??= []).push({ path: item.path, kind: item.kind, object: item.object });
+      if (item.path.endsWith("/0_gopurs_package.go")) {
+        const { sections } = packageSourceSections(readFileSync(join(output, item.path), "utf8"));
+        assert(sections.length > 0, "coalesced package has no source provenance");
+        for (const section of sections) {
+          const owner = sourceOwners.get(section.name);
+          assert(owner, "stale source in package: " + section.name);
+          (moduleOutputs[owner.module] ??= []).push({ path: item.path, source: section.name, kind: owner.kind,
+            object: { sha256: hash(section.content), bytes: Buffer.byteLength(section.content) } });
+        }
+      }
     }
     assert.equal(owned.size, byIdentity.size, "no unowned generated Go");
     save(join(workspace, "path-aliases.json"), Object.fromEntries(pathAliases));
-    return { files, parts, keys };
+    return { files, parts, keys, sources, moduleOutputs };
   }
 
   const selected = process.env.GOPURS_TEST_MODES?.split(",") ?? ["js", "native-sequential", "native-parallel",
@@ -193,18 +220,17 @@ test("source edits, ABI layouts, specialization retraction and renames equal fre
       for (const name of state.changedModules ?? []) assert.notDeepEqual(actual.keys[name], previous.keys[name], state.label + ": changed prepared input " + name);
       for (const name of state.changedPrepared ?? []) {
         assert.notDeepEqual(actual.keys[name], previous.keys[name], state.label + ": specialization provider must change " + name);
-        assert.notEqual(actual.files["purescript/" + name.replaceAll(".", "_") + ".go"], previous.files["purescript/" + name.replaceAll(".", "_") + ".go"], state.label + ": provider output must change " + name);
+        assert.notDeepEqual(actual.moduleOutputs[name], previous.moduleOutputs[name], state.label + ": provider output must change " + name);
       }
       for (const name of state.restoredPrepared ?? []) assert.deepEqual(actual.keys[name], initial.keys[name], state.label + ": removed demands restore " + name);
       for (const name of state.removedModules ?? []) {
         assert.ok(!(name in actual.keys), state.label + ": stale memo " + name);
-        for (const file of ["purescript/" + name.replaceAll(".", "_") + ".go", "purescript/" + name.replaceAll(".", "_") + "_ffi.go", name + "/main/main.go"])
-          assert.ok(!(file in actual.files), state.label + ": stale output " + file);
+        assert.ok(!(name in actual.moduleOutputs), state.label + ": stale owned output " + name);
       }
       for (const name of state.addedModules ?? []) {
         assert.ok(name in actual.keys);
-        for (const file of ["purescript/" + name.replaceAll(".", "_") + ".go", "purescript/" + name.replaceAll(".", "_") + "_ffi.go", name + "/main/main.go"])
-          assert.ok(file in actual.files, state.label + ": new output " + file);
+        for (const kind of process.env.GOPURS_GO_PACKAGES === "1" ? ["package", "ffi-package", "entry"] : ["module", "ffi", "entry"])
+          assert(actual.moduleOutputs[name]?.some(file => file.kind === kind), state.label + ": new " + kind + " output " + name);
       }
       if (state.restoredAll) assert.deepEqual(actual, initial, "full return reproduces original outputs, parts and prepared keys");
       const hit = invoke(state.label + "-identical");
@@ -222,7 +248,9 @@ test("source edits, ABI layouts, specialization retraction and renames equal fre
       renameSync(saved, output);
       assert.deepEqual(timestamps(actual.files), dates);
       const binary = join(workspace, "executables", mode.name + "-" + state.label);
-      command(mode.name + "-" + state.label + "-build", "go", ["build", "-trimpath", "-o", binary, "./Main/main/main.go"], { cwd: output, env });
+      command(mode.name + "-" + state.label + "-build", "go", ["build", "-p", "1", "-x", "-trimpath", "-o", binary, "./Main/main/main.go"], { cwd: output, env });
+      const identicalBuild = command(mode.name + "-" + state.label + "-identical-build", "go", ["build", "-p", "1", "-x", "-trimpath", "-o", binary, "./Main/main/main.go"], { cwd: output, env });
+      assert.doesNotMatch(identicalBuild.stderr, /\/compile\b|\/link\b/);
       const execution = command(mode.name + "-" + state.label + "-execute", binary, [], { cwd: output, env });
       assert.equal(execution.stdout.replaceAll("\r\n", "\n"), state.stdout, state.label + ": executable oracle");
       assert.equal(execution.stderr, "", state.label + ": unexpected runtime diagnostic");

@@ -14,11 +14,12 @@ import Gopurs.AdtMetadata (PointerAdtLeaf, PointerAdtPaths)
 import Gopurs.ClassMetadata (ClassFields)
 import Gopurs.ConstructorMetadata (ConstructorTypes)
 import Gopurs.GoAst (GoDecl, GoType)
+import Gopurs.GoSymbol (GoReference)
 import Gopurs.ReboxMetadata (ReboxFieldIndex)
 import PureScript.Backend.Optimizer.CoreFn (ExprType)
 
 type FunctionInfo =
-  { fullName :: String
+  { reference :: GoReference
   , fArgs :: Array GoType
   , fRet :: GoType
   , arity :: Int

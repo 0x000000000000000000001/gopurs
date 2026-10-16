@@ -1,5 +1,5 @@
 module Gopurs.Driver.Cache
-  ( Session, SourceModule, FrozenFFI, begin, plan, publish, close ) where
+  ( Session, SourceModule, FrozenFFI, begin, plan, packages, publish, close ) where
 
 import Prelude
 
@@ -21,6 +21,7 @@ type FrozenFFI = { name :: String, path :: String, file :: String, found :: Bool
 type Session =
   { status :: String, reason :: String, stage :: String, input :: String
   , output :: String, count :: Int, ffi :: Array FrozenFFI, context :: String, sameTast :: Boolean
+  , packageRequest :: String
   }
 type Setting = { name :: String, value :: String }
 type Request =
@@ -52,11 +53,15 @@ begin config = exchange $ (request "begin")
       , { name: "optimizerJobs", value: show config.optimizerJobs }
       , { name: "emissionJobs", value: show config.emission.jobs }
       , { name: "pipeline", value: show config.emission.pipelined }
+      , { name: "go-layout", value: if config.goPackages then "gopurs/go-packages-v1" else "gopurs/monolithic-v1" }
       ]
   }
 
 plan :: Session -> Array SourceModule -> Aff (Array FrozenFFI)
 plan session modules = _.ffi <$> exchange ((request "plan") { stage = session.stage, modules = modules })
+
+packages :: Session -> Array String -> Aff String
+packages session entries = _.packageRequest <$> exchange ((request "packages") { stage = session.stage, entries = entries })
 
 publish :: Session -> Array String -> Boolean -> Aff Unit
 publish session entries diagnostics = void $ exchange ((request "publish") { stage = session.stage, entries = entries, diagnostics = diagnostics, moduleCache = true })

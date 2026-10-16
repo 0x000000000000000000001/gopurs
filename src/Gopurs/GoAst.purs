@@ -2,11 +2,13 @@ module Gopurs.GoAst where
 
 import Prelude
 import Data.Generic.Rep (class Generic)
+import Data.Int as Int
 import Data.Tuple (Tuple(..))
 import Data.String as String
 import Data.String (Pattern(..), Replacement(..))
 import PureScript.Backend.Optimizer.CoreFn (ModuleName)
 import Gopurs.GoCode (GoCode, opaqueCode)
+import Gopurs.GoSymbol (GoReference, GoSymbol, generated)
 import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap)
 import Data.Array as Array
@@ -15,9 +17,11 @@ import Data.String.CodePoints as CodePoints
 
 data GoExpr
   = GoVar String
+  | GoRef GoReference
   | GoString String
   | GoInt Int
   | GoCall GoExpr (Array GoExpr)
+  | GoTypeApply GoExpr (Array GoType)
   | GoSelector GoExpr String
   | GoBlock (Array GoExpr)
   | GoReturn GoExpr
@@ -30,14 +34,15 @@ data GoExpr
   | GoLetRec (Array (Tuple String GoExpr)) GoExpr
   | GoRecordAccess GoExpr String
   | GoStructAccess GoExpr String
+  | GoRecordFieldAccess GoExpr String
   | GoRecordAccessStatic GoExpr Int Int
-  | GoConstructor String String (Array GoType) (Array GoExpr)
+  | GoConstructor String GoSymbol (Array GoType) (Array GoExpr)
   | GoConstructorDict String (Array GoExpr)
-  | GoConstructorAccess GoExpr String (Array GoType) Int Boolean
+  | GoConstructorAccess GoExpr GoSymbol (Array GoType) Int Boolean
   | GoBranch (Array (Tuple GoExpr GoExpr)) GoExpr
   | GoBinOp String GoExpr GoExpr
   | GoPrefixOp String GoExpr
-  | GoTypeAssertion GoExpr String
+  | GoTypeAssertion GoExpr GoType
   | GoIndex GoExpr GoExpr
   -- Retain the operand and its imports until the final rendering.
   | GoBoxStructPointer String GoExpr
@@ -61,7 +66,7 @@ data GoExpr
 derive instance eqGoExpr :: Eq GoExpr
 
 type GoBinding =
-  { identifier :: String
+  { identifier :: GoSymbol
   , expression :: GoExpr
   , goType :: GoType
   }
@@ -69,18 +74,18 @@ type GoBinding =
 data GoDecl
   = GoCachedValue GoBinding
   | GoStructDecl
-      { name :: String
+      { name :: GoSymbol
       , typeParams :: Array (Tuple String GoType)
       , fields :: Array (Tuple String GoType)
       }
   | GoFunctionDecl
-      { name :: String
+      { name :: GoSymbol
       , params :: Array (Tuple String GoType)
       , result :: GoType
       , body :: GoExpr
       }
-  | GoInitDecl GoExpr
-  | GoForeignGetter { name :: String, value :: String }
+  | GoInitDecl GoSymbol GoExpr
+  | GoForeignGetter { name :: GoSymbol, value :: GoSymbol }
 
 type GoFile =
   { packageName :: String
@@ -100,19 +105,22 @@ type StructPointer =
   , fullName :: String -- Fully qualified PureScript type.
   , fullPath :: String -- Instantiated Go constructor name.
   , structName :: String -- Go constructor name without type arguments.
+  , symbol :: GoSymbol -- Owner of that single named Go declaration.
   , typeArgs :: Array GoType
   }
 
 -- The caller supplies its module prefix. In particular, metadata for elided
 -- constructors retains module dots; normal Go declarations supply underscores.
-constructorNames :: String -> String -> { baseStructName :: String, structName :: String }
+constructorNames :: String -> String -> { baseStructName :: String, structName :: String, symbol :: GoSymbol }
 constructorNames modulePrefix constructorName =
   let suffix = modulePrefix <> "_" <> sanitizeName constructorName
-  in { baseStructName: "Data_" <> suffix, structName: "Constructor_" <> suffix }
+      structName = "Constructor_" <> suffix
+      unit = String.replaceAll (Pattern ".") (Replacement "_") modulePrefix
+  in { baseStructName: "Data_" <> suffix, structName, symbol: generated unit structName }
 
-structPointer :: forall r. { baseStructName :: String, fullName :: String, structName :: String | r } -> Array GoType -> GoType
-structPointer { baseStructName, fullName, structName } typeArgs =
-  TypeStructPointer { baseStructName, fullName, structName, fullPath: structTypeName structName typeArgs, typeArgs }
+structPointer :: forall r. { baseStructName :: String, fullName :: String, structName :: String, symbol :: GoSymbol | r } -> Array GoType -> GoType
+structPointer { baseStructName, fullName, structName, symbol } typeArgs =
+  TypeStructPointer { baseStructName, fullName, structName, symbol, fullPath: structTypeName structName typeArgs, typeArgs }
 
 structTypeName :: String -> Array GoType -> String
 structTypeName name args = name <> if Array.null args then "" else "[" <> String.joinWith ", " (map goTypeToStr args) <> "]"
@@ -127,6 +135,8 @@ data GoType
   | TypeStructPointer StructPointer
   | TypeRecord (Array (Tuple String GoType))
   | TypeInterface String
+  | TypeNamed GoSymbol
+  | TypePointer GoType
   | TypeNativeArray GoType
   | TypeGenericParam String
   | TypeFunc (Array GoType) GoType
@@ -144,6 +154,8 @@ goTypeToStr TypeBool = "bool"
 goTypeToStr TypeUint32 = "uint32"
 goTypeToStr (TypeStructPointer { fullPath }) = "*" <> fullPath
 goTypeToStr (TypeInterface name) = name
+goTypeToStr (TypeNamed symbol) = symbol.name
+goTypeToStr (TypePointer ty) = "*" <> goTypeToStr ty
 goTypeToStr (TypeNativeArray inner) = "[]" <> goTypeToStr inner
 goTypeToStr (TypeGenericParam name) = "T_" <> sanitizeName name
 goTypeToStr (TypeFunc args ret) = "func(" <> String.joinWith ", " (map goTypeToStr args) <> ") " <> goTypeToStr ret
@@ -151,9 +163,39 @@ goTypeToStr (TypeStructValue _ fields) = "struct{" <> String.joinWith "; " (Arra
 goTypeToStr (TypeRecord fields) = goRecordStructName fields
 goTypeToStr _ = "gopurs_runtime.Value"
 
+-- Helper identities describe Go types, independently of transport annotations.
+-- Recurse through every composite so nested records cannot rename a helper.
+structTypeIdentity :: String -> Array GoType -> String
+structTypeIdentity name args = name <> if Array.null args then "" else "[" <> String.joinWith ", " (map goTypeIdentity args) <> "]"
+
+goTypeIdentity :: GoType -> String
+goTypeIdentity (TypeStructPointer { structName, typeArgs }) = "*" <> structTypeIdentity structName typeArgs
+goTypeIdentity (TypePointer ty) = "*" <> goTypeIdentity ty
+goTypeIdentity (TypeNativeArray inner) = "[]" <> goTypeIdentity inner
+goTypeIdentity (TypeFunc args ret) = "func(" <> String.joinWith ", " (map goTypeIdentity args) <> ") " <> goTypeIdentity ret
+goTypeIdentity (TypeStructValue _ fields) = "struct{" <> String.joinWith "; " (Array.mapWithIndex (\i t -> "V" <> show i <> " " <> goTypeIdentity t) fields) <> "}"
+goTypeIdentity (TypeRecord fields) =
+  "struct{\n" <> String.joinWith "\n" (map (\(Tuple k v) -> "\t" <> recordFieldName k <> " " <> goTypeIdentity v) fields) <> "\n}"
+goTypeIdentity ty = goTypeToStr ty
+
 goRecordStructName :: Array (Tuple String GoType) -> String
 goRecordStructName fields =
-  "struct{\n" <> String.joinWith "\n" (map (\(Tuple k v) -> "\t" <> recordFieldName k <> " " <> goTypeToStr v) fields) <> "\n}"
+  "struct{\n" <> String.joinWith "\n" (map (\(Tuple k v) -> "\t" <> recordFieldName k <> " " <> goTypeToStr v) fields)
+    <> "\n/*gopurs:record-v1:" <> show (Array.length fields) <> ":"
+    <> String.joinWith "," (map (\(Tuple label _) -> recordLabelUnits label) fields) <> "*/\n}"
+
+-- Opaque expressions also print Go types. Carry the original labels through
+-- that textual boundary; the typed package emitter consumes this annotation.
+-- Hex UTF-16 preserves isolated surrogates and cannot terminate a Go comment.
+recordLabelUnits :: String -> String
+recordLabelUnits = String.joinWith "" <<< map (encodePoint <<< fromEnum) <<< CodePoints.toCodePointArray
+  where
+  encodePoint point
+    | point > 65535 = encode (55296 + div (point - 65536) 1024) <> encode (56320 + mod (point - 65536) 1024)
+    | otherwise = encode point
+  encode value =
+    let hex = Int.toStringAs Int.hexadecimal value
+    in String.take (4 - String.length hex) "0000" <> hex
 
 -- Labels are arbitrary PSStrings, unlike identifiers. Keep the established
 -- ASCII spelling, encoding other labels into a portable Go field name. Reserve
@@ -167,8 +209,10 @@ recordFieldName = memoizeName \label ->
       let n = fromEnum code
       in n == 95 || (n >= 48 && n <= 57) || (n >= 65 && n <= 90) || (n >= 97 && n <= 122)
   in
-    if name /= "_" && String.take (String.length prefix) name /= prefix
-        && Array.all asciiIdentifier (CodePoints.toCodePointArray name) then name
+    if label /= "" && name /= "_" && String.take (String.length prefix) label /= prefix
+        && String.take 4 label /= "go__"
+        && not (Array.elem (String.take 1 label) [ "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" ])
+        && Array.all asciiIdentifier (CodePoints.toCodePointArray label) then name
     else prefix <> String.joinWith "_" (map (show <<< fromEnum) (CodePoints.toCodePointArray label))
 
 

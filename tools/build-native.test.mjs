@@ -120,7 +120,7 @@ for (const explicit of [false, true]) {
     const f = fixture(t);
     const result = f.run(explicit ? { GOPURS_PURS: f.explicitFork } : {});
     assert.equal(result.status, 0, result.stdout + result.stderr);
-    assert.deepEqual(result.calls.map(call => call.name), ['npm', 'spago', 'gopurs.js', 'parser', 'go']);
+    assert.deepEqual(result.calls.map(call => call.name), ['npm', 'spago', 'parser', 'gopurs.js', 'go']);
     const selected = realpathSync(explicit ? f.explicitFork : f.fork);
     for (const call of result.calls.filter(call => call.name !== 'parser')) {
       assert.equal(call.purs, call.name === 'spago' ? selected : realpathSync(join(f.localBin, 'purs')));
@@ -154,7 +154,7 @@ test('native helper preserves the published binary when Go compilation fails', t
   const result = f.run({ MOCK_FAIL: 'go' });
   assert.equal(result.status, 1);
   assert.match(result.stderr, /failed during go-build/);
-  assert.deepEqual(result.calls.map(call => call.name), ['npm', 'spago', 'gopurs.js', 'parser', 'go']);
+  assert.deepEqual(result.calls.map(call => call.name), ['npm', 'spago', 'parser', 'gopurs.js', 'go']);
   assert.equal(readFileSync(f.binary, 'utf8'), 'old-native-binary');
   assert.ok(existsSync(join(result.workspace, 'go-build.log')), 'failure logs must remain available');
 });

@@ -18,6 +18,7 @@ import Gopurs.CodegenState (CodegenMetadata, CodegenState, FunctionInfo)
 import Gopurs.ExprAnalysis (extractFuncType)
 import Gopurs.ExprContext (ModuleFunctions, TranslateExpr, wrapInStmts)
 import Gopurs.GoAst (GoDecl(..), GoType(..), sanitizeName)
+import Gopurs.GoSymbol (GoReference(..), generated)
 import Gopurs.GoConversions (adtPayloadTypes, boxGoExpr, getUnboxedADT)
 import Gopurs.GoTypes (exprTypeToGoType)
 import Gopurs.ModuleWorkers as ModuleWorkers
@@ -73,7 +74,7 @@ prepare metadata modNameStr mod =
 
 boxedSignature :: String -> String -> FunctionInfo
 boxedSignature modNameStr name =
-  { fullName: "Call_" <> modNameStr <> "_" <> sanitizeName name, fArgs: [], fRet: TypeValue, arity: 0 }
+  { reference: SymbolReference (generated modNameStr ("Call_" <> modNameStr <> "_" <> sanitizeName name)), fArgs: [], fRet: TypeValue, arity: 0 }
 
 -- Syntax fixes worker arity. A computation between lambdas leaves a boxed
 -- function result; fully consumed native sums use their specialized ABI.
@@ -130,7 +131,7 @@ declarations translate metadata codegenStateRef modNameStr moduleFunctions group
                         let
                           res = translate (context { depth = 0, bound = Map.empty, tcoIdent = (Just (sanitizeName name)), loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = (Just (annotationType expr)) }) 0 expr
                         in
-                          [ GoCachedValue { identifier: modNameStr <> "_" <> sanitizeName name, expression: wrapInStmts [] res.stmts TypeValue (boxGoExpr codegenStateRef modNameStr res.expr res.exprType), goType: TypeValue } ]
+                          [ GoCachedValue { identifier: generated modNameStr (modNameStr <> "_" <> sanitizeName name), expression: wrapInStmts [] res.stmts TypeValue (boxGoExpr codegenStateRef modNameStr res.expr res.exprType), goType: TypeValue } ]
                     )
                     binds
         in

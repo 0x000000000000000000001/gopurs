@@ -56,6 +56,8 @@ zeroGoExpr t = case t of
   TypeStructValue _ _ -> rawGo (goTypeToStr t <> "{}")
   TypeNativeArray _ -> rawGo "nil"
   TypeInterface _ -> rawGo "nil"
+  TypePointer _ -> rawGo "nil"
+  TypeNamed _ -> rawGo ("func() " <> goTypeToStr t <> " { var zero " <> goTypeToStr t <> "; return zero }()")
   TypeFunc _ _ -> rawGo "nil"
   TypeGenericParam _ -> rawGo "gopurs_runtime.Value{}"
 

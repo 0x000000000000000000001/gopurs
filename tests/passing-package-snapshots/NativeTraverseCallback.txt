@@ -1,0 +1,1082 @@
+// gopurs-package-file: main/main.go
+package main
+
+import (
+	"gopurs/output/gopurs_runtime"
+	_ "gopurs/output/purescript/init_all"
+	purescript "gopurs/output/purescript/p_root"
+	"os"
+	"runtime/pprof"
+)
+
+func main() {
+	if os.Getenv("PPROF") == "1" {
+		f, err := os.Create("cpu.prof")
+		if err != nil {
+			panic(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
+
+	gopurs_runtime.Apply(purescript.Get_Main_main(), gopurs_runtime.Value{})
+
+	gopurs_runtime.EventLoopWait()
+
+	if os.Getenv("PPROF") == "1" {
+		mf, err := os.Create("mem.prof")
+		if err != nil {
+			panic(err)
+		}
+		pprof.WriteHeapProfile(mf)
+		mf.Close()
+	}
+}
+
+// gopurs-package-file: purescript/init_all/init.go
+package init_all
+
+import (
+	_ "gopurs/output/purescript/init_external"
+	_ "gopurs/output/purescript/p_root"
+)
+
+// gopurs-package-file: purescript/init_external/init.go
+package init_external
+
+import (
+	_ "fmt"
+	_ "gopurs/output/gopurs_runtime"
+	_ "math"
+	_ "os"
+	_ "sort"
+	_ "strconv"
+	_ "strings"
+	_ "sync"
+	_ "sync/atomic"
+	_ "unsafe"
+)
+
+// gopurs-package-file: purescript/p_root/0_gopurs_package.go
+package p_root
+
+import (
+	fmt "fmt"
+	r_ "gopurs/output/gopurs_runtime"
+	math "math"
+	os "os"
+	sort "sort"
+	strconv "strconv"
+	strings "strings"
+	sync "sync"
+	atomic "sync/atomic"
+	unsafe "unsafe"
+)
+
+// gopurs-source-v1: 4d61696e2e676f
+
+var cache_Main_valueIsSymbol r_.Value
+
+var once_Main_valueIsSymbol sync.Once
+
+func Get_Main_valueIsSymbol() r_.Value {
+	once_Main_valueIsSymbol.Do(func() {
+		cache_Main_valueIsSymbol = r_.RecordDict1("reflectSymbol", r_.Func(func(_dollar___unused_0 r_.Value) r_.Value {
+			return r_.Str("value")
+		}))
+	})
+	return cache_Main_valueIsSymbol
+}
+
+var cache_Main_indexIsSymbol r_.Value
+
+var once_Main_indexIsSymbol sync.Once
+
+func Get_Main_indexIsSymbol() r_.Value {
+	once_Main_indexIsSymbol.Do(func() {
+		cache_Main_indexIsSymbol = r_.RecordDict1("reflectSymbol", r_.Func(func(_dollar___unused_0 r_.Value) r_.Value {
+			return r_.Str("index")
+		}))
+	})
+	return cache_Main_indexIsSymbol
+}
+
+var cache_Main_eqEither r_.Value
+
+var once_Main_eqEither sync.Once
+
+func Get_Main_eqEither() r_.Value {
+	once_Main_eqEither.Do(func() {
+		cache_Main_eqEither = r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Call_Data_Either_eqEither(r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqString()))))}, Call_Data_Eq_eqArray(Call_Data_Eq_eqRec(r_.Value{}, Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Get_Data_Eq_eqRowNil(), r_.Value{}, Get_Main_valueIsSymbol(), r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqInt()))))}), r_.Value{}, Get_Main_indexIsSymbol(), r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqInt()))))}))))))}
+	})
+	return cache_Main_eqEither
+}
+
+var cache_Main_showEither r_.Value
+
+var once_Main_showEither sync.Once
+
+func Get_Main_showEither() r_.Value {
+	once_Main_showEither.Do(func() {
+		cache_Main_showEither = r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Call_Data_Either_showEither(r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showString()))))}, Call_Data_Show_showArray(Call_Data_Show_showRecord(r_.Value{}, r_.Value{}, Call_Data_Show_showRecordFieldsCons(Get_Main_indexIsSymbol(), Call_Data_Show_showRecordFieldsConsNil(Get_Main_valueIsSymbol(), r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt()))))}), r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt()))))}))))))}
+	})
+	return cache_Main_showEither
+}
+
+var cache_Main_eqArray r_.Value
+
+var once_Main_eqArray sync.Once
+
+func Get_Main_eqArray() r_.Value {
+	once_Main_eqArray.Do(func() {
+		cache_Main_eqArray = r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_378698611_3790796878(Rebox_Main_3790796878_378698611(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Call_Data_Eq_eqArray(r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqInt()))))})))))}
+	})
+	return cache_Main_eqArray
+}
+
+var cache_Main_showArray r_.Value
+
+var once_Main_showArray sync.Once
+
+func Get_Main_showArray() r_.Value {
+	once_Main_showArray.Do(func() {
+		cache_Main_showArray = r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1469227923_1386611502(Rebox_Main_1386611502_1469227923(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Call_Data_Show_showArray(r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt()))))})))))}
+	})
+	return cache_Main_showArray
+}
+
+var cache_Main_track r_.Value
+
+var once_Main_track sync.Once
+
+func Get_Main_track() r_.Value {
+	once_Main_track.Do(func() {
+		cache_Main_track = r_.Func3(func(calls_0_box r_.Value, marker_1_box r_.Value, value_2_box r_.Value) r_.Value {
+			return r_.Int(Call_Main_track(calls_0_box, marker_1_box.IntVal, value_2_box.IntVal))
+		})
+	})
+	return cache_Main_track
+}
+
+var cache_Main_staged r_.Value
+
+var once_Main_staged sync.Once
+
+func Get_Main_staged() r_.Value {
+	once_Main_staged.Do(func() {
+		cache_Main_staged = r_.Func2(func(calls_0_box r_.Value, values_1_box r_.Value) r_.Value {
+			return func() r_.Value {
+				_v := Call_Main_staged(calls_0_box, func() []int64 {
+					arr := *(*[]r_.Value)(values_1_box.UnsafePtr)
+					unboxed := make([]int64, len(arr))
+					for i, v := range arr {
+						unboxed[i] = v.IntVal
+					}
+					return unboxed
+				}())
+				if _v.V2 {
+					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
+				}
+				return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+			}()
+		})
+	})
+	return cache_Main_staged
+}
+
+var cache_Main_run r_.Value
+
+var once_Main_run sync.Once
+
+func Get_Main_run() r_.Value {
+	once_Main_run.Do(func() {
+		cache_Main_run = r_.Func2(func(calls_0_box r_.Value, values_1_box r_.Value) r_.Value {
+			return func() r_.Value {
+				_v := Call_Main_run(calls_0_box, func() []int64 {
+					arr := *(*[]r_.Value)(values_1_box.UnsafePtr)
+					unboxed := make([]int64, len(arr))
+					for i, v := range arr {
+						unboxed[i] = v.IntVal
+					}
+					return unboxed
+				}())
+				if _v.V2 {
+					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
+				}
+				return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+			}()
+		})
+	})
+	return cache_Main_run
+}
+
+var cache_Main_partial r_.Value
+
+var once_Main_partial sync.Once
+
+func Get_Main_partial() r_.Value {
+	once_Main_partial.Do(func() {
+		cache_Main_partial = r_.Func2(func(calls_0_box r_.Value, offset_1_box r_.Value) r_.Value {
+			return Call_Main_partial(calls_0_box, offset_1_box.IntVal)
+		})
+	})
+	return cache_Main_partial
+}
+
+var cache_Main_main r_.Value
+
+var once_Main_main sync.Once
+
+func Get_Main_main() r_.Value {
+	once_Main_main.Do(func() {
+		cache_Main_main = r_.Func(func(_ r_.Value) r_.Value {
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
+			__local_var_0_0 := r_.Apply(Get_Effect_Ref__new(), func() r_.Value {
+				arr := []int64{}
+				boxed := make([]r_.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = r_.Int(v)
+				}
+				return r_.Array(boxed)
+			}())
+			_ = __local_var_0_0
+			__local_var_1_1 := r_.Apply(__local_var_0_0, r_.Value{})
+			_ = __local_var_1_1
+			__local_var_2_2 := r_.Apply(Call_Test_Assert_assertEqual_prime___1693432849("", struct {
+				P_actual   r_.Value
+				P_expected r_.Value
+			}{func() r_.Value {
+				_v := Call_Main_run(__local_var_1_1, []int64{int64(3), int64(7)})
+				if _v.V2 {
+					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
+				}
+				return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+			}(), func() r_.Value {
+				_v := struct {
+					V0 r_.Value
+					V1 r_.Value
+					V2 bool
+				}{r_.Value{}, func() r_.Value {
+					arr := []struct {
+						P_index int64
+						P_value int64
+					}{struct {
+						P_index int64
+						P_value int64
+					}{int64(0), int64(3)}, struct {
+						P_index int64
+						P_value int64
+					}{int64(1), int64(7)}}
+					boxed := make([]r_.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = func() r_.Value {
+							orig := v
+							_ = orig
+							return r_.RecordDict2("index", "value", r_.Int(orig.P_index), r_.Int(orig.P_value))
+						}()
+					}
+					return r_.Array(boxed)
+				}(), true}
+				if _v.V2 {
+					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
+				}
+				return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+			}()}), r_.Value{})
+			_ = __local_var_2_2
+			__local_var_3_4 := r_.Apply(r_.Apply(Get_Effect_Ref_read(), __local_var_1_1), r_.Value{})
+			_ = __local_var_3_4
+			__local_var_3_3 := r_.Apply(Call_Test_Assert_assertEqual_prime___1772858129("", struct {
+				P_actual   []int64
+				P_expected []int64
+			}{func() []int64 {
+				arr := *(*[]r_.Value)(__local_var_3_4.UnsafePtr)
+				unboxed := make([]int64, len(arr))
+				for i, v := range arr {
+					unboxed[i] = v.IntVal
+				}
+				return unboxed
+			}(), []int64{int64(0), int64(1)}}), r_.Value{})
+			_ = __local_var_3_3
+			__local_var_4_5 := r_.Apply(r_.Apply2(Get_Effect_Ref_write(), func() r_.Value {
+				arr := []int64{}
+				boxed := make([]r_.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = r_.Int(v)
+				}
+				return r_.Array(boxed)
+			}(), __local_var_1_1), r_.Value{})
+			_ = __local_var_4_5
+			__local_var_5_6 := r_.Apply(Call_Test_Assert_assertEqual_prime___1693432849("", struct {
+				P_actual   r_.Value
+				P_expected r_.Value
+			}{func() r_.Value {
+				_v := Call_Main_run(__local_var_1_1, []int64{int64(-1), int64(8), int64(-2)})
+				if _v.V2 {
+					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
+				}
+				return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+			}(), func() r_.Value {
+				_v := struct {
+					V0 r_.Value
+					V1 r_.Value
+					V2 bool
+				}{r_.Str("0"), r_.Value{}, false}
+				if _v.V2 {
+					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
+				}
+				return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+			}()}), r_.Value{})
+			_ = __local_var_5_6
+			__local_var_6_8 := r_.Apply(r_.Apply(Get_Effect_Ref_read(), __local_var_1_1), r_.Value{})
+			_ = __local_var_6_8
+			__local_var_6_7 := r_.Apply(Call_Test_Assert_assertEqual_prime___1772858129("", struct {
+				P_actual   []int64
+				P_expected []int64
+			}{func() []int64 {
+				arr := *(*[]r_.Value)(__local_var_6_8.UnsafePtr)
+				unboxed := make([]int64, len(arr))
+				for i, v := range arr {
+					unboxed[i] = v.IntVal
+				}
+				return unboxed
+			}(), []int64{int64(0), int64(1), int64(2)}}), r_.Value{})
+			_ = __local_var_6_7
+			__local_var_7_9 := r_.Apply(r_.Apply2(Get_Effect_Ref_write(), func() r_.Value {
+				arr := []int64{}
+				boxed := make([]r_.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = r_.Int(v)
+				}
+				return r_.Array(boxed)
+			}(), __local_var_1_1), r_.Value{})
+			_ = __local_var_7_9
+			__local_var_8_10 := r_.Apply(Call_Test_Assert_assertEqual_prime___1693432849("", struct {
+				P_actual   r_.Value
+				P_expected r_.Value
+			}{func() r_.Value {
+				_v := Call_Main_run(__local_var_1_1, []int64{})
+				if _v.V2 {
+					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
+				}
+				return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+			}(), func() r_.Value {
+				_v := struct {
+					V0 r_.Value
+					V1 r_.Value
+					V2 bool
+				}{r_.Value{}, func() r_.Value {
+					arr := []struct {
+						P_index int64
+						P_value int64
+					}{}
+					boxed := make([]r_.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = func() r_.Value {
+							orig := v
+							_ = orig
+							return r_.RecordDict2("index", "value", r_.Int(orig.P_index), r_.Int(orig.P_value))
+						}()
+					}
+					return r_.Array(boxed)
+				}(), true}
+				if _v.V2 {
+					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
+				}
+				return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+			}()}), r_.Value{})
+			_ = __local_var_8_10
+			__local_var_9_12 := r_.Apply(r_.Apply(Get_Effect_Ref_read(), __local_var_1_1), r_.Value{})
+			_ = __local_var_9_12
+			__local_var_9_11 := r_.Apply(Call_Test_Assert_assertEqual_prime___1772858129("", struct {
+				P_actual   []int64
+				P_expected []int64
+			}{func() []int64 {
+				arr := *(*[]r_.Value)(__local_var_9_12.UnsafePtr)
+				unboxed := make([]int64, len(arr))
+				for i, v := range arr {
+					unboxed[i] = v.IntVal
+				}
+				return unboxed
+			}(), []int64{}}), r_.Value{})
+			_ = __local_var_9_11
+			__local_var_10_13 := r_.Apply(r_.Apply(Get_Effect_Ref__new(), Call_Main_partial(__local_var_1_1, int64(10))), r_.Value{})
+			_ = __local_var_10_13
+			__local_var_11_15 := r_.Apply(r_.Apply(Get_Effect_Ref_read(), __local_var_1_1), r_.Value{})
+			_ = __local_var_11_15
+			__local_var_11_14 := r_.Apply(Call_Test_Assert_assertEqual_prime___1772858129("", struct {
+				P_actual   []int64
+				P_expected []int64
+			}{func() []int64 {
+				arr := *(*[]r_.Value)(__local_var_11_15.UnsafePtr)
+				unboxed := make([]int64, len(arr))
+				for i, v := range arr {
+					unboxed[i] = v.IntVal
+				}
+				return unboxed
+			}(), []int64{int64(100)}}), r_.Value{})
+			_ = __local_var_11_14
+			__local_var_12_16 := r_.Apply(r_.Apply(Get_Effect_Ref_read(), __local_var_10_13), r_.Value{})
+			_ = __local_var_12_16
+			__local_var_13_17 := r_.Apply(Call_Test_Assert_assertEqual_prime___1693432849("", struct {
+				P_actual   r_.Value
+				P_expected r_.Value
+			}{r_.Apply(__local_var_12_16, func() r_.Value {
+				arr := []int64{int64(3)}
+				boxed := make([]r_.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = r_.Int(v)
+				}
+				return r_.Array(boxed)
+			}()), func() r_.Value {
+				_v := struct {
+					V0 r_.Value
+					V1 r_.Value
+					V2 bool
+				}{r_.Value{}, func() r_.Value {
+					arr := []struct {
+						P_index int64
+						P_value int64
+					}{struct {
+						P_index int64
+						P_value int64
+					}{int64(0), int64(13)}}
+					boxed := make([]r_.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = func() r_.Value {
+							orig := v
+							_ = orig
+							return r_.RecordDict2("index", "value", r_.Int(orig.P_index), r_.Int(orig.P_value))
+						}()
+					}
+					return r_.Array(boxed)
+				}(), true}
+				if _v.V2 {
+					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
+				}
+				return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+			}()}), r_.Value{})
+			_ = __local_var_13_17
+			__local_var_14_18 := r_.Apply(Call_Test_Assert_assertEqual_prime___1693432849("", struct {
+				P_actual   r_.Value
+				P_expected r_.Value
+			}{r_.Apply(__local_var_12_16, func() r_.Value {
+				arr := []int64{int64(7)}
+				boxed := make([]r_.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = r_.Int(v)
+				}
+				return r_.Array(boxed)
+			}()), func() r_.Value {
+				_v := struct {
+					V0 r_.Value
+					V1 r_.Value
+					V2 bool
+				}{r_.Value{}, func() r_.Value {
+					arr := []struct {
+						P_index int64
+						P_value int64
+					}{struct {
+						P_index int64
+						P_value int64
+					}{int64(0), int64(17)}}
+					boxed := make([]r_.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = func() r_.Value {
+							orig := v
+							_ = orig
+							return r_.RecordDict2("index", "value", r_.Int(orig.P_index), r_.Int(orig.P_value))
+						}()
+					}
+					return r_.Array(boxed)
+				}(), true}
+				if _v.V2 {
+					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
+				}
+				return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+			}()}), r_.Value{})
+			_ = __local_var_14_18
+			__local_var_15_20 := r_.Apply(r_.Apply(Get_Effect_Ref_read(), __local_var_1_1), r_.Value{})
+			_ = __local_var_15_20
+			__local_var_15_19 := r_.Apply(Call_Test_Assert_assertEqual_prime___1772858129("", struct {
+				P_actual   []int64
+				P_expected []int64
+			}{func() []int64 {
+				arr := *(*[]r_.Value)(__local_var_15_20.UnsafePtr)
+				unboxed := make([]int64, len(arr))
+				for i, v := range arr {
+					unboxed[i] = v.IntVal
+				}
+				return unboxed
+			}(), []int64{int64(100)}}), r_.Value{})
+			_ = __local_var_15_19
+			__local_var_16_21 := r_.Apply(r_.Apply2(Get_Effect_Ref_write(), func() r_.Value {
+				arr := []int64{}
+				boxed := make([]r_.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = r_.Int(v)
+				}
+				return r_.Array(boxed)
+			}(), __local_var_1_1), r_.Value{})
+			_ = __local_var_16_21
+			__local_var_17_22 := r_.Apply(Call_Test_Assert_assertEqual_prime___1693432849("", struct {
+				P_actual   r_.Value
+				P_expected r_.Value
+			}{func() r_.Value {
+				_v := Call_Main_staged(__local_var_1_1, []int64{int64(3), int64(-1), int64(-2)})
+				if _v.V2 {
+					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
+				}
+				return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+			}(), func() r_.Value {
+				_v := struct {
+					V0 r_.Value
+					V1 r_.Value
+					V2 bool
+				}{r_.Str("1"), r_.Value{}, false}
+				if _v.V2 {
+					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
+				}
+				return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+			}()}), r_.Value{})
+			_ = __local_var_17_22
+			__local_var_18_24 := r_.Apply(r_.Apply(Get_Effect_Ref_read(), __local_var_1_1), r_.Value{})
+			_ = __local_var_18_24
+			__local_var_18_23 := r_.Apply(Call_Test_Assert_assertEqual_prime___1772858129("", struct {
+				P_actual   []int64
+				P_expected []int64
+			}{func() []int64 {
+				arr := *(*[]r_.Value)(__local_var_18_24.UnsafePtr)
+				unboxed := make([]int64, len(arr))
+				for i, v := range arr {
+					unboxed[i] = v.IntVal
+				}
+				return unboxed
+			}(), []int64{int64(100), int64(101), int64(102)}}), r_.Value{})
+			_ = __local_var_18_23
+			return r_.Apply(r_.Apply(Get_Effect_Console_log(), r_.Str("Done")), r_.Value{})
+		})
+	})
+	return cache_Main_main
+}
+
+func Call_Main_track(calls_0_loop r_.Value, marker_1_loop int64, value_2_loop int64) int64 {
+	var calls_0 r_.Value = calls_0_loop
+	_ = calls_0
+	var marker_1 int64 = marker_1_loop
+	_ = marker_1
+	var value_2 int64 = value_2_loop
+	_ = value_2
+	return r_.Apply(Get_Effect_Unsafe_unsafePerformEffect(), r_.Func(func(_ r_.Value) r_.Value {
+		// TAST (Let): __local_var_3_0 shape=App(Var) bindingType=Any
+		__local_var_3_0 := r_.Apply2(Get_Effect_Ref_modify_(), r_.Func(func(seen_3 r_.Value) r_.Value {
+			return func() r_.Value {
+				arr := func() []int64 {
+					arr := *(*[]r_.Value)(r_.Array((*(*[]r_.Value)((r_.Apply2(Get_Data_Semigroup_concatArray(), seen_3, func() r_.Value {
+						arr := []int64{marker_1}
+						boxed := make([]r_.Value, len(arr))
+						for i, v := range arr {
+							boxed[i] = r_.Int(v)
+						}
+						return r_.Array(boxed)
+					}())).UnsafePtr))).UnsafePtr)
+					unboxed := make([]int64, len(arr))
+					for i, v := range arr {
+						unboxed[i] = v.IntVal
+					}
+					return unboxed
+				}()
+				boxed := make([]r_.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = r_.Int(v)
+				}
+				return r_.Array(boxed)
+			}()
+		}), calls_0)
+		_ = __local_var_3_0
+		__local_var_4_1 := r_.Apply(__local_var_3_0, r_.Value{})
+		_ = __local_var_4_1
+		return r_.Int(value_2)
+	})).IntVal
+}
+
+func Call_Main_staged(calls_0_loop r_.Value, values_1_loop []int64) struct {
+	V0 r_.Value
+	V1 r_.Value
+	V2 bool
+} {
+	var calls_0 r_.Value = calls_0_loop
+	_ = calls_0
+	var values_1 []int64 = values_1_loop
+	_ = values_1
+	traverseEither_arg_0 := Rebox_Main_1812164904_2955889203(r_.CoerceToStruct[Constructor_Data_TraversableWithIndex_TraversableWithIndex[r_.Value, r_.Value]](Get_Data_TraversableWithIndex_traversableWithIndexArray()))
+	_ = traverseEither_arg_0
+	_ = traverseEither_arg_0
+	traverseEither_arg_1 := r_.CoerceToStruct[Constructor_Control_Applicative_Applicative[r_.Value]](Get_Data_Either_applicativeEither())
+	_ = traverseEither_arg_1
+	_ = traverseEither_arg_1
+	traverseEither_arg_4 := r_.Func(func(i_2 r_.Value) r_.Value {
+		// TAST (Let): captured_3_2 shape=App(Var) bindingType=Int
+		captured_3_2 := Call_Main_track(calls_0, r_.IntAdd(int64(100), i_2.IntVal), i_2.IntVal)
+		_ = captured_3_2
+		return r_.Func(func(value_4 r_.Value) r_.Value {
+			var __t3 struct {
+				V0 r_.Value
+				V1 struct {
+					P_index int64
+					P_value int64
+				}
+				V2 bool
+			}
+			{
+				if (value_4.IntVal) < (int64(0)) {
+					__t3 = struct {
+						V0 r_.Value
+						V1 struct {
+							P_index int64
+							P_value int64
+						}
+						V2 bool
+					}{r_.Str(Data_Show_ShowIntImpl(captured_3_2)), struct {
+						P_index int64
+						P_value int64
+					}{}, false}
+					goto end_branch_3
+				} else {
+
+				}
+			}
+			{
+				__t3 = struct {
+					V0 r_.Value
+					V1 struct {
+						P_index int64
+						P_value int64
+					}
+					V2 bool
+				}{r_.Value{}, struct {
+					P_index int64
+					P_value int64
+				}{captured_3_2, value_4.IntVal}, true}
+			}
+		end_branch_3:
+			return func() r_.Value {
+				_v := __t3
+				if _v.V2 {
+					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: func() r_.Value {
+						orig := _v.V1
+						_ = orig
+						return r_.RecordDict2("index", "value", r_.Int(orig.P_index), r_.Int(orig.P_value))
+					}()})}
+				}
+				return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+			}()
+		})
+	})
+	_ = traverseEither_arg_4
+	_ = traverseEither_arg_4
+	traverseEither_arg_5 := values_1
+	_ = traverseEither_arg_5
+	_ = traverseEither_arg_5
+	return func() struct {
+		V0 r_.Value
+		V1 r_.Value
+		V2 bool
+	} { _v := func() r_.Value {
+		traverseEither_values_6 := traverseEither_arg_5
+		_ = traverseEither_values_6
+		traverseEither_output_6 := make([]r_.Value, len(traverseEither_values_6))
+		_ = traverseEither_output_6
+		traverseEither_firstError_6 := r_.Value{}
+		_ = traverseEither_firstError_6
+		traverseEither_failed_6 := false
+		_ = traverseEither_failed_6
+		for traverseEither_index_6, traverseEither_value_6 := range traverseEither_values_6 {
+			traverseEither_result_6 := r_.Apply2(traverseEither_arg_4, r_.Int(int64(traverseEither_index_6)), r_.Int(traverseEither_value_6))
+			_ = traverseEither_result_6
+			if traverseEither_result_6.Type == 9 && traverseEither_result_6.IntVal == 2465973597 {
+				traverseEither_output_6[traverseEither_index_6] = (*Constructor_Data_Either_Right[r_.Value, r_.Value])(traverseEither_result_6.UnsafePtr).V0
+			} else {
+				if traverseEither_result_6.Type == 9 && traverseEither_result_6.IntVal == 3711209382 {
+					if !(traverseEither_failed_6) {
+						traverseEither_firstError_6 = traverseEither_result_6
+						traverseEither_failed_6 = true
+					} else {
+
+					}
+				} else {
+					panic("Failed pattern match")
+				}
+			}
+		}
+		if traverseEither_failed_6 {
+			return traverseEither_firstError_6
+		} else {
+
+		}
+		return func() r_.Value {
+			_v := struct {
+				V0 r_.Value
+				V1 r_.Value
+				V2 bool
+			}{r_.Value{}, r_.Array(traverseEither_output_6), true}
+			if _v.V2 {
+				return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
+			}
+			return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+		}()
+	}(); if _v.Type == 9 && _v.IntVal == 2465973597 && _v.UnsafePtr != nil {
+		return struct {
+			V0 r_.Value
+			V1 r_.Value
+			V2 bool
+		}{V0: r_.Value{}, V1: (*(*Constructor_Data_Either_Right[r_.Value, r_.Value])(_v.UnsafePtr)).V0, V2: true}
+	}; return struct {
+		V0 r_.Value
+		V1 r_.Value
+		V2 bool
+	}{V0: (*(*Constructor_Data_Either_Left[r_.Value, r_.Value])(_v.UnsafePtr)).V0, V1: r_.Value{}, V2: false} }()
+}
+
+func Call_Main_run(calls_0_loop r_.Value, values_1_loop []int64) struct {
+	V0 r_.Value
+	V1 r_.Value
+	V2 bool
+} {
+	var calls_0 r_.Value = calls_0_loop
+	_ = calls_0
+	var values_1 []int64 = values_1_loop
+	_ = values_1
+	traverseEither_arg_0 := Rebox_Main_1812164904_2955889203(r_.CoerceToStruct[Constructor_Data_TraversableWithIndex_TraversableWithIndex[r_.Value, r_.Value]](Get_Data_TraversableWithIndex_traversableWithIndexArray()))
+	_ = traverseEither_arg_0
+	_ = traverseEither_arg_0
+	traverseEither_arg_1 := r_.CoerceToStruct[Constructor_Control_Applicative_Applicative[r_.Value]](Get_Data_Either_applicativeEither())
+	_ = traverseEither_arg_1
+	_ = traverseEither_arg_1
+	traverseEither_arg_4 := func(i_2 int64, value_3 r_.Value) struct {
+		V0 r_.Value
+		V1 struct {
+			P_index int64
+			P_value int64
+		}
+		V2 bool
+	} {
+		// TAST (Let): observed_4_2 shape=App(Var) bindingType=Int
+		observed_4_2 := Call_Main_track(calls_0, i_2, value_3.IntVal)
+		_ = observed_4_2
+		var __t3 struct {
+			V0 r_.Value
+			V1 struct {
+				P_index int64
+				P_value int64
+			}
+			V2 bool
+		}
+		{
+			if (observed_4_2) < (int64(0)) {
+				__t3 = struct {
+					V0 r_.Value
+					V1 struct {
+						P_index int64
+						P_value int64
+					}
+					V2 bool
+				}{r_.Str(Data_Show_ShowIntImpl(i_2)), struct {
+					P_index int64
+					P_value int64
+				}{}, false}
+				goto end_branch_3
+			} else {
+
+			}
+		}
+		{
+			__t3 = struct {
+				V0 r_.Value
+				V1 struct {
+					P_index int64
+					P_value int64
+				}
+				V2 bool
+			}{r_.Value{}, struct {
+				P_index int64
+				P_value int64
+			}{i_2, observed_4_2}, true}
+		}
+	end_branch_3:
+		return __t3
+	}
+	_ = traverseEither_arg_4
+	_ = traverseEither_arg_4
+	traverseEither_arg_5 := values_1
+	_ = traverseEither_arg_5
+	_ = traverseEither_arg_5
+	return func() struct {
+		V0 r_.Value
+		V1 r_.Value
+		V2 bool
+	} { _v := func() r_.Value {
+		traverseEither_values_6 := traverseEither_arg_5
+		_ = traverseEither_values_6
+		traverseEither_output_6 := make([]r_.Value, len(traverseEither_values_6))
+		_ = traverseEither_output_6
+		traverseEither_firstError_6 := r_.Value{}
+		_ = traverseEither_firstError_6
+		traverseEither_failed_6 := false
+		_ = traverseEither_failed_6
+		for traverseEither_index_6, traverseEither_value_6 := range traverseEither_values_6 {
+			traverseEither_result_6 := traverseEither_arg_4(int64(traverseEither_index_6), r_.Int(traverseEither_value_6))
+			_ = traverseEither_result_6
+			if traverseEither_result_6.V2 {
+				traverseEither_output_6[traverseEither_index_6] = func() r_.Value {
+					orig := traverseEither_result_6.V1
+					_ = orig
+					return r_.RecordDict2("index", "value", r_.Int(orig.P_index), r_.Int(orig.P_value))
+				}()
+			} else {
+				if !traverseEither_result_6.V2 {
+					if !(traverseEither_failed_6) {
+						traverseEither_firstError_6 = func() r_.Value {
+							_v := traverseEither_result_6
+							if _v.V2 {
+								return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: func() r_.Value {
+									orig := _v.V1
+									_ = orig
+									return r_.RecordDict2("index", "value", r_.Int(orig.P_index), r_.Int(orig.P_value))
+								}()})}
+							}
+							return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+						}()
+						traverseEither_failed_6 = true
+					} else {
+
+					}
+				} else {
+					panic("Failed pattern match")
+				}
+			}
+		}
+		if traverseEither_failed_6 {
+			return traverseEither_firstError_6
+		} else {
+
+		}
+		return func() r_.Value {
+			_v := struct {
+				V0 r_.Value
+				V1 r_.Value
+				V2 bool
+			}{r_.Value{}, r_.Array(traverseEither_output_6), true}
+			if _v.V2 {
+				return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
+			}
+			return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+		}()
+	}(); if _v.Type == 9 && _v.IntVal == 2465973597 && _v.UnsafePtr != nil {
+		return struct {
+			V0 r_.Value
+			V1 r_.Value
+			V2 bool
+		}{V0: r_.Value{}, V1: (*(*Constructor_Data_Either_Right[r_.Value, r_.Value])(_v.UnsafePtr)).V0, V2: true}
+	}; return struct {
+		V0 r_.Value
+		V1 r_.Value
+		V2 bool
+	}{V0: (*(*Constructor_Data_Either_Left[r_.Value, r_.Value])(_v.UnsafePtr)).V0, V1: r_.Value{}, V2: false} }()
+}
+
+func Call_Main_partial(calls_0_loop r_.Value, offset_1_loop int64) r_.Value {
+	var calls_0 r_.Value = calls_0_loop
+	_ = calls_0
+	var offset_1 int64 = offset_1_loop
+	_ = offset_1
+	// TAST (Let): captured_2_0 shape=App(Var) bindingType=Int
+	captured_2_0 := Call_Main_track(calls_0, int64(100), offset_1)
+	_ = captured_2_0
+	traverseEither_arg_1 := Rebox_Main_1812164904_2955889203(r_.CoerceToStruct[Constructor_Data_TraversableWithIndex_TraversableWithIndex[r_.Value, r_.Value]](Get_Data_TraversableWithIndex_traversableWithIndexArray()))
+	_ = traverseEither_arg_1
+	_ = traverseEither_arg_1
+	traverseEither_arg_2 := r_.CoerceToStruct[Constructor_Control_Applicative_Applicative[r_.Value]](Get_Data_Either_applicativeEither())
+	_ = traverseEither_arg_2
+	_ = traverseEither_arg_2
+	traverseEither_arg_3 := func(i_3 int64, value_4 r_.Value) struct {
+		V0 r_.Value
+		V1 struct {
+			P_index int64
+			P_value int64
+		}
+		V2 bool
+	} {
+		return struct {
+			V0 r_.Value
+			V1 struct {
+				P_index int64
+				P_value int64
+			}
+			V2 bool
+		}{r_.Value{}, struct {
+			P_index int64
+			P_value int64
+		}{i_3, r_.IntAdd(value_4.IntVal, captured_2_0)}, true}
+	}
+	_ = traverseEither_arg_3
+	_ = traverseEither_arg_3
+	return r_.Func(func(traverseEither_input_4 r_.Value) r_.Value {
+		traverseEither_values_4 := *((*[]r_.Value)(traverseEither_input_4.UnsafePtr))
+		_ = traverseEither_values_4
+		traverseEither_output_4 := make([]r_.Value, len(traverseEither_values_4))
+		_ = traverseEither_output_4
+		traverseEither_firstError_4 := r_.Value{}
+		_ = traverseEither_firstError_4
+		traverseEither_failed_4 := false
+		_ = traverseEither_failed_4
+		for traverseEither_index_4, traverseEither_value_4 := range traverseEither_values_4 {
+			traverseEither_result_4 := traverseEither_arg_3(int64(traverseEither_index_4), traverseEither_value_4)
+			_ = traverseEither_result_4
+			if traverseEither_result_4.V2 {
+				traverseEither_output_4[traverseEither_index_4] = func() r_.Value {
+					orig := traverseEither_result_4.V1
+					_ = orig
+					return r_.RecordDict2("index", "value", r_.Int(orig.P_index), r_.Int(orig.P_value))
+				}()
+			} else {
+				if !traverseEither_result_4.V2 {
+					if !(traverseEither_failed_4) {
+						traverseEither_firstError_4 = func() r_.Value {
+							_v := traverseEither_result_4
+							if _v.V2 {
+								return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: func() r_.Value {
+									orig := _v.V1
+									_ = orig
+									return r_.RecordDict2("index", "value", r_.Int(orig.P_index), r_.Int(orig.P_value))
+								}()})}
+							}
+							return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+						}()
+						traverseEither_failed_4 = true
+					} else {
+
+					}
+				} else {
+					panic("Failed pattern match")
+				}
+			}
+		}
+		if traverseEither_failed_4 {
+			return traverseEither_firstError_4
+		} else {
+
+		}
+		return func() r_.Value {
+			_v := struct {
+				V0 r_.Value
+				V1 r_.Value
+				V2 bool
+			}{r_.Value{}, r_.Array(traverseEither_output_4), true}
+			if _v.V2 {
+				return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
+			}
+			return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+		}()
+	})
+}
+
+func Rebox_Main_1053099733_3790796878(in *Constructor_Data_Eq_Eq[int64]) *Constructor_Data_Eq_Eq[r_.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[r_.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1140313009_3790796878(in *Constructor_Data_Eq_Eq[string]) *Constructor_Data_Eq_Eq[r_.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[r_.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1386611502_1469227923(in *Constructor_Data_Show_Show[r_.Value]) *Constructor_Data_Show_Show[[]int64] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[[]int64])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1386611502_1514099793(in *Constructor_Data_Show_Show[r_.Value]) *Constructor_Data_Show_Show[string] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[string])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1386611502_1636311157(in *Constructor_Data_Show_Show[r_.Value]) *Constructor_Data_Show_Show[int64] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[int64])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1469227923_1386611502(in *Constructor_Data_Show_Show[[]int64]) *Constructor_Data_Show_Show[r_.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[r_.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1514099793_1386611502(in *Constructor_Data_Show_Show[string]) *Constructor_Data_Show_Show[r_.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[r_.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1636311157_1386611502(in *Constructor_Data_Show_Show[int64]) *Constructor_Data_Show_Show[r_.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[r_.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1812164904_2955889203(in *Constructor_Data_TraversableWithIndex_TraversableWithIndex[r_.Value, r_.Value]) *Constructor_Data_TraversableWithIndex_TraversableWithIndex[int64, r_.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_TraversableWithIndex_TraversableWithIndex[int64, r_.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_378698611_3790796878(in *Constructor_Data_Eq_Eq[[]int64]) *Constructor_Data_Eq_Eq[r_.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[r_.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_3790796878_1053099733(in *Constructor_Data_Eq_Eq[r_.Value]) *Constructor_Data_Eq_Eq[int64] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[int64])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_3790796878_1140313009(in *Constructor_Data_Eq_Eq[r_.Value]) *Constructor_Data_Eq_Eq[string] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[string])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_3790796878_378698611(in *Constructor_Data_Eq_Eq[r_.Value]) *Constructor_Data_Eq_Eq[[]int64] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[[]int64])(unsafe.Pointer(in))
+}
+
+// gopurs-source-end-v1
+
+// gopurs-package-file: purescript/p_root/zz_gopurs_order.go
+package p_root
+
+import (
+	_ "gopurs/output/purescript/init_external"
+)
+

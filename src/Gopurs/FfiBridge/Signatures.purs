@@ -16,6 +16,7 @@ import Data.Tuple (Tuple(..))
 import Gopurs.CodegenState (FunctionInfo)
 import Gopurs.FfiTypes (FfiDecl, TypeNode(..))
 import Gopurs.GoAst (GoType(..), capitalize)
+import Gopurs.GoSymbol (GoReference(..), foreignSymbol)
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..))
 
 -- Worker generation and direct-call publication share this candidate. A
@@ -58,14 +59,14 @@ hasFunctionParameter = Array.any case _ of
   TFunc _ _ -> true
   _ -> false
 
-functionInfo :: NativeCandidate -> Maybe FunctionInfo
-functionInfo { declaration, tast, requiresWorker, callName } = do
+functionInfo :: String -> NativeCandidate -> Maybe FunctionInfo
+functionInfo unit { declaration, tast, requiresWorker, callName } = do
   args <- traverse argumentType declaration.args
   ret <- case declaration.ret of
     Just _ | requiresWorker -> boxedResult
     Just t -> typeNodeToGoType t
     Nothing -> boxedResult
-  pure { fullName: callName, fArgs: args, fRet: ret, arity: Array.length declaration.args }
+  pure { reference: SymbolReference (foreignSymbol unit callName), fArgs: args, fRet: ret, arity: Array.length declaration.args }
   where
   argumentType (TFunc _ _) | requiresWorker = Just TypeValue
   argumentType t = typeNodeToGoType t

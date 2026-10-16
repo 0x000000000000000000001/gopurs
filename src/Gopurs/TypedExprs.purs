@@ -112,7 +112,7 @@ classDictionary translate context@{ metadata, codegenStateRef, modNameStr, bound
     translatedFields = foldl translateField { stmts: StmtEmpty, exprs: [], nextId } fields
   pure
     { stmts: translatedFields.stmts
-    , expr: GoConstructor (hashString pointer.baseStructName) pointer.structName pointer.typeArgs translatedFields.exprs
+    , expr: GoConstructor (hashString pointer.baseStructName) pointer.symbol pointer.typeArgs translatedFields.exprs
     , exprType: TypeStructPointer pointer
     , nextId: translatedFields.nextId
     }

@@ -10,7 +10,11 @@ async function run() {
     go.run(result.instance).catch(fail);
     const content = readFileSync(0, 'utf8');
     const prefix = process.argv[2];
-    const response = prefix === undefined
+    const response = prefix === '--package-source'
+        ? globalThis.packageGoSource(content)
+        : prefix === '--bind-source'
+        ? globalThis.bindGoSource(content)
+        : prefix === undefined
         ? globalThis.parseFFI(content)
         : globalThis.parseFFI(content, prefix);
     if (!response || typeof response.json !== 'string' || typeof response.error !== 'string') {

@@ -59,7 +59,7 @@ test("optimizer reuse checks observed values and absences instead of unrelated p
     await runAff(Cache.emit(fresh)(Map.empty)(metadata)("unused")(false)(modules[i])(backends[i]));
     const path = join(fresh.session.stage, "modules", name);
     const memo = JSON.parse(readFileSync(join(path, "memo.json")));
-    memo.parts = ["pbo/backend-v2", "pbo/implementations-v1", "pbo/directives-v1", "gopurs/workers-v1"].map((codec, j) => {
+    memo.parts = ["pbo/backend-v2", "pbo/implementations-v1", "pbo/directives-v1", "gopurs/workers-v2"].map((codec, j) => {
       const bytes = readFileSync(join(path, j + ".json"));
       return { codec, object: { sha256: hash(bytes), bytes: bytes.length } };
     });

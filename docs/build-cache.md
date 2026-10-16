@@ -32,6 +32,49 @@ avec les mêmes options d'entrée/FFI à chaque invocation, comme dans le
 habituel valide le cache Go avant de lancer le binaire ; ses ressources de
 référence sont **GOMAXPROCS=2 / -p 1 / GOMEMLIMIT=12GiB**.
 
+### Sélectionner le découpage Go G06
+
+Le layout mesuré utilise des ancres **1/8192**, avec un fichier ordinaire regroupé
+par package. Il est disponible dans les trois compilateurs reconstruits ; sa
+sélection reste explicite et doit être conservée entre les builds :
+
+```sh
+export GOPURS_GO_PACKAGES=1
+spago build
+go -C output mod tidy
+```
+
+Sans backend Spago configuré, appliquer le même environnement à l'invocation
+habituelle de `bin/gopurs`, après production des TAST. Dans b8x, depuis la racine
+du projet sur la cible Go :
+
+```sh
+export GOPURS_GO_PACKAGES=1
+bin/build
+bin/test
+```
+
+`bin/_gopurs` sélectionne le checkout voisin `gopurs/gopurs/bin/gopurs` ; le
+launcher utilise le natif par défaut, JS avec `GOPURS_JS=1`, Rust avec
+`GOPURS_RUST=1`. La [livraison G06](build-go-measurements.md) identifie les quatre
+artefacts installés, y compris le WASM JS. Pour reconstruire depuis les sources,
+utiliser `npm run build:native`, ou `npm run build` pour JS et
+`GOPURS_RUST_PGO=0 npm run build:rust` pour le Rust non-PGO mesuré. Une modification
+du résolveur Go demande aussi `npm run build:ffi` avec Go 1.27.0 avant le build JS.
+
+La première invocation après changement de compilateur/layout est un miss de
+cache. La publication migre les sorties possédées dans leur racine actuelle et
+retire les anciens chemins par le journal ; elle conserve les fichiers externes,
+`go.mod`, `go.sum` et l'inode du verrou. Le retour monolithique utilise
+`GOPURS_GO_PACKAGES=0 spago build`. Les entrées `output/main/main.go` et
+`output/<Module>/main/main.go` gardent leur rôle ; le runner suit leurs imports
+sans connaître les noms de packages générés.
+
+Sur le corpus b8x figé, le gain jusqu'à `exec` est de **48–63 % après édition**.
+Le backend seul prend davantage de temps après édition et reste à **~118 s à
+froid** ; les [mesures ventilées](build-go-measurements.md) détaillent ce coût et
+la faible marge du GOCACHE. La préparation incrémentale P est en pause.
+
 ### Forcer la génération complète
 
 Avec le backend configuré dans Spago :
@@ -258,7 +301,13 @@ parties suivantes, dans cet ordre :
 | `pbo/backend-v2` (`v1` antérieur) | `BackendModule` : nom, commentaires, imports, types ADT, groupes de bindings récursifs ou non et leurs `NeutralExpr`, exports/réexports, déclarations ADT/classes, imports FFI et types ; le v2 ajoute l'enveloppe `body` et les lectures PBO optionnelles |
 | `pbo/implementations-v1` | Map qualifiée vers `BackendAnalysis` et `ExternImpl` : usages, tailles, complexité, args, dépendances, résultats et corps/dictionnaires/constructeurs complets |
 | `pbo/directives-v1` | Contributions `InlineDirectiveMap`, avec références, accesseurs et directives explicites |
-| `gopurs/workers-v1` | `ModuleFunctions` : `fullName`, `fArgs`, `fRet`, `arity`, avec les `GoType` structurels |
+| `gopurs/workers-v2` (`v1` antérieur) | `ModuleFunctions` : `reference` (symbole possédé), `fArgs`, `fRet`, `arity`, avec les `GoType` structurels et propriétaires des types nommés |
+
+Depuis [G02](build-go-references.md), les anciens manifests `workers-v1`
+restent lisibles pour la propriété des sorties et la reprise. Le producteur
+exige `workers-v2` pour restaurer une signature et refuse les références
+lexicales parmi les workers publiés. Un changement de propriétaire fait partie
+de la clé d'émission, même lorsque le nom Go monolithique reste identique.
 
 `prepared` couvre le module après spécialisation réellement consommé par PBO.
 `optimizerEnvironment` couvre les implémentations **et leurs absences**, les
@@ -610,6 +659,20 @@ producteur. Le stockage garantit leur intégrité et leur publication ; la preuv
 que ces données décrivent bien le calcul est exercée lors des raccordements des
 lots 03–05. La collecte des objets orphelins est différée ; leur présence ne
 constitue jamais un hit.
+
+**Candidat G06 multipackage :** après une publication réussie, le pilote effectue
+un entretien des objets sous le verrou stable. Il relit le manifeste courant,
+qui peut être celui d'un autre build, et exige un journal de propriété égal à
+ses sorties. Il conserve le manifeste, les sorties, les artefacts métier et de
+diagnostic ainsi que les sources compressées G05. Seuls les fichiers réguliers
+de `objects` nommés par un SHA-256 et absents de cet ensemble sont retirés ;
+les stages privés et les fichiers de contrôle restent en place. Une publication
+incomplète suspend cet entretien. Les lectures de candidats sont protégées par
+le même verrou et copient leurs données dans le staging avant de le rendre.
+Un échec d'entretien conserve des objets jetables sans invalider la publication
+réussie. Le parcours monolithique conserve la politique des lots précédents.
+Les mesures d'acceptation de ce candidat sont suivies dans
+[G06](build-go-measurements.md#diagnostics-suivant-le-pilote-3).
 
 ## Vérifications
 

@@ -17,6 +17,8 @@ export const withSnapshot = run => () => {
     .map(path => resolve(path)).find(path => existsSync(join(path, "build-cache.mjs")));
   if (!tools) throw new Error("Cannot locate compiler resources");
   const helper = execFileSync(process.execPath, [join(tools, "build-cache.mjs"), "--helper"], { encoding: "utf8" }).trim();
+  const packages = process.env.GOPURS_GO_PACKAGES === "1"
+    ? execFileSync(process.execPath, [join(tools, "go-packages.mjs")], { encoding: "utf8" }).trim() : null;
   const root = realpathSync(mkdtempSync(join(tmpdir(), "gopurs-compiler-")));
   const resources = [];
   const copy = (name, source, path, mode = 0o400) => {
@@ -28,6 +30,7 @@ export const withSnapshot = run => () => {
   try {
     copy("compiler", bundle, "bin/gopurs.js");
     copy("cache-helper", helper, "tools/build-cache-helper", 0o500);
+    if (packages) copy("go-packages-helper", packages, "tools/go-packages-helper", 0o500);
     for (const name of ["ffi-runner.mjs", "ffi_gen.wasm", "wasm_exec.js"]) copy(name, join(tools, name), "tools/" + name);
     writeFileSync(join(root, "package.json"), '{"type":"module"}\n', { mode: 0o400 });
     resources.push({ name: "module-format", kind: "file", path: "package.json" });

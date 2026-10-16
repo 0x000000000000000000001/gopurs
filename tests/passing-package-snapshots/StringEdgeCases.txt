@@ -1,0 +1,115 @@
+// gopurs-package-file: main/main.go
+package main
+
+import (
+	"gopurs/output/gopurs_runtime"
+	_ "gopurs/output/purescript/init_all"
+	purescript "gopurs/output/purescript/p_cdbf3019a3a300007f3d219dbc66ccf3"
+	"os"
+	"runtime/pprof"
+)
+
+func main() {
+	if os.Getenv("PPROF") == "1" {
+		f, err := os.Create("cpu.prof")
+		if err != nil {
+			panic(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
+
+	gopurs_runtime.Apply(purescript.Get_Main_main(), gopurs_runtime.Value{})
+
+	gopurs_runtime.EventLoopWait()
+
+	if os.Getenv("PPROF") == "1" {
+		mf, err := os.Create("mem.prof")
+		if err != nil {
+			panic(err)
+		}
+		pprof.WriteHeapProfile(mf)
+		mf.Close()
+	}
+}
+
+// gopurs-package-file: purescript/init_all/init.go
+package init_all
+
+import (
+	_ "gopurs/output/purescript/init_external"
+	_ "gopurs/output/purescript/p_cdbf3019a3a300007f3d219dbc66ccf3"
+)
+
+// gopurs-package-file: purescript/init_external/init.go
+package init_external
+
+import (
+	_ "context"
+	_ "errors"
+	_ "fmt"
+	_ "gopurs/output/gopurs_runtime"
+	_ "math"
+	_ "os"
+	_ "regexp"
+	_ "sort"
+	_ "strconv"
+	_ "strings"
+	_ "sync"
+	_ "sync/atomic"
+	_ "time"
+	_ "unicode/utf16"
+	_ "unicode/utf8"
+	_ "unsafe"
+)
+
+// gopurs-package-file: purescript/p_cdbf3019a3a300007f3d219dbc66ccf3/0_gopurs_package.go
+package p_cdbf3019a3a300007f3d219dbc66ccf3
+
+import (
+	context "context"
+	errors "errors"
+	fmt "fmt"
+	r_ "gopurs/output/gopurs_runtime"
+	gf7c1c4 "gopurs/output/purescript/p_root"
+	math "math"
+	os "os"
+	regexp "regexp"
+	sort "sort"
+	strconv "strconv"
+	strings "strings"
+	sync "sync"
+	gde6842 "sync/atomic"
+	time "time"
+	utf16 "unicode/utf16"
+	utf8 "unicode/utf8"
+	unsafe "unsafe"
+)
+
+// gopurs-source-v1: 4d61696e2e676f
+
+var cache_Main_main r_.Value
+
+var once_Main_main sync.Once
+
+func Get_Main_main() r_.Value {
+	once_Main_main.Do(func() {
+		cache_Main_main = r_.Func(func(_ r_.Value) r_.Value {
+			__local_var_0_0 := r_.Apply(Get_Records_main(), r_.Value{})
+			_ = __local_var_0_0
+			return r_.Apply(Get_Symbols_main(), r_.Value{})
+		})
+	})
+	return cache_Main_main
+}
+
+// gopurs-source-end-v1
+
+// gopurs-package-file: purescript/p_cdbf3019a3a300007f3d219dbc66ccf3/zz_gopurs_order.go
+package p_cdbf3019a3a300007f3d219dbc66ccf3
+
+import (
+	_ "gopurs/output/purescript/init_external"
+	_ "gopurs/output/purescript/p_root"
+)
+

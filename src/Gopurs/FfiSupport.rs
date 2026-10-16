@@ -6,10 +6,9 @@ unsafe extern "C" {
     fn GopursFreeFFI(result: *mut std::ffi::c_char);
 }
 
-fn gopurs_parse_ffi(content: &str, prefix: Option<&str>) -> Value {
+fn gopurs_parse_ffi(content: &str, prefix: &str, prepare: i32) -> Value {
     let content = purust_string_to_utf8_lossy(content);
-    let prepare = i32::from(prefix.is_some());
-    let prefix = purust_string_to_utf8_lossy(prefix.unwrap_or(""));
+    let prefix = purust_string_to_utf8_lossy(prefix);
     let mut failed = 0;
     let response = unsafe {
         let pointer = GopursParseFFI(content.as_ptr(), content.len(), prefix.as_ptr(), prefix.len(), prepare, &mut failed);
@@ -25,9 +24,21 @@ fn gopurs_parse_ffi(content: &str, prefix: Option<&str>) -> Value {
 }
 
 pub fn Gopurs_FfiSupport_extractFfiAstImpl(content: String) -> Value {
-    Value::Func1(Func1::Shared(std::rc::Rc::new(move |_| gopurs_parse_ffi(&content, None))))
+    Value::Func1(Func1::Shared(std::rc::Rc::new(move |_| gopurs_parse_ffi(&content, "", 0))))
 }
 
 pub fn Gopurs_FfiSupport_prepareFfiAstImpl(prefix: String, content: String) -> Value {
-    Value::Func1(Func1::Shared(std::rc::Rc::new(move |_| gopurs_parse_ffi(&content, Some(&prefix)))))
+    Value::Func1(Func1::Shared(std::rc::Rc::new(move |_| gopurs_parse_ffi(&content, &prefix, 1))))
+}
+
+pub fn Gopurs_FfiSupport_bindGoSourceImpl(content: String) -> Value {
+    Value::Func1(Func1::Shared(std::rc::Rc::new(move |_| gopurs_parse_ffi(&content, "", 2))))
+}
+
+pub fn Gopurs_FfiSupport_packageGoSourceImpl(content: String) -> Value {
+    Value::Func1(Func1::Shared(std::rc::Rc::new(move |_| gopurs_parse_ffi(&content, "", 3))))
+}
+
+pub fn Gopurs_FfiSupport_packageGoFilesImpl(content: String) -> Value {
+    Value::Func1(Func1::Shared(std::rc::Rc::new(move |_| gopurs_parse_ffi(&content, "", 4))))
 }
