@@ -1,0 +1,2148 @@
+{
+  "schema": 1,
+  "categories": {
+    "source": {
+      "count": 2704,
+      "rawBytes": 360039221,
+      "uniqueBytes": 360039221,
+      "encodeWrite": {
+        "median": 3.233,
+        "min": 3.231,
+        "max": 3.256,
+        "samples": [
+          3.231,
+          3.256,
+          3.233
+        ]
+      },
+      "restore": {
+        "median": 5.382,
+        "min": 5.178,
+        "max": 5.486,
+        "samples": [
+          5.486,
+          5.382,
+          5.178
+        ]
+      },
+      "canonicalRoundtrip": {
+        "median": 7.341,
+        "min": 7.091,
+        "max": 7.482,
+        "samples": [
+          7.091,
+          7.341,
+          7.482
+        ]
+      },
+      "stageCold": {
+        "median": 10.107139709,
+        "min": 9.50734625,
+        "max": 10.113118334,
+        "samples": [
+          9.50734625,
+          10.107139709,
+          10.113118334
+        ]
+      },
+      "stageColdProcess": {
+        "median": 10.251564833,
+        "min": 10.118613458,
+        "max": 10.258121375,
+        "samples": [
+          10.118613458,
+          10.258121375,
+          10.251564833
+        ]
+      },
+      "edits": {
+        "leaf": {
+          "changed": 1,
+          "removed": 0,
+          "changedBytes": 15430,
+          "encodeWrite": {
+            "median": 0.001,
+            "min": 0.001,
+            "max": 0.001,
+            "samples": [
+              0.001,
+              0.001,
+              0.001
+            ]
+          },
+          "stage": {
+            "median": 0.098587,
+            "min": 0.097616208,
+            "max": 0.17119675,
+            "samples": [
+              0.17119675,
+              0.097616208,
+              0.098587
+            ]
+          },
+          "stageProcess": {
+            "median": 0.423907125,
+            "min": 0.384088459,
+            "max": 0.487928208,
+            "samples": [
+              0.487928208,
+              0.423907125,
+              0.384088459
+            ]
+          }
+        },
+        "shared": {
+          "changed": 1,
+          "removed": 0,
+          "changedBytes": 306769,
+          "encodeWrite": {
+            "median": 0.022,
+            "min": 0.021,
+            "max": 0.023,
+            "samples": [
+              0.023,
+              0.021,
+              0.022
+            ]
+          },
+          "stage": {
+            "median": 0.101126959,
+            "min": 0.096768,
+            "max": 0.146981625,
+            "samples": [
+              0.146981625,
+              0.096768,
+              0.101126959
+            ]
+          },
+          "stageProcess": {
+            "median": 0.398228042,
+            "min": 0.387203958,
+            "max": 0.457433791,
+            "samples": [
+              0.457433791,
+              0.387203958,
+              0.398228042
+            ]
+          }
+        },
+        "ffi": {
+          "changed": 0,
+          "removed": 0,
+          "changedBytes": 0,
+          "encodeWrite": {
+            "median": 0,
+            "min": 0,
+            "max": 0,
+            "samples": [
+              0,
+              0,
+              0
+            ]
+          },
+          "stage": {
+            "median": 0.097455458,
+            "min": 0.094520916,
+            "max": 0.099144583,
+            "samples": [
+              0.097455458,
+              0.099144583,
+              0.094520916
+            ]
+          },
+          "stageProcess": {
+            "median": 0.382981,
+            "min": 0.377034916,
+            "max": 0.388523417,
+            "samples": [
+              0.388523417,
+              0.382981,
+              0.377034916
+            ]
+          }
+        }
+      }
+    },
+    "prepared": {
+      "count": 2704,
+      "rawBytes": 282026757,
+      "uniqueBytes": 282026757,
+      "encodeWrite": {
+        "median": 4.54,
+        "min": 4.525,
+        "max": 4.606,
+        "samples": [
+          4.606,
+          4.54,
+          4.525
+        ]
+      },
+      "restore": {
+        "median": 5.136,
+        "min": 5.107,
+        "max": 5.34,
+        "samples": [
+          5.34,
+          5.107,
+          5.136
+        ]
+      },
+      "canonicalRoundtrip": {
+        "median": 7.382,
+        "min": 7.377,
+        "max": 7.748,
+        "samples": [
+          7.748,
+          7.382,
+          7.377
+        ]
+      },
+      "stageCold": {
+        "median": 9.983166917,
+        "min": 9.664408833,
+        "max": 10.164966459,
+        "samples": [
+          9.983166917,
+          9.664408833,
+          10.164966459
+        ]
+      },
+      "stageColdProcess": {
+        "median": 10.128635417,
+        "min": 9.795048542,
+        "max": 10.324160833,
+        "samples": [
+          10.128635417,
+          9.795048542,
+          10.324160833
+        ]
+      },
+      "edits": {
+        "leaf": {
+          "changed": 1,
+          "removed": 0,
+          "changedBytes": 13231,
+          "encodeWrite": {
+            "median": 0.001,
+            "min": 0.001,
+            "max": 0.001,
+            "samples": [
+              0.001,
+              0.001,
+              0.001
+            ]
+          },
+          "stage": {
+            "median": 0.086586167,
+            "min": 0.085334875,
+            "max": 0.159454875,
+            "samples": [
+              0.159454875,
+              0.086586167,
+              0.085334875
+            ]
+          },
+          "stageProcess": {
+            "median": 0.342234083,
+            "min": 0.334807667,
+            "max": 0.417208291,
+            "samples": [
+              0.417208291,
+              0.334807667,
+              0.342234083
+            ]
+          }
+        },
+        "shared": {
+          "changed": 2,
+          "removed": 0,
+          "changedBytes": 1293245,
+          "encodeWrite": {
+            "median": 0.127,
+            "min": 0.124,
+            "max": 0.13,
+            "samples": [
+              0.13,
+              0.127,
+              0.124
+            ]
+          },
+          "stage": {
+            "median": 0.103251625,
+            "min": 0.098609208,
+            "max": 0.15747225,
+            "samples": [
+              0.15747225,
+              0.103251625,
+              0.098609208
+            ]
+          },
+          "stageProcess": {
+            "median": 0.347284958,
+            "min": 0.346295375,
+            "max": 0.418484458,
+            "samples": [
+              0.418484458,
+              0.347284958,
+              0.346295375
+            ]
+          }
+        },
+        "ffi": {
+          "changed": 0,
+          "removed": 0,
+          "changedBytes": 0,
+          "encodeWrite": {
+            "median": 0,
+            "min": 0,
+            "max": 0,
+            "samples": [
+              0,
+              0,
+              0
+            ]
+          },
+          "stage": {
+            "median": 0.085415833,
+            "min": 0.084936292,
+            "max": 0.087953,
+            "samples": [
+              0.085415833,
+              0.084936292,
+              0.087953
+            ]
+          },
+          "stageProcess": {
+            "median": 0.332809375,
+            "min": 0.328438333,
+            "max": 0.342256125,
+            "samples": [
+              0.342256125,
+              0.328438333,
+              0.332809375
+            ]
+          }
+        }
+      }
+    },
+    "metadata": {
+      "count": 1,
+      "rawBytes": 20134333,
+      "uniqueBytes": 20134333,
+      "encodeWrite": {
+        "median": 0.686,
+        "min": 0.679,
+        "max": 0.693,
+        "samples": [
+          0.679,
+          0.686,
+          0.693
+        ]
+      },
+      "restore": {
+        "median": 1.157,
+        "min": 1.121,
+        "max": 1.179,
+        "samples": [
+          1.157,
+          1.121,
+          1.179
+        ]
+      },
+      "canonicalRoundtrip": {
+        "median": 0.459,
+        "min": 0.45,
+        "max": 0.49,
+        "samples": [
+          0.459,
+          0.45,
+          0.49
+        ]
+      },
+      "stageCold": {
+        "median": 0.393374584,
+        "min": 0.391880083,
+        "max": 0.400028917,
+        "samples": [
+          0.400028917,
+          0.391880083,
+          0.393374584
+        ]
+      },
+      "stageColdProcess": {
+        "median": 0.490379167,
+        "min": 0.482614417,
+        "max": 0.497709167,
+        "samples": [
+          0.490379167,
+          0.482614417,
+          0.497709167
+        ]
+      },
+      "edits": {
+        "leaf": {
+          "changed": 0,
+          "removed": 0,
+          "changedBytes": 0,
+          "encodeWrite": {
+            "median": 0,
+            "min": 0,
+            "max": 0,
+            "samples": [
+              0,
+              0,
+              0
+            ]
+          },
+          "stage": {
+            "median": 0.035939584,
+            "min": 0.035358333,
+            "max": 0.040119292,
+            "samples": [
+              0.040119292,
+              0.035358333,
+              0.035939584
+            ]
+          },
+          "stageProcess": {
+            "median": 0.134581708,
+            "min": 0.132684167,
+            "max": 0.150159667,
+            "samples": [
+              0.134581708,
+              0.132684167,
+              0.150159667
+            ]
+          }
+        },
+        "shared": {
+          "changed": 0,
+          "removed": 0,
+          "changedBytes": 0,
+          "encodeWrite": {
+            "median": 0,
+            "min": 0,
+            "max": 0,
+            "samples": [
+              0,
+              0,
+              0
+            ]
+          },
+          "stage": {
+            "median": 0.0365445,
+            "min": 0.035777,
+            "max": 0.037725375,
+            "samples": [
+              0.0365445,
+              0.035777,
+              0.037725375
+            ]
+          },
+          "stageProcess": {
+            "median": 0.132178166,
+            "min": 0.131192041,
+            "max": 0.146237875,
+            "samples": [
+              0.132178166,
+              0.131192041,
+              0.146237875
+            ]
+          }
+        },
+        "ffi": {
+          "changed": 0,
+          "removed": 0,
+          "changedBytes": 0,
+          "encodeWrite": {
+            "median": 0,
+            "min": 0,
+            "max": 0,
+            "samples": [
+              0,
+              0,
+              0
+            ]
+          },
+          "stage": {
+            "median": 0.036088959,
+            "min": 0.033848584,
+            "max": 0.037672875,
+            "samples": [
+              0.036088959,
+              0.037672875,
+              0.033848584
+            ]
+          },
+          "stageProcess": {
+            "median": 0.142596334,
+            "min": 0.131206,
+            "max": 0.14861575,
+            "samples": [
+              0.131206,
+              0.142596334,
+              0.14861575
+            ]
+          }
+        }
+      }
+    },
+    "direct": {
+      "count": 14650,
+      "rawBytes": 136689290,
+      "uniqueBytes": 128881841,
+      "encodeWrite": {
+        "median": 1.329,
+        "min": 1.32,
+        "max": 1.342,
+        "samples": [
+          1.342,
+          1.329,
+          1.32
+        ]
+      },
+      "restore": {
+        "median": 1.703,
+        "min": 1.612,
+        "max": 1.868,
+        "samples": [
+          1.703,
+          1.612,
+          1.868
+        ]
+      },
+      "canonicalRoundtrip": {
+        "median": 0.91,
+        "min": 0.837,
+        "max": 1.002,
+        "samples": [
+          1.002,
+          0.837,
+          0.91
+        ]
+      },
+      "stageCold": {
+        "median": 52.35648075,
+        "min": 51.723771,
+        "max": 55.515876333,
+        "samples": [
+          52.35648075,
+          51.723771,
+          55.515876333
+        ]
+      },
+      "stageColdProcess": {
+        "median": 52.508174625,
+        "min": 51.861547,
+        "max": 55.662244209,
+        "samples": [
+          52.508174625,
+          51.861547,
+          55.662244209
+        ]
+      },
+      "edits": {
+        "leaf": {
+          "changed": 1,
+          "removed": 0,
+          "changedBytes": 5146923,
+          "encodeWrite": {
+            "median": 0.266,
+            "min": 0.262,
+            "max": 0.276,
+            "samples": [
+              0.262,
+              0.266,
+              0.276
+            ]
+          },
+          "stage": {
+            "median": 0.332662167,
+            "min": 0.32545725,
+            "max": 0.492568333,
+            "samples": [
+              0.492568333,
+              0.32545725,
+              0.332662167
+            ]
+          },
+          "stageProcess": {
+            "median": 0.806789417,
+            "min": 0.757297792,
+            "max": 0.914180209,
+            "samples": [
+              0.914180209,
+              0.757297792,
+              0.806789417
+            ]
+          }
+        },
+        "shared": {
+          "changed": 1,
+          "removed": 0,
+          "changedBytes": 2127677,
+          "encodeWrite": {
+            "median": 0.089,
+            "min": 0.086,
+            "max": 0.094,
+            "samples": [
+              0.094,
+              0.086,
+              0.089
+            ]
+          },
+          "stage": {
+            "median": 0.320742166,
+            "min": 0.312503792,
+            "max": 0.409690417,
+            "samples": [
+              0.409690417,
+              0.312503792,
+              0.320742166
+            ]
+          },
+          "stageProcess": {
+            "median": 0.728273667,
+            "min": 0.721734917,
+            "max": 0.808012292,
+            "samples": [
+              0.808012292,
+              0.721734917,
+              0.728273667
+            ]
+          }
+        },
+        "ffi": {
+          "changed": 0,
+          "removed": 0,
+          "changedBytes": 0,
+          "encodeWrite": {
+            "median": 0,
+            "min": 0,
+            "max": 0,
+            "samples": [
+              0,
+              0,
+              0
+            ]
+          },
+          "stage": {
+            "median": 0.322693709,
+            "min": 0.31852,
+            "max": 0.323620208,
+            "samples": [
+              0.322693709,
+              0.31852,
+              0.323620208
+            ]
+          },
+          "stageProcess": {
+            "median": 0.723075083,
+            "min": 0.712967917,
+            "max": 0.724988334,
+            "samples": [
+              0.723075083,
+              0.712967917,
+              0.724988334
+            ]
+          }
+        }
+      }
+    },
+    "callers": {
+      "count": 2704,
+      "rawBytes": 200482413,
+      "uniqueBytes": 200429837,
+      "encodeWrite": {
+        "median": 1.562,
+        "min": 1.532,
+        "max": 1.629,
+        "samples": [
+          1.629,
+          1.532,
+          1.562
+        ]
+      },
+      "restore": {
+        "median": 2.106,
+        "min": 2.025,
+        "max": 2.126,
+        "samples": [
+          2.106,
+          2.025,
+          2.126
+        ]
+      },
+      "canonicalRoundtrip": {
+        "median": 1.358,
+        "min": 1.301,
+        "max": 1.416,
+        "samples": [
+          1.416,
+          1.301,
+          1.358
+        ]
+      },
+      "stageCold": {
+        "median": 8.931011417,
+        "min": 8.12520475,
+        "max": 9.824566583,
+        "samples": [
+          8.931011417,
+          8.12520475,
+          9.824566583
+        ]
+      },
+      "stageColdProcess": {
+        "median": 9.065111917,
+        "min": 8.272775125,
+        "max": 9.964472375,
+        "samples": [
+          9.065111917,
+          8.272775125,
+          9.964472375
+        ]
+      },
+      "edits": {
+        "leaf": {
+          "changed": 1,
+          "removed": 0,
+          "changedBytes": 25308,
+          "encodeWrite": {
+            "median": 0.001,
+            "min": 0.001,
+            "max": 0.001,
+            "samples": [
+              0.001,
+              0.001,
+              0.001
+            ]
+          },
+          "stage": {
+            "median": 0.08226425,
+            "min": 0.077631167,
+            "max": 0.141306417,
+            "samples": [
+              0.141306417,
+              0.077631167,
+              0.08226425
+            ]
+          },
+          "stageProcess": {
+            "median": 0.296391,
+            "min": 0.292260542,
+            "max": 0.363659958,
+            "samples": [
+              0.363659958,
+              0.296391,
+              0.292260542
+            ]
+          }
+        },
+        "shared": {
+          "changed": 1,
+          "removed": 0,
+          "changedBytes": 192850,
+          "encodeWrite": {
+            "median": 0.011,
+            "min": 0.011,
+            "max": 0.012,
+            "samples": [
+              0.011,
+              0.012,
+              0.011
+            ]
+          },
+          "stage": {
+            "median": 0.08084125,
+            "min": 0.07328425,
+            "max": 0.141509458,
+            "samples": [
+              0.141509458,
+              0.07328425,
+              0.08084125
+            ]
+          },
+          "stageProcess": {
+            "median": 0.293884209,
+            "min": 0.290261291,
+            "max": 0.36115475,
+            "samples": [
+              0.36115475,
+              0.293884209,
+              0.290261291
+            ]
+          }
+        },
+        "ffi": {
+          "changed": 0,
+          "removed": 0,
+          "changedBytes": 0,
+          "encodeWrite": {
+            "median": 0,
+            "min": 0,
+            "max": 0,
+            "samples": [
+              0,
+              0,
+              0
+            ]
+          },
+          "stage": {
+            "median": 0.075508541,
+            "min": 0.074805375,
+            "max": 0.134010792,
+            "samples": [
+              0.134010792,
+              0.075508541,
+              0.074805375
+            ]
+          },
+          "stageProcess": {
+            "median": 0.3009625,
+            "min": 0.282517333,
+            "max": 0.350431083,
+            "samples": [
+              0.350431083,
+              0.3009625,
+              0.282517333
+            ]
+          }
+        }
+      }
+    },
+    "transitive": {
+      "count": 20483,
+      "rawBytes": 184718956,
+      "uniqueBytes": 165987137,
+      "encodeWrite": {
+        "median": 2.135,
+        "min": 2.085,
+        "max": 2.216,
+        "samples": [
+          2.216,
+          2.135,
+          2.085
+        ]
+      },
+      "restore": {
+        "median": 1.978,
+        "min": 1.9,
+        "max": 2.038,
+        "samples": [
+          1.978,
+          1.9,
+          2.038
+        ]
+      },
+      "canonicalRoundtrip": {
+        "median": 1.045,
+        "min": 1.034,
+        "max": 1.167,
+        "samples": [
+          1.045,
+          1.034,
+          1.167
+        ]
+      },
+      "stageCold": {
+        "median": 75.543308166,
+        "min": 72.181651,
+        "max": 77.389815375,
+        "samples": [
+          77.389815375,
+          72.181651,
+          75.543308166
+        ]
+      },
+      "stageColdProcess": {
+        "median": 75.720260292,
+        "min": 72.376572875,
+        "max": 77.556159333,
+        "samples": [
+          77.556159333,
+          72.376572875,
+          75.720260292
+        ]
+      },
+      "edits": {
+        "leaf": {
+          "changed": 1,
+          "removed": 0,
+          "changedBytes": 6082851,
+          "encodeWrite": {
+            "median": 0.337,
+            "min": 0.319,
+            "max": 0.349,
+            "samples": [
+              0.337,
+              0.319,
+              0.349
+            ]
+          },
+          "stage": {
+            "median": 0.5550025,
+            "min": 0.472999584,
+            "max": 0.611139583,
+            "samples": [
+              0.611139583,
+              0.472999584,
+              0.5550025
+            ]
+          },
+          "stageProcess": {
+            "median": 1.120085167,
+            "min": 1.107477458,
+            "max": 1.164527083,
+            "samples": [
+              1.164527083,
+              1.107477458,
+              1.120085167
+            ]
+          }
+        },
+        "shared": {
+          "changed": 1,
+          "removed": 0,
+          "changedBytes": 2483203,
+          "encodeWrite": {
+            "median": 0.095,
+            "min": 0.093,
+            "max": 0.096,
+            "samples": [
+              0.095,
+              0.096,
+              0.093
+            ]
+          },
+          "stage": {
+            "median": 0.468591958,
+            "min": 0.468273708,
+            "max": 0.65168375,
+            "samples": [
+              0.65168375,
+              0.468591958,
+              0.468273708
+            ]
+          },
+          "stageProcess": {
+            "median": 1.029803333,
+            "min": 0.989591334,
+            "max": 1.176606167,
+            "samples": [
+              1.176606167,
+              1.029803333,
+              0.989591334
+            ]
+          }
+        },
+        "ffi": {
+          "changed": 0,
+          "removed": 0,
+          "changedBytes": 0,
+          "encodeWrite": {
+            "median": 0,
+            "min": 0,
+            "max": 0,
+            "samples": [
+              0,
+              0,
+              0
+            ]
+          },
+          "stage": {
+            "median": 0.4724405,
+            "min": 0.465880875,
+            "max": 0.540965917,
+            "samples": [
+              0.540965917,
+              0.4724405,
+              0.465880875
+            ]
+          },
+          "stageProcess": {
+            "median": 1.002228208,
+            "min": 0.989108875,
+            "max": 1.056373916,
+            "samples": [
+              1.056373916,
+              1.002228208,
+              0.989108875
+            ]
+          }
+        }
+      }
+    },
+    "contributions": {
+      "count": 16452,
+      "rawBytes": 346158642,
+      "uniqueBytes": 346045221,
+      "encodeWrite": {
+        "median": 5.127,
+        "min": 5.044,
+        "max": 5.39,
+        "samples": [
+          5.39,
+          5.127,
+          5.044
+        ]
+      },
+      "restore": {
+        "median": 3.7,
+        "min": 3.661,
+        "max": 3.873,
+        "samples": [
+          3.7,
+          3.661,
+          3.873
+        ]
+      },
+      "canonicalRoundtrip": {
+        "median": 4.262,
+        "min": 4.245,
+        "max": 4.322,
+        "samples": [
+          4.245,
+          4.262,
+          4.322
+        ]
+      },
+      "stageCold": {
+        "median": 72.376540083,
+        "min": 70.568695541,
+        "max": 73.379672791,
+        "samples": [
+          73.379672791,
+          70.568695541,
+          72.376540083
+        ]
+      },
+      "stageColdProcess": {
+        "median": 72.551539625,
+        "min": 70.793058833,
+        "max": 73.596756792,
+        "samples": [
+          73.596756792,
+          70.793058833,
+          72.551539625
+        ]
+      },
+      "edits": {
+        "leaf": {
+          "changed": 2,
+          "removed": 0,
+          "changedBytes": 28094,
+          "encodeWrite": {
+            "median": 0.001,
+            "min": 0.001,
+            "max": 0.001,
+            "samples": [
+              0.001,
+              0.001,
+              0.001
+            ]
+          },
+          "stage": {
+            "median": 0.3776505,
+            "min": 0.361558792,
+            "max": 0.544746333,
+            "samples": [
+              0.544746333,
+              0.3776505,
+              0.361558792
+            ]
+          },
+          "stageProcess": {
+            "median": 1.001155625,
+            "min": 0.970462084,
+            "max": 1.156810208,
+            "samples": [
+              1.156810208,
+              1.001155625,
+              0.970462084
+            ]
+          }
+        },
+        "shared": {
+          "changed": 2,
+          "removed": 1,
+          "changedBytes": 34386,
+          "encodeWrite": {
+            "median": 0.001,
+            "min": 0.001,
+            "max": 0.001,
+            "samples": [
+              0.001,
+              0.001,
+              0.001
+            ]
+          },
+          "stage": {
+            "median": 0.364539166,
+            "min": 0.3623025,
+            "max": 0.556734625,
+            "samples": [
+              0.556734625,
+              0.3623025,
+              0.364539166
+            ]
+          },
+          "stageProcess": {
+            "median": 0.925820416,
+            "min": 0.920469708,
+            "max": 1.147645959,
+            "samples": [
+              1.147645959,
+              0.925820416,
+              0.920469708
+            ]
+          }
+        },
+        "ffi": {
+          "changed": 0,
+          "removed": 0,
+          "changedBytes": 0,
+          "encodeWrite": {
+            "median": 0,
+            "min": 0,
+            "max": 0,
+            "samples": [
+              0,
+              0,
+              0
+            ]
+          },
+          "stage": {
+            "median": 0.393120541,
+            "min": 0.366908458,
+            "max": 0.596013375,
+            "samples": [
+              0.596013375,
+              0.393120541,
+              0.366908458
+            ]
+          },
+          "stageProcess": {
+            "median": 0.988275083,
+            "min": 0.961265542,
+            "max": 1.200046083,
+            "samples": [
+              1.200046083,
+              0.988275083,
+              0.961265542
+            ]
+          }
+        }
+      }
+    }
+  },
+  "models": {
+    "source-only": {
+      "kinds": [
+        "source"
+      ],
+      "bytes": 360039221,
+      "coldEncodeAndStage": 13.484564833,
+      "coldStageOnly": 10.107139709,
+      "edits": {
+        "leaf": {
+          "gross": {
+            "median": 1.186,
+            "min": 1.158,
+            "max": 1.227,
+            "samples": [
+              1.227,
+              1.158,
+              1.186
+            ]
+          },
+          "restoration": 5.382,
+          "changedSerialization": 0.001,
+          "marginalStagingProcesses": 0.423907125,
+          "knownCosts": 5.806907125,
+          "headroomBeforeProofAndRecomputation": -4.6209071250000004,
+          "headroomPercent": -10.188918448002843,
+          "residualBeforeProofAndRecomputation": 49.973190084,
+          "remainingBudgetForTenPercent": -9.1561354209,
+          "remainingBudgetForThirtySeconds": -19.973190084000002,
+          "accounted": [
+            {
+              "pair": 1,
+              "process": 44.717119334,
+              "gross": 1.227,
+              "headroom": -4.579907125,
+              "percent": -10.241954743980424,
+              "residual": 49.297026459,
+              "tenPercentBudget": -9.0516190584
+            },
+            {
+              "pair": 2,
+              "process": 45.795468958,
+              "gross": 1.158,
+              "headroom": -4.648907125000001,
+              "percent": -10.151456532225081,
+              "residual": 50.444376083,
+              "tenPercentBudget": -9.228454020800001
+            },
+            {
+              "pair": 3,
+              "process": 45.352282959,
+              "gross": 1.186,
+              "headroom": -4.6209071250000004,
+              "percent": -10.188918448002843,
+              "residual": 49.973190084,
+              "tenPercentBudget": -9.1561354209
+            }
+          ],
+          "residualDistribution": {
+            "median": 49.973190084,
+            "min": 49.297026459,
+            "max": 50.444376083,
+            "samples": [
+              49.297026459,
+              50.444376083,
+              49.973190084
+            ]
+          },
+          "detailedObserverRepresentative": true
+        },
+        "shared": {
+          "gross": {
+            "median": 1.162,
+            "min": 1.154,
+            "max": 1.176,
+            "samples": [
+              1.176,
+              1.162,
+              1.154
+            ]
+          },
+          "restoration": 5.382,
+          "changedSerialization": 0.022,
+          "marginalStagingProcesses": 0.398228042,
+          "knownCosts": 5.802228042,
+          "headroomBeforeProofAndRecomputation": -4.640228042,
+          "headroomPercent": -9.879996278816503,
+          "residualBeforeProofAndRecomputation": 51.695088292,
+          "remainingBudgetForTenPercent": -9.352914067,
+          "remainingBudgetForThirtySeconds": -21.695088292,
+          "accounted": [
+            {
+              "pair": 1,
+              "process": 50.234122666,
+              "gross": 1.176,
+              "headroom": -4.626228042,
+              "percent": -9.209333808334177,
+              "residual": 54.860350708,
+              "tenPercentBudget": -9.6496403086
+            },
+            {
+              "pair": 2,
+              "process": 46.204930208,
+              "gross": 1.162,
+              "headroom": -4.640228042,
+              "percent": -10.042711938122533,
+              "residual": 50.84515825,
+              "tenPercentBudget": -9.260721062800002
+            },
+            {
+              "pair": 3,
+              "process": 47.04686025,
+              "gross": 1.154,
+              "headroom": -4.648228042,
+              "percent": -9.879996278816503,
+              "residual": 51.695088292,
+              "tenPercentBudget": -9.352914067
+            }
+          ],
+          "residualDistribution": {
+            "median": 51.695088292,
+            "min": 50.84515825,
+            "max": 54.860350708,
+            "samples": [
+              54.860350708,
+              50.84515825,
+              51.695088292
+            ]
+          },
+          "detailedObserverRepresentative": true
+        },
+        "ffi": {
+          "gross": {
+            "median": 1.178,
+            "min": 1.159,
+            "max": 1.198,
+            "samples": [
+              1.178,
+              1.198,
+              1.159
+            ]
+          },
+          "restoration": 5.382,
+          "changedSerialization": 0,
+          "marginalStagingProcesses": 0.382981,
+          "knownCosts": 5.764981,
+          "headroomBeforeProofAndRecomputation": -4.586981,
+          "headroomPercent": -13.027659085329706,
+          "residualBeforeProofAndRecomputation": 39.623018083,
+          "remainingBudgetForTenPercent": -8.0725847083,
+          "remainingBudgetForThirtySeconds": -9.623018082999998,
+          "accounted": [
+            {
+              "pair": 1,
+              "process": 36.328238625,
+              "gross": 1.178,
+              "headroom": -4.586981,
+              "percent": -12.626488851687341,
+              "residual": 40.915219625,
+              "tenPercentBudget": -8.2198048625
+            },
+            {
+              "pair": 2,
+              "process": 35.056037083,
+              "gross": 1.198,
+              "headroom": -4.566981,
+              "percent": -13.027659085329706,
+              "residual": 39.623018083,
+              "tenPercentBudget": -8.0725847083
+            },
+            {
+              "pair": 3,
+              "process": 34.559920875,
+              "gross": 1.159,
+              "headroom": -4.605981,
+              "percent": -13.327521832759404,
+              "residual": 39.165901875,
+              "tenPercentBudget": -8.0619730875
+            }
+          ],
+          "residualDistribution": {
+            "median": 39.623018083,
+            "min": 39.165901875,
+            "max": 40.915219625,
+            "samples": [
+              40.915219625,
+              39.623018083,
+              39.165901875
+            ]
+          },
+          "detailedObserverRepresentative": true
+        }
+      },
+      "caveats": [
+        "No new dependency proofs, input index or affected-region computation is implemented.",
+        "Separate probe processes do not measure GC interaction with the complete backend.",
+        "Per-family staging processes are additive estimates; shared transactions may amortize startup and index costs.",
+        "Object-cost medians are additive assumptions, not an integrated performance trial; residuals use individual backend samples and their paired observer.",
+        "Final instantiations alone do not supply the provenance needed to retract contributions after source edits."
+      ]
+    },
+    "prepared-and-metadata": {
+      "kinds": [
+        "prepared",
+        "metadata"
+      ],
+      "bytes": 302161090,
+      "coldEncodeAndStage": 15.845014584000001,
+      "coldStageOnly": 10.376541501,
+      "edits": {
+        "leaf": {
+          "gross": {
+            "median": 16.189,
+            "min": 15.95,
+            "max": 16.673,
+            "samples": [
+              16.189,
+              15.95,
+              16.673
+            ]
+          },
+          "restoration": 6.293,
+          "changedSerialization": 0.001,
+          "marginalStagingProcesses": 0.47681579100000004,
+          "knownCosts": 6.770815791,
+          "headroomBeforeProofAndRecomputation": 9.418184209,
+          "headroomPercent": 21.061697062044473,
+          "residualBeforeProofAndRecomputation": 35.45009875,
+          "remainingBudgetForTenPercent": 4.946472275599999,
+          "remainingBudgetForThirtySeconds": -5.450098750000002,
+          "accounted": [
+            {
+              "pair": 1,
+              "process": 44.717119334,
+              "gross": 16.189,
+              "headroom": 9.418184209,
+              "percent": 21.061697062044473,
+              "residual": 35.298935125,
+              "tenPercentBudget": 4.946472275599999
+            },
+            {
+              "pair": 2,
+              "process": 45.795468958,
+              "gross": 15.95,
+              "headroom": 9.179184208999999,
+              "percent": 20.043869880267902,
+              "residual": 36.616284749,
+              "tenPercentBudget": 4.599637313199999
+            },
+            {
+              "pair": 3,
+              "process": 45.352282959,
+              "gross": 16.673,
+              "headroom": 9.902184208999998,
+              "percent": 21.833926680056894,
+              "residual": 35.45009875,
+              "tenPercentBudget": 5.366955913099997
+            }
+          ],
+          "residualDistribution": {
+            "median": 35.45009875,
+            "min": 35.298935125,
+            "max": 36.616284749,
+            "samples": [
+              35.298935125,
+              36.616284749,
+              35.45009875
+            ]
+          },
+          "detailedObserverRepresentative": true
+        },
+        "shared": {
+          "gross": {
+            "median": 16.169999999999998,
+            "min": 16.142,
+            "max": 16.574,
+            "samples": [
+              16.574,
+              16.169999999999998,
+              16.142
+            ]
+          },
+          "restoration": 6.293,
+          "changedSerialization": 0.127,
+          "marginalStagingProcesses": 0.479463124,
+          "knownCosts": 6.899463124,
+          "headroomBeforeProofAndRecomputation": 9.270536875999998,
+          "headroomPercent": 19.645385105162248,
+          "residualBeforeProofAndRecomputation": 37.804323374000006,
+          "remainingBudgetForTenPercent": 4.650043855199997,
+          "remainingBudgetForThirtySeconds": -7.804323374000006,
+          "accounted": [
+            {
+              "pair": 1,
+              "process": 50.234122666,
+              "gross": 16.574,
+              "headroom": 9.674536876000001,
+              "percent": 19.25889487574952,
+              "residual": 40.55958579,
+              "tenPercentBudget": 4.651124609400001
+            },
+            {
+              "pair": 2,
+              "process": 46.204930208,
+              "gross": 16.169999999999998,
+              "headroom": 9.270536875999998,
+              "percent": 20.063956019989575,
+              "residual": 36.934393332,
+              "tenPercentBudget": 4.650043855199997
+            },
+            {
+              "pair": 3,
+              "process": 47.04686025,
+              "gross": 16.142,
+              "headroom": 9.242536875999999,
+              "percent": 19.645385105162248,
+              "residual": 37.804323374000006,
+              "tenPercentBudget": 4.537850850999999
+            }
+          ],
+          "residualDistribution": {
+            "median": 37.804323374000006,
+            "min": 36.934393332,
+            "max": 40.55958579,
+            "samples": [
+              40.55958579,
+              36.934393332,
+              37.804323374000006
+            ]
+          },
+          "detailedObserverRepresentative": true
+        },
+        "ffi": {
+          "gross": {
+            "median": 11.516,
+            "min": 11.408,
+            "max": 11.576,
+            "samples": [
+              11.516,
+              11.576,
+              11.408
+            ]
+          },
+          "restoration": 6.293,
+          "changedSerialization": 0,
+          "marginalStagingProcesses": 0.475405709,
+          "knownCosts": 6.7684057090000005,
+          "headroomBeforeProofAndRecomputation": 4.7475942909999995,
+          "headroomPercent": 13.424782735414752,
+          "residualBeforeProofAndRecomputation": 30.248442792,
+          "remainingBudgetForTenPercent": 1.1836022034999987,
+          "remainingBudgetForThirtySeconds": -0.24844279199999875,
+          "accounted": [
+            {
+              "pair": 1,
+              "process": 36.328238625,
+              "gross": 11.516,
+              "headroom": 4.7475942909999995,
+              "percent": 13.068605775268303,
+              "residual": 31.580644334,
+              "tenPercentBudget": 1.1147704284999995
+            },
+            {
+              "pair": 2,
+              "process": 35.056037083,
+              "gross": 11.576,
+              "headroom": 4.807594291,
+              "percent": 13.714026715619218,
+              "residual": 30.248442792,
+              "tenPercentBudget": 1.3019905826999998
+            },
+            {
+              "pair": 3,
+              "process": 34.559920875,
+              "gross": 11.408,
+              "headroom": 4.639594290999999,
+              "percent": 13.424782735414752,
+              "residual": 29.920326584000005,
+              "tenPercentBudget": 1.1836022034999987
+            }
+          ],
+          "residualDistribution": {
+            "median": 30.248442792,
+            "min": 29.920326584000005,
+            "max": 31.580644334,
+            "samples": [
+              31.580644334,
+              30.248442792,
+              29.920326584000005
+            ]
+          },
+          "detailedObserverRepresentative": true
+        }
+      },
+      "caveats": [
+        "No new dependency proofs, input index or affected-region computation is implemented.",
+        "Separate probe processes do not measure GC interaction with the complete backend.",
+        "Per-family staging processes are additive estimates; shared transactions may amortize startup and index costs.",
+        "Object-cost medians are additive assumptions, not an integrated performance trial; residuals use individual backend samples and their paired observer.",
+        "Final instantiations alone do not supply the provenance needed to retract contributions after source edits."
+      ]
+    },
+    "prepared-with-contributions": {
+      "kinds": [
+        "prepared",
+        "metadata",
+        "callers",
+        "contributions"
+      ],
+      "bytes": 848636148,
+      "coldEncodeAndStage": 104.150666126,
+      "coldStageOnly": 91.684093001,
+      "edits": {
+        "leaf": {
+          "gross": {
+            "median": 16.189,
+            "min": 15.95,
+            "max": 16.673,
+            "samples": [
+              16.189,
+              15.95,
+              16.673
+            ]
+          },
+          "restoration": 12.099,
+          "changedSerialization": 0.003,
+          "marginalStagingProcesses": 1.774362416,
+          "knownCosts": 13.876362416000001,
+          "headroomBeforeProofAndRecomputation": 2.312637583999999,
+          "headroomPercent": 5.171705195780845,
+          "residualBeforeProofAndRecomputation": 42.555645375000005,
+          "remainingBudgetForTenPercent": -2.1590743494000018,
+          "remainingBudgetForThirtySeconds": -12.555645375000005,
+          "accounted": [
+            {
+              "pair": 1,
+              "process": 44.717119334,
+              "gross": 16.189,
+              "headroom": 2.312637583999999,
+              "percent": 5.171705195780845,
+              "residual": 42.40448175,
+              "tenPercentBudget": -2.1590743494000018
+            },
+            {
+              "pair": 2,
+              "process": 45.795468958,
+              "gross": 15.95,
+              "headroom": 2.0736375839999983,
+              "percent": 4.528040942001872,
+              "residual": 43.721831374000004,
+              "tenPercentBudget": -2.5059093118000018
+            },
+            {
+              "pair": 3,
+              "process": 45.352282959,
+              "gross": 16.673,
+              "headroom": 2.7966375839999973,
+              "percent": 6.16647586744035,
+              "residual": 42.555645375000005,
+              "tenPercentBudget": -1.7385907119000032
+            }
+          ],
+          "residualDistribution": {
+            "median": 42.555645375000005,
+            "min": 42.40448175,
+            "max": 43.721831374000004,
+            "samples": [
+              42.40448175,
+              43.721831374000004,
+              42.555645375000005
+            ]
+          },
+          "detailedObserverRepresentative": true
+        },
+        "shared": {
+          "gross": {
+            "median": 16.169999999999998,
+            "min": 16.142,
+            "max": 16.574,
+            "samples": [
+              16.574,
+              16.169999999999998,
+              16.142
+            ]
+          },
+          "restoration": 12.099,
+          "changedSerialization": 0.139,
+          "marginalStagingProcesses": 1.699167749,
+          "knownCosts": 13.937167749,
+          "headroomBeforeProofAndRecomputation": 2.232832250999998,
+          "headroomPercent": 4.832454547487665,
+          "residualBeforeProofAndRecomputation": 44.842027999,
+          "remainingBudgetForTenPercent": -2.3876607698000027,
+          "remainingBudgetForThirtySeconds": -14.842027999000003,
+          "accounted": [
+            {
+              "pair": 1,
+              "process": 50.234122666,
+              "gross": 16.574,
+              "headroom": 2.6368322510000013,
+              "percent": 5.249085902289861,
+              "residual": 47.597290414999996,
+              "tenPercentBudget": -2.386580015599999
+            },
+            {
+              "pair": 2,
+              "process": 46.204930208,
+              "gross": 16.169999999999998,
+              "headroom": 2.232832250999998,
+              "percent": 4.832454547487665,
+              "residual": 43.972097957,
+              "tenPercentBudget": -2.3876607698000027
+            },
+            {
+              "pair": 3,
+              "process": 47.04686025,
+              "gross": 16.142,
+              "headroom": 2.204832250999999,
+              "percent": 4.686459923752295,
+              "residual": 44.842027999,
+              "tenPercentBudget": -2.499853774000001
+            }
+          ],
+          "residualDistribution": {
+            "median": 44.842027999,
+            "min": 43.972097957,
+            "max": 47.597290414999996,
+            "samples": [
+              47.597290414999996,
+              43.972097957,
+              44.842027999
+            ]
+          },
+          "detailedObserverRepresentative": true
+        },
+        "ffi": {
+          "gross": {
+            "median": 11.516,
+            "min": 11.408,
+            "max": 11.576,
+            "samples": [
+              11.516,
+              11.576,
+              11.408
+            ]
+          },
+          "restoration": 12.099,
+          "changedSerialization": 0,
+          "marginalStagingProcesses": 1.7646432920000001,
+          "knownCosts": 13.863643292,
+          "headroomBeforeProofAndRecomputation": -2.3476432920000008,
+          "headroomPercent": -6.525675696267919,
+          "residualBeforeProofAndRecomputation": 37.343680375,
+          "remainingBudgetForTenPercent": -5.911635379500002,
+          "remainingBudgetForThirtySeconds": -7.343680374999998,
+          "accounted": [
+            {
+              "pair": 1,
+              "process": 36.328238625,
+              "gross": 11.516,
+              "headroom": -2.3476432920000008,
+              "percent": -6.46230970962744,
+              "residual": 38.675881917,
+              "tenPercentBudget": -5.980467154500001
+            },
+            {
+              "pair": 2,
+              "process": 35.056037083,
+              "gross": 11.576,
+              "headroom": -2.2876432920000003,
+              "percent": -6.525675696267919,
+              "residual": 37.343680375,
+              "tenPercentBudget": -5.793247000300001
+            },
+            {
+              "pair": 3,
+              "process": 34.559920875,
+              "gross": 11.408,
+              "headroom": -2.4556432920000013,
+              "percent": -7.10546560821662,
+              "residual": 37.01556416700001,
+              "tenPercentBudget": -5.911635379500002
+            }
+          ],
+          "residualDistribution": {
+            "median": 37.343680375,
+            "min": 37.01556416700001,
+            "max": 38.675881917,
+            "samples": [
+              38.675881917,
+              37.343680375,
+              37.01556416700001
+            ]
+          },
+          "detailedObserverRepresentative": true
+        }
+      },
+      "caveats": [
+        "No new dependency proofs, input index or affected-region computation is implemented.",
+        "Separate probe processes do not measure GC interaction with the complete backend.",
+        "Per-family staging processes are additive estimates; shared transactions may amortize startup and index costs.",
+        "Object-cost medians are additive assumptions, not an integrated performance trial; residuals use individual backend samples and their paired observer.",
+        "Final instantiations alone do not supply the provenance needed to retract contributions after source edits."
+      ]
+    },
+    "caller-and-transitive-contributions": {
+      "kinds": [
+        "callers",
+        "contributions"
+      ],
+      "bytes": 546475058,
+      "coldEncodeAndStage": 88.305651542,
+      "coldStageOnly": 81.30755149999999,
+      "edits": {
+        "leaf": {
+          "gross": {
+            "median": 8.823,
+            "min": 8.705,
+            "max": 9.125,
+            "samples": [
+              9.125,
+              8.705,
+              8.823
+            ]
+          },
+          "restoration": 5.806,
+          "changedSerialization": 0.002,
+          "marginalStagingProcesses": 1.297546625,
+          "knownCosts": 7.105546625,
+          "headroomBeforeProofAndRecomputation": 1.7174533750000007,
+          "headroomPercent": 3.786917136128818,
+          "residualBeforeProofAndRecomputation": 43.634829584,
+          "remainingBudgetForTenPercent": -2.8177749209,
+          "remainingBudgetForThirtySeconds": -13.634829584000002,
+          "accounted": [
+            {
+              "pair": 1,
+              "process": 44.717119334,
+              "gross": 9.125,
+              "headroom": 2.0194533750000003,
+              "percent": 4.516063210414671,
+              "residual": 42.697665959000005,
+              "tenPercentBudget": -2.4522585584000005
+            },
+            {
+              "pair": 2,
+              "process": 45.795468958,
+              "gross": 8.705,
+              "headroom": 1.5994533750000004,
+              "percent": 3.492601804049421,
+              "residual": 44.196015583,
+              "tenPercentBudget": -2.9800935207999997
+            },
+            {
+              "pair": 3,
+              "process": 45.352282959,
+              "gross": 8.823,
+              "headroom": 1.7174533750000007,
+              "percent": 3.786917136128818,
+              "residual": 43.634829584,
+              "tenPercentBudget": -2.8177749209
+            }
+          ],
+          "residualDistribution": {
+            "median": 43.634829584,
+            "min": 42.697665959000005,
+            "max": 44.196015583,
+            "samples": [
+              42.697665959000005,
+              44.196015583,
+              43.634829584
+            ]
+          },
+          "detailedObserverRepresentative": true
+        },
+        "shared": {
+          "gross": {
+            "median": 9.017,
+            "min": 8.579,
+            "max": 9.030000000000001,
+            "samples": [
+              9.030000000000001,
+              8.579,
+              9.017
+            ]
+          },
+          "restoration": 5.806,
+          "changedSerialization": 0.012,
+          "marginalStagingProcesses": 1.2197046249999999,
+          "knownCosts": 7.037704625,
+          "headroomBeforeProofAndRecomputation": 1.9792953749999995,
+          "headroomPercent": 3.966020046267172,
+          "residualBeforeProofAndRecomputation": 45.067564875,
+          "remainingBudgetForTenPercent": -3.031116891599999,
+          "remainingBudgetForThirtySeconds": -15.067564875000002,
+          "accounted": [
+            {
+              "pair": 1,
+              "process": 50.234122666,
+              "gross": 9.030000000000001,
+              "headroom": 1.9922953750000012,
+              "percent": 3.966020046267172,
+              "residual": 48.24182729099999,
+              "tenPercentBudget": -3.031116891599999
+            },
+            {
+              "pair": 2,
+              "process": 46.204930208,
+              "gross": 8.579,
+              "headroom": 1.5412953750000007,
+              "percent": 3.3357811992390767,
+              "residual": 44.663634833,
+              "tenPercentBudget": -3.0791976458
+            },
+            {
+              "pair": 3,
+              "process": 47.04686025,
+              "gross": 9.017,
+              "headroom": 1.9792953749999995,
+              "percent": 4.2070721924530545,
+              "residual": 45.067564875,
+              "tenPercentBudget": -2.7253906500000005
+            }
+          ],
+          "residualDistribution": {
+            "median": 45.067564875,
+            "min": 44.663634833,
+            "max": 48.24182729099999,
+            "samples": [
+              48.24182729099999,
+              44.663634833,
+              45.067564875
+            ]
+          },
+          "detailedObserverRepresentative": true
+        },
+        "ffi": {
+          "gross": {
+            "median": 9,
+            "min": 8.662,
+            "max": 9.147,
+            "samples": [
+              9,
+              9.147,
+              8.662
+            ]
+          },
+          "restoration": 5.806,
+          "changedSerialization": 0,
+          "marginalStagingProcesses": 1.289237583,
+          "knownCosts": 7.095237583,
+          "headroomBeforeProofAndRecomputation": 1.9047624169999997,
+          "headroomPercent": 5.243200576449637,
+          "residualBeforeProofAndRecomputation": 33.004274666,
+          "remainingBudgetForTenPercent": -1.7280614455000003,
+          "remainingBudgetForThirtySeconds": -3.0042746660000006,
+          "accounted": [
+            {
+              "pair": 1,
+              "process": 36.328238625,
+              "gross": 9,
+              "headroom": 1.9047624169999997,
+              "percent": 5.243200576449637,
+              "residual": 34.423476208,
+              "tenPercentBudget": -1.7280614455000003
+            },
+            {
+              "pair": 2,
+              "process": 35.056037083,
+              "gross": 9.147,
+              "headroom": 2.051762417,
+              "percent": 5.852807640926924,
+              "residual": 33.004274666,
+              "tenPercentBudget": -1.4538412913000003
+            },
+            {
+              "pair": 3,
+              "process": 34.559920875,
+              "gross": 8.662,
+              "headroom": 1.5667624170000005,
+              "percent": 4.533466447064024,
+              "residual": 32.993158458,
+              "tenPercentBudget": -1.8892296704999998
+            }
+          ],
+          "residualDistribution": {
+            "median": 33.004274666,
+            "min": 32.993158458,
+            "max": 34.423476208,
+            "samples": [
+              34.423476208,
+              33.004274666,
+              32.993158458
+            ]
+          },
+          "detailedObserverRepresentative": true
+        }
+      },
+      "caveats": [
+        "No new dependency proofs, input index or affected-region computation is implemented.",
+        "Separate probe processes do not measure GC interaction with the complete backend.",
+        "Per-family staging processes are additive estimates; shared transactions may amortize startup and index costs.",
+        "Object-cost medians are additive assumptions, not an integrated performance trial; residuals use individual backend samples and their paired observer.",
+        "Final instantiations alone do not supply the provenance needed to retract contributions after source edits."
+      ]
+    },
+    "final-instantiations": {
+      "kinds": [
+        "transitive"
+      ],
+      "bytes": 165987137,
+      "coldEncodeAndStage": 77.85526029200001,
+      "coldStageOnly": 75.543308166,
+      "edits": {
+        "leaf": {
+          "gross": {
+            "median": 8.823,
+            "min": 8.705,
+            "max": 9.125,
+            "samples": [
+              9.125,
+              8.705,
+              8.823
+            ]
+          },
+          "restoration": 1.978,
+          "changedSerialization": 0.337,
+          "marginalStagingProcesses": 1.120085167,
+          "knownCosts": 3.435085167,
+          "headroomBeforeProofAndRecomputation": 5.387914833,
+          "headroomPercent": 11.88014027402073,
+          "residualBeforeProofAndRecomputation": 39.964368126,
+          "remainingBudgetForTenPercent": 0.8526865370999994,
+          "remainingBudgetForThirtySeconds": -9.964368125999997,
+          "accounted": [
+            {
+              "pair": 1,
+              "process": 44.717119334,
+              "gross": 9.125,
+              "headroom": 5.689914833,
+              "percent": 12.724242790554168,
+              "residual": 39.027204501,
+              "tenPercentBudget": 1.2182028995999987
+            },
+            {
+              "pair": 2,
+              "process": 45.795468958,
+              "gross": 8.705,
+              "headroom": 5.269914833,
+              "percent": 11.507502713495848,
+              "residual": 40.525554125,
+              "tenPercentBudget": 0.6903679371999996
+            },
+            {
+              "pair": 3,
+              "process": 45.352282959,
+              "gross": 8.823,
+              "headroom": 5.387914833,
+              "percent": 11.88014027402073,
+              "residual": 39.964368126,
+              "tenPercentBudget": 0.8526865370999994
+            }
+          ],
+          "residualDistribution": {
+            "median": 39.964368126,
+            "min": 39.027204501,
+            "max": 40.525554125,
+            "samples": [
+              39.027204501,
+              40.525554125,
+              39.964368126
+            ]
+          },
+          "detailedObserverRepresentative": true
+        },
+        "shared": {
+          "gross": {
+            "median": 9.017,
+            "min": 8.579,
+            "max": 9.030000000000001,
+            "samples": [
+              9.030000000000001,
+              8.579,
+              9.017
+            ]
+          },
+          "restoration": 1.978,
+          "changedSerialization": 0.095,
+          "marginalStagingProcesses": 1.029803333,
+          "knownCosts": 3.1028033329999998,
+          "headroomBeforeProofAndRecomputation": 5.914196667,
+          "headroomPercent": 11.851974761887732,
+          "residualBeforeProofAndRecomputation": 41.132663583,
+          "remainingBudgetForTenPercent": 0.9037844004000011,
+          "remainingBudgetForThirtySeconds": -11.132663583000003,
+          "accounted": [
+            {
+              "pair": 1,
+              "process": 50.234122666,
+              "gross": 9.030000000000001,
+              "headroom": 5.927196667000001,
+              "percent": 11.7991443911724,
+              "residual": 44.30692599899999,
+              "tenPercentBudget": 0.9037844004000011
+            },
+            {
+              "pair": 2,
+              "process": 46.204930208,
+              "gross": 8.579,
+              "headroom": 5.476196667000001,
+              "percent": 11.851974761887732,
+              "residual": 40.728733541,
+              "tenPercentBudget": 0.8557036462000003
+            },
+            {
+              "pair": 3,
+              "process": 47.04686025,
+              "gross": 9.017,
+              "headroom": 5.914196667,
+              "percent": 12.57086367841093,
+              "residual": 41.132663583,
+              "tenPercentBudget": 1.2095106419999997
+            }
+          ],
+          "residualDistribution": {
+            "median": 41.132663583,
+            "min": 40.728733541,
+            "max": 44.30692599899999,
+            "samples": [
+              44.30692599899999,
+              40.728733541,
+              41.132663583
+            ]
+          },
+          "detailedObserverRepresentative": true
+        },
+        "ffi": {
+          "gross": {
+            "median": 9,
+            "min": 8.662,
+            "max": 9.147,
+            "samples": [
+              9,
+              9.147,
+              8.662
+            ]
+          },
+          "restoration": 1.978,
+          "changedSerialization": 0,
+          "marginalStagingProcesses": 1.002228208,
+          "knownCosts": 2.9802282079999998,
+          "headroomBeforeProofAndRecomputation": 6.019771792,
+          "headroomPercent": 16.570502781980117,
+          "residualBeforeProofAndRecomputation": 28.889265291,
+          "remainingBudgetForTenPercent": 2.3869479295000002,
+          "remainingBudgetForThirtySeconds": 1.110734708999999,
+          "accounted": [
+            {
+              "pair": 1,
+              "process": 36.328238625,
+              "gross": 9,
+              "headroom": 6.019771792,
+              "percent": 16.570502781980117,
+              "residual": 30.308466832999997,
+              "tenPercentBudget": 2.3869479295000002
+            },
+            {
+              "pair": 2,
+              "process": 35.056037083,
+              "gross": 9.147,
+              "headroom": 6.1667717920000005,
+              "percent": 17.591183445519864,
+              "residual": 28.889265291,
+              "tenPercentBudget": 2.6611680837000002
+            },
+            {
+              "pair": 3,
+              "process": 34.559920875,
+              "gross": 8.662,
+              "headroom": 5.681771792000001,
+              "percent": 16.44034953827133,
+              "residual": 28.878149083000004,
+              "tenPercentBudget": 2.2257797045000007
+            }
+          ],
+          "residualDistribution": {
+            "median": 28.889265291,
+            "min": 28.878149083000004,
+            "max": 30.308466832999997,
+            "samples": [
+              30.308466832999997,
+              28.889265291,
+              28.878149083000004
+            ]
+          },
+          "detailedObserverRepresentative": true
+        }
+      },
+      "caveats": [
+        "No new dependency proofs, input index or affected-region computation is implemented.",
+        "Separate probe processes do not measure GC interaction with the complete backend.",
+        "Per-family staging processes are additive estimates; shared transactions may amortize startup and index costs.",
+        "Object-cost medians are additive assumptions, not an integrated performance trial; residuals use individual backend samples and their paired observer.",
+        "Final instantiations alone do not supply the provenance needed to retract contributions after source edits."
+      ]
+    }
+  },
+  "acceptance": false,
+  "scope": "Measured object costs and zero-proof headroom; a decision aid before P01, not optimization acceptance."
+}

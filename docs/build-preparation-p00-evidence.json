@@ -1,0 +1,231 @@
+{
+  "schema": 1,
+  "campaign": "/Users/0x1/Documents/htdocs/.gopurs-evidence/p00-20261019",
+  "created": "2026-10-19T09:56:50.196Z",
+  "scope": "P00 reconstituted baseline and codec accounting; no incremental preparation optimization accepted.",
+  "repositories": {
+    "gopurs/gopurs": {
+      "commit": "0d597f52236fff9266e426c27aa8f51306ad7842",
+      "status": "M todo.md\n M tools/driver-source-cache.test.mjs\n?? docs/build-preparation-baseline.md\n?? tests/host/PreparationTransitions/\n?? tools/preparation-analyze.mjs\n?? tools/preparation-baseline.mjs\n?? tools/preparation-codec-measure.mjs\n?? tools/preparation-measure.mjs\n?? tools/preparation-observe.mjs\n?? tools/preparation-observe.py\n?? tools/preparation-probe-build.mjs\n?? tools/preparation-probe/\n?? tools/preparation-source-variants.mjs\n?? tools/preparation-transition-oracles.mjs\n?? tools/preparation-validate.mjs"
+    },
+    "purescript-backend-optimizer-gopurs": {
+      "commit": "40d759ec0c919239d2b8cd4bace326ea7773d3ac",
+      "status": ""
+    },
+    "b8x": {
+      "commit": "67b6799fc754f4cd7bc4f9c4761188983f41dece",
+      "status": "",
+      "sourceRevision": "e6a34696a3fc4089296030a2fea9fecb92db5490",
+      "sourceArchiveSHA256": "7545bc7bf1086662c866fe298745d43dc06043e1b72f345ec4ddfddd9b91303d"
+    }
+  },
+  "toolchain": {
+    "go": "go version go1.27.0 darwin/arm64",
+    "node": "v24.8.0",
+    "purs": "0.15.16 [development build; commit: 3c8fcfd7a3d440bba487fe9fe059284cffc6e908 DIRTY]",
+    "spago": "1.0.3"
+  },
+  "files": {
+    "provenance.json": {
+      "bytes": 783828,
+      "sha256": "123bc44c12f0e983f28e626556cbd7a3615555af99397d65f9e1ed006ada0f6b"
+    },
+    "source-inventory.json": {
+      "bytes": 735290,
+      "sha256": "92c2ac49da8dcc954cdf4bb5efab8eb38d768cb87af5f3d2911c53f6a70bd68b"
+    },
+    "frontend-base.json": {
+      "bytes": 750527,
+      "sha256": "51649821864507fb797ab5bdea73f26780f6aadffd5d780e0e48b211f876f7c2"
+    },
+    "measurement/results.json": {
+      "bytes": 128878,
+      "sha256": "5876bb96d237f591be8108ec102818fda46a640dcd307a74411380a304b04300"
+    },
+    "measurement/business-oracles.json": {
+      "bytes": 18195917,
+      "sha256": "c743b12b9861720b4013523c67260c7a749934b6bd7384950c5f8e28bab11e5c"
+    },
+    "analysis/timings.json": {
+      "bytes": 151483,
+      "sha256": "fe20d7170995d8f7b466d6ff32cec3ba7d2f9e253425ab42016a34fdc5e155c5"
+    },
+    "analysis/timings.csv": {
+      "bytes": 13415,
+      "sha256": "a34ce150b597f618fb4090d94c800a8141e4d6274ebb3be387d1f58ee03fd67b"
+    },
+    "analysis/costs.json": {
+      "bytes": 59739,
+      "sha256": "397ca428acb069f43bbf92aa86e6100d76ed4d9eec295378d0407586faf37ab5"
+    },
+    "codec/build-logs/summary.json": {
+      "bytes": 629,
+      "sha256": "da3ddcc08c3b5aa2e6944fa43ca2a574a5f2cd63d074bb63b8e0ebc4f2506386"
+    },
+    "codec-measurement/results.json": {
+      "bytes": 87043,
+      "sha256": "d9662cbb515e1991d73ea130bd84f6759b9838cbb7f98c07f3a799cfbdf99c4f"
+    },
+    "codec-measurement/sets.json": {
+      "bytes": 138185923,
+      "sha256": "afcb8af04f9e9331fc3194774f030c59ea6b38081f0620f495b2fa1362bc1de3"
+    },
+    "codec-measurement/changed-encoding.json": {
+      "bytes": 53295,
+      "sha256": "2ddd2f673a620a7693bfa9abe54c65e069a0a345e929ce9b2520002e9648a3ad"
+    },
+    "codec-measurement/publication.json": {
+      "bytes": 12940,
+      "sha256": "66d1dbb33a4b2daf9eb0381b640d268790e0291aec7413a6adee066a976ffaf3"
+    },
+    "codec-measurement/summary.json": {
+      "bytes": 599,
+      "sha256": "cc9ec7db432169437e93fa291b6b4f2877926a41952988d08fa54e40b2533993"
+    },
+    "validation/summary.json": {
+      "bytes": 1849,
+      "sha256": "487103bbd81b74423e635489ade51ac55065bd6114f5db453bb24b47fe80530e"
+    },
+    "validation/commands.json": {
+      "bytes": 19465,
+      "sha256": "7e28669025f05b123e27e100132d75caa86d4b8949e13b39255ba36a97459921"
+    },
+    "validation/runner.json": {
+      "bytes": 254,
+      "sha256": "2b3b7858c9a6b56b4d48e97613b01cd17f9fb2c05dd39a7484801005ab1fa8dd"
+    },
+    "run-3/workspaces/gopurs-tests-gfsQP6/summary.json": {
+      "bytes": 237,
+      "sha256": "a6517bb471d922c759c52e1cf152974bf8048b985c6ea425d80f163e16a38785"
+    }
+  },
+  "traces": {
+    "measurement/logs": 48,
+    "codec-measurement/logs": 193
+  },
+  "fixtures": [
+    {
+      "path": "run-3/workspaces/gopurs-tests-gfsQP6/summary.json",
+      "summary": {
+        "completed": true,
+        "states": 7,
+        "modes": [
+          "js",
+          "native-sequential",
+          "native-parallel",
+          "rust"
+        ],
+        "comparisons": 28,
+        "sameTast": true,
+        "samePartsAndPrepared": true,
+        "sameGo": true,
+        "executed": true
+      }
+    }
+  ],
+  "codecs": {
+    "completed": true,
+    "repetitions": 3,
+    "states": [
+      "base",
+      "leaf",
+      "shared",
+      "ffi"
+    ],
+    "categories": [
+      "source",
+      "prepared",
+      "metadata",
+      "direct",
+      "callers",
+      "transitive",
+      "contributions"
+    ],
+    "scope": "Codec microbenchmarks; staging uses the frozen production store. No incremental preparation implementation or full transaction proof overhead is included.",
+    "artifacts": {
+      "codec": "6999a2685a9ac88fa3bcf35877dd541a5c195014b3b070c7efddfcc58e205eed",
+      "store": "194e75b767e2a13df32e95813e70e29e4559e8f3af4d2ab59ff3b490ba631fd9"
+    }
+  },
+  "validation": {
+    "completed": true,
+    "compilerHashes": {
+      "gopurs": "a2f198ace9ee575e3528b4f2f64f7a149cd0f9d2c9e53c0ffc3b83103d6e50dd",
+      "gopurs-native": "15dcf6904f8c75f67bda248e74d6e0a7758ca80442319ea641631da9c98b1072",
+      "gopurs.js": "199cbc2bba023222f90ad86c025531e514ad5f8856bf18494f40e999881c95ed",
+      "gopurs-rust": "aa64a8939964b736ce2736b022d2925d8ed969eb110782b1c938c056257a4983"
+    },
+    "comparisons": [
+      {
+        "host": "native-parallel",
+        "state": "base",
+        "sameTast": true,
+        "byteExact": true,
+        "forced": true,
+        "hit": true,
+        "executed": true
+      },
+      {
+        "host": "native-parallel",
+        "state": "leaf",
+        "sameTast": true,
+        "byteExact": true,
+        "forced": true,
+        "hit": true,
+        "executed": true
+      },
+      {
+        "host": "native-parallel",
+        "state": "shared",
+        "sameTast": true,
+        "byteExact": true,
+        "forced": true,
+        "hit": true,
+        "executed": true
+      },
+      {
+        "host": "native-parallel",
+        "state": "ffi",
+        "sameTast": true,
+        "byteExact": true,
+        "forced": true,
+        "hit": true,
+        "executed": true
+      },
+      {
+        "host": "native-sequential",
+        "state": "base",
+        "sameTast": true,
+        "byteExact": true,
+        "forced": true,
+        "hit": true,
+        "executed": false
+      },
+      {
+        "host": "js",
+        "state": "base",
+        "sameTast": true,
+        "byteExact": true,
+        "forced": true,
+        "hit": true,
+        "executed": false
+      },
+      {
+        "host": "rust",
+        "state": "base",
+        "sameTast": true,
+        "byteExact": true,
+        "forced": true,
+        "hit": true,
+        "executed": false
+      }
+    ],
+    "executionOracles": 4,
+    "commands": 26,
+    "scope": "Four-host b8x base; all b8x edits native-parallel; dedicated preparation fixtures cover every transition in every host."
+  },
+  "exports": {
+    "analysis/timings.csv": "docs/build-preparation-p00-timings.csv",
+    "analysis/costs.json": "docs/build-preparation-p00-costs.json"
+  }
+}

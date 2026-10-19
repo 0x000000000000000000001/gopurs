@@ -9,6 +9,7 @@ import { gunzipSync } from "node:zlib";
 import { corePackages, createWorkspace, prepareFixture } from "./test-workspace.mjs";
 import { findTypedCompiler, verifyTypedOutput } from "./native-workspace.mjs";
 import { sourceVariants } from "./cache-source-variants.mjs";
+import { preparationSourceVariants } from "./preparation-source-variants.mjs";
 import { packageSourceSections } from "./test-snapshots.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
@@ -23,9 +24,10 @@ test("source edits, ABI layouts, specialization retraction and renames equal fre
     if (passed && process.env.GOPURS_TEST_KEEP_WORKSPACE !== "1") rmSync(workspace, { recursive: true, force: true });
     else console.log(`Source transition workspace retained: ${workspace}`);
   });
-  const fixtureDirectory = join(root, "tests/host/CacheTransitions");
+  const preparationCorpus = process.env.GOPURS_TEST_SOURCE_CORPUS === "preparation";
+  const fixtureDirectory = join(root, "tests/host", preparationCorpus ? "PreparationTransitions" : "CacheTransitions");
   mkdirSync(join(workspace, "harness"));
-  for (const name of ["driver-source-cache.test.mjs", "cache-source-variants.mjs"])
+  for (const name of ["driver-source-cache.test.mjs", "cache-source-variants.mjs", "preparation-source-variants.mjs", "preparation-transition-oracles.mjs"])
     copyFileSync(join(root, "tools", name), join(workspace, "harness", name));
   cpSync(fixtureDirectory, join(workspace, "harness/fixture"), { recursive: true });
   const fixture = prepareFixture(root, workspace, join(fixtureDirectory, "Main.purs"), 0, corePackages(root));
@@ -171,7 +173,7 @@ test("source edits, ABI layouts, specialization retraction and renames equal fre
     { name: "rust", js: "0", jobs: "4", pipeline: "1" },
   ].filter(mode => selected.includes(mode.name));
   assert.equal(modes.length, selected.length, "unknown host mode");
-  const states = sourceVariants(fixtureDirectory);
+  const states = (preparationCorpus ? preparationSourceVariants : sourceVariants)(fixtureDirectory);
   for (const [index, state] of states.entries()) {
     installSources(state.sources);
     rmSync(output, { recursive: true, force: true });
@@ -185,6 +187,7 @@ test("source edits, ABI layouts, specialization retraction and renames equal fre
       copyFileSync(join(output, name, "corefn.json"), join(state.snapshot, name, "corefn.json"));
     }
     for (const name of state.sameTast ?? []) assert.equal(state.tast[name], states[index - 1].tast[name], state.label + ": unchanged provider TAST " + name);
+    if (state.sameAllTast) assert.deepEqual(state.tast, states[index - 1].tast, state.label + ": every TAST is unchanged");
     if (state.restoredAll) assert.deepEqual(state.tast, states[0].tast, "restored sources reproduce the initial TAST");
     const sources = join(workspace, "states", state.label, "src");
     for (const [name, text] of Object.entries(state.sources)) {
@@ -196,6 +199,10 @@ test("source edits, ABI layouts, specialization retraction and renames equal fre
   }
   assert.equal(hash(readFileSync(typedCompiler)), typedHash);
   save(join(workspace, "frontend.json"), { compiler: typedCompiler, sha256: typedHash, states: states.map(state => state.label) });
+  if (preparationCorpus) {
+    const { preparationTransitionOracles } = await import("./preparation-transition-oracles.mjs");
+    save(join(workspace, "preparation-oracles.json"), await preparationTransitionOracles(states));
+  }
 
   const references = new Map();
   let completedModes = 0;
