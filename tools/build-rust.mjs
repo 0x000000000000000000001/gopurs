@@ -80,7 +80,7 @@ try {
     if (name === "go.mod" || name.endsWith(".go") && !name.endsWith("_test.go"))
       copyFileSync(join(root, "tools/ffi-gen", name), join(archiveSource, name));
   }
-  for (const name of ["contract.go", "store.go", "session.go", "compiler.go", "modules.go", "packages.go"]) {
+  for (const name of ["contract.go", "store.go", "session.go", "compiler.go", "modules.go", "packages.go", "packs.go"]) {
     writeFileSync(join(archiveSource, "gopurs_build_cache", name),
       readFileSync(join(root, "tools/build-cache", name), "utf8").replace("package main", "package gopurs_build_cache"));
   }

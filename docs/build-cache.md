@@ -70,6 +70,15 @@ retire les anciens chemins par le journal ; elle conserve les fichiers externes,
 `output/<Module>/main/main.go` gardent leur rôle ; le runner suit leurs imports
 sans connaître les noms de packages générés.
 
+### Pack de publication expérimental
+
+Le pack regroupe par défaut les artefacts de modules dans 64 packs privés et un
+index ; les sorties publiques restent individuelles. `GOPURS_PACK_PUBLICATION=0`
+restaure le format individuel. Le gain froid mesuré est de **−34,2 %** sur trois
+paires. La compaction par groupe ramène le cache à 64 packs après édition ; JS,
+Go et Rust ont rejoué le corpus b8x packé avec des sorties exactes. Voir
+[pack de publication](build-publication-pack.md).
+
 Sur le corpus b8x figé, le gain jusqu'à `exec` est de **48–63 % après édition**.
 Le backend seul prend davantage de temps après édition et reste à **~118 s à
 froid** ; les [mesures ventilées](build-go-measurements.md) détaillent ce coût et
@@ -145,8 +154,8 @@ dans une autre racine. Pour une sortie historique sans journal, suivre les
 
 - `src/Gopurs/BuildCache.purs` expose `exchange` pour le stockage et
   `sessionExchange` pour le producteur du pilote, tous deux `String -> Effect String`.
-- `tools/build-cache/{contract,store}.go` possède les clés, validations, lectures,
-  verrouillage et publications.
+- `tools/build-cache/{contract,store,packs}.go` possède les clés, validations,
+  lectures, verrouillage, publications et le pack de publication par défaut.
 - `BuildCache.go` appelle directement ce code. `prepare-native-output.mjs` le
   copie en package `gopurs_build_cache` lors du bootstrap, comme le parseur FFI.
 - `BuildCache.js` appelle `tools/build-cache.mjs`. L'auxiliaire Go est compilé à la

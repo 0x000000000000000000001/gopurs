@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -11,8 +11,8 @@ import { resolveBuildCacheHelper } from "./build-cache.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const env = { ...process.env, GOWORK: "off" };
-const run = (command, args, cwd, input) => execFileSync(command, args, {
-  cwd, input, encoding: "utf8", env, timeout: 120_000,
+const run = (command, args, cwd, input, environment = env) => execFileSync(command, args, {
+  cwd, input, encoding: "utf8", env: environment, timeout: 120_000,
   maxBuffer: 16 * 1024 * 1024, stdio: ["pipe", "pipe", "pipe"],
 });
 
@@ -26,7 +26,13 @@ test("cache integrity, invalidation, publication and process death under the Go 
 
 test("JS and directly linked Go bridges exchange a content-verified persistent manifest", t => {
   const workspace = mkdtempSync(join(tmpdir(), "gopurs-build-cache-hosts-"));
-  t.after(() => rmSync(workspace, { recursive: true, force: true }));
+  const previousPackSetting = process.env.GOPURS_PACK_PUBLICATION;
+  process.env.GOPURS_PACK_PUBLICATION = "1";
+  t.after(() => {
+    rmSync(workspace, { recursive: true, force: true });
+    if (previousPackSetting === undefined) delete process.env.GOPURS_PACK_PUBLICATION;
+    else process.env.GOPURS_PACK_PUBLICATION = previousPackSetting;
+  });
   const put = (path, content) => {
     mkdirSync(dirname(join(workspace, path)), { recursive: true });
     writeFileSync(join(workspace, path), content);
@@ -42,10 +48,14 @@ func main() { b, err := io.ReadAll(os.Stdin); if err != nil { panic(err) }; fmt.
 `);
   const native = join(workspace, "linked-cache");
   run("go", ["build", "-o", native, "."], join(workspace, "native"));
-  const nativeExchange = request => run(native, [], workspace, request);
+  const packedEnv = { ...env, GOPURS_PACK_PUBLICATION: "1" };
+  const nativeExchange = request => run(native, [], workspace, request, packedEnv);
   put("compiler", "identical artifact for this protocol comparison");
   put("output/Main/corefn.json", '{"moduleName":["Main"],"typeTable":[]}');
   put("stage/Main.go", "package purescript\n// revision one\n");
+  put("stage/unit.json", '["unit"]');
+  put("stage/module.go", "package purescript\n// module source\n");
+  const key = value => createHash("sha256").update(value).digest("hex");
   const request = {
     schema: 1, operation: "snapshot",
     spec: {
@@ -55,6 +65,13 @@ func main() { b, err := io.ReadAll(os.Stdin); if err != nil { panic(err) }; fmt.
       inputs: [{ name: "tast", kind: "tast", path: "output" }],
     },
     outputs: [{ path: "purescript/Main.go", kind: "module", module: "Main", source: "stage/Main.go" }],
+    modules: [{
+      name: "Main", prepared: key("prepared"), optimizerEnvironment: key("optimizer"),
+      emitterEnvironment: key("emitter"), callerDemands: key("callers"),
+      parts: ["pbo/backend-v2", "pbo/implementations-v1", "pbo/directives-v1", "gopurs/workers-v2"]
+        .map(codec => ({ codec, source: "stage/unit.json" })),
+      sources: [{ kind: "module", source: "stage/module.go" }],
+    }],
   };
   const exchange = req => jsExchange(JSON.stringify(req))();
   const js = exchange(request);
@@ -63,6 +80,7 @@ func main() { b, err := io.ReadAll(os.Stdin); if err != nil { panic(err) }; fmt.
   request.expectedKey = JSON.parse(js).snapshot.key;
   const published = JSON.parse(exchange(request));
   assert.equal(published.status, "published");
+  assert.ok(existsSync(join(workspace, "output/.gopurs-cache/packs/index.json")), "pack index missing");
   request.operation = "lookup";
   const found = JSON.parse(nativeExchange(JSON.stringify(request)));
   assert.equal(found.status, "hit");

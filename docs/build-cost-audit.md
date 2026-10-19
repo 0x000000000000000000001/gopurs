@@ -10,6 +10,12 @@ coûts non attribués sur un build froid privé et une édition feuille. Elle
 confirme le poids des opérations filesystem dans la publication, du
 parsing/type-check Go et du décodage `Wire.read` à la réutilisation.
 
+**Suite A :** le [pack de publication](build-publication-pack.md), désormais par
+défaut, donne **122,4 → 83,2 s** de backend médian sur trois paires froides
+(−34,2 %) ; la feuille reste dans le bruit, la compaction ramène à 64 packs et
+JS/Go/Rust rejouent b8x avec 27/27 sorties exactes. Un stress multi-éditions
+reste à documenter.
+
 ## Deux chronomètres à ne pas confondre
 
 | Périmètre | Feuille | Partagé | FFI | Froid applicatif | Froid complet |

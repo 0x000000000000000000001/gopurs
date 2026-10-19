@@ -504,6 +504,9 @@ func (s store) retirePackageObjects() error {
 		return err
 	}
 	defer syscall.Flock(int(lock.Fd()), syscall.LOCK_UN)
+	if err := s.ensurePacks(); err != nil {
+		return err
+	}
 	// Another publisher may have run since this session committed. Read its
 	// current roots under the lock, and leave incomplete transactions alone.
 	manifest, _ := s.readManifest()
@@ -556,7 +559,9 @@ func (s store) retirePackageObjects() error {
 		}
 	}
 	if removed {
-		return syncDirectory(directory)
+		if err := syncDirectory(directory); err != nil {
+			return err
+		}
 	}
-	return nil
+	return s.retirePackObjects(manifest)
 }

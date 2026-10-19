@@ -35,13 +35,14 @@ du backend.
 | P00 — audit des coûts de préparation | **Terminé**, P à **1/7** |
 | C01 — objets compacts / publication regroupée | **Rejeté en l'état** |
 | P01–P06 | **Archivés, non financés par les mesures actuelles** |
-| Prochain candidat | **A — pack de publication froide**, aucun code engagé |
+| A — pack de publication froide | **Activé par défaut**, opt-out `GOPURS_PACK_PUBLICATION=0` |
 
 Références : [bilan P00](docs/build-preparation-baseline.md),
 [étude C01](docs/build-preparation-compact.md),
 [audit des coûts](docs/build-cost-audit.md),
 [profil étape 0](docs/build-cost-profile-step0.md),
 [données étape 0](docs/build-cost-profile-step0.json),
+[pack de publication](docs/build-publication-pack.md),
 [mesures G06](docs/build-go-measurements.md).
 
 ### Ce que les mesures ont établi
@@ -70,6 +71,10 @@ Références : [bilan P00](docs/build-preparation-baseline.md),
   dominé par le runtime/GC et l'émission, pas par un optimiseur unique ; la
   réutilisation feuille passe explicitement par `readPart`/`Wire.read` pour
   2 703 modules.
+- **A (défaut)** : trois paires froides donnent **122,419 → 83,155 s** de backend
+  médian, soit **−41,816 s (−34,16 %)** ; la publication médiane passe de
+  **43,611 à 5,067 s**. Le replay b8x JS/Go/Rust est exact (27/27) avec des
+  hits à **0,88–1,12 s**. `GOPURS_PACK_PUBLICATION=0` restaure l'ancien chemin.
 
 ## Décisions
 
@@ -115,34 +120,43 @@ planification Go 11,731 s) ; feuille **52,151 s** (2 703 modules restaurés,
 `readPart` → `Wire.read` → décodage JSON. Le pack de publication est le candidat
 au gain plafond le plus élevé (**~40 s** à froid).
 
-**Décision : A d'abord, B après A.** Le profil a dépassé le seuil de **≥5 s** :
-A est retenu pour une conception détaillée, sans code avant présentation.
+**Décision : A d'abord, B après A.** Le profil a dépassé le seuil de **≥5 s**.
+A est activé par défaut après validation JS/Go/Rust ; la compaction et la
+validation de base passent. B peut commencer après le stress multi-éditions.
 
 ### Chantier A — publication froide regroupée
 
-**Retenu après l'étape 0.** Conception à présenter avant le premier changement :
-parcours actuel `BuildCache/store/session`, enveloppe de pack, index, engagement
-atomique, reprise et bridges JS/Go/Rust. Pas de restauration globale.
+**Activé par défaut ; `GOPURS_PACK_PUBLICATION=0` conserve l'ancien chemin.**
+Résultats, code et limites : [pack de publication](docs/build-publication-pack.md).
 
 **Constat mesuré :** 13 840 écritures durables, 11 005 objets uniques, 550 Mio,
 45–47 s ; 97,8 % des échantillons actifs de publication sont des opérations
-filesystem. C01 donne l'ordre de grandeur : 82,4 → 3,34 s en 193 groupes.
+filesystem.
 
-- [ ] **Définir l'enveloppe de publication** : pack de sorties/cache, index et
-  engagement atomique, sans imposer une restauration globale. Les octets
-  individuels `Wire` restent l'oracle ; le pack est un transport de publication.
-- [ ] **Préserver l'intégrité et la reprise** : objet absent/corrompu, échec
-  avant engagement, index corrompu, reprise après interruption.
-- [ ] **Mesurer trois paires froides** (`cold-app`, `cold-complete`) avec les
-  mêmes TAST et sorties byte-exactes, puis vérifier la chaleur du cache.
-- [ ] **Critères d'arrêt :** gain médian **≥20 s** sur le froid applicatif,
-  aucune régression >5 % ailleurs, stockage et récupération acceptables. Si le
-  gain net est **<10 s** ou si le pack casse un contrat de reprise, abandonner.
-- [ ] **Bridges :** `BuildCache`/store/session Go commun, `Wire` inchangé pour
-  les objets individuels, validation JS/Go/Rust avant intégration.
+- [x] **Définir l'enveloppe de publication** : 64 packs bruts, index privé,
+  engagement atomique, sorties publiques individuelles, sans restauration
+  globale. Les octets `Wire` restent l'oracle.
+- [x] **Préserver l'intégrité et la reprise** : pack absent/corrompu, index
+  corrompu, invalidation et reconstruction sont couverts par les tests.
+- [x] **Mesurer trois paires froides** : backend **122,419 → 83,155 s** en
+  médiane (**−41,816 s, −34,16 %**) ; publication **43,611 → 5,067 s**. Le hit
+  pack-on reste à **1,00–1,60 s**. 64 packs, 10 979 entrées, ~427,5 Mio.
+- [x] **Édition feuille** : backend **45,911 s** contre **45,352 s** pour P00,
+  publication 1,928 s, hit 1,562 s, 27/27 sorties exactes. L'édition ajoute
+  3 packs avant compaction.
+- [x] **Compaction par groupe** : après `shared` puis `ffi`, retour à
+  **64 packs / 64 fichiers**, **427,49 Mio**, sorties `ffi` exactes ; 2 643
+  modules réutilisés, 61 optimisés. Un stress multi-éditions reste à faire.
+- [x] **Critères d'arrêt :** gain froid ≥20 s **atteint** ; feuille dans le
+  bruit, compaction validée, JS/Go/Rust exacts. Un stress multi-éditions et les
+  autres scénarios restent à documenter. RSS pack-on +0,4 à +0,8 Gio.
+- [x] **Bridges :** tests JS/Go packés, fixture Rust (301 entrées, hit
+  0,117 s, `Done`) et replay b8x JS/Go/Rust (27/27, hits 0,88–1,12 s).
+  Go séquentiel reste non rejoué séparément.
 
 **Note :** ce chantier vise le froid. Il ne doit pas rouvrir la restauration
-globale de C01 ni promettre seul les ~60 s.
+globale de C01 ni promettre seul les ~60 s. Le `go build` de la chaîne complète
+reste à ~48,5 s après feuille.
 
 ### Chantier B — incrémental ciblé
 
@@ -202,11 +216,9 @@ ou B.
 
 ## Prochaine action
 
-1. Présenter le code actuel de publication (`BuildCache`, store, session), la
-   transformation de pack et les bridges avant le premier changement.
-2. Après accord, implémenter **A** seul et mesurer trois paires froides ; arrêter
-   si le gain net est <10 s ou si la reprise est cassée.
-3. Passer ensuite à **B1–B3**, un sous-chantier à la fois, avec le même seuil de
-   5 s et les validations quatre hôtes.
-4. Revenir à l'utilisateur avec un bilan chiffré avant toute intégration ou
-   réouverture de P.
+1. Stresser plusieurs éditions et de gros changements avec le pack par défaut,
+   conserver les trois jeux de sorties froides et confirmer stockage/RSS.
+2. Rejouer Go séquentiel si nécessaire et vérifier les transitions de cache
+   restantes.
+3. Passer à **B1–B3**, un sous-chantier à la fois, avec le même seuil de 5 s
+   et les validations quatre hôtes.

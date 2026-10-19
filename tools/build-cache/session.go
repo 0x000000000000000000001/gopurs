@@ -537,7 +537,7 @@ func publishSession(stage string, state buildSession, req SessionRequest, result
 	if err := atomicWrite(filepath.Join(state.Spec.Output, ".gopurs-cache", "recipe.json"), data, 0600); err != nil {
 		return err
 	}
-	if usesGoPackages(state.Spec) {
+	if usesGoPackages(state.Spec) || packPublicationEnabled() {
 		// Cache maintenance is best-effort after the semantic commit. A failed
 		// removal leaves disposable objects; it cannot undo a successful build.
 		s := store{root: state.Spec.Output, cache: filepath.Join(state.Spec.Output, ".gopurs-cache")}

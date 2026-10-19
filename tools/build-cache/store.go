@@ -16,7 +16,10 @@ import (
 	"syscall"
 )
 
-type store struct{ root, cache string }
+type store struct {
+	root, cache string
+	packs       *packDB
+}
 type pointer struct {
 	Format   string `json:"format"`
 	Schema   int    `json:"schema"`
@@ -124,6 +127,9 @@ func execute(req Request) (Response, error) {
 		return Response{}, err
 	}
 	defer syscall.Flock(int(lock.Fd()), syscall.LOCK_UN)
+	if err := s.ensurePacks(); err != nil {
+		return Response{}, err
+	}
 	req.Spec.Workspace = workspace
 	req.Spec.Output = output
 	snap, err := snapshot(req.Spec)
@@ -598,9 +604,21 @@ func (s store) putStagedObject(data []byte) (Object, error) {
 	return obj, atomicReplaceFile(path, data, 0600)
 }
 
-func (s store) readObject(obj Object) ([]byte, error) {
+func (s *store) readObject(obj Object) ([]byte, error) {
 	if !validObject(obj) {
 		return nil, fmt.Errorf("invalid object reference")
+	}
+	if s.packs != nil {
+		if entry, ok := s.packs.entries[obj.SHA256]; ok {
+			data, err := s.readPackedObject(entry, obj)
+			if err != nil {
+				// Drop the whole unusable pack from the index. The next publication
+				// reparses the staged source and writes a fresh pack.
+				s.invalidatePack(entry.Pack)
+				_ = s.writePackIndex()
+			}
+			return data, err
+		}
 	}
 	path := filepath.Join(s.cache, "objects", obj.SHA256)
 	info, err := os.Lstat(path)
@@ -712,7 +730,11 @@ func (s store) readManifest() (*Manifest, string) {
 }
 
 func (s store) stage(req Request, snap Snapshot, previous *Manifest) (Manifest, error) {
+	if err := s.ensurePacks(); err != nil {
+		return Manifest{}, err
+	}
 	m := Manifest{Format: Format, Schema: Schema, Snapshot: snap, Outputs: make([]OwnedOutput, len(req.Outputs)), Modules: make([]ModuleMemo, len(req.Modules)), GoMod: "create-if-absent", GoSum: "external"}
+	packer := newPackWriter(&s)
 	validated := map[Artifact]bool{}
 	priorSources := map[string][]ModuleSource{}
 	if previous != nil {
@@ -746,14 +768,14 @@ func (s store) stage(req Request, snap Snapshot, previous *Manifest) (Manifest, 
 		mod := req.Modules[i]
 		memo := ModuleMemo{Name: mod.Name, Prepared: mod.Prepared, OptimizerEnvironment: mod.OptimizerEnvironment, EmitterEnvironment: mod.EmitterEnvironment, CallerDemands: mod.CallerDemands, Parts: []Artifact{}}
 		for _, part := range mod.Parts {
-			a, err := s.stageArtifact(req.Spec.Workspace, part, validated)
+			a, err := s.stageArtifact(req.Spec.Workspace, part, validated, packer)
 			if err != nil {
 				return err
 			}
 			memo.Parts = append(memo.Parts, a)
 		}
 		for _, source := range mod.Sources {
-			a, err := s.stageModuleSource(req.Spec.Workspace, source, priorSources[mod.Name])
+			a, err := s.stageModuleSource(req.Spec.Workspace, source, priorSources[mod.Name], packer)
 			if err != nil {
 				return err
 			}
@@ -765,13 +787,16 @@ func (s store) stage(req Request, snap Snapshot, previous *Manifest) (Manifest, 
 		return m, err
 	}
 	if req.Diagnostics != nil {
-		a, err := s.stageArtifact(req.Spec.Workspace, *req.Diagnostics, validated)
+		a, err := s.stageArtifact(req.Spec.Workspace, *req.Diagnostics, validated, packer)
 		if err != nil {
 			return m, err
 		}
 		m.Diagnostics = &a
 	}
 	if err := validateManifest(m); err != nil {
+		return m, err
+	}
+	if err := packer.flush(); err != nil {
 		return m, err
 	}
 	// This also covers byte-identical objects left by an interrupted/failed stage
@@ -806,7 +831,7 @@ func boundedEach(count int, task func(int) error) error {
 	return nil
 }
 
-func (s store) stageArtifact(root string, part StagedArtifact, validated map[Artifact]bool) (Artifact, error) {
+func (s store) stageArtifact(root string, part StagedArtifact, validated map[Artifact]bool, packer *packWriter) (Artifact, error) {
 	data, err := os.ReadFile(absolute(root, part.Source))
 	if err != nil {
 		return Artifact{}, err
@@ -817,7 +842,7 @@ func (s store) stageArtifact(root string, part StagedArtifact, validated map[Art
 			return Artifact{}, err
 		}
 	}
-	obj, err := s.putStagedObject(data)
+	obj, err := packer.put(data)
 	return Artifact{Codec: part.Codec, Object: obj}, err
 }
 

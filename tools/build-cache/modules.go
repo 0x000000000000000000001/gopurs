@@ -13,7 +13,7 @@ import (
 
 const moduleSourceCodec = "gopurs/go-source-gzip-v1"
 
-func (s store) stageModuleSource(root string, source StagedModuleSource, previous []ModuleSource) (ModuleSource, error) {
+func (s store) stageModuleSource(root string, source StagedModuleSource, previous []ModuleSource, packer *packWriter) (ModuleSource, error) {
 	data, err := os.ReadFile(absolute(root, source.Source))
 	if err != nil {
 		return ModuleSource{}, err
@@ -38,7 +38,7 @@ func (s store) stageModuleSource(root string, source StagedModuleSource, previou
 	if err := writer.Close(); err != nil {
 		return ModuleSource{}, err
 	}
-	object, err := s.putStagedObject(compressed.Bytes())
+	object, err := packer.put(compressed.Bytes())
 	return ModuleSource{Kind: source.Kind, Codec: moduleSourceCodec, Object: object, Raw: raw}, err
 }
 
@@ -67,6 +67,9 @@ func (s store) readModuleSource(source ModuleSource) ([]byte, error) {
 func freezeModuleCache(stage string, state buildSession, force bool, result *SessionResponse) error {
 	index := []ModuleMemo{}
 	s := store{root: state.Spec.Output, cache: filepath.Join(state.Spec.Output, ".gopurs-cache")}
+	if err := s.ensurePacks(); err != nil {
+		return err
+	}
 	lock, err := os.OpenFile(filepath.Join(s.cache, "write.lock"), os.O_RDWR, 0600)
 	if err != nil {
 		return err
