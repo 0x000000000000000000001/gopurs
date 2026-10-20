@@ -16,6 +16,35 @@ défaut, donne **122,4 → 83,2 s** de backend médian sur trois paires froides
 JS/Go/Rust rejouent b8x avec 27/27 sorties exactes. Un stress multi-éditions
 reste à documenter.
 
+**B3 :** le lookup packé parallèle donne **0,914 → 0,655 s** au hit et
+**45,4 → 43,2 s** sur une feuille, sous le seuil de 5 s. Voir
+[B3](build-incremental-b3.md).
+
+**B2 :** le descripteur PBO sans corps réduit le PBO de **9,9 à 7,9 s**, mais
+le backend feuille reste à **45,8 s** ; candidat rejeté et retiré. Voir
+[B2](build-incremental-b2.md).
+
+**B1 :** audit du planificateur Go : **11,57 s** au total, dont type-check 4,22
+et graphe/rendu ~5,2. Un cache par package avec export data est nécessaire ;
+aucun prototype. Voir [audit B1](build-incremental-b1-audit.md).
+
+**C0 — granularité Go :** à density 1024 (68 packages), le build feuille passe
+de 30,2 à 9,6 s en `-p 1` et à **2,67 s** en `-p 14` pour Ping ; froid Go
+46,7 s. Le `planHash` est identique base/feuille. Mais FFI reste à 32,9 s,
+son isolation crée un cycle, et le backend reste à 43,7 s. Voir
+[granularité et architecture](build-granularity-architecture.md).
+
+**C1 — isolation SCC :** Ping (SCC de 3 déclarations) passe à **1,16 s**.
+FFI a un SCC de **57 composants / 4 447 déclarations** ; l’isolation du SCC
+et la fermeture de dépendances (180 déclarations) recréent un cycle package.
+C1 est rejeté ; C1b (refactor codegen) est requis pour un plancher universel.
+La première tentative C1b (extraction de FFI + `Util.Html.Clean.Clean`) laisse
+encore un cycle via plusieurs packages. La fermeture globale FFI fait
+**10,9 Mo / 2 510 déclarations**, presque le package complet. L’analyse finale
+montre un SCC package de **49 packages / 92,2 Mo** pour FFI (Ping : 1 package /
+2 Ko). C1b n’est pas borné pour ce programme ; il exigerait une refonte de
+presque tout le graphe.
+
 ## Deux chronomètres à ne pas confondre
 
 | Périmètre | Feuille | Partagé | FFI | Froid applicatif | Froid complet |

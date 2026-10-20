@@ -31,7 +31,9 @@ type packIndexFile struct {
 }
 
 type packDB struct {
+	mu      sync.Mutex
 	entries map[string]packEntry
+	files   map[string]*os.File
 }
 
 type stagedPackObject struct {
@@ -67,7 +69,7 @@ func (s *store) ensurePacks() error {
 	if s.packs != nil {
 		return nil
 	}
-	s.packs = &packDB{entries: map[string]packEntry{}}
+	s.packs = &packDB{entries: map[string]packEntry{}, files: map[string]*os.File{}}
 	path := filepath.Join(s.cache, "packs", "index.json")
 	data, err := os.ReadFile(path)
 	if os.IsNotExist(err) {
@@ -89,16 +91,31 @@ func (s *store) ensurePacks() error {
 	return nil
 }
 
+func (s store) packFile(pack string) (*os.File, error) {
+	if s.packs == nil {
+		return nil, fmt.Errorf("missing/corrupt pack: %s", pack)
+	}
+	s.packs.mu.Lock()
+	defer s.packs.mu.Unlock()
+	if f := s.packs.files[pack]; f != nil {
+		return f, nil
+	}
+	f, err := os.Open(filepath.Join(s.cache, "packs", pack+".pack"))
+	if err != nil {
+		return nil, err
+	}
+	s.packs.files[pack] = f
+	return f, nil
+}
+
 func (s store) readPackedObject(entry packEntry, obj Object) ([]byte, error) {
 	if !validPackEntry(entry) || entry.Bytes != obj.Bytes {
 		return nil, fmt.Errorf("missing/corrupt object: %s", obj.SHA256)
 	}
-	path := filepath.Join(s.cache, "packs", entry.Pack+".pack")
-	f, err := os.Open(path)
+	f, err := s.packFile(entry.Pack)
 	if err != nil {
 		return nil, fmt.Errorf("missing/corrupt object: %s", obj.SHA256)
 	}
-	defer f.Close()
 	info, err := f.Stat()
 	if err != nil || !info.Mode().IsRegular() || info.Size() < entry.Offset+entry.Bytes {
 		return nil, fmt.Errorf("missing/corrupt object: %s", obj.SHA256)
@@ -209,10 +226,33 @@ func (w *packWriter) writeIndex() error {
 }
 
 func (s *store) invalidatePack(pack string) {
+	s.packs.mu.Lock()
+	defer s.packs.mu.Unlock()
 	for name, entry := range s.packs.entries {
 		if entry.Pack == pack {
 			delete(s.packs.entries, name)
 		}
+	}
+	if file := s.packs.files[pack]; file != nil {
+		_ = file.Close()
+		delete(s.packs.files, pack)
+	}
+}
+
+func (s *store) invalidateAllPacks() {
+	if s.packs == nil {
+		return
+	}
+	s.packs.mu.Lock()
+	empty := len(s.packs.entries) == 0 && len(s.packs.files) == 0
+	for _, file := range s.packs.files {
+		_ = file.Close()
+	}
+	s.packs.entries = map[string]packEntry{}
+	s.packs.files = map[string]*os.File{}
+	s.packs.mu.Unlock()
+	if !empty {
+		_ = s.writePackIndex()
 	}
 }
 
@@ -304,6 +344,17 @@ func (s *store) compactPackGroups() (bool, error) {
 		return false, err
 	}
 	directory := filepath.Join(s.cache, "packs")
+	s.packs.mu.Lock()
+	for pack := range oldPacks {
+		if newPacks[pack] {
+			continue
+		}
+		if file := s.packs.files[pack]; file != nil {
+			_ = file.Close()
+			delete(s.packs.files, pack)
+		}
+	}
+	s.packs.mu.Unlock()
 	for pack := range oldPacks {
 		if newPacks[pack] {
 			continue

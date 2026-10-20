@@ -170,14 +170,18 @@ func execute(req Request) (Response, error) {
 				return response, nil
 			}
 		}
-		for _, part := range artifacts(*old) {
+		parts := artifacts(*old)
+		if err := boundedEach(len(parts), func(i int) error {
 			// Publication validated the grammar of these exact bytes. Integrity
 			// is checked on every read; reparsing an unchanged committed object
 			// proves nothing additional and dominates large no-change builds.
-			if _, err := s.readObject(part.Object); err != nil {
-				response.Reason = "artifact-corrupt"
-				return response, nil
-			}
+			_, err := s.validateObject(parts[i].Object)
+			return err
+		}); err != nil {
+			// A damaged pack cannot be trusted for a later selective reuse.
+			s.invalidateAllPacks()
+			response.Reason = "artifact-corrupt"
+			return response, nil
 		}
 		if info, err := os.Lstat(filepath.Join(output, "go.mod")); err != nil || !info.Mode().IsRegular() {
 			response.Reason = "go-mod-missing"
@@ -604,20 +608,15 @@ func (s store) putStagedObject(data []byte) (Object, error) {
 	return obj, atomicReplaceFile(path, data, 0600)
 }
 
-func (s *store) readObject(obj Object) ([]byte, error) {
+// validateObject is the read-only variant used by parallel lookup. It never
+// mutates the pack index; a failed batch invalidates all packs once joined.
+func (s *store) validateObject(obj Object) ([]byte, error) {
 	if !validObject(obj) {
 		return nil, fmt.Errorf("invalid object reference")
 	}
 	if s.packs != nil {
 		if entry, ok := s.packs.entries[obj.SHA256]; ok {
-			data, err := s.readPackedObject(entry, obj)
-			if err != nil {
-				// Drop the whole unusable pack from the index. The next publication
-				// reparses the staged source and writes a fresh pack.
-				s.invalidatePack(entry.Pack)
-				_ = s.writePackIndex()
-			}
-			return data, err
+			return s.readPackedObject(entry, obj)
 		}
 	}
 	path := filepath.Join(s.cache, "objects", obj.SHA256)
@@ -630,6 +629,19 @@ func (s *store) readObject(obj Object) ([]byte, error) {
 		return nil, fmt.Errorf("missing/corrupt object: %s", obj.SHA256)
 	}
 	return data, nil
+}
+
+func (s *store) readObject(obj Object) ([]byte, error) {
+	data, err := s.validateObject(obj)
+	if err != nil && s.packs != nil {
+		if entry, ok := s.packs.entries[obj.SHA256]; ok {
+			// Drop the whole unusable pack from the index. The next publication
+			// reparses the staged source and writes a fresh pack.
+			s.invalidatePack(entry.Pack)
+			_ = s.writePackIndex()
+		}
+	}
+	return data, err
 }
 
 func mergeOwnership(left, right []OwnedOutput) []OwnedOutput {

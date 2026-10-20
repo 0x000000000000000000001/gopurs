@@ -65,6 +65,21 @@ Les logs de hit sont écrits hors du workspace : la racine du projet est une
 entrée de répertoire, et un fichier de log ajouté avant le lookup provoque un
 `inputs-changed`. Go séquentiel n'a pas été rejoué séparément.
 
+### Mesure installée b8x
+
+Avec `bin/gopurs` installé, sans `GOPURS_PACK_PUBLICATION` :
+
+| Passage | Backend | Publication | Sorties |
+| --- | ---: | ---: | ---: |
+| Froid | **76,163 s** | 3,393 s | 27/27 |
+| Hit | **0,914 s** | — | 27/27 |
+| Feuille `DecodeWithJson` | **45,421 s** | 1,429 s | 27/27 |
+
+Le froid gagne **39,5 s (−34,2 %)** face à la référence P00 de 115,692 s. La
+feuille reste dans le bruit (+0,07 % face à 45,352 s) : A améliore le froid,
+pas encore le backend après édition. Le pack est actif par défaut et le cache
+feuille revient à 64 packs.
+
 ## Intégrité et stockage
 
 - 27/27 sorties publiques byte-exactes face à la référence P00 pour les passages
@@ -115,8 +130,10 @@ entrée de répertoire, et un fichier de log ajouté avant le lookup provoque un
 
 **A est activé par défaut.** Le gain froid dépasse largement le seuil de 20 s
 et la publication est bien la cause. JS, Go et Rust ont produit et relu un cache
-b8x packé avec 27/27 sorties exactes. `GOPURS_PACK_PUBLICATION=0` reste
-l'échappatoire ; Go séquentiel et un stress multi-éditions restent à documenter.
+b8x packé avec 27/27 sorties exactes ; le compilateur installé confirme
+**76,2 s** à froid, **0,9 s** au hit et **45,4 s** sur feuille.
+`GOPURS_PACK_PUBLICATION=0` reste l'échappatoire ; Go séquentiel et un stress
+multi-éditions restent à documenter.
 
 ## Preuves
 

@@ -1,8 +1,9 @@
 # Gopurs — état et plan actif
 
-**Mise à jour : 19 octobre 2026.** Le plan v3 (lots 00–06) est clos et la suite
-G00–G06 est livrée. P00 est terminé et C01 a été rejeté. Aucun candidat
-d'optimisation n'est actif. L'historique complet des lots, seuils, échecs et
+**Mise à jour : 20 octobre 2026.** Le plan v3 (lots 00–06) est clos et la suite
+G00–G06 est livrée. P00 est terminé, C01 et B2 sont rejetés. Le chantier C
+(architecture incrémentale et découpage Go SCC-aware) est ouvert après
+l'exploration de granularité. L'historique complet des lots, seuils, échecs et
 décisions est conservé dans
 [`docs/plan-archive-20261019.md`](docs/plan-archive-20261019.md), copie figée
 de l'ancien `todo.md` (SHA-256
@@ -36,6 +37,11 @@ du backend.
 | C01 — objets compacts / publication regroupée | **Rejeté en l'état** |
 | P01–P06 | **Archivés, non financés par les mesures actuelles** |
 | A — pack de publication froide | **Activé par défaut**, opt-out `GOPURS_PACK_PUBLICATION=0` |
+| Granularité Go / C | **Exploration privée terminée**, non installée |
+| C1 — découpage SCC-aware | **Prototype échoué**, refactor codegen requis |
+| C1b — refactor SCC codegen | **Échoué** : topo 46,7 s, noinline 25,6 s |
+| C1c — bridge ABI/export | **Scalaires + type validés** : FFI 1,02 s |
+| C2 — backend résident | **Conception ouverte**, non codé |
 
 Références : [bilan P00](docs/build-preparation-baseline.md),
 [étude C01](docs/build-preparation-compact.md),
@@ -43,6 +49,12 @@ Références : [bilan P00](docs/build-preparation-baseline.md),
 [profil étape 0](docs/build-cost-profile-step0.md),
 [données étape 0](docs/build-cost-profile-step0.json),
 [pack de publication](docs/build-publication-pack.md),
+[B3 lookup](docs/build-incremental-b3.md),
+[B2 rejeté](docs/build-incremental-b2.md),
+[audit B1](docs/build-incremental-b1-audit.md),
+[granularité et architecture](docs/build-granularity-architecture.md),
+[conception C1b](docs/build-c1b-package-graph.md),
+[conception C2](docs/build-c2-resident.md),
 [mesures G06](docs/build-go-measurements.md).
 
 ### Ce que les mesures ont établi
@@ -74,7 +86,15 @@ Références : [bilan P00](docs/build-preparation-baseline.md),
 - **A (défaut)** : trois paires froides donnent **122,419 → 83,155 s** de backend
   médian, soit **−41,816 s (−34,16 %)** ; la publication médiane passe de
   **43,611 à 5,067 s**. Le replay b8x JS/Go/Rust est exact (27/27) avec des
-  hits à **0,88–1,12 s**. `GOPURS_PACK_PUBLICATION=0` restaure l'ancien chemin.
+  hits à **0,88–1,12 s**. Le compilateur installé donne **76,163 s** à froid,
+  **0,914 s** au hit et **45,421 s** après `DecodeWithJson`.
+  `GOPURS_PACK_PUBLICATION=0` restaure l'ancien chemin.
+- **Granularité Go (C0)** : à density 1024 (68 packages), le build Go de
+  feuille passe de 30,2 à 9,6 s en `-p 1` et à **2,67 s** en `-p 14` pour le
+  module Ping ; le froid Go `-p 14` est 46,7 s. Le `planHash` est identique
+  base/feuille. Mais FFI reste à **32,9 s** et son isolation crée un cycle
+  d'imports ; shared reste à 31,2 s. Le backend reste à 43,7 s. Voir
+  [granularité](docs/build-granularity-architecture.md).
 
 ## Décisions
 
@@ -152,7 +172,8 @@ filesystem.
   autres scénarios restent à documenter. RSS pack-on +0,4 à +0,8 Gio.
 - [x] **Bridges :** tests JS/Go packés, fixture Rust (301 entrées, hit
   0,117 s, `Done`) et replay b8x JS/Go/Rust (27/27, hits 0,88–1,12 s).
-  Go séquentiel reste non rejoué séparément.
+  Go séquentiel reste non rejoué séparément ; le Rust installé n'a pas été
+  reconstruit avec le pack, seul le binaire privé l'a été.
 
 **Note :** ce chantier vise le froid. Il ne doit pas rouvrir la restauration
 globale de C01 ni promettre seul les ~60 s. Le `go build` de la chaîne complète
@@ -166,14 +187,21 @@ quelques millisecondes.
 
 Après A, choisir **un seul** sous-chantier, dans cet ordre :
 
-- [ ] **B1 — planification Go incrémentale.** Réutiliser le plan/type-check des
-  packages dont les sources n'ont pas changé ; mesurer le gain sur feuille et
-  vérifier que le froid ne régresse pas.
-- [ ] **B2 — réutilisation PBO sans décoder 2 703 modules.** Réutiliser les
-  signatures/sorties nécessaires et éviter la restauration complète des modules
-  inchangés ; conserver les preuves de dépendances existantes.
-- [ ] **B3 — clés et lookup sélectifs.** Éviter de re-hacher 2 704 modules et de
-  revalider 550 Mio quand un seul module change, sous preuve complète.
+- [~] **B1 — planification Go incrémentale.** Audit terminé : sur 11,57 s,
+  parsing 1,28, type-check 4,22, graphe 2,34, plan 0,42, rendu/reste ~2,9.
+  Le type-check seul ne suffit pas ; un cache de plan par package avec export
+  data est nécessaire. Aucun prototype ni changement de production. Voir
+  [audit B1](docs/build-incremental-b1-audit.md).
+- [~] **B2 — réutilisation PBO sans décoder 2 703 modules.** Le prototype
+  réduit le PBO de **9,9 à 7,9 s**, mais le backend feuille reste à **45,8 s**
+  (pas de gain total) ; la transition FFI a exigé un digest émetteur et a été
+  corrigée. Candidat **rejeté et retiré** du chemin installé. Voir
+  [B2](docs/build-incremental-b2.md).
+- [~] **B3 — clés et lookup sélectifs.** Le lookup packé avec descripteurs
+  ouverts et validation parallèle donne **0,914 → 0,655 s** au hit et
+  **45,421 → 43,210 s** sur une feuille, pas les 5 s visés. Les clés préparées
+  (~5,3 s) restent entières et exigent les preuves P03/P04. Voir
+  [B3](docs/build-incremental-b3.md).
 
 **Critères d'arrêt :** **≥5 s** de gain backend sur le scénario annoncé, aucune
 régression >5 % ailleurs, trois paires alternées. Si le gain est **<2 s**,
@@ -188,13 +216,51 @@ Le profil feuille montre `readPart`/`Wire.read` dans la réutilisation et
 `Wire.write`/hash dans les clés ; B2 et B3 sont donc fondés sur des chemins
 observés, pas sur une hypothèse de stockage.
 
-### Chantier C — chaîne complète, conditionnel
+### Chantier C — architecture incrémentale et Go SCC-aware
 
-**À n'ouvrir que si l'objectif est 30 s de bout en bout.** Le `go build` après
-feuille vaut 48,490 s et compile un package généré de 39,8 Mio. Revoir la
-densité/le découpage des packages Go, le lien et les actions du runner ; mesurer
-séparément backend et Go. Aucun travail n'est engagé dans ce chantier avant A
-ou B.
+**Ouvert le 20 octobre 2026 après l'exploration C0.** Le `go build` n'est plus
+le seul mur : la granularité peut descendre à 1–3 s pour un module séparable,
+mais le backend reste à 43,7 s et les modules dans un SCC/cycle gardent un
+plancher Go d'environ 33 s. Aucune densité statique ni isolation naïve ne donne
+un build court universel.
+
+- [x] **C0 — exploration de granularité (privée).** Densités 512–8192,
+  `-p 14`, isolation dynamique, multi-édition. Résultats et limites dans
+  [granularité](docs/build-granularity-architecture.md). Aucun changement de
+  production.
+- [~] **C1 — découpage Go SCC-aware.** Prototype terminé, **rejeté** : Ping
+  isole 3 déclarations et tombe à 1,16 s, mais FFI a un SCC de 57 composants /
+  4 447 déclarations ; même la fermeture de dépendances (180 déclarations)
+  recrée un cycle package. La cible FFI ≤15 s n'est pas atteinte. Voir
+  [granularité](docs/build-granularity-architecture.md).
+- [~] **C1b — refactor codegen SCC.** Trois variantes testées : isolation SCC,
+  partition topologique stable et `-gcflags=all=-l`. Résultats : FFI
+  **46,7 s** en topo, **25,6 s** sans inlining ; la cible ≤15 s n’est pas
+  atteinte. Ping reste à 1,16 s. **C1b rejeté**, le plancher FFI reste
+  structurel. Voir [C1b](docs/build-c1b-package-graph.md).
+- [x] **C1c — bridge ABI/export (preuve de concept).** Trois fonctions
+  scalaires et le type `IntervalId` validés : `p_types`, champs exportés,
+  alias public, implémentation séparée. Go base 52,96 s, **feuille 1,02 s**,
+  `SetInterval`/`ClearInterval` OK. Reste : automatisation de l’extraction,
+  init/valeurs globales, autres types. Voir
+  [C1b/C1c](docs/build-c1b-package-graph.md).
+- [~] **C2 — backend résident/incrémental.** Conception initiale :
+  [C2](docs/build-c2-resident.md). État de session conservé, traitement du seul
+  module modifié et de sa fermeture prouvée, caches préparation/PBO/plan,
+  validation et publication incrémentales. Cible : backend feuille ≤20–25 s,
+  puis ≤15 s avec B1/B3. Fallback complet au moindre doute. Non codé.
+- [ ] **C3 — froid, conditionnel.** Le froid actuel (backend ~77 s + Go 46,7 s)
+  ne peut pas viser 60 s par un cache chaud. À ouvrir après C1/C2 avec un budget
+  séparé, pas comme sous-produit.
+
+**Critères d'arrêt C :** trois paires alternées, sorties exactes, aucune
+régression froide >5 %. C1/C1b sont arrêtés : FFI reste 25,6–46,7 s. C2 ne
+doit pas être lancé seul pour promettre un build universel ; il ne réduit que
+le backend.
+
+**Dépendances :** B1 (plan Go), B3 (clés) et B2 (descripteur PBO) deviennent des
+composants de C2, pas des candidats autonomes. B2 reste rejeté dans l'ancien
+chemin ; B3 reste partiel et exige les preuves P03/P04.
 
 ## Budgets et protocole
 
@@ -205,6 +271,9 @@ ou B.
   reprise mesurés. Un pack lent à restaurer ou à réparer est un rejet.
 - **Chantier B** : ≥5 s par sous-chantier ; feuille sous ~35 s après le premier
   gain accepté ; 30 s seulement après cumul et validation.
+- **Chantier C** : C1b est rejeté ; C1c doit viser un Go feuille ≤5 s pour les
+  fonctions à corps modifié, avec fallback si type/signature change. C2 backend
+  ≤20–25 s puis ≤15 s ; aucune régression froide >5 %.
 - **Mesures** : trois paires alternées minimum, sans campagne lourde
   concurrente ; conserver chaque essai et chaque échec ; comparer les octets
   JS, Go séquentiel/parallèle et Rust sur les mêmes TAST ; examiner les snapshots
@@ -214,11 +283,32 @@ ou B.
 - **Publication** : les preuves durables restent dans
   `htdocs/.gopurs-evidence/` ; les exports vérifiables dans `docs/`.
 
+## Worktrees de travail
+
+- **gopurs** : branche `c1b` créée depuis `edge` (HEAD `944f0e9`), sans
+  worktree séparé. Les changements B3/docs non commités restent dans la
+  worktree `gopurs/gopurs` sur `edge`.
+- **b8x** : worktree `/Users/0x1/Documents/htdocs/b8x-c1b`, branche `c1b`,
+  depuis `master` `67b6799f`. La worktree principale `b8x` garde les
+  changements utilisateur et n'est pas utilisée par les essais.
+- **purescript** : worktree `/Users/0x1/Documents/htdocs/purescript-c1b`,
+  branche `c1b`, depuis `edge` `105f575`.
+- **PBO** : worktree existant
+  `/Users/0x1/Documents/htdocs/purescript-backend-optimizer-gopurs`,
+  branche `edge-gopurs`.
+- **altbak.pub** : worktree existant
+  `/Users/0x1/Documents/htdocs/altbak.pub-gopurs`, branche `edge-gopurs`.
+
 ## Prochaine action
 
-1. Stresser plusieurs éditions et de gros changements avec le pack par défaut,
-   conserver les trois jeux de sorties froides et confirmer stockage/RSS.
-2. Rejouer Go séquentiel si nécessaire et vérifier les transitions de cache
-   restantes.
-3. Passer à **B1–B3**, un sous-chantier à la fois, avec le même seuil de 5 s
-   et les validations quatre hôtes.
+1. **A est clos** : pack par défaut, froid installé 76,163 s, hit 0,914 s,
+   feuille 45,421 s, sorties exactes.
+2. **C0 est terminé** : meilleur cas Go 2,67 s (Ping, density 1024, `-p 14`),
+   mais FFI à 32,9 s, isolation FFI impossible (cycle), backend 43,7 s.
+3. **C1c est validé** sur scalaires et type (`IntervalId`, Go feuille 1,02 s).
+   La prochaine priorité est **C2** : backend résident, cible ≤25 s. C1c doit
+   encore être automatisé pour les types/init, mais Go n’est plus le mur.
+4. **B1/B2/B3 sont des composants de C2** ; B2 reste rejeté dans l'ancien
+   chemin, B3 reste partiel et attend P03/P04.
+5. Garder Go séquentiel, le stress multi-éditions et les trois jeux de sorties
+   froides comme contrôles de régression du pack.
