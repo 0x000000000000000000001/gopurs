@@ -202,3 +202,9 @@ nouvelle campagne de préparation ni un nouveau candidat de cache.
   raw/regroupée C01.
 - `.gopurs-evidence/p00-20261019/tree/b8x/output/.gopurs-cache/` : manifeste
   de 13 840 écritures et 550 Mio d'objets.
+
+
+**C2-3 :** sur une édition de corps, **2 703 des 2 704 modules préparés**
+ont le même hash ; seul `Inter.Cli.Ping.Main` change. La préparation par module
+est donc une piste mesurée, pas une hypothèse. Le delta de préparation reste à
+implémenter.

@@ -1,4 +1,4 @@
-module Gopurs.Driver (compile) where
+module Gopurs.Driver (compile, compileWithConfig) where
 
 import Prelude
 
@@ -10,7 +10,7 @@ import Effect.Class (liftEffect)
 import Effect.Console as Console
 import Gopurs.Driver.Build (build)
 import Gopurs.Driver.Cache as BuildCache
-import Gopurs.Driver.Config (readConfig)
+import Gopurs.Driver.Config (CompilerConfig, readConfig)
 import Gopurs.Driver.Output (writeEntryPoints, writeRuntime, writePackageFiles)
 import Gopurs.Driver.Prepare (prepareModules)
 import Gopurs.Metrics as Metrics
@@ -20,8 +20,12 @@ import PureScript.Backend.Optimizer.Cache as Cache
 
 -- The driver owns phase ordering; each phase owns its inputs and mutable state.
 compile :: Aff Unit
-compile = Metrics.measure "backend total" \_ -> do
+compile = do
   config <- liftEffect readConfig
+  compileWithConfig config
+
+compileWithConfig :: CompilerConfig -> Aff Unit
+compileWithConfig config = Metrics.measure "backend total" \_ -> do
   liftEffect $ Console.error $
     "[gopurs] workers: prepare=" <> show config.prepareJobs
       <> ", pbo=" <> show config.optimizerJobs

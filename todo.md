@@ -41,7 +41,7 @@ du backend.
 | C1 — découpage SCC-aware | **Prototype échoué**, refactor codegen requis |
 | C1b — refactor SCC codegen | **Échoué** : topo 46,7 s, noinline 25,6 s |
 | C1c — bridge ABI/export | **Scalaires + type validés** : FFI 1,02 s |
-| C2 — backend résident | **Conception ouverte**, non codé |
+| C2 — backend résident | **C2-3 mesuré**, 1 module change |
 
 Références : [bilan P00](docs/build-preparation-baseline.md),
 [étude C01](docs/build-preparation-compact.md),
@@ -244,11 +244,12 @@ un build court universel.
   `SetInterval`/`ClearInterval` OK. Reste : automatisation de l’extraction,
   init/valeurs globales, autres types. Voir
   [C1b/C1c](docs/build-c1b-package-graph.md).
-- [~] **C2 — backend résident/incrémental.** Conception initiale :
-  [C2](docs/build-c2-resident.md). État de session conservé, traitement du seul
-  module modifié et de sa fermeture prouvée, caches préparation/PBO/plan,
-  validation et publication incrémentales. Cible : backend feuille ≤20–25 s,
-  puis ≤15 s avec B1/B3. Fallback complet au moindre doute. Non codé.
+- [~] **C2 — backend résident/incrémental.** C2-1/C2-2 codés. C2-3 mesuré :
+  base/feuille **2 703 modules préparés identiques**, seul
+  `Inter.Cli.Ping.Main` change. Le cache par module est viable ; il reste à
+  écrire `prepareModulesDelta`. Voir [C2](docs/build-c2-resident.md). Cible :
+  backend feuille ≤20–25 s, puis ≤15 s avec B1/B3. Fallback complet au moindre
+  doute.
 - [ ] **C3 — froid, conditionnel.** Le froid actuel (backend ~77 s + Go 46,7 s)
   ne peut pas viser 60 s par un cache chaud. À ouvrir après C1/C2 avec un budget
   séparé, pas comme sous-produit.
