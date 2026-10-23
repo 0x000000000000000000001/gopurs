@@ -164,6 +164,19 @@ test("object graphs reject forward, cyclic and missing references before busines
   ]) assert.equal(Wire.read(Wire.codecInt)(JSON.stringify(ctor("WithGraph", array(nodes), ctor("WithTypes", array([]), root)))), Maybe.Nothing.value);
 });
 
+test("graph references require canonical nonnegative integer text at roots and unused edges", () => {
+  const read = (root, edge = int(0)) => Wire.read(Wire.codecInt)(JSON.stringify(
+    ctor("WithGraph", array([int(7), array([edge])]), ctor("WithTypes", array([]), root)),
+  ));
+  assert.equal(read(int(0)).value0, 7);
+  const invalid = [null, true, 0, "0", [], {}, ["int"], ["int", 0], ["Int", "0"], ["int", "0", "extra"],
+    ...["", "-0", "+0", "00", "01", " 0", "0 ", "-1", "1.0", "1e0", "0x0", "2147483648", "１２", "\u0000"].map(text => ["int", text])];
+  for (const reference of invalid) {
+    assert.equal(read(reference), Maybe.Nothing.value, `root ${JSON.stringify(reference)}`);
+    assert.equal(read(int(0), reference), Maybe.Nothing.value, `unused edge ${JSON.stringify(reference)}`);
+  }
+});
+
 test("shared backend expressions are decoded once per graph node", () => {
   // The depth-1 assertion fails before attempting the larger graph if sharing
   // regresses. At depth 24, 100 wire nodes represent over 16 million leaves.

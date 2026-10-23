@@ -11,7 +11,7 @@ import Prelude
 
 import Control.Alt ((<|>))
 import Control.Alternative (guard)
-import Data.Argonaut.Core (Json, fromString, toArray, toBoolean, toString)
+import Data.Argonaut.Core (Json, caseJsonArray, caseJsonString, fromString, toArray, toBoolean, toString)
 import Data.Argonaut.Parser (jsonParser)
 import Data.Array as Array
 import Data.Array.NonEmpty (NonEmptyArray)
@@ -130,15 +130,18 @@ rawCtorArgs name json = do
     _ -> Nothing
 
 reference :: Json -> Maybe Int
-reference json = do
-  fields <- toArray json
-  case fields of
-    [ tag, value ] | toString tag == Just "int" -> do
-      text <- toString value
-      value' <- Int.fromString text
-      guard (value' >= 0 && show value' == text)
-      pure value'
+-- Consume JSON fields directly, without intermediate Maybe arrays or strings.
+reference = caseJsonArray Nothing readFields
+  where
+  readFields = case _ of
+    [ tag, value ] -> caseJsonString Nothing (\name ->
+      if name == "int" then caseJsonString Nothing readIndex value
+      else Nothing) tag
     _ -> Nothing
+  readIndex text = do
+    value <- Int.fromString text
+    guard (value >= 0 && show value == text)
+    pure value
 
 -- Every graph edge points backwards. Reject cycles/forward references before
 -- business decoding follows the graph's edges.
