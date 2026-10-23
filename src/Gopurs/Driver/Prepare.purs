@@ -42,6 +42,9 @@ type PreparedModules =
   , modules :: List (Module Ann)
   , mainModules :: Array String
   , metadata :: CodegenMetadata
+  -- A committed preparation proof covers every source input of sourceMetadata.
+  -- Consumers still bind a reused metadata fingerprint to the committed memos.
+  , metadataUnchanged :: Boolean
   , sources :: Array SourceModule
   }
 
@@ -111,7 +114,7 @@ prepareLoadedModules input jobs mainModule directives sortedModules =
         FS.writeTextFile UTF8 file (Data.String.joinWith "\n" hashes <> "\n")
     sourceHashes <- Map.fromFoldable <$> traverse (sourceFileHash input) (Array.fromFoldable sourceModules)
     let prepared =
-          { directives, modules, metadata, mainModules: selectMainModules mainModule sourceModules
+          { directives, modules, metadata, metadataUnchanged: false, mainModules: selectMainModules mainModule sourceModules
           , sources: map (\(Module m) -> { name: unwrap m.name, path: m.path, hasForeign: not (Map.isEmpty m.foreign) }) sourceModules
           }
     pure { prepared, sourceHashes, sourceModules: sortedModules, mono, reusable: Set.empty, proof: Nothing, materialize: Nothing }

@@ -137,7 +137,7 @@ probe session mainModule directives loaded sourceHashes = do
                         preparedModules = map (\source@(Module value) -> if value.name == changedSource.name then changedPrepared else Proof.placeholder (not (Map.isEmpty index)) source) enriched
                         metadata = sourceMetadata modules (map addClassDataDeclarations loaded)
                         prepared =
-                          { directives, modules: preparedModules, metadata
+                          { directives, modules: preparedModules, metadata, metadataUnchanged: true
                           , mainModules: selectMainModules mainModule modules
                           , sources: map (\(Module value) -> { name: unwrap value.name, path: value.path, hasForeign: not (Map.isEmpty value.foreign) }) modules
                           }

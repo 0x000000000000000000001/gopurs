@@ -158,9 +158,6 @@ func sessionOperation(req SessionRequest, result *SessionResponse) error {
 		result.Status = "ready"
 		return nil
 	case "packages":
-		if err := restorePriorSources(stage, state); err != nil {
-			return err
-		}
 		return preparePackageSession(stage, &state, req.Entries, result)
 	case "publish":
 		return publishSession(stage, state, req, result)

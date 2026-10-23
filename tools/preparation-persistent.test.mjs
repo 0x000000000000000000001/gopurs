@@ -56,6 +56,9 @@ const main = 'module Main (answer) where\nimport Leaf (value)\nanswer :: String\
 async function oracle(candidate, expected) {
   const expectedModules = array(expected.prepared.modules);
   assert(candidate.materialize instanceof Just);
+  assert.equal(candidate.prepared.metadataUnchanged, true);
+  assert.equal(expected.prepared.metadataUnchanged, false);
+  assert.equal(Wire.write(Wire.codecCodegenMetadata)(candidate.prepared.metadata)(), Wire.write(Wire.codecCodegenMetadata)(expected.prepared.metadata)());
   for (const mod of expectedModules) {
     const result = await run(candidate.materialize.value0(mod.name));
     assert(result instanceof Just, 'payload must materialize: ' + mod.name);

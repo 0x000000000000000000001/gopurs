@@ -88,7 +88,11 @@ initialize jobs session prepared reusableModules backends ffiDigests priorFfiDig
     Just values -> pure (Map.fromFoldable (map (\memo -> Tuple memo.name memo) (values :: Array Memo)))
     Nothing -> throwError (error "Invalid private module cache index")
   seed <- liftEffect (Wire.hash <$> Wire.write (Tuple session.context prepared.directives))
-  let modules = Array.fromFoldable prepared.modules
+  let
+    modules = Array.fromFoldable prepared.modules
+    sameContext = case Array.head modules of
+      Just (Module m) -> map _.optimizerEnvironment (Map.lookup (unwrap m.name) candidates) == Just seed
+      Nothing -> false
   -- Source/interface equality does not prove that specializations are equal.
   -- Only identical TAST or an explicit preparation proof can reuse these keys.
   let deltaReusable = if Set.size reusableModules == 0 then Map.empty else Map.filterWithKey (\name _ -> Set.member name reusableModules) candidates
@@ -96,11 +100,20 @@ initialize jobs session prepared reusableModules backends ffiDigests priorFfiDig
   fingerprints <- Metrics.measure "prepared module keys" \_ -> mapJobs jobs (preparedFingerprint reusable) modules
   let reused = Array.length (Array.filter (\(Module m) -> Map.member (unwrap m.name) reusable) modules)
   liftEffect $ Console.error $ "[gopurs] prepared fingerprints: computed=" <> show (Array.length modules - reused) <> ", reused=" <> show reused
-  metadata <- Metrics.measure "global metadata key" \_ -> liftEffect (Wire.hash <$> Wire.write prepared.metadata)
+  metadata <- Metrics.measure "global metadata key" \_ -> do
+    let previousMetadata = do
+          guard (prepared.metadataUnchanged && sameContext)
+          Module first <- Array.head modules
+          memo <- Map.lookup (unwrap first.name) candidates
+          value <- memo.metadata
+          guard (Array.all (\(Module m) -> (Map.lookup (unwrap m.name) candidates >>= _.metadata) == Just value) modules)
+          pure value
+    case previousMetadata of
+      Just value -> do
+        liftEffect $ Console.error "[gopurs] global metadata fingerprint: reused"
+        pure value
+      Nothing -> liftEffect (Wire.hash <$> Wire.write prepared.metadata)
   let
-    sameContext = case Array.head modules of
-      Just (Module m) -> map _.optimizerEnvironment (Map.lookup (unwrap m.name) candidates) == Just seed
-      Nothing -> false
     keyed = foldl add { prefix: seed, keys: Map.empty } fingerprints
     changedPrepared = Set.fromFoldable (Array.mapMaybe
       (\(Tuple name keys) -> case Map.lookup name candidates of
