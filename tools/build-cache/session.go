@@ -16,6 +16,11 @@ type SourceModule struct {
 	HasForeign bool   `json:"hasForeign"`
 }
 
+type frozenSourceHash struct {
+	Name string `json:"name"`
+	Hash string `json:"hash"`
+}
+
 type FrozenFFI struct {
 	Name   string `json:"name"`
 	Path   string `json:"path"`
@@ -39,18 +44,19 @@ type SessionRequest struct {
 }
 
 type SessionResponse struct {
-	Status         string      `json:"status"`
-	Reason         string      `json:"reason"`
-	Root           string      `json:"root"`
-	Stage          string      `json:"stage"`
-	Input          string      `json:"input"`
-	Output         string      `json:"output"`
-	Count          int         `json:"count"`
-	Context        string      `json:"context"`
-	SameTAST       bool        `json:"sameTast"`
-	FFI            []FrozenFFI `json:"ffi"`
-	PackageRequest string      `json:"packageRequest"`
-	PackageResult  string      `json:"packageResult"`
+	Status         string       `json:"status"`
+	Reason         string       `json:"reason"`
+	Root           string       `json:"root"`
+	Stage          string       `json:"stage"`
+	Input          string       `json:"input"`
+	Output         string       `json:"output"`
+	Count          int          `json:"count"`
+	Context        string       `json:"context"`
+	SameTAST       bool         `json:"sameTast"`
+	FFI            []FrozenFFI  `json:"ffi"`
+	PackageRequest string       `json:"packageRequest"`
+	PackageResult  string       `json:"packageResult"`
+	Contributions  []FrozenPart `json:"contributions,omitempty"`
 }
 
 type buildSession struct {
@@ -119,7 +125,7 @@ func sessionOperation(req SessionRequest, result *SessionResponse) error {
 	// Its immutable inputs are already bound to this stage; avoid reparsing the
 	// complete source/FFI inventory for every single part. Helper processes have
 	// no cached state and use the ordinary checked protocol below.
-	if req.Operation == "materialize" {
+	if req.Operation == "materialize" || req.Operation == "read-parts" {
 		lazyPriors.Lock()
 		prior := lazyPriors.values[stage]
 		lazyPriors.Unlock()
@@ -129,6 +135,9 @@ func sessionOperation(req SessionRequest, result *SessionResponse) error {
 				return fmt.Errorf("build workspace changed")
 			}
 			result.Stage, result.Input, result.Output, result.Count = stage, filepath.Join(stage, "input"), filepath.Join(stage, "output"), state.Count
+			if req.Operation == "read-parts" {
+				return readSessionParts(stage, state, req, result)
+			}
 			if err := materializePrior(stage, state, req.Owners, req.Parts); err != nil {
 				return err
 			}
@@ -157,6 +166,8 @@ func sessionOperation(req SessionRequest, result *SessionResponse) error {
 		}
 		result.Status = "ready"
 		return nil
+	case "read-parts":
+		return readSessionParts(stage, state, req, result)
 	case "packages":
 		return preparePackageSession(stage, &state, req.Entries, result)
 	case "publish":
@@ -174,16 +185,27 @@ func sessionOperation(req SessionRequest, result *SessionResponse) error {
 	}
 }
 
+func readSessionParts(stage string, state buildSession, req SessionRequest, result *SessionResponse) error {
+	parts, err := readPriorParts(stage, state, req.Owners, req.Parts)
+	if err != nil {
+		return err
+	}
+	result.Contributions, result.Status = parts, "ready"
+	return nil
+}
+
 func beginSession(spec Spec, force bool, result *SessionResponse) error {
 	result.SameTAST = false
 	baseInputs := spec.Inputs
 	result.Reason = "recipe-absent"
 	var saved recipe
+	var observed *Snapshot
 	data, err := os.ReadFile(filepath.Join(spec.Output, ".gopurs-cache", "recipe.json"))
 	if err == nil && strictJSON(data, &saved) == nil && saved.Schema == Schema {
 		spec.Inputs = saved.Inputs
 		lookup, lookupErr := execute(Request{Schema: Schema, Operation: "lookup", Spec: spec})
 		if lookupErr == nil {
+			observed = lookup.Snapshot
 			if lookup.Status == "hit" && !force && lookup.Manifest.Diagnostics == nil {
 				result.Status, result.Reason = "hit", ""
 				return nil
@@ -202,15 +224,19 @@ func beginSession(spec Spec, force bool, result *SessionResponse) error {
 		result.Reason = "forced"
 	}
 	spec.Inputs = baseInputs
-	initial, err := execute(Request{Schema: Schema, Operation: "snapshot", Spec: spec})
-	if err != nil {
-		return err
+	initial, available := baseSnapshot(spec, observed)
+	if !available {
+		response, err := execute(Request{Schema: Schema, Operation: "snapshot", Spec: spec})
+		if err != nil {
+			return err
+		}
+		initial = *response.Snapshot
 	}
 	options, err := sortedSettings(spec.Options)
 	if err != nil {
 		return err
 	}
-	result.Context = Key("module-context", initial.Snapshot.Compiler, Key("options", options...))
+	result.Context = Key("module-context", initial.Compiler, Key("options", options...))
 	parent := filepath.Join(spec.Output, ".gopurs-cache", "stages")
 	if err := privateDirectory(parent); err != nil {
 		return err
@@ -238,6 +264,7 @@ func beginSession(spec Spec, force bool, result *SessionResponse) error {
 		return err
 	}
 	parts := []string{}
+	sourceHashes := []frozenSourceHash{}
 	count := 0
 	for _, entry := range entries {
 		dir := filepath.Join(spec.Output, entry.Name())
@@ -259,6 +286,7 @@ func beginSession(spec Spec, force bool, result *SessionResponse) error {
 			continue
 		}
 		parts = append(parts, f.Name, f.Resolved, f.Digest)
+		sourceHashes = append(sourceHashes, frozenSourceHash{Name: entry.Name(), Hash: f.Digest})
 		destination := filepath.Join(input, entry.Name())
 		if err := os.Mkdir(destination, 0700); err != nil {
 			return err
@@ -268,15 +296,24 @@ func beginSession(spec Spec, force bool, result *SessionResponse) error {
 		}
 		count++
 	}
-	if Key("tast", parts...) != initial.Snapshot.Inputs[0].Digest {
+	if Key("tast", parts...) != initial.Inputs[0].Digest {
 		return fmt.Errorf("TAST changed while freezing inputs; retry the build")
 	}
 	check, err := snapshot(spec)
 	if err != nil {
 		return err
 	}
-	if check.Key != initial.Snapshot.Key {
+	if check.Key != initial.Key {
 		return fmt.Errorf("inputs changed while freezing TAST; retry the build")
+	}
+	// These hashes describe the exact private bytes consumed by preparation.
+	// Keeping them with the frozen input avoids reading every corefn twice.
+	hashes, err := json.Marshal(sourceHashes)
+	if err != nil {
+		return err
+	}
+	if err := os.WriteFile(filepath.Join(stage, "source-hashes.json"), hashes, 0400); err != nil {
+		return err
 	}
 	state := buildSession{Spec: spec, Snapshot: check, Count: count}
 	if err := freezeModuleCache(stage, state, force, result); err != nil {

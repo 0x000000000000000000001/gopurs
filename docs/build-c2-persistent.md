@@ -1,5 +1,10 @@
 # C2-7 — build incrémental one-shot sans daemon
 
+Suite : [C2-8 — backend central sous 10 s](build-c2-sub10.md), médiane v4 de
+8,586 s sur trois paires byte-exactes, fallback natif corrigé et livraison
+validée. Le vrai `b` v4 prend 13,651 s au total, dont 8,977 s backend.
+Les mesures C2-7 ci-dessous conservent leur binaire et leur protocole historiques.
+
 **Cible ≤20 s atteinte sur les trois paires natives du 23 octobre 2026 :
 16,970 s de backend médian, contre 92,934 s en full forcé.** Préparation
 persistante compacte, contributions PBO à la demande et overlay multi-bundles

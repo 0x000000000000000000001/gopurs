@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -128,6 +129,91 @@ func newOverlayFixture(t *testing.T, newBody string) *overlayFixture {
 		Entries: previousRequest.Entries}
 	state := buildSession{Spec: Spec{Output: output}, Modules: []SourceModule{{Name: "Main"}, {Name: "Helper"}}}
 	return &overlayFixture{output: output, stage: stage, state: state, request: request}
+}
+
+func TestPackageOverlayMaterializesOnlyMissingSignatures(t *testing.T) {
+	for _, missingSignature := range []bool{false, true} {
+		t.Run(fmt.Sprintf("missing-signature-%t", missingSignature), func(t *testing.T) {
+			t.Setenv(packPublication, "0")
+			t.Setenv("GOPURS_GO_PACKAGE_OVERLAY", "1")
+			f := newOverlayFixture(t, "-new")
+			f.state.Planned = true
+			var err error
+			f.state.Spec.Output, err = filepath.EvalSymlinks(f.output)
+			if err != nil {
+				t.Fatal(err)
+			}
+			f.state.Spec.Workspace = f.state.Spec.Output
+			f.state.Spec.Options = []Setting{{"go-layout", packageLayout}, {"module-lazy", "1"}}
+			f.state.Spec.Compiler = []Input{{Name: "compiler", Kind: "file", Path: filepath.Join(f.output, "compiler")}}
+			f.state.Spec.Inputs = []Input{{Name: "tast", Kind: "tast", Path: f.state.Spec.Output}}
+			put(t, f.state.Spec.Compiler[0].Path, "test compiler")
+			put(t, filepath.Join(f.output, "go.mod"), "module gopurs/output\n\ngo 1.22\n")
+			put(t, filepath.Join(f.stage, "output/gopurs_runtime/runtime.go"), "package gopurs_runtime\n")
+			f.state.Snapshot, err = snapshot(f.state.Spec)
+			if err != nil {
+				t.Fatal(err)
+			}
+			s := store{root: f.output, cache: filepath.Join(f.output, ".gopurs-cache")}
+			if err := os.MkdirAll(filepath.Join(s.cache, "objects"), 0700); err != nil {
+				t.Fatal(err)
+			}
+			helperPath := filepath.Join(f.stage, "output/purescript/Helper.go")
+			helper, err := os.ReadFile(helperPath)
+			if err != nil {
+				t.Fatal(err)
+			}
+			source, err := s.stageModuleSource("", StagedModuleSource{"module", helperPath}, nil, newPackWriter(&s))
+			if err != nil {
+				t.Fatal(err)
+			}
+			manifest := &Manifest{Modules: []ModuleMemo{{Name: "Helper", Sources: []ModuleSource{source}}}}
+			lazyPriors.Lock()
+			lazyPriors.values[f.stage] = newLazyPrior(manifest, s)
+			lazyPriors.Unlock()
+			t.Cleanup(func() { forgetLazyPrior(f.stage) })
+			if err := os.Remove(helperPath); err != nil {
+				t.Fatal(err)
+			}
+			previous := f.request
+			previous.GoVersion = "go1.22"
+			previous.Files = append([]packageSource{}, previous.Files...)
+			previous.Files[0].SHA256 = digest([]byte("package purescript\nfunc Get_Main() string { return Helper() + \"-old\" }\n"))
+			previous.Files[1].SHA256 = source.Raw.SHA256
+			previous.Signatures = map[string]string{}
+			for _, file := range previous.Files {
+				data := helper
+				if file.Module == "Main" {
+					data, err = os.ReadFile(file.Source)
+					if err != nil {
+						t.Fatal(err)
+					}
+				}
+				previous.Signatures[file.Path], err = sourceSignature(file.Path, data)
+				if err != nil {
+					t.Fatal(err)
+				}
+			}
+			if missingSignature {
+				delete(previous.Signatures, "Helper.go")
+			}
+			encoded, _ := json.Marshal(previous)
+			put(t, filepath.Join(f.output, ".gopurs-cache/go-packages/plan-v1/request.json"), string(encoded))
+			var response SessionResponse
+			err = preparePackageSession(f.stage, &f.state, []string{"Main"}, &response)
+			if missingSignature {
+				if err != nil || response.Status != "packages-ready" {
+					t.Fatalf("missing signature did not fall back to the planner: %s %v", response.Status, err)
+				}
+			} else if err != nil || response.Status != "packages-overlay" {
+				t.Fatalf("lazy overlay: %s %v", response.Status, err)
+			}
+			_, statErr := os.Stat(helperPath)
+			if missingSignature && statErr != nil || !missingSignature && !os.IsNotExist(statErr) {
+				t.Fatalf("unexpected helper materialization: %v", statErr)
+			}
+		})
+	}
 }
 
 func TestPackageOverlayExecutesBodyEdit(t *testing.T) {

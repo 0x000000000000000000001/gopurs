@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -80,6 +81,42 @@ func TestLazyModuleMaterializationIsSelectiveAndConcurrent(t *testing.T) {
 	}
 }
 
+func TestLazyHeaderBatchReturnsVerifiedBytesWithoutFiles(t *testing.T) {
+	t.Setenv(packPublication, "0")
+	stage, state, prior := lazyModuleFixture(t)
+	parts, err := readPriorParts(stage, state, []string{"Main"}, []string{"2", "3"})
+	if err != nil || len(parts) != 2 {
+		t.Fatalf("header batch: %+v %v", parts, err)
+	}
+	for i, part := range parts {
+		expected, err := prior.store.validateObject(prior.modules["Main"].Parts[i+2].Object)
+		if err != nil || part.Name != "Main" || part.Part != fmt.Sprint(i+2) || part.Text != string(expected) {
+			t.Fatalf("batch bytes differ: %+v %v", part, err)
+		}
+		if _, err := os.Stat(filepath.Join(stage, "prior/Main", part.Part+".json")); !os.IsNotExist(err) {
+			t.Fatalf("batch wrote a temporary part: %v", err)
+		}
+	}
+	// Serialized text preserves the exact Wire payload across the host boundary.
+	response := SessionResponse{Status: "ready", Contributions: parts}
+	encoded, err := json.Marshal(response)
+	var decoded SessionResponse
+	if err != nil || strictJSON(encoded, &decoded) != nil || !reflect.DeepEqual(decoded.Contributions, parts) {
+		t.Fatalf("batch JSON changed bytes: %s / %v", encoded, err)
+	}
+	if _, err := readPriorParts(stage, state, []string{"missing"}, []string{"2"}); err == nil {
+		t.Fatal("accepted unknown owner")
+	}
+	if _, err := readPriorParts(stage, state, []string{"Main"}, []string{"0"}); err == nil {
+		t.Fatal("batch loaded a backend body")
+	}
+	object := prior.modules["Main"].Parts[2].Object
+	put(t, filepath.Join(prior.store.cache, "objects", object.SHA256), "corrupt")
+	if _, err := readPriorParts(stage, state, []string{"Main"}, []string{"2", "3"}); err == nil {
+		t.Fatal("batch accepted a corrupt private object after a successful read")
+	}
+}
+
 func TestLazyModuleInheritanceUsesFrozenAuthority(t *testing.T) {
 	stage, state, prior := lazyModuleFixture(t)
 	old := prior.modules["Main"]
@@ -146,55 +183,87 @@ func TestLazyModuleAbsentForeignIsOptional(t *testing.T) {
 
 func TestLazyModuleReadsRemainCommittedProofs(t *testing.T) {
 	t.Setenv(packPublication, "0")
-	_, result, state, _ := packageModuleFixture(t)
-	s := store{root: state.Spec.Output, cache: filepath.Join(state.Spec.Output, ".gopurs-cache")}
-	manifest, why := s.readManifest()
-	if manifest == nil {
-		t.Fatal(why)
-	}
-	object, err := s.putObject([]byte("Provider\n"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	manifest.Modules[0].Reads = &Artifact{Codec: moduleReadsCodec, Object: object}
-	raw, _ := json.Marshal(manifest)
-	manifestObject, err := s.putObject(raw)
-	if err != nil {
-		t.Fatal(err)
-	}
-	pointerBytes, _ := json.Marshal(pointer{Format: Format, Schema: Schema, Manifest: manifestObject})
-	put(t, filepath.Join(s.cache, "current.json"), string(pointerBytes))
-	state.Spec.Options = append(state.Spec.Options, Setting{"module-lazy", "1"})
-	for _, corrupt := range []bool{false, true} {
-		stage := t.TempDir()
-		if err := os.Mkdir(filepath.Join(stage, "prior"), 0700); err != nil {
-			t.Fatal(err)
-		}
-		if corrupt {
-			put(t, filepath.Join(s.cache, "objects", object.SHA256), "bad")
-		}
-		if err := freezeModuleCache(stage, state, false, &result); err != nil {
-			t.Fatal(err)
-		}
-		data, err := os.ReadFile(filepath.Join(stage, "prior/index.json"))
-		if err != nil {
-			t.Fatal(err)
-		}
-		var index []ModuleMemo
-		if err := strictJSON(data, &index); err != nil {
-			t.Fatal(err)
-		}
-		if corrupt {
-			if len(index) != 0 {
-				t.Fatal("corrupt reads admitted candidate")
+	for _, test := range []struct {
+		name    string
+		text    string
+		missing bool
+		corrupt bool
+	}{
+		{name: "known", text: "Provider\nOther.Provider\n"},
+		{name: "empty"},
+		{name: "missing", missing: true},
+		{name: "corrupt", text: "Provider\n", corrupt: true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			_, result, state, _ := packageModuleFixture(t)
+			s := store{root: state.Spec.Output, cache: filepath.Join(state.Spec.Output, ".gopurs-cache")}
+			manifest, why := s.readManifest()
+			if manifest == nil {
+				t.Fatal(why)
 			}
-		} else {
-			data, err := os.ReadFile(filepath.Join(stage, "prior/Main/reads.json"))
-			if err != nil || string(data) != "Provider\n" {
-				t.Fatalf("lost committed reads: %s %v", data, err)
+			manifest.Modules[0].Reads = nil
+			if !test.missing {
+				object, err := s.putObject([]byte(test.text))
+				if err != nil {
+					t.Fatal(err)
+				}
+				manifest.Modules[0].Reads = &Artifact{Codec: moduleReadsCodec, Object: object}
+				if test.corrupt {
+					put(t, filepath.Join(s.cache, "objects", object.SHA256), "bad")
+				}
 			}
-		}
-		forgetLazyPrior(stage)
+			raw, _ := json.Marshal(manifest)
+			manifestObject, err := s.putObject(raw)
+			if err != nil {
+				t.Fatal(err)
+			}
+			pointerBytes, _ := json.Marshal(pointer{Format: Format, Schema: Schema, Manifest: manifestObject})
+			put(t, filepath.Join(s.cache, "current.json"), string(pointerBytes))
+			state.Spec.Options = append(state.Spec.Options, Setting{"module-lazy", "1"})
+			stage := t.TempDir()
+			defer forgetLazyPrior(stage)
+			if err := os.Mkdir(filepath.Join(stage, "prior"), 0700); err != nil {
+				t.Fatal(err)
+			}
+			if err := freezeModuleCache(stage, state, false, &result); err != nil {
+				t.Fatal(err)
+			}
+			data, err := os.ReadFile(filepath.Join(stage, "prior/index.json"))
+			var index []ModuleMemo
+			if err != nil || strictJSON(data, &index) != nil {
+				t.Fatalf("invalid frozen index: %s %v", data, err)
+			}
+			wantCandidates := 1
+			if test.corrupt {
+				wantCandidates = 0
+			}
+			if len(index) != wantCandidates {
+				t.Fatalf("candidate count: got %d, want %d", len(index), wantCandidates)
+			}
+			data, err = os.ReadFile(filepath.Join(stage, "prior/owners.json"))
+			var reads []frozenReads
+			if err != nil || strictJSON(data, &reads) != nil || len(reads) != 1 || reads[0].Name != "Main" {
+				t.Fatalf("invalid frozen reads: %s %v", data, err)
+			}
+			unknown := test.missing || test.corrupt
+			if unknown != (reads[0].Text == nil) || (!unknown && *reads[0].Text != test.text) {
+				t.Fatalf("lost proof presence or exact bytes: %s", data)
+			}
+			if _, err := os.Stat(filepath.Join(stage, "prior/Main")); !os.IsNotExist(err) {
+				t.Fatalf("eager owner directory: %v", err)
+			}
+			if !unknown {
+				// A fresh helper recovers the proof from the full private manifest.
+				forgetLazyPrior(stage)
+				if err := materializePrior(stage, state, []string{"Main"}, []string{"reads"}); err != nil {
+					t.Fatal(err)
+				}
+				data, err = os.ReadFile(filepath.Join(stage, "prior/Main/reads.json"))
+				if err != nil || string(data) != test.text {
+					t.Fatalf("lost materialized reads: %s %v", data, err)
+				}
+			}
+		})
 	}
 }
 

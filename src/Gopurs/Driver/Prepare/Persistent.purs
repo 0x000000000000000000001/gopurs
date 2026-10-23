@@ -84,13 +84,29 @@ sourceHash input (Module mod) = do
   text <- FS.readTextFile UTF8 (input <> "/" <> unwrap mod.name <> "/corefn.json")
   pure (Tuple (unwrap mod.name) (Wire.hash text))
 
+-- The freeze step hashes the exact bytes copied to this private session.
+-- Older sessions and incomplete inventories keep the original hashing path.
+sourceHashesFor :: Session -> Array (Module Ann) -> Aff (Map String String)
+sourceHashesFor session modules = do
+  frozen <- readJSON (session.stage <> "/source-hashes.json") :: Aff (Maybe (Array Proof.NamedHash))
+  case frozen of
+    Just entries
+      | Array.length entries == session.count -> do
+          let hashes = Map.fromFoldable (map (\entry -> Tuple entry.name entry.hash) entries)
+          if Map.size hashes == session.count
+            && Array.all (\(Module mod) -> Map.member (unwrap mod.name) hashes) modules then pure hashes
+          else readCurrent
+    _ -> readCurrent
+  where
+  readCurrent = Map.fromFoldable <$> traverse (sourceHash session.input) modules
+
 preparePersistent :: Session -> Int -> Maybe String -> InlineDirectiveMap -> Aff PreparedCache
 preparePersistent session jobs mainModule directives = do
   loaded <- Metrics.measure "load TAST + sort" \_ -> coreFnModulesFromOutput session.input
   let modules = Array.fromFoldable loaded
   when (Array.length modules /= session.count) $
     throwError (error "TAST decoding did not produce every inventoried module")
-  hashes <- Map.fromFoldable <$> traverse (sourceHash session.input) modules
+  hashes <- Metrics.measure "source hashes" \_ -> sourceHashesFor session modules
   candidate <- Metrics.measure "compact preparation probe" \_ -> probe session mainModule directives loaded hashes
   case candidate of
     Just prepared -> do

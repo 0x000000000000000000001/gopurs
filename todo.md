@@ -1,6 +1,6 @@
 # Gopurs — état et plan actif
 
-**Mise à jour : 21 octobre 2026.** Le plan v3 (lots 00–06) est clos et la suite
+**Mise à jour : 23 octobre 2026.** Le plan v3 (lots 00–06) est clos et la suite
 G00–G06 est livrée. P00 est terminé, C01 et B2 sont rejetés. Le chantier C
 (architecture incrémentale et découpage Go SCC-aware) est ouvert après
 l'exploration de granularité. L'historique complet des lots, seuils, échecs et
@@ -13,8 +13,9 @@ de l'ancien `todo.md` (SHA-256
 
 Réduire le cycle **modifier → construire → tester**. Les repères historiques
 restent **~30 s de backend après modification** et **~60 s de backend à froid**.
-Ils ne sont pas encore atteints et ne doivent pas être utilisés comme critère
-d'acceptation d'un premier lot.
+Ils restent des repères généraux. C2-8 confirme moins de 10 s backend avec v4
+sur le cas central borné décrit ci-dessous. Cela ne clôt pas l'objectif à froid
+ni celui de la chaîne complète.
 
 Deux chronomètres restent distincts :
 
@@ -45,6 +46,7 @@ du backend.
 | C2-5 — Go incrémental | **Overlay 3.5 branché**, Go packages 0,004–0,021 s |
 | C2-6 — daemon one-shot | Vérifié byte-exact avec 1 et 8 workers, y compris après erreur |
 | C2-7 — one-shot persistant | **16,970 s médiane** sur édition littérale centrale ; 3 paires byte-exactes, cible ≤20 s atteinte |
+| C2-8 — one-shot central <10 s | **Achevé**, v4 : 8,586 s backend médian, trois paires byte-exactes ; vrai `b` 13,651 s total ; audit 25/25 |
 
 Références : [bilan P00](docs/build-preparation-baseline.md),
 [étude C01](docs/build-preparation-compact.md),
@@ -60,6 +62,7 @@ Références : [bilan P00](docs/build-preparation-baseline.md),
 [conception C2](docs/build-c2-resident.md),
 [plan C2-5 Go](docs/build-c2-go-packages.md),
 [build one-shot persistant](docs/build-c2-persistent.md),
+[backend central sous 10 s](docs/build-c2-sub10.md),
 [mesures G06](docs/build-go-measurements.md).
 
 ### Ce que les mesures ont établi
@@ -284,6 +287,19 @@ un build court universel.
   → Int`, édition littérale et échec récupérable. Activé par défaut dans le
   lanceur Go natif pour permettre `b` sans exports ; autres hôtes opt-in.
   Voir [C2-7](docs/build-c2-persistent.md).
+- [x] **C2-8 — backend central sous 10 s.** Trois paires natives v4 :
+  **8,586 / 8,552 / 8,603 s**, médiane **8,586 s**, contre **79,464 s** full
+  médian. Les 2 704 modules et 27 sorties sont byte-exacts pour chaque paire.
+  Chaque incrémental respecte le seuil strict ; frontend et compilation Go
+  exclus, cache amorcé, édition littérale de corps uniquement. Suites ciblées
+  27/27 et Go `-race` vertes. La campagne v3 antérieure et son `b` restent
+  historiques : une corruption avait ensuite révélé un panic Aff empêchant
+  le fallback. V4 corrige la propagation des exceptions et
+  la libération des brackets ; deux corruptions natives et les daemons à un/huit
+  workers sont verts. Compilation Go finale et vrai `b` v4 réussis : **8,977 s
+  backend**, **13,651 s au total** pour ce dernier, sans daemon. Audit de clôture
+  **25/25**, SHA et sources concordants ; C2-8 achevé sur ce périmètre.
+  Voir [C2-8](docs/build-c2-sub10.md).
 - [ ] **C3 — froid, conditionnel.** Le froid actuel (backend ~77 s + Go 46,7 s)
   ne peut pas viser 60 s par un cache chaud. À ouvrir après C1/C2 avec un budget
   séparé, pas comme sous-produit.
@@ -338,7 +354,7 @@ chemin ; B3 reste partiel et exige les preuves P03/P04.
 1. **A est clos** : pack par défaut, froid installé 76,163 s, hit 0,914 s,
    feuille 45,421 s, sorties exactes.
 2. **C2-4 historique** : backend monolithique **14,734 s** sur le cas testé ;
-   la preuve actuelle et les mesures one-shot sont celles de C2-7.
+   la preuve compacte vient de C2-7 ; les dernières mesures sont celles de C2-8.
 3. **C2-5 est branché** (désormais par défaut via le lanceur Go natif) : overlay C1c dans
    `preparePackageSession`/`writePackageFiles`, entrées et imports réécrits,
    fallback full. Go packages **0,003–0,021 s**, backend **17,323–21,515 s**
@@ -348,14 +364,25 @@ chemin ; B3 reste partiel et exige les preuves P03/P04.
    et campagne quatre hôtes restent hors de cette validation. À la demande de
    l'utilisateur, le lanceur Go natif active désormais le chemin validé par
    défaut ; les autres hôtes gardent leur activation explicite.
-5. **HANDOFF détaillé** : branche `c2`, binaire final mesuré
-   `457bfcf3…` (C2-7 compact + lazy + overlay central, réparation des packs).
-   Évidence : `.gopurs-evidence/c2-7-reprise-20261023/central-validated-pairs/`
-   depuis `htdocs` ; détails et commande dans `docs/build-c2-persistent.md`.
+5. **C2-8 achevé avec v4.** Trois paires centrales exactes,
+   chaque incrémental sous 10 s ; fallback sur deux objets corrompus et daemon
+   un/huit workers validés, compilation Go du dernier résultat réussie. Le vrai
+   `b` sans exports fonctionne : 8,977 s backend, 13,651 s total. Les 25 critères
+   de `completion-audit.json` sont verts. Le seuil reste celui du backend,
+   après édition littérale centrale et avec cache amorcé.
+6. **HANDOFF détaillé** : branche `c2`, binaire final validé v4
+   `0394c4fe3aceb577f99480872853c17c44a8d43f309105b4a47909e0242f5fd5`.
+   Évidence : `.gopurs-evidence/c2-8-sub10-20261023/central-validated-v4/` depuis
+   `htdocs` ; SHA des sources et du correctif Aff dans `v4-source-state.json`,
+   détails dans `docs/build-c2-sub10.md`. Médianes v4 : backend **8,586 s**,
+   full **79,464 s**, processus **9,197 s**. La campagne v3 (`3ceb9250…`) reste
+   conservée sous `candidate-v3/`, médiane backend **8,506 s**, full **78,590 s**.
+   Le binaire C2-7 `457bfcf3…` et sa campagne restent dans
+   `.gopurs-evidence/c2-7-reprise-20261023/central-validated-pairs/`.
    Ancien binaire `33f8ba03…` ; daemon historique `cebd9c75…` ; overlay
-   build 7 `102f3d3e…` / build 8 `0dbbfcf4…`. Aucun commit. Le code C2/C1c
-   n'est pas installé dans l'arbre P00. Ne pas merger dans `edge` avant
-   validation.
+   build 7 `102f3d3e…` / build 8 `0dbbfcf4…`. Aucun commit de l'assistant. Le code C2/C1c
+   n'est pas installé dans l'arbre P00. La validation C2-8 est achevée ; aucun
+   merge n'a été effectué par l'assistant.
    - Fichiers C2 : `src/Gopurs/Driver.purs`,
      `src/Gopurs/Driver/Build.purs`, `src/Gopurs/Driver/Prepare.purs`,
      `src/Gopurs/Driver/Output.purs`, `src/Gopurs/Cache/Modules.purs`,
@@ -370,5 +397,5 @@ chemin ; B3 reste partiel et exige les preuves P03/P04.
      `p00-20261019/tree/gopurs` ; sinon `Promise_Internal_NewPromise` échoue.
    - Preuves : `.gopurs-evidence/a-20261020-c2-*`, `a-20261021-*`,
      `a-20261020-partition`.
-6. Garder Go séquentiel, le stress multi-éditions et les trois jeux de sorties
+7. Garder Go séquentiel, le stress multi-éditions et les trois jeux de sorties
    froides comme contrôles de régression du pack.

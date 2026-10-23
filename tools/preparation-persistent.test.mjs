@@ -58,7 +58,7 @@ async function oracle(candidate, expected) {
   assert(candidate.materialize instanceof Just);
   assert.equal(candidate.prepared.metadataUnchanged, true);
   assert.equal(expected.prepared.metadataUnchanged, false);
-  assert.equal(Wire.write(Wire.codecCodegenMetadata)(candidate.prepared.metadata)(), Wire.write(Wire.codecCodegenMetadata)(expected.prepared.metadata)());
+  assert.deepEqual(candidate.prepared.metadata, expected.prepared.metadata, 'literal proof preserves every source metadata table');
   for (const mod of expectedModules) {
     const result = await run(candidate.materialize.value0(mod.name));
     assert(result instanceof Just, 'payload must materialize: ' + mod.name);
@@ -76,6 +76,51 @@ test('literal edit reuses anchored compact preparation and materializes every re
   await f.publish(candidate);
   f.compile({ Leaf: leaf('third') });
   await oracle(await f.candidate(), await f.full());
+});
+
+test('literal metadata proof preserves ADT layouts, classes and foreign types', async t => {
+  const layout = text => `module Layout (Token(..), Chain(..), Wrap(..), class Select, select, foreignValue, label) where
+data Token = LeftToken | RightToken
+data Chain = End | Next Int Chain
+newtype Wrap = Wrap Int
+class Select a where
+  select :: a -> Int
+instance selectInt :: Select Int where
+  select x = x
+foreign import foreignValue :: Int
+label :: String
+label = "${text}"
+`;
+  const f = setup(t, { Poly: poly, Leaf: leaf('unchanged'), Layout: layout('before') });
+  f.compile({});
+  const initial = await f.full();
+  assert.equal(initial.prepared.metadataUnchanged, false);
+  await f.publish(initial);
+  f.compile({ Layout: layout('after') });
+  const candidate = await f.candidate();
+  assert.equal(candidate.prepared.metadataUnchanged, true);
+  assert.deepEqual(candidate.prepared.metadata, initial.prepared.metadata);
+  await oracle(candidate, await f.full());
+});
+
+test('frozen source hashes require a complete inventory with distinct module names', async t => {
+  const f = setup(t, { Poly: poly, Leaf: leaf('before'), Main: main });
+  f.compile({}); await f.publish(await f.full());
+  f.compile({ Leaf: leaf('after') });
+  const entries = Object.keys(f.sources).sort().map(name => ({ name, hash: Wire.hash(readFileSync(join(f.output, name, 'corefn.json'), 'utf8')) }));
+  const expected = await f.full();
+  const path = join(f.stage, 'source-hashes.json');
+  for (const inventory of [
+    entries,
+    entries.slice(1),
+    entries.map((entry, i) => i === 0 ? { ...entry, name: 'Unknown' } : entry),
+    entries.map((entry, i) => i === 0 ? { ...entry, name: entries[1].name } : entry),
+  ]) {
+    writeFileSync(path, JSON.stringify(inventory));
+    const candidate = await f.candidate();
+    assert.deepEqual(Map.toUnfoldable(unfoldableArray)(candidate.sourceHashes).map(pair => ({ name: pair.value0, hash: pair.value1 })), entries);
+    await oracle(candidate, expected);
+  }
 });
 
 test('an empty specialization index preserves untyped private bindings and source exports', async t => {

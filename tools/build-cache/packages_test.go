@@ -14,6 +14,82 @@ import (
 	"testing"
 )
 
+func TestPackageSourcesUseFrozenReferencesAndFreshOutput(t *testing.T) {
+	stage, state, prior := lazyModuleFixture(t)
+	files, err := packageSources(stage, state)
+	if err != nil || len(files) != 2 {
+		t.Fatalf("source references: %v %v", files, err)
+	}
+	for i, file := range files {
+		if file.SHA256 != prior.modules["Main"].Sources[i].Raw.SHA256 {
+			t.Fatalf("source hash did not come from the frozen manifest: %+v", file)
+		}
+		if _, err := os.Stat(file.Source); !os.IsNotExist(err) {
+			t.Fatalf("source reference materialized %s: %v", file.Path, err)
+		}
+	}
+	fresh := "package purescript\nfunc Use() int { return 17 }\n"
+	put(t, files[0].Source, fresh)
+	files, err = packageSources(stage, state)
+	if err != nil || files[0].SHA256 != digest([]byte(fresh)) {
+		t.Fatalf("fresh output lost to the prior source: %v", err)
+	}
+	ffi, err := readPackageSource(stage, state, files[1])
+	if err != nil || digest(ffi) != files[1].SHA256 {
+		t.Fatalf("FFI materialization: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(stage, "prior/Main/module.go")); !os.IsNotExist(err) {
+		t.Fatalf("materialized an unrelated module: %v", err)
+	}
+	put(t, files[0].Source, fresh+"// changed after inventory\n")
+	if _, err := readPackageSource(stage, state, files[0]); err == nil {
+		t.Fatal("accepted source changed after inventory")
+	}
+}
+
+func TestPackageSourceReferencesStillRejectCorruptMaterialization(t *testing.T) {
+	t.Setenv(packPublication, "0")
+	stage, state, prior := lazyModuleFixture(t)
+	files, err := packageSources(stage, state)
+	if err != nil {
+		t.Fatal(err)
+	}
+	object := prior.modules["Main"].Sources[0].Object
+	put(t, filepath.Join(prior.store.cache, "objects", object.SHA256), "corrupt")
+	if _, err := readPackageSource(stage, state, files[0]); err == nil {
+		t.Fatal("materialized a corrupt referenced source")
+	}
+	if _, err := os.Stat(files[0].Source); !os.IsNotExist(err) {
+		t.Fatalf("corrupt source reached the planner: %v", err)
+	}
+	state.Modules = append(state.Modules, SourceModule{Name: "Unknown"})
+	if _, err := packageSources(stage, state); err == nil {
+		t.Fatal("invented a reference for an unknown module")
+	}
+}
+
+func TestLazyPackagePlannerMaterializesSourcesOnFallback(t *testing.T) {
+	stage, state, _ := lazyModuleFixture(t)
+	put(t, filepath.Join(stage, "output/gopurs_runtime/runtime.go"), "package gopurs_runtime\n")
+	var response SessionResponse
+	if err := preparePackageSession(stage, &state, nil, &response); err != nil {
+		t.Fatal(err)
+	}
+	if response.Status != "packages-ready" {
+		t.Fatalf("expected ordinary planner fallback, got %s", response.Status)
+	}
+	request, err := readPackageRequest(response.PackageRequest)
+	if err != nil || len(request.Files) != 2 {
+		t.Fatalf("planner request: %v", err)
+	}
+	for _, file := range request.Files {
+		data, err := os.ReadFile(file.Source)
+		if err != nil || digest(data) != file.SHA256 {
+			t.Fatalf("full planner lacks verified source %s: %v", file.Path, err)
+		}
+	}
+}
+
 func TestPackageLayoutSplitMergeRemovalAndMigration(t *testing.T) {
 	f := newFixture(t)
 	const a = "p_11111111111111111111111111111111"

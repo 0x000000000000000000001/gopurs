@@ -39,7 +39,7 @@ const fixtures = (reference = ["Provider", "value"], never = false) => [
 ];
 const header = backend => ({ ...backend, implementations: Map.empty, bindings: [], imports: Set.empty, exports: Set.empty });
 async function build(modules, mode, cached = {}, { prepareFresh = mod => mod, cacheViaObservation = false } = {}) {
-  const queue = [], reused = [], emitted = [], loaded = [], prepared = [], observations = {}, result = {}, code = {}, publishedModules = {};
+  const queue = [], reused = [], emitted = [], loaded = [], prepared = [], observations = {}, result = {}, code = {}, publishedModules = {}, availability = {};
   let globals = Map.empty, stats;
   const publish = (mod, backend, fromCache) => effect(() => {
     const complete = fromCache ? cached[mod.name] : backend;
@@ -55,7 +55,12 @@ async function build(modules, mode, cached = {}, { prepareFresh = mod => mod, ca
     traceIdents: Set.empty, rewriteLimit: 10000, onPrepareModule: () => mod => effect(() => mod),
     onSkipModule: () => mod => cacheViaObservation ? effect(() => nothing) : skip(mod),
     onCodegenModule: () => mod => backend => () => publish(mod, backend, false) };
-  const observer = new Just({ onSkipModule: () => mod => () => skip(mod), onReads: () => mod => reads => effect(() => { observations[mod.name] = reads; }) });
+  const observer = new Just({ onSkipModule: () => mod => view => {
+    const before = loaded.length;
+    (availability[mod.name] ??= []).push(Object.fromEntries([...modules.map(value => value.name), "Outside"].map(name => [name, view.availableOwner(name)])));
+    assert.equal(loaded.length, before, "availability must not force a contribution");
+    return skip(mod);
+  }, onReads: () => mod => reads => effect(() => { observations[mod.name] = reads; }) });
   const onReuse = () => mod => backend => publish(mod, backend, true);
   const list = List.fromFoldable(F.foldableArray)(modules);
   if (mode === "full") await runAff(B.buildModulesWithObservation(Aff.monadEffectAff)(observer)(onReuse)(options)(list));
@@ -68,7 +73,7 @@ async function build(modules, mode, cached = {}, { prepareFresh = mod => mod, ca
     const prepare = mod => effect(() => { prepared.push(mod.name); return prepareFresh(mod); });
     await runAff(B.buildModulesParallelWithLazyPreparation(Aff.monadEffectAff)(prepare)(mode === "lazy" ? loader : nothing)(observer)(onReuse)(runner)(options)(list));
   }
-  return { result, code, reused, emitted, loaded, prepared, observations, stats, publishedModules };
+  return { result, code, reused, emitted, loaded, prepared, observations, stats, publishedModules, availability };
 }
 
 test("lazy contributions reproduce fresh and eager output, including absent/future reads and directives", async () => {
@@ -87,6 +92,11 @@ test("lazy contributions reproduce fresh and eager output, including absent/futu
       assert.ok(!lazy.loaded.includes("Future"), "future rank must never invoke its loader");
       if (reference[0] === "Provider" && !(never && reference[1] === "value")) assert.ok(lazy.loaded.includes("Provider"));
       if (reference[0] !== "Provider") assert.deepEqual(lazy.loaded, []);
+      for (const visible of lazy.availability.Caller) {
+        assert.equal(visible.Caller, false, "current owner remains invisible");
+        assert.equal(visible.Future, false, "future owner remains invisible even if its worker completed");
+        assert.equal(visible.Outside, false, "unknown owner remains invisible");
+      }
     }
   }
 });
@@ -129,6 +139,9 @@ test("a lookup introduced by a cached bridge defers until its earlier owner is f
   assert.ok(!lazy.loaded.includes("Unused"));
   assert.deepEqual(lazy.reused, ["Unused", "Bridge", "Hidden"]);
   assert.deepEqual(lazy.emitted, ["Caller"], "deferred attempts publish no partial result");
+  assert.equal(lazy.availability.Caller[0].Bridge, true, "the committed cached bridge is visible without loading");
+  assert.equal(lazy.availability.Caller[0].Hidden, false, "an earlier owner still in flight is not available");
+  assert.equal(lazy.availability.Caller.at(-1).Hidden, true, "replay sees the newly finalized owner");
 });
 
 test("lazy preparation leaves cache-hit placeholders inert and converts the restored AST on misses and replay", async () => {

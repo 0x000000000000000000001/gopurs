@@ -365,11 +365,15 @@ func snapshot(spec Spec) (Snapshot, error) {
 	if err != nil {
 		return Snapshot{}, err
 	}
+	return snapshotFromFingerprints(spec, identity, inputs)
+}
+
+func snapshotFromFingerprints(spec Spec, identity string, inputs []Fingerprint) (Snapshot, error) {
 	options, err := sortedSettings(spec.Options)
 	if err != nil {
 		return Snapshot{}, err
 	}
-	parts = []string{spec.Workspace, spec.Output, identity, Key("options", options...)}
+	parts := []string{spec.Workspace, spec.Output, identity, Key("options", options...)}
 	hasTast := false
 	for _, f := range inputs {
 		if f.Kind == "tast" && f.Resolved == spec.Output {
@@ -381,6 +385,32 @@ func snapshot(spec Spec) (Snapshot, error) {
 		return Snapshot{}, fmt.Errorf("output TAST inventory is required")
 	}
 	return Snapshot{Workspace: spec.Workspace, Output: spec.Output, Compiler: identity, Key: Key("build", parts...), Inputs: inputs}, nil
+}
+
+// A lookup has just observed the compiler and the saved input recipe. Reuse
+// its observations for the base recipe only when every requested input agrees.
+// The freeze and post-freeze snapshot still check the bytes independently.
+func baseSnapshot(spec Spec, observed *Snapshot) (Snapshot, bool) {
+	if observed == nil || observed.Workspace != spec.Workspace || observed.Output != spec.Output {
+		return Snapshot{}, false
+	}
+	byName := map[string]Fingerprint{}
+	for _, item := range observed.Inputs {
+		byName[item.Name] = item
+	}
+	inputs := []Fingerprint{}
+	seen := map[string]bool{}
+	for _, input := range spec.Inputs {
+		item, ok := byName[input.Name]
+		if !ok || input.Name == "" || seen[input.Name] || item.Kind != input.Kind || item.Path != absolute(spec.Workspace, input.Path) {
+			return Snapshot{}, false
+		}
+		seen[input.Name] = true
+		inputs = append(inputs, item)
+	}
+	sort.Slice(inputs, func(i, j int) bool { return inputs[i].Name < inputs[j].Name })
+	result, err := snapshotFromFingerprints(spec, observed.Compiler, inputs)
+	return result, err == nil
 }
 
 func fingerprints(root string, inputs []Input) ([]Fingerprint, error) {

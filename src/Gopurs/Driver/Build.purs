@@ -42,7 +42,8 @@ type OptimizedModule =
 build :: Session -> Map.Map String FrozenFFI -> CompilerConfig -> PreparedModules -> Set.Set String -> Maybe (String -> Aff (Maybe (Module Ann))) -> Set.Set String -> Ref.Ref (Map.Map String BackendModule) -> Map.Map String String -> Aff (Array ReusedMemo)
 build session ffi config preparedInput reusableModules materializePrepared headerSafe backends priorFfi = do
   initialized <- Metrics.measure "module cache keys" \_ -> ModuleCache.initialize config.prepareJobs session preparedInput reusableModules backends (Map.fromFoldable (map (\(Tuple name value) -> Tuple name value.digest) (Map.toUnfoldable ffi :: Array (Tuple String FrozenFFI)))) priorFfi headerSafe
-  let cache = initialized { lazyContributions = config.optimizerJobs > 1 }
+  cache <- Metrics.measure "module header bytes" \_ ->
+    ModuleCache.loadHeaderTexts (initialized { lazyContributions = config.optimizerJobs > 1 })
   preparedReaders <- liftEffect (Ref.new Map.empty)
   readerMillis <- liftEffect (Ref.new 0.0)
   let prepared = preparedInput

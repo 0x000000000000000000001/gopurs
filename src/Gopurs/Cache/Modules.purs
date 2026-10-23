@@ -1,11 +1,11 @@
-module Gopurs.Cache.Modules (ModuleCache, Memo, Keys, Part, initialize, lookupAll, lookupBackend, lookupBackendWithReads, captureReads, emit, report, loadReads, headerSafeFromReads, publishReads, readImplementationsSync) where
+module Gopurs.Cache.Modules (ModuleCache, Memo, Keys, Part, initialize, loadHeaderTexts, lookupAll, lookupBackend, lookupBackendWithReads, captureReads, emit, report, loadReads, headerSafeFromReads, publishReads, readImplementationsSync) where
 
 import Prelude
 
 import Control.Alternative (guard)
 import Control.Monad.Rec.Class (Step(..), tailRecM)
 import Control.Parallel (parTraverse)
-import Data.Argonaut.Core (stringify)
+import Data.Argonaut.Core (Json, stringify)
 import Data.Argonaut.Decode (decodeJson)
 import Data.Argonaut.Encode (encodeJson)
 import Data.Argonaut.Parser (jsonParser)
@@ -74,6 +74,7 @@ type ModuleCache =
   , priorFfiDigests :: Map String String
   , headerSafe :: Set String
   , lazyContributions :: Boolean
+  , priorPartTexts :: Map String (Map String String)
   , reused :: Ref.Ref (Map String Cache.ReusedMemo)
   }
 
@@ -83,11 +84,12 @@ type CachedBackend = { body :: BackendModule, reads :: Maybe Observation.Reads }
 
 initialize :: Int -> Session -> PreparedModules -> Set String -> Ref.Ref (Map String BackendModule) -> Map String String -> Map String String -> Set String -> Aff ModuleCache
 initialize jobs session prepared reusableModules backends ffiDigests priorFfiDigests headerCandidates = do
-  text <- FS.readTextFile UTF8 (session.stage <> "/prior/index.json")
-  candidates <- case hush (jsonParser text) >>= hush <<< decodeJson of
-    Just values -> pure (Map.fromFoldable (map (\memo -> Tuple memo.name memo) (values :: Array Memo)))
-    Nothing -> throwError (error "Invalid private module cache index")
-  seed <- liftEffect (Wire.hash <$> Wire.write (Tuple session.context prepared.directives))
+  candidates <- Metrics.measure "module index" \_ -> do
+    text <- FS.readTextFile UTF8 (session.stage <> "/prior/index.json")
+    case hush (jsonParser text) >>= hush <<< decodeJson of
+      Just values -> pure (Map.fromFoldable (map (\memo -> Tuple memo.name memo) (values :: Array Memo)))
+      Nothing -> throwError (error "Invalid private module cache index")
+  seed <- Metrics.measure "optimizer seed" \_ -> liftEffect (Wire.hash <$> Wire.write (Tuple session.context prepared.directives))
   let
     modules = Array.fromFoldable prepared.modules
     sameContext = case Array.head modules of
@@ -95,7 +97,8 @@ initialize jobs session prepared reusableModules backends ffiDigests priorFfiDig
       Nothing -> false
   -- Source/interface equality does not prove that specializations are equal.
   -- Only identical TAST or an explicit preparation proof can reuse these keys.
-  let deltaReusable = if Set.size reusableModules == 0 then Map.empty else Map.filterWithKey (\name _ -> Set.member name reusableModules) candidates
+  deltaReusable <- Metrics.measure "module reusable candidates" \_ -> pure $
+    if Set.size reusableModules == 0 then Map.empty else Map.filterWithKey (\name _ -> Set.member name reusableModules) candidates
   let reusable = if session.sameTast then candidates else deltaReusable
   fingerprints <- Metrics.measure "prepared module keys" \_ -> mapJobs jobs (preparedFingerprint reusable) modules
   let reused = Array.length (Array.filter (\(Module m) -> Map.member (unwrap m.name) reusable) modules)
@@ -113,21 +116,21 @@ initialize jobs session prepared reusableModules backends ffiDigests priorFfiDig
         liftEffect $ Console.error "[gopurs] global metadata fingerprint: reused"
         pure value
       Nothing -> liftEffect (Wire.hash <$> Wire.write prepared.metadata)
-  let
-    keyed = foldl add { prefix: seed, keys: Map.empty } fingerprints
-    changedPrepared = Set.fromFoldable (Array.mapMaybe
+  keyed <- Metrics.measure "module prefix keys" \_ -> pure $ foldl add { prefix: seed, keys: Map.empty } fingerprints
+  changedPrepared <- Metrics.measure "module changed keys" \_ -> pure $ Set.fromFoldable (Array.mapMaybe
       (\(Tuple name keys) -> case Map.lookup name candidates of
         Just previous | previous.prepared == keys.prepared && previous.callerDemands == keys.callerDemands -> Nothing
         _ -> Just name)
       (Map.toUnfoldable keyed.keys :: Array (Tuple String Keys)))
-    committedInputsMatch = Array.all (\(Module m) -> case Map.lookup (unwrap m.name) candidates of
+  committedInputsMatch <- Metrics.measure "module committed inputs" \_ -> pure $ Array.all (\(Module m) -> case Map.lookup (unwrap m.name) candidates of
       Just previous -> previous.metadata == Just metadata && previous.ffiDigest == Just (ffiDigestFor ffiDigests (unwrap m.name))
       Nothing -> false) modules
     -- Complete optimizer keys prove the module and its canonical predecessor
     -- prefix independently of the read-owner closure. In particular, a read
     -- of a future module remains absent when only that future body changes.
     -- Global metadata and all FFI still gate direct emitted-source restoration.
-    exactKeySafe = if not sameContext || not committedInputsMatch then Set.empty
+  exactKeySafe <- Metrics.measure "module exact headers" \_ -> pure $
+    if not sameContext || not committedInputsMatch then Set.empty
       else Set.fromFoldable (Array.mapMaybe
         (\(Tuple name keys) -> case Map.lookup name candidates of
           Just previous
@@ -137,12 +140,16 @@ initialize jobs session prepared reusableModules backends ffiDigests priorFfiDig
           _ -> Nothing)
         (Map.toUnfoldable keyed.keys :: Array (Tuple String Keys)))
   readSafe <- if not sameContext || not committedInputsMatch || Set.isEmpty headerCandidates then pure Set.empty else do
-    let names = map (\(Module m) -> unwrap m.name) modules
+    -- Exact contributions are unchanged even when their old read-owner proof
+    -- mentions a changed future module. They cannot propagate invalidation.
+    -- Build the remaining read graph only for owners still requiring proof.
+    let names = Array.filter (\name -> not (Set.member name exactKeySafe)) (map (\(Module m) -> unwrap m.name) modules)
     previousReads <- Metrics.measure "reads load" \_ -> loadReads (session.stage <> "/prior") names
     let decoded = Array.length (Array.filter (\(Tuple _ value) -> isJust value) (Map.toUnfoldable previousReads :: Array _))
     liftEffect $ Console.error ("[gopurs] reads decoded=" <> show decoded <> "/" <> show (Array.length names))
-    pure (Set.intersection headerCandidates (headerSafeFromReads changedPrepared previousReads (Set.fromFoldable names)))
-  let headerSafe = Set.union exactKeySafe readSafe
+    safe <- Metrics.measure "module read closure" \_ -> pure $ headerSafeFromReads changedPrepared previousReads (Set.fromFoldable names)
+    Metrics.measure "module read intersection" \_ -> pure $ Set.intersection headerCandidates safe
+  headerSafe <- Metrics.measure "module header union" \_ -> pure $ Set.union exactKeySafe readSafe
   invalidations <- liftEffect (Ref.new Map.empty)
   restored <- liftEffect (Ref.new 0)
   reads <- liftEffect (Ref.new Map.empty)
@@ -152,7 +159,7 @@ initialize jobs session prepared reusableModules backends ffiDigests priorFfiDig
   currentDigests <- liftEffect (Ref.new Map.empty)
   priorDigests <- liftEffect (Ref.new Map.empty)
   reusedMemos <- liftEffect (Ref.new Map.empty)
-  pure { session, candidates, keys: keyed.keys, metadata, invalidations, restored, sameContext, reads, restoredPBO, priorImplementations, priorWorkers, currentDigests, priorDigests, backends, ffiDigests, priorFfiDigests, headerSafe, lazyContributions: false, reused: reusedMemos }
+  pure { session, candidates, keys: keyed.keys, metadata, invalidations, restored, sameContext, reads, restoredPBO, priorImplementations, priorWorkers, currentDigests, priorDigests, backends, ffiDigests, priorFfiDigests, headerSafe, lazyContributions: false, priorPartTexts: Map.empty, reused: reusedMemos }
 
   where
   add acc (Tuple name preparedKey) =
@@ -264,9 +271,8 @@ lookupHeader cache (Module m) = do
   let sameFfi = ffiMatches cache name
   if not sameFfi || not (preparedMatches cache name keys) || not (Set.member name cache.headerSafe) then pure Nothing
   else do
-    ensureParts cache name [ "2" ]
     implementations <- if cache.lazyContributions then pure (Just Map.empty) else readImplementations cache name
-    directives <- readPart (prior cache name <> "2.json") :: Aff (Maybe InlineDirectiveMap)
+    directives <- readCachedPart cache name "2" :: Aff (Maybe InlineDirectiveMap)
     workers <- if cache.lazyContributions then pure (Just Map.empty) else readWorkers cache name
     case implementations, directives, workers of
       Just impls, Just dirs, Just _ -> do
@@ -358,8 +364,7 @@ lookupBackendFromDisk cache coreFnModule@(Module m) view = do
         Just inputs, Just reads -> validateReads cache inputs reads
         _, _ -> pure false
     implementations <- if accepted then readImplementations cache name else pure Nothing
-    ensureParts cache name [ "2" ]
-    directives <- readPart (prior cache name <> "2.json") :: Aff (Maybe InlineDirectiveMap)
+    directives <- readCachedPart cache name "2" :: Aff (Maybe InlineDirectiveMap)
     let decoded = do
           guard accepted
           mod <- map _.body entry
@@ -388,6 +393,31 @@ readImplementations cache name = do
       value <- if Map.member name cache.candidates then readPart (prior cache name <> "1.json") else pure Nothing
       liftEffect (Ref.modify_ (Map.insert name value) cache.priorImplementations)
       pure value
+
+-- Read verified small objects directly from the pinned private manifest.
+-- Their decoding and canonical visibility still happen at the usual points.
+loadHeaderTexts :: ModuleCache -> Aff ModuleCache
+loadHeaderTexts cache
+  | not cache.lazyContributions || Set.isEmpty cache.headerSafe = pure cache
+  | otherwise = do
+      contributions <- Cache.readParts cache.session (Set.toUnfoldable cache.headerSafe) [ "2", "3" ]
+      texts <- foldM add Map.empty contributions
+      unless (Array.length contributions == 2 * Set.size cache.headerSafe) $
+        throwError (error "incremental cache: incomplete header contributions")
+      pure (cache { priorPartTexts = texts })
+  where
+  add texts entry = do
+    let parts = fromMaybe Map.empty (Map.lookup entry.name texts)
+    unless (Set.member entry.name cache.headerSafe && (entry.part == "2" || entry.part == "3") && not (Map.member entry.part parts)) $
+      throwError (error "incremental cache: unexpected header contribution")
+    pure (Map.insert entry.name (Map.insert entry.part entry.text parts) texts)
+
+readCachedPart :: forall a. Wire.Codec a => ModuleCache -> String -> String -> Aff (Maybe a)
+readCachedPart cache name part = case Map.lookup name cache.priorPartTexts >>= Map.lookup part of
+  Just text -> pure (Wire.read text)
+  Nothing -> do
+    ensureParts cache name [ part ]
+    readPart (prior cache name <> part <> ".json")
 
 ensureParts :: ModuleCache -> String -> Array String -> Aff Unit
 ensureParts cache name parts = when (cache.lazyContributions && Map.member name cache.candidates) $
@@ -430,13 +460,18 @@ validateReads cache view reads = do
   if not implementations || not directives then pure false
   else not <$> liftEffect view.pending
   where
-  implementation (Tuple name@(Qualified (Just owner) (Ident ident)) present) =
-    case view.implementation (unwrap owner) ident of
+  implementation (Tuple name@(Qualified (Just owner) (Ident ident)) present) = do
+    restored <- liftEffect (Ref.read cache.restoredPBO)
+    -- A saved positive read belongs to the same immutable contribution when
+    -- its owner was restored and is visible in this attempt's snapshot. Avoid
+    -- decoding that contribution just to prove its value unchanged. Absences
+    -- still need a lookup: the old read may have hidden a future owner.
+    if present && Set.member (unwrap owner) restored && view.availableOwner (unwrap owner) then pure true
+    else case view.implementation (unwrap owner) ident of
       ExternPending -> pure false
       ExternMissing -> pure (not present)
       ExternFound _ | not present -> pure false
       ExternFound current -> do
-        restored <- liftEffect (Ref.read cache.restoredPBO)
         if Set.member (unwrap owner) restored then pure true
         else do
           previous <- readImplementations cache (unwrap owner)
@@ -454,9 +489,8 @@ readWorkers cache name = do
   case Map.lookup name previous of
     Just value -> pure value
     Nothing -> do
-      ensureParts cache name [ "3" ]
       workers <- case Map.lookup name cache.candidates >>= \memo -> Array.index memo.parts 3 of
-        Just part | part.codec == "gopurs/workers-v2" -> readPart (prior cache name <> "3.json")
+        Just part | part.codec == "gopurs/workers-v2" -> readCachedPart cache name "3"
         _ -> pure Nothing
       let value = do
             functions <- workers
@@ -589,13 +623,34 @@ emit cache ffi metadata _ optimizedCached coreFnModule backend = do
 loadReads :: String -> Array String -> Aff (Map String (Maybe (Array String)))
 -- Read only the hash-verified objects frozen from the committed module
 -- manifest. The public reads-v1 mirror may belong to a different publication.
-loadReads directory names = Map.fromFoldable <$> traverse read names
+loadReads directory names = do
+  let grouped = directory <> "/owners.json"
+  content <- attempt (FS.readTextFile UTF8 grouped)
+  case content of
+    Left _ -> do
+      exists <- liftEffect (Sync.exists grouped)
+      if exists then throwError (error "incremental cache: unreadable read-owner index")
+      else Map.fromFoldable <$> traverse read names
+    Right text -> case hush (jsonParser text) >>= hush <<< decodeJson of
+      Nothing -> throwError (error "incremental cache: invalid read-owner index")
+      Just entries -> do
+        decoded <- foldM add Map.empty (entries :: Array { name :: String, text :: Json })
+        pure (Map.fromFoldable (map (\name -> Tuple name (fromMaybe Nothing (Map.lookup name decoded))) names))
   where
+  owners = Array.filter (_ /= "") <<< String.split (Pattern "\n")
+  add acc entry = do
+    when (entry.name == "" || Map.member entry.name acc) $
+      throwError (error "incremental cache: duplicate or empty read-owner name")
+    -- Decode the required JSON field separately: null is unknown, whereas an
+    -- empty string is a known empty proof. An omitted field is invalid above.
+    case hush (decodeJson entry.text) :: Maybe (Maybe String) of
+      Nothing -> throwError (error "incremental cache: invalid read-owner text")
+      Just text -> pure (Map.insert entry.name (map owners text) acc)
   read name = do
     text <- attempt (FS.readTextFile UTF8 (directory <> "/" <> name <> "/reads.json"))
     pure (Tuple name (case text of
       Left _ -> Nothing
-      Right value -> Just (Array.filter (_ /= "") (String.split (Pattern "\n") value))))
+      Right value -> Just (owners value)))
 
 headerSafeFromReads :: Set String -> Map String (Maybe (Array String)) -> Set String -> Set String
 headerSafeFromReads changed reads names =

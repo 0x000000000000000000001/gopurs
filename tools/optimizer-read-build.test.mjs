@@ -64,7 +64,7 @@ test("observed PBO reuse matches fresh generation through body, directive, absen
     const cache = { session: { stage, output, context: hash("compiler/options") }, metadata: hash("metadata"),
       keys: Map.empty, candidates: Map.empty, sameContext: true, reads: Ref.new(Map.empty)(),
       restoredPBO: Ref.new(Set.empty)(), priorImplementations: Ref.new(Map.empty)(), currentDigests: Ref.new(Map.empty)(),
-      lazyContributions: false, reused: Ref.new(Map.empty)(), priorWorkers: Ref.new(Map.empty)(), priorDigests: Ref.new(Map.empty)(), invalidations: Ref.new(Map.empty)(), restored: Ref.new(0)(),
+      lazyContributions: false, priorPartTexts: Map.empty, reused: Ref.new(Map.empty)(), priorWorkers: Ref.new(Map.empty)(), priorDigests: Ref.new(Map.empty)(), invalidations: Ref.new(Map.empty)(), restored: Ref.new(0)(),
       backends: Ref.new(Map.empty)(), ffiDigests: Map.empty, priorFfiDigests: Map.empty, headerSafe: Set.empty };
     let prefix = hash("compiler/options/directives");
     for (const mod of modules) {

@@ -54,6 +54,25 @@ const metadataFor = modules => withReboxFields({ elidedCtors: Set.empty, ctorTyp
   pointerAdtPaths: Map.empty, pointerAdtNodes: Set.empty, pointerAdtLeaves: Map.empty, enumAdts: Set.empty,
   enumCtors: Set.empty, globalTypes: buildGlobalTypes(modules), globalFunctions: Map.empty, classDeclsFields: Map.empty });
 
+test("manifest interface reuse requires the same known source and compiler context", () => {
+  const original = fixture(false), saved = manifest(original);
+  const cached = (previous, modules, hashes = map(modules.map(mod => [mod.name, hash(mod)])), context = "same-context") =>
+    Manifest.buildManifestWithCache(new Just(previous))("")(context)(Map.empty)(modules)(hashes)();
+  const typedEdit = [...original.slice(0, 3), moduleOf("Unrelated", [binding("answer", string, literal("new", string))])];
+  for (const modules of [original, fixture(true), typedEdit]) {
+    assert.deepEqual(cached(saved, modules), manifest(modules));
+  }
+  const hashes = map(original.map(mod => [mod.name, hash(mod)]));
+  const unread = original.map(mod => ({ ...mod, get decls() { throw new Error("unchanged interface re-encoded"); } }));
+  assert.deepEqual(cached(saved, unread, hashes), saved);
+  const poisoned = { ...saved, modules: map(entries(saved.modules).map(([name, entry]) => [name, { ...entry, interface: "stale" }])) };
+  for (const previous of [{ ...poisoned, schema: 0 }, { ...poisoned, context: "other" }, { ...poisoned, directives: "other" }]) {
+    assert.deepEqual(cached(previous, original), saved);
+  }
+  const unknown = Manifest.buildManifest("")("same-context")(Map.empty)(original)(Map.empty)();
+  assert.deepEqual(cached({ ...poisoned, modules: map(entries(poisoned.modules).map(([name, entry]) => [name, { ...entry, source: "" }])) }, original, Map.empty), unknown);
+});
+
 function optimize(modules) {
   const backends = [], reads = [];
   const observer = new Just({ onSkipModule: () => () => () => () => nothing,

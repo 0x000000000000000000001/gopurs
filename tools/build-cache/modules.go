@@ -238,6 +238,12 @@ func newLazyPrior(manifest *Manifest, s store) *lazyPrior {
 	}
 	return p
 }
+
+type frozenReads struct {
+	Name string  `json:"name"`
+	Text *string `json:"text"`
+}
+
 func freezeLazyModuleCache(stage string, state buildSession, manifest *Manifest, s store) error {
 	pinned, err := pinLazyArtifacts(stage, manifest, s)
 	if err != nil {
@@ -254,29 +260,39 @@ func freezeLazyModuleCache(stage string, state buildSession, manifest *Manifest,
 	}
 	index := make([]ModuleMemo, len(manifest.Modules))
 	valid := make([]bool, len(index))
+	reads := make([]frozenReads, len(index))
 	if err := boundedEach(len(index), func(i int) error {
 		memo := manifest.Modules[i]
+		reads[i].Name = memo.Name
 		if memo.Reads != nil {
 			data, err := p.store.validateObject(memo.Reads.Object)
 			if err != nil {
 				return nil
 			} // absent proof forces ordinary optimization
-			dir := filepath.Join(stage, "prior", memo.Name)
-			if err := os.MkdirAll(dir, 0700); err != nil {
-				return err
-			}
-			if err := os.WriteFile(filepath.Join(dir, "reads.json"), data, 0400); err != nil {
-				return err
-			}
+			text := string(data)
+			reads[i].Text = &text
 		}
 		index[i], valid[i] = memo, true
 		return nil
 	}); err != nil {
 		return err
 	}
+	// Keep unknown proofs distinct from known empty proofs, without creating a
+	// temporary directory and file for every unchanged module. Explicit reads
+	// materialization still uses the authoritative pinned manifest below.
+	data, err = json.Marshal(reads)
+	if err != nil {
+		return err
+	}
+	if err := os.WriteFile(filepath.Join(stage, "prior", "owners.json"), data, 0400); err != nil {
+		return err
+	}
 	retained := make([]ModuleMemo, 0, len(index))
 	for i, memo := range index {
 		if valid[i] {
+			// These objects remain in the authoritative private manifest. The
+			// typed candidate index consumes only keys and numbered parts.
+			memo.Reads, memo.Sources = nil, nil
 			retained = append(retained, memo)
 		}
 	}
@@ -414,6 +430,76 @@ func materializePrior(stage string, state buildSession, owners, parts []string) 
 		}
 	}
 	return nil
+}
+
+type FrozenPart struct {
+	Name string `json:"name"`
+	Part string `json:"part"`
+	Text string `json:"text"`
+}
+
+// Header consumers need verified bytes, not staging files. Batch reads keep
+// the committed snapshot as authority and leave typed decoding and canonical
+// visibility to the producer. Backend bodies and Go sources stay lazy.
+func readPriorParts(stage string, state buildSession, owners, parts []string) ([]FrozenPart, error) {
+	p, err := getLazyPrior(stage, state)
+	if err != nil {
+		return nil, err
+	}
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	objects := []Object{}
+	result := []FrozenPart{}
+	for _, owner := range owners {
+		memo, ok := p.modules[owner]
+		if !ok {
+			return nil, fmt.Errorf("unknown prior module: %s", owner)
+		}
+		for _, part := range parts {
+			if part != "2" && part != "3" {
+				return nil, fmt.Errorf("invalid header part: %s", part)
+			}
+			i := int(part[0] - '0')
+			if i >= len(memo.Parts) {
+				return nil, fmt.Errorf("missing header part: %s/%s", owner, part)
+			}
+			objects = append(objects, memo.Parts[i].Object)
+			result = append(result, FrozenPart{Name: owner, Part: part})
+		}
+	}
+	if err := boundedEach(len(objects), func(i int) error {
+		data, err := p.store.validateObject(objects[i])
+		if err != nil {
+			return fmt.Errorf("reading %s/%s: %w", result[i].Name, result[i].Part, err)
+		}
+		result[i].Text = string(data)
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func priorSourceObject(stage string, state buildSession, owner, kind string) (Object, error) {
+	p, err := getLazyPrior(stage, state)
+	if err != nil {
+		return Object{}, err
+	}
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	memo, ok := p.modules[owner]
+	if !ok {
+		return Object{}, fmt.Errorf("unknown prior module: %s", owner)
+	}
+	for _, source := range memo.Sources {
+		if source.Kind == kind {
+			return source.Raw, nil
+		}
+	}
+	if object := p.outputs[owner][kind]; object.SHA256 != "" {
+		return object, nil
+	}
+	return Object{}, fmt.Errorf("missing prior source: %s/%s", owner, kind)
 }
 
 // The current planner consumes unqualified source files. Restore only missing

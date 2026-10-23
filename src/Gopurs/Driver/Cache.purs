@@ -1,5 +1,5 @@
 module Gopurs.Driver.Cache
-  ( Session, SourceModule, FrozenFFI, ReusedMemo, begin, plan, materialize, materializeSync, packages, publish, close ) where
+  ( Session, SourceModule, FrozenFFI, ReusedMemo, PartText, begin, plan, materialize, materializeSync, readParts, packages, publish, close ) where
 
 import Prelude
 
@@ -26,6 +26,7 @@ type Session =
   , packageRequest :: String
   }
 type Setting = { name :: String, value :: String }
+type PartText = { name :: String, part :: String, text :: String }
 type ReusedMemo =
   { name :: String, prepared :: String, optimizerEnvironment :: String
   , callerDemands :: String, emitterEnvironment :: String, metadata :: String, ffiDigest :: String
@@ -76,6 +77,17 @@ materialize session owners parts = liftEffect (materializeSync session owners pa
 
 materializeSync :: Session -> Array String -> Array String -> Effect Unit
 materializeSync session owners parts = void $ exchangeSync ((request "materialize") { stage = session.stage, owners = owners, parts = parts })
+
+readParts :: Session -> Array String -> Array String -> Aff (Array PartText)
+readParts session owners parts = liftEffect do
+  text <- sessionExchange (stringify (encodeJson ((request "read-parts") { stage = session.stage, owners = owners, parts = parts })))
+  json <- either (throwException <<< error <<< ("incremental cache: " <> _)) pure (jsonParser text)
+  response <- either (throwException <<< error <<< ("incremental cache: " <> _) <<< printJsonDecodeError) pure
+    (decodeJson json :: _ { status :: String, reason :: String })
+  when (response.status /= "ready") $ throwException (error ("incremental cache: " <> response.reason))
+  result <- either (throwException <<< error <<< ("incremental cache: " <> _) <<< printJsonDecodeError) pure
+    (decodeJson json :: _ { contributions :: Array PartText })
+  pure result.contributions
 
 packages :: Session -> Array String -> Aff String
 packages session entries = _.packageRequest <$> exchange ((request "packages") { stage = session.stage, entries = entries })

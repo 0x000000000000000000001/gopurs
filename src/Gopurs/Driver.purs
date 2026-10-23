@@ -77,7 +77,8 @@ compileCached config cacheRef backends ffiDigestsRef = Metrics.measure "backend 
   -- Directive diagnostics are inexpensive and retain their normal behavior on
   -- hits too. Other semantic diagnostics conservatively disable reuse.
   directives <- loadDirectives
-  bracket (Metrics.measure "cache lookup + freeze" \_ -> BuildCache.begin config) BuildCache.close \session -> do
+  let close session = Metrics.measure "cache close" \_ -> BuildCache.close session
+  bracket (Metrics.measure "cache lookup + freeze" \_ -> BuildCache.begin config) close \session -> do
     if session.status == "hit" then do
       -- Another process may have published this generation while the resident
       -- was idle. Its unkeyed memory must not be paired with these disk keys.
@@ -103,7 +104,7 @@ compileCached config cacheRef backends ffiDigestsRef = Metrics.measure "backend 
         else pure Nothing
       manifest <- if config.buildManifest
         then Just <$> Metrics.measure "build manifest encode" \_ ->
-          liftEffect (Manifest.buildManifest session.root session.context directives (Array.fromFoldable preparedBase.sourceModules) preparedBase.sourceHashes)
+          liftEffect (Manifest.buildManifestWithCache previousManifest session.root session.context directives (Array.fromFoldable preparedBase.sourceModules) preparedBase.sourceHashes)
         else pure Nothing
       let
         manifestChanged = case manifest, previousManifest of

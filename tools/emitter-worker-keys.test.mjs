@@ -67,7 +67,7 @@ test("emission keys cover referenced worker signatures and absences without unre
       keys: Map.singleton("Consumer")(keys), metadata: hash(metadataKey),
       invalidations: Ref.new(Map.empty)(), restored: Ref.new(0)(),
       reads: Ref.new(Map.empty)(),
-      lazyContributions: false, reused: Ref.new(Map.empty)(), priorWorkers: Ref.new(Map.empty)(), backends: Ref.new(Map.empty)(), headerSafe: emptySet,
+      lazyContributions: false, priorPartTexts: Map.empty, reused: Ref.new(Map.empty)(), priorWorkers: Ref.new(Map.empty)(), backends: Ref.new(Map.empty)(), headerSafe: emptySet,
       ffiDigests: Map.empty, priorFfiDigests: Map.empty,
     };
     // Different all-worker prefixes previously invalidated unrelated consumers.

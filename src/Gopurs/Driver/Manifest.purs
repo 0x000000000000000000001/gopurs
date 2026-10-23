@@ -1,5 +1,5 @@
 module Gopurs.Driver.Manifest
-  ( Manifest, ManifestEntry, buildManifest, readManifest, writeManifest, diffManifest
+  ( Manifest, ManifestEntry, buildManifest, buildManifestWithCache, readManifest, writeManifest, diffManifest
   , readFfiDigests, writeFfiDigests, readGlobalFunctions, writeGlobalFunctions
   ) where
 
@@ -103,9 +103,15 @@ declarationTypes = Array.concatMap \bind -> case bind of
   Rec bindings -> map (\(Binding (Ann annotation) ident _) -> Tuple ident annotation.type) bindings
 
 buildManifest :: String -> String -> InlineDirectiveMap -> Array (Module Ann) -> Map String String -> Effect Manifest
-buildManifest _output context directives modules sourceHashes = do
+buildManifest = buildManifestWithCache Nothing
+
+buildManifestWithCache :: Maybe Manifest -> String -> String -> InlineDirectiveMap -> Array (Module Ann) -> Map String String -> Effect Manifest
+buildManifestWithCache previous _output context directives modules sourceHashes = do
   directivesKey <- Wire.hash <$> Wire.write directives
-  entries <- traverse entry modules
+  let cached = case previous of
+        Just saved | saved.schema == 1 && saved.context == context && saved.directives == directivesKey -> saved.modules
+        _ -> Map.empty
+  entries <- traverse (entry cached) modules
   pure
     { schema: 1
     , context
@@ -113,10 +119,14 @@ buildManifest _output context directives modules sourceHashes = do
     , modules: Map.fromFoldable entries
     }
   where
-  entry (Module value) = do
-    let name = unwrap value.name
-    interface <- moduleInterface (Module value)
-    pure (Tuple name { source: fromMaybe "" (Map.lookup name sourceHashes), interface })
+  entry cached (Module value) = do
+    let
+      name = unwrap value.name
+      source = fromMaybe "" (Map.lookup name sourceHashes)
+    interface <- case Map.lookup name cached of
+      Just old | source /= "" && old.source == source -> pure old.interface
+      _ -> moduleInterface (Module value)
+    pure (Tuple name { source, interface })
 
 writeManifest :: String -> Manifest -> Aff Unit
 writeManifest output manifest = do

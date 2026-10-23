@@ -5,9 +5,46 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 )
+
+func TestBaseSnapshotUsesOnlyMatchingFreshObservations(t *testing.T) {
+	f := newFixture(t)
+	spec := f.req.Spec
+	spec.Output = filepath.Join(f.root, "output")
+	observed, err := snapshot(spec)
+	if err != nil {
+		t.Fatal(err)
+	}
+	spec.Inputs = []Input{{Name: "tast", Kind: "tast", Path: spec.Output}}
+	expected, err := snapshot(spec)
+	if err != nil {
+		t.Fatal(err)
+	}
+	actual, ok := baseSnapshot(spec, &observed)
+	if !ok || !reflect.DeepEqual(actual, expected) {
+		t.Fatalf("base snapshot differs from a fresh observation: %+v / %+v", actual, expected)
+	}
+	for _, inputs := range [][]Input{
+		{{Name: "tast", Kind: "tast", Path: "other-output"}},
+		{{Name: "tast", Kind: "file", Path: spec.Output}},
+		{{Name: "missing", Kind: "file", Path: "missing"}},
+		{spec.Inputs[0], spec.Inputs[0]},
+	} {
+		changed := spec
+		changed.Inputs = inputs
+		if _, ok := baseSnapshot(changed, &observed); ok {
+			t.Fatalf("accepted a changed or unknown recipe: %+v", inputs)
+		}
+	}
+	put(t, filepath.Join(spec.Output, "Main/corefn.json"), "changed after lookup")
+	current, err := snapshot(spec)
+	if err != nil || current.Key == actual.Key {
+		t.Fatalf("post-freeze verification cannot detect a later edit: %+v / %v", current, err)
+	}
+}
 
 func driverFixture(t *testing.T) (Spec, SessionResponse, buildSession) {
 	t.Helper()
@@ -68,6 +105,14 @@ func TestDriverFreezesConsumedBytes(t *testing.T) {
 	frozenTast, _ := os.ReadFile(filepath.Join(result.Input, "Main/corefn.json"))
 	if !bytes.Equal(frozenTast, originalTast) {
 		t.Fatal("decoder reads live TAST")
+	}
+	hashBytes, err := os.ReadFile(filepath.Join(result.Stage, "source-hashes.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var hashes []frozenSourceHash
+	if err := strictJSON(hashBytes, &hashes); err != nil || len(hashes) != 1 || hashes[0].Name != "Main" || hashes[0].Hash != digest(frozenTast) {
+		t.Fatalf("source hashes do not describe the frozen bytes: %s (%v)", hashBytes, err)
 	}
 	put(t, filepath.Join(result.Output, "gopurs_runtime/runtime.go"), "package gopurs_runtime\n")
 	put(t, filepath.Join(result.Output, "purescript/Main.go"), "package purescript\n")

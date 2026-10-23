@@ -329,12 +329,11 @@ func planCacheStatus(output string, request *packageFileRequest) string {
 	return "validated"
 }
 
-func preparePackageSession(stage string, state *buildSession, entries []string, response *SessionResponse) error {
-	if !state.Planned || !usesGoPackages(state.Spec) {
-		return fmt.Errorf("Go package inputs require a planned package-layout build")
-	}
-	request := packageFileRequest{Format: packageFilesFormat, PackagePath: "gopurs/output/purescript",
-		Files: []packageSource{}, Exports: []packageExport{}, Entries: []packageSymbol{}, Output: filepath.Join(stage, "packages")}
+// Missing staged sources belong to modules whose emission was reused. Their
+// raw hashes come from the frozen committed manifest, never the public plan
+// hint. An overlay needs those references, not thousands of decompressed files.
+func packageSources(stage string, state buildSession) ([]packageSource, error) {
+	files := []packageSource{}
 	for _, module := range state.Modules {
 		unit := strings.ReplaceAll(module.Name, ".", "_")
 		for _, suffix := range []string{"", "_ffi"} {
@@ -344,16 +343,67 @@ func preparePackageSession(stage string, state *buildSession, entries []string, 
 			name := unit + suffix + ".go"
 			file := filepath.Join(stage, "output", "purescript", name)
 			data, err := os.ReadFile(file)
-			if err != nil {
-				return err
-			}
 			owner := "generated/" + unit
+			kind := "module"
 			if suffix != "" {
 				owner = "ffi/" + unit
+				kind = "ffi"
 			}
-			request.Files = append(request.Files, packageSource{owner, module.Name, name, file, digest(data), []packageSymbol{}, []any{}})
+			sha := ""
+			if err == nil {
+				sha = digest(data)
+			} else if os.IsNotExist(err) && lazyModules(state.Spec) {
+				object, err := priorSourceObject(stage, state, module.Name, kind)
+				if err != nil {
+					return nil, err
+				}
+				sha = object.SHA256
+			} else {
+				return nil, err
+			}
+			files = append(files, packageSource{owner, module.Name, name, file, sha, []packageSymbol{}, []any{}})
 		}
 	}
+	return files, nil
+}
+
+// Only a missing signature or the full planner requires the original bytes.
+// Materialization verifies both the compressed object and its raw digest. Keep
+// the ordinary source path in requests so the external planner stays unchanged.
+func readPackageSource(stage string, state buildSession, file packageSource) ([]byte, error) {
+	data, err := os.ReadFile(file.Source)
+	if os.IsNotExist(err) && lazyModules(state.Spec) {
+		kind := "module"
+		if strings.HasPrefix(file.Owner, "ffi/") {
+			kind = "ffi"
+		}
+		if err := materializePrior(stage, state, []string{file.Module}, []string{kind}); err != nil {
+			return nil, err
+		}
+		if err := linkOrCopy(filepath.Join(stage, "prior", file.Module, kind+".go"), file.Source); err != nil {
+			return nil, err
+		}
+		data, err = os.ReadFile(file.Source)
+	}
+	if err != nil {
+		return nil, err
+	}
+	if digest(data) != file.SHA256 {
+		return nil, fmt.Errorf("Go package source changed during preparation: %s", file.Path)
+	}
+	return data, nil
+}
+
+func preparePackageSession(stage string, state *buildSession, entries []string, response *SessionResponse) error {
+	if !state.Planned || !usesGoPackages(state.Spec) {
+		return fmt.Errorf("Go package inputs require a planned package-layout build")
+	}
+	files, err := packageSources(stage, *state)
+	if err != nil {
+		return err
+	}
+	request := packageFileRequest{Format: packageFilesFormat, PackagePath: "gopurs/output/purescript",
+		Files: files, Exports: []packageExport{}, Entries: []packageSymbol{}, Output: filepath.Join(stage, "packages")}
 	request.Signatures = map[string]string{}
 	type cachedSignature struct{ owner, module, sha, signature string }
 	previousRequest, _ := readPackageRequest(filepath.Join(state.Spec.Output, ".gopurs-cache", "go-packages", "plan-v1", "request.json"))
@@ -371,7 +421,7 @@ func preparePackageSession(stage string, state *buildSession, entries []string, 
 			request.Signatures[file.Path] = previous.signature
 			continue
 		}
-		data, err := os.ReadFile(file.Source)
+		data, err := readPackageSource(stage, *state, file)
 		if err != nil {
 			return err
 		}
@@ -433,7 +483,7 @@ func preparePackageSession(stage string, state *buildSession, entries []string, 
 	// proof is complete before this point and does not parse 2 704 headers.
 	imports := map[string]bool{}
 	for _, file := range request.Files {
-		data, err := os.ReadFile(file.Source)
+		data, err := readPackageSource(stage, *state, file)
 		if err != nil {
 			return err
 		}
