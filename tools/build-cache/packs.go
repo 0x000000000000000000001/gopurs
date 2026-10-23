@@ -108,7 +108,7 @@ func (s store) packFile(pack string) (*os.File, error) {
 	return f, nil
 }
 
-func (s store) readPackedObject(entry packEntry, obj Object) ([]byte, error) {
+func (s store) packedObjectFile(entry packEntry, obj Object) (*os.File, error) {
 	if !validPackEntry(entry) || entry.Bytes != obj.Bytes {
 		return nil, fmt.Errorf("missing/corrupt object: %s", obj.SHA256)
 	}
@@ -119,6 +119,14 @@ func (s store) readPackedObject(entry packEntry, obj Object) ([]byte, error) {
 	info, err := f.Stat()
 	if err != nil || !info.Mode().IsRegular() || info.Size() < entry.Offset+entry.Bytes {
 		return nil, fmt.Errorf("missing/corrupt object: %s", obj.SHA256)
+	}
+	return f, nil
+}
+
+func (s store) readPackedObject(entry packEntry, obj Object) ([]byte, error) {
+	f, err := s.packedObjectFile(entry, obj)
+	if err != nil {
+		return nil, err
 	}
 	data := make([]byte, int(entry.Bytes))
 	if _, err := f.ReadAt(data, entry.Offset); err != nil {

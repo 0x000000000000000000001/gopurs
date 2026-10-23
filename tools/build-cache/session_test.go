@@ -3,12 +3,71 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
+	"sort"
 	"strings"
 	"testing"
 )
+
+func TestSessionFreezesManyModulesWithOrderedHashes(t *testing.T) {
+	f := newFixture(t)
+	spec := f.req.Spec
+	spec.Output = filepath.Join(f.root, "output")
+	spec.Inputs = []Input{{Name: "tast", Kind: "tast", Path: spec.Output}}
+	original, err := os.ReadFile(filepath.Join(spec.Output, "Main/corefn.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	sources := map[string]string{"Main": string(original), "Alias": "symlink provider"}
+	for i := 31; i >= 0; i-- {
+		name := fmt.Sprintf("Module%02d", i)
+		sources[name] = strings.Repeat(name, i+1)
+		put(t, filepath.Join(spec.Output, name, "corefn.json"), sources[name])
+	}
+	put(t, filepath.Join(f.root, "provider/corefn.json"), sources["Alias"])
+	if err := os.Symlink(filepath.Join(f.root, "provider"), filepath.Join(spec.Output, "Alias")); err != nil {
+		t.Fatal(err)
+	}
+	put(t, filepath.Join(spec.Output, "WithoutCoreFn/other.txt"), "not a module")
+	put(t, filepath.Join(spec.Output, "plain-file"), "not a directory")
+	var result SessionResponse
+	if err := beginSession(spec, false, &result); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { os.RemoveAll(result.Stage) })
+	if result.Count != len(sources) {
+		t.Fatalf("wrong inventory: %d != %d", result.Count, len(sources))
+	}
+	data, err := os.ReadFile(filepath.Join(result.Stage, "source-hashes.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var hashes []frozenSourceHash
+	if err := strictJSON(data, &hashes); err != nil {
+		t.Fatal(err)
+	}
+	names := make([]string, 0, len(sources))
+	for name := range sources {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	if len(hashes) != len(names) {
+		t.Fatalf("wrong hash inventory: %d", len(hashes))
+	}
+	for i, name := range names {
+		if hashes[i] != (frozenSourceHash{Name: name, Hash: digest([]byte(sources[name]))}) {
+			t.Fatalf("hash order/content mismatch for %s: %+v", name, hashes[i])
+		}
+		put(t, filepath.Join(spec.Output, name, "corefn.json"), "edited after freezing")
+		frozen, err := os.ReadFile(filepath.Join(result.Stage, "input", name, "corefn.json"))
+		if err != nil || string(frozen) != sources[name] {
+			t.Fatalf("private snapshot changed for %s: %v", name, err)
+		}
+	}
+}
 
 func TestBaseSnapshotUsesOnlyMatchingFreshObservations(t *testing.T) {
 	f := newFixture(t)

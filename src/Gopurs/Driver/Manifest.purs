@@ -1,5 +1,5 @@
 module Gopurs.Driver.Manifest
-  ( Manifest, ManifestEntry, buildManifest, buildManifestWithCache, readManifest, writeManifest, diffManifest
+  ( Manifest, ManifestEntry, buildManifest, buildManifestWithCache, buildManifestWithInterfaces, moduleInterface, readManifest, writeManifest, diffManifest
   , readFfiDigests, writeFfiDigests, readGlobalFunctions, writeGlobalFunctions
   ) where
 
@@ -106,7 +106,13 @@ buildManifest :: String -> String -> InlineDirectiveMap -> Array (Module Ann) ->
 buildManifest = buildManifestWithCache Nothing
 
 buildManifestWithCache :: Maybe Manifest -> String -> String -> InlineDirectiveMap -> Array (Module Ann) -> Map String String -> Effect Manifest
-buildManifestWithCache previous _output context directives modules sourceHashes = do
+buildManifestWithCache = buildManifestWithInterfaces Map.empty
+
+-- Compact preparation supplies interfaces from its hash-verified projection,
+-- anchored to the committed generation. Its inert headers cannot reconstruct
+-- source interfaces, even when the optional build-manifest sidecar is absent.
+buildManifestWithInterfaces :: Map String String -> Maybe Manifest -> String -> String -> InlineDirectiveMap -> Array (Module Ann) -> Map String String -> Effect Manifest
+buildManifestWithInterfaces known previous _output context directives modules sourceHashes = do
   directivesKey <- Wire.hash <$> Wire.write directives
   let cached = case previous of
         Just saved | saved.schema == 1 && saved.context == context && saved.directives == directivesKey -> saved.modules
@@ -123,9 +129,11 @@ buildManifestWithCache previous _output context directives modules sourceHashes 
     let
       name = unwrap value.name
       source = fromMaybe "" (Map.lookup name sourceHashes)
-    interface <- case Map.lookup name cached of
-      Just old | source /= "" && old.source == source -> pure old.interface
-      _ -> moduleInterface (Module value)
+    interface <- case Map.lookup name known of
+      Just exact -> pure exact
+      Nothing -> case Map.lookup name cached of
+        Just old | source /= "" && old.source == source -> pure old.interface
+        _ -> moduleInterface (Module value)
     pure (Tuple name { source, interface })
 
 writeManifest :: String -> Manifest -> Aff Unit

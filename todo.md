@@ -13,7 +13,7 @@ de l'ancien `todo.md` (SHA-256
 
 Réduire le cycle **modifier → construire → tester**. Les repères historiques
 restent **~30 s de backend après modification** et **~60 s de backend à froid**.
-Ils restent des repères généraux. C2-8 confirme moins de 10 s backend avec v4
+Ils restent des repères généraux. C2-9 confirme moins de 4 s backend avec D
 sur le cas central borné décrit ci-dessous. Cela ne clôt pas l'objectif à froid
 ni celui de la chaîne complète.
 
@@ -47,6 +47,7 @@ du backend.
 | C2-6 — daemon one-shot | Vérifié byte-exact avec 1 et 8 workers, y compris après erreur |
 | C2-7 — one-shot persistant | **16,970 s médiane** sur édition littérale centrale ; 3 paires byte-exactes, cible ≤20 s atteinte |
 | C2-8 — one-shot central <10 s | **Achevé**, v4 : 8,586 s backend médian, trois paires byte-exactes ; vrai `b` 13,651 s total ; audit 25/25 |
+| C2-9 — one-shot central <4 s | **Achevé**, D : 3,841 s backend médian, trois paires byte-exactes ; vrai `b` 8,791 s total ; cache disque, sans daemon |
 
 Références : [bilan P00](docs/build-preparation-baseline.md),
 [étude C01](docs/build-preparation-compact.md),
@@ -63,6 +64,7 @@ Références : [bilan P00](docs/build-preparation-baseline.md),
 [plan C2-5 Go](docs/build-c2-go-packages.md),
 [build one-shot persistant](docs/build-c2-persistent.md),
 [backend central sous 10 s](docs/build-c2-sub10.md),
+[backend central sous 4 s](docs/build-c2-sub4.md),
 [mesures G06](docs/build-go-measurements.md).
 
 ### Ce que les mesures ont établi
@@ -300,6 +302,19 @@ un build court universel.
   backend**, **13,651 s au total** pour ce dernier, sans daemon. Audit de clôture
   **25/25**, SHA et sources concordants ; C2-8 achevé sur ce périmètre.
   Voir [C2-8](docs/build-c2-sub10.md).
+- [x] **C2-9 — backend central sous 4 s.** Trois paires natives D :
+  **3,872 / 3,841 / 3,817 s**, médiane **3,841 s**, contre **78,111 s** full
+  médian. Les 2 704 modules et 27 sorties sont byte-exacts pour chaque paire.
+  Préparation à la demande, projection typée fragmentée, gel privé groupé,
+  contributions PBO/workers paresseuses et scan d'overlay réduit sous preuve.
+  Go final compilé, 54 tests ciblés et Go `-race` verts ; replis sur parties
+  corrompues et projection absente/corrompue validés, daemons 1/8 conservés.
+  Le vrai `b` utilise les défauts : **3,826 s backend**, **8,791 s total**,
+  sans daemon. Le seuil porte sur une édition littérale centrale avec cache
+  amorcé ; frontend et compilation Go restent séparés. Le contrôle projection
+  conserve les différences de disposition des packages et prouve les valeurs
+  publiques à l'exécution en plus de l'égalité des sources Go brutes.
+  Voir [C2-9 et son audit](docs/build-c2-sub4.md).
 - [ ] **C3 — froid, conditionnel.** Le froid actuel (backend ~77 s + Go 46,7 s)
   ne peut pas viser 60 s par un cache chaud. À ouvrir après C1/C2 avec un budget
   séparé, pas comme sous-produit.
@@ -354,7 +369,7 @@ chemin ; B3 reste partiel et exige les preuves P03/P04.
 1. **A est clos** : pack par défaut, froid installé 76,163 s, hit 0,914 s,
    feuille 45,421 s, sorties exactes.
 2. **C2-4 historique** : backend monolithique **14,734 s** sur le cas testé ;
-   la preuve compacte vient de C2-7 ; les dernières mesures sont celles de C2-8.
+   la preuve compacte vient de C2-7 ; les dernières mesures sont celles de C2-9.
 3. **C2-5 est branché** (désormais par défaut via le lanceur Go natif) : overlay C1c dans
    `preparePackageSession`/`writePackageFiles`, entrées et imports réécrits,
    fallback full. Go packages **0,003–0,021 s**, backend **17,323–21,515 s**
@@ -364,24 +379,28 @@ chemin ; B3 reste partiel et exige les preuves P03/P04.
    et campagne quatre hôtes restent hors de cette validation. À la demande de
    l'utilisateur, le lanceur Go natif active désormais le chemin validé par
    défaut ; les autres hôtes gardent leur activation explicite.
-5. **C2-8 achevé avec v4.** Trois paires centrales exactes,
-   chaque incrémental sous 10 s ; fallback sur deux objets corrompus et daemon
+5. **C2-9 achevé avec D.** Trois paires centrales exactes,
+   chaque incrémental sous 4 s ; replis sur corruption/absence et daemons
    un/huit workers validés, compilation Go du dernier résultat réussie. Le vrai
-   `b` sans exports fonctionne : 8,977 s backend, 13,651 s total. Les 25 critères
-   de `completion-audit.json` sont verts. Le seuil reste celui du backend,
-   après édition littérale centrale et avec cache amorcé.
-6. **HANDOFF détaillé** : branche `c2`, binaire final validé v4
-   `0394c4fe3aceb577f99480872853c17c44a8d43f309105b4a47909e0242f5fd5`.
-   Évidence : `.gopurs-evidence/c2-8-sub10-20261023/central-validated-v4/` depuis
-   `htdocs` ; SHA des sources et du correctif Aff dans `v4-source-state.json`,
-   détails dans `docs/build-c2-sub10.md`. Médianes v4 : backend **8,586 s**,
-   full **79,464 s**, processus **9,197 s**. La campagne v3 (`3ceb9250…`) reste
+   `b` sans exports fonctionne : 3,826 s backend, 8,791 s total. Le seuil reste
+   celui du backend, après édition littérale centrale et avec cache amorcé.
+   L'objectif de poursuite des optimisations atteint son seuil d'arrêt autorisé.
+6. **HANDOFF détaillé** : branche `c2`, binaire final validé D
+   `13160b1ab6689bee0bf930e4292e841b67d0e4c7ed4aab2ce538bc04ae2ab742`.
+   Évidence : `.gopurs-evidence/c2-9-sub4-20261023/` depuis `htdocs`, campagnes
+   `candidate-d/` et `candidate-d-final/`, sources `candidate-d-source-state.json`,
+   liaison binaire `candidate-d-build.json`, audit `completion-audit.json` et
+   détails dans `docs/build-c2-sub4.md`. Médianes D : backend **3,841 s**,
+   full **78,111 s**, processus **4,432 s**. C2-8 v4 (`0394c4fe…`) reste conservé
+   sous `.gopurs-evidence/c2-8-sub10-20261023/central-validated-v4/`, avec
+   backend **8,586 s**, full **79,464 s**, processus **9,197 s** et correction Aff.
+   La campagne v3 (`3ceb9250…`) reste
    conservée sous `candidate-v3/`, médiane backend **8,506 s**, full **78,590 s**.
    Le binaire C2-7 `457bfcf3…` et sa campagne restent dans
    `.gopurs-evidence/c2-7-reprise-20261023/central-validated-pairs/`.
    Ancien binaire `33f8ba03…` ; daemon historique `cebd9c75…` ; overlay
    build 7 `102f3d3e…` / build 8 `0dbbfcf4…`. Aucun commit de l'assistant. Le code C2/C1c
-   n'est pas installé dans l'arbre P00. La validation C2-8 est achevée ; aucun
+   n'est pas installé dans l'arbre P00. La validation C2-9 est achevée ; aucun
    merge n'a été effectué par l'assistant.
    - Fichiers C2 : `src/Gopurs/Driver.purs`,
      `src/Gopurs/Driver/Build.purs`, `src/Gopurs/Driver/Prepare.purs`,

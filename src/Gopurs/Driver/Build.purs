@@ -28,7 +28,7 @@ import Gopurs.Cache.Wire as Wire
 import Gopurs.Driver.Prepare (PreparedModules)
 import Gopurs.Emission (EmissionEntry, withEmitter)
 import Gopurs.Metrics as Metrics
-import PureScript.Backend.Optimizer.Builder (BuildEnv, BuildOptions, BuildObservation, JobScheduler, ParallelStats, buildModulesWithObservation, buildModulesParallelWithLazyPreparation)
+import PureScript.Backend.Optimizer.Builder (BuildEnv, BuildOptions, BuildObservation, JobScheduler, ParallelStats, buildModulesWithObservation, buildModulesParallelWithRestoredHeaders)
 import PureScript.Backend.Optimizer.Convert (BackendModule)
 import PureScript.Backend.Optimizer.CoreFn (Ann, Module(..))
 import PureScript.Backend.Optimizer.Semantics.Foreign (coreForeignSemantics)
@@ -48,7 +48,11 @@ build session ffi config preparedInput reusableModules materializePrepared heade
   readerMillis <- liftEffect (Ref.new 0.0)
   let prepared = preparedInput
   let
-    prepareFresh mod@(Module m) = case materializePrepared of
+    moduleRanks = Map.fromFoldable (Array.mapWithIndex (\rank (Module m) -> Tuple (unwrap m.name) rank) (Array.fromFoldable prepared.modules))
+    prepareFresh mod@(Module m) = do
+      ModuleCache.warmImplementations config.prepareJobs cache moduleRanks (unwrap m.name)
+      materializeFresh mod
+    materializeFresh mod@(Module m) = case materializePrepared of
       Nothing -> pure mod
       Just materialize | Set.member (unwrap m.name) reusableModules -> do
         let name = unwrap m.name
@@ -75,7 +79,10 @@ build session ffi config preparedInput reusableModules materializePrepared heade
           throwError (error ("incremental cache: unavailable prepared placeholder: " <> unwrap m.name))
         _, _ -> pure value
   reusable <- Metrics.measure "module cache all-hit lookup" \_ -> ModuleCache.lookupAll config.optimizerJobs cache prepared.modules
-  globalFunctionsRef <- liftEffect (Ref.new Map.empty)
+  restoredHeaders <- if config.optimizerJobs <= 1 then pure Map.empty else case reusable of
+    Just _ -> pure Map.empty
+    Nothing -> Metrics.measure "module header decode" \_ -> ModuleCache.lookupHeaders config.optimizerJobs cache prepared.modules
+  workerOwnersRef <- liftEffect (Ref.new Map.empty)
   workersDigestRef <- liftEffect (Ref.new (Wire.hash "workers-v1"))
   attemptsRef <- liftEffect (Ref.new 0)
   codegenRef <- liftEffect (Ref.new 0)
@@ -83,15 +90,17 @@ build session ffi config preparedInput reusableModules materializePrepared heade
   let
     emitBatch :: Array OptimizedModule -> Aff Unit
     emitBatch batch = Metrics.accumulate emissionMillisRef \_ -> do
-      globalFunctions <- liftEffect (Ref.read globalFunctionsRef)
+      workerOwners <- liftEffect (Ref.read workerOwnersRef)
       visibleWorkers <- liftEffect (Ref.read workersDigestRef)
       let
-        metadata = prepared.metadata { globalFunctions = globalFunctions }
-        emit entry = ModuleCache.emit cache ffi metadata visibleWorkers entry.optimizedCached entry.coreFnModule entry.backendMod
+        resolve = ModuleCache.resolveWorkerSnapshot (ModuleCache.readWorkerContribution cache) workerOwners
+        emit entry = ModuleCache.emitWithWorkerSnapshot resolve cache ffi prepared.metadata visibleWorkers entry.optimizedCached entry.coreFnModule entry.backendMod
       results <- if config.emission.jobs == 1 then traverse emit batch else parTraverse emit batch
       -- Read one immutable snapshot per batch and publish in module order.
       -- Later batches must see all signatures produced by this batch.
-      liftEffect (Ref.write (foldl (\acc result -> Map.union result.functions acc) globalFunctions results) globalFunctionsRef)
+      liftEffect (Ref.write (foldl (\acc (Tuple entry result) ->
+        Map.insert (unwrap entry.backendMod.name) (if result.deferred then Nothing else Just result.functions) acc)
+        workerOwners (Array.zip batch results)) workerOwnersRef)
       liftEffect (Ref.write (foldl (\acc result -> Wire.hash (acc <> "/" <> result.workers)) visibleWorkers results) workersDigestRef)
 
     buildOptions :: (EmissionEntry OptimizedModule -> Aff Unit) -> BuildOptions Aff
@@ -127,7 +136,7 @@ build session ffi config preparedInput reusableModules materializePrepared heade
         Metrics.measure "cached module producer" \_ ->
           for_ (Array.zip (Array.fromFoldable prepared.modules) previousBackends) \(Tuple coreFnModule backendMod) -> enqueueCached coreFnModule backendMod
       Nothing -> Metrics.measure "PBO producer" \_ ->
-        runBuilder config.optimizerJobs cache prepareFresh
+        runBuilder config.optimizerJobs cache restoredHeaders prepareFresh
           { onSkipModule: \_ mod view -> checkedLookup mod (ModuleCache.lookupBackendWithReads cache mod view)
           , onReads: \_ mod reads -> ModuleCache.captureReads cache mod reads
           }
@@ -141,17 +150,22 @@ build session ffi config preparedInput reusableModules materializePrepared heade
     "[gopurs] generation + writes (cumulative batches): " <> show (Int.round emissionMillis) <> " ms"
   liftEffect $ Console.error $
     "[gopurs] pbo module attempts: " <> show attempts <> ", codegen: " <> show codegen
+  workerOwnerCount <- liftEffect (Map.size <$> Ref.read cache.priorWorkers)
+  liftEffect $ Console.error $ "[gopurs] worker contributions: decoded=" <> show workerOwnerCount <> "/" <> show (List.length prepared.modules)
   readerCount <- liftEffect (Map.size <$> Ref.read preparedReaders)
   preparedMillis <- liftEffect (Ref.read readerMillis)
   liftEffect $ Console.error $ "[gopurs] prepare PBO readers: " <> show readerCount <> " modules, " <> show (Int.round preparedMillis) <> " ms"
   liftEffect (Array.fromFoldable <<< Map.values <$> Ref.read cache.reused)
 
-runBuilder :: Int -> ModuleCache.ModuleCache -> (Module Ann -> Aff (Module Ann)) -> BuildObservation Aff -> (BuildEnv -> Module Ann -> BackendModule -> Aff Unit) -> BuildOptions Aff -> List (Module Ann) -> Aff Unit
-runBuilder jobs cache prepareFresh observer onReuse options modules
+runBuilder :: Int -> ModuleCache.ModuleCache -> Map.Map String BackendModule -> (Module Ann -> Aff (Module Ann)) -> BuildObservation Aff -> (BuildEnv -> Module Ann -> BackendModule -> Aff Unit) -> BuildOptions Aff -> List (Module Ann) -> Aff Unit
+runBuilder jobs cache restoredHeaders prepareFresh observer onReuse options modules
   | jobs <= 1 = buildModulesWithObservation (Just observer) onReuse options modules
   | otherwise = do
+      let edges = foldl (\count owners -> count + Array.length owners) 0 (Map.values cache.schedulingReads)
+      liftEffect $ Console.error $ "[gopurs] PBO scheduling hints: owners=" <> show (Map.size cache.schedulingReads) <> ", edges=" <> show edges
+      liftEffect $ Console.error $ "[gopurs] PBO restored headers: " <> show (Map.size restoredHeaders)
       scheduler <- createJobScheduler
-      buildModulesParallelWithLazyPreparation prepareFresh (Just (ModuleCache.readImplementationsSync cache)) (Just observer) onReuse { jobs, scheduler, onStats: Just reportParallelStats } options modules
+      buildModulesParallelWithRestoredHeaders restoredHeaders cache.schedulingReads prepareFresh (Just (ModuleCache.readImplementationsSync cache)) (Just observer) onReuse { jobs, scheduler, onStats: Just reportParallelStats } options modules
 
 -- An AVar has a single result slot. A worker's put can remain suspended if the
 -- coordinator fails before taking its result. Run this scheduler inside the

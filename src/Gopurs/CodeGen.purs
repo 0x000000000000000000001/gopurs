@@ -4,6 +4,7 @@ module Gopurs.CodeGen
   , PreparedModule
   , prepareModule
   , workerInputs
+  , workerOwners
   , translatePreparedWithFunctions
   ) where
 
@@ -18,6 +19,7 @@ import Data.Array as Array
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Newtype (unwrap)
 import PureScript.Backend.Optimizer.CoreFn (Ident(..), Literal(..), Prop(..), Qualified(..))
+import PureScript.Backend.Optimizer.CoreFn as CoreFn
 import Data.Tuple (Tuple(..))
 import Effect.Unsafe (unsafePerformEffect)
 import Effect.Ref (Ref)
@@ -92,15 +94,25 @@ prepareModule metadata inputMod =
 -- own signatures. Include every such Var, even if it is not called, and record
 -- absences in the exact batch snapshot. TCO preserves these qualifications.
 workerInputs :: ModuleFunctions -> BackendModule -> Map.Map String (Maybe FunctionInfo)
-workerInputs available mod = foldl
-  (\acc group -> foldl (\entries (Tuple _ value) -> visit entries value) acc group.bindings)
+workerInputs available = foldWorkerReferences
+  (\owner name acc -> let key = unwrap owner <> "." <> name in Map.insert key (Map.lookup key available) acc)
   Map.empty
+
+-- The emitter can resolve immutable owner contributions without decoding every
+-- earlier module's signatures. Keep the exact qualified-Var inventory shared
+-- with workerInputs, including FFI targets and references introduced by passes.
+workerOwners :: BackendModule -> Set.Set String
+workerOwners = foldWorkerReferences (\owner _ -> Set.insert (unwrap owner)) Set.empty
+
+foldWorkerReferences :: forall a. (CoreFn.ModuleName -> String -> a -> a) -> a -> BackendModule -> a
+foldWorkerReferences insert initial mod = foldl
+  (\acc group -> foldl (\entries (Tuple _ value) -> visit entries value) acc group.bindings)
+  initial
   mod.bindings
   where
   visit acc (NeutralExpr syntax) = case syntax of
     Var (Qualified (Just owner) (Ident name)) | owner /= mod.name ->
-      let key = unwrap owner <> "." <> name
-      in Map.insert key (Map.lookup key available) acc
+      insert owner name acc
     _ -> foldl visit acc syntax
 
 -- Source metadata must be the same as at preparation. Output supplies the

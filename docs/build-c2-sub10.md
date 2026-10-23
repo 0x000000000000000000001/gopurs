@@ -1,5 +1,9 @@
 # C2-8 — backend one-shot central sous 10 s confirmé
 
+La suite [C2-9](build-c2-sub4.md) atteint désormais 3,841 s backend médian
+sur trois paires exactes et 8,791 s pour le vrai `b`. Les chiffres ci-dessous
+restent les résultats historiques propres à C2-8/v4.
+
 **C2-8 achevé avec v4 : 8,586 s backend médian, trois paires byte-exactes,
 chaque incrémental strictement sous 10 s.** Compilation Go, vrai `b`, deux
 fallbacks sur corruption et daemons validés ; l'audit de clôture passe ses

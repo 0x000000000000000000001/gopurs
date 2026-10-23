@@ -1,5 +1,5 @@
 module Gopurs.Driver.Cache
-  ( Session, SourceModule, FrozenFFI, ReusedMemo, PartText, begin, plan, materialize, materializeSync, readParts, packages, publish, close ) where
+  ( Session, SourceModule, FrozenFFI, ReusedMemo, PartText, begin, plan, materialize, materializeSync, materializeInputs, materializeAllInputs, readParts, packages, publish, close ) where
 
 import Prelude
 
@@ -21,7 +21,7 @@ import Gopurs.Driver.Config (CompilerConfig)
 type SourceModule = { name :: String, path :: String, hasForeign :: Boolean }
 type FrozenFFI = { name :: String, path :: String, file :: String, found :: Boolean, digest :: String }
 type Session =
-  { status :: String, reason :: String, stage :: String, input :: String
+  { status :: String, reason :: String, stage :: String, input :: String, inputLayout :: String
   , output :: String, root :: String, count :: Int, ffi :: Array FrozenFFI, context :: String, sameTast :: Boolean
   , packageRequest :: String
   }
@@ -35,11 +35,11 @@ type Request =
   { operation :: String, options :: Array Setting, force :: Boolean, stage :: String
   , modules :: Array SourceModule, entries :: Array String, diagnostics :: Boolean
   , moduleCache :: Boolean
-  , owners :: Array String, parts :: Array String, reused :: Array ReusedMemo
+  , owners :: Array String, all :: Boolean, parts :: Array String, reused :: Array ReusedMemo
   }
 
 request :: String -> Request
-request operation = { operation, options: [], force: false, stage: "", modules: [], entries: [], diagnostics: false, moduleCache: false, owners: [], parts: [], reused: [] }
+request operation = { operation, options: [], force: false, stage: "", modules: [], entries: [], diagnostics: false, moduleCache: false, owners: [], all: false, parts: [], reused: [] }
 
 exchange :: Request -> Aff Session
 exchange = liftEffect <<< exchangeSync
@@ -50,7 +50,7 @@ exchangeSync message = do
   json <- either (throwException <<< error) pure (jsonParser text)
   response <- either (throwException <<< error <<< printJsonDecodeError) pure (decodeJson json)
   when (response.status == "error") $ throwException (error
-    ((if message.operation == "materialize" || message.operation == "packages" || message.operation == "publish" && not (Array.null message.reused) then "incremental cache: " else "") <> response.reason))
+    ((if message.operation == "materialize" || message.operation == "materialize-input" || message.operation == "packages" || message.operation == "publish" && not (Array.null message.reused) then "incremental cache: " else "") <> response.reason))
   pure response
 
 begin :: CompilerConfig -> Aff Session
@@ -66,6 +66,7 @@ begin config = exchange $ (request "begin")
       , { name: "pipeline", value: show config.emission.pipelined }
       , { name: "go-layout", value: if config.goPackages then "gopurs/go-packages-v1" else "gopurs/monolithic-v1" }
       , { name: "module-lazy", value: if config.optimizerJobs > 1 then "1" else "0" }
+      , { name: "input-layout", value: "packed-v1" }
       ]
   }
 
@@ -77,6 +78,14 @@ materialize session owners parts = liftEffect (materializeSync session owners pa
 
 materializeSync :: Session -> Array String -> Array String -> Effect Unit
 materializeSync session owners parts = void $ exchangeSync ((request "materialize") { stage = session.stage, owners = owners, parts = parts })
+
+materializeInputs :: Session -> Array String -> Aff Unit
+materializeInputs session owners = when (session.inputLayout == "packed-v1") $
+  void $ exchange ((request "materialize-input") { stage = session.stage, owners = owners })
+
+materializeAllInputs :: Session -> Aff Unit
+materializeAllInputs session = when (session.inputLayout == "packed-v1") $
+  void $ exchange ((request "materialize-input") { stage = session.stage, all = true })
 
 readParts :: Session -> Array String -> Array String -> Aff (Array PartText)
 readParts session owners parts = liftEffect do

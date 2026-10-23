@@ -23,7 +23,7 @@ test("JS cache helper identity changes with each multi-package overlay source", 
   const helper = () => run(process.execPath, [join(workspace, "tools/build-cache.mjs"), "--helper"], workspace).trim();
   let previous = helper();
   assert.equal(helper(), previous, "unchanged helper should be reused");
-  for (const file of ["build-cache/overlay_sections.go", "c1c/partition.go", "c1c/literals.go"]) {
+  for (const file of ["build-cache/inputpack.go", "build-cache/overlay_sections.go", "c1c/partition.go", "c1c/literals.go"]) {
     const path = join(workspace, "tools", file);
     writeFileSync(path, readFileSync(path, "utf8") + "\n// changed source for compiler snapshot regression\n");
     const current = helper();

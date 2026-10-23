@@ -1,6 +1,6 @@
 module Gopurs.Driver.Prepare.Proof
   ( NamedHash, ModuleProof, Payload, IndexEntry, State
-  , moduleProof, moduleProofWithReads, permitsLiteralEdit, placeholder
+  , moduleProof, moduleProofWithReads, permitsLiteralEdit, placeholder, compactHeader
   ) where
 
 import Prelude
@@ -14,7 +14,8 @@ import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Gopurs.Cache.Wire as Wire
-import PureScript.Backend.Optimizer.CoreFn (Ann(..), Bind(..), Binding(..), CaseAlternative(..), CaseGuard(..), Expr(..), Guard(..), Literal(..), Module(..), Prop(..), emptySpan)
+import PureScript.Backend.Optimizer.CoreFn (Ann(..), Bind(..), Binding(..), CaseAlternative(..), CaseGuard(..), Expr(..), Guard(..), Literal(..), Module(..), Prop(..), Qualified(..), emptySpan)
+import PureScript.Backend.Optimizer.Monomorphize (getExprAnn)
 
 type NamedHash = { name :: String, hash :: String }
 type ModuleProof = { name :: String, shape :: String, bindings :: Array NamedHash }
@@ -24,6 +25,7 @@ type State =
   { schema :: Int, context :: String, directives :: String, snapshot :: String
   , sources :: Array NamedHash, modules :: Array ModuleProof
   , index :: Array IndexEntry, payloads :: Array Payload, bodyReads :: Array String
+  , projection :: Array String
   }
 
 -- Source locations are diagnostic, never specialization inputs. Keep types,
@@ -105,3 +107,28 @@ placeholder specialized (Module mod) =
   where
   names (NonRec (Binding _ ident _)) = [ ident ]
   names (Rec bindings) = map (\(Binding _ ident _) -> ident) bindings
+
+-- Only cached modules use these headers. Every fresh conversion reloads its
+-- exact typed source and monomorphizes it first. Preserve the builder's private
+-- untyped-global set exactly; foreign signatures remain needed by cached FFI.
+-- Filtering against the original exports first makes every retained binding
+-- private. Parallel cached headers need no export list after that filtering.
+-- Metadata and source interfaces are stored separately without type erasure.
+compactHeader :: Module Ann -> Module Ann
+compactHeader (Module mod) = Module (mod
+  { span = emptySpan
+  , imports = map (map (const blank)) mod.imports
+  , exports = []
+  , dataDecls = []
+  , classDecls = []
+  , comments = []
+  , decls = Array.mapMaybe keep (Array.concatMap flatten mod.decls)
+  })
+  where
+  blank = Ann { span: emptySpan, meta: Nothing, type: Nothing, sourceUsage: Nothing }
+  flatten (NonRec binding) = [ binding ]
+  flatten (Rec bindings) = bindings
+  keep (Binding (Ann ann) ident expr) = case getExprAnn expr of
+    Ann top | ann.type == Nothing && top.type == Nothing && not (Array.elem ident mod.exports) ->
+      Just (NonRec (Binding blank ident (ExprVar blank (Qualified Nothing ident))))
+    _ -> Nothing

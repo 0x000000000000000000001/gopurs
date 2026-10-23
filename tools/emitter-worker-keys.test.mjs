@@ -9,8 +9,8 @@ import * as Aff from "../output/Effect.Aff/index.js";
 import * as Either from "../output/Data.Either/index.js";
 import * as Map from "../output/Data.Map/index.js";
 import { ordString } from "../output/Data.Ord/index.js";
-import { Just } from "../output/Data.Maybe/index.js";
-import { empty as emptySet } from "../output/Data.Set/index.js";
+import { Just, Nothing } from "../output/Data.Maybe/index.js";
+import { empty as emptySet, singleton as singletonSet } from "../output/Data.Set/index.js";
 import { Tuple } from "../output/Data.Tuple/index.js";
 import * as Ref from "../output/Effect.Ref/index.js";
 import * as Cache from "../output/Gopurs.Cache.Modules/index.js";
@@ -54,7 +54,7 @@ test("emission keys cover referenced worker signatures and absences without unre
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const keys = { prepared: hash("prepared"), optimizerEnvironment: hash("optimizer"), callerDemands: hash("callers") };
   const codecs = ["pbo/backend-v2", "pbo/implementations-v1", "pbo/directives-v1", "gopurs/workers-v2"];
-  async function emit(label, globalFunctions, previous, metadataKey = "source-metadata", sourceBackend = backend, sourceMetadata = metadata) {
+  async function emit(label, globalFunctions, previous, metadataKey = "source-metadata", sourceBackend = backend, sourceMetadata = metadata, workerSnapshot, headerSafe = false) {
     const stage = join(directory, label), output = join(stage, "output");
     for (const child of ["modules", "prior/Consumer", "output/purescript"]) mkdirSync(join(stage, child), { recursive: true });
     if (previous) {
@@ -67,7 +67,7 @@ test("emission keys cover referenced worker signatures and absences without unre
       keys: Map.singleton("Consumer")(keys), metadata: hash(metadataKey),
       invalidations: Ref.new(Map.empty)(), restored: Ref.new(0)(),
       reads: Ref.new(Map.empty)(),
-      lazyContributions: false, priorPartTexts: Map.empty, reused: Ref.new(Map.empty)(), priorWorkers: Ref.new(Map.empty)(), backends: Ref.new(Map.empty)(), headerSafe: emptySet,
+      lazyContributions: false, priorPartTexts: Map.empty, reused: Ref.new(Map.empty)(), priorWorkers: Ref.new(Map.empty)(), backends: Ref.new(Map.empty)(), headerSafe: headerSafe ? singletonSet("Consumer") : emptySet,
       ffiDigests: Map.empty, priorFfiDigests: Map.empty,
     };
     // Different all-worker prefixes previously invalidated unrelated consumers.
@@ -81,17 +81,46 @@ test("emission keys cover referenced worker signatures and absences without unre
         return target[key];
       },
     });
-    await runAff(Cache.emit(cache)(Map.empty)(observedMetadata)(prefix)(Boolean(previous))({})(sourceBackend));
+    const loaded = [];
+    const load = owner => Aff.monadEffectAff.liftEffect(() => {
+      loaded.push(owner);
+      return Map.filterWithKey(ordString)(name => () => name.startsWith(owner + "."))(globalFunctions);
+    });
+    const emitted = workerSnapshot === undefined ? Cache.emit(cache)(Map.empty)(observedMetadata)(prefix)(Boolean(previous))({})(sourceBackend)
+      : Cache.emitWithWorkerSnapshot(Cache.resolveWorkerSnapshot(load)(workerSnapshot))(cache)(Map.empty)(observedMetadata)(prefix)(Boolean(previous))({})(sourceBackend);
+    const result = await runAff(emitted);
     const memo = JSON.parse(readFileSync(join(stage, "modules/Consumer/memo.json")));
     memo.parts = codecs.map((codec, i) => {
       const bytes = readFileSync(join(stage, `modules/Consumer/${i}.json`));
       return { codec, object: { sha256: hash(bytes), bytes: bytes.length } };
     });
-    return { stage, memo, preparationReads, restored: Ref.read(cache.restored)(), code: readFileSync(join(output, "purescript/Consumer.go"), "utf8") };
+    return { stage, memo, preparationReads, restored: Ref.read(cache.restored)(), code: readFileSync(join(output, "purescript/Consumer.go"), "utf8"), loaded, result, decodedOwners: Map.size(Ref.read(cache.priorWorkers)()) };
   }
   const first = await emit("first", present);
   assert.ok(first.preparationReads > 0, "a fresh module must be prepared");
   assert.match(first.code, /Call_Producer_f\(/);
+  const deferredProducer = Map.singleton("Producer")(Nothing.value);
+  const lazyFirst = await emit("lazy-first", present, undefined, undefined, undefined, undefined, deferredProducer);
+  assert.equal(lazyFirst.code, first.code, "lazy owner lookup reproduces the eager worker snapshot");
+  assert.deepEqual(lazyFirst.memo, first.memo, "lazy owner lookup preserves all emission keys and payloads");
+  assert.ok(lazyFirst.loaded.length > 0 && lazyFirst.loaded.every(name => name === "Producer"));
+  const deferredUnrelated = insert("Unused")(Nothing.value)(deferredProducer);
+  const lazyHit = await emit("lazy-hit", present, first, undefined, undefined, undefined, deferredUnrelated);
+  assert.equal(lazyHit.restored, 1);
+  assert.deepEqual(lazyHit.loaded, ["Producer"], "an early emission hit never loads unrelated owners");
+  const headerHit = await emit("lazy-header-hit", present, first, undefined, undefined, undefined, deferredUnrelated, true);
+  assert.equal(headerHit.restored, 1);
+  assert.equal(headerHit.result.deferred, true);
+  assert.equal(headerHit.decodedOwners, 0, "proved cached emission does not decode its worker contribution");
+  assert.deepEqual(headerHit.loaded, [], "proved cached emission does not consume any imported signatures");
+  const invisible = await emit("lazy-invisible", present, undefined, undefined, undefined, undefined, Map.empty);
+  const invisibleFull = await emit("eager-invisible", Map.empty);
+  assert.equal(invisible.code, invisibleFull.code, "same-batch and future owners remain absent despite cached signatures");
+  assert.deepEqual(invisible.loaded, []);
+  const currentProducer = Map.singleton("Producer")(new Just(Map.empty));
+  const current = await emit("lazy-current", present, undefined, undefined, undefined, undefined, currentProducer);
+  assert.equal(current.code, invisibleFull.code, "fresh owner signatures override the cached contribution, including removal");
+  assert.deepEqual(current.loaded, []);
   const unrelated = insert("Producer.unused")({ ...info, reference: worker("Producer", "Call_Producer_unused") })(present);
   const kept = await emit("unrelated", unrelated, first);
   assert.equal(kept.code, first.code);
@@ -152,6 +181,11 @@ test("emission keys cover referenced worker signatures and absences without unre
   const borrowEmit = (label, functions, previous) => emit("borrow-" + label, functions, previous, "borrowing-metadata", borrowingBackend, borrowingMetadata);
   const borrowed = await borrowEmit("first", helperPresent);
   assert.match(borrowed.code, /Call_Data_Argonaut_Decode_Internal_Record_borrowObject\(/);
+  const lazyBorrow = await emit("borrow-lazy", helperPresent, undefined, "borrowing-metadata", borrowingBackend, borrowingMetadata,
+    Map.singleton("Data.Argonaut.Decode.Internal.Record")(Nothing.value));
+  assert.equal(lazyBorrow.code, borrowed.code, "a transformation's added owner resolves in the original batch snapshot");
+  assert.deepEqual(lazyBorrow.memo, borrowed.memo);
+  assert.deepEqual(lazyBorrow.loaded, ["Data.Argonaut.Decode.Internal.Record"]);
   const borrowedHit = await borrowEmit("hit", helperPresent, borrowed);
   assert.equal(borrowedHit.restored, 1);
   assert.ok(borrowedHit.preparationReads > 0, "an introduced reference must use the post-preparation proof");

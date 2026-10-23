@@ -8,7 +8,7 @@ import Data.Argonaut.Parser (jsonParser)
 import Data.Array as Array
 import Data.Either (Either(..), hush)
 import Data.Foldable (foldl)
-import Data.List (List)
+import Data.List as List
 import Data.Map (Map)
 import Data.Map as Map
 import Data.Maybe (Maybe(..), fromMaybe)
@@ -18,23 +18,28 @@ import Data.String as String
 import Data.String.Pattern (Pattern(..))
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
-import Effect.Aff (Aff, attempt, throwError)
+import Effect.Aff (Aff, attempt)
 import Effect.Class (liftEffect)
 import Effect.Console as Console
-import Effect.Exception (error)
+import Effect.Ref as Ref
 import Gopurs.Cache.Wire as Wire
 import Gopurs.ClassMetadata (addClassDataDeclarations)
 import Gopurs.Driver.Cache (Session)
-import Gopurs.Driver.Prepare (PreparedCache, prepareLoadedModules, selectMainModules, sourceMetadata)
+import Gopurs.Driver.Cache as Cache
+import Gopurs.Driver.Prepare (PreparedCache, prepareModulesWithCache, selectMainModules)
+import Gopurs.Driver.Manifest (moduleInterface)
 import Gopurs.Driver.Prepare.Proof as Proof
+import Gopurs.Driver.Prepare.Projection (Projection)
+import Gopurs.Driver.Prepare.Projection as Projection
+import Gopurs.Preparation (runPreparationJobs)
 import Gopurs.Metrics as Metrics
 import Gopurs.Monomorphization (buildGlobalAstMap)
 import Node.Encoding (Encoding(..))
 import Node.FS.Aff as FS
-import PureScript.Backend.Optimizer.App (coreFnModulesFromOutput)
+import PureScript.Backend.Optimizer.CoreFn.Json.Text (parseModule)
 import PureScript.Backend.Optimizer.CoreFn (Ann, Module(..))
 import PureScript.Backend.Optimizer.CoreFn.Usage (invalidateSourceUsageModule)
-import PureScript.Backend.Optimizer.Monomorphize (InstantiationMap, monomorphizeWith, normalizeInstantiation, SpecializationLookup)
+import PureScript.Backend.Optimizer.Monomorphize (InstantiationMap, monomorphizeWithReads, normalizeInstantiation, SpecializationLookup)
 import PureScript.Backend.Optimizer.Semantics (InlineDirectiveMap)
 
 directory :: String -> String
@@ -79,98 +84,169 @@ writeAtomic stage path text = do
   FS.writeTextFile UTF8 temporary text
   FS.rename temporary path
 
-sourceHash :: String -> Module Ann -> Aff (Tuple String String)
-sourceHash input (Module mod) = do
-  text <- FS.readTextFile UTF8 (input <> "/" <> unwrap mod.name <> "/corefn.json")
-  pure (Tuple (unwrap mod.name) (Wire.hash text))
+readObject :: String -> String -> Aff (Maybe String)
+readObject root digest = do
+  text <- hush <$> attempt (FS.readTextFile UTF8 (payloadPath root digest))
+  pure (text >>= \value -> if Wire.hash value == digest then Just value else Nothing)
 
--- The freeze step hashes the exact bytes copied to this private session.
--- Older sessions and incomplete inventories keep the original hashing path.
-sourceHashesFor :: Session -> Array (Module Ann) -> Aff (Map String String)
-sourceHashesFor session modules = do
+-- Only the freeze's complete, distinct inventory can skip global TAST loading.
+-- Old sessions and malformed inventories retain the complete preparation path.
+readFrozenHashes :: Session -> Aff (Maybe (Map String String))
+readFrozenHashes session = do
   frozen <- readJSON (session.stage <> "/source-hashes.json") :: Aff (Maybe (Array Proof.NamedHash))
-  case frozen of
-    Just entries
-      | Array.length entries == session.count -> do
-          let hashes = Map.fromFoldable (map (\entry -> Tuple entry.name entry.hash) entries)
-          if Map.size hashes == session.count
-            && Array.all (\(Module mod) -> Map.member (unwrap mod.name) hashes) modules then pure hashes
-          else readCurrent
-    _ -> readCurrent
-  where
-  readCurrent = Map.fromFoldable <$> traverse (sourceHash session.input) modules
+  pure do
+    entries <- frozen
+    let hashes = Map.fromFoldable (map (\entry -> Tuple entry.name entry.hash) entries)
+    if Array.length entries == session.count && Map.size hashes == session.count
+      && Array.all (\entry -> entry.name /= "" && entry.hash /= "") entries
+      then Just hashes else Nothing
+
+readSource :: Session -> Map String String -> String -> Aff (Maybe (Module Ann))
+readSource session hashes name = case Map.lookup name hashes of
+  Nothing -> pure Nothing
+  Just digest -> do
+    Cache.materializeInputs session [ name ]
+    text <- hush <$> attempt (FS.readTextFile UTF8 (session.input <> "/" <> name <> "/corefn.json"))
+    pure do
+      encoded <- text
+      if Wire.hash encoded /= digest then Nothing
+      else do
+        source@(Module value) <- hush (parseModule encoded)
+        if unwrap value.name == name then Just source else Nothing
 
 preparePersistent :: Session -> Int -> Maybe String -> InlineDirectiveMap -> Aff PreparedCache
 preparePersistent session jobs mainModule directives = do
-  loaded <- Metrics.measure "load TAST + sort" \_ -> coreFnModulesFromOutput session.input
-  let modules = Array.fromFoldable loaded
-  when (Array.length modules /= session.count) $
-    throwError (error "TAST decoding did not produce every inventoried module")
-  hashes <- Metrics.measure "source hashes" \_ -> sourceHashesFor session modules
-  candidate <- Metrics.measure "compact preparation probe" \_ -> probe session mainModule directives loaded hashes
+  candidate <- Metrics.measure "compact preparation probe" \_ -> probe session jobs mainModule directives
   case candidate of
     Just prepared -> do
-      liftEffect $ Console.error ("[gopurs] compact preparation: " <> show (Set.size prepared.reusable) <> " modules proven reusable")
+      liftEffect $ Console.error ("[gopurs] compact preparation: " <> show (Set.size prepared.reusable) <> " modules proven reusable; TAST loaded on demand")
       pure prepared
-    Nothing -> prepareLoadedModules session.input jobs mainModule directives loaded
+    Nothing -> do
+      Cache.materializeAllInputs session
+      prepareModulesWithCache session.input session.count jobs mainModule directives
 
-probe :: Session -> Maybe String -> InlineDirectiveMap -> List (Module Ann) -> Map String String -> Aff (Maybe PreparedCache)
-probe session mainModule directives loaded sourceHashes = do
+probe :: Session -> Int -> Maybe String -> InlineDirectiveMap -> Aff (Maybe PreparedCache)
+probe session jobs mainModule directives = do
   saved <- readProof session.root
+  frozen <- readFrozenHashes session
   committed <- snapshotStamp (session.stage <> "/prior/manifest.json")
   currentStamp <- snapshotStamp (session.stage <> "/session.json")
   directivesKey <- liftEffect (Wire.hash <$> Wire.write directives)
-  case saved, committed, currentStamp of
-    Just old, Just stamp, Just current
-      | old.schema == 2 && old.context == session.context && old.directives == directivesKey && old.snapshot == stamp -> do
+  case saved, frozen, committed, currentStamp of
+    Just old, Just sourceHashes, Just stamp, Just current
+      | old.schema == 4 && old.context == session.context && old.directives == directivesKey && old.snapshot == stamp -> do
           let
             previousHashes = Map.fromFoldable (map (\entry -> Tuple entry.name entry.hash) old.sources)
-            modules = Array.fromFoldable loaded
-            changed = Array.filter (\(Module mod) -> Map.lookup (unwrap mod.name) previousHashes /= Map.lookup (unwrap mod.name) sourceHashes) modules
-            sameInventory = Map.size previousHashes == Map.size sourceHashes && Array.all (\(Tuple name _) -> Map.member name previousHashes) (Map.toUnfoldable sourceHashes :: Array _)
+            changed = Array.filter (\(Tuple name hash) -> Map.lookup name previousHashes /= Just hash) (Map.toUnfoldable sourceHashes :: Array _)
+            sameInventory = Map.keys previousHashes == Map.keys sourceHashes && Array.length old.sources == session.count
           case changed of
-            [ changedModule@(Module changedSource) ] | sameInventory -> do
-              currentProof <- liftEffect (Proof.moduleProofWithReads (Set.fromFoldable old.bodyReads) changedModule)
-              let previousProof = Array.find (\entry -> entry.name == unwrap changedSource.name) old.modules
-              case previousProof of
-                Just previous | Proof.permitsLiteralEdit (Set.fromFoldable old.bodyReads) previous currentProof -> do
-                  let
-                    enriched = map (invalidateSourceUsageModule <<< addClassDataDeclarations) loaded
-                    ast = Map.delete "Data.Ring.negate" (buildGlobalAstMap enriched)
-                    index = Map.fromFoldable (map (\entry -> Tuple entry.name (Set.fromFoldable entry.keys)) old.index)
-                    sourceByName = Map.fromFoldable (map (\mod@(Module value) -> Tuple (unwrap value.name) mod) (Array.fromFoldable enriched))
-                    payloads = Map.fromFoldable (map (\entry -> Tuple entry.name entry.hash) old.payloads)
-                    materialize name = case Map.lookup name sourceByName of
-                      Nothing -> pure Nothing
-                      Just source -> do
-                        own <- readOwn session.root index payloads name
-                        pure (map (\instantiations -> if Map.isEmpty index then source else monomorphizeWith ast (hashedLookup index) instantiations source) own)
-                  rewritten <- materialize (unwrap changedSource.name)
-                  case rewritten of
-                    Nothing -> pure Nothing
-                    Just changedPrepared -> do
-                      let
-                        preparedModules = map (\source@(Module value) -> if value.name == changedSource.name then changedPrepared else Proof.placeholder (not (Map.isEmpty index)) source) enriched
-                        metadata = sourceMetadata modules (map addClassDataDeclarations loaded)
-                        prepared =
-                          { directives, modules: preparedModules, metadata, metadataUnchanged: true
-                          , mainModules: selectMainModules mainModule modules
-                          , sources: map (\(Module value) -> { name: unwrap value.name, path: value.path, hasForeign: not (Map.isEmpty value.foreign) }) modules
-                          }
-                        proof = old
-                          { snapshot = current
-                          , sources = map (\(Tuple name hash) -> { name, hash }) (Map.toUnfoldable sourceHashes :: Array _)
-                          , modules = map (\entry -> if entry.name == currentProof.name then currentProof else entry) old.modules
-                          }
-                      pure (Just
-                        { prepared, sourceHashes, sourceModules: loaded
-                        , mono: { globalAstMap: ast, instantiations: Map.empty, bodyReads: Set.fromFoldable old.bodyReads }
-                        , reusable: Set.delete (unwrap changedSource.name) (Map.keys sourceHashes)
-                        , proof: Just proof, materialize: Just materialize
-                        })
+            [ Tuple changedName _ ] | sameInventory -> do
+              changedSource <- readSource session sourceHashes changedName
+              case changedSource of
+                Just source -> do
+                  currentProof <- liftEffect (Proof.moduleProofWithReads (Set.fromFoldable old.bodyReads) source)
+                  let previousProof = Array.find (\entry -> entry.name == changedName) old.modules
+                  case previousProof of
+                    Just previous | Proof.permitsLiteralEdit (Set.fromFoldable old.bodyReads) previous currentProof -> do
+                      projected <- readProjection session jobs old.projection
+                      case projected of
+                        Just projection | validProjection sourceHashes projection ->
+                          prepareProjected session mainModule directives sourceHashes old current source currentProof projection
+                        _ -> pure Nothing
+                    _ -> pure Nothing
                 _ -> pure Nothing
             _ -> pure Nothing
-    _, _, _ -> pure Nothing
+    _, _, _, _ -> pure Nothing
+
+-- Hash every private fragment before scheduling its pure decoder. A missing or
+-- corrupt fragment takes the existing full preparation path.
+validFragmentDigests :: Int -> Array String -> Boolean
+validFragmentDigests count digests = Array.length digests == Projection.fragmentCount count
+  && Set.size (Set.fromFoldable digests) == Array.length digests
+
+readProjection :: Session -> Int -> Array String -> Aff (Maybe Projection)
+readProjection session jobs digests
+  | not (validFragmentDigests session.count digests) = pure Nothing
+  | otherwise = do
+      encoded <- traverse (readObject session.root) digests
+      case traverse identity encoded of
+        Nothing -> pure Nothing
+        Just texts -> do
+          decoded <- runPreparationJobs jobs (map (\text _ -> Wire.read text) texts)
+          pure (traverse identity decoded >>= Projection.merge)
+
+validProjection :: Map String String -> Projection -> Boolean
+validProjection hashes projection =
+  let names = map (\(Module value) -> unwrap value.name) (Array.fromFoldable projection.modules)
+  in Array.length names == Map.size hashes && Set.fromFoldable names == Map.keys hashes
+    && Map.keys projection.interfaces == Map.keys hashes
+
+prepareProjected :: Session -> Maybe String -> InlineDirectiveMap -> Map String String -> Proof.State -> String -> Module Ann -> Proof.ModuleProof -> Projection -> Aff (Maybe PreparedCache)
+prepareProjected session mainModule directives sourceHashes old current source@(Module changed) currentProof projection = do
+  let
+    index = Map.fromFoldable (map (\entry -> Tuple entry.name (Set.fromFoldable entry.keys)) old.index)
+    payloads = Map.fromFoldable (map (\entry -> Tuple entry.name entry.hash) old.payloads)
+    bodyReads = Set.fromFoldable old.bodyReads
+    enrich = invalidateSourceUsageModule <<< addClassDataDeclarations
+  sources <- liftEffect (Ref.new (Map.singleton (unwrap changed.name) (enrich source)))
+  let
+    load name = do
+      available <- liftEffect (Ref.read sources)
+      case Map.lookup name available of
+        Just value -> pure (Just value)
+        Nothing -> do
+          loaded <- map enrich <$> readSource session sourceHashes name
+          case loaded of
+            Just value -> liftEffect (Ref.modify_ (Map.insert name value) sources)
+            Nothing -> pure unit
+          pure loaded
+    -- A missed lookup is itself recorded. Load its owner and replay the pure
+    -- transformation until all lookups have the same answers as the full AST.
+    -- A lookup not covered by the committed full-preparation proof fails shut.
+    rewrite own actual = do
+      available <- liftEffect (Ref.read sources)
+      let
+        ast = Map.delete "Data.Ring.negate" (buildGlobalAstMap (List.fromFoldable (Map.values available)))
+        Tuple result reads = monomorphizeWithReads ast (hashedLookup index) own actual
+        pending = Set.filter (\name -> Map.member name sourceHashes && not (Map.member name available)) (Set.map owner reads)
+      if not (Set.isEmpty (Set.difference reads bodyReads)) then pure Nothing
+      else if Set.isEmpty pending then pure (Just result)
+      else do
+        loaded <- traverse load (Set.toUnfoldable pending :: Array String)
+        if Array.all (case _ of
+          Just _ -> true
+          _ -> false) loaded then rewrite own actual
+        else pure Nothing
+    materialize name = do
+      actual <- load name
+      own <- readOwn session.root index payloads name
+      case actual, own of
+        Just value, Just instantiations ->
+          if Map.isEmpty index then pure (Just value) else rewrite instantiations value
+        _, _ -> pure Nothing
+  rewritten <- materialize (unwrap changed.name)
+  pure do
+    changedPrepared <- rewritten
+    let
+      preparedModules = map (\header@(Module value) -> if value.name == changed.name then changedPrepared else header) projection.modules
+      prepared =
+        { directives, modules: preparedModules, metadata: projection.metadata, metadataUnchanged: true
+        , mainModules: case mainModule of
+            Just name -> [ name ]
+            Nothing -> projection.mainModules
+        , sources: map (\(Module value) -> { name: unwrap value.name, path: value.path, hasForeign: not (Map.isEmpty value.foreign) }) (Array.fromFoldable projection.modules)
+        }
+      proof = old
+        { snapshot = current
+        , sources = map (\(Tuple name hash) -> { name, hash }) (Map.toUnfoldable sourceHashes :: Array _)
+        , modules = map (\entry -> if entry.name == currentProof.name then currentProof else entry) old.modules
+        }
+    Just
+      { prepared, sourceHashes, sourceModules: projection.modules, sourceInterfaces: projection.interfaces
+      , mono: { globalAstMap: Map.empty, instantiations: Map.empty, bodyReads }
+      , reusable: Set.delete (unwrap changed.name) (Map.keys sourceHashes)
+      , proof: Just proof, materialize: Just materialize
+      }
 
 -- Canonical specialization keys can contain very large nested type names.
 -- Hash their complete strings with the same SHA-256 used by cache fingerprints.
@@ -214,11 +290,12 @@ publishPersistentImpl session cache = do
         Nothing -> do
           previous <- readProof session.root
           case previous of
-            Just proof | proof.schema == 2 && proof.snapshot == snapshot
+            Just proof | proof.schema == 4 && proof.snapshot == snapshot
+              && validFragmentDigests session.count proof.projection
               && proof.context == session.context && proof.directives == directives -> do
                 valid <- Array.all identity <$> traverse (\entry -> do
                   text <- hush <$> attempt (FS.readTextFile UTF8 (payloadPath session.root entry.hash))
-                  pure (map Wire.hash text == Just entry.hash)) proof.payloads
+                  pure (map Wire.hash text == Just entry.hash)) (proof.payloads <> map (\hash -> { name: "projection", hash }) proof.projection)
                 pure (if valid then Just proof else Nothing)
             _ -> pure Nothing
       state <- case reusable of
@@ -235,10 +312,21 @@ publishPersistentImpl session cache = do
             let hash = Wire.hash encoded
             writeAtomic session.stage (payloadPath session.root hash) encoded
             pure { name, hash }) (Map.toUnfoldable grouped :: Array _)
+          interfaces <- liftEffect (Map.fromFoldable <$> traverse (\mod@(Module value) -> Tuple (unwrap value.name) <$> moduleInterface mod) (Array.fromFoldable cache.sourceModules))
+          projection <- traverse (\fragment -> do
+            encoded <- liftEffect (Wire.write fragment)
+            let hash = Wire.hash encoded
+            writeAtomic session.stage (payloadPath session.root hash) encoded
+            pure hash) (Projection.split
+              { modules: map Proof.compactHeader cache.prepared.modules
+              , metadata: cache.prepared.metadata
+              , interfaces
+              , mainModules: selectMainModules Nothing (Array.fromFoldable cache.sourceModules)
+              })
           pure
-            { schema: 2, context: session.context, directives, snapshot
+            { schema: 4, context: session.context, directives, snapshot
             , sources: map (\(Tuple name hash) -> { name, hash }) (Map.toUnfoldable cache.sourceHashes :: Array _)
-            , modules, index, payloads, bodyReads: Set.toUnfoldable cache.mono.bodyReads
+            , modules, index, payloads, projection, bodyReads: Set.toUnfoldable cache.mono.bodyReads
             }
       let payload = stringify (encodeJson state)
       writeAtomic session.stage (proofPath session.root) (stringify (encodeJson { hash: Wire.hash payload, payload }))

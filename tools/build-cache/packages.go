@@ -252,41 +252,57 @@ func readPackagePlan(path string) (*packagePlanResult, error) {
 	return &result, nil
 }
 
-func verifyPackagePlanFiles(output string, result *packagePlanResult) error {
+// Retain the exact verified bytes for the overlay. Parsing and proof consume
+// this private snapshot; staged links are independently checked before commit.
+type packagePlanSnapshot struct {
+	request *packageFileRequest
+	result  *packagePlanResult
+	sources map[string]string
+}
+
+func readPackagePlanFiles(output string, result *packagePlanResult) (map[string]string, error) {
+	sources := make(map[string]string, len(result.Files))
 	for _, file := range result.Files {
-		if !outputPath(file.Kind, file.Module, "purescript/"+file.Path) ||
-			!fileMatches(filepath.Join(output, "purescript", filepath.FromSlash(file.Path)), Object{file.SHA256, file.Bytes}) {
-			return fmt.Errorf("published Go package file changed: %s", file.Path)
+		path := filepath.Join(output, "purescript", filepath.FromSlash(file.Path))
+		info, err := os.Lstat(path)
+		if !outputPath(file.Kind, file.Module, "purescript/"+file.Path) || err != nil || !info.Mode().IsRegular() || info.Size() != file.Bytes {
+			return nil, fmt.Errorf("published Go package file changed: %s", file.Path)
 		}
+		data, err := os.ReadFile(path)
+		if err != nil || int64(len(data)) != file.Bytes || digest(data) != file.SHA256 {
+			return nil, fmt.Errorf("published Go package file changed: %s", file.Path)
+		}
+		sources[file.Path] = string(data)
 	}
-	return nil
+	return sources, nil
 }
 
 func planCacheStatus(output string, request *packageFileRequest) string {
+	previous, _ := readPackageRequest(filepath.Join(output, ".gopurs-cache", "go-packages", "plan-v1", "request.json"))
+	status, _ := inspectPackagePlan(output, request, previous)
+	return status
+}
+
+func inspectPackagePlan(output string, request, previous *packageFileRequest) (string, *packagePlanSnapshot) {
+	if previous == nil {
+		return "miss", nil
+	}
 	dir := filepath.Join(output, ".gopurs-cache", "go-packages", "plan-v1")
-	data, err := os.ReadFile(filepath.Join(dir, "request.json"))
-	if err != nil {
-		return "miss"
-	}
-	var previous packageFileRequest
-	if err := strictJSON(data, &previous); err != nil {
-		return "miss"
-	}
 	if previous.Format != request.Format || previous.PackagePath != request.PackagePath || previous.GoVersion != request.GoVersion || previous.Arch != request.Arch {
-		return "miss-options"
+		return "miss-options", nil
 	}
 	previousFiles := map[string]string{}
 	for _, file := range previous.Files {
 		previousFiles[file.Path] = file.Owner + ":" + file.Module + ":" + file.SHA256
 	}
 	if len(previousFiles) != len(request.Files) {
-		return "miss-sources"
+		return "miss-sources", nil
 	}
 	sourceChanged := false
 	for _, file := range request.Files {
 		previous, ok := previousFiles[file.Path]
 		if !ok {
-			return "miss-sources"
+			return "miss-sources", nil
 		}
 		if previous != file.Owner+":"+file.Module+":"+file.SHA256 {
 			sourceChanged = true
@@ -297,15 +313,15 @@ func planCacheStatus(output string, request *packageFileRequest) string {
 		previousEntries[entry.Owner+"\x00"+entry.Name] = true
 	}
 	if len(previousEntries) != len(request.Entries) {
-		return "miss-entries"
+		return "miss-entries", nil
 	}
 	for _, entry := range request.Entries {
 		if !previousEntries[entry.Owner+"\x00"+entry.Name] {
-			return "miss-entries"
+			return "miss-entries", nil
 		}
 	}
 	if len(previous.Signatures) != len(request.Signatures) {
-		return "miss-signatures"
+		return "miss-signatures", nil
 	}
 	signatureChanged := false
 	for path, signature := range request.Signatures {
@@ -315,18 +331,20 @@ func planCacheStatus(output string, request *packageFileRequest) string {
 	}
 	result, err := readPackagePlan(filepath.Join(dir, "result.json"))
 	if err != nil {
-		return "miss-result"
+		return "miss-result", nil
 	}
-	if err := verifyPackagePlanFiles(output, result); err != nil {
-		return "miss-output"
+	sources, err := readPackagePlanFiles(output, result)
+	if err != nil {
+		return "miss-output", nil
 	}
+	snapshot := &packagePlanSnapshot{request: previous, result: result, sources: sources}
 	if signatureChanged {
-		return "miss-signatures"
+		return "miss-signatures", nil
 	}
 	if sourceChanged {
-		return "eligible-body"
+		return "eligible-body", snapshot
 	}
-	return "validated"
+	return "validated", snapshot
 }
 
 // Missing staged sources belong to modules whose emission was reused. Their
@@ -453,7 +471,7 @@ func preparePackageSession(stage string, state *buildSession, entries []string, 
 		return err
 	}
 	request.GoVersion = "go" + version.Go
-	status := planCacheStatus(state.Spec.Output, &request)
+	status, plan := inspectPackagePlan(state.Spec.Output, &request, previousRequest)
 	fmt.Fprintf(os.Stderr, "[gopurs] Go plan cache: %s\n", status)
 	encoded, err := json.Marshal(request)
 	if err != nil {
@@ -467,7 +485,7 @@ func preparePackageSession(stage string, state *buildSession, entries []string, 
 	// it before freezing Go exports so a proven body edit does not pay for the
 	// full dependency type-check.
 	if status == "eligible-body" && packageOverlayEnabled() {
-		record, reason, err := preparePackageOverlay(stage, state, entries, &request)
+		record, reason, err := preparePackageOverlaySnapshot(stage, state, entries, &request, plan)
 		if err != nil {
 			return err
 		}

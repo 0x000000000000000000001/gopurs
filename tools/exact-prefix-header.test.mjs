@@ -65,6 +65,8 @@ test("exact canonical prefixes restore earlier absent readers independently of r
   assert.deepEqual(array(Cache.headerSafeFromReads(Set.singleton("Future"))(reads)(namesSet)), ["Anchor"]);
   const changed = await initialize(modules(11));
   assert.deepEqual(array(changed.headerSafe), ["Anchor", "Earlier"]);
+  assert.deepEqual(Map.toUnfoldable(U.unfoldableArray)(changed.schedulingReads).map(({ value0, value1 }) => [value0, value1]),
+    [["Future", []], ["Reader", ["Future"]]], "only uncertain owners retain observed scheduling hints");
 
   const alreadyProven = { ...metadata };
   Object.defineProperty(alreadyProven, "globalTypes", { get() { throw new Error("unchanged metadata must not be encoded"); } });

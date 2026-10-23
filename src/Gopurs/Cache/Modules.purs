@@ -1,4 +1,4 @@
-module Gopurs.Cache.Modules (ModuleCache, Memo, Keys, Part, initialize, loadHeaderTexts, lookupAll, lookupBackend, lookupBackendWithReads, captureReads, emit, report, loadReads, headerSafeFromReads, publishReads, readImplementationsSync) where
+module Gopurs.Cache.Modules (ModuleCache, Memo, Keys, Part, initialize, loadHeaderTexts, lookupAll, lookupHeaders, lookupBackend, lookupBackendWithReads, captureReads, emit, emitWithWorkerSnapshot, resolveWorkerSnapshot, readWorkerContribution, report, loadReads, headerSafeFromReads, publishReads, implementationOwners, warmImplementations, readImplementationsSync) where
 
 import Prelude
 
@@ -39,6 +39,7 @@ import Gopurs.Driver.Prepare (PreparedModules)
 import Gopurs.ExprContext (ModuleFunctions)
 import Gopurs.GoSymbol (GoReference(..))
 import Gopurs.Metrics as Metrics
+import Gopurs.Preparation (runPreparationJobs)
 import Node.Encoding (Encoding(..))
 import Node.FS.Aff as FS
 import Node.FS.Sync as Sync
@@ -73,6 +74,7 @@ type ModuleCache =
   , ffiDigests :: Map String String
   , priorFfiDigests :: Map String String
   , headerSafe :: Set String
+  , schedulingReads :: Map String (Array String)
   , lazyContributions :: Boolean
   , priorPartTexts :: Map String (Map String String)
   , reused :: Ref.Ref (Map String Cache.ReusedMemo)
@@ -139,7 +141,7 @@ initialize jobs session prepared reusableModules backends ffiDigests priorFfiDig
                 && previous.optimizerEnvironment == keys.optimizerEnvironment -> Just name
           _ -> Nothing)
         (Map.toUnfoldable keyed.keys :: Array (Tuple String Keys)))
-  readSafe <- if not sameContext || not committedInputsMatch || Set.isEmpty headerCandidates then pure Set.empty else do
+  readProof <- if not sameContext || not committedInputsMatch || Set.isEmpty headerCandidates then pure { safe: Set.empty, owners: Map.empty } else do
     -- Exact contributions are unchanged even when their old read-owner proof
     -- mentions a changed future module. They cannot propagate invalidation.
     -- Build the remaining read graph only for owners still requiring proof.
@@ -148,8 +150,14 @@ initialize jobs session prepared reusableModules backends ffiDigests priorFfiDig
     let decoded = Array.length (Array.filter (\(Tuple _ value) -> isJust value) (Map.toUnfoldable previousReads :: Array _))
     liftEffect $ Console.error ("[gopurs] reads decoded=" <> show decoded <> "/" <> show (Array.length names))
     safe <- Metrics.measure "module read closure" \_ -> pure $ headerSafeFromReads changedPrepared previousReads (Set.fromFoldable names)
-    Metrics.measure "module read intersection" \_ -> pure $ Set.intersection headerCandidates safe
-  headerSafe <- Metrics.measure "module header union" \_ -> pure $ Set.union exactKeySafe readSafe
+    selected <- Metrics.measure "module read intersection" \_ -> pure $ Set.intersection headerCandidates safe
+    pure { safe: selected, owners: previousReads }
+  headerSafe <- Metrics.measure "module header union" \_ -> pure $ Set.union exactKeySafe readProof.safe
+  -- These committed read owners are scheduling hints, never reuse evidence.
+  -- Header hits need no lookup; only uncertain modules benefit from waiting
+  -- for their prior dependencies before validating the current canonical snapshot.
+  let schedulingReads = Map.mapMaybeWithKey (\name owners ->
+        if Set.member name headerSafe then Nothing else owners) readProof.owners
   invalidations <- liftEffect (Ref.new Map.empty)
   restored <- liftEffect (Ref.new 0)
   reads <- liftEffect (Ref.new Map.empty)
@@ -159,7 +167,7 @@ initialize jobs session prepared reusableModules backends ffiDigests priorFfiDig
   currentDigests <- liftEffect (Ref.new Map.empty)
   priorDigests <- liftEffect (Ref.new Map.empty)
   reusedMemos <- liftEffect (Ref.new Map.empty)
-  pure { session, candidates, keys: keyed.keys, metadata, invalidations, restored, sameContext, reads, restoredPBO, priorImplementations, priorWorkers, currentDigests, priorDigests, backends, ffiDigests, priorFfiDigests, headerSafe, lazyContributions: false, priorPartTexts: Map.empty, reused: reusedMemos }
+  pure { session, candidates, keys: keyed.keys, metadata, invalidations, restored, sameContext, reads, restoredPBO, priorImplementations, priorWorkers, currentDigests, priorDigests, backends, ffiDigests, priorFfiDigests, headerSafe, schedulingReads, lazyContributions: false, priorPartTexts: Map.empty, reused: reusedMemos }
 
   where
   add acc (Tuple name preparedKey) =
@@ -237,6 +245,19 @@ lookupAll jobs cache modules = do
         Nothing -> false
   if Array.all matches ordered then sequence <$> mapJobs jobs (lookupHeader cache) ordered
   else pure Nothing
+
+-- Decode only independently proven headers. The builder restores these at its
+-- canonical publication front; this private map does not expose contributions.
+-- An invalid business codec remains an ordinary miss, including the existing
+-- placeholder check and full fallback when that module is attempted.
+lookupHeaders :: Int -> ModuleCache -> List (Module Ann) -> Aff (Map String BackendModule)
+lookupHeaders jobs cache modules
+  | not cache.lazyContributions = pure Map.empty
+  | otherwise = do
+      let selected = Array.filter (\(Module m) -> Set.member (unwrap m.name) cache.headerSafe) (Array.fromFoldable modules)
+      decoded <- mapJobs jobs (lookupHeader cache) selected
+      pure $ Map.fromFoldable $ Array.mapMaybe identity $ Array.zipWith
+        (\(Module m) backend -> Tuple (unwrap m.name) <$> backend) selected decoded
 
 invalidationReason :: ModuleCache -> String -> Keys -> String
 invalidationReason cache name keys = case Map.lookup name cache.candidates of
@@ -423,6 +444,49 @@ ensureParts :: ModuleCache -> String -> Array String -> Aff Unit
 ensureParts cache name parts = when (cache.lazyContributions && Map.member name cache.candidates) $
   Cache.materialize cache.session [ name ] parts
 
+-- Observations are hints for private decoding, never evidence of visibility.
+-- Only prior, unchanged owners can help this confirmed conversion miss.
+implementationOwners :: ModuleCache -> Map String Int -> String -> Array String
+implementationOwners cache ranks reader = case Map.lookup reader ranks of
+  Nothing -> []
+  Just rank -> Set.toUnfoldable $ Set.fromFoldable $ Array.filter
+    (\owner -> Set.member owner cache.headerSafe && case Map.lookup owner ranks of
+      Just ownerRank -> ownerRank < rank
+      Nothing -> false)
+    (fromMaybe [] (Map.lookup reader cache.schedulingReads))
+
+decodeImplementations :: String -> String -> Maybe BackendImplementations
+decodeImplementations name text = do
+  value <- Wire.read text
+  guard (Array.all (\(Qualified owner _) -> map unwrap owner == Just name) (Map.keys value # Array.fromFoldable))
+  pure value
+
+-- Run only after a conversion miss. Validate and read every immutable object
+-- before the pure parallel tasks, then join and validate the entire batch
+-- before adding anything to the private memo. The builder still controls rank
+-- and finality; this never publishes an optimizer contribution.
+warmImplementations :: Int -> ModuleCache -> Map String Int -> String -> Aff Unit
+warmImplementations jobs cache ranks reader
+  | not cache.lazyContributions = pure unit
+  | otherwise = do
+      previous <- liftEffect (Ref.read cache.priorImplementations)
+      let owners = Array.filter (\owner -> case Map.lookup owner previous of
+            Just (Just _) -> false
+            _ -> true) (implementationOwners cache ranks reader)
+      unless (Array.null owners) $ Metrics.measure "PBO implementation warm" \_ -> do
+        Cache.materialize cache.session owners [ "1" ]
+        encoded <- attempt $ traverse (\name -> Tuple name <$> FS.readTextFile UTF8 (prior cache name <> "1.json")) owners
+        texts <- case encoded of
+          Left _ -> throwError (error "incremental cache: unreadable warm implementation contribution")
+          Right texts -> pure texts
+        decoded <- runPreparationJobs jobs (map (\(Tuple name text) _ -> Tuple name (decodeImplementations name text)) texts)
+        complete <- traverse (\(Tuple name value) -> case value of
+          Nothing -> throwError (error ("incremental cache: invalid implementation contribution: " <> name))
+          Just implementations -> pure (Tuple name (Just implementations))) decoded
+        let additions = Map.fromFoldable complete
+        liftEffect (Ref.modify_ (\current -> Map.union current additions) cache.priorImplementations)
+        liftEffect $ Console.error ("[gopurs] warmed implementation owners: " <> show (Array.length owners))
+
 -- Called only after the builder's rank/finality checks. These immutable bytes
 -- belong to this session's committed manifest; never consult a public mirror.
 readImplementationsSync :: ModuleCache -> String -> Effect BackendImplementations
@@ -433,8 +497,8 @@ readImplementationsSync cache name = do
     _ -> do
       Cache.materializeSync cache.session [ name ] [ "1" ]
       text <- Sync.readTextFile UTF8 (prior cache name <> "1.json")
-      case Wire.read text of
-        Just value | Array.all (\(Qualified owner _) -> map unwrap owner == Just name) (Map.keys value # Array.fromFoldable) -> do
+      case decodeImplementations name text of
+        Just value -> do
           Ref.modify_ (Map.insert name (Just value)) cache.priorImplementations
           pure value
         _ -> throwException (error ("incremental cache: invalid implementation contribution: " <> name))
@@ -494,6 +558,7 @@ readWorkers cache name = do
         _ -> pure Nothing
       let value = do
             functions <- workers
+            guard (Array.all (isJust <<< String.stripPrefix (Pattern (name <> "."))) (Array.fromFoldable (Map.keys functions)))
             guard (Array.all (\info -> info.arity >= 0 && case info.reference of
               SymbolReference symbol -> symbol.owner /= "" && symbol.name /= ""
               LocalReference _ -> false) (Array.fromFoldable (Map.values functions)))
@@ -501,10 +566,49 @@ readWorkers cache name = do
       liftEffect (Ref.modify_ (Map.insert name value) cache.priorWorkers)
       pure value
 
+readWorkerContribution :: ModuleCache -> String -> Aff ModuleFunctions
+readWorkerContribution cache name = do
+  functions <- readWorkers cache name
+  case functions of
+    Nothing -> throwError (error ("incremental cache: unreadable workers for " <> name))
+    Just value -> pure value
+
+-- Each owner enters this table only after its emission batch completes. A
+-- missing owner therefore remains absent even when its cache object exists.
+-- Nothing is an immutable, proved cached contribution; Just is today's result.
+resolveWorkerSnapshot
+  :: (String -> Aff ModuleFunctions)
+  -> Map String (Maybe ModuleFunctions)
+  -> BackendModule
+  -> Aff ModuleFunctions
+resolveWorkerSnapshot load snapshot backend =
+  foldM resolve Map.empty (Set.toUnfoldable (CodeGen.workerOwners backend) :: Array String)
+  where
+  resolve functions owner = case Map.lookup owner snapshot of
+    Nothing -> pure functions
+    Just (Just current) -> pure (Map.union current functions)
+    Just Nothing -> (\previous -> Map.union previous functions) <$> load owner
+
 emit
   :: ModuleCache -> Map String FrozenFFI -> CodegenMetadata -> String -> Boolean
   -> Module Ann -> BackendModule -> Aff { functions :: ModuleFunctions, workers :: String }
-emit cache ffi metadata _ optimizedCached coreFnModule backend = do
+emit cache ffi metadata environment optimizedCached coreFnModule backend = do
+  result <- emitWithWorkers Nothing cache ffi metadata environment optimizedCached coreFnModule backend
+  pure { functions: result.functions, workers: result.workers }
+
+-- The resolver captures the worker table before this emission batch. It must
+-- never expose signatures from the current batch or a later canonical rank.
+emitWithWorkerSnapshot
+  :: (BackendModule -> Aff ModuleFunctions)
+  -> ModuleCache -> Map String FrozenFFI -> CodegenMetadata -> String -> Boolean
+  -> Module Ann -> BackendModule -> Aff { functions :: ModuleFunctions, workers :: String, deferred :: Boolean }
+emitWithWorkerSnapshot resolve = emitWithWorkers (Just resolve)
+
+emitWithWorkers
+  :: Maybe (BackendModule -> Aff ModuleFunctions)
+  -> ModuleCache -> Map String FrozenFFI -> CodegenMetadata -> String -> Boolean
+  -> Module Ann -> BackendModule -> Aff { functions :: ModuleFunctions, workers :: String, deferred :: Boolean }
+emitWithWorkers resolver cache ffi metadata _ optimizedCached coreFnModule backend = do
   let name = unwrap backend.name
   let directory = target cache name
   keys <- keysFor cache name
@@ -515,8 +619,11 @@ emit cache ffi metadata _ optimizedCached coreFnModule backend = do
       Just candidate -> pure candidate
     part <- case Array.index old.parts 3 of
       Nothing -> throwError (error ("Missing cached workers for " <> name))
-      Just value -> pure value
-    functions <- readWorkers cache name
+      Just value | value.codec == "gopurs/workers-v2" -> pure value
+      _ -> throwError (error ("incremental cache: invalid worker codec for " <> name))
+    functions <- case resolver of
+      Just _ -> pure (Just Map.empty)
+      Nothing -> readWorkers cache name
     case functions of
       Nothing -> throwError (error ("incremental cache: unreadable workers for " <> name))
       Just value -> do
@@ -534,7 +641,7 @@ emit cache ffi metadata _ optimizedCached coreFnModule backend = do
         liftEffect do
           Ref.modify_ (_ + 1) cache.restored
           Ref.modify_ (Map.insert name backend) cache.backends
-        pure { functions: value, workers: part.object.sha256 }
+        pure { functions: value, workers: part.object.sha256, deferred: isJust resolver }
   else do
     FS.mkdir directory
     -- An unsafe cached module keeps the previous emitter-environment proof:
@@ -569,6 +676,9 @@ emit cache ffi metadata _ optimizedCached coreFnModule backend = do
       liftEffect (Ref.modify_ (Map.delete name) cache.reads)
       traverse (\(Tuple i text) -> FS.writeTextFile UTF8 (directory <> show i <> ".json") text $> Wire.hash text)
         (Array.mapWithIndex Tuple parts)
+    available <- case resolver of
+      Just resolve -> resolve backend
+      Nothing -> pure metadata.globalFunctions
     let
       environment proof workers = liftEffect do
         workerKey <- Wire.hash <$> Wire.write workers
@@ -590,7 +700,7 @@ emit cache ffi metadata _ optimizedCached coreFnModule backend = do
         linkOrCopy (prior cache name <> "3.json") (directory <> "3.json")
         liftEffect (Ref.modify_ (_ + 1) cache.restored)
         pure result
-      inputWorkers = CodeGen.workerInputs metadata.globalFunctions backend
+      inputWorkers = CodeGen.workerInputs available backend
     -- A key in this domain is committed only after checking containment below.
     -- Equal backend/metadata/compiler inputs reproduce the same transformations;
     -- all their imported signatures are then covered by this conservative view.
@@ -600,7 +710,11 @@ emit cache ffi metadata _ optimizedCached coreFnModule backend = do
     Tuple emitterEnvironment result <- case early of
       Just previous -> Tuple inputEnvironment <$> restore previous
       Nothing -> do
-        let preparedModule = CodeGen.prepareModule metadata backend
+        let transformed = CodeGen.prepareModule (metadata { globalFunctions = available }) backend
+        transformedWorkers <- case resolver of
+          Just resolve -> CodeGen.workerInputs <$> resolve transformed.module <*> pure transformed.module
+          Nothing -> pure transformed.workers
+        let preparedModule = transformed { workers = transformedWorkers }
         let contained = Array.all (\key -> Map.member key inputWorkers) (Array.fromFoldable (Map.keys preparedModule.workers))
         environmentKey <- if contained then pure inputEnvironment
           else environment "prepared-workers-v1" preparedModule.workers
@@ -618,7 +732,7 @@ emit cache ffi metadata _ optimizedCached coreFnModule backend = do
     let memo = { name, prepared: keys.prepared, optimizerEnvironment: keys.optimizerEnvironment, callerDemands: keys.callerDemands, emitterEnvironment, metadata: cache.metadata, ffiDigest, parts: [] :: Array Part }
     FS.writeTextFile UTF8 (directory <> "memo.json") (stringify (encodeJson memo))
     liftEffect (Ref.modify_ (Map.insert name backend) cache.backends)
-    pure result
+    pure { functions: result.functions, workers: result.workers, deferred: false }
 
 loadReads :: String -> Array String -> Aff (Map String (Maybe (Array String)))
 -- Read only the hash-verified objects frozen from the committed module

@@ -14,6 +14,21 @@ import (
 const overlayOriginalPackage = "p_root"
 const overlayDependentPackage = "p_22222222222222222222222222222222"
 
+func TestOverlaySymbolLookupPreservesLocalPrecedence(t *testing.T) {
+	index := overlayIndex{
+		packageSymbols: map[string]map[string]string{"local": {"Shared": "local", "private": "local"}},
+		exported:       map[string]string{"Shared": "other", "Global": "other"},
+	}
+	declarations, err := inspectModuleSource("package local\nfunc Run() { Shared(); Global(); private() }", index.symbolLookup("local"), nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	refs := declarations.references["Run"]
+	if len(refs) != 3 || !refs["local\x00Shared"] || !refs["local\x00private"] || !refs["other\x00Global"] {
+		t.Fatalf("lookup changed declaration references: %v", refs)
+	}
+}
+
 func sectionFor(path, source string) string {
 	return sourceMarker + hex.EncodeToString([]byte(path)) + "\n" + source + sourceEndMarker + "\n"
 }

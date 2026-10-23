@@ -263,35 +263,40 @@ func parseBundleImports(source string, packageName string) (map[string]string, m
 	return imports, aliases, nil
 }
 
-func loadOverlayIndex(output string, result *packagePlanResult, overlayPackage string) (*overlayIndex, error) {
+func loadOverlayIndex(result *packagePlanResult, sources map[string]string, overlayPackage string) (*overlayIndex, error) {
+	return loadOverlayIndexForSource(result, sources, overlayPackage, "")
+}
+
+// A partial index is only sufficient for an in-place, proven literal change:
+// neither names nor edges can change. Other edits need the complete inventory.
+func loadOverlayIndexForSource(result *packagePlanResult, sources map[string]string, overlayPackage, onlySource string) (*overlayIndex, error) {
 	index := &overlayIndex{
 		bundles: map[string]*overlayBundle{}, packageSymbols: map[string]map[string]string{},
 		exported: map[string]string{}, sections: map[string][]overlaySectionRef{},
 	}
-	for _, file := range result.Files {
+	bundles := make([]*overlayBundle, len(result.Files))
+	if err := boundedEach(len(result.Files), func(position int) error {
+		file := result.Files[position]
 		if file.Kind != "package" && file.Kind != "ffi-package" {
-			continue
+			return nil
 		}
 		packageName, _, ok := strings.Cut(file.Path, "/")
 		if !ok || !goPackagePattern.MatchString(packageName) {
-			return nil, fmt.Errorf("invalid published package path: %s", file.Path)
+			return fmt.Errorf("invalid published package path: %s", file.Path)
 		}
-		source, err := os.ReadFile(filepath.Join(output, "purescript", filepath.FromSlash(file.Path)))
+		text, ok := sources[file.Path]
+		if !ok {
+			return fmt.Errorf("missing verified package: %s", file.Path)
+		}
+		imports, aliases, err := parseBundleImports(text, packageName)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		if digest(source) != file.SHA256 || int64(len(source)) != file.Bytes {
-			return nil, fmt.Errorf("published package changed: %s", file.Path)
-		}
-		imports, aliases, err := parseBundleImports(string(source), packageName)
-		if err != nil {
-			return nil, err
-		}
-		bundle := &overlayBundle{file: file, packageName: packageName, source: string(source), imports: imports, aliases: aliases}
+		bundle := &overlayBundle{file: file, packageName: packageName, source: text, imports: imports, aliases: aliases}
 		if filepath.Base(file.Path) == packageBundleName {
-			sections, err := extractSourceSections(string(source))
+			sections, err := extractSourceSections(text)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			if len(sections) > 0 {
 				bundle.coalesced = true
@@ -300,10 +305,38 @@ func loadOverlayIndex(output string, result *packagePlanResult, overlayPackage s
 		}
 		if len(bundle.sections) == 0 {
 			name := filepath.Base(file.Path)
-			bundle.sections = []overlaySection{{path: name, source: string(source)}}
+			bundle.sections = []overlaySection{{path: name, source: text}}
 		}
 		for i := range bundle.sections {
-			bundle.sections[i].names = scanTopLevelNames(bundle.sections[i].source)
+			if onlySource == "" || bundle.sections[i].path == onlySource {
+				bundle.sections[i].names = scanTopLevelNames(bundle.sections[i].source)
+			}
+		}
+		bundles[position] = bundle
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	counts := map[string]int{}
+	total := 0
+	for _, bundle := range bundles {
+		if bundle != nil {
+			for _, section := range bundle.sections {
+				counts[bundle.packageName] += len(section.names)
+				total += len(section.names)
+			}
+		}
+	}
+	index.exported = make(map[string]string, total)
+	for name, count := range counts {
+		index.packageSymbols[name] = make(map[string]string, count)
+	}
+	for _, bundle := range bundles {
+		if bundle == nil {
+			continue
+		}
+		file, packageName := bundle.file, bundle.packageName
+		for i := range bundle.sections {
 			index.sections[bundle.sections[i].path] = append(index.sections[bundle.sections[i].path], overlaySectionRef{bundle, bundle.sections[i]})
 			for name := range bundle.sections[i].names {
 				if name == "init" || name == "_" {
@@ -349,7 +382,7 @@ type moduleDecls struct {
 // inspectModuleSource resolves cross-package references with the same symbol
 // table the planner owns. References are keyed by declaration so a body edit
 // that keeps the declaration set but changes an edge is rejected.
-func inspectModuleSource(source string, symbols map[string]string, aliases map[string]string, external map[string]string) (*moduleDecls, error) {
+func inspectModuleSource(source string, symbol func(string) (string, bool), aliases map[string]string, external map[string]string) (*moduleDecls, error) {
 	fset := token.NewFileSet()
 	file, err := parser.ParseFile(fset, "module.go", source, parser.ParseComments)
 	if err != nil {
@@ -383,10 +416,10 @@ func inspectModuleSource(source string, symbols map[string]string, aliases map[s
 					}
 				}
 			case *ast.Ident:
-				if selectors[typed] || typed.Obj != nil {
+				if selectors[typed] || typed.Obj != nil || symbol == nil {
 					return true
 				}
-				if pkg, found := symbols[typed.Name]; found {
+				if pkg, found := symbol(typed.Name); found {
 					references[pkg+"\x00"+typed.Name] = true
 				}
 			}
@@ -503,6 +536,19 @@ func externalAliases(imports map[string]string) map[string]string {
 		out[alias] = path
 	}
 	return out
+}
+
+// Lookup keeps local precedence without copying every exported declaration
+// for each section of the changed module. The index is immutable after load.
+func (index *overlayIndex) symbolLookup(pkg string) func(string) (string, bool) {
+	local := index.packageSymbols[pkg]
+	return func(name string) (string, bool) {
+		if owner, found := local[name]; found {
+			return owner, true
+		}
+		owner, found := index.exported[name]
+		return owner, found
+	}
 }
 
 func (index *overlayIndex) symbolsFor(pkg string) map[string]string {
@@ -674,18 +720,27 @@ func linkOrCopy(source, destination string) error {
 // publication. It never mutates public output; any missing proof returns an
 // empty reason and the caller runs the full planner.
 func preparePackageOverlay(stage string, state *buildSession, entries []string, request *packageFileRequest) (*packageOverlayRecord, string, error) {
-	planDir := filepath.Join(state.Spec.Output, ".gopurs-cache", "go-packages", "plan-v1")
-	previous, err := readPackageRequest(filepath.Join(planDir, "request.json"))
-	if err != nil {
-		return nil, "missing previous request", nil
+	return preparePackageOverlaySnapshot(stage, state, entries, request, nil)
+}
+
+func preparePackageOverlaySnapshot(stage string, state *buildSession, entries []string, request *packageFileRequest, snapshot *packagePlanSnapshot) (*packageOverlayRecord, string, error) {
+	if snapshot == nil {
+		planDir := filepath.Join(state.Spec.Output, ".gopurs-cache", "go-packages", "plan-v1")
+		previous, err := readPackageRequest(filepath.Join(planDir, "request.json"))
+		if err != nil {
+			return nil, "missing previous request", nil
+		}
+		result, err := readPackagePlan(filepath.Join(planDir, "result.json"))
+		if err != nil {
+			return nil, "missing previous result", nil
+		}
+		sources, err := readPackagePlanFiles(state.Spec.Output, result)
+		if err != nil {
+			return nil, "published plan is stale", nil
+		}
+		snapshot = &packagePlanSnapshot{request: previous, result: result, sources: sources}
 	}
-	previousResult, err := readPackagePlan(filepath.Join(planDir, "result.json"))
-	if err != nil {
-		return nil, "missing previous result", nil
-	}
-	if err := verifyPackagePlanFiles(state.Spec.Output, previousResult); err != nil {
-		return nil, "published plan is stale", nil
-	}
+	previous, previousResult := snapshot.request, snapshot.result
 	changed, reason := changedPackageSource(previous, request)
 	if reason != "" {
 		return nil, reason, nil
@@ -704,7 +759,29 @@ func preparePackageOverlay(stage string, state *buildSession, entries []string, 
 	if overlay != nil {
 		overlayPackage = overlay.Package
 	}
-	index, err := loadOverlayIndex(state.Spec.Output, previousResult, overlayPackage)
+	if overlay == nil && committedPackageFiles(stage, *state, previousResult) {
+		source, readErr := os.ReadFile(changed.Source)
+		if readErr == nil && digest(source) == changed.SHA256 {
+			literals := packageLiteralChanges(stage, state, previous, changed, source)
+			if literals != nil {
+				marker := sourceMarker + hex.EncodeToString([]byte(changed.Path)) + "\n"
+				count := 0
+				for _, text := range snapshot.sources {
+					count += strings.Count(text, marker)
+				}
+				if count > 1 {
+					index, indexErr := loadOverlayIndexForSource(previousResult, snapshot.sources, overlayPackage, changed.Path)
+					if indexErr != nil {
+						return nil, "published bundles are not reusable", nil
+					}
+					if len(index.sections[changed.Path]) > 1 {
+						return preparePackageSectionsProven(stage, state, entries, request, previous, previousResult, index, changed, literals)
+					}
+				}
+			}
+		}
+	}
+	index, err := loadOverlayIndex(previousResult, snapshot.sources, overlayPackage)
 	if err != nil {
 		return nil, "published bundles are not reusable", nil
 	}
@@ -716,7 +793,7 @@ func preparePackageOverlay(stage string, state *buildSession, entries []string, 
 		return nil, err.Error(), nil
 	}
 	oldSource := sectionSource(reference)
-	oldDecls, err := inspectModuleSource(oldSource, index.symbolsFor(reference.bundle.packageName), reference.bundle.aliases, externalAliases(reference.bundle.imports))
+	oldDecls, err := inspectModuleSource(oldSource, index.symbolLookup(reference.bundle.packageName), reference.bundle.aliases, externalAliases(reference.bundle.imports))
 	if err != nil {
 		return nil, "previous module source is not reusable", nil
 	}
@@ -742,7 +819,7 @@ func preparePackageOverlay(stage string, state *buildSession, entries []string, 
 			return nil, "new module source uses a dot or blank import", nil
 		}
 	}
-	newDecls, err := inspectModuleSource(newSource, index.symbolsFor(reference.bundle.packageName), newAliases, externalAliases(newImports))
+	newDecls, err := inspectModuleSource(newSource, index.symbolLookup(reference.bundle.packageName), newAliases, externalAliases(newImports))
 	if err != nil {
 		return nil, "new module source is not parseable", nil
 	}

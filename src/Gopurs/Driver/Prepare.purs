@@ -52,6 +52,7 @@ type PreparedCache =
   { prepared :: PreparedModules
   , sourceHashes :: Map.Map String String
   , sourceModules :: List (Module Ann)
+  , sourceInterfaces :: Map.Map String String
   , mono :: MonoCache
   , reusable :: Set String
   , proof :: Maybe Proof.State
@@ -117,7 +118,7 @@ prepareLoadedModules input jobs mainModule directives sortedModules =
           { directives, modules, metadata, metadataUnchanged: false, mainModules: selectMainModules mainModule sourceModules
           , sources: map (\(Module m) -> { name: unwrap m.name, path: m.path, hasForeign: not (Map.isEmpty m.foreign) }) sourceModules
           }
-    pure { prepared, sourceHashes, sourceModules: sortedModules, mono, reusable: Set.empty, proof: Nothing, materialize: Nothing }
+    pure { prepared, sourceHashes, sourceModules: sortedModules, sourceInterfaces: Map.empty, mono, reusable: Set.empty, proof: Nothing, materialize: Nothing }
 
 -- Metadata always comes from source declarations, independently of the compact
 -- specialization proof. Rebuilding these tables does not traverse mono bodies.

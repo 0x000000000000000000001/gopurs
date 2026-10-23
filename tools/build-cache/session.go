@@ -39,6 +39,7 @@ type SessionRequest struct {
 	Diagnostics bool           `json:"diagnostics"`
 	ModuleCache bool           `json:"moduleCache"`
 	Owners      []string       `json:"owners,omitempty"`
+	All         bool           `json:"all,omitempty"`
 	Parts       []string       `json:"parts,omitempty"`
 	Reused      []ReusedModule `json:"reused,omitempty"`
 }
@@ -49,6 +50,7 @@ type SessionResponse struct {
 	Root           string       `json:"root"`
 	Stage          string       `json:"stage"`
 	Input          string       `json:"input"`
+	InputLayout    string       `json:"inputLayout"`
 	Output         string       `json:"output"`
 	Count          int          `json:"count"`
 	Context        string       `json:"context"`
@@ -135,6 +137,7 @@ func sessionOperation(req SessionRequest, result *SessionResponse) error {
 				return fmt.Errorf("build workspace changed")
 			}
 			result.Stage, result.Input, result.Output, result.Count = stage, filepath.Join(stage, "input"), filepath.Join(stage, "output"), state.Count
+			result.InputLayout = inputLayout(state.Spec)
 			if req.Operation == "read-parts" {
 				return readSessionParts(stage, state, req, result)
 			}
@@ -157,6 +160,7 @@ func sessionOperation(req SessionRequest, result *SessionResponse) error {
 		return fmt.Errorf("build workspace changed")
 	}
 	result.Stage, result.Input, result.Output, result.Count = stage, filepath.Join(stage, "input"), filepath.Join(stage, "output"), state.Count
+	result.InputLayout = inputLayout(state.Spec)
 	switch req.Operation {
 	case "plan":
 		return planSession(stage, &state, req.Modules, result)
@@ -168,6 +172,12 @@ func sessionOperation(req SessionRequest, result *SessionResponse) error {
 		return nil
 	case "read-parts":
 		return readSessionParts(stage, state, req, result)
+	case "materialize-input":
+		if err := materializeInputs(stage, state, req.Owners, req.All); err != nil {
+			return err
+		}
+		result.Status = "ready"
+		return nil
 	case "packages":
 		return preparePackageSession(stage, &state, req.Entries, result)
 	case "publish":
@@ -195,6 +205,7 @@ func readSessionParts(stage string, state buildSession, req SessionRequest, resu
 }
 
 func beginSession(spec Spec, force bool, result *SessionResponse) error {
+	result.InputLayout = inputLayout(spec)
 	result.SameTAST = false
 	baseInputs := spec.Inputs
 	result.Reason = "recipe-absent"
@@ -263,30 +274,43 @@ func beginSession(spec Spec, force bool, result *SessionResponse) error {
 	if err != nil {
 		return err
 	}
-	parts := []string{}
-	sourceHashes := []frozenSourceHash{}
-	count := 0
-	for _, entry := range entries {
+	moduleParts := make([][]string, len(entries))
+	moduleHashes := make([]frozenSourceHash, len(entries))
+	moduleInputs := make([]frozenInput, len(entries))
+	var inputPack *inputPackWriter
+	if packedInputs(spec) {
+		inputPack, err = newInputPackWriter(stage)
+		if err != nil {
+			return err
+		}
+		defer inputPack.file.Close()
+	}
+	if err := boundedEach(len(entries), func(i int) error {
+		entry := entries[i]
 		dir := filepath.Join(spec.Output, entry.Name())
 		info, err := os.Stat(dir)
 		if os.IsNotExist(err) {
-			continue
+			return nil
 		}
 		if err != nil {
 			return err
 		}
 		if !info.IsDir() {
-			continue
+			return nil
 		}
 		f, bytes, _, err := readObservation(spec.Workspace, Input{Name: entry.Name(), Kind: "file", Path: filepath.Join(dir, "corefn.json")})
 		if err != nil {
 			return err
 		}
 		if f.State == "missing" {
-			continue
+			return nil
 		}
-		parts = append(parts, f.Name, f.Resolved, f.Digest)
-		sourceHashes = append(sourceHashes, frozenSourceHash{Name: entry.Name(), Hash: f.Digest})
+		moduleParts[i] = []string{f.Name, f.Resolved, f.Digest}
+		moduleHashes[i] = frozenSourceHash{Name: entry.Name(), Hash: f.Digest}
+		if inputPack != nil {
+			moduleInputs[i], err = inputPack.append(f, bytes)
+			return err
+		}
 		destination := filepath.Join(input, entry.Name())
 		if err := os.Mkdir(destination, 0700); err != nil {
 			return err
@@ -294,10 +318,32 @@ func beginSession(spec Spec, force bool, result *SessionResponse) error {
 		if err := os.WriteFile(filepath.Join(destination, "corefn.json"), bytes, 0400); err != nil {
 			return err
 		}
-		count++
+		return nil
+	}); err != nil {
+		return err
 	}
+	// Joining before validation and cleanup keeps the frozen generation private,
+	// including on error. Its hash inventory retains the original module order.
+	parts := []string{}
+	sourceHashes := []frozenSourceHash{}
+	frozenInputs := []frozenInput{}
+	for i, part := range moduleParts {
+		if len(part) != 0 {
+			parts = append(parts, part...)
+			sourceHashes = append(sourceHashes, moduleHashes[i])
+			if inputPack != nil {
+				frozenInputs = append(frozenInputs, moduleInputs[i])
+			}
+		}
+	}
+	count := len(sourceHashes)
 	if Key("tast", parts...) != initial.Inputs[0].Digest {
 		return fmt.Errorf("TAST changed while freezing inputs; retry the build")
+	}
+	if inputPack != nil {
+		if err := inputPack.finish(stage, frozenInputs); err != nil {
+			return err
+		}
 	}
 	check, err := snapshot(spec)
 	if err != nil {

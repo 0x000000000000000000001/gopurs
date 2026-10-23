@@ -92,19 +92,24 @@ compileCached config cacheRef backends ffiDigestsRef = Metrics.measure "backend 
       liftEffect $ Console.error ("[gopurs] cache miss: " <> session.reason)
       cached <- liftEffect (Ref.read cacheRef)
       preparedBase <- Metrics.measure "prepare delta" \_ ->
-        if config.forceBuild then
+        if config.forceBuild then do
+          BuildCache.materializeAllInputs session
           prepareModulesWithCache session.input session.count config.prepareJobs config.mainModule directives
         else if config.buildManifest && config.optimizerJobs > 1 then
           preparePersistent session config.prepareJobs config.mainModule directives
         else case cached of
-          Just previous -> prepareModulesDelta session.input session.count config.prepareJobs config.mainModule directives previous
-          Nothing -> prepareModulesWithCache session.input session.count config.prepareJobs config.mainModule directives
+          Just previous -> do
+            BuildCache.materializeAllInputs session
+            prepareModulesDelta session.input session.count config.prepareJobs config.mainModule directives previous
+          Nothing -> do
+            BuildCache.materializeAllInputs session
+            prepareModulesWithCache session.input session.count config.prepareJobs config.mainModule directives
       previousManifest <- if config.buildManifest
         then Metrics.measure "build manifest read" \_ -> Manifest.readManifest session.root
         else pure Nothing
       manifest <- if config.buildManifest
         then Just <$> Metrics.measure "build manifest encode" \_ ->
-          liftEffect (Manifest.buildManifestWithCache previousManifest session.root session.context directives (Array.fromFoldable preparedBase.sourceModules) preparedBase.sourceHashes)
+          liftEffect (Manifest.buildManifestWithInterfaces preparedBase.sourceInterfaces previousManifest session.root session.context directives (Array.fromFoldable preparedBase.sourceModules) preparedBase.sourceHashes)
         else pure Nothing
       let
         manifestChanged = case manifest, previousManifest of

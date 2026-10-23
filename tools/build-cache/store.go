@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"hash"
 	"io"
 	"os"
 	"path/filepath"
@@ -41,6 +42,29 @@ type ownershipEnvelope struct {
 }
 
 func digest(data []byte) string { sum := sha256.Sum256(data); return hex.EncodeToString(sum[:]) }
+
+type digestScratch struct {
+	hash   hash.Hash
+	buffer []byte
+}
+
+var digestScratches = sync.Pool{New: func() any {
+	return &digestScratch{hash: sha256.New(), buffer: make([]byte, 64*1024)}
+}}
+
+// Readers used only for integrity do not need to retain the full file. Hide
+// WriterTo so os.File's fallback cannot allocate another buffer per object.
+// Copy through EOF; an earlier Stat is not a limit on the bytes being hashed.
+func digestReader(reader io.Reader) (string, int64, error) {
+	scratch := digestScratches.Get().(*digestScratch)
+	defer digestScratches.Put(scratch)
+	scratch.hash.Reset()
+	n, err := io.CopyBuffer(scratch.hash, struct{ io.Reader }{reader}, scratch.buffer)
+	if err != nil {
+		return "", n, err
+	}
+	return hex.EncodeToString(scratch.hash.Sum(nil)), n, nil
+}
 
 func absolute(root, name string) string {
 	if filepath.IsAbs(name) {
@@ -175,8 +199,7 @@ func execute(req Request) (Response, error) {
 			// Publication validated the grammar of these exact bytes. Integrity
 			// is checked on every read; reparsing an unchanged committed object
 			// proves nothing additional and dominates large no-change builds.
-			_, err := s.validateObject(parts[i].Object)
-			return err
+			return s.verifyObject(parts[i].Object)
 		}); err != nil {
 			// A damaged pack cannot be trusted for a later selective reuse.
 			s.invalidateAllPacks()
@@ -416,27 +439,37 @@ func baseSnapshot(spec Spec, observed *Snapshot) (Snapshot, bool) {
 func fingerprints(root string, inputs []Input) ([]Fingerprint, error) {
 	items := append([]Input{}, inputs...)
 	sort.Slice(items, func(i, j int) bool { return items[i].Name < items[j].Name })
-	result := []Fingerprint{}
+	result := make([]Fingerprint, len(items))
 	for i, input := range items {
 		if input.Name == "" || (i > 0 && items[i-1].Name == input.Name) {
 			return nil, fmt.Errorf("duplicate/empty input name")
 		}
+	}
+	if err := boundedEach(len(items), func(i int) error {
+		input := items[i]
 		f, err := fingerprint(root, input)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		result = append(result, f)
+		result[i] = f
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 	return result, nil
 }
 
 func fingerprint(root string, input Input) (Fingerprint, error) {
-	f, _, _, err := readObservation(root, input)
+	f, _, _, err := observeInput(root, input, false)
 	return f, err
 }
 
 // The resolver consumes exactly the bytes/entries whose fingerprint it records.
 func readObservation(root string, input Input) (Fingerprint, []byte, []os.DirEntry, error) {
+	return observeInput(root, input, true)
+}
+
+func observeInput(root string, input Input, retainBytes bool) (Fingerprint, []byte, []os.DirEntry, error) {
 	f := Fingerprint{Name: input.Name, Kind: input.Kind, Path: absolute(root, input.Path), State: "missing"}
 	if input.Kind != "file" && input.Kind != "directory" && input.Kind != "tast" {
 		return f, nil, nil, fmt.Errorf("unknown input kind")
@@ -455,6 +488,19 @@ func readObservation(root string, input Input) (Fingerprint, []byte, []os.DirEnt
 	if input.Kind == "file" {
 		if !info.Mode().IsRegular() {
 			return f, nil, nil, fmt.Errorf("input is not a regular file: %s", f.Path)
+		}
+		if !retainBytes {
+			file, err := os.Open(f.Path)
+			if err != nil {
+				return f, nil, nil, err
+			}
+			defer file.Close()
+			hash, _, err := digestReader(file)
+			if err != nil {
+				return f, nil, nil, err
+			}
+			f.State, f.Digest = "file", hash
+			return f, nil, nil, nil
 		}
 		data, err := os.ReadFile(f.Path)
 		if err != nil {
@@ -479,28 +525,41 @@ func readObservation(root string, input Input) (Fingerprint, []byte, []os.DirEnt
 		return f, nil, nil, err
 	}
 	parts := []string{}
-	for _, entry := range entries {
-		path := filepath.Join(f.Path, entry.Name())
-		if input.Kind == "tast" {
+	if input.Kind == "tast" {
+		// Hash independent modules concurrently, preserving the inventory order
+		// in the content key. Every task finishes before the snapshot is used.
+		modules := make([][]string, len(entries))
+		if err := boundedEach(len(entries), func(i int) error {
+			entry := entries[i]
+			path := filepath.Join(f.Path, entry.Name())
 			info, err := os.Stat(path)
 			if os.IsNotExist(err) {
-				continue
+				return nil
 			}
 			if err != nil {
-				return f, nil, nil, err
+				return err
 			}
 			if !info.IsDir() {
-				continue
+				return nil
 			}
 			child, err := fingerprint(root, Input{Name: entry.Name(), Kind: "file", Path: filepath.Join(path, "corefn.json")})
 			if err != nil {
-				return f, nil, nil, err
+				return err
 			}
 			if child.State == "missing" {
-				continue
+				return nil
 			}
-			parts = append(parts, child.Name, child.Resolved, child.Digest)
-		} else {
+			modules[i] = []string{child.Name, child.Resolved, child.Digest}
+			return nil
+		}); err != nil {
+			return f, nil, nil, err
+		}
+		for _, module := range modules {
+			parts = append(parts, module...)
+		}
+	} else {
+		for _, entry := range entries {
+			path := filepath.Join(f.Path, entry.Name())
 			info, err := os.Lstat(path)
 			if err != nil {
 				return f, nil, nil, err
@@ -659,6 +718,42 @@ func (s *store) validateObject(obj Object) ([]byte, error) {
 		return nil, fmt.Errorf("missing/corrupt object: %s", obj.SHA256)
 	}
 	return data, nil
+}
+
+// Check every byte without retaining an object that the caller will not use.
+// Packed objects remain authoritative when indexed, including on corruption.
+func (s *store) verifyObject(obj Object) error {
+	if !validObject(obj) {
+		return fmt.Errorf("invalid object reference")
+	}
+	var reader io.Reader
+	if s.packs != nil {
+		if entry, ok := s.packs.entries[obj.SHA256]; ok {
+			file, err := s.packedObjectFile(entry, obj)
+			if err != nil {
+				return err
+			}
+			reader = io.NewSectionReader(file, entry.Offset, entry.Bytes)
+		}
+	}
+	if reader == nil {
+		path := filepath.Join(s.cache, "objects", obj.SHA256)
+		info, err := os.Lstat(path)
+		if err != nil || !info.Mode().IsRegular() || info.Size() != obj.Bytes {
+			return fmt.Errorf("missing/corrupt object: %s", obj.SHA256)
+		}
+		file, err := os.Open(path)
+		if err != nil {
+			return fmt.Errorf("missing/corrupt object: %s", obj.SHA256)
+		}
+		defer file.Close()
+		reader = file
+	}
+	hash, count, err := digestReader(reader)
+	if err != nil || count != obj.Bytes || hash != obj.SHA256 {
+		return fmt.Errorf("missing/corrupt object: %s", obj.SHA256)
+	}
+	return nil
 }
 
 func (s *store) readObject(obj Object) ([]byte, error) {
@@ -823,7 +918,7 @@ func (s store) stage(req Request, snap Snapshot, previous *Manifest) (Manifest, 
 				return fmt.Errorf("invalid inherited module: %s", mod.Name)
 			}
 			for _, part := range artifacts(Manifest{Modules: []ModuleMemo{prior}}) {
-				if _, err := s.validateObject(part.Object); err != nil {
+				if err := s.verifyObject(part.Object); err != nil {
 					// A concurrent publisher may have retired this generation.
 					// Restore only from the pinned, hash-checked snapshot; a
 					// corrupt still-indexed pack is an error, not a cache hit.
