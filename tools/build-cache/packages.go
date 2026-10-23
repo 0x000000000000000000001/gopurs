@@ -2,9 +2,13 @@ package main
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"go/ast"
 	"go/parser"
+	"go/printer"
 	"go/token"
 	"io"
 	"os"
@@ -78,14 +82,15 @@ type packageExport struct {
 }
 
 type packageFileRequest struct {
-	Format      string          `json:"format"`
-	PackagePath string          `json:"packagePath"`
-	GoVersion   string          `json:"goVersion"`
-	Arch        string          `json:"arch"`
-	Files       []packageSource `json:"files"`
-	Exports     []packageExport `json:"exports"`
-	Entries     []packageSymbol `json:"entries"`
-	Output      string          `json:"output"`
+	Format      string            `json:"format"`
+	PackagePath string            `json:"packagePath"`
+	GoVersion   string            `json:"goVersion"`
+	Arch        string            `json:"arch"`
+	Files       []packageSource   `json:"files"`
+	Exports     []packageExport   `json:"exports"`
+	Entries     []packageSymbol   `json:"entries"`
+	Signatures  map[string]string `json:"signatures,omitempty"`
+	Output      string            `json:"output"`
 }
 
 func sourceImports(name string, data []byte, imports map[string]bool) error {
@@ -171,13 +176,165 @@ func goExportData(file string) ([]byte, error) {
 	return append(header, data...), nil
 }
 
+func sourceSignature(path string, data []byte) (string, error) {
+	fset := token.NewFileSet()
+	file, err := parser.ParseFile(fset, path, data, parser.SkipObjectResolution)
+	if err != nil {
+		return "", err
+	}
+	var out bytes.Buffer
+	for _, declaration := range file.Decls {
+		switch value := declaration.(type) {
+		case *ast.FuncDecl:
+			clone := *value
+			clone.Doc = nil
+			clone.Body = nil
+			if err := printer.Fprint(&out, fset, &clone); err != nil {
+				return "", err
+			}
+		case *ast.GenDecl:
+			clone := *value
+			clone.Doc = nil
+			if err := printer.Fprint(&out, fset, &clone); err != nil {
+				return "", err
+			}
+		}
+		out.WriteByte('\n')
+	}
+	sum := sha256.Sum256(out.Bytes())
+	return hex.EncodeToString(sum[:]), nil
+}
+
+type packagePlanPackage struct {
+	Name         string   `json:"name"`
+	Dependencies []string `json:"dependencies"`
+	Declarations int      `json:"declarations"`
+}
+
+type packagePlanFile struct {
+	Path   string `json:"path"`
+	Kind   string `json:"kind"`
+	Module string `json:"moduleName"`
+	SHA256 string `json:"sha256"`
+	Bytes  int64  `json:"bytes"`
+}
+
+type packagePlanEntry struct {
+	Symbol  packageSymbol `json:"symbol"`
+	Package string        `json:"package"`
+}
+
+type packagePlanResult struct {
+	Format   string               `json:"format"`
+	PlanHash string               `json:"planHash"`
+	Packages []packagePlanPackage `json:"packages"`
+	Files    []packagePlanFile    `json:"files"`
+	Entries  []packagePlanEntry   `json:"entries"`
+}
+
+func readPackagePlan(path string) (*packagePlanResult, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	var result packagePlanResult
+	if err := strictJSON(data, &result); err != nil {
+		return nil, err
+	}
+	if result.Format != packageFilesFormat || !digestPattern.MatchString(result.PlanHash) || len(result.Packages) == 0 {
+		return nil, fmt.Errorf("invalid emitted Go package plan")
+	}
+	for _, file := range result.Files {
+		if !outputPath(file.Kind, file.Module, "purescript/"+file.Path) {
+			return nil, fmt.Errorf("invalid emitted Go package path: %s", file.Path)
+		}
+	}
+	return &result, nil
+}
+
+func verifyPackagePlanFiles(output string, result *packagePlanResult) error {
+	for _, file := range result.Files {
+		if !outputPath(file.Kind, file.Module, "purescript/"+file.Path) ||
+			!fileMatches(filepath.Join(output, "purescript", filepath.FromSlash(file.Path)), Object{file.SHA256, file.Bytes}) {
+			return fmt.Errorf("published Go package file changed: %s", file.Path)
+		}
+	}
+	return nil
+}
+
+func planCacheStatus(output string, request *packageFileRequest) string {
+	dir := filepath.Join(output, ".gopurs-cache", "go-packages", "plan-v1")
+	data, err := os.ReadFile(filepath.Join(dir, "request.json"))
+	if err != nil {
+		return "miss"
+	}
+	var previous packageFileRequest
+	if err := strictJSON(data, &previous); err != nil {
+		return "miss"
+	}
+	if previous.Format != request.Format || previous.PackagePath != request.PackagePath || previous.GoVersion != request.GoVersion || previous.Arch != request.Arch {
+		return "miss-options"
+	}
+	previousFiles := map[string]string{}
+	for _, file := range previous.Files {
+		previousFiles[file.Path] = file.Owner + ":" + file.Module + ":" + file.SHA256
+	}
+	if len(previousFiles) != len(request.Files) {
+		return "miss-sources"
+	}
+	sourceChanged := false
+	for _, file := range request.Files {
+		previous, ok := previousFiles[file.Path]
+		if !ok {
+			return "miss-sources"
+		}
+		if previous != file.Owner+":"+file.Module+":"+file.SHA256 {
+			sourceChanged = true
+		}
+	}
+	previousEntries := map[string]bool{}
+	for _, entry := range previous.Entries {
+		previousEntries[entry.Owner+"\x00"+entry.Name] = true
+	}
+	if len(previousEntries) != len(request.Entries) {
+		return "miss-entries"
+	}
+	for _, entry := range request.Entries {
+		if !previousEntries[entry.Owner+"\x00"+entry.Name] {
+			return "miss-entries"
+		}
+	}
+	if len(previous.Signatures) != len(request.Signatures) {
+		return "miss-signatures"
+	}
+	signatureChanged := false
+	for path, signature := range request.Signatures {
+		if previous.Signatures[path] != signature {
+			signatureChanged = true
+		}
+	}
+	result, err := readPackagePlan(filepath.Join(dir, "result.json"))
+	if err != nil {
+		return "miss-result"
+	}
+	if err := verifyPackagePlanFiles(output, result); err != nil {
+		return "miss-output"
+	}
+	if signatureChanged {
+		return "miss-signatures"
+	}
+	if sourceChanged {
+		return "eligible-body"
+	}
+	return "validated"
+}
+
 func preparePackageSession(stage string, state *buildSession, entries []string, response *SessionResponse) error {
 	if !state.Planned || !usesGoPackages(state.Spec) {
 		return fmt.Errorf("Go package inputs require a planned package-layout build")
 	}
 	request := packageFileRequest{Format: packageFilesFormat, PackagePath: "gopurs/output/purescript",
 		Files: []packageSource{}, Exports: []packageExport{}, Entries: []packageSymbol{}, Output: filepath.Join(stage, "packages")}
-	imports := map[string]bool{}
 	for _, module := range state.Modules {
 		unit := strings.ReplaceAll(module.Name, ".", "_")
 		for _, suffix := range []string{"", "_ffi"} {
@@ -195,14 +352,94 @@ func preparePackageSession(stage string, state *buildSession, entries []string, 
 				owner = "ffi/" + unit
 			}
 			request.Files = append(request.Files, packageSource{owner, module.Name, name, file, digest(data), []packageSymbol{}, []any{}})
-			if err := sourceImports(file, data, imports); err != nil {
-				return err
+		}
+	}
+	request.Signatures = map[string]string{}
+	type cachedSignature struct{ owner, module, sha, signature string }
+	previousRequest, _ := readPackageRequest(filepath.Join(state.Spec.Output, ".gopurs-cache", "go-packages", "plan-v1", "request.json"))
+	previousSignatures := map[string]cachedSignature{}
+	if previousRequest != nil {
+		for _, file := range previousRequest.Files {
+			if signature, ok := previousRequest.Signatures[file.Path]; ok {
+				previousSignatures[file.Path] = cachedSignature{file.Owner, file.Module, file.SHA256, signature}
 			}
 		}
+	}
+	for _, file := range request.Files {
+		if previous, ok := previousSignatures[file.Path]; ok &&
+			previous.owner == file.Owner && previous.module == file.Module && previous.sha == file.SHA256 {
+			request.Signatures[file.Path] = previous.signature
+			continue
+		}
+		data, err := os.ReadFile(file.Source)
+		if err != nil {
+			return err
+		}
+		signature, err := sourceSignature(file.Path, data)
+		if err != nil {
+			return err
+		}
+		request.Signatures[file.Path] = signature
 	}
 	for _, module := range entries {
 		unit := strings.ReplaceAll(module, ".", "_")
 		request.Entries = append(request.Entries, packageSymbol{"generated/" + unit, "Get_" + unit + "_main"})
+	}
+	var environment map[string]string
+	for _, option := range state.Spec.Options {
+		if option.Name == "go-environment" {
+			if err := json.Unmarshal([]byte(option.Value), &environment); err != nil {
+				return err
+			}
+		}
+	}
+	request.Arch = environment["GOARCH"]
+	versionData, err := packageGoCommand(state.Spec.Output, "mod", "edit", "-json")
+	if err != nil {
+		return err
+	}
+	var version struct{ Go string }
+	if err := json.Unmarshal(versionData, &version); err != nil {
+		return err
+	}
+	request.GoVersion = "go" + version.Go
+	status := planCacheStatus(state.Spec.Output, &request)
+	fmt.Fprintf(os.Stderr, "[gopurs] Go plan cache: %s\n", status)
+	encoded, err := json.Marshal(request)
+	if err != nil {
+		return err
+	}
+	response.PackageRequest = filepath.Join(stage, "package-request.json")
+	if err := os.WriteFile(response.PackageRequest, encoded, 0600); err != nil {
+		return err
+	}
+	// The overlay only consumes generated sources and the published plan. Try
+	// it before freezing Go exports so a proven body edit does not pay for the
+	// full dependency type-check.
+	if status == "eligible-body" && packageOverlayEnabled() {
+		record, reason, err := preparePackageOverlay(stage, state, entries, &request)
+		if err != nil {
+			return err
+		}
+		if record != nil {
+			response.PackageResult = filepath.Join(stage, "package-result.json")
+			response.Status = "packages-overlay"
+			fmt.Fprintf(os.Stderr, "[gopurs] Go overlay: module=%s package=%s source=%s\n", record.Module, record.Package, record.OriginalPackage)
+			return nil
+		}
+		fmt.Fprintf(os.Stderr, "[gopurs] Go overlay fallback: %s\n", reason)
+	}
+	// Only the full planner consumes the native import closure. The overlay
+	// proof is complete before this point and does not parse 2 704 headers.
+	imports := map[string]bool{}
+	for _, file := range request.Files {
+		data, err := os.ReadFile(file.Source)
+		if err != nil {
+			return err
+		}
+		if err := sourceImports(file.Source, data, imports); err != nil {
+			return err
+		}
 	}
 	workspace := filepath.Join(stage, "go-exports")
 	if err := os.Mkdir(workspace, 0700); err != nil {
@@ -322,15 +559,6 @@ func preparePackageSession(stage string, state *buildSession, entries []string, 
 			copied[name] = true
 		}
 	}
-	var environment map[string]string
-	for _, option := range state.Spec.Options {
-		if option.Name == "go-environment" {
-			if err := json.Unmarshal([]byte(option.Value), &environment); err != nil {
-				return err
-			}
-		}
-	}
-	request.Arch = environment["GOARCH"]
 	if len(paths) > 0 {
 		args := []string{"list", "-deps", "-export", "-json", "-mod=readonly"}
 		if environment["GOFLAGS"] == "" {
@@ -393,44 +621,23 @@ func preparePackageSession(stage string, state *buildSession, entries []string, 
 	if err := saveSession(stage, *state); err != nil {
 		return err
 	}
-	data, err = json.Marshal(request)
+	encoded, err = json.Marshal(request)
 	if err != nil {
 		return err
 	}
-	response.PackageRequest = filepath.Join(stage, "package-request.json")
+	if err := os.WriteFile(response.PackageRequest, encoded, 0400); err != nil {
+		return err
+	}
 	response.Status = "packages-ready"
-	return os.WriteFile(response.PackageRequest, data, 0400)
+	return nil
 }
 
 func packageOutputs(stage string, modules []SourceModule, entries []string) ([]StagedOutput, error) {
-	var result struct {
-		Format   string `json:"format"`
-		PlanHash string `json:"planHash"`
-		Packages []struct {
-			Name         string   `json:"name"`
-			Dependencies []string `json:"dependencies"`
-			Declarations int      `json:"declarations"`
-		} `json:"packages"`
-		Files []struct {
-			Path   string `json:"path"`
-			Kind   string `json:"kind"`
-			Module string `json:"moduleName"`
-			SHA256 string `json:"sha256"`
-			Bytes  int64  `json:"bytes"`
-		} `json:"files"`
-		Entries []struct {
-			Symbol  packageSymbol `json:"symbol"`
-			Package string        `json:"package"`
-		} `json:"entries"`
-	}
-	data, err := os.ReadFile(filepath.Join(stage, "package-result.json"))
+	result, err := readPackagePlan(filepath.Join(stage, "package-result.json"))
 	if err != nil {
 		return nil, err
 	}
-	if err := strictJSON(data, &result); err != nil {
-		return nil, err
-	}
-	if result.Format != packageFilesFormat || !digestPattern.MatchString(result.PlanHash) || len(result.Packages) == 0 {
+	if len(result.Packages) == 0 {
 		return nil, fmt.Errorf("invalid emitted Go package plan")
 	}
 	packages := map[string]bool{}

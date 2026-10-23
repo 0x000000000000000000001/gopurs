@@ -205,6 +205,29 @@ nouvelle campagne de préparation ni un nouveau candidat de cache.
 
 
 **C2-3 :** sur une édition de corps, **2 703 des 2 704 modules préparés**
-ont le même hash ; seul `Inter.Cli.Ping.Main` change. La préparation par module
-est donc une piste mesurée, pas une hypothèse. Le delta de préparation reste à
-implémenter.
+ont le même hash ; seul `Inter.Cli.Ping.Main` change. `prepareModulesDelta` est
+implémenté et validé : backend base 106,652 s, feuille **47,372 s**,
+préparation sautée, **11 136 fichiers identiques** au one-shot forcé. Les clés
+et le PBO restent à rendre incrémentaux.
+
+
+**C2-4 clés :** le delta réutilise 2 703 clés de modules préparés
+(`computed=1, reused=2703`). Les clés passent de 7,216 à 0,696 s et le backend
+feuille de 47,372 à **38,183 s**, avec 11 136 fichiers identiques au one-shot
+forcé. Le PBO (11,2 s) devient le poste dominant.
+
+
+**C2-4 final :** cache PBO mémoire + hash des fichiers `corefn.json` au lieu
+des modules structurels. Backend feuille **14,734 s** (base 89,874 s),
+préparation delta **1,807 s**, clés **0,731 s**, PBO **4,899 s**, one-shot
+forcé 60,682 s, **11 136 fichiers identiques**. La cible backend ≤25 s est
+atteinte.
+
+
+**C2-5 Go packages :** le blocage FFI venait d'un symlink `gopurs` au mauvais
+niveau. Avec `app/gopurs`, le layout packages passe. Backend base 87,355 s,
+feuille **29,150 s**, dont **Go packages 11,536 s** ; le monolithique reste à
+14,7 s. L'overlay C1c branché (`GOPURS_GO_PACKAGE_OVERLAY=1`) ramène
+`Go packages` à **0,003–0,021 s** et le backend feuille à
+**17,32–21,52 s** (médiane 19,77 s), avec sorties Ping exactes et fallback
+full.

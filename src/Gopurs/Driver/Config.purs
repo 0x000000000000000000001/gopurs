@@ -22,6 +22,7 @@ type CompilerConfig =
   , allocationProfile :: Maybe String
   , forceBuild :: Boolean
   , goPackages :: Boolean
+  , buildManifest :: Boolean
   }
 
 readConfig :: Effect CompilerConfig
@@ -35,6 +36,7 @@ readConfig = do
   allocationProfile <- Process.lookupEnv "GOPURS_ALLOC_PROFILE"
   forceBuild <- Process.lookupEnv "GOPURS_FORCE_BUILD"
   goPackages <- Process.lookupEnv "GOPURS_GO_PACKAGES"
+  buildManifest <- Process.lookupEnv "GOPURS_BUILD_MANIFEST"
   pure
     { mainModule: args.mbMainModule
     , ffiDirectory: args.mbFfiDir
@@ -46,6 +48,7 @@ readConfig = do
     , allocationProfile
     , forceBuild: forceBuild == Just "1" || Array.elem "--force" argv
     , goPackages: goPackages == Just "1"
+    , buildManifest: buildManifest == Just "1"
     }
 
 readJobs :: String -> Int -> Effect Int

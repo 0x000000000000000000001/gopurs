@@ -13,6 +13,14 @@ if [[ "${GOPURS_RUST:-0}" == "1" ]]; then
   fi
 fi
 
+# Native one-shot builds use the persistent incremental path by default.
+# Preserve explicit settings, including 0; other hosts remain opt-in.
+if [[ "${GOPURS_RUST:-0}" != "1" && "${GOPURS_JS:-0}" != "1" ]]; then
+  export GOPURS_GO_PACKAGES="${GOPURS_GO_PACKAGES:-1}"
+  export GOPURS_GO_PACKAGE_OVERLAY="${GOPURS_GO_PACKAGE_OVERLAY:-1}"
+  export GOPURS_BUILD_MANIFEST="${GOPURS_BUILD_MANIFEST:-1}"
+fi
+
 # Choose parallelism before dispatching the host. Explicit job settings take
 # precedence, independently of the caller's Go GC policy.
 mem_bytes="$(sysctl -n hw.memsize 2>/dev/null || true)"
@@ -34,6 +42,80 @@ if [[ "${mem_bytes:-0}" =~ ^[0-9]+$ ]] && (( mem_bytes >= 32 * 1024 * 1024 * 102
     export GOGC=off
     export GOMEMLIMIT=10GiB
   fi
+fi
+
+if [[ "${GOPURS_DAEMON:-0}" == "1" && "${GOPURS_DAEMON_SERVER:-0}" != "1" && "${GOPURS_RESIDENT:-0}" != "1" ]]; then
+  # One-shot client for the opt-in build daemon. The daemon keeps the C2
+  # prepared/PBO state between invocations; this client only triggers a build
+  # and waits for its token. No filesystem watcher is involved.
+  export GOPURS_GO_PACKAGES="${GOPURS_GO_PACKAGES:-1}"
+  export GOPURS_GO_PACKAGE_OVERLAY="${GOPURS_GO_PACKAGE_OVERLAY:-1}"
+  workspace="$(pwd -P)"
+  daemon_dir="${GOPURS_DAEMON_DIR:-$workspace/.gopurs-daemon}"
+  mkdir -p "$daemon_dir"
+  if command -v shasum >/dev/null 2>&1; then
+    digest_cmd=(shasum -a 256)
+  else
+    digest_cmd=(sha256sum)
+  fi
+  compiler_file="$DIR/gopurs-native"
+  if [[ "${GOPURS_JS:-0}" == "1" ]]; then compiler_file="$DIR/gopurs.js"; fi
+  if [[ "${GOPURS_RUST:-0}" == "1" ]]; then compiler_file="$DIR/gopurs-rust"; fi
+  compiler_stamp="$(stat -f '%m:%z' "$compiler_file" 2>/dev/null || stat -c '%Y:%s' "$compiler_file" 2>/dev/null || true)"
+  identity="$(printf '%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s' \
+    "$DIR" "$workspace" "$*" "$compiler_stamp" "${GOPURS_GO_PACKAGES:-}" \
+    "${GOPURS_GO_PACKAGE_OVERLAY:-}" "${GOPURS_PBO_JOBS:-}" "${GOPURS_PREPARE_JOBS:-}" \
+    "${GOPURS_EMIT_JOBS:-}" "${GOPURS_FORCE_BUILD:-}" "${GOPURS_ALLOC_PROFILE:-}" \
+    | "${digest_cmd[@]}" | cut -d' ' -f1)"
+  pid_file="$daemon_dir/pid"
+  identity_file="$daemon_dir/identity"
+  status_file="$daemon_dir/status"
+  running=0
+  if [[ -f "$pid_file" ]]; then
+    pid="$(cat "$pid_file" 2>/dev/null || true)"
+    if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
+      if [[ "$(cat "$identity_file" 2>/dev/null || true)" == "$identity" ]] &&
+         [[ -f "$workspace/output/.gopurs-cache/current.json" ]]; then
+        running=1
+      else
+        kill -TERM "$pid" 2>/dev/null || true
+        for _ in $(seq 1 50); do kill -0 "$pid" 2>/dev/null || break; sleep 0.1; done
+        kill -KILL "$pid" 2>/dev/null || true
+      fi
+    fi
+  fi
+  if [[ "$running" != 1 ]]; then
+    rm -f "$status_file" "$daemon_dir/trigger"
+    (
+      cd "$workspace"
+      GOPURS_DAEMON=0 GOPURS_DAEMON_SERVER=1 GOPURS_RESIDENT=1 \
+      GOPURS_RESIDENT_TRIGGER="$daemon_dir/trigger" GOPURS_RESIDENT_STATUS="$status_file" \
+      "$DIR/gopurs" "$@" >>"$daemon_dir/log" 2>&1 &
+      echo $! >"$pid_file"
+    )
+    printf '%s\n' "$identity" >"$identity_file"
+  fi
+  token="$(date +%s)-$$-$RANDOM"
+  printf '%s\n' "$token" >"$daemon_dir/trigger.next"
+  mv "$daemon_dir/trigger.next" "$daemon_dir/trigger"
+  while :; do
+    pid="$(cat "$pid_file" 2>/dev/null || true)"
+    if [[ -z "$pid" ]] || ! kill -0 "$pid" 2>/dev/null; then
+      echo "[gopurs] daemon exited during build; see $daemon_dir/log" >&2
+      exit 1
+    fi
+    if [[ -f "$status_file" ]]; then
+      first="$(sed -n '1p' "$status_file" 2>/dev/null || true)"
+      if [[ "$first" == "$token" ]]; then
+        second="$(sed -n '2p' "$status_file" 2>/dev/null || true)"
+        if [[ "$second" == "ok" ]]; then exit 0; fi
+        echo "[gopurs] daemon build failed:" >&2
+        sed -n '2,$p' "$status_file" >&2
+        exit 1
+      fi
+    fi
+    sleep 0.05
+  done
 fi
 
 if [[ "${GOPURS_RUST:-0}" == "1" ]]; then

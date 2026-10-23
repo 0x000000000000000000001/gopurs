@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"go/importer"
 	"go/token"
 	"io"
@@ -397,4 +398,62 @@ func TestPackageMaintenanceConcurrentPublishersAndReaders(t *testing.T) {
 	}()
 	workers.Wait()
 	call(t, Request{Schema: Schema, Operation: "lookup", Spec: state.Spec}, "hit")
+}
+
+func TestPlanCacheStatus(t *testing.T) {
+	output := t.TempDir()
+	dir := filepath.Join(output, ".gopurs-cache", "go-packages", "plan-v1")
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		t.Fatal(err)
+	}
+	source := "package p_root\nfunc Get_A_main() {}\n"
+	put(t, filepath.Join(output, "purescript/p_root/0_gopurs_package.go"), source)
+	request := packageFileRequest{
+		Format: packageFilesFormat, PackagePath: "gopurs/output/purescript", GoVersion: "go1.26", Arch: "arm64",
+		Files:      []packageSource{{Owner: "generated/A", Module: "A", Path: "A.go", SHA256: "a"}},
+		Entries:    []packageSymbol{{Owner: "generated/A", Name: "Get_A_main"}},
+		Signatures: map[string]string{"A.go": "sig-a"},
+	}
+	data, err := json.Marshal(request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "request.json"), data, 0600); err != nil {
+		t.Fatal(err)
+	}
+	plan := packagePlanResult{Format: packageFilesFormat, PlanHash: digest([]byte("plan")),
+		Packages: []packagePlanPackage{{Name: "p_root", Declarations: 1}},
+		Entries:  []packagePlanEntry{{Symbol: packageSymbol{"generated/A", "Get_A_main"}, Package: "gopurs/output/purescript/p_root"}},
+	}
+	writePlan := func() {
+		plan.Files = []packagePlanFile{{Path: "p_root/0_gopurs_package.go", Kind: "package", SHA256: digest([]byte(source)), Bytes: int64(len(source))}}
+		encoded, _ := json.Marshal(plan)
+		if err := os.WriteFile(filepath.Join(dir, "result.json"), encoded, 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	writePlan()
+	if got := planCacheStatus(output, &request); got != "validated" {
+		t.Fatalf("valid cache: %s", got)
+	}
+	changed := request
+	changed.Files = []packageSource{{Owner: "generated/A", Module: "A", Path: "A.go", SHA256: "b"}}
+	if got := planCacheStatus(output, &changed); got != "eligible-body" {
+		t.Fatalf("changed body: %s", got)
+	}
+	changed.Signatures = map[string]string{"A.go": "sig-b"}
+	if got := planCacheStatus(output, &changed); got != "miss-signatures" {
+		t.Fatalf("changed signature: %s", got)
+	}
+	put(t, filepath.Join(output, "purescript/p_root/0_gopurs_package.go"), "corrupt")
+	if got := planCacheStatus(output, &request); got != "miss-output" {
+		t.Fatalf("changed output: %s", got)
+	}
+	put(t, filepath.Join(output, "purescript/p_root/0_gopurs_package.go"), source)
+	if err := os.WriteFile(filepath.Join(dir, "result.json"), []byte(`{`), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if got := planCacheStatus(output, &request); got != "miss-result" {
+		t.Fatalf("corrupt result: %s", got)
+	}
 }

@@ -75,14 +75,22 @@ try {
   const parser = join(rust, "Purs_Gopurs_FfiSupport", "native-parser");
   mkdirSync(parser);
   const archiveSource = join(workspace, "go-host-support");
+  const archiveModule = "github.com/0x000000000000000000001/gopurs/tools/ffi-gen";
   mkdirSync(join(archiveSource, "gopurs_build_cache"), { recursive: true });
+  mkdirSync(join(archiveSource, "gopurs_c1c"), { recursive: true });
+  writeFileSync(join(archiveSource, "go.mod"), `module ${archiveModule}\n\ngo 1.22\n`);
   for (const name of readdirSync(join(root, "tools/ffi-gen"))) {
     if (name === "go.mod" || name.endsWith(".go") && !name.endsWith("_test.go"))
       copyFileSync(join(root, "tools/ffi-gen", name), join(archiveSource, name));
   }
-  for (const name of ["contract.go", "store.go", "session.go", "compiler.go", "modules.go", "packages.go", "packs.go"]) {
+  for (const name of ["contract.go", "store.go", "session.go", "compiler.go", "modules.go", "packages.go", "overlay.go", "overlay_sections.go", "packs.go"]) {
     writeFileSync(join(archiveSource, "gopurs_build_cache", name),
-      readFileSync(join(root, "tools/build-cache", name), "utf8").replace("package main", "package gopurs_build_cache"));
+      readFileSync(join(root, "tools/build-cache", name), "utf8")
+        .replace("package main", "package gopurs_build_cache")
+        .replaceAll('"gopurs/c1c"', `"${archiveModule}/gopurs_c1c"`));
+  }
+  for (const name of ["manifest.go", "overlay.go", "qualify.go", "rewrite.go", "partition.go", "literals.go"]) {
+    copyFileSync(join(root, "tools/c1c", name), join(archiveSource, "gopurs_c1c", name));
   }
   await run("native-parser", "go", ["build", "-trimpath", "-tags=carchive,gopurscache", "-buildmode=c-archive",
     "-o", join(parser, "libgopurs_ffi.a"), "."], archiveSource);

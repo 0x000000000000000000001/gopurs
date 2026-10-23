@@ -63,10 +63,12 @@ test("emission keys cover referenced worker signatures and absences without unre
     }
     const cache = {
       session: { stage, output, context: hash("compiler-options") },
-      candidates: previous ? Map.singleton("Consumer")(previous.memo) : Map.empty,
+      candidates: previous ? Map.singleton("Consumer")({ ...previous.memo, metadata: new Just(previous.memo.metadata), ffiDigest: new Just(previous.memo.ffiDigest) }) : Map.empty,
       keys: Map.singleton("Consumer")(keys), metadata: hash(metadataKey),
       invalidations: Ref.new(Map.empty)(), restored: Ref.new(0)(),
       reads: Ref.new(Map.empty)(),
+      lazyContributions: false, reused: Ref.new(Map.empty)(), priorWorkers: Ref.new(Map.empty)(), backends: Ref.new(Map.empty)(), headerSafe: emptySet,
+      ffiDigests: Map.empty, priorFfiDigests: Map.empty,
     };
     // Different all-worker prefixes previously invalidated unrelated consumers.
     const prefix = Wire.hash(JSON.stringify(globalFunctions));

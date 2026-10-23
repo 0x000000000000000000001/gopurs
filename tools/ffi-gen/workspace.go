@@ -37,6 +37,7 @@ type PackageFilesRequest struct {
 	Files       []PackageSourceFile `json:"files"`
 	Exports     []PackageExportFile `json:"exports"`
 	Entries     []SourceSymbol      `json:"entries"`
+	Signatures  map[string]string   `json:"signatures,omitempty"`
 	Output      string              `json:"output"`
 }
 

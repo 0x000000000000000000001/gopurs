@@ -14,12 +14,31 @@ delete env.GOPURS_COMPILER_SNAPSHOT;
 const run = (command, args, cwd, extra = {}) => execFileSync(command, args, { cwd, env: { ...env, ...extra },
   encoding: "utf8", timeout: 120000, maxBuffer: 16 * 1024 * 1024 });
 
+test("JS cache helper identity changes with each multi-package overlay source", t => {
+  const workspace = realpathSync(mkdtempSync(join(tmpdir(), "gopurs-snapshot-overlay-")));
+  t.after(() => rmSync(workspace, { recursive: true, force: true }));
+  mkdirSync(join(workspace, "tools"));
+  for (const name of ["build-cache", "c1c", "build-cache.mjs"])
+    cpSync(join(root, "tools", name), join(workspace, "tools", name), { recursive: true });
+  const helper = () => run(process.execPath, [join(workspace, "tools/build-cache.mjs"), "--helper"], workspace).trim();
+  let previous = helper();
+  assert.equal(helper(), previous, "unchanged helper should be reused");
+  for (const file of ["build-cache/overlay_sections.go", "c1c/partition.go", "c1c/literals.go"]) {
+    const path = join(workspace, "tools", file);
+    writeFileSync(path, readFileSync(path, "utf8") + "\n// changed source for compiler snapshot regression\n");
+    const current = helper();
+    assert.notEqual(current, previous, `${file} must invalidate the captured helper`);
+    assert.ok(existsSync(current));
+    previous = current;
+  }
+});
+
 test("JS executes and identifies the captured bundle even if installation changes after load", t => {
   const workspace = realpathSync(mkdtempSync(join(tmpdir(), "gopurs-snapshot-js-")));
   t.after(() => rmSync(workspace, { recursive: true, force: true }));
   mkdirSync(join(workspace, "bin"));
   mkdirSync(join(workspace, "tools"));
-  for (const name of ["build-cache", "build-cache.mjs", "ffi-runner.mjs", "ffi_gen.wasm", "wasm_exec.js"])
+  for (const name of ["build-cache", "c1c", "build-cache.mjs", "ffi-runner.mjs", "ffi_gen.wasm", "wasm_exec.js"])
     cpSync(join(root, "tools", name), join(workspace, "tools", name), { recursive: true });
   writeFileSync(join(workspace, "package.json"), '{"type":"module"}\n');
   const snapshot = readFileSync(join(root, "src/Gopurs/CompilerSnapshot.js"), "utf8");

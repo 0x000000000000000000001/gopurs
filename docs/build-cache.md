@@ -35,8 +35,10 @@ référence sont **GOMAXPROCS=2 / -p 1 / GOMEMLIMIT=12GiB**.
 ### Sélectionner le découpage Go G06
 
 Le layout mesuré utilise des ancres **1/8192**, avec un fichier ordinaire regroupé
-par package. Il est disponible dans les trois compilateurs reconstruits ; sa
-sélection reste explicite et doit être conservée entre les builds :
+par package. Il est disponible dans les trois compilateurs reconstruits.
+Le lanceur `bin/gopurs` active désormais packages, overlay et manifeste par défaut
+pour l'hôte Go natif, sans daemon. Les autres hôtes et l'appel direct du binaire
+gardent une sélection explicite :
 
 ```sh
 export GOPURS_GO_PACKAGES=1
@@ -49,8 +51,7 @@ habituelle de `bin/gopurs`, après production des TAST. Dans b8x, depuis la raci
 du projet sur la cible Go :
 
 ```sh
-export GOPURS_GO_PACKAGES=1
-bin/build
+b
 bin/test
 ```
 
@@ -69,6 +70,33 @@ retire les anciens chemins par le journal ; elle conserve les fichiers externes,
 `GOPURS_GO_PACKAGES=0 spago build`. Les entrées `output/main/main.go` et
 `output/<Module>/main/main.go` gardent leur rôle ; le runner suit leurs imports
 sans connaître les noms de packages générés.
+
+L'overlay C1c, activé par défaut par le lanceur natif, réutilise le plan Go
+publié et ne rend que le module modifié si les signatures, les arêtes de
+déclaration, les imports et l'init sont prouvés inchangés. Sinon le
+planificateur complet reste l'oracle. Voir
+[C2-5](build-c2-go-packages.md). Les valeurs explicites, dont
+`GOPURS_GO_PACKAGE_OVERLAY=0` et `GOPURS_BUILD_MANIFEST=0`, restent prioritaires.
+Le [chemin C2-7](build-c2-persistent.md) décrit la préparation compacte et les
+mesures one-shot sans daemon.
+
+### Daemon one-shot (sans watch)
+
+Pour garder le `PreparedCache`, les backends PBO et le plan entre deux `b`,
+activer le client daemon :
+
+```sh
+export GOPURS_DAEMON=1
+export GOPURS_GO_PACKAGES=1
+export GOPURS_GO_PACKAGE_OVERLAY=1
+b
+```
+
+Le premier `b` démarre le daemon et paie le build froid ; les suivants
+réutilisent le processus. Aucune surveillance de fichiers : `b` envoie un
+jeton et attend le statut. Le daemon vit dans `<projet>/.gopurs-daemon/`
+(`pid`, `log`, `status`) et redémarre si le compilateur, les arguments ou les
+options changent. `GOPURS_DAEMON=0` ou l'arrêt du PID le désactivent.
 
 ### Pack de publication expérimental
 

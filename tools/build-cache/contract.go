@@ -117,17 +117,24 @@ type ModuleMemo struct {
 	OptimizerEnvironment string         `json:"optimizerEnvironment"`
 	EmitterEnvironment   string         `json:"emitterEnvironment"`
 	CallerDemands        string         `json:"callerDemands"`
+	Metadata             string         `json:"metadata,omitempty"`
+	FFIDigest            string         `json:"ffiDigest,omitempty"`
 	Parts                []Artifact     `json:"parts"`
+	Reads                *Artifact      `json:"reads,omitempty"`
 	Sources              []ModuleSource `json:"sources,omitempty"`
 }
 
 type StagedModule struct {
+	Inherited            bool                 `json:"inherited,omitempty"`
 	Name                 string               `json:"name"`
 	Prepared             string               `json:"prepared"`
 	OptimizerEnvironment string               `json:"optimizerEnvironment"`
 	EmitterEnvironment   string               `json:"emitterEnvironment"`
 	CallerDemands        string               `json:"callerDemands"`
+	Metadata             string               `json:"metadata,omitempty"`
+	FFIDigest            string               `json:"ffiDigest,omitempty"`
 	Parts                []StagedArtifact     `json:"parts"`
+	Reads                *StagedArtifact      `json:"reads,omitempty"`
 	Sources              []StagedModuleSource `json:"sources,omitempty"`
 }
 
@@ -144,14 +151,16 @@ type Manifest struct {
 }
 
 type Request struct {
-	Schema      int             `json:"schema"`
-	Operation   string          `json:"operation"`
-	Spec        Spec            `json:"spec"`
-	ExpectedKey string          `json:"expectedKey"`
-	Outputs     []StagedOutput  `json:"outputs"`
-	Modules     []StagedModule  `json:"modules"`
-	Diagnostics *StagedArtifact `json:"diagnostics"`
-	checkLegacy bool
+	Schema         int             `json:"schema"`
+	Operation      string          `json:"operation"`
+	Spec           Spec            `json:"spec"`
+	ExpectedKey    string          `json:"expectedKey"`
+	Outputs        []StagedOutput  `json:"outputs"`
+	Modules        []StagedModule  `json:"modules"`
+	Diagnostics    *StagedArtifact `json:"diagnostics"`
+	checkLegacy    bool
+	inherited      *Manifest // private session snapshot; never accepted over JSON
+	inheritedStore *store
 }
 
 type Response struct {
@@ -170,6 +179,8 @@ var integerPattern = regexp.MustCompile(`^(0|-?[1-9][0-9]*)$`)
 var tagPattern = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9_./-]*$`)
 
 var moduleCodecs = []string{"pbo/backend-v2", "pbo/implementations-v1", "pbo/directives-v1", "gopurs/workers-v2"}
+
+const moduleReadsCodec = "gopurs/reads-owners-v1"
 
 func validModule(name string) bool {
 	if name == "" || strings.ContainsAny(name, "/\\\x00") {
@@ -269,6 +280,9 @@ func validateManifest(m Manifest) error {
 				return fmt.Errorf("module-codec")
 			}
 		}
+		if mod.Reads != nil && (mod.Reads.Codec != moduleReadsCodec || !validObject(mod.Reads.Object)) {
+			return fmt.Errorf("module-reads-codec")
+		}
 		if len(mod.Sources) > 2 {
 			return fmt.Errorf("module-source-inventory")
 		}
@@ -280,6 +294,17 @@ func validateManifest(m Manifest) error {
 	}
 	if m.Diagnostics != nil && (m.Diagnostics.Codec != "gopurs/diagnostics-v1" || !validObject(m.Diagnostics.Object)) {
 		return fmt.Errorf("diagnostic-codec")
+	}
+	return nil
+}
+
+// The driver records PBO read owners as newline-delimited module names.
+// Empty input proves no reads; an absent artifact provides no such proof.
+func validateReadOwners(data []byte) error {
+	for _, owner := range strings.Split(string(data), "\n") {
+		if owner != "" && (!validModule(owner) || strings.ContainsAny(owner, " \t\r")) {
+			return fmt.Errorf("module-reads-owner")
+		}
 	}
 	return nil
 }

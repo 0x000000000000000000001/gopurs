@@ -33,11 +33,15 @@ type SessionRequest struct {
 	Entries     []string       `json:"entries"`
 	Diagnostics bool           `json:"diagnostics"`
 	ModuleCache bool           `json:"moduleCache"`
+	Owners      []string       `json:"owners,omitempty"`
+	Parts       []string       `json:"parts,omitempty"`
+	Reused      []ReusedModule `json:"reused,omitempty"`
 }
 
 type SessionResponse struct {
 	Status         string      `json:"status"`
 	Reason         string      `json:"reason"`
+	Root           string      `json:"root"`
 	Stage          string      `json:"stage"`
 	Input          string      `json:"input"`
 	Output         string      `json:"output"`
@@ -46,6 +50,7 @@ type SessionResponse struct {
 	SameTAST       bool        `json:"sameTast"`
 	FFI            []FrozenFFI `json:"ffi"`
 	PackageRequest string      `json:"packageRequest"`
+	PackageResult  string      `json:"packageResult"`
 }
 
 type buildSession struct {
@@ -88,6 +93,7 @@ func sessionOperation(req SessionRequest, result *SessionResponse) error {
 	if err != nil {
 		return err
 	}
+	result.Root = output
 	if req.Operation == "begin" {
 		compiler, err := CompilerInputs()
 		if err != nil {
@@ -109,6 +115,27 @@ func sessionOperation(req SessionRequest, result *SessionResponse) error {
 	if filepath.Dir(stage) != filepath.Join(output, ".gopurs-cache", "stages") || !strings.HasPrefix(filepath.Base(stage), "build-") {
 		return fmt.Errorf("invalid build staging directory")
 	}
+	// Native materialization is frequent (one small contribution per owner).
+	// Its immutable inputs are already bound to this stage; avoid reparsing the
+	// complete source/FFI inventory for every single part. Helper processes have
+	// no cached state and use the ordinary checked protocol below.
+	if req.Operation == "materialize" {
+		lazyPriors.Lock()
+		prior := lazyPriors.values[stage]
+		lazyPriors.Unlock()
+		if prior != nil {
+			state := prior.state
+			if state.Spec.Workspace != workspace || state.Spec.Output != output || prior.manifest.Snapshot.Workspace != workspace || prior.manifest.Snapshot.Output != output {
+				return fmt.Errorf("build workspace changed")
+			}
+			result.Stage, result.Input, result.Output, result.Count = stage, filepath.Join(stage, "input"), filepath.Join(stage, "output"), state.Count
+			if err := materializePrior(stage, state, req.Owners, req.Parts); err != nil {
+				return err
+			}
+			result.Status = "ready"
+			return nil
+		}
+	}
 	data, err := os.ReadFile(filepath.Join(stage, "session.json"))
 	if err != nil {
 		return err
@@ -124,11 +151,25 @@ func sessionOperation(req SessionRequest, result *SessionResponse) error {
 	switch req.Operation {
 	case "plan":
 		return planSession(stage, &state, req.Modules, result)
+	case "materialize":
+		if err := materializePrior(stage, state, req.Owners, req.Parts); err != nil {
+			return err
+		}
+		result.Status = "ready"
+		return nil
 	case "packages":
+		if err := restorePriorSources(stage, state); err != nil {
+			return err
+		}
 		return preparePackageSession(stage, &state, req.Entries, result)
 	case "publish":
 		return publishSession(stage, state, req, result)
 	case "abort":
+		forgetLazyPrior(stage)
+		if os.Getenv("GOPURS_KEEP_STAGE") == "1" {
+			result.Status = "kept"
+			return nil
+		}
 		result.Status = "closed"
 		return os.RemoveAll(stage)
 	default:
@@ -438,6 +479,11 @@ func saveSession(stage string, state buildSession) error {
 }
 
 func publishSession(stage string, state buildSession, req SessionRequest, result *SessionResponse) error {
+	if len(req.Reused) != 0 && !usesGoPackages(state.Spec) {
+		if err := restorePriorSources(stage, state); err != nil {
+			return err
+		}
+	}
 	if !state.Planned {
 		return fmt.Errorf("build inputs were not frozen")
 	}
@@ -489,7 +535,30 @@ func publishSession(stage string, state buildSession, req SessionRequest, result
 	}
 	publication := Request{Schema: Schema, Operation: "publish", Spec: state.Spec, ExpectedKey: state.Snapshot.Key, Outputs: outputs, checkLegacy: true}
 	if req.ModuleCache {
+		reused := map[string]ReusedModule{}
+		if len(req.Reused) != 0 {
+			prior, err := getLazyPrior(stage, state)
+			if err != nil {
+				return err
+			}
+			publication.inherited = prior.manifest
+			publication.inheritedStore = &prior.store
+			for _, memo := range req.Reused {
+				if _, duplicate := reused[memo.Name]; duplicate {
+					return fmt.Errorf("duplicate reused module: %s", memo.Name)
+				}
+				if _, exists := prior.modules[memo.Name]; !exists {
+					return fmt.Errorf("unknown reused module: %s", memo.Name)
+				}
+				reused[memo.Name] = memo
+			}
+		}
 		for _, source := range state.Modules {
+			if memo, ok := reused[source.Name]; ok {
+				publication.Modules = append(publication.Modules, memo.staged())
+				delete(reused, source.Name)
+				continue
+			}
 			var memo ModuleMemo
 			directory := filepath.Join(stage, "modules", source.Name)
 			data, err := os.ReadFile(filepath.Join(directory, "memo.json"))
@@ -503,9 +572,15 @@ func publishSession(stage string, state buildSession, req SessionRequest, result
 				return fmt.Errorf("module memo name mismatch")
 			}
 			mod := StagedModule{Name: memo.Name, Prepared: memo.Prepared, OptimizerEnvironment: memo.OptimizerEnvironment,
-				EmitterEnvironment: memo.EmitterEnvironment, CallerDemands: memo.CallerDemands}
+				EmitterEnvironment: memo.EmitterEnvironment, CallerDemands: memo.CallerDemands, Metadata: memo.Metadata, FFIDigest: memo.FFIDigest}
 			for i, codec := range moduleCodecs {
 				mod.Parts = append(mod.Parts, StagedArtifact{Codec: codec, Source: filepath.Join(directory, fmt.Sprintf("%d.json", i))})
+			}
+			readsPath := filepath.Join(directory, "reads.json")
+			if _, err := os.Stat(readsPath); err == nil {
+				mod.Reads = &StagedArtifact{Codec: moduleReadsCodec, Source: readsPath}
+			} else if !os.IsNotExist(err) {
+				return err
 			}
 			if usesGoPackages(state.Spec) {
 				name := strings.ReplaceAll(source.Name, ".", "_")
@@ -515,6 +590,9 @@ func publishSession(stage string, state buildSession, req SessionRequest, result
 				}
 			}
 			publication.Modules = append(publication.Modules, mod)
+		}
+		if len(reused) != 0 {
+			return fmt.Errorf("reused module outside current inventory")
 		}
 	}
 	if req.Diagnostics {

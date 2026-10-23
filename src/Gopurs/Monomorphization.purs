@@ -1,7 +1,12 @@
 module Gopurs.Monomorphization
-  ( monomorphizeModules
+  ( GlobalAstMap
+  , MonoCache
+  , monomorphize
+  , buildGlobalAstMap
+  , monomorphizeModules
   , monomorphizeModulesWith
   , monomorphizeModulesWithDispatch
+  , monomorphizeModulesWithCache
   , collectForeignForwarders
   ) where
 
@@ -19,15 +24,25 @@ import Data.Newtype (unwrap)
 import Data.Set (Set)
 import Data.Set as Set
 import Data.String as String
-import Data.Tuple (Tuple(..))
+import Data.Tuple (Tuple(..), fst, snd)
 import Gopurs.Monomorphization.ForeignForwarders as ForeignForwarders
 import Gopurs.NativeRecordArgs (candidateToShare)
 import PureScript.Backend.Optimizer.CoreFn (Ann, Bind(..), Binding(..), ExprType(..), Ident(..), Module(..))
 import PureScript.Backend.Optimizer.CoreFn.Usage (invalidateSourceUsageModule)
-import PureScript.Backend.Optimizer.Monomorphize (InstantiationMap, collectInstantiations, monomorphize, transitiveCollect)
+import PureScript.Backend.Optimizer.Monomorphize (InstantiationMap, collectInstantiations, transitiveCollect)
+import PureScript.Backend.Optimizer.Monomorphize as PBOMono
 import PureScript.Backend.Optimizer.NativeMaps (insertStringImpl, stringCompare)
 
 type GlobalAstMap = Map String (Binding Ann)
+
+type MonoCache =
+  { globalAstMap :: GlobalAstMap
+  , instantiations :: InstantiationMap
+  , bodyReads :: Set String
+  }
+
+monomorphize :: GlobalAstMap -> InstantiationMap -> Module Ann -> Module Ann
+monomorphize = PBOMono.monomorphize
 
 -- These are late barriers: available bodies still participate in dictionary
 -- evaluation and transitive discovery. Only intrinsicGlobals is removed from
@@ -78,6 +93,36 @@ monomorphizeModulesWithDispatch
   -> List (Module Ann)
   -> m (List (Module Ann))
 monomorphizeModulesWithDispatch collectTransitive dispatch globalTypes inputModules = do
+  Tuple _ modules <- monomorphizeModulesUsing collectTransitive dispatch monomorphize identity globalTypes inputModules
+  pure modules
+
+monomorphizeModulesWithCache
+  :: forall m
+   . Monad m
+  => (GlobalAstMap -> InstantiationMap -> m InstantiationMap)
+  -> (Array (Unit -> Tuple (Module Ann) (Set String)) -> m (Array (Tuple (Module Ann) (Set String))))
+  -> Map String ExprType
+  -> List (Module Ann)
+  -> m (Tuple MonoCache (List (Module Ann)))
+monomorphizeModulesWithCache collectTransitive dispatch globalTypes inputModules = do
+  Tuple mono rewritten <- monomorphizeModulesUsing collectTransitive dispatch
+    (\ast instantiations -> PBOMono.monomorphizeWithReads ast (PBOMono.specializationLookup instantiations) instantiations)
+    (\mod -> Tuple mod Set.empty)
+    globalTypes inputModules
+  let bodyReads = foldl (\reads result -> Set.union reads (snd result)) Set.empty rewritten
+  pure (Tuple (mono { bodyReads = bodyReads }) (map fst rewritten))
+
+monomorphizeModulesUsing
+  :: forall m result
+   . Monad m
+  => (GlobalAstMap -> InstantiationMap -> m InstantiationMap)
+  -> (Array (Unit -> result) -> m (Array result))
+  -> (GlobalAstMap -> InstantiationMap -> Module Ann -> result)
+  -> (Module Ann -> result)
+  -> Map String ExprType
+  -> List (Module Ann)
+  -> m (Tuple MonoCache (List result))
+monomorphizeModulesUsing collectTransitive dispatch rewrite unchanged globalTypes inputModules = do
   let
     -- Source identities and usage proofs belong to the exported CoreFn.
     -- Specialization copies bindings; analyze the final IR afresh instead.
@@ -99,16 +144,16 @@ monomorphizeModulesWithDispatch collectTransitive dispatch globalTypes inputModu
   transitiveInstantiations <- collectTransitive globalAstMap rawInstantiations
   let instantiations = Map.filterKeys (eligible globalTypes barriers) transitiveInstantiations
   if Map.isEmpty instantiations then
-    pure modules
+    pure (Tuple { globalAstMap, instantiations, bodyReads: Set.empty } (map unchanged modules))
   else do
     -- One independent task per module, in the caller's order. The dispatcher
     -- owns scheduling only; it must return the array in this same order.
     rewritten <- dispatch
       ( map
-          (\coreFnModule _ -> monomorphize globalAstMap instantiations coreFnModule)
+          (\coreFnModule _ -> rewrite globalAstMap instantiations coreFnModule)
           (Array.fromFoldable modules)
       )
-    pure (List.fromFoldable rewritten)
+    pure (Tuple { globalAstMap, instantiations, bodyReads: Set.empty } (List.fromFoldable rewritten))
 
 buildGlobalAstMap :: List (Module Ann) -> GlobalAstMap
 buildGlobalAstMap = foldl addModuleBindings Map.empty

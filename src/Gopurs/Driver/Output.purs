@@ -4,9 +4,12 @@ import Prelude
 
 import Control.Lazy (defer)
 import Data.Argonaut.Core (stringify)
+import Data.Argonaut.Decode (decodeJson)
+import Data.Argonaut.Decode.Error (printJsonDecodeError)
 import Data.Argonaut.Encode (encodeJson)
+import Data.Argonaut.Parser (jsonParser)
 import Data.Array as Array
-import Data.Either (either)
+import Data.Either (Either(..), either)
 import Data.Foldable (for_)
 import Data.Map as Map
 import Data.Maybe (Maybe(..))
@@ -25,11 +28,12 @@ import Gopurs.Driver.Cache (FrozenFFI)
 import Gopurs.FfiBridge as FfiBridge
 import Gopurs.FfiSupport (prepareFfi)
 import Gopurs.FfiTypes (FfiDecl)
-import Gopurs.GoSource (PackageRequest, PackageResult, packageSources, packageFiles)
+import Gopurs.GoSource (PackageRequest, PackageResult, PackageFilesResult, packageSources, packageFiles)
 import Gopurs.GoSymbol (GoSymbol, generated)
 import Gopurs.Runtime (runtimeGoCode)
 import Node.Encoding (Encoding(..))
 import Node.FS.Aff as FS
+import Node.FS.Sync as FSSync
 import PureScript.Backend.Optimizer.Convert (BackendModule)
 import PureScript.Backend.Optimizer.CoreFn (Ann, ExprType, Ident, Module)
 
@@ -153,16 +157,41 @@ packageEntries modules placements = Map.fromFoldable <$> traverse entry modules
       Just value -> pure (Tuple moduleName value."package")
       Nothing -> throwError (error ("Missing generated entry: " <> moduleName))
 
-writePackageFiles :: String -> Array String -> String -> String -> Aff Unit
-writePackageFiles output modules requestPath resultPath = do
+writePackageFiles :: String -> String -> Array String -> String -> String -> String -> Aff Unit
+writePackageFiles output cacheOutput modules requestPath resultPath overlayPath = do
   request <- FS.readTextFile UTF8 requestPath
-  emission <- liftEffect $ try $ packageFiles request
-  result <- either throwError pure emission
+  prepared <- liftEffect (FSSync.exists resultPath)
+  Tuple result resultText <- if prepared then do
+    -- The package session already produced a proven overlay result. Never
+    -- call the full planner again on this path.
+    text <- FS.readTextFile UTF8 resultPath
+    json <- either (throwError <<< error) pure (jsonParser text)
+    decoded <- either (throwError <<< error <<< printJsonDecodeError) pure
+      (decodeJson json :: Either _ PackageFilesResult)
+    pure (Tuple decoded text)
+  else do
+    emission <- liftEffect $ try $ packageFiles request
+    value <- either throwError pure emission
+    pure (Tuple value (stringify (encodeJson value)))
   entries <- packageEntries modules result.entries
   for_ modules \moduleName -> case Map.lookup moduleName entries of
     Just target -> writeEntryPoint output moduleName (renderEntryPoint moduleName (Just { target, initialization: "gopurs/output/purescript/init_all" }))
     Nothing -> throwError (error ("Missing generated entry: " <> moduleName))
-  FS.writeTextFile UTF8 resultPath (stringify (encodeJson result))
+  unless prepared $ FS.writeTextFile UTF8 resultPath resultText
+  let planDir = cacheOutput <> "/.gopurs-cache/go-packages/plan-v1"
+  void $ attempt (FS.mkdir (cacheOutput <> "/.gopurs-cache"))
+  void $ attempt (FS.mkdir (cacheOutput <> "/.gopurs-cache/go-packages"))
+  void $ attempt (FS.mkdir planDir)
+  -- Stage files live below the public cache. Copy/rename is atomic and keeps a
+  -- concurrent writer from exposing a half-written plan. The package result
+  -- itself stays in the stage because publication validates it again.
+  FS.rename requestPath (planDir <> "/request.json")
+  FS.copyFile resultPath (resultPath <> ".plan")
+  FS.rename (resultPath <> ".plan") (planDir <> "/result.json")
+  overlay <- attempt (FS.readTextFile UTF8 overlayPath)
+  case overlay of
+    Right _ -> FS.rename overlayPath (planDir <> "/overlay.json")
+    Left _ -> void $ attempt (FS.unlink (planDir <> "/overlay.json"))
 
 moduleGoName :: String -> String
 moduleGoName = String.replaceAll (Pattern ".") (Replacement "_")

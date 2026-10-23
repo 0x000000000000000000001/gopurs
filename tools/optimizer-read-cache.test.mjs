@@ -48,7 +48,7 @@ test("optimizer reuse checks observed values and absences instead of unrelated p
   const implementation = Map.lookup(qi)(qualified("f"))(backends[0].implementations).value0;
   const key = name => ({ prepared: hash(name), callerDemands: hash("demands/" + name), optimizerEnvironment: hash("prefix/" + name) });
   const keys = insert("Consumer")(key("Consumer"))(Map.singleton("Producer")(key("Producer")));
-  const state = () => ({ sameContext: true, reads: Ref.new(Map.empty)(), restoredPBO: Ref.new(Set.empty)(), priorImplementations: Ref.new(Map.empty)(), currentDigests: Ref.new(Map.empty)(), priorDigests: Ref.new(Map.empty)(), invalidations: Ref.new(Map.empty)(), restored: Ref.new(0)() });
+  const state = () => ({ sameContext: true, reads: Ref.new(Map.empty)(), restoredPBO: Ref.new(Set.empty)(), priorImplementations: Ref.new(Map.empty)(), lazyContributions: false, reused: Ref.new(Map.empty)(), priorWorkers: Ref.new(Map.empty)(), currentDigests: Ref.new(Map.empty)(), priorDigests: Ref.new(Map.empty)(), invalidations: Ref.new(Map.empty)(), restored: Ref.new(0)(), backends: Ref.new(Map.empty)(), ffiDigests: Map.empty, priorFfiDigests: Map.empty, headerSafe: Set.empty });
   const makeCache = stage => ({ ...state(), session: { stage, output: join(stage, "output"), context: hash("compiler/options") }, metadata: hash("metadata"), keys, candidates: Map.empty });
   const fresh = makeCache(join(directory, "fresh"));
   for (const path of ["modules", "output/purescript"]) mkdirSync(join(fresh.session.stage, path), { recursive: true });
@@ -68,12 +68,14 @@ test("optimizer reuse checks observed values and absences instead of unrelated p
   async function lookup(label, settings = {}) {
     const cache = makeCache(join(directory, label));
     cache.sameContext = settings.sameContext ?? true;
+    cache.headerSafe = settings.headerSafe ? Set.singleton("Consumer") : Set.empty;
+    if (settings.memoryHeader) cache.backends = Ref.new(Map.singleton("Consumer")({ ...backends[1], bindings: [] }))();
     cache.keys = insert("Consumer")({ ...key("Consumer"), optimizerEnvironment: hash("changed-prefix"), ...settings.keys })(keys);
     for (const memo of memos) {
       const path = join(cache.session.stage, "prior", memo.name);
       mkdirSync(path, { recursive: true });
       for (let i = 0; i < 4; i++) copyFileSync(join(fresh.session.stage, "modules", memo.name, i + ".json"), join(path, i + ".json"));
-      cache.candidates = insert(memo.name)(memo)(cache.candidates);
+      cache.candidates = insert(memo.name)({ ...memo, metadata: new Just(memo.metadata), ffiDigest: new Just(memo.ffiDigest) })(cache.candidates);
     }
     const view = { implementation: owner => ident => owner === "Producer" && ident === "f" ? (settings.implementation ?? new Convert.ExternFound(implementation)) : (settings.absent ?? Convert.ExternMissing.value),
       directive: () => settings.directive ?? nothing, pending: () => settings.pending ?? false };
@@ -88,6 +90,8 @@ test("optimizer reuse checks observed values and absences instead of unrelated p
     return result;
   }
   assert.ok(await lookup("unrelated") instanceof Just, "an unrelated predecessor invalidated optimization");
+  assert.ok(await lookup("exact-key-body-fallback", { keys: key("Consumer") }) instanceof Just, "an exact key without a header proof must still load its verified body");
+  assert.deepEqual((await lookup("resident-header-body-fallback", { keys: key("Consumer"), memoryHeader: true })).value0.bindings, backends[1].bindings, "a prior resident header cannot replace the complete body without a current header proof");
   assert.ok(await lookup("deferred-then-reused", { pendingFirst: true }) instanceof Just);
   assert.equal(await lookup("missing", { implementation: Convert.ExternMissing.value }), nothing);
   assert.equal(await lookup("pending", { implementation: Convert.ExternPending.value, pending: true }), nothing);
@@ -99,4 +103,6 @@ test("optimizer reuse checks observed values and absences instead of unrelated p
   assert.equal(await lookup("context", { sameContext: false }), nothing);
   assert.equal(await lookup("source", { keys: { prepared: hash("changed-body") } }), nothing);
   assert.equal(await lookup("callers", { keys: { callerDemands: hash("changed-demands") } }), nothing);
+  assert.equal(await lookup("unsafe-header-source", { headerSafe: true, keys: { prepared: hash("changed-body") } }), nothing);
+  assert.equal(await lookup("unsafe-header-callers", { headerSafe: true, keys: { callerDemands: hash("changed-demands") } }), nothing);
 });

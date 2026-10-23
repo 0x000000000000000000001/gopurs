@@ -72,6 +72,9 @@ func TestPackageModuleCandidatesRestoreUnqualifiedSources(t *testing.T) {
 	if len(candidates) != 1 {
 		t.Fatalf("package layout lost module candidates: %s", data)
 	}
+	if candidates[0].Reads != nil {
+		t.Fatal("absent read owners became an empty-read proof")
+	}
 	for kind, want := range sources {
 		actual, err := os.ReadFile(filepath.Join(next, "prior/Main", kind+".go"))
 		if err != nil || !bytes.Equal(actual, []byte(want)) {
@@ -194,19 +197,22 @@ func TestPackageModuleSourcesAreStableAndPublicationIsAtomic(t *testing.T) {
 }
 
 func TestModuleCandidatesArePrivateVerifiedSnapshots(t *testing.T) {
+	t.Setenv(packPublication, "0")
 	spec, result, state := driverFixture(t)
 	if err := planSession(result.Stage, &state, []SourceModule{{Name: "Main"}}, &result); err != nil {
 		t.Fatal(err)
 	}
 	put(t, filepath.Join(result.Output, "gopurs_runtime/runtime.go"), "package gopurs_runtime\n")
 	put(t, filepath.Join(result.Output, "purescript/Main.go"), "package purescript\n")
-	memo := ModuleMemo{Name: "Main", Prepared: Key("prepared"), OptimizerEnvironment: Key("optimizer"), EmitterEnvironment: Key("emitter"), CallerDemands: Key("callers"), Parts: []Artifact{}}
+	memo := ModuleMemo{Name: "Main", Prepared: Key("prepared"), OptimizerEnvironment: Key("optimizer"), EmitterEnvironment: Key("emitter"), CallerDemands: Key("callers"), Metadata: Key("metadata"), FFIDigest: Key("ffi"), Parts: []Artifact{}}
 	data, _ := json.Marshal(memo)
 	directory := filepath.Join(result.Stage, "modules/Main")
 	put(t, filepath.Join(directory, "memo.json"), string(data))
 	for _, name := range []string{"0.json", "1.json", "2.json", "3.json"} {
 		put(t, filepath.Join(directory, name), `["unit"]`)
 	}
+	const readOwners = "Data.Int\nData.Array\n"
+	put(t, filepath.Join(directory, "reads.json"), readOwners)
 	if err := publishSession(result.Stage, state, SessionRequest{ModuleCache: true}, &result); err != nil {
 		t.Fatal(err)
 	}
@@ -235,6 +241,27 @@ func TestModuleCandidatesArePrivateVerifiedSnapshots(t *testing.T) {
 	candidates := index(next)
 	if len(candidates) != 1 || len(candidates[0].Parts) != 4 {
 		t.Fatalf("missing candidate: %+v", candidates)
+	}
+	if candidates[0].Metadata != memo.Metadata || candidates[0].FFIDigest != memo.FFIDigest {
+		t.Fatalf("publication lost the module's generation proofs: %+v", candidates[0])
+	}
+	if candidates[0].Reads == nil || candidates[0].Reads.Codec != moduleReadsCodec {
+		t.Fatalf("publication lost the read-owner proof: %+v", candidates[0])
+	}
+	reads, err := os.ReadFile(filepath.Join(next.Stage, "prior/Main/reads.json"))
+	if err != nil || string(reads) != readOwners {
+		t.Fatalf("frozen read owners: %s %v", reads, err)
+	}
+	readsObject := filepath.Join(spec.Output, ".gopurs-cache/objects", candidates[0].Reads.Object.SHA256)
+	if err := os.Remove(readsObject); err != nil {
+		t.Fatal(err)
+	}
+	if len(index(begin(false))) != 0 {
+		t.Fatal("module with a missing read-owner object remained eligible")
+	}
+	put(t, readsObject, readOwners)
+	if len(index(begin(false))) != 1 {
+		t.Fatal("restored read-owner object did not restore the candidate")
 	}
 	if len(index(begin(true))) != 0 {
 		t.Fatal("forced build reused modules")

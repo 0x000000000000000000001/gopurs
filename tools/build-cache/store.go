@@ -749,6 +749,15 @@ func (s store) stage(req Request, snap Snapshot, previous *Manifest) (Manifest, 
 	packer := newPackWriter(&s)
 	validated := map[Artifact]bool{}
 	priorSources := map[string][]ModuleSource{}
+	inherited := map[string]ModuleMemo{}
+	if req.inherited != nil {
+		if req.inherited.Snapshot.Compiler != snap.Compiler || req.inherited.Snapshot.Workspace != snap.Workspace || req.inherited.Snapshot.Output != snap.Output || req.inherited.Diagnostics != nil {
+			return m, fmt.Errorf("incompatible inherited module snapshot")
+		}
+		for _, memo := range req.inherited.Modules {
+			inherited[memo.Name] = memo
+		}
+	}
 	if previous != nil {
 		for _, part := range artifacts(*previous) {
 			validated[part] = true
@@ -778,7 +787,35 @@ func (s store) stage(req Request, snap Snapshot, previous *Manifest) (Manifest, 
 	sort.Slice(m.Outputs, func(i, j int) bool { return m.Outputs[i].Path < m.Outputs[j].Path })
 	if err := boundedEach(len(req.Modules), func(i int) error {
 		mod := req.Modules[i]
-		memo := ModuleMemo{Name: mod.Name, Prepared: mod.Prepared, OptimizerEnvironment: mod.OptimizerEnvironment, EmitterEnvironment: mod.EmitterEnvironment, CallerDemands: mod.CallerDemands, Parts: []Artifact{}}
+		if mod.Inherited {
+			prior, ok := inherited[mod.Name]
+			if !ok || len(mod.Parts) != 0 || mod.Reads != nil || len(mod.Sources) != 0 {
+				return fmt.Errorf("invalid inherited module: %s", mod.Name)
+			}
+			for _, part := range artifacts(Manifest{Modules: []ModuleMemo{prior}}) {
+				if _, err := s.validateObject(part.Object); err != nil {
+					// A concurrent publisher may have retired this generation.
+					// Restore only from the pinned, hash-checked snapshot; a
+					// corrupt still-indexed pack is an error, not a cache hit.
+					_, indexed := s.packs.entries[part.Object.SHA256]
+					if req.inheritedStore == nil || indexed {
+						return fmt.Errorf("inherited module %s: %w", mod.Name, err)
+					}
+					data, readErr := req.inheritedStore.validateObject(part.Object)
+					if readErr != nil {
+						return fmt.Errorf("inherited module %s: %w", mod.Name, readErr)
+					}
+					if _, err := packer.put(data); err != nil {
+						return err
+					}
+				}
+			}
+			prior.Prepared, prior.OptimizerEnvironment, prior.CallerDemands = mod.Prepared, mod.OptimizerEnvironment, mod.CallerDemands
+			prior.EmitterEnvironment, prior.Metadata, prior.FFIDigest = mod.EmitterEnvironment, mod.Metadata, mod.FFIDigest
+			m.Modules[i] = prior
+			return nil
+		}
+		memo := ModuleMemo{Name: mod.Name, Prepared: mod.Prepared, OptimizerEnvironment: mod.OptimizerEnvironment, EmitterEnvironment: mod.EmitterEnvironment, CallerDemands: mod.CallerDemands, Metadata: mod.Metadata, FFIDigest: mod.FFIDigest, Parts: []Artifact{}}
 		for _, part := range mod.Parts {
 			a, err := s.stageArtifact(req.Spec.Workspace, part, validated, packer)
 			if err != nil {
@@ -792,6 +829,13 @@ func (s store) stage(req Request, snap Snapshot, previous *Manifest) (Manifest, 
 				return err
 			}
 			memo.Sources = append(memo.Sources, a)
+		}
+		if mod.Reads != nil {
+			a, err := s.stageArtifact(req.Spec.Workspace, *mod.Reads, validated, packer)
+			if err != nil {
+				return err
+			}
+			memo.Reads = &a
 		}
 		m.Modules[i] = memo
 		return nil
@@ -850,7 +894,11 @@ func (s store) stageArtifact(root string, part StagedArtifact, validated map[Art
 	}
 	identity := Artifact{Codec: part.Codec, Object: Object{SHA256: digest(data), Bytes: int64(len(data))}}
 	if !validated[identity] {
-		if err := validateWire(data); err != nil {
+		validate := validateWire
+		if part.Codec == moduleReadsCodec {
+			validate = validateReadOwners
+		}
+		if err := validate(data); err != nil {
 			return Artifact{}, err
 		}
 	}
@@ -862,6 +910,9 @@ func artifacts(m Manifest) []Artifact {
 	parts := []Artifact{}
 	for _, mod := range m.Modules {
 		parts = append(parts, mod.Parts...)
+		if mod.Reads != nil {
+			parts = append(parts, *mod.Reads)
+		}
 		for _, source := range mod.Sources {
 			parts = append(parts, Artifact{Codec: source.Codec, Object: source.Object})
 		}

@@ -142,12 +142,20 @@ func (w *packWriter) put(data []byte) (Object, error) {
 	if !w.enabled {
 		return w.store.putStagedObject(data)
 	}
+	repairPacked := false
 	if w.store.packs != nil {
-		if _, ok := w.store.packs.entries[obj.SHA256]; ok {
-			return obj, nil
+		if entry, ok := w.store.packs.entries[obj.SHA256]; ok {
+			// A lazy read can fail after lookup returned inputs-changed. The
+			// full fallback must repair that indexed object from fresh bytes.
+			// Keep the index immutable while producers run in parallel; flush
+			// replaces the entry after every producer has joined.
+			if _, err := w.store.readPackedObject(entry, obj); err == nil {
+				return obj, nil
+			}
+			repairPacked = true
 		}
 	}
-	if fileMatches(filepath.Join(w.store.cache, "objects", obj.SHA256), obj) {
+	if !repairPacked && fileMatches(filepath.Join(w.store.cache, "objects", obj.SHA256), obj) {
 		return obj, nil
 	}
 	w.mu.Lock()
@@ -194,6 +202,14 @@ func (w *packWriter) flush() error {
 			if err := atomicReplaceFile(path, data, 0600); err != nil {
 				return err
 			}
+			// An existing handle still names the replaced inode. No producer
+			// runs during flush; subsequent reads must open the repaired file.
+			w.store.packs.mu.Lock()
+			if file := w.store.packs.files[pack]; file != nil {
+				_ = file.Close()
+				delete(w.store.packs.files, pack)
+			}
+			w.store.packs.mu.Unlock()
 		}
 		for _, object := range group.objects {
 			w.store.packs.entries[object.sha] = packEntry{Pack: pack, Offset: object.offset, Bytes: int64(len(object.data))}

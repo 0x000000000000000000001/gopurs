@@ -15,9 +15,13 @@ export function resolveBuildCacheHelper() {
     throw new Error(`Build cache locking is unsupported on ${process.platform}`);
   }
   const hash = createHash("sha256");
-  for (const name of ["go.mod", "contract.go", "store.go", "session.go", "compiler.go", "modules.go", "packages.go", "packs.go", "main.go"]) {
+  for (const name of ["go.mod", "contract.go", "store.go", "session.go", "compiler.go", "modules.go", "packages.go", "overlay.go", "overlay_sections.go", "packs.go", "main.go"]) {
     const content = readFileSync(join(sources, name));
     hash.update(`${name}:${content.length}:`).update(content);
+  }
+  for (const name of ["go.mod", "manifest.go", "overlay.go", "qualify.go", "rewrite.go", "partition.go", "literals.go"]) {
+    const content = readFileSync(join(tools, "c1c", name));
+    hash.update(`c1c/${name}:${content.length}:`).update(content);
   }
   const directory = join(tools, "../node_modules/.cache/gopurs-build-cache");
   const binary = join(directory, `${process.platform}-${process.arch}-${hash.digest("hex")}`);

@@ -1,6 +1,6 @@
 # Gopurs — état et plan actif
 
-**Mise à jour : 20 octobre 2026.** Le plan v3 (lots 00–06) est clos et la suite
+**Mise à jour : 21 octobre 2026.** Le plan v3 (lots 00–06) est clos et la suite
 G00–G06 est livrée. P00 est terminé, C01 et B2 sont rejetés. Le chantier C
 (architecture incrémentale et découpage Go SCC-aware) est ouvert après
 l'exploration de granularité. L'historique complet des lots, seuils, échecs et
@@ -40,8 +40,11 @@ du backend.
 | Granularité Go / C | **Exploration privée terminée**, non installée |
 | C1 — découpage SCC-aware | **Prototype échoué**, refactor codegen requis |
 | C1b — refactor SCC codegen | **Échoué** : topo 46,7 s, noinline 25,6 s |
-| C1c — bridge ABI/export | **Scalaires + type validés** : FFI 1,02 s |
-| C2 — backend résident | **C2-3 mesuré**, 1 module change |
+| C1c — bridge ABI/export | **Intégré** dans le cache Go ; overlay par défaut via le lanceur natif |
+| C2 — backend résident | Mesures historiques ; chemin corrigé et daemon conservés |
+| C2-5 — Go incrémental | **Overlay 3.5 branché**, Go packages 0,004–0,021 s |
+| C2-6 — daemon one-shot | Vérifié byte-exact avec 1 et 8 workers, y compris après erreur |
+| C2-7 — one-shot persistant | **16,970 s médiane** sur édition littérale centrale ; 3 paires byte-exactes, cible ≤20 s atteinte |
 
 Références : [bilan P00](docs/build-preparation-baseline.md),
 [étude C01](docs/build-preparation-compact.md),
@@ -55,6 +58,8 @@ Références : [bilan P00](docs/build-preparation-baseline.md),
 [granularité et architecture](docs/build-granularity-architecture.md),
 [conception C1b](docs/build-c1b-package-graph.md),
 [conception C2](docs/build-c2-resident.md),
+[plan C2-5 Go](docs/build-c2-go-packages.md),
+[build one-shot persistant](docs/build-c2-persistent.md),
 [mesures G06](docs/build-go-measurements.md).
 
 ### Ce que les mesures ont établi
@@ -239,17 +244,46 @@ un build court universel.
   atteinte. Ping reste à 1,16 s. **C1b rejeté**, le plancher FFI reste
   structurel. Voir [C1b](docs/build-c1b-package-graph.md).
 - [x] **C1c — bridge ABI/export (preuve de concept).** Trois fonctions
-  scalaires et le type `IntervalId` validés : `p_types`, champs exportés,
-  alias public, implémentation séparée. Go base 52,96 s, **feuille 1,02 s**,
-  `SetInterval`/`ClearInterval` OK. Reste : automatisation de l’extraction,
-  init/valeurs globales, autres types. Voir
-  [C1b/C1c](docs/build-c1b-package-graph.md).
-- [~] **C2 — backend résident/incrémental.** C2-1/C2-2 codés. C2-3 mesuré :
-  base/feuille **2 703 modules préparés identiques**, seul
-  `Inter.Cli.Ping.Main` change. Le cache par module est viable ; il reste à
-  écrire `prepareModulesDelta`. Voir [C2](docs/build-c2-resident.md). Cible :
-  backend feuille ≤20–25 s, puis ≤15 s avec B1/B3. Fallback complet au moindre
-  doute.
+  scalaires et le type `IntervalId` validés manuellement. Composants
+  automatiques dans `tools/c1c` : manifeste ABI, `OverlaySource`,
+  qualification par table symbole→paquet, réécriture des références, test
+  end-to-end `go run`. **Branchés opt-in** dans le pipeline Go.
+  Voir [C2-5](docs/build-c2-go-packages.md).
+- [x] **C2-3 — delta de préparation historique.** Base 106,652 s,
+  feuille **47,372 s**, préparation sautée ; **11 136 fichiers identiques** au
+  build one-shot forcé sur le cas testé. Le skip source/interface de cette
+  version est remplacé par la preuve de préparation C2-7.
+- [x] **C2-4 — clés/PBO incrémentaux historiques.** Delta monolithique : préparation
+  **1,807 s**, clés **0,731 s**, PBO **4,899 s**, backend feuille **14,734 s**,
+  one-shot forcé 60,682 s, **11 136 fichiers identiques**.
+- [~] **C2-5 — Go packages.** Layout packages activé puis overlay C1c branché
+  derrière `GOPURS_GO_PACKAGE_OVERLAY=1` : `Go packages` passe de **11,5 s** à
+  **0,003–0,021 s** ; backend overlay **17,323–21,515 s** (médiane 19,773 s)
+  sur les éditions Ping, sorties identiques à l'oracle full, `go build`
+  0,8–2,1 s. Cache de plan public, signatures réutilisées, fallback complet sur
+  type/méthode/init/FFI/import/référence. **Flag opt-in ; pas de type-check
+  overlay avant publication.**
+  Voir [C2-5](docs/build-c2-go-packages.md).
+- [~] **C2-6 — daemon one-shot (sans watch).** Prototype `GOPURS_DAEMON=1`
+  dans `bin/gopurs` : démarrage automatique, jeton/statut fichier, redémarrage
+  sur changement de binaire/options. Mesures historiques : premier build
+  91,9 s, puis **24,9 / 21,2 /
+  20,7 s** backend Ping, hit no-op 1,15 s, frontend no-op 2,05 s. Non validé :
+  concurrence, `b -c`, Rust.
+  Voir [C2-6](docs/build-c2-resident.md).
+- [x] **C2-7 — one-shot persistant, cas central borné.** Préparation compacte
+  prouvée, contributions PBO à la demande, clés exactes ou fermeture des lectures,
+  overlay conservant les cinq bundles de `DecodeJsonWith`. Trois paires natives
+  finales : **16,970 / 17,293 / 16,946 s**, médiane **16,970 s** contre
+  **92,934 s** full. Les 2 704 modules et 27 sorties de packages sont
+  byte-exacts pour chaque paire. Frontend et Go exclus ; cache amorcé.
+  Le test porte sur une édition littérale de corps : changement structurel,
+  de type ou de spécialisation hors preuve revient à la préparation complète.
+  Packs corrompus rejetés puis réparés lors du full ; suites ciblées et Go
+  `-race` vertes. Daemon séquentiel vérifié avec 1 et 8 workers, `Int → String
+  → Int`, édition littérale et échec récupérable. Activé par défaut dans le
+  lanceur Go natif pour permettre `b` sans exports ; autres hôtes opt-in.
+  Voir [C2-7](docs/build-c2-persistent.md).
 - [ ] **C3 — froid, conditionnel.** Le froid actuel (backend ~77 s + Go 46,7 s)
   ne peut pas viser 60 s par un cache chaud. À ouvrir après C1/C2 avec un budget
   séparé, pas comme sous-produit.
@@ -286,9 +320,8 @@ chemin ; B3 reste partiel et exige les preuves P03/P04.
 
 ## Worktrees de travail
 
-- **gopurs** : branche `c1b` créée depuis `edge` (HEAD `944f0e9`), sans
-  worktree séparé. Les changements B3/docs non commités restent dans la
-  worktree `gopurs/gopurs` sur `edge`.
+- **gopurs** : worktree principale sur branche **`c2`** ; `c1b` existe aussi.
+  Changements C2/C1c/docs non commités. Aucun commit de l'assistant.
 - **b8x** : worktree `/Users/0x1/Documents/htdocs/b8x-c1b`, branche `c1b`,
   depuis `master` `67b6799f`. La worktree principale `b8x` garde les
   changements utilisateur et n'est pas utilisée par les essais.
@@ -304,12 +337,38 @@ chemin ; B3 reste partiel et exige les preuves P03/P04.
 
 1. **A est clos** : pack par défaut, froid installé 76,163 s, hit 0,914 s,
    feuille 45,421 s, sorties exactes.
-2. **C0 est terminé** : meilleur cas Go 2,67 s (Ping, density 1024, `-p 14`),
-   mais FFI à 32,9 s, isolation FFI impossible (cycle), backend 43,7 s.
-3. **C1c est validé** sur scalaires et type (`IntervalId`, Go feuille 1,02 s).
-   La prochaine priorité est **C2** : backend résident, cible ≤25 s. C1c doit
-   encore être automatisé pour les types/init, mais Go n’est plus le mur.
-4. **B1/B2/B3 sont des composants de C2** ; B2 reste rejeté dans l'ancien
-   chemin, B3 reste partiel et attend P03/P04.
-5. Garder Go séquentiel, le stress multi-éditions et les trois jeux de sorties
+2. **C2-4 historique** : backend monolithique **14,734 s** sur le cas testé ;
+   la preuve actuelle et les mesures one-shot sont celles de C2-7.
+3. **C2-5 est branché** (désormais par défaut via le lanceur Go natif) : overlay C1c dans
+   `preparePackageSession`/`writePackageFiles`, entrées et imports réécrits,
+   fallback full. Go packages **0,003–0,021 s**, backend **17,323–21,515 s**
+   (médiane 19,773 s), sorties Ping identiques au full.
+4. **C2-7 central validé** : médiane **16,970 s** après édition littérale,
+   trois paires byte-exactes. Extension aux changements structurels/types/FFI
+   et campagne quatre hôtes restent hors de cette validation. À la demande de
+   l'utilisateur, le lanceur Go natif active désormais le chemin validé par
+   défaut ; les autres hôtes gardent leur activation explicite.
+5. **HANDOFF détaillé** : branche `c2`, binaire final mesuré
+   `457bfcf3…` (C2-7 compact + lazy + overlay central, réparation des packs).
+   Évidence : `.gopurs-evidence/c2-7-reprise-20261023/central-validated-pairs/`
+   depuis `htdocs` ; détails et commande dans `docs/build-c2-persistent.md`.
+   Ancien binaire `33f8ba03…` ; daemon historique `cebd9c75…` ; overlay
+   build 7 `102f3d3e…` / build 8 `0dbbfcf4…`. Aucun commit. Le code C2/C1c
+   n'est pas installé dans l'arbre P00. Ne pas merger dans `edge` avant
+   validation.
+   - Fichiers C2 : `src/Gopurs/Driver.purs`,
+     `src/Gopurs/Driver/Build.purs`, `src/Gopurs/Driver/Prepare.purs`,
+     `src/Gopurs/Driver/Output.purs`, `src/Gopurs/Cache/Modules.purs`,
+     `src/Gopurs/Monomorphization.purs`, `src/Gopurs/Resident.purs`.
+   - Fichiers Go : `tools/build-cache/packages.go` (cache de plan, signatures),
+     `tools/build-cache/packages_test.go`, `tools/build-cache/session.go`
+     (`GOPURS_KEEP_STAGE`).
+   - C1c : `tools/c1c` (manifeste, overlay, réécriture, tests E2E).
+   - Docs : `docs/build-c2-resident.md`, `docs/build-c2-go-packages.md`.
+   - Tests : `go test -race ./...` dans `tools/build-cache` et `tools/c1c`.
+   - Go packages exige le bon symlink `app/gopurs` vers
+     `p00-20261019/tree/gopurs` ; sinon `Promise_Internal_NewPromise` échoue.
+   - Preuves : `.gopurs-evidence/a-20261020-c2-*`, `a-20261021-*`,
+     `a-20261020-partition`.
+6. Garder Go séquentiel, le stress multi-éditions et les trois jeux de sorties
    froides comme contrôles de régression du pack.
