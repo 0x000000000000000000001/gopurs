@@ -6,6 +6,7 @@ import Data.Array as Array
 import Data.Int as Int
 import Data.Maybe (Maybe(..), fromMaybe)
 import Effect (Effect)
+import Effect.Exception (throw)
 import Gopurs.Emission (EmissionOptions)
 import Node.Process as Process
 import PureScript.Backend.Optimizer.App (parseCLIArgs)
@@ -16,6 +17,7 @@ type CompilerConfig =
   { mainModule :: Maybe String
   , ffiDirectory :: Maybe String
   , rewriteLimit :: Int
+  , devMode :: Boolean
   , prepareJobs :: Int
   , optimizerJobs :: Int
   , emission :: EmissionOptions
@@ -29,6 +31,9 @@ readConfig :: Effect CompilerConfig
 readConfig = do
   argv <- Process.argv
   let args = parseCLIArgs argv
+  let devMode = Array.elem "--dev" argv
+  when (devMode && Array.elem "--release" argv) $
+    throw "Choose either --dev or --release, not both."
   prepareJobs <- readJobs "GOPURS_PREPARE_JOBS" 2
   emitJobs <- readJobs "GOPURS_EMIT_JOBS" 8
   optimizerJobs <- readJobs "GOPURS_PBO_JOBS" 1
@@ -41,6 +46,7 @@ readConfig = do
     { mainModule: args.mbMainModule
     , ffiDirectory: args.mbFfiDir
     , rewriteLimit: fromMaybe 10_000 args.mbRewriteLimit
+    , devMode
     -- Preparation partitions its own tasks and caps concurrency at eight.
     , prepareJobs: max 1 (min 8 prepareJobs)
     , optimizerJobs: boundedJobs optimizerJobs

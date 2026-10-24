@@ -489,7 +489,10 @@ restent relatifs. Le compilateur préconstruit est partagé par lien et les scri
 s'exécutent dans les copies, avec des temporaires privés. Les runners frères
 nettoient uniquement leur propre checkout lors d'une invocation directe.
 Les options de bilan, reprise et conservation ci-dessus s'appliquent aussi à
-`bin/modtest` ; son log par cible est `logs/test.log`.
+`bin/modtest` ; son log par cible est `logs/test.log`. Les sorties stdout/stderr
+de chaque cible sont diffusées pendant son exécution et conservées dans ce log,
+sans être rejouées à la fin. Avec `-d` ou `--dev`, le lanceur privé annonce aussi
+le mode Dev à chaque appel du compilateur par une bibliothèque.
 
 Dans `spec`, l'environnement d'intégration copie le template en lecture seule,
 ignore ses éventuels `node_modules`/`output`, puis remplace `SPEC_REPO_PATH`.
@@ -505,6 +508,19 @@ graine fixe et compare les sorties JavaScript/Go. Les trois `pending` de `spec`
 sont des fixtures intentionnelles ; leurs contrats d'exécution et d'affichage
 sont vérifiés dans le parcours standard. Voir le
 [lot 07 du plan v2](#plan-v2--lot-07--couverture-des-bibliothèques-6-octobre-2026).
+
+`tools/dev-loop-state.test.mjs` protège le coût des callbacks génériques de
+`tailRec` : une liste croît dans un record pendant 100 000 étapes en Dev, sans
+spécialisation. Le test mesure les allocations à 1 000 puis 2 000 étapes avant
+le grand cas, vérifie longueur et somme, puis compare le programme complet à
+JavaScript. Une croissance quadratique échoue sur les petits cas, sans attendre
+les 100 000 étapes. Les deux hôtes JS et natif sont couverts.
+
+`tools/recursive-function-result.test.mjs` vérifie qu'une recherche récursive
+peut renvoyer une fonction avant de recevoir ses derniers arguments. Les cas
+de comparaison, d'égalité et d'affichage s'exécutent en Release et en Dev et
+doivent produire la même sortie que JavaScript. Le type de retour du worker
+conserve les arguments non consommés par ses paramètres réels.
 
 ## Plan v3 — lot 00 : référence du cycle b8x, 10 octobre 2026
 

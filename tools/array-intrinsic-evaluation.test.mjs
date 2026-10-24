@@ -23,7 +23,7 @@ const context = () => ({
     metadata, codegenStateRef: Ref.new({ declarations: [], globalId: 0, reboxPairs: Sets.empty })(),
     depth: 2, modNameStr: 'Probe', recVars: [], moduleFunctions: Maps.empty, bound: Maps.empty,
     tcoIdent: Maybe.Nothing.value, loopCtx: [], options: { isTail: false, inEffectBlock: false },
-    mbExpectedExprType: Maybe.Nothing.value,
+    mbExpectedExprType: Maybe.Nothing.value, mbExpectedGoType: Maybe.Nothing.value,
 });
 const variable = (name, module = 'Probe') => new Tco.TcoExpr(null,
     new Syntax.Var(new Core.Qualified(new Maybe.Just(module), name)));

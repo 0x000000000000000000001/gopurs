@@ -103,6 +103,7 @@ type ExprContext =
   , loopCtx :: LoopContext
   , options :: ExprOptions
   , mbExpectedExprType :: Maybe ExprType
+  , mbExpectedGoType :: Maybe GoType
   }
 
 type TranslateExpr = ExprContext -> Int -> TcoExpr -> ExprResult
@@ -122,4 +123,5 @@ childContext context expected = context
   , loopCtx = []
   , options = { isTail: false, inEffectBlock: false }
   , mbExpectedExprType = expected
+  , mbExpectedGoType = Nothing
   }

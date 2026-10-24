@@ -158,7 +158,7 @@ packageEntries modules placements = Map.fromFoldable <$> traverse entry modules
       Nothing -> throwError (error ("Missing generated entry: " <> moduleName))
 
 writePackageFiles :: String -> String -> Array String -> String -> String -> String -> Aff Unit
-writePackageFiles output cacheOutput modules requestPath resultPath overlayPath = do
+writePackageFiles output cacheRoot modules requestPath resultPath overlayPath = do
   request <- FS.readTextFile UTF8 requestPath
   prepared <- liftEffect (FSSync.exists resultPath)
   Tuple result resultText <- if prepared then do
@@ -178,9 +178,9 @@ writePackageFiles output cacheOutput modules requestPath resultPath overlayPath 
     Just target -> writeEntryPoint output moduleName (renderEntryPoint moduleName (Just { target, initialization: "gopurs/output/purescript/init_all" }))
     Nothing -> throwError (error ("Missing generated entry: " <> moduleName))
   unless prepared $ FS.writeTextFile UTF8 resultPath resultText
-  let planDir = cacheOutput <> "/.gopurs-cache/go-packages/plan-v1"
-  void $ attempt (FS.mkdir (cacheOutput <> "/.gopurs-cache"))
-  void $ attempt (FS.mkdir (cacheOutput <> "/.gopurs-cache/go-packages"))
+  let planDir = cacheRoot <> "/go-packages/plan-v1"
+  void $ attempt (FS.mkdir cacheRoot)
+  void $ attempt (FS.mkdir (cacheRoot <> "/go-packages"))
   void $ attempt (FS.mkdir planDir)
   -- Stage files live below the public cache. Copy/rename is atomic and keeps a
   -- concurrent writer from exposing a half-written plan. The package result

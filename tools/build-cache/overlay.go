@@ -37,8 +37,8 @@ func packageOverlayEnabled() bool {
 	return os.Getenv("GOPURS_GO_PACKAGE_OVERLAY") == "1"
 }
 
-func readOverlayRecord(output string) *packageOverlayRecord {
-	data, err := os.ReadFile(filepath.Join(output, ".gopurs-cache", "go-packages", "plan-v1", "overlay.json"))
+func readOverlayRecord(cache string) *packageOverlayRecord {
+	data, err := os.ReadFile(filepath.Join(cache, "go-packages", "plan-v1", "overlay.json"))
 	if err != nil {
 		return nil
 	}
@@ -728,7 +728,7 @@ func preparePackageOverlay(stage string, state *buildSession, entries []string, 
 
 func preparePackageOverlaySnapshot(stage string, state *buildSession, entries []string, request *packageFileRequest, snapshot *packagePlanSnapshot) (*packageOverlayRecord, string, error) {
 	if snapshot == nil {
-		planDir := filepath.Join(state.Spec.Output, ".gopurs-cache", "go-packages", "plan-v1")
+		planDir := filepath.Join(cacheDirectory(state.Spec), "go-packages", "plan-v1")
 		previous, err := readPackageRequest(filepath.Join(planDir, "request.json"))
 		if err != nil {
 			return nil, "missing previous request", nil
@@ -752,7 +752,7 @@ func preparePackageOverlaySnapshot(stage string, state *buildSession, entries []
 		return nil, "changed source is not a generated module", nil
 	}
 	module := changed.Module
-	overlay := readOverlayRecord(state.Spec.Output)
+	overlay := readOverlayRecord(cacheDirectory(state.Spec))
 	if overlay != nil {
 		if overlay.Module != module || overlay.SourcePath != changed.Path || overlay.PlanHash != previousResult.PlanHash {
 			return nil, "previous overlay does not cover this edit", nil

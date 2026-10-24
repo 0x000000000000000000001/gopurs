@@ -54,7 +54,7 @@ export function prepareFixture(root, workspace, file, index, packages) {
 // Library runners assume sibling-relative paths and can clean their siblings.
 // Give each target its own complete source family; never symlink a library back
 // to a live checkout. Relative config symlinks stay relative inside the copy.
-export function prepareModule(root, directory, name) {
+export function prepareModule(root, directory, name, { dev = false } = {}) {
   const packages = join(directory, "packages");
   mkdirSync(packages);
   const generated = new Set([".git", ".spago", ".cache", ".purmeta", "node_modules", "output", ".stack-work", ".pulp-cache"]);
@@ -68,6 +68,20 @@ export function prepareModule(root, directory, name) {
     });
   }
   // The compiler is consumed read-only; -c is handled once by the outer runner.
-  symlinkSync(root, join(packages, "gopurs"), "dir");
+  // Library scripts call ../gopurs/bin/gopurs themselves. A private launcher
+  // supplies the selected profile without changing each library's arguments.
+  const compiler = join(packages, "gopurs");
+  if (!dev) symlinkSync(root, compiler, "dir");
+  else {
+    mkdirSync(join(compiler, "bin"), { recursive: true });
+    for (const entry of readdirSync(root)) {
+      if (entry !== "bin") symlinkSync(join(root, entry), join(compiler, entry));
+    }
+    for (const entry of readdirSync(join(root, "bin"))) {
+      if (entry !== "gopurs") symlinkSync(join(root, "bin", entry), join(compiler, "bin", entry));
+    }
+    const launcher = join(root, "bin/gopurs").replace(/'/g, "'\\''");
+    writeFileSync(join(compiler, "bin/gopurs"), `#!/usr/bin/env bash\necho '[gopurs] Build mode: DEV (--dev).' >&2\nexec '${launcher}' --dev "$@"\n`, { mode: 0o755 });
+  }
   return join(packages, name);
 }

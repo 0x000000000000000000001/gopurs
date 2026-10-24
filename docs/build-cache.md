@@ -32,6 +32,20 @@ avec les mêmes options d'entrée/FFI à chaque invocation, comme dans le
 habituel valide le cache Go avant de lancer le binaire ; ses ressources de
 référence sont **GOMAXPROCS=2 / -p 1 / GOMEMLIMIT=12GiB**.
 
+Les profils défaut/`--release` conservent le namespace historique
+`output/.gopurs-cache`. `--dev` utilise `output/.gopurs-cache/profiles/dev` et
+inclut `optimization-profile=dev-v4` dans les clés du build et des modules.
+Cette version ne génère aucune spécialisation directe ou transitive : elle
+conserve les fonctions génériques et les layouts typés du TAST, puis mène
+l'optimiseur jusqu'à convergence avec moins d'inlining importé. Les passes de
+génération Go, les workers natifs ordinaires et la récursion terminale restent
+actifs. Les autres politiques expérimentales, y compris `dev-v5`, restent
+reconnues dans le namespace dev, mais leurs résultats ne sont pas réutilisés
+par cette version.
+L'identité du binaire reste également vérifiée.
+Les profils partagent le verrou de publication et le journal de propriété des
+sorties publiques ; une transition restaure les sorties du profil sélectionné.
+
 ### Sélectionner le découpage Go G06
 
 Le layout mesuré utilise des ancres **1/8192**, avec un fichier ordinaire regroupé

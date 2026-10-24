@@ -1,4 +1,4 @@
-module Gopurs.Driver.Prepare.Persistent (Projected, PreloadedProjection, preloadProjection, preparePersistent, preparePersistentWithProjection, publishPersistent) where
+module Gopurs.Driver.Prepare.Persistent (Projected, PreloadedProjection, preloadProjection, preparePersistent, preparePersistentForProfile, preparePersistentWithProjection, preparePersistentWithProjectionForProfile, publishPersistent) where
 
 import Prelude
 import Data.Argonaut.Core (stringify)
@@ -28,7 +28,7 @@ import Gopurs.Cache.LookupTable as LookupTable
 import Gopurs.ClassMetadata (addClassDataDeclarations)
 import Gopurs.Driver.Cache (Session)
 import Gopurs.Driver.Cache as Cache
-import Gopurs.Driver.Prepare (PreparedCache, prepareModulesWithCache, selectMainModules)
+import Gopurs.Driver.Prepare (PreparedCache, prepareModulesWithCacheForProfile, selectMainModules)
 import Gopurs.Driver.Manifest (moduleInterface)
 import Gopurs.Driver.Prepare.Proof as Proof
 import Gopurs.Driver.Prepare.Projection (Projection)
@@ -46,7 +46,7 @@ import PureScript.Backend.Optimizer.Monomorphize (InstantiationMap, monomorphize
 import PureScript.Backend.Optimizer.Semantics (InlineDirectiveMap)
 
 directory :: String -> String
-directory root = root <> "/.gopurs-cache/preparation-literals-v1"
+directory root = root <> "/preparation-literals-v1"
 
 proofPath :: String -> String
 proofPath root = directory root <> "/proof.json"
@@ -127,46 +127,52 @@ readSource session hashes name = case Map.lookup name hashes of
 -- A preload is private data, never a reusable proof on its own. Keep the exact
 -- envelope identity so another publication cannot silently re-anchor it.
 type PreloadedProjection =
-  { root :: String, context :: String, count :: Int, proofHash :: String
+  { root :: String, cacheRoot :: String, context :: String, count :: Int, proofHash :: String
   , projected :: Projected
   }
 
 preloadProjection :: Int -> InlineDirectiveMap -> String -> Aff (Maybe PreloadedProjection)
 preloadProjection jobs directives encodedSeed = case hush (jsonParser encodedSeed) >>= hush <<< decodeJson of
   Nothing -> pure Nothing
-  Just (seed :: { root :: String, context :: String }) -> do
-    captured <- readCapturedProof seed.root
+  Just (seed :: { root :: String, cacheRoot :: String, context :: String }) -> do
+    captured <- readCapturedProof seed.cacheRoot
     directivesKey <- liftEffect (Wire.hash <$> Wire.write directives)
     case captured of
       Just saved | saved.value.schema == 5 && saved.value.context == seed.context
         && saved.value.directives == directivesKey -> do
           let count = Array.length saved.value.sources
-          result <- readProjection { root: seed.root, count } jobs saved.value.projection saved.value.capsule
-          pure (map (\projected -> { root: seed.root, context: seed.context, count, proofHash: saved.hash, projected }) result)
+          result <- readProjection { cacheRoot: seed.cacheRoot, count } jobs saved.value.projection saved.value.capsule
+          pure (map (\projected -> { root: seed.root, cacheRoot: seed.cacheRoot, context: seed.context, count, proofHash: saved.hash, projected }) result)
       _ -> pure Nothing
 
 preparePersistent :: Session -> Int -> Maybe String -> InlineDirectiveMap -> Aff PreparedCache
 preparePersistent = preparePersistentWithProjection Nothing
 
+preparePersistentForProfile :: Boolean -> Session -> Int -> Maybe String -> InlineDirectiveMap -> Aff PreparedCache
+preparePersistentForProfile devMode = preparePersistentWithProjectionForProfile devMode Nothing
+
 preparePersistentWithProjection :: Maybe PreloadedProjection -> Session -> Int -> Maybe String -> InlineDirectiveMap -> Aff PreparedCache
-preparePersistentWithProjection preloaded session jobs mainModule directives = do
+preparePersistentWithProjection = preparePersistentWithProjectionForProfile false
+
+preparePersistentWithProjectionForProfile :: Boolean -> Maybe PreloadedProjection -> Session -> Int -> Maybe String -> InlineDirectiveMap -> Aff PreparedCache
+preparePersistentWithProjectionForProfile devMode preloaded session jobs mainModule directives = do
   candidate <- Metrics.measure "compact preparation probe" \_ -> case preloaded of
-    Nothing -> probe session jobs mainModule directives
-    Just _ -> probeWithProjection preloaded session jobs mainModule directives
+    Nothing -> probe devMode session jobs mainModule directives
+    Just _ -> probeWithProjection devMode preloaded session jobs mainModule directives
   case candidate of
     Just prepared -> do
       liftEffect $ Console.error ("[gopurs] compact preparation: " <> show (Set.size prepared.reusable) <> " modules proven reusable; TAST loaded on demand")
       pure prepared
     Nothing -> do
       Cache.materializeAllInputs session
-      prepareModulesWithCache session.input session.count jobs mainModule directives
+      prepareModulesWithCacheForProfile devMode session.input session.count jobs mainModule directives
 
-probe :: Session -> Int -> Maybe String -> InlineDirectiveMap -> Aff (Maybe PreparedCache)
-probe = probeWithProjection Nothing
+probe :: Boolean -> Session -> Int -> Maybe String -> InlineDirectiveMap -> Aff (Maybe PreparedCache)
+probe devMode = probeWithProjection devMode Nothing
 
-probeWithProjection :: Maybe PreloadedProjection -> Session -> Int -> Maybe String -> InlineDirectiveMap -> Aff (Maybe PreparedCache)
-probeWithProjection preloaded session jobs mainModule directives = do
-  saved <- readCapturedProof session.root
+probeWithProjection :: Boolean -> Maybe PreloadedProjection -> Session -> Int -> Maybe String -> InlineDirectiveMap -> Aff (Maybe PreparedCache)
+probeWithProjection devMode preloaded session jobs mainModule directives = do
+  saved <- readCapturedProof session.cacheRoot
   frozen <- readFrozenHashes session
   committed <- snapshotStamp (session.stage <> "/prior/manifest.json")
   currentStamp <- snapshotStamp (session.stage <> "/session.json")
@@ -188,13 +194,13 @@ probeWithProjection preloaded session jobs mainModule directives = do
                   case previousProof of
                     Just previous | Proof.permitsLiteralEdit (Set.fromFoldable old.bodyReads) previous currentProof -> do
                       projected <- case preloaded of
-                        Just pending | pending.proofHash == captured.hash && pending.root == session.root
+                        Just pending | pending.proofHash == captured.hash && pending.root == session.root && pending.cacheRoot == session.cacheRoot
                           && pending.context == session.context && pending.count == session.count ->
                             pure (Just pending.projected)
                         _ -> readProjection session jobs old.projection old.capsule
                       case projected of
                         Just result | validProjection sourceHashes result.projection ->
-                          prepareProjected session mainModule directives sourceHashes (old { capsule = result.capsule }) current source currentProof result.projection result.coverage
+                          prepareProjected devMode session mainModule directives sourceHashes (old { capsule = result.capsule }) current source currentProof result.projection result.coverage
                         _ -> pure Nothing
                     _ -> pure Nothing
                 _ -> pure Nothing
@@ -213,11 +219,11 @@ type Projected =
   , capsule :: Maybe (Array String)
   }
 
-readProjection :: forall r. { root :: String, count :: Int | r } -> Int -> Array String -> Maybe (Array String) -> Aff (Maybe Projected)
+readProjection :: forall r. { cacheRoot :: String, count :: Int | r } -> Int -> Array String -> Maybe (Array String) -> Aff (Maybe Projected)
 readProjection session jobs digests capsule
   | not (validFragmentDigests session.count digests) = pure Nothing
   | otherwise = do
-      encoded <- traverse (readObject session.root) digests
+      encoded <- traverse (readObject session.cacheRoot) digests
       case traverse identity encoded of
         Nothing -> pure Nothing
         Just texts -> do
@@ -228,7 +234,7 @@ readProjection session jobs digests capsule
                 Just projection -> LookupTable.complete projection.metadata.globalTypes
           partial <- case capsule of
             Just refs | validFragmentDigests session.count refs -> do
-              saved <- traverse (readObject session.root) refs
+              saved <- traverse (readObject session.cacheRoot) refs
               case traverse identity saved of
                 Nothing -> pure Nothing
                 Just bytes -> do
@@ -248,8 +254,8 @@ validProjection hashes projection =
   in Array.length names == Map.size hashes && Set.fromFoldable names == Map.keys hashes
     && Map.keys projection.interfaces == Map.keys hashes
 
-prepareProjected :: Session -> Maybe String -> InlineDirectiveMap -> Map String String -> Proof.State -> String -> Module Ann -> Proof.ModuleProof -> Projection -> Maybe (Set.Set String) -> Aff (Maybe PreparedCache)
-prepareProjected session mainModule directives sourceHashes old current source@(Module changed) currentProof projection coverage = do
+prepareProjected :: Boolean -> Session -> Maybe String -> InlineDirectiveMap -> Map String String -> Proof.State -> String -> Module Ann -> Proof.ModuleProof -> Projection -> Maybe (Set.Set String) -> Aff (Maybe PreparedCache)
+prepareProjected devMode session mainModule directives sourceHashes old current source@(Module changed) currentProof projection coverage = do
   demands <- liftEffect (Ref.new Set.empty)
   let
     index = Map.fromFoldable (map (\entry -> Tuple entry.name (Set.fromFoldable entry.keys)) old.index)
@@ -287,7 +293,7 @@ prepareProjected session mainModule directives sourceHashes old current source@(
         else pure Nothing
     materialize name = do
       actual <- load name
-      own <- readOwn session.root index payloads name
+      own <- readOwn session.cacheRoot index payloads name
       case actual, own of
         Just value, Just instantiations ->
           if Map.isEmpty index then pure (Just value) else rewrite instantiations value
@@ -311,7 +317,7 @@ prepareProjected session mainModule directives sourceHashes old current source@(
         , modules = map (\entry -> if entry.name == currentProof.name then currentProof else entry) old.modules
         }
     Just
-      { prepared, sourceHashes, sourceModules: projection.modules, sourceInterfaces: projection.interfaces
+      { prepared, devMode, sourceHashes, sourceModules: projection.modules, sourceInterfaces: projection.interfaces
       , compactSourceDelta: Just (unwrap changed.name)
       , mono: { globalAstMap: Map.empty, instantiations: Map.empty, bodyReads }
       , reusable: Set.delete (unwrap changed.name) (Map.keys sourceHashes)
@@ -354,18 +360,18 @@ publishPersistentImpl session jobs cache = do
   case stamp of
     Nothing -> pure unit
     Just snapshot -> do
-      void $ attempt (FS.mkdir (directory session.root))
+      void $ attempt (FS.mkdir (directory session.cacheRoot))
       directives <- liftEffect (Wire.hash <$> Wire.write cache.prepared.directives)
       reusable <- case cache.proof of
         Just proof -> pure (Just proof)
         Nothing -> do
-          previous <- readProof session.root
+          previous <- readProof session.cacheRoot
           case previous of
             Just proof | proof.schema == 5 && proof.snapshot == snapshot
               && validFragmentDigests session.count proof.projection
               && proof.context == session.context && proof.directives == directives -> do
                 valid <- Array.all identity <$> traverse (\entry -> do
-                  text <- hush <$> attempt (FS.readTextFile UTF8 (payloadPath session.root entry.hash))
+                  text <- hush <$> attempt (FS.readTextFile UTF8 (payloadPath session.cacheRoot entry.hash))
                   pure (map Wire.hash text == Just entry.hash)) (proof.payloads <> map (\hash -> { name: "projection", hash }) proof.projection)
                 pure (if valid then Just proof else Nothing)
             _ -> pure Nothing
@@ -385,14 +391,14 @@ publishPersistentImpl session jobs cache = do
           payloads <- Metrics.measure "prepare specialization payloads" \_ -> traverse (\(Tuple name values) -> do
             encoded <- liftEffect (Wire.write (map (map normalizeInstantiation) values))
             let hash = Wire.hash encoded
-            writeAtomic session.stage (payloadPath session.root hash) encoded
+            writeAtomic session.stage (payloadPath session.cacheRoot hash) encoded
             pure { name, hash }) (Map.toUnfoldable grouped :: Array _)
           interfaces <- Metrics.measure "prepare source interfaces" \_ ->
             liftEffect (Map.fromFoldable <$> traverse (\mod@(Module value) -> Tuple (unwrap value.name) <$> moduleInterface mod) (Array.fromFoldable cache.sourceModules))
           projection <- Metrics.measure "prepare projection fragments" \_ -> traverse (\fragment -> do
             encoded <- liftEffect (Wire.write fragment)
             let hash = Wire.hash encoded
-            writeAtomic session.stage (payloadPath session.root hash) encoded
+            writeAtomic session.stage (payloadPath session.cacheRoot hash) encoded
             pure hash) (Projection.split
               { modules: map Proof.compactHeader cache.prepared.modules
               , metadata: cache.prepared.metadata
@@ -406,7 +412,7 @@ publishPersistentImpl session jobs cache = do
             }
       withCapsule <- publishCapsule session jobs cache state
       let payload = stringify (encodeJson withCapsule)
-      writeAtomic session.stage (proofPath session.root) (stringify (encodeJson { hash: Wire.hash payload, payload }))
+      writeAtomic session.stage (proofPath session.cacheRoot) (stringify (encodeJson { hash: Wire.hash payload, payload }))
 
 -- Capsule references are committed in the same proof as their complete source
 -- fragments. A full oracle preserves an existing capsule; only a compact run
@@ -426,13 +432,13 @@ publishCapsule session jobs cache state = case cache.metadataDemandKeys, cache.m
         (ProjectionCapsule.create coverage projection)
       fragments <- traverse (\text -> do
         let digest = Wire.hash text
-        writeAtomic session.stage (payloadPath session.root digest) text
+        writeAtomic session.stage (payloadPath session.cacheRoot digest) text
         pure digest) encoded
       pure (state { capsule = Just fragments })
   _, _ -> case state.capsule of
     Nothing -> pure state
     Just refs -> do
-      objects <- traverse (readObject session.root) refs
+      objects <- traverse (readObject session.cacheRoot) refs
       pure (if validFragmentDigests session.count refs && Array.all (case _ of
         Just _ -> true
         Nothing -> false) objects then state else state { capsule = Nothing })

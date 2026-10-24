@@ -21,13 +21,13 @@ func TestSessionPreloadIsOptionalAndRequestLocal(t *testing.T) {
 				put(t, filepath.Join(spec.Output, "Main/corefn.json"), "changed bytes")
 			}
 			calls := 0
-			var seed struct{ Root, Context string }
+			var seed struct{ Root, CacheRoot, Context string }
 			callback := func(text string) {
 				calls++
 				if err := json.Unmarshal([]byte(text), &seed); err != nil {
 					t.Fatal(err)
 				}
-				if seed.Root != spec.Output || seed.Context == "" {
+				if seed.Root != spec.Output || seed.CacheRoot != cacheDirectory(spec) || seed.Context == "" {
 					t.Fatal("incomplete speculative seed", seed)
 				}
 				// Callback runs after lookup has released its store lock.

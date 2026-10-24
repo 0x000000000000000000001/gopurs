@@ -115,7 +115,7 @@ declarations translate metadata codegenStateRef modNameStr moduleFunctions group
         let
           recVars = if group.recursive then map (\(Tuple (Ident name) _) -> sanitizeName name) group.bindings else []
 
-          context = { metadata, codegenStateRef, depth: 0, modNameStr, recVars, moduleFunctions, bound: Map.empty, tcoIdent: Nothing, loopCtx: [], options: { isTail: false, inEffectBlock: false }, mbExpectedExprType: Nothing }
+          context = { metadata, codegenStateRef, depth: 0, modNameStr, recVars, moduleFunctions, bound: Map.empty, tcoIdent: Nothing, loopCtx: [], options: { isTail: false, inEffectBlock: false }, mbExpectedExprType: Nothing, mbExpectedGoType: Nothing }
 
           processBindingGroup :: Array (Tuple Ident TcoExpr) -> Array GoDecl
           processBindingGroup binds =

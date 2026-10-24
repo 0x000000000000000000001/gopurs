@@ -130,13 +130,13 @@ func execute(req Request) (Response, error) {
 	if err != nil || !stat.IsDir() {
 		return Response{}, fmt.Errorf("output is not a directory: %s", output)
 	}
-	s := store{root: output, cache: filepath.Join(output, ".gopurs-cache")}
-	for _, dir := range []string{s.cache, filepath.Join(s.cache, "objects")} {
-		if err := privateDirectory(dir); err != nil {
-			return Response{}, err
-		}
+	req.Spec.Workspace = workspace
+	req.Spec.Output = output
+	s := store{root: output, cache: cacheDirectory(req.Spec)}
+	if err := prepareCacheDirectories(req.Spec); err != nil {
+		return Response{}, err
 	}
-	lockPath := filepath.Join(s.cache, "write.lock")
+	lockPath := publicLockPath(s.root)
 	if info, err := os.Lstat(lockPath); err == nil && !info.Mode().IsRegular() {
 		return Response{}, fmt.Errorf("cache lock is not a regular file")
 	}
@@ -154,8 +154,6 @@ func execute(req Request) (Response, error) {
 	if err := s.ensurePacks(); err != nil {
 		return Response{}, err
 	}
-	req.Spec.Workspace = workspace
-	req.Spec.Output = output
 	snap, err := snapshot(req.Spec)
 	if err != nil {
 		return Response{}, err
@@ -166,6 +164,14 @@ func execute(req Request) (Response, error) {
 	}
 	old, reason := s.readManifest()
 	owned, err := s.readOwnership()
+	if err != nil {
+		return Response{}, err
+	}
+	var coveredOutputs *Manifest
+	if req.Operation == "lookup" {
+		coveredOutputs = old
+	}
+	otherOutputs, err := s.otherProfileOutputs(workspace, coveredOutputs)
 	if err != nil {
 		return Response{}, err
 	}
@@ -182,6 +188,16 @@ func execute(req Request) (Response, error) {
 		if old.Snapshot.Workspace != workspace || old.Snapshot.Output != output || old.Snapshot.Key != snap.Key {
 			response.Reason = "inputs-changed"
 			return response, nil
+		}
+		currentPaths := make(map[string]bool, len(old.Outputs))
+		for _, out := range old.Outputs {
+			currentPaths[out.Path] = true
+		}
+		for _, out := range otherOutputs {
+			if !currentPaths[out.Path] {
+				response.Reason = "profile-outputs-changed"
+				return response, nil
+			}
 		}
 		for _, out := range old.Outputs {
 			if _, err := s.readObject(out.Object); err != nil {
@@ -237,6 +253,9 @@ func execute(req Request) (Response, error) {
 	// older valid inventory. The journal still supplies any uncommitted outputs.
 	if old != nil && old.Snapshot.Output == output {
 		owned = mergeOwnership(owned, old.Outputs)
+	}
+	if len(otherOutputs) != 0 {
+		owned = mergeOwnership(owned, otherOutputs)
 	}
 	if req.checkLegacy && old == nil && owned == nil {
 		if err := s.checkLegacyOutputs(manifest); err != nil {

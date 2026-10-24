@@ -46,13 +46,13 @@ type Interface =
   }
 
 manifestPath :: String -> String
-manifestPath output = output <> "/.gopurs-cache/build-manifest-v1.json"
+manifestPath output = output <> "/build-manifest-v1.json"
 
 ffiDigestsPath :: String -> String
-ffiDigestsPath output = output <> "/.gopurs-cache/ffi-digests-v1.json"
+ffiDigestsPath output = output <> "/ffi-digests-v1.json"
 
 globalFunctionsPath :: String -> String
-globalFunctionsPath output = output <> "/.gopurs-cache/global-functions-v1.json"
+globalFunctionsPath output = output <> "/global-functions-v1.json"
 
 readGlobalFunctions :: String -> Aff (Maybe ModuleFunctions)
 readGlobalFunctions output = do
@@ -138,7 +138,7 @@ buildManifestWithInterfaces known previous _output context directives modules so
 
 writeManifest :: String -> Manifest -> Aff Unit
 writeManifest output manifest = do
-  let directory = output <> "/.gopurs-cache"
+  let directory = output
   void $ attempt (FS.mkdir directory)
   text <- liftEffect (Wire.write manifest)
   let path = manifestPath output

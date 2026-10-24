@@ -40,7 +40,7 @@ branch translate context@{ codegenStateRef, depth, modNameStr, options: { isTail
     computedBranches = foldl
       ( \acc (Pair condExpr bodyExpr) ->
           let
-            resCond = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing }) acc.nextId condExpr
+            resCond = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing, mbExpectedGoType = Nothing }) acc.nextId condExpr
             resBody = translate (context { depth = (depth + 1), tcoIdent = Nothing, options = { isTail, inEffectBlock: false } }) resCond.nextId bodyExpr
           in
             { nextId: resBody.nextId, results: acc.results <> [ { cond: resCond, body: resBody } ] }
@@ -89,8 +89,8 @@ branch translate context@{ codegenStateRef, depth, modNameStr, options: { isTail
 booleanAnd :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> TcoExpr -> ExprResult
 booleanAnd translate context@{ codegenStateRef, depth, modNameStr } nextId e1 e2 =
   let
-    res1 = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing }) nextId e1
-    res2 = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing }) res1.nextId e2
+    res1 = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing, mbExpectedGoType = Nothing }) nextId e1
+    res2 = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing, mbExpectedGoType = Nothing }) res1.nextId e2
   in
     if isEmptyStmts res2.stmts then
       { expr: GoBinOp "&&" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeBool) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeBool), exprType: TypeBool, stmts: res1.stmts <> res2.stmts, nextId: res2.nextId }
@@ -105,8 +105,8 @@ booleanAnd translate context@{ codegenStateRef, depth, modNameStr } nextId e1 e2
 booleanOr :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> TcoExpr -> ExprResult
 booleanOr translate context@{ codegenStateRef, depth, modNameStr } nextId e1 e2 =
   let
-    res1 = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing }) nextId e1
-    res2 = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing }) res1.nextId e2
+    res1 = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing, mbExpectedGoType = Nothing }) nextId e1
+    res2 = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing, mbExpectedGoType = Nothing }) res1.nextId e2
   in
     if isEmptyStmts res2.stmts then
       { expr: GoBinOp "||" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeBool) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeBool), exprType: TypeBool, stmts: res1.stmts <> res2.stmts, nextId: res2.nextId }

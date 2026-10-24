@@ -4,7 +4,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { empty as emptyMap, lookup } from '../output/Data.Map/index.js';
+import { empty as emptyMap, insert, lookup } from '../output/Data.Map/index.js';
 import { Just, Nothing } from '../output/Data.Maybe/index.js';
 import { ordString } from '../output/Data.Ord/index.js';
 import { empty as emptySet } from '../output/Data.Set/index.js';
@@ -12,6 +12,7 @@ import { Tuple } from '../output/Data.Tuple/index.js';
 import * as Ref from '../output/Effect.Ref/index.js';
 import * as Bindings from '../output/Gopurs.BindingExprs/index.js';
 import * as CodeGen from '../output/Gopurs.CodeGen/index.js';
+import * as TypedExprs from '../output/Gopurs.TypedExprs/index.js';
 import { StmtEmpty, flattenStmts } from '../output/Gopurs.ExprContext/index.js';
 import * as Go from '../output/Gopurs.GoAst/index.js';
 import { printGoExpr } from '../output/Gopurs.Printer/index.js';
@@ -35,7 +36,7 @@ test('recursive workers publish peer signatures first, refine results in order, 
         metadata, codegenStateRef: Ref.new({ declarations: [], globalId: 11, reboxPairs: emptySet })(),
         depth: 0, modNameStr: 'Bindings', recVars: [], moduleFunctions: emptyMap, bound: emptyMap,
         tcoIdent: Nothing.value, loopCtx: [], options: { isTail: false, inEffectBlock: false },
-        mbExpectedExprType: Nothing.value,
+        mbExpectedExprType: Nothing.value, mbExpectedGoType: Nothing.value,
     };
     const node = syntax => new TcoExpr(null, syntax);
     const firstBody = node(new S.Lit(new C.LitInt(1)));
@@ -148,4 +149,86 @@ func main() {
     assert.ifError(result.error);
     assert.equal(result.status, 0, result.stdout + result.stderr);
     assert.equal(result.stdout, '20\n10\n20\n10\n');
+});
+
+
+test('recursive workers retain a function result after consuming only the list parameters', t => {
+    const list = new C.ADT('Probe.List', ['Probe', 'List'], [C.Any.value]);
+    const callback = new C.Func([C.Any.value, C.Any.value], C.Boolean.value);
+    const functionType = new C.Func([list, list], callback);
+    const meta = withReboxFields({ ...metadata,
+        pointerAdtPaths: insert(ordString)('Probe.List')({ ctorName: 'Cons', arity: 1 })(emptyMap),
+        ctorTypes: insert(ordString)('Probe.Cons')({ vars: ['a'], fields: [new C.TypeVar('a'),
+            new C.ADT('Probe.List', ['Probe', 'List'], [new C.TypeVar('a')])] })(emptyMap),
+    });
+    const context = {
+        metadata: meta, codegenStateRef: Ref.new({ declarations: [], globalId: 0, reboxPairs: emptySet })(),
+        depth: 0, modNameStr: 'Bindings', recVars: [], moduleFunctions: emptyMap, bound: emptyMap,
+        tcoIdent: Nothing.value, loopCtx: [], options: { isTail: false, inEffectBlock: false },
+        mbExpectedExprType: Nothing.value, mbExpectedGoType: Nothing.value,
+    };
+    const node = syntax => new TcoExpr(null, syntax);
+    const selected = node(new S.Lit(new C.LitInt(0)));
+    const outer = node(new S.Lit(new C.LitInt(1)));
+    const abstraction = node(new S.Typed(functionType, node(new S.Abs([
+        new Tuple(new Just('tags'), 2), new Tuple(new Just('methods'), 3),
+    ], selected))));
+    const binding = localId(new Just('lookup'))(1);
+    const listPointer = Go.structPointer({
+        baseStructName: 'Data_Probe_Cons', fullName: 'Probe.List', structName: 'Constructor_Probe_Cons',
+        symbol: { owner: 'generated/Probe', name: 'Constructor_Probe_Cons' },
+    })([Go.TypeValue.value]);
+    let visited = 0;
+    const translate = child => nextId => value => {
+        const local = get(child.bound, binding);
+        const info = get(child.moduleFunctions, local.name);
+        assert.deepEqual(info.fArgs, [listPointer, listPointer]);
+        assert.deepEqual(info.fRet, Go.TypeValue.value,
+            'the published worker returns the selected callback, before its two arguments are applied');
+        if (value === selected) {
+            visited++;
+            assert.deepEqual(child.mbExpectedExprType, new Just(callback));
+            assert.deepEqual(child.mbExpectedGoType, new Just(Go.TypeValue.value));
+            const methodList = get(child.bound, localId(new Just('methods'))(3));
+            const payload = { stmts: StmtEmpty.value,
+                expr: new Go.GoStructAccess(new Go.GoVar(methodList.name), 'V0'),
+                exprType: Go.TypeValue.value, nextId: nextId + 1 };
+            return TypedExprs.annotated(() => () => () => payload)(child)(nextId)(callback)(selected);
+        }
+        assert.equal(value, outer);
+        return { stmts: StmtEmpty.value,
+            expr: new Go.GoCall(new Go.GoRef(info.reference), [new Go.GoVar('tags'), new Go.GoVar('methods')]),
+            exprType: Go.TypeValue.value, nextId: nextId + 1 };
+    };
+    const result = Bindings.recursive(translate)(context)(0)(new TcoExpr({ role: { isLoop: true } }, null))(1)
+        ([new Tuple('lookup', abstraction)])(outer);
+    assert.equal(visited, 1);
+    const directory = mkdtempSync(join(tmpdir(), 'gopurs-recursive-result-'));
+    t.after(() => rmSync(directory, { recursive: true, force: true }));
+    mkdirSync(join(directory, 'gopurs_runtime'));
+    writeFileSync(join(directory, 'go.mod'), 'module gopurs/output\n\ngo 1.22\n');
+    writeFileSync(join(directory, 'gopurs_runtime/runtime.go'), runtimeGoCode);
+    writeFileSync(join(directory, 'main.go'), `package main
+import ("fmt"; "gopurs/output/gopurs_runtime")
+type Constructor_Probe_Cons[A any] struct { Rc uint32; V0 A; V1 *Constructor_Probe_Cons[A] }
+func selectMethod(tags, methods *Constructor_Probe_Cons[gopurs_runtime.Value]) gopurs_runtime.Value {
+${flattenStmts(result.stmts).map(printGoExpr).join('\n')}
+return ${printGoExpr(result.expr)}
+}
+func main() {
+    equal := gopurs_runtime.Func2(func(a, b gopurs_runtime.Value) gopurs_runtime.Value {
+        return gopurs_runtime.Bool(a.IntVal == b.IntVal)
+    })
+    methods := &Constructor_Probe_Cons[gopurs_runtime.Value]{Rc: 1, V0: equal}
+    chosen := selectMethod(nil, methods)
+    fmt.Println(gopurs_runtime.Apply2(chosen, gopurs_runtime.Int(7), gopurs_runtime.Int(7)).BoolVal())
+    fmt.Println(gopurs_runtime.Apply2(chosen, gopurs_runtime.Int(7), gopurs_runtime.Int(8)).BoolVal())
+}
+`);
+    const execution = spawnSync('go', ['run', '.'], {
+        cwd: directory, encoding: 'utf8', timeout: 30_000, env: { ...process.env, GOWORK: 'off' },
+    });
+    assert.ifError(execution.error);
+    assert.equal(execution.status, 0, execution.stdout + execution.stderr);
+    assert.equal(execution.stdout, 'true\nfalse\n');
 });

@@ -77,7 +77,7 @@ test('unsafe indexing converts one element, preserves evaluation and allocates c
             metadata, codegenStateRef: Ref.new({ declarations: [], globalId: 0, reboxPairs: emptySet })(),
             depth: 0, modNameStr: 'IndexProbe', recVars: [], moduleFunctions: emptyMap, bound: emptyMap,
             tcoIdent: Nothing.value, loopCtx: [], options: { isTail: false, inEffectBlock: false },
-            mbExpectedExprType: Nothing.value,
+            mbExpectedExprType: Nothing.value, mbExpectedGoType: Nothing.value,
         };
         const translate = _child => nextId => expression => {
             assert.ok(expression.value1 instanceof Syntax.Var, 'array Typed wrappers must be moved onto the selected element');

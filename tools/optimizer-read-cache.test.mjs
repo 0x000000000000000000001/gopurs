@@ -140,7 +140,7 @@ const request = JSON.parse(fs.readFileSync(0, "utf8")), mode = path.basename(req
 if (request.operation === "materialize") {
   assert.deepEqual(request.parts, ["3"]); assert.deepEqual(request.owners, ["Consumer"]);
   if (mode === "bulk-workers") fs.writeFileSync(path.join(request.stage, "prior/Consumer/3.json"), "invalid");
-  console.log(JSON.stringify({ status: "ready", reason: "", stage: request.stage, root: request.stage, input: request.stage, inputLayout: "", output: request.stage, count: 2, ffi: [], context: "same", sameTast: false, packageRequest: "" }));
+  console.log(JSON.stringify({ status: "ready", reason: "", stage: request.stage, root: request.stage, cacheRoot: request.stage + "/.gopurs-cache", input: request.stage, inputLayout: "", output: request.stage, count: 2, ffi: [], context: "same", sameTast: false, packageRequest: "" }));
   process.exit(0);
 }
 assert.equal(request.operation, "read-parts");

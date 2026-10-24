@@ -32,10 +32,10 @@ definition { metadata, codegenStateRef, modNameStr, mbExpectedExprType } nextId 
 -- Prepare the result layout once. Translate each field in source order and
 -- coerce it immediately, before the next field can inspect the shared state.
 saturated :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> Maybe ModuleName -> String -> Array (Tuple String TcoExpr) -> ExprResult
-saturated translateExpr context@{ metadata, codegenStateRef, modNameStr, bound, mbExpectedExprType } nextId node moduleName name props =
+saturated translateExpr context@{ metadata, codegenStateRef, modNameStr, bound, mbExpectedExprType, mbExpectedGoType } nextId node moduleName name props =
   let
     ctorType = saturatedResultType (getExprType node) mbExpectedExprType
-    prepared = AdtExprs.prepareSaturated metadata modNameStr moduleName name ctorType
+    prepared = AdtExprs.prepareSaturatedAs metadata modNameStr moduleName name ctorType mbExpectedGoType
     child = childContext context Nothing
     toGoType = exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr
     fields = Array.foldl
@@ -43,7 +43,7 @@ saturated translateExpr context@{ metadata, codegenStateRef, modNameStr, bound, 
         let
           expected = AdtExprs.saturatedFieldType prepared acc.fieldIdx
           fieldBound = bindFieldFunctionParameters toGoType bound expected.exprType value
-          valueResult = translateExpr (child { bound = fieldBound }) acc.nextId value
+          valueResult = translateExpr (child { bound = fieldBound, mbExpectedGoType = Just expected.goType }) acc.nextId value
           coerced = coerceGoExpr codegenStateRef modNameStr valueResult.expr valueResult.exprType expected.goType
           constant = isReusableConstant expected.goType valueResult.exprType value
         in

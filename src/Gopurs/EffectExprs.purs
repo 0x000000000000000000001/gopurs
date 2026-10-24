@@ -33,7 +33,7 @@ bindEffect translate context@{ codegenStateRef, depth, modNameStr, bound, option
     originalName = localId mbIdent lvl
     name = originalName <> "_" <> show nextId
     newBound = Map.insert originalName { name, goType: TypeValue } bound
-    resBinding = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: true }, mbExpectedExprType = Nothing }) (nextId + 1) realBinding
+    resBinding = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: true }, mbExpectedExprType = Nothing, mbExpectedGoType = Nothing }) (nextId + 1) realBinding
     resBody = translate (context { depth = (depth + 1), bound = newBound, tcoIdent = Nothing, options = { isTail, inEffectBlock: true } }) resBinding.nextId body
     bindingExpr = if wasStripped then boxGoExpr codegenStateRef modNameStr resBinding.expr resBinding.exprType else executeIfOpaque realBinding (boxGoExpr codegenStateRef modNameStr resBinding.expr resBinding.exprType)
     bodyExpr = executeIfOpaque body resBody.expr
@@ -42,12 +42,12 @@ bindEffect translate context@{ codegenStateRef, depth, modNameStr, bound, option
 
 pureValue :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> ExprResult
 pureValue translate context@{ depth } nextId binding =
-  translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing }) nextId binding
+  translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing, mbExpectedGoType = Nothing }) nextId binding
 
 defer :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> ExprResult
 defer translate context@{ codegenStateRef, depth, modNameStr } nextId binding =
   let
-    resBinding = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: true }, mbExpectedExprType = Nothing }) nextId binding
+    resBinding = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: true }, mbExpectedExprType = Nothing, mbExpectedGoType = Nothing }) nextId binding
     funcExpr = GoCall (GoSelector (GoVar "gopurs_runtime") "Func")
       [ GoFuncBlock [ Tuple "_" TypeValue ]
           (flattenStmts resBinding.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr resBinding.expr resBinding.exprType) ])
@@ -61,7 +61,7 @@ primitive translate context@{ codegenStateRef, depth, modNameStr } nextId eff =
   case eff of
   EffectRefNew a ->
     let
-      resA = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing }) nextId a
+      resA = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing, mbExpectedGoType = Nothing }) nextId a
       refIdent = "__local_ref_" <> show resA.nextId
       declStmt = GoAssign refIdent (boxGoExpr codegenStateRef modNameStr resA.expr resA.exprType)
       ifaceIdent = "__local_iface_" <> show resA.nextId
@@ -74,7 +74,7 @@ primitive translate context@{ codegenStateRef, depth, modNameStr } nextId eff =
       }
   EffectRefRead a ->
     let
-      resA = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing }) nextId a
+      resA = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing, mbExpectedGoType = Nothing }) nextId a
     in
       { stmts: resA.stmts
       , expr: rawGo ("(*(" <> printGoExpr resA.expr <> ".PtrVal().(*interface{}))).(gopurs_runtime.Value)")
@@ -83,8 +83,8 @@ primitive translate context@{ codegenStateRef, depth, modNameStr } nextId eff =
       }
   EffectRefWrite ref val ->
     let
-      resRef = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing }) nextId ref
-      resVal = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing }) resRef.nextId val
+      resRef = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing, mbExpectedGoType = Nothing }) nextId ref
+      resVal = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing, mbExpectedGoType = Nothing }) resRef.nextId val
       writeStmt = rawGo ("*(" <> printGoExpr resRef.expr <> ".PtrVal().(*interface{})) = " <> printGoExpr (boxGoExpr codegenStateRef modNameStr resVal.expr resVal.exprType))
     in
       { stmts: resRef.stmts <> resVal.stmts <> StmtLeaf writeStmt
@@ -96,7 +96,7 @@ primitive translate context@{ codegenStateRef, depth, modNameStr } nextId eff =
 wrap :: TranslateExpr -> ExprContext -> Int -> TcoExpr -> ExprResult
 wrap translate context@{ codegenStateRef, modNameStr } nextId tcoExpr =
   let
-    res = translate (context { options = { isTail: false, inEffectBlock: true }, mbExpectedExprType = Nothing }) nextId tcoExpr
+    res = translate (context { options = { isTail: false, inEffectBlock: true }, mbExpectedExprType = Nothing, mbExpectedGoType = Nothing }) nextId tcoExpr
     funcExpr = GoCall (GoSelector (GoVar "gopurs_runtime") "Func")
       [ GoFuncBlock [ Tuple "_" TypeValue ]
           (flattenStmts res.stmts <> [ GoReturn (boxGoExpr codegenStateRef modNameStr res.expr res.exprType) ])

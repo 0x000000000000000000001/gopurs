@@ -29,6 +29,7 @@ export class TestCampaign {
     this.report = {
       version: 1, kind, root: realpathSync(root), startedAt: new Date().toISOString(),
       resumedFrom: options.resumeFailed ? resolve(options.resumeFailed) : null,
+      buildProfile: options.dev ? "dev" : "release",
       updateSnapshots: options.update, skipped,
       targets: targets.map((target, index) => ({
         target, status: "pending",

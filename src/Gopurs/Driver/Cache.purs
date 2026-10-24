@@ -25,7 +25,7 @@ type SourceModule = { name :: String, path :: String, hasForeign :: Boolean }
 type FrozenFFI = { name :: String, path :: String, file :: String, found :: Boolean, digest :: String }
 type Session =
   { status :: String, reason :: String, stage :: String, input :: String, inputLayout :: String
-  , output :: String, root :: String, count :: Int, ffi :: Array FrozenFFI, context :: String, sameTast :: Boolean
+  , output :: String, root :: String, cacheRoot :: String, count :: Int, ffi :: Array FrozenFFI, context :: String, sameTast :: Boolean
   , packageRequest :: String
   }
 type Setting = { name :: String, value :: String }
@@ -77,7 +77,7 @@ beginRequest config = (request "begin")
       , { name: "go-layout", value: if config.goPackages then "gopurs/go-packages-v1" else "gopurs/monolithic-v1" }
       , { name: "module-lazy", value: if config.optimizerJobs > 1 then "1" else "0" }
       , { name: "input-layout", value: "packed-v1" }
-      ]
+      ] <> if config.devMode then [ { name: "optimization-profile", value: "dev-v4" } ] else []
   }
 
 -- Own the speculative fiber independently of session acquisition. Even a failed

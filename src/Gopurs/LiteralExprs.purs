@@ -9,6 +9,7 @@ import Data.Array as Array
 import Data.Map as Map
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.String as String
+import Data.Tuple (fst)
 import Gopurs.ExprAnalysis (bindFieldFunctionParameters)
 import Gopurs.ExprContext (ExprContext, ExprResult, StmtTree(..), TranslateExpr, childContext)
 import Gopurs.GoAst (GoExpr(..), GoType(..), goTypeToStr, rawGo)
@@ -83,17 +84,26 @@ nativeElementType { metadata, modNameStr, mbExpectedExprType } elementTypes =
 -- field annotation, then translate and coerce that field before the next one:
 -- coercion may register Rebox helpers in the shared state.
 record :: TranslateExpr -> ExprContext -> Int -> ExprType -> Array (Prop TcoExpr) -> ExprResult
-record translateExpr context@{ metadata, codegenStateRef, modNameStr, bound, mbExpectedExprType } nextId baseType props =
+record translateExpr context@{ metadata, codegenStateRef, modNameStr, bound, mbExpectedExprType, mbExpectedGoType } nextId baseType props =
   let
     child = childContext context Nothing
     toGoType = exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr
-    info = RecordExprs.prepareLiteral metadata modNameStr baseType mbExpectedExprType
+    sourceInfo = RecordExprs.prepareLiteral metadata modNameStr baseType mbExpectedExprType
+    recordType = case mbExpectedGoType of
+      Just TypeValue -> TypeValue
+      Just target@(TypeRecord targetFields)
+        | Array.sort (map fst targetFields) == Array.sort (map (\(Prop key _) -> key) props) -> target
+      _ -> sourceInfo.recordType
+    info = sourceInfo { recordType = recordType }
+    expectedField key = case recordType of
+      TypeRecord fieldTypes -> fromMaybe TypeValue (Map.lookup key (Map.fromFoldable fieldTypes))
+      _ -> TypeValue
     fields = Array.foldl
       (\acc (Prop key value) ->
         let
           expected = fromMaybe Any (Map.lookup key info.fields)
           fieldBound = bindFieldFunctionParameters toGoType bound expected value
-          valueResult = translateExpr (child { bound = fieldBound }) acc.nextId value
+          valueResult = translateExpr (child { bound = fieldBound, mbExpectedGoType = Just (expectedField key) }) acc.nextId value
           field = RecordExprs.coerceLiteralField codegenStateRef modNameStr key info.recordType
             { expr: valueResult.expr, exprType: valueResult.exprType }
         in

@@ -55,7 +55,7 @@ fs.appendFileSync(path.join(request.stage, "requests.jsonl"), JSON.stringify({op
 assert.deepEqual(request.parts, ["3"]);
 if (request.operation === "materialize") {
   assert.deepEqual(request.owners, ["Late"]);
-  console.log(JSON.stringify({status:"ready",reason:"",stage:request.stage,root:request.stage,input:request.stage,inputLayout:"",output:request.stage,count:3,ffi:[],context:"same",sameTast:false,packageRequest:""}));process.exit(0);
+  console.log(JSON.stringify({status:"ready",reason:"",stage:request.stage,root:request.stage,cacheRoot:request.stage+"/.gopurs-cache",input:request.stage,inputLayout:"",output:request.stage,count:3,ffi:[],context:"same",sameTast:false,packageRequest:""}));process.exit(0);
 }
 assert.equal(request.operation, "read-parts");
 const contributions=request.owners.map(name=>({name,part:"3",text:fs.readFileSync(path.join(request.stage,"prior",name,"3.json"),"utf8")}));

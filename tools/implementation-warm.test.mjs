@@ -57,7 +57,7 @@ console.log(JSON.stringify(response));
   const ranks = table(["Alpha", "Beta", "Fresh", "Late", "Reader", "Future"].map((name, index) => [name, index]));
   function fixture(mode) {
     const stage = join(directory, mode); mkdirSync(stage);
-    const session = { status: "ready", reason: "", stage, root: directory, input: stage, inputLayout: "", output: stage, count: 6, ffi: [], context: "same", sameTast: false, packageRequest: "" };
+    const session = { status: "ready", reason: "", stage, root: directory, cacheRoot: join(directory, ".gopurs-cache"), input: stage, inputLayout: "", output: stage, count: 6, ffi: [], context: "same", sameTast: false, packageRequest: "" };
     writeFileSync(join(stage, "session-response.json"), JSON.stringify(session));
     for (const name of ["Alpha", "Beta", "Late"]) {
       mkdirSync(join(stage, "prior", name), { recursive: true });

@@ -13,18 +13,18 @@ export class TestProcesses {
     this.commands.checkInterrupted();
   }
 
-  async run(label, command, args, { cwd, env, log, display = false } = {}) {
+  async run(label, command, args, { cwd, env, log, display = false, stream = false } = {}) {
     this.checkInterrupted();
     console.log(`   [${label}] ${command} ${args.join(" ")}`);
     let status;
     try {
-      status = await this.commands.run(command, args, { cwd, env, log });
+      status = await this.commands.run(command, args, { cwd, env, log, stream });
     } catch (error) {
       if (error instanceof Interrupted) throw error;
       throw new Error(`${label}: ${error.message}`);
     }
     const output = log ? readFileSync(log, "utf8") : "";
-    if ((display || status.code !== 0) && output) process.stdout.write(output.endsWith("\n") ? output : output + "\n");
+    if (!stream && (display || status.code !== 0) && output) process.stdout.write(output.endsWith("\n") ? output : output + "\n");
     this.checkInterrupted();
     if (status.code !== 0) throw new Error(`${label} failed (${status.signal ?? "exit " + status.code})${log ? `; log: ${log}` : ""}`);
     return output;

@@ -6,6 +6,7 @@ import { Interrupted, TestProcesses } from "./test-process.mjs";
 import { corePackages, prepareFixture } from "./test-workspace.mjs";
 import { formatSnapshots, snapshotFiles, updateSnapshots, verifySnapshots } from "./test-snapshots.mjs";
 import { resumeTargets, TestCampaign } from "./test-campaign.mjs";
+import { compilerBuildScript } from "./test-compiler.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const help = `Usage: ./bin/test [fixtures...] [options]
@@ -14,7 +15,8 @@ const help = `Usage: ./bin/test [fixtures...] [options]
   --skip-before NAME     Resume inclusively at a selected fixture
   --resume-failed FILE   Select failed/interrupted/pending targets from a JSON report
   --keep-going           Attempt every selected fixture after individual failures
-  -c, --clean            Rebuild gopurs; fixture workspaces are always fresh
+  -c, --clean            Rebuild the selected compiler host; workspaces are fresh
+  -d, --dev              Compile and run in Dev; skip Release snapshots
   --update-snapshots     Create/update snapshots after successful execution
   --keep-workspace       Also keep successful runs for inspection
 Legacy skip_before=NAME, --skip-before=NAME and UPDATE_SNAPSHOTS=1 still work.`;
@@ -23,11 +25,11 @@ async function runFixture(fixture, options, processes, env) {
   const { directory } = fixture;
   const phase = (name, command, args, cwd = directory, display = false) => processes.run(name, command, args, { cwd, env, display, log: join(directory, "logs", name + ".log") });
   await phase("purescript", "spago", ["build", "-q"]);
-  await phase("generate-go", process.env.GOPURS_TEST_COMPILER ?? join(root, "bin/gopurs"), ["--main", "Main"]);
-  const snapshots = snapshotFiles(root, fixture, env);
+  await phase("generate-go", process.env.GOPURS_TEST_COMPILER ?? join(root, "bin/gopurs"), ["--main", "Main", ...(options.dev ? ["--dev"] : [])]);
+  const snapshots = options.dev ? [] : snapshotFiles(root, fixture, env);
   if (!existsSync(join(directory, "output/main/main.go"))) throw new Error("gopurs did not generate output/main/main.go");
-  await formatSnapshots(snapshots, processes, fixture, env);
-  if (!options.update) await verifySnapshots(snapshots, processes, fixture, env);
+  if (!options.dev) await formatSnapshots(snapshots, processes, fixture, env);
+  if (!options.dev && !options.update) await verifySnapshots(snapshots, processes, fixture, env);
   const output = join(directory, "output");
   // Main already writes go.mod. Keep its Go version instead of recreating it.
   await phase("go-dependencies", "go", ["mod", "tidy"], output);
@@ -53,6 +55,7 @@ async function main() {
     if (retry) options.targets = retry;
     const { selected, skipped } = selectFixtures(root, options);
     if (options.list) { for (const file of selected) console.log(file); return; }
+    const buildScript = options.clean ? compilerBuildScript() : null;
     // Fixture compilations are tiny: use the sequential PBO builder so the
     // harness stays deterministic and independent from machine sizing rules.
     // Sequential and parallel output is byte-identical (validated on b8x and
@@ -60,11 +63,12 @@ async function main() {
     process.env.GOPURS_PBO_JOBS ??= "1";
     process.env.GOPURS_PREPARE_JOBS ??= "1";
     console.log(`Selected ${selected.length} fixtures; ${skipped.length} excluded.`);
+    if (options.dev) console.log("[gopurs] Build mode: DEV (--dev). Compile and execute fixtures without comparing Release snapshots.");
     for (const file of skipped) console.log(`=> Skipping ${basename(file)} (excluded)`);
     const packages = corePackages(root);
     campaign = new TestCampaign(root, "fixtures", selected, options, skipped);
     processes = new TestProcesses();
-    if (options.clean) await processes.run("build-gopurs", "npm", ["run", "build", "--silent"], { cwd: root, env: campaign.env(), log: join(campaign.workspace, "build-gopurs.log") });
+    if (buildScript) await processes.run("build-gopurs", "npm", ["run", buildScript, "--silent"], { cwd: root, env: campaign.env(), log: join(campaign.workspace, "build-gopurs.log") });
     const success = await campaign.run(processes, async (file, directory, index) => {
       console.log(`=> Testing ${basename(file)}`);
       const fixture = prepareFixture(root, campaign.workspace, file, index, packages);

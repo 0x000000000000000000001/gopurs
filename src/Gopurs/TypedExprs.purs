@@ -5,7 +5,7 @@ import Prelude
 import Data.Array as Array
 import Data.Foldable (foldl)
 import Data.Map as Map
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Tuple (Tuple(..))
 import Gopurs.CallAnalysis (isClosureNode)
 import Gopurs.ExprAnalysis (bindFieldFunctionParameters, unwrapTcoExpr)
@@ -19,14 +19,15 @@ import PureScript.Backend.Optimizer.FfiSupport (hashString)
 import PureScript.Backend.Optimizer.Syntax (BackendSyntax(Let, LetRec, Lit, Local, Typed))
 
 annotated :: TranslateExpr -> ExprContext -> Int -> ExprType -> TcoExpr -> ExprResult
-annotated translate context@{ metadata, modNameStr, mbExpectedExprType } nextId type_ expression =
+annotated translate context@{ metadata, modNameStr, mbExpectedExprType, mbExpectedGoType } nextId type_ expression =
   let
-    expectedGoType = exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr type_
+    annotatedGoType = exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr type_
+    expectedGoType = fromMaybe annotatedGoType mbExpectedGoType
   in
-    case unwrapTcoExpr expression, expectedGoType of
+    case unwrapTcoExpr expression, annotatedGoType of
       Lit (LitRecord props), TypeStructPointer pointer ->
         case classDictionary translate context nextId type_ pointer props of
-          Just result -> result
+          Just result -> coerceResult context expression expectedGoType result
           Nothing -> coerceResult context expression expectedGoType (translateValue expression)
       Let ident level value body, _ ->
         translateBinding (Let ident level value (annotate type_ body))
@@ -66,8 +67,15 @@ annotate :: ExprType -> TcoExpr -> TcoExpr
 annotate type_ expression@(TcoExpr annotation _) = TcoExpr annotation (Typed type_ expression)
 
 coerceResult :: ExprContext -> TcoExpr -> GoType -> ExprResult -> ExprResult
-coerceResult { metadata, codegenStateRef, modNameStr } expression expected result =
-  case result.exprType of
+coerceResult { metadata, codegenStateRef, modNameStr, mbExpectedGoType } expression expected result =
+  case mbExpectedGoType of
+    Just target -> result
+      { expr = coerceGoExpr codegenStateRef modNameStr result.expr result.exprType target
+      , exprType = target
+      }
+    Nothing -> inferredResult
+  where
+  inferredResult = case result.exprType of
     TypeStructPointer _ -> result
     _ ->
       if expected == result.exprType || isClosureNode metadata expression then result

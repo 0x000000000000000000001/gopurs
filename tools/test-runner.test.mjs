@@ -6,6 +6,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import { formatSnapshots, packageSourceSections, snapshotFiles } from "./test-snapshots.mjs";
+import { parseOptions } from "./test-selection.mjs";
 
 const repository = fileURLToPath(new URL("../", import.meta.url));
 const fakeTool = `#!/usr/bin/env node
@@ -17,8 +18,8 @@ const cwd = process.cwd();
 const fixture = basename(cwd) === "output" ? dirname(cwd) : cwd;
 const source = join(fixture, "src/Main.purs");
 const content = existsSync(source) ? readFileSync(source, "utf8") : "";
-const phase = tool === "go" ? (process.argv[2] === "mod" ? "tidy" : "build") : tool;
-appendFileSync(process.env.RUNNER_CALLS, JSON.stringify({ phase, cwd, tmp: process.env.TMPDIR }) + "\\n");
+const phase = tool === "go" ? (process.argv[2] === "mod" ? "tidy" : "build") : /^gopurs(?:-native|-rust|\\.js)?$/.test(tool) ? "gopurs" : tool;
+appendFileSync(process.env.RUNNER_CALLS, JSON.stringify({ phase, tool, args: process.argv.slice(2), cwd, tmp: process.env.TMPDIR }) + "\\n");
 if (content.includes("fail=" + phase) || process.env.RUNNER_FAIL === phase) process.exit(23);
 if (process.env.RUNNER_PAUSE && phase === "spago") {
   const child = spawn(process.execPath, ["-e", "setInterval(() => {}, 1000)"], { stdio: "ignore" });
@@ -59,7 +60,7 @@ function fixture(t) {
   for (const dir of ["mockbin", "tmp", "gopurs-prelude"]) mkdirSync(join(base, dir));
   writeFileSync(join(base, "package.json"), '{"type":"module"}');
   for (const name of ["test", "modtest"]) cpSync(join(repository, "bin", name), join(root, "bin", name));
-  for (const name of ["command-runner", "test-selection", "test-process", "test-workspace", "test-snapshots", "test-campaign", "test-runner", "modtest-runner"]) cpSync(join(repository, "tools", name + ".mjs"), join(root, "tools", name + ".mjs"));
+  for (const name of ["command-runner", "test-selection", "test-process", "test-workspace", "test-snapshots", "test-campaign", "test-compiler", "test-runner", "modtest-runner"]) cpSync(join(repository, "tools", name + ".mjs"), join(root, "tools", name + ".mjs"));
   writeFileSync(join(root, "bin/pkg"), "CORE_PACKAGES=(prelude)\n");
   for (const name of ["spago", "gofmt", "go", "npm"]) writeFileSync(join(base, "mockbin", name), fakeTool, { mode: 0o755 });
   writeFileSync(join(root, "bin/gopurs"), fakeTool, { mode: 0o755 });
@@ -68,7 +69,7 @@ function fixture(t) {
   writeFileSync(join(root, "tests/runner/spago.yaml"), "shared config sentinel");
   writeFileSync(join(root, "tests/runner/spago.lock"), "shared lock sentinel");
   const calls = join(base, "calls.jsonl");
-  const env = { ...process.env, TMPDIR: join(base, "tmp"), PATH: join(base, "mockbin") + ":" + process.env.PATH, RUNNER_CALLS: calls, UPDATE_SNAPSHOTS: "0" };
+  const env = { ...process.env, TMPDIR: join(base, "tmp"), PATH: join(base, "mockbin") + ":" + process.env.PATH, RUNNER_CALLS: calls, UPDATE_SNAPSHOTS: "0", GOPURS_JS: "0", GOPURS_RUST: "0", GOPURS_DAEMON: "0" };
   const start = (args, extraEnv = {}, command = "test") => {
     const child = spawn("bash", [join(root, "bin", command), ...args], { cwd: base, env: { ...env, ...extraEnv } });
     let output = "";
@@ -78,7 +79,7 @@ function fixture(t) {
       child.on("error", reject);
       child.on("close", (code, signal) => resolve({ code, signal, output }));
     });
-    return { child, completed };
+    return { child, completed, get output() { return output; } };
   };
   return { base, root, calls, env, start, run: (...args) => start(...args).completed, source: (name, text) => writeFileSync(join(root, "tests/passing", name + ".purs"), text) };
 }
@@ -104,6 +105,143 @@ test("selection is read-only, ordered, inclusive and rejects unknown names", asy
   assert(!existsSync(f.calls));
   assert.deepEqual(readdirSync(join(f.base, "tmp")), []);
   assertSharedUntouched(f);
+});
+
+test("Dev aliases preserve selection, clean options and the option terminator", () => {
+  for (const modules of [false, true]) for (const flag of ["-d", "--dev"]) {
+    const options = parseOptions(["Beta", flag, "-c", "--skip-before", "Alpha", "Alpha"], { modules, env: {} });
+    assert.equal(options.dev, true);
+    assert.equal(options.clean, true);
+    assert.equal(options.resume, "Alpha");
+    assert.deepEqual(options.targets, ["Beta", "Alpha"]);
+    const literal = parseOptions(["--", flag, "-c"], { modules, env: {} });
+    assert.equal(literal.dev, false);
+    assert.equal(literal.clean, false);
+    assert.deepEqual(literal.targets, [flag, "-c"]);
+  }
+  assert.equal(parseOptions([], { env: {} }).dev, false);
+});
+
+test("Dev fixtures forward only the backend flag and preserve Release snapshots", async t => {
+  const f = fixture(t);
+  const expected = join(f.root, "tests/passing-snapshots/Alpha.go");
+  writeFileSync(expected, "Release snapshot sentinel\n");
+  for (const flag of ["-d", "--dev"]) {
+    const result = await f.run(["Beta", "Alpha", flag, "-c", "--skip-before", "Alpha"]);
+    assert.equal(result.code, 0, result.output);
+    assert.match(result.output, /without comparing Release snapshots/);
+    assert.doesNotMatch(result.output, /=> Testing Beta/);
+    assert.equal(reportFor(result).buildProfile, "dev");
+  }
+  const calls = readFileSync(f.calls, "utf8").trim().split("\n").map(JSON.parse);
+  assert.deepEqual(calls.filter(call => call.phase === "gopurs").map(call => call.args), [
+    ["--main", "Main", "--dev"], ["--main", "Main", "--dev"],
+  ]);
+  assert.deepEqual(calls.filter(call => call.phase === "npm").map(call => call.args), [
+    ["run", "build:native", "--silent"], ["run", "build:native", "--silent"],
+  ]);
+  assert(calls.filter(call => call.phase !== "gopurs").every(call => !call.args.includes("--dev")));
+  assert(!calls.some(call => call.phase === "gofmt"));
+  assert.equal(readFileSync(expected, "utf8"), "Release snapshot sentinel\n");
+  for (const [args, env] of [[["--dev", "--update-snapshots"], {}], [["-d"], { UPDATE_SNAPSHOTS: "1" }]]) {
+    const result = await f.run(["Alpha", ...args], env);
+    assert.equal(result.code, 2, result.output);
+    assert.match(result.output, /cannot update Release snapshots/);
+  }
+  assert.equal(readFileSync(f.calls, "utf8").trim().split("\n").length, calls.length);
+  assertSharedUntouched(f);
+});
+
+test("Dev flags reach native and JS compiler hosts through the public launcher", async t => {
+  const f = fixture(t);
+  cpSync(join(repository, "bin/gopurs"), join(f.root, "bin/gopurs"));
+  for (const tool of ["gopurs-native", "gopurs.js"]) writeFileSync(join(f.root, "bin", tool), fakeTool, { mode: 0o755 });
+  for (const [host, flag] of [["0", "-d"], ["1", "--dev"]]) {
+    const result = await f.run(["Alpha", flag], { GOPURS_JS: host, GOPURS_RUST: "0", GOPURS_DAEMON: "0" });
+    assert.equal(result.code, 0, result.output);
+  }
+  const calls = readFileSync(f.calls, "utf8").trim().split("\n").map(JSON.parse).filter(call => call.phase === "gopurs");
+  assert.deepEqual(calls.map(call => [call.tool, call.args]), [
+    ["gopurs-native", ["--main", "Main", "--dev"]],
+    ["gopurs.js", ["--main", "Main", "--dev"]],
+  ]);
+});
+
+test("clean campaigns rebuild the selected compiler host before running it", async t => {
+  for (const runner of ["test", "modtest"]) for (const dev of [false, true]) {
+    for (const [host, script, tool, env] of [
+      ["native", "build:native", "gopurs-native", {}],
+      ["JS", "build", "gopurs.js", { GOPURS_JS: "1" }],
+      ["Rust", "build:rust", "gopurs-rust", { GOPURS_RUST: "1" }],
+    ]) await t.test(`${runner}, ${dev ? "Dev" : "Release"}, ${host}`, async t => {
+      const f = fixture(t);
+      cpSync(join(repository, "bin/gopurs"), join(f.root, "bin/gopurs"));
+      for (const name of ["gopurs-native", "gopurs.js", "gopurs-rust"]) {
+        writeFileSync(join(f.root, "bin", name), fakeTool, { mode: 0o755 });
+      }
+      const bin = join(f.base, "gopurs-alpha/bin");
+      mkdirSync(bin, { recursive: true });
+      writeFileSync(join(bin, "test"), "#!/usr/bin/env bash\nset -e\n../gopurs/bin/gopurs --main Test.Main\n", { mode: 0o755 });
+      const result = await f.run([runner === "test" ? "Alpha" : "alpha", "-c", ...(dev ? ["--dev"] : [])], { GOPURS_GO_PACKAGES: "0", ...env }, runner);
+      assert.equal(result.code, 0, result.output);
+      const calls = readFileSync(f.calls, "utf8").trim().split("\n").map(JSON.parse);
+      assert.deepEqual(calls.filter(call => call.phase === "npm").map(call => call.args), [["run", script, "--silent"]]);
+      assert.equal(calls[0].phase, "npm", "rebuild precedes every test phase");
+      const compilerCalls = calls.filter(call => call.phase === "gopurs");
+      assert.equal(compilerCalls.length, 1);
+      assert.equal(compilerCalls[0].tool, tool);
+      assert.equal(compilerCalls[0].args.includes("--dev"), dev);
+      assert.equal(reportFor(result).buildProfile, dev ? "dev" : "release");
+    });
+  }
+});
+
+test("clean campaigns reject conflicting compiler hosts before building", async t => {
+  for (const runner of ["test", "modtest"]) await t.test(runner, async t => {
+    const f = fixture(t);
+    const bin = join(f.base, "gopurs-alpha/bin");
+    mkdirSync(bin, { recursive: true });
+    writeFileSync(join(bin, "test"), "#!/usr/bin/env bash\nexit 0\n", { mode: 0o755 });
+    const result = await f.run([runner === "test" ? "Alpha" : "alpha", "-c", "--dev"], { GOPURS_JS: "1", GOPURS_RUST: "1" }, runner);
+    assert.equal(result.code, 2, result.output);
+    assert.match(result.output, /[Ss]elect only one compiler host: GOPURS_RUST=1 or GOPURS_JS=1/);
+    assert(!existsSync(f.calls), "no compiler, build or test may start");
+    assert.deepEqual(readdirSync(join(f.base, "tmp")), []);
+  });
+});
+
+test("Dev module campaigns profile each backend call without changing script or app arguments", async t => {
+  const f = fixture(t);
+  const bin = join(f.base, "gopurs-alpha/bin");
+  mkdirSync(bin, { recursive: true });
+  writeFileSync(join(bin, "test"), `#!/usr/bin/env bash
+set -e
+test "$#" -eq 0
+../gopurs/bin/gopurs --main 'Test.Main With Spaces'
+../gopurs/bin/gopurs --main Other --output 'output with spaces'
+`, { mode: 0o755 });
+  mkdirSync(join(f.root, "runtime"));
+  writeFileSync(join(f.root, "runtime/sentinel"), "compiler resource");
+  const originalScript = readFileSync(join(bin, "test"), "utf8");
+  for (const flag of ["-d", "--dev"]) {
+    const result = await f.run(["alpha", flag, "-c", "--keep-workspace"], {}, "modtest");
+    assert.equal(result.code, 0, result.output);
+    const report = reportFor(result);
+    assert.equal(report.buildProfile, "dev");
+    assert.equal(readFileSync(join(report.targets[0].directory, "packages/gopurs/runtime/sentinel"), "utf8"), "compiler resource");
+  }
+  const release = await f.run(["alpha"], {}, "modtest");
+  assert.equal(release.code, 0, release.output);
+  assert.equal(reportFor(release).buildProfile, "release");
+  const calls = readFileSync(f.calls, "utf8").trim().split("\n").map(JSON.parse);
+  assert.deepEqual(calls.filter(call => call.phase === "gopurs").map(call => call.args), [
+    ["--dev", "--main", "Test.Main With Spaces"], ["--dev", "--main", "Other", "--output", "output with spaces"],
+    ["--dev", "--main", "Test.Main With Spaces"], ["--dev", "--main", "Other", "--output", "output with spaces"],
+    ["--main", "Test.Main With Spaces"], ["--main", "Other", "--output", "output with spaces"],
+  ]);
+  assert.equal(calls.filter(call => call.phase === "npm").length, 2, "clean rebuilds only once per campaign");
+  assert.equal(readFileSync(join(bin, "test"), "utf8"), originalScript);
+  assert.equal(readFileSync(join(f.root, "bin/gopurs"), "utf8"), fakeTool);
 });
 
 test("fixtures own their sources, companions, config, lock and output", async t => {
@@ -270,6 +408,123 @@ for (const [signal, code] of [["SIGINT", 130], ["SIGTERM", 143]]) test(`${signal
   assert.match(result.output, /Kept workspace/);
   assert.equal(reportFor(result).targets[0].status, "interrupted");
   assertSharedUntouched(f);
+});
+
+test("module campaigns stream both outputs before completion and retain logs without replay", async t => {
+  const f = fixture(t);
+  const bin = join(f.base, "gopurs-alpha/bin");
+  mkdirSync(bin, { recursive: true });
+  writeFileSync(join(bin, "test"), `#!/usr/bin/env node
+import { existsSync } from "node:fs";
+console.log("module-live-stdout");
+console.error("module-live-stderr");
+const timer = setInterval(() => {
+  if (existsSync(process.env.RUNNER_RELEASE)) {
+    clearInterval(timer);
+    process.exitCode = Number(process.env.RUNNER_STATUS);
+  }
+}, 10);
+`, { mode: 0o755 });
+  for (const status of [0, 7]) {
+    const release = join(f.base, `release-${status}`);
+    const running = f.start(["alpha", "--dev"], { RUNNER_RELEASE: release, RUNNER_STATUS: String(status) }, "modtest");
+    try {
+      await waitFor(() => running.output.includes("module-live-stdout") && running.output.includes("module-live-stderr"));
+      assert.equal(running.child.exitCode, null, "both messages must be visible while the module is still running");
+      const inProgress = reportFor({ output: running.output });
+      assert.equal(inProgress.targets[0].status, "running");
+      const log = join(inProgress.targets[0].directory, "logs/test.log");
+      for (const message of ["module-live-stdout", "module-live-stderr"]) assert.match(readFileSync(log, "utf8"), new RegExp(message));
+      writeFileSync(release, "continue");
+      const result = await running.completed;
+      assert.equal(result.code, status === 0 ? 0 : 1, result.output);
+      const report = reportFor(result);
+      assert.equal(report.targets[0].status, status === 0 ? "passed" : "failed");
+      for (const message of ["module-live-stdout", "module-live-stderr"]) {
+        assert.equal(result.output.split(message).length - 1, 1, "streamed output must not be replayed");
+        assert.equal(readFileSync(log, "utf8").split(message).length - 1, 1, "the log must retain one copy");
+      }
+    } finally {
+      if (running.child.exitCode === null) running.child.kill("SIGTERM");
+      await running.completed;
+    }
+  }
+});
+
+test("a closed terminal pipe stops the streamed command and preserves its log", async t => {
+  const f = fixture(t);
+  const log = join(f.base, "pipe.log");
+  const resultFile = join(f.base, "pipe-result.json");
+  const childFile = join(f.base, "pipe-child.json");
+  const command = `import { writeFileSync } from "node:fs";
+writeFileSync(${JSON.stringify(childFile)}, JSON.stringify({ pid: process.pid }));
+console.log("module-before-pipe-error");
+setInterval(() => {}, 1000);`;
+  const driver = `import { writeFileSync } from "node:fs";
+import { CommandRunner } from ${JSON.stringify(join(f.root, "tools/command-runner.mjs"))};
+const commands = new CommandRunner();
+try {
+  await commands.run(process.execPath, ["--input-type=module", "-e", ${JSON.stringify(command)}], { log: ${JSON.stringify(log)}, stream: true });
+  process.exitCode = 1;
+} catch (error) {
+  writeFileSync(${JSON.stringify(resultFile)}, JSON.stringify({ code: error.code, message: error.message }));
+} finally { commands.dispose(); }`;
+  const child = spawn(process.execPath, ["--input-type=module", "-e", driver]);
+  let stderr = "";
+  child.stderr.on("data", chunk => stderr += chunk);
+  const completed = new Promise((resolve, reject) => {
+    child.once("error", reject);
+    child.once("close", code => resolve(code));
+  });
+  child.stdout.destroy();
+  try {
+    await waitFor(() => existsSync(resultFile));
+    assert.equal(await completed, 0, stderr);
+    const failure = JSON.parse(readFileSync(resultFile, "utf8"));
+    assert.equal(failure.code, "EPIPE", failure.message);
+    assert.match(readFileSync(log, "utf8"), /module-before-pipe-error/);
+    const { pid } = JSON.parse(readFileSync(childFile, "utf8"));
+    await waitFor(() => {
+      try { process.kill(pid, 0); return false; } catch (error) { return error.code === "ESRCH"; }
+    });
+  } finally {
+    if (child.exitCode === null) child.kill("SIGTERM");
+    await completed;
+  }
+});
+
+for (const [signal, code] of [["SIGINT", 130], ["SIGTERM", 143]]) test(`${signal} stops streamed module descendants and retains their log`, async t => {
+  const f = fixture(t);
+  const bin = join(f.base, "gopurs-alpha/bin");
+  mkdirSync(bin, { recursive: true });
+  writeFileSync(join(bin, "test"), `#!/usr/bin/env node
+import { spawn } from "node:child_process";
+import { writeFileSync } from "node:fs";
+const child = spawn(process.execPath, ["-e", "setInterval(() => {}, 1000)"], { stdio: "inherit" });
+writeFileSync(process.env.RUNNER_PAUSE, JSON.stringify({ pid: process.pid, child: child.pid }));
+console.error("module-stream-ready");
+setInterval(() => {}, 1000);
+`, { mode: 0o755 });
+  const pause = join(f.base, "pause.json");
+  const running = f.start(["alpha", "--dev"], { RUNNER_PAUSE: pause }, "modtest");
+  try {
+    await waitFor(() => running.output.includes("module-stream-ready") && existsSync(pause));
+    const pids = JSON.parse(readFileSync(pause, "utf8"));
+    running.child.kill(signal);
+    const result = await running.completed;
+    assert.equal(result.code, code, result.output);
+    for (const pid of [pids.pid, pids.child]) await waitFor(() => {
+      try { process.kill(pid, 0); return false; } catch (error) { return error.code === "ESRCH"; }
+    });
+    const report = reportFor(result);
+    assert.equal(report.targets[0].status, "interrupted");
+    assert.equal(result.output.split("module-stream-ready").length - 1, 1);
+    assert.match(readFileSync(join(report.targets[0].directory, "logs/test.log"), "utf8"), /module-stream-ready/);
+    assertSharedUntouched(f);
+  } finally {
+    if (running.child.exitCode === null) running.child.kill("SIGTERM");
+    await running.completed;
+  }
 });
 
 test("module campaigns list all eligible siblings, resume explicitly and stop on failure", async t => {

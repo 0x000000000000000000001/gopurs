@@ -34,7 +34,7 @@ const array = list => { const values = []; for (; list instanceof Cons; list = l
 const wire = mod => Wire.write(Wire.codecModule(Wire.codecAnn))(mod)();
 const metadataEntries = metadata => Object.fromEntries(Object.entries(metadata).map(([name, values]) =>
   [name, Map.toUnfoldable(unfoldableArray)(name === 'globalTypes' ? LookupTable.completeOrFail(values) : values).map(pair => [pair.value0, pair.value1])]));
-function setup(t, sources) {
+function setup(t, sources, devMode = false) {
   const workspace = mkdtempSync(join(tmpdir(), 'gopurs-compact-proof-'));
   t.after(() => rmSync(workspace, { recursive: true, force: true }));
   const src = join(workspace, 'src'), output = join(workspace, 'output'), stage = join(workspace, 'stage');
@@ -49,12 +49,14 @@ function setup(t, sources) {
     for (const [name, text] of Object.entries(sources)) writeFileSync(join(src, name + '.purs'), text);
     const result = spawnSync(compiler, ['compile', '--codegen', 'corefn', '--output', output, ...Object.keys(sources).map(name => join(src, name + '.purs'))], { cwd: workspace, encoding: 'utf8', timeout: 30000 });
     assert.ifError(result.error); assert.equal(result.status, 0, result.stdout + result.stderr);
-    mkdirSync(join(output, '.gopurs-cache'), { recursive: true });
+    mkdirSync(session.cacheRoot, { recursive: true });
     stamp();
   };
-  const session = { root: output, input: output, stage, context: 'context-test-v1', count: Object.keys(sources).length };
-  const full = () => run(Prepare.prepareModulesWithCache(output)(session.count)(1)(Nothing.value)(Map.empty));
-  const candidate = (jobs = 1) => run(Persistent.preparePersistent(session)(jobs)(Nothing.value)(Map.empty));
+  const session = { root: output, cacheRoot: devMode ? join(output, '.gopurs-cache', 'profiles', 'dev') : join(output, '.gopurs-cache'), input: output, stage, context: devMode ? 'context-test-dev-v4' : 'context-test-v1', count: Object.keys(sources).length };
+  const prepare = devMode ? Prepare.prepareModulesWithCacheForProfile(true) : Prepare.prepareModulesWithCache;
+  const persistent = devMode ? Persistent.preparePersistentForProfile(true) : Persistent.preparePersistent;
+  const full = () => run(prepare(output)(session.count)(1)(Nothing.value)(Map.empty));
+  const candidate = (jobs = 1) => run(persistent(session)(jobs)(Nothing.value)(Map.empty));
   const publish = async (cache, jobs = 1) => {
     await run(Persistent.publishPersistent(session)(jobs)(cache));
     copyFileSync(join(stage, 'session.json'), join(stage, 'prior', 'manifest.json'));
@@ -145,7 +147,73 @@ test('literal edit reuses anchored compact preparation and materializes every re
   await oracle(await f.candidate(), await f.full());
 });
 
-test('literal metadata proof preserves ADT layouts, classes and foreign types', async t => {
+test('Dev generic preparation replays compact proofs and falls back under the same policy', async t => {
+  const f = setup(t, { Poly: poly, Leaf: leaf('before'), Main: main }, true);
+  f.compile({});
+  const initial = await f.full();
+  assert.equal(initial.devMode, true);
+  assert.equal(Map.size(initial.mono.instantiations), 0, 'Dev creates no specialization demands');
+  assert.equal(Set.size(initial.mono.bodyReads), 0, 'generic preparation reads no definition bodies');
+  const withoutUsage = decls => JSON.parse(JSON.stringify(decls, (key, value) => key === 'sourceUsage' ? undefined : value));
+  for (const mod of array(initial.prepared.modules)) {
+    const original = array(initial.sourceModules).find(source => source.name === mod.name);
+    assert.deepEqual(withoutUsage(mod.decls), withoutUsage(original.decls), 'typed generic declarations are preserved, apart from invalidated source usage facts');
+  }
+  await f.publish(initial);
+  f.compile({ Leaf: leaf('after') });
+  const candidate = await f.candidate();
+  assert.equal(candidate.devMode, true, 'compact replay retains the preparation policy');
+  await oracle(candidate, await f.full());
+  await f.publish(candidate);
+  const resident = await run(Prepare.prepareModulesDeltaForProfile(true)(f.output)(f.session.count)(1)(Nothing.value)(Map.empty)(candidate));
+  assert.equal(resident.prepared.modules, candidate.prepared.modules);
+  assert(resident.compactSourceDelta instanceof Nothing);
+  f.compile({ Leaf: leaf('after', '"hello"') });
+  const fallback = await f.candidate();
+  assert.equal(fallback.devMode, true);
+  assert(fallback.materialize instanceof Nothing, 'a changed source type still invalidates the compact shape proof');
+  assert.deepEqual(array(fallback.prepared.modules).map(wire), array((await f.full()).prepared.modules).map(wire));
+});
+
+test('Dev generic preparation rejects corrupted and other-policy preparation proofs', async t => {
+  const f = setup(t, { Poly: poly, Leaf: leaf('before'), Main: main }, true);
+  f.compile({}); await f.publish(await f.full());
+  f.compile({ Leaf: leaf('after') });
+  const context = f.session.context;
+  f.session.context = 'context-test-dev-v3';
+  const foreignPolicy = await f.candidate();
+  assert.equal(foreignPolicy.devMode, true);
+  assert(foreignPolicy.materialize instanceof Nothing, 'a preceding policy cannot anchor this replay');
+  f.session.context = context;
+  const path = join(f.session.cacheRoot, 'preparation-literals-v1', 'proof.json');
+  const envelope = JSON.parse(readFileSync(path, 'utf8'));
+  envelope.payload += ' ';
+  writeFileSync(path, JSON.stringify(envelope));
+  const corrupted = await f.candidate();
+  assert.equal(corrupted.devMode, true);
+  assert(corrupted.materialize instanceof Nothing);
+  assert.deepEqual(array(corrupted.prepared.modules).map(wire), array((await f.full()).prepared.modules).map(wire));
+});
+
+test('Dev generic preparation replays a dictionary edit without rewriting other modules', async t => {
+  const dict = n => `module Dict (dict) where\ndict :: { method :: Int -> Int }\ndict = { method: \\_ -> ${n} }\n`;
+  const apply = 'module Apply (apply) where\napply :: forall a. { method :: a -> Int } -> a -> Int\napply d x = d.method x\n';
+  const caller = 'module Caller (answer) where\nimport Dict (dict)\nimport Apply (apply)\nanswer :: Int\nanswer = apply dict 1\n';
+  const f = setup(t, { Dict: dict(1), Apply: apply, Caller: caller }, true);
+  f.compile({}); const initial = await f.full();
+  assert.equal(Set.size(initial.mono.bodyReads), 0);
+  assert.equal(Map.size(initial.mono.instantiations), 0);
+  await f.publish(initial); f.compile({ Dict: dict(2) });
+  const candidate = await f.candidate();
+  assert.equal(candidate.devMode, true);
+  assert(candidate.materialize instanceof Just, 'without specialization the dictionary body changes only its source module');
+  const expected = await f.full();
+  await oracle(candidate, expected);
+  const provider = cache => wire(array(cache.prepared.modules).find(mod => mod.name === 'Apply'));
+  assert.equal(provider(expected), provider(initial), 'the generic provider does not embed another module’s dictionary body');
+});
+
+for (const devMode of [false, true]) test(`${devMode ? 'Dev' : 'Release'} literal metadata proof preserves ADT layouts, classes and foreign types`, async t => {
   const layout = text => `module Layout (Token(..), Chain(..), Wrap(..), class Select, select, foreignValue, label) where
 data Token = LeftToken | RightToken
 data Chain = End | Next Int Chain
@@ -158,7 +226,7 @@ foreign import foreignValue :: Int
 label :: String
 label = "${text}"
 `;
-  const f = setup(t, { Poly: poly, Leaf: leaf('unchanged'), Layout: layout('before') });
+  const f = setup(t, { Poly: poly, Leaf: leaf('unchanged'), Layout: layout('before') }, devMode);
   f.compile({});
   const initial = await f.full();
   assert.equal(initial.prepared.metadataUnchanged, false);
@@ -644,7 +712,7 @@ test('speculative projection requires the exact accepted proof envelope and sess
   const proofPath = join(directory, 'proof.json');
   const envelope = JSON.parse(readFileSync(proofPath, 'utf8'));
   const proof = JSON.parse(envelope.payload);
-  const pending = await run(Persistent.preloadProjection(8)(Map.empty)(JSON.stringify({root: f.session.root, context: f.session.context})));
+  const pending = await run(Persistent.preloadProjection(8)(Map.empty)(JSON.stringify({root: f.session.root, cacheRoot: f.session.cacheRoot, context: f.session.context})));
   assert(pending instanceof Just);
   f.compile({ Leaf: leaf('after') });
   const candidate = preload => run(Persistent.preparePersistentWithProjection(preload)(f.session)(8)(Nothing.value)(Map.empty));
@@ -656,6 +724,7 @@ test('speculative projection requires the exact accepted proof envelope and sess
   await oracle(await candidate(pending), expected);
   for (const altered of [
     {...pending.value0, root: pending.value0.root + '/other'},
+    {...pending.value0, cacheRoot: pending.value0.cacheRoot + '/other'},
     {...pending.value0, context: 'another-context'},
     {...pending.value0, count: pending.value0.count + 1},
   ]) assert.equal(Set.size((await candidate(new Just(altered))).reusable), 0);
@@ -666,5 +735,5 @@ test('speculative projection requires the exact accepted proof envelope and sess
   writeFileSync(path, bytes);
   await oracle(await candidate(pending), expected);
   assert(await run(Persistent.preloadProjection(8)(Map.empty)('not json')) instanceof Nothing);
-  assert(await run(Persistent.preloadProjection(8)(Map.empty)(JSON.stringify({root: f.session.root, context: 'wrong'}))) instanceof Nothing);
+  assert(await run(Persistent.preloadProjection(8)(Map.empty)(JSON.stringify({root: f.session.root, cacheRoot: f.session.cacheRoot, context: 'wrong'}))) instanceof Nothing);
 });

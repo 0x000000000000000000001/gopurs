@@ -35,7 +35,7 @@ config :: CompilerConfig
 config =
   { mainModule: Nothing, ffiDirectory: Nothing, rewriteLimit: 10000
   , prepareJobs: 8, optimizerJobs: 8, emission: { jobs: 8, pipelined: true }
-  , allocationProfile: Nothing, forceBuild: false, goPackages: false, buildManifest: true
+  , allocationProfile: Nothing, forceBuild: false, goPackages: false, buildManifest: true, devMode: false
   }
 
 type Counts = { started :: Int, finished :: Int, active :: Int, used :: Int, closed :: Int }
@@ -103,7 +103,7 @@ lifecycleCases = do
   Cache.withSessionUsing begin (release fast) (Just (\_ -> pure (Just 7))) \_ immediate ->
     liftEffect $ check (immediate == Just 7) "immediate result lost before handle retention"
   where
-  session = { status: "miss", reason: "test", stage: "fake", input: "", inputLayout: "", output: "", root: "", count: 0, ffi: [], context: "", sameTast: false, packageRequest: "" }
+  session = { status: "miss", reason: "test", stage: "fake", input: "", inputLayout: "", output: "", root: "", cacheRoot: "", count: 0, ffi: [], context: "", sameTast: false, packageRequest: "" }
   begin notify = notify "seed" *> pure session
   release counts _ = liftEffect do
     value <- Ref.read counts
@@ -162,7 +162,7 @@ headerCases = do
     Just action -> action >>= \value -> liftEffect $ check (value == Just 7) "immediate header result lost"
   liftEffect $ log "HEADER-PRELOAD-NATIVE-PASS"
   where
-  headerSession = { status: "miss", reason: "test", stage: "headers", input: "", inputLayout: "", output: "", root: "root", count: 2, ffi: [], context: "context", sameTast: false, packageRequest: "" }
+  headerSession = { status: "miss", reason: "test", stage: "headers", input: "", inputLayout: "", output: "", root: "root", cacheRoot: "root/.gopurs-cache", count: 2, ffi: [], context: "context", sameTast: false, packageRequest: "" }
   part name text = { name, part: "2", text }
 
 headerText :: String -> Effect String

@@ -15,7 +15,7 @@ export function resolveBuildCacheHelper() {
     throw new Error(`Build cache locking is unsupported on ${process.platform}`);
   }
   const hash = createHash("sha256");
-  for (const name of ["go.mod", "contract.go", "store.go", "session.go", "inputpack.go", "compiler.go", "modules.go", "capsules.go", "packages.go", "overlay.go", "overlay_sections.go", "packs.go", "main.go"]) {
+  for (const name of ["go.mod", "contract.go", "store.go", "profiles.go", "session.go", "inputpack.go", "compiler.go", "modules.go", "capsules.go", "packages.go", "overlay.go", "overlay_sections.go", "packs.go", "main.go"]) {
     const content = readFileSync(join(sources, name));
     hash.update(`${name}:${content.length}:`).update(content);
   }

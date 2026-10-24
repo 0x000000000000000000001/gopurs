@@ -212,6 +212,7 @@ nativeCallback translate context nextId indexed callback = case unwrapTcoExpr ca
           , loopCtx = []
           , options = { isTail: true, inEffectBlock: false }
           , mbExpectedExprType = expectedResult
+          , mbExpectedGoType = Nothing
           }) nextId grouped.body
     pure
       { stmts: StmtEmpty

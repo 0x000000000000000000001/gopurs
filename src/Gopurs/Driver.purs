@@ -22,8 +22,8 @@ import Gopurs.Cache.HeaderPreload as HeaderPreload
 import Gopurs.Driver.Cache as BuildCache
 import Gopurs.Driver.Config (CompilerConfig, readConfig)
 import Gopurs.Driver.Output (writeEntryPoints, writeRuntime, writePackageFiles)
-import Gopurs.Driver.Prepare (PreparedCache, prepareModulesDelta, prepareModulesWithCache)
-import Gopurs.Driver.Prepare.Persistent (preloadProjection, preparePersistentWithProjection, publishPersistent)
+import Gopurs.Driver.Prepare (PreparedCache, prepareModulesDeltaForProfile, prepareModulesWithCacheForProfile)
+import Gopurs.Driver.Prepare.Persistent (preloadProjection, preparePersistentWithProjectionForProfile, publishPersistent)
 import Gopurs.Driver.Manifest as Manifest
 import Gopurs.Cache.Modules as ModuleCache
 import Gopurs.Metrics as Metrics
@@ -98,16 +98,16 @@ compileCached config cacheRef backends ffiDigestsRef = Metrics.measure "backend 
       preparedBase <- Metrics.measure "prepare delta" \_ ->
         if config.forceBuild then do
           BuildCache.materializeAllInputs session
-          prepareModulesWithCache session.input session.count config.prepareJobs config.mainModule directives
+          prepareModulesWithCacheForProfile config.devMode session.input session.count config.prepareJobs config.mainModule directives
         else if config.buildManifest && config.optimizerJobs > 1 then
-          preparePersistentWithProjection projected session config.prepareJobs config.mainModule directives
+          preparePersistentWithProjectionForProfile config.devMode projected session config.prepareJobs config.mainModule directives
         else case cached of
           Just previous -> do
             BuildCache.materializeAllInputs session
-            prepareModulesDelta session.input session.count config.prepareJobs config.mainModule directives previous
+            prepareModulesDeltaForProfile config.devMode session.input session.count config.prepareJobs config.mainModule directives previous
           Nothing -> do
             BuildCache.materializeAllInputs session
-            prepareModulesWithCache session.input session.count config.prepareJobs config.mainModule directives
+            prepareModulesWithCacheForProfile config.devMode session.input session.count config.prepareJobs config.mainModule directives
       -- The anchored compact proof already establishes this exact source
       -- delta. The optional manifest adds no evidence on that path; leave it
       -- for the next full preparation, where an older sidecar is conservative.
@@ -115,7 +115,7 @@ compileCached config cacheRef backends ffiDigestsRef = Metrics.measure "backend 
             Nothing -> true
             Just _ -> false
       previousManifest <- if useManifest
-        then Metrics.measure "build manifest read" \_ -> Manifest.readManifest session.root
+        then Metrics.measure "build manifest read" \_ -> Manifest.readManifest session.cacheRoot
         else pure Nothing
       manifest <- if useManifest
         then Just <$> Metrics.measure "build manifest encode" \_ ->
@@ -139,7 +139,7 @@ compileCached config cacheRef backends ffiDigestsRef = Metrics.measure "backend 
           let
             interfaceChanged = Array.length (Array.filter (\(Tuple _ reason) -> reason == "interface" || reason == "source+interface") (Map.toUnfoldable manifestChanged :: Array _))
           liftEffect $ Console.error ("[gopurs] build manifest: " <> show (Map.size manifestChanged) <> " changed, " <> show interfaceChanged <> " interface, " <> show (Set.size withCache.reusable) <> " reusable")
-          Metrics.measure "build manifest write" \_ -> Manifest.writeManifest session.root current
+          Metrics.measure "build manifest write" \_ -> Manifest.writeManifest session.cacheRoot current
         Nothing -> case withCache.compactSourceDelta of
           Just _ -> liftEffect $ Console.error ("[gopurs] build manifest: 1 changed, 0 interface, " <> show (Set.size withCache.reusable) <> " reusable (committed preparation proof)")
           Nothing -> pure unit
@@ -149,7 +149,7 @@ compileCached config cacheRef backends ffiDigestsRef = Metrics.measure "backend 
         let ffi = Map.fromFoldable (map (\source -> Tuple source.name source) frozen)
         let currentFfi = Map.fromFoldable (map (\source -> Tuple source.name source.digest) frozen)
         memoryFfi <- liftEffect (Ref.read ffiDigestsRef)
-        diskFfi <- if config.buildManifest then Manifest.readFfiDigests session.root else pure Nothing
+        diskFfi <- if config.buildManifest then Manifest.readFfiDigests session.cacheRoot else pure Nothing
         let priorFfi = if Map.isEmpty memoryFfi then fromMaybe Map.empty diskFfi else memoryFfi
         let
           ffiChanged = Array.mapMaybe
@@ -174,7 +174,7 @@ compileCached config cacheRef backends ffiDigestsRef = Metrics.measure "backend 
         reused <- Metrics.measure "optimize + emit" \_ -> buildWithHeaders headers session ffi config prepared withCache.reusable withCache.materialize headerCandidates backends priorFfi
         if config.goPackages then do
           request <- Metrics.measure "Go exports" \_ -> BuildCache.packages session prepared.mainModules
-          Metrics.measure "Go packages" \_ -> writePackageFiles session.output session.root prepared.mainModules request (session.stage <> "/package-result.json") (session.stage <> "/package-overlay.json")
+          Metrics.measure "Go packages" \_ -> writePackageFiles session.output session.cacheRoot prepared.mainModules request (session.stage <> "/package-result.json") (session.stage <> "/package-overlay.json")
         else
           Metrics.measure "entry points" \_ -> writeEntryPoints session.output prepared.mainModules
         diagnostics <- liftEffect Diagnostics.recorded
@@ -182,8 +182,8 @@ compileCached config cacheRef backends ffiDigestsRef = Metrics.measure "backend 
         when config.buildManifest $ do
           Metrics.measure "prepare proof publish" \_ -> publishPersistent session config.prepareJobs withCache
           let restoredNames = Set.fromFoldable (map _.name reused)
-          Metrics.measure "reads publish" \_ -> ModuleCache.publishReads session.stage session.root (Array.filter (not <<< flip Set.member restoredNames) moduleNames)
-          Metrics.measure "ffi digests write" \_ -> Manifest.writeFfiDigests session.root currentFfi
+          Metrics.measure "reads publish" \_ -> ModuleCache.publishReads session.stage session.cacheRoot (Array.filter (not <<< flip Set.member restoredNames) moduleNames)
+          Metrics.measure "ffi digests write" \_ -> Manifest.writeFfiDigests session.cacheRoot currentFfi
         liftEffect do
           Ref.write (Just withCache) cacheRef
           Ref.write currentFfi ffiDigestsRef

@@ -892,7 +892,7 @@ headerSafeFromReads changed reads names =
 -- the committed, hash-verified objects frozen under the private prior tree.
 publishReads :: String -> String -> Array String -> Aff Unit
 publishReads stage output names = do
-  let directory = output <> "/.gopurs-cache/reads-v1"
+  let directory = output <> "/reads-v1"
   void $ attempt (FS.mkdir directory)
   for_ names \name -> void $ attempt
     (linkOrCopy (stage <> "/modules/" <> name <> "/reads.json") (directory <> "/" <> name <> ".json"))

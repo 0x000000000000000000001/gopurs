@@ -8,6 +8,7 @@ module Gopurs.ConstructorLayout
   , typeArguments
   , prepare
   , fieldType
+  , withExpectedRepresentation
   ) where
 
 import Prelude
@@ -144,6 +145,32 @@ prepare form metadata modNameStr fallbackModule name ctorType =
       _ -> Nothing
   in
     { layout: ctorLayout, fieldTypeArgs: typeArgs, typeArgs, pointerType, leafPointerType, adtFullName }
+
+-- Construction is free to choose the representation its consumer already
+-- requires. This changes allocation only; the source type still supplies the
+-- declaration and callback annotations.
+withExpectedRepresentation :: Maybe GoType -> PreparedConstructor -> PreparedConstructor
+withExpectedRepresentation expected prepared =
+  let
+    chosen = case expected of
+      Just TypeValue -> Just (map (const TypeValue) prepared.typeArgs)
+      Just (TypeStructPointer pointer)
+        | pointer.baseStructName == prepared.layout.identity.baseStructName
+            || (case prepared.leafPointerType of
+              Just (TypeStructPointer leaf) -> pointer.baseStructName == leaf.baseStructName
+              _ -> false) -> Just pointer.typeArgs
+      _ -> Nothing
+  in
+    case chosen of
+      Just args | Array.length args == Array.length prepared.typeArgs -> prepared
+        { typeArgs = args
+        , fieldTypeArgs = args
+        , pointerType = structPointer prepared.layout.identity args
+        , leafPointerType = map (case _ of
+            TypeStructPointer pointer -> structPointer pointer args
+            other -> other) prepared.leafPointerType
+        }
+      _ -> prepared
 
 fieldType :: CodegenMetadata -> String -> ConstructorFields -> Array GoType -> Int -> GoType
 fieldType metadata modNameStr info args index = case Array.index info.fields index of

@@ -68,11 +68,11 @@ func (s store) readModuleSource(source ModuleSource) ([]byte, error) {
 // keys and decodes the business schemas. No public output is used as authority.
 func freezeModuleCache(stage string, state buildSession, force bool, result *SessionResponse) error {
 	index := []ModuleMemo{}
-	s := store{root: state.Spec.Output, cache: filepath.Join(state.Spec.Output, ".gopurs-cache")}
+	s := store{root: state.Spec.Output, cache: cacheDirectory(state.Spec)}
 	if err := s.ensurePacks(); err != nil {
 		return err
 	}
-	lock, err := os.OpenFile(filepath.Join(s.cache, "write.lock"), os.O_RDWR, 0600)
+	lock, err := os.OpenFile(publicLockPath(s.root), os.O_RDWR, 0600)
 	if err != nil {
 		return err
 	}

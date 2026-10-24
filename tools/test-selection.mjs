@@ -8,7 +8,7 @@ const excluded = new Set();
 export class UsageError extends Error {}
 
 export function parseOptions(args, { modules = false, env = process.env } = {}) {
-  const options = { targets: [], clean: false, list: false, all: false, keep: false, keepGoing: false, update: false, resume: null, resumeFailed: null, help: false };
+  const options = { targets: [], clean: false, dev: false, list: false, all: false, keep: false, keepGoing: false, update: false, resume: null, resumeFailed: null, help: false };
   if (!modules) {
     const update = env.UPDATE_SNAPSHOTS ?? "0";
     if (update !== "0" && update !== "1") throw new UsageError("UPDATE_SNAPSHOTS must be 0 or 1.");
@@ -18,6 +18,7 @@ export function parseOptions(args, { modules = false, env = process.env } = {}) 
     const arg = args[i];
     if (arg === "--") { options.targets.push(...args.slice(i + 1)); break; }
     if (arg === "-c" || arg === "--clean") options.clean = true;
+    else if (arg === "-d" || arg === "--dev") options.dev = true;
     else if (arg === "--list") options.list = true;
     else if (arg === "--all") options.all = true;
     else if (arg === "--help" || arg === "-h") options.help = true;
@@ -43,6 +44,7 @@ export function parseOptions(args, { modules = false, env = process.env } = {}) 
   if (options.resumeFailed && (options.all || options.targets.length || options.resume)) {
     throw new UsageError("Use --resume-failed without targets, --all or --skip-before.");
   }
+  if (options.dev && options.update) throw new UsageError("--dev cannot update Release snapshots. Run without --dev to update them.");
   return options;
 }
 

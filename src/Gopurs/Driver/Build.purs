@@ -29,10 +29,11 @@ import Gopurs.Cache.Wire as Wire
 import Gopurs.Driver.Prepare (PreparedModules)
 import Gopurs.Emission (EmissionEntry, withEmitter)
 import Gopurs.Metrics as Metrics
-import PureScript.Backend.Optimizer.Builder (BuildEnv, BuildOptions, BuildObservation, JobScheduler, ParallelStats, buildModulesWithObservation, buildModulesParallelWithBindingLookup)
+import PureScript.Backend.Optimizer.Builder (BuildEnv, BuildOptions, BuildObservation, JobScheduler, ParallelStats, buildModulesWithObservationAndProfile, buildModulesParallelWithBindingLookupAndProfile)
 import PureScript.Backend.Optimizer.Convert (BackendModule)
 import PureScript.Backend.Optimizer.CoreFn (Ann, Module(..))
 import PureScript.Backend.Optimizer.Semantics.Foreign (coreForeignSemantics)
+import PureScript.Backend.Optimizer.Semantics (OptimizationProfile(..))
 
 type OptimizedModule =
   { coreFnModule :: Module Ann
@@ -144,7 +145,7 @@ buildWithHeaders pendingHeaders session ffi config preparedInput reusableModules
         Metrics.measure "cached module producer" \_ ->
           for_ (Array.zip (Array.fromFoldable prepared.modules) previousBackends) \(Tuple coreFnModule backendMod) -> enqueueCached coreFnModule backendMod
       Nothing -> Metrics.measure "PBO producer" \_ ->
-        runBuilder config.optimizerJobs cache restoredHeaders prepareFresh
+        runBuilder (if config.devMode then Dev else Release) config.optimizerJobs cache restoredHeaders prepareFresh
           { onSkipModule: \_ mod view -> checkedLookup mod (ModuleCache.lookupBackendWithReads cache mod view)
           , onReads: \_ mod reads -> ModuleCache.captureReads cache mod reads
           }
@@ -170,15 +171,15 @@ buildWithHeaders pendingHeaders session ffi config preparedInput reusableModules
     <> ", attempted=" <> show (Map.size capsules) <> ", hits=" <> show capsuleHits <> ", created=" <> show capsuleCreated
   liftEffect (Array.fromFoldable <<< Map.values <$> Ref.read cache.reused)
 
-runBuilder :: Int -> ModuleCache.ModuleCache -> Map.Map String BackendModule -> (Module Ann -> Aff (Module Ann)) -> BuildObservation Aff -> (BuildEnv -> Module Ann -> BackendModule -> Aff Unit) -> BuildOptions Aff -> List (Module Ann) -> Aff Unit
-runBuilder jobs cache restoredHeaders prepareFresh observer onReuse options modules
-  | jobs <= 1 = buildModulesWithObservation (Just observer) onReuse options modules
+runBuilder :: OptimizationProfile -> Int -> ModuleCache.ModuleCache -> Map.Map String BackendModule -> (Module Ann -> Aff (Module Ann)) -> BuildObservation Aff -> (BuildEnv -> Module Ann -> BackendModule -> Aff Unit) -> BuildOptions Aff -> List (Module Ann) -> Aff Unit
+runBuilder profile jobs cache restoredHeaders prepareFresh observer onReuse options modules
+  | jobs <= 1 = buildModulesWithObservationAndProfile profile (Just observer) onReuse options modules
   | otherwise = do
       let edges = foldl (\count owners -> count + Array.length owners) 0 (Map.values cache.schedulingReads)
       liftEffect $ Console.error $ "[gopurs] PBO scheduling hints: owners=" <> show (Map.size cache.schedulingReads) <> ", edges=" <> show edges
       liftEffect $ Console.error $ "[gopurs] PBO restored headers: " <> show (Map.size restoredHeaders)
       scheduler <- createJobScheduler
-      buildModulesParallelWithBindingLookup (Just (ModuleCache.readCachedBinding cache)) restoredHeaders cache.schedulingReads prepareFresh (Just (ModuleCache.readImplementationsSync cache)) (Just observer) onReuse { jobs, scheduler, onStats: Just reportParallelStats } options modules
+      buildModulesParallelWithBindingLookupAndProfile profile (Just (ModuleCache.readCachedBinding cache)) restoredHeaders cache.schedulingReads prepareFresh (Just (ModuleCache.readImplementationsSync cache)) (Just observer) onReuse { jobs, scheduler, onStats: Just reportParallelStats } options modules
 
 -- An AVar has a single result slot. A worker's put can remain suspended if the
 -- coordinator fails before taking its result. Run this scheduler inside the

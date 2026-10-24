@@ -49,7 +49,7 @@ const context = expected => ({
     metadata, codegenStateRef: Ref.new({ declarations: [], globalId: 0, reboxPairs: emptySet })(),
     depth: 4, modNameStr: 'Probe', recVars: ['recursive'], moduleFunctions: emptyMap, bound: emptyMap,
     tcoIdent: new Just('tail'), loopCtx: [{ sentinel: true }], options: { isTail: true, inEffectBlock: true },
-    mbExpectedExprType: expected,
+    mbExpectedExprType: expected, mbExpectedGoType: Nothing.value,
 });
 const pairCount = ctx => toUnfoldable(unfoldableArray)(Ref.read(ctx.codegenStateRef)().reboxPairs).length;
 const statements = result => flattenStmts(result.stmts).map(printGoExpr);

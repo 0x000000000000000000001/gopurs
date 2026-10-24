@@ -48,6 +48,7 @@ type SessionResponse struct {
 	Status         string       `json:"status"`
 	Reason         string       `json:"reason"`
 	Root           string       `json:"root"`
+	CacheRoot      string       `json:"cacheRoot"`
 	Stage          string       `json:"stage"`
 	Input          string       `json:"input"`
 	InputLayout    string       `json:"inputLayout"`
@@ -148,6 +149,7 @@ func sessionOperationOnMiss(req SessionRequest, result *SessionResponse, onMiss 
 				return fmt.Errorf("build workspace changed")
 			}
 			result.Stage, result.Input, result.Output, result.Count = stage, filepath.Join(stage, "input"), filepath.Join(stage, "output"), state.Count
+			result.CacheRoot = cacheDirectory(state.Spec)
 			result.InputLayout = inputLayout(state.Spec)
 			if req.Operation == "read-parts" {
 				return readSessionParts(stage, state, req, result)
@@ -174,6 +176,7 @@ func sessionOperationOnMiss(req SessionRequest, result *SessionResponse, onMiss 
 		return fmt.Errorf("build workspace changed")
 	}
 	result.Stage, result.Input, result.Output, result.Count = stage, filepath.Join(stage, "input"), filepath.Join(stage, "output"), state.Count
+	result.CacheRoot = cacheDirectory(state.Spec)
 	result.InputLayout = inputLayout(state.Spec)
 	switch req.Operation {
 	case "plan":
@@ -225,13 +228,14 @@ func beginSession(spec Spec, force bool, result *SessionResponse) error {
 }
 
 func beginSessionOnMiss(spec Spec, force bool, result *SessionResponse, onMiss func(string)) error {
+	result.CacheRoot = cacheDirectory(spec)
 	result.InputLayout = inputLayout(spec)
 	result.SameTAST = false
 	baseInputs := spec.Inputs
 	result.Reason = "recipe-absent"
 	var saved recipe
 	var observed *Snapshot
-	data, err := os.ReadFile(filepath.Join(spec.Output, ".gopurs-cache", "recipe.json"))
+	data, err := os.ReadFile(filepath.Join(cacheDirectory(spec), "recipe.json"))
 	if err == nil && strictJSON(data, &saved) == nil && saved.Schema == Schema {
 		spec.Inputs = saved.Inputs
 		lookup, lookupErr := execute(Request{Schema: Schema, Operation: "lookup", Spec: spec})
@@ -256,9 +260,10 @@ func beginSessionOnMiss(spec Spec, force bool, result *SessionResponse, onMiss f
 	if !force && onMiss != nil && observed != nil {
 		if context, contextErr := moduleContext(spec, *observed); contextErr == nil {
 			seed, seedErr := json.Marshal(struct {
-				Root    string `json:"root"`
-				Context string `json:"context"`
-			}{spec.Output, context})
+				Root      string `json:"root"`
+				CacheRoot string `json:"cacheRoot"`
+				Context   string `json:"context"`
+			}{spec.Output, cacheDirectory(spec), context})
 			if seedErr == nil {
 				func() {
 					// An unavailable optional preload must not introduce a build failure.
@@ -735,13 +740,13 @@ func publishSession(stage string, state buildSession, req SessionRequest, result
 	// This is a lookup hint, not authority. A stale/corrupt recipe cannot match
 	// the manifest's content key; concurrent writers can at worst cause a miss.
 	data, _ := json.Marshal(recipe{Schema: Schema, Inputs: state.Spec.Inputs})
-	if err := atomicWrite(filepath.Join(state.Spec.Output, ".gopurs-cache", "recipe.json"), data, 0600); err != nil {
+	if err := atomicWrite(filepath.Join(cacheDirectory(state.Spec), "recipe.json"), data, 0600); err != nil {
 		return err
 	}
 	if usesGoPackages(state.Spec) || packPublicationEnabled() {
 		// Cache maintenance is best-effort after the semantic commit. A failed
 		// removal leaves disposable objects; it cannot undo a successful build.
-		s := store{root: state.Spec.Output, cache: filepath.Join(state.Spec.Output, ".gopurs-cache")}
+		s := store{root: state.Spec.Output, cache: cacheDirectory(state.Spec)}
 		_ = s.retirePackageObjects()
 	}
 	result.Status = "published"

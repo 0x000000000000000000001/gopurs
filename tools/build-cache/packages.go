@@ -305,10 +305,14 @@ func planCacheStatus(output string, request *packageFileRequest) string {
 }
 
 func inspectPackagePlan(output string, request, previous *packageFileRequest) (string, *packagePlanSnapshot) {
+	return inspectPackagePlanInCache(output, filepath.Join(output, ".gopurs-cache"), request, previous)
+}
+
+func inspectPackagePlanInCache(output, cache string, request, previous *packageFileRequest) (string, *packagePlanSnapshot) {
 	if previous == nil {
 		return "miss", nil
 	}
-	dir := filepath.Join(output, ".gopurs-cache", "go-packages", "plan-v1")
+	dir := filepath.Join(cache, "go-packages", "plan-v1")
 	if previous.Format != request.Format || previous.PackagePath != request.PackagePath || previous.GoVersion != request.GoVersion || previous.Arch != request.Arch {
 		return "miss-options", nil
 	}
@@ -445,7 +449,7 @@ func preparePackageSession(stage string, state *buildSession, entries []string, 
 		Files: files, Exports: []packageExport{}, Entries: []packageSymbol{}, Output: filepath.Join(stage, "packages")}
 	request.Signatures = map[string]string{}
 	type cachedSignature struct{ owner, module, sha, signature string }
-	previousRequest, _ := readPackageRequest(filepath.Join(state.Spec.Output, ".gopurs-cache", "go-packages", "plan-v1", "request.json"))
+	previousRequest, _ := readPackageRequest(filepath.Join(cacheDirectory(state.Spec), "go-packages", "plan-v1", "request.json"))
 	previousSignatures := map[string]cachedSignature{}
 	if previousRequest != nil {
 		for _, file := range previousRequest.Files {
@@ -492,7 +496,7 @@ func preparePackageSession(stage string, state *buildSession, entries []string, 
 		return err
 	}
 	request.GoVersion = "go" + version.Go
-	status, plan := inspectPackagePlan(state.Spec.Output, &request, previousRequest)
+	status, plan := inspectPackagePlanInCache(state.Spec.Output, cacheDirectory(state.Spec), &request, previousRequest)
 	fmt.Fprintf(os.Stderr, "[gopurs] Go plan cache: %s\n", status)
 	encoded, err := json.Marshal(request)
 	if err != nil {
@@ -805,7 +809,7 @@ func packageOutputPlan(stage string, modules []SourceModule, entries []string) (
 // Readers freeze their module inputs under this same lock into private stages;
 // publishers put every object before committing, including reused inputs.
 func (s store) retirePackageObjects() error {
-	lockPath := filepath.Join(s.cache, "write.lock")
+	lockPath := publicLockPath(s.root)
 	if info, err := os.Lstat(lockPath); err != nil || !info.Mode().IsRegular() {
 		return fmt.Errorf("cache lock is not a regular file")
 	}

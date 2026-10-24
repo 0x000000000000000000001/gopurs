@@ -383,6 +383,8 @@ by the current gopurs entrypoint are:
 | --- | --- |
 | `--main Module` | Select the entry module explicitly. Without it, discover all loaded modules exporting `main`; each gets `output/<Module>/main/main.go`, and the shared `output/main/main.go` belongs to the last discovered target. |
 | `--ffi directory` | Supply an additional FFI lookup directory. |
+| `--dev` | Skip monomorphization and reduce imported inlining; keep incremental builds. |
+| `--release` | Select the existing optimized behavior explicitly; this is also the default. |
 | `--rewrite-limit number` | Set the optimizer rewrite limit; default 10000. |
 | `--force` | Recompute preparation, optimization and emission; publish only changed Go files. Also available as `GOPURS_FORCE_BUILD=1`. |
 
@@ -395,6 +397,80 @@ The CLI exits with status **0** on successful compilation and **1** when the
 driver raises an error. After compilation cleanup, it reports the original
 message once on stderr, prefixed with `[gopurs] error:`. This contract applies
 to all three compiler hosts selected by the launcher.
+
+### Build profiles
+
+The default profile remains `release`. Use `--dev` explicitly to reduce
+compilation work. Passing both `--dev` and `--release` is an error;
+neither flag overrides the other.
+
+Dev skips heuristic inlining of ordinary imported functions and all
+monomorphization: both direct and transitive specialization clones are omitted.
+It keeps the generic functions and the types and layouts from the TAST. Local
+simplification, explicit inlining directives, dictionary resolution and typed
+normalization remain enabled; the optimizer still runs to convergence. The Go
+generation passes, ordinary native workers and tail-call optimization remain
+enabled. Go compiler flags are unchanged.
+
+This profile is experimental. Measurements on a private b8x fixture on
+24 October 2026 put the cold backend at about 80 seconds in release and
+54 seconds in dev (about 32% less). They use frozen TAST and empty backend
+caches, with dependency exports already available; they exclude the PureScript
+frontend and Go executable compilation. Three small edits in dev had a median
+of 2.25 seconds, and noops took about 0.31 seconds. These results show a cold
+backend gain; they do not establish a faster incremental build or a speedup
+through final Go compilation. Generated-program runtime performance was not
+measured and depends on the workload.
+
+Pass the profile to the backend itself, from an application with typed TAST
+already generated:
+
+```bash
+../gopurs/gopurs/bin/gopurs --dev --main Main
+../gopurs/gopurs/bin/gopurs --release --main Main
+```
+
+When `workspace.backend` in `spago.yaml` already selects gopurs, forward the
+option through Spago:
+
+```bash
+spago build --backend-args "--dev"
+spago build --backend-args "--release"
+```
+
+Project-specific build wrappers must forward backend arguments to select a
+profile; these options are gopurs options, not additional Spago build flags.
+
+The test runners accept both `-d` and `--dev`:
+
+```bash
+./bin/test -d FFIIntegerReturns
+./bin/modtest -d prelude
+```
+
+Dev fixtures compile and execute without comparing the Release Go snapshots;
+combining `--dev` with `--update-snapshots` is rejected. Campaign reports record
+the selected profile. In sibling projects, `b8x/bin/t -d` builds in Dev before
+running tests, and `altbak.pub/bin/go/run -d` selects Dev for the Go backend.
+These wrappers retain Release as the default for builds without the option.
+For both test runners, `-c` rebuilds the selected compiler host: native by
+default, JavaScript with `GOPURS_JS=1`, or Rust with `GOPURS_RUST=1`.
+`modtest` streams each library's output as it runs and also preserves its log.
+Its private compiler launcher announces Dev mode for every library build.
+
+Generic callbacks construct records and ADTs in their consumer's representation.
+This avoids copying a growing list merely to box and unbox loop state, including
+when Dev omits specialization. `npm run test:profiles` checks linear allocation
+growth and JavaScript/Go parity over 100,000 generic loop steps.
+
+Both profiles retain incremental compilation with persistent disk caches and
+require no daemon. Release and the default use `output/.gopurs-cache`; dev uses
+`output/.gopurs-cache/profiles/dev`. Their reusable state coexists. They publish
+to the same public Go output tree under one shared write lock, so switching
+profiles may restore generated files even when the selected profile's modules
+are cached. The first build of a profile needs to populate its own cache.
+The `dev-v4` policy uses distinct build and module keys, so results from other
+experimental dev policies are not reused.
 
 ### Backend compilation timings
 
@@ -459,8 +535,9 @@ concurrency while preserving sequential directive visibility and publication
 order. See [parallel emission](docs/parallel-emission.md) for the lifecycle
 contract, defaults, measurements and validation.
 
-`GOPURS_PREPARE_JOBS` controls transitive specialization preparation separately
-(compiler default 2, clamped to 1–8); each round merges ordered results before starting
+`GOPURS_PREPARE_JOBS` controls preparation workers, including release transitive
+specialization rounds and the final per-module rewrite (compiler default 2,
+clamped to 1–8). Each transitive round merges ordered results before starting
 the next. The launcher selects eight preparation and PBO workers on machines
 with at least 32 GiB for every host, unless those variables are explicitly set.
 This choice is independent of `GOGC` and `GOMEMLIMIT`. Smaller machines retain
@@ -598,7 +675,14 @@ coverage gaps.
 npm run build:native -- --keep-workspace
 ./bin/test FFIIntegerReturns
 npm run test:runner
+npm run test:profiles
 ```
+
+`test:profiles` checks the JS and native parallel hosts after rebuilding them:
+profile selection, conflicting flags, runtime behavior, cache coexistence and
+incremental output against full rebuilds after source changes.
+It also checks generic ADT, record and type-class calls with no specialization
+clones, including edits and forced rebuilds.
 
 `bin/test -c` retains its historical JS-only rebuild. Use `GOPURS_JS=1` with
 that option, or rebuild native explicitly as above before testing the default

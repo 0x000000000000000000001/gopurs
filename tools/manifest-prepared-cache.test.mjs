@@ -110,7 +110,7 @@ test("a caller body edit invalidates changed specializations and their PBO reade
       mkdirSync(join(stage, "prior", candidate.name));
       writeFileSync(join(stage, "prior", candidate.name, "reads.json"), owners.join("\n"));
     }
-    const session = { root: directory, stage, context, sameTast: false };
+    const session = { root: directory, cacheRoot: join(directory, ".gopurs-cache"), stage, context, sameTast: false };
     const prepared = { directives: Map.empty, modules: list(modules), metadata, mainModules: [], sources: [] };
     return runAff(Cache.initialize(1)(session)(prepared)(Set.empty)(Ref.new(Map.empty)())(ffiDigests)(ffiDigests)(allowed));
   }

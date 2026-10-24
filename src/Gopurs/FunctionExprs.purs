@@ -142,5 +142,6 @@ boxedParameters = map (\(Tuple ident level) -> Tuple (localId ident level) TypeV
 closureContext :: ExprContext -> Parameters -> Maybe ExprType -> ExprContext
 closureContext context params expected = (childContext context expected)
   { bound = bindParameters params context.bound
+  , mbExpectedGoType = Just TypeValue
   , options = { isTail: context.options.isTail, inEffectBlock: false }
   }

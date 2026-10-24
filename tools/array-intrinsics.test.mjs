@@ -29,7 +29,7 @@ const context = () => ({
     metadata, codegenStateRef: Ref.new({ declarations: [], globalId: 0, reboxPairs: emptySet })(),
     depth: 2, modNameStr: 'Probe', recVars: [], moduleFunctions: emptyMap, bound: emptyMap,
     tcoIdent: Nothing.value, loopCtx: [], options: { isTail: false, inEffectBlock: false },
-    mbExpectedExprType: Nothing.value,
+    mbExpectedExprType: Nothing.value, mbExpectedGoType: Nothing.value,
 });
 const ref = (module, name) => new TcoExpr(null, new S.Var(new C.Qualified(new Just(module), name)));
 const target = (module, name) => new Just({ mbMod: module === null ? Nothing.value : new Just(module), name });

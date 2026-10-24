@@ -31,7 +31,7 @@ const context = () => ({
     metadata, codegenStateRef: Ref.new({ declarations: [], globalId: 0, reboxPairs: emptySet })(),
     depth: 0, modNameStr: 'Probe', recVars: [], moduleFunctions: emptyMap, bound: emptyMap,
     tcoIdent: Nothing.value, loopCtx: [], options: { isTail: false, inEffectBlock: false },
-    mbExpectedExprType: Nothing.value,
+    mbExpectedExprType: Nothing.value, mbExpectedGoType: Nothing.value,
 });
 const variable = (name, module = Nothing.value) => new TcoExpr(null, new Syntax.Var(new Core.Qualified(module, name)));
 const typed = (type, value) => new TcoExpr(null, new Syntax.Typed(type, value));

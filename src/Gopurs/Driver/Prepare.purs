@@ -1,4 +1,4 @@
-module Gopurs.Driver.Prepare (PreparedModules, PreparedCache, prepareModules, prepareModulesWithCache, prepareModulesDelta, prepareLoadedModules, sourceMetadata, selectMainModules) where
+module Gopurs.Driver.Prepare (PreparedModules, PreparedCache, prepareModules, prepareModulesWithCache, prepareModulesWithCacheForProfile, prepareModulesDelta, prepareModulesDeltaForProfile, prepareLoadedModules, prepareLoadedModulesForProfile, sourceMetadata, selectMainModules) where
 
 import Prelude
 
@@ -36,6 +36,7 @@ import Gopurs.Preparation (runPreparationJobs)
 import Gopurs.ReboxMetadata (buildReboxFieldIndex)
 import PureScript.Backend.Optimizer.App (coreFnModulesFromOutput)
 import PureScript.Backend.Optimizer.CoreFn (Ann, Ident(..), Module(..))
+import PureScript.Backend.Optimizer.CoreFn.Usage (invalidateSourceUsageModule)
 import PureScript.Backend.Optimizer.Monomorphize (transitiveCollectWithReads)
 import PureScript.Backend.Optimizer.Semantics (InlineDirectiveMap)
 
@@ -54,6 +55,8 @@ type PreparedModules =
 
 type PreparedCache =
   { prepared :: PreparedModules
+  -- Resident memory is unkeyed; source equality cannot justify profile reuse.
+  , devMode :: Boolean
   , sourceHashes :: Map.Map String String
   , sourceModules :: List (Module Ann)
   , sourceInterfaces :: Map.Map String String
@@ -79,40 +82,48 @@ prepareModules input expectedCount jobs mainModule directives =
   _.prepared <$> prepareModulesWithCache input expectedCount jobs mainModule directives
 
 prepareModulesWithCache :: String -> Int -> Int -> Maybe String -> InlineDirectiveMap -> Aff PreparedCache
-prepareModulesWithCache input expectedCount jobs mainModule directives = do
+prepareModulesWithCache = prepareModulesWithCacheForProfile false
+
+prepareModulesWithCacheForProfile :: Boolean -> String -> Int -> Int -> Maybe String -> InlineDirectiveMap -> Aff PreparedCache
+prepareModulesWithCacheForProfile devMode input expectedCount jobs mainModule directives = do
   sortedModules <- Metrics.measure "load TAST + sort" \_ -> coreFnModulesFromOutput input
   when (Array.length (Array.fromFoldable sortedModules) /= expectedCount) $
     throwError (error "TAST decoding did not produce every inventoried module")
-  prepareLoadedModules input jobs mainModule directives sortedModules
+  prepareLoadedModulesForProfile devMode input jobs mainModule directives sortedModules
 
 -- Reuse the decoded inventory on a resident fallback. A source edit can change
 -- another module's specializations even when every interface remains identical.
 prepareLoadedModules :: String -> Int -> Maybe String -> InlineDirectiveMap -> List (Module Ann) -> Aff PreparedCache
-prepareLoadedModules input jobs mainModule directives sortedModules =
+prepareLoadedModules = prepareLoadedModulesForProfile false
+
+prepareLoadedModulesForProfile :: Boolean -> String -> Int -> Maybe String -> InlineDirectiveMap -> List (Module Ann) -> Aff PreparedCache
+prepareLoadedModulesForProfile devMode input jobs mainModule directives sortedModules =
   Metrics.measure "prepare + monomorphize" \_ -> do
     let
       sourceModules = Array.fromFoldable sortedModules
       modulesWithClasses = map addClassDataDeclarations sortedModules
       metadata = sourceMetadata sourceModules modulesWithClasses
-      globalTypes = LookupTable.completeOrFail metadata.globalTypes
 
-    -- The final per-module rewrite joins the same preparation pool as the
-    -- transitive rounds: pure thunks over immutable snapshots, results in
-    -- caller order, evaluated only while this Aff runs (so the phase measure
-    -- below still covers it).
-    transitiveReads <- liftEffect (Ref.new Set.empty)
-    Tuple monoBase modules <- monomorphizeModulesWithCache
-      (\ast instantiations -> Metrics.measure "transitive specializations" \_ ->
-        do
+    Tuple mono modules <- if devMode then
+      -- Keep the same typed modules as the no-specialization path. Class
+      -- layouts remain available, without consulting other definitions for
+      -- specialization or generating new bindings. PBO normalizes the generic IR.
+      pure (Tuple { globalAstMap: Map.empty, instantiations: Map.empty, bodyReads: Set.empty }
+        (map invalidateSourceUsageModule modulesWithClasses))
+    else do
+      -- The final per-module rewrite joins the same preparation pool as the
+      -- transitive rounds, using ordered results over immutable snapshots.
+      transitiveReads <- liftEffect (Ref.new Set.empty)
+      Tuple monoBase rewritten <- monomorphizeModulesWithCache
+        (\ast instantiations -> Metrics.measure "transitive specializations" \_ -> do
           collected <- transitiveCollectWithReads (runPreparationJobs jobs) ast instantiations
           liftEffect (Ref.write collected.bodyReads transitiveReads)
           pure collected.instantiations)
-      (runPreparationJobs jobs)
-      globalTypes
-      modulesWithClasses
-
-    transitiveBodyReads <- liftEffect (Ref.read transitiveReads)
-    let mono = monoBase { bodyReads = Set.union monoBase.bodyReads transitiveBodyReads }
+        (runPreparationJobs jobs)
+        (LookupTable.completeOrFail metadata.globalTypes)
+        modulesWithClasses
+      transitiveBodyReads <- liftEffect (Ref.read transitiveReads)
+      pure (Tuple (monoBase { bodyReads = Set.union monoBase.bodyReads transitiveBodyReads }) rewritten)
     -- Entry selection is also source-based. Generated bindings do not export
     -- additional mains; an explicit request keeps its original CLI semantics.
     dump <- liftEffect (Process.lookupEnv "GOPURS_DUMP_PREPARED")
@@ -128,7 +139,7 @@ prepareLoadedModules input jobs mainModule directives sortedModules =
           { directives, modules, metadata, metadataUnchanged: false, metadataDemands: Nothing, mainModules: selectMainModules mainModule sourceModules
           , sources: map (\(Module m) -> { name: unwrap m.name, path: m.path, hasForeign: not (Map.isEmpty m.foreign) }) sourceModules
           }
-    pure { prepared, sourceHashes, sourceModules: sortedModules, sourceInterfaces: Map.empty, compactSourceDelta: Nothing, mono, reusable: Set.empty, proof: Nothing, metadataDemandKeys: Nothing, metadataCoverage: Nothing, metadataProjection: Nothing, materialize: Nothing }
+    pure { prepared, devMode, sourceHashes, sourceModules: sortedModules, sourceInterfaces: Map.empty, compactSourceDelta: Nothing, mono, reusable: Set.empty, proof: Nothing, metadataDemandKeys: Nothing, metadataCoverage: Nothing, metadataProjection: Nothing, materialize: Nothing }
 
 -- Metadata always comes from source declarations, independently of the compact
 -- specialization proof. Rebuilding these tables does not traverse mono bodies.
@@ -149,13 +160,16 @@ sourceMetadata sourceModules modulesWithClasses =
     }
 
 prepareModulesDelta :: String -> Int -> Int -> Maybe String -> InlineDirectiveMap -> PreparedCache -> Aff PreparedCache
-prepareModulesDelta input expectedCount jobs mainModule directives cache = do
+prepareModulesDelta = prepareModulesDeltaForProfile false
+
+prepareModulesDeltaForProfile :: Boolean -> String -> Int -> Int -> Maybe String -> InlineDirectiveMap -> PreparedCache -> Aff PreparedCache
+prepareModulesDeltaForProfile devMode input expectedCount jobs mainModule directives cache = do
   loaded <- Metrics.measure "load TAST + sort" \_ -> coreFnModulesFromOutput input
   when (Array.length (Array.fromFoldable loaded) /= expectedCount) $
     throwError (error "TAST decoding did not produce every inventoried module")
   hashes <- Map.fromFoldable <$> traverse (sourceFileHash input) (Array.fromFoldable loaded)
   let changed = Array.filter (\(Module m) -> Map.lookup (unwrap m.name) cache.sourceHashes /= Just (fromMaybe "" (Map.lookup (unwrap m.name) hashes))) (Array.fromFoldable loaded)
-  if Array.null changed && Map.size hashes == Map.size cache.sourceHashes then
+  if cache.devMode == devMode && Array.null changed && Map.size hashes == Map.size cache.sourceHashes then
     pure (cache
       { prepared = cache.prepared
           { directives = directives
@@ -168,7 +182,7 @@ prepareModulesDelta input expectedCount jobs mainModule directives cache = do
     -- No durable contribution/AST-read proof currently covers this edit. Keep
     -- the daemon protocol and backend caches, but rebuild preparation before
     -- deciding which prepared modules and PBO results are actually unchanged.
-    prepareLoadedModules input jobs mainModule directives loaded
+    prepareLoadedModulesForProfile devMode input jobs mainModule directives loaded
 
 selectMainModules :: Maybe String -> Array (Module Ann) -> Array String
 selectMainModules requested modules = case requested of

@@ -3,6 +3,7 @@ module Gopurs.AdtExprs
   , definition
   , SaturatedConstructor
   , prepareSaturated
+  , prepareSaturatedAs
   , saturatedFieldType
   , saturated
   , getField
@@ -85,11 +86,16 @@ newtype SaturatedConstructor = SaturatedConstructor
 
 prepareSaturated :: CodegenMetadata -> String -> Maybe ModuleName -> String -> ExprType -> SaturatedConstructor
 prepareSaturated metadata modNameStr mbMod name ctorType =
+  prepareSaturatedAs metadata modNameStr mbMod name ctorType Nothing
+
+prepareSaturatedAs :: CodegenMetadata -> String -> Maybe ModuleName -> String -> ExprType -> Maybe GoType -> SaturatedConstructor
+prepareSaturatedAs metadata modNameStr mbMod name ctorType expected =
   let
     fallbackModule = case mbMod of
       Just (ModuleName mn) -> mn
       Nothing -> modNameStr
-    prepared = ConstructorLayout.prepare ConstructorLayout.Saturated metadata modNameStr fallbackModule name ctorType
+    prepared = ConstructorLayout.withExpectedRepresentation expected
+      (ConstructorLayout.prepare ConstructorLayout.Saturated metadata modNameStr fallbackModule name ctorType)
   in
     SaturatedConstructor { metadata, modNameStr, name, prepared }
 

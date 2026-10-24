@@ -15,7 +15,7 @@ import Data.Tuple (Tuple(..), fst, snd)
 import Effect.Ref as Ref
 import Effect.Unsafe (unsafePerformEffect)
 import Gopurs.CallAnalysis (extractUncurriedAbs)
-import Gopurs.ExprAnalysis (extractExprFuncType, getExprType, printTcoExprShape)
+import Gopurs.ExprAnalysis (extractExprFuncType, functionResultAfter, getExprType, printTcoExprShape)
 import Gopurs.ExprContext (ExprContext, ExprResult, LocalEnv, TranslateExpr, StmtTree(..), bindParameters, childContext)
 import Gopurs.GoAst (rawGo, GoExpr(..), GoType(..), goTypeToStr, sanitizeName)
 import Gopurs.GoConversions (coerceGoExpr)
@@ -42,7 +42,7 @@ nonRecursive translate context@{ metadata, codegenStateRef, depth, modNameStr, m
         let
           params = LocalWorkers.parameters context abs.args binding
           loopBound = bindParameters params bound
-          resBodyMut = translate (context { depth = (depth + 1), bound = loopBound, tcoIdent = (Just name), loopCtx = [], options = { isTail: true, inEffectBlock: false }, mbExpectedExprType = Nothing }) (nextId + 1) abs.body
+          resBodyMut = translate (context { depth = (depth + 1), bound = loopBound, tcoIdent = (Just name), loopCtx = [], options = { isTail: true, inEffectBlock: false }, mbExpectedExprType = Nothing, mbExpectedGoType = Nothing }) (nextId + 1) abs.body
           -- The binding is non-recursive: infer its native result before
           -- publishing the signature to callers. Only its curried wrapper
           -- crosses the Value boundary, which can otherwise copy whole lists.
@@ -57,7 +57,7 @@ nonRecursive translate context@{ metadata, codegenStateRef, depth, modNameStr, m
 
       _ ->
         let
-          resBinding = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing }) (nextId + 1) binding
+          resBinding = translate (context { depth = (depth + 1), tcoIdent = Nothing, loopCtx = [], options = { isTail: false, inEffectBlock: false }, mbExpectedExprType = Nothing, mbExpectedGoType = Nothing }) (nextId + 1) binding
           actualGoType = if expectedGoTypeFromAst == TypeValue then resBinding.exprType else expectedGoTypeFromAst
           newBound = Map.insert originalName { name, goType: actualGoType } bound
           resBody = translate (context { depth = (depth + 1), bound = newBound, tcoIdent = Nothing }) resBinding.nextId body
@@ -94,7 +94,10 @@ recursive translate context@{ metadata, depth, modNameStr, recVars, moduleFuncti
                   boundInfo = fromMaybe { name: oldName, goType: TypeValue } (Map.lookup oldName allocated.newBound)
                   newName = boundInfo.name
                   params = LocalWorkers.parameters context fn.args fn.val
-                  expectedReturn = map _.fRet (extractExprFuncType (getExprType fn.val))
+                  -- The annotation flattens function-valued results into its
+                  -- argument list. Only consume the worker's actual binders:
+                  -- a recursive lookup may return a function still to apply.
+                  expectedReturn = map (functionResultAfter (Array.length fn.args)) (extractExprFuncType (getExprType fn.val))
                   resultType = case expectedReturn of
                     Just ty -> exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr ty
                     Nothing -> TypeValue
@@ -118,7 +121,7 @@ recursive translate context@{ metadata, depth, modNameStr, recVars, moduleFuncti
                   -- Peer bindings keep the provisional view; only the function
                   -- table sees results inferred for earlier bodies in the group.
                   loopBound = bindParameters params published.bound
-                  resBodyMut = translate (context { depth = (depth + 1), recVars = combinedRecVars, moduleFunctions = acc.moduleFunctions, bound = loopBound, tcoIdent = (Just newName), loopCtx = currentLoopCtx, options = { isTail: true, inEffectBlock: false }, mbExpectedExprType = worker.expectedReturn }) acc.nextId worker.body
+                  resBodyMut = translate (context { depth = (depth + 1), recVars = combinedRecVars, moduleFunctions = acc.moduleFunctions, bound = loopBound, tcoIdent = (Just newName), loopCtx = currentLoopCtx, options = { isTail: true, inEffectBlock: false }, mbExpectedExprType = worker.expectedReturn, mbExpectedGoType = Just worker.resultType }) acc.nextId worker.body
                   trueFRet = resBodyMut.exprType
                   emitted = LocalWorkers.emit context newName params true resBodyMut
                   newFunctions = Map.insert newName (LocalWorkers.signature context newName params trueFRet) acc.moduleFunctions

@@ -11,7 +11,7 @@ if (!output || process.argv.length !== 3) {
   throw new Error("Usage: node tools/prepare-native-output.mjs <generated-output-directory>");
 }
 const generatedModule = "gopurs/output";
-const buildCache = ["contract.go", "store.go", "session.go", "inputpack.go", "compiler.go", "modules.go", "capsules.go", "packages.go", "overlay.go", "overlay_sections.go", "packs.go"];
+const buildCache = ["contract.go", "store.go", "profiles.go", "session.go", "inputpack.go", "compiler.go", "modules.go", "capsules.go", "packages.go", "overlay.go", "overlay_sections.go", "packs.go"];
 const c1c = ["manifest.go", "overlay.go", "qualify.go", "rewrite.go", "partition.go", "literals.go"];
 const groups = [
   { directory: "ffi-gen", packageName: "gopurs_ffi_parser", destination: "gopurs_ffi_parser", sourcePackage: "main", files: ["parser.go", "types.go", "native_api.go", "bindings.go", "packages.go", "workspace.go"] },
