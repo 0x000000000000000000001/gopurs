@@ -19,7 +19,7 @@ const fixture = basename(cwd) === "output" ? dirname(cwd) : cwd;
 const source = join(fixture, "src/Main.purs");
 const content = existsSync(source) ? readFileSync(source, "utf8") : "";
 const phase = tool === "go" ? (process.argv[2] === "mod" ? "tidy" : "build") : /^gopurs(?:-native|-rust|\\.js)?$/.test(tool) ? "gopurs" : tool;
-appendFileSync(process.env.RUNNER_CALLS, JSON.stringify({ phase, tool, args: process.argv.slice(2), cwd, tmp: process.env.TMPDIR }) + "\\n");
+appendFileSync(process.env.RUNNER_CALLS, JSON.stringify({ phase, tool, args: process.argv.slice(2), cwd, tmp: process.env.TMPDIR, packages: process.env.GOPURS_GO_PACKAGES }) + "\\n");
 if (content.includes("fail=" + phase) || process.env.RUNNER_FAIL === phase) process.exit(23);
 if (process.env.RUNNER_PAUSE && phase === "spago") {
   const child = spawn(process.execPath, ["-e", "setInterval(() => {}, 1000)"], { stdio: "ignore" });
@@ -30,18 +30,19 @@ if (process.env.RUNNER_PAUSE && phase === "spago") {
   writeFileSync("spago.lock", "fixture-only lock");
   writeFileSync("output/module.json", JSON.stringify({ source: content }));
 } else if (phase === "gopurs") {
+  const profile = process.argv.includes("--dev") ? " // dev" : "";
   mkdirSync("output/purescript", { recursive: true });
   mkdirSync("output/main", { recursive: true });
   if (process.env.GOPURS_GO_PACKAGES === "1") {
     const group = process.env.RUNNER_PACKAGE_SPLIT ? "p_0123456789abcdef0123456789abcdef" : "p_root";
     for (const dir of [group, "init_all", "init_external"]) mkdirSync("output/purescript/" + dir, { recursive: true });
-    writeFileSync("output/purescript/" + group + "/Main.go", "package " + group + "\\n");
-    writeFileSync("output/purescript/" + group + "/Main_ffi.go", "package " + group + " // ffi\\n");
+    writeFileSync("output/purescript/" + group + "/Main.go", "package " + group + profile + "\\n");
+    writeFileSync("output/purescript/" + group + "/Main_ffi.go", "package " + group + " // ffi" + profile + "\\n");
     writeFileSync("output/purescript/" + group + "/zz_gopurs_order.go", "package " + group + "\\n");
     for (const name of ["init_all", "init_external"]) writeFileSync("output/purescript/" + name + "/init.go", "package " + name + "\\n");
   } else {
-    writeFileSync("output/purescript/Main.go", "package purescript\\n");
-    writeFileSync("output/purescript/Main_ffi.go", "package purescript // ffi\\n");
+    writeFileSync("output/purescript/Main.go", "package purescript" + profile + "\\n");
+    writeFileSync("output/purescript/Main_ffi.go", "package purescript // ffi" + profile + "\\n");
   }
   writeFileSync("output/main/main.go", "package main\\n");
   writeFileSync("output/go.mod", "module gopurs/output\\n\\ngo 1.22\\n");
@@ -56,7 +57,7 @@ function fixture(t) {
   const base = mkdtempSync(join(tmpdir(), "gopurs-runner-contract-"));
   t.after(() => rmSync(base, { recursive: true, force: true }));
   const root = join(base, "project with spaces");
-  for (const dir of ["bin", "tools", "tests/passing", "tests/passing-snapshots", "tests/runner"]) mkdirSync(join(root, dir), { recursive: true });
+  for (const dir of ["bin", "tools", "tests/passing", "tests/passing-snapshots", "tests/passing-snapshots-dev", "tests/runner"]) mkdirSync(join(root, dir), { recursive: true });
   for (const dir of ["mockbin", "tmp", "gopurs-prelude"]) mkdirSync(join(base, dir));
   writeFileSync(join(base, "package.json"), '{"type":"module"}');
   for (const name of ["test", "modtest"]) cpSync(join(repository, "bin", name), join(root, "bin", name));
@@ -66,6 +67,7 @@ function fixture(t) {
   writeFileSync(join(root, "bin/gopurs"), fakeTool, { mode: 0o755 });
   for (const name of ["Alpha", "Beta"]) writeFileSync(join(root, "tests/passing", name + ".purs"), `module Main where\n-- ${name}\n`);
   for (const name of ["Alpha", "Beta"]) writeFileSync(join(root, "tests/passing-snapshots", name + ".go"), "package purescript\n");
+  for (const name of ["Alpha", "Beta"]) writeFileSync(join(root, "tests/passing-snapshots-dev", name + ".go"), "package purescript // dev\n");
   writeFileSync(join(root, "tests/runner/spago.yaml"), "shared config sentinel");
   writeFileSync(join(root, "tests/runner/spago.lock"), "shared lock sentinel");
   const calls = join(base, "calls.jsonl");
@@ -122,14 +124,14 @@ test("Dev aliases preserve selection, clean options and the option terminator", 
   assert.equal(parseOptions([], { env: {} }).dev, false);
 });
 
-test("Dev fixtures forward only the backend flag and preserve Release snapshots", async t => {
+test("Dev fixtures forward only the backend flag, compare Dev snapshots and preserve Release snapshots", async t => {
   const f = fixture(t);
   const expected = join(f.root, "tests/passing-snapshots/Alpha.go");
   writeFileSync(expected, "Release snapshot sentinel\n");
   for (const flag of ["-d", "--dev"]) {
-    const result = await f.run(["Beta", "Alpha", flag, "-c", "--skip-before", "Alpha"]);
+    const result = await f.run(["Beta", "Alpha", flag, "-c", "--skip-before", "Alpha"], flag === "-d" ? { GOPURS_GO_PACKAGES: "" } : {});
     assert.equal(result.code, 0, result.output);
-    assert.match(result.output, /without comparing Release snapshots/);
+    assert.match(result.output, /Build mode: DEV/);
     assert.doesNotMatch(result.output, /=> Testing Beta/);
     assert.equal(reportFor(result).buildProfile, "dev");
   }
@@ -137,18 +139,13 @@ test("Dev fixtures forward only the backend flag and preserve Release snapshots"
   assert.deepEqual(calls.filter(call => call.phase === "gopurs").map(call => call.args), [
     ["--main", "Main", "--dev"], ["--main", "Main", "--dev"],
   ]);
+  assert(calls.filter(call => call.phase === "gopurs").every(call => call.packages === "0"));
   assert.deepEqual(calls.filter(call => call.phase === "npm").map(call => call.args), [
     ["run", "build:native", "--silent"], ["run", "build:native", "--silent"],
   ]);
   assert(calls.filter(call => call.phase !== "gopurs").every(call => !call.args.includes("--dev")));
-  assert(!calls.some(call => call.phase === "gofmt"));
+  assert.equal(calls.filter(call => call.phase === "gofmt").length, 2);
   assert.equal(readFileSync(expected, "utf8"), "Release snapshot sentinel\n");
-  for (const [args, env] of [[["--dev", "--update-snapshots"], {}], [["-d"], { UPDATE_SNAPSHOTS: "1" }]]) {
-    const result = await f.run(["Alpha", ...args], env);
-    assert.equal(result.code, 2, result.output);
-    assert.match(result.output, /cannot update Release snapshots/);
-  }
-  assert.equal(readFileSync(f.calls, "utf8").trim().split("\n").length, calls.length);
   assertSharedUntouched(f);
 });
 
@@ -307,6 +304,62 @@ test("snapshot creation and replacement require opt-in, including FFI", async t 
   assert.equal(readFileSync(expected, "utf8"), "package purescript\n");
 });
 
+test("Dev snapshots are independent in both layouts, including FFI and explicit updates", async t => {
+  for (const packages of [false, true]) await t.test(packages ? "packages" : "legacy", async t => {
+    const f = fixture(t);
+    f.source("Alpha", "-- @snapshot-ffi\nmodule Main where\n");
+    const env = { GOPURS_GO_PACKAGES: packages ? "1" : "0" };
+    const directory = packages ? "passing-package-snapshots" : "passing-snapshots";
+    const names = packages ? ["Alpha.txt"] : ["Alpha.go", "Alpha_ffi.go"];
+    const release = names.map(name => join(f.root, "tests", directory, name));
+    const dev = names.map(name => join(f.root, "tests", directory + "-dev", name));
+    for (const path of dev) rmSync(path, { force: true });
+    mkdirSync(join(f.root, "tests", directory), { recursive: true });
+    for (const path of release) writeFileSync(path, "Release sentinel\n");
+
+    const update = await f.run(["Alpha", "--dev", "--update-snapshots"], env);
+    assert.equal(update.code, 0, update.output);
+    const expected = dev.map(path => readFileSync(path, "utf8"));
+    assert(expected.some(content => content.includes(" // dev\n")));
+    assert(expected.some(content => content.includes(" // ffi // dev\n")));
+    for (const path of release) assert.equal(readFileSync(path, "utf8"), "Release sentinel\n");
+
+    // A matching Release snapshot must never hide a missing or stale Dev one.
+    for (let i = 0; i < release.length; i++) writeFileSync(release[i], expected[i]);
+    for (const path of dev) rmSync(path);
+    const missing = await f.run(["Alpha", "-d"], env);
+    assert.equal(missing.code, 1, missing.output);
+    assert.match(missing.output, /Missing snapshot: .*snapshots-dev/);
+    for (const path of dev) assert(!existsSync(path));
+    for (let i = 0; i < dev.length; i++) writeFileSync(dev[i], expected[i]);
+    writeFileSync(dev[0], "stale Dev snapshot\n");
+    const mismatch = await f.run(["Alpha", "--dev"], env);
+    assert.equal(mismatch.code, 1, mismatch.output);
+    assert.match(mismatch.output, /snapshot diff/);
+    assert.equal(readFileSync(dev[0], "utf8"), "stale Dev snapshot\n");
+
+    for (const path of release) writeFileSync(path, "Release sentinel\n");
+    const legacyUpdate = await f.run(["Alpha", "-d"], { ...env, UPDATE_SNAPSHOTS: "1" });
+    assert.equal(legacyUpdate.code, 0, legacyUpdate.output);
+    assert.deepEqual(dev.map(path => readFileSync(path, "utf8")), expected);
+    for (const path of release) assert.equal(readFileSync(path, "utf8"), "Release sentinel\n");
+    const replay = await f.run(["Alpha", "--dev"], env);
+    assert.equal(replay.code, 0, replay.output);
+
+    // Even an explicit update may publish only after the executable passes.
+    for (const phase of ["build", "execute", "text"]) {
+      f.source("Alpha", `-- @snapshot-ffi\nmodule Main where\n-- fail=${phase}\n`);
+      writeFileSync(dev[0], "preserved Dev snapshot\n");
+      const failed = await f.run(["Alpha", "--dev", "--update-snapshots"], env);
+      assert.equal(failed.code, 1, failed.output);
+      assert.equal(readFileSync(dev[0], "utf8"), "preserved Dev snapshot\n");
+      for (const path of release) assert.equal(readFileSync(path, "utf8"), "Release sentinel\n");
+    }
+    const calls = readFileSync(f.calls, "utf8").trim().split("\n").map(JSON.parse);
+    assert(calls.filter(call => call.phase === "gopurs").every(call => call.packages === env.GOPURS_GO_PACKAGES));
+  });
+});
+
 test("package snapshots cover fragments, FFI, order and entry paths with strict replays", async t => {
   const f = fixture(t);
   f.source("Alpha", "-- @snapshot-ffi\nmodule Main where\n");
@@ -350,9 +403,10 @@ test("coalesced snapshots select source sections without treating Go literals as
     section("Main_ffi.go", "func Native() int { return Excluded }");
   writeFileSync(join(output, bundle), code);
   assert.deepEqual(packageSourceSections(code).sections.map(section => section.name), ["Extra.go", "Main.go", "Main_ffi.go"]);
-  for (const snapshotFfi of [false, true]) {
+  for (const snapshotFfi of [false, true]) for (const dev of [false, true]) {
     const selected = { directory, name: "Alpha", snapshotFfi }, env = { ...process.env, GOPURS_GO_PACKAGES: "1" };
-    const files = snapshotFiles(f.root, selected, env);
+    const files = snapshotFiles(f.root, selected, env, { dev });
+    assert.equal(files[0].expected, join(f.root, `tests/passing-package-snapshots${dev ? "-dev" : ""}/Alpha.txt`));
     await formatSnapshots(files, { run: async (_, command, args, options) => {
       const result = spawnSync(command, args, { ...options, encoding: "utf8" });
       assert.equal(result.status, 0, result.stderr);

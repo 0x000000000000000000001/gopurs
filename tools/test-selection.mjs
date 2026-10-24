@@ -44,7 +44,6 @@ export function parseOptions(args, { modules = false, env = process.env } = {}) 
   if (options.resumeFailed && (options.all || options.targets.length || options.resume)) {
     throw new UsageError("Use --resume-failed without targets, --all or --skip-before.");
   }
-  if (options.dev && options.update) throw new UsageError("--dev cannot update Release snapshots. Run without --dev to update them.");
   return options;
 }
 

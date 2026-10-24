@@ -3,8 +3,9 @@
 Les commandes de cette page partent de la racine de gopurs, avec Go, Node,
 Spago et le `purs` TAST sur `PATH`. Voir [l'installation](../README.md).
 Le runner utilise `bin/gopurs`, donc le binaire natif existant par défaut ;
-`GOPURS_JS=1` sélectionne le bundle JS. `-c` reconstruit le bundle JS une fois via
-npm. Après une modification du compilateur, `npm run build:native -- --keep-workspace`
+`GOPURS_JS=1` sélectionne le bundle JS et `GOPURS_RUST=1` l'hôte Rust.
+`-c` reconstruit une fois l'hôte sélectionné. Après une modification du
+compilateur, `npm run build:native -- --keep-workspace`
 reconstruit les deux versions et conserve le workspace pour les tests natifs.
 
 ## Choisir un contrôle court
@@ -360,6 +361,7 @@ de source et de transport restent couvertes par `ffi-errors.test.mjs`.
 ./bin/test TCOMutRec ThunkFusion --list
 ./bin/test --skip-before ThunkFusion --list
 ./bin/test FFIIntegerReturns --keep-workspace
+./bin/test -d FFIIntegerReturns --keep-workspace
 ```
 
 Sans cible, `bin/test` sélectionne toutes les fixtures non exclues de
@@ -368,21 +370,46 @@ cible. `--skip-before=NAME` et `skip_before=NAME` restent compatibles. Une cible
 inconnue, une option inconnue ou une sélection entièrement exclue échoue avant
 le build. `--list` ne compile rien et ne crée pas de workspace.
 
-La vérification de snapshots est le mode par défaut. Un fichier absent ou
-différent échoue : examiner le diff et la phase responsable avant de le
-remplacer. Les snapshots sont `tests/passing-snapshots/<Fixture>.go`, avec
+La vérification de snapshots est le mode par défaut dans les deux profils.
+`bin/test` sélectionne Release ; `-d` ou `--dev` sélectionne Dev. Chaque profil
+compare son Go généré à ses propres références, puis compile et exécute la
+fixture. Les sources et les résultats fonctionnels attendus restent communs.
+Un fichier absent ou différent échoue : examiner le diff et la phase responsable
+avant de le remplacer.
+
+| Profil | Layout historique (`GOPURS_GO_PACKAGES=0`) | Layout packages (`GOPURS_GO_PACKAGES=1`) |
+| --- | --- | --- |
+| Release (défaut) | `tests/passing-snapshots` | `tests/passing-package-snapshots` |
+| Dev (`-d`, `--dev`) | `tests/passing-snapshots-dev` | `tests/passing-package-snapshots-dev` |
+
+Le runner fixe `GOPURS_GO_PACKAGES=0` par défaut pour utiliser les références
+complètes du layout historique. `GOPURS_GO_PACKAGES=1` explicite sélectionne
+le layout packages et ses références. Une invocation vérifie seulement le
+layout et le profil sélectionnés, pas les deux layouts à la fois.
+
+Les snapshots du layout historique sont nommés `<Fixture>.go`, avec
 `<Fixture>_ffi.go` en plus si la source déclare `-- @snapshot-ffi`.
 Une mise à jour intentionnelle s'effectue ainsi :
 
 ```bash
 ./bin/test FFIIntegerReturns --update-snapshots
+./bin/test -d FFIIntegerReturns --update-snapshots
 # Équivalent historique : UPDATE_SNAPSHOTS=1 ./bin/test FFIIntegerReturns
+# Profil Dev : UPDATE_SNAPSHOTS=1 ./bin/test -d FFIIntegerReturns
 ```
 
-Les snapshots ne sont écrits qu'après compilation et exécution Go réussies de
-la fixture concernée. Par défaut, la campagne s'arrête au premier échec ; les mises à jour
+Seuls les snapshots du profil sélectionné sont mis à jour, après compilation
+et exécution Go réussies de la fixture concernée. Par défaut, la campagne
+s'arrête au premier échec ; les mises à jour
 des fixtures déjà réussies restent écrites. Le contrôle d'exécution conserve
 le contrat historique : statut zéro et absence de `Fail` dans la sortie.
+
+Pour valider toute la suite dans les deux profils, lancer deux campagnes :
+
+```bash
+./bin/test --all --keep-going
+./bin/test -d --all --keep-going
+```
 
 ## Isolation, logs et caches
 

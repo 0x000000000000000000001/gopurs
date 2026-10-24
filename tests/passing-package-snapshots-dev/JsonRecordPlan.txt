@@ -1,0 +1,1838 @@
+// gopurs-package-file: main/main.go
+package main
+
+import (
+	"gopurs/output/gopurs_runtime"
+	_ "gopurs/output/purescript/init_all"
+	purescript "gopurs/output/purescript/p_root"
+	"os"
+	"runtime/pprof"
+)
+
+func main() {
+	if os.Getenv("PPROF") == "1" {
+		f, err := os.Create("cpu.prof")
+		if err != nil {
+			panic(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
+
+	gopurs_runtime.Apply(purescript.Get_Main_main(), gopurs_runtime.Value{})
+
+	gopurs_runtime.EventLoopWait()
+
+	if os.Getenv("PPROF") == "1" {
+		mf, err := os.Create("mem.prof")
+		if err != nil {
+			panic(err)
+		}
+		pprof.WriteHeapProfile(mf)
+		mf.Close()
+	}
+}
+
+// gopurs-package-file: purescript/init_all/init.go
+package init_all
+
+import (
+	_ "gopurs/output/purescript/init_external"
+	_ "gopurs/output/purescript/p_root"
+)
+
+// gopurs-package-file: purescript/init_external/init.go
+package init_external
+
+import (
+	_ "bytes"
+	_ "encoding/json"
+	_ "errors"
+	_ "fmt"
+	_ "gopurs/output/gopurs_runtime"
+	_ "math"
+	_ "os"
+	_ "regexp"
+	_ "sort"
+	_ "strconv"
+	_ "strings"
+	_ "sync"
+	_ "sync/atomic"
+	_ "unicode/utf16"
+	_ "unicode/utf8"
+	_ "unsafe"
+)
+
+// gopurs-package-file: purescript/p_root/0_gopurs_package.go
+package p_root
+
+import (
+	g277089 "bytes"
+	g4d3239 "encoding/json"
+	gbe4bd5 "errors"
+	fmt "fmt"
+	r_ "gopurs/output/gopurs_runtime"
+	math "math"
+	os "os"
+	regexp "regexp"
+	sort "sort"
+	strconv "strconv"
+	strings "strings"
+	sync "sync"
+	atomic "sync/atomic"
+	utf16 "unicode/utf16"
+	utf8 "unicode/utf8"
+	unsafe "unsafe"
+)
+
+// gopurs-source-v1: 4d61696e2e676f
+
+var cache_Main_cIsSymbol r_.Value
+
+var once_Main_cIsSymbol sync.Once
+
+func Get_Main_cIsSymbol() r_.Value {
+	once_Main_cIsSymbol.Do(func() {
+		cache_Main_cIsSymbol = r_.RecordDict1("reflectSymbol", r_.Func(func(_dollar___unused_0 r_.Value) r_.Value {
+			return r_.Str("c")
+		}))
+	})
+	return cache_Main_cIsSymbol
+}
+
+var cache_Main_bIsSymbol r_.Value
+
+var once_Main_bIsSymbol sync.Once
+
+func Get_Main_bIsSymbol() r_.Value {
+	once_Main_bIsSymbol.Do(func() {
+		cache_Main_bIsSymbol = r_.RecordDict1("reflectSymbol", r_.Func(func(_dollar___unused_0 r_.Value) r_.Value {
+			return r_.Str("b")
+		}))
+	})
+	return cache_Main_bIsSymbol
+}
+
+var cache_Main_aIsSymbol r_.Value
+
+var once_Main_aIsSymbol sync.Once
+
+func Get_Main_aIsSymbol() r_.Value {
+	once_Main_aIsSymbol.Do(func() {
+		cache_Main_aIsSymbol = r_.RecordDict1("reflectSymbol", r_.Func(func(_dollar___unused_0 r_.Value) r_.Value {
+			return r_.Str("a")
+		}))
+	})
+	return cache_Main_aIsSymbol
+}
+
+var cache_Main_headIsSymbol r_.Value
+
+var once_Main_headIsSymbol sync.Once
+
+func Get_Main_headIsSymbol() r_.Value {
+	once_Main_headIsSymbol.Do(func() {
+		cache_Main_headIsSymbol = r_.RecordDict1("reflectSymbol", r_.Func(func(_dollar___unused_0 r_.Value) r_.Value {
+			return r_.Str("head")
+		}))
+	})
+	return cache_Main_headIsSymbol
+}
+
+var cache_Main_outerIsSymbol r_.Value
+
+var once_Main_outerIsSymbol sync.Once
+
+func Get_Main_outerIsSymbol() r_.Value {
+	once_Main_outerIsSymbol.Do(func() {
+		cache_Main_outerIsSymbol = r_.RecordDict1("reflectSymbol", r_.Func(func(_dollar___unused_0 r_.Value) r_.Value {
+			return r_.Str("outer")
+		}))
+	})
+	return cache_Main_outerIsSymbol
+}
+
+var cache_Main_requiredIsSymbol r_.Value
+
+var once_Main_requiredIsSymbol sync.Once
+
+func Get_Main_requiredIsSymbol() r_.Value {
+	once_Main_requiredIsSymbol.Do(func() {
+		cache_Main_requiredIsSymbol = r_.RecordDict1("reflectSymbol", r_.Func(func(_dollar___unused_0 r_.Value) r_.Value {
+			return r_.Str("required")
+		}))
+	})
+	return cache_Main_requiredIsSymbol
+}
+
+var cache_Main_tailIsSymbol r_.Value
+
+var once_Main_tailIsSymbol sync.Once
+
+func Get_Main_tailIsSymbol() r_.Value {
+	once_Main_tailIsSymbol.Do(func() {
+		cache_Main_tailIsSymbol = r_.RecordDict1("reflectSymbol", r_.Func(func(_dollar___unused_0 r_.Value) r_.Value {
+			return r_.Str("tail")
+		}))
+	})
+	return cache_Main_tailIsSymbol
+}
+
+var cache_Main_Probe r_.Value
+
+var once_Main_Probe sync.Once
+
+func Get_Main_Probe() r_.Value {
+	once_Main_Probe.Do(func() {
+		cache_Main_Probe = r_.Func(func(x_0_box r_.Value) r_.Value {
+			return r_.Int(Call_Main_Probe(x_0_box.IntVal))
+		})
+	})
+	return cache_Main_Probe
+}
+
+var cache_Main_showProbe r_.Value
+
+var once_Main_showProbe sync.Once
+
+func Get_Main_showProbe() r_.Value {
+	once_Main_showProbe.Do(func() {
+		cache_Main_showProbe = r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt()))))}
+	})
+	return cache_Main_showProbe
+}
+
+var cache_Main_sharedTail r_.Value
+
+var once_Main_sharedTail sync.Once
+
+func Get_Main_sharedTail() r_.Value {
+	once_Main_sharedTail.Do(func() {
+		cache_Main_sharedTail = func() r_.Value {
+			orig := struct {
+				P_tail int64
+			}{int64(41)}
+			_ = orig
+			return r_.RecordDict1("tail", r_.Int(orig.P_tail))
+		}()
+	})
+	return cache_Main_sharedTail
+}
+
+var cache_Main_object r_.Value
+
+var once_Main_object sync.Once
+
+func Get_Main_object() r_.Value {
+	once_Main_object.Do(func() {
+		cache_Main_object = r_.Apply2(Call_Control_Semigroupoid_compose(r_.CoerceToStruct[Constructor_Control_Semigroupoid_Semigroupoid[r_.Value]](Get_Control_Semigroupoid_semigroupoidFn())), Get_Data_Argonaut_Core_fromObject(), r_.Apply(Get_Foreign_Object_fromFoldable(), r_.Value{Type: 9, IntVal: 4280266298, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Foldable_Foldable[r_.Value]](Get_Data_Foldable_foldableArray()))}))
+	})
+	return cache_Main_object
+}
+
+var cache_Main_eqProbe r_.Value
+
+var once_Main_eqProbe sync.Once
+
+func Get_Main_eqProbe() r_.Value {
+	once_Main_eqProbe.Do(func() {
+		cache_Main_eqProbe = r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878((&Constructor_Data_Eq_Eq[int64]{1, r_.Func2(func(x_0 r_.Value, y_1 r_.Value) r_.Value {
+			return r_.Bool((x_0.IntVal) == (y_1.IntVal))
+		})})))}
+	})
+	return cache_Main_eqProbe
+}
+
+var cache_Main_calls r_.Value
+
+var once_Main_calls sync.Once
+
+func Get_Main_calls() r_.Value {
+	once_Main_calls.Do(func() {
+		cache_Main_calls = r_.Apply(Get_Effect_Unsafe_unsafePerformEffect(), r_.Apply(Get_Effect_Ref_go__new(), func() r_.Value {
+			arr := []int64{}
+			boxed := make([]r_.Value, len(arr))
+			for i, v := range arr {
+				boxed[i] = r_.Int(v)
+			}
+			return r_.Array(boxed)
+		}()))
+	})
+	return cache_Main_calls
+}
+
+var cache_Main_observe r_.Value
+
+var once_Main_observe sync.Once
+
+func Get_Main_observe() r_.Value {
+	once_Main_observe.Do(func() {
+		cache_Main_observe = r_.Func(func(value_0_box r_.Value) r_.Value {
+			return r_.Int(Call_Main_observe(value_0_box.IntVal))
+		})
+	})
+	return cache_Main_observe
+}
+
+var cache_Main_decodeProbe r_.Value
+
+var once_Main_decodeProbe sync.Once
+
+func Get_Main_decodeProbe() r_.Value {
+	once_Main_decodeProbe.Do(func() {
+		cache_Main_decodeProbe = r_.Value{Type: 9, IntVal: 1358001017, UnsafePtr: unsafe.Pointer(Rebox_Main_1405234230_1277236813((&Constructor_Data_Argonaut_Decode_Class_DecodeJson[int64]{1, r_.Func(func(json_0 r_.Value) r_.Value {
+			// TAST (Let): __local_var_1_0 shape=App(Var) bindingType=(ADT ["Data","Either","Either"] [(ADT ["Data","Argonaut","Decode","Error","JsonDecodeError"] []), Int])
+			__local_var_1_0 := r_.Apply(Data_Argonaut_Decode_Internal_Record_TypedInt(func() r_.Value {
+				orig := func() struct {
+					P_atIndex      r_.Value
+					P_atKey        r_.Value
+					P_isRight      r_.Value
+					P_just         r_.Value
+					P_left         r_.Value
+					P_leftOf       r_.Value
+					P_missingValue r_.Value
+					P_named        r_.Value
+					P_nothing      *Constructor_Data_Maybe_Just[r_.Value]
+					P_right        r_.Value
+					P_rightValue   r_.Value
+					P_typeMismatch r_.Value
+				} {
+					orig := Get_Data_Argonaut_Decode_Class_recordErrorSupport()
+					_ = orig
+					clone := struct {
+						P_atIndex      r_.Value
+						P_atKey        r_.Value
+						P_isRight      r_.Value
+						P_just         r_.Value
+						P_left         r_.Value
+						P_leftOf       r_.Value
+						P_missingValue r_.Value
+						P_named        r_.Value
+						P_nothing      *Constructor_Data_Maybe_Just[r_.Value]
+						P_right        r_.Value
+						P_rightValue   r_.Value
+						P_typeMismatch r_.Value
+					}{}
+					clone.P_atIndex = r_.RecordGet(orig, "atIndex")
+					clone.P_atKey = r_.RecordGet(orig, "atKey")
+					clone.P_isRight = r_.RecordGet(orig, "isRight")
+					clone.P_just = r_.RecordGet(orig, "just")
+					clone.P_left = r_.RecordGet(orig, "left")
+					clone.P_leftOf = r_.RecordGet(orig, "leftOf")
+					clone.P_missingValue = r_.RecordGet(orig, "missingValue")
+					clone.P_named = r_.RecordGet(orig, "named")
+					clone.P_nothing = r_.CoerceToStruct[Constructor_Data_Maybe_Just[r_.Value]](r_.RecordGet(orig, "nothing"))
+					clone.P_right = r_.RecordGet(orig, "right")
+					clone.P_rightValue = r_.RecordGet(orig, "rightValue")
+					clone.P_typeMismatch = r_.RecordGet(orig, "typeMismatch")
+					return clone
+				}()
+				_ = orig
+				return r_.RecordDict([]string{"atIndex", "atKey", "isRight", "just", "left", "leftOf", "missingValue", "named", "nothing", "right", "rightValue", "typeMismatch"}, []r_.Value{orig.P_atIndex, orig.P_atKey, orig.P_isRight, orig.P_just, orig.P_left, orig.P_leftOf, orig.P_missingValue, orig.P_named, r_.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(orig.P_nothing)}, orig.P_right, orig.P_rightValue, orig.P_typeMismatch})
+			}(), Get_Data_Argonaut_Decode_Decoders_decodeInt()), json_0)
+			_ = __local_var_1_0
+			var __t5 struct {
+				V0 r_.Value
+				V1 r_.Value
+				V2 bool
+			}
+			{
+				if __local_var_1_0.Type == 9 && __local_var_1_0.IntVal == 3711209382 {
+					// TAST (Let): __local_var_2_1 shape=Other bindingType=(TypeVar e$scope161)
+					__local_var_2_1 := (*Constructor_Data_Either_Left[r_.Value, r_.Value])(__local_var_1_0.UnsafePtr).V0
+					_ = __local_var_2_1
+					__t5 = struct {
+						V0 r_.Value
+						V1 r_.Value
+						V2 bool
+					}{__local_var_2_1, r_.Value{}, false}
+					goto end_branch_5
+				} else {
+
+				}
+			}
+			{
+				if __local_var_1_0.Type == 9 && __local_var_1_0.IntVal == 2465973597 {
+					// TAST (Let): __local_var_2_2 shape=Other bindingType=(TypeVar b$scope119)
+					__local_var_2_2 := (*Constructor_Data_Either_Right[r_.Value, r_.Value])(__local_var_1_0.UnsafePtr).V0
+					_ = __local_var_2_2
+					// TAST (Let): observed_5_3 shape=App(Var) bindingType=Int
+					observed_5_3 := Call_Main_observe(__local_var_2_2.IntVal)
+					_ = observed_5_3
+					var __t4 struct {
+						V0 r_.Value
+						V1 r_.Value
+						V2 bool
+					}
+					{
+						if (observed_5_3) < (int64(0)) {
+							__t4 = struct {
+								V0 r_.Value
+								V1 r_.Value
+								V2 bool
+							}{r_.Value{Type: 9, IntVal: 2887704423, UnsafePtr: unsafe.Pointer((&Constructor_Data_Argonaut_Decode_Error_TypeMismatch{1, "negative probe"}))}, r_.Value{}, false}
+							goto end_branch_4
+						} else {
+
+						}
+					}
+					{
+						__t4 = struct {
+							V0 r_.Value
+							V1 r_.Value
+							V2 bool
+						}{r_.Value{}, r_.Int(observed_5_3), true}
+					}
+				end_branch_4:
+					__t5 = __t4
+					goto end_branch_5
+				} else {
+
+				}
+			}
+			{
+				__t5 = func() struct {
+					V0 r_.Value
+					V1 r_.Value
+					V2 bool
+				} { _v := func() r_.Value { panic("Failed pattern match") }(); if _v.Type == 9 && _v.IntVal == 2465973597 && _v.UnsafePtr != nil {
+					return struct {
+						V0 r_.Value
+						V1 r_.Value
+						V2 bool
+					}{V0: r_.Value{}, V1: (*(*Constructor_Data_Either_Right[r_.Value, r_.Value])(_v.UnsafePtr)).V0, V2: true}
+				}; return struct {
+					V0 r_.Value
+					V1 r_.Value
+					V2 bool
+				}{V0: (*(*Constructor_Data_Either_Left[r_.Value, r_.Value])(_v.UnsafePtr)).V0, V1: r_.Value{}, V2: false} }()
+			}
+		end_branch_5:
+			return func() r_.Value {
+				_v := __t5
+				if _v.V2 {
+					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
+				}
+				return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+			}()
+		})})))}
+	})
+	return cache_Main_decodeProbe
+}
+
+var cache_Main_decodeTracked r_.Value
+
+var once_Main_decodeTracked sync.Once
+
+func Get_Main_decodeTracked() r_.Value {
+	once_Main_decodeTracked.Do(func() {
+		cache_Main_decodeTracked = Call_Data_Argonaut_Decode_Class_decodeJson(r_.CoerceToStruct[Constructor_Data_Argonaut_Decode_Class_DecodeJson[r_.Value]](r_.Apply(Call_Data_Argonaut_Decode_Class_decodeRecord(r_.Apply4(Call_Data_Argonaut_Decode_Class_gDecodeJsonCons(Call_Data_Argonaut_Decode_Class_decodeFieldId(r_.Value{Type: 9, IntVal: 1358001017, UnsafePtr: unsafe.Pointer(Rebox_Main_1405234230_1277236813(Rebox_Main_1277236813_1405234230(r_.CoerceToStruct[Constructor_Data_Argonaut_Decode_Class_DecodeJson[r_.Value]](Get_Main_decodeProbe()))))})), r_.Apply4(Call_Data_Argonaut_Decode_Class_gDecodeJsonCons(Call_Data_Argonaut_Decode_Class_decodeFieldId(r_.Value{Type: 9, IntVal: 1358001017, UnsafePtr: unsafe.Pointer(Rebox_Main_1405234230_1277236813(Rebox_Main_1277236813_1405234230(r_.CoerceToStruct[Constructor_Data_Argonaut_Decode_Class_DecodeJson[r_.Value]](Get_Main_decodeProbe()))))})), r_.Apply4(Call_Data_Argonaut_Decode_Class_gDecodeJsonCons(Call_Data_Argonaut_Decode_Class_decodeFieldId(r_.Value{Type: 9, IntVal: 1358001017, UnsafePtr: unsafe.Pointer(Rebox_Main_1405234230_1277236813(Rebox_Main_1277236813_1405234230(r_.CoerceToStruct[Constructor_Data_Argonaut_Decode_Class_DecodeJson[r_.Value]](Get_Main_decodeProbe()))))})), r_.Value{Type: 9, IntVal: 2727814238, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Argonaut_Decode_Class_GDecodeJson[r_.Value, r_.Value]](Get_Data_Argonaut_Decode_Class_gDecodeJsonNil()))}, Get_Main_cIsSymbol(), r_.Value{}, r_.Value{}), Get_Main_bIsSymbol(), r_.Value{}, r_.Value{}), Get_Main_aIsSymbol(), r_.Value{}, r_.Value{})), r_.Value{})))
+	})
+	return cache_Main_decodeTracked
+}
+
+var cache_Main_tailResult r_.Value
+
+var once_Main_tailResult sync.Once
+
+func Get_Main_tailResult() r_.Value {
+	once_Main_tailResult.Do(func() {
+		cache_Main_tailResult = r_.Func(func(v_0_box r_.Value) r_.Value {
+			return func() r_.Value {
+				_v := Call_Main_tailResult(v_0_box)
+				if _v.V2 {
+					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: func() r_.Value {
+						orig := _v.V1
+						_ = orig
+						return r_.RecordDict1("tail", r_.Int(orig.P_tail))
+					}()})}
+				}
+				return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+			}()
+		})
+	})
+	return cache_Main_tailResult
+}
+
+var cache_Main_customTailDecoder r_.Value
+
+var once_Main_customTailDecoder sync.Once
+
+func Get_Main_customTailDecoder() r_.Value {
+	once_Main_customTailDecoder.Do(func() {
+		cache_Main_customTailDecoder = r_.Value{Type: 9, IntVal: 2727814238, UnsafePtr: unsafe.Pointer((&Constructor_Data_Argonaut_Decode_Class_GDecodeJson[r_.Value, r_.Value]{1, r_.Func2(func(value_0 r_.Value, v_1 r_.Value) r_.Value {
+			return func() r_.Value {
+				_v := Call_Main_tailResult(value_0)
+				if _v.V2 {
+					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: func() r_.Value {
+						orig := _v.V1
+						_ = orig
+						return r_.RecordDict1("tail", r_.Int(orig.P_tail))
+					}()})}
+				}
+				return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+			}()
+		})}))}
+	})
+	return cache_Main_customTailDecoder
+}
+
+var cache_Main_decodeCustom r_.Value
+
+var once_Main_decodeCustom sync.Once
+
+func Get_Main_decodeCustom() r_.Value {
+	once_Main_decodeCustom.Do(func() {
+		cache_Main_decodeCustom = r_.Func(func(value_0_box r_.Value) r_.Value {
+			return func() r_.Value {
+				_v := Call_Main_decodeCustom(value_0_box)
+				if _v.V2 {
+					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: func() r_.Value {
+						orig := _v.V1
+						_ = orig
+						return r_.RecordDict2("head", "tail", r_.Int(orig.P_head), r_.Int(orig.P_tail))
+					}()})}
+				}
+				return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+			}()
+		})
+	})
+	return cache_Main_decodeCustom
+}
+
+var cache_Main_main r_.Value
+
+var once_Main_main sync.Once
+
+func Get_Main_main() r_.Value {
+	once_Main_main.Do(func() {
+		cache_Main_main = r_.Func(func(_ r_.Value) r_.Value {
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
+			__local_var_0_0 := r_.Apply2(Get_Effect_Ref_write(), func() r_.Value {
+				arr := []int64{}
+				boxed := make([]r_.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = r_.Int(v)
+				}
+				return r_.Array(boxed)
+			}(), Get_Main_calls())
+			_ = __local_var_0_0
+			_dollar___unused_1_1 := r_.Apply(__local_var_0_0, r_.Value{})
+			_ = _dollar___unused_1_1
+			_dollar___unused_2_2 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Main___cached_dict_1()), r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Main___cached_dict_2())), func() r_.Value {
+				orig := struct {
+					P_actual   r_.Value
+					P_expected r_.Value
+				}{r_.Apply(Get_Main_decodeTracked(), r_.Apply(Get_Main_object(), func() r_.Value {
+					arr := []*Constructor_Data_Tuple_Tuple[string, r_.Value]{Rebox_Main_138441832_3103076375(r_.CoerceToStruct[Constructor_Data_Tuple_Tuple[r_.Value, r_.Value]](func() r_.Value {
+						_v := struct {
+							V0 r_.Value
+							V1 r_.Value
+						}{r_.Str("c"), Data_Argonaut_Core_FromNumber_nativeWorker(r_.Float(3.0))}
+						return r_.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(&Constructor_Data_Tuple_Tuple[r_.Value, r_.Value]{V0: _v.V0, V1: _v.V1})}
+					}())), Rebox_Main_138441832_3103076375(r_.CoerceToStruct[Constructor_Data_Tuple_Tuple[r_.Value, r_.Value]](func() r_.Value {
+						_v := struct {
+							V0 r_.Value
+							V1 r_.Value
+						}{r_.Str("a"), Data_Argonaut_Core_FromNumber_nativeWorker(r_.Float(1.0))}
+						return r_.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(&Constructor_Data_Tuple_Tuple[r_.Value, r_.Value]{V0: _v.V0, V1: _v.V1})}
+					}())), Rebox_Main_138441832_3103076375(r_.CoerceToStruct[Constructor_Data_Tuple_Tuple[r_.Value, r_.Value]](func() r_.Value {
+						_v := struct {
+							V0 r_.Value
+							V1 r_.Value
+						}{r_.Str("b"), Data_Argonaut_Core_FromNumber_nativeWorker(r_.Float(2.0))}
+						return r_.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(&Constructor_Data_Tuple_Tuple[r_.Value, r_.Value]{V0: _v.V0, V1: _v.V1})}
+					}()))}
+					boxed := make([]r_.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = r_.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(Rebox_Main_3103076375_138441832(v))}
+					}
+					return r_.Array(boxed)
+				}())), func() r_.Value {
+					_v := struct {
+						V0 r_.Value
+						V1 r_.Value
+						V2 bool
+					}{r_.Value{}, r_.RecordDict3("a", "b", "c", r_.Int(int64(1)), r_.Int(int64(2)), r_.Int(int64(3))), true}
+					if _v.V2 {
+						return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
+					}
+					return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+				}()}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", orig.P_actual, orig.P_expected)
+			}()), r_.Value{})
+			_ = _dollar___unused_2_2
+			actual_3_4 := r_.Apply(r_.Apply(Get_Effect_Ref_read(), Get_Main_calls()), r_.Value{})
+			_ = actual_3_4
+			_dollar___unused_3_3 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(Rebox_Main_378698611_3790796878(Rebox_Main_3790796878_378698611(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Main___cached_dict_3()))), Rebox_Main_1469227923_1386611502(Rebox_Main_1386611502_1469227923(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Main___cached_dict_4())))), func() r_.Value {
+				orig := struct {
+					P_actual   []int64
+					P_expected []int64
+				}{func() []int64 {
+					arr := *(*[]r_.Value)(actual_3_4.UnsafePtr)
+					unboxed := make([]int64, len(arr))
+					for i, v := range arr {
+						unboxed[i] = v.IntVal
+					}
+					return unboxed
+				}(), []int64{int64(1), int64(2), int64(3)}}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", func() r_.Value {
+					arr := orig.P_actual
+					boxed := make([]r_.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = r_.Int(v)
+					}
+					return r_.Array(boxed)
+				}(), func() r_.Value {
+					arr := orig.P_expected
+					boxed := make([]r_.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = r_.Int(v)
+					}
+					return r_.Array(boxed)
+				}())
+			}()), r_.Value{})
+			_ = _dollar___unused_3_3
+			_dollar___unused_4_5 := r_.Apply(r_.Apply2(Get_Effect_Ref_write(), func() r_.Value {
+				arr := []int64{}
+				boxed := make([]r_.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = r_.Int(v)
+				}
+				return r_.Array(boxed)
+			}(), Get_Main_calls()), r_.Value{})
+			_ = _dollar___unused_4_5
+			_dollar___unused_5_6 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Main___cached_dict_5()), r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Main___cached_dict_6())), func() r_.Value {
+				orig := struct {
+					P_actual   r_.Value
+					P_expected r_.Value
+				}{r_.Apply(Get_Main_decodeTracked(), r_.Apply(Get_Main_object(), func() r_.Value {
+					arr := []*Constructor_Data_Tuple_Tuple[string, r_.Value]{Rebox_Main_138441832_3103076375(r_.CoerceToStruct[Constructor_Data_Tuple_Tuple[r_.Value, r_.Value]](func() r_.Value {
+						_v := struct {
+							V0 r_.Value
+							V1 r_.Value
+						}{r_.Str("a"), Data_Argonaut_Core_FromNumber_nativeWorker(r_.Float(1.0))}
+						return r_.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(&Constructor_Data_Tuple_Tuple[r_.Value, r_.Value]{V0: _v.V0, V1: _v.V1})}
+					}())), Rebox_Main_138441832_3103076375(r_.CoerceToStruct[Constructor_Data_Tuple_Tuple[r_.Value, r_.Value]](func() r_.Value {
+						_v := struct {
+							V0 r_.Value
+							V1 r_.Value
+						}{r_.Str("b"), Data_Argonaut_Core_FromNumber_nativeWorker(r_.Float(-2.0))}
+						return r_.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(&Constructor_Data_Tuple_Tuple[r_.Value, r_.Value]{V0: _v.V0, V1: _v.V1})}
+					}())), Rebox_Main_138441832_3103076375(r_.CoerceToStruct[Constructor_Data_Tuple_Tuple[r_.Value, r_.Value]](func() r_.Value {
+						_v := struct {
+							V0 r_.Value
+							V1 r_.Value
+						}{r_.Str("c"), Data_Argonaut_Core_FromNumber_nativeWorker(r_.Float(-3.0))}
+						return r_.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(&Constructor_Data_Tuple_Tuple[r_.Value, r_.Value]{V0: _v.V0, V1: _v.V1})}
+					}()))}
+					boxed := make([]r_.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = r_.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(Rebox_Main_3103076375_138441832(v))}
+					}
+					return r_.Array(boxed)
+				}())), func() r_.Value {
+					_v := struct {
+						V0 r_.Value
+						V1 r_.Value
+						V2 bool
+					}{r_.Value{Type: 9, IntVal: 1896025177, UnsafePtr: unsafe.Pointer((&Constructor_Data_Argonaut_Decode_Error_AtKey{1, "b", r_.Value{Type: 9, IntVal: 2887704423, UnsafePtr: unsafe.Pointer((&Constructor_Data_Argonaut_Decode_Error_TypeMismatch{1, "negative probe"}))}}))}, r_.Value{}, false}
+					if _v.V2 {
+						return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
+					}
+					return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+				}()}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", orig.P_actual, orig.P_expected)
+			}()), r_.Value{})
+			_ = _dollar___unused_5_6
+			actual_6_8 := r_.Apply(r_.Apply(Get_Effect_Ref_read(), Get_Main_calls()), r_.Value{})
+			_ = actual_6_8
+			_dollar___unused_6_7 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(Rebox_Main_378698611_3790796878(Rebox_Main_3790796878_378698611(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Main___cached_dict_7()))), Rebox_Main_1469227923_1386611502(Rebox_Main_1386611502_1469227923(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Main___cached_dict_8())))), func() r_.Value {
+				orig := struct {
+					P_actual   []int64
+					P_expected []int64
+				}{func() []int64 {
+					arr := *(*[]r_.Value)(actual_6_8.UnsafePtr)
+					unboxed := make([]int64, len(arr))
+					for i, v := range arr {
+						unboxed[i] = v.IntVal
+					}
+					return unboxed
+				}(), []int64{int64(1), int64(-2)}}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", func() r_.Value {
+					arr := orig.P_actual
+					boxed := make([]r_.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = r_.Int(v)
+					}
+					return r_.Array(boxed)
+				}(), func() r_.Value {
+					arr := orig.P_expected
+					boxed := make([]r_.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = r_.Int(v)
+					}
+					return r_.Array(boxed)
+				}())
+			}()), r_.Value{})
+			_ = _dollar___unused_6_7
+			_dollar___unused_7_9 := r_.Apply(r_.Apply2(Get_Effect_Ref_write(), func() r_.Value {
+				arr := []int64{}
+				boxed := make([]r_.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = r_.Int(v)
+				}
+				return r_.Array(boxed)
+			}(), Get_Main_calls()), r_.Value{})
+			_ = _dollar___unused_7_9
+			_dollar___unused_8_10 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Main___cached_dict_9()), r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Main___cached_dict_10())), func() r_.Value {
+				orig := struct {
+					P_actual   r_.Value
+					P_expected r_.Value
+				}{r_.Apply(Get_Main_decodeTracked(), r_.Apply(Get_Main_object(), func() r_.Value {
+					arr := []*Constructor_Data_Tuple_Tuple[string, r_.Value]{Rebox_Main_138441832_3103076375(r_.CoerceToStruct[Constructor_Data_Tuple_Tuple[r_.Value, r_.Value]](func() r_.Value {
+						_v := struct {
+							V0 r_.Value
+							V1 r_.Value
+						}{r_.Str("a"), Data_Argonaut_Core_FromNumber_nativeWorker(r_.Float(1.0))}
+						return r_.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(&Constructor_Data_Tuple_Tuple[r_.Value, r_.Value]{V0: _v.V0, V1: _v.V1})}
+					}())), Rebox_Main_138441832_3103076375(r_.CoerceToStruct[Constructor_Data_Tuple_Tuple[r_.Value, r_.Value]](func() r_.Value {
+						_v := struct {
+							V0 r_.Value
+							V1 r_.Value
+						}{r_.Str("c"), Data_Argonaut_Core_FromNumber_nativeWorker(r_.Float(3.0))}
+						return r_.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(&Constructor_Data_Tuple_Tuple[r_.Value, r_.Value]{V0: _v.V0, V1: _v.V1})}
+					}()))}
+					boxed := make([]r_.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = r_.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(Rebox_Main_3103076375_138441832(v))}
+					}
+					return r_.Array(boxed)
+				}())), func() r_.Value {
+					_v := struct {
+						V0 r_.Value
+						V1 r_.Value
+						V2 bool
+					}{r_.Value{Type: 9, IntVal: 1896025177, UnsafePtr: unsafe.Pointer((&Constructor_Data_Argonaut_Decode_Error_AtKey{1, "b", r_.Value{Type: 9, IntVal: 3199441748, UnsafePtr: unsafe.Pointer(nil)}}))}, r_.Value{}, false}
+					if _v.V2 {
+						return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
+					}
+					return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+				}()}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", orig.P_actual, orig.P_expected)
+			}()), r_.Value{})
+			_ = _dollar___unused_8_10
+			actual_9_12 := r_.Apply(r_.Apply(Get_Effect_Ref_read(), Get_Main_calls()), r_.Value{})
+			_ = actual_9_12
+			_dollar___unused_9_11 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(Rebox_Main_378698611_3790796878(Rebox_Main_3790796878_378698611(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Main___cached_dict_11()))), Rebox_Main_1469227923_1386611502(Rebox_Main_1386611502_1469227923(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Main___cached_dict_12())))), func() r_.Value {
+				orig := struct {
+					P_actual   []int64
+					P_expected []int64
+				}{func() []int64 {
+					arr := *(*[]r_.Value)(actual_9_12.UnsafePtr)
+					unboxed := make([]int64, len(arr))
+					for i, v := range arr {
+						unboxed[i] = v.IntVal
+					}
+					return unboxed
+				}(), []int64{int64(1)}}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", func() r_.Value {
+					arr := orig.P_actual
+					boxed := make([]r_.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = r_.Int(v)
+					}
+					return r_.Array(boxed)
+				}(), func() r_.Value {
+					arr := orig.P_expected
+					boxed := make([]r_.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = r_.Int(v)
+					}
+					return r_.Array(boxed)
+				}())
+			}()), r_.Value{})
+			_ = _dollar___unused_9_11
+			_dollar___unused_10_13 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Main___cached_dict_13()), r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Main___cached_dict_14())), func() r_.Value {
+				orig := struct {
+					P_actual   r_.Value
+					P_expected r_.Value
+				}{r_.Apply(Call_Data_Argonaut_Decode_Class_decodeJson(Rebox_Main_2334244318_1277236813(Rebox_Main_1277236813_2334244318(r_.CoerceToStruct[Constructor_Data_Argonaut_Decode_Class_DecodeJson[r_.Value]](Get_Main___cached_dict_15())))), r_.Apply(Get_Main_object(), func() r_.Value {
+					arr := []*Constructor_Data_Tuple_Tuple[string, r_.Value]{Rebox_Main_138441832_3103076375(r_.CoerceToStruct[Constructor_Data_Tuple_Tuple[r_.Value, r_.Value]](func() r_.Value {
+						_v := struct {
+							V0 r_.Value
+							V1 r_.Value
+						}{r_.Str("a"), Data_Argonaut_Core_FromNumber_nativeWorker(r_.Float(7.0))}
+						return r_.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(&Constructor_Data_Tuple_Tuple[r_.Value, r_.Value]{V0: _v.V0, V1: _v.V1})}
+					}()))}
+					boxed := make([]r_.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = r_.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(Rebox_Main_3103076375_138441832(v))}
+					}
+					return r_.Array(boxed)
+				}())), func() r_.Value {
+					_v := struct {
+						V0 r_.Value
+						V1 r_.Value
+						V2 bool
+					}{r_.Value{}, r_.RecordDict2("a", "b", r_.Int(int64(7)), r_.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer((*Constructor_Data_Maybe_Just[r_.Value])(nil))}), true}
+					if _v.V2 {
+						return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
+					}
+					return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+				}()}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", orig.P_actual, orig.P_expected)
+			}()), r_.Value{})
+			_ = _dollar___unused_10_13
+			_dollar___unused_11_14 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Main___cached_dict_16()), r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Main___cached_dict_17())), func() r_.Value {
+				orig := struct {
+					P_actual   r_.Value
+					P_expected r_.Value
+				}{r_.Apply(Call_Data_Argonaut_Decode_Class_decodeJson(Rebox_Main_2334244318_1277236813(Rebox_Main_1277236813_2334244318(r_.CoerceToStruct[Constructor_Data_Argonaut_Decode_Class_DecodeJson[r_.Value]](Get_Main___cached_dict_18())))), r_.Apply(Get_Main_object(), func() r_.Value {
+					arr := []*Constructor_Data_Tuple_Tuple[string, r_.Value]{Rebox_Main_138441832_3103076375(r_.CoerceToStruct[Constructor_Data_Tuple_Tuple[r_.Value, r_.Value]](func() r_.Value {
+						_v := struct {
+							V0 r_.Value
+							V1 r_.Value
+						}{r_.Str("a"), Data_Argonaut_Core_FromNumber_nativeWorker(r_.Float(7.0))}
+						return r_.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(&Constructor_Data_Tuple_Tuple[r_.Value, r_.Value]{V0: _v.V0, V1: _v.V1})}
+					}())), Rebox_Main_138441832_3103076375(r_.CoerceToStruct[Constructor_Data_Tuple_Tuple[r_.Value, r_.Value]](func() r_.Value {
+						_v := struct {
+							V0 r_.Value
+							V1 r_.Value
+						}{r_.Str("b"), Get_Data_Argonaut_Core_jsonNull()}
+						return r_.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(&Constructor_Data_Tuple_Tuple[r_.Value, r_.Value]{V0: _v.V0, V1: _v.V1})}
+					}()))}
+					boxed := make([]r_.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = r_.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(Rebox_Main_3103076375_138441832(v))}
+					}
+					return r_.Array(boxed)
+				}())), func() r_.Value {
+					_v := struct {
+						V0 r_.Value
+						V1 r_.Value
+						V2 bool
+					}{r_.Value{}, r_.RecordDict2("a", "b", r_.Int(int64(7)), r_.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer((*Constructor_Data_Maybe_Just[r_.Value])(nil))}), true}
+					if _v.V2 {
+						return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
+					}
+					return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+				}()}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", orig.P_actual, orig.P_expected)
+			}()), r_.Value{})
+			_ = _dollar___unused_11_14
+			_dollar___unused_12_15 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Main___cached_dict_19()), r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Main___cached_dict_20())), func() r_.Value {
+				orig := struct {
+					P_actual   r_.Value
+					P_expected r_.Value
+				}{r_.Apply(Call_Data_Argonaut_Decode_Class_decodeJson(Rebox_Main_252997862_1277236813(Rebox_Main_1277236813_252997862(r_.CoerceToStruct[Constructor_Data_Argonaut_Decode_Class_DecodeJson[r_.Value]](Get_Main___cached_dict_21())))), r_.Apply(Get_Main_object(), func() r_.Value {
+					arr := []*Constructor_Data_Tuple_Tuple[string, r_.Value]{Rebox_Main_138441832_3103076375(r_.CoerceToStruct[Constructor_Data_Tuple_Tuple[r_.Value, r_.Value]](func() r_.Value {
+						_v := struct {
+							V0 r_.Value
+							V1 r_.Value
+						}{r_.Str("outer"), r_.Apply(Get_Main_object(), func() r_.Value {
+							arr := []*Constructor_Data_Tuple_Tuple[string, r_.Value]{}
+							boxed := make([]r_.Value, len(arr))
+							for i, v := range arr {
+								boxed[i] = r_.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(Rebox_Main_3103076375_138441832(v))}
+							}
+							return r_.Array(boxed)
+						}())}
+						return r_.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(&Constructor_Data_Tuple_Tuple[r_.Value, r_.Value]{V0: _v.V0, V1: _v.V1})}
+					}()))}
+					boxed := make([]r_.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = r_.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(Rebox_Main_3103076375_138441832(v))}
+					}
+					return r_.Array(boxed)
+				}())), func() r_.Value {
+					_v := struct {
+						V0 r_.Value
+						V1 r_.Value
+						V2 bool
+					}{r_.Value{Type: 9, IntVal: 1896025177, UnsafePtr: unsafe.Pointer((&Constructor_Data_Argonaut_Decode_Error_AtKey{1, "outer", r_.Value{Type: 9, IntVal: 1896025177, UnsafePtr: unsafe.Pointer((&Constructor_Data_Argonaut_Decode_Error_AtKey{1, "required", r_.Value{Type: 9, IntVal: 3199441748, UnsafePtr: unsafe.Pointer(nil)}}))}}))}, r_.Value{}, false}
+					if _v.V2 {
+						return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
+					}
+					return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+				}()}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", orig.P_actual, orig.P_expected)
+			}()), r_.Value{})
+			_ = _dollar___unused_12_15
+			_dollar___unused_13_16 := r_.Apply(r_.Apply2(Get_Effect_Ref_write(), func() r_.Value {
+				arr := []int64{}
+				boxed := make([]r_.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = r_.Int(v)
+				}
+				return r_.Array(boxed)
+			}(), Get_Main_calls()), r_.Value{})
+			_ = _dollar___unused_13_16
+			first_14_17 := r_.Apply(r_.Apply(Get_Effect_Ref_go__new(), func() r_.Value {
+				_v := Call_Main_decodeCustom(Call_Foreign_Object_singleton("head", Data_Argonaut_Core_FromNumber_nativeWorker(r_.Float(1.0))))
+				if _v.V2 {
+					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: func() r_.Value {
+						orig := _v.V1
+						_ = orig
+						return r_.RecordDict2("head", "tail", r_.Int(orig.P_head), r_.Int(orig.P_tail))
+					}()})}
+				}
+				return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+			}()), r_.Value{})
+			_ = first_14_17
+			second_15_18 := r_.Apply(r_.Apply(Get_Effect_Ref_go__new(), func() r_.Value {
+				_v := Call_Main_decodeCustom(Call_Foreign_Object_singleton("head", Data_Argonaut_Core_FromNumber_nativeWorker(r_.Float(2.0))))
+				if _v.V2 {
+					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: func() r_.Value {
+						orig := _v.V1
+						_ = orig
+						return r_.RecordDict2("head", "tail", r_.Int(orig.P_head), r_.Int(orig.P_tail))
+					}()})}
+				}
+				return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+			}()), r_.Value{})
+			_ = second_15_18
+			actual_16_20 := r_.Apply(r_.Apply(Get_Effect_Ref_read(), first_14_17), r_.Value{})
+			_ = actual_16_20
+			_dollar___unused_16_19 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Main___cached_dict_22()), r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Main___cached_dict_23())), func() r_.Value {
+				orig := struct {
+					P_actual   r_.Value
+					P_expected r_.Value
+				}{actual_16_20, func() r_.Value {
+					_v := struct {
+						V0 r_.Value
+						V1 r_.Value
+						V2 bool
+					}{r_.Value{}, r_.RecordDict2("head", "tail", r_.Int(int64(1)), r_.Int(int64(41))), true}
+					if _v.V2 {
+						return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
+					}
+					return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+				}()}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", orig.P_actual, orig.P_expected)
+			}()), r_.Value{})
+			_ = _dollar___unused_16_19
+			actual_17_22 := r_.Apply(r_.Apply(Get_Effect_Ref_read(), second_15_18), r_.Value{})
+			_ = actual_17_22
+			_dollar___unused_17_21 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Main___cached_dict_24()), r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Main___cached_dict_25())), func() r_.Value {
+				orig := struct {
+					P_actual   r_.Value
+					P_expected r_.Value
+				}{actual_17_22, func() r_.Value {
+					_v := struct {
+						V0 r_.Value
+						V1 r_.Value
+						V2 bool
+					}{r_.Value{}, r_.RecordDict2("head", "tail", r_.Int(int64(2)), r_.Int(int64(41))), true}
+					if _v.V2 {
+						return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
+					}
+					return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+				}()}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", orig.P_actual, orig.P_expected)
+			}()), r_.Value{})
+			_ = _dollar___unused_17_21
+			_dollar___unused_18_23 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(Rebox_Main_381738941_3790796878(Rebox_Main_3790796878_381738941(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Main___cached_dict_26()))), Rebox_Main_2815936861_1386611502(Rebox_Main_1386611502_2815936861(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Main___cached_dict_27())))), func() r_.Value {
+				orig := struct {
+					P_actual struct {
+						P_tail int64
+					}
+					P_expected struct {
+						P_tail int64
+					}
+				}{func() struct {
+					P_tail int64
+				} {
+					orig := Get_Main_sharedTail()
+					_ = orig
+					clone := struct {
+						P_tail int64
+					}{}
+					clone.P_tail = r_.RecordGet(orig, "tail").IntVal
+					return clone
+				}(), struct {
+					P_tail int64
+				}{int64(41)}}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", func() r_.Value {
+					orig := orig.P_actual
+					_ = orig
+					return r_.RecordDict1("tail", r_.Int(orig.P_tail))
+				}(), func() r_.Value {
+					orig := orig.P_expected
+					_ = orig
+					return r_.RecordDict1("tail", r_.Int(orig.P_tail))
+				}())
+			}()), r_.Value{})
+			_ = _dollar___unused_18_23
+			_dollar___unused_19_24 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(Rebox_Main_2737952170_3790796878(Rebox_Main_3790796878_2737952170(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqBoolean()))), Rebox_Main_2735895690_1386611502(Rebox_Main_1386611502_2735895690(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showBoolean())))), func() r_.Value {
+				orig := struct {
+					P_actual   bool
+					P_expected bool
+				}{(r_.Apply2(Get_Record_Unsafe_unsafeHas(), r_.Str("head"), func() r_.Value {
+					orig := func() struct {
+						P_tail int64
+					} {
+						orig := Get_Main_sharedTail()
+						_ = orig
+						clone := struct {
+							P_tail int64
+						}{}
+						clone.P_tail = r_.RecordGet(orig, "tail").IntVal
+						return clone
+					}()
+					_ = orig
+					return r_.RecordDict1("tail", r_.Int(orig.P_tail))
+				}()).IntVal) != (0), false}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", r_.Bool(orig.P_actual), r_.Bool(orig.P_expected))
+			}()), r_.Value{})
+			_ = _dollar___unused_19_24
+			actual_20_26 := r_.Apply(r_.Apply(Get_Effect_Ref_read(), Get_Main_calls()), r_.Value{})
+			_ = actual_20_26
+			_dollar___unused_20_25 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(Rebox_Main_378698611_3790796878(Rebox_Main_3790796878_378698611(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Main___cached_dict_28()))), Rebox_Main_1469227923_1386611502(Rebox_Main_1386611502_1469227923(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Main___cached_dict_29())))), func() r_.Value {
+				orig := struct {
+					P_actual   []int64
+					P_expected []int64
+				}{func() []int64 {
+					arr := *(*[]r_.Value)(actual_20_26.UnsafePtr)
+					unboxed := make([]int64, len(arr))
+					for i, v := range arr {
+						unboxed[i] = v.IntVal
+					}
+					return unboxed
+				}(), []int64{int64(100), int64(100)}}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", func() r_.Value {
+					arr := orig.P_actual
+					boxed := make([]r_.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = r_.Int(v)
+					}
+					return r_.Array(boxed)
+				}(), func() r_.Value {
+					arr := orig.P_expected
+					boxed := make([]r_.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = r_.Int(v)
+					}
+					return r_.Array(boxed)
+				}())
+			}()), r_.Value{})
+			_ = _dollar___unused_20_25
+			_dollar___unused_21_27 := r_.Apply(r_.Apply2(Get_Effect_Ref_write(), func() r_.Value {
+				arr := []int64{}
+				boxed := make([]r_.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = r_.Int(v)
+				}
+				return r_.Array(boxed)
+			}(), Get_Main_calls()), r_.Value{})
+			_ = _dollar___unused_21_27
+			_dollar___unused_22_28 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Main___cached_dict_30()), r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Main___cached_dict_31())), func() r_.Value {
+				orig := struct {
+					P_actual   r_.Value
+					P_expected r_.Value
+				}{func() r_.Value {
+					_v := Call_Main_decodeCustom(Get_Foreign_Object_empty())
+					if _v.V2 {
+						return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: func() r_.Value {
+							orig := _v.V1
+							_ = orig
+							return r_.RecordDict2("head", "tail", r_.Int(orig.P_head), r_.Int(orig.P_tail))
+						}()})}
+					}
+					return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+				}(), func() r_.Value {
+					_v := struct {
+						V0 r_.Value
+						V1 r_.Value
+						V2 bool
+					}{r_.Value{Type: 9, IntVal: 1896025177, UnsafePtr: unsafe.Pointer((&Constructor_Data_Argonaut_Decode_Error_AtKey{1, "head", r_.Value{Type: 9, IntVal: 3199441748, UnsafePtr: unsafe.Pointer(nil)}}))}, r_.Value{}, false}
+					if _v.V2 {
+						return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
+					}
+					return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+				}()}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", orig.P_actual, orig.P_expected)
+			}()), r_.Value{})
+			_ = _dollar___unused_22_28
+			actual_23_30 := r_.Apply(r_.Apply(Get_Effect_Ref_read(), Get_Main_calls()), r_.Value{})
+			_ = actual_23_30
+			_dollar___unused_23_29 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(Rebox_Main_378698611_3790796878(Rebox_Main_3790796878_378698611(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Main___cached_dict_32()))), Rebox_Main_1469227923_1386611502(Rebox_Main_1386611502_1469227923(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Main___cached_dict_33())))), func() r_.Value {
+				orig := struct {
+					P_actual   []int64
+					P_expected []int64
+				}{func() []int64 {
+					arr := *(*[]r_.Value)(actual_23_30.UnsafePtr)
+					unboxed := make([]int64, len(arr))
+					for i, v := range arr {
+						unboxed[i] = v.IntVal
+					}
+					return unboxed
+				}(), []int64{}}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", func() r_.Value {
+					arr := orig.P_actual
+					boxed := make([]r_.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = r_.Int(v)
+					}
+					return r_.Array(boxed)
+				}(), func() r_.Value {
+					arr := orig.P_expected
+					boxed := make([]r_.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = r_.Int(v)
+					}
+					return r_.Array(boxed)
+				}())
+			}()), r_.Value{})
+			_ = _dollar___unused_23_29
+			return r_.Apply(r_.Apply(Get_Effect_Console_log(), r_.Str("Done")), r_.Value{})
+		})
+	})
+	return cache_Main_main
+}
+
+var cache_Main___cached_dict_0 r_.Value
+
+var once_Main___cached_dict_0 sync.Once
+
+func Get_Main___cached_dict_0() r_.Value {
+	once_Main___cached_dict_0.Do(func() {
+		cache_Main___cached_dict_0 = r_.Value{Type: 9, IntVal: 2727814238, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Argonaut_Decode_Class_GDecodeJson[r_.Value, r_.Value]](r_.Apply4(Call_Data_Argonaut_Decode_Class_gDecodeJsonCons(Call_Data_Argonaut_Decode_Class_decodeFieldId(r_.Value{Type: 9, IntVal: 1358001017, UnsafePtr: unsafe.Pointer(Rebox_Main_1405234230_1277236813(Rebox_Main_1277236813_1405234230(r_.CoerceToStruct[Constructor_Data_Argonaut_Decode_Class_DecodeJson[r_.Value]](Get_Data_Argonaut_Decode_Class_decodeJsonInt()))))})), r_.Value{Type: 9, IntVal: 2727814238, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Argonaut_Decode_Class_GDecodeJson[r_.Value, r_.Value]](Get_Main_customTailDecoder()))}, Get_Main_headIsSymbol(), r_.Value{}, r_.Value{})))}
+	})
+	return cache_Main___cached_dict_0
+}
+
+var cache_Main___cached_dict_1 r_.Value
+
+var once_Main___cached_dict_1 sync.Once
+
+func Get_Main___cached_dict_1() r_.Value {
+	once_Main___cached_dict_1.Do(func() {
+		cache_Main___cached_dict_1 = r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Call_Data_Either_eqEither(r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Argonaut_Decode_Error_eqJsonDecodeError()))}, Call_Data_Eq_eqRec(r_.Value{}, Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Get_Data_Eq_eqRowNil(), r_.Value{}, Get_Main_cIsSymbol(), r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Main_eqProbe()))))}), r_.Value{}, Get_Main_bIsSymbol(), r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Main_eqProbe()))))}), r_.Value{}, Get_Main_aIsSymbol(), r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Main_eqProbe()))))})))))}
+	})
+	return cache_Main___cached_dict_1
+}
+
+var cache_Main___cached_dict_2 r_.Value
+
+var once_Main___cached_dict_2 sync.Once
+
+func Get_Main___cached_dict_2() r_.Value {
+	once_Main___cached_dict_2.Do(func() {
+		cache_Main___cached_dict_2 = r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Call_Data_Either_showEither(r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Argonaut_Decode_Error_showJsonDecodeError()))}, Call_Data_Show_showRecord(r_.Value{}, r_.Value{}, Call_Data_Show_showRecordFieldsCons(Get_Main_aIsSymbol(), Call_Data_Show_showRecordFieldsCons(Get_Main_bIsSymbol(), Call_Data_Show_showRecordFieldsConsNil(Get_Main_cIsSymbol(), r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt()))))}), r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt()))))}), r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt()))))})))))}
+	})
+	return cache_Main___cached_dict_2
+}
+
+var cache_Main___cached_dict_3 r_.Value
+
+var once_Main___cached_dict_3 sync.Once
+
+func Get_Main___cached_dict_3() r_.Value {
+	once_Main___cached_dict_3.Do(func() {
+		cache_Main___cached_dict_3 = r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_378698611_3790796878(Rebox_Main_3790796878_378698611(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Call_Data_Eq_eqArray(r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqInt()))))})))))}
+	})
+	return cache_Main___cached_dict_3
+}
+
+var cache_Main___cached_dict_4 r_.Value
+
+var once_Main___cached_dict_4 sync.Once
+
+func Get_Main___cached_dict_4() r_.Value {
+	once_Main___cached_dict_4.Do(func() {
+		cache_Main___cached_dict_4 = r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1469227923_1386611502(Rebox_Main_1386611502_1469227923(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Call_Data_Show_showArray(r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt()))))})))))}
+	})
+	return cache_Main___cached_dict_4
+}
+
+var cache_Main___cached_dict_5 r_.Value
+
+var once_Main___cached_dict_5 sync.Once
+
+func Get_Main___cached_dict_5() r_.Value {
+	once_Main___cached_dict_5.Do(func() {
+		cache_Main___cached_dict_5 = r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Call_Data_Either_eqEither(r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Argonaut_Decode_Error_eqJsonDecodeError()))}, Call_Data_Eq_eqRec(r_.Value{}, Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Get_Data_Eq_eqRowNil(), r_.Value{}, Get_Main_cIsSymbol(), r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Main_eqProbe()))))}), r_.Value{}, Get_Main_bIsSymbol(), r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Main_eqProbe()))))}), r_.Value{}, Get_Main_aIsSymbol(), r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Main_eqProbe()))))})))))}
+	})
+	return cache_Main___cached_dict_5
+}
+
+var cache_Main___cached_dict_6 r_.Value
+
+var once_Main___cached_dict_6 sync.Once
+
+func Get_Main___cached_dict_6() r_.Value {
+	once_Main___cached_dict_6.Do(func() {
+		cache_Main___cached_dict_6 = r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Call_Data_Either_showEither(r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Argonaut_Decode_Error_showJsonDecodeError()))}, Call_Data_Show_showRecord(r_.Value{}, r_.Value{}, Call_Data_Show_showRecordFieldsCons(Get_Main_aIsSymbol(), Call_Data_Show_showRecordFieldsCons(Get_Main_bIsSymbol(), Call_Data_Show_showRecordFieldsConsNil(Get_Main_cIsSymbol(), r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt()))))}), r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt()))))}), r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt()))))})))))}
+	})
+	return cache_Main___cached_dict_6
+}
+
+var cache_Main___cached_dict_7 r_.Value
+
+var once_Main___cached_dict_7 sync.Once
+
+func Get_Main___cached_dict_7() r_.Value {
+	once_Main___cached_dict_7.Do(func() {
+		cache_Main___cached_dict_7 = r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_378698611_3790796878(Rebox_Main_3790796878_378698611(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Call_Data_Eq_eqArray(r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqInt()))))})))))}
+	})
+	return cache_Main___cached_dict_7
+}
+
+var cache_Main___cached_dict_8 r_.Value
+
+var once_Main___cached_dict_8 sync.Once
+
+func Get_Main___cached_dict_8() r_.Value {
+	once_Main___cached_dict_8.Do(func() {
+		cache_Main___cached_dict_8 = r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1469227923_1386611502(Rebox_Main_1386611502_1469227923(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Call_Data_Show_showArray(r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt()))))})))))}
+	})
+	return cache_Main___cached_dict_8
+}
+
+var cache_Main___cached_dict_9 r_.Value
+
+var once_Main___cached_dict_9 sync.Once
+
+func Get_Main___cached_dict_9() r_.Value {
+	once_Main___cached_dict_9.Do(func() {
+		cache_Main___cached_dict_9 = r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Call_Data_Either_eqEither(r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Argonaut_Decode_Error_eqJsonDecodeError()))}, Call_Data_Eq_eqRec(r_.Value{}, Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Get_Data_Eq_eqRowNil(), r_.Value{}, Get_Main_cIsSymbol(), r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Main_eqProbe()))))}), r_.Value{}, Get_Main_bIsSymbol(), r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Main_eqProbe()))))}), r_.Value{}, Get_Main_aIsSymbol(), r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Main_eqProbe()))))})))))}
+	})
+	return cache_Main___cached_dict_9
+}
+
+var cache_Main___cached_dict_10 r_.Value
+
+var once_Main___cached_dict_10 sync.Once
+
+func Get_Main___cached_dict_10() r_.Value {
+	once_Main___cached_dict_10.Do(func() {
+		cache_Main___cached_dict_10 = r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Call_Data_Either_showEither(r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Argonaut_Decode_Error_showJsonDecodeError()))}, Call_Data_Show_showRecord(r_.Value{}, r_.Value{}, Call_Data_Show_showRecordFieldsCons(Get_Main_aIsSymbol(), Call_Data_Show_showRecordFieldsCons(Get_Main_bIsSymbol(), Call_Data_Show_showRecordFieldsConsNil(Get_Main_cIsSymbol(), r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt()))))}), r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt()))))}), r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt()))))})))))}
+	})
+	return cache_Main___cached_dict_10
+}
+
+var cache_Main___cached_dict_11 r_.Value
+
+var once_Main___cached_dict_11 sync.Once
+
+func Get_Main___cached_dict_11() r_.Value {
+	once_Main___cached_dict_11.Do(func() {
+		cache_Main___cached_dict_11 = r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_378698611_3790796878(Rebox_Main_3790796878_378698611(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Call_Data_Eq_eqArray(r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqInt()))))})))))}
+	})
+	return cache_Main___cached_dict_11
+}
+
+var cache_Main___cached_dict_12 r_.Value
+
+var once_Main___cached_dict_12 sync.Once
+
+func Get_Main___cached_dict_12() r_.Value {
+	once_Main___cached_dict_12.Do(func() {
+		cache_Main___cached_dict_12 = r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1469227923_1386611502(Rebox_Main_1386611502_1469227923(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Call_Data_Show_showArray(r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt()))))})))))}
+	})
+	return cache_Main___cached_dict_12
+}
+
+var cache_Main___cached_dict_13 r_.Value
+
+var once_Main___cached_dict_13 sync.Once
+
+func Get_Main___cached_dict_13() r_.Value {
+	once_Main___cached_dict_13.Do(func() {
+		cache_Main___cached_dict_13 = r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Call_Data_Either_eqEither(r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Argonaut_Decode_Error_eqJsonDecodeError()))}, Call_Data_Eq_eqRec(r_.Value{}, Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Get_Data_Eq_eqRowNil(), r_.Value{}, Get_Main_bIsSymbol(), Call_Data_Maybe_eqMaybe(r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqInt()))))})), r_.Value{}, Get_Main_aIsSymbol(), r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqInt()))))})))))}
+	})
+	return cache_Main___cached_dict_13
+}
+
+var cache_Main___cached_dict_14 r_.Value
+
+var once_Main___cached_dict_14 sync.Once
+
+func Get_Main___cached_dict_14() r_.Value {
+	once_Main___cached_dict_14.Do(func() {
+		cache_Main___cached_dict_14 = r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Call_Data_Either_showEither(r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Argonaut_Decode_Error_showJsonDecodeError()))}, Call_Data_Show_showRecord(r_.Value{}, r_.Value{}, Call_Data_Show_showRecordFieldsCons(Get_Main_aIsSymbol(), Call_Data_Show_showRecordFieldsConsNil(Get_Main_bIsSymbol(), Call_Data_Maybe_showMaybe(r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt()))))})), r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt()))))})))))}
+	})
+	return cache_Main___cached_dict_14
+}
+
+var cache_Main___cached_dict_15 r_.Value
+
+var once_Main___cached_dict_15 sync.Once
+
+func Get_Main___cached_dict_15() r_.Value {
+	once_Main___cached_dict_15.Do(func() {
+		cache_Main___cached_dict_15 = r_.Value{Type: 9, IntVal: 1358001017, UnsafePtr: unsafe.Pointer(Rebox_Main_2334244318_1277236813(Rebox_Main_1277236813_2334244318(r_.CoerceToStruct[Constructor_Data_Argonaut_Decode_Class_DecodeJson[r_.Value]](r_.Apply(Call_Data_Argonaut_Decode_Class_decodeRecord(r_.Apply4(Call_Data_Argonaut_Decode_Class_gDecodeJsonCons(Call_Data_Argonaut_Decode_Class_decodeFieldId(r_.Value{Type: 9, IntVal: 1358001017, UnsafePtr: unsafe.Pointer(Rebox_Main_1405234230_1277236813(Rebox_Main_1277236813_1405234230(r_.CoerceToStruct[Constructor_Data_Argonaut_Decode_Class_DecodeJson[r_.Value]](Get_Data_Argonaut_Decode_Class_decodeJsonInt()))))})), r_.Apply4(Call_Data_Argonaut_Decode_Class_gDecodeJsonCons(Call_Data_Argonaut_Decode_Class_decodeFieldMaybe(r_.Value{Type: 9, IntVal: 1358001017, UnsafePtr: unsafe.Pointer(Rebox_Main_1405234230_1277236813(Rebox_Main_1277236813_1405234230(r_.CoerceToStruct[Constructor_Data_Argonaut_Decode_Class_DecodeJson[r_.Value]](Get_Data_Argonaut_Decode_Class_decodeJsonInt()))))})), r_.Value{Type: 9, IntVal: 2727814238, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Argonaut_Decode_Class_GDecodeJson[r_.Value, r_.Value]](Get_Data_Argonaut_Decode_Class_gDecodeJsonNil()))}, Get_Main_bIsSymbol(), r_.Value{}, r_.Value{}), Get_Main_aIsSymbol(), r_.Value{}, r_.Value{})), r_.Value{})))))}
+	})
+	return cache_Main___cached_dict_15
+}
+
+var cache_Main___cached_dict_16 r_.Value
+
+var once_Main___cached_dict_16 sync.Once
+
+func Get_Main___cached_dict_16() r_.Value {
+	once_Main___cached_dict_16.Do(func() {
+		cache_Main___cached_dict_16 = r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Call_Data_Either_eqEither(r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Argonaut_Decode_Error_eqJsonDecodeError()))}, Call_Data_Eq_eqRec(r_.Value{}, Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Get_Data_Eq_eqRowNil(), r_.Value{}, Get_Main_bIsSymbol(), Call_Data_Maybe_eqMaybe(r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqInt()))))})), r_.Value{}, Get_Main_aIsSymbol(), r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqInt()))))})))))}
+	})
+	return cache_Main___cached_dict_16
+}
+
+var cache_Main___cached_dict_17 r_.Value
+
+var once_Main___cached_dict_17 sync.Once
+
+func Get_Main___cached_dict_17() r_.Value {
+	once_Main___cached_dict_17.Do(func() {
+		cache_Main___cached_dict_17 = r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Call_Data_Either_showEither(r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Argonaut_Decode_Error_showJsonDecodeError()))}, Call_Data_Show_showRecord(r_.Value{}, r_.Value{}, Call_Data_Show_showRecordFieldsCons(Get_Main_aIsSymbol(), Call_Data_Show_showRecordFieldsConsNil(Get_Main_bIsSymbol(), Call_Data_Maybe_showMaybe(r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt()))))})), r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt()))))})))))}
+	})
+	return cache_Main___cached_dict_17
+}
+
+var cache_Main___cached_dict_18 r_.Value
+
+var once_Main___cached_dict_18 sync.Once
+
+func Get_Main___cached_dict_18() r_.Value {
+	once_Main___cached_dict_18.Do(func() {
+		cache_Main___cached_dict_18 = r_.Value{Type: 9, IntVal: 1358001017, UnsafePtr: unsafe.Pointer(Rebox_Main_2334244318_1277236813(Rebox_Main_1277236813_2334244318(r_.CoerceToStruct[Constructor_Data_Argonaut_Decode_Class_DecodeJson[r_.Value]](r_.Apply(Call_Data_Argonaut_Decode_Class_decodeRecord(r_.Apply4(Call_Data_Argonaut_Decode_Class_gDecodeJsonCons(Call_Data_Argonaut_Decode_Class_decodeFieldId(r_.Value{Type: 9, IntVal: 1358001017, UnsafePtr: unsafe.Pointer(Rebox_Main_1405234230_1277236813(Rebox_Main_1277236813_1405234230(r_.CoerceToStruct[Constructor_Data_Argonaut_Decode_Class_DecodeJson[r_.Value]](Get_Data_Argonaut_Decode_Class_decodeJsonInt()))))})), r_.Apply4(Call_Data_Argonaut_Decode_Class_gDecodeJsonCons(Call_Data_Argonaut_Decode_Class_decodeFieldMaybe(r_.Value{Type: 9, IntVal: 1358001017, UnsafePtr: unsafe.Pointer(Rebox_Main_1405234230_1277236813(Rebox_Main_1277236813_1405234230(r_.CoerceToStruct[Constructor_Data_Argonaut_Decode_Class_DecodeJson[r_.Value]](Get_Data_Argonaut_Decode_Class_decodeJsonInt()))))})), r_.Value{Type: 9, IntVal: 2727814238, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Argonaut_Decode_Class_GDecodeJson[r_.Value, r_.Value]](Get_Data_Argonaut_Decode_Class_gDecodeJsonNil()))}, Get_Main_bIsSymbol(), r_.Value{}, r_.Value{}), Get_Main_aIsSymbol(), r_.Value{}, r_.Value{})), r_.Value{})))))}
+	})
+	return cache_Main___cached_dict_18
+}
+
+var cache_Main___cached_dict_19 r_.Value
+
+var once_Main___cached_dict_19 sync.Once
+
+func Get_Main___cached_dict_19() r_.Value {
+	once_Main___cached_dict_19.Do(func() {
+		cache_Main___cached_dict_19 = r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Call_Data_Either_eqEither(r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Argonaut_Decode_Error_eqJsonDecodeError()))}, Call_Data_Eq_eqRec(r_.Value{}, Call_Data_Eq_eqRowCons(Get_Data_Eq_eqRowNil(), r_.Value{}, Get_Main_outerIsSymbol(), Call_Data_Eq_eqRec(r_.Value{}, Call_Data_Eq_eqRowCons(Get_Data_Eq_eqRowNil(), r_.Value{}, Get_Main_requiredIsSymbol(), r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqInt()))))})))))))}
+	})
+	return cache_Main___cached_dict_19
+}
+
+var cache_Main___cached_dict_20 r_.Value
+
+var once_Main___cached_dict_20 sync.Once
+
+func Get_Main___cached_dict_20() r_.Value {
+	once_Main___cached_dict_20.Do(func() {
+		cache_Main___cached_dict_20 = r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Call_Data_Either_showEither(r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Argonaut_Decode_Error_showJsonDecodeError()))}, Call_Data_Show_showRecord(r_.Value{}, r_.Value{}, Call_Data_Show_showRecordFieldsConsNil(Get_Main_outerIsSymbol(), Call_Data_Show_showRecord(r_.Value{}, r_.Value{}, Call_Data_Show_showRecordFieldsConsNil(Get_Main_requiredIsSymbol(), r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt()))))})))))))}
+	})
+	return cache_Main___cached_dict_20
+}
+
+var cache_Main___cached_dict_21 r_.Value
+
+var once_Main___cached_dict_21 sync.Once
+
+func Get_Main___cached_dict_21() r_.Value {
+	once_Main___cached_dict_21.Do(func() {
+		cache_Main___cached_dict_21 = r_.Value{Type: 9, IntVal: 1358001017, UnsafePtr: unsafe.Pointer(Rebox_Main_252997862_1277236813(Rebox_Main_1277236813_252997862(r_.CoerceToStruct[Constructor_Data_Argonaut_Decode_Class_DecodeJson[r_.Value]](r_.Apply(Call_Data_Argonaut_Decode_Class_decodeRecord(r_.Apply4(Call_Data_Argonaut_Decode_Class_gDecodeJsonCons(Call_Data_Argonaut_Decode_Class_decodeFieldId(r_.Apply(Call_Data_Argonaut_Decode_Class_decodeRecord(r_.Apply4(Call_Data_Argonaut_Decode_Class_gDecodeJsonCons(Call_Data_Argonaut_Decode_Class_decodeFieldId(r_.Value{Type: 9, IntVal: 1358001017, UnsafePtr: unsafe.Pointer(Rebox_Main_1405234230_1277236813(Rebox_Main_1277236813_1405234230(r_.CoerceToStruct[Constructor_Data_Argonaut_Decode_Class_DecodeJson[r_.Value]](Get_Data_Argonaut_Decode_Class_decodeJsonInt()))))})), r_.Value{Type: 9, IntVal: 2727814238, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Argonaut_Decode_Class_GDecodeJson[r_.Value, r_.Value]](Get_Data_Argonaut_Decode_Class_gDecodeJsonNil()))}, Get_Main_requiredIsSymbol(), r_.Value{}, r_.Value{})), r_.Value{}))), r_.Value{Type: 9, IntVal: 2727814238, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Argonaut_Decode_Class_GDecodeJson[r_.Value, r_.Value]](Get_Data_Argonaut_Decode_Class_gDecodeJsonNil()))}, Get_Main_outerIsSymbol(), r_.Value{}, r_.Value{})), r_.Value{})))))}
+	})
+	return cache_Main___cached_dict_21
+}
+
+var cache_Main___cached_dict_22 r_.Value
+
+var once_Main___cached_dict_22 sync.Once
+
+func Get_Main___cached_dict_22() r_.Value {
+	once_Main___cached_dict_22.Do(func() {
+		cache_Main___cached_dict_22 = r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Call_Data_Either_eqEither(r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Argonaut_Decode_Error_eqJsonDecodeError()))}, Call_Data_Eq_eqRec(r_.Value{}, Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Get_Data_Eq_eqRowNil(), r_.Value{}, Get_Main_tailIsSymbol(), r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqInt()))))}), r_.Value{}, Get_Main_headIsSymbol(), r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqInt()))))})))))}
+	})
+	return cache_Main___cached_dict_22
+}
+
+var cache_Main___cached_dict_23 r_.Value
+
+var once_Main___cached_dict_23 sync.Once
+
+func Get_Main___cached_dict_23() r_.Value {
+	once_Main___cached_dict_23.Do(func() {
+		cache_Main___cached_dict_23 = r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Call_Data_Either_showEither(r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Argonaut_Decode_Error_showJsonDecodeError()))}, Call_Data_Show_showRecord(r_.Value{}, r_.Value{}, Call_Data_Show_showRecordFieldsCons(Get_Main_headIsSymbol(), Call_Data_Show_showRecordFieldsConsNil(Get_Main_tailIsSymbol(), r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt()))))}), r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt()))))})))))}
+	})
+	return cache_Main___cached_dict_23
+}
+
+var cache_Main___cached_dict_24 r_.Value
+
+var once_Main___cached_dict_24 sync.Once
+
+func Get_Main___cached_dict_24() r_.Value {
+	once_Main___cached_dict_24.Do(func() {
+		cache_Main___cached_dict_24 = r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Call_Data_Either_eqEither(r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Argonaut_Decode_Error_eqJsonDecodeError()))}, Call_Data_Eq_eqRec(r_.Value{}, Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Get_Data_Eq_eqRowNil(), r_.Value{}, Get_Main_tailIsSymbol(), r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqInt()))))}), r_.Value{}, Get_Main_headIsSymbol(), r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqInt()))))})))))}
+	})
+	return cache_Main___cached_dict_24
+}
+
+var cache_Main___cached_dict_25 r_.Value
+
+var once_Main___cached_dict_25 sync.Once
+
+func Get_Main___cached_dict_25() r_.Value {
+	once_Main___cached_dict_25.Do(func() {
+		cache_Main___cached_dict_25 = r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Call_Data_Either_showEither(r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Argonaut_Decode_Error_showJsonDecodeError()))}, Call_Data_Show_showRecord(r_.Value{}, r_.Value{}, Call_Data_Show_showRecordFieldsCons(Get_Main_headIsSymbol(), Call_Data_Show_showRecordFieldsConsNil(Get_Main_tailIsSymbol(), r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt()))))}), r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt()))))})))))}
+	})
+	return cache_Main___cached_dict_25
+}
+
+var cache_Main___cached_dict_26 r_.Value
+
+var once_Main___cached_dict_26 sync.Once
+
+func Get_Main___cached_dict_26() r_.Value {
+	once_Main___cached_dict_26.Do(func() {
+		cache_Main___cached_dict_26 = r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_381738941_3790796878(Rebox_Main_3790796878_381738941(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Call_Data_Eq_eqRec(r_.Value{}, Call_Data_Eq_eqRowCons(Get_Data_Eq_eqRowNil(), r_.Value{}, Get_Main_tailIsSymbol(), r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqInt()))))}))))))}
+	})
+	return cache_Main___cached_dict_26
+}
+
+var cache_Main___cached_dict_27 r_.Value
+
+var once_Main___cached_dict_27 sync.Once
+
+func Get_Main___cached_dict_27() r_.Value {
+	once_Main___cached_dict_27.Do(func() {
+		cache_Main___cached_dict_27 = r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_2815936861_1386611502(Rebox_Main_1386611502_2815936861(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Call_Data_Show_showRecord(r_.Value{}, r_.Value{}, Call_Data_Show_showRecordFieldsConsNil(Get_Main_tailIsSymbol(), r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt()))))}))))))}
+	})
+	return cache_Main___cached_dict_27
+}
+
+var cache_Main___cached_dict_28 r_.Value
+
+var once_Main___cached_dict_28 sync.Once
+
+func Get_Main___cached_dict_28() r_.Value {
+	once_Main___cached_dict_28.Do(func() {
+		cache_Main___cached_dict_28 = r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_378698611_3790796878(Rebox_Main_3790796878_378698611(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Call_Data_Eq_eqArray(r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqInt()))))})))))}
+	})
+	return cache_Main___cached_dict_28
+}
+
+var cache_Main___cached_dict_29 r_.Value
+
+var once_Main___cached_dict_29 sync.Once
+
+func Get_Main___cached_dict_29() r_.Value {
+	once_Main___cached_dict_29.Do(func() {
+		cache_Main___cached_dict_29 = r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1469227923_1386611502(Rebox_Main_1386611502_1469227923(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Call_Data_Show_showArray(r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt()))))})))))}
+	})
+	return cache_Main___cached_dict_29
+}
+
+var cache_Main___cached_dict_30 r_.Value
+
+var once_Main___cached_dict_30 sync.Once
+
+func Get_Main___cached_dict_30() r_.Value {
+	once_Main___cached_dict_30.Do(func() {
+		cache_Main___cached_dict_30 = r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Call_Data_Either_eqEither(r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Argonaut_Decode_Error_eqJsonDecodeError()))}, Call_Data_Eq_eqRec(r_.Value{}, Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Get_Data_Eq_eqRowNil(), r_.Value{}, Get_Main_tailIsSymbol(), r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqInt()))))}), r_.Value{}, Get_Main_headIsSymbol(), r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqInt()))))})))))}
+	})
+	return cache_Main___cached_dict_30
+}
+
+var cache_Main___cached_dict_31 r_.Value
+
+var once_Main___cached_dict_31 sync.Once
+
+func Get_Main___cached_dict_31() r_.Value {
+	once_Main___cached_dict_31.Do(func() {
+		cache_Main___cached_dict_31 = r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Call_Data_Either_showEither(r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Argonaut_Decode_Error_showJsonDecodeError()))}, Call_Data_Show_showRecord(r_.Value{}, r_.Value{}, Call_Data_Show_showRecordFieldsCons(Get_Main_headIsSymbol(), Call_Data_Show_showRecordFieldsConsNil(Get_Main_tailIsSymbol(), r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt()))))}), r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt()))))})))))}
+	})
+	return cache_Main___cached_dict_31
+}
+
+var cache_Main___cached_dict_32 r_.Value
+
+var once_Main___cached_dict_32 sync.Once
+
+func Get_Main___cached_dict_32() r_.Value {
+	once_Main___cached_dict_32.Do(func() {
+		cache_Main___cached_dict_32 = r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_378698611_3790796878(Rebox_Main_3790796878_378698611(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Call_Data_Eq_eqArray(r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqInt()))))})))))}
+	})
+	return cache_Main___cached_dict_32
+}
+
+var cache_Main___cached_dict_33 r_.Value
+
+var once_Main___cached_dict_33 sync.Once
+
+func Get_Main___cached_dict_33() r_.Value {
+	once_Main___cached_dict_33.Do(func() {
+		cache_Main___cached_dict_33 = r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1469227923_1386611502(Rebox_Main_1386611502_1469227923(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Call_Data_Show_showArray(r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt()))))})))))}
+	})
+	return cache_Main___cached_dict_33
+}
+
+func Call_Main_Probe(x_0_loop int64) int64 {
+	var x_0 int64 = x_0_loop
+	_ = x_0
+	return x_0
+}
+
+func Call_Main_observe(value_0_loop int64) int64 {
+	var value_0 int64 = value_0_loop
+	_ = value_0
+	return r_.Apply(Get_Effect_Unsafe_unsafePerformEffect(), r_.Func(func(_ r_.Value) r_.Value {
+		// TAST (Let): __local_var_1_0 shape=App(Var) bindingType=Any
+		__local_var_1_0 := r_.Apply2(Get_Effect_Ref_modify_(), r_.Func(func(seen_1 r_.Value) r_.Value {
+			return r_.Apply2(Get_Data_Semigroup_concatArray(), seen_1, func() r_.Value {
+				arr := []int64{value_0}
+				boxed := make([]r_.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = r_.Int(v)
+				}
+				return r_.Array(boxed)
+			}())
+		}), Get_Main_calls())
+		_ = __local_var_1_0
+		_dollar___unused_2_1 := r_.Apply(__local_var_1_0, r_.Value{})
+		_ = _dollar___unused_2_1
+		return r_.Int(value_0)
+	})).IntVal
+}
+
+func Call_Main_tailResult(v_0_loop r_.Value) struct {
+	V0 r_.Value
+	V1 struct {
+		P_tail int64
+	}
+	V2 bool
+} {
+	var v_0 r_.Value = v_0_loop
+	_ = v_0
+	var __t0 struct {
+		V0 r_.Value
+		V1 struct {
+			P_tail int64
+		}
+		V2 bool
+	}
+	{
+		if (Call_Main_observe(int64(100))) == (int64(100)) {
+			__t0 = struct {
+				V0 r_.Value
+				V1 struct {
+					P_tail int64
+				}
+				V2 bool
+			}{r_.Value{}, func() struct {
+				P_tail int64
+			} {
+				orig := Get_Main_sharedTail()
+				_ = orig
+				clone := struct {
+					P_tail int64
+				}{}
+				clone.P_tail = r_.RecordGet(orig, "tail").IntVal
+				return clone
+			}(), true}
+			goto end_branch_0
+		} else {
+
+		}
+	}
+	{
+		__t0 = struct {
+			V0 r_.Value
+			V1 struct {
+				P_tail int64
+			}
+			V2 bool
+		}{r_.Value{Type: 9, IntVal: 3199441748, UnsafePtr: unsafe.Pointer(nil)}, struct {
+			P_tail int64
+		}{}, false}
+	}
+end_branch_0:
+	return __t0
+}
+
+func Call_Main_decodeCustom(value_0_loop r_.Value) struct {
+	V0 r_.Value
+	V1 struct {
+		P_head int64
+		P_tail int64
+	}
+	V2 bool
+} {
+	var value_0 r_.Value = value_0_loop
+	_ = value_0
+	return func() struct {
+		V0 r_.Value
+		V1 struct {
+			P_head int64
+			P_tail int64
+		}
+		V2 bool
+	} {
+		_v := r_.Apply2(Call_Data_Argonaut_Decode_Class_gDecodeJson(r_.CoerceToStruct[Constructor_Data_Argonaut_Decode_Class_GDecodeJson[r_.Value, r_.Value]](Get_Main___cached_dict_0())), value_0, r_.Value{Type: 9, IntVal: int64(513803634), UnsafePtr: nil})
+		if _v.Type == 9 && _v.IntVal == 2465973597 && _v.UnsafePtr != nil {
+			return struct {
+				V0 r_.Value
+				V1 struct {
+					P_head int64
+					P_tail int64
+				}
+				V2 bool
+			}{V0: r_.Value{}, V1: func() struct {
+				P_head int64
+				P_tail int64
+			} {
+				orig := (*(*Constructor_Data_Either_Right[r_.Value, r_.Value])(_v.UnsafePtr)).V0
+				_ = orig
+				clone := struct {
+					P_head int64
+					P_tail int64
+				}{}
+				clone.P_head = r_.RecordGet(orig, "head").IntVal
+				clone.P_tail = r_.RecordGet(orig, "tail").IntVal
+				return clone
+			}(), V2: true}
+		}
+		return struct {
+			V0 r_.Value
+			V1 struct {
+				P_head int64
+				P_tail int64
+			}
+			V2 bool
+		}{V0: (*(*Constructor_Data_Either_Left[r_.Value, r_.Value])(_v.UnsafePtr)).V0, V1: struct {
+			P_head int64
+			P_tail int64
+		}{}, V2: false}
+	}()
+}
+
+func Rebox_Main_1053099733_3790796878(in *Constructor_Data_Eq_Eq[int64]) *Constructor_Data_Eq_Eq[r_.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[r_.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1277236813_1405234230(in *Constructor_Data_Argonaut_Decode_Class_DecodeJson[r_.Value]) *Constructor_Data_Argonaut_Decode_Class_DecodeJson[int64] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Argonaut_Decode_Class_DecodeJson[int64])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1277236813_2334244318(in *Constructor_Data_Argonaut_Decode_Class_DecodeJson[r_.Value]) *Constructor_Data_Argonaut_Decode_Class_DecodeJson[struct {
+	P_a int64
+	P_b *Constructor_Data_Maybe_Just[int64]
+}] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Argonaut_Decode_Class_DecodeJson[struct {
+		P_a int64
+		P_b *Constructor_Data_Maybe_Just[int64]
+	}])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1277236813_252997862(in *Constructor_Data_Argonaut_Decode_Class_DecodeJson[r_.Value]) *Constructor_Data_Argonaut_Decode_Class_DecodeJson[struct {
+	P_outer struct {
+		P_required int64
+	}
+}] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Argonaut_Decode_Class_DecodeJson[struct {
+		P_outer struct {
+			P_required int64
+		}
+	}])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_138441832_3103076375(in *Constructor_Data_Tuple_Tuple[r_.Value, r_.Value]) *Constructor_Data_Tuple_Tuple[string, r_.Value] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Data_Tuple_Tuple[string, r_.Value]{}
+	out.V0 = in.V0.StrVal()
+	out.V1 = in.V1
+	return out
+}
+
+func Rebox_Main_1386611502_1469227923(in *Constructor_Data_Show_Show[r_.Value]) *Constructor_Data_Show_Show[[]int64] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[[]int64])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1386611502_1636311157(in *Constructor_Data_Show_Show[r_.Value]) *Constructor_Data_Show_Show[int64] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[int64])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1386611502_2735895690(in *Constructor_Data_Show_Show[r_.Value]) *Constructor_Data_Show_Show[bool] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[bool])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1386611502_2815936861(in *Constructor_Data_Show_Show[r_.Value]) *Constructor_Data_Show_Show[struct {
+	P_tail int64
+}] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[struct {
+		P_tail int64
+	}])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1405234230_1277236813(in *Constructor_Data_Argonaut_Decode_Class_DecodeJson[int64]) *Constructor_Data_Argonaut_Decode_Class_DecodeJson[r_.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Argonaut_Decode_Class_DecodeJson[r_.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1469227923_1386611502(in *Constructor_Data_Show_Show[[]int64]) *Constructor_Data_Show_Show[r_.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[r_.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1636311157_1386611502(in *Constructor_Data_Show_Show[int64]) *Constructor_Data_Show_Show[r_.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[r_.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_2334244318_1277236813(in *Constructor_Data_Argonaut_Decode_Class_DecodeJson[struct {
+	P_a int64
+	P_b *Constructor_Data_Maybe_Just[int64]
+}]) *Constructor_Data_Argonaut_Decode_Class_DecodeJson[r_.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Argonaut_Decode_Class_DecodeJson[r_.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_252997862_1277236813(in *Constructor_Data_Argonaut_Decode_Class_DecodeJson[struct {
+	P_outer struct {
+		P_required int64
+	}
+}]) *Constructor_Data_Argonaut_Decode_Class_DecodeJson[r_.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Argonaut_Decode_Class_DecodeJson[r_.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_2735895690_1386611502(in *Constructor_Data_Show_Show[bool]) *Constructor_Data_Show_Show[r_.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[r_.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_2737952170_3790796878(in *Constructor_Data_Eq_Eq[bool]) *Constructor_Data_Eq_Eq[r_.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[r_.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_2815936861_1386611502(in *Constructor_Data_Show_Show[struct {
+	P_tail int64
+}]) *Constructor_Data_Show_Show[r_.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[r_.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_3103076375_138441832(in *Constructor_Data_Tuple_Tuple[string, r_.Value]) *Constructor_Data_Tuple_Tuple[r_.Value, r_.Value] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Data_Tuple_Tuple[r_.Value, r_.Value]{}
+	out.V0 = r_.Str(in.V0)
+	out.V1 = in.V1
+	return out
+}
+
+func Rebox_Main_378698611_3790796878(in *Constructor_Data_Eq_Eq[[]int64]) *Constructor_Data_Eq_Eq[r_.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[r_.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_3790796878_1053099733(in *Constructor_Data_Eq_Eq[r_.Value]) *Constructor_Data_Eq_Eq[int64] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[int64])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_3790796878_2737952170(in *Constructor_Data_Eq_Eq[r_.Value]) *Constructor_Data_Eq_Eq[bool] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[bool])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_3790796878_378698611(in *Constructor_Data_Eq_Eq[r_.Value]) *Constructor_Data_Eq_Eq[[]int64] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[[]int64])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_3790796878_381738941(in *Constructor_Data_Eq_Eq[r_.Value]) *Constructor_Data_Eq_Eq[struct {
+	P_tail int64
+}] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[struct {
+		P_tail int64
+	}])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_381738941_3790796878(in *Constructor_Data_Eq_Eq[struct {
+	P_tail int64
+}]) *Constructor_Data_Eq_Eq[r_.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[r_.Value])(unsafe.Pointer(in))
+}
+
+// gopurs-source-end-v1
+
+// gopurs-package-file: purescript/p_root/zz_gopurs_order.go
+package p_root
+
+import (
+	_ "gopurs/output/purescript/init_external"
+)
+

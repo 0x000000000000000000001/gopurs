@@ -1,0 +1,190 @@
+package purescript
+
+import (
+	gopurs_runtime "gopurs/output/gopurs_runtime"
+	sync "sync"
+	unsafe "unsafe"
+)
+
+var cache_Main_b gopurs_runtime.Value
+var once_Main_b sync.Once
+
+func Get_Main_b() gopurs_runtime.Value {
+	once_Main_b.Do(func() {
+		cache_Main_b = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_b(gopurs_runtime.CoerceToStruct[Constructor_Main_B[gopurs_runtime.Value]](dict_0_box))
+		})
+	})
+	return cache_Main_b
+}
+
+var cache_Main_a gopurs_runtime.Value
+var once_Main_a sync.Once
+
+func Get_Main_a() gopurs_runtime.Value {
+	once_Main_a.Do(func() {
+		cache_Main_a = gopurs_runtime.Func(func(dict_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_a(gopurs_runtime.CoerceToStruct[Constructor_Main_A[gopurs_runtime.Value]](dict_0_box))
+		})
+	})
+	return cache_Main_a
+}
+
+var cache_Main_bNumber gopurs_runtime.Value
+var once_Main_bNumber sync.Once
+
+func Get_Main_bNumber() gopurs_runtime.Value {
+	once_Main_bNumber.Do(func() {
+		cache_Main_bNumber = gopurs_runtime.Value{Type: 9, IntVal: 4250879068, UnsafePtr: unsafe.Pointer(Rebox_Main_2084057936_3159052616((&Constructor_Main_B[float64]{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			var __t0 gopurs_runtime.Value
+			{
+				if (v_0.FloatVal()) == (0.0) {
+					__t0 = gopurs_runtime.Bool(false)
+					goto end_branch_0
+				} else {
+
+				}
+			}
+			{
+				__t0 = gopurs_runtime.Apply(Rebox_Main_3943979371_2868984691(gopurs_runtime.CoerceToStruct[Constructor_Main_A[gopurs_runtime.Value]](Get_Main_aNumber())).V0, gopurs_runtime.Float((v_0.FloatVal())-(1.0)))
+			}
+		end_branch_0:
+			return __t0
+		})})))}
+	})
+	return cache_Main_bNumber
+}
+
+var cache_Main_aNumber gopurs_runtime.Value
+var once_Main_aNumber sync.Once
+
+func Get_Main_aNumber() gopurs_runtime.Value {
+	once_Main_aNumber.Do(func() {
+		cache_Main_aNumber = gopurs_runtime.Value{Type: 9, IntVal: 4219254943, UnsafePtr: unsafe.Pointer(Rebox_Main_2868984691_3943979371((&Constructor_Main_A[float64]{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			var __t0 gopurs_runtime.Value
+			{
+				if (v_0.FloatVal()) == (0.0) {
+					__t0 = gopurs_runtime.Bool(true)
+					goto end_branch_0
+				} else {
+
+				}
+			}
+			{
+				__t0 = gopurs_runtime.Apply(Rebox_Main_3159052616_2084057936(gopurs_runtime.CoerceToStruct[Constructor_Main_B[gopurs_runtime.Value]](Get_Main_bNumber())).V0, gopurs_runtime.Float((v_0.FloatVal())-(1.0)))
+			}
+		end_branch_0:
+			return __t0
+		})})))}
+	})
+	return cache_Main_aNumber
+}
+
+var cache_Main_main gopurs_runtime.Value
+var once_Main_main sync.Once
+
+func Get_Main_main() gopurs_runtime.Value {
+	once_Main_main.Do(func() {
+		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
+			__local_var_0_0 := Call_Effect_Console_logShow(Rebox_Main_2735895690_1386611502(Rebox_Main_1386611502_2735895690(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showBoolean()))), gopurs_runtime.Bool((gopurs_runtime.Apply(Rebox_Main_3943979371_2868984691(gopurs_runtime.CoerceToStruct[Constructor_Main_A[gopurs_runtime.Value]](Get_Main_aNumber())).V0, gopurs_runtime.Float(8.0)).IntVal) != (0)))
+			_ = __local_var_0_0
+			_dollar___unused_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
+			_ = _dollar___unused_1_1
+			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
+		})
+	})
+	return cache_Main_main
+}
+
+type Constructor_Main_B[T_a any] struct {
+	Rc uint32
+	V0 gopurs_runtime.Value
+}
+
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f0042
+func init() {
+	gopurs_runtime.StructGetters[4250879068] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
+		c := (*Constructor_Main_B[gopurs_runtime.Value])(ptr)
+		_ = c
+		switch key {
+		case "b":
+			return gopurs_runtime.Box(c.V0)
+		default:
+			panic("Key not found in dictionary Constructor_Main_B: " + key)
+		}
+	}
+}
+
+type Constructor_Main_A[T_a any] struct {
+	Rc uint32
+	V0 gopurs_runtime.Value
+}
+
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f0041
+func init() {
+	gopurs_runtime.StructGetters[4219254943] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
+		c := (*Constructor_Main_A[gopurs_runtime.Value])(ptr)
+		_ = c
+		switch key {
+		case "a":
+			return gopurs_runtime.Box(c.V0)
+		default:
+			panic("Key not found in dictionary Constructor_Main_A: " + key)
+		}
+	}
+}
+
+func Call_Main_b(dict_0_loop *Constructor_Main_B[gopurs_runtime.Value]) gopurs_runtime.Value {
+	var dict_0 *Constructor_Main_B[gopurs_runtime.Value] = dict_0_loop
+	_ = dict_0
+	return dict_0.V0
+}
+
+func Call_Main_a(dict_0_loop *Constructor_Main_A[gopurs_runtime.Value]) gopurs_runtime.Value {
+	var dict_0 *Constructor_Main_A[gopurs_runtime.Value] = dict_0_loop
+	_ = dict_0
+	return dict_0.V0
+}
+
+func Rebox_Main_1386611502_2735895690(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[bool] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[bool])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_2084057936_3159052616(in *Constructor_Main_B[float64]) *Constructor_Main_B[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Main_B[gopurs_runtime.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_2735895690_1386611502(in *Constructor_Data_Show_Show[bool]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_2868984691_3943979371(in *Constructor_Main_A[float64]) *Constructor_Main_A[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Main_A[gopurs_runtime.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_3159052616_2084057936(in *Constructor_Main_B[gopurs_runtime.Value]) *Constructor_Main_B[float64] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Main_B[float64])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_3943979371_2868984691(in *Constructor_Main_A[gopurs_runtime.Value]) *Constructor_Main_A[float64] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Main_A[float64])(unsafe.Pointer(in))
+}

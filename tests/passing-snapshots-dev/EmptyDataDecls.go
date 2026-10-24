@@ -1,0 +1,81 @@
+package purescript
+
+import (
+	gopurs_runtime "gopurs/output/gopurs_runtime"
+	sync "sync"
+)
+
+var cache_Main_ArrayBox gopurs_runtime.Value
+var once_Main_ArrayBox sync.Once
+
+func Get_Main_ArrayBox() gopurs_runtime.Value {
+	once_Main_ArrayBox.Do(func() {
+		cache_Main_ArrayBox = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
+			return value0
+		})
+	})
+	return cache_Main_ArrayBox
+}
+
+var cache_Main_nil gopurs_runtime.Value
+var once_Main_nil sync.Once
+
+func Get_Main_nil() gopurs_runtime.Value {
+	once_Main_nil.Do(func() {
+		cache_Main_nil = gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.Array([]gopurs_runtime.Value{})).UnsafePtr)))
+	})
+	return cache_Main_nil
+}
+
+var cache_Main_cons_prime_ gopurs_runtime.Value
+var once_Main_cons_prime_ sync.Once
+
+func Get_Main_cons_prime_() gopurs_runtime.Value {
+	once_Main_cons_prime_.Do(func() {
+		cache_Main_cons_prime_ = gopurs_runtime.Func2(func(x_0_box gopurs_runtime.Value, v_1_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_cons_prime_(x_0_box, v_1_box)
+		})
+	})
+	return cache_Main_cons_prime_
+}
+
+var cache_Main_main gopurs_runtime.Value
+var once_Main_main sync.Once
+
+func Get_Main_main() gopurs_runtime.Value {
+	once_Main_main.Do(func() {
+		cache_Main_main = func() gopurs_runtime.Value {
+			// TAST (Let): v_0_0 shape=App(Var) bindingType=(TypeApp (ADT ["Main","ArrayBox"] []) [(TypeApp (ADT ["Main","S"] []) [(TypeApp (ADT ["Main","S"] []) [(TypeApp (ADT ["Main","S"] []) [(ADT ["Main","Z"] [])])])]), Int])
+			v_0_0 := gopurs_runtime.Apply2(Get_Main_cons_prime_(), gopurs_runtime.Int(int64(1)), gopurs_runtime.Apply2(Get_Main_cons_prime_(), gopurs_runtime.Int(int64(2)), gopurs_runtime.Apply2(Get_Main_cons_prime_(), gopurs_runtime.Int(int64(3)), Get_Main_nil())))
+			_ = v_0_0
+			var __t1 gopurs_runtime.Value
+			{
+				if ((gopurs_runtime.Int(int64(gopurs_runtime.ArrayLength(v_0_0))).IntVal) == (int64(3))) && (((gopurs_runtime.ArrayAccess(v_0_0, 0).IntVal) == (int64(1))) && (((gopurs_runtime.ArrayAccess(v_0_0, 1).IntVal) == (int64(2))) && ((gopurs_runtime.ArrayAccess(v_0_0, 2).IntVal) == (int64(3))))) {
+					__t1 = gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
+					goto end_branch_1
+				} else {
+
+				}
+			}
+			{
+				__t1 = gopurs_runtime.Apply2(Get_Test_Assert_assert_prime_(), gopurs_runtime.Str("Failed"), gopurs_runtime.Bool(false))
+			}
+		end_branch_1:
+			return __t1
+		}()
+	})
+	return cache_Main_main
+}
+
+type Constructor_Main_ArrayBox[T_n any, T_a any] struct {
+	Rc uint32
+	V0 []gopurs_runtime.Value
+}
+
+func Call_Main_cons_prime_(x_0_loop gopurs_runtime.Value, v_1_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var x_0 gopurs_runtime.Value = x_0_loop
+	_ = x_0
+	var v_1 gopurs_runtime.Value = v_1_loop
+	_ = v_1
+	return gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), gopurs_runtime.Array([]gopurs_runtime.Value{x_0}), v_1)).UnsafePtr)))
+}

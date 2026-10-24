@@ -25,7 +25,8 @@ export function packageSourceSections(content) {
   return { header, sections };
 }
 
-export function snapshotFiles(root, fixture, env = process.env) {
+export function snapshotFiles(root, fixture, env = process.env, { dev = false } = {}) {
+  const profileSuffix = dev ? "-dev" : "";
   if (env.GOPURS_GO_PACKAGES === "1") {
     const output = join(fixture.directory, "output");
     const sources = ["main/main.go", "purescript/init_all/init.go", "purescript/init_external/init.go"];
@@ -51,11 +52,11 @@ export function snapshotFiles(root, fixture, env = process.env) {
     }
     if (fragments === 0) throw new Error("Missing generated package fragments for Main");
     return [{ generated: join(fixture.directory, "logs/package-snapshot.txt"),
-      expected: join(root, `tests/passing-package-snapshots/${fixture.name}.txt`), sources: sources.sort(), projections }];
+      expected: join(root, `tests/passing-package-snapshots${profileSuffix}/${fixture.name}.txt`), sources: sources.sort(), projections }];
   }
   return (fixture.snapshotFfi ? ["", "_ffi"] : [""]).map(suffix => ({
     generated: join(fixture.directory, `output/purescript/Main${suffix}.go`),
-    expected: join(root, `tests/passing-snapshots/${fixture.name}${suffix}.go`),
+    expected: join(root, `tests/passing-snapshots${profileSuffix}/${fixture.name}${suffix}.go`),
   }));
 }
 

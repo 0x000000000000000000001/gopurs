@@ -1,0 +1,73 @@
+package purescript
+
+import (
+	gopurs_runtime "gopurs/output/gopurs_runtime"
+	sync "sync"
+	unsafe "unsafe"
+)
+
+var cache_Main_Cons gopurs_runtime.Value
+var once_Main_Cons sync.Once
+
+func Get_Main_Cons() gopurs_runtime.Value {
+	once_Main_Cons.Do(func() {
+		cache_Main_Cons = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Func(func(value1 gopurs_runtime.Value) gopurs_runtime.Value {
+				return gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((&Constructor_Main_Cons[gopurs_runtime.Value]{1, value0, gopurs_runtime.CoerceToStruct[Constructor_Main_Cons[gopurs_runtime.Value]](value1)}))}
+			})
+		})
+	})
+	return cache_Main_Cons
+}
+
+var cache_Main_step gopurs_runtime.Value
+var once_Main_step sync.Once
+
+func Get_Main_step() gopurs_runtime.Value {
+	once_Main_step.Do(func() {
+		cache_Main_step = gopurs_runtime.Func(func(v_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer(Call_Main_step(gopurs_runtime.CoerceToStruct[Constructor_Main_Cons[gopurs_runtime.Value]](v_0_box)))}
+		})
+	})
+	return cache_Main_step
+}
+
+var cache_Main_main gopurs_runtime.Value
+var once_Main_main sync.Once
+
+func Get_Main_main() gopurs_runtime.Value {
+	once_Main_main.Do(func() {
+		cache_Main_main = gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
+	})
+	return cache_Main_main
+}
+
+var cache_Main_head gopurs_runtime.Value
+var once_Main_head sync.Once
+
+func Get_Main_head() gopurs_runtime.Value {
+	once_Main_head.Do(func() {
+		cache_Main_head = gopurs_runtime.Func(func(xs_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_head(gopurs_runtime.CoerceToStruct[Constructor_Main_Cons[gopurs_runtime.Value]](xs_0_box))
+		})
+	})
+	return cache_Main_head
+}
+
+type Constructor_Main_Cons[T_a any] struct {
+	Rc uint32
+	V0 T_a
+	V1 *Constructor_Main_Cons[T_a]
+}
+
+func Call_Main_step(v_0_loop *Constructor_Main_Cons[gopurs_runtime.Value]) *Constructor_Main_Cons[gopurs_runtime.Value] {
+	var v_0 *Constructor_Main_Cons[gopurs_runtime.Value] = v_0_loop
+	_ = v_0
+	return (v_0).V1
+}
+
+func Call_Main_head(xs_0_loop *Constructor_Main_Cons[gopurs_runtime.Value]) gopurs_runtime.Value {
+	var xs_0 *Constructor_Main_Cons[gopurs_runtime.Value] = xs_0_loop
+	_ = xs_0
+	return ((xs_0).V1).V0
+}

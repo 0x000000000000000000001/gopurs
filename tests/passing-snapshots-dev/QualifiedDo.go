@@ -1,0 +1,66 @@
+package purescript
+
+import (
+	gopurs_runtime "gopurs/output/gopurs_runtime"
+	sync "sync"
+)
+
+var cache_Main_testMonad gopurs_runtime.Value
+var once_Main_testMonad sync.Once
+
+func Get_Main_testMonad() gopurs_runtime.Value {
+	once_Main_testMonad.Do(func() {
+		cache_Main_testMonad = gopurs_runtime.Func(func(dictMonad_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_testMonad(dictMonad_0_box)
+		})
+	})
+	return cache_Main_testMonad
+}
+
+var cache_Main_testIMonad gopurs_runtime.Value
+var once_Main_testIMonad sync.Once
+
+func Get_Main_testIMonad() gopurs_runtime.Value {
+	once_Main_testIMonad.Do(func() {
+		cache_Main_testIMonad = gopurs_runtime.Func(func(dictIxMonad_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_testIMonad(dictIxMonad_0_box)
+		})
+	})
+	return cache_Main_testIMonad
+}
+
+var cache_Main_main gopurs_runtime.Value
+var once_Main_main sync.Once
+
+func Get_Main_main() gopurs_runtime.Value {
+	once_Main_main.Do(func() {
+		cache_Main_main = gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
+	})
+	return cache_Main_main
+}
+
+func Call_Main_testMonad(dictMonad_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var dictMonad_0 gopurs_runtime.Value = dictMonad_0_loop
+	_ = dictMonad_0
+	// TAST (Let): Bind1_1_0 shape=App(Other) bindingType=(ADT ["Control","Bind","Bind"] [(TypeVar m$scope1)])
+	Bind1_1_0 := gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonad_0, "Bind1"), gopurs_runtime.Value{}))
+	_ = Bind1_1_0
+	// TAST (Let): Applicative0_2_1 shape=App(Other) bindingType=(ADT ["Control","Applicative","Applicative"] [(TypeVar m$scope1)])
+	Applicative0_2_1 := gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictMonad_0, "Applicative0"), gopurs_runtime.Value{}))
+	_ = Applicative0_2_1
+	return gopurs_runtime.Apply2(Call_Control_Bind_bind(Bind1_1_0), gopurs_runtime.Apply(Call_Control_Applicative_pure(Applicative0_2_1), gopurs_runtime.Str("test")), gopurs_runtime.Func(func(a_3 gopurs_runtime.Value) gopurs_runtime.Value {
+		return gopurs_runtime.Apply2(Call_Control_Bind_bind(Bind1_1_0), gopurs_runtime.Apply(Call_Control_Applicative_pure(Applicative0_2_1), gopurs_runtime.Str("test")), gopurs_runtime.Func(func(b_4 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Apply(Call_Control_Applicative_pure(Applicative0_2_1), gopurs_runtime.Str(gopurs_runtime.ConcatString(a_3.StrVal(), b_4.StrVal())))
+		}))
+	}))
+}
+
+func Call_Main_testIMonad(dictIxMonad_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var dictIxMonad_0 gopurs_runtime.Value = dictIxMonad_0_loop
+	_ = dictIxMonad_0
+	return gopurs_runtime.Apply2(Call_IxMonad_bind(gopurs_runtime.CoerceToStruct[Constructor_IxMonad_IxMonad[gopurs_runtime.Value]](dictIxMonad_0)), gopurs_runtime.Apply(Call_IxMonad_pure(gopurs_runtime.CoerceToStruct[Constructor_IxMonad_IxMonad[gopurs_runtime.Value]](dictIxMonad_0)), gopurs_runtime.Str("test")), gopurs_runtime.Func(func(a_1 gopurs_runtime.Value) gopurs_runtime.Value {
+		return gopurs_runtime.Apply2(Call_IxMonad_bind(gopurs_runtime.CoerceToStruct[Constructor_IxMonad_IxMonad[gopurs_runtime.Value]](dictIxMonad_0)), gopurs_runtime.Apply(Call_IxMonad_pure(gopurs_runtime.CoerceToStruct[Constructor_IxMonad_IxMonad[gopurs_runtime.Value]](dictIxMonad_0)), gopurs_runtime.Str("test")), gopurs_runtime.Func(func(b_2 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Apply(Call_IxMonad_pure(gopurs_runtime.CoerceToStruct[Constructor_IxMonad_IxMonad[gopurs_runtime.Value]](dictIxMonad_0)), gopurs_runtime.Str(gopurs_runtime.ConcatString(a_1.StrVal(), b_2.StrVal())))
+		}))
+	}))
+}

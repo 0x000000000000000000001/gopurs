@@ -1,0 +1,251 @@
+package purescript
+
+import (
+	gopurs_runtime "gopurs/output/gopurs_runtime"
+	sync "sync"
+	unsafe "unsafe"
+)
+
+var cache_Main_natPlusZ gopurs_runtime.Value
+var once_Main_natPlusZ sync.Once
+
+func Get_Main_natPlusZ() gopurs_runtime.Value {
+	once_Main_natPlusZ.Do(func() {
+		cache_Main_natPlusZ = func() gopurs_runtime.Value {
+			orig := struct {
+
+				/*gopurs:record-v1:0:*/
+			}{}
+			_ = orig
+			return gopurs_runtime.RecordDict0()
+		}()
+	})
+	return cache_Main_natPlusZ
+}
+
+var cache_Main_natPlusS gopurs_runtime.Value
+var once_Main_natPlusS sync.Once
+
+func Get_Main_natPlusS() gopurs_runtime.Value {
+	once_Main_natPlusS.Do(func() {
+		cache_Main_natPlusS = gopurs_runtime.Func(func(_dollar___unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_natPlusS(_dollar___unused_0_box)
+		})
+	})
+	return cache_Main_natPlusS
+}
+
+var cache_Main_natMultZ gopurs_runtime.Value
+var once_Main_natMultZ sync.Once
+
+func Get_Main_natMultZ() gopurs_runtime.Value {
+	once_Main_natMultZ.Do(func() {
+		cache_Main_natMultZ = func() gopurs_runtime.Value {
+			orig := struct {
+
+				/*gopurs:record-v1:0:*/
+			}{}
+			_ = orig
+			return gopurs_runtime.RecordDict0()
+		}()
+	})
+	return cache_Main_natMultZ
+}
+
+var cache_Main_natMultS gopurs_runtime.Value
+var once_Main_natMultS sync.Once
+
+func Get_Main_natMultS() gopurs_runtime.Value {
+	once_Main_natMultS.Do(func() {
+		cache_Main_natMultS = gopurs_runtime.Func2(func(_dollar___unused_0_box gopurs_runtime.Value, _dollar___unused_1_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_natMultS(_dollar___unused_0_box, _dollar___unused_1_box)
+		})
+	})
+	return cache_Main_natMultS
+}
+
+var cache_Main_main gopurs_runtime.Value
+var once_Main_main sync.Once
+
+func Get_Main_main() gopurs_runtime.Value {
+	once_Main_main.Do(func() {
+		cache_Main_main = gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
+	})
+	return cache_Main_main
+}
+
+var cache_Main_fsingleton gopurs_runtime.Value
+var once_Main_fsingleton sync.Once
+
+func Get_Main_fsingleton() gopurs_runtime.Value {
+	once_Main_fsingleton.Do(func() {
+		cache_Main_fsingleton = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_fsingleton(x_0_box)
+		})
+	})
+	return cache_Main_fsingleton
+}
+
+var cache_Main_fflatten gopurs_runtime.Value
+var once_Main_fflatten sync.Once
+
+func Get_Main_fflatten() gopurs_runtime.Value {
+	once_Main_fflatten.Do(func() {
+		cache_Main_fflatten = gopurs_runtime.Func(func(_dollar___unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_fflatten(_dollar___unused_0_box)
+		})
+	})
+	return cache_Main_fflatten
+}
+
+var cache_Main_fappend gopurs_runtime.Value
+var once_Main_fappend sync.Once
+
+func Get_Main_fappend() gopurs_runtime.Value {
+	once_Main_fappend.Do(func() {
+		cache_Main_fappend = gopurs_runtime.Func(func(_dollar___unused_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_fappend(_dollar___unused_0_box)
+		})
+	})
+	return cache_Main_fappend
+}
+
+var cache_Main_fexample gopurs_runtime.Value
+var once_Main_fexample sync.Once
+
+func Get_Main_fexample() gopurs_runtime.Value {
+	once_Main_fexample.Do(func() {
+		cache_Main_fexample = gopurs_runtime.Apply2(Get_Main_fappendImpl(), gopurs_runtime.Apply2(Get_Main_fappendImpl(), gopurs_runtime.Apply2(Get_Main_fcons(), gopurs_runtime.Int(int64(1)), Call_Main_fsingleton(gopurs_runtime.Int(int64(2)))), Call_Main_fsingleton(gopurs_runtime.Int(int64(3)))), gopurs_runtime.Apply2(Get_Main_fcons(), gopurs_runtime.Int(int64(4)), Call_Main_fsingleton(gopurs_runtime.Int(int64(5)))))
+	})
+	return cache_Main_fexample
+}
+
+var cache_Main_fexample2 gopurs_runtime.Value
+var once_Main_fexample2 sync.Once
+
+func Get_Main_fexample2() gopurs_runtime.Value {
+	once_Main_fexample2.Do(func() {
+		cache_Main_fexample2 = gopurs_runtime.Apply2(Get_Main_fappendImpl(), gopurs_runtime.Apply2(Get_Main_fappendImpl(), Get_Main_fexample(), Get_Main_fexample()), Get_Main_fexample())
+	})
+	return cache_Main_fexample2
+}
+
+var cache_Main_fexample3 gopurs_runtime.Value
+var once_Main_fexample3 sync.Once
+
+func Get_Main_fexample3() gopurs_runtime.Value {
+	once_Main_fexample3.Do(func() {
+		cache_Main_fexample3 = gopurs_runtime.Apply2(Get_Main_fappendImpl(), gopurs_runtime.Apply2(Get_Main_fappendImpl(), Call_Main_fsingleton(Get_Main_fexample()), Call_Main_fsingleton(Get_Main_fexample())), Call_Main_fsingleton(Get_Main_fexample()))
+	})
+	return cache_Main_fexample3
+}
+
+var cache_Main_fexample4 gopurs_runtime.Value
+var once_Main_fexample4 sync.Once
+
+func Get_Main_fexample4() gopurs_runtime.Value {
+	once_Main_fexample4.Do(func() {
+		cache_Main_fexample4 = gopurs_runtime.Apply(Get_Main_fflattenImpl(), Get_Main_fexample3())
+	})
+	return cache_Main_fexample4
+}
+
+type Constructor_Main_NatPlus[T_l any, T_r any, T_o any] struct {
+	Rc uint32
+}
+
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f004e006100740050006c00750073
+func init() {
+	gopurs_runtime.StructGetters[3417617535] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
+		c := (*Constructor_Main_NatPlus[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(ptr)
+		_ = c
+		switch key {
+
+		default:
+			panic("Key not found in dictionary Constructor_Main_NatPlus: " + key)
+		}
+	}
+}
+
+type Constructor_Main_NatMult[T_l any, T_r any, T_o any] struct {
+	Rc uint32
+}
+
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f004e00610074004d0075006c0074
+func init() {
+	gopurs_runtime.StructGetters[2508830309] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
+		c := (*Constructor_Main_NatMult[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(ptr)
+		_ = c
+		switch key {
+
+		default:
+			panic("Key not found in dictionary Constructor_Main_NatMult: " + key)
+		}
+	}
+}
+
+func Call_Main_natPlusS(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
+	_ = _dollar___unused_0
+	return func() gopurs_runtime.Value {
+		orig := struct {
+
+			/*gopurs:record-v1:0:*/
+		}{}
+		_ = orig
+		return gopurs_runtime.RecordDict0()
+	}()
+}
+
+func Call_Main_natMultS(_dollar___unused_0_loop gopurs_runtime.Value, _dollar___unused_1_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
+	_ = _dollar___unused_0
+	var _dollar___unused_1 gopurs_runtime.Value = _dollar___unused_1_loop
+	_ = _dollar___unused_1
+	return func() gopurs_runtime.Value {
+		orig := struct {
+
+			/*gopurs:record-v1:0:*/
+		}{}
+		_ = orig
+		return gopurs_runtime.RecordDict0()
+	}()
+}
+
+func Call_Main_fsingleton(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var x_0 gopurs_runtime.Value = x_0_loop
+	_ = x_0
+	return gopurs_runtime.Apply2(Get_Main_fcons(), x_0, Get_Main_fnil())
+}
+
+func Call_Main_fflatten(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
+	_ = _dollar___unused_0
+	return Get_Main_fflattenImpl()
+}
+
+func Call_Main_fappend(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var _dollar___unused_0 gopurs_runtime.Value = _dollar___unused_0_loop
+	_ = _dollar___unused_0
+	return Get_Main_fappendImpl()
+}
+
+func Get_Main_fappendImpl() gopurs_runtime.Value {
+	return _Gopurs_Main_FappendImpl
+}
+
+func Get_Main_fcons() gopurs_runtime.Value {
+	return _Gopurs_Main_Fcons
+}
+
+func Get_Main_fflattenImpl() gopurs_runtime.Value {
+	return _Gopurs_Main_FflattenImpl
+}
+
+func Get_Main_fnil() gopurs_runtime.Value {
+	return _Gopurs_Main_Fnil
+}
+
+func Get_Main_ftoArray() gopurs_runtime.Value {
+	return _Gopurs_Main_FtoArray
+}

@@ -16,8 +16,8 @@ const help = `Usage: ./bin/test [fixtures...] [options]
   --resume-failed FILE   Select failed/interrupted/pending targets from a JSON report
   --keep-going           Attempt every selected fixture after individual failures
   -c, --clean            Rebuild the selected compiler host; workspaces are fresh
-  -d, --dev              Compile and run in Dev; skip Release snapshots
-  --update-snapshots     Create/update snapshots after successful execution
+  -d, --dev              Compile and run in Dev; compare Dev snapshots
+  --update-snapshots     Update the selected profile's snapshots after successful execution
   --keep-workspace       Also keep successful runs for inspection
 Legacy skip_before=NAME, --skip-before=NAME and UPDATE_SNAPSHOTS=1 still work.`;
 
@@ -26,10 +26,10 @@ async function runFixture(fixture, options, processes, env) {
   const phase = (name, command, args, cwd = directory, display = false) => processes.run(name, command, args, { cwd, env, display, log: join(directory, "logs", name + ".log") });
   await phase("purescript", "spago", ["build", "-q"]);
   await phase("generate-go", process.env.GOPURS_TEST_COMPILER ?? join(root, "bin/gopurs"), ["--main", "Main", ...(options.dev ? ["--dev"] : [])]);
-  const snapshots = options.dev ? [] : snapshotFiles(root, fixture, env);
+  const snapshots = snapshotFiles(root, fixture, env, options);
   if (!existsSync(join(directory, "output/main/main.go"))) throw new Error("gopurs did not generate output/main/main.go");
-  if (!options.dev) await formatSnapshots(snapshots, processes, fixture, env);
-  if (!options.dev && !options.update) await verifySnapshots(snapshots, processes, fixture, env);
+  await formatSnapshots(snapshots, processes, fixture, env);
+  if (!options.update) await verifySnapshots(snapshots, processes, fixture, env);
   const output = join(directory, "output");
   // Main already writes go.mod. Keep its Go version instead of recreating it.
   await phase("go-dependencies", "go", ["mod", "tidy"], output);
@@ -62,8 +62,11 @@ async function main() {
     // on a fixture sample run with GOPURS_PBO_JOBS=8).
     process.env.GOPURS_PBO_JOBS ??= "1";
     process.env.GOPURS_PREPARE_JOBS ??= "1";
+    // Match the established fixture snapshots instead of inheriting the native
+    // launcher's application layout default only in the compiler subprocess.
+    process.env.GOPURS_GO_PACKAGES ||= "0";
     console.log(`Selected ${selected.length} fixtures; ${skipped.length} excluded.`);
-    if (options.dev) console.log("[gopurs] Build mode: DEV (--dev). Compile and execute fixtures without comparing Release snapshots.");
+    if (options.dev) console.log("[gopurs] Build mode: DEV (--dev). Using Dev snapshots.");
     for (const file of skipped) console.log(`=> Skipping ${basename(file)} (excluded)`);
     const packages = corePackages(root);
     campaign = new TestCampaign(root, "fixtures", selected, options, skipped);

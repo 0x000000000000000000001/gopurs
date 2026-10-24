@@ -1,0 +1,1725 @@
+package purescript
+
+import (
+	gopurs_runtime "gopurs/output/gopurs_runtime"
+	sync "sync"
+	unsafe "unsafe"
+)
+
+var cache_Main_nameIsSymbol gopurs_runtime.Value
+var once_Main_nameIsSymbol sync.Once
+
+func Get_Main_nameIsSymbol() gopurs_runtime.Value {
+	once_Main_nameIsSymbol.Do(func() {
+		cache_Main_nameIsSymbol = gopurs_runtime.RecordDict1("reflectSymbol", gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str("name")
+		}))
+	})
+	return cache_Main_nameIsSymbol
+}
+
+var cache_Main_idIsSymbol gopurs_runtime.Value
+var once_Main_idIsSymbol sync.Once
+
+func Get_Main_idIsSymbol() gopurs_runtime.Value {
+	once_Main_idIsSymbol.Do(func() {
+		cache_Main_idIsSymbol = gopurs_runtime.RecordDict1("reflectSymbol", gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str("id")
+		}))
+	})
+	return cache_Main_idIsSymbol
+}
+
+var cache_Main_extraIsSymbol gopurs_runtime.Value
+var once_Main_extraIsSymbol sync.Once
+
+func Get_Main_extraIsSymbol() gopurs_runtime.Value {
+	once_Main_extraIsSymbol.Do(func() {
+		cache_Main_extraIsSymbol = gopurs_runtime.RecordDict1("reflectSymbol", gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str("extra")
+		}))
+	})
+	return cache_Main_extraIsSymbol
+}
+
+var cache_Main_activeIsSymbol gopurs_runtime.Value
+var once_Main_activeIsSymbol sync.Once
+
+func Get_Main_activeIsSymbol() gopurs_runtime.Value {
+	once_Main_activeIsSymbol.Do(func() {
+		cache_Main_activeIsSymbol = gopurs_runtime.RecordDict1("reflectSymbol", gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str("active")
+		}))
+	})
+	return cache_Main_activeIsSymbol
+}
+
+var cache_Main_nestedIsSymbol gopurs_runtime.Value
+var once_Main_nestedIsSymbol sync.Once
+
+func Get_Main_nestedIsSymbol() gopurs_runtime.Value {
+	once_Main_nestedIsSymbol.Do(func() {
+		cache_Main_nestedIsSymbol = gopurs_runtime.RecordDict1("reflectSymbol", gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str("nested")
+		}))
+	})
+	return cache_Main_nestedIsSymbol
+}
+
+var cache_Main_retainedIsSymbol gopurs_runtime.Value
+var once_Main_retainedIsSymbol sync.Once
+
+func Get_Main_retainedIsSymbol() gopurs_runtime.Value {
+	once_Main_retainedIsSymbol.Do(func() {
+		cache_Main_retainedIsSymbol = gopurs_runtime.RecordDict1("reflectSymbol", gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str("retained")
+		}))
+	})
+	return cache_Main_retainedIsSymbol
+}
+
+var cache_Main_beforeIsSymbol gopurs_runtime.Value
+var once_Main_beforeIsSymbol sync.Once
+
+func Get_Main_beforeIsSymbol() gopurs_runtime.Value {
+	once_Main_beforeIsSymbol.Do(func() {
+		cache_Main_beforeIsSymbol = gopurs_runtime.RecordDict1("reflectSymbol", gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str("before")
+		}))
+	})
+	return cache_Main_beforeIsSymbol
+}
+
+var cache_Main_zIsSymbol gopurs_runtime.Value
+var once_Main_zIsSymbol sync.Once
+
+func Get_Main_zIsSymbol() gopurs_runtime.Value {
+	once_Main_zIsSymbol.Do(func() {
+		cache_Main_zIsSymbol = gopurs_runtime.RecordDict1("reflectSymbol", gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str("z")
+		}))
+	})
+	return cache_Main_zIsSymbol
+}
+
+var cache_Main_valuesIsSymbol gopurs_runtime.Value
+var once_Main_valuesIsSymbol sync.Once
+
+func Get_Main_valuesIsSymbol() gopurs_runtime.Value {
+	once_Main_valuesIsSymbol.Do(func() {
+		cache_Main_valuesIsSymbol = gopurs_runtime.RecordDict1("reflectSymbol", gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str("values")
+		}))
+	})
+	return cache_Main_valuesIsSymbol
+}
+
+var cache_Main_tailIsSymbol gopurs_runtime.Value
+var once_Main_tailIsSymbol sync.Once
+
+func Get_Main_tailIsSymbol() gopurs_runtime.Value {
+	once_Main_tailIsSymbol.Do(func() {
+		cache_Main_tailIsSymbol = gopurs_runtime.RecordDict1("reflectSymbol", gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Str("tail")
+		}))
+	})
+	return cache_Main_tailIsSymbol
+}
+
+var cache_Main_makeC gopurs_runtime.Value
+var once_Main_makeC sync.Once
+
+func Get_Main_makeC() gopurs_runtime.Value {
+	once_Main_makeC.Do(func() {
+		cache_Main_makeC = gopurs_runtime.Func(func(n_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return func() gopurs_runtime.Value {
+				orig := Call_Main_makeC(n_0_box.IntVal)
+				_ = orig
+				return gopurs_runtime.RecordDict([]string{"active", "id", "name", "tail", "values", "z"}, []gopurs_runtime.Value{gopurs_runtime.Bool(orig.active), gopurs_runtime.Int(orig.id), gopurs_runtime.Str(orig.name), gopurs_runtime.Bool(orig.tail), func() gopurs_runtime.Value {
+					arr := orig.values
+					boxed := make([]gopurs_runtime.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = gopurs_runtime.Int(v)
+					}
+					return gopurs_runtime.Array(boxed)
+				}(), gopurs_runtime.Str(orig.z)})
+			}()
+		})
+	})
+	return cache_Main_makeC
+}
+
+var cache_Main_runC gopurs_runtime.Value
+var once_Main_runC sync.Once
+
+func Get_Main_runC() gopurs_runtime.Value {
+	once_Main_runC.Do(func() {
+		cache_Main_runC = gopurs_runtime.Func(func(n_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Int(Call_Main_runC(n_0_box.IntVal))
+		})
+	})
+	return cache_Main_runC
+}
+
+var cache_Main_makeB gopurs_runtime.Value
+var once_Main_makeB sync.Once
+
+func Get_Main_makeB() gopurs_runtime.Value {
+	once_Main_makeB.Do(func() {
+		cache_Main_makeB = gopurs_runtime.Func(func(n_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return func() gopurs_runtime.Value {
+				orig := Call_Main_makeB(n_0_box.IntVal)
+				_ = orig
+				return gopurs_runtime.RecordDict5("active", "before", "id", "name", "nested", gopurs_runtime.Bool(orig.active), gopurs_runtime.Float(orig.before), gopurs_runtime.Int(orig.id), gopurs_runtime.Str(orig.name), func() gopurs_runtime.Value {
+					orig := orig.nested
+					_ = orig
+					return gopurs_runtime.RecordDict1("retained", gopurs_runtime.Str(orig.retained))
+				}())
+			}()
+		})
+	})
+	return cache_Main_makeB
+}
+
+var cache_Main_runB gopurs_runtime.Value
+var once_Main_runB sync.Once
+
+func Get_Main_runB() gopurs_runtime.Value {
+	once_Main_runB.Do(func() {
+		cache_Main_runB = gopurs_runtime.Func(func(n_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Int(Call_Main_runB(n_0_box.IntVal))
+		})
+	})
+	return cache_Main_runB
+}
+
+var cache_Main_makeA gopurs_runtime.Value
+var once_Main_makeA sync.Once
+
+func Get_Main_makeA() gopurs_runtime.Value {
+	once_Main_makeA.Do(func() {
+		cache_Main_makeA = gopurs_runtime.Func(func(n_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return func() gopurs_runtime.Value {
+				orig := Call_Main_makeA(n_0_box.IntVal)
+				_ = orig
+				return gopurs_runtime.RecordDict4("active", "extra", "id", "name", gopurs_runtime.Bool(orig.active), gopurs_runtime.Int(orig.extra), gopurs_runtime.Int(orig.id), gopurs_runtime.Str(orig.name))
+			}()
+		})
+	})
+	return cache_Main_makeA
+}
+
+var cache_Main_runA gopurs_runtime.Value
+var once_Main_runA sync.Once
+
+func Get_Main_runA() gopurs_runtime.Value {
+	once_Main_runA.Do(func() {
+		cache_Main_runA = gopurs_runtime.Func(func(n_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return gopurs_runtime.Int(Call_Main_runA(n_0_box.IntVal))
+		})
+	})
+	return cache_Main_runA
+}
+
+var cache_Main_main gopurs_runtime.Value
+var once_Main_main sync.Once
+
+func Get_Main_main() gopurs_runtime.Value {
+	once_Main_main.Do(func() {
+		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
+			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Ref_go__new(), gopurs_runtime.Int(int64(5)))
+			_ = __local_var_0_0
+			seedRef_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
+			_ = seedRef_1_1
+			seed_2_2 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), seedRef_1_1), gopurs_runtime.Value{})
+			_ = seed_2_2
+			aRef_3_3 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_go__new(), func() gopurs_runtime.Value {
+				orig := Call_Main_makeA(seed_2_2.IntVal)
+				_ = orig
+				return gopurs_runtime.RecordDict4("active", "extra", "id", "name", gopurs_runtime.Bool(orig.active), gopurs_runtime.Int(orig.extra), gopurs_runtime.Int(orig.id), gopurs_runtime.Str(orig.name))
+			}()), gopurs_runtime.Value{})
+			_ = aRef_3_3
+			bRef_4_4 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_go__new(), func() gopurs_runtime.Value {
+				orig := Call_Main_makeB(seed_2_2.IntVal)
+				_ = orig
+				return gopurs_runtime.RecordDict5("active", "before", "id", "name", "nested", gopurs_runtime.Bool(orig.active), gopurs_runtime.Float(orig.before), gopurs_runtime.Int(orig.id), gopurs_runtime.Str(orig.name), func() gopurs_runtime.Value {
+					orig := orig.nested
+					_ = orig
+					return gopurs_runtime.RecordDict1("retained", gopurs_runtime.Str(orig.retained))
+				}())
+			}()), gopurs_runtime.Value{})
+			_ = bRef_4_4
+			cRef_5_5 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_go__new(), func() gopurs_runtime.Value {
+				orig := Call_Main_makeC(seed_2_2.IntVal)
+				_ = orig
+				return gopurs_runtime.RecordDict([]string{"active", "id", "name", "tail", "values", "z"}, []gopurs_runtime.Value{gopurs_runtime.Bool(orig.active), gopurs_runtime.Int(orig.id), gopurs_runtime.Str(orig.name), gopurs_runtime.Bool(orig.tail), func() gopurs_runtime.Value {
+					arr := orig.values
+					boxed := make([]gopurs_runtime.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = gopurs_runtime.Int(v)
+					}
+					return gopurs_runtime.Array(boxed)
+				}(), gopurs_runtime.Str(orig.z)})
+			}()), gopurs_runtime.Value{})
+			_ = cRef_5_5
+			a_6_6 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), aRef_3_3), gopurs_runtime.Value{})
+			_ = a_6_6
+			b_7_7 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), bRef_4_4), gopurs_runtime.Value{})
+			_ = b_7_7
+			c_8_8 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), cRef_5_5), gopurs_runtime.Value{})
+			_ = c_8_8
+			_dollar___unused_9_9 := gopurs_runtime.Apply(gopurs_runtime.Apply(Call_Test_Assert_assertEqual(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))), Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showInt())))), func() gopurs_runtime.Value {
+				orig := struct {
+					actual   int64
+					expected int64
+					/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
+				}{Call_Worker_score(func(record struct {
+					active bool
+					extra  int64
+					id     int64
+					name   string
+					/*gopurs:record-v1:4:006100630074006900760065,00650078007400720061,00690064,006e0061006d0065*/
+				}) struct {
+					active bool
+					id     int64
+					name   string
+					/*gopurs:record-v1:3:006100630074006900760065,00690064,006e0061006d0065*/
+				} {
+					return struct {
+						active bool
+						id     int64
+						name   string
+						/*gopurs:record-v1:3:006100630074006900760065,00690064,006e0061006d0065*/
+					}{record.active, record.id, record.name}
+				}(func() struct {
+					active bool
+					extra  int64
+					id     int64
+					name   string
+					/*gopurs:record-v1:4:006100630074006900760065,00650078007400720061,00690064,006e0061006d0065*/
+				} {
+					orig := a_6_6
+					_ = orig
+					clone := struct {
+						active bool
+						extra  int64
+						id     int64
+						name   string
+						/*gopurs:record-v1:4:006100630074006900760065,00650078007400720061,00690064,006e0061006d0065*/
+					}{}
+					clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
+					clone.extra = gopurs_runtime.RecordGet(orig, "extra").IntVal
+					clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
+					clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
+					return clone
+				}())), int64(2851)}
+				_ = orig
+				return gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(orig.actual), gopurs_runtime.Int(orig.expected))
+			}()), gopurs_runtime.Value{})
+			_ = _dollar___unused_9_9
+			_dollar___unused_10_10 := gopurs_runtime.Apply(gopurs_runtime.Apply(Call_Test_Assert_assertEqual(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))), Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showInt())))), func() gopurs_runtime.Value {
+				orig := struct {
+					actual   int64
+					expected int64
+					/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
+				}{Call_Worker_score(func(record struct {
+					active bool
+					before float64
+					id     int64
+					name   string
+					nested struct {
+						retained string
+						/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+					}
+					/*gopurs:record-v1:5:006100630074006900760065,006200650066006f00720065,00690064,006e0061006d0065,006e00650073007400650064*/
+				}) struct {
+					active bool
+					id     int64
+					name   string
+					/*gopurs:record-v1:3:006100630074006900760065,00690064,006e0061006d0065*/
+				} {
+					return struct {
+						active bool
+						id     int64
+						name   string
+						/*gopurs:record-v1:3:006100630074006900760065,00690064,006e0061006d0065*/
+					}{record.active, record.id, record.name}
+				}(func() struct {
+					active bool
+					before float64
+					id     int64
+					name   string
+					nested struct {
+						retained string
+						/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+					}
+					/*gopurs:record-v1:5:006100630074006900760065,006200650066006f00720065,00690064,006e0061006d0065,006e00650073007400650064*/
+				} {
+					orig := b_7_7
+					_ = orig
+					clone := struct {
+						active bool
+						before float64
+						id     int64
+						name   string
+						nested struct {
+							retained string
+							/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+						}
+						/*gopurs:record-v1:5:006100630074006900760065,006200650066006f00720065,00690064,006e0061006d0065,006e00650073007400650064*/
+					}{}
+					clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
+					clone.before = gopurs_runtime.RecordGet(orig, "before").FloatVal()
+					clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
+					clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
+					clone.nested = func() struct {
+						retained string
+						/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+					} {
+						orig := gopurs_runtime.RecordGet(orig, "nested")
+						_ = orig
+						clone := struct {
+							retained string
+							/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+						}{}
+						clone.retained = gopurs_runtime.RecordGet(orig, "retained").StrVal()
+						return clone
+					}()
+					return clone
+				}())), int64(-195)}
+				_ = orig
+				return gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(orig.actual), gopurs_runtime.Int(orig.expected))
+			}()), gopurs_runtime.Value{})
+			_ = _dollar___unused_10_10
+			_dollar___unused_11_11 := gopurs_runtime.Apply(gopurs_runtime.Apply(Call_Test_Assert_assertEqual(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))), Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showInt())))), func() gopurs_runtime.Value {
+				orig := struct {
+					actual   int64
+					expected int64
+					/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
+				}{Call_Worker_score(func(record struct {
+					active bool
+					id     int64
+					name   string
+					tail   bool
+					values []int64
+					z      string
+					/*gopurs:record-v1:6:006100630074006900760065,00690064,006e0061006d0065,007400610069006c,00760061006c007500650073,007a*/
+				}) struct {
+					active bool
+					id     int64
+					name   string
+					/*gopurs:record-v1:3:006100630074006900760065,00690064,006e0061006d0065*/
+				} {
+					return struct {
+						active bool
+						id     int64
+						name   string
+						/*gopurs:record-v1:3:006100630074006900760065,00690064,006e0061006d0065*/
+					}{record.active, record.id, record.name}
+				}(func() struct {
+					active bool
+					id     int64
+					name   string
+					tail   bool
+					values []int64
+					z      string
+					/*gopurs:record-v1:6:006100630074006900760065,00690064,006e0061006d0065,007400610069006c,00760061006c007500650073,007a*/
+				} {
+					orig := c_8_8
+					_ = orig
+					clone := struct {
+						active bool
+						id     int64
+						name   string
+						tail   bool
+						values []int64
+						z      string
+						/*gopurs:record-v1:6:006100630074006900760065,00690064,006e0061006d0065,007400610069006c,00760061006c007500650073,007a*/
+					}{}
+					clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
+					clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
+					clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
+					clone.tail = (gopurs_runtime.RecordGet(orig, "tail").IntVal) != (0)
+					clone.values = func() []int64 {
+						arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "values").UnsafePtr)
+						unboxed := make([]int64, len(arr))
+						for i, v := range arr {
+							unboxed[i] = v.IntVal
+						}
+						return unboxed
+					}()
+					clone.z = gopurs_runtime.RecordGet(orig, "z").StrVal()
+					return clone
+				}())), int64(2851)}
+				_ = orig
+				return gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(orig.actual), gopurs_runtime.Int(orig.expected))
+			}()), gopurs_runtime.Value{})
+			_ = _dollar___unused_11_11
+			// TAST (Let): a2_12_12 shape=Other bindingType=(Record (Row [id: Int, active: Boolean, extra: Int, name: String] Empty))
+			a2_12_12 := func() struct {
+				active bool
+				extra  int64
+				id     int64
+				name   string
+				/*gopurs:record-v1:4:006100630074006900760065,00650078007400720061,00690064,006e0061006d0065*/
+			} {
+				orig := gopurs_runtime.RecordUpdate1(a_6_6, "id", gopurs_runtime.Int(int64(9)))
+				_ = orig
+				clone := struct {
+					active bool
+					extra  int64
+					id     int64
+					name   string
+					/*gopurs:record-v1:4:006100630074006900760065,00650078007400720061,00690064,006e0061006d0065*/
+				}{}
+				clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
+				clone.extra = gopurs_runtime.RecordGet(orig, "extra").IntVal
+				clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
+				clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
+				return clone
+			}()
+			_ = a2_12_12
+			// TAST (Let): b2_13_13 shape=Other bindingType=(Record (Row [name: String, active: Boolean, before: Number, id: Int, nested: (Record (Row [retained: String] Empty))] Empty))
+			b2_13_13 := func() struct {
+				active bool
+				before float64
+				id     int64
+				name   string
+				nested struct {
+					retained string
+					/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+				}
+				/*gopurs:record-v1:5:006100630074006900760065,006200650066006f00720065,00690064,006e0061006d0065,006e00650073007400650064*/
+			} {
+				orig := gopurs_runtime.RecordUpdate1(b_7_7, "name", gopurs_runtime.Str("alpha"))
+				_ = orig
+				clone := struct {
+					active bool
+					before float64
+					id     int64
+					name   string
+					nested struct {
+						retained string
+						/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+					}
+					/*gopurs:record-v1:5:006100630074006900760065,006200650066006f00720065,00690064,006e0061006d0065,006e00650073007400650064*/
+				}{}
+				clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
+				clone.before = gopurs_runtime.RecordGet(orig, "before").FloatVal()
+				clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
+				clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
+				clone.nested = func() struct {
+					retained string
+					/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+				} {
+					orig := gopurs_runtime.RecordGet(orig, "nested")
+					_ = orig
+					clone := struct {
+						retained string
+						/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+					}{}
+					clone.retained = gopurs_runtime.RecordGet(orig, "retained").StrVal()
+					return clone
+				}()
+				return clone
+			}()
+			_ = b2_13_13
+			// TAST (Let): c2_14_14 shape=Other bindingType=(Record (Row [active: Boolean, id: Int, name: String, tail: Boolean, values: (Array Int), z: String] Empty))
+			c2_14_14 := func() struct {
+				active bool
+				id     int64
+				name   string
+				tail   bool
+				values []int64
+				z      string
+				/*gopurs:record-v1:6:006100630074006900760065,00690064,006e0061006d0065,007400610069006c,00760061006c007500650073,007a*/
+			} {
+				orig := gopurs_runtime.RecordUpdate1(c_8_8, "active", gopurs_runtime.Bool(false))
+				_ = orig
+				clone := struct {
+					active bool
+					id     int64
+					name   string
+					tail   bool
+					values []int64
+					z      string
+					/*gopurs:record-v1:6:006100630074006900760065,00690064,006e0061006d0065,007400610069006c,00760061006c007500650073,007a*/
+				}{}
+				clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
+				clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
+				clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
+				clone.tail = (gopurs_runtime.RecordGet(orig, "tail").IntVal) != (0)
+				clone.values = func() []int64 {
+					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "values").UnsafePtr)
+					unboxed := make([]int64, len(arr))
+					for i, v := range arr {
+						unboxed[i] = v.IntVal
+					}
+					return unboxed
+				}()
+				clone.z = gopurs_runtime.RecordGet(orig, "z").StrVal()
+				return clone
+			}()
+			_ = c2_14_14
+			_dollar___unused_15_15 := gopurs_runtime.Apply(gopurs_runtime.Apply(Call_Test_Assert_assertEqual(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))), Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showInt())))), func() gopurs_runtime.Value {
+				orig := struct {
+					actual   int64
+					expected int64
+					/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
+				}{Call_Worker_score(func(record struct {
+					active bool
+					extra  int64
+					id     int64
+					name   string
+					/*gopurs:record-v1:4:006100630074006900760065,00650078007400720061,00690064,006e0061006d0065*/
+				}) struct {
+					active bool
+					id     int64
+					name   string
+					/*gopurs:record-v1:3:006100630074006900760065,00690064,006e0061006d0065*/
+				} {
+					return struct {
+						active bool
+						id     int64
+						name   string
+						/*gopurs:record-v1:3:006100630074006900760065,00690064,006e0061006d0065*/
+					}{record.active, record.id, record.name}
+				}(a2_12_12)), int64(4435)}
+				_ = orig
+				return gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(orig.actual), gopurs_runtime.Int(orig.expected))
+			}()), gopurs_runtime.Value{})
+			_ = _dollar___unused_15_15
+			_dollar___unused_16_16 := gopurs_runtime.Apply(gopurs_runtime.Apply(Call_Test_Assert_assertEqual(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))), Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showInt())))), func() gopurs_runtime.Value {
+				orig := struct {
+					actual   int64
+					expected int64
+					/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
+				}{Call_Worker_score(func(record struct {
+					active bool
+					before float64
+					id     int64
+					name   string
+					nested struct {
+						retained string
+						/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+					}
+					/*gopurs:record-v1:5:006100630074006900760065,006200650066006f00720065,00690064,006e0061006d0065,006e00650073007400650064*/
+				}) struct {
+					active bool
+					id     int64
+					name   string
+					/*gopurs:record-v1:3:006100630074006900760065,00690064,006e0061006d0065*/
+				} {
+					return struct {
+						active bool
+						id     int64
+						name   string
+						/*gopurs:record-v1:3:006100630074006900760065,00690064,006e0061006d0065*/
+					}{record.active, record.id, record.name}
+				}(b2_13_13)), int64(1057)}
+				_ = orig
+				return gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(orig.actual), gopurs_runtime.Int(orig.expected))
+			}()), gopurs_runtime.Value{})
+			_ = _dollar___unused_16_16
+			_dollar___unused_17_17 := gopurs_runtime.Apply(gopurs_runtime.Apply(Call_Test_Assert_assertEqual(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))), Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showInt())))), func() gopurs_runtime.Value {
+				orig := struct {
+					actual   int64
+					expected int64
+					/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
+				}{Call_Worker_score(func(record struct {
+					active bool
+					id     int64
+					name   string
+					tail   bool
+					values []int64
+					z      string
+					/*gopurs:record-v1:6:006100630074006900760065,00690064,006e0061006d0065,007400610069006c,00760061006c007500650073,007a*/
+				}) struct {
+					active bool
+					id     int64
+					name   string
+					/*gopurs:record-v1:3:006100630074006900760065,00690064,006e0061006d0065*/
+				} {
+					return struct {
+						active bool
+						id     int64
+						name   string
+						/*gopurs:record-v1:3:006100630074006900760065,00690064,006e0061006d0065*/
+					}{record.active, record.id, record.name}
+				}(c2_14_14)), int64(1057)}
+				_ = orig
+				return gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(orig.actual), gopurs_runtime.Int(orig.expected))
+			}()), gopurs_runtime.Value{})
+			_ = _dollar___unused_17_17
+			savedA_18_18 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), aRef_3_3), gopurs_runtime.Value{})
+			_ = savedA_18_18
+			savedB_19_19 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), bRef_4_4), gopurs_runtime.Value{})
+			_ = savedB_19_19
+			savedC_20_20 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), cRef_5_5), gopurs_runtime.Value{})
+			_ = savedC_20_20
+			_dollar___unused_21_21 := gopurs_runtime.Apply(gopurs_runtime.Apply(Call_Test_Assert_assertEqual(Rebox_Main_2758774104_3790796878(Rebox_Main_3790796878_2758774104(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Main___cached_dict_0()))), Rebox_Main_1994653624_1386611502(Rebox_Main_1386611502_1994653624(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Main___cached_dict_1())))), func() gopurs_runtime.Value {
+				orig := struct {
+					actual struct {
+						active bool
+						extra  int64
+						id     int64
+						name   string
+						/*gopurs:record-v1:4:006100630074006900760065,00650078007400720061,00690064,006e0061006d0065*/
+					}
+					expected struct {
+						active bool
+						extra  int64
+						id     int64
+						name   string
+						/*gopurs:record-v1:4:006100630074006900760065,00650078007400720061,00690064,006e0061006d0065*/
+					}
+					/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
+				}{func() struct {
+					active bool
+					extra  int64
+					id     int64
+					name   string
+					/*gopurs:record-v1:4:006100630074006900760065,00650078007400720061,00690064,006e0061006d0065*/
+				} {
+					orig := savedA_18_18
+					_ = orig
+					clone := struct {
+						active bool
+						extra  int64
+						id     int64
+						name   string
+						/*gopurs:record-v1:4:006100630074006900760065,00650078007400720061,00690064,006e0061006d0065*/
+					}{}
+					clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
+					clone.extra = gopurs_runtime.RecordGet(orig, "extra").IntVal
+					clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
+					clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
+					return clone
+				}(), func() struct {
+					active bool
+					extra  int64
+					id     int64
+					name   string
+					/*gopurs:record-v1:4:006100630074006900760065,00650078007400720061,00690064,006e0061006d0065*/
+				} {
+					orig := a_6_6
+					_ = orig
+					clone := struct {
+						active bool
+						extra  int64
+						id     int64
+						name   string
+						/*gopurs:record-v1:4:006100630074006900760065,00650078007400720061,00690064,006e0061006d0065*/
+					}{}
+					clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
+					clone.extra = gopurs_runtime.RecordGet(orig, "extra").IntVal
+					clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
+					clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
+					return clone
+				}()}
+				_ = orig
+				return gopurs_runtime.RecordDict2("actual", "expected", func() gopurs_runtime.Value {
+					orig := orig.actual
+					_ = orig
+					return gopurs_runtime.RecordDict4("active", "extra", "id", "name", gopurs_runtime.Bool(orig.active), gopurs_runtime.Int(orig.extra), gopurs_runtime.Int(orig.id), gopurs_runtime.Str(orig.name))
+				}(), func() gopurs_runtime.Value {
+					orig := orig.expected
+					_ = orig
+					return gopurs_runtime.RecordDict4("active", "extra", "id", "name", gopurs_runtime.Bool(orig.active), gopurs_runtime.Int(orig.extra), gopurs_runtime.Int(orig.id), gopurs_runtime.Str(orig.name))
+				}())
+			}()), gopurs_runtime.Value{})
+			_ = _dollar___unused_21_21
+			_dollar___unused_22_22 := gopurs_runtime.Apply(gopurs_runtime.Apply(Call_Test_Assert_assertEqual(Rebox_Main_2543566495_3790796878(Rebox_Main_3790796878_2543566495(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Main___cached_dict_2()))), Rebox_Main_872707775_1386611502(Rebox_Main_1386611502_872707775(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Main___cached_dict_3())))), func() gopurs_runtime.Value {
+				orig := struct {
+					actual struct {
+						active bool
+						before float64
+						id     int64
+						name   string
+						nested struct {
+							retained string
+							/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+						}
+						/*gopurs:record-v1:5:006100630074006900760065,006200650066006f00720065,00690064,006e0061006d0065,006e00650073007400650064*/
+					}
+					expected struct {
+						active bool
+						before float64
+						id     int64
+						name   string
+						nested struct {
+							retained string
+							/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+						}
+						/*gopurs:record-v1:5:006100630074006900760065,006200650066006f00720065,00690064,006e0061006d0065,006e00650073007400650064*/
+					}
+					/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
+				}{func() struct {
+					active bool
+					before float64
+					id     int64
+					name   string
+					nested struct {
+						retained string
+						/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+					}
+					/*gopurs:record-v1:5:006100630074006900760065,006200650066006f00720065,00690064,006e0061006d0065,006e00650073007400650064*/
+				} {
+					orig := savedB_19_19
+					_ = orig
+					clone := struct {
+						active bool
+						before float64
+						id     int64
+						name   string
+						nested struct {
+							retained string
+							/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+						}
+						/*gopurs:record-v1:5:006100630074006900760065,006200650066006f00720065,00690064,006e0061006d0065,006e00650073007400650064*/
+					}{}
+					clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
+					clone.before = gopurs_runtime.RecordGet(orig, "before").FloatVal()
+					clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
+					clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
+					clone.nested = func() struct {
+						retained string
+						/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+					} {
+						orig := gopurs_runtime.RecordGet(orig, "nested")
+						_ = orig
+						clone := struct {
+							retained string
+							/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+						}{}
+						clone.retained = gopurs_runtime.RecordGet(orig, "retained").StrVal()
+						return clone
+					}()
+					return clone
+				}(), func() struct {
+					active bool
+					before float64
+					id     int64
+					name   string
+					nested struct {
+						retained string
+						/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+					}
+					/*gopurs:record-v1:5:006100630074006900760065,006200650066006f00720065,00690064,006e0061006d0065,006e00650073007400650064*/
+				} {
+					orig := b_7_7
+					_ = orig
+					clone := struct {
+						active bool
+						before float64
+						id     int64
+						name   string
+						nested struct {
+							retained string
+							/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+						}
+						/*gopurs:record-v1:5:006100630074006900760065,006200650066006f00720065,00690064,006e0061006d0065,006e00650073007400650064*/
+					}{}
+					clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
+					clone.before = gopurs_runtime.RecordGet(orig, "before").FloatVal()
+					clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
+					clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
+					clone.nested = func() struct {
+						retained string
+						/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+					} {
+						orig := gopurs_runtime.RecordGet(orig, "nested")
+						_ = orig
+						clone := struct {
+							retained string
+							/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+						}{}
+						clone.retained = gopurs_runtime.RecordGet(orig, "retained").StrVal()
+						return clone
+					}()
+					return clone
+				}()}
+				_ = orig
+				return gopurs_runtime.RecordDict2("actual", "expected", func() gopurs_runtime.Value {
+					orig := orig.actual
+					_ = orig
+					return gopurs_runtime.RecordDict5("active", "before", "id", "name", "nested", gopurs_runtime.Bool(orig.active), gopurs_runtime.Float(orig.before), gopurs_runtime.Int(orig.id), gopurs_runtime.Str(orig.name), func() gopurs_runtime.Value {
+						orig := orig.nested
+						_ = orig
+						return gopurs_runtime.RecordDict1("retained", gopurs_runtime.Str(orig.retained))
+					}())
+				}(), func() gopurs_runtime.Value {
+					orig := orig.expected
+					_ = orig
+					return gopurs_runtime.RecordDict5("active", "before", "id", "name", "nested", gopurs_runtime.Bool(orig.active), gopurs_runtime.Float(orig.before), gopurs_runtime.Int(orig.id), gopurs_runtime.Str(orig.name), func() gopurs_runtime.Value {
+						orig := orig.nested
+						_ = orig
+						return gopurs_runtime.RecordDict1("retained", gopurs_runtime.Str(orig.retained))
+					}())
+				}())
+			}()), gopurs_runtime.Value{})
+			_ = _dollar___unused_22_22
+			_dollar___unused_23_23 := gopurs_runtime.Apply(gopurs_runtime.Apply(Call_Test_Assert_assertEqual(Rebox_Main_2267788589_3790796878(Rebox_Main_3790796878_2267788589(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Main___cached_dict_4()))), Rebox_Main_1517968077_1386611502(Rebox_Main_1386611502_1517968077(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Main___cached_dict_5())))), func() gopurs_runtime.Value {
+				orig := struct {
+					actual struct {
+						active bool
+						id     int64
+						name   string
+						tail   bool
+						values []int64
+						z      string
+						/*gopurs:record-v1:6:006100630074006900760065,00690064,006e0061006d0065,007400610069006c,00760061006c007500650073,007a*/
+					}
+					expected struct {
+						active bool
+						id     int64
+						name   string
+						tail   bool
+						values []int64
+						z      string
+						/*gopurs:record-v1:6:006100630074006900760065,00690064,006e0061006d0065,007400610069006c,00760061006c007500650073,007a*/
+					}
+					/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
+				}{func() struct {
+					active bool
+					id     int64
+					name   string
+					tail   bool
+					values []int64
+					z      string
+					/*gopurs:record-v1:6:006100630074006900760065,00690064,006e0061006d0065,007400610069006c,00760061006c007500650073,007a*/
+				} {
+					orig := savedC_20_20
+					_ = orig
+					clone := struct {
+						active bool
+						id     int64
+						name   string
+						tail   bool
+						values []int64
+						z      string
+						/*gopurs:record-v1:6:006100630074006900760065,00690064,006e0061006d0065,007400610069006c,00760061006c007500650073,007a*/
+					}{}
+					clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
+					clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
+					clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
+					clone.tail = (gopurs_runtime.RecordGet(orig, "tail").IntVal) != (0)
+					clone.values = func() []int64 {
+						arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "values").UnsafePtr)
+						unboxed := make([]int64, len(arr))
+						for i, v := range arr {
+							unboxed[i] = v.IntVal
+						}
+						return unboxed
+					}()
+					clone.z = gopurs_runtime.RecordGet(orig, "z").StrVal()
+					return clone
+				}(), func() struct {
+					active bool
+					id     int64
+					name   string
+					tail   bool
+					values []int64
+					z      string
+					/*gopurs:record-v1:6:006100630074006900760065,00690064,006e0061006d0065,007400610069006c,00760061006c007500650073,007a*/
+				} {
+					orig := c_8_8
+					_ = orig
+					clone := struct {
+						active bool
+						id     int64
+						name   string
+						tail   bool
+						values []int64
+						z      string
+						/*gopurs:record-v1:6:006100630074006900760065,00690064,006e0061006d0065,007400610069006c,00760061006c007500650073,007a*/
+					}{}
+					clone.active = (gopurs_runtime.RecordGet(orig, "active").IntVal) != (0)
+					clone.id = gopurs_runtime.RecordGet(orig, "id").IntVal
+					clone.name = gopurs_runtime.RecordGet(orig, "name").StrVal()
+					clone.tail = (gopurs_runtime.RecordGet(orig, "tail").IntVal) != (0)
+					clone.values = func() []int64 {
+						arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "values").UnsafePtr)
+						unboxed := make([]int64, len(arr))
+						for i, v := range arr {
+							unboxed[i] = v.IntVal
+						}
+						return unboxed
+					}()
+					clone.z = gopurs_runtime.RecordGet(orig, "z").StrVal()
+					return clone
+				}()}
+				_ = orig
+				return gopurs_runtime.RecordDict2("actual", "expected", func() gopurs_runtime.Value {
+					orig := orig.actual
+					_ = orig
+					return gopurs_runtime.RecordDict([]string{"active", "id", "name", "tail", "values", "z"}, []gopurs_runtime.Value{gopurs_runtime.Bool(orig.active), gopurs_runtime.Int(orig.id), gopurs_runtime.Str(orig.name), gopurs_runtime.Bool(orig.tail), func() gopurs_runtime.Value {
+						arr := orig.values
+						boxed := make([]gopurs_runtime.Value, len(arr))
+						for i, v := range arr {
+							boxed[i] = gopurs_runtime.Int(v)
+						}
+						return gopurs_runtime.Array(boxed)
+					}(), gopurs_runtime.Str(orig.z)})
+				}(), func() gopurs_runtime.Value {
+					orig := orig.expected
+					_ = orig
+					return gopurs_runtime.RecordDict([]string{"active", "id", "name", "tail", "values", "z"}, []gopurs_runtime.Value{gopurs_runtime.Bool(orig.active), gopurs_runtime.Int(orig.id), gopurs_runtime.Str(orig.name), gopurs_runtime.Bool(orig.tail), func() gopurs_runtime.Value {
+						arr := orig.values
+						boxed := make([]gopurs_runtime.Value, len(arr))
+						for i, v := range arr {
+							boxed[i] = gopurs_runtime.Int(v)
+						}
+						return gopurs_runtime.Array(boxed)
+					}(), gopurs_runtime.Str(orig.z)})
+				}())
+			}()), gopurs_runtime.Value{})
+			_ = _dollar___unused_23_23
+			_dollar___unused_24_24 := gopurs_runtime.Apply(gopurs_runtime.Apply(Call_Test_Assert_assertEqual(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))), Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showInt())))), func() gopurs_runtime.Value {
+				orig := struct {
+					actual   int64
+					expected int64
+					/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
+				}{a2_12_12.extra, int64(42)}
+				_ = orig
+				return gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Int(orig.actual), gopurs_runtime.Int(orig.expected))
+			}()), gopurs_runtime.Value{})
+			_ = _dollar___unused_24_24
+			_dollar___unused_25_25 := gopurs_runtime.Apply(gopurs_runtime.Apply(Call_Test_Assert_assertEqual(Rebox_Main_1830338253_3790796878(Rebox_Main_3790796878_1830338253(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Main___cached_dict_6()))), Rebox_Main_920949869_1386611502(Rebox_Main_1386611502_920949869(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Main___cached_dict_7())))), func() gopurs_runtime.Value {
+				orig := struct {
+					actual struct {
+						retained string
+						/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+					}
+					expected struct {
+						retained string
+						/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+					}
+					/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
+				}{b2_13_13.nested, struct {
+					retained string
+					/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+				}{"keep"}}
+				_ = orig
+				return gopurs_runtime.RecordDict2("actual", "expected", func() gopurs_runtime.Value {
+					orig := orig.actual
+					_ = orig
+					return gopurs_runtime.RecordDict1("retained", gopurs_runtime.Str(orig.retained))
+				}(), func() gopurs_runtime.Value {
+					orig := orig.expected
+					_ = orig
+					return gopurs_runtime.RecordDict1("retained", gopurs_runtime.Str(orig.retained))
+				}())
+			}()), gopurs_runtime.Value{})
+			_ = _dollar___unused_25_25
+			_dollar___unused_26_26 := gopurs_runtime.Apply(gopurs_runtime.Apply(Call_Test_Assert_assertEqual(Rebox_Main_378698611_3790796878(Rebox_Main_3790796878_378698611(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Main___cached_dict_8()))), Rebox_Main_1469227923_1386611502(Rebox_Main_1386611502_1469227923(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Main___cached_dict_9())))), func() gopurs_runtime.Value {
+				orig := struct {
+					actual   []int64
+					expected []int64
+					/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
+				}{c2_14_14.values, []int64{int64(1), int64(2), int64(3)}}
+				_ = orig
+				return gopurs_runtime.RecordDict2("actual", "expected", func() gopurs_runtime.Value {
+					arr := orig.actual
+					boxed := make([]gopurs_runtime.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = gopurs_runtime.Int(v)
+					}
+					return gopurs_runtime.Array(boxed)
+				}(), func() gopurs_runtime.Value {
+					arr := orig.expected
+					boxed := make([]gopurs_runtime.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = gopurs_runtime.Int(v)
+					}
+					return gopurs_runtime.Array(boxed)
+				}())
+			}()), gopurs_runtime.Value{})
+			_ = _dollar___unused_26_26
+			_dollar___unused_27_27 := gopurs_runtime.Apply(gopurs_runtime.Apply(Call_Test_Assert_assertEqual(Rebox_Main_2737952170_3790796878(Rebox_Main_3790796878_2737952170(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqBoolean()))), Rebox_Main_2735895690_1386611502(Rebox_Main_1386611502_2735895690(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showBoolean())))), func() gopurs_runtime.Value {
+				orig := struct {
+					actual   bool
+					expected bool
+					/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
+				}{c2_14_14.tail, false}
+				_ = orig
+				return gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Bool(orig.actual), gopurs_runtime.Bool(orig.expected))
+			}()), gopurs_runtime.Value{})
+			_ = _dollar___unused_27_27
+			_dollar___unused_28_28 := gopurs_runtime.Apply(gopurs_runtime.Apply(Call_Test_Assert_assertEqual(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqString()))), Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showString())))), func() gopurs_runtime.Value {
+				orig := struct {
+					actual   string
+					expected string
+					/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
+				}{c2_14_14.z, "last"}
+				_ = orig
+				return gopurs_runtime.RecordDict2("actual", "expected", gopurs_runtime.Str(orig.actual), gopurs_runtime.Str(orig.expected))
+			}()), gopurs_runtime.Value{})
+			_ = _dollar___unused_28_28
+			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
+		})
+	})
+	return cache_Main_main
+}
+
+var cache_Main___cached_dict_0 gopurs_runtime.Value
+var once_Main___cached_dict_0 sync.Once
+
+func Get_Main___cached_dict_0() gopurs_runtime.Value {
+	once_Main___cached_dict_0.Do(func() {
+		cache_Main___cached_dict_0 = gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_2758774104_3790796878(Rebox_Main_3790796878_2758774104(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Call_Data_Eq_eqRec(gopurs_runtime.Value{}, Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Get_Data_Eq_eqRowNil(), gopurs_runtime.Value{}, Get_Main_nameIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqString()))))}), gopurs_runtime.Value{}, Get_Main_idIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))))}), gopurs_runtime.Value{}, Get_Main_extraIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))))}), gopurs_runtime.Value{}, Get_Main_activeIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_2737952170_3790796878(Rebox_Main_3790796878_2737952170(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqBoolean()))))}))))))}
+	})
+	return cache_Main___cached_dict_0
+}
+
+var cache_Main___cached_dict_1 gopurs_runtime.Value
+var once_Main___cached_dict_1 sync.Once
+
+func Get_Main___cached_dict_1() gopurs_runtime.Value {
+	once_Main___cached_dict_1.Do(func() {
+		cache_Main___cached_dict_1 = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1994653624_1386611502(Rebox_Main_1386611502_1994653624(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Call_Data_Show_showRecord(gopurs_runtime.Value{}, gopurs_runtime.Value{}, Call_Data_Show_showRecordFieldsCons(Get_Main_activeIsSymbol(), Call_Data_Show_showRecordFieldsCons(Get_Main_extraIsSymbol(), Call_Data_Show_showRecordFieldsCons(Get_Main_idIsSymbol(), Call_Data_Show_showRecordFieldsConsNil(Get_Main_nameIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showString()))))}), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showInt()))))}), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showInt()))))}), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_2735895690_1386611502(Rebox_Main_1386611502_2735895690(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showBoolean()))))}))))))}
+	})
+	return cache_Main___cached_dict_1
+}
+
+var cache_Main___cached_dict_2 gopurs_runtime.Value
+var once_Main___cached_dict_2 sync.Once
+
+func Get_Main___cached_dict_2() gopurs_runtime.Value {
+	once_Main___cached_dict_2.Do(func() {
+		cache_Main___cached_dict_2 = gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_2543566495_3790796878(Rebox_Main_3790796878_2543566495(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Call_Data_Eq_eqRec(gopurs_runtime.Value{}, Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Get_Data_Eq_eqRowNil(), gopurs_runtime.Value{}, Get_Main_nestedIsSymbol(), Call_Data_Eq_eqRec(gopurs_runtime.Value{}, Call_Data_Eq_eqRowCons(Get_Data_Eq_eqRowNil(), gopurs_runtime.Value{}, Get_Main_retainedIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqString()))))}))), gopurs_runtime.Value{}, Get_Main_nameIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqString()))))}), gopurs_runtime.Value{}, Get_Main_idIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))))}), gopurs_runtime.Value{}, Get_Main_beforeIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_687527510_3790796878(Rebox_Main_3790796878_687527510(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqNumber()))))}), gopurs_runtime.Value{}, Get_Main_activeIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_2737952170_3790796878(Rebox_Main_3790796878_2737952170(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqBoolean()))))}))))))}
+	})
+	return cache_Main___cached_dict_2
+}
+
+var cache_Main___cached_dict_3 gopurs_runtime.Value
+var once_Main___cached_dict_3 sync.Once
+
+func Get_Main___cached_dict_3() gopurs_runtime.Value {
+	once_Main___cached_dict_3.Do(func() {
+		cache_Main___cached_dict_3 = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_872707775_1386611502(Rebox_Main_1386611502_872707775(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Call_Data_Show_showRecord(gopurs_runtime.Value{}, gopurs_runtime.Value{}, Call_Data_Show_showRecordFieldsCons(Get_Main_activeIsSymbol(), Call_Data_Show_showRecordFieldsCons(Get_Main_beforeIsSymbol(), Call_Data_Show_showRecordFieldsCons(Get_Main_idIsSymbol(), Call_Data_Show_showRecordFieldsCons(Get_Main_nameIsSymbol(), Call_Data_Show_showRecordFieldsConsNil(Get_Main_nestedIsSymbol(), Call_Data_Show_showRecord(gopurs_runtime.Value{}, gopurs_runtime.Value{}, Call_Data_Show_showRecordFieldsConsNil(Get_Main_retainedIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showString()))))}))), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showString()))))}), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showInt()))))}), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_3263178038_1386611502(Rebox_Main_1386611502_3263178038(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showNumber()))))}), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_2735895690_1386611502(Rebox_Main_1386611502_2735895690(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showBoolean()))))}))))))}
+	})
+	return cache_Main___cached_dict_3
+}
+
+var cache_Main___cached_dict_4 gopurs_runtime.Value
+var once_Main___cached_dict_4 sync.Once
+
+func Get_Main___cached_dict_4() gopurs_runtime.Value {
+	once_Main___cached_dict_4.Do(func() {
+		cache_Main___cached_dict_4 = gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_2267788589_3790796878(Rebox_Main_3790796878_2267788589(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Call_Data_Eq_eqRec(gopurs_runtime.Value{}, Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Call_Data_Eq_eqRowCons(Get_Data_Eq_eqRowNil(), gopurs_runtime.Value{}, Get_Main_zIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqString()))))}), gopurs_runtime.Value{}, Get_Main_valuesIsSymbol(), Call_Data_Eq_eqArray(gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))))})), gopurs_runtime.Value{}, Get_Main_tailIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_2737952170_3790796878(Rebox_Main_3790796878_2737952170(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqBoolean()))))}), gopurs_runtime.Value{}, Get_Main_nameIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqString()))))}), gopurs_runtime.Value{}, Get_Main_idIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))))}), gopurs_runtime.Value{}, Get_Main_activeIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_2737952170_3790796878(Rebox_Main_3790796878_2737952170(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqBoolean()))))}))))))}
+	})
+	return cache_Main___cached_dict_4
+}
+
+var cache_Main___cached_dict_5 gopurs_runtime.Value
+var once_Main___cached_dict_5 sync.Once
+
+func Get_Main___cached_dict_5() gopurs_runtime.Value {
+	once_Main___cached_dict_5.Do(func() {
+		cache_Main___cached_dict_5 = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1517968077_1386611502(Rebox_Main_1386611502_1517968077(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Call_Data_Show_showRecord(gopurs_runtime.Value{}, gopurs_runtime.Value{}, Call_Data_Show_showRecordFieldsCons(Get_Main_activeIsSymbol(), Call_Data_Show_showRecordFieldsCons(Get_Main_idIsSymbol(), Call_Data_Show_showRecordFieldsCons(Get_Main_nameIsSymbol(), Call_Data_Show_showRecordFieldsCons(Get_Main_tailIsSymbol(), Call_Data_Show_showRecordFieldsCons(Get_Main_valuesIsSymbol(), Call_Data_Show_showRecordFieldsConsNil(Get_Main_zIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showString()))))}), Call_Data_Show_showArray(gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showInt()))))})), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_2735895690_1386611502(Rebox_Main_1386611502_2735895690(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showBoolean()))))}), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showString()))))}), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showInt()))))}), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_2735895690_1386611502(Rebox_Main_1386611502_2735895690(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showBoolean()))))}))))))}
+	})
+	return cache_Main___cached_dict_5
+}
+
+var cache_Main___cached_dict_6 gopurs_runtime.Value
+var once_Main___cached_dict_6 sync.Once
+
+func Get_Main___cached_dict_6() gopurs_runtime.Value {
+	once_Main___cached_dict_6.Do(func() {
+		cache_Main___cached_dict_6 = gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1830338253_3790796878(Rebox_Main_3790796878_1830338253(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Call_Data_Eq_eqRec(gopurs_runtime.Value{}, Call_Data_Eq_eqRowCons(Get_Data_Eq_eqRowNil(), gopurs_runtime.Value{}, Get_Main_retainedIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqString()))))}))))))}
+	})
+	return cache_Main___cached_dict_6
+}
+
+var cache_Main___cached_dict_7 gopurs_runtime.Value
+var once_Main___cached_dict_7 sync.Once
+
+func Get_Main___cached_dict_7() gopurs_runtime.Value {
+	once_Main___cached_dict_7.Do(func() {
+		cache_Main___cached_dict_7 = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_920949869_1386611502(Rebox_Main_1386611502_920949869(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Call_Data_Show_showRecord(gopurs_runtime.Value{}, gopurs_runtime.Value{}, Call_Data_Show_showRecordFieldsConsNil(Get_Main_retainedIsSymbol(), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showString()))))}))))))}
+	})
+	return cache_Main___cached_dict_7
+}
+
+var cache_Main___cached_dict_8 gopurs_runtime.Value
+var once_Main___cached_dict_8 sync.Once
+
+func Get_Main___cached_dict_8() gopurs_runtime.Value {
+	once_Main___cached_dict_8.Do(func() {
+		cache_Main___cached_dict_8 = gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_378698611_3790796878(Rebox_Main_3790796878_378698611(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Call_Data_Eq_eqArray(gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Data_Eq_eqInt()))))})))))}
+	})
+	return cache_Main___cached_dict_8
+}
+
+var cache_Main___cached_dict_9 gopurs_runtime.Value
+var once_Main___cached_dict_9 sync.Once
+
+func Get_Main___cached_dict_9() gopurs_runtime.Value {
+	once_Main___cached_dict_9.Do(func() {
+		cache_Main___cached_dict_9 = gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1469227923_1386611502(Rebox_Main_1386611502_1469227923(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Call_Data_Show_showArray(gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showInt()))))})))))}
+	})
+	return cache_Main___cached_dict_9
+}
+
+func Call_Main_makeC(n_0_loop int64) struct {
+	active bool
+	id     int64
+	name   string
+	tail   bool
+	values []int64
+	z      string
+	/*gopurs:record-v1:6:006100630074006900760065,00690064,006e0061006d0065,007400610069006c,00760061006c007500650073,007a*/
+} {
+	var n_0 int64 = n_0_loop
+	_ = n_0
+	return struct {
+		active bool
+		id     int64
+		name   string
+		tail   bool
+		values []int64
+		z      string
+		/*gopurs:record-v1:6:006100630074006900760065,00690064,006e0061006d0065,007400610069006c,00760061006c007500650073,007a*/
+	}{true, n_0, "alpha", false, []int64{int64(1), int64(2), int64(3)}, "last"}
+}
+
+func Call_Main_runC(n_0_loop int64) int64 {
+	var n_0 int64 = n_0_loop
+	_ = n_0
+	return Call_Worker_score(func(record struct {
+		active bool
+		id     int64
+		name   string
+		tail   bool
+		values []int64
+		z      string
+		/*gopurs:record-v1:6:006100630074006900760065,00690064,006e0061006d0065,007400610069006c,00760061006c007500650073,007a*/
+	}) struct {
+		active bool
+		id     int64
+		name   string
+		/*gopurs:record-v1:3:006100630074006900760065,00690064,006e0061006d0065*/
+	} {
+		return struct {
+			active bool
+			id     int64
+			name   string
+			/*gopurs:record-v1:3:006100630074006900760065,00690064,006e0061006d0065*/
+		}{record.active, record.id, record.name}
+	}(Call_Main_makeC(n_0)))
+}
+
+func Call_Main_makeB(n_0_loop int64) struct {
+	active bool
+	before float64
+	id     int64
+	name   string
+	nested struct {
+		retained string
+		/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+	}
+	/*gopurs:record-v1:5:006100630074006900760065,006200650066006f00720065,00690064,006e0061006d0065,006e00650073007400650064*/
+} {
+	var n_0 int64 = n_0_loop
+	_ = n_0
+	return struct {
+		active bool
+		before float64
+		id     int64
+		name   string
+		nested struct {
+			retained string
+			/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+		}
+		/*gopurs:record-v1:5:006100630074006900760065,006200650066006f00720065,00690064,006e0061006d0065,006e00650073007400650064*/
+	}{false, 1.25, n_0, "beta", struct {
+		retained string
+		/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+	}{"keep"}}
+}
+
+func Call_Main_runB(n_0_loop int64) int64 {
+	var n_0 int64 = n_0_loop
+	_ = n_0
+	return Call_Worker_score(func(record struct {
+		active bool
+		before float64
+		id     int64
+		name   string
+		nested struct {
+			retained string
+			/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+		}
+		/*gopurs:record-v1:5:006100630074006900760065,006200650066006f00720065,00690064,006e0061006d0065,006e00650073007400650064*/
+	}) struct {
+		active bool
+		id     int64
+		name   string
+		/*gopurs:record-v1:3:006100630074006900760065,00690064,006e0061006d0065*/
+	} {
+		return struct {
+			active bool
+			id     int64
+			name   string
+			/*gopurs:record-v1:3:006100630074006900760065,00690064,006e0061006d0065*/
+		}{record.active, record.id, record.name}
+	}(Call_Main_makeB(n_0)))
+}
+
+func Call_Main_makeA(n_0_loop int64) struct {
+	active bool
+	extra  int64
+	id     int64
+	name   string
+	/*gopurs:record-v1:4:006100630074006900760065,00650078007400720061,00690064,006e0061006d0065*/
+} {
+	var n_0 int64 = n_0_loop
+	_ = n_0
+	return struct {
+		active bool
+		extra  int64
+		id     int64
+		name   string
+		/*gopurs:record-v1:4:006100630074006900760065,00650078007400720061,00690064,006e0061006d0065*/
+	}{true, int64(42), n_0, "alpha"}
+}
+
+func Call_Main_runA(n_0_loop int64) int64 {
+	var n_0 int64 = n_0_loop
+	_ = n_0
+	return Call_Worker_score(func(record struct {
+		active bool
+		extra  int64
+		id     int64
+		name   string
+		/*gopurs:record-v1:4:006100630074006900760065,00650078007400720061,00690064,006e0061006d0065*/
+	}) struct {
+		active bool
+		id     int64
+		name   string
+		/*gopurs:record-v1:3:006100630074006900760065,00690064,006e0061006d0065*/
+	} {
+		return struct {
+			active bool
+			id     int64
+			name   string
+			/*gopurs:record-v1:3:006100630074006900760065,00690064,006e0061006d0065*/
+		}{record.active, record.id, record.name}
+	}(Call_Main_makeA(n_0)))
+}
+
+func Rebox_Main_1053099733_3790796878(in *Constructor_Data_Eq_Eq[int64]) *Constructor_Data_Eq_Eq[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[gopurs_runtime.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1140313009_3790796878(in *Constructor_Data_Eq_Eq[string]) *Constructor_Data_Eq_Eq[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[gopurs_runtime.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1386611502_1469227923(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[[]int64] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[[]int64])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1386611502_1514099793(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[string] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[string])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1386611502_1517968077(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[struct {
+	active bool
+	id     int64
+	name   string
+	tail   bool
+	values []int64
+	z      string
+	/*gopurs:record-v1:6:006100630074006900760065,00690064,006e0061006d0065,007400610069006c,00760061006c007500650073,007a*/
+}] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[struct {
+		active bool
+		id     int64
+		name   string
+		tail   bool
+		values []int64
+		z      string
+		/*gopurs:record-v1:6:006100630074006900760065,00690064,006e0061006d0065,007400610069006c,00760061006c007500650073,007a*/
+	}])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1386611502_1636311157(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[int64] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[int64])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1386611502_1994653624(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[struct {
+	active bool
+	extra  int64
+	id     int64
+	name   string
+	/*gopurs:record-v1:4:006100630074006900760065,00650078007400720061,00690064,006e0061006d0065*/
+}] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[struct {
+		active bool
+		extra  int64
+		id     int64
+		name   string
+		/*gopurs:record-v1:4:006100630074006900760065,00650078007400720061,00690064,006e0061006d0065*/
+	}])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1386611502_2735895690(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[bool] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[bool])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1386611502_3263178038(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[float64] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[float64])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1386611502_872707775(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[struct {
+	active bool
+	before float64
+	id     int64
+	name   string
+	nested struct {
+		retained string
+		/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+	}
+	/*gopurs:record-v1:5:006100630074006900760065,006200650066006f00720065,00690064,006e0061006d0065,006e00650073007400650064*/
+}] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[struct {
+		active bool
+		before float64
+		id     int64
+		name   string
+		nested struct {
+			retained string
+			/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+		}
+		/*gopurs:record-v1:5:006100630074006900760065,006200650066006f00720065,00690064,006e0061006d0065,006e00650073007400650064*/
+	}])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1386611502_920949869(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[struct {
+	retained string
+	/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+}] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[struct {
+		retained string
+		/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+	}])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1469227923_1386611502(in *Constructor_Data_Show_Show[[]int64]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1514099793_1386611502(in *Constructor_Data_Show_Show[string]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1517968077_1386611502(in *Constructor_Data_Show_Show[struct {
+	active bool
+	id     int64
+	name   string
+	tail   bool
+	values []int64
+	z      string
+	/*gopurs:record-v1:6:006100630074006900760065,00690064,006e0061006d0065,007400610069006c,00760061006c007500650073,007a*/
+}]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1636311157_1386611502(in *Constructor_Data_Show_Show[int64]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1830338253_3790796878(in *Constructor_Data_Eq_Eq[struct {
+	retained string
+	/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+}]) *Constructor_Data_Eq_Eq[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[gopurs_runtime.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1994653624_1386611502(in *Constructor_Data_Show_Show[struct {
+	active bool
+	extra  int64
+	id     int64
+	name   string
+	/*gopurs:record-v1:4:006100630074006900760065,00650078007400720061,00690064,006e0061006d0065*/
+}]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_2267788589_3790796878(in *Constructor_Data_Eq_Eq[struct {
+	active bool
+	id     int64
+	name   string
+	tail   bool
+	values []int64
+	z      string
+	/*gopurs:record-v1:6:006100630074006900760065,00690064,006e0061006d0065,007400610069006c,00760061006c007500650073,007a*/
+}]) *Constructor_Data_Eq_Eq[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[gopurs_runtime.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_2543566495_3790796878(in *Constructor_Data_Eq_Eq[struct {
+	active bool
+	before float64
+	id     int64
+	name   string
+	nested struct {
+		retained string
+		/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+	}
+	/*gopurs:record-v1:5:006100630074006900760065,006200650066006f00720065,00690064,006e0061006d0065,006e00650073007400650064*/
+}]) *Constructor_Data_Eq_Eq[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[gopurs_runtime.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_2735895690_1386611502(in *Constructor_Data_Show_Show[bool]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_2737952170_3790796878(in *Constructor_Data_Eq_Eq[bool]) *Constructor_Data_Eq_Eq[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[gopurs_runtime.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_2758774104_3790796878(in *Constructor_Data_Eq_Eq[struct {
+	active bool
+	extra  int64
+	id     int64
+	name   string
+	/*gopurs:record-v1:4:006100630074006900760065,00650078007400720061,00690064,006e0061006d0065*/
+}]) *Constructor_Data_Eq_Eq[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[gopurs_runtime.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_3263178038_1386611502(in *Constructor_Data_Show_Show[float64]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_378698611_3790796878(in *Constructor_Data_Eq_Eq[[]int64]) *Constructor_Data_Eq_Eq[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[gopurs_runtime.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_3790796878_1053099733(in *Constructor_Data_Eq_Eq[gopurs_runtime.Value]) *Constructor_Data_Eq_Eq[int64] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[int64])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_3790796878_1140313009(in *Constructor_Data_Eq_Eq[gopurs_runtime.Value]) *Constructor_Data_Eq_Eq[string] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[string])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_3790796878_1830338253(in *Constructor_Data_Eq_Eq[gopurs_runtime.Value]) *Constructor_Data_Eq_Eq[struct {
+	retained string
+	/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+}] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[struct {
+		retained string
+		/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+	}])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_3790796878_2267788589(in *Constructor_Data_Eq_Eq[gopurs_runtime.Value]) *Constructor_Data_Eq_Eq[struct {
+	active bool
+	id     int64
+	name   string
+	tail   bool
+	values []int64
+	z      string
+	/*gopurs:record-v1:6:006100630074006900760065,00690064,006e0061006d0065,007400610069006c,00760061006c007500650073,007a*/
+}] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[struct {
+		active bool
+		id     int64
+		name   string
+		tail   bool
+		values []int64
+		z      string
+		/*gopurs:record-v1:6:006100630074006900760065,00690064,006e0061006d0065,007400610069006c,00760061006c007500650073,007a*/
+	}])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_3790796878_2543566495(in *Constructor_Data_Eq_Eq[gopurs_runtime.Value]) *Constructor_Data_Eq_Eq[struct {
+	active bool
+	before float64
+	id     int64
+	name   string
+	nested struct {
+		retained string
+		/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+	}
+	/*gopurs:record-v1:5:006100630074006900760065,006200650066006f00720065,00690064,006e0061006d0065,006e00650073007400650064*/
+}] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[struct {
+		active bool
+		before float64
+		id     int64
+		name   string
+		nested struct {
+			retained string
+			/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+		}
+		/*gopurs:record-v1:5:006100630074006900760065,006200650066006f00720065,00690064,006e0061006d0065,006e00650073007400650064*/
+	}])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_3790796878_2737952170(in *Constructor_Data_Eq_Eq[gopurs_runtime.Value]) *Constructor_Data_Eq_Eq[bool] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[bool])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_3790796878_2758774104(in *Constructor_Data_Eq_Eq[gopurs_runtime.Value]) *Constructor_Data_Eq_Eq[struct {
+	active bool
+	extra  int64
+	id     int64
+	name   string
+	/*gopurs:record-v1:4:006100630074006900760065,00650078007400720061,00690064,006e0061006d0065*/
+}] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[struct {
+		active bool
+		extra  int64
+		id     int64
+		name   string
+		/*gopurs:record-v1:4:006100630074006900760065,00650078007400720061,00690064,006e0061006d0065*/
+	}])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_3790796878_378698611(in *Constructor_Data_Eq_Eq[gopurs_runtime.Value]) *Constructor_Data_Eq_Eq[[]int64] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[[]int64])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_3790796878_687527510(in *Constructor_Data_Eq_Eq[gopurs_runtime.Value]) *Constructor_Data_Eq_Eq[float64] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[float64])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_687527510_3790796878(in *Constructor_Data_Eq_Eq[float64]) *Constructor_Data_Eq_Eq[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[gopurs_runtime.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_872707775_1386611502(in *Constructor_Data_Show_Show[struct {
+	active bool
+	before float64
+	id     int64
+	name   string
+	nested struct {
+		retained string
+		/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+	}
+	/*gopurs:record-v1:5:006100630074006900760065,006200650066006f00720065,00690064,006e0061006d0065,006e00650073007400650064*/
+}]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_920949869_1386611502(in *Constructor_Data_Show_Show[struct {
+	retained string
+	/*gopurs:record-v1:1:00720065007400610069006e00650064*/
+}]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
+}

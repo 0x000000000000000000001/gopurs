@@ -1,0 +1,168 @@
+package purescript
+
+import (
+	gopurs_runtime "gopurs/output/gopurs_runtime"
+	sync "sync"
+	unsafe "unsafe"
+)
+
+var cache_Main_singleArgument gopurs_runtime.Value
+var once_Main_singleArgument sync.Once
+
+func Get_Main_singleArgument() gopurs_runtime.Value {
+	once_Main_singleArgument.Do(func() {
+		cache_Main_singleArgument = gopurs_runtime.Func(func(v_0_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_singleArgument(v_0_box)
+		})
+	})
+	return cache_Main_singleArgument
+}
+
+var cache_Main_singleApplication gopurs_runtime.Value
+var once_Main_singleApplication sync.Once
+
+func Get_Main_singleApplication() gopurs_runtime.Value {
+	once_Main_singleApplication.Do(func() {
+		cache_Main_singleApplication = Get_Main_singleArgument()
+	})
+	return cache_Main_singleApplication
+}
+
+var cache_Main_otherNestingWorks gopurs_runtime.Value
+var once_Main_otherNestingWorks sync.Once
+
+func Get_Main_otherNestingWorks() gopurs_runtime.Value {
+	once_Main_otherNestingWorks.Do(func() {
+		cache_Main_otherNestingWorks = func() gopurs_runtime.Value {
+			arr := []*Constructor_Data_Maybe_Just[*Constructor_Data_Tuple_Tuple[int64, float64]]{Rebox_Main_3094389156_1952550506(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](func() gopurs_runtime.Value {
+				_v := struct {
+					V0 gopurs_runtime.Value
+					V1 bool
+				}{gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer((&Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{1, gopurs_runtime.Int(int64(0)), gopurs_runtime.Float(0.0)}))}, true}
+				if _v.V1 {
+					return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: _v.V0})}
+				}
+				return gopurs_runtime.Value{Type: 9, IntVal: 930809136}
+			}())), Rebox_Main_3094389156_1952550506(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](func() gopurs_runtime.Value {
+				_v := struct {
+					V0 gopurs_runtime.Value
+					V1 bool
+				}{gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer((&Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{1, gopurs_runtime.Int(int64(1)), gopurs_runtime.Float(1.0)}))}, true}
+				if _v.V1 {
+					return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: _v.V0})}
+				}
+				return gopurs_runtime.Value{Type: 9, IntVal: 930809136}
+			}()))}
+			boxed := make([]gopurs_runtime.Value, len(arr))
+			for i, v := range arr {
+				boxed[i] = gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(Rebox_Main_1952550506_3094389156(v))}
+			}
+			return gopurs_runtime.Array(boxed)
+		}()
+	})
+	return cache_Main_otherNestingWorks
+}
+
+var cache_Main_operatorAsArgument gopurs_runtime.Value
+var once_Main_operatorAsArgument sync.Once
+
+func Get_Main_operatorAsArgument() gopurs_runtime.Value {
+	once_Main_operatorAsArgument.Do(func() {
+		cache_Main_operatorAsArgument = gopurs_runtime.Value{Type: 9, IntVal: int64(513803634), UnsafePtr: nil}
+	})
+	return cache_Main_operatorAsArgument
+}
+
+var cache_Main_multiArgument gopurs_runtime.Value
+var once_Main_multiArgument sync.Once
+
+func Get_Main_multiArgument() gopurs_runtime.Value {
+	once_Main_multiArgument.Do(func() {
+		cache_Main_multiArgument = gopurs_runtime.Func2(func(v_0_box gopurs_runtime.Value, v1_1_box gopurs_runtime.Value) gopurs_runtime.Value {
+			return Call_Main_multiArgument(v_0_box, v1_1_box)
+		})
+	})
+	return cache_Main_multiArgument
+}
+
+var cache_Main_main gopurs_runtime.Value
+var once_Main_main sync.Once
+
+func Get_Main_main() gopurs_runtime.Value {
+	once_Main_main.Do(func() {
+		cache_Main_main = gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done"))
+	})
+	return cache_Main_main
+}
+
+var cache_Main_inSynonym gopurs_runtime.Value
+var once_Main_inSynonym sync.Once
+
+func Get_Main_inSynonym() gopurs_runtime.Value {
+	once_Main_inSynonym.Do(func() {
+		cache_Main_inSynonym = Get_Main_singleArgument()
+	})
+	return cache_Main_inSynonym
+}
+
+var cache_Main_appNestingWorks gopurs_runtime.Value
+var once_Main_appNestingWorks sync.Once
+
+func Get_Main_appNestingWorks() gopurs_runtime.Value {
+	once_Main_appNestingWorks.Do(func() {
+		cache_Main_appNestingWorks = Get_Main_multiArgument()
+	})
+	return cache_Main_appNestingWorks
+}
+
+func Call_Main_singleArgument(v_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var v_0 gopurs_runtime.Value = v_0_loop
+	_ = v_0
+	return Get_Data_Unit_unit()
+}
+
+func Call_Main_multiArgument(v_0_loop gopurs_runtime.Value, v1_1_loop gopurs_runtime.Value) gopurs_runtime.Value {
+	var v_0 gopurs_runtime.Value = v_0_loop
+	_ = v_0
+	var v1_1 gopurs_runtime.Value = v1_1_loop
+	_ = v1_1
+	return Get_Data_Unit_unit()
+}
+
+func Rebox_Main_138441832_2886983403(in *Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]) *Constructor_Data_Tuple_Tuple[int64, float64] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Data_Tuple_Tuple[int64, float64]{}
+	out.V0 = in.V0.IntVal
+	out.V1 = in.V1.FloatVal()
+	return out
+}
+
+func Rebox_Main_1952550506_3094389156(in *Constructor_Data_Maybe_Just[*Constructor_Data_Tuple_Tuple[int64, float64]]) *Constructor_Data_Maybe_Just[gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Data_Maybe_Just[gopurs_runtime.Value]{}
+	out.V0 = gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(Rebox_Main_2886983403_138441832(in.V0))}
+	return out
+}
+
+func Rebox_Main_2886983403_138441832(in *Constructor_Data_Tuple_Tuple[int64, float64]) *Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{}
+	out.V0 = gopurs_runtime.Int(in.V0)
+	out.V1 = gopurs_runtime.Float(in.V1)
+	return out
+}
+
+func Rebox_Main_3094389156_1952550506(in *Constructor_Data_Maybe_Just[gopurs_runtime.Value]) *Constructor_Data_Maybe_Just[*Constructor_Data_Tuple_Tuple[int64, float64]] {
+	if in == nil {
+		return nil
+	}
+	out := &Constructor_Data_Maybe_Just[*Constructor_Data_Tuple_Tuple[int64, float64]]{}
+	out.V0 = Rebox_Main_138441832_2886983403(gopurs_runtime.CoerceToStruct[Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]](in.V0))
+	return out
+}

@@ -1,0 +1,1116 @@
+// gopurs-package-file: main/main.go
+package main
+
+import (
+	"gopurs/output/gopurs_runtime"
+	_ "gopurs/output/purescript/init_all"
+	purescript "gopurs/output/purescript/p_root"
+	"os"
+	"runtime/pprof"
+)
+
+func main() {
+	if os.Getenv("PPROF") == "1" {
+		f, err := os.Create("cpu.prof")
+		if err != nil {
+			panic(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
+
+	gopurs_runtime.Apply(purescript.Get_Main_main(), gopurs_runtime.Value{})
+
+	gopurs_runtime.EventLoopWait()
+
+	if os.Getenv("PPROF") == "1" {
+		mf, err := os.Create("mem.prof")
+		if err != nil {
+			panic(err)
+		}
+		pprof.WriteHeapProfile(mf)
+		mf.Close()
+	}
+}
+
+// gopurs-package-file: purescript/init_all/init.go
+package init_all
+
+import (
+	_ "gopurs/output/purescript/init_external"
+	_ "gopurs/output/purescript/p_root"
+)
+
+// gopurs-package-file: purescript/init_external/init.go
+package init_external
+
+import (
+	_ "fmt"
+	_ "gopurs/output/gopurs_runtime"
+	_ "math"
+	_ "os"
+	_ "strconv"
+	_ "strings"
+	_ "sync"
+	_ "sync/atomic"
+	_ "unsafe"
+)
+
+// gopurs-package-file: purescript/p_root/0_gopurs_package.go
+package p_root
+
+import (
+	fmt "fmt"
+	r_ "gopurs/output/gopurs_runtime"
+	math "math"
+	os "os"
+	strconv "strconv"
+	strings "strings"
+	sync "sync"
+	atomic "sync/atomic"
+	unsafe "unsafe"
+)
+
+// gopurs-source-v1: 4d61696e2e676f
+
+var cache_Main_retainedIsSymbol r_.Value
+
+var once_Main_retainedIsSymbol sync.Once
+
+func Get_Main_retainedIsSymbol() r_.Value {
+	once_Main_retainedIsSymbol.Do(func() {
+		cache_Main_retainedIsSymbol = r_.RecordDict1("reflectSymbol", r_.Func(func(_dollar___unused_0 r_.Value) r_.Value {
+			return r_.Str("retained")
+		}))
+	})
+	return cache_Main_retainedIsSymbol
+}
+
+var cache_Main_makeC r_.Value
+
+var once_Main_makeC sync.Once
+
+func Get_Main_makeC() r_.Value {
+	once_Main_makeC.Do(func() {
+		cache_Main_makeC = r_.Func(func(n_0_box r_.Value) r_.Value {
+			return func() r_.Value {
+				orig := Call_Main_makeC(n_0_box.IntVal)
+				_ = orig
+				return r_.RecordDict([]string{"active", "id", "name", "tail", "values", "z"}, []r_.Value{r_.Bool(orig.P_active), r_.Int(orig.P_id), r_.Str(orig.P_name), r_.Bool(orig.P_tail), func() r_.Value {
+					arr := orig.P_values
+					boxed := make([]r_.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = r_.Int(v)
+					}
+					return r_.Array(boxed)
+				}(), r_.Str(orig.P_z)})
+			}()
+		})
+	})
+	return cache_Main_makeC
+}
+
+var cache_Main_runC r_.Value
+
+var once_Main_runC sync.Once
+
+func Get_Main_runC() r_.Value {
+	once_Main_runC.Do(func() {
+		cache_Main_runC = r_.Func(func(n_0_box r_.Value) r_.Value {
+			return r_.Int(Call_Main_runC(n_0_box.IntVal))
+		})
+	})
+	return cache_Main_runC
+}
+
+var cache_Main_makeB r_.Value
+
+var once_Main_makeB sync.Once
+
+func Get_Main_makeB() r_.Value {
+	once_Main_makeB.Do(func() {
+		cache_Main_makeB = r_.Func(func(n_0_box r_.Value) r_.Value {
+			return func() r_.Value {
+				orig := Call_Main_makeB(n_0_box.IntVal)
+				_ = orig
+				return r_.RecordDict5("active", "before", "id", "name", "nested", r_.Bool(orig.P_active), r_.Float(orig.P_before), r_.Int(orig.P_id), r_.Str(orig.P_name), func() r_.Value {
+					orig := orig.P_nested
+					_ = orig
+					return r_.RecordDict1("retained", r_.Str(orig.P_retained))
+				}())
+			}()
+		})
+	})
+	return cache_Main_makeB
+}
+
+var cache_Main_runB r_.Value
+
+var once_Main_runB sync.Once
+
+func Get_Main_runB() r_.Value {
+	once_Main_runB.Do(func() {
+		cache_Main_runB = r_.Func(func(n_0_box r_.Value) r_.Value {
+			return r_.Int(Call_Main_runB(n_0_box.IntVal))
+		})
+	})
+	return cache_Main_runB
+}
+
+var cache_Main_makeA r_.Value
+
+var once_Main_makeA sync.Once
+
+func Get_Main_makeA() r_.Value {
+	once_Main_makeA.Do(func() {
+		cache_Main_makeA = r_.Func(func(n_0_box r_.Value) r_.Value {
+			return func() r_.Value {
+				orig := Call_Main_makeA(n_0_box.IntVal)
+				_ = orig
+				return r_.RecordDict4("active", "extra", "id", "name", r_.Bool(orig.P_active), r_.Int(orig.P_extra), r_.Int(orig.P_id), r_.Str(orig.P_name))
+			}()
+		})
+	})
+	return cache_Main_makeA
+}
+
+var cache_Main_runA r_.Value
+
+var once_Main_runA sync.Once
+
+func Get_Main_runA() r_.Value {
+	once_Main_runA.Do(func() {
+		cache_Main_runA = r_.Func(func(n_0_box r_.Value) r_.Value {
+			return r_.Int(Call_Main_runA(n_0_box.IntVal))
+		})
+	})
+	return cache_Main_runA
+}
+
+var cache_Main_firstSummary r_.Value
+
+var once_Main_firstSummary sync.Once
+
+func Get_Main_firstSummary() r_.Value {
+	once_Main_firstSummary.Do(func() {
+		cache_Main_firstSummary = r_.Func(func(n_0_box r_.Value) r_.Value {
+			return func() r_.Value {
+				orig := Call_Main_firstSummary(n_0_box.IntVal)
+				_ = orig
+				return r_.RecordDict3("active", "id", "name", r_.Bool(orig.P_active), r_.Int(orig.P_id), r_.Str(orig.P_name))
+			}()
+		})
+	})
+	return cache_Main_firstSummary
+}
+
+var cache_Main_callDynamic r_.Value
+
+var once_Main_callDynamic sync.Once
+
+func Get_Main_callDynamic() r_.Value {
+	once_Main_callDynamic.Do(func() {
+		cache_Main_callDynamic = r_.Func2(func(f_0_box r_.Value, value_1_box r_.Value) r_.Value {
+			return r_.Str(Call_Main_callDynamic(f_0_box, value_1_box))
+		})
+	})
+	return cache_Main_callDynamic
+}
+
+var cache_Main_main r_.Value
+
+var once_Main_main sync.Once
+
+func Get_Main_main() r_.Value {
+	once_Main_main.Do(func() {
+		cache_Main_main = r_.Func(func(_ r_.Value) r_.Value {
+			// TAST (Let): __local_var_0_0 shape=App(Var) bindingType=Any
+			__local_var_0_0 := r_.Apply(Call_Test_Assert_assertEqual(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqInt()))), Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt())))), func() r_.Value {
+				orig := struct {
+					P_actual   int64
+					P_expected int64
+				}{Call_Main_runA(int64(5)), int64(25)}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", r_.Int(orig.P_actual), r_.Int(orig.P_expected))
+			}())
+			_ = __local_var_0_0
+			_dollar___unused_1_1 := r_.Apply(__local_var_0_0, r_.Value{})
+			_ = _dollar___unused_1_1
+			_dollar___unused_2_2 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqInt()))), Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt())))), func() r_.Value {
+				orig := struct {
+					P_actual   int64
+					P_expected int64
+				}{Call_Main_runB(int64(5)), int64(18)}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", r_.Int(orig.P_actual), r_.Int(orig.P_expected))
+			}()), r_.Value{})
+			_ = _dollar___unused_2_2
+			_dollar___unused_3_3 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqInt()))), Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt())))), func() r_.Value {
+				orig := struct {
+					P_actual   int64
+					P_expected int64
+				}{Call_Main_runC(int64(5)), int64(25)}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", r_.Int(orig.P_actual), r_.Int(orig.P_expected))
+			}()), r_.Value{})
+			_ = _dollar___unused_3_3
+			_dollar___unused_4_4 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqInt()))), Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt())))), func() r_.Value {
+				orig := struct {
+					P_actual   int64
+					P_expected int64
+				}{Call_Main_runA(int64(-1)), int64(-1)}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", r_.Int(orig.P_actual), r_.Int(orig.P_expected))
+			}()), r_.Value{})
+			_ = _dollar___unused_4_4
+			_dollar___unused_5_5 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqInt()))), Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt())))), func() r_.Value {
+				orig := struct {
+					P_actual   int64
+					P_expected int64
+				}{Call_Main_runB(int64(-1)), int64(-1)}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", r_.Int(orig.P_actual), r_.Int(orig.P_expected))
+			}()), r_.Value{})
+			_ = _dollar___unused_5_5
+			_dollar___unused_6_6 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqInt()))), Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt())))), func() r_.Value {
+				orig := struct {
+					P_actual   int64
+					P_expected int64
+				}{Call_Main_runC(int64(-1)), int64(-1)}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", r_.Int(orig.P_actual), r_.Int(orig.P_expected))
+			}()), r_.Value{})
+			_ = _dollar___unused_6_6
+			// TAST (Let): a2_7_7 shape=LitRecord bindingType=(Record (Row [id: Int, active: Boolean, extra: Int, name: String] Empty))
+			a2_7_7 := struct {
+				P_active bool
+				P_extra  int64
+				P_id     int64
+				P_name   string
+			}{true, int64(42), int64(9), "alpha"}
+			_ = a2_7_7
+			_dollar___unused_8_8 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqInt()))), Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt())))), func() r_.Value {
+				orig := struct {
+					P_actual   int64
+					P_expected int64
+				}{Call_Main_runA(int64(9)), int64(37)}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", r_.Int(orig.P_actual), r_.Int(orig.P_expected))
+			}()), r_.Value{})
+			_ = _dollar___unused_8_8
+			_dollar___unused_9_9 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqInt()))), Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt())))), func() r_.Value {
+				orig := struct {
+					P_actual   int64
+					P_expected int64
+				}{Call_Main_runB(int64(5)), int64(18)}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", r_.Int(orig.P_actual), r_.Int(orig.P_expected))
+			}()), r_.Value{})
+			_ = _dollar___unused_9_9
+			_dollar___unused_10_10 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqInt()))), Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt())))), func() r_.Value {
+				orig := struct {
+					P_actual   int64
+					P_expected int64
+				}{Call_Main_runC(int64(10)), int64(40)}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", r_.Int(orig.P_actual), r_.Int(orig.P_expected))
+			}()), r_.Value{})
+			_ = _dollar___unused_10_10
+			_dollar___unused_11_11 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqInt()))), Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt())))), func() r_.Value {
+				orig := struct {
+					P_actual   int64
+					P_expected int64
+				}{a2_7_7.P_extra, int64(42)}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", r_.Int(orig.P_actual), r_.Int(orig.P_expected))
+			}()), r_.Value{})
+			_ = _dollar___unused_11_11
+			_dollar___unused_12_12 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(Rebox_Main_1830338253_3790796878(Rebox_Main_3790796878_1830338253(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Main___cached_dict_0()))), Rebox_Main_920949869_1386611502(Rebox_Main_1386611502_920949869(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Main___cached_dict_1())))), func() r_.Value {
+				orig := struct {
+					P_actual struct {
+						P_retained string
+					}
+					P_expected struct {
+						P_retained string
+					}
+				}{struct {
+					P_retained string
+				}{"keep"}, struct {
+					P_retained string
+				}{"keep"}}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", func() r_.Value {
+					orig := orig.P_actual
+					_ = orig
+					return r_.RecordDict1("retained", r_.Str(orig.P_retained))
+				}(), func() r_.Value {
+					orig := orig.P_expected
+					_ = orig
+					return r_.RecordDict1("retained", r_.Str(orig.P_retained))
+				}())
+			}()), r_.Value{})
+			_ = _dollar___unused_12_12
+			_dollar___unused_13_13 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(Rebox_Main_378698611_3790796878(Rebox_Main_3790796878_378698611(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Main___cached_dict_2()))), Rebox_Main_1469227923_1386611502(Rebox_Main_1386611502_1469227923(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Main___cached_dict_3())))), func() r_.Value {
+				orig := struct {
+					P_actual   []int64
+					P_expected []int64
+				}{[]int64{int64(1), int64(2), int64(3)}, []int64{int64(1), int64(2), int64(3)}}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", func() r_.Value {
+					arr := orig.P_actual
+					boxed := make([]r_.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = r_.Int(v)
+					}
+					return r_.Array(boxed)
+				}(), func() r_.Value {
+					arr := orig.P_expected
+					boxed := make([]r_.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = r_.Int(v)
+					}
+					return r_.Array(boxed)
+				}())
+			}()), r_.Value{})
+			_ = _dollar___unused_13_13
+			_dollar___unused_14_14 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqString()))), Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showString())))), func() r_.Value {
+				orig := struct {
+					P_actual   string
+					P_expected string
+				}{a2_7_7.P_name, "alpha"}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", r_.Str(orig.P_actual), r_.Str(orig.P_expected))
+			}()), r_.Value{})
+			_ = _dollar___unused_14_14
+			_dollar___unused_15_15 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqString()))), Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showString())))), func() r_.Value {
+				orig := struct {
+					P_actual   string
+					P_expected string
+				}{Call_Main_callDynamic(Get_Worker_decode(), func() r_.Value {
+					orig := struct {
+						P_active bool
+						P_extra  int64
+						P_id     int64
+						P_name   string
+					}{true, int64(42), int64(-3), "alpha"}
+					_ = orig
+					return r_.RecordDict4("active", "extra", "id", "name", r_.Bool(orig.P_active), r_.Int(orig.P_extra), r_.Int(orig.P_id), r_.Str(orig.P_name))
+				}()), "negative"}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", r_.Str(orig.P_actual), r_.Str(orig.P_expected))
+			}()), r_.Value{})
+			_ = _dollar___unused_15_15
+			_dollar___unused_16_16 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqString()))), Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showString())))), func() r_.Value {
+				orig := struct {
+					P_actual   string
+					P_expected string
+				}{Call_Main_callDynamic(Get_Worker_decode(), func() r_.Value {
+					orig := struct {
+						P_active bool
+						P_before float64
+						P_id     int64
+						P_name   string
+						P_nested struct {
+							P_retained string
+						}
+					}{false, 1.25, int64(3), "beta", struct {
+						P_retained string
+					}{"keep"}}
+					_ = orig
+					return r_.RecordDict5("active", "before", "id", "name", "nested", r_.Bool(orig.P_active), r_.Float(orig.P_before), r_.Int(orig.P_id), r_.Str(orig.P_name), func() r_.Value {
+						orig := orig.P_nested
+						_ = orig
+						return r_.RecordDict1("retained", r_.Str(orig.P_retained))
+					}())
+				}()), "beta"}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", r_.Str(orig.P_actual), r_.Str(orig.P_expected))
+			}()), r_.Value{})
+			_ = _dollar___unused_16_16
+			saved_17_17 := r_.Apply(r_.Apply(Get_Effect_Ref_go__new(), func() r_.Value {
+				_v := Call_Worker_decode(func(record struct {
+					P_active bool
+					P_extra  int64
+					P_id     int64
+					P_name   string
+				}) struct {
+					P_active bool
+					P_id     int64
+					P_name   string
+				} {
+					return struct {
+						P_active bool
+						P_id     int64
+						P_name   string
+					}{record.P_active, record.P_id, record.P_name}
+				}(struct {
+					P_active bool
+					P_extra  int64
+					P_id     int64
+					P_name   string
+				}{true, int64(42), int64(3), "alpha"}))
+				if _v.V2 {
+					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: func() r_.Value {
+						orig := _v.V1
+						_ = orig
+						return r_.RecordDict3("active", "id", "name", r_.Bool(orig.P_active), r_.Int(orig.P_id), r_.Str(orig.P_name))
+					}()})}
+				}
+				return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
+			}()), r_.Value{})
+			_ = saved_17_17
+			held_18_18 := r_.Apply(r_.Apply(Get_Effect_Ref_read(), saved_17_17), r_.Value{})
+			_ = held_18_18
+			var __t20 string
+			{
+				if held_18_18.Type == 9 && held_18_18.IntVal == 2465973597 {
+					__t20 = r_.RecordGet((*Constructor_Data_Either_Right[r_.Value, r_.Value])(held_18_18.UnsafePtr).V0, "name").StrVal()
+					goto end_branch_20
+				} else {
+
+				}
+			}
+			{
+				if held_18_18.Type == 9 && held_18_18.IntVal == 3711209382 {
+					__t20 = ""
+					goto end_branch_20
+				} else {
+
+				}
+			}
+			{
+				__t20 = func() string { panic("Failed pattern match") }()
+			}
+		end_branch_20:
+			_dollar___unused_19_19 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqString()))), Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showString())))), func() r_.Value {
+				orig := struct {
+					P_actual   string
+					P_expected string
+				}{__t20, "alpha"}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", r_.Str(orig.P_actual), r_.Str(orig.P_expected))
+			}()), r_.Value{})
+			_ = _dollar___unused_19_19
+			// TAST (Let): first_20_21 shape=App(Var) bindingType=(Record (Row [id: Int, name: String, active: Boolean] Empty))
+			first_20_21 := Call_Main_firstSummary(int64(7))
+			_ = first_20_21
+			_dollar___unused_21_22 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqInt()))), Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt())))), func() r_.Value {
+				orig := struct {
+					P_actual   int64
+					P_expected int64
+				}{first_20_21.P_id, int64(8)}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", r_.Int(orig.P_actual), r_.Int(orig.P_expected))
+			}()), r_.Value{})
+			_ = _dollar___unused_21_22
+			_dollar___unused_22_23 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqString()))), Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showString())))), func() r_.Value {
+				orig := struct {
+					P_actual   string
+					P_expected string
+				}{first_20_21.P_name, "alpha"}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", r_.Str(orig.P_actual), r_.Str(orig.P_expected))
+			}()), r_.Value{})
+			_ = _dollar___unused_22_23
+			_dollar___unused_23_24 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(Rebox_Main_2737952170_3790796878(Rebox_Main_3790796878_2737952170(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqBoolean()))), Rebox_Main_2735895690_1386611502(Rebox_Main_1386611502_2735895690(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showBoolean())))), func() r_.Value {
+				orig := struct {
+					P_actual   bool
+					P_expected bool
+				}{first_20_21.P_active, true}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", r_.Bool(orig.P_actual), r_.Bool(orig.P_expected))
+			}()), r_.Value{})
+			_ = _dollar___unused_23_24
+			// TAST (Let): missing_24_25 shape=App(Var) bindingType=(Record (Row [id: Int, name: String, active: Boolean] Empty))
+			missing_24_25 := Call_Main_firstSummary(int64(-1))
+			_ = missing_24_25
+			_dollar___unused_25_26 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqInt()))), Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt())))), func() r_.Value {
+				orig := struct {
+					P_actual   int64
+					P_expected int64
+				}{missing_24_25.P_id, int64(-1)}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", r_.Int(orig.P_actual), r_.Int(orig.P_expected))
+			}()), r_.Value{})
+			_ = _dollar___unused_25_26
+			_dollar___unused_26_27 := r_.Apply(r_.Apply(Call_Test_Assert_assertEqual(Rebox_Main_2737952170_3790796878(Rebox_Main_3790796878_2737952170(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqBoolean()))), Rebox_Main_2735895690_1386611502(Rebox_Main_1386611502_2735895690(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showBoolean())))), func() r_.Value {
+				orig := struct {
+					P_actual   bool
+					P_expected bool
+				}{missing_24_25.P_active, false}
+				_ = orig
+				return r_.RecordDict2("actual", "expected", r_.Bool(orig.P_actual), r_.Bool(orig.P_expected))
+			}()), r_.Value{})
+			_ = _dollar___unused_26_27
+			return r_.Apply(r_.Apply(Get_Effect_Console_log(), r_.Str("Done")), r_.Value{})
+		})
+	})
+	return cache_Main_main
+}
+
+var cache_Main___cached_dict_0 r_.Value
+
+var once_Main___cached_dict_0 sync.Once
+
+func Get_Main___cached_dict_0() r_.Value {
+	once_Main___cached_dict_0.Do(func() {
+		cache_Main___cached_dict_0 = r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1830338253_3790796878(Rebox_Main_3790796878_1830338253(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Call_Data_Eq_eqRec(r_.Value{}, Call_Data_Eq_eqRowCons(Get_Data_Eq_eqRowNil(), r_.Value{}, Get_Main_retainedIsSymbol(), r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqString()))))}))))))}
+	})
+	return cache_Main___cached_dict_0
+}
+
+var cache_Main___cached_dict_1 r_.Value
+
+var once_Main___cached_dict_1 sync.Once
+
+func Get_Main___cached_dict_1() r_.Value {
+	once_Main___cached_dict_1.Do(func() {
+		cache_Main___cached_dict_1 = r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_920949869_1386611502(Rebox_Main_1386611502_920949869(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Call_Data_Show_showRecord(r_.Value{}, r_.Value{}, Call_Data_Show_showRecordFieldsConsNil(Get_Main_retainedIsSymbol(), r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showString()))))}))))))}
+	})
+	return cache_Main___cached_dict_1
+}
+
+var cache_Main___cached_dict_2 r_.Value
+
+var once_Main___cached_dict_2 sync.Once
+
+func Get_Main___cached_dict_2() r_.Value {
+	once_Main___cached_dict_2.Do(func() {
+		cache_Main___cached_dict_2 = r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_378698611_3790796878(Rebox_Main_3790796878_378698611(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Call_Data_Eq_eqArray(r_.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1053099733_3790796878(Rebox_Main_3790796878_1053099733(r_.CoerceToStruct[Constructor_Data_Eq_Eq[r_.Value]](Get_Data_Eq_eqInt()))))})))))}
+	})
+	return cache_Main___cached_dict_2
+}
+
+var cache_Main___cached_dict_3 r_.Value
+
+var once_Main___cached_dict_3 sync.Once
+
+func Get_Main___cached_dict_3() r_.Value {
+	once_Main___cached_dict_3.Do(func() {
+		cache_Main___cached_dict_3 = r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1469227923_1386611502(Rebox_Main_1386611502_1469227923(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Call_Data_Show_showArray(r_.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1636311157_1386611502(Rebox_Main_1386611502_1636311157(r_.CoerceToStruct[Constructor_Data_Show_Show[r_.Value]](Get_Data_Show_showInt()))))})))))}
+	})
+	return cache_Main___cached_dict_3
+}
+
+func Call_Main_makeC(n_0_loop int64) struct {
+	P_active bool
+	P_id     int64
+	P_name   string
+	P_tail   bool
+	P_values []int64
+	P_z      string
+} {
+	var n_0 int64 = n_0_loop
+	_ = n_0
+	return struct {
+		P_active bool
+		P_id     int64
+		P_name   string
+		P_tail   bool
+		P_values []int64
+		P_z      string
+	}{true, n_0, "alpha", false, []int64{int64(1), int64(2), int64(3)}, "last"}
+}
+
+func Call_Main_runC(n_0_loop int64) int64 {
+	var n_0 int64 = n_0_loop
+	_ = n_0
+	// TAST (Let): v_1_0 shape=App(Var) bindingType=(ADT ["Data","Either","Either"] [String, (Record (Row [id: Int, name: String, active: Boolean] Empty))])
+	v_1_0 := Call_Worker_decode(func(record struct {
+		P_active bool
+		P_id     int64
+		P_name   string
+		P_tail   bool
+		P_values []int64
+		P_z      string
+	}) struct {
+		P_active bool
+		P_id     int64
+		P_name   string
+	} {
+		return struct {
+			P_active bool
+			P_id     int64
+			P_name   string
+		}{record.P_active, record.P_id, record.P_name}
+	}(struct {
+		P_active bool
+		P_id     int64
+		P_name   string
+		P_tail   bool
+		P_values []int64
+		P_z      string
+	}{true, n_0, "alpha", false, []int64{int64(1), int64(2), int64(3)}, "last"}))
+	_ = v_1_0
+	var __t2 int64
+	{
+		if !v_1_0.V2 {
+			__t2 = int64(-1)
+			goto end_branch_2
+		} else {
+
+		}
+	}
+	{
+		if v_1_0.V2 {
+			var __t1 int64
+			{
+				if v_1_0.V1.P_active {
+					__t1 = int64(7)
+					goto end_branch_1
+				} else {
+
+				}
+			}
+			{
+				__t1 = int64(0)
+			}
+		end_branch_1:
+			__t2 = r_.IntAdd(r_.IntMul(v_1_0.V1.P_id, int64(3)), __t1)
+			goto end_branch_2
+		} else {
+
+		}
+	}
+	{
+		__t2 = func() int64 { panic("Failed pattern match") }()
+	}
+end_branch_2:
+	return __t2
+}
+
+func Call_Main_makeB(n_0_loop int64) struct {
+	P_active bool
+	P_before float64
+	P_id     int64
+	P_name   string
+	P_nested struct {
+		P_retained string
+	}
+} {
+	var n_0 int64 = n_0_loop
+	_ = n_0
+	return struct {
+		P_active bool
+		P_before float64
+		P_id     int64
+		P_name   string
+		P_nested struct {
+			P_retained string
+		}
+	}{false, 1.25, n_0, "beta", struct {
+		P_retained string
+	}{"keep"}}
+}
+
+func Call_Main_runB(n_0_loop int64) int64 {
+	var n_0 int64 = n_0_loop
+	_ = n_0
+	// TAST (Let): v_1_0 shape=App(Var) bindingType=(ADT ["Data","Either","Either"] [String, (Record (Row [id: Int, name: String, active: Boolean] Empty))])
+	v_1_0 := Call_Worker_decode(func(record struct {
+		P_active bool
+		P_before float64
+		P_id     int64
+		P_name   string
+		P_nested struct {
+			P_retained string
+		}
+	}) struct {
+		P_active bool
+		P_id     int64
+		P_name   string
+	} {
+		return struct {
+			P_active bool
+			P_id     int64
+			P_name   string
+		}{record.P_active, record.P_id, record.P_name}
+	}(struct {
+		P_active bool
+		P_before float64
+		P_id     int64
+		P_name   string
+		P_nested struct {
+			P_retained string
+		}
+	}{false, 1.25, n_0, "beta", struct {
+		P_retained string
+	}{"keep"}}))
+	_ = v_1_0
+	var __t2 int64
+	{
+		if !v_1_0.V2 {
+			__t2 = int64(-1)
+			goto end_branch_2
+		} else {
+
+		}
+	}
+	{
+		if v_1_0.V2 {
+			var __t1 int64
+			{
+				if v_1_0.V1.P_active {
+					__t1 = int64(7)
+					goto end_branch_1
+				} else {
+
+				}
+			}
+			{
+				__t1 = int64(0)
+			}
+		end_branch_1:
+			__t2 = r_.IntAdd(r_.IntMul(v_1_0.V1.P_id, int64(3)), __t1)
+			goto end_branch_2
+		} else {
+
+		}
+	}
+	{
+		__t2 = func() int64 { panic("Failed pattern match") }()
+	}
+end_branch_2:
+	return __t2
+}
+
+func Call_Main_makeA(n_0_loop int64) struct {
+	P_active bool
+	P_extra  int64
+	P_id     int64
+	P_name   string
+} {
+	var n_0 int64 = n_0_loop
+	_ = n_0
+	return struct {
+		P_active bool
+		P_extra  int64
+		P_id     int64
+		P_name   string
+	}{true, int64(42), n_0, "alpha"}
+}
+
+func Call_Main_runA(n_0_loop int64) int64 {
+	var n_0 int64 = n_0_loop
+	_ = n_0
+	// TAST (Let): v_1_0 shape=App(Var) bindingType=(ADT ["Data","Either","Either"] [String, (Record (Row [id: Int, name: String, active: Boolean] Empty))])
+	v_1_0 := Call_Worker_decode(func(record struct {
+		P_active bool
+		P_extra  int64
+		P_id     int64
+		P_name   string
+	}) struct {
+		P_active bool
+		P_id     int64
+		P_name   string
+	} {
+		return struct {
+			P_active bool
+			P_id     int64
+			P_name   string
+		}{record.P_active, record.P_id, record.P_name}
+	}(struct {
+		P_active bool
+		P_extra  int64
+		P_id     int64
+		P_name   string
+	}{true, int64(42), n_0, "alpha"}))
+	_ = v_1_0
+	var __t2 int64
+	{
+		if !v_1_0.V2 {
+			__t2 = int64(-1)
+			goto end_branch_2
+		} else {
+
+		}
+	}
+	{
+		if v_1_0.V2 {
+			var __t1 int64
+			{
+				if v_1_0.V1.P_active {
+					__t1 = int64(7)
+					goto end_branch_1
+				} else {
+
+				}
+			}
+			{
+				__t1 = int64(0)
+			}
+		end_branch_1:
+			__t2 = r_.IntAdd(r_.IntMul(v_1_0.V1.P_id, int64(3)), __t1)
+			goto end_branch_2
+		} else {
+
+		}
+	}
+	{
+		__t2 = func() int64 { panic("Failed pattern match") }()
+	}
+end_branch_2:
+	return __t2
+}
+
+func Call_Main_firstSummary(n_0_loop int64) struct {
+	P_active bool
+	P_id     int64
+	P_name   string
+} {
+	var n_0 int64 = n_0_loop
+	_ = n_0
+	// TAST (Let): v_1_0 shape=App(Var) bindingType=(ADT ["Data","Either","Either"] [String, (Record (Row [id: Int, name: String, active: Boolean] Empty))])
+	v_1_0 := Call_Worker_decode(func(record struct {
+		P_active bool
+		P_extra  int64
+		P_id     int64
+		P_name   string
+	}) struct {
+		P_active bool
+		P_id     int64
+		P_name   string
+	} {
+		return struct {
+			P_active bool
+			P_id     int64
+			P_name   string
+		}{record.P_active, record.P_id, record.P_name}
+	}(struct {
+		P_active bool
+		P_extra  int64
+		P_id     int64
+		P_name   string
+	}{true, int64(42), n_0, "alpha"}))
+	_ = v_1_0
+	var __t1 struct {
+		P_active bool
+		P_id     int64
+		P_name   string
+	}
+	{
+		if !v_1_0.V2 {
+			__t1 = struct {
+				P_active bool
+				P_id     int64
+				P_name   string
+			}{false, int64(-1), ""}
+			goto end_branch_1
+		} else {
+
+		}
+	}
+	{
+		if v_1_0.V2 {
+			__t1 = v_1_0.V1
+			goto end_branch_1
+		} else {
+
+		}
+	}
+	{
+		__t1 = func() struct {
+			P_active bool
+			P_id     int64
+			P_name   string
+		} {
+			panic("Failed pattern match")
+		}()
+	}
+end_branch_1:
+	return __t1
+}
+
+func Call_Main_callDynamic(f_0_loop r_.Value, value_1_loop r_.Value) string {
+	var f_0 r_.Value = f_0_loop
+	_ = f_0
+	var value_1 r_.Value = value_1_loop
+	_ = value_1
+	// TAST (Let): v_2_0 shape=App(Other) bindingType=(ADT ["Data","Either","Either"] [String, (Record (Row [id: Int, name: String, active: Boolean] Empty))])
+	v_2_0 := r_.Apply(f_0, value_1)
+	_ = v_2_0
+	var __t1 string
+	{
+		if v_2_0.Type == 9 && v_2_0.IntVal == 3711209382 {
+			__t1 = (*Constructor_Data_Either_Left[r_.Value, r_.Value])(v_2_0.UnsafePtr).V0.StrVal()
+			goto end_branch_1
+		} else {
+
+		}
+	}
+	{
+		if v_2_0.Type == 9 && v_2_0.IntVal == 2465973597 {
+			__t1 = r_.RecordGet((*Constructor_Data_Either_Right[r_.Value, r_.Value])(v_2_0.UnsafePtr).V0, "name").StrVal()
+			goto end_branch_1
+		} else {
+
+		}
+	}
+	{
+		__t1 = func() string { panic("Failed pattern match") }()
+	}
+end_branch_1:
+	return __t1
+}
+
+func Rebox_Main_1053099733_3790796878(in *Constructor_Data_Eq_Eq[int64]) *Constructor_Data_Eq_Eq[r_.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[r_.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1140313009_3790796878(in *Constructor_Data_Eq_Eq[string]) *Constructor_Data_Eq_Eq[r_.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[r_.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1386611502_1469227923(in *Constructor_Data_Show_Show[r_.Value]) *Constructor_Data_Show_Show[[]int64] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[[]int64])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1386611502_1514099793(in *Constructor_Data_Show_Show[r_.Value]) *Constructor_Data_Show_Show[string] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[string])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1386611502_1636311157(in *Constructor_Data_Show_Show[r_.Value]) *Constructor_Data_Show_Show[int64] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[int64])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1386611502_2735895690(in *Constructor_Data_Show_Show[r_.Value]) *Constructor_Data_Show_Show[bool] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[bool])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1386611502_920949869(in *Constructor_Data_Show_Show[r_.Value]) *Constructor_Data_Show_Show[struct {
+	P_retained string
+}] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[struct {
+		P_retained string
+	}])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1469227923_1386611502(in *Constructor_Data_Show_Show[[]int64]) *Constructor_Data_Show_Show[r_.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[r_.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1514099793_1386611502(in *Constructor_Data_Show_Show[string]) *Constructor_Data_Show_Show[r_.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[r_.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1636311157_1386611502(in *Constructor_Data_Show_Show[int64]) *Constructor_Data_Show_Show[r_.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[r_.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_1830338253_3790796878(in *Constructor_Data_Eq_Eq[struct {
+	P_retained string
+}]) *Constructor_Data_Eq_Eq[r_.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[r_.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_2735895690_1386611502(in *Constructor_Data_Show_Show[bool]) *Constructor_Data_Show_Show[r_.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[r_.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_2737952170_3790796878(in *Constructor_Data_Eq_Eq[bool]) *Constructor_Data_Eq_Eq[r_.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[r_.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_378698611_3790796878(in *Constructor_Data_Eq_Eq[[]int64]) *Constructor_Data_Eq_Eq[r_.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[r_.Value])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_3790796878_1053099733(in *Constructor_Data_Eq_Eq[r_.Value]) *Constructor_Data_Eq_Eq[int64] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[int64])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_3790796878_1140313009(in *Constructor_Data_Eq_Eq[r_.Value]) *Constructor_Data_Eq_Eq[string] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[string])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_3790796878_1830338253(in *Constructor_Data_Eq_Eq[r_.Value]) *Constructor_Data_Eq_Eq[struct {
+	P_retained string
+}] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[struct {
+		P_retained string
+	}])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_3790796878_2737952170(in *Constructor_Data_Eq_Eq[r_.Value]) *Constructor_Data_Eq_Eq[bool] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[bool])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_3790796878_378698611(in *Constructor_Data_Eq_Eq[r_.Value]) *Constructor_Data_Eq_Eq[[]int64] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Eq_Eq[[]int64])(unsafe.Pointer(in))
+}
+
+func Rebox_Main_920949869_1386611502(in *Constructor_Data_Show_Show[struct {
+	P_retained string
+}]) *Constructor_Data_Show_Show[r_.Value] {
+	if in == nil {
+		return nil
+	}
+	return (*Constructor_Data_Show_Show[r_.Value])(unsafe.Pointer(in))
+}
+
+// gopurs-source-end-v1
+
+// gopurs-package-file: purescript/p_root/zz_gopurs_order.go
+package p_root
+
+import (
+	_ "gopurs/output/purescript/init_external"
+)
+

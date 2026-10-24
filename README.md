@@ -448,9 +448,16 @@ The test runners accept both `-d` and `--dev`:
 ./bin/modtest -d prelude
 ```
 
-Dev fixtures compile and execute without comparing the Release Go snapshots;
-combining `--dev` with `--update-snapshots` is rejected. Campaign reports record
-the selected profile. In sibling projects, `b8x/bin/t -d` builds in Dev before
+Fixtures compare the generated Go against snapshots for the selected profile,
+then compile and execute it. `bin/test` defaults `GOPURS_GO_PACKAGES` to `0`,
+using the complete legacy snapshot set: `tests/passing-snapshots` for Release
+and `tests/passing-snapshots-dev` for Dev. Explicitly setting
+`GOPURS_GO_PACKAGES=1` tests the package layout instead, using
+`tests/passing-package-snapshots` or `tests/passing-package-snapshots-dev`.
+Each invocation checks only its selected layout and profile. `--update-snapshots` (or
+`UPDATE_SNAPSHOTS=1`) updates only the selected profile, after successful Go
+compilation and execution. Campaign reports record the selected profile.
+In sibling projects, `b8x/bin/t -d` builds in Dev before
 running tests, and `altbak.pub/bin/go/run -d` selects Dev for the Go backend.
 These wrappers retain Release as the default for builds without the option.
 For both test runners, `-c` rebuilds the selected compiler host: native by
@@ -674,8 +681,16 @@ coverage gaps.
 ./bin/test --list
 npm run build:native -- --keep-workspace
 ./bin/test FFIIntegerReturns
+./bin/test -d FFIIntegerReturns
 npm run test:runner
 npm run test:profiles
+```
+
+Run the complete fixture suite separately for each profile:
+
+```bash
+./bin/test --all --keep-going
+./bin/test -d --all --keep-going
 ```
 
 `test:profiles` checks the JS and native parallel hosts after rebuilding them:
@@ -684,9 +699,8 @@ incremental output against full rebuilds after source changes.
 It also checks generic ADT, record and type-class calls with no specialization
 clones, including edits and forced rebuilds.
 
-`bin/test -c` retains its historical JS-only rebuild. Use `GOPURS_JS=1` with
-that option, or rebuild native explicitly as above before testing the default
-launcher.
+`bin/test -c` rebuilds the selected compiler host: native by default,
+JavaScript with `GOPURS_JS=1`, or Rust with `GOPURS_RUST=1`.
 
 For a broader integration check, run `bin/go/run -c` from an `altbak.pub`
 checkout. It rebuilds the backend and application, compiles Go, and executes
