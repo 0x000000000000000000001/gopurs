@@ -38,7 +38,7 @@ const fixtures = (reference = ["Provider", "value"], never = false) => [
   moduleOf("Future", [["value", lit(500)]]),
 ];
 const header = backend => ({ ...backend, implementations: Map.empty, bindings: [], imports: Set.empty, exports: Set.empty });
-async function build(modules, mode, cached = {}, { prepareFresh = mod => mod, cacheViaObservation = false, schedulingHints = {}, restoredHeaders = null } = {}) {
+async function build(modules, mode, cached = {}, { prepareFresh = mod => mod, cacheViaObservation = false, schedulingHints = {}, restoredHeaders = null, bindingLookup = null, jobs = 8 } = {}) {
   const queue = [], reused = [], emitted = [], published = [], environments = [], loaded = [], prepared = [], attempts = [], observations = {}, result = {}, code = {}, publishedModules = {}, availability = {};
   let globals = Map.empty, stats;
   const publish = (mod, backend, fromCache, env) => effect(() => {
@@ -67,7 +67,7 @@ async function build(modules, mode, cached = {}, { prepareFresh = mod => mod, ca
   const list = List.fromFoldable(F.foldableArray)(modules);
   if (mode === "full") await runAff(B.buildModulesWithObservation(Aff.monadEffectAff)(observer)(onReuse)(options)(list));
   else {
-    const runner = { jobs: 8, scheduler: {
+    const runner = { jobs, scheduler: {
       fork: job => effect(() => { queue.push(job); }),
       await: asyncAff(() => runAff(queue.pop()(undefined))),
     }, onStats: new Just(value => effect(() => { stats = value; })) };
@@ -75,7 +75,9 @@ async function build(modules, mode, cached = {}, { prepareFresh = mod => mod, ca
     const prepare = mod => effect(() => { prepared.push(mod.name); return prepareFresh(mod); });
     const hints = Map.fromFoldable(Ord.ordString)(F.foldableArray)(Object.entries(schedulingHints).map(([value0, value1]) => ({ value0, value1 })));
     const restored = restoredHeaders === null ? null : Map.fromFoldable(Ord.ordString)(F.foldableArray)(Object.entries(restoredHeaders).map(([value0, backend]) => ({ value0, value1: header(backend) })));
-    const parallel = restored !== null
+    const parallel = bindingLookup !== null
+      ? B.buildModulesParallelWithBindingLookup(Aff.monadEffectAff)(new Just(bindingLookup))(restored ?? Map.empty)(hints)
+      : restored !== null
       ? B.buildModulesParallelWithRestoredHeaders(Aff.monadEffectAff)(restored)(hints)
       : Object.keys(schedulingHints).length === 0
       ? B.buildModulesParallelWithLazyPreparation(Aff.monadEffectAff)
@@ -108,6 +110,49 @@ test("lazy contributions reproduce fresh and eager output, including absent/futu
       }
     }
   }
+});
+
+test("qualified cache coverage runs only after rank/finality and only for reused owners", async () => {
+  const base = await build(fixtures(), "full");
+  const cached = Object.fromEntries(Object.entries(base.result).filter(([name]) => name !== "Caller"));
+  const lookup = (owner, ident) => Map.lookup(C.ordQualified(C.ordIdent))(new C.Qualified(new Just(owner), ident))(cached[owner].implementations);
+  for (const jobs of [1, 8]) for (const reference of [["Provider", "value"], ["Provider", "spare"], ["Provider", "missing"], ["Provider", "newMissing"], ["Future", "value"], ["Outside", "missing"]]) {
+    const source = fixtures(reference), full = await build(source, "full"), calls = [];
+    const actual = await build(source, "lazy", cached, { jobs, restoredHeaders: cached,
+      bindingLookup: reader => owner => ident => () => {
+        calls.push([reader, owner, ident]);
+        assert.equal(reader, "Caller"); assert.equal(owner, "Provider", "future and unknown owners must be rejected before the callback");
+        return ident === "value" || ident === "missing" ? new Just(lookup(owner, ident)) : nothing;
+      },
+    });
+    assert.deepEqual(actual.code, full.code); assert.deepEqual(actual.observations.Caller, full.observations.Caller);
+    assert.deepEqual(actual.published, source.map(mod => mod.name)); assert.deepEqual(actual.emitted, ["Caller"]);
+    assert.deepEqual(actual.environments, source.map((mod, index) => ({ name: mod.name, moduleCount: source.length, moduleIndex: index })));
+    if (reference[0] === "Provider") {
+      assert.ok(calls.length > 0);
+      assert.equal(actual.loaded.includes("Provider"), reference[1] === "spare" || reference[1] === "newMissing", "only an uncovered binding loads the complete owner");
+    } else assert.deepEqual(calls, []);
+  }
+  const changed = fixtures().map(mod => mod.name === "Provider" ? moduleOf("Provider", [["value", lit(77)], ["spare", lit(20)]]) : mod);
+  const fresh = await build(changed, "full"), reused = { Unused: cached.Unused, Future: cached.Future };
+  const actual = await build(changed, "lazy", reused, { restoredHeaders: reused,
+    bindingLookup: () => () => () => () => { throw Error("fresh owner must bypass stale capsule callback"); },
+  });
+  assert.deepEqual(actual.code, fresh.code); assert.deepEqual(actual.observations.Caller, fresh.observations.Caller);
+});
+
+test("qualified cached values retain pending replay and do not publish partial attempts", async () => {
+  const source = [moduleOf("Unused", [["value", lit(999)]]), moduleOf("Bridge", [["value", variable("Hidden", "value")]]), moduleOf("Hidden", [["value", lit(17)]]), moduleOf("Caller", [["value", variable("Bridge", "value")]])];
+  const full = await build(source, "full"), calls = [];
+  const cached = Object.fromEntries(Object.entries(full.result).filter(([name]) => name !== "Caller"));
+  const actual = await build(source, "lazy", cached, { bindingLookup: reader => owner => ident => () => {
+    calls.push([reader, owner, ident]);
+    return new Just(Map.lookup(C.ordQualified(C.ordIdent))(new C.Qualified(new Just(owner), ident))(cached[owner].implementations));
+  } });
+  assert.ok(actual.stats.deferredAttempts > 0); assert.deepEqual(actual.loaded, []);
+  assert.deepEqual(actual.code, full.code); assert.deepEqual(actual.observations.Caller, full.observations.Caller);
+  assert.deepEqual(actual.emitted, ["Caller"]); assert.deepEqual(actual.reused, ["Unused", "Bridge", "Hidden"]);
+  assert.deepEqual(actual.published, source.map(mod => mod.name)); assert.ok(calls.some(([, owner]) => owner === "Hidden"));
 });
 
 test("rank lookup preserves absent versus pending and finality", async () => {
@@ -273,4 +318,42 @@ test("mixed restored ranges preserve pending replay and publish once with five u
   assert.ok(!restored.loaded.includes("Future"));
   assert.ok(restored.availability.Caller.some(view => !view.Hidden), "a fresh owner in flight remains pending");
   assert.equal(restored.availability.Caller.at(-1).Hidden, true);
+});
+
+test("uncertain dependency rows retain restored predecessors and future-import fallback", async () => {
+  const fixture = reference => [
+    moduleOf("Provider", [["value", lit(10)]]),
+    { ...moduleOf("First", [["value", variable(...reference)]]),
+      imports: ["Provider", "Future", "Prim", "First"].map(name => new C.Import(ann, name)) },
+    { ...moduleOf("CachedGap", [["value", lit(17)]]), imports: [new C.Import(ann, "Last")] },
+    { ...moduleOf("Last", [["value", variable("First", "value")]]),
+      imports: ["First", "CachedGap", "Outside"].map(name => new C.Import(ann, name)) },
+    moduleOf("Future", [["value", lit(500)]]),
+  ];
+  const base = await build(fixture(["Provider", "value"]), "full");
+  const names = ["Provider", "CachedGap", "Future"];
+  const cached = Object.fromEntries(names.map(name => [name, base.result[name]]));
+  for (const reference of [["Provider", "value"], ["Provider", "missing"], ["Future", "value"], ["Outside", "missing"]]) {
+    const modules = fixture(reference), full = await build(modules, "full");
+    for (const jobs of [1, 8]) {
+      const restored = await build(modules, "lazy", cached, { restoredHeaders: cached, jobs });
+      assert.deepEqual(restored.code, full.code);
+      assert.deepEqual(restored.observations, Object.fromEntries(Object.entries(full.observations).filter(([name]) => !names.includes(name))));
+      assert.deepEqual(restored.reused, names);
+      assert.deepEqual(restored.emitted, ["First", "Last"]);
+      assert.deepEqual(restored.published, modules.map(mod => mod.name));
+      assert.deepEqual(restored.environments, modules.map((mod, index) => ({ name: mod.name, moduleCount: modules.length, moduleIndex: index })));
+      assert.equal(restored.stats.dispatched + restored.stats.fallbackDispatched, 2);
+      assert.ok(restored.stats.fallbackDispatched > 0, "the future import must not block canonical progress");
+      assert.equal(restored.availability.First[0].Provider, true);
+      assert.equal(restored.availability.First[0].Future, false);
+      assert.equal(restored.availability.Last[0].CachedGap, true);
+      assert.ok(!restored.loaded.includes("Future"));
+    }
+    const historical = await build(modules, "lazy", cached);
+    const emptyHeaders = await build(modules, "lazy", cached, { restoredHeaders: {} });
+    assert.deepEqual(emptyHeaders.code, historical.code);
+    assert.deepEqual(emptyHeaders.published, historical.published);
+    assert.deepEqual(emptyHeaders.attempts, historical.attempts, "empty headers keep the historical scheduling path");
+  }
 });

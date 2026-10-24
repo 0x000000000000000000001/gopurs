@@ -26,6 +26,7 @@ type State =
   , sources :: Array NamedHash, modules :: Array ModuleProof
   , index :: Array IndexEntry, payloads :: Array Payload, bodyReads :: Array String
   , projection :: Array String
+  , capsule :: Maybe (Array String)
   }
 
 -- Source locations are diagnostic, never specialization inputs. Keep types,

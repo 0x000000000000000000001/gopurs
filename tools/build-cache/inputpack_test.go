@@ -6,9 +6,103 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 )
+
+func TestPackedInputsManyConcurrentSlices(t *testing.T) {
+	f := newFixture(t)
+	spec := f.req.Spec
+	spec.Output = filepath.Join(f.root, "packed-output")
+	spec.Inputs = []Input{{Name: "tast", Kind: "tast", Path: spec.Output}}
+	spec.Options = append(spec.Options, Setting{Name: "input-layout", Value: "packed-v1"})
+	sources := map[string]string{}
+	for i := 0; i < 257; i++ {
+		name := fmt.Sprintf("Module%03d", i)
+		// Include empty sources and unequal slices to expose overlap, holes
+		// and completion-order mistakes with the real eight-worker freeze.
+		text := string(bytes.Repeat([]byte{byte(i), 0, '\n'}, (i*73)%8192))
+		sources[name] = text
+		put(t, filepath.Join(spec.Output, name, "corefn.json"), text)
+	}
+	var result SessionResponse
+	if err := beginSession(spec, false, &result); err != nil {
+		t.Fatal(err)
+	}
+	var state buildSession
+	data, err := os.ReadFile(filepath.Join(result.Stage, "session.json"))
+	if err != nil || strictJSON(data, &state) != nil {
+		t.Fatal("invalid session", err)
+	}
+	index, err := readFrozenInputIndex(result.Stage, state)
+	if err != nil || len(index.Modules) != len(sources) {
+		t.Fatalf("invalid complete slice inventory: %v", err)
+	}
+	if err := materializeInputs(result.Stage, state, nil, true); err != nil {
+		t.Fatal(err)
+	}
+	for name, expected := range sources {
+		assertFrozenInput(t, result, name, expected)
+	}
+}
+
+func TestPackedInputWriteErrorsJoinWithoutIndex(t *testing.T) {
+	stage := t.TempDir()
+	writer, err := newInputPackWriter(stage)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := writer.file.Close(); err != nil {
+		t.Fatal(err)
+	}
+	seen := make([]bool, 33)
+	err = boundedEach(len(seen), func(i int) error {
+		data := []byte(fmt.Sprintf("failed source %d", i))
+		_, err := writer.append(Fingerprint{Name: fmt.Sprintf("Module%03d", i), Digest: digest(data)}, data)
+		seen[i] = true
+		return err
+	})
+	if err == nil {
+		t.Fatal("closed-file writes were accepted")
+	}
+	for _, finished := range seen {
+		if !finished {
+			t.Fatal("write failure returned before all tasks joined")
+		}
+	}
+	if err := writer.finish(stage, nil); err == nil {
+		t.Fatal("closed writer published an index")
+	}
+	if _, err := os.Stat(filepath.Join(stage, "input-index.json")); !os.IsNotExist(err) {
+		t.Fatalf("failed writer left a usable index: %v", err)
+	}
+}
+
+func TestPackedInputAppendFailureCleansStageAndRetries(t *testing.T) {
+	f := newFixture(t)
+	spec := f.req.Spec
+	spec.Output = filepath.Join(f.root, "output")
+	spec.Inputs = []Input{{Name: "tast", Kind: "tast", Path: spec.Output}}
+	spec.Options = append(spec.Options, Setting{Name: "input-layout", Value: "packed-v1"})
+	invalid := filepath.Join(spec.Output, "Invalid..Module")
+	put(t, filepath.Join(invalid, "corefn.json"), "rejected during append")
+	var result SessionResponse
+	err := beginSession(spec, false, &result)
+	if err == nil || !strings.Contains(err.Error(), "invalid frozen input module") {
+		t.Fatalf("append failure was not exercised: %v", err)
+	}
+	stages, err := os.ReadDir(filepath.Join(spec.Output, ".gopurs-cache", "stages"))
+	if err != nil || len(stages) != 0 {
+		t.Fatalf("failed append retained a partial stage: %v, %v", stages, err)
+	}
+	if err := os.RemoveAll(invalid); err != nil {
+		t.Fatal(err)
+	}
+	if err := beginSession(spec, false, &result); err != nil || result.Count != 1 {
+		t.Fatalf("append failure prevented retry: %+v, %v", result, err)
+	}
+}
 
 func packedInputFixture(t *testing.T) (SessionResponse, buildSession, map[string]string) {
 	t.Helper()

@@ -1,5 +1,10 @@
 # C2-9 — backend one-shot central sous 4 s
 
+La suite [C2-10](build-c2-sub2.md) poursuit la réduction sans daemon :
+médiane L à 2,347 s sur trois paires exactes, campagne close pour impasse
+pratique. Son audit échoue uniquement sur le seuil strict de 2 s. Les résultats D
+ci-dessous restent historiques et ne prouvent pas le seuil de 2 s.
+
 Le candidat D atteint **3,841 s backend médian**, avec trois mesures
 **3,872 / 3,841 / 3,817 s**. Chaque paire est identique octet pour octet à son
 full forcé sur les 2 704 modules et les 27 fichiers publiés. Le vrai `b` prend

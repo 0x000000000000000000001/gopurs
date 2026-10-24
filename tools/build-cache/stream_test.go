@@ -170,3 +170,61 @@ func TestDigestReaderPropagatesReadFailure(t *testing.T) {
 		t.Fatalf("failed reader contaminated the next digest: %q %d %v", hash, count, err)
 	}
 }
+
+func TestFileMatchesStreamIntegrity(t *testing.T) {
+	data := bytes.Repeat([]byte("published bytes\x00\n"), 17000)
+	for _, mode := range []string{"valid", "empty", "corrupt", "truncated", "appended", "missing", "directory", "symlink"} {
+		t.Run(mode, func(t *testing.T) {
+			path := filepath.Join(t.TempDir(), "output")
+			content := append([]byte{}, data...)
+			if mode == "empty" {
+				content = nil
+			}
+			object := Object{digest(content), int64(len(content))}
+			switch mode {
+			case "corrupt":
+				content[65536] ^= 1
+			case "truncated":
+				content = content[:len(content)-1]
+			case "appended":
+				content = append(content, 'x')
+			}
+			switch mode {
+			case "missing":
+			case "directory":
+				if err := os.Mkdir(path, 0700); err != nil {
+					t.Fatal(err)
+				}
+			case "symlink":
+				target := filepath.Join(t.TempDir(), "target")
+				put(t, target, string(content))
+				if err := os.Symlink(target, path); err != nil {
+					t.Fatal(err)
+				}
+			default:
+				put(t, path, string(content))
+			}
+			if got, expected := fileMatches(path, object), mode == "valid" || mode == "empty"; got != expected {
+				t.Fatalf("fileMatches=%v, expected %v", got, expected)
+			}
+		})
+	}
+	path := filepath.Join(t.TempDir(), "output")
+	put(t, path, string(data))
+	object := Object{digest(data), int64(len(data))}
+	info, err := os.Stat(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, changed := range []bool{true, false} {
+		data[65536] ^= 1
+		put(t, path, string(data))
+		if err := os.Chtimes(path, info.ModTime(), info.ModTime()); err != nil {
+			t.Fatal(err)
+		}
+		expected := !changed
+		if got := fileMatches(path, object); got != expected {
+			t.Fatalf("same-size/mtime edit and revert was not observed: changed=%v", changed)
+		}
+	}
+}

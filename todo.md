@@ -1,6 +1,6 @@
 # Gopurs — état et plan actif
 
-**Mise à jour : 23 octobre 2026.** Le plan v3 (lots 00–06) est clos et la suite
+**Mise à jour : 24 octobre 2026.** Le plan v3 (lots 00–06) est clos et la suite
 G00–G06 est livrée. P00 est terminé, C01 et B2 sont rejetés. Le chantier C
 (architecture incrémentale et découpage Go SCC-aware) est ouvert après
 l'exploration de granularité. L'historique complet des lots, seuils, échecs et
@@ -15,7 +15,9 @@ Réduire le cycle **modifier → construire → tester**. Les repères historiqu
 restent **~30 s de backend après modification** et **~60 s de backend à froid**.
 Ils restent des repères généraux. C2-9 confirme moins de 4 s backend avec D
 sur le cas central borné décrit ci-dessous. Cela ne clôt pas l'objectif à froid
-ni celui de la chaîne complète.
+ni celui de la chaîne complète. C2-10 est clos pour impasse pratique : trois
+paires L exactes à 2,347 s médian, quatorze gates qualité verts et seul le
+seuil strict de 2 s en échec. Ce seuil reste non atteint.
 
 Deux chronomètres restent distincts :
 
@@ -48,6 +50,7 @@ du backend.
 | C2-7 — one-shot persistant | **16,970 s médiane** sur édition littérale centrale ; 3 paires byte-exactes, cible ≤20 s atteinte |
 | C2-8 — one-shot central <10 s | **Achevé**, v4 : 8,586 s backend médian, trois paires byte-exactes ; vrai `b` 13,651 s total ; audit 25/25 |
 | C2-9 — one-shot central <4 s | **Achevé**, D : 3,841 s backend médian, trois paires byte-exactes ; vrai `b` 8,791 s total ; cache disque, sans daemon |
+| C2-10 — cible centrale <2 s | **Clos pour impasse pratique**, L : 2,347 s médiane, trois paires exactes ; vrai `b` 6,836 s total ; cible non atteinte |
 
 Références : [bilan P00](docs/build-preparation-baseline.md),
 [étude C01](docs/build-preparation-compact.md),
@@ -65,6 +68,7 @@ Références : [bilan P00](docs/build-preparation-baseline.md),
 [build one-shot persistant](docs/build-c2-persistent.md),
 [backend central sous 10 s](docs/build-c2-sub10.md),
 [backend central sous 4 s](docs/build-c2-sub4.md),
+[poursuite vers 2 s et limites](docs/build-c2-sub2.md),
 [mesures G06](docs/build-go-measurements.md).
 
 ### Ce que les mesures ont établi
@@ -315,6 +319,15 @@ un build court universel.
   conserve les différences de disposition des packages et prouve les valeurs
   publiques à l'exécution en plus de l'égalité des sources Go brutes.
   Voir [C2-9 et son audit](docs/build-c2-sub4.md).
+- [x] **C2-10 — exploration close pour impasse, cible de 2 s non atteinte.** L est lié à
+  sa capture de sources. Trois paires finales : **2,335 / 2,347 / 2,401 s**,
+  médiane **2,347 s backend**, full **76,724 s** médian, 2 704 modules et
+  27 sorties exactes dans chaque paire. Gain de **38,90 %** face à D. Vrai `b`
+  **6,836 s total / 2,277 s backend**, replis/capsules et daemons validés.
+  Les sept suites de régression sont passées. Audit strict : **14 gates PASS**,
+  seul le seuil de vitesse **FAILED** ; résultat global **failed / exit 1**.
+  Les sondes résiduelles étayent une impasse pratique des petites retouches,
+  sans établir de plancher théorique. Voir [C2-10](docs/build-c2-sub2.md).
 - [ ] **C3 — froid, conditionnel.** Le froid actuel (backend ~77 s + Go 46,7 s)
   ne peut pas viser 60 s par un cache chaud. À ouvrir après C1/C2 avec un budget
   séparé, pas comme sous-produit.
@@ -366,10 +379,18 @@ chemin ; B3 reste partiel et exige les preuves P03/P04.
 
 ## Prochaine action
 
+**C2-10 clos pour impasse pratique avec L (`69c8e28a…`).** Trois paires exactes
+donnent **2,347 s médian** ; vrai `b` **6,836 s total / 2,277 s backend**.
+Les sept suites et les quatorze gates de qualité/provenance sont verts ; seul
+le seuil de 2 s échoue, donc audit global **failed / exit 1**. Aucun gate
+n’est en attente. Le [bilan](docs/build-c2-sub2.md) distingue cette impasse
+d’un plancher théorique. Les points et identités D ci-dessous restent
+l’historique C2-9 ; toute nouvelle architecture exige un périmètre distinct.
+
 1. **A est clos** : pack par défaut, froid installé 76,163 s, hit 0,914 s,
    feuille 45,421 s, sorties exactes.
 2. **C2-4 historique** : backend monolithique **14,734 s** sur le cas testé ;
-   la preuve compacte vient de C2-7 ; les dernières mesures sont celles de C2-9.
+   la preuve compacte vient de C2-7 ; les mesures closes sont celles de C2-9, C2-10 restant en validation.
 3. **C2-5 est branché** (désormais par défaut via le lanceur Go natif) : overlay C1c dans
    `preparePackageSession`/`writePackageFiles`, entrées et imports réécrits,
    fallback full. Go packages **0,003–0,021 s**, backend **17,323–21,515 s**

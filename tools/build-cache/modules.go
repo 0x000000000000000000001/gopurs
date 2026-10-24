@@ -99,6 +99,9 @@ func freezeModuleCache(stage string, state buildSession, force bool, result *Ses
 			}
 		}
 		for _, memo := range manifest.Modules {
+			if !validCapsuleArtifact(memo.Capsule) {
+				memo.Capsule = nil
+			}
 			files := map[string][]byte{}
 			valid := true
 			for i, part := range memo.Parts {
@@ -263,6 +266,9 @@ func freezeLazyModuleCache(stage string, state buildSession, manifest *Manifest,
 	reads := make([]frozenReads, len(index))
 	if err := boundedEach(len(index), func(i int) error {
 		memo := manifest.Modules[i]
+		if !validCapsuleArtifact(memo.Capsule) {
+			memo.Capsule = nil
+		}
 		reads[i].Name = memo.Name
 		if memo.Reads != nil {
 			data, err := p.store.validateObject(memo.Reads.Object)
@@ -607,7 +613,7 @@ func pinLazyArtifacts(stage string, manifest *Manifest, source store) (store, er
 		return true, nil
 	}
 	objects := []Object{}
-	for _, part := range artifacts(*manifest) {
+	for _, part := range retainedArtifacts(*manifest) {
 		objects = append(objects, part.Object)
 	}
 	for _, output := range manifest.Outputs {
@@ -637,8 +643,8 @@ func pinLazyArtifacts(stage string, manifest *Manifest, source store) (store, er
 	if err := os.WriteFile(filepath.Join(pinned.cache, "packs", "index.json"), data, 0400); err != nil {
 		return pinned, err
 	}
-	if err := pinned.ensurePacks(); err != nil {
-		return pinned, err
-	}
+	// The private index was just written from this independent map. Native
+	// readers can use it directly; helpers still read the same persisted bytes.
+	pinned.packs = &packDB{entries: index.Objects, files: map[string]*os.File{}}
 	return pinned, nil
 }

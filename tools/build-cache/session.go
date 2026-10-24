@@ -59,6 +59,7 @@ type SessionResponse struct {
 	PackageRequest string       `json:"packageRequest"`
 	PackageResult  string       `json:"packageResult"`
 	Contributions  []FrozenPart `json:"contributions,omitempty"`
+	Capsule        *string      `json:"capsule"`
 }
 
 type buildSession struct {
@@ -77,11 +78,17 @@ type recipe struct {
 // SessionExchange is the driver's producer protocol. Storage v1 remains usable
 // independently. No PureScript runtime representation crosses this boundary.
 func SessionExchange(request string) string {
+	return SessionExchangeOnMiss(request, nil)
+}
+
+// A callback is optional and belongs only to this request. It may schedule a
+// private preload, but cannot authorize any reuse or publish a session.
+func SessionExchangeOnMiss(request string, onMiss func(string)) string {
 	response := SessionResponse{Status: "error", FFI: []FrozenFFI{}}
 	var req SessionRequest
 	if err := strictJSON([]byte(request), &req); err != nil {
 		response.Reason = err.Error()
-	} else if err := sessionOperation(req, &response); err != nil {
+	} else if err := sessionOperationOnMiss(req, &response, onMiss); err != nil {
 		response.Status, response.Reason = "error", err.Error()
 	}
 	data, _ := json.Marshal(response)
@@ -89,6 +96,10 @@ func SessionExchange(request string) string {
 }
 
 func sessionOperation(req SessionRequest, result *SessionResponse) error {
+	return sessionOperationOnMiss(req, result, nil)
+}
+
+func sessionOperationOnMiss(req SessionRequest, result *SessionResponse, onMiss func(string)) error {
 	workspace, err := os.Getwd()
 	if err != nil {
 		return err
@@ -117,7 +128,7 @@ func sessionOperation(req SessionRequest, result *SessionResponse) error {
 				return err
 			}
 		}
-		return beginSession(spec, req.Force, result)
+		return beginSessionOnMiss(spec, req.Force, result, onMiss)
 	}
 	stage := filepath.Clean(req.Stage)
 	if filepath.Dir(stage) != filepath.Join(output, ".gopurs-cache", "stages") || !strings.HasPrefix(filepath.Base(stage), "build-") {
@@ -127,7 +138,7 @@ func sessionOperation(req SessionRequest, result *SessionResponse) error {
 	// Its immutable inputs are already bound to this stage; avoid reparsing the
 	// complete source/FFI inventory for every single part. Helper processes have
 	// no cached state and use the ordinary checked protocol below.
-	if req.Operation == "materialize" || req.Operation == "read-parts" {
+	if req.Operation == "materialize" || req.Operation == "read-parts" || req.Operation == "read-capsule" {
 		lazyPriors.Lock()
 		prior := lazyPriors.values[stage]
 		lazyPriors.Unlock()
@@ -140,6 +151,9 @@ func sessionOperation(req SessionRequest, result *SessionResponse) error {
 			result.InputLayout = inputLayout(state.Spec)
 			if req.Operation == "read-parts" {
 				return readSessionParts(stage, state, req, result)
+			}
+			if req.Operation == "read-capsule" {
+				return readSessionCapsule(stage, state, req, result)
 			}
 			if err := materializePrior(stage, state, req.Owners, req.Parts); err != nil {
 				return err
@@ -172,6 +186,8 @@ func sessionOperation(req SessionRequest, result *SessionResponse) error {
 		return nil
 	case "read-parts":
 		return readSessionParts(stage, state, req, result)
+	case "read-capsule":
+		return readSessionCapsule(stage, state, req, result)
 	case "materialize-input":
 		if err := materializeInputs(stage, state, req.Owners, req.All); err != nil {
 			return err
@@ -205,6 +221,10 @@ func readSessionParts(stage string, state buildSession, req SessionRequest, resu
 }
 
 func beginSession(spec Spec, force bool, result *SessionResponse) error {
+	return beginSessionOnMiss(spec, force, result, nil)
+}
+
+func beginSessionOnMiss(spec Spec, force bool, result *SessionResponse, onMiss func(string)) error {
 	result.InputLayout = inputLayout(spec)
 	result.SameTAST = false
 	baseInputs := spec.Inputs
@@ -231,6 +251,23 @@ func beginSession(spec Spec, force bool, result *SessionResponse) error {
 	} else if err == nil {
 		result.Reason = "recipe-corrupt"
 	}
+	// The lookup has released its lock and ruled out an early hit. This seed
+	// is speculative: the consumer must still validate the frozen prior proof.
+	if !force && onMiss != nil && observed != nil {
+		if context, contextErr := moduleContext(spec, *observed); contextErr == nil {
+			seed, seedErr := json.Marshal(struct {
+				Root    string `json:"root"`
+				Context string `json:"context"`
+			}{spec.Output, context})
+			if seedErr == nil {
+				func() {
+					// An unavailable optional preload must not introduce a build failure.
+					defer func() { _ = recover() }()
+					onMiss(string(seed))
+				}()
+			}
+		}
+	}
 	if force {
 		result.Reason = "forced"
 	}
@@ -243,11 +280,11 @@ func beginSession(spec Spec, force bool, result *SessionResponse) error {
 		}
 		initial = *response.Snapshot
 	}
-	options, err := sortedSettings(spec.Options)
+	context, err := moduleContext(spec, initial)
 	if err != nil {
 		return err
 	}
-	result.Context = Key("module-context", initial.Compiler, Key("options", options...))
+	result.Context = context
 	parent := filepath.Join(spec.Output, ".gopurs-cache", "stages")
 	if err := privateDirectory(parent); err != nil {
 		return err
@@ -568,6 +605,7 @@ func publishSession(stage string, state buildSession, req SessionRequest, result
 		return fmt.Errorf("build inputs were not frozen")
 	}
 	outputs := []StagedOutput{}
+	var expectedOutputs map[string]Object
 	seen := map[string]bool{}
 	add := func(kind, module, path string, optional bool) error {
 		if seen[path] {
@@ -585,11 +623,12 @@ func publishSession(stage string, state buildSession, req SessionRequest, result
 		return err
 	}
 	if usesGoPackages(state.Spec) {
-		files, err := packageOutputs(stage, state.Modules, req.Entries)
+		files, expected, err := packageOutputPlan(stage, state.Modules, req.Entries)
 		if err != nil {
 			return err
 		}
 		outputs = append(outputs, files...)
+		expectedOutputs = expected
 	} else {
 		for _, module := range state.Modules {
 			name := strings.ReplaceAll(module.Name, ".", "_")
@@ -613,7 +652,7 @@ func publishSession(stage string, state buildSession, req SessionRequest, result
 			return err
 		}
 	}
-	publication := Request{Schema: Schema, Operation: "publish", Spec: state.Spec, ExpectedKey: state.Snapshot.Key, Outputs: outputs, checkLegacy: true}
+	publication := Request{Schema: Schema, Operation: "publish", Spec: state.Spec, ExpectedKey: state.Snapshot.Key, Outputs: outputs, checkLegacy: true, expectedOutputs: expectedOutputs}
 	if req.ModuleCache {
 		reused := map[string]ReusedModule{}
 		if len(req.Reused) != 0 {
@@ -661,6 +700,10 @@ func publishSession(stage string, state buildSession, req SessionRequest, result
 				mod.Reads = &StagedArtifact{Codec: moduleReadsCodec, Source: readsPath}
 			} else if !os.IsNotExist(err) {
 				return err
+			}
+			capsulePath := filepath.Join(directory, "capsule.json")
+			if info, err := os.Lstat(capsulePath); err == nil && info.Mode().IsRegular() {
+				mod.Capsule = &StagedArtifact{Codec: bindingCapsuleCodec, Source: capsulePath}
 			}
 			if usesGoPackages(state.Spec) {
 				name := strings.ReplaceAll(source.Name, ".", "_")

@@ -1,15 +1,17 @@
 module Gopurs.CodegenState
   ( CodegenMetadataRow
   , CodegenMetadata
+  , CodegenMetadataWith
+  , SharedMetadataRow
   , CodegenState
   , FunctionInfo
   ) where
 
 import Data.Map (Map)
-import Data.Map as Map
 import Data.Set (Set)
 import Data.Set as Set
 import Data.Tuple (Tuple)
+import Gopurs.Cache.LookupTable (LookupTable)
 import Gopurs.AdtMetadata (PointerAdtLeaf, PointerAdtPaths)
 import Gopurs.ClassMetadata (ClassFields)
 import Gopurs.ConstructorMetadata (ConstructorTypes)
@@ -31,8 +33,8 @@ type FunctionInfo =
 -- synthetic class data declarations used only for pointer layouts. Driver.Build
 -- supplies the published native signatures for the current emission batch;
 -- Driver.Output adds the current module's FFI signatures before translation.
-type CodegenMetadataRow :: Row Type
-type CodegenMetadataRow =
+type SharedMetadataRow :: Row Type
+type SharedMetadataRow =
   ( elidedCtors :: Set.Set String
   , ctorTypes :: ConstructorTypes
   , pointerAdtPaths :: PointerAdtPaths
@@ -40,13 +42,16 @@ type CodegenMetadataRow =
   , pointerAdtLeaves :: Map String PointerAdtLeaf
   , enumAdts :: Set.Set String
   , enumCtors :: Set.Set String
-  , globalTypes :: Map.Map String ExprType
   , globalFunctions :: Map String FunctionInfo
   -- | Infos d'appel natif des FFI du module courant (clé : ident brut).
   , ffiFunctions :: Map String FunctionInfo
   , classDeclsFields :: ClassFields
   , reboxFields :: ReboxFieldIndex
   )
+
+type CodegenMetadataWith globals = { globalTypes :: globals | SharedMetadataRow }
+
+type CodegenMetadataRow = ( globalTypes :: LookupTable ExprType | SharedMetadataRow )
 
 type CodegenMetadata = { | CodegenMetadataRow }
 

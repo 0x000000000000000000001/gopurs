@@ -40,6 +40,7 @@ test("JS and directly linked Go bridges exchange a content-verified persistent m
   // Compile the actual FFI and the exact same copied package used by bootstrap.
   put("native/go.mod", "module gopurs/output\n\ngo 1.22\n");
   run(process.execPath, [join(root, "tools/prepare-native-output.mjs"), join(workspace, "native")], root);
+  put("native/gopurs_runtime/runtime.go", readFileSync(join(root, "runtime/runtime.go"), "utf8"));
   put("native/bridge/bridge.go", readFileSync(join(root, "src/Gopurs/BuildCache.go"), "utf8")
     .replace("package Gopurs_BuildCache", "package bridge"));
   put("native/main.go", `package main

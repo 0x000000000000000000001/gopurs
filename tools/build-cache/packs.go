@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -319,70 +320,122 @@ func (s *store) compactPackGroups() (bool, error) {
 			sizes[entry.Pack] = info.Size()
 		}
 	}
-	for _, group := range groups {
+	ids := []int{}
+	for id, group := range groups {
 		for pack := range group.packs {
 			group.fileBytes += sizes[pack]
 		}
-	}
-	oldPacks := map[string]bool{}
-	newPacks := map[string]bool{}
-	changed := false
-	for _, group := range groups {
-		if len(group.packs) <= 1 && group.fileBytes == group.refBytes {
-			continue
+		if len(group.packs) > 1 || group.fileBytes != group.refBytes {
+			sort.Strings(group.shas)
+			ids = append(ids, id)
 		}
-		sort.Strings(group.shas)
+	}
+	sort.Ints(ids)
+	if len(ids) == 0 {
+		return false, nil
+	}
+	type groupResult struct {
+		pack       string
+		entries    map[string]packEntry
+		failedPack string
+	}
+	results := make([]groupResult, len(ids))
+	// All readers share an immutable index. Each task owns its new entries and
+	// pack; boundedEach joins every task before reporting the first error.
+	err := boundedEach(len(ids), func(i int) error {
+		group := groups[ids[i]]
+		result := groupResult{entries: map[string]packEntry{}}
 		var content bytes.Buffer
 		for _, sha := range group.shas {
 			entry := s.packs.entries[sha]
-			data, err := s.readObject(Object{SHA256: sha, Bytes: entry.Bytes})
+			data, err := s.validateObject(Object{SHA256: sha, Bytes: entry.Bytes})
 			if err != nil {
-				return false, err
+				results[i].failedPack = entry.Pack
+				return err
 			}
 			offset := int64(content.Len())
 			content.Write(data)
-			s.packs.entries[sha] = packEntry{Pack: "", Offset: offset, Bytes: entry.Bytes}
+			result.entries[sha] = packEntry{Offset: offset, Bytes: entry.Bytes}
 		}
 		pack := digest(content.Bytes())
+		result.pack = pack
 		path := filepath.Join(s.cache, "packs", pack+".pack")
 		if !fileMatches(path, Object{SHA256: pack, Bytes: int64(content.Len())}) {
 			if err := atomicReplaceFile(path, content.Bytes(), 0600); err != nil {
-				return false, err
+				results[i] = result
+				return err
 			}
 		}
-		for _, sha := range group.shas {
-			entry := s.packs.entries[sha]
+		for sha, entry := range result.entries {
 			entry.Pack = pack
-			s.packs.entries[sha] = entry
+			result.entries[sha] = entry
 		}
-		for pack := range group.packs {
-			oldPacks[pack] = true
+		results[i] = result
+		return nil
+	})
+	// Failed sources and newly produced targets can have cached handles naming
+	// an older inode after atomic repair. Close them only after every reader has
+	// joined, without evicting references or files. A target can already match
+	// its hash on disk while a cached descriptor still names the previous inode.
+	s.packs.mu.Lock()
+	for _, result := range results {
+		for _, pack := range []string{result.failedPack, result.pack} {
+			if file := s.packs.files[pack]; file != nil {
+				if closeErr := file.Close(); closeErr != nil {
+					err = errors.Join(err, fmt.Errorf("close compacted pack %s: %w", pack, closeErr))
+				}
+				delete(s.packs.files, pack)
+			}
 		}
-		newPacks[pack] = true
-		changed = true
 	}
-	if !changed {
-		return false, nil
-	}
-	if err := s.writePackIndex(); err != nil {
+	s.packs.mu.Unlock()
+	if err != nil {
 		return false, err
 	}
-	directory := filepath.Join(s.cache, "packs")
-	s.packs.mu.Lock()
-	for pack := range oldPacks {
-		if newPacks[pack] {
-			continue
+	oldPacks := map[string]bool{}
+	newPacks := map[string]bool{}
+	nextEntries := make(map[string]packEntry, len(s.packs.entries))
+	for sha, entry := range s.packs.entries {
+		nextEntries[sha] = entry
+	}
+	for i, result := range results {
+		for sha, entry := range result.entries {
+			nextEntries[sha] = entry
 		}
+		for pack := range groups[ids[i]].packs {
+			oldPacks[pack] = true
+		}
+		newPacks[result.pack] = true
+	}
+	// Durably publish a complete independent index before exposing it in memory
+	// or removing any old pack. Failed tasks may leave only unreferenced packs.
+	nextStore := store{root: s.root, cache: s.cache, packs: &packDB{entries: nextEntries}}
+	if err := nextStore.writePackIndex(); err != nil {
+		return false, err
+	}
+	s.packs.entries = nextEntries
+	directory := filepath.Join(s.cache, "packs")
+	retired := []string{}
+	for pack := range oldPacks {
+		if !newPacks[pack] {
+			retired = append(retired, pack)
+		}
+	}
+	sort.Strings(retired)
+	s.packs.mu.Lock()
+	for _, pack := range retired {
 		if file := s.packs.files[pack]; file != nil {
-			_ = file.Close()
+			if closeErr := file.Close(); closeErr != nil {
+				err = errors.Join(err, fmt.Errorf("close retired pack %s: %w", pack, closeErr))
+			}
 			delete(s.packs.files, pack)
 		}
 	}
 	s.packs.mu.Unlock()
-	for pack := range oldPacks {
-		if newPacks[pack] {
-			continue
-		}
+	if err != nil {
+		return false, err
+	}
+	for _, pack := range retired {
 		if err := os.Remove(filepath.Join(directory, pack+".pack")); err != nil && !os.IsNotExist(err) {
 			return false, err
 		}
@@ -395,7 +448,7 @@ func (s *store) retirePackObjects(manifest *Manifest) error {
 		return nil
 	}
 	retained := map[string]bool{}
-	for _, artifact := range artifacts(*manifest) {
+	for _, artifact := range retainedArtifacts(*manifest) {
 		retained[artifact.Object.SHA256] = true
 	}
 	packs := map[string]bool{}

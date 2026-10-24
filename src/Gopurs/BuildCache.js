@@ -26,3 +26,7 @@ export const sessionExchange = request => () => {
     stdio: ["pipe", "pipe", "pipe"],
   }).trimEnd();
 };
+
+// The helper process cannot call back into this JS runtime. Keep the ordinary
+// sequential path; the caller must accept that preload notification is absent.
+export const sessionExchangeOnMiss = request => _onMiss => sessionExchange(request);

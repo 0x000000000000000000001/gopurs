@@ -1,4 +1,4 @@
-module Gopurs.Driver.Build (build) where
+module Gopurs.Driver.Build (build, buildWithHeaders) where
 
 import Prelude
 
@@ -23,12 +23,13 @@ import Effect.Console as Console
 import Effect.Ref as Ref
 import Gopurs.Driver.Config (CompilerConfig)
 import Gopurs.Driver.Cache (FrozenFFI, Session, ReusedMemo)
+import Gopurs.Cache.HeaderPreload as HeaderPreload
 import Gopurs.Cache.Modules as ModuleCache
 import Gopurs.Cache.Wire as Wire
 import Gopurs.Driver.Prepare (PreparedModules)
 import Gopurs.Emission (EmissionEntry, withEmitter)
 import Gopurs.Metrics as Metrics
-import PureScript.Backend.Optimizer.Builder (BuildEnv, BuildOptions, BuildObservation, JobScheduler, ParallelStats, buildModulesWithObservation, buildModulesParallelWithRestoredHeaders)
+import PureScript.Backend.Optimizer.Builder (BuildEnv, BuildOptions, BuildObservation, JobScheduler, ParallelStats, buildModulesWithObservation, buildModulesParallelWithBindingLookup)
 import PureScript.Backend.Optimizer.Convert (BackendModule)
 import PureScript.Backend.Optimizer.CoreFn (Ann, Module(..))
 import PureScript.Backend.Optimizer.Semantics.Foreign (coreForeignSemantics)
@@ -40,17 +41,23 @@ type OptimizedModule =
   }
 
 build :: Session -> Map.Map String FrozenFFI -> CompilerConfig -> PreparedModules -> Set.Set String -> Maybe (String -> Aff (Maybe (Module Ann))) -> Set.Set String -> Ref.Ref (Map.Map String BackendModule) -> Map.Map String String -> Aff (Array ReusedMemo)
-build session ffi config preparedInput reusableModules materializePrepared headerSafe backends priorFfi = do
+build = buildWithHeaders Nothing
+
+buildWithHeaders :: Maybe (Aff (Maybe HeaderPreload.Reservoir)) -> Session -> Map.Map String FrozenFFI -> CompilerConfig -> PreparedModules -> Set.Set String -> Maybe (String -> Aff (Maybe (Module Ann))) -> Set.Set String -> Ref.Ref (Map.Map String BackendModule) -> Map.Map String String -> Aff (Array ReusedMemo)
+buildWithHeaders pendingHeaders session ffi config preparedInput reusableModules materializePrepared headerSafe backends priorFfi = do
   initialized <- Metrics.measure "module cache keys" \_ -> ModuleCache.initialize config.prepareJobs session preparedInput reusableModules backends (Map.fromFoldable (map (\(Tuple name value) -> Tuple name value.digest) (Map.toUnfoldable ffi :: Array (Tuple String FrozenFFI)))) priorFfi headerSafe
+  headerValues <- case pendingHeaders of
+    Nothing -> pure Nothing
+    Just pending -> Metrics.measure "module header preload join" \_ -> pending
   cache <- Metrics.measure "module header bytes" \_ ->
-    ModuleCache.loadHeaderTexts (initialized { lazyContributions = config.optimizerJobs > 1 })
+    ModuleCache.loadHeaderTextsWithPreload headerValues (initialized { lazyContributions = config.optimizerJobs > 1 })
   preparedReaders <- liftEffect (Ref.new Map.empty)
   readerMillis <- liftEffect (Ref.new 0.0)
   let prepared = preparedInput
   let
     moduleRanks = Map.fromFoldable (Array.mapWithIndex (\rank (Module m) -> Tuple (unwrap m.name) rank) (Array.fromFoldable prepared.modules))
     prepareFresh mod@(Module m) = do
-      ModuleCache.warmImplementations config.prepareJobs cache moduleRanks (unwrap m.name)
+      ModuleCache.warmImplementationInputs config.prepareJobs cache moduleRanks (unwrap m.name)
       materializeFresh mod
     materializeFresh mod@(Module m) = case materializePrepared of
       Nothing -> pure mod
@@ -92,6 +99,7 @@ build session ffi config preparedInput reusableModules materializePrepared heade
     emitBatch batch = Metrics.accumulate emissionMillisRef \_ -> do
       workerOwners <- liftEffect (Ref.read workerOwnersRef)
       visibleWorkers <- liftEffect (Ref.read workersDigestRef)
+      ModuleCache.warmWorkerSnapshot config.prepareJobs cache workerOwners (map _.backendMod (Array.filter (not <<< _.optimizedCached) batch))
       let
         resolve = ModuleCache.resolveWorkerSnapshot (ModuleCache.readWorkerContribution cache) workerOwners
         emit entry = ModuleCache.emitWithWorkerSnapshot resolve cache ffi prepared.metadata visibleWorkers entry.optimizedCached entry.coreFnModule entry.backendMod
@@ -155,6 +163,11 @@ build session ffi config preparedInput reusableModules materializePrepared heade
   readerCount <- liftEffect (Map.size <$> Ref.read preparedReaders)
   preparedMillis <- liftEffect (Ref.read readerMillis)
   liftEffect $ Console.error $ "[gopurs] prepare PBO readers: " <> show readerCount <> " modules, " <> show (Int.round preparedMillis) <> " ms"
+  capsules <- liftEffect (Ref.read cache.priorCapsules)
+  capsuleHits <- liftEffect (Ref.read cache.capsuleHits)
+  capsuleCreated <- liftEffect (Ref.read cache.capsuleCreated)
+  liftEffect $ Console.error $ "[gopurs] binding capsules: loaded=" <> show (Map.size (Map.mapMaybe identity capsules))
+    <> ", attempted=" <> show (Map.size capsules) <> ", hits=" <> show capsuleHits <> ", created=" <> show capsuleCreated
   liftEffect (Array.fromFoldable <<< Map.values <$> Ref.read cache.reused)
 
 runBuilder :: Int -> ModuleCache.ModuleCache -> Map.Map String BackendModule -> (Module Ann -> Aff (Module Ann)) -> BuildObservation Aff -> (BuildEnv -> Module Ann -> BackendModule -> Aff Unit) -> BuildOptions Aff -> List (Module Ann) -> Aff Unit
@@ -165,7 +178,7 @@ runBuilder jobs cache restoredHeaders prepareFresh observer onReuse options modu
       liftEffect $ Console.error $ "[gopurs] PBO scheduling hints: owners=" <> show (Map.size cache.schedulingReads) <> ", edges=" <> show edges
       liftEffect $ Console.error $ "[gopurs] PBO restored headers: " <> show (Map.size restoredHeaders)
       scheduler <- createJobScheduler
-      buildModulesParallelWithRestoredHeaders restoredHeaders cache.schedulingReads prepareFresh (Just (ModuleCache.readImplementationsSync cache)) (Just observer) onReuse { jobs, scheduler, onStats: Just reportParallelStats } options modules
+      buildModulesParallelWithBindingLookup (Just (ModuleCache.readCachedBinding cache)) restoredHeaders cache.schedulingReads prepareFresh (Just (ModuleCache.readImplementationsSync cache)) (Just observer) onReuse { jobs, scheduler, onStats: Just reportParallelStats } options modules
 
 -- An AVar has a single result slot. A worker's put can remain suspended if the
 -- coordinator fails before taking its result. Run this scheduler inside the

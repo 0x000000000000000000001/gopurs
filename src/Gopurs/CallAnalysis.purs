@@ -12,6 +12,7 @@ module Gopurs.CallAnalysis
   ) where
 
 import Prelude
+import Gopurs.Cache.LookupTable as LookupTable
 import Data.Array as Array
 import Data.Array.NonEmpty (NonEmptyArray, toArray)
 import Data.Map as Map
@@ -109,7 +110,7 @@ getArityFromType = go 0
   go acc (Func args ret) = go (acc + Array.length args) ret
   go acc _ = acc
 
-isClosureNode :: forall r. { globalTypes :: Map.Map String ExprType | r } -> TcoExpr -> Boolean
+isClosureNode :: forall r. { globalTypes :: LookupTable.LookupTable ExprType | r } -> TcoExpr -> Boolean
 isClosureNode metadata expr = case unwrapTcoExpr expr of
   Abs _ _ -> true
   UncurriedAbs _ _ -> true
@@ -124,7 +125,7 @@ isClosureNode metadata expr = case unwrapTcoExpr expr of
         Var (Qualified mbMn (Ident i)) ->
           let
             vType = case mbMn of
-              Just mn -> Map.lookup (unwrap mn <> "." <> i) metadata.globalTypes
+              Just mn -> LookupTable.lookup (unwrap mn <> "." <> i) metadata.globalTypes
               Nothing -> Nothing
 
             expectedArity2 = case vType of
@@ -144,7 +145,7 @@ isClosureNode metadata expr = case unwrapTcoExpr expr of
         Var (Qualified mbMn (Ident i)) ->
           let
             vType = case mbMn of
-              Just mn -> Map.lookup (unwrap mn <> "." <> i) metadata.globalTypes
+              Just mn -> LookupTable.lookup (unwrap mn <> "." <> i) metadata.globalTypes
               Nothing -> Nothing
 
             expectedArity2 = case vType of

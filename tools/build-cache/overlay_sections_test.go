@@ -329,8 +329,11 @@ func TestPackageSnapshotRetainsProofAndRechecksStagedLinks(t *testing.T) {
 }
 
 func TestPackageSnapshotRejectsCorruptionAndSymlinks(t *testing.T) {
-	for _, mode := range []string{"bundle", "order", "symlink"} {
+	for _, mode := range []string{"bundle", "order", "symlink", "missing", "unreadable"} {
 		t.Run(mode, func(t *testing.T) {
+			if mode == "unreadable" && os.Geteuid() == 0 {
+				t.Skip("root can read files without permission")
+			}
 			f := newPartitionFixture(t)
 			freezePartitionFixture(t, f, "-old")
 			plan, err := readPackagePlan(filepath.Join(f.output, ".gopurs-cache/go-packages/plan-v1/result.json"))
@@ -355,6 +358,15 @@ func TestPackageSnapshotRejectsCorruptionAndSymlinks(t *testing.T) {
 				if err := os.Symlink(target, path); err != nil {
 					t.Fatal(err)
 				}
+			} else if mode == "missing" {
+				if err := os.Remove(path); err != nil {
+					t.Fatal(err)
+				}
+			} else if mode == "unreadable" {
+				if err := os.Chmod(path, 0000); err != nil {
+					t.Fatal(err)
+				}
+				t.Cleanup(func() { _ = os.Chmod(path, 0600) })
 			} else {
 				put(t, path, "corrupt")
 			}
@@ -362,5 +374,36 @@ func TestPackageSnapshotRejectsCorruptionAndSymlinks(t *testing.T) {
 				t.Fatal("accepted invalid published bytes")
 			}
 		})
+	}
+}
+
+func TestPackageSnapshotPreservesReadFailureOrderAndImportRefusal(t *testing.T) {
+	output := t.TempDir()
+	plan := &packagePlanResult{}
+	for _, name := range []string{"Invalid", "MissingFirst", "MissingSecond"} {
+		source := "package " + overlayOriginalPackage + "\n"
+		if name == "Invalid" {
+			source += "import (\n"
+		}
+		path := overlayOriginalPackage + "/" + name + ".go"
+		plan.Files = append(plan.Files, packagePlanFile{Path: path, Kind: "package", Module: name, SHA256: digest([]byte(source)), Bytes: int64(len(source))})
+		if name == "Invalid" {
+			put(t, filepath.Join(output, "purescript", path), source)
+		}
+	}
+	// Import parsing must not supersede the existing byte-validation failures.
+	// Parallel reads must also report the first failure in plan order.
+	for _, missing := range plan.Files[1:] {
+		if _, err := readPackagePlanFiles(output, plan); err == nil || err.Error() != "published Go package file changed: "+missing.Path {
+			t.Fatalf("wrong first read failure for %s: %v", missing.Path, err)
+		}
+		put(t, filepath.Join(output, "purescript", missing.Path), "package "+overlayOriginalPackage+"\n")
+	}
+	snapshot, err := readPackagePlanFiles(output, plan)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := loadOverlayIndex(plan, snapshot, overlayOriginalPackage); err == nil {
+		t.Fatal("accepted malformed imports from verified bytes")
 	}
 }

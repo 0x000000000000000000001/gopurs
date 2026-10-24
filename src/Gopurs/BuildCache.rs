@@ -18,3 +18,6 @@ fn gopurs_cache_exchange(request: String, session: i32) -> Value {
 
 pub fn Gopurs_BuildCache_exchange(request: String) -> Value { gopurs_cache_exchange(request, 0) }
 pub fn Gopurs_BuildCache_sessionExchange(request: String) -> Value { gopurs_cache_exchange(request, 1) }
+
+// Preloading is optional. The helper bridge retains the sequential protocol.
+pub fn Gopurs_BuildCache_sessionExchangeOnMiss(request: String, _on_miss: Value) -> Value { gopurs_cache_exchange(request, 1) }

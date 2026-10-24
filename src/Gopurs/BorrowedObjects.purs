@@ -1,6 +1,7 @@
 module Gopurs.BorrowedObjects (borrowReadOnlyObjects) where
 
 import Prelude
+import Gopurs.Cache.LookupTable as LookupTable
 
 import Control.Alternative (guard)
 import Data.Array as Array
@@ -37,7 +38,7 @@ type BorrowScope = { result :: Level, objects :: Set.Set Level }
 -- recursion or arbitrary consumers. Custom element decoders never match the
 -- producer. The native helper also checks its identity tag before borrowing.
 borrowReadOnlyObjects :: CodegenMetadata -> BackendModule -> BackendModule
-borrowReadOnlyObjects metadata mod = case Map.lookup "Data.Argonaut.Decode.Internal.Record.borrowObject" metadata.globalTypes of
+borrowReadOnlyObjects metadata mod = case LookupTable.lookup "Data.Argonaut.Decode.Internal.Record.borrowObject" metadata.globalTypes of
   Nothing -> mod
   Just helperType ->
     let context =

@@ -31,6 +31,64 @@ func lazyModuleFixture(t *testing.T) (string, buildSession, *lazyPrior) {
 	return stage, state, prior
 }
 
+func TestPinnedIndexMatchesHelperAndInvalidatesLocally(t *testing.T) {
+	t.Setenv(packPublication, "1")
+	f := packedFixture(t)
+	result := publish(t, f)
+	source := store{root: f.s.root, cache: f.s.cache}
+	if err := source.ensurePacks(); err != nil {
+		t.Fatal(err)
+	}
+	pinned, err := pinLazyArtifacts(t.TempDir(), result.Manifest, source)
+	if err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile(filepath.Join(pinned.cache, "packs", "index.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var disk packIndexFile
+	if err := strictJSON(data, &disk); err != nil {
+		t.Fatal(err)
+	}
+	helper := store{root: pinned.root, cache: pinned.cache}
+	if err := helper.ensurePacks(); err != nil {
+		t.Fatal(err)
+	}
+	if disk.Format != packIndexFormat || disk.Schema != packIndexSchema || !reflect.DeepEqual(pinned.packs.entries, disk.Objects) || !reflect.DeepEqual(pinned.packs.entries, helper.packs.entries) {
+		t.Fatal("native and helper readers disagree on the private index")
+	}
+	object := result.Manifest.Modules[0].Parts[0].Object
+	if bytes, err := pinned.readObject(object); err != nil || string(bytes) != `["unit"]` {
+		t.Fatalf("pinned object: %q %v", bytes, err)
+	}
+	entry, ok := pinned.packs.entries[object.SHA256]
+	if !ok {
+		t.Fatal("fixture object is not packed")
+	}
+	// Corrupt only this fixture. Invalidation must update the private index,
+	// without mutating the map that supplied its entries during the freeze.
+	if err := os.WriteFile(filepath.Join(pinned.cache, "packs", entry.Pack+".pack"), []byte("corrupt"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := pinned.readObject(object); err == nil {
+		t.Fatal("accepted corrupt pinned object")
+	}
+	if _, exists := pinned.packs.entries[object.SHA256]; exists {
+		t.Fatal("corrupt pack survived private invalidation")
+	}
+	if original, exists := source.packs.entries[object.SHA256]; !exists || original != entry {
+		t.Fatal("private invalidation changed the source index")
+	}
+	helper = store{root: pinned.root, cache: pinned.cache}
+	if err := helper.ensurePacks(); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(pinned.packs.entries, helper.packs.entries) {
+		t.Fatal("private invalidation was not persisted for fresh helpers")
+	}
+}
+
 func TestLazyModuleMaterializationIsSelectiveAndConcurrent(t *testing.T) {
 	stage, state, prior := lazyModuleFixture(t)
 	for _, part := range []string{"0.json", "1.json", "2.json", "3.json", "module.go", "ffi.go"} {

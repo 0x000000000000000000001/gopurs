@@ -1,4 +1,4 @@
-module Gopurs.Driver.Prepare.Persistent (preparePersistent, publishPersistent) where
+module Gopurs.Driver.Prepare.Persistent (Projected, PreloadedProjection, preloadProjection, preparePersistent, preparePersistentWithProjection, publishPersistent) where
 
 import Prelude
 import Data.Argonaut.Core (stringify)
@@ -9,6 +9,7 @@ import Data.Array as Array
 import Data.Either (Either(..), hush)
 import Data.Foldable (foldl)
 import Data.List as List
+import Data.Lazy (defer)
 import Data.Map (Map)
 import Data.Map as Map
 import Data.Maybe (Maybe(..), fromMaybe)
@@ -23,6 +24,7 @@ import Effect.Class (liftEffect)
 import Effect.Console as Console
 import Effect.Ref as Ref
 import Gopurs.Cache.Wire as Wire
+import Gopurs.Cache.LookupTable as LookupTable
 import Gopurs.ClassMetadata (addClassDataDeclarations)
 import Gopurs.Driver.Cache (Session)
 import Gopurs.Driver.Cache as Cache
@@ -31,7 +33,8 @@ import Gopurs.Driver.Manifest (moduleInterface)
 import Gopurs.Driver.Prepare.Proof as Proof
 import Gopurs.Driver.Prepare.Projection (Projection)
 import Gopurs.Driver.Prepare.Projection as Projection
-import Gopurs.Preparation (runPreparationJobs)
+import Gopurs.Driver.Prepare.ProjectionCapsule as ProjectionCapsule
+import Gopurs.Preparation (mapPreparationJobs, runPreparationJobs)
 import Gopurs.Metrics as Metrics
 import Gopurs.Monomorphization (buildGlobalAstMap)
 import Node.Encoding (Encoding(..))
@@ -70,13 +73,20 @@ snapshotStamp path = do
       [ tast ] -> Just (Wire.hash (document.snapshot.compiler <> "/" <> tast.digest))
       _ -> Nothing
 
-readProof :: String -> Aff (Maybe Proof.State)
-readProof root = do
+type CapturedProof = { hash :: String, value :: Proof.State }
+
+readCapturedProof :: String -> Aff (Maybe CapturedProof)
+readCapturedProof root = do
   envelope <- readJSON (proofPath root) :: Aff (Maybe { hash :: String, payload :: String })
   pure do
     saved <- envelope
     if Wire.hash saved.payload /= saved.hash then Nothing
-    else hush (jsonParser saved.payload) >>= hush <<< decodeJson
+    else do
+      value <- hush (jsonParser saved.payload) >>= hush <<< decodeJson
+      Just { hash: saved.hash, value }
+
+readProof :: String -> Aff (Maybe Proof.State)
+readProof root = map _.value <$> readCapturedProof root
 
 writeAtomic :: String -> String -> String -> Aff Unit
 writeAtomic stage path text = do
@@ -114,9 +124,35 @@ readSource session hashes name = case Map.lookup name hashes of
         source@(Module value) <- hush (parseModule encoded)
         if unwrap value.name == name then Just source else Nothing
 
+-- A preload is private data, never a reusable proof on its own. Keep the exact
+-- envelope identity so another publication cannot silently re-anchor it.
+type PreloadedProjection =
+  { root :: String, context :: String, count :: Int, proofHash :: String
+  , projected :: Projected
+  }
+
+preloadProjection :: Int -> InlineDirectiveMap -> String -> Aff (Maybe PreloadedProjection)
+preloadProjection jobs directives encodedSeed = case hush (jsonParser encodedSeed) >>= hush <<< decodeJson of
+  Nothing -> pure Nothing
+  Just (seed :: { root :: String, context :: String }) -> do
+    captured <- readCapturedProof seed.root
+    directivesKey <- liftEffect (Wire.hash <$> Wire.write directives)
+    case captured of
+      Just saved | saved.value.schema == 5 && saved.value.context == seed.context
+        && saved.value.directives == directivesKey -> do
+          let count = Array.length saved.value.sources
+          result <- readProjection { root: seed.root, count } jobs saved.value.projection saved.value.capsule
+          pure (map (\projected -> { root: seed.root, context: seed.context, count, proofHash: saved.hash, projected }) result)
+      _ -> pure Nothing
+
 preparePersistent :: Session -> Int -> Maybe String -> InlineDirectiveMap -> Aff PreparedCache
-preparePersistent session jobs mainModule directives = do
-  candidate <- Metrics.measure "compact preparation probe" \_ -> probe session jobs mainModule directives
+preparePersistent = preparePersistentWithProjection Nothing
+
+preparePersistentWithProjection :: Maybe PreloadedProjection -> Session -> Int -> Maybe String -> InlineDirectiveMap -> Aff PreparedCache
+preparePersistentWithProjection preloaded session jobs mainModule directives = do
+  candidate <- Metrics.measure "compact preparation probe" \_ -> case preloaded of
+    Nothing -> probe session jobs mainModule directives
+    Just _ -> probeWithProjection preloaded session jobs mainModule directives
   case candidate of
     Just prepared -> do
       liftEffect $ Console.error ("[gopurs] compact preparation: " <> show (Set.size prepared.reusable) <> " modules proven reusable; TAST loaded on demand")
@@ -126,15 +162,18 @@ preparePersistent session jobs mainModule directives = do
       prepareModulesWithCache session.input session.count jobs mainModule directives
 
 probe :: Session -> Int -> Maybe String -> InlineDirectiveMap -> Aff (Maybe PreparedCache)
-probe session jobs mainModule directives = do
-  saved <- readProof session.root
+probe = probeWithProjection Nothing
+
+probeWithProjection :: Maybe PreloadedProjection -> Session -> Int -> Maybe String -> InlineDirectiveMap -> Aff (Maybe PreparedCache)
+probeWithProjection preloaded session jobs mainModule directives = do
+  saved <- readCapturedProof session.root
   frozen <- readFrozenHashes session
   committed <- snapshotStamp (session.stage <> "/prior/manifest.json")
   currentStamp <- snapshotStamp (session.stage <> "/session.json")
   directivesKey <- liftEffect (Wire.hash <$> Wire.write directives)
   case saved, frozen, committed, currentStamp of
-    Just old, Just sourceHashes, Just stamp, Just current
-      | old.schema == 4 && old.context == session.context && old.directives == directivesKey && old.snapshot == stamp -> do
+    Just captured@{ value: old }, Just sourceHashes, Just stamp, Just current
+      | old.schema == 5 && old.context == session.context && old.directives == directivesKey && old.snapshot == stamp -> do
           let
             previousHashes = Map.fromFoldable (map (\entry -> Tuple entry.name entry.hash) old.sources)
             changed = Array.filter (\(Tuple name hash) -> Map.lookup name previousHashes /= Just hash) (Map.toUnfoldable sourceHashes :: Array _)
@@ -148,10 +187,14 @@ probe session jobs mainModule directives = do
                   let previousProof = Array.find (\entry -> entry.name == changedName) old.modules
                   case previousProof of
                     Just previous | Proof.permitsLiteralEdit (Set.fromFoldable old.bodyReads) previous currentProof -> do
-                      projected <- readProjection session jobs old.projection
+                      projected <- case preloaded of
+                        Just pending | pending.proofHash == captured.hash && pending.root == session.root
+                          && pending.context == session.context && pending.count == session.count ->
+                            pure (Just pending.projected)
+                        _ -> readProjection session jobs old.projection old.capsule
                       case projected of
-                        Just projection | validProjection sourceHashes projection ->
-                          prepareProjected session mainModule directives sourceHashes old current source currentProof projection
+                        Just result | validProjection sourceHashes result.projection ->
+                          prepareProjected session mainModule directives sourceHashes (old { capsule = result.capsule }) current source currentProof result.projection result.coverage
                         _ -> pure Nothing
                     _ -> pure Nothing
                 _ -> pure Nothing
@@ -164,16 +207,40 @@ validFragmentDigests :: Int -> Array String -> Boolean
 validFragmentDigests count digests = Array.length digests == Projection.fragmentCount count
   && Set.size (Set.fromFoldable digests) == Array.length digests
 
-readProjection :: Session -> Int -> Array String -> Aff (Maybe Projection)
-readProjection session jobs digests
+type Projected =
+  { projection :: Projection
+  , coverage :: Maybe (Set.Set String)
+  , capsule :: Maybe (Array String)
+  }
+
+readProjection :: forall r. { root :: String, count :: Int | r } -> Int -> Array String -> Maybe (Array String) -> Aff (Maybe Projected)
+readProjection session jobs digests capsule
   | not (validFragmentDigests session.count digests) = pure Nothing
   | otherwise = do
       encoded <- traverse (readObject session.root) digests
       case traverse identity encoded of
         Nothing -> pure Nothing
         Just texts -> do
-          decoded <- runPreparationJobs jobs (map (\text _ -> Wire.read text) texts)
-          pure (traverse identity decoded >>= Projection.merge)
+          -- Immutable full bytes are verified even on a capsule hit. No I/O is
+          -- hidden in the Lazy; malformed complete data stays an explicit Left.
+          let delayed = defer \_ -> case traverse Wire.read texts >>= Projection.merge of
+                Nothing -> Left "complete projection codec"
+                Just projection -> LookupTable.complete projection.metadata.globalTypes
+          partial <- case capsule of
+            Just refs | validFragmentDigests session.count refs -> do
+              saved <- traverse (readObject session.root) refs
+              case traverse identity saved of
+                Nothing -> pure Nothing
+                Just bytes -> do
+                  decoded <- runPreparationJobs jobs (map (\text _ -> Wire.read text) bytes)
+                  pure (traverse identity decoded >>= flip ProjectionCapsule.open delayed)
+            _ -> pure Nothing
+          case partial of
+            Just value -> pure (Just { projection: value.projection, coverage: Just value.coverage, capsule })
+            Nothing -> do
+              decoded <- runPreparationJobs jobs (map (\text _ -> Wire.read text) texts)
+              pure (map (\projection -> { projection, coverage: Nothing, capsule: Nothing })
+                (traverse identity decoded >>= Projection.merge))
 
 validProjection :: Map String String -> Projection -> Boolean
 validProjection hashes projection =
@@ -181,8 +248,9 @@ validProjection hashes projection =
   in Array.length names == Map.size hashes && Set.fromFoldable names == Map.keys hashes
     && Map.keys projection.interfaces == Map.keys hashes
 
-prepareProjected :: Session -> Maybe String -> InlineDirectiveMap -> Map String String -> Proof.State -> String -> Module Ann -> Proof.ModuleProof -> Projection -> Aff (Maybe PreparedCache)
-prepareProjected session mainModule directives sourceHashes old current source@(Module changed) currentProof projection = do
+prepareProjected :: Session -> Maybe String -> InlineDirectiveMap -> Map String String -> Proof.State -> String -> Module Ann -> Proof.ModuleProof -> Projection -> Maybe (Set.Set String) -> Aff (Maybe PreparedCache)
+prepareProjected session mainModule directives sourceHashes old current source@(Module changed) currentProof projection coverage = do
+  demands <- liftEffect (Ref.new Set.empty)
   let
     index = Map.fromFoldable (map (\entry -> Tuple entry.name (Set.fromFoldable entry.keys)) old.index)
     payloads = Map.fromFoldable (map (\entry -> Tuple entry.name entry.hash) old.payloads)
@@ -231,6 +299,7 @@ prepareProjected session mainModule directives sourceHashes old current source@(
       preparedModules = map (\header@(Module value) -> if value.name == changed.name then changedPrepared else header) projection.modules
       prepared =
         { directives, modules: preparedModules, metadata: projection.metadata, metadataUnchanged: true
+        , metadataDemands: Just (\keys -> Ref.modify_ (Set.union keys) demands)
         , mainModules: case mainModule of
             Just name -> [ name ]
             Nothing -> projection.mainModules
@@ -243,9 +312,11 @@ prepareProjected session mainModule directives sourceHashes old current source@(
         }
     Just
       { prepared, sourceHashes, sourceModules: projection.modules, sourceInterfaces: projection.interfaces
+      , compactSourceDelta: Just (unwrap changed.name)
       , mono: { globalAstMap: Map.empty, instantiations: Map.empty, bodyReads }
       , reusable: Set.delete (unwrap changed.name) (Map.keys sourceHashes)
-      , proof: Just proof, materialize: Just materialize
+      , proof: Just proof, metadataDemandKeys: Just demands, metadataCoverage: coverage
+      , metadataProjection: Just projection, materialize: Just materialize
       }
 
 -- Canonical specialization keys can contain very large nested type names.
@@ -270,15 +341,15 @@ readOwn root index payloads name = do
 -- Call only after successful publication. Content-addressed own-payload files
 -- are immutable; replacing the proof is one atomic rename. A failed later build
 -- cannot pair this proof with different committed cache objects.
-publishPersistent :: Session -> PreparedCache -> Aff Unit
-publishPersistent session cache = do
-  result <- attempt (publishPersistentImpl session cache)
+publishPersistent :: Session -> Int -> PreparedCache -> Aff Unit
+publishPersistent session jobs cache = do
+  result <- attempt (publishPersistentImpl session jobs cache)
   case result of
     Left _ -> liftEffect $ Console.error "[gopurs] compact preparation publication skipped: cache write unavailable"
     Right _ -> pure unit
 
-publishPersistentImpl :: Session -> PreparedCache -> Aff Unit
-publishPersistentImpl session cache = do
+publishPersistentImpl :: Session -> Int -> PreparedCache -> Aff Unit
+publishPersistentImpl session jobs cache = do
   stamp <- snapshotStamp (session.stage <> "/session.json")
   case stamp of
     Nothing -> pure unit
@@ -290,7 +361,7 @@ publishPersistentImpl session cache = do
         Nothing -> do
           previous <- readProof session.root
           case previous of
-            Just proof | proof.schema == 4 && proof.snapshot == snapshot
+            Just proof | proof.schema == 5 && proof.snapshot == snapshot
               && validFragmentDigests session.count proof.projection
               && proof.context == session.context && proof.directives == directives -> do
                 valid <- Array.all identity <$> traverse (\entry -> do
@@ -324,9 +395,39 @@ publishPersistentImpl session cache = do
               , mainModules: selectMainModules Nothing (Array.fromFoldable cache.sourceModules)
               })
           pure
-            { schema: 4, context: session.context, directives, snapshot
+            { schema: 5, context: session.context, directives, snapshot
             , sources: map (\(Tuple name hash) -> { name, hash }) (Map.toUnfoldable cache.sourceHashes :: Array _)
-            , modules, index, payloads, projection, bodyReads: Set.toUnfoldable cache.mono.bodyReads
+            , modules, index, payloads, projection, capsule: Nothing, bodyReads: Set.toUnfoldable cache.mono.bodyReads
             }
-      let payload = stringify (encodeJson state)
+      withCapsule <- publishCapsule session jobs cache state
+      let payload = stringify (encodeJson withCapsule)
       writeAtomic session.stage (proofPath session.root) (stringify (encodeJson { hash: Wire.hash payload, payload }))
+
+-- Capsule references are committed in the same proof as their complete source
+-- fragments. A full oracle preserves an existing capsule; only a compact run
+-- with new explicit demands creates one from the verified complete table.
+publishCapsule :: Session -> Int -> PreparedCache -> Proof.State -> Aff Proof.State
+publishCapsule session jobs cache state = case cache.metadataDemandKeys, cache.metadataProjection of
+  Just reference, Just projection -> do
+    requested <- liftEffect (Ref.read reference)
+    let coverage = Set.union requested (fromMaybe Set.empty cache.metadataCoverage)
+    if Set.isEmpty requested || (case cache.metadataCoverage of
+      Just known -> Set.isEmpty (Set.difference requested known)
+      Nothing -> false) then pure state
+    else do
+      -- Join all encoders before writing any object or publishing its proof.
+      -- Wire's mutable encoder state belongs to each independent invocation.
+      encoded <- mapPreparationJobs jobs (liftEffect <<< Wire.write)
+        (ProjectionCapsule.create coverage projection)
+      fragments <- traverse (\text -> do
+        let digest = Wire.hash text
+        writeAtomic session.stage (payloadPath session.root digest) text
+        pure digest) encoded
+      pure (state { capsule = Just fragments })
+  _, _ -> case state.capsule of
+    Nothing -> pure state
+    Just refs -> do
+      objects <- traverse (readObject session.root) refs
+      pure (if validFragmentDigests session.count refs && Array.all (case _ of
+        Just _ -> true
+        Nothing -> false) objects then state else state { capsule = Nothing })

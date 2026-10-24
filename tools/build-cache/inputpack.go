@@ -41,8 +41,8 @@ func inputLayout(spec Spec) string {
 	return ""
 }
 
-// Readers hash their own observed bytes concurrently. Only append is serialized;
-// at most eight source buffers are live and no per-module inode is created.
+// Readers hash their own observed bytes concurrently. Only offset reservation is
+// serialized; at most eight source buffers are live, with disjoint writes.
 type inputPackWriter struct {
 	file  *os.File
 	mu    sync.Mutex
@@ -62,10 +62,10 @@ func (writer *inputPackWriter) append(f Fingerprint, data []byte) (frozenInput, 
 		return frozenInput{}, fmt.Errorf("invalid frozen input module: %s", f.Name)
 	}
 	writer.mu.Lock()
-	defer writer.mu.Unlock()
 	entry := frozenInput{Name: f.Name, Resolved: f.Resolved, Object: Object{f.Digest, int64(len(data))}, Offset: writer.bytes}
-	n, err := writer.file.Write(data)
-	writer.bytes += int64(n)
+	writer.bytes += int64(len(data))
+	writer.mu.Unlock()
+	n, err := writer.file.WriteAt(data, entry.Offset)
 	if err == nil && n != len(data) {
 		err = io.ErrShortWrite
 	}
@@ -73,6 +73,8 @@ func (writer *inputPackWriter) append(f Fingerprint, data []byte) (frozenInput, 
 }
 
 func (writer *inputPackWriter) finish(stage string, modules []frozenInput) error {
+	// The caller joins all append tasks before finish. Any failed reservation
+	// aborts the session instead: a partially written pack must have no index.
 	if err := writer.file.Chmod(0400); err != nil {
 		return err
 	}

@@ -5,10 +5,12 @@ module Gopurs.CodeGen
   , prepareModule
   , workerInputs
   , workerOwners
+  , globalTypeDemands
   , translatePreparedWithFunctions
   ) where
 
 import Prelude
+import Gopurs.Cache.LookupTable as LookupTable
 import Control.Alternative (guard)
 import PureScript.Backend.Optimizer.Syntax (BackendAccessor(..), BackendOperator(..), BackendOperator1(..), BackendOperator2(..), BackendSyntax(PrimEffect, PrimOp, Branch, Fail, CtorDef, CtorSaturated, Lit, UncurriedAbs, Abs, Update, Accessor, LetRec, Let, EffectDefer, EffectPure, EffectBind, UncurriedEffectAbs, UncurriedEffectApp, UncurriedApp, App, Local, Var, Typed))
 import PureScript.Backend.Optimizer.Syntax as Syn
@@ -104,6 +106,21 @@ workerInputs available = foldWorkerReferences
 workerOwners :: BackendModule -> Set.Set String
 workerOwners = foldWorkerReferences (\owner _ -> Set.insert (unwrap owner)) Set.empty
 
+-- Conservative requests are collected explicitly by the emitter. They do not
+-- need to be complete: LookupTable checks coverage on every actual lookup.
+globalTypeDemands :: BackendModule -> Set.Set String
+globalTypeDemands mod = foldl
+  (\acc group -> foldl (\entries (Tuple _ value) -> visit entries value) acc group.bindings)
+  (Set.fromFoldable
+    [ "Data.Argonaut.Decode.Internal.Record.schemaDecoderABI1"
+    , "Data.Argonaut.Decode.Parser.textDecoderABI1"
+    , "Data.Argonaut.Decode.Internal.Record.borrowObject"
+    ]) mod.bindings
+  where
+  visit acc (NeutralExpr syntax) = case syntax of
+    Var (Qualified (Just owner) (Ident name)) -> Set.insert (unwrap owner <> "." <> name) acc
+    _ -> foldl visit acc syntax
+
 foldWorkerReferences :: forall a. (CoreFn.ModuleName -> String -> a -> a) -> a -> BackendModule -> a
 foldWorkerReferences insert initial mod = foldl
   (\acc group -> foldl (\entries (Tuple _ value) -> visit entries value) acc group.bindings)
@@ -193,7 +210,7 @@ translateExpr context@{ metadata, codegenStateRef, modNameStr, bound, options: {
                 let
                   modStr = unwrap mn
                 in
-                  case Map.lookup (modStr <> "." <> i) metadata.globalTypes of
+                  case LookupTable.lookup (modStr <> "." <> i) metadata.globalTypes of
                     Just ty -> exprTypeToGoType metadata.pointerAdtPaths metadata.enumAdts metadata.elidedCtors modNameStr ty
                     Nothing -> TypeValue
               Nothing -> TypeValue

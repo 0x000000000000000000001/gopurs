@@ -1,3 +1,4 @@
+import { fromMap as globalTypesFromMap } from '../output/Gopurs.Cache.LookupTable/index.js';
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
@@ -10,7 +11,7 @@ import * as Either from "../output/Data.Either/index.js";
 import * as Map from "../output/Data.Map/index.js";
 import { ordString } from "../output/Data.Ord/index.js";
 import { Just, Nothing } from "../output/Data.Maybe/index.js";
-import { empty as emptySet, singleton as singletonSet } from "../output/Data.Set/index.js";
+import { empty as emptySet, singleton as singletonSet, member as memberSet } from "../output/Data.Set/index.js";
 import { Tuple } from "../output/Data.Tuple/index.js";
 import * as Ref from "../output/Effect.Ref/index.js";
 import * as Cache from "../output/Gopurs.Cache.Modules/index.js";
@@ -61,13 +62,15 @@ test("emission keys cover referenced worker signatures and absences without unre
       for (let i = 0; i < 4; i++) copyFileSync(join(previous.stage, `modules/Consumer/${i}.json`), join(stage, `prior/Consumer/${i}.json`));
       copyFileSync(join(previous.stage, "output/purescript/Consumer.go"), join(stage, "prior/Consumer/module.go"));
     }
+    const metadataDemands = [];
     const cache = {
       session: { stage, output, context: hash("compiler-options") },
       candidates: previous ? Map.singleton("Consumer")({ ...previous.memo, metadata: new Just(previous.memo.metadata), ffiDigest: new Just(previous.memo.ffiDigest) }) : Map.empty,
       keys: Map.singleton("Consumer")(keys), metadata: hash(metadataKey),
+      metadataDemands: new Just(demands => () => { metadataDemands.push(demands); }),
       invalidations: Ref.new(Map.empty)(), restored: Ref.new(0)(),
       reads: Ref.new(Map.empty)(),
-      lazyContributions: false, priorPartTexts: Map.empty, reused: Ref.new(Map.empty)(), priorWorkers: Ref.new(Map.empty)(), backends: Ref.new(Map.empty)(), headerSafe: headerSafe ? singletonSet("Consumer") : emptySet,
+      lazyContributions: false, priorHeaderDirectives: Map.empty, priorPartTexts: Map.empty, reused: Ref.new(Map.empty)(), priorWorkers: Ref.new(Map.empty)(), backends: Ref.new(Map.empty)(), headerSafe: headerSafe ? singletonSet("Consumer") : emptySet,
       ffiDigests: Map.empty, priorFfiDigests: Map.empty,
     };
     // Different all-worker prefixes previously invalidated unrelated consumers.
@@ -94,10 +97,12 @@ test("emission keys cover referenced worker signatures and absences without unre
       const bytes = readFileSync(join(stage, `modules/Consumer/${i}.json`));
       return { codec, object: { sha256: hash(bytes), bytes: bytes.length } };
     });
-    return { stage, memo, preparationReads, restored: Ref.read(cache.restored)(), code: readFileSync(join(output, "purescript/Consumer.go"), "utf8"), loaded, result, decodedOwners: Map.size(Ref.read(cache.priorWorkers)()) };
+    return { stage, memo, preparationReads, metadataDemands, restored: Ref.read(cache.restored)(), code: readFileSync(join(output, "purescript/Consumer.go"), "utf8"), loaded, result, decodedOwners: Map.size(Ref.read(cache.priorWorkers)()) };
   }
   const first = await emit("first", present);
   assert.ok(first.preparationReads > 0, "a fresh module must be prepared");
+  assert.equal(first.metadataDemands.length, 1);
+  assert.ok(memberSet(ordString)("Producer.f")(first.metadataDemands[0]));
   assert.match(first.code, /Call_Producer_f\(/);
   const deferredProducer = Map.singleton("Producer")(Nothing.value);
   const lazyFirst = await emit("lazy-first", present, undefined, undefined, undefined, undefined, deferredProducer);
@@ -112,6 +117,7 @@ test("emission keys cover referenced worker signatures and absences without unre
   assert.equal(headerHit.restored, 1);
   assert.equal(headerHit.result.deferred, true);
   assert.equal(headerHit.decodedOwners, 0, "proved cached emission does not decode its worker contribution");
+  assert.deepEqual(headerHit.metadataDemands, [], "a header restore does not repeat preparation demand collection");
   assert.deepEqual(headerHit.loaded, [], "proved cached emission does not consume any imported signatures");
   const invisible = await emit("lazy-invisible", present, undefined, undefined, undefined, undefined, Map.empty);
   const invisibleFull = await emit("eager-invisible", Map.empty);
@@ -126,6 +132,7 @@ test("emission keys cover referenced worker signatures and absences without unre
   assert.equal(kept.code, first.code);
   assert.equal(kept.restored, 1, "an unrelated worker invalidated emission");
   assert.equal(kept.preparationReads, 0, "a proven emission hit repeated local preparation");
+  assert.deepEqual(kept.metadataDemands, [], "an early emission hit does not repeat demand collection");
   const oldWorkers = { ...first, memo: { ...first.memo,
     parts: first.memo.parts.map((part, i) => i === 3 ? { ...part, codec: "gopurs/workers-v1" } : part) } };
   const migrated = await emit("old-worker-codec", present, oldWorkers);
@@ -172,7 +179,7 @@ test("emission keys cover referenced worker signatures and absences without unre
       ))),
     )))),
   ] }] };
-  const borrowingMetadata = { ...metadata, globalTypes: insert(helper)(helperType)(Map.empty) };
+  const borrowingMetadata = { ...metadata, globalTypes: globalTypesFromMap(insert(helper)(helperType)(Map.empty)) };
   const helperInfo = { reference: worker("Data_Argonaut_Decode_Internal_Record", "Call_Data_Argonaut_Decode_Internal_Record_borrowObject"), fArgs: [G.TypeValue.value, G.TypeValue.value], fRet: G.TypeValue.value, arity: 2 };
   const helperPresent = insert(helper)(helperInfo)(Map.empty);
   const prepared = CodeGen.prepareModule({ ...borrowingMetadata, globalFunctions: helperPresent })(borrowingBackend);
@@ -180,6 +187,9 @@ test("emission keys cover referenced worker signatures and absences without unre
   assert.equal(Map.member(ordString)(helper)(prepared.workers), true, "fixture must introduce the external helper");
   const borrowEmit = (label, functions, previous) => emit("borrow-" + label, functions, previous, "borrowing-metadata", borrowingBackend, borrowingMetadata);
   const borrowed = await borrowEmit("first", helperPresent);
+  assert.equal(borrowed.metadataDemands.length, 1);
+  assert.ok(memberSet(ordString)("Data.Argonaut.Decode.Class.decodeForeignObject")(borrowed.metadataDemands[0]), "input references remain covered after preparation");
+  assert.ok(memberSet(ordString)(helper)(borrowed.metadataDemands[0]), "a reference introduced by preparation is collected");
   assert.match(borrowed.code, /Call_Data_Argonaut_Decode_Internal_Record_borrowObject\(/);
   const lazyBorrow = await emit("borrow-lazy", helperPresent, undefined, "borrowing-metadata", borrowingBackend, borrowingMetadata,
     Map.singleton("Data.Argonaut.Decode.Internal.Record")(Nothing.value));

@@ -1,5 +1,10 @@
 # C2-8 — backend one-shot central sous 10 s confirmé
 
+La poursuite [C2-10](build-c2-sub2.md) vise 2 s sans daemon ; L reste
+au-dessus de ce seuil. La campagne est close pour impasse pratique ; son
+audit strict échoue uniquement sur le seuil de vitesse. La médiane
+**8,586 s** ci-dessous demeure le résultat historique propre à C2-8/v4.
+
 La suite [C2-9](build-c2-sub4.md) atteint désormais 3,841 s backend médian
 sur trois paires exactes et 8,791 s pour le vrai `b`. Les chiffres ci-dessous
 restent les résultats historiques propres à C2-8/v4.

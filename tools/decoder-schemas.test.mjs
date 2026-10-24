@@ -1,3 +1,4 @@
+import { withGlobalTypes } from './codegen-metadata.mjs';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
@@ -31,7 +32,7 @@ const metadata={globalTypes:Map.insert(ordString)('Data.Argonaut.Decode.Internal
 const textMetadata={globalTypes:Map.insert(ordString)('Data.Argonaut.Decode.Parser.textDecoderABI1')(C.Int.value)(metadata.globalTypes)};
 function run(dict,extra=[],recursive=false,meta=metadata){
  const mod={name:'Probe',bindings:[{recursive,bindings:[...extra,new Tuple('decode',method(dict))]}]};
- const snapshot=JSON.stringify(mod);const result=specializeDecoderSchemas(meta)(mod);
+ const snapshot=JSON.stringify(mod);const result=specializeDecoderSchemas(withGlobalTypes(meta))(mod);
  assert.equal(JSON.stringify(mod),snapshot);
  return {...result,code:result.declarations.map(printGoDecl).join('\n')};
 }
@@ -127,7 +128,7 @@ test('dynamic symbol callbacks, unknown builders, local captures and recursive s
 
 test('annotations, type applications and generated-name collisions are preserved',()=>{
  const source=new E(new S.Typed(C.Any.value,new E(new S.TypeApp(method(record(field('x',int))),C.Any.value))));
- const result=specializeDecoderSchemas(metadata)({name:'Probe',bindings:[{recursive:false,bindings:[new Tuple('__json_schema_0_decode',literal('user')),new Tuple('decode',source)]}]});
+ const result=specializeDecoderSchemas(withGlobalTypes(metadata))({name:'Probe',bindings:[{recursive:false,bindings:[new Tuple('__json_schema_0_decode',literal('user')),new Tuple('decode',source)]}]});
  assert.match(result.declarations.map(printGoDecl).join('\n'),/__json_schema_1_decode/);
  const replacement=result.module.bindings[0].bindings[1].value1;
  assert.ok(replacement instanceof S.Typed);
@@ -142,7 +143,7 @@ test('only an exact qualified unary decodeJson method is admitted, even with the
  for(const expr of [app(global('Other','decodeJson'),dict),app(global(null,'decodeJson'),dict),
   app(cls('decodeJson'),dict,erased),new E(new S.UncurriedApp(cls('decodeJson'),[dict]))]){
   const mod={name:'Probe',bindings:[{recursive:false,bindings:[new Tuple('decode',expr)]}]};
-  const result=specializeDecoderSchemas(textMetadata)(mod);
+  const result=specializeDecoderSchemas(withGlobalTypes(textMetadata))(mod);
   assert.deepEqual(result.module.bindings,mod.bindings);
   assert.deepEqual(result.declarations,[]);
  }
@@ -191,7 +192,7 @@ test('rejected scopes allow independent children while recursive groups and LetR
   {recursive:false,bindings:[new Tuple('localRec',recursive),new Tuple('effect',effect),
    new Tuple('missing',method(global('Probe','recursiveDict')))]},
  ]};
- const result=specializeDecoderSchemas(metadata)(mod);
+ const result=specializeDecoderSchemas(withGlobalTypes(metadata))(mod);
  assert.deepEqual(result.module.bindings[0],mod.bindings[0]);
  assert.deepEqual(result.module.bindings[1].bindings[0],mod.bindings[1].bindings[0]);
  assert.deepEqual(result.module.bindings[1].bindings[1].value1,new E(new S.EffectPure(global('Probe','__json_schema_0'))));
@@ -205,7 +206,7 @@ test('worker families reserve descendant names in all groups and publish untouch
   {recursive:true,bindings:[new Tuple('__json_schema_0_decode_item_text',literal('reserved'))]},
   {recursive:false,bindings:[new Tuple('pair',array([source,source])),new Tuple('__json_schema_2_source',erased)]},
  ]};
- const result=specializeDecoderSchemas(textMetadata)(mod);
+ const result=specializeDecoderSchemas(withGlobalTypes(textMetadata))(mod);
  assert.deepEqual(result.module.bindings[0],mod.bindings[0]);
  assert.deepEqual(result.module.bindings[1].bindings[0].value1,array([1,3].map(n=>typed(C.Any.value,
   new E(new S.TypeApp(global('Probe',`__json_schema_${n}`),C.Int.value))))));

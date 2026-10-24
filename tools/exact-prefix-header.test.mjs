@@ -1,3 +1,4 @@
+import { fromMap as globalTypesFromMap } from '../output/Gopurs.Cache.LookupTable/index.js';
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { mkdirSync, mkdtempSync, writeFileSync, rmSync } from "node:fs";
@@ -48,7 +49,7 @@ test("exact canonical prefixes restore earlier absent readers independently of r
   writeFileSync(join(stage, "prior/index.json"), "[]");
   const oldFfi = Map.singleton("Anchor")(hash("ffi-base"));
   const session = { stage, output: join(stage, "output"), context: hash("compiler/options"), sameTast: false };
-  const prepared = (ms, meta = metadata, metadataUnchanged = false) => ({ modules: List.fromFoldable(F.foldableArray)(ms), metadata: meta, metadataUnchanged, directives: Map.empty });
+  const prepared = (ms, meta = metadata, metadataUnchanged = false) => ({ modules: List.fromFoldable(F.foldableArray)(ms), metadata: meta, metadataUnchanged, metadataDemands: Nothing.value, directives: Map.empty });
   const initialize = (ms, settings = {}) => runAff(Cache.initialize(1)({ ...session, ...settings.session })
     (prepared(ms, settings.metadata ?? metadata, settings.metadataUnchanged ?? false))(Set.empty)(Ref.new(Map.empty)())
     (settings.ffi ?? oldFfi)(oldFfi)(settings.headerCandidates ?? namesSet));
@@ -79,7 +80,7 @@ test("exact canonical prefixes restore earlier absent readers independently of r
   assert.deepEqual(array((await initialize(modules(11), { headerCandidates: Set.empty })).headerSafe), ["Anchor", "Earlier"]);
 
   // A matching optimizer prefix does not cover a changed emitter environment.
-  const changedMetadata = { ...metadata, globalTypes: Map.singleton("Anchor.value")(C.String.value) };
+  const changedMetadata = { ...metadata, globalTypes: globalTypesFromMap(Map.singleton("Anchor.value")(C.String.value)) };
   assert.deepEqual(array((await initialize(modules(11), { metadata: changedMetadata })).headerSafe), []);
   assert.deepEqual(array((await initialize(modules(11), { ffi: Map.singleton("Anchor")(hash("different-ffi")) })).headerSafe), []);
   assert.deepEqual(array((await initialize(modules(11), { session: { context: hash("other-compiler/options") } })).headerSafe), []);
@@ -138,7 +139,7 @@ test("an exact contribution stops transitive invalidation while uncertain owners
   assert.ok(!prior.proofs.Reader.includes("Change"), "a forbidden inline keeps the reader independent of the future value");
   const currentNames = Set.fromFoldable(F.foldableArray)(Ord.ordString)(original.map(module => module.name));
   const initialize = (source, settings = {}) => runAff(Cache.initialize(1)({ stage, context: settings.context ?? "same-context", sameTast: false })
-    ({ modules: List.fromFoldable(F.foldableArray)(source), metadata: settings.metadata ?? metadata, metadataUnchanged: false, directives: Map.empty })
+    ({ modules: List.fromFoldable(F.foldableArray)(source), metadata: settings.metadata ?? metadata, metadataUnchanged: false, metadataDemands: Nothing.value, directives: Map.empty })
     (Set.empty)(Ref.new(Map.empty)())(settings.ffi ?? Map.empty)(Map.empty)(currentNames));
   const baseline = await initialize(original);
   const memos = Map.toUnfoldable(U.unfoldableArray)(baseline.keys).map(({ value0: name, value1: keys }) => ({
@@ -158,7 +159,7 @@ test("an exact contribution stops transitive invalidation while uncertain owners
   rmSync(join(stage, "prior/Reader/reads.json"));
   assert.deepEqual(array((await initialize(edited)).headerSafe), ["Exact"], "a missing reader proof never becomes a hit");
   for (const settings of [{ context: "other-context" }, { ffi: Map.singleton("Exact")("changed-ffi") },
-    { metadata: { ...metadata, globalTypes: Map.singleton("Exact.value")(C.String.value) } }]) {
+    { metadata: { ...metadata, globalTypes: globalTypesFromMap(Map.singleton("Exact.value")(C.String.value)) } }]) {
     assert.deepEqual(array((await initialize(edited, settings)).headerSafe), [], "context, FFI and metadata still gate the exact barrier");
   }
   // Remove exactness without changing prepared bodies: the changed seed must

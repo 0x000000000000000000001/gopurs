@@ -1,6 +1,7 @@
 module Gopurs.DecoderSchemas (specializeDecoderSchemas) where
 
 import Prelude
+import Gopurs.Cache.LookupTable as LookupTable
 
 import Control.Monad.State (get, put, runState)
 import Data.Array as Array
@@ -34,7 +35,7 @@ type RewriteState =
 -- the ABI gate, traversal, family-name reservation and final source publication.
 specializeDecoderSchemas :: CodegenMetadata -> BackendModule -> { module :: BackendModule, declarations :: Array GoDecl }
 specializeDecoderSchemas metadata mod
-  | not (Map.member "Data.Argonaut.Decode.Internal.Record.schemaDecoderABI1" metadata.globalTypes) = { module: mod, declarations: [] }
+  | not (LookupTable.member "Data.Argonaut.Decode.Internal.Record.schemaDecoderABI1" metadata.globalTypes) = { module: mod, declarations: [] }
   | otherwise =
       let
         context :: DictionaryContext
@@ -50,7 +51,7 @@ specializeDecoderSchemas metadata mod
       in { module: mod { bindings = bindings <> sources }, declarations: result.declarations }
   where
   prefix = String.replaceAll (Pattern ".") (Replacement "_") (unwrap mod.name)
-  textEnabled = Map.member "Data.Argonaut.Decode.Parser.textDecoderABI1" metadata.globalTypes
+  textEnabled = LookupTable.member "Data.Argonaut.Decode.Parser.textDecoderABI1" metadata.globalTypes
 
   rewriteGroup context group
     | group.recursive = pure group

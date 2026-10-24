@@ -365,13 +365,29 @@ func privateDirectory(path string) error {
 }
 
 func snapshot(spec Spec) (Snapshot, error) {
-	compiler, err := fingerprints(spec.Workspace, spec.Compiler)
-	if err != nil {
-		return Snapshot{}, err
+	return snapshotWithFingerprints(spec, fingerprints)
+}
+
+func snapshotWithFingerprints(spec Spec, observe func(string, []Input) ([]Fingerprint, error)) (Snapshot, error) {
+	type observation struct {
+		items []Fingerprint
+		err   error
+	}
+	compilerDone := make(chan observation, 1)
+	go func() {
+		items, err := observe(spec.Workspace, spec.Compiler)
+		compilerDone <- observation{items, err}
+	}()
+	inputs, inputErr := observe(spec.Workspace, spec.Inputs)
+	compiler := <-compilerDone
+	// Join both independent reads before returning. Preserve the serial error
+	// priority, including compiler artifact validation before any input error.
+	if compiler.err != nil {
+		return Snapshot{}, compiler.err
 	}
 	parts := []string{}
 	hasCompiler := false
-	for _, f := range compiler {
+	for _, f := range compiler.items {
 		if f.Kind != "file" || f.State != "file" {
 			return Snapshot{}, fmt.Errorf("compiler resource absent/not a file: %s", f.Path)
 		}
@@ -384,9 +400,8 @@ func snapshot(spec Spec) (Snapshot, error) {
 		return Snapshot{}, fmt.Errorf("compiler artifact is required")
 	}
 	identity := Key("compiler", parts...)
-	inputs, err := fingerprints(spec.Workspace, spec.Inputs)
-	if err != nil {
-		return Snapshot{}, err
+	if inputErr != nil {
+		return Snapshot{}, inputErr
 	}
 	return snapshotFromFingerprints(spec, identity, inputs)
 }
@@ -611,8 +626,13 @@ func fileMatches(path string, obj Object) bool {
 	if err != nil || !info.Mode().IsRegular() || info.Size() != obj.Bytes {
 		return false
 	}
-	data, err := os.ReadFile(path)
-	return err == nil && digest(data) == obj.SHA256
+	file, err := os.Open(path)
+	if err != nil {
+		return false
+	}
+	defer file.Close()
+	hash, count, err := digestReader(file)
+	return err == nil && count == obj.Bytes && hash == obj.SHA256
 }
 
 // Called under the publication lock, after all conflicts have been checked and
@@ -689,7 +709,14 @@ func (s store) putObject(data []byte) (Object, error) {
 // one directory. Until that barrier, these immutable objects are private hints:
 // no journal, output or manifest can refer to the new transaction yet.
 func (s store) putStagedObject(data []byte) (Object, error) {
+	return s.putStagedObjectExpected(data, nil)
+}
+
+func (s store) putStagedObjectExpected(data []byte, expected *Object) (Object, error) {
 	obj := Object{SHA256: digest(data), Bytes: int64(len(data))}
+	if expected != nil && obj != *expected {
+		return Object{}, fmt.Errorf("staged bytes differ from expected SHA/length")
+	}
 	path := filepath.Join(s.cache, "objects", obj.SHA256)
 	if fileMatches(path, obj) {
 		return obj, nil
@@ -891,16 +918,28 @@ func (s store) stage(req Request, snap Snapshot, previous *Manifest) (Manifest, 
 			priorSources[memo.Name] = memo.Sources
 		}
 	}
+	if err := validateExpectedOutputs(req); err != nil {
+		return m, err
+	}
 	if err := boundedEach(len(req.Outputs), func(i int) error {
 		out := req.Outputs[i]
 		if !outputPath(out.Kind, out.Module, out.Path) {
 			return fmt.Errorf("unowned output path: %s", out.Path)
 		}
-		data, err := os.ReadFile(absolute(req.Spec.Workspace, out.Source))
+		source := absolute(req.Spec.Workspace, out.Source)
+		var expected *Object
+		if object, ok := req.expectedOutputs[out.Path]; ok {
+			expected = &object
+			info, err := os.Lstat(source)
+			if err != nil || !info.Mode().IsRegular() || info.Size() != object.Bytes {
+				return fmt.Errorf("emitted Go file changed before publication: %s", out.Path)
+			}
+		}
+		data, err := os.ReadFile(source)
 		if err != nil {
 			return err
 		}
-		obj, err := s.putStagedObject(data)
+		obj, err := s.putStagedObjectExpected(data, expected)
 		if err != nil {
 			return err
 		}
@@ -914,7 +953,7 @@ func (s store) stage(req Request, snap Snapshot, previous *Manifest) (Manifest, 
 		mod := req.Modules[i]
 		if mod.Inherited {
 			prior, ok := inherited[mod.Name]
-			if !ok || len(mod.Parts) != 0 || mod.Reads != nil || len(mod.Sources) != 0 {
+			if !ok || len(mod.Parts) != 0 || mod.Reads != nil || mod.Capsule != nil || len(mod.Sources) != 0 {
 				return fmt.Errorf("invalid inherited module: %s", mod.Name)
 			}
 			for _, part := range artifacts(Manifest{Modules: []ModuleMemo{prior}}) {
@@ -937,6 +976,7 @@ func (s store) stage(req Request, snap Snapshot, previous *Manifest) (Manifest, 
 			}
 			prior.Prepared, prior.OptimizerEnvironment, prior.CallerDemands = mod.Prepared, mod.OptimizerEnvironment, mod.CallerDemands
 			prior.EmitterEnvironment, prior.Metadata, prior.FFIDigest = mod.EmitterEnvironment, mod.Metadata, mod.FFIDigest
+			prior.Capsule = nil // Revalidate optional anchors against the complete new generation below.
 			m.Modules[i] = prior
 			return nil
 		}
@@ -967,6 +1007,9 @@ func (s store) stage(req Request, snap Snapshot, previous *Manifest) (Manifest, 
 	}); err != nil {
 		return m, err
 	}
+	if err := s.stageCapsules(req, snap, previous, &m, packer); err != nil {
+		return m, err
+	}
 	if req.Diagnostics != nil {
 		a, err := s.stageArtifact(req.Spec.Workspace, *req.Diagnostics, validated, packer)
 		if err != nil {
@@ -983,6 +1026,33 @@ func (s store) stage(req Request, snap Snapshot, previous *Manifest) (Manifest, 
 	// This also covers byte-identical objects left by an interrupted/failed stage
 	// whose renames were not yet durable. It precedes ownership and public writes.
 	return m, syncDirectory(filepath.Join(s.cache, "objects"))
+}
+
+// A private expected inventory must cover exactly the package outputs. A nil
+// inventory retains the storage API's historical caller-supplied output path.
+func validateExpectedOutputs(req Request) error {
+	if req.expectedOutputs == nil {
+		return nil
+	}
+	seen := map[string]bool{}
+	for _, out := range req.Outputs {
+		expected, exists := req.expectedOutputs[out.Path]
+		switch out.Kind {
+		case "package", "ffi-package", "order", "package-init":
+			if !exists || !validObject(expected) || seen[out.Path] {
+				return fmt.Errorf("missing/invalid/duplicate expected emitted Go output: %s", out.Path)
+			}
+			seen[out.Path] = true
+		default:
+			if exists {
+				return fmt.Errorf("unexpected expectation for non-package output: %s", out.Path)
+			}
+		}
+	}
+	if len(seen) != len(req.expectedOutputs) {
+		return fmt.Errorf("expected emitted Go output is outside request inventory")
+	}
+	return nil
 }
 
 // Each task owns its result slot; completion order cannot reorder a manifest.

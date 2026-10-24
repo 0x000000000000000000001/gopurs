@@ -1,10 +1,8 @@
-module Gopurs.Cache.Modules (ModuleCache, Memo, Keys, Part, initialize, loadHeaderTexts, lookupAll, lookupHeaders, lookupBackend, lookupBackendWithReads, captureReads, emit, emitWithWorkerSnapshot, resolveWorkerSnapshot, readWorkerContribution, report, loadReads, headerSafeFromReads, publishReads, implementationOwners, warmImplementations, readImplementationsSync) where
+module Gopurs.Cache.Modules (ModuleCache, Memo, Keys, Part, initialize, loadHeaderTexts, loadHeaderTextsWithPreload, lookupAll, lookupHeaders, lookupBackend, lookupBackendWithReads, captureReads, emit, emitWithWorkerSnapshot, resolveWorkerSnapshot, warmWorkerSnapshot, readWorkerContribution, report, loadReads, headerSafeFromReads, publishReads, implementationOwners, warmImplementations, warmImplementationInputs, readCachedBinding, readImplementationsSync) where
 
 import Prelude
 
 import Control.Alternative (guard)
-import Control.Monad.Rec.Class (Step(..), tailRecM)
-import Control.Parallel (parTraverse)
 import Data.Argonaut.Core (Json, stringify)
 import Data.Argonaut.Decode (decodeJson)
 import Data.Argonaut.Encode (encodeJson)
@@ -15,21 +13,23 @@ import Data.Foldable (foldl, foldM, for_)
 import Data.List (List(..), (:))
 import Data.Map (Map)
 import Data.Map as Map
-import Data.Maybe (Maybe(..), fromMaybe, isJust)
+import Data.Maybe (Maybe(..), fromMaybe, isJust, maybe)
 import Data.Newtype (unwrap)
 import Data.Set (Set)
 import Data.Set as Set
 import Data.String as String
 import Data.String.Pattern (Pattern(..), Replacement(..))
 import Data.Traversable (sequence, traverse)
-import Data.Tuple (Tuple(..), fst, snd)
+import Data.Tuple (Tuple(..))
 import Effect.Aff (Aff, attempt, throwError)
 import Effect (Effect)
 import Effect.Class (liftEffect)
 import Effect.Console as Console
 import Effect.Exception (error, throwException)
 import Effect.Ref as Ref
+import Gopurs.Cache.HeaderPreload as HeaderPreload
 import Gopurs.Cache.Wire as Wire
+import Gopurs.Cache.BindingCapsule as BindingCapsule
 import Gopurs.CodeGen as CodeGen
 import Gopurs.CodegenState (CodegenMetadata)
 import Gopurs.Driver.Cache (FrozenFFI, Session)
@@ -39,13 +39,13 @@ import Gopurs.Driver.Prepare (PreparedModules)
 import Gopurs.ExprContext (ModuleFunctions)
 import Gopurs.GoSymbol (GoReference(..))
 import Gopurs.Metrics as Metrics
-import Gopurs.Preparation (runPreparationJobs)
+import Gopurs.Preparation (mapPreparationJobs, runPreparationJobs)
 import Node.Encoding (Encoding(..))
 import Node.FS.Aff as FS
 import Node.FS.Sync as Sync
 import PureScript.Backend.Optimizer.Analysis (BackendAnalysis)
 import PureScript.Backend.Optimizer.Convert (BackendImplementations, BackendModule, ExternLookup(..))
-import PureScript.Backend.Optimizer.CoreFn (Ann, Ident(..), Module(..), Qualified(..))
+import PureScript.Backend.Optimizer.CoreFn (Ann, Ident(..), Module(..), ModuleName(..), Qualified(..))
 import PureScript.Backend.Optimizer.Observation as Observation
 import PureScript.Backend.Optimizer.Semantics (EvalRef(..), ExternImpl, InlineDirectiveMap)
 
@@ -55,18 +55,24 @@ type Memo =
   { name :: String, prepared :: String, optimizerEnvironment :: String
   , callerDemands :: String, emitterEnvironment :: String, parts :: Array Part
   , metadata :: Maybe String, ffiDigest :: Maybe String
+  , capsule :: Maybe Part
   }
 type ModuleCache =
   { session :: Session
   , candidates :: Map String Memo
   , keys :: Map String Keys
   , metadata :: String
+  , metadataDemands :: Maybe (Set String -> Effect Unit)
   , invalidations :: Ref.Ref (Map String String)
   , restored :: Ref.Ref Int
   , sameContext :: Boolean
   , reads :: Ref.Ref (Map String Observation.Reads)
   , restoredPBO :: Ref.Ref (Set String)
   , priorImplementations :: Ref.Ref (Map String (Maybe BackendImplementations))
+  , implementationAnchors :: Map String String
+  , priorCapsules :: Ref.Ref (Map String (Maybe BindingCapsule.Capsule))
+  , capsuleHits :: Ref.Ref Int
+  , capsuleCreated :: Ref.Ref Int
   , priorWorkers :: Ref.Ref (Map String (Maybe ModuleFunctions))
   , currentDigests :: Ref.Ref (Map (Qualified Ident) String)
   , priorDigests :: Ref.Ref (Map (Qualified Ident) String)
@@ -76,6 +82,7 @@ type ModuleCache =
   , headerSafe :: Set String
   , schedulingReads :: Map String (Array String)
   , lazyContributions :: Boolean
+  , priorHeaderDirectives :: Map String InlineDirectiveMap
   , priorPartTexts :: Map String (Map String String)
   , reused :: Ref.Ref (Map String Cache.ReusedMemo)
   }
@@ -163,11 +170,18 @@ initialize jobs session prepared reusableModules backends ffiDigests priorFfiDig
   reads <- liftEffect (Ref.new Map.empty)
   restoredPBO <- liftEffect (Ref.new Set.empty)
   priorImplementations <- liftEffect (Ref.new Map.empty)
+  priorCapsules <- liftEffect (Ref.new Map.empty)
+  capsuleHits <- liftEffect (Ref.new 0)
+  capsuleCreated <- liftEffect (Ref.new 0)
+  let implementationAnchors = Map.mapMaybe (\memo -> do
+        part <- Array.index memo.parts 1
+        guard (part.codec == "pbo/implementations-v1")
+        pure part.object.sha256) candidates
   priorWorkers <- liftEffect (Ref.new Map.empty)
   currentDigests <- liftEffect (Ref.new Map.empty)
   priorDigests <- liftEffect (Ref.new Map.empty)
   reusedMemos <- liftEffect (Ref.new Map.empty)
-  pure { session, candidates, keys: keyed.keys, metadata, invalidations, restored, sameContext, reads, restoredPBO, priorImplementations, priorWorkers, currentDigests, priorDigests, backends, ffiDigests, priorFfiDigests, headerSafe, schedulingReads, lazyContributions: false, priorPartTexts: Map.empty, reused: reusedMemos }
+  pure { session, candidates, keys: keyed.keys, metadata, metadataDemands: prepared.metadataDemands, invalidations, restored, sameContext, reads, restoredPBO, priorImplementations, implementationAnchors, priorCapsules, capsuleHits, capsuleCreated, priorWorkers, currentDigests, priorDigests, backends, ffiDigests, priorFfiDigests, headerSafe, schedulingReads, lazyContributions: false, priorHeaderDirectives: Map.empty, priorPartTexts: Map.empty, reused: reusedMemos }
 
   where
   add acc (Tuple name preparedKey) =
@@ -183,23 +197,7 @@ initialize jobs session prepared reusableModules backends ffiDigests priorFfiDig
       }
 
 mapJobs :: forall a b. Int -> (a -> Aff b) -> Array a -> Aff (Array b)
-mapJobs configured task values
-  | configured <= 1 || Array.null values = traverse task values
-  | otherwise = do
-      let count = Array.length values
-      let workers = min 8 (min configured count)
-      let chunkSize = max 1 (min 8 ((count + workers * 8 - 1) / (workers * 8)))
-      next <- liftEffect (Ref.new 0)
-      let worker = tailRecM
-            (\results -> do
-              start <- liftEffect $ Ref.modify' (\index -> { state: index + chunkSize, value: index }) next
-              if start >= count then pure (Done results)
-              else do
-                completed <- traverse task (Array.slice start (start + chunkSize) values)
-                pure (Loop (Tuple start completed : results)))
-            Nil
-      results <- parTraverse (\_ -> worker) (Array.range 0 (workers - 1))
-      pure (Array.concatMap snd (Array.sortWith fst (Array.concatMap Array.fromFoldable results)))
+mapJobs = mapPreparationJobs
 
 preparedFingerprint :: Map String Memo -> Module Ann -> Aff (Tuple String String)
 -- Hash the actual specialized module, including embedded static arguments.
@@ -293,7 +291,7 @@ lookupHeader cache (Module m) = do
   if not sameFfi || not (preparedMatches cache name keys) || not (Set.member name cache.headerSafe) then pure Nothing
   else do
     implementations <- if cache.lazyContributions then pure (Just Map.empty) else readImplementations cache name
-    directives <- readCachedPart cache name "2" :: Aff (Maybe InlineDirectiveMap)
+    directives <- readHeaderDirectives cache name
     workers <- if cache.lazyContributions then pure (Just Map.empty) else readWorkers cache name
     case implementations, directives, workers of
       Just impls, Just dirs, Just _ -> do
@@ -385,7 +383,7 @@ lookupBackendFromDisk cache coreFnModule@(Module m) view = do
         Just inputs, Just reads -> validateReads cache inputs reads
         _, _ -> pure false
     implementations <- if accepted then readImplementations cache name else pure Nothing
-    directives <- readCachedPart cache name "2" :: Aff (Maybe InlineDirectiveMap)
+    directives <- readHeaderDirectives cache name
     let decoded = do
           guard accepted
           mod <- map _.body entry
@@ -418,20 +416,30 @@ readImplementations cache name = do
 -- Read verified small objects directly from the pinned private manifest.
 -- Their decoding and canonical visibility still happen at the usual points.
 loadHeaderTexts :: ModuleCache -> Aff ModuleCache
-loadHeaderTexts cache
+loadHeaderTexts = loadHeaderTextsWithPreload Nothing
+
+loadHeaderTextsWithPreload :: Maybe HeaderPreload.Reservoir -> ModuleCache -> Aff ModuleCache
+loadHeaderTextsWithPreload pending cache
   | not cache.lazyContributions || Set.isEmpty cache.headerSafe = pure cache
+  | Just headers <- pending >>= HeaderPreload.select cache.session cache.headerSafe =
+      pure (cache { priorHeaderDirectives = headers })
   | otherwise = do
-      contributions <- Cache.readParts cache.session (Set.toUnfoldable cache.headerSafe) [ "2", "3" ]
+      contributions <- Cache.readParts cache.session (Set.toUnfoldable cache.headerSafe) [ "2" ]
       texts <- foldM add Map.empty contributions
-      unless (Array.length contributions == 2 * Set.size cache.headerSafe) $
+      unless (Array.length contributions == Set.size cache.headerSafe) $
         throwError (error "incremental cache: incomplete header contributions")
       pure (cache { priorPartTexts = texts })
   where
   add texts entry = do
     let parts = fromMaybe Map.empty (Map.lookup entry.name texts)
-    unless (Set.member entry.name cache.headerSafe && (entry.part == "2" || entry.part == "3") && not (Map.member entry.part parts)) $
+    unless (Set.member entry.name cache.headerSafe && entry.part == "2" && not (Map.member entry.part parts)) $
       throwError (error "incremental cache: unexpected header contribution")
     pure (Map.insert entry.name (Map.insert entry.part entry.text parts) texts)
+
+readHeaderDirectives :: ModuleCache -> String -> Aff (Maybe InlineDirectiveMap)
+readHeaderDirectives cache name = case Map.lookup name cache.priorHeaderDirectives of
+  Just value -> pure (Just value)
+  Nothing -> readCachedPart cache name "2"
 
 readCachedPart :: forall a. Wire.Codec a => ModuleCache -> String -> String -> Aff (Maybe a)
 readCachedPart cache name part = case Map.lookup name cache.priorPartTexts >>= Map.lookup part of
@@ -466,11 +474,37 @@ decodeImplementations name text = do
 -- before adding anything to the private memo. The builder still controls rank
 -- and finality; this never publishes an optimizer contribution.
 warmImplementations :: Int -> ModuleCache -> Map String Int -> String -> Aff Unit
-warmImplementations jobs cache ranks reader
+warmImplementations = warmImplementationOwners Set.empty
+
+-- A capsule is a private hint for this confirmed miss. Uncovered new reads
+-- still reach the complete owner loader after the builder's visibility guards.
+warmImplementationInputs :: Int -> ModuleCache -> Map String Int -> String -> Aff Unit
+warmImplementationInputs jobs cache ranks reader = do
+  capsule <- loadBindingCapsule cache reader
+  warmImplementationOwners (maybe Set.empty (Map.keys <<< _.anchors) capsule) jobs cache ranks reader
+
+loadBindingCapsule :: ModuleCache -> String -> Aff (Maybe BindingCapsule.Capsule)
+loadBindingCapsule cache reader
+  | not cache.lazyContributions || not cache.sameContext = pure Nothing
+  | otherwise = do
+      previous <- liftEffect (Map.lookup reader <$> Ref.read cache.priorCapsules)
+      case previous of
+        Just value -> pure value
+        Nothing -> do
+          value <- case Map.lookup reader cache.candidates >>= _.capsule of
+            Just part | part.codec == BindingCapsule.codec -> Metrics.measure "PBO binding capsule" \_ -> do
+              text <- Cache.readCapsule cache.session reader
+              pure (text >>= BindingCapsule.decode cache.session.context reader cache.implementationAnchors)
+            _ -> pure Nothing
+          liftEffect (Ref.modify_ (Map.insert reader value) cache.priorCapsules)
+          pure value
+
+warmImplementationOwners :: Set String -> Int -> ModuleCache -> Map String Int -> String -> Aff Unit
+warmImplementationOwners covered jobs cache ranks reader
   | not cache.lazyContributions = pure unit
   | otherwise = do
       previous <- liftEffect (Ref.read cache.priorImplementations)
-      let owners = Array.filter (\owner -> case Map.lookup owner previous of
+      let owners = Array.filter (\owner -> not (Set.member owner covered) && case Map.lookup owner previous of
             Just (Just _) -> false
             _ -> true) (implementationOwners cache ranks reader)
       unless (Array.null owners) $ Metrics.measure "PBO implementation warm" \_ -> do
@@ -486,6 +520,33 @@ warmImplementations jobs cache ranks reader
         let additions = Map.fromFoldable complete
         liftEffect (Ref.modify_ (\current -> Map.union current additions) cache.priorImplementations)
         liftEffect $ Console.error ("[gopurs] warmed implementation owners: " <> show (Array.length owners))
+
+-- The builder calls this only for a finalized reused owner. Complete maps win;
+-- a capsule miss never stands for absence. Fresh contributions bypass it.
+readCachedBinding :: ModuleCache -> String -> String -> String -> Effect (Maybe (Maybe (Tuple BackendAnalysis ExternImpl)))
+readCachedBinding cache reader owner ident = do
+  let key = Qualified (Just (ModuleName owner)) (Ident ident)
+  previous <- Ref.read cache.priorImplementations
+  case Map.lookup owner previous of
+    Just (Just implementations) -> pure (Just (Map.lookup key implementations))
+    _ | Set.member owner cache.headerSafe -> do
+      capsule <- map (\entries -> Map.lookup reader entries >>= identity) (Ref.read cache.priorCapsules)
+      let covered = capsule >>= BindingCapsule.lookup key
+      when (isJust covered) (Ref.modify_ (_ + 1) cache.capsuleHits)
+      pure covered
+    _ -> pure Nothing
+
+publishBindingCapsule :: ModuleCache -> String -> Observation.Reads -> Aff Unit
+publishBindingCapsule cache reader reads
+  | not cache.lazyContributions || not cache.sameContext || not (Map.member reader cache.candidates) = pure unit
+  | otherwise = do
+      complete <- liftEffect (Ref.read cache.priorImplementations)
+      capsule <- liftEffect (map (\entries -> Map.lookup reader entries >>= identity) (Ref.read cache.priorCapsules))
+      let entries = BindingCapsule.select cache.headerSafe cache.implementationAnchors complete capsule reads
+      encoded <- liftEffect (BindingCapsule.encode cache.session.context reader cache.implementationAnchors entries)
+      for_ encoded \text -> do
+        FS.writeTextFile UTF8 (target cache reader <> "capsule.json") text
+        liftEffect (Ref.modify_ (_ + 1) cache.capsuleCreated)
 
 -- Called only after the builder's rank/finality checks. These immutable bytes
 -- belong to this session's committed manifest; never consult a public mirror.
@@ -547,6 +608,44 @@ validateReads cache view reads = do
               pure (before == after)
   implementation _ = pure false
 
+validateWorkers :: String -> ModuleFunctions -> Maybe ModuleFunctions
+validateWorkers name functions = do
+  guard (Array.all (isJust <<< String.stripPrefix (Pattern (name <> "."))) (Array.fromFoldable (Map.keys functions)))
+  guard (Array.all (\info -> info.arity >= 0 && case info.reference of
+    SymbolReference symbol -> symbol.owner /= "" && symbol.name /= ""
+    LocalReference _ -> false) (Array.fromFoldable (Map.values functions)))
+  pure functions
+
+-- Decode only cached owners already visible in the captured emission snapshot.
+-- Populate the private memo after the entire response is validated; visibility
+-- still belongs to resolveWorkerSnapshot, including current and future absences.
+warmWorkerSnapshot :: Int -> ModuleCache -> Map String (Maybe ModuleFunctions) -> Array BackendModule -> Aff Unit
+warmWorkerSnapshot jobs cache snapshot backends
+  | not cache.lazyContributions = pure unit
+  | otherwise = do
+      previous <- liftEffect (Ref.read cache.priorWorkers)
+      let requested = Set.filter (\owner -> case Map.lookup owner snapshot of
+            Just Nothing -> not (Map.member owner previous)
+            _ -> false) (foldl (\owners backend -> Set.union owners (CodeGen.workerOwners backend)) Set.empty backends)
+      unless (Set.isEmpty requested) $ do
+        let owners = Set.toUnfoldable requested :: Array String
+        for_ owners \name -> case Map.lookup name cache.candidates >>= \memo -> Array.index memo.parts 3 of
+          Just part | part.codec == "gopurs/workers-v2" -> pure unit
+          _ -> throwError (error ("incremental cache: unreadable workers for " <> name))
+        contributions <- Cache.readParts cache.session owners [ "3" ]
+        texts <- foldM (\values entry -> do
+          unless (entry.part == "3" && Set.member entry.name requested && not (Map.member entry.name values)) $
+            throwError (error "incremental cache: unexpected worker contribution")
+          pure (Map.insert entry.name entry.text values)) Map.empty contributions
+        unless (Map.size texts == Set.size requested) $
+          throwError (error "incremental cache: incomplete worker contributions")
+        decoded <- runPreparationJobs jobs (map (\(Tuple name text) _ -> Tuple name (Wire.read text >>= validateWorkers name)) (Map.toUnfoldable texts :: Array (Tuple String String)))
+        complete <- traverse (\(Tuple name value) -> case value of
+          Nothing -> throwError (error ("incremental cache: unreadable workers for " <> name))
+          Just functions -> pure (Tuple name (Just functions))) decoded
+        let additions = Map.fromFoldable complete
+        liftEffect (Ref.modify_ (\current -> Map.union current additions) cache.priorWorkers)
+
 readWorkers :: ModuleCache -> String -> Aff (Maybe ModuleFunctions)
 readWorkers cache name = do
   previous <- liftEffect (Ref.read cache.priorWorkers)
@@ -556,13 +655,7 @@ readWorkers cache name = do
       workers <- case Map.lookup name cache.candidates >>= \memo -> Array.index memo.parts 3 of
         Just part | part.codec == "gopurs/workers-v2" -> readCachedPart cache name "3"
         _ -> pure Nothing
-      let value = do
-            functions <- workers
-            guard (Array.all (isJust <<< String.stripPrefix (Pattern (name <> "."))) (Array.fromFoldable (Map.keys functions)))
-            guard (Array.all (\info -> info.arity >= 0 && case info.reference of
-              SymbolReference symbol -> symbol.owner /= "" && symbol.name /= ""
-              LocalReference _ -> false) (Array.fromFoldable (Map.values functions)))
-            pure functions
+      let value = workers >>= validateWorkers name
       liftEffect (Ref.modify_ (Map.insert name value) cache.priorWorkers)
       pure value
 
@@ -668,6 +761,7 @@ emitWithWorkers resolver cache ffi metadata _ optimizedCached coreFnModule backe
           map ownerName (Array.fromFoldable (Map.keys owned.implementations) <> Array.fromFoldable (Map.keys owned.directives))
         readsText = if Array.null owners then "" else String.joinWith "\n" owners <> "\n"
       FS.writeTextFile UTF8 (directory <> "reads.json") readsText
+      publishBindingCapsule cache name owned
       parts <- liftEffect $ sequence
             [ Wire.write ({ body: backend { implementations = Map.empty, directives = Map.empty }, reads: Map.lookup name observations } :: CachedBackend)
             , Wire.write backend.implementations
@@ -711,6 +805,8 @@ emitWithWorkers resolver cache ffi metadata _ optimizedCached coreFnModule backe
       Just previous -> Tuple inputEnvironment <$> restore previous
       Nothing -> do
         let transformed = CodeGen.prepareModule (metadata { globalFunctions = available }) backend
+        liftEffect $ for_ cache.metadataDemands \record ->
+          record (Set.union (CodeGen.globalTypeDemands backend) (CodeGen.globalTypeDemands transformed.module))
         transformedWorkers <- case resolver of
           Just resolve -> CodeGen.workerInputs <$> resolve transformed.module <*> pure transformed.module
           Nothing -> pure transformed.workers

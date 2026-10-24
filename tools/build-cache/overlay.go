@@ -234,7 +234,7 @@ func scanTopLevelNames(source string) map[string]bool {
 	return names
 }
 
-func parseBundleImports(source string, packageName string) (map[string]string, map[string]string, error) {
+func parseBundleImports(source []byte, packageName string) (map[string]string, map[string]string, error) {
 	file, err := parser.ParseFile(token.NewFileSet(), "bundle.go", source, parser.ImportsOnly)
 	if err != nil {
 		return nil, nil, err
@@ -263,13 +263,13 @@ func parseBundleImports(source string, packageName string) (map[string]string, m
 	return imports, aliases, nil
 }
 
-func loadOverlayIndex(result *packagePlanResult, sources map[string]string, overlayPackage string) (*overlayIndex, error) {
+func loadOverlayIndex(result *packagePlanResult, sources map[string]verifiedPackageFile, overlayPackage string) (*overlayIndex, error) {
 	return loadOverlayIndexForSource(result, sources, overlayPackage, "")
 }
 
 // A partial index is only sufficient for an in-place, proven literal change:
 // neither names nor edges can change. Other edits need the complete inventory.
-func loadOverlayIndexForSource(result *packagePlanResult, sources map[string]string, overlayPackage, onlySource string) (*overlayIndex, error) {
+func loadOverlayIndexForSource(result *packagePlanResult, sources map[string]verifiedPackageFile, overlayPackage, onlySource string) (*overlayIndex, error) {
 	index := &overlayIndex{
 		bundles: map[string]*overlayBundle{}, packageSymbols: map[string]map[string]string{},
 		exported: map[string]string{}, sections: map[string][]overlaySectionRef{},
@@ -284,15 +284,18 @@ func loadOverlayIndexForSource(result *packagePlanResult, sources map[string]str
 		if !ok || !goPackagePattern.MatchString(packageName) {
 			return fmt.Errorf("invalid published package path: %s", file.Path)
 		}
-		text, ok := sources[file.Path]
+		verified, ok := sources[file.Path]
 		if !ok {
 			return fmt.Errorf("missing verified package: %s", file.Path)
 		}
-		imports, aliases, err := parseBundleImports(text, packageName)
-		if err != nil {
-			return err
+		if verified.importError != nil {
+			return verified.importError
 		}
-		bundle := &overlayBundle{file: file, packageName: packageName, source: text, imports: imports, aliases: aliases}
+		if verified.imports == nil {
+			return fmt.Errorf("missing verified package imports: %s", file.Path)
+		}
+		text := verified.source
+		bundle := &overlayBundle{file: file, packageName: packageName, source: text, imports: verified.imports, aliases: verified.aliases}
 		if filepath.Base(file.Path) == packageBundleName {
 			sections, err := extractSourceSections(text)
 			if err != nil {
@@ -766,8 +769,8 @@ func preparePackageOverlaySnapshot(stage string, state *buildSession, entries []
 			if literals != nil {
 				marker := sourceMarker + hex.EncodeToString([]byte(changed.Path)) + "\n"
 				count := 0
-				for _, text := range snapshot.sources {
-					count += strings.Count(text, marker)
+				for _, file := range snapshot.sources {
+					count += strings.Count(file.source, marker)
 				}
 				if count > 1 {
 					index, indexErr := loadOverlayIndexForSource(previousResult, snapshot.sources, overlayPackage, changed.Path)
@@ -810,7 +813,7 @@ func preparePackageOverlaySnapshot(stage string, state *buildSession, entries []
 	if digest(newSourceBytes) != changed.SHA256 {
 		return nil, "generated source changed during preparation", nil
 	}
-	newImports, newAliases, err := parseBundleImports(newSource, "purescript")
+	newImports, newAliases, err := parseBundleImports(newSourceBytes, "purescript")
 	if err != nil {
 		return nil, "", err
 	}

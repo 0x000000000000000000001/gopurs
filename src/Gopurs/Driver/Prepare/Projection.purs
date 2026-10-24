@@ -1,4 +1,4 @@
-module Gopurs.Driver.Prepare.Projection (Projection, Fragment, fragmentCount, split, merge) where
+module Gopurs.Driver.Prepare.Projection (ProjectionWith, FragmentWith, Projection, Fragment, MapProjection, MapFragment, fragmentCount, split, merge, splitMaps, mergeMaps, fromMaps) where
 
 import Prelude
 import Data.Array as Array
@@ -11,27 +11,48 @@ import Data.Maybe (Maybe(..))
 import Data.Set (Set)
 import Data.Set as Set
 import Data.Tuple (Tuple)
-import Gopurs.CodegenState (CodegenMetadata)
-import PureScript.Backend.Optimizer.CoreFn (Ann, Module)
+import Data.Traversable (traverse)
+import Gopurs.CodegenState (CodegenMetadataWith)
+import Gopurs.Cache.LookupTable as LookupTable
+import Data.Either (hush)
+import PureScript.Backend.Optimizer.CoreFn (Ann, ExprType, Module)
 
 -- Only inert headers are stored here. Exact source types and layouts remain in
 -- metadata; every fresh conversion reloads and prepares the original TAST.
-type Projection =
+type ProjectionWith globals =
   { modules :: List (Module Ann)
-  , metadata :: CodegenMetadata
+  , metadata :: CodegenMetadataWith globals
   , interfaces :: Map String String
   , mainModules :: Array String
   }
 
-type Fragment = { ordinal :: Int, count :: Int, value :: Projection }
+type Projection = ProjectionWith (LookupTable.LookupTable ExprType)
+type MapProjection = ProjectionWith (Map String ExprType)
+type FragmentWith globals = { ordinal :: Int, count :: Int, value :: ProjectionWith globals }
+type Fragment = FragmentWith (LookupTable.LookupTable ExprType)
+type MapFragment = FragmentWith (Map String ExprType)
+
+fromMaps :: MapProjection -> Projection
+fromMaps projection = projection { metadata = projection.metadata { globalTypes = LookupTable.fromMap projection.metadata.globalTypes } }
+
+split :: Projection -> Array Fragment
+split projection = map (\part -> part { value = fromMaps part.value }) (splitMaps
+  (projection { metadata = projection.metadata { globalTypes = LookupTable.completeOrFail projection.metadata.globalTypes } }))
+
+merge :: Array Fragment -> Maybe Projection
+merge parts = fromMaps <$> (traverse completePart parts >>= mergeMaps)
+  where
+  completePart part = do
+    globals <- hush (LookupTable.complete part.value.metadata.globalTypes)
+    pure (part { value = part.value { metadata = part.value.metadata { globalTypes = globals } } })
 
 fragmentCount :: Int -> Int
 fragmentCount modules = max 1 (min 8 modules)
 
 -- Contiguous partitions preserve module and main selection order. Each map/set
 -- partitions its ordered entries independently, without duplicating any key.
-split :: Projection -> Array Fragment
-split projection = map fragment (Array.range 0 (count - 1))
+splitMaps :: MapProjection -> Array MapFragment
+splitMaps projection = map fragment (Array.range 0 (count - 1))
   where
   modules = Array.fromFoldable projection.modules
   count = fragmentCount (Array.length modules)
@@ -74,7 +95,7 @@ mergeKeys left right =
   let merged = Set.union left right
   in if Set.size merged == Set.size left + Set.size right then Just merged else Nothing
 
-mergeMetadata :: CodegenMetadata -> CodegenMetadata -> Maybe CodegenMetadata
+mergeMetadata :: CodegenMetadataWith (Map String ExprType) -> CodegenMetadataWith (Map String ExprType) -> Maybe (CodegenMetadataWith (Map String ExprType))
 mergeMetadata left right = do
   elidedCtors <- mergeKeys left.elidedCtors right.elidedCtors
   ctorTypes <- mergeTable left.ctorTypes right.ctorTypes
@@ -91,8 +112,8 @@ mergeMetadata left right = do
   pure { elidedCtors, ctorTypes, pointerAdtPaths, pointerAdtNodes, pointerAdtLeaves
        , enumAdts, enumCtors, globalTypes, globalFunctions, ffiFunctions, classDeclsFields, reboxFields }
 
-merge :: Array Fragment -> Maybe Projection
-merge fragments = do
+mergeMaps :: Array MapFragment -> Maybe MapProjection
+mergeMaps fragments = do
   first <- Array.head fragments
   rest <- Array.tail fragments
   let count = Array.length fragments

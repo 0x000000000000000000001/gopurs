@@ -19,6 +19,7 @@ import * as C from "../output/PureScript.Backend.Optimizer.CoreFn/index.js";
 import * as B from "../output/PureScript.Backend.Optimizer.Builder/index.js";
 import * as Cache from "../output/Gopurs.Cache.Modules/index.js";
 import * as Wire from "../output/Gopurs.Cache.Wire/index.js";
+import * as Capsule from "../output/Gopurs.Cache.BindingCapsule/index.js";
 const nothing = Nothing.value;
 const run = value => new Promise((resolve, reject) => Aff.runAff(result => () => result instanceof Either.Left ? reject(result.value0) : resolve(result.value0))(value)());
 const table = entries => Map.fromFoldable(Ord.ordString)(F.foldableArray)(entries.map(([name, value]) => new Tuple(name, value)));
@@ -42,9 +43,14 @@ test("implementation warming remains private, ordered by eligibility and atomic 
   writeFileSync(join(directory, "tools/build-cache-helper"), `#!/usr/bin/env node
 const fs = require("node:fs"), path = require("node:path"), assert = require("node:assert/strict");
 const request = JSON.parse(fs.readFileSync(0, "utf8"));
+const response = JSON.parse(fs.readFileSync(path.join(request.stage, "session-response.json"), "utf8"));
+if (request.operation === "read-capsule") {
+  const capsule = path.join(request.stage, "capsule.json");
+  console.log(JSON.stringify({ ...response, capsule: fs.existsSync(capsule) ? fs.readFileSync(capsule, "utf8") : null }));
+  process.exit(0);
+}
 assert.equal(request.operation, "materialize"); assert.deepEqual(request.parts, ["1"]);
 fs.appendFileSync(path.join(request.stage, "requests.jsonl"), JSON.stringify(request.owners) + "\\n");
-const response = JSON.parse(fs.readFileSync(path.join(request.stage, "session-response.json"), "utf8"));
 if (path.basename(request.stage) === "materialize-error") { response.status = "error"; response.reason = "corrupt pinned implementation"; }
 console.log(JSON.stringify(response));
 `, { mode: 0o755 });
@@ -58,7 +64,10 @@ console.log(JSON.stringify(response));
       const content = name === "Beta" && mode === "wrong-owner" ? Wire.write(codec)(implementations.Alpha)() : name === "Beta" && mode === "invalid" ? "{}" : Wire.write(codec)(implementations[name])();
       if (!(name === "Beta" && mode === "missing")) writeFileSync(join(stage, "prior", name, "1.json"), content);
     }
-    const cache = { session, lazyContributions: true, priorImplementations: Ref.new(Map.empty)(), restoredPBO: Ref.new(Set.empty)(), backends: Ref.new(Map.empty)(),
+    const cache = { session, lazyContributions: true, sameContext: true, candidates: Map.empty,
+      priorCapsules: Ref.new(Map.empty)(), capsuleHits: Ref.new(0)(), capsuleCreated: Ref.new(0)(),
+      implementationAnchors: table(Object.entries(implementations).map(([name, value]) => [name, Wire.hash(Wire.write(codec)(value)())])),
+      priorImplementations: Ref.new(Map.empty)(), restoredPBO: Ref.new(Set.empty)(), backends: Ref.new(Map.empty)(),
       headerSafe: set(["Alpha", "Beta", "Late", "Reader", "Future", "Outside"]), schedulingReads: table([["Reader", ["Alpha", "Beta", "Alpha", "Fresh", "Reader", "Future", "Outside"]]]) };
     return { cache, requests: () => existsSync(join(stage, "requests.jsonl")) ? readFileSync(join(stage, "requests.jsonl"), "utf8").trim().split("\n").map(JSON.parse) : [] };
   }
@@ -85,5 +94,28 @@ console.log(JSON.stringify(response));
     assert.deepEqual(names(Ref.read(f.cache.priorImplementations)()), [], mode + ": failed batches publish no partial memo");
     assert.deepEqual(Set.toUnfoldable(U.unfoldableArray)(Ref.read(f.cache.restoredPBO)()), []);
     assert.deepEqual(names(Ref.read(f.cache.backends)()), []);
+  }
+  const entries = Map.fromFoldable(C.ordQualified(C.ordIdent))(F.foldableArray)(["Alpha", "Beta"].map(owner => {
+    const key = new C.Qualified(new Just(owner), "value");
+    return new Tuple(key, Map.lookup(C.ordQualified(C.ordIdent))(key)(implementations[owner]));
+  }));
+  for (const valid of [true, false]) {
+    const f = fixture("capsule-" + valid), { cache } = f;
+    const text = Capsule.encode("same")("Reader")(cache.implementationAnchors)(entries)().value0;
+    const envelope = JSON.parse(text); if (!valid) envelope.payloadSha256 = Wire.hash("wrong");
+    writeFileSync(join(cache.session.stage, "capsule.json"), JSON.stringify(envelope));
+    cache.candidates = table([["Reader", { capsule: new Just({ codec: Capsule.codec, object: { sha256: Wire.hash(text), bytes: text.length } }) }]]);
+    const backends = Ref.read(cache.backends)(), restored = Ref.read(cache.restoredPBO)();
+    await run(Cache.warmImplementationInputs(8)(cache)(ranks)("Reader"));
+    assert.equal(Ref.read(cache.backends)(), backends); assert.equal(Ref.read(cache.restoredPBO)(), restored);
+    assert.deepEqual(names(Ref.read(cache.priorImplementations)()), valid ? [] : ["Alpha", "Beta"], "a rejected optional capsule falls back to the unchanged complete warm path");
+    assert.deepEqual(f.requests(), valid ? [] : [["Alpha", "Beta"]]);
+    assert.ok(Cache.readCachedBinding(cache)("Reader")("Alpha")("value")().value0 instanceof Just);
+    if (valid) {
+      assert.equal(Cache.readCachedBinding(cache)("Reader")("Alpha")("newMissing")(), nothing);
+      Cache.readImplementationsSync(cache)("Alpha")();
+      assert.deepEqual(Cache.readCachedBinding(cache)("Reader")("Alpha")("newMissing")(), new Just(nothing), "the complete fallback memo covers a newly observed absence");
+      assert.deepEqual(f.requests(), [["Alpha"]]);
+    }
   }
 });

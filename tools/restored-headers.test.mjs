@@ -36,7 +36,7 @@ test("batch headers require the same owner, prepared, FFI and business-codec pro
       candidates: table(all.map(name => [name, { ...keys(name), ffiDigest: new Just("no-foreign-v1") }])),
       keys: table(all.map(name => [name, { ...keys(name), prepared: name === "Changed" ? "changed" : name }])),
       ffiDigests: Map.singleton("FfiChanged")("changed-ffi"), priorFfiDigests: Map.empty,
-      priorPartTexts: texts, restoredPBO: Ref.new(Set.empty)(), invalidations: Ref.new(table(all.map(name => [name, "old"])))(),
+      priorHeaderDirectives: Map.empty, priorPartTexts: texts, restoredPBO: Ref.new(Set.empty)(), invalidations: Ref.new(table(all.map(name => [name, "old"])))(),
       priorImplementations: Ref.new(Map.empty)(), priorWorkers: Ref.new(Map.empty)(), backends: Ref.new(Map.empty)(),
     };
     const restored = await run(Cache.lookupHeaders(jobs)(cache)(list));

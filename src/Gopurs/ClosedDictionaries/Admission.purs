@@ -6,6 +6,7 @@ module Gopurs.ClosedDictionaries.Admission
   ) where
 
 import Prelude
+import Gopurs.Cache.LookupTable as LookupTable
 
 import Control.Alternative (guard)
 import Data.Array as Array
@@ -78,7 +79,7 @@ importedApplicationType :: CodegenMetadata -> ModuleName -> ApplicationKey -> Ma
 importedApplicationType metadata current = case _ of
   GlobalKey (Qualified (Just moduleName@(CoreFn.ModuleName name)) (Ident ident)) -> do
     guard (moduleName /= current)
-    Map.lookup (name <> "." <> ident) metadata.globalTypes
+    LookupTable.lookup (name <> "." <> ident) metadata.globalTypes
   CurriedKey fn args -> infer fn args
   UncurriedKey fn args -> infer fn args
   _ -> Nothing

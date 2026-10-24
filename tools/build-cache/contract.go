@@ -121,6 +121,7 @@ type ModuleMemo struct {
 	FFIDigest            string         `json:"ffiDigest,omitempty"`
 	Parts                []Artifact     `json:"parts"`
 	Reads                *Artifact      `json:"reads,omitempty"`
+	Capsule              *Artifact      `json:"capsule,omitempty"`
 	Sources              []ModuleSource `json:"sources,omitempty"`
 }
 
@@ -135,6 +136,7 @@ type StagedModule struct {
 	FFIDigest            string               `json:"ffiDigest,omitempty"`
 	Parts                []StagedArtifact     `json:"parts"`
 	Reads                *StagedArtifact      `json:"reads,omitempty"`
+	Capsule              *StagedArtifact      `json:"capsule,omitempty"`
 	Sources              []StagedModuleSource `json:"sources,omitempty"`
 }
 
@@ -151,16 +153,17 @@ type Manifest struct {
 }
 
 type Request struct {
-	Schema         int             `json:"schema"`
-	Operation      string          `json:"operation"`
-	Spec           Spec            `json:"spec"`
-	ExpectedKey    string          `json:"expectedKey"`
-	Outputs        []StagedOutput  `json:"outputs"`
-	Modules        []StagedModule  `json:"modules"`
-	Diagnostics    *StagedArtifact `json:"diagnostics"`
-	checkLegacy    bool
-	inherited      *Manifest // private session snapshot; never accepted over JSON
-	inheritedStore *store
+	Schema          int             `json:"schema"`
+	Operation       string          `json:"operation"`
+	Spec            Spec            `json:"spec"`
+	ExpectedKey     string          `json:"expectedKey"`
+	Outputs         []StagedOutput  `json:"outputs"`
+	Modules         []StagedModule  `json:"modules"`
+	Diagnostics     *StagedArtifact `json:"diagnostics"`
+	checkLegacy     bool
+	inherited       *Manifest // private session snapshot; never accepted over JSON
+	inheritedStore  *store
+	expectedOutputs map[string]Object // internal package references; never accepted over JSON
 }
 
 type Response struct {

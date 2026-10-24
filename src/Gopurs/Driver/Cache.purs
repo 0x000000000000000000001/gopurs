@@ -1,5 +1,5 @@
 module Gopurs.Driver.Cache
-  ( Session, SourceModule, FrozenFFI, ReusedMemo, PartText, begin, plan, materialize, materializeSync, materializeInputs, materializeAllInputs, readParts, packages, publish, close ) where
+  ( Session, SourceModule, FrozenFFI, ReusedMemo, PartText, begin, withSession, withSessionUsing, plan, materialize, materializeSync, materializeInputs, materializeAllInputs, readParts, readCapsule, packages, publish, close ) where
 
 import Prelude
 
@@ -9,13 +9,16 @@ import Data.Argonaut.Decode.Error (printJsonDecodeError)
 import Data.Argonaut.Encode (encodeJson)
 import Data.Argonaut.Parser (jsonParser)
 import Data.Array as Array
-import Data.Either (either)
-import Data.Maybe (fromMaybe, isJust)
+import Data.Either (either, hush)
+import Data.Maybe (Maybe(..), fromMaybe, isJust)
 import Effect (Effect)
-import Effect.Aff (Aff)
+import Effect.Aff (Aff, attempt, bracket, joinFiber, launchAff)
 import Effect.Class (liftEffect)
 import Effect.Exception (error, throwException)
-import Gopurs.BuildCache (sessionExchange)
+import Effect.Exception as Exception
+import Effect.Ref as Ref
+import Gopurs.Metrics as Metrics
+import Gopurs.BuildCache (sessionExchange, sessionExchangeOnMiss)
 import Gopurs.Driver.Config (CompilerConfig)
 
 type SourceModule = { name :: String, path :: String, hasForeign :: Boolean }
@@ -47,6 +50,10 @@ exchange = liftEffect <<< exchangeSync
 exchangeSync :: Request -> Effect Session
 exchangeSync message = do
   text <- sessionExchange (stringify (encodeJson message))
+  decodeResponse message text
+
+decodeResponse :: Request -> String -> Effect Session
+decodeResponse message text = do
   json <- either (throwException <<< error) pure (jsonParser text)
   response <- either (throwException <<< error <<< printJsonDecodeError) pure (decodeJson json)
   when (response.status == "error") $ throwException (error
@@ -54,7 +61,10 @@ exchangeSync message = do
   pure response
 
 begin :: CompilerConfig -> Aff Session
-begin config = exchange $ (request "begin")
+begin = exchange <<< beginRequest
+
+beginRequest :: CompilerConfig -> Request
+beginRequest config = (request "begin")
   { force = config.forceBuild || isJust config.allocationProfile
   , options =
       [ { name: "main", value: show config.mainModule }
@@ -69,6 +79,58 @@ begin config = exchange $ (request "begin")
       , { name: "input-layout", value: "packed-v1" }
       ]
   }
+
+-- Own the speculative fiber independently of session acquisition. Even a failed
+-- or cancelled begin joins it before closing the session or allowing a retry.
+withSession :: forall a b. CompilerConfig -> Maybe (String -> Aff (Maybe a)) -> (Session -> Maybe a -> Aff b) -> Aff b
+withSession config preload = withSessionUsing acquire closeMeasured preload
+  where
+  message = beginRequest config
+  acquire onMiss = do
+    text <- case preload of
+      Nothing -> sessionExchange (stringify (encodeJson message))
+      Just _ -> sessionExchangeOnMiss (stringify (encodeJson message)) onMiss
+    decodeResponse message text
+  closeMeasured session = Metrics.measure "cache close" \_ -> close session
+
+-- The request bridge is explicit so lifecycle tests can inject a failed begin
+-- after notification, without adding test hooks to the native store.
+withSessionUsing :: forall a b. ((String -> Effect Unit) -> Effect Session) -> (Session -> Aff Unit) -> Maybe (String -> Aff (Maybe a)) -> (Session -> Maybe a -> Aff b) -> Aff b
+withSessionUsing acquire release preload use = bracket
+  (liftEffect do
+    session <- Ref.new Nothing
+    fiber <- Ref.new Nothing
+    pure { session, fiber })
+  (\owned -> do
+    pending <- liftEffect (Ref.read owned.fiber)
+    case pending of
+      Nothing -> pure unit
+      Just fiber -> void (attempt (joinFiber fiber))
+    acquired <- liftEffect (Ref.read owned.session)
+    case acquired of
+      Nothing -> pure unit
+      Just session -> release session)
+  (\owned -> do
+    let onMiss seed = void $ Exception.try do
+          existing <- Ref.read owned.fiber
+          case existing, preload of
+            Nothing, Just load -> do
+              -- No suspension between launch and retaining the handle. Errors
+              -- inside the optional task remain data, including fast failures.
+              fiber <- launchAff (fromMaybe Nothing <<< hush <$> attempt (load seed))
+              Ref.write (Just fiber) owned.fiber
+            _, _ -> pure unit
+    session <- Metrics.measure "cache lookup + freeze" \_ -> liftEffect do
+      result <- acquire onMiss
+      -- Register in the same Effect, before Aff can observe cancellation.
+      Ref.write (Just result) owned.session
+      pure result
+    pending <- liftEffect (Ref.read owned.fiber)
+    projected <- case pending of
+      Nothing -> pure Nothing
+      Just fiber -> Metrics.measure "preparation preload join" \_ ->
+        fromMaybe Nothing <<< hush <$> attempt (joinFiber fiber)
+    use session projected)
 
 plan :: Session -> Array SourceModule -> Aff (Array FrozenFFI)
 plan session modules = _.ffi <$> exchange ((request "plan") { stage = session.stage, modules = modules })
@@ -97,6 +159,15 @@ readParts session owners parts = liftEffect do
   result <- either (throwException <<< error <<< ("incremental cache: " <> _) <<< printJsonDecodeError) pure
     (decodeJson json :: _ { contributions :: Array PartText })
   pure result.contributions
+
+readCapsule :: Session -> String -> Aff (Maybe String)
+readCapsule session reader = liftEffect do
+  text <- sessionExchange (stringify (encodeJson ((request "read-capsule") { stage = session.stage, owners = [ reader ] })))
+  json <- either (throwException <<< error <<< ("incremental cache: " <> _)) pure (jsonParser text)
+  response <- either (throwException <<< error <<< ("incremental cache: " <> _) <<< printJsonDecodeError) pure
+    (decodeJson json :: _ { status :: String, reason :: String, capsule :: Maybe String })
+  when (response.status /= "ready") $ throwException (error ("incremental cache: " <> response.reason))
+  pure response.capsule
 
 packages :: Session -> Array String -> Aff String
 packages session entries = _.packageRequest <$> exchange ((request "packages") { stage = session.stage, entries = entries })

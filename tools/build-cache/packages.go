@@ -257,22 +257,43 @@ func readPackagePlan(path string) (*packagePlanResult, error) {
 type packagePlanSnapshot struct {
 	request *packageFileRequest
 	result  *packagePlanResult
-	sources map[string]string
+	sources map[string]verifiedPackageFile
 }
 
-func readPackagePlanFiles(output string, result *packagePlanResult) (map[string]string, error) {
-	sources := make(map[string]string, len(result.Files))
-	for _, file := range result.Files {
+type verifiedPackageFile struct {
+	source           string
+	imports, aliases map[string]string
+	importError      error
+}
+
+func readPackagePlanFiles(output string, result *packagePlanResult) (map[string]verifiedPackageFile, error) {
+	files := make([]verifiedPackageFile, len(result.Files))
+	if err := boundedEach(len(result.Files), func(i int) error {
+		file := result.Files[i]
 		path := filepath.Join(output, "purescript", filepath.FromSlash(file.Path))
 		info, err := os.Lstat(path)
 		if !outputPath(file.Kind, file.Module, "purescript/"+file.Path) || err != nil || !info.Mode().IsRegular() || info.Size() != file.Bytes {
-			return nil, fmt.Errorf("published Go package file changed: %s", file.Path)
+			return fmt.Errorf("published Go package file changed: %s", file.Path)
 		}
 		data, err := os.ReadFile(path)
 		if err != nil || int64(len(data)) != file.Bytes || digest(data) != file.SHA256 {
-			return nil, fmt.Errorf("published Go package file changed: %s", file.Path)
+			return fmt.Errorf("published Go package file changed: %s", file.Path)
 		}
-		sources[file.Path] = string(data)
+		if file.Kind == "package" || file.Kind == "ffi-package" {
+			pkg, _, _ := strings.Cut(file.Path, "/")
+			// Parse the verified bytes before retaining a string snapshot, so
+			// go/parser does not copy the complete bundle for ImportsOnly.
+			// Keep parse failures for the overlay's existing refusal path.
+			files[i].imports, files[i].aliases, files[i].importError = parseBundleImports(data, pkg)
+		}
+		files[i].source = string(data)
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	sources := make(map[string]verifiedPackageFile, len(result.Files))
+	for i, file := range result.Files {
+		sources[file.Path] = files[i]
 	}
 	return sources, nil
 }
@@ -701,33 +722,48 @@ func preparePackageSession(stage string, state *buildSession, entries []string, 
 }
 
 func packageOutputs(stage string, modules []SourceModule, entries []string) ([]StagedOutput, error) {
-	result, err := readPackagePlan(filepath.Join(stage, "package-result.json"))
+	files, expected, err := packageOutputPlan(stage, modules, entries)
 	if err != nil {
 		return nil, err
 	}
+	for _, file := range files {
+		if !fileMatches(file.Source, expected[file.Path]) {
+			return nil, fmt.Errorf("emitted Go file changed before publication: %s", strings.TrimPrefix(file.Path, "purescript/"))
+		}
+	}
+	return files, nil
+}
+
+// Export preparation checks these files immediately. Publication carries their
+// expected identities into stage, which checks the actual bytes it will store.
+func packageOutputPlan(stage string, modules []SourceModule, entries []string) ([]StagedOutput, map[string]Object, error) {
+	result, err := readPackagePlan(filepath.Join(stage, "package-result.json"))
+	if err != nil {
+		return nil, nil, err
+	}
 	if len(result.Packages) == 0 {
-		return nil, fmt.Errorf("invalid emitted Go package plan")
+		return nil, nil, fmt.Errorf("invalid emitted Go package plan")
 	}
 	packages := map[string]bool{}
 	for _, pkg := range result.Packages {
 		if !goPackagePattern.MatchString(pkg.Name) || packages[pkg.Name] || pkg.Declarations < 1 {
-			return nil, fmt.Errorf("invalid emitted Go package: %s", pkg.Name)
+			return nil, nil, fmt.Errorf("invalid emitted Go package: %s", pkg.Name)
 		}
 		for _, dependency := range pkg.Dependencies {
 			if !packages[dependency] {
-				return nil, fmt.Errorf("non-topological emitted Go packages")
+				return nil, nil, fmt.Errorf("non-topological emitted Go packages")
 			}
 		}
 		packages[pkg.Name] = true
 	}
 	if len(result.Entries) != len(entries) {
-		return nil, fmt.Errorf("emitted Go entry inventory changed")
+		return nil, nil, fmt.Errorf("emitted Go entry inventory changed")
 	}
 	for i, entry := range result.Entries {
 		unit := strings.ReplaceAll(entries[i], ".", "_")
 		pkg, ok := strings.CutPrefix(entry.Package, "gopurs/output/purescript/")
 		if !ok || !packages[pkg] || entry.Symbol != (packageSymbol{"generated/" + unit, "Get_" + unit + "_main"}) {
-			return nil, fmt.Errorf("emitted Go entry changed: %s", entries[i])
+			return nil, nil, fmt.Errorf("emitted Go entry changed: %s", entries[i])
 		}
 	}
 	owners := map[string]bool{}
@@ -735,30 +771,33 @@ func packageOutputs(stage string, modules []SourceModule, entries []string) ([]S
 		owners[module.Name] = true
 	}
 	files := []StagedOutput{}
+	expected := map[string]Object{}
 	seen := map[string]bool{}
 	for _, file := range result.Files {
 		public := "purescript/" + file.Path
 		pkg, _, _ := strings.Cut(file.Path, "/")
 		if seen[public] || !outputPath(file.Kind, file.Module, public) ||
 			(file.Kind != "package-init" && !packages[pkg]) || (file.Module != "" && !owners[file.Module]) {
-			return nil, fmt.Errorf("unowned emitted Go file: %s", file.Path)
+			return nil, nil, fmt.Errorf("unowned emitted Go file: %s", file.Path)
 		}
 		seen[public] = true
 		source := filepath.Join(stage, "packages", filepath.FromSlash(file.Path))
-		if !fileMatches(source, Object{file.SHA256, file.Bytes}) {
-			return nil, fmt.Errorf("emitted Go file changed before publication: %s", file.Path)
+		object := Object{file.SHA256, file.Bytes}
+		if !validObject(object) {
+			return nil, nil, fmt.Errorf("invalid expected emitted Go object: %s", file.Path)
 		}
+		expected[public] = object
 		files = append(files, StagedOutput{public, file.Kind, file.Module, source})
 	}
 	if !seen["purescript/init_all/init.go"] || !seen["purescript/init_external/init.go"] {
-		return nil, fmt.Errorf("missing Go initialization packages")
+		return nil, nil, fmt.Errorf("missing Go initialization packages")
 	}
 	for pkg := range packages {
 		if !seen["purescript/"+pkg+"/zz_gopurs_order.go"] {
-			return nil, fmt.Errorf("missing Go package order file: %s", pkg)
+			return nil, nil, fmt.Errorf("missing Go package order file: %s", pkg)
 		}
 	}
-	return files, nil
+	return files, expected, nil
 }
 
 // Grouped sources can replace tens of megabytes for a one-line edit. Once a
@@ -807,7 +846,7 @@ func (s store) retirePackageObjects() error {
 	for _, output := range manifest.Outputs {
 		retained[output.Object.SHA256] = true
 	}
-	for _, artifact := range artifacts(*manifest) {
+	for _, artifact := range retainedArtifacts(*manifest) {
 		retained[artifact.Object.SHA256] = true
 	}
 	for _, module := range manifest.Modules {

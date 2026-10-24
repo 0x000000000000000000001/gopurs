@@ -1,3 +1,4 @@
+import { withGlobalTypes } from './codegen-metadata.mjs';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { spawnSync } from 'node:child_process';
@@ -36,7 +37,7 @@ function fixture(body, producer=identity, recursive=false) {
   return moduleOf([{recursive,bindings:[new Tuple('objectDecoder',producer),new Tuple('probe',letIn(1,app(method,local(0)),body))]}]);
 }
 function rewrite(mod, meta=metadata) {
-  const before=JSON.stringify(mod), result=borrowReadOnlyObjects(meta)(mod);
+  const before=JSON.stringify(mod), result=borrowReadOnlyObjects(withGlobalTypes(meta))(mod);
   assert.equal(JSON.stringify(mod),before);
   return result;
 }

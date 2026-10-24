@@ -14,6 +14,12 @@ import { Just, Nothing } from '../output/Data.Maybe/index.js';
 import { unfoldableArray } from '../output/Data.Unfoldable/index.js';
 import * as Set from '../output/Data.Set/index.js';
 import * as Aff from '../output/Effect.Aff/index.js';
+import * as LookupTable from '../output/Gopurs.Cache.LookupTable/index.js';
+import * as Capsule from '../output/Gopurs.Driver.Prepare.ProjectionCapsule/index.js';
+import * as Lazy from '../output/Data.Lazy/index.js';
+import { Right } from '../output/Data.Either/index.js';
+import * as F from '../output/Data.Foldable/index.js';
+import { ordString } from '../output/Data.Ord/index.js';
 import * as Prepare from '../output/Gopurs.Driver.Prepare/index.js';
 import * as Persistent from '../output/Gopurs.Driver.Prepare.Persistent/index.js';
 import * as Projection from '../output/Gopurs.Driver.Prepare.Projection/index.js';
@@ -27,7 +33,7 @@ const run = action => new Promise((resolve, reject) => Aff.runAff(result => () =
 const array = list => { const values = []; for (; list instanceof Cons; list = list.value1) values.push(list.value0); return values; };
 const wire = mod => Wire.write(Wire.codecModule(Wire.codecAnn))(mod)();
 const metadataEntries = metadata => Object.fromEntries(Object.entries(metadata).map(([name, values]) =>
-  [name, Map.toUnfoldable(unfoldableArray)(values).map(pair => [pair.value0, pair.value1])]));
+  [name, Map.toUnfoldable(unfoldableArray)(name === 'globalTypes' ? LookupTable.completeOrFail(values) : values).map(pair => [pair.value0, pair.value1])]));
 function setup(t, sources) {
   const workspace = mkdtempSync(join(tmpdir(), 'gopurs-compact-proof-'));
   t.after(() => rmSync(workspace, { recursive: true, force: true }));
@@ -49,8 +55,8 @@ function setup(t, sources) {
   const session = { root: output, input: output, stage, context: 'context-test-v1', count: Object.keys(sources).length };
   const full = () => run(Prepare.prepareModulesWithCache(output)(session.count)(1)(Nothing.value)(Map.empty));
   const candidate = (jobs = 1) => run(Persistent.preparePersistent(session)(jobs)(Nothing.value)(Map.empty));
-  const publish = async cache => {
-    await run(Persistent.publishPersistent(session)(cache));
+  const publish = async (cache, jobs = 1) => {
+    await run(Persistent.publishPersistent(session)(jobs)(cache));
     copyFileSync(join(stage, 'session.json'), join(stage, 'prior', 'manifest.json'));
   };
   return { sources, workspace, output, stage, session, compile, stamp, full, candidate, publish };
@@ -65,6 +71,11 @@ async function oracle(candidate, expected) {
   assert(candidate.materialize instanceof Just);
   assert.equal(candidate.prepared.metadataUnchanged, true);
   assert.equal(expected.prepared.metadataUnchanged, false);
+  assert(candidate.compactSourceDelta instanceof Just, 'compact delta is backed by the accepted committed proof');
+  assert(expected.compactSourceDelta instanceof Nothing, 'full preparation carries no shortcut delta');
+  const changed = Map.toUnfoldable(unfoldableArray)(candidate.sourceHashes).map(pair => pair.value0)
+    .filter(name => !Set.toUnfoldable(unfoldableArray)(candidate.reusable).includes(name));
+  assert.deepEqual(changed, [candidate.compactSourceDelta.value0], 'the delta identifies the sole changed source');
   assert.deepEqual(metadataEntries(candidate.prepared.metadata), metadataEntries(expected.prepared.metadata), 'literal proof preserves every source metadata table');
   const known = Manifest.buildManifestWithInterfaces(candidate.sourceInterfaces)(Nothing.value)('')('ctx')(Map.empty)(array(candidate.sourceModules))(candidate.sourceHashes)();
   const complete = Manifest.buildManifest('')('ctx')(Map.empty)(array(expected.sourceModules))(expected.sourceHashes)();
@@ -84,6 +95,8 @@ test('literal edit reuses anchored compact preparation and materializes every re
   assert.deepEqual(Set.toUnfoldable(unfoldableArray)(candidate.reusable), ['Main', 'Poly']);
   await oracle(candidate, await f.full());
   await f.publish(candidate);
+  const resident = await run(Prepare.prepareModulesDelta(f.output)(f.session.count)(1)(Nothing.value)(Map.empty)(candidate));
+  assert(resident.compactSourceDelta instanceof Nothing, 'a resident no-change run cannot reuse the previous run delta');
   f.compile({ Leaf: leaf('third') });
   await oracle(await f.candidate(), await f.full());
 });
@@ -365,7 +378,7 @@ test('projection fragments reject missing, repeated, reordered, and incompatible
   const path = join(directory, 'proof.json');
   const original = readFileSync(path, 'utf8');
   const proof = JSON.parse(JSON.parse(original).payload);
-  assert.equal(proof.schema, 4);
+  assert.equal(proof.schema, 5);
   assert.equal(proof.projection.length, 3);
   const first = join(directory, proof.projection[0] + '.json');
   const fragment = readFileSync(first, 'utf8');
@@ -407,7 +420,7 @@ test('projection splitting preserves order and every metadata entry, rejecting o
     assert.deepEqual(metadataEntries(restored.value0.metadata), metadataEntries(value.metadata));
   }
   for (const field of Object.keys(value.metadata)) {
-    const donor = fragments.findIndex(fragment => Map.size(fragment.value.metadata[field]) > 0);
+    const donor = fragments.findIndex(fragment => Map.size(field === 'globalTypes' ? LookupTable.completeOrFail(fragment.value.metadata[field]) : fragment.value.metadata[field]) > 0);
     if (donor < 0) continue;
     const recipient = (donor + 1) % fragments.length;
     const overlap = fragments.map((fragment, index) => index !== recipient ? fragment : { ...fragment, value: { ...fragment.value, metadata: { ...fragment.value.metadata, [field]: fragments[donor].value.metadata[field] } } });
@@ -458,4 +471,156 @@ test('demand replay preserves proved missing bindings and absent owners', async 
     assert.equal(fresh.reads.filter(name => name === owner).length, owner === 'Base' ? 1 : 0);
     await oracle(candidate, await f.full());
   }
+});
+
+const keysOf = keys => Set.fromFoldable(F.foldableArray)(ordString)(keys);
+const readState = f => JSON.parse(JSON.parse(readFileSync(join(f.output, '.gopurs-cache/preparation-literals-v1/proof.json'), 'utf8')).payload);
+const globalWire = table => Wire.write(LookupTable.codecLookupTable(Wire.codecExprType))(table)();
+
+test('projection capsules are proof-anchored, retain exact metadata and survive an intervening full oracle', async t => {
+  const f = setup(t, { Poly: poly, Leaf: leaf('first'), Main: main });
+  f.compile({}); await f.publish(await f.full());
+  assert.equal(readState(f).capsule, null, 'full preparation does not precompute a capsule');
+  f.compile({ Leaf: leaf('second') });
+  const first = await f.candidate(8);
+  assert(first.metadataCoverage instanceof Nothing);
+  first.prepared.metadataDemands.value0(keysOf(['Leaf.value', 'Known.absent']))();
+  await f.publish(first);
+  const primed = readState(f);
+  assert.equal(primed.schema, 5);
+  assert.equal(primed.capsule.length, primed.projection.length);
+  assert.equal(new globalThis.Set(primed.capsule).size, primed.capsule.length);
+  const complete = await f.full(); await f.publish(complete);
+  assert.deepEqual(readState(f).capsule, primed.capsule, 'full carry preserves already validated capsule references');
+  f.compile({ Leaf: leaf('third') });
+  const steady = await f.candidate(8), expected = await f.full();
+  assert(steady.metadataCoverage instanceof Just);
+  assert.deepEqual(Set.toUnfoldable(unfoldableArray)(steady.metadataCoverage.value0), ['Known.absent', 'Leaf.value']);
+  assert.deepEqual(LookupTable.lookup('Known.absent')(steady.prepared.metadata.globalTypes), Nothing.value);
+  assert.deepEqual(LookupTable.lookup('Leaf.value')(steady.prepared.metadata.globalTypes), LookupTable.lookup('Leaf.value')(expected.prepared.metadata.globalTypes));
+  for (const key of ['Poly.ignore', 'New.absent']) {
+    assert.deepEqual(LookupTable.lookup(key)(steady.prepared.metadata.globalTypes), LookupTable.lookup(key)(expected.prepared.metadata.globalTypes), 'uncovered lookup uses the complete table: ' + key);
+  }
+  assert.equal(globalWire(steady.prepared.metadata.globalTypes), globalWire(expected.prepared.metadata.globalTypes), 'opaque encoding forces exact complete types');
+  await oracle(steady, expected);
+  steady.prepared.metadataDemands.value0(keysOf(['Poly.ignore', 'New.absent']))();
+  await f.publish(steady);
+  assert.notDeepEqual(readState(f).capsule, primed.capsule, 'new demands expand the persisted capsule');
+  f.compile({ Leaf: leaf('fourth') });
+  const expanded = await f.candidate();
+  assert.deepEqual(Set.toUnfoldable(unfoldableArray)(expanded.metadataCoverage.value0), ['Known.absent', 'Leaf.value', 'New.absent', 'Poly.ignore']);
+});
+
+test('a capsule remains lazy for covered answers and preserves disjoint fragments and all eleven full tables', async t => {
+  const f = setup(t, { Poly: poly, Leaf: leaf('first'), Main: main });
+  f.compile({}); const full = await f.full();
+  const projection = { modules: full.prepared.modules, metadata: full.prepared.metadata, interfaces: Map.empty, mainModules: ['Main'] };
+  const coverage = keysOf(['Leaf.value', 'Known.absent']);
+  const fragments = Capsule.create(coverage)(projection);
+  let forced = 0;
+  const delayed = Lazy.defer(_ => { forced++; return new Right(LookupTable.completeOrFail(full.prepared.metadata.globalTypes)); });
+  const opened = Capsule.open(fragments)(delayed);
+  assert(opened instanceof Just);
+  const table = opened.value0.projection.metadata.globalTypes;
+  assert(LookupTable.lookup('Leaf.value')(table) instanceof Just);
+  assert(LookupTable.lookup('Known.absent')(table) instanceof Nothing);
+  assert.equal(forced, 0, 'covered presence and absence do not decode complete metadata');
+  assert(LookupTable.lookup('Poly.ignore')(table) instanceof Just);
+  assert(LookupTable.lookup('Uncovered.absent')(table) instanceof Nothing);
+  assert.equal(forced, 1, 'all uncovered requests share the complete decoder');
+  assert.deepEqual(metadataEntries(opened.value0.projection.metadata), metadataEntries(projection.metadata));
+  assert.deepEqual(array(opened.value0.projection.modules), array(projection.modules));
+  assert.deepEqual(opened.value0.projection.mainModules, ['Main']);
+  for (const mutation of [fragments.slice(1), fragments.toReversed(), fragments.map((fragment, i) => i ? fragment : { ...fragment, schema: 2 })]) {
+    assert(Capsule.open(mutation)(delayed) instanceof Nothing);
+  }
+  const overlap = fragments.map((fragment, i) => i > 1 ? fragment : { ...fragment, coverage: keysOf(['same']) });
+  assert(Capsule.open(overlap)(delayed) instanceof Nothing, 'duplicate coverage cannot disappear during union');
+  const outside = fragments.map((fragment, i) => i ? fragment : { ...fragment, values: Map.singleton('Outside.coverage')(LookupTable.lookup('Leaf.value')(table).value0) });
+  assert(Capsule.open(outside)(delayed) instanceof Nothing, 'values outside coverage are invalid');
+});
+
+test('missing or corrupt optional capsules load complete local fragments and are repaired without global TAST loading', async t => {
+  const f = setup(t, { Poly: poly, Leaf: leaf('first'), Main: main });
+  f.compile({}); await f.publish(await f.full());
+  f.compile({ Leaf: leaf('second') });
+  const first = await f.candidate();
+  first.prepared.metadataDemands.value0(keysOf(['Leaf.value']))(); await f.publish(first);
+  for (const kind of ['missing', 'corrupt']) {
+    const state = readState(f), path = join(f.output, '.gopurs-cache/preparation-literals-v1', state.capsule[0] + '.json');
+    if (kind === 'missing') rmSync(path); else writeFileSync(path, '{}');
+    f.compile({ Leaf: leaf(kind) });
+    const observed = await recordTastReads(() => f.candidate(8));
+    const candidate = observed.value;
+    assert(candidate.materialize instanceof Just, 'capsule failure uses the verified full projection locally');
+    assert(candidate.metadataCoverage instanceof Nothing);
+    assert.deepEqual(observed.reads, ['Leaf'], 'unchanged TAST owners remain unloaded');
+    await oracle(candidate, await f.full());
+    candidate.prepared.metadataDemands.value0(keysOf(['Leaf.value']))(); await f.publish(candidate);
+    const repaired = readState(f);
+    assert.equal(Wire.hash(readFileSync(join(f.output, '.gopurs-cache/preparation-literals-v1', repaired.capsule[0] + '.json'), 'utf8')), repaired.capsule[0]);
+  }
+});
+
+
+test('capsule encoders preserve proof references at jobs 1/8 and publish nothing on encoding failure', async t => {
+  const f = setup(t, { Poly: poly, Leaf: leaf('first'), Main: main });
+  f.compile({}); await f.publish(await f.full());
+  const directory = join(f.output, '.gopurs-cache/preparation-literals-v1');
+  const proofPath = join(directory, 'proof.json');
+  const previous = readFileSync(proofPath, 'utf8');
+  const inventory = () => fs.readdirSync(directory).sort();
+  const initialObjects = inventory();
+  f.compile({ Leaf: leaf('second') });
+  const candidate = await f.candidate(8);
+  candidate.prepared.metadataDemands.value0(keysOf(['Leaf.value', 'Known.absent']))();
+  const source = candidate.metadataProjection.value0;
+  let calls = 0;
+  const faulty = { ...source, modules: array(source.modules).map((mod, i) => i === 1 ? { ...mod, get path() { calls++; throw new Error('injected capsule Wire failure'); } } : mod).reduceRight((tail, head) => new Cons(head, tail), Nil.value) };
+  for (const jobs of [1, 8]) {
+    await f.publish({ ...candidate, metadataProjection: new Just(faulty) }, jobs);
+    assert.equal(readFileSync(proofPath, 'utf8'), previous, 'failed encoders cannot publish a new proof');
+    assert.deepEqual(inventory(), initialObjects, 'no object is written before all encoders join');
+  }
+  assert.equal(calls, 2, 'both configurations exercised Wire failure');
+  await f.publish(candidate, 1);
+  const sequential = readState(f);
+  const bytes = sequential.capsule.map(hash => readFileSync(join(directory, hash + '.json'), 'utf8'));
+  writeFileSync(proofPath, previous);
+  await f.publish(candidate, 8);
+  assert.deepEqual(readState(f), sequential, 'worker count does not change proof or reference order');
+  assert.deepEqual(readState(f).capsule.map(hash => readFileSync(join(directory, hash + '.json'), 'utf8')), bytes);
+});
+
+
+test('speculative projection requires the exact accepted proof envelope and session identity', async t => {
+  const f = setup(t, { Poly: poly, Leaf: leaf('before'), Main: main });
+  f.compile({}); await f.publish(await f.full());
+  const directory = join(f.output, '.gopurs-cache/preparation-literals-v1');
+  const proofPath = join(directory, 'proof.json');
+  const envelope = JSON.parse(readFileSync(proofPath, 'utf8'));
+  const proof = JSON.parse(envelope.payload);
+  const pending = await run(Persistent.preloadProjection(8)(Map.empty)(JSON.stringify({root: f.session.root, context: f.session.context})));
+  assert(pending instanceof Just);
+  f.compile({ Leaf: leaf('after') });
+  const candidate = preload => run(Persistent.preparePersistentWithProjection(preload)(f.session)(8)(Nothing.value)(Map.empty));
+  const expected = await f.full();
+  // Removing a fragment establishes whether the decoded projection was reused.
+  const path = join(directory, proof.projection[0] + '.json');
+  const bytes = readFileSync(path);
+  rmSync(path);
+  await oracle(await candidate(pending), expected);
+  for (const altered of [
+    {...pending.value0, root: pending.value0.root + '/other'},
+    {...pending.value0, context: 'another-context'},
+    {...pending.value0, count: pending.value0.count + 1},
+  ]) assert.equal(Set.size((await candidate(new Just(altered))).reusable), 0);
+  const payload = JSON.stringify(proof, null, 1);
+  assert.notEqual(Wire.hash(payload), envelope.hash);
+  writeFileSync(proofPath, JSON.stringify({hash: Wire.hash(payload), payload}));
+  assert.equal(Set.size((await candidate(pending)).reusable), 0, 'equivalent JSON with a new envelope hash rejects the old decoded result');
+  writeFileSync(path, bytes);
+  await oracle(await candidate(pending), expected);
+  assert(await run(Persistent.preloadProjection(8)(Map.empty)('not json')) instanceof Nothing);
+  assert(await run(Persistent.preloadProjection(8)(Map.empty)(JSON.stringify({root: f.session.root, context: 'wrong'}))) instanceof Nothing);
 });
