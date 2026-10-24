@@ -49,8 +49,7 @@ application translate context nextId expression =
           let target = curriedTarget context.bound fn
           in case ArrayIntrinsics.recognize ArrayIntrinsics.Curried context.modNameStr target (Array.length args) of
             Just intrinsic ->
-              let translated = CallArguments.translateBoxed translate context { stmts: StmtEmpty, nextId } args
-              in ArrayIntrinsics.emitCurried context fn args intrinsic translated
+              ArrayIntrinsics.emitCurried translate context nextId fn args intrinsic
             Nothing -> case directFunction context target (Array.length args) of
               Just info ->
                 let translated = CallArguments.translate translate context Nothing { stmts: StmtEmpty, nextId } args
@@ -109,8 +108,7 @@ uncurriedApplication translate context nextId expression fn args =
     Just result -> result
     Nothing -> case ArrayIntrinsics.recognize ArrayIntrinsics.Uncurried context.modNameStr (qualifiedTarget fn) (Array.length args) of
       Just intrinsic ->
-        let translated = CallArguments.translate translate context Nothing { stmts: StmtEmpty, nextId } args
-        in ArrayIntrinsics.emitUncurried context args intrinsic translated
+        ArrayIntrinsics.emitUncurried translate context nextId args intrinsic
       Nothing ->
         let
           Tuple flatFn spine = collectGoSpine expression

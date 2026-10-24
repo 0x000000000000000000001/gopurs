@@ -35,6 +35,7 @@ reconstruit les deux versions et conserve le workspace pour les tests natifs.
 | Fusion de thunks | `./bin/test ThunkFusion -c` |
 | Admission des fusions et applications immédiates | `node --test tools/thunk-fusion.test.mjs tools/counted-functions.test.mjs tools/immediate-applications.test.mjs`, après le build |
 | Intrinsics, indexation et traversées Either | `node --test tools/array-intrinsics.test.mjs tools/array-safe-index.test.mjs tools/array-unsafe-index.test.mjs tools/array-traverse-either.test.mjs tools/object-traverse-either.test.mjs tools/value-array-unboxing.test.mjs`, après le build |
+| Évaluation des arguments et fabriques de callbacks Array | `node --test tools/array-intrinsic-evaluation.test.mjs tools/array-intrinsics.test.mjs`, après le build ; [validation du 24 octobre](build-cold-20261024.md#validation-fonctionnelle) |
 | Propriété des arbres et workers consommants | `node --test tools/owned-trees.test.mjs`, après le build ; `./bin/test OwnedTrees RBTree ConstructorReuse` |
 | Mise en cache des dictionnaires fermés | `node --test tools/closed-dictionaries.test.mjs`, après le build ; `./bin/test StaticDictionary JsonRecordPlan` |
 | Emprunt d'objets et composition des décodeurs | `node --test tools/borrowed-objects.test.mjs tools/closed-dictionaries.test.mjs tools/decoder-schemas.test.mjs`, après le build ; `./bin/test JsonRecordPlan` |
@@ -64,6 +65,14 @@ go test -race -run '^TestPipelineNative' -count=1 -timeout 30s ./purescript
 ```
 
 ## Bootstrap natif et processus des runners
+
+La [campagne du 24 octobre](build-cold-20261024.md) ajoute une validation ciblée
+de l'encodage Wire et de l'évaluation des intrinsèques Array : 39 tests de
+cache/préparation, 4 tests Array, 24 programmes Go compilés et exécutés, et le
+gate driver-cache sur les hôtes JS et natif parallèle. Les quatre éditions
+successives de b8x sont comparées à une génération complète. Cette campagne
+ne remplace pas une exécution intégrale du corpus ni les validations de l'hôte
+Rust ou du mode natif séquentiel.
 
 Les tests `build-native.test.mjs` remplacent les commandes de compilation par
 des outils simulés. Ils vérifient la sélection du fork typé le plus récent ou

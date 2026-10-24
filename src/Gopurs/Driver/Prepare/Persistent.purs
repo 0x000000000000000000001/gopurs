@@ -372,19 +372,24 @@ publishPersistentImpl session jobs cache = do
       state <- case reusable of
         Just proof -> pure (proof { snapshot = snapshot })
         Nothing -> do
-          modules <- liftEffect (traverse (Proof.moduleProofWithReads cache.mono.bodyReads) (Array.fromFoldable cache.sourceModules))
+          -- Each proof owns its Wire encoder state. Join in source order before
+          -- publishing any object, using the same bounded preparation workers.
+          modules <- Metrics.measure "prepare source proofs" \_ ->
+            mapPreparationJobs jobs (liftEffect <<< Proof.moduleProofWithReads cache.mono.bodyReads)
+              (Array.fromFoldable cache.sourceModules)
           let
             index = map (\(Tuple name values) -> { name, keys: map Wire.hash (Set.toUnfoldable (Map.keys values) :: Array String) }) (Map.toUnfoldable cache.mono.instantiations :: Array _)
             grouped = foldl
               (\groups (Tuple name values) -> Map.insertWith Map.union (owner name) (Map.singleton name values) groups)
               Map.empty (Map.toUnfoldable cache.mono.instantiations :: Array _)
-          payloads <- traverse (\(Tuple name values) -> do
+          payloads <- Metrics.measure "prepare specialization payloads" \_ -> traverse (\(Tuple name values) -> do
             encoded <- liftEffect (Wire.write (map (map normalizeInstantiation) values))
             let hash = Wire.hash encoded
             writeAtomic session.stage (payloadPath session.root hash) encoded
             pure { name, hash }) (Map.toUnfoldable grouped :: Array _)
-          interfaces <- liftEffect (Map.fromFoldable <$> traverse (\mod@(Module value) -> Tuple (unwrap value.name) <$> moduleInterface mod) (Array.fromFoldable cache.sourceModules))
-          projection <- traverse (\fragment -> do
+          interfaces <- Metrics.measure "prepare source interfaces" \_ ->
+            liftEffect (Map.fromFoldable <$> traverse (\mod@(Module value) -> Tuple (unwrap value.name) <$> moduleInterface mod) (Array.fromFoldable cache.sourceModules))
+          projection <- Metrics.measure "prepare projection fragments" \_ -> traverse (\fragment -> do
             encoded <- liftEffect (Wire.write fragment)
             let hash = Wire.hash encoded
             writeAtomic session.stage (payloadPath session.root hash) encoded

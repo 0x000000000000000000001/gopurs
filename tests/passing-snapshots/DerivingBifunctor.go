@@ -176,30 +176,38 @@ func Get_Main_Test5() gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 1063363133, UnsafePtr: unsafe.Pointer((&Constructor_Main_Test5[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value]{1, func() struct {
 				nested []struct {
 					x gopurs_runtime.Value
+					/*gopurs:record-v1:1:0078*/
 				}
+				/*gopurs:record-v1:1:006e00650073007400650064*/
 			} {
 				orig := value0
 				_ = orig
 				clone := struct {
 					nested []struct {
 						x gopurs_runtime.Value
+						/*gopurs:record-v1:1:0078*/
 					}
+					/*gopurs:record-v1:1:006e00650073007400650064*/
 				}{}
 				clone.nested = func() []struct {
 					x gopurs_runtime.Value
+					/*gopurs:record-v1:1:0078*/
 				} {
 					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.RecordGet(orig, "nested").UnsafePtr)
 					unboxed := make([]struct {
 						x gopurs_runtime.Value
+						/*gopurs:record-v1:1:0078*/
 					}, len(arr))
 					for i, v := range arr {
 						unboxed[i] = func() struct {
 							x gopurs_runtime.Value
+							/*gopurs:record-v1:1:0078*/
 						} {
 							orig := v
 							_ = orig
 							clone := struct {
 								x gopurs_runtime.Value
+								/*gopurs:record-v1:1:0078*/
 							}{}
 							clone.x = gopurs_runtime.RecordGet(orig, "x")
 							return clone
@@ -329,7 +337,9 @@ type Constructor_Main_Test5[T_f any, T_a any, T_b any] struct {
 	V0 struct {
 		nested []struct {
 			x gopurs_runtime.Value
+			/*gopurs:record-v1:1:0078*/
 		}
+		/*gopurs:record-v1:1:006e00650073007400650064*/
 	}
 }
 
@@ -414,81 +424,89 @@ func Call_Main_bifunctorTest(dictBifunctor_0_loop gopurs_runtime.Value) gopurs_r
 	var dictBifunctor_0 gopurs_runtime.Value = dictBifunctor_0_loop
 	_ = dictBifunctor_0
 	return gopurs_runtime.Value{Type: 9, IntVal: 4141114362, UnsafePtr: unsafe.Pointer((&Constructor_Data_Bifunctor_Bifunctor[gopurs_runtime.Value]{1, gopurs_runtime.Func3(func(f_1 gopurs_runtime.Value, g_2 gopurs_runtime.Value, m_3 gopurs_runtime.Value) gopurs_runtime.Value {
-		var __t0 gopurs_runtime.Value
+		var __t6 gopurs_runtime.Value
 		{
 			if m_3.Type == 9 && m_3.IntVal == 2074462008 {
-				__t0 = gopurs_runtime.Value{Type: 9, IntVal: 2074462008, UnsafePtr: unsafe.Pointer(nil)}
-				goto end_branch_0
+				__t6 = gopurs_runtime.Value{Type: 9, IntVal: 2074462008, UnsafePtr: unsafe.Pointer(nil)}
+				goto end_branch_6
 			} else {
 
 			}
 		}
 		{
 			if m_3.Type == 9 && m_3.IntVal == 3720114489 {
-				__t0 = gopurs_runtime.Value{Type: 9, IntVal: 3720114489, UnsafePtr: unsafe.Pointer((&Constructor_Main_Test1[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value]{1, (*(*[]gopurs_runtime.Value)((func() gopurs_runtime.Value {
-					arr_val_arrayMap4 := gopurs_runtime.Array((*Constructor_Main_Test1[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0)
+				arrayIntrinsic_arg_0 := f_1
+				_ = arrayIntrinsic_arg_0
+				arrayIntrinsic_arg_1 := gopurs_runtime.Array((*Constructor_Main_Test1[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0)
+				_ = arrayIntrinsic_arg_1
+				__t6 = gopurs_runtime.Value{Type: 9, IntVal: 3720114489, UnsafePtr: unsafe.Pointer((&Constructor_Main_Test1[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value]{1, (*(*[]gopurs_runtime.Value)((func() gopurs_runtime.Value {
+					arr_val_arrayMap4 := arrayIntrinsic_arg_1
 					_ = arr_val_arrayMap4
 					arr_go_arrayMap4 := (*[]gopurs_runtime.Value)(arr_val_arrayMap4.UnsafePtr)
 					_ = arr_go_arrayMap4
 					res_go_arrayMap4 := make([]gopurs_runtime.Value, len(*arr_go_arrayMap4))
 					_ = res_go_arrayMap4
 					for i_arrayMap4, v_arrayMap4 := range *arr_go_arrayMap4 {
-						res_go_arrayMap4[i_arrayMap4] = gopurs_runtime.Apply(f_1, v_arrayMap4)
+						res_go_arrayMap4[i_arrayMap4] = gopurs_runtime.Apply(arrayIntrinsic_arg_0, v_arrayMap4)
 					}
 					return gopurs_runtime.Array(res_go_arrayMap4)
 				}()).UnsafePtr)), gopurs_runtime.Apply(g_2, (*Constructor_Main_Test1[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V1)}))}
-				goto end_branch_0
+				goto end_branch_6
 			} else {
 
 			}
 		}
 		{
 			if m_3.Type == 9 && m_3.IntVal == 2375191994 {
-				__t0 = gopurs_runtime.Value{Type: 9, IntVal: 2375191994, UnsafePtr: unsafe.Pointer((&Constructor_Main_Test2[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value]{1, (*Constructor_Main_Test2[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0, (*Constructor_Main_Test2[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V1}))}
-				goto end_branch_0
+				__t6 = gopurs_runtime.Value{Type: 9, IntVal: 2375191994, UnsafePtr: unsafe.Pointer((&Constructor_Main_Test2[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value]{1, (*Constructor_Main_Test2[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0, (*Constructor_Main_Test2[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V1}))}
+				goto end_branch_6
 			} else {
 
 			}
 		}
 		{
 			if m_3.Type == 9 && m_3.IntVal == 227416251 {
-				__t0 = gopurs_runtime.Value{Type: 9, IntVal: 227416251, UnsafePtr: unsafe.Pointer((&Constructor_Main_Test3[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value]{1, (*Constructor_Main_Test3[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0, gopurs_runtime.Apply3(gopurs_runtime.RecordGet(dictBifunctor_0, "bimap"), f_1, g_2, (*Constructor_Main_Test3[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V1), gopurs_runtime.Apply3(gopurs_runtime.RecordGet(dictBifunctor_0, "bimap"), f_1, gopurs_runtime.Func(func(x_4 gopurs_runtime.Value) gopurs_runtime.Value {
+				__t6 = gopurs_runtime.Value{Type: 9, IntVal: 227416251, UnsafePtr: unsafe.Pointer((&Constructor_Main_Test3[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value]{1, (*Constructor_Main_Test3[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0, gopurs_runtime.Apply3(gopurs_runtime.RecordGet(dictBifunctor_0, "bimap"), f_1, g_2, (*Constructor_Main_Test3[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V1), gopurs_runtime.Apply3(gopurs_runtime.RecordGet(dictBifunctor_0, "bimap"), f_1, gopurs_runtime.Func(func(x_4 gopurs_runtime.Value) gopurs_runtime.Value {
 					return x_4
 				}), (*Constructor_Main_Test3[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V2), gopurs_runtime.Apply3(gopurs_runtime.RecordGet(dictBifunctor_0, "bimap"), gopurs_runtime.Func(func(x_4 gopurs_runtime.Value) gopurs_runtime.Value {
 					return x_4
 				}), g_2, (*Constructor_Main_Test3[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V3)}))}
-				goto end_branch_0
+				goto end_branch_6
 			} else {
 
 			}
 		}
 		{
 			if m_3.Type == 9 && m_3.IntVal == 3712677948 {
-				__t0 = gopurs_runtime.Value{Type: 9, IntVal: 3712677948, UnsafePtr: unsafe.Pointer((&Constructor_Main_Test4[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value]{1, func() []*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, int64] {
+				arrayIntrinsic_arg_2 := gopurs_runtime.Func(func(v_4 gopurs_runtime.Value) gopurs_runtime.Value {
+					return gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]](func() gopurs_runtime.Value {
+						_v := struct {
+							V0 gopurs_runtime.Value
+							V1 gopurs_runtime.Value
+						}{gopurs_runtime.Apply(f_1, (*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(v_4.UnsafePtr).V0), (*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(v_4.UnsafePtr).V1}
+						return gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(&Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V0, V1: _v.V1})}
+					}()))}
+				})
+				_ = arrayIntrinsic_arg_2
+				arrayIntrinsic_arg_3 := func() gopurs_runtime.Value {
+					arr := (*Constructor_Main_Test4[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0
+					boxed := make([]gopurs_runtime.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(Rebox_Main_3415943795_138441832(v))}
+					}
+					return gopurs_runtime.Array(boxed)
+				}()
+				_ = arrayIntrinsic_arg_3
+				__t6 = gopurs_runtime.Value{Type: 9, IntVal: 3712677948, UnsafePtr: unsafe.Pointer((&Constructor_Main_Test4[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value]{1, func() []*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, int64] {
 					arr := *(*[]gopurs_runtime.Value)(func() gopurs_runtime.Value {
-						arr_val_arrayMap4 := func() gopurs_runtime.Value {
-							arr := (*Constructor_Main_Test4[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0
-							boxed := make([]gopurs_runtime.Value, len(arr))
-							for i, v := range arr {
-								boxed[i] = gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(Rebox_Main_3415943795_138441832(v))}
-							}
-							return gopurs_runtime.Array(boxed)
-						}()
+						arr_val_arrayMap4 := arrayIntrinsic_arg_3
 						_ = arr_val_arrayMap4
 						arr_go_arrayMap4 := (*[]gopurs_runtime.Value)(arr_val_arrayMap4.UnsafePtr)
 						_ = arr_go_arrayMap4
 						res_go_arrayMap4 := make([]gopurs_runtime.Value, len(*arr_go_arrayMap4))
 						_ = res_go_arrayMap4
 						for i_arrayMap4, v_arrayMap4 := range *arr_go_arrayMap4 {
-							res_go_arrayMap4[i_arrayMap4] = gopurs_runtime.Apply(gopurs_runtime.Func(func(v_4 gopurs_runtime.Value) gopurs_runtime.Value {
-								return gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]](func() gopurs_runtime.Value {
-									_v := struct {
-										V0 gopurs_runtime.Value
-										V1 gopurs_runtime.Value
-									}{gopurs_runtime.Apply(f_1, (*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(v_4.UnsafePtr).V0), (*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(v_4.UnsafePtr).V1}
-									return gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(&Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V0, V1: _v.V1})}
-								}()))}
-							}), v_arrayMap4)
+							res_go_arrayMap4[i_arrayMap4] = gopurs_runtime.Apply(arrayIntrinsic_arg_2, v_arrayMap4)
 						}
 						return gopurs_runtime.Array(res_go_arrayMap4)
 					}().UnsafePtr)
@@ -504,104 +522,120 @@ func Call_Main_bifunctorTest(dictBifunctor_0_loop gopurs_runtime.Value) gopurs_r
 					}{gopurs_runtime.Apply(g_2, ((*Constructor_Main_Test4[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V1).V0), gopurs_runtime.Int(((*Constructor_Main_Test4[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V1).V1)}
 					return gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(&Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V0, V1: _v.V1})}
 				}()))}))}
-				goto end_branch_0
+				goto end_branch_6
 			} else {
 
 			}
 		}
 		{
 			if m_3.Type == 9 && m_3.IntVal == 1063363133 {
-				__t0 = gopurs_runtime.Value{Type: 9, IntVal: 1063363133, UnsafePtr: unsafe.Pointer((&Constructor_Main_Test5[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value]{1, func() struct {
+				arrayIntrinsic_arg_4 := gopurs_runtime.Func(func(v1_4 gopurs_runtime.Value) gopurs_runtime.Value {
+					return func() gopurs_runtime.Value {
+						orig := func() struct {
+							x gopurs_runtime.Value
+							/*gopurs:record-v1:1:0078*/
+						} {
+							orig := gopurs_runtime.RecordUpdate1(v1_4, "x", gopurs_runtime.Apply3(gopurs_runtime.RecordGet(dictBifunctor_0, "bimap"), gopurs_runtime.Func(func(v2_5 gopurs_runtime.Value) gopurs_runtime.Value {
+								return func() gopurs_runtime.Value {
+									orig := func() struct {
+										a gopurs_runtime.Value
+										/*gopurs:record-v1:1:0061*/
+									} {
+										orig := gopurs_runtime.RecordUpdate1(v2_5, "a", gopurs_runtime.Apply(f_1, gopurs_runtime.RecordGet(v2_5, "a")))
+										_ = orig
+										clone := struct {
+											a gopurs_runtime.Value
+											/*gopurs:record-v1:1:0061*/
+										}{}
+										clone.a = gopurs_runtime.RecordGet(orig, "a")
+										return clone
+									}()
+									_ = orig
+									return gopurs_runtime.RecordDict1("a", orig.a)
+								}()
+							}), gopurs_runtime.Func(func(v2_5 gopurs_runtime.Value) gopurs_runtime.Value {
+								return func() gopurs_runtime.Value {
+									orig := func() struct {
+										b gopurs_runtime.Value
+										/*gopurs:record-v1:1:0062*/
+									} {
+										orig := gopurs_runtime.RecordUpdate1(v2_5, "b", gopurs_runtime.Apply(g_2, gopurs_runtime.RecordGet(v2_5, "b")))
+										_ = orig
+										clone := struct {
+											b gopurs_runtime.Value
+											/*gopurs:record-v1:1:0062*/
+										}{}
+										clone.b = gopurs_runtime.RecordGet(orig, "b")
+										return clone
+									}()
+									_ = orig
+									return gopurs_runtime.RecordDict1("b", orig.b)
+								}()
+							}), gopurs_runtime.RecordGet(v1_4, "x")))
+							_ = orig
+							clone := struct {
+								x gopurs_runtime.Value
+								/*gopurs:record-v1:1:0078*/
+							}{}
+							clone.x = gopurs_runtime.RecordGet(orig, "x")
+							return clone
+						}()
+						_ = orig
+						return gopurs_runtime.RecordDict1("x", orig.x)
+					}()
+				})
+				_ = arrayIntrinsic_arg_4
+				arrayIntrinsic_arg_5 := func() gopurs_runtime.Value {
+					arr := (*Constructor_Main_Test5[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0.nested
+					boxed := make([]gopurs_runtime.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = func() gopurs_runtime.Value {
+							orig := v
+							_ = orig
+							return gopurs_runtime.RecordDict1("x", orig.x)
+						}()
+					}
+					return gopurs_runtime.Array(boxed)
+				}()
+				_ = arrayIntrinsic_arg_5
+				__t6 = gopurs_runtime.Value{Type: 9, IntVal: 1063363133, UnsafePtr: unsafe.Pointer((&Constructor_Main_Test5[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value]{1, func() struct {
 					nested []struct {
 						x gopurs_runtime.Value
+						/*gopurs:record-v1:1:0078*/
 					}
+					/*gopurs:record-v1:1:006e00650073007400650064*/
 				} {
 					clone := (*Constructor_Main_Test5[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0
 					clone.nested = func() []struct {
 						x gopurs_runtime.Value
+						/*gopurs:record-v1:1:0078*/
 					} {
 						arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((func() gopurs_runtime.Value {
-							arr_val_arrayMap5 := func() gopurs_runtime.Value {
-								arr := (*Constructor_Main_Test5[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_3.UnsafePtr).V0.nested
-								boxed := make([]gopurs_runtime.Value, len(arr))
-								for i, v := range arr {
-									boxed[i] = func() gopurs_runtime.Value {
-										orig := v
-										_ = orig
-										return gopurs_runtime.RecordDict1("x", orig.x)
-									}()
-								}
-								return gopurs_runtime.Array(boxed)
-							}()
+							arr_val_arrayMap5 := arrayIntrinsic_arg_5
 							_ = arr_val_arrayMap5
 							arr_go_arrayMap5 := (*[]gopurs_runtime.Value)(arr_val_arrayMap5.UnsafePtr)
 							_ = arr_go_arrayMap5
 							res_go_arrayMap5 := make([]gopurs_runtime.Value, len(*arr_go_arrayMap5))
 							_ = res_go_arrayMap5
 							for i_arrayMap5, v_arrayMap5 := range *arr_go_arrayMap5 {
-								res_go_arrayMap5[i_arrayMap5] = gopurs_runtime.Apply(gopurs_runtime.Func(func(v1_4 gopurs_runtime.Value) gopurs_runtime.Value {
-									return func() gopurs_runtime.Value {
-										orig := func() struct {
-											x gopurs_runtime.Value
-										} {
-											orig := gopurs_runtime.RecordUpdate1(v1_4, "x", gopurs_runtime.Apply3(gopurs_runtime.RecordGet(dictBifunctor_0, "bimap"), gopurs_runtime.Func(func(v2_5 gopurs_runtime.Value) gopurs_runtime.Value {
-												return func() gopurs_runtime.Value {
-													orig := func() struct {
-														a gopurs_runtime.Value
-													} {
-														orig := gopurs_runtime.RecordUpdate1(v2_5, "a", gopurs_runtime.Apply(f_1, gopurs_runtime.RecordGet(v2_5, "a")))
-														_ = orig
-														clone := struct {
-															a gopurs_runtime.Value
-														}{}
-														clone.a = gopurs_runtime.RecordGet(orig, "a")
-														return clone
-													}()
-													_ = orig
-													return gopurs_runtime.RecordDict1("a", orig.a)
-												}()
-											}), gopurs_runtime.Func(func(v2_5 gopurs_runtime.Value) gopurs_runtime.Value {
-												return func() gopurs_runtime.Value {
-													orig := func() struct {
-														b gopurs_runtime.Value
-													} {
-														orig := gopurs_runtime.RecordUpdate1(v2_5, "b", gopurs_runtime.Apply(g_2, gopurs_runtime.RecordGet(v2_5, "b")))
-														_ = orig
-														clone := struct {
-															b gopurs_runtime.Value
-														}{}
-														clone.b = gopurs_runtime.RecordGet(orig, "b")
-														return clone
-													}()
-													_ = orig
-													return gopurs_runtime.RecordDict1("b", orig.b)
-												}()
-											}), gopurs_runtime.RecordGet(v1_4, "x")))
-											_ = orig
-											clone := struct {
-												x gopurs_runtime.Value
-											}{}
-											clone.x = gopurs_runtime.RecordGet(orig, "x")
-											return clone
-										}()
-										_ = orig
-										return gopurs_runtime.RecordDict1("x", orig.x)
-									}()
-								}), v_arrayMap5)
+								res_go_arrayMap5[i_arrayMap5] = gopurs_runtime.Apply(arrayIntrinsic_arg_4, v_arrayMap5)
 							}
 							return gopurs_runtime.Array(res_go_arrayMap5)
 						}()).UnsafePtr))).UnsafePtr)
 						unboxed := make([]struct {
 							x gopurs_runtime.Value
+							/*gopurs:record-v1:1:0078*/
 						}, len(arr))
 						for i, v := range arr {
 							unboxed[i] = func() struct {
 								x gopurs_runtime.Value
+								/*gopurs:record-v1:1:0078*/
 							} {
 								orig := v
 								_ = orig
 								clone := struct {
 									x gopurs_runtime.Value
+									/*gopurs:record-v1:1:0078*/
 								}{}
 								clone.x = gopurs_runtime.RecordGet(orig, "x")
 								return clone
@@ -611,16 +645,16 @@ func Call_Main_bifunctorTest(dictBifunctor_0_loop gopurs_runtime.Value) gopurs_r
 					}()
 					return clone
 				}()}))}
-				goto end_branch_0
+				goto end_branch_6
 			} else {
 
 			}
 		}
 		{
-			__t0 = func() gopurs_runtime.Value { panic("Failed pattern match") }()
+			__t6 = func() gopurs_runtime.Value { panic("Failed pattern match") }()
 		}
-	end_branch_0:
-		return __t0
+	end_branch_6:
+		return __t6
 	})}))}
 }
 
@@ -738,170 +772,188 @@ func Call_Main_bifoldableTest(dictBifoldable_0_loop gopurs_runtime.Value) gopurs
 			return __t9
 		})
 	}), gopurs_runtime.Func4(func(f_4 gopurs_runtime.Value, g_5 gopurs_runtime.Value, z_6 gopurs_runtime.Value, m_7 gopurs_runtime.Value) gopurs_runtime.Value {
-		var __t10 gopurs_runtime.Value
+		var __t19 gopurs_runtime.Value
 		{
 			if m_7.Type == 9 && m_7.IntVal == 2074462008 {
-				__t10 = z_6
-				goto end_branch_10
+				__t19 = z_6
+				goto end_branch_19
 			} else {
 
 			}
 		}
 		{
 			if m_7.Type == 9 && m_7.IntVal == 3720114489 {
-				__t10 = gopurs_runtime.Apply2(g_5, func() gopurs_runtime.Value {
-					arr_val_foldlArray7 := gopurs_runtime.Array((*Constructor_Main_Test1[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_7.UnsafePtr).V0)
+				arrayIntrinsic_arg_10 := f_4
+				_ = arrayIntrinsic_arg_10
+				arrayIntrinsic_arg_11 := z_6
+				_ = arrayIntrinsic_arg_11
+				arrayIntrinsic_arg_12 := gopurs_runtime.Array((*Constructor_Main_Test1[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_7.UnsafePtr).V0)
+				_ = arrayIntrinsic_arg_12
+				__t19 = gopurs_runtime.Apply2(g_5, func() gopurs_runtime.Value {
+					arr_val_foldlArray7 := arrayIntrinsic_arg_12
 					_ = arr_val_foldlArray7
-					res_go_foldlArray7 := z_6
+					res_go_foldlArray7 := arrayIntrinsic_arg_11
 					_ = res_go_foldlArray7
 					arr_go_foldlArray7 := (*[]gopurs_runtime.Value)(arr_val_foldlArray7.UnsafePtr)
 					_ = arr_go_foldlArray7
 					for _, v_foldlArray7 := range *arr_go_foldlArray7 {
-						res_go_foldlArray7 = gopurs_runtime.Apply2(f_4, res_go_foldlArray7, v_foldlArray7)
+						res_go_foldlArray7 = gopurs_runtime.Apply2(arrayIntrinsic_arg_10, res_go_foldlArray7, v_foldlArray7)
 					}
 					return res_go_foldlArray7
 				}(), (*Constructor_Main_Test1[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_7.UnsafePtr).V1)
-				goto end_branch_10
+				goto end_branch_19
 			} else {
 
 			}
 		}
 		{
 			if m_7.Type == 9 && m_7.IntVal == 2375191994 {
-				__t10 = z_6
-				goto end_branch_10
+				__t19 = z_6
+				goto end_branch_19
 			} else {
 
 			}
 		}
 		{
 			if m_7.Type == 9 && m_7.IntVal == 227416251 {
-				__t10 = gopurs_runtime.Apply4(gopurs_runtime.RecordGet(dictBifoldable_0, "bifoldl"), Get_Data_Function_go__const(), g_5, gopurs_runtime.Apply4(bifoldl2_1_0, f_4, Get_Data_Function_go__const(), gopurs_runtime.Apply4(gopurs_runtime.RecordGet(dictBifoldable_0, "bifoldl"), f_4, g_5, z_6, (*Constructor_Main_Test3[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_7.UnsafePtr).V1), (*Constructor_Main_Test3[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_7.UnsafePtr).V2), (*Constructor_Main_Test3[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_7.UnsafePtr).V3)
-				goto end_branch_10
+				__t19 = gopurs_runtime.Apply4(gopurs_runtime.RecordGet(dictBifoldable_0, "bifoldl"), Get_Data_Function_go__const(), g_5, gopurs_runtime.Apply4(bifoldl2_1_0, f_4, Get_Data_Function_go__const(), gopurs_runtime.Apply4(gopurs_runtime.RecordGet(dictBifoldable_0, "bifoldl"), f_4, g_5, z_6, (*Constructor_Main_Test3[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_7.UnsafePtr).V1), (*Constructor_Main_Test3[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_7.UnsafePtr).V2), (*Constructor_Main_Test3[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_7.UnsafePtr).V3)
+				goto end_branch_19
 			} else {
 
 			}
 		}
 		{
 			if m_7.Type == 9 && m_7.IntVal == 3712677948 {
-				__t10 = Call_Data_Function_go__const(gopurs_runtime.Apply2(g_5, func() gopurs_runtime.Value {
-					arr_val_foldlArray8 := func() gopurs_runtime.Value {
-						arr := (*Constructor_Main_Test4[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_7.UnsafePtr).V0
-						boxed := make([]gopurs_runtime.Value, len(arr))
-						for i, v := range arr {
-							boxed[i] = gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(Rebox_Main_3415943795_138441832(v))}
-						}
-						return gopurs_runtime.Array(boxed)
-					}()
+				arrayIntrinsic_arg_13 := gopurs_runtime.Func2(func(z_8 gopurs_runtime.Value, v_9 gopurs_runtime.Value) gopurs_runtime.Value {
+					return Call_Data_Function_go__const(gopurs_runtime.Apply2(f_4, z_8, (*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(v_9.UnsafePtr).V0), (*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(v_9.UnsafePtr).V1)
+				})
+				_ = arrayIntrinsic_arg_13
+				arrayIntrinsic_arg_14 := z_6
+				_ = arrayIntrinsic_arg_14
+				arrayIntrinsic_arg_15 := func() gopurs_runtime.Value {
+					arr := (*Constructor_Main_Test4[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_7.UnsafePtr).V0
+					boxed := make([]gopurs_runtime.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(Rebox_Main_3415943795_138441832(v))}
+					}
+					return gopurs_runtime.Array(boxed)
+				}()
+				_ = arrayIntrinsic_arg_15
+				__t19 = Call_Data_Function_go__const(gopurs_runtime.Apply2(g_5, func() gopurs_runtime.Value {
+					arr_val_foldlArray8 := arrayIntrinsic_arg_15
 					_ = arr_val_foldlArray8
-					res_go_foldlArray8 := z_6
+					res_go_foldlArray8 := arrayIntrinsic_arg_14
 					_ = res_go_foldlArray8
 					arr_go_foldlArray8 := (*[]gopurs_runtime.Value)(arr_val_foldlArray8.UnsafePtr)
 					_ = arr_go_foldlArray8
 					for _, v_foldlArray8 := range *arr_go_foldlArray8 {
-						res_go_foldlArray8 = gopurs_runtime.Apply2(gopurs_runtime.Func2(func(z_8 gopurs_runtime.Value, v_9 gopurs_runtime.Value) gopurs_runtime.Value {
-							return Call_Data_Function_go__const(gopurs_runtime.Apply2(f_4, z_8, (*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(v_9.UnsafePtr).V0), (*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(v_9.UnsafePtr).V1)
-						}), res_go_foldlArray8, v_foldlArray8)
+						res_go_foldlArray8 = gopurs_runtime.Apply2(arrayIntrinsic_arg_13, res_go_foldlArray8, v_foldlArray8)
 					}
 					return res_go_foldlArray8
 				}(), ((*Constructor_Main_Test4[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_7.UnsafePtr).V1).V0), gopurs_runtime.Int(((*Constructor_Main_Test4[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_7.UnsafePtr).V1).V1))
-				goto end_branch_10
+				goto end_branch_19
 			} else {
 
 			}
 		}
 		{
 			if m_7.Type == 9 && m_7.IntVal == 1063363133 {
-				__t10 = func() gopurs_runtime.Value {
-					arr_val_foldlArray6 := func() gopurs_runtime.Value {
-						arr := (*Constructor_Main_Test5[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_7.UnsafePtr).V0.nested
-						boxed := make([]gopurs_runtime.Value, len(arr))
-						for i, v := range arr {
-							boxed[i] = func() gopurs_runtime.Value {
-								orig := v
-								_ = orig
-								return gopurs_runtime.RecordDict1("x", orig.x)
-							}()
-						}
-						return gopurs_runtime.Array(boxed)
-					}()
+				arrayIntrinsic_arg_16 := gopurs_runtime.Func2(func(v1_8 gopurs_runtime.Value, v2_9 gopurs_runtime.Value) gopurs_runtime.Value {
+					return gopurs_runtime.Apply4(gopurs_runtime.RecordGet(dictBifoldable_0, "bifoldl"), gopurs_runtime.Func2(func(v3_10 gopurs_runtime.Value, v4_11 gopurs_runtime.Value) gopurs_runtime.Value {
+						return gopurs_runtime.Apply2(f_4, v3_10, gopurs_runtime.RecordGet(v4_11, "a"))
+					}), gopurs_runtime.Func2(func(v3_10 gopurs_runtime.Value, v4_11 gopurs_runtime.Value) gopurs_runtime.Value {
+						return gopurs_runtime.Apply2(g_5, v3_10, gopurs_runtime.RecordGet(v4_11, "b"))
+					}), v1_8, gopurs_runtime.RecordGet(v2_9, "x"))
+				})
+				_ = arrayIntrinsic_arg_16
+				arrayIntrinsic_arg_17 := z_6
+				_ = arrayIntrinsic_arg_17
+				arrayIntrinsic_arg_18 := func() gopurs_runtime.Value {
+					arr := (*Constructor_Main_Test5[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_7.UnsafePtr).V0.nested
+					boxed := make([]gopurs_runtime.Value, len(arr))
+					for i, v := range arr {
+						boxed[i] = func() gopurs_runtime.Value {
+							orig := v
+							_ = orig
+							return gopurs_runtime.RecordDict1("x", orig.x)
+						}()
+					}
+					return gopurs_runtime.Array(boxed)
+				}()
+				_ = arrayIntrinsic_arg_18
+				__t19 = func() gopurs_runtime.Value {
+					arr_val_foldlArray6 := arrayIntrinsic_arg_18
 					_ = arr_val_foldlArray6
-					res_go_foldlArray6 := z_6
+					res_go_foldlArray6 := arrayIntrinsic_arg_17
 					_ = res_go_foldlArray6
 					arr_go_foldlArray6 := (*[]gopurs_runtime.Value)(arr_val_foldlArray6.UnsafePtr)
 					_ = arr_go_foldlArray6
 					for _, v_foldlArray6 := range *arr_go_foldlArray6 {
-						res_go_foldlArray6 = gopurs_runtime.Apply2(gopurs_runtime.Func2(func(v1_8 gopurs_runtime.Value, v2_9 gopurs_runtime.Value) gopurs_runtime.Value {
-							return gopurs_runtime.Apply4(gopurs_runtime.RecordGet(dictBifoldable_0, "bifoldl"), gopurs_runtime.Func2(func(v3_10 gopurs_runtime.Value, v4_11 gopurs_runtime.Value) gopurs_runtime.Value {
-								return gopurs_runtime.Apply2(f_4, v3_10, gopurs_runtime.RecordGet(v4_11, "a"))
-							}), gopurs_runtime.Func2(func(v3_10 gopurs_runtime.Value, v4_11 gopurs_runtime.Value) gopurs_runtime.Value {
-								return gopurs_runtime.Apply2(g_5, v3_10, gopurs_runtime.RecordGet(v4_11, "b"))
-							}), v1_8, gopurs_runtime.RecordGet(v2_9, "x"))
-						}), res_go_foldlArray6, v_foldlArray6)
+						res_go_foldlArray6 = gopurs_runtime.Apply2(arrayIntrinsic_arg_16, res_go_foldlArray6, v_foldlArray6)
 					}
 					return res_go_foldlArray6
 				}()
-				goto end_branch_10
+				goto end_branch_19
 			} else {
 
 			}
 		}
 		{
-			__t10 = func() gopurs_runtime.Value { panic("Failed pattern match") }()
+			__t19 = func() gopurs_runtime.Value { panic("Failed pattern match") }()
 		}
-	end_branch_10:
-		return __t10
+	end_branch_19:
+		return __t19
 	}), gopurs_runtime.Func4(func(f_4 gopurs_runtime.Value, g_5 gopurs_runtime.Value, z_6 gopurs_runtime.Value, m_7 gopurs_runtime.Value) gopurs_runtime.Value {
-		var __t14 gopurs_runtime.Value
+		var __t23 gopurs_runtime.Value
 		{
 			if m_7.Type == 9 && m_7.IntVal == 2074462008 {
-				__t14 = z_6
-				goto end_branch_14
+				__t23 = z_6
+				goto end_branch_23
 			} else {
 
 			}
 		}
 		{
 			if m_7.Type == 9 && m_7.IntVal == 3720114489 {
-				__t14 = gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), f_4, gopurs_runtime.Apply2(g_5, (*Constructor_Main_Test1[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_7.UnsafePtr).V1, z_6), gopurs_runtime.Array((*Constructor_Main_Test1[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_7.UnsafePtr).V0))
-				goto end_branch_14
+				__t23 = gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), f_4, gopurs_runtime.Apply2(g_5, (*Constructor_Main_Test1[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_7.UnsafePtr).V1, z_6), gopurs_runtime.Array((*Constructor_Main_Test1[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_7.UnsafePtr).V0))
+				goto end_branch_23
 			} else {
 
 			}
 		}
 		{
 			if m_7.Type == 9 && m_7.IntVal == 2375191994 {
-				__t14 = z_6
-				goto end_branch_14
+				__t23 = z_6
+				goto end_branch_23
 			} else {
 
 			}
 		}
 		{
 			if m_7.Type == 9 && m_7.IntVal == 227416251 {
-				// TAST (Let): __local_var_8_11 shape=App(Var) bindingType=Any
-				__local_var_8_11 := Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))})
-				_ = __local_var_8_11
-				// TAST (Let): __local_var_9_12 shape=App(Var) bindingType=Any
-				__local_var_9_12 := Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))})
-				_ = __local_var_9_12
-				__t14 = gopurs_runtime.Apply4(gopurs_runtime.RecordGet(dictBifoldable_0, "bifoldr"), f_4, g_5, gopurs_runtime.Apply4(bifoldr2_2_1, f_4, gopurs_runtime.Func(func(v_9 gopurs_runtime.Value) gopurs_runtime.Value {
-					return __local_var_8_11
+				// TAST (Let): __local_var_8_20 shape=App(Var) bindingType=Any
+				__local_var_8_20 := Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))})
+				_ = __local_var_8_20
+				// TAST (Let): __local_var_9_21 shape=App(Var) bindingType=Any
+				__local_var_9_21 := Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))})
+				_ = __local_var_9_21
+				__t23 = gopurs_runtime.Apply4(gopurs_runtime.RecordGet(dictBifoldable_0, "bifoldr"), f_4, g_5, gopurs_runtime.Apply4(bifoldr2_2_1, f_4, gopurs_runtime.Func(func(v_9 gopurs_runtime.Value) gopurs_runtime.Value {
+					return __local_var_8_20
 				}), gopurs_runtime.Apply4(gopurs_runtime.RecordGet(dictBifoldable_0, "bifoldr"), gopurs_runtime.Func(func(v_10 gopurs_runtime.Value) gopurs_runtime.Value {
-					return __local_var_9_12
+					return __local_var_9_21
 				}), g_5, z_6, (*Constructor_Main_Test3[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_7.UnsafePtr).V3), (*Constructor_Main_Test3[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_7.UnsafePtr).V2), (*Constructor_Main_Test3[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_7.UnsafePtr).V1)
-				goto end_branch_14
+				goto end_branch_23
 			} else {
 
 			}
 		}
 		{
 			if m_7.Type == 9 && m_7.IntVal == 3712677948 {
-				// TAST (Let): __local_var_8_13 shape=App(Var) bindingType=Any
-				__local_var_8_13 := Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))})
-				_ = __local_var_8_13
-				__t14 = gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), gopurs_runtime.Func2(func(b_9 gopurs_runtime.Value, a_10 gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Apply2(f_4, (*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(b_9.UnsafePtr).V0, gopurs_runtime.Apply(__local_var_8_13, a_10))
+				// TAST (Let): __local_var_8_22 shape=App(Var) bindingType=Any
+				__local_var_8_22 := Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))})
+				_ = __local_var_8_22
+				__t23 = gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), gopurs_runtime.Func2(func(b_9 gopurs_runtime.Value, a_10 gopurs_runtime.Value) gopurs_runtime.Value {
+					return gopurs_runtime.Apply2(f_4, (*Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value])(b_9.UnsafePtr).V0, gopurs_runtime.Apply(__local_var_8_22, a_10))
 				}), gopurs_runtime.Apply2(g_5, ((*Constructor_Main_Test4[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_7.UnsafePtr).V1).V0, gopurs_runtime.Apply(Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))}), z_6)), func() gopurs_runtime.Value {
 					arr := (*Constructor_Main_Test4[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(m_7.UnsafePtr).V0
 					boxed := make([]gopurs_runtime.Value, len(arr))
@@ -910,14 +962,14 @@ func Call_Main_bifoldableTest(dictBifoldable_0_loop gopurs_runtime.Value) gopurs
 					}
 					return gopurs_runtime.Array(boxed)
 				}())
-				goto end_branch_14
+				goto end_branch_23
 			} else {
 
 			}
 		}
 		{
 			if m_7.Type == 9 && m_7.IntVal == 1063363133 {
-				__t14 = gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), gopurs_runtime.Func2(func(v1_8 gopurs_runtime.Value, v2_9 gopurs_runtime.Value) gopurs_runtime.Value {
+				__t23 = gopurs_runtime.Apply3(Get_Data_Foldable_foldrArray(), gopurs_runtime.Func2(func(v1_8 gopurs_runtime.Value, v2_9 gopurs_runtime.Value) gopurs_runtime.Value {
 					return gopurs_runtime.Apply4(gopurs_runtime.RecordGet(dictBifoldable_0, "bifoldr"), gopurs_runtime.Func2(func(v3_10 gopurs_runtime.Value, v4_11 gopurs_runtime.Value) gopurs_runtime.Value {
 						return gopurs_runtime.Apply2(f_4, gopurs_runtime.RecordGet(v3_10, "a"), v4_11)
 					}), gopurs_runtime.Func2(func(v3_10 gopurs_runtime.Value, v4_11 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -935,16 +987,16 @@ func Call_Main_bifoldableTest(dictBifoldable_0_loop gopurs_runtime.Value) gopurs
 					}
 					return gopurs_runtime.Array(boxed)
 				}())
-				goto end_branch_14
+				goto end_branch_23
 			} else {
 
 			}
 		}
 		{
-			__t14 = func() gopurs_runtime.Value { panic("Failed pattern match") }()
+			__t23 = func() gopurs_runtime.Value { panic("Failed pattern match") }()
 		}
-	end_branch_14:
-		return __t14
+	end_branch_23:
+		return __t23
 	})}))}
 }
 
@@ -1073,24 +1125,30 @@ bitraversableTest:
 							return gopurs_runtime.Value{Type: 9, IntVal: 1063363133, UnsafePtr: unsafe.Pointer((&Constructor_Main_Test5[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value]{1, func() struct {
 								nested []struct {
 									x gopurs_runtime.Value
+									/*gopurs:record-v1:1:0078*/
 								}
+								/*gopurs:record-v1:1:006e00650073007400650064*/
 							} {
 								clone := __local_var_9_10
 								clone.nested = func() []struct {
 									x gopurs_runtime.Value
+									/*gopurs:record-v1:1:0078*/
 								} {
 									arr := *(*[]gopurs_runtime.Value)(v1_10.UnsafePtr)
 									unboxed := make([]struct {
 										x gopurs_runtime.Value
+										/*gopurs:record-v1:1:0078*/
 									}, len(arr))
 									for i, v := range arr {
 										unboxed[i] = func() struct {
 											x gopurs_runtime.Value
+											/*gopurs:record-v1:1:0078*/
 										} {
 											orig := v
 											_ = orig
 											clone := struct {
 												x gopurs_runtime.Value
+												/*gopurs:record-v1:1:0078*/
 											}{}
 											clone.x = gopurs_runtime.RecordGet(orig, "x")
 											return clone
@@ -1105,11 +1163,13 @@ bitraversableTest:
 								return func() gopurs_runtime.Value {
 									orig := func() struct {
 										x gopurs_runtime.Value
+										/*gopurs:record-v1:1:0078*/
 									} {
 										orig := gopurs_runtime.RecordUpdate1(v1_11, "x", v2_12)
 										_ = orig
 										clone := struct {
 											x gopurs_runtime.Value
+											/*gopurs:record-v1:1:0078*/
 										}{}
 										clone.x = gopurs_runtime.RecordGet(orig, "x")
 										return clone
@@ -1122,11 +1182,13 @@ bitraversableTest:
 									return func() gopurs_runtime.Value {
 										orig := func() struct {
 											a gopurs_runtime.Value
+											/*gopurs:record-v1:1:0061*/
 										} {
 											orig := gopurs_runtime.RecordUpdate1(v2_12, "a", v3_13)
 											_ = orig
 											clone := struct {
 												a gopurs_runtime.Value
+												/*gopurs:record-v1:1:0061*/
 											}{}
 											clone.a = gopurs_runtime.RecordGet(orig, "a")
 											return clone
@@ -1140,11 +1202,13 @@ bitraversableTest:
 									return func() gopurs_runtime.Value {
 										orig := func() struct {
 											b gopurs_runtime.Value
+											/*gopurs:record-v1:1:0062*/
 										} {
 											orig := gopurs_runtime.RecordUpdate1(v2_12, "b", v3_13)
 											_ = orig
 											clone := struct {
 												b gopurs_runtime.Value
+												/*gopurs:record-v1:1:0062*/
 											}{}
 											clone.b = gopurs_runtime.RecordGet(orig, "b")
 											return clone

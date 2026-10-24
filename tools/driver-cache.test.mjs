@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { spawn, spawnSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, statSync, symlinkSync, utimesSync, writeFileSync } from "node:fs";
+import { closeSync, cpSync, existsSync, mkdirSync, openSync, readFileSync, readSync, readdirSync, renameSync, rmSync, statSync, symlinkSync, utimesSync, writeFileSync, writeSync } from "node:fs";
 import { delimiter, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
@@ -45,6 +45,31 @@ function timestamps(output, files = generated(output)) {
   return Object.fromEntries(Object.keys(files).map(name => [name, String(statSync(join(output, name), { bigint: true }).mtimeNs)]));
 }
 
+// An indexed pack is authoritative even if a loose object with the same SHA
+// exists. Corrupt exactly the referenced object's bytes, preserving its neighbors.
+function corruptCacheObject(cache, object) {
+  const indexPath = join(cache, "packs/index.json");
+  const entry = existsSync(indexPath) ? JSON.parse(readFileSync(indexPath)).objects[object.sha256] : undefined;
+  if (!entry) {
+    const path = join(cache, "objects", object.sha256), bytes = readFileSync(path);
+    assert.equal(bytes.length, object.bytes);
+    assert.equal(hash(bytes), object.sha256);
+    bytes[0] ^= 1;
+    writeFileSync(path, bytes);
+    return;
+  }
+  assert.equal(entry.bytes, object.bytes);
+  assert.ok(entry.bytes > 0);
+  const fd = openSync(join(cache, "packs", entry.pack + ".pack"), "r+");
+  try {
+    const bytes = Buffer.alloc(entry.bytes);
+    assert.equal(readSync(fd, bytes, 0, bytes.length, entry.offset), bytes.length);
+    assert.equal(hash(bytes), object.sha256);
+    bytes[0] ^= 1;
+    assert.equal(writeSync(fd, bytes, 0, 1, entry.offset), 1);
+  } finally { closeSync(fd); }
+}
+
 test("driver cache transitions equal clean generation in every supported host mode", async t => {
   const workspace = createWorkspace();
   let passed = false;
@@ -65,6 +90,9 @@ test("driver cache transitions equal clean generation in every supported host mo
   assert.equal(front.status, 0, front.stdout + front.stderr);
   const tast = join(workspace, "tast");
   cpSync(output, tast, { recursive: true });
+  const moduleCount = readdirSync(tast, { withFileTypes: true }).filter(entry =>
+    entry.isDirectory() && existsSync(join(tast, entry.name, "corefn.json"))).length;
+  assert.ok(moduleCount > 1);
   const ffiPath = join(directory, "src/Main.go"), originalFfi = readFileSync(ffiPath, "utf8");
   const references = new Map();
   const codecReferences = new Map();
@@ -90,6 +118,29 @@ test("driver cache transitions equal clean generation in every supported host mo
       assert.ifError(result.error);
       assert.equal(result.status, status, result.stdout + result.stderr);
       return result;
+    };
+    const counters = result => {
+      const matches = [...result.stderr.matchAll(/module cache: optimized=(\d+), reused=(\d+), emitted=(\d+), restored=(\d+)/g)];
+      assert.equal(matches.length, 1, "one completed module-cache report");
+      const [optimized, reused, emitted, restored] = matches[0].slice(1).map(Number);
+      assert.equal(optimized + reused, moduleCount, "every backend is accounted for");
+      assert.equal(emitted + restored, moduleCount, "every emitted module is accounted for");
+      return { optimized, reused, emitted, restored };
+    };
+    const fingerprints = result => {
+      const matches = [...result.stderr.matchAll(/prepared fingerprints: computed=(\d+), reused=(\d+)/g)];
+      assert.equal(matches.length, 1, "one completed prepared-fingerprint report");
+      const [computed, reused] = matches[0].slice(1).map(Number);
+      assert.equal(computed + reused, moduleCount, "every prepared fingerprint is accounted for");
+      return { computed, reused };
+    };
+    const unchangedBackends = result => {
+      const counts = counters(result);
+      assert.equal(counts.optimized, 0);
+      assert.equal(counts.reused, moduleCount);
+      assert.deepEqual(fingerprints(result), { computed: 0, reused: moduleCount });
+      assert.match(result.stderr, /pbo module attempts: \d+, codegen: 0\b/);
+      return counts;
     };
     const hit = (label, args = []) => {
       const before = timestamps(output), result = invoke(label, args);
@@ -133,8 +184,8 @@ test("driver cache transitions equal clean generation in every supported host mo
     const first = generated(output);
     const initialTimes = timestamps(output);
     const forced = invoke("forced", ["--force"]);
-    assert.match(forced.stderr, /module cache: optimized=[1-9]\d*, reused=0, emitted=[1-9]\d*, restored=0/);
-    assert.match(forced.stderr, /prepared fingerprints: computed=[1-9]\d*, reused=0/);
+    assert.deepEqual(counters(forced), { optimized: moduleCount, reused: 0, emitted: moduleCount, restored: 0 });
+    assert.deepEqual(fingerprints(forced), { computed: moduleCount, reused: 0 });
     assert.deepEqual(generated(output), first);
     assert.deepEqual(timestamps(output), initialTimes, "forced generation elides identical writes");
 
@@ -158,20 +209,21 @@ test("driver cache transitions equal clean generation in every supported host mo
     utimesSync(ffiPath, oldFfiTime.atime, oldFfiTime.mtime);
     const ffiEdit = invoke("ffi-edit");
     assert.match(ffiEdit.stderr, /cache miss: inputs-changed/);
-    assert.match(ffiEdit.stderr, /module cache: optimized=0, reused=\d+, emitted=1, restored=\d+/);
-    assert.match(ffiEdit.stderr, /prepared fingerprints: computed=0, reused=[1-9]\d*/);
-    assert.match(ffiEdit.stderr, /PBO cache: all \d+ backends validated; optimizer not started/);
+    assert.deepEqual(unchangedBackends(ffiEdit),
+      { optimized: 0, reused: moduleCount, emitted: 1, restored: moduleCount - 1 });
+    // Changed FFI invalidates the header-only shortcut. The ordinary path
+    // must still reuse every backend; compare below checks the full output.
     assert.notDeepEqual(moduleFiles(generated(output), "Main", true), moduleFiles(first, "Main", true));
     compare("ffi-edit");
     hit("ffi-identical");
     // A Go signature can change the native worker ABI while the PureScript
-    // signature and every TAST stay identical. The all-PBO-hit path must still
+    // signature and every TAST stay identical. The backend-reuse path must still
     // parse this FFI and invalidate emission according to the new signatures.
     const changedSignature = originalFfi.replace("func ReturnInt64(value int64) int64", "func ReturnInt64(value int64) any");
     assert.notEqual(changedSignature, originalFfi);
     writeFileSync(ffiPath, changedSignature);
     const ffiSignature = invoke("ffi-signature");
-    assert.match(ffiSignature.stderr, /PBO cache: all \d+ backends validated; optimizer not started/);
+    assert.ok(unchangedBackends(ffiSignature).emitted >= 2, "the FFI owner and its consumer must be emitted");
     assert.notDeepEqual(moduleFiles(generated(output), "Main"), moduleFiles(first, "Main"));
     assert.notDeepEqual(moduleFiles(generated(output), "Extra"), moduleFiles(first, "Extra"), "foreign worker ABI invalidates its cross-module consumer");
     compare("ffi-signature");
@@ -185,21 +237,24 @@ test("driver cache transitions equal clean generation in every supported host mo
     const cachedPointer = JSON.parse(readFileSync(join(cacheDirectory, "current.json")));
     const cachedManifest = JSON.parse(readFileSync(join(cacheDirectory, "objects", cachedPointer.manifest.sha256)));
     const mainBody = cachedManifest.modules.find(mod => mod.name === "Main").parts[0].object;
-    writeFileSync(join(cacheDirectory, "objects", mainBody.sha256), "corrupt cached backend");
+    corruptCacheObject(cacheDirectory, mainBody);
     const corruptBackend = invoke("corrupt-cached-backend");
     assert.doesNotMatch(corruptBackend.stderr, /optimizer not started/);
-    assert.match(corruptBackend.stderr, /module cache: optimized=[1-9]\d*, reused=[1-9]\d*/);
+    assert.doesNotMatch(corruptBackend.stderr, /cache hit:/);
+    assert.ok(counters(corruptBackend).optimized > 0, "corrupt backend must be rebuilt");
     compare("corrupt-cached-backend");
     if (packages) {
       const pointer = JSON.parse(readFileSync(join(cacheDirectory, "current.json")));
       const manifest = JSON.parse(readFileSync(join(cacheDirectory, "objects", pointer.manifest.sha256)));
       const source = manifest.modules.find(mod => mod.name === "Main").sources[0];
-      writeFileSync(join(cacheDirectory, "objects", source.object.sha256), "corrupt cached unqualified source");
+      corruptCacheObject(cacheDirectory, source.object);
       const repaired = invoke("corrupt-cached-source");
       assert.doesNotMatch(repaired.stderr, /optimizer not started/);
-      assert.match(repaired.stderr, /module cache: optimized=[1-9]\d*, reused=[1-9]\d*/);
+      assert.doesNotMatch(repaired.stderr, /cache hit:/);
+      assert.ok(counters(repaired).optimized > 0, "corrupt source must be rebuilt");
       compare("corrupt-cached-source");
     }
+    const beforeTastEdit = generated(output);
     const oldExtraTime = statSync(join(output, "Extra/corefn.json"));
     const extraText = readFileSync(join(output, "Extra/corefn.json"), "utf8");
     assert.ok(extraText.includes('"extra"'));
@@ -207,8 +262,13 @@ test("driver cache transitions equal clean generation in every supported host mo
     utimesSync(join(output, "Extra/corefn.json"), oldExtraTime.atime, oldExtraTime.mtime);
     const tastEdit = invoke("tast-edit");
     assert.match(tastEdit.stderr, /cache miss: inputs-changed/);
-    assert.match(tastEdit.stderr, /prepared fingerprints: computed=[1-9]\d*, reused=0/);
-    assert.match(tastEdit.stderr, /module cache: optimized=\d+, reused=[1-9]\d*, emitted=\d+, restored=[1-9]\d*/);
+    // A committed preparation proof can retain the unchanged fingerprints.
+    // The edited module must still be fingerprinted and its output regenerated.
+    const tastFingerprints = fingerprints(tastEdit), tastCounts = counters(tastEdit);
+    assert.ok(tastFingerprints.computed > 0, "the edited TAST must be fingerprinted");
+    assert.ok(tastCounts.optimized > 0 && tastCounts.reused > 0);
+    assert.ok(tastCounts.emitted > 0 && tastCounts.restored > 0);
+    assert.notDeepEqual(moduleFiles(generated(output), "Extra"), moduleFiles(beforeTastEdit, "Extra"));
     compare("tast-edit");
     const beforeRemoval = generated(output);
     rmSync(join(output, "Extra/corefn.json"));
@@ -228,7 +288,11 @@ test("driver cache transitions equal clean generation in every supported host mo
     rmSync(external);
     invoke("module-added");
     compare("module-added");
-    assert.match(invoke("entry-selected", ["--main", "Extra"]).stderr, /prepared fingerprints: computed=[1-9]\d*, reused=0/);
+    const entrySelected = invoke("entry-selected", ["--main", "Extra"]);
+    assert.match(entrySelected.stderr, /cache miss: inputs-changed/);
+    // Selecting an entry point changes the optimizer context, not the TAST.
+    assert.deepEqual(fingerprints(entrySelected), { computed: 0, reused: moduleCount });
+    assert.deepEqual(counters(entrySelected), { optimized: moduleCount, reused: 0, emitted: moduleCount, restored: 0 });
     assert.ok(!existsSync(join(output, "Main/main/main.go")));
     compare("entry-selected", ["--main", "Extra"]);
 

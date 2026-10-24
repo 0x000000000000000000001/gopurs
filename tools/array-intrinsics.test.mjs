@@ -10,7 +10,7 @@ import { ordString } from '../output/Data.Ord/index.js';
 import { empty as emptySet } from '../output/Data.Set/index.js';
 import * as Ref from '../output/Effect.Ref/index.js';
 import { Curried, Uncurried, recognize, emitCurried, emitUncurried } from '../output/Gopurs.ArrayIntrinsics/index.js';
-import { StmtEmpty } from '../output/Gopurs.ExprContext/index.js';
+import { StmtEmpty, flattenStmts } from '../output/Gopurs.ExprContext/index.js';
 import * as Go from '../output/Gopurs.GoAst/index.js';
 import { boxGoExpr } from '../output/Gopurs.GoConversions/index.js';
 import { printGoExpr } from '../output/Gopurs.Printer/index.js';
@@ -66,10 +66,17 @@ test('fresh integer normalization requires a resolved scalar fold, literal seed 
     const source = new Go.GoFreshFilterArray(Go.rawGo('freshFilter()'));
     const runtimeArray = value => new Go.GoCall(new Go.GoSelector(new Go.GoVar('gopurs_runtime'), 'Array'), [value]);
     const roundtrip = value => new Go.GoBoxIntArray(new Go.GoUnboxIntArray(runtimeArray(value)));
-    const render = (callee, args, arrayExpr) => printGoExpr(emitCurried(context())(callee)(args)
-        (select(Curried.value, 'foldlArray', 3))({ stmts: StmtEmpty.value, nextId: 7,
-            exprs: [Go.rawGo('callback'), Go.rawGo('seed'), arrayExpr],
-            exprTypes: [Go.TypeValue.value, Go.TypeValue.value, Go.TypeValue.value] }).expr);
+    const render = (callee, args, arrayExpr) => {
+        const translate = _context => nextId => argument => ({
+            stmts: StmtEmpty.value,
+            expr: [Go.rawGo('callback'), Go.rawGo('seed'), arrayExpr][args.indexOf(argument)] ?? Go.rawGo('surplus'),
+            exprType: Go.TypeValue.value, nextId,
+        });
+        const result = emitCurried(translate)(context())(7)(callee)(args)
+            (select(Curried.value, 'foldlArray', 3));
+        // Fresh-array normalization occurs before the argument is captured.
+        return [...flattenStmts(result.stmts), result.expr].map(printGoExpr).join('\n');
+    };
     const args = [callback, int(0), ref('Probe', 'array')];
     assert.match(render(fn, args, roundtrip(source)), /source_int_array_/);
     for (const [callee, supplied, value] of [
@@ -107,11 +114,18 @@ test('generated map/filter/fold loops preserve callbacks, left-fold order, nativ
             const convention = mode === 'curried' ? Curried.value : Uncurried.value;
             const name = kind === 'filter' && mode !== 'curried' ? 'filterImpl' : intrinsicName;
             const intrinsic = select(convention, name, args.length);
+            const translate = _context => nextId => argument => {
+                const index = args.indexOf(argument);
+                assert.ok(index >= 0, 'intrinsic translated an unexpected expression');
+                return { stmts: StmtEmpty.value, expr: translated.exprs[index],
+                    exprType: translated.exprTypes[index], nextId };
+            };
             const result = mode === 'curried'
-                ? emitCurried(ctx)(ref('Data.Array', name))(args)(intrinsic)(translated)
-                : emitUncurried(ctx)(args)(intrinsic)(translated);
+                ? emitCurried(translate)(ctx)(0)(ref('Data.Array', name))(args)(intrinsic)
+                : emitUncurried(translate)(ctx)(0)(args)(intrinsic);
             const boxed = boxGoExpr(ctx.codegenStateRef)('Probe')(result.expr)(result.exprType);
-            declarations.push(`func ${mode}_${kind}(values ${native ? '[]int64' : 'gopurs_runtime.Value'}) gopurs_runtime.Value { return ${printGoExpr(boxed)} }`);
+            const body = [...flattenStmts(result.stmts), new Go.GoReturn(boxed)].map(printGoExpr).join('\n');
+            declarations.push(`func ${mode}_${kind}(values ${native ? '[]int64' : 'gopurs_runtime.Value'}) gopurs_runtime.Value {\n${body}\n}`);
         }
     }
     const directory = mkdtempSync(join(tmpdir(), 'gopurs-array-intrinsics-'));

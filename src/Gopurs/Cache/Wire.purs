@@ -1,13 +1,13 @@
 module Gopurs.Cache.Wire
   ( class Codec, encode, decode, write, read, hash, genericEncode, genericDecode
-  , class Constructors, class Arguments, class Fields
+  , class Constructors, class Arguments, class Fields, class EncodeFields
   , encodeConstructor, decodeConstructor, argumentCount, encodeArguments, decodeArguments
-  , encodeFields, decodeFields
+  , encodeFields, decodeFields, encodeFieldsFrom
   , class KeyOrder, compareKey
   , TypeTable, EncodeContext, DecodeContext
   ) where
 
-import Prelude
+import Prelude hiding (one)
 
 import Control.Alt ((<|>))
 import Control.Alternative (guard)
@@ -413,6 +413,22 @@ instance (RowToList row fields, Fields fields row) => Codec (Record row) where
     intern context ("[\"record\",[" <> String.joinWith "," fields <> "]]")
   decode context json = payload context "record" json >>= toArray >>= decodeFields (Proxy :: Proxy fields) context
 
+-- Encoding only reads the listed labels, so retain the complete record instead
+-- of copying it to remove each visited field. The remaining field list controls
+-- the portable order; unlike Fields, it does not determine the complete row.
+class EncodeFields (fields :: RowList Type) (row :: Row Type) where
+  encodeFieldsFrom :: Proxy fields -> EncodeContext -> Record row -> Effect (Array String)
+
+instance EncodeFields Nil row where
+  encodeFieldsFrom _ _ _ = pure []
+
+instance (IsSymbol label, Codec a, EncodeFields tail row, Row.Cons label a rest row) => EncodeFields (Cons label a tail) row where
+  encodeFieldsFrom _ context record = do
+    value <- encode context (Record.get label record)
+    rest <- encodeFieldsFrom (Proxy :: Proxy tail) context record
+    pure (Array.cons (jsonArray [ quoted (stringUnits (reflectSymbol label)), value ]) rest)
+    where label = Proxy :: Proxy label
+
 class Fields (fields :: RowList Type) (row :: Row Type) | fields -> row where
   encodeFields :: Proxy fields -> EncodeContext -> Record row -> Effect (Array String)
   decodeFields :: Proxy fields -> DecodeContext -> Array Json -> Maybe (Record row)
@@ -421,10 +437,10 @@ instance Fields Nil () where
   encodeFields _ _ _ = pure []
   decodeFields _ _ values = if Array.null values then Just {} else Nothing
 
-instance (IsSymbol label, Codec a, Fields tail rest, Row.Cons label a rest row, Row.Lacks label rest) => Fields (Cons label a tail) row where
+instance (IsSymbol label, Codec a, Fields tail rest, EncodeFields tail row, Row.Cons label a rest row, Row.Lacks label rest) => Fields (Cons label a tail) row where
   encodeFields _ context record = do
     value <- encode context (Record.get label record)
-    rest <- encodeFields (Proxy :: Proxy tail) context (Record.delete label record)
+    rest <- encodeFieldsFrom (Proxy :: Proxy tail) context record
     pure (Array.cons (jsonArray [ quoted (stringUnits (reflectSymbol label)), value ]) rest)
     where label = Proxy :: Proxy label
   decodeFields _ context values = do

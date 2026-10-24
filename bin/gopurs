@@ -41,6 +41,11 @@ if [[ "${mem_bytes:-0}" =~ ^[0-9]+$ ]] && (( mem_bytes >= 32 * 1024 * 1024 * 102
   if [[ "${GOPURS_RUST:-0}" != "1" && "${GOPURS_JS:-0}" != "1" && -z "${GOGC:-}" && -z "${GOMEMLIMIT:-}" ]]; then
     export GOGC=off
     export GOMEMLIMIT=10GiB
+    # Full builds benefit from more GC headroom on larger machines. Keep the
+    # smaller-machine limit and never replace an explicit caller policy.
+    if (( mem_bytes >= 48 * 1024 * 1024 * 1024 )); then
+      export GOMEMLIMIT=16GiB
+    fi
   fi
 fi
 

@@ -87,6 +87,50 @@ async function oracle(candidate, expected) {
   }
 }
 
+test('first publication has identical proof, payloads and fragment order with one or eight workers', async t => {
+  const sources = { Poly: poly, Leaf: leaf('before'), Main: main };
+  for (let i = 0; i < 6; i++) sources[`Extra${i}`] = `module Extra${i} (label) where\nlabel :: String\nlabel = "${i}"\n`;
+  const f = setup(t, sources);
+  f.compile({});
+  const initial = await f.full();
+  assert(initial.proof instanceof Nothing, 'the publication must construct a new proof');
+  const directory = join(f.output, '.gopurs-cache', 'preparation-literals-v1');
+  const snapshot = () => {
+    const bytes = readFileSync(join(directory, 'proof.json'));
+    const envelope = JSON.parse(bytes.toString('utf8'));
+    assert.equal(Wire.hash(envelope.payload), envelope.hash, 'the complete proof envelope is valid');
+    const proof = JSON.parse(envelope.payload);
+    assert.equal(proof.schema, 5);
+    assert.deepEqual(proof.modules.map(mod => mod.name), array(initial.sourceModules).map(mod => mod.name),
+      'module proof order follows the original source order');
+    assert(proof.payloads.length > 0, 'the fixture exercises specialization payloads');
+    assert.equal(proof.projection.length, 8, 'the fixture exercises every projection fragment');
+    assert.equal(new globalThis.Set(proof.projection).size, 8, 'projection references are distinct');
+    const hashes = [...new globalThis.Set([...proof.payloads.map(entry => entry.hash), ...proof.projection,
+      ...(proof.capsule ?? [])])].sort();
+    const objects = hashes.map(hash => {
+      const bytes = readFileSync(join(directory, hash + '.json'));
+      assert.equal(Wire.hash(bytes.toString('utf8')), hash, 'every referenced object is content-addressed');
+      return [hash, bytes];
+    });
+    assert.deepEqual(fs.readdirSync(directory).sort(), ['proof.json', ...hashes.map(hash => hash + '.json')].sort(),
+      'first publication contains exactly the referenced objects and proof');
+    return { bytes, objects, projection: proof.projection };
+  };
+  assert.equal(fs.existsSync(directory), false);
+  await f.publish(initial, 1);
+  const sequential = snapshot();
+  // Remove this fixture's entire private proof directory. Reusing a valid
+  // previous proof would skip encoding and would not test first publication.
+  rmSync(directory, { recursive: true });
+  assert.equal(fs.existsSync(directory), false);
+  assert(initial.proof instanceof Nothing);
+  await f.publish(initial, 8);
+  assert.deepEqual(snapshot(), sequential, 'worker count preserves every byte and reference order');
+  f.compile({ Leaf: leaf('after') });
+  await oracle(await f.candidate(8), await f.full());
+});
+
 test('literal edit reuses anchored compact preparation and materializes every reader exactly', async t => {
   const f = setup(t, { Poly: poly, Leaf: leaf('before'), Main: main });
   f.compile({}); const initial = await f.full(); await f.publish(initial);

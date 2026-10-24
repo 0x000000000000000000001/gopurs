@@ -266,26 +266,30 @@ func Get_Main_main() r_.Value {
 			_ = __local_var_1_1
 			__local_var_2_2 := r_.Apply(r_.Apply(Get_Effect_Ref_read(), __local_var_1_1), r_.Value{})
 			_ = __local_var_2_2
+			arrayIntrinsic_arg_4 := Get_Main_describe()
+			_ = arrayIntrinsic_arg_4
+			arrayIntrinsic_arg_5 := func() r_.Value {
+				arr := Call_Main_flatten(__local_var_2_2)
+				boxed := make([]r_.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = r_.Value{Type: 9, IntVal: 3177043775, UnsafePtr: unsafe.Pointer(Rebox_Main_3242760310_4122662347(v))}
+				}
+				return r_.Array(boxed)
+			}()
+			_ = arrayIntrinsic_arg_5
 			__local_var_3_3 := r_.Apply(Call_Test_Assert_assertEqual_prime___2499841393("", struct {
 				P_actual   []string
 				P_expected []string
 			}{func() []string {
 				arr := *(*[]r_.Value)(r_.Array((*(*[]r_.Value)((func() r_.Value {
-					arr_val_arrayMap6 := func() r_.Value {
-						arr := Call_Main_flatten(__local_var_2_2)
-						boxed := make([]r_.Value, len(arr))
-						for i, v := range arr {
-							boxed[i] = r_.Value{Type: 9, IntVal: 3177043775, UnsafePtr: unsafe.Pointer(Rebox_Main_3242760310_4122662347(v))}
-						}
-						return r_.Array(boxed)
-					}()
+					arr_val_arrayMap6 := arrayIntrinsic_arg_5
 					_ = arr_val_arrayMap6
 					arr_go_arrayMap6 := (*[]r_.Value)(arr_val_arrayMap6.UnsafePtr)
 					_ = arr_go_arrayMap6
 					res_go_arrayMap6 := make([]r_.Value, len(*arr_go_arrayMap6))
 					_ = res_go_arrayMap6
 					for i_arrayMap6, v_arrayMap6 := range *arr_go_arrayMap6 {
-						res_go_arrayMap6[i_arrayMap6] = r_.Apply(Get_Main_describe(), v_arrayMap6)
+						res_go_arrayMap6[i_arrayMap6] = r_.Apply(arrayIntrinsic_arg_4, v_arrayMap6)
 					}
 					return r_.Array(res_go_arrayMap6)
 				}()).UnsafePtr))).UnsafePtr)
@@ -296,7 +300,7 @@ func Get_Main_main() r_.Value {
 				return unboxed
 			}(), []string{"x:typed:42"}}), r_.Value{})
 			_ = __local_var_3_3
-			__local_var_4_4 := r_.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
+			__local_var_4_6 := r_.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				P_actual   int64
 				P_expected int64
 			}{r_.Int(int64(len(Call_Main_flatten(r_.Value{Type: 9, IntVal: 4196596074, UnsafePtr: unsafe.Pointer(Rebox_Main_2297685059_1811419774((&Constructor_Main_Rec[struct {
@@ -320,7 +324,7 @@ func Get_Main_main() r_.Value {
 				}
 				return unboxed
 			}()})))})))).IntVal, int64(0)}), r_.Value{})
-			_ = __local_var_4_4
+			_ = __local_var_4_6
 			return r_.Apply(r_.Apply(Get_Effect_Console_log(), r_.Str("Done")), r_.Value{})
 		})
 	})

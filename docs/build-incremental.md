@@ -1,5 +1,9 @@
 # Bilan du cache incrémental — lots 04 à 06
 
+Le [bilan du 24 octobre](build-cold-20261024.md) décrit les optimisations et
+mesures ultérieures. Les chiffres et le comportement ci-dessous restent ceux
+de la campagne historique du 12 octobre.
+
 Lots clôturés le **12 octobre 2026**, sur le candidat **`publicsync`**. Le plan v3
 compte **7/7 lots validés**. Les mesures du parcours complet confirment la priorité
 du découpage des packages Go (suite G), avant la préparation incrémentale (P).

@@ -36,11 +36,13 @@ func Get_Main_Singleton_dollar_Dict() gopurs_runtime.Value {
 		cache_Main_Singleton_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 3773262993, UnsafePtr: unsafe.Pointer(Call_Main_Singleton_dollar_Dict(func() struct {
 				singleton gopurs_runtime.Value
+				/*gopurs:record-v1:1:00730069006e0067006c00650074006f006e*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					singleton gopurs_runtime.Value
+					/*gopurs:record-v1:1:00730069006e0067006c00650074006f006e*/
 				}{}
 				clone.singleton = gopurs_runtime.RecordGet(orig, "singleton")
 				return clone
@@ -159,6 +161,7 @@ func Get_Main_MonadWriter_dollar_Dict() gopurs_runtime.Value {
 				Monad0  gopurs_runtime.Value
 				Monoid1 gopurs_runtime.Value
 				tell    gopurs_runtime.Value
+				/*gopurs:record-v1:3:004d006f006e006100640030,004d006f006e006f006900640031,00740065006c006c*/
 			} {
 				orig := x_0_box
 				_ = orig
@@ -166,6 +169,7 @@ func Get_Main_MonadWriter_dollar_Dict() gopurs_runtime.Value {
 					Monad0  gopurs_runtime.Value
 					Monoid1 gopurs_runtime.Value
 					tell    gopurs_runtime.Value
+					/*gopurs:record-v1:3:004d006f006e006100640030,004d006f006e006f006900640031,00740065006c006c*/
 				}{}
 				clone.Monad0 = gopurs_runtime.RecordGet(orig, "Monad0")
 				clone.Monoid1 = gopurs_runtime.RecordGet(orig, "Monoid1")
@@ -417,22 +421,26 @@ func Get_Main_main() gopurs_runtime.Value {
 			_ = __local_var_1_1
 			__local_var_2_2 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Rebox_Main_1386611502_1953100407(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Main_showY())).V0, gopurs_runtime.Apply(gopurs_runtime.RecordGet(Get_Main_singletonY(), "singleton"), gopurs_runtime.Str("test"))).StrVal())), gopurs_runtime.Value{})
 			_ = __local_var_2_2
+			arrayIntrinsic_arg_4 := Get_Data_Show_showIntImpl()
+			_ = arrayIntrinsic_arg_4
+			arrayIntrinsic_arg_5 := func() gopurs_runtime.Value {
+				arr := []int64{int64(1), int64(2), int64(3)}
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Int(v)
+				}
+				return gopurs_runtime.Array(boxed)
+			}()
+			_ = arrayIntrinsic_arg_5
 			__local_var_3_3 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(gopurs_runtime.RecordGet(Call_Main_showMyArray(gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showString()))))}), "show"), func() gopurs_runtime.Value {
-				arr_val_arrayMap6 := func() gopurs_runtime.Value {
-					arr := []int64{int64(1), int64(2), int64(3)}
-					boxed := make([]gopurs_runtime.Value, len(arr))
-					for i, v := range arr {
-						boxed[i] = gopurs_runtime.Int(v)
-					}
-					return gopurs_runtime.Array(boxed)
-				}()
+				arr_val_arrayMap6 := arrayIntrinsic_arg_5
 				_ = arr_val_arrayMap6
 				arr_go_arrayMap6 := (*[]gopurs_runtime.Value)(arr_val_arrayMap6.UnsafePtr)
 				_ = arr_go_arrayMap6
 				res_go_arrayMap6 := make([]gopurs_runtime.Value, len(*arr_go_arrayMap6))
 				_ = res_go_arrayMap6
 				for i_arrayMap6, v_arrayMap6 := range *arr_go_arrayMap6 {
-					res_go_arrayMap6[i_arrayMap6] = gopurs_runtime.Apply(Get_Data_Show_showIntImpl(), v_arrayMap6)
+					res_go_arrayMap6[i_arrayMap6] = gopurs_runtime.Apply(arrayIntrinsic_arg_4, v_arrayMap6)
 				}
 				return gopurs_runtime.Array(res_go_arrayMap6)
 			}()).StrVal())), gopurs_runtime.Value{})
@@ -498,6 +506,7 @@ type Constructor_Main_Singleton[T_a any, T_b any] struct {
 	V0 gopurs_runtime.Value
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f00530069006e0067006c00650074006f006e
 func init() {
 	gopurs_runtime.StructGetters[3773262993] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_Singleton[gopurs_runtime.Value, gopurs_runtime.Value])(ptr)
@@ -518,6 +527,7 @@ type Constructor_Main_MonadWriter[T_w any, T_m any] struct {
 	V2 gopurs_runtime.Value
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f004d006f006e00610064005700720069007400650072
 func init() {
 	gopurs_runtime.StructGetters[2544837208] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_MonadWriter[gopurs_runtime.Value, gopurs_runtime.Value])(ptr)
@@ -543,9 +553,11 @@ func Call_Main_Y(x_0_loop []gopurs_runtime.Value) []gopurs_runtime.Value {
 
 func Call_Main_Singleton_dollar_Dict(x_0_loop struct {
 	singleton gopurs_runtime.Value
+	/*gopurs:record-v1:1:00730069006e0067006c00650074006f006e*/
 }) *Constructor_Main_Singleton[gopurs_runtime.Value, gopurs_runtime.Value] {
 	var x_0 struct {
 		singleton gopurs_runtime.Value
+		/*gopurs:record-v1:1:00730069006e0067006c00650074006f006e*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_Singleton[gopurs_runtime.Value, gopurs_runtime.Value]](func() gopurs_runtime.Value {
@@ -610,11 +622,13 @@ func Call_Main_MonadWriter_dollar_Dict(x_0_loop struct {
 	Monad0  gopurs_runtime.Value
 	Monoid1 gopurs_runtime.Value
 	tell    gopurs_runtime.Value
+	/*gopurs:record-v1:3:004d006f006e006100640030,004d006f006e006f006900640031,00740065006c006c*/
 }) *Constructor_Main_MonadWriter[gopurs_runtime.Value, gopurs_runtime.Value] {
 	var x_0 struct {
 		Monad0  gopurs_runtime.Value
 		Monoid1 gopurs_runtime.Value
 		tell    gopurs_runtime.Value
+		/*gopurs:record-v1:3:004d006f006e006100640030,004d006f006e006f006900640031,00740065006c006c*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_MonadWriter[gopurs_runtime.Value, gopurs_runtime.Value]](func() gopurs_runtime.Value {

@@ -32,8 +32,9 @@ The [altbak README](https://github.com/0x000000000000000000001/altbak.pub#go)
 contains the reference results, workloads, and benchmark context. Compare
 changes against those baselines; results depend on the workload and toolchain.
 The sequential core campaign does not establish multicore scaling.
-Performance work remains paused. Validation timings
-are not benchmark results; future optimization work requires meaningful measured gains.
+The [24 October cold-backend campaign](docs/build-cold-20261024.md) records
+three alternating pairs, incremental checks and the experiments not retained.
+Its empty-backend-cache protocol is separate from the historical altbak timings.
 
 ## Getting started
 
@@ -273,6 +274,8 @@ for forcing generation, resetting the reusable cache and reading diagnostics,
 the [cache contract](docs/build-cache.md) for migration and concurrency,
 and the [incremental-build results](docs/build-incremental.md) for the
 measured edit-time gains, cold-build overhead, cache size and validation evidence.
+The [24 October follow-up](docs/build-cold-20261024.md) records the subsequent
+allocation and array-intrinsic changes, with cold and incremental timings.
 The completed b8x cycle campaign includes [all 24 measurements](docs/build-cycle-lot06.csv):
 the common Go package still dominates rebuilds after edits, motivating the next
 package-granularity work. The report includes regressions and pair-to-pair variation.
@@ -464,6 +467,16 @@ This choice is independent of `GOGC` and `GOMEMLIMIT`. Smaller machines retain
 the compiler defaults (preparation 2, PBO 1); emission defaults to 8 everywhere.
 Set the environment variables explicitly for reproducible comparisons. See
 [parallel preparation](docs/parallel-preparation.md).
+
+For the native Go host, the launcher also selects `GOGC=off` with a soft GC
+memory target (`GOMEMLIMIT`): 10 GiB on machines with 32–47 GiB of RAM, and 16 GiB from 48 GiB
+upwards. An explicit `GOGC` or `GOMEMLIMIT` preserves the caller's entire GC
+policy. `GOMAXPROCS` is left to Go unless the caller sets it. This target is not
+a strict RSS ceiling. It governs the compiler process and does not configure
+the subsequent application build.
+Initial persistent preparation proofs use the same bounded preparation workers,
+then join in source order before publishing cache objects. Cache formats and
+incremental invalidation rules are unchanged.
 
 ## Develop one library locally
 

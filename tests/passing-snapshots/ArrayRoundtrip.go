@@ -247,18 +247,26 @@ func Call_Main_go__range(start_0_loop int64, end_1_loop int64) []int64 {
 func Call_Main_filterEvens(arr_0_loop []int64) []int64 {
 	var arr_0 []int64 = arr_0_loop
 	_ = arr_0
+	arrayIntrinsic_arg_0 := gopurs_runtime.Func(func(x_1 gopurs_runtime.Value) gopurs_runtime.Value {
+		return gopurs_runtime.Bool((gopurs_runtime.IntMod(x_1.IntVal, int64(2))) == (int64(0)))
+	})
+	_ = arrayIntrinsic_arg_0
+	_ = arrayIntrinsic_arg_0
+	arrayIntrinsic_arg_1 := arr_0
+	_ = arrayIntrinsic_arg_1
+	_ = arrayIntrinsic_arg_1
 	return func() []int64 {
-		arr_val_filterImpl0 := arr_0
+		arr_val_filterImpl0 := arrayIntrinsic_arg_1
 		_ = arr_val_filterImpl0
 		_ = arr_val_filterImpl0
+		arrayIntrinsic_callback_2 := arrayIntrinsic_arg_0
+		_ = arrayIntrinsic_callback_2
 		arr_go_filterImpl0 := arr_val_filterImpl0
 		_ = arr_go_filterImpl0
 		res_go_filterImpl0 := make([]int64, 0)
 		_ = res_go_filterImpl0
 		for _, v_filterImpl0 := range arr_go_filterImpl0 {
-			if gopurs_runtime.Apply(gopurs_runtime.Func(func(x_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Bool((gopurs_runtime.IntMod(x_1.IntVal, int64(2))) == (int64(0)))
-			}), gopurs_runtime.Int(v_filterImpl0)).BoolVal() {
+			if gopurs_runtime.Apply(arrayIntrinsic_callback_2, gopurs_runtime.Int(v_filterImpl0)).BoolVal() {
 				res_go_filterImpl0 = append(res_go_filterImpl0, v_filterImpl0)
 			} else {
 
@@ -271,40 +279,54 @@ func Call_Main_filterEvens(arr_0_loop []int64) []int64 {
 func Call_Main_sumArrayEvens(values_0_loop []int64) int64 {
 	var values_0 []int64 = values_0_loop
 	_ = values_0
-	return func() gopurs_runtime.Value {
-		arr_val_foldlArray0 := func() gopurs_runtime.Value {
-			arr := func() []int64 {
-				arr_val_filterImpl1 := values_0
-				_ = arr_val_filterImpl1
-				_ = arr_val_filterImpl1
-				arr_go_filterImpl1 := arr_val_filterImpl1
-				_ = arr_go_filterImpl1
-				res_go_filterImpl1 := make([]int64, 0)
-				_ = res_go_filterImpl1
-				for _, v_filterImpl1 := range arr_go_filterImpl1 {
-					if gopurs_runtime.Apply(gopurs_runtime.Func(func(x_1 gopurs_runtime.Value) gopurs_runtime.Value {
-						return gopurs_runtime.Bool((gopurs_runtime.IntMod(x_1.IntVal, int64(2))) == (int64(0)))
-					}), gopurs_runtime.Int(v_filterImpl1)).BoolVal() {
-						res_go_filterImpl1 = append(res_go_filterImpl1, v_filterImpl1)
-					} else {
+	arrayIntrinsic_arg_0 := Get_Data_Semiring_intAdd()
+	_ = arrayIntrinsic_arg_0
+	arrayIntrinsic_arg_1 := gopurs_runtime.Int(int64(0))
+	_ = arrayIntrinsic_arg_1
+	arrayIntrinsic_arg_2 := gopurs_runtime.Func(func(x_1 gopurs_runtime.Value) gopurs_runtime.Value {
+		return gopurs_runtime.Bool((gopurs_runtime.IntMod(x_1.IntVal, int64(2))) == (int64(0)))
+	})
+	_ = arrayIntrinsic_arg_2
+	_ = arrayIntrinsic_arg_2
+	arrayIntrinsic_arg_3 := values_0
+	_ = arrayIntrinsic_arg_3
+	_ = arrayIntrinsic_arg_3
+	arrayIntrinsic_arg_4 := func() gopurs_runtime.Value {
+		arr := func() []int64 {
+			arr_val_filterImpl1 := arrayIntrinsic_arg_3
+			_ = arr_val_filterImpl1
+			_ = arr_val_filterImpl1
+			arrayIntrinsic_callback_4 := arrayIntrinsic_arg_2
+			_ = arrayIntrinsic_callback_4
+			arr_go_filterImpl1 := arr_val_filterImpl1
+			_ = arr_go_filterImpl1
+			res_go_filterImpl1 := make([]int64, 0)
+			_ = res_go_filterImpl1
+			for _, v_filterImpl1 := range arr_go_filterImpl1 {
+				if gopurs_runtime.Apply(arrayIntrinsic_callback_4, gopurs_runtime.Int(v_filterImpl1)).BoolVal() {
+					res_go_filterImpl1 = append(res_go_filterImpl1, v_filterImpl1)
+				} else {
 
-					}
 				}
-				return res_go_filterImpl1
-			}()
-			boxed := make([]gopurs_runtime.Value, len(arr))
-			for i, v := range arr {
-				boxed[i] = gopurs_runtime.Int(v)
 			}
-			return gopurs_runtime.Array(boxed)
+			return res_go_filterImpl1
 		}()
+		boxed := make([]gopurs_runtime.Value, len(arr))
+		for i, v := range arr {
+			boxed[i] = gopurs_runtime.Int(v)
+		}
+		return gopurs_runtime.Array(boxed)
+	}()
+	_ = arrayIntrinsic_arg_4
+	return func() gopurs_runtime.Value {
+		arr_val_foldlArray0 := arrayIntrinsic_arg_4
 		_ = arr_val_foldlArray0
-		res_go_foldlArray0 := gopurs_runtime.Int(int64(0))
+		res_go_foldlArray0 := arrayIntrinsic_arg_1
 		_ = res_go_foldlArray0
 		arr_go_foldlArray0 := (*[]gopurs_runtime.Value)(arr_val_foldlArray0.UnsafePtr)
 		_ = arr_go_foldlArray0
 		for _, v_foldlArray0 := range *arr_go_foldlArray0 {
-			res_go_foldlArray0 = gopurs_runtime.Apply2(Get_Data_Semiring_intAdd(), res_go_foldlArray0, v_foldlArray0)
+			res_go_foldlArray0 = gopurs_runtime.Apply2(arrayIntrinsic_arg_0, res_go_foldlArray0, v_foldlArray0)
 		}
 		return res_go_foldlArray0
 	}().IntVal
@@ -313,47 +335,61 @@ func Call_Main_sumArrayEvens(values_0_loop []int64) int64 {
 func Call_Main_sumEvens(n_0_loop int64) int64 {
 	var n_0 int64 = n_0_loop
 	_ = n_0
-	return func() gopurs_runtime.Value {
-		arr_val_foldlArray0 := func() gopurs_runtime.Value {
-			arr := func() []int64 {
-				arr_val_filterImpl1 := func() []int64 {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.UncurriedApp2(Get_Data_Array_rangeImpl(), gopurs_runtime.Int(int64(1)), gopurs_runtime.Int(n_0)).UnsafePtr)
-					unboxed := make([]int64, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.IntVal
-					}
-					return unboxed
-				}()
-				_ = arr_val_filterImpl1
-				_ = arr_val_filterImpl1
-				arr_go_filterImpl1 := arr_val_filterImpl1
-				_ = arr_go_filterImpl1
-				res_go_filterImpl1 := make([]int64, 0)
-				_ = res_go_filterImpl1
-				for _, v_filterImpl1 := range arr_go_filterImpl1 {
-					if gopurs_runtime.Apply(gopurs_runtime.Func(func(x_1 gopurs_runtime.Value) gopurs_runtime.Value {
-						return gopurs_runtime.Bool((gopurs_runtime.IntMod(x_1.IntVal, int64(2))) == (int64(0)))
-					}), gopurs_runtime.Int(v_filterImpl1)).BoolVal() {
-						res_go_filterImpl1 = append(res_go_filterImpl1, v_filterImpl1)
-					} else {
+	arrayIntrinsic_arg_0 := Get_Data_Semiring_intAdd()
+	_ = arrayIntrinsic_arg_0
+	arrayIntrinsic_arg_1 := gopurs_runtime.Int(int64(0))
+	_ = arrayIntrinsic_arg_1
+	arrayIntrinsic_arg_2 := gopurs_runtime.Func(func(x_1 gopurs_runtime.Value) gopurs_runtime.Value {
+		return gopurs_runtime.Bool((gopurs_runtime.IntMod(x_1.IntVal, int64(2))) == (int64(0)))
+	})
+	_ = arrayIntrinsic_arg_2
+	_ = arrayIntrinsic_arg_2
+	arrayIntrinsic_arg_3 := func() []int64 {
+		arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.UncurriedApp2(Get_Data_Array_rangeImpl(), gopurs_runtime.Int(int64(1)), gopurs_runtime.Int(n_0)).UnsafePtr)
+		unboxed := make([]int64, len(arr))
+		for i, v := range arr {
+			unboxed[i] = v.IntVal
+		}
+		return unboxed
+	}()
+	_ = arrayIntrinsic_arg_3
+	_ = arrayIntrinsic_arg_3
+	arrayIntrinsic_arg_4 := func() gopurs_runtime.Value {
+		arr := func() []int64 {
+			arr_val_filterImpl1 := arrayIntrinsic_arg_3
+			_ = arr_val_filterImpl1
+			_ = arr_val_filterImpl1
+			arrayIntrinsic_callback_4 := arrayIntrinsic_arg_2
+			_ = arrayIntrinsic_callback_4
+			arr_go_filterImpl1 := arr_val_filterImpl1
+			_ = arr_go_filterImpl1
+			res_go_filterImpl1 := make([]int64, 0)
+			_ = res_go_filterImpl1
+			for _, v_filterImpl1 := range arr_go_filterImpl1 {
+				if gopurs_runtime.Apply(arrayIntrinsic_callback_4, gopurs_runtime.Int(v_filterImpl1)).BoolVal() {
+					res_go_filterImpl1 = append(res_go_filterImpl1, v_filterImpl1)
+				} else {
 
-					}
 				}
-				return res_go_filterImpl1
-			}()
-			boxed := make([]gopurs_runtime.Value, len(arr))
-			for i, v := range arr {
-				boxed[i] = gopurs_runtime.Int(v)
 			}
-			return gopurs_runtime.Array(boxed)
+			return res_go_filterImpl1
 		}()
+		boxed := make([]gopurs_runtime.Value, len(arr))
+		for i, v := range arr {
+			boxed[i] = gopurs_runtime.Int(v)
+		}
+		return gopurs_runtime.Array(boxed)
+	}()
+	_ = arrayIntrinsic_arg_4
+	return func() gopurs_runtime.Value {
+		arr_val_foldlArray0 := arrayIntrinsic_arg_4
 		_ = arr_val_foldlArray0
-		res_go_foldlArray0 := gopurs_runtime.Int(int64(0))
+		res_go_foldlArray0 := arrayIntrinsic_arg_1
 		_ = res_go_foldlArray0
 		arr_go_foldlArray0 := (*[]gopurs_runtime.Value)(arr_val_foldlArray0.UnsafePtr)
 		_ = arr_go_foldlArray0
 		for _, v_foldlArray0 := range *arr_go_foldlArray0 {
-			res_go_foldlArray0 = gopurs_runtime.Apply2(Get_Data_Semiring_intAdd(), res_go_foldlArray0, v_foldlArray0)
+			res_go_foldlArray0 = gopurs_runtime.Apply2(arrayIntrinsic_arg_0, res_go_foldlArray0, v_foldlArray0)
 		}
 		return res_go_foldlArray0
 	}().IntVal
@@ -364,47 +400,61 @@ func Call_Main_sumRangeEvens(start_0_loop int64, end_1_loop int64) int64 {
 	_ = start_0
 	var end_1 int64 = end_1_loop
 	_ = end_1
-	return func() gopurs_runtime.Value {
-		arr_val_foldlArray0 := func() gopurs_runtime.Value {
-			arr := func() []int64 {
-				arr_val_filterImpl1 := func() []int64 {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.UncurriedApp2(Get_Data_Array_rangeImpl(), gopurs_runtime.Int(start_0), gopurs_runtime.Int(end_1)).UnsafePtr)
-					unboxed := make([]int64, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.IntVal
-					}
-					return unboxed
-				}()
-				_ = arr_val_filterImpl1
-				_ = arr_val_filterImpl1
-				arr_go_filterImpl1 := arr_val_filterImpl1
-				_ = arr_go_filterImpl1
-				res_go_filterImpl1 := make([]int64, 0)
-				_ = res_go_filterImpl1
-				for _, v_filterImpl1 := range arr_go_filterImpl1 {
-					if gopurs_runtime.Apply(gopurs_runtime.Func(func(x_2 gopurs_runtime.Value) gopurs_runtime.Value {
-						return gopurs_runtime.Bool((gopurs_runtime.IntMod(x_2.IntVal, int64(2))) == (int64(0)))
-					}), gopurs_runtime.Int(v_filterImpl1)).BoolVal() {
-						res_go_filterImpl1 = append(res_go_filterImpl1, v_filterImpl1)
-					} else {
+	arrayIntrinsic_arg_0 := Get_Data_Semiring_intAdd()
+	_ = arrayIntrinsic_arg_0
+	arrayIntrinsic_arg_1 := gopurs_runtime.Int(int64(0))
+	_ = arrayIntrinsic_arg_1
+	arrayIntrinsic_arg_2 := gopurs_runtime.Func(func(x_2 gopurs_runtime.Value) gopurs_runtime.Value {
+		return gopurs_runtime.Bool((gopurs_runtime.IntMod(x_2.IntVal, int64(2))) == (int64(0)))
+	})
+	_ = arrayIntrinsic_arg_2
+	_ = arrayIntrinsic_arg_2
+	arrayIntrinsic_arg_3 := func() []int64 {
+		arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.UncurriedApp2(Get_Data_Array_rangeImpl(), gopurs_runtime.Int(start_0), gopurs_runtime.Int(end_1)).UnsafePtr)
+		unboxed := make([]int64, len(arr))
+		for i, v := range arr {
+			unboxed[i] = v.IntVal
+		}
+		return unboxed
+	}()
+	_ = arrayIntrinsic_arg_3
+	_ = arrayIntrinsic_arg_3
+	arrayIntrinsic_arg_4 := func() gopurs_runtime.Value {
+		arr := func() []int64 {
+			arr_val_filterImpl1 := arrayIntrinsic_arg_3
+			_ = arr_val_filterImpl1
+			_ = arr_val_filterImpl1
+			arrayIntrinsic_callback_4 := arrayIntrinsic_arg_2
+			_ = arrayIntrinsic_callback_4
+			arr_go_filterImpl1 := arr_val_filterImpl1
+			_ = arr_go_filterImpl1
+			res_go_filterImpl1 := make([]int64, 0)
+			_ = res_go_filterImpl1
+			for _, v_filterImpl1 := range arr_go_filterImpl1 {
+				if gopurs_runtime.Apply(arrayIntrinsic_callback_4, gopurs_runtime.Int(v_filterImpl1)).BoolVal() {
+					res_go_filterImpl1 = append(res_go_filterImpl1, v_filterImpl1)
+				} else {
 
-					}
 				}
-				return res_go_filterImpl1
-			}()
-			boxed := make([]gopurs_runtime.Value, len(arr))
-			for i, v := range arr {
-				boxed[i] = gopurs_runtime.Int(v)
 			}
-			return gopurs_runtime.Array(boxed)
+			return res_go_filterImpl1
 		}()
+		boxed := make([]gopurs_runtime.Value, len(arr))
+		for i, v := range arr {
+			boxed[i] = gopurs_runtime.Int(v)
+		}
+		return gopurs_runtime.Array(boxed)
+	}()
+	_ = arrayIntrinsic_arg_4
+	return func() gopurs_runtime.Value {
+		arr_val_foldlArray0 := arrayIntrinsic_arg_4
 		_ = arr_val_foldlArray0
-		res_go_foldlArray0 := gopurs_runtime.Int(int64(0))
+		res_go_foldlArray0 := arrayIntrinsic_arg_1
 		_ = res_go_foldlArray0
 		arr_go_foldlArray0 := (*[]gopurs_runtime.Value)(arr_val_foldlArray0.UnsafePtr)
 		_ = arr_go_foldlArray0
 		for _, v_foldlArray0 := range *arr_go_foldlArray0 {
-			res_go_foldlArray0 = gopurs_runtime.Apply2(Get_Data_Semiring_intAdd(), res_go_foldlArray0, v_foldlArray0)
+			res_go_foldlArray0 = gopurs_runtime.Apply2(arrayIntrinsic_arg_0, res_go_foldlArray0, v_foldlArray0)
 		}
 		return res_go_foldlArray0
 	}().IntVal
@@ -422,6 +472,7 @@ func Call_Main_check(label_0_loop string, expected_1_loop int64, actual_2_loop i
 		__local_var_3_0 := Call_Test_Assert_assertEqual_prime___627669702("", struct {
 			actual   int64
 			expected int64
+			/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 		}{actual_2, expected_1})
 		_ = __local_var_3_0
 		__local_var_4_1 := gopurs_runtime.Apply(__local_var_3_0, gopurs_runtime.Value{})
@@ -497,6 +548,7 @@ func Call_Main_checkRange(label_0_loop string, expected_1_loop int64, start_2_lo
 			orig := struct {
 				end   int64
 				start int64
+				/*gopurs:record-v1:2:0065006e0064,00730074006100720074*/
 			}{end_3, start_2}
 			_ = orig
 			return gopurs_runtime.RecordDict2("end", "start", gopurs_runtime.Int(orig.end), gopurs_runtime.Int(orig.start))

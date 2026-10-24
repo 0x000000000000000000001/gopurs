@@ -49,12 +49,14 @@ func Get_Main_Binding__267875142() gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 3177043775, UnsafePtr: unsafe.Pointer(Rebox_Main_3242760310_4122662347(Call_Main_Binding__267875142(func() struct {
 				label string
 				line  int64
+				/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 			} {
 				orig := __eta_norm_1_0_box
 				_ = orig
 				clone := struct {
 					label string
 					line  int64
+					/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 				}{}
 				clone.label = gopurs_runtime.RecordGet(orig, "label").StrVal()
 				clone.line = gopurs_runtime.RecordGet(orig, "line").IntVal
@@ -117,11 +119,13 @@ func Get_Main_Rec__1133290652() gopurs_runtime.Value {
 			return Call_Main_Rec__1133290652(func() []*Constructor_Main_Binding[struct {
 				label string
 				line  int64
+				/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 			}] {
 				arr := *(*[]gopurs_runtime.Value)(__eta_norm_0_0_box.UnsafePtr)
 				unboxed := make([]*Constructor_Main_Binding[struct {
 					label string
 					line  int64
+					/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 				}], len(arr))
 				for i, v := range arr {
 					unboxed[i] = Rebox_Main_4122662347_3242760310(gopurs_runtime.CoerceToStruct[Constructor_Main_Binding[gopurs_runtime.Value]](v))
@@ -174,38 +178,46 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Value{Type: 9, IntVal: 3480592549, UnsafePtr: unsafe.Pointer(Rebox_Main_863915020_2606613137((&Constructor_Main_NonRec[struct {
 				label string
 				line  int64
+				/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 			}]{1, (&Constructor_Main_Binding[struct {
 				label string
 				line  int64
+				/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 			}]{1, struct {
 				label string
 				line  int64
+				/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 			}{"typed", int64(42)}, "x"})})))})
 			_ = __local_var_0_0
 			__local_var_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
 			_ = __local_var_1_1
 			__local_var_2_2 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref_read(), __local_var_1_1), gopurs_runtime.Value{})
 			_ = __local_var_2_2
+			arrayIntrinsic_arg_4 := Get_Main_describe()
+			_ = arrayIntrinsic_arg_4
+			arrayIntrinsic_arg_5 := func() gopurs_runtime.Value {
+				arr := Call_Main_flatten(__local_var_2_2)
+				boxed := make([]gopurs_runtime.Value, len(arr))
+				for i, v := range arr {
+					boxed[i] = gopurs_runtime.Value{Type: 9, IntVal: 3177043775, UnsafePtr: unsafe.Pointer(Rebox_Main_3242760310_4122662347(v))}
+				}
+				return gopurs_runtime.Array(boxed)
+			}()
+			_ = arrayIntrinsic_arg_5
 			__local_var_3_3 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2499841393("", struct {
 				actual   []string
 				expected []string
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{func() []string {
 				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((func() gopurs_runtime.Value {
-					arr_val_arrayMap6 := func() gopurs_runtime.Value {
-						arr := Call_Main_flatten(__local_var_2_2)
-						boxed := make([]gopurs_runtime.Value, len(arr))
-						for i, v := range arr {
-							boxed[i] = gopurs_runtime.Value{Type: 9, IntVal: 3177043775, UnsafePtr: unsafe.Pointer(Rebox_Main_3242760310_4122662347(v))}
-						}
-						return gopurs_runtime.Array(boxed)
-					}()
+					arr_val_arrayMap6 := arrayIntrinsic_arg_5
 					_ = arr_val_arrayMap6
 					arr_go_arrayMap6 := (*[]gopurs_runtime.Value)(arr_val_arrayMap6.UnsafePtr)
 					_ = arr_go_arrayMap6
 					res_go_arrayMap6 := make([]gopurs_runtime.Value, len(*arr_go_arrayMap6))
 					_ = res_go_arrayMap6
 					for i_arrayMap6, v_arrayMap6 := range *arr_go_arrayMap6 {
-						res_go_arrayMap6[i_arrayMap6] = gopurs_runtime.Apply(Get_Main_describe(), v_arrayMap6)
+						res_go_arrayMap6[i_arrayMap6] = gopurs_runtime.Apply(arrayIntrinsic_arg_4, v_arrayMap6)
 					}
 					return gopurs_runtime.Array(res_go_arrayMap6)
 				}()).UnsafePtr))).UnsafePtr)
@@ -216,17 +228,20 @@ func Get_Main_main() gopurs_runtime.Value {
 				return unboxed
 			}(), []string{"x:typed:42"}}), gopurs_runtime.Value{})
 			_ = __local_var_3_3
-			__local_var_4_4 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
+			__local_var_4_6 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{gopurs_runtime.Int(int64(len(Call_Main_flatten(gopurs_runtime.Value{Type: 9, IntVal: 4196596074, UnsafePtr: unsafe.Pointer(Rebox_Main_2297685059_1811419774((&Constructor_Main_Rec[struct {
 				label string
 				line  int64
+				/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 			}]{1, func() []*Constructor_Main_Binding[gopurs_runtime.Value] {
 				arr := *(*[]gopurs_runtime.Value)(func() gopurs_runtime.Value {
 					arr := []*Constructor_Main_Binding[struct {
 						label string
 						line  int64
+						/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 					}]{}
 					boxed := make([]gopurs_runtime.Value, len(arr))
 					for i, v := range arr {
@@ -240,7 +255,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				}
 				return unboxed
 			}()})))})))).IntVal, int64(0)}), gopurs_runtime.Value{})
-			_ = __local_var_4_4
+			_ = __local_var_4_6
 			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
 		})
 	})
@@ -266,9 +281,11 @@ type Constructor_Main_Rec[T_a any] struct {
 func Call_Main_Binding__267875142(__eta_norm_1_0_loop struct {
 	label string
 	line  int64
+	/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 }, __eta_norm_0_1_loop string) *Constructor_Main_Binding[struct {
 	label string
 	line  int64
+	/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 }] {
 Binding__267875142:
 	for {
@@ -278,6 +295,7 @@ Binding__267875142:
 		var __eta_norm_1_0 struct {
 			label string
 			line  int64
+			/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 		} = __eta_norm_1_0_loop
 		_ = __eta_norm_1_0
 		var __eta_norm_0_1 string = __eta_norm_0_1_loop
@@ -285,6 +303,7 @@ Binding__267875142:
 		return (&Constructor_Main_Binding[struct {
 			label string
 			line  int64
+			/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 		}]{1, __eta_norm_1_0, __eta_norm_0_1})
 	}
 }
@@ -292,6 +311,7 @@ Binding__267875142:
 func Call_Main_NonRec__4285879642(__eta_norm_0_0_loop *Constructor_Main_Binding[struct {
 	label string
 	line  int64
+	/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 }]) gopurs_runtime.Value {
 NonRec__4285879642:
 	for {
@@ -301,11 +321,13 @@ NonRec__4285879642:
 		var __eta_norm_0_0 *Constructor_Main_Binding[struct {
 			label string
 			line  int64
+			/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 		}] = __eta_norm_0_0_loop
 		_ = __eta_norm_0_0
 		return gopurs_runtime.Value{Type: 9, IntVal: 3480592549, UnsafePtr: unsafe.Pointer(Rebox_Main_863915020_2606613137((&Constructor_Main_NonRec[struct {
 			label string
 			line  int64
+			/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 		}]{1, __eta_norm_0_0})))}
 	}
 }
@@ -313,6 +335,7 @@ NonRec__4285879642:
 func Call_Main_Rec__1133290652(__eta_norm_0_0_loop []*Constructor_Main_Binding[struct {
 	label string
 	line  int64
+	/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 }]) gopurs_runtime.Value {
 Rec__1133290652:
 	for {
@@ -322,11 +345,13 @@ Rec__1133290652:
 		var __eta_norm_0_0 []*Constructor_Main_Binding[struct {
 			label string
 			line  int64
+			/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 		}] = __eta_norm_0_0_loop
 		_ = __eta_norm_0_0
 		return gopurs_runtime.Value{Type: 9, IntVal: 4196596074, UnsafePtr: unsafe.Pointer(Rebox_Main_2297685059_1811419774((&Constructor_Main_Rec[struct {
 			label string
 			line  int64
+			/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 		}]{1, func() []*Constructor_Main_Binding[gopurs_runtime.Value] {
 			arr := *(*[]gopurs_runtime.Value)(func() gopurs_runtime.Value {
 				arr := __eta_norm_0_0
@@ -348,18 +373,21 @@ Rec__1133290652:
 func Call_Main_flatten(v_0_loop gopurs_runtime.Value) []*Constructor_Main_Binding[struct {
 	label string
 	line  int64
+	/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 }] {
 	var v_0 gopurs_runtime.Value = v_0_loop
 	_ = v_0
 	var __t0 []*Constructor_Main_Binding[struct {
 		label string
 		line  int64
+		/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 	}]
 	{
 		if v_0.Type == 9 && v_0.IntVal == 3480592549 {
 			__t0 = []*Constructor_Main_Binding[struct {
 				label string
 				line  int64
+				/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 			}]{Rebox_Main_4122662347_3242760310((*Constructor_Main_NonRec[gopurs_runtime.Value])(v_0.UnsafePtr).V0)}
 			goto end_branch_0
 		} else {
@@ -371,6 +399,7 @@ func Call_Main_flatten(v_0_loop gopurs_runtime.Value) []*Constructor_Main_Bindin
 			__t0 = func() []*Constructor_Main_Binding[struct {
 				label string
 				line  int64
+				/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 			}] {
 				arr := *(*[]gopurs_runtime.Value)(func() gopurs_runtime.Value {
 					arr := (*Constructor_Main_Rec[gopurs_runtime.Value])(v_0.UnsafePtr).V0
@@ -383,6 +412,7 @@ func Call_Main_flatten(v_0_loop gopurs_runtime.Value) []*Constructor_Main_Bindin
 				unboxed := make([]*Constructor_Main_Binding[struct {
 					label string
 					line  int64
+					/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 				}], len(arr))
 				for i, v := range arr {
 					unboxed[i] = Rebox_Main_4122662347_3242760310(gopurs_runtime.CoerceToStruct[Constructor_Main_Binding[gopurs_runtime.Value]](v))
@@ -398,6 +428,7 @@ func Call_Main_flatten(v_0_loop gopurs_runtime.Value) []*Constructor_Main_Bindin
 		__t0 = func() []*Constructor_Main_Binding[struct {
 			label string
 			line  int64
+			/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 		}] {
 			panic("Failed pattern match")
 		}()
@@ -409,10 +440,12 @@ end_branch_0:
 func Call_Main_describe(v_0_loop *Constructor_Main_Binding[struct {
 	label string
 	line  int64
+	/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 }]) string {
 	var v_0 *Constructor_Main_Binding[struct {
 		label string
 		line  int64
+		/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 	}] = v_0_loop
 	_ = v_0
 	return gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(gopurs_runtime.ConcatString((v_0).V1, ":"), (v_0).V0.label), ":"), Data_Show_ShowIntImpl((v_0).V0.line))
@@ -463,6 +496,7 @@ func Rebox_Main_1953100407_1386611502(in *Constructor_Data_Show_Show[[]string]) 
 func Rebox_Main_2297685059_1811419774(in *Constructor_Main_Rec[struct {
 	label string
 	line  int64
+	/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 }]) *Constructor_Main_Rec[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
@@ -473,6 +507,7 @@ func Rebox_Main_2297685059_1811419774(in *Constructor_Main_Rec[struct {
 func Rebox_Main_3242760310_4122662347(in *Constructor_Main_Binding[struct {
 	label string
 	line  int64
+	/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 }]) *Constructor_Main_Binding[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
@@ -504,6 +539,7 @@ func Rebox_Main_3790796878_131790935(in *Constructor_Data_Eq_Eq[gopurs_runtime.V
 func Rebox_Main_4122662347_3242760310(in *Constructor_Main_Binding[gopurs_runtime.Value]) *Constructor_Main_Binding[struct {
 	label string
 	line  int64
+	/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 }] {
 	if in == nil {
 		return nil
@@ -511,16 +547,19 @@ func Rebox_Main_4122662347_3242760310(in *Constructor_Main_Binding[gopurs_runtim
 	out := &Constructor_Main_Binding[struct {
 		label string
 		line  int64
+		/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 	}]{}
 	out.V0 = func() struct {
 		label string
 		line  int64
+		/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 	} {
 		orig := in.V0
 		_ = orig
 		clone := struct {
 			label string
 			line  int64
+			/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 		}{}
 		clone.label = gopurs_runtime.RecordGet(orig, "label").StrVal()
 		clone.line = gopurs_runtime.RecordGet(orig, "line").IntVal
@@ -533,6 +572,7 @@ func Rebox_Main_4122662347_3242760310(in *Constructor_Main_Binding[gopurs_runtim
 func Rebox_Main_863915020_2606613137(in *Constructor_Main_NonRec[struct {
 	label string
 	line  int64
+	/*gopurs:record-v1:2:006c006100620065006c,006c0069006e0065*/
 }]) *Constructor_Main_NonRec[gopurs_runtime.Value] {
 	if in == nil {
 		return nil

@@ -16,14 +16,14 @@ function fixture(t) {
   const bin = join(root, "bin"), tools = join(root, "tools");
   mkdirSync(bin); mkdirSync(tools);
   copyFileSync(new URL("../bin/gopurs", import.meta.url), join(bin, "gopurs"));
-  const keys = ["GOPURS_JOBS", "GOPURS_PREPARE_JOBS", "GOPURS_PBO_JOBS", "GOPURS_EMIT_JOBS", "GOPURS_PIPELINE", "GOGC", "GOMEMLIMIT",
+  const keys = ["GOPURS_JOBS", "GOPURS_PREPARE_JOBS", "GOPURS_PBO_JOBS", "GOPURS_EMIT_JOBS", "GOPURS_PIPELINE", "GOGC", "GOMEMLIMIT", "GOMAXPROCS",
     ...Object.keys(incrementalDefaults), ...daemonKeys];
   for (const [host, path] of [["go", join(bin, "gopurs-native")], ["rust", join(bin, "gopurs-rust")], ["js", join(tools, "node")]]) {
     writeFileSync(path, `#!${process.execPath}\nconsole.log(JSON.stringify({host:${JSON.stringify(host)},args:process.argv.slice(2),env:Object.fromEntries(${JSON.stringify(keys)}.filter(k=>process.env[k]!==undefined).map(k=>[k,process.env[k]]))}));\nprocess.exit(Number(process.env.TEST_EXIT ?? 0));\n`, { mode: 0o755 });
   }
   writeFileSync(join(tools, "sysctl"), '#!/bin/sh\nprintf "%s\\n" "$TEST_MEMORY_BYTES"\n', { mode: 0o755 });
   const base = { ...process.env, PATH: tools + delimiter + process.env.PATH, TEST_MEMORY_BYTES: String(48 * 2 ** 30) };
-  for (const key of Object.keys(base)) if (/^(GOPURS_|GOGC$|GOMEMLIMIT$)/.test(key)) delete base[key];
+  for (const key of Object.keys(base)) if (/^(GOPURS_|GOGC$|GOMEMLIMIT$|GOMAXPROCS$)/.test(key)) delete base[key];
   return { root, run(host, extra = {}, args = ["--main", "Main", "argument with spaces"]) {
     const env = { ...base, GOPURS_RUST: host === "rust" ? "1" : "0", GOPURS_JS: host === "js" ? "1" : "0", ...extra };
     const result = spawnSync("/bin/bash", [join(bin, "gopurs"), ...args], { cwd: root, env, encoding: "utf8", timeout: 10000 });
@@ -39,7 +39,7 @@ test("all hosts receive automatic worker limits; automatic GC settings belong on
     assert.equal(result.status, 0, result.stderr);
     assert.equal(result.value.host, host);
     assert.deepEqual(result.value.env, { GOPURS_PREPARE_JOBS: "8", GOPURS_PBO_JOBS: "8",
-      ...(host === "go" ? { GOGC: "off", GOMEMLIMIT: "10GiB", ...incrementalDefaults } : {}) });
+      ...(host === "go" ? { GOGC: "off", GOMEMLIMIT: "16GiB", ...incrementalDefaults } : {}) });
     assert.deepEqual(result.value.args, [
       ...(host === "js" ? ["--stack-size=65536", join(f.root, "bin/gopurs.js")] : []),
       "--main", "Main", "argument with spaces",
@@ -47,14 +47,17 @@ test("all hosts receive automatic worker limits; automatic GC settings belong on
   }
 });
 
-test("automatic parallelism has the same 32 GiB boundary for every host", t => {
+test("automatic parallelism and Go memory limits respect their exact RAM boundaries", t => {
   const f = fixture(t);
-  for (const host of ["go", "rust", "js"]) for (const gib of [16, 31, 32]) {
-    const result = f.run(host, { TEST_MEMORY_BYTES: String(gib * 2 ** 30) });
+  for (const host of ["go", "rust", "js"]) for (const bytes of [32 * 2 ** 30 - 1, 32 * 2 ** 30, 48 * 2 ** 30 - 1, 48 * 2 ** 30, 64 * 2 ** 30]) {
+    const gib = bytes / 2 ** 30;
+    const result = f.run(host, { TEST_MEMORY_BYTES: String(bytes) });
     assert.equal(result.status, 0, result.stderr);
     assert.equal(result.value.env.GOPURS_PBO_JOBS, gib >= 32 ? "8" : undefined);
     assert.equal(result.value.env.GOPURS_PREPARE_JOBS, gib >= 32 ? "8" : undefined);
     assert.equal(result.value.env.GOGC, gib >= 32 && host === "go" ? "off" : undefined);
+    assert.equal(result.value.env.GOMEMLIMIT, host !== "go" || gib < 32 ? undefined : gib < 48 ? "10GiB" : "16GiB");
+    assert.equal(result.value.env.GOMAXPROCS, undefined);
     for (const [key, value] of Object.entries(incrementalDefaults)) {
       assert.equal(result.value.env[key], host === "go" ? value : undefined, `${host}, ${gib} GiB: ${key}`);
     }
@@ -93,7 +96,7 @@ test("ordinary builds do not enable or start a daemon", t => {
 
 test("explicit worker limits and pipeline switches survive every host selection", t => {
   const f = fixture(t);
-  const settings = { GOPURS_JOBS: "5", GOPURS_PREPARE_JOBS: "3", GOPURS_PBO_JOBS: "1", GOPURS_EMIT_JOBS: "4", GOPURS_PIPELINE: "0" };
+  const settings = { GOPURS_JOBS: "5", GOPURS_PREPARE_JOBS: "3", GOPURS_PBO_JOBS: "1", GOPURS_EMIT_JOBS: "4", GOPURS_PIPELINE: "0", GOMAXPROCS: "5" };
   for (const host of ["go", "rust", "js"]) {
     const result = f.run(host, settings);
     assert.equal(result.status, 0, result.stderr);
@@ -103,8 +106,8 @@ test("explicit worker limits and pipeline switches survive every host selection"
 
 test("explicit GC policies are preserved without disabling automatic parallelism", t => {
   const f = fixture(t);
-  for (const host of ["go", "rust", "js"]) for (const policy of [{ GOGC: "100" }, { GOMEMLIMIT: "2GiB" }, { GOGC: "50", GOMEMLIMIT: "3GiB" }]) {
-    const result = f.run(host, policy);
+  for (const host of ["go", "rust", "js"]) for (const gib of [32, 48]) for (const policy of [{ GOGC: "100" }, { GOMEMLIMIT: "2GiB" }, { GOGC: "50", GOMEMLIMIT: "3GiB" }]) {
+    const result = f.run(host, { ...policy, TEST_MEMORY_BYTES: String(gib * 2 ** 30) });
     assert.equal(result.status, 0, result.stderr);
     assert.deepEqual(result.value.env, { GOPURS_PREPARE_JOBS: "8", GOPURS_PBO_JOBS: "8", ...policy,
       ...(host === "go" ? incrementalDefaults : {}) });

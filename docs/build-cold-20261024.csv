@@ -1,0 +1,7 @@
+sequence,pair,variant,backend_ms,noop_ms,process_seconds,max_rss_bytes,compiler_sha256,raw_go_byte_exact,packages_byte_exact,all_10816_parts_byte_exact,source_guard_equal
+1,1,a,87565,458,88.684267,18970951680,aaf0f971b2e87a68111c51def9ee1e8d474da4c1f0e260cee178171ac9cfb903,True,True,True,True
+2,1,g,79396,339,80.473886,18233147392,2c14439288f541c9f6d945fd028cb595cb1bb73a3b91f07d2dad5b9e52560e83,True,True,True,True
+3,2,g,78567,336,79.471078,18707742720,2c14439288f541c9f6d945fd028cb595cb1bb73a3b91f07d2dad5b9e52560e83,True,True,True,True
+4,2,a,84518,337,85.478754,19208306688,aaf0f971b2e87a68111c51def9ee1e8d474da4c1f0e260cee178171ac9cfb903,True,True,True,True
+5,3,a,84061,337,85.004842,19136004096,aaf0f971b2e87a68111c51def9ee1e8d474da4c1f0e260cee178171ac9cfb903,True,True,True,True
+6,3,g,78859,342,79.920504,18895011840,2c14439288f541c9f6d945fd028cb595cb1bb73a3b91f07d2dad5b9e52560e83,True,True,True,True
