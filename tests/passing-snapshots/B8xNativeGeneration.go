@@ -39,10 +39,14 @@ func Get_Main_Marker_dollar_Dict() gopurs_runtime.Value {
 	once_Main_Marker_dollar_Dict.Do(func() {
 		cache_Main_Marker_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return Call_Main_Marker_dollar_Dict(func() struct {
+
+				/*gopurs:record-v1:0:*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
+
+					/*gopurs:record-v1:0:*/
 				}{}
 
 				return clone
@@ -59,10 +63,14 @@ func Get_Main_Marker_dollar_Dict__1545153923() gopurs_runtime.Value {
 	once_Main_Marker_dollar_Dict__1545153923.Do(func() {
 		cache_Main_Marker_dollar_Dict__1545153923 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return Call_Main_Marker_dollar_Dict__1545153923(func() struct {
+
+				/*gopurs:record-v1:0:*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
+
+					/*gopurs:record-v1:0:*/
 				}{}
 
 				return clone
@@ -167,6 +175,8 @@ func Get_Main_markerInt() gopurs_runtime.Value {
 	once_Main_markerInt.Do(func() {
 		cache_Main_markerInt = func() gopurs_runtime.Value {
 			orig := struct {
+
+				/*gopurs:record-v1:0:*/
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
@@ -215,6 +225,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_3_3 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Call_Main_sumEleven(__local_var_2_2.IntVal, int64(2), int64(3), int64(4), int64(5), int64(6), int64(7), int64(8), int64(9), int64(10), int64(11)), int64(66)}), gopurs_runtime.Value{})
 			_ = __local_var_3_3
 			fnRef_4_4 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), Get_Main_sumEleven()), gopurs_runtime.Value{})
@@ -224,6 +235,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_6_6 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{gopurs_runtime.Apply(gopurs_runtime.Apply10(__local_var_5_5, gopurs_runtime.Int(__local_var_2_2.IntVal), gopurs_runtime.Int(int64(2)), gopurs_runtime.Int(int64(3)), gopurs_runtime.Int(int64(4)), gopurs_runtime.Int(int64(5)), gopurs_runtime.Int(int64(6)), gopurs_runtime.Int(int64(7)), gopurs_runtime.Int(int64(8)), gopurs_runtime.Int(int64(9)), gopurs_runtime.Int(int64(10))), gopurs_runtime.Int(int64(11))).IntVal, int64(66)}), gopurs_runtime.Value{})
 			_ = __local_var_6_6
 			// TAST (Let): __local_var_7_8 shape=Other bindingType=(ADT ["Main","Erased"] [Int])
@@ -239,6 +251,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_7_7 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{gopurs_runtime.Apply((__local_var_8_9).V0, (__local_var_8_9).V1).IntVal, int64(44)}), gopurs_runtime.Value{})
 			_ = __local_var_7_7
 			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
@@ -257,6 +270,7 @@ type Constructor_Main_Marker[T_a any] struct {
 	Rc uint32
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f004d00610072006b00650072
 func init() {
 	gopurs_runtime.StructGetters[185911708] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_Marker[gopurs_runtime.Value])(ptr)
@@ -284,8 +298,12 @@ Packed__592525336:
 }
 
 func Call_Main_Marker_dollar_Dict(x_0_loop struct {
+
+	/*gopurs:record-v1:0:*/
 }) gopurs_runtime.Value {
 	var x_0 struct {
+
+		/*gopurs:record-v1:0:*/
 	} = x_0_loop
 	_ = x_0
 	return func() gopurs_runtime.Value {
@@ -296,6 +314,8 @@ func Call_Main_Marker_dollar_Dict(x_0_loop struct {
 }
 
 func Call_Main_Marker_dollar_Dict__1545153923(x_0_loop struct {
+
+	/*gopurs:record-v1:0:*/
 }) gopurs_runtime.Value {
 Marker_dollar_Dict__1545153923:
 	for {
@@ -303,6 +323,8 @@ Marker_dollar_Dict__1545153923:
 			continue Marker_dollar_Dict__1545153923
 		}
 		var x_0 struct {
+
+			/*gopurs:record-v1:0:*/
 		} = x_0_loop
 		_ = x_0
 		return func() gopurs_runtime.Value {

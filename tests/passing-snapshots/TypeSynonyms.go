@@ -36,17 +36,11 @@ func Get_Main_fst() gopurs_runtime.Value {
 			orig := struct {
 				get gopurs_runtime.Value
 				set gopurs_runtime.Value
+				/*gopurs:record-v1:2:006700650074,007300650074*/
 			}{gopurs_runtime.Func(func(p_0 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.RecordGet(p_0, "fst")
 			}), gopurs_runtime.Func2(func(p_0 gopurs_runtime.Value, a_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return func() gopurs_runtime.Value {
-					orig := struct {
-						fst gopurs_runtime.Value
-						snd gopurs_runtime.Value
-					}{a_1, gopurs_runtime.RecordGet(p_0, "snd")}
-					_ = orig
-					return gopurs_runtime.RecordDict2("fst", "snd", orig.fst, orig.snd)
-				}()
+				return gopurs_runtime.RecordDict2("fst", "snd", a_1, gopurs_runtime.RecordGet(p_0, "snd"))
 			})}
 			_ = orig
 			return gopurs_runtime.RecordDict2("get", "set", orig.get, orig.set)
@@ -65,12 +59,14 @@ func Get_Main_composeLenses() gopurs_runtime.Value {
 				orig := Call_Main_composeLenses(func() struct {
 					get gopurs_runtime.Value
 					set gopurs_runtime.Value
+					/*gopurs:record-v1:2:006700650074,007300650074*/
 				} {
 					orig := l1_0_box
 					_ = orig
 					clone := struct {
 						get gopurs_runtime.Value
 						set gopurs_runtime.Value
+						/*gopurs:record-v1:2:006700650074,007300650074*/
 					}{}
 					clone.get = gopurs_runtime.RecordGet(orig, "get")
 					clone.set = gopurs_runtime.RecordGet(orig, "set")
@@ -78,12 +74,14 @@ func Get_Main_composeLenses() gopurs_runtime.Value {
 				}(), func() struct {
 					get gopurs_runtime.Value
 					set gopurs_runtime.Value
+					/*gopurs:record-v1:2:006700650074,007300650074*/
 				} {
 					orig := l2_1_box
 					_ = orig
 					clone := struct {
 						get gopurs_runtime.Value
 						set gopurs_runtime.Value
+						/*gopurs:record-v1:2:006700650074,007300650074*/
 					}{}
 					clone.get = gopurs_runtime.RecordGet(orig, "get")
 					clone.set = gopurs_runtime.RecordGet(orig, "set")
@@ -106,58 +104,11 @@ func Get_Main_test1() gopurs_runtime.Value {
 			orig := struct {
 				get gopurs_runtime.Value
 				set gopurs_runtime.Value
+				/*gopurs:record-v1:2:006700650074,007300650074*/
 			}{gopurs_runtime.Func(func(a_0 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(a_0, "fst"), "fst")
 			}), gopurs_runtime.Func2(func(a_0 gopurs_runtime.Value, c_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return func() gopurs_runtime.Value {
-					orig := func(record struct {
-						fst gopurs_runtime.Value
-						snd gopurs_runtime.Value
-					}) struct {
-						fst struct {
-							fst gopurs_runtime.Value
-							snd gopurs_runtime.Value
-						}
-						snd gopurs_runtime.Value
-					} {
-						return struct {
-							fst struct {
-								fst gopurs_runtime.Value
-								snd gopurs_runtime.Value
-							}
-							snd gopurs_runtime.Value
-						}{func() struct {
-							fst gopurs_runtime.Value
-							snd gopurs_runtime.Value
-						} {
-							orig := record.fst
-							_ = orig
-							clone := struct {
-								fst gopurs_runtime.Value
-								snd gopurs_runtime.Value
-							}{}
-							clone.fst = gopurs_runtime.RecordGet(orig, "fst")
-							clone.snd = gopurs_runtime.RecordGet(orig, "snd")
-							return clone
-						}(), record.snd}
-					}(struct {
-						fst gopurs_runtime.Value
-						snd gopurs_runtime.Value
-					}{func() gopurs_runtime.Value {
-						orig := struct {
-							fst gopurs_runtime.Value
-							snd gopurs_runtime.Value
-						}{c_1, gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(a_0, "fst"), "snd")}
-						_ = orig
-						return gopurs_runtime.RecordDict2("fst", "snd", orig.fst, orig.snd)
-					}(), gopurs_runtime.RecordGet(a_0, "snd")})
-					_ = orig
-					return gopurs_runtime.RecordDict2("fst", "snd", func() gopurs_runtime.Value {
-						orig := orig.fst
-						_ = orig
-						return gopurs_runtime.RecordDict2("fst", "snd", orig.fst, orig.snd)
-					}(), orig.snd)
-				}()
+				return gopurs_runtime.RecordDict2("fst", "snd", gopurs_runtime.RecordDict2("fst", "snd", c_1, gopurs_runtime.RecordGet(gopurs_runtime.RecordGet(a_0, "fst"), "snd")), gopurs_runtime.RecordGet(a_0, "snd"))
 			})}
 			_ = orig
 			return gopurs_runtime.RecordDict2("get", "set", orig.get, orig.set)
@@ -175,26 +126,32 @@ func Call_Main_N(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 func Call_Main_composeLenses(l1_0_loop struct {
 	get gopurs_runtime.Value
 	set gopurs_runtime.Value
+	/*gopurs:record-v1:2:006700650074,007300650074*/
 }, l2_1_loop struct {
 	get gopurs_runtime.Value
 	set gopurs_runtime.Value
+	/*gopurs:record-v1:2:006700650074,007300650074*/
 }) struct {
 	get gopurs_runtime.Value
 	set gopurs_runtime.Value
+	/*gopurs:record-v1:2:006700650074,007300650074*/
 } {
 	var l1_0 struct {
 		get gopurs_runtime.Value
 		set gopurs_runtime.Value
+		/*gopurs:record-v1:2:006700650074,007300650074*/
 	} = l1_0_loop
 	_ = l1_0
 	var l2_1 struct {
 		get gopurs_runtime.Value
 		set gopurs_runtime.Value
+		/*gopurs:record-v1:2:006700650074,007300650074*/
 	} = l2_1_loop
 	_ = l2_1
 	return struct {
 		get gopurs_runtime.Value
 		set gopurs_runtime.Value
+		/*gopurs:record-v1:2:006700650074,007300650074*/
 	}{gopurs_runtime.Func(func(a_2 gopurs_runtime.Value) gopurs_runtime.Value {
 		return gopurs_runtime.Apply(l2_1.get, gopurs_runtime.Apply(l1_0.get, a_2))
 	}), gopurs_runtime.Func2(func(a_2 gopurs_runtime.Value, c_3 gopurs_runtime.Value) gopurs_runtime.Value {

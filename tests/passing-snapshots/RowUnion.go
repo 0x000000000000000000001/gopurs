@@ -13,10 +13,14 @@ func Get_Main_Subrow_dollar_Dict() gopurs_runtime.Value {
 	once_Main_Subrow_dollar_Dict.Do(func() {
 		cache_Main_Subrow_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return Call_Main_Subrow_dollar_Dict(func() struct {
+
+				/*gopurs:record-v1:0:*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
+
+					/*gopurs:record-v1:0:*/
 				}{}
 
 				return clone
@@ -156,12 +160,14 @@ func Get_Main_test1() gopurs_runtime.Value {
 		cache_Main_test1 = gopurs_runtime.Apply2(Get_Main_mergeImpl(), func() gopurs_runtime.Value {
 			orig := struct {
 				x int64
+				/*gopurs:record-v1:1:0078*/
 			}{int64(1)}
 			_ = orig
 			return gopurs_runtime.RecordDict1("x", gopurs_runtime.Int(orig.x))
 		}(), func() gopurs_runtime.Value {
 			orig := struct {
 				y bool
+				/*gopurs:record-v1:1:0079*/
 			}{true}
 			_ = orig
 			return gopurs_runtime.RecordDict1("y", gopurs_runtime.Bool(orig.y))
@@ -178,12 +184,14 @@ func Get_Main_test2() gopurs_runtime.Value {
 		cache_Main_test2 = gopurs_runtime.Apply2(Get_Main_mergeImpl(), func() gopurs_runtime.Value {
 			orig := struct {
 				x int64
+				/*gopurs:record-v1:1:0078*/
 			}{int64(1)}
 			_ = orig
 			return gopurs_runtime.RecordDict1("x", gopurs_runtime.Int(orig.x))
 		}(), func() gopurs_runtime.Value {
 			orig := struct {
 				x bool
+				/*gopurs:record-v1:1:0078*/
 			}{true}
 			_ = orig
 			return gopurs_runtime.RecordDict1("x", gopurs_runtime.Bool(orig.x))
@@ -237,6 +245,7 @@ func Get_Main_test4() gopurs_runtime.Value {
 			orig := struct {
 				y int64
 				z int64
+				/*gopurs:record-v1:2:0079,007a*/
 			}{int64(1), int64(1)}
 			_ = orig
 			return gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(orig.y), gopurs_runtime.Int(orig.z))
@@ -301,6 +310,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_4_6 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Data_Show_ShowIntImpl(gopurs_runtime.RecordGet(gopurs_runtime.Apply2(Call_Main_merge(gopurs_runtime.Value{}), func() gopurs_runtime.Value {
 				orig := struct {
 					x int64
+					/*gopurs:record-v1:1:0078*/
 				}{int64(1)}
 				_ = orig
 				return gopurs_runtime.RecordDict1("x", gopurs_runtime.Int(orig.x))
@@ -309,6 +319,7 @@ func Get_Main_main() gopurs_runtime.Value {
 					x int64
 					y bool
 					z float64
+					/*gopurs:record-v1:3:0078,0079,007a*/
 				}{int64(0), true, 42.0}
 				_ = orig
 				return gopurs_runtime.RecordDict3("x", "y", "z", gopurs_runtime.Int(orig.x), gopurs_runtime.Bool(orig.y), gopurs_runtime.Float(orig.z))
@@ -318,6 +329,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				orig := struct {
 					y int64
 					z int64
+					/*gopurs:record-v1:2:0079,007a*/
 				}{int64(1), int64(1)}
 				_ = orig
 				return gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(orig.y), gopurs_runtime.Int(orig.z))
@@ -327,6 +339,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				orig := struct {
 					y int64
 					z int64
+					/*gopurs:record-v1:2:0079,007a*/
 				}{int64(1), int64(1)}
 				_ = orig
 				return gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(orig.y), gopurs_runtime.Int(orig.z))
@@ -336,6 +349,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				orig := struct {
 					y int64
 					z int64
+					/*gopurs:record-v1:2:0079,007a*/
 				}{int64(1), int64(1)}
 				_ = orig
 				return gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(orig.y), gopurs_runtime.Int(orig.z))
@@ -345,6 +359,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				orig := struct {
 					y int64
 					z int64
+					/*gopurs:record-v1:2:0079,007a*/
 				}{int64(1), int64(1)}
 				_ = orig
 				return gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(orig.y), gopurs_runtime.Int(orig.z))
@@ -354,6 +369,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				orig := struct {
 					y int64
 					z int64
+					/*gopurs:record-v1:2:0079,007a*/
 				}{int64(1), int64(1)}
 				_ = orig
 				return gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(orig.y), gopurs_runtime.Int(orig.z))
@@ -363,6 +379,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				orig := struct {
 					y int64
 					z int64
+					/*gopurs:record-v1:2:0079,007a*/
 				}{int64(1), int64(1)}
 				_ = orig
 				return gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(orig.y), gopurs_runtime.Int(orig.z))
@@ -372,6 +389,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				orig := struct {
 					y int64
 					z int64
+					/*gopurs:record-v1:2:0079,007a*/
 				}{int64(1), int64(1)}
 				_ = orig
 				return gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(orig.y), gopurs_runtime.Int(orig.z))
@@ -381,6 +399,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				orig := struct {
 					y int64
 					z int64
+					/*gopurs:record-v1:2:0079,007a*/
 				}{int64(1), int64(1)}
 				_ = orig
 				return gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(orig.y), gopurs_runtime.Int(orig.z))
@@ -390,6 +409,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				orig := struct {
 					y int64
 					z int64
+					/*gopurs:record-v1:2:0079,007a*/
 				}{int64(1), int64(1)}
 				_ = orig
 				return gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(orig.y), gopurs_runtime.Int(orig.z))
@@ -409,6 +429,7 @@ type Constructor_Main_Subrow[T_r any, T_s any] struct {
 	Rc uint32
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f0053007500620072006f0077
 func init() {
 	gopurs_runtime.StructGetters[3309093968] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_Subrow[gopurs_runtime.Value, gopurs_runtime.Value])(ptr)
@@ -422,8 +443,12 @@ func init() {
 }
 
 func Call_Main_Subrow_dollar_Dict(x_0_loop struct {
+
+	/*gopurs:record-v1:0:*/
 }) gopurs_runtime.Value {
 	var x_0 struct {
+
+		/*gopurs:record-v1:0:*/
 	} = x_0_loop
 	_ = x_0
 	return func() gopurs_runtime.Value {
@@ -438,6 +463,8 @@ func Call_Main_subrow(_dollar___unused_0_loop gopurs_runtime.Value) gopurs_runti
 	_ = _dollar___unused_0
 	return func() gopurs_runtime.Value {
 		orig := struct {
+
+			/*gopurs:record-v1:0:*/
 		}{}
 		_ = orig
 		return gopurs_runtime.RecordDict0()
@@ -500,6 +527,7 @@ func Call_Main_test3(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	return gopurs_runtime.Apply2(Get_Main_mergeImpl(), func() gopurs_runtime.Value {
 		orig := struct {
 			x int64
+			/*gopurs:record-v1:1:0078*/
 		}{int64(1)}
 		_ = orig
 		return gopurs_runtime.RecordDict1("x", gopurs_runtime.Int(orig.x))
@@ -514,6 +542,7 @@ func Call_Main_test3_prime_(dictUnion_0_loop gopurs_runtime.Value, x_1_loop gopu
 	return gopurs_runtime.Apply2(Get_Main_mergeImpl(), x_1, func() gopurs_runtime.Value {
 		orig := struct {
 			x int64
+			/*gopurs:record-v1:1:0078*/
 		}{int64(1)}
 		_ = orig
 		return gopurs_runtime.RecordDict1("x", gopurs_runtime.Int(orig.x))
@@ -529,6 +558,7 @@ func Call_Main_withDefaults(_dollar___unused_0_loop gopurs_runtime.Value, p_1_lo
 		orig := struct {
 			y int64
 			z int64
+			/*gopurs:record-v1:2:0079,007a*/
 		}{int64(1), int64(1)}
 		_ = orig
 		return gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(orig.y), gopurs_runtime.Int(orig.z))
@@ -546,6 +576,7 @@ func Call_Main_withDefaultsClosed(_dollar___unused_0_loop gopurs_runtime.Value, 
 		orig := struct {
 			y int64
 			z int64
+			/*gopurs:record-v1:2:0079,007a*/
 		}{int64(1), int64(1)}
 		_ = orig
 		return gopurs_runtime.RecordDict2("y", "z", gopurs_runtime.Int(orig.y), gopurs_runtime.Int(orig.z))

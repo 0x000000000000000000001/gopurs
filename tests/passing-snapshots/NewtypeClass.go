@@ -60,11 +60,13 @@ func Get_Main_Newtype_dollar_Dict() gopurs_runtime.Value {
 		cache_Main_Newtype_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 1443761658, UnsafePtr: unsafe.Pointer(Call_Main_Newtype_dollar_Dict(func() struct {
 				Coercible0 gopurs_runtime.Value
+				/*gopurs:record-v1:1:0043006f00650072006300690062006c00650030*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					Coercible0 gopurs_runtime.Value
+					/*gopurs:record-v1:1:0043006f00650072006300690062006c00650030*/
 				}{}
 				clone.Coercible0 = gopurs_runtime.RecordGet(orig, "Coercible0")
 				return clone
@@ -252,6 +254,7 @@ type Constructor_Main_Newtype[T_t any, T_a any] struct {
 	V0 gopurs_runtime.Value
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f004e006500770074007900700065
 func init() {
 	gopurs_runtime.StructGetters[1443761658] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_Newtype[gopurs_runtime.Value, gopurs_runtime.Value])(ptr)
@@ -281,9 +284,11 @@ Pair__1394429419:
 
 func Call_Main_Newtype_dollar_Dict(x_0_loop struct {
 	Coercible0 gopurs_runtime.Value
+	/*gopurs:record-v1:1:0043006f00650072006300690062006c00650030*/
 }) *Constructor_Main_Newtype[gopurs_runtime.Value, gopurs_runtime.Value] {
 	var x_0 struct {
 		Coercible0 gopurs_runtime.Value
+		/*gopurs:record-v1:1:0043006f00650072006300690062006c00650030*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_Newtype[gopurs_runtime.Value, gopurs_runtime.Value]](func() gopurs_runtime.Value {

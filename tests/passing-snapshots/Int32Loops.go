@@ -114,6 +114,7 @@ func Get_Main_main() gopurs_runtime.Value {
 					high     int64
 					low      int64
 					negative int64
+					/*gopurs:record-v1:4:0063006f0075006e0074,0068006900670068,006c006f0077,006e0065006700610074006900760065*/
 				}{int64(3), Get_Data_Bounded_topInt().IntVal, Get_Data_Bounded_bottomInt().IntVal, int64(-1)}
 				_ = orig
 				return gopurs_runtime.RecordDict4("count", "high", "low", "negative", gopurs_runtime.Int(orig.count), gopurs_runtime.Int(orig.high), gopurs_runtime.Int(orig.low), gopurs_runtime.Int(orig.negative))
@@ -132,71 +133,85 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_5_5 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Call_Main_accumulate(gopurs_runtime.RecordGet(__local_var_2_2, "count").IntVal, gopurs_runtime.RecordGet(__local_var_2_2, "high").IntVal, int64(1)), gopurs_runtime.IntAdd(gopurs_runtime.RecordGet(__local_var_2_2, "low").IntVal, int64(2))}), gopurs_runtime.Value{})
 			_ = __local_var_5_5
 			__local_var_6_6 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Call_Main_accumulate(gopurs_runtime.RecordGet(__local_var_2_2, "count").IntVal, gopurs_runtime.RecordGet(__local_var_2_2, "low").IntVal, gopurs_runtime.RecordGet(__local_var_2_2, "negative").IntVal), gopurs_runtime.IntSub(gopurs_runtime.RecordGet(__local_var_2_2, "high").IntVal, int64(2))}), gopurs_runtime.Value{})
 			_ = __local_var_6_6
 			__local_var_7_7 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Call_Main_accumulate(int64(0), unsigned_3_3, int64(1)), unsigned_3_3}), gopurs_runtime.Value{})
 			_ = __local_var_7_7
 			__local_var_8_8 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Call_Main_accumulate(int64(0), quotient_4_4, int64(1)), quotient_4_4}), gopurs_runtime.Value{})
 			_ = __local_var_8_8
 			__local_var_9_9 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Call_Main_accumulate(gopurs_runtime.RecordGet(__local_var_2_2, "count").IntVal, unsigned_3_3, int64(1)), int64(2)}), gopurs_runtime.Value{})
 			_ = __local_var_9_9
 			__local_var_10_10 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Call_Main_accumulate(gopurs_runtime.RecordGet(__local_var_2_2, "count").IntVal, quotient_4_4, int64(1)), gopurs_runtime.IntAdd(gopurs_runtime.RecordGet(__local_var_2_2, "low").IntVal, gopurs_runtime.RecordGet(__local_var_2_2, "count").IntVal)}), gopurs_runtime.Value{})
 			_ = __local_var_10_10
 			__local_var_11_11 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Call_Main_accumulate(int64(1), int64(1), unsigned_3_3), int64(0)}), gopurs_runtime.Value{})
 			_ = __local_var_11_11
 			__local_var_12_12 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Call_Main_choose(gopurs_runtime.RecordGet(__local_var_2_2, "count").IntVal, gopurs_runtime.RecordGet(__local_var_2_2, "high").IntVal, int64(1)), gopurs_runtime.RecordGet(__local_var_2_2, "low").IntVal}), gopurs_runtime.Value{})
 			_ = __local_var_12_12
 			__local_var_13_13 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Call_Main_shiftState(gopurs_runtime.RecordGet(__local_var_2_2, "count").IntVal, gopurs_runtime.RecordGet(__local_var_2_2, "negative").IntVal), unsigned_3_3}), gopurs_runtime.Value{})
 			_ = __local_var_13_13
 			__local_var_14_14 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Call_Main_divideState(int64(1), gopurs_runtime.RecordGet(__local_var_2_2, "low").IntVal), quotient_4_4}), gopurs_runtime.Value{})
 			_ = __local_var_14_14
 			__local_var_15_15 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Call_Main_divideState(int64(2), gopurs_runtime.RecordGet(__local_var_2_2, "low").IntVal), gopurs_runtime.RecordGet(__local_var_2_2, "low").IntVal}), gopurs_runtime.Value{})
 			_ = __local_var_15_15
 			__local_var_16_16 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Call_Main_literalState(gopurs_runtime.RecordGet(__local_var_2_2, "count").IntVal, int64(0)), unsigned_3_3}), gopurs_runtime.Value{})
 			_ = __local_var_16_16
 			__local_var_17_17 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Call_Main_literalStep(gopurs_runtime.RecordGet(__local_var_2_2, "count").IntVal, gopurs_runtime.RecordGet(__local_var_2_2, "high").IntVal), gopurs_runtime.IntSub(gopurs_runtime.RecordGet(__local_var_2_2, "high").IntVal, gopurs_runtime.RecordGet(__local_var_2_2, "count").IntVal)}), gopurs_runtime.Value{})
 			_ = __local_var_17_17
 			__local_var_18_18 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Call_Main_literalCompare(gopurs_runtime.RecordGet(__local_var_2_2, "count").IntVal, gopurs_runtime.RecordGet(__local_var_2_2, "high").IntVal), gopurs_runtime.IntAdd(gopurs_runtime.RecordGet(__local_var_2_2, "low").IntVal, int64(2))}), gopurs_runtime.Value{})
 			_ = __local_var_18_18
 			var Call_local_Main_go__467072791_19_20_2 func(int64, int64) int64
@@ -312,6 +327,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_19_19 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Call_local_Main_go__467072791_19_20_2(gopurs_runtime.RecordGet(__local_var_2_2, "count").IntVal, gopurs_runtime.RecordGet(__local_var_2_2, "high").IntVal), gopurs_runtime.IntAdd(gopurs_runtime.RecordGet(__local_var_2_2, "low").IntVal, int64(5))}), gopurs_runtime.Value{})
 			_ = __local_var_19_19
 			var Call_local_Main_go__467072791_20_25_4 func(int64, int64) int64
@@ -427,6 +443,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_20_24 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Call_local_Main_go__467072791_20_25_4(int64(0), unsigned_3_3), unsigned_3_3}), gopurs_runtime.Value{})
 			_ = __local_var_20_24
 			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})

@@ -63,6 +63,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_0_0 := gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.RecordGet(Call_Main_update1(func() gopurs_runtime.Value {
 				orig := struct {
 					foo string
+					/*gopurs:record-v1:1:0066006f006f*/
 				}{""}
 				_ = orig
 				return gopurs_runtime.RecordDict1("foo", gopurs_runtime.Str(orig.foo))

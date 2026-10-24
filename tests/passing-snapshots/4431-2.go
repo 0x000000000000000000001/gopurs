@@ -24,7 +24,7 @@ var once_Main_functorTypedCacheConst sync.Once
 func Get_Main_functorTypedCacheConst() gopurs_runtime.Value {
 	once_Main_functorTypedCacheConst.Do(func() {
 		cache_Main_functorTypedCacheConst = gopurs_runtime.Value{Type: 9, IntVal: 929368378, UnsafePtr: unsafe.Pointer(Rebox_Main_2898740081_2812149806((&Constructor_Data_Functor_Functor[*Constructor_Main_Get[gopurs_runtime.Value, gopurs_runtime.Value]]{1, gopurs_runtime.Func2(func(f_0 gopurs_runtime.Value, m_1 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 2813159464, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_Get[gopurs_runtime.Value, gopurs_runtime.Value]](m_1))}
+			return m_1
 		})})))}
 	})
 	return cache_Main_functorTypedCacheConst

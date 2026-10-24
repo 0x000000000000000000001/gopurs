@@ -23,11 +23,13 @@ func Get_Main_getFoo() gopurs_runtime.Value {
 		cache_Main_getFoo = gopurs_runtime.Func(func(o_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Str(Call_Main_getFoo(func() struct {
 				foo string
+				/*gopurs:record-v1:1:0066006f006f*/
 			} {
 				orig := o_0_box
 				_ = orig
 				clone := struct {
 					foo string
+					/*gopurs:record-v1:1:0066006f006f*/
 				}{}
 				clone.foo = gopurs_runtime.RecordGet(orig, "foo").StrVal()
 				return clone
@@ -63,9 +65,11 @@ func Get_Main_f() gopurs_runtime.Value {
 
 func Call_Main_getFoo(o_0_loop struct {
 	foo string
+	/*gopurs:record-v1:1:0066006f006f*/
 }) string {
 	var o_0 struct {
 		foo string
+		/*gopurs:record-v1:1:0066006f006f*/
 	} = o_0_loop
 	_ = o_0
 	return o_0.foo
@@ -83,6 +87,7 @@ func Call_Main_f(g_0_loop gopurs_runtime.Value) string {
 	return gopurs_runtime.RecordGet(gopurs_runtime.Apply(g_0, func() gopurs_runtime.Value {
 		orig := struct {
 			x string
+			/*gopurs:record-v1:1:0078*/
 		}{"Hello"}
 		_ = orig
 		return gopurs_runtime.RecordDict1("x", gopurs_runtime.Str(orig.x))

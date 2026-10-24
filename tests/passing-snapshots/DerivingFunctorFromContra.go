@@ -26,11 +26,13 @@ func Get_Main_Test2() gopurs_runtime.Value {
 		cache_Main_Test2 = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 2375191994, UnsafePtr: unsafe.Pointer((&Constructor_Main_Test2[gopurs_runtime.Value]{1, func() struct {
 				x gopurs_runtime.Value
+				/*gopurs:record-v1:1:0078*/
 			} {
 				orig := value0
 				_ = orig
 				clone := struct {
 					x gopurs_runtime.Value
+					/*gopurs:record-v1:1:0078*/
 				}{}
 				clone.x = gopurs_runtime.RecordGet(orig, "x")
 				return clone
@@ -61,24 +63,11 @@ func Get_Main_functorTest() gopurs_runtime.Value {
 				if m_1.Type == 9 && m_1.IntVal == 2375191994 {
 					__t0 = gopurs_runtime.Value{Type: 9, IntVal: 2375191994, UnsafePtr: unsafe.Pointer((&Constructor_Main_Test2[gopurs_runtime.Value]{1, func() struct {
 						x gopurs_runtime.Value
+						/*gopurs:record-v1:1:0078*/
 					} {
 						clone := (*Constructor_Main_Test2[gopurs_runtime.Value])(m_1.UnsafePtr).V0
 						clone.x = gopurs_runtime.Apply2(Call_Control_Semigroupoid_compose(gopurs_runtime.CoerceToStruct[Constructor_Control_Semigroupoid_Semigroupoid[gopurs_runtime.Value]](Get_Control_Semigroupoid_semigroupoidFn())), (*Constructor_Main_Test2[gopurs_runtime.Value])(m_1.UnsafePtr).V0.x, gopurs_runtime.Func(func(v1_2 gopurs_runtime.Value) gopurs_runtime.Value {
-							return func() gopurs_runtime.Value {
-								orig := func() struct {
-									y gopurs_runtime.Value
-								} {
-									orig := gopurs_runtime.RecordUpdate1(v1_2, "y", gopurs_runtime.Apply2(Call_Control_Semigroupoid_compose(gopurs_runtime.CoerceToStruct[Constructor_Control_Semigroupoid_Semigroupoid[gopurs_runtime.Value]](Get_Control_Semigroupoid_semigroupoidFn())), gopurs_runtime.RecordGet(v1_2, "y"), f_0))
-									_ = orig
-									clone := struct {
-										y gopurs_runtime.Value
-									}{}
-									clone.y = gopurs_runtime.RecordGet(orig, "y")
-									return clone
-								}()
-								_ = orig
-								return gopurs_runtime.RecordDict1("y", orig.y)
-							}()
+							return gopurs_runtime.RecordUpdate1(v1_2, "y", gopurs_runtime.Apply2(Call_Control_Semigroupoid_compose(gopurs_runtime.CoerceToStruct[Constructor_Control_Semigroupoid_Semigroupoid[gopurs_runtime.Value]](Get_Control_Semigroupoid_semigroupoidFn())), gopurs_runtime.RecordGet(v1_2, "y"), f_0))
 						}))
 						return clone
 					}()}))}
@@ -116,5 +105,6 @@ type Constructor_Main_Test2[T_a any] struct {
 	Rc uint32
 	V0 struct {
 		x gopurs_runtime.Value
+		/*gopurs:record-v1:1:0078*/
 	}
 }

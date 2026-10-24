@@ -12,17 +12,20 @@ func Get_Main_message() gopurs_runtime.Value {
 	once_Main_message.Do(func() {
 		cache_Main_message = func() gopurs_runtime.Value {
 			orig := struct {
-				X_0 struct {
-					X_1 string
+				gopurs_field_48 struct {
+					gopurs_field_49 string
+					/*gopurs:record-v1:1:0031*/
 				}
+				/*gopurs:record-v1:1:0030*/
 			}{struct {
-				X_1 string
+				gopurs_field_49 string
+				/*gopurs:record-v1:1:0031*/
 			}{"Done"}}
 			_ = orig
 			return gopurs_runtime.RecordDict1("0", func() gopurs_runtime.Value {
-				orig := orig.X_0
+				orig := orig.gopurs_field_48
 				_ = orig
-				return gopurs_runtime.RecordDict1("1", gopurs_runtime.Str(orig.X_1))
+				return gopurs_runtime.RecordDict1("1", gopurs_runtime.Str(orig.gopurs_field_49))
 			}())
 		}()
 	})
@@ -35,30 +38,36 @@ var once_Main_main sync.Once
 func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(func() struct {
-			X_0 struct {
-				X_1 string
+			gopurs_field_48 struct {
+				gopurs_field_49 string
+				/*gopurs:record-v1:1:0031*/
 			}
+			/*gopurs:record-v1:1:0030*/
 		} {
 			orig := Get_Main_message()
 			_ = orig
 			clone := struct {
-				X_0 struct {
-					X_1 string
+				gopurs_field_48 struct {
+					gopurs_field_49 string
+					/*gopurs:record-v1:1:0031*/
 				}
+				/*gopurs:record-v1:1:0030*/
 			}{}
-			clone.X_0 = func() struct {
-				X_1 string
+			clone.gopurs_field_48 = func() struct {
+				gopurs_field_49 string
+				/*gopurs:record-v1:1:0031*/
 			} {
 				orig := gopurs_runtime.RecordGet(orig, "0")
 				_ = orig
 				clone := struct {
-					X_1 string
+					gopurs_field_49 string
+					/*gopurs:record-v1:1:0031*/
 				}{}
-				clone.X_1 = gopurs_runtime.RecordGet(orig, "1").StrVal()
+				clone.gopurs_field_49 = gopurs_runtime.RecordGet(orig, "1").StrVal()
 				return clone
 			}()
 			return clone
-		}().X_0.X_1))
+		}().gopurs_field_48.gopurs_field_49))
 	})
 	return cache_Main_main
 }

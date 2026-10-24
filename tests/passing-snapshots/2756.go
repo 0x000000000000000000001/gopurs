@@ -26,11 +26,13 @@ func Get_Main_Id__468248410() gopurs_runtime.Value {
 			return func() gopurs_runtime.Value {
 				orig := Call_Main_Id__468248410(func() struct {
 					pu gopurs_runtime.Value
+					/*gopurs:record-v1:1:00700075*/
 				} {
 					orig := x_0_box
 					_ = orig
 					clone := struct {
 						pu gopurs_runtime.Value
+						/*gopurs:record-v1:1:00700075*/
 					}{}
 					clone.pu = gopurs_runtime.RecordGet(orig, "pu")
 					return clone
@@ -63,6 +65,7 @@ func Get_Main_sampleC() gopurs_runtime.Value {
 		cache_Main_sampleC = func() gopurs_runtime.Value {
 			orig := struct {
 				pu gopurs_runtime.Value
+				/*gopurs:record-v1:1:00700075*/
 			}{Get_Main_pu()}
 			_ = orig
 			return gopurs_runtime.RecordDict1("pu", orig.pu)
@@ -79,6 +82,7 @@ func Get_Main_sampleIdC() gopurs_runtime.Value {
 		cache_Main_sampleIdC = func() gopurs_runtime.Value {
 			orig := struct {
 				pu gopurs_runtime.Value
+				/*gopurs:record-v1:1:00700075*/
 			}{Get_Main_pu()}
 			_ = orig
 			return gopurs_runtime.RecordDict1("pu", orig.pu)
@@ -105,8 +109,10 @@ func Call_Main_Id(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 
 func Call_Main_Id__468248410(x_0_loop struct {
 	pu gopurs_runtime.Value
+	/*gopurs:record-v1:1:00700075*/
 }) struct {
 	pu gopurs_runtime.Value
+	/*gopurs:record-v1:1:00700075*/
 } {
 Id__468248410:
 	for {
@@ -115,6 +121,7 @@ Id__468248410:
 		}
 		var x_0 struct {
 			pu gopurs_runtime.Value
+			/*gopurs:record-v1:1:00700075*/
 		} = x_0_loop
 		_ = x_0
 		return x_0

@@ -15,6 +15,7 @@ func Get_Main_point() gopurs_runtime.Value {
 			orig := struct {
 				x float64
 				y float64
+				/*gopurs:record-v1:2:0078,0079*/
 			}{1.0, 0.0}
 			_ = orig
 			return gopurs_runtime.RecordDict2("x", "y", gopurs_runtime.Float(orig.x), gopurs_runtime.Float(orig.y))
@@ -45,12 +46,14 @@ func Get_Main_main() gopurs_runtime.Value {
 				orig := func() struct {
 					x float64
 					y float64
+					/*gopurs:record-v1:2:0078,0079*/
 				} {
 					orig := Get_Main_point()
 					_ = orig
 					clone := struct {
 						x float64
 						y float64
+						/*gopurs:record-v1:2:0078,0079*/
 					}{}
 					clone.x = gopurs_runtime.RecordGet(orig, "x").FloatVal()
 					clone.y = gopurs_runtime.RecordGet(orig, "y").FloatVal()
@@ -63,30 +66,19 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_1_1 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("OK")), gopurs_runtime.Value{})
 			_ = __local_var_1_1
 			__local_var_2_2 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.Apply(Call_Control_Semigroupoid_composeFlipped(gopurs_runtime.CoerceToStruct[Constructor_Control_Semigroupoid_Semigroupoid[gopurs_runtime.Value]](Get_Control_Semigroupoid_semigroupoidFn()), gopurs_runtime.Func(func(v_2 gopurs_runtime.Value) gopurs_runtime.Value {
-				return func() gopurs_runtime.Value {
-					orig := func() struct {
-						y string
-					} {
-						orig := gopurs_runtime.RecordGet(v_2, "x")
-						_ = orig
-						clone := struct {
-							y string
-						}{}
-						clone.y = gopurs_runtime.RecordGet(orig, "y").StrVal()
-						return clone
-					}()
-					_ = orig
-					return gopurs_runtime.RecordDict1("y", gopurs_runtime.Str(orig.y))
-				}()
+				return gopurs_runtime.RecordGet(v_2, "x")
 			}), gopurs_runtime.Func(func(v_2 gopurs_runtime.Value) gopurs_runtime.Value {
-				return gopurs_runtime.Str(gopurs_runtime.RecordGet(v_2, "y").StrVal())
+				return gopurs_runtime.RecordGet(v_2, "y")
 			})), func() gopurs_runtime.Value {
 				orig := struct {
 					x struct {
 						y string
+						/*gopurs:record-v1:1:0079*/
 					}
+					/*gopurs:record-v1:1:0078*/
 				}{struct {
 					y string
+					/*gopurs:record-v1:1:0079*/
 				}{"Nested"}}
 				_ = orig
 				return gopurs_runtime.RecordDict1("x", func() gopurs_runtime.Value {

@@ -74,6 +74,7 @@ func Get_Main_main() gopurs_runtime.Value {
 							kill        gopurs_runtime.Value
 							onComplete  gopurs_runtime.Value
 							run         gopurs_runtime.Value
+							/*gopurs:record-v1:5:0069007300530075007300700065006e006400650064,006a006f0069006e,006b0069006c006c,006f006e0043006f006d0070006c006500740065,00720075006e*/
 						} {
 							orig := f1_2
 							_ = orig
@@ -83,6 +84,7 @@ func Get_Main_main() gopurs_runtime.Value {
 								kill        gopurs_runtime.Value
 								onComplete  gopurs_runtime.Value
 								run         gopurs_runtime.Value
+								/*gopurs:record-v1:5:0069007300530075007300700065006e006400650064,006a006f0069006e,006b0069006c006c,006f006e0043006f006d0070006c006500740065,00720075006e*/
 							}{}
 							clone.isSuspended = gopurs_runtime.RecordGet(orig, "isSuspended")
 							clone.join = gopurs_runtime.RecordGet(orig, "join")
@@ -97,6 +99,7 @@ func Get_Main_main() gopurs_runtime.Value {
 								kill        gopurs_runtime.Value
 								onComplete  gopurs_runtime.Value
 								run         gopurs_runtime.Value
+								/*gopurs:record-v1:5:0069007300530075007300700065006e006400650064,006a006f0069006e,006b0069006c006c,006f006e0043006f006d0070006c006500740065,00720075006e*/
 							} {
 								orig := f2_3
 								_ = orig
@@ -106,6 +109,7 @@ func Get_Main_main() gopurs_runtime.Value {
 									kill        gopurs_runtime.Value
 									onComplete  gopurs_runtime.Value
 									run         gopurs_runtime.Value
+									/*gopurs:record-v1:5:0069007300530075007300700065006e006400650064,006a006f0069006e,006b0069006c006c,006f006e0043006f006d0070006c006500740065,00720075006e*/
 								}{}
 								clone.isSuspended = gopurs_runtime.RecordGet(orig, "isSuspended")
 								clone.join = gopurs_runtime.RecordGet(orig, "join")

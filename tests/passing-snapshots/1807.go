@@ -27,14 +27,20 @@ func Get_Main_a() gopurs_runtime.Value {
 				b struct {
 					c struct {
 						d int64
+						/*gopurs:record-v1:1:0064*/
 					}
+					/*gopurs:record-v1:1:0063*/
 				}
+				/*gopurs:record-v1:1:0062*/
 			}{struct {
 				c struct {
 					d int64
+					/*gopurs:record-v1:1:0064*/
 				}
+				/*gopurs:record-v1:1:0063*/
 			}{struct {
 				d int64
+				/*gopurs:record-v1:1:0064*/
 			}{int64(2)}}}
 			_ = orig
 			return gopurs_runtime.RecordDict1("b", func() gopurs_runtime.Value {
@@ -61,8 +67,11 @@ func Get_Main_d() gopurs_runtime.Value {
 				b struct {
 					c struct {
 						d int64
+						/*gopurs:record-v1:1:0064*/
 					}
+					/*gopurs:record-v1:1:0063*/
 				}
+				/*gopurs:record-v1:1:0062*/
 			} {
 				orig := Get_Main_a()
 				_ = orig
@@ -70,28 +79,37 @@ func Get_Main_d() gopurs_runtime.Value {
 					b struct {
 						c struct {
 							d int64
+							/*gopurs:record-v1:1:0064*/
 						}
+						/*gopurs:record-v1:1:0063*/
 					}
+					/*gopurs:record-v1:1:0062*/
 				}{}
 				clone.b = func() struct {
 					c struct {
 						d int64
+						/*gopurs:record-v1:1:0064*/
 					}
+					/*gopurs:record-v1:1:0063*/
 				} {
 					orig := gopurs_runtime.RecordGet(orig, "b")
 					_ = orig
 					clone := struct {
 						c struct {
 							d int64
+							/*gopurs:record-v1:1:0064*/
 						}
+						/*gopurs:record-v1:1:0063*/
 					}{}
 					clone.c = func() struct {
 						d int64
+						/*gopurs:record-v1:1:0064*/
 					} {
 						orig := gopurs_runtime.RecordGet(orig, "c")
 						_ = orig
 						clone := struct {
 							d int64
+							/*gopurs:record-v1:1:0064*/
 						}{}
 						clone.d = gopurs_runtime.RecordGet(orig, "d").IntVal
 						return clone
@@ -128,8 +146,11 @@ func Get_Main_main() gopurs_runtime.Value {
 						b struct {
 							c struct {
 								d int64
+								/*gopurs:record-v1:1:0064*/
 							}
+							/*gopurs:record-v1:1:0063*/
 						}
+						/*gopurs:record-v1:1:0062*/
 					} {
 						orig := Get_Main_a()
 						_ = orig
@@ -137,28 +158,37 @@ func Get_Main_main() gopurs_runtime.Value {
 							b struct {
 								c struct {
 									d int64
+									/*gopurs:record-v1:1:0064*/
 								}
+								/*gopurs:record-v1:1:0063*/
 							}
+							/*gopurs:record-v1:1:0062*/
 						}{}
 						clone.b = func() struct {
 							c struct {
 								d int64
+								/*gopurs:record-v1:1:0064*/
 							}
+							/*gopurs:record-v1:1:0063*/
 						} {
 							orig := gopurs_runtime.RecordGet(orig, "b")
 							_ = orig
 							clone := struct {
 								c struct {
 									d int64
+									/*gopurs:record-v1:1:0064*/
 								}
+								/*gopurs:record-v1:1:0063*/
 							}{}
 							clone.c = func() struct {
 								d int64
+								/*gopurs:record-v1:1:0064*/
 							} {
 								orig := gopurs_runtime.RecordGet(orig, "c")
 								_ = orig
 								clone := struct {
 									d int64
+									/*gopurs:record-v1:1:0064*/
 								}{}
 								clone.d = gopurs_runtime.RecordGet(orig, "d").IntVal
 								return clone

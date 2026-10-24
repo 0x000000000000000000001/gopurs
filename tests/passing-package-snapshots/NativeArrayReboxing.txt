@@ -281,7 +281,7 @@ func Get_Main_main() r_.Value {
 				P_actual   []string
 				P_expected []string
 			}{func() []string {
-				arr := *(*[]r_.Value)(r_.Array((*(*[]r_.Value)((func() r_.Value {
+				arr := *(*[]r_.Value)(func() r_.Value {
 					arr_val_arrayMap6 := arrayIntrinsic_arg_5
 					_ = arr_val_arrayMap6
 					arr_go_arrayMap6 := (*[]r_.Value)(arr_val_arrayMap6.UnsafePtr)
@@ -292,7 +292,7 @@ func Get_Main_main() r_.Value {
 						res_go_arrayMap6[i_arrayMap6] = r_.Apply(arrayIntrinsic_arg_4, v_arrayMap6)
 					}
 					return r_.Array(res_go_arrayMap6)
-				}()).UnsafePtr))).UnsafePtr)
+				}().UnsafePtr)
 				unboxed := make([]string, len(arr))
 				for i, v := range arr {
 					unboxed[i] = v.StrVal()

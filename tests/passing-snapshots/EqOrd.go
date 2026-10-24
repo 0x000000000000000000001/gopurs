@@ -116,20 +116,20 @@ func Call_Main_ordPair(dictOrd_0_loop gopurs_runtime.Value) gopurs_runtime.Value
 			// TAST (Let): v2_6_2 shape=App(Other) bindingType=(ADT ["Data","Ordering","Ordering"] [])
 			v2_6_2 := uint32(gopurs_runtime.Apply2(gopurs_runtime.RecordGet(dictOrd_0, "compare"), (*Constructor_Main_Pair[gopurs_runtime.Value, gopurs_runtime.Value])(v_4.UnsafePtr).V0, (*Constructor_Main_Pair[gopurs_runtime.Value, gopurs_runtime.Value])(v1_5.UnsafePtr).V0).IntVal)
 			_ = v2_6_2
-			var __t3 uint32
+			var __t3 gopurs_runtime.Value
 			{
 				if v2_6_2 == 902936544 {
-					__t3 = uint32(gopurs_runtime.Apply2(gopurs_runtime.RecordGet(dictOrd1_2, "compare"), (*Constructor_Main_Pair[gopurs_runtime.Value, gopurs_runtime.Value])(v_4.UnsafePtr).V1, (*Constructor_Main_Pair[gopurs_runtime.Value, gopurs_runtime.Value])(v1_5.UnsafePtr).V1).IntVal)
+					__t3 = gopurs_runtime.Apply2(gopurs_runtime.RecordGet(dictOrd1_2, "compare"), (*Constructor_Main_Pair[gopurs_runtime.Value, gopurs_runtime.Value])(v_4.UnsafePtr).V1, (*Constructor_Main_Pair[gopurs_runtime.Value, gopurs_runtime.Value])(v1_5.UnsafePtr).V1)
 					goto end_branch_3
 				} else {
 
 				}
 			}
 			{
-				__t3 = v2_6_2
+				__t3 = gopurs_runtime.Value{Type: 9, IntVal: int64(v2_6_2), UnsafePtr: nil}
 			}
 		end_branch_3:
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(__t3), UnsafePtr: nil}
+			return __t3
 		})})))}
 	})
 }

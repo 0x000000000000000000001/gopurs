@@ -15,12 +15,14 @@ func Get_Main_MonadAsk_dollar_Dict() gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 1125470254, UnsafePtr: unsafe.Pointer(Call_Main_MonadAsk_dollar_Dict(func() struct {
 				Monad0 gopurs_runtime.Value
 				ask    gopurs_runtime.Value
+				/*gopurs:record-v1:2:004d006f006e006100640030,00610073006b*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					Monad0 gopurs_runtime.Value
 					ask    gopurs_runtime.Value
+					/*gopurs:record-v1:2:004d006f006e006100640030,00610073006b*/
 				}{}
 				clone.Monad0 = gopurs_runtime.RecordGet(orig, "Monad0")
 				clone.ask = gopurs_runtime.RecordGet(orig, "ask")
@@ -37,7 +39,7 @@ var once_Main_monadAskFun sync.Once
 func Get_Main_monadAskFun() gopurs_runtime.Value {
 	once_Main_monadAskFun.Do(func() {
 		cache_Main_monadAskFun = gopurs_runtime.Value{Type: 9, IntVal: 1125470254, UnsafePtr: unsafe.Pointer((&Constructor_Main_MonadAsk[gopurs_runtime.Value, gopurs_runtime.Value]{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 778916621, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad[gopurs_runtime.Value]](Get_Control_Monad_monadFn()))}
+			return Get_Control_Monad_monadFn()
 		}), gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return x_0
 		})}))}
@@ -85,6 +87,7 @@ type Constructor_Main_MonadAsk[T_r any, T_m any] struct {
 	V1 gopurs_runtime.Value
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f004d006f006e0061006400410073006b
 func init() {
 	gopurs_runtime.StructGetters[1125470254] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_MonadAsk[gopurs_runtime.Value, gopurs_runtime.Value])(ptr)
@@ -103,10 +106,12 @@ func init() {
 func Call_Main_MonadAsk_dollar_Dict(x_0_loop struct {
 	Monad0 gopurs_runtime.Value
 	ask    gopurs_runtime.Value
+	/*gopurs:record-v1:2:004d006f006e006100640030,00610073006b*/
 }) *Constructor_Main_MonadAsk[gopurs_runtime.Value, gopurs_runtime.Value] {
 	var x_0 struct {
 		Monad0 gopurs_runtime.Value
 		ask    gopurs_runtime.Value
+		/*gopurs:record-v1:2:004d006f006e006100640030,00610073006b*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_MonadAsk[gopurs_runtime.Value, gopurs_runtime.Value]](func() gopurs_runtime.Value {

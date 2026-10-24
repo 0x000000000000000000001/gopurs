@@ -59,7 +59,7 @@ func Call_Main_fns(f_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	}
 	{
 		__t0 = gopurs_runtime.Func(func(x_1 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Bool((x_1.IntVal) != (0))
+			return x_1
 		})
 	}
 end_branch_0:

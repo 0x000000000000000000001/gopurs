@@ -38,13 +38,13 @@ func Get_Main_otherNestingWorks() gopurs_runtime.Value {
 				_v := struct {
 					V0 gopurs_runtime.Value
 					V1 bool
-				}{gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(Rebox_Main_2886983403_138441832(Rebox_Main_138441832_2886983403(gopurs_runtime.CoerceToStruct[Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]](func() gopurs_runtime.Value {
+				}{func() gopurs_runtime.Value {
 					_v := struct {
 						V0 gopurs_runtime.Value
 						V1 gopurs_runtime.Value
 					}{gopurs_runtime.Int(int64(0)), gopurs_runtime.Float(0.0)}
 					return gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(&Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V0, V1: _v.V1})}
-				}()))))}, true}
+				}(), true}
 				if _v.V1 {
 					return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: _v.V0})}
 				}
@@ -53,13 +53,13 @@ func Get_Main_otherNestingWorks() gopurs_runtime.Value {
 				_v := struct {
 					V0 gopurs_runtime.Value
 					V1 bool
-				}{gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(Rebox_Main_2886983403_138441832(Rebox_Main_138441832_2886983403(gopurs_runtime.CoerceToStruct[Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]](func() gopurs_runtime.Value {
+				}{func() gopurs_runtime.Value {
 					_v := struct {
 						V0 gopurs_runtime.Value
 						V1 gopurs_runtime.Value
 					}{gopurs_runtime.Int(int64(1)), gopurs_runtime.Float(1.0)}
 					return gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(&Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V0, V1: _v.V1})}
-				}()))))}, true}
+				}(), true}
 				if _v.V1 {
 					return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: _v.V0})}
 				}

@@ -15,12 +15,14 @@ func Get_Main_Test_dollar_Dict() gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 3423238824, UnsafePtr: unsafe.Pointer(Call_Main_Test_dollar_Dict(func() struct {
 				fn  gopurs_runtime.Value
 				val gopurs_runtime.Value
+				/*gopurs:record-v1:2:0066006e,00760061006c*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					fn  gopurs_runtime.Value
 					val gopurs_runtime.Value
+					/*gopurs:record-v1:2:0066006e,00760061006c*/
 				}{}
 				clone.fn = gopurs_runtime.RecordGet(orig, "fn")
 				clone.val = gopurs_runtime.RecordGet(orig, "val")
@@ -40,12 +42,14 @@ func Get_Main_Test_dollar_Dict__1170844877() gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 3423238824, UnsafePtr: unsafe.Pointer(Rebox_Main_1531651672_2549914428(Call_Main_Test_dollar_Dict__1170844877(func() struct {
 				fn  gopurs_runtime.Value
 				val bool
+				/*gopurs:record-v1:2:0066006e,00760061006c*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					fn  gopurs_runtime.Value
 					val bool
+					/*gopurs:record-v1:2:0066006e,00760061006c*/
 				}{}
 				clone.fn = gopurs_runtime.RecordGet(orig, "fn")
 				clone.val = (gopurs_runtime.RecordGet(orig, "val").IntVal) != (0)
@@ -74,7 +78,7 @@ var once_Main_testBoolean sync.Once
 func Get_Main_testBoolean() gopurs_runtime.Value {
 	once_Main_testBoolean.Do(func() {
 		cache_Main_testBoolean = gopurs_runtime.Value{Type: 9, IntVal: 3423238824, UnsafePtr: unsafe.Pointer(Rebox_Main_1531651672_2549914428((&Constructor_Main_Test[bool]{1, gopurs_runtime.Func2(func(x_0 gopurs_runtime.Value, y_1 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Bool((y_1.IntVal) != (0))
+			return y_1
 		}), true})))}
 	})
 	return cache_Main_testBoolean
@@ -127,6 +131,7 @@ type Constructor_Main_Test[T_a any] struct {
 	V1 T_a
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f0054006500730074
 func init() {
 	gopurs_runtime.StructGetters[3423238824] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_Test[gopurs_runtime.Value])(ptr)
@@ -145,10 +150,12 @@ func init() {
 func Call_Main_Test_dollar_Dict(x_0_loop struct {
 	fn  gopurs_runtime.Value
 	val gopurs_runtime.Value
+	/*gopurs:record-v1:2:0066006e,00760061006c*/
 }) *Constructor_Main_Test[gopurs_runtime.Value] {
 	var x_0 struct {
 		fn  gopurs_runtime.Value
 		val gopurs_runtime.Value
+		/*gopurs:record-v1:2:0066006e,00760061006c*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_Test[gopurs_runtime.Value]](func() gopurs_runtime.Value {
@@ -161,6 +168,7 @@ func Call_Main_Test_dollar_Dict(x_0_loop struct {
 func Call_Main_Test_dollar_Dict__1170844877(x_0_loop struct {
 	fn  gopurs_runtime.Value
 	val bool
+	/*gopurs:record-v1:2:0066006e,00760061006c*/
 }) *Constructor_Main_Test[bool] {
 Test_dollar_Dict__1170844877:
 	for {
@@ -170,6 +178,7 @@ Test_dollar_Dict__1170844877:
 		var x_0 struct {
 			fn  gopurs_runtime.Value
 			val bool
+			/*gopurs:record-v1:2:0066006e,00760061006c*/
 		} = x_0_loop
 		_ = x_0
 		return gopurs_runtime.CoerceToStruct[Constructor_Main_Test[bool]](func() gopurs_runtime.Value {

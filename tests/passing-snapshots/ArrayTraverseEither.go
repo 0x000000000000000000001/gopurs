@@ -379,6 +379,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_2_2 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___748768337("", struct {
 				actual   gopurs_runtime.Value
 				expected gopurs_runtime.Value
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{func() gopurs_runtime.Value {
 				_v := Call_Main_run(__local_var_1_1, []int64{int64(3), int64(7), int64(2), int64(9)})
 				if _v.V2 {
@@ -393,14 +394,19 @@ func Get_Main_main() gopurs_runtime.Value {
 				}{gopurs_runtime.Value{}, func() gopurs_runtime.Value {
 					arr := []struct {
 						value int64
+						/*gopurs:record-v1:1:00760061006c00750065*/
 					}{struct {
 						value int64
+						/*gopurs:record-v1:1:00760061006c00750065*/
 					}{int64(6)}, struct {
 						value int64
+						/*gopurs:record-v1:1:00760061006c00750065*/
 					}{int64(14)}, struct {
 						value int64
+						/*gopurs:record-v1:1:00760061006c00750065*/
 					}{int64(4)}, struct {
 						value int64
+						/*gopurs:record-v1:1:00760061006c00750065*/
 					}{int64(18)}}
 					boxed := make([]gopurs_runtime.Value, len(arr))
 					for i, v := range arr {
@@ -423,6 +429,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_3_3 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1772858129("", struct {
 				actual   []int64
 				expected []int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{func() []int64 {
 				arr := *(*[]gopurs_runtime.Value)(__local_var_3_4.UnsafePtr)
 				unboxed := make([]int64, len(arr))
@@ -444,6 +451,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_5_6 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___748768337("", struct {
 				actual   gopurs_runtime.Value
 				expected gopurs_runtime.Value
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{func() gopurs_runtime.Value {
 				_v := Call_Main_run(__local_var_1_1, []int64{int64(3), int64(-1), int64(8), int64(-2), int64(9)})
 				if _v.V2 {
@@ -467,6 +475,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_6_7 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1772858129("", struct {
 				actual   []int64
 				expected []int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{func() []int64 {
 				arr := *(*[]gopurs_runtime.Value)(__local_var_6_8.UnsafePtr)
 				unboxed := make([]int64, len(arr))
@@ -488,6 +497,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_8_10 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___748768337("", struct {
 				actual   gopurs_runtime.Value
 				expected gopurs_runtime.Value
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{func() gopurs_runtime.Value {
 				_v := Call_Main_run(__local_var_1_1, []int64{})
 				if _v.V2 {
@@ -502,6 +512,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				}{gopurs_runtime.Value{}, func() gopurs_runtime.Value {
 					arr := []struct {
 						value int64
+						/*gopurs:record-v1:1:00760061006c00750065*/
 					}{}
 					boxed := make([]gopurs_runtime.Value, len(arr))
 					for i, v := range arr {
@@ -524,6 +535,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_9_11 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1772858129("", struct {
 				actual   []int64
 				expected []int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{func() []int64 {
 				arr := *(*[]gopurs_runtime.Value)(__local_var_9_12.UnsafePtr)
 				unboxed := make([]int64, len(arr))
@@ -693,6 +705,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_11_17 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1772858129("", struct {
 				actual   []int64
 				expected []int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{func() []int64 {
 				arr := *(*[]gopurs_runtime.Value)(__local_var_11_18.UnsafePtr)
 				unboxed := make([]int64, len(arr))
@@ -707,6 +720,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_13_20 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___748768337("", struct {
 				actual   gopurs_runtime.Value
 				expected gopurs_runtime.Value
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{gopurs_runtime.Apply(__local_var_12_19, func() gopurs_runtime.Value {
 				arr := []int64{int64(6)}
 				boxed := make([]gopurs_runtime.Value, len(arr))
@@ -722,8 +736,10 @@ func Get_Main_main() gopurs_runtime.Value {
 				}{gopurs_runtime.Value{}, func() gopurs_runtime.Value {
 					arr := []struct {
 						value int64
+						/*gopurs:record-v1:1:00760061006c00750065*/
 					}{struct {
 						value int64
+						/*gopurs:record-v1:1:00760061006c00750065*/
 					}{int64(6)}}
 					boxed := make([]gopurs_runtime.Value, len(arr))
 					for i, v := range arr {
@@ -744,6 +760,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_14_21 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___748768337("", struct {
 				actual   gopurs_runtime.Value
 				expected gopurs_runtime.Value
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{gopurs_runtime.Apply(__local_var_12_19, func() gopurs_runtime.Value {
 				arr := []int64{int64(7)}
 				boxed := make([]gopurs_runtime.Value, len(arr))
@@ -759,8 +776,10 @@ func Get_Main_main() gopurs_runtime.Value {
 				}{gopurs_runtime.Value{}, func() gopurs_runtime.Value {
 					arr := []struct {
 						value int64
+						/*gopurs:record-v1:1:00760061006c00750065*/
 					}{struct {
 						value int64
+						/*gopurs:record-v1:1:00760061006c00750065*/
 					}{int64(7)}}
 					boxed := make([]gopurs_runtime.Value, len(arr))
 					for i, v := range arr {
@@ -783,6 +802,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_15_22 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1772858129("", struct {
 				actual   []int64
 				expected []int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{func() []int64 {
 				arr := *(*[]gopurs_runtime.Value)(__local_var_15_23.UnsafePtr)
 				unboxed := make([]int64, len(arr))
@@ -804,6 +824,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_17_25 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___748768337("", struct {
 				actual   gopurs_runtime.Value
 				expected gopurs_runtime.Value
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{gopurs_runtime.Apply6(Get_Data_Traversable_traverseArrayImpl(), gopurs_runtime.Func2(func(v_17 gopurs_runtime.Value, v1_18 gopurs_runtime.Value) gopurs_runtime.Value {
 				var __t27 struct {
 					V0 gopurs_runtime.Value
@@ -972,10 +993,13 @@ func Get_Main_main() gopurs_runtime.Value {
 				}{gopurs_runtime.Value{}, func() gopurs_runtime.Value {
 					arr := []struct {
 						value int64
+						/*gopurs:record-v1:1:00760061006c00750065*/
 					}{struct {
 						value int64
+						/*gopurs:record-v1:1:00760061006c00750065*/
 					}{int64(4)}, struct {
 						value int64
+						/*gopurs:record-v1:1:00760061006c00750065*/
 					}{int64(5)}}
 					boxed := make([]gopurs_runtime.Value, len(arr))
 					for i, v := range arr {
@@ -998,6 +1022,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_18_29 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1772858129("", struct {
 				actual   []int64
 				expected []int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{func() []int64 {
 				arr := *(*[]gopurs_runtime.Value)(__local_var_18_30.UnsafePtr)
 				unboxed := make([]int64, len(arr))
@@ -1014,23 +1039,16 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_21_33 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___748768337("", struct {
 				actual   gopurs_runtime.Value
 				expected gopurs_runtime.Value
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{gopurs_runtime.Apply2(__local_var_20_32, gopurs_runtime.Func(func(value_21 gopurs_runtime.Value) gopurs_runtime.Value {
 				return func() gopurs_runtime.Value {
 					_v := struct {
 						V0 gopurs_runtime.Value
-						V1 struct {
-							value int64
-						}
+						V1 gopurs_runtime.Value
 						V2 bool
-					}{gopurs_runtime.Value{}, struct {
-						value int64
-					}{value_21.IntVal}, true}
+					}{gopurs_runtime.Value{}, gopurs_runtime.RecordDict1("value", value_21), true}
 					if _v.V2 {
-						return gopurs_runtime.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[gopurs_runtime.Value, gopurs_runtime.Value]{V0: func() gopurs_runtime.Value {
-							orig := _v.V1
-							_ = orig
-							return gopurs_runtime.RecordDict1("value", gopurs_runtime.Int(orig.value))
-						}()})}
+						return gopurs_runtime.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V1})}
 					}
 					return gopurs_runtime.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V0})}
 				}()
@@ -1049,8 +1067,10 @@ func Get_Main_main() gopurs_runtime.Value {
 				}{gopurs_runtime.Value{}, func() gopurs_runtime.Value {
 					arr := []struct {
 						value int64
+						/*gopurs:record-v1:1:00760061006c00750065*/
 					}{struct {
 						value int64
+						/*gopurs:record-v1:1:00760061006c00750065*/
 					}{int64(10)}}
 					boxed := make([]gopurs_runtime.Value, len(arr))
 					for i, v := range arr {
@@ -1071,9 +1091,10 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_22_34 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___283401329("", struct {
 				actual   *Constructor_Data_Maybe_Just[[]int64]
 				expected *Constructor_Data_Maybe_Just[[]int64]
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Rebox_Main_3094389156_1495236409(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](func() gopurs_runtime.Value {
 				_v := Call_Main_generic__3263125282(gopurs_runtime.Func(func(value_22 gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(Rebox_Main_1170268447_3094389156(Rebox_Main_3094389156_1170268447(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](func() gopurs_runtime.Value {
+					return func() gopurs_runtime.Value {
 						_v := struct {
 							V0 gopurs_runtime.Value
 							V1 bool
@@ -1082,7 +1103,7 @@ func Get_Main_main() gopurs_runtime.Value {
 							return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: _v.V0})}
 						}
 						return gopurs_runtime.Value{Type: 9, IntVal: 930809136}
-					}()))))}
+					}()
 				}), []int64{int64(1), int64(2)})
 				if _v.V1 {
 					return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: _v.V0})}
@@ -1109,40 +1130,38 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_23_35 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___283401329("", struct {
 				actual   *Constructor_Data_Maybe_Just[[]int64]
 				expected *Constructor_Data_Maybe_Just[[]int64]
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Rebox_Main_3094389156_1495236409(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](func() gopurs_runtime.Value {
 				_v := Call_Main_generic__3263125282(gopurs_runtime.Func(func(value_23 gopurs_runtime.Value) gopurs_runtime.Value {
-					var __t36 *Constructor_Data_Maybe_Just[int64]
+					var __t36 struct {
+						V0 gopurs_runtime.Value
+						V1 bool
+					}
 					{
 						if (value_23.IntVal) < (int64(0)) {
-							__t36 = Rebox_Main_3094389156_1170268447(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](func() gopurs_runtime.Value {
-								_v := struct {
-									V0 gopurs_runtime.Value
-									V1 bool
-								}{gopurs_runtime.Value{}, false}
-								if _v.V1 {
-									return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: _v.V0})}
-								}
-								return gopurs_runtime.Value{Type: 9, IntVal: 930809136}
-							}()))
+							__t36 = struct {
+								V0 gopurs_runtime.Value
+								V1 bool
+							}{gopurs_runtime.Value{}, false}
 							goto end_branch_36
 						} else {
 
 						}
 					}
 					{
-						__t36 = Rebox_Main_3094389156_1170268447(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](func() gopurs_runtime.Value {
-							_v := struct {
-								V0 gopurs_runtime.Value
-								V1 bool
-							}{gopurs_runtime.Int(value_23.IntVal), true}
-							if _v.V1 {
-								return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: _v.V0})}
-							}
-							return gopurs_runtime.Value{Type: 9, IntVal: 930809136}
-						}()))
+						__t36 = struct {
+							V0 gopurs_runtime.Value
+							V1 bool
+						}{value_23, true}
 					}
 				end_branch_36:
-					return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(Rebox_Main_1170268447_3094389156(__t36))}
+					return func() gopurs_runtime.Value {
+						_v := __t36
+						if _v.V1 {
+							return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: _v.V0})}
+						}
+						return gopurs_runtime.Value{Type: 9, IntVal: 930809136}
+					}()
 				}), []int64{int64(1), int64(-1), int64(2)})
 				if _v.V1 {
 					return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: _v.V0})}
@@ -1173,28 +1192,14 @@ func Call_Main_track(calls_0_loop gopurs_runtime.Value, value_1_loop int64) int6
 	return gopurs_runtime.Apply(Get_Effect_Unsafe_unsafePerformEffect(), gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 		// TAST (Let): __local_var_2_0 shape=App(Var) bindingType=Any
 		__local_var_2_0 := gopurs_runtime.Apply2(Get_Effect_Ref_modify_(), gopurs_runtime.Func(func(seen_2 gopurs_runtime.Value) gopurs_runtime.Value {
-			return func() gopurs_runtime.Value {
-				arr := func() []int64 {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), seen_2, func() gopurs_runtime.Value {
-						arr := []int64{value_1}
-						boxed := make([]gopurs_runtime.Value, len(arr))
-						for i, v := range arr {
-							boxed[i] = gopurs_runtime.Int(v)
-						}
-						return gopurs_runtime.Array(boxed)
-					}())).UnsafePtr))).UnsafePtr)
-					unboxed := make([]int64, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.IntVal
-					}
-					return unboxed
-				}()
+			return gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), seen_2, func() gopurs_runtime.Value {
+				arr := []int64{value_1}
 				boxed := make([]gopurs_runtime.Value, len(arr))
 				for i, v := range arr {
 					boxed[i] = gopurs_runtime.Int(v)
 				}
 				return gopurs_runtime.Array(boxed)
-			}()
+			}())
 		}), calls_0)
 		_ = __local_var_2_0
 		__local_var_3_1 := gopurs_runtime.Apply(__local_var_2_0, gopurs_runtime.Value{})
@@ -1375,22 +1380,16 @@ func Call_Main_run(calls_0_loop gopurs_runtime.Value, values_1_loop []int64) str
 		_ = observed_3_3
 		var __t4 struct {
 			V0 gopurs_runtime.Value
-			V1 struct {
-				value int64
-			}
+			V1 gopurs_runtime.Value
 			V2 bool
 		}
 		{
 			if (observed_3_3) < (int64(0)) {
 				__t4 = struct {
 					V0 gopurs_runtime.Value
-					V1 struct {
-						value int64
-					}
+					V1 gopurs_runtime.Value
 					V2 bool
-				}{gopurs_runtime.Str(Data_Show_ShowIntImpl(observed_3_3)), struct {
-					value int64
-				}{}, false}
+				}{gopurs_runtime.Str(Data_Show_ShowIntImpl(observed_3_3)), gopurs_runtime.Value{}, false}
 				goto end_branch_4
 			} else {
 
@@ -1399,23 +1398,15 @@ func Call_Main_run(calls_0_loop gopurs_runtime.Value, values_1_loop []int64) str
 		{
 			__t4 = struct {
 				V0 gopurs_runtime.Value
-				V1 struct {
-					value int64
-				}
+				V1 gopurs_runtime.Value
 				V2 bool
-			}{gopurs_runtime.Value{}, struct {
-				value int64
-			}{gopurs_runtime.IntMul(observed_3_3, int64(2))}, true}
+			}{gopurs_runtime.Value{}, gopurs_runtime.RecordDict1("value", gopurs_runtime.Int(gopurs_runtime.IntMul(observed_3_3, int64(2)))), true}
 		}
 	end_branch_4:
 		return func() gopurs_runtime.Value {
 			_v := __t4
 			if _v.V2 {
-				return gopurs_runtime.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[gopurs_runtime.Value, gopurs_runtime.Value]{V0: func() gopurs_runtime.Value {
-					orig := _v.V1
-					_ = orig
-					return gopurs_runtime.RecordDict1("value", gopurs_runtime.Int(orig.value))
-				}()})}
+				return gopurs_runtime.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V1})}
 			}
 			return gopurs_runtime.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V0})}
 		}()
@@ -1445,28 +1436,14 @@ func Call_Main_produced(calls_0_loop gopurs_runtime.Value) gopurs_runtime.Value 
 	return gopurs_runtime.Apply(Get_Effect_Unsafe_unsafePerformEffect(), gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 		// TAST (Let): __local_var_1_0 shape=App(Var) bindingType=Any
 		__local_var_1_0 := gopurs_runtime.Apply2(Get_Effect_Ref_modify_(), gopurs_runtime.Func(func(seen_1 gopurs_runtime.Value) gopurs_runtime.Value {
-			return func() gopurs_runtime.Value {
-				arr := func() []int64 {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), seen_1, func() gopurs_runtime.Value {
-						arr := []int64{int64(200)}
-						boxed := make([]gopurs_runtime.Value, len(arr))
-						for i, v := range arr {
-							boxed[i] = gopurs_runtime.Int(v)
-						}
-						return gopurs_runtime.Array(boxed)
-					}())).UnsafePtr))).UnsafePtr)
-					unboxed := make([]int64, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.IntVal
-					}
-					return unboxed
-				}()
+			return gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), seen_1, func() gopurs_runtime.Value {
+				arr := []int64{int64(200)}
 				boxed := make([]gopurs_runtime.Value, len(arr))
 				for i, v := range arr {
 					boxed[i] = gopurs_runtime.Int(v)
 				}
 				return gopurs_runtime.Array(boxed)
-			}()
+			}())
 		}), calls_0)
 		_ = __local_var_1_0
 		__local_var_2_1 := gopurs_runtime.Apply(__local_var_1_0, gopurs_runtime.Value{})
@@ -1475,19 +1452,11 @@ func Call_Main_produced(calls_0_loop gopurs_runtime.Value) gopurs_runtime.Value 
 			return func() gopurs_runtime.Value {
 				_v := struct {
 					V0 gopurs_runtime.Value
-					V1 struct {
-						value int64
-					}
+					V1 gopurs_runtime.Value
 					V2 bool
-				}{gopurs_runtime.Value{}, struct {
-					value int64
-				}{Call_Main_track(calls_0, value_3.IntVal)}, true}
+				}{gopurs_runtime.Value{}, gopurs_runtime.RecordDict1("value", gopurs_runtime.Int(Call_Main_track(calls_0, value_3.IntVal))), true}
 				if _v.V2 {
-					return gopurs_runtime.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[gopurs_runtime.Value, gopurs_runtime.Value]{V0: func() gopurs_runtime.Value {
-						orig := _v.V1
-						_ = orig
-						return gopurs_runtime.RecordDict1("value", gopurs_runtime.Int(orig.value))
-					}()})}
+					return gopurs_runtime.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V1})}
 				}
 				return gopurs_runtime.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V0})}
 			}()
@@ -1502,28 +1471,14 @@ func Call_Main_input(calls_0_loop gopurs_runtime.Value) []int64 {
 		arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Apply(Get_Effect_Unsafe_unsafePerformEffect(), gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 			// TAST (Let): __local_var_1_0 shape=App(Var) bindingType=Any
 			__local_var_1_0 := gopurs_runtime.Apply2(Get_Effect_Ref_modify_(), gopurs_runtime.Func(func(seen_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				return func() gopurs_runtime.Value {
-					arr := func() []int64 {
-						arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), seen_1, func() gopurs_runtime.Value {
-							arr := []int64{int64(300)}
-							boxed := make([]gopurs_runtime.Value, len(arr))
-							for i, v := range arr {
-								boxed[i] = gopurs_runtime.Int(v)
-							}
-							return gopurs_runtime.Array(boxed)
-						}())).UnsafePtr))).UnsafePtr)
-						unboxed := make([]int64, len(arr))
-						for i, v := range arr {
-							unboxed[i] = v.IntVal
-						}
-						return unboxed
-					}()
+				return gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), seen_1, func() gopurs_runtime.Value {
+					arr := []int64{int64(300)}
 					boxed := make([]gopurs_runtime.Value, len(arr))
 					for i, v := range arr {
 						boxed[i] = gopurs_runtime.Int(v)
 					}
 					return gopurs_runtime.Array(boxed)
-				}()
+				}())
 			}), calls_0)
 			_ = __local_var_1_0
 			__local_var_2_1 := gopurs_runtime.Apply(__local_var_1_0, gopurs_runtime.Value{})
@@ -1571,38 +1526,32 @@ generic__3263125282:
 			V0 gopurs_runtime.Value
 			V1 bool
 		} { _v := gopurs_runtime.Apply6(Get_Data_Traversable_traverseArrayImpl(), gopurs_runtime.Func2(func(v_2 gopurs_runtime.Value, v1_3 gopurs_runtime.Value) gopurs_runtime.Value {
-			var __t1 *Constructor_Data_Maybe_Just[gopurs_runtime.Value]
+			var __t1 struct {
+				V0 gopurs_runtime.Value
+				V1 bool
+			}
 			{
 				if v_2.Type == 9 && v_2.IntVal == 930809136 && v_2.UnsafePtr != nil {
-					var __t0 *Constructor_Data_Maybe_Just[gopurs_runtime.Value]
+					var __t0 struct {
+						V0 gopurs_runtime.Value
+						V1 bool
+					}
 					{
 						if v1_3.Type == 9 && v1_3.IntVal == 930809136 && v1_3.UnsafePtr != nil {
-							__t0 = gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](func() gopurs_runtime.Value {
-								_v := struct {
-									V0 gopurs_runtime.Value
-									V1 bool
-								}{gopurs_runtime.Apply((*Constructor_Data_Maybe_Just[gopurs_runtime.Value])(v_2.UnsafePtr).V0, (*Constructor_Data_Maybe_Just[gopurs_runtime.Value])(v1_3.UnsafePtr).V0), true}
-								if _v.V1 {
-									return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: _v.V0})}
-								}
-								return gopurs_runtime.Value{Type: 9, IntVal: 930809136}
-							}())
+							__t0 = struct {
+								V0 gopurs_runtime.Value
+								V1 bool
+							}{gopurs_runtime.Apply((*Constructor_Data_Maybe_Just[gopurs_runtime.Value])(v_2.UnsafePtr).V0, (*Constructor_Data_Maybe_Just[gopurs_runtime.Value])(v1_3.UnsafePtr).V0), true}
 							goto end_branch_0
 						} else {
 
 						}
 					}
 					{
-						__t0 = gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](func() gopurs_runtime.Value {
-							_v := struct {
-								V0 gopurs_runtime.Value
-								V1 bool
-							}{gopurs_runtime.Value{}, false}
-							if _v.V1 {
-								return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: _v.V0})}
-							}
-							return gopurs_runtime.Value{Type: 9, IntVal: 930809136}
-						}())
+						__t0 = struct {
+							V0 gopurs_runtime.Value
+							V1 bool
+						}{gopurs_runtime.Value{}, false}
 					}
 				end_branch_0:
 					__t1 = __t0
@@ -1613,59 +1562,67 @@ generic__3263125282:
 			}
 			{
 				if v_2.Type == 9 && v_2.IntVal == 930809136 && v_2.UnsafePtr == nil {
-					__t1 = gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](func() gopurs_runtime.Value {
-						_v := struct {
-							V0 gopurs_runtime.Value
-							V1 bool
-						}{gopurs_runtime.Value{}, false}
-						if _v.V1 {
-							return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: _v.V0})}
-						}
-						return gopurs_runtime.Value{Type: 9, IntVal: 930809136}
-					}())
+					__t1 = struct {
+						V0 gopurs_runtime.Value
+						V1 bool
+					}{gopurs_runtime.Value{}, false}
 					goto end_branch_1
 				} else {
 
 				}
 			}
 			{
-				__t1 = func() *Constructor_Data_Maybe_Just[gopurs_runtime.Value] { panic("Failed pattern match") }()
+				__t1 = func() struct {
+					V0 gopurs_runtime.Value
+					V1 bool
+				} { _v := gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(func() *Constructor_Data_Maybe_Just[gopurs_runtime.Value] { panic("Failed pattern match") }())}; if _v.Type == 9 && _v.IntVal == 930809136 && _v.UnsafePtr != nil {
+					return struct {
+						V0 gopurs_runtime.Value
+						V1 bool
+					}{V0: (*(*Constructor_Data_Maybe_Just[gopurs_runtime.Value])(_v.UnsafePtr)).V0, V1: true}
+				}; return struct {
+					V0 gopurs_runtime.Value
+					V1 bool
+				}{V0: gopurs_runtime.Value{}, V1: false} }()
 			}
 		end_branch_1:
-			return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(__t1)}
+			return func() gopurs_runtime.Value {
+				_v := __t1
+				if _v.V1 {
+					return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: _v.V0})}
+				}
+				return gopurs_runtime.Value{Type: 9, IntVal: 930809136}
+			}()
 		}), gopurs_runtime.Func2(func(v_2 gopurs_runtime.Value, v1_3 gopurs_runtime.Value) gopurs_runtime.Value {
-			var __t2 *Constructor_Data_Maybe_Just[gopurs_runtime.Value]
+			var __t2 struct {
+				V0 gopurs_runtime.Value
+				V1 bool
+			}
 			{
 				if v1_3.Type == 9 && v1_3.IntVal == 930809136 && v1_3.UnsafePtr != nil {
-					__t2 = gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](func() gopurs_runtime.Value {
-						_v := struct {
-							V0 gopurs_runtime.Value
-							V1 bool
-						}{gopurs_runtime.Apply(v_2, (*Constructor_Data_Maybe_Just[gopurs_runtime.Value])(v1_3.UnsafePtr).V0), true}
-						if _v.V1 {
-							return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: _v.V0})}
-						}
-						return gopurs_runtime.Value{Type: 9, IntVal: 930809136}
-					}())
+					__t2 = struct {
+						V0 gopurs_runtime.Value
+						V1 bool
+					}{gopurs_runtime.Apply(v_2, (*Constructor_Data_Maybe_Just[gopurs_runtime.Value])(v1_3.UnsafePtr).V0), true}
 					goto end_branch_2
 				} else {
 
 				}
 			}
 			{
-				__t2 = gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](func() gopurs_runtime.Value {
-					_v := struct {
-						V0 gopurs_runtime.Value
-						V1 bool
-					}{gopurs_runtime.Value{}, false}
-					if _v.V1 {
-						return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: _v.V0})}
-					}
-					return gopurs_runtime.Value{Type: 9, IntVal: 930809136}
-				}())
+				__t2 = struct {
+					V0 gopurs_runtime.Value
+					V1 bool
+				}{gopurs_runtime.Value{}, false}
 			}
 		end_branch_2:
-			return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(__t2)}
+			return func() gopurs_runtime.Value {
+				_v := __t2
+				if _v.V1 {
+					return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: _v.V0})}
+				}
+				return gopurs_runtime.Value{Type: 9, IntVal: 930809136}
+			}()
 		}), Get_Data_Maybe_Just(), Get_Data_Semigroup_concatArray(), __eta_norm_1_0, func() gopurs_runtime.Value {
 			arr := __eta_norm_0_1
 			boxed := make([]gopurs_runtime.Value, len(arr))
@@ -1697,15 +1654,6 @@ func Rebox_Main_1140313009_3790796878(in *Constructor_Data_Eq_Eq[string]) *Const
 		return nil
 	}
 	return (*Constructor_Data_Eq_Eq[gopurs_runtime.Value])(unsafe.Pointer(in))
-}
-
-func Rebox_Main_1170268447_3094389156(in *Constructor_Data_Maybe_Just[int64]) *Constructor_Data_Maybe_Just[gopurs_runtime.Value] {
-	if in == nil {
-		return nil
-	}
-	out := &Constructor_Data_Maybe_Just[gopurs_runtime.Value]{}
-	out.V0 = gopurs_runtime.Int(in.V0)
-	return out
 }
 
 func Rebox_Main_1386611502_1469227923(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[[]int64] {
@@ -1769,15 +1717,6 @@ func Rebox_Main_2682098930_1386611502(in *Constructor_Data_Show_Show[*Constructo
 		return nil
 	}
 	return (*Constructor_Data_Show_Show[gopurs_runtime.Value])(unsafe.Pointer(in))
-}
-
-func Rebox_Main_3094389156_1170268447(in *Constructor_Data_Maybe_Just[gopurs_runtime.Value]) *Constructor_Data_Maybe_Just[int64] {
-	if in == nil {
-		return nil
-	}
-	out := &Constructor_Data_Maybe_Just[int64]{}
-	out.V0 = in.V0.IntVal
-	return out
 }
 
 func Rebox_Main_3094389156_1495236409(in *Constructor_Data_Maybe_Just[gopurs_runtime.Value]) *Constructor_Data_Maybe_Just[[]int64] {

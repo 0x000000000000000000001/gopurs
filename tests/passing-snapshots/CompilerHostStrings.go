@@ -68,6 +68,7 @@ func Call_Main_check(expected_0_loop string) gopurs_runtime.Value {
 		return gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("", struct {
 			actual   string
 			expected string
+			/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 		}{__local_var_3_2.StrVal(), expected_0}), gopurs_runtime.Value{})
 	})
 }

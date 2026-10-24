@@ -76,6 +76,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_5_5 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___692899441("", struct {
 				actual   *Constructor_Data_Maybe_Just[int64]
 				expected *Constructor_Data_Maybe_Just[int64]
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Rebox_Main_3094389156_1170268447(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](gopurs_runtime.Apply(__local_var_4_4, gopurs_runtime.Int(int64(22))))), Rebox_Main_3094389156_1170268447(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](func() gopurs_runtime.Value {
 				_v := struct {
 					V0 gopurs_runtime.Value
@@ -90,6 +91,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_6_6 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___692899441("", struct {
 				actual   *Constructor_Data_Maybe_Just[int64]
 				expected *Constructor_Data_Maybe_Just[int64]
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Rebox_Main_3094389156_1170268447(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](gopurs_runtime.Apply(__local_var_4_4, gopurs_runtime.Int(int64(0))))), Rebox_Main_3094389156_1170268447(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](func() gopurs_runtime.Value {
 				_v := struct {
 					V0 gopurs_runtime.Value
@@ -104,6 +106,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_7_7 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___692899441("", struct {
 				actual   *Constructor_Data_Maybe_Just[int64]
 				expected *Constructor_Data_Maybe_Just[int64]
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Rebox_Main_3094389156_1170268447(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](gopurs_runtime.Apply(__local_var_4_4, gopurs_runtime.Int(int64(-1))))), Rebox_Main_3094389156_1170268447(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer((*Constructor_Data_Maybe_Just[gopurs_runtime.Value])(nil))}))}), gopurs_runtime.Value{})
 			_ = __local_var_7_7
 			__local_var_8_8 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), Call_Main_partialMaybe(gopurs_runtime.IntNegate(__local_var_2_2.IntVal))), gopurs_runtime.Value{})
@@ -113,6 +116,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_10_10 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___692899441("", struct {
 				actual   *Constructor_Data_Maybe_Just[int64]
 				expected *Constructor_Data_Maybe_Just[int64]
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Rebox_Main_3094389156_1170268447(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](gopurs_runtime.Apply(__local_var_9_9, gopurs_runtime.Int(int64(3))))), Rebox_Main_3094389156_1170268447(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](func() gopurs_runtime.Value {
 				_v := struct {
 					V0 gopurs_runtime.Value

@@ -296,7 +296,7 @@ var once_Main_adapt sync.Once
 func Get_Main_adapt() gopurs_runtime.Value {
 	once_Main_adapt.Do(func() {
 		cache_Main_adapt = gopurs_runtime.Apply2(gopurs_runtime.RecordGet(Call_Main_profunctorTest(gopurs_runtime.Value{Type: 9, IntVal: 2367018778, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Profunctor_Profunctor[gopurs_runtime.Value]](Get_Data_Profunctor_profunctorFn()))}), "dimap"), gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Int(gopurs_runtime.RecordGet(v_0, "value").IntVal)
+			return gopurs_runtime.RecordGet(v_0, "value")
 		}), Get_Data_Show_showIntImpl())
 	})
 	return cache_Main_adapt
@@ -407,7 +407,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				_v := struct {
 					V0 gopurs_runtime.Value
 					V1 gopurs_runtime.Value
-				}{gopurs_runtime.Int(__local_var_1_1.IntVal), gopurs_runtime.Int(int64(42))}
+				}{__local_var_1_1, gopurs_runtime.Int(int64(42))}
 				return gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(&Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V0, V1: _v.V1})}
 			}()))})))})
 			_ = v_9_11
@@ -434,14 +434,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				x gopurs_runtime.Value
 				/*gopurs:record-v1:1:0078*/
 			}{gopurs_runtime.Func(func(r_11 gopurs_runtime.Value) gopurs_runtime.Value {
-				return func() gopurs_runtime.Value {
-					orig := struct {
-						b int64
-						/*gopurs:record-v1:1:0062*/
-					}{gopurs_runtime.IntAdd(gopurs_runtime.RecordGet(r_11, "a").IntVal, int64(1))}
-					_ = orig
-					return gopurs_runtime.RecordDict1("b", gopurs_runtime.Int(orig.b))
-				}()
+				return gopurs_runtime.RecordDict1("b", gopurs_runtime.Int(gopurs_runtime.IntAdd(gopurs_runtime.RecordGet(r_11, "a").IntVal, int64(1))))
 			})}}}})))})
 			_ = v_11_13
 			__local_var_12_14 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("dimap - nested records"), gopurs_runtime.Bool((v_11_13.Type == 9 && v_11_13.IntVal == 1063363133) && (((gopurs_runtime.Int(int64(len((*Constructor_Main_Test5[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(v_11_13.UnsafePtr).V0.nested))).IntVal) == (int64(1))) && ((gopurs_runtime.Apply2(gopurs_runtime.RecordGet(Call_Data_Eq_eqRec(gopurs_runtime.Value{}, Call_Data_Eq_eqRowCons(Get_Data_Eq_eqRowNil(), gopurs_runtime.Value{}, gopurs_runtime.RecordDict1("reflectSymbol", gopurs_runtime.Func(func(_dollar___unused_12 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -692,59 +685,11 @@ func Call_Main_profunctorTest(dictProfunctor_0_loop gopurs_runtime.Value) gopurs
 		{
 			if m_3.Type == 9 && m_3.IntVal == 1063363133 {
 				arrayIntrinsic_arg_2 := gopurs_runtime.Func(func(v1_4 gopurs_runtime.Value) gopurs_runtime.Value {
-					return func() gopurs_runtime.Value {
-						orig := func() struct {
-							x gopurs_runtime.Value
-							/*gopurs:record-v1:1:0078*/
-						} {
-							orig := gopurs_runtime.RecordUpdate1(v1_4, "x", gopurs_runtime.Apply3(gopurs_runtime.RecordGet(dictProfunctor_0, "dimap"), gopurs_runtime.Func(func(v2_5 gopurs_runtime.Value) gopurs_runtime.Value {
-								return func() gopurs_runtime.Value {
-									orig := func() struct {
-										a gopurs_runtime.Value
-										/*gopurs:record-v1:1:0061*/
-									} {
-										orig := gopurs_runtime.RecordUpdate1(v2_5, "a", gopurs_runtime.Apply(f_1, gopurs_runtime.RecordGet(v2_5, "a")))
-										_ = orig
-										clone := struct {
-											a gopurs_runtime.Value
-											/*gopurs:record-v1:1:0061*/
-										}{}
-										clone.a = gopurs_runtime.RecordGet(orig, "a")
-										return clone
-									}()
-									_ = orig
-									return gopurs_runtime.RecordDict1("a", orig.a)
-								}()
-							}), gopurs_runtime.Func(func(v2_5 gopurs_runtime.Value) gopurs_runtime.Value {
-								return func() gopurs_runtime.Value {
-									orig := func() struct {
-										b gopurs_runtime.Value
-										/*gopurs:record-v1:1:0062*/
-									} {
-										orig := gopurs_runtime.RecordUpdate1(v2_5, "b", gopurs_runtime.Apply(g_2, gopurs_runtime.RecordGet(v2_5, "b")))
-										_ = orig
-										clone := struct {
-											b gopurs_runtime.Value
-											/*gopurs:record-v1:1:0062*/
-										}{}
-										clone.b = gopurs_runtime.RecordGet(orig, "b")
-										return clone
-									}()
-									_ = orig
-									return gopurs_runtime.RecordDict1("b", orig.b)
-								}()
-							}), gopurs_runtime.RecordGet(v1_4, "x")))
-							_ = orig
-							clone := struct {
-								x gopurs_runtime.Value
-								/*gopurs:record-v1:1:0078*/
-							}{}
-							clone.x = gopurs_runtime.RecordGet(orig, "x")
-							return clone
-						}()
-						_ = orig
-						return gopurs_runtime.RecordDict1("x", orig.x)
-					}()
+					return gopurs_runtime.RecordUpdate1(v1_4, "x", gopurs_runtime.Apply3(gopurs_runtime.RecordGet(dictProfunctor_0, "dimap"), gopurs_runtime.Func(func(v2_5 gopurs_runtime.Value) gopurs_runtime.Value {
+						return gopurs_runtime.RecordUpdate1(v2_5, "a", gopurs_runtime.Apply(f_1, gopurs_runtime.RecordGet(v2_5, "a")))
+					}), gopurs_runtime.Func(func(v2_5 gopurs_runtime.Value) gopurs_runtime.Value {
+						return gopurs_runtime.RecordUpdate1(v2_5, "b", gopurs_runtime.Apply(g_2, gopurs_runtime.RecordGet(v2_5, "b")))
+					}), gopurs_runtime.RecordGet(v1_4, "x")))
 				})
 				_ = arrayIntrinsic_arg_2
 				arrayIntrinsic_arg_3 := func() gopurs_runtime.Value {

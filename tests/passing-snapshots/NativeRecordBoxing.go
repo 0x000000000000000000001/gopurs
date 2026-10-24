@@ -30,12 +30,14 @@ func Get_Main_describeEntry() gopurs_runtime.Value {
 			return gopurs_runtime.Str(Call_Main_describeEntry(func() struct {
 				count int64
 				label string
+				/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
 			} {
 				orig := entry_0_box
 				_ = orig
 				clone := struct {
 					count int64
 					label string
+					/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
 				}{}
 				clone.count = gopurs_runtime.RecordGet(orig, "count").IntVal
 				clone.label = gopurs_runtime.RecordGet(orig, "label").StrVal()
@@ -55,12 +57,14 @@ func Get_Main_consumeEntry() gopurs_runtime.Value {
 			return gopurs_runtime.Str(Call_Main_consumeEntry(consume_0_box, func() struct {
 				count int64
 				label string
+				/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
 			} {
 				orig := entry_1_box
 				_ = orig
 				clone := struct {
 					count int64
 					label string
+					/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
 				}{}
 				clone.count = gopurs_runtime.RecordGet(orig, "count").IntVal
 				clone.label = gopurs_runtime.RecordGet(orig, "label").StrVal()
@@ -107,12 +111,14 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_5_5 := gopurs_runtime.Apply(Call_Main_check("original", "5:alpha", Call_Main_consumeEntry(__local_var_2_2, func() struct {
 				count int64
 				label string
+				/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
 			} {
 				orig := __local_var_4_4
 				_ = orig
 				clone := struct {
 					count int64
 					label string
+					/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
 				}{}
 				clone.count = gopurs_runtime.RecordGet(orig, "count").IntVal
 				clone.label = gopurs_runtime.RecordGet(orig, "label").StrVal()
@@ -123,12 +129,14 @@ func Get_Main_main() gopurs_runtime.Value {
 			changedCount_6_6 := func() struct {
 				count int64
 				label string
+				/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
 			} {
 				orig := gopurs_runtime.RecordUpdate1(__local_var_4_4, "count", gopurs_runtime.Int(int64(-7)))
 				_ = orig
 				clone := struct {
 					count int64
 					label string
+					/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
 				}{}
 				clone.count = gopurs_runtime.RecordGet(orig, "count").IntVal
 				clone.label = gopurs_runtime.RecordGet(orig, "label").StrVal()
@@ -146,12 +154,14 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_9_9 := gopurs_runtime.Apply(Call_Main_check("original after count update", "5:alpha", Call_Main_consumeEntry(__local_var_2_2, func() struct {
 				count int64
 				label string
+				/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
 			} {
 				orig := __local_var_4_4
 				_ = orig
 				clone := struct {
 					count int64
 					label string
+					/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
 				}{}
 				clone.count = gopurs_runtime.RecordGet(orig, "count").IntVal
 				clone.label = gopurs_runtime.RecordGet(orig, "label").StrVal()
@@ -162,6 +172,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			changedLabel_10_10 := func() struct {
 				count int64
 				label string
+				/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
 			} {
 				clone := changedCount_6_6
 				clone.label = "beta"
@@ -181,6 +192,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_14_14 := gopurs_runtime.Apply(Call_Main_check("both fields updated", "0:", Call_Main_consumeEntry(__local_var_2_2, func() struct {
 				count int64
 				label string
+				/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
 			} {
 				clone := changedLabel_10_10
 				clone.count = int64(0)
@@ -199,12 +211,14 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_19_19 := gopurs_runtime.Apply(Call_Main_check("retained original", "5:alpha", Call_Main_consumeEntry(__local_var_2_2, func() struct {
 				count int64
 				label string
+				/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
 			} {
 				orig := __local_var_16_16
 				_ = orig
 				clone := struct {
 					count int64
 					label string
+					/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
 				}{}
 				clone.count = gopurs_runtime.RecordGet(orig, "count").IntVal
 				clone.label = gopurs_runtime.RecordGet(orig, "label").StrVal()
@@ -214,12 +228,14 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_20_20 := gopurs_runtime.Apply(Call_Main_check("retained count version", "-7:alpha", Call_Main_consumeEntry(__local_var_2_2, func() struct {
 				count int64
 				label string
+				/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
 			} {
 				orig := __local_var_17_17
 				_ = orig
 				clone := struct {
 					count int64
 					label string
+					/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
 				}{}
 				clone.count = gopurs_runtime.RecordGet(orig, "count").IntVal
 				clone.label = gopurs_runtime.RecordGet(orig, "label").StrVal()
@@ -229,12 +245,14 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_21_21 := gopurs_runtime.Apply(Call_Main_check("retained label version", "-7:beta", Call_Main_consumeEntry(__local_var_2_2, func() struct {
 				count int64
 				label string
+				/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
 			} {
 				orig := __local_var_18_18
 				_ = orig
 				clone := struct {
 					count int64
 					label string
+					/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
 				}{}
 				clone.count = gopurs_runtime.RecordGet(orig, "count").IntVal
 				clone.label = gopurs_runtime.RecordGet(orig, "label").StrVal()
@@ -250,6 +268,7 @@ func Get_Main_main() gopurs_runtime.Value {
 func Call_Main_makeEntry(count_0_loop int64, label_1_loop string) struct {
 	count int64
 	label string
+	/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
 } {
 	var count_0 int64 = count_0_loop
 	_ = count_0
@@ -258,16 +277,19 @@ func Call_Main_makeEntry(count_0_loop int64, label_1_loop string) struct {
 	return struct {
 		count int64
 		label string
+		/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
 	}{count_0, label_1}
 }
 
 func Call_Main_describeEntry(entry_0_loop struct {
 	count int64
 	label string
+	/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
 }) string {
 	var entry_0 struct {
 		count int64
 		label string
+		/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
 	} = entry_0_loop
 	_ = entry_0
 	return gopurs_runtime.ConcatString(gopurs_runtime.ConcatString(Data_Show_ShowIntImpl(entry_0.count), ":"), entry_0.label)
@@ -276,12 +298,14 @@ func Call_Main_describeEntry(entry_0_loop struct {
 func Call_Main_consumeEntry(consume_0_loop gopurs_runtime.Value, entry_1_loop struct {
 	count int64
 	label string
+	/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
 }) string {
 	var consume_0 gopurs_runtime.Value = consume_0_loop
 	_ = consume_0
 	var entry_1 struct {
 		count int64
 		label string
+		/*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c*/
 	} = entry_1_loop
 	_ = entry_1
 	return gopurs_runtime.Apply(consume_0, func() gopurs_runtime.Value {
@@ -303,6 +327,7 @@ func Call_Main_check(label_0_loop string, expected_1_loop string, actual_2_loop 
 		__local_var_3_0 := Call_Test_Assert_assertEqual_prime___4176622598("", struct {
 			actual   string
 			expected string
+			/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 		}{actual_2, expected_1})
 		_ = __local_var_3_0
 		__local_var_4_1 := gopurs_runtime.Apply(__local_var_3_0, gopurs_runtime.Value{})

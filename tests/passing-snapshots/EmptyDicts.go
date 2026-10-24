@@ -13,10 +13,14 @@ func Get_Main_WithArgEmpty_dollar_Dict() gopurs_runtime.Value {
 	once_Main_WithArgEmpty_dollar_Dict.Do(func() {
 		cache_Main_WithArgEmpty_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return Call_Main_WithArgEmpty_dollar_Dict(func() struct {
+
+				/*gopurs:record-v1:0:*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
+
+					/*gopurs:record-v1:0:*/
 				}{}
 
 				return clone
@@ -33,10 +37,14 @@ func Get_Main_WithArgEmpty_dollar_Dict__3150569997() gopurs_runtime.Value {
 	once_Main_WithArgEmpty_dollar_Dict__3150569997.Do(func() {
 		cache_Main_WithArgEmpty_dollar_Dict__3150569997 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return Call_Main_WithArgEmpty_dollar_Dict__3150569997(func() struct {
+
+				/*gopurs:record-v1:0:*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
+
+					/*gopurs:record-v1:0:*/
 				}{}
 
 				return clone
@@ -55,12 +63,14 @@ func Get_Main_WithArgHasEmptySuper_dollar_Dict() gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 785089286, UnsafePtr: unsafe.Pointer(Call_Main_WithArgHasEmptySuper_dollar_Dict(func() struct {
 				WithArgEmpty0        gopurs_runtime.Value
 				withArgHasEmptySuper gopurs_runtime.Value
+				/*gopurs:record-v1:2:00570069007400680041007200670045006d0070007400790030,00770069007400680041007200670048006100730045006d00700074007900530075007000650072*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					WithArgEmpty0        gopurs_runtime.Value
 					withArgHasEmptySuper gopurs_runtime.Value
+					/*gopurs:record-v1:2:00570069007400680041007200670045006d0070007400790030,00770069007400680041007200670048006100730045006d00700074007900530075007000650072*/
 				}{}
 				clone.WithArgEmpty0 = gopurs_runtime.RecordGet(orig, "WithArgEmpty0")
 				clone.withArgHasEmptySuper = gopurs_runtime.RecordGet(orig, "withArgHasEmptySuper")
@@ -80,12 +90,14 @@ func Get_Main_WithArgHasEmptySuper_dollar_Dict__2442956343() gopurs_runtime.Valu
 			return gopurs_runtime.Value{Type: 9, IntVal: 785089286, UnsafePtr: unsafe.Pointer(Rebox_Main_761192255_1292520722(Call_Main_WithArgHasEmptySuper_dollar_Dict__2442956343(func() struct {
 				WithArgEmpty0        gopurs_runtime.Value
 				withArgHasEmptySuper uint32
+				/*gopurs:record-v1:2:00570069007400680041007200670045006d0070007400790030,00770069007400680041007200670048006100730045006d00700074007900530075007000650072*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					WithArgEmpty0        gopurs_runtime.Value
 					withArgHasEmptySuper uint32
+					/*gopurs:record-v1:2:00570069007400680041007200670045006d0070007400790030,00770069007400680041007200670048006100730045006d00700074007900530075007000650072*/
 				}{}
 				clone.WithArgEmpty0 = gopurs_runtime.RecordGet(orig, "WithArgEmpty0")
 				clone.withArgHasEmptySuper = uint32(gopurs_runtime.RecordGet(orig, "withArgHasEmptySuper").IntVal)
@@ -103,10 +115,14 @@ func Get_Main_EmptyClass_dollar_Dict() gopurs_runtime.Value {
 	once_Main_EmptyClass_dollar_Dict.Do(func() {
 		cache_Main_EmptyClass_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return Call_Main_EmptyClass_dollar_Dict(func() struct {
+
+				/*gopurs:record-v1:0:*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
+
+					/*gopurs:record-v1:0:*/
 				}{}
 
 				return clone
@@ -135,12 +151,14 @@ func Get_Main_HasEmptySuper_dollar_Dict() gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 2786347248, UnsafePtr: unsafe.Pointer(Call_Main_HasEmptySuper_dollar_Dict(func() struct {
 				EmptyClass0   gopurs_runtime.Value
 				hasEmptySuper uint32
+				/*gopurs:record-v1:2:0045006d0070007400790043006c0061007300730030,0068006100730045006d00700074007900530075007000650072*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					EmptyClass0   gopurs_runtime.Value
 					hasEmptySuper uint32
+					/*gopurs:record-v1:2:0045006d0070007400790043006c0061007300730030,0068006100730045006d00700074007900530075007000650072*/
 				}{}
 				clone.EmptyClass0 = gopurs_runtime.RecordGet(orig, "EmptyClass0")
 				clone.hasEmptySuper = uint32(gopurs_runtime.RecordGet(orig, "hasEmptySuper").IntVal)
@@ -159,11 +177,13 @@ func Get_Main_HasNonEmptySuper_dollar_Dict() gopurs_runtime.Value {
 		cache_Main_HasNonEmptySuper_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 3506164383, UnsafePtr: unsafe.Pointer(Call_Main_HasNonEmptySuper_dollar_Dict(func() struct {
 				HasEmptySuper0 gopurs_runtime.Value
+				/*gopurs:record-v1:1:0048006100730045006d007000740079005300750070006500720030*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					HasEmptySuper0 gopurs_runtime.Value
+					/*gopurs:record-v1:1:0048006100730045006d007000740079005300750070006500720030*/
 				}{}
 				clone.HasEmptySuper0 = gopurs_runtime.RecordGet(orig, "HasEmptySuper0")
 				return clone
@@ -181,11 +201,13 @@ func Get_Main_AliasEmptyClass_dollar_Dict() gopurs_runtime.Value {
 		cache_Main_AliasEmptyClass_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 4080323731, UnsafePtr: unsafe.Pointer(Call_Main_AliasEmptyClass_dollar_Dict(func() struct {
 				EmptyClass0 gopurs_runtime.Value
+				/*gopurs:record-v1:1:0045006d0070007400790043006c0061007300730030*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					EmptyClass0 gopurs_runtime.Value
+					/*gopurs:record-v1:1:0045006d0070007400790043006c0061007300730030*/
 				}{}
 				clone.EmptyClass0 = gopurs_runtime.RecordGet(orig, "EmptyClass0")
 				return clone
@@ -214,6 +236,8 @@ func Get_Main_withArgEmptyCheck() gopurs_runtime.Value {
 	once_Main_withArgEmptyCheck.Do(func() {
 		cache_Main_withArgEmptyCheck = func() gopurs_runtime.Value {
 			orig := struct {
+
+				/*gopurs:record-v1:0:*/
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
@@ -287,6 +311,8 @@ func Get_Main_emptyDictInst() gopurs_runtime.Value {
 	once_Main_emptyDictInst.Do(func() {
 		cache_Main_emptyDictInst = func() gopurs_runtime.Value {
 			orig := struct {
+
+				/*gopurs:record-v1:0:*/
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
@@ -377,6 +403,7 @@ type Constructor_Main_WithArgEmpty[T_t any] struct {
 	Rc uint32
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f00570069007400680041007200670045006d007000740079
 func init() {
 	gopurs_runtime.StructGetters[207373949] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_WithArgEmpty[gopurs_runtime.Value])(ptr)
@@ -395,6 +422,7 @@ type Constructor_Main_WithArgHasEmptySuper[T_t any] struct {
 	V1 T_t
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f00570069007400680041007200670048006100730045006d00700074007900530075007000650072
 func init() {
 	gopurs_runtime.StructGetters[785089286] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_WithArgHasEmptySuper[gopurs_runtime.Value])(ptr)
@@ -414,6 +442,7 @@ type Constructor_Main_EmptyClass struct {
 	Rc uint32
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f0045006d0070007400790043006c006100730073
 func init() {
 	gopurs_runtime.StructGetters[394228773] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_EmptyClass)(ptr)
@@ -432,6 +461,7 @@ type Constructor_Main_HasEmptySuper struct {
 	V1 uint32
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f0048006100730045006d00700074007900530075007000650072
 func init() {
 	gopurs_runtime.StructGetters[2786347248] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_HasEmptySuper)(ptr)
@@ -452,6 +482,7 @@ type Constructor_Main_HasNonEmptySuper struct {
 	V0 gopurs_runtime.Value
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f004800610073004e006f006e0045006d00700074007900530075007000650072
 func init() {
 	gopurs_runtime.StructGetters[3506164383] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_HasNonEmptySuper)(ptr)
@@ -470,6 +501,7 @@ type Constructor_Main_AliasEmptyClass struct {
 	V0 gopurs_runtime.Value
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f0041006c0069006100730045006d0070007400790043006c006100730073
 func init() {
 	gopurs_runtime.StructGetters[4080323731] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_AliasEmptyClass)(ptr)
@@ -484,8 +516,12 @@ func init() {
 }
 
 func Call_Main_WithArgEmpty_dollar_Dict(x_0_loop struct {
+
+	/*gopurs:record-v1:0:*/
 }) gopurs_runtime.Value {
 	var x_0 struct {
+
+		/*gopurs:record-v1:0:*/
 	} = x_0_loop
 	_ = x_0
 	return func() gopurs_runtime.Value {
@@ -496,6 +532,8 @@ func Call_Main_WithArgEmpty_dollar_Dict(x_0_loop struct {
 }
 
 func Call_Main_WithArgEmpty_dollar_Dict__3150569997(x_0_loop struct {
+
+	/*gopurs:record-v1:0:*/
 }) gopurs_runtime.Value {
 WithArgEmpty_dollar_Dict__3150569997:
 	for {
@@ -503,6 +541,8 @@ WithArgEmpty_dollar_Dict__3150569997:
 			continue WithArgEmpty_dollar_Dict__3150569997
 		}
 		var x_0 struct {
+
+			/*gopurs:record-v1:0:*/
 		} = x_0_loop
 		_ = x_0
 		return func() gopurs_runtime.Value {
@@ -516,10 +556,12 @@ WithArgEmpty_dollar_Dict__3150569997:
 func Call_Main_WithArgHasEmptySuper_dollar_Dict(x_0_loop struct {
 	WithArgEmpty0        gopurs_runtime.Value
 	withArgHasEmptySuper gopurs_runtime.Value
+	/*gopurs:record-v1:2:00570069007400680041007200670045006d0070007400790030,00770069007400680041007200670048006100730045006d00700074007900530075007000650072*/
 }) *Constructor_Main_WithArgHasEmptySuper[gopurs_runtime.Value] {
 	var x_0 struct {
 		WithArgEmpty0        gopurs_runtime.Value
 		withArgHasEmptySuper gopurs_runtime.Value
+		/*gopurs:record-v1:2:00570069007400680041007200670045006d0070007400790030,00770069007400680041007200670048006100730045006d00700074007900530075007000650072*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_WithArgHasEmptySuper[gopurs_runtime.Value]](func() gopurs_runtime.Value {
@@ -532,6 +574,7 @@ func Call_Main_WithArgHasEmptySuper_dollar_Dict(x_0_loop struct {
 func Call_Main_WithArgHasEmptySuper_dollar_Dict__2442956343(x_0_loop struct {
 	WithArgEmpty0        gopurs_runtime.Value
 	withArgHasEmptySuper uint32
+	/*gopurs:record-v1:2:00570069007400680041007200670045006d0070007400790030,00770069007400680041007200670048006100730045006d00700074007900530075007000650072*/
 }) *Constructor_Main_WithArgHasEmptySuper[uint32] {
 WithArgHasEmptySuper_dollar_Dict__2442956343:
 	for {
@@ -541,6 +584,7 @@ WithArgHasEmptySuper_dollar_Dict__2442956343:
 		var x_0 struct {
 			WithArgEmpty0        gopurs_runtime.Value
 			withArgHasEmptySuper uint32
+			/*gopurs:record-v1:2:00570069007400680041007200670045006d0070007400790030,00770069007400680041007200670048006100730045006d00700074007900530075007000650072*/
 		} = x_0_loop
 		_ = x_0
 		return gopurs_runtime.CoerceToStruct[Constructor_Main_WithArgHasEmptySuper[uint32]](func() gopurs_runtime.Value {
@@ -552,8 +596,12 @@ WithArgHasEmptySuper_dollar_Dict__2442956343:
 }
 
 func Call_Main_EmptyClass_dollar_Dict(x_0_loop struct {
+
+	/*gopurs:record-v1:0:*/
 }) gopurs_runtime.Value {
 	var x_0 struct {
+
+		/*gopurs:record-v1:0:*/
 	} = x_0_loop
 	_ = x_0
 	return func() gopurs_runtime.Value {
@@ -566,10 +614,12 @@ func Call_Main_EmptyClass_dollar_Dict(x_0_loop struct {
 func Call_Main_HasEmptySuper_dollar_Dict(x_0_loop struct {
 	EmptyClass0   gopurs_runtime.Value
 	hasEmptySuper uint32
+	/*gopurs:record-v1:2:0045006d0070007400790043006c0061007300730030,0068006100730045006d00700074007900530075007000650072*/
 }) *Constructor_Main_HasEmptySuper {
 	var x_0 struct {
 		EmptyClass0   gopurs_runtime.Value
 		hasEmptySuper uint32
+		/*gopurs:record-v1:2:0045006d0070007400790043006c0061007300730030,0068006100730045006d00700074007900530075007000650072*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_HasEmptySuper](func() gopurs_runtime.Value {
@@ -581,9 +631,11 @@ func Call_Main_HasEmptySuper_dollar_Dict(x_0_loop struct {
 
 func Call_Main_HasNonEmptySuper_dollar_Dict(x_0_loop struct {
 	HasEmptySuper0 gopurs_runtime.Value
+	/*gopurs:record-v1:1:0048006100730045006d007000740079005300750070006500720030*/
 }) *Constructor_Main_HasNonEmptySuper {
 	var x_0 struct {
 		HasEmptySuper0 gopurs_runtime.Value
+		/*gopurs:record-v1:1:0048006100730045006d007000740079005300750070006500720030*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_HasNonEmptySuper](func() gopurs_runtime.Value {
@@ -595,9 +647,11 @@ func Call_Main_HasNonEmptySuper_dollar_Dict(x_0_loop struct {
 
 func Call_Main_AliasEmptyClass_dollar_Dict(x_0_loop struct {
 	EmptyClass0 gopurs_runtime.Value
+	/*gopurs:record-v1:1:0045006d0070007400790043006c0061007300730030*/
 }) *Constructor_Main_AliasEmptyClass {
 	var x_0 struct {
 		EmptyClass0 gopurs_runtime.Value
+		/*gopurs:record-v1:1:0045006d0070007400790043006c0061007300730030*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_AliasEmptyClass](func() gopurs_runtime.Value {
@@ -617,7 +671,7 @@ func Call_Main_hasNonEmptySuperInst(dictHasEmptySuper_0_loop gopurs_runtime.Valu
 	var dictHasEmptySuper_0 gopurs_runtime.Value = dictHasEmptySuper_0_loop
 	_ = dictHasEmptySuper_0
 	return gopurs_runtime.Value{Type: 9, IntVal: 3506164383, UnsafePtr: unsafe.Pointer((&Constructor_Main_HasNonEmptySuper{1, gopurs_runtime.Func(func(_dollar___unused_1 gopurs_runtime.Value) gopurs_runtime.Value {
-		return gopurs_runtime.Value{Type: 9, IntVal: 2786347248, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Main_HasEmptySuper](dictHasEmptySuper_0))}
+		return dictHasEmptySuper_0
 	})}))}
 }
 

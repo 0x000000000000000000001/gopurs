@@ -27,12 +27,14 @@ func Get_Main_TypeEquals_dollar_Dict() gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 2698051417, UnsafePtr: unsafe.Pointer(Call_Main_TypeEquals_dollar_Dict(func() struct {
 				coerce     gopurs_runtime.Value
 				coerceBack gopurs_runtime.Value
+				/*gopurs:record-v1:2:0063006f0065007200630065,0063006f0065007200630065004200610063006b*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					coerce     gopurs_runtime.Value
 					coerceBack gopurs_runtime.Value
+					/*gopurs:record-v1:2:0063006f0065007200630065,0063006f0065007200630065004200610063006b*/
 				}{}
 				clone.coerce = gopurs_runtime.RecordGet(orig, "coerce")
 				clone.coerceBack = gopurs_runtime.RecordGet(orig, "coerceBack")
@@ -52,11 +54,13 @@ func Get_Main_RecordNewtype() gopurs_runtime.Value {
 			return func() gopurs_runtime.Value {
 				orig := Call_Main_RecordNewtype(func() struct {
 					x string
+					/*gopurs:record-v1:1:0078*/
 				} {
 					orig := x_0_box
 					_ = orig
 					clone := struct {
 						x string
+						/*gopurs:record-v1:1:0078*/
 					}{}
 					clone.x = gopurs_runtime.RecordGet(orig, "x").StrVal()
 					return clone
@@ -78,12 +82,14 @@ func Get_Main_OldStyleNewtype_dollar_Dict() gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 847837002, UnsafePtr: unsafe.Pointer(Call_Main_OldStyleNewtype_dollar_Dict(func() struct {
 				unwrap gopurs_runtime.Value
 				wrap   gopurs_runtime.Value
+				/*gopurs:record-v1:2:0075006e0077007200610070,0077007200610070*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					unwrap gopurs_runtime.Value
 					wrap   gopurs_runtime.Value
+					/*gopurs:record-v1:2:0075006e0077007200610070,0077007200610070*/
 				}{}
 				clone.unwrap = gopurs_runtime.RecordGet(orig, "unwrap")
 				clone.wrap = gopurs_runtime.RecordGet(orig, "wrap")
@@ -176,6 +182,7 @@ func Get_Main_main() gopurs_runtime.Value {
 		cache_Main_main = gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(gopurs_runtime.RecordGet(gopurs_runtime.Apply(gopurs_runtime.RecordGet(Call_Main_newtypeRecordNewtype(Get_Main_refl()), "unwrap"), func() gopurs_runtime.Value {
 			orig := struct {
 				x string
+				/*gopurs:record-v1:1:0078*/
 			}{"Done"}
 			_ = orig
 			return gopurs_runtime.RecordDict1("x", gopurs_runtime.Str(orig.x))
@@ -190,6 +197,7 @@ type Constructor_Main_TypeEquals[T_a any, T_b any] struct {
 	V1 gopurs_runtime.Value
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f00540079007000650045007100750061006c0073
 func init() {
 	gopurs_runtime.StructGetters[2698051417] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_TypeEquals[gopurs_runtime.Value, gopurs_runtime.Value])(ptr)
@@ -211,6 +219,7 @@ type Constructor_Main_OldStyleNewtype[T_t any, T_a any] struct {
 	V1 gopurs_runtime.Value
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f004f006c0064005300740079006c0065004e006500770074007900700065
 func init() {
 	gopurs_runtime.StructGetters[847837002] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_OldStyleNewtype[gopurs_runtime.Value, gopurs_runtime.Value])(ptr)
@@ -235,10 +244,12 @@ func Call_Main_identity(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 func Call_Main_TypeEquals_dollar_Dict(x_0_loop struct {
 	coerce     gopurs_runtime.Value
 	coerceBack gopurs_runtime.Value
+	/*gopurs:record-v1:2:0063006f0065007200630065,0063006f0065007200630065004200610063006b*/
 }) *Constructor_Main_TypeEquals[gopurs_runtime.Value, gopurs_runtime.Value] {
 	var x_0 struct {
 		coerce     gopurs_runtime.Value
 		coerceBack gopurs_runtime.Value
+		/*gopurs:record-v1:2:0063006f0065007200630065,0063006f0065007200630065004200610063006b*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_TypeEquals[gopurs_runtime.Value, gopurs_runtime.Value]](func() gopurs_runtime.Value {
@@ -250,11 +261,14 @@ func Call_Main_TypeEquals_dollar_Dict(x_0_loop struct {
 
 func Call_Main_RecordNewtype(x_0_loop struct {
 	x string
+	/*gopurs:record-v1:1:0078*/
 }) struct {
 	x string
+	/*gopurs:record-v1:1:0078*/
 } {
 	var x_0 struct {
 		x string
+		/*gopurs:record-v1:1:0078*/
 	} = x_0_loop
 	_ = x_0
 	return x_0
@@ -263,10 +277,12 @@ func Call_Main_RecordNewtype(x_0_loop struct {
 func Call_Main_OldStyleNewtype_dollar_Dict(x_0_loop struct {
 	unwrap gopurs_runtime.Value
 	wrap   gopurs_runtime.Value
+	/*gopurs:record-v1:2:0075006e0077007200610070,0077007200610070*/
 }) *Constructor_Main_OldStyleNewtype[gopurs_runtime.Value, gopurs_runtime.Value] {
 	var x_0 struct {
 		unwrap gopurs_runtime.Value
 		wrap   gopurs_runtime.Value
+		/*gopurs:record-v1:2:0075006e0077007200610070,0077007200610070*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_OldStyleNewtype[gopurs_runtime.Value, gopurs_runtime.Value]](func() gopurs_runtime.Value {
@@ -305,15 +321,18 @@ func Call_Main_newtypeRecordNewtype(dictTypeEquals_0_loop gopurs_runtime.Value) 
 	_ = dictTypeEquals_0
 	return gopurs_runtime.Value{Type: 9, IntVal: 847837002, UnsafePtr: unsafe.Pointer(Rebox_Main_2718996007_2559642264((&Constructor_Main_OldStyleNewtype[struct {
 		x string
+		/*gopurs:record-v1:1:0078*/
 	}, gopurs_runtime.Value]{1, gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
 		return gopurs_runtime.Apply(gopurs_runtime.RecordGet(dictTypeEquals_0, "coerceBack"), func() gopurs_runtime.Value {
 			orig := func() struct {
 				x string
+				/*gopurs:record-v1:1:0078*/
 			} {
 				orig := v_1
 				_ = orig
 				clone := struct {
 					x string
+					/*gopurs:record-v1:1:0078*/
 				}{}
 				clone.x = gopurs_runtime.RecordGet(orig, "x").StrVal()
 				return clone
@@ -328,6 +347,7 @@ func Call_Main_newtypeRecordNewtype(dictTypeEquals_0_loop gopurs_runtime.Value) 
 
 func Rebox_Main_2718996007_2559642264(in *Constructor_Main_OldStyleNewtype[struct {
 	x string
+	/*gopurs:record-v1:1:0078*/
 }, gopurs_runtime.Value]) *Constructor_Main_OldStyleNewtype[gopurs_runtime.Value, gopurs_runtime.Value] {
 	if in == nil {
 		return nil

@@ -13,6 +13,7 @@ func Get_Main_typed() gopurs_runtime.Value {
 		cache_Main_typed = func() gopurs_runtime.Value {
 			orig := struct {
 				foo float64
+				/*gopurs:record-v1:1:0066006f006f*/
 			}{0.0}
 			_ = orig
 			return gopurs_runtime.RecordDict1("foo", gopurs_runtime.Float(orig.foo))
@@ -82,10 +83,11 @@ func Get_Main_test4() gopurs_runtime.Value {
 	once_Main_test4.Do(func() {
 		cache_Main_test4 = gopurs_runtime.Float(Call_Main_test2(func() gopurs_runtime.Value {
 			orig := struct {
-				_bang__at__hash_ float64
+				gopurs_field_33_64_35 float64
+				/*gopurs:record-v1:1:002100400023*/
 			}{1.0}
 			_ = orig
-			return gopurs_runtime.RecordDict1("!@#", gopurs_runtime.Float(orig._bang__at__hash_))
+			return gopurs_runtime.RecordDict1("!@#", gopurs_runtime.Float(orig.gopurs_field_33_64_35))
 		}()).FloatVal())
 	})
 	return cache_Main_test4
@@ -158,11 +160,13 @@ func Get_Main_apTest() gopurs_runtime.Value {
 			orig := func() struct {
 				bar float64
 				foo string
+				/*gopurs:record-v1:2:006200610072,0066006f006f*/
 			} {
 				orig := gopurs_runtime.Apply(Get_Main_go__append(), func() gopurs_runtime.Value {
 					orig := struct {
 						baz string
 						foo string
+						/*gopurs:record-v1:2:00620061007a,0066006f006f*/
 					}{"Baz", "Foo"}
 					_ = orig
 					return gopurs_runtime.RecordDict2("baz", "foo", gopurs_runtime.Str(orig.baz), gopurs_runtime.Str(orig.foo))
@@ -171,6 +175,7 @@ func Get_Main_apTest() gopurs_runtime.Value {
 				clone := struct {
 					bar float64
 					foo string
+					/*gopurs:record-v1:2:006200610072,0066006f006f*/
 				}{}
 				clone.bar = gopurs_runtime.RecordGet(orig, "bar").FloatVal()
 				clone.foo = gopurs_runtime.RecordGet(orig, "foo").StrVal()
@@ -204,11 +209,13 @@ func Call_Main_test(x_0_loop gopurs_runtime.Value) float64 {
 func Call_Main_go__append(o_0_loop gopurs_runtime.Value) struct {
 	bar float64
 	foo gopurs_runtime.Value
+	/*gopurs:record-v1:2:006200610072,0066006f006f*/
 } {
 	var o_0 gopurs_runtime.Value = o_0_loop
 	_ = o_0
 	return struct {
 		bar float64
 		foo gopurs_runtime.Value
+		/*gopurs:record-v1:2:006200610072,0066006f006f*/
 	}{1.0, gopurs_runtime.RecordGet(o_0, "foo")}
 }

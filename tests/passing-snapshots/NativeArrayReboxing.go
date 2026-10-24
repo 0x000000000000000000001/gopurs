@@ -209,7 +209,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				expected []string
 				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{func() []string {
-				arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((func() gopurs_runtime.Value {
+				arr := *(*[]gopurs_runtime.Value)(func() gopurs_runtime.Value {
 					arr_val_arrayMap6 := arrayIntrinsic_arg_5
 					_ = arr_val_arrayMap6
 					arr_go_arrayMap6 := (*[]gopurs_runtime.Value)(arr_val_arrayMap6.UnsafePtr)
@@ -220,7 +220,7 @@ func Get_Main_main() gopurs_runtime.Value {
 						res_go_arrayMap6[i_arrayMap6] = gopurs_runtime.Apply(arrayIntrinsic_arg_4, v_arrayMap6)
 					}
 					return gopurs_runtime.Array(res_go_arrayMap6)
-				}()).UnsafePtr))).UnsafePtr)
+				}().UnsafePtr)
 				unboxed := make([]string, len(arr))
 				for i, v := range arr {
 					unboxed[i] = v.StrVal()

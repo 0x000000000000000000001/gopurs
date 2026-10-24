@@ -128,6 +128,7 @@ func Get_Main_convert() gopurs_runtime.Value {
 					go__close bool
 					limit     int64
 					go__type  string
+					/*gopurs:record-v1:4:00610066007400650072,0063006c006f00730065,006c0069006d00690074,0074007900700065*/
 				} {
 					orig := options_0_box
 					_ = orig
@@ -136,6 +137,7 @@ func Get_Main_convert() gopurs_runtime.Value {
 						go__close bool
 						limit     int64
 						go__type  string
+						/*gopurs:record-v1:4:00610066007400650072,0063006c006f00730065,006c0069006d00690074,0074007900700065*/
 					}{}
 					clone.after = Rebox_Main_3094389156_742090555(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](gopurs_runtime.RecordGet(orig, "after")))
 					clone.go__close = (gopurs_runtime.RecordGet(orig, "close").IntVal) != (0)
@@ -164,6 +166,7 @@ func Get_Main_main() gopurs_runtime.Value {
 					go__close bool
 					limit     int64
 					go__type  string
+					/*gopurs:record-v1:4:00610066007400650072,0063006c006f00730065,006c0069006d00690074,0074007900700065*/
 				}{Rebox_Main_3094389156_742090555(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](func() gopurs_runtime.Value {
 					_v := struct {
 						V0 gopurs_runtime.Value
@@ -186,24 +189,30 @@ func Get_Main_main() gopurs_runtime.Value {
 				actual struct {
 					after *Constructor_Data_Maybe_Just[struct {
 						identifier string
+						/*gopurs:record-v1:1:006900640065006e007400690066006900650072*/
 					}]
 					go__close bool
 					limit     int64
 					go__type  string
+					/*gopurs:record-v1:4:00610066007400650072,0063006c006f00730065,006c0069006d00690074,0074007900700065*/
 				}
 				expected struct {
 					after *Constructor_Data_Maybe_Just[struct {
 						identifier string
+						/*gopurs:record-v1:1:006900640065006e007400690066006900650072*/
 					}]
 					go__close bool
 					limit     int64
 					go__type  string
+					/*gopurs:record-v1:4:00610066007400650072,0063006c006f00730065,006c0069006d00690074,0074007900700065*/
 				}
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Call_Main_convert(func() struct {
 				after     *Constructor_Data_Maybe_Just[string]
 				go__close bool
 				limit     int64
 				go__type  string
+				/*gopurs:record-v1:4:00610066007400650072,0063006c006f00730065,006c0069006d00690074,0074007900700065*/
 			} {
 				orig := __local_var_2_2
 				_ = orig
@@ -212,6 +221,7 @@ func Get_Main_main() gopurs_runtime.Value {
 					go__close bool
 					limit     int64
 					go__type  string
+					/*gopurs:record-v1:4:00610066007400650072,0063006c006f00730065,006c0069006d00690074,0074007900700065*/
 				}{}
 				clone.after = Rebox_Main_3094389156_742090555(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](gopurs_runtime.RecordGet(orig, "after")))
 				clone.go__close = (gopurs_runtime.RecordGet(orig, "close").IntVal) != (0)
@@ -221,18 +231,22 @@ func Get_Main_main() gopurs_runtime.Value {
 			}()), struct {
 				after *Constructor_Data_Maybe_Just[struct {
 					identifier string
+					/*gopurs:record-v1:1:006900640065006e007400690066006900650072*/
 				}]
 				go__close bool
 				limit     int64
 				go__type  string
+				/*gopurs:record-v1:4:00610066007400650072,0063006c006f00730065,006c0069006d00690074,0074007900700065*/
 			}{Rebox_Main_3094389156_3543310304(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](func() gopurs_runtime.Value {
 				_v := struct {
 					V0 struct {
 						identifier string
+						/*gopurs:record-v1:1:006900640065006e007400690066006900650072*/
 					}
 					V1 bool
 				}{struct {
 					identifier string
+					/*gopurs:record-v1:1:006900640065006e007400690066006900650072*/
 				}{"book-42"}, true}
 				if _v.V1 {
 					return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: func() gopurs_runtime.Value {
@@ -255,19 +269,23 @@ func Call_Main_convert(options_0_loop struct {
 	go__close bool
 	limit     int64
 	go__type  string
+	/*gopurs:record-v1:4:00610066007400650072,0063006c006f00730065,006c0069006d00690074,0074007900700065*/
 }) struct {
 	after *Constructor_Data_Maybe_Just[struct {
 		identifier string
+		/*gopurs:record-v1:1:006900640065006e007400690066006900650072*/
 	}]
 	go__close bool
 	limit     int64
 	go__type  string
+	/*gopurs:record-v1:4:00610066007400650072,0063006c006f00730065,006c0069006d00690074,0074007900700065*/
 } {
 	var options_0 struct {
 		after     *Constructor_Data_Maybe_Just[string]
 		go__close bool
 		limit     int64
 		go__type  string
+		/*gopurs:record-v1:4:00610066007400650072,0063006c006f00730065,006c0069006d00690074,0074007900700065*/
 	} = options_0_loop
 	_ = options_0
 	var __t1 *Constructor_Data_Maybe_Just[gopurs_runtime.Value]
@@ -279,13 +297,7 @@ func Call_Main_convert(options_0_loop struct {
 				_v := struct {
 					V0 gopurs_runtime.Value
 					V1 bool
-				}{func() gopurs_runtime.Value {
-					orig := struct {
-						identifier string
-					}{gopurs_runtime.Str((options_0.after).V0).StrVal()}
-					_ = orig
-					return gopurs_runtime.RecordDict1("identifier", gopurs_runtime.Str(orig.identifier))
-				}(), true}
+				}{gopurs_runtime.RecordDict1("identifier", gopurs_runtime.Str((options_0.after).V0)), true}
 				if _v.V1 {
 					return gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(&Constructor_Data_Maybe_Just[gopurs_runtime.Value]{Rc: 1, V0: _v.V0})}
 				}
@@ -312,10 +324,12 @@ end_branch_1:
 	return func() struct {
 		after *Constructor_Data_Maybe_Just[struct {
 			identifier string
+			/*gopurs:record-v1:1:006900640065006e007400690066006900650072*/
 		}]
 		go__close bool
 		limit     int64
 		go__type  string
+		/*gopurs:record-v1:4:00610066007400650072,0063006c006f00730065,006c0069006d00690074,0074007900700065*/
 	} {
 		originalRecord := options_0
 		_ = originalRecord
@@ -323,10 +337,12 @@ end_branch_1:
 		var clone struct {
 			after *Constructor_Data_Maybe_Just[struct {
 				identifier string
+				/*gopurs:record-v1:1:006900640065006e007400690066006900650072*/
 			}]
 			go__close bool
 			limit     int64
 			go__type  string
+			/*gopurs:record-v1:4:00610066007400650072,0063006c006f00730065,006c0069006d00690074,0074007900700065*/
 		}
 		clone.go__close = originalRecord.go__close
 		clone.limit = originalRecord.limit
@@ -367,10 +383,12 @@ func Rebox_Main_1386611502_1636311157(in *Constructor_Data_Show_Show[gopurs_runt
 func Rebox_Main_1386611502_2664792997(in *Constructor_Data_Show_Show[gopurs_runtime.Value]) *Constructor_Data_Show_Show[struct {
 	after *Constructor_Data_Maybe_Just[struct {
 		identifier string
+		/*gopurs:record-v1:1:006900640065006e007400690066006900650072*/
 	}]
 	go__close bool
 	limit     int64
 	go__type  string
+	/*gopurs:record-v1:4:00610066007400650072,0063006c006f00730065,006c0069006d00690074,0074007900700065*/
 }] {
 	if in == nil {
 		return nil
@@ -378,10 +396,12 @@ func Rebox_Main_1386611502_2664792997(in *Constructor_Data_Show_Show[gopurs_runt
 	return (*Constructor_Data_Show_Show[struct {
 		after *Constructor_Data_Maybe_Just[struct {
 			identifier string
+			/*gopurs:record-v1:1:006900640065006e007400690066006900650072*/
 		}]
 		go__close bool
 		limit     int64
 		go__type  string
+		/*gopurs:record-v1:4:00610066007400650072,0063006c006f00730065,006c0069006d00690074,0074007900700065*/
 	}])(unsafe.Pointer(in))
 }
 
@@ -409,10 +429,12 @@ func Rebox_Main_1636311157_1386611502(in *Constructor_Data_Show_Show[int64]) *Co
 func Rebox_Main_2664792997_1386611502(in *Constructor_Data_Show_Show[struct {
 	after *Constructor_Data_Maybe_Just[struct {
 		identifier string
+		/*gopurs:record-v1:1:006900640065006e007400690066006900650072*/
 	}]
 	go__close bool
 	limit     int64
 	go__type  string
+	/*gopurs:record-v1:4:00610066007400650072,0063006c006f00730065,006c0069006d00690074,0074007900700065*/
 }]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
@@ -437,10 +459,12 @@ func Rebox_Main_2737952170_3790796878(in *Constructor_Data_Eq_Eq[bool]) *Constru
 func Rebox_Main_3039522309_3790796878(in *Constructor_Data_Eq_Eq[struct {
 	after *Constructor_Data_Maybe_Just[struct {
 		identifier string
+		/*gopurs:record-v1:1:006900640065006e007400690066006900650072*/
 	}]
 	go__close bool
 	limit     int64
 	go__type  string
+	/*gopurs:record-v1:4:00610066007400650072,0063006c006f00730065,006c0069006d00690074,0074007900700065*/
 }]) *Constructor_Data_Eq_Eq[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
@@ -450,20 +474,24 @@ func Rebox_Main_3039522309_3790796878(in *Constructor_Data_Eq_Eq[struct {
 
 func Rebox_Main_3094389156_3543310304(in *Constructor_Data_Maybe_Just[gopurs_runtime.Value]) *Constructor_Data_Maybe_Just[struct {
 	identifier string
+	/*gopurs:record-v1:1:006900640065006e007400690066006900650072*/
 }] {
 	if in == nil {
 		return nil
 	}
 	out := &Constructor_Data_Maybe_Just[struct {
 		identifier string
+		/*gopurs:record-v1:1:006900640065006e007400690066006900650072*/
 	}]{}
 	out.V0 = func() struct {
 		identifier string
+		/*gopurs:record-v1:1:006900640065006e007400690066006900650072*/
 	} {
 		orig := in.V0
 		_ = orig
 		clone := struct {
 			identifier string
+			/*gopurs:record-v1:1:006900640065006e007400690066006900650072*/
 		}{}
 		clone.identifier = gopurs_runtime.RecordGet(orig, "identifier").StrVal()
 		return clone
@@ -482,6 +510,7 @@ func Rebox_Main_3094389156_742090555(in *Constructor_Data_Maybe_Just[gopurs_runt
 
 func Rebox_Main_3543310304_3094389156(in *Constructor_Data_Maybe_Just[struct {
 	identifier string
+	/*gopurs:record-v1:1:006900640065006e007400690066006900650072*/
 }]) *Constructor_Data_Maybe_Just[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
@@ -519,10 +548,12 @@ func Rebox_Main_3790796878_2737952170(in *Constructor_Data_Eq_Eq[gopurs_runtime.
 func Rebox_Main_3790796878_3039522309(in *Constructor_Data_Eq_Eq[gopurs_runtime.Value]) *Constructor_Data_Eq_Eq[struct {
 	after *Constructor_Data_Maybe_Just[struct {
 		identifier string
+		/*gopurs:record-v1:1:006900640065006e007400690066006900650072*/
 	}]
 	go__close bool
 	limit     int64
 	go__type  string
+	/*gopurs:record-v1:4:00610066007400650072,0063006c006f00730065,006c0069006d00690074,0074007900700065*/
 }] {
 	if in == nil {
 		return nil
@@ -530,10 +561,12 @@ func Rebox_Main_3790796878_3039522309(in *Constructor_Data_Eq_Eq[gopurs_runtime.
 	return (*Constructor_Data_Eq_Eq[struct {
 		after *Constructor_Data_Maybe_Just[struct {
 			identifier string
+			/*gopurs:record-v1:1:006900640065006e007400690066006900650072*/
 		}]
 		go__close bool
 		limit     int64
 		go__type  string
+		/*gopurs:record-v1:4:00610066007400650072,0063006c006f00730065,006c0069006d00690074,0074007900700065*/
 	}])(unsafe.Pointer(in))
 }
 

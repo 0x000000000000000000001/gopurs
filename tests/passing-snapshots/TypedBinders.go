@@ -53,12 +53,14 @@ func Get_Main_MonadState_dollar_Dict() gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 2980279296, UnsafePtr: unsafe.Pointer(Call_Main_MonadState_dollar_Dict(func() struct {
 				get gopurs_runtime.Value
 				put gopurs_runtime.Value
+				/*gopurs:record-v1:2:006700650074,007000750074*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					get gopurs_runtime.Value
 					put gopurs_runtime.Value
+					/*gopurs:record-v1:2:006700650074,007000750074*/
 				}{}
 				clone.get = gopurs_runtime.RecordGet(orig, "get")
 				clone.put = gopurs_runtime.RecordGet(orig, "put")
@@ -199,9 +201,9 @@ var once_Main_monadState sync.Once
 func Get_Main_monadState() gopurs_runtime.Value {
 	once_Main_monadState.Do(func() {
 		cache_Main_monadState = gopurs_runtime.Value{Type: 9, IntVal: 778916621, UnsafePtr: unsafe.Pointer((&Constructor_Control_Monad_Monad[gopurs_runtime.Value]{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 1459134221, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](Get_Main_applicativeState()))}
+			return Get_Main_applicativeState()
 		}), gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 4032919565, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Bind_Bind[gopurs_runtime.Value]](Get_Main_bindState()))}
+			return Get_Main_bindState()
 		})}))}
 	})
 	return cache_Main_monadState
@@ -223,7 +225,7 @@ var once_Main_bindState sync.Once
 func Get_Main_bindState() gopurs_runtime.Value {
 	once_Main_bindState.Do(func() {
 		cache_Main_bindState = gopurs_runtime.Value{Type: 9, IntVal: 4032919565, UnsafePtr: unsafe.Pointer((&Constructor_Control_Bind_Bind[gopurs_runtime.Value]{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 3032403085, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply[gopurs_runtime.Value]](Get_Main_applyState()))}
+			return Get_Main_applyState()
 		}), gopurs_runtime.Func2(func(f_0 gopurs_runtime.Value, g_1 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(s_2 gopurs_runtime.Value) gopurs_runtime.Value {
 				// TAST (Let): v_3_0 shape=App(Var) bindingType=(ADT ["Main","Tuple"] [(TypeVar s$scope38), (TypeVar a$scope42)])
@@ -242,7 +244,7 @@ var once_Main_applyState sync.Once
 func Get_Main_applyState() gopurs_runtime.Value {
 	once_Main_applyState.Do(func() {
 		cache_Main_applyState = gopurs_runtime.Value{Type: 9, IntVal: 3032403085, UnsafePtr: unsafe.Pointer((&Constructor_Control_Apply_Apply[gopurs_runtime.Value]{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 929368378, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor[gopurs_runtime.Value]](Get_Main_functorState()))}
+			return Get_Main_functorState()
 		}), Call_Control_Monad_ap(gopurs_runtime.CoerceToStruct[Constructor_Control_Monad_Monad[gopurs_runtime.Value]](Get_Main_monadState()))}))}
 	})
 	return cache_Main_applyState
@@ -254,7 +256,7 @@ var once_Main_applicativeState sync.Once
 func Get_Main_applicativeState() gopurs_runtime.Value {
 	once_Main_applicativeState.Do(func() {
 		cache_Main_applicativeState = gopurs_runtime.Value{Type: 9, IntVal: 1459134221, UnsafePtr: unsafe.Pointer((&Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 3032403085, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply[gopurs_runtime.Value]](Get_Main_applyState()))}
+			return Get_Main_applyState()
 		}), gopurs_runtime.Func(func(a_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Func(func(s_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer((&Constructor_Main_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{1, s_1, a_0}))}
@@ -302,7 +304,7 @@ func Get_Main_test() gopurs_runtime.Value {
 						__local_var_6_3 := (v_5_2).V1
 						_ = __local_var_6_3
 						return gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer(Call_Main_runState((v_5_2).V0, gopurs_runtime.Func(func(s_7 gopurs_runtime.Value) gopurs_runtime.Value {
-							return gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer((&Constructor_Main_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{1, s_7, gopurs_runtime.Str(__local_var_6_3.StrVal())}))}
+							return gopurs_runtime.Value{Type: 9, IntVal: 3562159846, UnsafePtr: unsafe.Pointer((&Constructor_Main_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{1, s_7, __local_var_6_3}))}
 						})))}
 					})))}
 				})))}
@@ -339,6 +341,7 @@ type Constructor_Main_MonadState[T_s any, T_m any] struct {
 	V1 gopurs_runtime.Value
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f004d006f006e0061006400530074006100740065
 func init() {
 	gopurs_runtime.StructGetters[2980279296] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_MonadState[gopurs_runtime.Value, gopurs_runtime.Value])(ptr)
@@ -371,10 +374,12 @@ Tuple__3273409525:
 func Call_Main_MonadState_dollar_Dict(x_0_loop struct {
 	get gopurs_runtime.Value
 	put gopurs_runtime.Value
+	/*gopurs:record-v1:2:006700650074,007000750074*/
 }) *Constructor_Main_MonadState[gopurs_runtime.Value, gopurs_runtime.Value] {
 	var x_0 struct {
 		get gopurs_runtime.Value
 		put gopurs_runtime.Value
+		/*gopurs:record-v1:2:006700650074,007000750074*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_MonadState[gopurs_runtime.Value, gopurs_runtime.Value]](func() gopurs_runtime.Value {

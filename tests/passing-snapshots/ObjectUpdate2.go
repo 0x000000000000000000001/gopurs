@@ -13,6 +13,7 @@ func Get_Main_x() gopurs_runtime.Value {
 		cache_Main_x = func() gopurs_runtime.Value {
 			orig := struct {
 				baz string
+				/*gopurs:record-v1:1:00620061007a*/
 			}{"baz"}
 			_ = orig
 			return gopurs_runtime.RecordDict1("baz", gopurs_runtime.Str(orig.baz))
@@ -63,18 +64,22 @@ func Get_Main_test() gopurs_runtime.Value {
 		cache_Main_test = func() gopurs_runtime.Value {
 			orig := func() struct {
 				baz string
+				/*gopurs:record-v1:1:00620061007a*/
 			} {
 				orig := func() gopurs_runtime.Value {
 					orig := func() struct {
 						baz string
+						/*gopurs:record-v1:1:00620061007a*/
 					} {
 						clone := func() struct {
 							baz string
+							/*gopurs:record-v1:1:00620061007a*/
 						} {
 							orig := Get_Main_x()
 							_ = orig
 							clone := struct {
 								baz string
+								/*gopurs:record-v1:1:00620061007a*/
 							}{}
 							clone.baz = gopurs_runtime.RecordGet(orig, "baz").StrVal()
 							return clone
@@ -88,6 +93,7 @@ func Get_Main_test() gopurs_runtime.Value {
 				_ = orig
 				clone := struct {
 					baz string
+					/*gopurs:record-v1:1:00620061007a*/
 				}{}
 				clone.baz = gopurs_runtime.RecordGet(orig, "baz").StrVal()
 				return clone

@@ -233,7 +233,7 @@ var once_Main_singletonArray sync.Once
 func Get_Main_singletonArray() gopurs_runtime.Value {
 	once_Main_singletonArray.Do(func() {
 		cache_Main_singletonArray = gopurs_runtime.Value{Type: 9, IntVal: 3773262993, UnsafePtr: unsafe.Pointer(Rebox_Main_2655323845_2269342371((&Constructor_Main_Singleton[gopurs_runtime.Value, []gopurs_runtime.Value]{1, gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.Array([]gopurs_runtime.Value{x_0})).UnsafePtr)))
+			return gopurs_runtime.Array([]gopurs_runtime.Value{x_0})
 		})})))}
 	})
 	return cache_Main_singletonArray
@@ -690,15 +690,15 @@ func Call_Main_monadWriterTuple(dictMonoid_0_loop gopurs_runtime.Value) gopurs_r
 	return gopurs_runtime.Value{Type: 9, IntVal: 2544837208, UnsafePtr: unsafe.Pointer(Rebox_Main_2915227655_72788106((&Constructor_Main_MonadWriter[gopurs_runtime.Value, *Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]]{1, gopurs_runtime.Func(func(_dollar___unused_2 gopurs_runtime.Value) gopurs_runtime.Value {
 		return gopurs_runtime.Value{Type: 9, IntVal: 778916621, UnsafePtr: unsafe.Pointer(Rebox_Main_2157788756_2568689657(monadTuple_1_0))}
 	}), gopurs_runtime.Func(func(_dollar___unused_2 gopurs_runtime.Value) gopurs_runtime.Value {
-		return gopurs_runtime.Value{Type: 9, IntVal: 1722653594, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Monoid_Monoid[gopurs_runtime.Value]](dictMonoid_0))}
+		return dictMonoid_0
 	}), gopurs_runtime.Func(func(w_2 gopurs_runtime.Value) gopurs_runtime.Value {
-		return gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]](func() gopurs_runtime.Value {
+		return func() gopurs_runtime.Value {
 			_v := struct {
 				V0 gopurs_runtime.Value
 				V1 gopurs_runtime.Value
 			}{w_2, Get_Data_Unit_unit()}
 			return gopurs_runtime.Value{Type: 9, IntVal: 2339352186, UnsafePtr: unsafe.Pointer(&Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V0, V1: _v.V1})}
-		}()))}
+		}()
 	})})))}
 }
 

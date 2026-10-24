@@ -825,23 +825,11 @@ func Get_Main_main() r_.Value {
 			}())), func() r_.Value {
 				_v := struct {
 					V0 r_.Value
-					V1 struct {
-						P_a int64
-						P_b int64
-						P_c int64
-					}
+					V1 r_.Value
 					V2 bool
-				}{r_.Value{}, struct {
-					P_a int64
-					P_b int64
-					P_c int64
-				}{int64(1), int64(2), int64(3)}, true}
+				}{r_.Value{}, r_.RecordDict3("a", "b", "c", r_.Int(int64(1)), r_.Int(int64(2)), r_.Int(int64(3))), true}
 				if _v.V2 {
-					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: func() r_.Value {
-						orig := _v.V1
-						_ = orig
-						return r_.RecordDict3("a", "b", "c", r_.Int(orig.P_a), r_.Int(orig.P_b), r_.Int(orig.P_c))
-					}()})}
+					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
 				}
 				return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
 			}()}), r_.Value{})
@@ -900,23 +888,11 @@ func Get_Main_main() r_.Value {
 			}())), func() r_.Value {
 				_v := struct {
 					V0 r_.Value
-					V1 struct {
-						P_a int64
-						P_b int64
-						P_c int64
-					}
+					V1 r_.Value
 					V2 bool
-				}{r_.Value{Type: 9, IntVal: 1896025177, UnsafePtr: unsafe.Pointer((&Constructor_Data_Argonaut_Decode_Error_AtKey{1, "b", r_.Value{Type: 9, IntVal: 2887704423, UnsafePtr: unsafe.Pointer((&Constructor_Data_Argonaut_Decode_Error_TypeMismatch{1, "negative probe"}))}}))}, struct {
-					P_a int64
-					P_b int64
-					P_c int64
-				}{}, false}
+				}{r_.Value{Type: 9, IntVal: 1896025177, UnsafePtr: unsafe.Pointer((&Constructor_Data_Argonaut_Decode_Error_AtKey{1, "b", r_.Value{Type: 9, IntVal: 2887704423, UnsafePtr: unsafe.Pointer((&Constructor_Data_Argonaut_Decode_Error_TypeMismatch{1, "negative probe"}))}}))}, r_.Value{}, false}
 				if _v.V2 {
-					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: func() r_.Value {
-						orig := _v.V1
-						_ = orig
-						return r_.RecordDict3("a", "b", "c", r_.Int(orig.P_a), r_.Int(orig.P_b), r_.Int(orig.P_c))
-					}()})}
+					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
 				}
 				return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
 			}()}), r_.Value{})
@@ -969,23 +945,11 @@ func Get_Main_main() r_.Value {
 			}())), func() r_.Value {
 				_v := struct {
 					V0 r_.Value
-					V1 struct {
-						P_a int64
-						P_b int64
-						P_c int64
-					}
+					V1 r_.Value
 					V2 bool
-				}{r_.Value{Type: 9, IntVal: 1896025177, UnsafePtr: unsafe.Pointer((&Constructor_Data_Argonaut_Decode_Error_AtKey{1, "b", r_.Value{Type: 9, IntVal: 3199441748, UnsafePtr: unsafe.Pointer(nil)}}))}, struct {
-					P_a int64
-					P_b int64
-					P_c int64
-				}{}, false}
+				}{r_.Value{Type: 9, IntVal: 1896025177, UnsafePtr: unsafe.Pointer((&Constructor_Data_Argonaut_Decode_Error_AtKey{1, "b", r_.Value{Type: 9, IntVal: 3199441748, UnsafePtr: unsafe.Pointer(nil)}}))}, r_.Value{}, false}
 				if _v.V2 {
-					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: func() r_.Value {
-						orig := _v.V1
-						_ = orig
-						return r_.RecordDict3("a", "b", "c", r_.Int(orig.P_a), r_.Int(orig.P_b), r_.Int(orig.P_c))
-					}()})}
+					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
 				}
 				return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
 			}()}), r_.Value{})
@@ -1023,21 +987,11 @@ func Get_Main_main() r_.Value {
 			}())), func() r_.Value {
 				_v := struct {
 					V0 r_.Value
-					V1 struct {
-						P_a int64
-						P_b *Constructor_Data_Maybe_Just[int64]
-					}
+					V1 r_.Value
 					V2 bool
-				}{r_.Value{}, struct {
-					P_a int64
-					P_b *Constructor_Data_Maybe_Just[int64]
-				}{int64(7), Rebox_Main_3094389156_1170268447(r_.CoerceToStruct[Constructor_Data_Maybe_Just[r_.Value]](r_.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer((*Constructor_Data_Maybe_Just[r_.Value])(nil))}))}, true}
+				}{r_.Value{}, r_.RecordDict2("a", "b", r_.Int(int64(7)), r_.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer((*Constructor_Data_Maybe_Just[r_.Value])(nil))}), true}
 				if _v.V2 {
-					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: func() r_.Value {
-						orig := _v.V1
-						_ = orig
-						return r_.RecordDict2("a", "b", r_.Int(orig.P_a), r_.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(Rebox_Main_1170268447_3094389156(orig.P_b))})
-					}()})}
+					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
 				}
 				return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
 			}()}), r_.Value{})
@@ -1067,21 +1021,11 @@ func Get_Main_main() r_.Value {
 			}())), func() r_.Value {
 				_v := struct {
 					V0 r_.Value
-					V1 struct {
-						P_a int64
-						P_b *Constructor_Data_Maybe_Just[int64]
-					}
+					V1 r_.Value
 					V2 bool
-				}{r_.Value{}, struct {
-					P_a int64
-					P_b *Constructor_Data_Maybe_Just[int64]
-				}{int64(7), Rebox_Main_3094389156_1170268447(r_.CoerceToStruct[Constructor_Data_Maybe_Just[r_.Value]](r_.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer((*Constructor_Data_Maybe_Just[r_.Value])(nil))}))}, true}
+				}{r_.Value{}, r_.RecordDict2("a", "b", r_.Int(int64(7)), r_.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer((*Constructor_Data_Maybe_Just[r_.Value])(nil))}), true}
 				if _v.V2 {
-					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: func() r_.Value {
-						orig := _v.V1
-						_ = orig
-						return r_.RecordDict2("a", "b", r_.Int(orig.P_a), r_.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(Rebox_Main_1170268447_3094389156(orig.P_b))})
-					}()})}
+					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
 				}
 				return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
 			}()}), r_.Value{})
@@ -1112,27 +1056,11 @@ func Get_Main_main() r_.Value {
 			}())), func() r_.Value {
 				_v := struct {
 					V0 r_.Value
-					V1 struct {
-						P_outer struct {
-							P_required int64
-						}
-					}
+					V1 r_.Value
 					V2 bool
-				}{r_.Value{Type: 9, IntVal: 1896025177, UnsafePtr: unsafe.Pointer((&Constructor_Data_Argonaut_Decode_Error_AtKey{1, "outer", r_.Value{Type: 9, IntVal: 1896025177, UnsafePtr: unsafe.Pointer((&Constructor_Data_Argonaut_Decode_Error_AtKey{1, "required", r_.Value{Type: 9, IntVal: 3199441748, UnsafePtr: unsafe.Pointer(nil)}}))}}))}, struct {
-					P_outer struct {
-						P_required int64
-					}
-				}{}, false}
+				}{r_.Value{Type: 9, IntVal: 1896025177, UnsafePtr: unsafe.Pointer((&Constructor_Data_Argonaut_Decode_Error_AtKey{1, "outer", r_.Value{Type: 9, IntVal: 1896025177, UnsafePtr: unsafe.Pointer((&Constructor_Data_Argonaut_Decode_Error_AtKey{1, "required", r_.Value{Type: 9, IntVal: 3199441748, UnsafePtr: unsafe.Pointer(nil)}}))}}))}, r_.Value{}, false}
 				if _v.V2 {
-					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: func() r_.Value {
-						orig := _v.V1
-						_ = orig
-						return r_.RecordDict1("outer", func() r_.Value {
-							orig := orig.P_outer
-							_ = orig
-							return r_.RecordDict1("required", r_.Int(orig.P_required))
-						}())
-					}()})}
+					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
 				}
 				return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
 			}()}), r_.Value{})
@@ -1178,21 +1106,11 @@ func Get_Main_main() r_.Value {
 			}{__local_var_16_20, func() r_.Value {
 				_v := struct {
 					V0 r_.Value
-					V1 struct {
-						P_head int64
-						P_tail int64
-					}
+					V1 r_.Value
 					V2 bool
-				}{r_.Value{}, struct {
-					P_head int64
-					P_tail int64
-				}{int64(1), int64(41)}, true}
+				}{r_.Value{}, r_.RecordDict2("head", "tail", r_.Int(int64(1)), r_.Int(int64(41))), true}
 				if _v.V2 {
-					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: func() r_.Value {
-						orig := _v.V1
-						_ = orig
-						return r_.RecordDict2("head", "tail", r_.Int(orig.P_head), r_.Int(orig.P_tail))
-					}()})}
+					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
 				}
 				return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
 			}()}), r_.Value{})
@@ -1205,21 +1123,11 @@ func Get_Main_main() r_.Value {
 			}{__local_var_17_22, func() r_.Value {
 				_v := struct {
 					V0 r_.Value
-					V1 struct {
-						P_head int64
-						P_tail int64
-					}
+					V1 r_.Value
 					V2 bool
-				}{r_.Value{}, struct {
-					P_head int64
-					P_tail int64
-				}{int64(2), int64(41)}, true}
+				}{r_.Value{}, r_.RecordDict2("head", "tail", r_.Int(int64(2)), r_.Int(int64(41))), true}
 				if _v.V2 {
-					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: func() r_.Value {
-						orig := _v.V1
-						_ = orig
-						return r_.RecordDict2("head", "tail", r_.Int(orig.P_head), r_.Int(orig.P_tail))
-					}()})}
+					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
 				}
 				return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
 			}()}), r_.Value{})
@@ -1303,21 +1211,11 @@ func Get_Main_main() r_.Value {
 			}(), func() r_.Value {
 				_v := struct {
 					V0 r_.Value
-					V1 struct {
-						P_head int64
-						P_tail int64
-					}
+					V1 r_.Value
 					V2 bool
-				}{r_.Value{Type: 9, IntVal: 1896025177, UnsafePtr: unsafe.Pointer((&Constructor_Data_Argonaut_Decode_Error_AtKey{1, "head", r_.Value{Type: 9, IntVal: 3199441748, UnsafePtr: unsafe.Pointer(nil)}}))}, struct {
-					P_head int64
-					P_tail int64
-				}{}, false}
+				}{r_.Value{Type: 9, IntVal: 1896025177, UnsafePtr: unsafe.Pointer((&Constructor_Data_Argonaut_Decode_Error_AtKey{1, "head", r_.Value{Type: 9, IntVal: 3199441748, UnsafePtr: unsafe.Pointer(nil)}}))}, r_.Value{}, false}
 				if _v.V2 {
-					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: func() r_.Value {
-						orig := _v.V1
-						_ = orig
-						return r_.RecordDict2("head", "tail", r_.Int(orig.P_head), r_.Int(orig.P_tail))
-					}()})}
+					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
 				}
 				return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
 			}()}), r_.Value{})
@@ -1354,28 +1252,14 @@ func Call_Main_observe(value_0_loop int64) int64 {
 	return r_.Apply(Get_Effect_Unsafe_unsafePerformEffect(), r_.Func(func(_ r_.Value) r_.Value {
 		// TAST (Let): __local_var_1_0 shape=App(Var) bindingType=Any
 		__local_var_1_0 := r_.Apply2(Get_Effect_Ref_modify_(), r_.Func(func(seen_1 r_.Value) r_.Value {
-			return func() r_.Value {
-				arr := func() []int64 {
-					arr := *(*[]r_.Value)(r_.Array((*(*[]r_.Value)((r_.Apply2(Get_Data_Semigroup_concatArray(), seen_1, func() r_.Value {
-						arr := []int64{value_0}
-						boxed := make([]r_.Value, len(arr))
-						for i, v := range arr {
-							boxed[i] = r_.Int(v)
-						}
-						return r_.Array(boxed)
-					}())).UnsafePtr))).UnsafePtr)
-					unboxed := make([]int64, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.IntVal
-					}
-					return unboxed
-				}()
+			return r_.Apply2(Get_Data_Semigroup_concatArray(), seen_1, func() r_.Value {
+				arr := []int64{value_0}
 				boxed := make([]r_.Value, len(arr))
 				for i, v := range arr {
 					boxed[i] = r_.Int(v)
 				}
 				return r_.Array(boxed)
-			}()
+			}())
 		}), Get_Main_calls())
 		_ = __local_var_1_0
 		__local_var_2_1 := r_.Apply(__local_var_1_0, r_.Value{})
@@ -1502,15 +1386,6 @@ func Rebox_Main_1053099733_3790796878(in *Constructor_Data_Eq_Eq[int64]) *Constr
 	return (*Constructor_Data_Eq_Eq[r_.Value])(unsafe.Pointer(in))
 }
 
-func Rebox_Main_1170268447_3094389156(in *Constructor_Data_Maybe_Just[int64]) *Constructor_Data_Maybe_Just[r_.Value] {
-	if in == nil {
-		return nil
-	}
-	out := &Constructor_Data_Maybe_Just[r_.Value]{}
-	out.V0 = r_.Int(in.V0)
-	return out
-}
-
 func Rebox_Main_1277236813_1405234230(in *Constructor_Data_Argonaut_Decode_Class_DecodeJson[r_.Value]) *Constructor_Data_Argonaut_Decode_Class_DecodeJson[int64] {
 	if in == nil {
 		return nil
@@ -1630,15 +1505,6 @@ func Rebox_Main_2815936861_1386611502(in *Constructor_Data_Show_Show[struct {
 		return nil
 	}
 	return (*Constructor_Data_Show_Show[r_.Value])(unsafe.Pointer(in))
-}
-
-func Rebox_Main_3094389156_1170268447(in *Constructor_Data_Maybe_Just[r_.Value]) *Constructor_Data_Maybe_Just[int64] {
-	if in == nil {
-		return nil
-	}
-	out := &Constructor_Data_Maybe_Just[int64]{}
-	out.V0 = in.V0.IntVal
-	return out
 }
 
 func Rebox_Main_3103076375_138441832(in *Constructor_Data_Tuple_Tuple[string, r_.Value]) *Constructor_Data_Tuple_Tuple[r_.Value, r_.Value] {

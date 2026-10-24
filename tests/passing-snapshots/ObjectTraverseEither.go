@@ -146,6 +146,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_3_3 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4024920945("", struct {
 				actual   gopurs_runtime.Value
 				expected gopurs_runtime.Value
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{gopurs_runtime.Apply(Call_Main_run(__local_var_1_1), input_2_2), func() gopurs_runtime.Value {
 				_v := struct {
 					V0 gopurs_runtime.Value
@@ -182,6 +183,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_4_4 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2499841393("", struct {
 				actual   []string
 				expected []string
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{func() []string {
 				arr := *(*[]gopurs_runtime.Value)(__local_var_4_5.UnsafePtr)
 				unboxed := make([]string, len(arr))
@@ -203,6 +205,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_6_7 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4024920945("", struct {
 				actual   gopurs_runtime.Value
 				expected gopurs_runtime.Value
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{gopurs_runtime.Apply(Call_Main_run(__local_var_1_1), Call_Foreign_Object_fromFoldable__1025470229(func() gopurs_runtime.Value {
 				arr := []*Constructor_Data_Tuple_Tuple[string, int64]{Rebox_Main_138441832_1830029836(gopurs_runtime.CoerceToStruct[Constructor_Data_Tuple_Tuple[gopurs_runtime.Value, gopurs_runtime.Value]](func() gopurs_runtime.Value {
 					_v := struct {
@@ -245,6 +248,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_7_8 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2499841393("", struct {
 				actual   []string
 				expected []string
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{func() []string {
 				arr := *(*[]gopurs_runtime.Value)(__local_var_7_9.UnsafePtr)
 				unboxed := make([]string, len(arr))
@@ -266,6 +270,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_9_11 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4024920945("", struct {
 				actual   gopurs_runtime.Value
 				expected gopurs_runtime.Value
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{gopurs_runtime.Apply(Call_Main_run(__local_var_1_1), Get_Foreign_Object_empty()), func() gopurs_runtime.Value {
 				_v := struct {
 					V0 gopurs_runtime.Value
@@ -283,6 +288,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_10_12 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2499841393("", struct {
 				actual   []string
 				expected []string
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{func() []string {
 				arr := *(*[]gopurs_runtime.Value)(__local_var_10_13.UnsafePtr)
 				unboxed := make([]string, len(arr))
@@ -299,6 +305,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_12_15 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2499841393("", struct {
 				actual   []string
 				expected []string
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{func() []string {
 				arr := *(*[]gopurs_runtime.Value)(__local_var_12_16.UnsafePtr)
 				unboxed := make([]string, len(arr))
@@ -313,6 +320,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_14_18 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4024920945("", struct {
 				actual   gopurs_runtime.Value
 				expected gopurs_runtime.Value
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{gopurs_runtime.Apply(__local_var_13_17, Call_Foreign_Object_singleton__2569136781("a", int64(3))), func() gopurs_runtime.Value {
 				_v := struct {
 					V0 gopurs_runtime.Value
@@ -328,6 +336,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_15_19 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4024920945("", struct {
 				actual   gopurs_runtime.Value
 				expected gopurs_runtime.Value
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{gopurs_runtime.Apply(__local_var_13_17, Call_Foreign_Object_singleton__2569136781("a", int64(7))), func() gopurs_runtime.Value {
 				_v := struct {
 					V0 gopurs_runtime.Value
@@ -345,6 +354,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_16_20 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___2499841393("", struct {
 				actual   []string
 				expected []string
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{func() []string {
 				arr := *(*[]gopurs_runtime.Value)(__local_var_16_21.UnsafePtr)
 				unboxed := make([]string, len(arr))
@@ -357,6 +367,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_17_22 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___692899441("", struct {
 				actual   *Constructor_Data_Maybe_Just[int64]
 				expected *Constructor_Data_Maybe_Just[int64]
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Rebox_Main_3094389156_1170268447(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](gopurs_runtime.UncurriedApp4(Get_Foreign_Object__lookup(), gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(Rebox_Main_1170268447_3094389156(Rebox_Main_3094389156_1170268447(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer((*Constructor_Data_Maybe_Just[gopurs_runtime.Value])(nil))}))))}, Get_Data_Maybe_Just(), gopurs_runtime.Str("a"), input_2_2))), Rebox_Main_3094389156_1170268447(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](func() gopurs_runtime.Value {
 				_v := struct {
 					V0 gopurs_runtime.Value
@@ -384,28 +395,14 @@ func Call_Main_track(calls_0_loop gopurs_runtime.Value, key_1_loop string, value
 	return gopurs_runtime.Apply(Get_Effect_Unsafe_unsafePerformEffect(), gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 		// TAST (Let): __local_var_3_0 shape=App(Var) bindingType=Any
 		__local_var_3_0 := gopurs_runtime.Apply2(Get_Effect_Ref_modify_(), gopurs_runtime.Func(func(seen_3 gopurs_runtime.Value) gopurs_runtime.Value {
-			return func() gopurs_runtime.Value {
-				arr := func() []string {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), seen_3, func() gopurs_runtime.Value {
-						arr := []string{key_1}
-						boxed := make([]gopurs_runtime.Value, len(arr))
-						for i, v := range arr {
-							boxed[i] = gopurs_runtime.Str(v)
-						}
-						return gopurs_runtime.Array(boxed)
-					}())).UnsafePtr))).UnsafePtr)
-					unboxed := make([]string, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.StrVal()
-					}
-					return unboxed
-				}()
+			return gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), seen_3, func() gopurs_runtime.Value {
+				arr := []string{key_1}
 				boxed := make([]gopurs_runtime.Value, len(arr))
 				for i, v := range arr {
 					boxed[i] = gopurs_runtime.Str(v)
 				}
 				return gopurs_runtime.Array(boxed)
-			}()
+			}())
 		}), calls_0)
 		_ = __local_var_3_0
 		__local_var_4_1 := gopurs_runtime.Apply(__local_var_3_0, gopurs_runtime.Value{})
@@ -438,7 +435,7 @@ func Call_Main_run(calls_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 					V0 gopurs_runtime.Value
 					V1 gopurs_runtime.Value
 					V2 bool
-				}{gopurs_runtime.Str(key_1.StrVal()), gopurs_runtime.Value{}, false}
+				}{key_1, gopurs_runtime.Value{}, false}
 				goto end_branch_3
 			} else {
 

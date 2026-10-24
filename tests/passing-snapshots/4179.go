@@ -150,16 +150,9 @@ func Get_Main_complicatedIdentity() gopurs_runtime.Value {
 					__t3 = gopurs_runtime.Apply(gopurs_runtime.RecordGet(gopurs_runtime.Apply((*f_0_2_2_cell), gopurs_runtime.Int(gopurs_runtime.IntSub(n_1.IntVal, int64(1)))), "tock"), Call_Control_Category_identity(gopurs_runtime.Value{Type: 9, IntVal: 784524589, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Control_Category_Category[gopurs_runtime.Value]](Get_Control_Category_categoryFn()))}))
 				}
 			end_branch_3:
-				return func() gopurs_runtime.Value {
-					orig := struct {
-						tick gopurs_runtime.Value
-						tock gopurs_runtime.Value
-					}{__t3, gopurs_runtime.Func(func(a_2 gopurs_runtime.Value) gopurs_runtime.Value {
-						return gopurs_runtime.Apply2((*g_0_1_1_cell), gopurs_runtime.Int(n_1.IntVal), a_2)
-					})}
-					_ = orig
-					return gopurs_runtime.RecordDict2("tick", "tock", orig.tick, orig.tock)
-				}()
+				return gopurs_runtime.RecordDict2("tick", "tock", __t3, gopurs_runtime.Func(func(a_2 gopurs_runtime.Value) gopurs_runtime.Value {
+					return gopurs_runtime.Apply2((*g_0_1_1_cell), gopurs_runtime.Int(n_1.IntVal), a_2)
+				}))
 			})
 			f_0_2_2_cell = &f_0_2_2
 			return h_0_0_0
@@ -176,12 +169,14 @@ func Get_Main_bravo() gopurs_runtime.Value {
 		cache_Main_bravo = gopurs_runtime.Int(gopurs_runtime.Int(func() struct {
 			backref gopurs_runtime.Value
 			x       int64
+			/*gopurs:record-v1:2:006200610063006b007200650066,0078*/
 		} {
 			orig := Get_Main_alpha()
 			_ = orig
 			clone := struct {
 				backref gopurs_runtime.Value
 				x       int64
+				/*gopurs:record-v1:2:006200610063006b007200650066,0078*/
 			}{}
 			clone.backref = gopurs_runtime.RecordGet(orig, "backref")
 			clone.x = gopurs_runtime.RecordGet(orig, "x").IntVal
@@ -200,6 +195,7 @@ func Get_Main_alpha() gopurs_runtime.Value {
 			orig := struct {
 				backref gopurs_runtime.Value
 				x       int64
+				/*gopurs:record-v1:2:006200610063006b007200650066,0078*/
 			}{gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Int(Get_Main_bravo().IntVal)
 			}), int64(1)}
@@ -220,18 +216,21 @@ func Get_Main_main() gopurs_runtime.Value {
 				var selfOwn_1_1_3 struct {
 					a int64
 					b int64
+					/*gopurs:record-v1:2:0061,0062*/
 				}
 				_ = selfOwn_1_1_3
 				var selfOwn_1_1_3_cell *struct {
 					a int64
 					b int64
+					/*gopurs:record-v1:2:0061,0062*/
 				}
 				_ = selfOwn_1_1_3_cell
 				// FALLBACK TCO: isLoop=false len=1
 				selfOwn_1_1_3 = struct {
 					a int64
 					b int64
-				}{int64(1), gopurs_runtime.Int((*selfOwn_1_1_3_cell).a).IntVal}
+					/*gopurs:record-v1:2:0061,0062*/
+				}{int64(1), (*selfOwn_1_1_3_cell).a}
 				selfOwn_1_1_3_cell = &selfOwn_1_1_3
 				return func() gopurs_runtime.Value {
 					orig := selfOwn_1_1_3
@@ -261,23 +260,18 @@ func Get_Main_main() gopurs_runtime.Value {
 				var f_3_7_7 struct {
 					left  gopurs_runtime.Value
 					right gopurs_runtime.Value
+					/*gopurs:record-v1:2:006c006500660074,00720069006700680074*/
 				}
 				_ = f_3_7_7
 				var f_3_7_7_cell *struct {
 					left  gopurs_runtime.Value
 					right gopurs_runtime.Value
+					/*gopurs:record-v1:2:006c006500660074,00720069006700680074*/
 				}
 				_ = f_3_7_7_cell
 				// FALLBACK TCO: isLoop=false len=4
 				j_3_4_4 = gopurs_runtime.Func3(func(x_4 gopurs_runtime.Value, y_5 gopurs_runtime.Value, z_6 gopurs_runtime.Value) gopurs_runtime.Value {
-					return func() gopurs_runtime.Value {
-						orig := struct {
-							left  gopurs_runtime.Value
-							right gopurs_runtime.Value
-						}{gopurs_runtime.Apply2(x_4, y_5, z_6), (*f_3_7_7_cell).left}
-						_ = orig
-						return gopurs_runtime.RecordDict2("left", "right", orig.left, orig.right)
-					}()
+					return gopurs_runtime.RecordDict2("left", "right", gopurs_runtime.Apply2(x_4, y_5, z_6), (*f_3_7_7_cell).left)
 				})
 				j_3_4_4_cell = &j_3_4_4
 				h_3_5_5 = gopurs_runtime.Func(func(x_4 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -291,6 +285,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				f_3_7_7 = struct {
 					left  gopurs_runtime.Value
 					right gopurs_runtime.Value
+					/*gopurs:record-v1:2:006c006500660074,00720069006700680074*/
 				}{gopurs_runtime.Apply((*g_3_6_6_cell), gopurs_runtime.Func(func(x_4 gopurs_runtime.Value) gopurs_runtime.Value {
 					return x_4
 				})), gopurs_runtime.Apply((*h_3_5_5_cell), gopurs_runtime.Func(func(x_4 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -309,7 +304,8 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_4_9 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
-			}{gopurs_runtime.Int(int64(1)).IntVal, int64(1)}), gopurs_runtime.Value{})
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
+			}{int64(1), int64(1)}), gopurs_runtime.Value{})
 			_ = __local_var_4_9
 			return gopurs_runtime.Apply(gopurs_runtime.Apply4(Get_Main_runtimeImportImpl(), gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(Rebox_Main_742090555_3094389156(Rebox_Main_3094389156_742090555(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](func() gopurs_runtime.Value {
 				_v := struct {
@@ -326,6 +322,7 @@ func Get_Main_main() gopurs_runtime.Value {
 					__local_var_6_10 := Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 						actual   bool
 						expected bool
+						/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 					}{((gopurs_runtime.Apply2(Rebox_Main_3790796878_1144047024(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Main_eqMaybe())).V0, err3_5, gopurs_runtime.Value{Type: 9, IntVal: 930809136, UnsafePtr: unsafe.Pointer(Rebox_Main_742090555_3094389156(Rebox_Main_3094389156_742090555(gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](func() gopurs_runtime.Value {
 						_v := struct {
 							V0 gopurs_runtime.Value

@@ -315,7 +315,7 @@ var once_Main_test6 sync.Once
 func Get_Main_test6() gopurs_runtime.Value {
 	once_Main_test6.Do(func() {
 		cache_Main_test6 = gopurs_runtime.Float(gopurs_runtime.Apply(Call_Main_k(gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Float(x_0.FloatVal())
+			return x_0
 		}), gopurs_runtime.Float(2.0)), gopurs_runtime.Float(3.0)).FloatVal())
 	})
 	return cache_Main_test6

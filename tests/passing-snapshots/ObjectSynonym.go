@@ -33,6 +33,7 @@ func Get_Main_outer() gopurs_runtime.Value {
 		cache_Main_outer = func() gopurs_runtime.Value {
 			orig := struct {
 				inner float64
+				/*gopurs:record-v1:1:0069006e006e00650072*/
 			}{0.0}
 			_ = orig
 			return gopurs_runtime.RecordDict1("inner", gopurs_runtime.Float(orig.inner))

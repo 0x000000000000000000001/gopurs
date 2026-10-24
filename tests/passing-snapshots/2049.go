@@ -65,10 +65,12 @@ type Constructor_Main_Nil[T_a any] struct {
 func Call_Main_f(v_0_loop *Constructor_Main_Cons[struct {
 	x int64
 	y int64
+	/*gopurs:record-v1:2:0078,0079*/
 }]) int64 {
 	var v_0 *Constructor_Main_Cons[struct {
 		x int64
 		y int64
+		/*gopurs:record-v1:2:0078,0079*/
 	}] = v_0_loop
 	_ = v_0
 	var __t0 int64
@@ -90,6 +92,7 @@ end_branch_0:
 func Rebox_Main_176455803_457532107(in *Constructor_Main_Cons[gopurs_runtime.Value]) *Constructor_Main_Cons[struct {
 	x int64
 	y int64
+	/*gopurs:record-v1:2:0078,0079*/
 }] {
 	if in == nil {
 		return nil
@@ -97,16 +100,19 @@ func Rebox_Main_176455803_457532107(in *Constructor_Main_Cons[gopurs_runtime.Val
 	out := &Constructor_Main_Cons[struct {
 		x int64
 		y int64
+		/*gopurs:record-v1:2:0078,0079*/
 	}]{}
 	out.V0 = func() struct {
 		x int64
 		y int64
+		/*gopurs:record-v1:2:0078,0079*/
 	} {
 		orig := in.V0
 		_ = orig
 		clone := struct {
 			x int64
 			y int64
+			/*gopurs:record-v1:2:0078,0079*/
 		}{}
 		clone.x = gopurs_runtime.RecordGet(orig, "x").IntVal
 		clone.y = gopurs_runtime.RecordGet(orig, "y").IntVal

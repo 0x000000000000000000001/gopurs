@@ -98,6 +98,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_0_0 := Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Call_Main_f(int64(99999)), int64(0)})
 			_ = __local_var_0_0
 			__local_var_1_1 := gopurs_runtime.Apply(__local_var_0_0, gopurs_runtime.Value{})
@@ -105,31 +106,34 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_2_2 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Call_Main_g(int64(100000)), int64(0)}), gopurs_runtime.Value{})
 			_ = __local_var_2_2
 			__local_var_3_3 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Call_Main_weirdsum(int64(0), gopurs_runtime.Func(func(x_3 gopurs_runtime.Value) gopurs_runtime.Value {
-				var __t4 *Constructor_Main_Just[int64]
+				var __t4 gopurs_runtime.Value
 				{
 					if (x_3.IntVal) < (int64(5)) {
-						__t4 = (&Constructor_Main_Just[int64]{1, gopurs_runtime.IntMul(int64(2), x_3.IntVal)})
+						__t4 = gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer((&Constructor_Main_Just[gopurs_runtime.Value]{1, gopurs_runtime.Int(gopurs_runtime.IntMul(int64(2), x_3.IntVal))}))}
 						goto end_branch_4
 					} else {
 
 					}
 				}
 				{
-					__t4 = (*Constructor_Main_Just[int64])(nil)
+					__t4 = gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer((*Constructor_Main_Just[gopurs_runtime.Value])(nil))}
 				}
 			end_branch_4:
-				return gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer(Rebox_Main_2656528265_4188394610(__t4))}
+				return __t4
 			}), int64(100000)), int64(20)}), gopurs_runtime.Value{})
 			_ = __local_var_3_3
 			__local_var_4_5 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{Call_Main_tricksyinners(int64(0), int64(100000)), int64(200009)}), gopurs_runtime.Value{})
 			_ = __local_var_4_5
 			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})

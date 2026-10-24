@@ -15,12 +15,14 @@ func Get_Main_Nonsense_dollar_Dict() gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 2074529919, UnsafePtr: unsafe.Pointer(Call_Main_Nonsense_dollar_Dict(func() struct {
 				Show0  gopurs_runtime.Value
 				method gopurs_runtime.Value
+				/*gopurs:record-v1:2:00530068006f00770030,006d006500740068006f0064*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					Show0  gopurs_runtime.Value
 					method gopurs_runtime.Value
+					/*gopurs:record-v1:2:00530068006f00770030,006d006500740068006f0064*/
 				}{}
 				clone.Show0 = gopurs_runtime.RecordGet(orig, "Show0")
 				clone.method = gopurs_runtime.RecordGet(orig, "method")
@@ -100,6 +102,7 @@ type Constructor_Main_Nonsense[T_a any] struct {
 	V1 gopurs_runtime.Value
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f004e006f006e00730065006e00730065
 func init() {
 	gopurs_runtime.StructGetters[2074529919] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_Nonsense[gopurs_runtime.Value])(ptr)
@@ -118,10 +121,12 @@ func init() {
 func Call_Main_Nonsense_dollar_Dict(x_0_loop struct {
 	Show0  gopurs_runtime.Value
 	method gopurs_runtime.Value
+	/*gopurs:record-v1:2:00530068006f00770030,006d006500740068006f0064*/
 }) *Constructor_Main_Nonsense[gopurs_runtime.Value] {
 	var x_0 struct {
 		Show0  gopurs_runtime.Value
 		method gopurs_runtime.Value
+		/*gopurs:record-v1:2:00530068006f00770030,006d006500740068006f0064*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_Nonsense[gopurs_runtime.Value]](func() gopurs_runtime.Value {

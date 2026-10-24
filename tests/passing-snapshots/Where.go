@@ -67,22 +67,22 @@ func Get_Main_test5() gopurs_runtime.Value {
 			})
 			g_0_1_3_cell = &g_0_1_3
 			f_0_2_4 = gopurs_runtime.Func(func(v_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				var __t4 float64
+				var __t4 gopurs_runtime.Value
 				{
 					var __t_tag_3 gopurs_runtime.Value = Data_Ord_OrdNumberImpl_nativeWorker(gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, v_1.FloatVal(), 0.0)
 					_ = __t_tag_3
 					if uint32(__t_tag_3.IntVal) == 380165415 {
-						__t4 = (gopurs_runtime.Apply((*g__512709115_0_0_2_cell), gopurs_runtime.Float((v_1.FloatVal())/(2.0))).FloatVal()) + (1.0)
+						__t4 = gopurs_runtime.Float((gopurs_runtime.Apply((*g__512709115_0_0_2_cell), gopurs_runtime.Float((v_1.FloatVal())/(2.0))).FloatVal()) + (1.0))
 						goto end_branch_4
 					} else {
 
 					}
 				}
 				{
-					__t4 = 0.0
+					__t4 = gopurs_runtime.Float(0.0)
 				}
 			end_branch_4:
-				return gopurs_runtime.Float(__t4)
+				return __t4
 			})
 			f_0_2_4_cell = &f_0_2_4
 			return gopurs_runtime.Float(gopurs_runtime.Apply(g__512709115_0_0_2, gopurs_runtime.Float(10.0)).FloatVal())
@@ -204,7 +204,7 @@ func Call_Main_test7(x_0_loop float64) float64 {
 				}
 			}
 			{
-				__t5 = gopurs_runtime.Float(Call_local_Main_go__go_1_1_1(((v_2) + ((x_0) / (v_2))) / (2.0))).FloatVal()
+				__t5 = Call_local_Main_go__go_1_1_1(((v_2) + ((x_0) / (v_2))) / (2.0))
 			}
 		end_branch_5:
 			return __t5

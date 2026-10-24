@@ -14,11 +14,13 @@ func Get_Main_Transitive_dollar_Dict() gopurs_runtime.Value {
 		cache_Main_Transitive_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 4241826851, UnsafePtr: unsafe.Pointer(Call_Main_Transitive_dollar_Dict(func() struct {
 				d gopurs_runtime.Value
+				/*gopurs:record-v1:1:0064*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					d gopurs_runtime.Value
+					/*gopurs:record-v1:1:0064*/
 				}{}
 				clone.d = gopurs_runtime.RecordGet(orig, "d")
 				return clone
@@ -36,11 +38,13 @@ func Get_Main_Transitive_dollar_Dict__3357984903() gopurs_runtime.Value {
 		cache_Main_Transitive_dollar_Dict__3357984903 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 4241826851, UnsafePtr: unsafe.Pointer(Rebox_Main_3392908154_1025015703(Call_Main_Transitive_dollar_Dict__3357984903(func() struct {
 				d gopurs_runtime.Value
+				/*gopurs:record-v1:1:0064*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					d gopurs_runtime.Value
+					/*gopurs:record-v1:1:0064*/
 				}{}
 				clone.d = gopurs_runtime.RecordGet(orig, "d")
 				return clone
@@ -58,11 +62,13 @@ func Get_Main_Simple_dollar_Dict() gopurs_runtime.Value {
 		cache_Main_Simple_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 2086942032, UnsafePtr: unsafe.Pointer(Call_Main_Simple_dollar_Dict(func() struct {
 				c gopurs_runtime.Value
+				/*gopurs:record-v1:1:0063*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					c gopurs_runtime.Value
+					/*gopurs:record-v1:1:0063*/
 				}{}
 				clone.c = gopurs_runtime.RecordGet(orig, "c")
 				return clone
@@ -80,11 +86,13 @@ func Get_Main_Simple_dollar_Dict__941721121() gopurs_runtime.Value {
 		cache_Main_Simple_dollar_Dict__941721121 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 2086942032, UnsafePtr: unsafe.Pointer(Rebox_Main_866733052_373320770(Call_Main_Simple_dollar_Dict__941721121(func() struct {
 				c gopurs_runtime.Value
+				/*gopurs:record-v1:1:0063*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					c gopurs_runtime.Value
+					/*gopurs:record-v1:1:0063*/
 				}{}
 				clone.c = gopurs_runtime.RecordGet(orig, "c")
 				return clone
@@ -102,11 +110,13 @@ func Get_Main_Simple_dollar_Dict__3895243937() gopurs_runtime.Value {
 		cache_Main_Simple_dollar_Dict__3895243937 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 2086942032, UnsafePtr: unsafe.Pointer(Rebox_Main_2568002420_373320770(Call_Main_Simple_dollar_Dict__3895243937(func() struct {
 				c gopurs_runtime.Value
+				/*gopurs:record-v1:1:0063*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					c gopurs_runtime.Value
+					/*gopurs:record-v1:1:0063*/
 				}{}
 				clone.c = gopurs_runtime.RecordGet(orig, "c")
 				return clone
@@ -123,10 +133,14 @@ func Get_Main_MultipleDeterminers_dollar_Dict() gopurs_runtime.Value {
 	once_Main_MultipleDeterminers_dollar_Dict.Do(func() {
 		cache_Main_MultipleDeterminers_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return Call_Main_MultipleDeterminers_dollar_Dict(func() struct {
+
+				/*gopurs:record-v1:0:*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
+
+					/*gopurs:record-v1:0:*/
 				}{}
 
 				return clone
@@ -143,10 +157,14 @@ func Get_Main_MultipleDeterminers_dollar_Dict__1380508241() gopurs_runtime.Value
 	once_Main_MultipleDeterminers_dollar_Dict__1380508241.Do(func() {
 		cache_Main_MultipleDeterminers_dollar_Dict__1380508241 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return Call_Main_MultipleDeterminers_dollar_Dict__1380508241(func() struct {
+
+				/*gopurs:record-v1:0:*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
+
+					/*gopurs:record-v1:0:*/
 				}{}
 
 				return clone
@@ -173,10 +191,14 @@ func Get_Main_DeterminedCycle_dollar_Dict() gopurs_runtime.Value {
 	once_Main_DeterminedCycle_dollar_Dict.Do(func() {
 		cache_Main_DeterminedCycle_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return Call_Main_DeterminedCycle_dollar_Dict(func() struct {
+
+				/*gopurs:record-v1:0:*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
+
+					/*gopurs:record-v1:0:*/
 				}{}
 
 				return clone
@@ -193,10 +215,14 @@ func Get_Main_DeterminedCycle_dollar_Dict__38278756() gopurs_runtime.Value {
 	once_Main_DeterminedCycle_dollar_Dict__38278756.Do(func() {
 		cache_Main_DeterminedCycle_dollar_Dict__38278756 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return Call_Main_DeterminedCycle_dollar_Dict__38278756(func() struct {
+
+				/*gopurs:record-v1:0:*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
+
+					/*gopurs:record-v1:0:*/
 				}{}
 
 				return clone
@@ -213,10 +239,14 @@ func Get_Main_Cyclic_dollar_Dict() gopurs_runtime.Value {
 	once_Main_Cyclic_dollar_Dict.Do(func() {
 		cache_Main_Cyclic_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return Call_Main_Cyclic_dollar_Dict(func() struct {
+
+				/*gopurs:record-v1:0:*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
+
+					/*gopurs:record-v1:0:*/
 				}{}
 
 				return clone
@@ -233,10 +263,14 @@ func Get_Main_Cyclic_dollar_Dict__1662970930() gopurs_runtime.Value {
 	once_Main_Cyclic_dollar_Dict__1662970930.Do(func() {
 		cache_Main_Cyclic_dollar_Dict__1662970930 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return Call_Main_Cyclic_dollar_Dict__1662970930(func() struct {
+
+				/*gopurs:record-v1:0:*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
+
+					/*gopurs:record-v1:0:*/
 				}{}
 
 				return clone
@@ -262,14 +296,13 @@ var once_Main_transitive sync.Once
 func Get_Main_transitive() gopurs_runtime.Value {
 	once_Main_transitive.Do(func() {
 		cache_Main_transitive = gopurs_runtime.Value{Type: 9, IntVal: 4241826851, UnsafePtr: unsafe.Pointer(Rebox_Main_3392908154_1025015703((&Constructor_Main_Transitive[uint32, struct {
+
+			/*gopurs:record-v1:0:*/
 		}, struct {
+
+			/*gopurs:record-v1:0:*/
 		}]{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return func() gopurs_runtime.Value {
-				orig := struct {
-				}{}
-				_ = orig
-				return gopurs_runtime.RecordDict0()
-			}()
+			return gopurs_runtime.RecordDict0()
 		})})))}
 	})
 	return cache_Main_transitive
@@ -282,14 +315,9 @@ func Get_Main_simple1() gopurs_runtime.Value {
 	once_Main_simple1.Do(func() {
 		cache_Main_simple1 = gopurs_runtime.Value{Type: 9, IntVal: 2086942032, UnsafePtr: unsafe.Pointer(Rebox_Main_866733052_373320770((&Constructor_Main_Simple[uint32, struct {
 			foo uint32
+			/*gopurs:record-v1:1:0066006f006f*/
 		}]{1, gopurs_runtime.Func(func(cons_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return func() gopurs_runtime.Value {
-				orig := struct {
-					foo uint32
-				}{uint32(cons_0.IntVal)}
-				_ = orig
-				return gopurs_runtime.RecordDict1("foo", gopurs_runtime.Value{Type: 9, IntVal: int64(orig.foo), UnsafePtr: nil})
-			}()
+			return gopurs_runtime.RecordDict1("foo", cons_0)
 		})})))}
 	})
 	return cache_Main_simple1
@@ -301,13 +329,10 @@ var once_Main_simple0 sync.Once
 func Get_Main_simple0() gopurs_runtime.Value {
 	once_Main_simple0.Do(func() {
 		cache_Main_simple0 = gopurs_runtime.Value{Type: 9, IntVal: 2086942032, UnsafePtr: unsafe.Pointer(Rebox_Main_2568002420_373320770((&Constructor_Main_Simple[uint32, struct {
+
+			/*gopurs:record-v1:0:*/
 		}]{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return func() gopurs_runtime.Value {
-				orig := struct {
-				}{}
-				_ = orig
-				return gopurs_runtime.RecordDict0()
-			}()
+			return gopurs_runtime.RecordDict0()
 		})})))}
 	})
 	return cache_Main_simple0
@@ -320,6 +345,8 @@ func Get_Main_multipleDeterminers() gopurs_runtime.Value {
 	once_Main_multipleDeterminers.Do(func() {
 		cache_Main_multipleDeterminers = func() gopurs_runtime.Value {
 			orig := struct {
+
+				/*gopurs:record-v1:0:*/
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
@@ -345,6 +372,8 @@ func Get_Main_determinedCycle() gopurs_runtime.Value {
 	once_Main_determinedCycle.Do(func() {
 		cache_Main_determinedCycle = func() gopurs_runtime.Value {
 			orig := struct {
+
+				/*gopurs:record-v1:0:*/
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
@@ -372,6 +401,8 @@ func Get_Main_cyclic() gopurs_runtime.Value {
 	once_Main_cyclic.Do(func() {
 		cache_Main_cyclic = func() gopurs_runtime.Value {
 			orig := struct {
+
+				/*gopurs:record-v1:0:*/
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()
@@ -405,6 +436,7 @@ type Constructor_Main_Transitive[T_a any, T_b any, T_c any] struct {
 	V0 gopurs_runtime.Value
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f005400720061006e007300690074006900760065
 func init() {
 	gopurs_runtime.StructGetters[4241826851] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_Transitive[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(ptr)
@@ -423,6 +455,7 @@ type Constructor_Main_Simple[T_a any, T_b any] struct {
 	V0 gopurs_runtime.Value
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f00530069006d0070006c0065
 func init() {
 	gopurs_runtime.StructGetters[2086942032] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_Simple[gopurs_runtime.Value, gopurs_runtime.Value])(ptr)
@@ -440,6 +473,7 @@ type Constructor_Main_MultipleDeterminers[T_a any, T_b any, T_c any, T_d any] st
 	Rc uint32
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f004d0075006c007400690070006c006500440065007400650072006d0069006e006500720073
 func init() {
 	gopurs_runtime.StructGetters[1290835010] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_MultipleDeterminers[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(ptr)
@@ -456,6 +490,7 @@ type Constructor_Main_DeterminedCycle[T_a any, T_b any, T_c any] struct {
 	Rc uint32
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f00440065007400650072006d0069006e00650064004300790063006c0065
 func init() {
 	gopurs_runtime.StructGetters[1744313767] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_DeterminedCycle[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(ptr)
@@ -472,6 +507,7 @@ type Constructor_Main_Cyclic[T_a any, T_b any, T_c any, T_d any] struct {
 	Rc uint32
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f004300790063006c00690063
 func init() {
 	gopurs_runtime.StructGetters[1751764097] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_Cyclic[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(ptr)
@@ -486,9 +522,11 @@ func init() {
 
 func Call_Main_Transitive_dollar_Dict(x_0_loop struct {
 	d gopurs_runtime.Value
+	/*gopurs:record-v1:1:0064*/
 }) *Constructor_Main_Transitive[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value] {
 	var x_0 struct {
 		d gopurs_runtime.Value
+		/*gopurs:record-v1:1:0064*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_Transitive[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value]](func() gopurs_runtime.Value {
@@ -500,8 +538,13 @@ func Call_Main_Transitive_dollar_Dict(x_0_loop struct {
 
 func Call_Main_Transitive_dollar_Dict__3357984903(x_0_loop struct {
 	d gopurs_runtime.Value
+	/*gopurs:record-v1:1:0064*/
 }) *Constructor_Main_Transitive[uint32, struct {
+
+	/*gopurs:record-v1:0:*/
 }, struct {
+
+	/*gopurs:record-v1:0:*/
 }] {
 Transitive_dollar_Dict__3357984903:
 	for {
@@ -510,10 +553,15 @@ Transitive_dollar_Dict__3357984903:
 		}
 		var x_0 struct {
 			d gopurs_runtime.Value
+			/*gopurs:record-v1:1:0064*/
 		} = x_0_loop
 		_ = x_0
 		return gopurs_runtime.CoerceToStruct[Constructor_Main_Transitive[uint32, struct {
+
+			/*gopurs:record-v1:0:*/
 		}, struct {
+
+			/*gopurs:record-v1:0:*/
 		}]](func() gopurs_runtime.Value {
 			orig := x_0
 			_ = orig
@@ -524,9 +572,11 @@ Transitive_dollar_Dict__3357984903:
 
 func Call_Main_Simple_dollar_Dict(x_0_loop struct {
 	c gopurs_runtime.Value
+	/*gopurs:record-v1:1:0063*/
 }) *Constructor_Main_Simple[gopurs_runtime.Value, gopurs_runtime.Value] {
 	var x_0 struct {
 		c gopurs_runtime.Value
+		/*gopurs:record-v1:1:0063*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_Simple[gopurs_runtime.Value, gopurs_runtime.Value]](func() gopurs_runtime.Value {
@@ -538,8 +588,10 @@ func Call_Main_Simple_dollar_Dict(x_0_loop struct {
 
 func Call_Main_Simple_dollar_Dict__941721121(x_0_loop struct {
 	c gopurs_runtime.Value
+	/*gopurs:record-v1:1:0063*/
 }) *Constructor_Main_Simple[uint32, struct {
 	foo uint32
+	/*gopurs:record-v1:1:0066006f006f*/
 }] {
 Simple_dollar_Dict__941721121:
 	for {
@@ -548,10 +600,12 @@ Simple_dollar_Dict__941721121:
 		}
 		var x_0 struct {
 			c gopurs_runtime.Value
+			/*gopurs:record-v1:1:0063*/
 		} = x_0_loop
 		_ = x_0
 		return gopurs_runtime.CoerceToStruct[Constructor_Main_Simple[uint32, struct {
 			foo uint32
+			/*gopurs:record-v1:1:0066006f006f*/
 		}]](func() gopurs_runtime.Value {
 			orig := x_0
 			_ = orig
@@ -562,7 +616,10 @@ Simple_dollar_Dict__941721121:
 
 func Call_Main_Simple_dollar_Dict__3895243937(x_0_loop struct {
 	c gopurs_runtime.Value
+	/*gopurs:record-v1:1:0063*/
 }) *Constructor_Main_Simple[uint32, struct {
+
+	/*gopurs:record-v1:0:*/
 }] {
 Simple_dollar_Dict__3895243937:
 	for {
@@ -571,9 +628,12 @@ Simple_dollar_Dict__3895243937:
 		}
 		var x_0 struct {
 			c gopurs_runtime.Value
+			/*gopurs:record-v1:1:0063*/
 		} = x_0_loop
 		_ = x_0
 		return gopurs_runtime.CoerceToStruct[Constructor_Main_Simple[uint32, struct {
+
+			/*gopurs:record-v1:0:*/
 		}]](func() gopurs_runtime.Value {
 			orig := x_0
 			_ = orig
@@ -583,8 +643,12 @@ Simple_dollar_Dict__3895243937:
 }
 
 func Call_Main_MultipleDeterminers_dollar_Dict(x_0_loop struct {
+
+	/*gopurs:record-v1:0:*/
 }) gopurs_runtime.Value {
 	var x_0 struct {
+
+		/*gopurs:record-v1:0:*/
 	} = x_0_loop
 	_ = x_0
 	return func() gopurs_runtime.Value {
@@ -595,6 +659,8 @@ func Call_Main_MultipleDeterminers_dollar_Dict(x_0_loop struct {
 }
 
 func Call_Main_MultipleDeterminers_dollar_Dict__1380508241(x_0_loop struct {
+
+	/*gopurs:record-v1:0:*/
 }) gopurs_runtime.Value {
 MultipleDeterminers_dollar_Dict__1380508241:
 	for {
@@ -602,6 +668,8 @@ MultipleDeterminers_dollar_Dict__1380508241:
 			continue MultipleDeterminers_dollar_Dict__1380508241
 		}
 		var x_0 struct {
+
+			/*gopurs:record-v1:0:*/
 		} = x_0_loop
 		_ = x_0
 		return func() gopurs_runtime.Value {
@@ -613,8 +681,12 @@ MultipleDeterminers_dollar_Dict__1380508241:
 }
 
 func Call_Main_DeterminedCycle_dollar_Dict(x_0_loop struct {
+
+	/*gopurs:record-v1:0:*/
 }) gopurs_runtime.Value {
 	var x_0 struct {
+
+		/*gopurs:record-v1:0:*/
 	} = x_0_loop
 	_ = x_0
 	return func() gopurs_runtime.Value {
@@ -625,6 +697,8 @@ func Call_Main_DeterminedCycle_dollar_Dict(x_0_loop struct {
 }
 
 func Call_Main_DeterminedCycle_dollar_Dict__38278756(x_0_loop struct {
+
+	/*gopurs:record-v1:0:*/
 }) gopurs_runtime.Value {
 DeterminedCycle_dollar_Dict__38278756:
 	for {
@@ -632,6 +706,8 @@ DeterminedCycle_dollar_Dict__38278756:
 			continue DeterminedCycle_dollar_Dict__38278756
 		}
 		var x_0 struct {
+
+			/*gopurs:record-v1:0:*/
 		} = x_0_loop
 		_ = x_0
 		return func() gopurs_runtime.Value {
@@ -643,8 +719,12 @@ DeterminedCycle_dollar_Dict__38278756:
 }
 
 func Call_Main_Cyclic_dollar_Dict(x_0_loop struct {
+
+	/*gopurs:record-v1:0:*/
 }) gopurs_runtime.Value {
 	var x_0 struct {
+
+		/*gopurs:record-v1:0:*/
 	} = x_0_loop
 	_ = x_0
 	return func() gopurs_runtime.Value {
@@ -655,6 +735,8 @@ func Call_Main_Cyclic_dollar_Dict(x_0_loop struct {
 }
 
 func Call_Main_Cyclic_dollar_Dict__1662970930(x_0_loop struct {
+
+	/*gopurs:record-v1:0:*/
 }) gopurs_runtime.Value {
 Cyclic_dollar_Dict__1662970930:
 	for {
@@ -662,6 +744,8 @@ Cyclic_dollar_Dict__1662970930:
 			continue Cyclic_dollar_Dict__1662970930
 		}
 		var x_0 struct {
+
+			/*gopurs:record-v1:0:*/
 		} = x_0_loop
 		_ = x_0
 		return func() gopurs_runtime.Value {
@@ -685,6 +769,8 @@ func Call_Main_c(dict_0_loop *Constructor_Main_Simple[gopurs_runtime.Value, gopu
 }
 
 func Rebox_Main_2568002420_373320770(in *Constructor_Main_Simple[uint32, struct {
+
+	/*gopurs:record-v1:0:*/
 }]) *Constructor_Main_Simple[gopurs_runtime.Value, gopurs_runtime.Value] {
 	if in == nil {
 		return nil
@@ -693,7 +779,11 @@ func Rebox_Main_2568002420_373320770(in *Constructor_Main_Simple[uint32, struct 
 }
 
 func Rebox_Main_3392908154_1025015703(in *Constructor_Main_Transitive[uint32, struct {
+
+	/*gopurs:record-v1:0:*/
 }, struct {
+
+	/*gopurs:record-v1:0:*/
 }]) *Constructor_Main_Transitive[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value] {
 	if in == nil {
 		return nil
@@ -703,6 +793,7 @@ func Rebox_Main_3392908154_1025015703(in *Constructor_Main_Transitive[uint32, st
 
 func Rebox_Main_866733052_373320770(in *Constructor_Main_Simple[uint32, struct {
 	foo uint32
+	/*gopurs:record-v1:1:0066006f006f*/
 }]) *Constructor_Main_Simple[gopurs_runtime.Value, gopurs_runtime.Value] {
 	if in == nil {
 		return nil

@@ -116,14 +116,14 @@ func Get_Main_main() gopurs_runtime.Value {
 				var __t7 gopurs_runtime.Value
 				{
 					if (n_6.IntVal) < (int64(10000)) {
-						__t7 = gopurs_runtime.Value{Type: 9, IntVal: 525585346, UnsafePtr: unsafe.Pointer(Rebox_Main_2795810992_4008603408((&Constructor_Control_Monad_Rec_Class_Loop[int64, int64]{1, gopurs_runtime.IntAdd(n_6.IntVal, int64(1))})))}
+						__t7 = gopurs_runtime.Value{Type: 9, IntVal: 525585346, UnsafePtr: unsafe.Pointer((&Constructor_Control_Monad_Rec_Class_Loop[gopurs_runtime.Value, gopurs_runtime.Value]{1, gopurs_runtime.Int(gopurs_runtime.IntAdd(n_6.IntVal, int64(1)))}))}
 						goto end_branch_7
 					} else {
 
 					}
 				}
 				{
-					__t7 = gopurs_runtime.Value{Type: 9, IntVal: 60402430, UnsafePtr: unsafe.Pointer(Rebox_Main_1462327052_3603546092((&Constructor_Control_Monad_Rec_Class_Done[int64, int64]{1, int64(42)})))}
+					__t7 = gopurs_runtime.Value{Type: 9, IntVal: 60402430, UnsafePtr: unsafe.Pointer((&Constructor_Control_Monad_Rec_Class_Done[gopurs_runtime.Value, gopurs_runtime.Value]{1, gopurs_runtime.Int(int64(42))}))}
 				}
 			end_branch_7:
 				return __t7
@@ -233,22 +233,4 @@ applyN__1066644181:
 			return x_4
 		}), __eta_norm_2_0, __eta_norm_1_1), gopurs_runtime.Int(__eta_norm_0_2)).IntVal
 	}
-}
-
-func Rebox_Main_1462327052_3603546092(in *Constructor_Control_Monad_Rec_Class_Done[int64, int64]) *Constructor_Control_Monad_Rec_Class_Done[gopurs_runtime.Value, gopurs_runtime.Value] {
-	if in == nil {
-		return nil
-	}
-	out := &Constructor_Control_Monad_Rec_Class_Done[gopurs_runtime.Value, gopurs_runtime.Value]{}
-	out.V0 = gopurs_runtime.Int(in.V0)
-	return out
-}
-
-func Rebox_Main_2795810992_4008603408(in *Constructor_Control_Monad_Rec_Class_Loop[int64, int64]) *Constructor_Control_Monad_Rec_Class_Loop[gopurs_runtime.Value, gopurs_runtime.Value] {
-	if in == nil {
-		return nil
-	}
-	out := &Constructor_Control_Monad_Rec_Class_Loop[gopurs_runtime.Value, gopurs_runtime.Value]{}
-	out.V0 = gopurs_runtime.Int(in.V0)
-	return out
 }

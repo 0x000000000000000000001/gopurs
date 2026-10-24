@@ -3531,10 +3531,10 @@ func Call_Main_insert(x_0_loop int64, s_1_loop *Constructor_Main_T) *Constructor
 	_ = ins_2_1_1_cell
 	// FALLBACK TCO: isLoop=false len=2
 	ins__3997675643_2_0_0 = gopurs_runtime.Func(func(v_3 gopurs_runtime.Value) gopurs_runtime.Value {
-		var __t4 *Constructor_Main_T
+		var __t4 gopurs_runtime.Value
 		{
 			if v_3.Type == 9 && v_3.IntVal == 990467018 && v_3.UnsafePtr == nil {
-				__t4 = (&Constructor_Main_T{1, 3558538316, (*Constructor_Main_T)(nil), x_0, (*Constructor_Main_T)(nil)})
+				__t4 = gopurs_runtime.Value{Type: 9, IntVal: 990467018, UnsafePtr: unsafe.Pointer((&Constructor_Main_T{1, 3558538316, (*Constructor_Main_T)(nil), x_0, (*Constructor_Main_T)(nil)}))}
 				goto end_branch_4
 			} else {
 
@@ -3542,27 +3542,27 @@ func Call_Main_insert(x_0_loop int64, s_1_loop *Constructor_Main_T) *Constructor
 		}
 		{
 			if v_3.Type == 9 && v_3.IntVal == 990467018 && v_3.UnsafePtr != nil {
-				var __t3 *Constructor_Main_T
+				var __t3 gopurs_runtime.Value
 				{
 					if (x_0) < ((*Constructor_Main_T)(v_3.UnsafePtr).V2) {
-						__t3 = Call_Main_balance((*Constructor_Main_T)(v_3.UnsafePtr).V0, gopurs_runtime.CoerceToStruct[Constructor_Main_T](gopurs_runtime.Apply((*ins__3997675643_2_0_0_cell), gopurs_runtime.Value{Type: 9, IntVal: 990467018, UnsafePtr: unsafe.Pointer((*Constructor_Main_T)(v_3.UnsafePtr).V1)})), (*Constructor_Main_T)(v_3.UnsafePtr).V2, (*Constructor_Main_T)(v_3.UnsafePtr).V3)
+						__t3 = gopurs_runtime.Value{Type: 9, IntVal: 990467018, UnsafePtr: unsafe.Pointer(Call_Main_balance((*Constructor_Main_T)(v_3.UnsafePtr).V0, gopurs_runtime.CoerceToStruct[Constructor_Main_T](gopurs_runtime.Apply((*ins__3997675643_2_0_0_cell), gopurs_runtime.Value{Type: 9, IntVal: 990467018, UnsafePtr: unsafe.Pointer((*Constructor_Main_T)(v_3.UnsafePtr).V1)})), (*Constructor_Main_T)(v_3.UnsafePtr).V2, (*Constructor_Main_T)(v_3.UnsafePtr).V3))}
 						goto end_branch_3
 					} else {
 
 					}
 				}
 				{
-					var __t2 *Constructor_Main_T
+					var __t2 gopurs_runtime.Value
 					{
 						if (x_0) > ((*Constructor_Main_T)(v_3.UnsafePtr).V2) {
-							__t2 = Call_Main_balance((*Constructor_Main_T)(v_3.UnsafePtr).V0, (*Constructor_Main_T)(v_3.UnsafePtr).V1, (*Constructor_Main_T)(v_3.UnsafePtr).V2, gopurs_runtime.CoerceToStruct[Constructor_Main_T](gopurs_runtime.Apply((*ins__3997675643_2_0_0_cell), gopurs_runtime.Value{Type: 9, IntVal: 990467018, UnsafePtr: unsafe.Pointer((*Constructor_Main_T)(v_3.UnsafePtr).V3)})))
+							__t2 = gopurs_runtime.Value{Type: 9, IntVal: 990467018, UnsafePtr: unsafe.Pointer(Call_Main_balance((*Constructor_Main_T)(v_3.UnsafePtr).V0, (*Constructor_Main_T)(v_3.UnsafePtr).V1, (*Constructor_Main_T)(v_3.UnsafePtr).V2, gopurs_runtime.CoerceToStruct[Constructor_Main_T](gopurs_runtime.Apply((*ins__3997675643_2_0_0_cell), gopurs_runtime.Value{Type: 9, IntVal: 990467018, UnsafePtr: unsafe.Pointer((*Constructor_Main_T)(v_3.UnsafePtr).V3)}))))}
 							goto end_branch_2
 						} else {
 
 						}
 					}
 					{
-						__t2 = (&Constructor_Main_T{1, (*Constructor_Main_T)(v_3.UnsafePtr).V0, (*Constructor_Main_T)(v_3.UnsafePtr).V1, (*Constructor_Main_T)(v_3.UnsafePtr).V2, (*Constructor_Main_T)(v_3.UnsafePtr).V3})
+						__t2 = gopurs_runtime.Value{Type: 9, IntVal: 990467018, UnsafePtr: unsafe.Pointer((&Constructor_Main_T{1, (*Constructor_Main_T)(v_3.UnsafePtr).V0, (*Constructor_Main_T)(v_3.UnsafePtr).V1, (*Constructor_Main_T)(v_3.UnsafePtr).V2, (*Constructor_Main_T)(v_3.UnsafePtr).V3}))}
 					}
 				end_branch_2:
 					__t3 = __t2
@@ -3575,17 +3575,17 @@ func Call_Main_insert(x_0_loop int64, s_1_loop *Constructor_Main_T) *Constructor
 			}
 		}
 		{
-			__t4 = func() *Constructor_Main_T { panic("Failed pattern match") }()
+			__t4 = gopurs_runtime.Value{Type: 9, IntVal: 990467018, UnsafePtr: unsafe.Pointer(func() *Constructor_Main_T { panic("Failed pattern match") }())}
 		}
 	end_branch_4:
-		return gopurs_runtime.Value{Type: 9, IntVal: 990467018, UnsafePtr: unsafe.Pointer(__t4)}
+		return __t4
 	})
 	ins__3997675643_2_0_0_cell = &ins__3997675643_2_0_0
 	ins_2_1_1 = gopurs_runtime.Func(func(v_3 gopurs_runtime.Value) gopurs_runtime.Value {
-		var __t7 *Constructor_Main_T
+		var __t7 gopurs_runtime.Value
 		{
 			if v_3.Type == 9 && v_3.IntVal == 990467018 && v_3.UnsafePtr == nil {
-				__t7 = (&Constructor_Main_T{1, 3558538316, (*Constructor_Main_T)(nil), x_0, (*Constructor_Main_T)(nil)})
+				__t7 = gopurs_runtime.Value{Type: 9, IntVal: 990467018, UnsafePtr: unsafe.Pointer((&Constructor_Main_T{1, 3558538316, (*Constructor_Main_T)(nil), x_0, (*Constructor_Main_T)(nil)}))}
 				goto end_branch_7
 			} else {
 
@@ -3593,27 +3593,27 @@ func Call_Main_insert(x_0_loop int64, s_1_loop *Constructor_Main_T) *Constructor
 		}
 		{
 			if v_3.Type == 9 && v_3.IntVal == 990467018 && v_3.UnsafePtr != nil {
-				var __t6 *Constructor_Main_T
+				var __t6 gopurs_runtime.Value
 				{
 					if (x_0) < ((*Constructor_Main_T)(v_3.UnsafePtr).V2) {
-						__t6 = Call_Main_balance((*Constructor_Main_T)(v_3.UnsafePtr).V0, gopurs_runtime.CoerceToStruct[Constructor_Main_T](gopurs_runtime.Apply((*ins__3997675643_2_0_0_cell), gopurs_runtime.Value{Type: 9, IntVal: 990467018, UnsafePtr: unsafe.Pointer((*Constructor_Main_T)(v_3.UnsafePtr).V1)})), (*Constructor_Main_T)(v_3.UnsafePtr).V2, (*Constructor_Main_T)(v_3.UnsafePtr).V3)
+						__t6 = gopurs_runtime.Value{Type: 9, IntVal: 990467018, UnsafePtr: unsafe.Pointer(Call_Main_balance((*Constructor_Main_T)(v_3.UnsafePtr).V0, gopurs_runtime.CoerceToStruct[Constructor_Main_T](gopurs_runtime.Apply((*ins__3997675643_2_0_0_cell), gopurs_runtime.Value{Type: 9, IntVal: 990467018, UnsafePtr: unsafe.Pointer((*Constructor_Main_T)(v_3.UnsafePtr).V1)})), (*Constructor_Main_T)(v_3.UnsafePtr).V2, (*Constructor_Main_T)(v_3.UnsafePtr).V3))}
 						goto end_branch_6
 					} else {
 
 					}
 				}
 				{
-					var __t5 *Constructor_Main_T
+					var __t5 gopurs_runtime.Value
 					{
 						if (x_0) > ((*Constructor_Main_T)(v_3.UnsafePtr).V2) {
-							__t5 = Call_Main_balance((*Constructor_Main_T)(v_3.UnsafePtr).V0, (*Constructor_Main_T)(v_3.UnsafePtr).V1, (*Constructor_Main_T)(v_3.UnsafePtr).V2, gopurs_runtime.CoerceToStruct[Constructor_Main_T](gopurs_runtime.Apply((*ins__3997675643_2_0_0_cell), gopurs_runtime.Value{Type: 9, IntVal: 990467018, UnsafePtr: unsafe.Pointer((*Constructor_Main_T)(v_3.UnsafePtr).V3)})))
+							__t5 = gopurs_runtime.Value{Type: 9, IntVal: 990467018, UnsafePtr: unsafe.Pointer(Call_Main_balance((*Constructor_Main_T)(v_3.UnsafePtr).V0, (*Constructor_Main_T)(v_3.UnsafePtr).V1, (*Constructor_Main_T)(v_3.UnsafePtr).V2, gopurs_runtime.CoerceToStruct[Constructor_Main_T](gopurs_runtime.Apply((*ins__3997675643_2_0_0_cell), gopurs_runtime.Value{Type: 9, IntVal: 990467018, UnsafePtr: unsafe.Pointer((*Constructor_Main_T)(v_3.UnsafePtr).V3)}))))}
 							goto end_branch_5
 						} else {
 
 						}
 					}
 					{
-						__t5 = (&Constructor_Main_T{1, (*Constructor_Main_T)(v_3.UnsafePtr).V0, (*Constructor_Main_T)(v_3.UnsafePtr).V1, (*Constructor_Main_T)(v_3.UnsafePtr).V2, (*Constructor_Main_T)(v_3.UnsafePtr).V3})
+						__t5 = gopurs_runtime.Value{Type: 9, IntVal: 990467018, UnsafePtr: unsafe.Pointer((&Constructor_Main_T{1, (*Constructor_Main_T)(v_3.UnsafePtr).V0, (*Constructor_Main_T)(v_3.UnsafePtr).V1, (*Constructor_Main_T)(v_3.UnsafePtr).V2, (*Constructor_Main_T)(v_3.UnsafePtr).V3}))}
 					}
 				end_branch_5:
 					__t6 = __t5
@@ -3626,10 +3626,10 @@ func Call_Main_insert(x_0_loop int64, s_1_loop *Constructor_Main_T) *Constructor
 			}
 		}
 		{
-			__t7 = func() *Constructor_Main_T { panic("Failed pattern match") }()
+			__t7 = gopurs_runtime.Value{Type: 9, IntVal: 990467018, UnsafePtr: unsafe.Pointer(func() *Constructor_Main_T { panic("Failed pattern match") }())}
 		}
 	end_branch_7:
-		return gopurs_runtime.Value{Type: 9, IntVal: 990467018, UnsafePtr: unsafe.Pointer(__t7)}
+		return __t7
 	})
 	ins_2_1_1_cell = &ins_2_1_1
 	// TAST (Let): __local_var_3_8 shape=App(Other) bindingType=(ADT ["Main","Tree"] [])

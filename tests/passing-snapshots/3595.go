@@ -15,12 +15,14 @@ func Get_Main_Show_dollar_Dict() gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 3143145725, UnsafePtr: unsafe.Pointer(Call_Main_Show_dollar_Dict(func() struct {
 				Show0 gopurs_runtime.Value
 				id    gopurs_runtime.Value
+				/*gopurs:record-v1:2:00530068006f00770030,00690064*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					Show0 gopurs_runtime.Value
 					id    gopurs_runtime.Value
+					/*gopurs:record-v1:2:00530068006f00770030,00690064*/
 				}{}
 				clone.Show0 = gopurs_runtime.RecordGet(orig, "Show0")
 				clone.id = gopurs_runtime.RecordGet(orig, "id")
@@ -40,12 +42,14 @@ func Get_Main_Show_dollar_Dict__1998906268() gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 3143145725, UnsafePtr: unsafe.Pointer(Rebox_Main_2177390102_590014985(Call_Main_Show_dollar_Dict__1998906268(func() struct {
 				Show0 gopurs_runtime.Value
 				id    gopurs_runtime.Value
+				/*gopurs:record-v1:2:00530068006f00770030,00690064*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					Show0 gopurs_runtime.Value
 					id    gopurs_runtime.Value
+					/*gopurs:record-v1:2:00530068006f00770030,00690064*/
 				}{}
 				clone.Show0 = gopurs_runtime.RecordGet(orig, "Show0")
 				clone.id = gopurs_runtime.RecordGet(orig, "id")
@@ -64,7 +68,7 @@ func Get_Main_showString() gopurs_runtime.Value {
 		cache_Main_showString = gopurs_runtime.Value{Type: 9, IntVal: 3143145725, UnsafePtr: unsafe.Pointer(Rebox_Main_2177390102_590014985((&Constructor_Main_Show[string]{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showString()))))}
 		}), gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Str(x_0.StrVal())
+			return x_0
 		})})))}
 	})
 	return cache_Main_showString
@@ -110,6 +114,7 @@ type Constructor_Main_Show[T_a any] struct {
 	V1 gopurs_runtime.Value
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f00530068006f0077
 func init() {
 	gopurs_runtime.StructGetters[3143145725] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_Show[gopurs_runtime.Value])(ptr)
@@ -128,10 +133,12 @@ func init() {
 func Call_Main_Show_dollar_Dict(x_0_loop struct {
 	Show0 gopurs_runtime.Value
 	id    gopurs_runtime.Value
+	/*gopurs:record-v1:2:00530068006f00770030,00690064*/
 }) *Constructor_Main_Show[gopurs_runtime.Value] {
 	var x_0 struct {
 		Show0 gopurs_runtime.Value
 		id    gopurs_runtime.Value
+		/*gopurs:record-v1:2:00530068006f00770030,00690064*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_Show[gopurs_runtime.Value]](func() gopurs_runtime.Value {
@@ -144,6 +151,7 @@ func Call_Main_Show_dollar_Dict(x_0_loop struct {
 func Call_Main_Show_dollar_Dict__1998906268(x_0_loop struct {
 	Show0 gopurs_runtime.Value
 	id    gopurs_runtime.Value
+	/*gopurs:record-v1:2:00530068006f00770030,00690064*/
 }) *Constructor_Main_Show[string] {
 Show_dollar_Dict__1998906268:
 	for {
@@ -153,6 +161,7 @@ Show_dollar_Dict__1998906268:
 		var x_0 struct {
 			Show0 gopurs_runtime.Value
 			id    gopurs_runtime.Value
+			/*gopurs:record-v1:2:00530068006f00770030,00690064*/
 		} = x_0_loop
 		_ = x_0
 		return gopurs_runtime.CoerceToStruct[Constructor_Main_Show[string]](func() gopurs_runtime.Value {

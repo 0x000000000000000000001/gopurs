@@ -299,10 +299,10 @@ func Get_Main_bindMaybe() gopurs_runtime.Value {
 		cache_Main_bindMaybe = gopurs_runtime.Value{Type: 9, IntVal: 4032919565, UnsafePtr: unsafe.Pointer(Rebox_Main_2534018798_2748095225((&Constructor_Control_Bind_Bind[*Constructor_Main_Just[gopurs_runtime.Value]]{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 3032403085, UnsafePtr: unsafe.Pointer(Rebox_Main_2381757806_3741347833(Rebox_Main_3741347833_2381757806(gopurs_runtime.CoerceToStruct[Constructor_Control_Apply_Apply[gopurs_runtime.Value]](Get_Main_applyMaybe()))))}
 		}), gopurs_runtime.Func2(func(v_0 gopurs_runtime.Value, v1_1 gopurs_runtime.Value) gopurs_runtime.Value {
-			var __t0 *Constructor_Main_Just[gopurs_runtime.Value]
+			var __t0 gopurs_runtime.Value
 			{
 				if v_0.Type == 9 && v_0.IntVal == 3271839782 && v_0.UnsafePtr == nil {
-					__t0 = (*Constructor_Main_Just[gopurs_runtime.Value])(nil)
+					__t0 = gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer((*Constructor_Main_Just[gopurs_runtime.Value])(nil))}
 					goto end_branch_0
 				} else {
 
@@ -310,17 +310,17 @@ func Get_Main_bindMaybe() gopurs_runtime.Value {
 			}
 			{
 				if v_0.Type == 9 && v_0.IntVal == 3271839782 && v_0.UnsafePtr != nil {
-					__t0 = gopurs_runtime.CoerceToStruct[Constructor_Main_Just[gopurs_runtime.Value]](gopurs_runtime.Apply(v1_1, (*Constructor_Main_Just[gopurs_runtime.Value])(v_0.UnsafePtr).V0))
+					__t0 = gopurs_runtime.Apply(v1_1, (*Constructor_Main_Just[gopurs_runtime.Value])(v_0.UnsafePtr).V0)
 					goto end_branch_0
 				} else {
 
 				}
 			}
 			{
-				__t0 = func() *Constructor_Main_Just[gopurs_runtime.Value] { panic("Failed pattern match") }()
+				__t0 = gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer(func() *Constructor_Main_Just[gopurs_runtime.Value] { panic("Failed pattern match") }())}
 			}
 		end_branch_0:
-			return gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer(__t0)}
+			return __t0
 		})})))}
 	})
 	return cache_Main_bindMaybe

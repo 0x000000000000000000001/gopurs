@@ -24,10 +24,14 @@ func Get_Main_test__1801063706() gopurs_runtime.Value {
 	once_Main_test__1801063706.Do(func() {
 		cache_Main_test__1801063706 = gopurs_runtime.Func2(func(go__const_0_box gopurs_runtime.Value, v_1_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Str(Call_Main_test__1801063706(go__const_0_box.StrVal(), func() struct {
+
+				/*gopurs:record-v1:0:*/
 			} {
 				orig := v_1_box
 				_ = orig
 				clone := struct {
+
+					/*gopurs:record-v1:0:*/
 				}{}
 
 				return clone
@@ -63,6 +67,8 @@ func Call_Main_test(go__const_0_loop gopurs_runtime.Value, v_1_loop gopurs_runti
 }
 
 func Call_Main_test__1801063706(go__const_0_loop string, v_1_loop struct {
+
+	/*gopurs:record-v1:0:*/
 }) string {
 test__1801063706:
 	for {
@@ -72,6 +78,8 @@ test__1801063706:
 		var go__const_0 string = go__const_0_loop
 		_ = go__const_0
 		var v_1 struct {
+
+			/*gopurs:record-v1:0:*/
 		} = v_1_loop
 		_ = v_1
 		return go__const_0

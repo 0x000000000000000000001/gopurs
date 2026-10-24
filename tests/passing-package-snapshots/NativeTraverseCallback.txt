@@ -569,28 +569,14 @@ func Call_Main_track(calls_0_loop r_.Value, marker_1_loop int64, value_2_loop in
 	return r_.Apply(Get_Effect_Unsafe_unsafePerformEffect(), r_.Func(func(_ r_.Value) r_.Value {
 		// TAST (Let): __local_var_3_0 shape=App(Var) bindingType=Any
 		__local_var_3_0 := r_.Apply2(Get_Effect_Ref_modify_(), r_.Func(func(seen_3 r_.Value) r_.Value {
-			return func() r_.Value {
-				arr := func() []int64 {
-					arr := *(*[]r_.Value)(r_.Array((*(*[]r_.Value)((r_.Apply2(Get_Data_Semigroup_concatArray(), seen_3, func() r_.Value {
-						arr := []int64{marker_1}
-						boxed := make([]r_.Value, len(arr))
-						for i, v := range arr {
-							boxed[i] = r_.Int(v)
-						}
-						return r_.Array(boxed)
-					}())).UnsafePtr))).UnsafePtr)
-					unboxed := make([]int64, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.IntVal
-					}
-					return unboxed
-				}()
+			return r_.Apply2(Get_Data_Semigroup_concatArray(), seen_3, func() r_.Value {
+				arr := []int64{marker_1}
 				boxed := make([]r_.Value, len(arr))
 				for i, v := range arr {
 					boxed[i] = r_.Int(v)
 				}
 				return r_.Array(boxed)
-			}()
+			}())
 		}), calls_0)
 		_ = __local_var_3_0
 		__local_var_4_1 := r_.Apply(__local_var_3_0, r_.Value{})
@@ -621,25 +607,16 @@ func Call_Main_staged(calls_0_loop r_.Value, values_1_loop []int64) struct {
 		return r_.Func(func(value_4 r_.Value) r_.Value {
 			var __t3 struct {
 				V0 r_.Value
-				V1 struct {
-					P_index int64
-					P_value int64
-				}
+				V1 r_.Value
 				V2 bool
 			}
 			{
 				if (value_4.IntVal) < (int64(0)) {
 					__t3 = struct {
 						V0 r_.Value
-						V1 struct {
-							P_index int64
-							P_value int64
-						}
+						V1 r_.Value
 						V2 bool
-					}{r_.Str(Data_Show_ShowIntImpl(captured_3_2)), struct {
-						P_index int64
-						P_value int64
-					}{}, false}
+					}{r_.Str(Data_Show_ShowIntImpl(captured_3_2)), r_.Value{}, false}
 					goto end_branch_3
 				} else {
 
@@ -648,25 +625,15 @@ func Call_Main_staged(calls_0_loop r_.Value, values_1_loop []int64) struct {
 			{
 				__t3 = struct {
 					V0 r_.Value
-					V1 struct {
-						P_index int64
-						P_value int64
-					}
+					V1 r_.Value
 					V2 bool
-				}{r_.Value{}, struct {
-					P_index int64
-					P_value int64
-				}{captured_3_2, value_4.IntVal}, true}
+				}{r_.Value{}, r_.RecordDict2("index", "value", r_.Int(captured_3_2), value_4), true}
 			}
 		end_branch_3:
 			return func() r_.Value {
 				_v := __t3
 				if _v.V2 {
-					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: func() r_.Value {
-						orig := _v.V1
-						_ = orig
-						return r_.RecordDict2("index", "value", r_.Int(orig.P_index), r_.Int(orig.P_value))
-					}()})}
+					return r_.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[r_.Value, r_.Value]{V0: _v.V1})}
 				}
 				return r_.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[r_.Value, r_.Value]{V0: _v.V0})}
 			}()

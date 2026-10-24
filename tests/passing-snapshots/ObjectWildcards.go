@@ -40,13 +40,7 @@ func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 			__local_var_0_0 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Call_Control_Applicative_liftA1(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](Get_Effect_applicativeEffect())), gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
-				return func() gopurs_runtime.Value {
-					orig := struct {
-						value bool
-					}{(v_0.IntVal) != (0)}
-					_ = orig
-					return gopurs_runtime.RecordDict1("value", gopurs_runtime.Bool(orig.value))
-				}()
+				return gopurs_runtime.RecordDict1("value", v_0)
 			}), gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Bool(true)
 			})), gopurs_runtime.Value{})
@@ -67,14 +61,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_1_1 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(__t2)), gopurs_runtime.Value{})
 			_ = __local_var_1_1
 			__local_var_2_3 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Call_Control_Applicative_liftA1(gopurs_runtime.CoerceToStruct[Constructor_Control_Applicative_Applicative[gopurs_runtime.Value]](Get_Effect_applicativeEffect())), gopurs_runtime.Func(func(v_2 gopurs_runtime.Value) gopurs_runtime.Value {
-				return func() gopurs_runtime.Value {
-					orig := struct {
-						x float64
-						y float64
-					}{v_2.FloatVal(), 1.0}
-					_ = orig
-					return gopurs_runtime.RecordDict2("x", "y", gopurs_runtime.Float(orig.x), gopurs_runtime.Float(orig.y))
-				}()
+				return gopurs_runtime.RecordDict2("x", "y", v_2, gopurs_runtime.Float(1.0))
 			}), gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Float(2.0)
 			})), gopurs_runtime.Value{})
@@ -93,6 +80,7 @@ func Call_Main_mkRecord(v_0_loop gopurs_runtime.Value, v1_1_loop gopurs_runtime.
 	bar gopurs_runtime.Value
 	baz string
 	foo gopurs_runtime.Value
+	/*gopurs:record-v1:3:006200610072,00620061007a,0066006f006f*/
 } {
 	var v_0 gopurs_runtime.Value = v_0_loop
 	_ = v_0
@@ -102,5 +90,6 @@ func Call_Main_mkRecord(v_0_loop gopurs_runtime.Value, v1_1_loop gopurs_runtime.
 		bar gopurs_runtime.Value
 		baz string
 		foo gopurs_runtime.Value
+		/*gopurs:record-v1:3:006200610072,00620061007a,0066006f006f*/
 	}{v1_1, "baz", v_0}
 }

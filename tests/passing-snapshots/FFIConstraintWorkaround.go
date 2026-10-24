@@ -59,6 +59,7 @@ func Get_Main_showFFI__460344716() gopurs_runtime.Value {
 				b bool
 				c string
 				e float64
+				/*gopurs:record-v1:4:0061,0062,0063,0065*/
 			} {
 				orig := __eta_norm_0_0_box
 				_ = orig
@@ -67,6 +68,7 @@ func Get_Main_showFFI__460344716() gopurs_runtime.Value {
 					b bool
 					c string
 					e float64
+					/*gopurs:record-v1:4:0061,0062,0063,0065*/
 				}{}
 				clone.a = gopurs_runtime.RecordGet(orig, "a").IntVal
 				clone.b = (gopurs_runtime.RecordGet(orig, "b").IntVal) != (0)
@@ -102,6 +104,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				b bool
 				c string
 				e float64
+				/*gopurs:record-v1:4:0061,0062,0063,0065*/
 			}{int64(1), true, "d", 4.0}))), gopurs_runtime.Value{})
 			_ = __local_var_0_0
 			__local_var_1_1 := gopurs_runtime.Apply(gopurs_runtime.Apply2(Get_Test_Assert_assertImpl(), gopurs_runtime.Str("Showing Int is correct"), gopurs_runtime.Bool((gopurs_runtime.Apply2(Get_Main_showImpl(), Get_Data_Show_showIntImpl(), gopurs_runtime.Int(int64(4))).StrVal()) == ("4"))), gopurs_runtime.Value{})
@@ -113,6 +116,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				b bool
 				c string
 				e float64
+				/*gopurs:record-v1:4:0061,0062,0063,0065*/
 			}{int64(1), true, "d", 4.0})) == ("{ a: 1, b: true, c: 'd', e: 4.0 }"))), gopurs_runtime.Value{})
 			_ = __local_var_3_3
 			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
@@ -144,6 +148,7 @@ func Call_Main_showFFI__460344716(__eta_norm_0_0_loop struct {
 	b bool
 	c string
 	e float64
+	/*gopurs:record-v1:4:0061,0062,0063,0065*/
 }) string {
 showFFI__460344716:
 	for {
@@ -155,6 +160,7 @@ showFFI__460344716:
 			b bool
 			c string
 			e float64
+			/*gopurs:record-v1:4:0061,0062,0063,0065*/
 		} = __eta_norm_0_0_loop
 		_ = __eta_norm_0_0
 		return gopurs_runtime.Apply2(Get_Main_showImpl(), Call_Data_Show_show(Rebox_Main_3574847586_1386611502(Rebox_Main_1386611502_3574847586(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Call_Data_Show_showRecord(gopurs_runtime.Value{}, gopurs_runtime.Value{}, Call_Data_Show_showRecordFieldsCons(gopurs_runtime.RecordDict1("reflectSymbol", gopurs_runtime.Func(func(_dollar___unused_1 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -218,6 +224,7 @@ func Rebox_Main_1386611502_3574847586(in *Constructor_Data_Show_Show[gopurs_runt
 	b bool
 	c string
 	e float64
+	/*gopurs:record-v1:4:0061,0062,0063,0065*/
 }] {
 	if in == nil {
 		return nil
@@ -227,6 +234,7 @@ func Rebox_Main_1386611502_3574847586(in *Constructor_Data_Show_Show[gopurs_runt
 		b bool
 		c string
 		e float64
+		/*gopurs:record-v1:4:0061,0062,0063,0065*/
 	}])(unsafe.Pointer(in))
 }
 
@@ -263,6 +271,7 @@ func Rebox_Main_3574847586_1386611502(in *Constructor_Data_Show_Show[struct {
 	b bool
 	c string
 	e float64
+	/*gopurs:record-v1:4:0061,0062,0063,0065*/
 }]) *Constructor_Data_Show_Show[gopurs_runtime.Value] {
 	if in == nil {
 		return nil

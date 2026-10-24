@@ -14,11 +14,13 @@ func Get_Main_SingleInstanceFundep_dollar_Dict() gopurs_runtime.Value {
 		cache_Main_SingleInstanceFundep_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 4179949665, UnsafePtr: unsafe.Pointer(Call_Main_SingleInstanceFundep_dollar_Dict(func() struct {
 				unified uint32
+				/*gopurs:record-v1:1:0075006e00690066006900650064*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					unified uint32
+					/*gopurs:record-v1:1:0075006e00690066006900650064*/
 				}{}
 				clone.unified = uint32(gopurs_runtime.RecordGet(orig, "unified").IntVal)
 				return clone
@@ -36,11 +38,13 @@ func Get_Main_SingleInstanceFundep_dollar_Dict__3493564679() gopurs_runtime.Valu
 		cache_Main_SingleInstanceFundep_dollar_Dict__3493564679 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 4179949665, UnsafePtr: unsafe.Pointer(Call_Main_SingleInstanceFundep_dollar_Dict__3493564679(func() struct {
 				unified uint32
+				/*gopurs:record-v1:1:0075006e00690066006900650064*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					unified uint32
+					/*gopurs:record-v1:1:0075006e00690066006900650064*/
 				}{}
 				clone.unified = uint32(gopurs_runtime.RecordGet(orig, "unified").IntVal)
 				return clone
@@ -97,6 +101,7 @@ type Constructor_Main_SingleInstanceFundep[T_r any] struct {
 	V0 uint32
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f00530069006e0067006c00650049006e007300740061006e0063006500460075006e006400650070
 func init() {
 	gopurs_runtime.StructGetters[4179949665] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_SingleInstanceFundep[gopurs_runtime.Value])(ptr)
@@ -112,9 +117,11 @@ func init() {
 
 func Call_Main_SingleInstanceFundep_dollar_Dict(x_0_loop struct {
 	unified uint32
+	/*gopurs:record-v1:1:0075006e00690066006900650064*/
 }) *Constructor_Main_SingleInstanceFundep[gopurs_runtime.Value] {
 	var x_0 struct {
 		unified uint32
+		/*gopurs:record-v1:1:0075006e00690066006900650064*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_SingleInstanceFundep[gopurs_runtime.Value]](func() gopurs_runtime.Value {
@@ -126,6 +133,7 @@ func Call_Main_SingleInstanceFundep_dollar_Dict(x_0_loop struct {
 
 func Call_Main_SingleInstanceFundep_dollar_Dict__3493564679(x_0_loop struct {
 	unified uint32
+	/*gopurs:record-v1:1:0075006e00690066006900650064*/
 }) *Constructor_Main_SingleInstanceFundep[gopurs_runtime.Value] {
 SingleInstanceFundep_dollar_Dict__3493564679:
 	for {
@@ -134,6 +142,7 @@ SingleInstanceFundep_dollar_Dict__3493564679:
 		}
 		var x_0 struct {
 			unified uint32
+			/*gopurs:record-v1:1:0075006e00690066006900650064*/
 		} = x_0_loop
 		_ = x_0
 		return gopurs_runtime.CoerceToStruct[Constructor_Main_SingleInstanceFundep[gopurs_runtime.Value]](func() gopurs_runtime.Value {

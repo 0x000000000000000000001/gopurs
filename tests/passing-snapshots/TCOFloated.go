@@ -26,11 +26,13 @@ func Get_Main_looper() gopurs_runtime.Value {
 		cache_Main_looper = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Str(Call_Main_looper(func() struct {
 				foo int64
+				/*gopurs:record-v1:1:0066006f006f*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					foo int64
+					/*gopurs:record-v1:1:0066006f006f*/
 				}{}
 				clone.foo = gopurs_runtime.RecordGet(orig, "foo").IntVal
 				return clone
@@ -47,6 +49,7 @@ func Get_Main_main() gopurs_runtime.Value {
 	once_Main_main.Do(func() {
 		cache_Main_main = gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(Call_Main_looper(struct {
 			foo int64
+			/*gopurs:record-v1:1:0066006f006f*/
 		}{int64(100000)})))
 	})
 	return cache_Main_main
@@ -54,6 +57,7 @@ func Get_Main_main() gopurs_runtime.Value {
 
 func Call_Main_looper(x_0_loop struct {
 	foo int64
+	/*gopurs:record-v1:1:0066006f006f*/
 }) string {
 looper:
 	for {
@@ -62,6 +66,7 @@ looper:
 		}
 		var x_0 struct {
 			foo int64
+			/*gopurs:record-v1:1:0066006f006f*/
 		} = x_0_loop
 		_ = x_0
 		var __t1 string
@@ -84,6 +89,7 @@ looper:
 		{
 			x_0_loop = struct {
 				foo int64
+				/*gopurs:record-v1:1:0066006f006f*/
 			}{gopurs_runtime.IntSub(x_0.foo, int64(1))}
 			continue looper
 			__t1 = func() string { panic("unreachable") }()
@@ -95,6 +101,7 @@ looper:
 
 func Rebox_Main_290402411_4177771502(in *Constructor_Data_Ord_Ord[struct {
 	foo int64
+	/*gopurs:record-v1:1:0066006f006f*/
 }]) *Constructor_Data_Ord_Ord[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
@@ -111,12 +118,14 @@ func Rebox_Main_3308271157_4177771502(in *Constructor_Data_Ord_Ord[int64]) *Cons
 
 func Rebox_Main_4177771502_290402411(in *Constructor_Data_Ord_Ord[gopurs_runtime.Value]) *Constructor_Data_Ord_Ord[struct {
 	foo int64
+	/*gopurs:record-v1:1:0066006f006f*/
 }] {
 	if in == nil {
 		return nil
 	}
 	return (*Constructor_Data_Ord_Ord[struct {
 		foo int64
+		/*gopurs:record-v1:1:0066006f006f*/
 	}])(unsafe.Pointer(in))
 }
 

@@ -44,6 +44,7 @@ type Constructor_Main_Person struct {
 	V0 struct {
 		age  float64
 		name string
+		/*gopurs:record-v1:2:006100670065,006e0061006d0065*/
 	}
 }
 

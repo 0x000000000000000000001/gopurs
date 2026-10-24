@@ -14,11 +14,13 @@ func Get_Main_Eq_dollar_Dict() gopurs_runtime.Value {
 		cache_Main_Eq_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 61300330, UnsafePtr: unsafe.Pointer(Call_Main_Eq_dollar_Dict(func() struct {
 				eq gopurs_runtime.Value
+				/*gopurs:record-v1:1:00650071*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					eq gopurs_runtime.Value
+					/*gopurs:record-v1:1:00650071*/
 				}{}
 				clone.eq = gopurs_runtime.RecordGet(orig, "eq")
 				return clone
@@ -36,11 +38,13 @@ func Get_Main_Eq_dollar_Dict__3060985643() gopurs_runtime.Value {
 		cache_Main_Eq_dollar_Dict__3060985643 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 61300330, UnsafePtr: unsafe.Pointer(Rebox_Main_3136802470_2946378686(Call_Main_Eq_dollar_Dict__3060985643(func() struct {
 				eq gopurs_runtime.Value
+				/*gopurs:record-v1:1:00650071*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					eq gopurs_runtime.Value
+					/*gopurs:record-v1:1:00650071*/
 				}{}
 				clone.eq = gopurs_runtime.RecordGet(orig, "eq")
 				return clone
@@ -89,6 +93,7 @@ type Constructor_Main_Eq[T_a any] struct {
 	V0 gopurs_runtime.Value
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f00450071
 func init() {
 	gopurs_runtime.StructGetters[61300330] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_Eq[gopurs_runtime.Value])(ptr)
@@ -104,9 +109,11 @@ func init() {
 
 func Call_Main_Eq_dollar_Dict(x_0_loop struct {
 	eq gopurs_runtime.Value
+	/*gopurs:record-v1:1:00650071*/
 }) *Constructor_Main_Eq[gopurs_runtime.Value] {
 	var x_0 struct {
 		eq gopurs_runtime.Value
+		/*gopurs:record-v1:1:00650071*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_Eq[gopurs_runtime.Value]](func() gopurs_runtime.Value {
@@ -118,6 +125,7 @@ func Call_Main_Eq_dollar_Dict(x_0_loop struct {
 
 func Call_Main_Eq_dollar_Dict__3060985643(x_0_loop struct {
 	eq gopurs_runtime.Value
+	/*gopurs:record-v1:1:00650071*/
 }) *Constructor_Main_Eq[float64] {
 Eq_dollar_Dict__3060985643:
 	for {
@@ -126,6 +134,7 @@ Eq_dollar_Dict__3060985643:
 		}
 		var x_0 struct {
 			eq gopurs_runtime.Value
+			/*gopurs:record-v1:1:00650071*/
 		} = x_0_loop
 		_ = x_0
 		return gopurs_runtime.CoerceToStruct[Constructor_Main_Eq[float64]](func() gopurs_runtime.Value {

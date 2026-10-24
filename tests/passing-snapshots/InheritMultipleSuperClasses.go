@@ -63,12 +63,14 @@ func Get_Main_Eg2_dollar_Dict() gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 2207147950, UnsafePtr: unsafe.Pointer(Call_Main_Eg2_dollar_Dict(func() struct {
 				Functor0 gopurs_runtime.Value
 				Functor1 gopurs_runtime.Value
+				/*gopurs:record-v1:2:00460075006e00630074006f00720030,00460075006e00630074006f00720031*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					Functor0 gopurs_runtime.Value
 					Functor1 gopurs_runtime.Value
+					/*gopurs:record-v1:2:00460075006e00630074006f00720030,00460075006e00630074006f00720031*/
 				}{}
 				clone.Functor0 = gopurs_runtime.RecordGet(orig, "Functor0")
 				clone.Functor1 = gopurs_runtime.RecordGet(orig, "Functor1")
@@ -88,12 +90,14 @@ func Get_Main_Eg1_dollar_Dict() gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 1828296749, UnsafePtr: unsafe.Pointer(Call_Main_Eg1_dollar_Dict(func() struct {
 				Functor0 gopurs_runtime.Value
 				Functor1 gopurs_runtime.Value
+				/*gopurs:record-v1:2:00460075006e00630074006f00720030,00460075006e00630074006f00720031*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					Functor0 gopurs_runtime.Value
 					Functor1 gopurs_runtime.Value
+					/*gopurs:record-v1:2:00460075006e00630074006f00720030,00460075006e00630074006f00720031*/
 				}{}
 				clone.Functor0 = gopurs_runtime.RecordGet(orig, "Functor0")
 				clone.Functor1 = gopurs_runtime.RecordGet(orig, "Functor1")
@@ -168,6 +172,7 @@ type Constructor_Main_Eg2[T_f any, T_g any] struct {
 	V1 gopurs_runtime.Value
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f004500670032
 func init() {
 	gopurs_runtime.StructGetters[2207147950] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_Eg2[gopurs_runtime.Value, gopurs_runtime.Value])(ptr)
@@ -189,6 +194,7 @@ type Constructor_Main_Eg1[T_f any, T_g any] struct {
 	V1 gopurs_runtime.Value
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f004500670031
 func init() {
 	gopurs_runtime.StructGetters[1828296749] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_Eg1[gopurs_runtime.Value, gopurs_runtime.Value])(ptr)
@@ -231,10 +237,12 @@ func Call_Main_identity3(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 func Call_Main_Eg2_dollar_Dict(x_0_loop struct {
 	Functor0 gopurs_runtime.Value
 	Functor1 gopurs_runtime.Value
+	/*gopurs:record-v1:2:00460075006e00630074006f00720030,00460075006e00630074006f00720031*/
 }) *Constructor_Main_Eg2[gopurs_runtime.Value, gopurs_runtime.Value] {
 	var x_0 struct {
 		Functor0 gopurs_runtime.Value
 		Functor1 gopurs_runtime.Value
+		/*gopurs:record-v1:2:00460075006e00630074006f00720030,00460075006e00630074006f00720031*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_Eg2[gopurs_runtime.Value, gopurs_runtime.Value]](func() gopurs_runtime.Value {
@@ -247,10 +255,12 @@ func Call_Main_Eg2_dollar_Dict(x_0_loop struct {
 func Call_Main_Eg1_dollar_Dict(x_0_loop struct {
 	Functor0 gopurs_runtime.Value
 	Functor1 gopurs_runtime.Value
+	/*gopurs:record-v1:2:00460075006e00630074006f00720030,00460075006e00630074006f00720031*/
 }) *Constructor_Main_Eg1[gopurs_runtime.Value, gopurs_runtime.Value] {
 	var x_0 struct {
 		Functor0 gopurs_runtime.Value
 		Functor1 gopurs_runtime.Value
+		/*gopurs:record-v1:2:00460075006e00630074006f00720030,00460075006e00630074006f00720031*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_Eg1[gopurs_runtime.Value, gopurs_runtime.Value]](func() gopurs_runtime.Value {

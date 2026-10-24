@@ -14,11 +14,13 @@ func Get_Main_Convert_dollar_Dict() gopurs_runtime.Value {
 		cache_Main_Convert_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 3639075177, UnsafePtr: unsafe.Pointer(Call_Main_Convert_dollar_Dict(func() struct {
 				convert gopurs_runtime.Value
+				/*gopurs:record-v1:1:0063006f006e0076006500720074*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					convert gopurs_runtime.Value
+					/*gopurs:record-v1:1:0063006f006e0076006500720074*/
 				}{}
 				clone.convert = gopurs_runtime.RecordGet(orig, "convert")
 				return clone
@@ -36,11 +38,13 @@ func Get_Main_Convert_dollar_Dict__1108481452() gopurs_runtime.Value {
 		cache_Main_Convert_dollar_Dict__1108481452 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 3639075177, UnsafePtr: unsafe.Pointer(Rebox_Main_1758696223_1198875995(Call_Main_Convert_dollar_Dict__1108481452(func() struct {
 				convert gopurs_runtime.Value
+				/*gopurs:record-v1:1:0063006f006e0076006500720074*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					convert gopurs_runtime.Value
+					/*gopurs:record-v1:1:0063006f006e0076006500720074*/
 				}{}
 				clone.convert = gopurs_runtime.RecordGet(orig, "convert")
 				return clone
@@ -56,20 +60,20 @@ var once_Main_convertSB sync.Once
 func Get_Main_convertSB() gopurs_runtime.Value {
 	once_Main_convertSB.Do(func() {
 		cache_Main_convertSB = gopurs_runtime.Value{Type: 9, IntVal: 3639075177, UnsafePtr: unsafe.Pointer(Rebox_Main_1758696223_1198875995((&Constructor_Main_Convert[int64, string]{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			var __t0 string
+			var __t0 gopurs_runtime.Value
 			{
 				if (v_0.IntVal) == (int64(0)) {
-					__t0 = "Nope"
+					__t0 = gopurs_runtime.Str("Nope")
 					goto end_branch_0
 				} else {
 
 				}
 			}
 			{
-				__t0 = "Done"
+				__t0 = gopurs_runtime.Str("Done")
 			}
 		end_branch_0:
-			return gopurs_runtime.Str(__t0)
+			return __t0
 		})})))}
 	})
 	return cache_Main_convertSB
@@ -114,6 +118,7 @@ type Constructor_Main_Convert[T_a any, T_b any] struct {
 	V0 gopurs_runtime.Value
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f0043006f006e0076006500720074
 func init() {
 	gopurs_runtime.StructGetters[3639075177] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_Convert[gopurs_runtime.Value, gopurs_runtime.Value])(ptr)
@@ -129,9 +134,11 @@ func init() {
 
 func Call_Main_Convert_dollar_Dict(x_0_loop struct {
 	convert gopurs_runtime.Value
+	/*gopurs:record-v1:1:0063006f006e0076006500720074*/
 }) *Constructor_Main_Convert[gopurs_runtime.Value, gopurs_runtime.Value] {
 	var x_0 struct {
 		convert gopurs_runtime.Value
+		/*gopurs:record-v1:1:0063006f006e0076006500720074*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_Convert[gopurs_runtime.Value, gopurs_runtime.Value]](func() gopurs_runtime.Value {
@@ -143,6 +150,7 @@ func Call_Main_Convert_dollar_Dict(x_0_loop struct {
 
 func Call_Main_Convert_dollar_Dict__1108481452(x_0_loop struct {
 	convert gopurs_runtime.Value
+	/*gopurs:record-v1:1:0063006f006e0076006500720074*/
 }) *Constructor_Main_Convert[int64, string] {
 Convert_dollar_Dict__1108481452:
 	for {
@@ -151,6 +159,7 @@ Convert_dollar_Dict__1108481452:
 		}
 		var x_0 struct {
 			convert gopurs_runtime.Value
+			/*gopurs:record-v1:1:0063006f006e0076006500720074*/
 		} = x_0_loop
 		_ = x_0
 		return gopurs_runtime.CoerceToStruct[Constructor_Main_Convert[int64, string]](func() gopurs_runtime.Value {

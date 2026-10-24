@@ -411,6 +411,22 @@ Pour valider toute la suite dans les deux profils, lancer deux campagnes :
 ./bin/test -d --all --keep-going
 ```
 
+### Validation des profils avant intégration de C2 — 24 octobre 2026
+
+Sur l'hôte Go natif, les 401 fixtures non exclues ont été compilées et
+exécutées dans chacun des profils Release et Dev. Chaque profil possède
+405 références dans le layout historique, incluant les fichiers FFI, et
+9 références validées dans le layout packages. Les 93 tests du runner passent.
+
+Les références Release anciennes ont été rafraîchies après succès d'exécution
+et revue des différences : 178 fichiers historiques et 3 fichiers packages.
+Les replays stricts dans des workspaces neufs passent pour `Conditional`,
+`3329`, `NativeTraverseCallback` et `TCO`, ainsi que `JsonRecordPlan` en
+packages. Des oracles JavaScript complètent les contrôles de `Conditional`
+(8 cas booléens), `3329` (12 assertions d'injection/projection), `TCO` et des
+trois fixtures packages modifiées. Le binaire natif est resté inchangé pendant
+cette validation ; aucune correction du compilateur n'a été nécessaire.
+
 ## Isolation, logs et caches
 
 Chaque fixture reçoit son propre répertoire temporaire : sources, configuration

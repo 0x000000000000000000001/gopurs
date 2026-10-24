@@ -165,6 +165,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_2_2 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1693432849("", struct {
 				actual   gopurs_runtime.Value
 				expected gopurs_runtime.Value
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{func() gopurs_runtime.Value {
 				_v := Call_Main_run(__local_var_1_1, []int64{int64(3), int64(7)})
 				if _v.V2 {
@@ -180,12 +181,15 @@ func Get_Main_main() gopurs_runtime.Value {
 					arr := []struct {
 						index int64
 						value int64
+						/*gopurs:record-v1:2:0069006e006400650078,00760061006c00750065*/
 					}{struct {
 						index int64
 						value int64
+						/*gopurs:record-v1:2:0069006e006400650078,00760061006c00750065*/
 					}{int64(0), int64(3)}, struct {
 						index int64
 						value int64
+						/*gopurs:record-v1:2:0069006e006400650078,00760061006c00750065*/
 					}{int64(1), int64(7)}}
 					boxed := make([]gopurs_runtime.Value, len(arr))
 					for i, v := range arr {
@@ -208,6 +212,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_3_3 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1772858129("", struct {
 				actual   []int64
 				expected []int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{func() []int64 {
 				arr := *(*[]gopurs_runtime.Value)(__local_var_3_4.UnsafePtr)
 				unboxed := make([]int64, len(arr))
@@ -229,6 +234,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_5_6 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1693432849("", struct {
 				actual   gopurs_runtime.Value
 				expected gopurs_runtime.Value
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{func() gopurs_runtime.Value {
 				_v := Call_Main_run(__local_var_1_1, []int64{int64(-1), int64(8), int64(-2)})
 				if _v.V2 {
@@ -252,6 +258,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_6_7 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1772858129("", struct {
 				actual   []int64
 				expected []int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{func() []int64 {
 				arr := *(*[]gopurs_runtime.Value)(__local_var_6_8.UnsafePtr)
 				unboxed := make([]int64, len(arr))
@@ -273,6 +280,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_8_10 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1693432849("", struct {
 				actual   gopurs_runtime.Value
 				expected gopurs_runtime.Value
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{func() gopurs_runtime.Value {
 				_v := Call_Main_run(__local_var_1_1, []int64{})
 				if _v.V2 {
@@ -288,6 +296,7 @@ func Get_Main_main() gopurs_runtime.Value {
 					arr := []struct {
 						index int64
 						value int64
+						/*gopurs:record-v1:2:0069006e006400650078,00760061006c00750065*/
 					}{}
 					boxed := make([]gopurs_runtime.Value, len(arr))
 					for i, v := range arr {
@@ -310,6 +319,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_9_11 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1772858129("", struct {
 				actual   []int64
 				expected []int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{func() []int64 {
 				arr := *(*[]gopurs_runtime.Value)(__local_var_9_12.UnsafePtr)
 				unboxed := make([]int64, len(arr))
@@ -326,6 +336,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_11_14 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1772858129("", struct {
 				actual   []int64
 				expected []int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{func() []int64 {
 				arr := *(*[]gopurs_runtime.Value)(__local_var_11_15.UnsafePtr)
 				unboxed := make([]int64, len(arr))
@@ -340,6 +351,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_13_17 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1693432849("", struct {
 				actual   gopurs_runtime.Value
 				expected gopurs_runtime.Value
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{gopurs_runtime.Apply(__local_var_12_16, func() gopurs_runtime.Value {
 				arr := []int64{int64(3)}
 				boxed := make([]gopurs_runtime.Value, len(arr))
@@ -356,9 +368,11 @@ func Get_Main_main() gopurs_runtime.Value {
 					arr := []struct {
 						index int64
 						value int64
+						/*gopurs:record-v1:2:0069006e006400650078,00760061006c00750065*/
 					}{struct {
 						index int64
 						value int64
+						/*gopurs:record-v1:2:0069006e006400650078,00760061006c00750065*/
 					}{int64(0), int64(13)}}
 					boxed := make([]gopurs_runtime.Value, len(arr))
 					for i, v := range arr {
@@ -379,6 +393,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_14_18 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1693432849("", struct {
 				actual   gopurs_runtime.Value
 				expected gopurs_runtime.Value
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{gopurs_runtime.Apply(__local_var_12_16, func() gopurs_runtime.Value {
 				arr := []int64{int64(7)}
 				boxed := make([]gopurs_runtime.Value, len(arr))
@@ -395,9 +410,11 @@ func Get_Main_main() gopurs_runtime.Value {
 					arr := []struct {
 						index int64
 						value int64
+						/*gopurs:record-v1:2:0069006e006400650078,00760061006c00750065*/
 					}{struct {
 						index int64
 						value int64
+						/*gopurs:record-v1:2:0069006e006400650078,00760061006c00750065*/
 					}{int64(0), int64(17)}}
 					boxed := make([]gopurs_runtime.Value, len(arr))
 					for i, v := range arr {
@@ -420,6 +437,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_15_19 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1772858129("", struct {
 				actual   []int64
 				expected []int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{func() []int64 {
 				arr := *(*[]gopurs_runtime.Value)(__local_var_15_20.UnsafePtr)
 				unboxed := make([]int64, len(arr))
@@ -441,6 +459,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_17_22 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1693432849("", struct {
 				actual   gopurs_runtime.Value
 				expected gopurs_runtime.Value
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{func() gopurs_runtime.Value {
 				_v := Call_Main_staged(__local_var_1_1, []int64{int64(3), int64(-1), int64(-2)})
 				if _v.V2 {
@@ -464,6 +483,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_18_23 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1772858129("", struct {
 				actual   []int64
 				expected []int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{func() []int64 {
 				arr := *(*[]gopurs_runtime.Value)(__local_var_18_24.UnsafePtr)
 				unboxed := make([]int64, len(arr))
@@ -489,28 +509,14 @@ func Call_Main_track(calls_0_loop gopurs_runtime.Value, marker_1_loop int64, val
 	return gopurs_runtime.Apply(Get_Effect_Unsafe_unsafePerformEffect(), gopurs_runtime.Func(func(_ gopurs_runtime.Value) gopurs_runtime.Value {
 		// TAST (Let): __local_var_3_0 shape=App(Var) bindingType=Any
 		__local_var_3_0 := gopurs_runtime.Apply2(Get_Effect_Ref_modify_(), gopurs_runtime.Func(func(seen_3 gopurs_runtime.Value) gopurs_runtime.Value {
-			return func() gopurs_runtime.Value {
-				arr := func() []int64 {
-					arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), seen_3, func() gopurs_runtime.Value {
-						arr := []int64{marker_1}
-						boxed := make([]gopurs_runtime.Value, len(arr))
-						for i, v := range arr {
-							boxed[i] = gopurs_runtime.Int(v)
-						}
-						return gopurs_runtime.Array(boxed)
-					}())).UnsafePtr))).UnsafePtr)
-					unboxed := make([]int64, len(arr))
-					for i, v := range arr {
-						unboxed[i] = v.IntVal
-					}
-					return unboxed
-				}()
+			return gopurs_runtime.Apply2(Get_Data_Semigroup_concatArray(), seen_3, func() gopurs_runtime.Value {
+				arr := []int64{marker_1}
 				boxed := make([]gopurs_runtime.Value, len(arr))
 				for i, v := range arr {
 					boxed[i] = gopurs_runtime.Int(v)
 				}
 				return gopurs_runtime.Array(boxed)
-			}()
+			}())
 		}), calls_0)
 		_ = __local_var_3_0
 		__local_var_4_1 := gopurs_runtime.Apply(__local_var_3_0, gopurs_runtime.Value{})
@@ -541,25 +547,16 @@ func Call_Main_staged(calls_0_loop gopurs_runtime.Value, values_1_loop []int64) 
 		return gopurs_runtime.Func(func(value_4 gopurs_runtime.Value) gopurs_runtime.Value {
 			var __t3 struct {
 				V0 gopurs_runtime.Value
-				V1 struct {
-					index int64
-					value int64
-				}
+				V1 gopurs_runtime.Value
 				V2 bool
 			}
 			{
 				if (value_4.IntVal) < (int64(0)) {
 					__t3 = struct {
 						V0 gopurs_runtime.Value
-						V1 struct {
-							index int64
-							value int64
-						}
+						V1 gopurs_runtime.Value
 						V2 bool
-					}{gopurs_runtime.Str(Data_Show_ShowIntImpl(captured_3_2)), struct {
-						index int64
-						value int64
-					}{}, false}
+					}{gopurs_runtime.Str(Data_Show_ShowIntImpl(captured_3_2)), gopurs_runtime.Value{}, false}
 					goto end_branch_3
 				} else {
 
@@ -568,25 +565,15 @@ func Call_Main_staged(calls_0_loop gopurs_runtime.Value, values_1_loop []int64) 
 			{
 				__t3 = struct {
 					V0 gopurs_runtime.Value
-					V1 struct {
-						index int64
-						value int64
-					}
+					V1 gopurs_runtime.Value
 					V2 bool
-				}{gopurs_runtime.Value{}, struct {
-					index int64
-					value int64
-				}{captured_3_2, value_4.IntVal}, true}
+				}{gopurs_runtime.Value{}, gopurs_runtime.RecordDict2("index", "value", gopurs_runtime.Int(captured_3_2), value_4), true}
 			}
 		end_branch_3:
 			return func() gopurs_runtime.Value {
 				_v := __t3
 				if _v.V2 {
-					return gopurs_runtime.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[gopurs_runtime.Value, gopurs_runtime.Value]{V0: func() gopurs_runtime.Value {
-						orig := _v.V1
-						_ = orig
-						return gopurs_runtime.RecordDict2("index", "value", gopurs_runtime.Int(orig.index), gopurs_runtime.Int(orig.value))
-					}()})}
+					return gopurs_runtime.Value{Type: 9, IntVal: 2465973597, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Right[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V1})}
 				}
 				return gopurs_runtime.Value{Type: 9, IntVal: 3711209382, UnsafePtr: unsafe.Pointer(&Constructor_Data_Either_Left[gopurs_runtime.Value, gopurs_runtime.Value]{V0: _v.V0})}
 			}()
@@ -677,6 +664,7 @@ func Call_Main_run(calls_0_loop gopurs_runtime.Value, values_1_loop []int64) str
 		V1 struct {
 			index int64
 			value int64
+			/*gopurs:record-v1:2:0069006e006400650078,00760061006c00750065*/
 		}
 		V2 bool
 	} {
@@ -688,6 +676,7 @@ func Call_Main_run(calls_0_loop gopurs_runtime.Value, values_1_loop []int64) str
 			V1 struct {
 				index int64
 				value int64
+				/*gopurs:record-v1:2:0069006e006400650078,00760061006c00750065*/
 			}
 			V2 bool
 		}
@@ -698,11 +687,13 @@ func Call_Main_run(calls_0_loop gopurs_runtime.Value, values_1_loop []int64) str
 					V1 struct {
 						index int64
 						value int64
+						/*gopurs:record-v1:2:0069006e006400650078,00760061006c00750065*/
 					}
 					V2 bool
 				}{gopurs_runtime.Str(Data_Show_ShowIntImpl(i_2)), struct {
 					index int64
 					value int64
+					/*gopurs:record-v1:2:0069006e006400650078,00760061006c00750065*/
 				}{}, false}
 				goto end_branch_3
 			} else {
@@ -715,11 +706,13 @@ func Call_Main_run(calls_0_loop gopurs_runtime.Value, values_1_loop []int64) str
 				V1 struct {
 					index int64
 					value int64
+					/*gopurs:record-v1:2:0069006e006400650078,00760061006c00750065*/
 				}
 				V2 bool
 			}{gopurs_runtime.Value{}, struct {
 				index int64
 				value int64
+				/*gopurs:record-v1:2:0069006e006400650078,00760061006c00750065*/
 			}{i_2, observed_4_2}, true}
 		}
 	end_branch_3:
@@ -823,6 +816,7 @@ func Call_Main_partial(calls_0_loop gopurs_runtime.Value, offset_1_loop int64) g
 		V1 struct {
 			index int64
 			value int64
+			/*gopurs:record-v1:2:0069006e006400650078,00760061006c00750065*/
 		}
 		V2 bool
 	} {
@@ -831,11 +825,13 @@ func Call_Main_partial(calls_0_loop gopurs_runtime.Value, offset_1_loop int64) g
 			V1 struct {
 				index int64
 				value int64
+				/*gopurs:record-v1:2:0069006e006400650078,00760061006c00750065*/
 			}
 			V2 bool
 		}{gopurs_runtime.Value{}, struct {
 			index int64
 			value int64
+			/*gopurs:record-v1:2:0069006e006400650078,00760061006c00750065*/
 		}{i_3, gopurs_runtime.IntAdd(value_4.IntVal, captured_2_0)}, true}
 	}
 	_ = traverseEither_arg_3

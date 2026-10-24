@@ -289,7 +289,7 @@ func Get_Main_genericDirection() gopurs_runtime.Value {
 				var __t_tag_0 uint32 = uint32(x_0.IntVal)
 				_ = __t_tag_0
 				if uint32(__t_tag_0) == 663586993 {
-					__t4 = gopurs_runtime.Value{Type: 9, IntVal: 3478632216, UnsafePtr: unsafe.Pointer(Rebox_Main_497217223_1323331594((&Constructor_Data_Generic_Rep_Inl[uint32, gopurs_runtime.Value]{1, 1454898258})))}
+					__t4 = gopurs_runtime.Value{Type: 9, IntVal: 3478632216, UnsafePtr: unsafe.Pointer((&Constructor_Data_Generic_Rep_Inl[gopurs_runtime.Value, gopurs_runtime.Value]{1, gopurs_runtime.Value{Type: 9, IntVal: int64(1454898258), UnsafePtr: nil}}))}
 					goto end_branch_4
 				} else {
 
@@ -299,7 +299,7 @@ func Get_Main_genericDirection() gopurs_runtime.Value {
 				var __t_tag_1 uint32 = uint32(x_0.IntVal)
 				_ = __t_tag_1
 				if uint32(__t_tag_1) == 3523815787 {
-					__t4 = gopurs_runtime.Value{Type: 9, IntVal: 492034566, UnsafePtr: unsafe.Pointer(Rebox_Main_660678937_2687169876((&Constructor_Data_Generic_Rep_Inr[uint32, gopurs_runtime.Value]{1, gopurs_runtime.Value{Type: 9, IntVal: 3478632216, UnsafePtr: unsafe.Pointer(Rebox_Main_497217223_1323331594((&Constructor_Data_Generic_Rep_Inl[uint32, gopurs_runtime.Value]{1, 1454898258})))}})))}
+					__t4 = gopurs_runtime.Value{Type: 9, IntVal: 492034566, UnsafePtr: unsafe.Pointer((&Constructor_Data_Generic_Rep_Inr[gopurs_runtime.Value, gopurs_runtime.Value]{1, gopurs_runtime.Value{Type: 9, IntVal: 3478632216, UnsafePtr: unsafe.Pointer((&Constructor_Data_Generic_Rep_Inl[gopurs_runtime.Value, gopurs_runtime.Value]{1, gopurs_runtime.Value{Type: 9, IntVal: int64(1454898258), UnsafePtr: nil}}))}}))}
 					goto end_branch_4
 				} else {
 
@@ -309,7 +309,7 @@ func Get_Main_genericDirection() gopurs_runtime.Value {
 				var __t_tag_2 uint32 = uint32(x_0.IntVal)
 				_ = __t_tag_2
 				if uint32(__t_tag_2) == 2291047933 {
-					__t4 = gopurs_runtime.Value{Type: 9, IntVal: 492034566, UnsafePtr: unsafe.Pointer(Rebox_Main_660678937_2687169876((&Constructor_Data_Generic_Rep_Inr[uint32, gopurs_runtime.Value]{1, gopurs_runtime.Value{Type: 9, IntVal: 492034566, UnsafePtr: unsafe.Pointer(Rebox_Main_660678937_2687169876((&Constructor_Data_Generic_Rep_Inr[uint32, gopurs_runtime.Value]{1, gopurs_runtime.Value{Type: 9, IntVal: 3478632216, UnsafePtr: unsafe.Pointer(Rebox_Main_4191096074_1323331594((&Constructor_Data_Generic_Rep_Inl[uint32, uint32]{1, 1454898258})))}})))}})))}
+					__t4 = gopurs_runtime.Value{Type: 9, IntVal: 492034566, UnsafePtr: unsafe.Pointer((&Constructor_Data_Generic_Rep_Inr[gopurs_runtime.Value, gopurs_runtime.Value]{1, gopurs_runtime.Value{Type: 9, IntVal: 492034566, UnsafePtr: unsafe.Pointer((&Constructor_Data_Generic_Rep_Inr[gopurs_runtime.Value, gopurs_runtime.Value]{1, gopurs_runtime.Value{Type: 9, IntVal: 3478632216, UnsafePtr: unsafe.Pointer((&Constructor_Data_Generic_Rep_Inl[gopurs_runtime.Value, gopurs_runtime.Value]{1, gopurs_runtime.Value{Type: 9, IntVal: int64(1454898258), UnsafePtr: nil}}))}}))}}))}
 					goto end_branch_4
 				} else {
 
@@ -319,7 +319,7 @@ func Get_Main_genericDirection() gopurs_runtime.Value {
 				var __t_tag_3 uint32 = uint32(x_0.IntVal)
 				_ = __t_tag_3
 				if uint32(__t_tag_3) == 2882997739 {
-					__t4 = gopurs_runtime.Value{Type: 9, IntVal: 492034566, UnsafePtr: unsafe.Pointer(Rebox_Main_660678937_2687169876((&Constructor_Data_Generic_Rep_Inr[uint32, gopurs_runtime.Value]{1, gopurs_runtime.Value{Type: 9, IntVal: 492034566, UnsafePtr: unsafe.Pointer(Rebox_Main_660678937_2687169876((&Constructor_Data_Generic_Rep_Inr[uint32, gopurs_runtime.Value]{1, gopurs_runtime.Value{Type: 9, IntVal: 492034566, UnsafePtr: unsafe.Pointer(Rebox_Main_1259967060_2687169876((&Constructor_Data_Generic_Rep_Inr[uint32, uint32]{1, 1454898258})))}})))}})))}
+					__t4 = gopurs_runtime.Value{Type: 9, IntVal: 492034566, UnsafePtr: unsafe.Pointer((&Constructor_Data_Generic_Rep_Inr[gopurs_runtime.Value, gopurs_runtime.Value]{1, gopurs_runtime.Value{Type: 9, IntVal: 492034566, UnsafePtr: unsafe.Pointer((&Constructor_Data_Generic_Rep_Inr[gopurs_runtime.Value, gopurs_runtime.Value]{1, gopurs_runtime.Value{Type: 9, IntVal: 492034566, UnsafePtr: unsafe.Pointer((&Constructor_Data_Generic_Rep_Inr[gopurs_runtime.Value, gopurs_runtime.Value]{1, gopurs_runtime.Value{Type: 9, IntVal: int64(1454898258), UnsafePtr: nil}}))}}))}}))}
 					goto end_branch_4
 				} else {
 
@@ -331,10 +331,10 @@ func Get_Main_genericDirection() gopurs_runtime.Value {
 		end_branch_4:
 			return __t4
 		}), gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			var __t11 uint32
+			var __t11 gopurs_runtime.Value
 			{
 				if x_0.Type == 9 && x_0.IntVal == 3478632216 {
-					__t11 = 663586993
+					__t11 = gopurs_runtime.Value{Type: 9, IntVal: int64(663586993), UnsafePtr: nil}
 					goto end_branch_11
 				} else {
 
@@ -342,12 +342,12 @@ func Get_Main_genericDirection() gopurs_runtime.Value {
 			}
 			{
 				if x_0.Type == 9 && x_0.IntVal == 492034566 {
-					var __t10 uint32
+					var __t10 gopurs_runtime.Value
 					{
 						var __t_tag_5 gopurs_runtime.Value = (*Constructor_Data_Generic_Rep_Inr[gopurs_runtime.Value, gopurs_runtime.Value])(x_0.UnsafePtr).V0
 						_ = __t_tag_5
 						if __t_tag_5.Type == 9 && __t_tag_5.IntVal == 3478632216 {
-							__t10 = 3523815787
+							__t10 = gopurs_runtime.Value{Type: 9, IntVal: int64(3523815787), UnsafePtr: nil}
 							goto end_branch_10
 						} else {
 
@@ -357,12 +357,12 @@ func Get_Main_genericDirection() gopurs_runtime.Value {
 						var __t_tag_6 gopurs_runtime.Value = (*Constructor_Data_Generic_Rep_Inr[gopurs_runtime.Value, gopurs_runtime.Value])(x_0.UnsafePtr).V0
 						_ = __t_tag_6
 						if __t_tag_6.Type == 9 && __t_tag_6.IntVal == 492034566 {
-							var __t9 uint32
+							var __t9 gopurs_runtime.Value
 							{
 								var __t_tag_7 gopurs_runtime.Value = (*Constructor_Data_Generic_Rep_Inr[gopurs_runtime.Value, gopurs_runtime.Value])((*Constructor_Data_Generic_Rep_Inr[gopurs_runtime.Value, gopurs_runtime.Value])(x_0.UnsafePtr).V0.UnsafePtr).V0
 								_ = __t_tag_7
 								if __t_tag_7.Type == 9 && __t_tag_7.IntVal == 3478632216 {
-									__t9 = 2291047933
+									__t9 = gopurs_runtime.Value{Type: 9, IntVal: int64(2291047933), UnsafePtr: nil}
 									goto end_branch_9
 								} else {
 
@@ -372,14 +372,14 @@ func Get_Main_genericDirection() gopurs_runtime.Value {
 								var __t_tag_8 gopurs_runtime.Value = (*Constructor_Data_Generic_Rep_Inr[gopurs_runtime.Value, gopurs_runtime.Value])((*Constructor_Data_Generic_Rep_Inr[gopurs_runtime.Value, gopurs_runtime.Value])(x_0.UnsafePtr).V0.UnsafePtr).V0
 								_ = __t_tag_8
 								if __t_tag_8.Type == 9 && __t_tag_8.IntVal == 492034566 {
-									__t9 = 2882997739
+									__t9 = gopurs_runtime.Value{Type: 9, IntVal: int64(2882997739), UnsafePtr: nil}
 									goto end_branch_9
 								} else {
 
 								}
 							}
 							{
-								__t9 = func() uint32 { panic("Failed pattern match") }()
+								__t9 = gopurs_runtime.Value{Type: 9, IntVal: int64(func() uint32 { panic("Failed pattern match") }()), UnsafePtr: nil}
 							}
 						end_branch_9:
 							__t10 = __t9
@@ -389,7 +389,7 @@ func Get_Main_genericDirection() gopurs_runtime.Value {
 						}
 					}
 					{
-						__t10 = func() uint32 { panic("Failed pattern match") }()
+						__t10 = gopurs_runtime.Value{Type: 9, IntVal: int64(func() uint32 { panic("Failed pattern match") }()), UnsafePtr: nil}
 					}
 				end_branch_10:
 					__t11 = __t10
@@ -399,10 +399,10 @@ func Get_Main_genericDirection() gopurs_runtime.Value {
 				}
 			}
 			{
-				__t11 = func() uint32 { panic("Failed pattern match") }()
+				__t11 = gopurs_runtime.Value{Type: 9, IntVal: int64(func() uint32 { panic("Failed pattern match") }()), UnsafePtr: nil}
 			}
 		end_branch_11:
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(__t11), UnsafePtr: nil}
+			return __t11
 		})})))}
 	})
 	return cache_Main_genericDirection
@@ -426,10 +426,10 @@ var once_Main_functorList sync.Once
 func Get_Main_functorList() gopurs_runtime.Value {
 	once_Main_functorList.Do(func() {
 		cache_Main_functorList = gopurs_runtime.Value{Type: 9, IntVal: 929368378, UnsafePtr: unsafe.Pointer(Rebox_Main_2834964816_2812149806((&Constructor_Data_Functor_Functor[*Constructor_Main_Cons[gopurs_runtime.Value]]{1, gopurs_runtime.Func2(func(f_0 gopurs_runtime.Value, m_1 gopurs_runtime.Value) gopurs_runtime.Value {
-			var __t0 *Constructor_Main_Cons[gopurs_runtime.Value]
+			var __t0 gopurs_runtime.Value
 			{
 				if m_1.Type == 9 && m_1.IntVal == 322902991 && m_1.UnsafePtr == nil {
-					__t0 = (*Constructor_Main_Cons[gopurs_runtime.Value])(nil)
+					__t0 = gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons[gopurs_runtime.Value])(nil))}
 					goto end_branch_0
 				} else {
 
@@ -437,17 +437,17 @@ func Get_Main_functorList() gopurs_runtime.Value {
 			}
 			{
 				if m_1.Type == 9 && m_1.IntVal == 322902991 && m_1.UnsafePtr != nil {
-					__t0 = (&Constructor_Main_Cons[gopurs_runtime.Value]{1, gopurs_runtime.Apply(f_0, (*Constructor_Main_Cons[gopurs_runtime.Value])(m_1.UnsafePtr).V0), gopurs_runtime.CoerceToStruct[Constructor_Main_Cons[gopurs_runtime.Value]](gopurs_runtime.Apply2(Rebox_Main_2812149806_2834964816(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor[gopurs_runtime.Value]](Get_Main_functorList())).V0, f_0, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons[gopurs_runtime.Value])(m_1.UnsafePtr).V1)}))})
+					__t0 = gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((&Constructor_Main_Cons[gopurs_runtime.Value]{1, gopurs_runtime.Apply(f_0, (*Constructor_Main_Cons[gopurs_runtime.Value])(m_1.UnsafePtr).V0), gopurs_runtime.CoerceToStruct[Constructor_Main_Cons[gopurs_runtime.Value]](gopurs_runtime.Apply2(Rebox_Main_2812149806_2834964816(gopurs_runtime.CoerceToStruct[Constructor_Data_Functor_Functor[gopurs_runtime.Value]](Get_Main_functorList())).V0, f_0, gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer((*Constructor_Main_Cons[gopurs_runtime.Value])(m_1.UnsafePtr).V1)}))}))}
 					goto end_branch_0
 				} else {
 
 				}
 			}
 			{
-				__t0 = func() *Constructor_Main_Cons[gopurs_runtime.Value] { panic("Failed pattern match") }()
+				__t0 = gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer(func() *Constructor_Main_Cons[gopurs_runtime.Value] { panic("Failed pattern match") }())}
 			}
 		end_branch_0:
-			return gopurs_runtime.Value{Type: 9, IntVal: 322902991, UnsafePtr: unsafe.Pointer(__t0)}
+			return __t0
 		})})))}
 	})
 	return cache_Main_functorList
@@ -459,10 +459,10 @@ var once_Main_functorBox sync.Once
 func Get_Main_functorBox() gopurs_runtime.Value {
 	once_Main_functorBox.Do(func() {
 		cache_Main_functorBox = gopurs_runtime.Value{Type: 9, IntVal: 929368378, UnsafePtr: unsafe.Pointer(Rebox_Main_2362652146_2812149806((&Constructor_Data_Functor_Functor[*Constructor_Main_Full[gopurs_runtime.Value]]{1, gopurs_runtime.Func2(func(f_0 gopurs_runtime.Value, m_1 gopurs_runtime.Value) gopurs_runtime.Value {
-			var __t0 *Constructor_Main_Full[gopurs_runtime.Value]
+			var __t0 gopurs_runtime.Value
 			{
 				if m_1.Type == 9 && m_1.IntVal == 1145268909 && m_1.UnsafePtr == nil {
-					__t0 = (*Constructor_Main_Full[gopurs_runtime.Value])(nil)
+					__t0 = gopurs_runtime.Value{Type: 9, IntVal: 1145268909, UnsafePtr: unsafe.Pointer((*Constructor_Main_Full[gopurs_runtime.Value])(nil))}
 					goto end_branch_0
 				} else {
 
@@ -470,17 +470,17 @@ func Get_Main_functorBox() gopurs_runtime.Value {
 			}
 			{
 				if m_1.Type == 9 && m_1.IntVal == 1145268909 && m_1.UnsafePtr != nil {
-					__t0 = (&Constructor_Main_Full[gopurs_runtime.Value]{1, gopurs_runtime.Apply(f_0, (*Constructor_Main_Full[gopurs_runtime.Value])(m_1.UnsafePtr).V0)})
+					__t0 = gopurs_runtime.Value{Type: 9, IntVal: 1145268909, UnsafePtr: unsafe.Pointer((&Constructor_Main_Full[gopurs_runtime.Value]{1, gopurs_runtime.Apply(f_0, (*Constructor_Main_Full[gopurs_runtime.Value])(m_1.UnsafePtr).V0)}))}
 					goto end_branch_0
 				} else {
 
 				}
 			}
 			{
-				__t0 = func() *Constructor_Main_Full[gopurs_runtime.Value] { panic("Failed pattern match") }()
+				__t0 = gopurs_runtime.Value{Type: 9, IntVal: 1145268909, UnsafePtr: unsafe.Pointer(func() *Constructor_Main_Full[gopurs_runtime.Value] { panic("Failed pattern match") }())}
 			}
 		end_branch_0:
-			return gopurs_runtime.Value{Type: 9, IntVal: 1145268909, UnsafePtr: unsafe.Pointer(__t0)}
+			return __t0
 		})})))}
 	})
 	return cache_Main_functorBox
@@ -644,7 +644,7 @@ func Get_Main_ordName() gopurs_runtime.Value {
 		cache_Main_ordName = gopurs_runtime.Value{Type: 9, IntVal: 1435789946, UnsafePtr: unsafe.Pointer(Rebox_Main_2406510097_4177771502((&Constructor_Data_Ord_Ord[string]{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_1140313009_3790796878(Rebox_Main_3790796878_1140313009(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Main_eqName()))))}
 		}), gopurs_runtime.Func2(func(x_0 gopurs_runtime.Value, y_1 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(uint32(gopurs_runtime.Apply5(Get_Data_Ord_ordStringImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, gopurs_runtime.Str(x_0.StrVal()), gopurs_runtime.Str(y_1.StrVal())).IntVal)), UnsafePtr: nil}
+			return gopurs_runtime.Apply5(Get_Data_Ord_ordStringImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, gopurs_runtime.Str(x_0.StrVal()), gopurs_runtime.Str(y_1.StrVal()))
 		})})))}
 	})
 	return cache_Main_ordName
@@ -730,24 +730,24 @@ func Get_Main_ordColor() gopurs_runtime.Value {
 		cache_Main_ordColor = gopurs_runtime.Value{Type: 9, IntVal: 1435789946, UnsafePtr: unsafe.Pointer(Rebox_Main_3730953251_4177771502((&Constructor_Data_Ord_Ord[uint32]{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_3768443459_3790796878(Rebox_Main_3790796878_3768443459(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Main_eqColor()))))}
 		}), gopurs_runtime.Func2(func(x_0 gopurs_runtime.Value, y_1 gopurs_runtime.Value) gopurs_runtime.Value {
-			var __t11 uint32
+			var __t11 gopurs_runtime.Value
 			{
 				var __t_tag_0 uint32 = uint32(x_0.IntVal)
 				_ = __t_tag_0
 				if uint32(__t_tag_0) == 1227005933 {
-					var __t2 uint32
+					var __t2 gopurs_runtime.Value
 					{
 						var __t_tag_1 uint32 = uint32(y_1.IntVal)
 						_ = __t_tag_1
 						if uint32(__t_tag_1) == 1227005933 {
-							__t2 = 902936544
+							__t2 = gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}
 							goto end_branch_2
 						} else {
 
 						}
 					}
 					{
-						__t2 = 1527465420
+						__t2 = gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}
 					}
 				end_branch_2:
 					__t11 = __t2
@@ -760,7 +760,7 @@ func Get_Main_ordColor() gopurs_runtime.Value {
 				var __t_tag_3 uint32 = uint32(y_1.IntVal)
 				_ = __t_tag_3
 				if uint32(__t_tag_3) == 1227005933 {
-					__t11 = 380165415
+					__t11 = gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}
 					goto end_branch_11
 				} else {
 
@@ -770,19 +770,19 @@ func Get_Main_ordColor() gopurs_runtime.Value {
 				var __t_tag_4 uint32 = uint32(x_0.IntVal)
 				_ = __t_tag_4
 				if uint32(__t_tag_4) == 3772422949 {
-					var __t6 uint32
+					var __t6 gopurs_runtime.Value
 					{
 						var __t_tag_5 uint32 = uint32(y_1.IntVal)
 						_ = __t_tag_5
 						if uint32(__t_tag_5) == 3772422949 {
-							__t6 = 902936544
+							__t6 = gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}
 							goto end_branch_6
 						} else {
 
 						}
 					}
 					{
-						__t6 = 1527465420
+						__t6 = gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}
 					}
 				end_branch_6:
 					__t11 = __t6
@@ -795,7 +795,7 @@ func Get_Main_ordColor() gopurs_runtime.Value {
 				var __t_tag_7 uint32 = uint32(y_1.IntVal)
 				_ = __t_tag_7
 				if uint32(__t_tag_7) == 3772422949 {
-					__t11 = 380165415
+					__t11 = gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}
 					goto end_branch_11
 				} else {
 
@@ -812,17 +812,17 @@ func Get_Main_ordColor() gopurs_runtime.Value {
 					__t_and_10 = (uint32(__t_tag_9) == 3944123360)
 				}
 				if __t_and_10 {
-					__t11 = 902936544
+					__t11 = gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}
 					goto end_branch_11
 				} else {
 
 				}
 			}
 			{
-				__t11 = func() uint32 { panic("Failed pattern match") }()
+				__t11 = gopurs_runtime.Value{Type: 9, IntVal: int64(func() uint32 { panic("Failed pattern match") }()), UnsafePtr: nil}
 			}
 		end_branch_11:
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(__t11), UnsafePtr: nil}
+			return __t11
 		})})))}
 	})
 	return cache_Main_ordColor
@@ -1125,15 +1125,6 @@ func Rebox_Main_1201789390_1950344881(in *Constructor_Data_Monoid_Monoid[gopurs_
 	return out
 }
 
-func Rebox_Main_1259967060_2687169876(in *Constructor_Data_Generic_Rep_Inr[uint32, uint32]) *Constructor_Data_Generic_Rep_Inr[gopurs_runtime.Value, gopurs_runtime.Value] {
-	if in == nil {
-		return nil
-	}
-	out := &Constructor_Data_Generic_Rep_Inr[gopurs_runtime.Value, gopurs_runtime.Value]{}
-	out.V0 = gopurs_runtime.Value{Type: 9, IntVal: int64(in.V0), UnsafePtr: nil}
-	return out
-}
-
 func Rebox_Main_1557125915_791404512(in *Constructor_Main_Pair[int64]) *Constructor_Main_Pair[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
@@ -1297,15 +1288,6 @@ func Rebox_Main_4169608016_3043886126(in *Constructor_Data_Traversable_Traversab
 	return (*Constructor_Data_Traversable_Traversable[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
-func Rebox_Main_4191096074_1323331594(in *Constructor_Data_Generic_Rep_Inl[uint32, uint32]) *Constructor_Data_Generic_Rep_Inl[gopurs_runtime.Value, gopurs_runtime.Value] {
-	if in == nil {
-		return nil
-	}
-	out := &Constructor_Data_Generic_Rep_Inl[gopurs_runtime.Value, gopurs_runtime.Value]{}
-	out.V0 = gopurs_runtime.Value{Type: 9, IntVal: int64(in.V0), UnsafePtr: nil}
-	return out
-}
-
 func Rebox_Main_451755851_2812149806(in *Constructor_Data_Functor_Functor[*Constructor_Main_Pair[gopurs_runtime.Value]]) *Constructor_Data_Functor_Functor[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
@@ -1320,27 +1302,11 @@ func Rebox_Main_464825424_1680800814(in *Constructor_Data_Foldable_Foldable[*Con
 	return (*Constructor_Data_Foldable_Foldable[gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
-func Rebox_Main_497217223_1323331594(in *Constructor_Data_Generic_Rep_Inl[uint32, gopurs_runtime.Value]) *Constructor_Data_Generic_Rep_Inl[gopurs_runtime.Value, gopurs_runtime.Value] {
-	if in == nil {
-		return nil
-	}
-	out := &Constructor_Data_Generic_Rep_Inl[gopurs_runtime.Value, gopurs_runtime.Value]{}
-	out.V0 = gopurs_runtime.Value{Type: 9, IntVal: int64(in.V0), UnsafePtr: nil}
-	return out
-}
-
 func Rebox_Main_660272253_2818661616(in *Constructor_Data_Generic_Rep_Generic[uint32, gopurs_runtime.Value]) *Constructor_Data_Generic_Rep_Generic[gopurs_runtime.Value, gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}
 	return (*Constructor_Data_Generic_Rep_Generic[gopurs_runtime.Value, gopurs_runtime.Value])(unsafe.Pointer(in))
-}
-
-func Rebox_Main_660678937_2687169876(in *Constructor_Data_Generic_Rep_Inr[uint32, gopurs_runtime.Value]) *Constructor_Data_Generic_Rep_Inr[gopurs_runtime.Value, gopurs_runtime.Value] {
-	if in == nil {
-		return nil
-	}
-	return (*Constructor_Data_Generic_Rep_Inr[gopurs_runtime.Value, gopurs_runtime.Value])(unsafe.Pointer(in))
 }
 
 func Rebox_Main_966678290_3790796878(in *Constructor_Data_Eq_Eq[*Constructor_Main_Full[gopurs_runtime.Value]]) *Constructor_Data_Eq_Eq[gopurs_runtime.Value] {

@@ -27,11 +27,14 @@ func Get_Main_go__init() gopurs_runtime.Value {
 				bar struct {
 					baz int64
 					qux int64
+					/*gopurs:record-v1:2:00620061007a,007100750078*/
 				}
 				foo int64
+				/*gopurs:record-v1:2:006200610072,0066006f006f*/
 			}{struct {
 				baz int64
 				qux int64
+				/*gopurs:record-v1:2:00620061007a,007100750078*/
 			}{int64(2), int64(3)}, int64(1)}
 			_ = orig
 			return gopurs_runtime.RecordDict2("bar", "foo", func() gopurs_runtime.Value {
@@ -54,11 +57,14 @@ func Get_Main_expected() gopurs_runtime.Value {
 				bar struct {
 					baz int64
 					qux int64
+					/*gopurs:record-v1:2:00620061007a,007100750078*/
 				}
 				foo int64
+				/*gopurs:record-v1:2:006200610072,0066006f006f*/
 			}{struct {
 				baz int64
 				qux int64
+				/*gopurs:record-v1:2:00620061007a,007100750078*/
 			}{int64(20), int64(30)}, int64(10)}
 			_ = orig
 			return gopurs_runtime.RecordDict2("bar", "foo", func() gopurs_runtime.Value {
@@ -93,16 +99,20 @@ func Get_Main_after() gopurs_runtime.Value {
 				bar struct {
 					baz int64
 					qux int64
+					/*gopurs:record-v1:2:00620061007a,007100750078*/
 				}
 				foo int64
+				/*gopurs:record-v1:2:006200610072,0066006f006f*/
 			} {
 				orig := Call_Main_update(func() gopurs_runtime.Value {
 					orig := func() struct {
 						bar struct {
 							baz int64
 							qux int64
+							/*gopurs:record-v1:2:00620061007a,007100750078*/
 						}
 						foo int64
+						/*gopurs:record-v1:2:006200610072,0066006f006f*/
 					} {
 						orig := Get_Main_go__init()
 						_ = orig
@@ -110,18 +120,22 @@ func Get_Main_after() gopurs_runtime.Value {
 							bar struct {
 								baz int64
 								qux int64
+								/*gopurs:record-v1:2:00620061007a,007100750078*/
 							}
 							foo int64
+							/*gopurs:record-v1:2:006200610072,0066006f006f*/
 						}{}
 						clone.bar = func() struct {
 							baz int64
 							qux int64
+							/*gopurs:record-v1:2:00620061007a,007100750078*/
 						} {
 							orig := gopurs_runtime.RecordGet(orig, "bar")
 							_ = orig
 							clone := struct {
 								baz int64
 								qux int64
+								/*gopurs:record-v1:2:00620061007a,007100750078*/
 							}{}
 							clone.baz = gopurs_runtime.RecordGet(orig, "baz").IntVal
 							clone.qux = gopurs_runtime.RecordGet(orig, "qux").IntVal
@@ -142,18 +156,22 @@ func Get_Main_after() gopurs_runtime.Value {
 					bar struct {
 						baz int64
 						qux int64
+						/*gopurs:record-v1:2:00620061007a,007100750078*/
 					}
 					foo int64
+					/*gopurs:record-v1:2:006200610072,0066006f006f*/
 				}{}
 				clone.bar = func() struct {
 					baz int64
 					qux int64
+					/*gopurs:record-v1:2:00620061007a,007100750078*/
 				} {
 					orig := gopurs_runtime.RecordGet(orig, "bar")
 					_ = orig
 					clone := struct {
 						baz int64
 						qux int64
+						/*gopurs:record-v1:2:00620061007a,007100750078*/
 					}{}
 					clone.baz = gopurs_runtime.RecordGet(orig, "baz").IntVal
 					clone.qux = gopurs_runtime.RecordGet(orig, "qux").IntVal
@@ -198,8 +216,10 @@ func Get_Main_main() gopurs_runtime.Value {
 						bar struct {
 							baz int64
 							qux int64
+							/*gopurs:record-v1:2:00620061007a,007100750078*/
 						}
 						foo int64
+						/*gopurs:record-v1:2:006200610072,0066006f006f*/
 					} {
 						orig := Get_Main_after()
 						_ = orig
@@ -207,18 +227,22 @@ func Get_Main_main() gopurs_runtime.Value {
 							bar struct {
 								baz int64
 								qux int64
+								/*gopurs:record-v1:2:00620061007a,007100750078*/
 							}
 							foo int64
+							/*gopurs:record-v1:2:006200610072,0066006f006f*/
 						}{}
 						clone.bar = func() struct {
 							baz int64
 							qux int64
+							/*gopurs:record-v1:2:00620061007a,007100750078*/
 						} {
 							orig := gopurs_runtime.RecordGet(orig, "bar")
 							_ = orig
 							clone := struct {
 								baz int64
 								qux int64
+								/*gopurs:record-v1:2:00620061007a,007100750078*/
 							}{}
 							clone.baz = gopurs_runtime.RecordGet(orig, "baz").IntVal
 							clone.qux = gopurs_runtime.RecordGet(orig, "qux").IntVal
@@ -238,8 +262,10 @@ func Get_Main_main() gopurs_runtime.Value {
 						bar struct {
 							baz int64
 							qux int64
+							/*gopurs:record-v1:2:00620061007a,007100750078*/
 						}
 						foo int64
+						/*gopurs:record-v1:2:006200610072,0066006f006f*/
 					} {
 						orig := Get_Main_expected()
 						_ = orig
@@ -247,18 +273,22 @@ func Get_Main_main() gopurs_runtime.Value {
 							bar struct {
 								baz int64
 								qux int64
+								/*gopurs:record-v1:2:00620061007a,007100750078*/
 							}
 							foo int64
+							/*gopurs:record-v1:2:006200610072,0066006f006f*/
 						}{}
 						clone.bar = func() struct {
 							baz int64
 							qux int64
+							/*gopurs:record-v1:2:00620061007a,007100750078*/
 						} {
 							orig := gopurs_runtime.RecordGet(orig, "bar")
 							_ = orig
 							clone := struct {
 								baz int64
 								qux int64
+								/*gopurs:record-v1:2:00620061007a,007100750078*/
 							}{}
 							clone.baz = gopurs_runtime.RecordGet(orig, "baz").IntVal
 							clone.qux = gopurs_runtime.RecordGet(orig, "qux").IntVal
@@ -332,8 +362,10 @@ check__1055591803:
 			bar struct {
 				baz int64
 				qux int64
+				/*gopurs:record-v1:2:00620061007a,007100750078*/
 			}
 			foo int64
+			/*gopurs:record-v1:2:006200610072,0066006f006f*/
 		} {
 			orig := Get_Main_after()
 			_ = orig
@@ -341,18 +373,22 @@ check__1055591803:
 				bar struct {
 					baz int64
 					qux int64
+					/*gopurs:record-v1:2:00620061007a,007100750078*/
 				}
 				foo int64
+				/*gopurs:record-v1:2:006200610072,0066006f006f*/
 			}{}
 			clone.bar = func() struct {
 				baz int64
 				qux int64
+				/*gopurs:record-v1:2:00620061007a,007100750078*/
 			} {
 				orig := gopurs_runtime.RecordGet(orig, "bar")
 				_ = orig
 				clone := struct {
 					baz int64
 					qux int64
+					/*gopurs:record-v1:2:00620061007a,007100750078*/
 				}{}
 				clone.baz = gopurs_runtime.RecordGet(orig, "baz").IntVal
 				clone.qux = gopurs_runtime.RecordGet(orig, "qux").IntVal
@@ -364,8 +400,10 @@ check__1055591803:
 			bar struct {
 				baz int64
 				qux int64
+				/*gopurs:record-v1:2:00620061007a,007100750078*/
 			}
 			foo int64
+			/*gopurs:record-v1:2:006200610072,0066006f006f*/
 		} {
 			orig := Get_Main_after()
 			_ = orig
@@ -373,18 +411,22 @@ check__1055591803:
 				bar struct {
 					baz int64
 					qux int64
+					/*gopurs:record-v1:2:00620061007a,007100750078*/
 				}
 				foo int64
+				/*gopurs:record-v1:2:006200610072,0066006f006f*/
 			}{}
 			clone.bar = func() struct {
 				baz int64
 				qux int64
+				/*gopurs:record-v1:2:00620061007a,007100750078*/
 			} {
 				orig := gopurs_runtime.RecordGet(orig, "bar")
 				_ = orig
 				clone := struct {
 					baz int64
 					qux int64
+					/*gopurs:record-v1:2:00620061007a,007100750078*/
 				}{}
 				clone.baz = gopurs_runtime.RecordGet(orig, "baz").IntVal
 				clone.qux = gopurs_runtime.RecordGet(orig, "qux").IntVal
@@ -396,8 +438,10 @@ check__1055591803:
 			bar struct {
 				baz int64
 				qux int64
+				/*gopurs:record-v1:2:00620061007a,007100750078*/
 			}
 			foo int64
+			/*gopurs:record-v1:2:006200610072,0066006f006f*/
 		} {
 			orig := Get_Main_after()
 			_ = orig
@@ -405,18 +449,22 @@ check__1055591803:
 				bar struct {
 					baz int64
 					qux int64
+					/*gopurs:record-v1:2:00620061007a,007100750078*/
 				}
 				foo int64
+				/*gopurs:record-v1:2:006200610072,0066006f006f*/
 			}{}
 			clone.bar = func() struct {
 				baz int64
 				qux int64
+				/*gopurs:record-v1:2:00620061007a,007100750078*/
 			} {
 				orig := gopurs_runtime.RecordGet(orig, "bar")
 				_ = orig
 				clone := struct {
 					baz int64
 					qux int64
+					/*gopurs:record-v1:2:00620061007a,007100750078*/
 				}{}
 				clone.baz = gopurs_runtime.RecordGet(orig, "baz").IntVal
 				clone.qux = gopurs_runtime.RecordGet(orig, "qux").IntVal

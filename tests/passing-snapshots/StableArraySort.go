@@ -22,7 +22,7 @@ var once_Main_sortEntries sync.Once
 func Get_Main_sortEntries() gopurs_runtime.Value {
 	once_Main_sortEntries.Do(func() {
 		cache_Main_sortEntries = gopurs_runtime.Apply(Get_Data_Array_sortBy__485191994(), gopurs_runtime.Apply(Get_Data_Ord_comparing__93829917(), gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Int(gopurs_runtime.RecordGet(v_0, "key").IntVal)
+			return gopurs_runtime.RecordGet(v_0, "key")
 		})))
 	})
 	return cache_Main_sortEntries
@@ -99,12 +99,12 @@ func Get_Main_main() gopurs_runtime.Value {
 			var __t3 string
 			{
 				arrayIntrinsic_arg_1 := gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Str(gopurs_runtime.RecordGet(v_0, "name").StrVal())
+					return gopurs_runtime.RecordGet(v_0, "name")
 				})
 				_ = arrayIntrinsic_arg_1
 				arrayIntrinsic_arg_2 := func() gopurs_runtime.Value {
 					arr := Call_Data_Array_sortBy__485191994(gopurs_runtime.Apply(Get_Data_Ord_comparing__93829917(), gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
-						return gopurs_runtime.Int(gopurs_runtime.RecordGet(v_0, "key").IntVal)
+						return gopurs_runtime.RecordGet(v_0, "key")
 					})), []struct {
 						key  int64
 						name string
@@ -170,7 +170,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			var __t8 string
 			{
 				arrayIntrinsic_arg_6 := gopurs_runtime.Func(func(v_2 gopurs_runtime.Value) gopurs_runtime.Value {
-					return gopurs_runtime.Str(gopurs_runtime.RecordGet(v_2, "name").StrVal())
+					return gopurs_runtime.RecordGet(v_2, "name")
 				})
 				_ = arrayIntrinsic_arg_6
 				arrayIntrinsic_arg_7 := func() gopurs_runtime.Value {

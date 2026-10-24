@@ -43,6 +43,7 @@ type Constructor_Main_Foo struct {
 	Rc uint32
 	V0 struct {
 		id gopurs_runtime.Value
+		/*gopurs:record-v1:1:00690064*/
 	}
 }
 

@@ -40,6 +40,7 @@ func Get_Main_use() gopurs_runtime.Value {
 		})), gopurs_runtime.Value{Type: 9, IntVal: 1835580986, UnsafePtr: unsafe.Pointer(Rebox_Main_1514099793_1386611502(Rebox_Main_1386611502_1514099793(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Data_Show_showString()))))})), "show"), func() gopurs_runtime.Value {
 			orig := struct {
 				asdf gopurs_runtime.Value
+				/*gopurs:record-v1:1:0061007300640066*/
 			}{Call_Main_reflect(gopurs_runtime.Value{Type: 9, IntVal: 19771322, UnsafePtr: unsafe.Pointer((&Constructor_Data_Reflectable_Reflectable[gopurs_runtime.Value, gopurs_runtime.Value]{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Str("asdf")
 			})}))})}

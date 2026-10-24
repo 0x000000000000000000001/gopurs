@@ -57,6 +57,7 @@ type Constructor_Main_Extend[T_r any, T_a any] struct {
 	V0 struct {
 		next T_a
 		prev gopurs_runtime.Value
+		/*gopurs:record-v1:2:006e006500780074,0070007200650076*/
 	}
 }
 

@@ -44,65 +44,37 @@ func Get_Main_foo() gopurs_runtime.Value {
 					}
 					return gopurs_runtime.Array(boxed)
 				}(), gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
-					return func() gopurs_runtime.Value {
-						arr := func() []int64 {
-							arr := *(*[]gopurs_runtime.Value)(gopurs_runtime.Array((*(*[]gopurs_runtime.Value)((gopurs_runtime.Apply2(Get_Control_Bind_arrayBind(), func() gopurs_runtime.Value {
-								arr := func() [][]int64 {
-									arr := *(*[]gopurs_runtime.Value)(v_0.UnsafePtr)
-									unboxed := make([][]int64, len(arr))
+					return gopurs_runtime.Apply2(Get_Control_Bind_arrayBind(), func() gopurs_runtime.Value {
+						arr := func() [][]int64 {
+							arr := *(*[]gopurs_runtime.Value)(v_0.UnsafePtr)
+							unboxed := make([][]int64, len(arr))
+							for i, v := range arr {
+								unboxed[i] = func() []int64 {
+									arr := *(*[]gopurs_runtime.Value)(v.UnsafePtr)
+									unboxed := make([]int64, len(arr))
 									for i, v := range arr {
-										unboxed[i] = func() []int64 {
-											arr := *(*[]gopurs_runtime.Value)(v.UnsafePtr)
-											unboxed := make([]int64, len(arr))
-											for i, v := range arr {
-												unboxed[i] = v.IntVal
-											}
-											return unboxed
-										}()
+										unboxed[i] = v.IntVal
 									}
 									return unboxed
 								}()
-								boxed := make([]gopurs_runtime.Value, len(arr))
-								for i, v := range arr {
-									boxed[i] = func() gopurs_runtime.Value {
-										arr := v
-										boxed := make([]gopurs_runtime.Value, len(arr))
-										for i, v := range arr {
-											boxed[i] = gopurs_runtime.Int(v)
-										}
-										return gopurs_runtime.Array(boxed)
-									}()
-								}
-								return gopurs_runtime.Array(boxed)
-							}(), gopurs_runtime.Func(func(v1_1 gopurs_runtime.Value) gopurs_runtime.Value {
-								return func() gopurs_runtime.Value {
-									arr := func() []int64 {
-										arr := *(*[]gopurs_runtime.Value)(v1_1.UnsafePtr)
-										unboxed := make([]int64, len(arr))
-										for i, v := range arr {
-											unboxed[i] = v.IntVal
-										}
-										return unboxed
-									}()
-									boxed := make([]gopurs_runtime.Value, len(arr))
-									for i, v := range arr {
-										boxed[i] = gopurs_runtime.Int(v)
-									}
-									return gopurs_runtime.Array(boxed)
-								}()
-							}))).UnsafePtr))).UnsafePtr)
-							unboxed := make([]int64, len(arr))
-							for i, v := range arr {
-								unboxed[i] = v.IntVal
 							}
 							return unboxed
 						}()
 						boxed := make([]gopurs_runtime.Value, len(arr))
 						for i, v := range arr {
-							boxed[i] = gopurs_runtime.Int(v)
+							boxed[i] = func() gopurs_runtime.Value {
+								arr := v
+								boxed := make([]gopurs_runtime.Value, len(arr))
+								for i, v := range arr {
+									boxed[i] = gopurs_runtime.Int(v)
+								}
+								return gopurs_runtime.Array(boxed)
+							}()
 						}
 						return gopurs_runtime.Array(boxed)
-					}()
+					}(), gopurs_runtime.Func(func(v1_1 gopurs_runtime.Value) gopurs_runtime.Value {
+						return v1_1
+					}))
 				}))).UnsafePtr))).UnsafePtr)
 				unboxed := make([]int64, len(arr))
 				for i, v := range arr {

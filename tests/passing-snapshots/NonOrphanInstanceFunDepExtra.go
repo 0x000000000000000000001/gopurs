@@ -22,6 +22,8 @@ func Get_Main_cflr() gopurs_runtime.Value {
 	once_Main_cflr.Do(func() {
 		cache_Main_cflr = func() gopurs_runtime.Value {
 			orig := struct {
+
+				/*gopurs:record-v1:0:*/
 			}{}
 			_ = orig
 			return gopurs_runtime.RecordDict0()

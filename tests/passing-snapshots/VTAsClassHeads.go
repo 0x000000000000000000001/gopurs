@@ -14,11 +14,13 @@ func Get_Main_Superclass_dollar_Dict() gopurs_runtime.Value {
 		cache_Main_Superclass_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 3942833201, UnsafePtr: unsafe.Pointer(Call_Main_Superclass_dollar_Dict(func() struct {
 				superClassValue gopurs_runtime.Value
+				/*gopurs:record-v1:1:007300750070006500720043006c00610073007300560061006c00750065*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					superClassValue gopurs_runtime.Value
+					/*gopurs:record-v1:1:007300750070006500720043006c00610073007300560061006c00750065*/
 				}{}
 				clone.superClassValue = gopurs_runtime.RecordGet(orig, "superClassValue")
 				return clone
@@ -36,11 +38,13 @@ func Get_Main_Superclass_dollar_Dict__1000886470() gopurs_runtime.Value {
 		cache_Main_Superclass_dollar_Dict__1000886470 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 3942833201, UnsafePtr: unsafe.Pointer(Rebox_Main_1743531624_470725445(Call_Main_Superclass_dollar_Dict__1000886470(func() struct {
 				superClassValue uint32
+				/*gopurs:record-v1:1:007300750070006500720043006c00610073007300560061006c00750065*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					superClassValue uint32
+					/*gopurs:record-v1:1:007300750070006500720043006c00610073007300560061006c00750065*/
 				}{}
 				clone.superClassValue = uint32(gopurs_runtime.RecordGet(orig, "superClassValue").IntVal)
 				return clone
@@ -58,11 +62,13 @@ func Get_Main_Superclass_dollar_Dict__4176382918() gopurs_runtime.Value {
 		cache_Main_Superclass_dollar_Dict__4176382918 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 3942833201, UnsafePtr: unsafe.Pointer(Rebox_Main_1743531624_470725445(Call_Main_Superclass_dollar_Dict__4176382918(func() struct {
 				superClassValue uint32
+				/*gopurs:record-v1:1:007300750070006500720043006c00610073007300560061006c00750065*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					superClassValue uint32
+					/*gopurs:record-v1:1:007300750070006500720043006c00610073007300560061006c00750065*/
 				}{}
 				clone.superClassValue = uint32(gopurs_runtime.RecordGet(orig, "superClassValue").IntVal)
 				return clone
@@ -80,11 +86,13 @@ func Get_Main_Singleton_dollar_Dict() gopurs_runtime.Value {
 		cache_Main_Singleton_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 3773262993, UnsafePtr: unsafe.Pointer(Call_Main_Singleton_dollar_Dict(func() struct {
 				singleton string
+				/*gopurs:record-v1:1:00730069006e0067006c00650074006f006e*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					singleton string
+					/*gopurs:record-v1:1:00730069006e0067006c00650074006f006e*/
 				}{}
 				clone.singleton = gopurs_runtime.RecordGet(orig, "singleton").StrVal()
 				return clone
@@ -102,11 +110,13 @@ func Get_Main_Singleton_dollar_Dict__2782663051() gopurs_runtime.Value {
 		cache_Main_Singleton_dollar_Dict__2782663051 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 3773262993, UnsafePtr: unsafe.Pointer(Rebox_Main_3423874878_825457317(Call_Main_Singleton_dollar_Dict__2782663051(func() struct {
 				singleton string
+				/*gopurs:record-v1:1:00730069006e0067006c00650074006f006e*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					singleton string
+					/*gopurs:record-v1:1:00730069006e0067006c00650074006f006e*/
 				}{}
 				clone.singleton = gopurs_runtime.RecordGet(orig, "singleton").StrVal()
 				return clone
@@ -124,11 +134,13 @@ func Get_Main_Singleton_dollar_Dict__2090617069() gopurs_runtime.Value {
 		cache_Main_Singleton_dollar_Dict__2090617069 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 3773262993, UnsafePtr: unsafe.Pointer(Rebox_Main_1773804058_825457317(Call_Main_Singleton_dollar_Dict__2090617069(func() struct {
 				singleton string
+				/*gopurs:record-v1:1:00730069006e0067006c00650074006f006e*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					singleton string
+					/*gopurs:record-v1:1:00730069006e0067006c00650074006f006e*/
 				}{}
 				clone.singleton = gopurs_runtime.RecordGet(orig, "singleton").StrVal()
 				return clone
@@ -146,11 +158,13 @@ func Get_Main_MultiWithFDs_dollar_Dict() gopurs_runtime.Value {
 		cache_Main_MultiWithFDs_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 4172703812, UnsafePtr: unsafe.Pointer(Call_Main_MultiWithFDs_dollar_Dict(func() struct {
 				multiWithFDs int64
+				/*gopurs:record-v1:1:006d0075006c007400690057006900740068004600440073*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					multiWithFDs int64
+					/*gopurs:record-v1:1:006d0075006c007400690057006900740068004600440073*/
 				}{}
 				clone.multiWithFDs = gopurs_runtime.RecordGet(orig, "multiWithFDs").IntVal
 				return clone
@@ -168,11 +182,13 @@ func Get_Main_MultiWithFDs_dollar_Dict__1625108929() gopurs_runtime.Value {
 		cache_Main_MultiWithFDs_dollar_Dict__1625108929 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 4172703812, UnsafePtr: unsafe.Pointer(Rebox_Main_625849654_2009327254(Call_Main_MultiWithFDs_dollar_Dict__1625108929(func() struct {
 				multiWithFDs int64
+				/*gopurs:record-v1:1:006d0075006c007400690057006900740068004600440073*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					multiWithFDs int64
+					/*gopurs:record-v1:1:006d0075006c007400690057006900740068004600440073*/
 				}{}
 				clone.multiWithFDs = gopurs_runtime.RecordGet(orig, "multiWithFDs").IntVal
 				return clone
@@ -190,11 +206,13 @@ func Get_Main_MultiWithFDs_dollar_Dict__2637651943() gopurs_runtime.Value {
 		cache_Main_MultiWithFDs_dollar_Dict__2637651943 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 4172703812, UnsafePtr: unsafe.Pointer(Rebox_Main_1655796530_2009327254(Call_Main_MultiWithFDs_dollar_Dict__2637651943(func() struct {
 				multiWithFDs int64
+				/*gopurs:record-v1:1:006d0075006c007400690057006900740068004600440073*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					multiWithFDs int64
+					/*gopurs:record-v1:1:006d0075006c007400690057006900740068004600440073*/
 				}{}
 				clone.multiWithFDs = gopurs_runtime.RecordGet(orig, "multiWithFDs").IntVal
 				return clone
@@ -212,11 +230,13 @@ func Get_Main_MultiWithBidiFDs_dollar_Dict() gopurs_runtime.Value {
 		cache_Main_MultiWithBidiFDs_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 3391744610, UnsafePtr: unsafe.Pointer(Call_Main_MultiWithBidiFDs_dollar_Dict(func() struct {
 				multiWithBidiFDs int64
+				/*gopurs:record-v1:1:006d0075006c0074006900570069007400680042006900640069004600440073*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					multiWithBidiFDs int64
+					/*gopurs:record-v1:1:006d0075006c0074006900570069007400680042006900640069004600440073*/
 				}{}
 				clone.multiWithBidiFDs = gopurs_runtime.RecordGet(orig, "multiWithBidiFDs").IntVal
 				return clone
@@ -234,11 +254,13 @@ func Get_Main_MultiWithBidiFDs_dollar_Dict__1781965825() gopurs_runtime.Value {
 		cache_Main_MultiWithBidiFDs_dollar_Dict__1781965825 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 3391744610, UnsafePtr: unsafe.Pointer(Rebox_Main_787286736_77741296(Call_Main_MultiWithBidiFDs_dollar_Dict__1781965825(func() struct {
 				multiWithBidiFDs int64
+				/*gopurs:record-v1:1:006d0075006c0074006900570069007400680042006900640069004600440073*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					multiWithBidiFDs int64
+					/*gopurs:record-v1:1:006d0075006c0074006900570069007400680042006900640069004600440073*/
 				}{}
 				clone.multiWithBidiFDs = gopurs_runtime.RecordGet(orig, "multiWithBidiFDs").IntVal
 				return clone
@@ -256,11 +278,13 @@ func Get_Main_MultiWithBidiFDs_dollar_Dict__3120495745() gopurs_runtime.Value {
 		cache_Main_MultiWithBidiFDs_dollar_Dict__3120495745 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 3391744610, UnsafePtr: unsafe.Pointer(Rebox_Main_4110399984_77741296(Call_Main_MultiWithBidiFDs_dollar_Dict__3120495745(func() struct {
 				multiWithBidiFDs int64
+				/*gopurs:record-v1:1:006d0075006c0074006900570069007400680042006900640069004600440073*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					multiWithBidiFDs int64
+					/*gopurs:record-v1:1:006d0075006c0074006900570069007400680042006900640069004600440073*/
 				}{}
 				clone.multiWithBidiFDs = gopurs_runtime.RecordGet(orig, "multiWithBidiFDs").IntVal
 				return clone
@@ -278,11 +302,13 @@ func Get_Main_MultiNoFDs_dollar_Dict() gopurs_runtime.Value {
 		cache_Main_MultiNoFDs_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 2354658663, UnsafePtr: unsafe.Pointer(Call_Main_MultiNoFDs_dollar_Dict(func() struct {
 				multiNoFds int64
+				/*gopurs:record-v1:1:006d0075006c00740069004e006f004600640073*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					multiNoFds int64
+					/*gopurs:record-v1:1:006d0075006c00740069004e006f004600640073*/
 				}{}
 				clone.multiNoFds = gopurs_runtime.RecordGet(orig, "multiNoFds").IntVal
 				return clone
@@ -300,11 +326,13 @@ func Get_Main_MultiNoFDs_dollar_Dict__10327329() gopurs_runtime.Value {
 		cache_Main_MultiNoFDs_dollar_Dict__10327329 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 2354658663, UnsafePtr: unsafe.Pointer(Rebox_Main_252480501_2228149845(Call_Main_MultiNoFDs_dollar_Dict__10327329(func() struct {
 				multiNoFds int64
+				/*gopurs:record-v1:1:006d0075006c00740069004e006f004600640073*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					multiNoFds int64
+					/*gopurs:record-v1:1:006d0075006c00740069004e006f004600640073*/
 				}{}
 				clone.multiNoFds = gopurs_runtime.RecordGet(orig, "multiNoFds").IntVal
 				return clone
@@ -322,11 +350,13 @@ func Get_Main_MultiNoFDs_dollar_Dict__2984540679() gopurs_runtime.Value {
 		cache_Main_MultiNoFDs_dollar_Dict__2984540679 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 2354658663, UnsafePtr: unsafe.Pointer(Rebox_Main_3635165681_2228149845(Call_Main_MultiNoFDs_dollar_Dict__2984540679(func() struct {
 				multiNoFds int64
+				/*gopurs:record-v1:1:006d0075006c00740069004e006f004600640073*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					multiNoFds int64
+					/*gopurs:record-v1:1:006d0075006c00740069004e006f004600640073*/
 				}{}
 				clone.multiNoFds = gopurs_runtime.RecordGet(orig, "multiNoFds").IntVal
 				return clone
@@ -346,6 +376,7 @@ func Get_Main_MultiCoveringSets_dollar_Dict() gopurs_runtime.Value {
 				noneOfSets     int64
 				partialOfABSet gopurs_runtime.Value
 				partialOfFESet gopurs_runtime.Value
+				/*gopurs:record-v1:3:006e006f006e0065004f00660053006500740073,007000610072007400690061006c004f006600410042005300650074,007000610072007400690061006c004f006600460045005300650074*/
 			} {
 				orig := x_0_box
 				_ = orig
@@ -353,6 +384,7 @@ func Get_Main_MultiCoveringSets_dollar_Dict() gopurs_runtime.Value {
 					noneOfSets     int64
 					partialOfABSet gopurs_runtime.Value
 					partialOfFESet gopurs_runtime.Value
+					/*gopurs:record-v1:3:006e006f006e0065004f00660053006500740073,007000610072007400690061006c004f006600410042005300650074,007000610072007400690061006c004f006600460045005300650074*/
 				}{}
 				clone.noneOfSets = gopurs_runtime.RecordGet(orig, "noneOfSets").IntVal
 				clone.partialOfABSet = gopurs_runtime.RecordGet(orig, "partialOfABSet")
@@ -374,6 +406,7 @@ func Get_Main_MultiCoveringSets_dollar_Dict__1364214897() gopurs_runtime.Value {
 				noneOfSets     int64
 				partialOfABSet gopurs_runtime.Value
 				partialOfFESet gopurs_runtime.Value
+				/*gopurs:record-v1:3:006e006f006e0065004f00660053006500740073,007000610072007400690061006c004f006600410042005300650074,007000610072007400690061006c004f006600460045005300650074*/
 			} {
 				orig := x_0_box
 				_ = orig
@@ -381,6 +414,7 @@ func Get_Main_MultiCoveringSets_dollar_Dict__1364214897() gopurs_runtime.Value {
 					noneOfSets     int64
 					partialOfABSet gopurs_runtime.Value
 					partialOfFESet gopurs_runtime.Value
+					/*gopurs:record-v1:3:006e006f006e0065004f00660053006500740073,007000610072007400690061006c004f006600410042005300650074,007000610072007400690061006c004f006600460045005300650074*/
 				}{}
 				clone.noneOfSets = gopurs_runtime.RecordGet(orig, "noneOfSets").IntVal
 				clone.partialOfABSet = gopurs_runtime.RecordGet(orig, "partialOfABSet")
@@ -402,6 +436,7 @@ func Get_Main_MultiCoveringSets_dollar_Dict__3044661585() gopurs_runtime.Value {
 				noneOfSets     int64
 				partialOfABSet gopurs_runtime.Value
 				partialOfFESet gopurs_runtime.Value
+				/*gopurs:record-v1:3:006e006f006e0065004f00660053006500740073,007000610072007400690061006c004f006600410042005300650074,007000610072007400690061006c004f006600460045005300650074*/
 			} {
 				orig := x_0_box
 				_ = orig
@@ -409,6 +444,7 @@ func Get_Main_MultiCoveringSets_dollar_Dict__3044661585() gopurs_runtime.Value {
 					noneOfSets     int64
 					partialOfABSet gopurs_runtime.Value
 					partialOfFESet gopurs_runtime.Value
+					/*gopurs:record-v1:3:006e006f006e0065004f00660053006500740073,007000610072007400690061006c004f006600410042005300650074,007000610072007400690061006c004f006600460045005300650074*/
 				}{}
 				clone.noneOfSets = gopurs_runtime.RecordGet(orig, "noneOfSets").IntVal
 				clone.partialOfABSet = gopurs_runtime.RecordGet(orig, "partialOfABSet")
@@ -429,12 +465,14 @@ func Get_Main_MainClass_dollar_Dict() gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 1673006587, UnsafePtr: unsafe.Pointer(Call_Main_MainClass_dollar_Dict(func() struct {
 				Superclass0  gopurs_runtime.Value
 				mainClassInt int64
+				/*gopurs:record-v1:2:005300750070006500720063006c0061007300730030,006d00610069006e0043006c0061007300730049006e0074*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					Superclass0  gopurs_runtime.Value
 					mainClassInt int64
+					/*gopurs:record-v1:2:005300750070006500720063006c0061007300730030,006d00610069006e0043006c0061007300730049006e0074*/
 				}{}
 				clone.Superclass0 = gopurs_runtime.RecordGet(orig, "Superclass0")
 				clone.mainClassInt = gopurs_runtime.RecordGet(orig, "mainClassInt").IntVal
@@ -454,12 +492,14 @@ func Get_Main_MainClass_dollar_Dict__3946516107() gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 1673006587, UnsafePtr: unsafe.Pointer(Rebox_Main_3107240322_1441597775(Call_Main_MainClass_dollar_Dict__3946516107(func() struct {
 				Superclass0  gopurs_runtime.Value
 				mainClassInt int64
+				/*gopurs:record-v1:2:005300750070006500720063006c0061007300730030,006d00610069006e0043006c0061007300730049006e0074*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					Superclass0  gopurs_runtime.Value
 					mainClassInt int64
+					/*gopurs:record-v1:2:005300750070006500720063006c0061007300730030,006d00610069006e0043006c0061007300730049006e0074*/
 				}{}
 				clone.Superclass0 = gopurs_runtime.RecordGet(orig, "Superclass0")
 				clone.mainClassInt = gopurs_runtime.RecordGet(orig, "mainClassInt").IntVal
@@ -479,12 +519,14 @@ func Get_Main_MainClass_dollar_Dict__1519917483() gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 1673006587, UnsafePtr: unsafe.Pointer(Rebox_Main_3107240322_1441597775(Call_Main_MainClass_dollar_Dict__1519917483(func() struct {
 				Superclass0  gopurs_runtime.Value
 				mainClassInt int64
+				/*gopurs:record-v1:2:005300750070006500720063006c0061007300730030,006d00610069006e0043006c0061007300730049006e0074*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					Superclass0  gopurs_runtime.Value
 					mainClassInt int64
+					/*gopurs:record-v1:2:005300750070006500720063006c0061007300730030,006d00610069006e0043006c0061007300730049006e0074*/
 				}{}
 				clone.Superclass0 = gopurs_runtime.RecordGet(orig, "Superclass0")
 				clone.mainClassInt = gopurs_runtime.RecordGet(orig, "mainClassInt").IntVal
@@ -503,11 +545,13 @@ func Get_Main_ConflictingIdentSynonym_dollar_Dict() gopurs_runtime.Value {
 		cache_Main_ConflictingIdentSynonym_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 3172630699, UnsafePtr: unsafe.Pointer(Call_Main_ConflictingIdentSynonym_dollar_Dict(func() struct {
 				conflictingIdentSynonym gopurs_runtime.Value
+				/*gopurs:record-v1:1:0063006f006e0066006c0069006300740069006e0067004900640065006e007400530079006e006f006e0079006d*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					conflictingIdentSynonym gopurs_runtime.Value
+					/*gopurs:record-v1:1:0063006f006e0066006c0069006300740069006e0067004900640065006e007400530079006e006f006e0079006d*/
 				}{}
 				clone.conflictingIdentSynonym = gopurs_runtime.RecordGet(orig, "conflictingIdentSynonym")
 				return clone
@@ -525,11 +569,13 @@ func Get_Main_ConflictingIdent_dollar_Dict() gopurs_runtime.Value {
 		cache_Main_ConflictingIdent_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 1296752506, UnsafePtr: unsafe.Pointer(Call_Main_ConflictingIdent_dollar_Dict(func() struct {
 				conflictingIdent gopurs_runtime.Value
+				/*gopurs:record-v1:1:0063006f006e0066006c0069006300740069006e0067004900640065006e0074*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					conflictingIdent gopurs_runtime.Value
+					/*gopurs:record-v1:1:0063006f006e0066006c0069006300740069006e0067004900640065006e0074*/
 				}{}
 				clone.conflictingIdent = gopurs_runtime.RecordGet(orig, "conflictingIdent")
 				return clone
@@ -665,36 +711,22 @@ var once_Main_multiCoveringSetsIntIntSt sync.Once
 func Get_Main_multiCoveringSetsIntIntSt() gopurs_runtime.Value {
 	once_Main_multiCoveringSetsIntIntSt.Do(func() {
 		cache_Main_multiCoveringSetsIntIntSt = gopurs_runtime.Value{Type: 9, IntVal: 2410351339, UnsafePtr: unsafe.Pointer(Rebox_Main_2402463609_2880574873((&Constructor_Main_MultiCoveringSets[int64, int64, string, string, bool, bool]{1, int64(2), gopurs_runtime.Func(func(a_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return func() gopurs_runtime.Value {
-				orig := struct {
-					c string
-					d string
-				}{Data_Show_ShowIntImpl(a_0.IntVal), "2"}
-				_ = orig
-				return gopurs_runtime.RecordDict2("c", "d", gopurs_runtime.Str(orig.c), gopurs_runtime.Str(orig.d))
-			}()
+			return gopurs_runtime.RecordDict2("c", "d", gopurs_runtime.Str(Data_Show_ShowIntImpl(a_0.IntVal)), gopurs_runtime.Str("2"))
 		}), gopurs_runtime.Func(func(f_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			var __t0 string
+			var __t0 gopurs_runtime.Value
 			{
 				if (f_0.IntVal) != (0) {
-					__t0 = "true"
+					__t0 = gopurs_runtime.Str("true")
 					goto end_branch_0
 				} else {
 
 				}
 			}
 			{
-				__t0 = "false"
+				__t0 = gopurs_runtime.Str("false")
 			}
 		end_branch_0:
-			return func() gopurs_runtime.Value {
-				orig := struct {
-					c string
-					d string
-				}{__t0, "2"}
-				_ = orig
-				return gopurs_runtime.RecordDict2("c", "d", gopurs_runtime.Str(orig.c), gopurs_runtime.Str(orig.d))
-			}()
+			return gopurs_runtime.RecordDict2("c", "d", __t0, gopurs_runtime.Str("2"))
 		})})))}
 	})
 	return cache_Main_multiCoveringSetsIntIntSt
@@ -706,36 +738,22 @@ var once_Main_multiCoveringSetsBooleanB sync.Once
 func Get_Main_multiCoveringSetsBooleanB() gopurs_runtime.Value {
 	once_Main_multiCoveringSetsBooleanB.Do(func() {
 		cache_Main_multiCoveringSetsBooleanB = gopurs_runtime.Value{Type: 9, IntVal: 2410351339, UnsafePtr: unsafe.Pointer(Rebox_Main_2270461177_2880574873((&Constructor_Main_MultiCoveringSets[bool, bool, string, string, int64, int64]{1, int64(1), gopurs_runtime.Func(func(a_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			var __t0 string
+			var __t0 gopurs_runtime.Value
 			{
 				if (a_0.IntVal) != (0) {
-					__t0 = "101"
+					__t0 = gopurs_runtime.Str("101")
 					goto end_branch_0
 				} else {
 
 				}
 			}
 			{
-				__t0 = "100"
+				__t0 = gopurs_runtime.Str("100")
 			}
 		end_branch_0:
-			return func() gopurs_runtime.Value {
-				orig := struct {
-					c string
-					d string
-				}{__t0, "1"}
-				_ = orig
-				return gopurs_runtime.RecordDict2("c", "d", gopurs_runtime.Str(orig.c), gopurs_runtime.Str(orig.d))
-			}()
+			return gopurs_runtime.RecordDict2("c", "d", __t0, gopurs_runtime.Str("1"))
 		}), gopurs_runtime.Func(func(f_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return func() gopurs_runtime.Value {
-				orig := struct {
-					c string
-					d string
-				}{Data_Show_ShowIntImpl(f_0.IntVal), "1"}
-				_ = orig
-				return gopurs_runtime.RecordDict2("c", "d", gopurs_runtime.Str(orig.c), gopurs_runtime.Str(orig.d))
-			}()
+			return gopurs_runtime.RecordDict2("c", "d", gopurs_runtime.Str(Data_Show_ShowIntImpl(f_0.IntVal)), gopurs_runtime.Str("1"))
 		})})))}
 	})
 	return cache_Main_multiCoveringSetsBooleanB
@@ -1471,6 +1489,7 @@ type Constructor_Main_Superclass[T_a any] struct {
 	V0 T_a
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f005300750070006500720063006c006100730073
 func init() {
 	gopurs_runtime.StructGetters[3942833201] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_Superclass[gopurs_runtime.Value])(ptr)
@@ -1489,6 +1508,7 @@ type Constructor_Main_Singleton[T_x any] struct {
 	V0 string
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f00530069006e0067006c00650074006f006e
 func init() {
 	gopurs_runtime.StructGetters[3773262993] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_Singleton[gopurs_runtime.Value])(ptr)
@@ -1507,6 +1527,7 @@ type Constructor_Main_MultiWithFDs[T_a any, T_b any] struct {
 	V0 int64
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f004d0075006c007400690057006900740068004600440073
 func init() {
 	gopurs_runtime.StructGetters[4172703812] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_MultiWithFDs[gopurs_runtime.Value, gopurs_runtime.Value])(ptr)
@@ -1525,6 +1546,7 @@ type Constructor_Main_MultiWithBidiFDs[T_a any, T_b any] struct {
 	V0 int64
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f004d0075006c0074006900570069007400680042006900640069004600440073
 func init() {
 	gopurs_runtime.StructGetters[3391744610] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_MultiWithBidiFDs[gopurs_runtime.Value, gopurs_runtime.Value])(ptr)
@@ -1543,6 +1565,7 @@ type Constructor_Main_MultiNoFDs[T_a any, T_b any] struct {
 	V0 int64
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f004d0075006c00740069004e006f004600440073
 func init() {
 	gopurs_runtime.StructGetters[2354658663] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_MultiNoFDs[gopurs_runtime.Value, gopurs_runtime.Value])(ptr)
@@ -1563,6 +1586,7 @@ type Constructor_Main_MultiCoveringSets[T_a any, T_b any, T_c any, T_d any, T_e 
 	V2 gopurs_runtime.Value
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f004d0075006c007400690043006f0076006500720069006e00670053006500740073
 func init() {
 	gopurs_runtime.StructGetters[2410351339] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_MultiCoveringSets[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value])(ptr)
@@ -1586,6 +1610,7 @@ type Constructor_Main_MainClass[T_a any] struct {
 	V1 int64
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f004d00610069006e0043006c006100730073
 func init() {
 	gopurs_runtime.StructGetters[1673006587] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_MainClass[gopurs_runtime.Value])(ptr)
@@ -1606,6 +1631,7 @@ type Constructor_Main_ConflictingIdentSynonym[T_a any] struct {
 	V0 gopurs_runtime.Value
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f0043006f006e0066006c0069006300740069006e0067004900640065006e007400530079006e006f006e0079006d
 func init() {
 	gopurs_runtime.StructGetters[3172630699] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_ConflictingIdentSynonym[gopurs_runtime.Value])(ptr)
@@ -1624,6 +1650,7 @@ type Constructor_Main_ConflictingIdent[T_a any] struct {
 	V0 gopurs_runtime.Value
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f0043006f006e0066006c0069006300740069006e0067004900640065006e0074
 func init() {
 	gopurs_runtime.StructGetters[1296752506] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_ConflictingIdent[gopurs_runtime.Value])(ptr)
@@ -1639,9 +1666,11 @@ func init() {
 
 func Call_Main_Superclass_dollar_Dict(x_0_loop struct {
 	superClassValue gopurs_runtime.Value
+	/*gopurs:record-v1:1:007300750070006500720043006c00610073007300560061006c00750065*/
 }) *Constructor_Main_Superclass[gopurs_runtime.Value] {
 	var x_0 struct {
 		superClassValue gopurs_runtime.Value
+		/*gopurs:record-v1:1:007300750070006500720043006c00610073007300560061006c00750065*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_Superclass[gopurs_runtime.Value]](func() gopurs_runtime.Value {
@@ -1653,6 +1682,7 @@ func Call_Main_Superclass_dollar_Dict(x_0_loop struct {
 
 func Call_Main_Superclass_dollar_Dict__1000886470(x_0_loop struct {
 	superClassValue uint32
+	/*gopurs:record-v1:1:007300750070006500720043006c00610073007300560061006c00750065*/
 }) *Constructor_Main_Superclass[uint32] {
 Superclass_dollar_Dict__1000886470:
 	for {
@@ -1661,6 +1691,7 @@ Superclass_dollar_Dict__1000886470:
 		}
 		var x_0 struct {
 			superClassValue uint32
+			/*gopurs:record-v1:1:007300750070006500720043006c00610073007300560061006c00750065*/
 		} = x_0_loop
 		_ = x_0
 		return gopurs_runtime.CoerceToStruct[Constructor_Main_Superclass[uint32]](func() gopurs_runtime.Value {
@@ -1673,6 +1704,7 @@ Superclass_dollar_Dict__1000886470:
 
 func Call_Main_Superclass_dollar_Dict__4176382918(x_0_loop struct {
 	superClassValue uint32
+	/*gopurs:record-v1:1:007300750070006500720043006c00610073007300560061006c00750065*/
 }) *Constructor_Main_Superclass[uint32] {
 Superclass_dollar_Dict__4176382918:
 	for {
@@ -1681,6 +1713,7 @@ Superclass_dollar_Dict__4176382918:
 		}
 		var x_0 struct {
 			superClassValue uint32
+			/*gopurs:record-v1:1:007300750070006500720043006c00610073007300560061006c00750065*/
 		} = x_0_loop
 		_ = x_0
 		return gopurs_runtime.CoerceToStruct[Constructor_Main_Superclass[uint32]](func() gopurs_runtime.Value {
@@ -1693,9 +1726,11 @@ Superclass_dollar_Dict__4176382918:
 
 func Call_Main_Singleton_dollar_Dict(x_0_loop struct {
 	singleton string
+	/*gopurs:record-v1:1:00730069006e0067006c00650074006f006e*/
 }) *Constructor_Main_Singleton[gopurs_runtime.Value] {
 	var x_0 struct {
 		singleton string
+		/*gopurs:record-v1:1:00730069006e0067006c00650074006f006e*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_Singleton[gopurs_runtime.Value]](func() gopurs_runtime.Value {
@@ -1707,6 +1742,7 @@ func Call_Main_Singleton_dollar_Dict(x_0_loop struct {
 
 func Call_Main_Singleton_dollar_Dict__2782663051(x_0_loop struct {
 	singleton string
+	/*gopurs:record-v1:1:00730069006e0067006c00650074006f006e*/
 }) *Constructor_Main_Singleton[int64] {
 Singleton_dollar_Dict__2782663051:
 	for {
@@ -1715,6 +1751,7 @@ Singleton_dollar_Dict__2782663051:
 		}
 		var x_0 struct {
 			singleton string
+			/*gopurs:record-v1:1:00730069006e0067006c00650074006f006e*/
 		} = x_0_loop
 		_ = x_0
 		return gopurs_runtime.CoerceToStruct[Constructor_Main_Singleton[int64]](func() gopurs_runtime.Value {
@@ -1727,6 +1764,7 @@ Singleton_dollar_Dict__2782663051:
 
 func Call_Main_Singleton_dollar_Dict__2090617069(x_0_loop struct {
 	singleton string
+	/*gopurs:record-v1:1:00730069006e0067006c00650074006f006e*/
 }) *Constructor_Main_Singleton[string] {
 Singleton_dollar_Dict__2090617069:
 	for {
@@ -1735,6 +1773,7 @@ Singleton_dollar_Dict__2090617069:
 		}
 		var x_0 struct {
 			singleton string
+			/*gopurs:record-v1:1:00730069006e0067006c00650074006f006e*/
 		} = x_0_loop
 		_ = x_0
 		return gopurs_runtime.CoerceToStruct[Constructor_Main_Singleton[string]](func() gopurs_runtime.Value {
@@ -1747,9 +1786,11 @@ Singleton_dollar_Dict__2090617069:
 
 func Call_Main_MultiWithFDs_dollar_Dict(x_0_loop struct {
 	multiWithFDs int64
+	/*gopurs:record-v1:1:006d0075006c007400690057006900740068004600440073*/
 }) *Constructor_Main_MultiWithFDs[gopurs_runtime.Value, gopurs_runtime.Value] {
 	var x_0 struct {
 		multiWithFDs int64
+		/*gopurs:record-v1:1:006d0075006c007400690057006900740068004600440073*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_MultiWithFDs[gopurs_runtime.Value, gopurs_runtime.Value]](func() gopurs_runtime.Value {
@@ -1761,6 +1802,7 @@ func Call_Main_MultiWithFDs_dollar_Dict(x_0_loop struct {
 
 func Call_Main_MultiWithFDs_dollar_Dict__1625108929(x_0_loop struct {
 	multiWithFDs int64
+	/*gopurs:record-v1:1:006d0075006c007400690057006900740068004600440073*/
 }) *Constructor_Main_MultiWithFDs[int64, int64] {
 MultiWithFDs_dollar_Dict__1625108929:
 	for {
@@ -1769,6 +1811,7 @@ MultiWithFDs_dollar_Dict__1625108929:
 		}
 		var x_0 struct {
 			multiWithFDs int64
+			/*gopurs:record-v1:1:006d0075006c007400690057006900740068004600440073*/
 		} = x_0_loop
 		_ = x_0
 		return gopurs_runtime.CoerceToStruct[Constructor_Main_MultiWithFDs[int64, int64]](func() gopurs_runtime.Value {
@@ -1781,6 +1824,7 @@ MultiWithFDs_dollar_Dict__1625108929:
 
 func Call_Main_MultiWithFDs_dollar_Dict__2637651943(x_0_loop struct {
 	multiWithFDs int64
+	/*gopurs:record-v1:1:006d0075006c007400690057006900740068004600440073*/
 }) *Constructor_Main_MultiWithFDs[string, int64] {
 MultiWithFDs_dollar_Dict__2637651943:
 	for {
@@ -1789,6 +1833,7 @@ MultiWithFDs_dollar_Dict__2637651943:
 		}
 		var x_0 struct {
 			multiWithFDs int64
+			/*gopurs:record-v1:1:006d0075006c007400690057006900740068004600440073*/
 		} = x_0_loop
 		_ = x_0
 		return gopurs_runtime.CoerceToStruct[Constructor_Main_MultiWithFDs[string, int64]](func() gopurs_runtime.Value {
@@ -1801,9 +1846,11 @@ MultiWithFDs_dollar_Dict__2637651943:
 
 func Call_Main_MultiWithBidiFDs_dollar_Dict(x_0_loop struct {
 	multiWithBidiFDs int64
+	/*gopurs:record-v1:1:006d0075006c0074006900570069007400680042006900640069004600440073*/
 }) *Constructor_Main_MultiWithBidiFDs[gopurs_runtime.Value, gopurs_runtime.Value] {
 	var x_0 struct {
 		multiWithBidiFDs int64
+		/*gopurs:record-v1:1:006d0075006c0074006900570069007400680042006900640069004600440073*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_MultiWithBidiFDs[gopurs_runtime.Value, gopurs_runtime.Value]](func() gopurs_runtime.Value {
@@ -1815,6 +1862,7 @@ func Call_Main_MultiWithBidiFDs_dollar_Dict(x_0_loop struct {
 
 func Call_Main_MultiWithBidiFDs_dollar_Dict__1781965825(x_0_loop struct {
 	multiWithBidiFDs int64
+	/*gopurs:record-v1:1:006d0075006c0074006900570069007400680042006900640069004600440073*/
 }) *Constructor_Main_MultiWithBidiFDs[int64, int64] {
 MultiWithBidiFDs_dollar_Dict__1781965825:
 	for {
@@ -1823,6 +1871,7 @@ MultiWithBidiFDs_dollar_Dict__1781965825:
 		}
 		var x_0 struct {
 			multiWithBidiFDs int64
+			/*gopurs:record-v1:1:006d0075006c0074006900570069007400680042006900640069004600440073*/
 		} = x_0_loop
 		_ = x_0
 		return gopurs_runtime.CoerceToStruct[Constructor_Main_MultiWithBidiFDs[int64, int64]](func() gopurs_runtime.Value {
@@ -1835,6 +1884,7 @@ MultiWithBidiFDs_dollar_Dict__1781965825:
 
 func Call_Main_MultiWithBidiFDs_dollar_Dict__3120495745(x_0_loop struct {
 	multiWithBidiFDs int64
+	/*gopurs:record-v1:1:006d0075006c0074006900570069007400680042006900640069004600440073*/
 }) *Constructor_Main_MultiWithBidiFDs[string, string] {
 MultiWithBidiFDs_dollar_Dict__3120495745:
 	for {
@@ -1843,6 +1893,7 @@ MultiWithBidiFDs_dollar_Dict__3120495745:
 		}
 		var x_0 struct {
 			multiWithBidiFDs int64
+			/*gopurs:record-v1:1:006d0075006c0074006900570069007400680042006900640069004600440073*/
 		} = x_0_loop
 		_ = x_0
 		return gopurs_runtime.CoerceToStruct[Constructor_Main_MultiWithBidiFDs[string, string]](func() gopurs_runtime.Value {
@@ -1855,9 +1906,11 @@ MultiWithBidiFDs_dollar_Dict__3120495745:
 
 func Call_Main_MultiNoFDs_dollar_Dict(x_0_loop struct {
 	multiNoFds int64
+	/*gopurs:record-v1:1:006d0075006c00740069004e006f004600640073*/
 }) *Constructor_Main_MultiNoFDs[gopurs_runtime.Value, gopurs_runtime.Value] {
 	var x_0 struct {
 		multiNoFds int64
+		/*gopurs:record-v1:1:006d0075006c00740069004e006f004600640073*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_MultiNoFDs[gopurs_runtime.Value, gopurs_runtime.Value]](func() gopurs_runtime.Value {
@@ -1869,6 +1922,7 @@ func Call_Main_MultiNoFDs_dollar_Dict(x_0_loop struct {
 
 func Call_Main_MultiNoFDs_dollar_Dict__10327329(x_0_loop struct {
 	multiNoFds int64
+	/*gopurs:record-v1:1:006d0075006c00740069004e006f004600640073*/
 }) *Constructor_Main_MultiNoFDs[int64, int64] {
 MultiNoFDs_dollar_Dict__10327329:
 	for {
@@ -1877,6 +1931,7 @@ MultiNoFDs_dollar_Dict__10327329:
 		}
 		var x_0 struct {
 			multiNoFds int64
+			/*gopurs:record-v1:1:006d0075006c00740069004e006f004600640073*/
 		} = x_0_loop
 		_ = x_0
 		return gopurs_runtime.CoerceToStruct[Constructor_Main_MultiNoFDs[int64, int64]](func() gopurs_runtime.Value {
@@ -1889,6 +1944,7 @@ MultiNoFDs_dollar_Dict__10327329:
 
 func Call_Main_MultiNoFDs_dollar_Dict__2984540679(x_0_loop struct {
 	multiNoFds int64
+	/*gopurs:record-v1:1:006d0075006c00740069004e006f004600640073*/
 }) *Constructor_Main_MultiNoFDs[string, int64] {
 MultiNoFDs_dollar_Dict__2984540679:
 	for {
@@ -1897,6 +1953,7 @@ MultiNoFDs_dollar_Dict__2984540679:
 		}
 		var x_0 struct {
 			multiNoFds int64
+			/*gopurs:record-v1:1:006d0075006c00740069004e006f004600640073*/
 		} = x_0_loop
 		_ = x_0
 		return gopurs_runtime.CoerceToStruct[Constructor_Main_MultiNoFDs[string, int64]](func() gopurs_runtime.Value {
@@ -1911,11 +1968,13 @@ func Call_Main_MultiCoveringSets_dollar_Dict(x_0_loop struct {
 	noneOfSets     int64
 	partialOfABSet gopurs_runtime.Value
 	partialOfFESet gopurs_runtime.Value
+	/*gopurs:record-v1:3:006e006f006e0065004f00660053006500740073,007000610072007400690061006c004f006600410042005300650074,007000610072007400690061006c004f006600460045005300650074*/
 }) *Constructor_Main_MultiCoveringSets[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value] {
 	var x_0 struct {
 		noneOfSets     int64
 		partialOfABSet gopurs_runtime.Value
 		partialOfFESet gopurs_runtime.Value
+		/*gopurs:record-v1:3:006e006f006e0065004f00660053006500740073,007000610072007400690061006c004f006600410042005300650074,007000610072007400690061006c004f006600460045005300650074*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_MultiCoveringSets[gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value, gopurs_runtime.Value]](func() gopurs_runtime.Value {
@@ -1929,6 +1988,7 @@ func Call_Main_MultiCoveringSets_dollar_Dict__1364214897(x_0_loop struct {
 	noneOfSets     int64
 	partialOfABSet gopurs_runtime.Value
 	partialOfFESet gopurs_runtime.Value
+	/*gopurs:record-v1:3:006e006f006e0065004f00660053006500740073,007000610072007400690061006c004f006600410042005300650074,007000610072007400690061006c004f006600460045005300650074*/
 }) *Constructor_Main_MultiCoveringSets[bool, bool, string, string, int64, int64] {
 MultiCoveringSets_dollar_Dict__1364214897:
 	for {
@@ -1939,6 +1999,7 @@ MultiCoveringSets_dollar_Dict__1364214897:
 			noneOfSets     int64
 			partialOfABSet gopurs_runtime.Value
 			partialOfFESet gopurs_runtime.Value
+			/*gopurs:record-v1:3:006e006f006e0065004f00660053006500740073,007000610072007400690061006c004f006600410042005300650074,007000610072007400690061006c004f006600460045005300650074*/
 		} = x_0_loop
 		_ = x_0
 		return gopurs_runtime.CoerceToStruct[Constructor_Main_MultiCoveringSets[bool, bool, string, string, int64, int64]](func() gopurs_runtime.Value {
@@ -1953,6 +2014,7 @@ func Call_Main_MultiCoveringSets_dollar_Dict__3044661585(x_0_loop struct {
 	noneOfSets     int64
 	partialOfABSet gopurs_runtime.Value
 	partialOfFESet gopurs_runtime.Value
+	/*gopurs:record-v1:3:006e006f006e0065004f00660053006500740073,007000610072007400690061006c004f006600410042005300650074,007000610072007400690061006c004f006600460045005300650074*/
 }) *Constructor_Main_MultiCoveringSets[int64, int64, string, string, bool, bool] {
 MultiCoveringSets_dollar_Dict__3044661585:
 	for {
@@ -1963,6 +2025,7 @@ MultiCoveringSets_dollar_Dict__3044661585:
 			noneOfSets     int64
 			partialOfABSet gopurs_runtime.Value
 			partialOfFESet gopurs_runtime.Value
+			/*gopurs:record-v1:3:006e006f006e0065004f00660053006500740073,007000610072007400690061006c004f006600410042005300650074,007000610072007400690061006c004f006600460045005300650074*/
 		} = x_0_loop
 		_ = x_0
 		return gopurs_runtime.CoerceToStruct[Constructor_Main_MultiCoveringSets[int64, int64, string, string, bool, bool]](func() gopurs_runtime.Value {
@@ -1976,10 +2039,12 @@ MultiCoveringSets_dollar_Dict__3044661585:
 func Call_Main_MainClass_dollar_Dict(x_0_loop struct {
 	Superclass0  gopurs_runtime.Value
 	mainClassInt int64
+	/*gopurs:record-v1:2:005300750070006500720063006c0061007300730030,006d00610069006e0043006c0061007300730049006e0074*/
 }) *Constructor_Main_MainClass[gopurs_runtime.Value] {
 	var x_0 struct {
 		Superclass0  gopurs_runtime.Value
 		mainClassInt int64
+		/*gopurs:record-v1:2:005300750070006500720063006c0061007300730030,006d00610069006e0043006c0061007300730049006e0074*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_MainClass[gopurs_runtime.Value]](func() gopurs_runtime.Value {
@@ -1992,6 +2057,7 @@ func Call_Main_MainClass_dollar_Dict(x_0_loop struct {
 func Call_Main_MainClass_dollar_Dict__3946516107(x_0_loop struct {
 	Superclass0  gopurs_runtime.Value
 	mainClassInt int64
+	/*gopurs:record-v1:2:005300750070006500720063006c0061007300730030,006d00610069006e0043006c0061007300730049006e0074*/
 }) *Constructor_Main_MainClass[uint32] {
 MainClass_dollar_Dict__3946516107:
 	for {
@@ -2001,6 +2067,7 @@ MainClass_dollar_Dict__3946516107:
 		var x_0 struct {
 			Superclass0  gopurs_runtime.Value
 			mainClassInt int64
+			/*gopurs:record-v1:2:005300750070006500720063006c0061007300730030,006d00610069006e0043006c0061007300730049006e0074*/
 		} = x_0_loop
 		_ = x_0
 		return gopurs_runtime.CoerceToStruct[Constructor_Main_MainClass[uint32]](func() gopurs_runtime.Value {
@@ -2014,6 +2081,7 @@ MainClass_dollar_Dict__3946516107:
 func Call_Main_MainClass_dollar_Dict__1519917483(x_0_loop struct {
 	Superclass0  gopurs_runtime.Value
 	mainClassInt int64
+	/*gopurs:record-v1:2:005300750070006500720063006c0061007300730030,006d00610069006e0043006c0061007300730049006e0074*/
 }) *Constructor_Main_MainClass[uint32] {
 MainClass_dollar_Dict__1519917483:
 	for {
@@ -2023,6 +2091,7 @@ MainClass_dollar_Dict__1519917483:
 		var x_0 struct {
 			Superclass0  gopurs_runtime.Value
 			mainClassInt int64
+			/*gopurs:record-v1:2:005300750070006500720063006c0061007300730030,006d00610069006e0043006c0061007300730049006e0074*/
 		} = x_0_loop
 		_ = x_0
 		return gopurs_runtime.CoerceToStruct[Constructor_Main_MainClass[uint32]](func() gopurs_runtime.Value {
@@ -2035,9 +2104,11 @@ MainClass_dollar_Dict__1519917483:
 
 func Call_Main_ConflictingIdentSynonym_dollar_Dict(x_0_loop struct {
 	conflictingIdentSynonym gopurs_runtime.Value
+	/*gopurs:record-v1:1:0063006f006e0066006c0069006300740069006e0067004900640065006e007400530079006e006f006e0079006d*/
 }) *Constructor_Main_ConflictingIdentSynonym[gopurs_runtime.Value] {
 	var x_0 struct {
 		conflictingIdentSynonym gopurs_runtime.Value
+		/*gopurs:record-v1:1:0063006f006e0066006c0069006300740069006e0067004900640065006e007400530079006e006f006e0079006d*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_ConflictingIdentSynonym[gopurs_runtime.Value]](func() gopurs_runtime.Value {
@@ -2049,9 +2120,11 @@ func Call_Main_ConflictingIdentSynonym_dollar_Dict(x_0_loop struct {
 
 func Call_Main_ConflictingIdent_dollar_Dict(x_0_loop struct {
 	conflictingIdent gopurs_runtime.Value
+	/*gopurs:record-v1:1:0063006f006e0066006c0069006300740069006e0067004900640065006e0074*/
 }) *Constructor_Main_ConflictingIdent[gopurs_runtime.Value] {
 	var x_0 struct {
 		conflictingIdent gopurs_runtime.Value
+		/*gopurs:record-v1:1:0063006f006e0066006c0069006300740069006e0067004900640065006e0074*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_ConflictingIdent[gopurs_runtime.Value]](func() gopurs_runtime.Value {
@@ -2088,6 +2161,7 @@ func Call_Main_partialOfABSet(dict_0_loop *Constructor_Main_MultiCoveringSets[go
 func Call_Main_partialOfABSet__1140860974(__eta_norm_0_0_loop bool) struct {
 	c bool
 	d bool
+	/*gopurs:record-v1:2:0063,0064*/
 } {
 partialOfABSet__1140860974:
 	for {
@@ -2112,17 +2186,21 @@ partialOfABSet__1140860974:
 		return func(record struct {
 			c string
 			d string
+			/*gopurs:record-v1:2:0063,0064*/
 		}) struct {
 			c bool
 			d bool
+			/*gopurs:record-v1:2:0063,0064*/
 		} {
 			return struct {
 				c bool
 				d bool
+				/*gopurs:record-v1:2:0063,0064*/
 			}{(gopurs_runtime.Str(record.c).IntVal) != (0), (gopurs_runtime.Str(record.d).IntVal) != (0)}
 		}(struct {
 			c string
 			d string
+			/*gopurs:record-v1:2:0063,0064*/
 		}{__t0, "1"})
 	}
 }

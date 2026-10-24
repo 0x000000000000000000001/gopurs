@@ -37,12 +37,14 @@ func Get_Main_Applicative_dollar_Dict() gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 4228518006, UnsafePtr: unsafe.Pointer(Call_Main_Applicative_dollar_Dict(func() struct {
 				apply gopurs_runtime.Value
 				pure  gopurs_runtime.Value
+				/*gopurs:record-v1:2:006100700070006c0079,0070007500720065*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					apply gopurs_runtime.Value
 					pure  gopurs_runtime.Value
+					/*gopurs:record-v1:2:006100700070006c0079,0070007500720065*/
 				}{}
 				clone.apply = gopurs_runtime.RecordGet(orig, "apply")
 				clone.pure = gopurs_runtime.RecordGet(orig, "pure")
@@ -93,20 +95,20 @@ var once_Main_applicativeMaybe sync.Once
 func Get_Main_applicativeMaybe() gopurs_runtime.Value {
 	once_Main_applicativeMaybe.Do(func() {
 		cache_Main_applicativeMaybe = gopurs_runtime.Value{Type: 9, IntVal: 4228518006, UnsafePtr: unsafe.Pointer(Rebox_Main_2015372117_1467411426((&Constructor_Main_Applicative[*Constructor_Main_Just[gopurs_runtime.Value]]{1, gopurs_runtime.Func2(func(v_0 gopurs_runtime.Value, v1_1 gopurs_runtime.Value) gopurs_runtime.Value {
-			var __t0 *Constructor_Main_Just[gopurs_runtime.Value]
+			var __t0 gopurs_runtime.Value
 			{
 				if (v_0.Type == 9 && v_0.IntVal == 3271839782 && v_0.UnsafePtr != nil) && (v1_1.Type == 9 && v1_1.IntVal == 3271839782 && v1_1.UnsafePtr != nil) {
-					__t0 = (&Constructor_Main_Just[gopurs_runtime.Value]{1, gopurs_runtime.Apply((*Constructor_Main_Just[gopurs_runtime.Value])(v_0.UnsafePtr).V0, (*Constructor_Main_Just[gopurs_runtime.Value])(v1_1.UnsafePtr).V0)})
+					__t0 = gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer((&Constructor_Main_Just[gopurs_runtime.Value]{1, gopurs_runtime.Apply((*Constructor_Main_Just[gopurs_runtime.Value])(v_0.UnsafePtr).V0, (*Constructor_Main_Just[gopurs_runtime.Value])(v1_1.UnsafePtr).V0)}))}
 					goto end_branch_0
 				} else {
 
 				}
 			}
 			{
-				__t0 = (*Constructor_Main_Just[gopurs_runtime.Value])(nil)
+				__t0 = gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer((*Constructor_Main_Just[gopurs_runtime.Value])(nil))}
 			}
 		end_branch_0:
-			return gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer(__t0)}
+			return __t0
 		}), Get_Main_Just()})))}
 	})
 	return cache_Main_applicativeMaybe
@@ -127,6 +129,7 @@ type Constructor_Main_Applicative[T_f any] struct {
 	V1 gopurs_runtime.Value
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f004100700070006c0069006300610074006900760065
 func init() {
 	gopurs_runtime.StructGetters[4228518006] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_Applicative[gopurs_runtime.Value])(ptr)
@@ -145,10 +148,12 @@ func init() {
 func Call_Main_Applicative_dollar_Dict(x_0_loop struct {
 	apply gopurs_runtime.Value
 	pure  gopurs_runtime.Value
+	/*gopurs:record-v1:2:006100700070006c0079,0070007500720065*/
 }) *Constructor_Main_Applicative[gopurs_runtime.Value] {
 	var x_0 struct {
 		apply gopurs_runtime.Value
 		pure  gopurs_runtime.Value
+		/*gopurs:record-v1:2:006100700070006c0079,0070007500720065*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_Applicative[gopurs_runtime.Value]](func() gopurs_runtime.Value {

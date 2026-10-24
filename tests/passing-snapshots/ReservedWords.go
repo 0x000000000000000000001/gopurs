@@ -13,6 +13,7 @@ func Get_Main_o() gopurs_runtime.Value {
 		cache_Main_o = func() gopurs_runtime.Value {
 			orig := struct {
 				go__type string
+				/*gopurs:record-v1:1:0074007900700065*/
 			}{"o"}
 			_ = orig
 			return gopurs_runtime.RecordDict1("type", gopurs_runtime.Str(orig.go__type))
@@ -29,14 +30,17 @@ func Get_Main_p() gopurs_runtime.Value {
 		cache_Main_p = func() gopurs_runtime.Value {
 			orig := func() struct {
 				go__type string
+				/*gopurs:record-v1:1:0074007900700065*/
 			} {
 				clone := func() struct {
 					go__type string
+					/*gopurs:record-v1:1:0074007900700065*/
 				} {
 					orig := Get_Main_o()
 					_ = orig
 					clone := struct {
 						go__type string
+						/*gopurs:record-v1:1:0074007900700065*/
 					}{}
 					clone.go__type = gopurs_runtime.RecordGet(orig, "type").StrVal()
 					return clone
@@ -59,11 +63,13 @@ func Get_Main_f() gopurs_runtime.Value {
 		cache_Main_f = gopurs_runtime.Func(func(v_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Str(Call_Main_f(func() struct {
 				go__type string
+				/*gopurs:record-v1:1:0074007900700065*/
 			} {
 				orig := v_0_box
 				_ = orig
 				clone := struct {
 					go__type string
+					/*gopurs:record-v1:1:0074007900700065*/
 				}{}
 				clone.go__type = gopurs_runtime.RecordGet(orig, "type").StrVal()
 				return clone
@@ -95,11 +101,13 @@ func Get_Main_main() gopurs_runtime.Value {
 			{
 				if (func() struct {
 					go__type string
+					/*gopurs:record-v1:1:0074007900700065*/
 				} {
 					orig := Get_Main_p()
 					_ = orig
 					clone := struct {
 						go__type string
+						/*gopurs:record-v1:1:0074007900700065*/
 					}{}
 					clone.go__type = gopurs_runtime.RecordGet(orig, "type").StrVal()
 					return clone
@@ -122,9 +130,11 @@ func Get_Main_main() gopurs_runtime.Value {
 
 func Call_Main_f(v_0_loop struct {
 	go__type string
+	/*gopurs:record-v1:1:0074007900700065*/
 }) string {
 	var v_0 struct {
 		go__type string
+		/*gopurs:record-v1:1:0074007900700065*/
 	} = v_0_loop
 	_ = v_0
 	var __t0 string

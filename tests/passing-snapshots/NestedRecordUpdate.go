@@ -17,18 +17,24 @@ func Get_Main_go__init() gopurs_runtime.Value {
 					qux struct {
 						lhs int64
 						rhs int64
+						/*gopurs:record-v1:2:006c00680073,007200680073*/
 					}
+					/*gopurs:record-v1:2:00620061007a,007100750078*/
 				}
 				foo int64
+				/*gopurs:record-v1:2:006200610072,0066006f006f*/
 			}{struct {
 				baz int64
 				qux struct {
 					lhs int64
 					rhs int64
+					/*gopurs:record-v1:2:006c00680073,007200680073*/
 				}
+				/*gopurs:record-v1:2:00620061007a,007100750078*/
 			}{int64(2), struct {
 				lhs int64
 				rhs int64
+				/*gopurs:record-v1:2:006c00680073,007200680073*/
 			}{int64(3), int64(4)}}, int64(1)}
 			_ = orig
 			return gopurs_runtime.RecordDict2("bar", "foo", func() gopurs_runtime.Value {
@@ -57,9 +63,12 @@ func Get_Main_updated() gopurs_runtime.Value {
 					qux struct {
 						lhs int64
 						rhs int64
+						/*gopurs:record-v1:2:006c00680073,007200680073*/
 					}
+					/*gopurs:record-v1:2:00620061007a,007100750078*/
 				}
 				foo int64
+				/*gopurs:record-v1:2:006200610072,0066006f006f*/
 			} {
 				clone := func() struct {
 					bar struct {
@@ -67,9 +76,12 @@ func Get_Main_updated() gopurs_runtime.Value {
 						qux struct {
 							lhs int64
 							rhs int64
+							/*gopurs:record-v1:2:006c00680073,007200680073*/
 						}
+						/*gopurs:record-v1:2:00620061007a,007100750078*/
 					}
 					foo int64
+					/*gopurs:record-v1:2:006200610072,0066006f006f*/
 				} {
 					orig := Get_Main_go__init()
 					_ = orig
@@ -79,16 +91,21 @@ func Get_Main_updated() gopurs_runtime.Value {
 							qux struct {
 								lhs int64
 								rhs int64
+								/*gopurs:record-v1:2:006c00680073,007200680073*/
 							}
+							/*gopurs:record-v1:2:00620061007a,007100750078*/
 						}
 						foo int64
+						/*gopurs:record-v1:2:006200610072,0066006f006f*/
 					}{}
 					clone.bar = func() struct {
 						baz int64
 						qux struct {
 							lhs int64
 							rhs int64
+							/*gopurs:record-v1:2:006c00680073,007200680073*/
 						}
+						/*gopurs:record-v1:2:00620061007a,007100750078*/
 					} {
 						orig := gopurs_runtime.RecordGet(orig, "bar")
 						_ = orig
@@ -97,18 +114,22 @@ func Get_Main_updated() gopurs_runtime.Value {
 							qux struct {
 								lhs int64
 								rhs int64
+								/*gopurs:record-v1:2:006c00680073,007200680073*/
 							}
+							/*gopurs:record-v1:2:00620061007a,007100750078*/
 						}{}
 						clone.baz = gopurs_runtime.RecordGet(orig, "baz").IntVal
 						clone.qux = func() struct {
 							lhs int64
 							rhs int64
+							/*gopurs:record-v1:2:006c00680073,007200680073*/
 						} {
 							orig := gopurs_runtime.RecordGet(orig, "qux")
 							_ = orig
 							clone := struct {
 								lhs int64
 								rhs int64
+								/*gopurs:record-v1:2:006c00680073,007200680073*/
 							}{}
 							clone.lhs = gopurs_runtime.RecordGet(orig, "lhs").IntVal
 							clone.rhs = gopurs_runtime.RecordGet(orig, "rhs").IntVal
@@ -125,7 +146,9 @@ func Get_Main_updated() gopurs_runtime.Value {
 					qux struct {
 						lhs int64
 						rhs int64
+						/*gopurs:record-v1:2:006c00680073,007200680073*/
 					}
+					/*gopurs:record-v1:2:00620061007a,007100750078*/
 				} {
 					clone := func() struct {
 						bar struct {
@@ -133,9 +156,12 @@ func Get_Main_updated() gopurs_runtime.Value {
 							qux struct {
 								lhs int64
 								rhs int64
+								/*gopurs:record-v1:2:006c00680073,007200680073*/
 							}
+							/*gopurs:record-v1:2:00620061007a,007100750078*/
 						}
 						foo int64
+						/*gopurs:record-v1:2:006200610072,0066006f006f*/
 					} {
 						orig := Get_Main_go__init()
 						_ = orig
@@ -145,16 +171,21 @@ func Get_Main_updated() gopurs_runtime.Value {
 								qux struct {
 									lhs int64
 									rhs int64
+									/*gopurs:record-v1:2:006c00680073,007200680073*/
 								}
+								/*gopurs:record-v1:2:00620061007a,007100750078*/
 							}
 							foo int64
+							/*gopurs:record-v1:2:006200610072,0066006f006f*/
 						}{}
 						clone.bar = func() struct {
 							baz int64
 							qux struct {
 								lhs int64
 								rhs int64
+								/*gopurs:record-v1:2:006c00680073,007200680073*/
 							}
+							/*gopurs:record-v1:2:00620061007a,007100750078*/
 						} {
 							orig := gopurs_runtime.RecordGet(orig, "bar")
 							_ = orig
@@ -163,18 +194,22 @@ func Get_Main_updated() gopurs_runtime.Value {
 								qux struct {
 									lhs int64
 									rhs int64
+									/*gopurs:record-v1:2:006c00680073,007200680073*/
 								}
+								/*gopurs:record-v1:2:00620061007a,007100750078*/
 							}{}
 							clone.baz = gopurs_runtime.RecordGet(orig, "baz").IntVal
 							clone.qux = func() struct {
 								lhs int64
 								rhs int64
+								/*gopurs:record-v1:2:006c00680073,007200680073*/
 							} {
 								orig := gopurs_runtime.RecordGet(orig, "qux")
 								_ = orig
 								clone := struct {
 									lhs int64
 									rhs int64
+									/*gopurs:record-v1:2:006c00680073,007200680073*/
 								}{}
 								clone.lhs = gopurs_runtime.RecordGet(orig, "lhs").IntVal
 								clone.rhs = gopurs_runtime.RecordGet(orig, "rhs").IntVal
@@ -189,6 +224,7 @@ func Get_Main_updated() gopurs_runtime.Value {
 					clone.qux = func() struct {
 						lhs int64
 						rhs int64
+						/*gopurs:record-v1:2:006c00680073,007200680073*/
 					} {
 						clone := func() struct {
 							bar struct {
@@ -196,9 +232,12 @@ func Get_Main_updated() gopurs_runtime.Value {
 								qux struct {
 									lhs int64
 									rhs int64
+									/*gopurs:record-v1:2:006c00680073,007200680073*/
 								}
+								/*gopurs:record-v1:2:00620061007a,007100750078*/
 							}
 							foo int64
+							/*gopurs:record-v1:2:006200610072,0066006f006f*/
 						} {
 							orig := Get_Main_go__init()
 							_ = orig
@@ -208,16 +247,21 @@ func Get_Main_updated() gopurs_runtime.Value {
 									qux struct {
 										lhs int64
 										rhs int64
+										/*gopurs:record-v1:2:006c00680073,007200680073*/
 									}
+									/*gopurs:record-v1:2:00620061007a,007100750078*/
 								}
 								foo int64
+								/*gopurs:record-v1:2:006200610072,0066006f006f*/
 							}{}
 							clone.bar = func() struct {
 								baz int64
 								qux struct {
 									lhs int64
 									rhs int64
+									/*gopurs:record-v1:2:006c00680073,007200680073*/
 								}
+								/*gopurs:record-v1:2:00620061007a,007100750078*/
 							} {
 								orig := gopurs_runtime.RecordGet(orig, "bar")
 								_ = orig
@@ -226,18 +270,22 @@ func Get_Main_updated() gopurs_runtime.Value {
 									qux struct {
 										lhs int64
 										rhs int64
+										/*gopurs:record-v1:2:006c00680073,007200680073*/
 									}
+									/*gopurs:record-v1:2:00620061007a,007100750078*/
 								}{}
 								clone.baz = gopurs_runtime.RecordGet(orig, "baz").IntVal
 								clone.qux = func() struct {
 									lhs int64
 									rhs int64
+									/*gopurs:record-v1:2:006c00680073,007200680073*/
 								} {
 									orig := gopurs_runtime.RecordGet(orig, "qux")
 									_ = orig
 									clone := struct {
 										lhs int64
 										rhs int64
+										/*gopurs:record-v1:2:006c00680073,007200680073*/
 									}{}
 									clone.lhs = gopurs_runtime.RecordGet(orig, "lhs").IntVal
 									clone.rhs = gopurs_runtime.RecordGet(orig, "rhs").IntVal
@@ -283,18 +331,24 @@ func Get_Main_expected() gopurs_runtime.Value {
 					qux struct {
 						lhs int64
 						rhs int64
+						/*gopurs:record-v1:2:006c00680073,007200680073*/
 					}
+					/*gopurs:record-v1:2:00620061007a,007100750078*/
 				}
 				foo int64
+				/*gopurs:record-v1:2:006200610072,0066006f006f*/
 			}{struct {
 				baz int64
 				qux struct {
 					lhs int64
 					rhs int64
+					/*gopurs:record-v1:2:006c00680073,007200680073*/
 				}
+				/*gopurs:record-v1:2:00620061007a,007100750078*/
 			}{int64(20), struct {
 				lhs int64
 				rhs int64
+				/*gopurs:record-v1:2:006c00680073,007200680073*/
 			}{int64(30), int64(40)}}, int64(10)}
 			_ = orig
 			return gopurs_runtime.RecordDict2("bar", "foo", func() gopurs_runtime.Value {
@@ -350,9 +404,12 @@ func Get_Main_main() gopurs_runtime.Value {
 							qux struct {
 								lhs int64
 								rhs int64
+								/*gopurs:record-v1:2:006c00680073,007200680073*/
 							}
+							/*gopurs:record-v1:2:00620061007a,007100750078*/
 						}
 						foo int64
+						/*gopurs:record-v1:2:006200610072,0066006f006f*/
 					} {
 						orig := Get_Main_updated()
 						_ = orig
@@ -362,16 +419,21 @@ func Get_Main_main() gopurs_runtime.Value {
 								qux struct {
 									lhs int64
 									rhs int64
+									/*gopurs:record-v1:2:006c00680073,007200680073*/
 								}
+								/*gopurs:record-v1:2:00620061007a,007100750078*/
 							}
 							foo int64
+							/*gopurs:record-v1:2:006200610072,0066006f006f*/
 						}{}
 						clone.bar = func() struct {
 							baz int64
 							qux struct {
 								lhs int64
 								rhs int64
+								/*gopurs:record-v1:2:006c00680073,007200680073*/
 							}
+							/*gopurs:record-v1:2:00620061007a,007100750078*/
 						} {
 							orig := gopurs_runtime.RecordGet(orig, "bar")
 							_ = orig
@@ -380,18 +442,22 @@ func Get_Main_main() gopurs_runtime.Value {
 								qux struct {
 									lhs int64
 									rhs int64
+									/*gopurs:record-v1:2:006c00680073,007200680073*/
 								}
+								/*gopurs:record-v1:2:00620061007a,007100750078*/
 							}{}
 							clone.baz = gopurs_runtime.RecordGet(orig, "baz").IntVal
 							clone.qux = func() struct {
 								lhs int64
 								rhs int64
+								/*gopurs:record-v1:2:006c00680073,007200680073*/
 							} {
 								orig := gopurs_runtime.RecordGet(orig, "qux")
 								_ = orig
 								clone := struct {
 									lhs int64
 									rhs int64
+									/*gopurs:record-v1:2:006c00680073,007200680073*/
 								}{}
 								clone.lhs = gopurs_runtime.RecordGet(orig, "lhs").IntVal
 								clone.rhs = gopurs_runtime.RecordGet(orig, "rhs").IntVal
@@ -419,9 +485,12 @@ func Get_Main_main() gopurs_runtime.Value {
 							qux struct {
 								lhs int64
 								rhs int64
+								/*gopurs:record-v1:2:006c00680073,007200680073*/
 							}
+							/*gopurs:record-v1:2:00620061007a,007100750078*/
 						}
 						foo int64
+						/*gopurs:record-v1:2:006200610072,0066006f006f*/
 					} {
 						orig := Get_Main_expected()
 						_ = orig
@@ -431,16 +500,21 @@ func Get_Main_main() gopurs_runtime.Value {
 								qux struct {
 									lhs int64
 									rhs int64
+									/*gopurs:record-v1:2:006c00680073,007200680073*/
 								}
+								/*gopurs:record-v1:2:00620061007a,007100750078*/
 							}
 							foo int64
+							/*gopurs:record-v1:2:006200610072,0066006f006f*/
 						}{}
 						clone.bar = func() struct {
 							baz int64
 							qux struct {
 								lhs int64
 								rhs int64
+								/*gopurs:record-v1:2:006c00680073,007200680073*/
 							}
+							/*gopurs:record-v1:2:00620061007a,007100750078*/
 						} {
 							orig := gopurs_runtime.RecordGet(orig, "bar")
 							_ = orig
@@ -449,18 +523,22 @@ func Get_Main_main() gopurs_runtime.Value {
 								qux struct {
 									lhs int64
 									rhs int64
+									/*gopurs:record-v1:2:006c00680073,007200680073*/
 								}
+								/*gopurs:record-v1:2:00620061007a,007100750078*/
 							}{}
 							clone.baz = gopurs_runtime.RecordGet(orig, "baz").IntVal
 							clone.qux = func() struct {
 								lhs int64
 								rhs int64
+								/*gopurs:record-v1:2:006c00680073,007200680073*/
 							} {
 								orig := gopurs_runtime.RecordGet(orig, "qux")
 								_ = orig
 								clone := struct {
 									lhs int64
 									rhs int64
+									/*gopurs:record-v1:2:006c00680073,007200680073*/
 								}{}
 								clone.lhs = gopurs_runtime.RecordGet(orig, "lhs").IntVal
 								clone.rhs = gopurs_runtime.RecordGet(orig, "rhs").IntVal
@@ -532,9 +610,12 @@ check__3900443344:
 				qux struct {
 					lhs int64
 					rhs int64
+					/*gopurs:record-v1:2:006c00680073,007200680073*/
 				}
+				/*gopurs:record-v1:2:00620061007a,007100750078*/
 			}
 			foo int64
+			/*gopurs:record-v1:2:006200610072,0066006f006f*/
 		} {
 			orig := Get_Main_updated()
 			_ = orig
@@ -544,16 +625,21 @@ check__3900443344:
 					qux struct {
 						lhs int64
 						rhs int64
+						/*gopurs:record-v1:2:006c00680073,007200680073*/
 					}
+					/*gopurs:record-v1:2:00620061007a,007100750078*/
 				}
 				foo int64
+				/*gopurs:record-v1:2:006200610072,0066006f006f*/
 			}{}
 			clone.bar = func() struct {
 				baz int64
 				qux struct {
 					lhs int64
 					rhs int64
+					/*gopurs:record-v1:2:006c00680073,007200680073*/
 				}
+				/*gopurs:record-v1:2:00620061007a,007100750078*/
 			} {
 				orig := gopurs_runtime.RecordGet(orig, "bar")
 				_ = orig
@@ -562,18 +648,22 @@ check__3900443344:
 					qux struct {
 						lhs int64
 						rhs int64
+						/*gopurs:record-v1:2:006c00680073,007200680073*/
 					}
+					/*gopurs:record-v1:2:00620061007a,007100750078*/
 				}{}
 				clone.baz = gopurs_runtime.RecordGet(orig, "baz").IntVal
 				clone.qux = func() struct {
 					lhs int64
 					rhs int64
+					/*gopurs:record-v1:2:006c00680073,007200680073*/
 				} {
 					orig := gopurs_runtime.RecordGet(orig, "qux")
 					_ = orig
 					clone := struct {
 						lhs int64
 						rhs int64
+						/*gopurs:record-v1:2:006c00680073,007200680073*/
 					}{}
 					clone.lhs = gopurs_runtime.RecordGet(orig, "lhs").IntVal
 					clone.rhs = gopurs_runtime.RecordGet(orig, "rhs").IntVal
@@ -589,9 +679,12 @@ check__3900443344:
 				qux struct {
 					lhs int64
 					rhs int64
+					/*gopurs:record-v1:2:006c00680073,007200680073*/
 				}
+				/*gopurs:record-v1:2:00620061007a,007100750078*/
 			}
 			foo int64
+			/*gopurs:record-v1:2:006200610072,0066006f006f*/
 		} {
 			orig := Get_Main_updated()
 			_ = orig
@@ -601,16 +694,21 @@ check__3900443344:
 					qux struct {
 						lhs int64
 						rhs int64
+						/*gopurs:record-v1:2:006c00680073,007200680073*/
 					}
+					/*gopurs:record-v1:2:00620061007a,007100750078*/
 				}
 				foo int64
+				/*gopurs:record-v1:2:006200610072,0066006f006f*/
 			}{}
 			clone.bar = func() struct {
 				baz int64
 				qux struct {
 					lhs int64
 					rhs int64
+					/*gopurs:record-v1:2:006c00680073,007200680073*/
 				}
+				/*gopurs:record-v1:2:00620061007a,007100750078*/
 			} {
 				orig := gopurs_runtime.RecordGet(orig, "bar")
 				_ = orig
@@ -619,18 +717,22 @@ check__3900443344:
 					qux struct {
 						lhs int64
 						rhs int64
+						/*gopurs:record-v1:2:006c00680073,007200680073*/
 					}
+					/*gopurs:record-v1:2:00620061007a,007100750078*/
 				}{}
 				clone.baz = gopurs_runtime.RecordGet(orig, "baz").IntVal
 				clone.qux = func() struct {
 					lhs int64
 					rhs int64
+					/*gopurs:record-v1:2:006c00680073,007200680073*/
 				} {
 					orig := gopurs_runtime.RecordGet(orig, "qux")
 					_ = orig
 					clone := struct {
 						lhs int64
 						rhs int64
+						/*gopurs:record-v1:2:006c00680073,007200680073*/
 					}{}
 					clone.lhs = gopurs_runtime.RecordGet(orig, "lhs").IntVal
 					clone.rhs = gopurs_runtime.RecordGet(orig, "rhs").IntVal
@@ -646,9 +748,12 @@ check__3900443344:
 				qux struct {
 					lhs int64
 					rhs int64
+					/*gopurs:record-v1:2:006c00680073,007200680073*/
 				}
+				/*gopurs:record-v1:2:00620061007a,007100750078*/
 			}
 			foo int64
+			/*gopurs:record-v1:2:006200610072,0066006f006f*/
 		} {
 			orig := Get_Main_updated()
 			_ = orig
@@ -658,16 +763,21 @@ check__3900443344:
 					qux struct {
 						lhs int64
 						rhs int64
+						/*gopurs:record-v1:2:006c00680073,007200680073*/
 					}
+					/*gopurs:record-v1:2:00620061007a,007100750078*/
 				}
 				foo int64
+				/*gopurs:record-v1:2:006200610072,0066006f006f*/
 			}{}
 			clone.bar = func() struct {
 				baz int64
 				qux struct {
 					lhs int64
 					rhs int64
+					/*gopurs:record-v1:2:006c00680073,007200680073*/
 				}
+				/*gopurs:record-v1:2:00620061007a,007100750078*/
 			} {
 				orig := gopurs_runtime.RecordGet(orig, "bar")
 				_ = orig
@@ -676,18 +786,22 @@ check__3900443344:
 					qux struct {
 						lhs int64
 						rhs int64
+						/*gopurs:record-v1:2:006c00680073,007200680073*/
 					}
+					/*gopurs:record-v1:2:00620061007a,007100750078*/
 				}{}
 				clone.baz = gopurs_runtime.RecordGet(orig, "baz").IntVal
 				clone.qux = func() struct {
 					lhs int64
 					rhs int64
+					/*gopurs:record-v1:2:006c00680073,007200680073*/
 				} {
 					orig := gopurs_runtime.RecordGet(orig, "qux")
 					_ = orig
 					clone := struct {
 						lhs int64
 						rhs int64
+						/*gopurs:record-v1:2:006c00680073,007200680073*/
 					}{}
 					clone.lhs = gopurs_runtime.RecordGet(orig, "lhs").IntVal
 					clone.rhs = gopurs_runtime.RecordGet(orig, "rhs").IntVal
@@ -703,9 +817,12 @@ check__3900443344:
 				qux struct {
 					lhs int64
 					rhs int64
+					/*gopurs:record-v1:2:006c00680073,007200680073*/
 				}
+				/*gopurs:record-v1:2:00620061007a,007100750078*/
 			}
 			foo int64
+			/*gopurs:record-v1:2:006200610072,0066006f006f*/
 		} {
 			orig := Get_Main_updated()
 			_ = orig
@@ -715,16 +832,21 @@ check__3900443344:
 					qux struct {
 						lhs int64
 						rhs int64
+						/*gopurs:record-v1:2:006c00680073,007200680073*/
 					}
+					/*gopurs:record-v1:2:00620061007a,007100750078*/
 				}
 				foo int64
+				/*gopurs:record-v1:2:006200610072,0066006f006f*/
 			}{}
 			clone.bar = func() struct {
 				baz int64
 				qux struct {
 					lhs int64
 					rhs int64
+					/*gopurs:record-v1:2:006c00680073,007200680073*/
 				}
+				/*gopurs:record-v1:2:00620061007a,007100750078*/
 			} {
 				orig := gopurs_runtime.RecordGet(orig, "bar")
 				_ = orig
@@ -733,18 +855,22 @@ check__3900443344:
 					qux struct {
 						lhs int64
 						rhs int64
+						/*gopurs:record-v1:2:006c00680073,007200680073*/
 					}
+					/*gopurs:record-v1:2:00620061007a,007100750078*/
 				}{}
 				clone.baz = gopurs_runtime.RecordGet(orig, "baz").IntVal
 				clone.qux = func() struct {
 					lhs int64
 					rhs int64
+					/*gopurs:record-v1:2:006c00680073,007200680073*/
 				} {
 					orig := gopurs_runtime.RecordGet(orig, "qux")
 					_ = orig
 					clone := struct {
 						lhs int64
 						rhs int64
+						/*gopurs:record-v1:2:006c00680073,007200680073*/
 					}{}
 					clone.lhs = gopurs_runtime.RecordGet(orig, "lhs").IntVal
 					clone.rhs = gopurs_runtime.RecordGet(orig, "rhs").IntVal

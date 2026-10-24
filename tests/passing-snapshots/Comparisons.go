@@ -166,6 +166,7 @@ func Call_Main_checkOrdering(dictOrd_0_loop *Constructor_Data_Ord_Ord[gopurs_run
 			__local_var_10_6 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply2(dictOrd_0.V1, x_8_4, y_9_5).IntVal), uint32(expected_4.IntVal)}), gopurs_runtime.Value{})
 			_ = __local_var_10_6
 			var __t_tag_8 gopurs_runtime.Value = gopurs_runtime.Apply2(dictOrd_0.V1, x_8_4, y_9_5)
@@ -175,6 +176,7 @@ func Call_Main_checkOrdering(dictOrd_0_loop *Constructor_Data_Ord_Ord[gopurs_run
 			__local_var_11_7 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(uint32(__t_tag_8.IntVal) == 1527465420), (uint32(__t_tag_9) == 1527465420)}), gopurs_runtime.Value{})
 			_ = __local_var_11_7
 			var __t_tag_11 gopurs_runtime.Value = gopurs_runtime.Apply2(dictOrd_0.V1, x_8_4, y_9_5)
@@ -184,6 +186,7 @@ func Call_Main_checkOrdering(dictOrd_0_loop *Constructor_Data_Ord_Ord[gopurs_run
 			__local_var_12_10 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(uint32(__t_tag_11.IntVal) == 380165415) != (true), (uint32(__t_tag_12) == 380165415) != (true)}), gopurs_runtime.Value{})
 			_ = __local_var_12_10
 			var __t_tag_14 uint32 = uint32(expected_4.IntVal)
@@ -191,6 +194,7 @@ func Call_Main_checkOrdering(dictOrd_0_loop *Constructor_Data_Ord_Ord[gopurs_run
 			__local_var_13_13 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(gopurs_runtime.Apply2(Eq0_1_0.V0, x_8_4, y_9_5).IntVal) != (0), (uint32(__t_tag_14) == 902936544)}), gopurs_runtime.Value{})
 			_ = __local_var_13_13
 			var __t_tag_16 uint32 = uint32(expected_4.IntVal)
@@ -198,6 +202,7 @@ func Call_Main_checkOrdering(dictOrd_0_loop *Constructor_Data_Ord_Ord[gopurs_run
 			__local_var_14_15 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{((gopurs_runtime.Apply2(Eq0_1_0.V0, x_8_4, y_9_5).IntVal) != (0)) != (true), (uint32(__t_tag_16) == 902936544) != (true)}), gopurs_runtime.Value{})
 			_ = __local_var_14_15
 			var __t_tag_18 gopurs_runtime.Value = gopurs_runtime.Apply2(dictOrd_0.V1, x_8_4, y_9_5)
@@ -207,6 +212,7 @@ func Call_Main_checkOrdering(dictOrd_0_loop *Constructor_Data_Ord_Ord[gopurs_run
 			__local_var_15_17 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(uint32(__t_tag_18.IntVal) == 1527465420) != (true), (uint32(__t_tag_19) == 1527465420) != (true)}), gopurs_runtime.Value{})
 			_ = __local_var_15_17
 			var __t_tag_21 gopurs_runtime.Value = gopurs_runtime.Apply2(dictOrd_0.V1, x_8_4, y_9_5)
@@ -216,6 +222,7 @@ func Call_Main_checkOrdering(dictOrd_0_loop *Constructor_Data_Ord_Ord[gopurs_run
 			__local_var_16_20 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(uint32(__t_tag_21.IntVal) == 380165415), (uint32(__t_tag_22) == 380165415)}), gopurs_runtime.Value{})
 			_ = __local_var_16_20
 			comparatorRef_17_23 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), dictOrd_0.V1), gopurs_runtime.Value{})
@@ -225,6 +232,7 @@ func Call_Main_checkOrdering(dictOrd_0_loop *Constructor_Data_Ord_Ord[gopurs_run
 			__local_var_19_25 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply2(comparator_18_24, x_8_4, y_9_5).IntVal), uint32(expected_4.IntVal)}), gopurs_runtime.Value{})
 			_ = __local_var_19_25
 			partialRef_20_26 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Apply(comparator_18_24, x_8_4)), gopurs_runtime.Value{})
@@ -234,16 +242,19 @@ func Call_Main_checkOrdering(dictOrd_0_loop *Constructor_Data_Ord_Ord[gopurs_run
 			__local_var_22_28 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply(partial_21_27, y_9_5).IntVal), uint32(expected_4.IntVal)}), gopurs_runtime.Value{})
 			_ = __local_var_22_28
 			__local_var_23_29 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply(partial_21_27, x_8_4).IntVal), 902936544}), gopurs_runtime.Value{})
 			_ = __local_var_23_29
 			__local_var_24_30 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply(partial_21_27, y_9_5).IntVal), uint32(expected_4.IntVal)}), gopurs_runtime.Value{})
 			_ = __local_var_24_30
 			lessThanRef_25_31 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Func(func(a2_25 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -259,11 +270,13 @@ func Call_Main_checkOrdering(dictOrd_0_loop *Constructor_Data_Ord_Ord[gopurs_run
 			__local_var_27_34 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(gopurs_runtime.Apply(lessThan_26_33, y_9_5).IntVal) != (0), (uint32(__t_tag_35) == 1527465420)}), gopurs_runtime.Value{})
 			_ = __local_var_27_34
 			__local_var_28_36 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(gopurs_runtime.Apply(lessThan_26_33, x_8_4).IntVal) != (0), false}), gopurs_runtime.Value{})
 			_ = __local_var_28_36
 			var __t_tag_37 uint32 = uint32(expected_4.IntVal)
@@ -271,6 +284,7 @@ func Call_Main_checkOrdering(dictOrd_0_loop *Constructor_Data_Ord_Ord[gopurs_run
 			return gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(gopurs_runtime.Apply(lessThan_26_33, y_9_5).IntVal) != (0), (uint32(__t_tag_37) == 1527465420)}), gopurs_runtime.Value{})
 		})
 	})
@@ -303,6 +317,7 @@ checkOrdering__39504560:
 			__local_var_8_5 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply5(Get_Data_Ord_ordCharImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_6_3, __local_var_7_4).IntVal), 902936544}), gopurs_runtime.Value{})
 			_ = __local_var_8_5
 			var __t_tag_7 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordCharImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_6_3, __local_var_7_4)
@@ -310,6 +325,7 @@ checkOrdering__39504560:
 			__local_var_9_6 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(uint32(__t_tag_7.IntVal) == 1527465420), false}), gopurs_runtime.Value{})
 			_ = __local_var_9_6
 			var __t_tag_9 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordCharImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_6_3, __local_var_7_4)
@@ -317,16 +333,19 @@ checkOrdering__39504560:
 			__local_var_10_8 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(uint32(__t_tag_9.IntVal) == 380165415) != (true), true}), gopurs_runtime.Value{})
 			_ = __local_var_10_8
 			__local_var_11_10 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(__local_var_6_3.StrVal()) == (__local_var_7_4.StrVal()), true}), gopurs_runtime.Value{})
 			_ = __local_var_11_10
 			__local_var_12_11 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{((__local_var_6_3.StrVal()) == (__local_var_7_4.StrVal())) != (true), false}), gopurs_runtime.Value{})
 			_ = __local_var_12_11
 			var __t_tag_13 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordCharImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_6_3, __local_var_7_4)
@@ -334,6 +353,7 @@ checkOrdering__39504560:
 			__local_var_13_12 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(uint32(__t_tag_13.IntVal) == 1527465420) != (true), true}), gopurs_runtime.Value{})
 			_ = __local_var_13_12
 			var __t_tag_15 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordCharImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_6_3, __local_var_7_4)
@@ -341,6 +361,7 @@ checkOrdering__39504560:
 			__local_var_14_14 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(uint32(__t_tag_15.IntVal) == 380165415), false}), gopurs_runtime.Value{})
 			_ = __local_var_14_14
 			__local_var_15_16 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), Get_Data_Ord_compare__2320923292()), gopurs_runtime.Value{})
@@ -350,6 +371,7 @@ checkOrdering__39504560:
 			__local_var_17_18 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply2(__local_var_16_17, gopurs_runtime.Str(__local_var_6_3.StrVal()), gopurs_runtime.Str(__local_var_7_4.StrVal())).IntVal), 902936544}), gopurs_runtime.Value{})
 			_ = __local_var_17_18
 			__local_var_18_19 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Apply(__local_var_16_17, gopurs_runtime.Str(__local_var_6_3.StrVal()))), gopurs_runtime.Value{})
@@ -359,16 +381,19 @@ checkOrdering__39504560:
 			__local_var_20_21 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply(__local_var_19_20, gopurs_runtime.Str(__local_var_7_4.StrVal())).IntVal), 902936544}), gopurs_runtime.Value{})
 			_ = __local_var_20_21
 			__local_var_21_22 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply(__local_var_19_20, gopurs_runtime.Str(__local_var_6_3.StrVal())).IntVal), 902936544}), gopurs_runtime.Value{})
 			_ = __local_var_21_22
 			__local_var_22_23 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply(__local_var_19_20, gopurs_runtime.Str(__local_var_7_4.StrVal())).IntVal), 902936544}), gopurs_runtime.Value{})
 			_ = __local_var_22_23
 			__local_var_23_24 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Apply(Get_Data_Ord_lessThan__3343604442(), gopurs_runtime.Str(__local_var_6_3.StrVal()))), gopurs_runtime.Value{})
@@ -378,16 +403,19 @@ checkOrdering__39504560:
 			__local_var_25_26 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(gopurs_runtime.Apply(__local_var_24_25, gopurs_runtime.Str(__local_var_7_4.StrVal())).IntVal) != (0), false}), gopurs_runtime.Value{})
 			_ = __local_var_25_26
 			__local_var_26_27 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(gopurs_runtime.Apply(__local_var_24_25, gopurs_runtime.Str(__local_var_6_3.StrVal())).IntVal) != (0), false}), gopurs_runtime.Value{})
 			_ = __local_var_26_27
 			return gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(gopurs_runtime.Apply(__local_var_24_25, gopurs_runtime.Str(__local_var_7_4.StrVal())).IntVal) != (0), false}), gopurs_runtime.Value{})
 		})
 	}
@@ -420,6 +448,7 @@ checkOrdering__4119744823:
 			__local_var_8_5 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply5(Get_Data_Ord_ordCharImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_6_3, __local_var_7_4).IntVal), 380165415}), gopurs_runtime.Value{})
 			_ = __local_var_8_5
 			var __t_tag_7 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordCharImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_6_3, __local_var_7_4)
@@ -427,6 +456,7 @@ checkOrdering__4119744823:
 			__local_var_9_6 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(uint32(__t_tag_7.IntVal) == 1527465420), false}), gopurs_runtime.Value{})
 			_ = __local_var_9_6
 			var __t_tag_9 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordCharImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_6_3, __local_var_7_4)
@@ -434,16 +464,19 @@ checkOrdering__4119744823:
 			__local_var_10_8 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(uint32(__t_tag_9.IntVal) == 380165415) != (true), false}), gopurs_runtime.Value{})
 			_ = __local_var_10_8
 			__local_var_11_10 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(__local_var_6_3.StrVal()) == (__local_var_7_4.StrVal()), false}), gopurs_runtime.Value{})
 			_ = __local_var_11_10
 			__local_var_12_11 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{((__local_var_6_3.StrVal()) == (__local_var_7_4.StrVal())) != (true), true}), gopurs_runtime.Value{})
 			_ = __local_var_12_11
 			var __t_tag_13 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordCharImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_6_3, __local_var_7_4)
@@ -451,6 +484,7 @@ checkOrdering__4119744823:
 			__local_var_13_12 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(uint32(__t_tag_13.IntVal) == 1527465420) != (true), true}), gopurs_runtime.Value{})
 			_ = __local_var_13_12
 			var __t_tag_15 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordCharImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_6_3, __local_var_7_4)
@@ -458,6 +492,7 @@ checkOrdering__4119744823:
 			__local_var_14_14 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(uint32(__t_tag_15.IntVal) == 380165415), true}), gopurs_runtime.Value{})
 			_ = __local_var_14_14
 			__local_var_15_16 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), Get_Data_Ord_compare__2320923292()), gopurs_runtime.Value{})
@@ -467,6 +502,7 @@ checkOrdering__4119744823:
 			__local_var_17_18 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply2(__local_var_16_17, gopurs_runtime.Str(__local_var_6_3.StrVal()), gopurs_runtime.Str(__local_var_7_4.StrVal())).IntVal), 380165415}), gopurs_runtime.Value{})
 			_ = __local_var_17_18
 			__local_var_18_19 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Apply(__local_var_16_17, gopurs_runtime.Str(__local_var_6_3.StrVal()))), gopurs_runtime.Value{})
@@ -476,16 +512,19 @@ checkOrdering__4119744823:
 			__local_var_20_21 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply(__local_var_19_20, gopurs_runtime.Str(__local_var_7_4.StrVal())).IntVal), 380165415}), gopurs_runtime.Value{})
 			_ = __local_var_20_21
 			__local_var_21_22 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply(__local_var_19_20, gopurs_runtime.Str(__local_var_6_3.StrVal())).IntVal), 902936544}), gopurs_runtime.Value{})
 			_ = __local_var_21_22
 			__local_var_22_23 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply(__local_var_19_20, gopurs_runtime.Str(__local_var_7_4.StrVal())).IntVal), 380165415}), gopurs_runtime.Value{})
 			_ = __local_var_22_23
 			__local_var_23_24 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Apply(Get_Data_Ord_lessThan__3343604442(), gopurs_runtime.Str(__local_var_6_3.StrVal()))), gopurs_runtime.Value{})
@@ -495,16 +534,19 @@ checkOrdering__4119744823:
 			__local_var_25_26 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(gopurs_runtime.Apply(__local_var_24_25, gopurs_runtime.Str(__local_var_7_4.StrVal())).IntVal) != (0), false}), gopurs_runtime.Value{})
 			_ = __local_var_25_26
 			__local_var_26_27 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(gopurs_runtime.Apply(__local_var_24_25, gopurs_runtime.Str(__local_var_6_3.StrVal())).IntVal) != (0), false}), gopurs_runtime.Value{})
 			_ = __local_var_26_27
 			return gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(gopurs_runtime.Apply(__local_var_24_25, gopurs_runtime.Str(__local_var_7_4.StrVal())).IntVal) != (0), false}), gopurs_runtime.Value{})
 		})
 	}
@@ -537,6 +579,7 @@ checkOrdering__2650964060:
 			__local_var_8_5 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply5(Get_Data_Ord_ordCharImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_6_3, __local_var_7_4).IntVal), 1527465420}), gopurs_runtime.Value{})
 			_ = __local_var_8_5
 			var __t_tag_7 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordCharImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_6_3, __local_var_7_4)
@@ -544,6 +587,7 @@ checkOrdering__2650964060:
 			__local_var_9_6 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(uint32(__t_tag_7.IntVal) == 1527465420), true}), gopurs_runtime.Value{})
 			_ = __local_var_9_6
 			var __t_tag_9 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordCharImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_6_3, __local_var_7_4)
@@ -551,16 +595,19 @@ checkOrdering__2650964060:
 			__local_var_10_8 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(uint32(__t_tag_9.IntVal) == 380165415) != (true), true}), gopurs_runtime.Value{})
 			_ = __local_var_10_8
 			__local_var_11_10 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(__local_var_6_3.StrVal()) == (__local_var_7_4.StrVal()), false}), gopurs_runtime.Value{})
 			_ = __local_var_11_10
 			__local_var_12_11 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{((__local_var_6_3.StrVal()) == (__local_var_7_4.StrVal())) != (true), true}), gopurs_runtime.Value{})
 			_ = __local_var_12_11
 			var __t_tag_13 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordCharImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_6_3, __local_var_7_4)
@@ -568,6 +615,7 @@ checkOrdering__2650964060:
 			__local_var_13_12 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(uint32(__t_tag_13.IntVal) == 1527465420) != (true), false}), gopurs_runtime.Value{})
 			_ = __local_var_13_12
 			var __t_tag_15 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordCharImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_6_3, __local_var_7_4)
@@ -575,6 +623,7 @@ checkOrdering__2650964060:
 			__local_var_14_14 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(uint32(__t_tag_15.IntVal) == 380165415), false}), gopurs_runtime.Value{})
 			_ = __local_var_14_14
 			__local_var_15_16 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), Get_Data_Ord_compare__2320923292()), gopurs_runtime.Value{})
@@ -584,6 +633,7 @@ checkOrdering__2650964060:
 			__local_var_17_18 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply2(__local_var_16_17, gopurs_runtime.Str(__local_var_6_3.StrVal()), gopurs_runtime.Str(__local_var_7_4.StrVal())).IntVal), 1527465420}), gopurs_runtime.Value{})
 			_ = __local_var_17_18
 			__local_var_18_19 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Apply(__local_var_16_17, gopurs_runtime.Str(__local_var_6_3.StrVal()))), gopurs_runtime.Value{})
@@ -593,16 +643,19 @@ checkOrdering__2650964060:
 			__local_var_20_21 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply(__local_var_19_20, gopurs_runtime.Str(__local_var_7_4.StrVal())).IntVal), 1527465420}), gopurs_runtime.Value{})
 			_ = __local_var_20_21
 			__local_var_21_22 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply(__local_var_19_20, gopurs_runtime.Str(__local_var_6_3.StrVal())).IntVal), 902936544}), gopurs_runtime.Value{})
 			_ = __local_var_21_22
 			__local_var_22_23 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply(__local_var_19_20, gopurs_runtime.Str(__local_var_7_4.StrVal())).IntVal), 1527465420}), gopurs_runtime.Value{})
 			_ = __local_var_22_23
 			__local_var_23_24 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Apply(Get_Data_Ord_lessThan__3343604442(), gopurs_runtime.Str(__local_var_6_3.StrVal()))), gopurs_runtime.Value{})
@@ -612,16 +665,19 @@ checkOrdering__2650964060:
 			__local_var_25_26 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(gopurs_runtime.Apply(__local_var_24_25, gopurs_runtime.Str(__local_var_7_4.StrVal())).IntVal) != (0), true}), gopurs_runtime.Value{})
 			_ = __local_var_25_26
 			__local_var_26_27 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(gopurs_runtime.Apply(__local_var_24_25, gopurs_runtime.Str(__local_var_6_3.StrVal())).IntVal) != (0), false}), gopurs_runtime.Value{})
 			_ = __local_var_26_27
 			return gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(gopurs_runtime.Apply(__local_var_24_25, gopurs_runtime.Str(__local_var_7_4.StrVal())).IntVal) != (0), true}), gopurs_runtime.Value{})
 		})
 	}
@@ -654,6 +710,7 @@ checkOrdering__325519965:
 			__local_var_8_5 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply5(Get_Data_Ord_ordStringImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_6_3, __local_var_7_4).IntVal), 902936544}), gopurs_runtime.Value{})
 			_ = __local_var_8_5
 			var __t_tag_7 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordStringImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_6_3, __local_var_7_4)
@@ -661,6 +718,7 @@ checkOrdering__325519965:
 			__local_var_9_6 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(uint32(__t_tag_7.IntVal) == 1527465420), false}), gopurs_runtime.Value{})
 			_ = __local_var_9_6
 			var __t_tag_9 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordStringImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_6_3, __local_var_7_4)
@@ -668,16 +726,19 @@ checkOrdering__325519965:
 			__local_var_10_8 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(uint32(__t_tag_9.IntVal) == 380165415) != (true), true}), gopurs_runtime.Value{})
 			_ = __local_var_10_8
 			__local_var_11_10 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(__local_var_6_3.StrVal()) == (__local_var_7_4.StrVal()), true}), gopurs_runtime.Value{})
 			_ = __local_var_11_10
 			__local_var_12_11 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{((__local_var_6_3.StrVal()) == (__local_var_7_4.StrVal())) != (true), false}), gopurs_runtime.Value{})
 			_ = __local_var_12_11
 			var __t_tag_13 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordStringImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_6_3, __local_var_7_4)
@@ -685,6 +746,7 @@ checkOrdering__325519965:
 			__local_var_13_12 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(uint32(__t_tag_13.IntVal) == 1527465420) != (true), true}), gopurs_runtime.Value{})
 			_ = __local_var_13_12
 			var __t_tag_15 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordStringImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_6_3, __local_var_7_4)
@@ -692,6 +754,7 @@ checkOrdering__325519965:
 			__local_var_14_14 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(uint32(__t_tag_15.IntVal) == 380165415), false}), gopurs_runtime.Value{})
 			_ = __local_var_14_14
 			__local_var_15_16 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), Get_Data_Ord_compare__2340924753()), gopurs_runtime.Value{})
@@ -701,6 +764,7 @@ checkOrdering__325519965:
 			__local_var_17_18 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply2(__local_var_16_17, gopurs_runtime.Str(__local_var_6_3.StrVal()), gopurs_runtime.Str(__local_var_7_4.StrVal())).IntVal), 902936544}), gopurs_runtime.Value{})
 			_ = __local_var_17_18
 			__local_var_18_19 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Apply(__local_var_16_17, gopurs_runtime.Str(__local_var_6_3.StrVal()))), gopurs_runtime.Value{})
@@ -710,16 +774,19 @@ checkOrdering__325519965:
 			__local_var_20_21 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply(__local_var_19_20, gopurs_runtime.Str(__local_var_7_4.StrVal())).IntVal), 902936544}), gopurs_runtime.Value{})
 			_ = __local_var_20_21
 			__local_var_21_22 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply(__local_var_19_20, gopurs_runtime.Str(__local_var_6_3.StrVal())).IntVal), 902936544}), gopurs_runtime.Value{})
 			_ = __local_var_21_22
 			__local_var_22_23 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply(__local_var_19_20, gopurs_runtime.Str(__local_var_7_4.StrVal())).IntVal), 902936544}), gopurs_runtime.Value{})
 			_ = __local_var_22_23
 			__local_var_23_24 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Apply(Get_Data_Ord_lessThan__2428873527(), gopurs_runtime.Str(__local_var_6_3.StrVal()))), gopurs_runtime.Value{})
@@ -729,16 +796,19 @@ checkOrdering__325519965:
 			__local_var_25_26 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(gopurs_runtime.Apply(__local_var_24_25, gopurs_runtime.Str(__local_var_7_4.StrVal())).IntVal) != (0), false}), gopurs_runtime.Value{})
 			_ = __local_var_25_26
 			__local_var_26_27 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(gopurs_runtime.Apply(__local_var_24_25, gopurs_runtime.Str(__local_var_6_3.StrVal())).IntVal) != (0), false}), gopurs_runtime.Value{})
 			_ = __local_var_26_27
 			return gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(gopurs_runtime.Apply(__local_var_24_25, gopurs_runtime.Str(__local_var_7_4.StrVal())).IntVal) != (0), false}), gopurs_runtime.Value{})
 		})
 	}
@@ -771,6 +841,7 @@ checkOrdering__2503009178:
 			__local_var_8_5 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply5(Get_Data_Ord_ordStringImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_6_3, __local_var_7_4).IntVal), 380165415}), gopurs_runtime.Value{})
 			_ = __local_var_8_5
 			var __t_tag_7 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordStringImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_6_3, __local_var_7_4)
@@ -778,6 +849,7 @@ checkOrdering__2503009178:
 			__local_var_9_6 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(uint32(__t_tag_7.IntVal) == 1527465420), false}), gopurs_runtime.Value{})
 			_ = __local_var_9_6
 			var __t_tag_9 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordStringImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_6_3, __local_var_7_4)
@@ -785,16 +857,19 @@ checkOrdering__2503009178:
 			__local_var_10_8 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(uint32(__t_tag_9.IntVal) == 380165415) != (true), false}), gopurs_runtime.Value{})
 			_ = __local_var_10_8
 			__local_var_11_10 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(__local_var_6_3.StrVal()) == (__local_var_7_4.StrVal()), false}), gopurs_runtime.Value{})
 			_ = __local_var_11_10
 			__local_var_12_11 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{((__local_var_6_3.StrVal()) == (__local_var_7_4.StrVal())) != (true), true}), gopurs_runtime.Value{})
 			_ = __local_var_12_11
 			var __t_tag_13 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordStringImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_6_3, __local_var_7_4)
@@ -802,6 +877,7 @@ checkOrdering__2503009178:
 			__local_var_13_12 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(uint32(__t_tag_13.IntVal) == 1527465420) != (true), true}), gopurs_runtime.Value{})
 			_ = __local_var_13_12
 			var __t_tag_15 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordStringImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_6_3, __local_var_7_4)
@@ -809,6 +885,7 @@ checkOrdering__2503009178:
 			__local_var_14_14 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(uint32(__t_tag_15.IntVal) == 380165415), true}), gopurs_runtime.Value{})
 			_ = __local_var_14_14
 			__local_var_15_16 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), Get_Data_Ord_compare__2340924753()), gopurs_runtime.Value{})
@@ -818,6 +895,7 @@ checkOrdering__2503009178:
 			__local_var_17_18 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply2(__local_var_16_17, gopurs_runtime.Str(__local_var_6_3.StrVal()), gopurs_runtime.Str(__local_var_7_4.StrVal())).IntVal), 380165415}), gopurs_runtime.Value{})
 			_ = __local_var_17_18
 			__local_var_18_19 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Apply(__local_var_16_17, gopurs_runtime.Str(__local_var_6_3.StrVal()))), gopurs_runtime.Value{})
@@ -827,16 +905,19 @@ checkOrdering__2503009178:
 			__local_var_20_21 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply(__local_var_19_20, gopurs_runtime.Str(__local_var_7_4.StrVal())).IntVal), 380165415}), gopurs_runtime.Value{})
 			_ = __local_var_20_21
 			__local_var_21_22 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply(__local_var_19_20, gopurs_runtime.Str(__local_var_6_3.StrVal())).IntVal), 902936544}), gopurs_runtime.Value{})
 			_ = __local_var_21_22
 			__local_var_22_23 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply(__local_var_19_20, gopurs_runtime.Str(__local_var_7_4.StrVal())).IntVal), 380165415}), gopurs_runtime.Value{})
 			_ = __local_var_22_23
 			__local_var_23_24 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Apply(Get_Data_Ord_lessThan__2428873527(), gopurs_runtime.Str(__local_var_6_3.StrVal()))), gopurs_runtime.Value{})
@@ -846,16 +927,19 @@ checkOrdering__2503009178:
 			__local_var_25_26 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(gopurs_runtime.Apply(__local_var_24_25, gopurs_runtime.Str(__local_var_7_4.StrVal())).IntVal) != (0), false}), gopurs_runtime.Value{})
 			_ = __local_var_25_26
 			__local_var_26_27 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(gopurs_runtime.Apply(__local_var_24_25, gopurs_runtime.Str(__local_var_6_3.StrVal())).IntVal) != (0), false}), gopurs_runtime.Value{})
 			_ = __local_var_26_27
 			return gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(gopurs_runtime.Apply(__local_var_24_25, gopurs_runtime.Str(__local_var_7_4.StrVal())).IntVal) != (0), false}), gopurs_runtime.Value{})
 		})
 	}
@@ -888,6 +972,7 @@ checkOrdering__3515330801:
 			__local_var_8_5 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply5(Get_Data_Ord_ordStringImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_6_3, __local_var_7_4).IntVal), 1527465420}), gopurs_runtime.Value{})
 			_ = __local_var_8_5
 			var __t_tag_7 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordStringImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_6_3, __local_var_7_4)
@@ -895,6 +980,7 @@ checkOrdering__3515330801:
 			__local_var_9_6 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(uint32(__t_tag_7.IntVal) == 1527465420), true}), gopurs_runtime.Value{})
 			_ = __local_var_9_6
 			var __t_tag_9 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordStringImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_6_3, __local_var_7_4)
@@ -902,16 +988,19 @@ checkOrdering__3515330801:
 			__local_var_10_8 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(uint32(__t_tag_9.IntVal) == 380165415) != (true), true}), gopurs_runtime.Value{})
 			_ = __local_var_10_8
 			__local_var_11_10 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(__local_var_6_3.StrVal()) == (__local_var_7_4.StrVal()), false}), gopurs_runtime.Value{})
 			_ = __local_var_11_10
 			__local_var_12_11 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{((__local_var_6_3.StrVal()) == (__local_var_7_4.StrVal())) != (true), true}), gopurs_runtime.Value{})
 			_ = __local_var_12_11
 			var __t_tag_13 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordStringImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_6_3, __local_var_7_4)
@@ -919,6 +1008,7 @@ checkOrdering__3515330801:
 			__local_var_13_12 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(uint32(__t_tag_13.IntVal) == 1527465420) != (true), false}), gopurs_runtime.Value{})
 			_ = __local_var_13_12
 			var __t_tag_15 gopurs_runtime.Value = gopurs_runtime.Apply5(Get_Data_Ord_ordStringImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, __local_var_6_3, __local_var_7_4)
@@ -926,6 +1016,7 @@ checkOrdering__3515330801:
 			__local_var_14_14 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(uint32(__t_tag_15.IntVal) == 380165415), false}), gopurs_runtime.Value{})
 			_ = __local_var_14_14
 			__local_var_15_16 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), Get_Data_Ord_compare__2340924753()), gopurs_runtime.Value{})
@@ -935,6 +1026,7 @@ checkOrdering__3515330801:
 			__local_var_17_18 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply2(__local_var_16_17, gopurs_runtime.Str(__local_var_6_3.StrVal()), gopurs_runtime.Str(__local_var_7_4.StrVal())).IntVal), 1527465420}), gopurs_runtime.Value{})
 			_ = __local_var_17_18
 			__local_var_18_19 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Apply(__local_var_16_17, gopurs_runtime.Str(__local_var_6_3.StrVal()))), gopurs_runtime.Value{})
@@ -944,16 +1036,19 @@ checkOrdering__3515330801:
 			__local_var_20_21 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply(__local_var_19_20, gopurs_runtime.Str(__local_var_7_4.StrVal())).IntVal), 1527465420}), gopurs_runtime.Value{})
 			_ = __local_var_20_21
 			__local_var_21_22 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply(__local_var_19_20, gopurs_runtime.Str(__local_var_6_3.StrVal())).IntVal), 902936544}), gopurs_runtime.Value{})
 			_ = __local_var_21_22
 			__local_var_22_23 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___162236433("", struct {
 				actual   uint32
 				expected uint32
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{uint32(gopurs_runtime.Apply(__local_var_19_20, gopurs_runtime.Str(__local_var_7_4.StrVal())).IntVal), 1527465420}), gopurs_runtime.Value{})
 			_ = __local_var_22_23
 			__local_var_23_24 := gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Ref__new(), gopurs_runtime.Apply(Get_Data_Ord_lessThan__2428873527(), gopurs_runtime.Str(__local_var_6_3.StrVal()))), gopurs_runtime.Value{})
@@ -963,16 +1058,19 @@ checkOrdering__3515330801:
 			__local_var_25_26 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(gopurs_runtime.Apply(__local_var_24_25, gopurs_runtime.Str(__local_var_7_4.StrVal())).IntVal) != (0), true}), gopurs_runtime.Value{})
 			_ = __local_var_25_26
 			__local_var_26_27 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(gopurs_runtime.Apply(__local_var_24_25, gopurs_runtime.Str(__local_var_6_3.StrVal())).IntVal) != (0), false}), gopurs_runtime.Value{})
 			_ = __local_var_26_27
 			return gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1138829510("", struct {
 				actual   bool
 				expected bool
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{(gopurs_runtime.Apply(__local_var_24_25, gopurs_runtime.Str(__local_var_7_4.StrVal())).IntVal) != (0), true}), gopurs_runtime.Value{})
 		})
 	}

@@ -24,11 +24,13 @@ func Get_Main_Clazz_dollar_Dict() gopurs_runtime.Value {
 		cache_Main_Clazz_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 3678469904, UnsafePtr: unsafe.Pointer(Call_Main_Clazz_dollar_Dict(func() struct {
 				def gopurs_runtime.Value
+				/*gopurs:record-v1:1:006400650066*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					def gopurs_runtime.Value
+					/*gopurs:record-v1:1:006400650066*/
 				}{}
 				clone.def = gopurs_runtime.RecordGet(orig, "def")
 				return clone
@@ -46,11 +48,13 @@ func Get_Main_Clazz_dollar_Dict__941953092() gopurs_runtime.Value {
 		cache_Main_Clazz_dollar_Dict__941953092 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 3678469904, UnsafePtr: unsafe.Pointer(Rebox_Main_40457147_498391044(Call_Main_Clazz_dollar_Dict__941953092(func() struct {
 				def string
+				/*gopurs:record-v1:1:006400650066*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					def string
+					/*gopurs:record-v1:1:006400650066*/
 				}{}
 				clone.def = gopurs_runtime.RecordGet(orig, "def").StrVal()
 				return clone
@@ -68,6 +72,7 @@ func Get_Main_test5() gopurs_runtime.Value {
 		cache_Main_test5 = func() gopurs_runtime.Value {
 			orig := struct {
 				a string
+				/*gopurs:record-v1:1:0061*/
 			}{"test"}
 			_ = orig
 			return gopurs_runtime.RecordDict1("a", gopurs_runtime.Str(orig.a))
@@ -183,6 +188,7 @@ type Constructor_Main_Clazz[T_a any] struct {
 	V0 T_a
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f0043006c0061007a007a
 func init() {
 	gopurs_runtime.StructGetters[3678469904] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_Clazz[gopurs_runtime.Value])(ptr)
@@ -198,9 +204,11 @@ func init() {
 
 func Call_Main_Clazz_dollar_Dict(x_0_loop struct {
 	def gopurs_runtime.Value
+	/*gopurs:record-v1:1:006400650066*/
 }) *Constructor_Main_Clazz[gopurs_runtime.Value] {
 	var x_0 struct {
 		def gopurs_runtime.Value
+		/*gopurs:record-v1:1:006400650066*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_Clazz[gopurs_runtime.Value]](func() gopurs_runtime.Value {
@@ -212,6 +220,7 @@ func Call_Main_Clazz_dollar_Dict(x_0_loop struct {
 
 func Call_Main_Clazz_dollar_Dict__941953092(x_0_loop struct {
 	def string
+	/*gopurs:record-v1:1:006400650066*/
 }) *Constructor_Main_Clazz[string] {
 Clazz_dollar_Dict__941953092:
 	for {
@@ -220,6 +229,7 @@ Clazz_dollar_Dict__941953092:
 		}
 		var x_0 struct {
 			def string
+			/*gopurs:record-v1:1:006400650066*/
 		} = x_0_loop
 		_ = x_0
 		return gopurs_runtime.CoerceToStruct[Constructor_Main_Clazz[string]](func() gopurs_runtime.Value {

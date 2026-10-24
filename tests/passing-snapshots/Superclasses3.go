@@ -15,12 +15,14 @@ func Get_Main_MonadWriter_dollar_Dict() gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 2544837208, UnsafePtr: unsafe.Pointer(Call_Main_MonadWriter_dollar_Dict(func() struct {
 				Monad0 gopurs_runtime.Value
 				tell   gopurs_runtime.Value
+				/*gopurs:record-v1:2:004d006f006e006100640030,00740065006c006c*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					Monad0 gopurs_runtime.Value
 					tell   gopurs_runtime.Value
+					/*gopurs:record-v1:2:004d006f006e006100640030,00740065006c006c*/
 				}{}
 				clone.Monad0 = gopurs_runtime.RecordGet(orig, "Monad0")
 				clone.tell = gopurs_runtime.RecordGet(orig, "tell")
@@ -40,12 +42,14 @@ func Get_Main_MonadWriter_dollar_Dict__3810907048() gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 2544837208, UnsafePtr: unsafe.Pointer(Rebox_Main_1480135733_72788106(Call_Main_MonadWriter_dollar_Dict__3810907048(func() struct {
 				Monad0 gopurs_runtime.Value
 				tell   gopurs_runtime.Value
+				/*gopurs:record-v1:2:004d006f006e006100640030,00740065006c006c*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					Monad0 gopurs_runtime.Value
 					tell   gopurs_runtime.Value
+					/*gopurs:record-v1:2:004d006f006e006100640030,00740065006c006c*/
 				}{}
 				clone.Monad0 = gopurs_runtime.RecordGet(orig, "Monad0")
 				clone.tell = gopurs_runtime.RecordGet(orig, "tell")
@@ -259,6 +263,7 @@ type Constructor_Main_MonadWriter[T_w any, T_m any] struct {
 	V1 gopurs_runtime.Value
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f004d006f006e00610064005700720069007400650072
 func init() {
 	gopurs_runtime.StructGetters[2544837208] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_MonadWriter[gopurs_runtime.Value, gopurs_runtime.Value])(ptr)
@@ -277,10 +282,12 @@ func init() {
 func Call_Main_MonadWriter_dollar_Dict(x_0_loop struct {
 	Monad0 gopurs_runtime.Value
 	tell   gopurs_runtime.Value
+	/*gopurs:record-v1:2:004d006f006e006100640030,00740065006c006c*/
 }) *Constructor_Main_MonadWriter[gopurs_runtime.Value, gopurs_runtime.Value] {
 	var x_0 struct {
 		Monad0 gopurs_runtime.Value
 		tell   gopurs_runtime.Value
+		/*gopurs:record-v1:2:004d006f006e006100640030,00740065006c006c*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_MonadWriter[gopurs_runtime.Value, gopurs_runtime.Value]](func() gopurs_runtime.Value {
@@ -293,6 +300,7 @@ func Call_Main_MonadWriter_dollar_Dict(x_0_loop struct {
 func Call_Main_MonadWriter_dollar_Dict__3810907048(x_0_loop struct {
 	Monad0 gopurs_runtime.Value
 	tell   gopurs_runtime.Value
+	/*gopurs:record-v1:2:004d006f006e006100640030,00740065006c006c*/
 }) *Constructor_Main_MonadWriter[string, gopurs_runtime.Value] {
 MonadWriter_dollar_Dict__3810907048:
 	for {
@@ -302,6 +310,7 @@ MonadWriter_dollar_Dict__3810907048:
 		var x_0 struct {
 			Monad0 gopurs_runtime.Value
 			tell   gopurs_runtime.Value
+			/*gopurs:record-v1:2:004d006f006e006100640030,00740065006c006c*/
 		} = x_0_loop
 		_ = x_0
 		return gopurs_runtime.CoerceToStruct[Constructor_Main_MonadWriter[string, gopurs_runtime.Value]](func() gopurs_runtime.Value {

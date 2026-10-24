@@ -40,12 +40,14 @@ func Get_Main_Z() gopurs_runtime.Value {
 				orig := Call_Main_Z(func() struct {
 					left  gopurs_runtime.Value
 					right gopurs_runtime.Value
+					/*gopurs:record-v1:2:006c006500660074,00720069006700680074*/
 				} {
 					orig := x_0_box
 					_ = orig
 					clone := struct {
 						left  gopurs_runtime.Value
 						right gopurs_runtime.Value
+						/*gopurs:record-v1:2:006c006500660074,00720069006700680074*/
 					}{}
 					clone.left = gopurs_runtime.RecordGet(orig, "left")
 					clone.right = gopurs_runtime.RecordGet(orig, "right")
@@ -92,6 +94,7 @@ func Get_Main_eqZ() gopurs_runtime.Value {
 		cache_Main_eqZ = gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(Rebox_Main_2923583716_3790796878((&Constructor_Data_Eq_Eq[struct {
 			left  gopurs_runtime.Value
 			right gopurs_runtime.Value
+			/*gopurs:record-v1:2:006c006500660074,00720069006700680074*/
 		}]{1, gopurs_runtime.Func2(func(x_0 gopurs_runtime.Value, y_1 gopurs_runtime.Value) gopurs_runtime.Value {
 			var __t19 bool
 			{
@@ -195,20 +198,20 @@ func Get_Main_ordX() gopurs_runtime.Value {
 		cache_Main_ordX = gopurs_runtime.Value{Type: 9, IntVal: 1435789946, UnsafePtr: unsafe.Pointer((&Constructor_Data_Ord_Ord[gopurs_runtime.Value]{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 1012063514, UnsafePtr: unsafe.Pointer(gopurs_runtime.CoerceToStruct[Constructor_Data_Eq_Eq[gopurs_runtime.Value]](Get_Main_eqX()))}
 		}), gopurs_runtime.Func2(func(x_0 gopurs_runtime.Value, y_1 gopurs_runtime.Value) gopurs_runtime.Value {
-			var __t1 uint32
+			var __t1 gopurs_runtime.Value
 			{
 				if x_0.Type == 9 && x_0.IntVal == 1409933510 {
-					var __t0 uint32
+					var __t0 gopurs_runtime.Value
 					{
 						if y_1.Type == 9 && y_1.IntVal == 1409933510 {
-							__t0 = uint32(Data_Ord_OrdIntImpl_nativeWorker(gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, (*Constructor_Main_X)(x_0.UnsafePtr).V0, (*Constructor_Main_X)(y_1.UnsafePtr).V0).IntVal)
+							__t0 = Data_Ord_OrdIntImpl_nativeWorker(gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, (*Constructor_Main_X)(x_0.UnsafePtr).V0, (*Constructor_Main_X)(y_1.UnsafePtr).V0)
 							goto end_branch_0
 						} else {
 
 						}
 					}
 					{
-						__t0 = 1527465420
+						__t0 = gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}
 					}
 				end_branch_0:
 					__t1 = __t0
@@ -219,7 +222,7 @@ func Get_Main_ordX() gopurs_runtime.Value {
 			}
 			{
 				if y_1.Type == 9 && y_1.IntVal == 1409933510 {
-					__t1 = 380165415
+					__t1 = gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}
 					goto end_branch_1
 				} else {
 
@@ -227,17 +230,17 @@ func Get_Main_ordX() gopurs_runtime.Value {
 			}
 			{
 				if (x_0.Type == 9 && x_0.IntVal == 1682951303) && (y_1.Type == 9 && y_1.IntVal == 1682951303) {
-					__t1 = uint32(gopurs_runtime.Apply5(Get_Data_Ord_ordStringImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, (*Constructor_Main_Y)(x_0.UnsafePtr).V0, (*Constructor_Main_Y)(y_1.UnsafePtr).V0).IntVal)
+					__t1 = gopurs_runtime.Apply5(Get_Data_Ord_ordStringImpl(), gopurs_runtime.Value{Type: 9, IntVal: int64(1527465420), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(902936544), UnsafePtr: nil}, gopurs_runtime.Value{Type: 9, IntVal: int64(380165415), UnsafePtr: nil}, (*Constructor_Main_Y)(x_0.UnsafePtr).V0, (*Constructor_Main_Y)(y_1.UnsafePtr).V0)
 					goto end_branch_1
 				} else {
 
 				}
 			}
 			{
-				__t1 = func() uint32 { panic("Failed pattern match") }()
+				__t1 = gopurs_runtime.Value{Type: 9, IntVal: int64(func() uint32 { panic("Failed pattern match") }()), UnsafePtr: nil}
 			}
 		end_branch_1:
-			return gopurs_runtime.Value{Type: 9, IntVal: int64(__t1), UnsafePtr: nil}
+			return __t1
 		})}))}
 	})
 	return cache_Main_ordX
@@ -253,6 +256,7 @@ func Get_Main_main() gopurs_runtime.Value {
 			z_0_0 := struct {
 				left  gopurs_runtime.Value
 				right gopurs_runtime.Value
+				/*gopurs:record-v1:2:006c006500660074,00720069006700680074*/
 			}{gopurs_runtime.Value{Type: 9, IntVal: 1409933510, UnsafePtr: unsafe.Pointer((&Constructor_Main_X{1, int64(0)}))}, gopurs_runtime.Value{Type: 9, IntVal: 1682951303, UnsafePtr: unsafe.Pointer((&Constructor_Main_Y{1, gopurs_runtime.Str("Foo")}))}}
 			_ = z_0_0
 			// TAST (Let): __local_var_1_1 shape=App(Var) bindingType=Any
@@ -329,13 +333,16 @@ type Constructor_Main_Y struct {
 func Call_Main_Z(x_0_loop struct {
 	left  gopurs_runtime.Value
 	right gopurs_runtime.Value
+	/*gopurs:record-v1:2:006c006500660074,00720069006700680074*/
 }) struct {
 	left  gopurs_runtime.Value
 	right gopurs_runtime.Value
+	/*gopurs:record-v1:2:006c006500660074,00720069006700680074*/
 } {
 	var x_0 struct {
 		left  gopurs_runtime.Value
 		right gopurs_runtime.Value
+		/*gopurs:record-v1:2:006c006500660074,00720069006700680074*/
 	} = x_0_loop
 	_ = x_0
 	return x_0
@@ -344,6 +351,7 @@ func Call_Main_Z(x_0_loop struct {
 func Rebox_Main_2923583716_3790796878(in *Constructor_Data_Eq_Eq[struct {
 	left  gopurs_runtime.Value
 	right gopurs_runtime.Value
+	/*gopurs:record-v1:2:006c006500660074,00720069006700680074*/
 }]) *Constructor_Data_Eq_Eq[gopurs_runtime.Value] {
 	if in == nil {
 		return nil
@@ -354,6 +362,7 @@ func Rebox_Main_2923583716_3790796878(in *Constructor_Data_Eq_Eq[struct {
 func Rebox_Main_3790796878_2923583716(in *Constructor_Data_Eq_Eq[gopurs_runtime.Value]) *Constructor_Data_Eq_Eq[struct {
 	left  gopurs_runtime.Value
 	right gopurs_runtime.Value
+	/*gopurs:record-v1:2:006c006500660074,00720069006700680074*/
 }] {
 	if in == nil {
 		return nil
@@ -361,5 +370,6 @@ func Rebox_Main_3790796878_2923583716(in *Constructor_Data_Eq_Eq[gopurs_runtime.
 	return (*Constructor_Data_Eq_Eq[struct {
 		left  gopurs_runtime.Value
 		right gopurs_runtime.Value
+		/*gopurs:record-v1:2:006c006500660074,00720069006700680074*/
 	}])(unsafe.Pointer(in))
 }

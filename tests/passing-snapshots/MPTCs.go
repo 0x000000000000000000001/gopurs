@@ -14,11 +14,13 @@ func Get_Main_NullaryTypeClass_dollar_Dict() gopurs_runtime.Value {
 		cache_Main_NullaryTypeClass_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 2059088857, UnsafePtr: unsafe.Pointer(Call_Main_NullaryTypeClass_dollar_Dict(func() struct {
 				greeting string
+				/*gopurs:record-v1:1:006700720065006500740069006e0067*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					greeting string
+					/*gopurs:record-v1:1:006700720065006500740069006e0067*/
 				}{}
 				clone.greeting = gopurs_runtime.RecordGet(orig, "greeting").StrVal()
 				return clone
@@ -36,11 +38,13 @@ func Get_Main_Coerce_dollar_Dict() gopurs_runtime.Value {
 		cache_Main_Coerce_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 2049652419, UnsafePtr: unsafe.Pointer(Call_Main_Coerce_dollar_Dict(func() struct {
 				coerce gopurs_runtime.Value
+				/*gopurs:record-v1:1:0063006f0065007200630065*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					coerce gopurs_runtime.Value
+					/*gopurs:record-v1:1:0063006f0065007200630065*/
 				}{}
 				clone.coerce = gopurs_runtime.RecordGet(orig, "coerce")
 				return clone
@@ -123,6 +127,7 @@ type Constructor_Main_NullaryTypeClass struct {
 	V0 string
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f004e0075006c006c00610072007900540079007000650043006c006100730073
 func init() {
 	gopurs_runtime.StructGetters[2059088857] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_NullaryTypeClass)(ptr)
@@ -141,6 +146,7 @@ type Constructor_Main_Coerce[T_a any, T_b any] struct {
 	V0 gopurs_runtime.Value
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f0043006f0065007200630065
 func init() {
 	gopurs_runtime.StructGetters[2049652419] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_Coerce[gopurs_runtime.Value, gopurs_runtime.Value])(ptr)
@@ -156,9 +162,11 @@ func init() {
 
 func Call_Main_NullaryTypeClass_dollar_Dict(x_0_loop struct {
 	greeting string
+	/*gopurs:record-v1:1:006700720065006500740069006e0067*/
 }) *Constructor_Main_NullaryTypeClass {
 	var x_0 struct {
 		greeting string
+		/*gopurs:record-v1:1:006700720065006500740069006e0067*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_NullaryTypeClass](func() gopurs_runtime.Value {
@@ -170,9 +178,11 @@ func Call_Main_NullaryTypeClass_dollar_Dict(x_0_loop struct {
 
 func Call_Main_Coerce_dollar_Dict(x_0_loop struct {
 	coerce gopurs_runtime.Value
+	/*gopurs:record-v1:1:0063006f0065007200630065*/
 }) *Constructor_Main_Coerce[gopurs_runtime.Value, gopurs_runtime.Value] {
 	var x_0 struct {
 		coerce gopurs_runtime.Value
+		/*gopurs:record-v1:1:0063006f0065007200630065*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_Coerce[gopurs_runtime.Value, gopurs_runtime.Value]](func() gopurs_runtime.Value {

@@ -14,11 +14,13 @@ func Get_Main_B_dollar_Dict() gopurs_runtime.Value {
 		cache_Main_B_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 4250879068, UnsafePtr: unsafe.Pointer(Call_Main_B_dollar_Dict(func() struct {
 				b gopurs_runtime.Value
+				/*gopurs:record-v1:1:0062*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					b gopurs_runtime.Value
+					/*gopurs:record-v1:1:0062*/
 				}{}
 				clone.b = gopurs_runtime.RecordGet(orig, "b")
 				return clone
@@ -36,11 +38,13 @@ func Get_Main_B_dollar_Dict__313467447() gopurs_runtime.Value {
 		cache_Main_B_dollar_Dict__313467447 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 4250879068, UnsafePtr: unsafe.Pointer(Rebox_Main_2084057936_3159052616(Call_Main_B_dollar_Dict__313467447(func() struct {
 				b gopurs_runtime.Value
+				/*gopurs:record-v1:1:0062*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					b gopurs_runtime.Value
+					/*gopurs:record-v1:1:0062*/
 				}{}
 				clone.b = gopurs_runtime.RecordGet(orig, "b")
 				return clone
@@ -58,11 +62,13 @@ func Get_Main_A_dollar_Dict() gopurs_runtime.Value {
 		cache_Main_A_dollar_Dict = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 4219254943, UnsafePtr: unsafe.Pointer(Call_Main_A_dollar_Dict(func() struct {
 				a gopurs_runtime.Value
+				/*gopurs:record-v1:1:0061*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					a gopurs_runtime.Value
+					/*gopurs:record-v1:1:0061*/
 				}{}
 				clone.a = gopurs_runtime.RecordGet(orig, "a")
 				return clone
@@ -80,11 +86,13 @@ func Get_Main_A_dollar_Dict__3954613399() gopurs_runtime.Value {
 		cache_Main_A_dollar_Dict__3954613399 = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{Type: 9, IntVal: 4219254943, UnsafePtr: unsafe.Pointer(Rebox_Main_2868984691_3943979371(Call_Main_A_dollar_Dict__3954613399(func() struct {
 				a gopurs_runtime.Value
+				/*gopurs:record-v1:1:0061*/
 			} {
 				orig := x_0_box
 				_ = orig
 				clone := struct {
 					a gopurs_runtime.Value
+					/*gopurs:record-v1:1:0061*/
 				}{}
 				clone.a = gopurs_runtime.RecordGet(orig, "a")
 				return clone
@@ -112,7 +120,7 @@ var once_Main_b__4024554 sync.Once
 func Get_Main_b__4024554() gopurs_runtime.Value {
 	once_Main_b__4024554.Do(func() {
 		cache_Main_b__4024554 = gopurs_runtime.Func(func(__eta_norm_0_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Bool((gopurs_runtime.Apply(Rebox_Main_3159052616_2084057936(gopurs_runtime.CoerceToStruct[Constructor_Main_B[gopurs_runtime.Value]](Get_Main_bNumber())).V0, __eta_norm_0_0).IntVal) != (0))
+			return gopurs_runtime.Apply(Rebox_Main_3159052616_2084057936(gopurs_runtime.CoerceToStruct[Constructor_Main_B[gopurs_runtime.Value]](Get_Main_bNumber())).V0, __eta_norm_0_0)
 		})
 	})
 	return cache_Main_b__4024554
@@ -124,7 +132,7 @@ var once_Main_a__61794345 sync.Once
 func Get_Main_a__61794345() gopurs_runtime.Value {
 	once_Main_a__61794345.Do(func() {
 		cache_Main_a__61794345 = gopurs_runtime.Func(func(__eta_norm_0_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Bool((gopurs_runtime.Apply(Rebox_Main_3943979371_2868984691(gopurs_runtime.CoerceToStruct[Constructor_Main_A[gopurs_runtime.Value]](Get_Main_aNumber())).V0, __eta_norm_0_0).IntVal) != (0))
+			return gopurs_runtime.Apply(Rebox_Main_3943979371_2868984691(gopurs_runtime.CoerceToStruct[Constructor_Main_A[gopurs_runtime.Value]](Get_Main_aNumber())).V0, __eta_norm_0_0)
 		})
 	})
 	return cache_Main_a__61794345
@@ -136,20 +144,20 @@ var once_Main_bNumber sync.Once
 func Get_Main_bNumber() gopurs_runtime.Value {
 	once_Main_bNumber.Do(func() {
 		cache_Main_bNumber = gopurs_runtime.Value{Type: 9, IntVal: 4250879068, UnsafePtr: unsafe.Pointer(Rebox_Main_2084057936_3159052616((&Constructor_Main_B[float64]{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			var __t0 bool
+			var __t0 gopurs_runtime.Value
 			{
 				if (v_0.FloatVal()) == (0.0) {
-					__t0 = false
+					__t0 = gopurs_runtime.Bool(false)
 					goto end_branch_0
 				} else {
 
 				}
 			}
 			{
-				__t0 = (gopurs_runtime.Apply(Get_Main_a__61794345(), gopurs_runtime.Float((v_0.FloatVal())-(1.0))).IntVal) != (0)
+				__t0 = gopurs_runtime.Apply(Get_Main_a__61794345(), gopurs_runtime.Float((v_0.FloatVal())-(1.0)))
 			}
 		end_branch_0:
-			return gopurs_runtime.Bool(__t0)
+			return __t0
 		})})))}
 	})
 	return cache_Main_bNumber
@@ -161,20 +169,20 @@ var once_Main_aNumber sync.Once
 func Get_Main_aNumber() gopurs_runtime.Value {
 	once_Main_aNumber.Do(func() {
 		cache_Main_aNumber = gopurs_runtime.Value{Type: 9, IntVal: 4219254943, UnsafePtr: unsafe.Pointer(Rebox_Main_2868984691_3943979371((&Constructor_Main_A[float64]{1, gopurs_runtime.Func(func(v_0 gopurs_runtime.Value) gopurs_runtime.Value {
-			var __t0 bool
+			var __t0 gopurs_runtime.Value
 			{
 				if (v_0.FloatVal()) == (0.0) {
-					__t0 = true
+					__t0 = gopurs_runtime.Bool(true)
 					goto end_branch_0
 				} else {
 
 				}
 			}
 			{
-				__t0 = (gopurs_runtime.Apply(Get_Main_b__4024554(), gopurs_runtime.Float((v_0.FloatVal())-(1.0))).IntVal) != (0)
+				__t0 = gopurs_runtime.Apply(Get_Main_b__4024554(), gopurs_runtime.Float((v_0.FloatVal())-(1.0)))
 			}
 		end_branch_0:
-			return gopurs_runtime.Bool(__t0)
+			return __t0
 		})})))}
 	})
 	return cache_Main_aNumber
@@ -211,6 +219,7 @@ type Constructor_Main_B[T_a any] struct {
 	V0 gopurs_runtime.Value
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f0042
 func init() {
 	gopurs_runtime.StructGetters[4250879068] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_B[gopurs_runtime.Value])(ptr)
@@ -229,6 +238,7 @@ type Constructor_Main_A[T_a any] struct {
 	V0 gopurs_runtime.Value
 }
 
+//gopurs:init-v1:00670065006e006500720061007400650064002f004d00610069006e:00720065006700690073007400650072002f0043006f006e007300740072007500630074006f0072005f004d00610069006e005f0041
 func init() {
 	gopurs_runtime.StructGetters[4219254943] = func(ptr unsafe.Pointer, key string) gopurs_runtime.Value {
 		c := (*Constructor_Main_A[gopurs_runtime.Value])(ptr)
@@ -244,9 +254,11 @@ func init() {
 
 func Call_Main_B_dollar_Dict(x_0_loop struct {
 	b gopurs_runtime.Value
+	/*gopurs:record-v1:1:0062*/
 }) *Constructor_Main_B[gopurs_runtime.Value] {
 	var x_0 struct {
 		b gopurs_runtime.Value
+		/*gopurs:record-v1:1:0062*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_B[gopurs_runtime.Value]](func() gopurs_runtime.Value {
@@ -258,6 +270,7 @@ func Call_Main_B_dollar_Dict(x_0_loop struct {
 
 func Call_Main_B_dollar_Dict__313467447(x_0_loop struct {
 	b gopurs_runtime.Value
+	/*gopurs:record-v1:1:0062*/
 }) *Constructor_Main_B[float64] {
 B_dollar_Dict__313467447:
 	for {
@@ -266,6 +279,7 @@ B_dollar_Dict__313467447:
 		}
 		var x_0 struct {
 			b gopurs_runtime.Value
+			/*gopurs:record-v1:1:0062*/
 		} = x_0_loop
 		_ = x_0
 		return gopurs_runtime.CoerceToStruct[Constructor_Main_B[float64]](func() gopurs_runtime.Value {
@@ -278,9 +292,11 @@ B_dollar_Dict__313467447:
 
 func Call_Main_A_dollar_Dict(x_0_loop struct {
 	a gopurs_runtime.Value
+	/*gopurs:record-v1:1:0061*/
 }) *Constructor_Main_A[gopurs_runtime.Value] {
 	var x_0 struct {
 		a gopurs_runtime.Value
+		/*gopurs:record-v1:1:0061*/
 	} = x_0_loop
 	_ = x_0
 	return gopurs_runtime.CoerceToStruct[Constructor_Main_A[gopurs_runtime.Value]](func() gopurs_runtime.Value {
@@ -292,6 +308,7 @@ func Call_Main_A_dollar_Dict(x_0_loop struct {
 
 func Call_Main_A_dollar_Dict__3954613399(x_0_loop struct {
 	a gopurs_runtime.Value
+	/*gopurs:record-v1:1:0061*/
 }) *Constructor_Main_A[float64] {
 A_dollar_Dict__3954613399:
 	for {
@@ -300,6 +317,7 @@ A_dollar_Dict__3954613399:
 		}
 		var x_0 struct {
 			a gopurs_runtime.Value
+			/*gopurs:record-v1:1:0061*/
 		} = x_0_loop
 		_ = x_0
 		return gopurs_runtime.CoerceToStruct[Constructor_Main_A[float64]](func() gopurs_runtime.Value {

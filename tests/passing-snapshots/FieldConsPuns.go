@@ -28,6 +28,7 @@ func Get_Main_main() gopurs_runtime.Value {
 				orig := struct {
 					greeting string
 					name     string
+					/*gopurs:record-v1:2:006700720065006500740069006e0067,006e0061006d0065*/
 				}{"Hello", "World"}
 				_ = orig
 				return gopurs_runtime.RecordDict2("greeting", "name", gopurs_runtime.Str(orig.greeting), gopurs_runtime.Str(orig.name))

@@ -102,27 +102,34 @@ func Get_Main_regression() gopurs_runtime.Value {
 	once_Main_regression.Do(func() {
 		cache_Main_regression = func() gopurs_runtime.Value {
 			arr := Call_Main_foldMap__869368821(gopurs_runtime.Func(func(x_0 gopurs_runtime.Value) gopurs_runtime.Value {
-				var __t0 []int64
+				var __t0 gopurs_runtime.Value
 				{
 					if ((int64(1)) < (x_0.IntVal)) && ((x_0.IntVal) < (int64(4))) {
-						__t0 = []int64{x_0.IntVal}
+						__t0 = func() gopurs_runtime.Value {
+							arr := []int64{x_0.IntVal}
+							boxed := make([]gopurs_runtime.Value, len(arr))
+							for i, v := range arr {
+								boxed[i] = gopurs_runtime.Int(v)
+							}
+							return gopurs_runtime.Array(boxed)
+						}()
 						goto end_branch_0
 					} else {
 
 					}
 				}
 				{
-					__t0 = []int64{}
+					__t0 = func() gopurs_runtime.Value {
+						arr := []int64{}
+						boxed := make([]gopurs_runtime.Value, len(arr))
+						for i, v := range arr {
+							boxed[i] = gopurs_runtime.Int(v)
+						}
+						return gopurs_runtime.Array(boxed)
+					}()
 				}
 			end_branch_0:
-				return func() gopurs_runtime.Value {
-					arr := __t0
-					boxed := make([]gopurs_runtime.Value, len(arr))
-					for i, v := range arr {
-						boxed[i] = gopurs_runtime.Int(v)
-					}
-					return gopurs_runtime.Array(boxed)
-				}()
+				return __t0
 			}), []int64{int64(1), int64(2), int64(3), int64(4), int64(5)})
 			boxed := make([]gopurs_runtime.Value, len(arr))
 			for i, v := range arr {

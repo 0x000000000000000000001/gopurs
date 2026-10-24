@@ -49,12 +49,14 @@ func Get_Main_test() gopurs_runtime.Value {
 			return Call_Main_test(func() struct {
 				bind       gopurs_runtime.Value
 				go__return gopurs_runtime.Value
+				/*gopurs:record-v1:2:00620069006e0064,00720065007400750072006e*/
 			} {
 				orig := m_0_box
 				_ = orig
 				clone := struct {
 					bind       gopurs_runtime.Value
 					go__return gopurs_runtime.Value
+					/*gopurs:record-v1:2:00620069006e0064,00720065007400750072006e*/
 				}{}
 				clone.bind = gopurs_runtime.RecordGet(orig, "bind")
 				clone.go__return = gopurs_runtime.RecordGet(orig, "return")
@@ -74,11 +76,12 @@ func Get_Main_maybe() gopurs_runtime.Value {
 			orig := struct {
 				bind       gopurs_runtime.Value
 				go__return gopurs_runtime.Value
+				/*gopurs:record-v1:2:00620069006e0064,00720065007400750072006e*/
 			}{gopurs_runtime.Func2(func(ma_0 gopurs_runtime.Value, f_1 gopurs_runtime.Value) gopurs_runtime.Value {
-				var __t0 *Constructor_Main_Just[gopurs_runtime.Value]
+				var __t0 gopurs_runtime.Value
 				{
 					if ma_0.Type == 9 && ma_0.IntVal == 3271839782 && ma_0.UnsafePtr == nil {
-						__t0 = (*Constructor_Main_Just[gopurs_runtime.Value])(nil)
+						__t0 = gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer((*Constructor_Main_Just[gopurs_runtime.Value])(nil))}
 						goto end_branch_0
 					} else {
 
@@ -86,17 +89,17 @@ func Get_Main_maybe() gopurs_runtime.Value {
 				}
 				{
 					if ma_0.Type == 9 && ma_0.IntVal == 3271839782 && ma_0.UnsafePtr != nil {
-						__t0 = gopurs_runtime.CoerceToStruct[Constructor_Main_Just[gopurs_runtime.Value]](gopurs_runtime.Apply(f_1, (*Constructor_Main_Just[gopurs_runtime.Value])(ma_0.UnsafePtr).V0))
+						__t0 = gopurs_runtime.Apply(f_1, (*Constructor_Main_Just[gopurs_runtime.Value])(ma_0.UnsafePtr).V0)
 						goto end_branch_0
 					} else {
 
 					}
 				}
 				{
-					__t0 = func() *Constructor_Main_Just[gopurs_runtime.Value] { panic("Failed pattern match") }()
+					__t0 = gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer(func() *Constructor_Main_Just[gopurs_runtime.Value] { panic("Failed pattern match") }())}
 				}
 			end_branch_0:
-				return gopurs_runtime.Value{Type: 9, IntVal: 3271839782, UnsafePtr: unsafe.Pointer(__t0)}
+				return __t0
 			}), Get_Main_Just()}
 			_ = orig
 			return gopurs_runtime.RecordDict2("bind", "return", orig.bind, orig.go__return)
@@ -134,6 +137,7 @@ func Get_Main_id() gopurs_runtime.Value {
 			orig := struct {
 				bind       gopurs_runtime.Value
 				go__return gopurs_runtime.Value
+				/*gopurs:record-v1:2:00620069006e0064,00720065007400750072006e*/
 			}{gopurs_runtime.Func2(func(ma_0 gopurs_runtime.Value, f_1 gopurs_runtime.Value) gopurs_runtime.Value {
 				return gopurs_runtime.Apply(f_1, ma_0)
 			}), Get_Main_Id()}
@@ -171,10 +175,12 @@ type Constructor_Main_Id[T_a any] struct {
 func Call_Main_test(m_0_loop struct {
 	bind       gopurs_runtime.Value
 	go__return gopurs_runtime.Value
+	/*gopurs:record-v1:2:00620069006e0064,00720065007400750072006e*/
 }) gopurs_runtime.Value {
 	var m_0 struct {
 		bind       gopurs_runtime.Value
 		go__return gopurs_runtime.Value
+		/*gopurs:record-v1:2:00620069006e0064,00720065007400750072006e*/
 	} = m_0_loop
 	_ = m_0
 	return gopurs_runtime.Apply2(m_0.bind, gopurs_runtime.Apply(m_0.go__return, gopurs_runtime.Float(1.0)), gopurs_runtime.Func(func(n1_1 gopurs_runtime.Value) gopurs_runtime.Value {

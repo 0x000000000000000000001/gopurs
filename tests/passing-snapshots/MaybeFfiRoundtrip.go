@@ -166,6 +166,7 @@ func Get_Main_main() gopurs_runtime.Value {
 					payload int64
 					present bool
 					zero    int64
+					/*gopurs:record-v1:4:0061006200730065006e0074,007000610079006c006f00610064,00700072006500730065006e0074,007a00650072006f*/
 				}{false, int64(7), true, int64(0)}
 				_ = orig
 				return gopurs_runtime.RecordDict4("absent", "payload", "present", "zero", gopurs_runtime.Bool(orig.absent), gopurs_runtime.Int(orig.payload), gopurs_runtime.Bool(orig.present), gopurs_runtime.Int(orig.zero))
@@ -274,11 +275,13 @@ func Get_Main_main() gopurs_runtime.Value {
 			__local_var_23_23 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{gopurs_runtime.Int(int64(len(result_22_22.go__init))).IntVal, int64(10000)}), gopurs_runtime.Value{})
 			_ = __local_var_23_23
 			__local_var_24_24 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___627669702("", struct {
 				actual   int64
 				expected int64
+				/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 			}{gopurs_runtime.Int(int64(len(result_22_22.rest))).IntVal, int64(0)}), gopurs_runtime.Value{})
 			_ = __local_var_24_24
 			return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str("Done")), gopurs_runtime.Value{})
@@ -379,11 +382,13 @@ func Call_Main_checkSpan(label_0_loop string, predicate_1_loop gopurs_runtime.Va
 		__local_var_9_4 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1772858129("", struct {
 			actual   []int64
 			expected []int64
+			/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 		}{actual_8_3.go__init, expectedInit_3}), gopurs_runtime.Value{})
 		_ = __local_var_9_4
 		__local_var_10_5 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___1772858129("", struct {
 			actual   []int64
 			expected []int64
+			/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 		}{actual_8_3.rest, expectedRest_4}), gopurs_runtime.Value{})
 		_ = __local_var_10_5
 		return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(label_0)), gopurs_runtime.Value{})
@@ -408,6 +413,7 @@ func Call_Main_checkMaybe(label_0_loop string, expected_1_loop string, value_2_l
 		__local_var_6_3 := gopurs_runtime.Apply(Call_Test_Assert_assertEqual_prime___4176622598("", struct {
 			actual   string
 			expected string
+			/*gopurs:record-v1:2:00610063007400750061006c,00650078007000650063007400650064*/
 		}{gopurs_runtime.Apply(Rebox_Main_1386611502_2818770644(gopurs_runtime.CoerceToStruct[Constructor_Data_Show_Show[gopurs_runtime.Value]](Get_Main_showMaybe())).V0, __local_var_5_2).StrVal(), expected_1}), gopurs_runtime.Value{})
 		_ = __local_var_6_3
 		return gopurs_runtime.Apply(gopurs_runtime.Apply(Get_Effect_Console_log(), gopurs_runtime.Str(label_0)), gopurs_runtime.Value{})

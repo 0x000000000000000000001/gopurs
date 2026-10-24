@@ -14,6 +14,7 @@ func Get_Main_v1() gopurs_runtime.Value {
 		cache_Main_v1 = func() gopurs_runtime.Value {
 			orig := struct {
 				a *Constructor_Data_Maybe_Just[gopurs_runtime.Value]
+				/*gopurs:record-v1:1:0061*/
 			}{gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](func() gopurs_runtime.Value {
 				_v := struct {
 					V0 gopurs_runtime.Value
@@ -39,14 +40,17 @@ func Get_Main_v2() gopurs_runtime.Value {
 		cache_Main_v2 = func() gopurs_runtime.Value {
 			orig := func() struct {
 				a *Constructor_Data_Maybe_Just[gopurs_runtime.Value]
+				/*gopurs:record-v1:1:0061*/
 			} {
 				clone := func() struct {
 					a *Constructor_Data_Maybe_Just[gopurs_runtime.Value]
+					/*gopurs:record-v1:1:0061*/
 				} {
 					orig := Get_Main_v1()
 					_ = orig
 					clone := struct {
 						a *Constructor_Data_Maybe_Just[gopurs_runtime.Value]
+						/*gopurs:record-v1:1:0061*/
 					}{}
 					clone.a = gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](gopurs_runtime.RecordGet(orig, "a"))
 					return clone
@@ -102,11 +106,13 @@ func Get_Main_asNothing() gopurs_runtime.Value {
 			return func() gopurs_runtime.Value {
 				orig := Call_Main_asNothing(func() struct {
 					a *Constructor_Data_Maybe_Just[gopurs_runtime.Value]
+					/*gopurs:record-v1:1:0061*/
 				} {
 					orig := v_0_box
 					_ = orig
 					clone := struct {
 						a *Constructor_Data_Maybe_Just[gopurs_runtime.Value]
+						/*gopurs:record-v1:1:0061*/
 					}{}
 					clone.a = gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](gopurs_runtime.RecordGet(orig, "a"))
 					return clone
@@ -131,15 +137,19 @@ func Call_Main_union(_dollar___unused_0_loop gopurs_runtime.Value, v_1_loop gopu
 
 func Call_Main_asNothing(v_0_loop struct {
 	a *Constructor_Data_Maybe_Just[gopurs_runtime.Value]
+	/*gopurs:record-v1:1:0061*/
 }) struct {
 	a *Constructor_Data_Maybe_Just[gopurs_runtime.Value]
+	/*gopurs:record-v1:1:0061*/
 } {
 	var v_0 struct {
 		a *Constructor_Data_Maybe_Just[gopurs_runtime.Value]
+		/*gopurs:record-v1:1:0061*/
 	} = v_0_loop
 	_ = v_0
 	return func() struct {
 		a *Constructor_Data_Maybe_Just[gopurs_runtime.Value]
+		/*gopurs:record-v1:1:0061*/
 	} {
 		clone := v_0
 		clone.a = gopurs_runtime.CoerceToStruct[Constructor_Data_Maybe_Just[gopurs_runtime.Value]](func() gopurs_runtime.Value {
