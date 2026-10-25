@@ -51,6 +51,10 @@ type PreparedModules =
   , metadataUnchanged :: Boolean
   , metadataDemands :: Maybe (Set String -> Effect Unit)
   , sources :: Array SourceModule
+  -- Dev preparation is source-local, so the TAST hash is a sufficient module
+  -- key and avoids re-encoding every prepared module on a cold build.
+  , devMode :: Boolean
+  , sourceHashes :: Map.Map String String
   }
 
 type PreparedCache =
@@ -138,6 +142,7 @@ prepareLoadedModulesForProfile devMode input jobs mainModule directives sortedMo
     let prepared =
           { directives, modules, metadata, metadataUnchanged: false, metadataDemands: Nothing, mainModules: selectMainModules mainModule sourceModules
           , sources: map (\(Module m) -> { name: unwrap m.name, path: m.path, hasForeign: not (Map.isEmpty m.foreign) }) sourceModules
+          , devMode, sourceHashes
           }
     pure { prepared, devMode, sourceHashes, sourceModules: sortedModules, sourceInterfaces: Map.empty, compactSourceDelta: Nothing, mono, reusable: Set.empty, proof: Nothing, metadataDemandKeys: Nothing, metadataCoverage: Nothing, metadataProjection: Nothing, materialize: Nothing }
 

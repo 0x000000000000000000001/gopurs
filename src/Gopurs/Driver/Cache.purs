@@ -77,7 +77,7 @@ beginRequest config = (request "begin")
       , { name: "go-layout", value: if config.goPackages then "gopurs/go-packages-v1" else "gopurs/monolithic-v1" }
       , { name: "module-lazy", value: if config.optimizerJobs > 1 then "1" else "0" }
       , { name: "input-layout", value: "packed-v1" }
-      ] <> if config.devMode then [ { name: "optimization-profile", value: "dev-v4" } ] else []
+      ] <> if config.devMode then [ { name: "optimization-profile", value: "dev-v5" } ] else []
   }
 
 -- Own the speculative fiber independently of session acquisition. Even a failed

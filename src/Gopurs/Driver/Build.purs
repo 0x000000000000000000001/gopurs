@@ -72,13 +72,20 @@ buildWithHeaders pendingHeaders session ffi config preparedInput reusableModules
             restored <- materialize name
             case restored of
               Nothing -> throwError (error ("incremental cache: cannot prepare reader: " <> name))
-              Just value -> do
-                fingerprint <- liftEffect (Wire.hash <$> Wire.write value)
-                case Map.lookup name cache.keys of
-                  Just keys | keys.prepared == fingerprint -> do
+              Just value
+                -- Dev keys are TAST hashes and ``materialize`` already verified
+                -- the source against one. Release keys remain the Wire hash of
+                -- the prepared module and keep their stronger check.
+                | prepared.devMode -> do
                     liftEffect (Ref.modify_ (Map.insert name value) preparedReaders)
                     pure value
-                  _ -> throwError (error ("incremental cache: reader preparation changed: " <> name))
+                | otherwise -> do
+                    fingerprint <- liftEffect (Wire.hash <$> Wire.write value)
+                    case Map.lookup name cache.keys of
+                      Just keys | keys.prepared == fingerprint -> do
+                        liftEffect (Ref.modify_ (Map.insert name value) preparedReaders)
+                        pure value
+                      _ -> throwError (error ("incremental cache: reader preparation changed: " <> name))
       _ -> pure mod
     checkedLookup (Module m) lookup = do
       value <- lookup

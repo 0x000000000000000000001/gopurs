@@ -10,7 +10,7 @@ import Data.Set as Set
 import Data.String as String
 import Data.String.Pattern (Pattern(..))
 import Data.Tuple (Tuple(..))
-import Effect.Aff (Aff, attempt, throwError)
+import Effect.Aff (Aff, attempt, forkAff, joinFiber, throwError)
 import Effect.Class (liftEffect)
 import Effect.Ref as Ref
 import Effect.Exception (message)
@@ -172,6 +172,12 @@ compileCached config cacheRef backends ffiDigestsRef = Metrics.measure "backend 
                   _, _ -> Set.empty
         Metrics.measure "runtime" \_ -> writeRuntime session.output
         reused <- Metrics.measure "optimize + emit" \_ -> buildWithHeaders headers session ffi config prepared withCache.reusable withCache.materialize headerCandidates backends priorFfi
+        -- Preparation proof serialization reads immutable prepared data and
+        -- writes its own cache objects. Start it alongside Go package planning
+        -- and publication, then join before the session closes.
+        proofFiber <- if config.buildManifest
+          then Just <$> forkAff (Metrics.measure "prepare proof publish" \_ -> publishPersistent session config.prepareJobs withCache)
+          else pure Nothing
         if config.goPackages then do
           request <- Metrics.measure "Go exports" \_ -> BuildCache.packages session prepared.mainModules
           Metrics.measure "Go packages" \_ -> writePackageFiles session.output session.cacheRoot prepared.mainModules request (session.stage <> "/package-result.json") (session.stage <> "/package-overlay.json")
@@ -180,7 +186,9 @@ compileCached config cacheRef backends ffiDigestsRef = Metrics.measure "backend 
         diagnostics <- liftEffect Diagnostics.recorded
         Metrics.measure "cache publish" \_ -> BuildCache.publish session prepared.mainModules diagnostics reused
         when config.buildManifest $ do
-          Metrics.measure "prepare proof publish" \_ -> publishPersistent session config.prepareJobs withCache
+          case proofFiber of
+            Just fiber -> void (joinFiber fiber)
+            Nothing -> pure unit
           let restoredNames = Set.fromFoldable (map _.name reused)
           Metrics.measure "reads publish" \_ -> ModuleCache.publishReads session.stage session.cacheRoot (Array.filter (not <<< flip Set.member restoredNames) moduleNames)
           Metrics.measure "ffi digests write" \_ -> Manifest.writeFfiDigests session.cacheRoot currentFfi
