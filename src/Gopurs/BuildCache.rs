@@ -20,4 +20,4 @@ pub fn Gopurs_BuildCache_exchange(request: String) -> Value { gopurs_cache_excha
 pub fn Gopurs_BuildCache_sessionExchange(request: String) -> Value { gopurs_cache_exchange(request, 1) }
 
 // Preloading is optional. The helper bridge retains the sequential protocol.
-pub fn Gopurs_BuildCache_sessionExchangeOnMiss(request: String, _on_miss: Value) -> Value { gopurs_cache_exchange(request, 1) }
+pub fn Gopurs_BuildCache_sessionExchangeOnMiss(request: String, _on_miss: Func1<String, Value>) -> Value { gopurs_cache_exchange(request, 1) }

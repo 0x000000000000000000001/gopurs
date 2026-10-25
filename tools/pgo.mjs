@@ -127,8 +127,8 @@ export function freezeTrainingOutput({ output, projectRoot, trainingDirectory })
 // inside output/Main on case-insensitive APFS (main aliases Main). Delete
 // individual generated files, never module directories, so the frozen CoreFn
 // and the FFI sources survive either aliasing. Only the compiler's generated
-// Go output is removed; any other diff fails the manifest assertion instead of
-// being cleaned away.
+// Go output and cache metadata are removed; any other diff fails the manifest
+// assertion instead of being cleaned away.
 export function cleanGenerated(trainingDirectory) {
   const output = join(trainingDirectory, "output");
   let removed = 0;
@@ -142,6 +142,8 @@ export function cleanGenerated(trainingDirectory) {
   for (const name of [".cache", ".purmeta"]) {
     rmSync(join(trainingDirectory, name), { recursive: true, force: true });
   }
+  rmSync(join(output, ".gopurs-cache"), { recursive: true, force: true });
+  rmSync(join(output, ".gopurs-ownership.json"), { force: true });
   return removed;
 }
 

@@ -22,7 +22,7 @@
     "test:cache-driver": "node --test tools/driver-cache.test.mjs",
     "test:cache-sources": "node --test tools/driver-source-cache.test.mjs",
     "test:cache-context": "node --test tools/driver-context-cache.test.mjs",
-    "test:cache-codecs": "node --test tools/module-codec.test.mjs",
+    "test:cache-codecs": "node --test tools/module-codec.test.mjs tools/cache-pool.test.mjs",
     "prepare": "npm run build"
   },
   "devDependencies": {

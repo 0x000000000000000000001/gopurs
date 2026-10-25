@@ -4,8 +4,8 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import test from "node:test";
 import {
-  cleanGenerated, emittedManifest, encodedRustFlags, freezeTrainingOutput,
-  rustFlagsEnvironment, walk,
+  assertTrainingIntact, cleanGenerated, emittedManifest, encodedRustFlags, freezeTrainingOutput,
+  manifest, rustFlagsEnvironment, walk,
 } from "./pgo.mjs";
 
 function temporary(t, name) {
@@ -66,6 +66,7 @@ test("cleanup removes generated Go files and preserves frozen CoreFn, Main and s
   put(join(training, "output/Main/corefn.json"), typedCoreFn("sources/Main/Main.purs"));
   put(join(training, "sources/Main/Main.purs"), "module Main where\n");
   put(join(training, "sources/Main/Main.go"), "package main\n");
+  const frozen = manifest(training);
   // The generated entry point is output/main/main.go; on case-insensitive APFS
   // that directory aliases output/Main, so writing it must not remove CoreFn.
   put(join(training, "output/main/main.go"), "package main\n");
@@ -75,6 +76,9 @@ test("cleanup removes generated Go files and preserves frozen CoreFn, Main and s
   put(join(training, "output/go.sum"), "gopurs/output v0.0.0\n");
   put(join(training, ".purmeta/Main.json"), "{}");
   put(join(training, ".cache/Main.json"), "{}");
+  put(join(training, "output/.gopurs-cache/current.json"), "{}");
+  put(join(training, "output/.gopurs-cache/objects/frozen"), "cached input");
+  put(join(training, "output/.gopurs-ownership.json"), "{}");
   const corefn = readFileSync(join(training, "output/Main/corefn.json"));
 
   const removed = cleanGenerated(training);
@@ -84,6 +88,9 @@ test("cleanup removes generated Go files and preserves frozen CoreFn, Main and s
   assert.equal(existsSync(join(training, "sources/Main/Main.go")), true);
   assert.equal(existsSync(join(training, ".purmeta")), false);
   assert.equal(existsSync(join(training, ".cache")), false);
+  assert.equal(existsSync(join(training, "output/.gopurs-cache")), false);
+  assert.equal(existsSync(join(training, "output/.gopurs-ownership.json")), false);
+  assertTrainingIntact(training, frozen);
 });
 
 test("profile flags keep spaces in paths inside one encoded argument", () => {

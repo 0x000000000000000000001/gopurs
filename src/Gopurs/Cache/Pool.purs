@@ -1,4 +1,4 @@
-module Gopurs.Cache.Pool (Pool, create, intern, finish) where
+module Gopurs.Cache.Pool (Pool, create, intern, internRef, finish) where
 
 import Effect (Effect)
 
@@ -7,4 +7,5 @@ import Effect (Effect)
 foreign import data Pool :: Type
 foreign import create :: Effect Pool
 foreign import intern :: Pool -> String -> Effect Int
+foreign import internRef :: Pool -> String -> Effect String
 foreign import finish :: Pool -> Effect String

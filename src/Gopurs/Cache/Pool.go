@@ -2,12 +2,14 @@ package Gopurs_Cache_Pool
 
 import (
 	"gopurs/output/gopurs_runtime"
+	"strconv"
 	"strings"
 )
 
 type pool struct {
-	index map[string]int64
-	nodes []string
+	index      map[string]int64
+	nodes      []string
+	references []string
 }
 
 func Create(_ any) gopurs_runtime.Value {
@@ -27,4 +29,24 @@ func Intern(handle gopurs_runtime.Value, text string, _ any) int64 {
 
 func Finish(handle gopurs_runtime.Value, _ any) string {
 	return strings.Join(handle.AnyVal().(*pool).nodes, ",")
+}
+
+// The reference is owned by this portable-artifact pool, like its JSON nodes.
+// Numeric Intern and node insertion order retain their original behavior.
+func InternRef(handle gopurs_runtime.Value, text string, effect any) string {
+	index := Intern(handle, text, effect)
+	p := handle.AnyVal().(*pool)
+	for int64(len(p.references)) <= index {
+		p.references = append(p.references, "")
+	}
+	if reference := p.references[index]; reference != "" {
+		return reference
+	}
+	var buffer [32]byte
+	n := copy(buffer[:], `["int","`)
+	bytes := strconv.AppendInt(buffer[:n], index, 10)
+	bytes = append(bytes, '"', ']')
+	reference := string(bytes)
+	p.references[index] = reference
+	return reference
 }

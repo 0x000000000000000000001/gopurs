@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { closeSync, existsSync, mkdtempSync, openSync, readFileSync, rmSync } from 'node:fs';
+import { closeSync, existsSync, mkdtempSync, openSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -55,8 +55,23 @@ export const packageGoSourceImpl = content => () => runFfiParser(content, '--pac
 export const packageGoFilesImpl = content => () => {
     const root = process.env.GOPURS_COMPILER_SNAPSHOT;
     if (!root) throw new Error('Compiler snapshot is required for Go package file emission');
-    return execFileSync(join(root, 'tools/go-packages-helper'), [], {
-        input: content, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024,
-        stdio: ['pipe', 'pipe', 'pipe'],
-    }).trimEnd();
+    let directory, descriptor;
+    try {
+        // A completed file gives the helper an immediate EOF after the request.
+        // Node's synchronous input pipe can otherwise stall with io.ReadAll.
+        directory = mkdtempSync(join(tmpdir(), 'gopurs-packages-'));
+        const request = join(directory, 'request.json');
+        writeFileSync(request, content, { encoding: 'utf8', flag: 'wx', mode: 0o600 });
+        descriptor = openSync(request, 'r');
+        return execFileSync(join(root, 'tools/go-packages-helper'), [], {
+            encoding: 'utf8', maxBuffer: 64 * 1024 * 1024,
+            stdio: [descriptor, 'pipe', 'pipe'],
+        }).trimEnd();
+    } finally {
+        try {
+            if (descriptor !== undefined) closeSync(descriptor);
+        } finally {
+            if (directory) rmSync(directory, { recursive: true, force: true });
+        }
+    }
 };

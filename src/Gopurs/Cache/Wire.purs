@@ -169,9 +169,7 @@ resolve :: DecodeContext -> Json -> Maybe Json
 resolve context json = reference json >>= Array.index context.nodes
 
 intern :: EncodeContext -> String -> Effect String
-intern context value = do
-  index <- Pool.intern context.pool value
-  pure ("[\"int\",\"" <> show index <> "\"]")
+intern context value = Pool.internRef context.pool value
 
 internCtor :: EncodeContext -> String -> Array String -> Effect String
 internCtor context name args = intern context (ctor name args)
