@@ -19,7 +19,7 @@ const fixture = basename(cwd) === "output" ? dirname(cwd) : cwd;
 const source = join(fixture, "src/Main.purs");
 const content = existsSync(source) ? readFileSync(source, "utf8") : "";
 const phase = tool === "go" ? (process.argv[2] === "mod" ? "tidy" : "build") : /^gopurs(?:-native|-rust|\\.js)?$/.test(tool) ? "gopurs" : tool;
-appendFileSync(process.env.RUNNER_CALLS, JSON.stringify({ phase, tool, args: process.argv.slice(2), cwd, tmp: process.env.TMPDIR, packages: process.env.GOPURS_GO_PACKAGES }) + "\\n");
+appendFileSync(process.env.RUNNER_CALLS, JSON.stringify({ phase, tool, args: process.argv.slice(2), cwd, tmp: process.env.TMPDIR, packages: process.env.GOPURS_GO_PACKAGES, goflags: process.env.GOFLAGS }) + "\\n");
 if (content.includes("fail=" + phase) || process.env.RUNNER_FAIL === phase) process.exit(23);
 if (process.env.RUNNER_PAUSE && phase === "spago") {
   const child = spawn(process.execPath, ["-e", "setInterval(() => {}, 1000)"], { stdio: "ignore" });
@@ -61,7 +61,7 @@ function fixture(t) {
   for (const dir of ["mockbin", "tmp", "gopurs-prelude"]) mkdirSync(join(base, dir));
   writeFileSync(join(base, "package.json"), '{"type":"module"}');
   for (const name of ["test", "modtest"]) cpSync(join(repository, "bin", name), join(root, "bin", name));
-  for (const name of ["command-runner", "test-selection", "test-process", "test-workspace", "test-snapshots", "test-campaign", "test-compiler", "test-runner", "modtest-runner"]) cpSync(join(repository, "tools", name + ".mjs"), join(root, "tools", name + ".mjs"));
+  for (const name of ["command-runner", "test-selection", "test-process", "test-workspace", "test-snapshots", "test-campaign", "test-compiler", "test-go", "test-runner", "modtest-runner"]) cpSync(join(repository, "tools", name + ".mjs"), join(root, "tools", name + ".mjs"));
   writeFileSync(join(root, "bin/pkg"), "CORE_PACKAGES=(prelude)\n");
   for (const name of ["spago", "gofmt", "go", "npm"]) writeFileSync(join(base, "mockbin", name), fakeTool, { mode: 0o755 });
   writeFileSync(join(root, "bin/gopurs"), fakeTool, { mode: 0o755 });
@@ -124,7 +124,7 @@ test("Dev aliases preserve selection, clean options and the option terminator", 
   assert.equal(parseOptions([], { env: {} }).dev, false);
 });
 
-test("Dev fixtures forward only the backend flag, compare Dev snapshots and preserve Release snapshots", async t => {
+test("Dev fixtures scope backend and Go flags, compare Dev snapshots and preserve Release snapshots", async t => {
   const f = fixture(t);
   const expected = join(f.root, "tests/passing-snapshots/Alpha.go");
   writeFileSync(expected, "Release snapshot sentinel\n");
@@ -132,6 +132,7 @@ test("Dev fixtures forward only the backend flag, compare Dev snapshots and pres
     const result = await f.run(["Beta", "Alpha", flag, "-c", "--skip-before", "Alpha"], flag === "-d" ? { GOPURS_GO_PACKAGES: "" } : {});
     assert.equal(result.code, 0, result.output);
     assert.match(result.output, /Build mode: DEV/);
+    assert.match(result.output, /Go build mode: DEV \(-gcflags=gopurs\/output\/\.\.\.=-N -l\)/);
     assert.doesNotMatch(result.output, /=> Testing Beta/);
     assert.equal(reportFor(result).buildProfile, "dev");
   }
@@ -144,6 +145,10 @@ test("Dev fixtures forward only the backend flag, compare Dev snapshots and pres
     ["run", "build:native", "--silent"], ["run", "build:native", "--silent"],
   ]);
   assert(calls.filter(call => call.phase !== "gopurs").every(call => !call.args.includes("--dev")));
+  const goFlag = "-gcflags=gopurs/output/...=-N -l";
+  assert.equal(calls.filter(call => call.phase === "build").length, 2);
+  assert(calls.filter(call => call.phase === "build").every(call => call.args.includes(goFlag)));
+  assert(calls.filter(call => call.phase !== "build").every(call => !call.args.includes(goFlag)));
   assert.equal(calls.filter(call => call.phase === "gofmt").length, 2);
   assert.equal(readFileSync(expected, "utf8"), "Release snapshot sentinel\n");
   assertSharedUntouched(f);
@@ -162,6 +167,53 @@ test("Dev flags reach native and JS compiler hosts through the public launcher",
     ["gopurs-native", ["--main", "Main", "--dev"]],
     ["gopurs.js", ["--main", "Main", "--dev"]],
   ]);
+});
+
+test("Release fixtures preserve Go flags and normal application compilation", async t => {
+  const f = fixture(t);
+  const result = await f.run(["Alpha"], { GOFLAGS: "-trimpath" });
+  assert.equal(result.code, 0, result.output);
+  const calls = readFileSync(f.calls, "utf8").trim().split("\n").map(JSON.parse);
+  assert(calls.every(call => call.goflags === "-trimpath"));
+  assert.deepEqual(calls.find(call => call.phase === "build").args, ["build", "-o", "gopurs_main", "./main/main.go"]);
+  assert.doesNotMatch(result.output, /Go build mode: DEV/);
+});
+
+test("Dev module Go flags reach every application build and run but not compiler host builds", async t => {
+  const f = fixture(t);
+  for (const name of ["alpha", "beta"]) {
+    const bin = join(f.base, "gopurs-" + name, "bin");
+    mkdirSync(bin, { recursive: true });
+    writeFileSync(join(bin, "test"), `#!/usr/bin/env bash
+set -e
+../gopurs/bin/gopurs --main Test.Main
+(
+  cd output
+  go mod tidy
+  go build -o 'test with spaces' ./main
+  go run ./main 'app argument with spaces'
+  go test ./...
+)
+(cd ../gopurs && go build ./main)
+`, { mode: 0o755 });
+  }
+  const goFlag = "-gcflags=gopurs/output/...=-N -l";
+  for (const dev of [true, false]) {
+    writeFileSync(f.calls, "");
+    const result = await f.run(["alpha", "beta", "-c", ...(dev ? ["--dev"] : [])], { GOFLAGS: "-trimpath" }, "modtest");
+    assert.equal(result.code, 0, result.output);
+    const calls = readFileSync(f.calls, "utf8").trim().split("\n").map(JSON.parse);
+    assert(calls.every(call => call.goflags === "-trimpath"), "do not export development flags through GOFLAGS");
+    const applications = calls.filter(call => call.tool === "go" && call.cwd.endsWith("/output") && call.args[0] !== "mod");
+    assert.equal(applications.length, 6);
+    for (const call of applications) assert.equal(call.args.includes(goFlag), dev);
+    assert.deepEqual(applications.filter(call => call.args[0] === "run").map(call => call.args.at(-1)), ["app argument with spaces", "app argument with spaces"]);
+    const hosts = calls.filter(call => call.tool === "go" && call.args[0] === "build" && !call.cwd.endsWith("/output"));
+    assert.equal(hosts.length, 2);
+    assert(hosts.every(call => !call.args.includes(goFlag)), "compiler host retains normal Go compilation");
+    assert(calls.filter(call => !applications.includes(call)).every(call => !call.args.includes(goFlag)));
+    assert.equal((result.output.match(/Go build mode: DEV/g) ?? []).length, dev ? 6 : 0);
+  }
 });
 
 test("clean campaigns rebuild the selected compiler host before running it", async t => {

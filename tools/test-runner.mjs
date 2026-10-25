@@ -7,6 +7,7 @@ import { corePackages, prepareFixture } from "./test-workspace.mjs";
 import { formatSnapshots, snapshotFiles, updateSnapshots, verifySnapshots } from "./test-snapshots.mjs";
 import { resumeTargets, TestCampaign } from "./test-campaign.mjs";
 import { compilerBuildScript } from "./test-compiler.mjs";
+import { devGoFlag, devGoMessage } from "./test-go.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const help = `Usage: ./bin/test [fixtures...] [options]
@@ -33,7 +34,8 @@ async function runFixture(fixture, options, processes, env) {
   const output = join(directory, "output");
   // Main already writes go.mod. Keep its Go version instead of recreating it.
   await phase("go-dependencies", "go", ["mod", "tidy"], output);
-  await phase("go-build", "go", ["build", "-o", "gopurs_main", "./main/main.go"], output);
+  if (options.dev) console.log(devGoMessage);
+  await phase("go-build", "go", ["build", ...(options.dev ? [devGoFlag] : []), "-o", "gopurs_main", "./main/main.go"], output);
   const result = await phase("execute", join(output, "gopurs_main"), [], output, true);
   if (result.includes("Fail")) throw new Error("Execution output contains Fail.");
   processes.checkInterrupted();

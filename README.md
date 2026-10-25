@@ -410,7 +410,7 @@ It keeps the generic functions and the types and layouts from the TAST. Local
 simplification, explicit inlining directives, dictionary resolution and typed
 normalization remain enabled; the optimizer still runs to convergence. The Go
 generation passes, ordinary native workers and tail-call optimization remain
-enabled. Go compiler flags are unchanged.
+enabled.
 
 This profile is experimental. Measurements on a private b8x fixture on
 24 October 2026 put the cold backend at about 80 seconds in release and
@@ -464,6 +464,15 @@ For both test runners, `-c` rebuilds the selected compiler host: native by
 default, JavaScript with `GOPURS_JS=1`, or Rust with `GOPURS_RUST=1`.
 `modtest` streams each library's output as it runs and also preserves its log.
 Its private compiler launcher announces Dev mode for every library build.
+
+In Dev, these runners also compile the generated application packages with
+`-gcflags='gopurs/output/...=-N -l'`: Go optimization and inlining are disabled
+for those packages to shorten compilation. The compiler host rebuilt by `-c`,
+the Go standard library and Release builds keep their normal flags. Each Dev
+application build logs the flags; generated programs can run more slowly.
+Calling `bin/gopurs --dev` alone only generates Go sources. When compiling
+those sources manually, use `go build -gcflags='gopurs/output/...=-N -l' ./main`
+from the output directory to select the same Go compilation mode.
 
 Generic callbacks construct records and ADTs in their consumer's representation.
 This avoids copying a growing list merely to box and unbox loop state, including

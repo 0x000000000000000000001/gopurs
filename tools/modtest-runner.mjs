@@ -5,6 +5,7 @@ import { Interrupted, TestProcesses } from "./test-process.mjs";
 import { prepareModule } from "./test-workspace.mjs";
 import { resumeTargets, TestCampaign } from "./test-campaign.mjs";
 import { compilerBuildScript } from "./test-compiler.mjs";
+import { moduleGoEnvironment } from "./test-go.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 async function main() {
@@ -43,7 +44,8 @@ Each library runs in a fresh copy of the sibling sources, with private temporari
       if (buildScript) await processes.run("build-gopurs", "npm", ["run", buildScript, "--silent"], { cwd: root, env: campaign.env(), log: join(campaign.workspace, "build-gopurs.log") });
       const success = await campaign.run(processes, async (name, directory) => {
         const cwd = prepareModule(root, directory, name, { dev: options.dev });
-        await processes.run(name, "./bin/test", [], { cwd, env: campaign.env(directory), log: join(directory, "logs/test.log"), stream: true });
+        const env = options.dev ? moduleGoEnvironment(directory, cwd, campaign.env(directory)) : campaign.env(directory);
+        await processes.run(name, "./bin/test", [], { cwd, env, log: join(directory, "logs/test.log"), stream: true });
       });
       if (!success) process.exitCode = 1;
     }
