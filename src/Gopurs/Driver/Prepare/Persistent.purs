@@ -310,6 +310,7 @@ prepareProjected devMode session mainModule directives sourceHashes old current 
             Just name -> [ name ]
             Nothing -> projection.mainModules
         , sources: map (\(Module value) -> { name: unwrap value.name, path: value.path, hasForeign: not (Map.isEmpty value.foreign) }) (Array.fromFoldable projection.modules)
+        , devMode, sourceHashes
         }
       proof = old
         { snapshot = current

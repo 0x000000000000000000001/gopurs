@@ -109,7 +109,8 @@ initialize jobs session prepared reusableModules backends ffiDigests priorFfiDig
   deltaReusable <- Metrics.measure "module reusable candidates" \_ -> pure $
     if Set.size reusableModules == 0 then Map.empty else Map.filterWithKey (\name _ -> Set.member name reusableModules) candidates
   let reusable = if session.sameTast then candidates else deltaReusable
-  fingerprints <- Metrics.measure "prepared module keys" \_ -> mapJobs jobs (preparedFingerprint reusable) modules
+  let sourceKeys = if prepared.devMode then Just prepared.sourceHashes else Nothing
+  fingerprints <- Metrics.measure "prepared module keys" \_ -> mapJobs jobs (preparedFingerprint sourceKeys reusable) modules
   let reused = Array.length (Array.filter (\(Module m) -> Map.member (unwrap m.name) reusable) modules)
   liftEffect $ Console.error $ "[gopurs] prepared fingerprints: computed=" <> show (Array.length modules - reused) <> ", reused=" <> show reused
   metadata <- Metrics.measure "global metadata key" \_ -> do
@@ -199,11 +200,15 @@ initialize jobs session prepared reusableModules backends ffiDigests priorFfiDig
 mapJobs :: forall a b. Int -> (a -> Aff b) -> Array a -> Aff (Array b)
 mapJobs = mapPreparationJobs
 
-preparedFingerprint :: Map String Memo -> Module Ann -> Aff (Tuple String String)
--- Hash the actual specialized module, including embedded static arguments.
-preparedFingerprint reusable mod@(Module m) = case Map.lookup (unwrap m.name) reusable of
+preparedFingerprint :: Maybe (Map String String) -> Map String Memo -> Module Ann -> Aff (Tuple String String)
+-- Release hashes the actual specialized module, including embedded static
+-- arguments. Dev has no cross-module specialization, so the already-computed
+-- TAST hash identifies the prepared module without another Wire traversal.
+preparedFingerprint sourceKeys reusable mod@(Module m) = case Map.lookup (unwrap m.name) reusable of
   Just previous -> pure (Tuple (unwrap m.name) previous.prepared)
-  Nothing -> Tuple (unwrap m.name) <$> liftEffect (Wire.hash <$> Wire.write mod)
+  Nothing -> case sourceKeys >>= Map.lookup (unwrap m.name) of
+    Just digest -> pure (Tuple (unwrap m.name) digest)
+    Nothing -> Tuple (unwrap m.name) <$> liftEffect (Wire.hash <$> Wire.write mod)
 
 keysFor :: ModuleCache -> String -> Aff Keys
 keysFor cache name = case Map.lookup name cache.keys of
