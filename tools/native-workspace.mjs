@@ -21,15 +21,35 @@ function compilerPackage(root) {
   return result.join("\n").trimEnd() + "\n";
 }
 
+function resolveOptimizer(root) {
+  const configured = process.env.GOPURS_PBO_DIR;
+  if (configured) {
+    const directory = resolve(configured);
+    if (!existsSync(join(directory, "spago.yaml"))) {
+      throw new Error(`GOPURS_PBO_DIR does not contain spago.yaml: ${directory}`);
+    }
+    return directory;
+  }
+  try {
+    const lock = JSON.parse(readFileSync(join(root, "spago.lock"), "utf8"));
+    const entry = lock.packages?.["backend-optimizer"];
+    if (entry?.type === "git" && entry.rev) {
+      const fetched = join(root, ".spago/p/backend-optimizer", entry.rev);
+      if (existsSync(join(fetched, "spago.yaml"))) return fetched;
+    }
+  } catch {
+    // Fall through to the actionable error below.
+  }
+  throw new Error("Missing backend optimizer; run npm ci or set GOPURS_PBO_DIR to a checkout");
+}
+
 export function nativeWorkspaceConfig(root, { runtime = "go", purust = resolve(root, "../../purust/purust") } = {}) {
   if (!["go", "rust"].includes(runtime)) throw new Error(`Unknown compiler runtime: ${runtime}`);
-  const optimizer = resolve(root, "../../purescript-backend-optimizer-gopurs");
-  if (!existsSync(join(optimizer, "spago.yaml"))) {
-    throw new Error(`Missing local backend optimizer: ${optimizer}`);
-  }
+  const optimizer = resolveOptimizer(root);
   const packages = new Map([["backend-optimizer", optimizer]]);
   const family = runtime === "rust" ? "purust-" : "gopurs-";
-  const libraries = dirname(runtime === "rust" ? purust : root);
+  const libraries = runtime === "rust" ? dirname(purust)
+    : resolve(process.env.GOPURS_LIBRARY_ROOT || dirname(root));
   for (const name of readdirSync(libraries).sort()) {
     if (!name.startsWith(family)) continue;
     const directory = join(libraries, name);
@@ -41,6 +61,12 @@ export function nativeWorkspaceConfig(root, { runtime = "go", purust = resolve(r
     const packageName = name.slice(family.length);
     if (packages.has(packageName)) throw new Error(`Duplicate local package: ${packageName}`);
     packages.set(packageName, directory);
+  }
+  // The Go codec adaptation is part of this source release; a bootstrap must
+  // not silently depend on an unversioned sibling copy of those sources.
+  if (runtime === "go") {
+    const codecs = join(root, "support/argonaut-codecs");
+    if (existsSync(join(codecs, "spago.yaml"))) packages.set("argonaut-codecs", codecs);
   }
   // Select the host runtime's library representations, retaining gopurs's PBO
   // sources and Go code generator for either native executable.
@@ -65,7 +91,7 @@ function localCompilerCandidates(root) {
   return candidates;
 }
 
-export function findTypedCompiler(root, configuredCompiler) {
+export function findTypedCompiler(root, configuredCompiler = process.env.GOPURS_PURS) {
   const compiler = configuredCompiler ? resolve(configuredCompiler)
     : localCompilerCandidates(root).sort((left, right) => right.modified - left.modified)[0]?.path;
   if (!compiler) throw new Error("No local TAST compiler found; set GOPURS_PURS to the typed fork's purs executable");

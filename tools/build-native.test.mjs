@@ -32,7 +32,11 @@ workspace:
   packageSet:
     registry: 77.10.1
 `);
-  put(join(temporary, 'checkout/purescript-backend-optimizer-gopurs/spago.yaml'),
+  const optimizerRevision = '0123456789abcdef0123456789abcdef01234567';
+  put(join(root, 'spago.lock'), JSON.stringify({ packages: {
+    'backend-optimizer': { type: 'git', rev: optimizerRevision },
+  } }));
+  put(join(root, `.spago/p/backend-optimizer/${optimizerRevision}/spago.yaml`),
     'package:\n  name: backend-optimizer\n');
   for (const name of ['aff', 'ordered-collections', 'node-process']) {
     put(join(temporary, `checkout/gopurs/gopurs-${name}/spago.yaml`),

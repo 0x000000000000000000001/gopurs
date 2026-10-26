@@ -624,7 +624,7 @@ La compilation monolithique Go constitue un coût distinct ; sa granularité res
 une suite mesurée du plan, après la livraison initiale du cache.
 
 Preuves conservées dans
-`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/b8x-incremental-lot00-srr89dtf/` :
+`<tmp>/b8x-incremental-lot00-srr89dtf/` :
 `README.md`, `summary.json`, `backend-results.json`, `frontend-corefn-results.json`,
 `cycle-results.json`, graphes d'actions de `measurements-go/`, `parity-results.json`,
 `snapshot-review.json`, `strict-replays.json` et `final-audit.json`. Les sources,
@@ -732,7 +732,7 @@ du cycle PureScript/gopurs et l'incrémentalité du backend restent les objets
 des lots 00 et 02–06 du plan v3.
 
 Preuves conservées dans
-`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/b8x-go-run-lot01-aa6h2e9b/` :
+`<tmp>/b8x-go-run-lot01-aa6h2e9b/` :
 `before/`, `after/`, les logs rouge/vert et natifs, `comparison.json`, les traces
 `measurements/handoff-*`, `measure-runner.mjs`, `compare-runners.mjs`,
 `handoff-only.sh`, `ping-results.json`, `ping-entry-provenance.json`,
@@ -802,7 +802,7 @@ chemin sans changement. Le changement de politique `go.mod` du protocole sera
 appliqué au pilote lors de ce raccordement.
 
 Preuves conservées dans
-`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/gopurs-cache-contract-uynq0oxb/` :
+`<tmp>/gopurs-cache-contract-uynq0oxb/` :
 `before.json`, compilateurs `before/` et `after/`,
 `verify-codegen.mjs`, `before-codegen.json`, `after-codegen.json`,
 `final-codegen.json`, les TAST et sorties de `fixtures/`, les workspaces natifs,
@@ -948,7 +948,7 @@ les mesures corrigées, avec cet inventaire hors horloge, alimentent ce bilan.
 ### Preuves et rejeu
 
 Répertoire local :
-`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/gopurs-nochange-lot03-b33v4ie0/`.
+`<tmp>/gopurs-nochange-lot03-b33v4ie0/`.
 Son `README.md` documente les artefacts `before`, `candidate-1`, `after`, les
 reproducteurs, les commandes de campagne et le rejeu sur une copie neuve.
 Les workspaces des transitions et des replays stricts sont conservés avec leurs
@@ -1826,7 +1826,7 @@ Les validations complètes ci-dessous conservent les preuves historiques de `all
 
 ### Preuves locales
 
-`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/gopurs-module-cache-lot04-nj_1suxg/`
+`<tmp>/gopurs-module-cache-lot04-nj_1suxg/`
 conserve les candidats et leurs SHA-256, les reproducteurs rouges, les profils,
 les essais écartés et les workspaces isolés. Voir notamment `candidate-allhit.json`,
 `allhit-before.log`, `driver-allhit-four-hosts.log`, `paired-ffi-allhit/`,
@@ -1834,7 +1834,7 @@ les essais écartés et les workspaces isolés. Voir notamment `candidate-allhit
 `cli-allhit.log` et `storage-allhit-linux-race.log`. Le `README.md` retrace les
 transformations et distingue les probes avec objets préchargés des caches froids.
 La campagne multi-hôtes conserve son workspace dans
-`/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/gopurs-tests-wEqaby/`.
+`<tmp>/gopurs-tests-wEqaby/`.
 `allhit-source-audit.json` vérifie que 221 fichiers des sources gopurs/PBO et du
 stockage correspondent au candidat figé testé.
 `final-campaign-allhit.json` identifie les quatre campagnes successives ;
@@ -2013,7 +2013,7 @@ Les journals gopurs restent dans leur racine ; un vrai build restaure la base
 avant chaque mutation. Les 3 010 Go, les 2 704 TAST et les fichiers de modules
 sont vérifiés, puis l'oracle de la mutation est compilé et exécuté hors chrono.
 Le premier lancement est conservé dans la preuve privée
-`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/gopurs-cycle-lot06-publicsync/`.
+`<tmp>/gopurs-cycle-lot06-publicsync/`.
 Il échoue au contrôle d'inventaire : le `PATH` sélectionnait Spago **0.93.45** du
 bootstrap gopurs au lieu du **1.0.3** du lot 00. Trois modules sont ajoutés et
 `Spago.Generated.BuildInfo` change ; ces temps sont exclus des résultats.
@@ -2460,7 +2460,7 @@ Lot validé : **15/100 points, 1/8 lots** du plan v2. Vérifications terminées 
 
 Les preuves avant/après, scripts de reproduction, rapports, empreintes des
 artefacts et journaux sont conservés dans
-`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/gopurs-v2-campaigns-koy5tymo/`.
+`<tmp>/gopurs-v2-campaigns-koy5tymo/`.
 Toolchain : Node **24.8.0**, Go **1.27.0**, Spago **1.0.3**, même frontend TAST
 **0.15.16 development** que la clôture v1 ; `toolchain.json` conserve les SHA-256
 du frontend et des deux compilateurs utilisés.
@@ -2517,7 +2517,7 @@ Vérifications terminées sur les copies figées :
   correspondent aux copies validées ; liens locaux et `git diff --check` passent.
 
 Preuves, empreintes, sorties avant/après et rapports conservés dans
-`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/gopurs-v2-tast-strings-5p8w6c8y/`,
+`<tmp>/gopurs-v2-tast-strings-5p8w6c8y/`,
 notamment `fixture-before.json`, `fixture-after.json`, `generated-go-review.diff`,
 `bootstrap-after-final.log`, `pbo-native-after.log`, `fixtures-strict.log` et
 `final-results.json`. Toolchain : Node **24.8.0**, Go **1.27.0**, Spago **1.0.3**,
@@ -2581,7 +2581,7 @@ Vérifications terminées sur les copies figées :
 Les **53 dépôts archivés** sont identifiés dans `source-heads.json`, dont gopurs
 `8581703`, PBO `157a544` et Prelude `82e63fe`. Preuves, scripts, rapports et
 empreintes conservés dans
-`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/gopurs-v2-utf16-aaiyq81c/`,
+`<tmp>/gopurs-v2-utf16-aaiyq81c/`,
 notamment `REPRODUCTION.md`, `fixture-before.json`, `fixture-after.json`,
 `generated-go-review.diff`, `snapshot-review.diff`, `fixtures-strict.log` et
 `final-results.json`. Toolchain : Node **24.8.0**, Go **1.27.0**, Spago **1.0.3**,
@@ -2650,7 +2650,7 @@ Les **53 dépôts archivés** et les **34 fichiers du lot 03 superposés** sont
 identifiés dans `source-heads.json` et `lot03-overlay.json` : notamment gopurs
 `8581703`, PBO `157a544`, Prelude `82e63fe` et integers `37b9dbe`.
 Les preuves, rapports, scripts et empreintes sont conservés dans
-`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/gopurs-v2-int32-d3hedy_d/`,
+`<tmp>/gopurs-v2-int32-d3hedy_d/`,
 notamment `REPRODUCTION.md`, `integers-red.log`, `integers-green.log`,
 `fixture-before.json`, `fixture-after.json`, `generated-review.json`,
 `snapshot-review.json`, `snapshot-review.diff`, `fixtures-strict.log` et
@@ -2676,7 +2676,7 @@ identique à la source canonique ; les **831 fichiers source/configuration**
 inventoriés du compilateur, de PBO et des bibliothèques sont préservés.
 
 Journaux avant/après, anciens binaires, empreintes et résultats conservés dans
-`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/gopurs-v2-local-install-7cj5t5s4/`,
+`<tmp>/gopurs-v2-local-install-7cj5t5s4/`,
 notamment `runner-red.log`, `runner-green.log`, `bootstrap.log`, `rung-after.log`
 et `final-results.json`. Le plan reste à **55/100, 4/8 lots**.
 
@@ -2740,7 +2740,7 @@ Vérifications terminées :
 Les **53 dépôts archivés** sont identifiés par leurs empreintes et HEAD,
 notamment gopurs `141d6fc`, PBO `157a544` et Prelude `3ee1343`.
 Preuves, scripts et rapports conservés dans
-`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/gopurs-v2-number-show-mw16tagz/`,
+`<tmp>/gopurs-v2-number-show-mw16tagz/`,
 notamment `REPRODUCTION.md`, `original-js.log`, `show-red.log`, `show-green.log`,
 `fixture-before.json`, `fixture-after.json`, `generated-go-review.diff`,
 `snapshot-review.json`, `fixtures-strict.log`, `host-results.json`,
@@ -2806,7 +2806,7 @@ Vérifications terminées :
 
 Preuves, scripts de reproduction, sources originales, inventaires TAST/Go et
 journaux conservés dans
-`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/gopurs-v2-deriving-bgLIyO/`,
+`<tmp>/gopurs-v2-deriving-bgLIyO/`,
 notamment `REPRODUCTION.md`, `comparison-before.json`, `comparison-imports.json`,
 `validation.json`, `snapshot-review.json`, `fixtures-strict.log`,
 `runner-tests.log` et `final-results.json`. Toolchain : Node **24.8.0**, Go
@@ -2897,7 +2897,7 @@ les nouveaux tests actifs ; sa reprise complète via `--resume-failed` réussit
 une fois l'espace disponible. Les rapports d'échec et de reprise sont conservés.
 
 Preuves et scripts dans
-`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/gopurs-v2-libraries-FnSmNh/`,
+`<tmp>/gopurs-v2-libraries-FnSmNh/`,
 notamment `sources-before.json`, `toolchain.json`, `quickcheck-first.log`,
 `quickcheck-validation.py`, `quickcheck-validation.json`, `spec-focused-validation.py`,
 `spec-focused-validation.json`, `spec-validated.log`, `runner-tests.log` et
@@ -3003,7 +3003,7 @@ scratch disparu du 21 septembre est remplacé par sa provenance textuelle dans
 `parallel-emission.md`.
 
 Preuves conservées dans
-`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/gopurs-v2-final-DFj3Sa/`,
+`<tmp>/gopurs-v2-final-DFj3Sa/`,
 notamment `sources-before.json`, `installed-remote-heads.json`,
 `setup-selection-before.json`, `fresh-checkouts.json`, `unversioned-argonaut-codecs.json`,
 `nix-results.json`, `nix-second.log`, `build-results.json`, `b8x-results.json`,
@@ -3105,7 +3105,7 @@ manquants. Les **1 365 fichiers frères** et les **111 fichiers compilateur/runt
 conservent leurs empreintes de référence ; `git diff --check` est propre.
 
 Les preuves, références, manifests et journaux sont conservés sous
-`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/gopurs-final-consolidation-xy_5fmmn/`.
+`<tmp>/gopurs-final-consolidation-xy_5fmmn/`.
 Le bootstrap natif est dans `gopurs-native-build-Hezybl/` sous le même parent ;
 le workspace `typed-plans` est `gopurs-tests-Qhgufu/`. `final-results.json`
 agrège les résultats, et `final.diff` conserve le diff complet du lot par rapport
@@ -3169,7 +3169,7 @@ Le lot 14 est validé : **95/100 points, 14 lots sur 15** clôturés. Le contrô
 b8x porte sur la génération ; les tests natifs et fixtures vérifient l'exécution.
 `git diff --check` est propre. Les preuves locales, la référence et le diff
 complet de cette passe sont conservés dans
-`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/gopurs-runtime-ffi-cleanup-6052azh5/`.
+`<tmp>/gopurs-runtime-ffi-cleanup-6052azh5/`.
 Le workspace bootstrap est conservé sous le même parent dans
 `gopurs-native-build-TLO4c1/`. Le lot 15, consolidation des campagnes et de la
 documentation avec statut explicite de Nix, constituait alors la prochaine passe.

@@ -26,21 +26,37 @@ records the earlier design work.
 - **Native FFI bridges.** The same Go parser reads foreign declarations through WebAssembly in the JS compiler and direct calls in the native compiler; generated wrappers adapt supported Go signatures to PureScript calls.
 - **Go runtime and library ports.** Generated programs include the runtime. The Go `Aff` port uses goroutines, and generated entrypoints wait for work registered with the runtime event loop.
 
+## Documentation
+
+- [Quickstart](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quickstart.md): compile and run a small application.
+- [CLI reference](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/cli.md): options, hosts, environment variables and exit status.
+- [Architecture overview](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/architecture-overview.md): input format, pipeline and generated output.
+- [Known limitations](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/limitations.md) and [publication scope](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/publication-scope.md).
+- [Migration and compatibility](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/migration.md).
+- [Troubleshooting and FAQ](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/troubleshooting.md).
+- [Benchmark protocol](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/benchmark-protocol.md).
+- [Bootstrap chain](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/bootstrap.md).
+- [Nix installation and development](docs/nix.md).
+- [Release procedure](docs/release.md).
+- [Contributing](CONTRIBUTING.md), [security policy](SECURITY.md), [changelog](CHANGELOG.md) and [code of conduct](CODE_OF_CONDUCT.md).
+
 ## Benchmarks
 
 The [altbak README](https://github.com/0x000000000000000000001/altbak.pub#go)
 contains the reference results, workloads, and benchmark context. Compare
 changes against those baselines; results depend on the workload and toolchain.
 The sequential core campaign does not establish multicore scaling.
-The [24 October cold-backend campaign](docs/build-cold-20261024.md) records
+The [24 October cold-backend campaign](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/build-cold-20261024.md) records
 three alternating pairs, incremental checks and the experiments not retained.
 Its empty-backend-cache protocol is separate from the historical altbak timings.
+See the [benchmark protocol](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/benchmark-protocol.md)
+for measurement boundaries and reporting requirements.
 
 ## Getting started
 
 ### Prerequisites
 
-- Node.js and npm to build the backend and run its JavaScript version. The native executable runs without Node. Node.js `24.8.0` is the documented development reference; a minimum Node version is not declared in `package.json`.
+- Node.js and npm to build the backend and run its JavaScript version. The native executable runs without Node. Node.js `24.8.0` is the supported reference and is declared in `package.json` and `.nvmrc`.
 - A TAST-capable `purs` from the compiler fork for applications, plus Spago with YAML configuration support.
 - Go to compile generated applications. Their `go.mod` declares Go 1.22; the walkthrough was checked with Go `1.27.0`, without establishing the minimum working version across library ports.
 - Git and Bash for the checkout and helper scripts.
@@ -49,90 +65,80 @@ Go `1.27.0` is specifically required to rebuild the FFI parser. Ordinary backend
 
 ### Build the backend
 
-The source build currently depends on local checkouts. Keep this layout, or
-adjust the paths in [spago.yaml](spago.yaml) explicitly:
+The optimizer fork and the `st`/`unsafe-coerce` overrides are pinned as git
+dependencies in [spago.yaml](https://github.com/0x000000000000000000001/gopurs/blob/main/spago.yaml); Spago downloads them on first build,
+so no manual optimizer checkout is required. The typed compiler fork remains a
+separate prerequisite for compiling applications and for the optional native
+bootstrap. `./bin/setup` installs the library checkouts used by the fixture and
+native paths; it does not install the typed compiler.
 
 ```text
 workspace/
-├── purescript/                         # TAST compiler fork, if built locally
-├── purescript-backend-optimizer-gopurs/ # optimizer fork, edge-gopurs branch
+├── purescript/        # TAST compiler fork, if built locally
 ├── gopurs/
-│   ├── gopurs/                         # this repository
-│   ├── gopurs-prelude/
-│   ├── gopurs-effect/
-│   ├── gopurs-console/
-│   ├── gopurs-st/
-│   ├── gopurs-unsafe-coerce/
-│   ├── gopurs-assert/
-│   └── ...                            # other core Go library forks
-└── hello/                             # example application below
+│   ├── gopurs/        # this repository
+│   └── gopurs-*/      # optional library checkouts from ./bin/setup
+└── hello/             # example application below
 ```
-
-The optimizer checkout comes from the
-[Go branch of our optimizer fork](https://github.com/0x000000000000000000001/purescript-backend-optimizer/tree/edge-gopurs).
-Its path is `../../purescript-backend-optimizer-gopurs` relative to this
-repository. `st` and `unsafe-coerce` are also local build dependencies.
-From this repository, `./bin/setup` installs the library siblings listed in
-[bin/pkg](bin/pkg); it does not install the optimizer or the typed compiler.
 
 ```bash
 # From an empty workspace directory:
-git clone --branch edge-gopurs https://github.com/0x000000000000000000001/purescript-backend-optimizer.git purescript-backend-optimizer-gopurs
 mkdir gopurs
 cd gopurs
 git clone https://github.com/0x000000000000000000001/gopurs.git
 cd gopurs
-./bin/setup
 npm ci
 ```
 
 `npm ci` installs the locked npm dependencies and its `prepare` hook runs
-`npm run build`, producing the JS compiler. After later edits, choose the build
-matching the launcher you use:
+`npm run build`, producing the JavaScript compiler. `./bin/setup --core` is
+optional: it installs the library checkouts used by tests and the native
+bootstrap. After later edits, choose the build matching the launcher you use:
 
 ```bash
-npm run build          # refresh bin/gopurs.js; run it with GOPURS_JS=1
-npm run build:native   # rebuild JS and bootstrap bin/gopurs-native (the default launcher)
-npm run build:rust     # bootstrap bin/gopurs-rust; select it with GOPURS_RUST=1
+npm run build          # refresh bin/gopurs.js (JavaScript host)
+npm run build:native   # optional: bootstrap bin/gopurs-native
+npm run build:rust     # optional: bootstrap bin/gopurs-rust; select with GOPURS_RUST=1
 ```
+
+`bin/gopurs` uses `bin/gopurs-native` when it exists. Otherwise it falls back to
+the JavaScript compiler and prints a notice, so a clean `npm ci` checkout is
+usable without running the native bootstrap. See the
+[bootstrap chain](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/bootstrap.md) for the pinned inputs, artifacts and
+checksums.
 
 The incremental Go package layout is selected with `GOPURS_GO_PACKAGES=1` when
 building an application. Keep that setting across builds; `GOPURS_GO_PACKAGES=0`
-selects the monolithic layout. See the [build and migration guide](docs/build-cache.md#sélectionner-le-découpage-go-g06)
-and the [G06 measurements](docs/build-go-measurements.md) for the delivered
+selects the monolithic layout. See the [build and migration guide](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/build-cache.md#sélectionner-le-découpage-go-g06)
+and the [G06 measurements](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/build-go-measurements.md) for the delivered
 1/8192 partition, compiler identities, measured cycle gains and backend costs.
 
 `npm run build:rust` profiles the Rust host by default: it trains on the
 compiler's own Go-runtime modules and rebuilds with the merged profile. Set
 `GOPURS_RUST_PGO=0` for the plain O3 ThinLTO binary, and
 `GOPURS_KEEP_WORKSPACE=1` to retain logs, raw profiles and `pgo-profile.json`
-(see [docs/pgo.md](docs/pgo.md)).
+(see [docs/pgo.md](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/pgo.md)).
 
 ### Nix environment
 
-A [Nix flake](flake.nix) supplies a development shell with the PureScript
-tooling, Node.js, the Go toolchain and the test helpers:
+A [Nix flake](https://github.com/0x000000000000000000001/gopurs/blob/main/flake.nix) builds the JavaScript backend and the pinned TAST
+frontend. It provides packages, executable apps, application checks and a
+development shell for Linux amd64/arm64 and macOS arm64:
 
 ```bash
+nix build .#gopurs
+nix build .#purs-tast
 nix develop
+nix flake check
 ```
 
-The shell deliberately does not provide an upstream `purs`: gopurs needs the
-TAST-capable compiler fork built from `../../purescript`, and a nix-provided
-`purs` would shadow it inside `nix develop`. It is development tooling only —
-the sibling checkouts (`../../purescript`,
-`../../purescript-backend-optimizer-gopurs`, `../gopurs-*`) and the fork's
-compiler still have to be supplied locally, so the file alone does not
-establish a portable, fully pinned build of this checkout.
-
-**Verification status (6 October 2026):** `nix flake check`, `nix develop` and
-`nix-instantiate shell.nix` pass on **aarch64-linux**, using Nix **2.31.2** in an
-isolated Docker container and the unchanged lockfile. The shell supplies Node
-**24.18.0**, Spago **1.0.4** and Go **1.26.4**; rebuilding the FFI parser still
-requires Go **1.27.0**. The flake exposes development shells, overlays and a
-formatter, with no `packages` or `apps` outputs. The JS/native compiler builds
-use the local non-Nix toolchain and the separately supplied TAST frontend.
-The Darwin and x86_64-linux shells have not been executed.
+The development shell provides the typed `purs` fork, Go **1.27.0**, Node.js
+**24.8.0** and Spago **1.0.3**. The backend's own build uses its separately
+pinned upstream PureScript compiler and Spago; application builds use the TAST
+frontend. The Nix package prebuilds its Go helpers so it can run from the
+immutable Nix store. See [the Nix guide](docs/nix.md) for application commands
+and [the qualification record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md) for validations actually
+completed on each platform.
 
 ### Choose the library checkouts
 
@@ -140,7 +146,8 @@ The Darwin and x86_64-linux shells have not been executed.
 ./bin/setup --core --list  # 22 core libraries + lazy, ordered-collections, random
 ./bin/setup --core         # default; install missing checkouts, preserve existing ones
 ./bin/setup --all --list   # complete inventory of 51 libraries
-./bin/setup --all          # requires the local Go-adapted QuickCheck checkout
+./bin/setup --all          # includes the public Go-adapted QuickCheck fork
+./bin/setup --locked --all # require the exact release revisions and clean sources
 ```
 
 The **22 `CORE_PACKAGES`** are the default dependencies of compiler fixtures.
@@ -150,15 +157,11 @@ the list of 51, including `js-uri`. All three lists live in `bin/pkg`; setup nev
 changes the fixture dependency list. An unknown option, an invalid existing destination or
 a failed clone stops setup with a nonzero status.
 
-QuickCheck is a specific local prerequisite for the complete library suite.
-The available checkout is upstream **v8.0.1**, with the Go adaptation supplied
-by `spago.yaml` and `src/Test/QuickCheck/Gen.go`. An upstream clone alone does
-not supply these two files. Keep the adapted checkout, including those files,
-at `../gopurs-quickcheck`; `--all` checks it before cloning anything. No remotely
-installable Go fork was established in this review, so setup does not invent
-one. Publishing that adaptation is separate from local setup.
-The complete test campaign also uses its standalone `bin/test` and `test/Go.purs`
-suite introduced in lot 07.
+New checkouts use the public commits in [bootstrap-sources.json](https://github.com/0x000000000000000000001/gopurs/blob/main/bootstrap-sources.json),
+including the Go-adapted QuickCheck fork. Ordinary setup preserves existing
+checkouts; `--locked` additionally verifies their revisions and rejects local
+changes. Set `GOPURS_LIBRARY_ROOT` to an empty directory for an isolated release
+installation. The same variable selects libraries for the bootstrap and tests.
 
 The build embeds the Go runtime, compiles PureScript, and bundles `Main` into
 `bin/gopurs.js`. The checked-in FFI WASM and its matching JavaScript runtime are
@@ -176,9 +179,10 @@ separate filename consumed by gopurs. Check a generated file for `dataDecls`,
 `classDecls`, and, with the current fork, `typeTable`. If they are absent, select
 the fork explicitly on `PATH` and rebuild in a fresh output directory.
 
-A GitHub source install is not a standalone installation recipe with these
-relative build dependencies. To install an already built backend in another
-project, create a local archive after `npm run build`:
+A GitHub source install builds the JavaScript compiler from pinned dependencies.
+Compiling applications still requires the typed compiler fork and Spago on
+`PATH`. To install an already built backend in another project, create a local
+archive after `npm run build`:
 
 ```bash
 # From the backend repository:
@@ -193,7 +197,7 @@ install the application compiler or the Go library overrides. The local
 archive installation was checked offline in an empty npm project; rebuilding
 the backend there is unnecessary.
 
-### Experimental native compiler
+### Native compiler bootstrap
 
 ```bash
 npm run build:native
@@ -203,18 +207,18 @@ GOPURS_PURS=/absolute/path/to/typed/purs npm run build:native
 npm run build:native -- --keep-workspace
 ```
 
-For the complete native validation path, provide the Go-adapted QuickCheck
-checkout and run `./bin/setup --all` before bootstrapping. The recorded
-500-module bootstrap also uses the local `gopurs-argonaut-codecs` adaptation;
-its 21 unversioned source/test/configuration files are identified by hashes in
-[the final-validation record](docs/testing.md#plan-v2--lot-08--installation-et-validation-finale-7-octobre-2026).
-Setup does not fetch that additional local adaptation.
+For the complete native validation path, run `./bin/setup --locked --all`
+before bootstrapping. The Argonaut codec adaptation is included, with its
+license, in `support/argonaut-codecs`. The bootstrap always selects this
+versioned adaptation, so it does not depend on an unversioned sibling copy.
 
 This bootstraps `bin/gopurs-native` with the existing Node backend. It requires
-the npm dependencies above, Go, the local `purescript-backend-optimizer-gopurs`
-checkout and the sibling Go library checkouts. The Node backend is rebuilt with
-this repository's npm toolchain. The isolated TAST build uses a separately selected
-typed `purs`: `GOPURS_PURS` when set, otherwise the newest compiler binary under
+the npm dependencies above, Go, the typed compiler fork and the sibling Go
+library checkouts installed by `./bin/setup --core`. The optimizer is resolved
+from the pinned Spago checkout; set `GOPURS_PBO_DIR` to use another checkout.
+The Node backend is rebuilt with this repository's npm toolchain. The isolated
+TAST build uses a separately selected typed `purs`: `GOPURS_PURS` when set,
+otherwise the newest compiler binary under
 `../../purescript/.stack-work/dist/*/*/build/purs/purs`. Its path is printed, and
 every generated module is checked for `typeTable`, `dataDecls` and `classDecls`
 before Go generation. A stock compiler with the same version number is rejected.
@@ -227,8 +231,8 @@ This includes the native persistent Map from `gopurs-ordered-collections`.
 The existing native binary is replaced only after Go compilation succeeds.
 Failures retain the isolated workspace and print the failed stage and log paths.
 SIGINT/SIGTERM also stop the active command's descendants and return status
-130/143. See the [tooling map](docs/architecture.md#outils-de-build-et-de-validation)
-and [bootstrap checks](docs/testing.md#bootstrap-natif-et-processus-des-runners).
+130/143. See the [tooling map](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/architecture.md#outils-de-build-et-de-validation)
+and [bootstrap checks](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/testing.md#bootstrap-natif-et-processus-des-runners).
 The resulting executable accepts the backend's usual arguments, such as
 `--main Main`, from a project containing typed `output/<Module>/corefn.json`.
 Its backend and FFI parser run without Node. The PureScript frontend that creates
@@ -241,7 +245,7 @@ cache is unsupported: reads miss and an attempted write fails explicitly.
 The native TAST decoder preserves integer magnitudes and isolated UTF-16
 surrogates as WTF-8, while combining valid surrogate pairs. Literal preservation
 does not establish every JavaScript string operation's semantics; the dated
-[validation record](docs/testing.md#exclusions-et-modules-frères) documents the
+[validation record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/testing.md#exclusions-et-modules-frères) documents the
 string corrections and fixture reintegrations.
 
 The 6 October 2026 reconstruction covers **500 modules and 288,603 types**.
@@ -249,7 +253,7 @@ Two fresh JS builds are byte-identical; the rebuilt native compiler also matches
 the active native binary exactly.
 TAST loading, transitive preparation, PBO optimization and Go emission each have
 their own bounded parallelism controls. Native sequential, native parallel and
-JS generation are compared on frozen inputs; see [the validation record](docs/testing.md)
+JS generation are compared on frozen inputs; see [the validation record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/testing.md)
 for corpus sizes, execution campaigns and their limits. These checks establish
 functional results, not performance gains.
 
@@ -269,14 +273,14 @@ Use `--force` or `GOPURS_FORCE_BUILD=1` to force a complete generation.
 `output/.gopurs-cache`; the separate `output/.gopurs-ownership.json` journal
 tracks generated files and must survive a cache reset. A historical output is
 adopted only when its generated files match a fresh generation. See the
-[cache usage and maintenance commands](docs/build-cache.md#usage-quotidien-et-maintenance)
+[cache usage and maintenance commands](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/build-cache.md#usage-quotidien-et-maintenance)
 for forcing generation, resetting the reusable cache and reading diagnostics,
-the [cache contract](docs/build-cache.md) for migration and concurrency,
-and the [incremental-build results](docs/build-incremental.md) for the
+the [cache contract](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/build-cache.md) for migration and concurrency,
+and the [incremental-build results](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/build-incremental.md) for the
 measured edit-time gains, cold-build overhead, cache size and validation evidence.
-The [24 October follow-up](docs/build-cold-20261024.md) records the subsequent
+The [24 October follow-up](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/build-cold-20261024.md) records the subsequent
 allocation and array-intrinsic changes, with cold and incremental timings.
-The completed b8x cycle campaign includes [all 24 measurements](docs/build-cycle-lot06.csv):
+The completed b8x cycle campaign includes [all 24 measurements](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/build-cycle-lot06.csv):
 the common Go package still dominates rebuilds after edits, motivating the next
 package-granularity work. The report includes regressions and pair-to-pair variation.
 
@@ -412,15 +416,11 @@ normalization remain enabled; the optimizer still runs to convergence. The Go
 generation passes, ordinary native workers and tail-call optimization remain
 enabled.
 
-This profile is experimental. Measurements on a private b8x fixture on
-24 October 2026 put the cold backend at about 80 seconds in release and
-54 seconds in dev (about 32% less). They use frozen TAST and empty backend
-caches, with dependency exports already available; they exclude the PureScript
-frontend and Go executable compilation. Three small edits in dev had a median
-of 2.25 seconds, and noops took about 0.31 seconds. These results show a cold
-backend gain; they do not establish a faster incremental build or a speedup
-through final Go compilation. Generated-program runtime performance was not
-measured and depends on the workload.
+This profile is experimental. It reduces preparation and code-generation work,
+but this repository does not attach a public, reproducible benchmark to it. It
+does not establish a faster incremental build or a speedup through final Go
+compilation. Generated-program runtime performance was not measured here and
+depends on the workload.
 
 Pass the profile to the backend itself, from an application with typed TAST
 already generated:
@@ -510,8 +510,10 @@ selects the sequential path; emission at one also disables pipeline overlap.
 No flag is needed; all three compiler builds report the same phases. These are real
 elapsed times for the current invocation, not warm-up or repeated benchmarks.
 
-The `bin/gopurs` launcher runs `bin/gopurs-native`, unless `GOPURS_JS=1` selects
-the Node bundle `bin/gopurs.js` or `GOPURS_RUST=1` selects `bin/gopurs-rust`.
+The `bin/gopurs` launcher runs `bin/gopurs-native` when it exists, unless
+`GOPURS_JS=1` selects the Node bundle `bin/gopurs.js` or `GOPURS_RUST=1` selects
+`bin/gopurs-rust`. Without a native build it falls back to the Node bundle and
+prints a notice.
 All three hosts report identical phases, so
 `GOPURS_JS=1 ../gopurs/bin/gopurs --main Main` in a project with a typed `output`
 measures the JavaScript compiler with the same instrumentation as the native one.
@@ -548,7 +550,7 @@ publish their signatures in the original order after the batch completes.
 Translation is deferred until its Aff worker runs, so native workers execute
 the CPU work concurrently. `GOPURS_PBO_JOBS` independently controls optimization
 concurrency while preserving sequential directive visibility and publication
-order. See [parallel emission](docs/parallel-emission.md) for the lifecycle
+order. See [parallel emission](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/parallel-emission.md) for the lifecycle
 contract, defaults, measurements and validation.
 
 `GOPURS_PREPARE_JOBS` controls preparation workers, including release transitive
@@ -559,7 +561,7 @@ with at least 32 GiB for every host, unless those variables are explicitly set.
 This choice is independent of `GOGC` and `GOMEMLIMIT`. Smaller machines retain
 the compiler defaults (preparation 2, PBO 1); emission defaults to 8 everywhere.
 Set the environment variables explicitly for reproducible comparisons. See
-[parallel preparation](docs/parallel-preparation.md).
+[parallel preparation](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/parallel-preparation.md).
 
 For the native Go host, the launcher also selects `GOGC=off` with a soft GC
 memory target (`GOMEMLIMIT`): 10 GiB on machines with 32–47 GiB of RAM, and 16 GiB from 48 GiB
@@ -574,7 +576,7 @@ incremental invalidation rules are unchanged.
 ## Develop one library locally
 
 Each library keeps its own Spago configuration and repository. The
-[repository map](docs/architecture.md#carte-des-dépôts-et-des-consommateurs) describes
+[repository map](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/architecture.md#carte-des-dépôts-et-des-consommateurs) describes
 the source families and their consumers. `./bin/modtest --all --list` gives the
 current executable library suite. The Go development section in each
 library README links back to this procedure.
@@ -605,14 +607,14 @@ library README links back to this procedure.
    `./bin/modtest prelude strings --keep-going` from gopurs: each target gets a
    fresh copy of the library family and private Spago temporaries.
    They describe the test path; they do not establish that every library's
-   tests are already passing. See the [coverage limits](docs/testing.md).
+   tests are already passing. See the [coverage limits](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/testing.md).
 
 Both `bin/test` and `bin/modtest` print a `Results:` JSON report path. Reports
 and per-target logs are retained; `--keep-workspace` also retains successful
 builds. Resume unsuccessful or unattempted targets with
 `./bin/modtest --resume-failed /path/to/results.json --keep-going` (or `bin/test`
 for fixtures). The retry creates a new report linked to the original campaign.
-See [isolation and reports](docs/testing.md#isolation-logs-et-caches).
+See [isolation and reports](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/testing.md#isolation-logs-et-caches).
 
 `assert` has no executable test suite: use `spago build`, then
 `../gopurs/bin/gopurs`, then `(cd output && go mod tidy && go build ./...)`.
@@ -621,7 +623,7 @@ QuickCheck has a standalone deterministic `Test.Go` suite: use
 runner builds and executes JavaScript and Go, then compares their transcripts.
 `node-net` has a `test/Test/Main.purs` entrypoint that
 the current Spago command compiles despite the absent `package.test` stanza;
-its runner executes that Go program. See [the module campaign](docs/testing.md).
+its runner executes that Go program. See [the module campaign](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/testing.md).
 
 ### Configuration and lockfiles
 
@@ -667,9 +669,9 @@ and creates bridge functions using the parsed signatures and TAST types.
 
 Supported bridges handle primitive values, slices, selected records and ADTs,
 and callbacks. Their conversion rules are implemented in
-[FfiBridge](src/Gopurs/FfiBridge.purs); see the executable
-[integer FFI fixture](tests/passing/FFIIntegerReturns.purs) and its
-[Go implementation](tests/passing/FFIIntegerReturns.go) for native `int`, `int64`,
+[FfiBridge](https://github.com/0x000000000000000000001/gopurs/blob/main/src/Gopurs/FfiBridge.purs); see the executable
+[integer FFI fixture](https://github.com/0x000000000000000000001/gopurs/blob/main/tests/passing/FFIIntegerReturns.purs) and its
+[Go implementation](https://github.com/0x000000000000000000001/gopurs/blob/main/tests/passing/FFIIntegerReturns.go) for native `int`, `int64`,
 slice, and dynamic return examples. Effect bindings must follow the thunk
 convention used by the Go library ports.
 
@@ -681,8 +683,8 @@ path and stop generation.
 
 ## Development and testing
 
-Start with [the architecture map](docs/architecture.md) to locate the owner of
-a change. [Testing and validation](docs/testing.md) describes targeted fixture
+Start with [the architecture map](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/architecture.md) to locate the owner of
+a change. [Testing and validation](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/testing.md) describes targeted fixture
 commands, snapshot review, cache behavior, the runner, exclusions and remaining
 coverage gaps.
 
@@ -713,7 +715,7 @@ JavaScript with `GOPURS_JS=1`, or Rust with `GOPURS_RUST=1`.
 
 For a broader integration check, run `bin/go/run -c` from an `altbak.pub`
 checkout. It rebuilds the backend and application, compiles Go, and executes
-the 14 cases of the default `pure` campaign. See [testing and validation](docs/testing.md)
+the 14 cases of the default `pure` campaign. See [testing and validation](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/testing.md)
 for dated results and the exact scope of completed checks. Performance
 comparisons use the altbak baselines separately from functional validation.
 
@@ -767,11 +769,11 @@ the backend bundle. Runner paths are resolved relative to the source, Spago
 output or installed bundle, independently of the current directory.
 
 The parser workflow was validated with Node.js 24.8.0 and Go 1.27.0.
-See [validation and remaining limits](docs/testing.md) for the scope of the checks.
+See [validation and remaining limits](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/testing.md) for the scope of the checks.
 
 ### Editing the Go runtime
 
-The canonical runtime source is [`runtime/runtime.go`](runtime/runtime.go).
+The canonical runtime source is [`runtime/runtime.go`](https://github.com/0x000000000000000000001/gopurs/blob/main/runtime/runtime.go).
 Edit that file, then rebuild the compiler hosts you use:
 
 ```bash
@@ -795,15 +797,15 @@ build artifacts; commit the Go source and build tooling.
 
 ## Architecture
 
-[`Main`](src/Main.purs) launches [`Driver`](src/Gopurs/Driver.purs), which owns phase ordering:
+[`Main`](https://github.com/0x000000000000000000001/gopurs/blob/main/src/Main.purs) launches [`Driver`](https://github.com/0x000000000000000000001/gopurs/blob/main/src/Gopurs/Driver.purs), which owns phase ordering:
 
-1. **Load and prepare:** [Driver.Prepare](src/Gopurs/Driver/Prepare.purs) loads enriched CoreFn, builds type and constructor metadata, and applies partial monomorphization.
-2. **Optimize and lower:** [Driver.Build](src/Gopurs/Driver/Build.purs) runs the optimizer and publishes module signatures; [CodeGen](src/Gopurs/CodeGen.purs) and the specialized `Gopurs` modules lower backend modules to Go representations and expressions.
-3. **Print and bridge:** [Printer](src/Gopurs/Printer.purs) emits Go source; [FfiSupport](src/Gopurs/FfiSupport.purs) prepares foreign declarations for [FfiBridge](src/Gopurs/FfiBridge.purs).
-4. **Assemble and execute:** [Driver.Output](src/Gopurs/Driver/Output.purs) writes modules, the embedded runtime, `go.mod`, and entrypoints. Go's tools resolve dependencies and compile the application.
+1. **Load and prepare:** [Driver.Prepare](https://github.com/0x000000000000000000001/gopurs/blob/main/src/Gopurs/Driver/Prepare.purs) loads enriched CoreFn, builds type and constructor metadata, and applies partial monomorphization.
+2. **Optimize and lower:** [Driver.Build](https://github.com/0x000000000000000000001/gopurs/blob/main/src/Gopurs/Driver/Build.purs) runs the optimizer and publishes module signatures; [CodeGen](https://github.com/0x000000000000000000001/gopurs/blob/main/src/Gopurs/CodeGen.purs) and the specialized `Gopurs` modules lower backend modules to Go representations and expressions.
+3. **Print and bridge:** [Printer](https://github.com/0x000000000000000000001/gopurs/blob/main/src/Gopurs/Printer.purs) emits Go source; [FfiSupport](https://github.com/0x000000000000000000001/gopurs/blob/main/src/Gopurs/FfiSupport.purs) prepares foreign declarations for [FfiBridge](https://github.com/0x000000000000000000001/gopurs/blob/main/src/Gopurs/FfiBridge.purs).
+4. **Assemble and execute:** [Driver.Output](https://github.com/0x000000000000000000001/gopurs/blob/main/src/Gopurs/Driver/Output.purs) writes modules, the embedded runtime, `go.mod`, and entrypoints. Go's tools resolve dependencies and compile the application.
 
-The [architecture map](docs/architecture.md) gives a detailed guide to module responsibilities.
-The [runtime/FFI contracts](docs/runtime-ffi-contracts.md) cover shared storage,
+The [architecture map](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/architecture.md) gives a detailed guide to module responsibilities.
+The [runtime/FFI contracts](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/runtime-ffi-contracts.md) cover shared storage,
 closure lifetime, and the per-render mutable buffer owned by `Printer.Builder`.
 
 ## Current status and limitations
@@ -816,7 +818,7 @@ As of **7 October 2026**, the fixture runner has **no exclusions**. The v2 work
 resolved the integer, number-display and string cases, then restored the four
 derived-instance fixtures by importing the instance modules needed for isolated
 compilation. Their derived methods are exercised in JS and Go. See
-[the reintegration evidence](docs/testing.md#exclusions-et-modules-frères).
+[the reintegration evidence](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/testing.md#exclusions-et-modules-frères).
 
 The **6–7 October final validation** passes all **400 fixtures** with strict
 snapshots and Go execution, plus **51 sibling-library runners**: 50 with Go
@@ -832,13 +834,16 @@ JS, native sequential and native parallel hosts. `nix flake check`, `nix develop
 and the legacy shell evaluation pass on **aarch64-linux**; see
 [the Nix section](#nix-environment) for the toolchain scope.
 
-The [final validation record](docs/testing.md#plan-v2--lot-08--installation-et-validation-finale-7-octobre-2026)
+The [final validation record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/testing.md#plan-v2--lot-08--installation-et-validation-finale-7-octobre-2026)
 identifies the local dependencies, retained evidence and disk-space retries.
-The [v1 maintainability plan](docs/testing.md#consolidation-finale--lot-15-2-octobre-2026)
+The [v1 maintainability plan](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/testing.md#consolidation-finale--lot-15-2-octobre-2026)
 is complete at **15/15 lots, 100/100 points**, and the
-[v2 reliability and reproducibility plan](todo.md) is complete at
-**8/8 lots, 100/100 points**. Performance work remains paused.
+[v2 reliability and reproducibility plan](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/testing.md#plan-v2--lot-08--installation-et-validation-finale-7-octobre-2026)
+is complete at **8/8 lots, 100/100 points**. Performance work remains paused.
 
 ## License
 
-MIT License. See [LICENSE](LICENSE) for details.
+MIT License. See [LICENSE](LICENSE) for details. Third-party attributions are in
+[NOTICE](NOTICE) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). The
+publication scope and compatibility policy is in
+[docs/publication-scope.md](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/publication-scope.md).

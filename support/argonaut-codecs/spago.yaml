@@ -1,0 +1,27 @@
+package:
+  name: "argonaut-codecs"
+  dependencies:
+    - argonaut-core
+    - arrays
+    - bifunctors
+    - either
+    - foldable-traversable
+    - foreign-object
+    - identity
+    - integers
+    - lists
+    - maybe
+    - nonempty
+    - ordered-collections
+    - partial
+    - prelude
+    - record
+    - strings
+    - transformers
+    - tuples
+
+# An independent workspace keeps Spago from treating the bootstrap adaptation
+# and its test Main as packages of the JavaScript compiler's root workspace.
+workspace:
+  packageSet:
+    registry: 77.10.1

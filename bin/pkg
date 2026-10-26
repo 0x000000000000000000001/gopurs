@@ -10,7 +10,7 @@ CORE_PACKAGES=(
 CORE_CHECKOUT_DEPENDENCIES=(lazy ordered-collections random)
 
 # Together, the three lists describe the 51 library directories.
-# QuickCheck requires the local Go adaptation; see bin/setup and the README.
+# Every source, including the Go QuickCheck adaptation, is pinned by bin/setup.
 ADDITIONAL_PACKAGES=(
   argonaut-core catenable-lists foreign free js-bigints js-date js-promise
   js-promise-aff js-uri node-buffer node-event-emitter node-fs node-http node-net

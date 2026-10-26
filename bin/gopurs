@@ -13,6 +13,14 @@ if [[ "${GOPURS_RUST:-0}" == "1" ]]; then
   fi
 fi
 
+# A source install builds the JavaScript compiler by default. Keep the
+# launcher usable when the native bootstrap has not been run, and make the
+# fallback explicit so Go-only tuning is not applied to the JavaScript host.
+if [[ "${GOPURS_RUST:-0}" != "1" && "${GOPURS_JS:-0}" != "1" && ! -x "$DIR/gopurs-native" ]]; then
+  export GOPURS_JS=1
+  echo "[gopurs] Native compiler not found; using the JavaScript host. Run npm run build:native to build it." >&2
+fi
+
 # Native one-shot builds use the persistent incremental path by default.
 # Preserve explicit settings, including 0; other hosts remain opt-in.
 if [[ "${GOPURS_RUST:-0}" != "1" && "${GOPURS_JS:-0}" != "1" ]]; then

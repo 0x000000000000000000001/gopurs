@@ -45,6 +45,65 @@ const signatures = ffiFunctionInfos(moduleName)(foreigns)(prepared.decls);
 const wrappers = generateFfiBridge(moduleName)([])(prepared.decls)(foreigns);
 const workers = ffiValueWorkers(moduleName)([])(foreigns)(prepared.decls);
 
+test('Go int32 FFI preserves signed values through scalar, array and callback bridges', t => {
+    const name = 'Int32Bridge';
+    const array = new C.Array(int);
+    const foreigns = [
+        new Tuple('identity', new Just(fn([int], int))),
+        new Tuple('array', new Just(fn([array], array))),
+        new Tuple('callback', new Just(fn([callback, int], int))),
+    ];
+    const parsed = prepareFfi({ moduleName: name, path: name + '.go' })(name + '_')(`
+func Identity(value int32) int32 { return value }
+func Array(values []int32) []int32 { return values }
+func Callback(callback func(int32) int32, value int32) int32 { return callback(value) }
+`)();
+    const directory = mkdtempSync(join(tmpdir(), 'gopurs-int32-ffi-'));
+    t.after(() => rmSync(directory, { recursive: true, force: true }));
+    mkdirSync(join(directory, 'gopurs_runtime'));
+    copyFileSync(new URL('../runtime/runtime.go', import.meta.url), join(directory, 'gopurs_runtime/runtime.go'));
+    writeFileSync(join(directory, 'go.mod'), 'module gopurs/output\n\ngo 1.22\n');
+    writeFileSync(join(directory, 'bridge.go'), 'package main\nimport "gopurs/output/gopurs_runtime"\n'
+        + parsed.content + '\n' + generateFfiBridge(name)([])(parsed.decls)(foreigns));
+    writeFileSync(join(directory, 'bridge_test.go'), `package main
+import (
+    "testing"
+    rt "gopurs/output/gopurs_runtime"
+)
+func TestSignedInt32Bridges(t *testing.T) {
+    if got := rt.Unbox[int32](rt.Any(int32(-42))); got != -42 {
+        t.Fatalf("opaque int32 unboxing: %d", got)
+    }
+    values := []rt.Value{rt.Int(-2147483648), rt.Int(-1), rt.Int(0), rt.Int(2147483647)}
+    callback := rt.Func(func(value rt.Value) rt.Value { return value })
+    for _, value := range values {
+        for _, result := range []rt.Value{
+            rt.Apply(_Gopurs_Int32Bridge_Identity, value),
+            rt.Apply2(_Gopurs_Int32Bridge_Callback, callback, value),
+        } {
+            if result.Type != rt.TypeInt || result.IntVal != value.IntVal {
+                t.Fatalf("int32 round trip: got %+v, want %+v", result, value)
+            }
+        }
+    }
+    result := rt.Apply(_Gopurs_Int32Bridge_Array, rt.Array(values))
+    returned := rt.Unbox[[]any](result)
+    if len(returned) != len(values) { t.Fatalf("array length: %d", len(returned)) }
+    for index, value := range returned {
+        got := rt.Unbox[int64](value)
+        if got != values[index].IntVal { t.Fatalf("array[%d]: %d", index, got) }
+    }
+}
+`);
+    const result = spawnSync('go', ['test', '-count=1', '-v', './...'], {
+        cwd: directory, encoding: 'utf8', timeout: 60_000,
+        env: { ...process.env, GOWORK: 'off' },
+    });
+    assert.ifError(result.error);
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    assert.match(result.stdout, /--- PASS: TestSignedInt32Bridges/);
+});
+
 test('native-call metadata names the emitted worker and retains its calling convention', () => {
     for (const [name, fullName, fArgs, fRet] of [
         ['choose', 'BridgeContract_Choose', [Go.TypeInt64.value], Go.TypeInt64.value],
@@ -54,7 +113,9 @@ test('native-call metadata names the emitted worker and retains its calling conv
     ]) {
         const found = lookup(ordString)(name)(signatures);
         assert.ok(found instanceof Just, name);
-        assert.deepEqual(found.value0, { fullName, fArgs, fRet, arity: fArgs.length });
+        const { reference, ...signature } = found.value0;
+        assert.deepEqual(reference.value0, { name: fullName, owner: 'ffi/' + moduleName });
+        assert.deepEqual(signature, { fArgs, fRet, arity: fArgs.length });
     }
     for (const name of ['record', 'unsupported', 'effectful', 'constant', 'zero', 'untyped', 'missing']) {
         assert.equal(lookup(ordString)(name)(signatures), Nothing.value, name);

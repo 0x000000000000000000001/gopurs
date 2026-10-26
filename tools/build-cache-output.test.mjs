@@ -21,6 +21,9 @@ test("output directory barriers survive failed synchronization and process death
   });
   const source = join(root, "tools/build-cache"), before = inventory(source);
   const fixtures = join(root, "tools/build-cache-fixtures");
+  // build-cache/go.mod replaces gopurs/c1c with ../c1c. Keep that module next
+  // to the private copy so the test build resolves it outside the checkout.
+  cpSync(join(root, "tools/c1c"), join(workspace, "c1c"), { recursive: true });
   const env = { ...process.env, GOWORK: "off" };
   delete env.GOPURS_TEST_CHILD_REQUEST;
   delete env.GOPURS_TEST_PAUSE_DIRECTORY;

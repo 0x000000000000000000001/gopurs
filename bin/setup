@@ -2,25 +2,29 @@
 set -euo pipefail
 
 ROOT_DIR=$(cd "$(dirname "$0")/.." && pwd)
-SIBLING_DIR="$ROOT_DIR/.."
+SIBLING_DIR="${GOPURS_LIBRARY_ROOT:-$ROOT_DIR/..}"
 source "$ROOT_DIR/bin/pkg"
 
 usage() {
   cat <<'USAGE'
-Usage: ./bin/setup [--core | --all] [--list]
+Usage: ./bin/setup [--core | --all] [--locked] [--list]
 
   --core  Install the 22 core libraries and their 3 supporting checkouts (default).
-  --all   Install all 51 libraries. Requires the local Go QuickCheck checkout.
+  --all   Install all 51 libraries, including the Go QuickCheck adaptation.
+  --locked  Require existing checkouts to match the clean, pinned release inputs.
   --list  Print the selected directories without cloning or changing files.
 
-Existing checkouts are preserved. The TAST compiler and the Go optimizer fork
-must be installed separately, as described in README.md.
+New checkouts use bootstrap-sources.json revisions. Existing checkouts are
+preserved; --locked rejects a changed revision or working tree instead of
+overwriting it. GOPURS_LIBRARY_ROOT selects the destination directory.
+The TAST compiler must be installed separately; see docs/bootstrap.md.
 USAGE
 }
 
 profile=core
 selected_profile=
 list_only=0
+locked=0
 for arg in "$@"; do
   case "$arg" in
     --core|--all)
@@ -32,6 +36,7 @@ for arg in "$@"; do
       profile=${arg#--}
       ;;
     --list) list_only=1 ;;
+    --locked) locked=1 ;;
     --help|-h) usage; exit 0 ;;
     *) echo "Unknown option: $arg" >&2; usage >&2; exit 2 ;;
   esac
@@ -47,37 +52,4 @@ if [[ "$list_only" == 1 ]]; then
   exit 0
 fi
 
-# Upstream QuickCheck v8.0.1 does not contain the local configuration or Go FFI.
-# Do not silently replace this adaptation with an upstream clone or invent a URL.
-if [[ "$profile" == all ]]; then
-  for file in spago.yaml src/Test/QuickCheck/Gen.purs src/Test/QuickCheck/Gen.go; do
-    if [[ ! -f "$SIBLING_DIR/gopurs-quickcheck/$file" ]]; then
-      echo "Missing local QuickCheck adaptation: gopurs-quickcheck/$file" >&2
-      echo "Provide the Go-adapted checkout before --all; see README.md." >&2
-      exit 1
-    fi
-  done
-fi
-
-# Validate existing destinations before cloning any missing repositories.
-for pkg in "${packages[@]}"; do
-  target="$SIBLING_DIR/gopurs-$pkg"
-  if [[ -e "$target" || -L "$target" ]]; then
-    if [[ ! -d "$target" || ! -f "$target/spago.yaml" ]]; then
-      echo "Existing destination is not a configured library: $target" >&2
-      exit 1
-    fi
-  fi
-done
-
-for pkg in "${packages[@]}"; do
-  target="$SIBLING_DIR/gopurs-$pkg"
-  if [[ -d "$target" ]]; then
-    echo "[SKIP] gopurs-$pkg"
-  else
-    echo "[CLONE] gopurs-$pkg"
-    git clone "https://github.com/0x000000000000000000001/gopurs-$pkg.git" "$target"
-  fi
-done
-
-echo "Installed ${#packages[@]} library checkouts. See README.md for toolchain and build commands."
+exec node "$ROOT_DIR/tools/setup-libraries.mjs" "$ROOT_DIR" "$SIBLING_DIR" "$locked" "${packages[@]}"

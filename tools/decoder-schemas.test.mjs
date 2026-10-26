@@ -287,10 +287,10 @@ function checkEmitted(result,testCode,constructors=''){
   mkdirSync(join(work,'output/gopurs_runtime'),{recursive:true});mkdirSync(join(work,'record'));
   writeFileSync(join(work,'go.mod'),'module gopurs\n\ngo 1.22\n');
   writeFileSync(join(work,'output/gopurs_runtime/runtime.go'),readFileSync(new URL('../runtime/runtime.go',import.meta.url)));
-   writeFileSync(join(work,'record/record.go'),readFileSync(new URL('../../gopurs-argonaut-codecs/src/Data/Argonaut/Decode/Internal/Record.go',import.meta.url)));
-   for(const [name,path] of [['parser','../../gopurs-argonaut-core/src/Data/Argonaut/Parser.go'],['text','../../gopurs-argonaut-codecs/src/Data/Argonaut/Decode/Parser.go']])
+   writeFileSync(join(work,'record/record.go'),readFileSync(new URL('../support/argonaut-codecs/src/Data/Argonaut/Decode/Internal/Record.go',import.meta.url)));
+   for(const [name,path] of [['parser','../../gopurs-argonaut-core/src/Data/Argonaut/Parser.go'],['text','../support/argonaut-codecs/src/Data/Argonaut/Decode/Parser.go']])
      writeFileSync(join(work,`record/${name}.go`),readFileSync(new URL(path,import.meta.url),'utf8').replace('package Parser','package Record'));
-   writeFileSync(join(work,'record/record_test.go'),readFileSync(new URL('../../gopurs-argonaut-codecs/test/record-plan_test.go',import.meta.url)));
+   writeFileSync(join(work,'record/record_test.go'),readFileSync(new URL('../support/argonaut-codecs/test/record-plan_test.go',import.meta.url)));
     writeFileSync(join(work,'record/workers.go'),`package Record\nimport "gopurs/output/gopurs_runtime"\n${declarations}`);
     if(constructors)writeFileSync(join(work,'record/constructors.go'),constructors.replace('package purescript','package Record'));
     writeFileSync(join(work,'record/emitted_test.go'),testCode);

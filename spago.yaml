@@ -29,8 +29,11 @@ workspace:
     registry: 77.10.1
   extraPackages:
     backend-optimizer:
-      path: "../../purescript-backend-optimizer-gopurs"
+      git: https://github.com/0x000000000000000000001/purescript-backend-optimizer.git
+      ref: 4e7de48ffd6e19480ed3de6bfe8ca8227133be13
     st:
-      path: "../gopurs-st"
+      git: https://github.com/0x000000000000000000001/gopurs-st.git
+      ref: b915b18e254f57994f88827a4172f6022ff47166
     unsafe-coerce:
-      path: "../gopurs-unsafe-coerce"
+      git: https://github.com/0x000000000000000000001/gopurs-unsafe-coerce.git
+      ref: 0b2ab4359a40ed0d0036f3f8d2bcdc29f3e57cd9

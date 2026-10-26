@@ -1,0 +1,30 @@
+gopurs
+======
+
+gopurs is licensed under the MIT License. See LICENSE.
+
+This distribution contains or is derived from the following third-party
+components:
+
+- The PureScript compiler fork, BSD-3-Clause.
+  Copyright (c) 2013-17 Phil Freeman, (c) 2014-2017 Gary Burgess, and other
+  contributors.
+
+- purescript-backend-optimizer, MIT.
+  Copyright (c) 2022 Arista Networks, Inc.
+
+- Go wasm_exec.js and the Go runtime embedded in tools/ffi_gen.wasm,
+  BSD-3-Clause.
+  Copyright 2009 The Go Authors. All rights reserved.
+
+- PureScript registry packages bundled into bin/gopurs.js, under MIT,
+  BSD-3-Clause and Apache-2.0 licenses.
+
+- The Argonaut codec adaptation in support/argonaut-codecs, MIT.
+  Copyright (c) 2020 PureScript Contrib. Its license accompanies the sources.
+
+The complete inventory and the applicable license texts are in
+THIRD_PARTY_NOTICES.md.
+
+The gopurs-* library ports are distributed separately and retain the licenses
+of their upstream PureScript packages.

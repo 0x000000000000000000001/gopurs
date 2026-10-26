@@ -131,7 +131,7 @@ Les scripts, sources/binaires avant-après, empreintes, TAST, logs, différences
 désassemblages et mesures individuelles sont conservés dans :
 
 ```text
-/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/rung-int32-optimization-z3ic1dwe/
+<tmp>/rung-int32-optimization-z3ic1dwe/
 ```
 
 Fichiers principaux : `campaign.mjs`, `review.go`, `review/report.json`,

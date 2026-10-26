@@ -273,7 +273,7 @@ concurrents sont consignés séparément dans l'audit de provenance.
 ## Reproducteurs et preuves
 
 Répertoire de campagne :
-`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/b8x-incremental-lot00-srr89dtf/`.
+`<tmp>/b8x-incremental-lot00-srr89dtf/`.
 
 - `initial-state.json`, `source-inventory-before.json`, `live-before.json` :
   révisions, changements concurrents, cibles, outils, healthchecks et processus ;

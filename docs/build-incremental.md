@@ -213,7 +213,7 @@ Le bundle JS utilise le helper de cache compilé depuis les sources auditées ;
 son identité d'exécution couvre aussi ce helper et les autres ressources.
 
 Les preuves locales sont conservées dans
-`/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/gopurs-module-cache-lot04-nj_1suxg/`.
+`<tmp>/gopurs-module-cache-lot04-nj_1suxg/`.
 Leurs fichiers de synthèse ont les SHA-256 suivants :
 
 ```text
