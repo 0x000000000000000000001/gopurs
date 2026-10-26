@@ -73,8 +73,11 @@ test('local workers return native records while first-class and partial calls re
     for (const [name, params] of [
         ['makeDirect', 'int64'], ['makeBoxed', 'int64'], ['makePartial', 'int64, int64'],
     ]) {
+        // Native record layouts carry the labels used when a worker result is
+        // boxed. Keep checking the concrete fields and their label metadata.
         assert.match(code, new RegExp(
-            `var Call_local_LocalReturns_${name}_\\w+ func\\(${params}\\) struct\\{\\s*count int64\\s*label string\\s*\\}`),
+            `var Call_local_LocalReturns_${name}_\\w+ func\\(${params}\\) struct\\{\\s*count int64\\s*label string\\s*`
+            + `/\\*gopurs:record-v1:2:0063006f0075006e0074,006c006100620065006c\\*/\\s*\\}`),
         `${name} must keep its native record result`);
     }
     // The computation separating the lambdas must remain at arity one. Its

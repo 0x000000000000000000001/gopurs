@@ -2,12 +2,14 @@
 
 This file inventories the third-party components in the `gopurs` compiler
 distribution and reproduces the applicable license texts. It covers the
-configuration pinned by `spago.lock` and `package-lock.json` at release
-time. Review and update it in the same change as those lockfiles.
+configuration pinned by `spago.lock`, `package-lock.json` and the native
+library commits in `bootstrap-sources.json` at release time. Review and update
+it in the same change as those inputs.
 
 The npm `devDependencies` are build-time tools and are not redistributed in
 the compiler bundle. The PureScript registry packages below are compiled into
-`bin/gopurs.js`; `tools/ffi_gen.wasm` contains the Go runtime and
+`bin/gopurs.js`. The native compiler uses the corresponding pinned Go ports
+and the additional dependency listed below. `tools/ffi_gen.wasm` contains the Go runtime and
 `tools/wasm_exec.js` is the matching Go JavaScript support file.
 
 ## Primary components
@@ -21,6 +23,13 @@ the compiler bundle. The PureScript registry packages below are compiled into
 | Vendored Argonaut codec adaptation (`support/argonaut-codecs`) | MIT | Copyright (c) 2020 PureScript Contrib; see the accompanying `LICENSE` |
 
 ## Bundled PureScript packages
+
+Registry versions below describe the JavaScript build. Native port revisions
+are recorded in `bootstrap-sources.json`; their upstream license notices are
+retained here as well. The native bootstrap additionally includes
+[`gopurs-assert` at `5662b17b6718c60c7acd8ca79de051d577de7bfb`](https://github.com/0x000000000000000000001/gopurs-assert/blob/5662b17b6718c60c7acd8ca79de051d577de7bfb/LICENSE),
+under BSD-3-Clause, Copyright 2018 PureScript. The BSD-3-Clause text below
+also applies to that dependency.
 
 | Package | Version | License | Copyright notice |
 | --- | --- | --- | --- |

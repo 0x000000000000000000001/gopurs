@@ -11,7 +11,7 @@ Le bilan des campagnes est dans `docs/quality-0.1.0.md`.
 - [x] Lister les surfaces stables : CLI, backend Go, formats intermédiaires, bibliothèques `gopurs-*`.
 - [x] Lister explicitement ce qui reste expérimental.
 - [x] Fixer les plateformes supportées : OS, architectures, versions de Go et de PureScript.
-- [x] Auditer les licences du compilateur, du fork PureScript, de PBO et des dépendances.
+- [x] Auditer les licences du compilateur, du fork PureScript et de PBO ; consigner séparément les écarts des ports sources dans [l'audit des bibliothèques](docs/library-source-audit.md).
 - [x] Ajouter les attributions et notices tierces nécessaires.
 - [x] Définir la politique de support et de dépréciation.
 
@@ -33,7 +33,7 @@ Le bilan des campagnes est dans `docs/quality-0.1.0.md`.
 - [x] Fournir des sorties `packages`, `apps`, `checks` et `devShells` sur le modèle de phpurs, sur les trois systèmes annoncés.
 - [x] Construire un paquet gopurs autonome depuis les sources et les lockfiles, sans dépendance à un checkout voisin.
 - [x] Fournir un frontend TAST épinglé et un parcours documenté pour compiler une application avec les ports Go.
-- [ ] Vérifier `nix build`, `nix run` et `nix flake check`, avec un vrai programme PureScript/FFI compilé puis exécuté en Go.
+- [x] Vérifier localement sur Linux arm64 `nix build`, `nix run` et `nix flake check`, avec un vrai programme PureScript/FFI compilé puis exécuté en Go ; la matrice CI reste à valider ci-dessous.
 - [ ] Exécuter les validations Nix sur Linux amd64/arm64 et macOS arm64 en CI.
 - [x] Documenter les commandes de développement, de build et d'installation Nix et leurs entrées exactes.
 
@@ -65,11 +65,11 @@ Le bilan des campagnes est dans `docs/quality-0.1.0.md`.
 - [ ] Exécuter toute la suite de tests dans un environnement propre.
 - [x] Vérifier la conformité avec le compilateur officiel sur un corpus représentatif.
 - [x] Vérifier les golden tests, la parité FFI et les formats générés.
-- [ ] Tester les erreurs, annulations, limites mémoire et cas de concurrence.
+- [x] Tester les erreurs, annulations, bornes de configuration mémoire et cas de concurrence, avec les tests Go `-race` et l'émission native.
 - [ ] Vérifier les performances à froid et à chaud avec le protocole publié.
 - [ ] Faire tourner une release candidate et corriger les régressions bloquantes.
 - [ ] Exiger une CI verte sur le tag de release.
-- [ ] Déclencher la CI sur les tags et couvrir le frontend TAST, le bootstrap natif et l'exécution d'applications, en plus du paquet JavaScript.
+- [x] Configurer la CI sur les tags pour couvrir le frontend TAST, le bootstrap natif et l'exécution d'applications, en plus du paquet JavaScript ; son exécution verte reste une porte distincte.
 
 ## 6. Préparer les artefacts et la publication
 
@@ -78,8 +78,9 @@ Le bilan des campagnes est dans `docs/quality-0.1.0.md`.
 - [ ] Signer le tag et les artefacts.
 - [ ] Rédiger les notes de version et le changelog.
 - [ ] Tester l'installation uniquement depuis les artefacts publiés.
-- [ ] Vérifier les paquets `gopurs-*` : versions alignées, bornes de dépendances, allowlist de fichiers.
-- [ ] Faire un `npm publish --dry-run` et vérifier la provenance si publication sur npm.
+- [ ] Vérifier les ports sources `gopurs-*` : commits compatibles épinglés, dépendances résolues et notices complètes ; appliquer versions, bornes et allowlists aux paquets effectivement publiés, sans versions communes imposées ([audit et écarts restants](docs/library-source-audit.md)).
+- [x] Faire un `npm publish --dry-run` sur l'archive locale préparée.
+- [ ] Vérifier la provenance de la publication npm réelle.
 - [ ] Préparer la procédure de rollback et conserver les artefacts précédents.
 - [x] Aligner le contrat de support avec les parcours réellement distribués : hôte JavaScript npm/Nix et binaires Go ; hôte Rust expérimental.
 - [ ] Enregistrer dans Git toutes les sources, configurations et notices nécessaires avant de créer la RC ; vérifier un checkout du commit publié.

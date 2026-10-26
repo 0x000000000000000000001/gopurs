@@ -17,8 +17,8 @@ components:
   BSD-3-Clause.
   Copyright 2009 The Go Authors. All rights reserved.
 
-- PureScript registry packages bundled into bin/gopurs.js, under MIT,
-  BSD-3-Clause and Apache-2.0 licenses.
+- PureScript packages bundled into bin/gopurs.js and the native compiler,
+  including pinned Go ports, under MIT, BSD-3-Clause and Apache-2.0 licenses.
 
 - The Argonaut codec adaptation in support/argonaut-codecs, MIT.
   Copyright (c) 2020 PureScript Contrib. Its license accompanies the sources.
@@ -26,5 +26,6 @@ components:
 The complete inventory and the applicable license texts are in
 THIRD_PARTY_NOTICES.md.
 
-The gopurs-* library ports are distributed separately and retain the licenses
-of their upstream PureScript packages.
+The gopurs-* library ports are separate source repositories. The revisions
+used by the native bootstrap are pinned in bootstrap-sources.json; notices
+for the compiler's dependencies are included in THIRD_PARTY_NOTICES.md.

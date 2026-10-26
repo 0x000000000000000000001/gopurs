@@ -11,7 +11,13 @@ From a checkout at the release revision:
 
 ```sh
 nix build .#gopurs
-nix run . -- --main Main
+```
+
+From an application directory containing typed `output/*/corefn.json`, run the
+flake by its checkout path:
+
+```sh
+nix run /path/to/gopurs -- --main Main
 ```
 
 The installed `result/bin/gopurs` is the JavaScript compiler host. Its Node
