@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
+import { isDeepStrictEqual } from "node:util";
 import * as Aff from "../output/Effect.Aff/index.js";
 import { monadEffectEffect } from "../output/Effect.Class/index.js";
 import * as Ref from "../output/Effect.Ref/index.js";
@@ -20,6 +21,8 @@ import * as Builder from "../output/PureScript.Backend.Optimizer.Builder/index.j
 import * as Cache from "../output/Gopurs.Cache.Modules/index.js";
 import * as CodeGen from "../output/Gopurs.CodeGen/index.js";
 import * as Manifest from "../output/Gopurs.Driver.Manifest/index.js";
+import { TypeInt64 } from "../output/Gopurs.GoAst/index.js";
+import { LocalReference } from "../output/Gopurs.GoSymbol/index.js";
 import { buildGlobalTypes } from "../output/Gopurs.GlobalTypes/index.js";
 import { monomorphizeModules } from "../output/Gopurs.Monomorphization/index.js";
 import { withReboxFields } from "./codegen-metadata.mjs";
@@ -53,6 +56,43 @@ const manifest = modules => Manifest.buildManifest("")("same-context")(Map.empty
 const metadataFor = modules => withReboxFields({ elidedCtors: Set.empty, ctorTypes: Map.empty,
   pointerAdtPaths: Map.empty, pointerAdtNodes: Set.empty, pointerAdtLeaves: Map.empty, enumAdts: Set.empty,
   enumCtors: Set.empty, globalTypes: buildGlobalTypes(modules), globalFunctions: Map.empty, classDeclsFields: Map.empty });
+
+test("concurrent manifest sidecar writers publish complete values from private stages", async t => {
+  const directory = mkdtempSync(join(tmpdir(), "gopurs-manifest-writers-"));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const cases = [
+    { name: "manifest", file: "build-manifest-v1.json", write: Manifest.writeManifest, read: Manifest.readManifest,
+      payload: index => manifest([moduleOf(`Writer${index}`, [binding("value", int, literal(index))])]),
+      normalize: value => ({ ...value, modules: entries(value.modules) }) },
+    { name: "ffi digests", file: "ffi-digests-v1.json", write: Manifest.writeFfiDigests, read: Manifest.readFfiDigests,
+      payload: index => map([["Module", `digest-${index}`], ["Other", `other-${index}`]]), normalize: entries },
+    { name: "global functions", file: "global-functions-v1.json", write: Manifest.writeGlobalFunctions, read: Manifest.readGlobalFunctions,
+      payload: index => map([[`Writer${index}.value`, { reference: new LocalReference(`value${index}`),
+        fArgs: [TypeInt64.value], fRet: TypeInt64.value, arity: 1 }]]), normalize: entries },
+  ];
+  for (const { name, file, write, read, payload, normalize } of cases) await t.test(name, async () => {
+    const cacheRoot = join(directory, name, "cache");
+    mkdirSync(cacheRoot, { recursive: true });
+    const payloads = Array.from({ length: 20 }, (_, index) => payload(index));
+    const stages = payloads.map((_, index) => {
+      const stage = join(directory, name, `stage-${index}`);
+      mkdirSync(stage);
+      return stage;
+    });
+    // Start every real Aff writer before awaiting completion. Waiting for all
+    // settlements also keeps cleanup from racing any still-running writer.
+    const results = await Promise.allSettled(payloads.map((value, index) =>
+      runAff(write(stages[index])(cacheRoot)(value))));
+    assert.deepEqual(results.filter(result => result.status === "rejected"), [],
+      "every concurrent writer must publish successfully");
+    const saved = await runAff(read(cacheRoot));
+    assert.ok(saved instanceof Just, "the published sidecar must decode");
+    assert.ok(payloads.some(value => isDeepStrictEqual(normalize(saved.value0), normalize(value))),
+      "the published value must equal one complete writer payload");
+    assert.deepEqual(readdirSync(cacheRoot), [file], "the shared cache has no temporary sidecar");
+    for (const stage of stages) assert.deepEqual(readdirSync(stage), [], "rename consumes each private temporary");
+  });
+});
 
 test("manifest interface reuse requires the same known source and compiler context", () => {
   const original = fixture(false), saved = manifest(original);

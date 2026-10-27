@@ -21,6 +21,9 @@ compiling the native scanner test. The signed first-candidate tag is retained.
   Release compiler binaries retain their optimized bootstrap profile.
 - Include the scanner and preparation probes in the quick CI campaign so their
   compilation and execution are checked before creating another release tag.
+- Publish build manifests, FFI digests and global-function sidecars from each
+  cache session's private stage. Concurrent builds no longer share a temporary
+  sidecar path that another writer can rename, causing an `ENOENT` failure.
 
 ## [0.1.0-rc.1]
 

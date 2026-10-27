@@ -51,6 +51,47 @@ and the generated application's Release/Dev gates remain separate checks. The
 new candidate still requires its own CI, signed-tag gate, provenance verification
 and installation from public artifacts.
 
+The first RC2 PR campaign [40528983021](https://github.com/0x000000000000000000001/gopurs/actions/runs/40528983021)
+tested head `23e452010ea7a3f5af587f74bb967f6bc75b2ac2` through merge commit
+`5c87178d163fd9faf48c54418c2185eb94f67a56`. Both Linux platforms passed all
+17 quick gates, with 176 Node entries each and no skips, including the scanner
+and preparation probes. Their installed-artifact smokes passed and their npm
+archives were identical. Their optimized native binaries, JavaScript compiler
+bundle and embedded runtime/helper bytes matched the preceding clean RC1
+artifacts. These comparisons describe the source before the sidecar fix below.
+
+macOS passed Nix, its fresh native bootstrap and nine Node files, then failed
+gate 10, `driver-cache.test.mjs`, in the `native-sequential` subtest. Publishing
+`ffi-digests-v1.json` failed because its shared `.next` file had already been
+renamed by another writer. The failing backend invocation took 3.685 seconds;
+this was an `ENOENT` race, not a compilation timeout. The JavaScript and native
+parallel subtests passed. The scanner and preparation probes, subsequent gates,
+clean-source check, packaging and smokes were not reached on macOS. The failed
+campaign and its original logs are retained in `ci-rc2-pr` under the evidence
+root, with `SHA256SUMS` digest
+`902e87dbaf2e08ec0cf92e1bb077e3ca250c626001794f44e4bc882e8e939062`.
+
+A focused reproduction called the real JavaScript-hosted manifest writer with
+20 concurrent publishers: one succeeded and 19 failed with `ENOENT` in about
+2 ms. Build manifests, FFI digests and global-function sidecars now write their
+temporary files in the owning cache session's private stage before renaming
+them into the shared cache. The regression runs 20 concurrent real Aff writers
+for each sidecar, requires every write to succeed, decodes a complete published
+payload, and checks that the stages are empty and no shared temporary remains.
+The updated JavaScript build and the regression file pass: seven Node entries,
+including its three concurrent-write subtests. Quick CI now also runs this file
+before the end-to-end driver-cache check. A fresh optimized native bootstrap
+passes with 522 typed modules and 326,579 types. This local diagnostic uses the
+recorded frontend binary with SHA-256
+`efac5816a482d5581cfc990892f8b24f1d3343f8df1798572ea1a0a96bd07991`;
+it does not establish identity with the public frontend used by CI. The complete
+driver-cache scenario then passed on JavaScript, native sequential and native
+parallel hosts: four Node entries, zero failures or skips, in 275.7 seconds.
+Each host ran the existing pair of simultaneous forced compilations and checked
+that their generated output still matched clean generation. Hosted validation
+of the corrected source remains pending. Historical timings, compiler hashes
+and frontend identities below retain their pre-fix provenance.
+
 The local diagnostic scripts, source copy, command reports, RSS samples and
 logs are archived under `.gopurs-evidence/release-preparation-20261026/rc1-go-timeout-probes`
 at the workspace root. Its `SHA256SUMS` digest is
