@@ -222,7 +222,7 @@ fermetures et déplacements ; leurs tailles ne sont pas des gains Go mesurés.
 Racine locale :
 
 ```text
-/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/
+<tmp>/
   gopurs-go-packages-g01-20261013/
 ```
 

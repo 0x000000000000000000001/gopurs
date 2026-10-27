@@ -39,7 +39,7 @@ test("source edits, ABI layouts, specialization retraction and renames equal fre
   const typedBin = join(workspace, "typed-bin");
   mkdirSync(typedBin);
   symlinkSync(typedCompiler, join(typedBin, "purs"));
-  const baseEnv = { ...process.env, GOWORK: "off", PATH: [typedBin, join(root, "node_modules/.bin"), process.env.PATH].join(delimiter) };
+  const baseEnv = { ...process.env, GOWORK: "off", GOPURS_PACK_PUBLICATION: "0", GOPURS_GO_PACKAGES: "0", PATH: [typedBin, join(root, "node_modules/.bin"), process.env.PATH].join(delimiter) };
   for (const key of ["GOPURS_ALLOC_PROFILE", "GOPURS_FORCE_BUILD", "GOPURS_COMPILER_SNAPSHOT", "PPROF", "GOGC", "GOMEMLIMIT"]) delete baseEnv[key];
   const commands = [], results = [], pathAliases = new Map();
   let sequence = 0, installedSources = { "Main.purs": readFileSync(join(sourceDirectory, "Main.purs"), "utf8") };

@@ -1,14 +1,24 @@
 import { execFileSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { basename, dirname, join } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
+import { isLibraryCheckout } from "./test-selection.mjs";
+
+export function libraryRoot(root) {
+  return resolve(process.env.GOPURS_LIBRARY_ROOT || dirname(root));
+}
+
+export function libraryPath(root, name) {
+  const vendored = join(root, "support", name);
+  return existsSync(join(vendored, "spago.yaml")) ? vendored : join(libraryRoot(root), "gopurs-" + name);
+}
 
 export function corePackages(root) {
   // bin/pkg remains the shared list used by bin/setup and the test runner.
   const names = execFileSync("bash", ["-c", 'source "$1"; printf "%s\\n" "${CORE_PACKAGES[@]}"', "pkg", join(root, "bin/pkg")], { encoding: "utf8" }).trim().split(/\s+/);
   for (const name of names) {
-    if (!statSync(join(dirname(root), "gopurs-" + name), { throwIfNoEntry: false })?.isDirectory()) {
-      throw new Error(`Missing sibling checkout: gopurs-${name}. Run ./bin/setup first.`);
+    if (!statSync(libraryPath(root, name), { throwIfNoEntry: false })?.isDirectory()) {
+      throw new Error(`Missing library checkout: gopurs-${name}. Run ./bin/setup first.`);
     }
   }
   return names;
@@ -27,7 +37,7 @@ export function prepareFixture(root, workspace, file, index, packages) {
   // bootstrap's core set. Use their local FFI instead of the registry's JS-only
   // package, while retaining the registry for dependencies without a checkout.
   const overrides = [...new Set([...packages, ...dependencies.filter(name =>
-    existsSync(join(dirname(root), "gopurs-" + name, "spago.yaml")))])];
+    existsSync(join(libraryPath(root, name), "spago.yaml")))])];
 
   const name = basename(file, ".purs");
   const directory = join(workspace, `${index}-${name}`);
@@ -46,7 +56,7 @@ export function prepareFixture(root, workspace, file, index, packages) {
 
   const config = "package:\n  name: runner\n  dependencies:\n" + dependencies.map(name => `    - ${name}\n`).join("") +
     "workspace:\n  packageSet:\n    registry: 77.10.1\n  extraPackages:\n" + overrides.map(name =>
-      `    ${name}:\n      path: ${JSON.stringify(join(dirname(root), "gopurs-" + name))}\n`).join("");
+      `    ${name}:\n      path: ${JSON.stringify(libraryPath(root, name))}\n`).join("");
   writeFileSync(join(directory, "spago.yaml"), config);
   return { name, directory, snapshotFfi: /^-- @snapshot-ffi\r?$/m.test(content) };
 }
@@ -58,13 +68,20 @@ export function prepareModule(root, directory, name, { dev = false } = {}) {
   const packages = join(directory, "packages");
   mkdirSync(packages);
   const generated = new Set([".git", ".spago", ".cache", ".purmeta", "node_modules", "output", ".stack-work", ".pulp-cache"]);
-  const parent = dirname(root);
+  const parent = libraryRoot(root);
   for (const sibling of readdirSync(parent)) {
     const source = join(parent, sibling);
-    if (!sibling.startsWith("gopurs-") || !statSync(source, { throwIfNoEntry: false })?.isDirectory()) continue;
+    if (!isLibraryCheckout(source)) continue;
     cpSync(realpathSync(source), join(packages, sibling), {
       recursive: true, verbatimSymlinks: true,
       filter: path => !generated.has(basename(path)),
+    });
+  }
+  const support = join(root, "support");
+  if (existsSync(support)) for (const name of readdirSync(support)) {
+    const source = join(support, name);
+    if (existsSync(join(source, "spago.yaml"))) cpSync(source, join(packages, `gopurs-${name}`), {
+      recursive: true, verbatimSymlinks: true,
     });
   }
   // The compiler is consumed read-only; -c is handled once by the outer runner.

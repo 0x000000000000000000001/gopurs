@@ -49,7 +49,8 @@ async function buildNative({ keepWorkspace }) {
     const log = join(workspace, `${label}.log`);
     const started = Date.now();
     console.log(`[${label}] ${command} ${commandArgs.join(" ")}\n  log: ${log}`);
-    const status = await commands.run(command, commandArgs, { cwd, env, log });
+    // Keep stage logs, and expose their progress while a CI build is running.
+    const status = await commands.run(command, commandArgs, { cwd, env, log, stream: process.env.CI === "true" });
     if (commands.signal || status.code !== 0) process.stderr.write(readFileSync(log, "utf8"));
     commands.checkInterrupted();
     if (status.code !== 0) throw new Error(`${label} failed (${status.signal ?? "exit " + status.code})`);

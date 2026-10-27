@@ -111,6 +111,23 @@
         "type": "github"
       }
     },
+    "purs-tast": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1791442624,
+        "narHash": "sha256-v/OKFy1IRZ7PYiTX7QWQD0Ag53LlEKxK5Pjw0+Dsn6c=",
+        "owner": "0x000000000000000000001",
+        "repo": "purescript",
+        "rev": "105f5752b39cc0f6c99a40064295338bf57ad223",
+        "type": "github"
+      },
+      "original": {
+        "owner": "0x000000000000000000001",
+        "repo": "purescript",
+        "rev": "105f5752b39cc0f6c99a40064295338bf57ad223",
+        "type": "github"
+      }
+    },
     "registry": {
       "flake": false,
       "locked": {
@@ -148,7 +165,8 @@
         "flake-compat": "flake-compat",
         "mkSpagoDerivation": "mkSpagoDerivation",
         "nixpkgs": "nixpkgs",
-        "purescript-overlay": "purescript-overlay"
+        "purescript-overlay": "purescript-overlay",
+        "purs-tast": "purs-tast"
       }
     }
   },

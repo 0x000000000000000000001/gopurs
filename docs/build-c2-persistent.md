@@ -84,7 +84,7 @@ export GOMEMLIMIT=10GiB
 export GOWORK=off
 unset GOPURS_DAEMON GOPURS_DAEMON_SERVER GOPURS_RESIDENT GOPURS_RESIDENT_TRIGGER
 unset GOPURS_COMPILER_SNAPSHOT GOPURS_FORCE_BUILD
-/Users/0x1/Documents/htdocs/gopurs/gopurs/bin/gopurs-native
+htdocs/gopurs/gopurs/bin/gopurs-native
 ```
 
 Une préparation complète publie l'état de référence. Un changement de
@@ -196,7 +196,7 @@ Voir [le contrat multi-bundles](build-c2-go-packages.md).
   test sont arrêtés. Les appels clients concurrents restent non supportés.
 
 Les preuves détaillées sont sous :
-`/Users/0x1/Documents/htdocs/.gopurs-evidence/c2-7-reprise-20261023/`.
+`htdocs/.gopurs-evidence/c2-7-reprise-20261023/`.
 Scripts principaux : `measure-central-pairs.py`, `check-daemon.py` ; résultats
 `central-validated-pairs/results.json`, `daemon-result.json`,
 `daemon-jobs-8-result.json`, `compact-normalized-oracle.json`.

@@ -7,8 +7,8 @@
     "proof": "whole-preparation-inputs"
   },
   "evidence": {
-    "study": "/Users/0x1/Documents/htdocs/.gopurs-evidence/p01-compact-20261019-c01",
-    "parent": "/Users/0x1/Documents/htdocs/.gopurs-evidence/p00-20261019",
+    "study": "htdocs/.gopurs-evidence/p01-compact-20261019-c01",
+    "parent": "htdocs/.gopurs-evidence/p00-20261019",
     "parentInputs": {
       "provenance.json": "123bc44c12f0e983f28e626556cbd7a3615555af99397d65f9e1ed006ada0f6b",
       "measurement/states.json": "9f232370e847e711aa00592dc193c5b267ddce5baaa3bdf960ca4d05eee2e44e",

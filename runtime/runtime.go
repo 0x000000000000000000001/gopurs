@@ -1177,6 +1177,11 @@ func Unbox[T any](v any) T {
 	
 	var t any = *new(T)
 	switch t.(type) {
+	case int32:
+		if val.Type == TypeAny && val.UnsafePtr != nil {
+			if value, ok := (*(*any)(val.UnsafePtr)).(int32); ok { return any(value).(T) }
+		}
+		return any(int32(Unbox[int64](val))).(T)
 	case int64: 
 		if val.Type == TypeFloat {
 			return any(int64(math.Float64frombits(uint64(val.IntVal)))).(T)
@@ -1248,6 +1253,7 @@ func Box[T any](val T) Value {
 		return v
 	}
 	switch v := any(val).(type) {
+	case int32: return Int(int64(v))
 	case int64: return Int(v)
 	case int: return Int(int64(v))
 	case string: return Str(v)

@@ -210,10 +210,10 @@ test('native identity borrowing and owned-copy fallback preserve containers and 
     writeFileSync(join(work, 'go.mod'), 'module gopurs\n\ngo 1.22\n');
     writeFileSync(join(work, 'output/gopurs_runtime/runtime.go'), readFileSync(new URL('../runtime/runtime.go', import.meta.url)));
     for (const [name, source] of [
-        ['record.go', '../../gopurs-argonaut-codecs/src/Data/Argonaut/Decode/Internal/Record.go'],
+        ['record.go', '../support/argonaut-codecs/src/Data/Argonaut/Decode/Internal/Record.go'],
         ['parser.go', '../../gopurs-argonaut-core/src/Data/Argonaut/Parser.go'],
-        ['text.go', '../../gopurs-argonaut-codecs/src/Data/Argonaut/Decode/Parser.go'],
-        ['record_test.go', '../../gopurs-argonaut-codecs/test/record-plan_test.go'],
+        ['text.go', '../support/argonaut-codecs/src/Data/Argonaut/Decode/Parser.go'],
+        ['record_test.go', '../support/argonaut-codecs/test/record-plan_test.go'],
     ]) writeFileSync(join(work, 'record', name), readFileSync(new URL(source, import.meta.url), 'utf8').replace('package Parser', 'package Record'));
     const checked = spawnSync('go', ['test', '-v', '-race', '-count=1', '-run', '^Test(BorrowObjectIdentityAndFallback|IdentityObjectShortcutOwnsContainer)$', './record'], {
         cwd:work, encoding:'utf8', timeout:60_000, env:{...process.env, GOWORK:'off', GOMAXPROCS:'2'},

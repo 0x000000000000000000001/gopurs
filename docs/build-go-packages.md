@@ -245,7 +245,7 @@ les **430 fichiers de production** toujours exacts. **G00 est clos à 1/7**.
 Racine locale conservée :
 
 ```text
-/private/var/folders/w9/l8bnb22d6c75c401f71djbt00000gn/T/opencode/
+<tmp>/
   gopurs-go-packages-g00-20261012/
 ```
 

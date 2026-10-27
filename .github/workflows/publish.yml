@@ -1,0 +1,118 @@
+name: Publish reviewed release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Signed version tag whose CI draft has been reviewed (for example v0.1.0-rc.1)
+        type: string
+        required: true
+      already_published:
+        description: Verify an existing npm version published locally with the draft's npm provenance bundle; never publish it again
+        type: boolean
+        default: false
+
+concurrency:
+  group: gopurs-publication
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      id-token: write
+      attestations: read
+    env:
+      RELEASE_TAG: ${{ inputs.tag }}
+      ALREADY_PUBLISHED: ${{ inputs.already_published }}
+      GH_TOKEN: ${{ github.token }}
+      npm_config_registry: https://registry.npmjs.org
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Validate the requested version
+        run: |
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]
+          test "$GITHUB_REF" = "refs/tags/$RELEASE_TAG"
+          echo "RELEASE_VERSION=${RELEASE_TAG#v}" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+          fetch-depth: 0
+      - uses: DeterminateSystems/determinate-nix-action@v3.5.2
+      - name: Download the draft produced by the successful CI matrix
+        run: |
+          test "$(gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft)" = true
+          gh release download "$RELEASE_TAG" --dir "$RUNNER_TEMP/candidate"
+      - name: Verify the signed artifact and its source tag
+        run: |
+          for target in linux-amd64 linux-arm64 darwin-arm64; do
+            prefix="gopurs-$RELEASE_VERSION-$target"
+            gh attestation verify "$RUNNER_TEMP/candidate/$prefix-SHA256SUMS" --repo "$GITHUB_REPOSITORY" \
+              --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/ci.yml" \
+              --source-ref "refs/tags/$RELEASE_TAG" --source-digest "$(git rev-parse HEAD)" --deny-self-hosted-runners
+            (cd "$RUNNER_TEMP/candidate" && shasum -a 256 -c "$prefix-SHA256SUMS")
+          done
+      - name: Verify the npm provenance exported by the tag's CI job
+        run: |
+          prefix="gopurs-$RELEASE_VERSION-linux-amd64"
+          mode=verify
+          if [ "$ALREADY_PUBLISHED" = true ]; then mode=verify-published; fi
+          nix develop --no-update-lock-file --command node tools/release-npm-provenance.mjs "$mode" \
+            --package "$RUNNER_TEMP/candidate/gopurs-$RELEASE_VERSION.tgz" \
+            --build "$RUNNER_TEMP/candidate/$prefix-build.json" \
+            --bundle "$RUNNER_TEMP/candidate/$prefix-npm-provenance.sigstore.json" \
+            > "$RUNNER_TEMP/npm-provenance-verification.json"
+      - name: Record registry state for publication or recovery
+        run: |
+          nix develop --no-update-lock-file --command node --input-type=module <<'JS'
+          import { spawnSync } from 'node:child_process';
+          import { writeFileSync } from 'node:fs';
+          const result = spawnSync('npm', ['view', 'gopurs', 'dist-tags', '--json'], { encoding: 'utf8' });
+          const value = JSON.parse(result.stdout || '{}');
+          if (result.status !== 0 && value.error?.code !== 'E404') throw new Error(result.stderr);
+          const tags = result.status === 0 ? value : {};
+          const existing = process.env.ALREADY_PUBLISHED === 'true';
+          const channel = process.env.RELEASE_VERSION.includes('-rc.') ? 'next' : 'latest';
+          if (existing && tags[channel] !== process.env.RELEASE_VERSION) throw new Error('The public release channel does not point at the reviewed version');
+          const name = existing ? 'observed-dist-tags.json' : 'previous-dist-tags.json';
+          writeFileSync(process.env.RUNNER_TEMP + '/' + name, JSON.stringify(tags, null, 2) + '\n');
+          writeFileSync(process.env.RUNNER_TEMP + '/publication-mode.json', JSON.stringify({ mode: existing ? 'verify-existing-ci-provenance' : 'trusted-publish', version: process.env.RELEASE_VERSION, channel }, null, 2) + '\n');
+          JS
+      - name: Publish the reviewed tarball with npm provenance
+        if: inputs.already_published != true
+        run: |
+          channel=latest
+          if [[ "$RELEASE_VERSION" == *-rc.* ]]; then channel=next; fi
+          nix develop --no-update-lock-file --command npm publish --ignore-scripts --provenance --access public \
+            --tag "$channel" "$RUNNER_TEMP/candidate/gopurs-$RELEASE_VERSION.tgz"
+      - name: Fetch the registry artifact and repeat the offline application smoke
+        run: |
+          mkdir "$RUNNER_TEMP/registry"
+          nix develop --no-update-lock-file --command npm pack "gopurs@$RELEASE_VERSION" --ignore-scripts --pack-destination "$RUNNER_TEMP/registry"
+          cmp "$RUNNER_TEMP/candidate/gopurs-$RELEASE_VERSION.tgz" "$RUNNER_TEMP/registry/gopurs-$RELEASE_VERSION.tgz"
+          typed_package=$(nix build .#purs-tast --no-link --print-out-paths --no-update-lock-file)
+          nix develop --no-update-lock-file --command node tools/release-smoke.mjs \
+            --package "$RUNNER_TEMP/registry/gopurs-$RELEASE_VERSION.tgz" \
+            --native "$RUNNER_TEMP/candidate/gopurs-$RELEASE_VERSION-linux-amd64" \
+            --purs "$typed_package/bin/purs" --report "$RUNNER_TEMP/published-smoke.json"
+      - name: Publish the matching GitHub release
+        run: gh release edit "$RELEASE_TAG" --draft=false
+      - name: Archive the publication and rollback evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: publication-${{ inputs.tag }}
+          path: |
+            ${{ runner.temp }}/previous-dist-tags.json
+            ${{ runner.temp }}/observed-dist-tags.json
+            ${{ runner.temp }}/publication-mode.json
+            ${{ runner.temp }}/npm-provenance-verification.json
+            ${{ runner.temp }}/published-smoke.json
+          if-no-files-found: warn
+          retention-days: 90

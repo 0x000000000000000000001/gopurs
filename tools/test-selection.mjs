@@ -1,4 +1,4 @@
-import { accessSync, constants, readdirSync, statSync } from "node:fs";
+import { accessSync, constants, readFileSync, readdirSync, statSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 
 // No exclusions remain after plan v2, lot 06 (2026-10-06).
@@ -74,9 +74,9 @@ export function selectFixtures(root, options, cwd = process.cwd()) {
 }
 
 export function selectModules(root, options) {
-  const parent = dirname(root);
+  const parent = resolve(process.env.GOPURS_LIBRARY_ROOT || dirname(root));
   const available = readdirSync(parent).filter(name => {
-    if (!name.startsWith("gopurs-")) return false;
+    if (!isLibraryCheckout(join(parent, name))) return false;
     const script = join(parent, name, "bin/test");
     if (!isFile(script)) return false;
     try { accessSync(script, constants.X_OK); return true; } catch { return false; }
@@ -90,4 +90,24 @@ export function selectModules(root, options) {
   const selected = resumeFrom([...new Set(candidates)], options, (name, target) => name === normalize(target));
   if (!selected.length) throw new UsageError("No module tests selected.");
   return selected.map(name => join(parent, name));
+}
+
+// A backend worktree can also be named gopurs-* and contain bin/test. Library
+// checkouts identify the package they supply, either with its registry name or
+// with the gopurs- prefix used by some ports. Do not require spago.go.yaml:
+// several ports keep their Go configuration directly in spago.yaml.
+export function isLibraryCheckout(directory) {
+  const name = basename(directory);
+  if (!name.startsWith("gopurs-")) return false;
+  const config = join(directory, "spago.yaml");
+  if (!isFile(config)) return false;
+  const lines = readFileSync(config, "utf8").split(/\r?\n/);
+  const start = lines.findIndex(line => /^package:\s*(?:#.*)?$/.test(line));
+  if (start < 0) return false;
+  for (const line of lines.slice(start + 1)) {
+    if (/^\S/.test(line)) break;
+    const match = line.match(/^\s+name:\s*(["']?)([a-z][a-z0-9-]*)\1\s*(?:#.*)?$/);
+    if (match) return match[2] === name || match[2] === name.slice("gopurs-".length);
+  }
+  return false;
 }

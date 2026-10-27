@@ -1,0 +1,225 @@
+{
+  "schema": 1,
+  "compiler": {
+    "url": "https://github.com/0x000000000000000000001/purescript.git",
+    "rev": "105f5752b39cc0f6c99a40064295338bf57ad223"
+  },
+  "optimizer": {
+    "url": "https://github.com/0x000000000000000000001/purescript-backend-optimizer.git",
+    "rev": "4e7de48ffd6e19480ed3de6bfe8ca8227133be13"
+  },
+  "libraries": {
+    "aff": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-aff.git",
+      "rev": "37dc3ebb4a332d598ce6d33b01350c44cba4b7dc"
+    },
+    "argonaut-core": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-argonaut-core.git",
+      "rev": "09360c8947ca27f35c2bb7a3d6c300ea5a5a2d23"
+    },
+    "arrays": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-arrays.git",
+      "rev": "e68970644734ba8420fc811337dd45beb4b2acea"
+    },
+    "assert": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-assert.git",
+      "rev": "5662b17b6718c60c7acd8ca79de051d577de7bfb"
+    },
+    "avar": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-avar.git",
+      "rev": "53422fdc24b9a1cf66ed7c76a9dc3a2b316cede2"
+    },
+    "catenable-lists": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-catenable-lists.git",
+      "rev": "cc89c53b96ee4b39f31a0a8c5218fc7defbb2625"
+    },
+    "console": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-console.git",
+      "rev": "d4931b94e7731581e761131c56844cf65c4d0b6d"
+    },
+    "datetime": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-datetime.git",
+      "rev": "dee8442feaf6dd7c461ec23c8fb2f9d72b5301bb"
+    },
+    "effect": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-effect.git",
+      "rev": "d4312e08a73769f2b41b89866717393192fe103e"
+    },
+    "enums": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-enums.git",
+      "rev": "f43a45ef69fc558b37168ca74d3aee78df58878d"
+    },
+    "exceptions": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-exceptions.git",
+      "rev": "cfeef292868e18b5f3fd025ad65da2420618881b"
+    },
+    "foldable-traversable": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-foldable-traversable.git",
+      "rev": "5f220711ce59a1b02f22c24440c4649002cfcfc0"
+    },
+    "foreign": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-foreign.git",
+      "rev": "4f793660b048db316547527d923a1ccd377c252e"
+    },
+    "foreign-object": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-foreign-object.git",
+      "rev": "820e1cb2cc223b6811715a52803208ce60d36c98"
+    },
+    "free": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-free.git",
+      "rev": "0e45728767c4337b9e4b40b2b45d06b2e3d1dd2c"
+    },
+    "functions": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-functions.git",
+      "rev": "f7d33c0a545dcf6e5fb85b255a7ac573082c491c"
+    },
+    "integers": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-integers.git",
+      "rev": "08016bb3384512b1c203f8ea0a21b8c8d9c3fbbb"
+    },
+    "js-bigints": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-js-bigints.git",
+      "rev": "11222d0fea160322fbf08682109febb78284b033"
+    },
+    "js-date": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-js-date.git",
+      "rev": "b3e68e2f93f6861da8e488b01093234ee6736077"
+    },
+    "js-promise": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-js-promise.git",
+      "rev": "9a32b5523d5a597a4e45de75925d566521ea8427"
+    },
+    "js-promise-aff": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-js-promise-aff.git",
+      "rev": "7e88c8a739061785cc518b370c301e9ce7de31dc"
+    },
+    "js-uri": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-js-uri.git",
+      "rev": "482d551aa5f2f1e3b5db72466cbd2ed87a41938a"
+    },
+    "lazy": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-lazy.git",
+      "rev": "e1c129f8f3ad6a1bde680d4ba7bad1386df6997f"
+    },
+    "node-buffer": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-node-buffer.git",
+      "rev": "f154e7d6ded317ed7559540f4fa0dff6d466d3f7"
+    },
+    "node-event-emitter": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-node-event-emitter.git",
+      "rev": "7e56b193ca4ec1162827a229472c997d1cd3ac17"
+    },
+    "node-fs": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-node-fs.git",
+      "rev": "dc52e7cc0c6841667362f3b8b25b6b9e8863c346"
+    },
+    "node-http": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-node-http.git",
+      "rev": "3e6ca7028ff635a66b188b54432a864e54723399"
+    },
+    "node-net": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-node-net.git",
+      "rev": "1ff1ce2ad5df5ecbeca0d66f25fa4703611eba71"
+    },
+    "node-path": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-node-path.git",
+      "rev": "914c57f5cb3b61ac440cb997488e5d8a6c43e859"
+    },
+    "node-process": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-node-process.git",
+      "rev": "ffdec791e0f4afeed06c5a798fa13dccc2d4fd32"
+    },
+    "node-streams": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-node-streams.git",
+      "rev": "3339c23082296fb30f7f7dcca0b97df962104178"
+    },
+    "now": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-now.git",
+      "rev": "cfb9cb4441fbb19e54e9e2e097759bdf4b6eb3f1"
+    },
+    "nullable": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-nullable.git",
+      "rev": "2796fba393b68f788c61273e1075a4f2d150f100"
+    },
+    "numbers": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-numbers.git",
+      "rev": "40d9f02a88d7b9ea9f02cfd02fd5cadcfa17c326"
+    },
+    "ordered-collections": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-ordered-collections.git",
+      "rev": "0dcc0c551469ac5ccec3fb5294f15e2e1489b7fb"
+    },
+    "partial": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-partial.git",
+      "rev": "4a305f1e37ed71863582272b27c9ed0ba514d706"
+    },
+    "prelude": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-prelude.git",
+      "rev": "aa220e3571b6f0ae3743861d04153a20b10ad0d0"
+    },
+    "quickcheck": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-quickcheck.git",
+      "rev": "aea9846a887483e4e7c85a08732c29d1faa5f675"
+    },
+    "random": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-random.git",
+      "rev": "f77df3b3376dea7e7cecf29f962e08a8d7c62dfa"
+    },
+    "record": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-record.git",
+      "rev": "3fef5c717b048b614d04be6c632d54a042bfae63"
+    },
+    "refs": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-refs.git",
+      "rev": "c1e1477205941377c2a290b83af935ba4f237733"
+    },
+    "run": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-run.git",
+      "rev": "f3ef17d9e809d5a3b0da5ceb6646d65e7bc41698"
+    },
+    "spec": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-spec.git",
+      "rev": "f72a29e90f7962c99cfe110a62e76a8dcd09ec10"
+    },
+    "st": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-st.git",
+      "rev": "b915b18e254f57994f88827a4172f6022ff47166"
+    },
+    "strings": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-strings.git",
+      "rev": "a4189eb3ee1dc5e18d6962359fb43430ea81efa4"
+    },
+    "strings-extra": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-strings-extra.git",
+      "rev": "dad3901f670fd160a232fd0fc088ab1dcee509ea"
+    },
+    "unfoldable": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-unfoldable.git",
+      "rev": "934aaf61aced2444cdac748707543bf07639ff75"
+    },
+    "unsafe-coerce": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-unsafe-coerce.git",
+      "rev": "0b2ab4359a40ed0d0036f3f8d2bcdc29f3e57cd9"
+    },
+    "uuid": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-uuid.git",
+      "rev": "bf931d30f8cf219bd9741d5f5e05c3af8a4a1560"
+    },
+    "variant": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-variant.git",
+      "rev": "66aee62413c3112e72250caa09be4dc7c32fbacf"
+    },
+    "yoga-json": {
+      "url": "https://github.com/0x000000000000000000001/gopurs-yoga-json.git",
+      "rev": "57064e3441abd87178e0679b7ad991265022d740"
+    }
+  },
+  "vendored": {
+    "argonaut-codecs": {
+      "path": "support/argonaut-codecs",
+      "upstream": "https://github.com/purescript-contrib/purescript-argonaut-codecs",
+      "version": "9.1.0",
+      "license": "MIT"
+    }
+  }
+}

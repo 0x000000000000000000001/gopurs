@@ -510,7 +510,7 @@ par les hôtes natif et Rust incluent aussi ces fichiers. Cela vérifie leur
 présence et les chemins testés, sans constituer une campagne Rust complète.
 
 La copie figée, son test Go via `-overlay` et le journal sont conservés sous
-`/Users/0x1/Documents/htdocs/.gopurs-evidence/c2-7-reprise-20261023/overlay-partition-proof/`.
+`htdocs/.gopurs-evidence/c2-7-reprise-20261023/overlay-partition-proof/`.
 Le script `measure-central-pairs.py` adjacent prépare trois paires natives avec
 vérification des sources Go brutes et de tous les fichiers Go publiés contre
 le full. Ses mesures de campagne ne sont pas incluses dans cette sonde.

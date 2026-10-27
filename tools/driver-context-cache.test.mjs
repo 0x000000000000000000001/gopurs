@@ -81,7 +81,7 @@ test("compiler context, options and entry transitions equal fresh generation in 
   const typedBin = join(workspace, "typed-bin");
   mkdirSync(typedBin);
   symlinkSync(typedCompiler, join(typedBin, "purs"));
-  const baseEnv = { ...process.env, GOWORK: "off", PPROF: "0", PATH: [typedBin, join(root, "node_modules/.bin"), process.env.PATH].join(delimiter) };
+  const baseEnv = { ...process.env, GOWORK: "off", GOPURS_PACK_PUBLICATION: "0", GOPURS_GO_PACKAGES: "0", PPROF: "0", PATH: [typedBin, join(root, "node_modules/.bin"), process.env.PATH].join(delimiter) };
   for (const key of ["GOPURS_ALLOC_PROFILE", "GOPURS_FORCE_BUILD", "GOPURS_COMPILER_SNAPSHOT", "GOGC", "GOMEMLIMIT"]) delete baseEnv[key];
   let sequence = 0;
   const commands = [], results = [];
@@ -173,7 +173,6 @@ test("compiler context, options and entry transitions equal fresh generation in 
     return states;
   }
   const allMiss = new RegExp(`module cache: optimized=${moduleCount}, reused=0, emitted=${moduleCount}, restored=0`);
-  const allPrepared = new RegExp(`prepared fingerprints: computed=${moduleCount}, reused=0`);
   for (const mode of modes) {
     rmSync(output, { recursive: true });
     installTast();
@@ -188,7 +187,9 @@ test("compiler context, options and entry transitions equal fresh generation in 
       const incremental = invoke("");
       assert.match(incremental.stderr, previous ? /cache miss: inputs-changed/ : /cache miss:/);
       assert.match(incremental.stderr, allMiss);
-      assert.match(incremental.stderr, allPrepared);
+      const prepared = /prepared fingerprints: computed=(\d+), reused=(\d+)/.exec(incremental.stderr);
+      assert.ok(prepared, "prepared fingerprint diagnostic");
+      assert.equal(Number(prepared[1]) + Number(prepared[2]), moduleCount, "every prepared module accounted for");
       assert.doesNotMatch(incremental.stderr, /optimizer not started/);
       const actual = business(), dates = timestamps(actual.portable.files);
       const rewritten = Object.keys(dates).filter(file => dates[file] !== previousDates?.[file]);

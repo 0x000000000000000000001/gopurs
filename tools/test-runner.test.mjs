@@ -2,11 +2,11 @@ import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import { formatSnapshots, packageSourceSections, snapshotFiles } from "./test-snapshots.mjs";
-import { parseOptions } from "./test-selection.mjs";
+import { parseOptions, selectModules } from "./test-selection.mjs";
 
 const repository = fileURLToPath(new URL("../", import.meta.url));
 const fakeTool = `#!/usr/bin/env node
@@ -71,7 +71,7 @@ function fixture(t) {
   writeFileSync(join(root, "tests/runner/spago.yaml"), "shared config sentinel");
   writeFileSync(join(root, "tests/runner/spago.lock"), "shared lock sentinel");
   const calls = join(base, "calls.jsonl");
-  const env = { ...process.env, TMPDIR: join(base, "tmp"), PATH: join(base, "mockbin") + ":" + process.env.PATH, RUNNER_CALLS: calls, UPDATE_SNAPSHOTS: "0", GOPURS_JS: "0", GOPURS_RUST: "0", GOPURS_DAEMON: "0" };
+  const env = { ...process.env, GOPURS_LIBRARY_ROOT: base, TMPDIR: join(base, "tmp"), PATH: join(base, "mockbin") + ":" + process.env.PATH, RUNNER_CALLS: calls, UPDATE_SNAPSHOTS: "0", GOPURS_JS: "0", GOPURS_RUST: "0", GOPURS_DAEMON: "0" };
   const start = (args, extraEnv = {}, command = "test") => {
     const child = spawn("bash", [join(root, "bin", command), ...args], { cwd: base, env: { ...env, ...extraEnv } });
     let output = "";
@@ -84,6 +84,14 @@ function fixture(t) {
     return { child, completed, get output() { return output; } };
   };
   return { base, root, calls, env, start, run: (...args) => start(...args).completed, source: (name, text) => writeFileSync(join(root, "tests/passing", name + ".purs"), text) };
+}
+
+function moduleBin(f, name) {
+  const directory = join(f.base, "gopurs-" + name);
+  const bin = join(directory, "bin");
+  mkdirSync(bin, { recursive: true });
+  writeFileSync(join(directory, "spago.yaml"), `package:\n  name: ${name}\n`);
+  return bin;
 }
 
 function assertSharedUntouched(f) {
@@ -182,7 +190,7 @@ test("Release fixtures preserve Go flags and normal application compilation", as
 test("Dev module Go flags reach every application build and run but not compiler host builds", async t => {
   const f = fixture(t);
   for (const name of ["alpha", "beta"]) {
-    const bin = join(f.base, "gopurs-" + name, "bin");
+    const bin = moduleBin(f, name);
     mkdirSync(bin, { recursive: true });
     writeFileSync(join(bin, "test"), `#!/usr/bin/env bash
 set -e
@@ -228,7 +236,7 @@ test("clean campaigns rebuild the selected compiler host before running it", asy
       for (const name of ["gopurs-native", "gopurs.js", "gopurs-rust"]) {
         writeFileSync(join(f.root, "bin", name), fakeTool, { mode: 0o755 });
       }
-      const bin = join(f.base, "gopurs-alpha/bin");
+      const bin = moduleBin(f, "alpha");
       mkdirSync(bin, { recursive: true });
       writeFileSync(join(bin, "test"), "#!/usr/bin/env bash\nset -e\n../gopurs/bin/gopurs --main Test.Main\n", { mode: 0o755 });
       const result = await f.run([runner === "test" ? "Alpha" : "alpha", "-c", ...(dev ? ["--dev"] : [])], { GOPURS_GO_PACKAGES: "0", ...env }, runner);
@@ -248,7 +256,7 @@ test("clean campaigns rebuild the selected compiler host before running it", asy
 test("clean campaigns reject conflicting compiler hosts before building", async t => {
   for (const runner of ["test", "modtest"]) await t.test(runner, async t => {
     const f = fixture(t);
-    const bin = join(f.base, "gopurs-alpha/bin");
+    const bin = moduleBin(f, "alpha");
     mkdirSync(bin, { recursive: true });
     writeFileSync(join(bin, "test"), "#!/usr/bin/env bash\nexit 0\n", { mode: 0o755 });
     const result = await f.run([runner === "test" ? "Alpha" : "alpha", "-c", "--dev"], { GOPURS_JS: "1", GOPURS_RUST: "1" }, runner);
@@ -261,7 +269,7 @@ test("clean campaigns reject conflicting compiler hosts before building", async 
 
 test("Dev module campaigns profile each backend call without changing script or app arguments", async t => {
   const f = fixture(t);
-  const bin = join(f.base, "gopurs-alpha/bin");
+  const bin = moduleBin(f, "alpha");
   mkdirSync(bin, { recursive: true });
   writeFileSync(join(bin, "test"), `#!/usr/bin/env bash
 set -e
@@ -518,7 +526,7 @@ for (const [signal, code] of [["SIGINT", 130], ["SIGTERM", 143]]) test(`${signal
 
 test("module campaigns stream both outputs before completion and retain logs without replay", async t => {
   const f = fixture(t);
-  const bin = join(f.base, "gopurs-alpha/bin");
+  const bin = moduleBin(f, "alpha");
   mkdirSync(bin, { recursive: true });
   writeFileSync(join(bin, "test"), `#!/usr/bin/env node
 import { existsSync } from "node:fs";
@@ -601,7 +609,7 @@ try {
 
 for (const [signal, code] of [["SIGINT", 130], ["SIGTERM", 143]]) test(`${signal} stops streamed module descendants and retains their log`, async t => {
   const f = fixture(t);
-  const bin = join(f.base, "gopurs-alpha/bin");
+  const bin = moduleBin(f, "alpha");
   mkdirSync(bin, { recursive: true });
   writeFileSync(join(bin, "test"), `#!/usr/bin/env node
 import { spawn } from "node:child_process";
@@ -636,7 +644,7 @@ setInterval(() => {}, 1000);
 test("module campaigns list all eligible siblings, resume explicitly and stop on failure", async t => {
   const f = fixture(t);
   for (const name of ["alpha", "beta", "strings"]) {
-    const bin = join(f.base, "gopurs-" + name, "bin");
+    const bin = moduleBin(f, name);
     mkdirSync(bin, { recursive: true });
     writeFileSync(join(bin, "test"), `#!/usr/bin/env bash\necho module-${name}\n${name === "beta" ? "exit 7" : "exit 0"}\n`, { mode: 0o755 });
   }
@@ -654,6 +662,36 @@ test("module campaigns list all eligible siblings, resume explicitly and stop on
   const clean = await f.run(["alpha", "-c"], {}, "modtest");
   assert.equal(clean.code, 0, clean.output);
   assert.equal(realpathSync(JSON.parse(readFileSync(f.calls, "utf8").trim()).cwd), realpathSync(f.root));
+});
+
+test("module discovery uses package identity and the selected library root, excluding backend worktrees", async t => {
+  const f = fixture(t);
+  const unrelated = moduleBin(f, "outside");
+  writeFileSync(join(unrelated, "test"), "#!/usr/bin/env bash\nexit 99\n", { mode: 0o755 });
+  const libraries = join(f.base, "release libraries");
+  for (const [name, packageName] of [["alpha", "alpha"], ["beta", "gopurs-beta"], ["dev-lite-20261025", "gopurs"]]) {
+    const directory = join(libraries, "gopurs-" + name);
+    mkdirSync(join(directory, "bin"), { recursive: true });
+    writeFileSync(join(directory, "spago.yaml"), `package:\n  name: "${packageName}"\n`);
+    writeFileSync(join(directory, "bin/test"), `#!/usr/bin/env bash
+set -e
+test ! -e ../gopurs-dev-lite-20261025
+test ! -e ../gopurs-outside
+echo module-${name}
+`, { mode: 0o755 });
+  }
+  const environment = { GOPURS_LIBRARY_ROOT: libraries };
+  const listed = await f.run(["--all", "--list"], environment, "modtest");
+  assert.equal(listed.code, 0, listed.output);
+  assert.equal(listed.output, "gopurs-alpha\ngopurs-beta\n");
+  assert(!existsSync(join(libraries, "gopurs-alpha/spago.go.yaml")), "a direct spago.yaml library must remain eligible");
+  assert(!existsSync(f.calls), "listing must not invoke build tools");
+  const wrong = await f.run(["dev-lite-20261025"], environment, "modtest");
+  assert.equal(wrong.code, 2, wrong.output);
+  const run = await f.run(["--all"], environment, "modtest");
+  assert.equal(run.code, 0, run.output);
+  assert.match(run.output, /module-alpha/);
+  assert.match(run.output, /module-beta/);
 });
 
 function reportFor(result) {
@@ -735,7 +773,7 @@ test("module scripts run in fresh copies and cannot delete another checkout or f
       mkdirSync(join(module, cache));
       writeFileSync(join(module, cache, "sentinel"), name);
     }
-    writeFileSync(join(module, "spago.go.yaml"), "source config\n");
+    writeFileSync(join(module, "spago.go.yaml"), `package:\n  name: ${name}\n`);
     symlinkSync("spago.go.yaml", join(module, "spago.yaml"));
     writeFileSync(join(module, "bin/test"), `#!/usr/bin/env bash
 set -e
@@ -764,14 +802,15 @@ ${name === "alpha" ? "exit 7" : "exit 0"}
 });
 
 test("installed library runners limit direct cleanup to their own checkout", async t => {
-  const parent = join(repository, "..");
-  const libraries = readdirSync(parent).filter(name => name.startsWith("gopurs-") && existsSync(join(parent, name, "bin/test")));
+  const libraries = selectModules(repository, parseOptions([], { modules: true }));
   assert(libraries.length, "requires the local library checkouts used by the runners");
-  for (const name of libraries) await t.test(name, () => {
+  for (const directory of libraries) {
+    const name = basename(directory);
+    await t.test(name, () => {
     const base = mkdtempSync(join(tmpdir(), "gopurs-library-cleanup-"));
     try {
       mkdirSync(join(base, name, "bin"), { recursive: true });
-      cpSync(join(parent, name, "bin/test"), join(base, name, "bin/test"));
+      cpSync(join(directory, "bin/test"), join(base, name, "bin/test"));
       writeFileSync(join(base, name, "spago.go.yaml"), "package: {}\n");
       mkdirSync(join(base, "mockbin"));
       writeFileSync(join(base, "mockbin/spago"), '#!/usr/bin/env bash\necho reached-spago\nexit 23\n', { mode: 0o755 });
@@ -793,5 +832,6 @@ test("installed library runners limit direct cleanup to their own checkout", asy
     } finally {
       rmSync(base, { recursive: true, force: true });
     }
-  });
+    });
+  }
 });

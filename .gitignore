@@ -7,6 +7,8 @@ output-es/
 .purs-repl
 purs_files.txt
 .DS_Store
+*.tgz
+bootstrap-checksums.txt
 .gopurs-cache.json
 /tests/runner/
 bin/gopurs.js

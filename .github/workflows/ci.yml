@@ -1,0 +1,223 @@
+name: CI
+
+on:
+  push:
+    branches: [main, edge]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      full:
+        description: Run the full release quality campaign
+        type: boolean
+        default: false
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: build and test (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: ${{ (startsWith(github.ref, 'refs/tags/') || inputs.full == true) && 360 || 240 }}
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: linux-amd64
+            os: ubuntu-24.04
+          - target: linux-arm64
+            os: ubuntu-24.04-arm
+          - target: darwin-arm64
+            os: macos-14
+    defaults:
+      run:
+        shell: bash
+    env:
+      GOPURS_RELEASE_TARGET: ${{ matrix.target }}
+      GOPURS_RELEASE_FULL: ${{ startsWith(github.ref, 'refs/tags/') || inputs.full == true }}
+    steps:
+      - name: Check out source and annotated tags
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install the pinned Nix runner
+        uses: DeterminateSystems/determinate-nix-action@v3.5.2
+
+      # No actions/cache or project binary cache is restored. Nix may substitute
+      # public toolchain dependencies; this checkout's compiler is built below.
+      - name: Check the Nix packages and TAST application
+        run: nix flake check --no-update-lock-file --print-build-logs
+
+      - name: Select the pinned TAST compiler
+        run: |
+          typed_package=$(nix build .#purs-tast --no-link --print-out-paths --no-update-lock-file)
+          echo "GOPURS_PURS=$typed_package/bin/purs" >> "$GITHUB_ENV"
+
+      - name: Install the backend from lockfiles in the Nix environment
+        run: nix develop --no-update-lock-file --command npm ci
+
+      - name: Install the pinned Go library sources
+        run: nix develop --no-update-lock-file --command ./bin/setup --locked --all
+
+      - name: Bootstrap a fresh native compiler
+        run: |
+          nix develop --no-update-lock-file --command npm run build:native -- --keep-workspace | tee "$RUNNER_TEMP/native-bootstrap.log"
+          bootstrap_workspace=$(sed -n 's/^Native bootstrap workspace: //p' "$RUNNER_TEMP/native-bootstrap.log")
+          test -n "$bootstrap_workspace"
+          test -d "$bootstrap_workspace/output/purescript"
+          echo "GOPURS_NATIVE_OUTPUT=$bootstrap_workspace/output" >> "$GITHUB_ENV"
+
+      - name: Run compiler, race, cache and fixture gates
+        run: |
+          flags=()
+          if [ "$GOPURS_RELEASE_FULL" = true ]; then flags+=(--full); fi
+          nix develop --no-update-lock-file --command node tools/release-quality.mjs "${flags[@]}" --report "$RUNNER_TEMP/quality" | tee "$RUNNER_TEMP/quality.log"
+
+      - name: Require a verified annotated release tag
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag_object=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$GITHUB_REF_NAME" --jq 'select(.object.type == "tag") | .object.sha')
+          test -n "$tag_object"
+          verified=$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$tag_object" --jq '.verification.verified')
+          test "$verified" = true
+
+      - name: Require clean sources after the build and quality gates
+        run: |
+          git status --short
+          test -z "$(git status --porcelain --untracked-files=all)"
+
+      - name: Package versioned binaries, SBOM and checksums
+        id: release
+        run: |
+          flags=()
+          if [[ "$GITHUB_REF" != refs/tags/* ]]; then flags+=(--preview); fi
+          nix develop --no-update-lock-file --command node tools/release-prepare.mjs --native bin/gopurs-native --out "$RUNNER_TEMP/release" "${flags[@]}"
+          version=$(nix develop --no-update-lock-file --command node -p 'JSON.parse(require("fs").readFileSync("package.json")).version' | tail -n 1)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "prefix=gopurs-$version-$GOPURS_RELEASE_TARGET" >> "$GITHUB_OUTPUT"
+
+      - name: Verify checksums and install only the release artifacts
+        env:
+          RELEASE_PREFIX: ${{ steps.release.outputs.prefix }}
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          (cd "$RUNNER_TEMP/release" && shasum -a 256 -c "$RELEASE_PREFIX-SHA256SUMS")
+          nix develop --no-update-lock-file --command node tools/release-smoke.mjs \
+            --package "$RUNNER_TEMP/release/gopurs-$RELEASE_VERSION.tgz" \
+            --native "$RUNNER_TEMP/release/$RELEASE_PREFIX" \
+            --purs "$GOPURS_PURS" --report "$RUNNER_TEMP/release/$RELEASE_PREFIX-smoke.json"
+          channel=latest
+          if [[ "$RELEASE_VERSION" == *-rc.* ]]; then channel=next; fi
+          nix develop --no-update-lock-file --command npm publish --dry-run --ignore-scripts --tag "$channel" "$RUNNER_TEMP/release/gopurs-$RELEASE_VERSION.tgz"
+          cp "$RUNNER_TEMP/quality/quality.json" "$RUNNER_TEMP/release/$RELEASE_PREFIX-quality.json"
+          (cd "$RUNNER_TEMP/release" && shasum -a 256 "$RELEASE_PREFIX-smoke.json" "$RELEASE_PREFIX-quality.json" >> "$RELEASE_PREFIX-SHA256SUMS")
+
+      - name: Export npm provenance for an authenticated first publication
+        if: startsWith(github.ref, 'refs/tags/') && matrix.target == 'linux-amd64'
+        env:
+          RELEASE_PREFIX: ${{ steps.release.outputs.prefix }}
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          nix develop --no-update-lock-file --command node tools/release-npm-provenance.mjs generate \
+            --package "$RUNNER_TEMP/release/gopurs-$RELEASE_VERSION.tgz" \
+            --build "$RUNNER_TEMP/release/$RELEASE_PREFIX-build.json" \
+            --bundle "$RUNNER_TEMP/release/$RELEASE_PREFIX-npm-provenance.sigstore.json" \
+            > "$RUNNER_TEMP/release/$RELEASE_PREFIX-npm-provenance-verification.json"
+          (cd "$RUNNER_TEMP/release" && shasum -a 256 "$RELEASE_PREFIX-npm-provenance.sigstore.json" \
+            "$RELEASE_PREFIX-npm-provenance-verification.json" >> "$RELEASE_PREFIX-SHA256SUMS")
+
+      - name: Sign build provenance with GitHub OIDC
+        id: provenance
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/attest@v4
+        with:
+          subject-path: ${{ runner.temp }}/release/*
+          create-storage-record: false
+
+      - name: Sign the dependency inventory
+        id: sbom
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            ${{ runner.temp }}/release/gopurs-${{ steps.release.outputs.version }}.tgz
+            ${{ runner.temp }}/release/${{ steps.release.outputs.prefix }}
+          sbom-path: ${{ runner.temp }}/release/${{ steps.release.outputs.prefix }}-sbom.cdx.json
+          create-storage-record: false
+
+      - name: Retain the portable signature bundles
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          PROVENANCE_BUNDLE: ${{ steps.provenance.outputs.bundle-path }}
+          SBOM_BUNDLE: ${{ steps.sbom.outputs.bundle-path }}
+          RELEASE_PREFIX: ${{ steps.release.outputs.prefix }}
+        run: |
+          cp "$PROVENANCE_BUNDLE" "$RUNNER_TEMP/release/$RELEASE_PREFIX-provenance.sigstore.json"
+          cp "$SBOM_BUNDLE" "$RUNNER_TEMP/release/$RELEASE_PREFIX-sbom.sigstore.json"
+
+      - name: Upload the tested release candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.target }}
+          path: ${{ runner.temp }}/release/
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Upload quality and bootstrap evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-${{ matrix.target }}
+          path: |
+            ${{ runner.temp }}/quality/
+            ${{ runner.temp }}/quality.log
+            ${{ runner.temp }}/native-bootstrap.log
+          if-no-files-found: warn
+          retention-days: 90
+
+  draft-release:
+    name: Prepare the GitHub release for review
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: candidate
+      - name: Require identical npm archives from all three builders
+        run: |
+          cmp candidate/release-linux-amd64/gopurs-*.tgz candidate/release-linux-arm64/gopurs-*.tgz
+          cmp candidate/release-linux-amd64/gopurs-*.tgz candidate/release-darwin-arm64/gopurs-*.tgz
+      - name: Prepare a draft; publication is a separate maintainer action
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          mkdir release-assets
+          cp candidate/release-linux-amd64/* release-assets/
+          for target in linux-arm64 darwin-arm64; do
+            for file in candidate/release-"$target"/*; do
+              if [[ "$file" != *.tgz ]]; then cp "$file" release-assets/; fi
+            done
+          done
+          prerelease=()
+          if [[ "$GITHUB_REF_NAME" == *-rc.* ]]; then prerelease+=(--prerelease); fi
+          gh release create "$GITHUB_REF_NAME" release-assets/* --verify-tag --draft \
+            --title "gopurs ${GITHUB_REF_NAME#v}" \
+            --notes-file "release-assets/gopurs-${GITHUB_REF_NAME#v}-linux-amd64-release-notes.md" "${prerelease[@]}"
