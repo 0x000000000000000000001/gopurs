@@ -36,7 +36,7 @@ test('Go import scanning handles lookahead and escapes at the end of input', () 
     }
 });
 
-test('native Go import scanning matches JavaScript at boundaries and uses bounded stack', {
+test('native Go import scanning matches JavaScript at boundaries and uses bounded stack (unoptimized Go)', {
     skip: nativeOutput ? false : 'requires GOPURS_NATIVE_OUTPUT from a native bootstrap',
 }, t => {
     const cases = [
@@ -85,10 +85,12 @@ func main() {
     json.NewEncoder(os.Stdout).Encode(results)
 }
 `);
-    // A cold build compiles the whole bootstrapped compiler. Give compilation
-    // its own budget while retaining the scanner's bounded execution time.
+    // This functional probe imports the whole bootstrapped compiler. Reduce
+    // compilation memory by disabling optimizations for that package;
+    // release bootstrap binaries remain optimized. The scanner's execution
+    // and stack limits are unchanged.
     const executable = join(directory, 'scannerprobe');
-    const build = spawnSync('go', ['build', '-trimpath', '-o', executable, '.'], {
+    const build = spawnSync('go', ['build', '-trimpath', '-gcflags=gopurs/output/purescript=-N -l', '-o', executable, '.'], {
         cwd: directory, encoding: 'utf8', timeout: 900_000,
         env: { ...process.env, GOWORK: 'off' }, maxBuffer: 1024 * 1024,
     });

@@ -6,6 +6,22 @@ All notable changes to gopurs are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0-rc.2]
+
+Second candidate for `0.1.0`, retaining the frontend, bootstrap dependencies,
+features and known limitations listed for `0.1.0-rc.1` below. The first candidate
+was not published to npm or GitHub Releases: its full macOS gate timed out while
+compiling the native scanner test. The signed first-candidate tag is retained.
+
+### Fixed
+
+- Compile the native scanner, preparation and emission functional probes without
+  Go optimizations for their large compiler package, keeping the existing memory
+  budget, assertions, execution deadlines, scanner stack limit and race checks.
+  Release compiler binaries retain their optimized bootstrap profile.
+- Include the scanner and preparation probes in the quick CI campaign so their
+  compilation and execution are checked before creating another release tag.
+
 ## [0.1.0-rc.1]
 
 First release candidate for `0.1.0`, using the typed PureScript compiler at

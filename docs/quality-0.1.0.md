@@ -3,6 +3,64 @@
 This is a working record for the `0.1.0` release gates. It is not a release
 certificate. The gate list is in [`todo.md`](../todo.md).
 
+## RC1 tag failure and RC2 preparation — 27 October 2026
+
+The clean PR campaign [40491438925](https://github.com/0x000000000000000000001/gopurs/actions/runs/40491438925)
+passed on all three platforms, followed by the main campaign
+[40503318512](https://github.com/0x000000000000000000001/gopurs/actions/runs/40503318512)
+at merge commit `c91d2f6ad6b833e44170794fa38ec74062fd26d2`. These are quick gates.
+The signed tag `v0.1.0-rc.1` points to
+`8361c05f0a0517d55be7ce8be7600cec198c33ee`, with the same source tree.
+
+The full tag campaign [40503372835](https://github.com/0x000000000000000000001/gopurs/actions/runs/40503372835)
+cannot qualify that candidate: macOS passed Nix, its fresh native bootstrap and
+65 Node files, then failed `native-go-code.test.mjs`. Its `go build -trimpath`
+timed out after 900 seconds, before the scanner executable ran. The bootstrap's
+Go build had taken 709.9 seconds. No quality-cache entries had been evicted before
+the failure. The signed tag and original failure evidence are retained; no npm
+package or public GitHub Release was created for RC1.
+
+Three local diagnostic builds used Go 1.27.0, the same retained native source,
+new caches, two Go threads and a 120-second limit per invocation. RSS was sampled
+every two seconds and Go GC traces were recorded:
+
+| Compiler package profile | Memory setting | Build time | Peak compiler RSS | Final cumulative GC share |
+| --- | --- | ---: | ---: | ---: |
+| Optimized | `GOMEMLIMIT=4GiB` | 108.00 s | 7.55 GiB | 43% |
+| Optimized | Default limit (`off`) | 50.95 s | 10.52 GiB | 12% |
+| `-N -l` for `gopurs/output/purescript` only | `GOMEMLIMIT=4GiB` | 36.75 s | 3.96 GiB | 14% |
+
+The first build's live Go heap exceeded its soft memory limit. This establishes
+local GC pressure, not a complete diagnosis of the slower GitHub runner. The
+third profile kept the library's assertions intact: the scanner's original two
+tests passed in 35.9 seconds from a new cache, including JavaScript parity and
+the explicit one-MiB stack limit. This is a diagnostic comparison, not a backend
+performance benchmark.
+
+A separate cold-cache experiment compiled the actual preparation and emission
+Go tests together with `-race`. The optimized build reached a sampled 7.64-GiB
+compiler RSS and was stopped at 120.01 seconds. The targeted `-N -l` build
+finished in 67.81 seconds at 3.96 GiB; both real test groups then passed with race
+detection and their original 30-second runtime deadlines. The optimized attempt
+is an interrupted diagnostic, not a completed failing test campaign.
+
+RC2 applies that profile only to the scanner, preparation and emission functional
+probes. Scanner and preparation checks are included in quick CI as well, so the
+next PR exercises the corrected compilations. The optimized release bootstrap
+and the generated application's Release/Dev gates remain separate checks. The
+new candidate still requires its own CI, signed-tag gate, provenance verification
+and installation from public artifacts.
+
+The local diagnostic scripts, source copy, command reports, RSS samples and
+logs are archived under `.gopurs-evidence/release-preparation-20261026/rc1-go-timeout-probes`
+at the workspace root. Its `SHA256SUMS` digest is
+`b3e3c93d1cce235fd37a04ff21b08d31ab2d78cc7ba4d39140e302b625aaa5f7`.
+The tag failure archive is `ci-rc1-tag` under the same evidence root.
+The separate race experiment is archived in `rc1-race-memory-probes`, including
+the initial sandbox-rejected attempt and the completed second attempt. Its
+`SHA256SUMS` digest is
+`f839fa30bb46d769eb46bbcc9aa5113608186e5e5a5fa739fc483f2a55547d63`.
+
 ## Initial three-platform CI — 27 October 2026
 
 PR CI run [40476860720](https://github.com/0x000000000000000000001/gopurs/actions/runs/40476860720)

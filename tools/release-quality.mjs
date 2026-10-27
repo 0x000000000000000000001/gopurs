@@ -13,7 +13,7 @@ let report;
 for (let index = 2; index < process.argv.length; index++) {
   const arg = process.argv[index];
   if (arg === "--help") {
-    console.log("Usage: node tools/release-quality.mjs [--full] [--report DIRECTORY]\nRequires a fresh JS/native build, typed purs and locked library checkouts. --full runs all Node tests, Go race tests, and Release/Dev fixtures. Uses a private bounded Go cache; retains logs and reports. Rust remains outside this gate.");
+    console.log("Usage: node tools/release-quality.mjs [--full] [--report DIRECTORY]\nRequires a fresh JS/native build, GOPURS_NATIVE_OUTPUT from --keep-workspace, typed purs and locked library checkouts. --full runs all Node tests, Go race tests, and Release/Dev fixtures. Uses a private bounded Go cache; retains logs and reports. Rust remains outside this gate.");
     process.exit(0);
   }
   if (arg === "--full") full = true;
@@ -21,8 +21,8 @@ for (let index = 2; index < process.argv.length; index++) {
   else throw new Error(`Unknown or incomplete option: ${arg}`);
 }
 if (!existsSync(join(root, "bin/gopurs-native"))) throw new Error("Build the native compiler before running release quality gates");
-if (full && !existsSync(join(process.env.GOPURS_NATIVE_OUTPUT ?? "/missing-native-output", "purescript"))) {
-  throw new Error("--full requires GOPURS_NATIVE_OUTPUT from build:native -- --keep-workspace, so native tests cannot silently skip");
+if (!existsSync(join(process.env.GOPURS_NATIVE_OUTPUT ?? "/missing-native-output", "purescript"))) {
+  throw new Error("Release quality requires GOPURS_NATIVE_OUTPUT from build:native -- --keep-workspace, so native tests cannot silently skip");
 }
 report ??= mkdtempSync(join(tmpdir(), "gopurs-quality-"));
 mkdirSync(report, { recursive: true });
@@ -93,7 +93,7 @@ async function runSingle(...args) {
 console.log(`Release quality evidence: ${report}`);
 save();
 try {
-  const quick = ["release-quality-resources", "release-npm-provenance", "ffi-errors", "launcher", "test-runner", "build-native", "bootstrap-inputs", "cli", "build-profiles", "driver-cache"].map(name => `${name}.test.mjs`);
+  const quick = ["release-quality-resources", "release-npm-provenance", "ffi-errors", "launcher", "test-runner", "build-native", "bootstrap-inputs", "cli", "build-profiles", "driver-cache", "native-go-code", "preparation-native"].map(name => `${name}.test.mjs`);
   const tests = full ? readdirSync(join(root, "tools")).filter(name => name.endsWith(".test.mjs")).sort() : quick;
   // node --test isolates files in child processes too. Separate invocations let
   // us bound the shared private Go cache between those same file boundaries.
@@ -103,7 +103,9 @@ try {
     const emissionTest = join(process.env.GOPURS_NATIVE_OUTPUT, "purescript/emission_native_test.go");
     writeFileSync(emissionTest, readFileSync(join(root, "tools/emission-native_test.go")), { flag: "wx" });
     try {
-      await runSingle("Native emission cancellation and concurrency (race)", "go", ["test", "-race", "-count=1", "-run", "^TestPipelineNative", "-timeout", "30s", "./purescript"], process.env.GOPURS_NATIVE_OUTPUT);
+      // Match the bounded functional-probe profile; preserve race detection
+      // and the runtime deadline. The release bootstrap remains optimized.
+      await runSingle("Native emission cancellation and concurrency (race)", "go", ["test", "-race", "-gcflags=gopurs/output/purescript=-N -l", "-count=1", "-run", "^TestPipelineNative", "-timeout", "30s", "./purescript"], process.env.GOPURS_NATIVE_OUTPUT);
     } finally {
       rmSync(emissionTest, { force: true });
     }
