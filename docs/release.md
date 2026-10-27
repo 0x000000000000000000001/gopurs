@@ -37,6 +37,11 @@ directory, then run:
 node tools/release-quality.mjs --full --report /tmp/gopurs-quality
 ```
 
+Keep this command inside the Nix shell. For an equivalent manual environment,
+put the typed frontend's directory first on `PATH`: Spago's fixture builds
+invoke `purs` through `PATH`. Setting `GOPURS_PURS` alone selects the frontend
+for native-build helpers but does not change Spago's executable selection.
+
 The full gate runs every Node test file, Go tests with the race detector,
 native emission cancellation/concurrency tests, and all selected fixtures
 under both Release and Dev. It requires the freshly

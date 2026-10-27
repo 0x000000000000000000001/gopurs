@@ -29,8 +29,11 @@ All build metadata records `preview: true`, no tag and `source.dirty: true`.
 The tested merge differs from the branch only by a tracked `node_modules`
 symlink inherited from main; npm logs record its replacement. The four
 source/lock manifests match the branch exactly. This run therefore does not
-establish a clean-tree release gate. The integration must remove that inherited
-tracked path; CI now explicitly rejects a dirty tree after builds and tests.
+establish a clean-tree release gate. Local merge `3925dc1` integrates main and
+removes that inherited tracked path; its source tree otherwise exactly matches
+the preceding release commit. The working checkout's ignored dependency
+directory was preserved. CI now explicitly rejects a dirty tree after builds
+and tests; the updated branch still requires its own CI run.
 Full tag quality, signing/provenance and public publication remain separate gates.
 
 Metadata, original ZIPs, complete workflow logs and repeatable checksum audits
@@ -38,6 +41,36 @@ are archived at the local workspace root under
 `.gopurs-evidence/release-preparation-20261026/ci-initial`: 129 files,
 228,932,462 bytes. The verified `SHA256SUMS` list has SHA-256
 `85a850f0342313ea12a2ee22714080ddb5ca3e76ea7790c6fe706f2b5dc70e9a`.
+
+## Candidate tooling — 27 October 2026
+
+The candidate version is `0.1.0-rc.1`. The bounded quality controller and the
+first-publication provenance helper have 23 passing focused tests, including
+the native-build orchestration with CI log streaming enabled. A failed
+digest-mutation test exposed a shared subject object in the generated
+statement; copying the subject fixed it, and all 23 tests then passed with
+zero skips. The fixture-report verifier also accepted all 162 archived real
+reports, covering the exact 401 Release and 401 Dev fixtures.
+
+Both workflow YAML files parse, and Bash syntax checks pass for their 22
+shell blocks. These checks do not exercise GitHub's OIDC service or npm's
+acceptance of a provenance bundle; those remain tag/publication gates.
+
+The quick local checks were completed across three recorded invocations:
+the initial controller stopped after nine successful gates during a session
+interruption; a continuation passed the driver-cache test and three Go modules,
+then failed its first fixture because the manual environment selected upstream
+`purs` 0.15.15 through `PATH`. The retained `corefn.json` lacks the TAST fields.
+Prepending the selected typed frontend's directory corrected that invocation;
+all five executable fixtures then passed with unchanged snapshots, followed by
+the package-surface check (59 files, approximately 3.4 MB packed).
+
+Together these runs cover all 15 quick gates: ten Node files with 173 passing
+entries and no skips, three Go modules, five native fixtures, and package
+contents. This is combined evidence, not one uninterrupted green command.
+The original interrupted/failed reports and the corrected results are retained
+at the local workspace root under
+`.gopurs-evidence/release-preparation-20261026/rc1-tooling`.
 
 ## Release preparation follow-up — 26 October 2026
 
