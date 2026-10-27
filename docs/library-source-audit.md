@@ -4,8 +4,9 @@ Audit date: 26 October 2026. This records the 51 repositories selected by
 [`bootstrap-sources.json`](../bootstrap-sources.json), whose SHA-256 was
 `e3db111252325962279ec3de313d843110c2525caa408526a9e29ceed30855ff`.
 All 51 inspected checkouts matched their exact commits and had clean working
-trees before and after the audit. No library was modified or published, and
-this audit did not rerun their builds.
+trees before and after the 26 October audit. That audit modified no library
+and reran no library build. The local notice preparation on 27 October is
+recorded separately below; none of those library changes has been published.
 
 ## What is being distributed
 
@@ -60,8 +61,8 @@ missing inputs to the current library build.
 
 | Port | Evidence | Remaining work for its source distribution |
 | --- | --- | --- |
-| `effect` | All seven inherited `.purs`/`.js` files exactly match upstream `v4.0.0`, commit `a192ddb923027d426d6ea3d8deb030c9aa7c7dda`. Its [BSD-3-Clause license](https://github.com/purescript/purescript-effect/blob/a192ddb923027d426d6ea3d8deb030c9aa7c7dda/LICENSE) names Copyright 2018 PureScript. The port retains the license identifier in `bower.json`, but has no license text or replacement source headers. | Restore the upstream notice and make the licensing of the Go adaptation explicit. |
-| `js-bigints` | Both inherited files exactly match upstream `v2.2.1`, commit `36a7d8ac75a7230043ae511f3145f9ed130954a9`. Its [license file](https://github.com/purescript-contrib/purescript-js-bigints/blob/36a7d8ac75a7230043ae511f3145f9ed130954a9/LICENSE) is MIT, Copyright (c) 2022 Jan Schulte. The port has no license text or source headers. | Restore the notice and document the upstream metadata discrepancy and Go adaptation provenance. |
+| `effect` | All seven inherited `.purs`/`.js` files exactly match upstream `v4.0.0`, commit `a192ddb923027d426d6ea3d8deb030c9aa7c7dda`. Its [BSD-3-Clause license](https://github.com/purescript/purescript-effect/blob/a192ddb923027d426d6ea3d8deb030c9aa7c7dda/LICENSE) names Copyright 2018 PureScript. The pinned port retains the license identifier in `bower.json`, but has no license text or replacement source headers. | The local commit below restores the notice and explicitly licenses the Go adaptation. Publication and a subsequent pin update remain pending. |
+| `js-bigints` | Both inherited files exactly match upstream `v2.2.1`, commit `36a7d8ac75a7230043ae511f3145f9ed130954a9`. Its [license file](https://github.com/purescript-contrib/purescript-js-bigints/blob/36a7d8ac75a7230043ae511f3145f9ed130954a9/LICENSE) is MIT, Copyright (c) 2022 Jan Schulte. The pinned port has no license text or source headers. | The local commit below restores the notice and explicitly licenses the Go adaptation. Publication, a subsequent pin update and the inherited metadata/example questions remain pending. |
 | `uuid` | Its npm manifest declares ISC, while the checked-in `LICENSE` and Bower manifest declare MIT. The npm name/repository still identify the upstream project. | Resolve the metadata before an autonomous package publication; do not infer an intended npm release from this manifest. |
 
 For `js-bigints`, upstream [package.json](https://github.com/purescript-contrib/purescript-js-bigints/blob/36a7d8ac75a7230043ae511f3145f9ed130954a9/package.json)
@@ -75,7 +76,47 @@ assigning a new license to the whole port. The Go implementation uses
 The official license files were fetched at the commits above and matched the
 registry copies: SHA-256 `d1ceeb89b7cce8e527167e969128601a80628f229f29db8a1f0111a9dd35375f`
 for `effect`, and `4a56dd0010e318fc1ebb942ee91a858ddb2a4de76f8085ffc5d84c58d1eadd26`
-for `js-bigints`. Restoring these files has not been performed by this audit.
+for `js-bigints`. The source pins audited on 26 October do not contain these
+license files.
+
+## Local notice preparation — 27 October 2026
+
+The maintainer selected the same upstream license terms for each Go
+adaptation: BSD-3-Clause for `effect`, and MIT for `js-bigints`. Two isolated
+worktrees now contain local commits on a branch named
+`chore/go-license-notices-20261027` in each library repository:
+
+| Library | Existing source pin | Prepared local commit |
+| --- | --- | --- |
+| `effect` | `9f72d40a510e37e53b49699e91e372345bfa386a` | `d4312e08a73769f2b41b89866717393192fe103e` |
+| `js-bigints` | `e431af881ec743ff79242e09fe608a09b2703f5c` | `11222d0fea160322fbf08682109febb78284b033` |
+
+Both commits add only `LICENSE` and `NOTICE.md`. The license files exactly
+match the upstream hashes above and preserve the original copyright notices.
+The `effect` notice applies BSD-3-Clause to `src/Effect.go`,
+`src/Effect/Uncurried.go` and `src/Effect/Unsafe.go`; the `js-bigints` notice
+applies MIT to `src/JS/BigInt.go`. The SPDX identifiers and file scopes are
+recorded in the notices; no header was added to the compiled source files.
+Neither notice attributes the Go adaptation to the upstream copyright holder.
+
+The seven/two inherited source files were rechecked byte for byte against the
+exact upstream revisions and registry copies before restoration. Every tracked
+`.purs`, `.js` and `.go` file, including tests, was also checked byte for byte
+against the initial source pins: 11 files in `effect` and four in `js-bigints`,
+all identical. Both committed worktrees are clean, and their diffs pass
+`git diff --check`. No library build was run for these notice-only changes.
+Review patches, upstream copies and hash verification records are retained in
+`/private/tmp/gopurs-library-notice-fixes-20261026/`.
+
+The explicit MIT choice applies to the Go adaptation. It does not resolve the
+MIT/ISC metadata discrepancy or the Stack Overflow attribution/licensing
+questions in inherited JavaScript. Those facts remain documented in the
+`js-bigints` notice; the `uuid` metadata issue also remains open.
+
+These are local commits only. The original library checkouts used by the test
+campaigns remain clean at their existing source pins, and
+`bootstrap-sources.json` is unchanged. Publish the reviewed library commits
+before updating that manifest to revisions which other users must fetch.
 
 ## Compiler release boundary
 

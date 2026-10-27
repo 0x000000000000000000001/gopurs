@@ -34,6 +34,7 @@ Le bilan des campagnes est dans `docs/quality-0.1.0.md`.
 - [x] Construire un paquet gopurs autonome depuis les sources et les lockfiles, sans dépendance à un checkout voisin.
 - [x] Fournir un frontend TAST épinglé et un parcours documenté pour compiler une application avec les ports Go.
 - [x] Vérifier localement sur Linux arm64 `nix build`, `nix run` et `nix flake check`, avec un vrai programme PureScript/FFI compilé puis exécuté en Go ; la matrice CI reste à valider ci-dessous.
+- [x] Vérifier l'évaluation des trois systèmes sans IFD et archiver les preuves locales Nix ; cette évaluation ne remplace pas leurs builds en CI.
 - [ ] Exécuter les validations Nix sur Linux amd64/arm64 et macOS arm64 en CI.
 - [x] Documenter les commandes de développement, de build et d'installation Nix et leurs entrées exactes.
 
@@ -63,6 +64,7 @@ Le bilan des campagnes est dans `docs/quality-0.1.0.md`.
 ## 5. Passer les portes de qualité
 
 - [ ] Exécuter toute la suite de tests dans un environnement propre.
+- [x] Exécuter les 401 fixtures en Release et les 401 en Dev avec le compilateur natif frais : 802/802 passent, snapshots inchangés et exécution Go validée ; preuves archivées dans le bilan qualité.
 - [x] Vérifier la conformité avec le compilateur officiel sur un corpus représentatif.
 - [x] Vérifier les golden tests, la parité FFI et les formats générés.
 - [x] Tester les erreurs, annulations, bornes de configuration mémoire et cas de concurrence, avec les tests Go `-race` et l'émission native.

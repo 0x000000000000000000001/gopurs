@@ -188,26 +188,51 @@ final release versions immutable.
 Before each final publication, retain the previous version's npm tarball,
 platform executables, checksums and signatures, plus the current npm dist-tags.
 Test recovery by running `release-smoke.mjs` against those retained artifacts
-on the target platform. Record its output and the exact restored version. A
-first release has no previous public version: document withdrawal from the
-default channel as its recovery action instead of claiming an earlier version
-was restored.
+on the target platform. Record its output and the exact restored version.
+A first release has no previous public version to restore: recovery requires
+communicating the regression and publishing a corrected version through the
+complete workflow. Until then, no validated public rollback is available.
+
+Removing `latest` does **not** block `npm install gopurs`. npm can fall back to
+an eligible published version, including the affected version when it is the
+only one. Deprecation produces a warning; it does not prevent installation.
+See npm's [version selection implementation](https://github.com/npm/npm-pick-manifest/blob/v10.0.0/lib/index.js)
+and [deprecation reference](https://docs.npmjs.com/cli/v11/commands/npm-deprecate/).
 
 If a published version has a blocking regression:
 
-1. Restore `latest` to the previously validated version with
+1. If a previously validated public version exists, restore `latest` with
    `npm dist-tag add gopurs@PREVIOUS latest`, using a maintainer account. Remove
-   the affected `next` tag if it points at a broken candidate. For a first
-   release, remove `latest` until a corrected version is ready.
+   the affected `next` tag if it points at a broken candidate. Record the
+   resulting dist-tags; do not substitute removal of `latest` for restoration.
 2. Mark the affected version deprecated with a concrete explanation and the
-   supported replacement. Update the GitHub release notes and remove its
+   supported replacement, if one exists; otherwise state that no corrected
+   public version is available yet. Update the GitHub release notes and remove its
    latest-release designation. Preserve the version/tag/artifacts for diagnosis.
-3. Reinstall the retained npm archive and its matching native executable in a
+3. When restoring a previous version, reinstall its retained npm archive and
+   matching native executable in a
    fresh directory, verify their signatures/checksums, and rerun the smoke and
-   affected application. A native compiler is installed as
+   affected application. Also check a fresh unversioned registry installation
+   selects the restored version. Existing lockfiles and explicit version pins
+   are not changed by moving a dist-tag. A native compiler is installed as
    `node_modules/gopurs/bin/gopurs-native` with executable permission; invoke
    `node_modules/gopurs/bin/gopurs` to select it. The `npx gopurs` entry stays JS.
 4. Publish a new patch or candidate version through the complete workflow.
+
+The selection behavior was exercised on 27 October 2026 with npm 11.6.0 and
+its installed `npm-pick-manifest` 10.0.0, using a loopback mock registry, fresh
+consumer directories and empty npm caches:
+
+| Mock registry state | Fresh unversioned `npm install` result |
+| --- | --- |
+| Only `0.1.0`, after `npm dist-tag rm ... latest` | Installed `0.1.0` |
+| Only `0.1.0`, deprecated and without `latest` | Installed `0.1.0` with a deprecation warning |
+| Eligible `0.1.0` and `0.1.1`, without `latest` | Installed `0.1.1` |
+| Both versions, after `npm dist-tag add ...@0.1.0 latest` | Installed `0.1.0` |
+
+All six local npm commands succeeded. This qualifies tag selection locally;
+it is not evidence of a public registry restoration, a signed-artifact check,
+or a `gopurs` application smoke. No public registry was modified.
 
 For interrupted publication, compare the registry tarball with the signed
 candidate first. If npm publication succeeded but only GitHub publication
