@@ -125,7 +125,7 @@ node tools/release-smoke.mjs \
   --package /tmp/gopurs-candidate/gopurs-VERSION.tgz \
   --native /tmp/gopurs-candidate/gopurs-VERSION-TARGET \
   --purs "$GOPURS_PURS" --report /tmp/gopurs-candidate-smoke.json
-npm publish --dry-run --ignore-scripts /tmp/gopurs-candidate/gopurs-VERSION.tgz
+npm publish --dry-run --ignore-scripts --tag next /tmp/gopurs-candidate/gopurs-VERSION.tgz
 ```
 
 The smoke installs the tarball offline, with an empty npm cache and lifecycle

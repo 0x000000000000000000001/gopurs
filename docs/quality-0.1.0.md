@@ -72,6 +72,13 @@ The original interrupted/failed reports and the corrected results are retained
 at the local workspace root under
 `.gopurs-evidence/release-preparation-20261026/rc1-tooling`.
 
+The clean local RC preview installs offline with an empty npm cache and passes
+the TAST-to-Go FFI smoke on both JavaScript and native hosts. All ten packaged
+checksums pass. npm 11.6.0 rejected the initial prerelease dry-run without an
+explicit distribution tag; it passed with `--tag next`. CI now chooses `next`
+for candidates and `latest` for final versions in its dry-run as well as in
+the publication workflow. No public version was created by these checks.
+
 ## Release preparation follow-up — 26 October 2026
 
 The following checks were executed during the reproducible-bootstrap/Nix work.

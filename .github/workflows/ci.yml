@@ -118,7 +118,9 @@ jobs:
             --package "$RUNNER_TEMP/release/gopurs-$RELEASE_VERSION.tgz" \
             --native "$RUNNER_TEMP/release/$RELEASE_PREFIX" \
             --purs "$GOPURS_PURS" --report "$RUNNER_TEMP/release/$RELEASE_PREFIX-smoke.json"
-          nix develop --no-update-lock-file --command npm publish --dry-run --ignore-scripts "$RUNNER_TEMP/release/gopurs-$RELEASE_VERSION.tgz"
+          channel=latest
+          if [[ "$RELEASE_VERSION" == *-rc.* ]]; then channel=next; fi
+          nix develop --no-update-lock-file --command npm publish --dry-run --ignore-scripts --tag "$channel" "$RUNNER_TEMP/release/gopurs-$RELEASE_VERSION.tgz"
           cp "$RUNNER_TEMP/quality/quality.json" "$RUNNER_TEMP/release/$RELEASE_PREFIX-quality.json"
           (cd "$RUNNER_TEMP/release" && shasum -a 256 "$RELEASE_PREFIX-smoke.json" "$RELEASE_PREFIX-quality.json" >> "$RELEASE_PREFIX-SHA256SUMS")
 
