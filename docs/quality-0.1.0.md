@@ -3,6 +3,42 @@
 This is a working record for the `0.1.0` release gates. It is not a release
 certificate. The gate list is in [`todo.md`](../todo.md).
 
+## Initial three-platform CI — 27 October 2026
+
+PR CI run [40476860720](https://github.com/0x000000000000000000001/gopurs/actions/runs/40476860720)
+passed on Linux amd64/arm64 and macOS arm64. It tested merge commit
+`1157e8778595ed7e44d83ad41f14a6120c9de22b`, combining branch head
+`8bbcf324b61b161f1edaa085c8a7c3994a641202` with main
+`9b6e147868e2b2accda9e398ac2c739e3447263f`.
+
+Each platform passed the Nix package/application checks, fresh native bootstrap
+(522 typed modules, 326,573 types), quick quality gate, both installed-artifact
+host smokes, and npm publication dry-run. The quick gate used `full: false`:
+157 Node entries passed, three Go test commands ran without `-race`, and five
+fixtures built and executed. Tag-only signatures and draft-release creation
+were skipped. The macOS bootstrap took 34 min 38 s, including 29 min 47 s in
+`go build`; these logs do not establish the hardware cause of that duration.
+
+The three npm archives are byte-identical, with SHA-256
+`a2b2cffb3c600294ed357822a371261b3be94b2bbc0fe653b95ea76f0ed1eba1`.
+Their JavaScript compiler and the Darwin native binary match the previously
+qualified local compiler hashes below. Six artifact ZIPs matched their GitHub
+digests; 36 release checksums and nine internal bootstrap checksums passed.
+
+All build metadata records `preview: true`, no tag and `source.dirty: true`.
+The tested merge differs from the branch only by a tracked `node_modules`
+symlink inherited from main; npm logs record its replacement. The four
+source/lock manifests match the branch exactly. This run therefore does not
+establish a clean-tree release gate. The integration must remove that inherited
+tracked path; CI now explicitly rejects a dirty tree after builds and tests.
+Full tag quality, signing/provenance and public publication remain separate gates.
+
+Metadata, original ZIPs, complete workflow logs and repeatable checksum audits
+are archived at the local workspace root under
+`.gopurs-evidence/release-preparation-20261026/ci-initial`: 129 files,
+228,932,462 bytes. The verified `SHA256SUMS` list has SHA-256
+`85a850f0342313ea12a2ee22714080ddb5ca3e76ea7790c6fe706f2b5dc70e9a`.
+
 ## Release preparation follow-up — 26 October 2026
 
 The following checks were executed during the reproducible-bootstrap/Nix work.
@@ -52,8 +88,9 @@ The Nix checks above ran in an isolated Linux arm64 container whose Nix daemon
 has `sandbox = false`. The backend build used Spago's offline mode and locked
 inputs. Evaluation passed for `aarch64-linux`, `x86_64-linux` and
 `aarch64-darwin`; actual builds and execution were validated on Linux arm64.
-Linux amd64, macOS arm64 and sandboxed CI builds remain independent platform
-gates. The native bootstrap runs inside `nix develop`, rather than as a pure
+The other platform builds subsequently passed in the initial CI recorded above;
+the final tagged builds remain a separate gate. The native bootstrap runs inside
+`nix develop`, rather than as a pure
 Nix derivation. The local evidence is
 `/private/tmp/gopurs-nix-validation-20261026/validation.json`. Its durable copy,
 build/check/run logs and recorded source inputs are under `nix/` in the evidence
@@ -161,7 +198,7 @@ the archive retains its tested version and records both hashes. The other
 The original fixture evidence is in
 `/private/tmp/gopurs-release-20261026/fixture-campaign`. A durable local archive
 is in
-`/Users/0x1/Documents/htdocs/.gopurs-evidence/release-preparation-20261026`:
+`.gopurs-evidence/release-preparation-20261026` at the local workspace root:
 `fixtures/` contains the reports, selection, telemetry and compressed source
 inputs/phase logs; `nix/` contains the Nix evidence and inputs.
 `fixtures-nix-audit.json` records the audit, and `fixtures-nix-SHA256SUMS`
@@ -228,30 +265,58 @@ manifests were retained. This is complete local build evidence, not a benchmark
 or a service execution check. The gate requiring b8x to build from publicly
 published artifacts remains open.
 
-### Full benchmark corpus prepared, not measured — 26 October
+### Complete local cold/warm benchmark — 27 October
 
-`tools/release-benchmark.mjs prepare` verified all 51 frozen 25 October corpora
-and the baseline table in the official `altbak.pub/README.md`. It prepared
-`/private/tmp/gopurs-release-benchmark-20261026` using the compiler from commit
-`0c9a6a1f69d64473ae240f547312fd97f6dd45cb`; only this quality record was dirty.
-The copied JavaScript/native hashes match the previews listed above. The
-prepared snapshot occupies 115,436,835 bytes before its small review record,
-below the 1 GiB preparation budget.
+All **51 official corpora passed on their first attempt** between 08:37:40
+and 10:19:22 UTC: b8x plus 50 library corpora, on the frozen 25 October inputs.
+`gopurs-quickcheck` has no standalone case in that historical table. The
+campaign used the untagged compiler snapshot
+`0c9a6a1f69d64473ae240f547312fd97f6dd45cb` prepared on 26 October; only this
+quality record was dirty at preparation. Its exact JS/native hashes match the
+previews above and the local binaries after the package metadata update to
+`0.1.0-rc.1`. This does not qualify a tagged CI rebuild or public installation.
 
-All 51 cases are `pending`, with zero attempts. No compiler invocation or
-benchmark measurement was launched; fixture campaigns were still running.
-This is preparation of an untagged local candidate, not a performance result
-or a completed release gate.
+An independent completion audit verified **1,224 invocations: 918 measured
+samples and 306 warmups**, 612 cold cache misses and 612 exact warm hits. Each
+cell contains the specified three measurements after one warmup. All exits,
+variant orders, raw timers and 102 output-oracle manifests were checked.
+JS/native Release outputs matched within each corpus; Dev remained stable
+against its own oracle. There were no failed/retried invocations, full or host
+fallbacks, or Go-cache evictions.
 
-`campaign.json` records each corpus, compiler file, source/runtime input,
-toolchain, baseline and runner hash. `preparation-review.json` records the
-scope and checksums of the prepared manifests. Initial file SHA-256 values:
+The following values are sums of the 51 per-corpus medians of `backend total`,
+in milliseconds. The reference is the official `altbak.pub/README.md` table,
+verified against its 25 October report and JSON.
+
+| Host/profile | Official cold | Current cold | Change | Current warm |
+| --- | ---: | ---: | ---: | ---: |
+| JavaScript Release | 812,478 | 809,532 | −0.36% | 13,111 |
+| Native Release | 332,715 | 288,082 | −13.41% | 5,808 |
+| Native Dev | 265,633 | 221,643 | −16.56% | 5,708 |
+
+All native cold medians were lower than their historical counterparts. JS was
+lower in 37 cases and higher in 14; its aggregate differs by only −0.36%.
+Warm values measure unchanged-input cache reuse and have no
+historical baseline. The full
+[benchmark record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/release-benchmark.md)
+retains the JS increases, individual samples, load observations and protocol
+limits: the new campaign interleaves all hosts and cold/warm pairs, whereas
+the historical JS measurements preceded the native reruns. No causal speedup,
+application runtime gain or cross-platform performance claim is established.
+
+The audit started only after the runner exited with code 0 and its lock was
+removed. Its durable evidence is in
+`.gopurs-evidence/release-preparation-20261026/benchmark` at the local workspace root:
+72 files, 98,766,767 bytes, including raw logs/records, manifests, baseline
+documents, analysis and compressed frozen sources/TAST/compiler inputs.
+The compressed members were read back and verified. Caches are excluded.
+No old input or timing was changed.
 
 | Evidence | SHA-256 |
 | --- | --- |
-| `campaign.json` before any run | `7f54ed917d88948efeb2ca2ba6297940809f33e8175f235a2149bb86f99a3300` |
-| `source-manifest.json` | `036ef7ebf0e0b8ddb1e6e1fe55f190940df438face28533a448905abd90bee8b` |
-| `module-cache-manifest.json` | `011403b41d4065348d81cf75178e6fb3f30ca4f971c4a0f4c51e46b92c0a749c` |
+| Completed `campaign.json` | `e83af80e05f3ceaf04bbc96495d7d4e2bcc4148dd1279b08f3718572a9dd872e` |
+| Completed `summary.json` | `9361f216e2de0b7cf9aafcbda81aedaf00eb1671a8c50575d4a483af9c30be40` |
+| Complete archive `SHA256SUMS` | `38cacf4f552662689fb7cb6a4a72a0ac90ddcd1af3a11d906e2e77fd094681fa` |
 
 ## Historical clean-checkout campaign — 25 October
 
@@ -310,6 +375,6 @@ scope and checksums of the prepared manifests. Initial file SHA-256 values:
 
 ## Next gate actions
 
-1. Execute the published cold/warm protocol on the release corpus.
+1. Review the completed cold/warm campaign and its comparison limits.
 2. Tag the release candidate, run CI on the tag, and record the artifact
    checksums.

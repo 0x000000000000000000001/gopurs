@@ -43,7 +43,7 @@
     },
     "effect": {
       "url": "https://github.com/0x000000000000000000001/gopurs-effect.git",
-      "rev": "9f72d40a510e37e53b49699e91e372345bfa386a"
+      "rev": "d4312e08a73769f2b41b89866717393192fe103e"
     },
     "enums": {
       "url": "https://github.com/0x000000000000000000001/gopurs-enums.git",
@@ -79,7 +79,7 @@
     },
     "js-bigints": {
       "url": "https://github.com/0x000000000000000000001/gopurs-js-bigints.git",
-      "rev": "e431af881ec743ff79242e09fe608a09b2703f5c"
+      "rev": "11222d0fea160322fbf08682109febb78284b033"
     },
     "js-date": {
       "url": "https://github.com/0x000000000000000000001/gopurs-js-date.git",

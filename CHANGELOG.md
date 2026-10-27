@@ -6,9 +6,18 @@ All notable changes to gopurs are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0-rc.1]
+
+First release candidate for `0.1.0`, using the typed PureScript compiler at
+`105f5752b39cc0f6c99a40064295338bf57ad223` and the bootstrap libraries pinned in
+`bootstrap-sources.json`. The [qualification record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md)
+distinguishes completed local checks from the remaining tag and public-install
+gates. The [benchmark protocol](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/release-benchmark.md) defines the cold and
+warm measurements; the historical reference is the official altbak.pub table.
+
 ### Added
 
-- First public `0.1.0` release preparation.
+- First public release candidate preparation for `0.1.0`.
 - PureScript-to-Go backend driven by typed TAST.
 - JavaScript, native Go and experimental Rust compiler hosts.
 - Content-verified incremental cache and optional Go package layout.

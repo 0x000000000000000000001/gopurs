@@ -38,6 +38,7 @@ records the earlier design work.
 - [Bootstrap chain](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/bootstrap.md).
 - [Nix installation and development](docs/nix.md).
 - [Release procedure](docs/release.md).
+- [Release qualification, 27 October 2026](docs/quality-0.1.0.md): 802 Release/Dev fixture checks, initial three-platform CI, completed cold/warm benchmarks and remaining publication gates.
 - [Contributing](CONTRIBUTING.md), [security policy](SECURITY.md), [changelog](CHANGELOG.md) and [code of conduct](CODE_OF_CONDUCT.md).
 
 ## Benchmarks
@@ -189,7 +190,7 @@ archive after `npm run build`:
 npm pack --ignore-scripts
 
 # From the application directory, using the archive just produced:
-npm install --save-dev --ignore-scripts /absolute/path/to/gopurs-0.1.0.tgz
+npm install --save-dev --ignore-scripts /absolute/path/to/gopurs-0.1.0-rc.1.tgz
 ```
 
 The archive includes the backend bundle and FFI parser artifacts. It does not

@@ -46,6 +46,30 @@ sequential and native parallel modes. Experimental Rust tests remain disabled. W
 `--full`, the command runs the tooling/CLI/cache checks, Go tests, and a smaller
 executable fixture sample suitable for ordinary CI changes.
 
+The command creates its own Go build cache and never prunes the caller's
+`GOCACHE`. It runs Node test files in separate sequential processes, then
+trims the private cache to 2 GiB after each completed file or Go test command.
+The full fixture selection runs once per profile in batches of at most five.
+Concurrent batches are limited to one fewer than the available CPUs, with a
+minimum of one and maximum of six (two batches on three CPUs, three on four).
+Each batch uses `GOMAXPROCS=2`, `GOGC=100`, `GOMEMLIMIT=4GiB`, and backend
+prepare/PBO/emission worker counts of 1/1/2. Snapshot updates are forced off.
+
+The cache is trimmed only after every process in a wave has finished. It may
+grow beyond 2 GiB during a command or wave. Before a fixture wave, the command
+requires 3 GiB free plus 0.75 GiB per batch. A failed batch prevents later
+waves from starting; already active batches finish and retain their reports.
+Each successful batch must report the exact requested profile and targets,
+with no exclusions, failures, pending targets or snapshot updates.
+
+`--report` retains command logs, fixture workspaces/reports and `quality.json`,
+including cache sizes before and after trimming. Use a fresh report directory;
+without the option, a temporary evidence directory is created and printed.
+The private Go cache is removed when the command finishes or reports failure;
+failed fixture sources, generated output and logs remain for diagnosis.
+This resource policy follows the completed local fixture campaign. The new
+orchestration and its platform CI runs require their own recorded validation.
+
 Run the [cold/warm benchmark protocol](benchmark-protocol.md), compare with the
 official `altbak.pub` README baselines, and retain the raw results. Also validate
 a complete b8x build against the installed candidate and verify the public
@@ -132,6 +156,17 @@ smoke and npm publication dry-run, and signs provenance and SBOM attestations
 using GitHub OIDC/Sigstore. The portable signature bundles are retained beside
 the artifacts. See the [GitHub attestation documentation](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations).
 
+On a release tag, the Linux amd64 job also exports
+`gopurs-VERSION-linux-amd64-npm-provenance.sigstore.json`. This separate npm
+bundle contains one subject (`pkg:npm/gopurs@VERSION`) and the exact archive's
+SHA-512, using npm's SLSA v1 format. The helper uses the public Sigstore API
+bundled with pinned npm 11.6.0. Generation requires the tagged GitHub-hosted
+CI job, its OIDC endpoint, and matching repository, workflow, commit, version
+and clean build metadata. It verifies the resulting signature before exporting
+the bundle; CI includes it in the checksums and GitHub attestation. Local
+environment variables or an unsigned statement are not a replacement for
+that CI signature.
+
 Only after every platform succeeds does CI compare the npm tarballs byte for
 byte and create a **draft** GitHub release containing the tested artifacts.
 Different tarball hashes block this step. The native binaries have separate
@@ -156,15 +191,100 @@ describes the identity and digest checks.
 
 ## Publish the reviewed candidate
 
-The package owner must configure npm's trusted publisher for this repository
-and `publish.yml`, with direct `npm publish` allowed. The public package and
-repository URL must match. The pinned npm CLI must support trusted publishing
-(npm 11.5.1 or newer). First-package ownership/setup is an account operation;
-the workflow does not reserve a package name. See [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/).
+Before the first dispatch, integrate the reviewed release workflow into the
+default branch (`main`) through the normal review/merge process. GitHub only
+offers `workflow_dispatch` when the workflow exists there, even when `--ref`
+selects a release tag. This prerequisite is not approval to merge or publish.
+See the [GitHub dispatch requirements](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow).
 
 Review the CI draft, external benchmark/b8x evidence and rollback prerequisites.
-Then dispatch the publication workflow **on the release tag**, so npm's
-provenance identifies that source revision:
+Both paths below require the complete tag CI matrix to have succeeded and the
+reviewed source to be checked out at that tag. Use the pinned Nix environment
+for npm 11.6.0. Keep downloaded files and local evidence outside the checkout.
+
+For the **first publication**, an npm trusted publisher cannot be configured
+on a package that does not yet exist. Publish the real CI archive from the
+maintainer's already authenticated npm CLI, supplying the CI-generated bundle.
+No placeholder package, npm token export, or npm secret in GitHub is needed.
+First download and verify the draft, replacing `VERSION` with the reviewed
+version:
+
+```bash
+version=VERSION
+tag="v$version"
+repo=0x000000000000000000001/gopurs
+candidate=$(mktemp -d "${TMPDIR:-/tmp}/gopurs-first-publish.XXXXXX")
+test "$(gh release view "$tag" --repo "$repo" --json isDraft --jq .isDraft)" = true
+gh release download "$tag" --repo "$repo" --dir "$candidate"
+commit=$(git rev-parse "$tag^{commit}")
+test "$(git rev-parse HEAD)" = "$commit"
+for target in linux-amd64 linux-arm64 darwin-arm64; do
+  prefix="gopurs-$version-$target"
+  gh attestation verify "$candidate/$prefix-SHA256SUMS" --repo "$repo" \
+    --signer-workflow "$repo/.github/workflows/ci.yml" \
+    --source-ref "refs/tags/$tag" --source-digest "$commit" --deny-self-hosted-runners
+  (cd "$candidate" && shasum -a 256 -c "$prefix-SHA256SUMS")
+done
+prefix="gopurs-$version-linux-amd64"
+nix develop --no-update-lock-file --command node tools/release-npm-provenance.mjs verify \
+  --package "$candidate/gopurs-$version.tgz" --build "$candidate/$prefix-build.json" \
+  --bundle "$candidate/$prefix-npm-provenance.sigstore.json" \
+  > "$candidate/local-provenance-verification.json"
+```
+
+Record the registry state before publishing. Only the package's `E404`
+establishes this first-package case; other errors are not evidence of absence.
+If the package already exists, stop this first-publication path and use its
+owner/trusted-publisher configuration instead.
+
+```bash
+export GOPURS_FIRST_PUBLISH_EVIDENCE="$candidate"
+nix develop --no-update-lock-file --command node --input-type=module <<'JS'
+import { spawnSync } from 'node:child_process';
+import { writeFileSync } from 'node:fs';
+const result = spawnSync('npm', ['view', 'gopurs', 'dist-tags', '--json', '--registry=https://registry.npmjs.org'], { encoding: 'utf8' });
+const value = JSON.parse(result.stdout || '{}');
+if (result.status === 0 || value.error?.code !== 'E404') throw new Error('First publication requires the confirmed absence of gopurs');
+writeFileSync(process.env.GOPURS_FIRST_PUBLISH_EVIDENCE + '/registry-before.json', JSON.stringify(value, null, 2) + '\n');
+writeFileSync(process.env.GOPURS_FIRST_PUBLISH_EVIDENCE + '/previous-dist-tags.json', '{}\n');
+JS
+```
+
+After review authorizes this publication, use the existing local account
+session (and complete any npm authentication prompt):
+
+```bash
+nix develop --no-update-lock-file --command npm whoami --registry=https://registry.npmjs.org
+channel=latest
+if [[ "$version" == *-rc.* ]]; then channel=next; fi
+nix develop --no-update-lock-file --command npm publish --ignore-scripts --access public \
+  --registry=https://registry.npmjs.org --tag "$channel" \
+  --provenance-file "$candidate/$prefix-npm-provenance.sigstore.json" \
+  "$candidate/gopurs-$version.tgz"
+gh workflow run publish.yml --ref "$tag" -f tag="$tag" -f already_published=true
+```
+
+`--provenance-file` makes npm verify and attach the signed CI bundle; it does
+not generate provenance on the local machine. See the
+[npm publication option](https://docs.npmjs.com/cli/v11/commands/npm-publish/#provenance-file).
+The explicit `already_published` mode never invokes `npm publish`. It requires
+the registry's exact package/version/SHA-512, the same signed CI envelope served
+by npm, the expected release channel, and the original tag's CI attestations.
+It then downloads the public tarball, compares its bytes with the candidate,
+runs the application smokes and publishes the matching GitHub release. Keep
+the locally recorded previous tags with the workflow's verification evidence;
+the tags observed after publishing are not a rollback baseline. A failure
+leaves the npm version immutable and the GitHub release in draft for diagnosis.
+
+This first-publication path must be qualified by a real CI OIDC signature and
+the registry checks above; unit tests of guards or local previews do not prove
+public publication. After the package exists, configure npm's trusted publisher
+for this repository and `publish.yml`, with direct `npm publish` allowed. The
+public package and repository URL must match. See
+[npm trusted publishing](https://docs.npmjs.com/trusted-publishers/).
+
+For **subsequent versions**, dispatch the publication workflow on the reviewed
+release tag with its default mode:
 
 ```bash
 gh workflow run publish.yml --ref vVERSION -f tag=vVERSION
@@ -176,7 +296,9 @@ provenance (`next` for `-rc.N`, `latest` for a final version), fetches it again
 from the registry and compares it byte for byte. It repeats the fresh offline
 application smoke, then publishes the matching GitHub release. A failure after
 npm publication requires inspecting the retained publication evidence; reruns
-must not try to overwrite an existing npm version.
+must not try to overwrite an existing npm version. The first-publication
+recovery mode specifically requires the exported CI bundle; it does not accept
+a different provenance bundle generated by a later trusted-publishing job.
 
 After a successful publication, verify the README installation with the public
 version, finish the b8x check using the published artifacts, archive the proof,

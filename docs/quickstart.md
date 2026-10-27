@@ -1,7 +1,7 @@
 # Quickstart
 
 This walkthrough compiles a small PureScript program to Go and runs the
-resulting binary. It was tested on 26 October 2026 with gopurs `0.1.0`,
+resulting binary. It was tested on 26 October 2026 with a local gopurs `0.1.0` preview,
 Node.js `24.8.0`, Go `1.27.0`, Spago `1.0.x` and the typed compiler fork.
 
 The example uses the Go port of `console`. Stock PureScript libraries compile,
@@ -35,13 +35,14 @@ workspace/
 mkdir hello
 cd hello
 npm init -y
-npm install --save-dev gopurs
+npm install --save-dev --ignore-scripts gopurs@0.1.0-rc.1
 ```
 
-Until the npm package is published, install the release archive instead:
+The command above requires the candidate to have been published. Until then,
+install its reviewed local release archive instead:
 
 ```bash
-npm install --save-dev /absolute/path/to/gopurs-0.1.0.tgz
+npm install --save-dev --ignore-scripts /absolute/path/to/gopurs-0.1.0-rc.1.tgz
 ```
 
 ## Install the console port
@@ -49,8 +50,11 @@ npm install --save-dev /absolute/path/to/gopurs-0.1.0.tgz
 ```bash
 cd ..
 git clone https://github.com/0x000000000000000000001/gopurs-console.git
+git -C gopurs-console checkout --detach d4931b94e7731581e761131c56844cf65c4d0b6d
 cd hello
 ```
+
+This is the console revision pinned by the candidate's bootstrap manifest.
 
 ## Create the project
 

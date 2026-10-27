@@ -70,7 +70,7 @@ To install into an application without building the backend there:
 
 ```bash
 npm pack --ignore-scripts
-npm install --save-dev --ignore-scripts /absolute/path/to/gopurs-0.1.0.tgz
+npm install --save-dev --ignore-scripts /absolute/path/to/gopurs-0.1.0-rc.1.tgz
 ```
 
 The archive contains the JavaScript compiler bundle and the FFI parser

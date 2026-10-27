@@ -5,14 +5,14 @@ Audit date: 26 October 2026. This records the 51 repositories selected by
 `e3db111252325962279ec3de313d843110c2525caa408526a9e29ceed30855ff`.
 All 51 inspected checkouts matched their exact commits and had clean working
 trees before and after the 26 October audit. That audit modified no library
-and reran no library build. The local notice preparation on 27 October is
-recorded separately below; none of those library changes has been published.
+and reran no library build. The notice corrections published on 27 October
+and their new source pins are recorded separately below.
 
 ## What is being distributed
 
 | Surface | Identity and release requirement |
 | --- | --- |
-| Compiler npm package | `gopurs@0.1.0`; its own version, dependency lockfile, file allowlist and installed-artifact tests apply. |
+| Compiler npm package | `gopurs@0.1.0-rc.1`, then the final `0.1.0`; its own version, dependency lockfile, file allowlist and installed-artifact tests apply. |
 | Library sources used by bootstrap/applications | Git URL and exact commit from the bootstrap manifest; validate this combination with the selected compiler and package set. The compiler npm archive does not contain these repositories. |
 | Independent future npm/Spago library publication | Review that package's name, destination, version, dependency bounds, files and notices before publishing it. This is a separate operation. |
 
@@ -61,8 +61,8 @@ missing inputs to the current library build.
 
 | Port | Evidence | Remaining work for its source distribution |
 | --- | --- | --- |
-| `effect` | All seven inherited `.purs`/`.js` files exactly match upstream `v4.0.0`, commit `a192ddb923027d426d6ea3d8deb030c9aa7c7dda`. Its [BSD-3-Clause license](https://github.com/purescript/purescript-effect/blob/a192ddb923027d426d6ea3d8deb030c9aa7c7dda/LICENSE) names Copyright 2018 PureScript. The pinned port retains the license identifier in `bower.json`, but has no license text or replacement source headers. | The local commit below restores the notice and explicitly licenses the Go adaptation. Publication and a subsequent pin update remain pending. |
-| `js-bigints` | Both inherited files exactly match upstream `v2.2.1`, commit `36a7d8ac75a7230043ae511f3145f9ed130954a9`. Its [license file](https://github.com/purescript-contrib/purescript-js-bigints/blob/36a7d8ac75a7230043ae511f3145f9ed130954a9/LICENSE) is MIT, Copyright (c) 2022 Jan Schulte. The pinned port has no license text or source headers. | The local commit below restores the notice and explicitly licenses the Go adaptation. Publication, a subsequent pin update and the inherited metadata/example questions remain pending. |
+| `effect` | All seven inherited `.purs`/`.js` files exactly match upstream `v4.0.0`, commit `a192ddb923027d426d6ea3d8deb030c9aa7c7dda`. Its [BSD-3-Clause license](https://github.com/purescript/purescript-effect/blob/a192ddb923027d426d6ea3d8deb030c9aa7c7dda/LICENSE) names Copyright 2018 PureScript. The originally audited pin had the identifier in `bower.json`, but no license text or replacement source headers. | Corrected by the published and pinned notice commit below, which also explicitly licenses the Go adaptation. |
+| `js-bigints` | Both inherited files exactly match upstream `v2.2.1`, commit `36a7d8ac75a7230043ae511f3145f9ed130954a9`. Its [license file](https://github.com/purescript-contrib/purescript-js-bigints/blob/36a7d8ac75a7230043ae511f3145f9ed130954a9/LICENSE) is MIT, Copyright (c) 2022 Jan Schulte. The originally audited pin had no license text or source headers. | The published and pinned notice commit below restores the notice and explicitly licenses the Go adaptation. The inherited metadata/example questions remain documented. |
 | `uuid` | Its npm manifest declares ISC, while the checked-in `LICENSE` and Bower manifest declare MIT. The npm name/repository still identify the upstream project. | Resolve the metadata before an autonomous package publication; do not infer an intended npm release from this manifest. |
 
 For `js-bigints`, upstream [package.json](https://github.com/purescript-contrib/purescript-js-bigints/blob/36a7d8ac75a7230043ae511f3145f9ed130954a9/package.json)
@@ -79,14 +79,15 @@ for `effect`, and `4a56dd0010e318fc1ebb942ee91a858ddb2a4de76f8085ffc5d84c58d1ead
 for `js-bigints`. The source pins audited on 26 October do not contain these
 license files.
 
-## Local notice preparation — 27 October 2026
+## Published notice corrections — 27 October 2026
 
 The maintainer selected the same upstream license terms for each Go
-adaptation: BSD-3-Clause for `effect`, and MIT for `js-bigints`. Two isolated
-worktrees now contain local commits on a branch named
-`chore/go-license-notices-20261027` in each library repository:
+adaptation: BSD-3-Clause for `effect`, and MIT for `js-bigints`. After explicit
+maintainer approval, the following notice-only commits were pushed as fast
+forwards to `gopurs-effect/master` and `gopurs-js-bigints/main` respectively.
+The bootstrap manifest now selects these public revisions:
 
-| Library | Existing source pin | Prepared local commit |
+| Library | Source pin used for the original audit/tests | Published source pin |
 | --- | --- | --- |
 | `effect` | `9f72d40a510e37e53b49699e91e372345bfa386a` | `d4312e08a73769f2b41b89866717393192fe103e` |
 | `js-bigints` | `e431af881ec743ff79242e09fe608a09b2703f5c` | `11222d0fea160322fbf08682109febb78284b033` |
@@ -113,10 +114,10 @@ MIT/ISC metadata discrepancy or the Stack Overflow attribution/licensing
 questions in inherited JavaScript. Those facts remain documented in the
 `js-bigints` notice; the `uuid` metadata issue also remains open.
 
-These are local commits only. The original library checkouts used by the test
-campaigns remain clean at their existing source pins, and
-`bootstrap-sources.json` is unchanged. Publish the reviewed library commits
-before updating that manifest to revisions which other users must fetch.
+The isolated library checkouts used by the test campaigns remain clean at
+their original source pins. The notice-only differences above preserve every
+compiled source byte; the recorded tests and frozen benchmark inputs retain
+their original identities instead of being relabelled with the new commits.
 
 ## Compiler release boundary
 
@@ -142,7 +143,8 @@ closures. This inventory check does not claim every generated function
 survives Go linker elimination.
 
 The compiler release must account for its actual JavaScript/native closures
-and ship their notices. Independently, the missing notices and inherited
-publication metadata above remain open for the public library source family.
+and ship their notices. The missing source notices above have been restored;
+the inherited metadata and JavaScript provenance questions remain open for
+the public library source family.
 Do not describe the 51 ports as separately published npm packages or as having
 completed autonomous publication checks.

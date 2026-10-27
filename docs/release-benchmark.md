@@ -14,6 +14,109 @@ Release**, and **265,633 ms native Dev**, summing the per-corpus cold medians.
 Rust values in that historical report are estimates and are not used here.
 There is no historical warm-cache baseline in that table.
 
+## Completed local campaign — 27 October 2026
+
+All **51 corpora passed**, each on its first attempt, between 08:37:40 and
+10:19:22 UTC. These are the official table's **b8x + 50 library corpora**;
+`gopurs-quickcheck`, one of the 51 bootstrap source pins, has no standalone
+case in that table. The campaign used frozen 25 October TAST/FFI inputs,
+including b8x's 2,707 modules, and the untagged compiler snapshot
+`0c9a6a1f69d64473ae240f547312fd97f6dd45cb` prepared on 26 October.
+
+The table below sums the 51 per-corpus medians, in milliseconds. Each median
+uses three measured fresh processes after one excluded warmup. The warm
+column measures an unchanged-input cache hit; it has no historical reference.
+These totals are neither the campaign's elapsed duration nor application
+build/execution times.
+
+| Host/profile | Official 25 October cold | Current cold | Change | Current warm |
+| --- | ---: | ---: | ---: | ---: |
+| JavaScript Release | 812,478 | 809,532 | −0.36% | 13,111 |
+| Native Release | 332,715 | 288,082 | −13.41% | 5,808 |
+| Native Dev | 265,633 | 221,643 | −16.56% | 5,708 |
+
+All 51 native Release and all 51 native Dev cold medians were below their
+respective historical values. JavaScript was lower in 37 cases and higher in
+14: its aggregate differs by only −0.36%, while individual cases move in both
+directions. The largest
+JS increases by absolute time were b8x (146,389 → 147,829 ms, +0.98%),
+argonaut-core (15,672 → 16,647 ms, +6.22%) and aff (16,023 → 16,802 ms,
++4.86%). The full per-case comparisons and all samples are retained; these
+increases are not hidden by the aggregate.
+
+For b8x specifically, native Release was 70,353 ms versus 78,037 ms
+(−9.85%), and native Dev was 47,227 ms versus 53,611 ms (−11.91%). Its warm
+medians were 479 ms JS, 324 ms native Release and 308 ms native Dev. This is
+generation from the archived TAST, separate from the complete application
+build qualification in the
+[quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md).
+
+The completion audit independently recomputed all medians from **1,224 raw
+records and logs: 918 measured samples and 306 warmups**. It verified 612
+explicit cold misses, 612 exact warm hits, the required variant/round order,
+and every recorded exit status. No invocation failed, timed out, used a full
+fallback or silently selected JS because a native executable was missing.
+For each corpus, all JS/native Release output fingerprints matched the
+current JS oracle; Dev matched its separate oracle across all repetitions.
+The 102 per-file oracle manifests are retained. No output was regenerated or
+application executed by this audit.
+
+Measurements ran on the Apple M4 Pro (14 logical CPUs, 48 GiB RAM), Darwin
+25.1.0, Node 24.8.0 and Go 1.27.0. The source/FFI/TAST definitions and official
+README/report hashes matched their preparation records. Workers, feature flags
+and native GC policy matched the protocol below. The 1 GiB Go cache eviction
+policy was configured but **never triggered**: its maximum recorded size
+after a case was 99,801,914 bytes. No timings were trimmed or retried.
+
+The new campaign interleaves JS, native Release and native Dev, with an
+immediate warm invocation after each cold invocation. The historical JS v2
+measurements preceded the native v3 measurements, and had no paired warm
+invocations. Both campaigns enable packages, overlays and build manifests;
+the older 4–5 October protocol differences are not the comparison used here.
+The measured compiler binaries also differ from the historical binaries.
+Consequently, these results show observed differences on this machine, not a
+controlled attribution of gains to a particular compiler change.
+
+The recorded one-minute load before invocations ranged from 2.59 to 10.57
+(median 4.79); it includes the campaign's own prior work and does not prove an
+otherwise idle machine or stable thermal conditions. Variability remains:
+native Release's three js-uri cold samples were 6,783 / 2,788 / 2,826 ms.
+The slow sample recorded 3,620 ms in `cache lookup + freeze`, compared with
+86 / 106 ms in the others; its cause was not established. That successful
+sample remains in the data, and the prescribed median is 2,826 ms. Three
+samples per cell do not establish statistical confidence or a bound on latency.
+
+The measured binary hashes are:
+
+| Artifact | SHA-256 |
+| --- | --- |
+| JavaScript compiler | `e7c761c44aef7276b335265459c03cfe6551b7ed8ec00f76f8233aa6fbe30b3b` |
+| Native compiler | `eb97922721f15c3e742ff14335a8294b6005ca321ae2e9a57bb8847776e46298` |
+
+Both still matched the local checkout after its package metadata was advanced
+to `0.1.0-rc.1`. This is evidence for those exact binaries and frozen inputs,
+not for a tagged CI rebuild, a public install or another platform. The
+benchmark does not establish application runtime gains.
+
+Durable local evidence is under
+`.gopurs-evidence/release-preparation-20261026/benchmark` at the local workspace root.
+Its 72 files occupy 98,766,767 bytes. They include the completed state and
+summary, independent analysis, per-case CSV, baseline documents, runner,
+definitions, manifests, raw logs/records and exact frozen inputs. The input
+archive retains 32,123 files and 43 symlinks, with equal contents deduplicated
+as tar hardlinks. Both compressed archives were read back and verified.
+Go module/build caches and backend caches are excluded; the Go module-cache
+manifest and pinned dependency files remain. The original inputs and timings were not
+modified.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| Completed `campaign.json` | `e83af80e05f3ceaf04bbc96495d7d4e2bcc4148dd1279b08f3718572a9dd872e` |
+| Completed `summary.json` | `9361f216e2de0b7cf9aafcbda81aedaf00eb1671a8c50575d4a483af9c30be40` |
+| `case-records.tar.gz` | `e97e32431a0915161ed77273605c03629bdab573940f6895cc96291fd261c5d5` |
+| `frozen-inputs.tar.gz` | `126c4180687147379210d2446e2797ee7bfbdedcb5414648b12d23d941e99c85` |
+| Complete `SHA256SUMS` list | `38cacf4f552662689fb7cb6a4a72a0ac90ddcd1af3a11d906e2e77fd094681fa` |
+
 ## Before a measurement
 
 Finish other builds, tests, Nix work and benchmarks on the machine first.

@@ -23,7 +23,7 @@ jobs:
   build:
     name: build and test (${{ matrix.target }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 240
+    timeout-minutes: ${{ (startsWith(github.ref, 'refs/tags/') || inputs.full == true) && 360 || 240 }}
     permissions:
       contents: read
       id-token: write
@@ -93,6 +93,11 @@ jobs:
           verified=$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$tag_object" --jq '.verification.verified')
           test "$verified" = true
 
+      - name: Require clean sources after the build and quality gates
+        run: |
+          git status --short
+          test -z "$(git status --porcelain --untracked-files=all)"
+
       - name: Package versioned binaries, SBOM and checksums
         id: release
         run: |
@@ -116,6 +121,20 @@ jobs:
           nix develop --no-update-lock-file --command npm publish --dry-run --ignore-scripts "$RUNNER_TEMP/release/gopurs-$RELEASE_VERSION.tgz"
           cp "$RUNNER_TEMP/quality/quality.json" "$RUNNER_TEMP/release/$RELEASE_PREFIX-quality.json"
           (cd "$RUNNER_TEMP/release" && shasum -a 256 "$RELEASE_PREFIX-smoke.json" "$RELEASE_PREFIX-quality.json" >> "$RELEASE_PREFIX-SHA256SUMS")
+
+      - name: Export npm provenance for an authenticated first publication
+        if: startsWith(github.ref, 'refs/tags/') && matrix.target == 'linux-amd64'
+        env:
+          RELEASE_PREFIX: ${{ steps.release.outputs.prefix }}
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          nix develop --no-update-lock-file --command node tools/release-npm-provenance.mjs generate \
+            --package "$RUNNER_TEMP/release/gopurs-$RELEASE_VERSION.tgz" \
+            --build "$RUNNER_TEMP/release/$RELEASE_PREFIX-build.json" \
+            --bundle "$RUNNER_TEMP/release/$RELEASE_PREFIX-npm-provenance.sigstore.json" \
+            > "$RUNNER_TEMP/release/$RELEASE_PREFIX-npm-provenance-verification.json"
+          (cd "$RUNNER_TEMP/release" && shasum -a 256 "$RELEASE_PREFIX-npm-provenance.sigstore.json" \
+            "$RELEASE_PREFIX-npm-provenance-verification.json" >> "$RELEASE_PREFIX-SHA256SUMS")
 
       - name: Sign build provenance with GitHub OIDC
         id: provenance

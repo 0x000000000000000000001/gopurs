@@ -9,10 +9,11 @@ what users may rely on. It is not evidence that the release gates in
 | Item | Decision |
 | --- | --- |
 | Package | `gopurs` |
-| First public version | `0.1.0` |
+| First candidate | `0.1.0-rc.1` |
+| First final version | `0.1.0` |
 | Version source | [`package.json`](../package.json) |
 | Versioning | [Semantic Versioning 2.0.0](https://semver.org/) |
-| Git tag | `v0.1.0` (annotated; signed when release signing is available) |
+| Git tag | `vVERSION` (annotated and signed; verified by GitHub before release packaging) |
 
 During `0.y.z`, a minor release may change or remove documented behavior. Patch
 releases do not intentionally break the compatibility commitments below.
@@ -84,7 +85,7 @@ The target matrix for `0.1.0` is:
 | --- | --- | --- | --- |
 | `linux/arm64` | Tier 1 | Tier 1 | Release-blocking |
 | `linux/amd64` | Tier 1 | Tier 1 | Release-blocking |
-| `darwin/arm64` | Tier 1 | Tier 1 | Supported for development |
+| `darwin/arm64` | Tier 1 | Tier 1 | Release-blocking |
 | Windows | Not supported | Not supported | Out of scope for `0.1.0` |
 | 32-bit targets | Not supported | Not supported | Out of scope for `0.1.0` |
 
@@ -103,7 +104,10 @@ Toolchain reference:
 
 Generated `go.mod` files declare Go 1.22. That declaration is not a support
 claim for older toolchains: only the reference Go version is validated for
-`0.1.0`. The Nix development shell is validated on `aarch64-linux`; it is a
+`0.1.0`. The initial CI validated the Nix packages, application checks and
+development shell on `aarch64-linux`, `x86_64-linux` and `aarch64-darwin`.
+The [quality record](quality-0.1.0.md) distinguishes those results from the
+remaining clean-tree and tagged release gates. The development shell is a
 development environment, not a production artifact.
 
 ## Licensing and attribution
