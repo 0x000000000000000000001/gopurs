@@ -162,16 +162,40 @@ The CI checkouts select tag refs explicitly so the checkout action preserves
 the annotated object. Each job checks its source commit and tag immediately;
 the build also compares the local tag object with the GitHub-verified object
 before installing Nix or compiling. Ordinary PRs retain the checkout action's
-default event-commit selection.
+default event-commit selection. The planning job also checks the release version,
+matching tag, both package-lock version fields and changelog section before
+starting any tagged build.
 
 `.github/workflows/ci.yml` runs on branch changes, pull requests and version
-tags. All three platforms build inside the locked Nix environment from a fresh
-checkout without a restored project cache. Public Nix dependency substitutes
-are allowed. Tags automatically select the full quality gate. A successful tag
+tags. Ordinary PRs and branch pushes run the existing 18 quick gates on Linux
+amd64, including both compiler hosts, the native race probe and artifact smokes.
+A small planning job always runs the classification and qualification-reuse
+tests. It skips heavy builds only when every changed path is an explicitly
+allowed regular Markdown document. Renames are examined as deletions and
+additions; code under `docs/`, file type changes and unknown paths require a
+build. Manual non-full runs also build Linux.
+
+A push to `main` may reuse one successful, associated, same-repository PR
+qualification. Its small receipt binds the 18 gates, each Node file's actual
+passing test counts with no skips, both artifact smokes, the run attempt and
+the actual tested merge commit.
+The planner verifies the artifact ZIP against GitHub's SHA-256 and compares the
+tested Git object's tree with the new `main` tree. The PR head alone is
+insufficient. Missing, expired, ambiguous or inconsistent evidence, fork runs
+and API failures all cause a new Linux build. The scope decision and reused
+run identity are retained in `ci-plan.json`.
+
+Tags and manual `full` runs always build all three platforms and run the
+complete qualification; documentation filtering and PR reuse never apply to
+them. Each build uses the locked Nix environment and a fresh checkout. A successful tag
 run packages the candidate, verifies checksums, runs the offline application
 smoke and npm publication dry-run, and signs provenance and SBOM attestations
 using GitHub OIDC/Sigstore. The portable signature bundles are retained beside
 the artifacts. See the [GitHub attestation documentation](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations).
+
+Quick builds may reuse the pinned frontend tool's runtime closure as described
+in [nix.md](nix.md#ci-frontend-cache). This optional cache never contains the
+gopurs compiler being qualified and is disabled for tags and full campaigns.
 
 On a release tag, the Linux amd64 job also exports
 `gopurs-VERSION-linux-amd64-npm-provenance.sigstore.json`. This separate npm
