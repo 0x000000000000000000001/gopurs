@@ -1,10 +1,14 @@
 import assert from "node:assert/strict";
+import { execFileSync, spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { setImmediate } from "node:timers/promises";
 import test from "node:test";
 import { fixtureBatches, fixtureWorkers, QualityGoCache, readFixtureReport, runFixtureWaves } from "./release-quality-resources.mjs";
+import { coreGateNames, fixtureShardCount, mergeQualityReports, qualityInventory, qualityOptions, shardBatches } from "./release-quality-report.mjs";
 
 function workspace(t) {
   const path = realpathSync(mkdtempSync(join(tmpdir(), "gopurs-quality-unit-")));
@@ -133,4 +137,152 @@ test("fixture reports must prove the exact profile, selection, completion and sn
   }
   writeFileSync(log, "No fixture report\n");
   assert.throws(() => readFixtureReport(log, root, batch), /Missing or ambiguous/);
+});
+
+test("partial phases require full intent and an explicit valid fixture shard", () => {
+  assert.deepEqual(qualityOptions([]), { full: false, phase: "all", shard: null, report: undefined });
+  assert.equal(qualityOptions(["--full"]).phase, "all");
+  assert.equal(qualityOptions(["--full", "--phase", "core"]).shard, null);
+  assert.deepEqual(qualityOptions(["--full", "--phase", "fixtures", "--shard", "3", "--shard-count", "4"]).shard, { index: 3, count: 4 });
+  for (const args of [
+    ["--phase", "core"], ["--full", "--phase", "unknown"], ["--full", "--shard", "0", "--shard-count", "4"],
+    ["--full", "--phase", "fixtures"], ["--full", "--phase", "fixtures", "--shard", "4", "--shard-count", "4"],
+    ["--full", "--phase", "fixtures", "--shard", "0", "--shard-count", "0"],
+    ["--full", "--phase", "fixtures", "--shard", "0.5", "--shard-count", "4"],
+  ]) assert.throws(() => qualityOptions(args));
+});
+
+function partialQualityReports() {
+  const inventory = qualityInventory(fileURLToPath(new URL("../", import.meta.url)));
+  const identity = { source: { commit: "a".repeat(40), dirty: false },
+    compiler: { javascriptSha256: "b".repeat(64), nativeSha256: "c".repeat(64) }, target: "linux-amd64",
+    github: { repository: "owner/gopurs", runId: "123", runAttempt: "1" } };
+  const common = { schema: 1, requestedFull: true, full: false, status: "passed", identity };
+  const gate = (name, index) => ({ index: index + 1, name, passed: true, exitCode: 0, signal: null });
+  const core = { ...common, phase: "core", shard: null, gates: coreGateNames(inventory).map(gate) };
+  const fixtures = Array.from({ length: fixtureShardCount }, (_, index) => {
+    const shard = { index, count: fixtureShardCount }, batches = shardBatches(inventory.batches, shard);
+    return { ...common, phase: "fixtures", shard,
+      fixtures: { selectedPerProfile: inventory.targets.length, passed: Object.fromEntries(["release", "dev"].map(profile =>
+        [profile, batches.filter(batch => batch.profile === profile).reduce((sum, batch) => sum + batch.targets.length, 0)])) },
+      gates: batches.map((batch, i) => ({ ...gate(batch.name, i), fixtures: { batchIndex: batch.batchIndex, profile: batch.profile,
+        passed: batch.targets.length, targets: batch.targets, file: `fixture-reports/${batch.batchIndex}-${batch.profile}.json` } })),
+    };
+  });
+  const build = { schema: 1, version: "0.1.0-rc.2", target: identity.target, source: { ...identity.source },
+    artifacts: [{ name: "gopurs-0.1.0-rc.2-linux-amd64", sha256: identity.compiler.nativeSha256 }] };
+  return structuredClone({ inventory, core, fixtures, build });
+}
+
+test("four shards preserve every original batch and only their verified union is full", () => {
+  const { inventory, core, fixtures, build } = partialQualityReports();
+  assert.equal(inventory.nodeTests.length, 99);
+  assert.equal(inventory.targets.length, 401);
+  assert.equal(core.full, false);
+  assert(fixtures.every(report => report.full === false));
+  assert.deepEqual(fixtures.map(report => report.gates.length), [41, 41, 40, 40]);
+  assert.deepEqual(fixtures.flatMap(report => report.gates.map(gate => gate.fixtures.batchIndex)).sort((a, b) => a - b),
+    inventory.batches.map(batch => batch.batchIndex));
+  const merged = mergeQualityReports(core, fixtures.toReversed(), inventory, build);
+  assert.equal(merged.full, true);
+  assert.equal(merged.phase, "all");
+  assert.equal(merged.status, "passed");
+  assert.equal(merged.gates.length, 266);
+  assert.deepEqual(merged.fixtures.passed, { release: 401, dev: 401 });
+  assert.deepEqual(merged.gates.map(gate => gate.index), Array.from({ length: 266 }, (_, index) => index + 1));
+  for (const profile of ["release", "dev"]) assert.deepEqual(
+    merged.gates.filter(gate => gate.fixtures?.profile === profile).flatMap(gate => gate.fixtures.targets), inventory.targets);
+  assert.equal(merged.gates.at(-1).name, "npm package surface");
+});
+
+test("aggregation rejects incomplete, duplicate, failed or mismatched qualification evidence", () => {
+  const changes = [
+    value => { value.fixtures.pop(); },
+    value => { value.fixtures[1] = structuredClone(value.fixtures[0]); },
+    value => { value.fixtures[0].shard.count = 5; },
+    value => { value.fixtures[0].shard.index = 4; },
+    value => { value.fixtures[0].gates.pop(); },
+    value => { value.fixtures[0].gates[1] = structuredClone(value.fixtures[0].gates[0]); },
+    value => { value.fixtures[0].gates[0].fixtures.targets[0] = "tests/passing/omitted.purs"; },
+    value => { value.fixtures[0].gates[0].fixtures.profile = "dev"; },
+    value => { value.fixtures[0].gates[0].fixtures.batchIndex = 1; },
+    value => { value.fixtures[0].fixtures.passed.release--; },
+    value => { value.fixtures[0].identity.source.commit = "d".repeat(40); },
+    value => { value.fixtures[0].identity.compiler.javascriptSha256 = "d".repeat(64); },
+    value => { value.fixtures[0].identity.compiler.nativeSha256 = "d".repeat(64); },
+    value => { value.fixtures[0].identity.github.runAttempt = "2"; },
+    value => { value.fixtures[0].identity.target = "linux-arm64"; },
+    value => { value.core.identity.source.dirty = true; },
+    value => { value.core.gates.pop(); },
+    value => { value.core.gates[0].passed = false; },
+    value => { value.core.gates[0].exitCode = 1; },
+    value => { value.fixtures[0].full = true; },
+    value => { value.fixtures[0].status = "running"; },
+    value => { value.core.requestedFull = false; },
+    value => { value.build.source.commit = "d".repeat(40); },
+    value => { value.build.artifacts[0].sha256 = "d".repeat(64); },
+    value => { value.build.target = "linux-arm64"; },
+  ];
+  for (const change of changes) {
+    const value = partialQualityReports();
+    // Each input is independent, as it is after loading separate JSON files.
+    value.fixtures = value.fixtures.map(report => structuredClone(report));
+    value.core = structuredClone(value.core);
+    change(value);
+    assert.throws(() => mergeQualityReports(value.core, value.fixtures, value.inventory, value.build), change.toString());
+  }
+});
+
+test("merge CLI checks stable fixture evidence and original bootstrap hashes before writing", t => {
+  const root = workspace(t), { core, fixtures, build } = partialQualityReports();
+  const commit = execFileSync("git", ["rev-parse", "HEAD"], { cwd: fileURLToPath(new URL("../", import.meta.url)), encoding: "utf8" }).trim();
+  for (const report of [core, ...fixtures]) report.identity.source.commit = commit;
+  build.source.commit = commit;
+  const json = (file, value) => writeFileSync(file, JSON.stringify(value));
+  const coreFile = join(root, "core.json"), buildFile = join(root, "build.json"), output = join(root, "merged.json");
+  json(coreFile, core);
+  const bootstrap = `${core.identity.compiler.javascriptSha256}  bin/gopurs.js\n`;
+  const bootstrapName = "gopurs-0.1.0-rc.2-linux-amd64-bootstrap-checksums.txt";
+  writeFileSync(join(root, bootstrapName), bootstrap);
+  build.artifacts.push({ name: bootstrapName, sha256: createHash("sha256").update(bootstrap).digest("hex") });
+  json(buildFile, build);
+  const fixtureFiles = fixtures.map(report => {
+    const directory = join(root, `shard-${report.shard.index}`);
+    mkdirSync(join(directory, "fixture-reports"), { recursive: true });
+    for (const gate of report.gates) json(join(directory, gate.fixtures.file), {
+      version: 1, kind: "fixtures", root: "/original-checkout", buildProfile: gate.fixtures.profile,
+      updateSnapshots: false, skipped: [], finishedAt: "2026-10-28T00:00:00Z",
+      targets: gate.fixtures.targets.map(target => ({ target: join("/original-checkout", target), status: "passed" })),
+    });
+    const file = join(directory, "quality.json");
+    json(file, report);
+    return file;
+  });
+  const env = { ...process.env };
+  for (const key of ["GITHUB_RUN_ID", "GITHUB_RUN_ATTEMPT", "GITHUB_REPOSITORY", "GITHUB_SHA"]) delete env[key];
+  const args = [fileURLToPath(new URL("./release-quality-report.mjs", import.meta.url)), "--core", coreFile,
+    ...fixtureFiles.flatMap(file => ["--fixtures", file]), "--build", buildFile, "--out", output];
+  let result = spawnSync(process.execPath, args, { env, encoding: "utf8" });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(JSON.parse(readFileSync(output, "utf8")).gates.length, 266);
+  rmSync(output);
+  result = spawnSync(process.execPath, args, { env: { ...env, GITHUB_SHA: "d".repeat(40) }, encoding: "utf8" });
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /Quality source differs from GITHUB_SHA/);
+  assert.equal(existsSync(output), false);
+  const firstEvidence = join(root, "shard-0", fixtures[0].gates[0].fixtures.file);
+  const goodEvidence = readFileSync(firstEvidence, "utf8");
+  const broken = JSON.parse(goodEvidence);
+  broken.targets[0].status = "failed";
+  json(firstEvidence, broken);
+  result = spawnSync(process.execPath, args, { env, encoding: "utf8" });
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /Stable fixture evidence differs/);
+  assert.equal(existsSync(output), false);
+  writeFileSync(firstEvidence, goodEvidence);
+  writeFileSync(join(root, bootstrapName), "changed manifest\n");
+  result = spawnSync(process.execPath, args, { env, encoding: "utf8" });
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /Original bootstrap checksums differ/);
+  assert.equal(existsSync(output), false);
 });

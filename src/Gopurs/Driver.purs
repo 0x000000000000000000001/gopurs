@@ -139,7 +139,7 @@ compileCached config cacheRef backends ffiDigestsRef = Metrics.measure "backend 
           let
             interfaceChanged = Array.length (Array.filter (\(Tuple _ reason) -> reason == "interface" || reason == "source+interface") (Map.toUnfoldable manifestChanged :: Array _))
           liftEffect $ Console.error ("[gopurs] build manifest: " <> show (Map.size manifestChanged) <> " changed, " <> show interfaceChanged <> " interface, " <> show (Set.size withCache.reusable) <> " reusable")
-          Metrics.measure "build manifest write" \_ -> Manifest.writeManifest session.cacheRoot current
+          Metrics.measure "build manifest write" \_ -> Manifest.writeManifest session.stage session.cacheRoot current
         Nothing -> case withCache.compactSourceDelta of
           Just _ -> liftEffect $ Console.error ("[gopurs] build manifest: 1 changed, 0 interface, " <> show (Set.size withCache.reusable) <> " reusable (committed preparation proof)")
           Nothing -> pure unit
@@ -191,7 +191,7 @@ compileCached config cacheRef backends ffiDigestsRef = Metrics.measure "backend 
             Nothing -> pure unit
           let restoredNames = Set.fromFoldable (map _.name reused)
           Metrics.measure "reads publish" \_ -> ModuleCache.publishReads session.stage session.cacheRoot (Array.filter (not <<< flip Set.member restoredNames) moduleNames)
-          Metrics.measure "ffi digests write" \_ -> Manifest.writeFfiDigests session.cacheRoot currentFfi
+          Metrics.measure "ffi digests write" \_ -> Manifest.writeFfiDigests session.stage session.cacheRoot currentFfi
         liftEffect do
           Ref.write (Just withCache) cacheRef
           Ref.write currentFfi ffiDigestsRef

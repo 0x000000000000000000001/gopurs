@@ -44,12 +44,18 @@ for native-build helpers but does not change Spago's executable selection.
 
 The full gate runs every Node test file, Go tests with the race detector,
 native emission cancellation/concurrency tests, and all selected fixtures
-under both Release and Dev. It requires the freshly
-bootstrapped native output so the native preparation and code-generation tests
-cannot silently skip. Host-parity tests explicitly select JavaScript, native
-sequential and native parallel modes. Experimental Rust tests remain disabled. Without
-`--full`, the command runs the tooling/CLI/cache checks, Go tests, and a smaller
-executable fixture sample suitable for ordinary CI changes.
+under both Release and Dev. Both full and quick gates require the freshly
+bootstrapped native output so native probes cannot silently skip. Host-parity
+tests explicitly select JavaScript, native sequential and native parallel modes.
+Experimental Rust tests remain disabled. Without `--full`, the command runs the
+tooling/CLI/cache checks, native scanner and preparation probes, Go tests, and a
+smaller executable fixture sample suitable for ordinary CI changes.
+
+The scanner, preparation and emission functional probes compile the large
+`gopurs/output/purescript` package with `-N -l` to reduce compilation memory.
+Their assertions, execution deadlines, scanner stack limit and preparation/
+emission race checks remain active. The release compiler bootstrap and the
+Release/Dev application fixture profiles keep their own compilation settings.
 
 The command creates its own Go build cache and never prunes the caller's
 `GOCACHE`. It runs Node test files in separate sequential processes, then

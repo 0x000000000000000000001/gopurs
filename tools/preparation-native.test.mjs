@@ -8,7 +8,7 @@ import test from 'node:test';
 
 const nativeOutput = process.env.GOPURS_NATIVE_OUTPUT;
 
-test('native preparation defers work, overlaps bounded workers, and preserves result order', {
+test('native preparation defers work, overlaps bounded workers, and preserves result order (unoptimized Go, race)', {
     skip: nativeOutput ? false : 'requires GOPURS_NATIVE_OUTPUT from a native bootstrap',
 }, t => {
     const output = resolve(nativeOutput);
@@ -19,13 +19,14 @@ test('native preparation defers work, overlaps bounded workers, and preserves re
     const nativeTest = join(output, 'purescript', 'preparation_native_test.go');
     writeFileSync(nativeTest, readFileSync(new URL('./preparation-native_test.go', import.meta.url)), { flag: 'wx' });
     t.after(() => rmSync(nativeTest, { force: true }));
-    // Compilation includes the whole native compiler; keep its cold-cache
-    // budget separate from the 30-second execution limit of these contracts.
+    // Reduce compilation memory for the whole native compiler package. The
+    // functional probe keeps race detection and its 30-second execution limit;
+    // release bootstrap binaries use their separate optimized profile.
     const directory = mkdtempSync(join(tmpdir(), 'gopurs-preparation-native-'));
     t.after(() => rmSync(directory, { recursive: true, force: true }));
     const executable = join(directory, 'preparation.test');
     const build = spawnSync('go', [
-        'test', '-race', '-c', '-o', executable, './purescript',
+        'test', '-race', '-gcflags=gopurs/output/purescript=-N -l', '-c', '-o', executable, './purescript',
     ], {
         cwd: output, encoding: 'utf8', timeout: 900_000,
         env: { ...process.env, GOWORK: 'off' }, maxBuffer: 1024 * 1024,

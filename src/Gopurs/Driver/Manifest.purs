@@ -61,12 +61,18 @@ readGlobalFunctions output = do
     Left _ -> Nothing
     Right value -> Wire.read value
 
-writeGlobalFunctions :: String -> ModuleFunctions -> Aff Unit
-writeGlobalFunctions output functions = do
+-- Cache sessions own distinct staging directories on the same filesystem.
+-- A shared path.next would let concurrent writers rename each other's file.
+writeAtomic :: String -> String -> String -> Aff Unit
+writeAtomic stage path text = do
+  let temporary = stage <> "/manifest-" <> Wire.hash path <> ".next"
+  FS.writeTextFile UTF8 temporary text
+  FS.rename temporary path
+
+writeGlobalFunctions :: String -> String -> ModuleFunctions -> Aff Unit
+writeGlobalFunctions stage output functions = do
   text <- liftEffect (Wire.write functions)
-  let path = globalFunctionsPath output
-  FS.writeTextFile UTF8 (path <> ".next") text
-  FS.rename (path <> ".next") path
+  writeAtomic stage (globalFunctionsPath output) text
 
 readFfiDigests :: String -> Aff (Maybe (Map String String))
 readFfiDigests output = do
@@ -75,12 +81,10 @@ readFfiDigests output = do
     Left _ -> Nothing
     Right value -> Wire.read value
 
-writeFfiDigests :: String -> Map String String -> Aff Unit
-writeFfiDigests output digests = do
+writeFfiDigests :: String -> String -> Map String String -> Aff Unit
+writeFfiDigests stage output digests = do
   text <- liftEffect (Wire.write digests)
-  let path = ffiDigestsPath output
-  FS.writeTextFile UTF8 (path <> ".next") text
-  FS.rename (path <> ".next") path
+  writeAtomic stage (ffiDigestsPath output) text
 
 moduleInterface :: Module Ann -> Effect String
 moduleInterface (Module value) = do
@@ -136,14 +140,12 @@ buildManifestWithInterfaces known previous _output context directives modules so
         _ -> moduleInterface (Module value)
     pure (Tuple name { source, interface })
 
-writeManifest :: String -> Manifest -> Aff Unit
-writeManifest output manifest = do
+writeManifest :: String -> String -> Manifest -> Aff Unit
+writeManifest stage output manifest = do
   let directory = output
   void $ attempt (FS.mkdir directory)
   text <- liftEffect (Wire.write manifest)
-  let path = manifestPath output
-  FS.writeTextFile UTF8 (path <> ".next") text
-  FS.rename (path <> ".next") path
+  writeAtomic stage (manifestPath output) text
 
 readManifest :: String -> Aff (Maybe Manifest)
 readManifest output = do

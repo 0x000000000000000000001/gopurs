@@ -26,8 +26,6 @@ jobs:
     timeout-minutes: ${{ (startsWith(github.ref, 'refs/tags/') || inputs.full == true) && 360 || 240 }}
     permissions:
       contents: read
-      id-token: write
-      attestations: write
     strategy:
       fail-fast: false
       matrix:
@@ -80,7 +78,7 @@ jobs:
       - name: Run compiler, race, cache and fixture gates
         run: |
           flags=()
-          if [ "$GOPURS_RELEASE_FULL" = true ]; then flags+=(--full); fi
+          if [ "$GOPURS_RELEASE_FULL" = true ]; then flags+=(--full --phase core); fi
           nix develop --no-update-lock-file --command node tools/release-quality.mjs "${flags[@]}" --report "$RUNNER_TEMP/quality" | tee "$RUNNER_TEMP/quality.log"
 
       - name: Require a verified annotated release tag
@@ -124,11 +122,151 @@ jobs:
           cp "$RUNNER_TEMP/quality/quality.json" "$RUNNER_TEMP/release/$RELEASE_PREFIX-quality.json"
           (cd "$RUNNER_TEMP/release" && shasum -a 256 "$RELEASE_PREFIX-smoke.json" "$RELEASE_PREFIX-quality.json" >> "$RELEASE_PREFIX-SHA256SUMS")
 
+      - name: Upload the tested candidate for downstream gates
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ (startsWith(github.ref, 'refs/tags/') || inputs.full == true) && 'candidate' || 'release' }}-${{ matrix.target }}
+          path: ${{ runner.temp }}/release/
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Upload stable quality and bootstrap evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-${{ matrix.target }}
+          path: |
+            ${{ runner.temp }}/quality/quality.json
+            ${{ runner.temp }}/quality/*.log
+            ${{ runner.temp }}/quality/fixture-reports/*.json
+            ${{ runner.temp }}/quality.log
+            ${{ runner.temp }}/native-bootstrap.log
+          if-no-files-found: warn
+          retention-days: 90
+
+  fixtures:
+    name: fixtures (${{ matrix.target }}, shard ${{ matrix.shard }})
+    if: startsWith(github.ref, 'refs/tags/') || inputs.full == true
+    needs: build
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [linux-amd64, linux-arm64, darwin-arm64]
+        shard: [0, 1, 2, 3]
+        include:
+          - target: linux-amd64
+            os: ubuntu-24.04
+          - target: linux-arm64
+            os: ubuntu-24.04-arm
+          - target: darwin-arm64
+            os: macos-14
+    defaults:
+      run:
+        shell: bash
+    env:
+      GOPURS_RELEASE_TARGET: ${{ matrix.target }}
+      FIXTURE_SHARD: ${{ matrix.shard }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: DeterminateSystems/determinate-nix-action@v3.5.2
+      - uses: actions/download-artifact@v4
+        with:
+          name: candidate-${{ matrix.target }}
+          path: ${{ runner.temp }}/candidate
+      - name: Select the exact tested compiler
+        run: |
+          version=$(nix develop --no-update-lock-file --command node -p 'JSON.parse(require("fs").readFileSync("package.json")).version' | tail -n 1)
+          prefix="gopurs-$version-$GOPURS_RELEASE_TARGET"
+          (cd "$RUNNER_TEMP/candidate" && shasum -a 256 -c "$prefix-SHA256SUMS")
+          mkdir "$RUNNER_TEMP/npm-candidate"
+          tar -xzf "$RUNNER_TEMP/candidate/gopurs-$version.tgz" -C "$RUNNER_TEMP/npm-candidate" package/bin/gopurs.js
+          cp "$RUNNER_TEMP/npm-candidate/package/bin/gopurs.js" bin/gopurs.js
+          cp "$RUNNER_TEMP/candidate/$prefix" bin/gopurs-native
+          chmod +x bin/gopurs-native
+      - name: Install the pinned Go library sources
+        run: nix develop --no-update-lock-file --command ./bin/setup --locked --all
+      - name: Run one disjoint part of the complete fixture campaign
+        run: |
+          nix develop --no-update-lock-file --command node tools/release-quality.mjs \
+            --full --phase fixtures --shard "$FIXTURE_SHARD" --shard-count 4 \
+            --report "$RUNNER_TEMP/quality" | tee "$RUNNER_TEMP/quality.log"
+      - name: Require clean sources after fixture execution
+        run: test -z "$(git status --porcelain --untracked-files=all)"
+      - name: Upload stable fixture evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fixtures-${{ matrix.target }}-${{ matrix.shard }}
+          path: |
+            ${{ runner.temp }}/quality/quality.json
+            ${{ runner.temp }}/quality/*.log
+            ${{ runner.temp }}/quality/fixture-reports/*.json
+          if-no-files-found: error
+          retention-days: 90
+
+  finalize:
+    name: qualify and attest (${{ matrix.target }})
+    if: startsWith(github.ref, 'refs/tags/') || inputs.full == true
+    needs: [build, fixtures]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [linux-amd64, linux-arm64, darwin-arm64]
+    defaults:
+      run:
+        shell: bash
+    env:
+      GOPURS_RELEASE_TARGET: ${{ matrix.target }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: DeterminateSystems/determinate-nix-action@v3.5.2
+      - uses: actions/download-artifact@v4
+        with:
+          name: candidate-${{ matrix.target }}
+          path: ${{ runner.temp }}/release
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: fixtures-${{ matrix.target }}-*
+          path: ${{ runner.temp }}/fixtures
+      - name: Require complete qualification of the exact candidate
+        id: identity
+        run: |
+          version=$(nix develop --no-update-lock-file --command node -p 'JSON.parse(require("fs").readFileSync("package.json")).version' | tail -n 1)
+          prefix="gopurs-$version-$GOPURS_RELEASE_TARGET"
+          (cd "$RUNNER_TEMP/release" && shasum -a 256 -c "$prefix-SHA256SUMS")
+          reports=()
+          for shard in 0 1 2 3; do
+            reports+=(--fixtures "$RUNNER_TEMP/fixtures/fixtures-$GOPURS_RELEASE_TARGET-$shard/quality.json")
+          done
+          nix develop --no-update-lock-file --command node tools/release-quality-report.mjs \
+            --core "$RUNNER_TEMP/release/$prefix-quality.json" "${reports[@]}" \
+            --build "$RUNNER_TEMP/release/$prefix-build.json" --out "$RUNNER_TEMP/complete-quality.json"
+          cp "$RUNNER_TEMP/complete-quality.json" "$RUNNER_TEMP/release/$prefix-quality.json"
+          # The original candidate checksums were verified above. Only the
+          # partial quality report is replaced before the final files are signed.
+          awk -v name="$prefix-quality.json" '$2 != name' "$RUNNER_TEMP/release/$prefix-SHA256SUMS" > "$RUNNER_TEMP/checksums"
+          (cd "$RUNNER_TEMP/release" && shasum -a 256 "$prefix-quality.json") >> "$RUNNER_TEMP/checksums"
+          mv "$RUNNER_TEMP/checksums" "$RUNNER_TEMP/release/$prefix-SHA256SUMS"
+          (cd "$RUNNER_TEMP/release" && shasum -a 256 -c "$prefix-SHA256SUMS")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "prefix=$prefix" >> "$GITHUB_OUTPUT"
+
       - name: Export npm provenance for an authenticated first publication
         if: startsWith(github.ref, 'refs/tags/') && matrix.target == 'linux-amd64'
         env:
-          RELEASE_PREFIX: ${{ steps.release.outputs.prefix }}
-          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+          RELEASE_PREFIX: ${{ steps.identity.outputs.prefix }}
+          RELEASE_VERSION: ${{ steps.identity.outputs.version }}
         run: |
           nix develop --no-update-lock-file --command node tools/release-npm-provenance.mjs generate \
             --package "$RUNNER_TEMP/release/gopurs-$RELEASE_VERSION.tgz" \
@@ -152,9 +290,9 @@ jobs:
         uses: actions/attest@v4
         with:
           subject-path: |
-            ${{ runner.temp }}/release/gopurs-${{ steps.release.outputs.version }}.tgz
-            ${{ runner.temp }}/release/${{ steps.release.outputs.prefix }}
-          sbom-path: ${{ runner.temp }}/release/${{ steps.release.outputs.prefix }}-sbom.cdx.json
+            ${{ runner.temp }}/release/gopurs-${{ steps.identity.outputs.version }}.tgz
+            ${{ runner.temp }}/release/${{ steps.identity.outputs.prefix }}
+          sbom-path: ${{ runner.temp }}/release/${{ steps.identity.outputs.prefix }}-sbom.cdx.json
           create-storage-record: false
 
       - name: Retain the portable signature bundles
@@ -162,12 +300,12 @@ jobs:
         env:
           PROVENANCE_BUNDLE: ${{ steps.provenance.outputs.bundle-path }}
           SBOM_BUNDLE: ${{ steps.sbom.outputs.bundle-path }}
-          RELEASE_PREFIX: ${{ steps.release.outputs.prefix }}
+          RELEASE_PREFIX: ${{ steps.identity.outputs.prefix }}
         run: |
           cp "$PROVENANCE_BUNDLE" "$RUNNER_TEMP/release/$RELEASE_PREFIX-provenance.sigstore.json"
           cp "$SBOM_BUNDLE" "$RUNNER_TEMP/release/$RELEASE_PREFIX-sbom.sigstore.json"
 
-      - name: Upload the tested release candidate
+      - name: Upload the fully qualified release candidate
         uses: actions/upload-artifact@v4
         with:
           name: release-${{ matrix.target }}
@@ -175,22 +313,10 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
-      - name: Upload quality and bootstrap evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: quality-${{ matrix.target }}
-          path: |
-            ${{ runner.temp }}/quality/
-            ${{ runner.temp }}/quality.log
-            ${{ runner.temp }}/native-bootstrap.log
-          if-no-files-found: warn
-          retention-days: 90
-
   draft-release:
     name: Prepare the GitHub release for review
     if: startsWith(github.ref, 'refs/tags/')
-    needs: build
+    needs: finalize
     runs-on: ubuntu-24.04
     permissions:
       contents: write

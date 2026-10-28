@@ -3,6 +3,177 @@
 This is a working record for the `0.1.0` release gates. It is not a release
 certificate. The gate list is in [`todo.md`](../todo.md).
 
+## RC2 quick CI and full-campaign split — 28 October 2026
+
+PR campaign [40547270158](https://github.com/0x000000000000000000001/gopurs/actions/runs/40547270158)
+passed on Linux amd64/arm64 and macOS arm64. It tested head
+`738265985438d9dfb1301236c9b2900f911b4980` through merge commit
+`09792f8cc802dd8d39311a28062bbb0606f655cf`. Each platform passed 18 quick
+gates: 13 Node files with 183 passing entries and no skips, three Go tool
+commands, five representative fixtures, and the package-surface check. The
+seven-entry sidecar regression, two scanner tests and native preparation test
+with race detection ran on every platform. Nix checks, fresh optimized native
+bootstraps, clean-source checks and both installed-artifact host smokes passed.
+
+The three npm archives are identical, with SHA-256
+`6bf4b90184a1cee74c1c1e97c8e99a4e0bf75cac08157a7b974833a216e08896`.
+All six artifact ZIP digests and 12 release checksum subjects per platform were
+verified. The metadata identifies clean preview builds at the tested merge,
+with the public TAST frontend `105f5752b39cc0f6c99a40064295338bf57ad223` and
+identical pinned inputs. The recovered completion audit re-read the existing
+Linux evidence and downloaded only the missing macOS ZIPs. Its 222-file archive
+is `ci-rc2-pr-40547270158` under
+`.gopurs-evidence/release-preparation-20261026` at the workspace root; its
+`SHA256SUMS` digest is
+`b782ef4d2334487112c9577f5cb85dddc89c1792ad5a3882280e8a073a999f1a`.
+This establishes quick PR qualification of that commit, before the workflow
+changes below; it does not establish full tagged qualification or publication.
+
+The completed logs of the earlier RC1 tag campaign
+[40503372835](https://github.com/0x000000000000000000001/gopurs/actions/runs/40503372835)
+also establish a separate Linux duration problem. Both jobs reached the
+six-hour job limit during fixtures: amd64 had started wave 37 of 54, while
+arm64 had started the final wave. Reaching fixtures means the controller had
+successfully completed all 99 Node-file commands, the three Go tool race gates
+and the native emission race gate. It does not establish individual Node
+pass/skip totals or completion of the interrupted fixture wave. Both evidence
+uploads then failed with `ENOENT` while archiving live workspace paths under
+temporary compiler snapshots. The workflow logs and
+`ci-rc1-tag/final-linux-diagnosis.json` are retained, but the missing Linux
+quality artifacts prevent an independent audit of their per-test reports.
+Those incomplete jobs do not qualify RC1.
+
+The revised full workflow keeps the fresh build, all Node files, three Go race
+gates, native emission race gate, package check and installed-artifact smokes in
+the build/core job. Four disjoint fixture jobs per platform then consume that
+job's candidate artifact, verify its checksums and reuse its native compiler
+without another bootstrap. They retain the existing fixture resource limits,
+snapshot comparisons and application executions. The aggregate requires every
+selected fixture exactly once in each profile: currently 401 Release and 401
+Dev fixtures. It checks the complete core inventory, all four shard identities,
+stable per-batch reports, clean source commit, target, compiler hashes and GitHub
+run identity against the original build metadata. Partial reports explicitly
+use `requestedFull: true` and `full: false`; only the validated aggregate records
+`full: true`.
+
+The final quality report replaces the partial report and its checksum before
+provenance and SBOM signing. Draft-release creation depends on successful
+finalization of all three platforms. Evidence uploads include only stable logs
+and reports, excluding generated workspaces and caches. Because the identity
+also includes `GITHUB_RUN_ATTEMPT`, retry the full campaign with **Re-run all
+jobs**: **Re-run failed jobs** would mix reports from different attempts and be
+rejected by aggregation.
+
+Actionlint 1.7.7 passes both workflows. The focused resource/report suite passes
+12/12 tests, including a real aggregation CLI invocation over 162 synthetic
+batch reports and negative identity/coverage cases. A real fixture-phase pilot
+then passed the first five Release fixtures in 121.4 seconds, including TAST
+compilation, native generation, strict snapshots, Go builds and execution. It
+used the recorded local frontend and compiler, and remains explicitly partial
+(`full: false`, one of 162 diagnostic shards); it is not a full qualification.
+The stable batch report is retained outside its generated workspace. Hosted
+validation of this workflow revision, the full tag campaign and public-artifact
+installation remain required.
+
+## RC1 tag failure and RC2 preparation — 27 October 2026
+
+The clean PR campaign [40491438925](https://github.com/0x000000000000000000001/gopurs/actions/runs/40491438925)
+passed on all three platforms, followed by the main campaign
+[40503318512](https://github.com/0x000000000000000000001/gopurs/actions/runs/40503318512)
+at merge commit `c91d2f6ad6b833e44170794fa38ec74062fd26d2`. These are quick gates.
+The signed tag `v0.1.0-rc.1` points to
+`8361c05f0a0517d55be7ce8be7600cec198c33ee`, with the same source tree.
+
+The full tag campaign [40503372835](https://github.com/0x000000000000000000001/gopurs/actions/runs/40503372835)
+cannot qualify that candidate: macOS passed Nix, its fresh native bootstrap and
+65 Node files, then failed `native-go-code.test.mjs`. Its `go build -trimpath`
+timed out after 900 seconds, before the scanner executable ran. The bootstrap's
+Go build had taken 709.9 seconds. No quality-cache entries had been evicted before
+the failure. The signed tag and original failure evidence are retained; no npm
+package or public GitHub Release was created for RC1.
+
+Three local diagnostic builds used Go 1.27.0, the same retained native source,
+new caches, two Go threads and a 120-second limit per invocation. RSS was sampled
+every two seconds and Go GC traces were recorded:
+
+| Compiler package profile | Memory setting | Build time | Peak compiler RSS | Final cumulative GC share |
+| --- | --- | ---: | ---: | ---: |
+| Optimized | `GOMEMLIMIT=4GiB` | 108.00 s | 7.55 GiB | 43% |
+| Optimized | Default limit (`off`) | 50.95 s | 10.52 GiB | 12% |
+| `-N -l` for `gopurs/output/purescript` only | `GOMEMLIMIT=4GiB` | 36.75 s | 3.96 GiB | 14% |
+
+The first build's live Go heap exceeded its soft memory limit. This establishes
+local GC pressure, not a complete diagnosis of the slower GitHub runner. The
+third profile kept the library's assertions intact: the scanner's original two
+tests passed in 35.9 seconds from a new cache, including JavaScript parity and
+the explicit one-MiB stack limit. This is a diagnostic comparison, not a backend
+performance benchmark.
+
+A separate cold-cache experiment compiled the actual preparation and emission
+Go tests together with `-race`. The optimized build reached a sampled 7.64-GiB
+compiler RSS and was stopped at 120.01 seconds. The targeted `-N -l` build
+finished in 67.81 seconds at 3.96 GiB; both real test groups then passed with race
+detection and their original 30-second runtime deadlines. The optimized attempt
+is an interrupted diagnostic, not a completed failing test campaign.
+
+RC2 applies that profile only to the scanner, preparation and emission functional
+probes. Scanner and preparation checks are included in quick CI as well, so the
+next PR exercises the corrected compilations. The optimized release bootstrap
+and the generated application's Release/Dev gates remain separate checks. The
+new candidate still requires its own CI, signed-tag gate, provenance verification
+and installation from public artifacts.
+
+The first RC2 PR campaign [40528983021](https://github.com/0x000000000000000000001/gopurs/actions/runs/40528983021)
+tested head `23e452010ea7a3f5af587f74bb967f6bc75b2ac2` through merge commit
+`5c87178d163fd9faf48c54418c2185eb94f67a56`. Both Linux platforms passed all
+17 quick gates, with 176 Node entries each and no skips, including the scanner
+and preparation probes. Their installed-artifact smokes passed and their npm
+archives were identical. Their optimized native binaries, JavaScript compiler
+bundle and embedded runtime/helper bytes matched the preceding clean RC1
+artifacts. These comparisons describe the source before the sidecar fix below.
+
+macOS passed Nix, its fresh native bootstrap and nine Node files, then failed
+gate 10, `driver-cache.test.mjs`, in the `native-sequential` subtest. Publishing
+`ffi-digests-v1.json` failed because its shared `.next` file had already been
+renamed by another writer. The failing backend invocation took 3.685 seconds;
+this was an `ENOENT` race, not a compilation timeout. The JavaScript and native
+parallel subtests passed. The scanner and preparation probes, subsequent gates,
+clean-source check, packaging and smokes were not reached on macOS. The failed
+campaign and its original logs are retained in `ci-rc2-pr` under the evidence
+root, with `SHA256SUMS` digest
+`902e87dbaf2e08ec0cf92e1bb077e3ca250c626001794f44e4bc882e8e939062`.
+
+A focused reproduction called the real JavaScript-hosted manifest writer with
+20 concurrent publishers: one succeeded and 19 failed with `ENOENT` in about
+2 ms. Build manifests, FFI digests and global-function sidecars now write their
+temporary files in the owning cache session's private stage before renaming
+them into the shared cache. The regression runs 20 concurrent real Aff writers
+for each sidecar, requires every write to succeed, decodes a complete published
+payload, and checks that the stages are empty and no shared temporary remains.
+The updated JavaScript build and the regression file pass: seven Node entries,
+including its three concurrent-write subtests. Quick CI now also runs this file
+before the end-to-end driver-cache check. A fresh optimized native bootstrap
+passes with 522 typed modules and 326,579 types. This local diagnostic uses the
+recorded frontend binary with SHA-256
+`efac5816a482d5581cfc990892f8b24f1d3343f8df1798572ea1a0a96bd07991`;
+it does not establish identity with the public frontend used by CI. The complete
+driver-cache scenario then passed on JavaScript, native sequential and native
+parallel hosts: four Node entries, zero failures or skips, in 275.7 seconds.
+Each host ran the existing pair of simultaneous forced compilations and checked
+that their generated output still matched clean generation. The subsequent
+hosted quick validation is recorded above. Historical timings, compiler hashes
+and frontend identities below retain their pre-fix provenance.
+
+The local diagnostic scripts, source copy, command reports, RSS samples and
+logs are archived under `.gopurs-evidence/release-preparation-20261026/rc1-go-timeout-probes`
+at the workspace root. Its `SHA256SUMS` digest is
+`b3e3c93d1cce235fd37a04ff21b08d31ab2d78cc7ba4d39140e302b625aaa5f7`.
+The tag failure archive is `ci-rc1-tag` under the same evidence root.
+The separate race experiment is archived in `rc1-race-memory-probes`, including
+the initial sandbox-rejected attempt and the completed second attempt. Its
+`SHA256SUMS` digest is
+`f839fa30bb46d769eb46bbcc9aa5113608186e5e5a5fa739fc483f2a55547d63`.
+
 ## Initial three-platform CI — 27 October 2026
 
 PR CI run [40476860720](https://github.com/0x000000000000000000001/gopurs/actions/runs/40476860720)

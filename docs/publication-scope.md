@@ -9,7 +9,7 @@ what users may rely on. It is not evidence that the release gates in
 | Item | Decision |
 | --- | --- |
 | Package | `gopurs` |
-| First candidate | `0.1.0-rc.1` |
+| Current candidate | `0.1.0-rc.2` |
 | First final version | `0.1.0` |
 | Version source | [`package.json`](../package.json) |
 | Versioning | [Semantic Versioning 2.0.0](https://semver.org/) |
