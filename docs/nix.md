@@ -76,6 +76,28 @@ The complete compiler fixture suite and the release benchmark gates are
 separate checks described in [testing.md](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/testing.md) and
 [benchmark-protocol.md](benchmark-protocol.md).
 
+## CI frontend cache
+
+Quick PR and branch builds can restore an Actions cache containing only the
+runtime closure of the pinned `purs-tast` tool. A quick push or manual run on
+`main` populates it before checking or building gopurs. Manual quick runs can
+therefore seed the cache even when a merged PR's qualification was reused.
+The exact key includes the runner OS/architecture and the flake, Nix and
+bootstrap pins; there is no fallback prefix or cross-platform restoration.
+
+The workflow exports that closure with `nix copy` into a dedicated directory
+under `RUNNER_TEMP`. It never archives the complete `/nix` directory, installer
+receipts, GHC build dependencies or gopurs outputs. Importing this repository's
+Actions cache uses `--no-check-sigs`; its trust comes from the repository's
+cache scope rather than a public Nix signing key. PRs only restore; they do not
+publish caches for subsequent builds.
+
+Cache failures fall back to the normal pinned build. Set the repository variable
+`GOPURS_NIX_TOOLS_CACHE=false` to disable the optimization. Tags and manual full
+campaigns always bypass it and bootstrap the current gopurs source afresh.
+No warm-run CI speedup is claimed until a producer and consumer have been
+measured. The compiler's functional test caches remain private to each run.
+
 ## Native bootstrap
 
 The native Go compiler is built from source with the same pinned tools:

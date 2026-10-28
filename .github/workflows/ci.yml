@@ -20,22 +20,55 @@ permissions:
   contents: read
 
 jobs:
+  plan:
+    name: Select and verify CI scope
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+    outputs:
+      build: ${{ steps.scope.outputs.build }}
+      matrix: ${{ steps.scope.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ startsWith(github.ref, 'refs/tags/') && github.ref || '' }}
+          fetch-depth: 0
+      - name: Verify the checked-out source identity
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            test "$(git cat-file -t "$GITHUB_REF")" = tag
+            test "$(git rev-parse "$GITHUB_REF^{commit}")" = "$GITHUB_SHA"
+          fi
+      - name: Test the CI classification and qualification guards
+        run: node --test tools/ci/*.test.mjs
+      - name: Select builds or reuse identical main qualification
+        id: scope
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CI_FULL: ${{ inputs.full == true }}
+        run: node tools/ci/policy.mjs
+      - name: Retain the scope decision
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-plan
+          path: ${{ runner.temp }}/ci-plan.json
+          if-no-files-found: error
+
   build:
     name: build and test (${{ matrix.target }})
+    needs: plan
+    if: needs.plan.outputs.build == 'true'
     runs-on: ${{ matrix.os }}
     timeout-minutes: ${{ (startsWith(github.ref, 'refs/tags/') || inputs.full == true) && 360 || 240 }}
     permissions:
       contents: read
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - target: linux-amd64
-            os: ubuntu-24.04
-          - target: linux-arm64
-            os: ubuntu-24.04-arm
-          - target: darwin-arm64
-            os: macos-14
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
     defaults:
       run:
         shell: bash
@@ -73,8 +106,43 @@ jobs:
       - name: Install the pinned Nix runner
         uses: DeterminateSystems/determinate-nix-action@v3.5.2
 
-      # No actions/cache or project binary cache is restored. Nix may substitute
-      # public toolchain dependencies; this checkout's compiler is built below.
+      # Cache only the exported runtime closure of the pinned TAST frontend.
+      # Never archive /nix itself (installer state can contain credentials),
+      # project outputs, compiler caches or full/tag qualification inputs.
+      - name: Restore the pinned frontend tools
+        id: frontend-cache
+        if: vars.GOPURS_NIX_TOOLS_CACHE != 'false' && env.GOPURS_RELEASE_FULL != 'true'
+        continue-on-error: true
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/nix-purs-cache
+          key: nix-purs-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('flake.lock', 'flake.nix', 'nix/*.nix', 'bootstrap-sources.json') }}
+      - name: Import the repository's frontend cache
+        if: steps.frontend-cache.outputs.cache-hit == 'true'
+        continue-on-error: true
+        run: nix copy --all --from "file://$RUNNER_TEMP/nix-purs-cache" --no-check-sigs
+      - name: Export the frontend for later quick runs
+        id: frontend-export
+        if: >-
+          vars.GOPURS_NIX_TOOLS_CACHE != 'false' && env.GOPURS_RELEASE_FULL != 'true' &&
+          github.ref == 'refs/heads/main' &&
+          (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+          steps.frontend-cache.outputs.cache-hit != 'true'
+        continue-on-error: true
+        run: |
+          frontend=$(nix build .#purs-tast --no-update-lock-file --no-link --print-out-paths)
+          rm -rf "${RUNNER_TEMP:?}/nix-purs-cache"
+          mkdir "$RUNNER_TEMP/nix-purs-cache"
+          nix copy --to "file://$RUNNER_TEMP/nix-purs-cache?compression=zstd" "$frontend"
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+      - name: Save only the frontend runtime closure
+        if: steps.frontend-export.outputs.ready == 'true'
+        continue-on-error: true
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/nix-purs-cache
+          key: nix-purs-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('flake.lock', 'flake.nix', 'nix/*.nix', 'bootstrap-sources.json') }}
+
       - name: Check the Nix packages and TAST application
         run: nix flake check --no-update-lock-file --print-build-logs
 
@@ -139,6 +207,22 @@ jobs:
         with:
           name: ${{ (startsWith(github.ref, 'refs/tags/') || inputs.full == true) && 'candidate' || 'release' }}-${{ matrix.target }}
           path: ${{ runner.temp }}/release/
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Record this PR's complete Linux quick qualification
+        if: github.event_name == 'pull_request' && matrix.target == 'linux-amd64'
+        env:
+          RELEASE_PREFIX: ${{ steps.release.outputs.prefix }}
+        run: |
+          node tools/ci/receipt.mjs "$RUNNER_TEMP/quality/quality.json" \
+            "$RUNNER_TEMP/release/$RELEASE_PREFIX-smoke.json" "$RUNNER_TEMP/qualification"
+      - name: Retain the qualification for an identical merge to main
+        if: github.event_name == 'pull_request' && matrix.target == 'linux-amd64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: qualification-linux-amd64
+          path: ${{ runner.temp }}/qualification/
           if-no-files-found: error
           retention-days: 90
 
