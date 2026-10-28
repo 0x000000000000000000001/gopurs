@@ -20,6 +20,10 @@ Set `package.json` and `package-lock.json` to the same release version. Use
 the exact TAST revision from `bootstrap-sources.json`, compatibility limits,
 platform results and benchmark evidence.
 
+Before creating the tag, update the active version references in `README.md`,
+`docs/quickstart.md`, `docs/publication-scope.md` and
+`docs/library-source-audit.md`, while preserving historical versions and results.
+
 Start from a fresh checkout and use the committed Nix and dependency locks:
 
 ```bash
