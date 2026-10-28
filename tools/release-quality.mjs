@@ -1,29 +1,26 @@
 #!/usr/bin/env node
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statfsSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statfsSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import { isDeepStrictEqual } from "node:util";
 import { CommandRunner } from "./command-runner.mjs";
 import { parseOptions, selectFixtures } from "./test-selection.mjs";
 import { fixtureBatches, fixtureWorkers, QualityGoCache, readFixtureReport, runFixtureWaves } from "./release-quality-resources.mjs";
+import { emissionGateName, packageGateName, qualityIdentity, qualityOptions, shardBatches } from "./release-quality-report.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
-let full = false;
-let report;
-for (let index = 2; index < process.argv.length; index++) {
-  const arg = process.argv[index];
-  if (arg === "--help") {
-    console.log("Usage: node tools/release-quality.mjs [--full] [--report DIRECTORY]\nRequires a fresh JS/native build, GOPURS_NATIVE_OUTPUT from --keep-workspace, typed purs and locked library checkouts. --full runs all Node tests, Go race tests, and Release/Dev fixtures. Uses a private bounded Go cache; retains logs and reports. Rust remains outside this gate.");
-    process.exit(0);
-  }
-  if (arg === "--full") full = true;
-  else if (arg === "--report" && process.argv[index + 1]) report = resolve(process.argv[++index]);
-  else throw new Error(`Unknown or incomplete option: ${arg}`);
+if (process.argv.includes("--help")) {
+  console.log("Usage: node tools/release-quality.mjs [--full [--phase core|fixtures --shard INDEX --shard-count COUNT]] [--report DIRECTORY]\nRequires a fresh JS/native build, typed purs and locked libraries. Core/all phases also require GOPURS_NATIVE_OUTPUT from --keep-workspace. --full without --phase runs the entire campaign. Partial phases never claim full qualification. Rust remains outside this gate.");
+  process.exit(0);
 }
+const { full, phase, shard, report: reportOption } = qualityOptions(process.argv.slice(2));
+let report = reportOption;
 if (!existsSync(join(root, "bin/gopurs-native"))) throw new Error("Build the native compiler before running release quality gates");
-if (!existsSync(join(process.env.GOPURS_NATIVE_OUTPUT ?? "/missing-native-output", "purescript"))) {
+if (phase !== "fixtures" && !existsSync(join(process.env.GOPURS_NATIVE_OUTPUT ?? "/missing-native-output", "purescript"))) {
   throw new Error("Release quality requires GOPURS_NATIVE_OUTPUT from build:native -- --keep-workspace, so native tests cannot silently skip");
 }
+const identity = qualityIdentity(root);
 report ??= mkdtempSync(join(tmpdir(), "gopurs-quality-"));
 mkdirSync(report, { recursive: true });
 if (existsSync(join(report, "quality.json"))) throw new Error(`Quality report already exists: ${report}`);
@@ -45,7 +42,8 @@ const fixtureEnv = { GOPURS_JS: "0", GOPURS_RUST: "0", GOPURS_TEST_COMPILER: joi
   GOPURS_PREPARE_JOBS: "1", GOPURS_PBO_JOBS: "1", GOPURS_EMIT_JOBS: "2", GOFLAGS: "-trimpath" };
 function save() {
   const file = join(report, "quality.json");
-  writeFileSync(file + ".tmp", JSON.stringify({ full, status, error: failure, fixtureWorkers: workers,
+  writeFileSync(file + ".tmp", JSON.stringify({ schema: 1, requestedFull: full, full: full && phase === "all", phase, shard,
+    identity, status, error: failure, fixtureWorkers: workers,
     fixtures: fixtureCount === undefined ? undefined : {
       selectedPerProfile: fixtureCount,
       passed: Object.fromEntries(["release", "dev"].map(profile => [profile,
@@ -97,38 +95,50 @@ try {
   const tests = full ? readdirSync(join(root, "tools")).filter(name => name.endsWith(".test.mjs")).sort() : quick;
   // node --test isolates files in child processes too. Separate invocations let
   // us bound the shared private Go cache between those same file boundaries.
-  for (const name of tests) await runSingle(`Node ${name}`, process.execPath, ["--test", "--test-concurrency=1", `tools/${name}`]);
-  for (const module of ["build-cache", "c1c", "ffi-gen"]) await runSingle(`Go ${module}${full ? " (race)" : ""}`, "go", ["test", ...(full ? ["-race"] : []), "-count=1", "./..."], join(root, "tools", module));
-  if (full) {
+  if (phase !== "fixtures") {
+    for (const name of tests) await runSingle(`Node ${name}`, process.execPath, ["--test", "--test-concurrency=1", `tools/${name}`]);
+    for (const module of ["build-cache", "c1c", "ffi-gen"]) await runSingle(`Go ${module}${full ? " (race)" : ""}`, "go", ["test", ...(full ? ["-race"] : []), "-count=1", "./..."], join(root, "tools", module));
+  }
+  if (full && phase !== "fixtures") {
     const emissionTest = join(process.env.GOPURS_NATIVE_OUTPUT, "purescript/emission_native_test.go");
     writeFileSync(emissionTest, readFileSync(join(root, "tools/emission-native_test.go")), { flag: "wx" });
     try {
       // Match the bounded functional-probe profile; preserve race detection
       // and the runtime deadline. The release bootstrap remains optimized.
-      await runSingle("Native emission cancellation and concurrency (race)", "go", ["test", "-race", "-gcflags=gopurs/output/purescript=-N -l", "-count=1", "-run", "^TestPipelineNative", "-timeout", "30s", "./purescript"], process.env.GOPURS_NATIVE_OUTPUT);
+      await runSingle(emissionGateName, "go", ["test", "-race", "-gcflags=gopurs/output/purescript=-N -l", "-count=1", "-run", "^TestPipelineNative", "-timeout", "30s", "./purescript"], process.env.GOPURS_NATIVE_OUTPUT);
     } finally {
       rmSync(emissionTest, { force: true });
     }
+  }
+  if (full && phase !== "core") {
     const { selected, skipped } = selectFixtures(root, parseOptions(["--all"], { env: { UPDATE_SNAPSHOTS: "0" } }));
     if (skipped.length) throw new Error("Release quality requires every fixture, without exclusions");
     fixtureCount = selected.length;
     save();
     console.log(`Full fixture selection: ${selected.length} per profile, ${workers} concurrent batches of at most 5.`);
-    await runFixtureWaves(fixtureBatches(selected), workers, batch => {
+    const batches = fixtureBatches(selected).map((batch, batchIndex) => ({ ...batch, batchIndex }));
+    mkdirSync(join(report, "fixture-reports"), { recursive: true });
+    await runFixtureWaves(shard ? shardBatches(batches, shard) : batches, workers, batch => {
       const name = `${batch.profile} fixtures ${batch.start + 1}-${batch.start + batch.targets.length}`;
       return run(name, "bash", ["bin/test", ...batch.targets, "--keep-going", ...(batch.profile === "dev" ? ["--dev"] : [])], root, fixtureEnv,
-        log => readFixtureReport(log, root, batch));
+        log => {
+          const evidence = readFixtureReport(log, root, batch);
+          const file = `fixture-reports/${String(batch.batchIndex + 1).padStart(3, "0")}-${batch.profile}-${batch.start + 1}-${batch.start + batch.targets.length}.json`;
+          copyFileSync(evidence.file, join(report, file));
+          return { ...evidence, file, batchIndex: batch.batchIndex, targets: batch.targets.map(target => relative(root, target)) };
+        });
     }, trimCache, wave => {
       const disk = statfsSync(workspaces);
       const required = (3 + wave.length * 0.75) * 1024 ** 3;
       if (disk.bavail * disk.bsize < required) throw new Error(`Fixture wave needs ${(required / 1024 ** 3).toFixed(2)} GiB free; reports retained at ${report}`);
     });
-  } else {
+  } else if (!full) {
     await runSingle("Representative executable fixtures", "bash", ["bin/test", "FFIIntegerReturns", "TCO", "ThunkFusion", "Int32Loops", "StringEdgeCases"], root, fixtureEnv);
   }
-  await runSingle("npm package surface", "npm", ["run", "test:package"]);
+  if (phase !== "fixtures") await runSingle(packageGateName, "npm", ["run", "test:package"]);
+  if (!isDeepStrictEqual(qualityIdentity(root), identity)) throw new Error("Source or compiler identity changed during quality gates");
   status = "passed";
-  console.log(`Release quality: ${results.length} gates passed (${full ? "full" : "quick"}).`);
+  console.log(`Release quality: ${results.length} gates passed (${full ? phase === "all" ? "full" : `partial ${phase}` : "quick"}).`);
 } catch (error) {
   status = "failed";
   failure = error.message;

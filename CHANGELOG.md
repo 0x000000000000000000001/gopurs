@@ -11,7 +11,8 @@ All notable changes to gopurs are recorded here. The format follows
 Second candidate for `0.1.0`, retaining the frontend, bootstrap dependencies,
 features and known limitations listed for `0.1.0-rc.1` below. The first candidate
 was not published to npm or GitHub Releases: its full macOS gate timed out while
-compiling the native scanner test. The signed first-candidate tag is retained.
+compiling the native scanner test, and both Linux jobs reached their six-hour
+limit during the fixture campaign. The signed first-candidate tag is retained.
 
 ### Fixed
 
@@ -24,6 +25,12 @@ compiling the native scanner test. The signed first-candidate tag is retained.
 - Publish build manifests, FFI digests and global-function sidecars from each
   cache session's private stage. Concurrent builds no longer share a temporary
   sidecar path that another writer can rename, causing an `ENOENT` failure.
+- Separate full CI into core checks and four fixture shards per platform,
+  reusing the exact candidate compiler. Require complete Release/Dev coverage
+  and matching source, compiler and run identities before signing artifacts.
+- Upload stable quality logs and reports instead of live generated workspaces,
+  avoiding missing-file errors while interrupted processes clean up temporary
+  compiler snapshots.
 
 ## [0.1.0-rc.1]
 
