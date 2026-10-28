@@ -158,6 +158,12 @@ that status through the GitHub API. Configure the signing key on the maintainer
 account before tagging; this process does not create or distribute a private
 signing key.
 
+The CI checkouts select tag refs explicitly so the checkout action preserves
+the annotated object. Each job checks its source commit and tag immediately;
+the build also compares the local tag object with the GitHub-verified object
+before installing Nix or compiling. Ordinary PRs retain the checkout action's
+default event-commit selection.
+
 `.github/workflows/ci.yml` runs on branch changes, pull requests and version
 tags. All three platforms build inside the locked Nix environment from a fresh
 checkout without a restored project cache. Public Nix dependency substitutes
