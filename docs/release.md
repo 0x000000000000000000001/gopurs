@@ -70,6 +70,13 @@ minimum of one and maximum of six (two batches on three CPUs, three on four).
 Each batch uses `GOMAXPROCS=2`, `GOGC=100`, `GOMEMLIMIT=4GiB`, and backend
 prepare/PBO/emission worker counts of 1/1/2. Snapshot updates are forced off.
 
+Before concurrent fixture batches start, the controller runs `spago fetch`
+once in a disposable fixture workspace, using the same shared registry cache.
+This serial initialization prevents fresh Spago processes from racing to create
+the registry. It does not compile fixtures. The controller records
+`fixturePreparation` and `fixture-preparation.log`, stops if fetch fails, then
+runs every fixture in its own fresh workspace as before.
+
 The cache is trimmed only after every process in a wave has finished. It may
 grow beyond 2 GiB during a command or wave. Before a fixture wave, the command
 requires 3 GiB free plus 0.75 GiB per batch. A failed batch prevents later

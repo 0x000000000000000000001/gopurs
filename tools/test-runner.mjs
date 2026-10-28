@@ -25,7 +25,8 @@ Legacy skip_before=NAME, --skip-before=NAME and UPDATE_SNAPSHOTS=1 still work.`;
 async function runFixture(fixture, options, processes, env) {
   const { directory } = fixture;
   const phase = (name, command, args, cwd = directory, display = false) => processes.run(name, command, args, { cwd, env, display, log: join(directory, "logs", name + ".log") });
-  await phase("purescript", "spago", ["build", "-q"]);
+  // TestProcesses hides successful output and prints diagnostics on failure.
+  await phase("purescript", "spago", ["build"]);
   await phase("generate-go", process.env.GOPURS_TEST_COMPILER ?? join(root, "bin/gopurs"), ["--main", "Main", ...(options.dev ? ["--dev"] : [])]);
   const snapshots = snapshotFiles(root, fixture, env, options);
   if (!existsSync(join(directory, "output/main/main.go"))) throw new Error("gopurs did not generate output/main/main.go");

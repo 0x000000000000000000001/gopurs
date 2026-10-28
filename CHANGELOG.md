@@ -6,6 +6,36 @@ All notable changes to gopurs are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0-rc.4]
+
+Fourth candidate for `0.1.0`, retaining the compiler, pinned dependencies,
+features and limitations below. RC3 was not published: all three build/core
+jobs passed, but fixture qualification failed. A local reproduction exposed a
+race while initializing Spago's shared registry cache. The previous signed
+candidate tags remain immutable.
+
+### Fixed
+
+- Initialize fixture dependencies once with `spago fetch` before starting
+  parallel batches on a fresh runner. Keep fresh fixture workspaces, both build
+  profiles, the existing resource limits and all 401 fixtures per profile.
+- Preserve Spago diagnostics on a failed fixture by removing its quiet flag.
+- Reuse qualified PR results after merge even when GitHub clears the run's PR
+  association list, while checking the actual tested tree, parents, receipt,
+  repository, run and artifact identity.
+- Import cached frontend tools using their complete Nix store paths and verify
+  the imported paths before recording success.
+
+### Changed
+
+- Run ordinary PR checks on Linux amd64 and skip heavy builds for documentation
+  changes. Tags and explicit full campaigns retain all three supported targets.
+- Cache the pinned frontend runtime closure for quick runs; missing or unusable
+  cache entries fall back to a fresh build. Full release runs remain independent
+  of this cache.
+- Align active public installation examples and candidate tables with this
+  version, and check tag/package/lockfile/changelog agreement before heavy builds.
+
 ## [0.1.0-rc.3]
 
 Third candidate for `0.1.0`, retaining the compiler, pinned dependencies,
