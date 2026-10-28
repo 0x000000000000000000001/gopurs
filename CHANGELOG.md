@@ -6,6 +6,22 @@ All notable changes to gopurs are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0-rc.3]
+
+Third candidate for `0.1.0`, retaining the compiler, pinned dependencies,
+features and limitations of the candidates below. RC2 was not published:
+its Linux core gates passed, but the checkout action replaced the local
+annotated tag with its peeled commit and artifact preparation rejected it.
+The signed RC1 and RC2 tags are retained.
+
+### Fixed
+
+- Select release tags explicitly in every CI checkout, preserving their
+  annotated objects while retaining the default commit selection for PRs.
+- Check source commit and annotated tag identity immediately after checkout.
+  Verify that the local tag object matches GitHub's verified signature before
+  starting the release build.
+
 ## [0.1.0-rc.2]
 
 Second candidate for `0.1.0`, retaining the frontend, bootstrap dependencies,

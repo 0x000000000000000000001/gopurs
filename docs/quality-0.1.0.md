@@ -3,6 +3,50 @@
 This is a working record for the `0.1.0` release gates. It is not a release
 certificate. The gate list is in [`todo.md`](../todo.md).
 
+## RC2 tag checkout failure and RC3 preparation — 28 October 2026
+
+PR campaign [40671552573](https://github.com/0x000000000000000000001/gopurs/actions/runs/40671552573)
+passed on all three platforms for head
+`a75c984db2a8c829470cd852b4b3bf11b7fbabbd`, tested through merge
+`95dbb23b4f9bbbc8a0c5b477508621f3e11e8d0d`. Each platform passed 18 quick
+gates and 187 Node entries with no skips. The artifact audits verified clean
+sources, optimized bootstraps, checksums and both installed-host smokes. All
+three npm archives have SHA-256
+`973abc2ea12b543f8e3fe512475e57ab9629a0e4161dab104edce897298ff234`.
+The macOS artifact download required a retry after a TLS timeout; the original
+failure is retained separately from the successful recovery audit. The
+262-file evidence manifest has SHA-256
+`d797123f1c5a369e6a4a0cf91b7fbf69039a2fb76939fe62f6246c6de8af827f`.
+
+PR #3 was merged as `bb5656f38a893327b1f16abf8371cf32cdf55fc6` with the same
+source tree. Signed tag `v0.1.0-rc.2` points to the reviewed head; its annotated
+object `326d48776ec8dd222a667f350babd9af09593b39` is verified by GitHub.
+In tag campaign [40683735647](https://github.com/0x000000000000000000001/gopurs/actions/runs/40683735647),
+both Linux platforms passed their 104 partial core gates, the remote tag
+signature check and the clean-source check. Artifact preparation then failed
+with `HEAD must be the annotated tag v0.1.0-rc.2`. This does not establish full
+fixture qualification or publication; RC2 remains unpublished.
+
+The checkout logs show the cause directly: after fetching the annotated
+object, `actions/checkout@v4` at
+`11d5960a326750d5838078e36cf38b85af677262` force-fetched the event commit into
+the local tag ref. That made the local ref a lightweight tag while the remote
+signed tag remained correct. Its [ref-selection implementation](https://github.com/actions/checkout/blob/11d5960a326750d5838078e36cf38b85af677262/src/ref-helper.ts)
+compares the annotated object with the event commit, then uses that commit in
+the fallback refspec. An isolated Git experiment reproduced the failing
+refspec and verified that explicit tag selection preserves the original tag
+object and passes the existing identity checks. The original checkout and tag
+were unchanged by the experiment.
+
+RC3 selects tag refs explicitly in each CI checkout, preserves default PR
+selection, and checks the source commit and local annotation immediately. The
+build also compares the local object with GitHub's verified object before Nix
+or compilation. Compiler sources and full qualification requirements are
+unchanged. The diagnostic logs, failed-run monitor and Git experiment are
+retained under `publication-rc2-20261028` within
+`.gopurs-evidence/release-preparation-20261026` at the workspace root. A new
+green tag campaign and verified public installations remain required for RC3.
+
 ## RC2 quick CI and full-campaign split — 28 October 2026
 
 PR campaign [40547270158](https://github.com/0x000000000000000000001/gopurs/actions/runs/40547270158)
@@ -467,13 +511,16 @@ were copied from the existing application cache and hashed; their archives
 were not downloaded again. The copied application `go.mod` and `go.sum`
 provided the dependency pins.
 
-The evidence is
-`/private/tmp/gopurs-b8x-release-build-20261026/plan.json`, its stage logs and
-executable hashes. Sources, TAST, generated Go and the 12 executables remain
-available. Only that workspace's backend and Go build caches were removed
-after success, freeing 1,860,024,370 bytes; their inventories and backend
-manifests were retained. This is complete local build evidence, not a benchmark
-or a service execution check. The gate requiring b8x to build from publicly
+The original temporary workspace was lost during the interruption on
+28 October; its `plan.json` has not been recovered. The previously archived
+generated sources and 12 executables remain in
+`b8x-generated-20261026.tar.gz` under
+`.gopurs-evidence/release-preparation-20261026` at the workspace root. The
+3,242 input files were recovered separately and their exact hashes checked
+against the retained input manifest, as recorded in
+`task-inputs/b8x-release-20261026/recovery-audit.json`. This proves input
+identity, not a resumed execution of the lost plan. The local build result
+above remains historical; the gate requiring a fresh b8x build from publicly
 published artifacts remains open.
 
 ### Complete local cold/warm benchmark — 27 October

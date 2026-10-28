@@ -46,7 +46,29 @@ jobs:
       - name: Check out source and annotated tags
         uses: actions/checkout@v4
         with:
+          # An implicit tag checkout can replace its annotated object with the
+          # event's peeled commit. Keep the default SHA selection for PRs.
+          ref: ${{ startsWith(github.ref, 'refs/tags/') && github.ref || '' }}
           fetch-depth: 0
+
+      - name: Verify the checked-out source identity
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            test "$(git cat-file -t "$GITHUB_REF")" = tag
+            test "$(git rev-parse "$GITHUB_REF^{commit}")" = "$GITHUB_SHA"
+          fi
+
+      - name: Require a verified annotated release tag
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag_object=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$GITHUB_REF_NAME" --jq 'select(.object.type == "tag") | .object.sha')
+          test -n "$tag_object"
+          test "$(git rev-parse "$GITHUB_REF")" = "$tag_object"
+          verified=$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$tag_object" --jq '.verification.verified')
+          test "$verified" = true
 
       - name: Install the pinned Nix runner
         uses: DeterminateSystems/determinate-nix-action@v3.5.2
@@ -80,16 +102,6 @@ jobs:
           flags=()
           if [ "$GOPURS_RELEASE_FULL" = true ]; then flags+=(--full --phase core); fi
           nix develop --no-update-lock-file --command node tools/release-quality.mjs "${flags[@]}" --report "$RUNNER_TEMP/quality" | tee "$RUNNER_TEMP/quality.log"
-
-      - name: Require a verified annotated release tag
-        if: startsWith(github.ref, 'refs/tags/')
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          tag_object=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$GITHUB_REF_NAME" --jq 'select(.object.type == "tag") | .object.sha')
-          test -n "$tag_object"
-          verified=$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$tag_object" --jq '.verification.verified')
-          test "$verified" = true
 
       - name: Require clean sources after the build and quality gates
         run: |
@@ -171,7 +183,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ startsWith(github.ref, 'refs/tags/') && github.ref || '' }}
           fetch-depth: 0
+      - name: Verify the checked-out source identity
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            test "$(git cat-file -t "$GITHUB_REF")" = tag
+            test "$(git rev-parse "$GITHUB_REF^{commit}")" = "$GITHUB_SHA"
+          fi
       - uses: DeterminateSystems/determinate-nix-action@v3.5.2
       - uses: actions/download-artifact@v4
         with:
@@ -229,7 +249,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ startsWith(github.ref, 'refs/tags/') && github.ref || '' }}
           fetch-depth: 0
+      - name: Verify the checked-out source identity
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            test "$(git cat-file -t "$GITHUB_REF")" = tag
+            test "$(git rev-parse "$GITHUB_REF^{commit}")" = "$GITHUB_SHA"
+          fi
       - uses: DeterminateSystems/determinate-nix-action@v3.5.2
       - uses: actions/download-artifact@v4
         with:
@@ -322,6 +350,15 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0
+      - name: Verify the checked-out source identity
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git cat-file -t "$GITHUB_REF")" = tag
+          test "$(git rev-parse "$GITHUB_REF^{commit}")" = "$GITHUB_SHA"
       - uses: actions/download-artifact@v4
         with:
           pattern: release-*
