@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { isDeepStrictEqual } from "node:util";
 import { CommandRunner } from "./command-runner.mjs";
 import { parseOptions, selectFixtures } from "./test-selection.mjs";
+import { corePackages, prepareFixture } from "./test-workspace.mjs";
 import { fixtureBatches, fixtureWorkers, QualityGoCache, readFixtureReport, runFixtureWaves } from "./release-quality-resources.mjs";
 import { emissionGateName, packageGateName, qualityIdentity, qualityOptions, shardBatches } from "./release-quality-report.mjs";
 
@@ -29,7 +30,7 @@ mkdirSync(workspaces, { recursive: true });
 const cache = new QualityGoCache();
 const workers = fixtureWorkers();
 const results = [], cacheTrims = [];
-let sequence = 0, status = "running", failure, fixtureCount;
+let sequence = 0, status = "running", failure, fixtureCount, fixturePreparation;
 const baseEnv = { ...process.env, GOWORK: "off", GOPURS_GO_PACKAGES: "0", GOPURS_TEST_RUST: "0",
   GOPURS_TEST_MODES: "js,native-sequential,native-parallel",
   GOMAXPROCS: "2", GOGC: "100", GOMEMLIMIT: "4GiB", UPDATE_SNAPSHOTS: "0",
@@ -43,7 +44,7 @@ const fixtureEnv = { GOPURS_JS: "0", GOPURS_RUST: "0", GOPURS_TEST_COMPILER: joi
 function save() {
   const file = join(report, "quality.json");
   writeFileSync(file + ".tmp", JSON.stringify({ schema: 1, requestedFull: full, full: full && phase === "all", phase, shard,
-    identity, status, error: failure, fixtureWorkers: workers,
+    identity, status, error: failure, fixtureWorkers: workers, fixturePreparation,
     fixtures: fixtureCount === undefined ? undefined : {
       selectedPerProfile: fixtureCount,
       passed: Object.fromEntries(["release", "dev"].map(profile => [profile,
@@ -88,6 +89,38 @@ async function runSingle(...args) {
   finally { trimCache(); }
 }
 
+async function initializeFixtureDependencies(target) {
+  const log = join(report, "fixture-preparation.log");
+  const started = Date.now(), runner = new CommandRunner();
+  let workspace;
+  fixturePreparation = { command: ["spago", "fetch"], target: relative(root, target), log, passed: false };
+  save();
+  try {
+    workspace = mkdtempSync(join(workspaces, "spago-initialize-"));
+    const { directory } = prepareFixture(root, workspace, target, 0, corePackages(root));
+    const temporary = join(directory, "tmp");
+    mkdirSync(temporary);
+    console.log(`Initialize shared Spago dependencies before fixture waves — ${log}`);
+    const result = await runner.run("spago", ["fetch"], { cwd: directory, log,
+      env: { ...baseEnv, ...fixtureEnv, TMPDIR: temporary, TMP: temporary, TEMP: temporary } });
+    Object.assign(fixturePreparation, { exitCode: result.code, signal: result.signal });
+    runner.checkInterrupted();
+    if (result.code !== 0) {
+      process.stderr.write(readFileSync(log, "utf8"));
+      throw new Error(`Spago fixture preparation failed: ${result.signal ?? result.code}; see ${log}`);
+    }
+    fixturePreparation.passed = true;
+  } catch (error) {
+    fixturePreparation.error = error.message;
+    throw error;
+  } finally {
+    runner.dispose();
+    if (workspace) rmSync(workspace, { recursive: true, force: true });
+    fixturePreparation.milliseconds = Date.now() - started;
+    save();
+  }
+}
+
 console.log(`Release quality evidence: ${report}`);
 save();
 try {
@@ -117,8 +150,12 @@ try {
     save();
     console.log(`Full fixture selection: ${selected.length} per profile, ${workers} concurrent batches of at most 5.`);
     const batches = fixtureBatches(selected).map((batch, batchIndex) => ({ ...batch, batchIndex }));
+    const assignedBatches = shard ? shardBatches(batches, shard) : batches;
+    // Spago's cold shared registry must be initialized before concurrent clients.
+    // Fetch does not compile; the unchanged gates still test every fixture.
+    if (assignedBatches.length) await initializeFixtureDependencies(assignedBatches[0].targets[0]);
     mkdirSync(join(report, "fixture-reports"), { recursive: true });
-    await runFixtureWaves(shard ? shardBatches(batches, shard) : batches, workers, batch => {
+    await runFixtureWaves(assignedBatches, workers, batch => {
       const name = `${batch.profile} fixtures ${batch.start + 1}-${batch.start + batch.targets.length}`;
       return run(name, "bash", ["bin/test", ...batch.targets, "--keep-going", ...(batch.profile === "dev" ? ["--dev"] : [])], root, fixtureEnv,
         log => {

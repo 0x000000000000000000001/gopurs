@@ -3,6 +3,41 @@
 This is a working record for the `0.1.0` release gates. It is not a release
 certificate. The gate list is in [`todo.md`](../todo.md).
 
+## RC3 fixture-cache race and RC4 preparation — 28 October 2026
+
+Tag campaign [40727256711](https://github.com/0x000000000000000000001/gopurs/actions/runs/40727256711)
+for signed RC3 commit `367163a040c90ba12f8d34c909b4c24541ea1592`
+completed with all three build/core jobs successful and all twelve fixture
+shards failed. The core jobs passed the annotated-tag checks, optimized native
+bootstrap, partial core gates and installed-artifact smokes. Finalization and
+draft creation were skipped. RC3 was not published and is not fully qualified.
+
+The examined failures occurred at `spago build -q`, before backend generation.
+The same fixture could pass elsewhere, so this was not evidence of a deterministic
+backend regression. A bounded Linux arm64 reproduction used the exact RC3
+fixture preparation, pinned library sources, public TAST frontend, Node and
+Spago tools. One cold fixture passed in 15 seconds. Starting the first three
+frontends concurrently against a new shared XDG cache reproduced two failures:
+Spago could not find its registry package-sets directory while another process
+was initializing it. The third frontend passed.
+
+A separate experiment used another entirely new XDG cache: serial `spago fetch`
+completed in 24.608 seconds without creating compiled output, then three new
+fixture workspaces passed in parallel in 7.399 seconds. It executed neither the
+backend nor generated Go applications. The retained experiment summary has
+SHA-256 `b8b1b98025fdc61a5d833e87ae831a704453347ac748695bdb58b814e64d0923`.
+This proves the targeted initialization fix, not full RC4 qualification.
+
+RC4 fetches the shared fixture dependencies before launching full fixture waves,
+records the preparation result and a stable log, and stops if preparation fails.
+It removes Spago's quiet flag so failed phases expose their existing captured
+diagnostics. Core and quick phases, fixture coverage, snapshots, profiles and
+resource limits are unchanged. The complete inventory remains 99 Node files,
+162 fixture batches and 266 final gates; the planning job separately runs the
+CI policy tests. A new successful tag campaign and public installations are
+still required for RC4. Historical sections below retain their original scope
+and status; they do not qualify this candidate.
+
 ## RC2 tag checkout failure and RC3 preparation — 28 October 2026
 
 PR campaign [40671552573](https://github.com/0x000000000000000000001/gopurs/actions/runs/40671552573)
