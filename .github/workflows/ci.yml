@@ -118,9 +118,27 @@ jobs:
           path: ${{ runner.temp }}/nix-purs-cache
           key: nix-purs-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('flake.lock', 'flake.nix', 'nix/*.nix', 'bootstrap-sources.json') }}
       - name: Import the repository's frontend cache
+        id: frontend-import
         if: steps.frontend-cache.outputs.cache-hit == 'true'
         continue-on-error: true
-        run: nix copy --all --from "file://$RUNNER_TEMP/nix-purs-cache" --no-check-sigs
+        run: |
+          shopt -s nullglob
+          narinfos=("$RUNNER_TEMP"/nix-purs-cache/*.narinfo)
+          [[ ${#narinfos[@]} -gt 0 ]]
+          store_paths=()
+          for narinfo in "${narinfos[@]}"; do
+            [[ -f "$narinfo" && ! -L "$narinfo" ]]
+            store_path=$(sed -n 's/^StorePath: //p' "$narinfo")
+            [[ "$store_path" =~ ^/nix/store/[0-9abcdfghijklmnpqrsvwxyz]{32}-[A-Za-z0-9+._?=-]+$ ]]
+            name=${narinfo##*/}
+            [[ "${name%.narinfo}" =~ ^[0-9abcdfghijklmnpqrsvwxyz]{32}$ ]]
+            [[ "$store_path" == "/nix/store/${name%.narinfo}-"* ]]
+            store_paths+=("$store_path")
+          done
+          nix copy --from "file://$RUNNER_TEMP/nix-purs-cache" --no-check-sigs "${store_paths[@]}"
+          nix path-info "${store_paths[@]}"
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+          printf 'GOPURS_FRONTEND_CACHE_IMPORTED paths=%s\n' "${#store_paths[@]}"
       - name: Export the frontend for later quick runs
         id: frontend-export
         if: >-

@@ -38,6 +38,14 @@ test('reuse requires the tested merge tree, not the PR head', () => {
   assert.throws(() => validateReuse(f.receipt, f.quality, f.smoke, f.context));
 });
 
+test('a cleared post-merge PR list is accepted only with the other identity links intact', () => {
+  const f = fixture();
+  f.context.run.pull_requests = [];
+  validateReuse(f.receipt, f.quality, f.smoke, f.context);
+  f.context.tested.tree.sha = 'e'.repeat(40);
+  assert.throws(() => validateReuse(f.receipt, f.quality, f.smoke, f.context));
+});
+
 test('changed tree, parents, source, run, attempt, PR, repository and fork are rejected', () => {
   const mutations = [
     f => { f.context.tree = 'e'.repeat(40); },
@@ -55,7 +63,10 @@ test('changed tree, parents, source, run, attempt, PR, repository and fork are r
     f => { f.context.run.event = 'push'; },
     f => { f.context.run.path = '.github/workflows/other.yml'; },
     f => { f.context.run.head_repository.full_name = 'fork/gopurs'; },
-    f => { f.context.run.pull_requests = []; },
+    f => { delete f.context.run.pull_requests; },
+    f => { f.context.run.pull_requests = null; },
+    f => { f.context.run.pull_requests = [{ number: 8, head: { sha: f.context.pr.head.sha } }]; },
+    f => { f.context.run.pull_requests = [{ number: 7, head: { sha: 'e'.repeat(40) } }]; },
     f => { f.receipt.parents = [f.context.pr.head.sha]; },
     f => { f.receipt.nodeTotals.skipped = 1; },
     f => { f.receipt.nodeResults[0].tests = 0; f.receipt.nodeResults[0].pass = 0; },
