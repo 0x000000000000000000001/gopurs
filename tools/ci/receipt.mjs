@@ -59,7 +59,10 @@ export function validateReuse(receipt, quality, smoke, { repository, tree, pr, r
   assert.equal(run.status, 'completed'); assert.equal(run.conclusion, 'success');
   assert.equal(run.repository.full_name, repository); assert.equal(run.head_repository.full_name, repository);
   assert.equal(run.head_sha, pr.head.sha);
-  assert.ok(run.pull_requests.some(item => item.number === pr.number && item.head.sha === pr.head.sha));
+  // GitHub clears this list after a PR is merged. The associated merged PR,
+  // receipt ref and actual tested Git tree/parents remain mandatory below.
+  assert.ok(Array.isArray(run.pull_requests));
+  if (run.pull_requests.length) assert.ok(run.pull_requests.some(item => item.number === pr.number && item.head.sha === pr.head.sha));
   assert.equal(receipt.repository, repository); assert.equal(receipt.ref, `refs/pull/${pr.number}/merge`);
   assert.equal(receipt.runId, String(run.id)); assert.equal(receipt.runAttempt, String(run.run_attempt));
   assert.equal(receipt.commit, tested.sha); assert.equal(receipt.tree, tree); assert.equal(tested.tree.sha, tree);
