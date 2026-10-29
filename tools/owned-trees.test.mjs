@@ -16,7 +16,7 @@ import * as S from '../output/PureScript.Backend.Optimizer.Syntax/index.js';
 import * as Ownership from '../output/Gopurs.Ownership/index.js';
 import * as Go from '../output/Gopurs.GoAst/index.js';
 import * as CodeGen from '../output/Gopurs.CodeGen/index.js';
-import { runtimeGoCode } from '../output/Gopurs.Runtime/index.js';
+import { runtimeGoCode } from '../output/Gopurs.Runtime.Source/index.js';
 
 // Deliberately unrelated names/layout: acceptance must depend on structure.
 const moduleName = 'OwnershipFixture';

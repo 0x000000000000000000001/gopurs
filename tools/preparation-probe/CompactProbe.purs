@@ -13,7 +13,7 @@ import Effect.Class (liftEffect)
 import Effect.Console as Console
 import Effect.Exception (error, message)
 import Gopurs.Cache.Wire as Wire
-import Gopurs.Metrics as Metrics
+import Gopurs.Host.Metrics as Metrics
 import Node.Encoding (Encoding(..))
 import Node.FS.Aff as FS
 import Node.Process as Process

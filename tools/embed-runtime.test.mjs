@@ -5,22 +5,22 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { test } from "node:test";
-import { runtimeGoCode } from "../src/Gopurs/Runtime.js";
+import { runtimeGoCode } from "../src/Gopurs/Runtime/Source.js";
 
 const rustContents = text => text.match(/purust_string_from_utf8\(r(#+)"([\s\S]*)"\1\)/)[2];
 
 test("all embedded runtimes equal the canonical Go source", () => {
   const source = readFileSync(new URL("../runtime/runtime.go", import.meta.url), "utf8");
   assert.equal(runtimeGoCode, source);
-  const native = readFileSync(new URL("../src/Gopurs/Runtime.go", import.meta.url), "utf8");
+  const native = readFileSync(new URL("../src/Gopurs/Runtime/Source.go", import.meta.url), "utf8");
   assert.equal(JSON.parse(native.match(/^var RuntimeGoCode = (.*)$/m)[1]), source);
-  assert.equal(rustContents(readFileSync(new URL("../src/Gopurs/Runtime.rs", import.meta.url), "utf8")), source);
+  assert.equal(rustContents(readFileSync(new URL("../src/Gopurs/Runtime/Source.rs", import.meta.url), "utf8")), source);
 });
 
 test("embedding resolves from the script, preserves unchanged timestamps and needs no runtime I/O", async t => {
   const directory = mkdtempSync(join(tmpdir(), "gopurs-embed-runtime-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
-  for (const name of ["tools", "runtime", "src/Gopurs"]) mkdirSync(join(directory, name), { recursive: true });
+  for (const name of ["tools", "runtime", "src/Gopurs/Runtime"]) mkdirSync(join(directory, name), { recursive: true });
   writeFileSync(join(directory, "package.json"), '{"type":"module"}\n');
   cpSync(new URL("./embed-runtime.mjs", import.meta.url), join(directory, "tools/embed-runtime.mjs"));
   const canonical = readFileSync(new URL("../runtime/runtime.go", import.meta.url), "utf8");
@@ -30,7 +30,7 @@ test("embedding resolves from the script, preserves unchanged timestamps and nee
     cwd: join(directory, "src"), stdio: "pipe",
   });
   run();
-  const generated = ["js", "go", "rs"].map(extension => join(directory, `src/Gopurs/Runtime.${extension}`));
+  const generated = ["js", "go", "rs"].map(extension => join(directory, `src/Gopurs/Runtime/Source.${extension}`));
   for (const path of generated) utimesSync(path, 1, 1);
   run();
   for (const path of generated) assert.equal(statSync(path).mtimeMs, 1000);

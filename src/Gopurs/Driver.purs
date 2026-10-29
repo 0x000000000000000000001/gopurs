@@ -26,9 +26,9 @@ import Gopurs.Driver.Prepare (PreparedCache, prepareModulesDeltaForProfile, prep
 import Gopurs.Driver.Prepare.Persistent (preloadProjection, preparePersistentWithProjectionForProfile, publishPersistent)
 import Gopurs.Driver.Manifest as Manifest
 import Gopurs.Cache.Modules as ModuleCache
-import Gopurs.Metrics as Metrics
+import Gopurs.Host.Metrics as Metrics
 import Data.Array as Array
-import Gopurs.Diagnostics as Diagnostics
+import Gopurs.Host.Diagnostics as Diagnostics
 import PureScript.Backend.Optimizer.App (loadDirectives)
 import PureScript.Backend.Optimizer.Cache as Cache
 

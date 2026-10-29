@@ -2,8 +2,8 @@
 
 Cette carte est la **source de vérité du lot 3** : une ligne par module, sa
 phase cible, sa responsabilité et les modules dont il dépend réellement
-(imports `Gopurs.*` du `.purs`, doublons retirés). Le nom cible et le lot
-proviennent de `cleanup.md` ; le glossaire est dans [naming.md](naming.md).
+(imports `Gopurs.*` du `.purs`, doublons retirés). Le nom cible provient de
+`cleanup.md` ; le glossaire est dans [naming.md](naming.md).
 
 ## Couverture
 
@@ -12,15 +12,19 @@ proviennent de `cleanup.md` ; le glossaire est dans [naming.md](naming.md).
 | Baseline du 29 octobre 2026 | 105 |
 | Supprimé au lot 1 (`DependencyGraph`, aucun import) | 1 |
 | **Présents au 29 octobre 2026** | **104** |
-| dont à la racine de `src/Gopurs` | 62 |
-| dont imbriqués sous `src/Gopurs` | 41 |
+| dont à la racine de `src/Gopurs` | 57 |
+| dont imbriqués sous `src/Gopurs` | 46 |
 | dont `src/Main.purs` | 1 |
 
 La baseline comptait 63 modules à la racine, dont `DependencyGraph` ; sa
-suppression au lot 1 ramène le total à 104. La carte couvre donc les 105
-modules de la baseline : 104 lignes actuelles et la ligne de suppression en
-annexe. `node tools/check-docs.mjs` vérifie que chaque `.purs` de `src/` a
-exactement une ligne et qu'aucune ligne ne pointe vers un module disparu.
+suppression au lot 1 ramène le total à 104. Le lot 3a a ensuite déplacé cinq
+modules de la racine vers `Host/` et `Runtime/` : 57 restent à la racine et 46
+sont imbriqués. La carte couvre donc les 105 modules de la baseline : 104
+lignes actuelles et la ligne de suppression en annexe. Le lot 3a est déjà
+appliqué : les cinq modules `Host.*` et `Runtime.Source` portent leur nom
+cible et leur nouveau chemin. `node tools/check-docs.mjs` vérifie que chaque
+`.purs` de `src/` a exactement une ligne et qu'aucune ligne ne pointe vers un
+module disparu.
 
 ## Phases et dépendances autorisées
 
@@ -40,19 +44,19 @@ dans cet ordre, sauf les exceptions assumées listées plus bas.
 | Runtime | Aucune dépendance Gopurs : le texte est généré par `tools/embed-runtime.mjs`. |
 | Entrée | Driver et Host uniquement. |
 
-Les dépendances réelles sont celles du code au 29 octobre 2026. Quand une
+Les dépendances réelles sont celles du code après le lot 3a (29 octobre 2026). Quand une
 ligne viole la règle ci-dessus, elle figure aussi dans la table des écarts.
 
 ## Driver — orchestration
 
 | Module actuel | Cible (lot 3) | Phase | Responsabilité | Dépend de |
 | --- | --- | --- | --- | --- |
-| `Gopurs.Driver`<br>`src/Gopurs/Driver.purs` | `Gopurs.Driver` | Driver | Ordonne les phases de compilation et expose l'entrée `compile`. | `Cache.HeaderPreload`, `Cache.Modules`, `Diagnostics`, `Driver.Build`, `Driver.Cache`, `Driver.Config`, `Driver.Manifest`, `Driver.Output`, `Driver.Prepare`, `Driver.Prepare.Persistent`, `Metrics` |
-| `Gopurs.Driver.Build`<br>`src/Gopurs/Driver/Build.purs` | `Gopurs.Driver.Build` | Driver | Choisit le builder PBO, publie les signatures et alimente la file d'émission. | `Cache.HeaderPreload`, `Cache.Modules`, `Cache.Wire`, `Driver.Cache`, `Driver.Config`, `Driver.Prepare`, `Emission`, `Metrics` |
+| `Gopurs.Driver`<br>`src/Gopurs/Driver.purs` | `Gopurs.Driver` | Driver | Ordonne les phases de compilation et expose l'entrée `compile`. | `Cache.HeaderPreload`, `Cache.Modules`, `Host.Diagnostics`, `Driver.Build`, `Driver.Cache`, `Driver.Config`, `Driver.Manifest`, `Driver.Output`, `Driver.Prepare`, `Driver.Prepare.Persistent`, `Host.Metrics` |
+| `Gopurs.Driver.Build`<br>`src/Gopurs/Driver/Build.purs` | `Gopurs.Driver.Build` | Driver | Choisit le builder PBO, publie les signatures et alimente la file d'émission. | `Cache.HeaderPreload`, `Cache.Modules`, `Cache.Wire`, `Driver.Cache`, `Driver.Config`, `Driver.Prepare`, `Emission`, `Host.Metrics` |
 | `Gopurs.Driver.Config`<br>`src/Gopurs/Driver/Config.purs` | `Gopurs.Driver.Config` | Driver | Lit les options CLI et l'environnement du pilote, avec leurs bornes. | `Emission` |
 | `Gopurs.Driver.Manifest`<br>`src/Gopurs/Driver/Manifest.purs` | `Gopurs.Driver.Manifest` | Driver | Construit, lit et compare le manifeste des entrées et sorties. | `Cache.Wire`, `ExprContext` |
-| `Gopurs.Driver.Output`<br>`src/Gopurs/Driver/Output.purs` | `Gopurs.Driver.Output` | Driver | Traduit un module préparé et écrit modules, runtime et points d'entrée. | `CodeGen`, `CodegenState`, `Driver.Cache`, `ExprContext`, `FfiBridge`, `FfiSupport`, `FfiTypes`, `GoSource`, `GoSymbol`, `Runtime` |
-| `Gopurs.Emission`<br>`src/Gopurs/Emission.purs` | `Gopurs.Driver.Scheduler` | Driver | Ordonne les lots d'émission, leurs dépendances et la contre-pression des fibres. | `Metrics` |
+| `Gopurs.Driver.Output`<br>`src/Gopurs/Driver/Output.purs` | `Gopurs.Driver.Output` | Driver | Traduit un module préparé et écrit modules, runtime et points d'entrée. | `CodeGen`, `CodegenState`, `Driver.Cache`, `ExprContext`, `FfiBridge`, `FfiSupport`, `FfiTypes`, `GoSource`, `GoSymbol`, `Runtime.Source` |
+| `Gopurs.Emission`<br>`src/Gopurs/Emission.purs` | `Gopurs.Driver.Scheduler` | Driver | Ordonne les lots d'émission, leurs dépendances et la contre-pression des fibres. | `Host.Metrics` |
 
 ## Prepare — chargement, métadonnées et spécialisation
 
@@ -62,8 +66,8 @@ ligne viole la règle ci-dessus, elle figure aussi dans la table des écarts.
 | `Gopurs.ClassMetadata`<br>`src/Gopurs/ClassMetadata.purs` | `Gopurs.Prepare.Metadata.Class` | Prepare | Indexe les classes, leurs superclasses et leurs méthodes par label. | — |
 | `Gopurs.ConstructorLayout`<br>`src/Gopurs/ConstructorLayout.purs` | `Gopurs.Prepare.Metadata.ConstructorLayout` | Prepare | Calcule l'identité, les champs et les arguments génériques des constructeurs. | `CodegenState`, `ConstructorMetadata`, `GoAst`, `GoSymbol`, `GoTypes` |
 | `Gopurs.ConstructorMetadata`<br>`src/Gopurs/ConstructorMetadata.purs` | `Gopurs.Prepare.Metadata.Constructor` | Prepare | Décrit les constructeurs, leurs champs et leurs identités. | `GoAst` |
-| `Gopurs.Driver.Prepare`<br>`src/Gopurs/Driver/Prepare.purs` | `Gopurs.Prepare` | Prepare | Charge le TAST, assemble les métadonnées et prépare les modules spécialisés. | `AdtMetadata`, `Cache.LookupTable`, `Cache.Wire`, `ClassMetadata`, `CodegenState`, `ConstructorMetadata`, `Driver.Cache`, `Driver.Prepare.Projection`, `Driver.Prepare.Proof`, `GlobalTypes`, `Metrics`, `Monomorphization`, `Preparation`, `ReboxMetadata` |
-| `Gopurs.Driver.Prepare.Persistent`<br>`src/Gopurs/Driver/Prepare/Persistent.purs` | `Gopurs.Prepare.Persistent` | Prepare | Précharge, projette et publie les artefacts persistants de préparation. | `Cache.LookupTable`, `Cache.Wire`, `ClassMetadata`, `Driver.Cache`, `Driver.Manifest`, `Driver.Prepare`, `Driver.Prepare.Projection`, `Driver.Prepare.ProjectionCapsule`, `Driver.Prepare.Proof`, `Metrics`, `Monomorphization`, `Preparation` |
+| `Gopurs.Driver.Prepare`<br>`src/Gopurs/Driver/Prepare.purs` | `Gopurs.Prepare` | Prepare | Charge le TAST, assemble les métadonnées et prépare les modules spécialisés. | `AdtMetadata`, `Cache.LookupTable`, `Cache.Wire`, `ClassMetadata`, `CodegenState`, `ConstructorMetadata`, `Driver.Cache`, `Driver.Prepare.Projection`, `Driver.Prepare.Proof`, `GlobalTypes`, `Host.Metrics`, `Monomorphization`, `Preparation`, `ReboxMetadata` |
+| `Gopurs.Driver.Prepare.Persistent`<br>`src/Gopurs/Driver/Prepare/Persistent.purs` | `Gopurs.Prepare.Persistent` | Prepare | Précharge, projette et publie les artefacts persistants de préparation. | `Cache.LookupTable`, `Cache.Wire`, `ClassMetadata`, `Driver.Cache`, `Driver.Manifest`, `Driver.Prepare`, `Driver.Prepare.Projection`, `Driver.Prepare.ProjectionCapsule`, `Driver.Prepare.Proof`, `Host.Metrics`, `Monomorphization`, `Preparation` |
 | `Gopurs.Driver.Prepare.Projection`<br>`src/Gopurs/Driver/Prepare/Projection.purs` | `Gopurs.Prepare.Persistent.Projection` | Prepare | Découpe et fusionne les projections de modules préparés. | `Cache.LookupTable`, `CodegenState` |
 | `Gopurs.Driver.Prepare.ProjectionCapsule`<br>`src/Gopurs/Driver/Prepare/ProjectionCapsule.purs` | `Gopurs.Prepare.Persistent.ProjectionCapsule` | Prepare | Emballe et rouvre une projection en fragments vérifiés. | `Cache.LookupTable`, `CodegenState`, `Driver.Prepare.Projection` |
 | `Gopurs.Driver.Prepare.Proof`<br>`src/Gopurs/Driver/Prepare/Proof.purs` | `Gopurs.Prepare.Persistent.Proof` | Prepare | Calcule les preuves d'identité et de réutilisation d'une préparation. | `Cache.Wire` |
@@ -133,7 +137,7 @@ ligne viole la règle ci-dessus, elle figure aussi dans la table des écarts.
 | `Gopurs.GoCode`<br>`src/Gopurs/GoCode.purs` | `Gopurs.Emit.Go.Code` | Emit | Porte les fragments opaques et leurs dépendances d'imports. | `GoSymbol` |
 | `Gopurs.GoConversions`<br>`src/Gopurs/GoConversions.purs` | `Gopurs.Emit.Go.Conversions` | Emit | Choisit les conversions, le boxing et la lecture de Value. | `CodegenState`, `GoAst`, `GoConversions.NativeAdts`, `GoConversions.Rebox`, `Printer` |
 | `Gopurs.GoConversions.NativeAdts`<br>`src/Gopurs/GoConversions/NativeAdts.purs` | `Gopurs.Emit.Go.Conversions.NativeAdts` | Emit | Décrit les layouts natifs de Maybe, Either et Tuple. | `GoAst`, `Printer` |
-| `Gopurs.GoConversions.Rebox`<br>`src/Gopurs/GoConversions/Rebox.purs` | `Gopurs.Emit.Go.Conversions.Rebox` | Emit | Émet les helpers de conversion et les demandes Rebox. | `CodegenState`, `Diagnostics`, `GoAst`, `GoSymbol`, `GoTypes`, `Printer`, `ReboxMetadata` |
+| `Gopurs.GoConversions.Rebox`<br>`src/Gopurs/GoConversions/Rebox.purs` | `Gopurs.Emit.Go.Conversions.Rebox` | Emit | Émet les helpers de conversion et les demandes Rebox. | `CodegenState`, `Host.Diagnostics`, `GoAst`, `GoSymbol`, `GoTypes`, `Printer`, `ReboxMetadata` |
 | `Gopurs.GoFunctions`<br>`src/Gopurs/GoFunctions.purs` | `Gopurs.Emit.Workers.Parameters` | Emit | Construit paramètres, variables d'itération et enveloppes curryfiées. | `GoAst` |
 | `Gopurs.GoImports`<br>`src/Gopurs/GoImports.purs` | `Gopurs.Emit.Go.Imports` | Emit | Collecte et rend les imports d'un module Go. | `GoAst`, `GoCode`, `GoSymbol` |
 | `Gopurs.GoSource`<br>`src/Gopurs/GoSource.purs` | `Gopurs.Emit.Go.Source` | Emit | Lie les sources Go aux symboles et assemble les fichiers de package. | `FfiSupport`, `GoCode`, `GoSymbol` |
@@ -158,40 +162,40 @@ ligne viole la règle ci-dessus, elle figure aussi dans la table des écarts.
 | --- | --- | --- | --- | --- |
 | `Gopurs.BuildCache`<br>`src/Gopurs/BuildCache.purs` | `Gopurs.Cache.Protocol` | Cache | Définit le protocole de stockage versionné et ses échanges JSON. | — |
 | `Gopurs.Cache.BindingCapsule`<br>`src/Gopurs/Cache/BindingCapsule.purs` | `Gopurs.Cache.BindingCapsule` | Cache | Encode et sélectionne les capsules de bindings. | `Cache.Wire` |
-| `Gopurs.Cache.HeaderPreload`<br>`src/Gopurs/Cache/HeaderPreload.purs` | `Gopurs.Cache.HeaderPreload` | Cache | Précharge et décode les en-têtes de cache. | `Cache.Wire`, `Driver.Cache`, `Metrics`, `Preparation` |
+| `Gopurs.Cache.HeaderPreload`<br>`src/Gopurs/Cache/HeaderPreload.purs` | `Gopurs.Cache.HeaderPreload` | Cache | Précharge et décode les en-têtes de cache. | `Cache.Wire`, `Driver.Cache`, `Host.Metrics`, `Preparation` |
 | `Gopurs.Cache.LookupTable`<br>`src/Gopurs/Cache/LookupTable.purs` | `Gopurs.Cache.LookupTable` | Cache | Représente les lectures de cache prouvées et complètes. | `Cache.Wire` |
-| `Gopurs.Cache.Modules`<br>`src/Gopurs/Cache/Modules.purs` | `Gopurs.Cache.Modules` | Cache | Gère les clés et la réutilisation par module (préparé, PBO, émission). | `Cache.BindingCapsule`, `Cache.HeaderPreload`, `Cache.Wire`, `CodeGen`, `CodegenState`, `Driver.Cache`, `Driver.Output`, `Driver.Prepare`, `ExprContext`, `GoSymbol`, `Metrics`, `Preparation` |
+| `Gopurs.Cache.Modules`<br>`src/Gopurs/Cache/Modules.purs` | `Gopurs.Cache.Modules` | Cache | Gère les clés et la réutilisation par module (préparé, PBO, émission). | `Cache.BindingCapsule`, `Cache.HeaderPreload`, `Cache.Wire`, `CodeGen`, `CodegenState`, `Driver.Cache`, `Driver.Output`, `Driver.Prepare`, `ExprContext`, `GoSymbol`, `Host.Metrics`, `Preparation` |
 | `Gopurs.Cache.Pool`<br>`src/Gopurs/Cache/Pool.purs` | `Gopurs.Cache.Pool` | Cache | Intern les fragments JSON canoniques d'un artefact. | — |
 | `Gopurs.Cache.TypeMemo`<br>`src/Gopurs/Cache/TypeMemo.purs` | `Gopurs.Cache.TypeMemo` | Cache | Mémoïse les types immuables par index canonique. | — |
 | `Gopurs.Cache.Wire`<br>`src/Gopurs/Cache/Wire.purs` | `Gopurs.Cache.Wire` | Cache | Fournit les codecs portables et les tables partagées. | `Cache.Pool`, `Cache.TypeMemo`, `GoAst`, `GoSymbol` |
-| `Gopurs.Driver.Cache`<br>`src/Gopurs/Driver/Cache.purs` | `Gopurs.Cache.Session` | Cache | Possède la session de stockage, le staging et la recette FFI. | `BuildCache`, `Driver.Config`, `Metrics` |
+| `Gopurs.Driver.Cache`<br>`src/Gopurs/Driver/Cache.purs` | `Gopurs.Cache.Session` | Cache | Possède la session de stockage, le staging et la recette FFI. | `BuildCache`, `Driver.Config`, `Host.Metrics` |
 
 ## Host — services dépendants de l'hôte
 
 | Module actuel | Cible (lot 3) | Phase | Responsabilité | Dépend de |
 | --- | --- | --- | --- | --- |
-| `Gopurs.CompilerSnapshot`<br>`src/Gopurs/CompilerSnapshot.purs` | `Gopurs.Host.Snapshot` | Host | Copie et réexécute le compilateur depuis un emplacement privé. | — |
-| `Gopurs.Diagnostics`<br>`src/Gopurs/Diagnostics.purs` | `Gopurs.Host.Diagnostics` | Host | Écrit les diagnostics et signale leur non-rejouabilité. | — |
-| `Gopurs.Metrics`<br>`src/Gopurs/Metrics.purs` | `Gopurs.Host.Metrics` | Host | Mesure les phases et accumule les durées d'émission. | — |
-| `Gopurs.Resident`<br>`src/Gopurs/Resident.purs` | `Gopurs.Host.Resident` | Host | Boucle résidente déclenchée par fichier, réutilisant la session de compilation. | `Driver`, `Driver.Config`, `Driver.Prepare` |
+| `Gopurs.Host.Diagnostics`<br>`src/Gopurs/Host/Diagnostics.purs` | `Gopurs.Host.Diagnostics` | Host | Écrit les diagnostics et signale leur non-rejouabilité. | — |
+| `Gopurs.Host.Metrics`<br>`src/Gopurs/Host/Metrics.purs` | `Gopurs.Host.Metrics` | Host | Mesure les phases et accumule les durées d'émission. | — |
+| `Gopurs.Host.Resident`<br>`src/Gopurs/Host/Resident.purs` | `Gopurs.Host.Resident` | Host | Boucle résidente déclenchée par fichier, réutilisant la session de compilation. | `Driver`, `Driver.Config`, `Driver.Prepare` |
+| `Gopurs.Host.Snapshot`<br>`src/Gopurs/Host/Snapshot.purs` | `Gopurs.Host.Snapshot` | Host | Copie et réexécute le compilateur depuis un emplacement privé. | — |
 
 ## Runtime — runtime embarqué
 
 | Module actuel | Cible (lot 3) | Phase | Responsabilité | Dépend de |
 | --- | --- | --- | --- | --- |
-| `Gopurs.Runtime`<br>`src/Gopurs/Runtime.purs` | `Gopurs.Runtime.Source` | Runtime | Fournit le texte Go du runtime embarqué. | — |
+| `Gopurs.Runtime.Source`<br>`src/Gopurs/Runtime/Source.purs` | `Gopurs.Runtime.Source` | Runtime | Fournit le texte Go du runtime embarqué. | — |
 
 ## Entrée
 
 | Module actuel | Cible (lot 3) | Phase | Responsabilité | Dépend de |
 | --- | --- | --- | --- | --- |
-| `Main`<br>`src/Main.purs` | `Main` | Entrée | Point d'entrée CLI : snapshot, options, exécution et code de sortie. | `CompilerSnapshot`, `Driver`, `Driver.Config`, `Resident` |
+| `Main`<br>`src/Main.purs` | `Main` | Entrée | Point d'entrée CLI : snapshot, options, exécution et code de sortie. | `Host.Snapshot`, `Driver`, `Driver.Config`, `Host.Resident` |
 
 ## Écarts de frontière actuels
 
 Ces imports traversent une frontière interdite par la table ci-dessus. Ils
-sont conservés pendant le lot 2, puis retirés par le lot qui possède le module
-appelé. Aucun n'est introduit par un nouveau code.
+sont conservés pendant les lots 3a à 3e, puis retirés par le lot qui possède
+le module appelé. Aucun n'est introduit par un nouveau code.
 
 | Module | Importe | Pourquoi c'est un écart | Retrait |
 | --- | --- | --- | --- |

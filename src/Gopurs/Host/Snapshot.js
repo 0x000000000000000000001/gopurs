@@ -1,4 +1,4 @@
-// Handwritten FFI for Gopurs.CompilerSnapshot; keep in sync with the .purs foreign imports.
+// Handwritten FFI for Gopurs.Host.Snapshot; keep in sync with the .purs foreign imports.
 import { execFileSync, spawn } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -14,8 +14,11 @@ export const withSnapshot = run => () => {
     run();
     return;
   }
-  const tools = [join(dirname(bundle), "../tools"), join(dirname(bundle), "../../tools")]
-    .map(path => resolve(path)).find(path => existsSync(join(path, "build-cache.mjs")));
+  const tools = [
+    join(dirname(bundle), "../tools"),
+    join(dirname(bundle), "../../tools"),
+    join(dirname(bundle), "../../../tools"),
+  ].map(path => resolve(path)).find(path => existsSync(join(path, "build-cache.mjs")));
   if (!tools) throw new Error("Cannot locate compiler resources");
   const helper = execFileSync(process.execPath, [join(tools, "build-cache.mjs"), "--helper"], { encoding: "utf8" }).trim();
   const packages = process.env.GOPURS_GO_PACKAGES === "1"

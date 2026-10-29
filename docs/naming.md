@@ -128,11 +128,11 @@ formes.**
 | `BuildCache` | `BuildCache` | `Cache.Protocol` | 3b |
 | `Driver.Cache` | `Driver.Cache` | `Cache.Session` | 3b |
 | `Driver.Prepare*` | `Driver.Prepare`, `Driver.Prepare.Persistent`, `Driver.Prepare.Projection`, `Driver.Prepare.ProjectionCapsule`, `Driver.Prepare.Proof` | `Prepare*` | 3c |
-| `CompilerSnapshot` | `CompilerSnapshot` | `Host.Snapshot` | 3a |
-| `Diagnostics` | `Diagnostics` | `Host.Diagnostics` | 3a |
-| `Metrics` | `Metrics` | `Host.Metrics` | 3a |
-| `Resident` | `Resident` | `Host.Resident` | 3a |
-| `Runtime` | `Runtime` | `Runtime.Source` | 3a |
+
+Le lot 3a a déjà déplacé `CompilerSnapshot` en `Host.Snapshot`, `Diagnostics`
+en `Host.Diagnostics`, `Metrics` en `Host.Metrics`, `Resident` en
+`Host.Resident` et `Runtime` en `Runtime.Source`. Ces cinq noms ne sont plus
+des exceptions : ils suivent les règles ci-dessus.
 
 Le plan ne fixe pas la PR qui déplace `Emission` : sa cible est
 `Driver.Scheduler`, et elle peut rejoindre une PR du pilote ou une PR dédiée
@@ -145,6 +145,8 @@ Les modules déjà conformes conservent leur nom quand ils changent de dossier :
   `Driver.Output` ;
 - `Cache.Modules`, `Cache.Wire`, `Cache.Pool`, `Cache.TypeMemo`,
   `Cache.BindingCapsule`, `Cache.HeaderPreload`, `Cache.LookupTable` ;
+- `Host.Snapshot`, `Host.Diagnostics`, `Host.Metrics`, `Host.Resident`,
+  `Runtime.Source` (déplacés au lot 3a) ;
 - `ThunkFusion`, `FunctionFusion`, `ImmediateApplications`,
   `ClosedDictionaries`, `BorrowedObjects`, `DecoderSchemas`, `Ownership`,
   `NativeRecordArgs`, `GlobalTypes`, `ClassMetadata`, `ConstructorMetadata`,

@@ -17,7 +17,7 @@ tests/passing-snapshots-dev/** linguist-generated=true
 
 # Generated bundles and embedded runtime snapshots.
 bin/gopurs.js linguist-generated=true
-src/Gopurs/Runtime.js linguist-generated=true
+src/Gopurs/Runtime/Source.js linguist-generated=true
 tools/wasm_exec.js linguist-generated=true
 tools/ffi_gen.wasm linguist-detectable=false
 

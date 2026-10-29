@@ -28,7 +28,15 @@ l'identité octet par octet des sorties Go.
   et `docs/README.md`, plus `tools/check-docs.mjs` et son script npm. La carte
   couvre les **104 modules actuels** : les 105 de la baseline moins
   `DependencyGraph`, supprimé au lot 1 ; elle documente cette soustraction.
-- **Lots 3 à 7 — à faire**.
+- **Lot 3a — prêt sur `cleanup/v2` (commit local, non mergé)** :
+  `CompilerSnapshot` → `Host.Snapshot`, `Diagnostics` → `Host.Diagnostics`,
+  `Metrics` → `Host.Metrics`, `Resident` → `Host.Resident`, `Runtime` →
+  `Runtime.Source`. Les compagnons FFI, `tools/embed-runtime.mjs`,
+  `.gitignore`, les outils et les documents normatifs suivent. Quatre
+  fixtures donnent **1 220 fichiers Go identiques** avant/après. Le tag
+  `v0.1.0` n'existe pas encore (seuls `v0.1.0-rc.1` à `rc.5` sont publiés) :
+  la PR ne doit pas être mergée avant sa création.
+- **Lots 3b à 7 — à faire**.
 
 ## 1. Objectif
 

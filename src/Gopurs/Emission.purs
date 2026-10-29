@@ -20,7 +20,7 @@ import Effect.Aff (Aff, attempt, bracket, forkAff, invincible, joinFiber, superv
 import Effect.Class (liftEffect)
 import Effect.Exception (error)
 import Effect.Ref as Ref
-import Gopurs.Metrics as Metrics
+import Gopurs.Host.Metrics as Metrics
 import PureScript.Backend.Optimizer.CoreFn (ModuleName)
 
 type EmissionEntry a =

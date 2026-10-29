@@ -14,7 +14,7 @@ import { hashString } from '../output/PureScript.Backend.Optimizer.FfiSupport/in
 import * as Go from '../output/Gopurs.GoAst/index.js';
 import { coerceGoExpr, generateReboxFunctions, unboxGoExpr } from '../output/Gopurs.GoConversions/index.js';
 import { printGoDecl, printGoExpr } from '../output/Gopurs.Printer/index.js';
-import { runtimeGoCode } from '../output/Gopurs.Runtime/index.js';
+import { runtimeGoCode } from '../output/Gopurs.Runtime.Source/index.js';
 import * as C from '../output/PureScript.Backend.Optimizer.CoreFn/index.js';
 import { withReboxFields } from './codegen-metadata.mjs';
 

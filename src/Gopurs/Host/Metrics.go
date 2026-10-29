@@ -1,5 +1,5 @@
-// Handwritten FFI for Gopurs.Metrics; keep in sync with the .purs foreign imports.
-package Gopurs_Metrics
+// Handwritten FFI for Gopurs.Host.Metrics; keep in sync with the .purs foreign imports.
+package Gopurs_Host_Metrics
 
 import (
 	"runtime"

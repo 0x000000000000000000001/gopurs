@@ -14,7 +14,7 @@ import { NeutralExpr } from '../output/PureScript.Backend.Optimizer.Semantics/in
 import * as S from '../output/PureScript.Backend.Optimizer.Syntax/index.js';
 import { cacheClosedDictionaries } from '../output/Gopurs.ClosedDictionaries/index.js';
 import { translate } from '../output/Gopurs.CodeGen/index.js';
-import { runtimeGoCode } from '../output/Gopurs.Runtime/index.js';
+import { runtimeGoCode } from '../output/Gopurs.Runtime.Source/index.js';
 import { withReboxFields } from './codegen-metadata.mjs';
 
 const expr = syntax => new NeutralExpr(syntax);

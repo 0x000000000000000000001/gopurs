@@ -1,11 +1,11 @@
-// Handwritten FFI for Gopurs.CompilerSnapshot; keep in sync with the .purs foreign imports.
+// Handwritten FFI for Gopurs.Host.Snapshot; keep in sync with the .purs foreign imports.
 unsafe extern "C" {
     fn GopursFreezeCompiler() -> *mut std::ffi::c_char;
     fn GopursReleaseCompiler();
     fn GopursFreeFFI(result: *mut std::ffi::c_char);
 }
 
-pub fn Gopurs_CompilerSnapshot_withSnapshot(run: Value) -> Value {
+pub fn Gopurs_Host_Snapshot_withSnapshot(run: Value) -> Value {
     Value::Func1(Func1::Shared(std::rc::Rc::new(move |_| {
         unsafe {
             let error = GopursFreezeCompiler();
@@ -19,6 +19,6 @@ pub fn Gopurs_CompilerSnapshot_withSnapshot(run: Value) -> Value {
     })))
 }
 
-pub fn Gopurs_CompilerSnapshot_release() -> Value {
+pub fn Gopurs_Host_Snapshot_release() -> Value {
     Value::Func1(Func1::Static(|_| { unsafe { GopursReleaseCompiler(); } Value::Unit }))
 }

@@ -14,7 +14,7 @@ import { StmtEmpty, flattenStmts } from '../output/Gopurs.ExprContext/index.js';
 import * as Go from '../output/Gopurs.GoAst/index.js';
 import { boxGoExpr } from '../output/Gopurs.GoConversions/index.js';
 import { printGoExpr } from '../output/Gopurs.Printer/index.js';
-import { runtimeGoCode } from '../output/Gopurs.Runtime/index.js';
+import { runtimeGoCode } from '../output/Gopurs.Runtime.Source/index.js';
 import { TcoExpr } from '../output/PureScript.Backend.Optimizer.Codegen.Tco/index.js';
 import * as C from '../output/PureScript.Backend.Optimizer.CoreFn/index.js';
 import * as S from '../output/PureScript.Backend.Optimizer.Syntax/index.js';

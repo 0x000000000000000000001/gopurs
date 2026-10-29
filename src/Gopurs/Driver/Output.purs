@@ -30,7 +30,7 @@ import Gopurs.FfiSupport (prepareFfi)
 import Gopurs.FfiTypes (FfiDecl)
 import Gopurs.GoSource (PackageRequest, PackageResult, PackageFilesResult, packageSources, packageFiles)
 import Gopurs.GoSymbol (GoSymbol, generated)
-import Gopurs.Runtime (runtimeGoCode)
+import Gopurs.Runtime.Source (runtimeGoCode)
 import Node.Encoding (Encoding(..))
 import Node.FS.Aff as FS
 import Node.FS.Sync as FSSync

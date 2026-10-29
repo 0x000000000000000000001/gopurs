@@ -10,7 +10,7 @@ import * as Ref from '../output/Effect.Ref/index.js';
 import * as Go from '../output/Gopurs.GoAst/index.js';
 import { binary } from '../output/Gopurs.PrimitiveExprs/index.js';
 import { printGoExpr } from '../output/Gopurs.Printer/index.js';
-import { runtimeGoCode } from '../output/Gopurs.Runtime/index.js';
+import { runtimeGoCode } from '../output/Gopurs.Runtime.Source/index.js';
 import * as S from '../output/PureScript.Backend.Optimizer.Syntax/index.js';
 
 test('integer division and modulo obey Euclidean laws and evaluate operands once', t => {

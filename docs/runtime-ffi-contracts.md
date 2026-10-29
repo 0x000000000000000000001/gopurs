@@ -7,7 +7,7 @@
 | Types PureScript → représentations Go | `GoTypeOf`, `GoConversions` et `FfiBridge` choisissent le layout et les adaptations à partir du TAST. |
 | Appels du compilateur → hôte JS ou Go | Les compagnons FFI de `src/` implémentent la même opération observable ; leurs caches et buffers ont un propriétaire explicite. |
 | Valeurs Go boxées → stockage | `runtime/runtime.go` définit l'ABI de `Value`, les constructeurs, accès, applications et conversions génériques. |
-| Source du runtime → compilateur construit | `tools/embed-runtime.mjs` produit `Runtime.js` et `Runtime.go` ; `Gopurs.Runtime` expose leur constante. |
+| Source du runtime → compilateur construit | `tools/embed-runtime.mjs` produit `Runtime/Source.js` et `Runtime/Source.go` ; `Gopurs.Runtime.Source` expose leur constante. |
 | Compilateur → application produite | `Driver.Output.writeRuntime` écrit la constante embarquée dans `output/gopurs_runtime/runtime.go`. |
 
 Le runtime est à la fois une API utilisée par les bibliothèques FFI et un

@@ -41,7 +41,7 @@ test("JS executes and identifies the captured bundle even if installation change
   for (const name of ["build-cache", "c1c", "build-cache.mjs", "ffi-runner.mjs", "ffi_gen.wasm", "wasm_exec.js"])
     cpSync(join(root, "tools", name), join(workspace, "tools", name), { recursive: true });
   writeFileSync(join(workspace, "package.json"), '{"type":"module"}\n');
-  const snapshot = readFileSync(join(root, "src/Gopurs/CompilerSnapshot.js"), "utf8");
+  const snapshot = readFileSync(join(root, "src/Gopurs/Host/Snapshot.js"), "utf8");
   const harness = `
 import { createHash } from 'node:crypto';
 import { renameSync } from 'node:fs';

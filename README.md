@@ -507,7 +507,7 @@ the effective worker limits and emission pipeline state after configuration is
 resolved. Preparation is capped at eight, and PBO/emission at 64. A limit of one
 selects the sequential path; emission at one also disables pipeline overlap.
 
-`Gopurs.Metrics` uses a monotonic clock, following altbak's `Bench` approach:
+`Gopurs.Host.Metrics` uses a monotonic clock, following altbak's `Bench` approach:
 `performance.now()` under Node, `time.Since` in Go and `Instant` in Rust.
 No flag is needed; all three compiler builds report the same phases. These are real
 elapsed times for the current invocation, not warm-up or repeated benchmarks.
@@ -784,8 +784,8 @@ npm run build:rust
 ```
 
 The build first runs `tools/embed-runtime.mjs`, which writes the ignored
-`src/Gopurs/Runtime.js`, `Runtime.go` and `Runtime.rs` FFI companions.
-`Gopurs.Runtime.runtimeGoCode` remains a PureScript `String`; all three compiler
+`src/Gopurs/Runtime/Source.js`, `Source.go` and `Source.rs` FFI companions.
+`Gopurs.Runtime.Source.runtimeGoCode` remains a PureScript `String`; all three compiler
 hosts embed the same constant. The installed
 backend does not read the Go source at execution time, and the generated
 `output/gopurs_runtime/runtime.go` contains its exact text.
