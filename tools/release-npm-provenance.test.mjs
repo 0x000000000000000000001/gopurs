@@ -1,11 +1,14 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { createHash } from "node:crypto";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { createHash, generateKeyPairSync, sign } from "node:crypto";
+import { once } from "node:events";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { createServer } from "node:http";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { delimiter, join } from "node:path";
 import test from "node:test";
-import { createStatement, describeRelease, generateBundle, loadPinnedSigstore, readRelease, repository, requireGitHubTag, verifyBundle, verifyPublished } from "./release-npm-provenance.mjs";
+import { createAttestor, createStatement, describeRelease, generateBundle, loadPinnedSigstore, readRelease, repository, requireGitHubTag, verifyBundle, verifyPublished } from "./release-npm-provenance.mjs";
 
 const sha256 = bytes => createHash("sha256").update(bytes).digest("hex");
 const commit = "a".repeat(40);
@@ -149,6 +152,103 @@ test("the pinned npm distribution provides the public Sigstore APIs used by the 
   const sigstore = loadPinnedSigstore();
   assert.equal(typeof sigstore.attest, "function");
   assert.equal(typeof sigstore.verify, "function");
+});
+
+test("Rekor conflicts fetch the existing entry and still require matching signatures, payload and identity", { timeout: 10_000 }, async t => {
+  loadPinnedSigstore(); // Check the exact npm/SDK versions before loading their public test APIs.
+  const npm = process.env.PATH.split(delimiter).map(path => join(path, "npm")).find(existsSync);
+  const npmRequire = createRequire(realpathSync(npm));
+  const signing = npmRequire("@sigstore/sign"), bundles = npmRequire("@sigstore/bundle");
+  const { Verifier, toSignedEntity } = npmRequire("@sigstore/verify");
+  const { json } = npmRequire("@sigstore/core");
+  // Ephemeral test keys only: no Fulcio/OIDC calls or public transparency-log writes.
+  const signerKey = generateKeyPairSync("ec", { namedCurve: "prime256v1" });
+  const logKey = generateKeyPairSync("ec", { namedCurve: "prime256v1" });
+  const signerPEM = signerKey.publicKey.export({ type: "spki", format: "pem" });
+  const logID = sha256(logKey.publicKey.export({ type: "spki", format: "der" }));
+  const uuid = "a".repeat(64), requests = [];
+  let mode = "equivalent", proposed;
+  function existingEntry() {
+    const dsse = JSON.parse(proposed.spec.proposedContent.envelope);
+    const body = { apiVersion: "0.0.1", kind: "dsse", spec: {
+      payloadHash: { algorithm: "sha256", value: sha256(Buffer.from(dsse.payload, "base64")) },
+      signatures: [{ signature: dsse.signatures[0].sig, verifier: proposed.spec.proposedContent.verifiers[0] }],
+    } };
+    if (mode === "payload") body.spec.payloadHash.value = "b".repeat(64);
+    if (mode === "signature") body.spec.signatures[0].signature = Buffer.from("wrong signature").toString("base64");
+    const canonical = Buffer.from(json.canonicalize(body));
+    const entry = { body: canonical.toString("base64"), integratedTime: 1700000000, logIndex: 0, logID };
+    const set = sign("sha256", Buffer.from(json.canonicalize(entry)), logKey.privateKey);
+    const rootHash = sha256(Buffer.concat([Buffer.from([0]), canonical]));
+    const note = `test-rekor\n1\n${Buffer.from(rootHash, "hex").toString("base64")}\n`;
+    const checkpointSignature = Buffer.concat([Buffer.from(logID, "hex").subarray(0, 4), sign("sha256", Buffer.from(note), logKey.privateKey)]);
+    entry.verification = {
+      signedEntryTimestamp: set.toString("base64"),
+      inclusionProof: { logIndex: 0, treeSize: 1, rootHash, hashes: [], checkpoint: `${note}\n— test-rekor ${checkpointSignature.toString("base64")}\n` },
+    };
+    if (mode === "log-signature") entry.verification.signedEntryTimestamp = Buffer.from("wrong SET").toString("base64");
+    return { [uuid]: entry };
+  }
+  const server = createServer(async (request, response) => {
+    requests.push(`${request.method} ${request.url}`);
+    response.setHeader("content-type", "application/json");
+    if (request.method === "POST" && request.url === "/api/v1/log/entries") {
+      const chunks = [];
+      for await (const chunk of request) chunks.push(chunk);
+      proposed = JSON.parse(Buffer.concat(chunks));
+      response.statusCode = 409;
+      if (mode !== "no-location") response.setHeader("location", `/api/v1/log/entries/${uuid}`);
+      response.end(JSON.stringify({ message: "an equivalent entry already exists" }));
+    } else if (request.method === "GET" && request.url === `/api/v1/log/entries/${uuid}`) {
+      response.statusCode = mode === "missing" ? 404 : 200;
+      response.end(JSON.stringify(mode === "missing" ? { message: "entry missing" } : existingEntry()));
+    } else {
+      response.statusCode = 404; response.end("{}");
+    }
+  });
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  t.after(() => new Promise(resolve => { server.close(resolve); server.closeAllConnections(); }));
+  class TestSigner {
+    constructor(options) {
+      assert(options.identityProvider instanceof signing.CIContextProvider);
+      assert.equal(options.identityProvider.audience, "sigstore");
+    }
+    async sign(data) {
+      return { signature: sign("sha256", data, signerKey.privateKey), key: { $case: "publicKey", publicKey: signerPEM, hint: "test-key" } };
+    }
+  }
+  class LocalRekorWitness extends signing.RekorWitness {
+    constructor(options) { super({ ...options, rekorBaseURL: `http://127.0.0.1:${server.address().port}`, retry: 0 }); }
+  }
+  const attest = createAttestor({ ...signing, FulcioSigner: TestSigner, RekorWitness: LocalRekorWitness }, bundles.bundleToJSON);
+  const verifier = new Verifier({
+    certificateAuthorities: [], timestampAuthorities: [], ctlogs: [],
+    tlogs: [{ logID: Buffer.from(logID, "hex"), publicKey: logKey.publicKey, validFor: { start: new Date(0), end: new Date(8640000000000000) } }],
+    publicKey: hint => { assert.equal(hint, "test-key"); return { publicKey: signerKey.publicKey, validFor: () => true }; },
+  });
+  const verifyCrypto = (value, policy) => verifier.verify(toSignedEntity(bundles.bundleFromJSON(value)), policy);
+  const bytes = Buffer.from(JSON.stringify(createStatement(release, ciEnvironment())));
+  const type = "application/vnd.in-toto+json";
+  const recovered = await attest(bytes, type);
+  assert.deepEqual(requests, ["POST /api/v1/log/entries", `GET /api/v1/log/entries/${uuid}`]);
+  assert.doesNotThrow(() => verifyCrypto(recovered));
+  for (const [bad, error] of [["payload", /payload hash mismatch/], ["signature", /signature mismatch/], ["log-signature", /inclusion promise/]]) {
+    mode = bad;
+    const substituted = await attest(bytes, type);
+    assert.throws(() => verifyCrypto(substituted), error);
+  }
+  // A valid recovered log entry with no authenticated GitHub certificate must
+  // still fail generateBundle's unchanged issuer/workflow identity policy.
+  mode = "equivalent";
+  await assert.rejects(generateBundle(release, { attest, verify(value, policy) {
+    return verifyCrypto(value, { subjectAlternativeName: policy.certificateIdentityURI, extensions: { issuer: policy.certificateIssuer } });
+  } }, ciEnvironment()), /certificate identity error/);
+  for (const bad of ["no-location", "missing"]) {
+    mode = bad; requests.length = 0;
+    await assert.rejects(attest(bytes, type), bad === "missing" ? /fetching tlog entry/ : /creating tlog entry/);
+    assert.equal(requests.length, bad === "missing" ? 2 : 1);
+  }
 });
 
 test("first-publication recovery requires npm to serve the approved signed CI envelope and exact integrity", async () => {

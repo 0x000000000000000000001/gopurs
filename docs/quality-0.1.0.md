@@ -3,6 +3,35 @@
 This is a working record for the `0.1.0` release gates. It is not a release
 certificate. The gate list is in [`todo.md`](../todo.md).
 
+## RC5 attestation failures and RC6 preparation — 29 October 2026
+
+Signed RC5 source `30a98ecaed56f3e0200667cb6cdd315828176ddd` was merged
+through PR #9 without changing its tested tree. Full tag campaign
+[40845932937](https://github.com/0x000000000000000000001/gopurs/actions/runs/40845932937)
+passed all three build/core jobs and all twelve fixture shards. Finalization
+failed after those tests; no RC5 package or GitHub release was published.
+
+The npm attestation request returned HTTP 409 for an equivalent entry already
+present in Rekor. That public entry was recorded seconds before the error.
+Sigstore 3.1's high-level API disables conflict recovery. RC6 composes the
+pinned SDK's public signing APIs with conflict recovery enabled, then retains
+the existing full cryptographic and exact release/workflow identity checks.
+Its local regression test exercises the actual SDK transport against a local
+HTTP server and rejects altered payloads, signatures and log evidence.
+The publication workflow also submits that verified CI bundle instead of
+generating a different signature, so its recovery check uses the same evidence.
+
+The GitHub action rejected the CycloneDX inventory because its format detector
+requires `serialNumber`. RC6 supplies a deterministic UUIDv5 derived from the
+complete inventory. Regression tests cover the action's format discriminator,
+a separately calculated UUID and identity changes when dependencies change.
+
+Compiler sources, dependency pins, fixtures and resource limits are unchanged.
+The added SBOM regression file raises the full inventory to 100 Node files and
+267 final gates, retaining 162 fixture batches and 401 fixtures per profile.
+These targeted checks do not replace complete tagged CI, artifact verification
+or the public quickstart and b8x compilation checks. RC6 is not yet qualified.
+
 ## RC4 runner failures and RC5 preparation — 29 October 2026
 
 Signed RC4 source `ae6b715efad686905ca633e6a2d6ee0bf5fd00c5` was qualified

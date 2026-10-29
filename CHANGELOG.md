@@ -6,6 +6,23 @@ All notable changes to gopurs are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0-rc.6]
+
+Sixth candidate for `0.1.0`, with the compiler and dependency pins of RC5.
+RC5 passed all three core jobs and all twelve fixture shards, but final
+attestation failed. It was not published; its signed tag remains immutable.
+
+### Fixed
+
+- Add a reproducible UUID serial number to the CycloneDX dependency inventory,
+  required by the GitHub attestation action.
+- Recover an existing Rekor entry when the signing service accepted a request
+  but its retry returned HTTP 409. Continue to verify the complete signature,
+  transparency-log proof, artifact digest and GitHub workflow identity before
+  accepting the recovered entry.
+- Publish using the CI provenance bundle already verified for the candidate,
+  preserving the same attestation for publication recovery.
+
 ## [0.1.0-rc.5]
 
 Fifth candidate for `0.1.0`, retaining the compiler, dependencies and feature
