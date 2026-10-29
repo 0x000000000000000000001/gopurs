@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import { formatSnapshots, packageSourceSections, snapshotFiles } from "./test-snapshots.mjs";
 import { parseOptions, selectModules } from "./test-selection.mjs";
+import { TestProcesses } from "./test-process.mjs";
 
 const repository = fileURLToPath(new URL("../", import.meta.url));
 const fakeTool = `#!/usr/bin/env node
@@ -497,6 +498,18 @@ test("every failed phase stops the run and keeps diagnostics without updating sn
   const build = await f.run(["Alpha", "-c"], { RUNNER_FAIL: "npm" });
   assert.equal(build.code, 1, build.output);
   assert.doesNotMatch(build.output, /=> Testing Alpha/);
+  const processes = new TestProcesses();
+  try {
+    const path = join(f.base, "missing-tools");
+    await assert.rejects(processes.run("purescript", "spago", ["build"], {
+      cwd: f.root, env: { PATH: path }, log: join(f.base, "missing-tool.log"),
+    }), error => {
+      assert.match(error.message, /spawn spago ENOENT/);
+      const context = JSON.parse(error.message.split("; spawn context: ")[1]);
+      assert.deepEqual(context, { cwd: { path: f.root, exists: true }, command: [{ path: join(path, "spago"), exists: false }] });
+      return true;
+    });
+  } finally { processes.dispose(); }
 });
 
 async function waitFor(check) {

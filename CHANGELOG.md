@@ -6,6 +6,23 @@ All notable changes to gopurs are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0-rc.5]
+
+Fifth candidate for `0.1.0`, retaining the compiler, dependencies and feature
+scope of RC4. RC4 was not published: all three core jobs and ten fixture shards
+passed, but a Linux runner lost communication and two macOS fixtures could not
+start Spago (`ENOENT`). The signed RC4 tag remains immutable.
+
+### Changed
+
+- Keep CI development tools reachable through a persistent Nix profile for the
+  lifetime of each job. This adds an explicit garbage-collection root instead
+  of relying on platform-dependent process inspection. Garbage collection has
+  not been established as the cause of the RC4 macOS failure.
+- Include the working directory and searched executable paths, with existence
+  checks, when a fixture command cannot start. Preserve the original failure;
+  do not silently retry or skip it.
+
 ## [0.1.0-rc.4]
 
 Fourth candidate for `0.1.0`, retaining the compiler, pinned dependencies,

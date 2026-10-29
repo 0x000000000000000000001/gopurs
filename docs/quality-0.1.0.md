@@ -3,6 +3,38 @@
 This is a working record for the `0.1.0` release gates. It is not a release
 certificate. The gate list is in [`todo.md`](../todo.md).
 
+## RC4 runner failures and RC5 preparation — 29 October 2026
+
+Signed RC4 source `ae6b715efad686905ca633e6a2d6ee0bf5fd00c5` was qualified
+by PR #8 and merged without changing its tested tree. Full tag campaign
+[40763342099](https://github.com/0x000000000000000000001/gopurs/actions/runs/40763342099)
+passed all three build/core jobs and ten of twelve fixture shards. Linux amd64
+shard 0 lost its hosted runner connection, leaving no downloadable job log or
+fixture artifact. macOS shard 0 passed serial dependency preparation and most
+fixtures, then two commands failed with `spawn spago ENOENT`. Finalization was
+skipped. RC4 is not fully qualified and was not published.
+
+The macOS failures occurred before Spago started, for
+`TypeClassesWithOverlappingTypeVariables` and `TypeSynonyms`. Their two reduced
+frontend builds passed concurrently in 7.349 seconds on Linux arm64 with the
+same frontend/tool versions and fixture preparation. This does not reproduce
+or explain the macOS failure. The runner opened each fixture log immediately
+before the failed spawn; inspection found no shared workspace cleanup that
+would account for a missing command.
+
+A separate isolated-store experiment, without garbage collection or a build,
+verified that `nix print-dev-env --profile` creates a persistent root while
+leaving the returned environment unchanged. Nix 2.35.4 uses process environment
+inspection on Linux and `lsof` on other systems; a profile provides an explicit
+root independently of that difference. The hosted Determinate version and a
+collection during the failed job have not been established. RC5 therefore
+adds explicit profiles as a tool-lifetime safeguard and adds command-start
+failure diagnostics; it does not claim a proven garbage-collection root cause.
+
+Compiler sources, dependency pins, fixtures, snapshots, resource limits and
+full gate coverage remain unchanged. A successful complete RC5 tag campaign,
+artifact verification and public consumer checks are still required.
+
 ## RC3 fixture-cache race and RC4 preparation — 28 October 2026
 
 Tag campaign [40727256711](https://github.com/0x000000000000000000001/gopurs/actions/runs/40727256711)

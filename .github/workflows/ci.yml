@@ -169,15 +169,16 @@ jobs:
           typed_package=$(nix build .#purs-tast --no-link --print-out-paths --no-update-lock-file)
           echo "GOPURS_PURS=$typed_package/bin/purs" >> "$GITHUB_ENV"
 
+      # Keep every dev-shell tool rooted for the whole job, including on macOS.
       - name: Install the backend from lockfiles in the Nix environment
-        run: nix develop --no-update-lock-file --command npm ci
+        run: nix develop --profile "$RUNNER_TEMP/gopurs-dev-profile" --no-update-lock-file --command npm ci
 
       - name: Install the pinned Go library sources
-        run: nix develop --no-update-lock-file --command ./bin/setup --locked --all
+        run: nix develop --profile "$RUNNER_TEMP/gopurs-dev-profile" --no-update-lock-file --command ./bin/setup --locked --all
 
       - name: Bootstrap a fresh native compiler
         run: |
-          nix develop --no-update-lock-file --command npm run build:native -- --keep-workspace | tee "$RUNNER_TEMP/native-bootstrap.log"
+          nix develop --profile "$RUNNER_TEMP/gopurs-dev-profile" --no-update-lock-file --command npm run build:native -- --keep-workspace | tee "$RUNNER_TEMP/native-bootstrap.log"
           bootstrap_workspace=$(sed -n 's/^Native bootstrap workspace: //p' "$RUNNER_TEMP/native-bootstrap.log")
           test -n "$bootstrap_workspace"
           test -d "$bootstrap_workspace/output/purescript"
@@ -187,7 +188,7 @@ jobs:
         run: |
           flags=()
           if [ "$GOPURS_RELEASE_FULL" = true ]; then flags+=(--full --phase core); fi
-          nix develop --no-update-lock-file --command node tools/release-quality.mjs "${flags[@]}" --report "$RUNNER_TEMP/quality" | tee "$RUNNER_TEMP/quality.log"
+          nix develop --profile "$RUNNER_TEMP/gopurs-dev-profile" --no-update-lock-file --command node tools/release-quality.mjs "${flags[@]}" --report "$RUNNER_TEMP/quality" | tee "$RUNNER_TEMP/quality.log"
 
       - name: Require clean sources after the build and quality gates
         run: |
@@ -199,8 +200,8 @@ jobs:
         run: |
           flags=()
           if [[ "$GITHUB_REF" != refs/tags/* ]]; then flags+=(--preview); fi
-          nix develop --no-update-lock-file --command node tools/release-prepare.mjs --native bin/gopurs-native --out "$RUNNER_TEMP/release" "${flags[@]}"
-          version=$(nix develop --no-update-lock-file --command node -p 'JSON.parse(require("fs").readFileSync("package.json")).version' | tail -n 1)
+          nix develop --profile "$RUNNER_TEMP/gopurs-dev-profile" --no-update-lock-file --command node tools/release-prepare.mjs --native bin/gopurs-native --out "$RUNNER_TEMP/release" "${flags[@]}"
+          version=$(nix develop --profile "$RUNNER_TEMP/gopurs-dev-profile" --no-update-lock-file --command node -p 'JSON.parse(require("fs").readFileSync("package.json")).version' | tail -n 1)
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "prefix=gopurs-$version-$GOPURS_RELEASE_TARGET" >> "$GITHUB_OUTPUT"
 
@@ -210,13 +211,13 @@ jobs:
           RELEASE_VERSION: ${{ steps.release.outputs.version }}
         run: |
           (cd "$RUNNER_TEMP/release" && shasum -a 256 -c "$RELEASE_PREFIX-SHA256SUMS")
-          nix develop --no-update-lock-file --command node tools/release-smoke.mjs \
+          nix develop --profile "$RUNNER_TEMP/gopurs-dev-profile" --no-update-lock-file --command node tools/release-smoke.mjs \
             --package "$RUNNER_TEMP/release/gopurs-$RELEASE_VERSION.tgz" \
             --native "$RUNNER_TEMP/release/$RELEASE_PREFIX" \
             --purs "$GOPURS_PURS" --report "$RUNNER_TEMP/release/$RELEASE_PREFIX-smoke.json"
           channel=latest
           if [[ "$RELEASE_VERSION" == *-rc.* ]]; then channel=next; fi
-          nix develop --no-update-lock-file --command npm publish --dry-run --ignore-scripts --tag "$channel" "$RUNNER_TEMP/release/gopurs-$RELEASE_VERSION.tgz"
+          nix develop --profile "$RUNNER_TEMP/gopurs-dev-profile" --no-update-lock-file --command npm publish --dry-run --ignore-scripts --tag "$channel" "$RUNNER_TEMP/release/gopurs-$RELEASE_VERSION.tgz"
           cp "$RUNNER_TEMP/quality/quality.json" "$RUNNER_TEMP/release/$RELEASE_PREFIX-quality.json"
           (cd "$RUNNER_TEMP/release" && shasum -a 256 "$RELEASE_PREFIX-smoke.json" "$RELEASE_PREFIX-quality.json" >> "$RELEASE_PREFIX-SHA256SUMS")
 
@@ -301,7 +302,7 @@ jobs:
           path: ${{ runner.temp }}/candidate
       - name: Select the exact tested compiler
         run: |
-          version=$(nix develop --no-update-lock-file --command node -p 'JSON.parse(require("fs").readFileSync("package.json")).version' | tail -n 1)
+          version=$(nix develop --profile "$RUNNER_TEMP/gopurs-dev-profile" --no-update-lock-file --command node -p 'JSON.parse(require("fs").readFileSync("package.json")).version' | tail -n 1)
           prefix="gopurs-$version-$GOPURS_RELEASE_TARGET"
           (cd "$RUNNER_TEMP/candidate" && shasum -a 256 -c "$prefix-SHA256SUMS")
           mkdir "$RUNNER_TEMP/npm-candidate"
@@ -310,10 +311,10 @@ jobs:
           cp "$RUNNER_TEMP/candidate/$prefix" bin/gopurs-native
           chmod +x bin/gopurs-native
       - name: Install the pinned Go library sources
-        run: nix develop --no-update-lock-file --command ./bin/setup --locked --all
+        run: nix develop --profile "$RUNNER_TEMP/gopurs-dev-profile" --no-update-lock-file --command ./bin/setup --locked --all
       - name: Run one disjoint part of the complete fixture campaign
         run: |
-          nix develop --no-update-lock-file --command node tools/release-quality.mjs \
+          nix develop --profile "$RUNNER_TEMP/gopurs-dev-profile" --no-update-lock-file --command node tools/release-quality.mjs \
             --full --phase fixtures --shard "$FIXTURE_SHARD" --shard-count 4 \
             --report "$RUNNER_TEMP/quality" | tee "$RUNNER_TEMP/quality.log"
       - name: Require clean sources after fixture execution
@@ -372,14 +373,14 @@ jobs:
       - name: Require complete qualification of the exact candidate
         id: identity
         run: |
-          version=$(nix develop --no-update-lock-file --command node -p 'JSON.parse(require("fs").readFileSync("package.json")).version' | tail -n 1)
+          version=$(nix develop --profile "$RUNNER_TEMP/gopurs-dev-profile" --no-update-lock-file --command node -p 'JSON.parse(require("fs").readFileSync("package.json")).version' | tail -n 1)
           prefix="gopurs-$version-$GOPURS_RELEASE_TARGET"
           (cd "$RUNNER_TEMP/release" && shasum -a 256 -c "$prefix-SHA256SUMS")
           reports=()
           for shard in 0 1 2 3; do
             reports+=(--fixtures "$RUNNER_TEMP/fixtures/fixtures-$GOPURS_RELEASE_TARGET-$shard/quality.json")
           done
-          nix develop --no-update-lock-file --command node tools/release-quality-report.mjs \
+          nix develop --profile "$RUNNER_TEMP/gopurs-dev-profile" --no-update-lock-file --command node tools/release-quality-report.mjs \
             --core "$RUNNER_TEMP/release/$prefix-quality.json" "${reports[@]}" \
             --build "$RUNNER_TEMP/release/$prefix-build.json" --out "$RUNNER_TEMP/complete-quality.json"
           cp "$RUNNER_TEMP/complete-quality.json" "$RUNNER_TEMP/release/$prefix-quality.json"
@@ -398,7 +399,7 @@ jobs:
           RELEASE_PREFIX: ${{ steps.identity.outputs.prefix }}
           RELEASE_VERSION: ${{ steps.identity.outputs.version }}
         run: |
-          nix develop --no-update-lock-file --command node tools/release-npm-provenance.mjs generate \
+          nix develop --profile "$RUNNER_TEMP/gopurs-dev-profile" --no-update-lock-file --command node tools/release-npm-provenance.mjs generate \
             --package "$RUNNER_TEMP/release/gopurs-$RELEASE_VERSION.tgz" \
             --build "$RUNNER_TEMP/release/$RELEASE_PREFIX-build.json" \
             --bundle "$RUNNER_TEMP/release/$RELEASE_PREFIX-npm-provenance.sigstore.json" \

@@ -35,14 +35,14 @@ workspace/
 mkdir hello
 cd hello
 npm init -y
-npm install --save-dev --ignore-scripts gopurs@0.1.0-rc.4
+npm install --save-dev --ignore-scripts gopurs@0.1.0-rc.5
 ```
 
 The command above requires the candidate to have been published. Until then,
 install its reviewed local release archive instead:
 
 ```bash
-npm install --save-dev --ignore-scripts /absolute/path/to/gopurs-0.1.0-rc.4.tgz
+npm install --save-dev --ignore-scripts /absolute/path/to/gopurs-0.1.0-rc.5.tgz
 ```
 
 ## Install the console port
