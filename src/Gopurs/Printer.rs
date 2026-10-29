@@ -1,3 +1,4 @@
+// Handwritten FFI for Gopurs.Printer; keep in sync with the .purs foreign imports.
 pub fn Gopurs_Printer_escapeGoStringImpl(input: String) -> String {
     use std::fmt::Write;
     let mut output = String::with_capacity(input.len());

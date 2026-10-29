@@ -1,3 +1,4 @@
+// Handwritten FFI for Gopurs.GoCode; keep in sync with the .purs foreign imports.
 // Same lexical boundaries and sorted result as referencedImportsPS and the Go
 // native scanner. Strings, rune literals and comments do not introduce imports.
 pub fn Gopurs_GoCode_referencedImportsImpl(_fallback: Func1<String, Value>, text: String) -> Value {

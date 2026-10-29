@@ -98,6 +98,8 @@
     "test:cache-sources": "node --test tools/driver-source-cache.test.mjs",
     "test:cache-context": "node --test tools/driver-context-cache.test.mjs",
     "test:cache-codecs": "node --test tools/module-codec.test.mjs tools/cache-pool.test.mjs",
+    "test:identity": "node --test tools/check-output-identity.test.mjs",
+    "check:identity": "node tools/check-output-identity.mjs",
     "prepare": "npm run build"
   },
   "devDependencies": {

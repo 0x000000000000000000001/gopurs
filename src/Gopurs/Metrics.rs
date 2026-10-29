@@ -1,3 +1,4 @@
+// Handwritten FFI for Gopurs.Metrics; keep in sync with the .purs foreign imports.
 pub fn Gopurs_Metrics_now() -> Value {
     Value::Func1(Func1::Shared(std::rc::Rc::new(|_| {
         static START: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new();

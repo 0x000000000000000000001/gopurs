@@ -1,3 +1,4 @@
+// Handwritten FFI for Gopurs.FfiSupport; keep in sync with the .purs foreign imports.
 // The existing Go parser is linked into this executable through a small C ABI.
 // Both compiler hosts therefore use exactly the same Go syntax/type handling.
 unsafe extern "C" {

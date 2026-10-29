@@ -1,3 +1,4 @@
+// Handwritten FFI for Gopurs.Cache.Pool; keep in sync with the .purs foreign imports.
 #[derive(Debug)]
 pub struct Pool(std::sync::Mutex<(std::collections::HashMap<String, i64>, Vec<String>, Vec<String>)>);
 

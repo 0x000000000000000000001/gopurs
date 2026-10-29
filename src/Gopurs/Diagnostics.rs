@@ -1,3 +1,4 @@
+// Handwritten FFI for Gopurs.Diagnostics; keep in sync with the .purs foreign imports.
 static GOPURS_DIAGNOSTIC: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 pub fn Gopurs_Diagnostics_mark() -> Value {

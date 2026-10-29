@@ -1,3 +1,4 @@
+// Handwritten FFI for Gopurs.CompilerSnapshot; keep in sync with the .purs foreign imports.
 unsafe extern "C" {
     fn GopursFreezeCompiler() -> *mut std::ffi::c_char;
     fn GopursReleaseCompiler();

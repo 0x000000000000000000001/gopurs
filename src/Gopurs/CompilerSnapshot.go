@@ -1,3 +1,4 @@
+// Handwritten FFI for Gopurs.CompilerSnapshot; keep in sync with the .purs foreign imports.
 package Gopurs_CompilerSnapshot
 
 import (

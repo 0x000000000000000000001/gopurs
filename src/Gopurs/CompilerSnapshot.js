@@ -1,3 +1,4 @@
+// Handwritten FFI for Gopurs.CompilerSnapshot; keep in sync with the .purs foreign imports.
 import { execFileSync, spawn } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";

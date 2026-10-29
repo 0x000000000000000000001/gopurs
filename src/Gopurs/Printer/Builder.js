@@ -1,3 +1,4 @@
+// Handwritten FFI for Gopurs.Printer.Builder; keep in sync with the .purs foreign imports.
 // Each rendering owns its buffer. pushImpl returns the same mutable handle;
 // toStringImpl publishes an immutable string, independent of later appends.
 export const newBuilderImpl = () => ({ parts: [] });

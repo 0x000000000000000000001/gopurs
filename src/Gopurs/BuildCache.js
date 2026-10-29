@@ -1,3 +1,4 @@
+// Handwritten FFI for Gopurs.BuildCache; keep in sync with the .purs foreign imports.
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";

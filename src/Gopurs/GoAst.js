@@ -1,3 +1,4 @@
+// Handwritten FFI for Gopurs.GoAst; keep in sync with the .purs foreign imports.
 export const memoizeName = sanitize => {
   const names = new Map();
   return name => {

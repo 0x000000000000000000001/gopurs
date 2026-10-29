@@ -1,3 +1,4 @@
+// Handwritten FFI for Gopurs.GoCode; keep in sync with the .purs foreign imports.
 package Gopurs_GoCode
 
 import (

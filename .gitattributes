@@ -1,30 +1,26 @@
-# Suppress PureScript entirely from stats
-*.purs linguist-detectable=false
-*.purs linguist-vendored
+# PureScript is the primary implementation language.
+*.purs linguist-detectable=true
+*.purs linguist-vendored=false
 
-# Keep JS generated diffs hidden
-*.js linguist-generated
-bin/gopurs.js linguist-generated
+# Upstream compiler fixtures are vendored test data, not project source.
+tests/passing/** linguist-vendored=true
 
-# Only include target language
+# Generated golden outputs.
+tests/passing-snapshots/** linguist-generated=true
+tests/passing-snapshots-dev/** linguist-generated=true
+
+# Handwritten host FFI.
 *.go linguist-detectable=true
 *.go linguist-vendored=false
+*.rs linguist-detectable=true
+*.rs linguist-vendored=false
 
-# Suppress Dhall entirely from stats
+# Generated bundles and embedded runtime snapshots.
+bin/gopurs.js linguist-generated=true
+src/Gopurs/Runtime.js linguist-generated=true
+tools/wasm_exec.js linguist-generated=true
+tools/ffi_gen.wasm linguist-detectable=false
+
+# Build configuration languages kept out of the main language breakdown.
 *.dhall linguist-detectable=false
-*.dhall linguist-vendored
-
-# Suppress AI artifact languages from stats
 *.py linguist-detectable=false
-*.py linguist-vendored
-*.js linguist-detectable=false
-*.js linguist-vendored
-*.sh linguist-detectable=false
-*.sh linguist-vendored
-
-bin/* linguist-detectable=false
-bin/* linguist-vendored
-*.mjs linguist-detectable=false
-*.mjs linguist-vendored
-*.cjs linguist-detectable=false
-*.cjs linguist-vendored
