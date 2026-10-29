@@ -413,3 +413,12 @@ candidate first. If npm publication succeeded but only GitHub publication
 failed, repeat the public smoke and finish that GitHub release; do not publish
 the same npm version again. If a CI tag build failed, fix the source and issue
 a new candidate tag instead of moving the signed tag.
+
+### CI tool lifetime
+
+Each CI job keeps its development environment in
+`$RUNNER_TEMP/gopurs-dev-profile`. Keep this profile for the entire job so its
+Spago, frontend and language tools have an explicit Nix garbage-collection
+root. An `ENOENT` diagnostic records the command search paths and working
+directory; investigate it before a costly retry. The signed candidate tag is
+immutable, including when its CI fails.

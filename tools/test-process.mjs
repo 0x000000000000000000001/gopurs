@@ -1,4 +1,5 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
+import { delimiter, resolve } from "node:path";
 import { CommandRunner, Interrupted } from "./command-runner.mjs";
 
 export { Interrupted };
@@ -21,6 +22,13 @@ export class TestProcesses {
       status = await this.commands.run(command, args, { cwd, env, log, stream });
     } catch (error) {
       if (error instanceof Interrupted) throw error;
+      if (error.code === "ENOENT") {
+        const directory = cwd ?? process.cwd();
+        const search = command.includes("/") ? [resolve(directory, command)]
+          : ((env ?? process.env).PATH ?? "/usr/bin:/bin").split(delimiter).map(path => resolve(directory, path, command));
+        const describe = path => ({ path, exists: existsSync(path) });
+        error.message += `; spawn context: ${JSON.stringify({ cwd: describe(directory), command: search.map(describe) })}`;
+      }
       throw new Error(`${label}: ${error.message}`);
     }
     const output = log ? readFileSync(log, "utf8") : "";
