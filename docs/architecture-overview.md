@@ -2,6 +2,24 @@
 
 This is the public overview of the gopurs data flow. The detailed,
 implementation-oriented map remains in [architecture.md](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/architecture.md).
+Each source module and its target phase are listed in
+[module-map.md](module-map.md); the vocabulary is normative in
+[naming.md](naming.md).
+
+## Terminology
+
+The pipeline uses one word per concept: **prepare** loads the TAST and derives
+metadata, **specialize** performs monomorphization, **rewrite** runs the
+Go-specific transformations, **emit** produces Go declarations in memory,
+**output** writes files and **publish** commits the cache. A **worker** is a
+generated Go function; a **job** is a parallel unit of work. A **host** runs
+the compiler (JS, Go or Rust); the **runtime** is the embedded Go runtime of
+the generated application.
+
+The source tree still carries historical module names such as
+`Driver.Prepare`, `Monomorphization` and `CodeGen` until the cleanup moves land.
+[module-map.md](module-map.md) gives the current name, the target name and the
+phase of every module; normative prose uses the target vocabulary.
 
 ## Hosts and driver
 
@@ -36,13 +54,14 @@ purs + Spago -> output/<Module>/corefn.json -> gopurs -> output/*.go
    decodes it in dependency order.
 2. **Prepare.** It collects constructors, class members, global types, FFI
    candidates, record fields and other metadata needed for native layouts.
-3. **Monomorphize.** It specializes supported higher-rank/type-class uses and
+3. **Specialize.** It specializes supported higher-rank/type-class uses and
    propagates the transitive specialization requirements.
-4. **Optimize.** The shared backend optimizer runs with Go-specific handling of
-   calls, tail recursion, records, arrays, effects, JSON plans and workers.
-5. **Emit.** Code generation chooses native Go representations where the types
-   allow it, falls back to a tagged `Value` representation otherwise, and
-   prints modules, imports and FFI bridges.
+4. **Build and rewrite.** The shared backend optimizer builds backend modules;
+   the Go rewrite passes then handle calls, tail recursion, records, arrays,
+   effects, JSON plans and workers.
+5. **Emit.** Emission chooses native Go representations where the types allow
+   it, falls back to a tagged `Value` representation otherwise, and prints
+   modules, imports and FFI bridges.
 6. **Publish.** Generated files are written through the content-verified cache.
    The runtime, `go.mod` and entry points are added when the application is
    assembled.

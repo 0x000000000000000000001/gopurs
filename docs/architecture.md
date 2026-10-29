@@ -3,6 +3,15 @@
 Les étapes suivent le chemin actif de [Driver](../src/Gopurs/Driver.purs), appelé
 par [Main](../src/Main.purs). Le pilote et ses frontières sont décrits ci-dessous.
 
+> **Vocabulaire.** Les phases cibles sont `Driver`, `Prepare`, `Rewrite`,
+> `Emit`, `Cache`, `Host` et `Runtime`. Le glossaire normatif est
+> [naming.md](naming.md) ; la carte module par module, avec le nom cible, la
+> phase et les dépendances réelles, est [module-map.md](module-map.md). Ce
+> document cite les modules actuels (`Driver.Prepare`, `CodeGen`,
+> `Monomorphization`) pour rester vérifiable tant que le lot 3 n'a pas mergé
+> leur déplacement. Les journaux et campagnes cités plus bas gardent leurs
+> termes d'origine.
+
 ## Entrée typée et ordre des passes
 
 1. Le fork PureScript émet le TAST enrichi dans `output/<Module>/corefn.json`.
@@ -254,6 +263,12 @@ commun aux hôtes et la propriété transactionnelle des sorties. Son stockage
 est exposé par `BuildCache` et raccordé au pilote par `Driver.Cache` et
 `Cache.Modules`. La réutilisation par module est livrée au lot 04, validée au
 lot 05 et mesurée jusqu'au runner au lot 06 du [plan incrémental](../todo.md).
+
+La carte [module-map.md](module-map.md) est la source de vérité : elle donne,
+pour chaque module, sa phase cible, sa responsabilité et les modules dont il
+dépend. Le tableau ci-dessous en est le résumé par responsabilité ; il emploie
+les noms actuels et sera remplacé par les noms cibles au fil du lot 3. La
+phase cible figure dans la carte, pas dans ce tableau.
 
 Tous les modules gopurs de ce tableau se trouvent dans [src/Gopurs](../src/Gopurs).
 

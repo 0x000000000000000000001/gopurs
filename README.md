@@ -31,6 +31,7 @@ records the earlier design work.
 - [Quickstart](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quickstart.md): compile and run a small application.
 - [CLI reference](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/cli.md): options, hosts, environment variables and exit status.
 - [Architecture overview](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/architecture-overview.md): input format, pipeline and generated output.
+- [Naming and vocabulary](docs/naming.md) and [module map](docs/module-map.md): the target terms and the phase of every compiler module.
 - [Known limitations](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/limitations.md) and [publication scope](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/publication-scope.md).
 - [Migration and compatibility](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/migration.md).
 - [Troubleshooting and FAQ](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/troubleshooting.md).
@@ -800,12 +801,12 @@ build artifacts; commit the Go source and build tooling.
 
 [`Main`](https://github.com/0x000000000000000000001/gopurs/blob/main/src/Main.purs) launches [`Driver`](https://github.com/0x000000000000000000001/gopurs/blob/main/src/Gopurs/Driver.purs), which owns phase ordering:
 
-1. **Load and prepare:** [Driver.Prepare](https://github.com/0x000000000000000000001/gopurs/blob/main/src/Gopurs/Driver/Prepare.purs) loads enriched CoreFn, builds type and constructor metadata, and applies partial monomorphization.
-2. **Optimize and lower:** [Driver.Build](https://github.com/0x000000000000000000001/gopurs/blob/main/src/Gopurs/Driver/Build.purs) runs the optimizer and publishes module signatures; [CodeGen](https://github.com/0x000000000000000000001/gopurs/blob/main/src/Gopurs/CodeGen.purs) and the specialized `Gopurs` modules lower backend modules to Go representations and expressions.
-3. **Print and bridge:** [Printer](https://github.com/0x000000000000000000001/gopurs/blob/main/src/Gopurs/Printer.purs) emits Go source; [FfiSupport](https://github.com/0x000000000000000000001/gopurs/blob/main/src/Gopurs/FfiSupport.purs) prepares foreign declarations for [FfiBridge](https://github.com/0x000000000000000000001/gopurs/blob/main/src/Gopurs/FfiBridge.purs).
-4. **Assemble and execute:** [Driver.Output](https://github.com/0x000000000000000000001/gopurs/blob/main/src/Gopurs/Driver/Output.purs) writes modules, the embedded runtime, `go.mod`, and entrypoints. Go's tools resolve dependencies and compile the application.
+1. **Prepare:** [Driver.Prepare](https://github.com/0x000000000000000000001/gopurs/blob/main/src/Gopurs/Driver/Prepare.purs) loads enriched CoreFn, builds type and constructor metadata, and applies partial specialization.
+2. **Build and rewrite:** [Driver.Build](https://github.com/0x000000000000000000001/gopurs/blob/main/src/Gopurs/Driver/Build.purs) runs the optimizer and publishes module signatures; the rewrite passes transform backend modules before emission.
+3. **Emit and print:** the emit phase ([CodeGen](https://github.com/0x000000000000000000001/gopurs/blob/main/src/Gopurs/CodeGen.purs) today) lowers backend modules to Go representations and expressions; [Printer](https://github.com/0x000000000000000000001/gopurs/blob/main/src/Gopurs/Printer.purs) renders Go source, and [FfiSupport](https://github.com/0x000000000000000000001/gopurs/blob/main/src/Gopurs/FfiSupport.purs) prepares foreign declarations for [FfiBridge](https://github.com/0x000000000000000000001/gopurs/blob/main/src/Gopurs/FfiBridge.purs).
+4. **Output and publish:** [Driver.Output](https://github.com/0x000000000000000000001/gopurs/blob/main/src/Gopurs/Driver/Output.purs) writes modules, the embedded runtime, `go.mod`, and entrypoints; the cache session then publishes the verified outputs. Go's tools resolve dependencies and compile the application.
 
-The [architecture map](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/architecture.md) gives a detailed guide to module responsibilities.
+The [architecture map](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/architecture.md) gives a detailed guide to module responsibilities. The [module map](docs/module-map.md) lists every module with its target phase and dependencies, and [naming.md](docs/naming.md) defines the vocabulary used above. Until the cleanup moves land, the links still point at the historical module names.
 The [runtime/FFI contracts](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/runtime-ffi-contracts.md) cover shared storage,
 closure lifetime, and the per-render mutable buffer owned by `Printer.Builder`.
 

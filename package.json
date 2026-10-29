@@ -100,7 +100,8 @@
     "test:cache-codecs": "node --test tools/module-codec.test.mjs tools/cache-pool.test.mjs",
     "test:identity": "node --test tools/check-output-identity.test.mjs",
     "check:identity": "node tools/check-output-identity.mjs",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "check:docs": "node tools/check-docs.mjs"
   },
   "devDependencies": {
     "purescript": "0.15.16",

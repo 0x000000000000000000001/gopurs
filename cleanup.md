@@ -22,7 +22,13 @@ l'identité octet par octet des sorties Go.
   commentaire de `BuildCache` corrigé, index `docs/`, `tests/` et `tools/`
   ajoutés, en-têtes FFI manuscrites ajoutés. L'archivage des journaux
   `build-*` reste groupé avec le lot 5 pour ne pas casser les liens deux fois.
-- **Lots 2 à 7 — à faire**.
+- **Lot 2 — fait** : [docs/naming.md](docs/naming.md),
+  [docs/module-map.md](docs/module-map.md), alignement de `README.md`,
+  `CONTRIBUTING.md`, `docs/architecture.md`, `docs/architecture-overview.md`
+  et `docs/README.md`, plus `tools/check-docs.mjs` et son script npm. La carte
+  couvre les **104 modules actuels** : les 105 de la baseline moins
+  `DependencyGraph`, supprimé au lot 1 ; elle documente cette soustraction.
+- **Lots 3 à 7 — à faire**.
 
 ## 1. Objectif
 

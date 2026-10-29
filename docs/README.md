@@ -21,7 +21,9 @@ campaign as a contract.
 | Document | Subject | Status |
 | --- | --- | --- |
 | [architecture-overview.md](architecture-overview.md) | pipeline in one page | normative |
-| [architecture.md](architecture.md) | detailed pass order, metadata provenance, module map | normative, being split |
+| [architecture.md](architecture.md) | detailed pass order, metadata provenance, responsibility table | normative, being split |
+| [naming.md](naming.md) | glossary, naming rules and historical names | normative |
+| [module-map.md](module-map.md) | phase, responsibility and dependencies of every module | normative, source of truth for the cleanup moves |
 | [build-cache.md](build-cache.md) | persistent cache protocol | normative |
 | [runtime-ffi-contracts.md](runtime-ffi-contracts.md) | runtime and host FFI ownership | normative |
 | [go-ast-printer.md](go-ast-printer.md) | boundary between Go AST and printer | normative |
@@ -81,4 +83,5 @@ for provenance; do not use them as the current contract.
 - Public documentation is written in English. Internal architecture and
   historical records may be in French; do not mix languages within one page.
 - New documents must be linked from this page, and relative links must resolve
-  before merge (see `tools/check-docs.mjs` in [cleanup.md](../cleanup.md)).
+  before merge. Run `node tools/check-docs.mjs` (or `npm run check:docs`) to
+  check relative links, anchors, packaged files and module-map coverage.
