@@ -12,18 +12,18 @@ const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const encode = value => Buffer.from(JSON.stringify(value));
 function fixture() {
   const repository = 'owner/gopurs', commit = 'a'.repeat(40), tree = 'b'.repeat(40), head = 'c'.repeat(40), base = 'd'.repeat(40);
-  const names = ['release-quality-resources', 'release-npm-provenance', 'ffi-errors', 'launcher', 'test-runner',
+  const names = ['release-quality-resources', 'release-npm-provenance', 'release-sbom', 'ffi-errors', 'launcher', 'test-runner',
     'build-native', 'bootstrap-inputs', 'cli', 'build-profiles', 'manifest-prepared-cache', 'driver-cache', 'native-go-code', 'preparation-native'];
   const quality = encode({ schema: 1, status: 'passed', full: false, requestedFull: false, phase: 'all', shard: null,
     identity: { source: { commit, dirty: false }, target: 'linux-amd64', github: { repository, runId: '123', runAttempt: '1' } },
     gates: [...names.map(name => `Node ${name}.test.mjs`), 'Go build-cache', 'Go c1c', 'Go ffi-gen', 'Representative executable fixtures', 'npm package surface']
       .map((name, index) => ({ name, index: index + 1, passed: true, exitCode: 0 })) });
   const smoke = encode({ version: '0.1.0-test', tests: [{ host: 'javascript', passed: true }, { host: 'native', passed: true }] });
-  const counts = [12, 8, 14, 9, 96, 7, 5, 19, 3, 7, 4, 2, 1];
+  const counts = [12, 9, 2, 14, 9, 96, 7, 5, 19, 3, 7, 4, 2, 1];
   const receipt = { schema: 1, policy: 'linux-quick-v1', repository, ref: 'refs/pull/7/merge', commit, tree,
     runId: '123', runAttempt: '1', version: '0.1.0-test', parents: [base, head], qualitySha256: hash(quality), smokeSha256: hash(smoke),
     nodeResults: names.map((name, index) => ({ name: `Node ${name}.test.mjs`, tests: counts[index], pass: counts[index], fail: 0, cancelled: 0, skipped: 0, todo: 0 })),
-    nodeTotals: { tests: 187, pass: 187, fail: 0, cancelled: 0, skipped: 0, todo: 0 } };
+    nodeTotals: { tests: 190, pass: 190, fail: 0, cancelled: 0, skipped: 0, todo: 0 } };
   const context = { repository, tree, pr: { number: 7, merged: true, head: { sha: head, repo: { full_name: repository } }, base: { ref: 'main', repo: { full_name: repository } } },
     run: { id: 123, run_attempt: 1, event: 'pull_request', status: 'completed', conclusion: 'success', path: '.github/workflows/ci.yml',
       repository: { full_name: repository }, head_repository: { full_name: repository }, head_sha: head, pull_requests: [{ number: 7, head: { sha: head } }] },
@@ -143,9 +143,9 @@ test('receipt CLI records a real clean merge commit and validates all Node summa
   git('add', '.'); git('commit', '-m', 'feature'); const head = git('rev-parse', 'HEAD');
   git('checkout', 'main'); git('merge', '--no-ff', '--no-edit', 'feature');
   const commit = git('rev-parse', 'HEAD'), tree = git('rev-parse', 'HEAD^{tree}');
-  const f = fixture(), quality = JSON.parse(f.quality), counts = [12, 8, 14, 9, 96, 7, 5, 19, 3, 7, 4, 2, 1];
+  const f = fixture(), quality = JSON.parse(f.quality), counts = [12, 9, 2, 14, 9, 96, 7, 5, 19, 3, 7, 4, 2, 1];
   quality.identity.source.commit = commit;
-  quality.gates.slice(0, 13).forEach((gate, index) => {
+  quality.gates.slice(0, counts.length).forEach((gate, index) => {
     gate.log = join(directory, `${index}.log`);
     writeFileSync(gate.log, `# tests ${counts[index]}\n# pass ${counts[index]}\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n`);
   });

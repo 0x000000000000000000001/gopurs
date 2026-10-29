@@ -89,7 +89,8 @@ jobs:
         run: |
           channel=latest
           if [[ "$RELEASE_VERSION" == *-rc.* ]]; then channel=next; fi
-          nix develop --no-update-lock-file --command npm publish --ignore-scripts --provenance --access public \
+          nix develop --no-update-lock-file --command npm publish --ignore-scripts --access public \
+            --provenance-file "$RUNNER_TEMP/candidate/gopurs-$RELEASE_VERSION-linux-amd64-npm-provenance.sigstore.json" \
             --tag "$channel" "$RUNNER_TEMP/candidate/gopurs-$RELEASE_VERSION.tgz"
       - name: Fetch the registry artifact and repeat the offline application smoke
         run: |

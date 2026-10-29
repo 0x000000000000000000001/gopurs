@@ -27,8 +27,26 @@ export function loadPinnedSigstore(env = process.env) {
   requireValue(npmManifest.name === "npm" && npmManifest.version === "11.6.0", "Expected pinned npm 11.6.0");
   const npmRequire = createRequire(join(npmRoot, "package.json"));
   requireValue(npmRequire("sigstore/package.json").version === "3.1.0", "Expected npm's Sigstore 3.1.0");
+  requireValue(npmRequire("@sigstore/sign/package.json").version === "3.1.0", "Expected npm's @sigstore/sign 3.1.0");
+  requireValue(npmRequire("@sigstore/bundle/package.json").version === "3.1.0", "Expected npm's @sigstore/bundle 3.1.0");
   requireValue(npmRequire("libnpmpublish/package.json").version === "11.1.0", "Expected npm's libnpmpublish 11.1.0");
-  return npmRequire("sigstore");
+  return { ...npmRequire("sigstore"), attest: createAttestor(npmRequire("@sigstore/sign"), npmRequire("@sigstore/bundle").bundleToJSON) };
+}
+
+export function createAttestor({ DSSEBundleBuilder, FulcioSigner, CIContextProvider, RekorWitness }, bundleToJSON) {
+  return async (data, type) => {
+    // Sigstore 3.1.0's high-level attest hardcodes fetchOnConflict=false.
+    // Compose its public APIs to recover a POST accepted before a lost response.
+    // Keep its CI provider, DSSE format, timeout and retry defaults unchanged.
+    const request = { timeout: 5000, retry: { retries: 2 } };
+    const builder = new DSSEBundleBuilder({
+      signer: new FulcioSigner({ ...request, identityProvider: new CIContextProvider("sigstore") }),
+      witnesses: [new RekorWitness({ ...request, entryType: "dsse", fetchOnConflict: true })],
+    });
+    // A fetched entry is evidence only; generateBundle still verifies the
+    // signature, transparency log and exact release/workflow identity below.
+    return bundleToJSON(await builder.create({ data, type }));
+  };
 }
 
 export function describeRelease({ manifest, sourceManifest, build, archiveName, bytes, git }) {

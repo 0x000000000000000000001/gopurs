@@ -5,6 +5,7 @@ import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, readdirSy
 import { arch, platform } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { withSbomSerialNumber } from "./release-sbom.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const options = {};
@@ -97,7 +98,7 @@ const goVersion = command("go", ["version"]).trim();
 components.push({ type: "application", "bom-ref": "toolchain:go", name: "go", version: goVersion.split(" ")[2], scope: "required" });
 components.push({ type: "application", "bom-ref": "toolchain:node", name: "node", version: process.version.slice(1), scope: "optional" });
 const sbomName = `${prefix}-sbom.cdx.json`;
-writeJson(sbomName, {
+writeJson(sbomName, withSbomSerialNumber({
   bomFormat: "CycloneDX", specVersion: "1.6", version: 1,
   metadata: {
     component: { type: "application", "bom-ref": "gopurs", name: "gopurs", version, licenses: [{ expression: metadata.license }] },
@@ -105,7 +106,7 @@ writeJson(sbomName, {
   },
   components,
   dependencies: [{ ref: "gopurs", dependsOn: components.map(component => component["bom-ref"]) }],
-});
+}));
 const notesName = `${prefix}-release-notes.md`;
 const section = changelog.split(/^## /m).find(section => section.startsWith(`[${version}]`))
   ?? (options.preview ? changelog.split(/^## /m).find(section => section.startsWith("[Unreleased]")) : null);

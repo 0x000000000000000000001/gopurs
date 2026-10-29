@@ -7,7 +7,7 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const policy = 'linux-quick-v1';
-const nodeGates = ['release-quality-resources', 'release-npm-provenance', 'ffi-errors',
+const nodeGates = ['release-quality-resources', 'release-npm-provenance', 'release-sbom', 'ffi-errors',
   'launcher', 'test-runner', 'build-native', 'bootstrap-inputs', 'cli',
   'build-profiles', 'manifest-prepared-cache', 'driver-cache', 'native-go-code', 'preparation-native']
   .map(name => `Node ${name}.test.mjs`);
