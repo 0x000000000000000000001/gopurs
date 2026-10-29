@@ -176,7 +176,7 @@ function partialQualityReports() {
 
 test("four shards preserve every original batch and only their verified union is full", () => {
   const { inventory, core, fixtures, build } = partialQualityReports();
-  assert.equal(inventory.nodeTests.length, 99);
+  assert.equal(inventory.nodeTests.length, 100);
   assert.equal(inventory.targets.length, 401);
   assert.equal(core.full, false);
   assert(fixtures.every(report => report.full === false));
@@ -187,9 +187,9 @@ test("four shards preserve every original batch and only their verified union is
   assert.equal(merged.full, true);
   assert.equal(merged.phase, "all");
   assert.equal(merged.status, "passed");
-  assert.equal(merged.gates.length, 266);
+  assert.equal(merged.gates.length, 267);
   assert.deepEqual(merged.fixtures.passed, { release: 401, dev: 401 });
-  assert.deepEqual(merged.gates.map(gate => gate.index), Array.from({ length: 266 }, (_, index) => index + 1));
+  assert.deepEqual(merged.gates.map(gate => gate.index), Array.from({ length: 267 }, (_, index) => index + 1));
   for (const profile of ["release", "dev"]) assert.deepEqual(
     merged.gates.filter(gate => gate.fixtures?.profile === profile).flatMap(gate => gate.fixtures.targets), inventory.targets);
   assert.equal(merged.gates.at(-1).name, "npm package surface");
@@ -264,7 +264,7 @@ test("merge CLI checks stable fixture evidence and original bootstrap hashes bef
     ...fixtureFiles.flatMap(file => ["--fixtures", file]), "--build", buildFile, "--out", output];
   let result = spawnSync(process.execPath, args, { env, encoding: "utf8" });
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(JSON.parse(readFileSync(output, "utf8")).gates.length, 266);
+  assert.equal(JSON.parse(readFileSync(output, "utf8")).gates.length, 267);
   rmSync(output);
   result = spawnSync(process.execPath, args, { env: { ...env, GITHUB_SHA: "d".repeat(40) }, encoding: "utf8" });
   assert.notEqual(result.status, 0);
