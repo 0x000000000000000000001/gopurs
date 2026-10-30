@@ -3,6 +3,91 @@
 This is a working record for the `0.1.0` release gates. It is not a release
 certificate. The gate list is in [`todo.md`](../todo.md).
 
+## RC7 qualification and operator recovery — 30 October 2026
+
+The original attempt of tagged run
+[41041948153](https://github.com/0x000000000000000000001/gopurs/actions/runs/41041948153)
+passed all three builds, twelve fixture shards and three qualification/signing
+jobs. These results belong to clean source commit
+`fe79595b49a2d1ed81b034533ab7c643cc69438a`, referenced by the verified,
+immutable tag object `6c673452f4ff239e55294f7c6f6bcd40ef3cda92`
+(`v0.1.0-rc.7`).
+
+Each of Linux amd64, Linux arm64 and macOS arm64 passed 267 gates: the
+100-file Node inventory, three Go race gates, native emission race checks,
+package checks and all 401 Release plus 401 Dev fixtures. The experimental
+Rust-host test remains the intentional exclusion. The three npm archives
+match SHA-256 `32e8888b46c9bfb448bc7767fd357942f99b1f27d69640dc4ac94d0472802bca`.
+The original-attempt audit verified 22 workflow archives. The recovery
+preflight verified the exact 45 release assets, including 36 checksummed
+files, with 16 cryptographic checks of provenance and SBOM attestations.
+
+The **workflow conclusion remains `failure`**. Only draft preparation failed:
+its first attempt created the draft, then failed because the draft was not
+immediately visible. Retrying that job copied 19 successful jobs into GitHub's
+attempt-2 metadata without executing them again or producing new archives.
+The retry selector mistook those copies for new producers and requested a
+nonexistent `release-linux-amd64-attempt-2` artifact. Neither failure invalidates
+the audited original qualification; neither is a successful complete CI run.
+
+After reviewing this distinction, the maintainer explicitly authorized an
+operator-recovery exception for the original RC7 assets, on npm `next` and as
+a GitHub prerelease. The tag, source and signed assets remain unchanged.
+The 45 assets were uploaded to release `429140696` and its remote inventory
+reverified. RC7 is now published on npm and as a
+[GitHub prerelease](https://github.com/0x000000000000000000001/gopurs/releases/tag/v0.1.0-rc.7)
+(30 October 2026, 15:47 UTC). A public npm download is byte-identical to the
+approved archive. Both the original and registry-served provenance pass the
+pinned Sigstore verifier. npm adds an empty `keyid` field to DSSE signatures;
+the operator check accepts only that absent-to-empty serialization difference,
+with the signed payload and signature bytes required to match exactly. Four
+negative cases reject modified payloads, signatures, key identifiers and fields.
+
+For this first publication npm also assigned `latest` to RC7 despite the
+explicit `--tag next`, and rejected its removal after authentication. The
+maintainer explicitly accepted this second exception: `next` and `latest`
+both resolve to `0.1.0-rc.7`, so unqualified `npm install gopurs` installs RC7.
+The version remains a candidate and GitHub marks it as a prerelease, not its
+latest release. No stable version or validated public rollback is claimed.
+The public quickstart passed on Linux arm64 with fresh npm, Spago and Go caches.
+It installed `gopurs@0.1.0-rc.7` from npm, used the README-linked quickstart's
+literal configuration and source, resolved real registry dependencies and the
+pinned public console port, then compiled and ran the example. Its exact output
+was `Hello from gopurs\n`. The backend host was the published JavaScript package;
+the prerequisites were the pinned typed frontend 0.15.16, Node 24.8.0, Spago
+1.0.3 and Go 1.27.0. This verifies a fresh application workspace with prepared
+toolchain prerequisites, not their installation on a bare operating system.
+The public b8x compilation also passed on Linux arm64: all 17 stages completed,
+the typed frontend produced 2,707 modules, all generated Go packages built and
+12 executables linked. It used the public RC7 npm archive and native binary,
+with their published checksums and attestation verified, against the frozen
+application source `3adb29c7acddf6799872bd98c95d64ae284dd34e`. The 3,242 input
+files and 138 dependency source directories were checked against their retained
+hashes; those dependency archives were not downloaded again. The build used
+private caches and two workers. No b8x executable, test program or service ran.
+This verifies compilation and linking, not application runtime behavior.
+
+Local evidence is under
+`.gopurs-evidence/release-preparation-20261026/publication-rc7-20261030/draft-recovery-diagnosis`:
+`original-attempt1-audit/audit.json` retains the failed global status alongside
+the successful qualification inspection; `recovery-preflight.json` records
+the artifact-only checks before authorization, and `draft-recovery-result.json`
+records the restored draft; `npm-public-verification.json` records public bytes
+and provenance, and `github-published.json` records the public prerelease.
+The later explicit approvals are recorded in
+`rc7-candidate-state.json` in the enclosing evidence archive.
+The public acquisition and quickstart receipts are under the same publication
+directory: `public-artifacts/linux-arm64/public-acquisition.json` and
+`public-quickstart-evidence/report.json` (SHA-256
+`4da1fb13aef58fb882d52b08bab839c05fe1a270ba08f027d4aca8347fb19180`).
+The b8x result is `b8x-public-evidence/plan.json` (SHA-256
+`f731cef0abdfc1818f7b0272f1ddac22214914145681b26c5ae2d1b895f0b927`),
+with stage logs, input hashes and executable hashes retained beside it.
+
+The separate `ci/library-modtest` branch prepares Release/Dev test campaigns
+for all 51 library ports. It is not merged into RC7, and those library campaigns
+have not run. Its local tooling tests do not extend RC7's 267-gate qualification.
+
 ## RC7 CI finalization recovery — 30 October 2026
 
 RC7 also separates qualification identity from finalization attempt. A later
@@ -42,8 +127,9 @@ cancellation/draining. A regression exercises worker failure while the producer
 is suspended, and all emission tests now run in quick PR qualification.
 Dependency pins, fixture inventory and resource limits are unchanged. Full
 coverage remains 100 Node files, 162 fixture batches and 267 gates; quick
-coverage becomes 20 gates and 210 Node tests. These changes require fresh CI,
-artifact verification and public consumer checks; RC7 is not yet qualified.
+coverage becomes 20 gates and 210 Node tests. This preparation required fresh
+CI, artifact verification and public consumer checks; the qualification and
+remaining publication checks are recorded above.
 
 ## RC5 attestation failures and RC6 preparation — 29 October 2026
 
@@ -659,8 +745,8 @@ generated sources and 12 executables remain in
 against the retained input manifest, as recorded in
 `task-inputs/b8x-release-20261026/recovery-audit.json`. This proves input
 identity, not a resumed execution of the lost plan. The local build result
-above remains historical; the gate requiring a fresh b8x build from publicly
-published artifacts remains open.
+above remains historical. The separate public RC7 build on 30 October closes
+the public-artifact compilation gate, as recorded at the top of this document.
 
 ### Complete local cold/warm benchmark — 27 October
 

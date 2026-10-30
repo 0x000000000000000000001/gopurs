@@ -253,6 +253,21 @@ This recovery uses the workflow stored at the original tag. A source or workflow
 fix still requires a new candidate and fresh qualification. Failed compiler or
 fixture qualification is not eligible for this finalization-only recovery.
 
+RC7 exposed a limit in this retry path: draft visibility failed immediately
+after creation, and the retry metadata copied successful jobs into attempt 2
+without new executions or artifacts. Its selector then requested a nonexistent
+attempt-2 release archive. The workflow remains failed. The maintainer
+authorized a specific operator recovery using the cryptographically verified
+original attempt-1 assets, without rebuilding or changing the signed tag.
+This exception and the remaining public checks are recorded in the
+[RC7 quality record](quality-0.1.0.md#rc7-qualification-and-operator-recovery--30-october-2026).
+Copied job metadata must not be treated as proof of a new producer attempt.
+The public npm verifier also needs to account for npm serializing an absent
+DSSE `keyid` as an empty string. RC7's operator verification allowed only that
+difference after verifying both bundles cryptographically and requiring exact
+signed-payload and signature bytes. These two recovery limitations remain to
+be fixed for the normal automated path; do not repeatedly retry an affected job.
+
 Finalization installs only pinned Node 24.8.0 (npm 11.6.0); it does not reinstall
 the Nix compiler environment. Builds and fixture jobs keep their locked Nix
 environment. The four fixture shards each mix Release and Dev batches while
@@ -281,14 +296,22 @@ selects a release tag. This prerequisite is not approval to merge or publish.
 See the [GitHub dispatch requirements](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow).
 
 Review the CI draft, external benchmark/b8x evidence and rollback prerequisites.
-Both paths below require the complete tag CI matrix to have succeeded and the
-reviewed source to be checked out at that tag. Use the pinned Nix environment
+Both normal paths below require the complete tag CI matrix to have succeeded
+and the reviewed source to be checked out at that tag. RC7 follows the explicit
+operator exception recorded above; it does not satisfy the green-workflow gate.
+Use the pinned Nix environment
 for npm 11.6.0. Keep downloaded files and local evidence outside the checkout.
 
 For the **first publication**, an npm trusted publisher cannot be configured
 on a package that does not yet exist. Publish the real CI archive from the
 maintainer's already authenticated npm CLI, supplying the CI-generated bundle.
 No placeholder package, npm token export, or npm secret in GitHub is needed.
+During RC7's first publication, npm's staging process created its own
+`0.0.0-stage` placeholder and then assigned both `next` and `latest` to RC7.
+The registry rejected removal of `latest`; the maintainer explicitly accepted
+this behavior. An explicit `--tag next` therefore did not establish a
+next-only first publication. Verify the public registry state and document
+any accepted exception before announcing the release.
 First download and verify the draft, replacing `VERSION` with the reviewed
 version:
 
