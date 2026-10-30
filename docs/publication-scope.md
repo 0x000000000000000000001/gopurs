@@ -9,7 +9,7 @@ what users may rely on. It is not evidence that the release gates in
 | Item | Decision |
 | --- | --- |
 | Package | `gopurs` |
-| Current candidate | `0.1.0-rc.7` |
+| Published candidate | `0.1.0-rc.7` (GitHub prerelease; npm `next` and registry-assigned `latest`) |
 | First final version | `0.1.0` |
 | Version source | [`package.json`](../package.json) |
 | Versioning | [Semantic Versioning 2.0.0](https://semver.org/) |
@@ -23,6 +23,11 @@ releases.
 
 Pre-releases use `-rc.N`. A release candidate is published through the same
 artifact and installation path as the final release.
+
+For the first npm publication, the registry also assigned `latest` to RC7 and
+refused its removal. This was explicitly accepted and documented in the
+[quality record](quality-0.1.0.md). Unqualified `npm install gopurs` therefore
+selects RC7; the alias does not establish a stable-release compatibility claim.
 
 ## Compatibility commitments for `0.1.x`
 
