@@ -19,6 +19,15 @@ and draws inspiration from Andy Arvanitis's
 The [development log](https://discourse.purescript.org/t/leveraging-a-blazing-fast-runtime-a-new-go-backend-for-purescript/5841)
 records the earlier design work.
 
+The first public release candidate is
+[`0.1.0-rc.7`](https://github.com/0x000000000000000000001/gopurs/releases/tag/v0.1.0-rc.7).
+Install the backend with `npm install --save-dev --ignore-scripts gopurs@0.1.0-rc.7`,
+then follow the [quickstart](docs/quickstart.md) for the typed PureScript frontend,
+Spago and Go prerequisites. npm currently resolves both `next` and `latest` to
+this candidate, so an unqualified installation also selects RC7. No stable
+version has been published; see the [qualification record](docs/quality-0.1.0.md)
+for the operator-recovery exceptions and validation scope.
+
 ## Features
 
 - **Type-guided Go generation.** TAST expression types, ADT layouts, and type-class declarations guide native records, constructors, dictionaries, and specialized functions. Partial monomorphization reduces generic representations where supported.
@@ -38,7 +47,7 @@ records the earlier design work.
 - [Bootstrap chain](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/bootstrap.md).
 - [Nix installation and development](docs/nix.md).
 - [Release procedure](docs/release.md).
-- [Release qualification, 28 October 2026](docs/quality-0.1.0.md): historical fixture and benchmark results, CI evidence and remaining publication gates.
+- [Release qualification, 30 October 2026](docs/quality-0.1.0.md): fixture and benchmark results, publication evidence and remaining gates.
 - [Contributing](CONTRIBUTING.md), [security policy](SECURITY.md), [changelog](CHANGELOG.md) and [code of conduct](CODE_OF_CONDUCT.md).
 
 ## Benchmarks

@@ -5,6 +5,20 @@ Une case de préparation cochée ne vaut pas validation de la release : les
 résultats doivent porter sur les sources et artefacts exacts qui seront publiés.
 Le bilan des campagnes est dans `docs/quality-0.1.0.md`.
 
+État RC7 au 30 octobre : la qualification des trois plateformes et l'audit des
+artefacts originaux passent. Le workflow reste en échec à la préparation du
+draft ; une reprise opérateur a été explicitement autorisée pour ces artefacts,
+sans modifier le tag. Les 45 assets sont publiés sur GitHub en prerelease ;
+l'archive npm publique et sa provenance sont vérifiées. npm a aussi attribué
+`latest` à RC7 malgré `--tag next` et refusé sa suppression ; cette exception
+a été acceptée explicitement. L'installation npm et le quickstart public passent
+sur Linux arm64 avec des caches applicatifs neufs. La compilation b8x depuis
+les artefacts publics passe aussi : 17 étapes, 2 707 modules TAST et 12 exécutables
+liés, sans exécution des programmes. La publication RC7 est clôturée avec ces
+exceptions ; les cases ouvertes ci-dessous restent des travaux pour la stable.
+La branche séparée
+`ci/library-modtest` ne fait pas partie de cette qualification.
+
 ## 1. Figer le périmètre et le contrat public
 
 - [x] Choisir la version de départ et le schéma de versionnement.
@@ -23,7 +37,7 @@ Le bilan des campagnes est dans `docs/quality-0.1.0.md`.
 - [x] Épingler les dépendances du build JavaScript.
 - [x] Figer et vérifier les révisions du frontend TAST et de tous les ports `gopurs-*` nécessaires à la release.
 - [x] Documenter la chaîne de bootstrap : binaire JS, binaire Go précédent, artefacts de référence.
-- [ ] Publier les checksums des binaires de bootstrap.
+- [x] Publier les checksums des binaires de bootstrap de RC7 avec les artefacts signés.
 - [x] Vérifier la reproductibilité des sorties, ou documenter précisément les différences.
 - [x] Mettre en place une CI Linux et macOS sur les architectures supportées.
 - [ ] Vérifier que la CI part d'un environnement vierge, sans cache préchauffé obligatoire.
@@ -63,38 +77,39 @@ Le bilan des campagnes est dans `docs/quality-0.1.0.md`.
 
 ## 5. Passer les portes de qualité
 
-- [ ] Exécuter toute la suite de tests dans un environnement propre.
+- [x] Exécuter la suite de qualification complète de RC7 dans un environnement propre sur les trois plateformes : 267 portes chacune, avec l'hôte Rust expérimental exclu ; ce résultat ne vaut pas CI globale verte.
 - [x] Exécuter les 401 fixtures en Release et les 401 en Dev avec le compilateur natif frais : 802/802 passent, snapshots inchangés et exécution Go validée ; preuves archivées dans le bilan qualité.
 - [x] Vérifier la conformité avec le compilateur officiel sur un corpus représentatif.
 - [x] Vérifier les golden tests, la parité FFI et les formats générés.
 - [x] Tester les erreurs, annulations, bornes de configuration mémoire et cas de concurrence, avec les tests Go `-race` et l'émission native.
 - [x] Vérifier les performances à froid et à chaud avec le protocole publié : 51 corpus, 1 224 invocations, comparaison aux baselines officielles et preuves archivées.
 - [ ] Faire tourner une release candidate et corriger les régressions bloquantes.
-- [ ] Exiger une CI verte sur le tag de release.
+- [ ] Exiger une CI verte sur le tag de release : le run RC7 reste en échec au draft, avec une exception opérateur documentée pour sa publication.
+- [ ] Corriger la reprise CI pour distinguer les jobs réellement réexécutés des copies de métadonnées GitHub, et la comparaison de provenance npm pour le seul ajout d'un `keyid` DSSE vide.
 - [x] Configurer la CI sur les tags pour couvrir le frontend TAST, le bootstrap natif et l'exécution d'applications, en plus du paquet JavaScript ; son exécution verte reste une porte distincte.
 
 ## 6. Préparer les artefacts et la publication
 
-- [ ] Produire les binaires par plateforme avec les flags de release documentés.
-- [ ] Générer les checksums, la provenance et un SBOM.
-- [ ] Signer le tag et les artefacts.
-- [ ] Rédiger les notes de version et le changelog.
-- [ ] Tester l'installation uniquement depuis les artefacts publiés.
+- [x] Produire les binaires RC7 par plateforme avec les flags de release documentés.
+- [x] Générer les checksums, la provenance et les SBOM de RC7 ; artefacts originaux audités.
+- [x] Signer le tag RC7 et les attestations de ses artefacts ; vérifications cryptographiques passées.
+- [x] Rédiger les notes de version et le changelog de RC7 ; la version stable reste à préparer.
+- [x] Tester l'installation npm de RC7 depuis les artefacts publics sur Linux arm64, avec vérification des octets et de la provenance.
 - [ ] Vérifier les ports sources `gopurs-*` : commits compatibles épinglés, dépendances résolues et notices complètes ; appliquer versions, bornes et allowlists aux paquets effectivement publiés, sans versions communes imposées ([audit et écarts restants](docs/library-source-audit.md)).
 - [x] Faire un `npm publish --dry-run` sur l'archive locale préparée.
-- [ ] Vérifier la provenance de la publication npm réelle.
+- [x] Vérifier la provenance de la publication npm réelle de RC7 et l'identité exacte des octets téléchargés.
 - [ ] Préparer la procédure de rollback et conserver les artefacts précédents.
 - [x] Aligner le contrat de support avec les parcours réellement distribués : hôte JavaScript npm/Nix et binaires Go ; hôte Rust expérimental.
 - [ ] Enregistrer dans Git toutes les sources, configurations et notices nécessaires avant de créer la RC ; vérifier un checkout du commit publié.
-- [ ] Effectuer un smoke test après publication depuis un environnement vierge.
+- [x] Effectuer le smoke test public sur Linux arm64 dans un nouveau projet, avec caches npm, Spago et Go neufs et prérequis de toolchain déjà préparés.
 
 ## 7. Clôturer la publication
 
-- [ ] Vérifier qu'un nouvel utilisateur peut compiler un petit projet avec uniquement le README.
-- [ ] Vérifier qu'un build b8x complet passe depuis les artefacts publiés.
-- [ ] Publier les limites et les travaux futurs sans les présenter comme terminés.
-- [ ] Annoncer la version, les plateformes supportées et le canal de support.
-- [ ] Archiver les preuves de release et les résultats de la CI.
+- [x] Vérifier le parcours du README et de son quickstart lié : installation publique, compilation PureScript/Go et sortie exacte `Hello from gopurs`, avec les prérequis documentés.
+- [x] Vérifier la compilation b8x complète depuis les artefacts publics RC7 sur Linux arm64 : 17 étapes et 12 exécutables liés ; aucun programme exécuté.
+- [x] Publier les limites et les travaux futurs de RC7 sans les présenter comme terminés.
+- [x] Publier les notes de RC7, les plateformes supportées et le canal de support dans la release et la documentation.
+- [x] Archiver les preuves RC7, les résultats de la CI et les contrôles publics, avec leurs limites et exceptions.
 
 ## Critères de sortie
 
@@ -103,7 +118,7 @@ Le bilan des campagnes est dans `docs/quality-0.1.0.md`.
 - [ ] Aucun secret, chemin privé ou artefact interne dans la publication.
 - [ ] Licences et attributions complètes.
 - [ ] Artefacts reproductibles ou procédure de vérification explicite.
-- [ ] Release candidate validée depuis les artefacts publiés.
+- [x] Release candidate vérifiée depuis les artefacts publics : quickstart exécuté et b8x compilé sur Linux arm64 ; exceptions de publication documentées.
 - [ ] Rollback testé.
 - [ ] Documentation et benchmarks conformes à ce qui est réellement mesuré.
 - [ ] Installation et application Nix validées sur la matrice supportée.
