@@ -167,6 +167,19 @@ async function publicRegistryJSON(url) {
   return response.json();
 }
 
+function sameSignatures(actual, expected) {
+  const valid = signatures => Array.isArray(signatures) && signatures.length > 0 && signatures.every(signature =>
+    signature !== null && typeof signature === "object" && !Array.isArray(signature)
+    && Object.keys(signature).every(key => key === "sig" || key === "keyid")
+    && typeof signature.sig === "string"
+    && (!Object.hasOwn(signature, "keyid") || typeof signature.keyid === "string"));
+  // npm serializes an absent DSSE keyid as "". Keep every signature and any
+  // nonempty key identifier exact; reject unknown fields before comparing.
+  return valid(actual) && valid(expected) && actual.length === expected.length
+    && actual.every((signature, index) => signature.sig === expected[index].sig
+      && (signature.keyid ?? "") === (expected[index].keyid ?? ""));
+}
+
 export async function verifyPublished(release, approvedBundle, sigstore, fetchJSON = publicRegistryJSON) {
   await verifyBundle(approvedBundle, release, sigstore);
   const manifest = await fetchJSON(`https://registry.npmjs.org/gopurs/${release.version}`);
@@ -181,8 +194,9 @@ export async function verifyPublished(release, approvedBundle, sigstore, fetchJS
   requireValue(provenance.length === 1, "Expected exactly one published SLSA v1 provenance bundle");
   const bundle = provenance[0].bundle;
   await verifyBundle(bundle, release, sigstore);
-  requireValue(bundle.dsseEnvelope.payload === approvedBundle.dsseEnvelope.payload
-    && JSON.stringify(bundle.dsseEnvelope.signatures) === JSON.stringify(approvedBundle.dsseEnvelope.signatures), "Published provenance differs from the approved signed CI envelope");
+  requireValue(bundle.dsseEnvelope.payloadType === approvedBundle.dsseEnvelope.payloadType
+    && bundle.dsseEnvelope.payload === approvedBundle.dsseEnvelope.payload
+    && sameSignatures(bundle.dsseEnvelope.signatures, approvedBundle.dsseEnvelope.signatures), "Published provenance differs from the approved signed CI envelope");
   return { package: manifest.name, version: manifest.version, integrity, attestationURL: url.href, provenanceBundle: bundle };
 }
 

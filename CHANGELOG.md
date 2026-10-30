@@ -6,6 +6,14 @@ All notable changes to gopurs are recorded here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Keep the original producer job and artifact attempt when GitHub copies a
+  completed execution into retry metadata. Require matching execution evidence
+  and keep newer failed or pending executions blocking recovery.
+- Accept npm's absent-to-empty DSSE `keyid` serialization without changing
+  signed payloads, signature bytes or cryptographic verification requirements.
+
 ### Changed
 
 - Include all 51 pinned library suites through `bin/modtest` in future full

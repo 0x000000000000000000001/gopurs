@@ -273,14 +273,23 @@ without new executions or artifacts. Its selector then requested a nonexistent
 attempt-2 release archive. The workflow remains failed. The maintainer
 authorized a specific operator recovery using the cryptographically verified
 original attempt-1 assets, without rebuilding or changing the signed tag.
-This exception and the remaining public checks are recorded in the
+This exception and the completed public checks are recorded in the
 [RC7 quality record](quality-0.1.0.md#rc7-qualification-and-operator-recovery--30-october-2026).
-Copied job metadata must not be treated as proof of a new producer attempt.
-The public npm verifier also needs to account for npm serializing an absent
-DSSE `keyid` as an empty string. RC7's operator verification allowed only that
-difference after verifying both bundles cryptographically and requiring exact
-signed-payload and signature bytes. These two recovery limitations remain to
-be fixed for the normal automated path; do not repeatedly retry an affected job.
+
+The post-RC7 selector recognizes copied successful jobs whose new creation time
+is after their recorded completion. Their status, execution timestamps, runner
+identity and complete steps must match the latest original execution. It keeps
+that original job ID and artifact attempt; missing or inconsistent evidence is
+rejected. A genuinely newer failed or pending execution still blocks recovery.
+This also preserves the original qualification identity when only finalization
+or draft preparation is retried.
+
+The public npm verifier now accepts an absent DSSE `keyid` and an empty string
+as equivalent. Both original bundles still undergo cryptographic verification;
+payload type, signed payload, signature bytes, signature order and nonempty key
+identifiers must match. Unknown signature fields are rejected. These fixes are
+covered by local regressions, including a replay of RC7's recorded job/artifact
+metadata; they do not modify RC7 or claim a new successful full tag campaign.
 
 Finalization installs only pinned Node 24.8.0 (npm 11.6.0); it does not reinstall
 the Nix compiler environment. Builds and fixture jobs keep their locked Nix
