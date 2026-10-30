@@ -190,7 +190,7 @@ archive after `npm run build`:
 npm pack --ignore-scripts
 
 # From the application directory, using the archive just produced:
-npm install --save-dev --ignore-scripts /absolute/path/to/gopurs-0.1.0-rc.6.tgz
+npm install --save-dev --ignore-scripts /absolute/path/to/gopurs-0.1.0-rc.7.tgz
 ```
 
 The archive includes the backend bundle and FFI parser artifacts. It does not

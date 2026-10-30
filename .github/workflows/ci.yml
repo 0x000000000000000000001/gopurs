@@ -338,6 +338,7 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: read
+      actions: read
       id-token: write
       attestations: write
     strategy:
@@ -349,6 +350,7 @@ jobs:
         shell: bash
     env:
       GOPURS_RELEASE_TARGET: ${{ matrix.target }}
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -361,26 +363,44 @@ jobs:
             test "$(git cat-file -t "$GITHUB_REF")" = tag
             test "$(git rev-parse "$GITHUB_REF^{commit}")" = "$GITHUB_SHA"
           fi
-      - uses: DeterminateSystems/determinate-nix-action@v3.5.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.8.0
+      - name: Verify the signing toolchain
+        run: |
+          test "$(node --version)" = v24.8.0
+          test "$(npm --version)" = 11.6.0
+      - name: Select immutable qualification inputs for this signing attempt
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          node tools/ci/release-inputs.mjs prepare \
+            --release "$RUNNER_TEMP/release" --fixtures "$RUNNER_TEMP/fixtures" \
+            --out "$RUNNER_TEMP/finalization-context.json"
       - uses: actions/download-artifact@v4
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         with:
           name: candidate-${{ matrix.target }}
           path: ${{ runner.temp }}/release
       - uses: actions/download-artifact@v4
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         with:
           pattern: fixtures-${{ matrix.target }}-*
           path: ${{ runner.temp }}/fixtures
       - name: Require complete qualification of the exact candidate
         id: identity
         run: |
-          version=$(nix develop --profile "$RUNNER_TEMP/gopurs-dev-profile" --no-update-lock-file --command node -p 'JSON.parse(require("fs").readFileSync("package.json")).version' | tail -n 1)
+          version=$(node -p 'JSON.parse(require("fs").readFileSync("package.json")).version')
           prefix="gopurs-$version-$GOPURS_RELEASE_TARGET"
           (cd "$RUNNER_TEMP/release" && shasum -a 256 -c "$prefix-SHA256SUMS")
           reports=()
           for shard in 0 1 2 3; do
             reports+=(--fixtures "$RUNNER_TEMP/fixtures/fixtures-$GOPURS_RELEASE_TARGET-$shard/quality.json")
           done
-          nix develop --profile "$RUNNER_TEMP/gopurs-dev-profile" --no-update-lock-file --command node tools/release-quality-report.mjs \
+          context=()
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            context+=(--finalization-context "$RUNNER_TEMP/finalization-context.json")
+          fi
+          node tools/release-quality-report.mjs "${context[@]}" \
             --core "$RUNNER_TEMP/release/$prefix-quality.json" "${reports[@]}" \
             --build "$RUNNER_TEMP/release/$prefix-build.json" --out "$RUNNER_TEMP/complete-quality.json"
           cp "$RUNNER_TEMP/complete-quality.json" "$RUNNER_TEMP/release/$prefix-quality.json"
@@ -399,7 +419,7 @@ jobs:
           RELEASE_PREFIX: ${{ steps.identity.outputs.prefix }}
           RELEASE_VERSION: ${{ steps.identity.outputs.version }}
         run: |
-          nix develop --profile "$RUNNER_TEMP/gopurs-dev-profile" --no-update-lock-file --command node tools/release-npm-provenance.mjs generate \
+          node tools/release-npm-provenance.mjs generate \
             --package "$RUNNER_TEMP/release/gopurs-$RELEASE_VERSION.tgz" \
             --build "$RUNNER_TEMP/release/$RELEASE_PREFIX-build.json" \
             --bundle "$RUNNER_TEMP/release/$RELEASE_PREFIX-npm-provenance.sigstore.json" \
@@ -439,7 +459,7 @@ jobs:
       - name: Upload the fully qualified release candidate
         uses: actions/upload-artifact@v4
         with:
-          name: release-${{ matrix.target }}
+          name: release-${{ matrix.target }}-attempt-${{ github.run_attempt }}
           path: ${{ runner.temp }}/release/
           if-no-files-found: error
           retention-days: 90
@@ -451,6 +471,9 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -462,10 +485,11 @@ jobs:
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           test "$(git cat-file -t "$GITHUB_REF")" = tag
           test "$(git rev-parse "$GITHUB_REF^{commit}")" = "$GITHUB_SHA"
-      - uses: actions/download-artifact@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          pattern: release-*
-          path: candidate
+          node-version: 24.8.0
+      - name: Select the successful signed attempt for each platform
+        run: node tools/ci/release-finalized.mjs --out candidate
       - name: Require identical npm archives from all three builders
         run: |
           cmp candidate/release-linux-amd64/gopurs-*.tgz candidate/release-linux-arm64/gopurs-*.tgz
@@ -482,8 +506,6 @@ jobs:
               if [[ "$file" != *.tgz ]]; then cp "$file" release-assets/; fi
             done
           done
-          prerelease=()
-          if [[ "$GITHUB_REF_NAME" == *-rc.* ]]; then prerelease+=(--prerelease); fi
-          gh release create "$GITHUB_REF_NAME" release-assets/* --verify-tag --draft \
-            --title "gopurs ${GITHUB_REF_NAME#v}" \
-            --notes-file "release-assets/gopurs-${GITHUB_REF_NAME#v}-linux-amd64-release-notes.md" "${prerelease[@]}"
+          node tools/ci/release-draft.mjs --tag "$GITHUB_REF_NAME" \
+            --assets release-assets \
+            --notes "release-assets/gopurs-${GITHUB_REF_NAME#v}-linux-amd64-release-notes.md"

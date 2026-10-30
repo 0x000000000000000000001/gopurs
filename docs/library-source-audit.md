@@ -12,7 +12,7 @@ and their new source pins are recorded separately below.
 
 | Surface | Identity and release requirement |
 | --- | --- |
-| Compiler npm package | `gopurs@0.1.0-rc.6`, then the final `0.1.0`; its own version, dependency lockfile, file allowlist and installed-artifact tests apply. |
+| Compiler npm package | `gopurs@0.1.0-rc.7`, then the final `0.1.0`; its own version, dependency lockfile, file allowlist and installed-artifact tests apply. |
 | Library sources used by bootstrap/applications | Git URL and exact commit from the bootstrap manifest; validate this combination with the selected compiler and package set. The compiler npm archive does not contain these repositories. |
 | Independent future npm/Spago library publication | Review that package's name, destination, version, dependency bounds, files and notices before publishing it. This is a separate operation. |
 

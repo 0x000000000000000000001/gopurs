@@ -3,6 +3,48 @@
 This is a working record for the `0.1.0` release gates. It is not a release
 certificate. The gate list is in [`todo.md`](../todo.md).
 
+## RC7 CI finalization recovery — 30 October 2026
+
+RC7 also separates qualification identity from finalization attempt. A later
+signing attempt in the same tagged run may reuse exact successful build and
+fixture artifacts, verified against GitHub metadata and their hashes. The
+original quality identity is retained. Draft uploads can resume without
+overwriting matching assets. This does not reuse results across source changes
+or repair an immutable tagged workflow in place.
+
+The RC5 jobs spent 12–16 minutes setting up Nix during finalization, which only
+needed Node and npm. RC7 uses pinned Node 24.8.0/npm 11.6.0 for that phase.
+The same four fixture shards now rotate their Release/Dev batches instead of
+isolating profiles. Replaying recorded macOS batch durations through the
+existing two-worker scheduling model estimates a reduction from 127.44 to
+119.93 minutes for the slowest shard. This is a scheduling estimate, not a
+measured new CI duration or a compiler performance claim. Platform coverage,
+fixture inventory and resource limits are unchanged.
+
+## RC6 worker-error race and RC7 preparation — 30 October 2026
+
+The corrected RC6 PR #10 passed all 19 quick gates and 190 Node tests with no
+skips. Its exact source tree was merged and tagged. Full tag campaign
+[40956246171](https://github.com/0x000000000000000000001/gopurs/actions/runs/40956246171)
+passed the macOS and Linux arm64 core jobs but failed one Linux amd64 emission
+test. The fixture phase did not run and RC6 was not published.
+
+A bounded local reproduction using unchanged emission sources and dependencies
+failed once in 30 executions of the original 19-test suite. Delaying the next
+producer action by 10 milliseconds also exposed the failure. A separate probe
+through the production `withEmitter` API confirmed that supervision alone did
+not consume the worker's error: a global exception occurred while the producer
+was suspended, followed later by the expected parent rejection.
+
+RC7 keeps worker outcomes as explicit `Either` values and rethrows failures at
+controlled joins. It retains sticky failure detection, dependency ordering and
+cancellation/draining. A regression exercises worker failure while the producer
+is suspended, and all emission tests now run in quick PR qualification.
+Dependency pins, fixture inventory and resource limits are unchanged. Full
+coverage remains 100 Node files, 162 fixture batches and 267 gates; quick
+coverage becomes 20 gates and 210 Node tests. These changes require fresh CI,
+artifact verification and public consumer checks; RC7 is not yet qualified.
+
 ## RC5 attestation failures and RC6 preparation — 29 October 2026
 
 Signed RC5 source `30a98ecaed56f3e0200667cb6cdd315828176ddd` was merged
@@ -199,10 +241,11 @@ use `requestedFull: true` and `full: false`; only the validated aggregate record
 The final quality report replaces the partial report and its checksum before
 provenance and SBOM signing. Draft-release creation depends on successful
 finalization of all three platforms. Evidence uploads include only stable logs
-and reports, excluding generated workspaces and caches. Because the identity
-also includes `GITHUB_RUN_ATTEMPT`, retry the full campaign with **Re-run all
-jobs**: **Re-run failed jobs** would mix reports from different attempts and be
-rejected by aggregation.
+and reports, excluding generated workspaces and caches. At this stage, the
+identity included one `GITHUB_RUN_ATTEMPT` for the entire campaign, so partial
+retries were rejected. RC7 supersedes that finalization restriction with the
+separate, verified attempt binding described above; qualification itself still
+requires one consistent attempt.
 
 Actionlint 1.7.7 passes both workflows. The focused resource/report suite passes
 12/12 tests, including a real aggregation CLI invocation over 162 synthetic

@@ -124,7 +124,7 @@ async function initializeFixtureDependencies(target) {
 console.log(`Release quality evidence: ${report}`);
 save();
 try {
-  const quick = ["release-quality-resources", "release-npm-provenance", "release-sbom", "ffi-errors", "launcher", "test-runner", "build-native", "bootstrap-inputs", "cli", "build-profiles", "manifest-prepared-cache", "driver-cache", "native-go-code", "preparation-native"].map(name => `${name}.test.mjs`);
+  const quick = ["release-quality-resources", "release-npm-provenance", "release-sbom", "emission", "ffi-errors", "launcher", "test-runner", "build-native", "bootstrap-inputs", "cli", "build-profiles", "manifest-prepared-cache", "driver-cache", "native-go-code", "preparation-native"].map(name => `${name}.test.mjs`);
   const tests = full ? readdirSync(join(root, "tools")).filter(name => name.endsWith(".test.mjs")).sort() : quick;
   // node --test isolates files in child processes too. Separate invocations let
   // us bound the shared private Go cache between those same file boundaries.

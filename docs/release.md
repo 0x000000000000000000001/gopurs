@@ -178,7 +178,7 @@ matching tag, both package-lock version fields and changelog section before
 starting any tagged build.
 
 `.github/workflows/ci.yml` runs on branch changes, pull requests and version
-tags. Ordinary PRs and branch pushes run the existing 18 quick gates on Linux
+tags. Ordinary PRs and branch pushes run the existing 20 quick gates on Linux
 amd64, including both compiler hosts, the native race probe and artifact smokes.
 A small planning job always runs the classification and qualification-reuse
 tests. It skips heavy builds only when every changed path is an explicitly
@@ -187,7 +187,7 @@ additions; code under `docs/`, file type changes and unknown paths require a
 build. Manual non-full runs also build Linux.
 
 A push to `main` may reuse one successful, associated, same-repository PR
-qualification. Its small receipt binds the 18 gates, each Node file's actual
+qualification. Its small receipt binds the 20 gates, each Node file's actual
 passing test counts with no skips, both artifact smokes, the run attempt and
 the actual tested merge commit.
 The planner verifies the artifact ZIP against GitHub's SHA-256 and compares the
@@ -196,7 +196,7 @@ insufficient. Missing, expired, ambiguous or inconsistent evidence, fork runs
 and API failures all cause a new Linux build. The scope decision and reused
 run identity are retained in `ci-plan.json`.
 
-Tags and manual `full` runs always build all three platforms and run the
+Initial tag campaigns and manual `full` runs build all three platforms and run the
 complete qualification; documentation filtering and PR reuse never apply to
 them. Each build uses the locked Nix environment and a fresh checkout. A successful tag
 run packages the candidate, verifies checksums, runs the offline application
@@ -226,6 +226,37 @@ platform hashes; the process does not claim their cross-platform identity.
 Quality/bootstrap logs are retained as workflow artifacts for 90 days. Copy
 long-term release evidence into the release archive before that retention
 period expires.
+
+### Retrying finalization
+
+After all three builds and twelve fixture jobs succeed, a transient signing
+failure can be retried with `gh run rerun RUN_ID --failed`. This reuses the
+successful qualification from that same run, commit and immutable annotated
+tag. Finalization verifies each input artifact's ID, SHA-256, size and producer
+job before extraction. All qualification jobs must still belong to one
+successful attempt; a newer failure, mixed attempts or missing evidence blocks
+reuse.
+
+The quality report retains its original qualification attempt and compiler
+hashes. Its separate `finalization` record binds the actual signing attempt to
+those inputs. Final artifacts use `release-TARGET-attempt-N` names. Draft
+creation selects the latest successful finalizer for each platform, allowing
+an unchanged successful platform to coexist with a retried one.
+
+If only draft creation/upload failed, rerun that job with
+`gh run rerun RUN_ID --job JOB_ID`. Identical assets already uploaded are kept;
+only missing assets are added. Different bytes, unexpected assets or an already
+published release stop recovery. Do not rerun successful signing jobs after
+starting a draft: new signatures would change its assets.
+
+This recovery uses the workflow stored at the original tag. A source or workflow
+fix still requires a new candidate and fresh qualification. Failed compiler or
+fixture qualification is not eligible for this finalization-only recovery.
+
+Finalization installs only pinned Node 24.8.0 (npm 11.6.0); it does not reinstall
+the Nix compiler environment. Builds and fixture jobs keep their locked Nix
+environment. The four fixture shards each mix Release and Dev batches while
+preserving the complete inventory and existing concurrency limits.
 
 Verify a downloaded executable or tarball against the repository, workflow and
 source tag:
@@ -411,12 +442,13 @@ or a `gopurs` application smoke. No public registry was modified.
 For interrupted publication, compare the registry tarball with the signed
 candidate first. If npm publication succeeded but only GitHub publication
 failed, repeat the public smoke and finish that GitHub release; do not publish
-the same npm version again. If a CI tag build failed, fix the source and issue
-a new candidate tag instead of moving the signed tag.
+the same npm version again. For transient finalization failures, use the retry
+procedure above. If a failure needs a source or workflow fix, issue a new
+candidate tag instead of moving the signed tag.
 
 ### CI tool lifetime
 
-Each CI job keeps its development environment in
+Each build and fixture job keeps its development environment in
 `$RUNNER_TEMP/gopurs-dev-profile`. Keep this profile for the entire job so its
 Spago, frontend and language tools have an explicit Nix garbage-collection
 root. An `ENOENT` diagnostic records the command search paths and working

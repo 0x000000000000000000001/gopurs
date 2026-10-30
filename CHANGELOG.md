@@ -6,6 +6,25 @@ All notable changes to gopurs are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0-rc.7]
+
+Seventh candidate for `0.1.0`. RC6 was not published: its Linux amd64 core
+campaign exposed an intermittent asynchronous emission failure. The macOS and
+Linux arm64 core jobs passed; fixture shards did not run. Earlier tags remain
+immutable.
+
+### Fixed
+
+- Return pipelined worker failures as explicit results and propagate them at
+  dependency joins and producer boundaries. A worker error no longer escapes
+  globally while its producer is suspended, including under supervision.
+  Failures remain sticky and prevent queued dependent batches from starting.
+- Include emission lifecycle regression tests in quick PR qualification.
+- Retry signing and draft upload using the exact successful qualification of
+  the same immutable tag, preserving the original test and compiler identities.
+- Use pinned Node directly for finalization, avoiding a redundant Nix setup,
+  and balance Release/Dev batches across the four existing fixture shards.
+
 ## [0.1.0-rc.6]
 
 Sixth candidate for `0.1.0`, with the compiler and dependency pins of RC5.
