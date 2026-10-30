@@ -9,6 +9,7 @@ import { isDeepStrictEqual } from "node:util";
 import { fixtureBatches } from "./release-quality-resources.mjs";
 import { parseOptions, selectFixtures } from "./test-selection.mjs";
 import { validateFinalizationContext } from "./ci/release-inputs.mjs";
+import { moduleGateName, moduleInventory, validateModuleEvidence } from "./release-quality-modules.mjs";
 
 export const fixtureShardCount = 4;
 export const emissionGateName = "Native emission cancellation and concurrency (race)";
@@ -72,13 +73,13 @@ export function qualityInventory(root) {
   const { selected, skipped } = selectFixtures(root, parseOptions(["--all"], { env: { UPDATE_SNAPSHOTS: "0" } }));
   requireValue(!skipped.length, "Release quality requires every fixture, without exclusions");
   const targets = selected.map(target => relative(root, target));
-  return { nodeTests, targets, batches: fixtureBatches(targets).map((batch, batchIndex) => ({ ...batch, batchIndex,
+  return { nodeTests, targets, modules: moduleInventory(root), batches: fixtureBatches(targets).map((batch, batchIndex) => ({ ...batch, batchIndex,
     name: `${batch.profile} fixtures ${batch.start + 1}-${batch.start + batch.targets.length}` })) };
 }
 
 export function coreGateNames(inventory) {
   return [...inventory.nodeTests.map(name => `Node ${name}`), ...["build-cache", "c1c", "ffi-gen"].map(name => `Go ${name} (race)`),
-    emissionGateName, packageGateName];
+    emissionGateName, ...["release", "dev"].flatMap(profile => inventory.modules.map(library => moduleGateName(profile, library.name))), packageGateName];
 }
 
 export function shardBatches(batches, shard) {
@@ -117,6 +118,12 @@ export function mergeQualityReports(core, fixtures, inventory, build) {
   }
   requireValue(core.phase === "core" && core.shard === null, "Expected a core report");
   validateGates(core, coreGateNames(inventory));
+  for (const profile of ["release", "dev"]) {
+    for (const library of inventory.modules) {
+      const gate = core.gates.find(gate => gate.name === moduleGateName(profile, library.name));
+      validateModuleEvidence(gate.modules, profile, [library]);
+    }
+  }
   requireValue(fixtures.length === fixtureShardCount, `Exactly ${fixtureShardCount} fixture shards are required`);
   const seen = new Set(), fixtureGates = [];
   for (const report of fixtures) {
@@ -145,6 +152,7 @@ export function mergeQualityReports(core, fixtures, inventory, build) {
   const gates = [...core.gates.slice(0, -1), ...fixtureGates, core.gates.at(-1)].map((gate, index) => ({ ...gate, index: index + 1 }));
   return { schema: 1, requestedFull: true, full: true, phase: "all", shard: null, status: "passed", identity: core.identity,
     fixtures: { selectedPerProfile: inventory.targets.length, passed: { release: inventory.targets.length, dev: inventory.targets.length } },
+    modules: { selectedPerProfile: inventory.modules.length, passed: { release: inventory.modules.length, dev: inventory.modules.length } },
     phases: reports.map(report => ({ phase: report.phase, shard: report.shard, gates: report.gates.length })), gates };
 }
 

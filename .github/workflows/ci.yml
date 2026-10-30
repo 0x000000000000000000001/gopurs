@@ -254,6 +254,7 @@ jobs:
             ${{ runner.temp }}/quality/quality.json
             ${{ runner.temp }}/quality/*.log
             ${{ runner.temp }}/quality/fixture-reports/*.json
+            ${{ runner.temp }}/quality/module-reports/
             ${{ runner.temp }}/quality.log
             ${{ runner.temp }}/native-bootstrap.log
           if-no-files-found: warn
