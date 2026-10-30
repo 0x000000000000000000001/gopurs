@@ -6,6 +6,14 @@ All notable changes to gopurs are recorded here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- Include all 51 pinned library suites through `bin/modtest` in future full
+  release qualification, in Release and Dev profiles. Reuse the native compiler,
+  trim the private Go cache between libraries, retain campaign reports and logs,
+  and require exact library revisions and complete coverage before finalization.
+  Ordinary quick CI and existing release tags keep their current scope.
+
 ## [0.1.0-rc.7]
 
 Seventh candidate for `0.1.0`. RC6 was not published: its Linux amd64 core

@@ -16,8 +16,8 @@ sur Linux arm64 avec des caches applicatifs neufs. La compilation b8x depuis
 les artefacts publics passe aussi : 17 étapes, 2 707 modules TAST et 12 exécutables
 liés, sans exécution des programmes. La publication RC7 est clôturée avec ces
 exceptions ; les cases ouvertes ci-dessous restent des travaux pour la stable.
-La branche séparée
-`ci/library-modtest` ne fait pas partie de cette qualification.
+L'intégration ultérieure de `bin/modtest` concerne les futures campagnes
+complètes ; elle n'ajoute aucune validation à cette qualification RC7.
 
 ## 1. Figer le périmètre et le contrat public
 

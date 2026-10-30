@@ -47,13 +47,27 @@ invoke `purs` through `PATH`. Setting `GOPURS_PURS` alone selects the frontend
 for native-build helpers but does not change Spago's executable selection.
 
 The full gate runs every Node test file, Go tests with the race detector,
-native emission cancellation/concurrency tests, and all selected fixtures
+native emission cancellation/concurrency tests, all pinned library test suites
+through `bin/modtest`, and all selected fixtures. Libraries and fixtures run
 under both Release and Dev. Both full and quick gates require the freshly
 bootstrapped native output so native probes cannot silently skip. Host-parity
 tests explicitly select JavaScript, native sequential and native parallel modes.
 Experimental Rust tests remain disabled. Without `--full`, the command runs the
 tooling/CLI/cache checks, native scanner and preparation probes, Go tests, and a
 smaller executable fixture sample suitable for ordinary CI changes.
+
+The full core phase runs each of the 51 libraries pinned in
+`bootstrap-sources.json` separately in each profile: 102 module gates. It
+reuses the freshly built native compiler without rebuilding it between
+libraries. Before and after these gates, the installed library selection,
+Git revisions and clean working trees must match the pins. Each library runs
+in the disposable source family provided by `bin/modtest`; successful generated
+files are removed, and the private Go cache is trimmed between libraries.
+Successful campaign JSON and logs are retained under
+`module-reports/<profile>/<library>.{json,log}`. The combined quality report
+embeds each campaign and rejects missing libraries, wrong pins or profiles,
+failed, skipped or resumed targets. These gates apply to future full campaigns
+containing this change; they do not add coverage to existing immutable tags.
 
 The scanner, preparation and emission functional probes compile the large
 `gopurs/output/purescript` package with `-N -l` to reduce compilation memory.

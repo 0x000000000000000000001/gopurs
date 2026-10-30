@@ -9,6 +9,7 @@ import { parseOptions, selectFixtures } from "./test-selection.mjs";
 import { corePackages, prepareFixture } from "./test-workspace.mjs";
 import { fixtureBatches, fixtureWorkers, QualityGoCache, readFixtureReport, runFixtureWaves } from "./release-quality-resources.mjs";
 import { emissionGateName, packageGateName, qualityIdentity, qualityOptions, shardBatches } from "./release-quality-report.mjs";
+import { collectModuleEvidence, moduleGateName, moduleInventory, verifyModuleInputs } from "./release-quality-modules.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 if (process.argv.includes("--help")) {
@@ -30,7 +31,7 @@ mkdirSync(workspaces, { recursive: true });
 const cache = new QualityGoCache();
 const workers = fixtureWorkers();
 const results = [], cacheTrims = [];
-let sequence = 0, status = "running", failure, fixtureCount, fixturePreparation;
+let sequence = 0, status = "running", failure, fixtureCount, fixturePreparation, moduleCount;
 const baseEnv = { ...process.env, GOWORK: "off", GOPURS_GO_PACKAGES: "0", GOPURS_TEST_RUST: "0",
   GOPURS_TEST_MODES: "js,native-sequential,native-parallel",
   GOMAXPROCS: "2", GOGC: "100", GOMEMLIMIT: "4GiB", UPDATE_SNAPSHOTS: "0",
@@ -49,6 +50,11 @@ function save() {
       selectedPerProfile: fixtureCount,
       passed: Object.fromEntries(["release", "dev"].map(profile => [profile,
         results.reduce((count, gate) => count + (gate.passed && gate.fixtures?.profile === profile ? gate.fixtures.passed : 0), 0)])),
+    },
+    modules: moduleCount === undefined ? undefined : {
+      selectedPerProfile: moduleCount,
+      passed: Object.fromEntries(["release", "dev"].map(profile => [profile,
+        results.reduce((count, gate) => count + (gate.passed && gate.modules?.profile === profile ? gate.modules.report.targets.length : 0), 0)])),
     },
     goCache: { path: cache.path, limitBytes: cache.limitBytes, trims: cacheTrims },
     gates: [...results].sort((a, b) => a.index - b.index) }, null, 2) + "\n");
@@ -71,7 +77,7 @@ async function run(name, command, args, cwd = root, extraEnv = {}, verify) {
       Object.assign(gate, { exitCode: result.code, signal: result.signal });
       runner.checkInterrupted();
       if (result.code !== 0) throw new Error(`${name} failed: ${result.signal ?? result.code}; see ${log}`);
-      if (verify) gate.fixtures = verify(log);
+      if (verify) Object.assign(gate, verify(log));
       gate.passed = true;
     });
   } catch (error) {
@@ -142,6 +148,18 @@ try {
     } finally {
       rmSync(emissionTest, { force: true });
     }
+    const modules = moduleInventory(root);
+    verifyModuleInputs(root, modules);
+    moduleCount = modules.length;
+    save();
+    for (const profile of ["release", "dev"]) {
+      // Keep the complete module inventory, but trim the private Go cache
+      // between libraries instead of accumulating an entire campaign's cache.
+      for (const library of modules) await runSingle(moduleGateName(profile, library.name), "bash",
+        ["bin/modtest", library.name, ...(profile === "dev" ? ["--dev"] : [])], root, fixtureEnv,
+        log => ({ modules: collectModuleEvidence(log, root, profile, [library], report) }));
+    }
+    verifyModuleInputs(root, modules);
   }
   if (full && phase !== "core") {
     const { selected, skipped } = selectFixtures(root, parseOptions(["--all"], { env: { UPDATE_SNAPSHOTS: "0" } }));
@@ -162,7 +180,7 @@ try {
           const evidence = readFixtureReport(log, root, batch);
           const file = `fixture-reports/${String(batch.batchIndex + 1).padStart(3, "0")}-${batch.profile}-${batch.start + 1}-${batch.start + batch.targets.length}.json`;
           copyFileSync(evidence.file, join(report, file));
-          return { ...evidence, file, batchIndex: batch.batchIndex, targets: batch.targets.map(target => relative(root, target)) };
+          return { fixtures: { ...evidence, file, batchIndex: batch.batchIndex, targets: batch.targets.map(target => relative(root, target)) } };
         });
     }, trimCache, wave => {
       const disk = statfsSync(workspaces);

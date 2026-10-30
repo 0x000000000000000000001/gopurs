@@ -9,6 +9,7 @@ import { setImmediate } from "node:timers/promises";
 import test from "node:test";
 import { fixtureBatches, fixtureWorkers, QualityGoCache, readFixtureReport, runFixtureWaves } from "./release-quality-resources.mjs";
 import { coreGateNames, fixtureShardCount, mergeQualityReports, qualityInventory, qualityOptions, shardBatches } from "./release-quality-report.mjs";
+import { moduleGateName } from "./release-quality-modules.mjs";
 
 function workspace(t) {
   const path = realpathSync(mkdtempSync(join(tmpdir(), "gopurs-quality-unit-")));
@@ -160,6 +161,16 @@ function partialQualityReports() {
   const common = { schema: 1, requestedFull: true, full: false, status: "passed", identity };
   const gate = (name, index) => ({ index: index + 1, name, passed: true, exitCode: 0, signal: null });
   const core = { ...common, phase: "core", shard: null, gates: coreGateNames(inventory).map(gate) };
+  const startedAt = "2026-10-30T00:00:00Z", finishedAt = "2026-10-30T00:01:00Z";
+  for (const profile of ["release", "dev"]) for (const library of inventory.modules) {
+    core.gates.find(gate => gate.name === moduleGateName(profile, library.name)).modules = {
+      profile, inputs: [library], file: `module-reports/${profile}/${library.name}.json`,
+      report: { version: 1, kind: "modules", root: "/checkout", startedAt, finishedAt,
+        resumedFrom: null, buildProfile: profile, updateSnapshots: false, skipped: [],
+        targets: [{ target: library.name, status: "passed", directory: `/tmp/modules/${library.name}`, startedAt, finishedAt }] },
+      logs: [{ target: library.name, file: `module-reports/${profile}/${library.name}.log`, sha256: "f".repeat(64) }],
+    };
+  }
   const fixtures = Array.from({ length: fixtureShardCount }, (_, index) => {
     const shard = { index, count: fixtureShardCount }, batches = shardBatches(inventory.batches, shard);
     return { ...common, phase: "fixtures", shard,
@@ -178,6 +189,7 @@ test("four shards preserve every original batch and only their verified union is
   const { inventory, core, fixtures, build } = partialQualityReports();
   assert.equal(inventory.nodeTests.length, 100);
   assert.equal(inventory.targets.length, 401);
+  assert.equal(inventory.modules.length, 51);
   assert.equal(core.full, false);
   assert(fixtures.every(report => report.full === false));
   assert.deepEqual(fixtures.map(report => report.gates.length), [41, 41, 40, 40]);
@@ -193,9 +205,10 @@ test("four shards preserve every original batch and only their verified union is
   assert.equal(merged.full, true);
   assert.equal(merged.phase, "all");
   assert.equal(merged.status, "passed");
-  assert.equal(merged.gates.length, 267);
+  assert.equal(merged.gates.length, 369);
   assert.deepEqual(merged.fixtures.passed, { release: 401, dev: 401 });
-  assert.deepEqual(merged.gates.map(gate => gate.index), Array.from({ length: 267 }, (_, index) => index + 1));
+  assert.deepEqual(merged.modules, { selectedPerProfile: 51, passed: { release: 51, dev: 51 } });
+  assert.deepEqual(merged.gates.map(gate => gate.index), Array.from({ length: 369 }, (_, index) => index + 1));
   for (const profile of ["release", "dev"]) assert.deepEqual(
     merged.gates.filter(gate => gate.fixtures?.profile === profile).flatMap(gate => gate.fixtures.targets), inventory.targets);
   assert.equal(merged.gates.at(-1).name, "npm package surface");
@@ -222,6 +235,12 @@ test("aggregation rejects incomplete, duplicate, failed or mismatched qualificat
     value => { value.core.gates.pop(); },
     value => { value.core.gates[0].passed = false; },
     value => { value.core.gates[0].exitCode = 1; },
+    value => { delete value.core.gates.find(gate => gate.modules).modules; },
+    value => { value.core.gates.find(gate => gate.modules).modules.report.targets.pop(); },
+    value => { value.core.gates.find(gate => gate.modules).modules.report.targets[0].status = "failed"; },
+    value => { value.core.gates.find(gate => gate.modules).modules.profile = "dev"; },
+    value => { value.core.gates.find(gate => gate.modules).modules.inputs[0].rev = "d".repeat(40); },
+    value => { value.core.gates.find(gate => gate.modules).modules.logs.pop(); },
     value => { value.fixtures[0].full = true; },
     value => { value.fixtures[0].status = "running"; },
     value => { value.core.requestedFull = false; },
@@ -270,7 +289,7 @@ test("merge CLI checks stable fixture evidence and original bootstrap hashes bef
     ...fixtureFiles.flatMap(file => ["--fixtures", file]), "--build", buildFile, "--out", output];
   let result = spawnSync(process.execPath, args, { env, encoding: "utf8" });
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(JSON.parse(readFileSync(output, "utf8")).gates.length, 267);
+  assert.equal(JSON.parse(readFileSync(output, "utf8")).gates.length, 369);
   rmSync(output);
   const signingEnv = { ...env, CI: "true", GITHUB_ACTIONS: "true", RUNNER_ENVIRONMENT: "github-hosted",
     GITHUB_SERVER_URL: "https://github.com", GITHUB_EVENT_NAME: "push", GITHUB_REF_TYPE: "tag",

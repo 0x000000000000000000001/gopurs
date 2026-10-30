@@ -84,9 +84,10 @@ The b8x result is `b8x-public-evidence/plan.json` (SHA-256
 `f731cef0abdfc1818f7b0272f1ddac22214914145681b26c5ae2d1b895f0b927`),
 with stage logs, input hashes and executable hashes retained beside it.
 
-The separate `ci/library-modtest` branch prepares Release/Dev test campaigns
-for all 51 library ports. It is not merged into RC7, and those library campaigns
-have not run. Its local tooling tests do not extend RC7's 267-gate qualification.
+The post-RC7 `bin/modtest` integration adds Release/Dev campaigns for all 51
+library ports to future full qualification. Those library campaigns have not
+run yet. The tooling tests and quick PR checks do not extend the immutable
+RC7 tag's 267-gate qualification.
 
 ## RC7 CI finalization recovery — 30 October 2026
 
