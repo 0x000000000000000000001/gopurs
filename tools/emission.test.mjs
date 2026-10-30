@@ -207,6 +207,38 @@ test("pipelined finish propagates the final worker failure", async () => {
   await runAff(emitter.cancel);
 });
 
+test("managed pipeline retains worker failure while the producer is suspended", { timeout: 3000 }, async t => {
+  const probe = suspendedEmission();
+  const failure = new Error("worker failed while producer was suspended");
+  let announcePaused, resumeProducer, settled = false;
+  const paused = new Promise(resolve => { announcePaused = resolve; });
+  const pauseProducer = Aff.makeAff(done => () => {
+    resumeProducer = () => done(new Either.Right(undefined))();
+    announcePaused();
+    return Aff.nonCanceler;
+  });
+  const build = withEmitter({ jobs: 2, pipelined: true })(probe.emit)(enqueue =>
+    bind(enqueue(entry("A")))(() => bind(enqueue(entry("B")))(() =>
+      bind(enqueue(entry("C")))(() => bind(enqueue(entry("D")))(() => pauseProducer)))),
+  );
+  const outcome = runAff(build).then(
+    value => { settled = true; return { value }; },
+    error => { settled = true; return { error }; },
+  );
+  await paused;
+  probe.batches[0].fail(failure);
+  t.after(async () => { resumeProducer(); await outcome; });
+  // Aff schedules an unobserved fiber failure with setTimeout(0). Keep the
+  // producer suspended across that timer phase; do not intercept global errors.
+  await new Promise(resolve => setTimeout(resolve, 10));
+  assert.equal(settled, false, "the producer must still be suspended");
+  assert.deepEqual(probe.batches.map(batch => batch.values), [["A", "B"]], "the queued batch must not emit");
+  resumeProducer();
+  assert.equal((await outcome).error, failure, "finish must propagate the original worker error");
+  assert.deepEqual(probe.batches.map(batch => batch.values), [["A", "B"]]);
+  assert.deepEqual(probe.published, []);
+});
+
 test("pipelined cancellation drains non-cancellable work and discards the pending batch", async () => {
   const events = [];
   let complete;

@@ -3,6 +3,30 @@
 This is a working record for the `0.1.0` release gates. It is not a release
 certificate. The gate list is in [`todo.md`](../todo.md).
 
+## RC6 worker-error race and RC7 preparation — 30 October 2026
+
+The corrected RC6 PR #10 passed all 19 quick gates and 190 Node tests with no
+skips. Its exact source tree was merged and tagged. Full tag campaign
+[40956246171](https://github.com/0x000000000000000000001/gopurs/actions/runs/40956246171)
+passed the macOS and Linux arm64 core jobs but failed one Linux amd64 emission
+test. The fixture phase did not run and RC6 was not published.
+
+A bounded local reproduction using unchanged emission sources and dependencies
+failed once in 30 executions of the original 19-test suite. Delaying the next
+producer action by 10 milliseconds also exposed the failure. A separate probe
+through the production `withEmitter` API confirmed that supervision alone did
+not consume the worker's error: a global exception occurred while the producer
+was suspended, followed later by the expected parent rejection.
+
+RC7 keeps worker outcomes as explicit `Either` values and rethrows failures at
+controlled joins. It retains sticky failure detection, dependency ordering and
+cancellation/draining. A regression exercises worker failure while the producer
+is suspended, and all emission tests now run in quick PR qualification.
+Dependency pins, fixture inventory and resource limits are unchanged. Full
+coverage remains 100 Node files, 162 fixture batches and 267 gates; quick
+coverage becomes 20 gates and 210 Node tests. These changes require fresh CI,
+artifact verification and public consumer checks; RC7 is not yet qualified.
+
 ## RC5 attestation failures and RC6 preparation — 29 October 2026
 
 Signed RC5 source `30a98ecaed56f3e0200667cb6cdd315828176ddd` was merged

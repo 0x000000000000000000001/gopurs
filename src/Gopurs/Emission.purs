@@ -116,13 +116,17 @@ createPipelinedEmitter jobs emit
       let
         cap = max 2 (jobs * 2)
 
+        -- A worker may fail before its owner joins it. Return its error as a
+        -- value so Aff cannot rethrow it globally while the producer is busy.
+        joinWorker fiber = joinFiber fiber >>= either throwError pure
+
         joinTail :: Aff Unit
         joinTail = do
           current <- liftEffect (Ref.read tail)
           case current of
             Nothing -> pure unit
             Just fiber -> do
-              result <- attempt (joinFiber fiber)
+              result <- attempt (joinWorker fiber)
               liftEffect (Ref.write Nothing tail)
               liftEffect (Ref.write [] inFlight)
               either throwError pure result
@@ -133,7 +137,7 @@ createPipelinedEmitter jobs emit
             case Array.uncons queued of
               Nothing -> pure unit
               Just { head: oldest, tail: rest } -> do
-                result <- attempt (joinFiber oldest)
+                result <- attempt (joinWorker oldest)
                 liftEffect (Ref.write rest inFlight)
                 case result of
                   Left err -> do
@@ -150,13 +154,12 @@ createPipelinedEmitter jobs emit
               result <- attempt do
                 case previous of
                   Nothing -> pure unit
-                  Just previousFiber -> void (joinFiber previousFiber)
+                  Just previousFiber -> joinWorker previousFiber
                 emit batch
               case result of
-                Left err -> do
-                  liftEffect (Ref.write (Just err) failure)
-                  throwError err
+                Left err -> liftEffect (Ref.write (Just err) failure)
                 Right _ -> pure unit
+              pure result
             liftEffect (Ref.write (Just fiber) tail)
             liftEffect (Ref.modify_ (flip Array.snoc fiber) inFlight)
 
