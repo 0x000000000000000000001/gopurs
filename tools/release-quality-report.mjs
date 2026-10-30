@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { isDeepStrictEqual } from "node:util";
 import { fixtureBatches } from "./release-quality-resources.mjs";
 import { parseOptions, selectFixtures } from "./test-selection.mjs";
+import { validateFinalizationContext } from "./ci/release-inputs.mjs";
 
 export const fixtureShardCount = 4;
 export const emissionGateName = "Native emission cancellation and concurrency (race)";
@@ -81,7 +82,9 @@ export function coreGateNames(inventory) {
 }
 
 export function shardBatches(batches, shard) {
-  return batches.filter((_, index) => index % shard.count === shard.index);
+  // Rotate each block so interleaved Release/Dev batches reach every shard.
+  // A plain modulo assigns only Release to even shards and only Dev to odd ones.
+  return batches.filter((_, index) => (index + Math.floor(index / shard.count)) % shard.count === shard.index);
 }
 
 export function validateQualityBuild(identity, build) {
@@ -150,10 +153,10 @@ function main(args) {
   for (let index = 0; index < args.length; index++) {
     const arg = args[index];
     if (arg === "--help") {
-      console.log("Usage: node tools/release-quality-report.mjs --core FILE --fixtures FILE (four times) --build FILE --out FILE\nMerge only complete, identical-build core and fixture phases. Keep fixture-reports/ alongside each quality.json.");
+      console.log("Usage: node tools/release-quality-report.mjs --core FILE --fixtures FILE (four times) --build FILE --out FILE [--finalization-context FILE]\nMerge only complete, identical-build core and fixture phases. Keep fixture-reports/ alongside each quality.json. A checked finalization context binds a later signing attempt to the original qualification.");
       return;
     }
-    requireValue(["--core", "--fixtures", "--build", "--out"].includes(arg) && args[index + 1], `Unknown or incomplete option: ${arg}`);
+    requireValue(["--core", "--fixtures", "--build", "--out", "--finalization-context"].includes(arg) && args[index + 1], `Unknown or incomplete option: ${arg}`);
     const value = resolve(args[++index]);
     if (arg === "--fixtures") options.fixtures.push(value);
     else {
@@ -170,7 +173,11 @@ function main(args) {
   requireValue(merged.identity.source.commit === commit, "Quality source differs from the validating checkout");
   if (process.env.GITHUB_SHA) requireValue(merged.identity.source.commit === process.env.GITHUB_SHA,
     "Quality source differs from GITHUB_SHA");
-  if (process.env.GITHUB_RUN_ID) requireValue(isDeepStrictEqual(merged.identity.github,
+  if (options["finalization-context"]) {
+    const context = json(options["finalization-context"]);
+    validateFinalizationContext(context, merged.identity, process.env);
+    merged.finalization = context;
+  } else if (process.env.GITHUB_RUN_ID) requireValue(isDeepStrictEqual(merged.identity.github,
     { repository: process.env.GITHUB_REPOSITORY, runId: process.env.GITHUB_RUN_ID, runAttempt: process.env.GITHUB_RUN_ATTEMPT }),
   "Quality reports belong to another GitHub run or attempt");
   for (let index = 0; index < fixtures.length; index++) {

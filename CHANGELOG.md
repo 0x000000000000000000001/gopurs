@@ -20,6 +20,10 @@ immutable.
   globally while its producer is suspended, including under supervision.
   Failures remain sticky and prevent queued dependent batches from starting.
 - Include emission lifecycle regression tests in quick PR qualification.
+- Retry signing and draft upload using the exact successful qualification of
+  the same immutable tag, preserving the original test and compiler identities.
+- Use pinned Node directly for finalization, avoiding a redundant Nix setup,
+  and balance Release/Dev batches across the four existing fixture shards.
 
 ## [0.1.0-rc.6]
 

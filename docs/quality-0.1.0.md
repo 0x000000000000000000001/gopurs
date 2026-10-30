@@ -3,6 +3,24 @@
 This is a working record for the `0.1.0` release gates. It is not a release
 certificate. The gate list is in [`todo.md`](../todo.md).
 
+## RC7 CI finalization recovery — 30 October 2026
+
+RC7 also separates qualification identity from finalization attempt. A later
+signing attempt in the same tagged run may reuse exact successful build and
+fixture artifacts, verified against GitHub metadata and their hashes. The
+original quality identity is retained. Draft uploads can resume without
+overwriting matching assets. This does not reuse results across source changes
+or repair an immutable tagged workflow in place.
+
+The RC5 jobs spent 12–16 minutes setting up Nix during finalization, which only
+needed Node and npm. RC7 uses pinned Node 24.8.0/npm 11.6.0 for that phase.
+The same four fixture shards now rotate their Release/Dev batches instead of
+isolating profiles. Replaying recorded macOS batch durations through the
+existing two-worker scheduling model estimates a reduction from 127.44 to
+119.93 minutes for the slowest shard. This is a scheduling estimate, not a
+measured new CI duration or a compiler performance claim. Platform coverage,
+fixture inventory and resource limits are unchanged.
+
 ## RC6 worker-error race and RC7 preparation — 30 October 2026
 
 The corrected RC6 PR #10 passed all 19 quick gates and 190 Node tests with no
@@ -223,10 +241,11 @@ use `requestedFull: true` and `full: false`; only the validated aggregate record
 The final quality report replaces the partial report and its checksum before
 provenance and SBOM signing. Draft-release creation depends on successful
 finalization of all three platforms. Evidence uploads include only stable logs
-and reports, excluding generated workspaces and caches. Because the identity
-also includes `GITHUB_RUN_ATTEMPT`, retry the full campaign with **Re-run all
-jobs**: **Re-run failed jobs** would mix reports from different attempts and be
-rejected by aggregation.
+and reports, excluding generated workspaces and caches. At this stage, the
+identity included one `GITHUB_RUN_ATTEMPT` for the entire campaign, so partial
+retries were rejected. RC7 supersedes that finalization restriction with the
+separate, verified attempt binding described above; qualification itself still
+requires one consistent attempt.
 
 Actionlint 1.7.7 passes both workflows. The focused resource/report suite passes
 12/12 tests, including a real aggregation CLI invocation over 162 synthetic

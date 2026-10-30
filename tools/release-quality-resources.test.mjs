@@ -181,6 +181,12 @@ test("four shards preserve every original batch and only their verified union is
   assert.equal(core.full, false);
   assert(fixtures.every(report => report.full === false));
   assert.deepEqual(fixtures.map(report => report.gates.length), [41, 41, 40, 40]);
+  for (const report of fixtures) {
+    const release = report.gates.filter(gate => gate.fixtures.profile === "release").length;
+    const dev = report.gates.filter(gate => gate.fixtures.profile === "dev").length;
+    assert(release > 0 && dev > 0 && Math.abs(release - dev) <= 1,
+      "every shard must balance Release and Dev instead of isolating a profile");
+  }
   assert.deepEqual(fixtures.flatMap(report => report.gates.map(gate => gate.fixtures.batchIndex)).sort((a, b) => a - b),
     inventory.batches.map(batch => batch.batchIndex));
   const merged = mergeQualityReports(core, fixtures.toReversed(), inventory, build);
@@ -266,6 +272,35 @@ test("merge CLI checks stable fixture evidence and original bootstrap hashes bef
   assert.equal(result.status, 0, result.stderr);
   assert.equal(JSON.parse(readFileSync(output, "utf8")).gates.length, 267);
   rmSync(output);
+  const signingEnv = { ...env, CI: "true", GITHUB_ACTIONS: "true", RUNNER_ENVIRONMENT: "github-hosted",
+    GITHUB_SERVER_URL: "https://github.com", GITHUB_EVENT_NAME: "push", GITHUB_REF_TYPE: "tag",
+    GITHUB_SHA: commit, GITHUB_REPOSITORY: "owner/gopurs", GITHUB_RUN_ID: "123", GITHUB_RUN_ATTEMPT: "2",
+    GITHUB_REF: "refs/tags/v0.1.0-rc.2", GITHUB_REF_NAME: "v0.1.0-rc.2", GITHUB_WORKFLOW_SHA: commit,
+    GITHUB_WORKFLOW_REF: "owner/gopurs/.github/workflows/ci.yml@refs/tags/v0.1.0-rc.2",
+    GOPURS_RELEASE_TARGET: "linux-amd64" };
+  const jobs = ["linux-amd64", "linux-arm64", "darwin-arm64"].flatMap(target =>
+    [`build and test (${target})`, ...[0, 1, 2, 3].map(shard => `fixtures (${target}, shard ${shard})`)])
+    .map((name, index) => ({ id: index + 1, name, attempt: "1" }));
+  const context = { schema: 1, source: { commit, tag: "v0.1.0-rc.2", tagObject: "e".repeat(40) },
+    target: "linux-amd64", github: { repository: "owner/gopurs", runId: "123", qualificationAttempt: "1", finalizationAttempt: "2" },
+    jobs, artifacts: ["candidate-linux-amd64", ...[0, 1, 2, 3].map(shard => `fixtures-linux-amd64-${shard}`)]
+      .map((name, index) => ({ id: 100 + index, name, producerJobId: index + 1, attempt: "1", size: 123, digest: `sha256:${"f".repeat(64)}` })),
+    qualificationIdentity: core.identity };
+  const contextFile = join(root, "finalization.json"); json(contextFile, context);
+  result = spawnSync(process.execPath, [...args, "--finalization-context", contextFile], { env: signingEnv, encoding: "utf8" });
+  assert.equal(result.status, 0, result.stderr);
+  const signed = JSON.parse(readFileSync(output, "utf8"));
+  assert.deepEqual(signed.identity, core.identity);
+  assert.deepEqual(signed.finalization, context);
+  rmSync(output);
+  result = spawnSync(process.execPath, args, { env: signingEnv, encoding: "utf8" });
+  assert.notEqual(result.status, 0, "a later attempt requires its verified finalization context");
+  assert.equal(existsSync(output), false);
+  context.qualificationIdentity = structuredClone(core.identity);
+  context.qualificationIdentity.compiler.nativeSha256 = "f".repeat(64); json(contextFile, context);
+  result = spawnSync(process.execPath, [...args, "--finalization-context", contextFile], { env: signingEnv, encoding: "utf8" });
+  assert.notEqual(result.status, 0, "a different original compiler cannot be rebound to the report");
+  assert.equal(existsSync(output), false);
   result = spawnSync(process.execPath, args, { env: { ...env, GITHUB_SHA: "d".repeat(40) }, encoding: "utf8" });
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /Quality source differs from GITHUB_SHA/);
