@@ -85,7 +85,7 @@ complètes ; elle n'ajoute aucune validation à cette qualification RC7.
 - [x] Vérifier les performances à froid et à chaud avec le protocole publié : 51 corpus, 1 224 invocations, comparaison aux baselines officielles et preuves archivées.
 - [ ] Faire tourner une release candidate et corriger les régressions bloquantes.
 - [ ] Exiger une CI verte sur le tag de release : le run RC7 reste en échec au draft, avec une exception opérateur documentée pour sa publication.
-- [ ] Corriger la reprise CI pour distinguer les jobs réellement réexécutés des copies de métadonnées GitHub, et la comparaison de provenance npm pour le seul ajout d'un `keyid` DSSE vide.
+- [x] Corriger la reprise CI pour distinguer les jobs réellement réexécutés des copies de métadonnées GitHub, et la comparaison de provenance npm pour le seul ajout d'un `keyid` DSSE vide ; régressions locales validées, prochaine campagne complète encore distincte.
 - [x] Configurer la CI sur les tags pour couvrir le frontend TAST, le bootstrap natif et l'exécution d'applications, en plus du paquet JavaScript ; son exécution verte reste une porte distincte.
 
 ## 6. Préparer les artefacts et la publication

@@ -26,6 +26,25 @@ function validateContext(context) {
   id(context.runId); id(context.runAttempt); assert.ok(targets.includes(context.target));
 }
 
+function copiedExecution(job, previous) {
+  if (!job.created_at || !job.completed_at || timestamp(job.created_at) <= timestamp(job.completed_at)) return false;
+  // GitHub may copy a completed job into a rerun with a new ID/attempt and
+  // creation time, while retaining the original execution and producing no
+  // artifact. Keep its original identity only when the latest real execution
+  // matches; never fall back across a newer failed or pending execution.
+  assert.ok(previous && previous.run_attempt < job.run_attempt, 'Copied job has no original execution');
+  assert.ok(job.status === 'completed' && job.conclusion === 'success', 'Copied job did not succeed');
+  assert.ok(timestamp(previous.created_at) <= timestamp(previous.started_at)
+    && timestamp(previous.started_at) <= timestamp(previous.completed_at), 'Copied job has invalid original timing');
+  assert.ok(Array.isArray(job.steps) && job.steps.length > 0, 'Copied job lacks execution steps');
+  assert.ok(Number.isSafeInteger(job.runner_id) && job.runner_id > 0
+    && typeof job.runner_name === 'string' && job.runner_name.length > 0, 'Copied job lacks runner identity');
+  const execution = value => Object.fromEntries(['status', 'conclusion', 'started_at', 'completed_at',
+    'runner_id', 'runner_name', 'steps'].map(key => [key, value[key]]));
+  assert.deepEqual(execution(job), execution(previous), 'Copied job differs from the latest original execution');
+  return true;
+}
+
 export function selectLatestJobs(jobs, context) {
   assert.ok(Array.isArray(jobs));
   const latest = new Map(), seen = new Set(), attempts = new Set();
@@ -37,8 +56,10 @@ export function selectLatestJobs(jobs, context) {
     assert.ok(!seen.has(job.id), 'Duplicate job ID'); seen.add(job.id);
     const key = JSON.stringify([job.name, job.run_attempt]);
     assert.ok(!attempts.has(key), 'Ambiguous jobs in the same attempt'); attempts.add(key);
+  }
+  for (const job of [...jobs].sort((left, right) => left.run_attempt - right.run_attempt)) {
     const previous = latest.get(job.name);
-    if (!previous || previous.run_attempt < job.run_attempt) latest.set(job.name, job);
+    if (!copiedExecution(job, previous)) latest.set(job.name, job);
   }
   return latest;
 }

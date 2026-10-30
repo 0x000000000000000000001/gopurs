@@ -57,6 +57,22 @@ test('draft retry accepts mixed successful finalization attempts while retaining
   assert.deepEqual(selectFinalizedInputs(data).map(item => item.artifact.id), [200, 201, 202]);
 });
 
+test('draft-only retry keeps original producers when GitHub copies completed jobs into a later attempt', () => {
+  const data = fixture();
+  for (const job of data.jobs) {
+    job.created_at = new Date(Date.parse(job.started_at) - 1000).toISOString();
+    job.runner_id = 123; job.runner_name = 'GitHub Actions 123';
+    job.steps = [{ name: 'Produce artifact', number: 1, status: job.status, conclusion: job.conclusion,
+      started_at: job.started_at, completed_at: job.completed_at }];
+  }
+  const original = selectFinalizedInputs(data);
+  const copies = data.jobs.map(job => ({ ...structuredClone(job), id: job.id + 1000, run_attempt: 3,
+    created_at: '2026-10-30T02:00:00Z' }));
+  data.jobs = [...copies, ...data.jobs].reverse();
+  data.context.runAttempt = '3'; data.run.run_attempt = 3;
+  assert.deepEqual(selectFinalizedInputs(data), original);
+});
+
 test('newer failed or pending finalizers cannot fall back to successful older artifacts', () => {
   for (const conclusion of ['failure', null]) {
     const data = fixture(), previous = data.jobs.find(job => job.name === 'qualify and attest (linux-arm64)');

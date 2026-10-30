@@ -4,7 +4,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, statSync, symlinkSync } 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
-import { extractArtifact, fileSha256, flattenPages, githubContext, selectQualifiedInputs, validateFinalizationContext, verifyArtifactFile } from './release-inputs.mjs';
+import { extractArtifact, fileSha256, flattenPages, githubContext, selectLatestJobs, selectQualifiedInputs, validateFinalizationContext, verifyArtifactFile } from './release-inputs.mjs';
 
 function fixture() {
   const context = { repository: 'owner/gopurs', commit: 'a'.repeat(40), tag: 'v0.1.0-rc.7', runId: '42', runAttempt: '2', target: 'linux-amd64' };
@@ -48,6 +48,30 @@ test('finalization attempt two reuses the exact successful qualification from at
   assert.deepEqual(githubContext(environment(data.context)), data.context);
   // Updated metadata is harmless; only creation binds the immutable archive to its producer.
   assert.equal(selectQualifiedInputs(data).artifacts[0].id, 100);
+});
+
+test('copied successful jobs retain the original identity only with matching execution evidence', () => {
+  const data = fixture(), original = { ...data.jobs[0], created_at: '2026-10-29T23:59:59Z',
+    runner_id: 123, runner_name: 'GitHub Actions 123',
+    steps: [{ name: 'Build', number: 1, status: 'completed', conclusion: 'success',
+      started_at: data.jobs[0].started_at, completed_at: data.jobs[0].completed_at }] };
+  const copy = { ...structuredClone(original), id: 1000, run_attempt: 2, created_at: '2026-10-30T01:00:00Z' };
+  assert.deepEqual(selectLatestJobs([copy, original], data.context).get(original.name), original);
+  for (const mutate of [
+    job => { job.steps[0].name = 'Different execution'; },
+    job => { job.runner_id++; }, job => { job.runner_name = 'different'; },
+    job => { job.completed_at = '2026-10-30T00:11:00Z'; },
+    job => { job.steps = []; }, job => { delete job.steps; },
+  ]) {
+    const changed = structuredClone(copy); mutate(changed);
+    assert.throws(() => selectLatestJobs([original, changed], data.context), /copied job/i);
+  }
+  assert.throws(() => selectLatestJobs([copy], data.context), /copied job/i);
+  const failed = { ...structuredClone(copy), status: 'completed', conclusion: 'failure',
+    created_at: '2026-10-30T00:59:59Z', started_at: '2026-10-30T01:00:00Z', completed_at: '2026-10-30T01:10:00Z' };
+  assert.equal(selectLatestJobs([original, failed], data.context).get(original.name).id, failed.id);
+  const laterCopy = { ...copy, id: 2000, run_attempt: 3, created_at: '2026-10-30T02:00:00Z' };
+  assert.throws(() => selectLatestJobs([original, failed, laterCopy], { ...data.context, runAttempt: '3' }), /copied job/i);
 });
 
 test('latest qualification jobs must all succeed in one attempt without hiding newer failures', () => {

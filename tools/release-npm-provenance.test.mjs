@@ -284,3 +284,60 @@ test("first-publication recovery requires npm to serve the approved signed CI en
   differentRun.attestations[0].bundle = envelope(createStatement(release, { ...ciEnvironment(), GITHUB_RUN_ID: "999" }));
   await assert.rejects(verifyPublished(release, approved, sigstore, async url => url.includes("/-/") ? differentRun : published), /approved signed CI envelope/);
 });
+
+test("published DSSE envelopes allow only absent/empty keyid normalization", async () => {
+  const manifest = { name: "gopurs", version: release.version, dist: {
+    integrity: `sha512-${Buffer.from(release.subject.digest.sha512, "hex").toString("base64")}`,
+    attestations: { url: "https://registry.npmjs.org/-/npm/v1/attestations/gopurs@0.1.0" },
+  } };
+  const approved = envelope(), published = structuredClone(approved);
+  const fetchJSON = async url => url.includes("/-/")
+    ? { attestations: [{ predicateType: "https://slsa.dev/provenance/v1", bundle: published }] } : manifest;
+  const verified = [];
+  const sigstore = { async verify(bundle) { verified.push(bundle); } };
+  const check = () => verifyPublished(release, approved, sigstore, fetchJSON);
+  delete approved.dsseEnvelope.signatures[0].keyid;
+  await check();
+  assert.deepEqual(verified, [approved, published], "both original bundles still undergo signature verification");
+  approved.dsseEnvelope.signatures[0].keyid = "";
+  delete published.dsseEnvelope.signatures[0].keyid;
+  await check();
+  approved.dsseEnvelope.signatures[0].keyid = "same-key";
+  published.dsseEnvelope.signatures[0].keyid = "same-key";
+  await check();
+
+  const approvedEnvelope = structuredClone(approved.dsseEnvelope);
+  const changes = [
+    value => { value.payload = Buffer.from(`${Buffer.from(value.payload, "base64")} `).toString("base64"); },
+    value => { value.payloadType = "different"; },
+    value => { value.signatures[0].sig = "different"; },
+    value => { value.signatures[0].keyid = "different-key"; },
+    value => { value.signatures[0].keyid = ""; },
+    value => { delete value.signatures[0].keyid; },
+    value => { value.signatures[0].extra = "unexpected"; },
+    value => { value.signatures.push(value.signatures[0]); },
+    value => { value.signatures = []; },
+  ];
+  for (const change of changes) {
+    published.dsseEnvelope = structuredClone(approvedEnvelope); change(published.dsseEnvelope);
+    await assert.rejects(check(), /approved signed CI envelope|in-toto DSSE bundle/);
+  }
+  // Unknown fields and malformed signatures must not become accepted just
+  // because canonicalization drops them, even if both bundles contain them.
+  for (const signature of [{ sig: "s", extra: "unexpected" }, { sig: "s", keyid: null }, { keyid: "" }]) {
+    approved.dsseEnvelope.signatures = [signature];
+    published.dsseEnvelope = structuredClone(approved.dsseEnvelope);
+    await assert.rejects(check(), /approved signed CI envelope/);
+  }
+  approved.dsseEnvelope.signatures = [{ sig: "first" }, { sig: "second" }];
+  published.dsseEnvelope = structuredClone(approved.dsseEnvelope);
+  published.dsseEnvelope.signatures.reverse();
+  await assert.rejects(check(), /approved signed CI envelope/);
+  approved.dsseEnvelope = structuredClone(approvedEnvelope);
+  published.dsseEnvelope = structuredClone(approvedEnvelope);
+  for (const rejected of [approved, published]) {
+    await assert.rejects(verifyPublished(release, approved, { async verify(bundle) {
+      if (bundle === rejected) throw new Error("invalid signature");
+    } }, fetchJSON), /invalid signature/);
+  }
+});
