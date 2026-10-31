@@ -76,6 +76,27 @@ It does not make PureScript registry acquisition or HTTP tests elsewhere
 offline, and does not repeat or extend the full 102-passage campaign.
 See the [targeted evidence](quality-0.1.0.md#strings-extra-targeted-check--31-october-2026).
 
+## Local HTTPS tests and response body correction — 31 October 2026
+
+`node-http` now uses an independent loopback HTTPS fixture instead of public
+Pursuit/httpbin services. Its intentionally public test certificate/key are
+committed fixtures, trusted only by the test child. Status, complete bodies and
+both cookies are asserted with TLS verification enabled. Native negative checks
+reject wrong bodies/cookies/status and an untrusted certificate.
+
+The body assertion exposed missing `data`/`end` delivery in the Go HTTPS port.
+The bootstrap now pairs `node-http` revision `fe20f37626de1c6fafe904ceb1499cd705f749e1`
+with `node-event-emitter` revision `be06532c41d348cede5a185b2c32faab2009caa0`:
+the response reader starts after listener setup, and optional payload callbacks
+run outside the emitter lock. Native regressions and targeted Release/Dev runs
+pass for both ports. Separate upstream JavaScript builds/tests also pass.
+The emitter's inherited Node 16/unpinned-tooling CI was replaced by one Linux
+job with pinned tools, native regression checks and upstream JavaScript tests.
+
+This removes public HTTP dependencies from these tests. Registry acquisition,
+other stream primitives, source notice gaps and release qualification remain
+separate concerns. See the [scope and evidence](quality-0.1.0.md#local-https-targeted-checks--31-october-2026).
+
 ## Confirmed notice and provenance gaps
 
 | Port | Evidence | Remaining work for its source distribution |

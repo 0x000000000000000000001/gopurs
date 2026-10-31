@@ -107,7 +107,7 @@
     },
     "node-event-emitter": {
       "url": "https://github.com/0x000000000000000000001/gopurs-node-event-emitter.git",
-      "rev": "7e56b193ca4ec1162827a229472c997d1cd3ac17"
+      "rev": "be06532c41d348cede5a185b2c32faab2009caa0"
     },
     "node-fs": {
       "url": "https://github.com/0x000000000000000000001/gopurs-node-fs.git",
@@ -115,7 +115,7 @@
     },
     "node-http": {
       "url": "https://github.com/0x000000000000000000001/gopurs-node-http.git",
-      "rev": "3e6ca7028ff635a66b188b54432a864e54723399"
+      "rev": "fe20f37626de1c6fafe904ceb1499cd705f749e1"
     },
     "node-net": {
       "url": "https://github.com/0x000000000000000000001/gopurs-node-net.git",
