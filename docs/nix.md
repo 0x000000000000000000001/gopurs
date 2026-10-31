@@ -82,8 +82,13 @@ Quick PR and branch builds can restore an Actions cache containing only the
 runtime closure of the pinned `purs-tast` tool. A quick push or manual run on
 `main` populates it before checking or building gopurs. Manual quick runs can
 therefore seed the cache even when a merged PR's qualification was reused.
-The exact key includes the runner OS/architecture and the flake, Nix and
-bootstrap pins; there is no fallback prefix or cross-platform restoration.
+The exact key includes the runner OS/architecture and the Nix derivation of
+`purs-tast`, evaluated without building it or updating the lockfile. Nix derives
+this identity from the frontend sources, build recipe and dependencies. Changes
+to unrelated Go library pins or gopurs sources no longer invalidate this cache;
+changes to frontend build inputs still do. There is no fallback prefix or
+cross-platform restoration. The first run with a new key needs a producer on
+`main`; a successful PR alone does not populate the cache.
 
 The workflow exports that closure with `nix copy` into a dedicated directory
 under `RUNNER_TEMP`. It never archives the complete `/nix` directory, installer
@@ -91,8 +96,11 @@ receipts, GHC build dependencies or gopurs outputs. Importing this repository's
 Actions cache uses `--no-check-sigs`; its trust comes from the repository's
 cache scope rather than a public Nix signing key. PRs only restore; they do not
 publish caches for subsequent builds.
+Import also checks that the expected frontend store path is available, and
+export requires the built frontend to match the identity used for the key.
 
-Cache failures fall back to the normal pinned build. Set the repository variable
+Identity evaluation is limited to three minutes; if it fails, no cache key is
+used. Cache failures fall back to the normal pinned build. Set the repository variable
 `GOPURS_NIX_TOOLS_CACHE=false` to disable the optimization. Tags and manual full
 campaigns always bypass it and bootstrap the current gopurs source afresh.
 No warm-run CI speedup is claimed until a producer and consumer have been
