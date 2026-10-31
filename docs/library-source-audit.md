@@ -97,6 +97,21 @@ This removes public HTTP dependencies from these tests. Registry acquisition,
 other stream primitives, source notice gaps and release qualification remain
 separate concerns. See the [scope and evidence](quality-0.1.0.md#local-https-targeted-checks--31-october-2026).
 
+## Native file pipe correction — 31 October 2026
+
+The bootstrap pairs `node-streams` revision
+`cf406cc9f84fbc82826157ca203cc4a2ff16d674` with `node-fs` revision
+`8cd86e81d8d71d219d6bc1894e2153b78f956554`. Native `pipe` previously copied
+hardcoded fixture paths; default file stream constructors discarded their file
+payload. They now transfer actual source chunks, retain open errors and wait
+for destination completion. The regression requires both nonempty and empty
+file assertions to complete, and an inert pipe makes it fail.
+
+Both ports passed targeted Release/Dev checks with the public RC7 compiler.
+This supplementary correction does not complete the general stream API,
+source notice audit or release qualification. The next audit work remains the
+notice and metadata gaps below. See the [targeted scope and evidence](quality-0.1.0.md#native-pipe-targeted-checks--31-october-2026).
+
 ## Confirmed notice and provenance gaps
 
 | Port | Evidence | Remaining work for its source distribution |

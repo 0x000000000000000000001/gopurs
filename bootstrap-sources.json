@@ -111,7 +111,7 @@
     },
     "node-fs": {
       "url": "https://github.com/0x000000000000000000001/gopurs-node-fs.git",
-      "rev": "2a8653066a61f9d2ff106668a187ba2f3bc66a9d"
+      "rev": "8cd86e81d8d71d219d6bc1894e2153b78f956554"
     },
     "node-http": {
       "url": "https://github.com/0x000000000000000000001/gopurs-node-http.git",
@@ -131,7 +131,7 @@
     },
     "node-streams": {
       "url": "https://github.com/0x000000000000000000001/gopurs-node-streams.git",
-      "rev": "3339c23082296fb30f7f7dcca0b97df962104178"
+      "rev": "cf406cc9f84fbc82826157ca203cc4a2ff16d674"
     },
     "now": {
       "url": "https://github.com/0x000000000000000000001/gopurs-now.git",
