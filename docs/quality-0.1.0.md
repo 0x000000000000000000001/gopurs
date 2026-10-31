@@ -3,6 +3,56 @@
 This is a working record for the `0.1.0` release gates. It is not a release
 certificate. The gate list is in [`todo.md`](../todo.md).
 
+## Post-RC7 integration and local library results — 31 October 2026
+
+The following changes are merged into `main`. Each PR passed quick Linux amd64
+qualification and its merged tree was checked against the tested tree.
+These integrations do not change the published RC7 tag, assets or CI conclusion.
+
+| Change | Integration and scope |
+| --- | --- |
+| Library qualification | [PR #13](https://github.com/0x000000000000000000001/gopurs/pull/13), merge `94dd04c88e5e4cd1556d60c50daab48c855d2acd`: future full campaigns include `bin/modtest` for 51 libraries in Release and Dev. Quick CI does not run this library campaign. |
+| Finalization fixes | [PR #14](https://github.com/0x000000000000000000001/gopurs/pull/14), merge `c2356d0f976c18845b0eeb38f6a3ce96ea449b6d`: copied job metadata no longer masquerades as a new artifact producer; npm provenance accepts only the documented absent-to-empty DSSE `keyid` difference. Local validation passed 52 CI tests, 10 npm tests and replay of the recorded RC7 metadata. A new tag's finalization remains untested. |
+| node-fs bootstrap | [PR #15](https://github.com/0x000000000000000000001/gopurs/pull/15), merge `66f34168ae76c5b4bbbaefb9415533f68ac99ccf`: pins the published sync/async `chmod` fix `2a8653066a61f9d2ff106668a187ba2f3bc66a9d`, merged through [node-fs PR #1](https://github.com/0x000000000000000000001/gopurs-node-fs/pull/1). The cleanup fixture now supplies the new permission pretest; all 96 runner tests passed locally. |
+| Frontend cache | [PR #16](https://github.com/0x000000000000000000001/gopurs/pull/16), merge `23e3858f054ebe26491f3c008b174bdbcbfc49fd`: quick CI keys its optional frontend cache by the Nix derivation and runner platform. Actual Nix evaluations show unrelated library/PBO pins preserve the key, while frontend recipe or architecture changes invalidate it. |
+
+The local library campaign passed **102 passages: 51 Release and 51 Dev** on
+Linux arm64 using the unchanged public RC7 native binary (SHA-256
+`8c31a8c65709176d80cf673698ea6c9704d43854aab39627a00fd88f09f28c5c`)
+and runner commit `021635908285124713f1de1bf2873ba94b6e01ef`.
+It retained 25 earlier Release successes after auditing that their compiled
+closures did not depend on Node.FS, then ran 77 new passages with the corrected
+node-fs pin above. All 102 logs and native reports, their hashes, the 51 pins per
+profile and unchanged campaign source family were verified. The last 77-case
+attempt took 1,929.790 seconds; this is not a fresh 102-case timing or a
+performance comparison.
+
+This is local Linux arm64 coverage with a changed library pin, not qualification
+of the immutable RC7 bootstrap or a complete multi-platform release campaign.
+`strings-extra` resolved `github.com/iancoleman/strcase` to `v0.3.0` in both
+profiles via an unversioned `go get`; that observed version is not a hermetic
+pin. `node-http` used public HTTP endpoints and passed both profiles. The two
+unused `js-uri` overrides did not enter compilation. No b8x or altbak runner
+was added or executed as part of this campaign.
+
+Local evidence is retained under
+`.gopurs-evidence/release-preparation-20261026` at the workspace root:
+`modtest-integration-state.json`, `finalization-fixes-integration-state.json`,
+`node-fs-bootstrap-integration-state.json` and
+`modtest-libraries-20261030/attempt4/evidence/verification.json`.
+The campaign report SHA-256 is
+`9708affbe8f1f05c1a159d8dfad73ac2d74ae6f33511e15354149d2168190a32`.
+
+The cache producer [run 41216211875](https://github.com/0x000000000000000000001/gopurs/actions/runs/41216211875)
+passed quick Linux CI on the PR #16 merge. Its export/save steps and the `main`
+cache inventory confirm key
+`nix-purs-v2-Linux-X64-6rz07jhjyaj9601s4klbav1pqy9cj0s6-purescript-0.15.16.drv`,
+containing frontend `/nix/store/ywn7kkp49z4awi2199syxr3crps1vma4-purescript-0.15.16`.
+The saved archive is 27,971,509 bytes. Evidence is in
+`.gopurs-evidence/ci-frontend-cache-20261031/state.json` and
+`seed-cache-steps.log`. No warm consumer has been measured; no CI speedup is
+claimed. Full/tag campaigns continue to bypass this cache.
+
 ## RC7 qualification and operator recovery — 30 October 2026
 
 The original attempt of tagged run
@@ -85,9 +135,10 @@ The b8x result is `b8x-public-evidence/plan.json` (SHA-256
 with stage logs, input hashes and executable hashes retained beside it.
 
 The post-RC7 `bin/modtest` integration adds Release/Dev campaigns for all 51
-library ports to future full qualification. Those library campaigns have not
-run yet. The tooling tests and quick PR checks do not extend the immutable
-RC7 tag's 267-gate qualification.
+library ports to future full qualification. The local Linux arm64 campaign and
+its corrected node-fs pin are recorded above; a full multi-platform library
+campaign has not run. Neither those local results nor the quick PR checks
+extend the immutable RC7 tag's 267-gate qualification.
 
 ## RC7 CI finalization recovery — 30 October 2026
 
@@ -857,8 +908,15 @@ No old input or timing was changed.
 - **Release candidate/tag and green CI.** The workflow exists but has not run on
   GitHub for a release tag.
 
-## Next gate actions
+## Remaining gates before stable — updated 31 October 2026
 
-1. Review the completed cold/warm campaign and its comparison limits.
-2. Tag the release candidate, run CI on the tag, and record the artifact
-   checksums.
+1. Resolve the remaining library source/dependency and notice issues recorded
+   in [the audit](library-source-audit.md) and the local campaign limits above.
+   Independent library package publication needs its own metadata review.
+2. Retain a suitable public fallback and verify the documented
+   [rollback procedure](release.md#rollback-and-recovery). The existing mock
+   registry exercise is not a validated public rollback.
+3. Once the candidate inputs are frozen, qualify their exact tag on every
+   supported platform, including the library campaigns, artifact finalization
+   and public installation checks. Preserve all earlier RC tags and record the
+   new results separately; quick CI and local evidence do not close these gates.
