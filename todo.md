@@ -106,7 +106,8 @@ figurent dans le [bilan post-RC7](docs/quality-0.1.0.md#post-rc7-integration-and
 - [x] Rédiger les notes de version et le changelog de RC7 ; la version stable reste à préparer.
 - [x] Tester l'installation npm de RC7 depuis les artefacts publics sur Linux arm64, avec vérification des octets et de la provenance.
 - [ ] Vérifier les ports sources `gopurs-*` : commits compatibles épinglés, dépendances résolues et notices complètes ; appliquer versions, bornes et allowlists aux paquets effectivement publiés, sans versions communes imposées ([audit et écarts restants](docs/library-source-audit.md)).
-- [ ] Lever les limites de résolution observées dans la campagne locale : épingler `strcase` dans `strings-extra` (version observée `v0.3.0`) et préciser le traitement des tests `node-http` dépendant d'endpoints publics ; conserver les écarts de notices/métadonnées de l'audit tant qu'ils ne sont pas résolus.
+- [x] Supprimer la résolution inutile de `strcase` dans `strings-extra` : aucun import ne l'utilise, les tests ciblés Release/Dev passent avec un cache de modules Go neuf et les téléchargements Go désactivés ; le bootstrap épingle `b448bb4a91086146fd430ae1cc0a370fab78cce5`.
+- [ ] Préciser le traitement des tests `node-http` dépendant d'endpoints publics ; conserver les écarts de notices/métadonnées de l'audit tant qu'ils ne sont pas résolus.
 - [x] Faire un `npm publish --dry-run` sur l'archive locale préparée.
 - [x] Vérifier la provenance de la publication npm réelle de RC7 et l'identité exacte des octets téléchargés.
 - [x] Documenter la [procédure de rollback](docs/release.md#rollback-and-recovery) et les limites d'une première publication.

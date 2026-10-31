@@ -191,7 +191,7 @@
     },
     "strings-extra": {
       "url": "https://github.com/0x000000000000000000001/gopurs-strings-extra.git",
-      "rev": "dad3901f670fd160a232fd0fc088ab1dcee509ea"
+      "rev": "b448bb4a91086146fd430ae1cc0a370fab78cce5"
     },
     "unfoldable": {
       "url": "https://github.com/0x000000000000000000001/gopurs-unfoldable.git",

@@ -53,6 +53,29 @@ The saved archive is 27,971,509 bytes. Evidence is in
 `seed-cache-steps.log`. No warm consumer has been measured; no CI speedup is
 claimed. Full/tag campaigns continue to bypass this cache.
 
+### strings-extra targeted check — 31 October 2026
+
+The historical `strcase` resolution above was traced to an unused `go get` in
+`strings-extra/bin/test`; no source among the 51 pinned libraries imports it.
+Revision `b448bb4a91086146fd430ae1cc0a370fab78cce5` removes only that command.
+The public RC7 native compiler and the same runner implementation as commit
+`021635908285124713f1de1bf2873ba94b6e01ef` then passed
+`bin/modtest strings-extra --keep-workspace` and its `--dev` variant in fresh
+isolated workspaces on Linux arm64. No `-c` compiler rebuild was needed.
+
+Both profiles used a newly created Go module cache, `GOPROXY=off` and
+`GOSUMDB=off`; each generated project reported only `gopurs/output` for
+`go list -m all`. Release passed in 31.001 seconds and Dev in 20.495 seconds.
+These are two targeted checks, not another 102-case or multi-platform campaign,
+and the durations are not a performance comparison. PureScript dependency
+metadata/toolchain caches were prepared; no fully offline bootstrap is claimed.
+
+The native campaign reports, log hashes, tested script hash and unchanged
+source-family check are retained in
+`.gopurs-evidence/strings-extra-20261031/evidence/report.json` at the workspace
+root, alongside the two logs and native reports. The earlier campaign evidence
+and immutable RC7 artifacts remain unchanged.
+
 ## RC7 qualification and operator recovery — 30 October 2026
 
 The original attempt of tagged run
