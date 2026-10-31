@@ -111,7 +111,7 @@
     },
     "node-fs": {
       "url": "https://github.com/0x000000000000000000001/gopurs-node-fs.git",
-      "rev": "dc52e7cc0c6841667362f3b8b25b6b9e8863c346"
+      "rev": "2a8653066a61f9d2ff106668a187ba2f3bc66a9d"
     },
     "node-http": {
       "url": "https://github.com/0x000000000000000000001/gopurs-node-http.git",
