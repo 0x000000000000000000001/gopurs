@@ -109,18 +109,34 @@ jobs:
       # Cache only the exported runtime closure of the pinned TAST frontend.
       # Never archive /nix itself (installer state can contain credentials),
       # project outputs, compiler caches or full/tag qualification inputs.
+      - name: Identify the frontend derivation without building it
+        id: frontend-identity
+        if: vars.GOPURS_NIX_TOOLS_CACHE != 'false' && env.GOPURS_RELEASE_FULL != 'true'
+        continue-on-error: true
+        timeout-minutes: 3
+        run: |
+          identity=$(nix eval --json --no-update-lock-file --apply 'p: [ p.drvPath p.outPath ]' .#purs-tast)
+          derivation=$(jq -er '.[0]' <<< "$identity")
+          frontend=$(jq -er '.[1]' <<< "$identity")
+          [[ "$derivation" =~ ^/nix/store/[0-9abcdfghijklmnpqrsvwxyz]{32}-[A-Za-z0-9+._?=-]+\.drv$ ]] || exit 1
+          [[ "$frontend" =~ ^/nix/store/[0-9abcdfghijklmnpqrsvwxyz]{32}-[A-Za-z0-9+._?=-]+$ ]] || exit 1
+          echo "key=nix-purs-v2-$RUNNER_OS-$RUNNER_ARCH-${derivation##*/}" >> "$GITHUB_OUTPUT"
+          echo "frontend=$frontend" >> "$GITHUB_OUTPUT"
+
       - name: Restore the pinned frontend tools
         id: frontend-cache
-        if: vars.GOPURS_NIX_TOOLS_CACHE != 'false' && env.GOPURS_RELEASE_FULL != 'true'
+        if: steps.frontend-identity.outputs.key != ''
         continue-on-error: true
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/nix-purs-cache
-          key: nix-purs-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('flake.lock', 'flake.nix', 'nix/*.nix', 'bootstrap-sources.json') }}
+          key: ${{ steps.frontend-identity.outputs.key }}
       - name: Import the repository's frontend cache
         id: frontend-import
         if: steps.frontend-cache.outputs.cache-hit == 'true'
         continue-on-error: true
+        env:
+          EXPECTED_FRONTEND: ${{ steps.frontend-identity.outputs.frontend }}
         run: |
           shopt -s nullglob
           narinfos=("$RUNNER_TEMP"/nix-purs-cache/*.narinfo)
@@ -137,18 +153,22 @@ jobs:
           done
           nix copy --from "file://$RUNNER_TEMP/nix-purs-cache" --no-check-sigs "${store_paths[@]}"
           nix path-info "${store_paths[@]}"
+          nix path-info "$EXPECTED_FRONTEND"
           echo "ready=true" >> "$GITHUB_OUTPUT"
-          printf 'GOPURS_FRONTEND_CACHE_IMPORTED paths=%s\n' "${#store_paths[@]}"
+          printf 'GOPURS_FRONTEND_CACHE_IMPORTED frontend=%s paths=%s\n' "$EXPECTED_FRONTEND" "${#store_paths[@]}"
       - name: Export the frontend for later quick runs
         id: frontend-export
         if: >-
-          vars.GOPURS_NIX_TOOLS_CACHE != 'false' && env.GOPURS_RELEASE_FULL != 'true' &&
+          steps.frontend-identity.outputs.key != '' &&
           github.ref == 'refs/heads/main' &&
           (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
           steps.frontend-cache.outputs.cache-hit != 'true'
         continue-on-error: true
+        env:
+          EXPECTED_FRONTEND: ${{ steps.frontend-identity.outputs.frontend }}
         run: |
           frontend=$(nix build .#purs-tast --no-update-lock-file --no-link --print-out-paths)
+          test "$frontend" = "$EXPECTED_FRONTEND"
           rm -rf "${RUNNER_TEMP:?}/nix-purs-cache"
           mkdir "$RUNNER_TEMP/nix-purs-cache"
           nix copy --to "file://$RUNNER_TEMP/nix-purs-cache?compression=zstd" "$frontend"
@@ -159,7 +179,7 @@ jobs:
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/nix-purs-cache
-          key: nix-purs-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('flake.lock', 'flake.nix', 'nix/*.nix', 'bootstrap-sources.json') }}
+          key: ${{ steps.frontend-identity.outputs.key }}
 
       - name: Check the Nix packages and TAST application
         run: nix flake check --no-update-lock-file --print-build-logs
