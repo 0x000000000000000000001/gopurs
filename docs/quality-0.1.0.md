@@ -76,6 +76,60 @@ source-family check are retained in
 root, alongside the two logs and native reports. The earlier campaign evidence
 and immutable RC7 artifacts remain unchanged.
 
+### Local HTTPS targeted checks — 31 October 2026
+
+The public Pursuit/httpbin requests in `node-http` are replaced by an independent
+Node HTTPS fixture on an ephemeral loopback port. Its public test certificate
+is trusted only in the child process; TLS verification remains enabled. The
+PureScript tests assert status 200, the complete body and both Set-Cookie values,
+and report explicit failures. Altered bodies, cookies and status codes, plus an
+untrusted certificate, each produced a nonzero exit in native negative checks.
+
+The new body assertion exposed a real Go port defect: response headers arrived,
+but no body reader produced `data` or `end`. The HTTPS wrapper now starts one
+reader after both the response callback and registration of a data listener,
+copies retained chunks, reports read errors and closes the body. The optional
+listener notification runs after the EventEmitter lock is released. The two
+public source revisions must be used together:
+
+- `node-http`: `fe20f37626de1c6fafe904ceb1499cd705f749e1` ([PR #1](https://github.com/0x000000000000000000001/gopurs-node-http/pull/1)).
+- `node-event-emitter`: `be06532c41d348cede5a185b2c32faab2009caa0` ([PR #1](https://github.com/0x000000000000000000001/gopurs-node-event-emitter/pull/1)).
+
+Targeted `bin/modtest` runs on Linux arm64 used the unchanged public RC7 native
+compiler and runner implementation `021635908285124713f1de1bf2873ba94b6e01ef`.
+The final results were:
+
+| Library | Release | Dev |
+| --- | ---: | ---: |
+| node-event-emitter | 41.442 s | 25.071 s |
+| node-http | 39.243 s | 24.288 s |
+
+These are measured test durations, not a performance comparison. Sources stayed
+unchanged during each run; report and log hashes were checked. Go module
+acquisition was disabled with fresh module caches; each generated module graph
+contained only `gopurs/output`. Existing PureScript registry/toolchain caches
+were reused. No compiler rebuild or full 102-passage campaign was required.
+The emitter's later CI-only commit changes no implementation or test source.
+
+Native regressions cover all four listener-add variants, ordering, once and
+reentry behavior, plus six response cases including empty bodies, read errors,
+retained chunks and concurrent startup. They also passed with Go race detection.
+Both libraries' JavaScript tests passed separately with upstream registry
+77.7.0 dependencies; the Go-specific Aff FFI is not a JavaScript runtime.
+The cleanup fixture was updated for the two new pretests; all 96 runner tests
+passed on the host, and 11 bootstrap/module-quality tests passed. Four process
+termination checks did not complete in the dedicated container; the host run
+is the complete runner result, not that container attempt.
+
+This qualifies the targeted library behavior locally, not the complete Node
+stream API: pause/resume, piping and pull-based reads remain outside this fix.
+It also does not qualify the pre-existing scheduling of initial request
+`response/error` events. The historical 102 results and immutable published RC7
+remain unchanged; this is not a multi-platform release qualification.
+Evidence, identities and hashes are retained in
+`.gopurs-evidence/node-http-local-20261031/state.json` and `verification.json`
+at the workspace root.
+
 ## RC7 qualification and operator recovery — 30 October 2026
 
 The original attempt of tagged run

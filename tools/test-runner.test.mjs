@@ -824,11 +824,14 @@ test("installed library runners limit direct cleanup to their own checkout", asy
     try {
       mkdirSync(join(base, name, "bin"), { recursive: true });
       cpSync(join(directory, "bin/test"), join(base, name, "bin/test"));
-      const nativePreflight = existsSync(join(directory, "test/chmod-native.mjs"));
-      if (nativePreflight) {
+      const nativePreflights = ["chmod-native.mjs", "listener-added-native.mjs", "https-response-native.mjs"]
+        .filter(file => existsSync(join(directory, "test", file)));
+      if (nativePreflights.length) {
         // This fixture checks shell cleanup before spago, not the native suite.
         mkdirSync(join(base, name, "test"));
-        writeFileSync(join(base, name, "test/chmod-native.mjs"), 'console.log("reached-native-preflight");\n');
+        for (const file of nativePreflights) {
+          writeFileSync(join(base, name, "test", file), `console.log(${JSON.stringify("reached-" + file)});\n`);
+        }
       }
       writeFileSync(join(base, name, "spago.go.yaml"), "package: {}\n");
       mkdirSync(join(base, "mockbin"));
@@ -844,7 +847,7 @@ test("installed library runners limit direct cleanup to their own checkout", asy
       });
       assert.ifError(result.error);
       assert.equal(result.status, 1, result.stdout + result.stderr);
-      if (nativePreflight) assert.match(result.stdout, /reached-native-preflight/);
+      for (const file of nativePreflights) assert(result.stdout.includes("reached-" + file), result.stdout);
       assert.match(result.stdout, /reached-spago/);
       for (const cache of ["output", ".spago", ".cache"]) {
         assert.equal(readFileSync(join(base, "gopurs-neighbor", cache, "sentinel"), "utf8"), "neighbor data");
