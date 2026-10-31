@@ -824,7 +824,7 @@ test("installed library runners limit direct cleanup to their own checkout", asy
     try {
       mkdirSync(join(base, name, "bin"), { recursive: true });
       cpSync(join(directory, "bin/test"), join(base, name, "bin/test"));
-      const nativePreflights = ["chmod-native.mjs", "listener-added-native.mjs", "https-response-native.mjs"]
+      const nativePreflights = ["chmod-native.mjs", "listener-added-native.mjs", "https-response-native.mjs", "pipe-native.mjs"]
         .filter(file => existsSync(join(directory, "test", file)));
       if (nativePreflights.length) {
         // This fixture checks shell cleanup before spago, not the native suite.

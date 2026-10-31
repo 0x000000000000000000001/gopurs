@@ -76,6 +76,51 @@ source-family check are retained in
 root, alongside the two logs and native reports. The earlier campaign evidence
 and immutable RC7 artifacts remain unchanged.
 
+### Native pipe targeted checks — 31 October 2026
+
+The bootstrap pairs the published source revisions `node-streams`
+`cf406cc9f84fbc82826157ca203cc4a2ff16d674` ([PR #1](https://github.com/0x000000000000000000001/gopurs-node-streams/pull/1))
+and `node-fs` `8cd86e81d8d71d219d6bc1894e2153b78f956554`
+([PR #2](https://github.com/0x000000000000000000001/gopurs-node-fs/pull/2)).
+Native pipe now forwards data events to the real destination writer instead of
+copying a fixed fixture. It preserves existing Net/HTTPS producers, handles
+`end: false`, and reports write/close errors without a successful finish.
+Default file adapters retain the opened file and its errors.
+
+Targeted `bin/modtest` runs used the unchanged public RC7 native compiler and
+runner implementation `021635908285124713f1de1bf2873ba94b6e01ef` on Linux arm64:
+
+| Library | Release | Dev |
+| --- | ---: | ---: |
+| node-streams | 44.940 s | 26.491 s |
+| node-fs | 35.193 s | 22.894 s |
+
+The Go module cache was fresh with `GOPROXY=off` and `GOSUMDB=off`; each graph
+contained only `gopurs/output`. Prepared PureScript registry/toolchain caches
+were reused. These timings are not a performance comparison or a new full
+campaign. Source families stayed unchanged during their runs, and implementation
+and test files match the committed inputs; README/CI metadata was finalized
+afterward and the FS lockfile was copied from its successful run.
+
+The native regression failed before the fix and passes with the race detector.
+It covers binary chunks, empty/multichunk real files, `end: false`, short writes,
+opening/read/write/close errors, duplex half-close and concurrent completion.
+The FS test waits for destination finish and requires two exact success markers.
+Replacing only pipe with a no-op in a separate generated application causes its
+timeout to fail the test. Five upstream JavaScript streams suites and the changed
+FS `Test.Streams` pass. The full upstream FS suite stops at its existing W_OK
+assertion when run as root in Docker; it is not reported as passing.
+
+Evidence is retained under `.gopurs-evidence/stream-pipe-20261031` at the workspace
+root: `initial-evidence` records the two streams successes and an initial FS test
+typing error; `final-evidence` records the corrected FS successes and negative
+probe. Log/native-report hashes were verified. The cleanup fixture's 52 checks
+also pass with the new native pretest.
+
+General unpipe, pause/resume, read/pipeline, transforms and options/fd file
+constructors are outside this correction. A native file reader may continue to
+EOF after detachment. This does not requalify RC7 or the full 51-library matrix.
+
 ### Local HTTPS targeted checks — 31 October 2026
 
 The public Pursuit/httpbin requests in `node-http` are replaced by an independent
