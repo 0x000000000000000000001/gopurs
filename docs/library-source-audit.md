@@ -57,6 +57,25 @@ Neither is a core/test dependency or part of its resolved 35-package closure
 in the frozen 25 October corpus. They are unused configuration entries, not
 missing inputs to the current library build.
 
+## strings-extra test dependency cleanup — 31 October 2026
+
+The local 102-passage campaign observed an unversioned `go get` of
+`github.com/iancoleman/strcase`, resolving to `v0.3.0`. Inspection of all 51
+pinned source trees found no import of that module: its only occurrence was
+the command in `strings-extra/bin/test`. The library's Go casing functions use
+the standard library directly.
+
+Source pin `b448bb4a91086146fd430ae1cc0a370fab78cce5` removes that command; it
+changes no compiler, library implementation or test assertion. The bootstrap
+now selects this revision. Targeted `bin/modtest strings-extra` passed in both
+Release and Dev on Linux arm64 with the unchanged public RC7 native compiler,
+a fresh Go module cache and module downloads disabled (`GOPROXY=off`,
+`GOSUMDB=off`). The generated module inventory contains only `gopurs/output`.
+This removes an unnecessary resolution rather than adding a version pin.
+It does not make PureScript registry acquisition or HTTP tests elsewhere
+offline, and does not repeat or extend the full 102-passage campaign.
+See the [targeted evidence](quality-0.1.0.md#strings-extra-targeted-check--31-october-2026).
+
 ## Confirmed notice and provenance gaps
 
 | Port | Evidence | Remaining work for its source distribution |
