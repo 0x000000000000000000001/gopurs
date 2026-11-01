@@ -79,7 +79,7 @@
     },
     "js-bigints": {
       "url": "https://github.com/0x000000000000000000001/gopurs-js-bigints.git",
-      "rev": "11222d0fea160322fbf08682109febb78284b033"
+      "rev": "6afa8f2ce6bdde3fa151c3c4785b63dd6109a494"
     },
     "js-date": {
       "url": "https://github.com/0x000000000000000000001/gopurs-js-date.git",
@@ -203,7 +203,7 @@
     },
     "uuid": {
       "url": "https://github.com/0x000000000000000000001/gopurs-uuid.git",
-      "rev": "bf931d30f8cf219bd9741d5f5e05c3af8a4a1560"
+      "rev": "65f2ec44bfd2dd46cc075336343fdda6ce2b2da2"
     },
     "variant": {
       "url": "https://github.com/0x000000000000000000001/gopurs-variant.git",

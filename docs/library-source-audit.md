@@ -6,7 +6,7 @@ Audit date: 26 October 2026. This records the 51 repositories selected by
 All 51 inspected checkouts matched their exact commits and had clean working
 trees before and after the 26 October audit. That audit modified no library
 and reran no library build. The notice corrections published on 27 October
-and their new source pins are recorded separately below.
+and 1 November and their new source pins are recorded separately below.
 
 ## What is being distributed
 
@@ -21,6 +21,9 @@ current release identity is the compatible set of source commits. A version
 copied from an upstream package is not a version assigned to the Go port.
 
 ## Manifest and file checks
+
+These counts describe the 26 October audit. The 1 November corrections below
+make `uuid` private and identify its Go fork; they change no dependencies.
 
 - 49 repositories have `package.json`: 46 say `private: true`; `spec` and
   `yoga-json` have neither npm name nor version; `uuid` retains the upstream
@@ -109,8 +112,8 @@ file assertions to complete, and an inert pipe makes it fail.
 
 Both ports passed targeted Release/Dev checks with the public RC7 compiler.
 This supplementary correction does not complete the general stream API,
-source notice audit or release qualification. The next audit work remains the
-notice and metadata gaps below. See the [targeted scope and evidence](quality-0.1.0.md#native-pipe-targeted-checks--31-october-2026).
+source notice audit or release qualification. The notice and metadata findings
+and their subsequent corrections are recorded below. See the [targeted scope and evidence](quality-0.1.0.md#native-pipe-targeted-checks--31-october-2026).
 
 ## HTTP test stdout correction — 1 November 2026
 
@@ -122,23 +125,23 @@ selects that revision without changing production library sources.
 The 26 earlier module successes and 25 successful remaining cases cover all
 51 libraries with the same rebuilt compiler bytes. See the [exact recovery
 history and scope](quality-0.1.0.md#local-clean-command-checks--1-november-2026).
-The notice and metadata gaps below remain open.
+The separate notice and metadata corrections are recorded below.
 
-## Confirmed notice and provenance gaps
+## Notice and provenance findings from the original audit
 
 | Port | Evidence | Remaining work for its source distribution |
 | --- | --- | --- |
 | `effect` | All seven inherited `.purs`/`.js` files exactly match upstream `v4.0.0`, commit `a192ddb923027d426d6ea3d8deb030c9aa7c7dda`. Its [BSD-3-Clause license](https://github.com/purescript/purescript-effect/blob/a192ddb923027d426d6ea3d8deb030c9aa7c7dda/LICENSE) names Copyright 2018 PureScript. The originally audited pin had the identifier in `bower.json`, but no license text or replacement source headers. | Corrected by the published and pinned notice commit below, which also explicitly licenses the Go adaptation. |
-| `js-bigints` | Both inherited files exactly match upstream `v2.2.1`, commit `36a7d8ac75a7230043ae511f3145f9ed130954a9`. Its [license file](https://github.com/purescript-contrib/purescript-js-bigints/blob/36a7d8ac75a7230043ae511f3145f9ed130954a9/LICENSE) is MIT, Copyright (c) 2022 Jan Schulte. The originally audited pin had no license text or source headers. | The published and pinned notice commit below restores the notice and explicitly licenses the Go adaptation. The inherited metadata/example questions remain documented. |
-| `uuid` | Its npm manifest declares ISC, while the checked-in `LICENSE` and Bower manifest declare MIT. The npm name/repository still identify the upstream project. | Resolve the metadata before an autonomous package publication; do not infer an intended npm release from this manifest. |
+| `js-bigints` | Both inherited files exactly match upstream `v2.2.1`, commit `36a7d8ac75a7230043ae511f3145f9ed130954a9`. Its [license file](https://github.com/purescript-contrib/purescript-js-bigints/blob/36a7d8ac75a7230043ae511f3145f9ed130954a9/LICENSE) is MIT, Copyright (c) 2022 Jan Schulte. The originally audited pin had no license text or source headers. | The 27 October correction restores the MIT notice and explicitly licenses the Go adaptation. The 1 November correction attributes the inherited JavaScript example and records its separate CC BY-SA 4.0 terms. |
+| `uuid` | The audited npm manifest declared ISC, while the checked-in `LICENSE` and Bower manifest declared MIT. Its npm name/repository still identified upstream. | The 1 November correction aligns the metadata with the unchanged MIT license, identifies the Go fork and makes its npm development manifest private. |
 
 For `js-bigints`, upstream [package.json](https://github.com/purescript-contrib/purescript-js-bigints/blob/36a7d8ac75a7230043ae511f3145f9ed130954a9/package.json)
 says ISC while Bower/Dhall and the license file say MIT; the registry records
 `MIT AND ISC`. Its [JavaScript FFI](https://github.com/purescript-contrib/purescript-js-bigints/blob/36a7d8ac75a7230043ae511f3145f9ed130954a9/src/JS/BigInt.js)
 also identifies a copied [Stack Overflow example](https://stackoverflow.com/questions/55646698/base-36-to-bigint).
-That comment is an additional provenance point to clarify, not evidence for
-assigning a new license to the whole port. The Go implementation uses
-`math/big.Int.SetString` instead of that JavaScript algorithm.
+The attribution and license of that example are recorded in the 1 November
+correction below. The Go implementation uses `math/big.Int.SetString` instead
+of that JavaScript algorithm and retains its separate MIT license.
 
 The official license files were fetched at the commits above and matched the
 registry copies: SHA-256 `d1ceeb89b7cce8e527167e969128601a80628f229f29db8a1f0111a9dd35375f`
@@ -152,7 +155,7 @@ The maintainer selected the same upstream license terms for each Go
 adaptation: BSD-3-Clause for `effect`, and MIT for `js-bigints`. After explicit
 maintainer approval, the following notice-only commits were pushed as fast
 forwards to `gopurs-effect/master` and `gopurs-js-bigints/main` respectively.
-The bootstrap manifest now selects these public revisions:
+The bootstrap manifest selected these public revisions on 27 October:
 
 | Library | Source pin used for the original audit/tests | Published source pin |
 | --- | --- | --- |
@@ -176,15 +179,52 @@ all identical. Both committed worktrees are clean, and their diffs pass
 Review patches, upstream copies and hash verification records are retained in
 `/private/tmp/gopurs-library-notice-fixes-20261026/`.
 
-The explicit MIT choice applies to the Go adaptation. It does not resolve the
-MIT/ISC metadata discrepancy or the Stack Overflow attribution/licensing
-questions in inherited JavaScript. Those facts remain documented in the
-`js-bigints` notice; the `uuid` metadata issue also remains open.
+The explicit MIT choice applies to the Go adaptation. At that stage it did
+not resolve the inherited metadata and JavaScript attribution questions or
+the `uuid` metadata discrepancy. The next correction addresses those findings.
 
 The isolated library checkouts used by the test campaigns remain clean at
 their original source pins. The notice-only differences above preserve every
 compiled source byte; the recorded tests and frozen benchmark inputs retain
 their original identities instead of being relabelled with the new commits.
+
+## Source metadata and attribution corrections — 1 November 2026
+
+The bootstrap now selects these public source commits, merged with their
+reviewed trees intact:
+
+| Library | Previous pin | Current source pin | Integration |
+| --- | --- | --- | --- |
+| `uuid` | `bf931d30f8cf219bd9741d5f5e05c3af8a4a1560` | `65f2ec44bfd2dd46cc075336343fdda6ce2b2da2` | [PR #1](https://github.com/0x000000000000000000001/gopurs-uuid/pull/1) |
+| `js-bigints` | `11222d0fea160322fbf08682109febb78284b033` | `6afa8f2ce6bdde3fa151c3c4785b63dd6109a494` | [PR #1](https://github.com/0x000000000000000000001/gopurs-js-bigints/pull/1) |
+
+`uuid` now declares MIT in both the npm manifest and the root lockfile entry,
+matching its unchanged upstream license. The npm name is `gopurs-uuid` with
+`private: true`; repository URLs and the README identify this fork while a
+new notice preserves upstream provenance. The inherited version is retained
+for development tooling, not presented as a release of the Go port. Source
+files and the license match upstream `maddie927/purescript-uuid` at
+`e4b8b15d5671e5849b9b04e7534d2b85a73116cb` where identified in that notice.
+Bower/Spago package identifiers, scripts, dependency constraints and every
+locked dependency are unchanged.
+
+The `js-bigints` notice identifies [Nina Scholz's answer](https://stackoverflow.com/a/55646905)
+of 12 April 2019, last edited on 13 April, under
+[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). It describes
+the upstream chunk-size, currying/Maybe, negative-number and error-handling
+adaptations in `fromStringAsImpl`. Attribution and share-alike apply to the
+adapted JavaScript material; the MIT notice and the separate MIT Go adaptation
+are retained. This port has no npm, Bower or Dhall manifests: the ISC/MIT
+manifest discrepancy is upstream history, not a local declaration to copy.
+A future package must describe the licenses of the files it actually includes.
+
+Both changes preserve every source, test and existing license byte against
+the previous pins. JSON metadata consistency, an unchanged UUID dependency
+graph and `git diff --check` were verified. No library build was repeated;
+the existing 401-fixture/51-library and earlier campaigns retain their actual
+commits and scope. These corrections close the identified source metadata
+and attribution findings, not the full qualification of a future release or
+the separate requirements for autonomous npm/Spago library publication.
 
 ## Compiler release boundary
 
@@ -210,8 +250,9 @@ closures. This inventory check does not claim every generated function
 survives Go linker elimination.
 
 The compiler release must account for its actual JavaScript/native closures
-and ship their notices. The missing source notices above have been restored;
-the inherited metadata and JavaScript provenance questions remain open for
-the public library source family.
+and ship their notices. The missing source notices and the identified
+metadata/JavaScript attribution findings above have been addressed in the
+public library source family. A future compiler candidate still needs its
+own closure and artifact checks.
 Do not describe the 51 ports as separately published npm packages or as having
 completed autonomous publication checks.
