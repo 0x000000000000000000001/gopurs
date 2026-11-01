@@ -3,6 +3,50 @@
 This is a working record for the `0.1.0` release gates. It is not a release
 certificate. The gate list is in [`todo.md`](../todo.md).
 
+## Local clean-command checks — 1 November 2026
+
+The requested `bin/test -c` and `bin/modtest -c` paths were exercised on macOS
+arm64 from main commit `70c3fb8dfba2108303c27fa9f33f121693623ebc`, in an isolated
+checkout. Node 24.8.0, Spago 0.93.45 and Go 1.27.0 were used with the existing
+local TAST development frontend, whose binary SHA-256 was
+`efac5816a482d5581cfc990892f8b24f1d3343f8df1798572ea1a0a96bd07991`.
+That frontend is not claimed as a verified release-pin build.
+
+All **401 fixtures** and **51 libraries** passed in the default Release profile,
+with the following interruptions and exact resumes preserved:
+
+| Campaign | Completed coverage and recovery | Executed time across attempts |
+| --- | --- | ---: |
+| `bin/test -c`, then `--resume-failed` | 119 successes before a missing shared Go cache entry; 220 more with a private cache before disk exhaustion; 62 remaining successes after deleting only that regenerable cache. No compiler or fixture source changed. | 6,971.475 s |
+| `bin/modtest -c`, then `-c --resume-failed` | 26 successes before the missing HTTP test stdout adaptation; 25 remaining successes after the test-only correction below. | 958.552 s |
+
+The failed attempts returned 1; the final resumes returned 0. The successful
+target sets are disjoint and cover the complete selections. Timings include
+failed targets and native rebuilds, exclude pauses between attempts, and are
+neither uninterrupted-run timings nor a performance comparison. Three native
+rebuilds actually ran: the initial fixture campaign and both module attempts.
+Each produced exactly SHA-256
+`50c9e42da5eb7e9bc696fe5a7d486df70ffa008ec4f21d047644a8e9b4e04f29`.
+No published RC7 binary was reused, compiler/layout defaults were retained,
+and no snapshots were updated.
+
+The real pipe implementation exposed an inherited test gap: `Test.Main.stdout`
+had JavaScript FFI but no Go FFI, so the generated destination was a panic
+placeholder. `node-http` source revision
+`9b11034d49163590634801a85219f765402b1fc7`
+([PR #2](https://github.com/0x000000000000000000001/gopurs-node-http/pull/2))
+adds the native test constant carrying `os.Stdout` in an EventEmitter and a
+regression check. Only three test files change. The original compiler,
+production library sources and 26 earlier module successes remain valid;
+the bootstrap now pins the corrected HTTP tests. The real HTTP application
+and seven native regressions with the race detector also pass.
+
+Evidence is in `.gopurs-evidence/clean-commands-20261031` at the workspace root.
+`verification.json` and `state.json` record the five pass counts (119, 220, 62, 26, 25), exact
+report/log hashes, the inventory hash of 2,457 successful target logs and source
+checks. This is local macOS Release coverage with an explicit test-source pin
+change; it does not replace a complete multi-platform release qualification.
+
 ## Post-RC7 integration and local library results — 31 October 2026
 
 The following changes are merged into `main`. Each PR passed quick Linux amd64
