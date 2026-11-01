@@ -25,6 +25,13 @@ plateformes. Le cache CI du frontend est corrigé et amorcé sur `main`, sans
 mesure de gain sur un consommateur à chaud. Les identités, preuves et limites
 figurent dans le [bilan post-RC7](docs/quality-0.1.0.md#post-rc7-integration-and-local-library-results--31-october-2026).
 
+Mise à jour du 1er novembre : les écarts identifiés de notices/métadonnées sont
+intégrés, ainsi que `cleanup/v2` via la PR #23, au merge
+`8a40ad11272ab2e149f8e050d735634ab488945c` (24 portes rapides, 232 tests Node
+et 2 smokes). Les artefacts RC7 conservés et leur réinstallation locale sont
+vérifiés ci-dessous. La qualification du prochain candidat et le rollback
+public restent ouverts ; ces contrôles ne les remplacent pas.
+
 ## 1. Figer le périmètre et le contrat public
 
 - [x] Choisir la version de départ et le schéma de versionnement.
@@ -112,7 +119,8 @@ figurent dans le [bilan post-RC7](docs/quality-0.1.0.md#post-rc7-integration-and
 - [x] Faire un `npm publish --dry-run` sur l'archive locale préparée.
 - [x] Vérifier la provenance de la publication npm réelle de RC7 et l'identité exacte des octets téléchargés.
 - [x] Documenter la [procédure de rollback](docs/release.md#rollback-and-recovery) et les limites d'une première publication.
-- [ ] Retenir une version de repli appropriée avec ses artefacts vérifiés et tester réellement le retour à cette version ; le contrôle sur registre simulé ne vaut pas rollback public validé.
+- [x] Vérifier les 45 artefacts RC7 conservés contre la release publique, les checksums, les signatures du paquet npm et du binaire macOS, puis leur réinstallation locale avec exécution JS/native dans des caches neufs ([preuve et limites](docs/quality-0.1.0.md#retained-rc7-recovery-check--1-november-2026)).
+- [ ] Retenir une version de repli adaptée aux applications concernées et tester réellement le retour du canal public à cette version ; la réinstallation locale de RC7 et le registre simulé ne valent pas rollback public validé, et RC7 ne contient pas les correctifs de bibliothèques postérieurs.
 - [x] Aligner le contrat de support avec les parcours réellement distribués : hôte JavaScript npm/Nix et binaires Go ; hôte Rust expérimental.
 - [ ] Figer dans Git toutes les sources, configurations et notices du prochain candidat ; vérifier son checkout et ses artefacts exacts avant publication.
 - [x] Effectuer le smoke test public sur Linux arm64 dans un nouveau projet, avec caches npm, Spago et Go neufs et prérequis de toolchain déjà préparés.
