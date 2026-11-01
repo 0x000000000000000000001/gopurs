@@ -196,8 +196,8 @@ tags. Ordinary PRs and branch pushes run 24 quick gates on Linux amd64,
 including output-identity and documentation checker tests, embedded-runtime
 consistency, compiler snapshot tests, both compiler hosts, the native race
 probe and artifact smokes.
-A small planning job always runs the classification and qualification-reuse
-tests. It skips heavy builds only when every changed path is an explicitly
+A small planning job always runs the classification, quality-inventory and
+qualification-reuse tests before any build. It skips heavy builds only when every changed path is an explicitly
 allowed regular Markdown document. Renames are examined as deletions and
 additions; code under `docs/`, file type changes and unknown paths require a
 build. Manual non-full runs also build Linux.

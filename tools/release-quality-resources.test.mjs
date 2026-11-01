@@ -187,7 +187,9 @@ function partialQualityReports() {
 
 test("four shards preserve every original batch and only their verified union is full", () => {
   const { inventory, core, fixtures, build } = partialQualityReports();
-  assert.equal(inventory.nodeTests.length, 100);
+  assert.equal(inventory.nodeTests.length, 102);
+  assert(inventory.nodeTests.includes("check-docs.test.mjs"));
+  assert(inventory.nodeTests.includes("check-output-identity.test.mjs"));
   assert.equal(inventory.targets.length, 401);
   assert.equal(inventory.modules.length, 51);
   assert.equal(core.full, false);
@@ -205,10 +207,10 @@ test("four shards preserve every original batch and only their verified union is
   assert.equal(merged.full, true);
   assert.equal(merged.phase, "all");
   assert.equal(merged.status, "passed");
-  assert.equal(merged.gates.length, 369);
+  assert.equal(merged.gates.length, 371);
   assert.deepEqual(merged.fixtures.passed, { release: 401, dev: 401 });
   assert.deepEqual(merged.modules, { selectedPerProfile: 51, passed: { release: 51, dev: 51 } });
-  assert.deepEqual(merged.gates.map(gate => gate.index), Array.from({ length: 369 }, (_, index) => index + 1));
+  assert.deepEqual(merged.gates.map(gate => gate.index), Array.from({ length: 371 }, (_, index) => index + 1));
   for (const profile of ["release", "dev"]) assert.deepEqual(
     merged.gates.filter(gate => gate.fixtures?.profile === profile).flatMap(gate => gate.fixtures.targets), inventory.targets);
   assert.equal(merged.gates.at(-1).name, "npm package surface");
@@ -289,7 +291,7 @@ test("merge CLI checks stable fixture evidence and original bootstrap hashes bef
     ...fixtureFiles.flatMap(file => ["--fixtures", file]), "--build", buildFile, "--out", output];
   let result = spawnSync(process.execPath, args, { env, encoding: "utf8" });
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(JSON.parse(readFileSync(output, "utf8")).gates.length, 369);
+  assert.equal(JSON.parse(readFileSync(output, "utf8")).gates.length, 371);
   rmSync(output);
   const signingEnv = { ...env, CI: "true", GITHUB_ACTIONS: "true", RUNNER_ENVIRONMENT: "github-hosted",
     GITHUB_SERVER_URL: "https://github.com", GITHUB_EVENT_NAME: "push", GITHUB_REF_TYPE: "tag",

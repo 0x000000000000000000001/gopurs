@@ -43,8 +43,8 @@ jobs:
             test "$(git cat-file -t "$GITHUB_REF")" = tag
             test "$(git rev-parse "$GITHUB_REF^{commit}")" = "$GITHUB_SHA"
           fi
-      - name: Test the CI classification and qualification guards
-        run: node --test tools/ci/*.test.mjs
+      - name: Test the CI classification, inventory and qualification guards
+        run: node --test tools/ci/*.test.mjs tools/release-quality-resources.test.mjs
       - name: Select builds or reuse identical main qualification
         id: scope
         env:
