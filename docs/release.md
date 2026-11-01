@@ -447,6 +447,15 @@ A first release has no previous public version to restore: recovery requires
 communicating the regression and publishing a corrected version through the
 complete workflow. Until then, no validated public rollback is available.
 
+RC7's retained assets and a fresh local macOS reinstallation were checked on
+1 November 2026; see the [recovery evidence](quality-0.1.0.md#retained-rc7-recovery-check--1-november-2026).
+This does not validate a public channel restoration. RC7 is the only real
+published version at that date, and is a prerelease. Its bootstrap predates
+the later library fixes, so select it as a fallback only after checking the
+affected application's dependency pins and behavior. The npm staging
+placeholder `0.0.0-stage` is not a fallback. Refresh the observed dist-tags
+immediately before any future publication or restoration.
+
 Removing `latest` does **not** block `npm install gopurs`. npm can fall back to
 an eligible published version, including the affected version when it is the
 only one. Deprecation produces a warning; it does not prevent installation.
@@ -455,10 +464,13 @@ and [deprecation reference](https://docs.npmjs.com/cli/v11/commands/npm-deprecat
 
 If a published version has a blocking regression:
 
-1. If a previously validated public version exists, restore `latest` with
-   `npm dist-tag add gopurs@PREVIOUS latest`, using a maintainer account. Remove
-   the affected `next` tag if it points at a broken candidate. Record the
-   resulting dist-tags; do not substitute removal of `latest` for restoration.
+1. If a suitable previously validated public version exists, restore the
+   affected channel using a maintainer account: for a candidate,
+   `npm dist-tag add gopurs@PREVIOUS next`; for an approved stable fallback,
+   `npm dist-tag add gopurs@PREVIOUS latest`. Record the previous and resulting
+   dist-tags and leave other channels unchanged. RC7's accepted first-publish
+   `latest` exception is not blanket approval to move that channel later.
+   Removing a dist-tag does not substitute for restoring a validated version.
 2. Mark the affected version deprecated with a concrete explanation and the
    supported replacement, if one exists; otherwise state that no corrected
    public version is available yet. Update the GitHub release notes and remove its
@@ -466,8 +478,9 @@ If a published version has a blocking regression:
 3. When restoring a previous version, reinstall its retained npm archive and
    matching native executable in a
    fresh directory, verify their signatures/checksums, and rerun the smoke and
-   affected application. Also check a fresh unversioned registry installation
-   selects the restored version. Existing lockfiles and explicit version pins
+   affected application. Also check a fresh registry installation of the
+   restored channel selects the expected version: `gopurs@next` for `next`,
+   or unversioned `gopurs` for `latest`. Existing lockfiles and explicit version pins
    are not changed by moving a dist-tag. A native compiler is installed as
    `node_modules/gopurs/bin/gopurs-native` with executable permission; invoke
    `node_modules/gopurs/bin/gopurs` to select it. The `npx gopurs` entry stays JS.

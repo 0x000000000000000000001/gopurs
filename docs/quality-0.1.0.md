@@ -3,6 +3,48 @@
 This is a working record for the `0.1.0` release gates. It is not a release
 certificate. The gate list is in [`todo.md`](../todo.md).
 
+## Retained RC7 recovery check — 1 November 2026
+
+The 45 retained RC7 assets still match the public GitHub release by name,
+size and SHA-256. All three checksum manifests verify, and the npm registry
+tarball is byte-identical to the retained archive. The observed registry has
+`latest` and `next` at `0.1.0-rc.7`; its only other version is npm's
+`0.0.0-stage` staging placeholder, which is not a recovery version.
+
+The archive and macOS arm64 native executable passed provenance signature
+verification, constrained to the CI workflow, immutable tag `v0.1.0-rc.7`
+and source commit `fe79595b49a2d1ed81b034533ab7c643cc69438a`.
+Their SHA-256 values are:
+
+| Artifact | SHA-256 |
+| --- | --- |
+| `gopurs-0.1.0-rc.7.tgz` | `32e8888b46c9bfb448bc7767fd357942f99b1f27d69640dc4ac94d0472802bca` |
+| `gopurs-0.1.0-rc.7-darwin-arm64` | `eb6948f46c55c294144efe56aee403d9b0ee9eeebe1244e574ab63aff63d313d` |
+
+`tools/release-smoke.mjs` from main
+`8a40ad11272ab2e149f8e050d735634ab488945c` reinstalled that archive offline
+in a fresh directory with empty npm and Go caches. Both the installed JavaScript
+entry point and the launcher using the retained native executable compiled and
+ran the minimal TAST/Go FFI application, each printing
+`gopurs release smoke: 42`. Exit code was 0; total measured duration was
+8.015 seconds. Node 24.8.0, npm 11.6.0 and Go 1.27.0 were used on macOS arm64
+with the local TAST development frontend identified in the clean-command
+record below, not a certified build of the release frontend pin.
+
+Evidence is retained in `.gopurs-evidence/rollback-readiness-20261101` at the
+workspace root: the inventory and current dist-tags in `state.json`, provenance
+verification outputs, and `smoke.json` with SHA-256
+`fb24bac4bf2d6817c58890134f3d84c8759fb2020147ab57a83b4c1860c69bd7`.
+The original archives and earlier qualification evidence are unchanged.
+
+This establishes local reinstallation readiness, not a public rollback or
+multi-platform recovery qualification. No registry tag was moved. RC7's own
+bootstrap lacks the later library fixes; the minimal smoke does not test those
+libraries or establish suitability for an application that needs those fixes.
+Before choosing RC7 as a fallback, verify the affected application's exact
+dependency pins and behavior. There is currently no previous public stable
+version, and the real channel restoration gate remains open.
+
 ## Local clean-command checks — 1 November 2026
 
 The requested `bin/test -c` and `bin/modtest -c` paths were exercised on macOS
@@ -1074,14 +1116,15 @@ No old input or timing was changed.
 - **Release candidate/tag and green CI.** The workflow exists but has not run on
   GitHub for a release tag.
 
-## Remaining gates before stable — updated 31 October 2026
+## Remaining gates before stable — updated 1 November 2026
 
-1. Resolve the remaining library source/dependency and notice issues recorded
-   in [the audit](library-source-audit.md) and the local campaign limits above.
-   Independent library package publication needs its own metadata review.
-2. Retain a suitable public fallback and verify the documented
-   [rollback procedure](release.md#rollback-and-recovery). The existing mock
-   registry exercise is not a validated public rollback.
+1. Keep the corrected library pins and notices in the frozen candidate inputs,
+   as recorded in [the audit](library-source-audit.md). The identified issues
+   are integrated; independent library publication still needs its own review.
+2. Select a fallback suitable for the affected applications and verify the
+   documented [rollback procedure](release.md#rollback-and-recovery).
+   RC7's retained assets and local reinstallation are verified above; neither
+   this check nor the mock registry exercise is a validated public rollback.
 3. Once the candidate inputs are frozen, qualify their exact tag on every
    supported platform, including the library campaigns, artifact finalization
    and public installation checks. Preserve all earlier RC tags and record the
