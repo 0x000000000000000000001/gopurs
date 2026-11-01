@@ -112,6 +112,18 @@ This supplementary correction does not complete the general stream API,
 source notice audit or release qualification. The next audit work remains the
 notice and metadata gaps below. See the [targeted scope and evidence](quality-0.1.0.md#native-pipe-targeted-checks--31-october-2026).
 
+## HTTP test stdout correction — 1 November 2026
+
+The full local `bin/modtest -c` run exposed a missing Go adaptation for the
+HTTP test's `stdout` constant when used by the real native pipe. Revision
+`9b11034d49163590634801a85219f765402b1fc7` adds this test FFI and a native
+regression; the three changed files are all under `test/`. The bootstrap
+selects that revision without changing production library sources.
+The 26 earlier module successes and 25 successful remaining cases cover all
+51 libraries with the same rebuilt compiler bytes. See the [exact recovery
+history and scope](quality-0.1.0.md#local-clean-command-checks--1-november-2026).
+The notice and metadata gaps below remain open.
+
 ## Confirmed notice and provenance gaps
 
 | Port | Evidence | Remaining work for its source distribution |
