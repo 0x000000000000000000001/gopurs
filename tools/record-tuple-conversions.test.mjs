@@ -17,7 +17,7 @@ import { boxGoExpr, coerceGoExpr, generateReboxFunctions, unboxGoExpr } from '..
 import { exprTypeToGoType, exprTypeToGenericGoType } from '../output/Gopurs.GoTypes/index.js';
 import { printGoDecl, printGoExpr } from '../output/Gopurs.Printer/index.js';
 import { coerceLiteralField, getProp, prepareLiteral, update } from '../output/Gopurs.RecordExprs/index.js';
-import { runtimeGoCode } from '../output/Gopurs.Runtime/index.js';
+import { runtimeGoCode } from '../output/Gopurs.Runtime.Source/index.js';
 import * as Core from '../output/PureScript.Backend.Optimizer.CoreFn/index.js';
 import { hashString } from '../output/PureScript.Backend.Optimizer.FfiSupport/index.js';
 

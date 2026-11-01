@@ -1,3 +1,4 @@
+// Handwritten FFI for Gopurs.Cache.Pool; keep in sync with the .purs foreign imports.
 export const create = () => ({ index: new Map(), nodes: [], references: [] });
 export const intern = pool => text => () => {
   let index = pool.index.get(text);

@@ -17,7 +17,7 @@ import * as Go from '../output/Gopurs.GoAst/index.js';
 import { coerceGoExpr } from '../output/Gopurs.GoConversions/index.js';
 import { exprTypeToGoType } from '../output/Gopurs.GoTypes/index.js';
 import { printGoExpr } from '../output/Gopurs.Printer/index.js';
-import { runtimeGoCode } from '../output/Gopurs.Runtime/index.js';
+import { runtimeGoCode } from '../output/Gopurs.Runtime.Source/index.js';
 import { TcoExpr } from '../output/PureScript.Backend.Optimizer.Codegen.Tco/index.js';
 import * as Core from '../output/PureScript.Backend.Optimizer.CoreFn/index.js';
 import * as Syntax from '../output/PureScript.Backend.Optimizer.Syntax/index.js';

@@ -1,3 +1,4 @@
+// Handwritten FFI for Gopurs.Cache.TypeMemo; keep in sync with the .purs foreign imports.
 package Gopurs_Cache_TypeMemo
 
 import "gopurs/output/gopurs_runtime"

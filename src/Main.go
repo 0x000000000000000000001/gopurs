@@ -1,3 +1,4 @@
+// Handwritten FFI for Main; keep in sync with the .purs foreign imports.
 package Main
 
 import "os"

@@ -9,7 +9,7 @@ import * as Ref from '../output/Effect.Ref/index.js';
 import * as Go from '../output/Gopurs.GoAst/index.js';
 import { unboxGoExpr } from '../output/Gopurs.GoConversions/index.js';
 import { printGoExpr } from '../output/Gopurs.Printer/index.js';
-import { runtimeGoCode } from '../output/Gopurs.Runtime/index.js';
+import { runtimeGoCode } from '../output/Gopurs.Runtime.Source/index.js';
 
 test('Value arrays reuse immutable storage while other element representations are converted', t => {
     const state = Ref.new({ declarations: [], globalId: 0, reboxPairs: emptySet })();

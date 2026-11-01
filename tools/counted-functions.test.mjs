@@ -13,7 +13,7 @@ import { Tuple } from '../output/Data.Tuple/index.js';
 import * as CodeGen from '../output/Gopurs.CodeGen/index.js';
 import { optimizeFunctionProducers } from '../output/Gopurs.FunctionFusion/index.js';
 import { sanitizeName } from '../output/Gopurs.GoAst/index.js';
-import { runtimeGoCode } from '../output/Gopurs.Runtime/index.js';
+import { runtimeGoCode } from '../output/Gopurs.Runtime.Source/index.js';
 import * as C from '../output/PureScript.Backend.Optimizer.CoreFn/index.js';
 import { NeutralExpr } from '../output/PureScript.Backend.Optimizer.Semantics/index.js';
 import * as S from '../output/PureScript.Backend.Optimizer.Syntax/index.js';

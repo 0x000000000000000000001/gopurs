@@ -1,3 +1,4 @@
+// Handwritten FFI for Gopurs.Cache.Wire; keep in sync with the .purs foreign imports.
 import { createHash } from "node:crypto";
 
 export const hash = text => createHash("sha256").update(text, "utf8").digest("hex");

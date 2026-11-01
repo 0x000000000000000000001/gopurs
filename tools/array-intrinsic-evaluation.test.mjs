@@ -10,7 +10,7 @@ const project = fileURLToPath(new URL('../', import.meta.url));
 const load = module => import(pathToFileURL(join(project, 'output', module, 'index.js')).href);
 const [Maps, Maybe, Ord, Sets, Ref, Go, Conversions, Printer, Runtime, Tco, Core, Syntax, Statements, Calls] = await Promise.all(
     ['Data.Map', 'Data.Maybe', 'Data.Ord', 'Data.Set', 'Effect.Ref', 'Gopurs.GoAst',
-        'Gopurs.GoConversions', 'Gopurs.Printer', 'Gopurs.Runtime',
+        'Gopurs.GoConversions', 'Gopurs.Printer', 'Gopurs.Runtime.Source',
         'PureScript.Backend.Optimizer.Codegen.Tco', 'PureScript.Backend.Optimizer.CoreFn',
         'PureScript.Backend.Optimizer.Syntax', 'Gopurs.ExprContext', 'Gopurs.CallExprs'].map(load));
 const { withReboxFields } = await import(pathToFileURL(join(project, 'tools/codegen-metadata.mjs')).href);

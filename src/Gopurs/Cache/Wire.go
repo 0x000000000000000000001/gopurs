@@ -1,3 +1,4 @@
+// Handwritten FFI for Gopurs.Cache.Wire; keep in sync with the .purs foreign imports.
 package Gopurs_Cache_Wire
 
 import (

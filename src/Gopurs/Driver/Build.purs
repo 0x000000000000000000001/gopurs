@@ -28,7 +28,7 @@ import Gopurs.Cache.Modules as ModuleCache
 import Gopurs.Cache.Wire as Wire
 import Gopurs.Driver.Prepare (PreparedModules)
 import Gopurs.Emission (EmissionEntry, withEmitter)
-import Gopurs.Metrics as Metrics
+import Gopurs.Host.Metrics as Metrics
 import PureScript.Backend.Optimizer.Builder (BuildEnv, BuildOptions, BuildObservation, JobScheduler, ParallelStats, buildModulesWithObservationAndProfile, buildModulesParallelWithBindingLookupAndProfile)
 import PureScript.Backend.Optimizer.Convert (BackendModule)
 import PureScript.Backend.Optimizer.CoreFn (Ann, Module(..))

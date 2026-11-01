@@ -1,4 +1,4 @@
-module Gopurs.Diagnostics (log, recorded) where
+module Gopurs.Host.Diagnostics (log, recorded) where
 
 import Prelude
 import Effect (Effect)

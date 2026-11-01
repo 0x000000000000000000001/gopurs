@@ -1,3 +1,4 @@
+// Handwritten FFI for Gopurs.BuildCache; keep in sync with the .purs foreign imports.
 unsafe extern "C" {
     fn GopursBuildCache(content: *const u8, length: usize, session: i32) -> *mut std::ffi::c_char;
     fn GopursFreeFFI(result: *mut std::ffi::c_char);

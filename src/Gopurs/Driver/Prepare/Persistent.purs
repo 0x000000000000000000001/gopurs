@@ -35,7 +35,7 @@ import Gopurs.Driver.Prepare.Projection (Projection)
 import Gopurs.Driver.Prepare.Projection as Projection
 import Gopurs.Driver.Prepare.ProjectionCapsule as ProjectionCapsule
 import Gopurs.Preparation (mapPreparationJobs, runPreparationJobs)
-import Gopurs.Metrics as Metrics
+import Gopurs.Host.Metrics as Metrics
 import Gopurs.Monomorphization (buildGlobalAstMap)
 import Node.Encoding (Encoding(..))
 import Node.FS.Aff as FS

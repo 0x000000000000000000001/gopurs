@@ -3,7 +3,7 @@
 @@ -16,7 +16,7 @@
  import Gopurs.Driver.Cache (SourceModule)
  import Gopurs.GlobalTypes (buildGlobalTypes)
- import Gopurs.Metrics as Metrics
+ import Gopurs.Host.Metrics as Metrics
 -import Gopurs.Monomorphization (monomorphizeModulesWithDispatch)
 +import Gopurs.Monomorphization (monomorphizeModulesWithPhases)
  import Gopurs.Preparation (runPreparationJobs)

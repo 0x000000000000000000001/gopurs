@@ -24,7 +24,7 @@ import Gopurs.Cache.Wire as Wire
 import Gopurs.Driver.Cache (PartText, Session)
 import Gopurs.Driver.Cache as Cache
 import Gopurs.Preparation (mapPreparationJobs)
-import Gopurs.Metrics as Metrics
+import Gopurs.Host.Metrics as Metrics
 import Node.Encoding (Encoding(..))
 import Node.FS.Aff as FS
 import PureScript.Backend.Optimizer.CoreFn (Qualified(..))

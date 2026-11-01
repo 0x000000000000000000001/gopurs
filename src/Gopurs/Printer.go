@@ -1,3 +1,4 @@
+// Handwritten FFI for Gopurs.Printer; keep in sync with the .purs foreign imports.
 package Gopurs_Printer
 
 import "strings"

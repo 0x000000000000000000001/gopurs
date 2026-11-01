@@ -1,3 +1,4 @@
+// Handwritten FFI for Gopurs.GoAst; keep in sync with the .purs foreign imports.
 // Purust flattens the two curried arguments at the native FFI boundary. Retain
 // the callback with its cache so a shared closure's address cannot be recycled.
 // Per-thread caches also allow callbacks to re-enter without holding a lock.

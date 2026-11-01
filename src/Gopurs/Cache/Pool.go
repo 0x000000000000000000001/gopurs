@@ -1,3 +1,4 @@
+// Handwritten FFI for Gopurs.Cache.Pool; keep in sync with the .purs foreign imports.
 package Gopurs_Cache_Pool
 
 import (

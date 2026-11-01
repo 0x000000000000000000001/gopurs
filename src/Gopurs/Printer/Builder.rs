@@ -1,3 +1,4 @@
+// Handwritten FFI for Gopurs.Printer.Builder; keep in sync with the .purs foreign imports.
 #[derive(Debug)]
 pub struct Builder(std::sync::Mutex<String>);
 

@@ -79,7 +79,7 @@ test("native compiler FFI preserves JS contracts and value lifetimes under the r
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   run(process.execPath, [join(root, "tools/embed-runtime.mjs")], root);
   run(process.execPath, [join(root, "tools/prepare-native-output.mjs"), directory], root);
-  for (const name of ["GoAst", "Printer", "Printer/Builder", "Runtime", "FfiSupport", "GoCode", "GoImports", "Metrics"]) {
+  for (const name of ["GoAst", "Printer", "Printer/Builder", "Runtime/Source", "FfiSupport", "GoCode", "GoImports", "Host/Metrics"]) {
     const source = readFileSync(join(root, `src/Gopurs/${name}.go`), "utf8");
     writeFileSync(join(directory, `${name.replaceAll("/", "_")}.go`), source.replace(/^package Gopurs_\w+$/m, "package main"));
   }

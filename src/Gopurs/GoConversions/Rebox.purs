@@ -18,7 +18,7 @@ import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import Effect.Unsafe (unsafePerformEffect)
 import Gopurs.CodegenState (CodegenMetadata, CodegenState)
-import Gopurs.Diagnostics as Diagnostics
+import Gopurs.Host.Diagnostics as Diagnostics
 import Gopurs.GoAst (GoDecl(..), GoExpr(..), GoType(..), StructPointer, rawGo, structTypeIdentity)
 import Gopurs.GoSymbol as Symbol
 import Gopurs.GoSymbol (GoReference(..))

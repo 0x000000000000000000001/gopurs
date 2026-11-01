@@ -821,7 +821,7 @@ Le pilote vérifie maintenant les empreintes avant le décodage des TAST. Un hit
 saute préparation, monomorphisation, optimisation et émission ; un miss consomme
 des copies privées des TAST et FFI, puis publie par le stockage du lot 02.
 La résolution FFI commune produit sa propre trace des candidats absents et des
-répertoires parcourus. `CompilerSnapshot` copie puis réexécute les octets
+répertoires parcourus. `Host.Snapshot` copie puis réexécute les octets
 identifiés, avec les ressources WASM/JS ou l'archive native intégrée.
 
 Le protocole conserve `go.mod` existant et `go.sum`, retire seulement les sorties

@@ -38,7 +38,7 @@ import Gopurs.Driver.Output as Output
 import Gopurs.Driver.Prepare (PreparedModules)
 import Gopurs.ExprContext (ModuleFunctions)
 import Gopurs.GoSymbol (GoReference(..))
-import Gopurs.Metrics as Metrics
+import Gopurs.Host.Metrics as Metrics
 import Gopurs.Preparation (mapPreparationJobs, runPreparationJobs)
 import Node.Encoding (Encoding(..))
 import Node.FS.Aff as FS

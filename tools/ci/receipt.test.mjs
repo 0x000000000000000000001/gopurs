@@ -13,17 +13,19 @@ const encode = value => Buffer.from(JSON.stringify(value));
 function fixture() {
   const repository = 'owner/gopurs', commit = 'a'.repeat(40), tree = 'b'.repeat(40), head = 'c'.repeat(40), base = 'd'.repeat(40);
   const names = ['release-quality-resources', 'release-npm-provenance', 'release-sbom', 'emission', 'ffi-errors', 'launcher', 'test-runner',
-    'build-native', 'bootstrap-inputs', 'cli', 'build-profiles', 'manifest-prepared-cache', 'driver-cache', 'native-go-code', 'preparation-native'];
+    'build-native', 'bootstrap-inputs', 'cli', 'build-profiles', 'manifest-prepared-cache', 'driver-cache', 'native-go-code', 'preparation-native',
+    'check-output-identity', 'check-docs', 'embed-runtime', 'compiler-snapshot'];
   const quality = encode({ schema: 1, status: 'passed', full: false, requestedFull: false, phase: 'all', shard: null,
     identity: { source: { commit, dirty: false }, target: 'linux-amd64', github: { repository, runId: '123', runAttempt: '1' } },
     gates: [...names.map(name => `Node ${name}.test.mjs`), 'Go build-cache', 'Go c1c', 'Go ffi-gen', 'Representative executable fixtures', 'npm package surface']
       .map((name, index) => ({ name, index: index + 1, passed: true, exitCode: 0 })) });
   const smoke = encode({ version: '0.1.0-test', tests: [{ host: 'javascript', passed: true }, { host: 'native', passed: true }] });
-  const counts = [12, 9, 2, 20, 14, 9, 96, 7, 5, 19, 3, 7, 4, 2, 1];
-  const receipt = { schema: 1, policy: 'linux-quick-v1', repository, ref: 'refs/pull/7/merge', commit, tree,
+  const counts = [12, 9, 2, 20, 14, 9, 96, 7, 5, 19, 3, 7, 4, 2, 1, 8, 8, 2, 3];
+  const total = counts.reduce((sum, count) => sum + count, 0);
+  const receipt = { schema: 1, policy: 'linux-quick-v2', repository, ref: 'refs/pull/7/merge', commit, tree,
     runId: '123', runAttempt: '1', version: '0.1.0-test', parents: [base, head], qualitySha256: hash(quality), smokeSha256: hash(smoke),
     nodeResults: names.map((name, index) => ({ name: `Node ${name}.test.mjs`, tests: counts[index], pass: counts[index], fail: 0, cancelled: 0, skipped: 0, todo: 0 })),
-    nodeTotals: { tests: 210, pass: 210, fail: 0, cancelled: 0, skipped: 0, todo: 0 } };
+    nodeTotals: { tests: total, pass: total, fail: 0, cancelled: 0, skipped: 0, todo: 0 } };
   const context = { repository, tree, pr: { number: 7, merged: true, head: { sha: head, repo: { full_name: repository } }, base: { ref: 'main', repo: { full_name: repository } } },
     run: { id: 123, run_attempt: 1, event: 'pull_request', status: 'completed', conclusion: 'success', path: '.github/workflows/ci.yml',
       repository: { full_name: repository }, head_repository: { full_name: repository }, head_sha: head, pull_requests: [{ number: 7, head: { sha: head } }] },
@@ -103,6 +105,26 @@ test('quality must include every gate, exact source/run, zero failures and both 
   assert.throws(() => validateQualification(f.receipt, f.quality, f.smoke));
 });
 
+test('quick v2 rejects old receipts and any omitted cleanup gate despite coherent hashes and counts', () => {
+  const cleanup = ['check-output-identity', 'check-docs', 'embed-runtime', 'compiler-snapshot']
+    .map(name => `Node ${name}.test.mjs`);
+  const old = fixture();
+  old.receipt.policy = 'linux-quick-v1';
+  assert.throws(() => validateQualification(old.receipt, old.quality, old.smoke));
+  // Reject both the complete v1 gate inventory relabelled as v2 and any
+  // individually omitted new suite, even if all summaries remain consistent.
+  for (const omitted of [cleanup, ...cleanup.map(name => [name])]) {
+    const f = fixture(), quality = JSON.parse(f.quality);
+    quality.gates = quality.gates.filter(gate => !omitted.includes(gate.name))
+      .map((gate, index) => ({ ...gate, index: index + 1 }));
+    f.quality = encode(quality); f.receipt.qualitySha256 = hash(f.quality);
+    f.receipt.nodeResults = f.receipt.nodeResults.filter(result => !omitted.includes(result.name));
+    const total = f.receipt.nodeResults.reduce((sum, result) => sum + result.tests, 0);
+    f.receipt.nodeTotals.tests = total; f.receipt.nodeTotals.pass = total;
+    assert.throws(() => validateQualification(f.receipt, f.quality, f.smoke));
+  }
+});
+
 test('receipt ZIP digest, byte count and exact member inventory are enforced', t => {
   const directory = mkdtempSync(join(tmpdir(), 'gopurs-receipt-test-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
@@ -143,7 +165,7 @@ test('receipt CLI records a real clean merge commit and validates all Node summa
   git('add', '.'); git('commit', '-m', 'feature'); const head = git('rev-parse', 'HEAD');
   git('checkout', 'main'); git('merge', '--no-ff', '--no-edit', 'feature');
   const commit = git('rev-parse', 'HEAD'), tree = git('rev-parse', 'HEAD^{tree}');
-  const f = fixture(), quality = JSON.parse(f.quality), counts = [12, 9, 2, 20, 14, 9, 96, 7, 5, 19, 3, 7, 4, 2, 1];
+  const f = fixture(), quality = JSON.parse(f.quality), counts = f.receipt.nodeResults.map(result => result.tests);
   quality.identity.source.commit = commit;
   quality.gates.slice(0, counts.length).forEach((gate, index) => {
     gate.log = join(directory, `${index}.log`);

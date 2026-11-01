@@ -8,7 +8,7 @@ import * as Go from '../output/Gopurs.GoAst/index.js';
 import { printGoFile } from '../output/Gopurs.Printer/index.js';
 import { generated } from '../output/Gopurs.GoSymbol/index.js';
 import { writeEntryPoints, writePackageOutput } from '../output/Gopurs.Driver.Output/index.js';
-import { runtimeGoCode } from '../output/Gopurs.Runtime/index.js';
+import { runtimeGoCode } from '../output/Gopurs.Runtime.Source/index.js';
 import { Tuple } from '../output/Data.Tuple/index.js';
 import { Left } from '../output/Data.Either/index.js';
 import * as Aff from '../output/Effect.Aff/index.js';

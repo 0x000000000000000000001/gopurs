@@ -301,7 +301,7 @@ et les SHA-256 des ressources de `spec.compiler`, toutes présentes :
 
 Les changements locaux reconstruits sont donc couverts, même sans nouveau
 commit Git. Une modification source non reconstruite n'est pas un changement
-du compilateur exécuté. `CompilerSnapshot` copie l'exécutable ou le bundle et ses
+du compilateur exécuté. `Host.Snapshot` copie l'exécutable ou le bundle et ses
 ressources dans un répertoire privé, puis **réexécute cette copie avant le cache**.
 Une installation remplacée entre le chargement du premier processus et la copie
 fait ainsi exécuter la nouvelle copie ; les anciens objets mémoire ne sont pas
@@ -579,7 +579,7 @@ GOPURS_FORCE_BUILD=1 ./bin/gopurs
 sorties sont valides. Les compteurs et horloges de passes ne sont pas rejoués
 sur un hit : le message annonce explicitement zéro module optimisé/émis.
 
-Le diagnostic sémantique `Rebox missing` est marqué par `Gopurs.Diagnostics`.
+Le diagnostic sémantique `Rebox missing` est marqué par `Gopurs.Host.Diagnostics`.
 Un manifeste marqué force le prochain calcul pour reproduire le diagnostic ;
 le marqueur wire `gopurs/diagnostics-v1` contient `["unit"]`, et n'est pas un
 texte à rejouer. Les erreurs de directives sont recalculées avant le lookup.

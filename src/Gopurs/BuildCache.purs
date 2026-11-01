@@ -1,5 +1,5 @@
--- | Versioned storage protocol; see docs/build-cache.md. The driver will supply
--- | complete input recipes and private staging outputs when cache reuse is wired.
+-- | Versioned storage protocol; see docs/build-cache.md. The driver supplies
+-- | complete input recipes and private staging outputs through Driver.Cache.
 module Gopurs.BuildCache (exchange, sessionExchange, sessionExchangeOnMiss) where
 
 import Data.Unit (Unit)

@@ -1,3 +1,4 @@
+// Handwritten FFI for Gopurs.FfiSupport; keep in sync with the .purs foreign imports.
 import { execFileSync } from 'node:child_process';
 import { closeSync, existsSync, mkdtempSync, openSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';

@@ -1,3 +1,4 @@
+// Handwritten FFI for Gopurs.Printer; keep in sync with the .purs foreign imports.
 export const escapeGoStringImpl = function(s) {
   let out = "";
   for (let i = 0; i < s.length; i++) {
