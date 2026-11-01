@@ -32,6 +32,13 @@ et 2 smokes). Les artefacts RC7 conservés et leur réinstallation locale sont
 vérifiés ci-dessous. La qualification du prochain candidat et le rollback
 public restent ouverts ; ces contrôles ne les remplacent pas.
 
+Prochain candidat : `0.1.0-rc.8`, préparé depuis `main` après la PR #24.
+Il regroupe les correctifs post-RC7, les pins et notices corrigés et le cleanup
+fusionné. Sa qualification complète devra porter sur son propre tag signé :
+371 portes par plateforme, dont 51 bibliothèques et 401 fixtures dans chaque
+profil Release/Dev. La préparation de ce candidat ne vaut ni qualification
+réussie ni publication ; RC7 reste la version publique jusqu'à nouvel avis.
+
 ## 1. Figer le périmètre et le contrat public
 
 - [x] Choisir la version de départ et le schéma de versionnement.
