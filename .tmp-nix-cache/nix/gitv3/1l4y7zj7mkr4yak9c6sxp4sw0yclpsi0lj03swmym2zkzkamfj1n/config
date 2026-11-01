@@ -1,0 +1,8 @@
+[core]
+	bare = true
+	repositoryformatversion = 0
+	filemode = true
+	ignorecase = true
+	precomposeunicode = true
+[remote "origin"]
+	url = https://github.com/0x000000000000000000001/gopurs-unsafe-coerce.git
