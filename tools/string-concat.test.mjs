@@ -9,7 +9,7 @@ import { empty as emptySet } from '../output/Data.Set/index.js';
 import * as Go from '../output/Gopurs.GoAst/index.js';
 import { binary } from '../output/Gopurs.PrimitiveExprs/index.js';
 import { printGoExpr } from '../output/Gopurs.Printer/index.js';
-import { runtimeGoCode } from '../output/Gopurs.Runtime/index.js';
+import { runtimeGoCode } from '../output/Gopurs.Runtime.Source/index.js';
 import { OpStringAppend } from '../output/PureScript.Backend.Optimizer.Syntax/index.js';
 
 test('generated and Prelude string concatenation match JavaScript UTF-16 boundaries', t => {

@@ -1,4 +1,5 @@
-package Gopurs_Diagnostics
+// Handwritten FFI for Gopurs.Host.Diagnostics; keep in sync with the .purs foreign imports.
+package Gopurs_Host_Diagnostics
 
 import "sync/atomic"
 

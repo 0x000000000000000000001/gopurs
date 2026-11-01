@@ -1,3 +1,4 @@
+// Handwritten FFI for Gopurs.Host.Metrics; keep in sync with the .purs foreign imports.
 // Like altbak's Bench clock, use monotonic elapsed time, never Date.now().
 import { performance } from "node:perf_hooks";
 

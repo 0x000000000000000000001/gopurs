@@ -1,4 +1,4 @@
-module Gopurs.Runtime
+module Gopurs.Runtime.Source
   ( runtimeGoCode
   ) where
 

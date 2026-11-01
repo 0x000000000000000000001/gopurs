@@ -50,12 +50,33 @@ For compiler changes, compare generated Go on a frozen TAST corpus and run the
 relevant fixture suite. A change that alters generated output must update the
 corresponding snapshots and explain the intended difference.
 
+## Vocabulary and module map
+
+- [docs/naming.md](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/naming.md) is the normative glossary: one concept, one
+  word. Phases are verbs, data are nouns, proofs are adjectives. Read it before
+  naming a module, a function or a field.
+- [docs/module-map.md](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/module-map.md) is the source of truth for module
+  responsibilities, target phases and allowed dependencies. Add or update the
+  matching row in the same commit as a module change.
+- The target phases are **Driver**, **Prepare**, **Rewrite**, **Emit**,
+  **Cache**, **Host** and **Runtime**. The current flat names are temporary:
+  `Driver.Prepare` prepares, the rewrite passes transform, `CodeGen` emits and
+  `Driver.Output` writes. Do not introduce a new ambiguous name while the
+  cleanup lots are in progress.
+- A move is a separate pull request from a rename or a behaviour change. Move
+  the `.purs` file and its `.go`/`.js`/`.rs` companions together, update every
+  import and path, and never update a snapshot to justify a move.
+- Generated Go identifiers are a public contract. Do not rename them during
+  cleanup.
+
 ## Code and documentation
 
 - Follow the style of the surrounding module and keep responsibilities in the
-  existing layer.
+  phase described by the module map.
 - Keep public documentation in English. Historical campaign notes may use their
-  original language.
+  original language. Use the vocabulary from `docs/naming.md` in normative
+  documents and link to `docs/module-map.md` instead of duplicating the module
+  list.
 - Do not commit generated output, caches, benchmark workspaces, logs or
   platform binaries.
 - Do not add a runtime dependency without updating the license inventory.

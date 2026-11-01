@@ -1,3 +1,4 @@
+// Handwritten FFI for Gopurs.GoAst; keep in sync with the .purs foreign imports.
 package Gopurs_GoAst
 
 import "sync"

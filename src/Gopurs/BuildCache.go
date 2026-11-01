@@ -1,3 +1,4 @@
+// Handwritten FFI for Gopurs.BuildCache; keep in sync with the .purs foreign imports.
 package Gopurs_BuildCache
 
 import (

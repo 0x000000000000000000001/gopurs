@@ -10,7 +10,7 @@ import * as Go from '../output/Gopurs.GoAst/index.js';
 import { boxGoExpr } from '../output/Gopurs.GoConversions/index.js';
 import { collectImports } from '../output/Gopurs.GoImports/index.js';
 import { printGoExpr, printGoFile } from '../output/Gopurs.Printer/index.js';
-import { runtimeGoCode } from '../output/Gopurs.Runtime/index.js';
+import { runtimeGoCode } from '../output/Gopurs.Runtime.Source/index.js';
 import { hashString } from '../output/PureScript.Backend.Optimizer.FfiSupport/index.js';
 
 const base = 'Constructor_Probe_Node';

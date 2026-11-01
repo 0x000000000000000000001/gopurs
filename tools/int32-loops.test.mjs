@@ -9,7 +9,7 @@ import * as Go from '../output/Gopurs.GoAst/index.js';
 import { iterationBindings, loopParameters } from '../output/Gopurs.GoFunctions/index.js';
 import { loop } from '../output/Gopurs.Int32Loops/index.js';
 import { printGoDecl, printGoExpr } from '../output/Gopurs.Printer/index.js';
-import { runtimeGoCode } from '../output/Gopurs.Runtime/index.js';
+import { runtimeGoCode } from '../output/Gopurs.Runtime.Source/index.js';
 import { intAdd } from '../../gopurs-prelude/src/Data/Semiring.js';
 import { intSub } from '../../gopurs-prelude/src/Data/Ring.js';
 import { intDiv } from '../../gopurs-prelude/src/Data/EuclideanRing.js';

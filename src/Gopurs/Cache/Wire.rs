@@ -1,3 +1,4 @@
+// Handwritten FFI for Gopurs.Cache.Wire; keep in sync with the .purs foreign imports.
 unsafe extern "C" {
     fn GopursCacheDigest(content: *const u8, length: usize) -> *mut std::ffi::c_char;
     fn GopursFreeFFI(result: *mut std::ffi::c_char);

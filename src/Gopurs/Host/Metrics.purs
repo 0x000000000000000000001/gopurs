@@ -1,4 +1,4 @@
-module Gopurs.Metrics (measure, accumulate, setMemProfileRate) where
+module Gopurs.Host.Metrics (measure, accumulate, setMemProfileRate) where
 
 import Prelude
 

@@ -1,4 +1,4 @@
-module Gopurs.CompilerSnapshot (withSnapshot, release) where
+module Gopurs.Host.Snapshot (withSnapshot, release) where
 
 import Prelude
 import Effect (Effect)

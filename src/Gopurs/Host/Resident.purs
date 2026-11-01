@@ -1,4 +1,4 @@
-module Gopurs.Resident (run) where
+module Gopurs.Host.Resident (run) where
 
 import Prelude
 

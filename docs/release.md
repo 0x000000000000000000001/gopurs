@@ -192,8 +192,10 @@ matching tag, both package-lock version fields and changelog section before
 starting any tagged build.
 
 `.github/workflows/ci.yml` runs on branch changes, pull requests and version
-tags. Ordinary PRs and branch pushes run the existing 20 quick gates on Linux
-amd64, including both compiler hosts, the native race probe and artifact smokes.
+tags. Ordinary PRs and branch pushes run 24 quick gates on Linux amd64,
+including output-identity and documentation checker tests, embedded-runtime
+consistency, compiler snapshot tests, both compiler hosts, the native race
+probe and artifact smokes.
 A small planning job always runs the classification and qualification-reuse
 tests. It skips heavy builds only when every changed path is an explicitly
 allowed regular Markdown document. Renames are examined as deletions and
@@ -201,9 +203,10 @@ additions; code under `docs/`, file type changes and unknown paths require a
 build. Manual non-full runs also build Linux.
 
 A push to `main` may reuse one successful, associated, same-repository PR
-qualification. Its small receipt binds the 20 gates, each Node file's actual
-passing test counts with no skips, both artifact smokes, the run attempt and
-the actual tested merge commit.
+qualification. Its small `linux-quick-v2` receipt binds the 24 gates, each
+Node file's actual passing test counts with no skips, both artifact smokes, the run attempt and
+the actual tested merge commit. Receipts using the old `linux-quick-v1`
+policy or missing any required gate cannot be reused.
 The planner verifies the artifact ZIP against GitHub's SHA-256 and compares the
 tested Git object's tree with the new `main` tree. The PR head alone is
 insufficient. Missing, expired, ambiguous or inconsistent evidence, fork runs

@@ -31,7 +31,7 @@ import Gopurs.ClassMetadata (addClassDataDeclarations)
 import Gopurs.CodegenState (CodegenMetadata)
 import Gopurs.Driver.Prepare (prepareModules)
 import Gopurs.GlobalTypes (buildGlobalTypes)
-import Gopurs.Metrics as Metrics
+import Gopurs.Host.Metrics as Metrics
 import Gopurs.Monomorphization (monomorphizeModulesWithDispatch)
 import Gopurs.Preparation (runPreparationJobs)
 import Node.Encoding (Encoding(..))

@@ -26,7 +26,7 @@ import Gopurs.Driver.Cache (SourceModule)
 import Gopurs.Driver.Prepare.Proof as Proof
 import Gopurs.Driver.Prepare.Projection (Projection)
 import Gopurs.GlobalTypes (buildGlobalTypes)
-import Gopurs.Metrics as Metrics
+import Gopurs.Host.Metrics as Metrics
 import Gopurs.Cache.Wire as Wire
 import Node.Encoding (Encoding(..))
 import Node.FS.Aff as FS

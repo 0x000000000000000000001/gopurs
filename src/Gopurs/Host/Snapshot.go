@@ -1,4 +1,5 @@
-package Gopurs_CompilerSnapshot
+// Handwritten FFI for Gopurs.Host.Snapshot; keep in sync with the .purs foreign imports.
+package Gopurs_Host_Snapshot
 
 import (
 	"fmt"

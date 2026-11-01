@@ -16,7 +16,7 @@ import * as CodeGen from '../output/Gopurs.CodeGen/index.js';
 import { StmtEmpty, StmtLeaf, flattenStmts } from '../output/Gopurs.ExprContext/index.js';
 import * as Go from '../output/Gopurs.GoAst/index.js';
 import { printGoExpr } from '../output/Gopurs.Printer/index.js';
-import { runtimeGoCode } from '../output/Gopurs.Runtime/index.js';
+import { runtimeGoCode } from '../output/Gopurs.Runtime.Source/index.js';
 import { TcoExpr } from '../output/PureScript.Backend.Optimizer.Codegen.Tco/index.js';
 import * as C from '../output/PureScript.Backend.Optimizer.CoreFn/index.js';
 import { hashString } from '../output/PureScript.Backend.Optimizer.FfiSupport/index.js';

@@ -34,7 +34,7 @@ test("compiler context, options and entry transitions equal fresh generation in 
     const compiler = process.env.GOPURS_TEST_COMPILER ?? join(root, "bin/gopurs");
     const rust = process.env.GOPURS_TEST_RUST_BINARY ?? join(root, "bin/gopurs-rust");
     const compilerRoot = dirname(dirname(compiler));
-    const sourcePath = join(compilerRoot, "src/Gopurs/Runtime.js");
+    const sourcePath = join(compilerRoot, "src/Gopurs/Runtime/Source.js");
     const embedded = JSON.parse(readFileSync(sourcePath, "utf8").split("export const runtimeGoCode = ")[1].trim().slice(0, -1));
     const files = new Set([sourcePath]);
     for (const mode of modes) {

@@ -3,6 +3,15 @@
 Les étapes suivent le chemin actif de [Driver](../src/Gopurs/Driver.purs), appelé
 par [Main](../src/Main.purs). Le pilote et ses frontières sont décrits ci-dessous.
 
+> **Vocabulaire.** Les phases cibles sont `Driver`, `Prepare`, `Rewrite`,
+> `Emit`, `Cache`, `Host` et `Runtime`. Le glossaire normatif est
+> [naming.md](naming.md) ; la carte module par module, avec le nom cible, la
+> phase et les dépendances réelles, est [module-map.md](module-map.md). Ce
+> document cite les modules actuels (`Driver.Prepare`, `CodeGen`,
+> `Monomorphization`) pour rester vérifiable tant que le lot 3 n'a pas mergé
+> leur déplacement. Les journaux et campagnes cités plus bas gardent leurs
+> termes d'origine.
+
 ## Entrée typée et ordre des passes
 
 1. Le fork PureScript émet le TAST enrichi dans `output/<Module>/corefn.json`.
@@ -121,7 +130,7 @@ Voir [la préparation parallèle](parallel-preparation.md).
 
 ## Pilote de compilation
 
-`Main` entre d'abord dans `CompilerSnapshot` : le bundle et ses ressources, ou
+`Main` entre d'abord dans `Host.Snapshot` : le bundle et ses ressources, ou
 l'exécutable natif, sont copiés puis réexécutés depuis un emplacement privé.
 L'identité du cache correspond ainsi au code réellement exécuté, même si
 l'installation est remplacée pendant le lancement. `Main` lance ensuite l'effet
@@ -255,6 +264,12 @@ est exposé par `BuildCache` et raccordé au pilote par `Driver.Cache` et
 `Cache.Modules`. La réutilisation par module est livrée au lot 04, validée au
 lot 05 et mesurée jusqu'au runner au lot 06 du [plan incrémental](../todo.md).
 
+La carte [module-map.md](module-map.md) est la source de vérité : elle donne,
+pour chaque module, sa phase cible, sa responsabilité et les modules dont il
+dépend. Le tableau ci-dessous en est le résumé par responsabilité ; il emploie
+les noms actuels et sera remplacé par les noms cibles au fil du lot 3. La
+phase cible figure dans la carte, pas dans ce tableau.
+
 Tous les modules gopurs de ce tableau se trouvent dans [src/Gopurs](../src/Gopurs).
 
 | Responsabilité | Modules |
@@ -269,7 +284,7 @@ Tous les modules gopurs de ce tableau se trouvent dans [src/Gopurs](../src/Gopur
 | Lookup avant décodage, staging et recette FFI | `Driver.Cache`, `tools/build-cache/session.go` |
 | Clés préparées/PBO/émission et réutilisation par module | `Cache.Modules`, `tools/build-cache/modules.go` |
 | Codecs métier portables, tables locales et partage des valeurs | `Cache.Wire`, `Cache.Pool`, `Cache.TypeMemo` |
-| Identité du code exécuté et ressources privées | `CompilerSnapshot`, `tools/build-cache/compiler.go` |
+| Identité du code exécuté et ressources privées | `Host.Snapshot`, `tools/build-cache/compiler.go` |
 | Types globaux, constructeurs et classes | `GlobalTypes`, `ConstructorMetadata`, `ClassMetadata` |
 | Représentations des ADT | `AdtMetadata` |
 | Invalidation source, collecte et barrières de spécialisation | `Monomorphization` |
@@ -1031,7 +1046,7 @@ déduit pas du seul nom du paquet.
 Les artefacts distribués suivis de gopurs sont `tools/ffi_gen.wasm` et
 `tools/wasm_exec.js` ; leur reconstruction est `npm run build:ffi`, avec
 Go **1.27.0** imposé par `tools/ffi-gen/go.mod`. `bin/gopurs.js`,
-`bin/gopurs-native` et `src/Gopurs/Runtime.{js,go}` sont générés et ignorés. Les `output/`, `.spago/`,
+`bin/gopurs-native` et `src/Gopurs/Runtime/Source.{js,go}` sont générés et ignorés. Les `output/`, `.spago/`,
 `.purmeta/`, caches npm et `node_modules/`, y compris ceux des exemples et
 environnements d'intégration, se contrôlent par leurs entrées et leur commande
 de reconstruction. Ne pas y reporter des modifications de sources.

@@ -17,7 +17,7 @@ import Effect.Class (liftEffect)
 import Effect.Exception (error, throwException)
 import Effect.Exception as Exception
 import Effect.Ref as Ref
-import Gopurs.Metrics as Metrics
+import Gopurs.Host.Metrics as Metrics
 import Gopurs.BuildCache (sessionExchange, sessionExchangeOnMiss)
 import Gopurs.Driver.Config (CompilerConfig)
 

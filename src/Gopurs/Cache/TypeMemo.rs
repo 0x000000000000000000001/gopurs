@@ -1,3 +1,4 @@
+// Handwritten FFI for Gopurs.Cache.TypeMemo; keep in sync with the .purs foreign imports.
 type Type = std::rc::Rc<Purs_PureScript_Backend_Optimizer_CoreFn::ExprType>;
 pub struct TypeMemo(std::sync::Mutex<std::collections::HashMap<usize, (Type, i64)>>);
 
