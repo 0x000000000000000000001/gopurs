@@ -12,7 +12,7 @@ and 1 November and their new source pins are recorded separately below.
 
 | Surface | Identity and release requirement |
 | --- | --- |
-| Compiler npm package | `gopurs@0.1.0-rc.7`, then the final `0.1.0`; its own version, dependency lockfile, file allowlist and installed-artifact tests apply. |
+| Compiler npm package | `gopurs@0.1.0-rc.8` is the candidate in preparation; qualification and publication are pending. RC7 remains the published candidate. The final target is `0.1.0`; each candidate's own version, dependency lockfile, file allowlist and installed-artifact tests apply. |
 | Library sources used by bootstrap/applications | Git URL and exact commit from the bootstrap manifest; validate this combination with the selected compiler and package set. The compiler npm archive does not contain these repositories. |
 | Independent future npm/Spago library publication | Review that package's name, destination, version, dependency bounds, files and notices before publishing it. This is a separate operation. |
 
@@ -252,7 +252,7 @@ survives Go linker elimination.
 The compiler release must account for its actual JavaScript/native closures
 and ship their notices. The missing source notices and the identified
 metadata/JavaScript attribution findings above have been addressed in the
-public library source family. A future compiler candidate still needs its
-own closure and artifact checks.
+public library source family. RC8 still needs its own closure and artifact
+checks; the earlier audit and campaign results retain their original identities.
 Do not describe the 51 ports as separately published npm packages or as having
 completed autonomous publication checks.

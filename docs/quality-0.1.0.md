@@ -3,6 +3,27 @@
 This is a working record for the `0.1.0` release gates. It is not a release
 certificate. The gate list is in [`todo.md`](../todo.md).
 
+## RC8 preparation — 1 November 2026
+
+Candidate `0.1.0-rc.8` starts from main
+`11c28fe9d5a26f6c880a7f49b4898af7dcb63349`, including the merged post-RC7
+library fixes, notices, finalization fixes and cleanup. Its exact source and
+artifact identities will be recorded separately after qualification. RC7's
+signed tag and published artifacts remain unchanged.
+
+The inventory for this candidate is 102 Node test files, 51 pinned libraries
+per profile and 401 fixtures per profile. Full qualification comprises 209
+core gates and 162 fixture gates per platform (371 total), covering Release
+and Dev on Linux amd64, Linux arm64 and macOS arm64. Every build and fixture
+job prepares its own locked inputs with `bin/setup --locked --all`; neighboring
+developer library checkouts do not serve as release inputs.
+
+The 65 lightweight CI policy, inventory and qualification tests passed locally
+before submission, with no skips. These checks establish neither complete
+platform results nor validated RC8 artifacts. The full tag campaign, artifact
+verification and publication checks remain pending. Earlier local and RC7
+campaigns retain only their original scope.
+
 ## Retained RC7 recovery check — 1 November 2026
 
 The 45 retained RC7 assets still match the public GitHub release by name,

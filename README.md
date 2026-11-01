@@ -19,7 +19,10 @@ and draws inspiration from Andy Arvanitis's
 The [development log](https://discourse.purescript.org/t/leveraging-a-blazing-fast-runtime-a-new-go-backend-for-purescript/5841)
 records the earlier design work.
 
-The first public release candidate is
+The candidate being prepared is `0.1.0-rc.8`. Its release qualification and
+publication are pending; see the [release procedure](docs/release.md).
+
+The published candidate remains
 [`0.1.0-rc.7`](https://github.com/0x000000000000000000001/gopurs/releases/tag/v0.1.0-rc.7).
 Install the backend with `npm install --save-dev --ignore-scripts gopurs@0.1.0-rc.7`,
 then follow the [quickstart](docs/quickstart.md) for the typed PureScript frontend,
@@ -200,13 +203,14 @@ archive after `npm run build`:
 npm pack --ignore-scripts
 
 # From the application directory, using the archive just produced:
-npm install --save-dev --ignore-scripts /absolute/path/to/gopurs-0.1.0-rc.7.tgz
+npm install --save-dev --ignore-scripts /absolute/path/to/gopurs-0.1.0-rc.8.tgz
 ```
 
 The archive includes the backend bundle and FFI parser artifacts. It does not
-install the application compiler or the Go library overrides. The local
-archive installation was checked offline in an empty npm project; rebuilding
-the backend there is unnecessary.
+install the application compiler or the Go library overrides. The earlier local
+archive installation was checked offline in an empty npm project; RC8 still
+requires its own artifact checks. Rebuilding the backend in the application
+project is unnecessary.
 
 ### Native compiler bootstrap
 

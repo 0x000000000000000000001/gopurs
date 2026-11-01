@@ -6,6 +6,19 @@ All notable changes to gopurs are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0-rc.8]
+
+Eighth candidate for `0.1.0`, prepared from the post-RC7 fixes and reviewed
+cleanup. Qualification and publication are pending. RC7 remains the published
+candidate; its artifacts, exceptions and earlier results are unchanged.
+
+The TAST frontend remains pinned to
+`105f5752b39cc0f6c99a40064295338bf57ad223`, and the backend optimizer to
+`4e7de48ffd6e19480ed3de6bfe8ca8227133be13`. The supported targets remain Linux
+amd64/arm64 and macOS arm64. Rust stays experimental, and the documented
+compatibility limits still apply. The existing benchmark record predates this
+candidate; it does not establish RC8 performance results.
+
 ### Fixed
 
 - Keep the original producer job and artifact attempt when GitHub copies a
@@ -13,6 +26,12 @@ All notable changes to gopurs are recorded here. The format follows
   and keep newer failed or pending executions blocking recovery.
 - Accept npm's absent-to-empty DSSE `keyid` serialization without changing
   signed payloads, signature bytes or cryptographic verification requirements.
+- Pin the node-fs synchronous/asynchronous `chmod` and file stream fixes, the
+  native node-streams pipe implementation, and the node-http/event-emitter
+  response-body fixes. Preserve the targeted regressions and add the missing
+  Go `stdout` adaptation used by the HTTP tests.
+- Complete the identified uuid and js-bigints source metadata and attribution
+  corrections without changing their library code or existing licenses.
 
 ### Changed
 
@@ -21,6 +40,22 @@ All notable changes to gopurs are recorded here. The format follows
   trim the private Go cache between libraries, retain campaign reports and logs,
   and require exact library revisions and complete coverage before finalization.
   Ordinary quick CI and existing release tags keep their current scope.
+- Replace external HTTP test endpoints with a local HTTPS fixture, retaining
+  certificate verification and refusal tests. Remove the unused `go get`
+  resolution of `strcase` from strings-extra.
+- Derive the optional quick-CI frontend cache key from its Nix derivation and
+  platform. Full candidate qualification continues to bypass this cache.
+- Group compiler host services under `Gopurs.Host`, move the embedded runtime
+  source under `Gopurs.Runtime.Source`, and document the module map and naming.
+  Add output-identity and documentation checks; quick receipts now require all
+  24 gates under `linux-quick-v2`. Check test inventories before CI builds.
+
+The complete RC8 campaign must validate its exact artifacts, 371 gates per
+platform (including 51 libraries and 401 fixtures in each profile), signatures
+and installation. Historical RC7 and local post-RC7 results remain supporting
+evidence only; they do not close those candidate gates. RC7 reinstallation has
+been checked locally, but application suitability and public rollback remain
+open in the release checklist.
 
 ## [0.1.0-rc.7]
 

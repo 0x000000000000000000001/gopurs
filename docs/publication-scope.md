@@ -9,6 +9,7 @@ what users may rely on. It is not evidence that the release gates in
 | Item | Decision |
 | --- | --- |
 | Package | `gopurs` |
+| Candidate in preparation | `0.1.0-rc.8`; release qualification and publication pending |
 | Published candidate | `0.1.0-rc.7` (GitHub prerelease; npm `next` and registry-assigned `latest`) |
 | First final version | `0.1.0` |
 | Version source | [`package.json`](../package.json) |
@@ -23,6 +24,8 @@ releases.
 
 Pre-releases use `-rc.N`. A release candidate is published through the same
 artifact and installation path as the final release.
+RC8 must complete its own [release gates](release.md) before publication;
+the recorded RC7 and local campaign results retain their original scope.
 
 For the first npm publication, the registry also assigned `latest` to RC7 and
 refused its removal. This was explicitly accepted and documented in the
