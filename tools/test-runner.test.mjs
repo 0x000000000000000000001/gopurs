@@ -826,6 +826,11 @@ test("installed library runners limit direct cleanup to their own checkout", asy
       cpSync(join(directory, "bin/test"), join(base, name, "bin/test"));
       const nativePreflights = ["chmod-native.mjs", "listener-added-native.mjs", "https-response-native.mjs", "pipe-native.mjs"]
         .filter(file => existsSync(join(directory, "test", file)));
+      const shellPreflights = ["test-child-process-native"]
+        .filter(file => existsSync(join(directory, "bin", file)));
+      for (const file of shellPreflights) {
+        writeFileSync(join(base, name, "bin", file), `#!/usr/bin/env bash\necho reached-${file}\n`, { mode: 0o755 });
+      }
       if (nativePreflights.length) {
         // This fixture checks shell cleanup before spago, not the native suite.
         mkdirSync(join(base, name, "test"));
@@ -847,7 +852,7 @@ test("installed library runners limit direct cleanup to their own checkout", asy
       });
       assert.ifError(result.error);
       assert.equal(result.status, 1, result.stdout + result.stderr);
-      for (const file of nativePreflights) assert(result.stdout.includes("reached-" + file), result.stdout);
+      for (const file of [...nativePreflights, ...shellPreflights]) assert(result.stdout.includes("reached-" + file), result.stdout);
       assert.match(result.stdout, /reached-spago/);
       for (const cache of ["output", ".spago", ".cache"]) {
         assert.equal(readFileSync(join(base, "gopurs-neighbor", cache, "sentinel"), "utf8"), "neighbor data");
