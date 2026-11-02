@@ -1,6 +1,6 @@
 {
   "name": "gopurs",
-  "version": "0.1.0-rc.8",
+  "version": "0.1.0-rc.9",
   "description": "PureScript-to-Go backend",
   "license": "MIT",
   "type": "module",

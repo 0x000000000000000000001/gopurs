@@ -4,8 +4,8 @@ This walkthrough compiles a small PureScript program to Go and runs the
 resulting binary. It was tested on 26 October 2026 with a local gopurs `0.1.0` preview,
 Node.js `24.8.0`, Go `1.27.0`, Spago `1.0.x` and the typed compiler fork.
 
-The current candidate is `0.1.0-rc.8`, with release qualification and publication
-pending. The earlier walkthrough result does not qualify RC8.
+The current candidate is `0.1.0-rc.9`, with release qualification and publication
+pending. The earlier walkthrough result does not qualify RC9.
 
 The example uses the Go port of `console`. Stock PureScript libraries compile,
 but their JavaScript FFI is not a Go implementation.
@@ -40,16 +40,16 @@ cd hello
 npm init -y
 ```
 
-To evaluate RC8, first prepare and review its local archive using the
+To evaluate RC9, first prepare and review its local archive using the
 [release procedure](release.md#prepare-reviewable-local-artifacts), then install
 that archive:
 
 ```bash
-npm install --save-dev --ignore-scripts /absolute/path/to/gopurs-0.1.0-rc.8.tgz
+npm install --save-dev --ignore-scripts /absolute/path/to/gopurs-0.1.0-rc.9.tgz
 ```
 
 For a currently published installation, use RC7 instead. npm `next` and `latest`
-still select RC7; RC8 is not yet available from the registry.
+still select RC7; RC9 is not yet available from the registry.
 
 ```bash
 npm install --save-dev --ignore-scripts gopurs@0.1.0-rc.7

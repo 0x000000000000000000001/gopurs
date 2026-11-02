@@ -3,6 +3,26 @@
 This is a working record for the `0.1.0` release gates. It is not a release
 certificate. The gate list is in [`todo.md`](../todo.md).
 
+## RC9 preparation — 2 November 2026
+
+Candidate `0.1.0-rc.9` starts from RC8 merge
+`1ccca995eae1f311ca904963f7244cf87d032ff7`. It changes the macOS build and fixture
+runners to ARM64 `macos-15`, with a regression check that both matrices agree.
+Compiler/runtime sources and all dependency pins are unchanged. Qualification
+and artifact review remain pending; no macOS 14 compatibility is established.
+The inventory remains 371 gates per platform, including 51 libraries and 401
+fixtures in each Release/Dev profile. Earlier results do not qualify RC9.
+
+## RC8 infrastructure failure — 1 November 2026
+
+PR #25 passed quick qualification (24 gates, 232 Node tests and two smokes),
+and merged as `1ccca995eae1f311ca904963f7244cf87d032ff7`. The immutable signed tag
+`v0.1.0-rc.8` started [run 41318431392](https://github.com/0x000000000000000000001/gopurs/actions/runs/41318431392).
+GitHub cancelled its macOS job before any steps ran during the
+[macOS 14 retirement schedule](https://github.com/actions/runner-images/issues/13518).
+The remaining campaign was cancelled. This is an infrastructure failure, with
+no established compiler failure; RC8 is unqualified and unpublished.
+
 ## RC8 preparation — 1 November 2026
 
 Candidate `0.1.0-rc.8` starts from main
@@ -20,8 +40,8 @@ developer library checkouts do not serve as release inputs.
 
 The 65 lightweight CI policy, inventory and qualification tests passed locally
 before submission, with no skips. These checks establish neither complete
-platform results nor validated RC8 artifacts. The full tag campaign, artifact
-verification and publication checks remain pending. Earlier local and RC7
+platform results nor validated RC8 artifacts. The full tag campaign was subsequently cancelled as recorded above; artifact
+verification and publication did not complete. Earlier local and RC7
 campaigns retain only their original scope.
 
 ## Retained RC7 recovery check — 1 November 2026

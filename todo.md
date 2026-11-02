@@ -32,7 +32,12 @@ et 2 smokes). Les artefacts RC7 conservés et leur réinstallation locale sont
 vérifiés ci-dessous. La qualification du prochain candidat et le rollback
 public restent ouverts ; ces contrôles ne les remplacent pas.
 
-Prochain candidat : `0.1.0-rc.8`, préparé depuis `main` après la PR #24.
+Mise à jour du 2 novembre : RC8 n'a pas été qualifiée. GitHub a annulé son
+job macOS avant toute étape pendant le retrait du runner macOS 14 ; le reste
+de la campagne a été annulé. Le tag RC8 reste immuable.
+
+Prochain candidat : `0.1.0-rc.9`, préparé depuis le merge RC8, avec les jobs
+macOS déplacés vers `macos-15` ARM64 et les mêmes sources de compilateur et pins.
 Il regroupe les correctifs post-RC7, les pins et notices corrigés et le cleanup
 fusionné. Sa qualification complète devra porter sur son propre tag signé :
 371 portes par plateforme, dont 51 bibliothèques et 401 fixtures dans chaque

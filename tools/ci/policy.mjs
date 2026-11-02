@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 const platforms = [
   { target: 'linux-amd64', os: 'ubuntu-24.04' },
   { target: 'linux-arm64', os: 'ubuntu-24.04-arm' },
-  { target: 'darwin-arm64', os: 'macos-14' },
+  { target: 'darwin-arm64', os: 'macos-15' },
 ];
 const rootDocs = new Set(['README.md', 'CHANGELOG.md', 'CODE_OF_CONDUCT.md',
   'CONTRIBUTING.md', 'SECURITY.md', 'THIRD_PARTY_NOTICES.md', 'todo.md']);
