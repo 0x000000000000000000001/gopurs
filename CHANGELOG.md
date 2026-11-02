@@ -6,10 +6,32 @@ All notable changes to gopurs are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0-rc.10]
+
+Tenth candidate for `0.1.0`, carrying the compiler/runtime and platform choices
+of RC9 with the corrected spec source pin. Qualification and publication are
+pending; RC7 remains the published candidate.
+
+### Fixed
+
+- Pin `gopurs-spec` at `c88da162df5d9ef85d672f5f2e819bb287e9647b`:
+  await cancellation of compiler subprocesses and their process groups before
+  reusing an integration directory; emit native child `close` only after
+  stdout/stderr delivery and `exit`. Include native lifecycle and Aff
+  cancellation regressions. Keep fixture source and golden output unchanged.
+- Give a whole integration case, including cold compilation, a finite default
+  budget of 300 seconds before parsing explicit timeout options. Log each
+  preparation/runtime phase so future failures identify the expensive command.
+
+Local corrected-source spec tests pass in Release and Dev (74 passing,
+3 pending, all nine integration cases per profile). They use a development
+frontend on macOS arm64 and do not replace this candidate's full qualification.
+
 ## [0.1.0-rc.9]
 
 Ninth candidate for `0.1.0`, carrying the same compiler, runtime and dependency
-pins as RC8. Qualification and publication are pending; RC7 remains public.
+pins as RC8. Qualification failed in the macOS spec integration tests; RC9
+is unpublished and its tag remains immutable. RC7 remains public.
 
 ### Fixed
 
