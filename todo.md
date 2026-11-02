@@ -36,13 +36,24 @@ Mise à jour du 2 novembre : RC8 n'a pas été qualifiée. GitHub a annulé son
 job macOS avant toute étape pendant le retrait du runner macOS 14 ; le reste
 de la campagne a été annulé. Le tag RC8 reste immuable.
 
-Prochain candidat : `0.1.0-rc.9`, préparé depuis le merge RC8, avec les jobs
-macOS déplacés vers `macos-15` ARM64 et les mêmes sources de compilateur et pins.
-Il regroupe les correctifs post-RC7, les pins et notices corrigés et le cleanup
-fusionné. Sa qualification complète devra porter sur son propre tag signé :
+RC9 a échoué dans les intégrations `spec` sur macOS : trois cas dépassent
+120 secondes et un autre reçoit une sortie vide. Les jobs principaux Linux
+passent, mais les fixtures distribuées n'ont pas été exécutées. Ce tag reste
+immuable et non qualifié.
+
+Prochain candidat : `0.1.0-rc.10`, préparé depuis le merge RC9 avec le pin spec
+corrigé `c88da162df5d9ef85d672f5f2e819bb287e9647b`. L'arrêt attendu des
+sous-processus et le drainage des sorties sont couverts par des régressions
+rouges puis vertes ; les vrais tests spec locaux passent en Release et Dev
+(74 réussis, 3 pending, 9 intégrations par profil). Ces résultats locaux
+utilisent un frontend de développement et ne qualifient pas une release.
+
+Le candidat regroupe tous les correctifs post-RC7, pins, notices et cleanup
+fusionnés. Une seule qualification complète sur son tag exact doit établir
 371 portes par plateforme, dont 51 bibliothèques et 401 fixtures dans chaque
-profil Release/Dev. La préparation de ce candidat ne vaut ni qualification
-réussie ni publication ; RC7 reste la version publique jusqu'à nouvel avis.
+profil Release/Dev. Les autres cases ouvertes seront vérifiées sur ces mêmes
+sources et artefacts ; aucun nouveau lot de cleanup n'est requis pour ce plan.
+RC7 reste la version publique jusqu'à la publication d'un candidat vérifié.
 
 ## 1. Figer le périmètre et le contrat public
 

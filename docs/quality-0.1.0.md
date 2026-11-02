@@ -3,13 +3,58 @@
 This is a working record for the `0.1.0` release gates. It is not a release
 certificate. The gate list is in [`todo.md`](../todo.md).
 
+## RC10 preparation and spec correction — 2 November 2026
+
+Candidate `0.1.0-rc.10` starts from RC9 merge
+`a1c2ee034a1c17889a01ac4644fd60c595febf45`, changing only the spec source pin,
+release identity and factual documentation. Compiler/runtime, TAST frontend,
+optimizer and the other library pins are unchanged. The full inventory remains
+371 gates per platform. Qualification and artifact review are pending.
+
+The spec fix is merged in [spec PR #1](https://github.com/0x000000000000000000001/gopurs-spec/pull/1),
+with source pin `c88da162df5d9ef85d672f5f2e819bb287e9647b` and tested tree
+`744e4556638b8bdb552af4c951942124d6cbc7f1`. Two short reproductions established
+that canceled compiler processes could survive into the next case and that
+native `close` could precede delivered stdout. The fix waits for process-group
+termination and output drainage, preserves exit-before-close ordering, adds
+phase diagnostics and applies a finite 300-second whole-case default before
+explicit command-line options. Fixture programs and golden outputs are unchanged.
+The exact cause of RC9's empty-output case is not established by these reproductions.
+
+Four native lifecycle tests pass with `-race`; the original source fails the
+ordering regression. Four native Aff helper tests pass, including child and
+descendant cancellation. Real spec tests then pass in Release and Dev:
+74 passing, 3 pending and all nine integrations per profile. The recorded
+profile durations are 147.026 and 107.860 seconds, respectively; the Release
+binary was reused, whereas Dev included preparation/build. These are not
+comparable benchmark measurements. Sources and tool hashes were checked.
+
+This validation ran on local macOS arm64 with an identified development TAST
+frontend and copied local library sources, not the certified release inputs.
+Its first attempt failed during integration preparation because the external
+harness forced offline mode without the template's Git package `spec-node`.
+That preparation was corrected and `v0.0.1` resolved to
+`a7527ea28341ad5d743230dede01c20e8a513a10`; the successful attempt retains the
+same corrected spec sources. These local results do not qualify RC10 artifacts.
+
+## RC9 qualification failure — 2 November 2026
+
+PR #26 passed 24 quick gates, 232 Node tests and two smokes. The immutable tag
+`v0.1.0-rc.9` points to merge `a1c2ee034a1c17889a01ac4644fd60c595febf45`.
+[Run 41422034345](https://github.com/0x000000000000000000001/gopurs/actions/runs/41422034345)
+passed both Linux core jobs but failed the macOS spec Release gate after
+148 successful gates (including 42 Release libraries). Three integration cases
+exceeded their 120-second whole-case budget; another captured an empty output.
+Distributed fixture jobs, attestation and release finalization were skipped.
+RC9 is unqualified and unpublished. No compiler defect has been established.
+
 ## RC9 preparation — 2 November 2026
 
 Candidate `0.1.0-rc.9` starts from RC8 merge
 `1ccca995eae1f311ca904963f7244cf87d032ff7`. It changes the macOS build and fixture
 runners to ARM64 `macos-15`, with a regression check that both matrices agree.
-Compiler/runtime sources and all dependency pins are unchanged. Qualification
-and artifact review remain pending; no macOS 14 compatibility is established.
+Compiler/runtime sources and all dependency pins are unchanged. The subsequent
+qualification failure is recorded above; no macOS 14 compatibility is established.
 The inventory remains 371 gates per platform, including 51 libraries and 401
 fixtures in each Release/Dev profile. Earlier results do not qualify RC9.
 
