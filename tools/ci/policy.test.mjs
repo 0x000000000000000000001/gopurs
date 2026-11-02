@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readFileSync } from "node:fs";
 import { buildMatrix, docsOnly, parseChanges, validateTagVersion } from "./policy.mjs";
 
 const change = (path, oldMode = "100644", newMode = "100644") => ({ path, oldMode, newMode });
@@ -27,6 +28,7 @@ function expectTargets(input, targets) {
   const result = policy(input);
   assert.equal(result.build, true);
   assert.deepEqual(result.matrix.include.map(row => row.target).sort(), [...targets].sort());
+  return result;
 }
 
 test("docs-only accepts the explicit root whitelist and nested Markdown documents", () => {
@@ -60,12 +62,26 @@ test("unlisted paths, deceptive document names and mixed source changes require 
 });
 
 test("tag and explicit full runs always build all three supported targets", () => {
-  const all = ["linux-amd64", "linux-arm64", "darwin-arm64"];
+  const supported = [
+    { target: "linux-amd64", os: "ubuntu-24.04" },
+    { target: "linux-arm64", os: "ubuntu-24.04-arm" },
+    { target: "darwin-arm64", os: "macos-15" },
+  ];
+  const all = supported.map(row => row.target);
   for (const changes of [docs, code, []]) {
-    expectTargets({ eventName: "push", ref: "refs/tags/v0.1.0-rc.3", full: false, changes }, all);
-    expectTargets({ eventName: "workflow_dispatch", ref: "refs/heads/main", full: true, changes }, all);
-    expectTargets({ eventName: "pull_request", ref: "refs/pull/4/merge", full: true, changes }, all);
+    for (const event of [
+      { eventName: "push", ref: "refs/tags/v0.1.0-rc.3", full: false },
+      { eventName: "workflow_dispatch", ref: "refs/heads/main", full: true },
+      { eventName: "pull_request", ref: "refs/pull/4/merge", full: true },
+    ]) {
+      const result = expectTargets({ ...event, changes }, all);
+      assert.deepEqual(result.matrix.include, supported, "build runner matrix");
+    }
   }
+  const workflow = readFileSync(new URL("../../.github/workflows/ci.yml", import.meta.url), "utf8");
+  const fixtureRunners = [...workflow.matchAll(/^          - target: ([a-z0-9-]+)\n            os: ([a-z0-9.-]+)$/gm)]
+    .map(([, target, os]) => ({ target, os }));
+  assert.deepEqual(fixtureRunners, supported, "fixture shards must use the same supported runners");
 });
 
 test("ordinary PRs and branch pushes skip only known document-only changes", () => {

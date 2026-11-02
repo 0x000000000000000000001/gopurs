@@ -6,11 +6,26 @@ All notable changes to gopurs are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0-rc.9]
+
+Ninth candidate for `0.1.0`, carrying the same compiler, runtime and dependency
+pins as RC8. Qualification and publication are pending; RC7 remains public.
+
+### Fixed
+
+- Move both the macOS build and fixture jobs to the ARM64 `macos-15` runner.
+  GitHub cancelled RC8's macOS job before any steps ran during the macOS 14
+  retirement schedule. The new qualification does not establish compatibility
+  with macOS 14. Keep the build and fixture runner matrices consistent through
+  the CI policy regression test.
+
 ## [0.1.0-rc.8]
 
 Eighth candidate for `0.1.0`, prepared from the post-RC7 fixes and reviewed
-cleanup. Qualification and publication are pending. RC7 remains the published
-candidate; its artifacts, exceptions and earlier results are unchanged.
+cleanup. Its macOS job was cancelled before any steps ran because GitHub
+retired that runner image; the remaining campaign was cancelled. RC8 is
+unqualified and unpublished. Its signed tag remains immutable, and RC7 remains
+the published candidate.
 
 The TAST frontend remains pinned to
 `105f5752b39cc0f6c99a40064295338bf57ad223`, and the backend optimizer to
@@ -50,7 +65,7 @@ candidate; it does not establish RC8 performance results.
   Add output-identity and documentation checks; quick receipts now require all
   24 gates under `linux-quick-v2`. Check test inventories before CI builds.
 
-The complete RC8 campaign must validate its exact artifacts, 371 gates per
+The next candidate must validate its own exact artifacts, 371 gates per
 platform (including 51 libraries and 401 fixtures in each profile), signatures
 and installation. Historical RC7 and local post-RC7 results remain supporting
 evidence only; they do not close those candidate gates. RC7 reinstallation has

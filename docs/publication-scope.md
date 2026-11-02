@@ -9,7 +9,7 @@ what users may rely on. It is not evidence that the release gates in
 | Item | Decision |
 | --- | --- |
 | Package | `gopurs` |
-| Candidate in preparation | `0.1.0-rc.8`; release qualification and publication pending |
+| Candidate in preparation | `0.1.0-rc.9`; release qualification and publication pending |
 | Published candidate | `0.1.0-rc.7` (GitHub prerelease; npm `next` and registry-assigned `latest`) |
 | First final version | `0.1.0` |
 | Version source | [`package.json`](../package.json) |
@@ -24,7 +24,7 @@ releases.
 
 Pre-releases use `-rc.N`. A release candidate is published through the same
 artifact and installation path as the final release.
-RC8 must complete its own [release gates](release.md) before publication;
+RC9 must complete its own [release gates](release.md) before publication;
 the recorded RC7 and local campaign results retain their original scope.
 
 For the first npm publication, the registry also assigned `latest` to RC7 and
@@ -99,6 +99,11 @@ The target matrix for `0.1.0` is:
 
 Release-blocking means that the platform must pass the release checks in blocks
 2 and 5. It is not a claim that those checks have already passed.
+
+RC9's `darwin/arm64` qualification targets the ARM64 `macos-15` runner;
+this campaign does not establish tested compatibility with macOS 14.
+RC8's campaign was cancelled before any macOS steps ran during the
+`macos-14` shutdown schedule. RC8 remains unqualified and unpublished.
 
 Toolchain reference:
 
