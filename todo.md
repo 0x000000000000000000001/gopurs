@@ -81,9 +81,23 @@ des trois plateformes, après reproduction rouge. Ces contrôles ne qualifient
 pas RC13 et aucune publication RC13 n'a eu lieu. Le détail figure dans le
 [bilan RC12 et RC13](docs/quality-0.1.0.md#rc13-input-selector-correction--4-november-2026).
 
-Le prochain candidat, `0.1.0-rc.13`, réunira tous les correctifs post-RC7, pins,
-notices et cleanup fusionnés. Compilateur, runtime et pins restent ceux de RC10.
-La qualification complète sur son tag exact doit établir
+La campagne RC13 a ensuite échoué sur macOS dans `spec` Dev : 73 réussis,
+3 pending, un échec dans `04-fail-fast-with-timeout`. Les deux jobs principaux
+Linux passent, ainsi que `spec` Release sur macOS (74 réussis, 3 pending).
+Les fixtures et la finalisation sont ignorées ; le tag RC13 reste immuable,
+non qualifié et non publié. Le [bilan RC13](docs/quality-0.1.0.md#rc13-qualification-failure--4-november-2026)
+conserve l'identité du run original.
+
+Le prochain candidat, `0.1.0-rc.14`, prépare le pin spec
+`7bbb30f00bfde95cdb39286662bb5a0f71e3f368`, issu de la
+[PR spec #2](https://github.com/0x000000000000000000001/gopurs-spec/pull/2)
+revue et fusionnée. Seule cette fixture remplace son délai de 15 ms par
+`never`, en conservant le timeout de 10 ms et la sortie attendue. Le cas original
+reproduit l'échec CI sous contention CPU (20/20), tandis que le cas corrigé
+passe en Dev et Release. Ces contrôles ciblés utilisent la toolchain locale de
+développement ; ils ne qualifient pas RC14 et ne démontrent pas de défaut du
+runtime. Compilateur, runtime, frontend, optimiseur, autres pins et workflows
+restent inchangés. La qualification complète sur son tag exact doit établir
 371 portes par plateforme, dont 51 bibliothèques et 401 fixtures dans chaque
 profil Release/Dev. Les autres cases ouvertes seront vérifiées sur ces mêmes
 sources et artefacts ; aucun nouveau lot de cleanup n'est requis pour ce plan.
@@ -206,5 +220,5 @@ ouvertes jusqu'à leur exécution ; aucune publication stable n'est implicite.
 - [ ] Artefacts reproductibles ou procédure de vérification explicite.
 - [x] Release candidate vérifiée depuis les artefacts publics : quickstart exécuté et b8x compilé sur Linux arm64 ; exceptions de publication documentées.
 - [ ] Rollback testé.
-- [x] Documentation et benchmarks conformes à ce qui est réellement mesuré : bilans RC10/RC11/RC12 actualisés, mesures historiques datées conservées, aucune qualification ni performance RC13 revendiquée ; contrôles de liens passés.
+- [x] Documentation et benchmarks conformes à ce qui est réellement mesuré : bilans RC10 à RC13 actualisés et préparation RC14 documentée, mesures historiques datées conservées, aucune qualification ni performance RC14 revendiquée.
 - [ ] Installation et application Nix validées sur la matrice supportée.
