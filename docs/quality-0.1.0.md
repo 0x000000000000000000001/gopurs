@@ -3,13 +3,57 @@
 This is a working record for the `0.1.0` release gates. It is not a release
 certificate. The gate list is in [`todo.md`](../todo.md).
 
+## RC11 grouped preparation — 4 November 2026
+
+Candidate `0.1.0-rc.11` groups CI environment transfer, selective retry and
+documentation updates after RC10. Compiler/runtime sources, TAST frontend,
+optimizer and all library pins are unchanged. The fixture and library corpus
+is unchanged. Preparation uses focused checks of the modified CI contracts;
+the full matrix, exact release artifacts and public installation remain to be
+qualified together at the end. No RC10 success is transferred to this source
+revision. Earlier benchmark records keep their original dates, toolchains and
+scope; no RC11 performance result is claimed.
+
+## RC10 qualification attempts — 2–4 November 2026
+
+[PR #27](https://github.com/0x000000000000000000001/gopurs/pull/27)
+passed 24 quick gates, 232 Node tests and two artifact smokes. The immutable
+signed tag `v0.1.0-rc.10` points to merge
+`1a2264b5ad16fcbb45d5138a446d407cffe55613`, tree
+`4d1de08de1a9efdb313e65cb750f93f6d58de92d`.
+
+[Run 41464590272](https://github.com/0x000000000000000000001/gopurs/actions/runs/41464590272)
+did not qualify RC10. Its first attempt reached the six-hour limit in both
+ARM build jobs; Linux amd64 succeeded and the fixture jobs did not execute.
+The maintainer authorized one complete retry with diagnostic logs. Four
+intermediate artifacts were retained and hash-verified before removal to
+avoid the workflow's fixed artifact-name collisions.
+
+Attempt 2 completed all three build jobs and eleven of twelve fixture shards.
+The remaining Linux amd64 shard 2 exceeded six hours in **Select the exact
+tested compiler**, before any fixture test. That step invoked `nix develop`
+to read the package version and rebuilt the development environment. Its last
+substantive log started the `regex-tdfa-1.3.2.5` derivation; no detailed build
+log establishes which dependency caused the stall. The compiler selection,
+library setup and fixture campaign did not complete. Finalization and draft
+creation were skipped. The 18 available original artifacts (72,387,887 bytes)
+were retained with matching GitHub SHA-256 digests and valid ZIP contents.
+
+RC10 remains unqualified and unpublished. The successful jobs retain their
+actual attempt-2 identities; they do not establish the missing shard or a
+complete campaign. Local bootstrap probes and earlier candidate results are
+not substitutes. No compiler defect has been established by these timeouts.
+The original tag, logs and artifacts remain unchanged. The preparation of a
+new candidate addresses environment transfer and selective retry; no further
+RC10 retry is authorized.
+
 ## RC10 preparation and spec correction — 2 November 2026
 
 Candidate `0.1.0-rc.10` starts from RC9 merge
 `a1c2ee034a1c17889a01ac4644fd60c595febf45`, changing only the spec source pin,
 release identity and factual documentation. Compiler/runtime, TAST frontend,
 optimizer and the other library pins are unchanged. The full inventory remains
-371 gates per platform. Qualification and artifact review are pending.
+371 gates per platform. The subsequent failed qualification is recorded above.
 
 The spec fix is merged in [spec PR #1](https://github.com/0x000000000000000000001/gopurs-spec/pull/1),
 with source pin `c88da162df5d9ef85d672f5f2e819bb287e9647b` and tested tree

@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 import { setImmediate } from "node:timers/promises";
 import test from "node:test";
 import { fixtureBatches, fixtureWorkers, QualityGoCache, readFixtureReport, runFixtureWaves } from "./release-quality-resources.mjs";
-import { coreGateNames, fixtureShardCount, mergeQualityReports, qualityInventory, qualityOptions, shardBatches } from "./release-quality-report.mjs";
+import { coreGateNames, fixtureShardCount, mergeQualityReports, qualityInventory, qualityIdentity, qualityOptions, shardBatches } from "./release-quality-report.mjs";
 import { moduleGateName } from "./release-quality-modules.mjs";
 
 function workspace(t) {
@@ -157,6 +157,7 @@ function partialQualityReports() {
   const inventory = qualityInventory(fileURLToPath(new URL("../", import.meta.url)));
   const identity = { source: { commit: "a".repeat(40), dirty: false },
     compiler: { javascriptSha256: "b".repeat(64), nativeSha256: "c".repeat(64) }, target: "linux-amd64",
+    environment: { profile: "/nix/store/" + "a".repeat(32) + "-gopurs-env", profileSha256: "b".repeat(64), closureSha256: "c".repeat(64), shell: "/nix/store/" + "d".repeat(32) + "-bash/bin/bash" },
     github: { repository: "owner/gopurs", runId: "123", runAttempt: "1" } };
   const common = { schema: 1, requestedFull: true, full: false, status: "passed", identity };
   const gate = (name, index) => ({ index: index + 1, name, passed: true, exitCode: 0, signal: null });
@@ -216,6 +217,18 @@ test("four shards preserve every original batch and only their verified union is
   assert.equal(merged.gates.at(-1).name, "npm package surface");
 });
 
+test("mixed attempts preserve original phase identities only for the exact compiler and environment", () => {
+  const { inventory, core, fixtures, build } = partialQualityReports();
+  const independent = fixtures.map(report => structuredClone(report));
+  independent[2].identity.github.runAttempt = "2";
+  const merged = mergeQualityReports(core, independent, inventory, build);
+  assert.equal(merged.identity.github.runAttempt, "1");
+  assert.deepEqual(merged.phases.map(phase => phase.identity.github.runAttempt), ["1", "1", "1", "2", "1"]);
+  delete core.identity.environment;
+  independent.forEach(report => delete report.identity.environment);
+  assert.throws(() => mergeQualityReports(core, independent, inventory, build), /exact prepared environment/);
+});
+
 test("aggregation rejects incomplete, duplicate, failed or mismatched qualification evidence", () => {
   const changes = [
     value => { value.fixtures.pop(); },
@@ -231,7 +244,9 @@ test("aggregation rejects incomplete, duplicate, failed or mismatched qualificat
     value => { value.fixtures[0].identity.source.commit = "d".repeat(40); },
     value => { value.fixtures[0].identity.compiler.javascriptSha256 = "d".repeat(64); },
     value => { value.fixtures[0].identity.compiler.nativeSha256 = "d".repeat(64); },
-    value => { value.fixtures[0].identity.github.runAttempt = "2"; },
+    value => { value.fixtures[0].identity.github.runId = "124"; },
+    value => { value.fixtures[0].identity.github.runAttempt = "bad"; },
+    value => { value.fixtures[0].identity.environment.closureSha256 = "d".repeat(64); },
     value => { value.fixtures[0].identity.target = "linux-arm64"; },
     value => { value.core.identity.source.dirty = true; },
     value => { value.core.gates.pop(); },
@@ -273,6 +288,8 @@ test("merge CLI checks stable fixture evidence and original bootstrap hashes bef
   writeFileSync(join(root, bootstrapName), bootstrap);
   build.artifacts.push({ name: bootstrapName, sha256: createHash("sha256").update(bootstrap).digest("hex") });
   json(buildFile, build);
+  fixtures[2].identity = structuredClone(fixtures[2].identity);
+  fixtures[2].identity.github.runAttempt = "2";
   const fixtureFiles = fixtures.map(report => {
     const directory = join(root, `shard-${report.shard.index}`);
     mkdirSync(join(directory, "fixture-reports"), { recursive: true });
@@ -302,11 +319,15 @@ test("merge CLI checks stable fixture evidence and original bootstrap hashes bef
   const jobs = ["linux-amd64", "linux-arm64", "darwin-arm64"].flatMap(target =>
     [`build and test (${target})`, ...[0, 1, 2, 3].map(shard => `fixtures (${target}, shard ${shard})`)])
     .map((name, index) => ({ id: index + 1, name, attempt: "1" }));
-  const context = { schema: 1, source: { commit, tag: "v0.1.0-rc.2", tagObject: "e".repeat(40) },
-    target: "linux-amd64", github: { repository: "owner/gopurs", runId: "123", qualificationAttempt: "1", finalizationAttempt: "2" },
+  const context = { schema: 2, source: { commit, tag: "v0.1.0-rc.2", tagObject: "e".repeat(40) },
+    target: "linux-amd64", github: { repository: "owner/gopurs", runId: "123", finalizationAttempt: "2" },
     jobs, artifacts: ["candidate-linux-amd64", ...[0, 1, 2, 3].map(shard => `fixtures-linux-amd64-${shard}`)]
-      .map((name, index) => ({ id: 100 + index, name, producerJobId: index + 1, attempt: "1", size: 123, digest: `sha256:${"f".repeat(64)}` })),
+      .map((name, index) => ({ id: 100 + index, name: name + "-attempt-1", logicalName: name, producerJobId: index + 1, attempt: "1", size: 123, digest: `sha256:${"f".repeat(64)}` })),
+    environmentArtifact: { id: 200, name: "fixture-environment-linux-amd64-attempt-1", logicalName: "fixture-environment-linux-amd64",
+      producerJobId: 1, attempt: "1", size: 123, digest: `sha256:${"f".repeat(64)}` },
     qualificationIdentity: core.identity };
+  context.jobs[3].attempt = "2";
+  context.artifacts[3].attempt = "2"; context.artifacts[3].name = "fixtures-linux-amd64-2-attempt-2";
   const contextFile = join(root, "finalization.json"); json(contextFile, context);
   result = spawnSync(process.execPath, [...args, "--finalization-context", contextFile], { env: signingEnv, encoding: "utf8" });
   assert.equal(result.status, 0, result.stderr);
@@ -341,4 +362,31 @@ test("merge CLI checks stable fixture evidence and original bootstrap hashes bef
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /Original bootstrap checksums differ/);
   assert.equal(existsSync(output), false);
+});
+
+
+test("quality identities bind prepared tool closure to the executing source, compiler and original build", t => {
+  const root = workspace(t);
+  const git = (...args) => execFileSync("git", args, { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
+  mkdirSync(join(root, "bin"));
+  writeFileSync(join(root, "bin/gopurs.js"), "javascript"); writeFileSync(join(root, "bin/gopurs-native"), "native");
+  git("init", "--quiet"); git("add", "bin");
+  git("-c", "user.name=CI Test", "-c", "user.email=ci@example.invalid", "-c", "commit.gpgsign=false", "commit", "--quiet", "-m", "fixture");
+  const env = { GITHUB_REPOSITORY: "owner/gopurs", GITHUB_RUN_ID: "42", GITHUB_RUN_ATTEMPT: "2" };
+  const base = qualityIdentity(root, env), file = join(root, "environment.json");
+  const manifest = { schema: 1, source: { commit: base.source.commit, tree: git("rev-parse", "HEAD^{tree}") },
+    compiler: base.compiler, target: base.target, github: { ...base.github, runAttempt: "1" },
+    environment: { profile: "/nix/store/" + "a".repeat(32) + "-gopurs-env", profileSha256: "b".repeat(64), closureSha256: "c".repeat(64), shell: "/nix/store/" + "d".repeat(32) + "-bash/bin/bash" } };
+  const boundEnv = { ...env, GOPURS_QUALITY_ENVIRONMENT: file };
+  writeFileSync(file, JSON.stringify(manifest));
+  assert.deepEqual(qualityIdentity(root, boundEnv).environment, manifest.environment);
+  for (const mutate of [
+    value => { value.source.commit = "f".repeat(40); }, value => { value.source.tree = "f".repeat(40); },
+    value => { value.compiler.nativeSha256 = "f".repeat(64); }, value => { value.github.runAttempt = "3"; },
+    value => { value.github.runId = "43"; }, value => { value.github.repository = "other/gopurs"; },
+    value => { value.environment.profile = "/tmp/unpinned"; }, value => { value.environment.closureSha256 = "short"; },
+  ]) {
+    const broken = structuredClone(manifest); mutate(broken); writeFileSync(file, JSON.stringify(broken));
+    assert.throws(() => qualityIdentity(root, boundEnv));
+  }
 });

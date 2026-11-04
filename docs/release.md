@@ -244,21 +244,31 @@ Quality/bootstrap logs are retained as workflow artifacts for 90 days. Copy
 long-term release evidence into the release archive before that retention
 period expires.
 
-### Retrying finalization
+### Reusing successful jobs after a targeted retry
 
-After all three builds and twelve fixture jobs succeed, a transient signing
-failure can be retried with `gh run rerun RUN_ID --failed`. This reuses the
-successful qualification from that same run, commit and immutable annotated
-tag. Finalization verifies each input artifact's ID, SHA-256, size and producer
-job before extraction. All qualification jobs must still belong to one
-successful attempt; a newer failure, mixed attempts or missing evidence blocks
-reuse.
+Diagnose a failed job before retrying it. A transient infrastructure failure
+can be retried within the same run without repeating successful builds and
+fixture shards. Use `gh run rerun RUN_ID --failed`, or select a single failed
+job with `gh run rerun RUN_ID --job JOB_ID`. A retry is appropriate only when
+the source and workflow need no change. Do not keep retrying an unexplained
+failure. A complete campaign must still contain three successful builds and
+all twelve successful fixture shards.
 
-The quality report retains its original qualification attempt and compiler
-hashes. Its separate `finalization` record binds the actual signing attempt to
-those inputs. Final artifacts use `release-TARGET-attempt-N` names. Draft
-creation selects the latest successful finalizer for each platform, allowing
-an unchanged successful platform to coexist with a retried one.
+Each intermediate artifact includes its producer's attempt in its name;
+earlier archives remain intact. Selection uses the latest **real execution**
+of every job. Finalization verifies each input's artifact ID, GitHub SHA-256,
+size, source commit and producer timing before extraction. Every selected
+producer must succeed; a newer failed or pending execution cannot fall back
+to an older success. The original signed tag and GitHub run must match.
+
+The core and fixture reports may have different actual attempts, but their
+source, target, compiler hashes and toolchain must match. Each phase retains
+its original identity. The separate `finalization` context records every
+producer job and artifact with its real attempt, alongside the signing
+attempt. No synthetic common attempt is assigned to older evidence.
+Final artifacts use `release-TARGET-attempt-N` names. Draft creation selects
+the latest successful finalizer for each platform and verifies that it covers
+the selected qualification producers.
 
 If only draft creation/upload failed, rerun that job with
 `gh run rerun RUN_ID --job JOB_ID`. Identical assets already uploaded are kept;
@@ -267,8 +277,8 @@ published release stop recovery. Do not rerun successful signing jobs after
 starting a draft: new signatures would change its assets.
 
 This recovery uses the workflow stored at the original tag. A source or workflow
-fix still requires a new candidate and fresh qualification. Failed compiler or
-fixture qualification is not eligible for this finalization-only recovery.
+fix requires a new candidate and fresh qualification. These improvements do not
+change RC10's workflow, qualify its missing shard or authorize another RC10 run.
 
 RC7 exposed a limit in this retry path: draft visibility failed immediately
 after creation, and the retry metadata copied successful jobs into attempt 2
@@ -295,9 +305,12 @@ covered by local regressions, including a replay of RC7's recorded job/artifact
 metadata; they do not modify RC7 or claim a new successful full tag campaign.
 
 Finalization installs only pinned Node 24.8.0 (npm 11.6.0); it does not reinstall
-the Nix compiler environment. Builds and fixture jobs keep their locked Nix
-environment. The four fixture shards each mix Release and Dev batches while
-preserving the complete inventory and existing concurrency limits.
+the Nix compiler environment. Each build prepares its locked Nix environment
+once. Its fixture shards import the exact runtime closure from that build and
+use it without rebuilding the development environment; see
+[the environment transfer](nix.md#ci-fixture-environment-transfer).
+The four shards each mix Release and Dev batches while preserving the complete
+inventory and existing concurrency limits.
 
 Verify a downloaded executable or tarball against the repository, workflow and
 source tag:

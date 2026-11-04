@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 import { isDeepStrictEqual } from "node:util";
 import { fixtureBatches } from "./release-quality-resources.mjs";
 import { parseOptions, selectFixtures } from "./test-selection.mjs";
-import { validateFinalizationContext } from "./ci/release-inputs.mjs";
+import { validateFinalizationContext, validateReportProducers, validateEnvironmentIdentity } from "./ci/release-inputs.mjs";
 import { moduleGateName, moduleInventory, validateModuleEvidence } from "./release-quality-modules.mjs";
 
 export const fixtureShardCount = 4;
@@ -54,6 +54,17 @@ export function qualityIdentity(root, env = process.env) {
     target,
     github: { repository: env.GITHUB_REPOSITORY ?? null, runId: env.GITHUB_RUN_ID ?? null, runAttempt: env.GITHUB_RUN_ATTEMPT ?? null },
   };
+  if (env.GOPURS_QUALITY_ENVIRONMENT) {
+    const manifest = JSON.parse(readFileSync(env.GOPURS_QUALITY_ENVIRONMENT, "utf8"));
+    requireValue(manifest.schema === 1 && manifest.source?.commit === identity.source.commit
+      && manifest.source.tree === git(["rev-parse", "HEAD^{tree}"]), "Prepared environment source differs");
+    requireValue(manifest.target === identity.target && isDeepStrictEqual(manifest.compiler, identity.compiler),
+      "Prepared environment compiler or target differs");
+    requireValue(manifest.github?.repository === identity.github.repository && manifest.github.runId === identity.github.runId
+      && /^[1-9]\d*$/.test(manifest.github.runAttempt ?? "")
+      && Number(manifest.github.runAttempt) <= Number(identity.github.runAttempt), "Prepared environment producer differs");
+    identity.environment = manifest.environment;
+  }
   validateIdentity(identity);
   return identity;
 }
@@ -62,6 +73,7 @@ function validateIdentity(identity) {
   requireValue(identity && /^[a-f0-9]{40}$/.test(identity.source?.commit) && typeof identity.source?.dirty === "boolean", "Invalid source identity");
   requireValue(["javascriptSha256", "nativeSha256"].every(key => /^[a-f0-9]{64}$/.test(identity.compiler?.[key])), "Invalid compiler identity");
   requireValue(["linux-amd64", "linux-arm64", "darwin-arm64"].includes(identity.target), "Invalid target identity");
+  if (identity.environment !== undefined) validateEnvironmentIdentity(identity.environment);
   const github = identity.github;
   requireValue(github && (github.repository === null && github.runId === null && github.runAttempt === null
     || /^[^/\s]+\/[^/\s]+$/.test(github.repository ?? "") && /^[1-9]\d*$/.test(github.runId ?? "")
@@ -114,7 +126,12 @@ export function mergeQualityReports(core, fixtures, inventory, build) {
   for (const report of reports) {
     requireValue(report?.schema === 1 && report.requestedFull === true && report.full === false && report.status === "passed",
       "Only successful partial full-campaign reports can be merged");
-    requireValue(isDeepStrictEqual(report.identity, core.identity), "Source/compiler/target/GitHub run identities differ");
+    validateIdentity(report.identity);
+    const comparable = identity => ({ ...identity, github: { ...identity.github, runAttempt: null } });
+    requireValue(isDeepStrictEqual(comparable(report.identity), comparable(core.identity)),
+      "Source/compiler/environment/target/GitHub run identities differ");
+    if (report.identity.github.runAttempt !== core.identity.github.runAttempt)
+      requireValue(Boolean(core.identity.environment), "Cross-attempt reports require an exact prepared environment");
   }
   requireValue(core.phase === "core" && core.shard === null, "Expected a core report");
   validateGates(core, coreGateNames(inventory));
@@ -153,7 +170,7 @@ export function mergeQualityReports(core, fixtures, inventory, build) {
   return { schema: 1, requestedFull: true, full: true, phase: "all", shard: null, status: "passed", identity: core.identity,
     fixtures: { selectedPerProfile: inventory.targets.length, passed: { release: inventory.targets.length, dev: inventory.targets.length } },
     modules: { selectedPerProfile: inventory.modules.length, passed: { release: inventory.modules.length, dev: inventory.modules.length } },
-    phases: reports.map(report => ({ phase: report.phase, shard: report.shard, gates: report.gates.length })), gates };
+    phases: reports.map(report => ({ phase: report.phase, shard: report.shard, gates: report.gates.length, identity: report.identity })), gates };
 }
 
 function main(args) {
@@ -183,11 +200,14 @@ function main(args) {
     "Quality source differs from GITHUB_SHA");
   if (options["finalization-context"]) {
     const context = json(options["finalization-context"]);
-    validateFinalizationContext(context, merged.identity, process.env);
+    validateFinalizationContext(context, merged.identity, process.env, { preview: process.env.GITHUB_REF_TYPE === "branch" });
+    validateReportProducers(context, core, fixtures);
     merged.finalization = context;
-  } else if (process.env.GITHUB_RUN_ID) requireValue(isDeepStrictEqual(merged.identity.github,
-    { repository: process.env.GITHUB_REPOSITORY, runId: process.env.GITHUB_RUN_ID, runAttempt: process.env.GITHUB_RUN_ATTEMPT }),
-  "Quality reports belong to another GitHub run or attempt");
+  } else if (process.env.GITHUB_RUN_ID) {
+    for (const report of [core, ...fixtures]) requireValue(isDeepStrictEqual(report.identity.github,
+      { repository: process.env.GITHUB_REPOSITORY, runId: process.env.GITHUB_RUN_ID, runAttempt: process.env.GITHUB_RUN_ATTEMPT }),
+    "Cross-attempt reports require their verified producer context");
+  }
   for (let index = 0; index < fixtures.length; index++) {
     for (const gate of fixtures[index].gates) {
       const file = gate.fixtures.file;

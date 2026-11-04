@@ -4,7 +4,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, statSync, symlinkSync } 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
-import { extractArtifact, fileSha256, flattenPages, githubContext, selectLatestJobs, selectQualifiedInputs, validateFinalizationContext, verifyArtifactFile } from './release-inputs.mjs';
+import { extractArtifact, fileSha256, flattenPages, githubContext, selectLatestJobs, selectQualifiedInputs, selectFixtureInputs, selectPreviewInputs, validateReportProducers, validateEnvironmentIdentity, validateFinalizationContext, verifyArtifactFile } from './release-inputs.mjs';
 
 function fixture() {
   const context = { repository: 'owner/gopurs', commit: 'a'.repeat(40), tag: 'v0.1.0-rc.7', runId: '42', runAttempt: '2', target: 'linux-amd64' };
@@ -13,9 +13,10 @@ function fixture() {
   ]).map((name, index) => ({ id: index + 1, name, run_id: 42, run_attempt: 1, head_sha: context.commit,
     status: 'completed', conclusion: 'success', started_at: '2026-10-30T00:00:00Z', completed_at: '2026-10-30T00:10:00Z' }));
   const artifacts = ['candidate-linux-amd64', ...[0, 1, 2, 3].map(shard => 'fixtures-linux-amd64-' + shard)].map((name, index) => ({
-    id: 100 + index, name, size_in_bytes: 128, digest: 'sha256:' + 'b'.repeat(64), expired: false,
+    id: 100 + index, name: name + '-attempt-1', size_in_bytes: 128, digest: 'sha256:' + 'b'.repeat(64), expired: false,
     created_at: '2026-10-30T00:05:00Z', updated_at: '2026-10-31T00:00:00Z', workflow_run: { id: 42, head_sha: context.commit },
   }));
+  artifacts.push({ ...artifacts[0], id: 9999, name: 'fixture-environment-linux-amd64-attempt-1' });
   const tag = { ref: { ref: 'refs/tags/' + context.tag, object: { type: 'tag', sha: 'c'.repeat(40) } },
     object: { sha: 'c'.repeat(40), tag: context.tag, object: { type: 'commit', sha: context.commit }, verification: { verified: true } } };
   const run = { id: 42, run_attempt: 2, head_sha: context.commit, head_branch: context.tag, event: 'push', path: '.github/workflows/ci.yml',
@@ -34,12 +35,13 @@ function environment(context) {
 function identity(selected) {
   return { source: { commit: selected.source.commit, dirty: false }, target: selected.target,
     compiler: { javascriptSha256: 'd'.repeat(64), nativeSha256: 'e'.repeat(64) },
-    github: { repository: selected.github.repository, runId: selected.github.runId, runAttempt: selected.github.qualificationAttempt } };
+    environment: { profile: '/nix/store/' + 'a'.repeat(32) + '-gopurs-env', profileSha256: 'b'.repeat(64), closureSha256: 'c'.repeat(64), shell: '/nix/store/' + 'd'.repeat(32) + '-bash/bin/bash' },
+    github: { repository: selected.github.repository, runId: selected.github.runId, runAttempt: selected.jobs.find(job => job.name === 'build and test (' + selected.target + ')').attempt } };
 }
 
 test('finalization attempt two reuses the exact successful qualification from attempt one', () => {
   const data = fixture(), selected = selectQualifiedInputs(data), core = identity(selected);
-  assert.equal(selected.github.qualificationAttempt, '1');
+  assert.ok(selected.jobs.every(job => job.attempt === '1'));
   assert.equal(selected.github.finalizationAttempt, '2');
   assert.equal(selected.jobs.length, 15); assert.equal(selected.artifacts.length, 5);
   assert.deepEqual(selected.artifacts.map(artifact => artifact.producerJobId), [1, 2, 3, 4, 5]);
@@ -74,7 +76,7 @@ test('copied successful jobs retain the original identity only with matching exe
   assert.throws(() => selectLatestJobs([original, failed, laterCopy], { ...data.context, runAttempt: '3' }), /copied job/i);
 });
 
-test('latest qualification jobs must all succeed in one attempt without hiding newer failures', () => {
+test('latest actual qualification jobs must all succeed without hiding newer failures', () => {
   const mutations = [
     data => data.jobs.push({ ...data.jobs[0], id: 1000, run_attempt: 2, conclusion: 'failure' }),
     data => data.jobs.push({ ...data.jobs[0], id: 1000, run_attempt: 2, status: 'in_progress', conclusion: null }),
@@ -90,9 +92,48 @@ test('latest qualification jobs must all succeed in one attempt without hiding n
   const newer = fixture();
   newer.jobs = [...newer.jobs.map(job => ({ ...job, conclusion: 'failure' })),
     ...newer.jobs.map(job => ({ ...job, id: job.id + 1000, run_attempt: 2, started_at: '2026-10-30T01:00:00Z', completed_at: '2026-10-30T01:10:00Z' }))];
+  assert.throws(() => selectQualifiedInputs(newer), /Expected one artifact/);
+  newer.artifacts.forEach(artifact => { artifact.name = artifact.name.replace('-attempt-1', '-attempt-2'); });
   assert.throws(() => selectQualifiedInputs(newer), /Artifact was not created/);
   newer.artifacts.forEach(artifact => { artifact.created_at = '2026-10-30T01:05:00Z'; });
-  assert.equal(selectQualifiedInputs(newer).github.qualificationAttempt, '2');
+  assert.ok(selectQualifiedInputs(newer).jobs.every(job => job.attempt === '2'));
+});
+
+test('a retry selects only the repaired shard from its real new attempt and retains original producers', () => {
+  const data = fixture(), original = data.jobs[3];
+  data.jobs.push({ ...original, id: 999, run_attempt: 2, started_at: '2026-10-30T01:00:00Z', completed_at: '2026-10-30T01:10:00Z' });
+  data.artifacts.push({ ...data.artifacts[3], id: 999, name: 'fixtures-linux-amd64-2-attempt-2', created_at: '2026-10-30T01:05:00Z' });
+  const selected = selectQualifiedInputs(data), core = identity(selected);
+  assert.deepEqual(selected.artifacts.map(value => value.attempt), ['1', '1', '1', '2', '1']);
+  assert.equal(selected.artifacts[3].producerJobId, 999);
+  selected.qualificationIdentity = structuredClone(core);
+  validateFinalizationContext(selected, core, environment(data.context));
+  const reports = [0, 1, 2, 3].map(index => ({ phase: 'fixtures', shard: { index, count: 4 },
+    identity: { ...core, github: { ...core.github, runAttempt: index === 2 ? '2' : '1' } } }));
+  validateReportProducers(selected, { phase: 'core', identity: core }, reports);
+  reports[2].identity.github.runAttempt = '1';
+  assert.throws(() => validateReportProducers(selected, { phase: 'core', identity: core }, reports), /actual artifact producer/);
+  data.jobs.at(-1).conclusion = 'failure';
+  assert.throws(() => selectQualifiedInputs(data), /latest qualification job/);
+});
+
+test('fixture inputs select exact candidate and environment from the original build, never a copied rerun label', () => {
+  const data = fixture();
+  const selected = selectFixtureInputs(data);
+  assert.deepEqual(selected.artifacts.map(value => value.logicalName), ['candidate-linux-amd64', 'fixture-environment-linux-amd64']);
+  assert.deepEqual(selected.artifacts.map(value => value.attempt), ['1', '1']);
+  assert.equal(selected.jobs.length, 1);
+  data.artifacts.find(a => a.name.startsWith('fixture-environment-')).name = 'fixture-environment-linux-amd64-attempt-2';
+  assert.throws(() => selectFixtureInputs(data), /Expected one artifact/);
+});
+
+test('unsigned preview validates its branch workflow_dispatch identity without asserting tag qualification', () => {
+  const data = fixture(); data.context.ref = 'refs/heads/edge'; delete data.context.tag;
+  data.run.event = 'workflow_dispatch'; data.run.head_branch = 'edge'; delete data.tag;
+  const selected = selectPreviewInputs(data);
+  assert.deepEqual(selected.source, { commit: data.context.commit, ref: 'refs/heads/edge' });
+  data.run.event = 'pull_request';
+  assert.throws(() => selectPreviewInputs(data));
 });
 
 test('run, workflow, source and verified annotated tag identities cannot be substituted', () => {
@@ -110,7 +151,7 @@ test('run, workflow, source and verified annotated tag identities cannot be subs
 
 test('artifact selection rejects omissions, ambiguity and wrong producer, run or digest', () => {
   const mutations = [
-    data => data.artifacts.pop(), data => data.artifacts.push({ ...data.artifacts[0], id: 999 }),
+    data => data.artifacts.pop(), data => data.artifacts.splice(4, 1), data => data.artifacts.push({ ...data.artifacts[0], id: 999 }),
     data => { data.artifacts[4].name = 'fixtures-linux-amd64-4'; }, data => { data.artifacts[0].expired = true; },
     data => { data.artifacts[0].workflow_run.id = 43; }, data => { data.artifacts[0].workflow_run.head_sha = 'f'.repeat(40); },
     data => { data.artifacts[0].digest = 'sha256:short'; }, data => { data.artifacts[0].size_in_bytes = 0; },
@@ -123,11 +164,14 @@ test('artifact selection rejects omissions, ambiguity and wrong producer, run or
 
 test('merged reports retain qualification identity while finalization remains bound to the current attempt', () => {
   const mutations = [
+    (selected, core) => { core.environment = {}; selected.qualificationIdentity.environment = {}; },
+    (selected, core) => { core.environment.profileSha256 = 'bad'; selected.qualificationIdentity.environment.profileSha256 = 'bad'; },
     (selected, core) => { core.compiler.nativeSha256 = 'f'.repeat(64); },
     (selected, core) => { core.compiler.javascriptSha256 = 'f'.repeat(64); },
     (selected, core) => { core.source.dirty = true; }, (selected, core) => { core.source.commit = 'f'.repeat(40); },
     (selected, core) => { core.target = 'darwin-arm64'; }, (selected, core) => { core.github.runAttempt = '2'; },
     selected => { selected.github.finalizationAttempt = '1'; }, selected => { selected.jobs[0].attempt = '2'; },
+    selected => { selected.environmentArtifact.attempt = '2'; }, selected => { selected.environmentArtifact.producerJobId = 2; },
     selected => { selected.artifacts[0].producerJobId = 2; }, selected => { selected.source.tag = 'v0.1.0-rc.6'; },
     (selected, core, env) => { env.GITHUB_WORKFLOW_SHA = 'f'.repeat(40); },
     (selected, core, env) => { env.GITHUB_REF = 'refs/heads/main'; },
@@ -203,4 +247,17 @@ test('hostile ZIP members, encryption and expansion over budget are rejected bef
   const oversized = archive(root, [{ name: 'large', data: 'ab' }]);
   assert.throws(() => extractArtifact(oversized.artifact, oversized.path, join(root, 'oversized'), 1));
   assert.equal(existsSync(join(root, 'oversized')), false);
+});
+
+
+test('qualification environments require the exact retained Nix bash as well as profile and closure', () => {
+  const value = identity(selectQualifiedInputs(fixture())).environment;
+  validateEnvironmentIdentity(value);
+  for (const shell of [undefined, '/bin/bash', '/nix/store/' + 'd'.repeat(32) + '-bash/bin/sh',
+    '/nix/store/' + 'd'.repeat(32) + '-bash/bin/../bin/bash',
+    '/nix/store/' + 'e'.repeat(32) + '-bash/bin/bash']) {
+    const changed = { ...value, shell };
+    if (shell === undefined) delete changed.shell;
+    assert.throws(() => validateEnvironmentIdentity(changed), undefined, String(shell));
+  }
 });
