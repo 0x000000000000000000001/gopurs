@@ -45,6 +45,9 @@ test('finalization attempt two reuses the exact successful qualification from at
   assert.equal(selected.github.finalizationAttempt, '2');
   assert.equal(selected.jobs.length, 15); assert.equal(selected.artifacts.length, 5);
   assert.deepEqual(selected.artifacts.map(artifact => artifact.producerJobId), [1, 2, 3, 4, 5]);
+  for (const status of ['queued', 'completed']) {
+    assert.deepEqual(selectQualifiedInputs({ ...data, run: { ...data.run, status } }), selected);
+  }
   selected.qualificationIdentity = structuredClone(core);
   assert.equal(validateFinalizationContext(selected, core, environment(data.context)), selected);
   assert.deepEqual(githubContext(environment(data.context)), data.context);
@@ -80,6 +83,9 @@ test('latest actual qualification jobs must all succeed without hiding newer fai
   const mutations = [
     data => data.jobs.push({ ...data.jobs[0], id: 1000, run_attempt: 2, conclusion: 'failure' }),
     data => data.jobs.push({ ...data.jobs[0], id: 1000, run_attempt: 2, status: 'in_progress', conclusion: null }),
+    data => data.jobs.push({ ...data.jobs[0], id: 1000, run_attempt: 2, status: 'queued', conclusion: null }),
+    data => { data.jobs[0].status = 'queued'; data.jobs[0].conclusion = null; },
+    data => { data.jobs[0].conclusion = 'failure'; },
     data => data.jobs.push({ ...data.jobs[0], id: 1000, run_attempt: 2 }),
     data => data.jobs.push({ ...data.jobs[0], id: 1000 }),
     data => data.jobs.pop(),
@@ -88,7 +94,12 @@ test('latest actual qualification jobs must all succeed without hiding newer fai
     data => { data.jobs[0].run_id = 43; },
     data => { data.jobs[0].head_sha = 'f'.repeat(40); },
   ];
-  mutations.forEach((mutate, index) => { const data = fixture(); mutate(data); assert.throws(() => selectQualifiedInputs(data), undefined, 'job mutation ' + index); });
+  for (const status of ['in_progress', 'queued']) {
+    mutations.forEach((mutate, index) => {
+      const data = fixture(); data.run.status = status; mutate(data);
+      assert.throws(() => selectQualifiedInputs(data), undefined, 'job mutation ' + index + ' during ' + status);
+    });
+  }
   const newer = fixture();
   newer.jobs = [...newer.jobs.map(job => ({ ...job, conclusion: 'failure' })),
     ...newer.jobs.map(job => ({ ...job, id: job.id + 1000, run_attempt: 2, started_at: '2026-10-30T01:00:00Z', completed_at: '2026-10-30T01:10:00Z' }))];
@@ -123,6 +134,25 @@ test('fixture inputs select exact candidate and environment from the original bu
   assert.deepEqual(selected.artifacts.map(value => value.logicalName), ['candidate-linux-amd64', 'fixture-environment-linux-amd64']);
   assert.deepEqual(selected.artifacts.map(value => value.attempt), ['1', '1']);
   assert.equal(selected.jobs.length, 1);
+  // GitHub may report the aggregate run queued while this shard imports a completed build.
+  data.run.status = 'queued';
+  data.jobs = data.jobs.map((job, index) => index === 0 ? job : {
+    ...job, status: 'queued', conclusion: null, started_at: null, completed_at: null,
+  });
+  assert.deepEqual(selectFixtureInputs(data), selected);
+  for (const mutate of [
+    changed => { changed.jobs[0].status = 'queued'; changed.jobs[0].conclusion = null; },
+    changed => { changed.jobs[0].conclusion = 'failure'; },
+    changed => changed.jobs.push({ ...changed.jobs[0], id: 1000, run_attempt: 2, status: 'queued', conclusion: null }),
+    changed => changed.jobs.push({ ...changed.jobs[0], id: 1000, run_attempt: 2, conclusion: 'failure' }),
+    changed => { changed.artifacts[0].workflow_run.id = 43; },
+    changed => { changed.artifacts[0].workflow_run.head_sha = 'f'.repeat(40); },
+    changed => { changed.artifacts[0].digest = 'sha256:bad'; },
+    changed => { changed.artifacts.at(-1).expired = true; },
+  ]) {
+    const changed = structuredClone(data); mutate(changed);
+    assert.throws(() => selectFixtureInputs(changed));
+  }
   data.artifacts.find(a => a.name.startsWith('fixture-environment-')).name = 'fixture-environment-linux-amd64-attempt-2';
   assert.throws(() => selectFixtureInputs(data), /Expected one artifact/);
 });
@@ -132,6 +162,9 @@ test('unsigned preview validates its branch workflow_dispatch identity without a
   data.run.event = 'workflow_dispatch'; data.run.head_branch = 'edge'; delete data.tag;
   const selected = selectPreviewInputs(data);
   assert.deepEqual(selected.source, { commit: data.context.commit, ref: 'refs/heads/edge' });
+  data.run.status = 'queued';
+  assert.deepEqual(selectPreviewInputs(data), selected);
+  assert.equal(selectFixtureInputs(data, true).jobs.length, 1);
   data.run.event = 'pull_request';
   assert.throws(() => selectPreviewInputs(data));
 });
@@ -146,7 +179,18 @@ test('run, workflow, source and verified annotated tag identities cannot be subs
     data => { data.tag.object.object.sha = 'f'.repeat(40); }, data => { data.tag.object.sha = 'f'.repeat(40); },
     data => { data.tag.object.tag = 'v0.1.0-rc.6'; }, data => { data.tag.ref.ref = 'refs/heads/main'; },
   ];
-  mutations.forEach((mutate, index) => { const data = fixture(); mutate(data); assert.throws(() => selectQualifiedInputs(data), undefined, 'source mutation ' + index); });
+  for (const select of [selectQualifiedInputs, selectFixtureInputs]) {
+    for (const status of ['in_progress', 'queued']) {
+      mutations.forEach((mutate, index) => {
+        const data = fixture(); data.run.status = status; mutate(data);
+        assert.throws(() => select(data), undefined, 'source mutation ' + index + ' during ' + status);
+      });
+    }
+    for (const status of ['requested', 'waiting', 'pending', 'unknown', undefined, null]) {
+      const data = fixture(); data.run.status = status;
+      assert.throws(() => select(data), undefined, 'unsupported run status ' + status);
+    }
+  }
 });
 
 test('artifact selection rejects omissions, ambiguity and wrong producer, run or digest', () => {
@@ -159,7 +203,12 @@ test('artifact selection rejects omissions, ambiguity and wrong producer, run or
     data => { data.artifacts[1].id = data.artifacts[0].id; }, data => { delete data.artifacts[0].created_at; },
     data => { data.artifacts[0].created_at = '2026-10-29T23:59:59Z'; }, data => { data.artifacts[0].created_at = '2026-10-30T00:10:01Z'; },
   ];
-  mutations.forEach((mutate, index) => { const data = fixture(); mutate(data); assert.throws(() => selectQualifiedInputs(data), undefined, 'artifact mutation ' + index); });
+  for (const status of ['in_progress', 'queued']) {
+    mutations.forEach((mutate, index) => {
+      const data = fixture(); data.run.status = status; mutate(data);
+      assert.throws(() => selectQualifiedInputs(data), undefined, 'artifact mutation ' + index + ' during ' + status);
+    });
+  }
 });
 
 test('merged reports retain qualification identity while finalization remains bound to the current attempt', () => {

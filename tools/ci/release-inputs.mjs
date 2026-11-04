@@ -80,7 +80,9 @@ function validateRun(run, context, preview = false) {
   assert.equal(run.head_sha, context.commit); assert.equal(run.head_branch, preview ? context.ref.slice(11) : context.tag);
   assert.equal(run.event, preview ? 'workflow_dispatch' : 'push'); assert.equal(run.path, workflow);
   assert.equal(run.repository?.full_name, context.repository); assert.equal(run.head_repository?.full_name, context.repository);
-  assert.ok(['in_progress', 'completed'].includes(run.status));
+  // An aggregate run can be queued while its required producers have succeeded.
+  // Producer completion and artifact provenance are checked separately below.
+  assert.ok(['queued', 'in_progress', 'completed'].includes(run.status));
 }
 
 function validateTag(tag, context) {

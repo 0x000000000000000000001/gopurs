@@ -6,12 +6,28 @@ All notable changes to gopurs are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0-rc.13]
+
+Thirteenth candidate for `0.1.0`, correcting the CI input selector after RC12.
+Compiler/runtime, frontend, optimizer, library pins and test corpus remain
+unchanged. RC13 qualification has not run and no RC13 publication has occurred.
+
+### Fixed
+
+- Accept an aggregate GitHub run status of `queued` when selecting fixture,
+  qualification or finalized inputs. Keep requiring the exact successful
+  producer jobs, source and artifact identities, and signature checks.
+  Pending or failed producers continue to block selection.
+
 ## [0.1.0-rc.12]
 
 Twelfth candidate for `0.1.0`, correcting the Nix cache inventory check that
 blocked RC11 before Linux quality tests. Compiler/runtime, frontend, optimizer,
-library pins and test corpus remain unchanged. Qualification and publication
-are pending.
+library pins and test corpus remain unchanged. Three build/core jobs passed,
+but nine fixture shards failed before import because the input selector
+rejected the aggregate run status `queued`. The run subsequently completed
+with failure. RC12 remains unqualified and unpublished; its signed tag is
+immutable.
 
 ### Fixed
 
