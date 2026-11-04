@@ -51,9 +51,9 @@ export function cacheInventory(directory) {
       const file = join(current, name), stat = lstatSync(file), path = relative(directory, file);
       assert.ok(!stat.isSymbolicLink(), 'Cache links are not transferable');
       if (stat.isDirectory()) {
-        // Determinate Nix also creates these empty cache directories. Never
-        // transfer build traces or logs as part of the runtime environment.
-        if (['log', 'build-trace-v2'].includes(path)) assert.equal(readdirSync(file).length, 0, 'Runtime cache contains build logs');
+        // Nix versions create different auxiliary cache directories. Accept
+        // them only when empty; metadata and build logs must never be ignored.
+        if (['log', 'build-trace-v2', 'realisations'].includes(path)) assert.equal(readdirSync(file).length, 0, `Unexpected contents in runtime cache directory ${path}`);
         else { assert.equal(path, 'nar'); walk(file); }
       }
       else {

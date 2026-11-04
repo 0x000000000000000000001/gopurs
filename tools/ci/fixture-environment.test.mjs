@@ -66,11 +66,21 @@ test('cache inventory detects corrupted bytes and rejects links or extra files',
   const directory = mkdtempSync(join(tmpdir(), 'gopurs-fixture-cache-'));
   try {
     mkdirSync(join(directory, 'nar'));
-    mkdirSync(join(directory, 'log')); mkdirSync(join(directory, 'build-trace-v2'));
+    const auxiliary = ['log', 'build-trace-v2', 'realisations'];
+    for (const name of auxiliary) mkdirSync(join(directory, name));
     writeFileSync(join(directory, 'nix-cache-info'), 'StoreDir: /nix/store\n');
     writeFileSync(join(directory, 'a'.repeat(32) + '.narinfo'), 'test narinfo');
     const archive = join(directory, 'nar/test.nar.zst'); writeFileSync(archive, 'original runtime bytes');
     const before = cacheInventory(directory);
+    for (const name of auxiliary) {
+      const metadata = join(directory, name, 'must-not-be-ignored.json');
+      writeFileSync(metadata, '{}');
+      assert.throws(() => cacheInventory(directory), /Unexpected contents in runtime cache directory/);
+      rmSync(metadata);
+    }
+    mkdirSync(join(directory, 'unrecognized'));
+    assert.throws(() => cacheInventory(directory));
+    rmSync(join(directory, 'unrecognized'), { recursive: true });
     writeFileSync(archive, 'tampered runtime bytes');
     assert.notDeepEqual(cacheInventory(directory), before);
     symlinkSync(archive, join(directory, 'nar/link.nar.zst'));
