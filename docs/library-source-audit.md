@@ -12,7 +12,7 @@ and 1 November and their new source pins are recorded separately below.
 
 | Surface | Identity and release requirement |
 | --- | --- |
-| Compiler npm package | `gopurs@0.1.0-rc.10` is the candidate in preparation; qualification and publication are pending. RC7 remains the published candidate. The final target is `0.1.0`; each candidate's own version, dependency lockfile, file allowlist and installed-artifact tests apply. |
+| Compiler npm package | `gopurs@0.1.0-rc.11` is the candidate in preparation, with the same library pins as RC10; qualification and publication are pending. RC7 remains the published candidate. The final target is `0.1.0`; each candidate's own version, dependency lockfile, file allowlist and installed-artifact tests apply. |
 | Library sources used by bootstrap/applications | Git URL and exact commit from the bootstrap manifest; validate this combination with the selected compiler and package set. The compiler npm archive does not contain these repositories. |
 | Independent future npm/Spago library publication | Review that package's name, destination, version, dependency bounds, files and notices before publishing it. This is a separate operation. |
 

@@ -6,11 +6,29 @@ All notable changes to gopurs are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0-rc.11]
+
+Eleventh candidate for `0.1.0`, grouping CI recovery and documentation after
+RC10's infrastructure failures. Compiler, runtime, TAST/frontend, optimizer
+and library pins are unchanged. Qualification and publication are pending.
+
+### Changed
+
+- Reuse the build's exact locked Nix runtime environment in fixture shards,
+  with bounded preparation and diagnostics, instead of rebuilding that
+  environment in every shard.
+- Retain the actual producer attempt for each qualification artifact so a
+  targeted retry can reuse successful work from the same run and source.
+  Exact compiler and toolchain identities remain required; historical tags
+  and their qualification results are unchanged.
+
 ## [0.1.0-rc.10]
 
 Tenth candidate for `0.1.0`, carrying the compiler/runtime and platform choices
-of RC9 with the corrected spec source pin. Qualification and publication are
-pending; RC7 remains the published candidate.
+of RC9 with the corrected spec source pin. Both qualification attempts failed
+in environment/bootstrap preparation; the complete retry passed all three
+builds and eleven fixture shards but timed out before the remaining shard's
+tests. RC10 is unqualified and unpublished; RC7 remains public.
 
 ### Fixed
 

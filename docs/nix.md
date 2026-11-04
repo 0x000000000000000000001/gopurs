@@ -106,6 +106,29 @@ campaigns always bypass it and bootstrap the current gopurs source afresh.
 No warm-run CI speedup is claimed until a producer and consumer have been
 measured. The compiler's functional test caches remain private to each run.
 
+## CI fixture environment transfer
+
+Full campaigns prepare the locked development environment in each platform's
+build job. The build exports its already materialized shell profile and
+recursive runtime closure for the four fixture shards on that platform. This
+is a same-campaign artifact, separate from the optional quick-CI cache above.
+It contains tools, not previous fixture results or application caches.
+
+Shards select the environment and candidate from the same successful original
+build, verify their GitHub artifact digests and producer identities, then
+import the closure. Source, platform and toolchain identities must match. They
+enter the saved environment offline with local builds and substitutions
+disabled; a missing or invalid closure fails preparation instead of rebuilding
+Haskell dependencies. Preparation has explicit time limits and phase logs.
+Library sources are still installed from the exact locked revisions, and each
+shard executes its assigned Release/Dev fixtures with the tested compiler.
+
+Attempt-qualified artifact names preserve earlier producers during targeted
+retries. The final quality report records actual attempts and requires matching
+compiler and toolchain identities across the selected build and fixture jobs.
+This transfer does not replace the fresh build or Nix application checks on
+each platform, nor does it claim a measured CI speedup before a real campaign.
+
 ## Native bootstrap
 
 The native Go compiler is built from source with the same pinned tools:

@@ -70,47 +70,79 @@ function validateArtifact(artifact) {
   assert.match(artifact.digest, /^sha256:[a-f0-9]{64}$/);
 }
 
-export function selectQualifiedInputs({ run, jobs, artifacts, tag, context }) {
-  validateContext(context);
+function validateRun(run, context, preview = false) {
+  if (preview) {
+    assert.match(context.repository, /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/);
+    sha(context.commit); id(context.runId); id(context.runAttempt); assert.ok(targets.includes(context.target));
+    assert.match(context.ref, /^refs\/heads\/[^\s]+$/);
+  } else validateContext(context);
   assert.equal(String(run.id), id(context.runId)); assert.equal(String(run.run_attempt), id(context.runAttempt));
-  assert.equal(run.head_sha, context.commit); assert.equal(run.head_branch, context.tag);
-  assert.equal(run.event, 'push'); assert.equal(run.path, workflow);
+  assert.equal(run.head_sha, context.commit); assert.equal(run.head_branch, preview ? context.ref.slice(11) : context.tag);
+  assert.equal(run.event, preview ? 'workflow_dispatch' : 'push'); assert.equal(run.path, workflow);
   assert.equal(run.repository?.full_name, context.repository); assert.equal(run.head_repository?.full_name, context.repository);
   assert.ok(['in_progress', 'completed'].includes(run.status));
+}
+
+function validateTag(tag, context) {
   assert.equal(tag.ref?.ref, 'refs/tags/' + context.tag); assert.equal(tag.ref.object?.type, 'tag');
   sha(tag.ref.object.sha); assert.equal(tag.object?.sha, tag.ref.object.sha);
   assert.equal(tag.object.tag, context.tag); assert.equal(tag.object.object?.type, 'commit');
   assert.equal(tag.object.object.sha, context.commit); assert.equal(tag.object.verification?.verified, true);
+}
+
+function successful(job) {
+  assert.ok(job, 'Missing producer job');
+  assert.equal(job.status, 'completed'); assert.equal(job.conclusion, 'success', 'The latest qualification job did not pass');
+  assert.ok(timestamp(job.started_at) <= timestamp(job.completed_at));
+}
+
+export function producerArtifactName(logicalName, attempt) {
+  assert.match(logicalName, /^(candidate|quality|fixture-environment|fixtures)-(linux-amd64|linux-arm64|darwin-arm64)(?:-[0-3])?$/);
+  return logicalName + '-attempt-' + id(attempt);
+}
+
+function selectArtifact(artifacts, logicalName, producer, context) {
+  const name = producerArtifactName(logicalName, producer.run_attempt);
+  const matches = artifacts.filter(artifact => artifact.name === name);
+  assert.equal(matches.length, 1, 'Expected one artifact named ' + name);
+  const artifact = matches[0];
+  assert.equal(artifact.expired, false);
+  assert.equal(String(artifact.workflow_run?.id), id(context.runId));
+  assert.equal(artifact.workflow_run.head_sha, context.commit);
+  const created = timestamp(artifact.created_at);
+  assert.ok(timestamp(producer.started_at) <= created && created <= timestamp(producer.completed_at), 'Artifact was not created during its qualified producer job');
+  const result = { id: artifact.id, name, logicalName, digest: artifact.digest, size: artifact.size_in_bytes,
+    producerJobId: producer.id, attempt: String(producer.run_attempt) };
+  validateArtifact(result); return result;
+}
+
+function selection({ run, jobs, artifacts, tag, context }, { preview = false, fixtures = false } = {}) {
+  validateRun(run, context, preview);
+  if (!preview) validateTag(tag, context);
   const latest = selectLatestJobs(jobs, context);
-  const qualification = [...latest.values()].filter(job => /^(build and test|fixtures) \(/.test(job.name));
-  assert.deepEqual(qualification.map(job => job.name).sort(), [...jobNames].sort(), 'Expected exactly three builds and twelve fixture jobs');
-  for (const job of qualification) {
-    assert.equal(job.status, 'completed'); assert.equal(job.conclusion, 'success', 'The latest qualification job did not pass');
-    assert.ok(timestamp(job.started_at) <= timestamp(job.completed_at));
+  const names = fixtures ? [producerName(context.target, 0)] : jobNames;
+  if (!fixtures) {
+    const qualification = [...latest.values()].filter(job => /^(build and test|fixtures) \(/.test(job.name));
+    assert.deepEqual(qualification.map(job => job.name).sort(), [...jobNames].sort(), 'Expected exactly three builds and twelve fixture jobs');
   }
-  const attempts = new Set(qualification.map(job => job.run_attempt));
-  assert.equal(attempts.size, 1, 'Qualification jobs belong to different attempts');
-  const qualificationAttempt = String(qualification[0].run_attempt);
+  names.forEach(name => successful(latest.get(name)));
   assert.ok(Array.isArray(artifacts));
-  const selected = artifactNames(context.target).map((name, index) => {
-    const matches = artifacts.filter(artifact => artifact.name === name);
-    assert.equal(matches.length, 1, 'Expected one artifact named ' + name);
-    const artifact = matches[0], producer = latest.get(producerName(context.target, index));
-    assert.equal(artifact.expired, false);
-    assert.equal(String(artifact.workflow_run?.id), id(context.runId));
-    assert.equal(artifact.workflow_run.head_sha, context.commit);
-    const created = timestamp(artifact.created_at);
-    assert.ok(timestamp(producer.started_at) <= created && created <= timestamp(producer.completed_at), 'Artifact was not created during its qualified producer job');
-    const result = { id: artifact.id, name, digest: artifact.digest, size: artifact.size_in_bytes,
-      producerJobId: producer.id, attempt: qualificationAttempt };
-    validateArtifact(result); return result;
-  });
+  const logicalNames = fixtures ? ['candidate-' + context.target, 'fixture-environment-' + context.target] : artifactNames(context.target);
+  const selected = logicalNames.map((name, index) => selectArtifact(artifacts, name,
+    latest.get(producerName(context.target, fixtures ? 0 : index)), context));
   assert.equal(new Set(selected.map(artifact => artifact.id)).size, selected.length);
-  return { schema: 1, source: { commit: context.commit, tag: context.tag, tagObject: tag.object.sha },
-    github: { repository: context.repository, runId: id(context.runId), qualificationAttempt, finalizationAttempt: id(context.runAttempt) },
-    target: context.target, jobs: jobNames.map(name => { const job = latest.get(name); return { id: job.id, name, attempt: String(job.run_attempt) }; }),
+  const environmentArtifact = fixtures ? undefined : selectArtifact(artifacts, 'fixture-environment-' + context.target, latest.get(producerName(context.target, 0)), context);
+  if (environmentArtifact) assert.ok(!selected.some(artifact => artifact.id === environmentArtifact.id), 'Environment artifact aliases another input');
+  return { schema: 2, ...(environmentArtifact ? { environmentArtifact } : {}), source: preview ? { commit: context.commit, ref: context.ref }
+    : { commit: context.commit, tag: context.tag, tagObject: tag.object.sha },
+    github: { repository: context.repository, runId: id(context.runId), finalizationAttempt: id(context.runAttempt) },
+    target: context.target, jobs: names.map(name => { const job = latest.get(name); return { id: job.id, name, attempt: String(job.run_attempt) }; }),
     artifacts: selected };
 }
+
+export function selectQualifiedInputs(data) { return selection(data); }
+export function selectPreviewInputs(data) { return selection(data, { preview: true }); }
+export function selectFixtureInputs(data, preview = false) { return selection(data, { preview, fixtures: true }); }
 
 export function githubContext(env = process.env) {
   assert.equal(env.CI, 'true'); assert.equal(env.GITHUB_ACTIONS, 'true');
@@ -124,32 +156,75 @@ export function githubContext(env = process.env) {
   return context;
 }
 
+function previewContext(env) {
+  assert.equal(env.CI, 'true'); assert.equal(env.GITHUB_ACTIONS, 'true');
+  assert.equal(env.RUNNER_ENVIRONMENT, 'github-hosted'); assert.equal(env.GITHUB_SERVER_URL, 'https://github.com');
+  assert.equal(env.GITHUB_EVENT_NAME, 'workflow_dispatch'); assert.equal(env.GITHUB_REF_TYPE, 'branch');
+  const context = { repository: env.GITHUB_REPOSITORY, commit: env.GITHUB_SHA, ref: env.GITHUB_REF,
+    runId: env.GITHUB_RUN_ID, runAttempt: env.GITHUB_RUN_ATTEMPT, target: env.GOPURS_RELEASE_TARGET };
+  assert.match(context.ref, /^refs\/heads\/[^\s]+$/);
+  assert.equal(env.GITHUB_REF_NAME, context.ref.slice(11)); assert.equal(env.GITHUB_WORKFLOW_SHA, context.commit);
+  assert.equal(env.GITHUB_WORKFLOW_REF, context.repository + '/' + workflow + '@' + context.ref);
+  return context;
+}
+
+export function validateEnvironmentIdentity(environment) {
+  assert.ok(environment && typeof environment === 'object', 'Missing exact qualification environment');
+  assert.deepEqual(Object.keys(environment).sort(), ['closureSha256', 'profile', 'profileSha256', 'shell']);
+  assert.match(environment.profile, /^\/nix\/store\/[a-z0-9]{32}-[^/\s]+-env$/);
+  assert.match(environment.shell, /^\/nix\/store\/[0-9abcdfghijklmnpqrsvwxyz]{32}-[A-Za-z0-9+._?=-]+\/bin\/bash$/);
+  for (const key of ['profileSha256', 'closureSha256']) assert.match(environment[key], /^[a-f0-9]{64}$/);
+}
+
 function validateQualificationIdentity(context, identity) {
   assert.deepEqual(identity.source, { commit: context.source.commit, dirty: false });
   assert.equal(identity.target, context.target);
-  assert.deepEqual(identity.github, { repository: context.github.repository, runId: context.github.runId, runAttempt: context.github.qualificationAttempt });
+  const build = context.jobs.find(job => job.name === producerName(context.target, 0));
+  assert.ok(build, 'Missing original build identity');
+  assert.deepEqual(identity.github, { repository: context.github.repository, runId: context.github.runId, runAttempt: build.attempt });
   for (const key of ['javascriptSha256', 'nativeSha256']) assert.match(identity.compiler?.[key], /^[a-f0-9]{64}$/);
+  validateEnvironmentIdentity(identity.environment);
 }
 
-export function validateFinalizationContext(context, identity, env = process.env) {
-  const current = githubContext(env);
-  assert.equal(context.schema, 1); sha(context.source?.tagObject);
-  assert.equal(context.source.commit, current.commit); assert.equal(context.source.tag, current.tag);
+export function validateFinalizationContext(context, identity, env = process.env, { preview = false } = {}) {
+  const current = preview ? previewContext(env) : githubContext(env);
+  assert.equal(context.schema, 2);
+  assert.equal(context.source.commit, current.commit);
+  if (preview) assert.deepEqual(context.source, { commit: current.commit, ref: current.ref });
+  else { sha(context.source?.tagObject); assert.equal(context.source.tag, current.tag); }
   assert.equal(context.target, current.target); assert.equal(context.github?.repository, current.repository);
   assert.equal(context.github.runId, id(current.runId)); assert.equal(context.github.finalizationAttempt, id(current.runAttempt));
-  assert.ok(Number(id(context.github.qualificationAttempt)) <= Number(current.runAttempt));
+  assert.deepEqual(Object.keys(context.github).sort(), ['finalizationAttempt', 'repository', 'runId']);
   assert.deepEqual(context.jobs.map(job => job.name), jobNames);
-  for (const job of context.jobs) { positive(job.id); assert.equal(job.attempt, context.github.qualificationAttempt); }
+  for (const job of context.jobs) { positive(job.id); assert.ok(Number(id(job.attempt)) <= Number(current.runAttempt)); }
   assert.equal(new Set(context.jobs.map(job => job.id)).size, jobNames.length);
-  assert.deepEqual(context.artifacts.map(artifact => artifact.name), artifactNames(current.target));
+  assert.deepEqual(context.artifacts.map(artifact => artifact.logicalName), artifactNames(current.target));
   assert.equal(new Set(context.artifacts.map(artifact => artifact.id)).size, context.artifacts.length);
   context.artifacts.forEach((artifact, index) => {
-    validateArtifact(artifact); assert.equal(artifact.attempt, context.github.qualificationAttempt);
-    assert.equal(artifact.producerJobId, context.jobs.find(job => job.name === producerName(current.target, index)).id);
+    validateArtifact(artifact);
+    const producer = context.jobs.find(job => job.name === producerName(current.target, index));
+    assert.equal(artifact.attempt, producer.attempt); assert.equal(artifact.producerJobId, producer.id);
+    assert.equal(artifact.name, producerArtifactName(artifact.logicalName, producer.attempt));
   });
+  const environment = context.environmentArtifact, build = context.jobs.find(job => job.name === producerName(current.target, 0));
+  validateArtifact(environment);
+  assert.equal(environment.logicalName, 'fixture-environment-' + current.target);
+  assert.equal(environment.attempt, build.attempt); assert.equal(environment.producerJobId, build.id);
+  assert.equal(environment.name, producerArtifactName(environment.logicalName, build.attempt));
+  assert.ok(!context.artifacts.some(artifact => artifact.id === environment.id));
   validateQualificationIdentity(context, identity);
   assert.deepEqual(context.qualificationIdentity, identity, 'Qualification identity differs from the downloaded core report');
   return context;
+}
+
+export function validateReportProducers(context, core, fixtures) {
+  for (const report of [core, ...fixtures]) {
+    const index = report.phase === 'core' ? 0 : report.shard.index + 1;
+    const artifact = context.artifacts[index];
+    assert.equal(report.identity.github.runAttempt, artifact.attempt, 'Report attempt differs from its actual artifact producer');
+    assert.equal(report.identity.github.runId, context.github.runId);
+    assert.equal(report.identity.github.repository, context.github.repository);
+  }
 }
 
 export function githubAPI(endpoint, { env = process.env, paginate = false } = {}) {
@@ -256,13 +331,16 @@ export function downloadAndExtract(artifact, destination, { repository, env = pr
 }
 
 function prepare(args, env = process.env) {
-  const current = githubContext(env), options = {};
-  assert.equal(args.shift(), 'prepare');
+  const command = args.shift(), fixturesOnly = command === 'prepare-fixtures', preview = env.GITHUB_REF_TYPE === 'branch';
+  assert.ok(['prepare', 'prepare-preview', 'prepare-fixtures'].includes(command));
+  if (!fixturesOnly) assert.equal(command === 'prepare-preview', preview);
+  const current = preview ? previewContext(env) : githubContext(env), options = {};
+  const second = fixturesOnly ? '--environment' : '--fixtures';
   for (let index = 0; index < args.length; index += 2) {
-    const name = args[index]; assert.ok(['--release', '--fixtures', '--out'].includes(name) && args[index + 1] && !options[name]);
+    const name = args[index]; assert.ok(['--release', second, '--out'].includes(name) && args[index + 1] && !options[name]);
     options[name] = resolve(args[index + 1]);
   }
-  assert.ok(options['--release'] && options['--fixtures'] && options['--out']);
+  assert.ok(options['--release'] && options[second] && options['--out']);
   assert.ok(isAbsolute(env.RUNNER_TEMP)); const temp = realpathSync(env.RUNNER_TEMP);
   const paths = Object.values(options);
   for (const path of paths) {
@@ -279,20 +357,22 @@ function prepare(args, env = process.env) {
   const run = githubAPI(prefix + 'actions/runs/' + current.runId, { env });
   const jobs = flattenPages(githubAPI(prefix + 'actions/runs/' + current.runId + '/jobs?filter=all&per_page=100', { env, paginate: true }), 'jobs');
   const artifacts = flattenPages(githubAPI(prefix + 'actions/runs/' + current.runId + '/artifacts?per_page=100', { env, paginate: true }), 'artifacts');
-  const tag = readVerifiedTag(current, { env, root });
-  const selected = selectQualifiedInputs({ run, jobs, artifacts, tag, context: current });
+  const tag = preview ? undefined : readVerifiedTag(current, { env, root });
+  const selected = selection({ run, jobs, artifacts, tag, context: current }, { preview, fixtures: fixturesOnly });
   const privateDir = mkdtempSync(join(temp, 'gopurs-release-inputs-'));
-  mkdirSync(options['--fixtures'], { mode: 0o700 });
+  if (!fixturesOnly) mkdirSync(options[second], { mode: 0o700 });
   let remaining = limit;
   for (const artifact of selected.artifacts) {
-    const destination = artifact.name.startsWith('candidate-') ? options['--release'] : join(options['--fixtures'], artifact.name);
+    const destination = artifact.logicalName.startsWith('candidate-') ? options['--release']
+      : fixturesOnly ? options[second] : join(options[second], artifact.logicalName);
     remaining -= downloadAndExtract(artifact, destination, { repository: current.repository, env, maximum: remaining, archiveDir: privateDir }).bytes;
   }
-  const core = JSON.parse(readFileSync(join(options['--release'], 'gopurs-' + current.tag.slice(1) + '-' + current.target + '-quality.json'), 'utf8'));
+  const version = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version;
+  const core = JSON.parse(readFileSync(join(options['--release'], 'gopurs-' + version + '-' + current.target + '-quality.json'), 'utf8'));
   validateQualificationIdentity(selected, core.identity); selected.qualificationIdentity = structuredClone(core.identity);
-  validateFinalizationContext(selected, core.identity, env);
+  if (!fixturesOnly) validateFinalizationContext(selected, core.identity, env, { preview });
   writeFileSync(options['--out'], JSON.stringify(selected, null, 2) + '\n', { flag: 'wx', mode: 0o600 });
-  console.log(JSON.stringify({ context: options['--out'], qualificationAttempt: selected.github.qualificationAttempt, finalizationAttempt: selected.github.finalizationAttempt }));
+  console.log(JSON.stringify({ context: options['--out'], producers: selected.jobs, finalizationAttempt: selected.github.finalizationAttempt }));
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) prepare(process.argv.slice(2));

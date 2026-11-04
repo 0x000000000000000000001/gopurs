@@ -5,7 +5,7 @@ import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSyn
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { downloadAndExtract, fileSha256, flattenPages, githubAPI, githubContext, readVerifiedTag,
-  selectLatestJobs, selectQualifiedInputs, validateFinalizationContext } from './release-inputs.mjs';
+  selectLatestJobs, selectQualifiedInputs, validateFinalizationContext, validateReportProducers } from './release-inputs.mjs';
 
 const targets = ['linux-amd64', 'linux-arm64', 'darwin-arm64'];
 const limit = 1024 ** 3;
@@ -26,7 +26,7 @@ export function selectFinalizedInputs({ run, jobs, artifacts, tag, context }) {
     const job = latest.get(names[index]);
     assert.equal(job.status, 'completed');
     assert.equal(job.conclusion, 'success', 'The latest finalization job did not pass');
-    assert.ok(Number(qualification.github.qualificationAttempt) <= job.run_attempt,
+    assert.ok(qualification.jobs.every(producer => Number(producer.attempt) <= job.run_attempt),
       'Finalization predates the current qualification');
     assert.ok(job.run_attempt <= Number(context.runAttempt));
     const started = timestamp(job.started_at), completed = timestamp(job.completed_at);
@@ -39,6 +39,7 @@ export function selectFinalizedInputs({ run, jobs, artifacts, tag, context }) {
     const matches = artifacts.filter(artifact => artifact.name === name);
     assert.equal(matches.length, 1, `Expected one artifact named ${name}`);
     const artifact = matches[0];
+    assert.ok(![...qualification.artifacts, qualification.environmentArtifact].some(input => input.id === artifact.id), 'Release artifact aliases a qualification input');
     assert.ok(Number.isSafeInteger(artifact.id) && artifact.id > 0);
     assert.ok(Number.isSafeInteger(artifact.size_in_bytes) && artifact.size_in_bytes > 0 && artifact.size_in_bytes <= limit);
     assert.match(artifact.digest, /^sha256:[a-f0-9]{64}$/);
@@ -53,7 +54,6 @@ export function selectFinalizedInputs({ run, jobs, artifacts, tag, context }) {
   });
   assert.equal(new Set(selected.map(item => item.artifact.id)).size, targets.length);
   for (const item of selected) {
-    assert.equal(item.finalization.github.qualificationAttempt, selected[0].finalization.github.qualificationAttempt);
     assert.deepEqual(item.finalization.jobs, selected[0].finalization.jobs);
   }
   return selected;
@@ -67,6 +67,18 @@ export function validateFinalizedQuality(quality, selected, env) {
   assert.deepEqual(quality.finalization, expected, 'Embedded finalization differs from the selected API evidence');
   validateFinalizationContext(expected, quality.identity,
     { ...env, GOPURS_RELEASE_TARGET: selected.target, GITHUB_RUN_ATTEMPT: selected.job.attempt });
+  assert.ok(Array.isArray(quality.phases) && quality.phases.length === 5, 'Missing phase producer identities');
+  const cores = quality.phases.filter(phase => phase.phase === 'core');
+  const fixtures = quality.phases.filter(phase => phase.phase === 'fixtures');
+  assert.equal(cores.length, 1); assert.equal(fixtures.length, 4);
+  assert.equal(cores[0].shard, null);
+  for (const phase of quality.phases) assert.ok(Number.isSafeInteger(phase.gates) && phase.gates > 0);
+  for (const phase of fixtures) assert.equal(phase.shard?.count, 4);
+  assert.deepEqual(cores[0].identity, quality.identity);
+  assert.deepEqual(fixtures.map(phase => phase.shard?.index).sort(), [0, 1, 2, 3]);
+  const comparable = identity => ({ ...identity, github: { ...identity.github, runAttempt: null } });
+  for (const phase of fixtures) assert.deepEqual(comparable(phase.identity), comparable(quality.identity));
+  validateReportProducers(expected, cores[0], fixtures);
   return quality;
 }
 
@@ -109,7 +121,7 @@ export function verifyFinalizedDirectory(directory, selected, env) {
   const bootstrap = readFileSync(join(directory, `${prefix}-bootstrap-checksums.txt`), 'utf8').split('\n')
     .filter(line => line.endsWith('  bin/gopurs.js'));
   assert.deepEqual(bootstrap, [`${quality.identity.compiler.javascriptSha256}  bin/gopurs.js`]);
-  return { target: selected.target, artifactId: selected.artifact.id, qualificationAttempt: selected.finalization.github.qualificationAttempt,
+  return { target: selected.target, artifactId: selected.artifact.id, producerAttempts: selected.finalization.jobs.map(job => ({ name: job.name, attempt: job.attempt })),
     finalizationAttempt: selected.job.attempt, files: names.length };
 }
 

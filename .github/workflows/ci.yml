@@ -54,7 +54,7 @@ jobs:
       - name: Retain the scope decision
         uses: actions/upload-artifact@v4
         with:
-          name: ci-plan
+          name: ci-plan-attempt-${{ github.run_attempt }}
           path: ${{ runner.temp }}/ci-plan.json
           if-no-files-found: error
 
@@ -204,6 +204,13 @@ jobs:
           test -d "$bootstrap_workspace/output/purescript"
           echo "GOPURS_NATIVE_OUTPUT=$bootstrap_workspace/output" >> "$GITHUB_ENV"
 
+      - name: Export the prepared runtime environment for fixture shards
+        if: env.GOPURS_RELEASE_FULL == 'true'
+        timeout-minutes: 15
+        run: |
+          node tools/ci/fixture-environment.mjs export \
+            --profile "$RUNNER_TEMP/gopurs-dev-profile" --directory "$RUNNER_TEMP/fixture-environment"
+
       - name: Run compiler, race, cache and fixture gates
         run: |
           flags=()
@@ -244,8 +251,18 @@ jobs:
       - name: Upload the tested candidate for downstream gates
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ (startsWith(github.ref, 'refs/tags/') || inputs.full == true) && 'candidate' || 'release' }}-${{ matrix.target }}
+          name: ${{ (startsWith(github.ref, 'refs/tags/') || inputs.full == true) && format('candidate-{0}-attempt-{1}', matrix.target, github.run_attempt) || format('release-{0}', matrix.target) }}
           path: ${{ runner.temp }}/release/
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Retain the exact prepared fixture environment
+        if: env.GOPURS_RELEASE_FULL == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fixture-environment-${{ matrix.target }}-attempt-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/fixture-environment/
+          compression-level: 0
           if-no-files-found: error
           retention-days: 90
 
@@ -269,7 +286,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: quality-${{ matrix.target }}
+          name: ${{ (startsWith(github.ref, 'refs/tags/') || inputs.full == true) && format('quality-{0}-attempt-{1}', matrix.target, github.run_attempt) || format('quality-{0}', matrix.target) }}
           path: |
             ${{ runner.temp }}/quality/quality.json
             ${{ runner.temp }}/quality/*.log
@@ -286,6 +303,9 @@ jobs:
     needs: build
     runs-on: ${{ matrix.os }}
     timeout-minutes: 360
+    permissions:
+      contents: read
+      actions: read
     strategy:
       fail-fast: false
       matrix:
@@ -304,6 +324,7 @@ jobs:
     env:
       GOPURS_RELEASE_TARGET: ${{ matrix.target }}
       FIXTURE_SHARD: ${{ matrix.shard }}
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -316,14 +337,22 @@ jobs:
             test "$(git cat-file -t "$GITHUB_REF")" = tag
             test "$(git rev-parse "$GITHUB_REF^{commit}")" = "$GITHUB_SHA"
           fi
-      - uses: DeterminateSystems/determinate-nix-action@v3.5.2
-      - uses: actions/download-artifact@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          name: candidate-${{ matrix.target }}
-          path: ${{ runner.temp }}/candidate
-      - name: Select the exact tested compiler
+          node-version: 24.8.0
+      - name: Acquire the latest real build and its prepared environment
+        timeout-minutes: 15
         run: |
-          version=$(nix develop --profile "$RUNNER_TEMP/gopurs-dev-profile" --no-update-lock-file --command node -p 'JSON.parse(require("fs").readFileSync("package.json")).version' | tail -n 1)
+          node tools/ci/release-inputs.mjs prepare-fixtures \
+            --release "$RUNNER_TEMP/candidate" --environment "$RUNNER_TEMP/fixture-environment" \
+            --out "$RUNNER_TEMP/fixture-inputs.json"
+      - name: Install the pinned Nix runner
+        timeout-minutes: 10
+        uses: DeterminateSystems/determinate-nix-action@v3.5.2
+      - name: Select the exact tested compiler
+        timeout-minutes: 3
+        run: |
+          version=$(node -p 'JSON.parse(require("fs").readFileSync("package.json")).version')
           prefix="gopurs-$version-$GOPURS_RELEASE_TARGET"
           (cd "$RUNNER_TEMP/candidate" && shasum -a 256 -c "$prefix-SHA256SUMS")
           mkdir "$RUNNER_TEMP/npm-candidate"
@@ -331,11 +360,18 @@ jobs:
           cp "$RUNNER_TEMP/npm-candidate/package/bin/gopurs.js" bin/gopurs.js
           cp "$RUNNER_TEMP/candidate/$prefix" bin/gopurs-native
           chmod +x bin/gopurs-native
+      - name: Import the exact prepared runtime closure without rebuilding
+        timeout-minutes: 15
+        run: |
+          node tools/ci/fixture-environment.mjs import \
+            --directory "$RUNNER_TEMP/fixture-environment" --context "$RUNNER_TEMP/fixture-inputs.json" \
+            --profile "$RUNNER_TEMP/gopurs-fixture-profile"
       - name: Install the pinned Go library sources
-        run: nix develop --profile "$RUNNER_TEMP/gopurs-dev-profile" --no-update-lock-file --command ./bin/setup --locked --all
+        timeout-minutes: 15
+        run: node tools/ci/fixture-environment.mjs run -- ./bin/setup --locked --all
       - name: Run one disjoint part of the complete fixture campaign
         run: |
-          nix develop --profile "$RUNNER_TEMP/gopurs-dev-profile" --no-update-lock-file --command node tools/release-quality.mjs \
+          node tools/ci/fixture-environment.mjs run -- node tools/release-quality.mjs \
             --full --phase fixtures --shard "$FIXTURE_SHARD" --shard-count 4 \
             --report "$RUNNER_TEMP/quality" | tee "$RUNNER_TEMP/quality.log"
       - name: Require clean sources after fixture execution
@@ -344,7 +380,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: fixtures-${{ matrix.target }}-${{ matrix.shard }}
+          name: fixtures-${{ matrix.target }}-${{ matrix.shard }}-attempt-${{ github.run_attempt }}
           path: |
             ${{ runner.temp }}/quality/quality.json
             ${{ runner.temp }}/quality/*.log
@@ -397,16 +433,12 @@ jobs:
           node tools/ci/release-inputs.mjs prepare \
             --release "$RUNNER_TEMP/release" --fixtures "$RUNNER_TEMP/fixtures" \
             --out "$RUNNER_TEMP/finalization-context.json"
-      - uses: actions/download-artifact@v4
+      - name: Select immutable qualification inputs for this preview attempt
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
-        with:
-          name: candidate-${{ matrix.target }}
-          path: ${{ runner.temp }}/release
-      - uses: actions/download-artifact@v4
-        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
-        with:
-          pattern: fixtures-${{ matrix.target }}-*
-          path: ${{ runner.temp }}/fixtures
+        run: |
+          node tools/ci/release-inputs.mjs prepare-preview \
+            --release "$RUNNER_TEMP/release" --fixtures "$RUNNER_TEMP/fixtures" \
+            --out "$RUNNER_TEMP/finalization-context.json"
       - name: Require complete qualification of the exact candidate
         id: identity
         run: |
@@ -417,10 +449,7 @@ jobs:
           for shard in 0 1 2 3; do
             reports+=(--fixtures "$RUNNER_TEMP/fixtures/fixtures-$GOPURS_RELEASE_TARGET-$shard/quality.json")
           done
-          context=()
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            context+=(--finalization-context "$RUNNER_TEMP/finalization-context.json")
-          fi
+          context=(--finalization-context "$RUNNER_TEMP/finalization-context.json")
           node tools/release-quality-report.mjs "${context[@]}" \
             --core "$RUNNER_TEMP/release/$prefix-quality.json" "${reports[@]}" \
             --build "$RUNNER_TEMP/release/$prefix-build.json" --out "$RUNNER_TEMP/complete-quality.json"

@@ -16,11 +16,12 @@ function fixture() {
   const artifact = (name, id, created_at) => ({ id, name, size_in_bytes: 128, digest: 'sha256:' + 'b'.repeat(64), expired: false,
     created_at, workflow_run: { id: 42, head_sha: context.commit } });
   const artifacts = targets.flatMap(target => [`candidate-${target}`, ...[0, 1, 2, 3].map(shard => `fixtures-${target}-${shard}`)])
-    .map((name, index) => artifact(name, 100 + index, '2026-10-30T00:05:00Z'));
+    .map((name, index) => artifact(name + '-attempt-1', 100 + index, '2026-10-30T00:05:00Z'));
   targets.forEach((target, index) => {
     const attempt = index === 0 ? 2 : 1, hour = attempt === 2 ? '01' : '00';
     jobs.push({ id: 50 + index, name: `qualify and attest (${target})`, run_id: 42, run_attempt: attempt, head_sha: context.commit,
       status: 'completed', conclusion: 'success', started_at: `2026-10-30T${hour}:11:00Z`, completed_at: `2026-10-30T${hour}:20:00Z` });
+    artifacts.push(artifact(`fixture-environment-${target}-attempt-1`, 300 + index, '2026-10-30T00:05:00Z'));
     artifacts.push(artifact(`release-${target}-attempt-${attempt}`, 200 + index, `2026-10-30T${hour}:19:00Z`));
   });
   const tag = { ref: { ref: 'refs/tags/' + context.tag, object: { type: 'tag', sha: 'c'.repeat(40) } },
@@ -38,9 +39,13 @@ function environment(context) {
 function quality(selected) {
   const identity = { source: { commit: selected.finalization.source.commit, dirty: false }, target: selected.target,
     compiler: { javascriptSha256: sha('javascript'), nativeSha256: sha('native') },
+    environment: { profile: '/nix/store/' + 'a'.repeat(32) + '-gopurs-env', profileSha256: 'b'.repeat(64), closureSha256: 'c'.repeat(64), shell: '/nix/store/' + 'd'.repeat(32) + '-bash/bin/bash' },
     github: { repository: selected.finalization.github.repository, runId: selected.finalization.github.runId,
-      runAttempt: selected.finalization.github.qualificationAttempt } };
-  return { schema: 1, requestedFull: true, full: true, phase: 'all', shard: null, status: 'passed', identity,
+      runAttempt: selected.finalization.jobs.find(job => job.name === 'build and test (' + selected.target + ')').attempt } };
+  const phases = [{ phase: 'core', shard: null, gates: 1, identity: structuredClone(identity) },
+    ...[0, 1, 2, 3].map(index => ({ phase: 'fixtures', shard: { index, count: 4 }, gates: 1, identity: { ...structuredClone(identity),
+      github: { ...identity.github, runAttempt: selected.finalization.artifacts[index + 1].attempt } } }))];
+  return { phases, schema: 1, requestedFull: true, full: true, phase: 'all', shard: null, status: 'passed', identity,
     finalization: { ...structuredClone(selected.finalization), qualificationIdentity: structuredClone(identity) } };
 }
 
@@ -49,12 +54,30 @@ test('draft retry accepts mixed successful finalization attempts while retaining
   assert.deepEqual(selected.map(item => item.job.attempt), ['2', '1', '1']);
   assert.deepEqual(selected.map(item => item.artifact.id), [200, 201, 202]);
   for (const item of selected) {
-    assert.equal(item.finalization.github.qualificationAttempt, '1');
+    assert.ok(item.finalization.jobs.every(job => job.attempt === '1'));
     assert.equal(item.finalization.jobs.length, 15);
     assert.equal(validateFinalizedQuality(quality(item), item, environment(data.context)).identity.github.runAttempt, '1');
   }
   data.context.runAttempt = '3'; data.run.run_attempt = 3;
   assert.deepEqual(selectFinalizedInputs(data).map(item => item.artifact.id), [200, 201, 202]);
+});
+
+test('a repaired fixture shard retains original build and eleven other shard producers through signing', () => {
+  const data = fixture(), shard = data.jobs.find(job => job.name === 'fixtures (linux-amd64, shard 2)');
+  data.jobs.push({ ...shard, id: 999, run_attempt: 2, started_at: '2026-10-30T01:00:00Z', completed_at: '2026-10-30T01:10:00Z' });
+  const artifact = data.artifacts.find(value => value.name === 'fixtures-linux-amd64-2-attempt-1');
+  data.artifacts.push({ ...artifact, id: 999, name: 'fixtures-linux-amd64-2-attempt-2', created_at: '2026-10-30T01:05:00Z' });
+  for (const job of data.jobs.filter(value => value.name.startsWith('qualify and attest ('))) {
+    job.run_attempt = 2; job.started_at = '2026-10-30T01:11:00Z'; job.completed_at = '2026-10-30T01:20:00Z';
+  }
+  for (const release of data.artifacts.filter(value => value.name.startsWith('release-'))) {
+    release.name = release.name.replace('-attempt-1', '-attempt-2'); release.created_at = '2026-10-30T01:19:00Z';
+  }
+  const selected = selectFinalizedInputs(data);
+  assert.deepEqual(selected[0].finalization.artifacts.map(value => value.attempt), ['1', '1', '1', '2', '1']);
+  for (const target of selected) validateFinalizedQuality(quality(target), target, environment(data.context));
+  const report = quality(selected[0]); report.phases[3].identity.github.runAttempt = '1';
+  assert.throws(() => validateFinalizedQuality(report, selected[0], environment(data.context)), /actual artifact producer/);
 });
 
 test('draft-only retry keeps original producers when GitHub copies completed jobs into a later attempt', () => {
@@ -112,6 +135,9 @@ test('all fifteen latest qualifiers must still pass together and precede every s
 test('full quality evidence cannot relabel qualification or substitute identities and input metadata', () => {
   const data = fixture(), selected = selectFinalizedInputs(data)[1], env = environment(data.context);
   const mutations = [
+    q => { q.phases[0].shard = {}; }, q => { q.phases[1].shard.count = 5; },
+    q => { q.identity.environment = {}; q.finalization.qualificationIdentity.environment = {}; },
+    q => { q.phases[1].identity.github.runAttempt = '2'; }, q => { q.phases[1].identity.environment.closureSha256 = 'f'.repeat(64); },
     q => { q.full = false; }, q => { q.status = 'failed'; }, q => { q.phase = 'core'; },
     q => { q.identity.github.runAttempt = '2'; }, q => { q.identity.source.commit = 'f'.repeat(40); },
     q => { q.identity.compiler.nativeSha256 = 'f'.repeat(64); }, q => { q.identity.target = 'linux-amd64'; },
@@ -141,7 +167,7 @@ function directoryFixture(t) {
 
 test('downloaded file checksums, build metadata and qualified compiler bytes are checked', t => {
   const { data, selected, directory, prefix, checksums } = directoryFixture(t), env = environment(data.context);
-  assert.equal(verifyFinalizedDirectory(directory, selected, env).qualificationAttempt, '1');
+  assert.ok(verifyFinalizedDirectory(directory, selected, env).producerAttempts.every(job => job.attempt === '1'));
   writeFileSync(join(directory, prefix), 'wrong');
   assert.throws(() => verifyFinalizedDirectory(directory, selected, env), /checksum differs/);
   writeFileSync(join(directory, prefix), 'native');
