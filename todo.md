@@ -70,7 +70,18 @@ le validateur refusait le répertoire `realisations`, créé par la version Nix
 épinglée en CI. Le tag reste immuable et non qualifié. Le correctif ciblé accepte
 ce répertoire uniquement vide ; les métadonnées inattendues restent refusées.
 
-Le prochain candidat, `0.1.0-rc.12`, réunira tous les correctifs post-RC7, pins,
+La campagne RC12 a réussi les trois builds/core, puis neuf lots de fixtures
+ont échoué avant acquisition/import : le sélecteur refusait le statut agrégé
+`queued` malgré les producteurs réussis. Le run s'est terminé en échec avant
+l'application de l'annulation autorisée. Le tag RC12 reste immuable et non
+qualifié. Le correctif du
+sélecteur conserve les contrôles des producteurs, identités et signatures.
+Les 21 tests ciblés passent, ainsi que le rejeu local des métadonnées originales
+des trois plateformes, après reproduction rouge. Ces contrôles ne qualifient
+pas RC13 et aucune publication RC13 n'a eu lieu. Le détail figure dans le
+[bilan RC12 et RC13](docs/quality-0.1.0.md#rc13-input-selector-correction--4-november-2026).
+
+Le prochain candidat, `0.1.0-rc.13`, réunira tous les correctifs post-RC7, pins,
 notices et cleanup fusionnés. Compilateur, runtime et pins restent ceux de RC10.
 La qualification complète sur son tag exact doit établir
 371 portes par plateforme, dont 51 bibliothèques et 401 fixtures dans chaque
@@ -195,5 +206,5 @@ ouvertes jusqu'à leur exécution ; aucune publication stable n'est implicite.
 - [ ] Artefacts reproductibles ou procédure de vérification explicite.
 - [x] Release candidate vérifiée depuis les artefacts publics : quickstart exécuté et b8x compilé sur Linux arm64 ; exceptions de publication documentées.
 - [ ] Rollback testé.
-- [x] Documentation et benchmarks conformes à ce qui est réellement mesuré : bilans RC10/RC11 actualisés, mesures historiques datées conservées, aucune qualification ni performance RC12 revendiquée ; contrôles de liens passés.
+- [x] Documentation et benchmarks conformes à ce qui est réellement mesuré : bilans RC10/RC11/RC12 actualisés, mesures historiques datées conservées, aucune qualification ni performance RC13 revendiquée ; contrôles de liens passés.
 - [ ] Installation et application Nix validées sur la matrice supportée.

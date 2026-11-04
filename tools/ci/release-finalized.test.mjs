@@ -53,6 +53,9 @@ test('draft retry accepts mixed successful finalization attempts while retaining
   const data = fixture(), selected = selectFinalizedInputs(data);
   assert.deepEqual(selected.map(item => item.job.attempt), ['2', '1', '1']);
   assert.deepEqual(selected.map(item => item.artifact.id), [200, 201, 202]);
+  for (const status of ['queued', 'completed']) {
+    assert.deepEqual(selectFinalizedInputs({ ...data, run: { ...data.run, status } }), selected);
+  }
   for (const item of selected) {
     assert.ok(item.finalization.jobs.every(job => job.attempt === '1'));
     assert.equal(item.finalization.jobs.length, 15);
@@ -97,10 +100,13 @@ test('draft-only retry keeps original producers when GitHub copies completed job
 });
 
 test('newer failed or pending finalizers cannot fall back to successful older artifacts', () => {
-  for (const conclusion of ['failure', null]) {
-    const data = fixture(), previous = data.jobs.find(job => job.name === 'qualify and attest (linux-arm64)');
-    data.jobs.push({ ...previous, id: 999, run_attempt: 2, conclusion, status: conclusion === null ? 'in_progress' : 'completed' });
-    assert.throws(() => selectFinalizedInputs(data));
+  for (const runStatus of ['in_progress', 'queued']) {
+    for (const [status, conclusion] of [['completed', 'failure'], ['in_progress', null], ['queued', null]]) {
+      const data = fixture(), previous = data.jobs.find(job => job.name === 'qualify and attest (linux-arm64)');
+      data.run.status = runStatus;
+      data.jobs.push({ ...previous, id: 999, run_attempt: 2, conclusion, status });
+      assert.throws(() => selectFinalizedInputs(data));
+    }
   }
   const data = fixture(); data.jobs.push({ ...data.jobs.at(-1), id: 999 });
   assert.throws(() => selectFinalizedInputs(data), /Ambiguous/);
@@ -116,20 +122,33 @@ test('each release archive must bind to its exact successful job, source, run an
     data => { data.artifacts.at(-1).expired = true; }, data => { data.artifacts.at(-1).digest = 'sha256:bad'; },
     data => { data.artifacts.at(-1).size_in_bytes = 0; }, data => { data.artifacts.at(-1).id = data.artifacts.at(-2).id; },
     data => { data.jobs.at(-1).run_attempt = 3; }, data => { data.run.head_sha = 'f'.repeat(40); },
+    data => { data.run.id = 43; },
     data => { data.tag.object.verification.verified = false; }, data => data.jobs.pop(),
   ];
-  mutations.forEach((mutate, index) => { const data = fixture(); mutate(data); assert.throws(() => selectFinalizedInputs(data), undefined, `binding ${index}`); });
+  for (const status of ['in_progress', 'queued']) {
+    mutations.forEach((mutate, index) => {
+      const data = fixture(); data.run.status = status; mutate(data);
+      assert.throws(() => selectFinalizedInputs(data), undefined, `binding ${index} during ${status}`);
+    });
+  }
 });
 
 test('all fifteen latest qualifiers must still pass together and precede every selected finalizer', () => {
   const mutations = [
     data => { data.jobs[0].conclusion = 'failure'; }, data => data.jobs.splice(0, 1),
+    data => { data.jobs[0].status = 'queued'; data.jobs[0].conclusion = null; },
+    data => data.jobs.push({ ...data.jobs[0], id: 999, run_attempt: 2, status: 'queued', conclusion: null }),
     data => data.jobs.push({ ...data.jobs[0], id: 999, run_attempt: 2, conclusion: 'failure' }),
     data => data.jobs.push({ ...data.jobs[0], id: 999, run_attempt: 2 }),
     data => { for (const job of data.jobs.slice(0, 15)) job.run_attempt = 2; },
     data => { data.jobs.at(-1).started_at = '2026-10-30T00:09:59Z'; },
   ];
-  for (const mutate of mutations) { const data = fixture(); mutate(data); assert.throws(() => selectFinalizedInputs(data)); }
+  for (const status of ['in_progress', 'queued']) {
+    for (const mutate of mutations) {
+      const data = fixture(); data.run.status = status; mutate(data);
+      assert.throws(() => selectFinalizedInputs(data));
+    }
+  }
 });
 
 test('full quality evidence cannot relabel qualification or substitute identities and input metadata', () => {

@@ -3,6 +3,40 @@
 This is a working record for the `0.1.0` release gates. It is not a release
 certificate. The gate list is in [`todo.md`](../todo.md).
 
+## RC13 input-selector correction — 4 November 2026
+
+Candidate `0.1.0-rc.13` adds `queued` to the aggregate run statuses accepted by
+the shared input selector. Required producer jobs must still have completed
+successfully; source, run, attempt, artifact and signature checks are unchanged.
+The change covers fixture imports, qualification, preview and finalized inputs.
+Compiler/runtime, frontend, optimizer, library pins, fixtures and goldens are
+unchanged from RC12.
+
+The two targeted test suites retain 21 tests: four fail on the original
+selector's run-status assertion, then all 21 pass with the correction. The
+negative cases retain rejection of queued or failed producers, newer failed
+attempts, pending finalizers, substituted identities/artifacts and unsupported
+aggregate statuses. Replaying the retained original API metadata for the three
+targets also fails before the correction and passes afterward. These checks
+validate input selection locally; RC13 has not undergone release qualification
+and has not been published. Earlier candidates' successful jobs retain their
+original scope.
+
+## RC12 fixture-import failure — 4 November 2026
+
+The immutable signed tag `v0.1.0-rc.12` points to merge
+`080306c49c7e282545652822c43db931902cf2b9`.
+In [run 41825575674](https://github.com/0x000000000000000000001/gopurs/actions/runs/41825575674),
+all three build/core jobs passed. Nine fixture shards then failed in
+`validateRun`, before acquiring or importing their inputs: GitHub reported the
+aggregate run as `queued`, which the selector rejected despite the successful
+build producers. The run completed with failure at 16:15 UTC, before the
+authorized cancellation could be applied.
+
+The original job metadata and useful failure logs are retained. The failure
+occurs in the CI input selector before fixture execution. RC12 remains
+unqualified and unpublished, and its tag is unchanged.
+
 ## RC12 cache-format correction — 4 November 2026
 
 Candidate `0.1.0-rc.12` changes only the runtime-cache directory validation,
