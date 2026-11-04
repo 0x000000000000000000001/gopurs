@@ -64,7 +64,13 @@ ciblée avec les véritables producteurs des preuves, sans reconstruire les lots
 réussis. Ces changements nécessitent un nouveau candidat ; ils ne requalifient
 pas rétroactivement RC10.
 
-Le prochain candidat, `0.1.0-rc.11`, réunira tous les correctifs post-RC7, pins,
+La PR #28 a ensuite passé 24 portes rapides, 234 tests Node et deux smokes.
+La campagne RC11 a échoué sur les deux jobs Linux à l’export du cache Nix :
+le validateur refusait le répertoire `realisations`, créé par la version Nix
+épinglée en CI. Le tag reste immuable et non qualifié. Le correctif ciblé accepte
+ce répertoire uniquement vide ; les métadonnées inattendues restent refusées.
+
+Le prochain candidat, `0.1.0-rc.12`, réunira tous les correctifs post-RC7, pins,
 notices et cleanup fusionnés. Compilateur, runtime et pins restent ceux de RC10.
 La qualification complète sur son tag exact doit établir
 371 portes par plateforme, dont 51 bibliothèques et 401 fixtures dans chaque
@@ -189,5 +195,5 @@ ouvertes jusqu'à leur exécution ; aucune publication stable n'est implicite.
 - [ ] Artefacts reproductibles ou procédure de vérification explicite.
 - [x] Release candidate vérifiée depuis les artefacts publics : quickstart exécuté et b8x compilé sur Linux arm64 ; exceptions de publication documentées.
 - [ ] Rollback testé.
-- [x] Documentation et benchmarks conformes à ce qui est réellement mesuré : bilan RC10 actualisé, mesures historiques datées conservées, aucune qualification ni performance RC11 revendiquée ; contrôles de liens passés.
+- [x] Documentation et benchmarks conformes à ce qui est réellement mesuré : bilans RC10/RC11 actualisés, mesures historiques datées conservées, aucune qualification ni performance RC12 revendiquée ; contrôles de liens passés.
 - [ ] Installation et application Nix validées sur la matrice supportée.

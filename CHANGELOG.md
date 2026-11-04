@@ -6,11 +6,25 @@ All notable changes to gopurs are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0-rc.12]
+
+Twelfth candidate for `0.1.0`, correcting the Nix cache inventory check that
+blocked RC11 before Linux quality tests. Compiler/runtime, frontend, optimizer,
+library pins and test corpus remain unchanged. Qualification and publication
+are pending.
+
+### Fixed
+
+- Accept the empty `realisations` directory created by Nix 2.28.3 during a
+  runtime-path cache export. Continue rejecting nonempty auxiliary directories,
+  symlinks and unknown cache entries; no metadata is silently discarded.
+
 ## [0.1.0-rc.11]
 
 Eleventh candidate for `0.1.0`, grouping CI recovery and documentation after
 RC10's infrastructure failures. Compiler, runtime, TAST/frontend, optimizer
-and library pins are unchanged. Qualification and publication are pending.
+and library pins are unchanged. Both Linux jobs failed at the runtime-cache
+export inventory check; RC11 remains unqualified and unpublished.
 
 ### Changed
 

@@ -3,6 +3,38 @@
 This is a working record for the `0.1.0` release gates. It is not a release
 certificate. The gate list is in [`todo.md`](../todo.md).
 
+## RC12 cache-format correction — 4 November 2026
+
+Candidate `0.1.0-rc.12` changes only the runtime-cache directory validation,
+its targeted regression and release documentation. It accepts empty
+`realisations/`, which Nix 2.28.3 creates for concrete runtime-path exports,
+while still rejecting any contents in auxiliary directories, links and
+unknown entries. Compiler/runtime, frontend, optimizer, library pins, fixtures
+and goldens are unchanged. The targeted regression fails before the fix and
+passes after it. A real Nix 2.28.3 runtime-file cache export reproduces the
+same rejection with the frozen RC11 validator and succeeds with the corrected
+validator. A second fresh container imports the cache with network access,
+substitution and builds disabled, then verifies the original file bytes.
+Newer Nix cache layouts remain accepted. These small local checks exercise
+the cache contract; they do not qualify a compiler or release candidate.
+
+## RC11 qualification failure — 4 November 2026
+
+[PR #28](https://github.com/0x000000000000000000001/gopurs/pull/28) passed
+24 quick gates, 234 Node tests and two smokes. Its merge is
+`35daff16f79c8b6714ed281fa0c8e030b4d377de`, tree
+`ab762e35232ad5c6be61a110e8d72bcf99f71dd0`, with the immutable signed tag
+`v0.1.0-rc.11`.
+
+In [run 41814219847](https://github.com/0x000000000000000000001/gopurs/actions/runs/41814219847),
+both Linux jobs failed at **Export the prepared runtime environment for fixture
+shards**, after `nix copy`. The inventory rejected `realisations/` as an unknown
+directory. The pinned Determinate installer 3.5.2 uses Nix 2.28.3, whose file
+cache creates that directory unconditionally. The initial local probe used a
+newer Nix version which did not create it. The original job logs are retained;
+these failures do not establish a compiler defect or successful quality gates.
+RC11 cannot qualify and remains unpublished; its tag is not moved.
+
 ## RC11 grouped preparation — 4 November 2026
 
 Candidate `0.1.0-rc.11` groups CI environment transfer, selective retry and
