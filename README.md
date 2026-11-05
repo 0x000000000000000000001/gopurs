@@ -12,7 +12,7 @@ must be compiled with this fork; the standard PureScript compiler does not
 produce the required input.
 
 The project is **experimental**. The published prerelease is
-[`0.1.0-rc.7`](https://github.com/0x000000000000000000001/gopurs/releases/tag/v0.1.0-rc.7);
+[`0.1.0-rc.14`](https://github.com/0x000000000000000000001/gopurs/releases/tag/v0.1.0-rc.14);
 no stable release has been published. See the [known limitations](docs/limitations.md)
 and [release qualification record](docs/quality-0.1.0.md) before adopting it.
 
@@ -28,8 +28,10 @@ environment for Linux amd64/arm64 and macOS arm64.
 Install the published backend in your application:
 
 ```bash
-npm install --save-dev --ignore-scripts gopurs@0.1.0-rc.7
+npm install --save-dev --ignore-scripts gopurs@0.1.0-rc.14
 ```
+
+On npm, `next` points to RC14; `latest` still points to RC7.
 
 This installs the backend; the typed frontend and Go library ports are set up
 separately in the quickstart. With that project configured, compilation has

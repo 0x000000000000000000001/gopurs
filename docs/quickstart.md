@@ -1,12 +1,14 @@
 # Quickstart
 
 This walkthrough compiles a small PureScript program to Go and runs the
-resulting binary. It was tested on 26 October 2026 with a local gopurs `0.1.0` preview,
-Node.js `24.8.0`, Go `1.27.0`, Spago `1.0.x` and the typed compiler fork.
+resulting binary. It was tested on 5 November 2026 with the public gopurs
+`0.1.0-rc.14` package on Linux arm64, Node.js `24.8.0`, Go `1.27.0`,
+Spago `1.0.3` and the pinned typed compiler fork, using fresh application caches.
 
-The published prerelease is `0.1.0-rc.7`. Later candidates are tracked in the
-[qualification record](quality-0.1.0.md); historical walkthrough results do not
-qualify a new candidate.
+The published prerelease is `0.1.0-rc.14`, available on npm as `next`.
+The `latest` alias still points to `0.1.0-rc.7`. See the
+[qualification record](quality-0.1.0.md) for the exact source, toolchain and
+public installation evidence.
 
 The example uses the Go port of `console`. Stock PureScript libraries compile,
 but their JavaScript FFI is not a Go implementation.
@@ -44,7 +46,7 @@ npm init -y
 Install the published prerelease:
 
 ```bash
-npm install --save-dev --ignore-scripts gopurs@0.1.0-rc.7
+npm install --save-dev --ignore-scripts gopurs@0.1.0-rc.14
 ```
 
 To evaluate an unpublished candidate, prepare and review its archive using the

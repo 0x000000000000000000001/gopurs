@@ -9,9 +9,9 @@ what users may rely on. It is not evidence that the release gates in
 | Item | Decision |
 | --- | --- |
 | Package | `gopurs` |
-| Candidate in preparation | `0.1.0-rc.14`; release qualification and publication pending |
-| Published candidate | `0.1.0-rc.7` (GitHub prerelease; npm `next` and registry-assigned `latest`) |
-| First final version | `0.1.0` |
+| Published candidate | `0.1.0-rc.14` (GitHub prerelease and npm `next`) |
+| npm `latest` | `0.1.0-rc.7` (registry-assigned alias; still a prerelease) |
+| First final version (planned) | `0.1.0`; not published |
 | Version source | [`package.json`](../package.json) |
 | Versioning | [Semantic Versioning 2.0.0](https://semver.org/) |
 | Git tag | `vVERSION` (annotated and signed; verified by GitHub before release packaging) |
@@ -24,7 +24,9 @@ releases.
 
 Pre-releases use `-rc.N`. A release candidate is published through the same
 artifact and installation path as the final release.
-RC14 must complete its own [release gates](release.md) before publication.
+RC14 is available as a [GitHub prerelease](https://github.com/0x000000000000000000001/gopurs/releases/tag/v0.1.0-rc.14)
+and on npm `next`. Its qualification and consumer checks are recorded in the
+[quality record](quality-0.1.0.md).
 RC13 failed qualification and remains unpublished with its tag unchanged;
 the recorded RC7 and local campaign results retain their original scope.
 
@@ -101,7 +103,7 @@ The target matrix for `0.1.0` is:
 Release-blocking means that the platform must pass the release checks in blocks
 2 and 5. It is not a claim that those checks have already passed.
 
-RC9's `darwin/arm64` qualification targets the ARM64 `macos-15` runner;
+RC14's successful `darwin/arm64` qualification uses the ARM64 `macos-15` runner;
 this campaign does not establish tested compatibility with macOS 14.
 RC8's campaign was cancelled before any macOS steps ran during the
 `macos-14` shutdown schedule. RC8 remains unqualified and unpublished.
@@ -113,15 +115,15 @@ Toolchain reference:
 | Node.js | `24.8.0` | Build tooling and JavaScript host; other versions are not supported in `0.1.0` |
 | Go | `1.27.0` | Reference for the FFI parser and application builds |
 | Spago (backend build) | `0.93.45` | Matches the npm lockfile |
-| Spago (applications) | `1.0.x` with YAML configuration | The tested revisions are documented in the README |
+| Spago (applications) | `1.0.x` with YAML configuration | The tested revision is documented in the quickstart |
 | PureScript compiler | Typed fork, exact revision pinned in release notes | Upstream `purs` is not a substitute |
 
 Generated `go.mod` files declare Go 1.22. That declaration is not a support
 claim for older toolchains: only the reference Go version is validated for
 `0.1.0`. The initial CI validated the Nix packages, application checks and
 development shell on `aarch64-linux`, `x86_64-linux` and `aarch64-darwin`.
-The [quality record](quality-0.1.0.md) distinguishes those results from the
-remaining clean-tree and tagged release gates. The development shell is a
+The [quality record](quality-0.1.0.md) distinguishes those initial results from
+the subsequent clean-tree and tagged RC14 qualification. The development shell is a
 development environment, not a production artifact.
 
 ## Licensing and attribution

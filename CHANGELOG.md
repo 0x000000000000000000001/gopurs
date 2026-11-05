@@ -8,8 +8,12 @@ All notable changes to gopurs are recorded here. The format follows
 
 ## [0.1.0-rc.14]
 
-Fourteenth candidate for `0.1.0`, preparing a deterministic spec timeout fixture
-following RC13's macOS Dev failure. Qualification and publication are pending.
+Fourteenth candidate for `0.1.0`, with a deterministic spec timeout fixture
+following RC13's macOS Dev failure. The exact signed tag passed qualification
+on all three supported platforms and its artifacts were reviewed. Published on
+npm `next` and as a GitHub prerelease; public Hello, b8x compilation/linking and
+the real `next` rollback to RC7 followed by restoration to RC14 passed. `latest`
+remains RC7. The embedded documentation deviation and rollback scope are recorded in [the quality report](docs/quality-0.1.0.md#rc14-qualification-and-artifact-review--5-november-2026).
 
 ### Fixed
 

@@ -5,6 +5,12 @@ Une case de préparation cochée ne vaut pas validation de la release : les
 résultats doivent porter sur les sources et artefacts exacts qui seront publiés.
 Le bilan des campagnes est dans `docs/quality-0.1.0.md`.
 
+Clôture au 5 novembre 2026 : toutes les cases de ce plan sont satisfaites dans
+le périmètre documenté. RC14 est qualifiée et publiée en prerelease ; Hello,
+la compilation b8x et le rollback public de `next` vers RC7 puis sa restauration
+vers RC14 sont vérifiés. `latest` reste RC7. Cette clôture ne publie pas la
+version finale `0.1.0` et ne transforme pas RC14 en version stable.
+
 État RC7 au 30 octobre : la qualification des trois plateformes et l'audit des
 artefacts originaux passent. Le workflow reste en échec à la préparation du
 draft ; une reprise opérateur a été explicitement autorisée pour ces artefacts,
@@ -88,7 +94,7 @@ Les fixtures et la finalisation sont ignorées ; le tag RC13 reste immuable,
 non qualifié et non publié. Le [bilan RC13](docs/quality-0.1.0.md#rc13-qualification-failure--4-november-2026)
 conserve l'identité du run original.
 
-Le prochain candidat, `0.1.0-rc.14`, prépare le pin spec
+Le candidat `0.1.0-rc.14` épingle le pin spec
 `7bbb30f00bfde95cdb39286662bb5a0f71e3f368`, issu de la
 [PR spec #2](https://github.com/0x000000000000000000001/gopurs-spec/pull/2)
 revue et fusionnée. Seule cette fixture remplace son délai de 15 ms par
@@ -97,18 +103,22 @@ reproduit l'échec CI sous contention CPU (20/20), tandis que le cas corrigé
 passe en Dev et Release. Ces contrôles ciblés utilisent la toolchain locale de
 développement ; ils ne qualifient pas RC14 et ne démontrent pas de défaut du
 runtime. Compilateur, runtime, frontend, optimiseur, autres pins et workflows
-restent inchangés. La qualification complète sur son tag exact doit établir
-371 portes par plateforme, dont 51 bibliothèques et 401 fixtures dans chaque
-profil Release/Dev. Les autres cases ouvertes seront vérifiées sur ces mêmes
-sources et artefacts ; aucun nouveau lot de cleanup n'est requis pour ce plan.
-RC7 reste la version publique jusqu'à la publication d'un candidat vérifié.
-
-La clôture suit trois étapes : terminer et committer les changements groupés,
-qualifier puis revoir les artefacts exacts, enfin vérifier l'installation
-publique et le retour du canal `next` à la version de repli retenue. La
-publication et les changements de canal demandent encore une autorisation
-explicite sur les artefacts revus. Les cases dépendant de ces résultats restent
-ouvertes jusqu'à leur exécution ; aucune publication stable n'est implicite.
+restent inchangés. La qualification complète du tag RC14 est désormais réussie :
+371 portes par plateforme, 51 bibliothèques et 401 fixtures par profil Release/Dev.
+Les 45 artefacts et leurs signatures sont vérifiés ; le
+[bilan RC14](docs/quality-0.1.0.md#rc14-qualification-and-artifact-review--5-november-2026)
+conserve les identités, preuves et limites. Seul le dernier job de préparation
+du brouillon a été repris avec autorisation, sans rejouer builds, tests ou signatures.
+RC14 est publiée sur npm `next` et en prerelease GitHub. Les octets publics,
+la provenance et les 45 artefacts sont vérifiés. Le Hello public et les 17 étapes
+de compilation b8x passent sur Linux arm64, sans exécution des programmes b8x.
+Le retour réel de `next` vers RC7 puis sa restauration vers RC14 passent chacun
+une installation neuve et Hello ; `latest` reste RC7. Le repli RC7 est validé
+pour cet exemple inchangé, sans garantie pour les applications dépendant des
+correctifs ultérieurs. L'archive contient encore des exemples documentaires
+RC2/RC9/RC10 : l'écart pré-tag a été explicitement accepté et l'erratum est
+public, avec les 45 artefacts et le tag inchangés. Les guides sources corrigés
+sont distincts de ces octets signés. Aucun nouveau cleanup de code n'est requis.
 
 ## 1. Figer le périmètre et le contrat public
 
@@ -132,7 +142,7 @@ ouvertes jusqu'à leur exécution ; aucune publication stable n'est implicite.
 - [x] Vérifier la reproductibilité des sorties, ou documenter précisément les différences.
 - [x] Mettre en place une CI Linux et macOS sur les architectures supportées.
 - [x] Rendre le cache frontend des campagnes rapides indépendant des pins des bibliothèques : [PR #16](https://github.com/0x000000000000000000001/gopurs/pull/16) fusionnée, clé dérivée de Nix et cache amorcé sur `main`. Les campagnes complètes le contournent ; aucun gain de durée à chaud encore mesuré.
-- [ ] Vérifier le futur candidat sur toute la matrice depuis un environnement vierge, sans cache préchauffé obligatoire.
+- [x] Vérifier le futur candidat sur toute la matrice depuis un environnement vierge, sans cache préchauffé obligatoire. RC14 vérifiée sur les trois plateformes ; cache frontend de dépôt ignoré, substitutions Nix publiques disponibles. [Bilan RC14](docs/quality-0.1.0.md#rc14-qualification-and-artifact-review--5-november-2026).
 
 ## 2 bis. Nixifier le projet
 
@@ -178,9 +188,9 @@ ouvertes jusqu'à leur exécution ; aucune publication stable n'est implicite.
 - [x] Intégrer `bin/modtest` aux futures campagnes complètes : [PR #13](https://github.com/0x000000000000000000001/gopurs/pull/13) fusionnée après CI rapide Linux ; 51 bibliothèques par profil, sans ajouter les runners b8x ou altbak.pub.
 - [x] Vérifier 102 passages locaux des bibliothèques sur Linux arm64 : 51 Release et 51 Dev, dont 25 succès antérieurs conservés après audit d'absence d'impact et 77 nouveaux passages avec node-fs corrigé ; rapports, hashes et sources contrôlés.
 - [x] Corriger `chmod` synchrone/asynchrone dans node-fs et épingler `2a8653066a61f9d2ff106668a187ba2f3bc66a9d` : [node-fs PR #1](https://github.com/0x000000000000000000001/gopurs-node-fs/pull/1) et [gopurs PR #15](https://github.com/0x000000000000000000001/gopurs/pull/15) fusionnées, régressions locales et CI rapide Linux validées.
-- [ ] Qualifier un futur candidat réunissant les correctifs post-RC7 et les tests des bibliothèques sur toutes les plateformes annoncées ; corriger toute régression bloquante révélée par cette campagne.
-- [ ] Exiger une CI verte sur le tag de release : le run RC7 reste en échec au draft, avec une exception opérateur documentée pour sa publication.
-- [x] Corriger la reprise CI pour distinguer les jobs réellement réexécutés des copies de métadonnées GitHub, et la comparaison de provenance npm pour le seul ajout d'un `keyid` DSSE vide : [PR #14](https://github.com/0x000000000000000000001/gopurs/pull/14) fusionnée après régressions locales et CI rapide Linux ; la finalisation d'un futur tag reste à valider.
+- [x] Qualifier un futur candidat réunissant les correctifs post-RC7 et les tests des bibliothèques sur toutes les plateformes annoncées ; corriger toute régression bloquante révélée par cette campagne. RC14 passe 371 portes par plateforme, dont 51 bibliothèques et 401 fixtures par profil Release/Dev. [Bilan RC14](docs/quality-0.1.0.md#rc14-qualification-and-artifact-review--5-november-2026).
+- [x] Exiger une CI verte sur le tag de release : le run RC7 reste en échec au draft, avec une exception opérateur documentée pour sa publication. Exigence désormais satisfaite par le run RC14 `42001425870`, réussi après la seule reprise autorisée du job de brouillon ; l’exception RC7 reste historique. [Bilan RC14](docs/quality-0.1.0.md#rc14-qualification-and-artifact-review--5-november-2026).
+- [x] Corriger la reprise CI pour distinguer les jobs réellement réexécutés des copies de métadonnées GitHub, et la comparaison de provenance npm pour le seul ajout d'un `keyid` DSSE vide : [PR #14](https://github.com/0x000000000000000000001/gopurs/pull/14) fusionnée après régressions locales et CI rapide Linux ; finalisation validée sur RC14 ; publication publique distincte.
 - [x] Configurer la CI sur les tags pour couvrir le frontend TAST, le bootstrap natif et l'exécution d'applications, en plus du paquet JavaScript ; son exécution verte reste une porte distincte.
 
 ## 6. Préparer les artefacts et la publication
@@ -190,7 +200,7 @@ ouvertes jusqu'à leur exécution ; aucune publication stable n'est implicite.
 - [x] Signer le tag RC7 et les attestations de ses artefacts ; vérifications cryptographiques passées.
 - [x] Rédiger les notes de version et le changelog de RC7 ; la version stable reste à préparer.
 - [x] Tester l'installation npm de RC7 depuis les artefacts publics sur Linux arm64, avec vérification des octets et de la provenance.
-- [x] Auditer les 51 ports sources `gopurs-*`, leurs pins et dépendances, puis corriger les écarts identifiés de notices/métadonnées (`effect`, `uuid`, `js-bigints`) ; conserver les identités des campagnes réellement exécutées ([audit et corrections](docs/library-source-audit.md)). La qualification du futur candidat reste ouverte ci-dessus ; une publication autonome npm/Spago doit vérifier ses propres versions, bornes, fichiers et notices, sans versions communes imposées.
+- [x] Auditer les 51 ports sources `gopurs-*`, leurs pins et dépendances, puis corriger les écarts identifiés de notices/métadonnées (`effect`, `uuid`, `js-bigints`) ; conserver les identités des campagnes réellement exécutées ([audit et corrections](docs/library-source-audit.md)). La qualification RC14 est consignée ci-dessus ; une publication autonome npm/Spago doit vérifier ses propres versions, bornes, fichiers et notices, sans versions communes imposées.
 - [x] Supprimer la résolution inutile de `strcase` dans `strings-extra` : aucun import ne l'utilise, les tests ciblés Release/Dev passent avec un cache de modules Go neuf et les téléchargements Go désactivés ; le bootstrap épingle `b448bb4a91086146fd430ae1cc0a370fab78cce5`.
 - [x] Remplacer les endpoints publics des tests `node-http` par une fixture HTTPS locale avec vérification TLS et assertions de statut, corps et cookies ; corriger la transmission du corps Go avec le hook `node-event-emitter`. Les deux ports passent les contrôles ciblés Release/Dev ([portée et preuves](docs/quality-0.1.0.md#local-https-targeted-checks--31-october-2026)). Les corrections de notices/métadonnées sont consignées séparément dans l'audit.
 - [x] Vérifier localement `bin/test -c` et `bin/modtest -c` : 401 fixtures et 51 bibliothèques réussies en Release sur macOS arm64, avec reprises après incidents de cache/disque et correction de la FFI de test `stdout` dans `node-http` ; reconstructions natives effectives et mêmes octets du compilateur ([détail et limites](docs/quality-0.1.0.md#local-clean-command-checks--1-november-2026)).
@@ -198,27 +208,27 @@ ouvertes jusqu'à leur exécution ; aucune publication stable n'est implicite.
 - [x] Vérifier la provenance de la publication npm réelle de RC7 et l'identité exacte des octets téléchargés.
 - [x] Documenter la [procédure de rollback](docs/release.md#rollback-and-recovery) et les limites d'une première publication.
 - [x] Vérifier les 45 artefacts RC7 conservés contre la release publique, les checksums, les signatures du paquet npm et du binaire macOS, puis leur réinstallation locale avec exécution JS/native dans des caches neufs ([preuve et limites](docs/quality-0.1.0.md#retained-rc7-recovery-check--1-november-2026)).
-- [ ] Retenir une version de repli adaptée aux applications concernées et tester réellement le retour du canal public à cette version ; la réinstallation locale de RC7 et le registre simulé ne valent pas rollback public validé, et RC7 ne contient pas les correctifs de bibliothèques postérieurs.
+- [x] Retenir une version de repli adaptée aux applications concernées et tester réellement le retour du canal public à cette version ; la réinstallation locale de RC7 et le registre simulé ne valent pas rollback public validé, et RC7 ne contient pas les correctifs de bibliothèques postérieurs. Exercice public `next` RC14 → RC7 → RC14 réussi avec une installation neuve et Hello à chaque phase ; repli limité à cet exemple inchangé. [Preuves et limites](docs/quality-0.1.0.md#actual-public-rollback-and-restoration).
 - [x] Aligner le contrat de support avec les parcours réellement distribués : hôte JavaScript npm/Nix et binaires Go ; hôte Rust expérimental.
-- [ ] Figer dans Git toutes les sources, configurations et notices du prochain candidat ; vérifier son checkout et ses artefacts exacts avant publication.
+- [x] Figer dans Git toutes les sources, configurations et notices du prochain candidat ; vérifier son checkout et ses artefacts exacts avant publication. Checkout RC14 propre et détaché, 26 sources et outils figés, 45 artefacts et signatures vérifiés ; écart documentaire pré-tag explicitement accepté et erratum publié, sans modification des octets signés.
 - [x] Effectuer le smoke test public sur Linux arm64 dans un nouveau projet, avec caches npm, Spago et Go neufs et prérequis de toolchain déjà préparés.
 
 ## 7. Clôturer la publication
 
 - [x] Vérifier le parcours du README et de son quickstart lié : installation publique, compilation PureScript/Go et sortie exacte `Hello from gopurs`, avec les prérequis documentés.
-- [x] Vérifier la compilation b8x complète depuis les artefacts publics RC7 sur Linux arm64 : 17 étapes et 12 exécutables liés ; aucun programme exécuté.
+- [x] Vérifier la compilation b8x complète depuis les artefacts publics RC7 sur Linux arm64 : 17 étapes et 12 exécutables liés ; aucun programme exécuté. Même contrôle réussi depuis les artefacts publics RC14 sur le snapshot source conservé.
 - [x] Publier les limites et les travaux futurs de RC7 sans les présenter comme terminés.
 - [x] Publier les notes de RC7, les plateformes supportées et le canal de support dans la release et la documentation.
-- [x] Archiver les preuves RC7, les résultats de la CI et les contrôles publics, avec leurs limites et exceptions.
+- [x] Archiver les preuves RC7, les résultats de la CI et les contrôles publics, avec leurs limites et exceptions. Preuves originales RC14 également conservées : qualification, 45 artefacts, publication, consommateurs et deux phases du rollback.
 
 ## Critères de sortie de la version stable
 
-- [ ] Clone propre, installation et premier build réussis sans intervention manuelle.
-- [ ] CI verte sur toutes les plateformes annoncées.
-- [ ] Aucun secret, chemin privé ou artefact interne dans la publication.
-- [ ] Licences et attributions complètes.
-- [ ] Artefacts reproductibles ou procédure de vérification explicite.
+- [x] Clone propre, installation et premier build réussis sans intervention manuelle. Acquis dans les trois environnements CI RC14, puis installation publique et Hello vérifiés sur Linux arm64 avec les prérequis préparés et des caches applicatifs neufs. [Bilan RC14](docs/quality-0.1.0.md#rc14-qualification-and-artifact-review--5-november-2026).
+- [x] CI verte sur toutes les plateformes annoncées. RC14 passe sur Linux amd64/arm64 et macOS arm64. [Bilan RC14](docs/quality-0.1.0.md#rc14-qualification-and-artifact-review--5-november-2026).
+- [x] Aucun secret, chemin privé ou artefact interne dans la publication. Revue des fichiers autorisés, sources et artefacts exacts RC14 sans anomalie détectée ; méthode et limites du contrôle consignées dans le bilan. [Bilan RC14](docs/quality-0.1.0.md#rc14-qualification-and-artifact-review--5-november-2026).
+- [x] Licences et attributions complètes. LICENSE, NOTICE et THIRD_PARTY_NOTICES contrôlés avec les sources et artefacts RC14. [Bilan RC14](docs/quality-0.1.0.md#rc14-qualification-and-artifact-review--5-november-2026).
+- [x] Artefacts reproductibles ou procédure de vérification explicite. Procédure explicite appliquée : checksums, provenance et signatures vérifiés ; même archive npm produite sur les trois plateformes. [Bilan RC14](docs/quality-0.1.0.md#rc14-qualification-and-artifact-review--5-november-2026).
 - [x] Release candidate vérifiée depuis les artefacts publics : quickstart exécuté et b8x compilé sur Linux arm64 ; exceptions de publication documentées.
-- [ ] Rollback testé.
-- [x] Documentation et benchmarks conformes à ce qui est réellement mesuré : bilans RC10 à RC13 actualisés et préparation RC14 documentée, mesures historiques datées conservées, aucune qualification ni performance RC14 revendiquée.
-- [ ] Installation et application Nix validées sur la matrice supportée.
+- [x] Rollback testé. Retour réel de `next` à RC7 puis restauration RC14, versions et intégrités vérifiées, Hello réussi dans deux projets neufs ; `latest` inchangé. [Preuves et limites](docs/quality-0.1.0.md#actual-public-rollback-and-restoration).
+- [x] Documentation et benchmarks conformes à ce qui est réellement mesuré : bilans RC10 à RC13 conservés, qualification, revue et publication RC14 documentées, limites des contrôles publics et du rollback explicites ; mesures historiques datées, aucune nouvelle performance RC14 revendiquée.
+- [x] Installation et application Nix validées sur la matrice supportée. Les trois validations Nix RC14, avec compilation et exécution de l’application, passent. [Bilan RC14](docs/quality-0.1.0.md#rc14-qualification-and-artifact-review--5-november-2026).

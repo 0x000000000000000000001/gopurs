@@ -469,6 +469,14 @@ affected application's dependency pins and behavior. The npm staging
 placeholder `0.0.0-stage` is not a fallback. Refresh the observed dist-tags
 immediately before any future publication or restoration.
 
+On 5 November 2026, RC14's public rollback exercise moved `next` to RC7,
+verified a fresh `gopurs@next` installation and the documented Hello, then
+restored `next` to RC14 and repeated that check in another empty project.
+`latest` stayed on RC7 throughout. See the [RC14 evidence and scope](quality-0.1.0.md#actual-public-rollback-and-restoration).
+This validates RC7 for that unchanged example only; applications requiring
+post-RC7 library fixes need a separately validated fallback. Immutable Git tags
+and release assets were preserved.
+
 Removing `latest` does **not** block `npm install gopurs`. npm can fall back to
 an eligible published version, including the affected version when it is the
 only one. Deprecation produces a warning; it does not prevent installation.
