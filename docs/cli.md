@@ -73,9 +73,10 @@ All hosts run the same compiler pipeline and report the same phase names.
 | `GOPURS_FORCE_BUILD` | `0` or `1` | Same effect as `--force`. |
 | `GOPURS_ALLOC_PROFILE` | `0` or `1` | Enable allocation profiling and force the measured passes. Experimental. |
 
-The native launcher raises preparation and PBO workers to `8` on machines with
-at least 32 GiB of memory unless the variables are set explicitly. The
-JavaScript and Rust hosts keep their own defaults.
+The `bin/gopurs` launcher raises preparation and PBO workers to `8` on machines
+with at least 32 GiB of memory for all three hosts, unless the variables are
+set explicitly. TAST loading defaults to eight workers for native Go and Rust,
+and one for JavaScript. Set worker counts explicitly for reproducible comparisons.
 
 `GOPURS_GO_PACKAGES`, `GOPURS_GO_PACKAGE_OVERLAY` and
 `GOPURS_BUILD_MANIFEST` interact with the incremental cache. Keep the chosen
@@ -132,3 +133,163 @@ go build -o hello ./main
 See [build-cache.md](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/build-cache.md) for cache layout, migration and
 concurrency, and [publication-scope.md](publication-scope.md) for the stability
 policy.
+
+## Build profiles
+
+The default profile remains `release`. Use `--dev` explicitly to reduce
+compilation work. Passing both `--dev` and `--release` is an error;
+neither flag overrides the other.
+
+Dev skips heuristic inlining of ordinary imported functions and all
+monomorphization: both direct and transitive specialization clones are omitted.
+It keeps the generic functions and the types and layouts from the TAST. Local
+simplification, explicit inlining directives, dictionary resolution and typed
+normalization remain enabled; the optimizer still runs to convergence. The Go
+generation passes, ordinary native workers and tail-call optimization remain
+enabled.
+
+This profile is experimental. It reduces preparation and code-generation work,
+but this repository does not attach a public, reproducible benchmark to it. It
+does not establish a faster incremental build or a speedup through final Go
+compilation. Generated-program runtime performance was not measured here and
+depends on the workload.
+
+Pass the profile to the backend itself, from an application with typed TAST
+already generated:
+
+```bash
+gopurs --dev --main Main
+gopurs --release --main Main
+```
+
+When `workspace.backend` in `spago.yaml` already selects gopurs, forward the
+option through Spago:
+
+```bash
+spago build --backend-args "--dev"
+spago build --backend-args "--release"
+```
+
+Project-specific build wrappers must forward backend arguments to select a
+profile; these options are gopurs options, not additional Spago build flags.
+
+The test runners accept both `-d` and `--dev`:
+
+```bash
+./bin/test -d FFIIntegerReturns
+./bin/modtest -d prelude
+```
+
+Fixtures compare the generated Go against snapshots for the selected profile,
+then compile and execute it. `bin/test` defaults `GOPURS_GO_PACKAGES` to `0`,
+using the complete legacy snapshot set: `tests/passing-snapshots` for Release
+and `tests/passing-snapshots-dev` for Dev. Explicitly setting
+`GOPURS_GO_PACKAGES=1` tests the package layout instead, using
+`tests/passing-package-snapshots` or `tests/passing-package-snapshots-dev`.
+Each invocation checks only its selected layout and profile. `--update-snapshots` (or
+`UPDATE_SNAPSHOTS=1`) updates only the selected profile, after successful Go
+compilation and execution. Campaign reports record the selected profile.
+In sibling projects, `b8x/bin/t -d` builds in Dev before
+running tests, and `altbak.pub/bin/go/run -d` selects Dev for the Go backend.
+These wrappers retain Release as the default for builds without the option.
+For both test runners, `-c` rebuilds the selected compiler host: native by
+default, JavaScript with `GOPURS_JS=1`, or Rust with `GOPURS_RUST=1`.
+`modtest` streams each library's output as it runs and also preserves its log.
+Its private compiler launcher announces Dev mode for every library build.
+
+In Dev, these runners also compile the generated application packages with
+`-gcflags='gopurs/output/...=-N -l'`: Go optimization and inlining are disabled
+for those packages to shorten compilation. The compiler host rebuilt by `-c`,
+the Go standard library and Release builds keep their normal flags. Each Dev
+application build logs the flags; generated programs can run more slowly.
+Calling `bin/gopurs --dev` alone only generates Go sources. When compiling
+those sources manually, use `go build -gcflags='gopurs/output/...=-N -l' ./main`
+from the output directory to select the same Go compilation mode.
+
+Generic callbacks construct records and ADTs in their consumer's representation.
+This avoids copying a growing list merely to box and unbox loop state, including
+when Dev omits specialization. `npm run test:profiles` checks linear allocation
+growth and JavaScript/Go parity over 100,000 generic loop steps.
+
+Both profiles retain incremental compilation with persistent disk caches and
+require no daemon. Release and the default use `output/.gopurs-cache`; dev uses
+`output/.gopurs-cache/profiles/dev`. Their reusable state coexists. They publish
+to the same public Go output tree under one shared write lock, so switching
+profiles may restore generated files even when the selected profile's modules
+are cached. The first build of a profile needs to populate its own cache.
+The `dev-v4` policy uses distinct build and module keys, so results from other
+experimental dev policies are not reused.
+
+## Timing and worker diagnostics
+
+Every invocation reports phase durations and `[gopurs] backend total: … ms`
+on stderr. The PureScript entrypoint measures loading and sorting the TAST,
+preparation and monomorphization, runtime output, optimization and emission,
+and entrypoint output. The total includes these phases; do not add it to them.
+It excludes the preceding `purs` compilation, process startup, and subsequent
+`go build`. Failed actions report elapsed time with `(failed)` and rethrow the
+original error.
+
+Optimization and emission also report the current module every 100 modules,
+starting with the first, so long builds show progress before the phase completes.
+The initial `[gopurs] workers: prepare=…, pbo=…, emit=…, pipeline=…` line reports
+the effective worker limits and emission pipeline state after configuration is
+resolved. Preparation is capped at eight, and PBO/emission at 64. A limit of one
+selects the sequential path; emission at one also disables pipeline overlap.
+
+`Gopurs.Host.Metrics` uses a monotonic clock, following altbak's `Bench` approach:
+`performance.now()` under Node, `time.Since` in Go and `Instant` in Rust.
+No flag is needed; all three compiler builds report the same phases. These are real
+elapsed times for the current invocation, not warm-up or repeated benchmarks.
+
+The `bin/gopurs` launcher runs `bin/gopurs-native` when it exists, unless
+`GOPURS_JS=1` selects the Node bundle `bin/gopurs.js` or `GOPURS_RUST=1` selects
+`bin/gopurs-rust`. Without a native build it falls back to the Node bundle and
+prints a notice.
+All three hosts report identical phases, so
+`GOPURS_JS=1 ../gopurs/bin/gopurs --main Main` in a project with a typed `output`
+measures the JavaScript compiler with the same instrumentation as the native one.
+`npm run build` refreshes the bundle; `npm run build:native` refreshes the bundle
+and Go executable; `npm run build:rust` refreshes the Rust executable.
+
+TAST loading and decoding use eight workers by default in the native Go and Rust compilers;
+the JavaScript compiler defaults to one. Set `GOPURS_JOBS` from 1 to 64 to select
+a worker count (for example, `GOPURS_JOBS=1 b` in b8x).
+Missing or invalid values use the backend's default. Batches preserve input order before
+dependency sorting. Native workers run on goroutines; Node overlaps file I/O
+but still decodes JSON on its JavaScript thread. Other compiler passes are
+unaffected by this setting.
+
+Dated [TAST loading measurements](history/tast-loading-202609.md) are retained
+separately from this command reference.
+
+`GOPURS_EMIT_JOBS` controls Go emission separately (1 to 64, defaulting to 8;
+set it to 1 for sequential emission). The compiler batches consecutive independent modules, using the
+optimizer's effective imports to wait for generated function signatures before
+emitting a dependent module. Workers receive immutable metadata snapshots and
+publish their signatures in the original order after the batch completes.
+Translation is deferred until its Aff worker runs, so native workers execute
+the CPU work concurrently. `GOPURS_PBO_JOBS` independently controls optimization
+concurrency while preserving sequential directive visibility and publication
+order. See [parallel emission](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/parallel-emission.md) for the lifecycle
+contract, defaults, measurements and validation.
+
+`GOPURS_PREPARE_JOBS` controls preparation workers, including release transitive
+specialization rounds and the final per-module rewrite (compiler default 2,
+clamped to 1–8). Each transitive round merges ordered results before starting
+the next. The launcher selects eight preparation and PBO workers on machines
+with at least 32 GiB for every host, unless those variables are explicitly set.
+This choice is independent of `GOGC` and `GOMEMLIMIT`. Smaller machines retain
+the compiler defaults (preparation 2, PBO 1); emission defaults to 8 everywhere.
+Set the environment variables explicitly for reproducible comparisons. See
+[parallel preparation](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/parallel-preparation.md).
+
+For the native Go host, the launcher also selects `GOGC=off` with a soft GC
+memory target (`GOMEMLIMIT`): 10 GiB on machines with 32–47 GiB of RAM, and 16 GiB from 48 GiB
+upwards. An explicit `GOGC` or `GOMEMLIMIT` preserves the caller's entire GC
+policy. `GOMAXPROCS` is left to Go unless the caller sets it. This target is not
+a strict RSS ceiling. It governs the compiler process and does not configure
+the subsequent application build.
+Initial persistent preparation proofs use the same bounded preparation workers,
+then join in source order before publishing cache objects. Cache formats and
+incremental invalidation rules are unchanged.

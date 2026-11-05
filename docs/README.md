@@ -45,7 +45,8 @@ campaign as a contract.
 
 | Document | Subject |
 | --- | --- |
-| [bootstrap.md](bootstrap.md) | bootstrap chain and pinned inputs |
+| [bootstrap.md](bootstrap.md) | source installation, native/Rust bootstrap and pinned inputs |
+| [development.md](development.md) | library ports, FFI parser and runtime changes |
 | [benchmark-protocol.md](benchmark-protocol.md) | measurement protocol and reporting rules |
 | [release.md](release.md) | release procedure |
 | [release-benchmark.md](release-benchmark.md) | release backend benchmark |
@@ -70,6 +71,7 @@ for provenance; do not use them as the current contract.
 - Build campaigns: `build-*.md`
 - Cost profiles and measurements: `build-cost-*`, `build-preparation-*`
 - Plans and archives: `plan-archive-20261019.md`, [../todo.md](../todo.md)
+- [TAST loading measurements — September 2026](history/tast-loading-202609.md)
 - Cleanup baseline: [history/cleanup-baseline.md](history/cleanup-baseline.md)
 
 ## Conventions

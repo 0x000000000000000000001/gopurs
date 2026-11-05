@@ -70,7 +70,8 @@ To install into an application without building the backend there:
 
 ```bash
 npm pack --ignore-scripts
-npm install --save-dev --ignore-scripts /absolute/path/to/gopurs-0.1.0-rc.2.tgz
+# In the application directory, use the archive printed by npm pack:
+npm install --save-dev --ignore-scripts /absolute/path/to/the-generated-archive.tgz
 ```
 
 The archive contains the JavaScript compiler bundle and the FFI parser
@@ -108,6 +109,53 @@ Build it from the public fork or use the Nix toolchain described in
 development builds retain discovery under `../../purescript/.stack-work`.
 The TAST metadata check is necessary but does not establish a compiler's source
 revision; record the source revision when producing a release.
+
+The native PBO implementation cache retains immutable modules in memory for
+one build; it does not use the JavaScript host's disk spill or memory budget.
+This is separate from the driver's persistent incremental cache.
+
+## Rust bootstrap
+
+```bash
+npm run build:rust
+GOPURS_RUST=1 ../gopurs/bin/gopurs --main Main # from a project with typed output/
+```
+
+`build:rust` compiles **gopurs itself** through the sibling `../../purust/purust`
+backend and Cargo. The resulting `bin/gopurs-rust` generates Go, just like the
+Go and JavaScript executables. It uses this repository's PureScript sources,
+`purescript-backend-optimizer-gopurs`, and the `purust-*` libraries for its host
+runtime. The same Go FFI parser is linked through a C archive into the executable.
+
+The bootstrap requires the npm dependencies from the source installation,
+typed `purs`, Go with cgo and a C toolchain, Cargo, Purust and its sibling
+library ports. It builds threaded Rust
+with release O3 and ThinLTO, then compiles and executes a fresh Go/FFI smoke test
+before atomically installing the compiler. Failures retain the workspace/logs;
+`--keep-workspace` retains successful builds too.
+On macOS it uses the Mach-O linker bundled with the Rust toolchain, keeping
+the linker compatible with rustc's LLVM bitcode version.
+
+`GOPURS_PURS` overrides the frontend, `PURUST_DIR` the Purust checkout,
+`GOPURS_NATIVE_TMPDIR` the workspace parent, and `GOPURS_RUST_OUTPUT` the binary
+destination. `GOPURS_KEEP_WORKSPACE=1` also retains successful builds invoked by
+library runners. Cargo honors `CARGO_TARGET_DIR`. `PURUST_JS=1` selects the JavaScript
+Purust executable for this bootstrap; it has no effect on an installed gopurs
+compiler's host selection. `GOPURS_JS=1` and `GOPURS_RUST=1` are mutually exclusive.
+
+In `../gopurs-aff`, `GOPURS_RUST=1 ./bin/test` generates, builds and executes Go;
+adding `-c` rebuilds this Rust-hosted compiler first.
+On machines with at least 32 GiB of RAM, the launcher selects eight preparation
+and PBO workers for Rust as well as Go and JavaScript. Explicit worker settings
+take precedence; the automatic Go GC policy applies only to the Go compiler host.
+
+With all three compiler executables built, `npm run test:rust` checks exact Go
+output and CLI failures in sequential/parallel modes, then compiles and executes
+the string, FFI, record-worker, owned-tree and JSON regression fixtures on each
+host. `GOPURS_TEST_KEEP_WORKSPACE=1` retains successful fixture workspaces.
+
+The Rust build uses PGO by default. Set `GOPURS_RUST_PGO=0` for a plain O3
+ThinLTO build. See the [PGO guide](pgo.md) for training and retained profiles.
 
 ## Checksums
 
