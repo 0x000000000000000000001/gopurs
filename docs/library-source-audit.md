@@ -12,13 +12,24 @@ and 1 November and their new source pins are recorded separately below.
 
 | Surface | Identity and release requirement |
 | --- | --- |
-| Compiler npm package | `gopurs@0.1.0-rc.13` is the candidate in preparation, with the same library pins as RC10; qualification and publication are pending. RC7 remains the published candidate. The final target is `0.1.0`; each candidate's own version, dependency lockfile, file allowlist and installed-artifact tests apply. |
+| Compiler npm package | `gopurs@0.1.0-rc.14` is the candidate in preparation, updating only the spec pin from RC13 as recorded below; qualification and publication are pending. RC7 remains the published candidate. The final target is `0.1.0`; each candidate's own version, dependency lockfile, file allowlist and installed-artifact tests apply. |
 | Library sources used by bootstrap/applications | Git URL and exact commit from the bootstrap manifest; validate this combination with the selected compiler and package set. The compiler npm archive does not contain these repositories. |
 | Independent future npm/Spago library publication | Review that package's name, destination, version, dependency bounds, files and notices before publishing it. This is a separate operation. |
 
 These independent libraries do not need identical version numbers. Their
 current release identity is the compatible set of source commits. A version
 copied from an upstream package is not a version assigned to the Go port.
+
+## Current spec pin — 5 November 2026
+
+RC14 selects `gopurs-spec` commit `7bbb30f00bfde95cdb39286662bb5a0f71e3f368`
+from reviewed, merged [spec PR #2](https://github.com/0x000000000000000000001/gopurs-spec/pull/2),
+replacing RC13's `c88da162df5d9ef85d672f5f2e819bb287e9647b`.
+The six-line fixture change makes the fail-fast timeout test wait for cancellation
+with `never`; its timeout, assertions and golden output remain unchanged.
+Other library pins are unchanged. The [targeted local evidence](quality-0.1.0.md#rc14-deterministic-spec-timeout-preparation--5-november-2026)
+uses a development toolchain and does not qualify RC14. The historical audit
+counts and source identities below retain their original scope.
 
 ## Manifest and file checks
 

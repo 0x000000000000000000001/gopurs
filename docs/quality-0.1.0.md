@@ -3,6 +3,53 @@
 This is a working record for the `0.1.0` release gates. It is not a release
 certificate. The gate list is in [`todo.md`](../todo.md).
 
+## RC14 deterministic spec timeout preparation — 5 November 2026
+
+Candidate `0.1.0-rc.14` updates only the spec source pin, release identity and
+release documentation. The selected spec commit is
+`7bbb30f00bfde95cdb39286662bb5a0f71e3f368`, from reviewed, merged
+[spec PR #2](https://github.com/0x000000000000000000001/gopurs-spec/pull/2).
+Its six-line fixture change replaces `delay (Milliseconds 15.0)` with
+`never :: Aff Unit` in `04-fail-fast-with-timeout`. The configured 10 ms timeout,
+fail-fast assertion and golden output are unchanged. Compiler/runtime, frontend,
+optimizer, all other pins and CI workflows are unchanged.
+
+Targeted local execution of the actual integration case gives these matches
+against the unchanged golden output:
+
+| Case and profile | Baseline | With one-CPU contention |
+| --- | --- | --- |
+| Original, Dev | 10/10 | 0/20 |
+| Corrected, Dev | 10/10 | 20/20 |
+| Corrected, Release | 5/5 | 5/5 |
+
+Every original-case mismatch under contention has the same output as the RC13
+failure: the delayed test passes and the following test executes. An independent
+probe using the pinned native Aff implementation also lets the 15 ms body win
+100/100 races under contention, while the timeout wins 50/50 against `never`.
+The correction tests fail-fast after a timeout without making successful body
+completion compete with that timeout. These observations establish fixture
+sensitivity to scheduling; the remote CI scheduler conditions are unknown.
+
+These checks use a local development toolchain and cover this case only. They
+do not qualify RC14 or establish a compiler/runtime defect. RC14 qualification
+and publication remain pending; no new performance result is claimed.
+
+## RC13 qualification failure — 4 November 2026
+
+The immutable tag `v0.1.0-rc.13` points to
+`1a807511ff78e981938f0bc24ff4f9bd3056ee82`.
+In [run 41891473142](https://github.com/0x000000000000000000001/gopurs/actions/runs/41891473142),
+both Linux core jobs passed. The macOS spec Release gate passed with 74 passing
+and 3 pending; spec Dev failed with 73 passing, 3 pending and 1 failed.
+The failing case, `04-fail-fast-with-timeout`, expected its 15 ms body to lose
+to the 10 ms timeout. Instead the body passed and the following test ran,
+producing the recorded golden mismatch. Fixtures and finalization were skipped.
+
+RC13 remains unqualified and unpublished. Its original tag, results and evidence
+retain their identities; the targeted local investigation above does not replace
+or retrospectively qualify this campaign.
+
 ## RC13 input-selector correction — 4 November 2026
 
 Candidate `0.1.0-rc.13` adds `queued` to the aggregate run statuses accepted by
@@ -18,9 +65,9 @@ negative cases retain rejection of queued or failed producers, newer failed
 attempts, pending finalizers, substituted identities/artifacts and unsupported
 aggregate statuses. Replaying the retained original API metadata for the three
 targets also fails before the correction and passes afterward. These checks
-validate input selection locally; RC13 has not undergone release qualification
-and has not been published. Earlier candidates' successful jobs retain their
-original scope.
+validate input selection locally; RC13's subsequent qualification failed as
+recorded above, and it has not been published. Earlier candidates' successful
+jobs retain their original scope.
 
 ## RC12 fixture-import failure — 4 November 2026
 

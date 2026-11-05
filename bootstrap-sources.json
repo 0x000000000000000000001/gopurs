@@ -179,7 +179,7 @@
     },
     "spec": {
       "url": "https://github.com/0x000000000000000000001/gopurs-spec.git",
-      "rev": "c88da162df5d9ef85d672f5f2e819bb287e9647b"
+      "rev": "7bbb30f00bfde95cdb39286662bb5a0f71e3f368"
     },
     "st": {
       "url": "https://github.com/0x000000000000000000001/gopurs-st.git",

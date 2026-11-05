@@ -6,11 +6,31 @@ All notable changes to gopurs are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0-rc.14]
+
+Fourteenth candidate for `0.1.0`, preparing a deterministic spec timeout fixture
+following RC13's macOS Dev failure. Qualification and publication are pending.
+
+### Fixed
+
+- Pin `gopurs-spec` at `7bbb30f00bfde95cdb39286662bb5a0f71e3f368`
+  ([spec PR #2](https://github.com/0x000000000000000000001/gopurs-spec/pull/2),
+  reviewed and merged): replace the 15 ms body delay in the fail-fast timeout
+  fixture with cancellable `never`, retaining the 10 ms timeout and golden
+  output. Targeted local Dev and Release checks pass under CPU contention;
+  they use a development toolchain and do not qualify this candidate.
+
+Compiler/runtime, frontend, optimizer, all other source pins and CI workflows
+are unchanged. RC13's tag and results remain unchanged.
+
 ## [0.1.0-rc.13]
 
 Thirteenth candidate for `0.1.0`, correcting the CI input selector after RC12.
 Compiler/runtime, frontend, optimizer, library pins and test corpus remain
-unchanged. RC13 qualification has not run and no RC13 publication has occurred.
+unchanged. Qualification failed in macOS spec Dev: 73 passing, 3 pending and
+one failing timeout fixture. Both Linux core jobs and macOS spec Release passed;
+fixtures and finalization were skipped. RC13 remains unqualified and unpublished,
+and its tag is immutable.
 
 ### Fixed
 
