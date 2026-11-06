@@ -1,29 +1,29 @@
 # Quickstart
 
-This walkthrough compiles a small PureScript program to Go and runs the
-resulting binary. It was tested on 5 November 2026 with the public gopurs
-`0.1.0-rc.14` package on Linux arm64, Node.js `24.8.0`, Go `1.27.0`,
-Spago `1.0.3` and the pinned typed compiler fork, using fresh application caches.
-
-The published prerelease is `0.1.0-rc.14`, available on npm as `next`.
-The `latest` alias still points to `0.1.0-rc.7`. See the
-[qualification record](quality-0.1.0.md) for the exact source, toolchain and
-public installation evidence.
-
-The example uses the Go port of `console`. Stock PureScript libraries compile,
-but their JavaScript FFI is not a Go implementation.
+Build and run a PureScript program that prints `Hello from gopurs`. It uses
+`gopurs@0.1.0-rc.14` and the Go port of `console` for `Effect.Console.log`.
 
 ## Prerequisites
 
-- Node.js `24.8.0` for the npm package and JavaScript compiler host.
-- Go `1.27.0` to build the generated application.
-- A TAST-capable `purs` from the compiler fork, first on `PATH`.
-- Spago `1.0.x` with YAML configuration.
-- Git.
+Start in an empty directory that will hold the example and its library port.
+If you use Nix with flakes enabled, open the development shell for this release
+and run the rest of the guide inside it.
 
-A version number alone does not prove that `purs` is the typed fork. After
-`spago build`, inspect `output/Main/corefn.json` for `typeTable`, `dataDecls`
-and `classDecls`.
+```bash
+nix develop github:0x000000000000000000001/gopurs/v0.1.0-rc.14
+```
+
+The shell supplies the tools below. For a manual setup, put them on `PATH`
+before continuing.
+
+- The [pinned typed `purs` compiler](https://github.com/0x000000000000000000001/purescript/tree/105f5752b39cc0f6c99a40064295338bf57ad223). Spago uses it to emit the type information gopurs needs.
+- Spago `1.0.3` for the application build.
+- Node.js `24.8.0` and npm for the gopurs JavaScript compiler host.
+- Go `1.27.0` and Git.
+
+See the [Nix guide](nix.md#typed-frontend-and-development-shell) for details of
+the pinned toolchain. The [qualification record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md#public-publication-and-consumer-checks)
+covers the public RC14 Hello tested on Linux arm64 on 5 November 2026.
 
 ## Workspace
 
@@ -35,11 +35,12 @@ workspace/
 └── hello/
 ```
 
-## Install the compiler
+## Install gopurs in the application
 
 ```bash
 mkdir hello
 cd hello
+mkdir src
 npm init -y
 ```
 
@@ -48,10 +49,6 @@ Install the published prerelease:
 ```bash
 npm install --save-dev --ignore-scripts gopurs@0.1.0-rc.14
 ```
-
-To evaluate an unpublished candidate, prepare and review its archive using the
-[release procedure](release.md#prepare-reviewable-local-artifacts), then install
-that exact archive with `npm install --save-dev --ignore-scripts /path/to/archive.tgz`.
 
 ## Install the console port
 
@@ -66,7 +63,7 @@ This is the console revision pinned by the candidate's bootstrap manifest.
 
 ## Create the project
 
-`spago.yaml`:
+In `hello/`, create `spago.yaml` with these contents.
 
 ```yaml
 package:
@@ -84,7 +81,7 @@ workspace:
       path: ../gopurs-console
 ```
 
-`src/Main.purs`:
+Save the program as `src/Main.purs`.
 
 ```purescript
 module Main where
@@ -107,7 +104,7 @@ go build -o hello ./main
 ./hello
 ```
 
-Expected output:
+The executable prints the following line.
 
 ```text
 Hello from gopurs
@@ -122,7 +119,7 @@ the [troubleshooting guide](troubleshooting.md).
 
 ## Minimal check without FFI
 
-To verify the compiler without a Go library port, remove `console` and use:
+To verify the compiler without a Go library port, remove `console` from both `dependencies` and `extraPackages` in `spago.yaml`, then use the following `Main.purs`.
 
 ```purescript
 module Main where

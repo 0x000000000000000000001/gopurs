@@ -2,88 +2,67 @@
 
 <img height="160" alt="gopurs" src="https://github.com/user-attachments/assets/b013e7c3-fac6-4ee8-9d4c-f39ac8c2c921" />
 
-**Compile PureScript applications to Go.** Build native executables, call Go
-libraries through FFI, and use Go implementations of PureScript effects and
-`Aff`.
+**Compile PureScript applications to Go.** gopurs generates Go source that you
+can build into a native executable. Your PureScript code can call Go libraries
+through the foreign function interface (FFI).
 
-gopurs uses a [typed PureScript compiler fork](https://github.com/0x000000000000000000001/purescript).
-The fork preserves the types the backend needs to generate Go. Applications
-must be compiled with this fork; the standard PureScript compiler does not
-produce the required input.
-
-The project is **experimental**. The published prerelease is
-[`0.1.0-rc.14`](https://github.com/0x000000000000000000001/gopurs/releases/tag/v0.1.0-rc.14);
-no stable release has been published. See the [known limitations](docs/limitations.md)
-and [release qualification record](docs/quality-0.1.0.md) before adopting it.
+This guide uses the experimental [0.1.0-rc.14 prerelease](https://github.com/0x000000000000000000001/gopurs/releases/tag/v0.1.0-rc.14),
+qualified on Linux amd64, Linux arm64 and macOS arm64.
 
 ## Getting started
 
-Start with the **[quickstart guide](docs/quickstart.md)**. It walks through the
-toolchain, library setup and a complete Hello World application.
+**[Build your first Hello World](docs/quickstart.md)**. Start in an empty
+directory and follow the guide until your executable prints `Hello from gopurs`.
+It includes the project files and the Go port of `console` used by the example.
 
-You'll need Node.js, Go, Spago and the typed `purs` fork. The guide specifies
-the supported versions. [Nix](docs/nix.md) provides a pinned development
-environment for Linux amd64/arm64 and macOS arm64.
+You'll need the [typed PureScript compiler fork](https://github.com/0x000000000000000000001/purescript)
+because gopurs uses the type information it emits. The quickstart shows how to
+get that compiler, Spago, Node.js and Go together in a Nix shell, and lists the
+versions for a manual setup.
 
-Install the published backend in your application:
+### Compile an existing application
+
+From your Spago project directory, with the typed `purs` on `PATH` and Go
+implementations configured for the foreign functions your app uses, install
+the backend and build. This example assumes your entry module is `Main`.
 
 ```bash
 npm install --save-dev --ignore-scripts gopurs@0.1.0-rc.14
-```
-
-On npm, `next` points to RC14; `latest` still points to RC7.
-
-This installs the backend; the typed frontend and Go library ports are set up
-separately in the quickstart. With that project configured, compilation has
-three steps:
-
-```bash
-spago build                   # PureScript → typed intermediate files
-npx gopurs --main Main         # Typed intermediate files → Go sources
+spago build                 # Compile PureScript with the typed fork
+npx gopurs --main Main      # Generate Go source and go.mod in output/
 cd output
-go build -o hello ./main       # Go sources → executable
-./hello
+go build -o app ./main      # Build the executable
+./app
 ```
-
-gopurs writes the Go sources, runtime and `go.mod` under `output/`. You do not
-need to run `go mod init`.
 
 ## What gopurs provides
 
-- **Typed Go generation.** Preserved types and data layouts guide records,
-  constructors, type-class dictionaries and specialized functions.
-- **Release and development profiles.** Release is the default; `--dev`
-  reduces optimization work. Both support incremental builds.
-- **Go FFI.** Write Go implementations beside PureScript foreign declarations.
-  The backend generates bridges for supported signatures.
-- **Library ports.** Go implementations of effects, `Aff` and other libraries
-  are pinned in the [source manifest](bootstrap-sources.json).
-
-A PureScript package with JavaScript FFI needs a Go implementation before it
-can run through gopurs. The [quickstart](docs/quickstart.md) demonstrates library
-overrides; the [FFI guide](docs/development.md#go-ffi) explains native bindings.
-
-The compiler itself can run as JavaScript, native Go or experimental native
-Rust. All three generate Go applications. See [compiler hosts](docs/cli.md#compiler-hosts)
-and the [bootstrap guide](docs/bootstrap.md) for their setup and scope.
+- **Go library support.** The quickstart uses `gopurs-console` to implement
+  `Effect.Console.log` in Go. For your own foreign functions, see the
+  [Go FFI guide](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/development.md#go-ffi). Existing ports and their
+  revisions are listed in the [source manifest](https://github.com/0x000000000000000000001/gopurs/blob/main/bootstrap-sources.json).
+- **Typed Go generation.** The backend uses PureScript type information when
+  generating records, constructors, type-class dictionaries and specialized functions.
+- **Build profiles.** Release is the default. Use `--dev` to spend less time
+  optimizing while you iterate. Both profiles support incremental builds.
 
 ## Find the right guide
 
 | I want to… | Read |
 | --- | --- |
-| Build my first application | [Quickstart](docs/quickstart.md) |
-| Use flags, profiles or compiler hosts | [CLI reference](docs/cli.md) |
-| Set up Nix | [Nix guide](docs/nix.md) |
-| Understand compatibility or diagnose a failure | [Limitations](docs/limitations.md), [migration](docs/migration.md), [troubleshooting](docs/troubleshooting.md) |
-| Work on the compiler or a library | [Development guide](docs/development.md), [contributing](CONTRIBUTING.md) |
-| Understand the compiler pipeline | [Architecture overview](docs/architecture-overview.md) |
+| Build my first application | [Hello World quickstart](docs/quickstart.md) |
+| Set up the pinned toolchain | [Nix guide](docs/nix.md#typed-frontend-and-development-shell) |
+| Use compiler flags or select a compiler host | [CLI reference](docs/cli.md) |
+| Check whether a project will work with gopurs | [Known limitations](docs/limitations.md) and [migration guide](docs/migration.md) |
+| Diagnose a build or runtime error | [Troubleshooting](docs/troubleshooting.md) |
+| Understand how the compiler works | [Architecture overview](docs/architecture-overview.md) |
 
-The [documentation index](docs/README.md) also links to the cache design,
-runtime contracts, release procedure and dated engineering records.
+The [documentation index](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/README.md) also covers the runtime,
+build cache and release process.
 
 ## Development and testing
 
-To build the JavaScript compiler from source:
+To work on gopurs itself, clone the repository and build the JavaScript compiler.
 
 ```bash
 git clone https://github.com/0x000000000000000000001/gopurs.git
@@ -91,26 +70,21 @@ cd gopurs
 npm ci
 ```
 
-`npm ci` installs the locked dependencies and builds `bin/gopurs.js`. The
-launcher uses that bundle when no native compiler is present. Application
-compilation still needs the typed frontend and Go library ports.
-
-Use the [bootstrap guide](docs/bootstrap.md) for native builds, and
-[testing and validation](docs/testing.md#choisir-un-contrôle-court) to select a
-targeted check. The [development guide](docs/development.md) covers library
-work, the FFI parser and runtime changes.
+`npm ci` builds `bin/gopurs.js`. The [bootstrap guide](docs/bootstrap.md)
+covers the native Go and experimental Rust compiler hosts. All three hosts
+generate Go applications. See [contributing](CONTRIBUTING.md) and
+[testing and validation](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/testing.md#choisir-un-contrôle-court) for development work.
 
 ### Develop one library locally
 
-Follow the [library development guide](docs/development.md#libraries) for
+The [library development guide](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/development.md#libraries) covers
 checkout layout, Go overrides, lockfiles and isolated test runs.
 
 ## Benchmarks
 
 The [altbak README](https://github.com/0x000000000000000000001/altbak.pub#go)
-contains the reference workloads and results. Use the
-[benchmark protocol](docs/benchmark-protocol.md) when comparing changes:
-compiler time and generated-program performance are separate measurements.
+contains the reference workloads and results. The [benchmark protocol](docs/benchmark-protocol.md)
+explains how to measure compiler time and generated-program performance separately.
 
 ## Credits and license
 
