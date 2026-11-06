@@ -1,234 +1,61 @@
-# Plan de publication officielle de gopurs
+# Rendre les FFI Go de b8x idiomatiques
 
-Ce plan suit la préparation de `0.1.0`, sa qualification puis sa publication.
-Une case de préparation cochée ne vaut pas validation de la release : les
-résultats doivent porter sur les sources et artefacts exacts qui seront publiés.
-Le bilan des campagnes est dans `docs/quality-0.1.0.md`.
+L’audit du 6 novembre 2026 a porté sur les 21 fichiers FFI Go de `b8x/src`. Les quatre premiers cas ont été reproduits en exécutant isolément les wrappers Go générés de b8x. Les autres entrées décrivent des dépendances visibles dans les sources.
 
-Clôture au 5 novembre 2026 : toutes les cases de ce plan sont satisfaites dans
-le périmètre documenté. RC14 est qualifiée et publiée en prerelease ; Hello,
-la compilation b8x et le rollback public de `next` vers RC7 puis sa restauration
-vers RC14 sont vérifiés. `latest` reste RC7. Cette clôture ne publie pas la
-version finale `0.1.0` et ne transforme pas RC14 en version stable.
+## Défauts reproduits
 
-État RC7 au 30 octobre : la qualification des trois plateformes et l'audit des
-artefacts originaux passent. Le workflow reste en échec à la préparation du
-draft ; une reprise opérateur a été explicitement autorisée pour ces artefacts,
-sans modifier le tag. Les 45 assets sont publiés sur GitHub en prerelease ;
-l'archive npm publique et sa provenance sont vérifiées. npm a aussi attribué
-`latest` à RC7 malgré `--tag next` et refusé sa suppression ; cette exception
-a été acceptée explicitement. L'installation npm et le quickstart public passent
-sur Linux arm64 avec des caches applicatifs neufs. La compilation b8x depuis
-les artefacts publics passe aussi : 17 étapes, 2 707 modules TAST et 12 exécutables
-liés, sans exécution des programmes. La publication RC7 est clôturée avec ces
-exceptions ; les cases ouvertes ci-dessous restent des travaux pour la stable.
+- [x] **[Cookie.go](../../b8x/src/Util/Cookie/Cookie.go#L28) — transmettre les six options séparément.** La réflexion sur une `gopurs_runtime.Value` faisait disparaître les attributs du cookie. PureScript déstructure désormais `SerializeOptions` avant l’appel aux FFI Go, JS et PHP. Le Go compilé produit les mêmes en-têtes que la bibliothèque JS pour la session, la déconnexion (`Max-Age=0`) et les options désactivées. [Frontière PureScript](../../b8x/src/Util/Cookie/Cookie.purs#L20) · [Tests de session et déconnexion](../../b8x/test/ffi/Native.purs#L25)
 
-Mise à jour du 31 octobre : `bin/modtest`, les correctifs de finalisation,
-le correctif `chmod` de node-fs et son pin de bootstrap sont intégrés à `main`.
-Les 102 passages locaux des bibliothèques passent sur Linux arm64, avec le pin
-node-fs corrigé ; ils ne requalifient ni le bootstrap publié de RC7 ni les autres
-plateformes. Le cache CI du frontend est corrigé et amorcé sur `main`, sans
-mesure de gain sur un consommateur à chaud. Les identités, preuves et limites
-figurent dans le [bilan post-RC7](docs/quality-0.1.0.md#post-rc7-integration-and-local-library-results--31-october-2026).
+- [ ] **[Paseto.go](../../b8x/src/Util/Crypto/Paseto/Paseto.go#L18) — le chiffrement perd le contenu du jeton.** Après chiffrement puis déchiffrement du payload de connexion, seul `exp` est présent. L’assertion vers `map[string]interface{}` échoue sur la valeur enveloppée et le chiffrement continue sans `userId` ni `csrfToken`.
+  Fournir à PASETO un objet de claims natif via la frontière `Foreign`, puis transmettre le résultat Go ou l’erreur via l’adaptateur `Aff` commun.
+  Vérifier l’aller-retour des deux champs et l’échec explicite pour un payload incompatible. [Appel de connexion](../../b8x/src/Inter/Api/Membership/Auth.purs#L151)
 
-Mise à jour du 1er novembre : les écarts identifiés de notices/métadonnées sont
-intégrés, ainsi que `cleanup/v2` via la PR #23, au merge
-`8a40ad11272ab2e149f8e050d735634ab488945c` (24 portes rapides, 232 tests Node
-et 2 smokes). Les artefacts RC7 conservés et leur réinstallation locale sont
-vérifiés ci-dessous. La qualification du prochain candidat et le rollback
-public restent ouverts ; ces contrôles ne les remplacent pas.
+- [ ] **[RabbitMq.go](../../b8x/src/Infra/Client/RabbitMq/RabbitMq.go#L43) — la connexion opaque provoque un panic.** À la création du canal, le type dynamique reçu est `gopurs_runtime.Value` et l’assertion exige `*amqp.Connection`. Les opérations suivantes supposent de même un `*amqp.Channel`.
+  Essayer des paramètres Go typés et faire préserver l’identité des pointeurs par le bridge, à l’aller comme au retour. Adapter aussi `onMessage` en `func(string)` pour que la boucle de consommation appelle directement le callback.
+  Vérifier la séquence connexion → canal → livraison d’un message → fermeture.
 
-Mise à jour du 2 novembre : RC8 n'a pas été qualifiée. GitHub a annulé son
-job macOS avant toute étape pendant le retrait du runner macOS 14 ; le reste
-de la campagne a été annulé. Le tag RC8 reste immuable.
+- [ ] **[TaggedSum.go](../../b8x/src/Util/Json/TaggedSum.go#L3) — la normalisation JSON ne s’applique pas.** En passant `{"type":"Given"}` par le wrapper, `value` reste absent. La réflexion examine l’enveloppe. Sur une map Go reçue directement, la fonction modifie de plus l’objet fourni.
+  Envisager la normalisation en PureScript avec les opérations de lecture et d’insertion sur les objets étrangers.
+  Vérifier que le nouveau résultat décode `Given Nothing`, que l’objet d’origine garde ses champs et qu’un `value` existant est préservé. [Contrat du décodeur](../../b8x/src/Util/Json/TaggedSum.purs#L10)
 
-RC9 a échoué dans les intégrations `spec` sur macOS : trois cas dépassent
-120 secondes et un autre reçoit une sortie vide. Les jobs principaux Linux
-passent, mais les fixtures distribuées n'ont pas été exécutées. Ce tag reste
-immuable et non qualifié.
+## Dépendances au runtime dans le code métier
 
-Le candidat `0.1.0-rc.10` a été préparé depuis le merge RC9 avec le pin spec
-corrigé `c88da162df5d9ef85d672f5f2e819bb287e9647b`. L'arrêt attendu des
-sous-processus et le drainage des sorties sont couverts par des régressions
-rouges puis vertes ; les vrais tests spec locaux passent en Release et Dev
-(74 réussis, 3 pending, 9 intégrations par profil). Ces résultats locaux
-utilisent un frontend de développement et ne qualifient pas une release.
+- [ ] **[Postgres.go](../../b8x/src/Infra/Client/Postgres/Postgres.go#L49) — le client SQL interprète la représentation de `Value`.** `_Query` et `_QueryCount` dupliquent la lecture des tags, de `IntVal` et des chaînes. Elles appellent directement le symbole généré `Foreign_UnboxForJSON`. Cinq opérations déballent le handle et `_Query` réemballe chaque ligne puis le tableau.
+  Séparer la conversion `Foreign` de la politique SQL. Fournir au client des paramètres Go, garder dans b8x les choix d’encodage attendus par pgx, et adapter les handles typés à la frontière.
+  Vérifier que scalaires, NULL, objets JSON et tableaux conservent leur comportement dans les deux chemins. [Deuxième conversion](../../b8x/src/Infra/Client/Postgres/Postgres.go#L129)
 
-Mise à jour du 4 novembre : RC10 reste non qualifiée. Sa reprise complète
-autorisée a réussi les trois builds et onze des douze lots de fixtures ; le
-dernier lot Linux amd64 a atteint six heures pendant la préparation Nix, avant
-ses tests. Les artefacts originaux sont conservés et le tag reste immuable.
-Le [diagnostic](docs/quality-0.1.0.md#rc10-qualification-attempts--24-november-2026)
-ne démontre pas de défaut du compilateur.
+- [ ] **[Router.go](../../b8x/src/Util/Run/Router.go#L18) — le routeur connaît la représentation de `VariantF`.** `Build` appelle `ExtractVariant`, imprime le variant entier en cas d’échec, puis essaie pointeur, map, struct ou chaîne et répète la recherche du handler.
+  Essayer d’extraire l’étiquette et la charge côté PureScript avec `unvariantF`. Le Go pourrait alors se limiter à la table de handlers.
+  Vérifier qu’une étiquette connue transmet sa charge et qu’une inconnue remet le variant original au fallback. [Éliminateur existant](../gopurs-variant/src/Data/Functor/Variant.purs#L472)
 
-La préparation se poursuit en regroupant les corrections de CI, la revue des
-sources et la documentation avant une seule campagne complète finale. Les
-contrôles locaux restent ciblés sur les changements ; les campagnes déjà
-réussies ne sont pas rejouées pendant cette préparation. La CI doit transmettre
-aux fixtures l'environnement Nix déjà construit et permettre une reprise
-ciblée avec les véritables producteurs des preuves, sans reconstruire les lots
-réussis. Ces changements nécessitent un nouveau candidat ; ils ne requalifient
-pas rétroactivement RC10.
+- [ ] **[Hash.go](../../b8x/src/Util/Crypto/Hash.go#L29) — un hash synchrone reconstruit tout le protocole de `EffectFnAff`.** Dans `_Xxhash64`, une ligne calcule le résultat. `Func2`, `Box`, `Apply` et `Func3` servent à le livrer et à acquitter l’annulation.
+  Garder le calcul Go sous forme de fonction `string → string` et l’exposer via l’adaptateur `Aff` commun. Préserver l’API PureScript `String -> Aff String`, également utilisée par le backend JS qui charge le module de hash de façon asynchrone.
 
-La PR #28 a ensuite passé 24 portes rapides, 234 tests Node et deux smokes.
-La campagne RC11 a échoué sur les deux jobs Linux à l’export du cache Nix :
-le validateur refusait le répertoire `realisations`, créé par la version Nix
-épinglée en CI. Le tag reste immuable et non qualifié. Le correctif ciblé accepte
-ce répertoire uniquement vide ; les métadonnées inattendues restent refusées.
+- [ ] **[Unzip.go](../../b8x/src/Util/File/Unzip.go#L11) — chaque sortie ZIP manipule des callbacks boxés.** L’ouverture, la recherche du fichier et la lecture appellent chacune `Apply(onError, Box(err))`.
+  L’extraction Go pourrait retourner `(string, error)` et laisser l’adaptateur `Aff` commun publier le résultat.
+  Vérifier aussi le passage de l’`ArrayBuffer` PureScript au paramètre Go `zipContent string`.
+  Essayer une entrée `[]byte` sur un vrai ZIP binaire, puis vérifier les erreurs pour une archive illisible et un fichier absent. `_UnzipToDirectory` doit continuer à signaler explicitement son état non implémenté.
 
-La campagne RC12 a réussi les trois builds/core, puis neuf lots de fixtures
-ont échoué avant acquisition/import : le sélecteur refusait le statut agrégé
-`queued` malgré les producteurs réussis. Le run s'est terminé en échec avant
-l'application de l'annulation autorisée. Le tag RC12 reste immuable et non
-qualifié. Le correctif du
-sélecteur conserve les contrôles des producteurs, identités et signatures.
-Les 21 tests ciblés passent, ainsi que le rejeu local des métadonnées originales
-des trois plateformes, après reproduction rouge. Ces contrôles ne qualifient
-pas RC13 et aucune publication RC13 n'a eu lieu. Le détail figure dans le
-[bilan RC12 et RC13](docs/quality-0.1.0.md#rc13-input-selector-correction--4-november-2026).
+## Conventions d’appel visibles dans de petites FFI
 
-La campagne RC13 a ensuite échoué sur macOS dans `spec` Dev : 73 réussis,
-3 pending, un échec dans `04-fail-fast-with-timeout`. Les deux jobs principaux
-Linux passent, ainsi que `spec` Release sur macOS (74 réussis, 3 pending).
-Les fixtures et la finalisation sont ignorées ; le tag RC13 reste immuable,
-non qualifié et non publié. Le [bilan RC13](docs/quality-0.1.0.md#rc13-qualification-failure--4-november-2026)
-conserve l'identité du run original.
+- [ ] **[Signal.go](../../b8x/src/Util/Signal.go#L9)** — un handler `Effect Unit` devient `func(interface{}) interface{}` et s’appelle avec `fn(nil)`.
+  Faire adapter le handler en `func()` et vérifier que l’effet s’exécute à la réception du signal.
+- [ ] **[Timer.go](../../b8x/src/Util/Timer.go#L12)** — chaque tick appelle aussi `fn(nil)`. La création retourne `interface{}` alors que l’arrêt attend un `*IntervalId`.
+  Réutiliser l’adaptation vers `func()` et faire transiter le handle opaque sous son type Go.
+  Vérifier qu’on peut arrêter le ticker avec le handle obtenu à sa création.
+- [ ] **[EventStore.go](../../b8x/src/Infra/EventStore/Postgres/EventStore.go#L21)** — `GenerateLockKeyStr(_ interface{}) interface{}` produit toujours une chaîne.
+  Essayer une fonction Go sans argument retournant `string`, en laissant le bridge différer l’appel jusqu’à l’exécution de l’`Effect String`.
+  Deux exécutions doivent avancer le compteur deux fois.
+- [ ] **[Ulid.go](../../b8x/src/Util/Type/Ulid.go#L7)** — `_GenerateUlid` reçoit un argument factice et efface le type de sa chaîne de retour.
+  Essayer la même adaptation de `Effect String` que pour l’EventStore et vérifier qu’un identifiant est généré à chaque exécution.
+- [ ] **[Uuid.go](../../b8x/src/Util/Type/Uuid.go#L3)** — `_GenerateV7Uuid` renvoie une chaîne via `interface{}` pour un import déclaré `Effect UUID`.
+  Envisager un import privé `Effect String` et construire le `Uuid` applicatif côté PureScript.
+  Préserver l’API publique et vérifier la version 7 après passage par PureScript.
+- [ ] **[KeepAlive.go](../../b8x/src/Inter/Cli/_/Util/KeepAlive.go#L1)** — `KeepMainAlive` déclare un résultat `interface{}` et un `return nil` après un `select {}` qui bloque indéfiniment.
+  Essayer une fonction Go sans résultat pour cet `Effect Unit` et vérifier que le blocage commence uniquement lorsque l’effet est exécuté.
 
-Le candidat `0.1.0-rc.14` épingle le pin spec
-`7bbb30f00bfde95cdb39286662bb5a0f71e3f368`, issu de la
-[PR spec #2](https://github.com/0x000000000000000000001/gopurs-spec/pull/2)
-revue et fusionnée. Seule cette fixture remplace son délai de 15 ms par
-`never`, en conservant le timeout de 10 ms et la sortie attendue. Le cas original
-reproduit l'échec CI sous contention CPU (20/20), tandis que le cas corrigé
-passe en Dev et Release. Ces contrôles ciblés utilisent la toolchain locale de
-développement ; ils ne qualifient pas RC14 et ne démontrent pas de défaut du
-runtime. Compilateur, runtime, frontend, optimiseur, autres pins et workflows
-restent inchangés. La qualification complète du tag RC14 est désormais réussie :
-371 portes par plateforme, 51 bibliothèques et 401 fixtures par profil Release/Dev.
-Les 45 artefacts et leurs signatures sont vérifiés ; le
-[bilan RC14](docs/quality-0.1.0.md#rc14-qualification-and-artifact-review--5-november-2026)
-conserve les identités, preuves et limites. Seul le dernier job de préparation
-du brouillon a été repris avec autorisation, sans rejouer builds, tests ou signatures.
-RC14 est publiée sur npm `next` et en prerelease GitHub. Les octets publics,
-la provenance et les 45 artefacts sont vérifiés. Le Hello public et les 17 étapes
-de compilation b8x passent sur Linux arm64, sans exécution des programmes b8x.
-Le retour réel de `next` vers RC7 puis sa restauration vers RC14 passent chacun
-une installation neuve et Hello ; `latest` reste RC7. Le repli RC7 est validé
-pour cet exemple inchangé, sans garantie pour les applications dépendant des
-correctifs ultérieurs. L'archive contient encore des exemples documentaires
-RC2/RC9/RC10 : l'écart pré-tag a été explicitement accepté et l'erratum est
-public, avec les 45 artefacts et le tag inchangés. Les guides sources corrigés
-sont distincts de ces octets signés. Aucun nouveau cleanup de code n'est requis.
+## Où placer les adaptations
 
-## 1. Figer le périmètre et le contrat public
-
-- [x] Choisir la version de départ et le schéma de versionnement.
-- [x] Lister les surfaces stables : CLI, backend Go, formats intermédiaires, bibliothèques `gopurs-*`.
-- [x] Lister explicitement ce qui reste expérimental.
-- [x] Fixer les plateformes supportées : OS, architectures, versions de Go et de PureScript.
-- [x] Auditer les licences du compilateur, du fork PureScript et de PBO ; consigner séparément les écarts des ports sources dans [l'audit des bibliothèques](docs/library-source-audit.md).
-- [x] Ajouter les attributions et notices tierces nécessaires.
-- [x] Définir la politique de support et de dépréciation.
-
-## 2. Garantir l'installation depuis zéro
-
-- [x] Tester un clone propre sur une machine sans cache ni binaire préexistant.
-- [x] Rendre le build JavaScript indépendant des checkouts voisins.
-- [x] Rendre le bootstrap natif et les applications reproductibles depuis des entrées publiques épinglées (fork TAST, PBO, bibliothèques et adaptations Go).
-- [x] Épingler les dépendances du build JavaScript.
-- [x] Figer et vérifier les révisions du frontend TAST et de tous les ports `gopurs-*` nécessaires à la release.
-- [x] Documenter la chaîne de bootstrap : binaire JS, binaire Go précédent, artefacts de référence.
-- [x] Publier les checksums des binaires de bootstrap de RC7 avec les artefacts signés.
-- [x] Vérifier la reproductibilité des sorties, ou documenter précisément les différences.
-- [x] Mettre en place une CI Linux et macOS sur les architectures supportées.
-- [x] Rendre le cache frontend des campagnes rapides indépendant des pins des bibliothèques : [PR #16](https://github.com/0x000000000000000000001/gopurs/pull/16) fusionnée, clé dérivée de Nix et cache amorcé sur `main`. Les campagnes complètes le contournent ; aucun gain de durée à chaud encore mesuré.
-- [x] Vérifier le futur candidat sur toute la matrice depuis un environnement vierge, sans cache préchauffé obligatoire. RC14 vérifiée sur les trois plateformes ; cache frontend de dépôt ignoré, substitutions Nix publiques disponibles. [Bilan RC14](docs/quality-0.1.0.md#rc14-qualification-and-artifact-review--5-november-2026).
-
-## 2 bis. Nixifier le projet
-
-- [x] Fournir des sorties `packages`, `apps`, `checks` et `devShells` sur le modèle de phpurs, sur les trois systèmes annoncés.
-- [x] Construire un paquet gopurs autonome depuis les sources et les lockfiles, sans dépendance à un checkout voisin.
-- [x] Fournir un frontend TAST épinglé et un parcours documenté pour compiler une application avec les ports Go.
-- [x] Vérifier localement sur Linux arm64 `nix build`, `nix run` et `nix flake check`, avec un vrai programme PureScript/FFI compilé puis exécuté en Go ; les validations de la matrice CI sont consignées ci-dessous.
-- [x] Vérifier l'évaluation des trois systèmes sans IFD et archiver les preuves locales Nix ; cette évaluation ne remplace pas leurs builds en CI.
-- [x] Exécuter les validations Nix sur Linux amd64/arm64 et macOS arm64 en CI : les trois passent dans la campagne initiale du 27 octobre ; la validation du tag reste distincte.
-- [x] Documenter les commandes de développement, de build et d'installation Nix et leurs entrées exactes.
-
-## 3. Nettoyer le dépôt
-
-- [x] Retirer les artefacts générés, caches, logs, binaires et sauvegardes du suivi Git.
-- [x] Retirer les preuves de benchmark et fichiers d'archive internes des surfaces publiées.
-- [x] Rechercher et supprimer les secrets, jetons, URLs privées et chemins personnels.
-- [x] Enlever les mentions `WIP` des surfaces officielles ou les convertir en limitations documentées.
-- [x] Supprimer le code mort et les options expérimentales visibles.
-- [x] Harmoniser le nommage `gopurs` et les intitulés des paquets.
-- [x] Vérifier que les fichiers publiés dans les paquets sont limités au nécessaire.
-- [x] Éviter tout refactor massif non nécessaire avant la première release.
-
-## 4. Finaliser la documentation
-
-- [x] Écrire un quickstart testé de bout en bout.
-- [x] Documenter l'installation, les prérequis et la référence CLI.
-- [x] Documenter l'architecture, les formats et le fonctionnement du backend Go.
-- [x] Documenter les limitations connues et les différences avec le compilateur officiel.
-- [x] Documenter la migration et la compatibilité entre versions.
-- [x] Ajouter un guide de dépannage et une FAQ.
-- [x] Ajouter `CONTRIBUTING`, `SECURITY`, `CHANGELOG` et le code de conduite.
-- [x] Reprendre les benchmarks avec protocole, machine, commandes et scripts reproductibles.
-- [x] Vérifier qu'aucune promesse de performance ou de compatibilité n'est ambiguë.
-
-## 5. Passer les portes de qualité
-
-- [x] Exécuter la suite de qualification complète de RC7 dans un environnement propre sur les trois plateformes : 267 portes chacune, avec l'hôte Rust expérimental exclu ; ce résultat ne vaut pas CI globale verte.
-- [x] Exécuter les 401 fixtures en Release et les 401 en Dev avec le compilateur natif frais : 802/802 passent, snapshots inchangés et exécution Go validée ; preuves archivées dans le bilan qualité.
-- [x] Vérifier la conformité avec le compilateur officiel sur un corpus représentatif.
-- [x] Vérifier les golden tests, la parité FFI et les formats générés.
-- [x] Tester les erreurs, annulations, bornes de configuration mémoire et cas de concurrence, avec les tests Go `-race` et l'émission native.
-- [x] Vérifier les performances à froid et à chaud avec le protocole publié : 51 corpus, 1 224 invocations, comparaison aux baselines officielles et preuves archivées.
-- [x] Intégrer `bin/modtest` aux futures campagnes complètes : [PR #13](https://github.com/0x000000000000000000001/gopurs/pull/13) fusionnée après CI rapide Linux ; 51 bibliothèques par profil, sans ajouter les runners b8x ou altbak.pub.
-- [x] Vérifier 102 passages locaux des bibliothèques sur Linux arm64 : 51 Release et 51 Dev, dont 25 succès antérieurs conservés après audit d'absence d'impact et 77 nouveaux passages avec node-fs corrigé ; rapports, hashes et sources contrôlés.
-- [x] Corriger `chmod` synchrone/asynchrone dans node-fs et épingler `2a8653066a61f9d2ff106668a187ba2f3bc66a9d` : [node-fs PR #1](https://github.com/0x000000000000000000001/gopurs-node-fs/pull/1) et [gopurs PR #15](https://github.com/0x000000000000000000001/gopurs/pull/15) fusionnées, régressions locales et CI rapide Linux validées.
-- [x] Qualifier un futur candidat réunissant les correctifs post-RC7 et les tests des bibliothèques sur toutes les plateformes annoncées ; corriger toute régression bloquante révélée par cette campagne. RC14 passe 371 portes par plateforme, dont 51 bibliothèques et 401 fixtures par profil Release/Dev. [Bilan RC14](docs/quality-0.1.0.md#rc14-qualification-and-artifact-review--5-november-2026).
-- [x] Exiger une CI verte sur le tag de release : le run RC7 reste en échec au draft, avec une exception opérateur documentée pour sa publication. Exigence désormais satisfaite par le run RC14 `42001425870`, réussi après la seule reprise autorisée du job de brouillon ; l’exception RC7 reste historique. [Bilan RC14](docs/quality-0.1.0.md#rc14-qualification-and-artifact-review--5-november-2026).
-- [x] Corriger la reprise CI pour distinguer les jobs réellement réexécutés des copies de métadonnées GitHub, et la comparaison de provenance npm pour le seul ajout d'un `keyid` DSSE vide : [PR #14](https://github.com/0x000000000000000000001/gopurs/pull/14) fusionnée après régressions locales et CI rapide Linux ; finalisation validée sur RC14 ; publication publique distincte.
-- [x] Configurer la CI sur les tags pour couvrir le frontend TAST, le bootstrap natif et l'exécution d'applications, en plus du paquet JavaScript ; son exécution verte reste une porte distincte.
-
-## 6. Préparer les artefacts et la publication
-
-- [x] Produire les binaires RC7 par plateforme avec les flags de release documentés.
-- [x] Générer les checksums, la provenance et les SBOM de RC7 ; artefacts originaux audités.
-- [x] Signer le tag RC7 et les attestations de ses artefacts ; vérifications cryptographiques passées.
-- [x] Rédiger les notes de version et le changelog de RC7 ; la version stable reste à préparer.
-- [x] Tester l'installation npm de RC7 depuis les artefacts publics sur Linux arm64, avec vérification des octets et de la provenance.
-- [x] Auditer les 51 ports sources `gopurs-*`, leurs pins et dépendances, puis corriger les écarts identifiés de notices/métadonnées (`effect`, `uuid`, `js-bigints`) ; conserver les identités des campagnes réellement exécutées ([audit et corrections](docs/library-source-audit.md)). La qualification RC14 est consignée ci-dessus ; une publication autonome npm/Spago doit vérifier ses propres versions, bornes, fichiers et notices, sans versions communes imposées.
-- [x] Supprimer la résolution inutile de `strcase` dans `strings-extra` : aucun import ne l'utilise, les tests ciblés Release/Dev passent avec un cache de modules Go neuf et les téléchargements Go désactivés ; le bootstrap épingle `b448bb4a91086146fd430ae1cc0a370fab78cce5`.
-- [x] Remplacer les endpoints publics des tests `node-http` par une fixture HTTPS locale avec vérification TLS et assertions de statut, corps et cookies ; corriger la transmission du corps Go avec le hook `node-event-emitter`. Les deux ports passent les contrôles ciblés Release/Dev ([portée et preuves](docs/quality-0.1.0.md#local-https-targeted-checks--31-october-2026)). Les corrections de notices/métadonnées sont consignées séparément dans l'audit.
-- [x] Vérifier localement `bin/test -c` et `bin/modtest -c` : 401 fixtures et 51 bibliothèques réussies en Release sur macOS arm64, avec reprises après incidents de cache/disque et correction de la FFI de test `stdout` dans `node-http` ; reconstructions natives effectives et mêmes octets du compilateur ([détail et limites](docs/quality-0.1.0.md#local-clean-command-checks--1-november-2026)).
-- [x] Faire un `npm publish --dry-run` sur l'archive locale préparée.
-- [x] Vérifier la provenance de la publication npm réelle de RC7 et l'identité exacte des octets téléchargés.
-- [x] Documenter la [procédure de rollback](docs/release.md#rollback-and-recovery) et les limites d'une première publication.
-- [x] Vérifier les 45 artefacts RC7 conservés contre la release publique, les checksums, les signatures du paquet npm et du binaire macOS, puis leur réinstallation locale avec exécution JS/native dans des caches neufs ([preuve et limites](docs/quality-0.1.0.md#retained-rc7-recovery-check--1-november-2026)).
-- [x] Retenir une version de repli adaptée aux applications concernées et tester réellement le retour du canal public à cette version ; la réinstallation locale de RC7 et le registre simulé ne valent pas rollback public validé, et RC7 ne contient pas les correctifs de bibliothèques postérieurs. Exercice public `next` RC14 → RC7 → RC14 réussi avec une installation neuve et Hello à chaque phase ; repli limité à cet exemple inchangé. [Preuves et limites](docs/quality-0.1.0.md#actual-public-rollback-and-restoration).
-- [x] Aligner le contrat de support avec les parcours réellement distribués : hôte JavaScript npm/Nix et binaires Go ; hôte Rust expérimental.
-- [x] Figer dans Git toutes les sources, configurations et notices du prochain candidat ; vérifier son checkout et ses artefacts exacts avant publication. Checkout RC14 propre et détaché, 26 sources et outils figés, 45 artefacts et signatures vérifiés ; écart documentaire pré-tag explicitement accepté et erratum publié, sans modification des octets signés.
-- [x] Effectuer le smoke test public sur Linux arm64 dans un nouveau projet, avec caches npm, Spago et Go neufs et prérequis de toolchain déjà préparés.
-
-## 7. Clôturer la publication
-
-- [x] Vérifier le parcours du README et de son quickstart lié : installation publique, compilation PureScript/Go et sortie exacte `Hello from gopurs`, avec les prérequis documentés.
-- [x] Vérifier la compilation b8x complète depuis les artefacts publics RC7 sur Linux arm64 : 17 étapes et 12 exécutables liés ; aucun programme exécuté. Même contrôle réussi depuis les artefacts publics RC14 sur le snapshot source conservé.
-- [x] Publier les limites et les travaux futurs de RC7 sans les présenter comme terminés.
-- [x] Publier les notes de RC7, les plateformes supportées et le canal de support dans la release et la documentation.
-- [x] Archiver les preuves RC7, les résultats de la CI et les contrôles publics, avec leurs limites et exceptions. Preuves originales RC14 également conservées : qualification, 45 artefacts, publication, consommateurs et deux phases du rollback.
-
-## Critères de sortie de la version stable
-
-- [x] Clone propre, installation et premier build réussis sans intervention manuelle. Acquis dans les trois environnements CI RC14, puis installation publique et Hello vérifiés sur Linux arm64 avec les prérequis préparés et des caches applicatifs neufs. [Bilan RC14](docs/quality-0.1.0.md#rc14-qualification-and-artifact-review--5-november-2026).
-- [x] CI verte sur toutes les plateformes annoncées. RC14 passe sur Linux amd64/arm64 et macOS arm64. [Bilan RC14](docs/quality-0.1.0.md#rc14-qualification-and-artifact-review--5-november-2026).
-- [x] Aucun secret, chemin privé ou artefact interne dans la publication. Revue des fichiers autorisés, sources et artefacts exacts RC14 sans anomalie détectée ; méthode et limites du contrôle consignées dans le bilan. [Bilan RC14](docs/quality-0.1.0.md#rc14-qualification-and-artifact-review--5-november-2026).
-- [x] Licences et attributions complètes. LICENSE, NOTICE et THIRD_PARTY_NOTICES contrôlés avec les sources et artefacts RC14. [Bilan RC14](docs/quality-0.1.0.md#rc14-qualification-and-artifact-review--5-november-2026).
-- [x] Artefacts reproductibles ou procédure de vérification explicite. Procédure explicite appliquée : checksums, provenance et signatures vérifiés ; même archive npm produite sur les trois plateformes. [Bilan RC14](docs/quality-0.1.0.md#rc14-qualification-and-artifact-review--5-november-2026).
-- [x] Release candidate vérifiée depuis les artefacts publics : quickstart exécuté et b8x compilé sur Linux arm64 ; exceptions de publication documentées.
-- [x] Rollback testé. Retour réel de `next` à RC7 puis restauration RC14, versions et intégrités vérifiées, Hello réussi dans deux projets neufs ; `latest` inchangé. [Preuves et limites](docs/quality-0.1.0.md#actual-public-rollback-and-restoration).
-- [x] Documentation et benchmarks conformes à ce qui est réellement mesuré : bilans RC10 à RC13 conservés, qualification, revue et publication RC14 documentées, limites des contrôles publics et du rollback explicites ; mesures historiques datées, aucune nouvelle performance RC14 revendiquée.
-- [x] Installation et application Nix validées sur la matrice supportée. Les trois validations Nix RC14, avec compilation et exécution de l’application, passent. [Bilan RC14](docs/quality-0.1.0.md#rc14-qualification-and-artifact-review--5-november-2026).
+1. **Dans le bridge de gopurs**, exploiter le TAST et la signature Go pour les records fermés, les handles opaques, les callbacks et les effets. Procéder par petites fixtures passant par un véritable `foreign import`. Préserver les appelants existants qui utilisent `any` pour recevoir une valeur enveloppée. [Conversion actuelle des arguments](src/Gopurs/FfiBridge/Values.purs#L40)
+2. **Dans `gopurs-foreign`**, réutiliser ou compléter les conversions de données réellement dynamiques. Les exposer en PureScript pour pouvoir les fournir à la FFI au besoin. Le traitement des cookies, des claims ou du SQL reste dans b8x. [Conversion JSON existante](../gopurs-foreign/src/Foreign.purs#L192)
+3. **Pour `EffectFnAff`**, essayer un seul adaptateur partagé, à partir du cas simple de `_Xxhash64`, puis du couple succès/erreur de l’extraction ZIP. Étendre l’essai à PostgreSQL, PASETO et RabbitMQ en préservant pour chaque opération le mode d’exécution et le contrat d’annulation. [Adaptateur local de RabbitMQ](../../b8x/src/Infra/Client/RabbitMq/RabbitMq.go#L13)
