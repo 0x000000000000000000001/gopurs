@@ -66,6 +66,21 @@
       devShells = forAllSystems (system:
         let pkgs = pkgsFor system; toolchains = toolsFor system;
         in {
+          application = pkgs.mkShell {
+            name = "gopurs-application";
+            packages = [
+              self.packages.${system}.purs-tast
+              pkgs.spago-bin.spago-1_0_3
+              toolchains.nodejs
+              toolchains.go
+              pkgs.git
+            ];
+            GOPURS_PURS = "${self.packages.${system}.purs-tast}/bin/purs";
+            GOTOOLCHAIN = "local";
+            shellHook = ''
+              echo "gopurs application: pinned TAST frontend, Go 1.27.0, Node 24.8.0, Spago 1.0.3"
+            '';
+          };
           default = pkgs.mkShell {
             name = "gopurs";
             packages = [

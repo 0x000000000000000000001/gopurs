@@ -19,7 +19,7 @@ export function resolveBuildCacheHelper() {
     const content = readFileSync(join(sources, name));
     hash.update(`${name}:${content.length}:`).update(content);
   }
-  for (const name of ["go.mod", "manifest.go", "overlay.go", "qualify.go", "rewrite.go", "partition.go", "literals.go"]) {
+  for (const name of ["go.mod", "manifest.go", "overlay.go", "qualify.go", "rewrite.go", "partition.go", "literals.go", "missing_ffi.go"]) {
     const content = readFileSync(join(tools, "c1c", name));
     hash.update(`c1c/${name}:${content.length}:`).update(content);
   }

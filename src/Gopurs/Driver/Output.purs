@@ -12,7 +12,7 @@ import Data.Array as Array
 import Data.Either (Either(..), either)
 import Data.Foldable (for_)
 import Data.Map as Map
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Newtype (unwrap)
 import Data.String as String
 import Data.String.Pattern (Pattern(..), Replacement(..))
@@ -35,7 +35,7 @@ import Node.Encoding (Encoding(..))
 import Node.FS.Aff as FS
 import Node.FS.Sync as FSSync
 import PureScript.Backend.Optimizer.Convert (BackendModule)
-import PureScript.Backend.Optimizer.CoreFn (Ann, ExprType, Ident, Module)
+import PureScript.Backend.Optimizer.CoreFn (Ann, ExprType, Ident, Module(..))
 
 type ModuleFfi =
   { content :: String
@@ -48,12 +48,16 @@ emitModule output frozen metadata coreFnModule backendMod = defer \_ ->
   emitPreparedModule output frozen metadata coreFnModule backendMod (prepareModule metadata backendMod)
 
 emitPreparedModule :: String -> Map.Map String FrozenFFI -> CodegenMetadata -> Module Ann -> BackendModule -> PreparedModule -> Aff ModuleFunctions
-emitPreparedModule output frozen metadata _ backendMod preparedModule = defer \_ -> do
+emitPreparedModule output frozen metadata (Module coreFnModule) backendMod preparedModule = defer \_ -> do
   let
     moduleName = unwrap backendMod.name
     goName = moduleGoName moduleName
     foreigns = Map.toUnfoldable backendMod.foreign
     hasForeigns = not (Array.null foreigns)
+    expectedPath = fromMaybe coreFnModule.path (String.stripSuffix (Pattern ".purs") coreFnModule.path) <> ".go"
+    ffiPath = case Map.lookup moduleName frozen of
+      Just source | source.found -> source.path
+      _ -> expectedPath
 
   -- Read native signatures before translation: saturated FFI calls can then
   -- use direct workers. Missing FFI and malformed FFI are distinct paths.
@@ -83,16 +87,17 @@ emitPreparedModule output frozen metadata _ backendMod preparedModule = defer \_
   FS.writeTextFile UTF8 (output <> "/purescript/" <> goName <> ".go") translated.code
   when hasForeigns $
     FS.writeTextFile UTF8 (output <> "/purescript/" <> goName <> "_ffi.go")
-      (renderFfiModule goName backendMod foreigns ffi)
+      (renderFfiModule { moduleName, path: ffiPath } goName backendMod foreigns ffi)
   pure translated.functions
 
 renderFfiModule
-  :: String
+  :: { moduleName :: String, path :: String }
+  -> String
   -> BackendModule
   -> Array (Tuple Ident (Maybe ExprType))
   -> Maybe ModuleFfi
   -> String
-renderFfiModule goName backendMod foreigns ffi = case ffi of
+renderFfiModule context goName backendMod foreigns ffi = annotations <> case ffi of
   Nothing ->
     "package purescript\n\nimport \"gopurs/output/gopurs_runtime\"\n\n"
       <> FfiBridge.generateFfiBridge goName backendMod.dataDecls [] foreigns
@@ -105,6 +110,14 @@ renderFfiModule goName backendMod foreigns ffi = case ffi of
     in
       "package purescript\n\n" <> runtimeImport <> "\n" <> source.content
         <> "\n\n// --- Auto-generated FFI wrappers ---\n" <> wrappers <> workersBlock
+  where
+  declarations = case ffi of
+    Just source -> source.decls
+    Nothing -> []
+  annotations = String.joinWith "" $ map
+    (\missing -> "//gopurs:missing-ffi-v1:" <> stringify (encodeJson
+      { binding: missing.binding, module: context.moduleName, symbol: missing.symbol, path: context.path }) <> "\n")
+    (FfiBridge.missingImplementations goName declarations foreigns)
 
 writeRuntime :: String -> Aff Unit
 writeRuntime output = do

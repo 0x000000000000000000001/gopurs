@@ -1,7 +1,7 @@
 # Nix installation and development
 
-The flake exposes packages, executable apps, a development shell and checks for
-`x86_64-linux`, `aarch64-linux` and `aarch64-darwin`. Its inputs are fixed by
+The flake exposes packages, executable apps, application and development shells,
+and checks for `x86_64-linux`, `aarch64-linux` and `aarch64-darwin`. Its inputs are fixed by
 `flake.lock`; it does not read a sibling compiler checkout or an existing
 gopurs binary.
 
@@ -26,7 +26,32 @@ compiled during the derivation: running gopurs never needs to write into its
 read-only installation in `/nix/store`.
 
 The backend consumes typed `output/*/corefn.json` from the fork below. Building
-the generated application still requires Go; the development shell supplies it.
+the generated application still requires Go; both shells supply it.
+
+## Application shell
+
+From a checkout containing this shell definition, select the tools needed to
+build an application:
+
+```sh
+nix develop .#application
+```
+
+From your application directory, use the checkout path instead:
+
+```sh
+nix develop /path/to/gopurs#application
+```
+
+This shell provides the pinned TAST frontend, Spago `1.0.3`, Node.js `24.8.0`,
+Go `1.27.0` and Git. Follow the [quickstart](quickstart.md) to install the npm
+backend and configure the application. The default `nix develop` shell also
+provides editor servers, formatters and compiler development tools.
+
+The application shell reduces the tools needed for an application setup. The
+first setup can still build the pinned Haskell frontend and its dependencies
+when those store paths are unavailable locally or from a configured substitute.
+The frontend's source derivation and pinned dependencies are described below.
 
 ## Typed frontend and development shell
 

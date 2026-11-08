@@ -1,5 +1,6 @@
 module Gopurs.FfiBridge
   ( generateFfiBridge
+  , missingImplementations
   , ffiFunctionInfos
   , ffiValueWorkers
   ) where
@@ -18,7 +19,7 @@ import Gopurs.FfiBridge.Signatures (NativeCandidate)
 import Gopurs.FfiBridge.Signatures as Signatures
 import Gopurs.FfiTypes (FfiDecl)
 import Gopurs.GoAst (capitalize, sanitizeName)
-import PureScript.Backend.Optimizer.CoreFn (DataDecl, ExprType, Ident(..))
+import PureScript.Backend.Optimizer.CoreFn (DataDecl, ExprType(..), Ident(..))
 
 -- Every foreign binding keeps a boxed entry, including first-class uses and
 -- declarations that cannot publish a direct native-call signature.
@@ -26,11 +27,30 @@ generateFfiBridge :: String -> Array DataDecl -> Array FfiDecl -> Array (Tuple I
 generateFfiBridge modNameStr dataDecls decls foreigns = String.joinWith "\n" (map bridge foreigns)
   where
   bridge (Tuple (Ident name) tast) =
-    let exportName = "_Gopurs_" <> modNameStr <> "_" <> capitalize (sanitizeName name)
+    let exportName = foreignExportName modNameStr name
     in
       case Signatures.matchDeclaration modNameStr decls name of
+        Nothing | unitConstant modNameStr name tast -> "var " <> exportName <> " = gopurs_runtime.Value{}"
         Nothing -> Render.missingImplementation exportName name
         Just declaration -> "var " <> exportName <> " = " <> Render.wrapper dataDecls declaration tast
+
+-- The driver records these alongside the generated stubs. Reachability is
+-- checked after translation, when intrinsic calls have already disappeared.
+missingImplementations :: String -> Array FfiDecl -> Array (Tuple Ident (Maybe ExprType)) -> Array { binding :: String, symbol :: String }
+missingImplementations modNameStr decls = Array.mapMaybe \(Tuple (Ident name) tast) ->
+  case Signatures.matchDeclaration modNameStr decls name of
+    Nothing | unitConstant modNameStr name tast -> Nothing
+    Nothing -> Just { binding: foreignExportName modNameStr name, symbol: name }
+    Just _ -> Nothing
+
+foreignExportName :: String -> String -> String
+foreignExportName modNameStr name = "_Gopurs_" <> modNameStr <> "_" <> capitalize (sanitizeName name)
+
+-- The canonical Unit value has a single representation. Materialize that
+-- value when using stock prelude, while keeping explicit Go FFI authoritative.
+unitConstant :: String -> String -> Maybe ExprType -> Boolean
+unitConstant "Data_Unit" "unit" (Just Unit) = true
+unitConstant _ _ _ = false
 
 -- Only publish signatures whose arguments and result can cross a direct call.
 ffiFunctionInfos :: String -> Array (Tuple Ident (Maybe ExprType)) -> Array FfiDecl -> Map String FunctionInfo

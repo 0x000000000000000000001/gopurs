@@ -13,6 +13,9 @@ and run the rest of the guide inside it.
 nix develop github:0x000000000000000000001/gopurs/v0.1.0-rc.14
 ```
 
+The first shell setup can download and compile the Haskell frontend and its
+dependencies. Let that setup finish before entering the application commands.
+
 The shell supplies the tools below. For a manual setup, put them on `PATH`
 before continuing.
 
@@ -99,9 +102,7 @@ main = log "Hello from gopurs"
 ```bash
 spago build
 npx gopurs --main Main
-cd output
-go build -o hello ./main
-./hello
+(cd output && go build -o hello ./main && ./hello)
 ```
 
 The executable prints the following line.
@@ -114,12 +115,16 @@ Hello from gopurs
 writes Go sources, the runtime and `go.mod` under `output/`; `go build` produces
 the final application binary.
 
-If `purs` is not the typed fork, gopurs stops with a TAST decoding error. See
-the [troubleshooting guide](troubleshooting.md).
+Use the pinned typed fork even if generation appears to succeed with upstream
+`purs`. RC14 can accept upstream CoreFn without reporting the missing type
+information. The [migration guide](migration.md#from-a-javascript-project)
+shows how to check the generated frontend output.
 
 ## Minimal check without FFI
 
-To verify the compiler without a Go library port, remove `console` from both `dependencies` and `extraPackages` in `spago.yaml`, then use the following `Main.purs`.
+From `hello/`, remove `console` from both `dependencies` and `extraPackages`
+in `spago.yaml` to verify the compiler without a Go library port. Then use
+the following `src/Main.purs`.
 
 ```purescript
 module Main where

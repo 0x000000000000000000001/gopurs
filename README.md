@@ -22,17 +22,19 @@ versions for a manual setup.
 
 ### Compile an existing application
 
-From your Spago project directory, with the typed `purs` on `PATH` and Go
-implementations configured for the foreign functions your app uses, install
-the backend and build. This example assumes your entry module is `Main`.
+Follow the [JavaScript migration walkthrough](docs/migration.md#from-a-javascript-project)
+to select the typed frontend, configure library ports and add Go implementations
+of your application's FFI. The walkthrough includes a check of the emitted
+type information and comparison with the application's JavaScript output.
+
+Once those steps are complete, build from your Spago project directory.
+This example assumes your entry module is `Main`.
 
 ```bash
 npm install --save-dev --ignore-scripts gopurs@0.1.0-rc.14
 spago build                 # Compile PureScript with the typed fork
 npx gopurs --main Main      # Generate Go source and go.mod in output/
-cd output
-go build -o app ./main      # Build the executable
-./app
+(cd output && go build -o app ./main && ./app)
 ```
 
 ## What gopurs provides

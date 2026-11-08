@@ -89,7 +89,7 @@ try {
         .replace("package main", "package gopurs_build_cache")
         .replaceAll('"gopurs/c1c"', `"${archiveModule}/gopurs_c1c"`));
   }
-  for (const name of ["manifest.go", "overlay.go", "qualify.go", "rewrite.go", "partition.go", "literals.go"]) {
+  for (const name of ["manifest.go", "overlay.go", "qualify.go", "rewrite.go", "partition.go", "literals.go", "missing_ffi.go"]) {
     copyFileSync(join(root, "tools/c1c", name), join(archiveSource, "gopurs_c1c", name));
   }
   await run("native-parser", "go", ["build", "-trimpath", "-tags=carchive,gopurscache", "-buildmode=c-archive",

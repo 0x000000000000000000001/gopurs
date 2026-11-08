@@ -90,7 +90,7 @@ test("CLI reports failures and preserves successful output across backends", asy
       GOPURS_EMIT_JOBS: mode.jobs,
       GOPURS_PIPELINE: mode.pipeline,
     };
-    const compile = () => run(mode.rust && rustCandidate ? rustCandidate : launcher, ["--main", "Main"], fixture.directory, env);
+    const compile = (args = ["--main", "Main"]) => run(mode.rust && rustCandidate ? rustCandidate : launcher, args, fixture.directory, env);
 
     await t.test(`${mode.name}: success exits zero with byte-identical Go`, () => {
       reset();
@@ -118,6 +118,17 @@ test("CLI reports failures and preserves successful output across backends", asy
         phase: "cache lookup + freeze",
       },
       {
+        name: "upstream CoreFn mixed with typed modules",
+        prepare: () => {
+          const path = join(output, "Main/corefn.json");
+          const module = JSON.parse(readFileSync(path, "utf8"));
+          for (const field of ["typeTable", "dataDecls", "classDecls"]) delete module[field];
+          writeFileSync(path, JSON.stringify(module));
+        },
+        diagnostic: /module Main \(.*corefn\.json\).*TAST/,
+        phase: "cache lookup + freeze",
+      },
+      {
         name: "runtime write",
         prepare: () => mkdirSync(join(output, "gopurs_runtime/runtime.go"), { recursive: true }),
         diagnostic: /gopurs_runtime\/runtime\.go/,
@@ -134,6 +145,18 @@ test("CLI reports failures and preserves successful output across backends", asy
         prepare: () => writeFileSync(ffiPath, "func Broken("),
         diagnostic: /FFI error in module Main \(.*Main\.go\)/,
         phase: "optimize + emit",
+      },
+      {
+        name: "missing FFI file",
+        prepare: () => rmSync(ffiPath),
+        diagnostic: /FFI error in module Main \(.*Main\.go\): missing Go implementation/,
+        phase: "FFI validation",
+      },
+      {
+        name: "missing FFI binding",
+        prepare: () => writeFileSync(ffiPath, originalFfi.replace("func ReturnInt64(", "func UnusedReturnInt64(")),
+        diagnostic: /FFI error in module Main \(.*Main\.go\): missing Go implementation for returnInt64/,
+        phase: "FFI validation",
       },
       {
         name: "entry point write",
@@ -154,7 +177,45 @@ test("CLI reports failures and preserves successful output across backends", asy
         assert.ok(result.stderr.includes(`[gopurs] ${scenario.phase}:`), result.stderr);
         assert.ok(result.stderr.includes("(failed)"), result.stderr);
         assert.doesNotMatch(result.stderr, /deadlock|panic:/);
+        if (scenario.name === "upstream CoreFn mixed with typed modules") {
+          assert.match(result.stderr, /typed.*purs/);
+          assert.doesNotMatch(result.stderr, /optimize \+ emit|full fallback/);
+          assert.ok(!existsSync(join(output, "main/main.go")));
+        }
       });
     }
+
+    await t.test(`${mode.name}: batch generation preserves missing bindings without selecting an executable`, () => {
+      reset();
+      rmSync(ffiPath);
+      const result = compile([]);
+      assert.equal(result.status, 0, result.stdout + result.stderr);
+      assert.ok(existsSync(join(output, "main/main.go")));
+      assert.match(readFileSync(join(output, "purescript/Main_ffi.go"), "utf8"), /FFI not implemented/);
+    });
   }
+
+  await t.test("the minimal quickstart needs no Go library overrides", () => {
+    rmSync(output, { recursive: true, force: true });
+    rmSync(ffiPath, { force: true });
+    rmSync(join(fixture.directory, "src/Main.js"), { force: true });
+    writeFileSync(join(fixture.directory, "src/Main.purs"),
+      "module Main where\nimport Prelude\nimport Effect (Effect)\nmain :: Effect Unit\nmain = pure unit\n");
+    writeFileSync(join(fixture.directory, "spago.yaml"),
+      "package:\n  name: minimal\n  dependencies: [prelude, effect]\nworkspace:\n  packageSet:\n    registry: 77.10.1\n");
+    const frontend = run("spago", ["build", "-q"], fixture.directory, fixtureEnvironment);
+    assert.equal(frontend.status, 0, frontend.stdout + frontend.stderr);
+    const minimalInputs = join(workspace, "minimal-inputs");
+    cpSync(output, minimalInputs, { recursive: true });
+    for (const js of ["1", "0"]) {
+      rmSync(output, { recursive: true, force: true });
+      cpSync(minimalInputs, output, { recursive: true });
+      const result = run(launcher, ["--main", "Main"], fixture.directory,
+        { ...environment, GOPURS_JS: js, GOPURS_RUST: "0" });
+      assert.equal(result.status, 0, result.stdout + result.stderr);
+      const execute = run("go", ["run", "./main/main.go"], output);
+      assert.equal(execute.status, 0, execute.stdout + execute.stderr);
+      assert.equal(execute.stdout, "");
+    }
+  });
 });

@@ -1,5 +1,5 @@
 module Gopurs.Driver.Cache
-  ( Session, SourceModule, FrozenFFI, ReusedMemo, PartText, begin, withSession, withSessionUsing, plan, materialize, materializeSync, materializeInputs, materializeAllInputs, readParts, readCapsule, packages, publish, close ) where
+  ( Session, SourceModule, FrozenFFI, ReusedMemo, PartText, begin, withSession, withSessionUsing, plan, materialize, materializeSync, materializeInputs, materializeAllInputs, readParts, readCapsule, validateFFI, packages, publish, close ) where
 
 import Prelude
 
@@ -77,6 +77,8 @@ beginRequest config = (request "begin")
       , { name: "go-layout", value: if config.goPackages then "gopurs/go-packages-v1" else "gopurs/monolithic-v1" }
       , { name: "module-lazy", value: if config.optimizerJobs > 1 then "1" else "0" }
       , { name: "input-layout", value: "packed-v1" }
+      , { name: "input-format", value: "tast-v1" }
+      , { name: "ffi-validation", value: "explicit-main-v1" }
       ] <> if config.devMode then [ { name: "optimization-profile", value: "dev-v5" } ] else []
   }
 
@@ -168,6 +170,9 @@ readCapsule session reader = liftEffect do
     (decodeJson json :: _ { status :: String, reason :: String, capsule :: Maybe String })
   when (response.status /= "ready") $ throwException (error ("incremental cache: " <> response.reason))
   pure response.capsule
+
+validateFFI :: Session -> Array String -> Aff Unit
+validateFFI session entries = void $ exchange ((request "validate-ffi") { stage = session.stage, entries = entries })
 
 packages :: Session -> Array String -> Aff String
 packages session entries = _.packageRequest <$> exchange ((request "packages") { stage = session.stage, entries = entries })

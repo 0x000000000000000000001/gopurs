@@ -56,6 +56,7 @@
     "tools/c1c/go.mod",
     "tools/c1c/literals.go",
     "tools/c1c/manifest.go",
+    "tools/c1c/missing_ffi.go",
     "tools/c1c/overlay.go",
     "tools/c1c/partition.go",
     "tools/c1c/qualify.go",

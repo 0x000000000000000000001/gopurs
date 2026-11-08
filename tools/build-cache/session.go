@@ -8,6 +8,8 @@ import (
 	"reflect"
 	"sort"
 	"strings"
+
+	"gopurs/c1c"
 )
 
 type SourceModule struct {
@@ -74,6 +76,26 @@ type buildSession struct {
 type recipe struct {
 	Schema int     `json:"schema"`
 	Inputs []Input `json:"inputs"`
+}
+
+// Record root-field shapes without decoding or copying their full payloads.
+// json.Unmarshal still validates the complete JSON before calling this method.
+type tastArray bool
+
+func (array *tastArray) UnmarshalJSON(data []byte) error {
+	*array = len(data) > 0 && data[0] == '['
+	return nil
+}
+
+func validateTypedModule(module, path string, data []byte) error {
+	var fields map[string]tastArray
+	if err := json.Unmarshal(data, &fields); err != nil {
+		return fmt.Errorf("invalid CoreFn JSON in module %s (%s): %w", module, path, err)
+	}
+	if !fields["typeTable"] || !fields["dataDecls"] || !fields["classDecls"] {
+		return fmt.Errorf("module %s (%s) requires TAST metadata arrays typeTable, dataDecls and classDecls. Use the typed PureScript fork and rebuild from clean frontend output, preserving go.mod/go.sum. Check purs on PATH, including npm's node_modules/.bin", module, path)
+	}
+	return nil
 }
 
 // SessionExchange is the driver's producer protocol. Storage v1 remains usable
@@ -199,6 +221,12 @@ func sessionOperationOnMiss(req SessionRequest, result *SessionResponse, onMiss 
 		return nil
 	case "packages":
 		return preparePackageSession(stage, &state, req.Entries, result)
+	case "validate-ffi":
+		if err := validateSessionFFI(stage, state, req.Entries); err != nil {
+			return err
+		}
+		result.Status = "ready"
+		return nil
 	case "publish":
 		return publishSession(stage, state, req, result)
 	case "abort":
@@ -319,6 +347,12 @@ func beginSessionOnMiss(spec Spec, force bool, result *SessionResponse, onMiss f
 	moduleParts := make([][]string, len(entries))
 	moduleHashes := make([]frozenSourceHash, len(entries))
 	moduleInputs := make([]frozenInput, len(entries))
+	checkTypedInput := false
+	for _, option := range spec.Options {
+		if option.Name == "input-format" && option.Value == "tast-v1" {
+			checkTypedInput = true
+		}
+	}
 	var inputPack *inputPackWriter
 	if packedInputs(spec) {
 		inputPack, err = newInputPackWriter(stage)
@@ -346,6 +380,11 @@ func beginSessionOnMiss(spec Spec, force bool, result *SessionResponse, onMiss f
 		}
 		if f.State == "missing" {
 			return nil
+		}
+		if checkTypedInput {
+			if err := validateTypedModule(entry.Name(), f.Resolved, bytes); err != nil {
+				return err
+			}
 		}
 		moduleParts[i] = []string{f.Name, f.Resolved, f.Digest}
 		moduleHashes[i] = frozenSourceHash{Name: entry.Name(), Hash: f.Digest}
@@ -598,6 +637,53 @@ func saveSession(stage string, state buildSession) error {
 		return err
 	}
 	return atomicWrite(filepath.Join(stage, "session.json"), data, 0600)
+}
+
+func validateSessionFFI(stage string, state buildSession, entries []string) error {
+	if !state.Planned {
+		return fmt.Errorf("FFI validation requires frozen build inputs")
+	}
+	if len(entries) == 0 {
+		return nil
+	}
+	files, err := packageSources(stage, state)
+	if err != nil {
+		return fmt.Errorf("incremental cache: %w", err)
+	}
+	sources := map[string]string{}
+	missing := false
+	for _, file := range files {
+		if !strings.HasPrefix(file.Owner, "ffi/") {
+			continue
+		}
+		data, err := readPackageSource(stage, state, file)
+		if err != nil {
+			return fmt.Errorf("incremental cache: %w", err)
+		}
+		source := string(data)
+		sources[file.Path] = source
+		missing = missing || strings.Contains(source, c1c.MissingFFIMarker)
+	}
+	if !missing {
+		return nil
+	}
+	// Resolve reachability only when a stub exists. Normal incremental builds
+	// can keep their unchanged generated declarations in the lazy source cache.
+	for _, file := range files {
+		if strings.HasPrefix(file.Owner, "ffi/") {
+			continue
+		}
+		data, err := readPackageSource(stage, state, file)
+		if err != nil {
+			return fmt.Errorf("incremental cache: %w", err)
+		}
+		sources[file.Path] = string(data)
+	}
+	roots := make([]string, 0, len(entries))
+	for _, module := range entries {
+		roots = append(roots, "Get_"+strings.ReplaceAll(module, ".", "_")+"_main")
+	}
+	return c1c.CheckMissingFFI(sources, roots)
 }
 
 func publishSession(stage string, state buildSession, req SessionRequest, result *SessionResponse) error {

@@ -8,7 +8,7 @@ import { lookup } from '../output/Data.Map/index.js';
 import { Just, Nothing } from '../output/Data.Maybe/index.js';
 import { ordString } from '../output/Data.Ord/index.js';
 import { Tuple } from '../output/Data.Tuple/index.js';
-import { ffiFunctionInfos, ffiValueWorkers, generateFfiBridge } from '../output/Gopurs.FfiBridge/index.js';
+import { ffiFunctionInfos, ffiValueWorkers, generateFfiBridge, missingImplementations } from '../output/Gopurs.FfiBridge/index.js';
 import { prepareFfi } from '../output/Gopurs.FfiSupport/index.js';
 import * as Go from '../output/Gopurs.GoAst/index.js';
 import * as C from '../output/PureScript.Backend.Optimizer.CoreFn/index.js';
@@ -44,6 +44,28 @@ func Untyped(x int64) any { return x }
 const signatures = ffiFunctionInfos(moduleName)(foreigns)(prepared.decls);
 const wrappers = generateFfiBridge(moduleName)([])(prepared.decls)(foreigns);
 const workers = ffiValueWorkers(moduleName)([])(foreigns)(prepared.decls);
+
+test('missing-binding annotations use declaration matching, including suffix and variable implementations', () => {
+    assert.deepEqual(missingImplementations(moduleName)(prepared.decls)(foreigns), [
+        { binding: '_Gopurs_BridgeContract_Missing', symbol: 'missing' },
+    ]);
+});
+
+test('stock Data.Unit.unit materializes its typed singleton value without a Go port', () => {
+    const unit = [new Tuple('unit', new Just(C.Unit.value))];
+    assert.equal(generateFfiBridge('Data_Unit')([])([])(unit),
+        'var _Gopurs_Data_Unit_Unit = gopurs_runtime.Value{}');
+    assert.deepEqual(missingImplementations('Data_Unit')([])(unit), []);
+    for (const [owner, foreigns] of [
+        ['Other', unit],
+        ['Data_Unit', [new Tuple('unit', Nothing.value)]],
+        ['Data_Unit', [new Tuple('unit', new Just(effect))]],
+    ]) {
+        assert.equal(missingImplementations(owner)([])(foreigns).length, 1);
+    }
+    const explicit = prepareFfi({ moduleName: 'Data.Unit', path: 'Data/Unit.go' })('Data_Unit_')('var Unit any = nil')();
+    assert.match(generateFfiBridge('Data_Unit')([])(explicit.decls)(unit), /gopurs_runtime.Box\(Data_Unit_Unit\)/);
+});
 
 test('Go int32 FFI preserves signed values through scalar, array and callback bridges', t => {
     const name = 'Int32Bridge';
