@@ -77,7 +77,7 @@ for path in sorted((workspace / 'output').glob('*/corefn.json')):
     assert all(isinstance(data.get(key), list) for key in ['typeTable', 'dataDecls', 'classDecls']), path
     typed.append({'module': path.parent.name, 'types': len(data['typeTable'])})
 (workspace / 'typed.json').write_text(json.dumps(typed, indent=2) + '\n')
-command('native-support', ['node', project / 'tools/prepare-native-output.mjs', workspace / 'output'])
+command('native-support', ['node', project / 'tools/build/prepare-native-output.mjs', workspace / 'output'])
 command('generate-go', [backend, '--main', main_module])
 go = args.go
 command('go-build', [go, 'build', '-p', '2', '-o', workspace / 'lookup-native-ps', './main/main.go'], workspace / 'output')

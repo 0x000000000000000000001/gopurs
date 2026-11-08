@@ -830,7 +830,7 @@ ses noms passent par `GoAst.constructorNames`.
 ## Runtime et FFI
 
 [runtime/runtime.go](../runtime/runtime.go) est la source canonique du runtime.
-`tools/embed-runtime.mjs` génère les compagnons FFI `Runtime.js` et `Runtime.go`
+`tools/build/embed-runtime.mjs` génère les compagnons FFI `Runtime.js` et `Runtime.go`
 au build ; le bundle JS et le compilateur natif embarquent la même constante.
 `Driver.Output.writeRuntime` écrit ce texte dans l'application générée, sans
 relire la source Go au lancement du backend.

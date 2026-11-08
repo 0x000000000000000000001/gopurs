@@ -6,12 +6,12 @@ import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { delimiter, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { CommandRunner, Interrupted } from "./command-runner.mjs";
+import { CommandRunner, Interrupted } from "../command-runner.mjs";
 import { findTypedCompiler, nativeWorkspaceConfig, verifyTypedOutput } from "./native-workspace.mjs";
 import { buildProfileGuidedBinary, rustFlagsEnvironment } from "./pgo.mjs";
-import { corePackages, prepareFixture } from "./test-workspace.mjs";
+import { corePackages, prepareFixture } from "../test-workspace.mjs";
 
-const root = fileURLToPath(new URL("../", import.meta.url));
+const root = fileURLToPath(new URL("../../", import.meta.url));
 const args = process.argv.slice(2);
 if (args.includes("--help")) {
   console.log("Usage: npm run build:rust -- [--keep-workspace]\nBuild bin/gopurs-rust: the gopurs Go code generator hosted in Rust.\nPURUST_DIR selects the Rust backend checkout; PURUST_JS=1 uses its JavaScript executable for this bootstrap only.\nGOPURS_PURS selects the typed frontend. GOPURS_NATIVE_TMPDIR selects the workspace parent; GOPURS_RUST_OUTPUT overrides the installed executable.\nGOPURS_RUST_PGO=0 disables profile-guided optimization (enabled by default).\nGOPURS_KEEP_WORKSPACE=1 also retains successful builds.");
@@ -60,7 +60,7 @@ try {
   mkdirSync(typedBin);
   symlinkSync(compiler, join(typedBin, "purs"));
   const typedEnvironment = { ...environment, PATH: typedBin + delimiter + environment.PATH };
-  await run("embed-go-runtime", process.execPath, [join(root, "tools/embed-runtime.mjs")], root);
+  await run("embed-go-runtime", process.execPath, [join(root, "tools/build/embed-runtime.mjs")], root);
   await run("typed-corefn", "spago", ["build"], workspace, typedEnvironment);
   const output = join(workspace, "output");
   stage = "verify-tast";

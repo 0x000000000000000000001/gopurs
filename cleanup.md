@@ -31,7 +31,7 @@ l'identité octet par octet des sorties Go.
 - **Lot 3a — préparé sur `cleanup/v2`, intégration sur main autorisée le 1 novembre** :
   `CompilerSnapshot` → `Host.Snapshot`, `Diagnostics` → `Host.Diagnostics`,
   `Metrics` → `Host.Metrics`, `Resident` → `Host.Resident`, `Runtime` →
-  `Runtime.Source`. Les compagnons FFI, `tools/embed-runtime.mjs`,
+  `Runtime.Source`. Les compagnons FFI, `tools/build/embed-runtime.mjs`,
   `.gitignore`, les outils et les documents normatifs suivent. Quatre
   fixtures donnent **1 220 fichiers Go identiques** avant/après. L’intégration
   a été autorisée après la publication de RC7, avant la future
@@ -156,7 +156,7 @@ orchestrateur lisible, pas un sac d'imports.
   marque **tous** les `.js` comme générés. Un visiteur ne voit donc pas le
   langage réel du projet, et les FFI JS manuscrites sont présentées comme
   générées.
-- `Runtime.js/go/rs` est généré par `tools/embed-runtime.mjs` ; les autres
+- `Runtime.js/go/rs` est généré par `tools/build/embed-runtime.mjs` ; les autres
   compagnons sont manuscrits. Cette distinction n'est écrite nulle part.
 - 13 outils contiennent des chemins `src/Gopurs/...` en dur ; tout mouvement
   de module doit les mettre à jour.
@@ -371,7 +371,7 @@ Découpage des PR, dans cet ordre (du moins dépendant au plus dépendant) :
 1. **Host + Runtime** : `CompilerSnapshot` → `Host.Snapshot`,
    `Diagnostics` → `Host.Diagnostics`, `Metrics` → `Host.Metrics`,
    `Resident` → `Host.Resident`, `Runtime` → `Runtime.Source`.
-   Mettre à jour `tools/embed-runtime.mjs`, `.gitignore`, les imports de tests
+   Mettre à jour `tools/build/embed-runtime.mjs`, `.gitignore`, les imports de tests
    et les 57 références en dur.
 2. **Cache** : `Driver.Cache` → `Cache.Session`, `BuildCache` →
    `Cache.Protocol`. Déplacer les compagnons FFI et mettre à jour

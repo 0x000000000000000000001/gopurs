@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
-import { findTypedCompiler } from "./native-workspace.mjs";
+import { findTypedCompiler } from "./build/native-workspace.mjs";
 import { formatSnapshots, snapshotFiles } from "./test-snapshots.mjs";
 import { corePackages, prepareFixture } from "./test-workspace.mjs";
 

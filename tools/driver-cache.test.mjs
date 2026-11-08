@@ -6,7 +6,7 @@ import { delimiter, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import { corePackages, createWorkspace, prepareFixture } from "./test-workspace.mjs";
-import { findTypedCompiler } from "./native-workspace.mjs";
+import { findTypedCompiler } from "./build/native-workspace.mjs";
 import { packageSourceSections } from "./test-snapshots.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));

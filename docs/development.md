@@ -181,7 +181,7 @@ npm run build:native   # native Go host
 npm run build:rust     # native Rust host
 ```
 
-The build first runs `tools/embed-runtime.mjs`, which writes the ignored
+The build first runs `tools/build/embed-runtime.mjs`, which writes the ignored
 `src/Gopurs/Runtime/Source.js`, `Source.go` and `Source.rs` FFI companions.
 `Gopurs.Runtime.Source.runtimeGoCode` remains a PureScript `String`; all three compiler
 hosts embed the same constant. The installed

@@ -8,7 +8,7 @@ import { delimiter, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import { corePackages, createWorkspace, prepareFixture } from './test-workspace.mjs';
-import { findTypedCompiler } from './native-workspace.mjs';
+import { findTypedCompiler } from './build/native-workspace.mjs';
 import { hash as wireHash } from '../output/Gopurs.Cache.Wire/index.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));

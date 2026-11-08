@@ -7,7 +7,7 @@ import { delimiter, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import { corePackages, createWorkspace, prepareFixture } from './test-workspace.mjs';
-import { findTypedCompiler } from './native-workspace.mjs';
+import { findTypedCompiler } from './build/native-workspace.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const modes = [{ name: 'js', GOPURS_JS: '1' }, { name: 'native-parallel', GOPURS_JS: '0' }]

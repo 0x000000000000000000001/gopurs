@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import { gunzipSync } from "node:zlib";
 import { corePackages, createWorkspace, prepareFixture } from "./test-workspace.mjs";
-import { findTypedCompiler, verifyTypedOutput } from "./native-workspace.mjs";
+import { findTypedCompiler, verifyTypedOutput } from "./build/native-workspace.mjs";
 import { sourceVariants } from "./cache-source-variants.mjs";
 import { preparationSourceVariants } from "./preparation-source-variants.mjs";
 import { packageSourceSections } from "./test-snapshots.mjs";

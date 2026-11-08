@@ -6,7 +6,7 @@ import { delimiter, join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { corePackages, createWorkspace, prepareFixture } from "./test-workspace.mjs";
-import { findTypedCompiler } from "./native-workspace.mjs";
+import { findTypedCompiler } from "./build/native-workspace.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const launcher = join(root, "bin/gopurs");

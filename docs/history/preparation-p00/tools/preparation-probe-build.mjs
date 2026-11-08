@@ -73,12 +73,12 @@ const entry = kind === "compact" ? "PreparationCompactProbe" : kind === "codecs"
 command("js-bundle", process.execPath, [spago, "bundle", "--offline", "--monochrome", "--module", entry, "--platform", "node", "--outfile", "bin/gopurs.js", "--bundle-type", "app", "--force"], compiler);
 command("preparation-contracts", process.execPath, ["--test", "--test-concurrency=1", "tools/monomorphization.test.mjs", "tools/preparation.test.mjs", "tools/global-types.test.mjs", "tools/rebox-metadata.test.mjs"], compiler);
 
-const { nativeWorkspaceConfig, verifyTypedOutput } = await import(pathToFileURL(join(compiler, "tools/native-workspace.mjs")));
+const { nativeWorkspaceConfig, verifyTypedOutput } = await import(pathToFileURL(join(compiler, "tools/build/native-workspace.mjs")));
 writeFileSync(join(bootstrap, "spago.yaml"), nativeWorkspaceConfig(compiler) + '  backend:\n    cmd: "/usr/bin/true"\n');
 symlinkSync(join(compiler, "src"), join(bootstrap, "src"));
 command("bootstrap-frontend", process.execPath, [spago, "build", "--offline", "--monochrome"], bootstrap);
 const typed = verifyTypedOutput(join(bootstrap, "output"), join(campaign, "toolchain/purs"));
-command("native-bridges", process.execPath, [join(compiler, "tools/prepare-native-output.mjs"), join(bootstrap, "output")], compiler);
+command("native-bridges", process.execPath, [join(compiler, "tools/build/prepare-native-output.mjs"), join(bootstrap, "output")], compiler);
 if (kind !== "timings") command("bootstrap-reference-generator", join(reference, "bin/gopurs"), ["--main", entry], bootstrap, { GOGC: "off", GOMEMLIMIT: "10GiB" });
 else command("bootstrap-reference-generator", process.execPath, ["--stack-size=65536", join(reference, "bin/gopurs.js"), "--main", entry], bootstrap);
 command("go-build", "go", ["build", "-p", "2", "-trimpath", "-o", join(compiler, "bin/gopurs-native"), "./main/main.go"], join(bootstrap, "output"), { GOMAXPROCS: "8", GOMEMLIMIT: "12GiB" });

@@ -9,7 +9,8 @@ import {
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const toolsDirectory = dirname(fileURLToPath(import.meta.url));
+const buildDirectory = dirname(fileURLToPath(import.meta.url));
+const toolsDirectory = join(buildDirectory, "..");
 const generatorDirectory = join(toolsDirectory, "ffi-gen");
 
 function buildFfi() {
@@ -46,7 +47,7 @@ function buildFfi() {
   }
 
   // Stage both files on the destination filesystem before replacing either one.
-  const temporaryDirectory = mkdtempSync(join(toolsDirectory, ".build-ffi-"));
+  const temporaryDirectory = mkdtempSync(join(buildDirectory, ".build-ffi-"));
   try {
     const wasmPath = join(temporaryDirectory, "ffi_gen.wasm");
     const runtimePath = join(temporaryDirectory, "wasm_exec.js");

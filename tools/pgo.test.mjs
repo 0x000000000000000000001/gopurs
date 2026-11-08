@@ -6,7 +6,7 @@ import test from "node:test";
 import {
   assertTrainingIntact, cleanGenerated, emittedManifest, encodedRustFlags, freezeTrainingOutput,
   manifest, rustFlagsEnvironment, walk,
-} from "./pgo.mjs";
+} from "./build/pgo.mjs";
 
 function temporary(t, name) {
   const directory = mkdtempSync(join(tmpdir(), `gopurs-pgo-${name}-`));

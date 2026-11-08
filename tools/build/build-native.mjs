@@ -5,10 +5,10 @@ import {
 import { tmpdir } from "node:os";
 import { delimiter, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { CommandRunner, Interrupted } from "./command-runner.mjs";
+import { CommandRunner, Interrupted } from "../command-runner.mjs";
 import { findTypedCompiler, nativeWorkspaceConfig, verifyTypedOutput } from "./native-workspace.mjs";
 
-const root = fileURLToPath(new URL("../", import.meta.url));
+const root = fileURLToPath(new URL("../../", import.meta.url));
 const args = process.argv.slice(2);
 if (args.includes("--help")) {
   console.log("Usage: npm run build:native -- [--keep-workspace]\nBuild an experimental native compiler using the Node backend and local Go library checkouts.\nGOPURS_PURS=/absolute/path/to/typed/purs overrides discovery of the local compiler fork.");
@@ -85,7 +85,7 @@ async function buildNative({ keepWorkspace }) {
     writeFileSync(join(workspace, "verify-tast.log"), verification);
     console.log(verification.trimEnd());
 
-    await runStage("native-parser", process.execPath, [join(root, "tools/prepare-native-output.mjs"), output], { cwd: root });
+    await runStage("native-parser", process.execPath, [join(root, "tools/build/prepare-native-output.mjs"), output], { cwd: root });
     await runStage("generate-go", process.execPath, ["--stack-size=65536", join(root, "bin/gopurs.js"), "--main", "Main"], { cwd: workspace });
     const binary = join(workspace, "gopurs-native");
     await runStage("go-build", "go", ["build", "-trimpath", "-o", binary, "./main/main.go"], { cwd: output });

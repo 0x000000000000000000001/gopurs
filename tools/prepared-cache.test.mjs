@@ -12,7 +12,7 @@ import { Nothing } from "../output/Data.Maybe/index.js";
 import * as Aff from "../output/Effect.Aff/index.js";
 import * as Prepare from "../output/Gopurs.Driver.Prepare/index.js";
 import * as Wire from "../output/Gopurs.Cache.Wire/index.js";
-import { findTypedCompiler } from "./native-workspace.mjs";
+import { findTypedCompiler } from "./build/native-workspace.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const runAff = action => new Promise((resolve, reject) => {

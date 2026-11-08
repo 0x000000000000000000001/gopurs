@@ -40,7 +40,7 @@ pkgs.mkSpagoDerivation {
   GOTOOLCHAIN = "local";
   buildPhase = ''
     export GOCACHE=$TMPDIR/go-cache
-    node tools/embed-runtime.mjs
+    node tools/build/embed-runtime.mjs
     spago build --offline
     spago bundle --module Main --platform node --outfile bin/gopurs.js --bundle-type app --offline
     # The Nix store is immutable. Build the content-addressed helpers now,

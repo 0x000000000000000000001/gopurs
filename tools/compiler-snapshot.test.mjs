@@ -70,7 +70,7 @@ test("native re-exec identifies the binary actually executed after installation 
   const workspace = realpathSync(mkdtempSync(join(tmpdir(), "gopurs-snapshot-go-")));
   t.after(() => rmSync(workspace, { recursive: true, force: true }));
   writeFileSync(join(workspace, "go.mod"), "module gopurs/output\n\ngo 1.22\n");
-  run(process.execPath, [join(root, "tools/prepare-native-output.mjs"), workspace], root);
+  run(process.execPath, [join(root, "tools/build/prepare-native-output.mjs"), workspace], root);
   writeFileSync(join(workspace, "main.go"), `package main
 import ("crypto/sha256"; "encoding/hex"; "encoding/json"; "fmt"; "os"; "runtime/pprof"; "gopurs/output/gopurs_build_cache")
 var marker = "old"

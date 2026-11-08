@@ -20,13 +20,13 @@ test("all embedded runtimes equal the canonical Go source", () => {
 test("embedding resolves from the script, preserves unchanged timestamps and needs no runtime I/O", async t => {
   const directory = mkdtempSync(join(tmpdir(), "gopurs-embed-runtime-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
-  for (const name of ["tools", "runtime", "src/Gopurs/Runtime"]) mkdirSync(join(directory, name), { recursive: true });
+  for (const name of ["tools/build", "runtime", "src/Gopurs/Runtime"]) mkdirSync(join(directory, name), { recursive: true });
   writeFileSync(join(directory, "package.json"), '{"type":"module"}\n');
-  cpSync(new URL("./embed-runtime.mjs", import.meta.url), join(directory, "tools/embed-runtime.mjs"));
+  cpSync(new URL("./build/embed-runtime.mjs", import.meta.url), join(directory, "tools/build/embed-runtime.mjs"));
   const canonical = readFileSync(new URL("../runtime/runtime.go", import.meta.url), "utf8");
   const runtime = join(directory, "runtime/runtime.go");
   writeFileSync(runtime, canonical);
-  const run = () => execFileSync(process.execPath, [join(directory, "tools/embed-runtime.mjs")], {
+  const run = () => execFileSync(process.execPath, [join(directory, "tools/build/embed-runtime.mjs")], {
     cwd: join(directory, "src"), stdio: "pipe",
   });
   run();

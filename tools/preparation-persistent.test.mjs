@@ -25,7 +25,7 @@ import * as Persistent from '../output/Gopurs.Driver.Prepare.Persistent/index.js
 import * as Projection from '../output/Gopurs.Driver.Prepare.Projection/index.js';
 import * as Wire from '../output/Gopurs.Cache.Wire/index.js';
 import * as Manifest from '../output/Gopurs.Driver.Manifest/index.js';
-import { findTypedCompiler } from './native-workspace.mjs';
+import { findTypedCompiler } from './build/native-workspace.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const compiler = findTypedCompiler(root, process.env.GOPURS_PURS);

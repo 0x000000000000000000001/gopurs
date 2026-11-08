@@ -41,7 +41,7 @@ dans cet ordre, sauf les exceptions assumées listées plus bas.
 | Emit | Emit, Rewrite (composition des passes et preuves d'ABI partagées), Prepare.Metadata, Cache.LookupTable, Host. Ni Driver. |
 | Cache | Cache, Emit (types et entrée d'émission), Prepare, Host. Ni Driver. |
 | Host | Host pur pour Snapshot, Diagnostics et Metrics : aucune dépendance Gopurs. Resident est une entrée de service : il peut dépendre de `Driver`, `Driver.Config` et `Driver.Prepare`. |
-| Runtime | Aucune dépendance Gopurs : le texte est généré par `tools/embed-runtime.mjs`. |
+| Runtime | Aucune dépendance Gopurs : le texte est généré par `tools/build/embed-runtime.mjs`. |
 | Entrée | Driver et Host uniquement. |
 
 Les dépendances réelles sont celles du code après le lot 3a (29 octobre 2026). Quand une

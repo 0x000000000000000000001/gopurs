@@ -42,9 +42,13 @@ workspace:
     put(join(temporary, `checkout/gopurs/gopurs-${name}/spago.yaml`),
       `package:\n  name: ${name === 'node-process' ? 'gopurs-node-process' : name}\n`);
   }
-  mkdirSync(join(root, 'tools'));
-  for (const name of ['build-native', 'native-workspace', 'command-runner']) {
-    copyFileSync(new URL(`./${name}.mjs`, import.meta.url), join(root, `tools/${name}.mjs`));
+  mkdirSync(join(root, 'tools/build'), { recursive: true });
+  for (const [source, target] of [
+    ['./build/build-native.mjs', 'tools/build/build-native.mjs'],
+    ['./build/native-workspace.mjs', 'tools/build/native-workspace.mjs'],
+    ['./command-runner.mjs', 'tools/command-runner.mjs'],
+  ]) {
+    copyFileSync(new URL(source, import.meta.url), join(root, target));
   }
   // Every external build command is replaced; this test never compiles sources.
   const mockTool = `#!/usr/bin/env node
@@ -78,7 +82,7 @@ if (process.env.MOCK_PAUSE === name) {
   utimesSync(fork, 2, 2);
   const binary = join(root, 'bin/gopurs-native');
   put(binary, 'old-native-binary', 0o755);
-  put(join(root, 'tools/prepare-native-output.mjs'), `
+  put(join(root, 'tools/build/prepare-native-output.mjs'), `
 import { appendFileSync } from 'node:fs';
 appendFileSync(process.env.MOCK_LOG, JSON.stringify({ name: 'parser' }) + '\\n');
 `);
@@ -93,14 +97,14 @@ appendFileSync(process.env.MOCK_LOG, JSON.stringify({ name: 'parser' }) + '\\n')
     calls: existsSync(log) ? readFileSync(log, 'utf8').trim().split('\n').map(JSON.parse) : [],
   });
   const run = (environment = {}, args = ['--keep-workspace']) => {
-    const result = spawnSync(process.execPath, [join(root, 'tools/build-native.mjs'), ...args], {
+    const result = spawnSync(process.execPath, [join(root, 'tools/build/build-native.mjs'), ...args], {
       cwd: root, encoding: 'utf8', timeout: 15_000, env: environmentFor(environment),
     });
     assert.ifError(result.error);
     return summarize(result);
   };
   const start = environment => {
-    const child = spawn(process.execPath, [join(root, 'tools/build-native.mjs'), '--keep-workspace'], {
+    const child = spawn(process.execPath, [join(root, 'tools/build/build-native.mjs'), '--keep-workspace'], {
       cwd: root, env: environmentFor(environment), stdio: ['ignore', 'pipe', 'pipe'],
     });
     let stdout = '', stderr = '';

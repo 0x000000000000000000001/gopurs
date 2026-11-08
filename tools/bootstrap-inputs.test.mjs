@@ -4,7 +4,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync,
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import { findTypedCompiler, nativeWorkspaceConfig } from "./native-workspace.mjs";
+import { findTypedCompiler, nativeWorkspaceConfig } from "./build/native-workspace.mjs";
 
 function fixture(t) {
   const directory = mkdtempSync(join(tmpdir(), "gopurs-bootstrap-inputs-"));

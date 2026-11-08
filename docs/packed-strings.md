@@ -41,7 +41,7 @@ La taille de `Value` est inchangée, comme pour les flottants déjà packés dan
 - `runtime/runtime.go` : `Str`, `StrValue` et 13 lecteurs (`StrVal`, `AnyVal`,
   `RecordGet`, `Unbox`, `ValueToAny`, `ExtractVariant`, `copyReflectField`).
 - `src/Gopurs/Runtime/Source.go` et `Source.js` : régénérés par
-  `node tools/embed-runtime.mjs` (ou `npm run build:runtime`).
+  `node tools/build/embed-runtime.mjs` (ou `npm run build:runtime`).
 - FFI : `gopurs-argonaut-core` (1 site), `gopurs-foreign` (3), 
   `gopurs-node-buffer` (9), tous remplacés par `gopurs_runtime.StrValue`.
 - `tools/ffi-generics.test.mjs` : le garde-fou d'ordonnancement attend

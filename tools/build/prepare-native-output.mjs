@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 // gopurs/output module can resolve the build cache's import.
 const output = process.argv[2];
 if (!output || process.argv.length !== 3) {
-  throw new Error("Usage: node tools/prepare-native-output.mjs <generated-output-directory>");
+  throw new Error("Usage: node tools/build/prepare-native-output.mjs <generated-output-directory>");
 }
 const generatedModule = "gopurs/output";
 const buildCache = ["contract.go", "store.go", "profiles.go", "session.go", "inputpack.go", "compiler.go", "modules.go", "capsules.go", "packages.go", "overlay.go", "overlay_sections.go", "packs.go"];
@@ -20,7 +20,7 @@ const groups = [
   { directory: "c1c", packageName: "c1c", destination: "gopurs_c1c", sourcePackage: "c1c", files: c1c },
 ];
 for (const group of groups) {
-  const sourceDirectory = fileURLToPath(new URL(`./${group.directory}/`, import.meta.url));
+  const sourceDirectory = fileURLToPath(new URL(`../${group.directory}/`, import.meta.url));
   const destination = join(resolve(output), group.destination);
   const sources = group.files.map(name => {
     const source = readFileSync(join(sourceDirectory, name), "utf8");
