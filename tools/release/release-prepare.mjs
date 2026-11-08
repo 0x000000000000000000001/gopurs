@@ -7,12 +7,12 @@ import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { withSbomSerialNumber } from "./release-sbom.mjs";
 
-const root = fileURLToPath(new URL("../", import.meta.url));
+const root = fileURLToPath(new URL("../../", import.meta.url));
 const options = {};
 for (let index = 2; index < process.argv.length; index++) {
   const arg = process.argv[index];
   if (arg === "--help") {
-    console.log("Usage: node tools/release-prepare.mjs --out DIRECTORY --native FILE [--preview]\nPackages the already built compiler, its lockfile inventory, build metadata and SHA-256 checksums. Final preparation requires a clean tree at the matching annotated version tag.");
+    console.log("Usage: node tools/release/release-prepare.mjs --out DIRECTORY --native FILE [--preview]\nPackages the already built compiler, its lockfile inventory, build metadata and SHA-256 checksums. Final preparation requires a clean tree at the matching annotated version tag.");
     process.exit(0);
   }
   if (arg === "--preview") options.preview = true;

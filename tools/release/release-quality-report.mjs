@@ -7,8 +7,8 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { isDeepStrictEqual } from "node:util";
 import { fixtureBatches } from "./release-quality-resources.mjs";
-import { parseOptions, selectFixtures } from "./test-selection.mjs";
-import { validateFinalizationContext, validateReportProducers, validateEnvironmentIdentity } from "./ci/release-inputs.mjs";
+import { parseOptions, selectFixtures } from "../test-selection.mjs";
+import { validateFinalizationContext, validateReportProducers, validateEnvironmentIdentity } from "../ci/release-inputs.mjs";
 import { moduleGateName, moduleInventory, validateModuleEvidence } from "./release-quality-modules.mjs";
 
 export const fixtureShardCount = 4;
@@ -178,7 +178,7 @@ function main(args) {
   for (let index = 0; index < args.length; index++) {
     const arg = args[index];
     if (arg === "--help") {
-      console.log("Usage: node tools/release-quality-report.mjs --core FILE --fixtures FILE (four times) --build FILE --out FILE [--finalization-context FILE]\nMerge only complete, identical-build core and fixture phases. Keep fixture-reports/ alongside each quality.json. A checked finalization context binds a later signing attempt to the original qualification.");
+      console.log("Usage: node tools/release/release-quality-report.mjs --core FILE --fixtures FILE (four times) --build FILE --out FILE [--finalization-context FILE]\nMerge only complete, identical-build core and fixture phases. Keep fixture-reports/ alongside each quality.json. A checked finalization context binds a later signing attempt to the original qualification.");
       return;
     }
     requireValue(["--core", "--fixtures", "--build", "--out", "--finalization-context"].includes(arg) && args[index + 1], `Unknown or incomplete option: ${arg}`);
@@ -191,7 +191,7 @@ function main(args) {
   }
   requireValue(options.core && options.out && options.build, "--core, --build and --out are required");
   const json = file => JSON.parse(readFileSync(file, "utf8"));
-  const root = fileURLToPath(new URL("../", import.meta.url));
+  const root = fileURLToPath(new URL("../../", import.meta.url));
   const core = json(options.core), fixtures = options.fixtures.map(json), build = json(options.build);
   const merged = mergeQualityReports(core, fixtures, qualityInventory(root), build);
   const commit = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();

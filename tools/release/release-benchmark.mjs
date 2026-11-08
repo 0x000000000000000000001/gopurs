@@ -6,9 +6,9 @@ import { chmodSync, constants, copyFileSync, cpSync, existsSync, mkdirSync, open
 import { cpus, loadavg, platform, release, totalmem } from "node:os";
 import { basename, delimiter, dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { CommandRunner } from "./command-runner.mjs";
+import { CommandRunner } from "../command-runner.mjs";
 
-const root = fileURLToPath(new URL("../", import.meta.url));
+const root = fileURLToPath(new URL("../../", import.meta.url));
 const script = fileURLToPath(import.meta.url);
 const [operation, ...args] = process.argv.slice(2);
 const options = {};
@@ -19,7 +19,7 @@ for (let index = 0; index < args.length; index++) {
   else throw new Error(`Unknown or incomplete option: ${arg}`);
 }
 if (!["prepare", "run", "status"].includes(operation) || !options.out) {
-  console.log("Usage:\n  node tools/release-benchmark.mjs prepare --out DIR --archive FROZEN_20261025 --altbak ALTBAK_DIR [--compiler DIR] [--cases NAME,...] [--pilot] [--min-free-gib 2]\n  node tools/release-benchmark.mjs run --out DIR [--cases NAME,...] [--retry-failed] [--keep-going]\n  node tools/release-benchmark.mjs status --out DIR\nNo frontend, compiler bootstrap, final Go build or application execution is timed. Prepare does not launch a compiler.");
+  console.log("Usage:\n  node tools/release/release-benchmark.mjs prepare --out DIR --archive FROZEN_20261025 --altbak ALTBAK_DIR [--compiler DIR] [--cases NAME,...] [--pilot] [--min-free-gib 2]\n  node tools/release/release-benchmark.mjs run --out DIR [--cases NAME,...] [--retry-failed] [--keep-going]\n  node tools/release/release-benchmark.mjs status --out DIR\nNo frontend, compiler bootstrap, final Go build or application execution is timed. Prepare does not launch a compiler.");
   process.exit(operation === "--help" ? 0 : 2);
 }
 const directory = resolve(options.out);

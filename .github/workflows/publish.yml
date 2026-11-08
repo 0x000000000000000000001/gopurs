@@ -63,7 +63,7 @@ jobs:
           prefix="gopurs-$RELEASE_VERSION-linux-amd64"
           mode=verify
           if [ "$ALREADY_PUBLISHED" = true ]; then mode=verify-published; fi
-          nix develop --no-update-lock-file --command node tools/release-npm-provenance.mjs "$mode" \
+          nix develop --no-update-lock-file --command node tools/release/release-npm-provenance.mjs "$mode" \
             --package "$RUNNER_TEMP/candidate/gopurs-$RELEASE_VERSION.tgz" \
             --build "$RUNNER_TEMP/candidate/$prefix-build.json" \
             --bundle "$RUNNER_TEMP/candidate/$prefix-npm-provenance.sigstore.json" \
@@ -98,7 +98,7 @@ jobs:
           nix develop --no-update-lock-file --command npm pack "gopurs@$RELEASE_VERSION" --ignore-scripts --pack-destination "$RUNNER_TEMP/registry"
           cmp "$RUNNER_TEMP/candidate/gopurs-$RELEASE_VERSION.tgz" "$RUNNER_TEMP/registry/gopurs-$RELEASE_VERSION.tgz"
           typed_package=$(nix build .#purs-tast --no-link --print-out-paths --no-update-lock-file)
-          nix develop --no-update-lock-file --command node tools/release-smoke.mjs \
+          nix develop --no-update-lock-file --command node tools/release/release-smoke.mjs \
             --package "$RUNNER_TEMP/registry/gopurs-$RELEASE_VERSION.tgz" \
             --native "$RUNNER_TEMP/candidate/gopurs-$RELEASE_VERSION-linux-amd64" \
             --purs "$typed_package/bin/purs" --report "$RUNNER_TEMP/published-smoke.json"

@@ -215,7 +215,7 @@ jobs:
         run: |
           flags=()
           if [ "$GOPURS_RELEASE_FULL" = true ]; then flags+=(--full --phase core); fi
-          nix develop --profile "$RUNNER_TEMP/gopurs-dev-profile" --no-update-lock-file --command node tools/release-quality.mjs "${flags[@]}" --report "$RUNNER_TEMP/quality" | tee "$RUNNER_TEMP/quality.log"
+          nix develop --profile "$RUNNER_TEMP/gopurs-dev-profile" --no-update-lock-file --command node tools/release/release-quality.mjs "${flags[@]}" --report "$RUNNER_TEMP/quality" | tee "$RUNNER_TEMP/quality.log"
 
       - name: Require clean sources after the build and quality gates
         run: |
@@ -227,7 +227,7 @@ jobs:
         run: |
           flags=()
           if [[ "$GITHUB_REF" != refs/tags/* ]]; then flags+=(--preview); fi
-          nix develop --profile "$RUNNER_TEMP/gopurs-dev-profile" --no-update-lock-file --command node tools/release-prepare.mjs --native bin/gopurs-native --out "$RUNNER_TEMP/release" "${flags[@]}"
+          nix develop --profile "$RUNNER_TEMP/gopurs-dev-profile" --no-update-lock-file --command node tools/release/release-prepare.mjs --native bin/gopurs-native --out "$RUNNER_TEMP/release" "${flags[@]}"
           version=$(nix develop --profile "$RUNNER_TEMP/gopurs-dev-profile" --no-update-lock-file --command node -p 'JSON.parse(require("fs").readFileSync("package.json")).version' | tail -n 1)
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "prefix=gopurs-$version-$GOPURS_RELEASE_TARGET" >> "$GITHUB_OUTPUT"
@@ -238,7 +238,7 @@ jobs:
           RELEASE_VERSION: ${{ steps.release.outputs.version }}
         run: |
           (cd "$RUNNER_TEMP/release" && shasum -a 256 -c "$RELEASE_PREFIX-SHA256SUMS")
-          nix develop --profile "$RUNNER_TEMP/gopurs-dev-profile" --no-update-lock-file --command node tools/release-smoke.mjs \
+          nix develop --profile "$RUNNER_TEMP/gopurs-dev-profile" --no-update-lock-file --command node tools/release/release-smoke.mjs \
             --package "$RUNNER_TEMP/release/gopurs-$RELEASE_VERSION.tgz" \
             --native "$RUNNER_TEMP/release/$RELEASE_PREFIX" \
             --purs "$GOPURS_PURS" --report "$RUNNER_TEMP/release/$RELEASE_PREFIX-smoke.json"
@@ -371,7 +371,7 @@ jobs:
         run: node tools/ci/fixture-environment.mjs run -- ./bin/setup --locked --all
       - name: Run one disjoint part of the complete fixture campaign
         run: |
-          node tools/ci/fixture-environment.mjs run -- node tools/release-quality.mjs \
+          node tools/ci/fixture-environment.mjs run -- node tools/release/release-quality.mjs \
             --full --phase fixtures --shard "$FIXTURE_SHARD" --shard-count 4 \
             --report "$RUNNER_TEMP/quality" | tee "$RUNNER_TEMP/quality.log"
       - name: Require clean sources after fixture execution
@@ -450,7 +450,7 @@ jobs:
             reports+=(--fixtures "$RUNNER_TEMP/fixtures/fixtures-$GOPURS_RELEASE_TARGET-$shard/quality.json")
           done
           context=(--finalization-context "$RUNNER_TEMP/finalization-context.json")
-          node tools/release-quality-report.mjs "${context[@]}" \
+          node tools/release/release-quality-report.mjs "${context[@]}" \
             --core "$RUNNER_TEMP/release/$prefix-quality.json" "${reports[@]}" \
             --build "$RUNNER_TEMP/release/$prefix-build.json" --out "$RUNNER_TEMP/complete-quality.json"
           cp "$RUNNER_TEMP/complete-quality.json" "$RUNNER_TEMP/release/$prefix-quality.json"
@@ -469,7 +469,7 @@ jobs:
           RELEASE_PREFIX: ${{ steps.identity.outputs.prefix }}
           RELEASE_VERSION: ${{ steps.identity.outputs.version }}
         run: |
-          node tools/release-npm-provenance.mjs generate \
+          node tools/release/release-npm-provenance.mjs generate \
             --package "$RUNNER_TEMP/release/gopurs-$RELEASE_VERSION.tgz" \
             --build "$RUNNER_TEMP/release/$RELEASE_PREFIX-build.json" \
             --bundle "$RUNNER_TEMP/release/$RELEASE_PREFIX-npm-provenance.sigstore.json" \

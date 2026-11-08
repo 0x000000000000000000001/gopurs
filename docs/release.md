@@ -38,7 +38,7 @@ The bootstrap prints its workspace. Set `GOPURS_NATIVE_OUTPUT` to its `output`
 directory, then run:
 
 ```bash
-node tools/release-quality.mjs --full --report /tmp/gopurs-quality
+node tools/release/release-quality.mjs --full --report /tmp/gopurs-quality
 ```
 
 Keep this command inside the Nix shell. For an equivalent manual environment,
@@ -117,7 +117,7 @@ application smoke below does not replace them.
 After building the JavaScript and native hosts from the same source tree:
 
 ```bash
-node tools/release-prepare.mjs \
+node tools/release/release-prepare.mjs \
   --native bin/gopurs-native --out /tmp/gopurs-candidate --preview
 ```
 
@@ -152,7 +152,7 @@ Validate the prepared files on their own platform:
 cd /tmp/gopurs-candidate
 shasum -a 256 -c gopurs-VERSION-TARGET-SHA256SUMS
 cd /path/to/gopurs
-node tools/release-smoke.mjs \
+node tools/release/release-smoke.mjs \
   --package /tmp/gopurs-candidate/gopurs-VERSION.tgz \
   --native /tmp/gopurs-candidate/gopurs-VERSION-TARGET \
   --purs "$GOPURS_PURS" --report /tmp/gopurs-candidate-smoke.json
@@ -371,7 +371,7 @@ for target in linux-amd64 linux-arm64 darwin-arm64; do
   (cd "$candidate" && shasum -a 256 -c "$prefix-SHA256SUMS")
 done
 prefix="gopurs-$version-linux-amd64"
-nix develop --no-update-lock-file --command node tools/release-npm-provenance.mjs verify \
+nix develop --no-update-lock-file --command node tools/release/release-npm-provenance.mjs verify \
   --package "$candidate/gopurs-$version.tgz" --build "$candidate/$prefix-build.json" \
   --bundle "$candidate/$prefix-npm-provenance.sigstore.json" \
   > "$candidate/local-provenance-verification.json"

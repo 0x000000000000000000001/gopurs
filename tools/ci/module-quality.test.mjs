@@ -5,7 +5,7 @@ import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSy
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import { collectModuleEvidence, moduleGateName, moduleInventory, validateModuleEvidence, verifyModuleInputs } from "../release-quality-modules.mjs";
+import { collectModuleEvidence, moduleGateName, moduleInventory, validateModuleEvidence, verifyModuleInputs } from "../release/release-quality-modules.mjs";
 
 function temporary(t) {
   const directory = mkdtempSync(join(tmpdir(), "gopurs-module-quality-"));

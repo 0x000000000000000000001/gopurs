@@ -366,7 +366,7 @@ Their SHA-256 values are:
 | `gopurs-0.1.0-rc.7.tgz` | `32e8888b46c9bfb448bc7767fd357942f99b1f27d69640dc4ac94d0472802bca` |
 | `gopurs-0.1.0-rc.7-darwin-arm64` | `eb6948f46c55c294144efe56aee403d9b0ee9eeebe1244e574ab63aff63d313d` |
 
-`tools/release-smoke.mjs` from main
+`tools/release/release-smoke.mjs` from main
 `8a40ad11272ab2e149f8e050d735634ab488945c` reinstalled that archive offline
 in a fresh directory with empty npm and Go caches. Both the installed JavaScript
 entry point and the launcher using the retained native executable compiled and

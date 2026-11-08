@@ -11,7 +11,7 @@ const repositoryURL = `https://github.com/${repository}`;
 const workflowPath = ".github/workflows/ci.yml";
 const payloadType = "application/vnd.in-toto+json";
 const workflowBuildType = "https://slsa-framework.github.io/github-actions-buildtypes/workflow/v1";
-const root = fileURLToPath(new URL("../", import.meta.url));
+const root = fileURLToPath(new URL("../../", import.meta.url));
 const hash = (bytes, algorithm) => createHash(algorithm).update(bytes).digest("hex");
 const requireValue = (condition, message) => { if (!condition) throw new Error(message); };
 
@@ -203,7 +203,7 @@ export async function verifyPublished(release, approvedBundle, sigstore, fetchJS
 async function main(args) {
   const mode = args.shift();
   if (mode === "--help") {
-    console.log("Usage: node tools/release-npm-provenance.mjs generate|verify|verify-published --package FILE.tgz --build FILE-build.json --bundle FILE.sigstore.json\nGeneration requires the actual tagged GitHub CI job. Verification is also available locally from the clean tagged checkout; all modes use npm 11.6.0's Sigstore. verify-published additionally requires npm to serve the same signed CI envelope.");
+    console.log("Usage: node tools/release/release-npm-provenance.mjs generate|verify|verify-published --package FILE.tgz --build FILE-build.json --bundle FILE.sigstore.json\nGeneration requires the actual tagged GitHub CI job. Verification is also available locally from the clean tagged checkout; all modes use npm 11.6.0's Sigstore. verify-published additionally requires npm to serve the same signed CI envelope.");
     return;
   }
   requireValue(["generate", "verify", "verify-published"].includes(mode), "Expected generate, verify or verify-published");

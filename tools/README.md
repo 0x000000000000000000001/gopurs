@@ -55,8 +55,9 @@ plain Node ESM unless noted. `*.test.mjs` files stay at the top level so that
 | `preparation-source-variants.mjs`, `preparation-transition-oracles.mjs` | preparation contract helpers used by tests |
 | `docs/history/preparation-p00/tools/` | archived P00/P01 measurement harnesses, not active tools |
 | `build/pgo.mjs` | profile-guided optimization for the Rust host |
-| `release-prepare.mjs`, `release-smoke.mjs`, `release-quality.mjs` | release gates |
-| `release-benchmark.mjs` | release benchmark campaign |
+| `release/release-prepare.mjs`, `release/release-smoke.mjs`, `release/release-quality.mjs` | release gates |
+| `release/release-benchmark.mjs` | release benchmark campaign |
+| `release/release-quality-*.mjs`, `release/release-npm-provenance.mjs`, `release/release-sbom.mjs` | quality merge, provenance and SBOM helpers |
 | `check-package.mjs`, `bootstrap-checksums.mjs` | package contents and artefact checks |
 
 ## Guardrails

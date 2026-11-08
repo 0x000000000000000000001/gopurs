@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { lstatSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join } from "node:path";
-import { parseOptions, selectModules } from "./test-selection.mjs";
+import { parseOptions, selectModules } from "../test-selection.mjs";
 
 function validateInventory(inventory) {
   assert.ok(Array.isArray(inventory) && inventory.length > 0, "Empty module inventory");

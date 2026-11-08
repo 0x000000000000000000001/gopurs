@@ -4,17 +4,17 @@ import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { isDeepStrictEqual } from "node:util";
-import { CommandRunner } from "./command-runner.mjs";
-import { parseOptions, selectFixtures } from "./test-selection.mjs";
-import { corePackages, prepareFixture } from "./test-workspace.mjs";
+import { CommandRunner } from "../command-runner.mjs";
+import { parseOptions, selectFixtures } from "../test-selection.mjs";
+import { corePackages, prepareFixture } from "../test-workspace.mjs";
 import { fixtureBatches, fixtureWorkers, QualityGoCache, readFixtureReport, runFixtureWaves } from "./release-quality-resources.mjs";
 import { emissionGateName, packageGateName, qualityIdentity, qualityOptions, shardBatches } from "./release-quality-report.mjs";
 import { collectModuleEvidence, moduleGateName, moduleInventory, verifyModuleInputs } from "./release-quality-modules.mjs";
-import { QUICK_TEST_FILES } from "./ci/gates.mjs";
+import { QUICK_TEST_FILES } from "../ci/gates.mjs";
 
-const root = fileURLToPath(new URL("../", import.meta.url));
+const root = fileURLToPath(new URL("../../", import.meta.url));
 if (process.argv.includes("--help")) {
-  console.log("Usage: node tools/release-quality.mjs [--full [--phase core|fixtures --shard INDEX --shard-count COUNT]] [--report DIRECTORY]\nRequires a fresh JS/native build, typed purs and locked libraries. Core/all phases also require GOPURS_NATIVE_OUTPUT from --keep-workspace. --full without --phase runs the entire campaign. Partial phases never claim full qualification. Rust remains outside this gate.");
+  console.log("Usage: node tools/release/release-quality.mjs [--full [--phase core|fixtures --shard INDEX --shard-count COUNT]] [--report DIRECTORY]\nRequires a fresh JS/native build, typed purs and locked libraries. Core/all phases also require GOPURS_NATIVE_OUTPUT from --keep-workspace. --full without --phase runs the entire campaign. Partial phases never claim full qualification. Rust remains outside this gate.");
   process.exit(0);
 }
 const { full, phase, shard, report: reportOption } = qualityOptions(process.argv.slice(2));

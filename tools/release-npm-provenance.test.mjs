@@ -8,7 +8,7 @@ import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { delimiter, join } from "node:path";
 import test from "node:test";
-import { createAttestor, createStatement, describeRelease, generateBundle, loadPinnedSigstore, readRelease, repository, requireGitHubTag, verifyBundle, verifyPublished } from "./release-npm-provenance.mjs";
+import { createAttestor, createStatement, describeRelease, generateBundle, loadPinnedSigstore, readRelease, repository, requireGitHubTag, verifyBundle, verifyPublished } from "./release/release-npm-provenance.mjs";
 
 const sha256 = bytes => createHash("sha256").update(bytes).digest("hex");
 const commit = "a".repeat(40);

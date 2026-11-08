@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { withSbomSerialNumber } from "./release-sbom.mjs";
+import { withSbomSerialNumber } from "./release/release-sbom.mjs";
 
 const inventory = { bomFormat: "CycloneDX", specVersion: "1.6", version: 1,
   components: [{ type: "library", name: "example", version: "1.0.0" }] };

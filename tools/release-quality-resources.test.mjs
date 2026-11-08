@@ -7,9 +7,9 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { setImmediate } from "node:timers/promises";
 import test from "node:test";
-import { fixtureBatches, fixtureWorkers, QualityGoCache, readFixtureReport, runFixtureWaves } from "./release-quality-resources.mjs";
-import { coreGateNames, fixtureShardCount, mergeQualityReports, qualityInventory, qualityIdentity, qualityOptions, shardBatches } from "./release-quality-report.mjs";
-import { moduleGateName } from "./release-quality-modules.mjs";
+import { fixtureBatches, fixtureWorkers, QualityGoCache, readFixtureReport, runFixtureWaves } from "./release/release-quality-resources.mjs";
+import { coreGateNames, fixtureShardCount, mergeQualityReports, qualityInventory, qualityIdentity, qualityOptions, shardBatches } from "./release/release-quality-report.mjs";
+import { moduleGateName } from "./release/release-quality-modules.mjs";
 
 function workspace(t) {
   const path = realpathSync(mkdtempSync(join(tmpdir(), "gopurs-quality-unit-")));
@@ -304,7 +304,7 @@ test("merge CLI checks stable fixture evidence and original bootstrap hashes bef
   });
   const env = { ...process.env };
   for (const key of ["GITHUB_RUN_ID", "GITHUB_RUN_ATTEMPT", "GITHUB_REPOSITORY", "GITHUB_SHA"]) delete env[key];
-  const args = [fileURLToPath(new URL("./release-quality-report.mjs", import.meta.url)), "--core", coreFile,
+  const args = [fileURLToPath(new URL("./release/release-quality-report.mjs", import.meta.url)), "--core", coreFile,
     ...fixtureFiles.flatMap(file => ["--fixtures", file]), "--build", buildFile, "--out", output];
   let result = spawnSync(process.execPath, args, { env, encoding: "utf8" });
   assert.equal(result.status, 0, result.stderr);

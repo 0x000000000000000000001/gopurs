@@ -1,6 +1,6 @@
 # Release backend benchmark
 
-`tools/release-benchmark.mjs` compares the release JavaScript host, native
+`tools/release/release-benchmark.mjs` compares the release JavaScript host, native
 Release host and native Dev host on the frozen 25 October 2026 corpus. It does
 not regenerate TAST, rebuild a compiler, compile a final application or measure
 application execution. The primary metric is the driver's internal
@@ -141,7 +141,7 @@ temporary Go export cache is required.
 Prepare a small corpus without starting any compiler:
 
 ```bash
-node tools/release-benchmark.mjs prepare \
+node tools/release/release-benchmark.mjs prepare \
   --archive /path/to/.gopurs-evidence/compilation-readme-20261025 \
   --altbak /path/to/altbak.pub \
   --out /tmp/gopurs-benchmark-pilot \
@@ -151,8 +151,8 @@ node tools/release-benchmark.mjs prepare \
 Run the functional pilot:
 
 ```bash
-node tools/release-benchmark.mjs run --out /tmp/gopurs-benchmark-pilot
-node tools/release-benchmark.mjs status --out /tmp/gopurs-benchmark-pilot
+node tools/release/release-benchmark.mjs run --out /tmp/gopurs-benchmark-pilot
+node tools/release/release-benchmark.mjs status --out /tmp/gopurs-benchmark-pilot
 ```
 
 The pilot checks old TAST compatibility, both executable hosts, cold misses,
@@ -169,12 +169,12 @@ machine has stopped, as required above.
 ## Full campaign
 
 ```bash
-node tools/release-benchmark.mjs prepare \
+node tools/release/release-benchmark.mjs prepare \
   --archive /path/to/.gopurs-evidence/compilation-readme-20261025 \
   --altbak /path/to/altbak.pub \
   --out /path/with/free/space/gopurs-release-benchmark
 
-node tools/release-benchmark.mjs run \
+node tools/release/release-benchmark.mjs run \
   --out /path/with/free/space/gopurs-release-benchmark
 ```
 
@@ -225,8 +225,8 @@ assessing comparability.
 ## Progress, interruption and recovery
 
 ```bash
-node tools/release-benchmark.mjs status --out /path/to/campaign
-node tools/release-benchmark.mjs run --out /path/to/campaign
+node tools/release/release-benchmark.mjs status --out /path/to/campaign
+node tools/release/release-benchmark.mjs run --out /path/to/campaign
 ```
 
 `campaign.json` is updated atomically after each invocation. It contains each
@@ -239,7 +239,7 @@ Completed cases are retained on resume. An interrupted or failed case is
 restarted from its first warmup with:
 
 ```bash
-node tools/release-benchmark.mjs run --out /path/to/campaign --retry-failed
+node tools/release/release-benchmark.mjs run --out /path/to/campaign --retry-failed
 ```
 
 Its previous attempt and logs remain archived and excluded. `--cases NAME,...`

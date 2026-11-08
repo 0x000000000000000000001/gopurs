@@ -8,7 +8,7 @@ const options = {};
 for (let index = 2; index < process.argv.length; index++) {
   const arg = process.argv[index];
   if (arg === "--help") {
-    console.log("Usage: node tools/release-smoke.mjs --package FILE.tgz --native FILE [--purs FILE] [--report FILE] [--keep-workspace]\nInstalls only the tarball, then compiles and runs a fresh TAST/Go FFI application with its JS and native hosts.");
+    console.log("Usage: node tools/release/release-smoke.mjs --package FILE.tgz --native FILE [--purs FILE] [--report FILE] [--keep-workspace]\nInstalls only the tarball, then compiles and runs a fresh TAST/Go FFI application with its JS and native hosts.");
     process.exit(0);
   }
   if (arg === "--keep-workspace") options.keep = true;

@@ -67,22 +67,23 @@ aucune référence cassée dans `docs/`.
 Critère de sortie : une seule source pour la sélection rapide, et plus d'export
 public sans consommateur.
 
-## Lot 3 — Organisation des fichiers — en cours
+## Lot 3 — Organisation des fichiers — terminé pour build/release
 
 - [x] Créer `tools/build/` et y déplacer `build-native`, `build-rust`,
   `build-ffi`, `embed-runtime`, `native-workspace`, `prepare-native-output` et
   `pgo`.
-- [ ] Créer `tools/release/` pour `release-prepare`, `release-smoke`,
+- [x] Créer `tools/release/` et y déplacer `release-prepare`, `release-smoke`,
   `release-quality*`, `release-sbom`, `release-benchmark` et
   `release-npm-provenance`.
 - [ ] Créer `tools/lib/` : primitives partagées (voir lot 4).
-- [ ] `tools/ci/` : déjà en place.
+- [x] `tools/ci/` : déjà en place.
 - [x] Garder les `*.test.mjs` à la racine de `tools/`.
-- [x] Déplacer un domaine à la fois : build est fait, release reste à faire.
-- [x] Mettre à jour `package.json`, `nix/gopurs.nix`, les imports relatifs, les
-  tests et les docs pour le domaine build.
-- [x] Vérifier les anciens chemins avec `git grep` pour le domaine build.
-- [x] Conserver les commandes publiques (`npm run build:native`, etc.).
+- [x] Déplacer un domaine à la fois : build puis release.
+- [x] Mettre à jour `package.json`, les workflows CI, `nix/gopurs.nix`, les
+  imports relatifs, les tests et les docs pour build et release.
+- [x] Vérifier les anciens chemins avec `git grep` pour build et release.
+- [x] Conserver les commandes publiques (`npm run build:native`,
+  `npm run release:quality`, etc.).
 
 Critère de sortie : `tools/` racine ne contient plus que les tests, les
 répertoires de domaine et les lanceurs explicitement documentés.
