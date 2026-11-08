@@ -4,11 +4,11 @@ import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { isLibraryCheckout } from "./test-selection.mjs";
 
-export function libraryRoot(root) {
+function libraryRoot(root) {
   return resolve(process.env.GOPURS_LIBRARY_ROOT || dirname(root));
 }
 
-export function libraryPath(root, name) {
+function libraryPath(root, name) {
   return join(libraryRoot(root), "gopurs-" + name);
 }
 

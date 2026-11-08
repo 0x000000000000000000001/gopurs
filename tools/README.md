@@ -11,6 +11,7 @@ plain Node ESM unless noted. `*.test.mjs` files stay at the top level so that
 | `test-runner.mjs` | fixture runner behind `bin/test` |
 | `test-snapshots.mjs` | snapshot comparison and update |
 | `test-selection.mjs` | fixture selection and exclusions |
+| `ci/gates.mjs` | single source for the quick release-quality test list |
 | `test-compiler.mjs`, `test-go.mjs`, `test-process.mjs` | compilation, Go build and process phases |
 | `test-campaign.mjs` | long multi-fixture campaigns |
 | `modtest-runner.mjs` | library-module runner behind `bin/modtest` |
@@ -51,7 +52,8 @@ plain Node ESM unless noted. `*.test.mjs` files stay at the top level so that
 
 | Script | Purpose |
 | --- | --- |
-| `preparation-*.mjs`, `preparation-probe/` | preparation and PBO measurements |
+| `preparation-source-variants.mjs`, `preparation-transition-oracles.mjs` | preparation contract helpers used by tests |
+| `docs/history/preparation-p00/tools/` | archived P00/P01 measurement harnesses, not active tools |
 | `pgo.mjs` | profile-guided optimization for the Rust host |
 | `release-prepare.mjs`, `release-smoke.mjs`, `release-quality.mjs` | release gates |
 | `release-benchmark.mjs` | release benchmark campaign |

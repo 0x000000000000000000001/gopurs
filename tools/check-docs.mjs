@@ -62,7 +62,7 @@ const defaultDocuments = root => {
 
 // GitHub-style heading anchor: keep Unicode letters and digits, drop the rest
 // of the punctuation, turn spaces into hyphens, and suffix duplicates.
-export const slugify = text => text
+const slugify = text => text
   .trim()
   .toLowerCase()
   .replace(/<[^>]*>/g, "")
@@ -73,7 +73,7 @@ export const slugify = text => text
   .replace(/\s/g, "-");
 
 // Strip fenced blocks and inline code so examples never look like links.
-export const stripCode = source => {
+const stripCode = source => {
   const lines = source.split("\n");
   let fence = null;
   const kept = [];
@@ -91,7 +91,7 @@ export const stripCode = source => {
   return kept.join("\n");
 };
 
-export const anchorsOf = source => {
+const anchorsOf = source => {
   const counts = new Map();
   const anchors = new Set();
   for (const line of stripCode(source).split("\n")) {
@@ -105,7 +105,7 @@ export const anchorsOf = source => {
   return anchors;
 };
 
-export const linksOf = source => {
+const linksOf = source => {
   const links = [];
   for (const match of stripCode(source).matchAll(/!?\[[^\]]*\]\(\s*([^)\s]+)(?:\s+"[^"]*")?\s*\)/g)) {
     links.push(match[1]);
@@ -115,7 +115,7 @@ export const linksOf = source => {
 
 const readAnchors = (root, path) => anchorsOf(readFileSync(join(root, path), "utf8"));
 
-export const checkLinks = (root, documents) => {
+const checkLinks = (root, documents) => {
   const errors = [];
   const checked = [];
   let outside = 0;
@@ -218,7 +218,7 @@ const sourceModules = root => {
   return modules;
 };
 
-export const checkModuleMap = root => {
+const checkModuleMap = root => {
   const errors = [];
   const { rows, errors: mapErrors } = readModuleMap(root);
   errors.push(...mapErrors);
@@ -246,7 +246,7 @@ export const checkModuleMap = root => {
   return { errors, checked: rows.length };
 };
 
-export const checkRepository = (root, documents) => {
+const checkRepository = (root, documents) => {
   const linkResult = checkLinks(root, documents);
   const packageResult = checkPackageFiles(root);
   const moduleResult = checkModuleMap(root);

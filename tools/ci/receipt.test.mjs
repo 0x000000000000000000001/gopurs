@@ -7,24 +7,23 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import { readQualificationArtifact, reuseQualification, validateQualification, validateReuse } from './receipt.mjs';
+import { NODE_GATES, QUICK_TESTS } from './gates.mjs';
 
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const encode = value => Buffer.from(JSON.stringify(value));
 function fixture() {
   const repository = 'owner/gopurs', commit = 'a'.repeat(40), tree = 'b'.repeat(40), head = 'c'.repeat(40), base = 'd'.repeat(40);
-  const names = ['release-quality-resources', 'release-npm-provenance', 'release-sbom', 'emission', 'ffi-errors', 'launcher', 'test-runner',
-    'build-native', 'bootstrap-inputs', 'cli', 'build-profiles', 'manifest-prepared-cache', 'driver-cache', 'native-go-code', 'preparation-native',
-    'check-output-identity', 'check-docs', 'embed-runtime', 'compiler-snapshot'];
   const quality = encode({ schema: 1, status: 'passed', full: false, requestedFull: false, phase: 'all', shard: null,
     identity: { source: { commit, dirty: false }, target: 'linux-amd64', github: { repository, runId: '123', runAttempt: '1' } },
-    gates: [...names.map(name => `Node ${name}.test.mjs`), 'Go build-cache', 'Go c1c', 'Go ffi-gen', 'Representative executable fixtures', 'npm package surface']
+    gates: [...NODE_GATES, 'Go build-cache', 'Go c1c', 'Go ffi-gen', 'Representative executable fixtures', 'npm package surface']
       .map((name, index) => ({ name, index: index + 1, passed: true, exitCode: 0 })) });
   const smoke = encode({ version: '0.1.0-test', tests: [{ host: 'javascript', passed: true }, { host: 'native', passed: true }] });
   const counts = [12, 9, 2, 20, 14, 9, 96, 7, 5, 19, 3, 7, 4, 2, 1, 8, 8, 2, 3];
+  assert.equal(counts.length, QUICK_TESTS.length);
   const total = counts.reduce((sum, count) => sum + count, 0);
   const receipt = { schema: 1, policy: 'linux-quick-v2', repository, ref: 'refs/pull/7/merge', commit, tree,
     runId: '123', runAttempt: '1', version: '0.1.0-test', parents: [base, head], qualitySha256: hash(quality), smokeSha256: hash(smoke),
-    nodeResults: names.map((name, index) => ({ name: `Node ${name}.test.mjs`, tests: counts[index], pass: counts[index], fail: 0, cancelled: 0, skipped: 0, todo: 0 })),
+    nodeResults: QUICK_TESTS.map((name, index) => ({ name: `Node ${name}.test.mjs`, tests: counts[index], pass: counts[index], fail: 0, cancelled: 0, skipped: 0, todo: 0 })),
     nodeTotals: { tests: total, pass: total, fail: 0, cancelled: 0, skipped: 0, todo: 0 } };
   const context = { repository, tree, pr: { number: 7, merged: true, head: { sha: head, repo: { full_name: repository } }, base: { ref: 'main', repo: { full_name: repository } } },
     run: { id: 123, run_attempt: 1, event: 'pull_request', status: 'completed', conclusion: 'success', path: '.github/workflows/ci.yml',

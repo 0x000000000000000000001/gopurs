@@ -38,32 +38,31 @@ les études mortes, imposer quelques conventions et rendre l'inventaire fiable.
   `tools/preparation-native.rs`.
 - [x] Vérifier qu'aucune référence ne subsiste et committer.
 
-### 1.2 Cluster historique P00/P01 — à décider
+### 1.2 Cluster historique P00/P01 — archivé
 
-- [ ] Trancher entre archive et suppression pour les 18 fichiers (~2 537
-  lignes) référencés uniquement par `docs/build-preparation-baseline.md`,
-  `docs/build-preparation-compact.md` et `docs/plan-archive-20261019.md`.
-- [ ] Recommandation : archiver dans `docs/history/preparation-p00/` et
-  remplacer les références `tools/preparation-*` par les chemins d'archive.
-- [ ] Alternative : supprimer les scripts et conserver uniquement les preuves
-  JSON/CSV publiées dans `docs/`.
-- [ ] Ne pas toucher à `preparation-source-variants.mjs`,
-  `preparation-transition-oracles.mjs`, `preparation-native.test.mjs` ni
-  `preparation-persistent.test.mjs`, qui sont actifs.
-- [ ] Mettre à jour les documents qui citent les scripts déplacés ou supprimés.
+- [x] Archiver les 18 fichiers (~2 537 lignes) dans
+  `docs/history/preparation-p00/tools/`, avec un README d'archive.
+- [x] Remplacer les références `tools/preparation-*` par les chemins d'archive
+  dans `docs/build-preparation-baseline.md` et
+  `docs/build-preparation-compact.md`.
+- [x] Mettre à jour `tools/README.md` pour ne plus présenter ces scripts comme
+  des outils actifs.
+- [x] Ne pas toucher à `preparation-source-variants.mjs`,
+  `preparation-transition-oracles.mjs`, `preparation-native.test.mjs`,
+  `preparation-persistent.test.mjs` ni `preparation.test.mjs`, qui sont actifs.
+- [x] Vérifier que `tools/` ne contient plus de script d'étude non maintenu.
 
 Critère de sortie : plus aucun script d'étude non maintenu dans `tools/`, et
 aucune référence cassée dans `docs/`.
 
-## Lot 2 — Config unique et exports morts
+## Lot 2 — Config unique et exports morts — terminé
 
-- [ ] Extraire la liste des tests rapides dans un module unique, par exemple
-  `tools/test-inventory.mjs`, et l'utiliser depuis `release-quality.mjs`,
-  `ci/receipt.mjs` et `ci/receipt.test.mjs`.
-- [ ] Vérifier que chaque nom de la liste correspond à un fichier existant.
-- [ ] Supprimer ou rendre privés les exports inutilisés :
+- [x] Extraire la liste des tests rapides dans `tools/ci/gates.mjs` et l'utiliser
+  depuis `release-quality.mjs`, `ci/receipt.mjs` et `ci/receipt.test.mjs`.
+- [x] Vérifier que chaque nom de la liste correspond à un fichier existant.
+- [x] Supprimer ou rendre privés les exports inutilisés :
   `check-docs.mjs`, `pgo.mjs`, `test-workspace.mjs`.
-- [ ] Vérifier les exports avec une recherche de type `grep` avant suppression.
+- [x] Vérifier les exports avec une recherche de type `grep` avant suppression.
 
 Critère de sortie : une seule source pour la sélection rapide, et plus d'export
 public sans consommateur.
@@ -173,7 +172,6 @@ les mêmes helpers.
 
 ## Décisions ouvertes
 
-1. P00/P01 : archiver ou supprimer ?
-2. Formateur : Prettier ou Biome ?
-3. Organisation : déplacer build/release dès maintenant, ou seulement après
+1. Formateur : Prettier ou Biome ?
+2. Organisation : déplacer build/release dès maintenant, ou seulement après
    les lots 2 et 3 ?

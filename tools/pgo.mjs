@@ -16,18 +16,18 @@ import {
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { nativeWorkspaceConfig, verifyTypedOutput } from "./native-workspace.mjs";
 
-export const PGO_TRAINING_PASSES = 3;
+const PGO_TRAINING_PASSES = 3;
 // The excluded entry is the fixture/benchmark test module, never compiler code.
-export const PGO_EXCLUDED_MODULES = Object.freeze(["Test.Main"]);
+const PGO_EXCLUDED_MODULES = Object.freeze(["Test.Main"]);
 // Requiring Main proves every frozen workload can produce an executable entry
 // point; the nightly experiment lost it to an APFS case alias.
-export const PGO_REQUIRED_MODULES = Object.freeze(["Main"]);
+const PGO_REQUIRED_MODULES = Object.freeze(["Main"]);
 // Full parallelism for the first two passes, sequential prepare/PBO/emit for
 // the final pass, matching the isolated night-pgo experiment.
-export const PGO_JOBS = Object.freeze({
+const PGO_JOBS = Object.freeze({
   GOPURS_JOBS: "8", GOPURS_PREPARE_JOBS: "8", GOPURS_PBO_JOBS: "8", GOPURS_EMIT_JOBS: "8", GOPURS_PIPELINE: "1",
 });
-export const PGO_FINAL_JOBS = Object.freeze({
+const PGO_FINAL_JOBS = Object.freeze({
   ...PGO_JOBS, GOPURS_PREPARE_JOBS: "1", GOPURS_PBO_JOBS: "1", GOPURS_EMIT_JOBS: "1",
 });
 const PGO_TRAINING_POLICY = Object.freeze({
@@ -37,7 +37,7 @@ const PGO_TRAINING_POLICY = Object.freeze({
 });
 const TRAINING_SOURCE_EXTENSIONS = Object.freeze(["purs", "go", "js"]);
 
-export const sha256 = bytes => createHash("sha256").update(bytes).digest("hex");
+const sha256 = bytes => createHash("sha256").update(bytes).digest("hex");
 
 // Deterministic, relative-path, content-addressed file inventory.
 export function walk(directory) {
@@ -58,7 +58,7 @@ export function manifest(directory, filter = () => true) {
   }));
 }
 
-export function digestManifest(files) {
+function digestManifest(files) {
   return sha256(JSON.stringify(files));
 }
 

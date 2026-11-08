@@ -5,13 +5,10 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { NODE_GATES } from './gates.mjs';
 
 const policy = 'linux-quick-v2';
-const nodeGates = ['release-quality-resources', 'release-npm-provenance', 'release-sbom', 'emission', 'ffi-errors',
-  'launcher', 'test-runner', 'build-native', 'bootstrap-inputs', 'cli',
-  'build-profiles', 'manifest-prepared-cache', 'driver-cache', 'native-go-code', 'preparation-native',
-  'check-output-identity', 'check-docs', 'embed-runtime', 'compiler-snapshot']
-  .map(name => `Node ${name}.test.mjs`);
+const nodeGates = NODE_GATES;
 const gates = [...nodeGates,
   'Go build-cache', 'Go c1c', 'Go ffi-gen', 'Representative executable fixtures', 'npm package surface'];
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');

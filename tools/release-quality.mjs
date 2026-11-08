@@ -10,6 +10,7 @@ import { corePackages, prepareFixture } from "./test-workspace.mjs";
 import { fixtureBatches, fixtureWorkers, QualityGoCache, readFixtureReport, runFixtureWaves } from "./release-quality-resources.mjs";
 import { emissionGateName, packageGateName, qualityIdentity, qualityOptions, shardBatches } from "./release-quality-report.mjs";
 import { collectModuleEvidence, moduleGateName, moduleInventory, verifyModuleInputs } from "./release-quality-modules.mjs";
+import { QUICK_TEST_FILES } from "./ci/gates.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 if (process.argv.includes("--help")) {
@@ -130,8 +131,7 @@ async function initializeFixtureDependencies(target) {
 console.log(`Release quality evidence: ${report}`);
 save();
 try {
-  const quick = ["release-quality-resources", "release-npm-provenance", "release-sbom", "emission", "ffi-errors", "launcher", "test-runner", "build-native", "bootstrap-inputs", "cli", "build-profiles", "manifest-prepared-cache", "driver-cache", "native-go-code", "preparation-native", "check-output-identity", "check-docs", "embed-runtime", "compiler-snapshot"].map(name => `${name}.test.mjs`);
-  const tests = full ? readdirSync(join(root, "tools")).filter(name => name.endsWith(".test.mjs")).sort() : quick;
+  const tests = full ? readdirSync(join(root, "tools")).filter(name => name.endsWith(".test.mjs")).sort() : QUICK_TEST_FILES;
   // node --test isolates files in child processes too. Separate invocations let
   // us bound the shared private Go cache between those same file boundaries.
   if (phase !== "fixtures") {

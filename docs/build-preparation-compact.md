@@ -244,12 +244,15 @@ L'étude autorisée s'arrête à ce bilan, avec un nouveau point de décision.
 
 ### Reproducteurs
 
-- `tools/preparation-compact-build.mjs P00 NEW_STUDY` : copie auditée et build
-  privé, avec `preparation-probe-build.mjs … compact` pour une reprise archivée.
-- `tools/preparation-compact-measure.mjs project STUDY` : projection, identité
+Ces reproducteurs sont archivés sous `docs/history/preparation-p00/tools/` ; ils ne
+sont plus des outils actifs de `tools/`.
+
+- `docs/history/preparation-p00/tools/preparation-compact-build.mjs P00 NEW_STUDY` : copie auditée et build
+  privé, avec `docs/history/preparation-p00/tools/preparation-probe-build.mjs … compact` pour une reprise archivée.
+- `docs/history/preparation-p00/tools/preparation-compact-measure.mjs project STUDY` : projection, identité
   JS/Go, trois paires de restauration et deltas des éditions.
-- `tools/preparation-compact-measure.mjs packs STUDY` : helper figé, contrôles de
+- `docs/history/preparation-p00/tools/preparation-compact-measure.mjs packs STUDY` : helper figé, contrôles de
   protocole, trois paires de publication/extraction et validation des octets.
-- `tools/preparation-compact-analyze.mjs STUDY` : distributions, empreintes,
+- `docs/history/preparation-p00/tools/preparation-compact-analyze.mjs STUDY` : distributions, empreintes,
   coûts complets comptables et exports ; aucune acceptation d'optimisation
   intégrée n'est déduite de ces seules micro-mesures.

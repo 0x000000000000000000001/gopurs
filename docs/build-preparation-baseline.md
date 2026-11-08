@@ -86,7 +86,7 @@ une optimisation de P.
 - Une seule campagne lourde, exécutée en arrière-plan. Publication dans ce
   dépôt du protocole, du harnais et du bilan ; preuves volumineuses privées
   inventoriées séparément.
-- À la reprise du 19 : `preparation-observe.py` enregistre les processus et
+- À la reprise du 19 : `docs/history/preparation-p00/tools/preparation-observe.py` enregistre les processus et
   leurs liens de parenté toutes les deux secondes, en distinguant le travail du
   harnais d'un compilateur externe. Une compilation lourde déjà présente diffère
   le lancement ; une concurrence détectée pendant le passage invalide son temps
@@ -470,37 +470,40 @@ d'objets doivent être remesurés dans la reprise durable.
 
 ### Sondes et reproducteurs
 
-- `tools/preparation-baseline.mjs` fige les entrées, reconstruit le frontend et
+Ces sondes sont archivées sous `docs/history/preparation-p00/tools/` ; elles ne
+sont plus des outils actifs de `tools/`.
+
+- `docs/history/preparation-p00/tools/preparation-baseline.mjs` fige les entrées, reconstruit le frontend et
   vérifie le seed. Les reprises sont des opérations distinctes et les logs des
   tentatives précédentes restent présents.
-- `tools/preparation-probe/instrumentation.patch` détaille les frontières dans
+- `docs/history/preparation-p00/tools/preparation-probe/instrumentation.patch` détaille les frontières dans
   une copie privée de `Driver.Prepare` et `Monomorphization`. Le builder privé
-  est `tools/preparation-probe-build.mjs` ; les compilateurs installés ne servent
+  est `docs/history/preparation-p00/tools/preparation-probe-build.mjs` ; les compilateurs installés ne servent
   que de générateurs témoins.
-- `tools/preparation-measure.mjs` conserve les quatre états TAST, les bases de
+- `docs/history/preparation-p00/tools/preparation-measure.mjs` conserve les quatre états TAST, les bases de
   cache et les sorties. La restauration revient au chemin d'origine de chaque
   copie privée ; l'inode de son verrou est conservé. Les archives de journaux ne
   sont jamais activées dans leur répertoire d'archive.
-- `tools/preparation-analyze.mjs` calcule les frontières additives, les résidus,
+- `docs/history/preparation-p00/tools/preparation-analyze.mjs` calcule les frontières additives, les résidus,
   les tours transitifs, les médianes/min/max et les écarts par paire. Le cumul
   d'émission chevauche le producteur ; il n'est pas ajouté au total.
-- `tools/preparation-probe/Probe.purs` encode et restaure source, préparation,
+- `docs/history/preparation-p00/tools/preparation-probe/Probe.purs` encode et restaure source, préparation,
   métadonnées, demandes directes/transitives et contributions. Les demandes
   directes fusionnées par fournisseur et les contributions de chaque appelant
   sont deux objets distincts, tous deux mesurés. Chaque
   restauration vérifie le hash et refait l'encodage canonique hors de son
   chronomètre de lecture. Trois répétitions alternent encodage/restauration,
   avec un processus neuf par action et le cache de pages du système chaud.
-- `tools/preparation-probe/store.go` lie les fonctions du stockage figé :
+- `docs/history/preparation-p00/tools/preparation-probe/store.go` lie les fonctions du stockage figé :
   `stageArtifact`, `putStagedObject`, `boundedEach`, barrière de répertoire et
   publication atomique d'un index. Le compteur interne exclut la vérification
   préalable des objets déjà présents ; la durée du processus l'inclut. C'est
   le **coût marginal du stockage**, pas une transaction de build complète avec
   de nouvelles preuves de dépendances. Les deux durées sont conservées.
-- `tools/preparation-codec-measure.mjs` conserve octets, empreintes, deltas par
+- `docs/history/preparation-p00/tools/preparation-codec-measure.mjs` conserve octets, empreintes, deltas par
   édition, roundtrips et coûts de publication. Le fait qu'un objet se décode
   correctement ne prouve pas qu'il est encore réutilisable après une édition.
-- `tools/preparation-costs.mjs` soustrait les coûts médians des objets aux phases
+- `docs/history/preparation-p00/tools/preparation-costs.mjs` soustrait les coûts médians des objets aux phases
   observées, puis calcule le résiduel de chaque passage avant la médiane. Le
   budget restant appartient aux preuves et au recalcul affecté, non implémentés
   dans P00. Le stockage mesuré reprend la lecture de tous les objets par le
@@ -508,13 +511,13 @@ d'objets doivent être remesurés dans la reprise durable.
   de ce coût. Au froid, les clés existantes encodent déjà modules préparés et
   métadonnées : réutiliser ces octets pourrait éviter un deuxième encodage, mais
   le coût de cette intégration n'est pas mesuré par une sonde séparée.
-- `tools/preparation-publish.mjs` exporte temps bruts, analyse des coûts et
+- `docs/history/preparation-p00/tools/preparation-publish.mjs` exporte temps bruts, analyse des coûts et
   empreintes des preuves vers `docs/` après vérification de la complétude des
   mesures, de l'absence de concurrence détectée et des validations.
 - `tests/host/PreparationTransitions` et le pilote de transitions ajoutent les
   cas de cycle, de cardinalité constante, de fournisseur de dictionnaire et de
   FFI seule. Les observations PBO complètent la comparaison des Go exécutés.
-- `tools/preparation-validate.mjs` reprend b8x dans les quatre hôtes sur la base,
+- `docs/history/preparation-p00/tools/preparation-validate.mjs` reprend b8x dans les quatre hôtes sur la base,
   puis les trois éditions en natif parallèle, avec cache/forcé/hit et quatre
   oracles d'exécution. Les petites transitions couvrent toutes les éditions
   dans tous les hôtes.
@@ -557,7 +560,7 @@ d'objets doivent être remesurés dans la reprise durable.
 - La sonde de codecs compile depuis **513 TAST / 313 300 types**, après les
   contrôles de préparation/métadonnées. Son natif porte l'empreinte
   `6999a2685a9ac88fa3bcf35877dd541a5c195014b3b070c7efddfcc58e205eed` ; son source
-  est vérifié identique à `tools/preparation-probe/Probe.purs` avant mesure.
+  est vérifié identique à `docs/history/preparation-p00/tools/preparation-probe/Probe.purs` avant mesure.
 - Les nouvelles fixtures passent : **7 états × 4 hôtes = 28 comparaisons et
   exécutions**. Chaque transition compare sorties, quatre parties de cache,
   clés préparées et sources privées avec un build neuf ; la relance identique
