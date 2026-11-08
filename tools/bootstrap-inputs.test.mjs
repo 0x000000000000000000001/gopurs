@@ -33,7 +33,7 @@ function fixture(t) {
   const run = (locked, names = ["console"]) => spawnSync(process.execPath,
     [new URL("./setup-libraries.mjs", import.meta.url).pathname, root, destination, locked ? "1" : "0", ...names],
     { encoding: "utf8", timeout: 30000 });
-  return { root, directory, destination, git, pinned, run };
+  return { root, directory, upstream, destination, git, pinned, run };
 }
 
 test("setup installs the pinned commit, not the repository's current branch", t => {
@@ -71,7 +71,20 @@ test("locked setup rejects a different source revision without resetting it", t 
   assert.equal(f.git(["rev-parse", "HEAD"], checkout), before);
 });
 
-test("native workspace selects the lockfile optimizer and versioned codec input", t => {
+test("setup installs a pinned support checkout", t => {
+  const f = fixture(t);
+  const manifestFile = join(f.root, "bootstrap-sources.json");
+  const manifest = JSON.parse(readFileSync(manifestFile, "utf8"));
+  manifest.support = { codecs: { url: f.upstream, rev: f.pinned } };
+  writeFileSync(manifestFile, JSON.stringify(manifest));
+  const result = f.run(true, ["codecs"]);
+  assert.equal(result.status, 0, result.stderr);
+  const checkout = join(f.destination, "gopurs-codecs");
+  assert.equal(f.git(["rev-parse", "HEAD"], checkout), f.pinned);
+  assert.equal(existsSync(join(checkout, "later.txt")), false);
+});
+
+test("native workspace selects the lockfile optimizer and pinned support codecs", t => {
   const f = fixture(t);
   const previous = { pbo: process.env.GOPURS_PBO_DIR, libraries: process.env.GOPURS_LIBRARY_ROOT };
   delete process.env.GOPURS_PBO_DIR;
@@ -84,7 +97,7 @@ test("native workspace selects the lockfile optimizer and versioned codec input"
   writeFileSync(join(f.root, "spago.yaml"), "package:\n  name: gopurs\n  dependencies:\n    - backend-optimizer\nworkspace:\n");
   writeFileSync(join(f.root, "spago.lock"), JSON.stringify({ packages: { "backend-optimizer": { type: "git", rev: f.pinned } } }));
   const optimizer = join(f.root, ".spago/p/backend-optimizer", f.pinned);
-  const codecs = join(f.root, "support/argonaut-codecs");
+  const codecs = join(f.destination, "gopurs-argonaut-codecs");
   for (const path of [optimizer, codecs]) {
     mkdirSync(path, { recursive: true });
     writeFileSync(join(path, "spago.yaml"), "package:\n");

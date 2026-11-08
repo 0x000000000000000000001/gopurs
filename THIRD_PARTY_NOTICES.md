@@ -20,7 +20,7 @@ and the additional dependency listed below. `tools/ffi_gen.wasm` contains the Go
 | PureScript compiler fork | BSD-3-Clause | Copyright (c) 2013-17 Phil Freeman, (c) 2014-2017 Gary Burgess, and other contributors |
 | `purescript-backend-optimizer` fork | MIT | Copyright © 2022 Arista Networks, Inc. |
 | Go `wasm_exec.js` and `ffi_gen.wasm` runtime | BSD-3-Clause | Copyright 2009 The Go Authors. All rights reserved. |
-| Vendored Argonaut codec adaptation (`support/argonaut-codecs`) | MIT | Copyright (c) 2020 PureScript Contrib; see the accompanying `LICENSE` |
+| Pinned Argonaut codec support checkout (`gopurs-argonaut-codecs`) | MIT | Copyright (c) 2020 PureScript Contrib; see the accompanying `LICENSE` |
 
 ## Bundled PureScript packages
 

@@ -38,7 +38,7 @@ workspace:
   } }));
   put(join(root, `.spago/p/backend-optimizer/${optimizerRevision}/spago.yaml`),
     'package:\n  name: backend-optimizer\n');
-  for (const name of ['aff', 'ordered-collections', 'node-process']) {
+  for (const name of ['aff', 'argonaut-codecs', 'ordered-collections', 'node-process']) {
     put(join(temporary, `checkout/gopurs/gopurs-${name}/spago.yaml`),
       `package:\n  name: ${name === 'node-process' ? 'gopurs-node-process' : name}\n`);
   }
@@ -133,7 +133,7 @@ for (const explicit of [false, true]) {
     const config = readFileSync(join(result.workspace, 'spago.yaml'), 'utf8');
     assert.doesNotMatch(config, /^  test:/m);
     assert.match(config, /registry: 77\.10\.1/);
-    for (const name of ['backend-optimizer', 'aff', 'ordered-collections', 'node-process']) {
+    for (const name of ['backend-optimizer', 'aff', 'argonaut-codecs', 'ordered-collections', 'node-process']) {
       assert.ok(config.includes(`    ${name}:\n`), `missing local override ${name}`);
     }
     assert.doesNotMatch(config, /    gopurs-node-process:/);

@@ -9,7 +9,11 @@ CORE_PACKAGES=(
 # These are checkouts, not additional default dependencies of compiler fixtures.
 CORE_CHECKOUT_DEPENDENCIES=(lazy ordered-collections random)
 
-# Together, the three lists describe the 51 library directories.
+# Compiler-only support checkout, installed for every setup profile.
+SUPPORT_PACKAGES=(argonaut-codecs)
+
+# Together, the four lists describe the 51 library directories and the pinned
+# Argonaut codec support checkout.
 # Every source, including the Go QuickCheck adaptation, is pinned by bin/setup.
 ADDITIONAL_PACKAGES=(
   argonaut-core catenable-lists foreign free js-bigints js-date js-promise

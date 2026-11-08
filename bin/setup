@@ -9,8 +9,10 @@ usage() {
   cat <<'USAGE'
 Usage: ./bin/setup [--core | --all] [--locked] [--list]
 
-  --core  Install the 22 core libraries and their 3 supporting checkouts (default).
-  --all   Install all 51 libraries, including the Go QuickCheck adaptation.
+  --core  Install the 22 core libraries, their 3 supporting checkouts and the
+          Argonaut codec support checkout (default).
+  --all   Install all 51 libraries plus the Argonaut codec support checkout,
+          including the Go QuickCheck adaptation.
   --locked  Require existing checkouts to match the clean, pinned release inputs.
   --list  Print the selected directories without cloning or changing files.
 
@@ -42,7 +44,7 @@ for arg in "$@"; do
   esac
 done
 
-packages=("${CORE_PACKAGES[@]}" "${CORE_CHECKOUT_DEPENDENCIES[@]}")
+packages=("${CORE_PACKAGES[@]}" "${CORE_CHECKOUT_DEPENDENCIES[@]}" "${SUPPORT_PACKAGES[@]}")
 if [[ "$profile" == all ]]; then
   packages+=("${ADDITIONAL_PACKAGES[@]}")
 fi

@@ -62,11 +62,11 @@ export function nativeWorkspaceConfig(root, { runtime = "go", purust = resolve(r
     if (packages.has(packageName)) throw new Error(`Duplicate local package: ${packageName}`);
     packages.set(packageName, directory);
   }
-  // The Go codec adaptation is part of this source release; a bootstrap must
-  // not silently depend on an unversioned sibling copy of those sources.
-  if (runtime === "go") {
-    const codecs = join(root, "support/argonaut-codecs");
-    if (existsSync(join(codecs, "spago.yaml"))) packages.set("argonaut-codecs", codecs);
+  // A Go bootstrap needs the pinned Argonaut codec support checkout. The
+  // sibling scan above supplies it; fail early rather than silently falling
+  // back to the registry package's JavaScript-only FFI.
+  if (runtime === "go" && !packages.has("argonaut-codecs")) {
+    throw new Error("Missing gopurs-argonaut-codecs; run ./bin/setup to install the pinned Argonaut codec support checkout");
   }
   // Select the host runtime's library representations, retaining gopurs's PBO
   // sources and Go code generator for either native executable.

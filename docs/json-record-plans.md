@@ -7,7 +7,7 @@ stores the successful values in one fresh buffer, rather than allocating a
 larger immutable record at every recursive return.
 
 The public `GDecodeJson` class and method types are unchanged. The implementation
-lives in the local `gopurs-argonaut-codecs` package, in
+lives in the pinned `gopurs-argonaut-codecs` support checkout, in
 `Data.Argonaut.Decode.Internal.Record`. JavaScript uses the original recursive
 implementation through the same internal interface. A custom tail dictionary
 without a recognized plan also keeps the original recursive implementation.

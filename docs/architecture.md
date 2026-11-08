@@ -940,11 +940,11 @@ vérification du TAST et la compilation Go précèdent cette publication.
 ## Carte des dépôts et des consommateurs
 
 Le compilateur et chaque bibliothèque ont leurs sources et leur configuration.
-Au 6 octobre 2026, `bin/pkg` inventorie **51 bibliothèques**, dont `js-uri` ; le
-checkout local contient aussi le workspace `gopurs-argonaut-codecs`.
-Ce dernier n'a pas de dépôt Git ni de `bin/test` ; ses
-tests `typed-plans` sont exécutés séparément. Le répertoire parent `gopurs/` est
-leur conteneur ; ses éventuels artefacts ne sont pas une bibliothèque.
+Au 8 novembre 2026, `bin/pkg` inventorie **51 bibliothèques**, dont `js-uri`, et
+le checkout de support pinné `gopurs-argonaut-codecs`. Ce dernier n'a pas de
+`bin/test` ; ses tests `typed-plans` sont exécutés séparément. Le répertoire
+parent `gopurs/` est leur conteneur ; ses éventuels artefacts ne sont pas une
+bibliothèque.
 Les noms publics sont ceux des déclarations `module` et de leurs exports,
 indépendamment du préfixe `gopurs-` des répertoires.
 
@@ -962,13 +962,16 @@ indépendamment du préfixe `gopurs-` des répertoires.
 | Documentation de chaque dépôt | README, guides, licences, images et docs | Utilisateurs et mainteneurs |
 
 `bin/pkg` déclare **22 paquets core** pour le runner de fixtures, **trois
-checkouts de support** pour leur développement et **26 autres bibliothèques**.
-`bin/setup --core` installe les 25 premiers checkouts et `--all` couvre les 51,
-avec l'adaptation QuickCheck locale fournie au préalable. `--list` décrit la
-sélection sans modifier de fichiers. La liste de `bin/modtest` est, elle,
-découverte au lancement :
-**51 frères ont un `bin/test` exécutable**, dont `js-uri` et QuickCheck ; le
-workspace `argonaut-codecs` n'en a pas. Une entrée dans `extraPackages` est un choix de résolution, pas la
+checkouts de support** pour leur développement, **26 autres bibliothèques** et
+le checkout de support Argonaut.
+`bin/setup --core` installe les 25 premiers checkouts plus
+`gopurs-argonaut-codecs` (26), et `--all` couvre les 51 bibliothèques et le
+support (52), avec l'adaptation QuickCheck locale fournie au préalable. `--list`
+décrit la sélection sans modifier de fichiers. La liste de `bin/modtest` est,
+elle, découverte au lancement :
+**51 des 52 checkouts ont un `bin/test` exécutable**, dont `js-uri` et
+QuickCheck ; le checkout `argonaut-codecs` n'en a pas. Une entrée dans
+`extraPackages` est un choix de résolution, pas la
 preuve qu'un paquet appartient aux dépendances effectivement utilisées.
 La compilation JS du backend emploie son propre graphe Spago : PBO local, plus
 les overrides `st` et `unsafe-coerce`. Le bootstrap natif fournit les overrides

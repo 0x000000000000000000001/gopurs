@@ -16,9 +16,15 @@ function git(args, cwd, capture = true) {
 try {
   const manifest = JSON.parse(readFileSync(join(root, "bootstrap-sources.json"), "utf8"));
   if (manifest.schema !== 1) throw new Error("Unsupported bootstrap-sources.json schema");
+  if (manifest.support !== undefined && (typeof manifest.support !== "object" || Array.isArray(manifest.support))) {
+    throw new Error("Unsupported support source inventory");
+  }
   const libraries = resolve(destination);
+  const support = manifest.support ?? {};
   const selected = names.map(name => {
-    const source = manifest.libraries[name];
+    // A support checkout is pinned and installed like a library, but it is not
+    // part of the module-test inventory.
+    const source = manifest.libraries[name] ?? support[name];
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name) || !source || !/^[a-f0-9]{40}$/.test(source.rev)) {
       throw new Error(`Missing pinned source for ${name}`);
     }

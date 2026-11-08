@@ -91,8 +91,16 @@ for (const [name, source] of Object.entries({ "purs-tast": sources.compiler, ...
   if (source.url) component.externalReferences = [{ type: "vcs", url: source.url }];
   components.push(component);
 }
-for (const [name, source] of Object.entries(sources.vendored ?? {})) {
-  components.push({ type: "library", "bom-ref": `vendored:${name}`, name, version: source.version ?? "vendored", scope: "optional", properties: [{ name: "gopurs:source-path", value: source.path }], ...(source.license ? { licenses: [{ expression: source.license }] } : {}) });
+for (const [name, source] of Object.entries(sources.support ?? {})) {
+  components.push({
+    type: "library",
+    "bom-ref": `support:gopurs-${name}`,
+    name: `gopurs-${name}`,
+    version: source.rev ?? source.version ?? "vendored",
+    scope: "required",
+    ...(source.url ? { externalReferences: [{ type: "vcs", url: source.url }] } : {}),
+    ...(source.license ? { licenses: [{ expression: source.license }] } : {}),
+  });
 }
 const goVersion = command("go", ["version"]).trim();
 components.push({ type: "application", "bom-ref": "toolchain:go", name: "go", version: goVersion.split(" ")[2], scope: "required" });

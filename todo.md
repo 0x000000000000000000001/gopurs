@@ -56,6 +56,6 @@ L’audit du 6 novembre 2026 a porté sur les 21 fichiers FFI Go de `b8x/src`. L
 
 ## Où placer les adaptations
 
-1. **Dans le bridge de gopurs**, exploiter le TAST et la signature Go pour les records fermés, les handles opaques, les callbacks et les effets. Procéder par petites fixtures passant par un véritable `foreign import`. Préserver les appelants existants qui utilisent `any` pour recevoir une valeur enveloppée. [Conversion actuelle des arguments](src/Gopurs/FfiBridge/Values.purs#L40)
+1. **Dans le bridge de gopurs**, exploiter le TAST et la signature Go pour les records fermés, les handles opaques, les callbacks et les effets. Procéder par petites fixtures passant par un véritable `foreign import`. Préserver les appelants existants qui utilisent `any` pour recevoir une valeur enveloppée. [Conversion actuelle des arguments](src/Gopurs/FfiBridge/Values.purs)
 2. **Dans `gopurs-foreign`**, réutiliser ou compléter les conversions de données réellement dynamiques. Les exposer en PureScript pour pouvoir les fournir à la FFI au besoin. Le traitement des cookies, des claims ou du SQL reste dans b8x. [Conversion JSON existante](../gopurs-foreign/src/Foreign.purs#L192)
 3. **Pour `EffectFnAff`**, essayer un seul adaptateur partagé, à partir du cas simple de `_Xxhash64`, puis du couple succès/erreur de l’extraction ZIP. Étendre l’essai à PostgreSQL, PASETO et RabbitMQ en préservant pour chaque opération le mode d’exécution et le contrat d’annulation. [Adaptateur local de RabbitMQ](../../b8x/src/Infra/Client/RabbitMq/RabbitMq.go#L13)

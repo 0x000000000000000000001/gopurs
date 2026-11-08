@@ -9,8 +9,7 @@ export function libraryRoot(root) {
 }
 
 export function libraryPath(root, name) {
-  const vendored = join(root, "support", name);
-  return existsSync(join(vendored, "spago.yaml")) ? vendored : join(libraryRoot(root), "gopurs-" + name);
+  return join(libraryRoot(root), "gopurs-" + name);
 }
 
 export function corePackages(root) {
@@ -75,13 +74,6 @@ export function prepareModule(root, directory, name, { dev = false } = {}) {
     cpSync(realpathSync(source), join(packages, sibling), {
       recursive: true, verbatimSymlinks: true,
       filter: path => !generated.has(basename(path)),
-    });
-  }
-  const support = join(root, "support");
-  if (existsSync(support)) for (const name of readdirSync(support)) {
-    const source = join(support, name);
-    if (existsSync(join(source, "spago.yaml"))) cpSync(source, join(packages, `gopurs-${name}`), {
-      recursive: true, verbatimSymlinks: true,
     });
   }
   // The compiler is consumed read-only; -c is handled once by the outer runner.

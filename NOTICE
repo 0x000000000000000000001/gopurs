@@ -20,8 +20,9 @@ components:
 - PureScript packages bundled into bin/gopurs.js and the native compiler,
   including pinned Go ports, under MIT, BSD-3-Clause and Apache-2.0 licenses.
 
-- The Argonaut codec adaptation in support/argonaut-codecs, MIT.
-  Copyright (c) 2020 PureScript Contrib. Its license accompanies the sources.
+- The Argonaut codec adaptation in the pinned gopurs-argonaut-codecs
+  support checkout, MIT. Copyright (c) 2020 PureScript Contrib. Its license
+  accompanies the sources.
 
 The complete inventory and the applicable license texts are in
 THIRD_PARTY_NOTICES.md.

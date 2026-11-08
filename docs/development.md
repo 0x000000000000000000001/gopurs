@@ -17,9 +17,10 @@ the source families and their consumers. `./bin/modtest --all --list` gives the
 current executable library suite. The Go development sections in the library READMEs link to this procedure.
 
 1. Build gopurs with the [bootstrap guide](bootstrap.md#clean-source-installation).
-   From the gopurs checkout, run `./bin/setup --core` for the 22 core libraries
-   and their supporting dependencies, or `./bin/setup --all` for the complete
-   family, including the adapted QuickCheck prerequisite.
+   From the gopurs checkout, run `./bin/setup --core` for the 22 core libraries,
+   their supporting dependencies and the Argonaut codec support checkout, or
+   `./bin/setup --all` for the complete family, including the adapted QuickCheck
+   prerequisite.
 2. Put the TAST compiler and YAML-capable Spago on `PATH` (**1.0.3** in the
    2 October campaign; earlier checks also used 1.0.4). Check both with
    `command -v purs spago` and `purs --version; spago --version`. The interactive
