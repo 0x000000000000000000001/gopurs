@@ -13,6 +13,7 @@ plain Node ESM unless noted. `*.test.mjs` files stay at the top level so that
 | `lib/repo.mjs` | repository-root discovery |
 | `lib/cli.mjs` | usage and failure output |
 | `lib/log.mjs` | step and info output |
+| `codegen-metadata.mjs` | TAST metadata fixtures shared by codegen tests |
 
 ## Test harness
 
@@ -21,11 +22,24 @@ plain Node ESM unless noted. `*.test.mjs` files stay at the top level so that
 | `test-runner.mjs` | fixture runner behind `bin/test` |
 | `test-snapshots.mjs` | snapshot comparison and update |
 | `test-selection.mjs` | fixture selection and exclusions |
-| `ci/gates.mjs` | single source for the quick release-quality test list |
 | `test-compiler.mjs`, `test-go.mjs`, `test-process.mjs` | compilation, Go build and process phases |
 | `test-campaign.mjs` | long multi-fixture campaigns |
+| `test-workspace.mjs` | fixture workspaces and module copies |
+| `test-native-pbo.mjs` | manual native-PBO differential campaign |
 | `modtest-runner.mjs` | library-module runner behind `bin/modtest` |
 | `*.test.mjs` | unit and contract tests (`node --test tools/*.test.mjs`) |
+
+## CI helpers
+
+| Script | Purpose |
+| --- | --- |
+| `ci/fixture-environment.mjs` | export and import the CI fixture environment |
+| `ci/gates.mjs` | single source for the quick release-quality test list |
+| `ci/policy.mjs` | select the CI scope |
+| `ci/receipt.mjs` | validate qualification receipts |
+| `ci/release-draft.mjs` | prepare GitHub release drafts |
+| `ci/release-finalized.mjs` | finalize a release |
+| `ci/release-inputs.mjs` | verify release inputs and provenance |
 
 ## Build and bootstrap
 
@@ -44,6 +58,8 @@ plain Node ESM unless noted. `*.test.mjs` files stay at the top level so that
 | Path | Purpose |
 | --- | --- |
 | `build-cache.mjs` | driver for the native build-cache helper |
+| `cache-context-runtime.mjs` | audited runtime-variant catalog for cache-context tests |
+| `cache-source-variants.mjs` | source-edit variants for cache tests |
 | `build-cache/` | Go storage protocol, sessions and overlays |
 | `c1c/` | package partition and rewrite helpers |
 | `build-cache-fixtures/` | protocol fixtures |
@@ -67,10 +83,16 @@ plain Node ESM unless noted. `*.test.mjs` files stay at the top level so that
 | `build/pgo.mjs` | profile-guided optimization for the Rust host |
 | `release/release-prepare.mjs`, `release/release-smoke.mjs`, `release/release-quality.mjs` | release gates |
 | `release/release-benchmark.mjs` | release benchmark campaign |
-| `release/release-quality-*.mjs`, `release/release-npm-provenance.mjs`, `release/release-sbom.mjs` | quality merge, provenance and SBOM helpers |
+| `release/release-quality-modules.mjs` | module inventory and evidence |
+| `release/release-quality-report.mjs` | quality report merge and identity |
+| `release/release-quality-resources.mjs` | fixture batches, waves and Go cache |
+| `release/release-npm-provenance.mjs` | npm provenance generation and verification |
+| `release/release-sbom.mjs` | deterministic SBOM serial numbers |
 | `check-package.mjs`, `bootstrap-checksums.mjs` | package contents and artefact checks |
 
 ## Guardrails
+
+`check-docs.mjs` verifies relative links, packaged files and module-map coverage.
 
 `check-output-identity.mjs` compares two output trees, or a tree against a
 manifest, without parsing the generated Go:

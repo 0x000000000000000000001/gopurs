@@ -18,7 +18,7 @@ function fixture() {
     gates: [...NODE_GATES, 'Go build-cache', 'Go c1c', 'Go ffi-gen', 'Representative executable fixtures', 'npm package surface']
       .map((name, index) => ({ name, index: index + 1, passed: true, exitCode: 0 })) });
   const smoke = encode({ version: '0.1.0-test', tests: [{ host: 'javascript', passed: true }, { host: 'native', passed: true }] });
-  const counts = [12, 9, 2, 20, 14, 9, 96, 7, 5, 19, 3, 7, 4, 2, 1, 8, 8, 2, 3];
+  const counts = [12, 9, 2, 20, 14, 9, 96, 7, 5, 19, 3, 7, 4, 2, 1, 8, 8, 2, 3, 1, 1];
   assert.equal(counts.length, QUICK_TESTS.length);
   const total = counts.reduce((sum, count) => sum + count, 0);
   const receipt = { schema: 1, policy: 'linux-quick-v2', repository, ref: 'refs/pull/7/merge', commit, tree,

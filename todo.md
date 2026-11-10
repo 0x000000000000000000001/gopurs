@@ -121,14 +121,15 @@ passent, et il reste seulement l'extraction optionnelle de `main()`.
 Critère de sortie : `format:check` passe, les outils manuels ont une aide
 minimale, et la charte est appliquée aux scripts actifs.
 
-## Lot 6 — Documentation et inventaire
+## Lot 6 — Documentation et inventaire — terminé
 
-- [ ] Rendre `tools/README.md` exhaustif : une ligne par script non-test avec
-  objectif, usage, prérequis et statut (CI, manuel, historique).
-- [ ] Ou générer cet inventaire depuis un manifeste et vérifier qu'il est à jour.
-- [ ] Ajouter un test d'inventaire qui échoue si un script non-test n'est
-  référencé nulle part, avec une liste explicite pour les outils manuels.
-- [ ] Vérifier les liens et les commandes de `docs/` après les déplacements.
+- [x] Rendre `tools/README.md` exhaustif pour les outils gérés : scripts
+  top-level, `lib/`, `build/`, `release/` et `ci/`.
+- [x] Inventaire dynamique plutôt qu'un manifeste séparé.
+- [x] Ajouter `tools/tools-inventory.test.mjs`, qui échoue si un outil non-test
+  géré n'est pas nommé dans `tools/README.md`.
+- [x] Vérifier les liens et les commandes de `docs/` après les déplacements
+  (`check-docs`).
 
 Critère de sortie : un nouveau mainteneur peut trouver et exécuter chaque outil
 sans lire son code.

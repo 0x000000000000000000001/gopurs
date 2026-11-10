@@ -24,6 +24,8 @@ export const QUICK_TESTS = Object.freeze([
   "check-docs",
   "embed-runtime",
   "compiler-snapshot",
+  "tool-help",
+  "tools-inventory",
 ]);
 
 export const QUICK_TEST_FILES = Object.freeze(QUICK_TESTS.map((name) => `${name}.test.mjs`));
