@@ -20,7 +20,7 @@ It covers the compiler distribution; it does not cover application builds.
 | Go (FFI parser and native bootstrap) | `1.27.0` |
 | Typed PureScript compiler | commit `105f5752b39cc0f6c99a40064295338bf57ad223` |
 | Go library ports | 51 exact commits in [`bootstrap-sources.json`](https://github.com/0x000000000000000000001/gopurs/blob/main/bootstrap-sources.json) |
-| Go Argonaut codecs support checkout | commit `464a0db755e6e996c8a0723be8e43da98ee6108e` in [`bootstrap-sources.json`](https://github.com/0x000000000000000000001/gopurs/blob/main/bootstrap-sources.json) |
+| Go Argonaut codecs support checkout | commit `bdf31cc0f7d74d510dcf53f2a8fbca3b550d8ff2` in [`bootstrap-sources.json`](https://github.com/0x000000000000000000001/gopurs/blob/main/bootstrap-sources.json) |
 
 The npm and Spago lockfiles and `bootstrap-sources.json` are authoritative for a source installation. A
 lockfile change requires regenerating the third-party inventory; see
@@ -218,7 +218,11 @@ compilation remains a separate release gate.
 
 On 8 November 2026, the Argonaut codec adaptation moved from the in-repo
 `support/argonaut-codecs` directory to the pinned `gopurs-argonaut-codecs`
-support checkout at commit `464a0db755e6e996c8a0723be8e43da98ee6108e`. Its
+support checkout. On 10 November 2026, that checkout was rebased onto upstream
+`purescript-contrib/purescript-argonaut-codecs` v9.1.0
+(`f8fdc1e34142fa84e66022ea5d417a008d709146`): the pinned commit
+`bdf31cc0f7d74d510dcf53f2a8fbca3b550d8ff2` is a direct child of the upstream
+tag and its diff contains only the gopurs Go/JS FFI and adaptation patches. Its
 remote clone and pinned revision were verified with `setup-libraries.mjs`. The
 21 source, test and configuration files are unchanged from the validated
 adaptation, its two JavaScript test runners keep sibling-relative compiler

@@ -217,8 +217,9 @@
   "support": {
     "argonaut-codecs": {
       "url": "https://github.com/0x000000000000000000001/gopurs-argonaut-codecs.git",
-      "rev": "464a0db755e6e996c8a0723be8e43da98ee6108e",
+      "rev": "bdf31cc0f7d74d510dcf53f2a8fbca3b550d8ff2",
       "upstream": "https://github.com/purescript-contrib/purescript-argonaut-codecs",
+      "upstreamRev": "f8fdc1e34142fa84e66022ea5d417a008d709146",
       "version": "9.1.0",
       "license": "MIT"
     }
