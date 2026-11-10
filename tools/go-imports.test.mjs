@@ -1,13 +1,10 @@
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import test from 'node:test';
 import { opaqueCode, referencedImports } from '../output/Gopurs.GoCode/index.js';
 import { collectImports } from '../output/Gopurs.GoImports/index.js';
 import { GoFunctionDecl, GoRaw, GoReturn, TypeFloat64, TypeString } from '../output/Gopurs.GoAst/index.js';
 import { printGoFile } from '../output/Gopurs.Printer/index.js';
+import { runGo, temporaryDirectory, writeGoFile } from './lib/go.mjs';
 
 test('opaque Go imports ignore string, rune, raw-string and comment contents', () => {
     for (const source of [
@@ -46,9 +43,7 @@ for (const [name, source, result, expectedImports] of [
     const imports = collectImports(declarationGroups);
     assert.deepEqual(imports, expectedImports);
     const code = printGoFile({ packageName: 'probe', imports, declarationGroups });
-    const directory = mkdtempSync(join(tmpdir(), 'gopurs-imports-'));
-    t.after(() => rmSync(directory, { recursive: true, force: true }));
-    writeFileSync(join(directory, 'probe.go'), code);
-    const build = spawnSync('go', ['build', '-o', join(directory, 'probe.a'), 'probe.go'], { cwd: directory, encoding: 'utf8' });
-    assert.equal(build.status, 0, build.stdout + build.stderr + '\n' + code);
+    const directory = temporaryDirectory(t, 'gopurs-imports-');
+    writeGoFile(directory, 'probe.go', code);
+    runGo(directory, ['build', '-o', 'probe.a', 'probe.go']);
 });

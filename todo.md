@@ -134,12 +134,13 @@ minimale, et la charte est appliquée aux scripts actifs.
 Critère de sortie : un nouveau mainteneur peut trouver et exécuter chaque outil
 sans lire son code.
 
-## Lot 7 — Tests : lisibilité ciblée
+## Lot 7 — Tests : lisibilité ciblée — partiel
 
-- [ ] Ne pas réécrire les 102 tests pour le style.
-- [ ] Extraire des helpers communs pour les schémas répétés :
-  création de workspace Go, écriture de TAST, lancement de `go test`,
-  capture de sortie.
+- [x] Ne pas réécrire les 102 tests pour le style.
+- [x] Extraire `tools/lib/go.mjs` : répertoire temporaire, module Go, écriture
+  de fichiers et exécution de commandes Go. Pilotes : `go-imports`,
+  `struct-pointer-boxing`, `runtime-contracts`.
+- [ ] Étendre les helpers aux schémas TAST restants.
 - [ ] Traiter en priorité les fichiers de plus de 500 lignes :
   `test-runner.test.mjs` (865), `preparation-persistent.test.mjs` (739),
   `owned-trees.test.mjs` (572).

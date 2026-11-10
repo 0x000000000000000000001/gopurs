@@ -13,6 +13,7 @@ plain Node ESM unless noted. `*.test.mjs` files stay at the top level so that
 | `lib/repo.mjs` | repository-root discovery |
 | `lib/cli.mjs` | usage and failure output |
 | `lib/log.mjs` | step and info output |
+| `lib/go.mjs` | temporary Go modules, files and commands for tests |
 | `codegen-metadata.mjs` | TAST metadata fixtures shared by codegen tests |
 
 ## Test harness

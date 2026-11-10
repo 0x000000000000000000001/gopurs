@@ -1,8 +1,4 @@
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import test from 'node:test';
 import { empty as emptySet } from '../output/Data.Set/index.js';
 import * as Ref from '../output/Effect.Ref/index.js';
@@ -12,6 +8,7 @@ import { collectImports } from '../output/Gopurs.GoImports/index.js';
 import { printGoExpr, printGoFile } from '../output/Gopurs.Printer/index.js';
 import { runtimeGoCode } from '../output/Gopurs.Runtime.Source/index.js';
 import { hashString } from '../output/PureScript.Backend.Optimizer.FfiSupport/index.js';
+import { goModule, runGo, writeGoFile } from './lib/go.mjs';
 
 const base = 'Constructor_Probe_Node';
 const pointer = Go.structPointer({ baseStructName: base, fullName: 'Probe.Node', structName: base, symbol: { owner: 'generated/Probe', name: base } })([]);
@@ -35,12 +32,8 @@ test('structured pointer boxing preserves tag, pointer identity, nil, and single
     const expression = box(new Go.GoCall(new Go.GoVar('next'), []));
     const declarationGroups = [[new Go.GoFunctionDecl({ name: { owner: 'generated/Probe', name: 'boxed' }, params: [], result: Go.TypeValue.value, body: new Go.GoReturn(expression) })]];
     const code = printGoFile({ packageName: 'main', imports: collectImports(declarationGroups), declarationGroups });
-    const directory = mkdtempSync(join(tmpdir(), 'gopurs-struct-pointer-boxing-'));
-    t.after(() => rmSync(directory, { recursive: true, force: true }));
-    mkdirSync(join(directory, 'gopurs_runtime'));
-    writeFileSync(join(directory, 'gopurs_runtime/runtime.go'), runtimeGoCode);
-    writeFileSync(join(directory, 'go.mod'), 'module gopurs/output\n\ngo 1.22\n');
-    writeFileSync(join(directory, 'main.go'), `${code}
+    const directory = goModule(t, 'gopurs-struct-pointer-boxing-', { runtime: runtimeGoCode });
+    writeGoFile(directory, 'main.go', `${code}
 type Node struct { N int64 }
 var node = &Node{N: 42}
 var reads int
@@ -53,7 +46,5 @@ func main() {
     if reads != 2 || result.Type != 9 || result.IntVal != ${hashString(base)} || result.UnsafePtr != nil { panic("nil pointer changed") }
 }
 `);
-    const run = spawnSync('go', ['run', '.'], { cwd: directory, encoding: 'utf8', timeout: 30_000, env: { ...process.env, GOWORK: 'off' } });
-    assert.ifError(run.error);
-    assert.equal(run.status, 0, run.stdout + run.stderr);
+    runGo(directory, ['run', '.'], { timeout: 30_000 });
 });
