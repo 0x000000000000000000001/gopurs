@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { delimiter, resolve } from "node:path";
-import { CommandRunner, Interrupted } from "./command-runner.mjs";
+import { CommandRunner, Interrupted } from "./lib/process.mjs";
 
 export { Interrupted };
 

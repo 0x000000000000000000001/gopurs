@@ -6,7 +6,7 @@ import { chmodSync, constants, copyFileSync, cpSync, existsSync, mkdirSync, open
 import { cpus, loadavg, platform, release, totalmem } from "node:os";
 import { basename, delimiter, dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { CommandRunner } from "../command-runner.mjs";
+import { CommandRunner } from "../lib/process.mjs";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const script = fileURLToPath(import.meta.url);
@@ -159,7 +159,7 @@ if (operation === "prepare") {
   const state = { schema: 1, purpose: options.pilot ? "pilot-functional-validation" : "release-backend-benchmark", created: new Date().toISOString(), archive, compiler_origin: compiler, version: packageJson.version,
     machine: { cpu: cpus()[0]?.model, logical_cpus: cpus().length, memory: totalmem(), platform: platform(), os_release: release() },
     tools: { node: process.version, node_sha256: fileHash(process.execPath), go: capture(goPath, ["version"]), go_path: goPath, go_sha256: fileHash(goPath) }, source: { ...git, manifest_sha256: hash(JSON.stringify(sources)), runtime_sha256: hash(JSON.stringify(sources.filter(file => file.path.startsWith("runtime/")))) },
-    runner: { sha256: fileHash(script), process_helper_sha256: fileHash(join(root, "tools/command-runner.mjs")) }, compiler_files: compilerFiles,
+    runner: { sha256: fileHash(script), process_helper_sha256: fileHash(join(root, "tools/lib/process.mjs")) }, compiler_files: compilerFiles,
     module_cache: { original: moduleCache, manifest_sha256: hash(JSON.stringify(moduleFiles)), files: moduleFiles.length }, baseline: reference,
     protocol: { metric: "backend total", warmups: 1, samples: 3, orders, cache_order: ["cold", "warm"], min_free_gib: minimum, go_cache_budget_mib: 1024, cold: "fresh output and backend caches per pair; warm filesystem/Go export cache", warm: "fresh process immediately after the same variant's cold generation; exact input/output cache hit required", excludes: ["frontend", "compiler bootstrap", "final go build", "application execution", "process startup/exit"] }, cases: selected };
   writeJson(statePath, state);
@@ -170,7 +170,7 @@ if (operation === "prepare") {
   const state = readJson(statePath);
   assert.equal(state.schema, 1);
   assert.equal(fileHash(script), state.runner.sha256, "Benchmark runner changed; prepare a new campaign");
-  assert.equal(fileHash(join(root, "tools/command-runner.mjs")), state.runner.process_helper_sha256, "Process helper changed");
+  assert.equal(fileHash(join(root, "tools/lib/process.mjs")), state.runner.process_helper_sha256, "Process helper changed");
   assert.equal(fileHash(process.execPath), state.tools.node_sha256, "Node executable changed");
   assert.equal(fileHash(state.tools.go_path), state.tools.go_sha256, "Go executable changed");
   assert.equal(capture(state.tools.go_path, ["version"]), state.tools.go, "Go toolchain changed");

@@ -6,7 +6,7 @@ import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { delimiter, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { CommandRunner, Interrupted } from "../command-runner.mjs";
+import { CommandRunner, Interrupted } from "../lib/process.mjs";
 import { findTypedCompiler, nativeWorkspaceConfig, verifyTypedOutput } from "./native-workspace.mjs";
 import { buildProfileGuidedBinary, rustFlagsEnvironment } from "./pgo.mjs";
 import { corePackages, prepareFixture } from "../test-workspace.mjs";

@@ -1,10 +1,13 @@
 #!/usr/bin/env node
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statfsSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, statfsSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
-import { fileURLToPath } from "node:url";
 import { isDeepStrictEqual } from "node:util";
-import { CommandRunner } from "../command-runner.mjs";
+import { CommandRunner } from "../lib/process.mjs";
+import { ensureDirectory, writeJsonAtomic } from "../lib/fs.mjs";
+import { fail, showUsage } from "../lib/cli.mjs";
+import { info, step } from "../lib/log.mjs";
+import { repoRoot } from "../lib/repo.mjs";
 import { parseOptions, selectFixtures } from "../test-selection.mjs";
 import { corePackages, prepareFixture } from "../test-workspace.mjs";
 import { fixtureBatches, fixtureWorkers, QualityGoCache, readFixtureReport, runFixtureWaves } from "./release-quality-resources.mjs";
@@ -12,10 +15,9 @@ import { emissionGateName, packageGateName, qualityIdentity, qualityOptions, sha
 import { collectModuleEvidence, moduleGateName, moduleInventory, verifyModuleInputs } from "./release-quality-modules.mjs";
 import { QUICK_TEST_FILES } from "../ci/gates.mjs";
 
-const root = fileURLToPath(new URL("../../", import.meta.url));
+const root = repoRoot(import.meta.url);
 if (process.argv.includes("--help")) {
-  console.log("Usage: node tools/release/release-quality.mjs [--full [--phase core|fixtures --shard INDEX --shard-count COUNT]] [--report DIRECTORY]\nRequires a fresh JS/native build, typed purs and locked libraries. Core/all phases also require GOPURS_NATIVE_OUTPUT from --keep-workspace. --full without --phase runs the entire campaign. Partial phases never claim full qualification. Rust remains outside this gate.");
-  process.exit(0);
+  showUsage("Usage: node tools/release/release-quality.mjs [--full [--phase core|fixtures --shard INDEX --shard-count COUNT]] [--report DIRECTORY]\nRequires a fresh JS/native build, typed purs and locked libraries. Core/all phases also require GOPURS_NATIVE_OUTPUT from --keep-workspace. --full without --phase runs the entire campaign. Partial phases never claim full qualification. Rust remains outside this gate.");
 }
 const { full, phase, shard, report: reportOption } = qualityOptions(process.argv.slice(2));
 let report = reportOption;
@@ -25,10 +27,10 @@ if (phase !== "fixtures" && !existsSync(join(process.env.GOPURS_NATIVE_OUTPUT ??
 }
 const identity = qualityIdentity(root);
 report ??= mkdtempSync(join(tmpdir(), "gopurs-quality-"));
-mkdirSync(report, { recursive: true });
+ensureDirectory(report);
 if (existsSync(join(report, "quality.json"))) throw new Error(`Quality report already exists: ${report}`);
 const workspaces = join(report, "workspaces");
-mkdirSync(workspaces, { recursive: true });
+ensureDirectory(workspaces);
 const cache = new QualityGoCache();
 const workers = fixtureWorkers();
 const results = [], cacheTrims = [];
@@ -45,7 +47,7 @@ const fixtureEnv = { GOPURS_JS: "0", GOPURS_RUST: "0", GOPURS_TEST_COMPILER: joi
   GOPURS_PREPARE_JOBS: "1", GOPURS_PBO_JOBS: "1", GOPURS_EMIT_JOBS: "2", GOFLAGS: "-trimpath" };
 function save() {
   const file = join(report, "quality.json");
-  writeFileSync(file + ".tmp", JSON.stringify({ schema: 1, requestedFull: full, full: full && phase === "all", phase, shard,
+  writeJsonAtomic(file, { schema: 1, requestedFull: full, full: full && phase === "all", phase, shard,
     identity, status, error: failure, fixtureWorkers: workers, fixturePreparation,
     fixtures: fixtureCount === undefined ? undefined : {
       selectedPerProfile: fixtureCount,
@@ -58,8 +60,7 @@ function save() {
         results.reduce((count, gate) => count + (gate.passed && gate.modules?.profile === profile ? gate.modules.report.targets.length : 0), 0)])),
     },
     goCache: { path: cache.path, limitBytes: cache.limitBytes, trims: cacheTrims },
-    gates: [...results].sort((a, b) => a.index - b.index) }, null, 2) + "\n");
-  renameSync(file + ".tmp", file);
+    gates: [...results].sort((a, b) => a.index - b.index) });
 }
 function trimCache() {
   cacheTrims.push(cache.trim());
@@ -68,7 +69,7 @@ function trimCache() {
 async function run(name, command, args, cwd = root, extraEnv = {}, verify) {
   const index = ++sequence;
   const log = join(report, `${String(index).padStart(3, "0")}-${name.replace(/[^a-zA-Z0-9_-]+/g, "-")}.log`);
-  console.log(`\n[release quality] ${name} — ${log}`);
+  step("release quality", `${name} — ${log}`);
   const started = Date.now();
   const runner = new CommandRunner();
   const gate = { index, name, command: [command, ...args], log, passed: false };
@@ -106,8 +107,8 @@ async function initializeFixtureDependencies(target) {
     workspace = mkdtempSync(join(workspaces, "spago-initialize-"));
     const { directory } = prepareFixture(root, workspace, target, 0, corePackages(root));
     const temporary = join(directory, "tmp");
-    mkdirSync(temporary);
-    console.log(`Initialize shared Spago dependencies before fixture waves — ${log}`);
+    ensureDirectory(temporary);
+    info(`Initialize shared Spago dependencies before fixture waves — ${log}`);
     const result = await runner.run("spago", ["fetch"], { cwd: directory, log,
       env: { ...baseEnv, ...fixtureEnv, TMPDIR: temporary, TMP: temporary, TEMP: temporary } });
     Object.assign(fixturePreparation, { exitCode: result.code, signal: result.signal });
@@ -128,7 +129,7 @@ async function initializeFixtureDependencies(target) {
   }
 }
 
-console.log(`Release quality evidence: ${report}`);
+info(`Release quality evidence: ${report}`);
 save();
 try {
   const tests = full ? readdirSync(join(root, "tools")).filter(name => name.endsWith(".test.mjs")).sort() : QUICK_TEST_FILES;
@@ -166,13 +167,13 @@ try {
     if (skipped.length) throw new Error("Release quality requires every fixture, without exclusions");
     fixtureCount = selected.length;
     save();
-    console.log(`Full fixture selection: ${selected.length} per profile, ${workers} concurrent batches of at most 5.`);
+    info(`Full fixture selection: ${selected.length} per profile, ${workers} concurrent batches of at most 5.`);
     const batches = fixtureBatches(selected).map((batch, batchIndex) => ({ ...batch, batchIndex }));
     const assignedBatches = shard ? shardBatches(batches, shard) : batches;
     // Spago's cold shared registry must be initialized before concurrent clients.
     // Fetch does not compile; the unchanged gates still test every fixture.
     if (assignedBatches.length) await initializeFixtureDependencies(assignedBatches[0].targets[0]);
-    mkdirSync(join(report, "fixture-reports"), { recursive: true });
+    ensureDirectory(join(report, "fixture-reports"));
     await runFixtureWaves(assignedBatches, workers, batch => {
       const name = `${batch.profile} fixtures ${batch.start + 1}-${batch.start + batch.targets.length}`;
       return run(name, "bash", ["bin/test", ...batch.targets, "--keep-going", ...(batch.profile === "dev" ? ["--dev"] : [])], root, fixtureEnv,
@@ -193,14 +194,13 @@ try {
   if (phase !== "fixtures") await runSingle(packageGateName, "npm", ["run", "test:package"]);
   if (!isDeepStrictEqual(qualityIdentity(root), identity)) throw new Error("Source or compiler identity changed during quality gates");
   status = "passed";
-  console.log(`Release quality: ${results.length} gates passed (${full ? phase === "all" ? "full" : `partial ${phase}` : "quick"}).`);
+  info(`Release quality: ${results.length} gates passed (${full ? phase === "all" ? "full" : `partial ${phase}` : "quick"}).`);
 } catch (error) {
   status = "failed";
   failure = error.message;
-  console.error(error.message);
-  process.exitCode = error.exitCode ?? 1;
+  fail(error.message, error.exitCode ?? 1);
 } finally {
   cache.dispose();
   save();
-  console.log(`Retained quality logs and reports: ${report}`);
+  info(`Retained quality logs and reports: ${report}`);
 }

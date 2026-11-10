@@ -43,10 +43,12 @@ workspace:
       `package:\n  name: ${name === 'node-process' ? 'gopurs-node-process' : name}\n`);
   }
   mkdirSync(join(root, 'tools/build'), { recursive: true });
+  mkdirSync(join(root, 'tools/lib'), { recursive: true });
   for (const [source, target] of [
     ['./build/build-native.mjs', 'tools/build/build-native.mjs'],
     ['./build/native-workspace.mjs', 'tools/build/native-workspace.mjs'],
-    ['./command-runner.mjs', 'tools/command-runner.mjs'],
+    ['./lib/process.mjs', 'tools/lib/process.mjs'],
+    ['./lib/fs.mjs', 'tools/lib/fs.mjs'],
   ]) {
     copyFileSync(new URL(source, import.meta.url), join(root, target));
   }

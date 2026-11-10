@@ -4,7 +4,7 @@ import { execFileSync } from "node:child_process";
 import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { transformSync } from "esbuild";
-import { CommandRunner, Interrupted } from "./command-runner.mjs";
+import { CommandRunner, Interrupted } from "./lib/process.mjs";
 
 if (process.argv.includes("--help")) {
   console.log("Usage: node tools/cache-context-runtime.mjs config.json\nCreate an audited compiler/runtime catalog for test:cache-context.\nConfig: baseline/alternate { compiler, rust }, nativeOutput, rustOutput, destination.\nUse retained Go/Rust bootstrap outputs matching baseline; destination must be new.");

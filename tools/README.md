@@ -4,6 +4,16 @@ The scripts in this directory build, test, measure and release gopurs. They are
 plain Node ESM unless noted. `*.test.mjs` files stay at the top level so that
 `node --test tools/*.test.mjs` remains the canonical test entry point.
 
+## Shared helpers
+
+| Script | Purpose |
+| --- | --- |
+| `lib/process.mjs` | child processes, process groups, signals and logs |
+| `lib/fs.mjs` | JSON reads, atomic JSON writes and directory creation |
+| `lib/repo.mjs` | repository-root discovery |
+| `lib/cli.mjs` | usage and failure output |
+| `lib/log.mjs` | step and info output |
+
 ## Test harness
 
 | Script | Purpose |

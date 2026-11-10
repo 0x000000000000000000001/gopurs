@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, statSync, symlinkSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdtempSync, readFileSync, readdirSync, realpathSync, statSync, symlinkSync, writeFileSync } from "node:fs";
+import { ensureDirectory } from "./lib/fs.mjs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { isLibraryCheckout } from "./test-selection.mjs";
@@ -41,8 +42,8 @@ export function prepareFixture(root, workspace, file, index, packages) {
   const name = basename(file, ".purs");
   const directory = join(workspace, `${index}-${name}`);
   const source = join(directory, "src");
-  mkdirSync(source, { recursive: true });
-  mkdirSync(join(directory, "logs"), { recursive: true });
+  ensureDirectory(source);
+  ensureDirectory(join(directory, "logs"));
   // A fresh source/output directory replaces timestamp edits and module-name
   // cleanup. No files from tests/runner are read, modified, or removed.
   cpSync(file, join(source, "Main.purs"));
@@ -65,7 +66,7 @@ export function prepareFixture(root, workspace, file, index, packages) {
 // to a live checkout. Relative config symlinks stay relative inside the copy.
 export function prepareModule(root, directory, name, { dev = false } = {}) {
   const packages = join(directory, "packages");
-  mkdirSync(packages);
+  ensureDirectory(packages);
   const generated = new Set([".git", ".spago", ".cache", ".purmeta", "node_modules", "output", ".stack-work", ".pulp-cache"]);
   const parent = libraryRoot(root);
   for (const sibling of readdirSync(parent)) {
@@ -82,7 +83,7 @@ export function prepareModule(root, directory, name, { dev = false } = {}) {
   const compiler = join(packages, "gopurs");
   if (!dev) symlinkSync(root, compiler, "dir");
   else {
-    mkdirSync(join(compiler, "bin"), { recursive: true });
+    ensureDirectory(join(compiler, "bin"));
     for (const entry of readdirSync(root)) {
       if (entry !== "bin") symlinkSync(join(root, entry), join(compiler, entry));
     }

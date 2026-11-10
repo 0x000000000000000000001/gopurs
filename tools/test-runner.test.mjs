@@ -58,11 +58,13 @@ function fixture(t) {
   const base = mkdtempSync(join(tmpdir(), "gopurs-runner-contract-"));
   t.after(() => rmSync(base, { recursive: true, force: true }));
   const root = join(base, "project with spaces");
-  for (const dir of ["bin", "tools", "tests/passing", "tests/passing-snapshots", "tests/passing-snapshots-dev", "tests/runner"]) mkdirSync(join(root, dir), { recursive: true });
+  for (const dir of ["bin", "tools", "tools/lib", "tests/passing", "tests/passing-snapshots", "tests/passing-snapshots-dev", "tests/runner"]) mkdirSync(join(root, dir), { recursive: true });
   for (const dir of ["mockbin", "tmp", "gopurs-prelude"]) mkdirSync(join(base, dir));
   writeFileSync(join(base, "package.json"), '{"type":"module"}');
   for (const name of ["test", "modtest"]) cpSync(join(repository, "bin", name), join(root, "bin", name));
-  for (const name of ["command-runner", "test-selection", "test-process", "test-workspace", "test-snapshots", "test-campaign", "test-compiler", "test-go", "test-runner", "modtest-runner"]) cpSync(join(repository, "tools", name + ".mjs"), join(root, "tools", name + ".mjs"));
+  for (const name of ["test-selection", "test-process", "test-workspace", "test-snapshots", "test-campaign", "test-compiler", "test-go", "test-runner", "modtest-runner"]) cpSync(join(repository, "tools", name + ".mjs"), join(root, "tools", name + ".mjs"));
+  cpSync(join(repository, "tools/lib/process.mjs"), join(root, "tools/lib/process.mjs"));
+  cpSync(join(repository, "tools/lib/fs.mjs"), join(root, "tools/lib/fs.mjs"));
   writeFileSync(join(root, "bin/pkg"), "CORE_PACKAGES=(prelude)\n");
   for (const name of ["spago", "gofmt", "go", "npm"]) writeFileSync(join(base, "mockbin", name), fakeTool, { mode: 0o755 });
   writeFileSync(join(root, "bin/gopurs"), fakeTool, { mode: 0o755 });
@@ -588,7 +590,7 @@ writeFileSync(${JSON.stringify(childFile)}, JSON.stringify({ pid: process.pid })
 console.log("module-before-pipe-error");
 setInterval(() => {}, 1000);`;
   const driver = `import { writeFileSync } from "node:fs";
-import { CommandRunner } from ${JSON.stringify(join(f.root, "tools/command-runner.mjs"))};
+import { CommandRunner } from ${JSON.stringify(join(f.root, "tools/lib/process.mjs"))};
 const commands = new CommandRunner();
 try {
   await commands.run(process.execPath, ["--input-type=module", "-e", ${JSON.stringify(command)}], { log: ${JSON.stringify(log)}, stream: true });

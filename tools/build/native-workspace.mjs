@@ -1,5 +1,6 @@
 import { accessSync, constants, existsSync, readFileSync, readdirSync, realpathSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
+import { readJson } from "../lib/fs.mjs";
 
 // Copy the package section verbatim, excluding its optional test stanza. This
 // preserves dependency constraints without a second YAML parser dependency.
@@ -31,7 +32,7 @@ function resolveOptimizer(root) {
     return directory;
   }
   try {
-    const lock = JSON.parse(readFileSync(join(root, "spago.lock"), "utf8"));
+    const lock = readJson(join(root, "spago.lock"));
     const entry = lock.packages?.["backend-optimizer"];
     if (entry?.type === "git" && entry.rev) {
       const fetched = join(root, ".spago/p/backend-optimizer", entry.rev);
@@ -108,7 +109,7 @@ export function verifyTypedOutput(output, compiler) {
     if (!entry.isDirectory()) continue;
     const file = join(output, entry.name, "corefn.json");
     if (!existsSync(file)) continue;
-    const metadata = JSON.parse(readFileSync(file, "utf8"));
+    const metadata = readJson(file);
     if (!["typeTable", "dataDecls", "classDecls"].every(key => Array.isArray(metadata[key]))) {
       throw new Error(`${file} lacks TAST type metadata. ${compiler} did not produce the required format; select the typed fork with GOPURS_PURS`);
     }

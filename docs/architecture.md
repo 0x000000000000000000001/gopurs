@@ -913,7 +913,7 @@ Les scripts de [tools](../tools) ont des responsabilités distinctes :
 | --- | --- |
 | Ordre des étapes du bootstrap, logs et publication atomique du binaire | `build-native.mjs` |
 | Configuration Spago native, sélection du fork `purs`, vérification du TAST | `native-workspace.mjs` |
-| Sous-processus, groupes de processus, signaux et descripteurs des logs | `command-runner.mjs` |
+| Sous-processus, groupes de processus, signaux et descripteurs des logs | `tools/lib/process.mjs` |
 | Présentation des commandes et erreurs des campagnes de tests | `test-process.mjs` |
 | Rapports atomiques, statuts par cible, reprise et conservation des campagnes | `test-campaign.mjs` |
 | Sélection des fixtures, snapshots et workspaces | `test-runner.mjs` et ses helpers `test-*` |

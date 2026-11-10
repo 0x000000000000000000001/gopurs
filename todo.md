@@ -75,7 +75,7 @@ public sans consommateur.
 - [x] Créer `tools/release/` et y déplacer `release-prepare`, `release-smoke`,
   `release-quality*`, `release-sbom`, `release-benchmark` et
   `release-npm-provenance`.
-- [ ] Créer `tools/lib/` : primitives partagées (voir lot 4).
+- [x] Créer `tools/lib/` : primitives partagées (voir lot 4).
 - [x] `tools/ci/` : déjà en place.
 - [x] Garder les `*.test.mjs` à la racine de `tools/`.
 - [x] Déplacer un domaine à la fois : build puis release.
@@ -88,23 +88,23 @@ public sans consommateur.
 Critère de sortie : `tools/` racine ne contient plus que les tests, les
 répertoires de domaine et les lanceurs explicitement documentés.
 
-## Lot 4 — `tools/lib` et pilote de lisibilité
+## Lot 4 — `tools/lib` et pilote de lisibilité — partiel
 
-- [ ] Créer un petit socle partagé, sans framework :
-  - `cli.mjs` : `parseArgs`, `--help`, `fail` ;
-  - `process.mjs` : `run`, timeouts, signaux — réutiliser
-    `command-runner.mjs` ;
-  - `fs.mjs` : `readJson`, `writeJson`, `tempDir`, `ensureEmpty` ;
-  - `repo.mjs` : racine, chemins, Git ;
-  - `log.mjs` : étapes, succès, erreurs.
-- [ ] Refactoriser trois scripts pilotes seulement :
+- [x] Créer un petit socle partagé, sans framework :
+  - `cli.mjs` : `showUsage`, `fail` ;
+  - `process.mjs` : `CommandRunner`, `Interrupted` (déplacé depuis
+    `command-runner.mjs`) ;
+  - `fs.mjs` : `readJson`, `ensureDirectory`, `writeJsonAtomic` ;
+  - `repo.mjs` : `repoRoot` ;
+  - `log.mjs` : `step`, `info`.
+- [x] Refactoriser trois scripts pilotes :
   `release-quality.mjs`, `native-workspace.mjs`, `test-workspace.mjs`.
-- [ ] Leur donner un `main()`, un `--help`, des fonctions nommées et des
-  constantes nommées.
-- [ ] Ne pas changer leur comportement observable.
+- [ ] Extraire le bloc d'exécution de `release-quality.mjs` dans un `main()`.
+  Les deux autres pilotes sont des modules bibliothèques et n'ont pas de CLI.
+- [x] Ne pas changer leur comportement observable : 144 tests ciblés passent.
 
-Critère de sortie : les trois scripts sont plus courts, testés, et les
-primitives sont réutilisées sans duplication.
+Critère de sortie : les trois scripts utilisent les primitives, les tests
+passent, et il reste seulement l'extraction optionnelle de `main()`.
 
 ## Lot 5 — Style et ergonomie
 
