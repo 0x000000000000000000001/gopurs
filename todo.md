@@ -151,16 +151,16 @@ sans lire son code.
 Critère de sortie : les tests restent équivalents, mais les scénarios réutilisent
 les mêmes helpers.
 
-## Lot 8 — Validation finale
+## Lot 8 — Validation finale — partiel
 
-- [ ] `node tools/check-docs.mjs`
-- [ ] `npm run test:package`
-- [ ] `npm run format:check`
+- [x] `node tools/check-docs.mjs`
+- [x] `npm run test:package`
+- [x] `npm run format:check`
 - [ ] `node --test tools/*.test.mjs` (campagne complète, avec l'environnement
   natif requis)
 - [ ] `npm run build:native` si un script de build a été déplacé
-- [ ] `git diff --check`
-- [ ] Vérifier que les commandes publiques et les workflows CI n'ont pas changé
+- [x] `git diff --check`
+- [x] Vérifier que les commandes publiques et les workflows CI n'ont pas changé
   de contrat.
 
 ## Définition de terminé
@@ -174,6 +174,4 @@ les mêmes helpers.
 
 ## Décisions ouvertes
 
-1. Formateur : Prettier ou Biome ?
-2. Organisation : déplacer build/release dès maintenant, ou seulement après
-   les lots 2 et 3 ?
+Aucune : Prettier est retenu et build/release sont déplacés.
