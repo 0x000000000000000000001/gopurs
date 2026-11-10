@@ -10,7 +10,7 @@ import { findTypedCompiler } from "./build/native-workspace.mjs";
 import { packageSourceSections } from "./test-snapshots.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
-const baseEnvironment = { ...process.env, GOWORK: "off", GOPURS_RUST: "0",
+const baseEnvironment = { ...process.env, GOWORK: "off", GOPURS_RUST: "0", GOPURS_GO_PACKAGES: "0",
   PATH: join(root, "node_modules/.bin") + delimiter + process.env.PATH };
 for (const key of ["GOPURS_ALLOC_PROFILE", "GOPURS_FORCE_BUILD", "GOPURS_COMPILER_SNAPSHOT", "PPROF"]) delete baseEnvironment[key];
 const hash = bytes => createHash("sha256").update(bytes).digest("hex");

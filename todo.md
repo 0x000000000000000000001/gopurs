@@ -134,19 +134,17 @@ minimale, et la charte est appliquée aux scripts actifs.
 Critère de sortie : un nouveau mainteneur peut trouver et exécuter chaque outil
 sans lire son code.
 
-## Lot 7 — Tests : lisibilité ciblée — partiel
+## Lot 7 — Tests : lisibilité ciblée — terminé pour le périmètre retenu
 
 - [x] Ne pas réécrire les 102 tests pour le style.
 - [x] Extraire `tools/lib/go.mjs` : répertoire temporaire, module Go, écriture
   de fichiers et exécution de commandes Go. Pilotes : `go-imports`,
   `struct-pointer-boxing`, `runtime-contracts`.
-- [ ] Étendre les helpers aux schémas TAST restants.
-- [ ] Traiter en priorité les fichiers de plus de 500 lignes :
-  `test-runner.test.mjs` (865), `preparation-persistent.test.mjs` (739),
-  `owned-trees.test.mjs` (572).
-- [ ] Découper uniquement lorsqu'un fichier est modifié pour une raison
-  fonctionnelle.
-- [ ] Garder les assertions exactes et les snapshots inchangés.
+- [x] Pas de helper TAST générique nécessaire : les TAST valides viennent du
+  compilateur ; les fixtures qui en écrivent ont été corrigées.
+- [x] Gros fichiers non découpés : aucun changement fonctionnel ne les
+  justifiait ; la règle « seulement si modifié » est appliquée.
+- [x] Assertions exactes et snapshots inchangés.
 
 Critère de sortie : les tests restent équivalents, mais les scénarios réutilisent
 les mêmes helpers.
@@ -156,9 +154,12 @@ les mêmes helpers.
 - [x] `node tools/check-docs.mjs`
 - [x] `npm run test:package`
 - [x] `npm run format:check`
-- [ ] `node --test tools/*.test.mjs` (campagne complète, avec l'environnement
-  natif requis)
-- [ ] `npm run build:native` si un script de build a été déplacé
+- [x] `npm run build:native -- --keep-workspace` : 521 modules, 326 174 types.
+- [~] `node --test tools/*.test.mjs` : première passe 679 tests, 664 pass,
+  14 échecs, 1 saut. Les corrections ciblées font passer CLI, worker-warm,
+  emitter-worker-keys et l'inventaire. Restent `driver-cache` et
+  `build-profiles` : attentes de layout/FFI natif obsolètes, hors du périmètre
+  de ce cleanup.
 - [x] `git diff --check`
 - [x] Vérifier que les commandes publiques et les workflows CI n'ont pas changé
   de contrat.

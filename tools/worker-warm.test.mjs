@@ -40,10 +40,10 @@ test("worker warming decodes only visible cached owners and commits complete bat
     for (const child of ["modules", "output/purescript"]) mkdirSync(join(stage, child), { recursive: true });
     const cache = { session: { stage, output, context: "context" }, candidates: Map.empty, keys: Map.singleton(owner)(keys), metadata: "metadata", metadataDemands: Nothing.value,
       lazyContributions: false, reads: Ref.new(Map.empty)(), invalidations: Ref.new(Map.empty)(), restored: Ref.new(0)(), backends: Ref.new(Map.empty)(), ffiDigests: Map.empty, priorFfiDigests: Map.empty };
-    const mod = { name: owner, comments: [], imports: Set.empty, exports: Set.empty, reExports: Set.empty, dataTypes: Map.empty, dataDecls: [], classDecls: [], foreign: Map.empty,
+    const mod = { name: owner, path: owner + ".purs", comments: [], imports: Set.empty, exports: Set.empty, reExports: Set.empty, dataTypes: Map.empty, dataDecls: [], classDecls: [], foreign: Map.empty,
       implementations: Map.empty, directives: Map.empty,
       bindings: [{ recursive: false, bindings: [new Tuple("f", expr(new S.Typed(new C.Func([C.Int.value], C.Int.value), expr(new S.Abs([new Tuple(new Just("x"), 0)], expr(new S.Typed(C.Int.value, expr(new S.Local(new Just("x"), 0)))))))))] }] };
-    expected[owner] = (await run(Cache.emit(cache)(Map.empty)(metadata)("workers")(false)({})(mod))).functions;
+    expected[owner] = (await run(Cache.emit(cache)(Map.empty)(metadata)("workers")(false)({ path: owner + ".purs" })(mod))).functions;
     assert.ok(Map.size(expected[owner]) > 0);
     payloads[owner] = readFileSync(join(stage, "modules", owner, "3.json"), "utf8");
   }

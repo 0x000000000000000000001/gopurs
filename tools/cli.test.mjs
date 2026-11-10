@@ -16,6 +16,7 @@ const environment = {
   ...process.env,
   PATH: join(root, "node_modules/.bin") + delimiter + process.env.PATH,
   GOWORK: "off",
+  GOPURS_GO_PACKAGES: "0",
 };
 // An inherited profile path could turn an otherwise successful build into an
 // unrelated failure. Each case below explicitly selects compiler concurrency.

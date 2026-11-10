@@ -31,7 +31,7 @@ const expr = syntax => new NeutralExpr(syntax);
 const int = C.Int.value, unary = new C.Func([int], int);
 const typed = (type, value) => expr(new S.Typed(type, value));
 const backend = {
-  name: "Consumer", comments: [], imports: emptySet, exports: emptySet, reExports: emptySet,
+  name: "Consumer", path: "Consumer.purs", comments: [], imports: emptySet, exports: emptySet, reExports: emptySet,
   dataTypes: Map.empty, dataDecls: [], classDecls: [], foreign: Map.empty, implementations: Map.empty, directives: Map.empty,
   bindings: [{ recursive: false, bindings: [new Tuple("use", typed(unary, expr(new S.Abs(
     [new Tuple(new Just("x"), 0)], typed(int, expr(new S.App(
@@ -89,8 +89,8 @@ test("emission keys cover referenced worker signatures and absences without unre
       loaded.push(owner);
       return Map.filterWithKey(ordString)(name => () => name.startsWith(owner + "."))(globalFunctions);
     });
-    const emitted = workerSnapshot === undefined ? Cache.emit(cache)(Map.empty)(observedMetadata)(prefix)(Boolean(previous))({})(sourceBackend)
-      : Cache.emitWithWorkerSnapshot(Cache.resolveWorkerSnapshot(load)(workerSnapshot))(cache)(Map.empty)(observedMetadata)(prefix)(Boolean(previous))({})(sourceBackend);
+    const emitted = workerSnapshot === undefined ? Cache.emit(cache)(Map.empty)(observedMetadata)(prefix)(Boolean(previous))({ path: "Consumer.purs" })(sourceBackend)
+      : Cache.emitWithWorkerSnapshot(Cache.resolveWorkerSnapshot(load)(workerSnapshot))(cache)(Map.empty)(observedMetadata)(prefix)(Boolean(previous))({ path: "Consumer.purs" })(sourceBackend);
     const result = await runAff(emitted);
     const memo = JSON.parse(readFileSync(join(stage, "modules/Consumer/memo.json")));
     memo.parts = codecs.map((codec, i) => {
