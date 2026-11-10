@@ -8,7 +8,9 @@ const options = {};
 for (let index = 2; index < process.argv.length; index++) {
   const arg = process.argv[index];
   if (arg === "--help") {
-    console.log("Usage: node tools/release/release-smoke.mjs --package FILE.tgz --native FILE [--purs FILE] [--report FILE] [--keep-workspace]\nInstalls only the tarball, then compiles and runs a fresh TAST/Go FFI application with its JS and native hosts.");
+    console.log(
+      "Usage: node tools/release/release-smoke.mjs --package FILE.tgz --native FILE [--purs FILE] [--report FILE] [--keep-workspace]\nInstalls only the tarball, then compiles and runs a fresh TAST/Go FFI application with its JS and native hosts.",
+    );
     process.exit(0);
   }
   if (arg === "--keep-workspace") options.keep = true;
@@ -31,10 +33,20 @@ environment.GOMODCACHE = join(workspace, "go-mod-cache");
 let passed = false;
 const results = [];
 function run(command, args, cwd) {
-  return execFileSync(command, args, { cwd, env: environment, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], maxBuffer: 8 * 1024 * 1024, timeout: 300_000 });
+  return execFileSync(command, args, {
+    cwd,
+    env: environment,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+    maxBuffer: 8 * 1024 * 1024,
+    timeout: 300_000,
+  });
 }
 try {
-  writeFileSync(join(workspace, "package.json"), JSON.stringify({ name: "gopurs-release-smoke", version: "1.0.0", private: true }));
+  writeFileSync(
+    join(workspace, "package.json"),
+    JSON.stringify({ name: "gopurs-release-smoke", version: "1.0.0", private: true }),
+  );
   run("npm", ["install", "--offline", "--ignore-scripts", "--no-audit", "--no-fund", options.package], workspace);
   const installed = join(workspace, "node_modules/gopurs");
   const metadata = JSON.parse(readFileSync(join(installed, "package.json"), "utf8"));
@@ -50,8 +62,14 @@ try {
     // registry caches and sibling library checkouts. Library gates are separate.
     writeFileSync(join(source, "Effect.purs"), "module Effect where\nforeign import data Effect :: Type -> Type\n");
     writeFileSync(join(source, "Unit.purs"), "module Data.Unit where\ndata Unit = Unit\n");
-    writeFileSync(join(source, "Main.purs"), 'module Main where\nimport Data.Unit (Unit)\nimport Effect (Effect)\nforeign import report :: String -> Int -> Effect Unit\nmain :: Effect Unit\nmain = report "gopurs release smoke" 42\n');
-    writeFileSync(join(source, "Main.go"), 'package Main\nimport "fmt"\nfunc Report(message string, value int32, _ any) any { fmt.Printf("%s: %d\\n", message, value); return nil }\n');
+    writeFileSync(
+      join(source, "Main.purs"),
+      'module Main where\nimport Data.Unit (Unit)\nimport Effect (Effect)\nforeign import report :: String -> Int -> Effect Unit\nmain :: Effect Unit\nmain = report "gopurs release smoke" 42\n',
+    );
+    writeFileSync(
+      join(source, "Main.go"),
+      'package Main\nimport "fmt"\nfunc Report(message string, value int32, _ any) any { fmt.Printf("%s: %d\\n", message, value); return nil }\n',
+    );
     run(compiler, ["compile", "src/Effect.purs", "src/Unit.purs", "src/Main.purs", "--codegen", "corefn"], application);
     const tast = JSON.parse(readFileSync(join(application, "output/Main/corefn.json"), "utf8"));
     for (const field of ["typeTable", "dataDecls", "classDecls"]) {
@@ -63,11 +81,24 @@ try {
     const binary = join(application, "hello");
     run("go", ["build", "-trimpath", "-o", binary, "./main"], output);
     const actual = run(binary, [], application).trim();
-    if (actual !== "gopurs release smoke: 42") throw new Error(`${host}: unexpected application output: ${JSON.stringify(actual)}`);
+    if (actual !== "gopurs release smoke: 42")
+      throw new Error(`${host}: unexpected application output: ${JSON.stringify(actual)}`);
     results.push({ host, output: actual, passed: true });
     console.log(`${host}: installed gopurs ${metadata.version}, TAST → Go → FFI execution passed`);
   }
-  if (options.report) writeFileSync(options.report, JSON.stringify({ version: metadata.version, npmInstall: "offline, empty npm cache, lifecycle scripts disabled", tests: results }, null, 2) + "\n");
+  if (options.report)
+    writeFileSync(
+      options.report,
+      JSON.stringify(
+        {
+          version: metadata.version,
+          npmInstall: "offline, empty npm cache, lifecycle scripts disabled",
+          tests: results,
+        },
+        null,
+        2,
+      ) + "\n",
+    );
   passed = true;
 } catch (error) {
   process.stderr.write(error.stdout ?? "");

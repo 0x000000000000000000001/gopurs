@@ -26,14 +26,16 @@ docs/**/*.md except docs/history/, docs/build-*, docs/plan-archive-* and
 docs/testing.md (historical sections are split out by the cleanup plan).`);
 };
 
-const toPosix = path => path.split(sep).join("/");
-const isHistorical = path => {
+const toPosix = (path) => path.split(sep).join("/");
+const isHistorical = (path) => {
   const posix = toPosix(path);
   const name = basename(posix);
-  return posix.startsWith("docs/history/")
-    || name.startsWith("build-")
-    || name.startsWith("plan-archive-")
-    || name === "testing.md";
+  return (
+    posix.startsWith("docs/history/") ||
+    name.startsWith("build-") ||
+    name.startsWith("plan-archive-") ||
+    name === "testing.md"
+  );
 };
 
 const walk = (directory, predicate) => {
@@ -46,34 +48,35 @@ const walk = (directory, predicate) => {
   return found;
 };
 
-const defaultDocuments = root => {
+const defaultDocuments = (root) => {
   const candidates = ["README.md", "CONTRIBUTING.md", "cleanup.md", "todo.md"]
-    .map(name => join(root, name))
+    .map((name) => join(root, name))
     .filter(existsSync);
   const docs = join(root, "docs");
   if (existsSync(docs)) {
-    candidates.push(...walk(docs, path => extname(path) === ".md"));
+    candidates.push(...walk(docs, (path) => extname(path) === ".md"));
   }
   return candidates
-    .filter(path => !isHistorical(toPosix(relative(root, path))))
-    .map(path => toPosix(relative(root, path)))
+    .filter((path) => !isHistorical(toPosix(relative(root, path))))
+    .map((path) => toPosix(relative(root, path)))
     .sort();
 };
 
 // GitHub-style heading anchor: keep Unicode letters and digits, drop the rest
 // of the punctuation, turn spaces into hyphens, and suffix duplicates.
-const slugify = text => text
-  .trim()
-  .toLowerCase()
-  .replace(/<[^>]*>/g, "")
-  .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
-  .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
-  .replace(/[`*~]/g, "")
-  .replace(/[^\p{L}\p{N}\s_-]/gu, "")
-  .replace(/\s/g, "-");
+const slugify = (text) =>
+  text
+    .trim()
+    .toLowerCase()
+    .replace(/<[^>]*>/g, "")
+    .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/[`*~]/g, "")
+    .replace(/[^\p{L}\p{N}\s_-]/gu, "")
+    .replace(/\s/g, "-");
 
 // Strip fenced blocks and inline code so examples never look like links.
-const stripCode = source => {
+const stripCode = (source) => {
   const lines = source.split("\n");
   let fence = null;
   const kept = [];
@@ -85,13 +88,16 @@ const stripCode = source => {
       kept.push("");
       continue;
     }
-    if (fence !== null) { kept.push(""); continue; }
+    if (fence !== null) {
+      kept.push("");
+      continue;
+    }
     kept.push(line.replace(/(`+)[^`]*?\1/g, ""));
   }
   return kept.join("\n");
 };
 
-const anchorsOf = source => {
+const anchorsOf = (source) => {
   const counts = new Map();
   const anchors = new Set();
   for (const line of stripCode(source).split("\n")) {
@@ -105,7 +111,7 @@ const anchorsOf = source => {
   return anchors;
 };
 
-const linksOf = source => {
+const linksOf = (source) => {
   const links = [];
   for (const match of stripCode(source).matchAll(/!?\[[^\]]*\]\(\s*([^)\s]+)(?:\s+"[^"]*")?\s*\)/g)) {
     links.push(match[1]);
@@ -132,11 +138,18 @@ const checkLinks = (root, documents) => {
       let target = link;
       let anchor = "";
       const hash = target.indexOf("#");
-      if (hash >= 0) { anchor = target.slice(hash + 1); target = target.slice(0, hash); }
+      if (hash >= 0) {
+        anchor = target.slice(hash + 1);
+        target = target.slice(0, hash);
+      }
       if (target.includes("?")) target = target.slice(0, target.indexOf("?"));
       let decoded;
-      try { decoded = decodeURIComponent(target); }
-      catch { errors.push(`${document}: invalid URL escape in ${link}`); continue; }
+      try {
+        decoded = decodeURIComponent(target);
+      } catch {
+        errors.push(`${document}: invalid URL escape in ${link}`);
+        continue;
+      }
       let targetPath;
       if (decoded === "") targetPath = document;
       else if (decoded.startsWith("/")) targetPath = decoded.slice(1);
@@ -157,8 +170,12 @@ const checkLinks = (root, documents) => {
         continue;
       }
       let decodedAnchor;
-      try { decodedAnchor = decodeURIComponent(anchor); }
-      catch { errors.push(`${document}: invalid anchor escape in ${link}`); continue; }
+      try {
+        decodedAnchor = decodeURIComponent(anchor);
+      } catch {
+        errors.push(`${document}: invalid anchor escape in ${link}`);
+        continue;
+      }
       const anchors = readAnchors(root, targetPath);
       if (!anchors.has(decodedAnchor)) {
         errors.push(`${document}: missing anchor ${link} in ${targetPath}`);
@@ -168,7 +185,7 @@ const checkLinks = (root, documents) => {
   return { errors, checked, outside };
 };
 
-const checkPackageFiles = root => {
+const checkPackageFiles = (root) => {
   const errors = [];
   let manifest;
   try {
@@ -188,7 +205,7 @@ const checkPackageFiles = root => {
   return { errors, checked: files.length };
 };
 
-const readModuleMap = root => {
+const readModuleMap = (root) => {
   const path = join(root, "docs/module-map.md");
   if (!existsSync(path)) return { rows: [], errors: ["docs/module-map.md: missing"] };
   const rows = [];
@@ -202,11 +219,11 @@ const readModuleMap = root => {
   return { rows, errors };
 };
 
-const sourceModules = root => {
+const sourceModules = (root) => {
   const src = join(root, "src");
   if (!existsSync(src)) return new Map();
   const modules = new Map();
-  for (const path of walk(src, file => extname(file) === ".purs")) {
+  for (const path of walk(src, (file) => extname(file) === ".purs")) {
     const source = readFileSync(path, "utf8");
     const match = source.match(/^module\s+([\w.]+)/m);
     if (!match) {
@@ -218,7 +235,7 @@ const sourceModules = root => {
   return modules;
 };
 
-const checkModuleMap = root => {
+const checkModuleMap = (root) => {
   const errors = [];
   const { rows, errors: mapErrors } = readModuleMap(root);
   errors.push(...mapErrors);
@@ -261,7 +278,7 @@ const checkRepository = (root, documents) => {
   };
 };
 
-const parseArgs = argv => {
+const parseArgs = (argv) => {
   const options = { root: ROOT, linksOnly: false, quiet: false, help: false, files: [] };
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];
@@ -279,12 +296,29 @@ const parseArgs = argv => {
 
 const main = () => {
   let options;
-  try { options = parseArgs(process.argv.slice(2)); }
-  catch (error) { console.error(`[docs] ${error.message}`); usage(); process.exitCode = 2; return; }
-  if (options.help) { usage(); return; }
-  if (!existsSync(options.root)) { console.error(`[docs] root does not exist: ${options.root}`); process.exitCode = 2; return; }
+  try {
+    options = parseArgs(process.argv.slice(2));
+  } catch (error) {
+    console.error(`[docs] ${error.message}`);
+    usage();
+    process.exitCode = 2;
+    return;
+  }
+  if (options.help) {
+    usage();
+    return;
+  }
+  if (!existsSync(options.root)) {
+    console.error(`[docs] root does not exist: ${options.root}`);
+    process.exitCode = 2;
+    return;
+  }
   const documents = options.files.length ? options.files : defaultDocuments(options.root);
-  if (documents.length === 0) { console.error("[docs] no documents selected"); process.exitCode = 2; return; }
+  if (documents.length === 0) {
+    console.error("[docs] no documents selected");
+    process.exitCode = 2;
+    return;
+  }
   const result = options.linksOnly
     ? { errors: checkLinks(options.root, documents).errors, counts: { documents: documents.length } }
     : checkRepository(options.root, documents);

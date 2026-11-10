@@ -10,8 +10,17 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import {
-  accessSync, constants, copyFileSync, existsSync, mkdirSync, readFileSync,
-  readdirSync, rmSync, statSync, symlinkSync, writeFileSync,
+  accessSync,
+  constants,
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  symlinkSync,
+  writeFileSync,
 } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { nativeWorkspaceConfig, verifyTypedOutput } from "./native-workspace.mjs";
@@ -25,10 +34,17 @@ const PGO_REQUIRED_MODULES = Object.freeze(["Main"]);
 // Full parallelism for the first two passes, sequential prepare/PBO/emit for
 // the final pass, matching the isolated night-pgo experiment.
 const PGO_JOBS = Object.freeze({
-  GOPURS_JOBS: "8", GOPURS_PREPARE_JOBS: "8", GOPURS_PBO_JOBS: "8", GOPURS_EMIT_JOBS: "8", GOPURS_PIPELINE: "1",
+  GOPURS_JOBS: "8",
+  GOPURS_PREPARE_JOBS: "8",
+  GOPURS_PBO_JOBS: "8",
+  GOPURS_EMIT_JOBS: "8",
+  GOPURS_PIPELINE: "1",
 });
 const PGO_FINAL_JOBS = Object.freeze({
-  ...PGO_JOBS, GOPURS_PREPARE_JOBS: "1", GOPURS_PBO_JOBS: "1", GOPURS_EMIT_JOBS: "1",
+  ...PGO_JOBS,
+  GOPURS_PREPARE_JOBS: "1",
+  GOPURS_PBO_JOBS: "1",
+  GOPURS_EMIT_JOBS: "1",
 });
 const PGO_TRAINING_POLICY = Object.freeze({
   scope: "compiler self-compilation with the Go-runtime library checkouts",
@@ -37,25 +53,27 @@ const PGO_TRAINING_POLICY = Object.freeze({
 });
 const TRAINING_SOURCE_EXTENSIONS = Object.freeze(["purs", "go", "js"]);
 
-const sha256 = bytes => createHash("sha256").update(bytes).digest("hex");
+const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 
 // Deterministic, relative-path, content-addressed file inventory.
 export function walk(directory) {
   if (!existsSync(directory)) return [];
   return readdirSync(directory, { withFileTypes: true })
-    .sort((left, right) => left.name < right.name ? -1 : left.name > right.name ? 1 : 0)
-    .flatMap(entry => {
+    .sort((left, right) => (left.name < right.name ? -1 : left.name > right.name ? 1 : 0))
+    .flatMap((entry) => {
       const path = join(directory, entry.name);
       return entry.isDirectory() ? walk(path) : entry.isFile() ? [path] : [];
     });
 }
 
 export function manifest(directory, filter = () => true) {
-  return walk(directory).filter(filter).map(path => ({
-    path: relative(directory, path).split(sep).join("/"),
-    bytes: statSync(path).size,
-    sha256: sha256(readFileSync(path)),
-  }));
+  return walk(directory)
+    .filter(filter)
+    .map((path) => ({
+      path: relative(directory, path).split(sep).join("/"),
+      bytes: statSync(path).size,
+      sha256: sha256(readFileSync(path)),
+    }));
 }
 
 function digestManifest(files) {
@@ -66,7 +84,7 @@ function digestManifest(files) {
 // only appears if a Go tool ran in the training directory. CoreFn is an input,
 // never part of the generated set.
 export function emittedManifest(output) {
-  return manifest(output, path => path.endsWith(".go") || path.split("/").at(-1) === "go.mod");
+  return manifest(output, (path) => path.endsWith(".go") || path.split("/").at(-1) === "go.mod");
 }
 
 // Freeze the typed compiler-self output as a self-contained training project.
@@ -79,13 +97,17 @@ export function freezeTrainingOutput({ output, projectRoot, trainingDirectory })
   mkdirSync(frozenOutput, { recursive: true });
   const modules = [];
   const excluded = [];
-  for (const entry of readdirSync(output, { withFileTypes: true })
-    .sort((left, right) => left.name < right.name ? -1 : left.name > right.name ? 1 : 0)) {
+  for (const entry of readdirSync(output, { withFileTypes: true }).sort((left, right) =>
+    left.name < right.name ? -1 : left.name > right.name ? 1 : 0,
+  )) {
     if (!entry.isDirectory()) continue;
     const corefn = join(output, entry.name, "corefn.json");
     if (!existsSync(corefn)) continue;
     const module = entry.name;
-    if (PGO_EXCLUDED_MODULES.includes(module)) { excluded.push(module); continue; }
+    if (PGO_EXCLUDED_MODULES.includes(module)) {
+      excluded.push(module);
+      continue;
+    }
     const bytes = readFileSync(corefn);
     const metadata = JSON.parse(bytes);
     if (typeof metadata.modulePath !== "string" || metadata.modulePath === "") {
@@ -110,12 +132,16 @@ export function freezeTrainingOutput({ output, projectRoot, trainingDirectory })
     mkdirSync(dirname(destination), { recursive: true });
     writeFileSync(destination, JSON.stringify(metadata, null, 2) + "\n");
     modules.push({
-      module, source, corefn: relative(projectRoot, corefn).split(sep).join("/"),
-      frozen_source: frozenSource, sources, sha256: sha256(bytes),
+      module,
+      source,
+      corefn: relative(projectRoot, corefn).split(sep).join("/"),
+      frozen_source: frozenSource,
+      sources,
+      sha256: sha256(bytes),
     });
   }
   for (const module of PGO_REQUIRED_MODULES) {
-    if (!modules.some(record => record.module === module)) {
+    if (!modules.some((record) => record.module === module)) {
       throw new Error(`Training output is missing required module ${module}`);
     }
   }
@@ -176,8 +202,17 @@ export function rustFlagsEnvironment(environment, flags = []) {
 // execution through `run` (CommandRunner logging and interruption) and the
 // cargo/linker policy through `buildBinary(label, targetDirectory, rustflags)`.
 export async function buildProfileGuidedBinary({
-  run, root, compiler, workspace, rust, bootstrapBinary,
-  environment, typedEnvironment, targetRoot, buildBinary, toolchain,
+  run,
+  root,
+  compiler,
+  workspace,
+  rust,
+  bootstrapBinary,
+  environment,
+  typedEnvironment,
+  targetRoot,
+  buildBinary,
+  toolchain,
 }) {
   const pgoRoot = join(workspace, "pgo");
   const trainingWorkspace = join(pgoRoot, "workspace");
@@ -185,14 +220,16 @@ export async function buildProfileGuidedBinary({
   const rawDirectory = join(pgoRoot, "raw");
   const mergedProfile = join(pgoRoot, "training.profdata");
   const metadataPath = join(workspace, "pgo-profile.json");
-  const sourceManifest = manifest(rust, path => path.endsWith(".rs") || path.endsWith(".toml"));
+  const sourceManifest = manifest(rust, (path) => path.endsWith(".rs") || path.endsWith(".toml"));
   const metadata = {
     status: "pending",
     enabled: true,
     started_at: new Date().toISOString(),
     source: {
       directory: relative(workspace, rust),
-      files: sourceManifest.length, sha256: digestManifest(sourceManifest), manifest: sourceManifest,
+      files: sourceManifest.length,
+      sha256: digestManifest(sourceManifest),
+      manifest: sourceManifest,
     },
     training: {
       workspace: relative(workspace, trainingWorkspace),
@@ -240,9 +277,14 @@ export async function buildProfileGuidedBinary({
 
     stage = "instrument";
     mkdirSync(rawDirectory, { recursive: true });
-    const instrumented = await buildBinary("pgo-instrument", join(targetRoot, "pgo-generate"),
-      ["-C", `profile-generate=${rawDirectory}`]);
-    metadata.builds.instrumented = { binary: relative(workspace, instrumented), sha256: sha256(readFileSync(instrumented)) };
+    const instrumented = await buildBinary("pgo-instrument", join(targetRoot, "pgo-generate"), [
+      "-C",
+      `profile-generate=${rawDirectory}`,
+    ]);
+    metadata.builds.instrumented = {
+      binary: relative(workspace, instrumented),
+      sha256: sha256(readFileSync(instrumented)),
+    };
     save();
 
     stage = "training";
@@ -251,7 +293,9 @@ export async function buildProfileGuidedBinary({
       cleanGenerated(trainingDirectory);
       assertTrainingIntact(trainingDirectory, frozen.manifest);
       await run(`pgo-train-${round}`, instrumented, ["--main", "Main"], trainingDirectory, {
-        ...environment, ...jobs, LLVM_PROFILE_FILE: join(rawDirectory, `round-${round}-%m-%p.profraw`),
+        ...environment,
+        ...jobs,
+        LLVM_PROFILE_FILE: join(rawDirectory, `round-${round}-%m-%p.profraw`),
       });
       const emitted = emittedManifest(join(trainingDirectory, "output"));
       assert.deepEqual(emitted, oracle, `PGO training pass ${round} generated different Go sources`);
@@ -259,23 +303,32 @@ export async function buildProfileGuidedBinary({
       assertTrainingIntact(trainingDirectory, frozen.manifest);
       metadata.passes.push({ round, jobs, files: emitted.length, sha256: digestManifest(emitted) });
       save();
-      console.log(`[pgo] training pass ${round}/${PGO_TRAINING_PASSES}: ${emitted.length} files identical to the oracle`);
+      console.log(
+        `[pgo] training pass ${round}/${PGO_TRAINING_PASSES}: ${emitted.length} files identical to the oracle`,
+      );
     }
 
     stage = "merge";
     const profdata = toolchain.profdata;
     accessSync(profdata, constants.X_OK);
-    const rawProfiles = manifest(rawDirectory, path => path.endsWith(".profraw"));
+    const rawProfiles = manifest(rawDirectory, (path) => path.endsWith(".profraw"));
     if (!rawProfiles.length) throw new Error("PGO training produced no raw profiles");
     await run("pgo-profdata", profdata, ["--version"], pgoRoot, environment);
-    await run("pgo-merge", profdata,
-      ["merge", "-o", mergedProfile, ...rawProfiles.map(file => join(rawDirectory, file.path))], pgoRoot, environment);
+    await run(
+      "pgo-merge",
+      profdata,
+      ["merge", "-o", mergedProfile, ...rawProfiles.map((file) => join(rawDirectory, file.path))],
+      pgoRoot,
+      environment,
+    );
     metadata.profile = {
       tool: { path: profdata, sha256: sha256(readFileSync(profdata)) },
       generate_flags: ["-C", `profile-generate=${rawDirectory}`],
-      raw: rawProfiles, raw_sha256: digestManifest(rawProfiles),
+      raw: rawProfiles,
+      raw_sha256: digestManifest(rawProfiles),
       merged: {
-        path: relative(workspace, mergedProfile), bytes: statSync(mergedProfile).size,
+        path: relative(workspace, mergedProfile),
+        bytes: statSync(mergedProfile).size,
         sha256: sha256(readFileSync(mergedProfile)),
       },
       use_flags: ["-C", `profile-use=${mergedProfile}`],
@@ -284,20 +337,30 @@ export async function buildProfileGuidedBinary({
     console.log(`[pgo] merged ${rawProfiles.length} raw profiles`);
 
     stage = "profile-use";
-    const binary = await buildBinary("pgo-profile-use", join(targetRoot, "pgo-use"),
-      ["-C", `profile-use=${mergedProfile}`]);
+    const binary = await buildBinary("pgo-profile-use", join(targetRoot, "pgo-use"), [
+      "-C",
+      `profile-use=${mergedProfile}`,
+    ]);
     metadata.binary = {
-      path: relative(workspace, binary), bytes: statSync(binary).size, sha256: sha256(readFileSync(binary)),
-      bootstrap_sha256: metadata.builds.bootstrap.sha256, instrumented_sha256: metadata.builds.instrumented.sha256,
+      path: relative(workspace, binary),
+      bytes: statSync(binary).size,
+      sha256: sha256(readFileSync(binary)),
+      bootstrap_sha256: metadata.builds.bootstrap.sha256,
+      instrumented_sha256: metadata.builds.instrumented.sha256,
     };
-    assert.deepEqual(manifest(rust, path => path.endsWith(".rs") || path.endsWith(".toml")), sourceManifest);
+    assert.deepEqual(
+      manifest(rust, (path) => path.endsWith(".rs") || path.endsWith(".toml")),
+      sourceManifest,
+    );
     assertTrainingIntact(trainingDirectory, frozen.manifest);
     metadata.status = "passed";
     metadata.finished_at = new Date().toISOString();
     save();
     console.log(`[pgo] source sha256: ${metadata.source.sha256} (${metadata.source.manifest.length} Rust files)`);
-    console.log(`[pgo] training sha256: ${metadata.training.sha256} (${frozen.modules.length} modules, ` +
-      `${frozen.manifest.length} frozen files, excluded ${frozen.excluded.length ? frozen.excluded.join(", ") : "none"})`);
+    console.log(
+      `[pgo] training sha256: ${metadata.training.sha256} (${frozen.modules.length} modules, ` +
+        `${frozen.manifest.length} frozen files, excluded ${frozen.excluded.length ? frozen.excluded.join(", ") : "none"})`,
+    );
     console.log(`[pgo] profile sha256: ${metadata.profile.merged.sha256} (${rawProfiles.length} raw profiles)`);
     console.log(`[pgo] binary sha256: ${metadata.binary.sha256} (${binary})`);
     console.log(`[pgo] metadata: ${metadataPath}`);

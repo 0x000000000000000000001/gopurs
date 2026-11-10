@@ -193,6 +193,9 @@ jobs:
       - name: Install the backend from lockfiles in the Nix environment
         run: nix develop --profile "$RUNNER_TEMP/gopurs-dev-profile" --no-update-lock-file --command npm ci
 
+      - name: Check tools formatting
+        run: nix develop --profile "$RUNNER_TEMP/gopurs-dev-profile" --no-update-lock-file --command npm run format:check
+
       - name: Install the pinned Go library sources
         run: nix develop --profile "$RUNNER_TEMP/gopurs-dev-profile" --no-update-lock-file --command ./bin/setup --locked --all
 

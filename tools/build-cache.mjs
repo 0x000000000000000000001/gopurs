@@ -15,11 +15,35 @@ export function resolveBuildCacheHelper() {
     throw new Error(`Build cache locking is unsupported on ${process.platform}`);
   }
   const hash = createHash("sha256");
-  for (const name of ["go.mod", "contract.go", "store.go", "profiles.go", "session.go", "inputpack.go", "compiler.go", "modules.go", "capsules.go", "packages.go", "overlay.go", "overlay_sections.go", "packs.go", "main.go"]) {
+  for (const name of [
+    "go.mod",
+    "contract.go",
+    "store.go",
+    "profiles.go",
+    "session.go",
+    "inputpack.go",
+    "compiler.go",
+    "modules.go",
+    "capsules.go",
+    "packages.go",
+    "overlay.go",
+    "overlay_sections.go",
+    "packs.go",
+    "main.go",
+  ]) {
     const content = readFileSync(join(sources, name));
     hash.update(`${name}:${content.length}:`).update(content);
   }
-  for (const name of ["go.mod", "manifest.go", "overlay.go", "qualify.go", "rewrite.go", "partition.go", "literals.go", "missing_ffi.go"]) {
+  for (const name of [
+    "go.mod",
+    "manifest.go",
+    "overlay.go",
+    "qualify.go",
+    "rewrite.go",
+    "partition.go",
+    "literals.go",
+    "missing_ffi.go",
+  ]) {
     const content = readFileSync(join(tools, "c1c", name));
     hash.update(`c1c/${name}:${content.length}:`).update(content);
   }
@@ -32,8 +56,12 @@ export function resolveBuildCacheHelper() {
       execFileSync("go", ["build", "-trimpath", "-buildvcs=false", "-o", join(staging, "helper"), "."], {
         cwd: sources,
         env: {
-          ...process.env, GOWORK: "off", GOFLAGS: "", CGO_ENABLED: "0",
-          GOOS: process.platform, GOARCH: { x64: "amd64", arm64: "arm64" }[process.arch] ?? process.arch,
+          ...process.env,
+          GOWORK: "off",
+          GOFLAGS: "",
+          CGO_ENABLED: "0",
+          GOOS: process.platform,
+          GOARCH: { x64: "amd64", arm64: "arm64" }[process.arch] ?? process.arch,
         },
         stdio: ["ignore", "pipe", "pipe"],
       });
@@ -47,11 +75,15 @@ export function resolveBuildCacheHelper() {
 
 export function exchange(request) {
   return execFileSync(resolveBuildCacheHelper(), [], {
-    input: request, encoding: "utf8", maxBuffer: 64 * 1024 * 1024,
+    input: request,
+    encoding: "utf8",
+    maxBuffer: 64 * 1024 * 1024,
     stdio: ["pipe", "pipe", "pipe"],
   }).trimEnd();
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === script) {
-  process.stdout.write((process.argv[2] === "--helper" ? resolveBuildCacheHelper() : exchange(readFileSync(0, "utf8"))) + "\n");
+  process.stdout.write(
+    (process.argv[2] === "--helper" ? resolveBuildCacheHelper() : exchange(readFileSync(0, "utf8"))) + "\n",
+  );
 }

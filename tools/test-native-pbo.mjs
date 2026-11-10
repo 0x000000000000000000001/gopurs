@@ -36,17 +36,39 @@ import { dirname, join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
-  GOPURS_FORK, PURUST_FORK, gopursRoot, isDirectory, pboDir,
-  purustDir, purustTools, requireDirectory, loadThreadedRust,
+  GOPURS_FORK,
+  PURUST_FORK,
+  gopursRoot,
+  isDirectory,
+  pboDir,
+  purustDir,
+  purustTools,
+  requireDirectory,
+  loadThreadedRust,
 } from "./native-pbo/shared.mjs";
 
 const CASES = [
   { name: "memo", script: "memo.mjs", corpus: false, injects: [] },
   { name: "directives", script: "directives.mjs", corpus: false, injects: [] },
-  { name: "source-usage", script: "source-usage.mjs", corpus: true, injects: ["PureScript/Backend/Optimizer/CoreFn/Usage.rs"] },
+  {
+    name: "source-usage",
+    script: "source-usage.mjs",
+    corpus: true,
+    injects: ["PureScript/Backend/Optimizer/CoreFn/Usage.rs"],
+  },
   { name: "tast", script: "tast.mjs", corpus: true, injects: ["PureScript/Backend/Optimizer/CoreFn/Json.rs"] },
-  { name: "tast-module", script: "tast-module.mjs", corpus: true, injects: ["PureScript/Backend/Optimizer/CoreFn/Json.rs"] },
-  { name: "type-table", script: "type-table.mjs", corpus: true, injects: ["PureScript/Backend/Optimizer/CoreFn/Json.rs"] },
+  {
+    name: "tast-module",
+    script: "tast-module.mjs",
+    corpus: true,
+    injects: ["PureScript/Backend/Optimizer/CoreFn/Json.rs"],
+  },
+  {
+    name: "type-table",
+    script: "type-table.mjs",
+    corpus: true,
+    injects: ["PureScript/Backend/Optimizer/CoreFn/Json.rs"],
+  },
   { name: "maps", script: "maps.mjs", corpus: false, injects: ["PureScript/Backend/Optimizer/NativeMaps.rs"] },
   { name: "qualified", script: "qualified.mjs", corpus: false, injects: ["PureScript/Backend/Optimizer/CoreFn.rs"] },
 ];
@@ -113,7 +135,9 @@ function corpusModulePaths(corpus) {
       try {
         const value = JSON.parse(entry.contents);
         if (typeof value.modulePath === "string") paths.push(value.modulePath);
-      } catch (error) { /* not a module entry */ }
+      } catch (error) {
+        /* not a module entry */
+      }
     }
     return paths;
   }
@@ -125,7 +149,9 @@ function corpusModulePaths(corpus) {
     try {
       const value = JSON.parse(readFileSync(file, "utf8"));
       if (typeof value.modulePath === "string") paths.push(value.modulePath);
-    } catch (error) { /* ignore malformed ignored members */ }
+    } catch (error) {
+      /* ignore malformed ignored members */
+    }
   }
   return paths;
 }
@@ -133,13 +159,14 @@ function corpusModulePaths(corpus) {
 // The oracles must be generated from the gopurs PBO fork, not the Purust fork.
 function verifyProvenance(corpus) {
   const paths = corpusModulePaths(corpus);
-  const gopurs = paths.filter(path => path.includes(GOPURS_FORK)).length;
-  const purust = paths.filter(path => path.includes(PURUST_FORK)).length;
+  const gopurs = paths.filter((path) => path.includes(GOPURS_FORK)).length;
+  const purust = paths.filter((path) => path.includes(PURUST_FORK)).length;
   if (paths.length === 0) return `unverified (no modulePath found in ${corpus})`;
   if (gopurs === 0 && purust > 0) {
     throw new Error(
       `TAST corpus ${corpus} names ${purust} Purust module paths and no ${GOPURS_FORK} path; ` +
-      "pass the typed output of the retained gopurs build instead");
+        "pass the typed output of the retained gopurs build instead",
+    );
   }
   if (gopurs === 0) return `unverified (${paths.length} module paths, none naming ${GOPURS_FORK})`;
   return `gopurs (${gopurs}/${paths.length} module paths)`;
@@ -147,7 +174,10 @@ function verifyProvenance(corpus) {
 
 async function main() {
   const { options, positionals } = parse(process.argv.slice(2));
-  if (options.help) { console.log(usage()); return; }
+  if (options.help) {
+    console.log(usage());
+    return;
+  }
   if (options.list) {
     for (const item of CASES) console.log(`${item.name}${item.corpus ? " (TAST_CORPUS)" : ""}`);
     return;
@@ -171,10 +201,13 @@ async function main() {
 
   let selected = CASES;
   if (options.only) {
-    const names = options.only.split(",").map(name => name.trim()).filter(Boolean);
-    const unknown = names.filter(name => !CASES.some(item => item.name === name));
+    const names = options.only
+      .split(",")
+      .map((name) => name.trim())
+      .filter(Boolean);
+    const unknown = names.filter((name) => !CASES.some((item) => item.name === name));
     assert.equal(unknown.length, 0, `Unknown case(s): ${unknown.join(", ")}`);
-    selected = CASES.filter(item => names.includes(item.name));
+    selected = CASES.filter((item) => names.includes(item.name));
   }
 
   const targetDir = resolve(options.targetDir ?? process.env.PBO_NATIVE_TARGET_DIR ?? join(dirname(rust), "target"));
@@ -182,7 +215,10 @@ async function main() {
   mkdirSync(workspaceParent, { recursive: true });
 
   requireDirectory(purustTools, "Purust tools fixture directory");
-  assert.ok(existsSync(join(purustDir, "src/Purust/Threading.js")), `Missing Purust threading helper under ${purustDir}`);
+  assert.ok(
+    existsSync(join(purustDir, "src/Purust/Threading.js")),
+    `Missing Purust threading helper under ${purustDir}`,
+  );
   for (const item of selected) {
     assert.ok(existsSync(join(gopursRoot, "tools", "native-pbo", item.script)), `Missing case script: ${item.script}`);
     for (const relative of item.injects) {
@@ -193,16 +229,23 @@ async function main() {
   // Differential injection must test the very FFI embedded in the compiler.
   // Check full contents, not just a function-name/staleness marker.
   const threadedRust = await loadThreadedRust();
-  const ffiModules = new Set(selected.flatMap(item => item.injects.length ? item.injects
-    : [`PureScript/Backend/Optimizer/${item.name === "memo" ? "BoundedMemo" : "Directives"}.rs`]));
+  const ffiModules = new Set(
+    selected.flatMap((item) =>
+      item.injects.length
+        ? item.injects
+        : [`PureScript/Backend/Optimizer/${item.name === "memo" ? "BoundedMemo" : "Directives"}.rs`],
+    ),
+  );
   const nativeSources = [];
   for (const relative of ffiModules) {
     const source = join(pboDir, "src", relative);
     const crate = "Purs_" + relative.replace(/\.rs$/, "").replaceAll("/", "_");
     const generated = join(rust, crate, "src/lib.rs");
     const bytes = readFileSync(source);
-    assert.ok(readFileSync(generated, "utf8").includes(threadedRust(bytes.toString()).trim()),
-      `${source} differs from the FFI embedded in ${generated}`);
+    assert.ok(
+      readFileSync(generated, "utf8").includes(threadedRust(bytes.toString()).trim()),
+      `${source} differs from the FFI embedded in ${generated}`,
+    );
     nativeSources.push({ source, generated, sha256: createHash("sha256").update(bytes).digest("hex") });
   }
 
@@ -249,7 +292,8 @@ async function main() {
     return;
   }
 
-  const env = { ...process.env,
+  const env = {
+    ...process.env,
     GOPURS_PBO_DIR: pboDir,
     PURUST_DIR: purustDir,
     PBO_NATIVE_LOG_DIR: logDir,
@@ -270,7 +314,12 @@ async function main() {
     const args = [join(gopursRoot, "tools", "native-pbo", item.script), rust];
     if (item.corpus) args.push(corpus);
     const started = Date.now();
-    const child = spawnSync(process.execPath, args, { cwd: gopursRoot, env, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+    const child = spawnSync(process.execPath, args, {
+      cwd: gopursRoot,
+      env,
+      encoding: "utf8",
+      maxBuffer: 64 * 1024 * 1024,
+    });
     const seconds = Number(((Date.now() - started) / 1000).toFixed(1));
     const consoleLog = join(logDir, `${item.name}.console.log`);
     writeFileSync(consoleLog, `$ node ${args.join(" ")}\n\n${child.stdout ?? ""}${child.stderr ?? ""}`);
@@ -281,7 +330,7 @@ async function main() {
       seconds,
       log: consoleLog,
       caseLog: join(logDir, `${item.name}.log`),
-      injects: item.injects.map(relative => join(pboDir, "src", relative)),
+      injects: item.injects.map((relative) => join(pboDir, "src", relative)),
     };
     if (child.error) result.error = child.error.message;
     if (child.signal) result.signal = child.signal;
@@ -289,8 +338,8 @@ async function main() {
     console.log(`[native-pbo] ${item.name}: ${result.status.toUpperCase()} (${seconds}s) -> ${consoleLog}`);
   }
 
-  const failed = results.filter(result => result.status === "failed").length;
-  const skipped = results.filter(result => result.status === "skipped").length;
+  const failed = results.filter((result) => result.status === "failed").length;
+  const skipped = results.filter((result) => result.status === "skipped").length;
   const summary = {
     ...environment,
     finishedAt: new Date().toISOString(),
@@ -300,8 +349,10 @@ async function main() {
     results,
   };
   writeFileSync(join(logDir, "summary.json"), JSON.stringify(summary, null, 2) + "\n");
-  console.log(`[native-pbo] ${summary.status.toUpperCase()}: ` +
-    `${results.length - failed - skipped} ok / ${failed} failed / ${skipped} skipped`);
+  console.log(
+    `[native-pbo] ${summary.status.toUpperCase()}: ` +
+      `${results.length - failed - skipped} ok / ${failed} failed / ${skipped} skipped`,
+  );
   if (failed) process.exitCode = 1;
 }
 

@@ -15,19 +15,24 @@ export class CommandRunner {
   constructor() {
     this.active = null;
     this.signal = null;
-    this.handlers = new Map(["SIGINT", "SIGTERM"].map(signal => {
-      const handler = () => {
-        this.signal = signal;
-        if (this.active?.pid) {
-          try { process.kill(-this.active.pid, signal); }
-          catch (error) { if (error.code !== "ESRCH") throw error; }
-          this.active.stdout?.resume();
-          this.active.stderr?.resume();
-        }
-      };
-      process.on(signal, handler);
-      return [signal, handler];
-    }));
+    this.handlers = new Map(
+      ["SIGINT", "SIGTERM"].map((signal) => {
+        const handler = () => {
+          this.signal = signal;
+          if (this.active?.pid) {
+            try {
+              process.kill(-this.active.pid, signal);
+            } catch (error) {
+              if (error.code !== "ESRCH") throw error;
+            }
+            this.active.stdout?.resume();
+            this.active.stderr?.resume();
+          }
+        };
+        process.on(signal, handler);
+        return [signal, handler];
+      }),
+    );
   }
 
   checkInterrupted() {
@@ -40,34 +45,42 @@ export class CommandRunner {
     const cleanups = [];
     try {
       const child = spawn(command, args, {
-        cwd, env, detached: true,
+        cwd,
+        env,
+        detached: true,
         stdio: fd === null ? "inherit" : stream ? ["ignore", "pipe", "pipe"] : ["ignore", fd, fd],
       });
       this.active = child;
       let failure;
       const pendingWrites = new Set();
-      const fail = error => {
+      const fail = (error) => {
         if (failure) return;
         failure = error;
         if (child.pid) {
-          try { process.kill(-child.pid, "SIGTERM"); }
-          catch (error) { if (error.code !== "ESRCH") failure.cause ??= error; }
+          try {
+            process.kill(-child.pid, "SIGTERM");
+          } catch (error) {
+            if (error.code !== "ESRCH") failure.cause ??= error;
+          }
         }
         child.stdout?.resume();
         child.stderr?.resume();
       };
       if (fd !== null && stream) {
-        for (const [input, output] of [[child.stdout, process.stdout], [child.stderr, process.stderr]]) {
+        for (const [input, output] of [
+          [child.stdout, process.stdout],
+          [child.stderr, process.stderr],
+        ]) {
           input.on("error", fail);
           output.on("error", fail);
           cleanups.push(() => output.off("error", fail));
-          input.on("data", chunk => {
+          input.on("data", (chunk) => {
             if (failure) return;
             try {
               writeFileSync(fd, chunk);
-              const pending = new Promise(resolve => {
+              const pending = new Promise((resolve) => {
                 try {
-                  const writable = output.write(chunk, error => {
+                  const writable = output.write(chunk, (error) => {
                     if (error) fail(error);
                     input.resume();
                     resolve();
@@ -80,11 +93,13 @@ export class CommandRunner {
               });
               pendingWrites.add(pending);
               pending.then(() => pendingWrites.delete(pending));
-            } catch (error) { fail(error); }
+            } catch (error) {
+              fail(error);
+            }
           });
         }
       }
-      const status = await new Promise(resolve => {
+      const status = await new Promise((resolve) => {
         child.once("error", fail);
         child.once("close", (code, signal) => resolve({ code, signal }));
       });

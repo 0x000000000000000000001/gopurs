@@ -102,11 +102,14 @@
     "test:identity": "node --test tools/check-output-identity.test.mjs",
     "check:identity": "node tools/check-output-identity.mjs",
     "prepare": "npm run build",
-    "check:docs": "node tools/check-docs.mjs"
+    "check:docs": "node tools/check-docs.mjs",
+    "format": "prettier --write \"tools/*.mjs\" \"tools/lib/*.mjs\" \"tools/build/*.mjs\" \"tools/release/*.mjs\" \"tools/ci/*.mjs\"",
+    "format:check": "prettier --check \"tools/*.mjs\" \"tools/lib/*.mjs\" \"tools/build/*.mjs\" \"tools/release/*.mjs\" \"tools/ci/*.mjs\""
   },
   "devDependencies": {
+    "esbuild": "0.28.1",
+    "prettier": "3.9.10",
     "purescript": "0.15.16",
-    "spago": "0.93.45",
-    "esbuild": "0.28.1"
+    "spago": "0.93.45"
   }
 }

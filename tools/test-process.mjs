@@ -24,17 +24,22 @@ export class TestProcesses {
       if (error instanceof Interrupted) throw error;
       if (error.code === "ENOENT") {
         const directory = cwd ?? process.cwd();
-        const search = command.includes("/") ? [resolve(directory, command)]
-          : ((env ?? process.env).PATH ?? "/usr/bin:/bin").split(delimiter).map(path => resolve(directory, path, command));
-        const describe = path => ({ path, exists: existsSync(path) });
+        const search = command.includes("/")
+          ? [resolve(directory, command)]
+          : ((env ?? process.env).PATH ?? "/usr/bin:/bin")
+              .split(delimiter)
+              .map((path) => resolve(directory, path, command));
+        const describe = (path) => ({ path, exists: existsSync(path) });
         error.message += `; spawn context: ${JSON.stringify({ cwd: describe(directory), command: search.map(describe) })}`;
       }
       throw new Error(`${label}: ${error.message}`);
     }
     const output = log ? readFileSync(log, "utf8") : "";
-    if (!stream && (display || status.code !== 0) && output) process.stdout.write(output.endsWith("\n") ? output : output + "\n");
+    if (!stream && (display || status.code !== 0) && output)
+      process.stdout.write(output.endsWith("\n") ? output : output + "\n");
     this.checkInterrupted();
-    if (status.code !== 0) throw new Error(`${label} failed (${status.signal ?? "exit " + status.code})${log ? `; log: ${log}` : ""}`);
+    if (status.code !== 0)
+      throw new Error(`${label} failed (${status.signal ?? "exit " + status.code})${log ? `; log: ${log}` : ""}`);
     return output;
   }
 

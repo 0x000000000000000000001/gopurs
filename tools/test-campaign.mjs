@@ -9,16 +9,25 @@ import { createWorkspace } from "./test-workspace.mjs";
 export function resumeTargets(root, options, kind) {
   if (!options.resumeFailed) return null;
   let report;
-  try { report = JSON.parse(readFileSync(resolve(options.resumeFailed), "utf8")); }
-  catch (error) { throw new UsageError(`Cannot read campaign report: ${error.message}`); }
+  try {
+    report = JSON.parse(readFileSync(resolve(options.resumeFailed), "utf8"));
+  } catch (error) {
+    throw new UsageError(`Cannot read campaign report: ${error.message}`);
+  }
   const statuses = new Set(["pending", "running", "passed", "failed", "interrupted"]);
-  if (report?.version !== 1 || report.kind !== kind || report.root !== realpathSync(root)
-      || !Array.isArray(report.targets) || !report.targets.every(row =>
-        row && typeof row.target === "string" && row.target.length && statuses.has(row.status))
-      || new Set(report.targets.map(row => row.target)).size !== report.targets.length) {
+  if (
+    report?.version !== 1 ||
+    report.kind !== kind ||
+    report.root !== realpathSync(root) ||
+    !Array.isArray(report.targets) ||
+    !report.targets.every(
+      (row) => row && typeof row.target === "string" && row.target.length && statuses.has(row.status),
+    ) ||
+    new Set(report.targets.map((row) => row.target)).size !== report.targets.length
+  ) {
     throw new UsageError("Invalid campaign report, kind, or repository root.");
   }
-  return report.targets.filter(row => row.status !== "passed").map(row => row.target);
+  return report.targets.filter((row) => row.status !== "passed").map((row) => row.target);
 }
 
 export class TestCampaign {
@@ -27,12 +36,17 @@ export class TestCampaign {
     this.workspace = createWorkspace();
     this.file = join(this.workspace, "results.json");
     this.report = {
-      version: 1, kind, root: realpathSync(root), startedAt: new Date().toISOString(),
+      version: 1,
+      kind,
+      root: realpathSync(root),
+      startedAt: new Date().toISOString(),
       resumedFrom: options.resumeFailed ? resolve(options.resumeFailed) : null,
       buildProfile: options.dev ? "dev" : "release",
-      updateSnapshots: options.update, skipped,
+      updateSnapshots: options.update,
+      skipped,
       targets: targets.map((target, index) => ({
-        target, status: "pending",
+        target,
+        status: "pending",
         directory: join(this.workspace, `${index}-${basename(target, kind === "fixtures" ? ".purs" : undefined)}`),
       })),
     };
@@ -84,14 +98,14 @@ export class TestCampaign {
       if (interruption) throw interruption;
       if (row.status !== "passed" && !this.options.keepGoing) break;
     }
-    return this.report.targets.every(row => row.status === "passed");
+    return this.report.targets.every((row) => row.status === "passed");
   }
 
   finish(error) {
     if (error) this.report.error = error.message;
     this.report.finishedAt = new Date().toISOString();
     this.save();
-    const count = status => this.report.targets.filter(row => row.status === status).length;
+    const count = (status) => this.report.targets.filter((row) => row.status === status).length;
     const passed = count("passed");
     const failed = count("failed") + count("interrupted");
     const pending = count("pending") + count("running");

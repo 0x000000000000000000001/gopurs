@@ -1,6 +1,16 @@
 import {
-  accessSync, chmodSync, constants, copyFileSync, mkdirSync, mkdtempSync,
-  readFileSync, readdirSync, renameSync, rmSync, symlinkSync, writeFileSync,
+  accessSync,
+  chmodSync,
+  constants,
+  copyFileSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  renameSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
 } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
@@ -14,11 +24,13 @@ import { corePackages, prepareFixture } from "../test-workspace.mjs";
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const args = process.argv.slice(2);
 if (args.includes("--help")) {
-  console.log("Usage: npm run build:rust -- [--keep-workspace]\nBuild bin/gopurs-rust: the gopurs Go code generator hosted in Rust.\nPURUST_DIR selects the Rust backend checkout; PURUST_JS=1 uses its JavaScript executable for this bootstrap only.\nGOPURS_PURS selects the typed frontend. GOPURS_NATIVE_TMPDIR selects the workspace parent; GOPURS_RUST_OUTPUT overrides the installed executable.\nGOPURS_RUST_PGO=0 disables profile-guided optimization (enabled by default).\nGOPURS_KEEP_WORKSPACE=1 also retains successful builds.");
+  console.log(
+    "Usage: npm run build:rust -- [--keep-workspace]\nBuild bin/gopurs-rust: the gopurs Go code generator hosted in Rust.\nPURUST_DIR selects the Rust backend checkout; PURUST_JS=1 uses its JavaScript executable for this bootstrap only.\nGOPURS_PURS selects the typed frontend. GOPURS_NATIVE_TMPDIR selects the workspace parent; GOPURS_RUST_OUTPUT overrides the installed executable.\nGOPURS_RUST_PGO=0 disables profile-guided optimization (enabled by default).\nGOPURS_KEEP_WORKSPACE=1 also retains successful builds.",
+  );
   process.exit(0);
 }
-if (args.some(arg => arg !== "--keep-workspace")) {
-  console.error(`Unknown option: ${args.find(arg => arg !== "--keep-workspace")}`);
+if (args.some((arg) => arg !== "--keep-workspace")) {
+  console.error(`Unknown option: ${args.find((arg) => arg !== "--keep-workspace")}`);
   process.exit(1);
 }
 
@@ -29,16 +41,20 @@ const pgoEnabled = process.env.GOPURS_RUST_PGO !== "0";
 const commands = new CommandRunner();
 const purust = resolve(process.env.PURUST_DIR ?? join(root, "../../purust/purust"));
 const destination = resolve(process.env.GOPURS_RUST_OUTPUT ?? join(root, "bin/gopurs-rust"));
-const environment = { ...process.env,
+const environment = {
+  ...process.env,
   PATH: [join(root, "node_modules/.bin"), dirname(process.execPath), process.env.PATH ?? ""].join(delimiter),
-  GOWORK: "off", CARGO_BUILD_JOBS: process.env.CARGO_BUILD_JOBS ?? "8",
+  GOWORK: "off",
+  CARGO_BUILD_JOBS: process.env.CARGO_BUILD_JOBS ?? "8",
   CARGO_INCREMENTAL: process.env.CARGO_INCREMENTAL ?? "0",
 };
-let workspace, stage = "prepare";
+let workspace,
+  stage = "prepare";
 async function run(label, command, args, cwd, env = environment) {
   commands.checkInterrupted();
   stage = label;
-  const log = join(workspace, `${label}.log`), started = Date.now();
+  const log = join(workspace, `${label}.log`),
+    started = Date.now();
   console.log(`[${label}] ${command} ${args.join(" ")}\n  log: ${log}`);
   const status = await commands.run(command, args, { cwd, env, log });
   if (commands.signal || status.code !== 0) process.stderr.write(readFileSync(log, "utf8"));
@@ -67,8 +83,12 @@ try {
   const verified = verifyTypedOutput(output, compiler);
   writeFileSync(join(workspace, "verify-tast.json"), JSON.stringify({ compiler, ...verified }, null, 2) + "\n");
   const rust = join(workspace, "rust");
-  await run("generate-rust", join(purust, "bin/purust"), ["--source", output, "--out", rust,
-    "--main", "Main", "--threaded"], workspace);
+  await run(
+    "generate-rust",
+    join(purust, "bin/purust"),
+    ["--source", output, "--out", rust, "--main", "Main", "--threaded"],
+    workspace,
+  );
 
   // Link the same Go parser as gopurs-native. No parser subprocess or Node
   // runtime is needed when the resulting compiler generates a project's Go.
@@ -80,20 +100,55 @@ try {
   mkdirSync(join(archiveSource, "gopurs_c1c"), { recursive: true });
   writeFileSync(join(archiveSource, "go.mod"), `module ${archiveModule}\n\ngo 1.22\n`);
   for (const name of readdirSync(join(root, "tools/ffi-gen"))) {
-    if (name === "go.mod" || name.endsWith(".go") && !name.endsWith("_test.go"))
+    if (name === "go.mod" || (name.endsWith(".go") && !name.endsWith("_test.go")))
       copyFileSync(join(root, "tools/ffi-gen", name), join(archiveSource, name));
   }
-  for (const name of ["contract.go", "store.go", "profiles.go", "session.go", "inputpack.go", "compiler.go", "modules.go", "capsules.go", "packages.go", "overlay.go", "overlay_sections.go", "packs.go"]) {
-    writeFileSync(join(archiveSource, "gopurs_build_cache", name),
+  for (const name of [
+    "contract.go",
+    "store.go",
+    "profiles.go",
+    "session.go",
+    "inputpack.go",
+    "compiler.go",
+    "modules.go",
+    "capsules.go",
+    "packages.go",
+    "overlay.go",
+    "overlay_sections.go",
+    "packs.go",
+  ]) {
+    writeFileSync(
+      join(archiveSource, "gopurs_build_cache", name),
       readFileSync(join(root, "tools/build-cache", name), "utf8")
         .replace("package main", "package gopurs_build_cache")
-        .replaceAll('"gopurs/c1c"', `"${archiveModule}/gopurs_c1c"`));
+        .replaceAll('"gopurs/c1c"', `"${archiveModule}/gopurs_c1c"`),
+    );
   }
-  for (const name of ["manifest.go", "overlay.go", "qualify.go", "rewrite.go", "partition.go", "literals.go", "missing_ffi.go"]) {
+  for (const name of [
+    "manifest.go",
+    "overlay.go",
+    "qualify.go",
+    "rewrite.go",
+    "partition.go",
+    "literals.go",
+    "missing_ffi.go",
+  ]) {
     copyFileSync(join(root, "tools/c1c", name), join(archiveSource, "gopurs_c1c", name));
   }
-  await run("native-parser", "go", ["build", "-trimpath", "-tags=carchive,gopurscache", "-buildmode=c-archive",
-    "-o", join(parser, "libgopurs_ffi.a"), "."], archiveSource);
+  await run(
+    "native-parser",
+    "go",
+    [
+      "build",
+      "-trimpath",
+      "-tags=carchive,gopurscache",
+      "-buildmode=c-archive",
+      "-o",
+      join(parser, "libgopurs_ffi.a"),
+      ".",
+    ],
+    archiveSource,
+  );
   copyFileSync(join(root, "tools/ffi-gen/rust-build.rs"), join(rust, "Purs_Gopurs_FfiSupport", "build.rs"));
   const target = resolve(environment.CARGO_TARGET_DIR ?? join(workspace, "target"));
   const rustc = environment.RUSTC ?? "rustc";
@@ -111,10 +166,27 @@ try {
   }
   const buildRust = async (label, targetDirectory, rustflags = []) => {
     commands.checkInterrupted();
-    await run(label, "cargo", [linkArgs.length ? "rustc" : "build", "--release", "--target-dir", targetDirectory,
-      "--config", 'profile.release.lto="thin"', "--config", "profile.release.opt-level=3",
-      "--config", "profile.release.debug=false", "--manifest-path", join(rust, "Cargo.toml"), ...linkArgs],
-    workspace, rustFlagsEnvironment(environment, rustflags));
+    await run(
+      label,
+      "cargo",
+      [
+        linkArgs.length ? "rustc" : "build",
+        "--release",
+        "--target-dir",
+        targetDirectory,
+        "--config",
+        'profile.release.lto="thin"',
+        "--config",
+        "profile.release.opt-level=3",
+        "--config",
+        "profile.release.debug=false",
+        "--manifest-path",
+        join(rust, "Cargo.toml"),
+        ...linkArgs,
+      ],
+      workspace,
+      rustFlagsEnvironment(environment, rustflags),
+    );
     return join(targetDirectory, "release", process.platform === "win32" ? "purust_output.exe" : "purust_output");
   };
   let binary = await buildRust("cargo-build", target);
@@ -123,10 +195,28 @@ try {
     // trains on the compiler's own Go-runtime modules and returns an identical
     // ThinLTO rebuild that uses the merged profile.
     const pgo = await buildProfileGuidedBinary({
-      run, root, compiler, workspace, rust, bootstrapBinary: binary, environment, typedEnvironment,
-      targetRoot: target, buildBinary: buildRust,
-      toolchain: { rustc, sysroot, host,
-        profdata: join(sysroot, "lib/rustlib", host, "bin", process.platform === "win32" ? "llvm-profdata.exe" : "llvm-profdata") },
+      run,
+      root,
+      compiler,
+      workspace,
+      rust,
+      bootstrapBinary: binary,
+      environment,
+      typedEnvironment,
+      targetRoot: target,
+      buildBinary: buildRust,
+      toolchain: {
+        rustc,
+        sysroot,
+        host,
+        profdata: join(
+          sysroot,
+          "lib/rustlib",
+          host,
+          "bin",
+          process.platform === "win32" ? "llvm-profdata.exe" : "llvm-profdata",
+        ),
+      },
     });
     binary = pgo.binary;
     console.log(`PGO profile metadata: ${pgo.profilePath}`);
@@ -136,7 +226,13 @@ try {
 
   // A fresh Go-target fixture exercises FFI parsing, generation and application
   // execution before the candidate can replace an installed compiler.
-  const smoke = prepareFixture(root, workspace, join(root, "tests/passing/FFIIntegerReturns.purs"), 0, corePackages(root));
+  const smoke = prepareFixture(
+    root,
+    workspace,
+    join(root, "tests/passing/FFIIntegerReturns.purs"),
+    0,
+    corePackages(root),
+  );
   await run("smoke-tast", "spago", ["build", "-q"], smoke.directory, typedEnvironment);
   verifyTypedOutput(join(smoke.directory, "output"), compiler);
   await run("smoke-generate-go", binary, ["--main", "Main"], smoke.directory);
@@ -154,12 +250,17 @@ try {
     copyFileSync(binary, staged);
     chmodSync(staged, 0o755);
     renameSync(staged, destination);
-  } finally { rmSync(staging, { recursive: true, force: true }); }
+  } finally {
+    rmSync(staging, { recursive: true, force: true });
+  }
   console.log(`Built ${destination}`);
-  if (args.includes("--keep-workspace") || process.env.GOPURS_KEEP_WORKSPACE === "1") console.log(`Workspace retained: ${workspace}`);
+  if (args.includes("--keep-workspace") || process.env.GOPURS_KEEP_WORKSPACE === "1")
+    console.log(`Workspace retained: ${workspace}`);
   else rmSync(workspace, { recursive: true, force: true, maxRetries: 3 });
 } catch (error) {
   console.error(`Rust bootstrap failed during ${stage}: ${error.message}`);
   if (workspace) console.error(`Workspace and logs retained: ${workspace}`);
   process.exitCode = commands.signal ? new Interrupted(commands.signal).exitCode : 1;
-} finally { commands.dispose(); }
+} finally {
+  commands.dispose();
+}

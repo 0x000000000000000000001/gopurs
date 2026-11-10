@@ -11,18 +11,43 @@ if (!output || process.argv.length !== 3) {
   throw new Error("Usage: node tools/build/prepare-native-output.mjs <generated-output-directory>");
 }
 const generatedModule = "gopurs/output";
-const buildCache = ["contract.go", "store.go", "profiles.go", "session.go", "inputpack.go", "compiler.go", "modules.go", "capsules.go", "packages.go", "overlay.go", "overlay_sections.go", "packs.go"];
+const buildCache = [
+  "contract.go",
+  "store.go",
+  "profiles.go",
+  "session.go",
+  "inputpack.go",
+  "compiler.go",
+  "modules.go",
+  "capsules.go",
+  "packages.go",
+  "overlay.go",
+  "overlay_sections.go",
+  "packs.go",
+];
 const c1c = ["manifest.go", "overlay.go", "qualify.go", "rewrite.go", "partition.go", "literals.go", "missing_ffi.go"];
 const groups = [
-  { directory: "ffi-gen", packageName: "gopurs_ffi_parser", destination: "gopurs_ffi_parser", sourcePackage: "main", files: ["parser.go", "types.go", "native_api.go", "bindings.go", "packages.go", "workspace.go"] },
-  { directory: "build-cache", packageName: "gopurs_build_cache", destination: "gopurs_build_cache", sourcePackage: "main", files: buildCache,
-    replace: [["\"gopurs/c1c\"", `"${generatedModule}/gopurs_c1c"`]] },
+  {
+    directory: "ffi-gen",
+    packageName: "gopurs_ffi_parser",
+    destination: "gopurs_ffi_parser",
+    sourcePackage: "main",
+    files: ["parser.go", "types.go", "native_api.go", "bindings.go", "packages.go", "workspace.go"],
+  },
+  {
+    directory: "build-cache",
+    packageName: "gopurs_build_cache",
+    destination: "gopurs_build_cache",
+    sourcePackage: "main",
+    files: buildCache,
+    replace: [['"gopurs/c1c"', `"${generatedModule}/gopurs_c1c"`]],
+  },
   { directory: "c1c", packageName: "c1c", destination: "gopurs_c1c", sourcePackage: "c1c", files: c1c },
 ];
 for (const group of groups) {
   const sourceDirectory = fileURLToPath(new URL(`../${group.directory}/`, import.meta.url));
   const destination = join(resolve(output), group.destination);
-  const sources = group.files.map(name => {
+  const sources = group.files.map((name) => {
     const source = readFileSync(join(sourceDirectory, name), "utf8");
     const declaration = new RegExp(`^package ${group.sourcePackage}\\n`, "m");
     if (!declaration.test(source)) {

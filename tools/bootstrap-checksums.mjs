@@ -33,19 +33,21 @@ if (args.includes("--help") || args.includes("-h")) {
 }
 
 const requireAll = args.includes("--require-all");
-const unknown = args.find(arg => arg.startsWith("-") && arg !== "--require-all");
+const unknown = args.find((arg) => arg.startsWith("-") && arg !== "--require-all");
 if (unknown) {
   console.error(`Unknown option: ${unknown}`);
   process.exit(2);
 }
 
-const requested = args.filter(arg => arg !== "--require-all");
-const paths = (requested.length
-  ? requested.map(path => resolve(root, path))
-  : defaultArtifacts.map(path => join(root, path)).filter(path => existsSync(path))).sort();
+const requested = args.filter((arg) => arg !== "--require-all");
+const paths = (
+  requested.length
+    ? requested.map((path) => resolve(root, path))
+    : defaultArtifacts.map((path) => join(root, path)).filter((path) => existsSync(path))
+).sort();
 
 if (!requested.length) {
-  const missing = requiredArtifacts.map(path => join(root, path)).filter(path => !existsSync(path));
+  const missing = requiredArtifacts.map((path) => join(root, path)).filter((path) => !existsSync(path));
   if (missing.length) {
     console.error("Missing required bootstrap artifacts:");
     for (const path of missing) console.error(`  ${relative(root, path)}`);

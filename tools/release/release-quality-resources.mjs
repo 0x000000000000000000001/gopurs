@@ -7,10 +7,12 @@ export function fixtureWorkers(cpus = availableParallelism()) {
 }
 
 export function fixtureBatches(targets) {
-  if (!targets.length || new Set(targets).size !== targets.length) throw new Error("Fixture selection must be nonempty and unique");
+  if (!targets.length || new Set(targets).size !== targets.length)
+    throw new Error("Fixture selection must be nonempty and unique");
   const batches = [];
   for (let start = 0; start < targets.length; start += 5) {
-    for (const profile of ["release", "dev"]) batches.push({ profile, start, targets: targets.slice(start, start + 5) });
+    for (const profile of ["release", "dev"])
+      batches.push({ profile, start, targets: targets.slice(start, start + 5) });
   }
   return batches;
 }
@@ -18,13 +20,14 @@ export function fixtureBatches(targets) {
 // Finish every active process before trimming or propagating a failure. No
 // subsequent wave starts after a failed command, report check or interruption.
 export async function runFixtureWaves(batches, workers, run, afterWave, beforeWave = () => {}) {
-  if (!Number.isInteger(workers) || workers < 1 || workers > 6) throw new Error("Fixture workers must be between 1 and 6");
+  if (!Number.isInteger(workers) || workers < 1 || workers > 6)
+    throw new Error("Fixture workers must be between 1 and 6");
   for (let index = 0; index < batches.length; index += workers) {
     const wave = batches.slice(index, index + workers);
     await beforeWave(wave);
-    const results = await Promise.allSettled(wave.map(batch => Promise.resolve().then(() => run(batch))));
+    const results = await Promise.allSettled(wave.map((batch) => Promise.resolve().then(() => run(batch))));
     await afterWave();
-    const failed = results.find(result => result.status === "rejected");
+    const failed = results.find((result) => result.status === "rejected");
     if (failed) throw failed.reason;
   }
 }
@@ -34,11 +37,19 @@ export function readFixtureReport(log, root, batch) {
   if (matches.length !== 1) throw new Error(`Missing or ambiguous fixture report in ${log}`);
   const file = matches[0][1];
   const report = JSON.parse(readFileSync(file, "utf8"));
-  if (report?.version !== 1 || report.kind !== "fixtures" || report.root !== realpathSync(root)
-      || report.buildProfile !== batch.profile || report.updateSnapshots !== false
-      || !Array.isArray(report.skipped) || report.skipped.length || !report.finishedAt
-      || !Array.isArray(report.targets) || report.targets.length !== batch.targets.length
-      || report.targets.some((row, index) => row?.target !== batch.targets[index] || row.status !== "passed")) {
+  if (
+    report?.version !== 1 ||
+    report.kind !== "fixtures" ||
+    report.root !== realpathSync(root) ||
+    report.buildProfile !== batch.profile ||
+    report.updateSnapshots !== false ||
+    !Array.isArray(report.skipped) ||
+    report.skipped.length ||
+    !report.finishedAt ||
+    !Array.isArray(report.targets) ||
+    report.targets.length !== batch.targets.length ||
+    report.targets.some((row, index) => row?.target !== batch.targets[index] || row.status !== "passed")
+  ) {
     throw new Error(`Incomplete or mismatched fixture report: ${file}`);
   }
   return { file, profile: batch.profile, passed: report.targets.length };
@@ -62,8 +73,11 @@ export class QualityGoCache {
 
   async withProcess(run) {
     this.active++;
-    try { return await run(); }
-    finally { this.active--; }
+    try {
+      return await run();
+    } finally {
+      this.active--;
+    }
   }
 
   requireIdle() {
@@ -73,7 +87,7 @@ export class QualityGoCache {
   trim() {
     this.requireIdle();
     const files = [];
-    const visit = directory => {
+    const visit = (directory) => {
       for (const entry of readdirSync(directory, { withFileTypes: true })) {
         const path = join(directory, entry.name);
         if (entry.isDirectory()) visit(path);
@@ -85,7 +99,8 @@ export class QualityGoCache {
     };
     visit(this.path);
     const beforeBytes = files.reduce((sum, file) => sum + file.bytes, 0);
-    let afterBytes = beforeBytes, deletedObjects = 0;
+    let afterBytes = beforeBytes,
+      deletedObjects = 0;
     for (const file of files.sort((a, b) => a.modified - b.modified || a.path.localeCompare(b.path))) {
       if (afterBytes <= this.limitBytes) break;
       unlinkSync(file.path);

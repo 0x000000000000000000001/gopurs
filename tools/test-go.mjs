@@ -10,10 +10,12 @@ export const devGoMessage = `[gopurs] Go build mode: DEV (${devGoFlag}).`;
 // outside it alone. Do not export GOFLAGS to the backend or host rebuild.
 export function moduleGoEnvironment(directory, library, env) {
   const go = execFileSync("bash", ["-c", "command -v go"], { env, encoding: "utf8" }).trim();
-  const quote = text => "'" + text.replace(/'/g, "'\\''") + "'";
+  const quote = (text) => "'" + text.replace(/'/g, "'\\''") + "'";
   const bin = join(directory, "go-bin");
   mkdirSync(bin);
-  writeFileSync(join(bin, "go"), `#!/usr/bin/env bash
+  writeFileSync(
+    join(bin, "go"),
+    `#!/usr/bin/env bash
 case "$(pwd -P)" in
   ${quote(realpathSync(library))}|${quote(realpathSync(library))}/*)
     case "$1" in
@@ -27,6 +29,8 @@ case "$(pwd -P)" in
     ;;
 esac
 exec ${quote(go)} "$@"
-`, { mode: 0o755 });
+`,
+    { mode: 0o755 },
+  );
   return { ...env, PATH: bin + ":" + env.PATH };
 }

@@ -4,8 +4,14 @@
 // exactly; this is the guardrail for behavior-preserving cleanup.
 import { createHash } from "node:crypto";
 import {
-  existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, readlinkSync,
-  statSync, writeFileSync,
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  readlinkSync,
+  statSync,
+  writeFileSync,
 } from "node:fs";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 
@@ -27,10 +33,10 @@ Symbolic links are recorded as "symlink:<target>". Ignored paths are not
 represented in a manifest and must be passed again when comparing.`);
 };
 
-const toPosix = path => path.split(sep).join("/");
-const sha256 = path => createHash("sha256").update(readFileSync(path)).digest("hex");
+const toPosix = (path) => path.split(sep).join("/");
+const sha256 = (path) => createHash("sha256").update(readFileSync(path)).digest("hex");
 
-const globToRegExp = pattern => {
+const globToRegExp = (pattern) => {
   let source = "";
   for (let index = 0; index < pattern.length; index += 1) {
     const character = pattern[index];
@@ -57,17 +63,18 @@ const globToRegExp = pattern => {
   return new RegExp(`^${source}$`);
 };
 
-const compileIgnores = patterns => patterns.map(pattern => ({
-  matches: globToRegExp(pattern),
-  anyDepth: !pattern.includes("/"),
-}));
+const compileIgnores = (patterns) =>
+  patterns.map((pattern) => ({
+    matches: globToRegExp(pattern),
+    anyDepth: !pattern.includes("/"),
+  }));
 
-const isIgnored = (path, ignores) => ignores.some(({ matches, anyDepth }) =>
-  matches.test(path) || (anyDepth && matches.test(basename(path))));
+const isIgnored = (path, ignores) =>
+  ignores.some(({ matches, anyDepth }) => matches.test(path) || (anyDepth && matches.test(basename(path))));
 
-const walk = root => {
+const walk = (root) => {
   const entries = new Map();
-  const visit = directory => {
+  const visit = (directory) => {
     for (const name of readdirSync(directory).sort()) {
       const absolute = join(directory, name);
       const path = toPosix(relative(root, absolute));
@@ -87,7 +94,7 @@ const walk = root => {
   return entries;
 };
 
-const readManifest = path => {
+const readManifest = (path) => {
   const manifest = JSON.parse(readFileSync(path, "utf8"));
   if (manifest.version !== VERSION || manifest.algorithm !== "sha256" || typeof manifest.files !== "object") {
     throw new Error(`unsupported manifest: ${path}`);
@@ -122,8 +129,10 @@ const printDifferences = (differences, maximum) => {
     total[kind] = (total[kind] ?? 0) + 1;
     return total;
   }, {});
-  console.error(`[identity] ${differences.length} difference(s): ` +
-    ["missing", "extra", "changed"].map(kind => `${counts[kind] ?? 0} ${kind}`).join(", "));
+  console.error(
+    `[identity] ${differences.length} difference(s): ` +
+      ["missing", "extra", "changed"].map((kind) => `${counts[kind] ?? 0} ${kind}`).join(", "),
+  );
   for (const { kind, path } of differences.slice(0, maximum)) {
     console.error(`  ${kind.padEnd(7)} ${path}`);
   }
@@ -132,7 +141,7 @@ const printDifferences = (differences, maximum) => {
   }
 };
 
-const parseArguments = args => {
+const parseArguments = (args) => {
   const positional = [];
   const ignores = [];
   let maximum = MAX_REPORT;
@@ -157,7 +166,7 @@ const parseArguments = args => {
   return { positional, ignores: compileIgnores(ignores), maximum };
 };
 
-const requireDirectory = path => {
+const requireDirectory = (path) => {
   if (!existsSync(path) || !statSync(path).isDirectory()) {
     throw new Error(`not a directory: ${path}`);
   }

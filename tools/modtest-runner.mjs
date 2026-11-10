@@ -37,14 +37,28 @@ Each library runs in a fresh copy of the sibling sources, with private temporari
     for (const directory of modules) console.log(basename(directory));
     if (!options.list) {
       const buildScript = options.clean ? compilerBuildScript() : null;
-      console.log(`Selected ${modules.length} modules (${options.resume ? "resume" : options.targets.length ? "explicit selection" : "all"}).`);
+      console.log(
+        `Selected ${modules.length} modules (${options.resume ? "resume" : options.targets.length ? "explicit selection" : "all"}).`,
+      );
       if (options.dev) console.log("[gopurs] Build mode: DEV (--dev).");
-      campaign = new TestCampaign(root, "modules", modules.map(directory => basename(directory)), options);
+      campaign = new TestCampaign(
+        root,
+        "modules",
+        modules.map((directory) => basename(directory)),
+        options,
+      );
       processes = new TestProcesses();
-      if (buildScript) await processes.run("build-gopurs", "npm", ["run", buildScript, "--silent"], { cwd: root, env: campaign.env(), log: join(campaign.workspace, "build-gopurs.log") });
+      if (buildScript)
+        await processes.run("build-gopurs", "npm", ["run", buildScript, "--silent"], {
+          cwd: root,
+          env: campaign.env(),
+          log: join(campaign.workspace, "build-gopurs.log"),
+        });
       const success = await campaign.run(processes, async (name, directory) => {
         const cwd = prepareModule(root, directory, name, { dev: options.dev });
-        const env = options.dev ? moduleGoEnvironment(directory, cwd, campaign.env(directory)) : campaign.env(directory);
+        const env = options.dev
+          ? moduleGoEnvironment(directory, cwd, campaign.env(directory))
+          : campaign.env(directory);
         await processes.run(name, "./bin/test", [], { cwd, env, log: join(directory, "logs/test.log"), stream: true });
       });
       if (!success) process.exitCode = 1;

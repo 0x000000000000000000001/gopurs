@@ -106,22 +106,20 @@ répertoires de domaine et les lanceurs explicitement documentés.
 Critère de sortie : les trois scripts utilisent les primitives, les tests
 passent, et il reste seulement l'extraction optionnelle de `main()`.
 
-## Lot 5 — Style et ergonomie
+## Lot 5 — Style et ergonomie — partiel
 
-- [ ] Choisir un formateur unique (Prettier ou Biome) pour `tools/`.
-- [ ] Ajouter un `format:check` et l'exécuter en CI.
-- [ ] Ajouter une charte courte :
-  - pas de logique au niveau racine ;
-  - pas de ligne à plus de deux effets ;
-  - constantes nommées pour les chemins, limites et listes ;
-  - erreurs explicites avec la commande et le fichier concernés ;
-  - JSDoc sur les fonctions exportées.
-- [ ] Ajouter des tests de fumée `--help` pour les outils manuels.
-- [ ] Documenter ou supprimer la dépendance cachée à Python 3
-  (`preparation-observe.py`).
+- [x] Choisir Prettier comme formateur unique pour les outils non-test.
+- [x] Ajouter `format` / `format:check` et exécuter `format:check` en CI.
+- [x] Documenter les conventions dans `tools/README.md` et ajouter les JSDoc
+  des helpers `tools/lib`.
+- [ ] Appliquer la charte aux scripts restants : logique racine, lignes à plus
+  de deux effets, constantes nommées.
+- [x] Ajouter un test de fumée `--help` pour les outils manuels.
+- [x] Dépendance Python : `preparation-observe.py` est archivé avec le cluster
+  P00/P01, il n'y a plus de dépendance active.
 
-Critère de sortie : `format:check` passe, les nouveaux scripts suivent la
-charte, et les outils manuels ont une aide minimale.
+Critère de sortie : `format:check` passe, les outils manuels ont une aide
+minimale, et la charte est appliquée aux scripts actifs.
 
 ## Lot 6 — Documentation et inventaire
 

@@ -24,19 +24,30 @@ Legacy skip_before=NAME, --skip-before=NAME and UPDATE_SNAPSHOTS=1 still work.`;
 
 async function runFixture(fixture, options, processes, env) {
   const { directory } = fixture;
-  const phase = (name, command, args, cwd = directory, display = false) => processes.run(name, command, args, { cwd, env, display, log: join(directory, "logs", name + ".log") });
+  const phase = (name, command, args, cwd = directory, display = false) =>
+    processes.run(name, command, args, { cwd, env, display, log: join(directory, "logs", name + ".log") });
   // TestProcesses hides successful output and prints diagnostics on failure.
   await phase("purescript", "spago", ["build"]);
-  await phase("generate-go", process.env.GOPURS_TEST_COMPILER ?? join(root, "bin/gopurs"), ["--main", "Main", ...(options.dev ? ["--dev"] : [])]);
+  await phase("generate-go", process.env.GOPURS_TEST_COMPILER ?? join(root, "bin/gopurs"), [
+    "--main",
+    "Main",
+    ...(options.dev ? ["--dev"] : []),
+  ]);
   const snapshots = snapshotFiles(root, fixture, env, options);
-  if (!existsSync(join(directory, "output/main/main.go"))) throw new Error("gopurs did not generate output/main/main.go");
+  if (!existsSync(join(directory, "output/main/main.go")))
+    throw new Error("gopurs did not generate output/main/main.go");
   await formatSnapshots(snapshots, processes, fixture, env);
   if (!options.update) await verifySnapshots(snapshots, processes, fixture, env);
   const output = join(directory, "output");
   // Main already writes go.mod. Keep its Go version instead of recreating it.
   await phase("go-dependencies", "go", ["mod", "tidy"], output);
   if (options.dev) console.log(devGoMessage);
-  await phase("go-build", "go", ["build", ...(options.dev ? [devGoFlag] : []), "-o", "gopurs_main", "./main/main.go"], output);
+  await phase(
+    "go-build",
+    "go",
+    ["build", ...(options.dev ? [devGoFlag] : []), "-o", "gopurs_main", "./main/main.go"],
+    output,
+  );
   const result = await phase("execute", join(output, "gopurs_main"), [], output, true);
   if (result.includes("Fail")) throw new Error("Execution output contains Fail.");
   processes.checkInterrupted();
@@ -49,7 +60,10 @@ async function main() {
   let failure;
   try {
     const options = parseOptions(process.argv.slice(2));
-    if (options.help) { console.log(help); return; }
+    if (options.help) {
+      console.log(help);
+      return;
+    }
     const retry = resumeTargets(root, options, "fixtures");
     if (retry?.length === 0) {
       if (!options.list) console.log("No unsuccessful targets to resume.");
@@ -57,7 +71,10 @@ async function main() {
     }
     if (retry) options.targets = retry;
     const { selected, skipped } = selectFixtures(root, options);
-    if (options.list) { for (const file of selected) console.log(file); return; }
+    if (options.list) {
+      for (const file of selected) console.log(file);
+      return;
+    }
     const buildScript = options.clean ? compilerBuildScript() : null;
     // Fixture compilations are tiny: use the sequential PBO builder so the
     // harness stays deterministic and independent from machine sizing rules.
@@ -74,7 +91,12 @@ async function main() {
     const packages = corePackages(root);
     campaign = new TestCampaign(root, "fixtures", selected, options, skipped);
     processes = new TestProcesses();
-    if (buildScript) await processes.run("build-gopurs", "npm", ["run", buildScript, "--silent"], { cwd: root, env: campaign.env(), log: join(campaign.workspace, "build-gopurs.log") });
+    if (buildScript)
+      await processes.run("build-gopurs", "npm", ["run", buildScript, "--silent"], {
+        cwd: root,
+        env: campaign.env(),
+        log: join(campaign.workspace, "build-gopurs.log"),
+      });
     const success = await campaign.run(processes, async (file, directory, index) => {
       console.log(`=> Testing ${basename(file)}`);
       const fixture = prepareFixture(root, campaign.workspace, file, index, packages);

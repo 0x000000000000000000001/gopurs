@@ -6,7 +6,7 @@ const output = execFileSync("npm", ["pack", "--dry-run", "--json", "--ignore-scr
   maxBuffer: 16 * 1024 * 1024,
 });
 const [manifest] = JSON.parse(output);
-const paths = manifest.files.map(file => file.path);
+const paths = manifest.files.map((file) => file.path);
 const required = [
   "CHANGELOG.md",
   "CODE_OF_CONDUCT.md",
@@ -44,13 +44,13 @@ const forbidden = [
   /^docs\/plan-/,
 ];
 
-const missing = required.filter(path => !paths.includes(path));
+const missing = required.filter((path) => !paths.includes(path));
 if (missing.length) {
   console.error("Package is missing required files:");
   for (const path of missing) console.error(`  ${path}`);
   process.exit(1);
 }
-const excluded = paths.filter(path => forbidden.some(pattern => pattern.test(path)));
+const excluded = paths.filter((path) => forbidden.some((pattern) => pattern.test(path)));
 if (excluded.length) {
   console.error("Package contains files excluded from the publication surface:");
   for (const path of excluded) console.error(`  ${path}`);
@@ -64,4 +64,6 @@ if (manifest.unpackedSize > 25 * 1024 * 1024) {
   console.error(`Package unpacks to ${manifest.unpackedSize} bytes; the limit is 25 MiB.`);
   process.exit(1);
 }
-console.log(`Package surface OK: ${manifest.entryCount} files, ${manifest.size} bytes packed, ${manifest.unpackedSize} bytes unpacked.`);
+console.log(
+  `Package surface OK: ${manifest.entryCount} files, ${manifest.size} bytes packed, ${manifest.unpackedSize} bytes unpacked.`,
+);

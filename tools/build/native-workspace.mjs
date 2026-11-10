@@ -6,17 +6,20 @@ import { readJson } from "../lib/fs.mjs";
 // preserves dependency constraints without a second YAML parser dependency.
 function compilerPackage(root) {
   const lines = readFileSync(join(root, "spago.yaml"), "utf8").split(/\r?\n/);
-  const start = lines.findIndex(line => /^package:\s*$/.test(line));
+  const start = lines.findIndex((line) => /^package:\s*$/.test(line));
   if (start < 0) throw new Error("spago.yaml has no package section");
   let skipTest = false;
   const result = [];
   for (const line of lines.slice(start)) {
     if (result.length && /^\S/.test(line)) break;
-    if (/^  test:/.test(line)) { skipTest = true; continue; }
+    if (/^  test:/.test(line)) {
+      skipTest = true;
+      continue;
+    }
     if (/^  \S/.test(line)) skipTest = false;
     if (!skipTest) result.push(line);
   }
-  if (!result.some(line => /^  dependencies:/.test(line))) {
+  if (!result.some((line) => /^  dependencies:/.test(line))) {
     throw new Error("spago.yaml has no package dependencies");
   }
   return result.join("\n").trimEnd() + "\n";
@@ -49,8 +52,7 @@ export function nativeWorkspaceConfig(root, { runtime = "go", purust = resolve(r
   const optimizer = resolveOptimizer(root);
   const packages = new Map([["backend-optimizer", optimizer]]);
   const family = runtime === "rust" ? "purust-" : "gopurs-";
-  const libraries = runtime === "rust" ? dirname(purust)
-    : resolve(process.env.GOPURS_LIBRARY_ROOT || dirname(root));
+  const libraries = runtime === "rust" ? dirname(purust) : resolve(process.env.GOPURS_LIBRARY_ROOT || dirname(root));
   for (const name of readdirSync(libraries).sort()) {
     if (!name.startsWith(family)) continue;
     const directory = join(libraries, name);
@@ -67,12 +69,17 @@ export function nativeWorkspaceConfig(root, { runtime = "go", purust = resolve(r
   // sibling scan above supplies it; fail early rather than silently falling
   // back to the registry package's JavaScript-only FFI.
   if (runtime === "go" && !packages.has("argonaut-codecs")) {
-    throw new Error("Missing gopurs-argonaut-codecs; run ./bin/setup to install the pinned Argonaut codec support checkout");
+    throw new Error(
+      "Missing gopurs-argonaut-codecs; run ./bin/setup to install the pinned Argonaut codec support checkout",
+    );
   }
   // Select the host runtime's library representations, retaining gopurs's PBO
   // sources and Go code generator for either native executable.
-  return compilerPackage(root) + "workspace:\n  packageSet:\n    registry: 77.10.1\n  extraPackages:\n" +
-    [...packages].map(([name, directory]) => `    ${name}:\n      path: ${JSON.stringify(directory)}\n`).join("");
+  return (
+    compilerPackage(root) +
+    "workspace:\n  packageSet:\n    registry: 77.10.1\n  extraPackages:\n" +
+    [...packages].map(([name, directory]) => `    ${name}:\n      path: ${JSON.stringify(directory)}\n`).join("")
+  );
 }
 
 function localCompilerCandidates(root) {
@@ -93,7 +100,8 @@ function localCompilerCandidates(root) {
 }
 
 export function findTypedCompiler(root, configuredCompiler = process.env.GOPURS_PURS) {
-  const compiler = configuredCompiler ? resolve(configuredCompiler)
+  const compiler = configuredCompiler
+    ? resolve(configuredCompiler)
     : localCompilerCandidates(root).sort((left, right) => right.modified - left.modified)[0]?.path;
   if (!compiler) throw new Error("No local TAST compiler found; set GOPURS_PURS to the typed fork's purs executable");
   accessSync(compiler, constants.X_OK);
@@ -110,8 +118,10 @@ export function verifyTypedOutput(output, compiler) {
     const file = join(output, entry.name, "corefn.json");
     if (!existsSync(file)) continue;
     const metadata = readJson(file);
-    if (!["typeTable", "dataDecls", "classDecls"].every(key => Array.isArray(metadata[key]))) {
-      throw new Error(`${file} lacks TAST type metadata. ${compiler} did not produce the required format; select the typed fork with GOPURS_PURS`);
+    if (!["typeTable", "dataDecls", "classDecls"].every((key) => Array.isArray(metadata[key]))) {
+      throw new Error(
+        `${file} lacks TAST type metadata. ${compiler} did not produce the required format; select the typed fork with GOPURS_PURS`,
+      );
     }
     modules++;
     types += metadata.typeTable.length;

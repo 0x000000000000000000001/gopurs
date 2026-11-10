@@ -10,7 +10,11 @@ if (!root || !destination || !["0", "1"].includes(lockedFlag) || !names.length) 
 }
 
 function git(args, cwd, capture = true) {
-  return execFileSync("git", args, { cwd, encoding: "utf8", stdio: capture ? ["ignore", "pipe", "pipe"] : "inherit" })?.trim();
+  return execFileSync("git", args, {
+    cwd,
+    encoding: "utf8",
+    stdio: capture ? ["ignore", "pipe", "pipe"] : "inherit",
+  })?.trim();
 }
 
 try {
@@ -21,7 +25,7 @@ try {
   }
   const libraries = resolve(destination);
   const support = manifest.support ?? {};
-  const selected = names.map(name => {
+  const selected = names.map((name) => {
     // A support checkout is pinned and installed like a library, but it is not
     // part of the module-test inventory.
     const source = manifest.libraries[name] ?? support[name];
@@ -40,8 +44,14 @@ try {
     }
     if (lockedFlag === "1") {
       const actual = git(["rev-parse", "HEAD"], target);
-      if (actual !== source.rev) throw new Error(`gopurs-${name} is at ${actual}; release requires ${source.rev}. Use an empty GOPURS_LIBRARY_ROOT.`);
-      if (git(["status", "--porcelain"], target)) throw new Error(`gopurs-${name} has local changes; use an empty GOPURS_LIBRARY_ROOT for a locked installation.`);
+      if (actual !== source.rev)
+        throw new Error(
+          `gopurs-${name} is at ${actual}; release requires ${source.rev}. Use an empty GOPURS_LIBRARY_ROOT.`,
+        );
+      if (git(["status", "--porcelain"], target))
+        throw new Error(
+          `gopurs-${name} has local changes; use an empty GOPURS_LIBRARY_ROOT for a locked installation.`,
+        );
     }
   }
 

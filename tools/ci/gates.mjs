@@ -26,8 +26,8 @@ export const QUICK_TESTS = Object.freeze([
   "compiler-snapshot",
 ]);
 
-export const QUICK_TEST_FILES = Object.freeze(QUICK_TESTS.map(name => `${name}.test.mjs`));
-export const NODE_GATES = Object.freeze(QUICK_TEST_FILES.map(name => `Node ${name}`));
+export const QUICK_TEST_FILES = Object.freeze(QUICK_TESTS.map((name) => `${name}.test.mjs`));
+export const NODE_GATES = Object.freeze(QUICK_TEST_FILES.map((name) => `Node ${name}`));
 
 const toolsDirectory = fileURLToPath(new URL("../", import.meta.url));
 for (const name of QUICK_TEST_FILES) {

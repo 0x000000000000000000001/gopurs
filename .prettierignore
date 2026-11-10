@@ -1,0 +1,8 @@
+tools/*.test.mjs
+tools/ci/*.test.mjs
+tools/fixtures/
+tests/
+output/
+.spago/
+node_modules/
+docs/history/

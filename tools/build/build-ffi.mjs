@@ -1,11 +1,5 @@
 import { execFileSync } from "node:child_process";
-import {
-  copyFileSync,
-  mkdtempSync,
-  readFileSync,
-  renameSync,
-  rmSync,
-} from "node:fs";
+import { copyFileSync, mkdtempSync, readFileSync, renameSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -16,9 +10,7 @@ const generatorDirectory = join(toolsDirectory, "ffi-gen");
 function buildFfi() {
   const goModPath = join(generatorDirectory, "go.mod");
   const goMod = readFileSync(goModPath, "utf8");
-  const requiredVersion = goMod.match(
-    /^go[ \t]+(\d+\.\d+\.\d+)[ \t]*(?:\/\/.*)?$/m,
-  )?.[1];
+  const requiredVersion = goMod.match(/^go[ \t]+(\d+\.\d+\.\d+)[ \t]*(?:\/\/.*)?$/m)?.[1];
   if (!requiredVersion) {
     throw new Error(`${goModPath} must pin a Go version including its patch number.`);
   }
@@ -33,13 +25,15 @@ function buildFfi() {
     env: goEnvironment,
     encoding: "utf8",
     stdio: ["ignore", "pipe", "inherit"],
-  }).trim().split(/\r?\n/);
+  })
+    .trim()
+    .split(/\r?\n/);
 
   if (actualVersion !== `go${requiredVersion}`) {
     throw new Error(
       `Go ${requiredVersion} is required by ${goModPath}; found ${actualVersion}. ` +
-      `Put Go ${requiredVersion} on PATH and run this command again. ` +
-      "Automatic toolchain switching is disabled (GOTOOLCHAIN=local).",
+        `Put Go ${requiredVersion} on PATH and run this command again. ` +
+        "Automatic toolchain switching is disabled (GOTOOLCHAIN=local).",
     );
   }
   if (!goRoot) {
@@ -52,14 +46,7 @@ function buildFfi() {
     const wasmPath = join(temporaryDirectory, "ffi_gen.wasm");
     const runtimePath = join(temporaryDirectory, "wasm_exec.js");
     copyFileSync(join(goRoot, "lib", "wasm", "wasm_exec.js"), runtimePath);
-    execFileSync("go", [
-      "build",
-      "-trimpath",
-      "-buildvcs=false",
-      "-ldflags=-buildid=",
-      "-o", wasmPath,
-      ".",
-    ], {
+    execFileSync("go", ["build", "-trimpath", "-buildvcs=false", "-ldflags=-buildid=", "-o", wasmPath, "."], {
       cwd: generatorDirectory,
       env: { ...goEnvironment, GOOS: "js", GOARCH: "wasm", CGO_ENABLED: "0" },
       stdio: "inherit",

@@ -36,25 +36,33 @@ export function snapshotFiles(root, fixture, env = process.env, { dev = false } 
       if (!entry.isDirectory() || !/^p_(?:root|[0-9a-f]{32})$/.test(entry.name)) continue;
       const bundle = `purescript/${entry.name}/0_gopurs_package.go`;
       if (existsSync(join(output, bundle))) {
-        const selected = packageSourceSections(readFileSync(join(output, bundle), "utf8")).sections.filter(section =>
-          section.name === "Main.go" || (fixture.snapshotFfi && section.name === "Main_ffi.go"));
+        const selected = packageSourceSections(readFileSync(join(output, bundle), "utf8")).sections.filter(
+          (section) => section.name === "Main.go" || (fixture.snapshotFfi && section.name === "Main_ffi.go"),
+        );
         if (selected.length === 0) continue;
-        fragments += selected.filter(section => section.name === "Main.go").length;
-        projections[bundle] = selected.map(section => section.name);
+        fragments += selected.filter((section) => section.name === "Main.go").length;
+        projections[bundle] = selected.map((section) => section.name);
         sources.push(bundle, `purescript/${entry.name}/zz_gopurs_order.go`);
         continue;
       }
-      const files = readdirSync(join(output, "purescript", entry.name)).filter(name =>
-        name === "Main.go" || (fixture.snapshotFfi && name === "Main_ffi.go"));
+      const files = readdirSync(join(output, "purescript", entry.name)).filter(
+        (name) => name === "Main.go" || (fixture.snapshotFfi && name === "Main_ffi.go"),
+      );
       if (files.length === 0) continue;
-      fragments += files.filter(name => name === "Main.go").length;
-      sources.push(...[...files, "zz_gopurs_order.go"].map(name => `purescript/${entry.name}/${name}`));
+      fragments += files.filter((name) => name === "Main.go").length;
+      sources.push(...[...files, "zz_gopurs_order.go"].map((name) => `purescript/${entry.name}/${name}`));
     }
     if (fragments === 0) throw new Error("Missing generated package fragments for Main");
-    return [{ generated: join(fixture.directory, "logs/package-snapshot.txt"),
-      expected: join(root, `tests/passing-package-snapshots${profileSuffix}/${fixture.name}.txt`), sources: sources.sort(), projections }];
+    return [
+      {
+        generated: join(fixture.directory, "logs/package-snapshot.txt"),
+        expected: join(root, `tests/passing-package-snapshots${profileSuffix}/${fixture.name}.txt`),
+        sources: sources.sort(),
+        projections,
+      },
+    ];
   }
-  return (fixture.snapshotFfi ? ["", "_ffi"] : [""]).map(suffix => ({
+  return (fixture.snapshotFfi ? ["", "_ffi"] : [""]).map((suffix) => ({
     generated: join(fixture.directory, `output/purescript/Main${suffix}.go`),
     expected: join(root, `tests/passing-snapshots${profileSuffix}/${fixture.name}${suffix}.go`),
   }));
@@ -62,28 +70,48 @@ export function snapshotFiles(root, fixture, env = process.env, { dev = false } 
 
 export async function formatSnapshots(files, processes, fixture, env) {
   const output = join(fixture.directory, "output");
-  const sources = files.flatMap(file => file.sources?.map(name => join(output, name)) ?? [file.generated]);
-  for (const source of sources) if (!existsSync(source)) throw new Error(`Missing generated snapshot source: ${source}`);
+  const sources = files.flatMap((file) => file.sources?.map((name) => join(output, name)) ?? [file.generated]);
+  for (const source of sources)
+    if (!existsSync(source)) throw new Error(`Missing generated snapshot source: ${source}`);
   await processes.run("format", "gofmt", ["-w", ...sources], {
-    cwd: fixture.directory, env, log: join(fixture.directory, "logs/format.log"),
+    cwd: fixture.directory,
+    env,
+    log: join(fixture.directory, "logs/format.log"),
   });
-  for (const file of files) if (file.sources) {
-    writeFileSync(file.generated, file.sources.map(name => {
-      let content = readFileSync(join(output, name), "utf8");
-      if (file.projections?.[name]) {
-        const { header, sections } = packageSourceSections(content);
-        content = header + sections.filter(section => file.projections[name].includes(section.name)).map(section => section.content).join("\n");
-      }
-      return `// gopurs-package-file: ${name}\n${content}\n`;
-    }).join(""));
-  }
+  for (const file of files)
+    if (file.sources) {
+      writeFileSync(
+        file.generated,
+        file.sources
+          .map((name) => {
+            let content = readFileSync(join(output, name), "utf8");
+            if (file.projections?.[name]) {
+              const { header, sections } = packageSourceSections(content);
+              content =
+                header +
+                sections
+                  .filter((section) => file.projections[name].includes(section.name))
+                  .map((section) => section.content)
+                  .join("\n");
+            }
+            return `// gopurs-package-file: ${name}\n${content}\n`;
+          })
+          .join(""),
+      );
+    }
 }
 
 export async function verifySnapshots(files, processes, fixture, env) {
   for (const { generated, expected } of files) {
-    if (!existsSync(expected)) throw new Error(`Missing snapshot: ${expected}. Use --update-snapshots to create it explicitly.`);
+    if (!existsSync(expected))
+      throw new Error(`Missing snapshot: ${expected}. Use --update-snapshots to create it explicitly.`);
     if (!readFileSync(expected).equals(readFileSync(generated))) {
-      await processes.run("snapshot diff", "diff", ["-u", expected, generated], { cwd: fixture.directory, env, log: join(fixture.directory, "logs/snapshot.diff"), display: true });
+      await processes.run("snapshot diff", "diff", ["-u", expected, generated], {
+        cwd: fixture.directory,
+        env,
+        log: join(fixture.directory, "logs/snapshot.diff"),
+        display: true,
+      });
     }
   }
 }

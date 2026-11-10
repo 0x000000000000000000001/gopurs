@@ -1,6 +1,14 @@
 import {
-  chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync,
-  renameSync, rmSync, symlinkSync, writeFileSync,
+  chmodSync,
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { delimiter, dirname, join } from "node:path";
@@ -11,11 +19,13 @@ import { findTypedCompiler, nativeWorkspaceConfig, verifyTypedOutput } from "./n
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const args = process.argv.slice(2);
 if (args.includes("--help")) {
-  console.log("Usage: npm run build:native -- [--keep-workspace]\nBuild an experimental native compiler using the Node backend and local Go library checkouts.\nGOPURS_PURS=/absolute/path/to/typed/purs overrides discovery of the local compiler fork.");
+  console.log(
+    "Usage: npm run build:native -- [--keep-workspace]\nBuild an experimental native compiler using the Node backend and local Go library checkouts.\nGOPURS_PURS=/absolute/path/to/typed/purs overrides discovery of the local compiler fork.",
+  );
   process.exit(0);
 }
-if (args.some(arg => arg !== "--keep-workspace")) {
-  console.error(`Unknown option: ${args.find(arg => arg !== "--keep-workspace")}`);
+if (args.some((arg) => arg !== "--keep-workspace")) {
+  console.error(`Unknown option: ${args.find((arg) => arg !== "--keep-workspace")}`);
   process.exit(1);
 }
 
@@ -85,8 +95,15 @@ async function buildNative({ keepWorkspace }) {
     writeFileSync(join(workspace, "verify-tast.log"), verification);
     console.log(verification.trimEnd());
 
-    await runStage("native-parser", process.execPath, [join(root, "tools/build/prepare-native-output.mjs"), output], { cwd: root });
-    await runStage("generate-go", process.execPath, ["--stack-size=65536", join(root, "bin/gopurs.js"), "--main", "Main"], { cwd: workspace });
+    await runStage("native-parser", process.execPath, [join(root, "tools/build/prepare-native-output.mjs"), output], {
+      cwd: root,
+    });
+    await runStage(
+      "generate-go",
+      process.execPath,
+      ["--stack-size=65536", join(root, "bin/gopurs.js"), "--main", "Main"],
+      { cwd: workspace },
+    );
     const binary = join(workspace, "gopurs-native");
     await runStage("go-build", "go", ["build", "-trimpath", "-o", binary, "./main/main.go"], { cwd: output });
 
