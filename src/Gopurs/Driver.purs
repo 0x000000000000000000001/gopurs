@@ -174,7 +174,7 @@ compileCached config cacheRef backends ffiDigestsRef = Metrics.measure "backend 
         reused <- Metrics.measure "optimize + emit" \_ -> buildWithHeaders headers session ffi config prepared withCache.reusable withCache.materialize headerCandidates backends priorFfi
         -- Automatic entry discovery also includes unrelated library and browser
         -- mains. Validate reachability for the explicitly selected application.
-        when (isJust config.mainModule) $
+        when (config.explicitMain && isJust config.mainModule) $
           Metrics.measure "FFI validation" \_ -> BuildCache.validateFFI session prepared.mainModules
         -- Preparation proof serialization reads immutable prepared data and
         -- writes its own cache objects. Start it alongside Go package planning

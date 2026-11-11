@@ -308,8 +308,8 @@ test("driver cache transitions equal clean generation in every supported host mo
     compare("ffi-priority", ffiArgs);
     rmSync(ffiPath);
     rmSync(join(directory, "ffi/Main.go"));
-    invoke("ffi-absent", ffiArgs);
-    compare("ffi-absent", ffiArgs);
+    const absent = invoke("ffi-absent", ffiArgs, {}, 1);
+    assert.match(absent.stderr, /FFI error in module Main \(.*Main\.go\): missing Go implementation/);
     writeFileSync(ffiPath, originalFfi);
     invoke("ffi-added", ffiArgs);
     compare("ffi-added", ffiArgs);
@@ -326,7 +326,7 @@ test("driver cache transitions equal clean generation in every supported host mo
 
     const extraTast = readFileSync(join(output, "Extra/corefn.json"));
     writeFileSync(join(output, "Extra/corefn.json"), "invalid TAST");
-    assert.match(invoke("invalid-tast", ffiArgs, {}, 1).stderr, /Failed to decode/);
+    assert.match(invoke("invalid-tast", ffiArgs, {}, 1).stderr, /invalid CoreFn JSON/);
     assert.deepEqual(generated(output), beforeFailure);
     assert.deepEqual(readFileSync(pointerPath), pointer);
     writeFileSync(join(output, "Extra/corefn.json"), extraTast);

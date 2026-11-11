@@ -149,17 +149,14 @@ sans lire son code.
 Critère de sortie : les tests restent équivalents, mais les scénarios réutilisent
 les mêmes helpers.
 
-## Lot 8 — Validation finale — partiel
+## Lot 8 — Validation finale — terminé
 
 - [x] `node tools/check-docs.mjs`
 - [x] `npm run test:package`
 - [x] `npm run format:check`
-- [x] `npm run build:native -- --keep-workspace` : 521 modules, 326 174 types.
-- [~] `node --test tools/*.test.mjs` : première passe 679 tests, 664 pass,
-  14 échecs, 1 saut. Les corrections ciblées font passer CLI, worker-warm,
-  emitter-worker-keys et l'inventaire. Restent `driver-cache` et
-  `build-profiles` : attentes de layout/FFI natif obsolètes, hors du périmètre
-  de ce cleanup.
+- [x] `npm run build:native -- --keep-workspace` : 521 modules, 326 176 types.
+- [x] `node --test --test-concurrency=1 tools/*.test.mjs` : 679 tests,
+  678 pass, 0 échec, 1 saut.
 - [x] `git diff --check`
 - [x] Vérifier que les commandes publiques et les workflows CI n'ont pas changé
   de contrat.

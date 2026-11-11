@@ -15,6 +15,7 @@ import PureScript.Backend.Optimizer.App (parseCLIArgs)
 -- also recognises options used by other backends.
 type CompilerConfig =
   { mainModule :: Maybe String
+  , explicitMain :: Boolean
   , ffiDirectory :: Maybe String
   , rewriteLimit :: Int
   , devMode :: Boolean
@@ -44,6 +45,7 @@ readConfig = do
   buildManifest <- Process.lookupEnv "GOPURS_BUILD_MANIFEST"
   pure
     { mainModule: args.mbMainModule
+    , explicitMain: Array.elem "--main" argv
     , ffiDirectory: args.mbFfiDir
     , rewriteLimit: fromMaybe 10_000 args.mbRewriteLimit
     , devMode
