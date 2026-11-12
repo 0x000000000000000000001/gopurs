@@ -3,6 +3,31 @@
 This is a working record for the `0.1.0` release gates. It is not a release
 certificate. The current gate list is in the [release checklist](release-checklist.md).
 
+## RC16 functional pilot and RC17 preparation — 12 November 2026
+
+RC16's clean source commit is `42c67ca5ba58cca904782834527dc758102aeedf`.
+Its rebuilt local native compiler, installed archive and pinned frontend passed
+the ordinary FFI package checks with both compiler hosts. The Linux amd64 Nix
+stage that blocked RC15 passed in
+[RC16 run 43290095150](https://github.com/0x000000000000000000001/gopurs/actions/runs/43290095150).
+
+The mandatory benchmark's functional pilot then rejected host output identity
+on `gopurs-assert`. Five of six generated files were identical. The sixth
+contained 87 `missing-ffi-v1` JSON comments with different key order; all other
+bytes and all decoded metadata were identical. Replaying JavaScript reproduced
+its oracle exactly, and canonicalizing those comments reproduced the native
+hash exactly. A one-module probe also exposed different escaping of HTML and
+Unicode line-separator characters in metadata paths.
+
+RC17 fixes these comments locally, preserving the schema, decoded data and
+executable Go. It adds a real compilation regression for key order, unusual
+paths and literal escape sequences across hosts. The byte-for-byte benchmark
+oracle remains unchanged. The failed pilot is a functional diagnostic, with
+no performance claims; evidence is under
+`.gopurs-evidence/rc16-benchmark-pilot-20261112/diagnosis` at the workspace root.
+RC17 requires its own strict pilot, full benchmark and tagged qualification.
+Neither RC15 nor RC16 has been published.
+
 ## RC15 qualification interruption and RC16 preparation — 12 November 2026
 
 The signed RC15 tag identifies commit `ac7c45530364dcb08a63131ebe80e1f132c8825f`.

@@ -1,8 +1,8 @@
 # Quickstart
 
 Build and run a PureScript program that prints `Hello from gopurs`. It uses
-`gopurs@0.1.0-rc.16` and the Go port of `console` for `Effect.Console.log`.
-This guide targets the experimental RC16 candidate. Consult the live
+`gopurs@0.1.0-rc.17` and the Go port of `console` for `Effect.Console.log`.
+This guide targets the experimental RC17 candidate. Consult the live
 [quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md)
 for its qualification and publication status. The
 [source bootstrap](bootstrap.md#clean-source-installation) covers local builds.
@@ -14,7 +14,7 @@ If you use Nix with flakes enabled, open the development shell for this release
 and run the rest of the guide inside it.
 
 ```bash
-nix develop github:0x000000000000000000001/gopurs/v0.1.0-rc.16
+nix develop github:0x000000000000000000001/gopurs/v0.1.0-rc.17
 ```
 
 The first shell setup can download and compile the Haskell frontend and its
@@ -30,7 +30,7 @@ before continuing.
 
 See the [Nix guide](nix.md#typed-frontend-and-development-shell) for details of
 the pinned toolchain. The [qualification record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md#public-publication-and-consumer-checks)
-covers the public RC14 Hello tested on Linux arm64 on 5 November 2026. RC16
+covers the public RC14 Hello tested on Linux arm64 on 5 November 2026. RC17
 requires consumer checks with its own published artifacts.
 
 ## Workspace
@@ -55,7 +55,7 @@ npm init -y
 Install the selected candidate:
 
 ```bash
-npm install --save-dev --ignore-scripts gopurs@0.1.0-rc.16
+npm install --save-dev --ignore-scripts gopurs@0.1.0-rc.17
 ```
 
 ## Install the console port

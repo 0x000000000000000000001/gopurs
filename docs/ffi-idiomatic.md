@@ -6,7 +6,7 @@ capitalized. Imports, package declarations and local type declarations are
 allowed. The compiler adapts a copy; the handwritten file remains usable by
 `gofmt`, `go test` and Go tooling. No per-function registration is needed.
 
-These conventions describe experimental `0.1.0-rc.16` and its matching typed
+These conventions describe experimental `0.1.0-rc.17` and its matching typed
 frontend. Consult the live [quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md)
 for qualification and publication status. Published `0.1.0-rc.14` predates
 this work. The frontend

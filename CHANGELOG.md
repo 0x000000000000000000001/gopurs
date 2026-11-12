@@ -6,6 +6,20 @@ All notable changes to gopurs are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0-rc.17]
+
+Seventeenth candidate for `0.1.0`, retaining RC16's ordinary Go FFI contract,
+dependency pins and frontend build fixes. Qualification and publication status
+remain in the [quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md).
+
+### Fixed
+
+- Emit missing-FFI annotations with identical JSON key order and string escaping
+  on the JavaScript and native compiler hosts. The metadata keeps the same
+  schema and decoded values; generated executable code is unchanged. A real
+  batch-compilation regression checks byte identity and JSON round-tripping
+  across hosts, including Unicode, quotes, backslashes and literal escapes.
+
 ## [0.1.0-rc.16]
 
 Sixteenth candidate for `0.1.0`, retaining RC15's ordinary Go FFI, dependency

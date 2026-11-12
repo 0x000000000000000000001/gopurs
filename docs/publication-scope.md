@@ -9,7 +9,7 @@ what users may rely on. It is not evidence that the release gates in the
 | Item | Decision |
 | --- | --- |
 | Package | `gopurs` |
-| Documented candidate | Experimental `0.1.0-rc.16` |
+| Documented candidate | Experimental `0.1.0-rc.17` |
 | Published candidate at preparation (12 November 2026) | `0.1.0-rc.14` (GitHub prerelease and npm `next`) |
 | npm `latest` at preparation (12 November 2026) | `0.1.0-rc.7` (registry-assigned alias; still a prerelease) |
 | First final version (planned) | `0.1.0` |
@@ -32,7 +32,7 @@ artifact and installation path as the final release.
 On 5 November 2026, RC14 was published as a [GitHub prerelease](https://github.com/0x000000000000000000001/gopurs/releases/tag/v0.1.0-rc.14)
 and on npm `next`. Its qualification and consumer checks are recorded in the
 [quality record](quality-0.1.0.md).
-RC16 adds the [ordinary Go FFI contract](ffi-idiomatic.md) and new frontend and
+RC17 adds the [ordinary Go FFI contract](ffi-idiomatic.md) and new frontend and
 library pins. It requires its own qualification, artifact and consumer checks;
 RC14's results are historical evidence only.
 RC13 failed qualification and remains unpublished with its tag unchanged;
@@ -40,7 +40,7 @@ the recorded RC7 and local campaign results retain their original scope.
 
 For the first npm publication, the registry also assigned `latest` to RC7 and
 refused its removal. This was explicitly accepted and documented in the
-[quality record](quality-0.1.0.md). At RC16 preparation on 12 November 2026,
+[quality record](quality-0.1.0.md). At RC17 preparation on 12 November 2026,
 unqualified `npm install gopurs` selected RC7; that alias does not establish a
 stable-release compatibility claim.
 
@@ -111,7 +111,7 @@ The target matrix for `0.1.0` is:
 
 Release-blocking means that the platform must pass the qualification and
 installation checks in the [release checklist](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/release-checklist.md).
-It is not a claim that those checks have already passed for RC16.
+It is not a claim that those checks have already passed for RC17.
 
 RC14's successful `darwin/arm64` qualification uses the ARM64 `macos-15` runner;
 this campaign does not establish tested compatibility with macOS 14.

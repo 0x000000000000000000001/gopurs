@@ -1,6 +1,6 @@
-# RC16 release checklist
+# RC17 release checklist
 
-Candidate: `0.1.0-rc.16`, in preparation on 12 November 2026. It is not yet
+Candidate: `0.1.0-rc.17`, in preparation on 12 November 2026. It is not yet
 qualified or published. RC14 is the published candidate on npm `next`;
 `latest` remains RC7. The planned first final release is `0.1.0`.
 
@@ -55,14 +55,14 @@ development results retain their original scope.
   FFI examples with both compiler hosts; record platform and toolchain scope.
 - [ ] Validate a retained fallback for the affected consumer before any channel
   rollback. RC14 predates the new FFI contract; RC7's historical Hello rollback
-  does not establish a fallback for applications using RC16 features.
+  does not establish a fallback for applications using RC17 features.
 
 ## Final release and announcement
 
 - [ ] Resolve qualification failures and documentation deviations, and have
   the retained evidence reviewed against the declared compatibility scope.
 - [ ] Prepare the final `0.1.0` identity and qualify its exact artifacts through
-  the same release process. RC16 results do not authorize substituting rebuilt
+  the same release process. RC17 results do not authorize substituting rebuilt
   or modified final artifacts without validation.
 - [ ] Publish and verify `0.1.0`, update the active installation commands and
   status pages, then announce the qualified scope with links to the public
