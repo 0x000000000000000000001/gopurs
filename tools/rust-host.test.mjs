@@ -1,20 +1,16 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { cpSync, existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
-import { basename, delimiter, join } from "node:path";
+import { basename, delimiter, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import { corePackages, createWorkspace, prepareFixture } from "./test-workspace.mjs";
+import { findTypedCompiler } from "./build/native-workspace.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const launcher = join(root, "bin/gopurs");
 const candidate = process.env.GOPURS_TEST_RUST_BINARY;
 const enabled = process.env.GOPURS_TEST_RUST === "1";
-const environment = { ...process.env,
-  PATH: join(root, "node_modules/.bin") + delimiter + process.env.PATH,
-  GOWORK: "off", GOPURS_PBO_JOBS: "4", GOPURS_PREPARE_JOBS: "4", GOPURS_EMIT_JOBS: "4",
-};
-delete environment.GOPURS_ALLOC_PROFILE;
 
 function run(command, args, cwd, env, log) {
   const result = spawnSync(command, args, { cwd, env, encoding: "utf8", timeout: 120000, maxBuffer: 16 * 1024 * 1024 });
@@ -37,6 +33,12 @@ test("Rust-hosted gopurs preserves Go sources and execution on native regression
   skip: enabled ? false : "run npm run test:rust after building the Rust compiler",
 }, async t => {
   assert.ok(existsSync(candidate ?? join(root, "bin/gopurs-rust")), "run npm run build:rust first");
+  const typedCompiler = findTypedCompiler(root, process.env.GOPURS_PURS);
+  const environment = { ...process.env,
+    PATH: dirname(typedCompiler) + delimiter + join(root, "node_modules/.bin") + delimiter + process.env.PATH,
+    GOWORK: "off", GOPURS_PBO_JOBS: "4", GOPURS_PREPARE_JOBS: "4", GOPURS_EMIT_JOBS: "4",
+  };
+  delete environment.GOPURS_ALLOC_PROFILE;
   const workspace = createWorkspace(), packages = corePackages(root);
   let passed = false, completed = 0;
   t.after(() => {

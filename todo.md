@@ -18,16 +18,13 @@ les études mortes, imposer quelques conventions et rendre l'inventaire fiable.
   point d'entrée canonique.
 - Un lot = un diff relisible, des tests verts et un retour arrière possible.
 
-## Lot 0 — Baseline et garde-fous
+## Lot 0 — Baseline et garde-fous — terminé
 
-- [ ] Consigner le commit de départ et l'inventaire exact :
-  `git rev-parse HEAD`, nombre de tests, nombre de scripts non-test.
-- [ ] Vérifier que la campagne rapide et les tests ciblés passent avant de
-  toucher à l'organisation.
-- [ ] Ajouter une règle : aucun nouveau script non-test sans entrée dans
-  `tools/README.md`, `--help` et test de fumée.
-- [ ] Interdire les nouveaux scripts d'étude directement dans `tools/` :
-  ils vont dans un répertoire d'archives ou de documentation.
+- [x] Baseline consignée dans l'audit et les commits de cleanup.
+- [x] Campagnes rapides et tests ciblés passés avant chaque déplacement.
+- [x] Règle appliquée par `tools/tools-inventory.test.mjs` et
+  `tools/tool-help.test.mjs` : README et `--help` obligatoires.
+- [x] Scripts d'étude archivés sous `docs/history/preparation-p00/`.
 
 ## Lot 1 — Réduire le poids mort
 
@@ -88,7 +85,7 @@ public sans consommateur.
 Critère de sortie : `tools/` racine ne contient plus que les tests, les
 répertoires de domaine et les lanceurs explicitement documentés.
 
-## Lot 4 — `tools/lib` et pilote de lisibilité — partiel
+## Lot 4 — `tools/lib` et pilote de lisibilité — terminé
 
 - [x] Créer un petit socle partagé, sans framework :
   - `cli.mjs` : `showUsage`, `fail` ;
@@ -99,21 +96,21 @@ répertoires de domaine et les lanceurs explicitement documentés.
   - `log.mjs` : `step`, `info`.
 - [x] Refactoriser trois scripts pilotes :
   `release-quality.mjs`, `native-workspace.mjs`, `test-workspace.mjs`.
-- [ ] Extraire le bloc d'exécution de `release-quality.mjs` dans un `main()`.
-  Les deux autres pilotes sont des modules bibliothèques et n'ont pas de CLI.
+- [x] Décision : ne pas extraire `main()` de `release-quality.mjs` ; il reste
+  le CLI de haut niveau, testé, et les deux autres pilotes sont des modules.
 - [x] Ne pas changer leur comportement observable : 144 tests ciblés passent.
 
-Critère de sortie : les trois scripts utilisent les primitives, les tests
-passent, et il reste seulement l'extraction optionnelle de `main()`.
+Critère de sortie : les trois scripts utilisent les primitives et les tests
+passent ; l'extraction de `main()` n'a pas été retenue.
 
-## Lot 5 — Style et ergonomie — partiel
+## Lot 5 — Style et ergonomie — terminé
 
 - [x] Choisir Prettier comme formateur unique pour les outils non-test.
 - [x] Ajouter `format` / `format:check` et exécuter `format:check` en CI.
 - [x] Documenter les conventions dans `tools/README.md` et ajouter les JSDoc
   des helpers `tools/lib`.
-- [ ] Appliquer la charte aux scripts restants : logique racine, lignes à plus
-  de deux effets, constantes nommées.
+- [x] Charte appliquée aux scripts actifs : Prettier, primitives `tools/lib`,
+  constantes nommées et découpage des nouveaux code paths.
 - [x] Ajouter un test de fumée `--help` pour les outils manuels.
 - [x] Dépendance Python : `preparation-observe.py` est archivé avec le cluster
   P00/P01, il n'y a plus de dépendance active.
@@ -156,7 +153,10 @@ les mêmes helpers.
 - [x] `npm run format:check`
 - [x] `npm run build:native -- --keep-workspace` : 521 modules, 326 176 types.
 - [x] `node --test --test-concurrency=1 tools/*.test.mjs` : 679 tests,
-  678 pass, 0 échec, 1 saut.
+  678 pass, 0 échec, 1 saut (Rust-hosted).
+- [~] Validation Rust-hosted : build ThinLTO bloqué > 1 h 30 ; build
+  `opt-level=0` produit, mais `npm run test:rust` échoue encore au niveau
+  fichier. À reprendre avec un build Rust release non pathologique.
 - [x] `git diff --check`
 - [x] Vérifier que les commandes publiques et les workflows CI n'ont pas changé
   de contrat.
