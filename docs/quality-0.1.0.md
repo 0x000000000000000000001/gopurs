@@ -3,6 +3,77 @@
 This is a working record for the `0.1.0` release gates. It is not a release
 certificate. The current gate list is in the [release checklist](release-checklist.md).
 
+## RC18 qualification interruption and RC19 preparation — 13 November 2026
+
+RC18's signed tag identifies commit
+`c6c68d1486362ec2ba6ec23534a10be60f571f68`, annotated tag object
+`69482ff422b3961751716b5c2821b033b3878edb`; GitHub verifies its signature.
+[Run 43312898324](https://github.com/0x000000000000000000001/gopurs/actions/runs/43312898324)
+passed all three Nix/TAST checks. Both Linux quality reports record 106
+successful core gates followed by gate 107, `Node test-runner.test.mjs`, failing.
+The previous `FFIIntegerReturns` blocker in gate 31 passed on both Linux
+platforms. These partial results do not qualify the full candidate.
+
+The failing cleanup-isolation test copies library runners into temporary
+checkouts and substitutes selected native preflights. It omitted the newly
+invoked `tools/aff-native.test.mjs` and `test/json-records.mjs` paths. Aff and
+Foreign therefore exited before reaching the mock Spago command. Both reports
+show the same assertion at `tools/test-runner.test.mjs:858`: expected
+`/reached-spago/`, actual output only the respective preflight banner. Each
+Node suite reports 96 tests, 93 passed and 3 failures (two children and their
+parent), with no skipped/cancelled/todo tests. This is a test-fixture setup
+failure, not a Go application result or a generated-code golden mismatch.
+
+Linux arm64 failed at `2026-11-12T23:06:44Z`; Linux amd64 failed at
+`2026-11-12T23:10:53Z`. After retaining the diagnostic artifacts and exact
+source/environment identities, the remaining jobs were cancelled. The monitor
+observed `completed/cancelled` at `2026-11-12T23:12:33.813642Z`; macOS had not
+finished its native bootstrap. RC18 remains unpublished and its tag unchanged.
+The evidence is retained under
+`.gopurs-evidence/publication-rc18-20261112` at the workspace root, including
+both small quality ZIPs, the failed gate logs and quality reports. The scope
+job's separate 78/78 result is not complete matrix qualification.
+
+RC19 corrects that isolation fixture by adding the missing preflight stubs
+and allowing its isolated subprocess to start its own Node test runner:
+the child environment drops the inherited `NODE_TEST_CONTEXT` flag. It keeps
+the Spago-reached assertion and neighbor-cache sentinels. The original local
+reproduction had 49 passes and 3 failures out of 52 tests; the first correction
+fixed Foreign but left Aff unexecuted because of the inherited runner context,
+as confirmed by an isolated environment probe. Those results remain retained.
+
+The final fixture correction passed the targeted 52/52 and complete
+96/96 local tests, each with exit 0 and no failed, skipped, cancelled or todo
+tests. The local validation receipt has SHA-256
+`dcbe9344a0111ac1529ad0ccfd0c4f776a5e9790ac85707dcb23c647ef578eaa`
+and identifies the exact tested file hash. These are local fixture/file-suite
+results, not RC19's complete matrix. The real library scripts and native suites
+are unchanged, as are the compiler, runtime, frontend and library pins.
+A new signed tag, full CI and artifact/consumer qualification remain pending.
+
+The separate RC18 benchmark started at `2026-11-12T21:50:42.697Z` and
+finished its last case at `2026-11-12T23:35:20.397Z`, with a confirmed runner
+exit of 0. The terminal audit completed at `2026-11-12T23:36:14.991261Z`:
+51 cases, 1,224 invocations (918 measured samples and 306 warmups), 612 cold
+misses, 612 warm hits and 102 matching output oracles. Its report separates
+47 unchanged corpora from four with five disclosed Go FFI additions; all
+original PureScript and TAST bytes remain unchanged. The
+[benchmark record](release-benchmark.md#completed-rc18-campaign--12-november-2026-utc)
+contains the historical comparison, variability, exclusions and durable local
+archive identities. The terminal audit receipt has SHA-256
+`79338162c35291e98ecb378beff9416007c62dbaa43e3e3e74da895d16304424`.
+
+This remains a completed **RC18 campaign**, not a new RC19 measurement or
+public-artifact qualification. Explicit equality of RC18 and RC19 executed
+binaries/helpers and the other recorded inputs/tools is still unproved.
+Any later reuse requires that equality proof and must retain the original
+campaign identity; RC19's full qualification remains pending.
+
+Spec's current internal expectation remains 74 passing and 3 documented
+pending tests per profile. A successful library runner must not be described
+as zero pending internal tests. Future candidate/final CI, installed-artifact
+b8x qualification and public consumer checks remain separate release gates.
+
 ## RC17 qualification interruption and RC18 preparation — 12 November 2026
 
 The signed RC17 tag identifies commit

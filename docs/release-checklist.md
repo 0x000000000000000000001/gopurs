@@ -1,8 +1,13 @@
-# RC18 release checklist
+# RC19 release checklist
 
-Candidate: `0.1.0-rc.18`, in preparation on 12 November 2026. It is not yet
-qualified or published. RC14 is the published candidate on npm `next`;
-`latest` remains RC7. The planned first final release is `0.1.0`.
+Candidate: `0.1.0-rc.19`, in preparation on 13 November 2026. Its commit,
+signed tag, full CI and artifact qualification are pending. RC18 remains
+unpublished after its cleanup-fixture failure; its tag and failed evidence
+are preserved. The planned first final release is `0.1.0`.
+
+The previously recorded npm channel state is historical; recheck the public
+registry before publication. Checked source-preparation items below describe
+existing targeted evidence, not a successful RC19 matrix.
 
 Check an item only after recording its exact source, artifact identity and
 result in the [quality record](quality-0.1.0.md). The [release procedure](release.md)
@@ -55,14 +60,14 @@ development results retain their original scope.
   FFI examples with both compiler hosts; record platform and toolchain scope.
 - [ ] Validate a retained fallback for the affected consumer before any channel
   rollback. RC14 predates the new FFI contract; RC7's historical Hello rollback
-  does not establish a fallback for applications using RC18 features.
+  does not establish a fallback for applications using the ordinary Go FFI contract.
 
 ## Final release and announcement
 
 - [ ] Resolve qualification failures and documentation deviations, and have
   the retained evidence reviewed against the declared compatibility scope.
 - [ ] Prepare the final `0.1.0` identity and qualify its exact artifacts through
-  the same release process. RC18 results do not authorize substituting rebuilt
+  the same release process. RC19 results do not authorize substituting rebuilt
   or modified final artifacts without validation.
 - [ ] Publish and verify `0.1.0`, update the active installation commands and
   status pages, then announce the qualified scope with links to the public

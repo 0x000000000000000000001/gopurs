@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { basename, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import { formatSnapshots, packageSourceSections, snapshotFiles } from "./test-snapshots.mjs";
@@ -826,19 +826,18 @@ test("installed library runners limit direct cleanup to their own checkout", asy
     try {
       mkdirSync(join(base, name, "bin"), { recursive: true });
       cpSync(join(directory, "bin/test"), join(base, name, "bin/test"));
-      const nativePreflights = ["chmod-native.mjs", "listener-added-native.mjs", "https-response-native.mjs", "pipe-native.mjs"]
-        .filter(file => existsSync(join(directory, "test", file)));
-      const shellPreflights = ["test-child-process-native"]
-        .filter(file => existsSync(join(directory, "bin", file)));
-      for (const file of shellPreflights) {
-        writeFileSync(join(base, name, "bin", file), `#!/usr/bin/env bash\necho reached-${file}\n`, { mode: 0o755 });
-      }
-      if (nativePreflights.length) {
-        // This fixture checks shell cleanup before spago, not the native suite.
-        mkdirSync(join(base, name, "test"));
-        for (const file of nativePreflights) {
-          writeFileSync(join(base, name, "test", file), `console.log(${JSON.stringify("reached-" + file)});\n`);
-        }
+      const preflights = [
+        "test/chmod-native.mjs", "test/listener-added-native.mjs", "test/https-response-native.mjs", "test/pipe-native.mjs",
+        "tools/aff-native.test.mjs", "test/json-records.mjs", "bin/test-child-process-native",
+      ].filter(file => existsSync(join(directory, file)));
+      // This fixture checks shell cleanup before spago, not the native suites.
+      for (const file of preflights) {
+        const target = join(base, name, file);
+        mkdirSync(dirname(target), { recursive: true });
+        const marker = JSON.stringify("reached-" + file);
+        writeFileSync(target, file.startsWith("bin/")
+          ? `#!/usr/bin/env bash\necho ${marker}\n`
+          : `console.log(${marker});\n`, { mode: 0o755 });
       }
       writeFileSync(join(base, name, "spago.go.yaml"), "package: {}\n");
       mkdirSync(join(base, "mockbin"));
@@ -848,13 +847,16 @@ test("installed library runners limit direct cleanup to their own checkout", asy
         mkdirSync(directory, { recursive: true });
         writeFileSync(join(directory, "sentinel"), "neighbor data");
       }
+      const env = { ...process.env, GOPURS_RUST: "0", GOPURS_JS: "0", PATH: join(base, "mockbin") + ":" + process.env.PATH };
+      // Library scripts must be able to start their own Node test runner.
+      delete env.NODE_TEST_CONTEXT;
       const result = spawnSync("bash", [join(base, name, "bin/test")], {
-        env: { ...process.env, GOPURS_RUST: "0", GOPURS_JS: "0", PATH: join(base, "mockbin") + ":" + process.env.PATH },
+        env,
         encoding: "utf8", timeout: 10_000,
       });
       assert.ifError(result.error);
       assert.equal(result.status, 1, result.stdout + result.stderr);
-      for (const file of [...nativePreflights, ...shellPreflights]) assert(result.stdout.includes("reached-" + file), result.stdout);
+      for (const file of preflights) assert(result.stdout.includes("reached-" + file), result.stdout);
       assert.match(result.stdout, /reached-spago/);
       for (const cache of ["output", ".spago", ".cache"]) {
         assert.equal(readFileSync(join(base, "gopurs-neighbor", cache, "sentinel"), "utf8"), "neighbor data");

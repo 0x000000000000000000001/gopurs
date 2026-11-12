@@ -9,7 +9,7 @@ what users may rely on. It is not evidence that the release gates in the
 | Item | Decision |
 | --- | --- |
 | Package | `gopurs` |
-| Documented candidate | Experimental `0.1.0-rc.18` |
+| Documented candidate | Experimental `0.1.0-rc.19` |
 | Published candidate at preparation (12 November 2026) | `0.1.0-rc.14` (GitHub prerelease and npm `next`) |
 | npm `latest` at preparation (12 November 2026) | `0.1.0-rc.7` (registry-assigned alias; still a prerelease) |
 | First final version (planned) | `0.1.0` |
@@ -35,6 +35,10 @@ and on npm `next`. Its qualification and consumer checks are recorded in the
 RC18 adds the [ordinary Go FFI contract](ffi-idiomatic.md) and new frontend and
 library pins. It requires its own qualification, artifact and consumer checks;
 RC14's results are historical evidence only.
+RC18 remains unpublished after its isolated cleanup-fixture check failed on
+both Linux platforms. RC19 retains the same compiler/runtime and source pins,
+and prepares a correction limited to that test fixture. It requires its own
+signed tag, complete CI qualification and artifact/consumer checks.
 RC13 failed qualification and remains unpublished with its tag unchanged;
 the recorded RC7 and local campaign results retain their original scope.
 
@@ -111,7 +115,7 @@ The target matrix for `0.1.0` is:
 
 Release-blocking means that the platform must pass the qualification and
 installation checks in the [release checklist](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/release-checklist.md).
-It is not a claim that those checks have already passed for RC18.
+It is not a claim that those checks have already passed for RC19.
 
 RC14's successful `darwin/arm64` qualification uses the ARM64 `macos-15` runner;
 this campaign does not establish tested compatibility with macOS 14.

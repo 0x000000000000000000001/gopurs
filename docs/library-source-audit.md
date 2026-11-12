@@ -12,13 +12,20 @@ and 1 November and their new source pins are recorded separately below.
 
 | Surface | Identity and release requirement |
 | --- | --- |
-| Compiler npm package | `gopurs@0.1.0-rc.18` is in preparation; qualification and publication are pending. RC14 is published on `next`; `latest` remains RC7. The final target is `0.1.0`; each candidate's own version, dependency lockfile, file allowlist and installed-artifact tests apply. |
+| Compiler npm package | `gopurs@0.1.0-rc.19` is in preparation; qualification and publication are pending. RC18 remains unpublished after its CI failure. The recorded 12 November channel state was RC14 on `next` and RC7 on `latest`; recheck it before publication. Each candidate's exact version, lockfile, file allowlist and installed-artifact tests apply. |
 | Library sources used by bootstrap/applications | Git URL and exact commit from the bootstrap manifest; validate this combination with the selected compiler and package set. The compiler npm archive does not contain these repositories. |
 | Independent future npm/Spago library publication | Review that package's name, destination, version, dependency bounds, files and notices before publishing it. This is a separate operation. |
 
 These independent libraries do not need identical version numbers. Their
 current release identity is the compatible set of source commits. A version
 copied from an upstream package is not a version assigned to the Go port.
+
+## RC19 source configuration — 13 November 2026
+
+RC19 retains the exact RC18 frontend, library and support pins listed below.
+The proposed change is confined to the isolated runner-cleanup test and release
+identity/documentation; it does not alter the compiler, runtime or Go ports.
+Its own qualification remains pending in the [quality record](quality-0.1.0.md).
 
 ## RC18 source pins — 12 November 2026
 

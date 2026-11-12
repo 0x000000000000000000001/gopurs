@@ -6,6 +6,23 @@ All notable changes to gopurs are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0-rc.19]
+
+Nineteenth candidate for `0.1.0`, prepared on 13 November 2026, retaining
+RC18's compiler, runtime and dependency pins. Qualification and publication
+remain pending in the live
+[quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md).
+
+### Fixed
+
+- Include the Aff and Foreign native preflight paths in the isolated library
+  cleanup fixture. Stub these preflights consistently with the other library
+  runners, preserving the requirement to reach the mock Spago command and the
+  neighbor-cache sentinels. Allow the isolated subprocess to start its own
+  Node test runner by removing the inherited test-runner context from its
+  environment. The real library scripts and native suites remain unchanged;
+  this corrects the test setup that stopped RC18 qualification.
+
 ## [0.1.0-rc.18]
 
 Eighteenth candidate for `0.1.0`, retaining RC17's compiler and runtime.

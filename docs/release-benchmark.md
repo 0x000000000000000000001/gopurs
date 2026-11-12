@@ -14,6 +14,166 @@ Release**, and **265,633 ms native Dev**, summing the per-corpus cold medians.
 Rust values in that historical report are estimates and are not used here.
 There is no historical warm-cache baseline in that table.
 
+## Completed RC18 campaign — 12 November 2026 (UTC)
+
+All **51 corpora passed on their first attempt** with the locally built
+`0.1.0-rc.18` compiler from clean commit
+`c6c68d1486362ec2ba6ec23534a10be60f571f68`. Its signed tag
+`v0.1.0-rc.18` has annotated object
+`69482ff422b3961751716b5c2821b033b3878edb`. The runner started at
+`2026-11-12T21:50:42.697Z` and exited successfully after the last case finished
+at `2026-11-12T23:35:20.397Z`. The independent terminal audit completed at
+`2026-11-12T23:36:14.991261Z`. The campaign retains this RC18 identity even if
+its evidence is later referenced by another release.
+
+The primary historical comparison uses **47 corpora with identical inputs**.
+These include b8x and 46 libraries. The other four library corpora received
+explicit Go FFI additions and are shown separately below. All 51 retain their
+original PureScript and TAST bytes, including b8x's 2,707 modules. No frontend
+ran during this measurement. `gopurs-quickcheck` remains a bootstrap source
+pin without a standalone case in the official 50-library table.
+
+The tables sum per-corpus medians in **milliseconds**, each based on three
+measured fresh processes after one excluded warmup. They do not give the
+campaign's elapsed duration, complete application build time or runtime.
+The warm column measures exact unchanged-input cache hits and has no historical
+baseline. The official reference remains the altbak.pub README table above.
+
+### Principal comparison: 47 unchanged corpora
+
+| Host/profile | Official 25 October cold | RC18 cold | Change | RC18 warm |
+| --- | ---: | ---: | ---: | ---: |
+| JavaScript Release | 718,784 | 716,655 | −0.30% | 15,186 |
+| Native Release | 296,270 | 270,492 | −8.70% | 5,447 |
+| Native Dev | 237,978 | 203,360 | −14.55% | 5,397 |
+
+The recorded native Release and Dev cold medians were lower than their
+historical counterparts for each of these 47 cases. This is an observed
+comparison with the historical protocol, not a controlled attribution to one
+compiler change. JavaScript moved in both directions: across all 51 cases,
+29 medians were lower and 22 higher. Its largest absolute increases were
+avar (15,097 → 15,473 ms), strings-extra (13,757 → 14,086 ms) and partial
+(9,519 → 9,827 ms); all three belong to the unchanged group. The full samples
+and per-case comparisons remain available in the local evidence.
+
+For b8x, native Release was 76,016 ms against the historical 78,037 ms
+(−2.59%), and native Dev was 47,044 ms against 53,611 ms (−12.25%). Its warm
+medians were 531 ms JS, 321 ms native Release and 307 ms native Dev. These are
+backend-generation measurements from the historical TAST, separate from the
+installed-artifact application build and execution gate.
+
+### Context only: four corrected corpora
+
+| Host/profile | Official 25 October cold | RC18 cold | Change | RC18 warm |
+| --- | ---: | ---: | ---: | ---: |
+| JavaScript Release | 93,694 | 93,433 | −0.28% | 1,269 |
+| Native Release | 36,445 | 32,635 | −10.45% | 485 |
+| Native Dev | 27,655 | 23,715 | −14.25% | 474 |
+
+These four cases are `gopurs-node-http`, `gopurs-node-net`,
+`gopurs-node-streams` and `gopurs-spec`. Their historical comparison is **not
+at identical inputs**. The derived archive adds exactly five Go FFI files;
+all original source files, existing FFI, PureScript and TAST remain unchanged:
+
+| Derived corpus | Added Go FFI | Public source commit |
+| --- | --- | --- |
+| node-http | `test/Main.go` (`stdout`) | `9b11034d49163590634801a85219f765402b1fc7` in gopurs-node-http |
+| node-net and node-streams | `Node/Buffer/Immutable.go` in each frozen node-buffer dependency | `f154e7d6ded317ed7559540f4fa0dff6d466d3f7` in gopurs-node-buffer |
+| spec | `src/Node/ChildProcess.go` and `src/Node/ChildProcess/Types.go` | `de7f8d143d4a8468d9ec358598c24bb610a21bdc` in gopurs-spec |
+
+The historical archive was not modified. The derived archive has 31,908 source
+files versus 31,903 originally; the derivation manifest records every addition,
+its public source identity and file hash. Current library configuration changes
+are documented in the [source audit](library-source-audit.md); they must not
+be confused with regeneration of this frozen TAST. The aggregate of all 51
+cases is contextual only: cold JS/native Release/native Dev totals are
+810,088 / 303,127 / 227,075 ms, against 812,478 / 332,715 / 265,633 ms in the
+historical table; warm totals are 16,455 / 5,932 / 5,871 ms.
+
+### Validation, environment and limits
+
+The audit independently recomputed the results from **1,224 invocations:
+918 measured samples and 306 warmups**. It checked all 612 explicit cold
+misses and 612 exact warm hits, invocation order, exits, timers and output
+fingerprints. The 51 Release oracles compare JS and native Release output;
+51 separate Dev oracles check stability across its repetitions. All 102
+per-file manifests are retained. No invocation failed, timed out, used a full
+fallback or silently substituted JS for a missing native executable. No
+sample was trimmed or retried. This checks generated output agreement, not
+application execution or the correctness of every possible program.
+
+The machine was an Apple M4 Pro with 14 logical CPUs and 48 GiB RAM, Darwin
+25.1.0, Node 24.8.0 and Go 1.27.0 darwin/arm64. Source, runtime, compiler
+files, lockfiles, pinned dependencies, tool hashes, baseline files and input
+identities are retained in the audit. The frozen Go module cache was used with
+`GOPROXY=off`, `GOTOOLCHAIN=local` and `GOWORK=off`. Eight prepare/PBO/emission
+workers, pipelining, packages, overlays and build manifests were enabled;
+daemon and resident modes were disabled. Native invocations used `GOGC=off`
+and `GOMEMLIMIT=16GiB`; JS did not inherit these GC settings. The configured
+1 GiB Go cache eviction policy never triggered; its largest recorded
+post-case size was 100,019,199 bytes.
+
+Cold means fresh backend/output caches, with a warm filesystem and Go export
+cache. Every cold call was immediately followed by a fresh-process warm call.
+The variants rotated between rounds. The historical JS v2 measurements were
+retained before the native v3 measurements and did not include paired warm
+calls; the compiler binaries also differ. The recorded host and Node version
+match the historical reference, but software and scheduling/thermal conditions
+are not a controlled identical environment. Frontend compilation, compiler
+bootstrap, final Go compilation, application execution and process startup/exit
+are excluded from the internal `backend total` metric.
+
+One-minute load before invocations ranged from 2.28 to 9.15, with median 4.24;
+it includes earlier work in the campaign and does not establish an otherwise
+idle machine. The largest cold sample range was JS bigints:
+4,748 / 4,763 / 5,958 ms, with the prescribed median 4,763 ms (25.40% range
+relative to that median). All samples remain in the data. Three observations
+per cell do not establish statistical confidence or a latency bound.
+
+The measured compiler hashes are:
+
+| Artifact | SHA-256 |
+| --- | --- |
+| JavaScript compiler | `5ad71cd10cdf4ed0f18e7bbeb393f35fac1fa1d11534f5b89d982c953195377c` |
+| Native compiler, Darwin arm64 | `3e6cccfb97792003549f35b3283956a04fba0d57b383323c734fcbb8a9d47f62` |
+| Benchmark runner | `274caeb10f7377b2be6f042674ebed0922527bfc8b8502d8cc96a3b3832a131d` |
+
+### Retained evidence and release scope
+
+Durable local evidence is in
+`.gopurs-evidence/publication-rc18-20261112/benchmark-audit` at the workspace
+root. It contains `analysis.json`, `cold-comparison.csv`, campaign/summary and
+source manifests, runner and completion identities, baseline README/report,
+input derivation, all raw records/logs and the 102 output oracles. Both
+compressed archives were read back and their contents verified. The
+`frozen-inputs.tar.gz` archive includes private b8x inputs and remains local;
+this document publishes identities and aggregate results, not those sources.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| Terminal `audit-completion.json` | `79338162c35291e98ecb378beff9416007c62dbaa43e3e3e74da895d16304424` |
+| Complete `SHA256SUMS` list | `054f3fa1f18141bf89253377deaa3bca9c46cf5f1684e2641eaedf3082cf89ee` |
+| `case-records.tar.gz` | `cddb86ab047ffbb803ba095b729831c7d5511440c0e669d905f80ae020ad2101` |
+| `frozen-inputs.tar.gz` | `e5c1f8629ea40189e98315fc14edd58c4c5abf3d94231af411e3942857c4a599` |
+
+The actual build-cache and go-packages helpers were captured after the
+campaign, with binary/source/tool identities and build information. Their
+hashes were not recorded at each invocation. The separate helper receipt is
+retained under the same RC18 publication-evidence directory with SHA-256
+`0e7ce253b7b080c5146bb678e322f3064f0c084fcaec8739315c033dc85fdbd4`.
+No resolver or rebuild was used for that capture.
+
+RC18's CI qualification was interrupted by a separate test-fixture failure
+and RC18 remains unpublished; see the [quality record](quality-0.1.0.md).
+This completed local benchmark does not qualify a public package, another
+platform, RC19 or the final release. Referring a later candidate to this
+campaign requires an explicit proof of equality for all executed compiler,
+launcher, helper and runtime bytes, as well as its inputs, tools and protocol.
+That proof is pending. Any such reference must retain the words **RC18
+campaign on identical bytes**, not claim a new run. Each later version still
+requires its own CI, installed-artifact application and public consumer gates;
+an executed-byte difference requires a new strict campaign.
+
 ## RC17 interrupted campaign — 12 November 2026
 
 The RC17 local build completed 27 corpora before the frozen `node-http` entry
