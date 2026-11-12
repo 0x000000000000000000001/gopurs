@@ -14,6 +14,21 @@ Release**, and **265,633 ms native Dev**, summing the per-corpus cold medians.
 Rust values in that historical report are estimates and are not used here.
 There is no historical warm-cache baseline in that table.
 
+## RC17 interrupted campaign — 12 November 2026
+
+The RC17 local build completed 27 corpora before the frozen `node-http` entry
+failed validation: its reachable `stdout` foreign binding had no Go
+implementation in the 25 October archive. The implementation already present
+in the current library port fixes generation when added alone to an isolated
+copy; the compiler and the 312 TAST modules are unchanged.
+
+The original archive, partial measurements and failure are retained. They are
+not a completed release benchmark. Corrected entries must be identified as
+derived inputs, and their added FFI must be disclosed when comparing with the
+official historical baseline. See the
+[qualification record](quality-0.1.0.md#rc17-qualification-interruption-and-rc18-preparation--12-november-2026)
+for the diagnostic evidence.
+
 ## Completed local campaign — 27 October 2026
 
 All **51 corpora passed**, each on its first attempt, between 08:37:40 and

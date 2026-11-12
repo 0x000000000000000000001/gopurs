@@ -4,7 +4,7 @@ This document records how the `gopurs` compiler is built from a clean source
 checkout, which inputs are trusted, and which artifacts a release must publish.
 It covers the compiler distribution; it does not cover application builds.
 
-These pins target experimental `0.1.0-rc.17`. Consult the live
+These pins target experimental `0.1.0-rc.18`. Consult the live
 [quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md)
 and [release checklist](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/release-checklist.md)
 for its qualification and publication status.

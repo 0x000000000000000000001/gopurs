@@ -3,6 +3,85 @@
 This is a working record for the `0.1.0` release gates. It is not a release
 certificate. The current gate list is in the [release checklist](release-checklist.md).
 
+## RC17 qualification interruption and RC18 preparation — 12 November 2026
+
+The signed RC17 tag identifies commit
+`3d5a196c4a9ab7644185c0484284783149236248`, with annotated tag object
+`19e8c70c27cafc6ec4e14ed0153bb5a4ee7f3835`; GitHub verifies its signature.
+The freshly built local hosts passed the 33-test CLI suite, the installed
+package test on both hosts and the strict 24-invocation benchmark pilot.
+Those results do not qualify the later CI artifacts or a public installation.
+
+In [run 43296018853](https://github.com/0x000000000000000000001/gopurs/actions/runs/43296018853),
+all three platforms passed their Nix checks. Both Linux jobs passed the first
+30 core gates, then rejected the `FFIIntegerReturns` package snapshot in gate
+31. Before this assertion, all nine consumer fixtures had compiled and executed
+in monolithic form and with JavaScript, sequential native and parallel native
+package generation, with matching TAST, output files and runtime results.
+The run was cancelled after retaining both failure logs; macOS had not finished
+its native bootstrap. The tag remains unchanged and unpublished.
+
+A 23-second local reproduction identifies exactly two outdated array-argument
+blocks in the snapshot. Their replacement by the generated array-accessor
+conversion adds exactly 100 bytes to the package snapshot, matching both Linux
+reports. Release and Dev executions retain the same results and host parity.
+RC18 refreshes the four affected package and monolithic FFI snapshots; the
+generated Main code, compiler implementation and runtime are unchanged.
+The four post-update checks pass across Release/Dev and monolithic/package
+layouts. The neighboring native-array fixture `FunWithFunDeps` also passes
+both profiles and all three package hosts without a snapshot change.
+The complete qualification must run against RC18's own identity.
+
+The separate RC17 benchmark stopped after 27 completed corpora when the frozen
+25 October `node-http` entry failed FFI validation. Its reachable `stdout`
+binding has a JavaScript implementation but no `test/Main.go` in that archive.
+The current library port added this file in public commit `9b11034` on
+1 November. Adding only that file in an isolated copy lets the same RC17
+compiler generate the same 312 frozen TAST modules successfully. This is an
+incomplete historical input, not a reason to weaken FFI validation.
+
+The failed campaign and original corpus remain unchanged. A derived corpus
+and functional preflight are being prepared separately; any comparison with
+the official baseline must identify every added FFI input. No completed
+51-corpus performance result is claimed. Logs, hashes, reproductions and the
+terminal failure receipt are retained under
+`.gopurs-evidence/publication-rc17-20261112` and
+`.gopurs-evidence/rc17-benchmark-20261112` at the workspace root.
+
+The preflight also exposed missing Go Buffer dependency selection in the
+historical `node-net` and `node-streams` corpora. The actual current library
+runners reproduced the same missing `Node.Buffer.Immutable.toStringImpl`
+diagnostic in 19 and 28 seconds. Selecting `gopurs-node-buffer` in their Go
+test configurations and regenerating their locks fixes both Release and Dev.
+The four runs execute successfully and their copied configuration, lock and
+TAST module path confirm the local Go port. The public commits are
+`f640b30a98180fbaa37a1f33e298107ab8253db1` for net and
+`3a0da79477adb3e17757c1b246f21b7ddd2382b8` for streams.
+No implementation code changed in these two ports. Evidence is retained in
+`publication-rc18-20261112/current-library-probes` in the workspace evidence
+directory; the compiler manifest now selects these commits.
+
+The actual Spec runner also reproduced the historical corpus's missing
+`Node.ChildProcess.undefined` and `Node.ChildProcess.Types.fromKillSignalImpl`
+bindings. Public Spec commit `de7f8d143d4a8468d9ec358598c24bb610a21bdc`
+supplies these two auxiliary value helpers for its tests. It preserves
+undefined versus null, JavaScript ToInt32 conversion, string dispatch and
+polymorphic callback results. It does not implement the complete ChildProcess
+API or change the compiler's validation.
+
+Spec's full Release and Dev runs pass: 74 passing and the three previously
+documented pending cases in each profile, all nine external integration
+consumers, the native lifecycle checks, four integration-environment
+assertions and 21 value-contract cases. The value tests compare with the stock
+JavaScript implementation. The external consumers use Spec without `--ffi`.
+The native compiler hash remains the tested RC17 hash throughout these runs.
+Evidence is in `publication-rc18-20261112/spec-helpers-validation`.
+
+The first local Spec reproduction was interrupted by an unrelated PATH
+collision: `dd` resolved to a b8x helper rather than the system utility.
+Repeating the real runner with an explicit toolchain PATH resolves that
+environment failure; its log is retained separately from the successful runs.
+
 ## RC16 functional pilot and RC17 preparation — 12 November 2026
 
 RC16's clean source commit is `42c67ca5ba58cca904782834527dc758102aeedf`.

@@ -45,7 +45,7 @@ different program.
 
 ### Select the frontend and backend
 
-This walkthrough targets experimental `0.1.0-rc.17`. Consult the live
+This walkthrough targets experimental `0.1.0-rc.18`. Consult the live
 [quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md)
 for its qualification and publication status. Open the pinned shell in the
 application directory and install the candidate with the commands below.
@@ -54,10 +54,10 @@ See the [quickstart prerequisites](quickstart.md#prerequisites) for manual
 toolchain requirements.
 
 ```bash
-nix develop github:0x000000000000000000001/gopurs/v0.1.0-rc.17
+nix develop github:0x000000000000000000001/gopurs/v0.1.0-rc.18
 command -v purs
 purs --version
-npm install --save-dev --ignore-scripts gopurs@0.1.0-rc.17
+npm install --save-dev --ignore-scripts gopurs@0.1.0-rc.18
 ```
 
 Use `spago build` directly in this shell for the steps below. An existing
@@ -109,7 +109,7 @@ func Prefix(value string) string {
 
 The [Go FFI guide](ffi-idiomatic.md) covers signatures and representations
 for other types. The `.js` implementation serves the JavaScript target, while
-gopurs reads the `.go` implementation. RC17 checks foreign implementations in
+gopurs reads the `.go` implementation. RC18 checks foreign implementations in
 the selected entry-point scope before emitting Go. Exercise the application's
 foreign calls when checking behavior, errors and resource cleanup.
 
@@ -151,7 +151,7 @@ check errors, resource handling and asynchronous operations for its own FFI.
 
 ## Current baseline
 
-RC17 is a candidate for the first final release, `0.1.0`.
+RC18 is a candidate for the first final release, `0.1.0`.
 The compatibility commitments and the `0.x` policy are in
 [publication-scope.md](publication-scope.md).
 
@@ -198,7 +198,7 @@ Treat generated Go as a build artifact:
 The `gopurs-*` libraries are separate packages. A compiler release does not
 automatically make every stock PureScript library work. Use the library
 revision associated with the release notes or the repository branch documented
-for that release. RC17 reports missing Go FFI in the selected entry-point scope;
+for that release. RC18 reports missing Go FFI in the selected entry-point scope;
 library behavior still needs application tests.
 
 ## Toolchain pins

@@ -12,7 +12,7 @@ and 1 November and their new source pins are recorded separately below.
 
 | Surface | Identity and release requirement |
 | --- | --- |
-| Compiler npm package | `gopurs@0.1.0-rc.17` is in preparation; qualification and publication are pending. RC14 is published on `next`; `latest` remains RC7. The final target is `0.1.0`; each candidate's own version, dependency lockfile, file allowlist and installed-artifact tests apply. |
+| Compiler npm package | `gopurs@0.1.0-rc.18` is in preparation; qualification and publication are pending. RC14 is published on `next`; `latest` remains RC7. The final target is `0.1.0`; each candidate's own version, dependency lockfile, file allowlist and installed-artifact tests apply. |
 | Library sources used by bootstrap/applications | Git URL and exact commit from the bootstrap manifest; validate this combination with the selected compiler and package set. The compiler npm archive does not contain these repositories. |
 | Independent future npm/Spago library publication | Review that package's name, destination, version, dependency bounds, files and notices before publishing it. This is a separate operation. |
 
@@ -20,7 +20,7 @@ These independent libraries do not need identical version numbers. Their
 current release identity is the compatible set of source commits. A version
 copied from an upstream package is not a version assigned to the Go port.
 
-## RC17 source pins — 12 November 2026
+## RC18 source pins — 12 November 2026
 
 The candidate selects the following exact revisions in
 [`bootstrap-sources.json`](../bootstrap-sources.json):
@@ -30,6 +30,9 @@ The candidate selects the following exact revisions in
 | Typed frontend | `ae6a6f644502bafcfa4fa94d8f81a1a1a1ca5080` | Retain the nominal `EffectFnAff` contract in TAST |
 | `gopurs-aff` | `dbe9ff1c574a18352cf9ec861090083b14ca0246` | Match the native foreign-function boundary |
 | `gopurs-foreign` | `c79499d6c22fd0637104bec5449434cfb6e31fe4` | Handle native Go foreign values, including undefined semantics |
+| `gopurs-node-net` | `f640b30a98180fbaa37a1f33e298107ab8253db1` | Select the Go Buffer dependency in the test configuration |
+| `gopurs-node-streams` | `3a0da79477adb3e17757c1b246f21b7ddd2382b8` | Select the Go Buffer dependency in the test configuration |
+| `gopurs-spec` | `de7f8d143d4a8468d9ec358598c24bb610a21bdc` | Complete the node-child-process value helpers used by Spec's tests |
 
 The manifest also identifies the separate Argonaut codecs support checkout at
 `bdf31cc0f7d74d510dcf53f2a8fbca3b550d8ff2`. It is a support input, not a 52nd

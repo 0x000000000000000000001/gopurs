@@ -6,6 +6,31 @@ All notable changes to gopurs are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0-rc.18]
+
+Eighteenth candidate for `0.1.0`, retaining RC17's compiler and runtime.
+Qualification and publication status remain in the live
+[quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md).
+
+### Fixed
+
+- Refresh the Release and Dev `FFIIntegerReturns` snapshots for the ordinary
+  FFI array conversion introduced in RC15. The references now use the runtime
+  array accessors, matching the generated code already exercised successfully
+  by the JavaScript and native hosts. Compiler and runtime behavior are unchanged.
+- Select the Go Buffer port in the `node-net` and `node-streams` test
+  configurations and generated locks. Their Release and Dev suites pass with
+  this dependency selection; the bootstrap manifest pins the reviewed commits.
+- Supply Spec's two missing node-child-process value helpers: an undefined
+  sentinel distinct from null, and kill-signal dispatch matching the stock
+  JavaScript number/string conversion. This supports Spec's test dependency,
+  not the complete node-child-process API. Contract checks and the complete
+  Release/Dev Spec suites cover the new source pin.
+- Record the incomplete historical HTTP benchmark input separately from
+  compiler qualification. Its reachable `stdout` foreign binding lacked a Go
+  implementation; the current library port already supplies it. Historical
+  inputs and measurements remain unchanged.
+
 ## [0.1.0-rc.17]
 
 Seventeenth candidate for `0.1.0`, retaining RC16's ordinary Go FFI contract,
