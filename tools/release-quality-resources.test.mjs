@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, utimesSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -186,9 +186,21 @@ function partialQualityReports() {
   return structuredClone({ inventory, core, fixtures, build });
 }
 
+function expectedFullGateNames(inventory) {
+  return [
+    ...inventory.nodeTests.map(name => `Node ${name}`),
+    "Go build-cache (race)", "Go c1c (race)", "Go ffi-gen (race)",
+    "Native emission cancellation and concurrency (race)",
+    ...["release", "dev"].flatMap(profile => inventory.modules.map(library => `Library module ${library.name} (${profile})`)),
+    ...inventory.batches.map(batch => batch.name),
+    "npm package surface",
+  ];
+}
+
 test("four shards preserve every original batch and only their verified union is full", () => {
   const { inventory, core, fixtures, build } = partialQualityReports();
-  assert.equal(inventory.nodeTests.length, 104);
+  const nodeTests = readdirSync(new URL("./", import.meta.url)).filter(name => name.endsWith(".test.mjs")).sort();
+  assert.deepEqual(inventory.nodeTests, nodeTests, "the full gate must discover every Node test file");
   assert(inventory.nodeTests.includes("check-docs.test.mjs"));
   assert(inventory.nodeTests.includes("check-output-identity.test.mjs"));
   assert.equal(inventory.targets.length, 401);
@@ -208,10 +220,11 @@ test("four shards preserve every original batch and only their verified union is
   assert.equal(merged.full, true);
   assert.equal(merged.phase, "all");
   assert.equal(merged.status, "passed");
-  assert.equal(merged.gates.length, 373);
+  const expectedGates = expectedFullGateNames(inventory);
+  assert.deepEqual(merged.gates.map(gate => gate.name), expectedGates);
   assert.deepEqual(merged.fixtures.passed, { release: 401, dev: 401 });
   assert.deepEqual(merged.modules, { selectedPerProfile: 51, passed: { release: 51, dev: 51 } });
-  assert.deepEqual(merged.gates.map(gate => gate.index), Array.from({ length: 373 }, (_, index) => index + 1));
+  assert.deepEqual(merged.gates.map(gate => gate.index), Array.from({ length: expectedGates.length }, (_, index) => index + 1));
   for (const profile of ["release", "dev"]) assert.deepEqual(
     merged.gates.filter(gate => gate.fixtures?.profile === profile).flatMap(gate => gate.fixtures.targets), inventory.targets);
   assert.equal(merged.gates.at(-1).name, "npm package surface");
@@ -276,7 +289,7 @@ test("aggregation rejects incomplete, duplicate, failed or mismatched qualificat
 });
 
 test("merge CLI checks stable fixture evidence and original bootstrap hashes before writing", t => {
-  const root = workspace(t), { core, fixtures, build } = partialQualityReports();
+  const root = workspace(t), { inventory, core, fixtures, build } = partialQualityReports();
   const commit = execFileSync("git", ["rev-parse", "HEAD"], { cwd: fileURLToPath(new URL("../", import.meta.url)), encoding: "utf8" }).trim();
   for (const report of [core, ...fixtures]) report.identity.source.commit = commit;
   build.source.commit = commit;
@@ -308,7 +321,7 @@ test("merge CLI checks stable fixture evidence and original bootstrap hashes bef
     ...fixtureFiles.flatMap(file => ["--fixtures", file]), "--build", buildFile, "--out", output];
   let result = spawnSync(process.execPath, args, { env, encoding: "utf8" });
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(JSON.parse(readFileSync(output, "utf8")).gates.length, 373);
+  assert.deepEqual(JSON.parse(readFileSync(output, "utf8")).gates.map(gate => gate.name), expectedFullGateNames(inventory));
   rmSync(output);
   const signingEnv = { ...env, CI: "true", GITHUB_ACTIONS: "true", RUNNER_ENVIRONMENT: "github-hosted",
     GITHUB_SERVER_URL: "https://github.com", GITHUB_EVENT_NAME: "push", GITHUB_REF_TYPE: "tag",

@@ -1,7 +1,11 @@
 # Quickstart
 
 Build and run a PureScript program that prints `Hello from gopurs`. It uses
-`gopurs@0.1.0-rc.14` and the Go port of `console` for `Effect.Console.log`.
+`gopurs@0.1.0-rc.15` and the Go port of `console` for `Effect.Console.log`.
+This guide targets the experimental RC15 candidate. Consult the live
+[quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md)
+for its qualification and publication status. The
+[source bootstrap](bootstrap.md#clean-source-installation) covers local builds.
 
 ## Prerequisites
 
@@ -10,7 +14,7 @@ If you use Nix with flakes enabled, open the development shell for this release
 and run the rest of the guide inside it.
 
 ```bash
-nix develop github:0x000000000000000000001/gopurs/v0.1.0-rc.14
+nix develop github:0x000000000000000000001/gopurs/v0.1.0-rc.15
 ```
 
 The first shell setup can download and compile the Haskell frontend and its
@@ -19,14 +23,15 @@ dependencies. Let that setup finish before entering the application commands.
 The shell supplies the tools below. For a manual setup, put them on `PATH`
 before continuing.
 
-- The [pinned typed `purs` compiler](https://github.com/0x000000000000000000001/purescript/tree/105f5752b39cc0f6c99a40064295338bf57ad223). Spago uses it to emit the type information gopurs needs.
+- The [pinned typed `purs` compiler](https://github.com/0x000000000000000000001/purescript/tree/ae6a6f644502bafcfa4fa94d8f81a1a1a1ca5080). Spago uses it to emit the type information gopurs needs.
 - Spago `1.0.3` for the application build.
 - Node.js `24.8.0` and npm for the gopurs JavaScript compiler host.
 - Go `1.27.0` and Git.
 
 See the [Nix guide](nix.md#typed-frontend-and-development-shell) for details of
 the pinned toolchain. The [qualification record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md#public-publication-and-consumer-checks)
-covers the public RC14 Hello tested on Linux arm64 on 5 November 2026.
+covers the public RC14 Hello tested on Linux arm64 on 5 November 2026. RC15
+requires consumer checks with its own published artifacts.
 
 ## Workspace
 
@@ -47,10 +52,10 @@ mkdir src
 npm init -y
 ```
 
-Install the published prerelease:
+Install the selected candidate:
 
 ```bash
-npm install --save-dev --ignore-scripts gopurs@0.1.0-rc.14
+npm install --save-dev --ignore-scripts gopurs@0.1.0-rc.15
 ```
 
 ## Install the console port
@@ -115,10 +120,11 @@ Hello from gopurs
 writes Go sources, the runtime and `go.mod` under `output/`; `go build` produces
 the final application binary.
 
-Use the pinned typed fork even if generation appears to succeed with upstream
-`purs`. RC14 can accept upstream CoreFn without reporting the missing type
-information. The [migration guide](migration.md#from-a-javascript-project)
-shows how to check the generated frontend output.
+Use the pinned typed fork. gopurs rejects frontend output that lacks the TAST
+metadata arrays. After switching frontend revisions, rebuild from clean
+frontend output to replace older type annotations, preserving `go.mod` and
+`go.sum`. The [migration guide](migration.md#from-a-javascript-project)
+shows how to check the frontend selected on `PATH` and its generated output.
 
 ## Minimal check without FFI
 

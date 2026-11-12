@@ -1,7 +1,10 @@
 # FFI Go idiomatique — plan de travail
 
-Plan établi le 12 novembre 2026. Les cases ci-dessous décrivent le travail à
-réaliser ; ce document ne constitue pas une validation des capacités proposées.
+Plan établi le 12 novembre 2026. Les cases cochées correspondent aux travaux
+vérifiés ; les preuves et limites sont consignées dans
+[la baseline FFI](docs/ffi-baseline.md), [le rapport de validation](docs/ffi-validation.md)
+et les tests `tools/ffi-*.test.mjs`.
+Les huit lots sont réalisés ou explicitement qualifiés dans le périmètre ci-dessous.
 
 ## Objectif final
 
@@ -73,18 +76,18 @@ syntaxiques seules ne prouvent pas la compatibilité des types.
 
 ## Lot 0 — Définir le contrat et les preuves minimales
 
-- [ ] Inventorier les signatures réellement utilisées dans les FFI manuscrites
+- [x] Inventorier les signatures réellement utilisées dans les FFI manuscrites
   de b8x et les ports concernés : effets, retours multiples, callbacks,
   handles, valeurs dynamiques, records et ADT.
-- [ ] Séparer les conversions propres à l'application des conversions imposées
+- [x] Séparer les conversions propres à l'application des conversions imposées
   par la représentation du backend.
-- [ ] Consigner une baseline : imports du runtime, wrappers manuscrits, casts,
+- [x] Consigner une baseline : imports du runtime, wrappers manuscrits, casts,
   helpers spécifiques, instructions de configuration et résultats observables.
-- [ ] Choisir une fixture sans réseau ni SDK externe : une fonction Go qui
+- [x] Choisir une fixture sans réseau ni SDK externe : une fonction Go qui
   retourne `(string, error)`, associée à un import `EffectFnAff String`.
-- [ ] Définir ses cas succès, erreur, exécution différée et exécutions répétées.
+- [x] Définir ses cas succès, erreur, exécution différée et exécutions répétées.
   Prévoir une reproduction ciblée réalisable en moins de cinq minutes.
-- [ ] Définir le contrat cible ci-dessous, en indiquant pour chaque forme son
+- [x] Définir le contrat cible ci-dessous, en indiquant pour chaque forme son
   statut : existante, à étendre ou non prise en charge.
 
 | Contrat PureScript | Forme Go visée | Adaptation attendue |
@@ -96,7 +99,7 @@ syntaxiques seules ne prouvent pas la compatibilité des types.
 | `EffectFnAff Unit` | Aucun résultat ou un `error` | Succès sans valeur et échec |
 | Opération asynchrone annulable | `context.Context` et résultats ordinaires | Propagation de l'annulation selon le contrat de l'opération |
 | Handle opaque PureScript | Pointeur ou type natif du SDK | Transport du handle sans déballage manuel |
-| `Aff a` directement importé | Formes Go ordinaires équivalentes | Extension à qualifier après le premier pont `EffectFnAff` |
+| `Aff a` directement importé | Intégration spécialisée existante du port | Formes Go ordinaires refusées avec diagnostic ; utiliser `EffectFnAff` |
 
 **Critère de sortie :** une première signature précise, des comportements
 observables à vérifier et une liste de limites explicites. Aucune migration
@@ -104,21 +107,21 @@ générale avant cette preuve.
 
 ## Lot 1 — Conserver les signatures Go complètes
 
-- [ ] Représenter tous les résultats dans le modèle partagé, y compris pour
+- [x] Représenter tous les résultats dans le modèle partagé, y compris pour
   les callbacks, les résultats nommés et les déclarations groupées.
-- [ ] Conserver les informations nécessaires sur pointeurs, types nommés,
+- [x] Conserver les informations nécessaires sur pointeurs, types nommés,
   alias, imports, interfaces et fonctions. Distinguer notamment slices,
   tableaux de taille fixe et paramètres variadiques.
-- [ ] Identifier `error` et `context.Context` par leur identité de type, en
+- [x] Identifier `error` et `context.Context` par leur identité de type, en
   tenant compte des alias et des noms masqués ; éviter une simple comparaison
   avec le nom d'un paramètre ou un alias d'import.
-- [ ] Utiliser les mécanismes existants de résolution des types lorsque
+- [x] Utiliser les mécanismes existants de résolution des types lorsque
   l'analyse syntaxique ne suffit pas. Définir les formes initialement acceptées.
-- [ ] Mettre à jour le décodage PureScript et les consommateurs du contrat.
+- [x] Mettre à jour le décodage PureScript et les consommateurs du contrat.
   Une forme non prise en charge ne doit plus être réduite silencieusement.
-- [ ] Garder les réécritures AST cohérentes avec les scopes, imports et
+- [x] Garder les réécritures AST cohérentes avec les scopes, imports et
   références ; préserver commentaires, littéraux et provenance des diagnostics.
-- [ ] Versionner le contrat et invalider les caches concernés. Mettre à jour
+- [x] Versionner le contrat et invalider les caches concernés. Mettre à jour
   l'identité des helpers, les listes de sources embarquées et le paquet distribué.
 
 **Validation :** tests du parseur sur signatures complètes et diagnostics ;
@@ -127,21 +130,21 @@ existantes. Pas de migration applicative dans ce lot.
 
 ## Lot 2 — Générer le premier pont idiomatique
 
-- [ ] Croiser la signature Go avec le type TAST instancié du foreign import.
+- [x] Croiser la signature Go avec le type TAST instancié du foreign import.
   Reconnaître explicitement `EffectFnAff a` avant son éventuel dépliage ;
   vérifier la substitution des paramètres de ses newtypes et callbacks.
-- [ ] Générer le pont `(T, error)` vers `EffectFnAff a`, puis le cas
+- [x] Générer le pont `(T, error)` vers `EffectFnAff a`, puis le cas
   `error` vers `EffectFnAff Unit`.
-- [ ] Prendre en charge les opérations sans erreur Go selon leur type
+- [x] Prendre en charge les opérations sans erreur Go selon leur type
   PureScript, sans imposer un retour `error` artificiel au développeur.
-- [ ] Conserver le démarrage différé : construire une action ou appliquer ses
+- [x] Conserver le démarrage différé : construire une action ou appliquer ses
   arguments ne doit pas exécuter prématurément l'opération.
-- [ ] Une nouvelle exécution de l'action doit lancer une nouvelle opération.
+- [x] Une nouvelle exécution de l'action doit lancer une nouvelle opération.
   Ne pas introduire de mémorisation involontaire.
-- [ ] Définir la transmission d'`error`, de `nil` et des valeurs nulles typées.
+- [x] Définir la transmission d'`error`, de `nil` et des valeurs nulles typées.
   Traiter explicitement la politique des panics, sans les transformer
   silencieusement en erreurs métier.
-- [ ] Conserver la compatibilité avec les signatures utilisant déjà le runtime.
+- [x] Conserver la compatibilité avec les signatures utilisant déjà le runtime.
   Toute ambiguïté entre ancien et nouveau contrat doit être diagnostiquée.
 
 **Validation :** la fixture Go ne contient aucune référence au runtime et peut
@@ -151,23 +154,23 @@ natif. Inspecter aussi le Go généré pour vérifier le chemin réellement util
 
 ## Lot 3 — Fixer le cycle de vie asynchrone
 
-- [ ] Faire revenir l'installation de l'opération avec son annuleur sans
+- [x] Faire revenir l'installation de l'opération avec son annuleur sans
   attendre une opération bloquante. Sinon l'annulation ne devient observable
   qu'après la fin du travail.
-- [ ] Définir un arbitrage unique entre résultat, erreur et annulation :
+- [x] Définir un arbitrage unique entre résultat, erreur et annulation :
   une seule terminaison observable, y compris en présence de courses.
-- [ ] Relier un `context.Context` Go au cycle de vie de l'action PureScript,
+- [x] Relier un `context.Context` Go au cycle de vie de l'action PureScript,
   avec propagation et libération du contexte au bon moment.
-- [ ] Distinguer une opération effectivement interruptible d'une opération
+- [x] Distinguer une opération effectivement interruptible d'une opération
   qui continue après l'arrêt de l'attente. Ne pas annoncer une annulation
   physique que le SDK ne fournit pas.
-- [ ] Fixer la propriété des ressources lors d'une acquisition concurrente
+- [x] Fixer la propriété des ressources lors d'une acquisition concurrente
   avec une annulation : qui reçoit ou libère un résultat tardif, et quand.
   S'appuyer sur un contrat explicite d'acquisition/libération ; ne pas déduire
   automatiquement un destructeur d'une méthode nommée `Close`.
-- [ ] Couvrir callbacks et abonnements de longue durée : durée de validité,
+- [x] Couvrir callbacks et abonnements de longue durée : durée de validité,
   désinscription, appels après arrêt et synchronisation avec la fermeture.
-- [ ] Privilégier les mécanismes Go usuels, dont `context`, et les abstractions
+- [x] Privilégier les mécanismes Go usuels, dont `context`, et les abstractions
   PureScript existantes. Toute convention supplémentaire doit être nécessaire
   et expliquée par un cas concret.
 
@@ -179,24 +182,25 @@ RabbitMQ ou PostgreSQL.
 
 ## Lot 4 — Rendre les paramètres et résultats naturels
 
-- [ ] Adapter les callbacks typés afin que le code Go puisse appeler une
+- [x] Adapter les callbacks typés afin que le code Go puisse appeler une
   fonction ordinaire sans `Apply` ni fabrication manuelle d'un effet.
-- [ ] Transporter les handles par leurs types Go natifs. Vérifier aller-retour,
+- [x] Transporter les handles par leurs types Go natifs. Vérifier aller-retour,
   identité, `nil`, durée de validité et usages après fermeture selon le contrat
   du SDK.
-- [ ] Définir le passage de `Foreign`, `Array Foreign` et des données
+- [x] Définir le passage de `Foreign`, `Array Foreign` et des données
   dynamiques vers les valeurs Go correspondantes, notamment pour PostgreSQL.
   Un `any` naturel ne doit pas masquer une obligation de déballer un `Value`.
-- [ ] Préserver les distinctions pertinentes : valeur absente, `nil`, tableau
+- [x] Préserver les distinctions pertinentes : valeur absente, `nil`, tableau
   vide, zéro, faux, taille et précision numériques.
-- [ ] Garder les conversions SQL, JSON et les choix de sérialisation sous
+- [x] Garder les conversions SQL, JSON et les choix de sérialisation sous
   le contrôle de l'application.
-- [ ] Compléter les conventions `Effect` et `EffectFnN` pour éviter les thunks
+- [x] Compléter les conventions `Effect` et `EffectFnN` pour éviter les thunks
   et arguments `Unit` artificiels dans le Go manuscrit lorsque le type
   PureScript permet de les générer sans ambiguïté.
-- [ ] Qualifier ensuite l'import direct d'`Aff a` : réutiliser le contrat
-  asynchrone commun sans imposer une migration des imports `EffectFnAff`
-  existants ni exposer une nouvelle famille de helpers au développeur.
+- [x] Qualifier ensuite l'import direct d'`Aff a` : l'intégration spécialisée
+  du port reste disponible ; les signatures Go ordinaires sont refusées avec
+  un diagnostic qui recommande `EffectFnAff`. Aucune nouvelle famille de
+  helpers n'est imposée au développeur.
 
 **Critère de sortie :** des signatures natives couvrent les besoins des premiers
 pilotes, avec erreurs précises sur les formes incompatibles. Le typage et le
@@ -206,24 +210,24 @@ comportement priment sur une acceptation permissive de toutes les signatures.
 
 ### RabbitMQ
 
-- [ ] Migrer une opération simple, puis les acquisitions, fermetures et
+- [x] Migrer une opération simple, puis les acquisitions, fermetures et
   abonnements lorsque leurs contrats de cycle de vie sont validés.
-- [ ] Remplacer `rabbitAff` et les manipulations du runtime par les fonctions,
+- [x] Remplacer `rabbitAff` et les manipulations du runtime par les fonctions,
   types et retours ordinaires du SDK.
-- [ ] Conserver les interfaces PureScript/JavaScript et vérifier les callbacks
+- [x] Conserver les interfaces PureScript/JavaScript et vérifier les callbacks
   de messages, erreurs de connexion et fermetures.
-- [ ] Vérifier les scénarios annulables et non annulables réellement proposés
+- [x] Vérifier les scénarios annulables et non annulables réellement proposés
   par le SDK ; documenter les limites restantes.
 
 ### PostgreSQL
 
-- [ ] Migrer d'abord une requête simple, puis les paramètres/résultats
+- [x] Migrer d'abord une requête simple, puis les paramètres/résultats
   dynamiques, le comptage, les connexions dédiées et les transactions.
-- [ ] Retirer des FFI les inspections de tags, `Box`, `Apply` et les essais
+- [x] Retirer des FFI les inspections de tags, `Box`, `Apply` et les essais
   de déballage manuel des handles.
-- [ ] Utiliser le contexte transmis pour les opérations qui le prennent
+- [x] Utiliser le contexte transmis pour les opérations qui le prennent
   en charge, avec fermeture des rows et libération des connexions.
-- [ ] Préserver exactement les conversions applicatives et les comportements
+- [x] Préserver exactement les conversions applicatives et les comportements
   des erreurs, résultats vides, valeurs nulles et transactions.
 
 **Validation de chaque pilote :** tests Go directs avec doublures lorsque
@@ -236,19 +240,21 @@ le SDK concerné, sans apprendre la représentation du runtime PureScript.
 
 ## Lot 6 — Étendre aux données structurées et aux autres FFI
 
-- [ ] Ajouter les correspondances records fermés vers structs Go à partir du
+- [x] Ajouter les correspondances records fermés vers structs Go à partir du
   TAST et des déclarations Go : champs, types, noms, présence et valeurs nulles.
   Définir les divergences acceptées et les diagnostics des autres cas.
-- [ ] Exploiter les déclarations TAST pour les newtypes et ADT. Garder les tags,
+- [x] Exploiter les déclarations TAST pour les newtypes et ADT. Garder les tags,
   layouts et détails de boxing dans les adaptateurs générés.
-- [ ] Traiter les rangées ouvertes, variantes polymorphes, conteneurs imbriqués
+- [x] Traiter les rangées ouvertes, variantes polymorphes, conteneurs imbriqués
   et contraintes uniquement avec des règles explicites et des preuves ciblées.
-- [ ] Si une information ou une garantie manque, identifier précisément le
+- [x] Si une information ou une garantie manque, identifier précisément le
   besoin avant de proposer une évolution du TAST/PBO ; ne pas supposer que les
   types ont été effacés.
-- [ ] Migrer ensuite les FFI b8x restantes, notamment Paseto, Unzip, Hash et
-  Router, en conservant les politiques métier et les comportements des cibles.
-- [ ] Recenser chaque dépendance résiduelle au runtime dans une FFI manuscrite,
+- [x] Migrer ensuite les FFI b8x restantes, notamment Paseto, Unzip et Hash,
+  en conservant les politiques métier et les comportements des cibles. Router
+  extrait désormais `VariantF` côté PureScript via `unvariantF` ; son dispatcher
+  Go ne dépend plus du runtime et conserve la variante originale pour le fallback.
+- [x] Recenser chaque dépendance résiduelle au runtime dans une FFI manuscrite,
   sa raison et le travail nécessaire pour la retirer.
 
 **Critère de sortie :** les FFI applicatives ordinaires n'exposent plus le
@@ -256,52 +262,62 @@ runtime. Les exceptions sont limitées, identifiées et justifiées techniquemen
 
 ## Lot 7 — Vérifier la DX de bout en bout et documenter
 
-- [ ] Documenter quelques exemples Go naturels : fonction pure, effet, opération
+- [x] Documenter quelques exemples Go naturels : fonction pure, effet, opération
   avec erreur, callback, handle, contexte et données structurées.
-- [ ] Présenter une seule voie recommandée pour chaque besoin courant.
+- [x] Présenter une seule voie recommandée pour chaque besoin courant.
   Décrire les conventions indispensables et les limites sans demander au
   lecteur de connaître l'ABI du compilateur.
-- [ ] Situer les diagnostics dans le module PureScript et le fichier Go
+- [x] Situer les diagnostics dans le module PureScript et le fichier Go
   manuscrit : signature rencontrée, forme attendue et correction possible.
-- [ ] Refaire le parcours depuis un projet neuf et une migration depuis le
+- [x] Refaire le parcours depuis un projet neuf et une migration depuis le
   compilateur/JavaScript officiels, en installant le paquet assemblé.
-- [ ] Vérifier les sorties avec cache froid, réutilisation du cache, changement
+- [x] Vérifier les sorties avec cache froid, réutilisation du cache, changement
   de signature FFI et récupération après erreur.
-- [ ] Vérifier analyse et génération avec les hôtes JS/WASM et natif.
+- [x] Vérifier analyse et génération avec les hôtes JS/WASM et natif.
   Qualifier séparément l'exécution des bibliothèques sur les cibles supportées :
   le parseur WASM ne rend pas un SDK réseau compatible avec une cible WASM.
-- [ ] Vérifier que le paquet distribue le parseur et les helpers correspondant
+- [x] Vérifier que le paquet distribue le parseur et les helpers correspondant
   au nouveau contrat, sans dépendance implicite au checkout du développeur.
-- [ ] Comparer la FFI avant/après : code de liaison manuscrit, imports, casts,
+- [x] Comparer la FFI avant/après : code de liaison manuscrit, imports, casts,
   configuration et connaissances spécifiques requises. Vérifier aussi les
   allocations et conversions introduites lorsque le chemin le justifie.
-- [ ] Pour toute conclusion de performance applicative, utiliser les baselines
+- [x] Pour toute conclusion de performance applicative, utiliser les baselines
   officielles du README d'altbak.pub. Les microbenchmarks ciblés complètent
   ces baselines et ne les remplacent pas.
 
 ## Définition de terminé
 
-- [ ] Les FFI courantes s'écrivent et se testent comme du Go ordinaire.
-- [ ] Les pilotes RabbitMQ et PostgreSQL, puis les autres FFI ordinaires de b8x,
+- [x] Les FFI courantes s'écrivent et se testent comme du Go ordinaire.
+- [x] Les pilotes RabbitMQ et PostgreSQL, puis les autres FFI ordinaires de b8x,
   n'importent plus le runtime et ne manipulent plus sa représentation interne.
-- [ ] Aucun helper propriétaire ne remplace artificiellement le boilerplate
+- [x] Aucun helper propriétaire ne remplace artificiellement le boilerplate
   supprimé ; les conventions et fichiers à maintenir restent minimaux.
-- [ ] Les effets, erreurs, callbacks, annulations et ressources ont un contrat
+- [x] Les effets, erreurs, callbacks, annulations et ressources ont un contrat
   observable couvert par des tests.
-- [ ] Les conversions préservent les valeurs et les comportements applicatifs.
-- [ ] Les FFI existantes restent utilisables pendant la migration.
-- [ ] Les signatures non prises en charge échouent avec un diagnostic utile.
-- [ ] Les exemples de documentation et les parcours d'installation/migration
+- [x] Les conversions préservent les valeurs et les comportements applicatifs.
+- [x] Les FFI existantes restent utilisables pendant la migration.
+- [x] Les signatures non prises en charge échouent avec un diagnostic utile.
+- [x] Les exemples de documentation et les parcours d'installation/migration
   ont été exécutés avec les versions exactes consignées.
-- [ ] Les vérifications distinguent les hôtes du compilateur, les cibles
+- [x] Les vérifications distinguent les hôtes du compilateur, les cibles
   d'exécution et les bibliothèques réellement testées.
-- [ ] Les limites restantes sont explicites et ne sont pas présentées comme
+- [x] Les limites restantes sont explicites et ne sont pas présentées comme
   des cas validés.
 
-## Première étape à entreprendre
+## Preuves et qualification
 
-Commencer par le lot 0, puis préserver les retours multiples dans le parseur
-pour la fixture `(string, error) → EffectFnAff String`. Obtenir une preuve
-courte de génération et d'exécution avant d'élargir le contrat ou de migrer
-b8x. À chaque étape, conserver la commande de reproduction et le résultat
-observé ; un test échoué doit orienter la prochaine petite modification.
+La fixture `(string, error) → EffectFnAff String` a précédé les migrations.
+Le rapport de validation et les runners durables consignent les commandes,
+versions, corrections guidées par les échecs et périmètres réellement exécutés.
+Le lot 7 est validé sur les derniers binaires assemblés : 31 tests ciblés,
+parcours E2E JS et natif en release/dev, puis installation isolée du tarball
+avec cache froid, réutilisation, changement de signature, erreur et récupération.
+Le rapport conserve les versions, empreintes SHA-256 et chemins des artefacts.
+
+Les limites qualifiées ne sont pas des capacités annoncées : pas d’adaptation
+ordinaire directe d’`Aff`, pas de nouvelle correspondance générale des ADT à
+plusieurs constructeurs, des rangées ouvertes ou des variantes polymorphes.
+Les newtypes et layouts ADT élidés ont une substitution testée. Le complément
+Router retire sa dépendance au runtime par une adaptation dans la bibliothèque
+PureScript, sans nouvelle règle de génération. Aucun manque supposé de types
+TAST n’est utilisé pour justifier les limites restantes.

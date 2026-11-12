@@ -1,7 +1,31 @@
 # Quality-gate status — 0.1.0
 
 This is a working record for the `0.1.0` release gates. It is not a release
-certificate. The gate list is in [`todo.md`](../todo.md).
+certificate. The current gate list is in the [release checklist](release-checklist.md).
+
+## RC15 source preparation — 12 November 2026
+
+The new candidate targets `0.1.0-rc.15`. Its source preparation is not a
+qualification of signed or published artifacts. The typed frontend is pinned
+to `ae6a6f644502bafcfa4fa94d8f81a1a1a1ca5080`, Aff to
+`dbe9ff1c574a18352cf9ec861090083b14ca0246`, and Foreign to
+`c79499d6c22fd0637104bec5449434cfb6e31fe4`; those commits are available in
+their public repositories. All 51 local library checkouts match the candidate
+manifest and have clean working trees.
+
+The rebuilt JavaScript host passed all 36 focused FFI tests, including the five
+old-frontend diagnostic tests. The parser and runtime passed their Go race
+suites. All 78 CI planning, receipt and full-inventory aggregation tests passed,
+with no skips. Documentation checks covered 42 documents, 58 packaged paths
+and 106 compiler modules. Logs and the library identity audit are retained in
+`.gopurs-evidence/publication-rc15-20261112` at the local workspace root.
+
+The ordinary Go FFI, ownership and native Foreign work is detailed in the
+[FFI validation record](ffi-validation.md). Its successful 287-test b8x run
+used development compiler artifacts. A fresh application source snapshot has
+been prepared for installed-candidate validation; that validation, the complete
+cold/warm benchmark, the signed three-platform qualification and public
+consumer checks remain pending in the [release checklist](release-checklist.md).
 
 ## RC14 qualification and artifact review — 5 November 2026
 

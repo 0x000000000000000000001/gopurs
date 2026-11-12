@@ -1,20 +1,25 @@
 # Publication scope and compatibility policy
 
 Status: decision record for the first public release of `gopurs`. It defines
-what users may rely on. It is not evidence that the release gates in
-[`todo.md`](https://github.com/0x000000000000000000001/gopurs/blob/main/todo.md) have passed.
+what users may rely on. It is not evidence that the release gates in the
+[release checklist](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/release-checklist.md) have passed.
 
 ## Release identity
 
 | Item | Decision |
 | --- | --- |
 | Package | `gopurs` |
-| Published candidate | `0.1.0-rc.14` (GitHub prerelease and npm `next`) |
-| npm `latest` | `0.1.0-rc.7` (registry-assigned alias; still a prerelease) |
-| First final version (planned) | `0.1.0`; not published |
+| Documented candidate | Experimental `0.1.0-rc.15` |
+| Published candidate at preparation (12 November 2026) | `0.1.0-rc.14` (GitHub prerelease and npm `next`) |
+| npm `latest` at preparation (12 November 2026) | `0.1.0-rc.7` (registry-assigned alias; still a prerelease) |
+| First final version (planned) | `0.1.0` |
 | Version source | [`package.json`](../package.json) |
 | Versioning | [Semantic Versioning 2.0.0](https://semver.org/) |
 | Git tag | `vVERSION` (annotated and signed; verified by GitHub before release packaging) |
+
+Consult the live [quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md)
+and [release checklist](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/release-checklist.md)
+for qualification and publication status.
 
 During `0.y.z`, a minor release may change or remove documented behavior. Patch
 releases do not intentionally break the compatibility commitments below.
@@ -24,16 +29,20 @@ releases.
 
 Pre-releases use `-rc.N`. A release candidate is published through the same
 artifact and installation path as the final release.
-RC14 is available as a [GitHub prerelease](https://github.com/0x000000000000000000001/gopurs/releases/tag/v0.1.0-rc.14)
+On 5 November 2026, RC14 was published as a [GitHub prerelease](https://github.com/0x000000000000000000001/gopurs/releases/tag/v0.1.0-rc.14)
 and on npm `next`. Its qualification and consumer checks are recorded in the
 [quality record](quality-0.1.0.md).
+RC15 adds the [ordinary Go FFI contract](ffi-idiomatic.md) and new frontend and
+library pins. It requires its own qualification, artifact and consumer checks;
+RC14's results are historical evidence only.
 RC13 failed qualification and remains unpublished with its tag unchanged;
 the recorded RC7 and local campaign results retain their original scope.
 
 For the first npm publication, the registry also assigned `latest` to RC7 and
 refused its removal. This was explicitly accepted and documented in the
-[quality record](quality-0.1.0.md). Unqualified `npm install gopurs` therefore
-selects RC7; the alias does not establish a stable-release compatibility claim.
+[quality record](quality-0.1.0.md). At RC15 preparation on 12 November 2026,
+unqualified `npm install gopurs` selected RC7; that alias does not establish a
+stable-release compatibility claim.
 
 ## Compatibility commitments for `0.1.x`
 
@@ -100,8 +109,9 @@ The target matrix for `0.1.0` is:
 | Windows | Not supported | Not supported | Out of scope for `0.1.0` |
 | 32-bit targets | Not supported | Not supported | Out of scope for `0.1.0` |
 
-Release-blocking means that the platform must pass the release checks in blocks
-2 and 5. It is not a claim that those checks have already passed.
+Release-blocking means that the platform must pass the qualification and
+installation checks in the [release checklist](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/release-checklist.md).
+It is not a claim that those checks have already passed for RC15.
 
 RC14's successful `darwin/arm64` qualification uses the ARM64 `macos-15` runner;
 this campaign does not establish tested compatibility with macOS 14.

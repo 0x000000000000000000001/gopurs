@@ -83,6 +83,7 @@ plain Node ESM unless noted. `*.test.mjs` files stay at the top level so that
 | `docs/history/preparation-p00/tools/` | archived P00/P01 measurement harnesses, not active tools |
 | `build/pgo.mjs` | profile-guided optimization for the Rust host |
 | `release/release-prepare.mjs`, `release/release-smoke.mjs`, `release/release-quality.mjs` | release gates |
+| `release/official-compiler.mjs` | select the stock frontend for the release JavaScript oracle without using PATH |
 | `release/release-benchmark.mjs` | release benchmark campaign |
 | `release/release-quality-modules.mjs` | module inventory and evidence |
 | `release/release-quality-report.mjs` | quality report merge and identity |

@@ -40,7 +40,7 @@ matchDeclaration modNameStr decls pursName =
 
 nativeCandidate :: FfiDecl -> ExprType -> Maybe NativeCandidate
 nativeCandidate declaration tast
-  | isPureConcreteResult tast && not declaration.isVar && Array.length declaration.args >= 1 =
+  | Array.length declaration.results <= 1 && not (Array.any containsStruct (declaration.args <> declaration.results)) && not (mentionsForeign tast) && isPureConcreteResult tast && not declaration.isVar && Array.length declaration.args >= 1 =
       let
         requiresWorker = hasFunctionParameter declaration.args || case declaration.ret of
           Nothing -> true
@@ -126,4 +126,36 @@ mentionsEffect = case _ of
   ForAll _ t -> mentionsEffect t
   ConstrainedType constraints t ->
     Array.any (\(Tuple _ as) -> Array.any mentionsEffect as) constraints || mentionsEffect t
+  _ -> false
+
+-- Dynamic Foreign boundaries require unboxing dictated by the PureScript type;
+-- do not advertise their boxed entry as a direct native call.
+mentionsForeign :: ExprType -> Boolean
+mentionsForeign = case _ of
+  ADT name _ args -> name == "Foreign.Foreign" || Array.any mentionsForeign args
+  Func args ret -> Array.any mentionsForeign args || mentionsForeign ret
+  Array t -> mentionsForeign t
+  Record t -> mentionsForeign t
+  Row fields tail -> Array.any (\(Tuple _ t) -> mentionsForeign t) fields || case tail of
+    Just t -> mentionsForeign t
+    Nothing -> false
+  TypeApp t args -> mentionsForeign t || Array.any mentionsForeign args
+  ForAll _ t -> mentionsForeign t
+  ConstrainedType _ t -> mentionsForeign t
+  _ -> false
+
+-- Structured fields must go through the TAST-guided adapter. In particular a
+-- callback worker returning an array of structs cannot use generic Box.
+containsStruct :: TypeNode -> Boolean
+containsStruct = case _ of
+  TStruct _ _ -> true
+  TIdentified _ _ underlying -> case underlying of
+    Just t -> containsStruct t
+    Nothing -> false
+  TPointer t -> containsStruct t
+  TArray t -> containsStruct t
+  TMap k v -> containsStruct k || containsStruct v
+  TFunc args ret -> Array.any containsStruct args || case ret of
+    Just t -> containsStruct t
+    Nothing -> false
   _ -> false

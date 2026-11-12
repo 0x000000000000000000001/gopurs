@@ -2,7 +2,7 @@
   "schema": 1,
   "compiler": {
     "url": "https://github.com/0x000000000000000000001/purescript.git",
-    "rev": "105f5752b39cc0f6c99a40064295338bf57ad223"
+    "rev": "ae6a6f644502bafcfa4fa94d8f81a1a1a1ca5080"
   },
   "optimizer": {
     "url": "https://github.com/0x000000000000000000001/purescript-backend-optimizer.git",
@@ -11,7 +11,7 @@
   "libraries": {
     "aff": {
       "url": "https://github.com/0x000000000000000000001/gopurs-aff.git",
-      "rev": "37dc3ebb4a332d598ce6d33b01350c44cba4b7dc"
+      "rev": "dbe9ff1c574a18352cf9ec861090083b14ca0246"
     },
     "argonaut-core": {
       "url": "https://github.com/0x000000000000000000001/gopurs-argonaut-core.git",
@@ -59,7 +59,7 @@
     },
     "foreign": {
       "url": "https://github.com/0x000000000000000000001/gopurs-foreign.git",
-      "rev": "4f793660b048db316547527d923a1ccd377c252e"
+      "rev": "c79499d6c22fd0637104bec5449434cfb6e31fe4"
     },
     "foreign-object": {
       "url": "https://github.com/0x000000000000000000001/gopurs-foreign-object.git",

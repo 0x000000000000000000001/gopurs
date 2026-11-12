@@ -13,6 +13,7 @@ campaign as a contract.
 | [cli.md](cli.md) | users | CLI options, environment, exit status |
 | [limitations.md](limitations.md) | users | known gaps and unsupported features |
 | [migration.md](migration.md) | users | compatibility between releases |
+| [ffi-idiomatic.md](ffi-idiomatic.md) | users | ordinary Go FFI contract for RC15 |
 | [troubleshooting.md](troubleshooting.md) | users | common failures |
 | [publication-scope.md](publication-scope.md) | users | support and compatibility policy |
 
@@ -49,6 +50,7 @@ campaign as a contract.
 | [development.md](development.md) | library ports, FFI parser and runtime changes |
 | [benchmark-protocol.md](benchmark-protocol.md) | measurement protocol and reporting rules |
 | [release.md](release.md) | release procedure |
+| [release-checklist.md](release-checklist.md) | remaining RC15 and final-release gates |
 | [release-benchmark.md](release-benchmark.md) | release backend benchmark |
 | [quality-0.1.0.md](quality-0.1.0.md) | quality-gate status for 0.1.0 |
 | [nix.md](nix.md) | Nix installation and development |

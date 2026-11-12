@@ -45,15 +45,19 @@ different program.
 
 ### Select the frontend and backend
 
-Open the pinned shell in the application directory, then install the public
-backend. See the [quickstart prerequisites](quickstart.md#prerequisites) for
-manual toolchain requirements.
+This walkthrough targets experimental `0.1.0-rc.15`. Consult the live
+[quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md)
+for its qualification and publication status. Open the pinned shell in the
+application directory and install the candidate with the commands below.
+For local builds, use the [source bootstrap](bootstrap.md#clean-source-installation).
+See the [quickstart prerequisites](quickstart.md#prerequisites) for manual
+toolchain requirements.
 
 ```bash
-nix develop github:0x000000000000000000001/gopurs/v0.1.0-rc.14
+nix develop github:0x000000000000000000001/gopurs/v0.1.0-rc.15
 command -v purs
 purs --version
-npm install --save-dev --ignore-scripts gopurs@0.1.0-rc.14
+npm install --save-dev --ignore-scripts gopurs@0.1.0-rc.15
 ```
 
 Use `spago build` directly in this shell for the steps below. An existing
@@ -65,8 +69,8 @@ script. The Nix shell supplies its executable path in `GOPURS_PURS`.
 ### Configure the Go library ports
 
 Add this `extraPackages` block to the application's existing `workspace` in
-`spago.yaml`. These revisions come from RC14's
-[source manifest](https://github.com/0x000000000000000000001/gopurs/blob/v0.1.0-rc.14/bootstrap-sources.json).
+`spago.yaml`. These revisions come from the candidate's
+[source manifest](https://github.com/0x000000000000000000001/gopurs/blob/main/bootstrap-sources.json).
 
 ```yaml
   extraPackages:
@@ -103,11 +107,11 @@ func Prefix(value string) string {
 }
 ```
 
-The [Go FFI guide](https://github.com/0x000000000000000000001/gopurs/blob/edge/docs/development.md#go-ffi) covers signatures and representations
+The [Go FFI guide](ffi-idiomatic.md) covers signatures and representations
 for other types. The `.js` implementation serves the JavaScript target, while
-gopurs reads the `.go` implementation. In RC14, a missing Go implementation can
-produce a successful build followed by `FFI not implemented` at runtime.
-Exercise the application's foreign calls when checking the migration.
+gopurs reads the `.go` implementation. RC15 checks foreign implementations in
+the selected entry-point scope before emitting Go. Exercise the application's
+foreign calls when checking behavior, errors and resource cleanup.
 
 ### Rebuild and compare
 
@@ -123,8 +127,8 @@ The backup retains any application-managed Go dependency manifests. For a
 project that already has `go.mod` and `go.sum`, restore them to the new
 `output/` before invoking gopurs. The example uses only the Go standard library.
 
-Check the frontend output explicitly. RC14 can accept upstream CoreFn, so its
-successful exit alone does not prove that the typed frontend was used:
+gopurs rejects frontend output without the TAST metadata arrays. Check the
+frontend output explicitly when diagnosing a frontend or cache mismatch:
 
 ```bash
 node --input-type=module <<'NODE'
@@ -147,8 +151,8 @@ check errors, resource handling and asynchronous operations for its own FFI.
 
 ## Current baseline
 
-`0.1.0` is the first public release. There is no earlier public version to
-migrate from. The compatibility commitments and the `0.x` policy are in
+RC15 is a candidate for the first final release, `0.1.0`.
+The compatibility commitments and the `0.x` policy are in
 [publication-scope.md](publication-scope.md).
 
 ## Version policy
@@ -194,7 +198,8 @@ Treat generated Go as a build artifact:
 The `gopurs-*` libraries are separate packages. A compiler release does not
 automatically make every stock PureScript library work. Use the library
 revision associated with the release notes or the repository branch documented
-for that release. A library without Go FFI can compile but fail at runtime.
+for that release. RC15 reports missing Go FFI in the selected entry-point scope;
+library behavior still needs application tests.
 
 ## Toolchain pins
 

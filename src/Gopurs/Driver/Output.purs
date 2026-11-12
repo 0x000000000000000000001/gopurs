@@ -78,6 +78,12 @@ emitPreparedModule output frozen metadata (Module coreFnModule) backendMod prepa
           }
     else pure Nothing
 
+  case ffi of
+    Just source -> case FfiBridge.ffiProblemsWithTypes goName backendMod.dataDecls source.decls foreigns of
+      [] -> pure unit
+      problems -> throwError (error ("FFI error in module " <> moduleName <> " (" <> ffiPath <> "):\n" <> String.joinWith "\n" problems))
+    Nothing -> pure unit
+
   let
     ffiFunctions = case ffi of
       Just source -> FfiBridge.ffiFunctionInfos goName foreigns source.decls

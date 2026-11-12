@@ -4,6 +4,11 @@ This document records how the `gopurs` compiler is built from a clean source
 checkout, which inputs are trusted, and which artifacts a release must publish.
 It covers the compiler distribution; it does not cover application builds.
 
+These pins target experimental `0.1.0-rc.15`. Consult the live
+[quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md)
+and [release checklist](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/release-checklist.md)
+for its qualification and publication status.
+
 ## Pinned inputs
 
 | Input | Pin |
@@ -18,7 +23,7 @@ It covers the compiler distribution; it does not cover application builds.
 | `gopurs-st` | commit `b915b18e254f57994f88827a4172f6022ff47166` |
 | `gopurs-unsafe-coerce` | commit `0b2ab4359a40ed0d0036f3f8d2bcdc29f3e57cd9` |
 | Go (FFI parser and native bootstrap) | `1.27.0` |
-| Typed PureScript compiler | commit `105f5752b39cc0f6c99a40064295338bf57ad223` |
+| Typed PureScript compiler | commit `ae6a6f644502bafcfa4fa94d8f81a1a1a1ca5080` |
 | Go library ports | 51 exact commits in [`bootstrap-sources.json`](https://github.com/0x000000000000000000001/gopurs/blob/main/bootstrap-sources.json) |
 | Go Argonaut codecs support checkout | commit `bdf31cc0f7d74d510dcf53f2a8fbca3b550d8ff2` in [`bootstrap-sources.json`](https://github.com/0x000000000000000000001/gopurs/blob/main/bootstrap-sources.json) |
 

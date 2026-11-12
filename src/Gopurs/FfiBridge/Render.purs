@@ -10,6 +10,7 @@ import Data.Array as Array
 import Data.Maybe (Maybe(..))
 import Data.String as String
 import Data.String.Pattern (Pattern(..), Replacement(..))
+import Gopurs.FfiBridge.Effects as Effects
 import Gopurs.FfiBridge.Signatures (NativeCandidate)
 import Gopurs.FfiBridge.TypeSupport (getTastReturnType, instantiateDeclaration, printTypeNode)
 import Gopurs.FfiBridge.Values as Values
@@ -18,7 +19,12 @@ import Gopurs.GoTypes (printExprType)
 import PureScript.Backend.Optimizer.CoreFn (DataDecl, ExprType)
 
 wrapper :: Array DataDecl -> FfiDecl -> Maybe ExprType -> String
-wrapper dataDecls declaration mbTast =
+wrapper dataDecls declaration mbTast = case mbTast >>= Effects.wrapper dataDecls (instantiateDeclaration declaration) of
+  Just rendered -> rendered
+  Nothing -> legacyWrapper dataDecls declaration mbTast
+
+legacyWrapper :: Array DataDecl -> FfiDecl -> Maybe ExprType -> String
+legacyWrapper dataDecls declaration mbTast =
   let
     d = instantiateDeclaration declaration
     tastComment = case mbTast of

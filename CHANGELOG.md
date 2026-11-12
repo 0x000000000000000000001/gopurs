@@ -6,6 +6,53 @@ All notable changes to gopurs are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0-rc.15]
+
+Fifteenth experimental candidate for `0.1.0`. Its qualification and publication
+status are recorded in the live [quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md)
+and [release checklist](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/release-checklist.md).
+At preparation on 12 November 2026, RC14 was the published candidate on `next`
+and `latest` selected RC7. Local FFI results do not qualify RC15's final artifacts.
+
+### Added
+
+- [Ordinary Go FFI](docs/ffi-idiomatic.md): native `Effect` and `EffectFnAff`
+  results, Go errors, optional `context.Context`, typed callbacks, opaque
+  handles and closed-record conversion to local Go structs. Generated adapters
+  own the runtime integration; handwritten implementations can use Go tooling
+  directly. Direct ordinary `Aff`, open-record layout inference and a general
+  multi-constructor ADT mapping remain outside this contract.
+- Focused parser, runtime race, documented-example, end-to-end and installed
+  package regressions, including both compiler hosts, cold/warm caches,
+  signature changes, rejection and recovery.
+
+### Fixed
+
+- Keep asynchronous operations lazy and repeatable, arbitrate completion and
+  cancellation, and release failed or late acquisitions exactly once before
+  ownership transfers. Callbacks retained by a Go service follow that service's
+  explicit unsubscribe/close lifetime.
+- Convert dynamic `Foreign` data without JSON round-trips; preserve native
+  handles, nested containers, null and a distinct undefined marker. Functions
+  and algebraic constructors still require an explicit PureScript conversion.
+- Diagnose missing TAST metadata before optimization and incompatible expanded
+  `EffectFn2`/`EffectFn3` results with frontend, `PATH` and clean-output guidance.
+  Require nominal `EffectFnAff` metadata for its ordinary Go ABI; retain valid
+  explicit callback implementations. Preserve valid cache state after an FFI
+  signature error.
+- Validate missing FFI in explicitly selected entry-point scopes, and retain
+  the cleanup of build/test tooling and the separately pinned Argonaut codecs
+  support checkout already integrated since RC14.
+
+### Changed
+
+- Pin the typed frontend to `ae6a6f644502bafcfa4fa94d8f81a1a1a1ca5080`,
+  `gopurs-aff` to `dbe9ff1c574a18352cf9ec861090083b14ca0246`, and
+  `gopurs-foreign` to `c79499d6c22fd0637104bec5449434cfb6e31fe4`.
+  Rebuild frontend output after switching revisions, preserving application
+  `go.mod` and `go.sum`; the `purs` version number alone does not identify the
+  required TAST contract. Existing explicit runtime FFI remains supported.
+
 ## [0.1.0-rc.14]
 
 Fourteenth candidate for `0.1.0`, with a deterministic spec timeout fixture

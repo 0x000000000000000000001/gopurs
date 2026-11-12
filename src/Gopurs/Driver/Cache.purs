@@ -78,6 +78,7 @@ beginRequest config = (request "begin")
       , { name: "module-lazy", value: if config.optimizerJobs > 1 then "1" else "0" }
       , { name: "input-layout", value: "packed-v1" }
       , { name: "input-format", value: "tast-v1" }
+      , { name: "ffi-signature", value: "v2" }
       , { name: "ffi-validation", value: "explicit-main-v1" }
       ] <> if config.devMode then [ { name: "optimization-profile", value: "dev-v5" } ] else []
   }

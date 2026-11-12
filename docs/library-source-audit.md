@@ -12,7 +12,7 @@ and 1 November and their new source pins are recorded separately below.
 
 | Surface | Identity and release requirement |
 | --- | --- |
-| Compiler npm package | `gopurs@0.1.0-rc.14` is the candidate in preparation, updating only the spec pin from RC13 as recorded below; qualification and publication are pending. RC7 remains the published candidate. The final target is `0.1.0`; each candidate's own version, dependency lockfile, file allowlist and installed-artifact tests apply. |
+| Compiler npm package | `gopurs@0.1.0-rc.15` is in preparation; qualification and publication are pending. RC14 is published on `next`; `latest` remains RC7. The final target is `0.1.0`; each candidate's own version, dependency lockfile, file allowlist and installed-artifact tests apply. |
 | Library sources used by bootstrap/applications | Git URL and exact commit from the bootstrap manifest; validate this combination with the selected compiler and package set. The compiler npm archive does not contain these repositories. |
 | Independent future npm/Spago library publication | Review that package's name, destination, version, dependency bounds, files and notices before publishing it. This is a separate operation. |
 
@@ -20,7 +20,24 @@ These independent libraries do not need identical version numbers. Their
 current release identity is the compatible set of source commits. A version
 copied from an upstream package is not a version assigned to the Go port.
 
-## Current spec pin — 5 November 2026
+## RC15 source pins — 12 November 2026
+
+The candidate selects the following exact revisions in
+[`bootstrap-sources.json`](../bootstrap-sources.json):
+
+| Input | Revision | Purpose |
+| --- | --- | --- |
+| Typed frontend | `ae6a6f644502bafcfa4fa94d8f81a1a1a1ca5080` | Retain the nominal `EffectFnAff` contract in TAST |
+| `gopurs-aff` | `dbe9ff1c574a18352cf9ec861090083b14ca0246` | Match the native foreign-function boundary |
+| `gopurs-foreign` | `c79499d6c22fd0637104bec5449434cfb6e31fe4` | Handle native Go foreign values, including undefined semantics |
+
+The manifest also identifies the separate Argonaut codecs support checkout at
+`bdf31cc0f7d74d510dcf53f2a8fbca3b550d8ff2`. It is a support input, not a 52nd
+library in the historical audit. The older audit counts and test results below
+retain their dates and scope; they do not qualify this new combination.
+Qualification is tracked in the [release checklist](release-checklist.md).
+
+## RC14 spec pin — 5 November 2026
 
 RC14 selects `gopurs-spec` commit `7bbb30f00bfde95cdb39286662bb5a0f71e3f368`
 from reviewed, merged [spec PR #2](https://github.com/0x000000000000000000001/gopurs-spec/pull/2),

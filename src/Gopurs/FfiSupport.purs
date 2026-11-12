@@ -12,8 +12,10 @@ import Prelude
 import Data.Argonaut.Decode (decodeJson)
 import Data.Argonaut.Decode.Error (printJsonDecodeError)
 import Data.Argonaut.Parser (jsonParser)
+import Data.Maybe (Maybe(..))
 import Data.Bifunctor (lmap)
-import Data.Either (Either, either)
+import Data.Either (Either(..), either)
+import Data.Array as Array
 import Effect (Effect)
 import Effect.Exception (message, throw, try)
 import Gopurs.FfiTypes (FfiDecl)
@@ -27,7 +29,8 @@ foreign import packageGoFilesImpl :: String -> Effect String
 decodeFfiDecls :: String -> Either String (Array FfiDecl)
 decodeFfiDecls content = do
   json <- lmap ("Invalid JSON response: " <> _) (jsonParser content)
-  lmap (("Invalid FFI declarations: " <> _) <<< printJsonDecodeError) (decodeJson json)
+  declarations <- lmap (("Invalid FFI declarations: " <> _) <<< printJsonDecodeError) (decodeJson json)
+  validateDeclarations declarations
 
 extractFfiDecls :: { moduleName :: String, path :: String } -> String -> Effect (Array FfiDecl)
 extractFfiDecls source content = withFfiContext source do
@@ -38,7 +41,9 @@ prepareFfi :: { moduleName :: String, path :: String } -> String -> String -> Ef
 prepareFfi source prefix content = withFfiContext source do
   result <- prepareFfiAstImpl prefix content
   json <- either (throw <<< ("Invalid JSON response: " <> _)) pure (jsonParser result)
-  either (throw <<< ("Invalid FFI module: " <> _) <<< printJsonDecodeError) pure (decodeJson json)
+  prepared <- either (throw <<< ("Invalid FFI module: " <> _) <<< printJsonDecodeError) pure (decodeJson json)
+  declarations <- either throw pure (validateDeclarations prepared.decls)
+  pure (prepared { decls = declarations })
 
 withFfiContext :: forall a. { moduleName :: String, path :: String } -> Effect a -> Effect a
 withFfiContext source action = do
@@ -47,3 +52,8 @@ withFfiContext source action = do
     (\error -> throw ("FFI error in module " <> source.moduleName <> " (" <> source.path <> "): " <> message error))
     pure
     result
+
+validateDeclarations :: Array FfiDecl -> Either String (Array FfiDecl)
+validateDeclarations declarations = case Array.find (\d -> d.schemaVersion /= 2) declarations of
+  Just declaration -> Left ("Unsupported Go FFI signature schema " <> show declaration.schemaVersion <> "; expected 2. Rebuild the matching native/WASM parser and clear stale compiler artifacts.")
+  Nothing -> Right declarations

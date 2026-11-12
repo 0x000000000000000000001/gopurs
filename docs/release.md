@@ -10,7 +10,7 @@ evidence that a tag, platform, benchmark or public installation has passed.
 Record actual results in the repository's
 [quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md)
 and the release notes. The remaining gates are tracked in the
-[release checklist](https://github.com/0x000000000000000000001/gopurs/blob/main/todo.md).
+[release checklist](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/release-checklist.md).
 
 ## Build and validate a candidate
 
@@ -192,7 +192,8 @@ matching tag, both package-lock version fields and changelog section before
 starting any tagged build.
 
 `.github/workflows/ci.yml` runs on branch changes, pull requests and version
-tags. Ordinary PRs and branch pushes run 24 quick gates on Linux amd64,
+tags. Ordinary PRs and branch pushes run the
+[declared quick gates](https://github.com/0x000000000000000000001/gopurs/blob/main/tools/ci/gates.mjs) on Linux amd64,
 including output-identity and documentation checker tests, embedded-runtime
 consistency, compiler snapshot tests, both compiler hosts, the native race
 probe and artifact smokes.
@@ -203,7 +204,7 @@ additions; code under `docs/`, file type changes and unknown paths require a
 build. Manual non-full runs also build Linux.
 
 A push to `main` may reuse one successful, associated, same-repository PR
-qualification. Its small `linux-quick-v2` receipt binds the 24 gates, each
+qualification. Its small `linux-quick-v2` receipt binds that exact gate inventory, each
 Node file's actual passing test counts with no skips, both artifact smokes, the run attempt and
 the actual tested merge commit. Receipts using the old `linux-quick-v1`
 policy or missing any required gate cannot be reused.
