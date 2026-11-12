@@ -186,9 +186,9 @@ jobs:
 
       - name: Select the pinned TAST and standard compilers
         run: |
-          typed_package=$(nix build .#purs-tast --no-link --print-out-paths --no-update-lock-file)
+          typed_package=$(nix build .#purs-tast --out-link "$RUNNER_TEMP/gopurs-purs-tast" --print-out-paths --no-update-lock-file)
           echo "GOPURS_PURS=$typed_package/bin/purs" >> "$GITHUB_ENV"
-          official_package=$(nix build .#purs-official --no-link --print-out-paths --no-update-lock-file)
+          official_package=$(nix build .#purs-official --out-link "$RUNNER_TEMP/gopurs-purs-official" --print-out-paths --no-update-lock-file)
           echo "GOPURS_OFFICIAL_PURS=$official_package/bin/purs" >> "$GITHUB_ENV"
 
       # Keep every dev-shell tool rooted for the whole job, including on macOS.

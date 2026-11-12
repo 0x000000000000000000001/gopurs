@@ -74,6 +74,22 @@ package, the package derivation relaxes Cabal version bounds to use this locked
 set. The end-to-end application check verifies that the result emits TAST with
 `typeTable`, `dataDecls` and `classDecls` and that gopurs accepts it.
 
+The dependency override applies a local test-only patch to Foundation 0.0.30's
+[division property](https://hackage.haskell.org/package/foundation-0.0.30/src/tests/Test/Foundation/Number.hs).
+RC15's Linux amd64 dependency build failed with seed `5576833819021412192`:
+the generator selected `Int8 (-128) / (-1)`, whose quotient `128` cannot be
+represented. Replaying the same seed with Nix GHC 9.8.4 on macOS arm64 reproduced
+the failure. Both Prelude and Foundation correctly raise arithmetic overflow.
+The property already excludes division by zero; the patch also excludes a
+quotient that fails an `Integer` round-trip through the tested type. An
+exhaustive check of all 65,280 nonzero-divisor Int8 pairs found this single
+overflow and no failed equality. The patched suite passed all 6,121 tests with
+the failing seed in an explicit local macOS run. Foundation's implementation,
+test count and default random seed selection are unchanged. Both Linux Nix
+derivations keep the suite enabled. The pre-existing nixpkgs Darwin override
+disables its build-time suite; this patch leaves that separate policy unchanged.
+The explicit macOS replay does not replace a candidate's platform qualification.
+
 The backend's own JavaScript build uses upstream PureScript `0.15.16` and Spago
 `0.93.45`. These tools are deliberately separate from the application frontend.
 Inside the shell, `npm ci` selects the build tools from `package-lock.json`.

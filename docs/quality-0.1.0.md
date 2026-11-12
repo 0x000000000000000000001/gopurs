@@ -3,6 +3,40 @@
 This is a working record for the `0.1.0` release gates. It is not a release
 certificate. The current gate list is in the [release checklist](release-checklist.md).
 
+## RC15 qualification interruption and RC16 preparation — 12 November 2026
+
+The signed RC15 tag identifies commit `ac7c45530364dcb08a63131ebe80e1f132c8825f`.
+[Run 43284779858](https://github.com/0x000000000000000000001/gopurs/actions/runs/43284779858)
+failed its Linux amd64 Nix check in Foundation 0.0.30's arithmetic property
+test, before the gopurs quality gates. The seed `5576833819021412192`
+reproduces the same exception on Darwin with the pinned GHC 9.8.4.
+
+Tracing identifies `Int8 (-128) / (-1)`: the result 128 is unrepresentable.
+Prelude and Foundation both raise an overflow. An exhaustive check of all
+65,280 Int8 pairs with nonzero divisors finds only this overflowing pair and
+no false division identity. A patch restricted to the property's domain
+passes the complete Foundation suite at the exact failing seed: 6,121 tests.
+The patch preserves Foundation's implementation and test configuration.
+Linux Nix checks keep the complete suite enabled; the pinned nixpkgs disables
+Foundation checks on Darwin, where the explicit seeded run supplies this proof.
+Proofs are retained under `publication-rc15-20261112/foundation-test-fix` in
+the local workspace evidence directory.
+
+The first local installed-package check stopped because its previously built
+Nix frontend executables no longer existed at invocation time. The deletion
+trigger was not established. RC16 roots both selected frontends explicitly
+throughout CI and publication checks. The repeated local package test passed
+with both compiler hosts: native/WASM parser parity, stock-JavaScript oracle,
+ordinary effects/Aff, cold/warm caches, signature edits, rejection and recovery.
+The separate FFI end-to-end run passed both hosts in Release and Dev. These
+preparation checks used Node 24.8.0 and Go 1.27.0 on macOS arm64; they do not
+qualify the future signed CI artifacts or a public installation.
+
+RC16 integrates these build corrections and retains the frontend/Aff/Foreign
+pins and ordinary Go FFI implementation. Its own signed-tag qualification,
+artifact review and public consumer checks remain required. RC15's tag and
+failed run are preserved; RC15 has not been published.
+
 ## RC15 source preparation — 12 November 2026
 
 The new candidate targets `0.1.0-rc.15`. Its source preparation is not a

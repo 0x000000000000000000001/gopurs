@@ -12,7 +12,7 @@ and 1 November and their new source pins are recorded separately below.
 
 | Surface | Identity and release requirement |
 | --- | --- |
-| Compiler npm package | `gopurs@0.1.0-rc.15` is in preparation; qualification and publication are pending. RC14 is published on `next`; `latest` remains RC7. The final target is `0.1.0`; each candidate's own version, dependency lockfile, file allowlist and installed-artifact tests apply. |
+| Compiler npm package | `gopurs@0.1.0-rc.16` is in preparation; qualification and publication are pending. RC14 is published on `next`; `latest` remains RC7. The final target is `0.1.0`; each candidate's own version, dependency lockfile, file allowlist and installed-artifact tests apply. |
 | Library sources used by bootstrap/applications | Git URL and exact commit from the bootstrap manifest; validate this combination with the selected compiler and package set. The compiler npm archive does not contain these repositories. |
 | Independent future npm/Spago library publication | Review that package's name, destination, version, dependency bounds, files and notices before publishing it. This is a separate operation. |
 
@@ -20,7 +20,7 @@ These independent libraries do not need identical version numbers. Their
 current release identity is the compatible set of source commits. A version
 copied from an upstream package is not a version assigned to the Go port.
 
-## RC15 source pins — 12 November 2026
+## RC16 source pins — 12 November 2026
 
 The candidate selects the following exact revisions in
 [`bootstrap-sources.json`](../bootstrap-sources.json):

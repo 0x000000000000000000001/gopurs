@@ -6,6 +6,25 @@ All notable changes to gopurs are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0-rc.16]
+
+Sixteenth candidate for `0.1.0`, retaining RC15's ordinary Go FFI, dependency
+pins and compatibility scope. The [quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md)
+tracks qualification and publication.
+
+### Fixed
+
+- Keep the selected typed and stock frontends rooted in Nix throughout CI and
+  publication smoke tests, so garbage collection cannot remove them between
+  build and execution.
+- Correct the test domain in the Nix frontend dependency Foundation 0.0.30:
+  integer division properties now exclude quotients that cannot be represented
+  by their tested type, as well as division by zero. This prevents the
+  reproducible `Int8 (-128) / (-1)` test overflow found during RC15 qualification.
+  Foundation implementation code and test configuration are unchanged: Linux
+  CI keeps the complete suite enabled; Darwin retains the pinned nixpkgs
+  policy and was checked explicitly with the failing seed (6,121 tests).
+
 ## [0.1.0-rc.15]
 
 Fifteenth experimental candidate for `0.1.0`. Its qualification and publication

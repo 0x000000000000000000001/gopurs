@@ -6,13 +6,13 @@
 can build into a native executable. Your PureScript code can call Go libraries
 through the foreign function interface (FFI).
 
-This guide targets experimental `0.1.0-rc.15`. Consult the live
+This guide targets experimental `0.1.0-rc.16`. Consult the live
 [quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md)
 and [release checklist](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/release-checklist.md)
 for its qualification and publication status. The
 published [RC14 prerelease](https://github.com/0x000000000000000000001/gopurs/releases/tag/v0.1.0-rc.14)
 was qualified on Linux amd64, Linux arm64 and macOS arm64; those results do not
-qualify RC15.
+qualify RC16.
 
 ## Getting started
 
@@ -36,7 +36,7 @@ Once those steps are complete, build from your Spago project directory.
 This example assumes your entry module is `Main`.
 
 ```bash
-npm install --save-dev --ignore-scripts gopurs@0.1.0-rc.15
+npm install --save-dev --ignore-scripts gopurs@0.1.0-rc.16
 spago build                 # Compile PureScript with the typed fork
 npx gopurs --main Main      # Generate Go source and go.mod in output/
 (cd output && go build -o app ./main && ./app)
