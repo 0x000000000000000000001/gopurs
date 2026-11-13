@@ -22,12 +22,18 @@ copied from an upstream package is not a version assigned to the Go port.
 
 ## RC20 source configuration — 13 November 2026
 
-RC20 retains the exact RC19 frontend, library and support pins below. It
-changes compiler bridge behavior for curried foreign callback values and
-function-valued uncurried FFI results; unchanged dependency pins do not imply
-unchanged compiler output. A new complete 51-library Release/Dev preflight
-(102 invocations, no exclusions), benchmark and full candidate qualification
-are required. Their results remain pending in the [quality record](quality-0.1.0.md).
+RC20 selects `gopurs-foreign` commit
+`8c326898e821a9151af35b2a647fc9b2354ba92e`, which corrects safe reads of native
+Go primitives and slices, indexed access, and preservation of shared/cyclic
+child values. The frontend and other library/support pins remain those of
+RC19. The compiler also changes curried callback and function-result bridges.
+
+The final Foreign patch passed its native race tests, both Foreign and YogaJSON
+Release/Dev runners, and the Foreign JavaScript reference. The exact tagged
+candidate still requires full CI with all 51 libraries in both profiles,
+a fresh benchmark and artifact/application qualification. The
+[quality record](quality-0.1.0.md) distinguishes these targeted local results
+from the older incomplete preflight and the pending complete matrix.
 
 ## RC19 source configuration — 13 November 2026
 

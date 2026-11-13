@@ -1,7 +1,7 @@
 # RC20 release checklist
 
 Candidate: `0.1.0-rc.20`, in preparation on 13 November 2026. Its commit,
-signed tag, complete library preflight, fresh benchmark, full CI and artifact
+signed tag, full library qualification, fresh benchmark, full CI and artifact
 qualification are pending. RC19 remains unpublished after a local Arrays
 failure; its unfinished CI was cancelled and its exact evidence is retained.
 The planned first final release is `0.1.0`.

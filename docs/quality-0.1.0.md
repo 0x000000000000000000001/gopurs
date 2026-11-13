@@ -3,6 +3,42 @@
 This is a working record for the `0.1.0` release gates. It is not a release
 certificate. The current gate list is in the [release checklist](release-checklist.md).
 
+## RC20 native Foreign correction — 13 November 2026
+
+The second local preflight used clean compiler commit
+`4a5983172305c659899caa45ad19311d2ae40ddd`. It completed 100 successful
+library gates before YogaJSON Release failed with a native-array read panic;
+YogaJSON Dev was not attempted. This is partial evidence, not 102 passes.
+The original workspace, log and failed result remain retained.
+
+Execution traces isolated three related Foreign-port defects: safe readers
+assumed boxed primitives/arrays, indexed reads did not recognize native slices,
+and reading a native object property copied slice children. The correction
+uses explicit representation conversions after the existing type checks and
+preserves child identity without traversing shared or cyclic values. It does
+not change the compiler/runtime or the public PureScript export list.
+
+The final patch is published as `gopurs-foreign` commit
+`8c326898e821a9151af35b2a647fc9b2354ba92e` and selected by the bootstrap
+manifest. On the unchanged compiler above, a fresh final source capture passed
+Foreign Release and Dev, YogaJSON **50/50 in each profile**, the Foreign
+JavaScript reference and the native Go race tests. These include named native
+types, index bounds, shared/cyclic children and legacy runtime values.
+The four-run controller exited 0; its receipt has SHA-256
+`5a30ac2a7c300b78eaa3ad6df2e907ee0c329bfeb79313459f3e10560d5a6e41`.
+Evidence is under `.gopurs-evidence/publication-rc20-20261113/foreign-safe-read-validation-attempt3`
+and `yoga-json-diagnosis` at the local workspace root.
+
+RC20 remains untagged and unpublished at this preparation step. A fresh
+bootstrap with the new pin and the exact-tag full CI matrix are next. Full CI
+will rerun all 51 libraries in Release and Dev on every supported platform;
+the 100 older local gates are not relabelled as results with the new pin.
+This targeted local verification replaces another complete local repetition
+before tagging, while retaining the complete CI requirement before publication.
+The fresh benchmark, installed-artifact application check and public consumer
+checks also remain required. Spec's three historical pending internal cases
+remain disclosed separately from its successful runner.
+
 ## RC20 ignored-Unit correction before tagging — 13 November 2026
 
 The first untagged RC20 build at

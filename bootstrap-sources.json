@@ -59,7 +59,7 @@
     },
     "foreign": {
       "url": "https://github.com/0x000000000000000000001/gopurs-foreign.git",
-      "rev": "c79499d6c22fd0637104bec5449434cfb6e31fe4"
+      "rev": "8c326898e821a9151af35b2a647fc9b2354ba92e"
     },
     "foreign-object": {
       "url": "https://github.com/0x000000000000000000001/gopurs-foreign-object.git",

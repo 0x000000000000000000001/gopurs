@@ -23,8 +23,11 @@ Qualification and publication remain pending in the live
 - Preserve the original TAST annotation at zero-argument Go wrappers' ignored
   `Unit` boundary, so `Unit -> Int` with Go `func() any` produces an `Int`
   rather than an extra function. Keep `Fn0` scalar and function results intact.
+- Pin the Foreign port's safe readers for native Go strings, booleans, numbers
+  and slices. Indexed reads recognize native slices; reading an array or a
+  property preserves shared and cyclic native child values.
 
-The frontend and library pins remain those of RC19. The compiler changes
+The frontend and other library pins remain those of RC19. The compiler changes
 require a new benchmark and complete validation; the historical RC18 campaign
 and its local RC19 equality proof do not qualify this candidate.
 
