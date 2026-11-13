@@ -156,12 +156,16 @@ Le type masque le constructeur sans prétendre assurer une propriété linéaire
 La FFI Go conserve un **pointeur** de `strings.Builder`, jamais une copie de ce
 builder. Les rendus parallèles utilisent des buffers distincts.
 
-Les FFI de `Printer.Builder` et `Cache.Pool` exposent directement leurs pointeurs
-Go ; les callbacks de `BuildCache` et `Host.Snapshot` sont des fonctions natives.
+La FFI de `Cache.Pool` expose directement son pointeur Go ; les callbacks de
+`BuildCache` et `Host.Snapshot` sont des fonctions natives.
 Le pont généré conserve le boxing nécessaire à la frontière PureScript. Dans
 la convention FFI actuelle, le paramètre final `_ any` des opérations effectives
 garde leur exécution différée ; un callback `String -> Effect Unit` est représenté
-par `func(string) func()`. `Cache.TypeMemo` conserve sa clé `Value`, qui retient
+par `func(string) func()`. `GoImports.concatStringArrays` est générique pour
+conserver la représentation des éléments des tableaux imbriqués.
+`Printer.Builder` conserve ses arguments et résultats `Value` pour garder les
+appels directs du backend et renvoyer la poignée sans la reboxer à chaque fragment.
+`Cache.TypeMemo` conserve sa clé `Value`, qui retient
 le tag et le propriétaire mémoire utilisés pour identifier les types immuables.
 
 Les autres petites FFI gardent une responsabilité unique et ne demandent pas de

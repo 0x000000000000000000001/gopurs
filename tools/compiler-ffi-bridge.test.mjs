@@ -16,15 +16,9 @@ const fn = (args, result) => new C.Func(args, result);
 const opaque = name => new C.ADT(name, name.split('.'), []);
 const effect = result => new C.ADT('Effect.Effect', ['Effect', 'Effect'], [result]);
 const strings = new C.Array(C.String.value);
-const builder = opaque('Gopurs.Printer.Builder.Builder');
 const pool = opaque('Gopurs.Cache.Pool.Pool');
 const unitEffect = effect(C.Unit.value);
 const modules = [
-  ['Printer/Builder', [
-    ['newBuilderImpl', effect(builder)],
-    ['pushImpl', fn([builder, C.String.value], builder)],
-    ['toStringImpl', fn([builder], C.String.value)],
-  ]],
   ['Cache/Pool', [
     ['create', effect(pool)],
     ['intern', fn([pool, C.String.value], effect(C.Int.value))],

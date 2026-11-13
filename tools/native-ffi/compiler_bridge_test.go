@@ -5,7 +5,6 @@ package main
 import (
 	"reflect"
 	"runtime"
-	"strings"
 	"testing"
 
 	cache "gopurs/output/gopurs_build_cache"
@@ -24,20 +23,6 @@ func stringArray(value rt.Value) []string {
 }
 
 func TestCompilerHandles(t *testing.T) {
-	builder := runEffect(_Gopurs_Gopurs_Printer_Builder_NewBuilderImpl)
-	other := runEffect(_Gopurs_Gopurs_Printer_Builder_NewBuilderImpl)
-	pushed := rt.Apply2(_Gopurs_Gopurs_Printer_Builder_PushImpl, builder, rt.Str("é😀"))
-	if rt.Unbox[*strings.Builder](pushed) != rt.Unbox[*strings.Builder](builder) {
-		t.Fatal("push replaced the native builder handle")
-	}
-	completed := rt.Apply(_Gopurs_Gopurs_Printer_Builder_ToStringImpl, builder).StrVal()
-	rt.Apply2(_Gopurs_Gopurs_Printer_Builder_PushImpl, builder, rt.Str(strings.Repeat("x", 8192)))
-	builder, pushed = rt.Value{}, rt.Value{}
-	runtime.GC()
-	if completed != "é😀" || rt.Apply(_Gopurs_Gopurs_Printer_Builder_ToStringImpl, other).StrVal() != "" {
-		t.Fatal("completed string or separate builder lost its private storage")
-	}
-
 	pool := runEffect(_Gopurs_Gopurs_Cache_Pool_Create)
 	finish := rt.Apply(_Gopurs_Gopurs_Cache_Pool_Finish, pool)
 	a := rt.Apply2(_Gopurs_Gopurs_Cache_Pool_Intern, pool, rt.Str("a"))
