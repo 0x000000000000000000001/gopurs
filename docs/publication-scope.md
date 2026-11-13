@@ -9,10 +9,10 @@ what users may rely on. It is not evidence that the release gates in the
 | Item | Decision |
 | --- | --- |
 | Package | `gopurs` |
-| Documented release | `0.1.0` |
+| Documented release | `0.1.1` |
 | Published candidate at preparation (12 November 2026) | `0.1.0-rc.14` (GitHub prerelease and npm `next`) |
 | npm `latest` at preparation (12 November 2026) | `0.1.0-rc.7` (registry-assigned alias; still a prerelease) |
-| First final version | `0.1.0` |
+| First final version | `0.1.1` |
 | Version source | [`package.json`](../package.json) |
 | Versioning | [Semantic Versioning 2.0.0](https://semver.org/) |
 | Git tag | `vVERSION` (annotated and signed; verified by GitHub before release packaging) |
@@ -110,15 +110,15 @@ version, license and compatibility policy governs its package.
 
 ## Supported platforms and toolchains
 
-The target matrix for `0.1.0` is:
+The target matrix for `0.1.1` is:
 
 | Target | Compiler | Generated Go applications | Release status |
 | --- | --- | --- | --- |
 | `linux/arm64` | Tier 1 | Tier 1 | Release-blocking |
 | `linux/amd64` | Tier 1 | Tier 1 | Release-blocking |
 | `darwin/arm64` | Tier 1 | Tier 1 | Release-blocking |
-| Windows | Not supported | Not supported | Out of scope for `0.1.0` |
-| 32-bit targets | Not supported | Not supported | Out of scope for `0.1.0` |
+| Windows | Not supported | Not supported | Out of scope for `0.1.1` |
+| 32-bit targets | Not supported | Not supported | Out of scope for `0.1.1` |
 
 Release-blocking means that the platform must pass the qualification and
 installation checks in the [release checklist](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/release-checklist.md).
@@ -133,7 +133,7 @@ Toolchain reference:
 
 | Tool | Supported reference | Notes |
 | --- | --- | --- |
-| Node.js | `24.8.0` | Build tooling and JavaScript host; other versions are not supported in `0.1.0` |
+| Node.js | `24.8.0` | Build tooling and JavaScript host; other versions are not supported in `0.1.1` |
 | Go | `1.27.0` | Reference for the FFI parser and application builds |
 | Spago (backend build) | `0.93.45` | Matches the npm lockfile |
 | Spago (applications) | `1.0.x` with YAML configuration | The tested revision is documented in the quickstart |
@@ -141,7 +141,7 @@ Toolchain reference:
 
 Generated `go.mod` files declare Go 1.22. That declaration is not a support
 claim for older toolchains: only the reference Go version is validated for
-`0.1.0`. The initial CI validated the Nix packages, application checks and
+`0.1.1`. The initial CI validated the Nix packages, application checks and
 development shell on `aarch64-linux`, `x86_64-linux` and `aarch64-darwin`.
 The [quality record](quality-0.1.0.md) distinguishes those initial results from
 the subsequent clean-tree and tagged RC14 qualification. The development shell is a

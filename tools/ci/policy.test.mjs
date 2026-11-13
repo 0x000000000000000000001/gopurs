@@ -16,11 +16,11 @@ const code = [change("src/Main.purs")];
 function recoverySource(fixtureNames = []) {
   const before = Buffer.from("old golden"), after = Buffer.from("correct golden");
   const path = "tests/passing-snapshots/1110.go";
-  const manifest = { schema: 1, enabled: true, base: recoveryBase, targetTag: "v0.1.0", fixtureSources: [],
+  const manifest = { schema: 1, enabled: true, base: recoveryBase, targetTag: "v0.1.1", fixtureSources: [],
     goldens: [{ path, fixture: "tests/passing/1110.purs", beforeSha256: recoveryHash(before), afterSha256: recoveryHash(after) }] };
   const changes = [{ ...change(path), before, after }, ...["package.json", "package-lock.json"].map(path => ({
     ...change(path), before: JSON.stringify({ version: "0.1.0-rc.20", ...(path.includes("lock") ? { packages: { "": { version: "0.1.0-rc.20" } } } : {}) }),
-    after: JSON.stringify({ version: "0.1.0", ...(path.includes("lock") ? { packages: { "": { version: "0.1.0" } } } : {}) }),
+    after: JSON.stringify({ version: "0.1.1", ...(path.includes("lock") ? { packages: { "": { version: "0.1.1" } } } : {}) }),
   }))];
   for (const name of fixtureNames) {
     const path = `tests/passing/${name}.go`, before = Buffer.from(`old ${name} FFI`), after = Buffer.from(`direct ${name} FFI`);
@@ -43,9 +43,9 @@ test("RC20 recovery accepts only exact goldens and three release version fields"
     value => { value.changes.pop(); },
     value => { value.manifest.enabled = false; },
     value => { value.manifest.base = { ...recoveryBase, commit: "f".repeat(40) }; },
-    value => { value.manifest.targetTag = "v0.1.1"; },
-    value => { value.changes[2].after = JSON.stringify({ version: "0.1.0", packages: { "": { version: "0.1.0" }, altered: { version: "2" } } }); },
-    value => { value.changes[1].after = JSON.stringify({ version: "0.1.0", scripts: { build: "something else" } }); },
+    value => { value.manifest.targetTag = "v0.1.0"; },
+    value => { value.changes[2].after = JSON.stringify({ version: "0.1.1", packages: { "": { version: "0.1.1" }, altered: { version: "2" } } }); },
+    value => { value.changes[1].after = JSON.stringify({ version: "0.1.1", scripts: { build: "something else" } }); },
   ]) {
     const value = recoverySource(); mutate(value);
     assert.throws(() => validateRecoverySource(value.changes, value.manifest), mutate.toString());
@@ -251,7 +251,7 @@ test("raw parsing rejects truncated or malformed records instead of treating the
 });
 
 test("early tag validation accepts matching RC and stable release metadata", () => {
-  for (const version of ["0.1.0-rc.3", "0.1.0"]) {
+  for (const version of ["0.1.0-rc.3", "0.1.1"]) {
     validateTagVersion(`refs/tags/v${version}`, { version }, { version, packages: { "": { version } } },
       `# Changelog\n\n## [Unreleased]\n\n## [${version}] - 2026-10-28\nRelease notes.\n`);
   }

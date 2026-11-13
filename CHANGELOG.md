@@ -6,9 +6,11 @@ All notable changes to gopurs are recorded here. The format follows
 
 ## [Unreleased]
 
-## [0.1.0]
+## [0.1.1]
 
 First final release, prepared from the RC20 compiler and pinned libraries.
+Correct the recovery command's cyclic module import without rebuilding or
+changing the qualified compiler.
 Qualification and publication are recorded in the live
 [quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md).
 
@@ -29,6 +31,14 @@ Linux arm64 and macOS arm64. This is a `0.x` release; the
 [limitations](docs/limitations.md) define its scope. The
 [RC20 benchmark](docs/release-benchmark.md#completed-rc20-campaign--13-november-2026-utc)
 measures backend generation, not application runtime.
+
+## [0.1.0] — not published
+
+Signed tag `v0.1.0` remains available for traceability. Its CI stopped before
+fixture execution or packaging because the artifact-acquisition command had
+a cyclic module import. No npm package or GitHub release was published.
+Version `0.1.1` resumes qualification with the corrected command and unchanged
+RC20 compiler bytes.
 
 ## [0.1.0-rc.20]
 

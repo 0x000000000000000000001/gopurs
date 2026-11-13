@@ -1,7 +1,35 @@
-# Quality-gate status — 0.1.0
+# Quality-gate status — 0.1.x
 
-This is a working record for the `0.1.0` release gates. It is not a release
+This is a working record for the `0.1.1` release gates. It is not a release
 certificate. The current gate list is in the [release checklist](release-checklist.md).
+
+## 0.1.0 workflow failure and 0.1.1 preparation — 13 November 2026
+
+The immutable signed tag `v0.1.0` identifies commit
+`447bababda052882aeb8bfe005ab5a157741ed05` and tag object
+`bfb9e722c645ab627b5339e1c09c01074b606ae4`, verified by GitHub.
+[CI run 43489468517](https://github.com/0x000000000000000000001/gopurs/actions/runs/43489468517)
+passed its 88 policy tests and skipped rebuilding the three compilers, as
+intended. All twelve fixture jobs and three packaging jobs stopped during
+artifact acquisition with Node's unsettled top-level-await error. No fixture,
+new package smoke, attestation or publication ran in that attempt.
+
+The recovery command dynamically imported the quality-report module, which
+imports the still-executing recovery command. Version `0.1.1` corrects this
+module-loading cycle. The failed `0.1.0` tag remains unchanged and unpublished.
+All 679 local fixture results, the 19 targeted JS comparisons, original RC20
+core jobs, benchmark and b8x execution retain their identities. The compiler,
+pins and fixture bytes are unchanged by this workflow correction.
+
+The new regression invokes the actual CLI: it reproduces exit 13 before the
+fix, then verifies and extracts two small local artifacts and writes the
+selected context after the fix. The complete policy suite passed **89/89**
+with zero failed, skipped, cancelled or todo cases. No compiler build or
+fixture campaign was repeated for this module-loading correction.
+
+The final `0.1.1` source, signed tag, successful complete qualification, artifact
+review and public checks are still required. The recovery remains one hop from
+RC20; it does not inherit success from the failed `0.1.0` workflow.
 
 ## RC20 results and final recovery preparation — 13 November 2026
 

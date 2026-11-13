@@ -1,6 +1,6 @@
-# 0.1.0 release checklist
+# 0.1.1 release checklist
 
-Final release `0.1.0` is in preparation. Its compiler inputs and binaries come
+Final release `0.1.1` is in preparation. Its compiler inputs and binaries come
 from signed RC20; original successful checks retain their identities. The
 bounded recovery must finish all affected or missing fixtures and verify the
 final packages on all supported platforms before publication.
@@ -74,9 +74,9 @@ development results retain their original scope.
 
 - [ ] Resolve qualification failures and documentation deviations, and have
   the retained evidence reviewed against the declared compatibility scope.
-- [ ] Prepare the final `0.1.0` identity and qualify its exact artifacts through
+- [ ] Prepare the final `0.1.1` identity and qualify its exact artifacts through
   the same release process. Earlier results do not authorize substituting rebuilt
   or modified final artifacts without validation.
-- [ ] Publish and verify `0.1.0`, update the active installation commands and
+- [ ] Publish and verify `0.1.1`, update the active installation commands and
   status pages, then announce the qualified scope with links to the public
   artifacts, Go FFI guide, limitations and quality record.

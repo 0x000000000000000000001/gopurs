@@ -45,7 +45,7 @@ different program.
 
 ### Select the frontend and backend
 
-This walkthrough targets `0.1.0`. Consult the live
+This walkthrough targets `0.1.1`. Consult the live
 [quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md)
 for its qualification and publication status. Open the pinned shell in the
 application directory and install the candidate with the commands below.
@@ -54,10 +54,10 @@ See the [quickstart prerequisites](quickstart.md#prerequisites) for manual
 toolchain requirements.
 
 ```bash
-nix develop github:0x000000000000000000001/gopurs/v0.1.0
+nix develop github:0x000000000000000000001/gopurs/v0.1.1
 command -v purs
 purs --version
-npm install --save-dev --ignore-scripts gopurs@0.1.0
+npm install --save-dev --ignore-scripts gopurs@0.1.1
 ```
 
 Use `spago build` directly in this shell for the steps below. An existing
@@ -174,7 +174,7 @@ check errors, resource handling and asynchronous operations for its own FFI.
 
 ## Current baseline
 
-RC20 is a candidate for the first final release, `0.1.0`.
+RC20 is a candidate for the first final release, `0.1.1`.
 The compatibility commitments and the `0.x` policy are in
 [publication-scope.md](publication-scope.md).
 
@@ -240,7 +240,7 @@ The [bootstrap chain](bootstrap.md) records the compiler-side pins.
 
 ## Removing experimental settings
 
-`0.1.0` accepts experimental daemon, resident, Rust and profiling settings.
+`0.1.1` accepts experimental daemon, resident, Rust and profiling settings.
 They are not required for a normal build. When upgrading:
 
 - unset `GOPURS_DAEMON`, `GOPURS_RESIDENT` and related variables;

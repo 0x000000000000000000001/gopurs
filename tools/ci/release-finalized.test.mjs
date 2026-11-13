@@ -58,14 +58,14 @@ test('final signing binds the new package smoke and unchanged RC20 producer iden
     const artifact = base.artifacts.find(row => row.name === `candidate-${target}-attempt-1`);
     if (artifact) base.artifacts.push({ ...artifact, id: artifact.id + 50000, name: `quality-${target}-attempt-1` });
   }
-  const current = convert(fixture(), { repository: recoveryBase.repository, commit: 'd'.repeat(40), tag: 'v0.1.0', runId: '999', runAttempt: '2', target: targets[0] });
+  const current = convert(fixture(), { repository: recoveryBase.repository, commit: 'd'.repeat(40), tag: 'v0.1.1', runId: '999', runAttempt: '2', target: targets[0] });
   current.jobs = current.jobs.filter(job => job.name.endsWith('shard 0)') || job.name.startsWith('qualify and attest')).map(job => ({ ...job, id: job.id + 10000 }));
   current.artifacts = current.artifacts.filter(artifact => artifact.name.startsWith('release-') || /fixtures-.*-0-attempt/.test(artifact.name)).map(artifact => ({ ...artifact, id: artifact.id + 10000 }));
   targets.forEach((target, index) => {
     current.jobs.push({ ...current.jobs[0], id: 20000 + index, name: `repackage and smoke (${target})` });
     current.artifacts.push({ ...current.artifacts[0], id: 21000 + index, name: `repackaged-${target}-attempt-1` });
   });
-  const manifest = { schema: 1, enabled: true, base: recoveryBase, targetTag: 'v0.1.0', fixtureSources: [], goldens: [{ path: 'tests/passing-snapshots/1110.go', fixture: 'tests/passing/1110.purs', beforeSha256: 'a'.repeat(64), afterSha256: 'b'.repeat(64) }] };
+  const manifest = { schema: 1, enabled: true, base: recoveryBase, targetTag: 'v0.1.1', fixtureSources: [], goldens: [{ path: 'tests/passing-snapshots/1110.go', fixture: 'tests/passing/1110.purs', beforeSha256: 'a'.repeat(64), afterSha256: 'b'.repeat(64) }] };
   const recovery = { base, manifest, proof: { manifestSha256: recoveryHash(JSON.stringify(manifest)), changes: [] }, inventory: qualityInventory(fileURLToPath(new URL('../../', import.meta.url))) };
   const selected = selectFinalizedInputs({ ...current, recovery });
   for (const item of selected) {
@@ -82,13 +82,13 @@ test('final signing binds the new package smoke and unchanged RC20 producer iden
     report.gates = Array.from({ length: 384 }, () => ({})); report.phases[0].gates = 222;
     report.fixtures = { selectedPerProfile: 401, passed: { release: 401, dev: 401 } };
     validateFinalizedQuality(report, item, environment(current.context));
-    const context = report.finalization, sourceManifest = { name: 'gopurs', version: '0.1.0' };
-    const contents = { build: { schema: 1, preview: false, version: '0.1.0', target: item.target,
-      source: { commit: current.context.commit, tag: 'v0.1.0', dirty: false },
+    const context = report.finalization, sourceManifest = { name: 'gopurs', version: '0.1.1' };
+    const contents = { build: { schema: 1, preview: false, version: '0.1.1', target: item.target,
+      source: { commit: current.context.commit, tag: 'v0.1.1', dirty: false },
       compilerOrigin: { base: recoveryBase, identity: report.identity, artifact: item.finalization.artifacts[0] } },
       nativeSha256: report.identity.compiler.nativeSha256, javascriptSha256: report.identity.compiler.javascriptSha256,
       manifest: sourceManifest, sourceManifest, packageSha256: 'e'.repeat(64),
-      smoke: { version: '0.1.0', packageSHA256: 'e'.repeat(64), commands: ['javascript', 'native'].flatMap(host =>
+      smoke: { version: '0.1.1', packageSHA256: 'e'.repeat(64), commands: ['javascript', 'native'].flatMap(host =>
         [0, 0, 0, 1, 0].map(status => ({ status, cwd: `/tmp/smoke/${host}`, args: ['--main', 'Main'],
           command: '/tmp/smoke/node_modules/' + (host === 'javascript' ? '.bin/gopurs' : 'gopurs/bin/gopurs') }))),
         tests: ['javascript', 'native'].map(host => ({ host, passed: true, stages: ['official-javascript', 'cold', 'warm', 'signature-change', 'invalid-signature', 'recovery'] })) } };

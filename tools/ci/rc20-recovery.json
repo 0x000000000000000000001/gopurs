@@ -8,7 +8,7 @@
     "tagObject": "9a80c154eff82589275d6790e158e0636066197c",
     "runId": "43412666316"
   },
-  "targetTag": "v0.1.0",
+  "targetTag": "v0.1.1",
   "fixtureSources": [
     {
       "path": "tests/passing/PolyLabels.go",

@@ -109,7 +109,7 @@ async function main() {
     plan = {
       build: false,
       recovery: true,
-      reason: "One-hop RC20 qualification recovery for 0.1.0",
+      reason: "One-hop RC20 qualification recovery for 0.1.1",
       matrix: { include: recoveryPlatforms },
       fixtureMatrix: { include: required },
       proof,

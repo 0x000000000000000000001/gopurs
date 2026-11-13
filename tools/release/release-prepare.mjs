@@ -16,7 +16,7 @@ for (let index = 2; index < process.argv.length; index++) {
   const arg = process.argv[index];
   if (arg === "--help") {
     console.log(
-      "Usage: node tools/release/release-prepare.mjs --out DIRECTORY --native FILE [--preview] [--recovery-context FILE --original-directory DIRECTORY]\nPackages the already built compiler, its lockfile inventory, build metadata and SHA-256 checksums. Final preparation requires a clean tree at the matching annotated version tag. Recovery is restricted to RC20 compiler bytes repackaged and smoked on the original platform for 0.1.0.",
+      "Usage: node tools/release/release-prepare.mjs --out DIRECTORY --native FILE [--preview] [--recovery-context FILE --original-directory DIRECTORY]\nPackages the already built compiler, its lockfile inventory, build metadata and SHA-256 checksums. Final preparation requires a clean tree at the matching annotated version tag. Recovery is restricted to RC20 compiler bytes repackaged and smoked on the original platform for 0.1.1.",
     );
     process.exit(0);
   }

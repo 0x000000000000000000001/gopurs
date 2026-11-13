@@ -9,7 +9,7 @@ The compatibility policy is in [publication-scope.md](publication-scope.md).
   by the compiler fork.
 - A stock `purs` with the same version number is not sufficient. It does not
   write `typeTable`, `dataDecls` and `classDecls`.
-- gopurs has no `--help` or `--version` handler in `0.1.0`; see the
+- gopurs has no `--help` or `--version` handler in `0.1.1`; see the
   [CLI reference](cli.md).
 - The backend writes Go, not JavaScript. Existing JavaScript FFI modules are
   not reused.
@@ -47,7 +47,7 @@ The compatibility policy is in [publication-scope.md](publication-scope.md).
 
 ## Platform and toolchain limits
 
-- `0.1.0` targets `linux/arm64`, `linux/amd64` and `darwin/arm64`.
+- `0.1.1` targets `linux/arm64`, `linux/amd64` and `darwin/arm64`.
 - Windows and 32-bit targets are out of scope.
 - Node.js `24.8.0` is the supported reference for the build and JavaScript
   host. Other Node versions are not validated.
@@ -62,7 +62,7 @@ The compatibility policy is in [publication-scope.md](publication-scope.md).
 
 ## Native, Rust and experimental modes
 
-The following are not production contracts in `0.1.0`:
+The following are not production contracts in `0.1.1`:
 
 - `bin/gopurs-rust`, Purust, and Rust PGO.
 - daemon/resident modes;

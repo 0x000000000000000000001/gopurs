@@ -442,11 +442,11 @@ jobs:
       - name: Execute the installed final package with both compiler hosts
         run: |
           node tools/ci/fixture-environment.mjs run -- node tools/release/release-smoke.mjs \
-            --package "$RUNNER_TEMP/repackaged/gopurs-0.1.0.tgz" \
-            --native "$RUNNER_TEMP/repackaged/gopurs-0.1.0-$GOPURS_RELEASE_TARGET" \
+            --package "$RUNNER_TEMP/repackaged/gopurs-0.1.1.tgz" \
+            --native "$RUNNER_TEMP/repackaged/gopurs-0.1.1-$GOPURS_RELEASE_TARGET" \
             --hosts javascript,native --report "$RUNNER_TEMP/repackage-smoke.json"
           test -z "$(git status --porcelain --untracked-files=all)"
-          prefix="gopurs-0.1.0-$GOPURS_RELEASE_TARGET"
+          prefix="gopurs-0.1.1-$GOPURS_RELEASE_TARGET"
           cp "$RUNNER_TEMP/repackage-smoke.json" "$RUNNER_TEMP/repackaged/$prefix-smoke.json"
           (cd "$RUNNER_TEMP/repackaged" && shasum -a 256 "$prefix-smoke.json" >> "$prefix-SHA256SUMS")
       - name: Retain only successfully tested final packages

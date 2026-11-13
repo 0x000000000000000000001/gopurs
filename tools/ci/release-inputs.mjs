@@ -15,6 +15,7 @@ import {
 } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { qualityInventory } from "../release/release-quality-report.mjs";
 import {
   isRecovery,
   readRecoverySource,
@@ -774,7 +775,6 @@ async function prepare(args, env = process.env) {
   const tag = preview ? undefined : readVerifiedTag(current, { env, root });
   let selected;
   if (isRecovery(env)) {
-    const { qualityInventory } = await import("../release/release-quality-report.mjs");
     const { manifest, proof } = readRecoverySource(root);
     selected = selectRecoveryInputs(
       {
@@ -855,8 +855,8 @@ function verifyRepackaged(args) {
     directory = resolve(args[3]);
   assert.deepEqual(context.recovery.proof, readRecoverySource().proof);
   validateFinalizationContext(context, context.qualificationIdentity);
-  const prefix = `gopurs-0.1.0-${context.target}`,
-    archive = join(directory, "gopurs-0.1.0.tgz");
+  const prefix = `gopurs-0.1.1-${context.target}`,
+    archive = join(directory, "gopurs-0.1.1.tgz");
   const extract = (name) => execFileSync("tar", ["-xOf", archive, `package/${name}`], { maxBuffer: 128 * 1024 ** 2 });
   validateRecoveryPackage(context, {
     build: JSON.parse(readFileSync(join(directory, `${prefix}-build.json`), "utf8")),

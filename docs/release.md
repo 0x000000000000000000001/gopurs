@@ -283,9 +283,9 @@ release transition below has a separate, bounded qualification contract.
 These improvements do not
 change RC10's workflow, qualify its missing shard or authorize another RC10 run.
 
-### Bounded RC20 to 0.1.0 qualification
+### Bounded RC20 to 0.1.1 qualification
 
-The 0.1.0 tag uses a one-hop recovery from signed `v0.1.0-rc.20`, commit
+The 0.1.1 tag uses a one-hop recovery from signed `v0.1.0-rc.20`, commit
 `2202368d4b19849fdc365afacaffa4a617b0ea43`, Actions run `43412666316`.
 This mechanism cannot promote another base, another final version, or a chain
 of inherited qualifications. `tools/ci/rc20-recovery.json` must be explicitly

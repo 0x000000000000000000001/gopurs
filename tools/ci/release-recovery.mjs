@@ -13,7 +13,7 @@ export const recoveryBase = Object.freeze({
   tagObject: "9a80c154eff82589275d6790e158e0636066197c",
   runId: "43412666316",
 });
-export const recoveryTag = "v0.1.0";
+export const recoveryTag = "v0.1.1";
 export const recoveryManifestPath = "tools/ci/rc20-recovery.json";
 export const recoveryPlatforms = Object.freeze([
   { target: "linux-amd64", os: "ubuntu-24.04" },
@@ -136,11 +136,11 @@ export function validateRecoverySource(changes, manifest) {
       const original = JSON.parse(before),
         current = JSON.parse(after);
       assert.equal(original.version, "0.1.0-rc.20");
-      assert.equal(current.version, "0.1.0");
+      assert.equal(current.version, "0.1.1");
       original.version = current.version;
       if (path === "package-lock.json") {
         assert.equal(original.packages[""].version, "0.1.0-rc.20");
-        assert.equal(current.packages[""].version, "0.1.0");
+        assert.equal(current.packages[""].version, "0.1.1");
         original.packages[""].version = current.packages[""].version;
       }
       assert.deepEqual(current, original, `Only release version fields may differ: ${path}`);
@@ -303,7 +303,7 @@ export function validateRecoveryPackage(
   validateRecoveryIdentity(context, context.qualificationIdentity, { core: true });
   assert.equal(build.schema, 1);
   assert.equal(build.preview, false);
-  assert.equal(build.version, "0.1.0");
+  assert.equal(build.version, "0.1.1");
   assert.equal(build.target, context.target);
   assert.deepEqual(build.source, { commit: context.source.commit, tag: recoveryTag, dirty: false });
   assert.deepEqual(build.compilerOrigin, {
@@ -322,9 +322,9 @@ export function validateRecoveryPackage(
     "Final JavaScript compiler bytes changed",
   );
   assert.equal(manifest.name, "gopurs");
-  assert.equal(manifest.version, "0.1.0");
+  assert.equal(manifest.version, "0.1.1");
   assert.deepEqual(manifest, sourceManifest, "Packaged metadata differs from the signed final source");
-  assert.equal(smoke.version, "0.1.0");
+  assert.equal(smoke.version, "0.1.1");
   assert.equal(smoke.packageSHA256, packageSha256, "Smoke tested a different package archive");
   assert.deepEqual(
     smoke.tests.map((entry) => entry.host),
