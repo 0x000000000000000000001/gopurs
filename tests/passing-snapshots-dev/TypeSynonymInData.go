@@ -12,7 +12,7 @@ var once_Main_Foo sync.Once
 func Get_Main_Foo() gopurs_runtime.Value {
 	once_Main_Foo.Do(func() {
 		cache_Main_Foo = gopurs_runtime.Func(func(value0 gopurs_runtime.Value) gopurs_runtime.Value {
-			return gopurs_runtime.Value{Type: 9, IntVal: 2763139640, UnsafePtr: unsafe.Pointer((&Constructor_Main_Foo[gopurs_runtime.Value]{1, value0}))}
+			return gopurs_runtime.Value{Type: 9, IntVal: 2763139640, UnsafePtr: unsafe.Pointer((&Constructor_Main_Foo[gopurs_runtime.Value]{1, (*(*[]gopurs_runtime.Value)((value0).UnsafePtr))}))}
 		})
 	})
 	return cache_Main_Foo
@@ -52,7 +52,7 @@ func Get_Main_foo() gopurs_runtime.Value {
 
 type Constructor_Main_Foo[T_a any] struct {
 	Rc uint32
-	V0 gopurs_runtime.Value
+	V0 []gopurs_runtime.Value
 }
 
 type Constructor_Main_Bar[T_a any] struct {
@@ -66,7 +66,7 @@ func Call_Main_foo(dictPartial_0_loop gopurs_runtime.Value, v_1_loop *Constructo
 	_ = v_1
 	var __t0 *Constructor_Main_Foo[gopurs_runtime.Value]
 	{
-		if (v_1 != nil) && ((gopurs_runtime.Int(int64(gopurs_runtime.ArrayLength((v_1).V0))).IntVal) == (int64(0))) {
+		if (v_1 != nil) && ((gopurs_runtime.Int(int64(len((v_1).V0))).IntVal) == (int64(0))) {
 			__t0 = gopurs_runtime.CoerceToStruct[Constructor_Main_Foo[gopurs_runtime.Value]](gopurs_runtime.Value{Type: 9, IntVal: 2763139640, UnsafePtr: unsafe.Pointer((*Constructor_Main_Foo[gopurs_runtime.Value])(nil))})
 			goto end_branch_0
 		} else {

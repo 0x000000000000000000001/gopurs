@@ -19,8 +19,19 @@ adapters use types retained by the TAST more precisely than the old references.
 Isolated validation with the exact frozen RC20 distribution passed all four
 fixtures in Release and Dev on both compiler hosts. Additional rank-2 class
 and record-equality probes matched the JavaScript reference. Only their
-generated-code snapshots were changed. Remaining unexecuted fixtures are
-being completed separately; these local results do not fill missing CI gates.
+generated-code snapshots were changed. The separate continuation has now
+completed all **679 previously missing fixture/profile pairs** on the frozen
+native compiler. Its exact union retains 40 initial successes, 389 subsequent
+successes, four repaired record-helper cases and 246 final successes, without
+replaying completed cases. The completion receipt has SHA-256
+`919add2c5a535cbeb8f4b178aa88ec8321a5208aa0e9059c952214aff7a0f68f`.
+Nineteen further obsolete snapshots concern resolved type synonyms, newtypes,
+records and derived dictionaries. Their targeted JS-host comparison also
+passed **19/19**, including Go builds/executions, with Main TAST and relevant
+class declarations retained. That receipt has SHA-256
+`1ae079509abd00a5293b89cd5436efc807b17aa0f77b394f4d6528a978b490bb`.
+Together with the earlier seven references, 26 snapshot files were refreshed.
+These local results do not fill missing CI gates.
 
 The continuation subsequently exposed a separate FFI validation limit in
 `PolyLabels`, reproduced in `RowUnion`: a curried Go function returning an
@@ -31,8 +42,8 @@ unchanged. All eight fixture/profile/host executions passed with outputs equal
 to the JavaScript frontend reference. The limitation and migration are
 documented; no compiler fix or full rebuild is claimed. The validation receipt
 has SHA-256 `470daaace40b381602edcca1a8b9bfc21d0c1d258e0daf5cc1d306fc751b3927`.
-Previously successful fixture executions remain retained, and only missing
-cases continue.
+Previously successful fixture executions remain retained in the completed
+local coverage union.
 
 The complete [RC20 benchmark](release-benchmark.md#completed-rc20-campaign--13-november-2026-utc)
 passed and was audited: 51 cases, 1,224 retained invocations and one separately
@@ -57,6 +68,12 @@ packaged artifacts on their native platforms. Original reports are not
 rewritten as new executions. The final tag, complete coverage, binding of the
 observed b8x execution to the final compiler, and public-consumer checks remain
 pending at this preparation step.
+
+The sealed recovery source lists the 26 snapshot hashes and the two exact
+Go fixture input changes. Its policy suite passed 88/88 with no skipped,
+cancelled or todo cases. All compiler/runtime bytes, library pins, frontend
+inputs and dependency versions remain those of RC20; only the three release
+version fields change in the package metadata.
 
 Evidence is retained under `.gopurs-evidence/publication-rc20-20261113` at the
 local workspace root, including `ci-monitor`, the two isolated fixture-repair
