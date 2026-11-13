@@ -8,8 +8,8 @@ All notable changes to gopurs are recorded here. The format follows
 
 ## [0.1.0-rc.20]
 
-Twentieth candidate for `0.1.0`, prepared on 13 November 2026. It corrects two
-compiler bridge defects exposed by the local Arrays qualification of RC19.
+Twentieth candidate for `0.1.0`, prepared on 13 November 2026. It corrects
+compiler bridge defects exposed during local qualification.
 Qualification and publication remain pending in the live
 [quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md).
 
@@ -20,6 +20,9 @@ Qualification and publication remain pending in the live
 - Consume the TAST arguments actually accepted by the Go implementation,
   including arguments of a returned function; preserve a function result when
   Go returns it. Add focused regressions for both bridge cases.
+- Preserve the original TAST annotation at zero-argument Go wrappers' ignored
+  `Unit` boundary, so `Unit -> Int` with Go `func() any` produces an `Int`
+  rather than an extra function. Keep `Fn0` scalar and function results intact.
 
 The frontend and library pins remain those of RC19. The compiler changes
 require a new benchmark and complete validation; the historical RC18 campaign

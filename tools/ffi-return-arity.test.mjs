@@ -6,7 +6,7 @@ import { join } from "node:path";
 import test from "node:test";
 import { Just } from "../output/Data.Maybe/index.js";
 import { Tuple } from "../output/Data.Tuple/index.js";
-import { generateFfiBridge, ffiValueWorkers } from "../output/Gopurs.FfiBridge/index.js";
+import { generateFfiBridge, ffiProblems, ffiValueWorkers } from "../output/Gopurs.FfiBridge/index.js";
 import { prepareFfi } from "../output/Gopurs.FfiSupport/index.js";
 import * as C from "../output/PureScript.Backend.Optimizer.CoreFn/index.js";
 
@@ -23,6 +23,14 @@ test("FFI adapts arguments and residual results at the actual native Go arity", 
   const fn3ReturningFn = uncurried([int, int, int], fourth);
   const foreign = new C.ADT("Foreign.Foreign", ["Foreign", "Foreign"], []);
   const a = new C.TypeVar("a");
+  const unitToInt = fn([C.Unit.value], int);
+  const zeroForeigns = [
+    ["zeroAny", unitToInt],
+    ["zeroInt", unitToInt],
+    ["oneIgnore", unitToInt],
+    ["fnZero", uncurried([], int)],
+    ["fnZeroReturning", uncurried([], fourth)],
+  ].map(([name, type]) => new Tuple(name, new Just(type)));
   const foreigns = [
     ["flat", fn3ReturningFn],
     ["curried", fn3ReturningFn],
@@ -34,7 +42,9 @@ test("FFI adapts arguments and residual results at the actual native Go arity", 
     ["foreignTail", uncurried([int, int, int], fn([foreign], foreign))],
     ["legacy", fn3ReturningFn],
     ["worker", fn([fn([int], int), int], fn([int], fourth))],
-  ].map(([name, type]) => new Tuple(name, new Just(type)));
+  ]
+    .map(([name, type]) => new Tuple(name, new Just(type)))
+    .concat(zeroForeigns);
   const parsed = prepareFfi({ moduleName: "ReturnArity", path: "ReturnArity.go" })("ReturnArity_")(`
 func Flat(a, b, c, d int64) any { return a + b + c + d }
 func Curried(a, b, c int64) func(int64) int64 {
@@ -60,7 +70,15 @@ func Legacy(a, b, c, d gopurs_runtime.Value) gopurs_runtime.Value {
 func Worker(callback func(int64) int64, a, b int64) func(int64) any {
     return func(c int64) any { return callback(a + b + c) }
 }
+func ZeroAny() any { return int64(42) }
+func ZeroInt() int64 { return 42 }
+func OneIgnore(_ any) any { return int64(42) }
+func FnZero() any { return int64(42) }
+func FnZeroReturning() func(int64) int64 {
+    return func(value int64) int64 { return value + 1 }
+}
 `)();
+  assert.deepEqual(ffiProblems("ReturnArity")(parsed.decls)(zeroForeigns), []);
   const directory = mkdtempSync(join(tmpdir(), "gopurs-ffi-return-arity-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   mkdirSync(join(directory, "gopurs_runtime"));
@@ -111,6 +129,24 @@ func TestNativeArity(t *testing.T) {
     } {
         if result.Type != rt.TypeInt || result.IntVal != 42 { t.Fatalf("%s: got %+v; expected Int(42)", name, result) }
     }
+}
+func TestZeroArity(t *testing.T) {
+    for _, item := range []struct { name string; function rt.Value }{
+        {"UnitToInt_Go0Any", _Gopurs_ReturnArity_ZeroAny},
+        {"UnitToInt_Go0Int64", _Gopurs_ReturnArity_ZeroInt},
+        {"UnitToInt_Go1Ignore", _Gopurs_ReturnArity_OneIgnore},
+        {"Fn0Int_Go0Any", _Gopurs_ReturnArity_FnZero},
+    } {
+        t.Run(item.name, func(t *testing.T) {
+            got := rt.Apply(item.function, rt.Value{})
+            if got.Type != rt.TypeInt || got.IntVal != 42 { t.Fatalf("got %+v; expected Int(42)", got) }
+        })
+    }
+    t.Run("Fn0ReturningFunction", func(t *testing.T) {
+        returned := rt.Apply(_Gopurs_ReturnArity_FnZeroReturning, rt.Value{})
+        got := rt.Apply(returned, rt.Int(41))
+        if got.Type != rt.TypeInt || got.IntVal != 42 { t.Fatalf("got %+v; expected Int(42)", got) }
+    })
 }
 `,
   );

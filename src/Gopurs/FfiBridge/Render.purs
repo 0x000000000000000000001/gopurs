@@ -37,7 +37,10 @@ legacyWrapper dataDecls declaration mbTast =
       else
         let
           arity = Array.length d.args
-          callTast = map (\tast -> fromMaybe tast (tastForArity arity tast)) mbTast
+          -- Zero-argument Go wrappers still consume the runtime's dummy Unit
+          -- argument. Preserve that existing boundary, including Fn0 results.
+          callTast = if arity == 0 then mbTast
+            else map (\tast -> fromMaybe tast (tastForArity arity tast)) mbTast
           funcConstructor = if arity > 1 then "Func" <> show arity else "Func"
           boxedArgs =
             if arity == 0 then "_ gopurs_runtime.Value"

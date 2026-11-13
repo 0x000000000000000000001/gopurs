@@ -3,6 +3,24 @@
 This is a working record for the `0.1.0` release gates. It is not a release
 certificate. The current gate list is in the [release checklist](release-checklist.md).
 
+## RC20 ignored-Unit correction before tagging — 13 November 2026
+
+The first untagged RC20 build at
+`3d534faf07083ed00a2348f1d9a2358af0bf9c09` exposed an additional bridge
+regression: `Unit -> Int` implemented by Go `func() any` produced an extra
+function. The correction keeps the original TAST annotation at the dummy-Unit
+boundary consumed by zero-argument Go wrappers. A focused regression covering
+five contracts passed; complete validation of the corrected build is pending.
+
+The initial library preflight was deliberately stopped after 45 passing gates;
+the 46th was interrupted with `SIGTERM` and the controller exited 1. This is
+partial evidence, not a completed 102-invocation campaign. Its exact binaries
+and receipt remain under
+`.gopurs-evidence/publication-rc20-20261113/first-build`. RC20 has no tag or
+publication, so its version is unchanged. A new committed source, native build,
+complete preflight and benchmark are required; the plans bound to the first
+build await refreshed identities and cannot qualify the corrected compiler.
+
 ## RC19 local qualification failure and RC20 preparation — 13 November 2026
 
 RC19's signed tag `v0.1.0-rc.19` identifies commit
