@@ -142,7 +142,7 @@ durée de vie mémoire des valeurs reste assurée par leurs références Go.
 | `Printer` | Échappement identique des littéraux : contrôles en `\xNN`, UTF-8 valide conservé, surrogates UTF-16 isolés représentés en WTF-8 puis échappés. Le scanner Go travaille en octets, sans itération qui remplacerait ces surrogates. |
 | `Printer.Builder` | Un buffer opaque par rendu. `pushImpl` modifie le buffer et retourne la même poignée ; les anciennes poignées sont des alias. Le résultat de `toStringImpl` est une chaîne immuable qui survit à la poignée. |
 | `GoAst` | `memoizeName` crée un cache par application partielle, y compris pour le résultat vide. Le callback est pur. En Go, le mutex encadre lecture et initialisation afin d'exécuter le callback une seule fois par clé. |
-| `GoCode` | JS appelle le fallback PureScript fourni. Go adapte les `Value` à `scanReferencedImports`, puis boxe son résultat. Les deux reconnaissent les mêmes frontières de tokens, ignorent commentaires/littéraux et rendent des imports uniques triés. |
+| `GoCode` | JS appelle le fallback PureScript fourni. Go reçoit une chaîne native et rend un tableau de chaînes ; le pont généré possède les adaptations de représentation. Les deux reconnaissent les mêmes frontières de tokens, ignorent commentaires/littéraux et rendent des imports uniques triés. |
 | `GoImports` | Les entrées sont empruntées en lecture. Le résultat possède un nouveau tableau, garde l'ordre et les doublons et partage seulement les chaînes immuables. `collectImports` possède le tri et la déduplication. |
 | `FfiSupport` | Même parser Go et même protocole JSON. JS appelle le runner WASM ; Go appelle directement `gopurs_ffi_parser`, préparé par `prepare-native-output.mjs` ; Rust utilise l'archive Go via C. Extraction/préparation : opérations `0`/`1`. Liaison typée G02 : opération `2`, avec sources possédées et exports Go en octets. La façade décode la réponse ; les erreurs FFI d'extraction/préparation portent module/chemin. |
 | `Runtime` | Constante identique à la source canonique, embarquée dans les deux compilateurs. Aucune lecture de `runtime/runtime.go` au lancement du compilateur construit. |
@@ -155,6 +155,14 @@ poignées dans l'ordre ; il ne doit pas capturer la poignée pour un autre rendu
 Le type masque le constructeur sans prétendre assurer une propriété linéaire.
 La FFI Go conserve un **pointeur** de `strings.Builder`, jamais une copie de ce
 builder. Les rendus parallèles utilisent des buffers distincts.
+
+Les FFI de `Printer.Builder` et `Cache.Pool` exposent directement leurs pointeurs
+Go ; les callbacks de `BuildCache` et `Host.Snapshot` sont des fonctions natives.
+Le pont généré conserve le boxing nécessaire à la frontière PureScript. Dans
+la convention FFI actuelle, le paramètre final `_ any` des opérations effectives
+garde leur exécution différée ; un callback `String -> Effect Unit` est représenté
+par `func(string) func()`. `Cache.TypeMemo` conserve sa clé `Value`, qui retient
+le tag et le propriétaire mémoire utilisés pour identifier les types immuables.
 
 Les autres petites FFI gardent une responsabilité unique et ne demandent pas de
 dispatcher supplémentaire. Le parser, les adaptations typées des bibliothèques

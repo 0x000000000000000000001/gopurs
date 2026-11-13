@@ -129,19 +129,15 @@ func TestImportScanner(t *testing.T) {
 	if err := json.Unmarshal(raw, &cases); err != nil {
 		t.Fatal(err)
 	}
-	fallback := gopurs_runtime.Func(func(gopurs_runtime.Value) gopurs_runtime.Value {
+	fallback := func(string) []string {
 		panic("native scanner invoked the PureScript fallback")
-	})
+	}
 	for _, item := range cases {
 		text, err := hex.DecodeString(item.Input)
 		if err != nil {
 			t.Fatal(err)
 		}
-		result := ReferencedImportsImpl(fallback, gopurs_runtime.Str(string(text)))
-		actual := make([]string, 0)
-		for _, value := range gopurs_runtime.Unbox[[]gopurs_runtime.Value](result) {
-			actual = append(actual, value.StrVal())
-		}
+		actual := append([]string{}, ReferencedImportsImpl(fallback, string(text))...)
 		if !reflect.DeepEqual(actual, item.Expected) {
 			t.Errorf("%q: got %v, want %v", text, actual, item.Expected)
 		}
@@ -161,31 +157,19 @@ func TestImportArrayOwnership(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, item := range cases {
-		outer := make([]gopurs_runtime.Value, len(item.Input))
-		for i, inner := range item.Input {
-			values := make([]gopurs_runtime.Value, len(inner))
-			for j, value := range inner {
-				values[j] = gopurs_runtime.Str(value)
-			}
-			outer[i] = gopurs_runtime.Array(values)
-		}
-		input := gopurs_runtime.Array(outer)
-		first := gopurs_runtime.Unbox[[]gopurs_runtime.Value](ConcatStringArrays(input))
-		second := ConcatStringArrays(input)
-		actual := make([]string, 0, len(first))
-		for _, value := range first {
-			actual = append(actual, value.StrVal())
-		}
+		first := ConcatStringArrays(item.Input)
+		second := ConcatStringArrays(item.Input)
+		actual := append([]string{}, first...)
 		if !reflect.DeepEqual(actual, item.Expected) {
 			t.Fatalf("got %v, want %v", actual, item.Expected)
 		}
 		for i := range first {
-			first[i] = gopurs_runtime.Str("changed")
+			first[i] = "changed"
 		}
 		runtime.GC()
-		for _, values := range []gopurs_runtime.Value{second, ConcatStringArrays(input)} {
-			for i, value := range gopurs_runtime.Unbox[[]gopurs_runtime.Value](values) {
-				if value.StrVal() != item.Expected[i] {
+		for _, values := range [][]string{second, ConcatStringArrays(item.Input)} {
+			for i, value := range values {
+				if value != item.Expected[i] {
 					t.Fatal("output shares mutable storage with another output or input")
 				}
 			}
@@ -204,7 +188,7 @@ func TestMetrics(t *testing.T) {
 	}
 	rate := runtime.MemProfileRate
 	defer func() { runtime.MemProfileRate = rate }()
-	SetMemProfileRate(12345, gopurs_runtime.Value{})
+	SetMemProfileRate(12345, nil)
 	if runtime.MemProfileRate != 12345 {
 		t.Fatal("profile rate was not applied")
 	}

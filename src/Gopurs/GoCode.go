@@ -1,22 +1,12 @@
 // Handwritten FFI for Gopurs.GoCode; keep in sync with the .purs foreign imports.
 package Gopurs_GoCode
 
-import (
-	"sort"
-
-	"gopurs/output/gopurs_runtime"
-)
+import "sort"
 
 // The FFI boundary borrows the immutable text for this call and returns a fresh
-// boxed array. Only the JavaScript backend invokes the PureScript fallback.
-func ReferencedImportsImpl(fallback gopurs_runtime.Value, textValue gopurs_runtime.Value) gopurs_runtime.Value {
-	_ = fallback
-	imports := scanReferencedImports(textValue.StrVal())
-	out := make([]gopurs_runtime.Value, len(imports))
-	for i, path := range imports {
-		out[i] = gopurs_runtime.Str(path)
-	}
-	return gopurs_runtime.Array(out)
+// array. Only the JavaScript backend invokes the PureScript fallback.
+func ReferencedImportsImpl(_ func(string) []string, text string) []string {
+	return scanReferencedImports(text)
 }
 
 // Same token boundaries and sorted unique result as referencedImportsPS.
