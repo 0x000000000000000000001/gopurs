@@ -12,7 +12,7 @@ import Data.Maybe (Maybe(..), fromMaybe)
 import Data.String as String
 import Data.String.Pattern (Pattern(..), Replacement(..))
 import Data.Tuple (Tuple(..))
-import Gopurs.FfiBridge.TypeSupport (flattenFuncArgs, getTastArgType, getTastReturnType, isRuntimeValueNode, isStandardPursFunc, printTypeNode, resolveNewtype)
+import Gopurs.FfiBridge.TypeSupport (flattenFuncArgs, getTastArgType, getTastReturnType, isPointerNode, isRuntimeValueNode, isStandardPursFunc, printTypeNode, resolveNewtype)
 import Gopurs.FfiTypes (TypeNode(..))
 import Gopurs.GoTypes (isClosedRowTail)
 import PureScript.Backend.Optimizer.CoreFn (DataDecl, ExprType(..))
@@ -26,6 +26,16 @@ boxedArgument dataDecls mbTast i t =
   in
     case t of
       TFunc _ _ -> callbackArgument dataDecls tastArg i t
+      _ | isPointerNode t ->
+        -- Match Unbox's pointer cases without passing Value through any. That
+        -- conversion otherwise allocates even when the native handle is reused.
+        [ "\tvar go_arg" <> show i <> " " <> typStr
+        , "\tif arg" <> show i <> ".Type == gopurs_runtime.TypeAny {"
+        , "\t\tgo_arg" <> show i <> " = arg" <> show i <> ".AnyVal().(" <> typStr <> ")"
+        , "\t} else {"
+        , "\t\tgo_arg" <> show i <> " = *(*" <> typStr <> ")(arg" <> show i <> ".UnsafePtr)"
+        , "\t}"
+        ]
       TArray _ | typStr /= "[]gopurs_runtime.Value" ->
         let
           et = if elemType == "any" then "interface{}" else elemType
@@ -64,6 +74,7 @@ boxedArgument dataDecls mbTast i t =
 nativeArgument :: Array DataDecl -> ExprType -> Int -> TypeNode -> Array String
 nativeArgument dataDecls tast i t = case t of
   TFunc _ _ -> callbackArgument dataDecls (getTastArgType tast i) i t
+  _ | isPointerNode t -> boxedArgument dataDecls (Just tast) i t
   _ -> [ "\tgo_arg" <> show i <> " := arg" <> show i ]
 
 callbackArgument :: Array DataDecl -> Maybe ExprType -> Int -> TypeNode -> Array String

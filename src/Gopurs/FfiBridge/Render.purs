@@ -10,8 +10,8 @@ import Data.Array as Array
 import Data.Maybe (Maybe(..))
 import Data.String as String
 import Data.String.Pattern (Pattern(..), Replacement(..))
-import Gopurs.FfiBridge.Signatures (NativeCandidate)
-import Gopurs.FfiBridge.TypeSupport (getTastReturnType, instantiateDeclaration, printTypeNode)
+import Gopurs.FfiBridge.Signatures (NativeCandidate, workerReturnsNative)
+import Gopurs.FfiBridge.TypeSupport (getTastArgType, getTastReturnType, instantiateDeclaration, isPointerNode, printTypeNode)
 import Gopurs.FfiBridge.Values as Values
 import Gopurs.FfiTypes (FfiDecl, TypeNode(..))
 import Gopurs.GoTypes (printExprType)
@@ -51,8 +51,9 @@ wrapper dataDecls declaration mbTast =
                 indented = String.replaceAll (Pattern "\n") (Replacement "\n\t") wrapped
               in
                 [ "\tgo_res := " <> call
-                , "\treturn " <> indented
                 ]
+                  <> reusePointerResult d mbTast
+                  <> [ "\treturn " <> indented ]
         in
           "gopurs_runtime." <> funcConstructor <> "(func(" <> boxedArgs <> ") gopurs_runtime.Value {\n"
             <> String.joinWith "\n" argsCode <> "\n"
@@ -64,6 +65,7 @@ valueWorker dataDecls { declaration, tast, callName } =
     params = String.joinWith ", " (Array.mapWithIndex
       (\i t -> "arg" <> show i <> " " <> case t of
         TFunc _ _ -> "gopurs_runtime.Value"
+        _ | isPointerNode t -> "gopurs_runtime.Value"
         _ -> printTypeNode t)
       declaration.args)
     args = Array.concat (Array.mapWithIndex (Values.nativeArgument dataDecls tast) declaration.args)
@@ -71,12 +73,32 @@ valueWorker dataDecls { declaration, tast, callName } =
     callLine = case declaration.ret of
       Nothing -> "\t" <> call
       Just _ -> "\tgo_res := " <> call
+    nativeResult = workerReturnsNative declaration
+    resultType = case declaration.ret of
+      Just t | nativeResult -> printTypeNode t
+      _ -> "gopurs_runtime.Value"
+    result = if nativeResult then [ "\treturn go_res" ]
+      else reusePointerResult declaration (Just tast) <> Values.workerReturn dataDecls tast declaration.ret
   in
-    "func " <> callName <> "(" <> params <> ") gopurs_runtime.Value {\n"
+    "func " <> callName <> "(" <> params <> ") " <> resultType <> " {\n"
       <> String.joinWith "\n" args
       <> "\n" <> callLine
-      <> "\n" <> String.joinWith "\n" (Values.workerReturn dataDecls tast declaration.ret)
+      <> "\n" <> String.joinWith "\n" result
       <> "\n}\n"
+
+-- Reusing a returned input pointer preserves its existing envelope and GC
+-- owner. Compare pointers at runtime; a fresh result must still be boxed.
+-- Require the same PureScript type as well as the same Go pointer type.
+reusePointerResult :: FfiDecl -> Maybe ExprType -> Array String
+reusePointerResult declaration mbTast = case declaration.ret, mbTast of
+  Just result, Just tast | isPointerNode result ->
+    Array.concat $ Array.mapWithIndex
+      (\i argument -> case getTastArgType tast i, getTastReturnType tast of
+        Just argumentType, Just resultType | argument == result && argumentType == resultType ->
+          [ "\tif go_res == go_arg" <> show i <> " { return arg" <> show i <> " }" ]
+        _, _ -> [])
+      declaration.args
+  _, _ -> []
 
 callArguments :: FfiDecl -> String
 callArguments declaration = String.joinWith ", " (Array.mapWithIndex (\i _ -> "go_arg" <> show i) declaration.args)

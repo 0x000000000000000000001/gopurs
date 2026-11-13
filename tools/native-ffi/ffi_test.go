@@ -11,8 +11,6 @@ import (
 	"strings"
 	"sync"
 	"testing"
-
-	"gopurs/output/gopurs_runtime"
 )
 
 func TestEscaping(t *testing.T) {
@@ -84,13 +82,13 @@ func TestBuilderLifetime(t *testing.T) {
 		workers.Add(1)
 		go func(seed int) {
 			defer workers.Done()
-			created := make(chan gopurs_runtime.Value, 1)
+			created := make(chan *strings.Builder, 1)
 			var creator sync.WaitGroup
 			creator.Add(1)
 			prefix := fmt.Sprintf("%d:é😀\xed\xa0\x80\x00", seed)
 			go func() {
 				defer creator.Done()
-				builder := NewBuilderImpl(gopurs_runtime.Value{})
+				builder := NewBuilderImpl()
 				if ToStringImpl(builder) != "" {
 					t.Error("new builder is not empty")
 				}
@@ -107,7 +105,7 @@ func TestBuilderLifetime(t *testing.T) {
 			if completed != prefix || ToStringImpl(builder) != prefix+strings.Repeat("x", 8192) {
 				t.Error("builder contents or completed string changed")
 			}
-			builder = gopurs_runtime.Value{}
+			builder = nil
 			runtime.GC()
 			if completed != prefix {
 				t.Error("completed string did not retain its storage")

@@ -163,10 +163,15 @@ la convention FFI actuelle, le paramètre final `_ any` des opérations effectiv
 garde leur exécution différée ; un callback `String -> Effect Unit` est représenté
 par `func(string) func()`. `GoImports.concatStringArrays` est générique pour
 conserver la représentation des éléments des tableaux imbriqués.
-`Printer.Builder` conserve ses arguments et résultats `Value` pour garder les
-appels directs du backend et renvoyer la poignée sans la reboxer à chaque fragment.
-`Cache.TypeMemo` conserve sa clé `Value`, qui retient
-le tag et le propriétaire mémoire utilisés pour identifier les types immuables.
+`Printer.Builder` expose un pointeur natif. Le pont génère des workers directs
+dont les paramètres de pointeur restent des poignées boxées et les résultats
+scalaires restent natifs. Si un résultat renvoie le même pointeur qu'un argument
+de même type Go et PureScript, le pont réutilise son enveloppe ; un nouveau
+pointeur reçoit sa propre enveloppe. Les ajouts dans un buffer déjà dimensionné
+n'allouent donc pas une nouvelle poignée à chaque fragment.
+`Cache.TypeMemo` utilise une map générique à clés comparables. Le pont instancie
+ses opérations avec la représentation `Value` d'`ExprType`, conservant son tag
+et le propriétaire mémoire de son pointeur. La FFI ne dépend pas du runtime.
 
 Les autres petites FFI gardent une responsabilité unique et ne demandent pas de
 dispatcher supplémentaire. Le parser, les adaptations typées des bibliothèques

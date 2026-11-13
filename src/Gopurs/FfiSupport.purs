@@ -34,7 +34,11 @@ extractFfiDecls source content = withFfiContext source do
   json <- extractFfiAstImpl content
   either throw pure (decodeFfiDecls json)
 
-prepareFfi :: { moduleName :: String, path :: String } -> String -> String -> Effect { decls :: Array FfiDecl, content :: String }
+prepareFfi
+  :: { moduleName :: String, path :: String }
+  -> String
+  -> String
+  -> Effect { decls :: Array FfiDecl, content :: String, imports :: Array { path :: String, alias :: String } }
 prepareFfi source prefix content = withFfiContext source do
   result <- prepareFfiAstImpl prefix content
   json <- either (throw <<< ("Invalid JSON response: " <> _)) pure (jsonParser result)

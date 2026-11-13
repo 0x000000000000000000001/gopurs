@@ -100,6 +100,11 @@ release library family; use the same value for the native build.
 
 The native path resolves the optimizer from the pinned Spago checkout. A local
 development optimizer is selected only through explicit `GOPURS_PBO_DIR`.
+The Go bootstrap exports each library and support revision from
+`bootstrap-sources.json` into its temporary workspace using the local Git
+objects. Newer branches and uncommitted changes in sibling libraries remain
+untouched. An explicit `GOPURS_LIBRARY_ROOT` selects those development sources
+instead; they must match the compiler's runtime and FFI conventions.
 The Go Argonaut codecs adaptation is part of the source release, including its
 MIT license and tests, and takes precedence over an unversioned sibling copy.
 

@@ -6,9 +6,38 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 )
+
+func TestPrepareFFIReportsOnlyImportDeclarations(t *testing.T) {
+	const source = "package ffi\n" +
+		"// import \"gopurs/output/gopurs_runtime\"\n" +
+		"import (\n\t\"sort\"\n\trt `gopurs/output/gopurs_runtime`\n\t_ \"net/http/pprof\"\n)\n" +
+		"func Path() string { return \"gopurs/output/gopurs_runtime\" }"
+	for _, content := range []string{source, `func Path() string { return "gopurs/output/gopurs_runtime" }`} {
+		result, err := parseFFI(content, "Probe_")
+		if err != nil {
+			t.Fatal(err)
+		}
+		var prepared struct {
+			Imports []struct{ Path, Alias string }
+		}
+		if err := json.Unmarshal([]byte(result), &prepared); err != nil {
+			t.Fatal(err)
+		}
+		want := []struct{ Path, Alias string }{}
+		if content == source {
+			want = append(want, struct{ Path, Alias string }{"sort", ""},
+				struct{ Path, Alias string }{"gopurs/output/gopurs_runtime", "rt"},
+				struct{ Path, Alias string }{"net/http/pprof", "_"})
+		}
+		if !reflect.DeepEqual(prepared.Imports, want) {
+			t.Fatalf("imports: got %#v, want %#v", prepared.Imports, want)
+		}
+	}
+}
 
 func TestParseFFIContract(t *testing.T) {
 	tests := []struct {

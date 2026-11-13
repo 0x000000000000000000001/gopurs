@@ -14,13 +14,13 @@ import { tmpdir } from "node:os";
 import { delimiter, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { CommandRunner, Interrupted } from "../lib/process.mjs";
-import { findTypedCompiler, nativeWorkspaceConfig, verifyTypedOutput } from "./native-workspace.mjs";
+import { findTypedCompiler, nativeWorkspaceConfig, prepareNativeGoLibraries, verifyTypedOutput } from "./native-workspace.mjs";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const args = process.argv.slice(2);
 if (args.includes("--help")) {
   console.log(
-    "Usage: npm run build:native -- [--keep-workspace]\nBuild an experimental native compiler using the Node backend and local Go library checkouts.\nGOPURS_PURS=/absolute/path/to/typed/purs overrides discovery of the local compiler fork.",
+    "Usage: npm run build:native -- [--keep-workspace]\nBuild a native compiler using the Node backend and pinned Go library sources from local checkouts.\nGOPURS_PURS=/absolute/path/to/typed/purs overrides discovery of the local compiler fork.\nGOPURS_LIBRARY_ROOT selects development library sources instead of the manifest pins.",
   );
   process.exit(0);
 }
@@ -73,10 +73,11 @@ async function buildNative({ keepWorkspace }) {
         throw new Error(`Missing local ${tool}; install the compiler's npm dependencies first`);
       }
     }
-    const config = nativeWorkspaceConfig(root);
     const compiler = findTypedCompiler(root, process.env.GOPURS_PURS);
     // Record the workspace before populating it, so setup failures retain its path.
     workspace = mkdtempSync(join(tmpdir(), "gopurs-native-build-"));
+    const libraryRoot = prepareNativeGoLibraries(root, workspace);
+    const config = nativeWorkspaceConfig(root, { libraryRoot });
     writeFileSync(join(workspace, "spago.yaml"), config);
     symlinkSync(join(root, "src"), join(workspace, "src"), "dir");
     const typedBin = join(workspace, "typed-bin");

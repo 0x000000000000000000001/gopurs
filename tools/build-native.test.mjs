@@ -91,7 +91,8 @@ appendFileSync(process.env.MOCK_LOG, JSON.stringify({ name: 'parser' }) + '\\n')
   const ready = join(temporary, 'ready.json');
   const environmentFor = overrides => ({
     ...process.env, TMPDIR: join(temporary, 'tmp'), MOCK_LOG: log, MOCK_READY: ready,
-    MOCK_FAIL: '', MOCK_UNTYPED: '', MOCK_PAUSE: '', GOPURS_PURS: '', ...overrides,
+    MOCK_FAIL: '', MOCK_UNTYPED: '', MOCK_PAUSE: '', GOPURS_PURS: '',
+    GOPURS_LIBRARY_ROOT: join(temporary, 'checkout/gopurs'), ...overrides,
   });
   const summarize = result => ({
     ...result,

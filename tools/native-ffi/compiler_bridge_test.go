@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"runtime"
 	"testing"
+	"unsafe"
+	"weak"
 
 	cache "gopurs/output/gopurs_build_cache"
 	rt "gopurs/output/gopurs_runtime"
@@ -40,6 +42,69 @@ func TestCompilerHandles(t *testing.T) {
 	if runEffect(finish).StrVal() != "a,c,b" || runEffect(a).IntVal != 0 {
 		t.Fatal("pool deduplication changed")
 	}
+}
+
+func TestCompilerTypeMemo(t *testing.T) {
+	memo := runEffect(_Gopurs_Gopurs_Cache_TypeMemo_Create)
+	other := runEffect(_Gopurs_Gopurs_Cache_TypeMemo_Create)
+	owner := &memoPayload{label: "same fields"}
+	separate := &memoPayload{label: "same fields"}
+	keys := []rt.Value{
+		{Type: rt.TypeConstructor, IntVal: 17},
+		{Type: rt.TypeConstructor, IntVal: 18},
+		{Type: rt.TypeConstructor, IntVal: 17, UnsafePtr: unsafe.Pointer(owner)},
+		{Type: rt.TypeConstructor, IntVal: 18, UnsafePtr: unsafe.Pointer(owner)},
+		{Type: rt.TypeConstructor, IntVal: 17, UnsafePtr: unsafe.Pointer(separate)},
+	}
+	lookup := func(cache, key rt.Value) int64 {
+		return runEffect(rt.Apply2(_Gopurs_Gopurs_Cache_TypeMemo_Lookup, cache, key)).IntVal
+	}
+	for i, key := range keys {
+		insert := rt.Apply3(_Gopurs_Gopurs_Cache_TypeMemo_Insert, memo, key, rt.Int(int64(i)))
+		if lookup(memo, key) != -1 {
+			t.Fatal("memo insertion ran before its Effect thunk")
+		}
+		runEffect(insert)
+	}
+	for i, key := range keys {
+		if lookup(memo, key) != int64(i) || lookup(other, key) != -1 {
+			t.Fatal("memo key lost its constructor tag, object identity or cache ownership")
+		}
+	}
+	runEffect(rt.Apply3(_Gopurs_Gopurs_Cache_TypeMemo_Insert, memo, keys[2], rt.Int(42)))
+	if lookup(memo, keys[2]) != 42 || lookup(memo, keys[3]) != 3 {
+		t.Fatal("replacing a memo entry changed another constructor")
+	}
+}
+
+type memoPayload struct {
+	label   string
+	padding [64]byte
+}
+
+//go:noinline
+func memoWithRetainedOwner() (rt.Value, weak.Pointer[memoPayload]) {
+	owner := &memoPayload{label: "retained by memo key"}
+	key := rt.Value{Type: rt.TypeConstructor, IntVal: 17, UnsafePtr: unsafe.Pointer(owner)}
+	memo := runEffect(_Gopurs_Gopurs_Cache_TypeMemo_Create)
+	runEffect(rt.Apply3(_Gopurs_Gopurs_Cache_TypeMemo_Insert, memo, key, rt.Int(42)))
+	return memo, weak.Make(owner)
+}
+
+func TestCompilerTypeMemoRetainsOwner(t *testing.T) {
+	memo, reference := memoWithRetainedOwner()
+	for i := 0; i < 3; i++ {
+		runtime.GC()
+	}
+	owner := reference.Value()
+	if owner == nil || owner.label != "retained by memo key" {
+		t.Fatal("memo key did not keep its payload alive")
+	}
+	key := rt.Value{Type: rt.TypeConstructor, IntVal: 17, UnsafePtr: unsafe.Pointer(owner)}
+	if runEffect(rt.Apply2(_Gopurs_Gopurs_Cache_TypeMemo_Lookup, memo, key)).IntVal != 42 {
+		t.Fatal("memo lookup changed after collection")
+	}
+	runtime.KeepAlive(memo)
 }
 
 func TestCompilerImportArrays(t *testing.T) {

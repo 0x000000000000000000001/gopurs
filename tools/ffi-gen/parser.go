@@ -10,6 +10,7 @@ import (
 	"go/scanner"
 	"go/token"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -191,6 +192,22 @@ func parseFFI(content string, prefixes ...string) (string, error) {
 
 	var result any = decls
 	if len(prefixes) > 0 {
+		type sourceImport struct {
+			Path  string `json:"path"`
+			Alias string `json:"alias"`
+		}
+		imports := make([]sourceImport, 0, len(f.Imports))
+		for _, spec := range f.Imports {
+			path, err := strconv.Unquote(spec.Path.Value)
+			if err != nil {
+				return "", fmt.Errorf("decode FFI import: %w", err)
+			}
+			alias := ""
+			if spec.Name != nil {
+				alias = spec.Name.Name
+			}
+			imports = append(imports, sourceImport{Path: path, Alias: alias})
+		}
 		type sourceEdit struct {
 			start, end int
 			text       string
@@ -233,9 +250,10 @@ func parseFFI(content string, prefixes ...string) (string, error) {
 		}
 		renamed.WriteString(content[start:])
 		result = struct {
-			Decls   []FFIDecl `json:"decls"`
-			Content string    `json:"content"`
-		}{decls, renamed.String()}
+			Decls   []FFIDecl      `json:"decls"`
+			Content string         `json:"content"`
+			Imports []sourceImport `json:"imports"`
+		}{decls, renamed.String(), imports}
 	}
 	jsonBytes, err := json.Marshal(result)
 	if err != nil {

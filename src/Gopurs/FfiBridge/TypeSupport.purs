@@ -7,6 +7,7 @@ module Gopurs.FfiBridge.TypeSupport
   , flattenFuncArgs
   , isStandardPursFunc
   , isRuntimeValueNode
+  , isPointerNode
   ) where
 
 import Prelude
@@ -31,6 +32,12 @@ printTypeNode (TFunc args ret) =
 printTypeNode (TArray elem) = "[]" <> printTypeNode elem
 printTypeNode (TMap k v) = "map[" <> printTypeNode k <> "]" <> printTypeNode v
 printTypeNode (TUnknown s) = s
+
+-- The Go parser preserves pointer types as source text. Their representation
+-- stays inside the FFI module; callers pass an opaque boxed handle.
+isPointerNode :: TypeNode -> Boolean
+isPointerNode (TUnknown name) = String.take 1 name == "*"
+isPointerNode _ = false
 
 -- Wrapper calls instantiate Go type parameters with Value. The same
 -- substitution must reach callbacks and containers before adapting values.

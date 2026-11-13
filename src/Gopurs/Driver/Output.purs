@@ -74,7 +74,9 @@ emitPreparedModule output frozen metadata (Module coreFnModule) backendMod prepa
         pure $ Just
           { content: prepared.content
           , decls: prepared.decls
-          , importsRuntime: String.contains (Pattern "\"gopurs/output/gopurs_runtime\"") original
+          , importsRuntime: Array.any
+              (\item -> item.path == "gopurs/output/gopurs_runtime" && (item.alias == "" || item.alias == "gopurs_runtime"))
+              prepared.imports
           }
     else pure Nothing
 

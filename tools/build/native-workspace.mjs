@@ -1,4 +1,5 @@
-import { accessSync, constants, existsSync, readFileSync, readdirSync, realpathSync, statSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { accessSync, constants, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { readJson } from "../lib/fs.mjs";
 
@@ -47,12 +48,53 @@ function resolveOptimizer(root) {
   throw new Error("Missing backend optimizer; run npm ci or set GOPURS_PBO_DIR to a checkout");
 }
 
-export function nativeWorkspaceConfig(root, { runtime = "go", purust = resolve(root, "../../purust/purust") } = {}) {
+// The compiler's own bootstrap must pair its runtime with the library versions
+// in its source manifest. Read committed trees without checking out or changing
+// the developer's sibling libraries. An explicit library root opts into using
+// the caller's development sources instead.
+export function prepareNativeGoLibraries(root, workspace, { libraryRoot = process.env.GOPURS_LIBRARY_ROOT } = {}) {
+  if (libraryRoot) return resolve(libraryRoot);
+  const manifestBytes = readFileSync(join(root, "bootstrap-sources.json"), "utf8");
+  const manifest = JSON.parse(manifestBytes);
+  if (manifest.schema !== 1 || !manifest.libraries || typeof manifest.libraries !== "object") {
+    throw new Error("Invalid bootstrap library manifest");
+  }
+  // Spago discovers nested spago.yaml files as workspace packages. Keep these
+  // dependency snapshots in its excluded cache tree so extraPackages remains
+  // their only registration, including support packages without a workspace.
+  const destination = join(workspace, ".spago", "bootstrap-libraries");
+  mkdirSync(destination, { recursive: true });
+  for (const [name, source] of Object.entries({ ...manifest.support, ...manifest.libraries })) {
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name) || !/^[a-f0-9]{40}$/.test(source?.rev)) {
+      throw new Error(`Invalid pinned bootstrap library: ${name}`);
+    }
+    const checkout = join(dirname(root), `gopurs-${name}`);
+    let archive;
+    try {
+      archive = execFileSync("git", ["-C", checkout, "archive", "--format=tar", source.rev], {
+        maxBuffer: 64 * 1024 * 1024, stdio: ["ignore", "pipe", "pipe"],
+      });
+    } catch (error) {
+      throw new Error(
+        `Cannot read pinned gopurs-${name} ${source.rev} from ${checkout}; install the manifest sources with ./bin/setup or select GOPURS_LIBRARY_ROOT explicitly`,
+        { cause: error },
+      );
+    }
+    const library = join(destination, `gopurs-${name}`);
+    mkdirSync(library);
+    execFileSync("tar", ["-xf", "-", "-C", library], { input: archive, stdio: ["pipe", "pipe", "pipe"] });
+    if (!existsSync(join(library, "spago.yaml"))) throw new Error(`Pinned gopurs-${name} has no spago.yaml`);
+  }
+  writeFileSync(join(destination, "bootstrap-sources.json"), manifestBytes);
+  return destination;
+}
+
+export function nativeWorkspaceConfig(root, { runtime = "go", purust = resolve(root, "../../purust/purust"), libraryRoot } = {}) {
   if (!["go", "rust"].includes(runtime)) throw new Error(`Unknown compiler runtime: ${runtime}`);
   const optimizer = resolveOptimizer(root);
   const packages = new Map([["backend-optimizer", optimizer]]);
   const family = runtime === "rust" ? "purust-" : "gopurs-";
-  const libraries = runtime === "rust" ? dirname(purust) : resolve(process.env.GOPURS_LIBRARY_ROOT || dirname(root));
+  const libraries = runtime === "rust" ? dirname(purust) : resolve(libraryRoot || process.env.GOPURS_LIBRARY_ROOT || dirname(root));
   for (const name of readdirSync(libraries).sort()) {
     if (!name.startsWith(family)) continue;
     const directory = join(libraries, name);

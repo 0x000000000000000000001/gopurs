@@ -17,6 +17,8 @@ const opaque = name => new C.ADT(name, name.split('.'), []);
 const effect = result => new C.ADT('Effect.Effect', ['Effect', 'Effect'], [result]);
 const strings = new C.Array(C.String.value);
 const pool = opaque('Gopurs.Cache.Pool.Pool');
+const typeMemo = opaque('Gopurs.Cache.TypeMemo.TypeMemo');
+const exprType = opaque('PureScript.Backend.Optimizer.CoreFn.ExprType');
 const unitEffect = effect(C.Unit.value);
 const modules = [
   ['Cache/Pool', [
@@ -24,6 +26,11 @@ const modules = [
     ['intern', fn([pool, C.String.value], effect(C.Int.value))],
     ['internRef', fn([pool, C.String.value], effect(C.String.value))],
     ['finish', fn([pool], effect(C.String.value))],
+  ]],
+  ['Cache/TypeMemo', [
+    ['create', effect(typeMemo)],
+    ['lookup', fn([typeMemo, exprType], effect(C.Int.value))],
+    ['insert', fn([typeMemo, exprType, C.Int.value], unitEffect)],
   ]],
   ['GoCode', [['referencedImportsImpl', fn([fn([C.String.value], strings), C.String.value], strings)]]],
   ['GoImports', [['concatStringArrays', fn([new C.Array(strings)], strings)]]],
@@ -40,7 +47,8 @@ test('compiler FFI generated bridges preserve native handles, nested arrays and 
   const directory = mkdtempSync(join(tmpdir(), 'gopurs-compiler-ffi-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   for (const name of ['gopurs_runtime', 'gopurs_build_cache']) mkdirSync(join(directory, name));
-  writeFileSync(join(directory, 'go.mod'), 'module gopurs/output\n\ngo 1.22\n');
+  // weak.Pointer observes GC ownership without itself retaining a memo key.
+  writeFileSync(join(directory, 'go.mod'), 'module gopurs/output\n\ngo 1.24\n');
   copyFileSync(join(root, 'runtime/runtime.go'), join(directory, 'gopurs_runtime/runtime.go'));
   for (const [name, entries] of modules) {
     const moduleName = 'Gopurs.' + name.replaceAll('/', '.');
@@ -72,7 +80,7 @@ func ReleaseCompilerSnapshot() { Events = append(Events, "release") }
     cwd: directory, encoding: 'utf8', timeout: 90_000,
     env: { ...process.env, GOWORK: 'off' }, stdio: ['ignore', 'pipe', 'pipe'],
   });
-  for (const name of ['CompilerHandles', 'CompilerImportArrays', 'CompilerHostEffects']) {
+  for (const name of ['CompilerHandles', 'CompilerTypeMemo', 'CompilerTypeMemoRetainsOwner', 'CompilerImportArrays', 'CompilerHostEffects']) {
     assert.match(output, new RegExp(`--- PASS: Test${name}`));
   }
 });

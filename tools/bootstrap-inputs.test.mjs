@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import { findTypedCompiler, nativeWorkspaceConfig } from "./build/native-workspace.mjs";
+import { findTypedCompiler, nativeWorkspaceConfig, prepareNativeGoLibraries } from "./build/native-workspace.mjs";
 
 function fixture(t) {
   const directory = mkdtempSync(join(tmpdir(), "gopurs-bootstrap-inputs-"));
@@ -82,6 +82,40 @@ test("setup installs a pinned support checkout", t => {
   const checkout = join(f.destination, "gopurs-codecs");
   assert.equal(f.git(["rev-parse", "HEAD"], checkout), f.pinned);
   assert.equal(existsSync(join(checkout, "later.txt")), false);
+});
+
+test("native bootstrap archives manifest revisions and preserves newer working libraries", t => {
+  const f = fixture(t);
+  const manifestFile = join(f.root, "bootstrap-sources.json");
+  const manifest = JSON.parse(readFileSync(manifestFile, "utf8"));
+  manifest.support = { "argonaut-codecs": { url: f.upstream, rev: f.pinned } };
+  writeFileSync(manifestFile, JSON.stringify(manifest));
+  for (const name of ["console", "effect", "argonaut-codecs"]) {
+    symlinkSync(f.upstream, join(f.directory, `gopurs-${name}`), "dir");
+  }
+  const source = join(f.upstream, "spago.yaml");
+  writeFileSync(source, "local uncommitted source\n");
+  const before = f.git(["rev-parse", "HEAD"]);
+  const libraries = prepareNativeGoLibraries(f.root, join(f.directory, "bootstrap"), { libraryRoot: "" });
+  assert.equal(libraries, join(f.directory, "bootstrap/.spago/bootstrap-libraries"));
+  for (const name of ["console", "effect", "argonaut-codecs"]) {
+    const snapshot = join(libraries, `gopurs-${name}`);
+    assert.equal(readFileSync(join(snapshot, "spago.yaml"), "utf8"), "package:\n  name: console\n");
+    assert.equal(existsSync(join(snapshot, "later.txt")), false);
+    assert.equal(existsSync(join(snapshot, ".git")), false);
+  }
+  assert.deepEqual(JSON.parse(readFileSync(join(libraries, "bootstrap-sources.json"), "utf8")), manifest);
+  assert.equal(f.git(["rev-parse", "HEAD"]), before);
+  assert.equal(readFileSync(source, "utf8"), "local uncommitted source\n");
+});
+
+test("native bootstrap honors an explicit development root and reports unavailable pins", t => {
+  const f = fixture(t);
+  const workspace = join(f.directory, "bootstrap");
+  assert.equal(prepareNativeGoLibraries(f.root, workspace, { libraryRoot: f.destination }), f.destination);
+  assert.equal(existsSync(workspace), false);
+  assert.throws(() => prepareNativeGoLibraries(f.root, workspace, { libraryRoot: "" }),
+    /Cannot read pinned gopurs-console .*GOPURS_LIBRARY_ROOT/);
 });
 
 test("native workspace selects the lockfile optimizer and pinned support codecs", t => {

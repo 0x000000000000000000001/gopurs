@@ -1,24 +1,20 @@
 // Handwritten FFI for Gopurs.Printer.Builder; keep in sync with the .purs foreign imports.
 package Gopurs_Printer_Builder
 
-import (
-	"strings"
+import "strings"
 
-	"gopurs/output/gopurs_runtime"
-)
-
-// Each rendering owns one opaque pointer. Copying the Value aliases that
-// handle; the strings.Builder itself must never be copied or shared by writers.
-func NewBuilderImpl(_ gopurs_runtime.Value) gopurs_runtime.Value {
-	return gopurs_runtime.Any(new(strings.Builder))
+// Each rendering owns one opaque pointer. Copies of the handle alias it;
+// the strings.Builder itself must never be copied or shared by writers.
+func NewBuilderImpl() *strings.Builder {
+	return new(strings.Builder)
 }
 
-func PushImpl(builder gopurs_runtime.Value, chunk string) gopurs_runtime.Value {
-	builder.AnyVal().(*strings.Builder).WriteString(chunk)
+func PushImpl(builder *strings.Builder, chunk string) *strings.Builder {
+	builder.WriteString(chunk)
 	return builder
 }
 
 // String keeps its immutable backing alive after the handle is released.
-func ToStringImpl(builder gopurs_runtime.Value) string {
-	return builder.AnyVal().(*strings.Builder).String()
+func ToStringImpl(builder *strings.Builder) string {
+	return builder.String()
 }

@@ -3,6 +3,7 @@ module Gopurs.FfiBridge.Signatures
   , matchDeclaration
   , nativeCandidate
   , functionInfo
+  , workerReturnsNative
   ) where
 
 import Prelude
@@ -15,6 +16,7 @@ import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
 import Gopurs.CodegenState (FunctionInfo)
 import Gopurs.FfiTypes (FfiDecl, TypeNode(..))
+import Gopurs.FfiBridge.TypeSupport (isPointerNode)
 import Gopurs.GoAst (GoType(..), capitalize)
 import Gopurs.GoSymbol (GoReference(..), foreignSymbol)
 import PureScript.Backend.Optimizer.CoreFn (ExprType(..))
@@ -40,11 +42,17 @@ matchDeclaration modNameStr decls pursName =
 
 nativeCandidate :: FfiDecl -> ExprType -> Maybe NativeCandidate
 nativeCandidate declaration tast
+  -- The generic boxed entry instantiates its type parameters explicitly.
+  -- Direct pointer adapters must not emit an uninstantiated Go function.
+  | not (Array.null declaration.typeParams)
+      && (Array.any isPointerNode declaration.args || case declaration.ret of
+        Just result -> isPointerNode result
+        Nothing -> false) = Nothing
   | isPureConcreteResult tast && not declaration.isVar && Array.length declaration.args >= 1 =
       let
-        requiresWorker = hasFunctionParameter declaration.args || case declaration.ret of
+        requiresWorker = hasFunctionParameter declaration.args || Array.any isPointerNode declaration.args || case declaration.ret of
           Nothing -> true
-          Just result -> needsValueWorker result
+          Just result -> needsValueWorker result || isPointerNode result
       in
         Just
           { declaration
@@ -63,15 +71,31 @@ functionInfo :: String -> NativeCandidate -> Maybe FunctionInfo
 functionInfo unit { declaration, tast, requiresWorker, callName } = do
   args <- traverse argumentType declaration.args
   ret <- case declaration.ret of
+    Just t | requiresWorker && workerReturnsNative declaration -> typeNodeToGoType t
     Just _ | requiresWorker -> boxedResult
     Just t -> typeNodeToGoType t
     Nothing -> boxedResult
   pure { reference: SymbolReference (foreignSymbol unit callName), fArgs: args, fRet: ret, arity: Array.length declaration.args }
   where
   argumentType (TFunc _ _) | requiresWorker = Just TypeValue
+  argumentType t | requiresWorker && isPointerNode t = Just TypeValue
   argumentType t = typeNodeToGoType t
 
   boxedResult = if isRecordResult tast then Nothing else Just TypeValue
+
+-- Pointer adapters need boxed inputs, but scalar outputs can keep the same
+-- direct representation as a handwritten scalar FFI function.
+workerReturnsNative :: FfiDecl -> Boolean
+workerReturnsNative declaration = Array.any isPointerNode declaration.args && case declaration.ret of
+  Just t -> case typeNodeToGoType t of
+    Just TypeString -> true
+    Just TypeInt64 -> true
+    Just TypeFloat64 -> true
+    Just TypeBool -> true
+    Just TypeUint32 -> true
+    Just TypeValue -> true
+    _ -> false
+  Nothing -> false
 
 isRecordResult :: ExprType -> Boolean
 isRecordResult = case _ of

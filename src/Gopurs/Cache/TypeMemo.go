@@ -1,23 +1,24 @@
 // Handwritten FFI for Gopurs.Cache.TypeMemo; keep in sync with the .purs foreign imports.
 package Gopurs_Cache_TypeMemo
 
-import "gopurs/output/gopurs_runtime"
-
-// ExprType is an immutable sum represented by a constructor tag and an optional
-// payload pointer. Keep the whole Value as the key so the GC retains its owner.
-type memo map[gopurs_runtime.Value]int64
-
-func Create(_ any) gopurs_runtime.Value {
-	return gopurs_runtime.Any(memo{})
+// Keep each complete comparable key, including any pointers it owns. The FFI
+// bridge supplies the ExprType representation without exposing it to this cache.
+// All operations use the same key type; only the map handle is type-erased.
+type memo struct {
+	indices any
 }
 
-func Lookup(handle, value gopurs_runtime.Value, _ any) int64 {
-	if index, found := handle.AnyVal().(memo)[value]; found {
+func Create[T comparable]() *memo {
+	return &memo{indices: make(map[T]int64)}
+}
+
+func Lookup[T comparable](handle *memo, value T, _ any) int64 {
+	if index, found := handle.indices.(map[T]int64)[value]; found {
 		return index
 	}
 	return -1
 }
 
-func Insert(handle, value gopurs_runtime.Value, index int64, _ any) {
-	handle.AnyVal().(memo)[value] = index
+func Insert[T comparable](handle *memo, value T, index int64, _ any) {
+	handle.indices.(map[T]int64)[value] = index
 }
