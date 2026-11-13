@@ -65,7 +65,7 @@ test('final signing binds the new package smoke and unchanged RC20 producer iden
     current.jobs.push({ ...current.jobs[0], id: 20000 + index, name: `repackage and smoke (${target})` });
     current.artifacts.push({ ...current.artifacts[0], id: 21000 + index, name: `repackaged-${target}-attempt-1` });
   });
-  const manifest = { schema: 1, enabled: true, base: recoveryBase, targetTag: 'v0.1.0', goldens: [{ path: 'tests/passing-snapshots/1110.go', fixture: 'tests/passing/1110.purs', beforeSha256: 'a'.repeat(64), afterSha256: 'b'.repeat(64) }] };
+  const manifest = { schema: 1, enabled: true, base: recoveryBase, targetTag: 'v0.1.0', fixtureSources: [], goldens: [{ path: 'tests/passing-snapshots/1110.go', fixture: 'tests/passing/1110.purs', beforeSha256: 'a'.repeat(64), afterSha256: 'b'.repeat(64) }] };
   const recovery = { base, manifest, proof: { manifestSha256: recoveryHash(JSON.stringify(manifest)), changes: [] }, inventory: qualityInventory(fileURLToPath(new URL('../../', import.meta.url))) };
   const selected = selectFinalizedInputs({ ...current, recovery });
   for (const item of selected) {

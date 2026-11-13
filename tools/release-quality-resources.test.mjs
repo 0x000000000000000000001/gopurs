@@ -216,7 +216,7 @@ test("bounded RC20 aggregation retains producer commits and still requires all 3
     const context = { schema: 3, source: { commit: "d".repeat(40), tag: "v0.1.0" }, target: core.identity.target,
       github: { repository: recoveryBase.repository, runId: "999", finalizationAttempt: "1" },
       recovery: { base: recoveryBase,
-        manifest: { schema: 1, enabled: true, base: recoveryBase, targetTag: "v0.1.0",
+        manifest: { schema: 1, enabled: true, base: recoveryBase, targetTag: "v0.1.0", fixtureSources: [],
           goldens: [{ path: "tests/passing-snapshots/1110.go", fixture: "tests/passing/1110.purs", beforeSha256: "a".repeat(64), afterSha256: "b".repeat(64) }] },
         required: [0, 1, 2].map(shard => ({ target: core.identity.target, shard })) },
       qualificationIdentity: structuredClone(core.identity),

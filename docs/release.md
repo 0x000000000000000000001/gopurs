@@ -289,17 +289,28 @@ The 0.1.0 tag uses a one-hop recovery from signed `v0.1.0-rc.20`, commit
 `2202368d4b19849fdc365afacaffa4a617b0ea43`, Actions run `43412666316`.
 This mechanism cannot promote another base, another final version, or a chain
 of inherited qualifications. `tools/ci/rc20-recovery.json` must be explicitly
-sealed after the exact obsolete goldens have been reviewed. An incomplete or
+sealed after the exact obsolete goldens and the two fixture FFI migrations
+have been reviewed. An incomplete or
 invalid recovery stops the plan; it does not fall back to a complete rebuild.
 
 The source check permits only the listed golden paths with their before/after
-hashes and owning fixtures, the three package version fields, and the explicit
+hashes and owning fixtures, the existing `tests/passing/PolyLabels.go` and
+`tests/passing/RowUnion.go` companions with their exact before/after hashes,
+the three package version fields, and the explicit
 documentation and release-control paths in `release-recovery.mjs`. Compiler
 sources, runtime, runners, dependencies, pins and executable tools must remain
 identical. The plan runs the release-control tests on the new source. The
 original run must be terminal, and its three core producers must have passed.
+The two companion migrations use direct Go arguments for `UnsafeSet` and
+`MergeImpl`: their curried Go result cannot be validated against the declared
+open-record result. This is a fixture FFI migration, not a compiler change.
+Their PureScript sources remain identical, and no other fixture source is
+allowed to change. `fixtureSources` in the manifest identifies each companion
+and its owning fixture; a missing or unreviewed hash prevents sealing.
 
-Only invalidated, missing or unsuccessful fixture shards run again. Each job
+Only invalidated, missing or unsuccessful fixture shards run again. A changed
+companion invalidates its fixture's Release and Dev shards even when neither
+golden changes. Each job
 imports the exact compiler and prepared Nix closure from its original RC20
 producer. The aggregate still requires 222 core gates plus all 162 fixture
 batches per platform: 384 gates, covering all 401 fixtures in both profiles.

@@ -32,7 +32,7 @@ function recoveryFixture() {
   current.artifacts = current.artifacts.filter(artifact => artifact.name.startsWith('fixtures-linux-amd64-0-')).map(artifact => ({ ...artifact, id: artifact.id + 10000 }));
   current.jobs.push({ ...current.jobs[0], id: 20000, name: 'repackage and smoke (linux-amd64)' });
   current.artifacts.push({ ...current.artifacts[0], id: 20001, name: 'repackaged-linux-amd64-attempt-1' });
-  const manifest = { schema: 1, enabled: true, base: recoveryBase, targetTag: 'v0.1.0', goldens: [{ path: 'tests/passing-snapshots/1110.go', fixture: 'tests/passing/1110.purs', beforeSha256: 'a'.repeat(64), afterSha256: 'b'.repeat(64) }] };
+  const manifest = { schema: 1, enabled: true, base: recoveryBase, targetTag: 'v0.1.0', fixtureSources: [], goldens: [{ path: 'tests/passing-snapshots/1110.go', fixture: 'tests/passing/1110.purs', beforeSha256: 'a'.repeat(64), afterSha256: 'b'.repeat(64) }] };
   return { base, current, manifest, proof: { manifestSha256: recoveryHash(JSON.stringify(manifest)), changes: [] }, inventory: qualityInventory(fileURLToPath(new URL('../../', import.meta.url))) };
 }
 
@@ -74,6 +74,21 @@ test('RC20 recovery rejects substituted runs, artifacts, extra jobs and visible 
     const data = recoveryFixture(); mutate(data);
     assert.throws(() => selectRecoveryInputs(data), mutate.toString());
   }
+});
+
+test('RC20 recovery never inherits successful shards invalidated by either fixture FFI migration', () => {
+  const data = recoveryFixture();
+  data.manifest.fixtureSources = ['PolyLabels', 'RowUnion'].map(name => ({
+    path: `tests/passing/${name}.go`, fixture: `tests/passing/${name}.purs`, beforeSha256: 'a'.repeat(64), afterSha256: 'b'.repeat(64),
+  }));
+  data.proof.manifestSha256 = recoveryHash(JSON.stringify(data.manifest));
+  assert.deepEqual(recoveryRequired(data.base, data.inventory, data.manifest).map(row => [row.target, row.shard]), [
+    ['linux-amd64', 0], ['linux-amd64', 1], ['linux-amd64', 2],
+    ['linux-arm64', 0], ['linux-arm64', 1], ['linux-arm64', 2],
+    ['darwin-arm64', 0], ['darwin-arm64', 1], ['darwin-arm64', 2],
+  ]);
+  // All base shards passed, but the current run has only rerun shard 0.
+  assert.throws(() => selectRecoveryInputs(data), /Missing producer job/);
 });
 
 function fixture() {

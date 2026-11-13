@@ -9,6 +9,20 @@
     "runId": "43412666316"
   },
   "targetTag": "v0.1.0",
+  "fixtureSources": [
+    {
+      "path": "tests/passing/PolyLabels.go",
+      "beforeSha256": "ca936c0fe0e4e3fac52847026fb9a0c0fa47c88947dfe066d8140a439694ca04",
+      "afterSha256": "0bb663dc8c5c7943ec4da1065ccbfe7a9fad8a9363cba807445caf82ef07bc38",
+      "fixture": "tests/passing/PolyLabels.purs"
+    },
+    {
+      "path": "tests/passing/RowUnion.go",
+      "beforeSha256": "d3e888e521d6728b9bb1b348f338efaa032a6a179136dc23eadfd89cd65f9523",
+      "afterSha256": "33cbff05c6841a17a05b30d6d4671ee8f4c80a844480399afde229f7acb7e084",
+      "fixture": "tests/passing/RowUnion.purs"
+    }
+  ],
   "goldens": [
     {
       "path": "tests/passing-snapshots/1110.go",

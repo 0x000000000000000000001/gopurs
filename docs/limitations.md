@@ -26,6 +26,11 @@ The compatibility policy is in [publication-scope.md](publication-scope.md).
   licenses are not implied by the compiler version.
 - The FFI parser supports the documented Go signatures, not arbitrary
   JavaScript FFI shapes.
+- A curried Go implementation returning an open-row record through
+  `map[string]any` can be rejected by the structured-result validator. Declare
+  its arguments together in one Go function; see the
+  [migration note](migration.md#curried-record-helper-signatures). This limit
+  does not make open rows convertible to arbitrary Go structs.
 - `--ffi` paths containing spaces are not supported by the shared argument
   parser.
 

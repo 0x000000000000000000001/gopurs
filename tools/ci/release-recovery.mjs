@@ -59,12 +59,18 @@ const recoveryDataHashes = Object.freeze({
   "docs/benchmark-results/2026-11-13-rc20.json": "d980cc08ae0298a6637759995d2920820f0e6cbf26a4d724285d80ca175ad62e",
   "docs/benchmark-results/2026-11-13-rc20.csv": "f97b52098fdc14f3b3cabaabb61286a042a398f8466647e60975a97d53f0cae2",
 });
+// These two existing fixture companions only migrate their FFI calling shape.
+// PureScript fixtures and every other executable fixture input remain sealed.
+const recoveryFixtureSources = Object.freeze({
+  "tests/passing/PolyLabels.go": "tests/passing/PolyLabels.purs",
+  "tests/passing/RowUnion.go": "tests/passing/RowUnion.purs",
+});
 export const recoveryHash = (bytes) => createHash("sha256").update(bytes).digest("hex");
 export const isRecovery = (env = process.env) => env.GITHUB_REF === `refs/tags/${recoveryTag}`;
 const hash = (value) => assert.match(value, /^[a-f0-9]{64}$/);
 
 export function validateRecoveryManifest(manifest) {
-  assert.deepEqual(Object.keys(manifest).sort(), ["base", "enabled", "goldens", "schema", "targetTag"]);
+  assert.deepEqual(Object.keys(manifest).sort(), ["base", "enabled", "fixtureSources", "goldens", "schema", "targetTag"]);
   assert.equal(manifest.schema, 1);
   assert.equal(manifest.enabled, true, "RC20 recovery has not been sealed");
   assert.deepEqual(manifest.base, recoveryBase);
@@ -86,6 +92,17 @@ export function validateRecoveryManifest(manifest) {
     hash(golden.afterSha256);
     assert.notEqual(golden.beforeSha256, golden.afterSha256);
   }
+  assert.ok(Array.isArray(manifest.fixtureSources));
+  for (const source of manifest.fixtureSources) {
+    assert.deepEqual(Object.keys(source).sort(), ["afterSha256", "beforeSha256", "fixture", "path"]);
+    assert.ok(Object.hasOwn(recoveryFixtureSources, source.path), "Unreviewed fixture source path");
+    assert.equal(source.fixture, recoveryFixtureSources[source.path], "Fixture source owner changed");
+    assert.ok(!paths.has(source.path), "Duplicate fixture source");
+    paths.add(source.path);
+    hash(source.beforeSha256);
+    hash(source.afterSha256);
+    assert.notEqual(source.beforeSha256, source.afterSha256);
+  }
   return manifest;
 }
 
@@ -93,7 +110,7 @@ export function validateRecoveryManifest(manifest) {
 // allowlisted subset supplied by a caller. The Git reader below produces it.
 export function validateRecoverySource(changes, manifest) {
   validateRecoveryManifest(manifest);
-  const goldens = new Map(manifest.goldens.map((entry) => [entry.path, entry]));
+  const fixtureChanges = new Map([...manifest.goldens, ...manifest.fixtureSources].map((entry) => [entry.path, entry]));
   const seen = new Set();
   const rows = changes.map(({ path, oldMode, newMode, before, after }) => {
     assert.ok(!seen.has(path), "Duplicate source change");
@@ -109,11 +126,11 @@ export function validateRecoverySource(changes, manifest) {
     if (Object.hasOwn(recoveryDataHashes, path)) {
       assert.equal(before, null);
       assert.equal(afterSha256, recoveryDataHashes[path], "Reviewed benchmark export bytes changed");
-    } else if (goldens.has(path)) {
+    } else if (fixtureChanges.has(path)) {
       assert.deepEqual(
-        { path, fixture: goldens.get(path).fixture, beforeSha256, afterSha256 },
-        goldens.get(path),
-        `Unreviewed golden bytes: ${path}`,
+        { path, fixture: fixtureChanges.get(path).fixture, beforeSha256, afterSha256 },
+        fixtureChanges.get(path),
+        `Unreviewed fixture bytes: ${path}`,
       );
     } else if (path === "package.json" || path === "package-lock.json") {
       const original = JSON.parse(before),
@@ -134,7 +151,7 @@ export function validateRecoverySource(changes, manifest) {
       );
     return { path, oldMode, newMode, beforeSha256, afterSha256 };
   });
-  for (const path of [...goldens.keys(), "package.json", "package-lock.json"])
+  for (const path of [...fixtureChanges.keys(), "package.json", "package-lock.json"])
     assert.ok(seen.has(path), `Missing required release change: ${path}`);
   return {
     manifestSha256: recoveryHash(JSON.stringify(manifest)),
@@ -178,15 +195,18 @@ export function recoveryShards(inventory, manifest) {
   assert.equal(inventory.targets.length, 401);
   assert.equal(inventory.batches.length, 162);
   const affected = new Set();
-  for (const golden of manifest.goldens) {
-    const profile = golden.path.includes("-dev/") ? "dev" : "release";
+  const includeFixture = (entry, profile) => {
     const matches = inventory.batches.filter(
-      (batch) => batch.profile === profile && batch.targets.includes(golden.fixture),
+      (batch) => batch.profile === profile && batch.targets.includes(entry.fixture),
     );
-    assert.equal(matches.length, 1, `Golden has no unique fixture batch: ${golden.path}`);
+    assert.equal(matches.length, 1, `No unique fixture batch (${profile}): ${entry.path}`);
     const index = matches[0].batchIndex;
     affected.add((index + Math.floor(index / 4)) % 4);
-  }
+  };
+  for (const golden of manifest.goldens)
+    includeFixture(golden, golden.path.includes("-dev/") ? "dev" : "release");
+  for (const source of manifest.fixtureSources)
+    for (const profile of ["release", "dev"]) includeFixture(source, profile);
   return [...affected].sort();
 }
 

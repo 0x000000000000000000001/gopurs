@@ -113,6 +113,29 @@ gopurs reads the `.go` implementation. RC20 checks foreign implementations in
 the selected entry-point scope before emitting Go. Exercise the application's
 foreign calls when checking behavior, errors and resource cleanup.
 
+### Curried record-helper signatures
+
+For a polymorphic record helper that copies or forwards map entries, declare
+the Go arguments together. The current validator can reject a curried Go
+function whose eventual result is an open-row record, reporting an unsupported
+record-to-struct conversion. For example, replace:
+
+```go
+func MergeImpl(left map[string]any) func(map[string]any) map[string]any
+```
+
+with:
+
+```go
+func MergeImpl(left map[string]any, right map[string]any) map[string]any
+```
+
+Keep the PureScript declaration and the map-copy behavior unchanged. Map
+entries in this polymorphic helper remain opaque values; this is not a general
+conversion of open records into Go structs. `PolyLabels` and `RowUnion` passed
+Release and Dev with both compiler hosts after this signature change, with
+outputs matching the JavaScript frontend reference.
+
 ### Rebuild and compare
 
 From the project root, move the previous output to an unused backup name, then

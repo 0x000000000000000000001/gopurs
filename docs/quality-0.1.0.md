@@ -22,6 +22,18 @@ and record-equality probes matched the JavaScript reference. Only their
 generated-code snapshots were changed. Remaining unexecuted fixtures are
 being completed separately; these local results do not fill missing CI gates.
 
+The continuation subsequently exposed a separate FFI validation limit in
+`PolyLabels`, reproduced in `RowUnion`: a curried Go function returning an
+open-row record map is checked against the final record too early. Only the
+two fixture implementations were flattened to ordinary Go argument lists;
+their PureScript declarations, map-copy behavior, compiler and snapshots are
+unchanged. All eight fixture/profile/host executions passed with outputs equal
+to the JavaScript frontend reference. The limitation and migration are
+documented; no compiler fix or full rebuild is claimed. The validation receipt
+has SHA-256 `470daaace40b381602edcca1a8b9bfc21d0c1d258e0daf5cc1d306fc751b3927`.
+Previously successful fixture executions remain retained, and only missing
+cases continue.
+
 The complete [RC20 benchmark](release-benchmark.md#completed-rc20-campaign--13-november-2026-utc)
 passed and was audited: 51 cases, 1,224 retained invocations and one separately
 excluded warmup after a disk-floor stop. The resumed runner preserved the

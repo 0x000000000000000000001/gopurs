@@ -13,15 +13,20 @@ const change = (path, oldMode = "100644", newMode = "100644") => ({ path, oldMod
 const docs = [change("README.md"), change("docs/reference/ffi.md")];
 const code = [change("src/Main.purs")];
 
-function recoverySource() {
+function recoverySource(fixtureNames = []) {
   const before = Buffer.from("old golden"), after = Buffer.from("correct golden");
   const path = "tests/passing-snapshots/1110.go";
-  const manifest = { schema: 1, enabled: true, base: recoveryBase, targetTag: "v0.1.0",
+  const manifest = { schema: 1, enabled: true, base: recoveryBase, targetTag: "v0.1.0", fixtureSources: [],
     goldens: [{ path, fixture: "tests/passing/1110.purs", beforeSha256: recoveryHash(before), afterSha256: recoveryHash(after) }] };
   const changes = [{ ...change(path), before, after }, ...["package.json", "package-lock.json"].map(path => ({
     ...change(path), before: JSON.stringify({ version: "0.1.0-rc.20", ...(path.includes("lock") ? { packages: { "": { version: "0.1.0-rc.20" } } } : {}) }),
     after: JSON.stringify({ version: "0.1.0", ...(path.includes("lock") ? { packages: { "": { version: "0.1.0" } } } : {}) }),
   }))];
+  for (const name of fixtureNames) {
+    const path = `tests/passing/${name}.go`, before = Buffer.from(`old ${name} FFI`), after = Buffer.from(`direct ${name} FFI`);
+    manifest.fixtureSources.push({ path, fixture: `tests/passing/${name}.purs`, beforeSha256: recoveryHash(before), afterSha256: recoveryHash(after) });
+    changes.push({ ...change(path), before, after });
+  }
   return { changes, manifest };
 }
 
@@ -44,6 +49,44 @@ test("RC20 recovery accepts only exact goldens and three release version fields"
   ]) {
     const value = recoverySource(); mutate(value);
     assert.throws(() => validateRecoverySource(value.changes, value.manifest), mutate.toString());
+  }
+});
+
+test("RC20 recovery binds only the two reviewed Go fixture companions to exact bytes and owners", () => {
+  const { changes, manifest } = recoverySource(["PolyLabels", "RowUnion"]);
+  assert.equal(validateRecoverySource(changes, manifest).changes.length, 5);
+  for (const path of ["tests/passing/PolyLabels.purs", "tests/passing/RowUnion.purs", "tests/passing/PolyLabels.js", "tests/passing/Other.go", "tools/test-runner.mjs"])
+    assert.throws(() => validateRecoverySource([...changes, { ...change(path), before: "old", after: "new" }], manifest), /input changed/);
+  for (const mutate of [
+    value => { value.changes.at(-1).before = "unreviewed old FFI"; },
+    value => { value.changes.at(-1).after = "unreviewed new FFI"; },
+    value => { value.changes.at(-1).newMode = "120000"; },
+    value => { value.changes.pop(); },
+    value => { value.manifest.fixtureSources.pop(); },
+    value => { value.manifest.fixtureSources[0].path = "tests/passing/Other.go"; },
+    value => { value.manifest.fixtureSources[0].path = "tests/passing/PolyLabels.purs"; },
+    value => { value.manifest.fixtureSources[0].fixture = "tests/passing/RowUnion.purs"; },
+    value => { value.manifest.fixtureSources[0].afterSha256 = null; },
+    value => { value.manifest.fixtureSources[0].afterSha256 = value.manifest.fixtureSources[0].beforeSha256; },
+    value => { value.manifest.fixtureSources.push(structuredClone(value.manifest.fixtureSources[0])); },
+    value => { delete value.manifest.fixtureSources; },
+  ]) {
+    const value = recoverySource(["PolyLabels", "RowUnion"]); mutate(value);
+    assert.throws(() => validateRecoverySource(value.changes, value.manifest), mutate.toString());
+  }
+});
+
+test("RC20 companion changes invalidate both profiles without requiring changed goldens", () => {
+  const inventory = qualityInventory(fileURLToPath(new URL("../../", import.meta.url)));
+  for (const [name, expected] of [["PolyLabels", [0, 1]], ["RowUnion", [0, 1, 2]]]) {
+    const { manifest } = recoverySource([name]); // The only golden remains unrelated 1110 Release (shard 0).
+    assert.deepEqual(recoveryShards(inventory, manifest), expected);
+    for (const profile of ["release", "dev"]) {
+      const missing = structuredClone(inventory);
+      const batch = missing.batches.find(row => row.profile === profile && row.targets.includes(`tests/passing/${name}.purs`));
+      batch.targets = batch.targets.filter(path => path !== `tests/passing/${name}.purs`);
+      assert.throws(() => recoveryShards(missing, manifest), /unique fixture batch/);
+    }
   }
 });
 
