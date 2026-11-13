@@ -6,6 +6,9 @@ import { arch, platform } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { withSbomSerialNumber } from "./release-sbom.mjs";
+import assert from "node:assert/strict";
+import { readRecoverySource, recoveryBase, recoveryTag, validateRecoveryIdentity } from "../ci/release-recovery.mjs";
+import { githubContext } from "../ci/release-inputs.mjs";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const options = {};
@@ -13,12 +16,12 @@ for (let index = 2; index < process.argv.length; index++) {
   const arg = process.argv[index];
   if (arg === "--help") {
     console.log(
-      "Usage: node tools/release/release-prepare.mjs --out DIRECTORY --native FILE [--preview]\nPackages the already built compiler, its lockfile inventory, build metadata and SHA-256 checksums. Final preparation requires a clean tree at the matching annotated version tag.",
+      "Usage: node tools/release/release-prepare.mjs --out DIRECTORY --native FILE [--preview] [--recovery-context FILE --original-directory DIRECTORY]\nPackages the already built compiler, its lockfile inventory, build metadata and SHA-256 checksums. Final preparation requires a clean tree at the matching annotated version tag. Recovery is restricted to RC20 compiler bytes repackaged and smoked on the original platform for 0.1.0.",
     );
     process.exit(0);
   }
   if (arg === "--preview") options.preview = true;
-  else if (["--out", "--native"].includes(arg) && process.argv[index + 1])
+  else if (["--out", "--native", "--recovery-context", "--original-directory"].includes(arg) && process.argv[index + 1])
     options[arg.slice(2)] = resolve(process.argv[++index]);
   else throw new Error(`Unknown or incomplete option: ${arg}`);
 }
@@ -32,7 +35,24 @@ const version = metadata.version;
 if (!/^\d+\.\d+\.\d+(?:-rc\.\d+)?$/.test(version)) throw new Error(`Unsupported release version: ${version}`);
 if (json("package-lock.json").packages[""].version !== version)
   throw new Error("package.json and package-lock.json release versions differ");
+const recovery = options["recovery-context"] ? JSON.parse(readFileSync(options["recovery-context"], "utf8")) : null;
+assert.equal(Boolean(options["original-directory"]), Boolean(recovery));
+if (recovery) {
+  assert.equal(options.preview, undefined);
+  assert.equal(version, recoveryTag.slice(1));
+  assert.deepEqual(readRecoverySource(root).proof, recovery.recovery.proof);
+  const current = githubContext();
+  assert.equal(recovery.source.commit, current.commit);
+  assert.equal(recovery.source.tag, current.tag);
+  assert.deepEqual(recovery.github, {
+    repository: current.repository,
+    runId: current.runId,
+    finalizationAttempt: current.runAttempt,
+  });
+  validateRecoveryIdentity(recovery, recovery.qualificationIdentity, { core: true });
+}
 const target = `${platform()}-${{ x64: "amd64", arm64: "arm64" }[arch()] ?? arch()}`;
+if (recovery) assert.equal(recovery.target, target, "Repackage and smoke must use the original target platform");
 if (!["linux-amd64", "linux-arm64", "darwin-arm64"].includes(target))
   throw new Error(`Unsupported release target: ${target}`);
 const status = command("git", ["status", "--porcelain", "--untracked-files=all"]).trim();
@@ -70,10 +90,34 @@ const nativeInfo = command("go", ["version", "-m", options.native]).trim().split
 // metadata does not expose a maintainer's absolute checkout path.
 nativeInfo[0] = nativeInfo[0].slice(nativeInfo[0].lastIndexOf(": ") + 2);
 const nativeBuildInfo = nativeInfo.join("\n");
-const expectedOs = platform();
-const expectedArch = arch() === "x64" ? "amd64" : arch();
+const [expectedOs, expectedArch] = target.split("-");
 if (!nativeBuildInfo.includes(`GOOS=${expectedOs}`) || !nativeBuildInfo.includes(`GOARCH=${expectedArch}`))
   throw new Error(`Native executable does not match ${target}`);
+let originalBuild;
+if (recovery) {
+  const oldPrefix = `gopurs-${recoveryBase.tag.slice(1)}-${target}`;
+  originalBuild = JSON.parse(readFileSync(join(options["original-directory"], `${oldPrefix}-build.json`), "utf8"));
+  assert.deepEqual(originalBuild.source, { commit: recoveryBase.commit, tag: recoveryBase.tag, dirty: false });
+  assert.equal(originalBuild.target, target);
+  assert.equal(originalBuild.nativeBuildInfo, nativeBuildInfo, "Native build info changed during repackaging");
+  assert.equal(sha256(options.native), recovery.qualificationIdentity.compiler.nativeSha256);
+  assert.equal(sha256(join(root, "bin/gopurs.js")), recovery.qualificationIdentity.compiler.javascriptSha256);
+  for (const artifact of originalBuild.artifacts) {
+    assert.match(artifact.name, /^[A-Za-z0-9._-]+$/);
+    assert.equal(sha256(join(options["original-directory"], artifact.name)), artifact.sha256);
+  }
+  // The tracked executable/package inputs are already equal by the source
+  // proof; verify the generated JS and WASM bytes against the actual old pack.
+  const oldArchive = join(options["original-directory"], `gopurs-${recoveryBase.tag.slice(1)}.tgz`);
+  for (const file of ["bin/gopurs.js", "tools/ffi_gen.wasm", "tools/wasm_exec.js"]) {
+    const bytes = execFileSync("tar", ["-xOf", oldArchive, `package/${file}`], { maxBuffer: 128 * 1024 ** 2 });
+    assert.equal(
+      createHash("sha256").update(bytes).digest("hex"),
+      sha256(join(root, file)),
+      `Original execution bytes differ: ${file}`,
+    );
+  }
+}
 mkdirSync(options.out, { recursive: true });
 const prefix = `gopurs-${version}-${target}`;
 const writeJson = (name, value) => writeFileSync(join(options.out, name), JSON.stringify(value, null, 2) + "\n");
@@ -147,7 +191,7 @@ for (const [name, source] of Object.entries(sources.support ?? {})) {
     ...(source.license ? { licenses: [{ expression: source.license }] } : {}),
   });
 }
-const goVersion = command("go", ["version"]).trim();
+const goVersion = originalBuild?.tools.go ?? command("go", ["version"]).trim();
 components.push({
   type: "application",
   "bom-ref": "toolchain:go",
@@ -217,6 +261,15 @@ writeJson(`${prefix}-build.json`, {
   preview: Boolean(options.preview),
   tools: { node: process.version, npm: command("npm", ["--version"]).trim(), go: goVersion },
   nativeBuildInfo,
+  ...(recovery
+    ? {
+        compilerOrigin: {
+          base: recoveryBase,
+          identity: recovery.qualificationIdentity,
+          artifact: recovery.artifacts[0],
+        },
+      }
+    : {}),
   inputs: Object.fromEntries(inputFiles.map((file) => [file, sha256(join(root, file))])),
   artifacts,
   attestation:

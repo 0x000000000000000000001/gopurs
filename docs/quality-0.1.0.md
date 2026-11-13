@@ -3,6 +3,55 @@
 This is a working record for the `0.1.0` release gates. It is not a release
 certificate. The current gate list is in the [release checklist](release-checklist.md).
 
+## RC20 results and final recovery preparation — 13 November 2026
+
+Signed RC20 identifies source `2202368d4b19849fdc365afacaffa4a617b0ea43`
+and tag object `9a80c154eff82589275d6790e158e0636066197c`.
+[CI run 43412666316](https://github.com/0x000000000000000000001/gopurs/actions/runs/43412666316)
+completed with failure: the scope job and all three platform build/core jobs
+passed, but the twelve fixture shards stopped on snapshot differences.
+Final qualification, attestations and the release draft were consequently
+skipped. This is not a successful complete matrix or a published candidate.
+
+The observed differences concern `1110`, `4105`, `Coercible` and
+`CompactRecordConsumers`: generated dictionaries, newtypes and record FFI
+adapters use types retained by the TAST more precisely than the old references.
+Isolated validation with the exact frozen RC20 distribution passed all four
+fixtures in Release and Dev on both compiler hosts. Additional rank-2 class
+and record-equality probes matched the JavaScript reference. Only their
+generated-code snapshots were changed. Remaining unexecuted fixtures are
+being completed separately; these local results do not fill missing CI gates.
+
+The complete [RC20 benchmark](release-benchmark.md#completed-rc20-campaign--13-november-2026-utc)
+passed and was audited: 51 cases, 1,224 retained invocations and one separately
+excluded warmup after a disk-floor stop. The resumed runner preserved the
+19 completed cases and restarted the interrupted case from its first warmup.
+Its source, raw timings and exclusions retain their RC20 identities.
+
+The successfully produced Darwin CI artifact was installed into a fresh b8x
+workspace. Frontend compilation, native backend generation, Go package builds
+and the `Test.Main` link passed; its Linux arm64 executable passed **287/287
+application tests**. The original 3,242 frozen input files remained unchanged.
+This is an observed RC20 artifact execution despite the overall CI failure;
+it does not certify the pending final package or a public installation.
+The retained preflight receipt has SHA-256
+`761e2682fb4e6ea7364b72d486e0f76925ff16985e8468b0041fdbbfe467afc6`.
+
+Final `0.1.0` preparation uses a bounded recovery path rather than repeating
+the successful compiler builds. It must verify unchanged compiler inputs,
+binary bytes, pins and tools; rerun affected or missing fixtures; retain the
+original producer identity of every inherited result; and verify the newly
+packaged artifacts on their native platforms. Original reports are not
+rewritten as new executions. The final tag, complete coverage, binding of the
+observed b8x execution to the final compiler, and public-consumer checks remain
+pending at this preparation step.
+
+Evidence is retained under `.gopurs-evidence/publication-rc20-20261113` at the
+local workspace root, including `ci-monitor`, the two isolated fixture-repair
+directories and `benchmark-audit`. The main working checkout was switched to
+`edge` during qualification; subsequent work uses a separate release worktree
+and the frozen compiler distribution, leaving that checkout untouched.
+
 ## RC20 native Foreign correction — 13 November 2026
 
 The second local preflight used clean compiler commit

@@ -4,7 +4,77 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, statSync, symlinkSync } 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
-import { extractArtifact, fileSha256, flattenPages, githubContext, selectLatestJobs, selectQualifiedInputs, selectFixtureInputs, selectPreviewInputs, validateReportProducers, validateEnvironmentIdentity, validateFinalizationContext, verifyArtifactFile } from './release-inputs.mjs';
+import { extractArtifact, fileSha256, flattenPages, githubContext, selectLatestJobs, selectQualifiedInputs, selectFixtureInputs, selectPreviewInputs, validateReportProducers, validateEnvironmentIdentity, validateFinalizationContext, verifyArtifactFile, selectRecoveryInputs, recoveryRequired } from './release-inputs.mjs';
+import { recoveryBase, recoveryHash } from './release-recovery.mjs';
+import { qualityInventory } from '../release/release-quality-report.mjs';
+import { fileURLToPath } from 'node:url';
+
+function recoveryFixture() {
+  const convert = (data, context) => {
+    data.context = context;
+    Object.assign(data.run, { id: Number(context.runId), run_attempt: Number(context.runAttempt), head_sha: context.commit,
+      head_branch: context.tag, repository: { full_name: context.repository }, head_repository: { full_name: context.repository } });
+    data.tag.ref.ref = 'refs/tags/' + context.tag;
+    data.tag.ref.object.sha = context.tag === recoveryBase.tag ? recoveryBase.tagObject : 'c'.repeat(40);
+    Object.assign(data.tag.object, { sha: data.tag.ref.object.sha, tag: context.tag, object: { type: 'commit', sha: context.commit } });
+    for (const job of data.jobs) Object.assign(job, { run_id: Number(context.runId), head_sha: context.commit });
+    for (const artifact of data.artifacts) artifact.workflow_run = { id: Number(context.runId), head_sha: context.commit };
+    return data;
+  };
+  const base = convert(fixture(), { ...recoveryBase, runAttempt: '2', target: 'linux-amd64' });
+  base.run.status = 'completed';
+  for (const target of ['linux-amd64', 'linux-arm64', 'darwin-arm64']) {
+    const artifact = base.artifacts.find(row => row.name === `candidate-${target}-attempt-1`);
+    if (artifact) base.artifacts.push({ ...artifact, id: artifact.id + 50000, name: `quality-${target}-attempt-1` });
+  }
+  const current = convert(fixture(), { repository: recoveryBase.repository, commit: 'd'.repeat(40), tag: 'v0.1.0', runId: '999', runAttempt: '2', target: 'linux-amd64' });
+  current.jobs = current.jobs.filter(job => job.name.endsWith('shard 0)')).map(job => ({ ...job, id: job.id + 10000 }));
+  current.artifacts = current.artifacts.filter(artifact => artifact.name.startsWith('fixtures-linux-amd64-0-')).map(artifact => ({ ...artifact, id: artifact.id + 10000 }));
+  current.jobs.push({ ...current.jobs[0], id: 20000, name: 'repackage and smoke (linux-amd64)' });
+  current.artifacts.push({ ...current.artifacts[0], id: 20001, name: 'repackaged-linux-amd64-attempt-1' });
+  const manifest = { schema: 1, enabled: true, base: recoveryBase, targetTag: 'v0.1.0', goldens: [{ path: 'tests/passing-snapshots/1110.go', fixture: 'tests/passing/1110.purs', beforeSha256: 'a'.repeat(64), afterSha256: 'b'.repeat(64) }] };
+  return { base, current, manifest, proof: { manifestSha256: recoveryHash(JSON.stringify(manifest)), changes: [] }, inventory: qualityInventory(fileURLToPath(new URL('../../', import.meta.url))) };
+}
+
+test('one-hop RC20 recovery keeps real producer origins and selects only changed or missing shards', () => {
+  const data = recoveryFixture();
+  assert.deepEqual(recoveryRequired(data.base, data.inventory, data.manifest).map(row => [row.target, row.shard]), [
+    ['linux-amd64', 0], ['linux-arm64', 0], ['darwin-arm64', 0],
+  ]);
+  const selected = selectRecoveryInputs(data);
+  assert.equal(selected.schema, 3);
+  assert.deepEqual(selected.artifacts.map(row => row.runId), [recoveryBase.runId, '999', recoveryBase.runId, recoveryBase.runId, recoveryBase.runId]);
+  assert.equal(selected.artifacts[1].producerJobId, 10002);
+  const core = { ...identity({ ...selected, source: { commit: recoveryBase.commit }, github: { ...selected.github, runId: recoveryBase.runId } }) };
+  selected.qualificationIdentity = core;
+  assert.equal(validateFinalizationContext(selected, core, environment(data.current.context)), selected);
+  const prepared = selectRecoveryInputs(data, { fixtures: true });
+  assert.deepEqual(prepared.artifacts.map(row => row.runId), [recoveryBase.runId, recoveryBase.runId]);
+  data.base.jobs.find(job => job.name === 'fixtures (linux-amd64, shard 3)').conclusion = 'failure';
+  assert.ok(recoveryRequired(data.base, data.inventory, data.manifest).some(row => row.target === 'linux-amd64' && row.shard === 3));
+  assert.throws(() => selectRecoveryInputs(data), /Missing producer/);
+});
+
+test('RC20 recovery rejects substituted runs, artifacts, extra jobs and visible newer failures', () => {
+  for (const mutate of [
+    data => { data.base.run.status = 'in_progress'; },
+    data => { data.base.context.commit = 'f'.repeat(40); },
+    data => { data.base.tag.object.verification.verified = false; },
+    data => { data.base.jobs[0].conclusion = 'failure'; },
+    data => { data.current.jobs[0].conclusion = 'failure'; },
+    data => { data.current.jobs.push({ ...data.current.jobs[0], id: 99999, run_attempt: 2, conclusion: 'failure' }); },
+    data => { data.current.jobs.push({ ...data.current.jobs[0], id: 88888, name: 'build and test (linux-amd64)' }); },
+    data => { data.current.jobs.push({ ...data.current.jobs[0], id: 88888, name: 'fixtures (linux-amd64, shard 3)' }); },
+    data => { data.current.artifacts[0].workflow_run.id = Number(recoveryBase.runId); },
+    data => { data.current.artifacts[0].digest = 'bad'; },
+    data => { data.current.context.tag = 'v0.1.1'; },
+    data => { data.current.jobs.at(-1).conclusion = 'failure'; },
+    data => { data.current.artifacts.at(-1).workflow_run.head_sha = recoveryBase.commit; },
+  ]) {
+    const data = recoveryFixture(); mutate(data);
+    assert.throws(() => selectRecoveryInputs(data), mutate.toString());
+  }
+});
 
 function fixture() {
   const context = { repository: 'owner/gopurs', commit: 'a'.repeat(40), tag: 'v0.1.0-rc.7', runId: '42', runAttempt: '2', target: 'linux-amd64' };

@@ -1,8 +1,8 @@
 # Quickstart
 
 Build and run a PureScript program that prints `Hello from gopurs`. It uses
-`gopurs@0.1.0-rc.20` and the Go port of `console` for `Effect.Console.log`.
-This guide targets the experimental RC20 candidate. Consult the live
+`gopurs@0.1.0` and the Go port of `console` for `Effect.Console.log`.
+This guide targets `0.1.0`. Consult the live
 [quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md)
 for its qualification and publication status. The
 [source bootstrap](bootstrap.md#clean-source-installation) covers local builds.
@@ -14,7 +14,7 @@ If you use Nix with flakes enabled, open the development shell for this release
 and run the rest of the guide inside it.
 
 ```bash
-nix develop github:0x000000000000000000001/gopurs/v0.1.0-rc.20
+nix develop github:0x000000000000000000001/gopurs/v0.1.0
 ```
 
 The first shell setup can download and compile the Haskell frontend and its
@@ -55,7 +55,7 @@ npm init -y
 Install the selected candidate:
 
 ```bash
-npm install --save-dev --ignore-scripts gopurs@0.1.0-rc.20
+npm install --save-dev --ignore-scripts gopurs@0.1.0
 ```
 
 ## Install the console port

@@ -6,6 +6,30 @@ All notable changes to gopurs are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0]
+
+First final release, prepared from the RC20 compiler and pinned libraries.
+Qualification and publication are recorded in the live
+[quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md).
+
+- Compile the typed PureScript fork's TAST to Go with JavaScript or native
+  compiler hosts, Release/Dev profiles and incremental compilation.
+- Write ordinary Go FFI for values, records, callbacks, effects and cancellable
+  asynchronous operations. The typed frontend is pinned to
+  `ae6a6f644502bafcfa4fa94d8f81a1a1a1ca5080`; stock `purs` is not a substitute.
+- Include RC20's callback, return-arity and ignored-Unit corrections, and the
+  Foreign port's native readers preserving shared/cyclic child values.
+- Refresh generated-code references against the preserved TAST types. Keep
+  original compiler qualification and benchmark identities when reusing their
+  exact bytes; record final packaging and fixture producers separately.
+
+The supported reference is Node.js 24.8.0 and Go 1.27.0 on Linux amd64,
+Linux arm64 and macOS arm64. This is a `0.x` release; the
+[compatibility policy](docs/publication-scope.md) and
+[limitations](docs/limitations.md) define its scope. The
+[RC20 benchmark](docs/release-benchmark.md#completed-rc20-campaign--13-november-2026-utc)
+measures backend generation, not application runtime.
+
 ## [0.1.0-rc.20]
 
 Twentieth candidate for `0.1.0`, prepared on 13 November 2026. It corrects

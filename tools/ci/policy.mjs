@@ -2,12 +2,16 @@ import { appendFileSync, readFileSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { isRecovery, readRecoverySource, recoveryPlatforms } from "./release-recovery.mjs";
 
 const platforms = [
   { target: "linux-amd64", os: "ubuntu-24.04" },
   { target: "linux-arm64", os: "ubuntu-24.04-arm" },
   { target: "darwin-arm64", os: "macos-15" },
 ];
+export const fullFixtureMatrix = {
+  include: platforms.flatMap((platform) => [0, 1, 2, 3].map((shard) => ({ ...platform, shard }))),
+};
 const rootDocs = new Set([
   "README.md",
   "CHANGELOG.md",
@@ -91,12 +95,26 @@ async function main() {
   } catch (error) {
     console.log(`Changed paths unavailable; building: ${error.message}`);
   }
-  const plan = buildMatrix({
+  let plan = buildMatrix({
     eventName: env.GITHUB_EVENT_NAME,
     ref: env.GITHUB_REF,
     full: env.CI_FULL === "true",
     changes,
   });
+  if (isRecovery(env)) {
+    const { readRecoveryBase, recoveryRequired } = await import("./release-inputs.mjs");
+    const { qualityInventory } = await import("../release/release-quality-report.mjs");
+    const { manifest, proof } = readRecoverySource();
+    const required = recoveryRequired(readRecoveryBase(env), qualityInventory(process.cwd()), manifest);
+    plan = {
+      build: false,
+      recovery: true,
+      reason: "One-hop RC20 qualification recovery for 0.1.0",
+      matrix: { include: recoveryPlatforms },
+      fixtureMatrix: { include: required },
+      proof,
+    };
+  }
   if (
     plan.build &&
     env.GITHUB_EVENT_NAME === "push" &&
@@ -113,7 +131,11 @@ async function main() {
     }
   }
   writeFileSync(`${env.RUNNER_TEMP}/ci-plan.json`, JSON.stringify(plan, null, 2) + "\n");
-  appendFileSync(env.GITHUB_OUTPUT, `build=${plan.build}\nmatrix=${JSON.stringify(plan.matrix)}\n`);
+  const fixtureMatrix = plan.fixtureMatrix ?? fullFixtureMatrix;
+  appendFileSync(
+    env.GITHUB_OUTPUT,
+    `build=${plan.build}\nrecovery=${plan.recovery === true}\nmatrix=${JSON.stringify(plan.matrix)}\nfixture_matrix=${JSON.stringify(fixtureMatrix)}\n`,
+  );
   console.log(JSON.stringify(plan, null, 2));
 }
 

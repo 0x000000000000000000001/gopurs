@@ -16,10 +16,12 @@ The compatibility policy is in [publication-scope.md](publication-scope.md).
 
 ## FFI and library coverage
 
-- Every reachable foreign declaration needs a Go implementation. Missing FFI
-  fails at runtime with `FFI not implemented: <name>`.
-- The stock PureScript libraries contain JavaScript FFI. Using them without a
-  Go port may compile but fail when the foreign function is called.
+- Every foreign declaration reachable through the selected PureScript entries
+  needs a Go implementation. The backend rejects missing implementations in
+  that statically reachable scope. A runtime guard remains for dynamic Go
+  dispatch or code outside that validation scope.
+- The stock PureScript libraries contain JavaScript FFI. Select their Go ports
+  for the foreign functions your application uses.
 - The `gopurs-*` library ports are separate distributions. Their versions and
   licenses are not implied by the compiler version.
 - The FFI parser supports the documented Go signatures, not arbitrary

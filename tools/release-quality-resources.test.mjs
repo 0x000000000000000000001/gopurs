@@ -10,6 +10,7 @@ import test from "node:test";
 import { fixtureBatches, fixtureWorkers, QualityGoCache, readFixtureReport, runFixtureWaves } from "./release/release-quality-resources.mjs";
 import { coreGateNames, fixtureShardCount, mergeQualityReports, qualityInventory, qualityIdentity, qualityOptions, shardBatches } from "./release/release-quality-report.mjs";
 import { moduleGateName } from "./release/release-quality-modules.mjs";
+import { recoveryBase } from "./ci/release-recovery.mjs";
 
 function workspace(t) {
   const path = realpathSync(mkdtempSync(join(tmpdir(), "gopurs-quality-unit-")));
@@ -196,6 +197,56 @@ function expectedFullGateNames(inventory) {
     "npm package surface",
   ];
 }
+
+test("bounded RC20 aggregation retains producer commits and still requires all 384 gates", () => {
+  const create = () => {
+    const value = partialQualityReports(), { core, fixtures, build } = value;
+    core.identity.source.commit = recoveryBase.commit;
+    core.identity.github = { repository: recoveryBase.repository, runId: recoveryBase.runId, runAttempt: "1" };
+    build.source.commit = recoveryBase.commit;
+    build.source.tag = recoveryBase.tag; build.version = recoveryBase.tag.slice(1); build.preview = false;
+    build.artifacts[0].name = `gopurs-${build.version}-${core.identity.target}`;
+    for (const report of fixtures) {
+      report.identity = structuredClone(core.identity);
+      if (report.shard.index !== 3) {
+        report.identity.source.commit = "d".repeat(40);
+        report.identity.github.runId = "999";
+      }
+    }
+    const context = { schema: 3, source: { commit: "d".repeat(40), tag: "v0.1.0" }, target: core.identity.target,
+      github: { repository: recoveryBase.repository, runId: "999", finalizationAttempt: "1" },
+      recovery: { base: recoveryBase,
+        manifest: { schema: 1, enabled: true, base: recoveryBase, targetTag: "v0.1.0",
+          goldens: [{ path: "tests/passing-snapshots/1110.go", fixture: "tests/passing/1110.purs", beforeSha256: "a".repeat(64), afterSha256: "b".repeat(64) }] },
+        required: [0, 1, 2].map(shard => ({ target: core.identity.target, shard })) },
+      qualificationIdentity: structuredClone(core.identity),
+      jobs: [{ name: `build and test (${core.identity.target})`, attempt: "1", commit: recoveryBase.commit, runId: recoveryBase.runId },
+        ...fixtures.map(report => ({ name: `fixtures (${core.identity.target}, shard ${report.shard.index})`, attempt: "1",
+          commit: report.identity.source.commit, runId: report.identity.github.runId }))] };
+    return { ...value, context };
+  };
+  const good = create(), original = JSON.stringify([good.core, ...good.fixtures]);
+  const merged = mergeQualityReports(good.core, good.fixtures, good.inventory, good.build, good.context);
+  assert.equal(merged.gates.length, 384); assert.equal(good.core.gates.length, 222);
+  assert.equal(JSON.stringify([good.core, ...good.fixtures]), original, "producer reports are never rewritten");
+  assert.equal(merged.identity.source.commit, recoveryBase.commit);
+  assert.deepEqual(merged.phases.map(phase => phase.identity.github.runId), [recoveryBase.runId, "999", "999", "999", recoveryBase.runId]);
+  for (const mutate of [
+    value => { value.fixtures[0].identity.compiler.nativeSha256 = "a".repeat(64); },
+    value => { value.fixtures[0].identity.environment.closureSha256 = "a".repeat(64); },
+    value => { value.fixtures[0].identity = structuredClone(value.core.identity); value.context.jobs[1].commit = recoveryBase.commit; value.context.jobs[1].runId = recoveryBase.runId; },
+    value => { value.fixtures[0].gates.pop(); },
+    value => { value.fixtures.pop(); },
+    value => { value.fixtures[1] = structuredClone(value.fixtures[0]); },
+    value => { value.core.gates[0].passed = false; },
+    value => { value.context.qualificationIdentity.compiler.javascriptSha256 = "a".repeat(64); },
+    value => { delete value.context.qualificationIdentity; },
+    value => { value.context.recovery.required = value.context.recovery.required.filter(row => row.shard !== 0); },
+  ]) {
+    const value = create(); mutate(value);
+    assert.throws(() => mergeQualityReports(value.core, value.fixtures, value.inventory, value.build, value.context), mutate.toString());
+  }
+});
 
 test("four shards preserve every original batch and only their verified union is full", () => {
   const { inventory, core, fixtures, build } = partialQualityReports();

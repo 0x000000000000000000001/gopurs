@@ -9,10 +9,10 @@ what users may rely on. It is not evidence that the release gates in the
 | Item | Decision |
 | --- | --- |
 | Package | `gopurs` |
-| Documented candidate | Experimental `0.1.0-rc.20` |
+| Documented release | `0.1.0` |
 | Published candidate at preparation (12 November 2026) | `0.1.0-rc.14` (GitHub prerelease and npm `next`) |
 | npm `latest` at preparation (12 November 2026) | `0.1.0-rc.7` (registry-assigned alias; still a prerelease) |
-| First final version (planned) | `0.1.0` |
+| First final version | `0.1.0` |
 | Version source | [`package.json`](../package.json) |
 | Versioning | [Semantic Versioning 2.0.0](https://semver.org/) |
 | Git tag | `vVERSION` (annotated and signed; verified by GitHub before release packaging) |
@@ -41,8 +41,11 @@ and prepares a correction limited to that test fixture. It requires its own
 signed tag, complete CI qualification and artifact/consumer checks.
 RC19 also remains unpublished: its local Arrays preflight exposed two
 compiler bridge defects, and its unfinished CI was cancelled. RC20 prepares
-those compiler corrections with unchanged frontend/library pins. It requires
-a fresh complete library preflight, benchmark, CI and artifact/consumer checks.
+those compiler corrections, then pins native Foreign reader fixes at
+`8c326898e821a9151af35b2a647fc9b2354ba92e`. Its benchmark and three core
+platform jobs passed; obsolete fixture expectations stopped the complete CI.
+The final release preparation preserves those original results and completes
+the affected fixtures with explicit source and artifact identities.
 RC13 failed qualification and remains unpublished with its tag unchanged;
 the recorded RC7 and local campaign results retain their original scope.
 
@@ -119,7 +122,7 @@ The target matrix for `0.1.0` is:
 
 Release-blocking means that the platform must pass the qualification and
 installation checks in the [release checklist](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/release-checklist.md).
-It is not a claim that those checks have already passed for RC20.
+It is not a claim that those checks have already passed for a candidate; consult the live quality record.
 
 RC14's successful `darwin/arm64` qualification uses the ARM64 `macos-15` runner;
 this campaign does not establish tested compatibility with macOS 14.

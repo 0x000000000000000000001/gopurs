@@ -15,7 +15,16 @@ import {
   selectQualifiedInputs,
   validateFinalizationContext,
   validateReportProducers,
+  readRecoveryBase,
+  selectRecoveryInputs,
 } from "./release-inputs.mjs";
+import {
+  isRecovery,
+  readRecoverySource,
+  recoveryBase,
+  recoveryTag,
+  validateRecoveryIdentity,
+} from "./release-recovery.mjs";
 
 const targets = ["linux-amd64", "linux-arm64", "darwin-arm64"];
 const limit = 1024 ** 3;
@@ -29,7 +38,8 @@ const timestamp = (value) => {
 
 // Selection always uses the real current run. The embedded signing attempt is
 // adjusted only after binding it to the selected successful finalizer job.
-export function selectFinalizedInputs({ run, jobs, artifacts, tag, context }) {
+export function selectFinalizedInputs({ run, jobs, artifacts, tag, context, recovery }) {
+  assert.ok(context.tag !== recoveryTag || recovery, "Final release requires the bounded RC20 recovery");
   const latest = selectLatestJobs(jobs, context);
   const names = targets.map((target) => `qualify and attest (${target})`);
   assert.deepEqual(
@@ -37,12 +47,16 @@ export function selectFinalizedInputs({ run, jobs, artifacts, tag, context }) {
     [...names].sort(),
   );
   const selected = targets.map((target, index) => {
-    const qualification = selectQualifiedInputs({ run, jobs, artifacts, tag, context: { ...context, target } });
+    const current = { run, jobs, artifacts, tag, context: { ...context, target } };
+    const qualification = recovery ? selectRecoveryInputs({ ...recovery, current }) : selectQualifiedInputs(current);
     const job = latest.get(names[index]);
     assert.equal(job.status, "completed");
     assert.equal(job.conclusion, "success", "The latest finalization job did not pass");
     assert.ok(
-      qualification.jobs.every((producer) => Number(producer.attempt) <= job.run_attempt),
+      qualification.jobs.every(
+        (producer) =>
+          (recovery && producer.runId === recoveryBase.runId) || Number(producer.attempt) <= job.run_attempt,
+      ),
       "Finalization predates the current qualification",
     );
     assert.ok(job.run_attempt <= Number(context.runAttempt));
@@ -50,9 +64,19 @@ export function selectFinalizedInputs({ run, jobs, artifacts, tag, context }) {
       completed = timestamp(job.completed_at);
     assert.ok(started <= completed);
     for (const qualified of qualification.jobs) {
+      const producers =
+        recovery && qualified.runId === recoveryBase.runId
+          ? selectLatestJobs(recovery.base.jobs, recovery.base.context)
+          : latest;
       assert.ok(
-        timestamp(latest.get(qualified.name).completed_at) <= started,
+        timestamp(producers.get(qualified.name).completed_at) <= started,
         "Finalization started before the selected qualification completed",
+      );
+    }
+    if (recovery) {
+      assert.ok(
+        timestamp(latest.get(qualification.packageJob.name).completed_at) <= started,
+        "Finalization started before the final package smoke completed",
       );
     }
     const name = `release-${target}-attempt-${job.run_attempt}`;
@@ -118,7 +142,16 @@ export function validateFinalizedQuality(quality, selected, env) {
   assert.deepEqual(cores[0].identity, quality.identity);
   assert.deepEqual(fixtures.map((phase) => phase.shard?.index).sort(), [0, 1, 2, 3]);
   const comparable = (identity) => ({ ...identity, github: { ...identity.github, runAttempt: null } });
-  for (const phase of fixtures) assert.deepEqual(comparable(phase.identity), comparable(quality.identity));
+  for (const phase of fixtures) {
+    if (expected.schema === 3) validateRecoveryIdentity(expected, phase.identity, { shard: phase.shard.index });
+    else assert.deepEqual(comparable(phase.identity), comparable(quality.identity));
+  }
+  if (expected.schema === 3) {
+    assert.deepEqual(quality.publicationSource, expected.source);
+    assert.equal(cores[0].gates, 222);
+    assert.equal(quality.gates.length, 384);
+    assert.deepEqual(quality.fixtures, { selectedPerProfile: 401, passed: { release: 401, dev: 401 } });
+  }
   validateReportProducers(expected, cores[0], fixtures);
   return quality;
 }
@@ -177,6 +210,15 @@ export function verifyFinalizedDirectory(directory, selected, env) {
     dirty: false,
   });
   assert.equal(build.preview, false);
+  if (selected.finalization.schema === 3) {
+    for (const name of [`${prefix}-smoke.json`, `${prefix}-recovery-inputs.tar.gz`])
+      assert.ok(checked.has(name), `Missing recovery evidence: ${name}`);
+    assert.deepEqual(build.compilerOrigin, {
+      base: recoveryBase,
+      identity: quality.identity,
+      artifact: selected.finalization.artifacts[0],
+    });
+  }
   assert.equal(
     fileSha256(join(directory, prefix)),
     quality.identity.compiler.nativeSha256,
@@ -204,7 +246,7 @@ export function verifyFinalizedDirectory(directory, selected, env) {
   };
 }
 
-function main(args, env = process.env) {
+async function main(args, env = process.env) {
   assert.ok(args.length === 2 && args[0] === "--out" && args[1], "Expected --out DIRECTORY");
   const root = resolve(fileURLToPath(new URL("../../", import.meta.url))),
     output = resolve(args[1]);
@@ -220,7 +262,12 @@ function main(args, env = process.env) {
   const jobs = flattenPages(githubAPI(`${prefix}/jobs?filter=all&per_page=100`, { env, paginate: true }), "jobs");
   const artifacts = flattenPages(githubAPI(`${prefix}/artifacts?per_page=100`, { env, paginate: true }), "artifacts");
   const tag = readVerifiedTag(context, { env, root });
-  const selected = selectFinalizedInputs({ run, jobs, artifacts, tag, context });
+  let recovery;
+  if (isRecovery(env)) {
+    const { qualityInventory } = await import("../release/release-quality-report.mjs");
+    recovery = { ...readRecoverySource(root), base: readRecoveryBase(env), inventory: qualityInventory(root) };
+  }
+  const selected = selectFinalizedInputs({ run, jobs, artifacts, tag, context, recovery });
   const archiveDir = mkdtempSync(join(realpathSync(env.RUNNER_TEMP), "gopurs-finalized-"));
   mkdirSync(output, { mode: 0o700 });
   const results = [];
@@ -249,4 +296,4 @@ function main(args, env = process.env) {
   );
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main(process.argv.slice(2));
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await main(process.argv.slice(2));

@@ -12,13 +12,23 @@ and 1 November and their new source pins are recorded separately below.
 
 | Surface | Identity and release requirement |
 | --- | --- |
-| Compiler npm package | `gopurs@0.1.0-rc.20` is in preparation; qualification and publication are pending. RC19 remains unpublished after its local Arrays failure and CI cancellation. The recorded 12 November channels were RC14 on `next` and RC7 on `latest`; recheck before publication. Each candidate's exact version, lockfile, file allowlist and installed-artifact tests apply. |
+| Compiler npm package | `gopurs@0.1.0` is in preparation from the unchanged RC20 compiler and library pins; final qualification and publication are pending. RC20 remains unpublished after fixture-reference failures. The recorded 12 November channels were RC14 on `next` and RC7 on `latest`; recheck before publication. Each candidate's exact version, lockfile, file allowlist and installed-artifact tests apply. |
 | Library sources used by bootstrap/applications | Git URL and exact commit from the bootstrap manifest; validate this combination with the selected compiler and package set. The compiler npm archive does not contain these repositories. |
 | Independent future npm/Spago library publication | Review that package's name, destination, version, dependency bounds, files and notices before publishing it. This is a separate operation. |
 
 These independent libraries do not need identical version numbers. Their
 current release identity is the compatible set of source commits. A version
 copied from an upstream package is not a version assigned to the Go port.
+
+## Final source configuration — 13 November 2026
+
+The final release retains RC20's exact typed frontend, support and 51 library
+pins, including Foreign `8c326898e821a9151af35b2a647fc9b2354ba92e`.
+The compiler/runtime and delivered executable helpers are unchanged. Fixture
+expectations, release metadata and bounded qualification controls are tracked
+separately from those inputs. Reused results retain their original source and
+producer; the final artifact identity and public installation still require
+verification in the [quality record](quality-0.1.0.md).
 
 ## RC20 source configuration — 13 November 2026
 

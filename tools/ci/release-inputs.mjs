@@ -15,6 +15,18 @@ import {
 } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  isRecovery,
+  readRecoverySource,
+  recoveryBase,
+  recoveryPlatforms,
+  recoveryShards,
+  recoveryTag,
+  validateRecoveryIdentity,
+  recoveryHash,
+  validateRecoveryPackage,
+  validateRecoveryManifest,
+} from "./release-recovery.mjs";
 
 const targets = ["linux-amd64", "linux-arm64", "darwin-arm64"];
 const workflow = ".github/workflows/ci.yml";
@@ -161,7 +173,7 @@ function successful(job) {
 export function producerArtifactName(logicalName, attempt) {
   assert.match(
     logicalName,
-    /^(candidate|quality|fixture-environment|fixtures)-(linux-amd64|linux-arm64|darwin-arm64)(?:-[0-3])?$/,
+    /^(candidate|quality|fixture-environment|fixtures|repackaged)-(linux-amd64|linux-arm64|darwin-arm64)(?:-[0-3])?$/,
   );
   return logicalName + "-attempt-" + id(attempt);
 }
@@ -253,6 +265,132 @@ export function selectFixtureInputs(data, preview = false) {
   return selection(data, { preview, fixtures: true });
 }
 
+export function recoveryRequired(base, inventory, manifest) {
+  assert.deepEqual(
+    {
+      repository: base.context.repository,
+      commit: base.context.commit,
+      tag: base.context.tag,
+      tagObject: base.tag.object.sha,
+      runId: base.context.runId,
+    },
+    recoveryBase,
+  );
+  validateRun(base.run, base.context);
+  validateTag(base.tag, base.context);
+  assert.equal(base.run.status, "completed", "Wait for the original RC20 run to finish");
+  const latest = selectLatestJobs(base.jobs, base.context);
+  for (const { target } of recoveryPlatforms) successful(latest.get(producerName(target, 0)));
+  const changed = new Set(recoveryShards(inventory, manifest));
+  return recoveryPlatforms.flatMap((platform) =>
+    [0, 1, 2, 3].flatMap((shard) => {
+      const job = latest.get(producerName(platform.target, shard + 1));
+      return changed.has(shard) || !job || job.status !== "completed" || job.conclusion !== "success"
+        ? [{ ...platform, shard }]
+        : [];
+    }),
+  );
+}
+
+// Original and new runs are validated independently. Their jobs/artifacts keep
+// their real commit, run and attempt; no synthetic same-commit API response.
+export function selectRecoveryInputs({ base, current, inventory, manifest, proof }, { fixtures = false } = {}) {
+  const context = current.context;
+  assert.equal(context.tag, recoveryTag);
+  assert.equal(context.repository, recoveryBase.repository);
+  assert.notEqual(context.commit, recoveryBase.commit);
+  assert.notEqual(context.runId, recoveryBase.runId);
+  validateRecoveryManifest(manifest);
+  assert.equal(proof.manifestSha256, recoveryHash(JSON.stringify(manifest)), "Recovery source manifest hash differs");
+  validateRun(current.run, context);
+  validateTag(current.tag, context);
+  const required = recoveryRequired(base, inventory, manifest);
+  const old = selectLatestJobs(base.jobs, base.context),
+    fresh = selectLatestJobs(current.jobs, context);
+  const requiredNames = new Set(required.map(({ target, shard }) => producerName(target, shard + 1)));
+  for (const job of fresh.values()) {
+    if (/^build and test \(/.test(job.name))
+      assert.equal(job.conclusion, "skipped", "Recovery must not rebuild the full matrix");
+    if (/^fixtures \(/.test(job.name)) assert.ok(requiredNames.has(job.name), "Unexpected recovery fixture job");
+  }
+  const names = fixtures ? [producerName(context.target, 0)] : jobNames;
+  const selectedJobs = names.map((name) => {
+    const inherited = !requiredNames.has(name),
+      data = inherited ? base : current;
+    const job = (inherited ? old : fresh).get(name);
+    successful(job);
+    return {
+      id: job.id,
+      name,
+      attempt: String(job.run_attempt),
+      commit: data.context.commit,
+      runId: data.context.runId,
+    };
+  });
+  const artifactFor = (name, producer) => {
+    const inherited = producer.runId === recoveryBase.runId,
+      data = inherited ? base : current;
+    const job = (inherited ? old : fresh).get(producer.name);
+    return {
+      ...selectArtifact(data.artifacts, name, job, data.context),
+      commit: producer.commit,
+      runId: producer.runId,
+    };
+  };
+  const build = selectedJobs.find((job) => job.name === producerName(context.target, 0));
+  const environmentArtifact = artifactFor(`fixture-environment-${context.target}`, build);
+  const artifacts = fixtures
+    ? [artifactFor(`candidate-${context.target}`, build), environmentArtifact]
+    : artifactNames(context.target).map((name, index) =>
+        artifactFor(
+          name,
+          selectedJobs.find((job) => job.name === producerName(context.target, index)),
+        ),
+      );
+  assert.equal(new Set(artifacts.map((artifact) => artifact.id)).size, artifacts.length);
+  let packageJob, packageArtifact, coreEvidenceArtifact;
+  if (!fixtures) {
+    coreEvidenceArtifact = artifactFor(`quality-${context.target}`, build);
+    const name = `repackage and smoke (${context.target})`,
+      job = fresh.get(name);
+    successful(job);
+    packageJob = { id: job.id, name, attempt: String(job.run_attempt), commit: context.commit, runId: context.runId };
+    packageArtifact = artifactFor(`repackaged-${context.target}`, packageJob);
+    assert.ok(!artifacts.some((artifact) => artifact.id === packageArtifact.id));
+  }
+  return {
+    schema: 3,
+    source: { commit: context.commit, tag: recoveryTag, tagObject: current.tag.object.sha },
+    github: { repository: context.repository, runId: context.runId, finalizationAttempt: context.runAttempt },
+    target: context.target,
+    jobs: selectedJobs,
+    artifacts,
+    ...(!fixtures ? { environmentArtifact } : {}),
+    ...(!fixtures ? { packageJob, packageArtifact, coreEvidenceArtifact } : {}),
+    recovery: { base: recoveryBase, baseRunAttempt: base.context.runAttempt, manifest, proof, required },
+  };
+}
+
+export function readRunInputs(context, env = process.env) {
+  const prefix = `repos/${context.repository}/actions/runs/${context.runId}`;
+  return {
+    context,
+    run: githubAPI(prefix, { env }),
+    jobs: flattenPages(githubAPI(`${prefix}/jobs?filter=all&per_page=100`, { env, paginate: true }), "jobs"),
+    artifacts: flattenPages(githubAPI(`${prefix}/artifacts?per_page=100`, { env, paginate: true }), "artifacts"),
+  };
+}
+
+export function readRecoveryBase(env = process.env) {
+  const prefix = `repos/${recoveryBase.repository}/`;
+  const run = githubAPI(`${prefix}actions/runs/${recoveryBase.runId}`, { env });
+  const context = { ...recoveryBase, runAttempt: String(run.run_attempt), target: targets[0] };
+  const ref = githubAPI(`${prefix}git/ref/tags/${recoveryBase.tag}`, { env });
+  assert.equal(ref.object?.sha, recoveryBase.tagObject);
+  const object = githubAPI(`${prefix}git/tags/${recoveryBase.tagObject}`, { env });
+  return { ...readRunInputs(context, env), tag: { ref, object } };
+}
+
 export function githubContext(env = process.env) {
   assert.equal(env.CI, "true");
   assert.equal(env.GITHUB_ACTIONS, "true");
@@ -306,6 +444,11 @@ export function validateEnvironmentIdentity(environment) {
 }
 
 function validateQualificationIdentity(context, identity) {
+  if (context.schema === 3) {
+    validateRecoveryIdentity(context, identity, { core: true });
+    validateEnvironmentIdentity(identity.environment);
+    return;
+  }
   assert.deepEqual(identity.source, { commit: context.source.commit, dirty: false });
   assert.equal(identity.target, context.target);
   const build = context.jobs.find((job) => job.name === producerName(context.target, 0));
@@ -321,7 +464,37 @@ function validateQualificationIdentity(context, identity) {
 
 export function validateFinalizationContext(context, identity, env = process.env, { preview = false } = {}) {
   const current = preview ? previewContext(env) : githubContext(env);
-  assert.equal(context.schema, 2);
+  const recovery = context.schema === 3;
+  assert.equal(context.schema, recovery ? 3 : 2);
+  if (recovery) {
+    assert.equal(preview, false);
+    assert.equal(current.tag, recoveryTag);
+    assert.deepEqual(context.recovery.base, recoveryBase);
+    validateRecoveryManifest(context.recovery.manifest);
+    assert.equal(context.recovery.proof.manifestSha256, recoveryHash(JSON.stringify(context.recovery.manifest)));
+    const seen = new Set();
+    for (const row of context.recovery.required) {
+      assert.ok(recoveryPlatforms.some((platform) => platform.target === row.target && platform.os === row.os));
+      assert.ok([0, 1, 2, 3].includes(row.shard));
+      const key = `${row.target}:${row.shard}`;
+      assert.ok(!seen.has(key));
+      seen.add(key);
+    }
+    const producer = context.packageJob,
+      artifact = context.packageArtifact;
+    assert.equal(producer.name, `repackage and smoke (${current.target})`);
+    assert.equal(producer.commit, current.commit);
+    assert.equal(producer.runId, current.runId);
+    positive(producer.id);
+    assert.ok(Number(id(producer.attempt)) <= Number(current.runAttempt));
+    validateArtifact(artifact);
+    assert.equal(artifact.logicalName, `repackaged-${current.target}`);
+    assert.equal(artifact.name, producerArtifactName(artifact.logicalName, producer.attempt));
+    assert.deepEqual(
+      [artifact.commit, artifact.runId, artifact.attempt, artifact.producerJobId],
+      [producer.commit, producer.runId, producer.attempt, producer.id],
+    );
+  }
   assert.equal(context.source.commit, current.commit);
   if (preview) assert.deepEqual(context.source, { commit: current.commit, ref: current.ref });
   else {
@@ -339,7 +512,14 @@ export function validateFinalizationContext(context, identity, env = process.env
   );
   for (const job of context.jobs) {
     positive(job.id);
-    assert.ok(Number(id(job.attempt)) <= Number(current.runAttempt));
+    assert.ok(
+      Number(id(job.attempt)) <=
+        Number(job.runId === recoveryBase.runId && recovery ? id(context.recovery.baseRunAttempt) : current.runAttempt),
+    );
+    if (recovery) {
+      assert.ok([recoveryBase.runId, current.runId].includes(job.runId));
+      assert.equal(job.commit, job.runId === recoveryBase.runId ? recoveryBase.commit : current.commit);
+    }
   }
   assert.equal(new Set(context.jobs.map((job) => job.id)).size, jobNames.length);
   assert.deepEqual(
@@ -353,6 +533,7 @@ export function validateFinalizationContext(context, identity, env = process.env
     assert.equal(artifact.attempt, producer.attempt);
     assert.equal(artifact.producerJobId, producer.id);
     assert.equal(artifact.name, producerArtifactName(artifact.logicalName, producer.attempt));
+    if (recovery) assert.deepEqual([artifact.commit, artifact.runId], [producer.commit, producer.runId]);
   });
   const environment = context.environmentArtifact,
     build = context.jobs.find((job) => job.name === producerName(current.target, 0));
@@ -361,6 +542,21 @@ export function validateFinalizationContext(context, identity, env = process.env
   assert.equal(environment.attempt, build.attempt);
   assert.equal(environment.producerJobId, build.id);
   assert.equal(environment.name, producerArtifactName(environment.logicalName, build.attempt));
+  if (recovery) assert.deepEqual([environment.commit, environment.runId], [build.commit, build.runId]);
+  if (recovery) {
+    const evidence = context.coreEvidenceArtifact;
+    validateArtifact(evidence);
+    assert.equal(evidence.logicalName, `quality-${current.target}`);
+    assert.equal(evidence.name, producerArtifactName(evidence.logicalName, build.attempt));
+    assert.deepEqual(
+      [evidence.commit, evidence.runId, evidence.attempt, evidence.producerJobId],
+      [build.commit, build.runId, build.attempt, build.id],
+    );
+    assert.equal(
+      new Set([...context.artifacts, environment, context.packageArtifact, evidence].map((row) => row.id)).size,
+      context.artifacts.length + 3,
+    );
+  }
   assert.ok(!context.artifacts.some((artifact) => artifact.id === environment.id));
   validateQualificationIdentity(context, identity);
   assert.deepEqual(
@@ -380,8 +576,10 @@ export function validateReportProducers(context, core, fixtures) {
       artifact.attempt,
       "Report attempt differs from its actual artifact producer",
     );
-    assert.equal(report.identity.github.runId, context.github.runId);
+    assert.equal(report.identity.github.runId, context.schema === 3 ? artifact.runId : context.github.runId);
     assert.equal(report.identity.github.repository, context.github.repository);
+    if (context.schema === 3)
+      validateRecoveryIdentity(context, report.identity, { core: report.phase === "core", shard: report.shard?.index });
   }
 }
 
@@ -533,7 +731,7 @@ export function downloadAndExtract(
   return { archive, bytes: extractArtifact(artifact, archive, destination, maximum) };
 }
 
-function prepare(args, env = process.env) {
+async function prepare(args, env = process.env) {
   const command = args.shift(),
     fixturesOnly = command === "prepare-fixtures",
     preview = env.GITHUB_REF_TYPE === "branch";
@@ -574,7 +772,21 @@ function prepare(args, env = process.env) {
     "artifacts",
   );
   const tag = preview ? undefined : readVerifiedTag(current, { env, root });
-  const selected = selection({ run, jobs, artifacts, tag, context: current }, { preview, fixtures: fixturesOnly });
+  let selected;
+  if (isRecovery(env)) {
+    const { qualityInventory } = await import("../release/release-quality-report.mjs");
+    const { manifest, proof } = readRecoverySource(root);
+    selected = selectRecoveryInputs(
+      {
+        base: readRecoveryBase(env),
+        current: { run, jobs, artifacts, tag, context: current },
+        inventory: qualityInventory(root),
+        manifest,
+        proof,
+      },
+      { fixtures: fixturesOnly },
+    );
+  } else selected = selection({ run, jobs, artifacts, tag, context: current }, { preview, fixtures: fixturesOnly });
   const privateDir = mkdtempSync(join(temp, "gopurs-release-inputs-"));
   if (!fixturesOnly) mkdirSync(options[second], { mode: 0o700 });
   let remaining = limit;
@@ -591,12 +803,39 @@ function prepare(args, env = process.env) {
       archiveDir: privateDir,
     }).bytes;
   }
-  const version = JSON.parse(readFileSync(join(root, "package.json"), "utf8")).version;
+  if (selected.packageArtifact) {
+    const destination = options["--release"] + "-packaged";
+    assert.ok(!existsSync(destination));
+    remaining -= downloadAndExtract(selected.packageArtifact, destination, {
+      repository: current.repository,
+      env,
+      maximum: remaining,
+      archiveDir: privateDir,
+    }).bytes;
+  }
+  if (selected.coreEvidenceArtifact) {
+    remaining -= downloadAndExtract(selected.coreEvidenceArtifact, join(options[second], `core-${current.target}`), {
+      repository: current.repository,
+      env,
+      maximum: remaining,
+      archiveDir: privateDir,
+    }).bytes;
+  }
+  const version =
+    selected.schema === 3
+      ? recoveryBase.tag.slice(1)
+      : JSON.parse(readFileSync(join(root, "package.json"), "utf8")).version;
   const core = JSON.parse(
     readFileSync(join(options["--release"], "gopurs-" + version + "-" + current.target + "-quality.json"), "utf8"),
   );
-  validateQualificationIdentity(selected, core.identity);
   selected.qualificationIdentity = structuredClone(core.identity);
+  if (selected.coreEvidenceArtifact)
+    assert.equal(
+      fileSha256(join(options[second], `core-${current.target}`, "quality", "quality.json")),
+      fileSha256(join(options["--release"], `gopurs-${version}-${current.target}-quality.json`)),
+      "Core report differs between original candidate and original log archive",
+    );
+  validateQualificationIdentity(selected, core.identity);
   if (!fixturesOnly) validateFinalizationContext(selected, core.identity, env, { preview });
   writeFileSync(options["--out"], JSON.stringify(selected, null, 2) + "\n", { flag: "wx", mode: 0o600 });
   console.log(
@@ -608,4 +847,32 @@ function prepare(args, env = process.env) {
   );
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) prepare(process.argv.slice(2));
+function verifyRepackaged(args) {
+  assert.equal(args.length, 4);
+  assert.equal(args[0], "--context");
+  assert.equal(args[2], "--release");
+  const context = JSON.parse(readFileSync(args[1], "utf8")),
+    directory = resolve(args[3]);
+  assert.deepEqual(context.recovery.proof, readRecoverySource().proof);
+  validateFinalizationContext(context, context.qualificationIdentity);
+  const prefix = `gopurs-0.1.0-${context.target}`,
+    archive = join(directory, "gopurs-0.1.0.tgz");
+  const extract = (name) => execFileSync("tar", ["-xOf", archive, `package/${name}`], { maxBuffer: 128 * 1024 ** 2 });
+  validateRecoveryPackage(context, {
+    build: JSON.parse(readFileSync(join(directory, `${prefix}-build.json`), "utf8")),
+    nativeSha256: fileSha256(join(directory, prefix)),
+    javascriptSha256: recoveryHash(extract("bin/gopurs.js")),
+    manifest: JSON.parse(extract("package.json")),
+    sourceManifest: JSON.parse(readFileSync("package.json", "utf8")),
+    smoke: JSON.parse(readFileSync(join(directory, `${prefix}-smoke.json`), "utf8")),
+    packageSha256: fileSha256(archive),
+  });
+  for (const name of ["tools/ffi_gen.wasm", "tools/wasm_exec.js"])
+    assert.equal(recoveryHash(extract(name)), fileSha256(name), `Final package tool bytes changed: ${name}`);
+}
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const args = process.argv.slice(2);
+  if (args[0] === "verify-repackaged") verifyRepackaged(args.slice(1));
+  else await prepare(args);
+}

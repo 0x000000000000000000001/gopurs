@@ -45,7 +45,7 @@ different program.
 
 ### Select the frontend and backend
 
-This walkthrough targets experimental `0.1.0-rc.20`. Consult the live
+This walkthrough targets `0.1.0`. Consult the live
 [quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md)
 for its qualification and publication status. Open the pinned shell in the
 application directory and install the candidate with the commands below.
@@ -54,10 +54,10 @@ See the [quickstart prerequisites](quickstart.md#prerequisites) for manual
 toolchain requirements.
 
 ```bash
-nix develop github:0x000000000000000000001/gopurs/v0.1.0-rc.20
+nix develop github:0x000000000000000000001/gopurs/v0.1.0
 command -v purs
 purs --version
-npm install --save-dev --ignore-scripts gopurs@0.1.0-rc.20
+npm install --save-dev --ignore-scripts gopurs@0.1.0
 ```
 
 Use `spago build` directly in this shell for the steps below. An existing

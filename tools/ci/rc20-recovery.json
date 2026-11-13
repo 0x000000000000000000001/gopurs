@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "enabled": false,
+  "base": {
+    "repository": "0x000000000000000000001/gopurs",
+    "commit": "2202368d4b19849fdc365afacaffa4a617b0ea43",
+    "tag": "v0.1.0-rc.20",
+    "tagObject": "9a80c154eff82589275d6790e158e0636066197c",
+    "runId": "43412666316"
+  },
+  "targetTag": "v0.1.0",
+  "goldens": [
+    {
+      "path": "tests/passing-snapshots/1110.go",
+      "beforeSha256": "a991a32565e10937d513eb321a9bb6471f4205629c9a9b41638566200b9e5830",
+      "afterSha256": "e14d370428ed4445270a3385cb6fc00ce93f5f5cf9afe647d2ad78eb98c222a8",
+      "fixture": "tests/passing/1110.purs"
+    },
+    {
+      "path": "tests/passing-snapshots/4105.go",
+      "beforeSha256": "236d062a8384c4d14bef499d5e4b6d6c438df01562f83afc60fd588426f73310",
+      "afterSha256": "530e8c76d9434d84f7feb1d27384a03252ad38a852acde6039388d84f052f21b",
+      "fixture": "tests/passing/4105.purs"
+    },
+    {
+      "path": "tests/passing-snapshots-dev/4105.go",
+      "beforeSha256": "236d062a8384c4d14bef499d5e4b6d6c438df01562f83afc60fd588426f73310",
+      "afterSha256": "530e8c76d9434d84f7feb1d27384a03252ad38a852acde6039388d84f052f21b",
+      "fixture": "tests/passing/4105.purs"
+    }
+  ]
+}

@@ -1,10 +1,9 @@
-# RC20 release checklist
+# 0.1.0 release checklist
 
-Candidate: `0.1.0-rc.20`, in preparation on 13 November 2026. Its commit,
-signed tag, full library qualification, fresh benchmark, full CI and artifact
-qualification are pending. RC19 remains unpublished after a local Arrays
-failure; its unfinished CI was cancelled and its exact evidence is retained.
-The planned first final release is `0.1.0`.
+Final release `0.1.0` is in preparation. Its compiler inputs and binaries come
+from signed RC20; original successful checks retain their identities. The
+bounded recovery must finish all affected or missing fixtures and verify the
+final packages on all supported platforms before publication.
 
 The earlier npm channel observations and checked source-preparation items
 below retain their original scope. They do not qualify RC20's changed compiler.
@@ -28,26 +27,31 @@ development results retain their original scope.
 - [ ] Freeze and review the exact candidate commit, release version, source
   manifest, Nix/npm/Spago locks, generated parser/runtime artifacts, changelog
   and public guide. Confirm every dependency pin is publicly retrievable.
-- [ ] Rebuild from a clean checkout with the matching typed frontend and run
-  the complete declared quick-gate inventory without skipped tests.
+- [ ] Verify the clean RC20 compiler builds and complete core-gate inventory
+  on all three platforms, then bind their unchanged compiler bytes and inputs
+  to the final package through the bounded recovery procedure.
 
 ## Candidate qualification
 
-- [ ] Qualify the same signed tag on `linux/amd64`, `linux/arm64` and
-  `darwin/arm64` using the full workflow: compiler hosts, library suites,
-  fixtures, race checks, cache behavior and output identity.
+- [ ] Qualify the signed final tag on `linux/amd64`, `linux/arm64` and
+  `darwin/arm64`: preserve original RC20 core results, complete affected or
+  missing fixture shards, and verify the final packages. Compiler hosts,
+  library suites, fixtures, race checks, cache behavior and output identity
+  must all be covered with their actual execution identities.
 - [ ] Run the FFI end-to-end and installed-package regressions against the
   freshly built candidate hosts, including Release/Dev, official JavaScript
   reference behavior, empty npm cache, cold/warm compilation and error recovery.
-- [ ] Rebuild and exercise the representative application with this candidate,
-  including its migrated FFI and service/resource tests; retain the source and
-  service versions with the results.
-- [ ] Run the mandatory [cold/warm benchmark protocol](benchmark-protocol.md)
-  with this candidate, compare against the
+- [x] Build and exercise the representative application with the installed
+  RC20 CI compiler, including its migrated FFI and service/resource tests:
+  b8x passed 287/287. Retain the exact inputs and artifacts; final-package
+  binding remains part of artifact qualification below.
+- [x] Run the mandatory [cold/warm benchmark protocol](benchmark-protocol.md)
+  with RC20, compare against the
   [altbak reference workloads and baselines](https://github.com/0x000000000000000000001/altbak.pub#go),
   and retain the raw results as required by the [release procedure](release.md).
-  Record compiler and generated-program measurements separately; do not reuse
-  an older candidate's numbers as new evidence.
+  Record compiler and generated-program measurements separately. The completed
+  51-case campaign retains its RC20 identity; final reuse requires unchanged
+  executed compiler bytes and inputs, not a claim of new measurements.
 
 ## Artifacts and public installation
 
@@ -55,7 +59,9 @@ development results retain their original scope.
   checksums, cross-platform npm archive identity, source identity, licenses,
   third-party inventory, SBOM and signed provenance. Verify packaged guides and
   helpers from the installed archive rather than the source checkout.
-- [ ] Publish the qualified candidate through the release procedure, then
+- [ ] Bind the observed b8x run and benchmark to the final compiler by verified
+  equality of executed bytes and inputs, retaining their original identities.
+- [ ] Publish the qualified final release through the release procedure, then
   verify downloaded GitHub/npm bytes, signatures and intended dist-tags.
 - [ ] In fresh consumer projects, follow the published quickstart and migration
   guide with only published artifacts and pinned sources. Exercise ordinary

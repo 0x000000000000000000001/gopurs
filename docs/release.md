@@ -277,9 +277,46 @@ only missing assets are added. Different bytes, unexpected assets or an already
 published release stop recovery. Do not rerun successful signing jobs after
 starting a draft: new signatures would change its assets.
 
-This recovery uses the workflow stored at the original tag. A source or workflow
-fix requires a new candidate and fresh qualification. These improvements do not
+This retry uses the workflow stored at the original tag. A source or workflow
+fix normally requires a new candidate and fresh qualification. The single
+release transition below has a separate, bounded qualification contract.
+These improvements do not
 change RC10's workflow, qualify its missing shard or authorize another RC10 run.
+
+### Bounded RC20 to 0.1.0 qualification
+
+The 0.1.0 tag uses a one-hop recovery from signed `v0.1.0-rc.20`, commit
+`2202368d4b19849fdc365afacaffa4a617b0ea43`, Actions run `43412666316`.
+This mechanism cannot promote another base, another final version, or a chain
+of inherited qualifications. `tools/ci/rc20-recovery.json` must be explicitly
+sealed after the exact obsolete goldens have been reviewed. An incomplete or
+invalid recovery stops the plan; it does not fall back to a complete rebuild.
+
+The source check permits only the listed golden paths with their before/after
+hashes and owning fixtures, the three package version fields, and the explicit
+documentation and release-control paths in `release-recovery.mjs`. Compiler
+sources, runtime, runners, dependencies, pins and executable tools must remain
+identical. The plan runs the release-control tests on the new source. The
+original run must be terminal, and its three core producers must have passed.
+
+Only invalidated, missing or unsuccessful fixture shards run again. Each job
+imports the exact compiler and prepared Nix closure from its original RC20
+producer. The aggregate still requires 222 core gates plus all 162 fixture
+batches per platform: 384 gates, covering all 401 fixtures in both profiles.
+Original reports keep their source commit, run, attempt and artifact identity;
+new reports name their actual final source and run. The schema-3 finalization
+context records both origins. Original report bytes are also retained in the
+signed `recovery-inputs.tar.gz` asset.
+
+Three small repackage jobs produce the final metadata and execute the installed
+final package with both JS and native hosts on their actual target platforms.
+They reuse the compiler bytes without a bootstrap or core campaign. Final
+build metadata records the old `compilerOrigin` separately from the final
+packaging source. Finalization verifies the fresh package producers and exact
+compiler bytes before signing. The final tag receives its own GitHub OIDC and
+npm provenance; RC20 is never relabeled as a successful final-tag run. Public
+installation, application qualification and benchmark-byte binding remain
+separate publication requirements.
 
 RC7 exposed a limit in this retry path: draft visibility failed immediately
 after creation, and the retry metadata copied successful jobs into attempt 2
