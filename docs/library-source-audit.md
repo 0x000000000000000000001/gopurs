@@ -12,13 +12,22 @@ and 1 November and their new source pins are recorded separately below.
 
 | Surface | Identity and release requirement |
 | --- | --- |
-| Compiler npm package | `gopurs@0.1.0-rc.19` is in preparation; qualification and publication are pending. RC18 remains unpublished after its CI failure. The recorded 12 November channel state was RC14 on `next` and RC7 on `latest`; recheck it before publication. Each candidate's exact version, lockfile, file allowlist and installed-artifact tests apply. |
+| Compiler npm package | `gopurs@0.1.0-rc.20` is in preparation; qualification and publication are pending. RC19 remains unpublished after its local Arrays failure and CI cancellation. The recorded 12 November channels were RC14 on `next` and RC7 on `latest`; recheck before publication. Each candidate's exact version, lockfile, file allowlist and installed-artifact tests apply. |
 | Library sources used by bootstrap/applications | Git URL and exact commit from the bootstrap manifest; validate this combination with the selected compiler and package set. The compiler npm archive does not contain these repositories. |
 | Independent future npm/Spago library publication | Review that package's name, destination, version, dependency bounds, files and notices before publishing it. This is a separate operation. |
 
 These independent libraries do not need identical version numbers. Their
 current release identity is the compatible set of source commits. A version
 copied from an upstream package is not a version assigned to the Go port.
+
+## RC20 source configuration — 13 November 2026
+
+RC20 retains the exact RC19 frontend, library and support pins below. It
+changes compiler bridge behavior for curried foreign callback values and
+function-valued uncurried FFI results; unchanged dependency pins do not imply
+unchanged compiler output. A new complete 51-library Release/Dev preflight
+(102 invocations, no exclusions), benchmark and full candidate qualification
+are required. Their results remain pending in the [quality record](quality-0.1.0.md).
 
 ## RC19 source configuration — 13 November 2026
 

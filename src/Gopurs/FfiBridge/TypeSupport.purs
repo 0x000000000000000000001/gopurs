@@ -3,6 +3,7 @@ module Gopurs.FfiBridge.TypeSupport
   , instantiateDeclaration
   , getTastArgType
   , getTastReturnType
+  , tastForArity
   , resolveNewtype
   , flattenFuncArgs
   , isStandardPursFunc
@@ -75,6 +76,33 @@ getTastReturnType (Func _ ret) = Just ret
 getTastReturnType (ForAll _ body) = getTastReturnType body
 getTastReturnType (ADT name _ args) | name == "Effect.Effect" || isUncurriedFunction name = Array.last args
 getTastReturnType _ = Nothing
+
+-- A native declaration can consume arguments from a returned function, or
+-- return a function before consuming the whole first TAST argument group.
+-- Keep the residual result at the actual Go call boundary; flattening every
+-- result would lose genuinely returned functions.
+tastForArity :: Int -> ExprType -> Maybe ExprType
+tastForArity arity tast = do
+  call <- consume arity tast
+  pure (Func call.args call.result)
+  where
+  consume count (ForAll _ body) = consume count body
+  consume count (Func args result) = group count args result
+  consume count (ADT name _ args) | isUncurriedFunction name = do
+    result <- Array.last args
+    group count (Array.dropEnd 1 args) result
+  consume _ _ = Nothing
+
+  group count args result
+    | count < 0 = Nothing
+    | count < Array.length args = Just
+        { args: Array.take count args
+        , result: Func (Array.drop count args) result
+        }
+    | count == Array.length args = Just { args, result }
+    | otherwise = do
+        rest <- consume (count - Array.length args) result
+        pure { args: args <> rest.args, result: rest.result }
 
 -- Single-field data constructors use the same elided layout as newtypes in
 -- this backend. Instantiate their fields before following that representation.

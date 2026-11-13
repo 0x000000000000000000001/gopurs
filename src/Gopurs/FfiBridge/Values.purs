@@ -289,7 +289,8 @@ toValue dataDecls (TNamed anyT) mbTast valName | anyT == "any" || anyT == "inter
                   )
                   fArgs
                 invokeCall = "fn(" <> String.joinWith ", " invokeArgs <> ")"
-                fallbackChain = Array.foldl (\acc p -> "gopurs_runtime.Apply(" <> acc <> ", " <> p <> ")") ("(" <> valName <> ".(gopurs_runtime.Value))") (Array.mapWithIndex (\i _ -> "p" <> show (depth - arity + i)) fArgs)
+                -- Box preserves runtime closures and adapts native curried functions.
+                fallbackChain = Array.foldl (\acc p -> "gopurs_runtime.Apply(" <> acc <> ", " <> p <> ")") ("gopurs_runtime.Box(" <> valName <> ")") (Array.mapWithIndex (\i _ -> "p" <> show (depth - arity + i)) fArgs)
               in
                 "func() gopurs_runtime.Value {\n\t\t\t\tif fn, ok := " <> valName <> ".(" <> castType <> "); ok {\n\t\t\t\t\treturn gopurs_runtime.Box(" <> invokeCall <> ")\n\t\t\t\t}\n\t\t\t\treturn " <> fallbackChain <> "\n\t\t\t}()"
             else

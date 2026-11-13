@@ -3,6 +3,62 @@
 This is a working record for the `0.1.0` release gates. It is not a release
 certificate. The current gate list is in the [release checklist](release-checklist.md).
 
+## RC19 local qualification failure and RC20 preparation — 13 November 2026
+
+RC19's signed tag `v0.1.0-rc.19` identifies commit
+`68fd4b3d41b88dae84852b1e54924508bc2109a0`, annotated object
+`bc16c2da6fbe99b51a0f0ce5e5d2c52113e895d7`; GitHub verified its signature.
+Its fresh local native bootstrap and installed-package check passed, but these
+checks did not cover the subsequent Arrays failure. RC19 remains unpublished.
+
+A separate local library preflight stopped at its third invocation,
+`gopurs-arrays` Release at pin `e68970644734ba8420fc811337dd45beb4b2acea`,
+with exit 1. Aff and Argonaut Core Release had passed; the remaining 93
+invocations of that selected preflight were not attempted. Re-executing the
+unchanged generated Arrays binary reproduced the panic at `traverse1`:
+a curried native callback was treated as an already boxed runtime value.
+Short isolated experiments also exposed a distinct return-arity error: the
+bridge did not consume a TAST function-result argument accepted by the Go
+implementation. It must consume the arguments Go actually accepts, while
+preserving a function result when Go returns one. Both cases require compiler
+bridge corrections, not a change to the Arrays port or its source pin.
+
+The original failure, binary rerun, typed contract and isolated probes are
+retained under `.gopurs-evidence/publication-rc19-20261113/local-library-preflight/arrays-failure`
+at the workspace root. Its terminal failure receipt has SHA-256
+`d25e09d557c3b2fab5053594b081524ddb62d0b33b44b3587409f076f7bd7408`.
+The original source and failed results remain available; isolated experiments
+do not count as the complete corrected candidate qualification.
+
+[CI run 43332185849](https://github.com/0x000000000000000000001/gopurs/actions/runs/43332185849)
+was cancelled after this local failure. The cancellation request succeeded at
+`2026-11-13T00:22:20.521104Z`; the monitor observed `completed/cancelled` at
+`2026-11-13T00:23:20.335969Z`. No CI step was recorded as failed. The scope
+job passed 78/78 with zero failed, skipped, cancelled or todo tests, and all
+three Nix/TAST checks passed. Both Linux jobs were still running core gates;
+macOS was still bootstrapping. These partial results are not complete CI
+qualification. The exact scope log and terminal job metadata are retained
+under the same RC19 evidence directory.
+
+RC19's local proof of equality with the executed RC18 compiler bytes also
+passed, after a real installed-package consumer; its receipt has SHA-256
+`350e2136fb1a6c9ffea2d0186bd035385453c6502a9c6fb8e691adb7a637eb4d`.
+It concerns those local RC19 artifacts and the original RC18 campaign, not
+public artifacts or program correctness. The RC20 compiler corrections
+invalidate reuse through that byte-equality argument. The completed RC18
+measurements remain historical and a **new strict benchmark is required**.
+
+RC20 prepares the two bridge corrections and focused regressions. The local
+JavaScript build completed without warnings and the targeted FFI suite passed
+38/38. These results do not qualify the pending fresh native compiler or the
+complete candidate. Its frontend and library pins remain unchanged, but it
+must run all 51 libraries in both
+Release and Dev (102 invocations, no exclusions), with Arrays first. Source
+commit, signed tag, complete preflight, new benchmark, full CI, installed
+application qualification and public consumer checks are pending. No result
+from the older candidate is relabelled as an RC20 pass. Spec's current 74
+passing and three pending internal cases remain explicitly disclosed.
+
 ## RC18 qualification interruption and RC19 preparation — 13 November 2026
 
 RC18's signed tag identifies commit

@@ -7,12 +7,12 @@ module Gopurs.FfiBridge.Render
 import Prelude
 
 import Data.Array as Array
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.String as String
 import Data.String.Pattern (Pattern(..), Replacement(..))
 import Gopurs.FfiBridge.Effects as Effects
 import Gopurs.FfiBridge.Signatures (NativeCandidate)
-import Gopurs.FfiBridge.TypeSupport (getTastReturnType, instantiateDeclaration, printTypeNode)
+import Gopurs.FfiBridge.TypeSupport (getTastReturnType, instantiateDeclaration, printTypeNode, tastForArity)
 import Gopurs.FfiBridge.Values as Values
 import Gopurs.FfiTypes (FfiDecl, TypeNode(..))
 import Gopurs.GoTypes (printExprType)
@@ -37,6 +37,7 @@ legacyWrapper dataDecls declaration mbTast =
       else
         let
           arity = Array.length d.args
+          callTast = map (\tast -> fromMaybe tast (tastForArity arity tast)) mbTast
           funcConstructor = if arity > 1 then "Func" <> show arity else "Func"
           boxedArgs =
             if arity == 0 then "_ gopurs_runtime.Value"
@@ -44,7 +45,7 @@ legacyWrapper dataDecls declaration mbTast =
           callFunc =
             if Array.null d.typeParams then d.name
             else d.name <> "[" <> String.joinWith ", " (map (const "gopurs_runtime.Value") d.typeParams) <> "]"
-          argsCode = Array.concat (Array.mapWithIndex (Values.boxedArgument dataDecls mbTast) d.args)
+          argsCode = Array.concat (Array.mapWithIndex (Values.boxedArgument dataDecls callTast) d.args)
           call = callFunc <> "(" <> callArguments d <> ")"
           retCode = case d.ret of
             Nothing ->
@@ -53,7 +54,7 @@ legacyWrapper dataDecls declaration mbTast =
               ]
             Just r ->
               let
-                wrapped = Values.toValue dataDecls r (mbTast >>= getTastReturnType) "go_res"
+                wrapped = Values.toValue dataDecls r (callTast >>= getTastReturnType) "go_res"
                 indented = String.replaceAll (Pattern "\n") (Replacement "\n\t") wrapped
               in
                 [ "\tgo_res := " <> call
@@ -67,12 +68,13 @@ legacyWrapper dataDecls declaration mbTast =
 valueWorker :: Array DataDecl -> NativeCandidate -> String
 valueWorker dataDecls { declaration, tast, callName } =
   let
+    callTast = fromMaybe tast (tastForArity (Array.length declaration.args) tast)
     params = String.joinWith ", " (Array.mapWithIndex
       (\i t -> "arg" <> show i <> " " <> case t of
         TFunc _ _ -> "gopurs_runtime.Value"
         _ -> printTypeNode t)
       declaration.args)
-    args = Array.concat (Array.mapWithIndex (Values.nativeArgument dataDecls tast) declaration.args)
+    args = Array.concat (Array.mapWithIndex (Values.nativeArgument dataDecls callTast) declaration.args)
     call = declaration.name <> "(" <> callArguments declaration <> ")"
     callLine = case declaration.ret of
       Nothing -> "\t" <> call
@@ -81,7 +83,7 @@ valueWorker dataDecls { declaration, tast, callName } =
     "func " <> callName <> "(" <> params <> ") gopurs_runtime.Value {\n"
       <> String.joinWith "\n" args
       <> "\n" <> callLine
-      <> "\n" <> String.joinWith "\n" (Values.workerReturn dataDecls tast declaration.ret)
+      <> "\n" <> String.joinWith "\n" (Values.workerReturn dataDecls callTast declaration.ret)
       <> "\n}\n"
 
 callArguments :: FfiDecl -> String

@@ -6,6 +6,25 @@ All notable changes to gopurs are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0-rc.20]
+
+Twentieth candidate for `0.1.0`, prepared on 13 November 2026. It corrects two
+compiler bridge defects exposed by the local Arrays qualification of RC19.
+Qualification and publication remain pending in the live
+[quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md).
+
+### Fixed
+
+- Convert curried callback values through the native FFI bridge instead of
+  assuming that a foreign function is already a boxed runtime value.
+- Consume the TAST arguments actually accepted by the Go implementation,
+  including arguments of a returned function; preserve a function result when
+  Go returns it. Add focused regressions for both bridge cases.
+
+The frontend and library pins remain those of RC19. The compiler changes
+require a new benchmark and complete validation; the historical RC18 campaign
+and its local RC19 equality proof do not qualify this candidate.
+
 ## [0.1.0-rc.19]
 
 Nineteenth candidate for `0.1.0`, prepared on 13 November 2026, retaining

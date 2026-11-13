@@ -14,6 +14,21 @@ Release**, and **265,633 ms native Dev**, summing the per-corpus cold medians.
 Rust values in that historical report are estimates and are not used here.
 There is no historical warm-cache baseline in that table.
 
+## RC20 requires a new campaign — 13 November 2026
+
+The local Arrays qualification of RC19 exposed two compiler bridge defects.
+RC20 changes executable compiler behavior to correct them. The completed RC18
+campaign below remains historical evidence, and the later local RC19 proof of
+identical executed bytes does not extend to RC20. Neither is a new RC20
+measurement or an application-correctness result.
+
+RC20 requires a fresh strict campaign after its corrected compiler and complete
+51-library Release/Dev preflight are validated. Preserve the historical inputs
+and disclose the same derived FFI cases when comparing with the official
+altbak.pub baseline; do not overwrite or rename RC18 measurements. The new
+campaign and candidate qualification remain pending in the
+[quality record](quality-0.1.0.md).
+
 ## Completed RC18 campaign — 12 November 2026 (UTC)
 
 All **51 corpora passed on their first attempt** with the locally built

@@ -1,13 +1,15 @@
-# RC19 release checklist
+# RC20 release checklist
 
-Candidate: `0.1.0-rc.19`, in preparation on 13 November 2026. Its commit,
-signed tag, full CI and artifact qualification are pending. RC18 remains
-unpublished after its cleanup-fixture failure; its tag and failed evidence
-are preserved. The planned first final release is `0.1.0`.
+Candidate: `0.1.0-rc.20`, in preparation on 13 November 2026. Its commit,
+signed tag, complete library preflight, fresh benchmark, full CI and artifact
+qualification are pending. RC19 remains unpublished after a local Arrays
+failure; its unfinished CI was cancelled and its exact evidence is retained.
+The planned first final release is `0.1.0`.
 
-The previously recorded npm channel state is historical; recheck the public
-registry before publication. Checked source-preparation items below describe
-existing targeted evidence, not a successful RC19 matrix.
+The earlier npm channel observations and checked source-preparation items
+below retain their original scope. They do not qualify RC20's changed compiler.
+No historical benchmark or local RC19 equality proof substitutes for a fresh
+RC20 campaign. Recheck public registry state at publication.
 
 Check an item only after recording its exact source, artifact identity and
 result in the [quality record](quality-0.1.0.md). The [release procedure](release.md)
@@ -67,7 +69,7 @@ development results retain their original scope.
 - [ ] Resolve qualification failures and documentation deviations, and have
   the retained evidence reviewed against the declared compatibility scope.
 - [ ] Prepare the final `0.1.0` identity and qualify its exact artifacts through
-  the same release process. RC19 results do not authorize substituting rebuilt
+  the same release process. Earlier results do not authorize substituting rebuilt
   or modified final artifacts without validation.
 - [ ] Publish and verify `0.1.0`, update the active installation commands and
   status pages, then announce the qualified scope with links to the public
