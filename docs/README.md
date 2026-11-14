@@ -23,6 +23,7 @@ These guides describe the current source tree. Start with the
 | [Nix](nix.md) | Install the toolchain and use the development shell |
 | [Development](development.md) | Work on library ports, Go FFI and the runtime |
 | [Testing](testing.md) | Choose checks, run fixtures and inspect reports |
+| [Release quickstart](release-quickstart.md) | Prepare, qualify and publish a new version |
 | [Release procedure](release.md) | Qualify, package and publish a candidate |
 | [Release qualification](quality-0.1.0.md) | Evidence for the published release and earlier candidates |
 | [Release checklist](release-checklist.md) | Track qualification and publication gates |
