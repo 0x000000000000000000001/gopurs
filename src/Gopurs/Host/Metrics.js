@@ -4,6 +4,6 @@ import { performance } from "node:perf_hooks";
 
 export const now = () => performance.now();
 
-// No-op: seul le backend Go échantillonne le profil mémoire.
+// No-op: only the Go backend samples memory allocations for profiling.
 export const setMemProfileRate = (rate) => () => {};
 

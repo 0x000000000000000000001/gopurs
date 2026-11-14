@@ -148,8 +148,8 @@ translatePreparedWithFunctions sourceMetadata prepared =
       Ref.new { declarations: ModuleDeclarations.constructors metadata modNameStr mod, globalId: 0, reboxPairs: Set.empty }
 
     preparedBindings = ModuleBindings.prepare metadata modNameStr mod
-    -- Les FFI du module sont connues par ident brut ; les fonctions locales
-    -- gardent la priorité en cas d'homonymie.
+    -- The module's FFI functions are keyed by raw identifier; local functions
+    -- take precedence when names collide.
     ffiLocalFunctions = Map.fromFoldable (map (\(Tuple k v) -> Tuple (sanitizeName k) v) (Map.toUnfoldable metadata.ffiFunctions :: Array (Tuple String FunctionInfo)))
     moduleFunctions = Map.union (Map.union prepared.functions preparedBindings.functions) ffiLocalFunctions
     normalFunctions = Map.fromFoldable $ Array.concatMap
@@ -160,7 +160,7 @@ translatePreparedWithFunctions sourceMetadata prepared =
           pure (Tuple (unwrap mod.name <> "." <> name) info))
         group.bindings)
       preparedBindings.bindings
-    -- FFI exportées sous `<Module>.<ident>` pour les appelants d'autres modules.
+    -- Export FFI functions as `<Module>.<ident>` for callers in other modules.
     ffiGlobalFunctions = Map.fromFoldable $ Array.mapMaybe
       (\(Tuple (Ident name) _) -> map (Tuple (unwrap mod.name <> "." <> name)) (Map.lookup name metadata.ffiFunctions))
       (Map.toUnfoldable mod.foreign)

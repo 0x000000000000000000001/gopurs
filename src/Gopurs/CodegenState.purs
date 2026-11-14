@@ -43,7 +43,7 @@ type SharedMetadataRow =
   , enumAdts :: Set.Set String
   , enumCtors :: Set.Set String
   , globalFunctions :: Map String FunctionInfo
-  -- | Infos d'appel natif des FFI du module courant (clé : ident brut).
+  -- | Native call metadata for the current module's FFI (key: raw identifier).
   , ffiFunctions :: Map String FunctionInfo
   , classDeclsFields :: ClassFields
   , reboxFields :: ReboxFieldIndex

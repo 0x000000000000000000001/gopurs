@@ -139,9 +139,9 @@ elif [[ "${GOPURS_JS:-0}" == "1" ]]; then
       echo "Error: 'node' is not installed or not in the PATH." >&2
       exit 1
   fi
-  # Le backend JS récurse sur les structures du corpus (listes/maps) : Node a
-  # un stack fixe, contrairement au Go natif. Même valeur que les autres
-  # chemins JS du projet.
+  # The JS backend recurses over corpus structures (lists/maps): Node has a
+  # fixed stack, unlike native Go. Use the same size as the project's other
+  # JS execution paths.
   exec "$NODE_BIN" --stack-size=65536 "$DIR/gopurs.js" "$@"
 else
   exec "$DIR/gopurs-native" "$@"

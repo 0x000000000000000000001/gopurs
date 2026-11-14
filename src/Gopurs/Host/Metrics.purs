@@ -13,9 +13,9 @@ import Effect.Ref as Ref
 -- Milliseconds from a monotonic clock; only the clock is host-specific.
 foreign import now :: Effect Number
 
--- | Règle l'échantillonnage du profil mémoire Go (`runtime.MemProfileRate`).
--- | Un compileur alloue des centaines de Go : le taux par défaut (512 Kio)
--- | coûte ~15 % de CPU en pure perte quand aucun profil n'est demandé.
+-- | Set Go memory profiling's sampling rate (`runtime.MemProfileRate`).
+-- | A compiler allocates hundreds of GB: the default rate (512 KiB)
+-- | wastes ~15% of CPU time when no profile is requested.
 foreign import setMemProfileRate :: Int -> Effect Unit
 
 -- Delay construction of the action until after the first clock read.

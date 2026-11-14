@@ -20,8 +20,7 @@ escapeGoString = escapeGoStringImpl
 quoteGoString :: String -> String
 quoteGoString s = "\"" <> escapeGoString s <> "\""
 
--- | Écrit des éléments séparés par `separator` (sans séparateur avant le
--- | premier).
+-- | Write elements separated by `separator`, with no leading separator.
 writeJoined :: forall a. String -> (Out -> a -> Out) -> Out -> Array a -> Out
 writeJoined separator write = go true
   where
