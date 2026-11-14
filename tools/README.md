@@ -95,6 +95,10 @@ plain Node ESM unless noted. `*.test.mjs` files stay at the top level so that
 ## Guardrails
 
 `check-docs.mjs` verifies relative links, packaged files and module-map coverage.
+Before building a fresh checkout, use `node tools/check-docs.mjs --source-only`:
+it defers only the generated `bin/gopurs.js` package check. Links, module coverage
+and all packaged source files remain checked. Run the default command after the
+build to check the complete package surface.
 
 `sync-docs.mjs` generates the marked version and dependency blocks in the user
 guides from `package.json` and `bootstrap-sources.json`. `npm run docs:sync`

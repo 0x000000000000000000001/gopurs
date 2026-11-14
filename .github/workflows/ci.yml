@@ -49,7 +49,7 @@ jobs:
         run: |
           node --test tools/sync-docs.test.mjs tools/check-docs.test.mjs
           node tools/sync-docs.mjs --check
-          node tools/check-docs.mjs
+          node tools/check-docs.mjs --source-only
       - name: Test the CI classification, inventory and qualification guards
         run: node --test tools/ci/*.test.mjs tools/release-quality-resources.test.mjs
       - name: Select builds or reuse identical main qualification

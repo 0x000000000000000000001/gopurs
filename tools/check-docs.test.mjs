@@ -86,6 +86,55 @@ test("checks every package.json files entry", t => {
   assert.match(result.stderr, /files entry does not exist: missing\.md/);
 });
 
+test("source-only accepts an unbuilt checkout while the default requires the bundle", t => {
+  const { write, run } = fixture(t);
+  write("package.json", JSON.stringify({ files: ["README.md", "bin/gopurs.js"] }));
+  write("README.md", "# Root\n");
+  write("src/Test.purs", "module Test where\n");
+  write("docs/module-map.md", "# Map\n\n" + moduleRow("Test"));
+
+  const unbuilt = run();
+  assert.equal(unbuilt.status, 1);
+  assert.match(unbuilt.stderr, /files entry does not exist: bin\/gopurs\.js/);
+
+  const source = run("--source-only");
+  assert.equal(source.status, 0, source.stderr);
+  assert.match(source.stdout, /1 packaged file\(s\) present/);
+  assert.match(source.stdout, /bin\/gopurs\.js package check deferred until after build/);
+
+  write("bin/gopurs.js", "// Built compiler bundle\n");
+  const built = run();
+  assert.equal(built.status, 0, built.stderr);
+  assert.match(built.stdout, /2 packaged file\(s\) present/);
+  assert.doesNotMatch(built.stdout, /deferred/);
+});
+
+test("source-only still requires packaged sources and checked-in generated files", t => {
+  const { write, run } = fixture(t);
+  write("package.json", JSON.stringify({ files: ["README.md", "bin/gopurs.js", "bin/gopurs", "tools/ffi_gen.wasm"] }));
+  write("README.md", "# Root\n");
+  write("src/Test.purs", "module Test where\n");
+  write("docs/module-map.md", "# Map\n\n" + moduleRow("Test"));
+  const result = run("--source-only");
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /files entry does not exist: bin\/gopurs\n/);
+  assert.match(result.stderr, /files entry does not exist: tools\/ffi_gen\.wasm/);
+  assert.doesNotMatch(result.stderr, /files entry does not exist: bin\/gopurs\.js/);
+});
+
+test("source-only still checks links and complete module-map coverage", t => {
+  const { write, run } = fixture(t);
+  write("package.json", JSON.stringify({ files: ["README.md", "bin/gopurs.js"] }));
+  write("README.md", "# Root\n\n[missing](docs/missing.md)\n");
+  write("src/A.purs", "module A where\n");
+  write("src/B.purs", "module B where\n");
+  write("docs/module-map.md", "# Map\n\n" + moduleRow("A"));
+  const result = run("--source-only");
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /missing target docs\/missing\.md/);
+  assert.match(result.stderr, /missing row for B \(src\/B\.purs\)/);
+});
+
 test("requires one module-map row per source module", t => {
   const { write, run } = fixture(t);
   write("package.json", JSON.stringify({ files: ["README.md"] }));

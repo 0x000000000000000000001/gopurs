@@ -17,6 +17,7 @@ and that docs/module-map.md has exactly one row per src/**/*.purs module.
 
 Options:
   --root <dir>     Repository root to inspect (default: this checkout).
+  --source-only    Defer the generated bin/gopurs.js package check until after build.
   --links-only     Skip package.json.files and module-map coverage.
   --quiet          Print only failures.
   -h, --help       Show this help.
@@ -44,9 +45,7 @@ const defaultDocuments = (root) => {
   if (existsSync(docs)) {
     candidates.push(...walk(docs, (path) => extname(path) === ".md"));
   }
-  return candidates
-    .map((path) => toPosix(relative(root, path)))
-    .sort();
+  return candidates.map((path) => toPosix(relative(root, path))).sort();
 };
 
 // GitHub-style heading anchor: keep Unicode letters and digits, drop the rest
@@ -172,8 +171,9 @@ const checkLinks = (root, documents) => {
   return { errors, checked, outside };
 };
 
-const checkPackageFiles = (root) => {
+const checkPackageFiles = (root, sourceOnly) => {
   const errors = [];
+  let deferred = 0;
   let manifest;
   try {
     manifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
@@ -183,13 +183,17 @@ const checkPackageFiles = (root) => {
   const files = Array.isArray(manifest.files) ? manifest.files : [];
   if (files.length === 0) errors.push("package.json: files is missing or empty");
   for (const entry of files) {
+    if (sourceOnly && entry === "bin/gopurs.js") {
+      deferred += 1;
+      continue;
+    }
     if (typeof entry !== "string" || entry.length === 0) {
       errors.push(`package.json: invalid files entry ${JSON.stringify(entry)}`);
     } else if (!existsSync(join(root, entry))) {
       errors.push(`package.json: files entry does not exist: ${entry}`);
     }
   }
-  return { errors, checked: files.length };
+  return { errors, checked: files.length - deferred, deferred };
 };
 
 const readModuleMap = (root) => {
@@ -250,15 +254,16 @@ const checkModuleMap = (root) => {
   return { errors, checked: rows.length };
 };
 
-const checkRepository = (root, documents) => {
+const checkRepository = (root, documents, sourceOnly) => {
   const linkResult = checkLinks(root, documents);
-  const packageResult = checkPackageFiles(root);
+  const packageResult = checkPackageFiles(root, sourceOnly);
   const moduleResult = checkModuleMap(root);
   return {
     errors: [...linkResult.errors, ...packageResult.errors, ...moduleResult.errors],
     counts: {
       documents: linkResult.checked.length,
       files: packageResult.checked,
+      deferred: packageResult.deferred,
       modules: moduleResult.checked,
       outside: linkResult.outside,
     },
@@ -266,13 +271,14 @@ const checkRepository = (root, documents) => {
 };
 
 const parseArgs = (argv) => {
-  const options = { root: ROOT, linksOnly: false, quiet: false, help: false, files: [] };
+  const options = { root: ROOT, sourceOnly: false, linksOnly: false, quiet: false, help: false, files: [] };
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];
     if (argument === "--root") {
       if (!argv[index + 1]) throw new Error("--root needs a directory");
       options.root = resolve(argv[++index]);
-    } else if (argument === "--links-only") options.linksOnly = true;
+    } else if (argument === "--source-only") options.sourceOnly = true;
+    else if (argument === "--links-only") options.linksOnly = true;
     else if (argument === "--quiet") options.quiet = true;
     else if (argument === "-h" || argument === "--help") options.help = true;
     else if (argument.startsWith("-")) throw new Error(`unknown option ${argument}`);
@@ -308,7 +314,7 @@ const main = () => {
   }
   const result = options.linksOnly
     ? { errors: checkLinks(options.root, documents).errors, counts: { documents: documents.length } }
-    : checkRepository(options.root, documents);
+    : checkRepository(options.root, documents, options.sourceOnly);
   if (result.errors.length > 0) {
     for (const error of result.errors) console.error(`[docs] ${error}`);
     console.error(`[docs] ${result.errors.length} error(s)`);
@@ -319,6 +325,8 @@ const main = () => {
     console.log(`[docs] ${result.counts.documents} document(s) checked`);
     if (!options.linksOnly) {
       console.log(`[docs] ${result.counts.files} packaged file(s) present`);
+      if (result.counts.deferred)
+        console.log("[docs] generated bin/gopurs.js package check deferred until after build");
       console.log(`[docs] ${result.counts.modules} module row(s) match src/`);
       if (result.counts.outside) console.log(`[docs] ${result.counts.outside} cross-repository link(s) skipped`);
     }
