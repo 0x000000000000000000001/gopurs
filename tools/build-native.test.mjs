@@ -91,7 +91,7 @@ appendFileSync(process.env.MOCK_LOG, JSON.stringify({ name: 'parser' }) + '\\n')
   const ready = join(temporary, 'ready.json');
   const environmentFor = overrides => ({
     ...process.env, TMPDIR: join(temporary, 'tmp'), MOCK_LOG: log, MOCK_READY: ready,
-    MOCK_FAIL: '', MOCK_UNTYPED: '', MOCK_PAUSE: '', GOPURS_PURS: '',
+    MOCK_FAIL: '', MOCK_UNTYPED: '', MOCK_PAUSE: '', GOPURS_PURS: '', GOPURS_PBO_DIR: '',
     GOPURS_LIBRARY_ROOT: join(temporary, 'checkout/gopurs'), ...overrides,
   });
   const summarize = result => ({
@@ -123,7 +123,7 @@ appendFileSync(process.env.MOCK_LOG, JSON.stringify({ name: 'parser' }) + '\\n')
     });
     return { child, completed };
   };
-  return { run, start, ready, fork, explicitFork, localBin, binary };
+  return { run, start, ready, root, put, fork, explicitFork, localBin, binary };
 }
 
 for (const explicit of [false, true]) {
@@ -146,6 +146,53 @@ for (const explicit of [false, true]) {
     assert.doesNotMatch(config, /    gopurs-node-process:/);
     assert.equal(readFileSync(f.binary, 'utf8'), 'new-native-binary');
     assert.ok(statSync(f.binary).mode & 0o100, 'published binary must be executable');
+  });
+}
+
+for (const hasExtraPackages of [false, true]) {
+  test(`native helper uses explicit PBO for the Node seed and TAST (${hasExtraPackages ? 'existing' : 'new'} overrides)`, t => {
+    const f = fixture(t);
+    const optimizer = join(dirname(f.root), 'local-pbo');
+    f.put(join(optimizer, 'spago.yaml'), 'package:\n  name: backend-optimizer\n');
+    const configPath = join(f.root, 'spago.yaml');
+    if (hasExtraPackages) {
+      writeFileSync(configPath, readFileSync(configPath, 'utf8') + `  extraPackages:
+    backend-optimizer:
+      git: https://example.invalid/pbo.git
+      ref: pinned-pbo
+    st:
+      git: https://example.invalid/st.git
+      ref: pinned-st
+`);
+    }
+    const originalConfig = readFileSync(configPath, 'utf8');
+    const originalLock = readFileSync(join(f.root, 'spago.lock'), 'utf8');
+    const result = f.run({ GOPURS_PBO_DIR: optimizer });
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    assert.deepEqual(result.calls.map(call => call.name), ['npm', 'spago', 'spago', 'spago', 'parser', 'gopurs.js', 'go']);
+    const nodeWorkspace = join(result.workspace, '.spago/node-bootstrap');
+    const nodeConfig = readFileSync(join(nodeWorkspace, 'spago.yaml'), 'utf8');
+    const nativeConfig = readFileSync(join(result.workspace, 'spago.yaml'), 'utf8');
+    const override = `    backend-optimizer:\n      path: ${JSON.stringify(optimizer)}`;
+    assert.ok(nodeConfig.includes(override));
+    assert.ok(nativeConfig.includes(override));
+    assert.equal(nodeConfig.match(/^    backend-optimizer:/gm).length, 1);
+    assert.doesNotMatch(nodeConfig, /pinned-pbo|^  test:|^    argonaut-codecs:/m);
+    if (hasExtraPackages) assert.match(nodeConfig, /ref: pinned-st/);
+    assert.equal(readFileSync(configPath, 'utf8'), originalConfig);
+    assert.equal(readFileSync(join(f.root, 'spago.lock'), 'utf8'), originalLock);
+    assert.equal(realpathSync(join(nodeWorkspace, 'src')), realpathSync(join(f.root, 'src')));
+    assert.deepEqual(result.calls[0].args, ['run', 'build:runtime']);
+    for (const call of result.calls.slice(1, 3)) {
+      assert.equal(call.cwd, realpathSync(nodeWorkspace));
+      assert.equal(call.purs, realpathSync(join(f.localBin, 'purs')));
+    }
+    assert.deepEqual(result.calls[2].args, [
+      'bundle', '--module', 'Main', '--platform', 'node', '--outfile', join(realpathSync(f.root), 'bin/gopurs.js'), '--bundle-type', 'app',
+    ]);
+    assert.equal(result.calls[3].cwd, realpathSync(result.workspace));
+    assert.equal(result.calls[3].purs, realpathSync(f.fork));
+    assert.equal(readFileSync(f.binary, 'utf8'), 'new-native-binary');
   });
 }
 

@@ -58,6 +58,30 @@ function resolveOptimizer(root) {
   throw new Error("Missing backend optimizer; run npm ci or set GOPURS_PBO_DIR to a checkout");
 }
 
+// Keep the JavaScript dependencies from the source manifest, replacing only
+// PBO. Native library overrides belong to the separate TAST workspace.
+export function nodeWorkspaceConfig(root) {
+  const lines = readFileSync(join(root, "spago.yaml"), "utf8").split(/\r?\n/);
+  const start = lines.findIndex((line) => /^workspace:\s*$/.test(line));
+  if (start < 0) throw new Error("spago.yaml has no workspace section");
+  const override = `    backend-optimizer:\n      path: ${JSON.stringify(resolveOptimizer(root))}`;
+  const result = [];
+  let skipOptimizer = false;
+  let hasExtraPackages = false;
+  for (const line of lines.slice(start)) {
+    if (/^ {0,4}\S/.test(line)) skipOptimizer = false;
+    if (/^    backend-optimizer:/.test(line)) skipOptimizer = true;
+    if (skipOptimizer) continue;
+    result.push(line);
+    if (/^  extraPackages:\s*$/.test(line)) {
+      hasExtraPackages = true;
+      result.push(override);
+    }
+  }
+  if (!hasExtraPackages) result.push("  extraPackages:", override);
+  return compilerPackage(root) + result.join("\n").trimEnd() + "\n";
+}
+
 // The compiler's own bootstrap must pair its runtime with the library versions
 // in its source manifest. Read committed trees without checking out or changing
 // the developer's sibling libraries. An explicit library root opts into using

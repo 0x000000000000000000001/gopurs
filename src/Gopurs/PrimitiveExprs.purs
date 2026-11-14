@@ -97,8 +97,10 @@ binary codegenStateRef modNameStr = case _ of
   OpCharOrd OpGte -> Just \res1 res2 -> { expr: GoBinOp ">=" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeString) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeString), exprType: TypeBool }
   OpBooleanOrd OpEq -> Just \res1 res2 -> { expr: GoBinOp "==" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeBool) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeBool), exprType: TypeBool }
   OpBooleanOrd OpNotEq -> Just \res1 res2 -> { expr: GoBinOp "!=" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeBool) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeBool), exprType: TypeBool }
-  OpBooleanOrd OpLt -> Just \res1 res2 -> { expr: GoBinOp "<" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeBool) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeBool), exprType: TypeBool }
-  OpBooleanOrd OpLte -> Just \res1 res2 -> { expr: GoBinOp "<=" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeBool) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeBool), exprType: TypeBool }
-  OpBooleanOrd OpGt -> Just \res1 res2 -> { expr: GoBinOp ">" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeBool) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeBool), exprType: TypeBool }
-  OpBooleanOrd OpGte -> Just \res1 res2 -> { expr: GoBinOp ">=" (unboxGoExpr codegenStateRef modNameStr res1.expr res1.exprType TypeBool) (unboxGoExpr codegenStateRef modNameStr res2.expr res2.exprType TypeBool), exprType: TypeBool }
+  -- Go cannot order bools. Their canonical payloads are 0/1; comparing those
+  -- preserves false < true and evaluates both operands exactly once.
+  OpBooleanOrd OpLt -> Just \res1 res2 -> { expr: GoBinOp "<" (GoSelector (boxGoExpr codegenStateRef modNameStr res1.expr res1.exprType) "IntVal") (GoSelector (boxGoExpr codegenStateRef modNameStr res2.expr res2.exprType) "IntVal"), exprType: TypeBool }
+  OpBooleanOrd OpLte -> Just \res1 res2 -> { expr: GoBinOp "<=" (GoSelector (boxGoExpr codegenStateRef modNameStr res1.expr res1.exprType) "IntVal") (GoSelector (boxGoExpr codegenStateRef modNameStr res2.expr res2.exprType) "IntVal"), exprType: TypeBool }
+  OpBooleanOrd OpGt -> Just \res1 res2 -> { expr: GoBinOp ">" (GoSelector (boxGoExpr codegenStateRef modNameStr res1.expr res1.exprType) "IntVal") (GoSelector (boxGoExpr codegenStateRef modNameStr res2.expr res2.exprType) "IntVal"), exprType: TypeBool }
+  OpBooleanOrd OpGte -> Just \res1 res2 -> { expr: GoBinOp ">=" (GoSelector (boxGoExpr codegenStateRef modNameStr res1.expr res1.exprType) "IntVal") (GoSelector (boxGoExpr codegenStateRef modNameStr res2.expr res2.exprType) "IntVal"), exprType: TypeBool }
   _ -> Nothing

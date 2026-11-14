@@ -17,6 +17,7 @@ import { CommandRunner, Interrupted } from "../lib/process.mjs";
 import {
   findTypedCompiler,
   nativeWorkspaceConfig,
+  nodeWorkspaceConfig,
   prepareNativeGoLibraries,
   verifyTypedOutput,
 } from "./native-workspace.mjs";
@@ -25,7 +26,7 @@ const root = fileURLToPath(new URL("../../", import.meta.url));
 const args = process.argv.slice(2);
 if (args.includes("--help")) {
   console.log(
-    "Usage: npm run build:native -- [--keep-workspace]\nBuild a native compiler using the Node backend and pinned Go library sources from local checkouts.\nGOPURS_PURS=/absolute/path/to/typed/purs overrides discovery of the local compiler fork.\nGOPURS_LIBRARY_ROOT selects development library sources instead of the manifest pins.",
+    "Usage: npm run build:native -- [--keep-workspace]\nBuild a native compiler using the Node backend and pinned Go library sources from local checkouts.\nGOPURS_PURS=/absolute/path/to/typed/purs overrides discovery of the local compiler fork.\nGOPURS_PBO_DIR selects a local backend optimizer for both the Node seed and native compiler.\nGOPURS_LIBRARY_ROOT selects development library sources instead of the manifest pins.",
   );
   process.exit(0);
 }
@@ -93,7 +94,36 @@ async function buildNative({ keepWorkspace }) {
     console.log(`Native bootstrap workspace: ${workspace}`);
     console.log(`TAST compiler: ${compiler}`);
 
-    await runStage("node-backend", "npm", ["run", "build"], { cwd: root });
+    if (process.env.GOPURS_PBO_DIR) {
+      // Spago excludes .spago from workspace discovery, so this JS package
+      // cannot become a duplicate package in the parent TAST build.
+      const nodeWorkspace = join(workspace, ".spago", "node-bootstrap");
+      mkdirSync(nodeWorkspace, { recursive: true });
+      writeFileSync(join(nodeWorkspace, "spago.yaml"), nodeWorkspaceConfig(root));
+      symlinkSync(join(root, "src"), join(nodeWorkspace, "src"), "dir");
+      symlinkSync(join(root, "node_modules"), join(nodeWorkspace, "node_modules"), "dir");
+      await runStage("node-runtime", "npm", ["run", "build:runtime"], { cwd: root });
+      await runStage("node-backend", "spago", ["build"], { cwd: nodeWorkspace });
+      // Keep the normal bundle location: its FFI locates tools relative to it.
+      await runStage(
+        "node-bundle",
+        "spago",
+        [
+          "bundle",
+          "--module",
+          "Main",
+          "--platform",
+          "node",
+          "--outfile",
+          join(root, "bin/gopurs.js"),
+          "--bundle-type",
+          "app",
+        ],
+        { cwd: nodeWorkspace },
+      );
+    } else {
+      await runStage("node-backend", "npm", ["run", "build"], { cwd: root });
+    }
     await runStage("typed-corefn", "spago", ["build"], { cwd: workspace, env: typedEnvironment });
     stage = "verify-tast";
     const { modules, types } = verifyTypedOutput(output, compiler);
