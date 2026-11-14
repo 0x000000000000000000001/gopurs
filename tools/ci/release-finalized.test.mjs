@@ -5,6 +5,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 import { selectFinalizedInputs, validateFinalizedQuality, verifyFinalizedDirectory } from './release-finalized.mjs';
+import { recoveryBase, recoveryHash, validateRecoveryPackage, validateRecoverySmokeCommands } from './release-recovery.mjs';
+import { qualityInventory } from '../release/release-quality-report.mjs';
+import { fileURLToPath } from 'node:url';
 
 const targets = ['linux-amd64', 'linux-arm64', 'darwin-arm64'];
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -36,6 +39,75 @@ function environment(context) {
     GITHUB_REF_NAME: context.tag, GITHUB_REF: 'refs/tags/' + context.tag, GITHUB_RUN_ID: context.runId, GITHUB_RUN_ATTEMPT: context.runAttempt,
     GITHUB_WORKFLOW_SHA: context.commit, GITHUB_WORKFLOW_REF: context.repository + '/.github/workflows/ci.yml@refs/tags/' + context.tag };
 }
+
+test('final signing binds the new package smoke and unchanged RC20 producer identities', () => {
+  const convert = (data, context) => {
+    data.context = context;
+    Object.assign(data.run, { id: Number(context.runId), run_attempt: Number(context.runAttempt), head_sha: context.commit,
+      head_branch: context.tag, repository: { full_name: context.repository }, head_repository: { full_name: context.repository } });
+    data.tag.ref.ref = 'refs/tags/' + context.tag;
+    data.tag.ref.object.sha = context.tag === recoveryBase.tag ? recoveryBase.tagObject : 'c'.repeat(40);
+    Object.assign(data.tag.object, { sha: data.tag.ref.object.sha, tag: context.tag, object: { type: 'commit', sha: context.commit } });
+    for (const job of data.jobs) Object.assign(job, { run_id: Number(context.runId), head_sha: context.commit });
+    for (const artifact of data.artifacts) artifact.workflow_run = { id: Number(context.runId), head_sha: context.commit };
+    return data;
+  };
+  const base = convert(fixture(), { ...recoveryBase, runAttempt: '2', target: targets[0] });
+  base.run.status = 'completed';
+  for (const target of ['linux-amd64', 'linux-arm64', 'darwin-arm64']) {
+    const artifact = base.artifacts.find(row => row.name === `candidate-${target}-attempt-1`);
+    if (artifact) base.artifacts.push({ ...artifact, id: artifact.id + 50000, name: `quality-${target}-attempt-1` });
+  }
+  const current = convert(fixture(), { repository: recoveryBase.repository, commit: 'd'.repeat(40), tag: 'v0.1.1', runId: '999', runAttempt: '2', target: targets[0] });
+  current.jobs = current.jobs.filter(job => job.name.endsWith('shard 0)') || job.name.startsWith('qualify and attest')).map(job => ({ ...job, id: job.id + 10000 }));
+  current.artifacts = current.artifacts.filter(artifact => artifact.name.startsWith('release-') || /fixtures-.*-0-attempt/.test(artifact.name)).map(artifact => ({ ...artifact, id: artifact.id + 10000 }));
+  targets.forEach((target, index) => {
+    current.jobs.push({ ...current.jobs[0], id: 20000 + index, name: `repackage and smoke (${target})` });
+    current.artifacts.push({ ...current.artifacts[0], id: 21000 + index, name: `repackaged-${target}-attempt-1` });
+  });
+  const manifest = { schema: 1, enabled: true, base: recoveryBase, targetTag: 'v0.1.1', fixtureSources: [], goldens: [{ path: 'tests/passing-snapshots/1110.go', fixture: 'tests/passing/1110.purs', beforeSha256: 'a'.repeat(64), afterSha256: 'b'.repeat(64) }] };
+  const recovery = { base, manifest, proof: { manifestSha256: recoveryHash(JSON.stringify(manifest)), changes: [] }, inventory: qualityInventory(fileURLToPath(new URL('../../', import.meta.url))) };
+  const selected = selectFinalizedInputs({ ...current, recovery });
+  for (const item of selected) {
+    const report = quality(item);
+    for (const phase of report.phases) {
+      const name = phase.phase === 'core' ? `build and test (${item.target})` : `fixtures (${item.target}, shard ${phase.shard.index})`;
+      const producer = item.finalization.jobs.find(job => job.name === name);
+      phase.identity.source.commit = producer.commit;
+      phase.identity.github.runId = producer.runId;
+    }
+    report.identity = structuredClone(report.phases[0].identity);
+    report.finalization.qualificationIdentity = report.identity;
+    report.publicationSource = item.finalization.source;
+    report.gates = Array.from({ length: 384 }, () => ({})); report.phases[0].gates = 222;
+    report.fixtures = { selectedPerProfile: 401, passed: { release: 401, dev: 401 } };
+    validateFinalizedQuality(report, item, environment(current.context));
+    const context = report.finalization, sourceManifest = { name: 'gopurs', version: '0.1.1' };
+    const contents = { build: { schema: 1, preview: false, version: '0.1.1', target: item.target,
+      source: { commit: current.context.commit, tag: 'v0.1.1', dirty: false },
+      compilerOrigin: { base: recoveryBase, identity: report.identity, artifact: item.finalization.artifacts[0] } },
+      nativeSha256: report.identity.compiler.nativeSha256, javascriptSha256: report.identity.compiler.javascriptSha256,
+      manifest: sourceManifest, sourceManifest, packageSha256: 'e'.repeat(64),
+      smoke: { version: '0.1.1', packageSHA256: 'e'.repeat(64), commands: ['javascript', 'native'].flatMap(host =>
+        [0, 0, 0, 1, 0].map(status => ({ status, cwd: `/tmp/smoke/${host}`, args: ['--main', 'Main'],
+          command: '/tmp/smoke/node_modules/' + (host === 'javascript' ? '.bin/gopurs' : 'gopurs/bin/gopurs') }))),
+        tests: ['javascript', 'native'].map(host => ({ host, passed: true, stages: ['official-javascript', 'cold', 'warm', 'signature-change', 'invalid-signature', 'recovery'] })) } };
+    validateRecoveryPackage(context, contents);
+    assert.throws(() => validateRecoveryPackage(context, { ...contents, nativeSha256: 'a'.repeat(64) }), /bytes changed/);
+    assert.throws(() => validateRecoveryPackage(context, { ...contents, manifest: { ...sourceManifest, version: '0.1.0-rc.20' } }));
+    assert.throws(() => validateRecoveryPackage(context, { ...contents, packageSha256: 'f'.repeat(64) }), /different package/);
+    assert.throws(() => validateRecoveryPackage(context, { ...contents, smoke: { ...contents.smoke, tests: contents.smoke.tests.slice(0, 1) } }));
+    for (const change of [commands => { commands[3].status = 0; }, commands => { commands[2].status = 1; },
+      commands => { commands[3].status = null; }, commands => { commands.splice(5); },
+      commands => { commands.push({ command: 'go', args: ['test'], cwd: '/tmp/smoke/native', status: 1 }); },
+      commands => { commands[3].command = 'unrelated-failure'; }]) {
+      const commands = structuredClone(contents.smoke.commands); change(commands);
+      assert.throws(() => validateRecoverySmokeCommands(commands), change.toString());
+    }
+  }
+  current.jobs.find(job => job.name === 'repackage and smoke (linux-amd64)').conclusion = 'failure';
+  assert.throws(() => selectFinalizedInputs({ ...current, recovery }), /did not pass/);
+});
 function quality(selected) {
   const identity = { source: { commit: selected.finalization.source.commit, dirty: false }, target: selected.target,
     compiler: { javascriptSha256: sha('javascript'), nativeSha256: sha('native') },

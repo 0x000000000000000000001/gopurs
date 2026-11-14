@@ -2,7 +2,7 @@
   "schema": 1,
   "compiler": {
     "url": "https://github.com/0x000000000000000000001/purescript.git",
-    "rev": "105f5752b39cc0f6c99a40064295338bf57ad223"
+    "rev": "ae6a6f644502bafcfa4fa94d8f81a1a1a1ca5080"
   },
   "optimizer": {
     "url": "https://github.com/0x000000000000000000001/purescript-backend-optimizer.git",
@@ -11,7 +11,7 @@
   "libraries": {
     "aff": {
       "url": "https://github.com/0x000000000000000000001/gopurs-aff.git",
-      "rev": "37dc3ebb4a332d598ce6d33b01350c44cba4b7dc"
+      "rev": "dbe9ff1c574a18352cf9ec861090083b14ca0246"
     },
     "argonaut-core": {
       "url": "https://github.com/0x000000000000000000001/gopurs-argonaut-core.git",
@@ -59,7 +59,7 @@
     },
     "foreign": {
       "url": "https://github.com/0x000000000000000000001/gopurs-foreign.git",
-      "rev": "4f793660b048db316547527d923a1ccd377c252e"
+      "rev": "8c326898e821a9151af35b2a647fc9b2354ba92e"
     },
     "foreign-object": {
       "url": "https://github.com/0x000000000000000000001/gopurs-foreign-object.git",
@@ -119,7 +119,7 @@
     },
     "node-net": {
       "url": "https://github.com/0x000000000000000000001/gopurs-node-net.git",
-      "rev": "1ff1ce2ad5df5ecbeca0d66f25fa4703611eba71"
+      "rev": "f640b30a98180fbaa37a1f33e298107ab8253db1"
     },
     "node-path": {
       "url": "https://github.com/0x000000000000000000001/gopurs-node-path.git",
@@ -131,7 +131,7 @@
     },
     "node-streams": {
       "url": "https://github.com/0x000000000000000000001/gopurs-node-streams.git",
-      "rev": "cf406cc9f84fbc82826157ca203cc4a2ff16d674"
+      "rev": "3a0da79477adb3e17757c1b246f21b7ddd2382b8"
     },
     "now": {
       "url": "https://github.com/0x000000000000000000001/gopurs-now.git",
@@ -179,7 +179,7 @@
     },
     "spec": {
       "url": "https://github.com/0x000000000000000000001/gopurs-spec.git",
-      "rev": "7bbb30f00bfde95cdb39286662bb5a0f71e3f368"
+      "rev": "de7f8d143d4a8468d9ec358598c24bb610a21bdc"
     },
     "st": {
       "url": "https://github.com/0x000000000000000000001/gopurs-st.git",

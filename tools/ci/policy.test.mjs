@@ -1,11 +1,118 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
-import { buildMatrix, docsOnly, parseChanges, validateTagVersion } from "./policy.mjs";
+import { buildMatrix, docsOnly, parseChanges, validateTagVersion, fullFixtureMatrix } from "./policy.mjs";
+import { recoveryBase, recoveryHash, recoveryShards, validateRecoverySource, validateRecoveryManifest } from "./release-recovery.mjs";
+import { qualityInventory } from "../release/release-quality-report.mjs";
+import { fileURLToPath } from "node:url";
+import { spawnSync } from "node:child_process";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 const change = (path, oldMode = "100644", newMode = "100644") => ({ path, oldMode, newMode });
 const docs = [change("README.md"), change("docs/reference/ffi.md")];
 const code = [change("src/Main.purs")];
+
+function recoverySource(fixtureNames = []) {
+  const before = Buffer.from("old golden"), after = Buffer.from("correct golden");
+  const path = "tests/passing-snapshots/1110.go";
+  const manifest = { schema: 1, enabled: true, base: recoveryBase, targetTag: "v0.1.1", fixtureSources: [],
+    goldens: [{ path, fixture: "tests/passing/1110.purs", beforeSha256: recoveryHash(before), afterSha256: recoveryHash(after) }] };
+  const changes = [{ ...change(path), before, after }, ...["package.json", "package-lock.json"].map(path => ({
+    ...change(path), before: JSON.stringify({ version: "0.1.0-rc.20", ...(path.includes("lock") ? { packages: { "": { version: "0.1.0-rc.20" } } } : {}) }),
+    after: JSON.stringify({ version: "0.1.1", ...(path.includes("lock") ? { packages: { "": { version: "0.1.1" } } } : {}) }),
+  }))];
+  for (const name of fixtureNames) {
+    const path = `tests/passing/${name}.go`, before = Buffer.from(`old ${name} FFI`), after = Buffer.from(`direct ${name} FFI`);
+    manifest.fixtureSources.push({ path, fixture: `tests/passing/${name}.purs`, beforeSha256: recoveryHash(before), afterSha256: recoveryHash(after) });
+    changes.push({ ...change(path), before, after });
+  }
+  return { changes, manifest };
+}
+
+test("RC20 recovery accepts only exact goldens and three release version fields", () => {
+  const { changes, manifest } = recoverySource();
+  const result = validateRecoverySource(changes, manifest);
+  assert.equal(result.changes.length, 3);
+  assert.equal(result.manifestSha256, recoveryHash(JSON.stringify(manifest)));
+  for (const path of ["src/Gopurs/Render.purs", "bootstrap-sources.json", "flake.lock", "spago.lock", "bin/test", "tools/c1c/main.go", "tools/ffi_gen.wasm", "tests/passing/1110.purs", "tests/passing-snapshots/4105.go"])
+    assert.throws(() => validateRecoverySource([...changes, { ...change(path), before: "old", after: "new" }], manifest), /input changed/);
+  for (const mutate of [
+    value => { value.changes[0].after = "different golden"; },
+    value => { value.changes[0].newMode = "120000"; },
+    value => { value.changes.pop(); },
+    value => { value.manifest.enabled = false; },
+    value => { value.manifest.base = { ...recoveryBase, commit: "f".repeat(40) }; },
+    value => { value.manifest.targetTag = "v0.1.0"; },
+    value => { value.changes[2].after = JSON.stringify({ version: "0.1.1", packages: { "": { version: "0.1.1" }, altered: { version: "2" } } }); },
+    value => { value.changes[1].after = JSON.stringify({ version: "0.1.1", scripts: { build: "something else" } }); },
+  ]) {
+    const value = recoverySource(); mutate(value);
+    assert.throws(() => validateRecoverySource(value.changes, value.manifest), mutate.toString());
+  }
+});
+
+test("RC20 recovery binds only the two reviewed Go fixture companions to exact bytes and owners", () => {
+  const { changes, manifest } = recoverySource(["PolyLabels", "RowUnion"]);
+  assert.equal(validateRecoverySource(changes, manifest).changes.length, 5);
+  for (const path of ["tests/passing/PolyLabels.purs", "tests/passing/RowUnion.purs", "tests/passing/PolyLabels.js", "tests/passing/Other.go", "tools/test-runner.mjs"])
+    assert.throws(() => validateRecoverySource([...changes, { ...change(path), before: "old", after: "new" }], manifest), /input changed/);
+  for (const mutate of [
+    value => { value.changes.at(-1).before = "unreviewed old FFI"; },
+    value => { value.changes.at(-1).after = "unreviewed new FFI"; },
+    value => { value.changes.at(-1).newMode = "120000"; },
+    value => { value.changes.pop(); },
+    value => { value.manifest.fixtureSources.pop(); },
+    value => { value.manifest.fixtureSources[0].path = "tests/passing/Other.go"; },
+    value => { value.manifest.fixtureSources[0].path = "tests/passing/PolyLabels.purs"; },
+    value => { value.manifest.fixtureSources[0].fixture = "tests/passing/RowUnion.purs"; },
+    value => { value.manifest.fixtureSources[0].afterSha256 = null; },
+    value => { value.manifest.fixtureSources[0].afterSha256 = value.manifest.fixtureSources[0].beforeSha256; },
+    value => { value.manifest.fixtureSources.push(structuredClone(value.manifest.fixtureSources[0])); },
+    value => { delete value.manifest.fixtureSources; },
+  ]) {
+    const value = recoverySource(["PolyLabels", "RowUnion"]); mutate(value);
+    assert.throws(() => validateRecoverySource(value.changes, value.manifest), mutate.toString());
+  }
+});
+
+test("RC20 companion changes invalidate both profiles without requiring changed goldens", () => {
+  const inventory = qualityInventory(fileURLToPath(new URL("../../", import.meta.url)));
+  for (const [name, expected] of [["PolyLabels", [0, 1]], ["RowUnion", [0, 1, 2]]]) {
+    const { manifest } = recoverySource([name]); // The only golden remains unrelated 1110 Release (shard 0).
+    assert.deepEqual(recoveryShards(inventory, manifest), expected);
+    for (const profile of ["release", "dev"]) {
+      const missing = structuredClone(inventory);
+      const batch = missing.batches.find(row => row.profile === profile && row.targets.includes(`tests/passing/${name}.purs`));
+      batch.targets = batch.targets.filter(path => path !== `tests/passing/${name}.purs`);
+      assert.throws(() => recoveryShards(missing, manifest), /unique fixture batch/);
+    }
+  }
+});
+
+test("RC20 recovery maps only the reviewed golden profiles to existing shards", () => {
+  const { manifest } = recoverySource();
+  const inventory = qualityInventory(fileURLToPath(new URL("../../", import.meta.url)));
+  for (const [path, expected] of [["tests/passing-snapshots/1110.go", 0], ["tests/passing-snapshots/4105.go", 1], ["tests/passing-snapshots-dev/4105.go", 2]]) {
+    manifest.goldens[0].path = path;
+    manifest.goldens[0].fixture = `tests/passing/${path.split("/").at(-1).slice(0, -3)}.purs`;
+    assert.deepEqual(recoveryShards(inventory, manifest), [expected]);
+  }
+  manifest.goldens[0].path = "tests/passing-snapshots/not-a-fixture.go";
+  manifest.goldens[0].fixture = "tests/passing/not-a-fixture.purs";
+  assert.throws(() => recoveryShards(inventory, manifest), /unique fixture/);
+  manifest.goldens.push(structuredClone(manifest.goldens[0]));
+  assert.throws(() => validateRecoveryManifest(manifest), /Duplicate golden/);
+});
+
+test("release preparation actually activates its explicit recovery context option", () => {
+  const missing = join(tmpdir(), `gopurs-required-recovery-context-${process.pid}.json`);
+  const result = spawnSync(process.execPath, [fileURLToPath(new URL("../release/release-prepare.mjs", import.meta.url)),
+    "--out", join(tmpdir(), "unused-recovery-output"), "--native", join(tmpdir(), "unused-native"),
+    "--recovery-context", missing, "--original-directory", tmpdir()], { encoding: "utf8" });
+  assert.notEqual(result.status, 0);
+  assert.ok(result.stderr.includes(missing) && result.stderr.includes("ENOENT"), result.stderr);
+});
 const oldSha = "1".repeat(40), newSha = "2".repeat(40), zeroSha = "0".repeat(40);
 const raw = (path, status = "M", oldMode = "100644", newMode = "100644") =>
   `:${oldMode} ${newMode} ${status === "A" ? zeroSha : oldSha} ${status === "D" ? zeroSha : newSha} ${status}\0${path}\0`;
@@ -79,9 +186,8 @@ test("tag and explicit full runs always build all three supported targets", () =
     }
   }
   const workflow = readFileSync(new URL("../../.github/workflows/ci.yml", import.meta.url), "utf8");
-  const fixtureRunners = [...workflow.matchAll(/^          - target: ([a-z0-9-]+)\n            os: ([a-z0-9.-]+)$/gm)]
-    .map(([, target, os]) => ({ target, os }));
-  assert.deepEqual(fixtureRunners, supported, "fixture shards must use the same supported runners");
+  assert.deepEqual(fullFixtureMatrix.include, supported.flatMap(platform => [0, 1, 2, 3].map(shard => ({ ...platform, shard }))), "complete fixture matrix keeps twelve jobs on the supported runners");
+  assert.match(workflow, /matrix: \$\{\{ fromJSON\(needs\.plan\.outputs\.fixture_matrix\) \}\}/);
 });
 
 test("ordinary PRs and branch pushes skip only known document-only changes", () => {
@@ -145,7 +251,7 @@ test("raw parsing rejects truncated or malformed records instead of treating the
 });
 
 test("early tag validation accepts matching RC and stable release metadata", () => {
-  for (const version of ["0.1.0-rc.3", "0.1.0"]) {
+  for (const version of ["0.1.0-rc.3", "0.1.1"]) {
     validateTagVersion(`refs/tags/v${version}`, { version }, { version, packages: { "": { version } } },
       `# Changelog\n\n## [Unreleased]\n\n## [${version}] - 2026-10-28\nRelease notes.\n`);
   }

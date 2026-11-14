@@ -9,7 +9,7 @@ The compatibility policy is in [publication-scope.md](publication-scope.md).
   by the compiler fork.
 - A stock `purs` with the same version number is not sufficient. It does not
   write `typeTable`, `dataDecls` and `classDecls`.
-- gopurs has no `--help` or `--version` handler in `0.1.0`; see the
+- gopurs has no `--help` or `--version` handler in `0.1.1`; see the
   [CLI reference](cli.md).
 - The backend writes Go, not JavaScript. Existing JavaScript FFI modules are
   not reused.
@@ -17,16 +17,21 @@ The compatibility policy is in [publication-scope.md](publication-scope.md).
 ## FFI and library coverage
 
 - Foreign declarations that are not implemented by compiler intrinsics need
-  Go bindings. Source builds after RC14 reject missing bindings reachable from
+  Go bindings. In `0.1.1`, the backend rejects missing bindings reachable from
   the entry point selected by `--main` before publishing output.
-- RC14, batch generation without `--main`, and dynamic calls inside native Go
-  FFI can still reach runtime stubs that fail with `FFI not implemented: <name>`.
+- Batch generation without `--main` and dynamic calls inside native Go FFI
+  can still reach runtime stubs that fail with `FFI not implemented: <name>`.
   Select Go ports for libraries with JavaScript FFI and test the application's
   foreign calls; see [troubleshooting](troubleshooting.md).
 - The `gopurs-*` library ports are separate distributions. Their versions and
   licenses are not implied by the compiler version.
 - The FFI parser supports the documented Go signatures, not arbitrary
   JavaScript FFI shapes.
+- A curried Go implementation returning an open-row record through
+  `map[string]any` can be rejected by the structured-result validator. Declare
+  its arguments together in one Go function; see the
+  [migration note](migration.md#curried-record-helper-signatures). This limit
+  does not make open rows convertible to arbitrary Go structs.
 - `--ffi` paths containing spaces are not supported by the shared argument
   parser.
 
@@ -43,8 +48,10 @@ The compatibility policy is in [publication-scope.md](publication-scope.md).
 
 ## Platform and toolchain limits
 
-- `0.1.0` targets `linux/arm64`, `linux/amd64` and `darwin/arm64`.
-- Windows and 32-bit targets are out of scope.
+- `0.1.1` targets `linux/arm64`, `linux/amd64` and `darwin/arm64`.
+- Intel Macs (`darwin/amd64`), Windows and 32-bit targets are outside the
+  supported host matrix. The Nix flake and release qualification cover only
+  the three platforms above.
 - Node.js `24.8.0` is the supported reference for the build and JavaScript
   host. Other Node versions are not validated.
 - Go `1.27.0` is the reference toolchain. Generated `go.mod` files declare Go
@@ -58,7 +65,7 @@ The compatibility policy is in [publication-scope.md](publication-scope.md).
 
 ## Native, Rust and experimental modes
 
-The following are not production contracts in `0.1.0`:
+The following are not production contracts in `0.1.1`:
 
 - `bin/gopurs-rust`, Purust, and Rust PGO.
 - daemon/resident modes;

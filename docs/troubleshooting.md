@@ -2,13 +2,10 @@
 
 ## Check the frontend when generation fails or behaves unexpectedly
 
-gopurs requires the typed compiler fork. RC14 can accept upstream CoreFn and
-generate Go, so a successful backend command alone does not establish that the
-frontend supplied the required type information. Check the `purs` first on
-`PATH` and follow the [migration walkthrough](migration.md#from-a-javascript-project)
-to regenerate and validate the typed output.
-
-Source builds after RC14 check every input module before optimization. An error
+gopurs requires the typed compiler fork and checks every input module before
+optimization. Check the `purs` first on `PATH` and follow the
+[migration walkthrough](migration.md#from-a-javascript-project) to regenerate
+and validate the typed output. An error
 containing `requires TAST metadata arrays` identifies the module and file
 missing `typeTable`, `dataDecls` or `classDecls`. Rebuild the frontend output
 with the pinned fork. If invoking Spago through an npm script, check for an
@@ -34,7 +31,7 @@ external Go dependencies. Inspect `output/Main/corefn.json` for the
 
 ## `missing Go implementation for ...`
 
-Source builds after RC14 check Go bindings referenced from the entry point
+gopurs checks Go bindings referenced from the entry point
 selected with `--main` before publishing generated output. The diagnostic identifies the
 PureScript module, foreign symbol and expected Go source file.
 
@@ -55,7 +52,8 @@ use the `gopurs-console` port and add it as an `extraPackages` override; see the
 [quickstart](quickstart.md). Stock PureScript packages expose JavaScript FFI
 and are not a Go implementation.
 
-RC14 can generate and build a binary containing this failure stub. Run the
+Batch generation without `--main` and dynamic calls within Go FFI can still
+reach this failure stub. Compile with the application entry point and run the
 application to exercise its FFI. Check transitive packages as well as direct
 dependencies. For example, `ordStringImpl` belongs to `prelude`, which needs
 its Go port when the application sorts strings. Application-owned foreign
@@ -130,7 +128,7 @@ FFI directory to a path without spaces.
 
 ## `--help` or `--version` does nothing
 
-`0.1.0` has no dedicated handler. Use the [CLI reference](cli.md) and
+gopurs has no dedicated handler. Use the [CLI reference](cli.md) and
 `package.json` for the version. Unknown arguments may be ignored by the shared
 parser rather than rejected.
 
@@ -145,9 +143,13 @@ coverage have been validated for your workload.
 
 ### Which PureScript compiler should I use?
 
-Use the pinned typed TAST fork. RC14 may accept stock `purs` output, but its
-type information does not satisfy the supported compiler contract. Validate
-the frontend output as shown in the migration walkthrough.
+Use the pinned typed TAST fork. Stock `purs` output does not satisfy the
+supported compiler contract. Validate the frontend output as shown in the
+migration walkthrough.
+
+The historical `purescript-npm` wrapper is obsolete for gopurs. Use the
+[current frontend installation](bootstrap.md#legacy-compiler-installer)
+instead of its macOS-only release binary.
 
 ### Can I use stock PureScript libraries?
 
@@ -164,9 +166,15 @@ The test runners compile the selected entry point immediately before execution
 so they never run a stale binary. That is separate from the backend compile-time
 measurement.
 
+For compiler fixtures, `./bin/test` builds Go with `-mod=readonly`, module
+downloads disabled, and the installed Go toolchain. It uses the generated
+`go.mod` directly, without `go mod init` or `go mod tidy`. This offline policy
+applies to the final Go build; Spago dependency fetching and library-specific
+test scripts retain their own setup requirements.
+
 ### Does it support Windows or 32-bit targets?
 
-No, not in `0.1.0`.
+No. See the [supported platform matrix](publication-scope.md#supported-platforms-and-toolchains).
 
 ### Are benchmark numbers guarantees?
 

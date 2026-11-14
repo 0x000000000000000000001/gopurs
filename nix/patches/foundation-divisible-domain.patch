@@ -1,0 +1,22 @@
+# Foundation 0.0.30, tests/Test/Foundation/Number.hs.
+# Source: https://hackage.haskell.org/package/foundation-0.0.30/src/tests/Test/Foundation/Number.hs
+# Local test-only correction, 12 November 2026; not an upstream-applied patch.
+# Seed 5576833819021412192 selects Int8 (-128, -1), whose quotient 128 is
+# outside Int8. Preserve the division law for representable quotients, with
+# an Integer oracle so Integer and unsigned instances retain their domains.
+# No library implementation, random seed or test count is changed.
+--- a/tests/Test/Foundation/Number.hs
++++ b/tests/Test/Foundation/Number.hs
+@@ -54,8 +54,10 @@
+               => Proxy a -> Test
+ testDividible _ = Group "Divisible"
+     [ Property "(x `div` y) * y + (x `mod` y) == x" $ \(a :: a) b ->
+-            if b == 0 then True === True
+-                      else a === (a `div` b) * b + (a `mod` b)
++            let quotient = toInteger a `Prelude.div` toInteger b
++             in if b == 0 || toInteger (fromInteger quotient :: a) /= quotient
++                    then True === True
++                    else a === (a `div` b) * b + (a `mod` b)
+     ]
+ 
+ testOperatorPrecedence :: forall a . (Show a, Eq a, Prelude.Num a, IsIntegral a, Additive a, Subtractive a, Multiplicative a, Difference a ~ a, Arbitrary a, Typeable a)

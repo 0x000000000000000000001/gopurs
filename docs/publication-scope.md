@@ -6,15 +6,25 @@ what users may rely on. Qualification evidence is recorded separately in the
 
 ## Release identity
 
-| Item | Decision |
+<!-- gopurs:identity:start -->
+| Item | Source of truth |
 | --- | --- |
 | Package | `gopurs` |
-| Published candidate | `0.1.0-rc.14` (GitHub prerelease and npm `next`) |
-| npm `latest` | `0.1.0-rc.7` (registry-assigned alias; still a prerelease) |
-| First final version (planned) | `0.1.0`; not published |
-| Version source | [`package.json`](../package.json) |
+| Documentation target | `0.1.1`, the version in this checkout |
+| Published release | [Latest GitHub release](https://github.com/0x000000000000000000001/gopurs/releases/latest) |
+| npm channels | [Current registry state](https://www.npmjs.com/package/gopurs?activeTab=versions) |
+| Source version | [`package.json`](../package.json) |
 | Versioning | [Semantic Versioning 2.0.0](https://semver.org/) |
-| Git tag | `vVERSION` (annotated and signed; verified by GitHub before release packaging) |
+| Version tag | `v0.1.1`; release tags are annotated and signed |
+<!-- gopurs:identity:end -->
+
+The documentation target identifies these sources. It does not establish that
+the version has been published or qualified. Use the release page and the
+guides at its tag when installing a published version.
+
+Consult the live [quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md)
+for qualification and publication status. The
+[historical release checklist](release-checklist.md) retains the preparation state.
 
 During `0.y.z`, a minor release may change or remove documented behavior. Patch
 releases do not intentionally break the compatibility commitments below.
@@ -24,14 +34,30 @@ releases.
 
 Pre-releases use `-rc.N`. A release candidate is published through the same
 artifact and installation path as the final release.
-RC14 is available as a [GitHub prerelease](https://github.com/0x000000000000000000001/gopurs/releases/tag/v0.1.0-rc.14)
+The registry's `latest` and `next` channels can change independently of this
+checkout. Their names alone do not establish qualification. Publication,
+rollback and consumer checks are retained in the dated
+[quality record](quality-0.1.0.md).
+
+### Historical publication context through RC20
+
+The final `v0.1.1` publication and its successful CI run are recorded in the
+[dated quality record](quality-0.1.0.md#011-publication--13-november-2026).
+The following paragraphs retain the earlier candidate history.
+
+On 5 November 2026, RC14 was published as a [GitHub prerelease](https://github.com/0x000000000000000000001/gopurs/releases/tag/v0.1.0-rc.14)
 and on npm `next`. Its qualification and consumer checks are recorded in the
 [quality record](quality-0.1.0.md).
+RC15–RC20 introduced the ordinary Go FFI and updated frontend and library
+pins. Their failed or partial qualifications retain their original scope in
+the [quality record](quality-0.1.0.md). Version `0.1.1` uses the RC20 compiler
+and completed its bounded fixture and package recovery before publication.
 
 For the first npm publication, the registry also assigned `latest` to RC7 and
 refused its removal. This was explicitly accepted and documented in the
-[quality record](quality-0.1.0.md). Unqualified `npm install gopurs` therefore
-selects RC7; the alias does not establish a stable-release compatibility claim.
+[quality record](quality-0.1.0.md). At RC18 preparation on 12 November 2026,
+unqualified `npm install gopurs` selected RC7; that alias does not establish a
+stable-release compatibility claim.
 
 ## Compatibility commitments for `0.1.x`
 
@@ -88,15 +114,15 @@ version, license and compatibility policy governs its package.
 
 ## Supported platforms and toolchains
 
-The target matrix for `0.1.0` is:
+The target matrix for `0.1.1` is:
 
 | Target | Compiler | Generated Go applications | Release status |
 | --- | --- | --- | --- |
 | `linux/arm64` | Tier 1 | Tier 1 | Release-blocking |
 | `linux/amd64` | Tier 1 | Tier 1 | Release-blocking |
 | `darwin/arm64` | Tier 1 | Tier 1 | Release-blocking |
-| Windows | Not supported | Not supported | Out of scope for `0.1.0` |
-| 32-bit targets | Not supported | Not supported | Out of scope for `0.1.0` |
+| Windows | Not supported | Not supported | Out of scope for `0.1.1` |
+| 32-bit targets | Not supported | Not supported | Out of scope for `0.1.1` |
 
 Release-blocking means that the platform must pass the
 [release checks](release.md). It is not a claim that those checks have already
@@ -109,7 +135,7 @@ Toolchain reference:
 
 | Tool | Supported reference | Notes |
 | --- | --- | --- |
-| Node.js | `24.8.0` | Build tooling and JavaScript host; other versions are not supported in `0.1.0` |
+| Node.js | `24.8.0` | Build tooling and JavaScript host; other versions are not supported in `0.1.1` |
 | Go | `1.27.0` | Reference for the FFI parser and application builds |
 | Spago (backend build) | `0.93.45` | Matches the npm lockfile |
 | Spago (applications) | `1.0.x` with YAML configuration | The tested revision is documented in the quickstart |
@@ -117,10 +143,10 @@ Toolchain reference:
 
 Generated `go.mod` files declare Go 1.22. That declaration is not a support
 claim for older toolchains: only the reference Go version is validated for
-`0.1.0`. The initial CI validated the Nix packages, application checks and
+`0.1.1`. The initial CI validated the Nix packages, application checks and
 development shell on `aarch64-linux`, `x86_64-linux` and `aarch64-darwin`.
-The [quality record](quality-0.1.0.md) documents the tagged RC14 qualification
-and public consumer checks. The development shell is a
+The [quality record](quality-0.1.0.md) records 0.1.1 publication and its CI
+qualification, together with the historical RC14 public consumer checks. The development shell is a
 development environment, not a production artifact.
 
 ## Licensing and attribution

@@ -4,23 +4,21 @@ This document records how the `gopurs` compiler is built from a clean source
 checkout, which inputs are trusted, and which artifacts a release must publish.
 It covers the compiler distribution; it does not cover application builds.
 
+These pins describe the current checkout. Consult the live
+[quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md)
+for qualification and publication status. The
+[historical release checklist](release-checklist.md) retains the preparation state.
+
 ## Pinned inputs
 
-| Input | Pin |
+| Input | Authoritative file in this checkout |
 | --- | --- |
-| Node.js | `24.8.0` (`.nvmrc`) |
-| npm dependencies | `package-lock.json` |
-| PureScript compiler (npm `purescript`) | `0.15.16` |
-| Spago | `0.93.45` |
-| esbuild | `0.28.1` |
-| PureScript package set | registry `77.10.1` |
-| `purescript-backend-optimizer` | commit `4e7de48ffd6e19480ed3de6bfe8ca8227133be13` |
-| `gopurs-st` | commit `b915b18e254f57994f88827a4172f6022ff47166` |
-| `gopurs-unsafe-coerce` | commit `0b2ab4359a40ed0d0036f3f8d2bcdc29f3e57cd9` |
-| Go (FFI parser and native bootstrap) | `1.27.0` |
-| Typed PureScript compiler | commit `105f5752b39cc0f6c99a40064295338bf57ad223` |
-| Go library ports | 51 exact commits in [`bootstrap-sources.json`](https://github.com/0x000000000000000000001/gopurs/blob/main/bootstrap-sources.json) |
-| Go Argonaut codecs support checkout | commit `bdf31cc0f7d74d510dcf53f2a8fbca3b550d8ff2` in [`bootstrap-sources.json`](https://github.com/0x000000000000000000001/gopurs/blob/main/bootstrap-sources.json) |
+| Node.js | [`.nvmrc`](../.nvmrc) |
+| npm build tools: upstream PureScript, Spago, esbuild | [`package.json`](../package.json) and [`package-lock.json`](../package-lock.json) |
+| PureScript package set, optimizer, `st` and `unsafe-coerce` | [`spago.yaml`](../spago.yaml) and [`spago.lock`](../spago.lock) |
+| Go toolchain | [`nix/toolchains.nix`](../nix/toolchains.nix) |
+| Typed PureScript compiler, Go library and support revisions | [`bootstrap-sources.json`](../bootstrap-sources.json) |
+| Nix dependency closure | [`flake.lock`](../flake.lock) |
 
 The npm and Spago lockfiles and `bootstrap-sources.json` are authoritative for a source installation. A
 lockfile change requires regenerating the third-party inventory; see
@@ -77,6 +75,20 @@ npm install --save-dev --ignore-scripts /absolute/path/to/the-generated-archive.
 The archive contains the JavaScript compiler bundle and the FFI parser
 artifacts. It does not contain the typed application compiler or the Go library
 ports.
+
+## Legacy compiler installer
+
+Earlier installation instructions used the
+[`purescript-npm` wrapper](https://github.com/0x000000000000000000001/purescript-npm).
+It downloads the historical `v0.15.16-0x1` macOS ARM64 binary, which is not the
+TAST frontend pinned by this checkout. Gopurs no longer depends on that wrapper.
+
+Use the [Nix toolchain](nix.md#typed-frontend-and-development-shell) or build the
+public PureScript fork at the exact revision in `bootstrap-sources.json`.
+The upstream `purescript` npm package in this repository's development
+dependencies builds the JavaScript backend; applications require the separate
+TAST frontend. When using a published gopurs release, follow the quickstart at
+that release tag so the frontend and library revisions match the backend.
 
 ## Native bootstrap
 

@@ -39,14 +39,18 @@ async function runFixture(fixture, options, processes, env) {
   await formatSnapshots(snapshots, processes, fixture, env);
   if (!options.update) await verifySnapshots(snapshots, processes, fixture, env);
   const output = join(directory, "output");
-  // Main already writes go.mod. Keep its Go version instead of recreating it.
-  await phase("go-dependencies", "go", ["mod", "tidy"], output);
+  // Fixtures use only the Go standard library. Build the generated go.mod
+  // unchanged, without module/toolchain downloads or an enclosing workspace.
   if (options.dev) console.log(devGoMessage);
-  await phase(
+  await processes.run(
     "go-build",
     "go",
-    ["build", ...(options.dev ? [devGoFlag] : []), "-o", "gopurs_main", "./main/main.go"],
-    output,
+    ["build", "-mod=readonly", ...(options.dev ? [devGoFlag] : []), "-o", "gopurs_main", "./main/main.go"],
+    {
+      cwd: output,
+      env: { ...env, GOPROXY: "off", GONOPROXY: "none", GOSUMDB: "off", GOTOOLCHAIN: "local", GOWORK: "off" },
+      log: join(directory, "logs", "go-build.log"),
+    },
   );
   const result = await phase("execute", join(output, "gopurs_main"), [], output, true);
   if (result.includes("Fail")) throw new Error("Execution output contains Fail.");

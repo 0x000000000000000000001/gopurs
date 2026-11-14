@@ -9,6 +9,7 @@ import (
 	"go/printer"
 	"go/scanner"
 	"go/token"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -16,50 +17,161 @@ import (
 
 var fset = token.NewFileSet()
 
-func parseExprToTypeNode(expr ast.Expr) *TypeNode {
-	if expr == nil {
-		return nil
+// signatureParser retains source spelling while proving the two special ABI
+// identities from lexical declarations. Imported aliases requiring export data
+// deliberately remain unresolved here; resolveSources is the authoritative
+// go/types checker used when assembling the generated package.
+type signatureParser struct {
+	imports  map[string]string
+	visiting map[*ast.Object]bool
+}
+
+func newSignatureParser(file *ast.File) *signatureParser {
+	p := &signatureParser{imports: map[string]string{}, visiting: map[*ast.Object]bool{}}
+	for _, spec := range file.Imports {
+		path, _ := strconv.Unquote(spec.Path.Value)
+		name := filepath.Base(path)
+		if spec.Name != nil {
+			name = spec.Name.Name
+		}
+		p.imports[name] = path
 	}
-	switch t := expr.(type) {
-	case *ast.Ident:
-		return &TypeNode{Type: "Named", Name: t.Name}
-	case *ast.SelectorExpr:
-		var buf bytes.Buffer
-		printer.Fprint(&buf, fset, t)
-		return &TypeNode{Type: "Named", Name: buf.String()}
-	case *ast.InterfaceType:
-		return &TypeNode{Type: "Named", Name: "any"}
-	case *ast.ArrayType:
-		return &TypeNode{Type: "Array", Elem: parseExprToTypeNode(t.Elt)}
-	case *ast.MapType:
-		return &TypeNode{Type: "Map", Key: parseExprToTypeNode(t.Key), Val: parseExprToTypeNode(t.Value)}
-	case *ast.FuncType:
-		var args []*TypeNode
-		if t.Params != nil {
-			for _, field := range t.Params.List {
-				typNode := parseExprToTypeNode(field.Type)
-				if len(field.Names) == 0 {
-					args = append(args, typNode)
-				} else {
-					for range field.Names {
-						args = append(args, typNode)
-					}
+	return p
+}
+
+func sourceText(node ast.Node) string {
+	var buf bytes.Buffer
+	printer.Fprint(&buf, fset, node)
+	return buf.String()
+}
+
+func singleResult(results []*TypeNode) *TypeNode {
+	if len(results) == 1 {
+		return results[0]
+	}
+	return nil
+}
+
+func (p *signatureParser) fields(fields *ast.FieldList) ([]*TypeNode, []string) {
+	nodes, names := []*TypeNode{}, []string{}
+	if fields != nil {
+		for _, field := range fields.List {
+			node := p.parse(field.Type)
+			if len(field.Names) == 0 {
+				nodes, names = append(nodes, node), append(names, "")
+			} else {
+				for _, name := range field.Names {
+					nodes, names = append(nodes, node), append(names, name.Name)
 				}
 			}
 		}
-		var ret *TypeNode
-		if t.Results != nil && len(t.Results.List) > 0 {
-			ret = parseExprToTypeNode(t.Results.List[0].Type)
-		}
-		if args == nil {
-			args = []*TypeNode{} // Ensure empty array, not null
-		}
-		return &TypeNode{Type: "Func", Args: args, Ret: ret}
-	default:
-		var buf bytes.Buffer
-		printer.Fprint(&buf, fset, expr)
-		return &TypeNode{Type: "Unknown", Name: buf.String()}
 	}
+	return nodes, names
+}
+
+func (p *signatureParser) parse(expr ast.Expr) *TypeNode {
+	if expr == nil {
+		return nil
+	}
+	node := &TypeNode{Args: []*TypeNode{}, ArgNames: []string{}, Results: []*TypeNode{}, ResultNames: []string{}}
+	switch t := expr.(type) {
+	case *ast.ParenExpr:
+		return p.parse(t.X)
+	case *ast.Ident:
+		node.Type, node.Name = "Named", t.Name
+		if t.Obj == nil {
+			if t.Name == "error" {
+				node.Identity = "builtin.error"
+			}
+		} else if spec, ok := t.Obj.Decl.(*ast.TypeSpec); ok && !p.visiting[t.Obj] {
+			p.visiting[t.Obj] = true
+			underlying := p.parse(spec.Type)
+			delete(p.visiting, t.Obj)
+			if spec.Assign.IsValid() {
+				node.Underlying, node.Identity = underlying, underlying.Identity
+			} else if hasStructLayout(underlying) {
+				node.Underlying = underlying
+			}
+		}
+	case *ast.SelectorExpr:
+		node.Type, node.Name = "Named", sourceText(t)
+		if qualifier, ok := t.X.(*ast.Ident); ok && qualifier.Obj == nil {
+			node.PackagePath = p.imports[qualifier.Name]
+			if node.PackagePath == "context" && t.Sel.Name == "Context" {
+				node.Identity = "context.Context"
+			}
+		}
+	case *ast.StructType:
+		node.Type, node.Name = "Struct", sourceText(t)
+		node.Fields = []StructField{}
+		for _, field := range t.Fields.List {
+			value := p.parse(field.Type)
+			tag := ""
+			if field.Tag != nil {
+				tag, _ = strconv.Unquote(field.Tag.Value)
+			}
+			names := field.Names
+			if len(names) == 0 {
+				name := embeddedFieldName(field.Type)
+				node.Fields = append(node.Fields, StructField{Name: name, Type: value, Embedded: true, Exported: ast.IsExported(name), Tag: tag})
+			} else {
+				for _, name := range names {
+					node.Fields = append(node.Fields, StructField{Name: name.Name, Type: value, Exported: ast.IsExported(name.Name), Tag: tag})
+				}
+			}
+		}
+	case *ast.InterfaceType:
+		if t.Methods == nil || len(t.Methods.List) == 0 {
+			node.Type, node.Name = "Named", "any"
+		} else {
+			node.Type, node.Name = "Interface", sourceText(t)
+		}
+	case *ast.StarExpr:
+		node.Type, node.Elem, node.Name = "Pointer", p.parse(t.X), sourceText(t)
+	case *ast.ArrayType:
+		node.Type, node.Elem = "Array", p.parse(t.Elt)
+		if t.Len != nil {
+			node.Type, node.Length, node.Name = "FixedArray", sourceText(t.Len), sourceText(t)
+		}
+	case *ast.Ellipsis:
+		node.Type, node.Elem, node.Name = "Variadic", p.parse(t.Elt), sourceText(t)
+	case *ast.MapType:
+		node.Type, node.Key, node.Val = "Map", p.parse(t.Key), p.parse(t.Value)
+	case *ast.FuncType:
+		node.Type = "Func"
+		node.Args, node.ArgNames = p.fields(t.Params)
+		node.Results, node.ResultNames = p.fields(t.Results)
+		node.Ret = singleResult(node.Results)
+	default:
+		node.Type, node.Name = "Unknown", sourceText(expr)
+	}
+	return node
+}
+
+func hasStructLayout(node *TypeNode) bool {
+	for node != nil {
+		if node.Type == "Struct" {
+			return true
+		}
+		node = node.Underlying
+	}
+	return false
+}
+
+func embeddedFieldName(expr ast.Expr) string {
+	switch value := expr.(type) {
+	case *ast.Ident:
+		return value.Name
+	case *ast.SelectorExpr:
+		return value.Sel.Name
+	case *ast.StarExpr:
+		return embeddedFieldName(value.X)
+	case *ast.IndexExpr:
+		return embeddedFieldName(value.X)
+	case *ast.IndexListExpr:
+		return embeddedFieldName(value.X)
+	}
+	return ""
 }
 
 func parseFFI(content string, prefixes ...string) (string, error) {
@@ -114,6 +226,7 @@ func parseFFI(content string, prefixes ...string) (string, error) {
 		return name.Name
 	}
 
+	types := newSignatureParser(f)
 	var decls []FFIDecl
 
 	for _, decl := range f.Decls {
@@ -132,38 +245,23 @@ func parseFFI(content string, prefixes ...string) (string, error) {
 				}
 			}
 
-			var parsedArgs []*TypeNode
-			if funcDecl.Type.Params != nil {
-				for _, field := range funcDecl.Type.Params.List {
-					typNode := parseExprToTypeNode(field.Type)
-					if len(field.Names) == 0 {
-						parsedArgs = append(parsedArgs, typNode)
-					} else {
-						for range field.Names {
-							parsedArgs = append(parsedArgs, typNode)
-						}
-					}
-				}
-			}
-
-			var retNode *TypeNode
-			if funcDecl.Type.Results != nil && len(funcDecl.Type.Results.List) > 0 {
-				retNode = parseExprToTypeNode(funcDecl.Type.Results.List[0].Type)
-			}
-
+			parsedArgs, argNames := types.fields(funcDecl.Type.Params)
+			results, resultNames := types.fields(funcDecl.Type.Results)
 			if typeParamNames == nil {
 				typeParamNames = []string{}
 			}
-			if parsedArgs == nil {
-				parsedArgs = []*TypeNode{}
+			position := fset.Position(funcDecl.Name.Pos())
+			var receiver *TypeNode
+			if funcDecl.Recv != nil && len(funcDecl.Recv.List) > 0 {
+				receiver = types.parse(funcDecl.Recv.List[0].Type)
 			}
-
 			decls = append(decls, FFIDecl{
-				Name:       funcName,
-				IsVar:      false,
-				TypeParams: typeParamNames,
-				Args:       parsedArgs,
-				Ret:        retNode,
+				SchemaVersion: ffiSchemaVersion,
+				Name:          funcName, IsVar: false, TypeParams: typeParamNames,
+				Args: parsedArgs, ArgNames: argNames,
+				Ret: singleResult(results), Results: results, ResultNames: resultNames,
+				Receiver: receiver, Signature: sourceText(funcDecl.Type),
+				Line: position.Line, Column: position.Column,
 			})
 
 		} else if genDecl, ok := decl.(*ast.GenDecl); ok && genDecl.Tok == token.VAR {
@@ -175,10 +273,14 @@ func parseFFI(content string, prefixes ...string) (string, error) {
 						}
 						varName := declarationName(name)
 						decls = append(decls, FFIDecl{
-							Name:       varName,
-							IsVar:      true,
-							TypeParams: []string{},
-							Args:       []*TypeNode{},
+							SchemaVersion: ffiSchemaVersion,
+							Name:          varName,
+							IsVar:         true,
+							TypeParams:    []string{},
+							Args:          []*TypeNode{},
+							ArgNames:      []string{}, Results: []*TypeNode{}, ResultNames: []string{},
+							ValueType: types.parse(valueSpec.Type),
+							Line:      fset.Position(name.Pos()).Line, Column: fset.Position(name.Pos()).Column,
 						})
 					}
 				}
@@ -250,10 +352,11 @@ func parseFFI(content string, prefixes ...string) (string, error) {
 		}
 		renamed.WriteString(content[start:])
 		result = struct {
-			Decls   []FFIDecl      `json:"decls"`
-			Content string         `json:"content"`
-			Imports []sourceImport `json:"imports"`
-		}{decls, renamed.String(), imports}
+			SchemaVersion int            `json:"schemaVersion"`
+			Decls         []FFIDecl      `json:"decls"`
+			Content       string         `json:"content"`
+			Imports       []sourceImport `json:"imports"`
+		}{ffiSchemaVersion, decls, renamed.String(), imports}
 	}
 	jsonBytes, err := json.Marshal(result)
 	if err != nil {

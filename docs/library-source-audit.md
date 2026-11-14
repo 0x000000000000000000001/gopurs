@@ -19,6 +19,22 @@ establish a published version of its Go port. The current compiler release
 identity and qualification are documented in [publication scope](publication-scope.md)
 and the [quality record](quality-0.1.0.md).
 
+## Source configuration for 0.1.1
+
+The [0.1.1 manifest](https://github.com/0x000000000000000000001/gopurs/blob/v0.1.1/bootstrap-sources.json)
+retains RC20's exact typed frontend, support inputs and 51 library pins. In
+particular, `gopurs-foreign` at
+`8c326898e821a9151af35b2a647fc9b2354ba92e` supplies native Go reads that preserve
+shared and cyclic child values. The release's compiler and runtime come from
+RC20; the recovery CLI, packaging and fixture qualification are tracked
+separately in the [quality record](quality-0.1.0.md).
+
+Use the checkout's manifest for current pins and the
+[latest release](https://github.com/0x000000000000000000001/gopurs/releases/latest)
+for published installation instructions. The
+[release source audit](https://github.com/0x000000000000000000001/gopurs/blob/e691356/docs/library-source-audit.md)
+retains the dated RC18–RC20 pin changes and their original validation scope.
+
 ## Reviewing a pin change
 
 1. Compare the old and new commits, including source, tests, configuration and

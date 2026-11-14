@@ -14,6 +14,13 @@ import {
   validateEnvironmentIdentity,
 } from "../ci/release-inputs.mjs";
 import { moduleGateName, moduleInventory, validateModuleEvidence } from "./release-quality-modules.mjs";
+import {
+  readRecoverySource,
+  recoveryBase,
+  recoveryShards,
+  validateRecoveryEnvironment,
+  validateRecoveryIdentity,
+} from "../ci/release-recovery.mjs";
 
 export const fixtureShardCount = 4;
 export const emissionGateName = "Native emission cancellation and concurrency (race)";
@@ -81,23 +88,33 @@ export function qualityIdentity(root, env = process.env) {
   };
   if (env.GOPURS_QUALITY_ENVIRONMENT) {
     const manifest = JSON.parse(readFileSync(env.GOPURS_QUALITY_ENVIRONMENT, "utf8"));
-    requireValue(
-      manifest.schema === 1 &&
-        manifest.source?.commit === identity.source.commit &&
-        manifest.source.tree === git(["rev-parse", "HEAD^{tree}"]),
-      "Prepared environment source differs",
-    );
-    requireValue(
-      manifest.target === identity.target && isDeepStrictEqual(manifest.compiler, identity.compiler),
-      "Prepared environment compiler or target differs",
-    );
-    requireValue(
-      manifest.github?.repository === identity.github.repository &&
-        manifest.github.runId === identity.github.runId &&
-        /^[1-9]\d*$/.test(manifest.github.runAttempt ?? "") &&
-        Number(manifest.github.runAttempt) <= Number(identity.github.runAttempt),
-      "Prepared environment producer differs",
-    );
+    if (env.GOPURS_RECOVERY_CONTEXT) {
+      const selected = JSON.parse(readFileSync(env.GOPURS_RECOVERY_CONTEXT, "utf8"));
+      requireValue(identity.source.dirty === false, "Dirty recovery checkout");
+      requireValue(
+        isDeepStrictEqual(selected.recovery.proof, readRecoverySource(root).proof),
+        "Recovery source proof differs",
+      );
+      validateRecoveryEnvironment(manifest, identity, selected);
+    } else {
+      requireValue(
+        manifest.schema === 1 &&
+          manifest.source?.commit === identity.source.commit &&
+          manifest.source.tree === git(["rev-parse", "HEAD^{tree}"]),
+        "Prepared environment source differs",
+      );
+      requireValue(
+        manifest.target === identity.target && isDeepStrictEqual(manifest.compiler, identity.compiler),
+        "Prepared environment compiler or target differs",
+      );
+      requireValue(
+        manifest.github?.repository === identity.github.repository &&
+          manifest.github.runId === identity.github.runId &&
+          /^[1-9]\d*$/.test(manifest.github.runAttempt ?? "") &&
+          Number(manifest.github.runAttempt) <= Number(identity.github.runAttempt),
+        "Prepared environment producer differs",
+      );
+    }
     identity.environment = manifest.environment;
   }
   validateIdentity(identity);
@@ -194,9 +211,21 @@ function validateGates(report, names) {
   });
 }
 
-export function mergeQualityReports(core, fixtures, inventory, build) {
+export function mergeQualityReports(core, fixtures, inventory, build, recovery) {
   validateIdentity(core?.identity);
   requireValue(core.identity.source.dirty === false, "Dirty source cannot qualify a full release");
+  if (recovery) {
+    requireValue(isDeepStrictEqual(recovery.qualificationIdentity, core.identity), "Original core identity differs");
+    requireValue(
+      build?.version === recoveryBase.tag.slice(1) && build.source.tag === recoveryBase.tag && build.preview === false,
+      "Recovery requires the original RC20 build metadata",
+    );
+    for (const shard of recoveryShards(inventory, recovery.recovery.manifest))
+      requireValue(
+        recovery.recovery.required.some((entry) => entry.target === core.identity.target && entry.shard === shard),
+        "Recovery plan omitted an invalidated shard",
+      );
+  }
   const reports = [core, ...fixtures];
   for (const report of reports) {
     requireValue(
@@ -205,10 +234,13 @@ export function mergeQualityReports(core, fixtures, inventory, build) {
     );
     validateIdentity(report.identity);
     const comparable = (identity) => ({ ...identity, github: { ...identity.github, runAttempt: null } });
-    requireValue(
-      isDeepStrictEqual(comparable(report.identity), comparable(core.identity)),
-      "Source/compiler/environment/target/GitHub run identities differ",
-    );
+    if (recovery)
+      validateRecoveryIdentity(recovery, report.identity, { core: report === core, shard: report.shard?.index });
+    else
+      requireValue(
+        isDeepStrictEqual(comparable(report.identity), comparable(core.identity)),
+        "Source/compiler/environment/target/GitHub run identities differ",
+      );
     if (report.identity.github.runAttempt !== core.identity.github.runAttempt)
       requireValue(Boolean(core.identity.environment), "Cross-attempt reports require an exact prepared environment");
   }
@@ -320,18 +352,28 @@ function main(args) {
   const core = json(options.core),
     fixtures = options.fixtures.map(json),
     build = json(options.build);
-  const merged = mergeQualityReports(core, fixtures, qualityInventory(root), build);
+  const context = options["finalization-context"] ? json(options["finalization-context"]) : undefined;
+  const recovery = context?.schema === 3 ? context : undefined;
+  if (recovery) {
+    requireValue(
+      isDeepStrictEqual(recovery.recovery.proof, readRecoverySource(root).proof),
+      "Recovery source proof differs",
+    );
+    requireValue(isDeepStrictEqual(recovery.qualificationIdentity, core.identity), "Original core identity differs");
+  }
+  const merged = mergeQualityReports(core, fixtures, qualityInventory(root), build, recovery);
   const commit = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
-  requireValue(merged.identity.source.commit === commit, "Quality source differs from the validating checkout");
+  const publicationCommit = recovery ? recovery.source.commit : merged.identity.source.commit;
+  requireValue(publicationCommit === commit, "Quality source differs from the validating checkout");
   if (process.env.GITHUB_SHA)
-    requireValue(merged.identity.source.commit === process.env.GITHUB_SHA, "Quality source differs from GITHUB_SHA");
+    requireValue(publicationCommit === process.env.GITHUB_SHA, "Quality source differs from GITHUB_SHA");
   if (options["finalization-context"]) {
-    const context = json(options["finalization-context"]);
     validateFinalizationContext(context, merged.identity, process.env, {
       preview: process.env.GITHUB_REF_TYPE === "branch",
     });
     validateReportProducers(context, core, fixtures);
     merged.finalization = context;
+    if (recovery) merged.publicationSource = recovery.source;
   } else if (process.env.GITHUB_RUN_ID) {
     for (const report of [core, ...fixtures])
       requireValue(

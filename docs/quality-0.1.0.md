@@ -1,8 +1,45 @@
-# Quality-gate status — 0.1.0
+# Quality-gate status — 0.1.x
 
-This page retains the qualification and public consumer evidence for the
-`0.1.0-rc.14` prerelease. It does not qualify later source changes or a final
-`0.1.0` release. The procedure is in [release.md](release.md).
+This record retains dated qualification and publication observations. Results
+apply to the source and artifact identities named in each entry. The current
+gate list is in the [release procedure](release.md); the
+[release checklist](release-checklist.md) preserves the preparation snapshot.
+
+## 0.1.1 publication — 13 November 2026
+
+The [GitHub release for `v0.1.1`](https://github.com/0x000000000000000000001/gopurs/releases/tag/v0.1.1)
+was published on 13 November 2026 at 22:05:36 UTC as a final release.
+[CI run 43492895269](https://github.com/0x000000000000000000001/gopurs/actions/runs/43492895269)
+completed successfully for source `7ca02a9072ee76e8173eeb9f286d60157acb3bd3`.
+Both states were checked through the GitHub API on 14 November 2026.
+
+The linked preparation history retains the observations made before publication,
+including the RC20 recovery scope. Qualification applies to the named release
+sources and artifacts; subsequent branch changes require their own checks.
+
+### Qualification provenance
+
+The final package reuses the compiler from signed RC20 source
+`2202368d4b19849fdc365afacaffa4a617b0ea43`. RC20's three platform build/core
+jobs passed, while its fixture shards stopped on obsolete snapshots. The
+bounded recovery completed the affected or missing fixtures and checked the
+final packages while retaining each original source and artifact identity.
+See the [recovery contract](release.md#bounded-rc20-to-011-qualification).
+
+The intervening `v0.1.0` workflow failed during artifact acquisition because
+of a cyclic module import in the recovery command. Version `0.1.1` corrected
+that release-control error without changing the RC20 compiler, runtime or
+pins. The failed tag remains unchanged and unpublished.
+
+The [RC20 benchmark](release-benchmark.md#completed-rc20-campaign--13-november-2026-utc)
+retains its original compiler and measurement identity. Local installed-artifact
+b8x execution passed 287 application tests with the RC20 artifact; that result
+is separate from a public final-package installation.
+
+The [detailed preparation history](https://github.com/0x000000000000000000001/gopurs/blob/e691356fe2f0e22bab0d97b4aa08ddd8676e1eed/docs/quality-0.1.0.md)
+retains the RC15–RC20 failures, targeted checks, recovery receipts and pending
+gates as observed at each dated step. Those earlier observations do not
+override the successful 0.1.1 CI and publication recorded above.
 
 ## RC14 qualification and artifact review — 5 November 2026
 

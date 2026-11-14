@@ -68,7 +68,7 @@ func Main_DescribeScalarsMap(record map[string]any) string {
 }
 
 // --- Auto-generated FFI wrappers ---
-var _Gopurs_Main_CompactEntry = // TAST: (Func [Boolean] (ADT ["Effect","Effect"] [Any]))
+var _Gopurs_Main_CompactEntry = // TAST: (Func [Boolean] (ADT ["Effect","Effect"] [(Record (Row [count: Int, label: String] Empty))]))
 gopurs_runtime.Box(Main_CompactEntry)
 var _Gopurs_Main_CompactKeys = // TAST: (ForAll [a] (Func [(TypeVar a)] String))
 gopurs_runtime.Func(func(arg0 gopurs_runtime.Value) gopurs_runtime.Value {
@@ -76,25 +76,37 @@ gopurs_runtime.Func(func(arg0 gopurs_runtime.Value) gopurs_runtime.Value {
 	go_res := Main_CompactKeys(go_arg0)
 	return gopurs_runtime.Box(go_res)
 })
-var _Gopurs_Main_CompactPayload = // TAST: (ADT ["Effect","Effect"] [Any])
+var _Gopurs_Main_CompactPayload = // TAST: (ADT ["Effect","Effect"] [(Record (Row [child: (Record (Row [count: Int, label: String] Empty)), values: (Array Int)] Empty))])
 gopurs_runtime.Box(Main_CompactPayload)
-var _Gopurs_Main_CompactScalars = // TAST: (ADT ["Effect","Effect"] [Any])
+var _Gopurs_Main_CompactScalars = // TAST: (ADT ["Effect","Effect"] [(Record (Row [flag: Boolean, number: Number] Empty))])
 gopurs_runtime.Box(Main_CompactScalars)
-var _Gopurs_Main_DescribeEntryMap = // TAST: (Func [Any] String)
+var _Gopurs_Main_DescribeEntryMap = // TAST: (Func [(Record (Row [count: Int, label: String] Empty))] String)
 gopurs_runtime.Func(func(arg0 gopurs_runtime.Value) gopurs_runtime.Value {
-	go_arg0 := gopurs_runtime.UnboxObject(arg0)
+	arg0_map := gopurs_runtime.RecordToMap(arg0)
+	go_arg0 := make(map[string]any)
+	for k, v := range arg0_map {
+		go_arg0[k] = v
+	}
 	go_res := Main_DescribeEntryMap(go_arg0)
 	return gopurs_runtime.Box(go_res)
 })
-var _Gopurs_Main_DescribePayloadMap = // TAST: (Func [Any] String)
+var _Gopurs_Main_DescribePayloadMap = // TAST: (Func [(Record (Row [child: (Record (Row [count: Int, label: String] Empty)), values: (Array Int)] Empty))] String)
 gopurs_runtime.Func(func(arg0 gopurs_runtime.Value) gopurs_runtime.Value {
-	go_arg0 := gopurs_runtime.UnboxObject(arg0)
+	arg0_map := gopurs_runtime.RecordToMap(arg0)
+	go_arg0 := make(map[string]any)
+	for k, v := range arg0_map {
+		go_arg0[k] = v
+	}
 	go_res := Main_DescribePayloadMap(go_arg0)
 	return gopurs_runtime.Box(go_res)
 })
-var _Gopurs_Main_DescribeScalarsMap = // TAST: (Func [Any] String)
+var _Gopurs_Main_DescribeScalarsMap = // TAST: (Func [(Record (Row [flag: Boolean, number: Number] Empty))] String)
 gopurs_runtime.Func(func(arg0 gopurs_runtime.Value) gopurs_runtime.Value {
-	go_arg0 := gopurs_runtime.UnboxObject(arg0)
+	arg0_map := gopurs_runtime.RecordToMap(arg0)
+	go_arg0 := make(map[string]any)
+	for k, v := range arg0_map {
+		go_arg0[k] = v
+	}
 	go_res := Main_DescribeScalarsMap(go_arg0)
 	return gopurs_runtime.Box(go_res)
 })

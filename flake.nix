@@ -13,7 +13,7 @@
       inputs.ps-overlay.follows = "purescript-overlay";
     };
     purs-tast = {
-      url = "github:0x000000000000000000001/purescript/105f5752b39cc0f6c99a40064295338bf57ad223";
+      url = "github:0x000000000000000000001/purescript/ae6a6f644502bafcfa4fa94d8f81a1a1a1ca5080";
       flake = false;
     };
   };
@@ -39,6 +39,7 @@
         in
         {
           inherit gopurs purs-tast;
+          purs-official = pkgs.purs-bin.purs-0_15_16;
           inherit (toolchains) nodejs go;
           default = gopurs;
         });
@@ -97,6 +98,7 @@
               pkgs.nixpkgs-fmt
             ];
             GOPURS_PURS = "${self.packages.${system}.purs-tast}/bin/purs";
+            GOPURS_OFFICIAL_PURS = "${self.packages.${system}.purs-official}/bin/purs";
             GOTOOLCHAIN = "local";
             shellHook = ''
               echo "gopurs: pinned TAST frontend, Go 1.27.0, Node 24.8.0, Spago 1.0.3"

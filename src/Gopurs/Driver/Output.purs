@@ -80,6 +80,12 @@ emitPreparedModule output frozen metadata (Module coreFnModule) backendMod prepa
           }
     else pure Nothing
 
+  case ffi of
+    Just source -> case FfiBridge.ffiProblemsWithTypes goName backendMod.dataDecls source.decls foreigns of
+      [] -> pure unit
+      problems -> throwError (error ("FFI error in module " <> moduleName <> " (" <> ffiPath <> "):\n" <> String.joinWith "\n" problems))
+    Nothing -> pure unit
+
   let
     ffiFunctions = case ffi of
       Just source -> FfiBridge.ffiFunctionInfos goName foreigns source.decls
@@ -116,9 +122,21 @@ renderFfiModule context goName backendMod foreigns ffi = annotations <> case ffi
   declarations = case ffi of
     Just source -> source.decls
     Nothing -> []
+  -- Object key order and HTML/line-separator escaping differ between JS and Go.
+  -- Normalize only raw characters after encoding, preserving escaped literals.
+  annotationString :: String -> String
+  annotationString =
+    String.replaceAll (Pattern "\x2029") (Replacement "\\u2029")
+      <<< String.replaceAll (Pattern "\x2028") (Replacement "\\u2028")
+      <<< String.replaceAll (Pattern ">") (Replacement "\\u003e")
+      <<< String.replaceAll (Pattern "<") (Replacement "\\u003c")
+      <<< String.replaceAll (Pattern "&") (Replacement "\\u0026")
+      <<< stringify <<< encodeJson
   annotations = String.joinWith "" $ map
-    (\missing -> "//gopurs:missing-ffi-v1:" <> stringify (encodeJson
-      { binding: missing.binding, module: context.moduleName, symbol: missing.symbol, path: context.path }) <> "\n")
+    (\missing -> "//gopurs:missing-ffi-v1:{\"binding\":" <> annotationString missing.binding
+      <> ",\"module\":" <> annotationString context.moduleName
+      <> ",\"path\":" <> annotationString context.path
+      <> ",\"symbol\":" <> annotationString missing.symbol <> "}\n")
     (FfiBridge.missingImplementations goName declarations foreigns)
 
 writeRuntime :: String -> Aff Unit

@@ -5,6 +5,12 @@ let
   haskell = pkgs.haskell.packages.ghc984.override {
     overrides = self: super: {
       language-javascript = self.language-javascript_0_7_0_0;
+      # Foundation 0.0.30's division property omits non-representable quotients.
+      # Preserve nixpkgs' test settings/random seeds; only fix the property domain.
+      # See docs/nix.md for the reproduced seed and exhaustive Int8 check.
+      foundation = pkgs.haskell.lib.overrideCabal super.foundation (old: {
+        patches = (old.patches or [ ]) ++ [ ./patches/foundation-divisible-domain.patch ];
+      });
     };
   };
   compiler = haskell.callPackage ./purs-tast-package.nix { inherit src; };

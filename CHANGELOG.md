@@ -6,6 +6,187 @@ All notable changes to gopurs are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.1.1]
+
+First final release, prepared from the RC20 compiler and pinned libraries.
+Correct the recovery command's cyclic module import without rebuilding or
+changing the qualified compiler.
+Qualification and publication are recorded in the live
+[quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md).
+
+- Compile the typed PureScript fork's TAST to Go with JavaScript or native
+  compiler hosts, Release/Dev profiles and incremental compilation.
+- Write ordinary Go FFI for values, records, callbacks, effects and cancellable
+  asynchronous operations. The typed frontend is pinned to
+  `ae6a6f644502bafcfa4fa94d8f81a1a1a1ca5080`; stock `purs` is not a substitute.
+- Include RC20's callback, return-arity and ignored-Unit corrections, and the
+  Foreign port's native readers preserving shared/cyclic child values.
+- Refresh generated-code references against the preserved TAST types. Keep
+  original compiler qualification and benchmark identities when reusing their
+  exact bytes; record final packaging and fixture producers separately.
+
+The supported reference is Node.js 24.8.0 and Go 1.27.0 on Linux amd64,
+Linux arm64 and macOS arm64. This is a `0.x` release; the
+[compatibility policy](docs/publication-scope.md) and
+[limitations](docs/limitations.md) define its scope. The
+[RC20 benchmark](docs/release-benchmark.md#completed-rc20-campaign--13-november-2026-utc)
+measures backend generation, not application runtime.
+
+## [0.1.0] — not published
+
+Signed tag `v0.1.0` remains available for traceability. Its CI stopped before
+fixture execution or packaging because the artifact-acquisition command had
+a cyclic module import. No npm package or GitHub release was published.
+Version `0.1.1` resumes qualification with the corrected command and unchanged
+RC20 compiler bytes.
+
+## [0.1.0-rc.20]
+
+Twentieth candidate for `0.1.0`, prepared on 13 November 2026. It corrects
+compiler bridge defects exposed during local qualification.
+Qualification and publication remain pending in the live
+[quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md).
+
+### Fixed
+
+- Convert curried callback values through the native FFI bridge instead of
+  assuming that a foreign function is already a boxed runtime value.
+- Consume the TAST arguments actually accepted by the Go implementation,
+  including arguments of a returned function; preserve a function result when
+  Go returns it. Add focused regressions for both bridge cases.
+- Preserve the original TAST annotation at zero-argument Go wrappers' ignored
+  `Unit` boundary, so `Unit -> Int` with Go `func() any` produces an `Int`
+  rather than an extra function. Keep `Fn0` scalar and function results intact.
+- Pin the Foreign port's safe readers for native Go strings, booleans, numbers
+  and slices. Indexed reads recognize native slices; reading an array or a
+  property preserves shared and cyclic native child values.
+
+The frontend and other library pins remain those of RC19. The compiler changes
+require a new benchmark and complete validation; the historical RC18 campaign
+and its local RC19 equality proof do not qualify this candidate.
+
+## [0.1.0-rc.19]
+
+Nineteenth candidate for `0.1.0`, prepared on 13 November 2026, retaining
+RC18's compiler, runtime and dependency pins. Qualification and publication
+remain pending in the live
+[quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md).
+
+### Fixed
+
+- Include the Aff and Foreign native preflight paths in the isolated library
+  cleanup fixture. Stub these preflights consistently with the other library
+  runners, preserving the requirement to reach the mock Spago command and the
+  neighbor-cache sentinels. Allow the isolated subprocess to start its own
+  Node test runner by removing the inherited test-runner context from its
+  environment. The real library scripts and native suites remain unchanged;
+  this corrects the test setup that stopped RC18 qualification.
+
+## [0.1.0-rc.18]
+
+Eighteenth candidate for `0.1.0`, retaining RC17's compiler and runtime.
+Qualification and publication status remain in the live
+[quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md).
+
+### Fixed
+
+- Refresh the Release and Dev `FFIIntegerReturns` snapshots for the ordinary
+  FFI array conversion introduced in RC15. The references now use the runtime
+  array accessors, matching the generated code already exercised successfully
+  by the JavaScript and native hosts. Compiler and runtime behavior are unchanged.
+- Select the Go Buffer port in the `node-net` and `node-streams` test
+  configurations and generated locks. Their Release and Dev suites pass with
+  this dependency selection; the bootstrap manifest pins the reviewed commits.
+- Supply Spec's two missing node-child-process value helpers: an undefined
+  sentinel distinct from null, and kill-signal dispatch matching the stock
+  JavaScript number/string conversion. This supports Spec's test dependency,
+  not the complete node-child-process API. Contract checks and the complete
+  Release/Dev Spec suites cover the new source pin.
+- Record the incomplete historical HTTP benchmark input separately from
+  compiler qualification. Its reachable `stdout` foreign binding lacked a Go
+  implementation; the current library port already supplies it. Historical
+  inputs and measurements remain unchanged.
+
+## [0.1.0-rc.17]
+
+Seventeenth candidate for `0.1.0`, retaining RC16's ordinary Go FFI contract,
+dependency pins and frontend build fixes. Qualification and publication status
+remain in the [quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md).
+
+### Fixed
+
+- Emit missing-FFI annotations with identical JSON key order and string escaping
+  on the JavaScript and native compiler hosts. The metadata keeps the same
+  schema and decoded values; generated executable code is unchanged. A real
+  batch-compilation regression checks byte identity and JSON round-tripping
+  across hosts, including Unicode, quotes, backslashes and literal escapes.
+
+## [0.1.0-rc.16]
+
+Sixteenth candidate for `0.1.0`, retaining RC15's ordinary Go FFI, dependency
+pins and compatibility scope. The [quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md)
+tracks qualification and publication.
+
+### Fixed
+
+- Keep the selected typed and stock frontends rooted in Nix throughout CI and
+  publication smoke tests, so garbage collection cannot remove them between
+  build and execution.
+- Correct the test domain in the Nix frontend dependency Foundation 0.0.30:
+  integer division properties now exclude quotients that cannot be represented
+  by their tested type, as well as division by zero. This prevents the
+  reproducible `Int8 (-128) / (-1)` test overflow found during RC15 qualification.
+  Foundation implementation code and test configuration are unchanged: Linux
+  CI keeps the complete suite enabled; Darwin retains the pinned nixpkgs
+  policy and was checked explicitly with the failing seed (6,121 tests).
+
+## [0.1.0-rc.15]
+
+Fifteenth experimental candidate for `0.1.0`. Its qualification and publication
+status are recorded in the live [quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md)
+and [release checklist](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/release-checklist.md).
+At preparation on 12 November 2026, RC14 was the published candidate on `next`
+and `latest` selected RC7. Local FFI results do not qualify RC15's final artifacts.
+
+### Added
+
+- [Ordinary Go FFI](docs/ffi-idiomatic.md): native `Effect` and `EffectFnAff`
+  results, Go errors, optional `context.Context`, typed callbacks, opaque
+  handles and closed-record conversion to local Go structs. Generated adapters
+  own the runtime integration; handwritten implementations can use Go tooling
+  directly. Direct ordinary `Aff`, open-record layout inference and a general
+  multi-constructor ADT mapping remain outside this contract.
+- Focused parser, runtime race, documented-example, end-to-end and installed
+  package regressions, including both compiler hosts, cold/warm caches,
+  signature changes, rejection and recovery.
+
+### Fixed
+
+- Keep asynchronous operations lazy and repeatable, arbitrate completion and
+  cancellation, and release failed or late acquisitions exactly once before
+  ownership transfers. Callbacks retained by a Go service follow that service's
+  explicit unsubscribe/close lifetime.
+- Convert dynamic `Foreign` data without JSON round-trips; preserve native
+  handles, nested containers, null and a distinct undefined marker. Functions
+  and algebraic constructors still require an explicit PureScript conversion.
+- Diagnose missing TAST metadata before optimization and incompatible expanded
+  `EffectFn2`/`EffectFn3` results with frontend, `PATH` and clean-output guidance.
+  Require nominal `EffectFnAff` metadata for its ordinary Go ABI; retain valid
+  explicit callback implementations. Preserve valid cache state after an FFI
+  signature error.
+- Validate missing FFI in explicitly selected entry-point scopes, and retain
+  the cleanup of build/test tooling and the separately pinned Argonaut codecs
+  support checkout already integrated since RC14.
+
+### Changed
+
+- Pin the typed frontend to `ae6a6f644502bafcfa4fa94d8f81a1a1a1ca5080`,
+  `gopurs-aff` to `dbe9ff1c574a18352cf9ec861090083b14ca0246`, and
+  `gopurs-foreign` to `c79499d6c22fd0637104bec5449434cfb6e31fe4`.
+  Rebuild frontend output after switching revisions, preserving application
+  `go.mod` and `go.sum`; the `purs` version number alone does not identify the
+  required TAST contract. Existing explicit runtime FFI remains supported.
+
 ## [0.1.0-rc.14]
 
 Fourteenth candidate for `0.1.0`, with a deterministic spec timeout fixture

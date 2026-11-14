@@ -10,6 +10,7 @@ These guides describe the current source tree. Start with the
 | [Quickstart](quickstart.md) | Build and run your first application |
 | [CLI reference](cli.md) | Options, environment variables and exit status |
 | [Migration](migration.md) | Move a JavaScript project to Go |
+| [Go FFI](ffi-idiomatic.md) | Implement foreign imports with ordinary Go functions |
 | [Limitations](limitations.md) | Unsupported features and compatibility gaps |
 | [Troubleshooting](troubleshooting.md) | Diagnose build and runtime errors |
 | [Publication scope](publication-scope.md) | Supported platforms and compatibility policy |
@@ -23,7 +24,8 @@ These guides describe the current source tree. Start with the
 | [Development](development.md) | Work on library ports, Go FFI and the runtime |
 | [Testing](testing.md) | Choose checks, run fixtures and inspect reports |
 | [Release procedure](release.md) | Qualify, package and publish a candidate |
-| [RC14 qualification](quality-0.1.0.md) | Evidence for the published prerelease |
+| [Release qualification](quality-0.1.0.md) | Evidence for the published release and earlier candidates |
+| [Release checklist](release-checklist.md) | Track qualification and publication gates |
 | [Library source review](library-source-audit.md) | Review source pins and attribution |
 | [Benchmark protocol](benchmark-protocol.md) | Measure and report performance |
 | [Release benchmark runner](release-benchmark.md) | Compare compiler hosts on the frozen corpus |

@@ -12,6 +12,7 @@ const tools = [
   "release/release-smoke.mjs",
   "bootstrap-checksums.mjs",
   "check-docs.mjs",
+  "sync-docs.mjs",
   "check-output-identity.mjs",
   "test-native-pbo.mjs",
 ];

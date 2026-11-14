@@ -23,6 +23,8 @@ const foreigns = [
   ['pushImpl', fn([handle, C.String.value], handle)],
   ['toStringImpl', fn([handle], C.String.value)],
   ['choose', fn([handle, handle, C.Boolean.value], handle)],
+  ['chooseCurried', fn([handle], fn([handle, C.Boolean.value], handle))],
+  ['aliasEcho', fn([handle], handle)],
   ['fresh', fn([handle], handle)],
   ['factory', fn([C.Int.value], handle)],
 ].map(([name, type]) => new Tuple(name, new Just(type)));
@@ -33,6 +35,11 @@ test('pointer FFI keeps direct workers, native scalar results and existing handl
 func Choose(first, second *strings.Builder, useSecond bool) *strings.Builder {
     if useSecond { return second }; return first
 }
+func ChooseCurried(first, second *strings.Builder, useSecond bool) *strings.Builder {
+    if useSecond { return second }; return first
+}
+type BuilderAlias = *strings.Builder
+func AliasEcho(value BuilderAlias) BuilderAlias { return value }
 func Fresh(previous *strings.Builder) *strings.Builder { return new(strings.Builder) }
 func Factory[T any](seed int64) *T { return new(T) }
 `;
@@ -44,6 +51,8 @@ func Factory[T any](seed int64) *T { return new(T) }
   for (const [binding, args, result] of [
     ['pushImpl', [Go.TypeValue.value, Go.TypeString.value], Go.TypeValue.value],
     ['toStringImpl', [Go.TypeValue.value], Go.TypeString.value],
+    ['chooseCurried', [Go.TypeValue.value, Go.TypeValue.value, Go.TypeBool.value], Go.TypeValue.value],
+    ['aliasEcho', [Go.TypeValue.value], Go.TypeValue.value],
   ]) {
     const found = lookup(ordString)(binding)(signatures);
     assert.ok(found instanceof Just, `${binding} must keep a direct native worker`);
@@ -86,6 +95,18 @@ func TestPointerHandles(t *testing.T) {
     }
     if got := rt.Apply3(_Gopurs_BuilderProbe_Choose, first, second, rt.Bool(false)); got != first {
         t.Fatal("boxed choice lost the first envelope")
+    }
+    if got := BuilderProbe_ChooseCurried_nativeWorker(first, second, true); got != second {
+        t.Fatal("direct curried choice lost the second envelope at the native call arity")
+    }
+    if got := rt.Apply3(_Gopurs_BuilderProbe_ChooseCurried, first, second, rt.Bool(true)); got != second {
+        t.Fatal("boxed curried choice lost the second envelope at the native call arity")
+    }
+    if got := BuilderProbe_AliasEcho_nativeWorker(first); got != first {
+        t.Fatal("pointer alias direct call lost the existing envelope")
+    }
+    if got := rt.Apply(_Gopurs_BuilderProbe_AliasEcho, first); got != first {
+        t.Fatal("pointer alias boxed call lost the existing envelope")
     }
     fresh := BuilderProbe_Fresh_nativeWorker(first)
     if rt.Unbox[*strings.Builder](fresh) == rt.Unbox[*strings.Builder](first) {

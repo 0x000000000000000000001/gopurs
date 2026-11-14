@@ -6,7 +6,7 @@ classify responsibilities; they do not prescribe a future directory layout.
 See [architecture.md](architecture.md) for execution order and
 [naming.md](naming.md) for terminology.
 
-The map covers **104 modules**. `node tools/check-docs.mjs` verifies source
+The map covers **106 modules**. `node tools/check-docs.mjs` verifies source
 paths, duplicate rows and complete coverage against `src/`. Import lists below
 are sorted and deduplicated from the module source.
 
@@ -88,11 +88,13 @@ are sorted and deduplicated from the module source.
 | `Gopurs.EffectExprs`<br>`src/Gopurs/EffectExprs.purs` | Emit | Translates effect expressions and their wrappers. | `ExprAnalysis`, `ExprContext`, `GoAst`, `GoConversions`, `Printer` |
 | `Gopurs.ExprAnalysis`<br>`src/Gopurs/ExprAnalysis.purs` | Emit | Provides read-only expression analyses. | `ExprContext`, `GoAst`, `GoTypes` |
 | `Gopurs.ExprContext`<br>`src/Gopurs/ExprContext.purs` | Emit | Carries translation context, results and callbacks. | `CodegenState`, `GoAst` |
-| `Gopurs.FfiBridge`<br>`src/Gopurs/FfiBridge.purs` | Emit | Assembles typed FFI bridges. | `CodegenState`, `FfiBridge.Render`, `FfiBridge.Signatures`, `FfiTypes`, `GoAst` |
-| `Gopurs.FfiBridge.Render`<br>`src/Gopurs/FfiBridge/Render.purs` | Emit | Renders wrappers, workers and missing-FFI declarations. | `FfiBridge.Signatures`, `FfiBridge.TypeSupport`, `FfiBridge.Values`, `FfiTypes`, `GoTypes` |
+| `Gopurs.FfiBridge`<br>`src/Gopurs/FfiBridge.purs` | Emit | Assembles typed FFI bridges. | `CodegenState`, `FfiBridge.Effects`, `FfiBridge.Render`, `FfiBridge.Signatures`, `FfiBridge.TypeSupport`, `FfiTypes`, `GoAst`, `GoTypes` |
+| `Gopurs.FfiBridge.Effects`<br>`src/Gopurs/FfiBridge/Effects.purs` | Emit | Validates effect contracts and generates deferred Go actions and asynchronous adapters. | `FfiBridge.Structured`, `FfiBridge.TypeSupport`, `FfiBridge.Values`, `FfiTypes` |
+| `Gopurs.FfiBridge.Render`<br>`src/Gopurs/FfiBridge/Render.purs` | Emit | Renders wrappers, workers and missing-FFI declarations. | `FfiBridge.Effects`, `FfiBridge.Signatures`, `FfiBridge.Structured`, `FfiBridge.TypeSupport`, `FfiBridge.Values`, `FfiTypes`, `GoTypes` |
 | `Gopurs.FfiBridge.Signatures`<br>`src/Gopurs/FfiBridge/Signatures.purs` | Emit | Matches foreign declarations to native call signatures. | `CodegenState`, `FfiBridge.TypeSupport`, `FfiTypes`, `GoAst`, `GoSymbol` |
+| `Gopurs.FfiBridge.Structured`<br>`src/Gopurs/FfiBridge/Structured.purs` | Emit | Validates closed-record fields and generates conversions to Go structs. | `FfiBridge.TypeSupport`, `FfiTypes`, `GoAst`, `GoTypes`, `Printer` |
 | `Gopurs.FfiBridge.TypeSupport`<br>`src/Gopurs/FfiBridge/TypeSupport.purs` | Emit | Instantiates bridge types and generic arguments. | `FfiTypes` |
-| `Gopurs.FfiBridge.Values`<br>`src/Gopurs/FfiBridge/Values.purs` | Emit | Adapts FFI arguments, callbacks and results. | `FfiBridge.TypeSupport`, `FfiTypes`, `GoTypes` |
+| `Gopurs.FfiBridge.Values`<br>`src/Gopurs/FfiBridge/Values.purs` | Emit | Adapts FFI arguments, callbacks and results. | `FfiBridge.Structured`, `FfiBridge.TypeSupport`, `FfiTypes`, `GoTypes` |
 | `Gopurs.FfiSupport`<br>`src/Gopurs/FfiSupport.purs` | Emit | Parses Go FFI and exposes support operations. | `FfiTypes` |
 | `Gopurs.FfiTypes`<br>`src/Gopurs/FfiTypes.purs` | Emit | Defines FFI bridge types. | — |
 | `Gopurs.FunctionExprs`<br>`src/Gopurs/FunctionExprs.purs` | Emit | Translates abstractions, applications and functions. | `CallAnalysis`, `ExprAnalysis`, `ExprContext`, `GoAst`, `GoConversions`, `GoFunctions`, `GoSymbol` |

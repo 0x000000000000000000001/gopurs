@@ -12,7 +12,7 @@ var once_Main_Test sync.Once
 func Get_Main_Test() gopurs_runtime.Value {
 	once_Main_Test.Do(func() {
 		cache_Main_Test = gopurs_runtime.Func(func(x_0_box gopurs_runtime.Value) gopurs_runtime.Value {
-			return Call_Main_Test(x_0_box)
+			return gopurs_runtime.Str(Call_Main_Test(x_0_box.StrVal()))
 		})
 	})
 	return cache_Main_Test
@@ -35,7 +35,7 @@ var once_Main_newtypeTest sync.Once
 
 func Get_Main_newtypeTest() gopurs_runtime.Value {
 	once_Main_newtypeTest.Do(func() {
-		cache_Main_newtypeTest = gopurs_runtime.Value{Type: 9, IntVal: 3322196858, UnsafePtr: unsafe.Pointer(Rebox_Main_3677948887_385277032((&Constructor_Data_Newtype_Newtype[gopurs_runtime.Value, string]{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
+		cache_Main_newtypeTest = gopurs_runtime.Value{Type: 9, IntVal: 3322196858, UnsafePtr: unsafe.Pointer(Rebox_Main_2199435624_385277032((&Constructor_Data_Newtype_Newtype[string, string]{1, gopurs_runtime.Func(func(_dollar___unused_0 gopurs_runtime.Value) gopurs_runtime.Value {
 			return gopurs_runtime.Value{}
 		})})))}
 	})
@@ -47,7 +47,7 @@ var once_Main_t sync.Once
 
 func Get_Main_t() gopurs_runtime.Value {
 	once_Main_t.Do(func() {
-		cache_Main_t = gopurs_runtime.Apply(Call_Data_Newtype_wrap(gopurs_runtime.CoerceToStruct[Constructor_Data_Newtype_Newtype[gopurs_runtime.Value, gopurs_runtime.Value]](gopurs_runtime.Value{})), gopurs_runtime.Str("hello"))
+		cache_Main_t = gopurs_runtime.Str(gopurs_runtime.Apply(Call_Data_Newtype_wrap(gopurs_runtime.CoerceToStruct[Constructor_Data_Newtype_Newtype[gopurs_runtime.Value, gopurs_runtime.Value]](gopurs_runtime.Value{})), gopurs_runtime.Str("hello")).StrVal())
 	})
 	return cache_Main_t
 }
@@ -99,13 +99,13 @@ var once_Main_a sync.Once
 
 func Get_Main_a() gopurs_runtime.Value {
 	once_Main_a.Do(func() {
-		cache_Main_a = gopurs_runtime.Str(gopurs_runtime.Apply(Call_Data_Newtype_unwrap(gopurs_runtime.CoerceToStruct[Constructor_Data_Newtype_Newtype[gopurs_runtime.Value, gopurs_runtime.Value]](gopurs_runtime.Value{})), Get_Main_t()).StrVal())
+		cache_Main_a = gopurs_runtime.Str(gopurs_runtime.Apply(Call_Data_Newtype_unwrap(gopurs_runtime.CoerceToStruct[Constructor_Data_Newtype_Newtype[gopurs_runtime.Value, gopurs_runtime.Value]](gopurs_runtime.Value{})), gopurs_runtime.Str(Get_Main_t().StrVal())).StrVal())
 	})
 	return cache_Main_a
 }
 
-func Call_Main_Test(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
-	var x_0 gopurs_runtime.Value = x_0_loop
+func Call_Main_Test(x_0_loop string) string {
+	var x_0 string = x_0_loop
 	_ = x_0
 	return x_0
 }
@@ -116,7 +116,7 @@ func Call_Main_First(x_0_loop gopurs_runtime.Value) gopurs_runtime.Value {
 	return x_0
 }
 
-func Rebox_Main_3677948887_385277032(in *Constructor_Data_Newtype_Newtype[gopurs_runtime.Value, string]) *Constructor_Data_Newtype_Newtype[gopurs_runtime.Value, gopurs_runtime.Value] {
+func Rebox_Main_2199435624_385277032(in *Constructor_Data_Newtype_Newtype[string, string]) *Constructor_Data_Newtype_Newtype[gopurs_runtime.Value, gopurs_runtime.Value] {
 	if in == nil {
 		return nil
 	}

@@ -14,6 +14,85 @@ Release**, and **265,633 ms native Dev**, summing the per-corpus cold medians.
 Rust values in that historical report are estimates and are not used here.
 There is no historical warm-cache baseline in that table.
 
+## Completed RC20 campaign — 13 November 2026 (UTC)
+
+All **51 corpora completed** with the locally built RC20 compiler from clean
+commit `2202368d4b19849fdc365afacaffa4a617b0ea43`, signed tag object
+`9a80c154eff82589275d6790e158e0636066197c`. The JavaScript SHA-256 is
+`26ee3b1a8f40fa4ed9675f478f89c39464b3aa13e1b726587f9c12832e709d9a`;
+the Darwin arm64 native SHA-256 is
+`858b204ba61cf6691ef4638ccfd17541effaa55472e352663aef0eda7710d10e`.
+These remain RC20 measurements if a later release reuses the same executables.
+
+The audit verifies **1,224 retained invocations**: 918 measured samples,
+306 warmups, 612 cold misses, 612 exact warm hits and 102 matching output
+oracles. Each median uses three measured fresh processes after one warmup.
+The settings remain those of the recorded protocol: eight workers, native
+`GOGC=off` and `GOMEMLIMIT=16GiB`, packages/overlays enabled and daemon disabled.
+
+The initial process started at 11:00:04 UTC and stopped at 11:47:12 after
+19 complete cases when the 2 GiB disk floor prevented the next invocation.
+No compiler invocation failed. The sole successful `js-date` cold JavaScript
+warmup from that incomplete attempt is **excluded**, with its log and oracle
+retained. After retiring private task caches and archiving verified old
+workspaces, the official `--retry-failed` path restarted the whole case at
+12:06:53, preserving the 19 completed cases. The second process exited 0
+after the last case finished at 13:08:51. Both real process identities and
+terminals are retained; the audit checks 1,225 recorded invocations in total.
+The runner's disk floor and measurement settings were unchanged.
+
+The primary comparison uses the **47 historically identical corpora**.
+The other four retain the previously disclosed five added Go FFI files;
+all 51 original PureScript and TAST inputs remain unchanged. Values below
+sum per-corpus medians in **milliseconds**, not elapsed campaign duration.
+Warm results have no historical baseline.
+
+| Host/profile | Official cold, 47 unchanged | RC20 cold | Change | RC20 warm |
+| --- | ---: | ---: | ---: | ---: |
+| JavaScript Release | 718,784 | 749,080 | +4.21% | 14,259 |
+| Native Release | 296,270 | 282,920 | −4.51% | 5,388 |
+| Native Dev | 237,978 | 214,609 | −9.82% | 5,275 |
+
+The following groups are context only because they include corrected FFI
+inputs. They must not be presented as identical-input historical comparisons.
+
+| Group | JS cold / warm | Native Release cold / warm | Native Dev cold / warm |
+| --- | ---: | ---: | ---: |
+| Four corrected corpora | 92,934 / 1,233 | 32,113 / 473 | 23,312 / 458 |
+| All 51 corpora | 842,014 / 15,492 | 315,033 / 5,861 | 237,921 / 5,733 |
+
+Compared with the separate RC18 campaign on the same derived inputs, the
+51 cold totals increased by 3.94% JS, 3.93% native Release and 4.78% native Dev.
+Three samples per cell, environmental variability and the disclosed pause do
+not establish a causal attribution to a compiler change. These are backend
+generation measurements, not frontend/build or application runtime results.
+
+The public [JSON samples](benchmark-results/2026-11-13-rc20.json) and
+[CSV samples](benchmark-results/2026-11-13-rc20.csv) contain all 1,225 recorded
+invocations, their timing columns and the explicit warmup exclusion. The
+per-cell medians and the 47/4/51 totals were recomputed against the audit.
+These exports contain no private source files or local filesystem paths.
+
+Detailed records and verified archives remain under
+`.gopurs-evidence/publication-rc20-20261113/benchmark-audit` at the local workspace
+root; private b8x inputs are not uploaded. The case archive contains all 2,553
+retained/excluded files, and the frozen-input archive contains 32,176 entries.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| Terminal audit | `2f20b55188679fc21296a52e35e375a9df8beb8f5a882f66df58e75add539de9` |
+| Archive checksum list | `7a8bfd6c649d1319f3d73b0631570ae5e589d9d400bac03121f0bfe251bf8e59` |
+| Case records | `8b2cda309e1b8b6a10d53ca3c7a9b35ad78064261320045a20d9eb7c3802dfe7` |
+| Frozen inputs | `2f6948365efb994ef75353421885ce4f0962d55e41f1a0f73f5ab2e0a80895e0` |
+
+The two native helpers were preserved and hashed after completion; their
+hashes were not sampled per invocation. The successful audit and benchmark
+do not substitute for fixture, artifact or public-consumer qualification.
+
+## Earlier campaigns
+
+The [12 November RC18 campaign](https://github.com/0x000000000000000000001/gopurs/blob/e691356fe2f0e22bab0d97b4aa08ddd8676e1eed/docs/release-benchmark.md#completed-rc18-campaign--12-november-2026-utc)
+retains its own inputs, results and qualification limits.
 The [27 October 2026 campaign report](https://github.com/0x000000000000000000001/gopurs/blob/7589ec34aed08ec3b7dfc52014a4253b007b2fdc/docs/release-benchmark.md#completed-local-campaign--27-october-2026)
 retains the measured results and evidence identities for that compiler. Use the
 procedure below for a new candidate; do not treat those results as its qualification.

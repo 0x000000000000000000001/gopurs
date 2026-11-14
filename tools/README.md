@@ -41,6 +41,7 @@ plain Node ESM unless noted. `*.test.mjs` files stay at the top level so that
 | `ci/release-draft.mjs` | prepare GitHub release drafts |
 | `ci/release-finalized.mjs` | finalize a release |
 | `ci/release-inputs.mjs` | verify release inputs and provenance |
+| `ci/release-recovery.mjs` | verify the restricted RC20 recovery inputs and retained qualification artifacts |
 
 ## Build and bootstrap
 
@@ -82,6 +83,7 @@ plain Node ESM unless noted. `*.test.mjs` files stay at the top level so that
 | `preparation-source-variants.mjs`, `preparation-transition-oracles.mjs` | preparation contract helpers used by tests |
 | `build/pgo.mjs` | profile-guided optimization for the Rust host |
 | `release/release-prepare.mjs`, `release/release-smoke.mjs`, `release/release-quality.mjs` | release gates |
+| `release/official-compiler.mjs` | select the stock frontend for the release JavaScript oracle without using PATH |
 | `release/release-benchmark.mjs` | release benchmark campaign |
 | `release/release-quality-modules.mjs` | module inventory and evidence |
 | `release/release-quality-report.mjs` | quality report merge and identity |
@@ -93,6 +95,13 @@ plain Node ESM unless noted. `*.test.mjs` files stay at the top level so that
 ## Guardrails
 
 `check-docs.mjs` verifies relative links, packaged files and module-map coverage.
+
+`sync-docs.mjs` generates the marked version and dependency blocks in the user
+guides from `package.json` and `bootstrap-sources.json`. `npm run docs:sync`
+updates them; `npm run docs:check` checks them without writing. The `npm version`
+hook updates and stages these documents before npm creates its version commit.
+CI checks the real documentation before choosing its build scope, and release
+packaging rejects stale blocks. Historical results remain outside generation.
 
 `check-output-identity.mjs` compares two output trees, or a tree against a
 manifest, without parsing the generated Go:

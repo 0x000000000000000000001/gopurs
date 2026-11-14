@@ -18,6 +18,7 @@ import {
 import { arch, platform } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { readRecoverySource, recoveryBase, validateRecoveryEnvironment } from "./release-recovery.mjs";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const storePath = /^\/nix\/store\/[0-9abcdfghijklmnpqrsvwxyz]{32}-[A-Za-z0-9+._?=-]+$/;
@@ -241,22 +242,38 @@ function importEnvironment(directory, contextPath, profile, env) {
     manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
   const context = sourceContext(env),
     artifact = selected.artifacts.find((value) => value.logicalName === `fixture-environment-${context.target}`);
-  assert.equal(selected.source.commit, context.source.commit);
-  assert.equal(selected.target, context.target);
-  assert.equal(selected.github.repository, context.github.repository);
-  assert.equal(selected.github.runId, context.github.runId);
-  assert.equal(selected.github.finalizationAttempt, context.github.runAttempt);
-  assert.ok(artifact);
-  positive(artifact.attempt);
-  assert.ok(Number(artifact.attempt) <= Number(context.github.runAttempt));
-  assert.equal(selected.jobs.length, 1);
-  assert.deepEqual(selected.jobs[0], {
-    id: artifact.producerJobId,
-    name: `build and test (${context.target})`,
-    attempt: artifact.attempt,
-  });
-  context.github.runAttempt = artifact.attempt;
-  validateManifest(manifest, context);
+  let original = context;
+  if (selected.schema === 3) {
+    assert.deepEqual(selected.recovery.proof, readRecoverySource(root).proof);
+    original = validateRecoveryEnvironment(manifest, context, selected);
+    assert.equal(manifest.source.tree, command("git", ["rev-parse", `${recoveryBase.commit}^{tree}`]).trim());
+    assert.deepEqual(selected.jobs, [
+      {
+        id: artifact.producerJobId,
+        name: `build and test (${context.target})`,
+        attempt: artifact.attempt,
+        commit: recoveryBase.commit,
+        runId: recoveryBase.runId,
+      },
+    ]);
+  } else {
+    assert.equal(selected.source.commit, context.source.commit);
+    assert.equal(selected.target, context.target);
+    assert.equal(selected.github.repository, context.github.repository);
+    assert.equal(selected.github.runId, context.github.runId);
+    assert.equal(selected.github.finalizationAttempt, context.github.runAttempt);
+    assert.ok(artifact);
+    positive(artifact.attempt);
+    assert.ok(Number(artifact.attempt) <= Number(context.github.runAttempt));
+    assert.equal(selected.jobs.length, 1);
+    assert.deepEqual(selected.jobs[0], {
+      id: artifact.producerJobId,
+      name: `build and test (${context.target})`,
+      attempt: artifact.attempt,
+    });
+    context.github.runAttempt = artifact.attempt;
+  }
+  validateManifest(manifest, original);
   validateCoreEnvironment(manifest, selected.qualificationIdentity);
   assert.deepEqual(cacheInventory(join(directory, "cache")), manifest.cache, "Transferred cache bytes differ");
   command("nix", [
@@ -295,7 +312,8 @@ function importEnvironment(directory, contextPath, profile, env) {
   console.log(`Imported ${imported.length} runtime paths from original build attempt ${artifact.attempt}`);
   writeFileSync(
     env.GITHUB_ENV,
-    `GOPURS_QUALITY_ENVIRONMENT=${manifestPath}\nGOPURS_FIXTURE_PROFILE=${manifest.environment.profile}\n`,
+    `GOPURS_QUALITY_ENVIRONMENT=${manifestPath}\nGOPURS_FIXTURE_PROFILE=${manifest.environment.profile}\n` +
+      (selected.schema === 3 ? `GOPURS_RECOVERY_CONTEXT=${contextPath}\n` : ""),
     { flag: "a" },
   );
 }

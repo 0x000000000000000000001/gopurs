@@ -220,3 +220,53 @@ test("CLI reports failures and preserves successful output across backends", asy
     }
   });
 });
+
+test("batch missing-FFI annotations are canonical across compiler hosts", t => {
+  const selected = process.env.GOPURS_TEST_MODES?.split(",") ?? ["js", "native-sequential", "native-parallel"];
+  const modes = [
+    { name: "js", js: "1", jobs: "1", pipeline: "0" },
+    { name: "native-sequential", js: "0", jobs: "1", pipeline: "0" },
+    { name: "native-parallel", js: "0", jobs: "8", pipeline: "1" },
+  ].filter(mode => selected.includes(mode.name));
+  assert.ok(selected.length > 0 && new Set(selected).size === selected.length);
+  assert.equal(modes.length, selected.length, "unknown host mode");
+  if (modes.some(mode => mode.js === "0")) {
+    assert.ok(existsSync(join(root, "bin/gopurs-native")), "run npm run build:native first");
+  }
+  const workspace = createWorkspace();
+  t.after(() => rmSync(workspace, { recursive: true, force: true }));
+  const sourceDirectory = 'src/entrée λ & <> " \\ \\u0026 \\u003c \\u003e \\u2028 \\u2029 \u2028 \u2029';
+  const source = sourceDirectory + "/Missing.purs";
+  mkdirSync(join(workspace, sourceDirectory), { recursive: true });
+  writeFileSync(join(workspace, source), "module Missing where\nforeign import missing :: String -> String\n");
+  const frontend = run(findTypedCompiler(root, process.env.GOPURS_PURS),
+    ["compile", "--codegen", "corefn", source], workspace);
+  assert.equal(frontend.status, 0, frontend.stdout + frontend.stderr);
+  const output = join(workspace, "output"), inputs = join(workspace, "tast");
+  cpSync(output, inputs, { recursive: true });
+  const expected = {
+    binding: "_Gopurs_Missing_Missing", module: "Missing",
+    path: sourceDirectory + "/Missing.go", symbol: "missing",
+  };
+  const prefix = "//gopurs:missing-ffi-v1:";
+  const expectedLine = prefix + JSON.stringify(expected).replace(/[&<>\u2028\u2029]/gu,
+    char => "\\u" + char.charCodeAt(0).toString(16).padStart(4, "0"));
+  let reference;
+  for (const mode of modes) {
+    rmSync(output, { recursive: true, force: true });
+    cpSync(inputs, output, { recursive: true });
+    const result = run(launcher, [], workspace, {
+      ...environment, GOPURS_JS: mode.js, GOPURS_RUST: "0", GOPURS_DAEMON: "0", GOPURS_RESIDENT: "0",
+      GOPURS_JOBS: mode.jobs, GOPURS_PREPARE_JOBS: mode.jobs, GOPURS_PBO_JOBS: mode.jobs,
+      GOPURS_EMIT_JOBS: mode.jobs, GOPURS_PIPELINE: mode.pipeline,
+    });
+    assert.equal(result.status, 0, `${mode.name}: ${result.stdout}${result.stderr}`);
+    const lines = readFileSync(join(output, "purescript/Missing_ffi.go"), "utf8")
+      .split("\n").filter(line => line.startsWith(prefix));
+    assert.deepEqual(lines, [expectedLine], mode.name);
+    assert.deepEqual(JSON.parse(lines[0].slice(prefix.length)), expected, "metadata strings survive JSON encoding");
+    const files = generatedFiles(output);
+    if (reference) assert.deepEqual(files, reference, mode.name);
+    else reference = files;
+  }
+});

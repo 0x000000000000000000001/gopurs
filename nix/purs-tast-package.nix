@@ -1,5 +1,5 @@
 # Generated with cabal2nix 2.21.3 from the TAST compiler revision
-# 105f5752b39cc0f6c99a40064295338bf57ad223. The source is supplied by
+# ae6a6f644502bafcfa4fa94d8f81a1a1a1ca5080. The source is supplied by
 # the locked flake input; keep this dependency description in sync with it.
 { src
 , mkDerivation
@@ -76,7 +76,7 @@
 , vector
 , witherable
 }:
-assert src.rev == "105f5752b39cc0f6c99a40064295338bf57ad223";
+assert src.rev == "ae6a6f644502bafcfa4fa94d8f81a1a1a1ca5080";
 mkDerivation {
   pname = "purescript";
   version = "0.15.16";
