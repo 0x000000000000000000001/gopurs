@@ -21,7 +21,7 @@ const fixture = t => {
 };
 
 const moduleRow = (name, path = `src/${name}.purs`, phase = "Entry") =>
-  `| \`${name}\`<br>\`${path}\` | \`${name}\` | ${phase} | Test module. | — |\n`;
+  `| \`${name}\`<br>\`${path}\` | ${phase} | Test module. | — |\n`;
 
 test("accepts relative links and GitHub anchors", t => {
   const { write, run } = fixture(t);
@@ -38,6 +38,16 @@ test("reports a missing relative target", t => {
   const result = run("--links-only", "README.md");
   assert.equal(result.status, 1);
   assert.match(result.stderr, /missing target docs\/nope\.md/);
+});
+
+test("checks build-cache and testing guides by default", t => {
+  const { write, run } = fixture(t);
+  write("docs/build-cache.md", "# Cache\n\n[old report](build-baseline.md)\n");
+  write("docs/testing.md", "# Testing\n\n[old log](history/tests.md)\n");
+  const result = run("--links-only");
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /docs\/build-cache\.md: missing target/);
+  assert.match(result.stderr, /docs\/testing\.md: missing target/);
 });
 
 test("preserves consecutive spaces in anchors after punctuation removal", t => {
@@ -70,7 +80,7 @@ test("checks every package.json files entry", t => {
   write("package.json", JSON.stringify({ files: ["README.md", "missing.md"] }));
   write("README.md", "# Root\n");
   write("src/Test.purs", "module Test where\n");
-  write("docs/module-map.md", "# Map\n\n| Module | Target | Phase | Responsibility | Depends on |\n| --- | --- | --- | --- | --- |\n" + moduleRow("Test"));
+  write("docs/module-map.md", "# Map\n\n| Module | Phase | Responsibility | Depends on |\n| --- | --- | --- | --- |\n" + moduleRow("Test"));
   const result = run();
   assert.equal(result.status, 1);
   assert.match(result.stderr, /files entry does not exist: missing\.md/);
@@ -82,7 +92,7 @@ test("requires one module-map row per source module", t => {
   write("README.md", "# Root\n");
   write("src/A.purs", "module A where\n");
   write("src/B.purs", "module B where\n");
-  write("docs/module-map.md", "# Map\n\n| Module | Target | Phase | Responsibility | Depends on |\n| --- | --- | --- | --- | --- |\n" + moduleRow("A"));
+  write("docs/module-map.md", "# Map\n\n| Module | Phase | Responsibility | Depends on |\n| --- | --- | --- | --- |\n" + moduleRow("A"));
   const result = run();
   assert.equal(result.status, 1);
   assert.match(result.stderr, /missing row for B \(src\/B\.purs\)/);
@@ -93,7 +103,7 @@ test("rejects a module-map path that does not match the source file", t => {
   write("package.json", JSON.stringify({ files: ["README.md"] }));
   write("README.md", "# Root\n");
   write("src/A.purs", "module A where\n");
-  write("docs/module-map.md", "# Map\n\n| Module | Target | Phase | Responsibility | Depends on |\n| --- | --- | --- | --- | --- |\n" + moduleRow("A", "src/Wrong.purs"));
+  write("docs/module-map.md", "# Map\n\n| Module | Phase | Responsibility | Depends on |\n| --- | --- | --- | --- |\n" + moduleRow("A", "src/Wrong.purs"));
   const result = run();
   assert.equal(result.status, 1);
   assert.match(result.stderr, /declares src\/Wrong\.purs, actual file is src\/A\.purs/);

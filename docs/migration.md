@@ -103,7 +103,7 @@ func Prefix(value string) string {
 }
 ```
 
-The [Go FFI guide](https://github.com/0x000000000000000000001/gopurs/blob/edge/docs/development.md#go-ffi) covers signatures and representations
+The [Go FFI guide](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/development.md#go-ffi) covers signatures and representations
 for other types. The `.js` implementation serves the JavaScript target, while
 gopurs reads the `.go` implementation. In RC14, a missing Go implementation can
 produce a successful build followed by `FFI not implemented` at runtime.

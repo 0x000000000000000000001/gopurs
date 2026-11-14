@@ -1,8 +1,8 @@
 # Publication scope and compatibility policy
 
 Status: decision record for the first public release of `gopurs`. It defines
-what users may rely on. It is not evidence that the release gates in
-[`todo.md`](https://github.com/0x000000000000000000001/gopurs/blob/main/todo.md) have passed.
+what users may rely on. Qualification evidence is recorded separately in the
+[quality record](quality-0.1.0.md); the gates are defined in [release.md](release.md).
 
 ## Release identity
 
@@ -27,8 +27,6 @@ artifact and installation path as the final release.
 RC14 is available as a [GitHub prerelease](https://github.com/0x000000000000000000001/gopurs/releases/tag/v0.1.0-rc.14)
 and on npm `next`. Its qualification and consumer checks are recorded in the
 [quality record](quality-0.1.0.md).
-RC13 failed qualification and remains unpublished with its tag unchanged;
-the recorded RC7 and local campaign results retain their original scope.
 
 For the first npm publication, the registry also assigned `latest` to RC7 and
 refused its removal. This was explicitly accepted and documented in the
@@ -100,13 +98,12 @@ The target matrix for `0.1.0` is:
 | Windows | Not supported | Not supported | Out of scope for `0.1.0` |
 | 32-bit targets | Not supported | Not supported | Out of scope for `0.1.0` |
 
-Release-blocking means that the platform must pass the release checks in blocks
-2 and 5. It is not a claim that those checks have already passed.
+Release-blocking means that the platform must pass the
+[release checks](release.md). It is not a claim that those checks have already
+passed.
 
 RC14's successful `darwin/arm64` qualification uses the ARM64 `macos-15` runner;
 this campaign does not establish tested compatibility with macOS 14.
-RC8's campaign was cancelled before any macOS steps ran during the
-`macos-14` shutdown schedule. RC8 remains unqualified and unpublished.
 
 Toolchain reference:
 
@@ -122,8 +119,8 @@ Generated `go.mod` files declare Go 1.22. That declaration is not a support
 claim for older toolchains: only the reference Go version is validated for
 `0.1.0`. The initial CI validated the Nix packages, application checks and
 development shell on `aarch64-linux`, `x86_64-linux` and `aarch64-darwin`.
-The [quality record](quality-0.1.0.md) distinguishes those initial results from
-the subsequent clean-tree and tagged RC14 qualification. The development shell is a
+The [quality record](quality-0.1.0.md) documents the tagged RC14 qualification
+and public consumer checks. The development shell is a
 development environment, not a production artifact.
 
 ## Licensing and attribution
@@ -160,7 +157,7 @@ A new runtime dependency must not be added without updating
   removal when a compatible migration exists. Removal may be immediate when
   keeping the old behavior would be unsafe.
 - Support requests and defect reports use the repository issue tracker.
-  Security reports follow `SECURITY.md`, added before publication.
+  Security reports follow [`SECURITY.md`](../SECURITY.md).
 - `gopurs` is not a drop-in replacement for the upstream PureScript compiler.
   It requires the typed compiler fork and the documented Go library ports.
 

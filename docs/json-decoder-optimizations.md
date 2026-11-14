@@ -1,150 +1,85 @@
-# Optimisations du code généré pour les décodeurs JSON
+# JSON decoder code generation
 
-Les changements du 22 septembre 2026 réduisent les représentations
-intermédiaires produites par la composition de décodeurs. Ils interviennent dans
-le générateur Go, après PBO, et s'appliquent à des formes générales de programme.
-Aucun schéma JSON, module de benchmark ou traitement particulier du TAST n'est
-encodé dans ces règles. Le parseur JSON et la validation réalisée par les
-décodeurs restent les mêmes.
+These general compiler rules reduce intermediate representations in composed
+PureScript decoders. They run after PBO and do not encode a JSON schema,
+benchmark name or special TAST decoder. Parsing and decoder validation retain
+their existing semantics.
 
-Les mesures finales et les ablations sont consignées séparément dans le
-[bilan altbak des optimisations JSON générées](../../../altbak.pub-gopurs/docs/benchmark-results/2026-09-22-generated-json-optimizations.md).
-Cette note décrit le périmètre de l'implémentation et
-ses garanties ; elle ne reprend pas les chiffres des prototypes scratch.
+## Array/Either traversal
 
-## Fusion de la traversée indexée Array/Either
+[ArrayTraverse](../src/Gopurs/ArrayTraverse.purs) recognizes qualified indexed
+traversals with the standard Array and Either dictionaries. It replaces the
+intermediate mapped-result array and repeated reconstruction with one private
+output buffer. Two supplied arguments create a reusable binary worker, three
+capture the callback, and four execute the traversal.
 
-[ArrayTraverse](../src/Gopurs/ArrayTraverse.purs), appelé depuis
-[CallExprs](../src/Gopurs/CallExprs.purs), reconnaît les applications qualifiées de
-`Data.TraversableWithIndex.traverseWithIndexDefault` ou `traverseWithIndex` lorsque
-les deux premiers arguments sont explicitement les dictionnaires standards
-`Data.TraversableWithIndex.traversableWithIndexArray` et
-`Data.Either.applicativeEither`.
+Arguments are captured once, in order and at their original partial-application
+stage. Every callback runs in index order, including after the first failure:
+the original strict mapping evaluated them all. Only the first `Left` is
+returned. Inputs stay unchanged and repeated invocations own separate buffers.
+Unknown dictionaries, other Applicatives and unsupported arities retain the
+generic path. Constructor tags and fields come from shared ADT metadata.
 
-L'implémentation générique compose `mapWithIndex` et `sequence`. La règle émet une
-boucle avec un buffer résultat privé, rempli par index, qui remplace le tableau
-intermédiaire des résultats et la reconstruction par sous-tableaux/concaténations
-du parcours générique. Elle conserve le premier `Left` et retourne un `Right`
-contenant le tableau lorsque tous les éléments réussissent.
+Nonindexed forms and direct native callbacks are described in
+[fused Either traversals](json-traversals.md). The output buffer remains
+`[]Value`; callback payloads may still require boxing even when the callback
+itself returns a native result.
 
-Les gardes et contraintes sont les suivantes :
+## Immediate applications
 
-- Deux arguments créent un worker binaire réutilisable, trois arguments créent
-  une fermeture attendant le tableau et quatre exécutent la traversée. Les autres
-  arités conservent le chemin ordinaire.
-- Les symboles homonymes d'autres modules, les dictionnaires locaux ou opaques et
-  les autres `Applicative` ne déclenchent pas la règle.
-- Chaque argument est capturé une fois, dans l'ordre, avant les instructions du
-  suivant. La création du callback reste au même stade dans la forme partielle.
-- Le callback reçoit chaque index et chaque élément dans l'ordre, **y compris
-  après le premier échec**. La boucle ne fait pas de sortie anticipée : le
-  `mapWithIndex` strict d'origine évaluait tous les callbacks avant `sequence`.
-- L'entrée n'est pas modifiée. Chaque invocation, y compris d'une fermeture
-  partielle réutilisée, possède son propre buffer résultat.
-- Les tests de tags, accès aux champs et constructions d'ADT utilisent
-  [AdtExprs](../src/Gopurs/AdtExprs.purs) et les métadonnées de constructeurs. La
-  règle ne contient ni tags numériques ni disposition d'erreur Argonaut.
+[ImmediateApplications](../src/Gopurs/ImmediateApplications.purs) reduces a
+known unary lambda application after function/thunk fusion and before ownership
+analysis and tail-call optimization. It can move an application into a `Let`
+or branches only when every result permits eliminating that application.
 
-Cette transformation ne constitue pas une réécriture générale des traversées
-`Applicative`. En particulier, conserver seulement le premier résultat en erreur
-n'autorise pas à supprimer les appels suivants.
+The substituted argument must already be a value: a local, scalar literal or
+lambda without `LetRec`. Locals and scalar literals may replace repeated uses;
+a lambda cannot replace multiple uses within one body. When distributing into
+branches, the total duplicated syntax must fit a 128-node growth budget,
+counting all substitutions rather than only the largest branch. Zero or one
+substitution imposes no size limit. Branches have at most four explicit
+alternatives and must also have a reducible default; an explicit failure is
+also admitted without evaluating the callback.
 
-## Réduction des applications immédiates
+Calls, global getters, field accesses, constructors and arrays are not movable
+arguments. Recursive scopes, opaque function results and partial applications
+of multi-parameter lambdas retain their calls. Transplanted bound variables
+receive fresh levels; free variables keep their original bindings. Recognition
+passes through `Typed` and `TypeApp` without discarding annotations globally.
+Callback effects and divergence stay deferred until invocation.
 
-[ImmediateApplications](../src/Gopurs/ImmediateApplications.purs) réduit une
-application immédiatement connue à une lambda unaire. La passe intervient après
-les fusions de fonctions et de thunks, avant l'analyse d'ownership et le TCO. Elle
-peut également déplacer l'application sous un `Let` ou dans les branches d'un
-producteur de fonctions, lorsque chaque résultat possible permet effectivement
-d'éliminer l'application.
+## Native Maybe, Either and Tuple results
 
-La substitution est limitée à un argument qui est déjà une valeur : local,
-lambda sans `LetRec`, ou littéral scalaire. L'argument compte au plus 128 nœuds ;
-le paramètre remplacé apparaît au plus une fois dans le corps. Les branches
-acceptées ont au plus quatre alternatives explicites, et leur branche par défaut
-doit aussi être réductible. Une branche retournant une fonction opaque reste
-inchangée.
+[TypedExprs](../src/Gopurs/TypedExprs.purs) can preserve a `TypeStructValue`
+when the expected representation is boxed but its ADT identity matches the
+recognized native result. An annotation alone then does not force an
+intermediate `Value` wrapper.
 
-Les appels, getters globaux, accès aux champs, constructeurs et tableaux ne sont
-pas des arguments déplaçables. Les scopes `LetRec` restent intacts. Une lambda à
-plusieurs paramètres partiellement appliquée garde son appel. Les variables liées
-de la valeur transplantée reçoivent des niveaux frais, supérieurs aux niveaux de
-l'expression initiale, pour éviter une capture entre scopes frères. Les variables
-libres continuent de désigner leur liaison d'origine.
-
-La reconnaissance traverse les enveloppes `Typed` et `TypeApp` de l'expression
-fonctionnelle. Elle réduit une application connue ; elle ne supprime pas
-globalement les annotations de type. Les effets et la divergence contenus dans
-un callback restent différés jusqu'à son appel. Les tests protègent notamment les
-branches qui ignorent ce callback, les effets précédant la branche sélectionnée
-et la réutilisation de la fonction produite.
-
-## Conservation des résultats natifs Maybe, Either et Tuple
-
-Le traitement de `Typed` dans [CodeGen](../src/Gopurs/CodeGen.purs) conserve un
-résultat `TypeStructValue` lorsque l'annotation attend `TypeValue` et que son identité d'ADT correspond à celle reconnue
-par `getUnboxedADT` dans [GoConversions](../src/Gopurs/GoConversions.purs).
-L'annotation décrit alors une valeur déjà représentée par la structure native
-attendue ; elle ne provoque plus à elle seule un emballage intermédiaire en
-`gopurs_runtime.Value`.
-
-La règle utilise les représentations existantes :
-
-| Type | Champs de la représentation native |
+| Native value layout | Payload and discriminant slots |
 | --- | --- |
-| `Maybe` | Valeur en `V0`, présence en `V1` |
-| `Either` | Valeur gauche en `V0`, valeur droite en `V1`, choix de branche en `V2` |
-| `Tuple` | Première valeur en `V0`, seconde en `V1` |
+| `Maybe` | Payload `V0`, presence `V1` |
+| `Either` | Left `V0`, right `V1`, branch `V2` |
+| `Tuple` | First `V0`, second `V1` |
 
-Les champs de données restent des `Value` et les indicateurs des `bool`. La table
-`fieldIndex` partagée avec les conversions permet à `AdtExprs.getField` de lire
-directement le bon champ natif, notamment `V1` pour le contenu de `Right`.
+For these value layouts, payload slots are `Value` and discriminants are
+`bool`. More precise native pointer layouts retain their own typed payloads
+and conversion rules. Shared field metadata selects the correct slot, notably
+`V1` for `Right`. Dynamic boundaries and public `Get_…` wrappers still box when
+required. Preserving one native envelope does not make every nested payload
+native or generalize the layout to arbitrary ADTs.
 
-La garde porte sur l'identité du résultat réellement traduit et celle de l'ADT
-annoté, et exige une conversion attendue vers `TypeValue`. Un layout natif de pointeur déjà plus précis conserve sa conversion et ses payloads typés. Une frontière dynamique nécessitant un `Value` conserve son boxing, ainsi
-que les wrappers publics `Get_…`. Les tests de tags et les conventions des
-constructeurs restent partagés avec les autres chemins du générateur. Ces
-changements ne créent pas de nouveau `GoType` et ne généralisent pas cette
-représentation à tous les ADT.
+## Validation
 
-## Validation ciblée
-
-Les tests exécutent du Go généré, en plus des assertions structurelles :
-
-| Test | Contrat vérifié |
-| --- | --- |
-| [array-traverse-either.test.mjs](../tools/array-traverse-either.test.mjs) | Reconnaissance stricte ; 11 055 comparaisons contre le `TraverseArrayImpl` FFI courant, avec tailles de 0 à 65 et toutes les positions du premier échec ; ordre des arguments et callbacks, premier `Left`, entrée intacte, buffers indépendants, formes natives/boxées/partielles. Le fixture CodeGen comprend la forme à trois arguments rencontrée dans `decodeArray`. |
-| [immediate-applications.test.mjs](../tools/immediate-applications.test.mjs) | Réductions permises, refus des arguments évaluables et des branches opaques, absence de duplication d'un paramètre utilisé plusieurs fois, scopes récursifs conservés ; oracle Go de capture, effets, échec et réutilisation. |
-| [native-sum-results.test.mjs](../tools/native-sum-results.test.mjs) | Champs natifs de `Maybe`, `Either` et `Tuple`, absence de reboxing lors des lectures de résultats annotés, tags et payloads corrects aux frontières dynamiques, wrappers et évaluation unique des producteurs. |
-
-Ces tests se lancent depuis la racine de gopurs, après compilation du backend JS :
+After building:
 
 ```sh
 node --test tools/array-traverse-either.test.mjs tools/immediate-applications.test.mjs tools/native-sum-results.test.mjs
 ```
 
-Le test d'applications immédiates compare l'exécution optimisée à un oracle
-explicite. Il ne présente pas deux appels à `CodeGen.translate`, qui inclut déjà
-la passe, comme une comparaison avant/après. Les empreintes des corpus complets,
-la présence des règles dans les vrais décodeurs régénérés et les ablations de
-performance relèvent du bilan altbak lié plus haut.
-
-## Limites actuelles
-
-La fusion de tableaux utilise encore `Apply2` pour le callback. Son résultat
-intermédiaire est un `Value`, le buffer de sortie est un `[]Value` et l'Either
-final franchit une frontière boxée. Elle ne supprime donc pas les boîtes créées
-par le callback lui-même. La spécialisation de sa signature et le maintien d'un
-résultat natif jusque dans la boucle restent des pistes distinctes à valider.
-
-De même, conserver la structure native de `Maybe`, `Either` ou `Tuple` élimine
-une enveloppe sans rendre leurs payloads récursivement natifs. Une évolution vers
-des payloads typés doit préserver les accords entre signatures de workers,
-conversions, constructeurs, captures et interfaces FFI.
-
-Le décodage continue de consommer l'arbre JSON existant. Ces règles ne constituent
-ni un parseur spécialisé ni un décodeur direct depuis les octets. Elles ne
-modifient pas le contrat `tcorefn` : informations de type, déclarations, rangées,
-quantificateurs et validations du décodeur restent dans le périmètre de
-correction. Un gain sur ces diagnostics n'établit pas, à lui seul, le gain d'une
-compilation complète ou d'un chargement parallèle.
+The tests execute generated Go against explicit oracles, covering callback and
+argument order, calls after failure, first-error priority, untouched inputs,
+independent buffers, partial applications, lexical capture, effect timing,
+rejected shapes, native fields and dynamic boundaries. Real application
+performance comparisons follow the [benchmark protocol](benchmark-protocol.md).
+These rules still consume the existing JSON tree; they are not a byte-stream
+decoder and do not alter the typed `tcorefn` contract.

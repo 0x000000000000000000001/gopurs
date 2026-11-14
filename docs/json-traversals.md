@@ -31,7 +31,7 @@ statically known `traversableArray.traverse` dictionary field, and
 Unknown dictionaries and other Applicatives retain their original code.
 Arguments are captured in order at their original partial-application stage.
 
-The existing Array/Either fusion can now consume an adjacent two-parameter
+Array/Either fusion can consume an adjacent two-parameter
 lambda, or a unary lambda for the nonindexed traversal, as a native Go function.
 The callback's result retains its generated
 representation, including a native Either and native record success payload.
@@ -44,12 +44,11 @@ index order; only the first error is returned. The output array remains
 `[]Value`, so boxing the final element payload is still required. This is a
 local consumer optimization, not a complete native dictionary/callback ABI.
 
-The same campaign changes PBO's own `getField` and `getFieldOptional'` helpers
-to construct `AtKey` wrappers only after a decoding failure. Missing fields,
+PBO's `getField` and `getFieldOptional'` helpers construct `AtKey` wrappers only after a decoding failure. Missing fields,
 `null`, nested errors and the number of decoder calls retain their existing
 semantics. The parser and TypeTable helpers are unchanged.
 
-## Validation and measurements
+## Validation
 
 - `NativeTraverseCallback` covers native record results, first-error priority,
   calls after failure, empty arrays, reusable captures and staged lambdas.
@@ -60,12 +59,19 @@ semantics. The parser and TypeTable helpers are unchanged.
   first-error priority, all callbacks, empty input, reusable captures and
   unchanged input.
 - The object traversal generator tests cover supplied argument counts,
-  dictionary/default fallbacks, and 270 comparisons against the existing
-  traversal, including numeric and non-ASCII keys and output independence.
+  dictionary/default fallbacks, and comparisons against the existing traversal,
+  including numeric and non-ASCII keys and output independence.
 - Real JSON and TAST diagnostic measurements use the original PureScript
   programs and independent fixed oracles.
 - PBO's `json-fields` tests cover both changed helpers, including missing/null
   fields, complete error paths and exact decoder call counts.
 
-The paired campaign, current numbers, binary sizes and limitations are recorded
-in [the altbak report](../../../altbak.pub-gopurs/docs/benchmark-results/2026-09-22-fused-json-traversals.md).
+Run the focused compiler checks after building:
+
+```sh
+node --test tools/array-traverse-either.test.mjs tools/object-traverse-either.test.mjs
+bin/test NativeTraverseCallback ArrayTraverseEither ObjectTraverseEither
+```
+
+For performance measurements, use the [benchmark protocol](benchmark-protocol.md)
+and official altbak baselines.

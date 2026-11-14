@@ -1,222 +1,168 @@
-# Runtime et FFI du compilateur
+# Runtime and compiler FFI contracts
 
-## Propriétaires des frontières
+## Boundary owners
 
-| Frontière | Responsabilité |
+| Boundary | Owner |
 | --- | --- |
-| Types PureScript → représentations Go | `GoTypeOf`, `GoConversions` et `FfiBridge` choisissent le layout et les adaptations à partir du TAST. |
-| Appels du compilateur → hôte JS ou Go | Les compagnons FFI de `src/` implémentent la même opération observable ; leurs caches et buffers ont un propriétaire explicite. |
-| Valeurs Go boxées → stockage | `runtime/runtime.go` définit l'ABI de `Value`, les constructeurs, accès, applications et conversions génériques. |
-| Source du runtime → compilateur construit | `tools/build/embed-runtime.mjs` produit `Runtime/Source.js` et `Runtime/Source.go` ; `Gopurs.Runtime.Source` expose leur constante. |
-| Compilateur → application produite | `Driver.Output.writeRuntime` écrit la constante embarquée dans `output/gopurs_runtime/runtime.go`. |
+| PureScript types to Go representations | `GoTypes`, `GoConversions` and `FfiBridge`, using TAST. |
+| Compiler operations on JS, Go or Rust hosts | Foreign companions under `src/`, with explicit owners for mutable state. |
+| Boxed values and storage | `runtime/runtime.go`: `Value`, constructors, accessors, applications and conversions. |
+| Runtime source embedded in the compiler | `tools/build/embed-runtime.mjs` and `Gopurs.Runtime.Source`. |
+| Compiler to generated application | `Driver.Output.writeRuntime`, writing the embedded bytes to `output/gopurs_runtime/runtime.go`. |
 
-Le runtime est à la fois une API utilisée par les bibliothèques FFI et un
-**artefact source copié à l'octet près** dans chaque application. La revue du
-lot 14 garde ce fichier canonique unique : ses familles d'opérations sont
-cartographiées ci-dessous et leurs contrats exécutés directement sur cette
-source. Un découpage physique ou une réorganisation de ses déclarations
-modifierait cet artefact. Les extractions de ce lot portent sur la frontière
-interne du compilateur, où les responsabilités étaient mélangées.
+The runtime is both an API used by library FFI and a source artifact copied
+into applications. Tests exercise the canonical source directly; a built
+compiler does not read that source file at startup.
 
-## Stockage et durée de vie de `Value`
+## Value storage and lifetime
 
-`Value` contient un tag `Type`, un champ `IntVal` et un `UnsafePtr` suivi par le
-GC Go. Copier un `Value` copie cette enveloppe ; cela ne clone pas le stockage
-pointé. Le producteur garantit le tag et le layout attendus par l'accès choisi.
-Les accès directs de la FFI ne constituent pas un décodeur de valeurs arbitraires.
+`Value` contains a `Type` tag, an `IntVal` field and a GC-tracked `UnsafePtr`.
+Copying it copies the wrapper, not the pointed-to storage. Its producer must
+supply the tag and layout expected by the chosen accessor. Direct FFI access
+is not a decoder for arbitrary values.
 
-| Famille | Charge utile et propriété |
+| Family | Payload and sharing |
 | --- | --- |
-| Entiers, nombres, booléens | Charge dans `IntVal` ; les nombres utilisent `math.Float64bits`, les booléens 0/1. Les lectures typées passent notamment par `FloatVal`, `BoolVal` et `Unbox`. |
-| Chaînes | Longueur **en octets** dans `IntVal`, pointeur sur les octets immuables dans `UnsafePtr`. `Str`/`StrValue` sont la frontière de lecture/écriture ; une sous-chaîne retient son support. La chaîne vide est canonique sans pointeur. |
-| Tableaux | `Array` alloue l'enveloppe du slice et partage son support `[]Value`. La lecture d'un tableau de `Value` peut partager ce support ; une conversion vers une autre représentation convertit ses éléments. |
-| Records | `Record` partage la map fournie ; `RecordDict` partage les slices clés/valeurs. Les formes fixes `RecordDict0`…`5` possèdent leur petit conteneur. Les conteneurs publiés comme valeurs PureScript restent immuables. |
-| Valeurs opaques | `Any` retient une interface Go, donc aussi son objet, ses pointeurs et ses slices. Copier l'enveloppe conserve l'identité de cet objet ; la FFI propriétaire décide de sa mutabilité. |
-| Fonctions | `Func`…`Func11` conservent la closure et ses captures sur le tas via `forceEscape`. Les applications partielles retiennent les arguments fournis. `WithFunctionData` attache des métadonnées à la fonction ; une application partielle restitue une fonction ordinaire. |
-| ADT natifs | Le tag et le layout sont décidés par le générateur. `StructGetters` reçoit les getters pendant les `init` Go, avant leurs lectures concurrentes. Le champ `Rc` des ADT concernés sert au protocole de réutilisation ; la mémoire reste gérée par le GC. |
+| Integers, numbers, booleans | `IntVal`; floating-point values use `math.Float64bits`, booleans use 0/1. |
+| Strings | Byte length in `IntVal`, immutable byte pointer in `UnsafePtr`. `Str`/`StrValue` own the boundary; substrings retain backing storage. Empty strings have no pointer. |
+| Arrays | `Array` allocates a slice wrapper and shares `[]Value` backing storage. Conversions to another representation convert elements. |
+| Records | `Record` shares its map; `RecordDict` shares key/value slices. Fixed `RecordDict0` through `RecordDict5` own compact containers. Published PureScript containers are immutable. |
+| Opaque values | `Any` retains a Go interface and its referenced storage. Copies preserve identity; the owning FFI determines mutability. |
+| Functions | `Func` through `Func11` retain closures and captures on the heap through `forceEscape`. Partial applications retain supplied arguments. `WithFunctionData` attaches metadata; partial application returns an ordinary function. |
+| Native ADTs | Code generation selects tags and layouts. `StructGetters` registers getters during Go initialization. `Rc` participates in reuse protocols; the GC still owns memory reclamation. |
 
-Les constructeurs de conteneurs n'introduisent pas de copie profonde. Le passage
-FFI doit donc distinguer une **vue en lecture** d'un buffer privé à modifier.
-Les conversions `Box`/`Unbox` ne sont pas non plus une promesse générale de copie :
-`Box([]Value)` partage le support, tandis que `Box([]any)` construit les valeurs
-boxées dans un nouveau slice. Les conversions typées du générateur possèdent
-leurs propres règles, décrites dans [l'architecture](architecture.md).
+Container constructors and `Box`/`Unbox` do not promise deep copies.
+`Box([]Value)` shares backing storage; `Box([]any)` creates a new boxed slice.
+FFI must distinguish read-only views from privately owned writable buffers.
+See [packed strings](packed-strings.md), [closure lifetime](runtime-closures.md),
+[ADT reuse](adt-reuse.md) and [representation conversions](architecture.md#representations-and-conversions).
+`runtime.KeepAlive` alone does not replace the heap escape enforced by
+`forceEscape` for closure captures.
 
-Les [chaînes packées](packed-strings.md), les [closures](runtime-closures.md)
-et la [réutilisation d'ADT](adt-reuse.md) détaillent ces protocoles. En
-particulier, `runtime.KeepAlive` seul ne remplace pas l'échappement sur le tas
-des captures imposé par `forceEscape`.
+## Primitive semantics
 
-### Concaténation UTF-16
+### UTF-16 concatenation
 
-Les chaînes PureScript sont stockées en WTF-8 canonique : les paires de
-surrogates valides forment un scalaire UTF-8, et les surrogates isolés gardent
-leurs trois octets WTF-8. `ConcatString` recompose la paire pouvant apparaître
-entre un surrogate haut en fin d'opérande gauche et un surrogate bas en début
-d'opérande droit. Les opérandes restent immuables.
+PureScript strings use canonical WTF-8 storage: valid surrogate pairs form
+UTF-8 scalars, while isolated surrogates retain their three WTF-8 bytes.
+`ConcatString` combines a trailing high surrogate with a leading low surrogate
+across its operands, without mutating either operand.
 
-`PrimitiveExprs` émet ce helper pour `OpStringAppend` ; la FFI Go
-`Data.Semigroup.concatString` l'utilise aussi. Le compilateur natif emploie ainsi
-la même sémantique pendant le pliage des constantes. Une addition Go brute de
-deux chaînes ne suffit pas à respecter ce contrat UTF-16.
+`PrimitiveExprs` emits this helper for `OpStringAppend`; the Go
+`Data.Semigroup` FFI also uses it. The native compiler therefore uses the same
+semantics when folding constants. Plain Go string addition does not cover
+this boundary case.
 
-### Opérations sur `Int`
+### Int operations
 
-Les primitives suivent les FFI JS de référence de Prelude et `Data.Int.Bits` :
+Runtime helpers follow the reference JS FFI of Prelude and `Data.Int.Bits`:
 
-- `IntNegate`, `IntAdd` et `IntSub` rendent un entier signé sur 32 bits avec
-  débordement circulaire ; `negate bottom` vaut donc `bottom`.
-- `IntMul` reproduit `(a * b) | 0` : le produit est d'abord arrondi comme un
-  `Number`, puis converti sur 32 bits. Par exemple, `top * top` vaut `0` dans
-  cette référence. Le modulo `2^32` précède la conversion Go pour accepter les
-  produits dépassant la capacité d'un `int64`.
-- `IntBitNot`, `IntBitAnd`, `IntBitOr` et `IntBitXor` utilisent des opérandes
-  sur 32 bits. `IntShl`, `IntShr` et `IntZshr` masquent le compte par `31`, y
-  compris pour les comptes négatifs. `IntZshr` rend le résultat non signé.
-- `IntDiv` et `IntMod` respectent la division euclidienne de Prelude, avec zéro
-  pour un diviseur nul. La division `bottom / -1` rend `2147483648` ; le test
-  conserve explicitement ce comportement de la référence.
+- `IntNegate`, `IntAdd` and `IntSub` wrap to signed 32-bit results.
+- `IntMul` reproduces `(a * b) | 0`: round the product as a `Number`, then
+  convert to 32 bits. For example, `top * top` is `0`. Modulo `2^32` precedes
+  Go conversion for products beyond `int64` range.
+- Bitwise operands are 32-bit. Shifts mask the count by `31`, including
+  negative counts; `IntZshr` returns the unsigned result.
+- `IntDiv` and `IntMod` implement Prelude's Euclidean behavior and return zero
+  for a zero divisor. The reference result of `bottom / -1` is `2147483648`.
 
-`PrimitiveExprs` et les FFI Go de `Data.Semiring`, `Data.Ring` et
-`Data.Int.Bits` partagent ces helpers. Les wrappers binaires boxés délèguent aux
-mêmes opérations. Le stockage `int64` de `Value` porte aussi les résultats
-positifs de `zshr` et le quotient frontière : la conversion sur 32 bits se fait
-aux opérations concernées. Le compilateur natif utilise ces contrats pendant
-le pliage, et chaque opérande émis est évalué une seule fois, dans l'ordre.
+Generated primitives and the Go library FFI share these helpers. `Value`'s
+`int64` storage can carry unsigned-shift results and the division boundary;
+normalization occurs at the relevant operation. Operands are evaluated once
+and in order. Admitted [Int32 loops](int32-loops.md) can use signed native
+slots after proving their writes and checking entry ranges; worker boundaries
+and the general path retain `int64` storage.
 
-Les boucles scalaires admises par `Gopurs.Int32Loops` peuvent conserver un état
-local `int32` après vérification de sa plage initiale et de toutes ses écritures.
-Les additions et soustractions de ce chemin natif ont le même débordement signé.
-Le chemin général et les frontières des workers gardent le stockage `int64`,
-notamment pour les valeurs non signées et les sorties sans itération. La preuve
-et les limites de cette optimisation sont décrites dans
-[Bindings, captures et TCO](architecture.md#bindings-captures-et-tco).
+### Number formatting
 
-### Affichage des `Number`
+The Go `Data.Show.ShowNumberImpl` follows Prelude's JS `showNumberImpl`:
+shortest round-trippable binary64 digits, decimal notation for
+`1e-6 <= abs(n) < 1e21`, scientific notation otherwise. Exponents have `e`,
+an explicit sign and no padding; decimal integers receive `.0`.
+Both zeros print `0.0`; special values print `NaN`, `Infinity` and `-Infinity`.
+Stored negative zero remains distinct, and generated literals preserve it
+through `runtime.NegativeZero`. The executed JS FFI is the test oracle.
 
-La FFI Go `Data.Show.ShowNumberImpl` suit la FFI JS Prelude `showNumberImpl` :
-chiffres les plus courts permettant de retrouver le même binary64, notation
-décimale pour `1e-6 <= abs(n) < 1e21`, notation scientifique en dehors de cet
-intervalle. Les exposants utilisent `e`, un signe explicite et aucun zéro de
-remplissage (`1e-7`, `1e+21`). Un entier en notation décimale reçoit `.0`.
+## JSON views and updates
 
-Les deux zéros s'affichent `0.0` ; les valeurs spéciales sont `NaN`, `Infinity`
-et `-Infinity`. Cela ne modifie pas la valeur stockée : le générateur préserve
-les littéraux `-0` avec `runtime.NegativeZero`. Le compilateur natif utilise
-aussi cette FFI pour écrire les littéraux numériques Go.
+- `ReadJSONObject` borrows foreign maps and compact `JSONObject` storage.
+  `ReadJSONObjectValue` materializes maps for record representations.
+  A view does not authorize mutation of its source.
+- A compact `JSONObject` owns its storage and strings. `UnboxObject` and
+  `RecordToMap` materialize independent containers for it; nested values can
+  still share storage.
+- For opaque values already holding a map, `UnboxObject` directly returns a
+  `map[string]any` and `RecordToMap` directly returns a `map[string]Value`.
+  Writers must own that map or copy it explicitly.
+- `RecordSet` implements immutable insertion/replacement, including foreign
+  maps. `RecordUpdateDict` replaces existing fields in PureScript records;
+  compact forms share keys and copy values. Its map path inherits
+  `RecordToMap` sharing and is not a general copy operation for opaque maps.
 
-L'oracle est la FFI JS exécutée, sans arrondi arbitraire à 14 chiffres.
-`NumberLiterals` vérifie les mêmes valeurs depuis leurs littéraux et après
-lecture d'une `Effect.Ref`, dont les sous-normaux et les limites de notation.
+## Asynchronous work
 
-### Vues JSON et mises à jour
+`Retain`, `Release` and `EventLoopWait` track outstanding host tasks. Retain
+before starting a task and release exactly once on completion. The counter
+must be positive when waiting for that generation begins. This protocol
+controls program completion; Go references control value lifetime.
 
-- `ReadJSONObject` emprunte les maps étrangères et les `JSONObject` compacts.
-  `ReadJSONObjectValue` matérialise une map pour les représentations record.
-  Une vue ne donne pas l'autorisation de modifier le conteneur source.
-- Un `JSONObject` compact possède son stockage et ses chaînes.
-  `UnboxObject` et `RecordToMap` en matérialisent un conteneur indépendant,
-  avec partage possible des valeurs imbriquées.
-- Pour une valeur opaque contenant déjà une map, le contrat diffère :
-  `UnboxObject` rend directement une `map[string]any`, et `RecordToMap` rend
-  directement une `map[string]Value`. Les appelants qui écrivent doivent
-  posséder la map ou en faire une copie explicite.
-- `RecordSet` possède l'insertion et le remplacement immuables, y compris pour
-  les maps étrangères. `RecordUpdateDict` vise le remplacement de champs déjà
-  présents dans les records PureScript ; ses formes compactes partagent les
-  clés et copient les valeurs. Son chemin de map hérite du contrat de
-  `RecordToMap` : ce n'est pas une primitive de copie pour une map opaque.
+## Compiler companion contracts
 
-### Travail asynchrone
-
-`Retain`, `Release` et `EventLoopWait` comptent les tâches hôtes encore actives.
-Le producteur retient une tâche avant de la lancer ; celle-ci libère exactement
-une fois sa retenue à la fin. Le compteur doit déjà être positif quand l'attente
-d'une génération commence. Ce protocole supervise la fin du programme ; la
-durée de vie mémoire des valeurs reste assurée par leurs références Go.
-
-## Contrats des compagnons JS/Go
-
-| Module | Contrat commun et propriétaire de l'état |
+| Module | Contract |
 | --- | --- |
-| `Printer` | Échappement identique des littéraux : contrôles en `\xNN`, UTF-8 valide conservé, surrogates UTF-16 isolés représentés en WTF-8 puis échappés. Le scanner Go travaille en octets, sans itération qui remplacerait ces surrogates. |
-| `Printer.Builder` | Un buffer opaque par rendu. `pushImpl` modifie le buffer et retourne la même poignée ; les anciennes poignées sont des alias. Le résultat de `toStringImpl` est une chaîne immuable qui survit à la poignée. |
-| `GoAst` | `memoizeName` crée un cache par application partielle, y compris pour le résultat vide. Le callback est pur. En Go, le mutex encadre lecture et initialisation afin d'exécuter le callback une seule fois par clé. |
-| `GoCode` | JS appelle le fallback PureScript fourni. Go reçoit une chaîne native et rend un tableau de chaînes ; le pont généré possède les adaptations de représentation. Les deux reconnaissent les mêmes frontières de tokens, ignorent commentaires/littéraux et rendent des imports uniques triés. |
-| `GoImports` | Les entrées sont empruntées en lecture. Le résultat possède un nouveau tableau, garde l'ordre et les doublons et partage seulement les chaînes immuables. `collectImports` possède le tri et la déduplication. |
-| `FfiSupport` | Même parser Go et même protocole JSON. JS appelle le runner WASM ; Go appelle directement `gopurs_ffi_parser`, préparé par `prepare-native-output.mjs` ; Rust utilise l'archive Go via C. Extraction/préparation : opérations `0`/`1`. Liaison typée G02 : opération `2`, avec sources possédées et exports Go en octets. La façade décode la réponse ; les erreurs FFI d'extraction/préparation portent module/chemin. |
-| `Runtime` | Constante identique à la source canonique, embarquée dans les deux compilateurs. Aucune lecture de `runtime/runtime.go` au lancement du compilateur construit. |
-| `Metrics` | Temps monotone en millisecondes ; l'origine n'est pas commune aux deux hôtes. Le réglage du profil mémoire est effectif en Go et neutre en JS. Le pilote le configure avant les workers. |
-| `Main` | Après nettoyage et diagnostic unique, JS fixe le statut en laissant Node vider ses sorties ; Go termine avec le statut 1 après l'écriture synchrone. |
+| `Printer` | Identical literal escaping across hosts: control escapes, valid UTF-8 and isolated UTF-16 surrogates represented through WTF-8. The Go scanner works in bytes. |
+| `Printer.Builder` | One opaque buffer per render. `pushImpl` mutates and returns the same handle; older handles alias it. `toStringImpl` returns an immutable string. |
+| `GoAst` | `memoizeName` owns a cache per partial application, including empty results. The callback is pure; a Go mutex covers lookup and initialization. |
+| `GoCode` | JS uses the PureScript fallback; native Go scanning follows the same token boundaries, ignores literals/comments and returns unique sorted imports. |
+| `GoImports` | Inputs are borrowed. The returned array is new, preserving order and duplicates while sharing immutable strings; `collectImports` sorts and deduplicates. |
+| `FfiSupport` | The same Go parser and JSON protocol over WASM, native Go or a Go archive through C for Rust. Operations `0`/`1` extract/prepare FFI; operation `2` binds typed Go references. Extraction/preparation errors include module and path. |
+| `Runtime.Source` | Constant embedded from canonical Go source, with no runtime source-file read. |
+| `Host.Metrics` | Monotonic milliseconds with a host-local origin. Memory-profile configuration is effective in Go and neutral in JS, set before jobs begin. |
+| `Main` | One diagnostic after cleanup; JS allows output to drain, Go exits after synchronous output. |
 
-`Printer.Builder.withOut` confine la mutation à un callback synchrone et
-n'exporte que `Out`, `emit`, `emitMany` et `withOut`. Le callback chaîne les
-poignées dans l'ordre ; il ne doit pas capturer la poignée pour un autre rendu.
-Le type masque le constructeur sans prétendre assurer une propriété linéaire.
-La FFI Go conserve un **pointeur** de `strings.Builder`, jamais une copie de ce
-builder. Les rendus parallèles utilisent des buffers distincts.
+`Printer.Builder.withOut` confines mutation to a synchronous callback. Chain
+handles in order and do not retain one for another render. The opaque type
+does not guarantee linear ownership. Go stores a pointer to `strings.Builder`,
+never a copied builder; concurrent renders use different buffers.
 
-La FFI de `Cache.Pool` expose directement son pointeur Go ; les callbacks de
-`BuildCache` et `Host.Snapshot` sont des fonctions natives.
-Le pont généré conserve le boxing nécessaire à la frontière PureScript. Dans
-la convention FFI actuelle, le paramètre final `_ any` des opérations effectives
-garde leur exécution différée ; un callback `String -> Effect Unit` est représenté
-par `func(string) func()`. `GoImports.concatStringArrays` est générique pour
-conserver la représentation des éléments des tableaux imbriqués.
-`Printer.Builder` expose un pointeur natif. Le pont génère des workers directs
-dont les paramètres de pointeur restent des poignées boxées et les résultats
-scalaires restent natifs. Si un résultat renvoie le même pointeur qu'un argument
-de même type Go et PureScript, le pont réutilise son enveloppe ; un nouveau
-pointeur reçoit sa propre enveloppe. Les ajouts dans un buffer déjà dimensionné
-n'allouent donc pas une nouvelle poignée à chaque fragment.
-`Cache.TypeMemo` utilise une map générique à clés comparables. Le pont instancie
-ses opérations avec la représentation `Value` d'`ExprType`, conservant son tag
-et le propriétaire mémoire de son pointeur. La FFI ne dépend pas du runtime.
+`Cache.Pool` exposes its native pointer; `BuildCache` and `Host.Snapshot`
+callbacks are native functions. The bridge still supplies required PureScript
+boxing. A final `_ any` parameter keeps effectful operations delayed; a
+`String -> Effect Unit` callback becomes `func(string) func()`.
+`GoImports.concatStringArrays` is generic to preserve element representation.
 
-Les autres petites FFI gardent une responsabilité unique et ne demandent pas de
-dispatcher supplémentaire. Le parser, les adaptations typées des bibliothèques
-et les diagnostics restent respectivement dans `ffi-gen`, `FfiBridge` et
-`FfiSupport`/`Driver`. Les différences de transport n'ajoutent pas un deuxième
-parser ni une deuxième politique de représentation.
+For pointer-returning workers, the bridge reuses an argument's wrapper when
+the result is that same pointer with matching Go and PureScript types; a new
+pointer receives a new wrapper. `Cache.TypeMemo` uses comparable generic keys
+instantiated with the full `Value` representation of `ExprType`, preserving its
+tag and pointer owner. The companion does not depend on the runtime package.
 
-## Vérifications reproductibles
+The parser, typed adaptations and diagnostics remain owned by `ffi-gen`,
+`FfiBridge` and `FfiSupport`/`Driver`, respectively. Different host transports
+share parser and representation policy.
 
-Après `npm run build` :
+## Verification
+
+After building the compiler, select the relevant suites:
 
 ```sh
 node --test tools/native-ffi.test.mjs tools/embed-runtime.test.mjs \
-  tools/runtime-contracts.test.mjs tools/string-concat.test.mjs tools/closure-lifetime.test.mjs \
-  tools/integer-boundaries.test.mjs tools/integer-division.test.mjs tools/number-show.test.mjs \
+  tools/runtime-contracts.test.mjs tools/string-concat.test.mjs \
+  tools/closure-lifetime.test.mjs tools/integer-boundaries.test.mjs \
+  tools/integer-division.test.mjs tools/number-show.test.mjs \
   tools/apply-arity.test.mjs tools/function-data.test.mjs \
   tools/value-array-unboxing.test.mjs tools/go-imports.test.mjs
 ```
 
-- `native-ffi` exécute les compagnons natifs réels sous `-race` avec le runtime
-  canonique et le parser natif. Il compare échappement, scan et concaténation
-  aux oracles JS, puis contrôle caches, buffers, GC et horloge. Les imports Go
-  du runtime sont explicites, comme dans les autres FFI compilables isolément.
-- `runtime-contracts` exécute tous les tests de `runtime/`, normalement puis
-  sous `-race` : chaînes/sous-chaînes après GC, graphes de conteneurs après
-  sortie du créateur, lectures concurrentes, alias de stockage, maps JSON,
-  mises à jour immuables et retenues asynchrones.
-- `string-concat` compare le Go émis par `PrimitiveExprs` et la FFI Prelude à
-  l'oracle JS, sous `-race` : 801 couples UTF-16, bornes des surrogates, chaînes
-  vides, caractères BMP/astraux, préfixes/suffixes et associativité.
-- `integer-boundaries` importe les vraies FFI JS comme oracles : **5 978 cas**
-  sur 13 opérations, exécutés sur le Go émis et sur les FFI Go sous `-race`,
-  avec vérification de l'ordre et du nombre d'évaluations. Les bornes signées,
-  résultats non signés, comptes de décalage et couples pseudo-aléatoires sont
-  couverts. `integer-division` conserve ses 24 cas de lois euclidiennes.
-- `number-show` compare **32 527 cas binary64** à la vraie FFI JS sous `-race` :
-  zéros signés, NaN/infinis, chacun des exposants binaires finis, voisins des
-  puissances de dix, sous-normaux et 4 096 motifs de bits pseudo-aléatoires.
-- `embed-runtime` vérifie les octets embarqués, la résolution relative au script,
-  les timestamps stables, la régénération après changement et le chargement JS
-  sans le fichier source du runtime.
-- Les suites closures/applications/métadonnées conservent leurs matrices
-  d'arités, captures et applications partielles. `native-go-code.test.mjs`
-  vérifie en plus le chemin compilé complet avec une pile bornée, à partir de
-  `GOPURS_NATIVE_OUTPUT` issu d'un bootstrap conservé.
+`native-ffi` compares native companions against JS oracles and exercises
+buffers, caches, GC and clocks under the race detector. `runtime-contracts`
+runs canonical runtime tests normally and with `-race`, including aliases,
+immutable updates and task retention. Primitive suites compare executed Go
+against JS for surrogate boundaries, integer operations and binary64 formats.
+`embed-runtime` checks embedded bytes, stable timestamps, regeneration and
+loading without the source file. The closure and application suites exercise
+arities, captures and partial application.
 
-Les résultats datés, snapshots stricts et comparaisons des trois compilateurs
-sont consignés dans [testing.md](testing.md).
+`native-go-code.test.mjs` additionally checks the compiled scanner with a
+bounded stack using `GOPURS_NATIVE_OUTPUT` from a retained bootstrap.
+See [testing.md](testing.md) for setup and command selection.

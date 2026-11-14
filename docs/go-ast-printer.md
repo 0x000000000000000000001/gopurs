@@ -1,77 +1,87 @@
-# Frontière entre AST Go et impression
+# Go AST and printer boundary
 
-État du 13 octobre 2026, après les références possédées de G02.
+Emitters choose native types, boxing, names, evaluation order, parameters,
+captures and tail-call targets from the typed IR. `Printer` renders their
+nodes without reading or changing `CodegenState`.
 
-Les émetteurs construisent les expressions et statements Go à partir du TAST. Ils décident des types natifs, du boxing, des noms, de l'ordre d'évaluation, des paramètres, des captures et des cibles TCO. `Printer` rend les nœuds obtenus sans lire ni modifier `CodegenState`.
+`Printer.Builder` owns a mutable buffer per rendering operation. `withOut`
+confines its handle to a synchronous callback; `emit` and `emitMany` chain
+writes in order. Only the completed string leaves the operation. See the
+[runtime and FFI contracts](runtime-ffi-contracts.md).
 
-Depuis le lot 14 du plan de maintenabilité (2 octobre 2026),
-`Printer.Builder` possède le buffer mutable de chaque rendu et ses compagnons
-FFI JS/Go. `withOut` confine la poignée au callback d'impression ; `emit` et
-`emitMany` la chaînent dans l'ordre. Seule la chaîne terminée sort de ce rendu.
-Voir les [contrats runtime/FFI](runtime-ffi-contracts.md).
+## Structured functions and declarations
 
-## Inventaire des fragments bruts
+`GoFuncBlock params stmts retType` contains ordered, named and typed
+parameters, statements and a result type. Its `GoReturn` nodes are explicit,
+so a body containing a tail-call loop does not receive an extra return.
+`GoFuncLit params stmts retExpr retType` delegates to that representation
+with a final `GoReturn retExpr`.
 
-L'inventaire porte sur les sites du générateur, pas sur le nombre d'occurrences dans les fichiers Go produits.
+Emitters construct runtime wrappers by calling `gopurs_runtime.FuncN` with
+a function node, and immediately invoked functions by calling the function
+node with an empty argument list. They choose grouping and conversions before
+printing. `GoFunctions.curriedFunction` supplies a dummy parameter for a
+zero-argument function, groups up to ten arguments, and wraps excess arguments
+in unary functions. The printer preserves these function boundaries.
 
-| Famille | Propriétaires actuels | Représentation et portée |
-| --- | --- | --- |
-| Déclarations de module | `ModuleDeclarations`, `ModuleBindings`, `FunctionExprs`, `GoConversions`, `CodeGen` | `GoDecl` représente les valeurs avec cache, structs ADT, fonctions nommées, initialisations et getters FFI. Les corps d'enregistrement des getters de classes et les affectations Rebox restent opaques, avec leurs dépendances. |
-| Fonctions anonymes du parcours d'expressions | `BindingExprs`, `ModuleBindings`, `FunctionExprs`, `EffectExprs`, `AdtExprs`, `GoFunctions` | Les fonctions natives, enveloppes curryfiées et IIFE utilisent `GoFuncBlock` ou `GoFuncLit`, composés avec `GoCall`. |
-| Autres expressions et statements | `BindingExprs`, `ControlExprs`, `CallExprs`, `ArrayIntrinsics`, `CallArguments`, `AdtExprs`, `EffectExprs`, `PrimitiveExprs`, `CodeGen` | Déclarations locales typées, labels et fragments de contrôle, pointeurs, littéraux et commentaires comportent encore des `GoRaw`. Ils constituent d'autres familles. |
-| Conversions | `GoConversions`, avec certains rendus spécialisés dans `Printer` | Les conversions de records, tableaux génériques et ADT unboxés contiennent encore des fonctions Go assemblées en chaînes. Les conversions de tableaux d'entiers restent des nœuds structurés jusqu'au consommateur. |
-| Adaptations FFI | `FfiBridge` | Les bridges sont rendus depuis les signatures Go et les métadonnées TAST, avec leurs adaptations propres. Ils ne passent pas par les nœuds de fonctions anonymes du parcours d'expressions. |
-| Runtime | `runtime/runtime.go`, `Gopurs.Runtime.Source` | La source Go canonique est incluse au build par `tools/build/embed-runtime.mjs`. La façade PureScript expose la constante embarquée, sans lecture du fichier Go à l'exécution ; extraction réalisée au lot 9. |
+`GoDecl` distinguishes cached values, structs, named functions, initialization
+blocks and foreign getters. Structs retain generic parameters and typed fields;
+functions retain parameter and result types and bodies. `CodeGen` supplies
+ordered declaration groups to `GoFile`.
 
-## Fonctions natives structurées
+## Opaque fragments and imports
 
-`GoFuncBlock params stmts retType` contient une liste ordonnée de paramètres nommés et typés, un corps de statements et un type résultat. Le printer émet uniquement `func(params) retType { body }`. Les `GoReturn` sont explicites : le corps peut donc contenir une boucle TCO sans recevoir de retour supplémentaire.
+Some source remains opaque: local declaration/control fragments, portions of
+record and ADT conversions, class-getter registration bodies and Rebox
+assignments. The owning emitter remains responsible for their semantics.
+FFI bridges are rendered from Go signatures and TAST metadata by `FfiBridge`.
+The runtime is canonical Go source embedded from `runtime/runtime.go`.
 
-`GoFuncLit params stmts retExpr retType` est la forme avec retour final. Son rendu délègue à `GoFuncBlock` après ajout de `GoReturn retExpr`. Les usages existants, notamment les IIFE des intrinsics de tableaux, conservent ainsi leur rendu.
+`GoRaw` carries a `GoCode` with `{ text, imports }`. `rawGo` can recognize
+references to `gopurs_runtime`, `math`, `sync` and `unsafe` when a fragment is
+created; new fragments can supply dependencies explicitly. The import
+collector does not scan the fragment again.
 
-Une enveloppe runtime se construit par `GoCall (GoSelector (GoVar "gopurs_runtime") "FuncN") [ fonction ]`. Une IIFE se construit par `GoCall fonction []`. Les émetteurs choisissent `Func`, `Func2`, etc., les groupes de paramètres et les conversions avant de construire ces nœuds. Le nouveau rendu ne fusionne pas les fonctions imbriquées.
+`GoImports.collectImports` owns the complete file import list. It traverses
+structured declarations, expressions and types, collects opaque dependencies,
+then sorts and deduplicates them. `Printer.printGoFile` prints the supplied
+list without rendering declarations once to discover imports and again to
+produce output.
 
-Le nœud historique `GoFunc` est supprimé. `GoFunctions.curriedFunction` prépare ses anciens usages avec les nœuds natifs : un paramètre factice pour une fonction sans argument, un groupe jusqu'à dix paramètres, puis des enveloppes unaires successives au-delà de dix jusqu'à ce que le groupe restant tienne dans un `FuncN`. Ce regroupement conserve le Go antérieur. Les nœuds spécialisés de records et de constructeurs conservent leurs conventions de rendu.
+## Owned references and qualification
 
-## Déclarations et imports
+`GoRef` distinguishes lexical references from owned symbols. Declarations,
+constructors, pointers and worker signatures retain their producer's owner.
+`GoTypeApply` retains type arguments; `GoTypeAssertion` takes a `GoType`.
+`GoRecordFieldAccess` keeps the PureScript label separately from its Go field
+name.
 
-`GoDecl` distingue `GoCachedValue`, `GoStructDecl`, `GoFunctionDecl`, `GoInitDecl` et `GoForeignGetter`. Les structs portent leurs paramètres génériques et leurs champs typés ; les fonctions nommées portent leurs paramètres, leur résultat et leur corps. `CodeGen` fournit des groupes ordonnés de ces déclarations à `GoFile`, en conservant l'ordre et les séparations entre valeurs avec cache, déclarations natives et helpers Rebox, puis getters FFI.
+`GoSource.bindSources` resolves complete sources, including opaque fragments
+and FFI, with the Go parser and `go/types`. `BoundGoCode` retains spans and
+targets, distinguishing ordinary references, fields and methods.
+`printBoundGoCode` and `boundImports` apply the consumer's package placement.
+The cache and package-publication contract is described in
+[build-cache.md](build-cache.md).
 
-`GoImports.collectImports` est l'unique propriétaire des imports du fichier. Il parcourt les déclarations, expressions et types structurés, puis trie et déduplique leurs dépendances. `Printer.printGoFile` imprime la liste reçue sans rendre les déclarations une première fois pour y rechercher des noms de packages.
+## Rules for changes
 
-`GoRaw` transporte un `GoCode` contenant `{ text, imports }`. Pour les fragments historiques, `rawGo` reconnaît les références à `gopurs_runtime`, `math`, `sync` et `unsafe` au moment de leur création. Cette détection textuelle locale reste un mécanisme de compatibilité ; un fragment peut aussi fournir explicitement sa liste d'imports. Le collecteur lit ces dépendances sans inspecter à nouveau le texte. Les corps opaques d'initialisation des getters et d'affectation Rebox restent distincts des en-têtes de déclaration désormais structurés.
+- Keep expressions structured while a downstream consumer can use their
+  structure. Avoid printing a representable function just to wrap it in `rawGo`.
+- Derive conversions from TAST in the emitter. The printer does not infer
+  missing types, consult translation context or register Rebox helpers.
+- Preserve parameter, statement and argument order and function boundaries.
+  Printing must not duplicate evaluation or move it into a closure.
+- Supply selected names and valid bodies to function nodes. `GoFuncBlock`
+  does not rename parameters, invent temporaries or validate return paths.
+- Declare dependencies for opaque fragments and extend `GoImports` when a
+  structured node introduces a package reference.
 
-## Références possédées et qualification
+`GoBoxIntArray`, `GoUnboxIntArray` and `GoFreshFilterArray` retain information
+for `ArrayIntrinsics.normalizeFreshIntArrayRoundtrip`. The fold emitter
+chooses whether a private filter buffer can be normalized before printing.
+The printer renders surviving conversions and treats the freshness marker
+transparently. See [array-roundtrip.md](array-roundtrip.md).
 
-`GoRef` distingue références lexicales et symboles possédés. Les déclarations,
-constructeurs, pointeurs et signatures de workers conservent le propriétaire
-fourni par leur producteur. `GoTypeApply` garde les arguments de type ;
-`GoTypeAssertion` prend un `GoType`. `GoRecordFieldAccess` conserve le label
-PureScript indépendamment de son nom de champ Go.
-
-Le rendu monolithique restitue les noms historiques. Pour la qualification,
-`GoSource.bindSources` résout les sources complètes, fragments opaques et FFI
-compris, avec le parser Go et `go/types`. `BoundGoCode` retient les spans et
-cibles, en distinguant références ordinaires, champs et méthodes.
-`printBoundGoCode` et `boundImports` utilisent le placement du consommateur.
-Les [contrats et preuves G02](build-go-references.md) précisent les transports,
-les limites du relevé exhaustif et le raccordement restant au pilote en G03.
-
-## Contrat pour les prochains changements
-
-- Conserver les expressions comme des `GoExpr` lorsque leur structure peut encore servir à un consommateur. Éviter `rawGo (printGoExpr ...)` pour une fonction déjà représentable par les nœuds ci-dessus.
-- Construire les conversions avec les métadonnées TAST dans l'émetteur. Le printer ne doit pas déduire un type effacé, consulter le contexte de traduction ou enregistrer un helper Rebox.
-- Préserver l'ordre des paramètres, des statements et des arguments, ainsi que les frontières des fonctions. L'impression ne doit ni dupliquer une expression, ni déplacer son évaluation dans une closure.
-- Fournir des noms Go déjà choisis et des corps valides pour les nœuds de fonctions natives. `GoFuncBlock` ne renomme pas les paramètres, ne rajoute pas de variable temporaire et ne vérifie pas les chemins de retour.
-- Garder les fragments bruts restants dans leur famille propriétaire. Un nouveau nœud doit remplacer une structure répétée utile, plutôt que simplement emballer une chaîne Go opaque.
-- Déclarer les dépendances des nouveaux fragments opaques et compléter le parcours de `GoImports` lorsqu'un nœud structuré introduit une référence à un package.
-
-## Conversions de tableaux
-
-`GoBoxIntArray`, `GoUnboxIntArray` et `GoFreshFilterArray` conservent l'information nécessaire à `ArrayIntrinsics.normalizeFreshIntArrayRoundtrip`. La décision de normaliser le buffer privé du filtre se prend au site du fold, avant l'impression. `Printer` rend les conversions conservées et imprime le marqueur de fraîcheur de façon transparente ; il ne reconnaît pas ce motif dans du texte Go. Voir [la règle des tableaux d'entiers](array-roundtrip.md).
-
-## Validation du lot 4 de la deuxième vague
-
-La compilation et le bundle passent sans avertissement. Les 18 tests existants ciblant les conversions record/tuple, les fonctions sans argument, les workers importés, les tags natifs et l'initialisation récursive réussissent. Un contrôle différentiel temporaire compare également 18 rendus de currying avec l'ancien printer : arités 0, 1, 2, 9, 10, 11, 12, 20 et 21, avec une expression ou un bloc comme corps.
-
-`bin/go/run -c` depuis `altbak.pub` termine avec statut 0. Les 387 fichiers Go sont identiques octet pour octet à la référence prise avant ce lot, sur les mêmes 300 entrées TAST, et les 14 résultats fonctionnels sont inchangés. Les sources PBO et altbak sont inchangées ; aucune conclusion de performance n'est tirée de ces runs. Preuves locales : `/private/tmp/gopurs-wave2-declarations-q81ed26w/verification.json`.
+Relevant checks include `tools/go-imports.test.mjs`,
+`tools/native-ffi.test.mjs` and the code-generation fixtures described in
+[testing.md](testing.md).

@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-// Check the normative documentation without a network or Markdown dependency:
+// Check the documentation without a network or Markdown dependency:
 // relative links and anchors, package.json.files entries, and module-map
-// coverage against the real src/ tree. Historical records are out of scope.
+// coverage against the real src/ tree.
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { basename, dirname, extname, join, relative, resolve, sep } from "node:path";
+import { dirname, extname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const ROOT = fileURLToPath(new URL("../", import.meta.url));
@@ -21,23 +21,11 @@ Options:
   --quiet          Print only failures.
   -h, --help       Show this help.
 
-With no files, checks README.md, CONTRIBUTING.md, cleanup.md, todo.md and
-docs/**/*.md except docs/history/, docs/build-*, docs/plan-archive-* and
-docs/testing.md (historical sections are split out by the cleanup plan).`);
+With no files, checks README.md, CONTRIBUTING.md, cleanup.md and todo.md when
+present, plus every Markdown document under docs/.`);
 };
 
 const toPosix = (path) => path.split(sep).join("/");
-const isHistorical = (path) => {
-  const posix = toPosix(path);
-  const name = basename(posix);
-  return (
-    posix.startsWith("docs/history/") ||
-    name.startsWith("build-") ||
-    name.startsWith("plan-archive-") ||
-    name === "testing.md"
-  );
-};
-
 const walk = (directory, predicate) => {
   const found = [];
   for (const entry of readdirSync(directory, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
@@ -57,7 +45,6 @@ const defaultDocuments = (root) => {
     candidates.push(...walk(docs, (path) => extname(path) === ".md"));
   }
   return candidates
-    .filter((path) => !isHistorical(toPosix(relative(root, path))))
     .map((path) => toPosix(relative(root, path)))
     .sort();
 };
@@ -211,9 +198,9 @@ const readModuleMap = (root) => {
   const rows = [];
   const errors = [];
   for (const [index, line] of readFileSync(path, "utf8").split("\n").entries()) {
-    const match = line.match(/^\| `([^`]+)`<br>`([^`]+)` \| `([^`]+)` \| ([A-Za-zÀ-ÿ]+) \|/);
+    const match = line.match(/^\| `([^`]+)`<br>`([^`]+)` \| ([A-Za-z]+) \|/);
     if (!match) continue;
-    rows.push({ name: match[1], path: match[2], target: match[3], phase: match[4], line: index + 1 });
+    rows.push({ name: match[1], path: match[2], phase: match[3], line: index + 1 });
   }
   if (rows.length === 0) errors.push("docs/module-map.md: no module rows found");
   return { rows, errors };

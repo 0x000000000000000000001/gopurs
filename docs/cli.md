@@ -71,7 +71,7 @@ All hosts run the same compiler pipeline and report the same phase names.
 | `GOPURS_GO_PACKAGE_OVERLAY` | `0` or `1` | Use the Go package overlay path. |
 | `GOPURS_BUILD_MANIFEST` | `0` or `1` | Publish the build manifest used by the package layout. |
 | `GOPURS_FORCE_BUILD` | `0` or `1` | Same effect as `--force`. |
-| `GOPURS_ALLOC_PROFILE` | `0` or `1` | Enable allocation profiling and force the measured passes. Experimental. |
+| `GOPURS_ALLOC_PROFILE` | Output file path; unset by default | Write a native Go allocation profile and force the measured passes. Unsupported by JS/Rust. Experimental; unset to disable (`0` is a filename). |
 
 The `bin/gopurs` launcher raises preparation and PBO workers to `8` on machines
 with at least 32 GiB of memory for all three hosts, unless the variables are
@@ -260,9 +260,6 @@ dependency sorting. Native workers run on goroutines; Node overlaps file I/O
 but still decodes JSON on its JavaScript thread. Other compiler passes are
 unaffected by this setting.
 
-Dated [TAST loading measurements](history/tast-loading-202609.md) are retained
-separately from this command reference.
-
 `GOPURS_EMIT_JOBS` controls Go emission separately (1 to 64, defaulting to 8;
 set it to 1 for sequential emission). The compiler batches consecutive independent modules, using the
 optimizer's effective imports to wait for generated function signatures before
@@ -272,7 +269,7 @@ Translation is deferred until its Aff worker runs, so native workers execute
 the CPU work concurrently. `GOPURS_PBO_JOBS` independently controls optimization
 concurrency while preserving sequential directive visibility and publication
 order. See [parallel emission](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/parallel-emission.md) for the lifecycle
-contract, defaults, measurements and validation.
+contract, defaults and validation.
 
 `GOPURS_PREPARE_JOBS` controls preparation workers, including release transitive
 specialization rounds and the final per-module rewrite (compiler default 2,

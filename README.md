@@ -75,7 +75,7 @@ npm ci
 `npm ci` builds `bin/gopurs.js`. The [bootstrap guide](docs/bootstrap.md)
 covers the native Go and experimental Rust compiler hosts. All three hosts
 generate Go applications. See [contributing](CONTRIBUTING.md) and
-[testing and validation](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/testing.md#choisir-un-contrôle-court) for development work.
+[testing and validation](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/testing.md#choose-a-targeted-check) for development work.
 
 ### Develop one library locally
 

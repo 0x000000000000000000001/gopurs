@@ -1,89 +1,67 @@
-# Documentation map
+# Documentation
 
-This directory contains both normative documentation and historical engineering
-records. Read the section that matches your question; do not treat a benchmark
-campaign as a contract.
+These guides describe the current source tree. Start with the
+[project README](../README.md) or choose a guide below.
 
-## Start here
+## Using gopurs
 
-| Document | Audience | Status |
-| --- | --- | --- |
-| [README](../README.md) | users, newcomers | project overview, install, quickstart |
-| [quickstart.md](quickstart.md) | users | end-to-end first program |
-| [cli.md](cli.md) | users | CLI options, environment, exit status |
-| [limitations.md](limitations.md) | users | known gaps and unsupported features |
-| [migration.md](migration.md) | users | compatibility between releases |
-| [troubleshooting.md](troubleshooting.md) | users | common failures |
-| [publication-scope.md](publication-scope.md) | users | support and compatibility policy |
-
-## Internals
-
-| Document | Subject | Status |
-| --- | --- | --- |
-| [architecture-overview.md](architecture-overview.md) | pipeline in one page | normative |
-| [architecture.md](architecture.md) | detailed pass order, metadata provenance, responsibility table | normative, being split |
-| [naming.md](naming.md) | glossary, naming rules and historical names | normative |
-| [module-map.md](module-map.md) | phase, responsibility and dependencies of every module | normative, source of truth for the cleanup moves |
-| [build-cache.md](build-cache.md) | persistent cache protocol | normative |
-| [runtime-ffi-contracts.md](runtime-ffi-contracts.md) | runtime and host FFI ownership | normative |
-| [go-ast-printer.md](go-ast-printer.md) | boundary between Go AST and printer | normative |
-| [parallel-preparation.md](parallel-preparation.md) | preparation jobs and scheduling | normative |
-| [parallel-emission.md](parallel-emission.md) | emission batching | normative |
-| [runtime-closures.md](runtime-closures.md) | closure lifetime and heap escape | normative |
-| [adt-reuse.md](adt-reuse.md) | tree-cell reuse | reference |
-| [array-roundtrip.md](array-roundtrip.md) | integer-array round-trip rule | reference |
-| [function-fusion.md](function-fusion.md) | counted function producers | reference |
-| [int32-loops.md](int32-loops.md) | signed 32-bit loop fast path | reference |
-| [json-decoder-optimizations.md](json-decoder-optimizations.md) | JSON decoder codegen | reference |
-| [json-record-plans.md](json-record-plans.md) | shared record construction | reference |
-| [json-traversals.md](json-traversals.md) | fused Either traversals | reference |
-| [native-record-workers.md](native-record-workers.md) | native read-only record workers | reference |
-| [packed-strings.md](packed-strings.md) | packed String payload | reference |
-| [pgo.md](pgo.md) | profile-guided optimization for Rust | reference |
-
-## Build, release and benchmarks
-
-| Document | Subject |
+| Guide | Purpose |
 | --- | --- |
-| [bootstrap.md](bootstrap.md) | source installation, native/Rust bootstrap and pinned inputs |
-| [development.md](development.md) | library ports, FFI parser and runtime changes |
-| [benchmark-protocol.md](benchmark-protocol.md) | measurement protocol and reporting rules |
-| [release.md](release.md) | release procedure |
-| [release-benchmark.md](release-benchmark.md) | release backend benchmark |
-| [quality-0.1.0.md](quality-0.1.0.md) | quality-gate status for 0.1.0 |
-| [nix.md](nix.md) | Nix installation and development |
-| [library-source-audit.md](library-source-audit.md) | library source pins and licenses |
+| [Quickstart](quickstart.md) | Build and run your first application |
+| [CLI reference](cli.md) | Options, environment variables and exit status |
+| [Migration](migration.md) | Move a JavaScript project to Go |
+| [Limitations](limitations.md) | Unsupported features and compatibility gaps |
+| [Troubleshooting](troubleshooting.md) | Diagnose build and runtime errors |
+| [Publication scope](publication-scope.md) | Supported platforms and compatibility policy |
 
-## Testing
+## Development and releases
 
-[testing.md](testing.md) is the test entry point: command selection, contracts
-and historical campaign logs. It is intentionally large for now; the plan
-[cleanup.md](../cleanup.md) separates the command table and contracts from the
-historical lots.
+| Guide | Purpose |
+| --- | --- |
+| [Bootstrap](bootstrap.md) | Build the compiler hosts from pinned inputs |
+| [Nix](nix.md) | Install the toolchain and use the development shell |
+| [Development](development.md) | Work on library ports, Go FFI and the runtime |
+| [Testing](testing.md) | Choose checks, run fixtures and inspect reports |
+| [Release procedure](release.md) | Qualify, package and publish a candidate |
+| [RC14 qualification](quality-0.1.0.md) | Evidence for the published prerelease |
+| [Library source review](library-source-audit.md) | Review source pins and attribution |
+| [Benchmark protocol](benchmark-protocol.md) | Measure and report performance |
+| [Release benchmark runner](release-benchmark.md) | Compare compiler hosts on the frozen corpus |
 
-## History and evidence
+## Compiler internals
 
-The `build-*.md`, `build-*.csv`, `build-*.json`, `quality-*.md`,
-`release-benchmark.md` and `plan-archive-*.md` files are dated engineering
-records. They document what was measured, not what is guaranteed. Keep them
-for provenance; do not use them as the current contract.
+| Guide | Purpose |
+| --- | --- |
+| [Architecture overview](architecture-overview.md) | Follow the compilation pipeline |
+| [Architecture](architecture.md) | Pass order, metadata and module boundaries |
+| [Module map](module-map.md) | Locate implementations and their dependencies |
+| [Naming](naming.md) | Understand compiler terminology |
+| [Build cache](build-cache.md) | Cache keys, storage, publication and reuse |
+| [Go AST and printer](go-ast-printer.md) | Separate code generation from formatting |
+| [Runtime and FFI contracts](runtime-ffi-contracts.md) | Distinguish compiler hosts from generated programs |
+| [Parallel preparation](parallel-preparation.md) | Schedule preparation jobs |
+| [Parallel emission](parallel-emission.md) | Schedule optimization and emission |
+| [Runtime closures](runtime-closures.md) | Understand closure lifetime and heap escape |
 
-- Build campaigns: `build-*.md`
-- Cost profiles and measurements: `build-cost-*`, `build-preparation-*`
-- Plans and archives: `plan-archive-20261019.md`, [../todo.md](../todo.md)
-- [TAST loading measurements — September 2026](history/tast-loading-202609.md)
-- Cleanup baseline: [history/cleanup-baseline.md](history/cleanup-baseline.md)
+Optimization references:
 
-## Conventions
+- [ADT reuse](adt-reuse.md), [array round-trips](array-roundtrip.md),
+  [function fusion](function-fusion.md) and [Int32 loops](int32-loops.md).
+- [JSON decoders](json-decoder-optimizations.md),
+  [record construction](json-record-plans.md) and
+  [JSON traversals](json-traversals.md).
+- [Native record workers](native-record-workers.md),
+  [packed strings](packed-strings.md) and [Rust PGO](pgo.md).
 
-- **Normative** documents describe current behaviour and must be updated with
-  the code.
-- **Reference** documents explain one rule or optimisation and may lag behind
-  the code; link the tests that enforce them.
-- **Historical** documents are frozen. Add a date in the title or the first
-  paragraph.
-- Public documentation is written in English. Internal architecture and
-  historical records may be in French; do not mix languages within one page.
-- New documents must be linked from this page, and relative links must resolve
-  before merge. Run `node tools/check-docs.mjs` (or `npm run check:docs`) to
-  check relative links, anchors, packaged files and module-map coverage.
+## Keeping these guides current
+
+Write documentation in English, describe implemented behavior and link to the
+source or tests that enforce a contract. Keep campaign logs, abandoned designs
+and completed development plans in Git history. The
+[documentation before this cleanup](https://github.com/0x000000000000000000001/gopurs/tree/7589ec34aed08ec3b7dfc52014a4253b007b2fdc/docs)
+retains those records, including their raw measurements and probe scripts.
+
+Link new guides from this index. Run `npm run check:docs` after editing: it
+checks relative links and anchors, packaged files and module-map coverage.
+Use the [altbak README](https://github.com/0x000000000000000000001/altbak.pub#go)
+as the official performance baseline.

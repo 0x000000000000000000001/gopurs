@@ -12,7 +12,7 @@ changes to library ports, Go FFI and the embedded runtime.
 ## Libraries
 
 Each library keeps its own Spago configuration and repository. The
-[repository map](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/architecture.md#carte-des-dépôts-et-des-consommateurs) describes
+[repository map](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/architecture.md#repositories-and-consumers) describes
 the source families and their consumers. `./bin/modtest --all --list` gives the
 current executable library suite. The Go development sections in the library READMEs link to this procedure.
 
@@ -21,8 +21,8 @@ current executable library suite. The Go development sections in the library REA
    their supporting dependencies and the Argonaut codec support checkout, or
    `./bin/setup --all` for the complete family, including the adapted QuickCheck
    prerequisite.
-2. Put the TAST compiler and YAML-capable Spago on `PATH` (**1.0.3** in the
-   2 October campaign; earlier checks also used 1.0.4). Check both with
+2. Put the pinned TAST compiler and application Spago on `PATH` (see the
+   [toolchain guide](nix.md#typed-frontend-and-development-shell)). Check both with
    `command -v purs spago` and `purs --version; spago --version`. The interactive
    shell, npm and altbak can select different tools. A stock compiler's version
    number alone does not prove that it emits TAST.
@@ -43,15 +43,14 @@ current executable library suite. The Go development sections in the library REA
    clean only their own build directories. For an isolated campaign, run
    `./bin/modtest prelude strings --keep-going` from gopurs: each target gets a
    fresh copy of the library family and private Spago temporaries.
-   They describe the test path; they do not establish that every library's
-   tests are already passing. See the [coverage limits](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/testing.md).
+   See the [test guide](testing.md#library-tests) for selection and reports.
 
 Both `bin/test` and `bin/modtest` print a `Results:` JSON report path. Reports
 and per-target logs are retained; `--keep-workspace` also retains successful
 builds. Resume unsuccessful or unattempted targets with
 `./bin/modtest --resume-failed /path/to/results.json --keep-going` (or `bin/test`
 for fixtures). The retry creates a new report linked to the original campaign.
-See [isolation and reports](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/testing.md#isolation-logs-et-caches).
+See [isolation and reports](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/testing.md#isolation-reports-and-resume).
 
 `assert` has no executable test suite: use `spago build`, then
 `../gopurs/bin/gopurs`, then `(cd output && go mod tidy && go build ./...)`.
@@ -60,49 +59,45 @@ QuickCheck has a standalone deterministic `Test.Go` suite: use
 runner builds and executes JavaScript and Go, then compares their transcripts.
 `node-net` has a `test/Test/Main.purs` entrypoint that
 the current Spago command compiles despite the absent `package.test` stanza;
-its runner executes that Go program. See [the module campaign](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/testing.md).
+its runner executes that Go program.
 
 ### Configuration and lockfiles
 
-The Go configuration is `spago.yaml`. In 42 libraries it is a **tracked** link
-to `spago.go.yaml`, which is the file to edit; the other configurations are
-ordinary files. Setup preserves these links. Library `workspace.extraPackages`
+The Go configuration is `spago.yaml`. Where it is a tracked link to
+`spago.go.yaml`, edit the target file. Setup preserves these links. Library `workspace.extraPackages`
 lists only overrides used by that workspace's resolved graph, including its
 test dependencies. A dependency's own `workspace` does not supply overrides to
 the consuming application: add the necessary Go overrides to that application's
 configuration as well. Keep required transitive overrides; retaining only the
 direct imports can silently select registry JavaScript implementations.
 
-Most libraries use registry set **77.7.0**; `assert` retains **73.3.0**, while
-the backend uses **77.10.1**. Package names in four historical configurations
-(`js-promise`, `js-promise-aff`, `node-path`, `node-process`) include `gopurs-`;
-their existing resolution aliases are preserved. No package versions or public
-module names were changed by the configuration cleanup.
+Use each library's checked-in package set and package name. Some ports use
+a `gopurs-` prefix in their package declaration; preserve the resolution aliases
+used by their consumers.
 
 Spago lockfiles record registry versions and local **paths**, not commits of
 sibling repositories. Keep related checkouts at the intended revisions when
 reproducing a build. Update a tracked lockfile with the same Spago version as
-the workspace after changing its configuration. Seven libraries currently
-ignore their local Spago lockfile: `aff`, `argonaut-core`, `avar`, `js-date`,
-`now`, `nullable` and `strings-extra`. This existing policy is preserved;
-dependency resolution was also checked without these local files.
+the workspace after changing its configuration. Some libraries ignore their
+local Spago lockfile; follow the checkout's existing tracking policy.
 
 The backend's `package-lock.json` is the source for `npm ci`; its npm `prepare`
-hook builds the bundle. Library npm manifests, Bower files and the eleven
-Dhall configuration pairs still serve their JavaScript or upstream workflows.
+hook builds the bundle. Library npm manifests, Bower files and Dhall
+configurations can also serve JavaScript or upstream workflows.
 In particular, Spago 0.20/0.21 reads Dhall while Spago 0.93/1.x reads YAML.
 Follow a library's existing npm/CI commands for those workflows; `npm test`
 does not universally run Go. Preserve npm lockfiles used by those commands.
-The Go parser has the only maintained `go.mod`, in `tools/ffi-gen`; the backend
-creates each application's Go module under `output`.
+Go helper modules live in `tools/ffi-gen`, `tools/build-cache` and `tools/c1c`.
+The backend creates each application's Go module under `output`.
 
 ## Go FFI
 
 Place a `.go` file beside the corresponding `.purs` file, or provide a lookup
 directory with `--ffi`. For a foreign import named `returnInt64`, export a Go
 function named `ReturnInt64`. The backend prefixes package-level declarations
-and their references, merges generated modules into the `purescript` Go package,
-and creates bridge functions using the parsed signatures and TAST types.
+and their references and creates bridge functions using the parsed signatures
+and TAST types. Generated modules use either the single `purescript` package or
+the partitioned package layout selected by `GOPURS_GO_PACKAGES`.
 
 Supported bridges handle primitive values, slices, selected records and ADTs,
 and callbacks. Their conversion rules are implemented in
@@ -113,10 +108,12 @@ slice, and dynamic return examples. Effect bindings must follow the thunk
 convention used by the Go library ports.
 
 The Go parser is not a general binding generator for every Go API. Confirm that
-an imported signature is supported before using it. A missing binding can
-produce a panic stub, so successful Go compilation alone does not establish FFI
-coverage. Parser and decoding failures report the PureScript module and FFI
-path and stop generation.
+an imported signature is supported before using it. Source builds after RC14
+check bindings reachable from an explicit `--main` before publishing output.
+Batch generation without `--main`, RC14 and dynamic calls inside native Go FFI
+can still reach missing-binding panic stubs; exercise the application's FFI in
+tests. Parser and decoding failures report the PureScript module and FFI path
+and stop generation.
 
 ## FFI parser
 
@@ -167,8 +164,8 @@ maintainer command. After editing `FfiSupport.js`, run `npm run build` to update
 the backend bundle. Runner paths are resolved relative to the source, Spago
 output or installed bundle, independently of the current directory.
 
-The parser workflow was validated with Node.js 24.8.0 and Go 1.27.0.
-See [validation and remaining limits](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/testing.md) for the scope of the checks.
+The pinned Node.js and Go versions are listed in [bootstrap](bootstrap.md).
+See [testing](testing.md) for the available regression suites.
 
 ## Embedded runtime
 

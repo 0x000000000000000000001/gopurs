@@ -16,7 +16,7 @@ l'identité octet par octet des sorties Go.
 **État au 29 octobre 2026** (branche `cleanup/v2`) :
 
 - **Lot 0 — fait** : baseline consignée dans
-  [docs/history/cleanup-baseline.md](docs/history/cleanup-baseline.md),
+  [the recorded baseline](https://github.com/0x000000000000000000001/gopurs/blob/7589ec34aed08ec3b7dfc52014a4253b007b2fdc/docs/history/cleanup-baseline.md),
   `tools/check-output-identity.mjs` et ses tests ajoutés.
 - **Lot 1 — partiel** : `.gitattributes` corrigé, `DependencyGraph` supprimé,
   commentaire de `BuildCache` corrigé, index `docs/`, `tests/` et `tools/`

@@ -55,9 +55,7 @@ variants used explicit `GOGC=off` and `GOMEMLIMIT=16GiB` after a launcher check
 showed that the sandbox could deny memory discovery. The JavaScript variant
 retained its own launcher environment. See
 [the refresh record](https://github.com/0x000000000000000000001/altbak.pub/blob/main/docs/benchmark-results/2026-10-25-gopurs-compilation-refresh.md)
-and the local [cold campaign](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/build-cold-20261024.md) and
-[G06 measurements](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/build-go-measurements.md) for campaign settings and
-sources.
+for the recorded campaign settings and sources.
 
 ## Application protocol
 
@@ -75,9 +73,8 @@ scaling for another workload.
 The protocol is implemented by the campaign records, not by an informal
 stopwatch:
 
-- [Cold backend campaign, 24 October 2026](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/build-cold-20261024.md)
-  and its CSV.
-- [G06 package-layout measurements](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/build-go-measurements.md).
+- [Release benchmark runner](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/release-benchmark.md),
+  including cold/warm cache policy, output comparison and result reporting.
 - [Parallel emission](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/parallel-emission.md)
   and [parallel preparation](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/parallel-preparation.md).
 - The altbak refresh record linked above, including the raw JSON and campaign
@@ -102,7 +99,7 @@ Use the release tag, not an arbitrary working tree:
 ```bash
 git clone https://github.com/0x000000000000000000001/gopurs.git
 cd gopurs
-git checkout v0.1.0
+git checkout v0.1.0-rc.14
 npm ci
 ```
 

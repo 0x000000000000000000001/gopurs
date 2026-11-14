@@ -1,168 +1,97 @@
-# Réutilisation des cellules d’arbres
+# Tree-cell reuse
 
-La passe `Gopurs.Ownership` analyse le `BackendModule` après PBO et les passes
-spécialisées de `CodeGen`, avant l’analyse TCO et la génération des fonctions
-ordinaires. Elle produit des fonctions spécialisées qui consomment un arbre
-possédé exclusivement.
-Les fonctions ordinaires gardent leur sémantique persistante.
+[`Gopurs.Ownership`](../src/Gopurs/Ownership.purs) analyzes the transformed
+`BackendModule` after PBO and specialized CodeGen passes, before tail-call
+analysis and ordinary function generation. It creates workers that consume
+exclusively owned trees. Ordinary functions retain persistent semantics.
 
-## Responsabilités de l'implémentation
+## Proof and eligibility
 
-- `Ownership.prepare` assemble les phases : collecte, validation au point fixe,
-  publication des déclarations/signatures et réécriture des appels frais.
-- `Ownership.Candidates` prouve les layouts et signatures admissibles. La paire
-  worker/helper est réservée une seule fois, dans l'ordre source, avant toute
-  élimination de candidats. Les noms d'un candidat rejeté restent donc réservés.
-- `Ownership.Types` définit les chemins, l'environnement et le langage d'arbres.
-  `Ownership.Analysis` reconnaît ces termes et les scalaires autorisés, contrôle
-  la disjonction et la fraîcheur, et relève les observations des continuations.
-- `Ownership.Workers` capture les valeurs, planifie les cellules réutilisables et
-  émet les déclarations Go. Chaque tentative de worker possède son propre compteur
-  de noms ; un échec rejette le corps entier. La même tentative valide les corps
-  au point fixe puis produit les déclarations des seuls candidats survivants.
+A consuming worker receives a forest whose nonempty nodes are exclusive and
+disjoint, and returns a forest with the same property. A fresh root containing
+a shared child does not qualify. Empty `nil` values may be shared.
 
-`snapshot` transforme les chemins `Keep` en valeurs `Existing` déjà lues.
-`planCells` exige leur disjonction avant cette capture. `reusablePaths` identifie
-ensuite les cellules mortes sans confondre les préfixes réellement déréférencés
-et les lectures scalaires conditionnelles. `emitLet` retire les anciens alias et
-réinitialise le donneur avant la continuation ; `emitTerminal` sélectionne le
-donneur après émission des arguments, puis retourne ou boucle. Les noms sont
-alloués en commençant par la branche de repli, comme avant l'extraction.
+Eligible ADTs are monomorphic, declared in the module and represented by a
+pointer, with one constructor carrying fields and at most one empty
+constructor. Fields contain scalars, enums or the same tree type. Functions
+are first-order, accept scalar or tree parameters, and return a tree. Opaque
+fields, functions, arrays and representation conversions are excluded.
 
-## Propriété établie
+Local references are resolved lexically. Projection aliases identify canonical
+paths consisting of a root and field indices. Retained subtrees and arguments
+to consuming workers must be disjoint: no duplicate paths and no path that is
+a prefix of another. A result cannot retain both a parent and its descendant,
+or place the same child in two fields.
 
-L’entrée d’une fonction spécialisée est une forêt dont les nœuds non vides sont
-exclusifs et disjoints. Le résultat conserve cette propriété. Une racine neuve
-contenant un enfant partagé ne remplit pas cette condition. La représentation
-vide `nil` peut être partagée.
+Calls are validated to a fixed point across module functions. Rejecting a
+candidate also rejects callers relying on its contract. Unknown calls, FFI,
+closures and effects provide no consumption proof. The existing `Rc` field
+is not an ownership proof and this pass requires no reference-counting protocol.
 
-La première implémentation traite les ADT monomorphes définis dans le module,
-représentés par un pointeur, avec un constructeur portant des champs et au plus
-un constructeur vide. Les champs portent des scalaires, des enums, ou le même
-type d’arbre. Les fonctions acceptées sont de premier ordre, avec des paramètres
-scalaires ou arbres et un résultat arbre. Les champs opaques, fonctions, tableaux
-et conversions de représentation restent hors de cette analyse.
+## Mutation and evaluation order
 
-Chaque référence locale de l’IR est résolue dans sa portée. Les alias de
-projections désignent un chemin canonique : une racine et une suite d’indices de
-champs. Les sous-arbres conservés dans un résultat ou passés à d’autres fonctions
-spécialisées doivent former des chemins disjoints : aucun doublon et aucun
-chemin préfixe d’un autre. Cela interdit de conserver ensemble un parent et son
-descendant, ou de placer le même enfant dans deux champs du résultat.
+Required field reads are captured before mutation. Dead cells are roots or
+prefixes no longer retained as result subtrees. Each branch has its own proof;
+a guard grants no mutation rights on its failure path. An old root or subtree
+still observable by the continuation prevents consumption.
 
-Les appels sont validés par un point fixe sur les fonctions du module. Retirer
-une fonction non prouvée invalide les fonctions qui dépendaient de son contrat.
-Les appels inconnus, les FFI, les closures et les effets ne constituent pas des
-preuves de consommation. Une fonction peut donc rester persistante même si son
-algorithme permettrait une analyse plus précise.
+Workers may receive an extra donor cell, allowing an insertion to pass its
+former parent to a balancing function. Cells leave the available pool when
+consumed. A consuming `let` removes old aliases before introducing the result.
+Terminal recursive calls become loops.
 
-## Ordre des opérations et cellules disponibles
+Strict prefixes dereferenced during capture form a known-nonnull pool, used
+before nullable donors. Conditional scalar reads do not prove nonnullness.
+Remaining cells pass between sibling constructions and arguments; an external
+or terminal recursive call chooses its donor after its arguments have consumed
+their cells. Pools belong to individual plans, branches and continuations.
+All addresses are captured before mutation, including when reusing a parent
+before a child.
 
-Les lectures de champs nécessaires au résultat sont matérialisées avant les
-mutations. Les cellules mortes correspondent aux racines ou aux préfixes de
-chemins qui ne font plus partie des sous-arbres conservés. Les branches disposent
-de leurs propres preuves ; une garde ne donne pas de droit de mutation sur son
-chemin d’échec.
+## Responsibilities
 
-Chaque invocation reçoit éventuellement une cellule supplémentaire à réutiliser.
-Cela permet à une insertion de transmettre son ancien parent à la fonction de
-rééquilibrage, même lorsque cette dernière reçoit seulement ses champs. Les
-cellules disponibles sont retirées du stock lorsqu’elles servent. Lors d’un
-`let` consommant, l’environnement perd aussi les anciennes références vers les
-cellules données au calcul, avant d’introduire la nouvelle racine du résultat.
+- `Ownership.prepare` collects candidates, validates them to a fixed point,
+  publishes declarations and signatures, and rewrites proven fresh calls.
+- `Ownership.Candidates` checks layouts and signatures. Worker/helper names
+  are reserved once in source order, including names of later rejected
+  candidates and their normalized Go forms.
+- `Ownership.Types` defines paths, environments and tree terms.
+  `Ownership.Analysis` proves disjointness and freshness and records
+  continuation observations.
+- `Ownership.Workers` captures values, plans reusable cells and emits Go.
+  Each attempt has its own name counter; a failed attempt rejects the whole
+  body. The same generator validates candidates and emits surviving workers.
 
-Les préfixes stricts des chemins conservés ont nécessairement été déréférencés
-pendant la capture des champs. Parmi les cellules mortes, ces préfixes forment
-un stock connu non nul, distinct du stock nullable qui contient notamment le
-donneur. Le générateur consomme d’abord les cellules connues, sans test de
-nullité ni repli d’allocation. Les autres cellules gardent leur sélection et
-leur effacement à l’exécution. Une lecture scalaire conditionnelle ne suffit
-pas à établir cette non-nullité.
+`snapshot` converts `Keep` paths into already-read `Existing` values after
+`planCells` checks disjointness. `reusablePaths` distinguishes dereferenced
+prefixes from conditional scalar reads. `emitLet` removes old aliases and
+resets the donor before the continuation; `emitTerminal` selects the donor
+after emitting arguments.
 
-Le stock connu restant est transmis entre les constructions et les arguments
-frères. Un appel externe, y compris récursif terminal, reçoit son donneur après
-la consommation des cellules par ses arguments. Chaque plan possède son stock ;
-les branches et les continuations ne le partagent pas. Toutes les adresses sont
-capturées avant mutation, même lorsque le parent est réutilisé avant son enfant.
+## Call selection and source annotations
 
-Une ancienne racine ou un sous-arbre encore observable dans la continuation
-empêche la consommation correspondante. Les appels terminaux récursifs des
-fonctions spécialisées deviennent des boucles. Le champ `Rc` existant ne sert
-pas de preuve : aucun protocole complet de comptage de références n’est requis
-par cette passe.
+A consuming worker is selected only when every tree argument is a recursively
+fresh admissible construction or an empty value. A local variable or borrowed
+child does not establish freshness. Recognition never depends on benchmark,
+function or type names.
 
-## Choix des appels
+The TAST's optional `bindingUsage` and `variableUse` describe direct local uses,
+not exclusivity or alias freedom. Missing facts are unknown. PBO invalidates
+source usage identities and facts before monomorphization and conversion.
+This pass recomputes its proof on lexical references and paths in the final IR;
+`lastLocalUse` and escaping-context flags never authorize mutation.
 
-Le générateur peut sélectionner une fonction spécialisée lorsque tous ses
-arguments arbres sont des constructions fraîches admissibles, composées
-récursivement de telles constructions et de valeurs vides. Une variable locale
-ou un enfant emprunté ne suffit pas à établir cette fraîcheur.
+## Validation
 
-Les noms des types, des fonctions et des benchmarks n’interviennent pas dans la
-reconnaissance. Les noms générés sont réservés avec leur forme Go et celle de
-leurs fonctions auxiliaires, en tenant compte des fonctions et des FFI du module.
+After building:
 
-## Contrat source et transformations
+```sh
+node --test tools/owned-trees.test.mjs
+bin/test OwnedTrees
+```
 
-Le lecteur PBO lit directement `bindingUsage` et `variableUse` sur les
-annotations, sans marqueur de version ou de phase, et conserve la provenance
-module + identifiant. Un champ absent reste inconnu. Les bornes
-supérieures à l’intervalle `Int` du lecteur deviennent inconnues, sans troncature.
-
-Avant la monomorphisation et la conversion PBO, ces identités et faits source sont
-invalidés. Les copies et spécialisations ne peuvent donc pas transporter de
-certificat périmé. La passe Go recalcule ses preuves sur les références lexicales
-et les chemins de l’IR final ; elle ne transforme pas un `lastLocalUse` ou un
-marqueur de contexte échappant en preuve d’exclusivité. Les anciens champs
-`usageCount` et `escapes`, ainsi que leur transport `UsageMeta`, ont été retirés.
-
-## Vérification
-
-Les tests `tools/owned-trees.test.mjs` construisent des IR ciblés pour vérifier
-l’acceptation des chemins disjoints et le refus des alias, des continuations
-encore observables, des gardes et des collisions de noms. Ils contrôlent aussi
-le rejet transitif des appelants, les cycles dépendant d'un candidat rejeté, les
-collisions sur le helper consommant et l'exécution d'une famille mutuellement
-récursive admise. La fixture
-`tests/passing/OwnedTrees.purs` vérifie quatre rotations, l’ordre des clés, les
-couleurs, la hauteur noire, les doublons, les anciennes versions et les enfants
-partagés, avec des noms différents du benchmark.
-
-Le build et le bundle passent sans avertissement. Les 64 tests des outils
-Gopurs passent, dont 21 tests de possession. La fixture `OwnedTrees` compile et
-s’exécute ; le contrôle final du snapshot passe sans le réécrire. Les 10 tests
-du contrat source et les 41 tests PBO existants passent également.
-
-Après la suppression des anciens champs et du marqueur racine le 17 septembre,
-le build et le bundle passent sans avertissement, ainsi que les 12 tests du
-contrat direct, les 41 tests PBO existants et les 64 tests des outils Gopurs.
-`OwnedTrees` conserve son snapshot et s’exécute correctement avec le compilateur
-TAST installé. Le retrait des anciens champs côté Haskell reste à compiler et
-tester par l’utilisateur ; les anciens fichiers JSON ne sont pas réécrits.
-
-La sélection statique ajoutée le 17 septembre passe le build et le bundle sans
-avertissement, les 64 tests outils existants et quatre tests supplémentaires.
-Ces derniers vérifient les captures avant réemploi du parent, les arguments
-frères, le stock nullable et le donneur d’un appel récursif terminal. Le nouveau
-snapshot `OwnedTrees` ne change que trois corps de fonctions consommantes ; son
-code public et persistant reste identique. La fixture s’exécute et un nouveau
-passage contrôle le snapshot sans le réécrire.
-
-Les mesures avant/après utilisent le protocole et les artefacts archivés
-localement sous `altbak.pub/scratch/gopurs-adt-reuse-validation-20260916/PROTOCOL.md`.
-Pour 100 000 clés, les médianes passent de 2 483 949 à 100 000 allocations et
-de 79 486 352 à 3 200 000 octets cumulés. Dans la campagne à trois processus
-par variante, RBTree passe de 24,20 à 9,95 ms, contre 8,92 ms pour le manuscrit.
-Les baselines historiques du README d’altbak restent distinctes des mesures
-contrôlées de cette campagne. Ce protocole précise les limites et les commandes
-de reproduction ; les validations actuelles sont dans [testing.md](testing.md).
-
-La campagne de sélection statique du 17 septembre, archivée localement sous
-`altbak.pub/scratch/gopurs-static-cells-20260917/integration/REPORT.md`,
-compare le vrai générateur avant/après à CoreFn identique. Seuls les corps
-consommants de `balance` et `makeBlack` changent dans le Go d’altbak. Sur trois
-processus par variante, le total passe de 12,58267 à 12,26888 ms (−2,49 %),
-contre 10,59596 ms pour le Go manuscrit ; RBTree passe de 9,40708 à 9,09525 ms
-(−3,31 %), contre 8,28300 ms. La sonde séparée conserve une médiane de
-100 000 allocations et 3 200 000 octets. Cette campagne reste distincte de
-la baseline officielle du README, 13,01 ms compilées et 11,09 ms manuscrites.
+The tests cover disjointness, aliases, observable continuations, guards,
+transitive rejection, recursive candidate groups, naming collisions, capture
+before mutation, sibling arguments and nullable donors. The fixture verifies
+rotations, key order, colors, black height, duplicates, retained versions and
+shared children with names independent of the benchmark.

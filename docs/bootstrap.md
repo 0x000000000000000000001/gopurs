@@ -183,58 +183,31 @@ Use `node tools/bootstrap-checksums.mjs --require-all` for a release that
 includes both native and Rust compilers. The flag fails if either binary is
 missing.
 
-## Reproducibility status
+## Reproducibility and input checks
 
-The 26 October 2026 clean-install check used a checkout containing only tracked
-and new source files, with no `node_modules`, `output`, `.spago` or compiler
-binary. `npm ci` completed and built `bin/gopurs.js` from the pinned git
-dependencies; the gopurs source build did not use the local sibling checkouts.
-Three clean checkouts at different paths produced the same SHA-256
-`0ce3e26633fe8d81fba8db605adefec34a7579a5b4432b135056d16ee2df1b39`, and an
-immediate `npm run build` in each checkout kept that hash. The release pin uses
-the npm `purescript` `0.15.16` compiler; a build that used an unpinned global
-`purs` produced a different bundle, so the compiler pin is part of the
-reproducibility contract.
+Build from a fresh checkout using the committed package, Spago and Nix locks.
+Use `npm ci` to select the pinned compiler for the backend's JavaScript bundle;
+an unpinned global `purs` can produce different output. Applications and the
+native bootstrap require the typed compiler fork.
 
-Limits of that check:
+The native build uses `-trimpath`. Its typed compiler, library sources and Go
+toolchain must match the recorded release provenance. Rust PGO is experimental;
+profile data and LLVM versions can change the resulting binary.
 
-- It covers the JavaScript bundle, not the native or Rust binaries.
-- The native build uses `-trimpath`. Its manifest-pinned typed compiler, library
-  sources and Go toolchain must match the recorded release provenance.
-- Rust PGO is experimental; profile data and LLVM versions can change the
-  binary.
-- The application walkthrough still requires the typed compiler fork; the
-  npm-provided compiler is used to build the backend, not to compile
-  applications.
+`./bin/setup --locked --all` installs the exact library and support revisions
+from `bootstrap-sources.json`. The Argonaut codec adaptation is a separate
+pinned support checkout, described above. Local sibling checkouts are not a
+substitute for verifying the manifest-selected inputs.
 
-The release process must repeat the clean build from the tag and compare the
-published checksums. Any difference must be explained in the release notes
-before publication.
+Run the bootstrap orchestration checks with:
 
-## Bootstrap input verification — 26 October 2026
+```bash
+node --test tools/bootstrap-inputs.test.mjs tools/build-native.test.mjs
+```
 
-The manifest's 51 library commits, the optimizer commit and the TAST compiler
-commit were each checked against the public repositories with `git ls-remote`.
-`./bin/setup --locked --all` also verified the 51 local checkouts at those
-commits with clean working trees. This establishes source availability and
-identity. A subsequent `--locked --all` installation into an empty temporary
-directory cloned all 51 exact revisions successfully. The complete native
-compilation remains a separate release gate.
-
-On 8 November 2026, the Argonaut codec adaptation moved from the in-repo
-`support/argonaut-codecs` directory to the pinned `gopurs-argonaut-codecs`
-support checkout. On 10 November 2026, that checkout was rebased onto upstream
-`purescript-contrib/purescript-argonaut-codecs` v9.1.0
-(`f8fdc1e34142fa84e66022ea5d417a008d709146`): the pinned commit
-`bdf31cc0f7d74d510dcf53f2a8fbca3b550d8ff2` is a direct child of the upstream
-tag and its diff contains only the gopurs Go/JS FFI and adaptation patches. Its
-remote clone and pinned revision were verified with `setup-libraries.mjs`. The
-21 source, test and configuration files are unchanged from the validated
-adaptation, its two JavaScript test runners keep sibling-relative compiler
-paths, and its upstream MIT license is retained in that checkout.
-
-`node --test tools/bootstrap-inputs.test.mjs tools/build-native.test.mjs` passes
-13 checks covering pinned installation of libraries and support checkouts,
-refusal to overwrite changed inputs, the optimizer and codec selection, native
-build failure handling and process cancellation. These tests exercise bootstrap
-orchestration; they do not stand in for compiling the full compiler.
+These cover pinned installation, refusal to overwrite changed inputs, optimizer
+and codec selection, build failures and cancellation. They do not replace a
+complete compiler build. For a release, repeat the clean build from its tag and
+compare artifact checksums as described in [release.md](release.md). The
+[quality record](quality-0.1.0.md) states the scope of the published candidate's
+checks.

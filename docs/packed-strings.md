@@ -1,69 +1,44 @@
-# Charge utile `String` packée dans le runtime
+# Packed String payloads
 
-`TypeString` ne réserve plus un en-tête `*string` par boîte. La valeur porte
-directement ses données :
+[`runtime/runtime.go`](../runtime/runtime.go) stores `TypeString` directly in a
+`Value`, without allocating a separate `*string` header:
 
-| Champ | Contenu |
+| Field | Meaning |
 | --- | --- |
-| `IntVal` | longueur en octets |
-| `UnsafePtr` | données immuables de la chaîne (`unsafe.StringData`) |
-| pointeur nul | chaîne vide, lue comme `""` |
+| `IntVal` | Byte length |
+| `UnsafePtr` | Immutable string bytes from `unsafe.StringData` |
+| Nil pointer | Empty string |
 
-L'écriture passe par `Str`, la lecture par `StrValue` :
+Write through `Str` and read through `StrValue`:
 
 ```go
 func StrValue(v Value) string {
-	if v.UnsafePtr == nil {
-		return ""
-	}
-	return unsafe.String((*byte)(v.UnsafePtr), int(v.IntVal))
+    if v.UnsafePtr == nil {
+        return ""
+    }
+    return unsafe.String((*byte)(v.UnsafePtr), int(v.IntVal))
 }
 ```
 
-La taille de `Value` est inchangée, comme pour les flottants déjà packés dans
-`IntVal`.
+## Contract
 
-## Contrat
+- Referenced bytes must remain immutable for the entire lifetime of the value,
+  as required by `unsafe.String`. FFI code must copy mutable buffers before
+  exposing them as strings.
+- A substring retains its backing allocation.
+- An empty string has no pointer. Always use `StrValue`; do not dereference
+  `UnsafePtr` or reinterpret it as `*string`.
+- The `Value` size is unchanged. Consumers must use the shared helpers rather
+  than depending on the old representation.
 
-- Les octets référencés doivent rester **immuables pendant toute la vie** de la
-  valeur, exigence d'`unsafe.String`. Toutes les chaînes produites par `Str`
-  proviennent de chaînes Go immuables ; aucune FFI ne construit de chaîne sur
-  un tampon mutable sans copie.
-- Un sous-`string` retient tout son support : c'est un compromis de rétention,
-  pas un problème de correction.
-- Une chaîne vide n'a pas de pointeur ; ne jamais déréférencer `UnsafePtr`
-  sans passer par `StrValue`.
-- Aucun code ne doit convertir `UnsafePtr` en `*string` : le helper est la
-  seule lecture autorisée.
+Runtime changes must also regenerate `src/Gopurs/Runtime/Source.go` and
+`Source.js` using `npm run build:runtime`. The generated sources are checked by
+[embed-runtime.test.mjs](../tools/embed-runtime.test.mjs).
 
-## Surfaces adaptées
+## Validation
 
-- `runtime/runtime.go` : `Str`, `StrValue` et 13 lecteurs (`StrVal`, `AnyVal`,
-  `RecordGet`, `Unbox`, `ValueToAny`, `ExtractVariant`, `copyReflectField`).
-- `src/Gopurs/Runtime/Source.go` et `Source.js` : régénérés par
-  `node tools/build/embed-runtime.mjs` (ou `npm run build:runtime`).
-- FFI : `gopurs-argonaut-core` (1 site), `gopurs-foreign` (3), 
-  `gopurs-node-buffer` (9), tous remplacés par `gopurs_runtime.StrValue`.
-- `tools/ffi-generics.test.mjs` : le garde-fou d'ordonnancement attend
-  désormais **zéro allocation** par appel au lieu de deux boîtes de chaînes.
-
-## Contrôles
-
-- Sonde GC autonome : 4 M de valeurs packées, sous-chaînes comprises, relues
-  correctement après plusieurs collectes, y compris sous `-race`/checkptr.
-- `node --test tools/*.test.mjs` : 170 tests, 168 réussis, 0 échec, 2 ignorés.
-- `bin/modtest` : `argonaut-core`, `foreign`, `foreign-object`, `node-buffer`,
-  `prelude`, `strings-extra` verts. `gopurs-strings` échoue sur un littéral à
-  surrogates isolés ; le même échec se reproduit avec le bundle baseline et
-  correspond aux exclusions `StringEdgeCases`/`StringEscapes`.
-- Oracles des diagnostics altbak : 17 cas JSON et 12 modules TAST identiques
-  dans chaque processus mesuré.
-- `bin/go/run -c` : 14 sorties de référence, total 13,138 ms.
-
-## Effet mesuré
-
-Campagnes appariées (5 processus par version, ordre alterné) : décodage
-**−10,79 %** (JSON général) et **−8,21 %** (TAST) ; combinés **−4,61 %** et
-**−4,36 %** ; allocations par corpus **−2,68 Mio** et **−23,13 Mio**. Le
-parseur est inchangé. Détails, campagnes officielles et provenance :
-[rapport altbak](../../../altbak.pub-gopurs/docs/benchmark-results/2026-09-22-packed-strings.md).
+[ffi-generics.test.mjs](../tools/ffi-generics.test.mjs) checks the generic bridge,
+including its allocation contract. Library regression runs should include
+`argonaut-core`, `foreign`, `foreign-object`, `node-buffer` and `strings-extra`.
+Performance comparisons use the [benchmark protocol](benchmark-protocol.md)
+and the official altbak baselines.

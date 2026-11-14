@@ -9,8 +9,7 @@ The workflows and scripts below implement the procedure. Their presence is not
 evidence that a tag, platform, benchmark or public installation has passed.
 Record actual results in the repository's
 [quality record](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/quality-0.1.0.md)
-and the release notes. The remaining gates are tracked in the
-[release checklist](https://github.com/0x000000000000000000001/gopurs/blob/main/todo.md).
+and the release notes. Apply the gates below to each new candidate.
 
 ## Build and validate a candidate
 
@@ -277,19 +276,9 @@ published release stop recovery. Do not rerun successful signing jobs after
 starting a draft: new signatures would change its assets.
 
 This recovery uses the workflow stored at the original tag. A source or workflow
-fix requires a new candidate and fresh qualification. These improvements do not
-change RC10's workflow, qualify its missing shard or authorize another RC10 run.
+fix requires a new candidate and fresh qualification.
 
-RC7 exposed a limit in this retry path: draft visibility failed immediately
-after creation, and the retry metadata copied successful jobs into attempt 2
-without new executions or artifacts. Its selector then requested a nonexistent
-attempt-2 release archive. The workflow remains failed. The maintainer
-authorized a specific operator recovery using the cryptographically verified
-original attempt-1 assets, without rebuilding or changing the signed tag.
-This exception and the completed public checks are recorded in the
-[RC7 quality record](quality-0.1.0.md#rc7-qualification-and-operator-recovery--30-october-2026).
-
-The post-RC7 selector recognizes copied successful jobs whose new creation time
+The selector recognizes copied successful jobs whose new creation time
 is after their recorded completion. Their status, execution timestamps, runner
 identity and complete steps must match the latest original execution. It keeps
 that original job ID and artifact attempt; missing or inconsistent evidence is
@@ -461,7 +450,7 @@ communicating the regression and publishing a corrected version through the
 complete workflow. Until then, no validated public rollback is available.
 
 RC7's retained assets and a fresh local macOS reinstallation were checked on
-1 November 2026; see the [recovery evidence](quality-0.1.0.md#retained-rc7-recovery-check--1-november-2026).
+1 November 2026; see the [recovery evidence](https://github.com/0x000000000000000000001/gopurs/blob/7589ec34aed08ec3b7dfc52014a4253b007b2fdc/docs/quality-0.1.0.md#retained-rc7-recovery-check--1-november-2026).
 This does not validate a public channel restoration. RC7 is the only real
 published version at that date, and is a prerelease. Its bootstrap predates
 the later library fixes, so select it as a fallback only after checking the

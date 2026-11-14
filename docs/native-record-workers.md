@@ -85,10 +85,10 @@ carrying a closed record, including dynamic calls and retained results.
 Use the typed PureScript fork in PATH when running `bin/test`. The native
 bootstrap discovers that fork itself. Runtime benchmarking, separate from tests,
 uses the generated caller/producer pipeline with an unchanged scalar oracle.
-The 22 September experiment is recorded in altbak.pub's
-`docs/benchmark-results/2026-09-22-native-record-workers.md`.
+See the [benchmark protocol](benchmark-protocol.md) for comparisons against
+the official altbak baselines.
 
 Projection applies only to proven read-only parameters. Whole-row returns,
 arbitrary row updates and escaping or higher-order uses keep the ordinary ABI.
 Closed record payloads in supported native results use the existing result
-conversion rules. This validation establishes no new JSON/TAST or b8x timing.
+conversion rules. Performance claims require a separate application benchmark.

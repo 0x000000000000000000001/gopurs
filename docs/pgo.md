@@ -46,7 +46,7 @@ directory, including logs, raw profiles, and `pgo-profile.json`.
 ## Metadata
 
 The build writes `<workspace>/pgo-profile.json` with the qualification data
-needed to compare a local build against the isolated experiment:
+needed to identify and reproduce the build:
 
 - `status`, `started_at`, `finished_at`, `stage`, `failure` on errors
 - `source.manifest` / `source.sha256`: generated Rust sources and their digest

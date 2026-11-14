@@ -2,7 +2,7 @@
 
 This is the public overview of the gopurs data flow. The detailed,
 implementation-oriented map remains in [architecture.md](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/architecture.md).
-Each source module and its target phase are listed in
+Each source module and its responsibility are listed in
 [module-map.md](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/module-map.md); the vocabulary is normative in
 [naming.md](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/naming.md).
 
@@ -16,10 +16,10 @@ generated Go function; a **job** is a parallel unit of work. A **host** runs
 the compiler (JS, Go or Rust); the **runtime** is the embedded Go runtime of
 the generated application.
 
-The source tree still carries historical module names such as
-`Driver.Prepare`, `Monomorphization` and `CodeGen` until the cleanup moves land.
-[module-map.md](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/module-map.md) gives the current name, the target name and the
-phase of every module; normative prose uses the target vocabulary.
+The source modules implementing these phases include `Driver.Prepare`,
+`Monomorphization` and `CodeGen`. The
+[module map](https://github.com/0x000000000000000000001/gopurs/blob/main/docs/module-map.md)
+lists their current names, source paths and dependencies.
 
 ## Hosts and driver
 

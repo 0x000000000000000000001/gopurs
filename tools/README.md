@@ -80,7 +80,6 @@ plain Node ESM unless noted. `*.test.mjs` files stay at the top level so that
 | Script | Purpose |
 | --- | --- |
 | `preparation-source-variants.mjs`, `preparation-transition-oracles.mjs` | preparation contract helpers used by tests |
-| `docs/history/preparation-p00/tools/` | archived P00/P01 measurement harnesses, not active tools |
 | `build/pgo.mjs` | profile-guided optimization for the Rust host |
 | `release/release-prepare.mjs`, `release/release-smoke.mjs`, `release/release-quality.mjs` | release gates |
 | `release/release-benchmark.mjs` | release benchmark campaign |
@@ -104,8 +103,7 @@ node tools/check-output-identity.mjs snapshot <output> <manifest.json>
 node tools/check-output-identity.mjs compare <output> <manifest.json>
 ```
 
-It is used by the cleanup plan ([../cleanup.md](../cleanup.md)) to prove that a
-rename or move does not change generated files.
+Use it to check that a rename or move preserves generated files.
 
 ## Generated versus handwritten files
 

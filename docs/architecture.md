@@ -1,1055 +1,251 @@
-# Architecture du backend
+# Backend architecture
 
-Les étapes suivent le chemin actif de [Driver](../src/Gopurs/Driver.purs), appelé
-par [Main](../src/Main.purs). Le pilote et ses frontières sont décrits ci-dessous.
+This guide follows the current [Driver](../src/Gopurs/Driver.purs), entered
+through [Main](../src/Main.purs). See the [overview](architecture-overview.md)
+for the public pipeline, the [module map](module-map.md) for source locations
+and direct dependencies, and [naming](naming.md) for terminology.
 
-> **Vocabulaire.** Les phases cibles sont `Driver`, `Prepare`, `Rewrite`,
-> `Emit`, `Cache`, `Host` et `Runtime`. Le glossaire normatif est
-> [naming.md](naming.md) ; la carte module par module, avec le nom cible, la
-> phase et les dépendances réelles, est [module-map.md](module-map.md). Ce
-> document cite les modules actuels (`Driver.Prepare`, `CodeGen`,
-> `Monomorphization`) pour rester vérifiable tant que le lot 3 n'a pas mergé
-> leur déplacement. Les journaux et campagnes cités plus bas gardent leurs
-> termes d'origine.
+## Typed input and pass order
 
-## Entrée typée et ordre des passes
-
-1. Le fork PureScript émet le TAST enrichi dans `output/<Module>/corefn.json`.
-   Le cache vérifie leur contenu avant décodage. Sur un miss, le pilote les copie
-   dans un staging privé ; `coreFnModulesFromOutput` du PBO local lit ces copies,
-   les décode et trie les
-   modules par dépendances. Le nom de fichier ne signifie pas que le backend
-   utilise le CoreFn standard : `dataDecls`, `classDecls`, les annotations de
-   types et les instanciations `TypeApp` restent accessibles après décodage.
-2. `Driver` charge les directives (aussi sur un hit). `Driver.Prepare.prepareModules`
-   collecte les constructeurs éliminés, puis construit les types des constructeurs, les types globaux
-   et les champs des classes. Il enrichit les modules avec les déclarations de
-   données synthétiques des classes.
-3. `Monomorphization.monomorphizeModulesWith` collecte les instanciations, propage
-   les besoins transitifs, filtre les candidats et spécialise les modules.
-    Les métadonnées pointeurs viennent des modules enrichis avant spécialisation ;
-    les enums et types globaux viennent des modules d'origine. Ces tables
-    accompagnent ensuite les modules monomorphisés. `Driver.Cache.plan` résout
-    et fige les FFI, avec leurs candidats absents et répertoires parcourus.
-4. `Driver.Build` établit les clés des modules préparés. Si toutes les clés PBO
-   correspondent, il valide les backends/workers et transmet les backends à
-   l'émetteur dans l'ordre canonique. Sinon, `Builder.buildModulesWithReuse` ou
-   `buildModulesParallelWithReuse` restaure les résultats valides et convertit
-   les autres en `BackendModule` optimisés, avec les directives et
-   `coreForeignSemantics`. Les contributions restaurées deviennent visibles aux
-   mêmes barrières que les résultats calculés.
-   **La monomorphisation de gopurs précède donc cette optimisation PBO.**
-5. `Cache.Modules.emit` tente d'abord la restauration des émissions dont la
-   preuve engagée couvre les transformations via les références du backend
-   d'entrée. À défaut, `CodeGen.prepareModule` applique dans l'ordre `ThunkFusion`, `FunctionFusion`,
+1. The typed PureScript fork emits TAST in `output/<Module>/corefn.json`.
+   The cache inventories and verifies these files, then copies inputs needed
+   for a build into private staging. PBO decodes the copies and orders modules
+   by dependencies. `dataDecls`, `classDecls`, type annotations and `TypeApp`
+   instantiations are available to the backend.
+2. `Driver` loads directives, including on a cache hit.
+   `Driver.Prepare.prepareModules` collects eliminated constructors,
+   constructor types, global types and class fields. It adds synthetic data
+   declarations for class dictionaries.
+3. `Monomorphization.monomorphizeModulesWith` collects instantiations,
+   propagates transitive requirements, filters candidates and specializes
+   modules. Pointer metadata comes from the enriched modules before
+   specialization; enums and global types come from the original TAST.
+   `Driver.Cache.plan` resolves and freezes FFI inputs, including absent
+   candidates and searched directories.
+4. `Driver.Build` computes prepared-module keys. It restores valid PBO
+   results or invokes the PBO builder to convert modules to optimized
+   `BackendModule` values, using directives and `coreForeignSemantics`.
+   Restored and freshly computed contributions become visible at the same
+   ordered barriers. **gopurs monomorphization precedes PBO optimization.**
+5. `Cache.Modules.emit` attempts verified emission reuse. Where preparation
+   is needed, `CodeGen.prepareModule` applies `ThunkFusion`, `FunctionFusion`,
    `ImmediateApplications`, `ClosedDictionaries`, `BorrowedObjects`,
-   `DecoderSchemas` et `Ownership`. Les références qualifiées externes du résultat
-   sélectionnent les signatures de workers couvertes par la clé d'émission,
-   absences comprises. Sur un hit, les sorties privées vérifiées sont restaurées.
-   Sinon, `Driver.Output.emitPreparedModule` lit les signatures FFI figées puis
-   appelle `CodeGen.translatePreparedWithFunctions` avec la préparation déjà
-   calculée. Celui-ci crée l'état local, prépare l'analyse TCO et les signatures
-   via `ModuleBindings`, puis traduit les déclarations et leurs expressions.
-6. Les émetteurs construisent les expressions et les déclarations `GoDecl`,
-   dont les helpers de conversion. `GoImports.collectImports` collecte leurs
-   dépendances avant que `Printer.printGoFile` les rende en texte Go. Les
-   signatures produites sont rendues à `Driver.Build`. Chaque lot lit une vue
-   immuable ; ses résultats sont fusionnés dans l'ordre des modules avant que
-   le lot suivant puisse les consulter pour les appels directs entre modules.
-7. `Driver.Output` écrit le code du module et son bridge FFI typé dans le staging.
-   `Driver` y écrit le runtime avant le build, puis les entrées après sa réussite.
-   `Driver.Cache.publish` publie les contenus modifiés et retire les anciennes
-   sorties possédées. Le stockage crée `go.mod` seulement s'il manque et conserve
-   `go.sum` comme fichier externe.
+   `DecoderSchemas` and `Ownership`, in that order. External references in
+   the rewritten module determine the imported worker signatures covered by
+   its emission key, including absent signatures.
+6. `Driver.Output.emitPreparedModule` adds frozen module-local FFI signatures
+   and calls `CodeGen.translatePreparedWithFunctions`. `ModuleBindings`
+   prepares tail-call analysis and native signatures; the emitters produce
+   `GoDecl` and `GoExpr` values. `GoImports.collectImports` collects
+   dependencies before `Printer.printGoFile` renders the result. Each
+   parallel batch reads an immutable signature snapshot; results are merged
+   in module order before the next batch uses them.
+7. `Driver.Output` writes module source and FFI bridges into staging.
+   The driver supplies the embedded runtime and entry points.
+   `Driver.Cache.publish` verifies and publishes changed contents and removes
+   obsolete owned outputs. Storage creates `go.mod` only when missing and
+   treats `go.sum` as external.
 
-Les `ForAll`, contraintes, types structurels, ordre des champs et queues de
-rangées font partie des données typées utilisées par le backend. Une décision
-de représentation doit partir de ces informations, pas d'une reconstruction
-à partir de chaînes Go déjà imprimées.
+`ForAll`, constraints, structural types, row-label order and row tails belong
+in representation decisions. Do not reconstruct this information from printed
+Go or assume the type erasure of standard CoreFn.
 
-### Provenance des métadonnées
+## Metadata provenance
 
-Les modules spécialisés et les tables de déclarations n'ont pas la même origine.
-`Driver.Prepare` conserve ces vues distinctes ; `CodegenState` décrit leur contrat
-au point où les émetteurs les reçoivent.
+`CodegenState` separates shared, immutable `CodegenMetadata` from the mutable
+state of one translation: declarations, fresh identifiers and requested Rebox
+pairs.
 
-| Table ou donnée | Origine et moment de publication |
+| Data | Source and availability |
 | --- | --- |
-| `ctorTypes`, `elidedCtors`, `enumAdts`, `enumCtors` | Déclarations ADT du TAST d'origine, avant ajout des classes synthétiques |
-| `classDeclsFields` | Classes d'origine ; superclasses et méthodes triées par label |
-| `globalTypes` | Bindings et imports FFI du TAST d'origine ; noms qualifiés PureScript, pas noms des copies spécialisées |
-| `reboxFields` | Index dérivé de `ctorTypes` et `classDeclsFields`, avec leurs priorités et identités propres |
-| `pointerAdtPaths`, `pointerAdtNodes`, `pointerAdtLeaves` | Modules enrichis des déclarations de classes, avant spécialisation |
-| `PreparedModules.modules` | CoreFn invalidé puis spécialisé, fourni au builder PBO dans l'ordre chargé |
-| `mainModules` | Exports des modules d'origine, ou nom demandé explicitement par la CLI |
-| `globalFunctions` | Signatures natives produites par les modules déjà émis ; une vue immuable par lot, publiée dans l'ordre des modules |
-| `ffiFunctions` | Signatures reconnues dans la FFI du seul module courant, avant sa traduction |
+| `ctorTypes`, `elidedCtors`, `enumAdts`, `enumCtors` | Original TAST ADTs, before synthetic classes are added. |
+| `classDeclsFields` | Original classes; methods and superclasses sorted together by label. |
+| `globalTypes` | Original bindings and FFI imports, keyed by qualified PureScript names. |
+| `reboxFields` | Constructor and class metadata with their respective identity and precedence rules. |
+| `pointerAdtPaths`, `pointerAdtNodes`, `pointerAdtLeaves` | Class-enriched modules before specialization. |
+| `PreparedModules.modules` | Modules with source-usage facts invalidated and specialization applied, in loaded order. |
+| `mainModules` | Original exports, or an explicit CLI entry module. |
+| `globalFunctions` | Native signatures from previously emitted modules, published in canonical batch order. |
+| `ffiFunctions` | Recognized FFI signatures for the module currently being emitted. |
 
-`GlobalTypes` préfère l'annotation du binding, puis celle de l'expression. Un
-`Any` explicite arrête cette recherche. Le dernier repli ne constitue pas une
-inférence générale : il suit seulement les résultats d'applications, en retirant
-les enveloppes de quantification/contraintes. Les groupes récursifs sont indexés
-comme les bindings ordinaires ; un import FFI annoté prend ensuite priorité sur
-une définition de même nom, tandis qu'un import sans type n'efface rien.
+`GlobalTypes` prefers a binding annotation, then its expression annotation.
+An explicit `Any` stops this search. Its final fallback follows application
+results through quantifier/constraint wrappers; it is not general inference.
+An annotated FFI import takes precedence over a definition with the same name;
+an untyped import does not erase an existing type.
 
-### Barrières de spécialisation et préparation
+## Specialization and preparation
 
-`Monomorphization` invalide les identités et preuves `sourceUsage` dans toutes
-les déclarations avant de construire l'index global, même si aucune spécialisation
-n'est finalement retenue. Le décodage PBO valide leur provenance lexicale ; ces
-faits ne sont pas transportables après copie ou substitution de bindings. Les
-analyses backend et TCO recalculent leurs preuves sur l'IR qu'elles consomment.
+`Monomorphization` invalidates source-usage identities and proofs before
+constructing its global index, even when no specialization is selected.
+Copied or substituted bindings cannot retain lexical usage proofs. Backend
+and tail-call analyses establish their own facts on the IR they consume.
+Source usage also does not prove exclusive ownership or permission to mutate.
 
-L'index conserve les corps monomorphes, les dictionnaires, les wrappers FFI et
-les lecteurs de records : ils peuvent révéler des appels génériques pendant
-la collecte transitive. L'exception précoce est le nom exact `Data.Ring.negate`,
-retiré de l'index pour conserver son dictionnaire jusqu'à l'intrinsic du zéro
-signé. Ses appels typés restent collectables.
+The global index retains monomorphic bodies, dictionaries, FFI wrappers and
+record readers because they can reveal transitive generic calls. The exact
+`Data.Ring.negate` binding is excluded to preserve its dictionary for the
+signed-zero intrinsic; its typed calls remain discoverable.
 
-Après le point fixe PBO, `SpecializationBarriers` exclut les globals FFI et
-l'intrinsic, les wrappers reconnus par `Monomorphization.ForeignForwarders` et
-les lecteurs admis par `NativeRecordArgs.candidateToShare`. `eligible` consulte
-alors le type global d'origine : un type absent, `Any` ou sans variable admissible
-ne justifie pas de copie. Les quantificateurs seuls ne suffisent pas. Les preuves
-de partage des records restent distinctes de la vérification TCO finale.
+After the PBO fixed point, specialization barriers exclude FFI globals,
+recognized foreign forwarders and record readers admitted for sharing.
+Eligibility uses original global types: a missing type, `Any`, or a type
+without an eligible variable does not justify a copy.
+`Monomorphization.ForeignForwarders` requires distinct lambda parameters,
+forwarded exactly once and in order to a same-module FFI. Captures, extra
+computation, changed arity, reordered arguments and shadowed FFI references
+reject the candidate.
 
-`ForeignForwarders` exige une lambda de paramètres distincts qui transmet chacun
-exactement une fois, dans l'ordre, à une FFI du même module. Les `TypeApp` et
-coercions qualifiées `Unsafe.Coerce.unsafeCoerce` peuvent envelopper les arguments
-et le résultat. Les captures, calculs supplémentaires, changements d'arité,
-permutations et masquages d'une référence FFI non qualifiée excluent le wrapper.
-L'appartenance à un groupe récursif ne remplace pas cette preuve du corps.
+`Preparation.runPreparationJobs` executes one ordered round of deferred `Aff`
+jobs, in contiguous chunks with concurrency bounded at eight. PBO owns
+snapshots, per-call caches, ordered merging and barriers between fixed-point
+rounds. See [parallel preparation](parallel-preparation.md) and
+[parallel emission](parallel-emission.md).
 
-`Preparation.runPreparationJobs` possède uniquement l'exécution d'un tour :
-évaluation différée dans `Aff`, blocs contigus, concurrence bornée à huit et
-résultats dans l'ordre des travaux. PBO possède les snapshots, le cache local à
-l'appel, la fusion ordonnée et la barrière entre tours du point fixe. Réexécuter
-le même `Aff` recalcule les travaux. Le chemin JS respecte ce contrat sans
-parallélisme CPU multithread ; le test natif contrôle le chevauchement réel.
-Voir [la préparation parallèle](parallel-preparation.md).
+## Driver and cache boundaries
 
-## Pilote de compilation
+`Host.Snapshot` copies and re-executes the compiler from private storage so its
+cache identity describes the code actually executing. `Main` starts the driver
+through `runAff_`; after cleanup, a failure writes its original diagnostic and
+exits with status 1. The JS host lets Node drain output; the Go host exits after
+its synchronous diagnostic. `Driver.Output` explicitly converts synchronous
+FFI preparation exceptions into `Aff` errors so they receive the same cleanup.
 
-`Main` entre d'abord dans `Host.Snapshot` : le bundle et ses ressources, ou
-l'exécutable natif, sont copiés puis réexécutés depuis un emplacement privé.
-L'identité du cache correspond ainsi au code réellement exécuté, même si
-l'installation est remplacée pendant le lancement. `Main` lance ensuite l'effet
-avec `runAff_` et traite son résultat après le nettoyage du
-pilote. Sur erreur, il écrit le diagnostic original sur stderr puis demande une
-sortie de statut 1. La petite FFI `Main.js` laisse Node vider ses écritures ;
-`Main.go` termine le processus après le diagnostic synchrone. Le point d'entrée
-Go ne consulte pas le code stocké par `Node.Process.setExitCode`.
+`Driver.Config` reads options once. `Driver.Cache.begin` can return early when
+input, context, object and output proofs match. On a miss, a bracket owns the
+session and staging through publication. Consumed inputs are frozen copies;
+live inputs are checked again before publication. Failure preserves the last
+committed manifest. Rebox diagnostics make a manifest non-reusable so they
+are reproduced on the next computation.
 
-À la frontière FFI, `Driver.Output` convertit explicitement les exceptions de
-préparation `Effect` en erreurs `Aff` : le `liftEffect` natif ne les intercepte
-pas. Elles suivent ainsi le même nettoyage et le même diagnostic CLI que les
-erreurs des opérations de fichiers asynchrones.
+`Cache.Modules` manages prepared, PBO and emission reuse. A compiler/input
+identity proof can permit reuse of prepared fingerprints when options and
+directives match. Changed TAST requires recomputing relevant preparation,
+including specialization providers. PBO observations can validate unchanged
+lookup results and absences across a changed conservative prefix; unfinished
+predecessors cannot supply finalized contributions.
 
-`Driver.compile` rend visible l'ordre des phases. Les options sont lues une
-fois par `Driver.Config`, avec les valeurs par défaut et les bornes existantes.
-`Driver.Prepare` rend un `PreparedModules` contenant les
-modules spécialisés, les directives, les modules exécutables et un champ
-`metadata :: CodegenMetadata` distinct de ces données d'orchestration.
+The persistence protocol, publication ordering and invalidation rules are in
+[build-cache.md](build-cache.md). Cache keys must cover transformations and
+all metadata they consult, including absence observations.
 
-`Driver.Cache.begin` peut terminer avant `Driver.Prepare` lorsque les empreintes
-des entrées, objets et sorties sont valides. Sur un miss, un bracket possède le
-staging et la session jusqu'à la fin de la publication. Les TAST et FFI consommés
-sont les copies des octets inventoriés ; les entrées vivantes sont revérifiées
-avant publication. Les erreurs laissent le dernier manifeste engagé intact.
-`--force`, `GOPURS_FORCE_BUILD=1` ou `GOPURS_ALLOC_PROFILE` forcent le calcul ;
-les écritures identiques restent élidées. Les diagnostics Rebox rendent le
-manifeste non réutilisable afin d'être reproduits lors du prochain calcul.
+## Representations and conversions
 
-`Cache.Modules` vérifie les empreintes des modules spécialisés et le préfixe PBO
-conservateur. La préparation globale précède cette vérification. Lorsque le
-stockage prouve que tous les TAST et le compilateur sont identiques (`sameTast`),
-le pilote peut reprendre les empreintes préparées si le contexte options/directives
-correspond aussi. Une modification de TAST impose leur recalcul, y compris pour
-les fournisseurs de spécialisations demandées par un appelant modifié.
+`GoTypes` chooses native representations from TAST metadata. Closed records
+have no row tail; their first occurrence of each label wins and fields are
+sorted by label. Open records retain a general representation unless a
+separate projection proof admits a worker ABI.
 
-L'optimisation `pboreads` ajoute `Observation` à PBO. Les variantes du builder avec
-observation fournissent une vue de rang aux lookups de cache, observent les
-implémentations et directives pendant une conversion fraîche, puis transmettent
-les lectures à la barrière canonique. `Cache.Modules` les conserve avec le corps
-dans `pbo/backend-v2`. Si le préfixe change, ces lectures peuvent encore prouver
-la validité du résultat : mêmes valeurs/absences et directives initiales, sans
-prédécesseur en attente. Les empreintes d'implémentations courantes ne concernent
-que des contributions finalisées, immuables pour le build. Les anciennes API de
-skip restent disponibles. Le candidat est retenu après un gain partagé de
-16,09 % sur trois paires face à `restoreprep`. Sa validation complète multi-hôtes
-passe ; les paires de cette étape face au lot 03 restaient à +16,97 % sur le
-partagé, avant les optimisations suivantes.
+An enum has one or more constructors, all without fields. Empty class
+dictionaries are excluded. A pointer ADT has one payload constructor and at
+most one fieldless alternative, represented by `nil`; additional fieldless
+alternatives need distinct tags. Synthetic class declarations are added after
+constructor-elimination metadata, so a one-method class keeps its wrapper.
+`ConstructorLayout` resolves constructor identity, generic arguments and
+fields together; ADT fields take precedence over class fields.
 
-Le candidat suivant `scalarhex` remplace le tableau temporaire de caractères
-de la validation hexadécimale par un parcours direct dans les bridges scalaires.
-Le codec partagé garde les contrôles de longueur et de réencodage. Les quatre
-artefacts restent byte-exacts ; trois paires partagées gagnent 10,05 % face à
-`pboreads-final`. Sa validation complète multi-hôtes passe ; les paires de cette
-étape face au lot 03 restaient à +6,99 % sur le partagé.
+`GoAst.TypeStructPointer` retains constructor identity, qualified PureScript
+type and generic arguments. Substitution reconstructs the structured type;
+it does not split printed names. Unknown generic arguments use `Value` where
+required by the selected layout. Applied type arguments and declared layout
+arity remain distinct inputs to `GoTypes` and `ConstructorLayout`.
 
-Le candidat `typeintern` conserve le raccourci d'identité des types, puis utilise
-leurs références de graphe canoniques pour attribuer les indices locaux. Il
-remplace les comparaisons récursives de `Map ExprType Int` par le second pool de
-chaînes, avec les bridges existants et les mêmes octets. Les trois paires face
-à `scalarhex` gagnent **7,03 %** ; la validation complète multi-hôtes passe.
-Les trois paires de cette étape face au lot 03 donnent **39,273 → 38,480 s (−2,02 %)**
-sur le partagé. Le froid reste à **127,687 s**, dont **66,593 s de publication**,
-contre les **93,599 s historiques** du lot 03 ; ce coût a motivé le travail de publication.
+`GoConversions.coerceGoExpr` first tries layout-aware conversions: identity,
+record projection, native ADT slots and pointers to the same constructor.
+Other conversions pass through `Value`. A record projection evaluates its
+source once, including extra fields, before converting selected fields.
+Boxing a generic pointer converts its payload arguments to `Value`; typed
+unboxing reverses that conversion. Array helpers capture their source once;
+`[]Value` can share immutable backing storage, while other representations
+convert their elements. Integer arrays retain dedicated AST nodes so the
+[round-trip optimization](array-roundtrip.md) runs before printing.
 
-`publicpool2` partage le pool borné du stockage entre staging et publication
-publique, avec une barrière complète entre les deux. La publication démarre
-après le journal durable ; chaque fichier conserve son écriture atomique et ses
-synchronisations. Toutes les tâches sont jointes avant suppression ou commit,
-même sur erreur. Les trois paires de build froid donnent **127,163 → 120,354 s
-(−5,35 %)** face à `typeintern`, après **−17,16 %** sur le stockage isolé. Le
-candidat est installé après audit du relien Go ; sa validation complète passe.
-Les trois paires de cette étape face au lot 03 donnent **−4,57 % sur la feuille /
-+2,78 % sur le partagé / −24,85 % sur la FFI**. Le bilan final de `publicsync`
-figure ci-dessous. Le protocole et les bridges conservent leur contrat.
+`GoConversions.NativeAdts` owns native `Maybe`, `Either` and `Tuple` layouts,
+tags and slots. Closed-record payload slots may remain native; other payloads
+use `Value`. Composite payload conversions call the ordinary converter.
 
-`publicsync` conserve les writers et la synchronisation de chaque fichier avant
-son renommage, puis synchronise une fois chaque répertoire public et ses ancêtres
-après leur jonction. Cette barrière couvre les sorties identiques d'une reprise
-et précède suppression et commit. Le journal d'union reste durable avant les
-writes. Les trois paires froides donnent **118,971 → 112,857 s (−5,14 %)** face à
-`publicpool2`, après **−14,48 %** sur la publication isolée. Les budgets de
-non-régression passent : **−0,71 % feuille / −5,19 % partagé / +1,71 % FFI** ;
-l'identique passe de **1,658 à 1,612 s**. Les reproducteurs d'erreur et de SIGKILL,
-le race detector macOS/Linux et le relien natif audité passent. Le candidat
-mesuré est installé et sa validation complète passe : parité b8x des trois
-hôtes, bootstrap Rust, transitions pilote/sources/contexte des quatre hôtes,
-replays stricts, CLI et audit des 430 fichiers. Les trois paires actuelles face
-au lot 03 donnent **−10,37 % feuille / −4,48 % partagé / −32,76 % FFI**. Les
-paires froides actuelles mesurent **94,191 → 113,213 s (+20,19 %)** ; les hits
-suivants passent de **1,366 à 1,716 s**. Les lots 04–05 sont clos avec ce
-compromis explicitement documenté dans le [bilan](build-incremental.md).
-Le lot 06 clôt ensuite le plan v3 : **24 chaînes / 24 oracles**, mêmes Go/TAST
-et binaires par scénario. Les médianes jusqu'à `exec` varient de **−1,44 %
-feuille / +1,01 % partagé / −5,50 % FFI**, et de **+0,403 s** sur l'identique.
-La compilation du package `purescript` domine encore le cycle ; la suite G
-précède donc P, selon les seuils fixés dans le plan.
+`GoConversions.Rebox` records directed source/destination pairs, derives
+field conversions from `ReboxMetadata`, and emits helpers to a fixed point.
+Requests can introduce further requests, including recursive pairs. Helpers
+preserve `nil`; identical immutable layouts can share a pointer, while field
+conversions allocate a new value. `Rc` does not establish this equivalence.
+Missing metadata retains the `ERROR: Rebox missing!` diagnostic. Constructor
+metadata takes precedence over class metadata.
 
-`workerkeys` extrait `CodeGen.prepareModule` : fusions, dictionnaires,
-emprunts, décodeurs et ownership déterminent les entrées de la clé d'émission.
-Les références qualifiées externes du module transformé sélectionnent une vue
-des signatures globales, absences comprises. `translatePreparedWithFunctions`
-consomme cette vue et la préparation déjà calculée ; les signatures FFI locales
-sont ajoutées par `Driver.Output`. Les métadonnées source et le résultat PBO
-complet restent couverts par la clé. Le bilan du lot 04 décrit les mesures et
-la validation du candidat qui intègre cette optimisation.
+## Bindings, captures and tail calls
 
-`restoreprep` peut éviter cette préparation sur un hit : il compare une clé des
-références d'entrée, engagée seulement lorsque la préparation précédente a prouvé
-qu'elles couvraient les références transformées. La stabilité du backend, des
-métadonnées et du compilateur reproduit cette preuve ; les signatures importées,
-y compris leurs absences, et la FFI sont aussi vérifiées. Si une transformation
-introduit une référence supplémentaire, comme `borrowObject`, la clé reste fondée
-sur les références transformées et son lookup suit la préparation.
+`ModuleBindings.prepare` analyzes recursive groups before publishing native
+signatures. Arity follows adjacent lambdas: computation between lambdas keeps
+a boxed function result. A recursive group with non-function values keeps its
+boxed getters; a singleton recursive function can receive a module loop.
+`ModuleWorkers` emits the exact prepared ABI and its boxed wrapper.
 
-`Driver.Build` possède les références mutables de la compilation : signatures
-déjà publiées et compteurs de progression. Son coordinateur est le seul
-producteur de la file d'émission, même avec le builder PBO parallèle.
-`Emission.withEmitter` encadre le producteur, ses workers PBO et les émetteurs.
-Le décodage indépendant du chemin où toutes les clés PBO correspondent est
-terminé avant son ouverture. Il termine le dernier lot sur succès et supervise les fibres avant
-la fermeture de l'émetteur. Un worker peut être suspendu en publiant son
-résultat dans l'AVar ; il doit aussi être arrêté si le coordinateur échoue.
-Voir le [contrat du pipeline](parallel-emission.md) et ses tests JS/natifs.
+`BindingExprs` owns lexical scope and initialization order. `LocalWorkers`
+publishes provisional signatures for recognized recursive loops before their
+bodies, then refines result signatures in source order. Recursive values use
+pointer cells: an early read fails, while a delayed closure can observe the
+value after its complete initialization.
 
-## Où modifier une responsabilité
+Closure contexts remove inherited loop targets. `GoFunctions` separates
+mutable loop slots from source parameters recreated on every iteration, so
+closures capture the values from their own iteration. `CallExprs` evaluates
+and adapts tail-call arguments before assigning slots and continuing; argument
+permutations therefore read the old iteration values.
 
-Le [contrat du cache persistant](build-cache.md) décrit la recette, le format
-commun aux hôtes et la propriété transactionnelle des sorties. Son stockage
-est exposé par `BuildCache` et raccordé au pilote par `Driver.Cache` et
-`Cache.Modules`. La réutilisation par module est livrée au lot 04, validée au
-lot 05 et mesurée jusqu'au runner au lot 06 du [plan incrémental](../todo.md).
+`Int32Loops` can version local or module loops after proving signed writes
+and checking entry values. The fast path uses `int32` slots and widens at
+call/return boundaries. Out-of-range entries retain the original `int64`
+loop, including zero-iteration results. Arbitrary calls, division and unsigned
+shifts do not prove a signed result. See [int32-loops.md](int32-loops.md).
 
-La carte [module-map.md](module-map.md) est la source de vérité : elle donne,
-pour chaque module, sa phase cible, sa responsabilité et les modules dont il
-dépend. Le tableau ci-dessous en est le résumé par responsabilité ; il emploie
-les noms actuels et sera remplacé par les noms cibles au fil du lot 3. La
-phase cible figure dans la carte, pas dans ce tableau.
+`NativeRecordArgs` separately proves pre-specialization sharing and the final
+post-PBO worker ABI. Only read-only field access admits projection; whole-record
+uses and delayed captures keep the ordinary argument. Boxed wrappers preserve
+dynamic and partial calls. See [native-record-workers.md](native-record-workers.md).
 
-Tous les modules gopurs de ce tableau se trouvent dans [src/Gopurs](../src/Gopurs).
+## Rewrite and intrinsic contracts
 
-| Responsabilité | Modules |
+| Area | Contract and reference |
 | --- | --- |
-| Ordre des phases et mesures | `Driver` |
-| Arguments et variables d'environnement du pilote | `Driver.Config` |
-| Chargement du TAST et assemblage des métadonnées | `Driver.Prepare` |
-| Choix du builder, ordonnanceur Aff et publication des signatures | `Driver.Build` |
-| Lots, dépendances, contre-pression et durée de vie des fibres | `Emission` |
-| Traduction d'un module, assemblage FFI et fichiers de sortie | `Driver.Output` |
-| Protocole de stockage persistant et publication vérifiée | `BuildCache`, `tools/build-cache` |
-| Lookup avant décodage, staging et recette FFI | `Driver.Cache`, `tools/build-cache/session.go` |
-| Clés préparées/PBO/émission et réutilisation par module | `Cache.Modules`, `tools/build-cache/modules.go` |
-| Codecs métier portables, tables locales et partage des valeurs | `Cache.Wire`, `Cache.Pool`, `Cache.TypeMemo` |
-| Identité du code exécuté et ressources privées | `Host.Snapshot`, `tools/build-cache/compiler.go` |
-| Types globaux, constructeurs et classes | `GlobalTypes`, `ConstructorMetadata`, `ClassMetadata` |
-| Représentations des ADT | `AdtMetadata` |
-| Invalidation source, collecte et barrières de spécialisation | `Monomorphization` |
-| Reconnaissance des wrappers FFI exclus des copies spécialisées | `Monomorphization.ForeignForwarders` |
-| Exécution différée et ordonnée des travaux d'un tour PBO | `Preparation` |
-| Contrats distincts des métadonnées immuables et de l'état mutable | `CodegenState` |
-| Dispatcher récursif, assemblage du fichier | `CodeGen` |
-| Admission et réécriture des producteurs de thunks/fonctions | `ThunkFusion`, `FunctionFusion` |
-| Admission et réduction des applications immédiates | `ImmediateApplications` |
-| Occurrences, substitution et renommage des niveaux locaux | `ImmediateApplications.Scope` |
-| Réservation des noms de workers des fusions | `WorkerNames` |
-| Réécriture, réservation des noms et publication des dictionnaires en cache | `ClosedDictionaries` |
-| Preuves distinctes de réutilisation et de nouvelle mise en cache | `ClosedDictionaries.Admission` |
-| Fermeture lexicale, exclusion des effets et de la récursion | `ClosedDictionaries.Scope` |
-| Admission d'un emprunt d'objet, preuve des usages et réécriture | `BorrowedObjects` |
-| Point fixe des contrats consommants et sélection des appels frais | `Ownership` |
-| Admission des layouts/signatures et réservation des paires de noms | `Ownership.Candidates` |
-| Chemins, scalaires, termes d'arbres et fraîcheur | `Ownership.Analysis`, `Ownership.Types` |
-| Captures, cellules réutilisables et déclarations consommantes | `Ownership.Workers` |
-| Contexte, résultat et callbacks de traduction | `ExprContext` |
-| Annotations typées, propagation et dictionnaires de classes | `TypedExprs` |
-| Fonctions de module, signatures, groupes TCO | `ModuleBindings` |
-| Vérification TCO des arguments record et sélection de leur ABI | `NativeRecordArgs` |
-| Projection des champs et admission des résultats natifs | `NativeRecordArgs.Projection` |
-| Preuve source des lecteurs partagés avant monomorphisation | `NativeRecordArgs.Source` |
-| Émission des workers de module et de leurs wrappers | `ModuleWorkers` |
-| Structs ADT et enregistrement des getters de classes | `ModuleDeclarations` |
-| Bindings locaux, récursion locale et initialisation | `BindingExprs` |
-| Paramètres, signatures et émission des workers locaux | `LocalWorkers` |
-| Sélection des appels, surapplications et sauts TCO | `CallExprs`, `CallAnalysis` |
-| Traduction, capture ordonnée et adaptation des arguments | `CallArguments` |
-| Reconnaissance et émission de map, filter et foldl | `ArrayIntrinsics` |
-| Admission de l'indexation et conversion de l'élément sélectionné | `ArrayIntrinsics.Index` |
-| Accès au buffer natif ou boxé sans copie | `ArrayIntrinsics.Source` |
-| Admission, captures et boucles des traversées Either | `ArrayTraverse`, `ObjectTraverse` |
-| Abstractions, branches et effets | `FunctionExprs`, `ControlExprs`, `EffectExprs` |
-| ADT, records et primitives | `AdtExprs`, `RecordExprs`, `PrimitiveExprs` |
-| Traduction des littéraux tableaux et records | `LiteralExprs` |
-| Traduction des définitions et constructions saturées | `ConstructorExprs` |
-| Identité, champs et arguments génériques des constructeurs | `ConstructorLayout` |
-| Analyses d'expressions | `ExprAnalysis` |
-| Traduction des annotations en types Go | `GoTypes` |
-| Choix des conversions, boxing et lecture de Value | `GoConversions` |
-| Layouts natifs de Maybe, Either et Tuple, adaptation de leurs slots | `GoConversions.NativeAdts` |
-| Demandes de helpers, conversion des champs et émission transitive Rebox | `GoConversions.Rebox`, `ReboxMetadata` |
-| Paramètres Go, variables d'itération et enveloppes curryfiées | `GoFunctions` |
-| Preuve et versionnement des boucles scalaires à état signé 32 bits | `Int32Loops` |
-| Dépendances des fragments opaques et imports du module | `GoCode`, `GoImports` |
-| Représentation et rendu Go | `GoAst`, `Printer` |
-| Stockage mutable privé d'un rendu et FFI JS/Go associée | `Printer.Builder` |
-| Analyse du Go FFI et façade du bridge | `FfiSupport`, `FfiBridge` |
-| Appariement des déclarations et signatures d'appel natif | `FfiBridge.Signatures` |
-| Types du bridge et instanciation générique | `FfiBridge.TypeSupport` |
-| Adaptation des arguments, callbacks et résultats FFI | `FfiBridge.Values` |
-| Rendu des wrappers, workers et déclarations manquantes | `FfiBridge.Render` |
+| Function and thunk fusion | Admit recognized producer shapes, preserve evaluation boundaries, reserve collision-free worker names and keep original fallback behavior. [Function fusion](function-fusion.md). |
+| Immediate applications | Scope-aware substitution and renaming; no recursive scopes; bounded code growth and preserved evaluation order. `ImmediateApplications` and its `Scope` module own admission. |
+| Closed dictionaries | Separate reuse of an existing closed binding from lifting a new one. Effects and recursion reject moving a construction; source order determines winners. `ClosedDictionaries.Admission` and `.Scope` own the proofs. |
+| Borrowed JSON objects | Prove all uses read-only before replacing a decoder with a borrowed view. Delayed or escaping payload uses reject admission; runtime helpers retain a fallback. [JSON decoder optimizations](json-decoder-optimizations.md). |
+| Decoder schemas | Derive plans from recognized source dictionaries and bodies, not result types alone. Preserve read order, first error and opaque callback behavior. [JSON record plans](json-record-plans.md). |
+| Tree ownership | Establish eligible layouts and a fixed point of consuming workers, then rewrite calls only with fresh tree arguments. Source usage counts and `Rc` do not replace ownership proofs. [ADT reuse](adt-reuse.md). |
+| Array intrinsics | Recognize exact calls before emitting loops; capture each argument at its original evaluation boundary. [Array round trips](array-roundtrip.md). |
+| Either traversals | Keep the first `Left` while executing subsequent callbacks, preserve source iteration order and allocate a result per invocation. [JSON traversals](json-traversals.md). |
 
-`ExprContext` permet aux familles d'expressions de rappeler le dispatcher sans
-importer `CodeGen`. Il transporte directement les tables immuables de
-`CodegenMetadata`, utilisées pour le typage, les signatures et la préparation
-des constructeurs et des records. Ces décisions ne lisent aucune référence
-mutable.
+## Runtime, FFI and printing
 
-Le dispatcher reçoit lui-même un `ExprContext`, comme les émetteurs spécialisés.
-`ExprContext.childContext` prépare les opérandes ordinaires : profondeur suivante,
-hors position terminale et hors bloc d'effet, sans cible TCO ni boucle héritée.
-Le type attendu est passé explicitement. Les corps de bindings, branches et
-fonctions conservent leurs propres règles de propagation du contexte.
+Emitters own type selection, boxing, evaluation order, captures and calls.
+`Printer` renders the chosen AST without reading or mutating translation state.
+Structured references retain ownership through package qualification; raw Go
+fragments carry explicit dependency information. See the
+[AST/printer boundary](go-ast-printer.md).
 
-`TypedExprs` traite les annotations `Typed` : il propage le type vers le résultat
-des `Let`/`LetRec`, construit les dictionnaires dans l'ordre des champs de la
-classe et adapte les autres résultats. Il garde explicites les cas où le boxing
-doit être évité : records déjà boxés destinés à un consommateur dynamique, records
-natifs projetés, sommes natives, pointeurs et closures. Chaque champ de dictionnaire
-est traduit puis converti avant le suivant, car la conversion peut enregistrer
-des helpers Rebox dans l'état du module.
+`runtime/runtime.go` is the canonical application runtime. The build embeds it
+in `Gopurs.Runtime.Source`; a built compiler does not read that Go file at
+startup. `FfiSupport` transports requests to the Go parser, `FfiBridge` adapts
+typed calls, and the driver owns diagnostics and cleanup. JS uses WebAssembly;
+native Go and Rust hosts use native transports. The
+[runtime and FFI contracts](runtime-ffi-contracts.md) describe memory sharing,
+primitive semantics, asynchronous work and companion implementations.
 
-`LiteralExprs` conserve deux ordres d'adaptation distincts. Pour un tableau, tous
-les éléments sont traduits dans l'ordre source, puis leur représentation commune
-est choisie et les conversions sont émises. L'annotation peut spécialiser des
-éléments homogènes ou un tableau vide ; des représentations sources hétérogènes
-restent boxées. Pour un record, les labels sont triés, puis chaque champ est
-traduit et converti avant le suivant. Les deux chemins transmettent les statements
-et le prochain identifiant libre sans les réordonner.
+## Repositories and consumers
 
-`ConstructorExprs` résout le type résultat des définitions et prépare le layout
-des constructions saturées. Une attente concrète peut préciser une annotation
-absente ou polymorphe. Les champs sont traduits et convertis immédiatement dans
-l'ordre source, puis `AdtExprs` assemble la représentation choisie. Records et
-constructeurs partagent `ExprAnalysis.bindFieldFunctionParameters` pour typer les
-paramètres des callbacks curryfiés ou non curryfiés ; leurs bindings restent
-locaux au champ. Le contexte ordinaire des enfants ne reçoit pas le type attendu
-du conteneur.
-
-La réutilisation d'un constructeur intervient après ses champs et seulement si
-aucun statement n'a été produit. `AdtExprs.constructorReuse` établit la preuve
-d'une reconstruction inchangée avec un remplacement constant unique ;
-`ConstructorExprs` reconnaît les constantes Int, Boolean et enum sans conversion,
-puis assemble la condition et réserve un identifiant `__reuse_…`. Number reste
-exclu pour préserver le zéro signé. Les chemins sans réutilisation gardent le
-compteur renvoyé par le dernier champ.
-
-La référence `CodegenState` contient uniquement les déclarations structurées
-produites (`declarations`), le compteur des bindings récursifs (`globalId`) et les
-couples de conversion à émettre (`reboxPairs`). Le compteur local `nextId` et
-les statements restent transportés dans les résultats ; les déclarations
-principales sont renvoyées directement par `ModuleBindings.declarations`.
-La génération Rebox consulte les métadonnées directement et relit les couples
-accumulés jusqu'à avoir émis les conversions transitives. Le printer ne consulte
-ni ne modifie cet état. Le [contrat AST/printer](go-ast-printer.md) décrit les
-nœuds structurés et les familles qui restent assemblées en chaînes.
-
-`CodeGen` assemble trois groupes ordonnés de `GoDecl` : valeurs avec cache,
-déclarations natives et helpers Rebox, puis getters FFI. Tous empruntent le
-même parcours d'imports et de rendu. Les corps opaques encore nécessaires,
-notamment les affectations Rebox et l'enregistrement des getters de classes,
-portent leur texte et leurs dépendances dans `GoCode`. Le constructeur `rawGo`
-reconnaît les imports historiques à la création du fragment ; aucun module
-Go imprimé n'est reparcouru pour calculer ses imports.
-
-`CallArguments` traduit chaque argument dans l'ordre, en conservant ses
-statements et le compteur de noms. Les intrinsics curryfiés boxent chaque
-argument immédiatement ; les autres chemins conservent sa représentation
-native jusqu'à l'adaptation de l'appel. `ArrayIntrinsics` reçoit ces arguments
-déjà traduits et émet les boucles. `translate` conserve séparément les expressions
-et les statements ; `capture` lie chaque expression immédiatement après ses
-propres statements, avant de traduire l'argument suivant. Le traducteur fourni à
-`capture` choisit le boxing ou le callback natif, et le helper réserve le nom de la
-capture. Les traversées émettent aussi `_ = capture` pour les dictionnaires et
-méthodes évalués mais inutilisés par leur boucle.
-
-`CallExprs` conserve les priorités existantes :
-TCO avant les intrinsics pour `App`, intrinsics avant TCO pour `UncurriedApp`.
-
-## Intrinsics et traversées
-
-`ArrayIntrinsics.recognize` garde les gardes propres à chaque convention : noms
-historiques de map/fold, qualification et nom de filter, arité minimale.
-`emitCurried` distingue la boucle boxée et l'application des arguments restants ;
-`emitUncurried` conserve les slices natives et sélectionne les workers connus ou
-les appels boxés. La normalisation des entiers reste limitée au filtre frais
-immédiatement consommé par un fold scalaire résolu, avec seed littéral.
-
-`ArrayIntrinsics.Index` possède l'admission exacte de `indexImpl`, la capture de
-ses quatre arguments et les bornes. Les indexations sûre et non sûre retirent
-l'annotation du tableau et convertissent seulement l'élément sélectionné.
-`Source.arraySource` partage la lecture du buffer avec les boucles, sans copie.
-L'indexation non sûre émet sa liaison du buffer avant les statements de l'index ;
-l'indexation sûre la place dans l'IIFE, après la capture des arguments.
-
-`ArrayTraverse` et `ObjectTraverse` suivent trois étapes nommées : `recognize`,
-`captureArguments`, `emitLoop`. La reconnaissance précède toute traduction et
-prouve les dictionnaires standard ainsi que l'arité admise. Les captures restent
-au stade d'application courant ; la boucle et son stockage neuf restent dans le
-worker tant que des arguments manquent. Les tableaux conservent les types natifs
-et peuvent regrouper un callback formé de lambdas adjacentes ; les objets boxent
-chaque argument. Un calcul entre lambdas conserve le chemin curryfié ordinaire.
-
-Les deux boucles gardent le premier `Left` tout en exécutant les callbacks
-suivants. Le tableau parcourt les indices source ; l'objet trie ses clés avec
-`sort.Strings`, comme son fold Go de référence. `traverseWithIndexDefault` reste
-générique pour les objets, car son map préalable a un autre ordre de callbacks.
-Chaque invocation alloue son propre résultat, y compris via une closure réutilisée.
-
-## Fusions et applications immédiates
-
-Ces passes travaillent sur les `NeutralExpr` optimisés par PBO, avant que
-`ModuleBindings` recalcule les informations TCO. Les wrappers/newtypes effacés par
-PBO peuvent ainsi exposer un motif admissible. Chaque passe conserve ses propres
-règles de lecture des annotations.
-
-`ThunkFusion.producerParameters` vérifie la signature : un unique paramètre
-`Unit -> Int`, les autres paramètres `Int`, puis un résultat `Unit -> Int`.
-`producerTail` valide et réécrit les branches et appels récursifs ; il exige une
-base et une récursion. `suspendedBody` reconnaît les thunks unaires dont le
-paramètre Unit est inutilisé. `recursiveArgument` exige exactement un forçage du
-prédécesseur ; `seedArgument` admet seulement une expression entière totale.
-`integerTerm` et `booleanTerm` portent la liste fermée des opérations permises.
-La réécriture des consommateurs conserve intégralement les scopes `LetRec`.
-Le producteur initial reste présent, et le worker strict n'est inséré que si un
-consommateur immédiat admissible l'utilise.
-
-`FunctionFusion.recognize` compose trois preuves nommées : `zeroCase`,
-`recursiveStep` et `callbackChain`. Elles établissent l'identité à zéro, la
-décrémentation de un et la composition `callback (previous callback seed)`.
-Le contrôle typé `at` vérifie aussi les annotations imbriquées. `compactProducer`
-et `iteratorWorker` construisent ensuite la réécriture : la branche du compteur
-non négatif capture le compte, tandis que le corps d'origine conserve le chemin
-négatif avant la lambda retournée. Le callback reste différé jusqu'à l'appel.
-
-`WorkerNames` maintient les noms source et leurs formes Go assainies, y compris
-les déclarations étrangères. Chaque fusion fournit son suffixe, réserve les noms
-retenus dans l'ordre du module et garde sa politique d'insertion des workers.
-
-`ImmediateApplications` réécrit d'abord les enfants, hors scopes `LetRec`.
-`admitApplication` produit un plan de réduction pour les lambdas unaires, les
-résultats de `Let`, les branches et les échecs. Chaque résultat possible doit
-éliminer l'application. Le plan compte les substitutions syntaxiques dans toutes
-les branches, puis `boundedGrowth` applique le budget de duplication de 128 nœuds
-supplémentaires ; au plus quatre alternatives explicites sont admises par branche.
-Une valeur locale ou scalaire peut être réutilisée, une lambda seulement une fois
-par résultat. Zéro ou une insertion totale peut accepter une grande lambda.
-
-`applyInto` exécute ce plan sans refaire les contrôles d'admission. Les opérations
-de `Scope` respectent les bindings masqués et renomment les locaux liés avant
-transplantation, en conservant les références libres. La réserve de niveaux est
-propre à chaque binding et commence au-dessus du maximum de l'expression
-d'origine. Substitution et renommage portent sur les fragments sans récursion
-déjà admis ; l'ordre de visite des branches fixe l'ordre des nouveaux niveaux.
-
-## Mise en cache des dictionnaires fermés
-
-`ClosedDictionaries` intervient après les fusions et applications immédiates,
-avant `BorrowedObjects`. La passe remplace des constructions répétées par des
-références à des bindings de module, dont les getters ordinaires assurent ensuite
-l'évaluation paresseuse et la mise en cache.
-
-`Admission` distingue deux preuves. La réutilisation d'un binding existant
-sans annotation au site d'usage exige une application exacte de globals importés,
-un résultat monomorphe et un type retrouvé identique à l'annotation du binding.
-Les qualifications, conventions curryfiées/non curryfiées et regroupements
-d'applications restent distincts ; les enfants annotés ne forment pas de clés.
-La création d'un nouveau binding repose sur l'annotation de classe du site et
-la fermeture de toute l'application ; elle n'exige pas cette inférence monomorphe.
-
-`Scope` possède la preuve de fermeture : seules les formes de binding modifient
-la portée, les autres réunissent les références libres de leurs enfants. Les
-identités locales associent le nom source et le niveau, avant assainissement Go.
-Les effets et la récursion excluent une construction entière de la mise en cache.
-
-`RewriteContext` garde l'index immuable des bindings d'origine : le premier
-candidat admissible dans l'ordre source gagne. `rewriteBelowRoot` conserve les
-enveloppes `Typed`/`TypeApp` sans réadmettre leur racine ; les groupes récursifs
-et `LetRec` arrêtent la réécriture. Un effet empêche le déplacement de l'expression
-qui le contient, mais ses enfants indépendants restent visités.
-
-`LiftState` ne porte que les noms réservés, le compteur et les nouveaux bindings.
-Le déplacement privilégie l'application admissible la plus extérieure, conservée
-telle quelle sans réécriture de ses enfants. Les sites nouvellement mis en cache
-restent distincts et ne rejoignent pas l'index de réutilisation. Le groupe final
-non récursif suit l'ordre de visite, après tous les groupes d'origine.
-
-## Emprunt des objets JSON en lecture seule
-
-`BorrowedObjects` intervient après le partage des dictionnaires fermés, avant
-les schémas de décodeurs. `admitBorrowing` produit un plan contenant la méthode
-et l'entrée JSON uniquement après reconnaissance du décodeur identité et preuve
-de tous les usages de son résultat. Les alias de dictionnaires suivis sont des
-références qualifiées du module, définies hors groupes récursifs ; un ensemble
-des noms visités interrompt les cycles.
-
-`BorrowScope` distingue le niveau de l'enveloppe `Either` et les niveaux des alias
-de son payload `Right`. `readOnlyUses` autorise les tests de tags, la propagation
-de `Left` et les lecteurs de champs standard saturés, dans leur seul argument
-objet. Les closures, scopes récursifs et formes à effets doivent être entièrement
-indépendants des références empruntées. Le contrôle reste conservateur lors du
-masquage de l'enveloppe ou dans une portée différée.
-
-`borrowedDecode` construit l'appel au helper existant avec les opérandes d'origine ;
-`replaceAnnotated` conserve les enveloppes `Typed`/`TypeApp` du site d'appel.
-Un producteur admis ne descend pas à nouveau dans ses opérandes ; un refus permet
-d'y chercher des candidats indépendants. Les continuations sont réécrites, hors `LetRec`.
-Cette passe ne crée aucune déclaration et exige la signature du helper dans les
-types globaux. Le helper Go confirme l'identité à l'exécution et délègue les
-décodeurs inconnus ou entrées invalides au chemin ordinaire.
-
-## Spécialisation des schémas de décodeurs
-
-`DecoderSchemas` intervient après `BorrowedObjects`, avant `Ownership`. La façade
-possède les gardes ABI, la réécriture et la publication des sources. `Source`
-résout les alias qualifiés du module et les applications partielles à partir d'un
-index immuable des bindings d'origine non récursifs. La reconnaissance ignore
-les enveloppes `Typed`/`TypeApp`, mais la réécriture et le getter source conservent
-les expressions et annotations d'origine.
-
-`Admission` exige une application unaire exacte de `Decode.Class.decodeJson`,
-sans local, effet ni récursion dans sa construction. Les instances standard,
-les proxies effacés et les méthodes constantes `reflectSymbol` établissent le
-schéma ; les types de résultat seuls ne suffisent pas. La résolution démarre
-avec 64 unités de profondeur et la taille pondérée doit être comprise entre
-2 et 128. `Types` distingue les feuilles opaques, les corps prouvés et les
-compositions munies d'un tag natif : seules ces dernières sont admises à la racine.
-
-`Programs` prouve un petit langage de corps personnalisés : emprunt de l'objet
-identité, lectures standard de champs, tests ordonnés d'égalité à une chaîne,
-constructions réelles de valeurs et erreurs `TypeMismatch` explicites. Ses atomes
-distinguent l'entrée, l'objet emprunté, les valeurs décodées et les payloads d'erreur.
-Chaque lecture exige un schéma entièrement standard et la transmission exacte de
-son `Left`. Les lectures obligatoires, optionnelles et optionnelles-nullables
-gardent leurs politiques distinctes ; les producteurs qui masquent un niveau
-déjà prouvé sont refusés. Les budgets des continuations d'erreur (128) et de
-l'abaissement du corps (256) restent indépendants du budget des dictionnaires.
-
-`Workers` consomme ce schéma pour produire les workers DOM, leurs gardes natives,
-le getter mis en cache et, si son ABI est présente, le chemin texte. Les feuilles
-opaques gardent leurs callbacks dans le plan DOM. Elles interdisent le chemin
-texte entier : matérialiser seulement leur sous-arbre pourrait perdre les alias
-observables par ces callbacks. Les lectures des corps prouvés utilisent au
-contraire un appel direct. Les constructeurs passent par le générateur ordinaire,
-avec leurs annotations et un seul getter source partagé entre DOM et texte ;
-leurs captures uniques sont triées par niveau.
-
-La réécriture privilégie le candidat admissible le plus extérieur. Un refus
-permet de visiter ses enfants, hors groupes récursifs et `LetRec`. Les noms sont
-réservés par famille dans l'ordre source : une collision avec un descendant,
-même dans un groupe récursif, fait avancer le compteur. Les sources originales
-et les constructeurs rejoignent un unique groupe final non récursif. L'émission
-conserve l'ordre des lectures et la première erreur ; les labels répétés du
-record gardent la priorité de la tête de ligne, tandis que les clés JSON répétées
-gardent la dernière occurrence d'entrée.
-
-## Workers consommants des arbres
-
-`Ownership.prepare` intervient après les passes spécialisées de `CodeGen`, avant
-la préparation TCO des bindings. `Candidates.collect` admet les layouts d'arbres
-monomorphes et les signatures de premier ordre, puis réserve chaque paire de noms
-worker/helper dans l'ordre source. La validation des corps élimine les candidats
-rejetés et leurs appelants jusqu'au point fixe, y compris les familles mutuellement
-récursives. Seuls les survivants publient des signatures et des déclarations.
-
-`Analysis` résout les alias en chemins canoniques, reconnaît le langage fermé des
-scalaires et des termes d'arbres, et relève les chemins encore observables dans une
-continuation. `Workers.declarations` est une tentative indivisible de preuve et
-d'émission : elle utilise un compteur local neuf, sans publier de déclaration
-partielle si un corps est rejeté. `planCells` capture toutes les lectures avant
-mutation ; `reusablePaths` distingue les cellules connues non nulles des cellules
-nécessitant une sélection à l'exécution. Le stock restant passe entre arguments
-frères avant le choix du donneur de l'appel extérieur.
-
-L'admission `freshCall` exige des constructions fraîches pour chaque argument
-arbre avant la réécriture. Les fonctions persistantes restent disponibles ; la
-preuve ignore les annotations d'usage source et le champ `Rc`. Les politiques de
-capture, de retrait des alias et de donation sont détaillées dans
-[la réutilisation des arbres](adt-reuse.md).
-
-## Bindings, captures et TCO
-
-`ModuleBindings.prepare` analyse les groupes récursifs avant de publier leurs
-signatures. L'arité vient des lambdas réellement adjacentes : une computation
-intermédiaire conserve un résultat fonctionnel boxé. Les signatures de module
-choisissent aussi les projections de records en lecture seule et les résultats
-de sommes natifs. `ModuleWorkers` consomme exactement cette ABI pour traduire le
-corps, publier la déclaration native puis adapter le wrapper. Un groupe récursif
-contenant une valeur non fonctionnelle garde ses getters boxés ; seul un groupe
-fonctionnel récursif singleton reçoit une boucle de module.
-
-`BindingExprs` possède la portée lexicale et l'ordre des bindings locaux.
-`LocalWorkers` partage la préparation des paramètres et l'émission du worker et
-de son wrapper, avec une signature résultat inférée à partir du corps traduit.
-Pour un groupe récursif local reconnu comme boucle par PBO, les noms et signatures
-provisoires sont publiés avant le premier corps. Les résultats affinent la table
-des fonctions dans l'ordre source ; l'environnement lexical utilisé par ces
-corps garde la vue provisoire commune. Le corps englobant reçoit les signatures
-et bindings affinés. Toutes les déclarations du groupe précèdent ses affectations.
-
-Pour les valeurs récursives, `allocateRecursive` réserve les noms et
-`initializeRecursiveValues` fait lire les initialiseurs à travers des cellules
-pointeurs. Chaque cellule est publiée après la traduction et la coercition de
-sa valeur complète : une lecture anticipée échoue, une closure différée peut
-relire la valeur après initialisation. Le corps englobant utilise les valeurs
-initialisées directement.
-
-`ExprContext.bindParameters` étend l'environnement capturé et ne masque que les
-paramètres. `FunctionExprs.closureContext` retire les cibles de boucle héritées :
-une closure ne peut pas sauter dans la boucle qui l'a créée. Les frontières entre
-lambdas restent définies par `CallAnalysis` ; une abstraction sans argument est
-une étape d'évaluation distincte. `ExprAnalysis.functionResultAfter` conserve les
-flèches non consommées quand la traduction d'une abstraction s'arrête avant la
-fin du type fonctionnel.
-
-`GoFunctions.loopParameters` nomme les slots mutables et `iterationBindings`
-recrée les paramètres source à chaque itération. Les captures de closures gardent
-ainsi les valeurs de leur itération. `CallExprs.tailTarget` sélectionne une cible
-en position terminale ; `tailCall` traduit les arguments, adapte et affecte les
-slots, puis émet le `continue`. Les arguments lisent les paramètres de l'itération
-courante, ce qui préserve notamment les permutations. `LoopTarget` contient le
-label, les slots et leurs types ; son ancien résultat et sa liste de paramètres
-inutilisés ont été retirés.
-
-`Int32Loops.loop`, appelé par les émetteurs de workers locaux et de module,
-versionne certaines boucles à résultat `int64`. Il choisit indépendamment les
-slots `int64` effectivement réaffectés dont toutes les écritures visibles sont
-des additions/soustractions normalisées ou des littéraux dans la plage signée
-32 bits. Une référence opaque, un masquage du paramètre, une closure, une boucle
-imbriquée ou une forme AST non reconnue invalide la preuve concernée. Les appels
-arbitraires, la division et `zshr` ne prouvent pas un résultat signé.
-
-Une garde à l'entrée vérifie `slot == int64(int32(slot))` pour chaque slot
-retenu. Le chemin admis utilise des slots et paramètres d'itération `int32`,
-des additions/soustractions natives et des comparaisons natives lorsque les deux
-opérandes sont prouvés signés. Il élargit aux frontières des appels et du retour.
-La boucle originale traite les entrées hors plage, y compris une sortie immédiate
-sans opération arithmétique. Une IIFE donne une portée propre aux labels copiés.
-Les signatures des workers, des wrappers et des bridges restent en `int64`.
-
-Le type `Int` du compilateur ne suffit pas non plus pour borner un littéral :
-PBO peut plier un décalage non signé en `4294967295`. Les opérations constantes
-et les conversions de constantes hors plage gardent un helper runtime pour
-éviter un débordement de constante rejeté par le vérificateur de types Go.
-
-Les politiques d'enveloppes restent explicites : modules regroupés jusqu'à dix
-arguments, workers locaux curryfiés un argument à la fois, closures curryfiées
-anonymes par groupes de cinq. Les abstractions non curryfiées et à effets gardent
-leurs seuils respectifs ; les fonctions sans argument restent différées.
-
-## Arguments record projetés
-
-`NativeRecordArgs` relie deux preuves indépendantes. Avant PBO, `Source` décide
-si un lecteur de record ouvert peut être partagé entre plusieurs instanciations.
-L'annotation du binding prime, même si elle vaut `Any` ; seule son absence permet
-le repli sur celle de l'expression. Les lambdas doivent correspondre exactement
-aux arguments, et les lectures respectent les portées des `let`, lambdas et cases.
-
-`Projection` possède les champs admissibles : ligne non vide dont la queue est
-une variable de type, champs visibles scalaires et labels utilisables sans
-collision après assainissement Go. Le premier label dupliqué gagne, puis les
-champs sont triés par label source.
-La politique commune des résultats accepte les scalaires et les layouts natifs
-`Maybe`/`Either`/`Tuple` existants ; leurs payloads restent gérés par les conversions.
-
-Après PBO, `workerArguments` vérifie séparément chaque argument sur le corps TCO,
-avec les identités locales de l'émetteur. Un accès direct à un champ connu est
-admis ; une capture différée ou un usage du record entier impose le type ordinaire.
-Une preuve source périmée ne peut donc imposer une projection. Les champs déjà
-reconnus servent directement à construire le type de l'argument admis.
-
-`Monomorphization` possède le filtre des instanciations ; `ModuleBindings` publie
-les signatures finales utilisées par `ModuleWorkers` et les appels directs.
-Les wrappers boxés conservent les appels dynamiques et partiels. Le contrat
-détaillé figure dans [native-record-workers.md](native-record-workers.md).
-
-## Choix des représentations
-
-Les tables assemblées par `Driver.Prepare` ont des contrats distincts, repris
-par les alias de types de `CodegenMetadata` :
-
-| Table | Entrée et identité |
+| Repository or component | Responsibility |
 | --- | --- |
-| `ConstructorMetadata.ConstructorTypes` | ADT d'origine ; clé `<module_avec_underscores>.<constructeur_brut>`, champs dans l'ordre de déclaration |
-| `elidedCtors` | ADT d'origine avec un seul constructeur et un seul champ ; noms `Constructor_…`, avec les points du module historiquement conservés |
-| `ClassMetadata.ClassFields` | Classes d'origine ; clé PureScript qualifiée avec points, méthodes et superclasses triées ensemble par label |
-| `AdtMetadata.PointerAdtPaths` | ADT enrichis des dictionnaires synthétiques ; clé du type PureScript qualifié, constructeur à payload et arité déclarée |
-| `pointerAdtNodes`, `pointerAdtLeaves`, `enumCtors` | Identités runtime `Data_<module_avec_underscores>_<constructeur_sanitisé>` |
-| `enumAdts` | Types PureScript qualifiés, depuis les ADT d'origine |
+| Typed PureScript fork | Produces TAST, including layouts, class declarations and instantiated types. |
+| `purescript-backend-optimizer` | Decodes the typed format and supplies the shared optimizer, builder and IR. |
+| `gopurs` | Specialization, Go rewrites, emission, compiler hosts and cache. |
+| `gopurs-*` library ports | Go FFI implementations and library-specific tests. Pins are recorded in `bootstrap-sources.json`. |
+| `altbak.pub` | Reference generated-program benchmarks and historical baselines. |
+| Go toolchain | Compiles and runs the generated application after gopurs finishes. |
 
-Un ADT pointeur possède exactement un constructeur à payload et au plus une
-alternative sans champ, représentable par `nil`. Plusieurs alternatives sans
-champ doivent conserver leurs tags distincts. Un enum possède au moins un
-constructeur, tous sans champ ; un dictionnaire de classe vide reste exclu des
-enums. Les dictionnaires synthétiques sont ajoutés après
-la collecte des constructeurs éliminés : une classe à une méthode conserve son
-wrapper. `ClassMetadata.sortedClassFields` fournit déjà le même ordre à la table
-nommée et au constructeur synthétique ; `ModuleDeclarations` s'en sert pour les
-champs `V0…` et les getters.
-
-`GoTypes.appliedAdt` rassemble les arguments d'un ADT puis de ses `TypeApp`, de
-l'intérieur vers l'extérieur. Il ne retire ni `ForAll` ni les contraintes.
-La recherche d'un pointeur préfère le nom exact, puis son alias `$Dict`.
-L'instanciation conserve les politiques suivantes :
-
-| Contexte | Arguments Go |
-| --- | --- |
-| Type de valeur | Préfixe fourni, tronqué à l'arité ; positions manquantes complétées par `Value` |
-| Champ générique | Arguments fournis si leur nombre est exact ; sinon tous les paramètres déclarés si leur nombre convient ; sinon tous `Value` |
-| Constructeur annoté par un ADT simple | Arité explicite du layout prioritaire ; si des arguments manquent, tous deviennent `Value`, sinon le préfixe est conservé |
-| Définition annotée par un `TypeApp` | Préfixe des arguments appliqués, limité aux variables du layout, sans compléter les positions manquantes |
-| Construction saturée annotée par un `TypeApp` | Variables du layout effacées en `Value` |
-
-Les arités nulles ne produisent aucun argument générique. Les types de valeur
-testent l'élimination sur le nom porté par le chemin ADT avant de choisir enum
-ou pointeur ; les champs génériques choisissent l'enum d'abord, puis testent
-l'élimination sur le constructeur à payload résolu. Ces priorités sont explicites
-dans `GoTypes`. Les tableaux génériques gardent la traduction de valeur de leurs
-éléments. Un record natif exige une queue de rangée absente ; le premier champ
-de chaque label gagne, puis les labels sont triés.
-
-`ConstructorLayout` résout l'identité avant les champs : le type pointeur attendu
-peut fournir le module de définition ; un accès aux champs garde son qualificateur
-explicite. Les champs ADT priment sur ceux d'une classe. La préparation choisit
-une fois les arguments pour le pointeur et ses champs. Pour une alternative
-`nil`, une définition résout le worker dans le module courant, une construction
-saturée dans le module résolu ; l'identité runtime reste celle du payload.
-
-`GoAst.constructorNames` partage les noms du constructeur Go et du tag runtime,
-en laissant le préfixe de module à l'appelant. `TypeStructPointer` conserve ces noms,
-le type PureScript qualifié et les arguments. `GoAst.structPointer` est le point
-de construction du nom Go instancié. `instantiateGenericGoType` le reconstruit
-après substitution, sans découper de texte imprimé ; une variable absente de
-l'environnement devient `Value`.
-
-## Boxing, conversions et Rebox
-
-`GoConversions` conserve les entrées de conversion et réexporte le contrat des
-ADT natifs. `coerceGoExpr` choisit d'abord les conversions qui connaissent leur
-layout : identité, projection d'un record vers les champs attendus, slots d'un
-ADT natif, puis pointeurs d'un même constructeur. Les autres chemins passent par
-`Value`. Une projection évalue le record source une fois, y compris ses champs
-supplémentaires, puis convertit les champs demandés.
-
-Le boxing d'un pointeur générique doit d'abord convertir ses arguments en
-`Value` ; le déboxing typé suit le chemin inverse : lire le pointeur à payloads
-`Value`, puis convertir ses champs. `coerceGoExpr` porte ce choix de layout et
-`boxGoExpr` l'applique avant d'émettre la boîte. `unboxGoExpr` normalise son entrée
-en `Value` avant de lire la représentation demandée ; une conversion entre deux
-représentations distinctes de tableaux natifs emprunte donc aussi cette frontière.
-Les lecteurs de destination
-ne traitent plus un cas de tableau source natif devenu inaccessible après cette
-normalisation.
-
-Les helpers de records et de tableaux prennent un callback d'adaptation des
-champs ou éléments. Ils capturent leur opérande une fois et conservent l'ordre
-fourni. Les tableaux `[]Value` partagent leur stockage immuable ; les tableaux
-`[]int64` utilisent leurs nœuds dédiés de l'AST ; les autres éléments sont
-convertis individuellement.
-
-`GoConversions.NativeAdts` possède les signatures, constructeurs, tests de tags,
-indices de slots et passages par `Value` de `Maybe`, `Either` et `Tuple`. Seuls les
-slots instanciés par un record fermé restent natifs ; les autres payloads sont
-des `Value`. Les callbacks de boxing/déboxing rappellent le convertisseur pour
-les payloads composites, sans créer de dépendance de module circulaire.
-
-`GoConversions.Rebox` distingue trois étapes :
-
-1. `request` enregistre le couple **orienté** source/destination dans le `Set`
-   du module et produit l'appel au helper. Son nom est calculé au même endroit
-   pour l'appel et la déclaration, depuis les chemins Go instanciés.
-2. L'émission consulte `ReboxMetadata`, puis `convertFields` instancie chaque
-   champ dans les deux environnements génériques et rappelle `coerceGoExpr`
-   avec le même état de module. Cette traduction peut enregistrer d'autres
-   couples, y compris le couple récursif en cours.
-3. `generate` lit les demandes par vagues et déduplique les déclarations par
-   nom. Il s'arrête quand une vague n'ajoute aucun helper, puis retourne les
-   déclarations dans l'ordre de la `Map`. L'ordre des demandes ne détermine pas
-   celui du Go émis.
-
-Chaque helper préserve `nil`. Si tous ses champs sont rendus comme des accès
-identiques `in.Vn`, les paramètres fantômes permettent un cast du pointeur vers
-le même layout immuable ; sinon le helper alloue et convertit champ par champ.
-`Rc` n'intervient pas dans cette décision. L'absence de métadonnées conserve le
-diagnostic `ERROR: Rebox missing!` et l'omission du helper. `ReboxMetadata` garde
-la priorité des constructeurs sur les classes et du premier alias rencontré ;
-ses noms passent par `GoAst.constructorNames`.
-
-## Runtime et FFI
-
-[runtime/runtime.go](../runtime/runtime.go) est la source canonique du runtime.
-`tools/build/embed-runtime.mjs` génère les compagnons FFI `Runtime.js` et `Runtime.go`
-au build ; le bundle JS et le compilateur natif embarquent la même constante.
-`Driver.Output.writeRuntime` écrit ce texte dans l'application générée, sans
-relire la source Go au lancement du backend.
-
-`Printer.Builder` possède la poignée mutable du rendu, confinée par `withOut` ;
-`Printer` possède les décisions de mise en forme et l'échappement des littéraux.
-La FFI `GoCode` adapte les valeurs boxées au scanner natif `scanReferencedImports`.
-`GoImports` concatène dans un buffer privé ; le collecteur PureScript garde le
-tri et la déduplication. Les contrats de stockage, vues JSON, caches, captures et
-travail retenu sont détaillés dans [runtime-ffi-contracts.md](runtime-ffi-contracts.md).
-
-La FFI utilise une autre chaîne : `tools/ffi-gen` analyse le Go avec son AST
-natif et expose le contrat JSON par WebAssembly ou appel Go direct.
-`tools/ffi-runner.mjs` exécute le WASM ; `prepare-native-output.mjs` fournit les
-mêmes sources au compilateur Go. `FfiSupport` prépare la source et décode la réponse, puis `FfiBridge`
-rapproche les déclarations Go des types TAST. Une erreur de syntaxe, de runner
-ou de décodage fait échouer le build ; elle ne devient pas une liste vide de
-fonctions. L'absence de fichier FFI suit encore le chemin de bridge de secours
-de `Driver.Output`, distinct d'un échec d'analyse.
-
-`FfiBridge` expose trois opérations : enveloppes boxées, signatures publiées
-et workers à résultat boxé. `Signatures` centralise l'appariement des noms
-(`<Module>_<Nom>`, puis sa variante suffixée `_`) et l'admission d'un
-`NativeCandidate`. Ce candidat porte la déclaration Go, son type TAST, le besoin
-d'un worker et le nom à appeler. La publication d'une `FunctionInfo` vérifie
-ensuite les types de tous les arguments et du résultat. Cette étape est plus
-stricte que l'émission des workers : certains workers générés restent inutilisés
-par les appels directs, notamment avec un retour record ou un argument natif
-non représentable par cette interface.
-
-`TypeSupport` instancie les paramètres génériques des wrappers jusque dans les
-callbacks et les conteneurs. `Values` possède les adaptations dans les deux sens
-et partage le traitement des callbacks entre wrappers et workers. `Render`
-assemble leurs déclarations Go. Les valeurs étrangères, les fonctions sans
-argument et les signatures non admissibles conservent leur enveloppe boxée.
-Une déclaration Go absente produit l'enveloppe qui signale « FFI not implemented »
-à l'utilisation ; une source Go mal formée reste une erreur de compilation.
-
-## Sorties et cache
-
-| Chemin dans l'application | Contenu |
-| --- | --- |
-| `output/purescript/Module_Name.go` | Code du module PureScript |
-| `output/purescript/Module_Name_ffi.go` | FFI et bridge, pour les modules concernés |
-| `output/gopurs_runtime/runtime.go` | Copie exacte du runtime embarqué |
-| `output/go.mod` | Module `gopurs/output`, version Go déclarée 1.22 |
-| `output/main/main.go` | Entrée partagée sélectionnée par `--main` |
-| `output/Module.Name/main/main.go` | Entrée propre à chaque module ciblé |
-
-`onSkipModule` renvoie toujours `Nothing` : gopurs régénère les modules et leur
-FFI à chaque invocation. Aucun `.gopurs-cache.json` n'est lu ou écrit par ce
-chemin. Le PBO emploie encore `.purmeta` pour les implémentations nécessaires à
-l'optimisation ; cela ne remplace pas la génération Go. Les caches de paquets
-et de compilation Spago restent une couche distincte.
-
-Pendant un build JS, le PBO conserve les implémentations `.purmeta` récemment
-utilisées dans un cache LRU. À la frontière de chaque module, il ramène le
-poids des entrées retenues à 64 Mio de données sérialisées. Cette limite ne
-mesure pas le tas JavaScript décodé ; les imports d'un module peuvent aussi
-dépasser ce budget pendant son traitement. Le début du build suivant purge
-le cache et les validations des modules, afin de ne jamais reprendre une
-spécialisation périmée. `clearPurmetaCache` permet toujours une purge explicite.
-
-Le compilateur natif conserve au contraire toutes les implémentations immuables
-du build dans une table synchronisée, sans repli disque ni budget d'octets.
-`beginPurmetaBuild` libère la table du build précédent ; `clear` et `trim` ne
-peuvent pas évincer cette unique copie. Le format V8 de `.purmeta` n'est pas lu
-par Go. Cette différence de stockage ne change pas l'ordre de publication.
-
-Le backend ne purge pas les anciens fichiers de `output` lorsqu'un module ou
-une FFI disparaît. Pour comparer deux générateurs, conserver les mêmes entrées
-TAST et inventorier les sorties ; pour une fixture, le runner fournit un
-workspace neuf. Voir [les vérifications](testing.md).
-
-## Outils de build et de validation
-
-Les scripts de [tools](../tools) ont des responsabilités distinctes :
-
-| Responsabilité | Fichier |
-| --- | --- |
-| Ordre des étapes du bootstrap, logs et publication atomique du binaire | `build-native.mjs` |
-| Configuration Spago native, sélection du fork `purs`, vérification du TAST | `native-workspace.mjs` |
-| Sous-processus, groupes de processus, signaux et descripteurs des logs | `tools/lib/process.mjs` |
-| Présentation des commandes et erreurs des campagnes de tests | `test-process.mjs` |
-| Rapports atomiques, statuts par cible, reprise et conservation des campagnes | `test-campaign.mjs` |
-| Sélection des fixtures, snapshots et workspaces | `test-runner.mjs` et ses helpers `test-*` |
-| Parcours des bibliothèques sœurs | `modtest-runner.mjs` |
-
-`CommandRunner` exécute une commande à la fois. Il rend son statut de sortie ;
-le client interprète les échecs après avoir affiché les logs et appelé
-`checkInterrupted`. SIGINT/SIGTERM sont transmis au groupe actif, descendants
-compris. Chaque propriétaire appelle `dispose` dans un `finally` pour retirer
-les handlers de signaux. Le build natif et `TestProcesses` utilisent ce même
-contrat, avec leur propre présentation des étapes.
-
-`TestCampaign` conserve toute la sélection dans `results.json`, même après un
-arrêt anticipé. Les runners lui fournissent leur action par cible et utilisent
-son environnement de temporaires privés. `test-workspace.mjs` prépare les
-fixtures et les copies de bibliothèques ; chaque bibliothèque reçoit sa propre
-famille de sources, afin que les nettoyages ne touchent ni les checkouts vivants
-ni les preuves d'une autre cible. Les logs restent disponibles après succès.
-
-Le bootstrap conserve son workspace sur échec et installe le nouveau binaire
-par renommage d'un fichier préparé sur le même système de fichiers. La
-vérification du TAST et la compilation Go précèdent cette publication.
-
-## Carte des dépôts et des consommateurs
-
-Le compilateur et chaque bibliothèque ont leurs sources et leur configuration.
-Au 8 novembre 2026, `bin/pkg` inventorie **51 bibliothèques**, dont `js-uri`, et
-le checkout de support pinné `gopurs-argonaut-codecs`. Ce dernier n'a pas de
-`bin/test` ; ses tests `typed-plans` sont exécutés séparément. Le répertoire
-parent `gopurs/` est leur conteneur ; ses éventuels artefacts ne sont pas une
-bibliothèque.
-Les noms publics sont ceux des déclarations `module` et de leurs exports,
-indépendamment du préfixe `gopurs-` des répertoires.
-
-| Famille et propriétaire | Entrées → traitement → sorties | Consommateurs et revue |
-| --- | --- | --- |
-| Configuration de chaque dépôt | `package.json`, Bower/Dhall, Spago et lockfiles → choix des outils, dépendances et sources | npm, Spago, Pulp, CI et éditeurs |
-| Build de gopurs | `runtime/runtime.go` → `embed-runtime.mjs` → `Runtime.js`/`Runtime.go` ; `src/**/*.purs` et FFI → bundle JS puis bootstrap TAST/Go natif | npm `prepare`, `build:native`, `bin/gopurs`, runners et applications |
-| Entrée et pipeline gopurs | TAST de l'application → métadonnées → monomorphisation → PBO → émetteurs → AST/printer | Fichiers Go et signatures utilisées par les modules suivants |
-| Bibliothèque `gopurs-*` | `src/**/*.purs` → modules publics, réexports, instances et signatures étrangères ; compagnons `.go`/`.js` | Imports des autres paquets, des applications et des tests |
-| Bridge gopurs et FFI de bibliothèque | Chemin source du TAST + `.go` → recherche PBO → parser → déclarations JSON → rapprochement avec les types → `<Module>_ffi.go` | Programme Go généré |
-| Runtime gopurs | Source Go canonique → chaîne d'embarquement ci-dessus → `output/gopurs_runtime/runtime.go` | Go généré, bridges et FFI des bibliothèques |
-| Parser gopurs | `tools/ffi-gen` → WASM apparié à `wasm_exec.js` ou package Go via `prepare-native-output.mjs` | `FfiSupport`, par transport JS ou appel Go direct |
-| Tests de gopurs | Fixtures et compagnons, snapshots, AST construits par les tests Node, cas Go du parser | Runners Node, modules PureScript compilés et Go |
-| Tests, exemples et benchmarks des bibliothèques | `test/`, `example(s)/`, `bench/`, `benchmark/`, `integration-tests/`, compagnons et données | `bin/test`, commandes npm/Pulp/Spago et CI propres au paquet |
-| Documentation de chaque dépôt | README, guides, licences, images et docs | Utilisateurs et mainteneurs |
-
-`bin/pkg` déclare **22 paquets core** pour le runner de fixtures, **trois
-checkouts de support** pour leur développement, **26 autres bibliothèques** et
-le checkout de support Argonaut.
-`bin/setup --core` installe les 25 premiers checkouts plus
-`gopurs-argonaut-codecs` (26), et `--all` couvre les 51 bibliothèques et le
-support (52), avec l'adaptation QuickCheck locale fournie au préalable. `--list`
-décrit la sélection sans modifier de fichiers. La liste de `bin/modtest` est,
-elle, découverte au lancement :
-**51 des 52 checkouts ont un `bin/test` exécutable**, dont `js-uri` et
-QuickCheck ; le checkout `argonaut-codecs` n'en a pas. Une entrée dans
-`extraPackages` est un choix de résolution, pas la
-preuve qu'un paquet appartient aux dépendances effectivement utilisées.
-La compilation JS du backend emploie son propre graphe Spago : PBO local, plus
-les overrides `st` et `unsafe-coerce`. Le bootstrap natif fournit les overrides
-des bibliothèques Go via `native-workspace.mjs`. Le graphe de l'application
-détermine les bibliothèques et FFI Go qu'elle utilise.
-
-Les configurations restent propres à chaque dépôt. Les overrides transitifs
-nécessaires doivent rester présents dans le workspace consommateur. Le
-[guide de développement local](../README.md#develop-one-library-locally)
-décrit les profils d'installation, les outils et la politique des lockfiles.
-Les dépendances npm de gopurs servent uniquement au build : le bundle distribué
-ne dépend ni d'esbuild ni du backend ES au lancement.
-
-## Usages qui échappent à une recherche d'imports
-
-Avant de supprimer un fichier ou un export, suivre aussi ces entrées :
-
-- `Main` découvre les exports `main` quand `--main` est absent. Le parseur PBO
-  lit les TAST depuis `output`, sans import de fichier explicite dans gopurs.
-- `findFfiFile` du PBO essaie d'abord le compagnon du `modulePath` TAST, puis
-  les répertoires FFI et Spago. Une FFI Go peut donc être consommée sans aucun
-  import textuel vers son chemin. La FFI JS est sélectionnée par le compilateur
-  PureScript pour les outils et parcours JavaScript conservés.
-- `FfiSupport.js` résout le runner relativement à la source, au module compilé
-  ou au bundle. Le runner instancie le WASM et appelle le global `parseFFI`
-  enregistré par `main_js_wasm.go` ; cette fonction n'a pas d'import JS ordinaire.
-- Les tests Node importent `output/Gopurs.*/index.js` et construisent les AST
-  avec leurs exports. Les supprimer du bundle ou renommer un constructeur
-  demande de vérifier ces consommateurs.
-- Le runner découvre les fixtures par répertoire et lit `@dependencies` et
-  `@snapshot-ffi`. Il copie aussi les fichiers et répertoires compagnons.
-  Les snapshots et données d'entrée ne sont pas des sorties jetables.
-- Le runtime consulte notamment `StructGetters` par tag et emploie `reflect`
-  pour des conversions de champs. Les noms et enregistrements générés font
-  partie de ce contrat, même sans appel statique visible dans une bibliothèque.
-- `gopurs-spec/test/Integration.purs` découvre les sous-répertoires de
-  `integration-tests/cases`, leurs sorties attendues et `env-template`.
-  `gopurs-console/scripts/test` est appelé par npm et compare la sortie à
-  `test/expected_output.txt`. Des commandes npm de benchmarks et de chaînes
-  importent également les modules compilés directement.
-
-## Provenance et sources à conserver
-
-Les inventaires distinguent fichiers suivis, fichiers locaux non suivis,
-artefacts ignorés et dépendances installées. Les attributs Linguist des dépôts
-masquent largement le PureScript et le JavaScript : `linguist-generated` ou
-`linguist-vendored` n'établit pas à lui seul qu'un fichier est reconstructible.
-
-L'inventaire historique du 14 septembre relevait 46 bibliothèques avec un remote
-`upstream`, sans référence locale `upstream/*` disponible. Le backend,
-`argonaut-core`, `js-bigints` et `js-date` n'ont pas ce remote ; QuickCheck a
-directement l'origin PureScript upstream et est détaché sur **v8.0.1**.
-Ses fichiers suivis correspondaient à ce tag. `spago.yaml` et
-`src/Test/QuickCheck/Gen.go` participent à l'adaptation Go locale et doivent être
-conservés avec le checkout ; un clone upstream seul ne les fournit pas.
-
-À cette date, une comparaison octet par octet de `src/` avec **33 versions du registre déjà
-présentes dans `.spago/p` de gopurs** donnait 224 fichiers identiques, 36 fichiers
-différents, 79 ajouts locaux et aucun fichier manquant. Ces versions sont des
-références locales datées, pas les dernières versions upstream. Parmi les
-ajouts, 77 sont des `.go` ; les deux autres sont
-`Control/Monad/Free.js` et `Data/Map/Internal.js`. Les différences touchent
-aussi le PureScript et le JavaScript de `aff`, `argonaut-core`, `arrays`,
-`foldable-traversable`, `foreign`, `foreign-object`, `free`, `lazy`,
-`node-event-emitter`, `nullable`, `ordered-collections`, `record`, `refs` et
-`strings`. Les versions et chemins exacts étaient consignés dans l'inventaire
-temporaire de cette revue ; les 17 autres bibliothèques n'avaient pas été comparées à une
-distribution du registre dans ce contrôle. QuickCheck dispose du tag ci-dessus.
-
-Les licences sont maintenues par dépôt. `gopurs-yoga-json` conserve aussi
-`LICENCE/simple-json.LICENSE`. `gopurs-js-bigints` possède désormais un README,
-mais aucun fichier de licence dans le checkout inspecté ; sa provenance ne se
-déduit pas du seul nom du paquet.
-
-Les artefacts distribués suivis de gopurs sont `tools/ffi_gen.wasm` et
-`tools/wasm_exec.js` ; leur reconstruction est `npm run build:ffi`, avec
-Go **1.27.0** imposé par `tools/ffi-gen/go.mod`. `bin/gopurs.js`,
-`bin/gopurs-native` et `src/Gopurs/Runtime/Source.{js,go}` sont générés et ignorés. Les `output/`, `.spago/`,
-`.purmeta/`, caches npm et `node_modules/`, y compris ceux des exemples et
-environnements d'intégration, se contrôlent par leurs entrées et leur commande
-de reconstruction. Ne pas y reporter des modifications de sources.
+Use [development.md](development.md) for the checkout layout and library ports,
+[bootstrap.md](bootstrap.md) for compiler hosts, [testing.md](testing.md) for
+validation commands and [benchmark-protocol.md](benchmark-protocol.md) for
+measurement boundaries. Foreign companions, runtime embedding, package file
+lists and dynamically selected test fixtures remain uses even when they have
+no PureScript import edge.
