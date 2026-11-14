@@ -757,7 +757,7 @@
     "extra_packages": {
       "backend-optimizer": {
         "git": "https://github.com/0x000000000000000000001/purescript-backend-optimizer.git",
-        "ref": "4e7de48ffd6e19480ed3de6bfe8ca8227133be13"
+        "ref": "c9e5899d668b15d4a10a80910122af11bcc19469"
       },
       "st": {
         "git": "https://github.com/0x000000000000000000001/gopurs-st.git",
@@ -916,7 +916,7 @@
     "backend-optimizer": {
       "type": "git",
       "url": "https://github.com/0x000000000000000000001/purescript-backend-optimizer.git",
-      "rev": "4e7de48ffd6e19480ed3de6bfe8ca8227133be13",
+      "rev": "c9e5899d668b15d4a10a80910122af11bcc19469",
       "dependencies": [
         "argonaut",
         "arrays",
